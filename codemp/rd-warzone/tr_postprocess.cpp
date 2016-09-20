@@ -932,7 +932,7 @@ void R_AddGlowShaderLights ( void )
 			float distance = Distance(backEnd.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
 
-			if (distance > 2048.0) continue;
+			if (distance > 4096.0) continue;
 
 #ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			if (!TR_InFOV( MAP_GLOW_LOCATIONS[maplight], backEnd.refdef.vieworg ))
@@ -1113,11 +1113,11 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		transformed[2] = DotProduct(local,vfwd);
 
 		// Make sure Z is not negative.
-		if(transformed[2] < 0.01)
+		/*if(transformed[2] < 0.01)
 		{
 			//return false;
 			//transformed[2] = 2.0 - transformed[2];
-		}
+		}*/
 
 		// Simple convert to screen coords.
 		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
@@ -1126,7 +1126,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		x = (xcenter + xzi * transformed[0]);
 		y = (ycenter - yzi * transformed[1]);
 
-		float depth = (distance/2048.0);
+		float depth = (distance/4096.0);
 		if (depth > 1.0) depth = 1.0;
 
 		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
@@ -1214,7 +1214,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		}
 	}
 
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i volume lights.\n", NUM_CLOSE_LIGHTS);
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i volume lights. Sun id is %i.\n", NUM_CLOSE_LIGHTS, SUN_ID);
 
 	// None to draw...
 	if (NUM_CLOSE_LIGHTS <= 0) {
@@ -1277,7 +1277,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		vec4_t viewInfo;
 
 		//float zmax = backEnd.viewParms.zFar;
-		float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float zmax = 4096.0;//2048.0;//backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, (float)SUN_ID);
@@ -1288,7 +1288,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	
 	{
 		vec4_t local0;
-		VectorSet4(local0, r_testvalue1->value, 0, 0, 0);
+		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(&tr.volumeLightShader[dlightShader], UNIFORM_LOCAL0, local0);
 	}
 	
@@ -1797,13 +1797,13 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, 0.0, 0.0);
+		VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, (tr.refdef.rdflags & RDF_UNDERWATER) ? 1.0 : 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, r_waterWaveHeight->value, 0.0, 0.0, 0.0);
+		VectorSet4(loc, r_waterWaveHeight->value, r_waterWaveDensity->value, 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
 	

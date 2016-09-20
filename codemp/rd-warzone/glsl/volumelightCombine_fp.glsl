@@ -14,6 +14,10 @@ varying vec2		var_ScreenTex;
 // Shall we pixelize randomly the output? -- Sucks!
 //#define RANDOMIZE_PIXELS
 
+#define APPLY_CONTRAST
+//#define APPLY_CONTRAST2
+//#define EXPERIMENTAL_SHADOWS
+
 #ifdef RANDOMIZE_PIXELS
 //noise producing function to eliminate banding (got it from someone else´s shader):
 float rand(vec2 co){
@@ -31,7 +35,8 @@ void main()
 #if defined(BLUR_WIDTH)
 	vec2 offset = vec2(1.0) / u_Dimensions;
 
-	vec3 volumeLight = texture2D(u_NormalMap, var_ScreenTex).rgb;
+	vec4 pixelLight = texture2D(u_NormalMap, var_ScreenTex);
+	vec3 volumeLight = pixelLight.rgb;
 	
 	for (float i = 1.0; i < BLUR_WIDTH+1.0; i+=1.0)
 	{
@@ -48,6 +53,17 @@ void main()
 	vec3 volumeLight = texture2D(u_NormalMap, var_ScreenTex).rgb;
 #endif
 
+#ifdef APPLY_CONTRAST
+#define const_1 ( 18.0 / 255.0)
+#define const_2 (255.0 / 248.0)
+	volumeLight.rgb = clamp((clamp(volumeLight.rgb - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
+#endif
+#ifdef APPLY_CONTRAST2
+	float contrast = clamp(((volumeLight.r + volumeLight.g + volumeLight.b) / 1.5) + 0.25, 0.25, 1.5);
+	//diffuseColor.rgb *= contrast;
+	volumeLight.rgb *= contrast;
+#endif
+
 #ifdef DEBUG
 	gl_FragColor.rgb = volumeLight;
 	gl_FragColor.a = 1.0;
@@ -57,6 +73,19 @@ void main()
 #ifdef RANDOMIZE_PIXELS
 	gl_FragColor = diffuseColor + vec4(volumeLight*random, 0.0);
 #else
+
+#ifdef EXPERIMENTAL_SHADOWS
+	if (pixelLight.a <= 0.0)
+	{
+		diffuseColor.rgb *= 0.2;
+		gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
+	}
+	else
+	{
+		gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
+	}
+#else
 	gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
+#endif
 #endif	
 }

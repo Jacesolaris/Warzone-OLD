@@ -97,7 +97,7 @@ varying vec2 fragCoord;
 
 void main()
 {
-    vec4 object_space_pos = vec4( attr_Position.x, attr_Position.y, attr_Position.z, 1.0);
+    vec4 object_space_pos = vec4( attr_Position.xyz, 1.0);
     gl_Position = u_ModelViewProjectionMatrix * object_space_pos;
     
 	//fragCoord = attr_Position.xy;

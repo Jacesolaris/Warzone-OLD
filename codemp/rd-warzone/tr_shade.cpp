@@ -2089,6 +2089,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
+		/*
 		if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{// Attach dummy water output textures...
 			if (glState.currentFBO == tr.renderFbo)
@@ -2097,6 +2098,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				passMax = 2;
 			}
 		}
+		*/
 
 		//
 		// UQ1: Split up uniforms by what is actually used...
@@ -2726,12 +2728,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
 					stateBits = GLS_DEFAULT | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
+					tess.shader->cullType = CT_TWO_SIDED; // Always...
 
-					if (passNum > 0)
+					/*if (passNum > 0)
 					{
 						GLSL_AttachWaterTextures2();
 					}
-					else
+					else*/
 					{
 						GLSL_AttachWaterTextures();
 					}
@@ -2781,7 +2784,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
 					vec4_t passInfo;
-					VectorSet4(passInfo, passNum, r_waterWaveHeight->value, 0.0, 0.0);
+					VectorSet4(passInfo, /*passNum*/0.0, r_waterWaveHeight->value, 0.0, 0.0);
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
 				}
 			}

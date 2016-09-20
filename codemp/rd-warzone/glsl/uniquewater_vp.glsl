@@ -23,7 +23,7 @@ void main()
 	var_Normal = normal;
 
 	if (u_Local10.r > 0.0)
-	{
+	{// NOTE: Unused - No longer using second pass...
 		position.z += maxAmplitude; // Raise up the height to add to water map shorelines...
 	}
 

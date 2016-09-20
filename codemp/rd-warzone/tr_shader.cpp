@@ -3550,7 +3550,14 @@ void AssignMaterialType ( const char *name, const char *text )
 	{// Always greenleaves... No parallax...
 		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
 		if (oldmat) shader.surfaceFlags &= ~oldmat;
-		shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+
+#ifdef FIXME_TREE_BARK_PARALLAX
+		if (StringContainsWord(name, "bark") || StringContainsWord(name, "trunk") || StringContainsWord(name, "giant_tree") || StringContainsWord(name, "vine01"))
+			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+		else
+#endif
+			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+
 	}
 	else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "trooper") || StringContainsWord(name, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;

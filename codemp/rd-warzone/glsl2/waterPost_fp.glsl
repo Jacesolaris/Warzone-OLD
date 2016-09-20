@@ -1,6 +1,6 @@
 //#define SIMPLIFIED_FRESNEL		// Seems no faster... not as good?
 #define REAL_WAVES					// You probably always want this turned on.
-//#define USE_UNDERWATER			// TODO: Convert from HLSL when I can be bothered.
+#define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 //#define HEIGHT_BASED_FOG			// Height based volumetric fog. Works but has some issues I can't be bothered fixing atm.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
@@ -32,8 +32,8 @@ uniform vec4		u_Maxs;					// MAP_MAXS[0], MAP_MAXS[1], MAP_MAXS[2], 0.0
 uniform vec4		u_MapInfo;				// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec4		u_Local0;				// testvalue0, testvalue1, testvalue2, testvalue3
-uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION
-uniform vec4		u_Local10;				// waveHeight
+uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER
+uniform vec4		u_Local10;				// waveHeight, waveDensity
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo;				// zmin, zmax, zmax / zmin
@@ -49,8 +49,7 @@ uniform vec3		u_ViewOrigin;
 
 // Timer
 uniform float		u_Time;
-#define timer		(u_Time * 5000.0)
-#define wfTimer		(u_Time * 0.5)
+#define systemtimer		(u_Time * 5000.0)
 
 
 // Over-all water clearness...
@@ -71,8 +70,9 @@ const float normalScale = 1.0;
 const float R0 = 0.5;
 
 // Maximum waves amplitude
-//const float maxAmplitude = 6.0;//4.0;
-#define maxAmplitude u_Local10.r
+//const float waveHeight = 6.0;//4.0;
+#define waveHeight u_Local10.r
+#define waveDensity u_Local10.g
 
 // Colour of the sun
 vec3 sunColor = u_PrimaryLightColor.rgb;
@@ -92,14 +92,12 @@ const float refractionStrength = 0.0;
 // smaller "waves" or last to have more bigger "waves"
 const vec4 normalModifier = vec4(1.0, 2.0, 4.0, 8.0);
 
-// Strength of displacement along normal.
-const float displace = 1.7;
-
 // Describes at what depth foam starts to fade out and
 // at what it is completely invisible. The third value is at
 // what height foam for waves appear (+ waterLevel).
 //const vec3 foamExistence = vec3(1.5, 5.35, 2.3); //vec3(0.65, 1.35, 0.5);
-const vec3 foamExistence = vec3(1.5, 50.0, 5.0/*3.5*/);
+//const vec3 foamExistence = vec3(1.5, 50.0, waveHeight * 0.85/*5.0*/);
+#define foamExistence vec3(1.5, 50.0, waveHeight * 0.85/*5.0*/)
 //vec3 foamExistence = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 const float sunScale = 3.0;
@@ -172,12 +170,15 @@ float fresnelTerm(vec3 normal, vec3 eyeVec)
 
 vec4 waterMapAtCoord ( vec2 coord )
 {
-	return texture2D(u_WaterPositionMap, coord).xzya;
+	vec4 wmap = texture2D(u_WaterPositionMap, coord).xzya;
+	wmap.y -= waveHeight;
+	return wmap;
 }
 
 vec4 waterMap2AtCoord ( vec2 coord )
 {
-	return texture2D(u_WaterPositionMap2, coord).xzya;
+	//return texture2D(u_WaterPositionMap2, coord).xzya;
+	return texture2D(u_WaterPositionMap, coord).xzya;
 }
 
 vec4 positionMapAtCoord ( vec2 coord )
@@ -298,6 +299,12 @@ void main ( void )
 {
 	vec3 color2 = texture2D(u_DiffuseMap, var_TexCoords).rgb;
 	vec4 waterMap2 = waterMap2AtCoord(var_TexCoords);
+	bool IS_UNDERWATER = false;
+
+	if (u_Local1.b > 0.0) 
+	{
+		IS_UNDERWATER = true;
+	}
 
 	if (waterMap2.a <= 0.0)
 	{// Should be safe to skip everything.
@@ -306,10 +313,13 @@ void main ( void )
 	}
 
 	bool pixelIsInWaterRange = false;
+	bool pixelIsUnderWater = false;
 	bool pixelIsWaterfall = false;
 	vec3 color = color2;
 
-	vec4 waterMap = waterMapAtCoord(var_TexCoords);
+	vec4 waterMap = waterMap2;//waterMapAtCoord(var_TexCoords);
+	waterMap.y -= waveHeight;
+
 	vec4 positionMap = positionMapAtCoord(var_TexCoords);
 	vec3 position = positionMap.xyz;
 
@@ -321,101 +331,26 @@ void main ( void )
 	}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
-	if (waterMap.a > 0.0 || waterMap2.a > 0.0 || (waterMap.y != 0.0 && position.y <= waterMap.y + maxAmplitude))
+	if (waterMap.a >= 2.0 || waterMap2.a >= 2.0)
+	{// Low horizontal normal, this is a waterfall...
+		pixelIsWaterfall = true;
+	}
+	else if (/*waterMap.a > 0.0 ||*/ position.y <= waterMap.y)
 	{
 		pixelIsInWaterRange = true;
 	}
+	else if (IS_UNDERWATER || waterMap.y > ViewOrigin.y)
+	{
+		pixelIsUnderWater = true;
+	}
 
-	if (!pixelIsInWaterRange)
+	if (!pixelIsInWaterRange && !pixelIsWaterfall && !pixelIsUnderWater)
 	{// No water here. Skip calculations.
 		gl_FragColor = vec4(color2, 1.0);
 		return;
 	}
 
-	float waterLevel = waterMap2.y;
-	float level = waterMap2.y;
-	float depth = 0.0;
-
-	if (waterMap.a >= 2.0 || waterMap2.a >= 2.0)
-	{// Low horizontal normal, this is a waterfall...
-		pixelIsWaterfall = true;
-	}
-
-	// If we are underwater let's leave out complex computations
-	if (level >= ViewOrigin.y && !pixelIsWaterfall)
-	{
-#if defined(USE_UNDERWATER)
-		depth = length(position - cameraPos);
-		float depthN = depth * fadeSpeed;
-		float depth2 = level - cameraPos.y;
-		
-		vec3 waterCol = saturate(length(sunColor) / sunScale);
-		waterCol = waterCol * lerp(depthColour, bigDepthColour, saturate(depth2 / extinction));
-			
-		if (position.y <= level)
-		{
-			color2 = color2 - color2 * saturate(depth2 / extinction);
-			color = lerp(color2, waterCol, saturate(depthN / visibility));
-		}
-		else
-		{
-			vec3 eyeVec = position - cameraPos;	
-			vec3 eyeVecNorm = normalize(eyeVec);
-			float t = (level - cameraPos.y) / eyeVecNorm.y;
-			vec3 surfacePoint = cameraPos + eyeVecNorm * t;
-			
-			eyeVecNorm = normalize(eyeVecNorm);
-			depth = length(surfacePoint - cameraPos);
-			float depthN = depth * fadeSpeed;
-			
-			float depth2 = level - cameraPos.y;
-			
-			vec2 texCoord = 0;
-			texCoord = IN.texCoord.xy;
-			texCoord.x += sin(timer * 0.002f + 3.0f * abs(position.y)) * (refractionScale);
-			color2 = tex2D(backBufferMap, texCoord).rgb;
-			
-			color2 = color2 - color2 * saturate(depth2 / extinction);
-			color = lerp(color2, waterCol, saturate(depthN / visibility));
-			
-			vec3 myNormal = normalize(vec3(0.0f, 1.0f, 0.0f));
-		
-			texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
-			vec3x3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal0a = normalize(mul((2.0f * tex2D(normalMap, texCoord) - 1.0f).xyz, tangentFrame).xyz);
-	
-			texCoord = surfacePoint.xz * 0.8 + wind * timer * 0.00008;
-			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal1a = normalize(mul((2.0f * tex2D(normalMap, texCoord) - 1.0f).xyz, tangentFrame).xyz);
-			
-			texCoord = surfacePoint.xz * 0.4 + wind * timer * 0.00004;
-			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal2a = normalize(mul((2.0f * tex2D(normalMap, texCoord) - 1.0f).xyz, tangentFrame).xyz);
-			
-			texCoord = surfacePoint.xz * 0.1 + wind * timer * 0.00002;
-			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal3a = normalize(mul((2.0f * tex2D(normalMap, texCoord) - 1.0f).xyz, tangentFrame).xyz);
-			
-			vec3 normal = normalize(normal0a * normalModifier.x + normal1a * normalModifier.y +
-									  normal2a * normalModifier.z + normal3a * normalModifier.w);
-									  
-			vec3 lightDir = waterMap2.xyz - u_PrimaryLightOrigin.xzy;
-			lightDir.xz = -lightDir.xz;
-
-			vec3 mirrorEye = (2.0f * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
-			float dotSpec = saturate(dot(mirrorEye.xyz, -lightDir) * 0.5f + 0.5f);
-			vec3 fresnel = 0;
-			vec3 specular = (1.0f - fresnel) * saturate(-lightDir.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f))* sunColor;
-			specular += specular * 25 * saturate(shininess - 0.05f) * sunColor;
-		}
-		
-		gl_FragColor = vec4(color, 1.0);
-		return;
-#else //!defined(USE_UNDERWATER)
-		gl_FragColor = vec4(color2, 1.0);
-		return;
-#endif //defined(USE_UNDERWATER)
-	}
+	float timer = systemtimer * (waveHeight / 16.0);
 
 	if (pixelIsWaterfall)
 	{// How???
@@ -427,49 +362,174 @@ void main ( void )
 		return;
 	}
 
-	if (pixelIsInWaterRange || pixelIsWaterfall)
-	{
-		vec3 eyeVec = waterMap2.xyz/*position*/ - ViewOrigin;
-		float cameraDepth = ViewOrigin.y - waterMap2.y;//position.y;
-		
-		// Find intersection with water surface
-		vec3 eyeVecNorm = normalize(eyeVec);
-		float t = (level - ViewOrigin.y) / eyeVecNorm.y;
-		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
+	float waterLevel = waterMap.y;
+	float level = waterMap.y;
+	float depth = 0.0;
 
-		eyeVecNorm = normalize(eyeVecNorm);
+#if 0
+	if (pixelIsUnderWater)
+	{// If we are underwater let's leave out complex computations
+#if defined(USE_UNDERWATER)
+		depth = length(position - ViewOrigin.xyz);
+		float depthN = depth * fadeSpeed;
+		float depth2 = level - ViewOrigin.y;
+		
+		vec3 waterCol = clamp(length(sunColor) / vec3(sunScale), 0.0, 1.0);
+		waterCol = waterCol * mix(depthColour, bigDepthColour, clamp(depth2 / extinction, 0.0, 1.0));
+
+		//gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+		//return;
+			
+		if (position.y <= level)
+		{
+			color2 = color2 - color2 * clamp(depth2 / extinction, 0.0, 1.0);
+			color = mix(color2, waterCol, clamp(depthN / visibility, 0.0, 1.0));
+		}
+		else
+		{
+			vec3 eyeVec = position - ViewOrigin.xyz;	
+			vec3 eyeVecNorm = normalize(eyeVec);
+			float t = (level - ViewOrigin.xyz.y) / eyeVecNorm.y;
+			vec3 surfacePoint = ViewOrigin.xyz + eyeVecNorm * t;
+			
+			eyeVecNorm = normalize(eyeVecNorm);
+			depth = length(surfacePoint - ViewOrigin.xyz);
+			float depthN = depth * fadeSpeed;
+			
+			float depth2 = level - ViewOrigin.y;
+			
+			vec2 texCoord = vec2(0.0);
+			texCoord = var_TexCoords.xy;
+			texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale);
+			color2 = texture2D(u_DiffuseMap, texCoord).rgb;
+			
+			color2 = color2 - color2 * clamp(depth2 / extinction, 0.0, 1.0);
+			color = mix(color2, waterCol, clamp(depthN / visibility, 0.0, 1.0));
+			
+			vec3 myNormal = normalize(vec3(0.0, 1.0, 0.0));
+		
+			texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
+			mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
+			vec3 normal0a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
+	
+			texCoord = surfacePoint.xz * 0.8 + wind * timer * 0.00008;
+			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
+			vec3 normal1a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
+			
+			texCoord = surfacePoint.xz * 0.4 + wind * timer * 0.00004;
+			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
+			vec3 normal2a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
+			
+			texCoord = surfacePoint.xz * 0.1 + wind * timer * 0.00002;
+			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
+			vec3 normal3a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
+			
+			vec3 normal = normalize(normal0a * normalModifier.x + normal1a * normalModifier.y +
+									  normal2a * normalModifier.z + normal3a * normalModifier.w);
+									  
+			vec3 lightDir = waterMap2.xyz - u_PrimaryLightOrigin.xzy;
+			lightDir.xz = -lightDir.xz;
+
+			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
+			float dotSpec = clamp(dot(mirrorEye.xyz, -lightDir) * 0.5 + 0.5, 0.0, 1.0);
+			//vec3 fresnel = vec3(0.0);
+			float fresnel = fresnelTerm(normal, eyeVecNorm);
+			vec3 specular = (1.0 - fresnel) * clamp(-lightDir.y, 0.0, 1.0) * ((pow(dotSpec, 512.0)) * (shininess * 1.8 + 0.2))* sunColor;
+			specular += specular * 25 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor;
+
+			color = clamp(color + max(specular, sunColor), 0.0, 1.0);
+			//color = mix(refraction, bigDepthColour, fresnel);
+			//color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
+			color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
+		}
+		
+		gl_FragColor = vec4(color, 1.0);
+		return;
+#else //!defined(USE_UNDERWATER)
+		gl_FragColor = vec4(color2, 1.0);
+		return;
+#endif //defined(USE_UNDERWATER)
+	}
+#endif
+
+	if (pixelIsInWaterRange || pixelIsUnderWater)
+	{
+		// Find intersection with water surface
+		//vec3 eyeVecNorm = normalize(waterMap.xyz/*position*/ - ViewOrigin);
+		vec3 eyeVecNorm = normalize(ViewOrigin - waterMap.xyz/*position*/);
+		float t = ((level - ViewOrigin.y) / eyeVecNorm.y);
+		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
+		//vec3 surfacePoint = waterMap.xyz;
 
 
 		vec2 texCoord;
+		//level = 0.0;
 
 #ifdef REAL_WAVES
 		for(int i = 0; i < 10; i++)
 #endif //REAL_WAVES
 		{
-			texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * scale + timer * 0.000005 * wind;
+			texCoord = ((surfacePoint.xz + eyeVecNorm.xz * 0.1) * scale + timer * 0.000005 * wind) * waveDensity;
 			
 			float bias = texture2D(u_WaterHeightMap, texCoord).r;
 	
 			bias *= 0.1;
-			level += bias * maxAmplitude;
+			level += bias * waveHeight;
 
-			t = (level - ViewOrigin.y) / eyeVecNorm.y;
+			t = ((level - ViewOrigin.y) / eyeVecNorm.y);
 			surfacePoint = ViewOrigin + eyeVecNorm * t;
+			//surfacePoint = waterMap.xyz + vec3(0.0, level, 0.0);
+			//surfacePoint = waterMap.xyz + (eyeVecNorm * level);
 		}
+
+		//level = surfacePoint.y;
 
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
+		float depthN = depth * fadeSpeed;
 
-		eyeVecNorm = normalize(ViewOrigin - waterMap2.xyz/*surfacePoint*/);
+		if (pixelIsUnderWater)
+		{
+			//depth = -depth;
+			//depth2 = -depth2;
+			//depthN = depth * fadeSpeed;
+
+			depth = length(surfacePoint - position);
+			depth2 = position.y - surfacePoint.y;
+			depthN = depth * fadeSpeed;
+
+			//depth = length(position - ViewOrigin.xyz);
+			//depthN = depth * fadeSpeed;
+			//depth2 = level - ViewOrigin.y;
+
+			if (position.y <= level)
+			{// This pixel is below the water line... Fast path...
+				vec3 waterCol = clamp(length(sunColor) / vec3(sunScale), 0.0, 1.0);
+				waterCol = waterCol * mix(depthColour, bigDepthColour, clamp(depth2 / extinction, 0.0, 1.0));
+
+				color2 = color2 - color2 * clamp(depth2 / extinction, 0.0, 1.0);
+				color = mix(color2, waterCol, clamp(depthN / visibility, 0.0, 1.0));
+
+				gl_FragColor = vec4(color, 1.0);
+				return;
+			}
+		}
+		else if (position.y > level)
+		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
+			gl_FragColor = vec4(color2, 1.0);
+			return;
+		}
+
+		eyeVecNorm = normalize(ViewOrigin - /*waterMap2.xyz*/surfacePoint);
 
 		float normal1 = texture2D(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
 		float normal2 = texture2D(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
 		float normal3 = texture2D(u_WaterHeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0))).r;
 		float normal4 = texture2D(u_WaterHeightMap, (texCoord + (vec2(0.0, 1.0) / 256.0))).r;
 		
-		vec3 myNormal = normalize(vec3((normal1 - normal2) * maxAmplitude,
+		vec3 myNormal = normalize(vec3((normal1 - normal2) * waveHeight,
 										   normalScale,
-										   (normal3 - normal4) * maxAmplitude));
+										   (normal3 - normal4) * waveHeight));
 
 		texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
 		mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
@@ -487,8 +547,8 @@ void main ( void )
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
 		vec3 normal3a = normalize(tangentFrame * (texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0));
 		
-		vec3 normal = normalize(normal0a * normalModifier.x + normal1a * normalModifier.y +
-								  normal2a * normalModifier.z + normal3a * normalModifier.w);
+		vec3 normal = normalize((normal0a * normalModifier.x + normal1a * normalModifier.y +
+								  normal2a * normalModifier.z + normal3a * normalModifier.w));
 
 		texCoord = var_TexCoords.xy;
 
@@ -507,14 +567,13 @@ void main ( void )
 		}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
-		if (position2.y > level)
+		if (!pixelIsUnderWater && position2.y > level)
 		{
 			refraction = color2;
 		}
 
 		float fresnel = fresnelTerm(normal, eyeVecNorm);
 		
-		float depthN = depth * fadeSpeed;
 		float waterCol = clamp(length(sunColor) / sunScale, 0.0, 1.0);
 		
 		vec3 refraction1 = mix(refraction, depthColour * vec3(waterCol), clamp(vec3(depthN) / vec3(visibility), 0.0, 1.0));
@@ -524,6 +583,7 @@ void main ( void )
 
 		texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00001 * wind + sin(timer * 0.001 + position.x) * 0.005;
 		vec2 texCoord2 = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00002 * wind + sin(timer * 0.001 + position.z) * 0.005;
+		
 		
 		if (depth2 < foamExistence.x)
 		{
@@ -535,12 +595,13 @@ void main ( void )
 						 vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
 		}
 		
-		if (maxAmplitude - foamExistence.z > 0.0001)
+		
+		if (waveHeight - foamExistence.z > 0.0001)
 		{
 			foam += (texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5 * 
-				clamp((level - (waterLevel + foamExistence.z)) / (maxAmplitude - foamExistence.z), 0.0, 1.0);
+				clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
 		}
-
+		
 
 		vec3 specular = vec3(0.0);
 
@@ -560,7 +621,7 @@ void main ( void )
 		}
 
 #if defined(USE_REFLECTION)
-		if (u_Local1.g >= 2.0)
+		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
 		{
 			color = mix(refraction, bigDepthColour, fresnel);
 			color = AddReflection(var_TexCoords, position, vec3(waterMap3.x, level, waterMap3.z), color.rgb);
@@ -579,11 +640,11 @@ void main ( void )
 
 		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
 
-		if (position.y > level && waterMap.a <= 0.0)
+		/*if (position.y > level && waterMap.a <= 0.0)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			color = color2;
 		}
-		else
+		else*/
 		{
 			float depthMap = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);//length(u_ViewOrigin.xyz - position.xzy);
 			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xyz/*position.xzy*/, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );

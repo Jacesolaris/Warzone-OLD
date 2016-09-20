@@ -30,7 +30,7 @@ void main()
 
 	if (u_Local6.a > 0.0)
 	{// Shadow pass... Skip the rest...
-		gl_FragColor = texture2D(u_DiffuseMap, texCoords);
+		gl_FragColor = texture(u_DiffuseMap, texCoords);
 		return;
 	}
 }

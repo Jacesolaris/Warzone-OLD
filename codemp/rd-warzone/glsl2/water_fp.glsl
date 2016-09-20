@@ -289,7 +289,7 @@ vec4 doWater( in vec2 fragCoord )
 void main()
 {
 #if 1
-	gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+	gl_FragColor = vec4(0.0);
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(0.0);
 	out_Position = vec4(var_position, 13.0);

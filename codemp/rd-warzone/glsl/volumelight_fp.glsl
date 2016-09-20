@@ -18,6 +18,10 @@ flat varying int	var_SunVisible;
 
 //#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // Enable when I fix it...
 
+//#define NO_FALLOFF
+#define NO_SUN_FALLOFF
+//#define EXPERIMENTAL_SHADOWS
+
 #define VOLUMETRIC_THRESHOLD 0.15
 
 vec2 pixel = 1.0 / u_Dimensions;
@@ -67,7 +71,11 @@ void main ( void )
 
 	vec2		inRangePositions[16];
 	vec3		lightColors[16];
+#ifndef NO_FALLOFF
 	float		fallOffRanges[16];
+#else
+	int			isSun = -1;
+#endif
 	float		lightDepths[16];
 	int			numInRange = 0;
 
@@ -76,20 +84,31 @@ void main ( void )
 		float dist = length(var_TexCoords - u_lightPositions[i]);
 		//float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_lightPositions[i]).r);
 		float depth = 1.0 - u_lightDistances[i];
+
+#ifndef NO_FALLOFF
 		float fall = clamp((fBloomrayFalloffRange * depth) - dist, 0.0, 1.0) * depth;
 
 		if (i == SUN_ID) 
 		{
 			if (var_SunVisible <= 0) continue;
 
+#ifdef NO_SUN_FALLOFF
+			fall = 1.0; // none
+#else
 			fall *= 4.0;
+#endif
 		}
+#endif
 
+#ifndef NO_FALLOFF
 		if (fall > 0.0)
 		{
+#endif
 			inRangePositions[numInRange] = u_lightPositions[i];
 			lightDepths[numInRange] = depth;
+#ifndef NO_FALLOFF
 			fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
+#endif
 			lightColors[numInRange] = u_lightColors[i];
 
 			if (lightColors[numInRange].r == 0.0 && lightColors[numInRange].g == 0.0 && lightColors[numInRange].b == 0.0)
@@ -169,10 +188,19 @@ void main ( void )
 
 			if (length(lightColors[numInRange]) > VOLUMETRIC_THRESHOLD)
 			{// Only use it if it is not a dark pixel...
+#ifdef NO_FALLOFF
+				if (i == SUN_ID) 
+				{
+					isSun = numInRange;
+				}
+#endif
+
 				numInRange++;
 			}
 		}
+#ifndef NO_FALLOFF
 	}
+#endif
 
 	if (numInRange <= 0)
 	{// Nothing in range...
@@ -226,14 +254,48 @@ void main ( void )
 				break;
 		}
 
+#ifdef NO_FALLOFF
+		if (i == isSun)
+		{
+			totalColor += clamp((lens * lightDepth), 0.0, 1.0);
+		}
+		else
+		{
+			totalColor += clamp((lens * lightDepth) * 0.03/*0.03*/, 0.0, 1.0);
+		}
+#else
 		totalColor += clamp((lens * lightDepth) * fallOffRanges[i], 0.0, 1.0);
+#endif
 	}
+
+#ifdef DUAL_PASS
+#ifdef NO_FALLOFF
+#ifdef EXPERIMENTAL_SHADOWS
+	if (isSun != -1 && max(max(totalColor.r, totalColor.g), totalColor.b) <= u_Local0.r)
+	{
+		totalColor.a = 0.0;
+	}
+	else
+#endif
+	{
+		totalColor.a = 1.0;
+	}
+#else
+	totalColor.a = 1.0;
+#endif
+
+	gl_FragColor = totalColor;
+#else //!DUAL_PASS
+
+#ifdef EXPERIMENTAL_SHADOWS
+	if (isSun != -1 && max(max(totalColor.r, totalColor.g), totalColor.b) <= u_Local0.r)
+	{
+		diffuseColor.rgb *= vec3(0.2);
+	}
+#endif
 
 	totalColor.a = 0.0;
 
-#ifdef DUAL_PASS
-	gl_FragColor = totalColor;
-#else //!DUAL_PASS
 	gl_FragColor = diffuseColor + totalColor;
 #endif //DUAL_PASS
 }
