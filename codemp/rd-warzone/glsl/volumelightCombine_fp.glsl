@@ -14,7 +14,7 @@ varying vec2		var_ScreenTex;
 // Shall we pixelize randomly the output? -- Sucks!
 //#define RANDOMIZE_PIXELS
 
-#define APPLY_CONTRAST
+//#define APPLY_CONTRAST
 //#define APPLY_CONTRAST2
 //#define EXPERIMENTAL_SHADOWS
 

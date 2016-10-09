@@ -29,7 +29,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                   Warzone Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
-#define __USE_QGL_FINISH__
+//#define __USE_QGL_FINISH__
+#define __USE_QGL_FLUSH__
 #define __USE_WATERMAP__
 //#define __RENDERER_FOLIAGE__
 #define ___SHADER_GENERATOR___

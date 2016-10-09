@@ -19,8 +19,9 @@ flat varying int	var_SunVisible;
 //#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // Enable when I fix it...
 
 //#define NO_FALLOFF
-#define NO_SUN_FALLOFF
+//#define NO_SUN_FALLOFF
 //#define EXPERIMENTAL_SHADOWS
+//#define ADJUST_DEPTH_PIXELS // Gives more shadow effect to the lighting, but also can make it too intense...
 
 #define VOLUMETRIC_THRESHOLD 0.15
 
@@ -234,9 +235,13 @@ void main ( void )
 			texCoord -= deltaTexCoord;
 
 			float linDepth = linearize(texture2D(u_ScreenDepthMap, texCoord.xy).r);
+
+#ifdef ADJUST_DEPTH_PIXELS
 			//if (linDepth < lightDepths[i]) linDepth = 0.0;
 			//else linDepth = 1.0;
 			if (linDepth >= lightDepths[i]) linDepth = 1.0;
+#endif //ADJUST_DEPTH_PIXELS
+
 			float sample2 = linDepth * illuminationDecay * fBloomrayWeight;
 
 			if (lightColors[i].r < 0.0 && lightColors[i].g < 0.0 && lightColors[i].b < 0.0)

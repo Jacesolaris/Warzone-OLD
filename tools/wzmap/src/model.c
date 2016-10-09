@@ -776,6 +776,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 							{
 								float s = top - bottom;
 								float newtop = bottom + (s / 2.0);
+								//float newtop = bottom + (s / 4.0);
 
 								//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
 

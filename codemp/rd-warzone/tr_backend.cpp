@@ -763,6 +763,14 @@ void RB_BeginDrawingView (void) {
 	if ( r_finish->integer == 0 ) {
 		glState.finishCalled = qtrue;
 	}
+#else if __USE_QGL_FLUSH__
+	if ( r_finish->integer == 1 && !glState.finishCalled ) {
+		qglFlush ();
+		glState.finishCalled = qtrue;
+	}
+	if ( r_finish->integer == 0 ) {
+		glState.finishCalled = qtrue;
+	}
 #endif //__USE_QGL_FINISH__
 
 	// we will need to change the projection matrix before drawing
@@ -1286,6 +1294,8 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	// we definately want to sync every frame for the cinematics
 #ifdef __USE_QGL_FINISH__
 	qglFinish();
+#else if __USE_QGL_FLUSH__
+	qglFlush();
 #endif //__USE_QGL_FINISH__
 
 	start = 0;
@@ -2140,6 +2150,8 @@ void RB_ShowImages( void ) {
 
 #ifdef __USE_QGL_FINISH__
 	qglFinish();
+#else if __USE_QGL_FLUSH__
+	qglFlush();
 #endif //__USE_QGL_FINISH__
 
 	start = ri->Milliseconds();
@@ -2174,6 +2186,8 @@ void RB_ShowImages( void ) {
 
 #ifdef __USE_QGL_FINISH__
 	qglFinish();
+#else if __USE_QGL_FLUSH__
+	qglFlush();
 #endif //__USE_QGL_FINISH__
 
 	end = ri->Milliseconds();
@@ -2309,6 +2323,10 @@ const void	*RB_SwapBuffers( const void *data ) {
 #ifdef __USE_QGL_FINISH__
 	if ( !glState.finishCalled ) {
 		qglFinish();
+	}
+#else if __USE_QGL_FLUSH__
+	if ( !glState.finishCalled ) {
+		qglFlush();
 	}
 #endif //__USE_QGL_FINISH__
 

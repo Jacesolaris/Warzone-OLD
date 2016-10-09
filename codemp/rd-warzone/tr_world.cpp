@@ -37,7 +37,10 @@ qboolean R_CULL_InFOV( vec3_t spot, vec3_t from )
 	int hFOV = 100;//backEnd.refdef.fov_x + 5.0;//100;
 	int vFOV = 140;//backEnd.refdef.fov_y + 5.0;//100;
 	
-	TR_AxisToAngles(backEnd.refdef.viewaxis/*tr.refdef.viewaxis*/, fromAngles);
+	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
+		TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+	else
+		TR_AxisToAngles(backEnd.refdef.viewaxis/*tr.refdef.viewaxis*/, fromAngles);
 
 	VectorSubtract ( spot, from, deltaVector );
 	vectoangles ( deltaVector, angles );
