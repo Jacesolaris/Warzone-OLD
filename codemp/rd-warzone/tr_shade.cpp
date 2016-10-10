@@ -2846,6 +2846,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	}
 }
 
+void RB_ExternalIterateStagesGeneric( shaderCommands_t *input )
+{
+	RB_IterateStagesGeneric( input );
+}
+
 
 static void RB_RenderShadowmap( shaderCommands_t *input )
 {

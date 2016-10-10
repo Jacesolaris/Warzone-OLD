@@ -14,7 +14,7 @@ void main()
 	vec4 color = texture2D(u_DiffuseMap, var_DiffuseTex);
 	color = texture2D(u_DiffuseMap, var_DiffuseTex) * var_Color;
 	
-	if (color.a <= 0.0) discard;
+	//if (color.a <= 0.0) discard;
 
 	gl_FragColor = color;
 

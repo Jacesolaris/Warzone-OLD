@@ -2308,6 +2308,8 @@ typedef struct trGlobals_s {
 
 	int						frameSceneNum;	// zeroed at RE_BeginFrame
 
+	qboolean				changedFrustum;
+
 	qboolean				worldMapLoaded;
 	qboolean				worldDeluxeMapping;
 	vec2_t                  autoExposureMinMax;

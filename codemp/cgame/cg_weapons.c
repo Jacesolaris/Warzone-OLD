@@ -268,6 +268,7 @@ angle)
 ===============
 */
 static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
+#if 0
 //	trace_t  trace;
 	refEntity_t  beam;
 //	vec3_t   forward;
@@ -371,6 +372,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 		AddRefEntityToScene( &beam );
 	}
 */
+#endif
 }
 
 
@@ -406,6 +408,25 @@ char *barrelTags[] = {
 	"tag_barrel4"
 };
 
+void CG_AddDebugMuzzleLine( vec3_t from, vec3_t to )
+{
+	refEntity_t		re;
+
+	memset( &re, 0, sizeof( re ) );
+
+	re.reType = RT_LINE;
+	re.radius = 1;
+
+	re.shaderRGBA[0] = re.shaderRGBA[1] = re.shaderRGBA[2] = re.shaderRGBA[3] = 0xff;
+
+	re.customShader = cgs.media.whiteShader;
+
+	VectorCopy(from, re.origin);
+	VectorCopy(to, re.oldorigin);
+
+	AddRefEntityToScene( &re );
+}
+
 /*
 =============
 CG_AddPlayerWeapon
@@ -430,7 +451,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	addspriteArgStruct_t	fxSArgs;
 	vec3_t					flashorigin, flashdir;
 
-	weaponNum = cent->currentState.weapon;
+	weaponNum = (weapon_t)cent->currentState.weapon;
 
 	if (weaponNum == WP_EMPLACED_GUN)
 	{
@@ -846,7 +867,6 @@ Ghoul2 Insert End
 		|| cent->currentState.number != cg.predictedPlayerState.clientNum)
 		//[/TrueView] 
 	{	// Make sure we don't do the thirdperson model effects for the local player if we're in first person
-		vec3_t flashorigin, flashdir;
 		refEntity_t	flash;
 
 		memset (&flash, 0, sizeof(flash));
@@ -1117,6 +1137,19 @@ Ghoul2 Insert End
 			}
 		}
 	}
+
+	if (cg_debugMuzzle.integer)
+	{
+		vec3_t start, end, fdir;
+		VectorCopy(flashorigin, start);
+		VectorCopy(flashdir, fdir);
+		VectorMA( start, 131072, fdir, end );
+		CG_AddDebugMuzzleLine( start, end );
+	}
+
+	// UQ1: Record position to be used later in code instead of a stupid hard coded array...
+	VectorCopy(flashorigin, cent->muzzlePoint);
+	VectorCopy(flashdir, cent->muzzleDir);
 }
 
 /*
@@ -2502,13 +2535,16 @@ CG_CalcMuzzlePoint
 ======================
 */
 qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
+#if 0 // UQ: Since we already stored it when drawing it...
 	vec3_t		forward, right;
 	vec3_t		gunpoint;
-	centity_t	*cent;
 	int			anim;
+#endif
+	centity_t	*cent;
 
 	if ( entityNum == cg.snap->ps.clientNum )
 	{ //I'm not exactly sure why we'd be rendering someone else's crosshair, but hey.
+#if 0 // UQ: Since we already stored it when drawing it...
 		int weapontype = cg.snap->ps.weapon;
 		vec3_t weaponMuzzle;
 		centity_t *pEnt = &cg_entities[cg.predictedPlayerState.clientNum];
@@ -2578,6 +2614,10 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 		{
 			muzzle[2] += weaponMuzzle[2] * (pEnt->currentState.iModelScale/100.0f);
 		}
+#else
+		centity_t *pEnt = &cg_entities[cg.predictedPlayerState.clientNum];
+		VectorCopy(pEnt->muzzlePoint, muzzle);
+#endif
 
 		return qtrue;
 	}
@@ -2588,6 +2628,7 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 		return qfalse;
 	}
 
+#if 0 // UQ: Since we already stored it when drawing it...
 	VectorCopy( cent->currentState.pos.trBase, muzzle );
 
 	AngleVectors( cent->currentState.apos.trBase, forward, NULL, NULL );
@@ -2599,6 +2640,9 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 	}
 
 	VectorMA( muzzle, 14, forward, muzzle );
+#else
+	VectorCopy(cent->muzzlePoint, muzzle);
+#endif
 
 	return qtrue;
 

@@ -863,61 +863,82 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		if ( node->maxs[2] > tr.viewParms.visBounds[1][2] ) {
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
-
-		if (r_occlusion->integer)
+		
+		if (r_occlusion->integer)// && (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 		{// Occlusion culling...
 			int scene = tr.viewParms.isPortal ? 1 : 0;
 			tr.world->visibleLeafs[scene][tr.world->numVisibleLeafs[scene]++] = node;
 			node->occluded[scene] = qfalse;
 		}
 
-		// add merged and unmerged surfaces
-		if (tr.world->viewSurfaces && !r_nocurves->integer)
-			view = tr.world->viewSurfaces + node->firstmarksurface;
-		else
-			view = tr.world->marksurfaces + node->firstmarksurface;
+		if (r_occlusion->integer)
+		{// add the individual surfaces
+#if 0
+			//int *mark = &node->firstmarksurface;
 
-		c = node->nummarksurfaces;
-		while (c--) {
-			// just mark it as visible, so we don't jump out of the cache derefencing the surface
-			surf = *view;
-			if (surf < 0)
-			{
-				if (tr.world->mergedSurfacesViewCount[-surf - 1] != tr.viewCount)
-				{
-					tr.world->mergedSurfacesViewCount[-surf - 1]  = tr.viewCount;
-					//tr.world->mergedSurfacesDlightBits[-surf - 1] = dlightBits;
-#ifdef __PSHADOWS__
-					tr.world->mergedSurfacesPshadowBits[-surf - 1] = pshadowBits;
-#endif
-				}
-				else
-				{
-					//tr.world->mergedSurfacesDlightBits[-surf - 1] |= dlightBits;
-#ifdef __PSHADOWS__
-					tr.world->mergedSurfacesPshadowBits[-surf - 1] |= pshadowBits;
-#endif
-				}
+			c = node->nummarksurfaces;
+			while (c--) {
+				int *mark = (tr.world->marksurfaces + node->firstmarksurface + c);
+				msurface_t *surf = tr.world->surfaces + *mark;
+
+				// the surface may have already been added if it
+				// spans multiple leafs
+				//surf = *mark;
+				R_AddWorldSurface( surf, 0, 0, qfalse );
+				mark++;
 			}
+#endif
+		}
+		else
+		{
+			// add merged and unmerged surfaces
+			if (tr.world->viewSurfaces && !r_nocurves->integer)
+				view = tr.world->viewSurfaces + node->firstmarksurface;
 			else
-			{
-				if (tr.world->surfacesViewCount[surf] != tr.viewCount)
+				view = tr.world->marksurfaces + node->firstmarksurface;
+
+			c = node->nummarksurfaces;
+			while (c--) {
+				// just mark it as visible, so we don't jump out of the cache derefencing the surface
+				surf = *view;
+				if (surf < 0)
 				{
-					tr.world->surfacesViewCount[surf] = tr.viewCount;
-					//tr.world->surfacesDlightBits[surf] = dlightBits;
+					if (tr.world->mergedSurfacesViewCount[-surf - 1] != tr.viewCount)
+					{
+						tr.world->mergedSurfacesViewCount[-surf - 1]  = tr.viewCount;
+						//tr.world->mergedSurfacesDlightBits[-surf - 1] = dlightBits;
 #ifdef __PSHADOWS__
-					tr.world->surfacesPshadowBits[surf] = pshadowBits;
+						tr.world->mergedSurfacesPshadowBits[-surf - 1] = pshadowBits;
 #endif
+					}
+					else
+					{
+						//tr.world->mergedSurfacesDlightBits[-surf - 1] |= dlightBits;
+#ifdef __PSHADOWS__
+						tr.world->mergedSurfacesPshadowBits[-surf - 1] |= pshadowBits;
+#endif
+					}
 				}
 				else
 				{
-					//tr.world->surfacesDlightBits[surf] |= dlightBits;
+					if (tr.world->surfacesViewCount[surf] != tr.viewCount)
+					{
+						tr.world->surfacesViewCount[surf] = tr.viewCount;
+						//tr.world->surfacesDlightBits[surf] = dlightBits;
 #ifdef __PSHADOWS__
-					tr.world->surfacesPshadowBits[surf] |= pshadowBits;
+						tr.world->surfacesPshadowBits[surf] = pshadowBits;
 #endif
+					}
+					else
+					{
+						//tr.world->surfacesDlightBits[surf] |= dlightBits;
+#ifdef __PSHADOWS__
+						tr.world->surfacesPshadowBits[surf] |= pshadowBits;
+#endif
+					}
 				}
+				view++;
 			}
-			view++;
 		}
 	}
 
@@ -1506,6 +1527,9 @@ R_AddWorldSurfaces
 =============
 */
 
+vec3_t PREVIOUS_OCCLUSION_ORG = { -999999 };
+vec3_t PREVIOUS_OCCLUSION_ANGLES = { -999999 };
+
 void R_AddWorldSurfaces (void) {
 	int planeBits;
 #ifdef __PSHADOWS__
@@ -1553,6 +1577,7 @@ void R_AddWorldSurfaces (void) {
 		else
 		{
 			changeFrustum = 0;
+
 			if (tr.visIndex != tr.previousVisIndex[scene] || tr.refdef.areamaskModified)
 			{
 				tr.previousVisIndex[scene] = tr.visIndex;
@@ -1564,8 +1589,31 @@ void R_AddWorldSurfaces (void) {
 			//{
 			//changeFrustum = 1;
 			//}
+
+#if 0
+			if (!changeFrustum)
+			{
+				vec3_t ang;
+				AxisToAngles(tr.refdef.viewaxis, ang);
+				if (Distance(tr.refdef.vieworg, PREVIOUS_OCCLUSION_ORG) > 64)
+				{
+					changeFrustum = 1;
+					VectorCopy(tr.refdef.vieworg, PREVIOUS_OCCLUSION_ORG);
+					VectorCopy(ang, PREVIOUS_OCCLUSION_ANGLES);
+					ri->Printf(PRINT_ALL, "Frust changed because of org.\n");
+				}
+				else if (Distance(ang, PREVIOUS_OCCLUSION_ANGLES) > 8)
+				{
+					changeFrustum = 1;
+					VectorCopy(tr.refdef.vieworg, PREVIOUS_OCCLUSION_ORG);
+					VectorCopy(ang, PREVIOUS_OCCLUSION_ANGLES);
+					ri->Printf(PRINT_ALL, "Frust changed because of ang.\n");
+				}
+			}
+#endif
 		}
 
+#if 1
 		if (!changeFrustum)
 		{
 			//clip new view frustum against old one
@@ -1628,6 +1676,7 @@ void R_AddWorldSurfaces (void) {
 					break;
 			}
 		}
+#endif
 	}
 
 	// perform frustum culling and flag all the potentially visible surfaces
@@ -1694,16 +1743,19 @@ void R_AddWorldSurfaces (void) {
 			//tr.framesSincePreviousFrustum = 0;
 			tr.updateVisibleSurfaces[scene] = qtrue;
 			tr.updateOcclusion[scene] = qtrue;
+			tr.changedFrustum = qtrue;
 		}
 		else
 		{
 			VectorCopy( tr.previousVisBounds[scene][0], tr.viewParms.visBounds[0]);
 			VectorCopy( tr.previousVisBounds[scene][1], tr.viewParms.visBounds[1]);
+			tr.changedFrustum = qfalse;
 		}
 
 		if (!r_cacheVisibleSurfaces->integer || tr.updateVisibleSurfaces[scene])
 		{
 			int i;
+			int occludedCount = 0;
 
 			tr.world->numVisibleSurfaces[scene] = 0;
 
@@ -1713,7 +1765,10 @@ void R_AddWorldSurfaces (void) {
 				int c;
 
 				if (leaf->occluded[scene])
+				{
+					occludedCount++;
 					continue;
+				}
 
 				// add the individual surfaces
 				c = leaf->nummarksurfaces;
@@ -1727,6 +1782,9 @@ void R_AddWorldSurfaces (void) {
 			}
 
 			tr.updateVisibleSurfaces[scene] = qfalse;
+			
+			if (occludedCount > 0)
+				ri->Printf(PRINT_ALL, "time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
 		}
 		//ri.Printf(PRINT_ALL, "Change Frustum: %d\n", changeFrustum);
 

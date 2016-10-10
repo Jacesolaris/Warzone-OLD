@@ -4399,6 +4399,56 @@ qboolean LogAccuracyHit(gentity_t *target, gentity_t *attacker) {
 
 /*
 ===============
+CalcMuzzlePointOrigin
+
+set muzzle location relative to pivoting eye
+===============
+*/
+qboolean G_GetWeaponMuzzleBoltPoint(gentity_t *ent, vec3_t to, int hand)
+{// UQ1: Added - lookup origin of the *flash for a real muzzle point...
+	mdxaBone_t	boltMatrix;
+	vec3_t origin, angles;
+	vec3_t lerpOrigin, lerpAngles;
+
+	// UQ: model index 1 is right hand.
+	// Untested - left hand weapon (since we currently don't have them)
+	//          - modelindex 2 (1+hand) would be second hand? More then 2 hands possible on future model???
+	int modelIndex = Q_clampi(1, 1+hand, 2);
+	
+	if (!ent 
+		|| !ent->ghoul2 
+		|| !trap->G2API_HaveWeGhoul2Models(ent->ghoul2) 
+		|| !trap->G2API_HasGhoul2ModelOnIndex(&(ent->ghoul2), modelIndex))
+	{
+		// Fallback to the old method for now... I don't think it is needed any more though...
+		// Look out for errors in console, if we don't see any for a while, then we can remove WP_MuzzlePoints[] for good!
+		//trap->Print("G_GetWeaponMuzzleBoltPoint: Failed to find *flash bone for entity %i. %s\n", ent->s.number, ent->NPC ? "is NPC." : "not NPC!");
+		return qfalse;
+	}
+
+	//VectorSet(angles, 0, ent->client->ps.viewangles[YAW], 0);
+	//VectorCopy(ent->client->ps.origin, origin);
+	
+	// Try to predict next frame position (as current frame results in the old JKA shots behind you issues)
+	VectorMA( ent->s.pos.trBase, 0.2/*g_debugValue.value*/, ent->s.pos.trDelta, lerpOrigin );
+	VectorMA( ent->s.apos.trBase, 0.2/*g_debugValue.value*/, ent->s.apos.trDelta, lerpAngles );
+
+	VectorSet(angles, 0, lerpAngles[YAW], 0);
+	VectorCopy(lerpOrigin, origin);
+	
+	//trap->G2API_GetBoltMatrix(ent->ghoul2, modelIndex, 0, &boltMatrix, angles, origin, level.time, NULL, /*vec3_origin*/ent->modelScale);
+	trap->G2API_GetBoltMatrix_NoRecNoRot(ent->ghoul2, modelIndex, 0, &boltMatrix, angles, origin, level.time, NULL, /*vec3_origin*/ent->modelScale);
+	//trap->G2API_GetBoltMatrix_NoReconstruct(ent->ghoul2, modelIndex, 0, &boltMatrix, angles, origin, level.time, NULL, /*vec3_origin*/ent->modelScale);
+
+	BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, to);
+
+	//trap->Print("Found *flash bone for entity %i. %s\n", ent->s.number, ent->NPC ? "is NPC." : "not NPC!");
+
+	return qtrue;
+}
+
+/*
+===============
 CalcMuzzlePoint
 
 set muzzle location relative to pivoting eye
@@ -4413,13 +4463,21 @@ void CalcMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, ve
 	int weapontype;
 	vec3_t muzzleOffPoint;
 
+	if (G_GetWeaponMuzzleBoltPoint(ent, muzzlePoint, 0))
+	{
+		//VectorMA(muzzlePoint, 14, forward, muzzlePoint);
+		SnapVector(muzzlePoint);
+		return;
+	}
+
 	weapontype = ent->s.weapon;
 	VectorCopy(ent->s.pos.trBase, muzzlePoint);
 
 	if (ent->client->ps.scopeType > SCOPE_NONE)
 		VectorSet(muzzleOffPoint, 0, 0, 0);
 	else
-		VectorCopy(WP_MuzzlePoint[weapontype], muzzleOffPoint);
+		//VectorCopy(WP_MuzzlePoint[weapontype], muzzleOffPoint);
+		VectorSet(muzzleOffPoint, 30, 6, -14); // Using old rocket launcher muzzle for fallback... Only needed very very rarely on NPC spawns...
 
 
 	if (weapontype > WP_NONE && weapontype < WP_NUM_WEAPONS)
@@ -4457,6 +4515,13 @@ void CalcFirstMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t u
 	int weapontype;
 	vec3_t muzzleOffPoint;
 
+	if (G_GetWeaponMuzzleBoltPoint(ent, muzzlePoint, 0))
+	{
+		//VectorMA(muzzlePoint, 14, forward, muzzlePoint);
+		SnapVector(muzzlePoint);
+		return;
+	}
+
 	weapontype = ent->s.weapon;
 	VectorCopy(ent->s.pos.trBase, muzzlePoint);
 
@@ -4475,6 +4540,13 @@ void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t 
 	int weapontype;
 	vec3_t muzzleOffPoint;
 
+	if (G_GetWeaponMuzzleBoltPoint(ent, muzzlePoint, 1))
+	{
+		//VectorMA(muzzlePoint, 14, forward, muzzlePoint);
+		SnapVector(muzzlePoint);
+		return;
+	}
+
 	weapontype = ent->s.weapon;
 	VectorCopy(ent->s.pos.trBase, muzzlePoint);
 
@@ -4488,17 +4560,18 @@ void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t 
 	SnapVector(muzzlePoint);
 }
 
-/*
-===============
-CalcMuzzlePointOrigin
-
-set muzzle location relative to pivoting eye
-===============
-*/
 void CalcMuzzlePointOrigin(gentity_t *ent, vec3_t origin, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint) {
+	if (G_GetWeaponMuzzleBoltPoint(ent, muzzlePoint, 0))
+	{
+		//VectorMA(muzzlePoint, 14, forward, muzzlePoint);
+		SnapVector(muzzlePoint);
+		return;
+	}
+
 	VectorCopy(ent->s.pos.trBase, muzzlePoint);
 	muzzlePoint[2] += ent->client->ps.viewheight;
 	VectorMA(muzzlePoint, 14, forward, muzzlePoint);
+
 	// snap to integer coordinates for more efficient network bandwidth usage
 	SnapVector(muzzlePoint);
 }

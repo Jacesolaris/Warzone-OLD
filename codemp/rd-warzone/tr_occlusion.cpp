@@ -3,7 +3,7 @@
 extern void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation);
 
-#define MAX_OCCLUSION_QUERIES 1048576//16384
+#define MAX_OCCLUSION_QUERIES 8192//1048576//16384
 
 static GLuint occlusionCache[MAX_OCCLUSION_QUERIES];
 static mnode_t *occlusionQueryTarget[MAX_OCCLUSION_QUERIES];
@@ -29,6 +29,10 @@ void OQ_ShutdownOcclusionQuery()
 	lastOcclusionQueryCount = 0;
 }
 
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+extern void RB_UpdateMatrixes ( void );
+extern void RB_ExternalIterateStagesGeneric( shaderCommands_t *input );
+
 void RB_LeafOcclusion()
 {
 	int i;
@@ -45,7 +49,7 @@ void RB_LeafOcclusion()
 		{
 			occlusionQueryFinished[i] = qtrue;
 			qglGetQueryObjectuiv(occlusionCache[i], GL_QUERY_RESULT, &result);
-			//ri.Printf(PRINT_ALL, "leaf %d count %d query %d has %d samples!\n", occlusionQueryTarget[i], occlusionQueryCount[i], occlusionCache[i], result);
+			//ri->Printf(PRINT_ALL, "leaf %d count %d query %d has %d samples!\n", occlusionQueryTarget[i], occlusionQueryCount[i], occlusionCache[i], result);
 			if (!result && occlusionQueryCount[i] == lastOcclusionQueryCount)
 			{
 				occlusionQueryTarget[i]->occluded[0] = qtrue;
@@ -71,6 +75,15 @@ void RB_LeafOcclusion()
 	// Don't draw into color or depth
 	GL_State(0);
 	qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	
+	/* Testing */
+	//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	//qglDepthMask(GL_FALSE);
+	//GL_State( GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS );
+	//qglDisable(GL_BLEND);
+	//qglDepthFunc(GL_LESS);
+	//qglDepthMask(GL_TRUE);
+	/* Testing */
 
 #if 0
 	ri.Printf(PRINT_ALL, "modelview:\n");
@@ -82,9 +95,10 @@ void RB_LeafOcclusion()
 	if (r_occlusion->integer)
 	{
 		vec4_t color;
-		//matrix_t matrix;
 		mnode_t *leaf;
 		int lastquery;
+
+		RB_UpdateMatrixes();
 
 		lastquery = 0;
 		for (i = 0; i < tr.world->numVisibleLeafs[0]; i++)
@@ -124,44 +138,49 @@ void RB_LeafOcclusion()
 			tess.numIndexes = 0;
 			tess.firstIndex = 0;
 
-			tess.xyz[tess.numVertexes][0] = leaf->mins[0];
-			tess.xyz[tess.numVertexes][1] = leaf->mins[1];
-			tess.xyz[tess.numVertexes][2] = leaf->mins[2];
+			vec3_t mins, maxs;
+
+			VectorSubtract(leaf->mins, backEnd.ori.viewOrigin, mins);
+			VectorSubtract(leaf->maxs, backEnd.ori.viewOrigin, maxs);
+
+			tess.xyz[tess.numVertexes][0] = mins[0];
+			tess.xyz[tess.numVertexes][1] = mins[1];
+			tess.xyz[tess.numVertexes][2] = mins[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->mins[0];
-			tess.xyz[tess.numVertexes][1] = leaf->maxs[1];
-			tess.xyz[tess.numVertexes][2] = leaf->mins[2];
+			tess.xyz[tess.numVertexes][0] = mins[0];
+			tess.xyz[tess.numVertexes][1] = maxs[1];
+			tess.xyz[tess.numVertexes][2] = mins[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->maxs[0];
-			tess.xyz[tess.numVertexes][1] = leaf->maxs[1];
-			tess.xyz[tess.numVertexes][2] = leaf->mins[2];
+			tess.xyz[tess.numVertexes][0] = maxs[0];
+			tess.xyz[tess.numVertexes][1] = maxs[1];
+			tess.xyz[tess.numVertexes][2] = mins[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->maxs[0];
-			tess.xyz[tess.numVertexes][1] = leaf->mins[1];
-			tess.xyz[tess.numVertexes][2] = leaf->mins[2];
+			tess.xyz[tess.numVertexes][0] = maxs[0];
+			tess.xyz[tess.numVertexes][1] = mins[1];
+			tess.xyz[tess.numVertexes][2] = mins[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->mins[0];
-			tess.xyz[tess.numVertexes][1] = leaf->mins[1];
-			tess.xyz[tess.numVertexes][2] = leaf->maxs[2];
+			tess.xyz[tess.numVertexes][0] = mins[0];
+			tess.xyz[tess.numVertexes][1] = mins[1];
+			tess.xyz[tess.numVertexes][2] = maxs[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->mins[0];
-			tess.xyz[tess.numVertexes][1] = leaf->maxs[1];
-			tess.xyz[tess.numVertexes][2] = leaf->maxs[2];
+			tess.xyz[tess.numVertexes][0] = mins[0];
+			tess.xyz[tess.numVertexes][1] = maxs[1];
+			tess.xyz[tess.numVertexes][2] = maxs[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->maxs[0];
-			tess.xyz[tess.numVertexes][1] = leaf->maxs[1];
-			tess.xyz[tess.numVertexes][2] = leaf->maxs[2];
+			tess.xyz[tess.numVertexes][0] = maxs[0];
+			tess.xyz[tess.numVertexes][1] = maxs[1];
+			tess.xyz[tess.numVertexes][2] = maxs[2];
 			tess.numVertexes++;
 
-			tess.xyz[tess.numVertexes][0] = leaf->maxs[0];
-			tess.xyz[tess.numVertexes][1] = leaf->mins[1];
-			tess.xyz[tess.numVertexes][2] = leaf->maxs[2];
+			tess.xyz[tess.numVertexes][0] = maxs[0];
+			tess.xyz[tess.numVertexes][1] = mins[1];
+			tess.xyz[tess.numVertexes][2] = maxs[2];
 			tess.numVertexes++;
 
 			//231-301-015-154-126-265-734-304-762-237-456-567
@@ -213,33 +232,21 @@ void RB_LeafOcclusion()
 			tess.indexes[tess.numIndexes++] = 6;
 			tess.indexes[tess.numIndexes++] = 7;
 
+			//ri->Printf(PRINT_ALL, "Mins is %f %f %f. Maxs is %f %f %f.\n", leaf->mins[0], leaf->mins[1], leaf->mins[2], leaf->maxs[0], leaf->maxs[1], leaf->maxs[2]);
+
 			RB_UpdateVBOs(ATTR_POSITION);
 			GLSL_VertexAttribsState(ATTR_POSITION);
 			GLSL_BindProgram(shader);
 
-			//GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 			GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-			/*matrix_t trans, model, mvp, invTrans, normalMatrix, vp, invMv;
-
-			Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-			Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-			Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-			GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);*/
-
 
 			GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
-			//GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.ori.viewOrigin);
-			//GLSL_SetUniformVec3(shader, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
-
-			//GLSL_SetUniformInt(shader, UNIFORM_TCGEN0, TCGEN_IDENTITY);
-
-			//GLSL_SetUniformInt(shader, UNIFORM_COLORGEN, CGEN_CONST);
-			//GLSL_SetUniformInt(shader, UNIFORM_ALPHAGEN, AGEN_CONST);
 
 			color[0] = 1.0f;
 			color[1] = 1.0f;
 			color[2] = 1.0f;
 			color[3] = 1.0f;
+
 			GLSL_SetUniformVec4(shader, UNIFORM_COLOR, color);
 
 			GL_BindToTMU( tr.whiteImage, TB_DIFFUSEMAP );
@@ -269,7 +276,6 @@ void RB_LeafOcclusion()
 				}
 			}
 
-
 			qglEndQuery(GL_SAMPLES_PASSED);
 			occlusionQueryTarget[querynum] = leaf;
 			occlusionQueryFinished[querynum] = qfalse;
@@ -282,12 +288,35 @@ void RB_LeafOcclusion()
 		}
 	}
 
+	//ri->Printf(PRINT_ALL, "tr.world->numVisibleLeafs[0] is %i.\n", tr.world->numVisibleLeafs[0]);
 
 	qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_State(GLS_DEFAULT);
 	GL_Cull( CT_FRONT_SIDED );
 	R_BindNullVBO();
 	R_BindNullIBO();
+
+	/* Testing */
+	/*qglFinish();
+	for (i = 0; i < occlusionCachePos; i++)
+	{
+		GLuint result;
+		if (occlusionQueryFinished[i])
+			continue;
+
+		qglGetQueryObjectuiv(occlusionCache[i], GL_QUERY_RESULT_AVAILABLE, &result);
+		if (result)
+		{
+			occlusionQueryFinished[i] = qtrue;
+			qglGetQueryObjectuiv(occlusionCache[i], GL_QUERY_RESULT, &result);
+			//ri->Printf(PRINT_ALL, "leaf %d count %d query %d has %d samples!\n", occlusionQueryTarget[i], occlusionQueryCount[i], occlusionCache[i], result);
+			if (!result && occlusionQueryCount[i] == lastOcclusionQueryCount)
+			{
+				occlusionQueryTarget[i]->occluded[0] = qtrue;
+				tr.updateVisibleSurfaces[0] = qtrue;
+			}
+		}
+	}*/
 }
 
 

@@ -247,9 +247,11 @@ typedef enum _flag_status {
 
 typedef enum { GENDER_MALE, GENDER_FEMALE, GENDER_NEUTER, GENDER_DROID } gender_t;
 
+#if 0 // No longer needed...
 extern vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS];
+#endif
 
-//ready for 2 handed pistols when we get there
+//ready for 2 handed pistols when we get there -- UQ1: Probably no longer needed - needs to be tested when we have 2 pistols...
 extern vec3_t WP_FirstPistolMuzzle[WP_NUM_WEAPONS];
 extern vec3_t WP_SecondPistolMuzzle[WP_NUM_WEAPONS];
 

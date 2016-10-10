@@ -1926,7 +1926,7 @@ void SetupGameGhoul2Model(gentity_t *ent, char *modelname, char *skinName)
 		}
 	}
 
-	if (ent->client->ps.weapon == WP_SABER || ent->s.number < MAX_CLIENTS)
+	if (ent->client->ps.weapon == WP_SABER || ent->s.number < MAX_CLIENTS || (ent->NPC && ent->client->NPC_class != CLASS_VEHICLE))
 	{ //a player or NPC saber user
 		trap->G2API_AddBolt(ent->ghoul2, 0, "*r_hand");
 		trap->G2API_AddBolt(ent->ghoul2, 0, "*l_hand");
@@ -1965,7 +1965,7 @@ void SetupGameGhoul2Model(gentity_t *ent, char *modelname, char *skinName)
 		}
 	}
 
-	if (ent->s.number >= MAX_CLIENTS)
+	if (ent->s.number >= MAX_CLIENTS && !(ent->NPC && ent->client->NPC_class != CLASS_VEHICLE))
 	{ //some extra NPC stuff
 		if (trap->G2API_AddBolt(ent->ghoul2, 0, "lower_lumbar") == -1)
 		{ //check now to see if we have this bone for setting anims and such

@@ -16,6 +16,10 @@
 	#include "ui/ui_local.h"
 #endif
 
+#if defined (_CGAME)
+extern qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle );
+#endif
+
 extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 
 #define MAX_WEAPON_CHARGE_TIME 5000
@@ -6461,7 +6465,11 @@ void PM_RocketLock( float lockDist, qboolean vehicleLock )
 	vec3_t		ang;
 	trace_t		tr;
 
+#if !defined(_CGAME) && !defined(_GAME)
 	vec3_t muzzleOffPoint, muzzlePoint, forward, right, up;
+#else
+	vec3_t muzzlePoint, forward, right, up;
+#endif
 
 	if ( vehicleLock )
 	{
@@ -6475,15 +6483,24 @@ void PM_RocketLock( float lockDist, qboolean vehicleLock )
 
 		AngleVectors(pm->ps->viewangles, ang, NULL, NULL);
 
+#if defined (_CGAME)
+		CG_CalcMuzzlePoint( pm->ps->clientNum, muzzlePoint );
+#elif defined(_GAME)
+		{
+			gentity_t *ent = &g_entities[pm->ps->clientNum];
+			CalcMuzzlePoint(ent, forward, right, up, muzzlePoint);
+		}
+#else
 		VectorCopy( pm->ps->origin, muzzlePoint );
-		VectorCopy(WP_MuzzlePoint[WP_ROCKET_LAUNCHER], muzzleOffPoint);
-		VectorCopy(WP_MuzzlePoint[WP_E60_ROCKET_LAUNCHER], muzzleOffPoint);
-		VectorCopy(WP_MuzzlePoint[WP_CW_ROCKET_LAUNCHER], muzzleOffPoint);
-		
+
+		//VectorCopy(WP_MuzzlePoint[pm->ps->weapon], muzzleOffPoint);
+		VectorSet(muzzleOffPoint, 30, 6, -14);
 
 		VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
 		VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
 		muzzlePoint[2] += pm->ps->viewheight + muzzleOffPoint[2];
+#endif
+
 		ang[0] = muzzlePoint[0] + ang[0]*lockDist;
 		ang[1] = muzzlePoint[1] + ang[1]*lockDist;
 		ang[2] = muzzlePoint[2] + ang[2]*lockDist;

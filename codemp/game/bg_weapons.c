@@ -8,6 +8,7 @@
 
 qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 
+#if 0 // No longer needed...
 // Muzzle point table...
 vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 {//	Fwd,	right,	up.
@@ -69,7 +70,9 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	0,		-4	},	// WP_DET_PACK,
 
 };
-//ready for 2 handed pistols when ready for it.
+#endif
+
+//ready for 2 handed pistols when ready for it. -- UQ1: Probably no longer needed - needs to be tested when we have 2 pistols...
 vec3_t WP_FirstPistolMuzzle[WP_NUM_WEAPONS] = 
 {//	Fwd,	right,	up.
 	{ 12,	6,		0	},

@@ -411,6 +411,10 @@ typedef struct centity_s {
 	vec3_t			modelScale; //needed for g2 collision
 	int				selected_voice;
 
+	// UQ: Added to record *real* muzzle points...
+	vec3_t			muzzlePoint;
+	vec3_t			muzzleDir;
+
 	//from here up must be unified with bgEntity_t -rww
 
 	entityState_t	nextState;		// from cg.nextFrame, if available
