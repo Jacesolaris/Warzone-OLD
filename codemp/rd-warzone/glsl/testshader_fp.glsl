@@ -18,9 +18,6 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//#define UQAO
-//#define SCREEN_SPACE_CURVATURE
-
 uniform mat4		u_ModelViewProjectionMatrix;
 uniform mat4		u_ModelViewMatrix;
 
@@ -36,12 +33,17 @@ uniform vec2		u_Dimensions;
 
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;		// testshadervalue1, testshadervalue2, testshadervalue3, testshadervalue4
-uniform vec4		u_Local2;		// sun dir
+uniform vec4		u_Local2;		// 
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec3		u_ViewOrigin;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
+
+uniform int			u_lightCount;
+uniform vec3		u_lightPositions2[16];
+uniform float		u_lightDistances[16];
+uniform vec3		u_lightColors[16];
 
 varying vec2		var_TexCoords;
 varying vec3		var_vertPos;
@@ -52,282 +54,157 @@ varying vec3		var_rayDir;
 varying vec3		var_sunDir;
 
 
-#if defined(UQAO)
+float znear = u_ViewInfo.x; //camera clipping start
+float zfar = u_ViewInfo.y; //camera clipping end
 
-//==RAY MARCHING CONSTANTS=========================================================
-#define EPSILON .0001
-#define MAX_VIEW_STEPS 100
-#define MAX_SHADOW_STEPS 64
-#define OCCLUSION_SAMPLES 8.0
-#define OCCLUSION_FACTOR .5
-#define MAX_DEPTH 10.0
-#define BUMP_FACTOR .04
-#define TEX_SCALE_FACTOR .4
+//#define		C_HBAO_ZFAR u_ViewInfo.y
+//#define		C_HBAO_ZFAR 2048.0
+#define		C_HBAO_ZFAR 256.0
+//#define		C_HBAO_ZFAR 1.0
+//#define		C_HBAO_ZFAR u_Local0.r
 
-#define PEN_FACTOR 50.0
-
-
-vec3 Matrixify(vec3 pos)
+float linearize(float depth)
 {
-	return vec4(u_ModelViewProjectionMatrix * vec4(pos, 1.0)).xyz;
+	return -zfar * znear / (depth * (zfar - znear) - zfar);
 }
 
-float getDist(vec3 pos, vec3 samplePos)
+float linearizeDepth ( float depth )
 {
-	vec2 coord;
-	vec3 sPos = samplePos;
-
-	coord = var_TexCoords + ((pos.xy - sPos.xy) * (1.0 / u_Dimensions));
-
-	if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0)
-	{// Off screen...
-		return 4.0;
-	}
-
-	vec3 nPos = Matrixify(texture2D(u_PositionMap, coord).xyz);
-	return min(length(nPos - pos) * 0.2, 4.0) * 128.0;
+	float d = depth;
+	d /= C_HBAO_ZFAR - depth * C_HBAO_ZFAR + depth;
+	return clamp(d, 0.0, 1.0);
+	//return linearize(depth);
 }
 
-const float PI = 3.14159265359;
-
-float hash( float n )//->0:1
+vec4 ConvertToNormals ( vec4 color )
 {
-    return fract(sin(n)*3538.5453);
-}
+	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
+	// wasting vram on real normals.
+	//
+	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
+	// for the very noticable FPS boost over texture lookups.
 
-vec3 randomSphereDir(vec2 rnd)
-{
-	float s = rnd.x*PI*2.;
-	float t = rnd.y*2.-1.;
-	return vec3(sin(s), cos(s), t) / sqrt(1.0 + t * t);
-}
+	//N = vec3((color.r + color.b) / 2.0, (color.g + color.b) / 2.0, (color.r + color.g) / 2.0);
+	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 
-vec3 randomHemisphereDir(vec3 dir, float i)
-{
-	vec3 v = randomSphereDir( vec2(hash(i+1.), hash(i+2.)) );
-	return v * sign(dot(v, dir));
-}
+	N.xy = pow(1.0 - N.xy, vec2(u_Local0.a));
 
-float ambientOcclusion( in vec3 p, in vec3 n, float maxDist, float falloff )
-{
-	const int nbIte = 32;
-    const float nbIteInv = 1./float(nbIte);
-    const float rad = 1.-1.*nbIteInv; //Hemispherical factor (self occlusion correction)
-    
-	float ao = 0.0;
-    
-    for( int i=0; i<nbIte; i++ )
-    {
-        float l = hash(float(i))*maxDist;
-        vec3 rd = normalize(n+randomHemisphereDir(n, l )*rad)*l; // mix direction with the normal
-        
-        ao += (l - /*map( p + rd ).x*/getDist(p, p + rd) * u_Local0.g) / pow(1.+l, falloff);
-    }
-	
-    return clamp( 1.-ao*nbIteInv, 0., 1.);
-}
+	float displacement = clamp(length(color.rgb), 0.0, 1.0);
+#define const_1 ( 32.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
-float calcOcclusion(vec3 pos, vec3 surfaceNormal)
-{
-	return ambientOcclusion( pos, surfaceNormal, 1.0, 0.001 );
-	/*
-	float result = 0.0;
-	vec3 normalPos = vec3(pos);
-	for(float i = 0.0; i < OCCLUSION_SAMPLES; i+=1.0)
-	{
-		normalPos += surfaceNormal * (1.0/OCCLUSION_SAMPLES);
-		result += (1.0/exp2(i)) * (i/OCCLUSION_SAMPLES)-getDist(pos, normalPos);
-	}
-	return 1.0-(OCCLUSION_FACTOR*result);
-	*/
-}
-
-float calcShadow( vec3 origin, vec3 lightDir, vec3 lightpos, float penumbraFactor, vec3 viewPos)
-{
-	float dist;
-	float result = 1.0;
-	float lightDist = length(lightpos-origin);
-	
-	vec3 pos = vec3(origin)+(lightDir*(EPSILON*15.0+BUMP_FACTOR));
-	
-	for(int i = 0; i < MAX_SHADOW_STEPS; i++)
-	{
-		dist = getDist(origin, pos);
-		if(dist < EPSILON)
-		{
-			return 0.0;
-		}
-		if(length(pos-origin) > lightDist || length(pos-origin) > MAX_DEPTH)
-		{
-			return result;
-		}
-		pos+=lightDir*dist;
-		if( length(pos-origin) < lightDist )
-		{
-			result = min( result, penumbraFactor*dist / length(pos-origin) );
-		}
-	}
-	return result;
-}
-
-vec4 GetPosAndDepth(sampler2D tex, ivec2 coord, int num)
-{
-	vec4 pos = texelFetch(tex, coord, num);
-	pos.w = length((pos.xyz - u_ViewOrigin) / u_MapInfo.xyz);
-	return pos;
-}
-
-void main ( void )
-{
-	vec2 coord = var_TexCoords;
-	vec3 normal = texture2D(u_NormalMap, coord).xyz * 2.0 - 1.0;
-
-	/*if (u_Local0.a > 0.0)
-	{// Just draw screen normals for debugging...
-		gl_FragColor = vec4(normal * 0.5 + 0.5, 1.0);
-		return;
-	}*/
-
-	vec4 color = texture2D(u_DiffuseMap, coord);
-	vec4 positionMap = texture2D(u_PositionMap, coord);
-
-	if (positionMap.a == 0.0 || positionMap.a == 1024.0)
-	{// No material info on this pixel, it is most likely sky or generic shader...
-		gl_FragColor = color;
-		return;
-	}
-
-	vec3 pos = Matrixify(positionMap.xyz);
-
-	float occlusion = (1.0 - clamp(calcOcclusion(pos, normal) * u_Local0.r/*0.0002*/, 0.0, 1.0));
-	color.rgb *= occlusion;
-	//color.rgb = vec3(occlusion);
-
-	gl_FragColor = color;
-}
-
-#elif defined(SCREEN_SPACE_CURVATURE)
-
-#extension GL_OES_standard_derivatives : enable
-
-vec4 GetNormalAndHeight(vec2 coord)
-{
-	vec4 norm = texture2D(u_NormalMap, coord);
+	//vec4 norm = vec4(N, ((1.0 - (N.x * N.y * N.z)) + (1.0 - (length(N.xyz) / 3.0))) / 2.0);
+	//vec4 norm = vec4(N, 1.0 - clamp(length(color.xyz), 0.0, 1.0));
+	vec4 norm = vec4(N, displacement);
 	return norm;
 }
 
-vec4 GetPosAndDepth(vec2 coord)
-{
-	vec4 pos = texture2D(u_PositionMap, coord);
-	pos.w = length((pos.xyz - u_ViewOrigin) / u_MapInfo.xyz);
-	return pos;
+#define		fvTexelSize (vec2(1.0) / u_Dimensions.xy)
+
+vec3 normal_from_depth(float depth, vec2 texcoords, vec3 fakeNormals) {
+	vec2 offset1 = vec2(0.0, fvTexelSize.y);
+	vec2 offset2 = vec2(fvTexelSize.x, 0.0);
+
+	float depth1 = linearizeDepth(texture2D(u_ScreenDepthMap, texcoords + offset1).r);
+	float depth2 = linearizeDepth(texture2D(u_ScreenDepthMap, texcoords + offset2).r);
+
+	vec3 p1 = vec3(offset1, depth1 - depth);
+	vec3 p2 = vec3(offset2, depth2 - depth);
+
+	vec3 normal = cross(p1, p2);
+	if (u_Local0.g == 1.0)
+		normal.y = -normal.y;
+
+	normal.z = -normal.z;
+
+	normal *= fakeNormals;
+
+	return normalize(normal);
 }
-
-vec3 GetVertexForPosition(vec3 pos)
-{
-	return (u_ModelViewMatrix * vec4(pos.xyz, 1.0)).xyz;
-}
-
-void main() {
-  vec3 normal = GetNormalAndHeight(var_TexCoords).xyz * 2.0 - 1.0;
-  vec4 pos = GetPosAndDepth(var_TexCoords);
-  vec3 vertex = GetVertexForPosition(pos.xyz);
-  vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
-
-  vec3 n = normalize(normal);
-
-  // Compute curvature
-  vec3 dx = dFdx(n);
-  vec3 dy = dFdy(n);
-  vec3 xneg = n - dx;
-  vec3 xpos = n + dx;
-  vec3 yneg = n - dy;
-  vec3 ypos = n + dy;
-  float depth = u_Local0.g;//pos.a;//length(vertex);
-  float curvature = ((cross(xneg, xpos).y * u_Dimensions.y) - (cross(yneg, ypos).x * u_Dimensions.x))/* * 4.0*/ * u_Local0.r / depth;
-
-  //curvature *= u_Local0.r;
-
-#define TEST_SCENE
-  // Compute surface properties
-#if defined(TEST_SCENE)
-  float corrosion = clamp(-curvature * 3.0, 0.0, 1.0);
-  float shine = clamp(curvature * 5.0, 0.0, 1.0);
-  vec3 light = normalize(vec3(0.0, 1.0, 10.0));
-  vec3 ambient = color.rgb;//vec3(0.15, 0.1, 0.1);
-  //vec3 diffuse = mix(mix(vec3(0.3, 0.25, 0.2), vec3(0.45, 0.5, 0.5), corrosion),
-   // vec3(0.5, 0.4, 0.3), shine) - ambient;
-vec3 diffuse = mix(mix(vec3(0.3, 0.25, 0.2) * color.rgb, vec3(0.45, 0.5, 0.5) * color.rgb, corrosion),
-    vec3(0.5, 0.4, 0.3) * color.rgb, shine) - ambient;
-  vec3 specular = mix(vec3(0.0), vec3(1.0) - ambient - diffuse, shine);
-  float shininess = 128.0;
-#elif defined(TEST_RED_WAX)
-  float dirt = clamp(0.25 - curvature * 4.0, 0.0, 1.0);
-  vec3 light = normalize(vec3(0.0, 1.0, 10.0));
-  vec3 ambient = vec3(0.1, 0.05, 0.0);
-  vec3 diffuse = mix(vec3(0.4, 0.15, 0.1), vec3(0.4, 0.3, 0.3), dirt) - ambient;
-  vec3 specular = mix(vec3(0.15) - ambient, vec3(0.0), dirt);
-  float shininess = 32.0;
-#elif defined(TEST_METAL)
-  float corrosion = clamp(-curvature * 3.0, 0.0, 1.0);
-  float shine = clamp(curvature * 5.0, 0.0, 1.0);
-  vec3 light = normalize(vec3(0.0, 1.0, 10.0));
-  vec3 ambient = vec3(0.15, 0.1, 0.1);
-  vec3 diffuse = mix(mix(vec3(0.3, 0.25, 0.2), vec3(0.45, 0.5, 0.5), corrosion),
-    vec3(0.5, 0.4, 0.3), shine) - ambient;
-  vec3 specular = mix(vec3(0.0), vec3(1.0) - ambient - diffuse, shine);
-  float shininess = 128.0;
-#else // Debugging curvature
-  // View curvature...
-  vec3 light = vec3(0.0);
-  vec3 ambient = vec3(curvature + 0.5);
-  vec3 diffuse = vec3(0.0);
-  vec3 specular = vec3(0.0);
-  float shininess = 0.0;
-#endif
-
-  // Compute final color
-  float cosAngle = dot(n, light);
-  gl_FragColor.rgb = ambient +
-    diffuse * max(0.0, cosAngle) +
-    specular * pow(max(0.0, cosAngle), shininess);
-}
-
-#elif 1
 
 void main (void)
 {
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
+	//vec4 norm = texture2D(u_NormalMap, var_TexCoords);
+	vec4 norm = ConvertToNormals(color);
+	vec4 position = texture2D(u_PositionMap, var_TexCoords);
 
-#define E_CC_PALETTE
+	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
+	vec3 N = norm.xyz * E * u_Local1.a;// * 2.0 - 1.0;
 
-#ifdef E_CC_PALETTE
-	//adaptation in time
-	color.rgb = clamp(color.rgb, 0.0, 1.0);
+	if (u_Local0.b == 1.0)
+		N.z = sqrt(1.0 - dot(N.xy, N.xy));
 
-	vec3	brightness = texture2D(u_GlowMap, vec2(0.5)).rgb;//adaptation luminance
-	brightness = (brightness/(brightness+1.0));//new version
-	brightness = vec3(max(brightness.x, max(brightness.y, brightness.z)));//new version
+	//float depth = linearizeDepth(texture2D(u_ScreenDepthMap, var_TexCoords).r);
+	//vec3 N = (normal_from_depth(depth, var_TexCoords, norm.rgb) * u_Local1.a) * 2.0 - 1.0 /** 0.004*/;
+	
 
-	vec3	palette;
-	vec2	uvsrc=vec2(0.0);
+	//gl_FragColor = vec4(norm.xyz * 0.5 + 0.5, 1.0);
+	//gl_FragColor = vec4(N.rgb /** 0.5 + 0.5*/, 1.0);
+	//gl_FragColor = vec4(depth, depth, depth, 1.0);
+	//return;
 
-	uvsrc.y=brightness.r;
-	uvsrc.x=color.r;
-	palette.r=texture(u_DeluxeMap, uvsrc).r;
-	uvsrc.x=color.g;
-	uvsrc.y=brightness.g;
-	palette.g=texture2D(u_DeluxeMap, uvsrc).g;
-	uvsrc.x=color.b;
-	uvsrc.y=brightness.b;
-	palette.b=texture2D(u_DeluxeMap, uvsrc).b;
-	color.rgb=palette.rgb;
-#endif //E_CC_PALETTE
+	gl_FragColor = vec4(color.rgb, 1.0);
+	//return;
 
-	gl_FragColor = color;
+	float phongFactor = u_Local2.r;
+	/*vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
+	float lambertian2 = dot(PrimaryLightDir.xyz,N);
+	float spec2 = 0.0;
+	bool noSunPhong = false;
+
+	if (phongFactor < 0.0)
+	{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
+		noSunPhong = true;
+		phongFactor = 0.0;
+	}
+
+	if(lambertian2 > 0.0)
+	{// this is blinn phong
+		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
+		float specAngle = max(dot(halfDir2, N), 0.0);
+		spec2 = pow(specAngle, 16.0);
+		gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
+	}
+
+	if (noSunPhong)
+	{// Invert phong value so we still have non-sun lights...
+		phongFactor = -u_Local2.r;
+	}*/
+
+	if (u_lightCount > 0)
+	{
+		for (int li = 0; li < u_lightCount; li++)
+		{
+			vec3 lightDir = normalize(u_lightPositions2[li] - position.xyz);
+			float lambertian3 = dot(lightDir.xyz,N);
+			float spec3 = 0.0;
+
+			if(lambertian3 > 0.0)
+			{
+				float lightDist = distance(u_lightPositions2[li], position.xyz);
+				float lightMax = u_lightDistances[li] * u_Local1.r;
+
+				if (lightDist < lightMax)
+				{
+					float lightStrength = 1.0 - (lightDist / lightMax);
+					lightStrength = pow(lightStrength * u_Local1.g, u_Local1.b);
+
+					if(lightStrength > 0.0)
+					{// this is blinn phong
+						vec3 halfDir3 = normalize(lightDir.xyz + E);
+						float specAngle3 = max(dot(halfDir3, N), 0.0);
+						spec3 = pow(specAngle3, 16.0);
+						gl_FragColor.rgb += gl_FragColor.rgb * u_lightColors[li].rgb * spec3 * lightStrength * phongFactor * u_Local0.r;
+					}
+				}
+			}
+		}
+	}
 }
 
-#else // NO TEST SHADER DEFINED
+#if 0
 
 vec4 GetPosAndDepth(vec2 coord)
 {
@@ -406,45 +283,6 @@ float shadow( vec3 pPos, vec3 light )
 vec4 positionMapAtCoord ( vec2 coord )
 {
 	return texture2D(u_PositionMap, coord).xyza;
-}
-
-float linearize(float depth)
-{
-	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
-}
-
-/*vec3 applyFog( in vec3  rgb,      // original color of the pixel
-               in float distance, // camera to point distance
-               in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir )  // sun light direction
-{
-    float fogAmount = 1.0 - exp( -distance*b );
-    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-    vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
-                           vec3(1.0,0.9,0.7), // yellowish
-                           pow(sunAmount,8.0) );
-    return mix( rgb, fogColor, fogAmount );
-}*/
-
-vec3 applyFog2( in vec3  rgb,      // original color of the pixel
-               in float distance, // camera to point distance
-               in vec3  rayOri,   // camera position
-               in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir )  // sun light direction
-{
-	float b = u_Local0.r; // the falloff of this density
-	// be extintion and bi inscattering
-	float c = u_Local0.g; // height falloff
-
-    //float fogAmount = c * exp(-rayOri.z*b) * (1.0-exp( -distance*rayDir.z*b ))/rayDir.z;
-	float fogAmount = 1.0 - exp( -distance*b );
-	fogAmount = clamp(fogAmount, 0.1, u_Local0.a);
-	float sunAmount = max( clamp(dot( rayDir, sunDir )*u_Local0.b, 0.0, 1.0), 0.0 );
-	if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
-    vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
-                           vec3(1.0,0.9,0.7), // yellowish
-                           pow(sunAmount,8.0) );
-	return mix( rgb, fogColor, fogAmount );
 }
 
 void main ( void )

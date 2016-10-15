@@ -61,6 +61,8 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_occlusion_vp;
+extern const char *fallbackShader_occlusion_fp;
 extern const char *fallbackShader_generateNormalMap_vp;
 extern const char *fallbackShader_generateNormalMap_fp;
 extern const char *fallbackShader_truehdr_vp;
@@ -1356,6 +1358,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_lightPositions",		GLSL_VEC2, 16  },
 	{ "u_lightDistances",		GLSL_FLOAT, 16  },
 	{ "u_lightColors",			GLSL_VEC3, 16  },
+	{ "u_vlightPositions2",		GLSL_VEC3, 16  },
+	{ "u_vlightPositions",		GLSL_VEC2, 16  },
+	{ "u_vlightDistances",		GLSL_FLOAT, 16  },
+	{ "u_vlightColors",			GLSL_VEC3, 16  },
 };
 
 static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
@@ -1958,11 +1964,29 @@ void GLSL_AttachTextures( void )
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
+void GLSL_AttachGenericTextures( void )
+{// Moved here for convenience...
+	FBO_AttachTextureImage(tr.renderImage, 0);
+	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
+	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
+	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
+	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+}
+
+void GLSL_AttachPostTextures( void )
+{// Moved here for convenience...
+	//FBO_AttachTextureImage(tr.renderImage, 0);
+	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
+	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
+	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
+	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+}
+
 void GLSL_AttachWaterTextures( void )
 {// To output dummy textures on waters in RB_IterateStagesGeneric...
-	FBO_AttachTextureImage(tr.genericFBOImage, 0); // dummy
-	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
-	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
+	FBO_AttachTextureImage(tr.dummyImage, 0); // dummy
+	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
+	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
@@ -2443,6 +2467,34 @@ void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3
 	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
 }
 
+void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+	float *compare;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
+	{
+		ri->Printf( PRINT_WARNING, "GLSL_SetUniformVec3x64: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	if (memcmp (elements, compare, sizeof (vec3_t) * numElements) == 0)
+	{
+		return;
+	}
+
+	Com_Memcpy (compare, elements, sizeof (vec3_t) * numElements);
+
+	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+}
+
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v)
 {
 	GLint *uniforms = program->uniforms;
@@ -2502,6 +2554,34 @@ void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const flo
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
 	{
 		ri->Printf( PRINT_WARNING, "GLSL_SetUniformFloatx16: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	if (memcmp (elements, compare, sizeof (float) * numElements) == 0)
+	{
+		return;
+	}
+
+	Com_Memcpy (compare, elements, sizeof (float) * numElements);
+
+	qglUniform1fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+}
+
+void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+	float *compare;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
+	{
+		ri->Printf( PRINT_WARNING, "GLSL_SetUniformFloatx64: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -2658,6 +2738,13 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.textureColorShader, "texturecolor", attribs, qtrue, qfalse, qfalse, NULL, qfalse, NULL, fallbackShader_texturecolor_vp, fallbackShader_texturecolor_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load texturecolor shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+
+	if (!GLSL_BeginLoadGPUShader(&tr.occlusionShader, "occlusion", attribs, qtrue, qfalse, qfalse, NULL, qfalse, NULL, fallbackShader_occlusion_vp, fallbackShader_occlusion_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load occlusion shader!");
 	}
 
 	for (i = 0; i < FOGDEF_COUNT; i++)
@@ -3297,7 +3384,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.testshaderShader, "testshader", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "330", fallbackShader_testshader_vp, fallbackShader_testshader_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.testshaderShader, "testshader", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_testshader_vp, fallbackShader_testshader_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load testshader shader!");
 	}
@@ -3629,6 +3716,23 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	GLSL_FinishGPUShader(&tr.textureColorShader);
 
 	numEtcShaders++;
+
+
+	if (!GLSL_EndLoadGPUShader (&tr.occlusionShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load occlusion shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.occlusionShader);
+
+	qglUseProgram(tr.occlusionShader.program);
+	GLSL_SetUniformInt(&tr.occlusionShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+	qglUseProgram(0);
+
+	GLSL_FinishGPUShader(&tr.occlusionShader);
+
+	numEtcShaders++;
+
 
 	for (i = 0; i < FOGDEF_COUNT; i++)
 	{
@@ -4671,13 +4775,34 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.testshaderShader.program);
 
-	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, loc);
+	}
+	
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL1, loc);
+	}
+
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_MAPINFO, loc);
+	}
 
 	{
 		vec2_t screensize;
@@ -5548,6 +5673,7 @@ void GLSL_ShutdownGPUShaders(void)
 		GLSL_DeleteGPUShader(&tr.genericShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
+	GLSL_DeleteGPUShader(&tr.occlusionShader);
 
 	for ( i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);

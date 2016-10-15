@@ -287,7 +287,7 @@ RE_AddDynamicLightToScene
 
 =====================
 */
-void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive ) {
+void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased ) {
 	dlight_t	*dl;
 
 	if ( !tr.registered ) {
@@ -307,6 +307,7 @@ void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, floa
 	dl->color[1] = g;
 	dl->color[2] = b;
 	dl->additive = additive;
+	dl->isGlowBased = isGlowBased;
 }
 
 /*
@@ -316,7 +317,7 @@ RE_AddLightToScene
 =====================
 */
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, intensity, r, g, b, qfalse );
+	RE_AddDynamicLightToScene( org, intensity, r, g, b, qfalse, qfalse );
 }
 
 /*
@@ -326,7 +327,7 @@ RE_AddAdditiveLightToScene
 =====================
 */
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, intensity, r, g, b, qtrue );
+	RE_AddDynamicLightToScene( org, intensity, r, g, b, qtrue, qfalse );
 }
 
 #ifdef __DAY_NIGHT__
@@ -425,7 +426,8 @@ extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 #endif //__DAY_NIGHT__
 
-extern void R_AddGlowShaderLights ( void );
+extern void RB_AddGlowShaderLights ( void );
+extern void RB_UpdateCloseLights();
 
 void RE_BeginScene(const refdef_t *fd)
 {
@@ -595,12 +597,15 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
 
-#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-	R_AddGlowShaderLights();
-#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];
+
+//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+	backEnd.refdef.dlights = tr.refdef.dlights;
+	backEnd.refdef.num_dlights = tr.refdef.num_dlights;
+	RB_AddGlowShaderLights();
+	RB_UpdateCloseLights();
+//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	// Add the decals here because decals add polys and we need to ensure
 	// that the polys are added before the the renderer is prepared

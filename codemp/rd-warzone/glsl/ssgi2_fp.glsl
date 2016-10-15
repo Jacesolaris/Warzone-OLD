@@ -112,7 +112,7 @@ void main()
 	prof = zFar * zNear / (prof * (zFar - zNear) - zFar);  //linearize z sample
 
 	//obtain normal and color at current pixel:
-	vec3 norm = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st).xyz)*2.0-vec3(1.0));
+	vec3 norm = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st).xyz));
 	vec3 dcolor1 = texture2D(u_DiffuseMap, var_TexCoords.st).xyz;
 
 	float hf = samples/2.0;
@@ -132,7 +132,7 @@ void main()
 				prof2g = zFar * zNear / (prof2g * (zFar - zNear) - zFar);  //linearize z sample
 
 				//OCCLUSION:
-				vec3 norm2g = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st+coords2*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
+				vec3 norm2g = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st+coords2*rand(var_TexCoords)).xyz)); 
 
 				//calculate approximate pixel distance:
 				vec3 dist2 = vec3(coords2,prof-prof2g);

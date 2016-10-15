@@ -82,6 +82,8 @@ float blend(float val, float val0, float val1, float res0, float res1) {
 
 void main (void)
 {
+	//gl_FragColor = vec4(texture2D( u_NormalMap, var_TexCoords ).rgb, 1.0);
+	//return;
 #if 1
 
 	vec4 positionMap = texture2D( u_PositionMap, var_TexCoords.xy );
@@ -104,7 +106,7 @@ void main (void)
 	}
 
 	vec4 norm = texture2D( u_NormalMap, var_TexCoords.xy );
-	norm.xyz = norm.xyz * 2.0 - 1.0;
+	//norm.xyz = norm.xyz * 2.0 - 1.0;
 	vec3 viewDir = normalize(u_ViewOrigin.xyz - positionMap.xyz);
 	mat3 tangentToWorld = cotangent_frame(norm.xyz, -viewDir, var_TexCoords.xy);
 	vec3 E = normalize(viewDir.xyz);

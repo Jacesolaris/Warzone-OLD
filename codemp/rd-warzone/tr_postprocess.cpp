@@ -910,14 +910,15 @@ extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 extern int		NUM_MAP_GLOW_LOCATIONS;
 extern vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
 extern vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
+extern qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
 
 extern vec3_t SUN_POSITION;
 extern vec2_t SUN_SCREEN_POSITION;
 extern qboolean SUN_VISIBLE;
 
-extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive );
+extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased );
 
-void R_AddGlowShaderLights ( void )
+void RB_AddGlowShaderLights ( void )
 {
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
 	{// Add (close) map glows as dynamic lights as well...
@@ -929,14 +930,14 @@ void R_AddGlowShaderLights ( void )
 
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
-			float distance = Distance(backEnd.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
+			float distance = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
 
 			if (distance > 4096.0) continue;
 
 #ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-			if (!TR_InFOV( MAP_GLOW_LOCATIONS[maplight], backEnd.refdef.vieworg ))
-			{
+			if (distance > 512.0 && !TR_InFOV( MAP_GLOW_LOCATIONS[maplight], tr.refdef.vieworg ))
+			{// 512.0 to still allow close lights just behind the player...
 				continue; // not on screen...
 			}
 #endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
@@ -970,7 +971,7 @@ void R_AddGlowShaderLights ( void )
 
 				for (int i = 0; i < CLOSE_TOTAL; i++)
 				{// Find the most distance light in our current list to replace, if this new option is closer...
-					float		dist = Distance(backEnd.refdef.vieworg, MAP_GLOW_LOCATIONS[CLOSE_LIST[i]]);
+					float		dist = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[CLOSE_LIST[i]]);
 
 					if (dist > farthest_distance)
 					{// This one is further!
@@ -991,7 +992,10 @@ void R_AddGlowShaderLights ( void )
 
 		//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i visible of %i total glow lights.\n", CLOSE_TOTAL, NUM_MAP_GLOW_LOCATIONS);
 
-		for (int i = 0; i < CLOSE_TOTAL && backEnd.refdef.num_dlights < MAX_DLIGHTS; i++)
+		int num_colored = 0;
+		int num_uncolored = 0;
+
+		for (int i = 0; i < CLOSE_TOTAL && tr.refdef.num_dlights < MAX_DLIGHTS; i++)
 		{
 #ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			vec4_t glowColor = { 0 };
@@ -1001,12 +1005,27 @@ void R_AddGlowShaderLights ( void )
 			if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)
 				VectorSet4(glowColor, 2.0, 2.0, 2.0, 2.0);
 
-			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -glowColor[0], -glowColor[1], -glowColor[2], qfalse );
+			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -glowColor[0], -glowColor[1], -glowColor[2], qfalse, qtrue );
 #else //!USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -1.0, -1.0, -1.0, qfalse );
+			if (MAP_GLOW_COLORS_AVILABLE[CLOSE_LIST[i]])
+			{
+				vec4_t glowColor = { 0 };
+
+				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
+
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, glowColor[0] * 0.25, glowColor[1] * 0.25, glowColor[2] * 0.25, qfalse, qtrue );
+				num_colored++;
+			}
+			else
+			{
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -1.0, -1.0, -1.0, qfalse, qtrue );
+				num_uncolored++;
+			}
 #endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			backEnd.refdef.num_dlights++;
 		}
+
+		//ri->Printf(PRINT_ALL, "Added %i glow lights with color. %i without.\n", num_colored, num_uncolored);
 	}
 }
 
@@ -1025,9 +1044,9 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
 	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i glow positions.\n", NUM_MAP_GLOW_LOCATIONS);
 
-#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-	R_AddGlowShaderLights();
-#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+//#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+	RB_AddGlowShaderLights();
+//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	//ri->Printf(PRINT_WARNING, "VLIGHT GLOWS DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
 
@@ -1040,11 +1059,11 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	// UQ1: Now going to allow a maximum of MAX_VOLUMETRIC_LIGHTS volumetric lights on screen for FPS...
 	//
 	const int	MAX_VOLUMETRIC_LIGHTS = 16;
-	int			NUM_CLOSE_LIGHTS = 0;
-	int			CLOSEST_LIGHTS[MAX_VOLUMETRIC_LIGHTS] = {0};
-	vec2_t		CLOSEST_LIGHTS_POSITIONS[MAX_VOLUMETRIC_LIGHTS] = {0};
-	float		CLOSEST_LIGHTS_DISTANCES[MAX_VOLUMETRIC_LIGHTS] = {0};
-	vec3_t		CLOSEST_LIGHTS_COLORS[MAX_VOLUMETRIC_LIGHTS] = {0};
+	int			NUM_CLOSE_VLIGHTS = 0;
+	int			CLOSEST_VLIGHTS[MAX_VOLUMETRIC_LIGHTS] = {0};
+	vec2_t		CLOSEST_VLIGHTS_POSITIONS[MAX_VOLUMETRIC_LIGHTS] = {0};
+	float		CLOSEST_VLIGHTS_DISTANCES[MAX_VOLUMETRIC_LIGHTS] = {0};
+	vec3_t		CLOSEST_VLIGHTS_COLORS[MAX_VOLUMETRIC_LIGHTS] = {0};
 
 	float strengthMult = 1.0;
 	if (r_dynamiclight->integer < 3) strengthMult = 2.0; // because the lower samples result in less color...
@@ -1060,6 +1079,11 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		if (!TR_InFOV( dl->origin, backEnd.refdef.vieworg ))
 		{
 			continue; // not on screen...
+		}
+
+		if (distance > 4096.0)
+		{
+			continue;
 		}
 
 		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin, qfalse))
@@ -1129,16 +1153,25 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		float depth = (distance/4096.0);
 		if (depth > 1.0) depth = 1.0;
 
-		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
+		if (NUM_CLOSE_VLIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
 		{// Have free light slots for a new light...
-			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
-			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = x / 640;
-			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = 1.0 - (y / 480);
-			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = depth;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
-			NUM_CLOSE_LIGHTS++;
+			CLOSEST_VLIGHTS[NUM_CLOSE_VLIGHTS] = l;
+			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = x / 640;
+			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = 1.0 - (y / 480);
+			CLOSEST_VLIGHTS_DISTANCES[NUM_CLOSE_VLIGHTS] = depth;
+			if (dl->isGlowBased)
+			{// Always force glsl color lookup...
+				CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][0] = -1.0;
+				CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][1] = -1.0;
+				CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][2] = -1.0;
+			}
+			else
+			{
+				CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][0] = dl->color[0]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+				CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][1] = dl->color[1]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+				CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][2] = dl->color[2]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+			}
+			NUM_CLOSE_VLIGHTS++;
 			continue;
 		}
 		else
@@ -1146,9 +1179,9 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 			int		farthest_light = 0;
 			float	farthest_distance = 0.0;
 
-			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+			for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
 			{// Find the most distance light in our current list to replace, if this new option is closer...
-				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_VLIGHTS[i]];
 				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
 
 				if (dist > farthest_distance)
@@ -1161,13 +1194,23 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 			if (Distance(dl->origin, backEnd.refdef.vieworg) < farthest_distance)
 			{// This light is closer. Replace this one in our array of closest lights...
-				CLOSEST_LIGHTS[farthest_light] = l;
-				CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = x / 640;
-				CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
-				CLOSEST_LIGHTS_DISTANCES[farthest_light] = depth;
-				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
-				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
-				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+				CLOSEST_VLIGHTS[farthest_light] = l;
+				CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = x / 640;
+				CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
+				CLOSEST_VLIGHTS_DISTANCES[farthest_light] = depth;
+
+				if (dl->isGlowBased)
+				{// Always force glsl color lookup...
+					CLOSEST_VLIGHTS_COLORS[farthest_light][0] = -1.0;
+					CLOSEST_VLIGHTS_COLORS[farthest_light][1] = -1.0;
+					CLOSEST_VLIGHTS_COLORS[farthest_light][2] = -1.0;
+				}
+				else
+				{
+					CLOSEST_VLIGHTS_COLORS[farthest_light][0] = dl->color[0]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+					CLOSEST_VLIGHTS_COLORS[farthest_light][1] = dl->color[1]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+					CLOSEST_VLIGHTS_COLORS[farthest_light][2] = dl->color[2]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+				}
 			}
 		}
 	}
@@ -1175,25 +1218,25 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	if ( SUN_VISIBLE )
 	{// Add sun...
 		//SUN_SCREEN_POSITION
-		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
+		if (NUM_CLOSE_VLIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
 		{// Have free light slots for a new light...
-			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = SUN_SCREEN_POSITION[0];
-			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = 0.1;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = (backEnd.refdef.sunCol[0])*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = (backEnd.refdef.sunCol[1])*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = (backEnd.refdef.sunCol[2])*r_volumeLightStrength->value*strengthMult;
-			SUN_ID = NUM_CLOSE_LIGHTS;
-			NUM_CLOSE_LIGHTS++;
+			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = SUN_SCREEN_POSITION[0];
+			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = SUN_SCREEN_POSITION[1];
+			CLOSEST_VLIGHTS_DISTANCES[NUM_CLOSE_VLIGHTS] = 0.1;
+			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][0] = (backEnd.refdef.sunCol[0])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][1] = (backEnd.refdef.sunCol[1])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][2] = (backEnd.refdef.sunCol[2])*r_volumeLightStrength->value*strengthMult;
+			SUN_ID = NUM_CLOSE_VLIGHTS;
+			NUM_CLOSE_VLIGHTS++;
 		}
 		else
 		{// See if this is closer then one of our other lights...
 			int		farthest_light = 0;
 			float	farthest_distance = 0.0;
 
-			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+			for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
 			{// Find the most distance light in our current list to replace, if this new option is closer...
-				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_VLIGHTS[i]];
 				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
 
 				if (dist > farthest_distance)
@@ -1204,30 +1247,30 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 				}
 			}
 
-			CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = SUN_SCREEN_POSITION[0];
-			CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_LIGHTS_DISTANCES[farthest_light] = 0.1;
-			CLOSEST_LIGHTS_COLORS[farthest_light][0] = (backEnd.refdef.sunCol[0])*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[farthest_light][1] = (backEnd.refdef.sunCol[1])*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[farthest_light][2] = (backEnd.refdef.sunCol[2])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = SUN_SCREEN_POSITION[0];
+			CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = SUN_SCREEN_POSITION[1];
+			CLOSEST_VLIGHTS_DISTANCES[farthest_light] = 0.1;
+			CLOSEST_VLIGHTS_COLORS[farthest_light][0] = (backEnd.refdef.sunCol[0])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_VLIGHTS_COLORS[farthest_light][1] = (backEnd.refdef.sunCol[1])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_VLIGHTS_COLORS[farthest_light][2] = (backEnd.refdef.sunCol[2])*r_volumeLightStrength->value*strengthMult;
 			SUN_ID = farthest_light;
 		}
 	}
 
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i volume lights. Sun id is %i.\n", NUM_CLOSE_LIGHTS, SUN_ID);
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i volume lights. Sun id is %i.\n", NUM_CLOSE_VLIGHTS, SUN_ID);
 
 	// None to draw...
-	if (NUM_CLOSE_LIGHTS <= 0) {
+	if (NUM_CLOSE_VLIGHTS <= 0) {
 		//ri->Printf(PRINT_WARNING, "0 visible dlights. %i total dlights.\n", backEnd.refdef.num_dlights);
 		return qfalse;
 	}
 
-	/*
-	for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+	
+	/*for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
 	{
-		ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: [%i] %fx%f. Dist %f. Color %f %f %f.\n", i, CLOSEST_LIGHTS_POSITIONS[i][0], CLOSEST_LIGHTS_POSITIONS[i][1], CLOSEST_LIGHTS_DISTANCES[i], CLOSEST_LIGHTS_COLORS[i][0], CLOSEST_LIGHTS_COLORS[i][1], CLOSEST_LIGHTS_COLORS[i][2]);
-	}
-	*/
+		ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: [%i] %fx%f. Dist %f. Color %f %f %f.\n", i, CLOSEST_VLIGHTS_POSITIONS[i][0], CLOSEST_VLIGHTS_POSITIONS[i][1], CLOSEST_VLIGHTS_DISTANCES[i], CLOSEST_VLIGHTS_COLORS[i][0], CLOSEST_VLIGHTS_COLORS[i][1], CLOSEST_VLIGHTS_COLORS[i][2]);
+	}*/
+	
 
 	int dlightShader = r_dynamiclight->integer - 1;
 
@@ -1238,12 +1281,12 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_BindProgram(&tr.volumeLightShader[dlightShader]);
 
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_DELUXEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_DELUXEMAP);
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
@@ -1293,10 +1336,10 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	}
 	
 
-	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	GLSL_SetUniformVec2x16(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformVec3x16(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformFloatx16(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTCOUNT, NUM_CLOSE_VLIGHTS);
+	GLSL_SetUniformVec2x16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformVec3x16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTCOLORS, CLOSEST_VLIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformFloatx16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTDISTANCES, CLOSEST_VLIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
 
 #if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
 	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.volumeLightShader[dlightShader], color, 0);
@@ -1323,7 +1366,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumeLightShader[dlightShader], color, 0);
 #endif //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)
 
-	//ri->Printf(PRINT_WARNING, "%i visible dlights. %i total dlights.\n", NUM_CLOSE_LIGHTS, backEnd.refdef.num_dlights);
+	//ri->Printf(PRINT_WARNING, "%i visible dlights. %i total dlights.\n", NUM_CLOSE_VLIGHTS, backEnd.refdef.num_dlights);
 	return qtrue;
 }
 
@@ -2555,6 +2598,12 @@ void transpose(float *src, float *dst, const int N, const int M) {
     }
 }
 
+extern int			NUM_CLOSE_LIGHTS;
+extern int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS];
+extern float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS];
+
 void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int pass_num)
 {
 	vec4_t color;
@@ -2564,6 +2613,8 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 		color[1] =
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
+
+	//RB_AddGlowShaderLights();
 
 	GLSL_BindProgram(&tr.testshaderShader);
 	
@@ -2575,7 +2626,7 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
-
+	
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
@@ -2586,94 +2637,36 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	GL_BindToTMU(tr.glowImageScaled[5], TB_GLOWMAP);
 
 
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+	GLSL_SetUniformVec3x16(&tr.testshaderShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec3x16(&tr.testshaderShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformFloatx16(&tr.testshaderShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
+
 	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
-	
-	vec3_t out;
-	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
- 	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
-	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
-	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
-
-	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-
-	//Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	/*GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);*/
+	/*
 	matrix_t trans, model, mvp;
 	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
 	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix); //*
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, model);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.viewParms.world.modelMatrix/*model*/); //*
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWMATRIX, backEnd.viewParms.world.transformMatrix);//trans);
-
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invProjection);
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-	matrix_t invProj, proj;
-	//Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, invProj);
-	//RealInvertMatrix(backEnd.viewParms.projectionMatrix, invProj);
-	//RealTransposeMatrix(glState.projection, invProj);
-	//RealTransposeMatrix(invProj, proj);
-	//myInverseMatrix(invProj, backEnd.viewParms.projectionMatrix);
-	//transpose(backEnd.viewParms.projectionMatrix, invProj, 16, 16);
-	Matrix16SimpleInverse( model/*backEnd.viewParms.world.modelMatrix*//*backEnd.viewParms.projectionMatrix*/, invProj);
-	Matrix16SimpleInverse( invProj, proj);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, invProj);
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, proj);
-
-	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
-
-
-
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-	
-	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
-
-
-	/*
-	matrix_t trans, model, mvp, invTrans, invMvp, normalMatrix, vp, invVp, invP;
-
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
-
-	Matrix16SimpleInverse( mvp, invMvp);
-	Matrix16SimpleInverse( vp, invVp);
-	Matrix16SimpleInverse( model, normalMatrix);
-	//Matrix16SimpleInverse( trans, invTrans);
-	Matrix16SimpleInverse( backEnd.ori.transformMatrix, invTrans);
-	Matrix16SimpleInverse( glState.projection, invP);
-
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);//vp);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);//glState.invEyeProjection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-				
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, model);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWMATRIX, trans);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVVIEWMATRIX, invTrans);
-
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_NORMALMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVPROJECTIONMATRIX, invP);
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 	*/
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+	vec3_t out;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+ 	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
+	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 
-		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
-	}
+	//GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
+	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+
+	vec4_t local2;
+	VectorSet4(local2, r_blinnPhong->value, 0.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL2,  local2);
 
 	{
 		vec4_t viewInfo;
@@ -2703,6 +2696,14 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 		vec4_t loc;
 		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_MAPINFO, loc);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, 0);

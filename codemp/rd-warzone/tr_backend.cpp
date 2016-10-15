@@ -1041,7 +1041,12 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
 		// entities merged into a single batch, like smoke and blood puff sprites
 		if ( shader != NULL 
-			&& ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted || postRender != oldPostRender || cubemapIndex != oldCubemapIndex || ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) 
+			&& ( shader != oldShader 
+				//|| fogNum != oldFogNum 
+				//|| dlighted != oldDlighted 
+				|| postRender != oldPostRender 
+				|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex) 
+				|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) 
 		{
 #ifdef __DEBUG_MERGE__
 			if (shader != NULL)
@@ -2412,6 +2417,8 @@ RB_PostProcess
 =============
 */
 
+extern void GLSL_AttachPostTextures( void );
+
 const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = (const postProcessCommand_t *)data;
@@ -2490,6 +2497,8 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
+		//GLSL_AttachPostTextures(); // make sure that we never overwrite our extra textures...
+
 		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		FBO_t *currentFbo = tr.genericFbo3;

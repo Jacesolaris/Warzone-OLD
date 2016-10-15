@@ -573,7 +573,7 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 	else
 		cubemapIndex = 0;
 
-	if (!r_occlusion->integer)
+	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex );
 	}
@@ -864,84 +864,65 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
 		
-		if (r_occlusion->integer)// && (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+		if (r_occlusion->integer)
 		{// Occlusion culling...
 			int scene = tr.viewParms.isPortal ? 1 : 0;
 			tr.world->visibleLeafs[scene][tr.world->numVisibleLeafs[scene]++] = node;
 			node->occluded[scene] = qfalse;
+			return;
 		}
 
-		if (r_occlusion->integer)
-		{// add the individual surfaces
-#if 0
-			//int *mark = &node->firstmarksurface;
-
-			c = node->nummarksurfaces;
-			while (c--) {
-				int *mark = (tr.world->marksurfaces + node->firstmarksurface + c);
-				msurface_t *surf = tr.world->surfaces + *mark;
-
-				// the surface may have already been added if it
-				// spans multiple leafs
-				//surf = *mark;
-				R_AddWorldSurface( surf, 0, 0, qfalse );
-				mark++;
-			}
-#endif
-		}
+		// add merged and unmerged surfaces
+		if (tr.world->viewSurfaces && !r_nocurves->integer)
+			view = tr.world->viewSurfaces + node->firstmarksurface;
 		else
-		{
-			// add merged and unmerged surfaces
-			if (tr.world->viewSurfaces && !r_nocurves->integer)
-				view = tr.world->viewSurfaces + node->firstmarksurface;
-			else
-				view = tr.world->marksurfaces + node->firstmarksurface;
+			view = tr.world->marksurfaces + node->firstmarksurface;
 
-			c = node->nummarksurfaces;
-			while (c--) {
-				// just mark it as visible, so we don't jump out of the cache derefencing the surface
-				surf = *view;
-				if (surf < 0)
+		c = node->nummarksurfaces;
+		
+		while (c--) 
+		{
+			// just mark it as visible, so we don't jump out of the cache derefencing the surface
+			surf = *view;
+			if (surf < 0)
+			{
+				if (tr.world->mergedSurfacesViewCount[-surf - 1] != tr.viewCount)
 				{
-					if (tr.world->mergedSurfacesViewCount[-surf - 1] != tr.viewCount)
-					{
-						tr.world->mergedSurfacesViewCount[-surf - 1]  = tr.viewCount;
-						//tr.world->mergedSurfacesDlightBits[-surf - 1] = dlightBits;
+					tr.world->mergedSurfacesViewCount[-surf - 1]  = tr.viewCount;
+					//tr.world->mergedSurfacesDlightBits[-surf - 1] = dlightBits;
 #ifdef __PSHADOWS__
-						tr.world->mergedSurfacesPshadowBits[-surf - 1] = pshadowBits;
+					tr.world->mergedSurfacesPshadowBits[-surf - 1] = pshadowBits;
 #endif
-					}
-					else
-					{
-						//tr.world->mergedSurfacesDlightBits[-surf - 1] |= dlightBits;
-#ifdef __PSHADOWS__
-						tr.world->mergedSurfacesPshadowBits[-surf - 1] |= pshadowBits;
-#endif
-					}
 				}
 				else
 				{
-					if (tr.world->surfacesViewCount[surf] != tr.viewCount)
-					{
-						tr.world->surfacesViewCount[surf] = tr.viewCount;
-						//tr.world->surfacesDlightBits[surf] = dlightBits;
+					//tr.world->mergedSurfacesDlightBits[-surf - 1] |= dlightBits;
 #ifdef __PSHADOWS__
-						tr.world->surfacesPshadowBits[surf] = pshadowBits;
+					tr.world->mergedSurfacesPshadowBits[-surf - 1] |= pshadowBits;
 #endif
-					}
-					else
-					{
-						//tr.world->surfacesDlightBits[surf] |= dlightBits;
-#ifdef __PSHADOWS__
-						tr.world->surfacesPshadowBits[surf] |= pshadowBits;
-#endif
-					}
 				}
-				view++;
 			}
+			else
+			{
+				if (tr.world->surfacesViewCount[surf] != tr.viewCount)
+				{
+					tr.world->surfacesViewCount[surf] = tr.viewCount;
+					//tr.world->surfacesDlightBits[surf] = dlightBits;
+#ifdef __PSHADOWS__
+					tr.world->surfacesPshadowBits[surf] = pshadowBits;
+#endif
+				}
+				else
+				{
+					//tr.world->surfacesDlightBits[surf] |= dlightBits;
+#ifdef __PSHADOWS__
+					tr.world->surfacesPshadowBits[surf] |= pshadowBits;
+#endif
+				}
+			}
+			view++;
 		}
 	}
-
 }
 
 
@@ -1043,7 +1024,7 @@ static void R_MarkLeaves (void) {
 
 	// if the cluster is the same and the area visibility matrix
 	// hasn't changed, we don't need to mark everything again
-	if (!r_occlusion->integer)
+	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		for(i = 0; i < MAX_VISCOUNTS; i++)
 		{
@@ -1527,6 +1508,8 @@ R_AddWorldSurfaces
 =============
 */
 
+extern void RB_LeafOcclusion();
+
 vec3_t PREVIOUS_OCCLUSION_ORG = { -999999 };
 vec3_t PREVIOUS_OCCLUSION_ANGLES = { -999999 };
 
@@ -1535,7 +1518,7 @@ void R_AddWorldSurfaces (void) {
 #ifdef __PSHADOWS__
 	int pshadowBits;//, dlightBits;
 #endif
-	int changeFrustum;
+	int changeFrustum = 0;
 	int scene;
 
 	if ( !r_drawworld->integer ) {
@@ -1563,7 +1546,7 @@ void R_AddWorldSurfaces (void) {
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW))
 		R_MarkLeaves ();
 
-	if (!r_occlusion->integer)
+	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		// clear out the visible min/max
 		ClearBounds( tr.viewParms.visBounds[0], tr.viewParms.visBounds[1] );
@@ -1709,7 +1692,7 @@ void R_AddWorldSurfaces (void) {
 #endif
 	}
 
-	if (!r_occlusion->integer)
+	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 #ifdef __PSHADOWS__
 		R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, pshadowBits);
@@ -1752,7 +1735,14 @@ void R_AddWorldSurfaces (void) {
 			tr.changedFrustum = qfalse;
 		}
 
-		if (!r_cacheVisibleSurfaces->integer || tr.updateVisibleSurfaces[scene])
+		if (r_occlusion->integer && !r_lazyFrustum->integer)
+		{
+			tr.updateOcclusion[0] = qtrue;
+			RB_LeafOcclusion();
+			tr.updateOcclusion[0] = qfalse;
+		}
+
+		if ((!r_cacheVisibleSurfaces->integer || tr.updateVisibleSurfaces[scene]))
 		{
 			int i;
 			int occludedCount = 0;
@@ -1783,8 +1773,8 @@ void R_AddWorldSurfaces (void) {
 
 			tr.updateVisibleSurfaces[scene] = qfalse;
 			
-			if (occludedCount > 0)
-				ri->Printf(PRINT_ALL, "time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
+			if (occludedCount > 0 && r_occlusionDebug->integer)
+				ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
 		}
 		//ri.Printf(PRINT_ALL, "Change Frustum: %d\n", changeFrustum);
 
@@ -1803,7 +1793,7 @@ void R_AddWorldSurfaces (void) {
 
 	// now add all the potentially visible surfaces
 	// also mask invisible dlights for next frame
-	if (!r_occlusion->integer)
+	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		int i;
 

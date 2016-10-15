@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_DYNAMIC_SHADOWS 4
 #endif //__DYNAMIC_SHADOWS__
 
+#define	MAX_LIGHTALL_DLIGHTS 16
 
 
 // Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
@@ -215,6 +216,7 @@ extern cvar_t	*r_ext_texture_env_add;
 extern cvar_t	*r_ext_texture_filter_anisotropic;
 
 extern cvar_t  *r_occlusion;
+extern cvar_t  *r_occlusionDebug;
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
 extern cvar_t  *r_ext_texture_float;
@@ -551,6 +553,8 @@ typedef struct dlight_s {
 #ifdef __DYNAMIC_SHADOWS__
 	qboolean		activeShadows;
 #endif //__DYNAMIC_SHADOWS__
+
+	qboolean isGlowBased;
 } dlight_t;
 
 // a trRefEntity_t has all the information passed in by
@@ -944,7 +948,10 @@ typedef struct {
 	bool			hasRealOverlayMap;
 	bool			hasRealSteepMap;
 	bool			hasRealSteepMap2;
+	
 	qboolean		glow;
+	bool			glowColorFound;
+	vec4_t			glowColor;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
 
@@ -1419,6 +1426,10 @@ typedef enum
 	UNIFORM_LIGHTPOSITIONS,
 	UNIFORM_LIGHTDISTANCES,
 	UNIFORM_LIGHTCOLORS,
+	UNIFORM_VLIGHTPOSITIONS2,
+	UNIFORM_VLIGHTPOSITIONS,
+	UNIFORM_VLIGHTDISTANCES,
+	UNIFORM_VLIGHTCOLORS,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -2444,6 +2455,7 @@ typedef struct trGlobals_s {
 	//
 	shaderProgram_t genericShader[GENERICDEF_COUNT];
 	shaderProgram_t textureColorShader;
+	shaderProgram_t occlusionShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
@@ -2523,6 +2535,10 @@ typedef struct trGlobals_s {
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
 	image_t        *genericFBO3Image;
+
+	image_t        *dummyImage;
+	image_t        *dummyImage2;
+	image_t        *dummyImage3;
 
 	FBO_t          *anamorphicRenderFBO;
 	FBO_t          *bloomRenderFBO[3];
@@ -2679,6 +2695,7 @@ extern	cvar_t	*r_showcluster;
 extern cvar_t	*r_gamma;
 
 extern  cvar_t  *r_occlusion;
+extern cvar_t  *r_occlusionDebug;
 extern  cvar_t  *r_ext_draw_range_elements;
 extern  cvar_t  *r_ext_multi_draw_arrays;
 extern  cvar_t  *r_ext_framebuffer_object;
@@ -3299,6 +3316,8 @@ void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const flo
 void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
 void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
 void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
+void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
+void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
 
 shaderProgram_t *GLSL_GetGenericShaderProgram(int stage);
 

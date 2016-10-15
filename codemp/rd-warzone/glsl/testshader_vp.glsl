@@ -22,33 +22,15 @@ uniform vec3	u_PrimaryLightColor;
 
 varying vec2   var_TexCoords;
 varying vec3   var_vertPos;
-varying vec3   var_viewOrg;
-varying vec3   var_rayOrg;
-varying vec3   var_sunOrg;
 varying vec3   var_rayDir;
 varying vec3   var_sunDir;
 
 void main()
 {
+	gl_Position = u_ModelViewProjectionMatrix * vec4(attr_Position, 1.0);
+
 	var_TexCoords = attr_TexCoord0.st;
-
-	vec4 vertPos = u_ModelViewProjectionMatrix * vec4(attr_Position, 1.0);
-
 	var_vertPos = attr_Position.xyz;
-	var_viewOrg = u_ViewOrigin.xyz;
-	var_sunOrg = u_PrimaryLightOrigin.xyz;
 	var_rayDir = u_ViewOrigin.xyz - attr_Position.xyz;
 	var_sunDir = u_PrimaryLightOrigin.xyz - attr_Position.xyz;
-
-	var_rayOrg = var_viewOrg;
-
-	//var_vertPos = vertPos.xyz;
-	//var_viewOrg = (u_ModelViewProjectionMatrix * vec4(u_ViewOrigin, 1.0)).xyz;
-	//var_sunOrg = (u_ModelViewProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz;
-	//var_rayDir = var_viewOrg.xyz - vertPos.xyz;
-	//var_sunDir = var_sunOrg.xyz - vertPos.xyz;
-	
-	//var_rayOrg = (u_ModelViewProjectionMatrix * vec4(u_ViewOrigin, 1.0)).xyz;
-
-	gl_Position = vertPos;
 }

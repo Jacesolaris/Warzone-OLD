@@ -113,7 +113,7 @@ void main()
 	prof = zFar * zNear / (prof * (zFar - zNear) - zFar);  //linearize z sample
 
 	//obtain normal and color at current pixel:
-	vec3 norm = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st).xyz)*2.0-vec3(1.0));
+	vec3 norm = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st).xyz));
 	vec3 dcolor1 = texture2D(u_DiffuseMap, var_TexCoords.st).xyz;
 
 	float hf = samples/2.0;
@@ -140,7 +140,7 @@ void main()
 				if (length(dcolor2)>0.3)//color threshold
 #endif //USE_GLOWMAP
 				{
-					vec3 norm2 = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
+					vec3 norm2 = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)); 
 
 					//calculate approximate pixel distance:
 					vec3 dist = vec3(coords,abs(prof-prof2));

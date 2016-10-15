@@ -85,7 +85,7 @@ void main()
 		gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
 	}
 #else
-	gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
+	gl_FragColor = vec4(diffuseColor.rgb + volumeLight, 1.0);
 #endif
 #endif	
 }

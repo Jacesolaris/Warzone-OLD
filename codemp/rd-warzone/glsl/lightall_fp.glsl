@@ -644,7 +644,6 @@ void main()
 	vec3 viewDir = vec3(0.0), lightColor = vec3(0.0), ambientColor = vec3(0.0);
 	vec4 specular = vec4(0.0);
 	vec3 N, E, H;
-	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 	vec2 texCoords = m_TexCoords.xy;
@@ -707,9 +706,9 @@ void main()
 		viewDir = normalize(u_ViewOrigin.xyz - m_vertPos.xyz);
 	#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)*/
 
-	viewDir = normalize(u_ViewOrigin.xyz - m_vertPos.xyz);
+	viewDir = /*normalize*/(u_ViewOrigin.xyz - m_vertPos.xyz);
 
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+	mat3 tangentToWorld = mat3(normalize(var_Tangent.xyz), normalize(var_Bitangent.xyz), normalize(m_Normal.xyz));
 	//mat3 tangentToWorld = cotangent_frame(normalize(m_Normal.xyz), -viewDir, texCoords.xy);
 
 	E = normalize(viewDir);
@@ -735,14 +734,16 @@ void main()
 	{
 		#if defined(FAST_PARALLAX)
 
-			vec3 offsetDir = normalize(E * tangentToWorld);
+			//vec3 offsetDir = normalize(E * tangentToWorld);
+			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (m_Normal.xyz * E.z));
 			vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
 
 			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords, displacement);
 			texCoords += ParallaxOffset;
 
 		#else //!defined(FAST_PARALLAX)
-			vec3 offsetDir = normalize(E * tangentToWorld);
+			//vec3 offsetDir = normalize(E * tangentToWorld);
+			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (m_Normal.xyz * E.z));
 			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
 #if 0
@@ -868,17 +869,16 @@ void main()
 	#endif //defined(USE_SHADOWMAP) 
 
 
-
 	//vec4 norm = vec4(m_Normal.xyz, 0.0);
 	vec4 norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
-	N = norm.xyz * 2.0 - 1.0;
+	N.xy = norm.xy * 2.0 - 1.0;
 	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
-	N.xy *= u_NormalScale.xy;
-	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	N = tangentToWorld * N;
-	N = normalize(N);
-
-	DETAILED_NORMAL = N;
+	//N.xy *= u_NormalScale.xy;
+	N.xy *= 0.004;
+	//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+	N.z = sqrt(1.0 - dot(N.xy, N.xy));
+	//N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
+	N = normalize(tangentToWorld * N);
 
 
 
@@ -896,7 +896,7 @@ void main()
 
 	#endif //defined(USE_LIGHTMAP)
   
-		gl_FragColor = vec4 ((diffuse.rgb * lightColor) + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
+		gl_FragColor = vec4 (diffuse.rgb + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
 
 		if (u_Local1.a == 19 || u_Local1.a == 20)
 		{// Tree billboards... Need to match tree colors...
@@ -941,13 +941,7 @@ void main()
 		}
 	#endif
 
-
-	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
-		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
-		gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
-	#endif //defined(USE_SHADOWMAP)
-
-
+#if 0
 	#if (defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)) && !defined(USE_GLOW_BUFFER)
 		if (u_Local6.r > 0.0)
 		{
@@ -975,31 +969,45 @@ void main()
 				phongFactor = -u_Local5.b;
 			}
 
-			for (int li = 0; li < u_lightCount; li++)
+			if (u_lightCount > 0.0)
 			{
-				#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-					vec3 lightDir = m_vertPos.xyz - u_lightPositions2[li];
-				#else
-					vec3 lightDir = u_lightPositions2[li] - m_vertPos.xyz;
-				#endif
-				float lambertian3 = dot(lightDir.xyz,N);
-				float spec3 = 0.0;
-
-				if(lambertian3 > 0.0)
+				for (int li = 0; li < u_lightCount; li++)
 				{
-					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
+					vec3 lightDir = normalize(u_lightPositions2[li] - m_vertPos.xyz);
+					float lambertian3 = dot(lightDir.xyz,N);
+					float spec3 = 0.0;
 
-					if(lightStrength > 0.0)
-					{// this is blinn phong
-						vec3 halfDir3 = normalize(lightDir.xyz + E);
-						float specAngle3 = max(dot(halfDir3, N), 0.0);
-						spec3 = pow(specAngle3, 16.0);
-						gl_FragColor.rgb += vec3(spec3 * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
+					if(lambertian3 > 0.0)
+					{
+						float lightDist = distance(u_lightPositions2[li], m_vertPos.xyz);
+						float lightMax = u_lightDistances[li] * 1.5;//u_Local9.r;
+						
+						if (lightDist < lightMax)
+						{
+							float lightStrength = 1.0 - (lightDist / lightMax);
+							lightStrength = pow(lightStrength * 0.9/*u_Local9.g*/, 3.0/*u_Local9.b*/);
+
+							if(lightStrength > 0.0)
+							{// this is blinn phong
+								vec3 halfDir3 = normalize(lightDir.xyz + E);
+								float specAngle3 = max(dot(halfDir3, N), 0.0);
+								spec3 = pow(specAngle3, 16.0);
+								gl_FragColor.rgb += vec3((1.0 - spec3) * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
+							}
+						}
 					}
 				}
 			}
 		}
 	#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+#endif
+
+	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
+		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
+		gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
+	#endif //defined(USE_SHADOWMAP)
+
+	gl_FragColor.rgb *= lightColor;
 
 	//gl_FragColor.rgb = N.xyz * 0.5 + 0.5;
 
@@ -1009,6 +1017,6 @@ void main()
 		out_Glow = vec4(0.0);
 	#endif
 
-	out_Normal = vec4(DETAILED_NORMAL.xyz * 0.5 + 0.5, /*specular.a / 8.0*/displacement);
+	out_Normal = vec4(N.xyz, specular.a / 8.0/*displacement*/);
 	out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 }

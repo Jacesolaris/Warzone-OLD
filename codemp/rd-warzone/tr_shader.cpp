@@ -1560,6 +1560,53 @@ qboolean ForceGlow ( char *shader )
 	return qfalse;
 }
 
+static void ComputeShaderGlowColors( shaderStage_t *pStage )
+{
+	colorGen_t rgbGen = pStage->rgbGen;
+	alphaGen_t alphaGen = pStage->alphaGen;
+	
+	pStage->glowColorFound = qfalse;
+
+	pStage->glowColor[0] =  
+   	pStage->glowColor[1] = 
+   	pStage->glowColor[2] = 
+   	pStage->glowColor[3] = 1.0f; 
+
+	if (!pStage->glow) return;
+
+	switch ( rgbGen )
+	{
+		case CGEN_CONST:
+			pStage->glowColor[0] = pStage->constantColor[0] / 255.0f;
+			pStage->glowColor[1] = pStage->constantColor[1] / 255.0f;
+			pStage->glowColor[2] = pStage->constantColor[2] / 255.0f;
+			pStage->glowColor[3] = pStage->constantColor[3] / 255.0f;
+			//ri->Printf(PRINT_ALL, "Glow color found for shader %s - %f %f %f %f.\n", shader.name, pStage->glowColor[0], pStage->glowColor[1], pStage->glowColor[2], pStage->glowColor[3]);
+			pStage->glowColorFound = qtrue;
+			return;
+			break;
+		case CGEN_LIGHTMAPSTYLE:
+			VectorScale4(styleColors[pStage->lightmapStyle], 1.0f / 255.0f, pStage->glowColor);
+			//ri->Printf(PRINT_ALL, "Glow color found (style) for shader %s - %f %f %f %f.\n", shader.name, pStage->glowColor[0], pStage->glowColor[1], pStage->glowColor[2], pStage->glowColor[3]);
+			pStage->glowColorFound = qtrue;
+			return;
+			break;
+		default:
+			break;
+	}
+
+	//if (pStage->bundle[TB_DIFFUSEMAP].image && pStage->bundle[TB_DIFFUSEMAP].image[0] == tr.whiteImage)
+	{// Testing - Assume white... Might add shader keyword for glow light colors at some point maybe...
+		pStage->glowColor[0] = 1.0;
+		pStage->glowColor[1] = 1.0;
+		pStage->glowColor[2] = 1.0;
+		pStage->glowColor[3] = 1.0;
+		pStage->glowColorFound = qtrue;
+		//ri->Printf(PRINT_ALL, "Glow color set for whiteimage shader %s - %f %f %f %f.\n", shader.name, pStage->glowColor[0], pStage->glowColor[1], pStage->glowColor[2], pStage->glowColor[3]);
+		return;
+	}
+}
+
 /*
 ===================
 ParseStage
@@ -2568,6 +2615,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			|| stage->rgbGen == CGEN_LIGHTING_DIFFUSE ) {
 			stage->alphaGen = AGEN_SKIP;
 		}
+	}
+
+	if (stage->glow)
+	{
+		ComputeShaderGlowColors( stage );
 	}
 
 	//
@@ -5323,6 +5375,7 @@ static qboolean CollapseStagesToGLSL(void)
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
 
+#if 0
 	if (numStages > 1)
 	{
 		ri->Printf(PRINT_WARNING, "Shader %s has %i stages.\n", shader.name, numStages);
@@ -5392,6 +5445,7 @@ static qboolean CollapseStagesToGLSL(void)
 			}
 		}
 	}
+#endif
 
 	return (qboolean)numStages;
 }

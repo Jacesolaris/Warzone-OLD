@@ -1010,7 +1010,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	dest->projectionMatrix[11] = -1;
 	dest->projectionMatrix[15] = 0;
 
-	if (!r_occlusion->integer)
+	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		// Now that we have all the data for the projection matrix we can also setup the view frustum.
 		if(computeFrustum)
@@ -2259,7 +2259,7 @@ void R_RenderView (viewParms_t *parms) {
 
 	R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 
-	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer) {
+	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer && !(tr.viewParms.flags & VPF_SHADOWPASS)) {
 		R_AddDrawOcclusionCmd(&tr.viewParms);
 	}
 

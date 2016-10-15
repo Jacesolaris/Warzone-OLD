@@ -479,7 +479,7 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.genericFBO3Image, 0);
 		R_CheckFBO(tr.genericFbo3);
 	}
-	
+
 
 	//
 	// Bloom VBO's...

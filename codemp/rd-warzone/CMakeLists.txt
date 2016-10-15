@@ -49,6 +49,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_model.cpp"
 	"${MPDir}/rd-warzone/tr_model_iqm.cpp"
 	"${MPDir}/rd-warzone/tr_occlusion.cpp"
+	"${MPDir}/rd-warzone/tr_occlusion.h"
 	"${MPDir}/rd-warzone/tr_ocean.cpp"
 	"${MPDir}/rd-warzone/tr_ocean.h"
 	"${MPDir}/rd-warzone/tr_postprocess.cpp"
@@ -260,7 +261,7 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium")
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/wz-occlusion")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)

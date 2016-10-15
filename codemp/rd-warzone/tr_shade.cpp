@@ -1669,7 +1669,6 @@ void RB_UpdateMatrixes ( void )
 	MATRIX_UPDATE = qfalse;
 }
 
-const int	MAX_LIGHTALL_DLIGHTS = 16;
 int			NUM_CLOSE_LIGHTS = 0;
 int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS] = {0};
 vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS] = {0};
@@ -1679,22 +1678,21 @@ vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
 void RB_UpdateCloseLights ( void )
 {
 	if (!CLOSE_LIGHTS_UPDATE) return; // Already done for this frame...
-
-	/*for ( int l = 0; l < MAX_LIGHTALL_DLIGHTS; l++ )
-	{// Init...
-		CLOSEST_LIGHTS[l] = 0;
-		VectorClear(CLOSEST_LIGHTS_POSITIONS[l]);
-		CLOSEST_LIGHTS_DISTANCES[l] = 0.0;
-		VectorClear(CLOSEST_LIGHTS_COLORS[l]);
-	}*/
 	
 	NUM_CLOSE_LIGHTS = 0;
 
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
+		
+#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+		if (dl->color[0] < 0.0 && dl->color[1] < 0.0 && dl->color[2] < 0.0)
+		{// Surface glow light... But has no color assigned...
+			continue;
+		}
+#endif
 
-		float distance = Distance(backEnd.refdef.vieworg, dl->origin);
+		float distance = Distance(tr.refdef.vieworg, dl->origin);
 
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
@@ -1715,7 +1713,7 @@ void RB_UpdateCloseLights ( void )
 			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 			{// Find the most distance light in our current list to replace, if this new option is closer...
 				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
-				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
+				float		dist = Distance(thisLight->origin, tr.refdef.vieworg);
 
 				if (dist > farthest_distance)
 				{// This one is further!
@@ -1725,7 +1723,7 @@ void RB_UpdateCloseLights ( void )
 				}
 			}
 
-			if (Distance(dl->origin, backEnd.refdef.vieworg) < farthest_distance)
+			if (Distance(dl->origin, tr.refdef.vieworg) < farthest_distance)
 			{// This light is closer. Replace this one in our array of closest lights...
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
@@ -1757,6 +1755,8 @@ void RB_UpdateCloseLights ( void )
 		CLOSEST_LIGHTS_DISTANCES[i] *= 2.0;
 	}
 
+	//ri->Printf(PRINT_ALL, "Found %i close lights this frame.\n", NUM_CLOSE_LIGHTS);
+
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }
 
@@ -1766,6 +1766,7 @@ float waveTime = 0.5;
 float waveFreq = 0.1;
 
 extern void GLSL_AttachTextures( void );
+extern void GLSL_AttachGenericTextures( void );
 extern void GLSL_AttachWaterTextures( void );
 extern void GLSL_AttachWaterTextures2( void );
 
@@ -1783,7 +1784,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
 
 	RB_UpdateMatrixes();
-	RB_UpdateCloseLights();
+	//RB_UpdateCloseLights();
 
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -2441,7 +2442,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
 
-				if (pStage->glow)
+				if (pStage->glow && !pStage->glowColorFound)
 				{// No light added to glow stages...
 					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
 				}
@@ -2642,6 +2643,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
 		}
 
+#if 0
+		if (glState.currentFBO == tr.renderFbo)
+		{
+			if (isGeneric /*|| tess.shader->hasAlpha*/ || (pStage->type != ST_DIFFUSEMAP && pStage->type != ST_GLSL))
+			{// So we dont ever output to position and normal maps...
+				GLSL_AttachGenericTextures();
+			}
+			else
+			{
+				GLSL_AttachTextures();
+			}
+		}
+#endif
 
 		while (1)
 		{

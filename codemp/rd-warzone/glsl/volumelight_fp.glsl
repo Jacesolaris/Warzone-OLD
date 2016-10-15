@@ -4,9 +4,9 @@ uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
 
 uniform int			u_lightCount;
-uniform vec2		u_lightPositions[16];
-uniform float		u_lightDistances[16];
-uniform vec3		u_lightColors[16];
+uniform vec2		u_vlightPositions[16];
+uniform float		u_vlightDistances[16];
+uniform vec3		u_vlightColors[16];
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_Local0;
@@ -82,9 +82,9 @@ void main ( void )
 
 	for (int i = 0; i < u_lightCount; i++)
 	{
-		float dist = length(var_TexCoords - u_lightPositions[i]);
-		//float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_lightPositions[i]).r);
-		float depth = 1.0 - u_lightDistances[i];
+		float dist = length(var_TexCoords - u_vlightPositions[i]);
+		//float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_vlightPositions[i]).r);
+		float depth = 1.0 - u_vlightDistances[i];
 
 #ifndef NO_FALLOFF
 		float fall = clamp((fBloomrayFalloffRange * depth) - dist, 0.0, 1.0) * depth;
@@ -105,12 +105,12 @@ void main ( void )
 		if (fall > 0.0)
 		{
 #endif
-			inRangePositions[numInRange] = u_lightPositions[i];
+			inRangePositions[numInRange] = u_vlightPositions[i];
 			lightDepths[numInRange] = depth;
 #ifndef NO_FALLOFF
 			fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
 #endif
-			lightColors[numInRange] = u_lightColors[i];
+			lightColors[numInRange] = u_vlightColors[i];
 
 			if (lightColors[numInRange].r == 0.0 && lightColors[numInRange].g == 0.0 && lightColors[numInRange].b == 0.0)
 			{// When no color is set, skip adding this light... Should never happen, but just in case (for speed)...

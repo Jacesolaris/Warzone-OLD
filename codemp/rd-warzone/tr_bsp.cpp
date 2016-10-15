@@ -3310,12 +3310,13 @@ qboolean IgnoreCubemapsOnMap( void )
 	return qfalse;
 }
 
-float MAP_WATER_LEVEL = 131072.0;
+float		MAP_WATER_LEVEL = 131072.0;
 
-#define MAX_GLOW_LOCATIONS 65536
-int		NUM_MAP_GLOW_LOCATIONS = 0;
-vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS] = { 0 };
-vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS] = { 0 };
+#define		MAX_GLOW_LOCATIONS 65536
+int			NUM_MAP_GLOW_LOCATIONS = 0;
+vec3_t		MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS] = { 0 };
+vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS] = { 0 };
+qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS] = { qfalse };
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
@@ -3348,8 +3349,20 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			{
 				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
 				{
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 					hasGlow = qtrue;
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
+#else
+					if (surf->shader->stages[stage]->glowColorFound)
+					{
+						hasGlow = qtrue;
+						VectorCopy4(surf->shader->stages[stage]->glowColor, glowColor);
+					}
+					else
+					{
+						hasGlow = qfalse;
+					}
+#endif
 					break;
 				}
 			}
@@ -3380,6 +3393,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		{
 			VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
 			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+			MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 			NUM_MAP_GLOW_LOCATIONS++;
 		}
 	}
@@ -3454,8 +3468,20 @@ static void R_LoadCubemapWaypoints( void )
 			{
 				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
 				{
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 					hasGlow = qtrue;
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
+#else
+					if (surf->shader->stages[stage]->glowColorFound)
+					{
+						hasGlow = qtrue;
+						VectorCopy4(surf->shader->stages[stage]->glowColor, glowColor);
+					}
+					else
+					{
+						hasGlow = qfalse;
+					}
+#endif
 					break;
 				}
 			}
@@ -3490,6 +3516,7 @@ static void R_LoadCubemapWaypoints( void )
 			{
 				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
 				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 				NUM_MAP_GLOW_LOCATIONS++;
 			}
 
@@ -3530,6 +3557,8 @@ static void R_LoadCubemapWaypoints( void )
 			if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
 			{
 				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 				NUM_MAP_GLOW_LOCATIONS++;
 			}
 		}

@@ -63,8 +63,8 @@ uniform float  u_VertexLerp;
 uniform mat4   u_BoneMatrices[20];
 #endif
 
-varying vec2   var_DiffuseTex;
-varying vec4   var_Color;
+varying vec2		var_DiffuseTex;
+varying vec4		var_Color;
 
 attribute vec3		attr_LightDirection;
 uniform mat4		u_ModelMatrix;
