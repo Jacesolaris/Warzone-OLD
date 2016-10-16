@@ -316,7 +316,7 @@ void Tess_AddCube(const vec3_t mins, const vec3_t maxs, const vec4_t color)
 #endif //__SOFTWARE_OCCLUSION__
 }
 
-extern void RB_UpdateMatrixes ( void );
+extern void RB_UpdateMatrixes(void);
 
 void RB_UpdateOcclusion()
 {
@@ -412,7 +412,7 @@ void RB_LeafOcclusion()
 	// Don't draw into color or depth
 	GL_State(0);
 	qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	
+
 	/* Testing */
 	//GL_State(GLS_DEFAULT);
 	//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -556,12 +556,12 @@ void RB_LeafOcclusion()
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		MaskedOcclusionCulling::Implementation implementation = moc->GetImplementation();
-		
-		/*switch (implementation) 
+
+		/*switch (implementation)
 		{
-			case MaskedOcclusionCulling::SSE2: ri->Printf(PRINT_ALL, "Using SSE2 version\n"); break;
-			case MaskedOcclusionCulling::SSE41: ri->Printf(PRINT_ALL, "Using SSE41 version\n"); break;
-			case MaskedOcclusionCulling::AVX2: ri->Printf(PRINT_ALL, "Using AVX2 version\n"); break;
+		case MaskedOcclusionCulling::SSE2: ri->Printf(PRINT_ALL, "Using SSE2 version\n"); break;
+		case MaskedOcclusionCulling::SSE41: ri->Printf(PRINT_ALL, "Using SSE41 version\n"); break;
+		case MaskedOcclusionCulling::AVX2: ri->Printf(PRINT_ALL, "Using AVX2 version\n"); break;
 		}*/
 
 		////////////////////////////////////////////////////////////////////////////////////////
@@ -571,8 +571,8 @@ void RB_LeafOcclusion()
 		// Setup a rendertarget with near clip plane at w = 1.0
 		const int width = glConfig.vidWidth * r_superSampleMultiplier->value, height = glConfig.vidHeight * r_superSampleMultiplier->value;
 		moc->SetResolution(width, height);
-		moc->SetNearClipPlane(r_znear->value);
-		
+		//moc->SetNearClipPlane(r_znear->value);
+
 		// Clear the depth buffer
 		moc->ClearBuffer();
 
@@ -593,19 +593,19 @@ void RB_LeafOcclusion()
 			tess.numIndexes = 0;
 			tess.firstIndex = 0;
 
-			vec3_t mins, maxs;
-			VectorSubtract(leaf->mins, backEnd.ori.viewOrigin, mins);
-			VectorSubtract(leaf->maxs, backEnd.ori.viewOrigin, maxs);
+			//vec3_t mins, maxs;
+			//VectorSubtract(leaf->mins, backEnd.ori.viewOrigin, mins);
+			//VectorSubtract(leaf->maxs, backEnd.ori.viewOrigin, maxs);
 
-			//vec4_t mins, maxs, eye;
-			//R_TransformModelToClip(leaf->mins, backEnd.ori.modelMatrix, backEnd.viewParms.projectionMatrix, eye, mins);
-			//R_TransformModelToClip(leaf->maxs, backEnd.ori.modelMatrix, backEnd.viewParms.projectionMatrix, eye, maxs);
+			vec4_t mins, maxs, eye;
+			R_TransformModelToClip(leaf->mins, tr.ori.modelMatrix/*backEnd.ori.modelMatrix*/, backEnd.viewParms.projectionMatrix, eye, mins);
+			R_TransformModelToClip(leaf->maxs, tr.ori.modelMatrix/*backEnd.ori.modelMatrix*/, backEnd.viewParms.projectionMatrix, eye, maxs);
 
 			/*if (VectorLength(mins) < 4096.0 || VectorLength(maxs) < 4096.0)
 			{
-				leaf->occluded[0] = qfalse;
-				NUM_VISIBLE++;
-				continue;
+			leaf->occluded[0] = qfalse;
+			NUM_VISIBLE++;
+			continue;
 			}*/
 
 			Tess_AddCube(mins, maxs, colorWhite);
@@ -621,37 +621,67 @@ void RB_LeafOcclusion()
 
 			MaskedOcclusionCulling::CullingResult result;
 
-			
+
 			//if (r_occlusion->integer == 2)
 			//	result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL);
 			//else
 			//	result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL);
-			
-			MaskedOcclusionCulling::VertexLayout TessVertexLayout(sizeof(float), 2 * sizeof(float), 3 * sizeof(float));
-			MaskedOcclusionCulling::VertexLayout TessVertexLayout2(sizeof(float), 2 * sizeof(float), 4 * sizeof(float));
+
+			//MaskedOcclusionCulling::VertexLayout TessVertexLayout(sizeof(float), 2 * sizeof(float), 3 * sizeof(float));
+			//MaskedOcclusionCulling::VertexLayout TessVertexLayout2(sizeof(float), 2 * sizeof(float), 4 * sizeof(float));
 
 			// A triangle specified on struct of arrays (SoA) form
 			/*float SoAVerts[] = {
 				10, 10, 7, // x-coordinates
 				-10, -7, -10, // y-coordinates
 				10, 10, 10  // w-coordinates
-			};*/
+				};*/
 
 			// Set vertex layout (stride, y offset, w offset)
-			MaskedOcclusionCulling::VertexLayout SoAVertexLayout(sizeof(float), 3 * sizeof(float), 6 * sizeof(float));
+			//MaskedOcclusionCulling::VertexLayout SoAVertexLayout(sizeof(float), 3 * sizeof(float), 6 * sizeof(float));
 
-			if (r_occlusion->integer == 6)
-				result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, SoAVertexLayout);
+			
+			/*if (r_occlusion->integer == 6)
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, SoAVertexLayout);
 			else if (r_occlusion->integer == 5)
-				result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, SoAVertexLayout);
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, SoAVertexLayout);
 			else if (r_occlusion->integer == 4)
-				result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout2);
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout2);
 			else if (r_occlusion->integer == 3)
-				result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout2);
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout2);
 			else if (r_occlusion->integer == 2)
-				result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);
 			else
-				result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);*/
+			
+			
+			MaskedOcclusionCulling::VertexLayout TessVertexLayout(sizeof(float) * 4, sizeof(float), sizeof(float) * 3);
+			result = moc->TestTriangles((float*)tess.xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);
+			
+#if 0
+			vec3_t xyz[6*4];
+			for (int t = 0; t < 6*4; t++)
+			{
+				VectorSet(tess.xyz[t], xyz[t][0], xyz[t][1], xyz[t][2]);
+			}
+
+			if (r_occlusion->integer == 8)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, SoAVertexLayout);
+			else if (r_occlusion->integer == 7)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, SoAVertexLayout);
+			else if (r_occlusion->integer == 6)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout2);
+			else if (r_occlusion->integer == 5)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout2);
+			else if (r_occlusion->integer == 4)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);
+			else if (r_occlusion->integer == 3)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL, nullptr, TessVertexLayout);
+			else if (r_occlusion->integer == 2)
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, glState.modelviewProjection, MaskedOcclusionCulling::CLIP_PLANE_ALL);
+			else
+				result = moc->TestTriangles((float*)xyz, tess.indexes, tess.numIndexes - tess.firstIndex, nullptr, MaskedOcclusionCulling::CLIP_PLANE_ALL);
+#endif
 
 			/*
 			vec4 clipSpacePos = projectionMatrix * (viewMatrix * vec4(point3D, 1.0));
@@ -665,17 +695,17 @@ void RB_LeafOcclusion()
 
 			if (r_occlusion->integer == 1)
 			{
-				moc->TransformVertices(glState.modelviewProjection, mins, ndcSpaceMins, 1);
-				moc->TransformVertices(glState.modelviewProjection, maxs, ndcSpaceMaxs, 1);
+			moc->TransformVertices(glState.modelviewProjection, mins, ndcSpaceMins, 1);
+			moc->TransformVertices(glState.modelviewProjection, maxs, ndcSpaceMaxs, 1);
 			}
 			else
 			{
-				moc->TransformVertices(backEnd.ori.modelMatrix, mins, clipSpaceMins, 1);
-				moc->TransformVertices(backEnd.ori.modelMatrix, maxs, clipSpaceMaxs, 1);
-				moc->TransformVertices(backEnd.viewParms.projectionMatrix, clipSpaceMins, ndcMins, 1);
-				moc->TransformVertices(backEnd.viewParms.projectionMatrix, clipSpaceMaxs, ndcMaxs, 1);
-				VectorSet4(ndcSpaceMins, ndcMins[0] / ndcMins[4], ndcMins[1] / ndcMins[4], ndcMins[2] / ndcMins[4], ndcMins[3]);
-				VectorSet4(ndcSpaceMaxs, ndcMaxs[0] / ndcMaxs[4], ndcMaxs[1] / ndcMaxs[4], ndcMaxs[2] / ndcMaxs[4], ndcMaxs[3]);
+			moc->TransformVertices(backEnd.ori.modelMatrix, mins, clipSpaceMins, 1);
+			moc->TransformVertices(backEnd.ori.modelMatrix, maxs, clipSpaceMaxs, 1);
+			moc->TransformVertices(backEnd.viewParms.projectionMatrix, clipSpaceMins, ndcMins, 1);
+			moc->TransformVertices(backEnd.viewParms.projectionMatrix, clipSpaceMaxs, ndcMaxs, 1);
+			VectorSet4(ndcSpaceMins, ndcMins[0] / ndcMins[4], ndcMins[1] / ndcMins[4], ndcMins[2] / ndcMins[4], ndcMins[3]);
+			VectorSet4(ndcSpaceMaxs, ndcMaxs[0] / ndcMaxs[4], ndcMaxs[1] / ndcMaxs[4], ndcMaxs[2] / ndcMaxs[4], ndcMaxs[3]);
 			}
 
 			result = moc->TestRect(ndcSpaceMins[0], ndcSpaceMins[1], ndcSpaceMaxs[0], ndcSpaceMaxs[1], ndcSpaceMins[3]);
@@ -730,11 +760,11 @@ void RB_LeafOcclusion()
 }
 
 
-const void	*RB_DrawOcclusion( const void *data ) {
+const void	*RB_DrawOcclusion(const void *data) {
 	const drawOcclusionCommand_t	*cmd;
 
 	// finish any 2D drawing if needed
-	if ( tess.numIndexes ) {
+	if (tess.numIndexes) {
 		RB_EndSurface();
 	}
 
@@ -747,11 +777,11 @@ const void	*RB_DrawOcclusion( const void *data ) {
 	return (const void *)(cmd + 1);
 }
 
-void	R_AddDrawOcclusionCmd( viewParms_t *parms ) {
+void	R_AddDrawOcclusionCmd(viewParms_t *parms) {
 	drawOcclusionCommand_t	*cmd;
 
-	cmd = (drawOcclusionCommand_t *)R_GetCommandBuffer( sizeof( *cmd ) );
-	if ( !cmd ) {
+	cmd = (drawOcclusionCommand_t *)R_GetCommandBuffer(sizeof(*cmd));
+	if (!cmd) {
 		return;
 	}
 	cmd->commandId = RC_DRAW_OCCLUSION;

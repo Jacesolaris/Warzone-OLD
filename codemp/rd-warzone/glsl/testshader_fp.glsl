@@ -63,6 +63,8 @@ float zfar = u_ViewInfo.y; //camera clipping end
 //#define		C_HBAO_ZFAR 1.0
 //#define		C_HBAO_ZFAR u_Local0.r
 
+#define		fvTexelSize (vec2(1.0) / u_Dimensions.xy)
+
 float linearize(float depth)
 {
 	return -zfar * znear / (depth * (zfar - znear) - zfar);
@@ -76,7 +78,28 @@ float linearizeDepth ( float depth )
 	//return linearize(depth);
 }
 
-vec4 ConvertToNormals ( vec4 color )
+vec3 normal_from_depth(float depth, vec2 texcoords, vec3 fakeNormals) {
+	vec2 offset1 = vec2(0.0, fvTexelSize.y);
+	vec2 offset2 = vec2(fvTexelSize.x, 0.0);
+
+	float depth1 = linearizeDepth(texture2D(u_ScreenDepthMap, texcoords + offset1).r);
+	float depth2 = linearizeDepth(texture2D(u_ScreenDepthMap, texcoords + offset2).r);
+
+	vec3 p1 = vec3(offset1, depth1 - depth);
+	vec3 p2 = vec3(offset2, depth2 - depth);
+
+	vec3 normal = cross(p1, p2);
+	if (u_Local0.g == 1.0)
+		normal.y = -normal.y;
+
+	normal.z = -normal.z;
+
+	//normal *= fakeNormals;
+
+	return normalize(normal);
+}
+
+vec4 ConvertToNormals(vec4 color)
 {
 	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
 	// wasting vram on real normals.
@@ -100,27 +123,23 @@ vec4 ConvertToNormals ( vec4 color )
 	return norm;
 }
 
-#define		fvTexelSize (vec2(1.0) / u_Dimensions.xy)
+mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
+{
+	// get edge vectors of the pixel triangle
+	vec3 dp1 = dFdx(p);
+	vec3 dp2 = dFdy(p);
+	vec2 duv1 = dFdx(uv);
+	vec2 duv2 = dFdy(uv);
 
-vec3 normal_from_depth(float depth, vec2 texcoords, vec3 fakeNormals) {
-	vec2 offset1 = vec2(0.0, fvTexelSize.y);
-	vec2 offset2 = vec2(fvTexelSize.x, 0.0);
+	// solve the linear system
+	vec3 dp2perp = cross(dp2, N);
+	vec3 dp1perp = cross(N, dp1);
+	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 
-	float depth1 = linearizeDepth(texture2D(u_ScreenDepthMap, texcoords + offset1).r);
-	float depth2 = linearizeDepth(texture2D(u_ScreenDepthMap, texcoords + offset2).r);
-
-	vec3 p1 = vec3(offset1, depth1 - depth);
-	vec3 p2 = vec3(offset2, depth2 - depth);
-
-	vec3 normal = cross(p1, p2);
-	if (u_Local0.g == 1.0)
-		normal.y = -normal.y;
-
-	normal.z = -normal.z;
-
-	normal *= fakeNormals;
-
-	return normalize(normal);
+	// construct a scale-invariant frame 
+	float invmax = inversesqrt(max(dot(T, T), dot(B, B)));
+	return mat3(T * invmax, B * invmax, N);
 }
 
 void main (void)
@@ -128,20 +147,26 @@ void main (void)
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
 	//vec4 norm = texture2D(u_NormalMap, var_TexCoords);
 	vec4 norm = ConvertToNormals(color);
+	vec4 cNorm = norm;
 	vec4 position = texture2D(u_PositionMap, var_TexCoords);
 
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
-	vec3 N = norm.xyz * E * u_Local1.a;// * 2.0 - 1.0;
+	//vec3 N = norm.xyz * E * u_Local1.a;// * 2.0 - 1.0;
 
-	if (u_Local0.b == 1.0)
-		N.z = sqrt(1.0 - dot(N.xy, N.xy));
+	float depth = linearizeDepth(texture2D(u_ScreenDepthMap, var_TexCoords).r);
+	norm.xyz = normal_from_depth(depth, var_TexCoords, vec3(1.0, 1.0, 1.0));
+	mat3 TBN = cotangent_frame(-norm.xyz, -E, var_TexCoords);
+	vec3 N = normalize(TBN * -cNorm.xyz);
+
+	//if (u_Local0.b == 1.0)
+	//	N.z = sqrt(1.0 - dot(N.xy, N.xy));
 
 	//float depth = linearizeDepth(texture2D(u_ScreenDepthMap, var_TexCoords).r);
 	//vec3 N = (normal_from_depth(depth, var_TexCoords, norm.rgb) * u_Local1.a) * 2.0 - 1.0 /** 0.004*/;
 	
 
 	//gl_FragColor = vec4(norm.xyz * 0.5 + 0.5, 1.0);
-	//gl_FragColor = vec4(N.rgb /** 0.5 + 0.5*/, 1.0);
+	//gl_FragColor = vec4(N.rgb * 0.5 + 0.5, 1.0);
 	//gl_FragColor = vec4(depth, depth, depth, 1.0);
 	//return;
 
