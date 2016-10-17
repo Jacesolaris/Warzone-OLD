@@ -586,13 +586,15 @@ typedef struct {
 typedef enum
 {
 	VBO_USAGE_STATIC,
-	VBO_USAGE_DYNAMIC
+	VBO_USAGE_DYNAMIC,
+	VBO_USAGE_STREAM
 } vboUsage_t;
 
 typedef struct VBO_s
 {
 	uint32_t        vertexesVBO;
 	int             vertexesSize;	// amount of memory data allocated for all vertices in bytes
+	int				vboUsage;
 	uint32_t        ofs_xyz;
 	uint32_t        ofs_normal;
 	uint32_t        ofs_st;
@@ -620,6 +622,7 @@ typedef struct IBO_s
 	uint32_t        indexesVBO;
 	int             indexesSize;	// amount of memory data allocated for all triangles in bytes
 //  uint32_t        ofsIndexes;
+	int				iboUsage;
 } IBO_t;
 
 //===============================================================================

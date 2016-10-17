@@ -61,6 +61,9 @@ static GLenum GetGLBufferUsage ( vboUsage_t usage )
 			return GL_STATIC_DRAW;
 
 		case VBO_USAGE_DYNAMIC:
+			return GL_DYNAMIC_DRAW;// GL_STREAM_DRAW;
+
+		case VBO_USAGE_STREAM:
 			return GL_STREAM_DRAW;
 
 		default:
@@ -91,6 +94,7 @@ VBO_t *R_CreateVBO(byte * vertexes, int vertexesSize, vboUsage_t usage)
 	memset(vbo, 0, sizeof(*vbo));
 
 	vbo->vertexesSize = vertexesSize;
+	vbo->vboUsage = glUsage;
 
 	qglGenBuffers(1, &vbo->vertexesVBO);
 
@@ -126,6 +130,7 @@ IBO_t *R_CreateIBO(byte * indexes, int indexesSize, vboUsage_t usage)
 	tr.numIBOs++;
 
 	ibo->indexesSize = indexesSize;
+	ibo->iboUsage = glUsage;
 
 	qglGenBuffers(1, &ibo->indexesVBO);
 
@@ -266,7 +271,8 @@ void R_InitVBOs(void)
 	dataSize += sizeof(tess.lightdir[0]);
 	dataSize *= SHADER_MAX_VERTEXES;
 
-	tess.vbo = R_CreateVBO(NULL, dataSize, VBO_USAGE_DYNAMIC);
+	//tess.vbo = R_CreateVBO(NULL, dataSize, VBO_USAGE_DYNAMIC);
+	tess.vbo = R_CreateVBO(NULL, dataSize, VBO_USAGE_STATIC);
 
 	offset = 0;
 
@@ -288,7 +294,8 @@ void R_InitVBOs(void)
 
 	dataSize = sizeof(tess.indexes[0]) * SHADER_MAX_INDEXES;
 
-	tess.ibo = R_CreateIBO(NULL, dataSize, VBO_USAGE_DYNAMIC);
+	//tess.ibo = R_CreateIBO(NULL, dataSize, VBO_USAGE_DYNAMIC);
+	tess.ibo = R_CreateIBO(NULL, dataSize, VBO_USAGE_STATIC);
 
 	R_BindNullVBO();
 	R_BindNullIBO();
@@ -416,7 +423,7 @@ void RB_UpdateVBOs(unsigned int attribBits)
 		R_BindVBO(tess.vbo);
 
 		// orphan old buffer so we don't stall on it
-		qglBufferData(GL_ARRAY_BUFFER, tess.vbo->vertexesSize, NULL, GL_STREAM_DRAW);
+		qglBufferData(GL_ARRAY_BUFFER, tess.vbo->vertexesSize, NULL, tess.vbo->vboUsage);
 
 		if(attribBits & ATTR_BITS)
 		{
@@ -474,7 +481,7 @@ void RB_UpdateVBOs(unsigned int attribBits)
 		R_BindIBO(tess.ibo);
 
 		// orphan old buffer so we don't stall on it
-		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, tess.ibo->indexesSize, NULL, GL_STREAM_DRAW);
+		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, tess.ibo->indexesSize, NULL, tess.ibo->iboUsage);
 
 		qglBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, tess.numIndexes * sizeof(tess.indexes[0]), tess.indexes);
 	}

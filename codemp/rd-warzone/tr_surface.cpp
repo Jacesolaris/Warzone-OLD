@@ -76,6 +76,10 @@ void RB_CheckVBOandIBO(VBO_t *vbo, IBO_t *ibo)
 
 	if (vbo != tess.vbo && ibo != tess.ibo)
 		tess.useInternalVBO = qfalse;
+	else if (vbo->vboUsage == GL_STATIC_DRAW && ibo->iboUsage == GL_STATIC_DRAW)
+		tess.useInternalVBO = qtrue;
+	else
+		tess.useInternalVBO = qfalse;
 }
 
 
@@ -2276,7 +2280,10 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 	R_BindVBO(surface->vbo);
 	R_BindIBO(surface->ibo);
 
-	tess.useInternalVBO = qfalse;
+	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
+		tess.useInternalVBO = qtrue;
+	else
+		tess.useInternalVBO = qfalse;
 
 	tess.numIndexes += surface->numIndexes;
 	tess.numVertexes += surface->numVerts;

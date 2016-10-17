@@ -605,7 +605,7 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 		qglGenBuffers(1, &ibo->indexesVBO);
 
 		R_BindIBO(ibo);
-		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, numIboIndexes * sizeof(*iboIndexes), iboIndexes, GL_STATIC_DRAW);
+		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, numIboIndexes * sizeof(*iboIndexes), iboIndexes, ibo->iboUsage);
 		R_BindNullIBO();
 
 		GL_CheckErrors();

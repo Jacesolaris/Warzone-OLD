@@ -1773,8 +1773,8 @@ void R_AddWorldSurfaces (void) {
 
 			tr.updateVisibleSurfaces[scene] = qfalse;
 			
-			if (occludedCount > 0 && r_occlusionDebug->integer)
-				ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
+			//if (occludedCount > 0 && r_occlusionDebug->integer)
+			//	ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
 		}
 		//ri.Printf(PRINT_ALL, "Change Frustum: %d\n", changeFrustum);
 

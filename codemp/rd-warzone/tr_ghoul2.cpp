@@ -3497,7 +3497,10 @@ void RB_SurfaceGhoul( CRenderableSurface *surf )
 	R_BindVBO(surface->vbo);
 	R_BindIBO(surface->ibo);
 
-	tess.useInternalVBO = qfalse;
+	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
+		tess.useInternalVBO = qtrue;
+	else
+		tess.useInternalVBO = qfalse;
 
 	tess.numIndexes += surface->numIndexes;
 	tess.numVertexes += surface->numVertexes;
