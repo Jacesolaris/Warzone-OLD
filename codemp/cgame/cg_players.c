@@ -6934,15 +6934,15 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 			//[RGBSabers]		
 			if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 			{
-				if (saberType == 1 || saberType == 2 || saberType == 3)
-				{
+				//if (saberType == 1 || saberType == 2 || saberType == 3)
+				//{
 					//saber.radius = coreradius / 2.9f;
 					saber.radius = coreradius;
-				}
-				else
-				{
-					saber.radius = coreradius;
-				}
+				//}
+				//else
+				//{
+				//	saber.radius = coreradius;
+				//}
 				AddRefEntityToScene(&saber);
 			}
 			//[/RGBSabers]
@@ -13148,8 +13148,7 @@ void SmoothTrueView(vec3_t eyeAngles)
 		DidSpecial = qtrue;
 	}
 
-	if (((cg.predictedPlayerState.torsoAnim) == BOTH_JUMPFLIPSLASHDOWN1)
-		|| ((cg.predictedPlayerState.torsoAnim) == BOTH_JUMPFLIPSLASHDOWN1))
+	if (cg.predictedPlayerState.torsoAnim == BOTH_JUMPFLIPSLASHDOWN1)
 	{
 		eyeRange = qfalse;
 		DidSpecial = qtrue;

@@ -148,8 +148,8 @@ void CStringEdPackage::Clear( SE_BOOL bChangingLanguages )
 	}
 
 	m_bEndMarkerFound_ParseOnly = SE_FALSE;
-	m_strCurrentEntryRef_ParseOnly = "";
-	m_strCurrentEntryEnglish_ParseOnly = "";
+	m_strCurrentEntryRef_ParseOnly.clear();
+	m_strCurrentEntryEnglish_ParseOnly.clear();
 	//
 	// the other vars are cleared in SetupNewFileParse(), and are ok to not do here.
 	//
@@ -395,7 +395,7 @@ const char *CStringEdPackage::InsideQuotes( const char *psLine )
 	//	be static as well, hence permanent. (problem on consoles?)
 	//
 	static	string	str;
-					str = "";	// do NOT join to above line
+					str.clear();	// do NOT join to above line
 
 	// skip any leading whitespace...
 	//
@@ -419,18 +419,18 @@ const char *CStringEdPackage::InsideQuotes( const char *psLine )
 	{
 		// lose any trailing whitespace...
 		//
-		while (	str.c_str()[ strlen(str.c_str()) -1 ] == ' ' ||
-				str.c_str()[ strlen(str.c_str()) -1 ] == '\t'
+		while (	str.c_str()[ str.length() -1 ] == ' ' ||
+				str.c_str()[ str.length() -1 ] == '\t'
 				)
 		{
-			str.erase( strlen(str.c_str()) -1, 1);
+			str.erase( str.length() -1, 1);
 		}
 
 		// lose any trailing quote...
 		//
-		if (str.c_str()[ strlen(str.c_str()) -1 ] == '"')
+		if (str.c_str()[ str.length() -1 ] == '"')
 		{
-			str.erase( strlen(str.c_str()) -1, 1);
+			str.erase( str.length() -1, 1);
 		}
 	}
 
@@ -879,7 +879,7 @@ static const char *SE_GetFoundFile( string &strResult )
 {
 	static char sTemp[1024/*MAX_PATH*/];
 
-	if (!strlen(strResult.c_str()))
+	if (!strResult.length())
 		return NULL;
 
 	strncpy(sTemp,strResult.c_str(),sizeof(sTemp)-1);

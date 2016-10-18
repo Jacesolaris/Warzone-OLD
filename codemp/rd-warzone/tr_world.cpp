@@ -868,7 +868,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		{// Occlusion culling...
 			int scene = tr.viewParms.isPortal ? 1 : 0;
 			tr.world->visibleLeafs[scene][tr.world->numVisibleLeafs[scene]++] = node;
-			node->occluded[scene] = qfalse;
+			//node->occluded[scene] = qfalse;
 			return;
 		}
 
@@ -1509,6 +1509,9 @@ R_AddWorldSurfaces
 */
 
 extern void RB_LeafOcclusion();
+extern void R_RotateForViewer(void);
+extern void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2]);
+extern void R_SetupProjectionZ(viewParms_t *dest);
 
 vec3_t PREVIOUS_OCCLUSION_ORG = { -999999 };
 vec3_t PREVIOUS_OCCLUSION_ANGLES = { -999999 };
@@ -1699,6 +1702,7 @@ void R_AddWorldSurfaces (void) {
 #else //!__PSHADOWS__
 		R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, 0/*pshadowBits*/);
 #endif //__PSHADOWS__
+		tr.updateOcclusion[0] = qtrue;
 	}
 	else
 	{
@@ -1735,12 +1739,37 @@ void R_AddWorldSurfaces (void) {
 			tr.changedFrustum = qfalse;
 		}
 
+		/*
 		if (r_occlusion->integer && !r_lazyFrustum->integer)
 		{
 			tr.updateOcclusion[0] = qtrue;
+			
+			viewParms_t originalParms = tr.viewParms;
+			orientationr_t originalOri = tr.ori;
+			tr.viewParms.fovX = backEnd.refdef.fov_x;
+			tr.viewParms.fovY = backEnd.refdef.fov_y;
+			//R_SetupProjection(&tr.viewParms, r_znear->value, originalParms.zFar, qfalse);
+			R_SetupProjectionOrtho(&tr.viewParms, tr.viewParms.visBounds);
+			R_RotateForViewer();
+
+			matrix_t mm, pm;
+			Matrix16Copy(tr.ori.modelMatrix, mm);
+			Matrix16Copy(tr.viewParms.projectionMatrix, pm);
+			
+			tr.viewParms = originalParms;
+			tr.ori = originalOri;
+
+			Matrix16Copy(mm, tr.ori.modelMatrix);
+			Matrix16Copy(pm, tr.viewParms.projectionMatrix);
+
 			RB_LeafOcclusion();
+
+			tr.viewParms = originalParms;
+			tr.ori = originalOri;
+
 			tr.updateOcclusion[0] = qfalse;
 		}
+		*/
 
 		if ((!r_cacheVisibleSurfaces->integer || tr.updateVisibleSurfaces[scene]))
 		{
@@ -1773,8 +1802,8 @@ void R_AddWorldSurfaces (void) {
 
 			tr.updateVisibleSurfaces[scene] = qfalse;
 			
-			//if (occludedCount > 0 && r_occlusionDebug->integer)
-			//	ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
+			if (r_occlusionDebug->integer == 4)
+				ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs[scene]);
 		}
 		//ri.Printf(PRINT_ALL, "Change Frustum: %d\n", changeFrustum);
 

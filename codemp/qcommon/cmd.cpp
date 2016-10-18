@@ -122,7 +122,7 @@ void Cbuf_ExecuteText (int exec_when, const char *text)
 	switch (exec_when)
 	{
 	case EXEC_NOW:
-		if (text && strlen(text) > 0) {
+		if (text && text[0] != '\0') {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
 			Cmd_ExecuteString (text);
 		} else {

@@ -805,7 +805,7 @@ void CROFFSystem::UpdateEntities(qboolean isClient)
 	{
 		if ((*itr)->mIsClient != isClient)
 		{
-			itr++;
+			++itr;
 			continue;
 		}
 
@@ -821,7 +821,7 @@ void CROFFSystem::UpdateEntities(qboolean isClient)
 		}
 		else
 		{
-			itr++;
+			++itr;
 		}
 	}
 }

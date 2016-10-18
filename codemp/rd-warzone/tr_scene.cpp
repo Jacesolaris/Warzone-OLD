@@ -101,7 +101,7 @@ void R_AddPolygonSurfaces( void ) {
 
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
-	fogMask = -((tr.refdef.rdflags & RDF_NOFOG) == 0);
+	fogMask = !((tr.refdef.rdflags & RDF_NOFOG) == 0);
 
 	poly = tr.refdef.polys;
 

@@ -3254,6 +3254,8 @@ void CL_LocalServers_f( void ) {
 	// can use that to prevent spoofed server responses from invalid ip
 	message = "\377\377\377\377getinfo xxx";
 
+	size_t messageLen = strlen(message);
+
 	// send each message twice in case one is dropped
 	for ( i = 0 ; i < 2 ; i++ ) {
 		// send a broadcast packet on each server port
@@ -3263,7 +3265,7 @@ void CL_LocalServers_f( void ) {
 			to.port = BigShort( (short)(PORT_SERVER + j) );
 
 			to.type = NA_BROADCAST;
-			NET_SendPacket( NS_CLIENT, strlen( message ), message, to );
+			NET_SendPacket( NS_CLIENT, messageLen, message, to );
 		}
 	}
 }

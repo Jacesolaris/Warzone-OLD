@@ -963,6 +963,7 @@ typedef	map < int, bool >		drawMap_m;
 
 void CNavigator::ShowEdges( void )
 {
+	sharedEntity_t *ent = SV_GentityNum(0);
 	node_v::iterator	ni;
 	vec3_t	start, end;
 
@@ -973,12 +974,13 @@ void CNavigator::ShowEdges( void )
 	STL_ITERATE( ni, m_nodes )
 	{
 		(*ni)->GetPosition( start );
-		if ( DistanceSquared( SV_GentityNum(0)->r.currentOrigin, start ) >= 1048576 )
+
+		if ( DistanceSquared( ent->r.currentOrigin, start ) >= 1048576 )
 		{
 			continue;
 		}
 
-		if (!SV_inPVS(SV_GentityNum(0)->r.currentOrigin, start))
+		if (!SV_inPVS(ent->r.currentOrigin, start))
 		{
 			continue;
 		}
@@ -1004,12 +1006,12 @@ void CNavigator::ShowEdges( void )
 			//Set this as drawn
 			drawMap[id][(*ni)->GetID()] = true;
 
-			if ( DistanceSquared( SV_GentityNum(0)->r.currentOrigin, end ) >= 1048576 )
+			if ( DistanceSquared( ent->r.currentOrigin, end ) >= 1048576 )
 			{
 				continue;
 			}
 
-			if ( !SV_inPVS( SV_GentityNum(0)->r.currentOrigin, end ) )
+			if ( !SV_inPVS( ent->r.currentOrigin, end ) )
 				continue;
 
 			/*

@@ -389,7 +389,7 @@ static char *StripTrailingWhiteSpaceOnEveryLine(char *pText)
 		strNewText += "\n";
 	}
 
-	char  *pNewText = (char *) Z_Malloc( strlen(strNewText.c_str())+1, TAG_TEMP_WORKSPACE, qfalse);
+	char  *pNewText = (char *) Z_Malloc( strNewText.length()+1, TAG_TEMP_WORKSPACE, qfalse);
 	strcpy(pNewText, strNewText.c_str());
 	return pNewText;
 }
@@ -938,9 +938,9 @@ qboolean Music_AllowedToTransition( float			fPlayingTimeElapsed,
 		//
 		pair <MusicExitTimes_t::iterator, MusicExitTimes_t::iterator> itp = equal_range( pMusicFile->MusicExitTimes.begin(), pMusicFile->MusicExitTimes.end(), T);
 		if (itp.first != pMusicFile->MusicExitTimes.begin())
-			itp.first--;	// encompass the one before, in case we've just missed an exit point by < fTimeEpsilon
+			--itp.first;	// encompass the one before, in case we've just missed an exit point by < fTimeEpsilon
 		if (itp.second!= pMusicFile->MusicExitTimes.end())
-			itp.second++;	// increase range to one beyond, so we can do normal STL being/end looping below
+			++itp.second;	// increase range to one beyond, so we can do normal STL being/end looping below
 		for (MusicExitTimes_t::iterator it = itp.first; it != itp.second; ++it)
 		{
 			MusicExitTimes_t::iterator pExitTime = it;

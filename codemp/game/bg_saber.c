@@ -908,13 +908,13 @@ int PM_SaberLockLoseAnim( playerState_t *genemy, qboolean victory, qboolean supe
 		{
 			loseAnim = BOTH_LK_S_S_T_SB_1_L;
 		}
-		else if ( !victory )
+		else if ( !victory ) // ... this
 		{
 			loseAnim = BOTH_BF1BREAK;
 		}
 		else
 		{
-			if ( !victory )
+			if ( !victory ) // ... makes this pointless
 			{//no-one won
 				genemy->saberMove = LS_K1_T_;
 				loseAnim = BOTH_K1_S1_T_;
@@ -930,13 +930,13 @@ int PM_SaberLockLoseAnim( playerState_t *genemy, qboolean victory, qboolean supe
 		{
 			loseAnim = BOTH_LK_S_S_T_SB_1_L;
 		}
-		else if ( !victory )
+		else if ( !victory ) // ... this
 		{
 			loseAnim = BOTH_KNOCKDOWN4;
 		}
 		else
 		{
-			if ( !victory )
+			if ( !victory ) // ... makes this pointless
 			{//no-one won
 				genemy->saberMove = LS_A_T2B;
 				loseAnim = BOTH_A3_T__B_;
@@ -952,7 +952,7 @@ int PM_SaberLockLoseAnim( playerState_t *genemy, qboolean victory, qboolean supe
 		{
 			loseAnim = BOTH_LK_S_S_S_SB_1_L;
 		}
-		else if ( !victory )
+		else if ( !victory ) // ... this
 		{
 			genemy->saberMove = LS_V1_BL;//genemy->saberBounceMove =
 			genemy->saberBlocked = BLOCKED_PARRY_BROKEN;
@@ -960,7 +960,7 @@ int PM_SaberLockLoseAnim( playerState_t *genemy, qboolean victory, qboolean supe
 		}
 		else
 		{
-			if ( !victory )
+			if ( !victory ) // ... makes this pointless
 			{//no-one won
 				loseAnim = BOTH_CCWCIRCLEBREAK;
 			}
@@ -982,7 +982,7 @@ int PM_SaberLockLoseAnim( playerState_t *genemy, qboolean victory, qboolean supe
 		{
 			loseAnim = BOTH_LK_S_S_S_SB_1_L;
 		}
-		else if ( !victory )
+		else if ( !victory ) // ... this
 		{
 			genemy->saberMove = LS_V1_BR;//genemy->saberBounceMove =
 			genemy->saberBlocked = BLOCKED_PARRY_BROKEN;
@@ -990,7 +990,7 @@ int PM_SaberLockLoseAnim( playerState_t *genemy, qboolean victory, qboolean supe
 		}
 		else
 		{
-			if ( !victory )
+			if ( !victory ) // ... makes this pointless
 			{//no-one won
 				loseAnim = BOTH_CWCIRCLEBREAK;
 			}
@@ -3321,11 +3321,6 @@ weapChecks:
 		if ( overrideMove == LS_INVALID )
 		{
 			if ( saber2
-				&& saber2->kataMove == LS_NONE )
-			{
-				overrideMove = LS_NONE;
-			}
-			else if ( saber2
 				&& saber2->kataMove == LS_NONE )
 			{
 				overrideMove = LS_NONE;

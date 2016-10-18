@@ -2622,17 +2622,19 @@ char *G2API_GetGLAName(CGhoul2Info_v &ghoul2, int modelIndex)
 			//model_t	*mod = R_GetModelByHandle(RE_RegisterModel(ghoul2[modelIndex].mFileName));
 			//return mod->mdxm->animName;
 
-			assert(ghoul2[modelIndex].currentModel && ghoul2[modelIndex].currentModel->data.glm);
+			const model_t *currentModel = ghoul2[modelIndex].currentModel;
 
-			if (ghoul2[modelIndex].currentModel->data.glm->header->animName[0])
+			assert(currentModel && currentModel->data.glm);
+
+			if (currentModel->data.glm->header->animName[0])
 			{
-				if (!strstr(ghoul2[modelIndex].currentModel->data.glm->header->animName, "players/_humanoid/"))
+				if (!strstr(currentModel->data.glm->header->animName, "players/_humanoid/"))
 				{// Not supported. let's try to force it to load anyway...
-					strcpy(ghoul2[modelIndex].currentModel->data.glm->header->animName, "models/players/_humanoid/_humanoid");
+					strcpy(currentModel->data.glm->header->animName, "models/players/_humanoid/_humanoid");
 				}
 			}
 
-			return ghoul2[modelIndex].currentModel->data.glm->header->animName;
+			return currentModel->data.glm->header->animName;
 		}
 	}
 	return NULL;

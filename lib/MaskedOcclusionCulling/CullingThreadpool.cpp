@@ -116,7 +116,7 @@ inline unsigned int CullingThreadpool::RenderJobQueue::GetMinRenderPtr() const
 
 inline void CullingThreadpool::RenderJobQueue::AdvanceRenderJob(int binIdx)
 {
-	mRenderPtrs[binIdx]++;
+	++mRenderPtrs[binIdx];
 	mBinMutexes[binIdx] = 0;
 }
 

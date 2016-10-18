@@ -607,16 +607,17 @@ static qboolean AS_ParseSet( int setID, CSetGroup *sg )
 	name = setNames[setID];
 
 	//Iterate through the whole file and find every occurance of a set
+	int namelen = strlen(name);
 	while ( parsePos <= parseSize )
 	{
 		//Check for a valid set group
-		if ( Q_strncmp( parseBuffer+parsePos, name, strlen(name) ) == 0 )
+		if ( Q_strncmp( parseBuffer+parsePos, name, namelen ) == 0 )
 		{
 			//Update the debug info
 			numSets++;
 
 			//Push past the set specifier and on to the name
-			parsePos+=strlen(name)+1;	//Also take the following space out
+			parsePos+=namelen+1;	//Also take the following space out
 
 			//Get the set name (this MUST be first)
 			sscanf( parseBuffer+parsePos, "%s", tempBuffer );

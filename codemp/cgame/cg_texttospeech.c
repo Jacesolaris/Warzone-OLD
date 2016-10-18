@@ -531,7 +531,7 @@ void CHATTER_TextToSpeech( const char *text, const char *voice, int entityNum, v
 	clientInfo_t	*ci = CG_GetClientInfoForEnt(&cg_entities[entityNum]);
 	char			chatline_text[MAX_SAY_TEXT] = {0};
 
-	if (text == "") return; // hmm somehow this can happen... no point wasting time...
+	if (strlen(text) == 0) return; // hmm somehow this can happen... no point wasting time...
 
 	if (ci && add_chat_text)
 	{
@@ -1146,7 +1146,7 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 
 		for (forcePowerNum = 0; forcePowerNum < NUM_FORCE_POWERS; forcePowerNum++)
 		{
-			if ((char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum]) && (char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum])[0])
+			if ((char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum])[0])
 			{
 				trap->Print("Generating TTS force power %s sound for voice %s.\n", (char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum]), voice);
 

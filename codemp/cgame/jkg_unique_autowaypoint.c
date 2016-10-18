@@ -7514,13 +7514,13 @@ void AIMOD_AI_InitNodeContentsFlags ( void )
 
 		if (contents & CONTENTS_LAVA)
 		{// Not ICE, but still avoid if possible!
-			if (!nodes[i].type & NODE_ICE)
+			if (!(nodes[i].type & NODE_ICE))
 				nodes[i].type |= NODE_ICE;
 		}
 			
 		if (contents & CONTENTS_SLIME)
 		{
-			if (!nodes[i].type & NODE_ICE)
+			if (!(nodes[i].type & NODE_ICE))
 				nodes[i].type |= NODE_ICE;
 		}
 			

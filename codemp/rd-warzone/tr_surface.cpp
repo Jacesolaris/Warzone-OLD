@@ -663,7 +663,7 @@ static qboolean RB_SurfaceVbo(VBO_t *vbo, IBO_t *ibo, int numVerts, int numIndex
 			}
 		}
 
-		for (i = i; i < tess.multiDrawPrimitives; i++)
+		for (; i < tess.multiDrawPrimitives; i++)
 		{
 			if (tess.multiDrawLastIndex[i] == firstIndexOffset)
 			{

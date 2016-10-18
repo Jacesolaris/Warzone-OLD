@@ -1286,7 +1286,7 @@ static void ProcessOrientCommands( Vehicle_t *pVeh )
 
 	parentPS = parent->playerState;
 	riderPS = rider->playerState;
-	isDead = (qboolean)((parentPS->eFlags&EF_DEAD)!=0);
+	isDead = (qboolean)(parentPS->eFlags&EF_DEAD);
 
 #ifdef VEH_CONTROL_SCHEME_4
 	if ( parentPS->hyperSpaceTime

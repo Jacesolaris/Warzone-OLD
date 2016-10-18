@@ -1038,7 +1038,7 @@ bool gEffectsInPortal = qfalse; //this is just because I don't want to have to a
 
 void CFxScheduler::AddScheduledEffects( bool portal )
 {
-	TScheduledEffect::iterator	itr, next;
+	TScheduledEffect::iterator	itr;
 	vec3_t						origin;
 	matrix3_t					axis;
 	int							oldEntNum = -1, oldBoltIndex = -1, oldModelNum = -1;

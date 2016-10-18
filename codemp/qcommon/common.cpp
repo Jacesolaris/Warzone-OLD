@@ -2242,7 +2242,9 @@ Field_FindFirstSeparator
 ===============
 */
 static char *Field_FindFirstSeparator( char *s ) {
-	for ( size_t i=0; i<strlen( s ); i++ ) {
+	size_t len = strlen(s);
+
+	for ( size_t i=0; i<len; i++ ) {
 		if ( s[i] == ';' )
 			return &s[ i ];
 	}

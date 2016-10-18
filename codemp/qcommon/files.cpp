@@ -2287,8 +2287,9 @@ static pack_t *FS_LoadZipFile( const char *zipfile, const char *basename )
 	Q_strncpyz( pack->pakBasename, basename, sizeof( pack->pakBasename ) );
 
 	// strip .pk3 if needed
-	if ( strlen( pack->pakBasename ) > 4 && !Q_stricmp( pack->pakBasename + strlen( pack->pakBasename ) - 4, ".pk3" ) ) {
-		pack->pakBasename[strlen( pack->pakBasename ) - 4] = 0;
+	int basePakNameLen = strlen(pack->pakBasename);
+	if ( basePakNameLen > 4 && !Q_stricmp( pack->pakBasename + basePakNameLen - 4, ".pk3" ) ) {
+		pack->pakBasename[basePakNameLen - 4] = 0;
 	}
 
 	pack->handle = uf;

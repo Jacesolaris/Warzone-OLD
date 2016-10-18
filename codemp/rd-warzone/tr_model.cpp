@@ -1163,7 +1163,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->minIndex = 0;
 			vboSurf->maxIndex = surf->numVerts;
 
-			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_STATIC);
+			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
 
 			vboSurf->vbo->ofs_xyz       = ofs_xyz;
 			vboSurf->vbo->ofs_normal    = ofs_normal;

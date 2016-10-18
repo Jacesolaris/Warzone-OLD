@@ -39,10 +39,7 @@ public:
 	// free up the heap
 	~CMiniHeap()
 	{
-		if (mHeap)
-		{
-			free(mHeap);
-		}
+		free(mHeap);
 	}
 
 	// give me some space from the heap please

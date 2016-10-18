@@ -1474,7 +1474,7 @@ static void GLSL_PrintShaderSource(GLuint shader)
 
 qboolean ALLOW_GL_400 = qfalse;
 
-char		GLSL_MAX_VERSION[24] = {0};
+char		GLSL_MAX_VERSION[64] = {0};
 
 char *GLSL_GetHighestSupportedVersion( void )
 {
@@ -1548,7 +1548,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 		sprintf(dest, "#version %s\n", forceVersion);
 	else
 		//Q_strcat(dest, size, "#version 150 core\n");
-		sprintf(dest, GLSL_GetHighestSupportedVersion());
+		sprintf(dest, "%s", GLSL_GetHighestSupportedVersion());
 
 	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
 	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);

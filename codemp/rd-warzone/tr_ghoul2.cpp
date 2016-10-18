@@ -2481,7 +2481,7 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 				for (k=range.first;k!=range.second;)
 				{
 					kcur=k;
-					k++;
+					++k;
 					GoreTextureCoordinates *tex=FindGoreRecord((*kcur).second.mGoreTag);
 					if (!tex ||											 // it is gone, lets get rid of it
 						(kcur->second.mDeleteTime && curTime>=kcur->second.mDeleteTime)) // out of time
@@ -4677,8 +4677,6 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 				float *v0, *v1, *v2;
 				float *uv0, *uv1, *uv2;
 				vec3_t normal = { 0.0f, 0.0f, 0.0f };
-				vec3_t tangent = { 0.0f, 0.0f, 0.0f };
-				vec3_t bitangent = { 0.0f, 0.0f, 0.0f };
 
 				index[0] = t[k].indexes[0];
 				index[1] = t[k].indexes[1];
@@ -4748,7 +4746,7 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 			modelName = mdxm->name;
 		}
 
-		VBO_t *vbo = R_CreateVBO (data, dataSize, VBO_USAGE_STATIC);
+		VBO_t *vbo = R_CreateVBO (data, dataSize, VBO_USAGE_DYNAMIC);
 
 		ri->Hunk_FreeTempMemory (data);
 		ri->Hunk_FreeTempMemory (tangentsf);

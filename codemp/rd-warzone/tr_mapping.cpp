@@ -5,16 +5,11 @@ extern char currentMapName[128];
 
 extern	world_t		s_worldData;
 
-
-extern image_t	*R_FindImageFile( const char *name, imgType_t type, int flags );
-
-
+extern image_t	*R_FindImageFile(const char *name, imgType_t type, int flags);
 
 #define	MASK_PLAYERSOLID		(CONTENTS_SOLID|CONTENTS_BODY|CONTENTS_TERRAIN)
 #define	MASK_WATER				(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
 #define	MASK_ALL				(0xFFFFFFFFu)
-
-
 
 #define MAP_INFO_TRACEMAP_SIZE 1024
 
@@ -25,14 +20,14 @@ vec3_t	MAP_INFO_PIXELSIZE;
 vec3_t	MAP_INFO_SCATTEROFFSET;
 float	MAP_INFO_MAXSIZE;
 
-void Mapping_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask )
+void Mapping_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask)
 {
 	results->entityNum = ENTITYNUM_NONE;
 	ri->CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, 0);
 	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 }
 
-void R_SetupMapInfo ( void )
+void R_SetupMapInfo(void)
 {
 	world_t	*w;
 	int i;
@@ -123,12 +118,12 @@ void R_SetupMapInfo ( void )
 	MAP_INFO_PIXELSIZE[1] = MAP_INFO_TRACEMAP_SIZE / MAP_INFO_SIZE[1];
 	MAP_INFO_SCATTEROFFSET[0] = MAP_INFO_SIZE[0] / MAP_INFO_TRACEMAP_SIZE;
 	MAP_INFO_SCATTEROFFSET[1] = MAP_INFO_SIZE[1] / MAP_INFO_TRACEMAP_SIZE;
-	
+
 	MAP_INFO_MAXSIZE = MAP_INFO_SIZE[0];
 	if (MAP_INFO_SIZE[1] > MAP_INFO_MAXSIZE) MAP_INFO_MAXSIZE = MAP_INFO_SIZE[1];
 }
 
-void R_CreateRandom2KImage ( char *variation )
+void R_CreateRandom2KImage(char *variation)
 {
 	// Hopefully now we have a map image... Save it...
 	byte	data;
@@ -138,48 +133,48 @@ void R_CreateRandom2KImage ( char *variation )
 	fileHandle_t f;
 
 	if (!strcmp(variation, "splatControl"))
-		f = ri->FS_FOpenFileWrite( "gfx/splatControlImage.tga", qfalse);
+		f = ri->FS_FOpenFileWrite("gfx/splatControlImage.tga", qfalse);
 	else
-		f = ri->FS_FOpenFileWrite( va("gfx/random2K%s.tga", variation), qfalse);
+		f = ri->FS_FOpenFileWrite(va("gfx/random2K%s.tga", variation), qfalse);
 
 	// header
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 1
-	data = 2; ri->FS_Write( &data, sizeof(data), f );	// 2 : uncompressed type
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 3
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 4
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 5
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 6
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 7
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 8
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 9
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 10
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 11
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 12 : width
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 13 : width
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 14 : height
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 15 : height
-	data = 32; ri->FS_Write( &data, sizeof(data), f );	// 16 : pixel size
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 17
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
 
-	for( int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++ ) {
-		for( int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++ ) {
-			data = irand(0,255); ri->FS_Write( &data, sizeof(data), f );	// b
-			data = irand(0,255); ri->FS_Write( &data, sizeof(data), f );	// g
-			data = irand(0,255); ri->FS_Write( &data, sizeof(data), f );	// r
-			data = irand(0,255); ri->FS_Write( &data, sizeof(data), f );	// a
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++) {
+		for (int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++) {
+			data = irand(0, 255); ri->FS_Write(&data, sizeof(data), f);	// b
+			data = irand(0, 255); ri->FS_Write(&data, sizeof(data), f);	// g
+			data = irand(0, 255); ri->FS_Write(&data, sizeof(data), f);	// r
+			data = irand(0, 255); ri->FS_Write(&data, sizeof(data), f);	// a
 		}
 	}
 
 	// footer
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// extension area offset, 4 bytes
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// developer directory offset, 4 bytes
-	ri->FS_Write( "TRUEVISION-XFILE.\0", 18, f );
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
 
-	ri->FS_FCloseFile( f );
+	ri->FS_FCloseFile(f);
 }
 
-void R_CreateGrassImages ( void )
+void R_CreateGrassImages(void)
 {
 #define GRASS_TEX_SCALE 200
 #define GRASS_NUM_MASKS 10
@@ -207,20 +202,20 @@ void R_CreateGrassImages ( void )
 	}
 
 	//Load NUM_DIFFERENT_LAYERS alpha maps into the material.
-    //Each one has the same pixel pattern, but a few less total pixels.
-    //This way, the grass gradually thins as it gets to the top.
-	for (int l = 0; l < GRASS_NUM_MASKS; l++) 
+	//Each one has the same pixel pattern, but a few less total pixels.
+	//This way, the grass gradually thins as it gets to the top.
+	for (int l = 0; l < GRASS_NUM_MASKS; l++)
 	{
 		//Thin the density as it approaches the top layer
 		//The bottom layer will have 1000, the top layer 100.
-		float density = l / (float) 60;
-		int numGrass = (int) (4000 - ((3500 * density) + 500));
+		float density = l / (float)60;
+		int numGrass = (int)(4000 - ((3500 * density) + 500));
 
 		//Generate the points
-		for (int j = 0; j < numGrass; j++) 
+		for (int j = 0; j < numGrass; j++)
 		{
-			int curPointX = irand(0, GRASS_TEX_SCALE-1);
-			int curPointY = irand(0, GRASS_TEX_SCALE-1);
+			int curPointX = irand(0, GRASS_TEX_SCALE - 1);
+			int curPointY = irand(0, GRASS_TEX_SCALE - 1);
 
 			green[curPointX][curPointY] = (1 - (density * 255));
 		}
@@ -230,43 +225,43 @@ void R_CreateGrassImages ( void )
 		int		i = 0;
 
 		// write tga
-		fileHandle_t f = ri->FS_FOpenFileWrite( va( "grassImage/grassMask%i.tga", (GRASS_NUM_MASKS-1)-l ), qfalse);
+		fileHandle_t f = ri->FS_FOpenFileWrite(va("grassImage/grassMask%i.tga", (GRASS_NUM_MASKS - 1) - l), qfalse);
 
 		// header
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 1
-		data = 2; ri->FS_Write( &data, sizeof(data), f );	// 2 : uncompressed type
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 3
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 4
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 5
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 6
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 7
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 8
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 9
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 10
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 11
-		data = GRASS_TEX_SCALE & 255; ri->FS_Write( &data, sizeof(data), f );	// 12 : width
-		data = GRASS_TEX_SCALE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 13 : width
-		data = GRASS_TEX_SCALE & 255; ri->FS_Write( &data, sizeof(data), f );	// 14 : height
-		data = GRASS_TEX_SCALE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 15 : height
-		data = 32; ri->FS_Write( &data, sizeof(data), f );	// 16 : pixel size
-		data = 0; ri->FS_Write( &data, sizeof(data), f );	// 17
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+		data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+		data = GRASS_TEX_SCALE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+		data = GRASS_TEX_SCALE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+		data = GRASS_TEX_SCALE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+		data = GRASS_TEX_SCALE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+		data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+		data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
 
-		for( int x = 0; x < GRASS_TEX_SCALE; x++ ) {
-			for( int y = 0; y < GRASS_TEX_SCALE; y++ ) {
-				data = 0; ri->FS_Write( &data, sizeof(data), f );	// b
-				data = green[x][y]; ri->FS_Write( &data, sizeof(data), f );	// g
-				data = 0; ri->FS_Write( &data, sizeof(data), f );	// r
-				data = 255; ri->FS_Write( &data, sizeof(data), f );	// a
+		for (int x = 0; x < GRASS_TEX_SCALE; x++) {
+			for (int y = 0; y < GRASS_TEX_SCALE; y++) {
+				data = 0; ri->FS_Write(&data, sizeof(data), f);	// b
+				data = green[x][y]; ri->FS_Write(&data, sizeof(data), f);	// g
+				data = 0; ri->FS_Write(&data, sizeof(data), f);	// r
+				data = 255; ri->FS_Write(&data, sizeof(data), f);	// a
 			}
 		}
 
 		// footer
-		i = 0; ri->FS_Write( &i, sizeof(i), f );	// extension area offset, 4 bytes
-		i = 0; ri->FS_Write( &i, sizeof(i), f );	// developer directory offset, 4 bytes
-		ri->FS_Write( "TRUEVISION-XFILE.\0", 18, f );
+		i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+		i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+		ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
 
-		ri->FS_FCloseFile( f );
+		ri->FS_FCloseFile(f);
 	}
 
 	for (int i = 0; i < GRASS_TEX_SCALE; i++)
@@ -286,46 +281,46 @@ void R_CreateGrassImages ( void )
 	int		i = 0;
 
 	// write tga
-	fileHandle_t f = ri->FS_FOpenFileWrite( "grassImage/grassImage.tga", qfalse);
+	fileHandle_t f = ri->FS_FOpenFileWrite("grassImage/grassImage.tga", qfalse);
 
 	// header
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 1
-	data = 2; ri->FS_Write( &data, sizeof(data), f );	// 2 : uncompressed type
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 3
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 4
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 5
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 6
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 7
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 8
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 9
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 10
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 11
-	data = GRASS_TEX_SCALE & 255; ri->FS_Write( &data, sizeof(data), f );	// 12 : width
-	data = GRASS_TEX_SCALE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 13 : width
-	data = GRASS_TEX_SCALE & 255; ri->FS_Write( &data, sizeof(data), f );	// 14 : height
-	data = GRASS_TEX_SCALE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 15 : height
-	data = 32; ri->FS_Write( &data, sizeof(data), f );	// 16 : pixel size
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 17
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = GRASS_TEX_SCALE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = GRASS_TEX_SCALE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = GRASS_TEX_SCALE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = GRASS_TEX_SCALE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
 
-	for( int i = 0; i < GRASS_TEX_SCALE; i++ ) {
-		for( int j = 0; j < GRASS_TEX_SCALE; j++ ) {
-			data = irand(0,20)+15; ri->FS_Write( &data, sizeof(data), f );	// b
-			data = irand(0,70)+45; ri->FS_Write( &data, sizeof(data), f );	// g
-			data = irand(0,20)+20; ri->FS_Write( &data, sizeof(data), f );	// r
-			data = irand(0,255); ri->FS_Write( &data, sizeof(data), f );	// a
+	for (int i = 0; i < GRASS_TEX_SCALE; i++) {
+		for (int j = 0; j < GRASS_TEX_SCALE; j++) {
+			data = irand(0, 20) + 15; ri->FS_Write(&data, sizeof(data), f);	// b
+			data = irand(0, 70) + 45; ri->FS_Write(&data, sizeof(data), f);	// g
+			data = irand(0, 20) + 20; ri->FS_Write(&data, sizeof(data), f);	// r
+			data = irand(0, 255); ri->FS_Write(&data, sizeof(data), f);	// a
 		}
 	}
 
 	// footer
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// extension area offset, 4 bytes
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// developer directory offset, 4 bytes
-	ri->FS_Write( "TRUEVISION-XFILE.\0", 18, f );
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
 
-	ri->FS_FCloseFile( f );
+	ri->FS_FCloseFile(f);
 }
 
-void R_CreateBspMapImage ( void )
+void R_CreateBspMapImage(void)
 {
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
@@ -359,7 +354,7 @@ void R_CreateBspMapImage ( void )
 				VectorSet(pos, x, y, z);
 				VectorSet(down, x, y, -65536);
 
-				Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, /*MASK_ALL*/MASK_PLAYERSOLID|CONTENTS_WATER/*|CONTENTS_OPAQUE*/ );
+				Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, /*MASK_ALL*/MASK_PLAYERSOLID | CONTENTS_WATER/*|CONTENTS_OPAQUE*/);
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
@@ -377,7 +372,7 @@ void R_CreateBspMapImage ( void )
 					break;
 				}
 
-				if ( tr.surfaceFlags & SURF_SKY )
+				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -388,14 +383,14 @@ void R_CreateBspMapImage ( void )
 				/*
 				if ( tr.surfaceFlags & SURF_NOIMPACT )
 				{// don't make missile explosions
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 				*/
 
-				if ( tr.surfaceFlags & SURF_NODRAW )
+				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -406,216 +401,215 @@ void R_CreateBspMapImage ( void )
 				/*
 				if ( tr.surfaceFlags & SURF_NOSTEPS )
 				{// no footstep sounds
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 
 				if ( tr.surfaceFlags & SURF_NODLIGHT )
 				{// don't dlight even if solid (solid lava, skies)
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 
 				if ( tr.surfaceFlags & SURF_NOMISCENTS )
 				{// no client models allowed on this surface
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 				*/
 
 				/*
 				if ( tr.contents & CONTENTS_TRIGGER )
 				{// Trigger hurt???
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 
 				if (tr.contents & CONTENTS_DETAIL || tr.contents & CONTENTS_NODROP )
 				{
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 				*/
 
 				/*
 				if (tr.contents & CONTENTS_NOSHOT )
 				{
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 				*/
 
 				/*
 				if (tr.contents & CONTENTS_TRANSLUCENT)
 				{
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					continue;
+				red[imageX][imageY] = 0;
+				green[imageX][imageY] = 0;
+				blue[imageX][imageY] = 0;
+				continue;
 				}
 				*/
-
 
 				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
 				float HEIGHT_COLOR_MULT = ((1.0 - (DIST_FROM_ROOF / MAP_INFO_SIZE[2])) * 0.5) + 0.5;
 
 				if (tr.contents & CONTENTS_WATER)
 				{
-					red[imageX][imageY] = 0.3*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 1.0*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 1.0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				}
 
 				int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
 
-				switch( MATERIAL_TYPE )
+				switch (MATERIAL_TYPE)
 				{
 				case MATERIAL_WATER:			// 13			// light covering of water on a surface
-					red[imageX][imageY] = 0.3*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 1.0*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 1.0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-					red[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SAND:				// 8			// sandy beach
-					red[imageX][imageY] = 0.8*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.8*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #if 0
 				case MATERIAL_CARPET:			// 27			// lush carpet
-					red[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_GRAVEL:			// 9			// lots of small stones
-					red[imageX][imageY] = 0.2*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.5*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.5*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_ROCK:				// 23			//
-					red[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_TILES:			// 26			// tiled floor
-					red[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-					red[imageX][imageY] = 0.2*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.2*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-					red[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-					red[imageX][imageY] = 0.2*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.2*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_FABRIC:			// 21			// Cotton sheets
 				case MATERIAL_CANVAS:			// 22			// tent material
-					red[imageX][imageY] = 0.8*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_MARBLE:			// 12			// marble floors
-					red[imageX][imageY] = 0.8*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.8*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.8*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #endif
 				case MATERIAL_SNOW:				// 14			// freshly laid snow
 				case MATERIAL_ICE:				// 15			// packed snow/solid ice
-					red[imageX][imageY] = 1*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 1*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 1*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 1 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 1 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_MUD:				// 17			// wet soil
 				case MATERIAL_DIRT:				// 7			// hard mud
-					red[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.2*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #if 0
 				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 				case MATERIAL_PLASTER:			// 28			// drywall style plaster
-					red[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.4*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-					red[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.3*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.3*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 				case MATERIAL_PLASTIC:			// 25			//
-					red[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_ARMOR:			// 30			// body armor
-					red[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.7*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 				case MATERIAL_GLASS:			// 10			//
 				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-					red[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-					red[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.9*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #endif
@@ -625,9 +619,9 @@ void R_CreateBspMapImage ( void )
 					green[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
 					blue[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
 					*/
-					red[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.6*255*HEIGHT_COLOR_MULT;
+					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				}
@@ -641,45 +635,45 @@ void R_CreateBspMapImage ( void )
 	byte data;
 
 	// write tga
-	fileHandle_t f = ri->FS_FOpenFileWrite( va( "mapImage/%s.tga", currentMapName ), qfalse);
+	fileHandle_t f = ri->FS_FOpenFileWrite(va("mapImage/%s.tga", currentMapName), qfalse);
 
 	// header
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 1
-	data = 2; ri->FS_Write( &data, sizeof(data), f );	// 2 : uncompressed type
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 3
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 4
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 5
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 6
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 7
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 8
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 9
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 10
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 11
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 12 : width
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 13 : width
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 14 : height
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 15 : height
-	data = 32; ri->FS_Write( &data, sizeof(data), f );	// 16 : pixel size
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 17
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
 
-	for( int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++ ) {
-		for( int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++ ) {
-			data = blue[i][j]; ri->FS_Write( &data, sizeof(data), f );	// b
-			data = green[i][j]; ri->FS_Write( &data, sizeof(data), f );	// g
-			data = red[i][j]; ri->FS_Write( &data, sizeof(data), f );	// r
-			data = 255; ri->FS_Write( &data, sizeof(data), f );	// a
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++) {
+		for (int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++) {
+			data = blue[i][j]; ri->FS_Write(&data, sizeof(data), f);	// b
+			data = green[i][j]; ri->FS_Write(&data, sizeof(data), f);	// g
+			data = red[i][j]; ri->FS_Write(&data, sizeof(data), f);	// r
+			data = 255; ri->FS_Write(&data, sizeof(data), f);	// a
 		}
 	}
 
 	int i;
 
 	// footer
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// extension area offset, 4 bytes
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// developer directory offset, 4 bytes
-	ri->FS_Write( "TRUEVISION-XFILE.\0", 18, f );
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
 
-	ri->FS_FCloseFile( f );
+	ri->FS_FCloseFile(f);
 
 	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++)
 	{
@@ -689,7 +683,7 @@ void R_CreateBspMapImage ( void )
 	}
 }
 
-void R_CreateHeightMapImage ( void )
+void R_CreateHeightMapImage(void)
 {
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
@@ -707,7 +701,7 @@ void R_CreateHeightMapImage ( void )
 	}
 
 	// Create the map...
-//#pragma omp parallel for schedule(dynamic)
+	//#pragma omp parallel for schedule(dynamic)
 	//for (int x = (int)MAP_INFO_MINS[0]; x < (int)MAP_INFO_MAXS[0]; x += MAP_INFO_SCATTEROFFSET[0])
 	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
 	{
@@ -729,9 +723,9 @@ void R_CreateHeightMapImage ( void )
 				VectorSet(down, x, y, -65536);
 
 				if (HIT_WATER)
-					Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID );
+					Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID);
 				else
-					Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER/*|CONTENTS_OPAQUE*/ );
+					Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER/*|CONTENTS_OPAQUE*/);
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
@@ -742,7 +736,7 @@ void R_CreateHeightMapImage ( void )
 					continue;
 				}
 
-				if (tr.endpos[2] < MAP_INFO_MINS[2]-256.0)
+				if (tr.endpos[2] < MAP_INFO_MINS[2] - 256.0)
 				{// Went off map...
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -751,7 +745,7 @@ void R_CreateHeightMapImage ( void )
 					break;
 				}
 
-				if ( tr.surfaceFlags & SURF_SKY )
+				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -760,7 +754,7 @@ void R_CreateHeightMapImage ( void )
 					continue;
 				}
 
-				if ( tr.surfaceFlags & SURF_NODRAW )
+				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -787,10 +781,10 @@ void R_CreateHeightMapImage ( void )
 					isUnderWater = 1.0;
 				}
 
-				red[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
-				green[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
-				blue[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
-				alpha[imageX][imageY] = isUnderWater*255;			// is under water
+				red[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
+				green[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
+				blue[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
+				alpha[imageX][imageY] = isUnderWater * 255;			// is under water
 
 				HIT_WATER = qfalse;
 				break;
@@ -802,45 +796,45 @@ void R_CreateHeightMapImage ( void )
 	byte data;
 
 	// write tga
-	fileHandle_t f = ri->FS_FOpenFileWrite( va( "heightMapImage/%s.tga", currentMapName ), qfalse);
+	fileHandle_t f = ri->FS_FOpenFileWrite(va("heightMapImage/%s.tga", currentMapName), qfalse);
 
 	// header
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 1
-	data = 2; ri->FS_Write( &data, sizeof(data), f );	// 2 : uncompressed type
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 3
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 4
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 5
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 6
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 7
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 8
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 9
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 10
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 11
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 12 : width
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 13 : width
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 14 : height
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 15 : height
-	data = 32; ri->FS_Write( &data, sizeof(data), f );	// 16 : pixel size
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 17
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
 
-	for( int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++ ) {
-		for( int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++ ) {
-			data = blue[i][j]; ri->FS_Write( &data, sizeof(data), f );	// b
-			data = green[i][j]; ri->FS_Write( &data, sizeof(data), f );	// g
-			data = red[i][j]; ri->FS_Write( &data, sizeof(data), f );	// r
-			data = alpha[i][j]; ri->FS_Write( &data, sizeof(data), f );	// a
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++) {
+		for (int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++) {
+			data = blue[i][j]; ri->FS_Write(&data, sizeof(data), f);	// b
+			data = green[i][j]; ri->FS_Write(&data, sizeof(data), f);	// g
+			data = red[i][j]; ri->FS_Write(&data, sizeof(data), f);	// r
+			data = alpha[i][j]; ri->FS_Write(&data, sizeof(data), f);	// a
 		}
 	}
 
 	int i;
 
 	// footer
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// extension area offset, 4 bytes
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// developer directory offset, 4 bytes
-	ri->FS_Write( "TRUEVISION-XFILE.\0", 18, f );
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
 
-	ri->FS_FCloseFile( f );
+	ri->FS_FCloseFile(f);
 
 	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++)
 	{
@@ -851,7 +845,7 @@ void R_CreateHeightMapImage ( void )
 	}
 }
 
-void R_CreateFoliageMapImage ( void )
+void R_CreateFoliageMapImage(void)
 {
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
@@ -888,7 +882,7 @@ void R_CreateFoliageMapImage ( void )
 				VectorSet(pos, x, y, z);
 				VectorSet(down, x, y, -65536);
 
-				Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, /*MASK_ALL*/MASK_PLAYERSOLID|CONTENTS_WATER/*|CONTENTS_OPAQUE*/ );
+				Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, /*MASK_ALL*/MASK_PLAYERSOLID | CONTENTS_WATER/*|CONTENTS_OPAQUE*/);
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
@@ -908,7 +902,7 @@ void R_CreateFoliageMapImage ( void )
 					break;
 				}
 
-				if ( tr.surfaceFlags & SURF_SKY )
+				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -917,7 +911,7 @@ void R_CreateFoliageMapImage ( void )
 					continue;
 				}
 
-				if ( tr.surfaceFlags & SURF_NODRAW )
+				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -931,16 +925,16 @@ void R_CreateFoliageMapImage ( void )
 
 				int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
 
-				switch( MATERIAL_TYPE )
+				switch (MATERIAL_TYPE)
 				{
 				case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
 				case MATERIAL_LONGGRASS:		// 6					// long jungle grass
 				case MATERIAL_MUD:				// 17					// wet soil
 				case MATERIAL_DIRT:				// 7					// hard mud
-					red[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
-					green[imageX][imageY] = irand(0,255);				// foliage option 1
-					blue[imageX][imageY] = irand(0,255);				// foliage option 2
-					alpha[imageX][imageY] = irand(0,255);				// foliage option 3
+					red[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
+					green[imageX][imageY] = irand(0, 255);				// foliage option 1
+					blue[imageX][imageY] = irand(0, 255);				// foliage option 2
+					alpha[imageX][imageY] = irand(0, 255);				// foliage option 3
 					FOUND = qtrue;
 					break;
 				default:
@@ -961,45 +955,45 @@ void R_CreateFoliageMapImage ( void )
 	byte data;
 
 	// write tga
-	fileHandle_t f = ri->FS_FOpenFileWrite( va( "foliageMapImage/%s.tga", currentMapName ), qfalse);
+	fileHandle_t f = ri->FS_FOpenFileWrite(va("foliageMapImage/%s.tga", currentMapName), qfalse);
 
 	// header
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 1
-	data = 2; ri->FS_Write( &data, sizeof(data), f );	// 2 : uncompressed type
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 3
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 4
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 5
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 6
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 7
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 8
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 9
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 10
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 11
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 12 : width
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 13 : width
-	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write( &data, sizeof(data), f );	// 14 : height
-	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write( &data, sizeof(data), f );	// 15 : height
-	data = 32; ri->FS_Write( &data, sizeof(data), f );	// 16 : pixel size
-	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 17
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
 
-	for( int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++ ) {
-		for( int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++ ) {
-			data = blue[i][j]; ri->FS_Write( &data, sizeof(data), f );	// b
-			data = green[i][j]; ri->FS_Write( &data, sizeof(data), f );	// g
-			data = red[i][j]; ri->FS_Write( &data, sizeof(data), f );	// r
-			data = alpha[i][j]; ri->FS_Write( &data, sizeof(data), f );	// a
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++) {
+		for (int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++) {
+			data = blue[i][j]; ri->FS_Write(&data, sizeof(data), f);	// b
+			data = green[i][j]; ri->FS_Write(&data, sizeof(data), f);	// g
+			data = red[i][j]; ri->FS_Write(&data, sizeof(data), f);	// r
+			data = alpha[i][j]; ri->FS_Write(&data, sizeof(data), f);	// a
 		}
 	}
 
 	int i;
 
 	// footer
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// extension area offset, 4 bytes
-	i = 0; ri->FS_Write( &i, sizeof(i), f );	// developer directory offset, 4 bytes
-	ri->FS_Write( "TRUEVISION-XFILE.\0", 18, f );
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
 
-	ri->FS_FCloseFile( f );
+	ri->FS_FCloseFile(f);
 
 	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++)
 	{
@@ -1024,7 +1018,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 		if (buf[i] != ' ' && buf[i] != '{' && buf[i] != '}' && buf[i] != '\n' && buf[i] != '\r')
 		{ //we're on a valid character
 			if (buf[i] == '/' &&
-				buf[i+1] == '/')
+				buf[i + 1] == '/')
 			{ //this is a comment, so skip over it
 				while (buf[i] && buf[i] != '\n' && buf[i] != '\r')
 				{
@@ -1037,7 +1031,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 
 				while (buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r' && buf[i] != SIEGECHAR_TAB && buf[i])
 				{
-					if (buf[i] == '/' && buf[i+1] == '/')
+					if (buf[i] == '/' && buf[i + 1] == '/')
 					{ //hit a comment, break out.
 						break;
 					}
@@ -1090,7 +1084,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 				else
 				{
 					//Is this the one we want?
-					if (buf[i] != '/' || buf[i+1] != '/')
+					if (buf[i] != '/' || buf[i + 1] != '/')
 					{ //make sure we didn't stop on a comment, if we did then this is considered an error in the file.
 						if (!Q_stricmp(checkKey, key))
 						{ //guess so. Parse along to the next valid character, then put that into the output buffer and return 1.
@@ -1110,10 +1104,10 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 								}
 
 								j = 0;
-								while ( ((!parseToQuote && buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r') || (parseToQuote && buf[i] != '\"')) )
+								while (((!parseToQuote && buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r') || (parseToQuote && buf[i] != '\"')))
 								{
 									if (buf[i] == '/' &&
-										buf[i+1] == '/')
+										buf[i + 1] == '/')
 									{ //hit a comment after the value? This isn't an ideal way to be writing things, but we'll support it anyway.
 										break;
 									}
@@ -1170,11 +1164,11 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 }
 
 extern const char *materialNames[MATERIAL_LAST];
-extern void ParseMaterial( const char **text );
+extern void ParseMaterial(const char **text);
 
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 
-qboolean FOLIAGE_LoadMapClimateInfo( void )
+qboolean FOLIAGE_LoadMapClimateInfo(void)
 {
 	const char		*climateName = NULL;
 
@@ -1183,14 +1177,14 @@ qboolean FOLIAGE_LoadMapClimateInfo( void )
 	memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
 	strncpy(CURRENT_CLIMATE_OPTION, climateName, strlen(climateName));
 
-	if (strlen(CURRENT_CLIMATE_OPTION) == 0)
+	if (CURRENT_CLIMATE_OPTION[0] == '\0')
 	{
-		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", "Warzone", currentMapName );
+		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", "Warzone", currentMapName);
 		//strncpy(CURRENT_CLIMATE_OPTION, "tropical", strlen("tropical"));
 		return qfalse;
 	}
 
-	ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION );
+	ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION);
 
 	return qtrue;
 }
@@ -1200,7 +1194,7 @@ qboolean FOLIAGE_LoadMapClimateInfo( void )
 int FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
 int FOLIAGE_ALLOWED_MATERIALS[MAX_FOLIAGE_ALLOWED_MATERIALS] = { 0 };
 
-qboolean R_SurfaceIsAllowedFoliage( int materialType )
+qboolean R_SurfaceIsAllowedFoliage(int materialType)
 {
 	for (int i = 0; i < FOLIAGE_ALLOWED_MATERIALS_NUM; i++)
 	{
@@ -1210,7 +1204,7 @@ qboolean R_SurfaceIsAllowedFoliage( int materialType )
 	return qfalse;
 }
 
-void R_LoadMapInfo ( void )
+void R_LoadMapInfo(void)
 {
 	R_SetupMapInfo();
 
@@ -1237,20 +1231,20 @@ void R_LoadMapInfo ( void )
 	if (!ri->FS_FileExists("gfx/splatControlImage.tga"))
 	{
 		R_CreateRandom2KImage("splatControl");
-		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 
 	{
 		// Color Palette... Try to load map based image first...
-		tr.paletteImage = R_FindImageFile(va( "maps/%s_palette.png", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+		tr.paletteImage = R_FindImageFile(va("maps/%s_palette.png", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.paletteImage)
 		{// No map based image? Use default...
-			tr.paletteImage = R_FindImageFile("gfx/palette.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+			tr.paletteImage = R_FindImageFile("gfx/palette.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 		}
 
 		if (!tr.paletteImage)
@@ -1261,11 +1255,11 @@ void R_LoadMapInfo ( void )
 
 	{
 		// Grass maps... Try to load map based image first...
-		tr.defaultGrassMapImage = R_FindImageFile(va( "maps/%s_grass.tga", currentMapName ), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.defaultGrassMapImage)
 		{// No map based image? Use default...
-			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 		}
 
 		if (!tr.defaultGrassMapImage)
@@ -1314,7 +1308,6 @@ void R_LoadMapInfo ( void )
 	}
 	else // Default to new tropical...
 	{
-
 	}
 
 	// Check if we have a climate file in climates/ for this map...
@@ -1324,54 +1317,54 @@ void R_LoadMapInfo ( void )
 	{// Seems we have no climate file in climates/ for the map... Check maps/
 		for (int i = 0; i < 3; i++)
 		{
-			tr.grassImage[i] = R_FindImageFile( IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+			tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		}
 
-		tr.seaGrassImage = R_FindImageFile( IniRead(va("maps/%s.climate", currentMapName), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.seaGrassImage = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
 	else
 	{// Have a climate file in climates/
 		for (int i = 0; i < 3; i++)
 		{
-			tr.grassImage[i] = R_FindImageFile( IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+			tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		}
 
-		tr.seaGrassImage = R_FindImageFile( IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.seaGrassImage = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
-	
+
 #if 0
-	if (!ri->FS_FileExists(va( "mapImage/%s.tga", currentMapName )))
+	if (!ri->FS_FileExists(va("mapImage/%s.tga", currentMapName)))
 	{
 		R_CreateBspMapImage();
-		tr.mapImage = R_FindImageFile(va( "mapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 	else
 	{
-		tr.mapImage = R_FindImageFile(va( "mapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 #endif
 
 #if 0
-	if (!ri->FS_FileExists(va( "heightMapImage/%s.tga", currentMapName )))
+	if (!ri->FS_FileExists(va("heightMapImage/%s.tga", currentMapName)))
 	{
 		R_CreateHeightMapImage();
-		tr.heightMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 	else
 	{
-		tr.heightMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 #endif
 
 #if 0
-	if (!ri->FS_FileExists(va( "foliageMapImage/%s.tga", currentMapName )))
+	if (!ri->FS_FileExists(va("foliageMapImage/%s.tga", currentMapName)))
 	{
 		R_CreateFoliageMapImage();
-		tr.foliageMapImage = R_FindImageFile(va( "foliageMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 	else
 	{
-		tr.foliageMapImage = R_FindImageFile(va( "foliageMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 #endif
 }

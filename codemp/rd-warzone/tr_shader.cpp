@@ -3375,7 +3375,7 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
 	else if (!StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && (StringContainsWord(name, "models/weapon") || StringContainsWord(name, "scope") || StringContainsWord(name, "blaster") || StringContainsWord(name, "pistol") || StringContainsWord(name, "thermal") || StringContainsWord(name, "bowcaster") || StringContainsWord(name, "cannon") || StringContainsWord(name, "saber") || StringContainsWord(name, "rifle") || StringContainsWord(name, "rocket")))
 		return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
-	else if (StringContainsWord(name, "metal") || StringContainsWord(name, "pipe") || StringContainsWord(name, "shaft") || StringContainsWord(name, "jetpack") || StringContainsWord(name, "antenna") || StringContainsWord(name, "xwing") || StringContainsWord(name, "tie_") || StringContainsWord(name, "raven") || StringContainsWord(name, "falcon") || StringContainsWord(name, "engine") || StringContainsWord(name, "elevator") || StringContainsWord(name, "evaporator") || StringContainsWord(name, "airpur") || StringContainsWord(name, "gonk") || StringContainsWord(name, "droid") || StringContainsWord(name, "cart") || StringContainsWord(name, "vent") || StringContainsWord(name, "tank") || StringContainsWord(name, "transformer") || StringContainsWord(name, "generator") || StringContainsWord(name, "grate") || StringContainsWord(name, "rack") || StringContainsWord(name, "mech") || StringContainsWord(name, "turbolift") || StringContainsWord(name, "grate") || StringContainsWord(name, "tube") || StringContainsWord(name, "coil") || StringContainsWord(name, "vader_trim") || StringContainsWord(name, "newfloor_vjun") || StringContainsWord(name, "bay_beam"))
+	else if (StringContainsWord(name, "metal") || StringContainsWord(name, "pipe") || StringContainsWord(name, "shaft") || StringContainsWord(name, "jetpack") || StringContainsWord(name, "antenna") || StringContainsWord(name, "xwing") || StringContainsWord(name, "tie_") || StringContainsWord(name, "raven") || StringContainsWord(name, "falcon") || StringContainsWord(name, "engine") || StringContainsWord(name, "elevator") || StringContainsWord(name, "evaporator") || StringContainsWord(name, "airpur") || StringContainsWord(name, "gonk") || StringContainsWord(name, "droid") || StringContainsWord(name, "cart") || StringContainsWord(name, "vent") || StringContainsWord(name, "tank") || StringContainsWord(name, "transformer") || StringContainsWord(name, "generator") || StringContainsWord(name, "grate") || StringContainsWord(name, "rack") || StringContainsWord(name, "mech") || StringContainsWord(name, "turbolift") || StringContainsWord(name, "tube") || StringContainsWord(name, "coil") || StringContainsWord(name, "vader_trim") || StringContainsWord(name, "newfloor_vjun") || StringContainsWord(name, "bay_beam"))
 		return MATERIAL_SOLIDMETAL;
 	else if (StringContainsWord(name, "armor") || StringContainsWord(name, "armour"))
 		return MATERIAL_ARMOR;
@@ -3429,7 +3429,7 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_TILES;
 	else if (StringContainsWord(name, "floor"))
 		return MATERIAL_CONCRETE;
-	else if (StringContainsWord(name, "textures/mp/") && !StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && !StringContainsWord(name, "static") && !StringContainsWord(name, "light") && !StringContainsWord(name, "env_") && !StringContainsWord(name, "_env") && !StringContainsWord(name, "underside") && !StringContainsWord(name, "blend") && !StringContainsWord(name, "t_pit") && !StringContainsWord(name, "desert") && !StringContainsWord(name, "cliff") && !StringContainsWord(name, "t_pit"))
+	else if (StringContainsWord(name, "textures/mp/") && !StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && !StringContainsWord(name, "static") && !StringContainsWord(name, "light") && !StringContainsWord(name, "env_") && !StringContainsWord(name, "_env") && !StringContainsWord(name, "underside") && !StringContainsWord(name, "blend") && !StringContainsWord(name, "t_pit") && !StringContainsWord(name, "desert") && !StringContainsWord(name, "cliff"))
 		return MATERIAL_SOLIDMETAL; // special for mp shiny
 	else if (IsKnownShinyMap(name) && StringContainsWord(name, "frame"))
 		return MATERIAL_SOLIDMETAL;
@@ -6220,7 +6220,8 @@ static shader_t *FinishShader( void ) {
 	//
 	stage = CollapseStagesToGLSL();
 
-	if ( shader.lightmapIndex >= 0 && !hasLightmapStage ) {
+	if ( (shader.lightmapIndex[0] || shader.lightmapIndex[1] || shader.lightmapIndex[2] || shader.lightmapIndex[3]) && !hasLightmapStage ) 
+	{
 		ri->Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap but no lightmap stage!\n", shader.name );
 		// Don't set this, it will just add duplicate shaders to the hash
   		//shader.lightmapIndex = LIGHTMAP_NONE;
@@ -6806,7 +6807,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 
 #ifdef ___SHADER_GENERATOR___
-	if (R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)) && !StringContainsWord(name, "icon")) 
+	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && !StringContainsWord(name, "icon")) 
 	{
 		char glowShaderAddition[256] = { 0 };
 		int material = DetectMaterialType( name );
@@ -7258,7 +7259,7 @@ void	R_ShaderList_f (void) {
 
 		ri->Printf( PRINT_ALL, "%i ", shader->numUnfoggedPasses );
 
-		if (shader->lightmapIndex >= 0 ) {
+		if (shader->lightmapIndex[0] || shader->lightmapIndex[1] || shader->lightmapIndex[2] || shader->lightmapIndex[3] ) {
 			ri->Printf (PRINT_ALL, "L ");
 		} else {
 			ri->Printf (PRINT_ALL, "  ");

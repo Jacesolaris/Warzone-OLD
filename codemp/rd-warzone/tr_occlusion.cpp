@@ -3,12 +3,10 @@
 
 void OQ_InitOcclusionQuery()
 {
-
 }
 
 void OQ_ShutdownOcclusionQuery()
 {
-
 }
 
 struct ShortVertex { float x, y, z; };
@@ -94,7 +92,6 @@ extern void RB_UpdateMatrixes(void);
 
 void RB_UpdateOcclusion()
 {
-
 }
 
 extern void R_RotateForViewer(void);
@@ -117,9 +114,9 @@ void RB_LeafOcclusion()
 	{
 		mnode_t *leaf;
 
-		backEnd.ori = backEnd.viewParms.world;
-		GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
-		GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+		//backEnd.ori = backEnd.viewParms.world;
+		//GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
+		//GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
 
 		// Flush denorms to zero to avoid performance issues with small values
 		_mm_setcsr(_mm_getcsr() | 0x8040);
@@ -166,6 +163,11 @@ void RB_LeafOcclusion()
 		ShortVertex			xyz[24];
 		ClipspaceVertex		xyz2[24];
 
+		matrix_t MVP;
+		Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, MVP);
+		//Matrix16Multiply(tr.viewParms.projectionMatrix, /*backEnd.viewParms.world.modelMatrix*/tr.ori.modelMatrix, MVP);
+		//Matrix16Copy(glState.modelviewProjection, MVP);
+
 		for (i = 0; i < tr.world->numVisibleLeafs[0]; i++)
 		{
 			leaf = tr.world->visibleLeafs[0][i];
@@ -201,35 +203,34 @@ void RB_LeafOcclusion()
 			AddCube(mins, maxs, &numIndexes, indexes, &numVerts, xyz);
 
 			/* Convert xyz to clip space */
-			moc->TransformVertices(glState.modelviewProjection, (const float*)xyz, (float *)xyz2, numVerts);
+			moc->TransformVertices(MVP/*glState.modelviewProjection*/, (const float*)xyz, (float *)xyz2, numVerts);
 
 			/*for (int t = 0; t < numVerts; t++)
 			{
-				xyz2[t].x /= xyz2[t].w;
-				xyz2[t].y /= xyz2[t].w;
-				xyz2[t].z /= xyz2[t].w;
-				//xyz2[t].w /= xyz2[t].w;
+			xyz2[t].x /= xyz2[t].w;
+			xyz2[t].y /= xyz2[t].w;
+			xyz2[t].z /= xyz2[t].w;
+			//xyz2[t].w /= xyz2[t].w;
 			}*/
 
-			
 			/*vec4_t eye, in, out;
 			for (int t = 0; t < numVerts; t++)
 			{// None of this gives between -1 and 1... grrr....
-				VectorSet(in, xyz[t].x, xyz[t].y, xyz[t].z);
-				
-				if (r_occlusion->integer == 4)
-					R_TransformModelToClip(in, glState.modelview, glState.projection, eye, out);
-				else if (r_occlusion->integer == 3) // tr_main code uses this...
-					R_TransformModelToClip(in, tr.ori.modelMatrix, tr.viewParms.projectionMatrix, eye, out);
-				else if (r_occlusion->integer == 2) // xyc suggested this...
-					R_TransformModelToClip(in, tr.ori.modelMatrix, backEnd.viewParms.projectionMatrix, eye, out);
-				else // tr_flares uses this...
-					R_TransformModelToClip(in, backEnd.ori.modelMatrix, backEnd.viewParms.projectionMatrix, eye, out);
+			VectorSet(in, xyz[t].x, xyz[t].y, xyz[t].z);
 
-				xyz2[t].x = out[0];
-				xyz2[t].y = out[1];
-				xyz2[t].z = out[2];
-				xyz2[t].w = out[3];
+			if (r_occlusion->integer == 4)
+			R_TransformModelToClip(in, glState.modelview, glState.projection, eye, out);
+			else if (r_occlusion->integer == 3) // tr_main code uses this...
+			R_TransformModelToClip(in, tr.ori.modelMatrix, tr.viewParms.projectionMatrix, eye, out);
+			else if (r_occlusion->integer == 2) // xyc suggested this...
+			R_TransformModelToClip(in, tr.ori.modelMatrix, backEnd.viewParms.projectionMatrix, eye, out);
+			else // tr_flares uses this...
+			R_TransformModelToClip(in, backEnd.ori.modelMatrix, backEnd.viewParms.projectionMatrix, eye, out);
+
+			xyz2[t].x = out[0];
+			xyz2[t].y = out[1];
+			xyz2[t].z = out[2];
+			xyz2[t].w = out[3];
 			}*/
 
 			/* Debug xyz values */
@@ -241,6 +242,11 @@ void RB_LeafOcclusion()
 						, xyz[t].x, xyz[t].y, xyz[t].z
 						, xyz2[t].x, xyz2[t].y, xyz2[t].z, xyz2[t].w);
 				}
+			}
+
+			if (r_occlusionDebug->integer == 3)
+			{
+				ri->Printf(PRINT_ALL, "MVP is %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", MVP[0], MVP[1], MVP[2], MVP[3], MVP[4], MVP[5], MVP[6], MVP[7], MVP[8], MVP[9], MVP[10], MVP[11], MVP[12], MVP[13], MVP[14], MVP[15], MVP[16]);
 			}
 
 			/* Test the occlusion for this cube */
@@ -267,7 +273,8 @@ void RB_LeafOcclusion()
 				NUM_CULLED++;
 			}
 
-			moc->RenderTriangles((float*)xyz2, (unsigned int*)indexes, numIndexes / 3, nullptr, MaskedOcclusionCulling::CLIP_PLANE_SIDES/*CLIP_PLANE_ALL*/);
+			if (!leaf->occluded[0])
+				moc->RenderTriangles((float*)xyz2, (unsigned int*)indexes, numIndexes / 3, nullptr, MaskedOcclusionCulling::CLIP_PLANE_SIDES/*CLIP_PLANE_ALL*/);
 
 			//ri->Printf(PRINT_ALL, "rendered leaf %d, pos %d, query %d\n", leaf, querynum, occlusionCache[querynum]);
 		}
@@ -278,7 +285,6 @@ void RB_LeafOcclusion()
 			ri->Printf(PRINT_ALL, "%i queries. %i visible. %i occluded. %i culled.\n", tr.world->numVisibleLeafs[0], NUM_VISIBLE, NUM_OCCLUDED, NUM_CULLED);
 	}
 }
-
 
 const void	*RB_DrawOcclusion(const void *data) {
 	const drawOcclusionCommand_t	*cmd;

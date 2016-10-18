@@ -195,7 +195,7 @@ int SE_BuildFileList( const char *psStartDir, string &strResults )
 {
 #ifndef _STRINGED
 	giFilesFound = 0;
-	strResults = "";
+	strResults.clear();
 
 	SE_R_ListFiles( sSE_INGAME_FILE_EXTENSION, psStartDir, strResults );
 

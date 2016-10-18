@@ -510,15 +510,17 @@ int G2_AddSurface(CGhoul2Info *ghoul2, int surfaceNumber, int polyNumber, float 
 	// first up, see if we have a free one already set up  - look only from the end of the constant surfaces onwards
 	for (size_t i=0; i<ghoul2->mSlist.size(); i++)
 	{
+		surfaceInfo_t *si = &ghoul2->mSlist[i];
+
 		// is the surface count -1? That would indicate it's free
-		if (ghoul2->mSlist[i].surface == -1)
+		if (si->surface == -1)
 		{
-			ghoul2->mSlist[i].offFlags = G2SURFACEFLAG_GENERATED;
-			ghoul2->mSlist[i].surface = 10000;		// no model will ever have 10000 surfaces
-			ghoul2->mSlist[i].genBarycentricI = BarycentricI;
-			ghoul2->mSlist[i].genBarycentricJ = BarycentricJ;
-			ghoul2->mSlist[i].genPolySurfaceIndex = ((polyNumber & 0xffff) << 16) | (surfaceNumber & 0xffff);
-			ghoul2->mSlist[i].genLod = lod;
+			si->offFlags = G2SURFACEFLAG_GENERATED;
+			si->surface = 10000;		// no model will ever have 10000 surfaces
+			si->genBarycentricI = BarycentricI;
+			si->genBarycentricJ = BarycentricJ;
+			si->genPolySurfaceIndex = ((polyNumber & 0xffff) << 16) | (surfaceNumber & 0xffff);
+			si->genLod = lod;
 			return i;
 		}
 	}

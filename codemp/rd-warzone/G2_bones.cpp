@@ -4463,11 +4463,13 @@ void G2_Animate_Bone_List(CGhoul2Info_v &ghoul2, const int currentTime, const in
 	bool anyIK = false;
 	for(size_t i=0; i<ghoul2[index].mBlist.size(); i++)
 	{
-		if (ghoul2[index].mBlist[i].boneNumber != -1)
+		boneInfo_t *boneInfo = &ghoul2[index].mBlist[i];
+
+		if (boneInfo->boneNumber != -1)
 		{
-			if (ghoul2[index].mBlist[i].flags & BONE_ANGLES_RAGDOLL)
+			if (boneInfo->flags & BONE_ANGLES_RAGDOLL)
 			{
-				if (ghoul2[index].mBlist[i].RagFlags & RAG_PCJ_IK_CONTROLLED)
+				if (boneInfo->RagFlags & RAG_PCJ_IK_CONTROLLED)
 				{
 					anyIK = true;
 				}

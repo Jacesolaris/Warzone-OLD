@@ -37,7 +37,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	char		filename[512];
 	char		filename2[512];
 
-	if (text == "") return;
+	if (strlen(text) == 0) return;
 
 	memset(USE_VOICE, 0, sizeof(USE_VOICE));
 	memset(RESPONSE, 0, sizeof(RESPONSE));
@@ -231,7 +231,7 @@ void S_TextToSpeech( const char *text, const char *voice, int entityNum, float *
 	if (strcmp(ttsInfo->text, PREVIOUS_TALK_TEXT))
 	{// Never repeat...
 		HANDLE thread;
-		memset(PREVIOUS_TALK_TEXT, '\0', sizeof(char)*16550);
+		memset(PREVIOUS_TALK_TEXT, '\0', sizeof(char)*16551);
 		strcpy(PREVIOUS_TALK_TEXT, ttsInfo->text);
 		PREVIOUS_TALK_TIME = cl.serverTime;
 		thread = CreateThread(NULL, 0, ThreadFunc, ttsInfo, 0, NULL);

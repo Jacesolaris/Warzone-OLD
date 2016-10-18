@@ -2673,7 +2673,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_SABER_BODY_BLOCK");
 		{
 			if (es->eventParm)
-			{// Hit body
+			{// Hit body -- UQ1: These 2 are identical... Different FX maybe?
 				vec3_t fxDir;
 				VectorCopy(es->angles, fxDir);
 				if (!fxDir[0] && !fxDir[1] && !fxDir[2])
@@ -2683,7 +2683,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				PlayEffectID(cgs.effects.mSaberBodyHit, es->origin, fxDir, -1, -1, qfalse);
 			}
 			else
-			{// Hit bbox
+			{// Hit bbox -- UQ1: These 2 are identical... Different FX maybe?
 				vec3_t fxDir;
 				VectorCopy(es->angles, fxDir);
 				if (!fxDir[0] && !fxDir[1] && !fxDir[2])

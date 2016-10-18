@@ -2166,8 +2166,8 @@ void RB_ShowImages( void ) {
 
 		w = (glConfig.vidWidth * r_superSampleMultiplier->value) / 20;
 		h = (glConfig.vidHeight * r_superSampleMultiplier->value) / 15;
-		x = i % 20 * w;
-		y = i / 20 * h;
+		x = (float)(i % 20) * (float)w;
+		y = (float)((float)i / 20) * (float)h;
 
 		// show in proportional size in mode 2
 		if ( r_showImages->integer == 2 ) {
@@ -2464,23 +2464,9 @@ const void *RB_PostProcess(const void *data)
 	dstBox[2] = backEnd.viewParms.viewportWidth;
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
-	/*
-	if (r_ssao->integer)
-	{
-		srcBox[0] = backEnd.viewParms.viewportX      * tr.screenSsaoImage->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-		srcBox[1] = backEnd.viewParms.viewportY      * tr.screenSsaoImage->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-		srcBox[2] = backEnd.viewParms.viewportWidth  * tr.screenSsaoImage->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-		srcBox[3] = backEnd.viewParms.viewportHeight * tr.screenSsaoImage->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-
-		//FBO_BlitFromTexture(tr.screenSsaoImage, srcBox, NULL, srcFbo, dstBox, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
-		srcBox[1] = tr.screenSsaoImage->height - srcBox[1];
-		srcBox[3] = -srcBox[3];
-
-		FBO_Blit(tr.screenSsaoFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
-	}
-	*/
-
-	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
+	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))) 
+		&& !backEnd.depthFill
+		&& (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer || r_bloom->integer))
 	{
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
@@ -2490,6 +2476,7 @@ const void *RB_PostProcess(const void *data)
 		for ( int i = numPasses - 2; i >= 0; i-- )
 			RB_BloomUpscale(tr.glowFboScaled[i + 1], tr.glowFboScaled[i]);
 	}
+
 	srcBox[0] = backEnd.viewParms.viewportX;
 	srcBox[1] = backEnd.viewParms.viewportY;
 	srcBox[2] = backEnd.viewParms.viewportWidth;
@@ -2497,8 +2484,6 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
-		//GLSL_AttachPostTextures(); // make sure that we never overwrite our extra textures...
-
 		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		FBO_t *currentFbo = tr.genericFbo3;
@@ -2876,7 +2861,7 @@ const void *RB_PostProcess(const void *data)
 	}
 #endif //__DYNAMIC_SHADOWS__
 
-	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_ssgi->integer || r_anamorphic->integer))
+	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_ssgi->integer || r_anamorphic->integer || r_bloom->integer))
 	{
 		// Composite the glow/bloom texture
 		int blendFunc = 0;

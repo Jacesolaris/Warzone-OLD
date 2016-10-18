@@ -452,7 +452,7 @@ void AnimateRiders( Vehicle_t *pVeh )
 			//===============================================
 			if (!Left && !Right)		// Allow player strafe keys to override
 			{
-				if (pilotPS->weapon==WP_SABER && !Left && !Right)
+				if (pilotPS->weapon==WP_SABER)
 				{
 					Left = (WeaponPose==WPOSE_SABERLEFT);
 					Right	= !Left;

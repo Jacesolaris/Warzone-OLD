@@ -7401,7 +7401,7 @@ static void PM_Weapon( void )
 		case HANDEXTEND_FORCEPUSH:
 			if (pm->ps->weapon == WP_MELEE ||
 				pm->ps->weapon == WP_NONE ||
-				pm->ps->weapon == WP_SABER && pm->ps->saberHolstered)
+				(pm->ps->weapon == WP_SABER && pm->ps->saberHolstered))
 			{//2-handed PUSH
 				desiredAnim = BOTH_SUPERPUSH;
 			}
@@ -7422,7 +7422,7 @@ static void PM_Weapon( void )
 			{//lightning
 				if (pm->ps->weapon == WP_MELEE ||
 					pm->ps->weapon == WP_NONE ||
-					pm->ps->weapon == WP_SABER && pm->ps->saberHolstered)
+					(pm->ps->weapon == WP_SABER && pm->ps->saberHolstered))
 				{//2-handed lightning
 					desiredAnim = BOTH_FORCE_2HANDEDLIGHTNING_HOLD;
 				}

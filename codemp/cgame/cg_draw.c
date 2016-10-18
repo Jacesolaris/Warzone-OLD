@@ -361,13 +361,16 @@ static void CG_DrawZoomMask( void )
 
 		max *= 58.0f;
 
-		for (fi = 18.5f; fi <= 18.5f + max; fi+= 3 ) // going from 15 to 45 degrees, with 5 degree increments
-		{
-			cx = 320 + sin( (fi+90.0f)/57.296f ) * 190;
-			cy = 240 + cos( (fi+90.0f)/57.296f ) * 190;
+		qboolean drawTick = (strncmp(scopeData[cg.predictedPlayerState.scopeType].tickShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].tickShader)));
 
-			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].tickShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].tickShader)))
+		if (drawTick)
+		{
+			for (fi = 18.5f; fi <= 18.5f + max; fi += 3) // going from 15 to 45 degrees, with 5 degree increments
+			{
+				cx = 320 + sin((fi + 90.0f) / 57.296f) * 190;
+				cy = 240 + cos((fi + 90.0f) / 57.296f) * 190;
 				CG_DrawRotatePic2(cx, cy, 12, 24, 90 - fi, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].tickShader));
+			}
 		}
 
 		if ( cg.predictedPlayerState.weaponstate == WEAPON_CHARGING_ALT )
