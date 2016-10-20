@@ -1921,7 +1921,7 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 		R_ShutdownVBOs();
 		GLSL_ShutdownGPUShaders();
 
-		//if (r_occlusion->integer)
+		if (r_occlusion->integer)
 		{
 			OQ_ShutdownOcclusionQuery();
 		}

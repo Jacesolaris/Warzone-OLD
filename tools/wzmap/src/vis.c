@@ -913,18 +913,20 @@ void LoadPortals (char *name)
 	portals = (vportal_t *)safe_malloc(2*numportals*sizeof(vportal_t));
 	memset (portals, 0, 2*numportals*sizeof(vportal_t));
 
-	//Sys_Printf("portals: %i MB.\n", (2*numportals*sizeof(vportal_t)) / (1024 * 1024));
+	Sys_Printf("portals: %i MB.\n", (2*numportals*sizeof(vportal_t)) / (1024 * 1024));
 
 #define UQ1_TESTING
 #ifdef UQ1_TESTING
-	leafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
+	leafs = (leaf_t *)safe_malloc(portalclusters*sizeof(leaf_t));
 	memset (leafs, 0, portalclusters*sizeof(leaf_t));
+
+	Sys_Printf("leafs: %i MB.\n", (portalclusters*sizeof(leaf_t)) / (1024 * 1024));
 #else
 	leafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
 	memset (leafs, 0, 2*portalclusters*sizeof(leaf_t));
-#endif
 
-	//Sys_Printf("leafs: %i MB.\n", (2*portalclusters*sizeof(leaf_t)) / (1024 * 1024));
+	Sys_Printf("leafs: %i MB.\n", (2*portalclusters*sizeof(leaf_t)) / (1024 * 1024));
+#endif
 
 	for (i = 0; i < portalclusters; i++)
 		leafs[i].merged = -1;

@@ -368,8 +368,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 							VectorCopy( si->averageColor, textureColor );
 							textureColor[ 3 ] = 255;
 						}
-						for( i = 0; i < 3; i++ )
-							color[ i ] = (textureColor[ i ] / 255) * (radLuxel[ i ] / 255);
+						for( int j = 0; j < 3; j++ )
+							color[ j ] = (textureColor[ i ] / 255) * (radLuxel[ i ] / 255);
 						
 						AddPointToBounds( color, mins, maxs );
 						VectorAdd( average, color, average );

@@ -546,8 +546,9 @@ qboolean FixBrokenSurface( mapDrawSurface_t *ds )
 				vec3_t p[256];
 				if( max > 256 )
 					max = 256;
-				for ( i = 0 ; i < max ; i++ )
-					VectorCopy( ds->verts[i].xyz, p[i] );
+				for ( int j = 0 ; j < max ; j++ )
+					VectorCopy( ds->verts[i].xyz, p[j] );
+
 				Sys_Warning( p, max, "Degenerate T-junction edge found, fixing..." );
 			}
 

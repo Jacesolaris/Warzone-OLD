@@ -1,5 +1,3 @@
-//#define USE_PHONG_LIGHTING_ON_GRASS
-
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_SplatMap1;
 uniform sampler2D	u_SplatMap2;
@@ -76,27 +74,6 @@ void main()
 	gl_FragColor = diffuse;
 
 	vec4 m_Normal = ConvertToNormals(diffuse);
-
-#if defined(USE_PHONG_LIGHTING_ON_GRASS)
-	vec3 lightDir = /*vVertPosition.xyz*/u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz;
-	lightDir.xy = -lightDir.xy;
-
-	float lambertian2 = dot(-lightDir.xyz, -m_Normal.xyz);
-
-	if(lambertian2 > 0.0)
-	{// this is blinn phong
-		vec3 eyeVecNorm = normalize(vVertPosition - u_ViewOrigin);
-		vec3 mirrorEye = (2.0 * dot(eyeVecNorm, -m_Normal.xyz) * -m_Normal.xyz - eyeVecNorm);
-		vec3 halfDir2 = normalize(-lightDir.xyz + mirrorEye);
-		float specAngle = max(dot(halfDir2, -m_Normal.xyz), 0.0);
-		float spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += vec3(spec2 * (1.0 - m_Normal.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb;
-	}
-	else
-	{
-		gl_FragColor.rgb *= u_PrimaryLightColor.rgb;
-	}
-#endif //defined(USE_PHONG_LIGHTING_ON_GRASS)
 
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(m_Normal.xyz, 0.1);

@@ -311,7 +311,7 @@ void ColorMod( entity_t *e, mapDrawSurface_t *ds, colorMod_t *cm, brush_t *b, in
 							x = ds->surfaceNum;
 						else
 							x = (ds->mapEntityNum < 0 ? -1 : 1) * ds->mapEntityNum;
-						add[ 3 ] += (x - ((x / 16) * 16));
+						add[ 3 ] += (float(x) - ((float(x) / 16.0f) * 16.0f));
 						/* 2) intensity of vegetation deform effect which is: (<maxs_z> - <mins_z> / <alphaMod parm>) * <vertex alpha> */
 						c = ((float)dv->color[ 0 ][ 3 ] / 255.0f) * (dv->xyz[ 2 ] - dsBoundsMin[ 2 ]) / cm2->data[ 0 ];
 						c = min(max(0, c), 3.75f);

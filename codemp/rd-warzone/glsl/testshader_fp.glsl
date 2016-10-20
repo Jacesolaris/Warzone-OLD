@@ -33,7 +33,7 @@ uniform vec2		u_Dimensions;
 
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;		// testshadervalue1, testshadervalue2, testshadervalue3, testshadervalue4
-uniform vec4		u_Local2;		// 
+uniform vec4		u_Local2;		//
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec3		u_ViewOrigin;
@@ -53,7 +53,6 @@ varying vec3		var_sunOrg;
 varying vec3		var_rayDir;
 varying vec3		var_sunDir;
 
-
 float znear = u_ViewInfo.x; //camera clipping start
 float zfar = u_ViewInfo.y; //camera clipping end
 
@@ -70,7 +69,7 @@ float linearize(float depth)
 	return -zfar * znear / (depth * (zfar - znear) - zfar);
 }
 
-float linearizeDepth ( float depth )
+float linearizeDepth(float depth)
 {
 	float d = depth;
 	d /= C_HBAO_ZFAR - depth * C_HBAO_ZFAR + depth;
@@ -137,12 +136,12 @@ mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
 	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
 	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 
-	// construct a scale-invariant frame 
+	// construct a scale-invariant frame
 	float invmax = inversesqrt(max(dot(T, T), dot(B, B)));
 	return mat3(T * invmax, B * invmax, N);
 }
 
-void main (void)
+void main(void)
 {
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
 	//vec4 norm = texture2D(u_NormalMap, var_TexCoords);
@@ -155,15 +154,15 @@ void main (void)
 
 	float depth = linearizeDepth(texture2D(u_ScreenDepthMap, var_TexCoords).r);
 	norm.xyz = normal_from_depth(depth, var_TexCoords, vec3(1.0, 1.0, 1.0));
-	mat3 TBN = cotangent_frame(-norm.xyz, -E, var_TexCoords);
-	vec3 N = normalize(TBN * -cNorm.xyz);
+	//mat3 TBN = cotangent_frame(-norm.xyz, -E, var_TexCoords);
+	//vec3 N = normalize(TBN * -cNorm.xyz * 0.004);
+	vec3 N = norm.xyz * 0.004;
 
 	//if (u_Local0.b == 1.0)
-	//	N.z = sqrt(1.0 - dot(N.xy, N.xy));
+	N.z = sqrt(1.0 - dot(N.xy, N.xy));
 
 	//float depth = linearizeDepth(texture2D(u_ScreenDepthMap, var_TexCoords).r);
 	//vec3 N = (normal_from_depth(depth, var_TexCoords, norm.rgb) * u_Local1.a) * 2.0 - 1.0 /** 0.004*/;
-	
 
 	//gl_FragColor = vec4(norm.xyz * 0.5 + 0.5, 1.0);
 	//gl_FragColor = vec4(N.rgb * 0.5 + 0.5, 1.0);
@@ -181,21 +180,21 @@ void main (void)
 
 	if (phongFactor < 0.0)
 	{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
-		noSunPhong = true;
-		phongFactor = 0.0;
+	noSunPhong = true;
+	phongFactor = 0.0;
 	}
 
 	if(lambertian2 > 0.0)
 	{// this is blinn phong
-		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
-		float specAngle = max(dot(halfDir2, N), 0.0);
-		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
+	vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
+	float specAngle = max(dot(halfDir2, N), 0.0);
+	spec2 = pow(specAngle, 16.0);
+	gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
 	}
 
 	if (noSunPhong)
 	{// Invert phong value so we still have non-sun lights...
-		phongFactor = -u_Local2.r;
+	phongFactor = -u_Local2.r;
 	}*/
 
 	if (u_lightCount > 0)
@@ -203,10 +202,10 @@ void main (void)
 		for (int li = 0; li < u_lightCount; li++)
 		{
 			vec3 lightDir = normalize(u_lightPositions2[li] - position.xyz);
-			float lambertian3 = dot(lightDir.xyz,N);
+			float lambertian3 = dot(lightDir.xyz, N);
 			float spec3 = 0.0;
 
-			if(lambertian3 > 0.0)
+			if (lambertian3 > 0.0)
 			{
 				float lightDist = distance(u_lightPositions2[li], position.xyz);
 				float lightMax = u_lightDistances[li] * u_Local1.r;
@@ -216,12 +215,12 @@ void main (void)
 					float lightStrength = 1.0 - (lightDist / lightMax);
 					lightStrength = pow(lightStrength * u_Local1.g, u_Local1.b);
 
-					if(lightStrength > 0.0)
+					if (lightStrength > 0.0)
 					{// this is blinn phong
 						vec3 halfDir3 = normalize(lightDir.xyz + E);
 						float specAngle3 = max(dot(halfDir3, N), 0.0);
 						spec3 = pow(specAngle3, 16.0);
-						gl_FragColor.rgb += gl_FragColor.rgb * u_lightColors[li].rgb * spec3 * lightStrength * phongFactor * u_Local0.r;
+						gl_FragColor.rgb += (clamp(gl_FragColor.rgb + vec3(0.3), 0.3, 0.7)) * u_lightColors[li].rgb * spec3 * lightStrength * phongFactor * u_Local0.r;
 					}
 				}
 			}
@@ -238,7 +237,7 @@ vec4 GetPosAndDepth(vec2 coord)
 	return pos;
 }
 
-vec2 WorldToScreen( vec3 worldPos )
+vec2 WorldToScreen(vec3 worldPos)
 {
 	vec4 hpos = u_ModelViewProjectionMatrix * vec4(worldPos, 1.0);
 
@@ -257,7 +256,7 @@ vec2 WorldToScreen( vec3 worldPos )
 	return hpos.xy;
 }
 
-vec2 mvpPosToScreen( vec4 mvpPos )
+vec2 mvpPosToScreen(vec4 mvpPos)
 {
 	vec4 hpos = mvpPos;
 	vec2 pos;
@@ -271,46 +270,47 @@ vec2 mvpPosToScreen( vec4 mvpPos )
 	return pos;
 }
 
-float map( vec4 pos )
+float map(vec4 pos)
 {
 	//vec2 screenPos = WorldToScreen(pos);
-	vec2 screenPos = mvpPosToScreen( pos );
+	vec2 screenPos = mvpPosToScreen(pos);
 	vec4 pPos = u_ModelViewProjectionMatrix * vec4(GetPosAndDepth(screenPos).xyz, 1.0);
 	//vec3 pPos = GetPosAndDepth(screenPos).xyz;
 	float d1 = pPos.y;
-	float d2 = length(pPos.xyz - vec3(1.0, 0.5, 0.0))-0.5;
+	float d2 = length(pPos.xyz - vec3(1.0, 0.5, 0.0)) - 0.5;
 	return min(d1, d2);
 }
 
-float shadow( vec3 pPos, vec3 light ) 
+float shadow(vec3 pPos, vec3 light)
 {
 	vec4 p = u_ModelViewProjectionMatrix * vec4(pPos, 1.0);
 	vec4 l = u_ModelViewProjectionMatrix * vec4(light, 1.0);
-    vec3 dr = normalize(p.xyz - l.xyz);
-    float dst = 0.0;
-    float res = 1.0;
-    for (int i = 0; i < 100; ++i) {
-        float dt = map(l);
-        l.xyz += dr * dt * 0.8;
-        dst += dt * 0.8;
-        if (dt < 0.0001) {
-            if (distance(l.xyz, p.xyz) < 0.001) {
-                return res;
-            } else {
-            	return 0.0;
-            }
-        }
-        res = min(res, 4.0 * dt * dst / length(p.xyz - l.xyz));
-    }
-    return res;// * l.w;
+	vec3 dr = normalize(p.xyz - l.xyz);
+	float dst = 0.0;
+	float res = 1.0;
+	for (int i = 0; i < 100; ++i) {
+		float dt = map(l);
+		l.xyz += dr * dt * 0.8;
+		dst += dt * 0.8;
+		if (dt < 0.0001) {
+			if (distance(l.xyz, p.xyz) < 0.001) {
+				return res;
+			}
+			else {
+				return 0.0;
+			}
+		}
+		res = min(res, 4.0 * dt * dst / length(p.xyz - l.xyz));
+	}
+	return res;// * l.w;
 }
 
-vec4 positionMapAtCoord ( vec2 coord )
+vec4 positionMapAtCoord(vec2 coord)
 {
 	return texture2D(u_PositionMap, coord).xyza;
 }
 
-void main ( void )
+void main(void)
 {
 	gl_FragColor = texture2D(u_DiffuseMap, var_TexCoords);
 }

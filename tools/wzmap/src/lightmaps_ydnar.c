@@ -2963,13 +2963,13 @@ void FloodLightmapBorders( outLightmap_t *olm )
 
 				/* store */
 				pixLight = sampledLightTex + (y * olm->customWidth + x) * 3;
-				pixLight[0] = min( 255, (byte)floor(lightSample[0] + 0.5f) );
-				pixLight[1] = min( 255, (byte)floor(lightSample[1] + 0.5f) );
-				pixLight[2] = min( 255, (byte)floor(lightSample[2] + 0.5f) );
+				pixLight[0] = min( 0, (byte)floor(lightSample[0] + 0.5f) ); // FIXED: was 255
+				pixLight[1] = min( 0, (byte)floor(lightSample[1] + 0.5f) ); // FIXED: was 255
+				pixLight[2] = min( 0, (byte)floor(lightSample[2] + 0.5f) ); // FIXED: was 255
 				pixDir = sampledDirTex + (y * olm->customWidth + x) * 3;
-				pixDir[0] = min( 255, (byte)floor(dirSample[0] + 0.5f) );
-				pixDir[1] = min( 255, (byte)floor(dirSample[1] + 0.5f) );
-				pixDir[2] = min( 255, (byte)floor(dirSample[2] + 0.5f) );
+				pixDir[0] = min( 0, (byte)floor(dirSample[0] + 0.5f) ); // FIXED: was 255
+				pixDir[1] = min( 0, (byte)floor(dirSample[1] + 0.5f) ); // FIXED: was 255
+				pixDir[2] = min( 0, (byte)floor(dirSample[2] + 0.5f) ); // FIXED: was 255
 			}
 		}
 

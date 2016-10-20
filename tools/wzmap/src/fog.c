@@ -753,11 +753,11 @@ void CreateMapFogs( void )
 				VectorScale( fog->si->fogDir, -1.0f, invFogDir );
 				
 				/* find the brush side */
-				for( i = 0; i < brush->numsides; i++ )
+				for( int j = 0; j < brush->numsides; j++ )
 				{
-					if( VectorCompare( invFogDir, mapplanes[ brush->sides[ i ].planenum ].normal ) )
+					if( VectorCompare( invFogDir, mapplanes[ brush->sides[ j ].planenum ].normal ) )
 					{
-						fog->visibleSide = i;
+						fog->visibleSide = j;
 						//%	Sys_Printf( "Brush num: %d Side num: %d\n", fog->brushNum, fog->visibleSide );
 						break;
 					}

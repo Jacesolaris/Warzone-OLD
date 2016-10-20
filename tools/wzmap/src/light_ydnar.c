@@ -1825,8 +1825,8 @@ void SetupDirtForEntity(int num)
 	else
 	{
 		/* calculate angular steps */
-		angleStep = DEG2RAD( 360.0f / (DIRT_NUM_ANGLE_STEPS ) );
-		elevationStep = DEG2RAD( DIRT_CONE_ANGLE / (DIRT_NUM_ELEVATION_STEPS ) );
+		angleStep = DEG2RAD( 360.0f / float(DIRT_NUM_ANGLE_STEPS ) );
+		elevationStep = DEG2RAD( float(DIRT_CONE_ANGLE) / float(DIRT_NUM_ELEVATION_STEPS ) );
 
 		/* default cone-based dirt vectors */
 		/* get number of dirt vectors */

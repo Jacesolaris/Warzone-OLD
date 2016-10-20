@@ -941,7 +941,7 @@ void main()
 		}
 	#endif
 
-#if 0
+#if 1
 	#if (defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)) && !defined(USE_GLOW_BUFFER)
 		if (u_Local6.r > 0.0)
 		{

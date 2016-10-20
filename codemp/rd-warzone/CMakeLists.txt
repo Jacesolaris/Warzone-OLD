@@ -49,7 +49,6 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_model.cpp"
 	"${MPDir}/rd-warzone/tr_model_iqm.cpp"
 	"${MPDir}/rd-warzone/tr_occlusion.cpp"
-	"${MPDir}/rd-warzone/tr_occlusion.h"
 	"${MPDir}/rd-warzone/tr_ocean.cpp"
 	"${MPDir}/rd-warzone/tr_ocean.h"
 	"${MPDir}/rd-warzone/tr_postprocess.cpp"
@@ -114,6 +113,17 @@ set(MPWarzoneAwesomiumFiles
 	"${MPDir}/rd-warzone/Awesomium/WebViewListener.h")
 source_group("Awesomium Headers" FILES ${MPWarzoneAwesomiumFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAwesomiumFiles})
+
+set(MPWarzoneMaskedOcclusionCullingFiles
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/CullingThreadpool.cpp"
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/CullingThreadpool.h"
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCulling.cpp"
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCulling.h"
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCullingAVX2.cpp"
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCullingCommon.inl"
+	"${MPDir}/rd-warzone/MaskedOcclusionCulling/README.md")
+source_group("MaskedOcclusionCulling" FILES ${MPWarzoneMaskedOcclusionCullingFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneMaskedOcclusionCullingFiles})
 
 set(MPWarzoneRdCommonFiles
 	"${MPDir}/rd-common/mdx_format.h"
@@ -261,7 +271,7 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/wz-occlusion")
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)

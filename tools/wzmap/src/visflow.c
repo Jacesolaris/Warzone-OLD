@@ -149,7 +149,7 @@ fixedWinding_t	*VisChopWinding (fixedWinding_t *in, pstack_t *stack, visPlane_t 
 	for (i=0 ; i<in->numpoints ; i++)
 	{
 		if (i >= 128) break;
-		if (!in || !stack || !split) continue;
+		if (/*!in || !stack ||*/ !split) continue;
 
 		dot = DotProduct (in->points[i], split->normal);
 		dot -= split->dist;

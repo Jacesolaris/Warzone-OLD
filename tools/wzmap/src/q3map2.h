@@ -230,10 +230,10 @@ constants
 
 #define	PORTALFILE				"PRT1"
 
-#define	MAX_PORTALS				32768
+#define	MAX_PORTALS				65536//131072//262144//32768
 #define MAX_SEPERATORS			MAX_POINTS_ON_WINDING
 #define	MAX_POINTS_ON_FIXED_WINDING	24	/* ydnar: increased this from 12 at the expense of more memory */
-#define	MAX_PORTALS_ON_LEAF		32768//4096//128
+#define	MAX_PORTALS_ON_LEAF		128//256//32768//4096//128
 
 
 /* light */
@@ -396,7 +396,7 @@ abstracted bsp file
 #define	MAX_MAP_LEAFBRUSHES		0x800000//0xA00000
 #define	MAX_MAP_PORTALS			0x800000//0xA00000
 #define	MAX_MAP_LIGHTGRID		0x800000//0xF00000
-#define	MAX_MAP_VISIBILITY		0xFFFFFFF
+#define	MAX_MAP_VISIBILITY		0x2FFFFFFF
 
 #define	MAX_MAP_DRAW_SURFS		0x200000
 #define	MAX_MAP_DRAW_VERTS		0x4000000

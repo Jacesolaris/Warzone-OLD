@@ -2259,7 +2259,7 @@ void R_RenderView (viewParms_t *parms) {
 
 	R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 
-	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer && !(tr.viewParms.flags & VPF_SHADOWPASS)) {
+	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer && !(tr.viewParms.flags & VPF_SHADOWPASS) && !backEnd.depthFill) {
 		R_AddDrawOcclusionCmd(&tr.viewParms);
 	}
 

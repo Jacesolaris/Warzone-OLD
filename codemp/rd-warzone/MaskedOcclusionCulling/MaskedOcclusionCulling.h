@@ -27,6 +27,10 @@
  */
 #pragma once
 
+#define __SOFTWARE_OCCLUSION__
+#define __THREADED_OCCLUSION__
+//#define __THREADED_OCCLUSION2__
+
 /*!
  *  \file MaskedOcclusionCulling.h
  *  \brief Masked Occlusion Culling
@@ -57,8 +61,8 @@
  * balance between performance and low leakage. If QUICK_MASK is defined to 0, use the algorithm from
  * "Masked Depth Culling for Graphics Hardware" which has less leakage, but also lower performance.
  */
-#define QUICK_MASK			1
-//#define QUICK_MASK			0
+//#define QUICK_MASK			1
+#define QUICK_MASK			0
 
 #endif
 
@@ -79,8 +83,8 @@
  * Define PRECISE_COVERAGE to 1 to more closely match GPU rasterization rules. The increased precision comes
  * at a cost of slightly lower performance.
  */
-#define PRECISE_COVERAGE	0
-//#define PRECISE_COVERAGE	1
+//#define PRECISE_COVERAGE	0
+#define PRECISE_COVERAGE	1
 
 #endif
 
