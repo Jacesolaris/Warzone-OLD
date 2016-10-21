@@ -336,6 +336,7 @@ cvar_t  *r_rbm;
 cvar_t  *r_rbmStrength;
 cvar_t  *r_hbao;
 cvar_t  *r_colorCorrection;
+cvar_t  *r_deferredLighting;
 cvar_t	*r_steepParallax;
 cvar_t  *r_trueAnaglyph;
 cvar_t  *r_trueAnaglyphSeparation;
@@ -1560,6 +1561,7 @@ void R_Register( void )
 	r_rbm = ri->Cvar_Get( "r_rbm", "0", CVAR_ARCHIVE );
 	r_rbmStrength = ri->Cvar_Get( "r_rbmStrength", "0.22", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
+	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
 	r_colorCorrection = ri->Cvar_Get( "r_colorCorrection", "1", CVAR_ARCHIVE );
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );
 	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "10.0", CVAR_ARCHIVE );
@@ -1605,7 +1607,7 @@ void R_Register( void )
 	r_lodCurveError = ri->Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE|CVAR_CHEAT );
 	r_lodbias = ri->Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE );
 	r_flares = ri->Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
-	r_znear = ri->Cvar_Get( "r_znear", "4", CVAR_CHEAT );
+	r_znear = ri->Cvar_Get( "r_znear", "2", CVAR_CHEAT ); // originally 4
 	ri->Cvar_CheckRange( r_znear, 0.001f, 200, qfalse );
 	r_autolodscalevalue	= ri->Cvar_Get( "r_autolodscalevalue", "0", CVAR_ROM );
 	r_zproj = ri->Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE );

@@ -38,7 +38,6 @@ vec4 ConvertToNormals ( vec4 color )
 	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 	N.xy = 1.0 - N.xy;
 	vec4 norm = vec4(N, 1.0 - (length(N.xyz) / 3.0));
-	norm.xyz = norm.xyz * 2.0 - 1.0;
 	return norm;
 }
 

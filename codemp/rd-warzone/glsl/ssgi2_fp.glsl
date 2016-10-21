@@ -49,7 +49,7 @@ vec3 SampleNormals(sampler2D normalMap, in vec2 coord)
 	 float depth = texture2D(u_ScreenDepthMap, coord/*var_TexCoords*/).r * depthMult;
 	 return normal_from_depth(depth, coord);
 #else //!USE_DEPTHMAP
-	 return texture2D(u_NormalMap, coord).rgb;
+	 return texture2D(u_NormalMap, coord).rgb * 2.0 - 1.0;
 #endif //USE_DEPTHMAP
 }
 

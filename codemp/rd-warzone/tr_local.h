@@ -411,6 +411,7 @@ extern cvar_t  *r_sssMaxRange;
 extern cvar_t  *r_rbm;
 extern cvar_t  *r_rbmStrength;
 extern cvar_t  *r_hbao;
+extern cvar_t  *r_deferredLighting;
 extern cvar_t  *r_colorCorrection;
 extern cvar_t  *r_steepParallax;
 extern cvar_t  *r_trueAnaglyph;
@@ -2529,6 +2530,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t distanceBlurShader[4];
 	shaderProgram_t fogPostShader;
 	shaderProgram_t colorCorrectionShader;
+	shaderProgram_t deferredLightingShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *anamorphicRenderFBOImage;

@@ -163,7 +163,7 @@ out vec4 out_Normal;
 
 
 // 'threshold ' is constant , 'value ' is smoothly varying
-/*float aastep ( float threshold , float value ) 
+/*float aastep ( float threshold , float value )
 {
 	float afwidth = 0.7 * length ( vec2 ( dFdx ( value ) , dFdy ( value ))) ;
 	// GLSL 's fwidth ( value ) is abs ( dFdx ( value )) + abs ( dFdy ( value ))
@@ -178,18 +178,29 @@ vec4 ConvertToNormals ( vec4 color )
 	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
 	// for the very noticable FPS boost over texture lookups.
 
-	//N = vec3((color.r + color.b) / 2.0, (color.g + color.b) / 2.0, (color.r + color.g) / 2.0);
-	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
+	vec3 color2 = color.rgb;
+
+	vec3 N = vec3(clamp(color2.r + color2.b, 0.0, 1.0), clamp(color2.g + color2.b, 0.0, 1.0), clamp(color2.r + color2.g, 0.0, 1.0));
+
+	vec3 brightness = color2.rgb; //adaptation luminance
+	brightness = (brightness/(brightness+1.0));
+	brightness = vec3(max(brightness.x, max(brightness.y, brightness.z)));
+	vec3 brightnessMult = (vec3(1.0) - brightness) * 0.5;
+
+	color2 = pow(clamp(color2 + brightnessMult, 0.0, 1.0), vec3(2.0));
 
 	N.xy = 1.0 - N.xy;
+	N.xyz = N.xyz * 0.5 + 0.5;
+	N.xyz = pow(N.xyz, vec3(2.0));
+	N.xyz *= 0.8;
 
+	//float displacement = brightness.r;
 	float displacement = clamp(length(color.rgb), 0.0, 1.0);
+	//float displacement = clamp(length(color2.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
 #define const_2 (255.0 / 219.0)
 	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
-	//vec4 norm = vec4(N, ((1.0 - (N.x * N.y * N.z)) + (1.0 - (length(N.xyz) / 3.0))) / 2.0);
-	//vec4 norm = vec4(N, 1.0 - clamp(length(color.xyz), 0.0, 1.0));
 	vec4 norm = vec4(N, displacement);
 	return norm;
 }
@@ -203,7 +214,7 @@ float randZeroOne()
     uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
     n = n * (n * n * 15731u + 789221u);
     n = (n >> 9u) | 0x3F800000u;
- 
+
     float fRes =  2.0 - uintBitsToFloat(n);
     vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
     return fRes;
@@ -235,7 +246,7 @@ vec4 GenerateTerrainMap(vec2 coord)
     float regionMax = 0.0;
     float regionRange = 0.0;
     float regionWeight = 0.0;
-    
+
     // Terrain region 1.
     regionMin = region1min;
     regionMax = region1max;
@@ -419,7 +430,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 
 		vec4 tex1 = GetMap(u_SteepMap2, 0.0075, ParallaxOffset, FAKE_MAP_NONE);
 		float a1 = 0.0;
-		
+
 		if (u_Local4.r <= 0.0) // save texture lookup
 			a1 = ConvertToNormals(tex1).a;
 		else
@@ -486,7 +497,7 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 
 		vec4 tex2 = GetMap(u_NormalMap, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP);
 		float a2 = tex2.a;
-		
+
 		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
@@ -533,12 +544,12 @@ float RayIntersectDisplaceMap(vec2 dp, inout float displacement)
 {
 	if (u_Local1.x == 0.0)
 		return 0.0;
-	
+
 	displacement = GetDepth(dp);
 	return (displacement - 1.0) * u_Local1.x;
 }
 
-float ReliefMapping(vec2 dp, vec2 ds) 
+float ReliefMapping(vec2 dp, vec2 ds)
 {
 	const int linear_steps = 10;
 	const int binary_steps = 5;
@@ -593,7 +604,7 @@ vec3 NormalBlend_RNM(vec3 n1, vec3 n2)
     // Unpack (see article on why it's not just n*2-1)
 	n1 = n1*vec3( 2,  2, 2) + vec3(-1, -1,  0);
     n2 = n2*vec3(-2, -2, 2) + vec3( 1,  1, -1);
-    
+
     // Blend
     return n1*dot(n1, n2)/n1.z - n2;
 }
@@ -604,8 +615,8 @@ vec3 NormalBlend_Linear(vec3 n1, vec3 n2)
     // Unpack
 	n1 = n1*2.0 - 1.0;
     n2 = n2*2.0 - 1.0;
-    
-	return normalize(n1 + n2);    
+
+	return normalize(n1 + n2);
 }
 
 #define TECHNIQUE_RNM 				 0
@@ -634,7 +645,7 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
 	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
 
-	// construct a scale-invariant frame 
+	// construct a scale-invariant frame
 	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
 	return mat3( T * invmax, B * invmax, N );
 }
@@ -651,7 +662,7 @@ void main()
 	float dist = distance(m_vertPos.xyz, u_ViewOrigin.xyz);
 	bool isDistant = false;
 
-	if (dist > 4096.0) 
+	if (dist > 4096.0)
 	{
 		isDistant = true;
 	}
@@ -666,8 +677,20 @@ void main()
 	//#if defined(USE_TESSELLATION)
 	//if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 32.0)
 	{
-		gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
+		//gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
 		//gl_FragColor = vec4(vec3(texture( u_NormalMap, texCoords).a), 1.0);
+/*#if defined(USE_VERTEX_ANIMATION)
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+#elif defined(USE_SKELETAL_ANIMATION)
+		gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+#elif defined(USE_MODELMATRIX)
+		gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+#else
+		gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+#endif*/
+		vec4 nm = GetNormal(texCoords, vec2(0.0), 0.0);
+		//gl_FragColor = vec4(nm.xyz, 1.0);
+		gl_FragColor = vec4(nm.a, nm.a, nm.a, 1.0);
 
 		#if defined(USE_GLOW_BUFFER)
 			out_Glow = gl_FragColor;
@@ -699,16 +722,9 @@ void main()
 		}
 	#endif //!defined(USE_GLOW_BUFFER)
 
-	/*#if !defined(USE_TESSELLATION) && !defined(USE_ICR_CULLING)
-		viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-	#else //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-		//viewDir = m_ViewDir.xyz;
-		viewDir = normalize(u_ViewOrigin.xyz - m_vertPos.xyz);
-	#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)*/
-
 	viewDir = /*normalize*/(u_ViewOrigin.xyz - m_vertPos.xyz);
 
-	mat3 tangentToWorld = mat3(normalize(var_Tangent.xyz), normalize(var_Bitangent.xyz), normalize(m_Normal.xyz));
+	//mat3 tangentToWorld = mat3(normalize(var_Tangent.xyz), normalize(var_Bitangent.xyz), normalize(m_Normal.xyz));
 	//mat3 tangentToWorld = cotangent_frame(normalize(m_Normal.xyz), -viewDir, texCoords.xy);
 
 	E = normalize(viewDir);
@@ -717,33 +733,33 @@ void main()
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 		vec4 lightmapColor = texture(u_LightMap, var_TexCoords2.st);
-  
+
 		#if defined(RGBM_LIGHTMAP)
 			lightmapColor.rgb *= lightmapColor.a;
 		#endif //defined(RGBM_LIGHTMAP)
- 
-	#endif //defined(USE_LIGHTMAP)
 
+	#endif //defined(USE_LIGHTMAP)
 
 
 	vec2 ParallaxOffset = vec2(0.0);
 	float displacement = 0.0;
 
-	#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER)
+
+#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER) && !(defined(USE_MODELMATRIX) && !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)) // MODELMATRIX causes screwed up normals...
 	if (u_Local1.x > 0.0 && !isDistant)
 	{
 		#if defined(FAST_PARALLAX)
 
 			//vec3 offsetDir = normalize(E * tangentToWorld);
-			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (m_Normal.xyz * E.z));
-			vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
+			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
+			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
 			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords, displacement);
 			texCoords += ParallaxOffset;
 
 		#else //!defined(FAST_PARALLAX)
 			//vec3 offsetDir = normalize(E * tangentToWorld);
-			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (m_Normal.xyz * E.z));
+			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
 			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
 #if 0
@@ -775,20 +791,20 @@ void main()
 			vec2 oldCoord = Coord;
 			float HeightMap = GetDepth( Coord );
 			float oldHeightMap = HeightMap;
- 
+
 			while( Height >= 0.0 && HeightMap < Height )
 			{
 				oldHeightMap = HeightMap;
 				oldHeight = Height;
 				oldCoord = Coord;
- 
+
 				Height -= Step;
 				Coord += dt;
 				HeightMap = GetDepth( Coord );
 			}
 
 			displacement = HeightMap;
-		
+
 			//Coord = (Coord + oldCoord)*0.5;
 			if( Height < 0.0 )
 			{
@@ -796,7 +812,7 @@ void main()
 				Height = 0.0;
 				displacement = oldHeightMap;
 			}
-		
+
 			ParallaxOffset = texCoords - Coord;
 			texCoords = Coord;
 #endif
@@ -816,38 +832,19 @@ void main()
 	#endif
 
 
-	/*#if defined(USE_OVERLAY) && !defined(USE_GLOW_BUFFER)
+		/*if (diffuse.a <= 0.0)
+		{
+	#if defined(USE_GLOW_BUFFER)
+			out_Glow = gl_FragColor;
+	#else
+			out_Glow = vec4(0.0);
+	#endif
 
-		//
-		// Overlay Maps...
-		//
+			out_Normal = vec4(N.xyz, specular.a / 8.0);
+			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 
-		#define OVERLAY_HEIGHT 5.0
-
-		if (!isDistant && u_Local5.x > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
-		{// Have overlay map...
-			vec2 ovCoords = m_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
-			vec4 overlay = texture(u_OverlayMap, ovCoords);
-
-			if (overlay.a > 0.1)
-			{// Have an overlay, and it is visible here... Set it as diffuse instead...
-				diffuse = overlay;
-			}
-			else
-			{// Have an overlay, but it is not visibile at this pixel... Still need to check if we need a shadow casted on this pixel...
-				vec2 ovCoords2 = ovCoords - (tex_offset * OVERLAY_HEIGHT);
-				vec4 overlay2 = texture(u_OverlayMap, ovCoords2);
-
-				if (overlay2.a > 0.1)
-				{// Add shadow...
-					diffuse.rgb *= 0.25;
-				}
-			}
-		}
-
-	#endif //USE_OVERLAY*/
-
-	if (diffuse.a <= 0.0) discard; // no point going further??!?!?!
+			discard; // no point going further??!?!?!
+		}*/
 
 
 	ambientColor = vec3(0.0);
@@ -866,7 +863,7 @@ void main()
 		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
 		float shadowValue = texture(u_ShadowMap, shadowTex).r;
 
-	#endif //defined(USE_SHADOWMAP) 
+	#endif //defined(USE_SHADOWMAP)
 
 
 	//vec4 norm = vec4(m_Normal.xyz, 0.0);
@@ -874,12 +871,17 @@ void main()
 	N.xy = norm.xy * 2.0 - 1.0;
 	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
 	//N.xy *= u_NormalScale.xy;
-	N.xy *= 0.004;
+	//N.xy *= 0.004;
+	N.xy *= 0.25;
 	//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N.z = sqrt(1.0 - dot(N.xy, N.xy));
-	//N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
-	N = normalize(tangentToWorld * N);
+	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
+	//N = normalize(tangentToWorld * N);
 
+	if (diffuse.a <= 0.0)
+	{
+		discard; // no point going further??!?!?!
+	}
 
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
@@ -895,7 +897,7 @@ void main()
 		lightColor *= lightmapColor.rgb;
 
 	#endif //defined(USE_LIGHTMAP)
-  
+
 		gl_FragColor = vec4 (diffuse.rgb + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
 
 		if (u_Local1.a == 19 || u_Local1.a == 20)
@@ -924,7 +926,7 @@ void main()
 		specular.rgb *= u_SpecularScale.rgb;
 
 	#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER)
-		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0) 
+		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
 		{
 			float spec = 0.0;
 
@@ -941,7 +943,7 @@ void main()
 		}
 	#endif
 
-#if 1
+#if 0
 	#if (defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)) && !defined(USE_GLOW_BUFFER)
 		if (u_Local6.r > 0.0)
 		{
@@ -981,7 +983,7 @@ void main()
 					{
 						float lightDist = distance(u_lightPositions2[li], m_vertPos.xyz);
 						float lightMax = u_lightDistances[li] * 1.5;//u_Local9.r;
-						
+
 						if (lightDist < lightMax)
 						{
 							float lightStrength = 1.0 - (lightDist / lightMax);
@@ -1013,10 +1015,11 @@ void main()
 
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
+		//out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+		//out_Position = vec4(m_vertPos, 0.0 );
 	#else
 		out_Glow = vec4(0.0);
+		out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+		out_Position = vec4(m_vertPos, u_Local1.a );
 	#endif
-
-	out_Normal = vec4(N.xyz, specular.a / 8.0/*displacement*/);
-	out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 }

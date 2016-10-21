@@ -27,7 +27,7 @@ vec2 PixelSize = vec2(1.0) / var_Dimensions.xy;
 
 vec3 GetNormalMap(vec2 coords)
 {
-	vec3 norm = texture2D(u_NormalMap, coords.xy).rgb;
+	vec3 norm = texture2D(u_NormalMap, coords.xy).rgb * 2.0 - 1.0;
 	if (norm.r + norm.g + norm.b == 0.0)
 	norm.b = 1.0;
 	return norm;

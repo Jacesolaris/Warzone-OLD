@@ -106,7 +106,7 @@ void main (void)
 	}
 
 	vec4 norm = texture2D( u_NormalMap, var_TexCoords.xy );
-	//norm.xyz = norm.xyz * 2.0 - 1.0;
+	norm.xyz = norm.xyz * 2.0 - 1.0;
 	vec3 viewDir = normalize(u_ViewOrigin.xyz - positionMap.xyz);
 	mat3 tangentToWorld = cotangent_frame(norm.xyz, -viewDir, var_TexCoords.xy);
 	vec3 E = normalize(viewDir.xyz);

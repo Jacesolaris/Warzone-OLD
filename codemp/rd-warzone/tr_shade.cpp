@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // tr_shade.c
 
-#include "tr_local.h"
+#include "tr_local.h" 
 
 /*
 
@@ -62,7 +62,7 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 	{
 		GLint MaxPatchVertices = 0;
 		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
-		//printf("Max supported patch vertices %d\n", MaxPatchVertices);
+		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
 		qglPatchParameteri(GL_PATCH_VERTICES, 3);
 		qglDrawRangeElements(GL_PATCHES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 
@@ -89,7 +89,7 @@ void TesselatedGlMultiDrawElements( GLenum mode, GLsizei *count, GLenum type, co
 	}
 }
 
-void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex,
+void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation)
 {
 	if (r_tesselation->integer && tesselation)
@@ -194,7 +194,7 @@ static void DrawTris (shaderCommands_t *input) {
 
 		GLSL_VertexAttribsState(ATTR_POSITION);
 		GLSL_BindProgram(sp);
-
+		
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		VectorSet4(color, 1, 1, 1, 1);
 		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, color);
@@ -293,7 +293,7 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 	for ( tm = 0; tm < bundle->numTexMods ; tm++ ) {
 		switch ( bundle->texMods[tm].type )
 		{
-
+			
 		case TMOD_NONE:
 			tm = TR_MAX_TEXMODS;		// break out of for loop
 			break;
@@ -315,9 +315,9 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 			RB_CalcScaleTexMatrix( bundle->texMods[tm].scale,
 								  matrix );
 			break;
-
+		
 		case TMOD_STRETCH:
-			RB_CalcStretchTexMatrix( &bundle->texMods[tm].wave,
+			RB_CalcStretchTexMatrix( &bundle->texMods[tm].wave, 
 								   matrix );
 			break;
 
@@ -337,7 +337,7 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 		}
 
 		switch ( bundle->texMods[tm].type )
-		{
+		{	
 		case TMOD_NONE:
 		case TMOD_TURBULENT:
 		default:
@@ -414,14 +414,14 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 	colorGen_t rgbGen = pStage->rgbGen;
 	alphaGen_t alphaGen = pStage->alphaGen;
 
-	baseColor[0] =
-   	baseColor[1] =
-   	baseColor[2] =
-   	baseColor[3] = 1.0f;
-
-   	vertColor[0] =
-   	vertColor[1] =
-   	vertColor[2] =
+	baseColor[0] =  
+   	baseColor[1] = 
+   	baseColor[2] = 
+   	baseColor[3] = 1.0f; 
+   	
+   	vertColor[0] = 
+   	vertColor[1] = 
+   	vertColor[2] = 
    	vertColor[3] = 0.0f;
 
 	if ( forceRGBGen != NULL && *forceRGBGen != CGEN_BAD )
@@ -437,20 +437,20 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 	switch ( rgbGen )
 	{
 		case CGEN_IDENTITY_LIGHTING:
-			baseColor[0] =
+			baseColor[0] = 
 			baseColor[1] =
 			baseColor[2] = tr.identityLight;
 			break;
 		case CGEN_EXACT_VERTEX:
 		case CGEN_EXACT_VERTEX_LIT:
-			baseColor[0] =
+			baseColor[0] = 
 			baseColor[1] =
-			baseColor[2] =
+			baseColor[2] = 
 			baseColor[3] = 0.0f;
 
 			vertColor[0] =
 			vertColor[1] =
-			vertColor[2] =
+			vertColor[2] = 
 			vertColor[3] = 1.0f;
 			break;
 		case CGEN_CONST:
@@ -460,7 +460,7 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			baseColor[3] = pStage->constantColor[3] / 255.0f;
 			break;
 		case CGEN_VERTEX:
-			baseColor[0] =
+			baseColor[0] = 
 			baseColor[1] =
 			baseColor[2] =
 			baseColor[3] = 0.0f;
@@ -471,18 +471,18 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			vertColor[3] = 1.0f;
 			break;
 		case CGEN_VERTEX_LIT:
-			baseColor[0] =
+			baseColor[0] = 
 			baseColor[1] =
-			baseColor[2] =
+			baseColor[2] = 
 			baseColor[3] = 0.0f;
 
 			vertColor[0] =
 			vertColor[1] =
-			vertColor[2] =
+			vertColor[2] = 
 			vertColor[3] = tr.identityLight;
 			break;
 		case CGEN_ONE_MINUS_VERTEX:
-			baseColor[0] =
+			baseColor[0] = 
 			baseColor[1] =
 			baseColor[2] = tr.identityLight;
 
@@ -506,8 +506,8 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			}
 			break;
 		case CGEN_WAVEFORM:
-			baseColor[0] =
-			baseColor[1] =
+			baseColor[0] = 
+			baseColor[1] = 
 			baseColor[2] = RB_CalcWaveColorSingle( &pStage->rgbWave );
 			break;
 		case CGEN_ENTITY:
@@ -603,9 +603,9 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 	{
 		*forceRGBGen = rgbGen;
 	}
-
+	
 	// multiply color by overbrightbits if this isn't a blend
-	if (tr.overbrightBits
+	if (tr.overbrightBits 
 	 && !((blend & GLS_SRCBLEND_BITS) == GLS_SRCBLEND_DST_COLOR)
 	 && !((blend & GLS_SRCBLEND_BITS) == GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
 	 && !((blend & GLS_DSTBLEND_BITS) == GLS_DSTBLEND_SRC_COLOR)
@@ -627,7 +627,7 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 	if(r_greyscale->integer)
 	{
 		int scale;
-
+		
 		for(i = 0; i < tess.numVertexes; i++)
 		{
 			scale = (tess.svars.colors[i][0] + tess.svars.colors[i][1] + tess.svars.colors[i][2]) / 3;
@@ -663,11 +663,11 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 
 	// rotate the gradient vector for this orientation
 	if ( fog->hasSurface ) {
-		fogDepthVector[0] = fog->surface[0] * backEnd.ori.axis[0][0] +
+		fogDepthVector[0] = fog->surface[0] * backEnd.ori.axis[0][0] + 
 			fog->surface[1] * backEnd.ori.axis[0][1] + fog->surface[2] * backEnd.ori.axis[0][2];
-		fogDepthVector[1] = fog->surface[0] * backEnd.ori.axis[1][0] +
+		fogDepthVector[1] = fog->surface[0] * backEnd.ori.axis[1][0] + 
 			fog->surface[1] * backEnd.ori.axis[1][1] + fog->surface[2] * backEnd.ori.axis[1][2];
-		fogDepthVector[2] = fog->surface[0] * backEnd.ori.axis[2][0] +
+		fogDepthVector[2] = fog->surface[0] * backEnd.ori.axis[2][0] + 
 			fog->surface[1] * backEnd.ori.axis[2][1] + fog->surface[2] * backEnd.ori.axis[2][2];
 		fogDepthVector[3] = -fog->surface[3] + DotProduct( backEnd.ori.origin, fog->surface );
 
@@ -733,7 +733,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 	if ( !backEnd.refdef.num_pshadows ) {
 		return;
 	}
-
+	
 	ComputeDeformValues(&deformGen, deformParams);
 
 	for ( l = 0 ; l < backEnd.refdef.num_pshadows ; l++ ) {
@@ -769,7 +769,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 		GLSL_SetUniformVec3(sp, UNIFORM_LIGHTUP, vector);
 
 		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);
-
+	  
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 		// where they aren't rendered
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
@@ -827,7 +827,7 @@ static void RB_FogPass( void ) {
 
 		if (glState.skeletalAnimation)
 			index |= FOGDEF_USE_SKELETAL_ANIMATION;
-
+		
 		sp = &tr.fogShader[index];
 	}
 
@@ -841,7 +841,7 @@ static void RB_FogPass( void ) {
 
 	GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
 	GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
+	
 	GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
 	if (deformGen != DGEN_NONE)
 	{
@@ -983,7 +983,7 @@ float		overlaySway = 0.0;
 
 void RB_AdvanceOverlaySway ( void )
 {
-	if (overlaySwayTime > ri->Milliseconds())
+	if (overlaySwayTime > ri->Milliseconds()) 
 		return;
 
 	if (overlaySwayDown)
@@ -1035,10 +1035,10 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 
 	if (!backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
 	{
-		if (r_normalMapping->integer >= 2
-			&& pStage->bundle[TB_NORMALMAP].image[0]
+		if (r_normalMapping->integer >= 2 
+			&& pStage->bundle[TB_NORMALMAP].image[0] 
 			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage
-			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.blackImage)
+			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.blackImage) 
 		{
 			hasNormalMap = 1.0;
 		}
@@ -1061,25 +1061,25 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			hasSteepMap2 = 1.0;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP1].image[0]
+		if ((pStage->bundle[TB_SPLATMAP1].image[0] 
 			&& pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
 		{
 			hasSplatMap1 = 1;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP2].image[0]
+		if ((pStage->bundle[TB_SPLATMAP2].image[0] 
 			&& pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
 		{
 			hasSplatMap2 = 1;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP3].image[0]
+		if ((pStage->bundle[TB_SPLATMAP3].image[0] 
 			&& pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
 		{
 			hasSplatMap3 = 1;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP4].image[0]
+		if ((pStage->bundle[TB_SPLATMAP4].image[0] 
 			&& pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
 		{
 			hasSplatMap4 = 1;
@@ -1308,7 +1308,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		}
 
 		// Shader overrides material...
-		if (pStage->cubeMapScale > 0.0)
+		if (pStage->cubeMapScale > 0.0) 
 		{
 			cubemapScale = pStage->cubeMapScale;
 		}
@@ -1318,7 +1318,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			doSway = 0.7;
 		}
 
-		if (tess.shader == tr.sunShader)
+		if (tess.shader == tr.sunShader) 
 		{// SPECIAL MATERIAL TYPE FOR SUN
 			materialType = 1025.0;
 		}
@@ -1348,7 +1348,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		materialType = (float)0.0;
 		parallaxScale = 0.0;
 
-		if (tess.shader == tr.sunShader)
+		if (tess.shader == tr.sunShader) 
 		{// SPECIAL MATERIAL TYPE FOR SUN
 			materialType = 1025.0;
 		}
@@ -1396,7 +1396,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	{
 		VectorSet4(specMult, specularScale, specularScale, specularScale, 1.0);
 
-		if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == 30.0 /* ARMOR */
+		if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == 30.0 /* ARMOR */ 
 			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == 25.0 /* PLASTIC */
 			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == 12.0 /* MARBLE */)
 		{// Armor, plastic, and marble should remain somewhat shiny...
@@ -1406,9 +1406,9 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
 		}
 		else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) != 0.0 /* METALS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 10.0 /* GLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 29.0 /* SHATTERGLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 18.0 /* BPGLASS */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 10.0 /* GLASS */ 
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 29.0 /* SHATTERGLASS */ 
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 18.0 /* BPGLASS */ 
 			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 31.0 /* COMPUTER */
 			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 15.0 /* ICE */)
 		{// Only if not metalic... Metals should remain nice and shiny...
@@ -1475,7 +1475,7 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 
 qboolean RB_ShouldUseTesselation ( int materialType )
 {
-	if ( materialType == MATERIAL_SHORTGRASS
+	if ( materialType == MATERIAL_SHORTGRASS 
 		|| materialType == MATERIAL_LONGGRASS
 		|| materialType == MATERIAL_SAND
 		|| materialType == MATERIAL_ROCK
@@ -1630,8 +1630,8 @@ qboolean RB_ShouldUseGeometryGrass (int materialType )
 	{
 		return qfalse;
 	}
-
-	if ( materialType == MATERIAL_SHORTGRASS
+	
+	if ( materialType == MATERIAL_SHORTGRASS 
 		|| materialType == MATERIAL_LONGGRASS )
 	{
 		return qtrue;
@@ -1678,13 +1678,13 @@ vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
 void RB_UpdateCloseLights ( void )
 {
 	if (!CLOSE_LIGHTS_UPDATE) return; // Already done for this frame...
-
+	
 	NUM_CLOSE_LIGHTS = 0;
 
-	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ )
+	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
-
+		
 #ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 		if (dl->color[0] < 0.0 && dl->color[1] < 0.0 && dl->color[2] < 0.0)
 		{// Surface glow light... But has no color assigned...
@@ -1737,7 +1737,7 @@ void RB_UpdateCloseLights ( void )
 
 	for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 	{
-		if (CLOSEST_LIGHTS_DISTANCES[i] < 0.0)
+		if (CLOSEST_LIGHTS_DISTANCES[i] < 0.0) 
 		{// Remove volume light markers...
 			CLOSEST_LIGHTS_DISTANCES[i] = -CLOSEST_LIGHTS_DISTANCES[i];
 		}
@@ -1795,7 +1795,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		int stateBits;
 		colorGen_t forceRGBGen = CGEN_BAD;
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
-
+		
 		qboolean isGeneric = qtrue;
 		qboolean isLightAll = qfalse;
 		qboolean isWater = qfalse;
@@ -1859,7 +1859,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					index |= LIGHTDEF_USE_TESSELLATION;
 				}
 
-				if (r_foliage->integer
+				if (r_foliage->integer 
 					&& r_sunlightMode->integer >= 2
 					&& r_foliageShadows->integer
 					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
@@ -1922,7 +1922,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (glState.skeletalAnimation)
 				{
 					index |= LIGHTDEF_USE_SKELETAL_ANIMATION;
-				}
+				} 
 			}
 
 			if ((r_sunlightMode->integer >= 2)
@@ -1944,10 +1944,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
-
-			if (r_lightmap->integer
-				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES
-				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES
+			
+			if (r_lightmap->integer 
+				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES 
+				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES 
 				&& !tess.shader->isSky && !pStage->glow)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;
@@ -1992,7 +1992,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			if (pStage->bundle[TB_STEEPMAP].image[0]
+			if (pStage->bundle[TB_STEEPMAP].image[0] 
 				|| pStage->bundle[TB_STEEPMAP2].image[0]
 				|| pStage->bundle[TB_SPLATMAP1].image[0]
 				|| pStage->bundle[TB_SPLATMAP2].image[0]
@@ -2020,7 +2020,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
 #ifdef __USE_WATERMAP__
-			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
+			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS)) 
 			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 			{
 				sp = &tr.waterShader;
@@ -2056,7 +2056,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glslShaderGroup = tr.lightallShader;
 				sp = &pStage->glslShaderGroup[0];
 
-				if (r_foliage->integer
+				if (r_foliage->integer 
 					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
 				{
 					isGrass = qtrue;
@@ -2070,7 +2070,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			sp = &tr.shadowPassShader;
 			GLSL_BindProgram(sp);
-
+			
 			if (!r_foliageShadows->integer || r_sunlightMode->integer < 2)
 			{
 				isGrass = qfalse;
@@ -2106,7 +2106,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 
 		RB_SetMaterialBasedProperties(sp, pStage);
-
+		
 		stateBits = pStage->stateBits;
 
 		/*if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
@@ -2537,18 +2537,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						&& !pStage->glow
 						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
 						&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0]
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 					&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 						&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR
-						/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR 
+						/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2 
 						// gfx dirs can be exempted I guess...
 						&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
 					{// How did this happen??? Oh well, generate a normal map now...
@@ -2557,7 +2557,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
 						pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, pStage->bundle[TB_DIFFUSEMAP].image[0]->flags, pStage->bundle[TB_DIFFUSEMAP].image[0] );
 
-						if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
+						if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage) 
 						{
 							pStage->hasRealNormalMap = true;
 							RB_SetMaterialBasedProperties(sp, pStage);
@@ -2639,7 +2639,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
 			R_BindAnimatedImageToTMU( &pStage->bundle[1], 1 );
 		}
-		else
+		else 
 		{
 			//
 			// set state
@@ -2724,7 +2724,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (isGrass && passNum > 0)
 			{// Use grass map...
-
+				
 			}
 			else
 			{
@@ -2842,7 +2842,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				multiPass = qfalse;
 			}
 
-			if (!multiPass)
+			if (!multiPass) 
 			{
 				if (isGrass && r_foliage->integer)
 				{// Set cull type back to original... Just in case...
@@ -2852,7 +2852,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				break;
 			}
 		}
-
+	
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )
 		{
@@ -2935,7 +2935,7 @@ void RB_StageIteratorGeneric( void )
 	unsigned int vertexAttribs = 0;
 
 	input = &tess;
-
+	
 	if (!input->numVertexes || !input->numIndexes)
 	{
 		return;
@@ -2960,7 +2960,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// log this call
 	//
-	if ( r_logFile->integer )
+	if ( r_logFile->integer ) 
 	{
 		// don't just call LogComment, or we will get
 		// a call to va() every frame!
@@ -2973,14 +2973,14 @@ void RB_StageIteratorGeneric( void )
 	if ((backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
 		//GL_Cull( CT_TWO_SIDED );
-
+		
 		if (input->shader->cullType == CT_TWO_SIDED)
 			GL_Cull( CT_TWO_SIDED );
 		else if (input->shader->cullType == CT_FRONT_SIDED)
 			GL_Cull( CT_BACK_SIDED );
 		else
 			GL_Cull( CT_FRONT_SIDED );
-
+		
 	}
 	else
 		GL_Cull( input->shader->cullType );
@@ -3002,9 +3002,9 @@ void RB_StageIteratorGeneric( void )
 	//
 
 	if ((tess.shader->isWater && r_glslWater->integer)
-		|| (tess.shader->contentFlags & CONTENTS_WATER)
-		/*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/
-		|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		|| (tess.shader->contentFlags & CONTENTS_WATER) 
+		/*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/ 
+		|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
 	{
 		if (input && input->xstages[0] && input->xstages[0]->isWater == 0 && r_glslWater->integer) // In case it is already set, no need looping more then once on the same shader...
 		{
@@ -3121,7 +3121,7 @@ void RB_EndSurface( void ) {
 
 	if (input->indexes[SHADER_MAX_INDEXES-1] != 0) {
 		ri->Error (ERR_DROP, "RB_EndSurface() - SHADER_MAX_INDEXES hit");
-	}
+	}	
 	if (input->xyz[SHADER_MAX_VERTEXES-1][0] != 0) {
 		ri->Error (ERR_DROP, "RB_EndSurface() - SHADER_MAX_VERTEXES hit");
 	}

@@ -144,16 +144,7 @@ vec2 offset2 = vec2(1.0 / var_Dimensions.x, 0.0);
 vec3 normal_from_depth(float depth, vec2 texcoords)
 {
 #if defined(USE_NORMALMAP)
-	/*
-    float depth1 = getLinearDepth(u_ScreenDepthMap, texcoords + offset1);
-    float depth2 = getLinearDepth(u_ScreenDepthMap, texcoords + offset2);
-    vec3 p1 = vec3(offset1, depth1 - depth);
-    vec3 p2 = vec3(offset2, depth2 - depth);
-    vec3 normal = cross(p1, p2);
-    normal.z = -normal.z;
-	return normalize((texture(u_NormalMap, texcoords).rgb + normal) / 2.0);
-	*/
-	return texture(u_NormalMap, texcoords).rgb;
+	return texture(u_NormalMap, texcoords).rgb * 2.0 - 1.0;
 #else //!defined(USE_NORMALMAP)
     float depth1 = getLinearDepth(u_ScreenDepthMap, texcoords + offset1);
     float depth2 = getLinearDepth(u_ScreenDepthMap, texcoords + offset2);
@@ -352,8 +343,6 @@ vec3 normal_from_depth(vec2 texcoords) {
 }
 
 vec3 GetPixelNormal( in vec2 coord ) {
-		//return normalize(texture2D( u_NormalMap, coord ).xyz);
-
 		return normal_from_depth(coord);
 }
 

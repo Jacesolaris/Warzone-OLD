@@ -1,6 +1,5 @@
 attribute vec2 attr_TexCoord0;
 
-
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
@@ -34,7 +33,6 @@ attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
 #endif
 
-
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
@@ -47,7 +45,6 @@ uniform vec4	u_Local9;
 uniform sampler2D			u_DiffuseMap;
 
 uniform float	u_Time;
-
 
 #if defined(USE_DELUXEMAP)
 uniform vec4   u_EnableTextures; // x = normal, y = deluxe, z = specular, w = cube
@@ -105,7 +102,6 @@ varying float	var_usingSteepMap;
 
 varying vec2   var_nonTCtexCoords; // for steep maps
 
-
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
@@ -144,10 +140,9 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 
 	vec2 texOffset = sin(offsetPos * (2.0 * M_PI / 1024.0) + vec2(phase));
 
-	return st2 + texOffset * amplitude;	
+	return st2 + texOffset * amplitude;
 }
 #endif //defined(USE_TCMOD)
-
 
 #if defined(USE_TRI_PLANAR)
 void GetBlending(vec3 normal)
@@ -157,33 +152,33 @@ void GetBlending(vec3 normal)
 		/*
 		// Raise each component of normal vector to 4th power.
 		//vec3 blend = abs(normalize(normal));
-		vec3 blend = clamp(abs(normalize(normal)) - 0.5,0.0,1.0);	
+		vec3 blend = clamp(abs(normalize(normal)) - 0.5,0.0,1.0);
 		blend *= blend;
 		blend *= blend;
-		
+
 		// Normalize result by dividing by the sum of its components.
 		blend /= dot(blend, vec3(1.0, 1.0, 1.0));
 		var_Blending = blend;
 		*/
-		
-		vec3 blend_weights = abs( normalize(normal.xyz) );   // Tighten up the blending zone:  
-		blend_weights = (blend_weights - 0.2) * 7.0;  
-		blend_weights = max(blend_weights, 0.0);      // Force weights to sum to 1.0 (very important!)  
-		blend_weights /= vec3(blend_weights.x + blend_weights.y + blend_weights.z );
+
+		vec3 blend_weights = abs(normalize(normal.xyz));   // Tighten up the blending zone:
+		blend_weights = (blend_weights - 0.2) * 7.0;
+		blend_weights = max(blend_weights, 0.0);      // Force weights to sum to 1.0 (very important!)
+		blend_weights /= vec3(blend_weights.x + blend_weights.y + blend_weights.z);
 		var_Blending = blend_weights;
 	}
 }
 #endif //defined(USE_TRI_PLANAR)
 
 #if defined(USE_TRI_PLANAR)
-vec3 vectoangles( in vec3 value1 ) {
+vec3 vectoangles(in vec3 value1) {
 	float	forward;
 	float	yaw, pitch;
 	vec3	angles;
 
-	if ( value1.g == 0 && value1.r == 0 ) {
+	if (value1.g == 0 && value1.r == 0) {
 		yaw = 0;
-		if ( value1.b > 0 ) {
+		if (value1.b > 0) {
 			pitch = 90;
 		}
 		else {
@@ -191,22 +186,22 @@ vec3 vectoangles( in vec3 value1 ) {
 		}
 	}
 	else {
-		if ( value1.r > 0 ) {
-			yaw = ( atan ( value1.g, value1.r ) * 180 / M_PI );
+		if (value1.r > 0) {
+			yaw = (atan(value1.g, value1.r) * 180 / M_PI);
 		}
-		else if ( value1.g > 0 ) {
+		else if (value1.g > 0) {
 			yaw = 90;
 		}
 		else {
 			yaw = 270;
 		}
-		if ( yaw < 0 ) {
+		if (yaw < 0) {
 			yaw += 360;
 		}
 
-		forward = sqrt ( value1.r*value1.r + value1.g*value1.g );
-		pitch = ( atan(value1.b, forward) * 180 / M_PI );
-		if ( pitch < 0 ) {
+		forward = sqrt(value1.r*value1.r + value1.g*value1.g);
+		pitch = (atan(value1.b, forward) * 180 / M_PI);
+		if (pitch < 0) {
 			pitch += 360;
 		}
 	}
@@ -219,7 +214,7 @@ vec3 vectoangles( in vec3 value1 ) {
 }
 #endif //defined(USE_TRI_PLANAR)
 
-vec4 ConvertToNormals ( vec4 color )
+vec4 ConvertToNormals(vec4 color)
 {
 	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
 	// wasting vram on real normals.
@@ -241,14 +236,17 @@ void main()
 	vec3 position = vec3(attr_Position.xyz);
 
 #if defined(USE_VERTEX_ANIMATION)
-	position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-	normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp);
-	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
+	position = mix(attr_Position, attr_Position2, u_VertexLerp);
+	normal = mix(attr_Normal, attr_Normal2, u_VertexLerp);
+	vec3 tangent = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
+
+	normal = normal  * 2.0 - 1.0;
+	tangent = tangent * 2.0 - 1.0;
 #elif defined(USE_SKELETAL_ANIMATION)
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
 	vec4 originalPosition = vec4(attr_Position, 1.0);
-	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
+	vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
 	vec4 tangent4 = vec4(0.0);
 	vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
@@ -262,18 +260,17 @@ void main()
 	}
 
 	position = position4.xyz;
-	normal = normalize (normal4.xyz);
-	vec3 tangent = normalize (tangent4.xyz);
+	normal = normalize(normal4.xyz);
+	vec3 tangent = normalize(tangent4.xyz);
 
-	normal  = normal  * 2.0 - 1.0;
+	normal = normal  * 2.0 - 1.0;
 	tangent = tangent * 2.0 - 1.0;
 #else
-	vec3 tangent   = attr_Tangent.xyz;
+	vec3 tangent = attr_Tangent.xyz;
 
-	normal  = normal  * 2.0 - 1.0;
+	normal = normal  * 2.0 - 1.0;
 	tangent = tangent * 2.0 - 1.0;
 #endif
-
 
 #if defined(USE_TCGEN)
 	vec2 texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
@@ -290,25 +287,24 @@ void main()
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
 	vec3 preMMPos = position.xyz;
+	/*vec3 preMMNorm = normal.xyz;
+	vec4 preMMtangent = vec4(tangent, 0.0);
+	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);*/
+
+#if defined(USE_MODELMATRIX) && !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
+	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
+	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
+	tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
+#endif
+
+	//vec3 preMMPos = position.xyz;
 	vec3 preMMNorm = normal.xyz;
 	vec4 preMMtangent = vec4(tangent, 0.0);
 	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);
 
-
-#if defined(USE_MODELMATRIX)
-	position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
-	normal    = (u_ModelMatrix * vec4(normal,   0.0)).xyz;
-	tangent   = (u_ModelMatrix * vec4(tangent,  0.0)).xyz;
-#endif
-
-
 	var_vertPos = position.xyz;
 
-
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
-
-
-
 
 #if defined(USE_LIGHTMAP)
 	var_TexCoords2 = attr_TexCoord1.st;
@@ -321,60 +317,55 @@ void main()
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
 	var_PrimaryLightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius;
 
-
 	vec3 viewDir = u_ViewOrigin - position;
 	var_ViewDir = viewDir;
 
 	// store view direction in tangent space to save on varyings
-	var_Normal    = vec4(normal,    viewDir.x);
-	var_Tangent   = vec4(tangent,   viewDir.y);
+	var_Normal = vec4(normal, viewDir.x);
+	var_Tangent = vec4(tangent, viewDir.y);
 	var_Bitangent = vec4(bitangent, viewDir.z);
 
 	var_nonTCtexCoords = attr_TexCoord0.st;
-
-
 
 	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;
 
 #if defined(USE_TRI_PLANAR)
 
-		//
-		// Steep Maps...
-		//
+	//
+	// Steep Maps...
+	//
 
-		if (u_Local5.a > 0.0)
-		{// Steep maps...
-			float pitch = vectoangles( normalize(normal.xyz) ).r;
-	
-			if (pitch > 180)
-				pitch -= 360;
+	if (u_Local5.a > 0.0)
+	{// Steep maps...
+		float pitch = vectoangles(normalize(normal.xyz)).r;
 
-			if (pitch < -180)
-				pitch += 360;
+		if (pitch > 180)
+			pitch -= 360;
 
-			pitch += 90.0f;
+		if (pitch < -180)
+			pitch += 360;
 
-			if (pitch > 46.0 || pitch < -46.0)
-			{
-				var_usingSteepMap = 1.0;
-				var_Slope = 1.0;
-			}
-			else if (pitch > 26.0 || pitch < -26.0)
-			{// do not add to foliage map on this slope, but still do original texture
-				var_usingSteepMap = 1.0;
-				var_Slope = 0.0;
-			}
-			else
-			{
-				var_usingSteepMap = 0.0;
-				var_Slope = 0.0;
-			}
+		pitch += 90.0f;
+
+		if (pitch > 46.0 || pitch < -46.0)
+		{
+			var_usingSteepMap = 1.0;
+			var_Slope = 1.0;
 		}
+		else if (pitch > 26.0 || pitch < -26.0)
+		{// do not add to foliage map on this slope, but still do original texture
+			var_usingSteepMap = 1.0;
+			var_Slope = 0.0;
+		}
+		else
+		{
+			var_usingSteepMap = 0.0;
+			var_Slope = 0.0;
+		}
+	}
 
 #endif //defined(USE_TRI_PLANAR)
-
-
 
 	var_Blending = vec3(0.0);
 
@@ -384,33 +375,31 @@ void main()
 
 #endif //defined(USE_TRI_PLANAR)
 
-
-
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-  //mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, attr_Normal.xyz * 2.0 - 1.0);
-  //vec4 color = texture(u_DiffuseMap, var_TexCoords.xy);
-  //vec4 no = ConvertToNormals(color);
-  //vec3 nMap = normalize(tangentToWorld * ((no * 2.0 - 1.0).xyz * no.a));
-  //vec3 nMap = normalize(attr_Normal.xyz * 2.0 - 1.0);
-  //vec3 nMap = normalize(tangentToWorld * attr_Normal.xyz * 2.0 - 1.0);
-  //nMap.z = sqrt(clamp((0.25 - nMap.x * nMap.x) - nMap.y * nMap.y, 0.0, 1.0));
+	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, attr_Normal.xyz * 2.0 - 1.0);
+	//vec4 color = texture(u_DiffuseMap, var_TexCoords.xy);
+	//vec4 no = ConvertToNormals(color);
+	//vec3 nMap = normalize(tangentToWorld * ((no * 2.0 - 1.0).xyz * no.a));
+	//vec3 nMap = normalize(attr_Normal.xyz * 2.0 - 1.0);
+	//vec3 nMap = normalize(tangentToWorld * attr_Normal.xyz * 2.0 - 1.0);
+	//nMap.z = sqrt(clamp((0.25 - nMap.x * nMap.x) - nMap.y * nMap.y, 0.0, 1.0));
 
-  WorldPos_CS_in = vec4(preMMPos, 1.0);
-  //WorldPos_CS_in = vec4(var_vertPos.xyz, 1.0);
-  TexCoord_CS_in = var_TexCoords.xy;
-  //Normal_CS_in = /*nMap.xyz;*/attr_Normal.xyz * 2.0 - 1.0;//-preMMNorm.xyz;//-var_Normal.xyz;
-  Normal_CS_in = var_Normal.xyz;
-  ViewDir_CS_in = var_ViewDir;
-  Tangent_CS_in = var_Tangent;
-  Bitangent_CS_in = var_Bitangent;
-  Color_CS_in = var_Color;
-  PrimaryLightDir_CS_in = var_PrimaryLightDir;
-  TexCoord2_CS_in = var_TexCoords2;
-  Blending_CS_in = var_Blending;
-  Slope_CS_in = var_Slope;
-  usingSteepMap_CS_in = var_usingSteepMap;
-  gl_Position = vec4(preMMPos, 1.0);
-  //gl_Position = vec4(var_vertPos.xyz, 1.0);
+	WorldPos_CS_in = vec4(preMMPos, 1.0);
+	//WorldPos_CS_in = vec4(var_vertPos.xyz, 1.0);
+	TexCoord_CS_in = var_TexCoords.xy;
+	//Normal_CS_in = /*nMap.xyz;*/attr_Normal.xyz * 2.0 - 1.0;//-preMMNorm.xyz;//-var_Normal.xyz;
+	Normal_CS_in = var_Normal.xyz;
+	ViewDir_CS_in = var_ViewDir;
+	Tangent_CS_in = var_Tangent;
+	Bitangent_CS_in = var_Bitangent;
+	Color_CS_in = var_Color;
+	PrimaryLightDir_CS_in = var_PrimaryLightDir;
+	TexCoord2_CS_in = var_TexCoords2;
+	Blending_CS_in = var_Blending;
+	Slope_CS_in = var_Slope;
+	usingSteepMap_CS_in = var_usingSteepMap;
+	gl_Position = vec4(preMMPos, 1.0);
+	//gl_Position = vec4(var_vertPos.xyz, 1.0);
 
 #else
 
