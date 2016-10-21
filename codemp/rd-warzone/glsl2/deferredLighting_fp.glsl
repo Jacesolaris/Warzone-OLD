@@ -83,19 +83,14 @@ void main(void)
 		norm.g = t;
 		norm.rgb = normalize(norm.rgb);
 	}
-	/*else if (position.a == 0.0)
-	{// Glow.. We need to rebuild specular level...
-		norm.a = ConvertToNormals(color).a;
-	}*/
 
-	if (u_Local2.a == 1.0)
+	/*if (u_Local2.a == 1.0)
 	{
 		gl_FragColor = vec4(normalize(norm.rgb), 1.0);
 		return;
-	}
+	}*/
 
 	norm.a = norm.a * 0.5 + 0.5;
-	//norm.a = norm.a * 0.5 + 0.5;
 	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 	vec3 N = norm.xyz;
@@ -112,7 +107,7 @@ void main(void)
 		phongFactor = 0.0;
 	}
 
-	if (lambertian2 > 0.0)
+	if (!noSunPhong && lambertian2 > 0.0)
 	{// this is blinn phong
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
@@ -142,7 +137,6 @@ void main(void)
 				{
 					vec3 lightDir = normalize(u_lightPositions2[li] - position.xyz);
 					float lambertian3 = dot(lightDir.xyz, N);
-					float spec3 = 0.0;
 
 					gl_FragColor.rgb += u_lightColors[li].rgb * lightStrength * u_Local2.g; // Always add some basic light...
 
@@ -152,7 +146,7 @@ void main(void)
 						{// this is blinn phong
 							vec3 halfDir3 = normalize(lightDir.xyz + E);
 							float specAngle3 = max(dot(halfDir3, N), 0.0);
-							spec3 = pow(specAngle3, 16.0);
+							float spec3 = pow(specAngle3, 16.0);
 							gl_FragColor.rgb += vec3((1.0 - spec3) * (1.0 - norm.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
 						}
 					}
