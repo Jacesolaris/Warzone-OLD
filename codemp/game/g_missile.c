@@ -246,9 +246,9 @@ void G_ExplodeMissile( gentity_t *ent ) {
 
 	ent->takedamage = qfalse;
 	// splash damage
-	if ( ent->splashDamage ) {
-		if( G_RadiusDamage( ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius, ent,
-				ent, ent->splashMethodOfDeath ) )
+	if ( ent->splashDamage ) 
+	{
+		if( G_RadiusDamage( ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius, ent, ent, ent->splashMethodOfDeath ) )
 		{
 			if (ent->parent)
 			{
@@ -917,25 +917,16 @@ killProj:
 	G_SetOrigin(ent, trace->endpos);
 
 	ent->takedamage = qfalse;
+
 	// splash damage (doesn't apply to person directly hit)
-	/*if (ent->splashDamage) {
-		if (G_RadiusDamage(trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius,
-			other, ent, ent->splashMethodOfDeath)) {
-			if (!hitClient
-				&& g_entities[ent->r.ownerNum].client) {
-				g_entities[ent->r.ownerNum].client->accuracy_hits++;
-			}
-		}
-	}*/
+	if (ent->splashDamage && ent->splashRadius)
+	{
+		G_RadiusDamage(trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius, other, ent, ent->splashMethodOfDeath);
+	}
 
 	if (ent->s.weapon == G2_MODEL_PART)
 	{
 		ent->freeAfterEvent = qfalse; //it will free itself
-	}
-
-	if (ent->splashRadius && ent->splashDamage && !ent->genericValue10)
-	{
-		G_RadiusDamage(trace->endpos, &g_entities[ent->r.ownerNum], ent->splashDamage, ent->splashRadius, NULL, ent, ent->methodOfDeath);
 	}
 
 	trap->LinkEntity((sharedEntity_t *)ent);

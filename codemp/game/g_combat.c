@@ -405,8 +405,7 @@ void ExplodeDeath( gentity_t *self )
 		{
 			attacker = self->parent;
 		}
-		G_RadiusDamage( self->r.currentOrigin, attacker, self->splashDamage, self->splashRadius,
-				attacker, NULL, MOD_UNKNOWN );
+		G_RadiusDamage( self->r.currentOrigin, attacker, self->splashDamage, self->splashRadius, attacker, NULL, MOD_UNKNOWN );
 	}
 
 	ObjectDie( self, self, self, 20, 0 );
@@ -5955,16 +5954,19 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 	qboolean	hitClient = qfalse;
 	qboolean	roastPeople = qfalse;
 
-	/*
-	if (missile && !missile->client && missile->s.weapon > WP_NONE &&
-		missile->s.weapon < WP_NUM_WEAPONS && missile->r.ownerNum >= 0 &&
-		(missile->r.ownerNum < MAX_CLIENTS || g_entities[missile->r.ownerNum].s.eType == ET_NPC))
+	if (missile 
+		&& !missile->client 
+		&& missile->s.weapon > WP_NONE 
+		&& missile->s.weapon < WP_NUM_WEAPONS 
+		&& missile->r.ownerNum >= 0 
+		&& (missile->r.ownerNum < MAX_CLIENTS || g_entities[missile->r.ownerNum].s.eType == ET_NPC))
 	{ //sounds like it's a valid weapon projectile.. is it a valid explosive to create marks from?
 		switch(missile->s.weapon)
 		{
 		case WP_FLECHETTE: //flechette issuing this will be alt-fire
 		case WP_ROCKET_LAUNCHER:
 		case WP_THERMAL:
+		case WP_CYROBAN_GRENADE:
 		case WP_TRIP_MINE:
 		case WP_DET_PACK:
 			roastPeople = qtrue; //Then create explosive marks
@@ -5973,7 +5975,7 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 			break;
 		}
 	}
-	*/
+	
 	//oh well.. maybe sometime? I am trying to cut down on tempent use.
 
 	if ( radius < 1 ) {
@@ -5994,6 +5996,8 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 			continue;
 		if (!ent->takedamage)
 			continue;
+
+		trap->Print("Game hit entity %i.\n", e);
 
 		// find the distance from the edge of the bounding box
 		for ( i = 0 ; i < 3 ; i++ ) {
@@ -6035,15 +6039,15 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 				G_Damage (ent, NULL, attacker, dir, origin, (int)points, DAMAGE_RADIUS, mod);
 			}
 
-			if (ent && ent->client && roastPeople && missile &&
-				!VectorCompare(ent->r.currentOrigin, missile->r.currentOrigin))
+			if (ent 
+				&& ent->client 
+				&& roastPeople && missile 
+				&& !VectorCompare(ent->r.currentOrigin, missile->r.currentOrigin))
 			{ //the thing calling this function can create burn marks on people, so create an event to do so
 				gentity_t *evEnt = G_TempEntity(ent->r.currentOrigin, EV_GHOUL2_MARK);
 
 				evEnt->s.otherEntityNum = ent->s.number; //the entity the mark should be placed on
-				evEnt->s.weapon = WP_ROCKET_LAUNCHER; //always say it's rocket so we make the right mark
-				evEnt->s.weapon = WP_E60_ROCKET_LAUNCHER;
-				evEnt->s.weapon = WP_CW_ROCKET_LAUNCHER;
+				evEnt->s.weapon = missile->s.weapon; //always say it's rocket so we make the right mark
 
 				//Try to place the decal by going from the missile location to the location of the person that was hit
 				VectorCopy(missile->r.currentOrigin, evEnt->s.origin);
@@ -6062,6 +6066,13 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 
 				//Special col check
 				evEnt->s.eventParm = 1;
+
+				if (g_entities[missile->r.ownerNum].client)
+				{
+					g_entities[missile->r.ownerNum].client->accuracy_hits++;
+				}
+
+				roastPeople = qfalse; // only send 1 tempent to client... handle the other hits fx there...
 			}
 		}
 	}

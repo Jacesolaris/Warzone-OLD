@@ -146,10 +146,16 @@ typedef struct weaponData_s
 	char	classname[32];		// Spawning name
 
 	int		fireTime;			// Amount of time between firings
-	int		range;				// Range of weapon
-
 	int		altFireTime;		// Amount of time between alt-firings
-	int		altRange;			// Range of alt-fire
+					
+	int		dmg;
+	int		dmgAlt;
+
+	float	boltSpeed;
+	int		accuracy;
+
+	int		splashDmg;
+	int		splashRadius;
 
 	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 	int		altChargeSubTime;	// above for secondary

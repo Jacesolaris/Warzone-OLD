@@ -1425,18 +1425,38 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_E60_ROCKET_LAUNCHER:
 	case WP_ROCKET_LAUNCHER:
 	case WP_THERMAL:
-		if ( !size )
 		{
-			size = 24.0f;
+			int e;
+
+			for (e = 0; e < MAX_GENTITIES; e++) 
+			{// no entitiesinbox in cgame... grrrr
+				centity_t *cent = &cg_entities[e];
+
+				if (cent->currentState.eType != ET_PLAYER && cent->currentState.eType != ET_NPC)
+				{
+					continue;
+				}
+
+				if (Distance(cent->lerpOrigin, es->origin) <= weaponData[es->weapon].splashRadius)
+				{// Damage FX on all players/NPCs within range...
+					trap->Print("Cgame hit entity %i.\n", e);
+					if (!size)
+					{
+						size = 24.0f;
+					}
+
+					if (!shader)
+					{
+						shader = cgs.media.bdecal_burn1;
+					}
+
+					CG_AddGhoul2Mark(shader, size,
+						startPoint, es->origin2, es->owner, cent->lerpOrigin,
+						cent->lerpAngles[YAW], cent->ghoul2,
+						cent->modelScale, Q_irand(10000, 20000));
+				}
+			}
 		}
-		if ( !shader )
-		{
-			shader = cgs.media.bdecal_burn1;
-		}
-		CG_AddGhoul2Mark(shader, size,
-			startPoint, es->origin2, es->owner, pOwner->lerpOrigin,
-			pOwner->lerpAngles[YAW], pOwner->ghoul2,
-			pOwner->modelScale, Q_irand(10000, 20000));
 		break;
 		/*
 	case WP_FLECHETTE:
