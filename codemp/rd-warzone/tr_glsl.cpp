@@ -146,6 +146,8 @@ extern const char *fallbackShader_distanceBlur_vp;
 extern const char *fallbackShader_distanceBlur_fp;
 extern const char *fallbackShader_fogPost_vp;
 extern const char *fallbackShader_fogPost_fp;
+extern const char *fallbackShader_showNormals_vp;
+extern const char *fallbackShader_showNormals_fp;
 extern const char *fallbackShader_deferredLighting_vp;
 extern const char *fallbackShader_deferredLighting_fp;
 extern const char *fallbackShader_colorCorrection_vp;
@@ -3403,6 +3405,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.showNormalsShader, "showNormals", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_showNormals_vp, fallbackShader_showNormals_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load showNormals shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader, "deferredLighting", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load deferredLighting shader!");
@@ -4843,6 +4853,28 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.showNormalsShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load showNormals shader!");
+	}
+
+	GLSL_InitUniforms(&tr.showNormalsShader);
+
+	qglUseProgram(tr.showNormalsShader.program);
+
+	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.showNormalsShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+
 	if (!GLSL_EndLoadGPUShader(&tr.deferredLightingShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load deferredLightingshader!");
@@ -5796,6 +5828,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[3]);
 	GLSL_DeleteGPUShader(&tr.fogPostShader);
 	GLSL_DeleteGPUShader(&tr.colorCorrectionShader);
+	GLSL_DeleteGPUShader(&tr.showNormalsShader);
 	GLSL_DeleteGPUShader(&tr.deferredLightingShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
 	GLSL_DeleteGPUShader(&tr.uniqueskyShader);

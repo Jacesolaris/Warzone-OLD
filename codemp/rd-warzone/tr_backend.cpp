@@ -2511,6 +2511,12 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && r_shownormals->integer)
+		{
+			RB_ShowNormals(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (!SCREEN_BLUR && r_testshader->integer)
 		{
 			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);

@@ -2660,6 +2660,26 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.deferredLightingShader, color, 0);
 }
 
+void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.showNormalsShader);
+
+	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformMatrix16(&tr.showNormalsShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.showNormalsShader, color, 0);
+}
+
 void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int pass_num)
 {
 	vec4_t color;
