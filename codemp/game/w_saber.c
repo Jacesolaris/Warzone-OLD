@@ -4651,8 +4651,6 @@ static qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, 
 		}
 
 	blockStuff:
-		otherUnblockable = qfalse;
-
 		if ( otherOwner && otherOwner->client && otherOwner->client->ps.saberInFlight ) {
 			return qfalse;
 		}
@@ -4666,7 +4664,7 @@ static qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, 
 
 		otherSaberLevel = G_SaberAttackPower( otherOwner, SaberAttacking( otherOwner ) );
 
-		if ( dmg > SABER_NONATTACK_DAMAGE && !unblockable && !otherUnblockable ) {
+		if ( dmg > SABER_NONATTACK_DAMAGE && !unblockable ) {
 			int lockFactor = g_saberLockFactor.integer;
 
 			if ( sabersClashed && Q_irand( 1, 20 ) <= lockFactor ) {

@@ -3211,12 +3211,8 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_CROUCH;
 		}
-	}
-
-	if (!TREE_BLOCK)
-	{// Try jump...
-		vec3_t trypos;
-
+	
+		// Try jump...
 		VectorCopy(NPC->r.currentOrigin, trypos);
 
 		VectorCopy(trypos, org1);

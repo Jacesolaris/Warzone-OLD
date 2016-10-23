@@ -1333,8 +1333,7 @@ static void CG_General( centity_t *cent ) {
 
 		if (cent->ghoul2 && cent->bolt4 != -1 && cent->trailTime < cg.time)
 		{
-			if ( cent->bolt4 != -1 &&
-				(cent->currentState.pos.trDelta[0] || cent->currentState.pos.trDelta[1] || cent->currentState.pos.trDelta[2]) )
+			if ( cent->currentState.pos.trDelta[0] || cent->currentState.pos.trDelta[1] || cent->currentState.pos.trDelta[2] )
 			{
 				vec3_t boltOrg, boltAng;
 

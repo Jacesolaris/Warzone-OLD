@@ -3857,7 +3857,7 @@ void G_RunFrame( int levelTime ) {
 
 		if ( ent->client && (ent->s.eType == ET_PLAYER || ent->s.eType == ET_NPC) )
 		{// UQ1: NPCs can hack/use too!!!
-			if (ent->client->isHacking)
+			if (ent->client->isHacking > MAX_CLIENTS)
 			{ //hacking checks
 				gentity_t *hacked = &g_entities[ent->client->isHacking];
 				vec3_t angDif;
@@ -3881,7 +3881,7 @@ void G_RunFrame( int levelTime ) {
 					ent->client->isHacking = 0;
 					ent->client->ps.hackingTime = 0;
 				}
-				else if (!hacked || !hacked->inuse)
+				else if (!hacked->inuse)
 				{ //shouldn't happen, but safety first
 					ent->client->isHacking = 0;
 					ent->client->ps.hackingTime = 0;

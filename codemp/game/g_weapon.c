@@ -812,14 +812,10 @@ static void WP_DisruptorMainFire(gentity_t *ent)
 
 		if (d_projectileGhoul2Collision.integer && traceEnt->inuse && traceEnt->client)
 		{ //g2 collision checks -rww
-			if (traceEnt->inuse && traceEnt->client && traceEnt->ghoul2)
+			if (traceEnt->ghoul2)
 			{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
 				traceEnt->client->g2LastSurfaceHit = tr.surfaceFlags;
 				traceEnt->client->g2LastSurfaceTime = level.time;
-			}
-
-			if (traceEnt->ghoul2)
-			{
 				tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
 			}
 		}
@@ -1026,14 +1022,10 @@ void WP_DisruptorAltFire(gentity_t *ent)
 
 		if (d_projectileGhoul2Collision.integer && traceEnt->inuse && traceEnt->client)
 		{ //g2 collision checks -rww
-			if (traceEnt->inuse && traceEnt->client && traceEnt->ghoul2)
+			if (traceEnt->ghoul2)
 			{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
 				traceEnt->client->g2LastSurfaceHit = tr.surfaceFlags;
 				traceEnt->client->g2LastSurfaceTime = level.time;
-			}
-
-			if (traceEnt->ghoul2)
-			{
 				tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
 			}
 		}
@@ -3807,14 +3799,10 @@ static void WP_FireConcussionAlt(gentity_t *ent)
 
 		if (d_projectileGhoul2Collision.integer && traceEnt->inuse && traceEnt->client)
 		{ //g2 collision checks -rww
-			if (traceEnt->inuse && traceEnt->client && traceEnt->ghoul2)
+			if (traceEnt->ghoul2)
 			{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
 				traceEnt->client->g2LastSurfaceHit = tr.surfaceFlags;
 				traceEnt->client->g2LastSurfaceTime = level.time;
-			}
-
-			if (traceEnt->ghoul2)
-			{
 				tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
 			}
 		}

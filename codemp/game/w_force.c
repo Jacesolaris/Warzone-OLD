@@ -3432,7 +3432,6 @@ void ForceThrow( gentity_t *self, qboolean pull )
 				continue;
 			}
 			if (ent->s.pos.trType == TR_STATIONARY 
-				&& ent->s.weapon != WP_CYROBAN_GRENADE 
 				&& ent->s.weapon != WP_FRAG_GRENADE
 				&& ent->s.weapon != WP_FRAG_GRENADE_OLD
 				&& ent->s.weapon != WP_CYROBAN_GRENADE)
@@ -3656,7 +3655,7 @@ void ForceThrow( gentity_t *self, qboolean pull )
 					VectorSubtract( thispush_org, self->client->ps.origin, pushDir );
 				}
 
-				if ((modPowerLevel > otherPushPower || push_list[x]->client->ps.m_iVehicleNum) && push_list[x]->client)
+				if (push_list[x]->client && (modPowerLevel > otherPushPower || push_list[x]->client->ps.m_iVehicleNum))
 				{
 					if (modPowerLevel == FORCE_LEVEL_3 &&
 						push_list[x]->client->ps.forceHandExtend != HANDEXTEND_KNOCKDOWN)
