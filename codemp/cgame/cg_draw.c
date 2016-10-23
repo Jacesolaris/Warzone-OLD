@@ -3495,7 +3495,7 @@ Load_NPC_Names ( void )
 
 		if ( *t )
 		{
-			if ( !Q_strncmp( "//", va( "%s", t), 2) == 0 && strlen( va( "%s", t)) > 0 )
+			if ( t[0] != '\0' && !Q_strncmp( "//", va( "%s", t), 2) == 0 )
 			{	// Not a comment either... Record it in our list...
 				Q_strncpyz( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, va( "%s", t), strlen( va( "%s", t)) );
 				NUM_HUMAN_NAMES++;

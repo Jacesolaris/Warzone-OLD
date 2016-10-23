@@ -714,13 +714,8 @@ qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum 
 //	float	i;
 
 	//Offset the step height
-	//vec3_t	mins = {-18, -18, -24};
-	//vec3_t	mins = {-8, -8, -6};
-	vec3_t	mins = {-10, -10, -6};
-	//vec3_t	maxs = {18, 18, 48};
-	//vec3_t	maxs = {8, 8, NPC->client->ps.crouchheight};
-	//vec3_t	maxs = {8, 8, 16};
-	vec3_t	maxs = {10, 10, 16};
+	//vec3_t	mins = {-10, -10, -6};
+	//vec3_t	maxs = {10, 10, 16};
 
 	VectorCopy(NPC->s.origin, org);
 	//org[2]+=STEPSIZE;

@@ -37,7 +37,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	char		filename[512];
 	char		filename2[512];
 
-	if (strlen(text) == 0) return;
+	if (text[0] == '\0') return;
 
 	memset(USE_VOICE, 0, sizeof(USE_VOICE));
 	memset(RESPONSE, 0, sizeof(RESPONSE));

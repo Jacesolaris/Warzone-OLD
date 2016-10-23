@@ -2697,7 +2697,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 
 					if ( *t )
 					{
-						if ( Q_strncmp( "//", va( "%s", t), 2) && strlen( va( "%s", t)) > 0 )
+						if ( t[0] != '\0' && Q_strncmp( "//", va( "%s", t), 2) )
 						{	// Not a comment either... Record it in our list...
 							if (NUM_LINES < 1)
 							{// Sound dir...

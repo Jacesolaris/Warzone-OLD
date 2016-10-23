@@ -331,7 +331,7 @@ AIMOD_NODES_LoadNodes ( void )
 
 	////////////////////
 	trap->Cvar_VariableStringBuffer( "g_scriptName", filename, sizeof(filename) );
-	if ( strlen( filename) > 0 )
+	if ( filename[0] != '\0' )
 	{
 		trap->Cvar_Register( &mapname, "g_scriptName", "", CVAR_ROM );
 	}

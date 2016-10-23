@@ -6241,7 +6241,7 @@ static void UI_RunMenuScript(char **args)
 				name[0] = addr[0] = '\0';
 				Q_strncpyz(name, 	Info_ValueForKey(buff, "hostname"), sizeof( name ) );
 				Q_strncpyz(addr, 	Info_ValueForKey(buff, "addr"), sizeof( addr ) );
-				if (strlen(name) > 0 && strlen(addr) > 0)
+				if (name[0] != '\0' && addr[0] != '\0')
 				{
 					res = trap->LAN_AddServer(AS_FAVORITES, name, addr);
 					if (res == 0)
@@ -6270,7 +6270,7 @@ static void UI_RunMenuScript(char **args)
 				trap->LAN_GetServerInfo(AS_FAVORITES, uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, MAX_STRING_CHARS);
 				addr[0] = '\0';
 				Q_strncpyz(addr, 	Info_ValueForKey(buff, "addr"), sizeof( addr ) );
-				if (strlen(addr) > 0)
+				if (addr[0] != '\0')
 				{
 					trap->LAN_RemoveServer(AS_FAVORITES, addr);
 				}
@@ -6288,7 +6288,7 @@ static void UI_RunMenuScript(char **args)
 				name[0] = addr[0] = '\0';
 				Q_strncpyz(name, 	UI_Cvar_VariableString("ui_favoriteName"), sizeof( name ) );
 				Q_strncpyz(addr, 	UI_Cvar_VariableString("ui_favoriteAddress"), sizeof( addr ) );
-				if (/*strlen(name) > 0 &&*/ strlen(addr) > 0) {
+				if (addr[0] != '\0') {
 					res = trap->LAN_AddServer(AS_FAVORITES, name, addr);
 					if (res == 0) {
 						// server already in the list
@@ -7614,6 +7614,8 @@ static void UI_SortServerStatusInfo( serverStatusInfo_t *info ) {
 	numLines = Com_Clampi( 0, MAX_SERVERSTATUS_LINES, info->numLines );
 	for (i = 0; serverStatusCvars[i].name; i++) {
 		for (j = 0; j < numLines; j++) {
+			int altNameLen = strlen(serverStatusCvars[i].altName);
+
 			if ( !info->lines[j][1] || info->lines[j][1][0] ) {
 				continue;
 			}
@@ -7626,7 +7628,7 @@ static void UI_SortServerStatusInfo( serverStatusInfo_t *info ) {
 				info->lines[j][0] = tmp1;
 				info->lines[j][3] = tmp2;
 				//
-				if ( strlen(serverStatusCvars[i].altName) ) {
+				if ( altNameLen ) {
 					info->lines[index][0] = serverStatusCvars[i].altName;
 				}
 				index++;

@@ -718,7 +718,7 @@ void NPC_Precache ( gentity_t *spawner )
 			Q_strncpyz( playerModel, value, sizeof(playerModel));
 			md3Model = qfalse;
 
-			if (strlen(customSkin) > 0) {
+			if (customSkin[0] != '\0') {
 				trap->R_RegisterSkin(va("models/players/%s/model_%s.skin", playerModel, customSkin));
 			}
 			continue;
@@ -732,7 +732,7 @@ void NPC_Precache ( gentity_t *spawner )
 				continue;
 			}
 
-			if (strlen(playerModel) > 0) {
+			if (playerModel[0] != '\0') {
 				trap->R_RegisterSkin(va("models/players/%s/model_%s.skin", playerModel, customSkin));
 			}
 

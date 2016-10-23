@@ -2358,7 +2358,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 		matchCount = 0;
 		shortestMatch[ 0 ] = 0;
 
-		if ( strlen( completionString ) == 0 )
+		if ( completionString[0] == '\0' )
 			return;
 
 		if ( doCommands )

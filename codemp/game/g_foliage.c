@@ -247,7 +247,7 @@ qboolean FOLIAGE_LoadMapClimateInfo( void )
 	memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
 	strncpy(CURRENT_CLIMATE_OPTION, climateName, strlen(climateName));
 
-	if (strlen(CURRENT_CLIMATE_OPTION) == 0)
+	if (CURRENT_CLIMATE_OPTION[0] == '\0')
 	{
 		trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, mapname.string );
 		strncpy(CURRENT_CLIMATE_OPTION, "tropical", strlen("tropical"));

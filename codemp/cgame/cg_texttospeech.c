@@ -531,7 +531,7 @@ void CHATTER_TextToSpeech( const char *text, const char *voice, int entityNum, v
 	clientInfo_t	*ci = CG_GetClientInfoForEnt(&cg_entities[entityNum]);
 	char			chatline_text[MAX_SAY_TEXT] = {0};
 
-	if (strlen(text) == 0) return; // hmm somehow this can happen... no point wasting time...
+	if (text[0] == '\0') return; // hmm somehow this can happen... no point wasting time...
 
 	if (ci && add_chat_text)
 	{
