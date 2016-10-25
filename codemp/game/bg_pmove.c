@@ -8078,6 +8078,25 @@ static void PM_Weapon( void )
 		return;
 	}
 
+	if (pm->ps->weapon == 0)
+	{
+		return;
+	}
+
+	{
+		if (pm->ps->shotsRemaining & SHOTS_TOGGLEBIT)
+		{
+			if (weaponData[pm->ps->weapon].firingType == FT_SEMI)
+			{
+				return;
+			}
+			else if (weaponData[pm->ps->weapon].firingType == FT_BURST)
+			{
+				pm->ps->shotsRemaining = weaponData[pm->ps->weapon].shotsPerBurst & ~SHOTS_TOGGLEBIT;
+			}
+		}
+	}
+
 	if (pm->ps->weapon == WP_EMPLACED_GUN)
 	{
 		addTime = weaponData[pm->ps->weapon].fireTime;
@@ -8361,8 +8380,7 @@ static void PM_Weapon( void )
 		}
 		else
 		{
-			if (pm->ps->weapon != WP_MELEE ||
-				!pm->ps->m_iVehicleNum)
+			if (pm->ps->weapon != WP_MELEE || !pm->ps->m_iVehicleNum)
 			{ //do not fire melee events at all when on vehicle
 				PM_AddEvent( EV_ALT_FIRE );
 			}
@@ -8370,15 +8388,40 @@ static void PM_Weapon( void )
 		}
 	}
 	else {
-		if (pm->ps->weapon != WP_MELEE ||
-			!pm->ps->m_iVehicleNum)
+		if (pm->ps->weapon != WP_MELEE || !pm->ps->m_iVehicleNum)
 		{ //do not fire melee events at all when on vehicle
 			PM_AddEvent( EV_FIRE_WEAPON );
 		}
-		addTime = weaponData[pm->ps->weapon].fireTime;
-		if ( pm->gametype == GT_SIEGE && pm->ps->weapon == WP_DET_PACK )
-		{	// were far too spammy before?  So says Rick.
-			addTime *= 2;
+
+		//addTime = weaponData[pm->ps->weapon].fireTime;
+		//if ( pm->gametype == GT_SIEGE && pm->ps->weapon == WP_DET_PACK )
+		//{	// were far too spammy before?  So says Rick.
+		//	addTime *= 2;
+		//}
+
+		switch (weaponData[pm->ps->weapon].firingType)
+		{
+		case FT_AUTOMATIC:
+			addTime = weaponData[pm->ps->weapon].fireTime;
+			break;
+
+		case FT_SEMI:
+			addTime = weaponData[pm->ps->weapon].fireTime;
+			pm->ps->shotsRemaining = SHOTS_TOGGLEBIT;
+			break;
+
+		case FT_BURST:
+			if ((pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT) == 1)
+			{
+				addTime = weaponData[pm->ps->weapon].fireTime;
+				pm->ps->shotsRemaining = SHOTS_TOGGLEBIT;
+			}
+			else
+			{
+				addTime = weaponData[pm->ps->weapon].burstFireDelay;
+				pm->ps->shotsRemaining = (pm->ps->shotsRemaining - 1) & ~SHOTS_TOGGLEBIT;
+			}
+			break;
 		}
 	}
 
@@ -8758,10 +8801,11 @@ void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 void PM_AdjustAttackStates( pmove_t *pmove )
 //-------------------------------------------
 {
+	
 #ifndef __MMO__
 	int amount;
 #endif //__MMO__
-
+	qboolean primFireDown;
 	if (pm_entSelf->s.NPC_class!=CLASS_VEHICLE
 		&&pmove->ps->m_iVehicleNum)
 	{ //riding a vehicle
@@ -8770,10 +8814,25 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			(veh->m_pVehicle && (veh->m_pVehicle->m_pVehicleInfo->type == VH_WALKER || veh->m_pVehicle->m_pVehicleInfo->type == VH_FIGHTER)) )
 		{//riding a walker/fighter
 			//not firing, ever
-			pmove->ps->eFlags &= ~(EF_FIRING|EF_ALT_FIRING);
+			pmove->ps->eFlags &= ~(EF_FIRING/*|EF_ALT_FIRING*/);
 			return;
 		}
 	}
+
+	// JKG: Keep attack button 'pressed' until no more shots
+	// are remaining.
+	if (pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT)
+	{
+		if (pm->ps->eFlags & EF_FIRING)
+		{
+			if (weaponData[pm->ps->weapon].firingType == FT_BURST)
+			{
+				pm->cmd.buttons |= BUTTON_ATTACK;
+			}
+		}
+	}
+
+	primFireDown = (pm->cmd.buttons & BUTTON_ATTACK);
 
 	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
 	if (WeaponSniperCharge(pmove->ps->weapon) && pmove->ps->weaponstate == WEAPON_READY)
@@ -8900,6 +8959,24 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 		}
 	}
 
+	//Burst fire
+	if ( !(pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT) &&
+			(primFireDown && !(pm->ps->eFlags & EF_FIRING)) )
+	{
+	    if ( pm->ps->weaponTime <= 0 )
+	    {
+       		if ( weaponData[pm->ps->weapon].firingType == FT_BURST )
+            {
+				pm->ps->shotsRemaining = weaponData[pm->ps->weapon].shotsPerBurst & ~SHOTS_TOGGLEBIT;
+            }
+        }
+        else
+        {
+			pm->cmd.buttons &= ~BUTTON_ATTACK;
+            primFireDown =  qfalse;
+        }
+	}
+
 	// set the firing flag for continuous beam weapons, saber will fire even if out of ammo
 	if ( !(pmove->ps->pm_flags & PMF_RESPAWNED) &&
 			pmove->ps->pm_type != PM_INTERMISSION &&
@@ -8926,7 +9003,13 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	else
 	{
 		// Clear 'em out
-		pmove->ps->eFlags &= ~(EF_FIRING|EF_ALT_FIRING);
+		//pmove->ps->eFlags &= ~(EF_FIRING|EF_ALT_FIRING);
+		// Clear 'em out
+		pm->ps->eFlags &= ~(EF_FIRING/*|EF_ALT_FIRING*/);
+		if (pm->ps->shotsRemaining & SHOTS_TOGGLEBIT)
+		{
+			pm->ps->shotsRemaining = 0;
+		}
 	}
 
 	// disruptor should convert a main fire to an alt-fire if the gun is currently zoomed

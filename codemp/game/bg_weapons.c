@@ -95,74 +95,87 @@ vec3_t WP_SecondPistolMuzzle[WP_NUM_WEAPONS] =
 #define BLASTER_SPEED				DEFAULT_SPEED
 #define GRENADE_SPEED				900
 
-#define DEFAULT_ACCURACY				1.0f
+#define DEFAULT_ACCURACY			1.0f
 #define PISTOL_ACCURACY				1.0f
-#define BLASTER_ACCURACY				1.6f
+#define BLASTER_ACCURACY			1.6f
 
+#define DEFAULT_BURST_SHOT			0
+#define BURST_SHOW_LOW				2
+#define BURST_SHOT_MID				3
+#define BURST_SHOT_HIGH				5
+
+#define DEFAULT_BURST_DELAY			0
+#define LOW_BURST_DELAY				175	
+#define MID_BURST_DELAY				150
+#define HIGH_BURST_DELAY			100
+
+#define FULL_AUTO_MODE				0
+#define FULL_SEMI_MODE				1
+#define FULL_BURST_MODE				2
 
 
 //New clean weapon table NOTE* need to remeber to put the WP_NAME same place as you have added it in BG_weapon.h else it gets messed up in the weapon table
 weaponData_t weaponData[WP_NUM_WEAPONS] = {
-	// char	classname[32];							fireTime	altFireTime		dmg				dmgAlt				boltSpeed			accuracy				splashDmg		splashRadius	chargeSubTime	altChargeSubTime	chargeSub	altChargeSub	maxCharge	altMaxCharge
-	{ "No Weapon",									0,			0,				0,				0,					0,					0,						0,				0,				0,				0,					0,			0,			 	0,			0		},
-	{ "Stun Baton",									400,		400,			DEFAULT_DAMAGE,	DEFAULT_DAMAGE,		0,					0,						0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Melee",										400,		400,			5,				5,					0,					0,						0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Light Saber",								100,		100,			0,				0,					0,					0,						0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Bryar Pistol",								800,		800,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Old Bryar Pistol",							600,		400,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
-	{ "E-11 Blaster Rifle",							350,		275,			BLASTER_DAMAGE,	BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
-	{ "Tenloss Disruptor Rifle",					600,		1300,			30,				50,																0,				0,				0,				0,					0,			0,				0,			0		},	
-	{ "Modified Wookie Crossbow",					800,		750,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				400,			0,					5,			0,				1700,		0		},
-	{ "Imperial Heavy Repeater",					175,		800,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		1.4f,					60,				128,			0,				0,					0,			0,				0,			0		},
-	{ "DEMP 2",										500,		900,			25,				35,					BLASTER_SPEED,		BLASTER_ACCURACY,		0,				256,			0,				250,				0,			3,				0,			2100	},
-	{ "Golan Arms Flechette",						700,		800,			35,				45,					3500,				4.0f,					60,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Concussion Rifle",							800,		1200,			50,				65,					3000,				BLASTER_ACCURACY,		65,				200,			0,				0,					0,			0,				0,			0		},
-	//Place new Guns under here.																																	
-	{ "A280 Clone Blaster",							250,		1500,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			3,				0,			1700	},
-	{ "DC-15 Blaster",								175,		900,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				3,					0,			3,			    0,			2100	},
-	{ "Westarm 5 Blaster",							175,		900,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				3,					0,			250,		    0,			2100	},
-	{ "T-21 Blaster Rifle",							175,		1200,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				100,				0,			0,				0,			0		},
-	{ "EE-3 Blaster Rifle",							250,		1200,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "DC-15-S Blaster Pistol",						450,		900,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
-	{ "DLT-19 Heavy Blaster Rifle",					175,		1200,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "DC-15A_Rifle",								175,		900,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
-	{ "Wester Pistol",								800,		800,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
-	{ "ELG-3A Pistol",								800,		800,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
-	{ "S-5 Pistol",									800,		800,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
-	{ "Z-6 Rotary Blaster Cannon",					125,		2800,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Wookiee Bowcaster",							350,		650,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					5,			0,				1700,		0		},
-	{ "Wookie Pistol",								500,		250,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
-	{ "DC-15-S Blaster",							350,		275,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "DC-15 Ext Blaster",							175,		900,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
-	{ "E-60 Pulse Rocket Launcher",					3000,		5000,			ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				1100,					65,				160,			0,				0,					0,			0,				0,			0		},
-	{ "CW Pulse Rocket Launcher",					3000,		5000,			ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				1100,					65,				160,			0,				0,					0,			0,				0,			0		},
-	{ "TEST GUN",									350,		500,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "DC-17 Clone Blaster Pistol",					375,		875,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
-	{ "Spoting Blaster",							350,		500,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "ACP ArrayGun",								350,		500,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "ACP Pistol",									350,		500,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "ACP DoubleBarrel ArrayGun",					350,		500,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0,		},
-	{ "Acp Sniper Rifle",							850,		1200,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Arc Caster Imperial",						1200,		300,			5,				7,					BLASTER_SPEED,		BLASTER_ACCURACY,		60,				128,			0,				0,					0,			0,				1500,		0		},
-	{ "Rifle Bowcaster Classic",					550,		350,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			3,				0,			1700	},
-	{ "Heavy Wookie Bowcaster",						550,		350,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			3,				0,			1700	},
-	{ "Bryar Carbine Blaster",						350,		250,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
-	{ "Bryar Rifle",								275,		600,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Bryar Sniper Rifle",							250,		1200,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Pulse Canon",								200,		2800,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Proton Carbine Rifle",						350,		275,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
-	{ "DH-17 Pistol",								325,		275,			PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
+	// char	classname[32];							fireTime	altFireTime		firingType			burstFireDelay			  shotsPerBurst			dmg				dmgAlt				boltSpeed			accuracy				splashDmg		splashRadius	chargeSubTime	altChargeSubTime	chargeSub	altChargeSub	maxCharge	altMaxCharge
+	{ "No Weapon",									0,			0,				0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	0,				0,					0,					0,						0,				0,				0,				0,					0,			0,			 	0,			0		},
+	{ "Stun Baton",									400,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	DEFAULT_DAMAGE,	DEFAULT_DAMAGE,		0,					0,						0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Melee",										400,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	5,				5,					0,					0,						0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Light Saber",								100,		100,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	0,				0,					0,					0,						0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Bryar Pistol",								800,		800,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Old Bryar Pistol",							600,		400,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
+	{ "E-11 Blaster Rifle",							350,		275,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE,	BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
+	{ "Tenloss Disruptor Rifle",					600,		1300,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	30,				50,																0,				0,				0,				0,					0,			0,				0,			0		},	
+	{ "Modified Wookie Crossbow",					800,		750,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				400,			0,					5,			0,				1700,		0		},
+	{ "Imperial Heavy Repeater",					250,		800,			FULL_BURST_MODE,    HIGH_BURST_DELAY,		  BURST_SHOT_MID,		4,				25,					BLASTER_SPEED,		1.4f,					60,				128,			0,				0,					0,			0,				0,			0		},
+	{ "DEMP 2",										500,		900,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	25,				35,					BLASTER_SPEED,		BLASTER_ACCURACY,		0,				256,			0,				250,				0,			3,				0,			2100	},
+	{ "Golan Arms Flechette",						700,		800,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	35,				45,					3500,				4.0f,					60,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Concussion Rifle",							800,		1200,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	50,				65,					3000,				BLASTER_ACCURACY,		65,				200,			0,				0,					0,			0,				0,			0		},
+	//Place new Guns under here.												      																
+	{ "A280 Clone Blaster",							250,		1500,			FULL_BURST_MODE,    HIGH_BURST_DELAY,		  BURST_SHOT_MID,		4,				BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			3,				0,			1700	},
+	{ "DC-15 Blaster",								175,		900,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				3,					0,			3,			    0,			2100	},
+	{ "Westarm 5 Blaster",							175,		900,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				3,					0,			250,		    0,			2100	},
+	{ "T-21 Blaster Rifle",							175,		1200,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				100,				0,			0,				0,			0		},
+	{ "EE-3 Blaster Rifle",							250,		1200,			FULL_BURST_MODE,    HIGH_BURST_DELAY,		  BURST_SHOT_MID,		5,				BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "DC-15-S Blaster Pistol",						450,		900,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
+	{ "DLT-19 Heavy Blaster Rifle",					175,		1200,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "DC-15A_Rifle",								175,		900,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
+	{ "Wester Pistol",								800,		800,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
+	{ "ELG-3A Pistol",								800,		800,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
+	{ "S-5 Pistol",									800,		800,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
+	{ "Z-6 Rotary Blaster Cannon",					125,		2800,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Wookiee Bowcaster",							350,		650,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					5,			0,				1700,		0		},
+	{ "Wookie Pistol",								500,		250,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			1,				0,			1500	},
+	{ "DC-15-S Blaster",							350,		275,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "DC-15 Ext Blaster",							175,		900,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
+	{ "E-60 Pulse Rocket Launcher",					3000,		5000,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				1100,					65,				160,			0,				0,					0,			0,				0,			0		},
+	{ "CW Pulse Rocket Launcher",					3000,		5000,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				1100,					65,				160,			0,				0,					0,			0,				0,			0		},
+	{ "TEST GUN",									350,		500,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "DC-17 Clone Blaster Pistol",					375,		875,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				250,				0,			3,				0,			2100	},
+	{ "Spoting Blaster",							350,		500,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "ACP ArrayGun",								350,		500,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "ACP Pistol",									350,		500,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "ACP DoubleBarrel ArrayGun",					350,		500,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0,		},
+	{ "Acp Sniper Rifle",							850,		1200,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Arc Caster Imperial",						1200,		300,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	5,				7,					BLASTER_SPEED,		BLASTER_ACCURACY,		60,				128,			0,				0,					0,			0,				1500,		0		},
+	{ "Rifle Bowcaster Classic",					550,		350,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			3,				0,			1700	},
+	{ "Heavy Wookie Bowcaster",						550,		350,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			3,				0,			1700	},
+	{ "Bryar Carbine Blaster",						350,		250,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
+	{ "Bryar Rifle",								275,		600,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Bryar Sniper Rifle",							250,		1200,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Pulse Canon",								200,		2800,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Proton Carbine Rifle",						350,		275,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
+	{ "DH-17 Pistol",								325,		275,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
 	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss - UQ1: Grenades should be below here.
-	{ "Merr-Sonn Missile System",					3000,		5000,			ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				0,						65,				160,			0,				0,					0,			0,				0,			0		},
-	{ "Thermal Detonator",							800,		400,			GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Frag Grenade",								800,		400,			GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Old Frag Grenade",							800,		400,			GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "CryoBan Grenade",							800,		400,			GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Trip Mine",									800,		400,			GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},	
-	{ "Det Pack",									800,		400,			GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Emplaced Gun",								100,		100,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Turret",										100,		100,			BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	
+	{ "Merr-Sonn Missile System",					3000,		5000,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				0,						65,				160,			0,				0,					0,			0,				0,			0		},
+	{ "Thermal Detonator",							800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Frag Grenade",								800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Old Frag Grenade",							800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "CryoBan Grenade",							800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Trip Mine",									800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},	
+	{ "Det Pack",									800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Emplaced Gun",								100,		100,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Turret",										100,		100,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+
 	};
 
 qboolean IsRollWithPistols(int weapon)

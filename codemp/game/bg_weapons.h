@@ -140,6 +140,12 @@ typedef enum //# ammo_e
 	AMMO_MAX
 } ammo_t;
 
+typedef enum firingType_e
+{
+	FT_AUTOMATIC,
+	FT_SEMI,
+	FT_BURST
+} firingType_t;
 
 typedef struct weaponData_s
 {
@@ -147,6 +153,12 @@ typedef struct weaponData_s
 
 	int		fireTime;			// Amount of time between firings
 	int		altFireTime;		// Amount of time between alt-firings
+
+	firingType_t    firingType;
+
+	short   burstFireDelay;     // Delay between firing in a burst.
+	
+	char    shotsPerBurst;      // Shots per burst
 					
 	int		dmg;
 	int		dmgAlt;

@@ -2075,10 +2075,12 @@ extern qboolean g_endPDuel;
 //intializing checkforblowingup - Wahoo
 void G_CheckForblowingup(gentity_t *ent, gentity_t *enemy, vec3_t point, int damage, int deathAnim, qboolean postDeath);
 //[/FullDismemberment]
+gentity_t *WP_DropThermalDetonator(gentity_t *ent, qboolean altFire);
 extern qboolean g_noPDuelCheck;
 extern void saberReactivate(gentity_t *saberent, gentity_t *saberOwner);
 extern void saberBackToOwner(gentity_t *saberent);
 extern qboolean Boba_Flying( gentity_t *self );
+
 
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
 #ifndef __MMO__
@@ -2273,6 +2275,15 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		if (objectiveItem->inuse && objectiveItem->think)
 		{
             objectiveItem->think(objectiveItem);
+		}
+	}
+
+	if (self->client && self->client->ps.weapon == WP_THERMAL) {
+		if (self->client->ps.weaponstate == WEAPON_CHARGING) {
+			WP_DropThermalDetonator(self, qfalse);
+		}
+		else if (self->client->ps.weaponstate == WEAPON_CHARGING_ALT) {
+			WP_DropThermalDetonator(self, qtrue);
 		}
 	}
 
