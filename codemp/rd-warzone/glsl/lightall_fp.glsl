@@ -97,11 +97,11 @@ flat in float				usingSteepMap_FS_in;
 //vec3 m_Normal =				normalize(-Normal_FS_in.xyz);
 //#define m_Normal 			normalize(-Normal_FS_in.xyz)
 //#define m_Normal 			normalize(vec3(Normal_FS_in.xy, Normal_FS_in.z))
-#if defined(USE_TESSELLATION)
-#define m_Normal 			normalize(-Normal_FS_in.xyz)
-#else
+//#if defined(USE_TESSELLATION)
+//#define m_Normal 			normalize(-Normal_FS_in.xyz)
+//#else
 #define m_Normal 			normalize(Normal_FS_in.xyz)
-#endif
+//#endif
 
 #define m_TexCoords			TexCoord_FS_in
 #define m_vertPos			WorldPos_FS_in
