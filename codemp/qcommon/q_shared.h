@@ -29,6 +29,9 @@
 
 #define	BASEGAME "base"
 
+//Toggle bit for shots remaining.Just like in JK2 with anims
+#define SHOTS_TOGGLEBIT (1 << 7)
+
 //NOTENOTE: Only change this to re-point ICARUS to a new script directory
 #define Q3_SCRIPT_DIR	"scripts"
 
@@ -1928,16 +1931,15 @@ typedef struct playerState_s {
 	qboolean	damageCrit;
 	int			damageValue;
 
+	unsigned char   shotsRemaining;
+
 	int 			damageTypeFlags;
 	int 			freezeTorsoAnim;
 	int 			freezeLegsAnim;
 
 	//Keeps Trak of Block Point
-	int				blockPoints;
-	float			saberSwingSpeed;
+	
 	signed short	forcePower;
-	short			saberActionFlags;
-
 	int				playerClass;
 
 	int				primaryWeapon;

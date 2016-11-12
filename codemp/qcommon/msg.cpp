@@ -1301,6 +1301,7 @@ netField_t	playerStateFields[] =
 { PSF(cloakFuel), 8 },
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
+{ PSF(shotsRemaining), 8 },
 { PSF(damageTypeFlags), 32 },// was it missing int the ent feild ? ?? this is fine
 { PSF(freezeTorsoAnim), 32 },
 { PSF(freezeLegsAnim), 32 },
@@ -1476,6 +1477,7 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(cloakFuel), 8 },
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
+{ PSF(shotsRemaining), 8 },
 { PSF(damageTypeFlags), 32 },// was it missing int the ent feild ? ?? this is fine
 { PSF(freezeTorsoAnim), 32 },
 { PSF(freezeLegsAnim), 32 },

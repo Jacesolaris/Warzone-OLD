@@ -2401,16 +2401,14 @@ void GrenadeCryoBanExplode(gentity_t *ent)
 		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
 		ent->freeAfterEvent = qtrue;
 
-
 		JKG_DoSplashDamage(GrenadeCryoBanDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
 
-
-
-		/*if (G_RadiusDamage( ent->r.currentOrigin, ent->parent,  ent->splashDamage, ent->splashRadius,
-		ent, ent, ent->splashMethodOfDeath))
+		if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
+			ent, ent, ent->splashMethodOfDeath))
 		{
-		g_entities[ent->r.ownerNum].client->accuracy_hits++;
-		}*/
+			if (g_entities[ent->r.ownerNum].client)
+				g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		}
 
 		trap->LinkEntity((sharedEntity_t *)ent);
 	}
@@ -2458,13 +2456,12 @@ void thermalDetonatorExplode(gentity_t *ent)
 
 		JKG_DoSplashDamage(thermalDetDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
 
-
-
-		/*if (G_RadiusDamage( ent->r.currentOrigin, ent->parent,  ent->splashDamage, ent->splashRadius,
-		ent, ent, ent->splashMethodOfDeath))
+		if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
+			ent, ent, ent->splashMethodOfDeath))
 		{
-		g_entities[ent->r.ownerNum].client->accuracy_hits++;
-		}*/
+			if (g_entities[ent->r.ownerNum].client)
+				g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		}
 
 		trap->LinkEntity((sharedEntity_t *)ent);
 	}
@@ -2570,6 +2567,77 @@ gentity_t *WP_FireThermalDetonator(gentity_t *ent, qboolean altFire)
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = ent->s.weapon;
+
+	bolt->methodOfDeath = MOD_THERMAL;
+	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
+
+	bolt->s.pos.trTime = level.time;		// move a bit on the very first frame
+	VectorCopy(start, bolt->s.pos.trBase);
+
+	SnapVector(bolt->s.pos.trDelta);			// save net bandwidth
+	VectorCopy(start, bolt->r.currentOrigin);
+
+	VectorCopy(start, bolt->pos2);
+
+	bolt->bounceCount = -5;
+
+	return bolt;
+}
+
+// JKG - used when a player is killed who was holding a primed thermal detonator
+//---------------------------------------------------------
+gentity_t *WP_DropThermalDetonator(gentity_t *ent, qboolean altFire)
+//---------------------------------------------------------
+{
+	gentity_t	*bolt;
+	vec3_t		dir, start;
+
+	VectorCopy(forward, dir);
+	VectorCopy(muzzle, start);
+
+	bolt = G_Spawn();
+
+	bolt->physicsObject = qtrue;
+
+	bolt->classname = "thermal_detonator";
+	bolt->think = thermalThinkStandard;
+	bolt->nextthink = level.time;
+	bolt->touch = touch_NULL;
+
+	// How 'bout we give this thing a size...
+	VectorSet(bolt->r.mins, -3.0f, -3.0f, -3.0f);
+	VectorSet(bolt->r.maxs, 3.0f, 3.0f, 3.0f);
+	bolt->clipmask = MASK_SHOT;
+
+	W_TraceSetStart(ent, start, bolt->r.mins, bolt->r.maxs);//make sure our start point isn't on the other side of a wall
+
+	// normal ones bounce, alt ones explode on impact
+	bolt->genericValue5 = level.time + TD_TIME; // How long 'til she blows
+	bolt->s.pos.trType = TR_GRAVITY;
+	bolt->parent = ent;
+	bolt->r.ownerNum = ent->s.number;
+
+	if (ent->health >= 0)
+	{
+		bolt->s.pos.trDelta[2] += 120;
+	}
+
+	if (!altFire)
+	{
+		bolt->flags |= FL_BOUNCE_HALF;
+	}
+
+	//bolt->s.loopSound = G_SoundIndex( "sound/weapons/thermal/thermloop.wav" );
+	//bolt->s.loopIsSoundset = qfalse;
+
+	bolt->damage = weaponData[ent->client->ps.weapon].dmg;
+	bolt->dflags = 0;
+	bolt->splashDamage = weaponData[ent->client->ps.weapon].splashDmg;
+	bolt->splashRadius = weaponData[ent->client->ps.weapon].splashRadius;
+
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_THERMAL;
 
 	bolt->methodOfDeath = MOD_THERMAL;
 	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
