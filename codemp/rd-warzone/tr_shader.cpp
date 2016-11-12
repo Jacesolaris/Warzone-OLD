@@ -27,7 +27,7 @@ static char *s_shaderText;
 
 // the shader is parsed into these global variables, then copied into
 // dynamically allocated memory if it is valid.
-static	shaderStage_t	stages[MAX_SHADER_STAGES];		
+static	shaderStage_t	stages[MAX_SHADER_STAGES];
 static	shader_t		shader;
 static	texModInfo_t	texMods[MAX_SHADER_STAGES][TR_MAX_TEXMODS];
 
@@ -38,31 +38,31 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
-const int lightmapsNone[MAXLIGHTMAPS] = 
-{ 
+const int lightmapsNone[MAXLIGHTMAPS] =
+{
 	LIGHTMAP_NONE,
 	LIGHTMAP_NONE,
 	LIGHTMAP_NONE,
-	LIGHTMAP_NONE 
+	LIGHTMAP_NONE
 };
 
-const int lightmaps2d[MAXLIGHTMAPS] = 
-{ 
+const int lightmaps2d[MAXLIGHTMAPS] =
+{
 	LIGHTMAP_2D,
 	LIGHTMAP_2D,
 	LIGHTMAP_2D,
-	LIGHTMAP_2D 
+	LIGHTMAP_2D
 };
 
-const int lightmapsVertex[MAXLIGHTMAPS] = 
-{ 
+const int lightmapsVertex[MAXLIGHTMAPS] =
+{
 	LIGHTMAP_BY_VERTEX,
 	LIGHTMAP_BY_VERTEX,
 	LIGHTMAP_BY_VERTEX,
-	LIGHTMAP_BY_VERTEX 
+	LIGHTMAP_BY_VERTEX
 };
 
-const int lightmapsFullBright[MAXLIGHTMAPS] = 
+const int lightmapsFullBright[MAXLIGHTMAPS] =
 {
 	LIGHTMAP_WHITEIMAGE,
 	LIGHTMAP_WHITEIMAGE,
@@ -70,7 +70,7 @@ const int lightmapsFullBright[MAXLIGHTMAPS] =
 	LIGHTMAP_WHITEIMAGE
 };
 
-const byte stylesDefault[MAXLIGHTMAPS] = 
+const byte stylesDefault[MAXLIGHTMAPS] =
 {
 	LS_NORMAL,
 	LS_LSNONE,
@@ -135,7 +135,7 @@ return a hash value for the filename
 ================
 */
 #ifdef __GNUCC__
-  #warning TODO: check if long is ok here 
+  #warning TODO: check if long is ok here
 #endif
 static long generateHashValue( const char *fname, const int size ) {
 	int		i;
@@ -243,7 +243,7 @@ NameToAFunc
 ===============
 */
 static unsigned NameToAFunc( const char *funcname )
-{	
+{
 	if ( !Q_stricmp( funcname, "GT0" ) )
 	{
 		return GLS_ATEST_GT_0;
@@ -615,7 +615,7 @@ static void ParseTexMod( const char *_text, shaderStage_t *stage )
 			return;
 		}
 		tmi->wave.frequency = atof( token );
-		
+
 		tmi->type = TMOD_STRETCH;
 	}
 	//
@@ -1564,13 +1564,13 @@ static void ComputeShaderGlowColors( shaderStage_t *pStage )
 {
 	colorGen_t rgbGen = pStage->rgbGen;
 	alphaGen_t alphaGen = pStage->alphaGen;
-	
+
 	pStage->glowColorFound = qfalse;
 
-	pStage->glowColor[0] =  
-   	pStage->glowColor[1] = 
-   	pStage->glowColor[2] = 
-   	pStage->glowColor[3] = 1.0f; 
+	pStage->glowColor[0] =
+   	pStage->glowColor[1] =
+   	pStage->glowColor[2] =
+   	pStage->glowColor[3] = 1.0f;
 
 	if (!pStage->glow) return;
 
@@ -2151,8 +2151,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for specular reflectance in shader '%s'\n", shader.name );
 				continue;
 			}
-			stage->specularScale[0] = 
-			stage->specularScale[1] = 
+			stage->specularScale[0] =
+			stage->specularScale[1] =
 			stage->specularScale[2] = Com_Clamp( 0.0f, 1.0f, atof( token ) );
 		}
 		//
@@ -2170,13 +2170,13 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 			exponent = atof( token );
 
-			// Change shininess to gloss 
-			// FIXME: assumes max exponent of 8192 and min of 1, must change here if altered in lightall_fp.glsl 
-			exponent = CLAMP(exponent, 1.0, 8192.0); 
+			// Change shininess to gloss
+			// FIXME: assumes max exponent of 8192 and min of 1, must change here if altered in lightall_fp.glsl
+			exponent = CLAMP(exponent, 1.0, 8192.0);
 			stage->specularScale[3] = log(exponent) / log(8192.0);
 		}
 		//
-		// gloss <value> 
+		// gloss <value>
 		//
 		else if ( !Q_stricmp( token, "gloss" ) )
 		{
@@ -2373,7 +2373,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 		}
 		//
-		// alphaGen 
+		// alphaGen
 		//
 		else if ( !Q_stricmp( token, "alphaGen" ) )
 		{
@@ -2450,7 +2450,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		//
 		// tcGen <function>
 		//
-		else if ( !Q_stricmp(token, "texgen") || !Q_stricmp( token, "tcGen" ) ) 
+		else if ( !Q_stricmp(token, "texgen") || !Q_stricmp( token, "tcGen" ) )
 		{
 			token = COM_ParseExt( text, qfalse );
 			if ( token[0] == 0 )
@@ -2478,7 +2478,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				stage->bundle[0].tcGen = TCGEN_VECTOR;
 			}
-			else 
+			else
 			{
 				ri->Printf( PRINT_WARNING, "WARNING: unknown texgen parm in shader '%s'\n", shader.name );
 			}
@@ -2590,7 +2590,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	//
 	if ( stage->rgbGen == CGEN_BAD ) {
 		if ( blendSrcBits == 0 ||
-			blendSrcBits == GLS_SRCBLEND_ONE || 
+			blendSrcBits == GLS_SRCBLEND_ONE ||
 			blendSrcBits == GLS_SRCBLEND_SRC_ALPHA ) {
 			stage->rgbGen = CGEN_IDENTITY_LIGHTING;
 		} else {
@@ -2602,7 +2602,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	//
 	// implicitly assume that a GL_ONE GL_ZERO blend mask disables blending
 	//
-	if ( ( blendSrcBits == GLS_SRCBLEND_ONE ) && 
+	if ( ( blendSrcBits == GLS_SRCBLEND_ONE ) &&
 		 ( blendDstBits == GLS_DSTBLEND_ZERO ) )
 	{
 		blendDstBits = blendSrcBits = 0;
@@ -2625,9 +2625,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	//
 	// compute state bits
 	//
-	stage->stateBits = depthMaskBits | 
-		               blendSrcBits | blendDstBits | 
-					   atestBits | 
+	stage->stateBits = depthMaskBits |
+		               blendSrcBits | blendDstBits |
+					   atestBits |
 					   depthFuncBits;
 
 	return qtrue;
@@ -2683,7 +2683,7 @@ static void ParseDeform( const char **text ) {
 
 	if ( !Q_stricmpn( token, "text", 4 ) ) {
 		int		n;
-		
+
 		n = token[4] - '0';
 		if ( n < 0 || n > 7 ) {
 			n = 0;
@@ -2892,7 +2892,7 @@ void ParseSort( const char **text ) {
 		shader.sort = SS_MID_OUTSIDE;
 	} else if ( !Q_stricmp( token, "outside" ) ) {
 		shader.sort = SS_OUTSIDE;
-	}	
+	}
 	else {
 		shader.sort = atof( token );
 	}
@@ -2908,20 +2908,20 @@ const char *materialNames[MATERIAL_LAST] =
 	MATERIALS
 };
 
-void ParseMaterial( const char **text ) 
+void ParseMaterial( const char **text )
 {
 	char	*token;
 	int		i;
 
 	token = COM_ParseExt( text, qfalse );
-	if ( token[0] == 0 ) 
+	if ( token[0] == 0 )
 	{
 		Com_Printf (S_COLOR_YELLOW  "WARNING: missing material in shader '%s'\n", shader.name );
 		return;
 	}
 	for(i = 0; i < MATERIAL_LAST; i++)
 	{
-		if ( !Q_stricmp( token, materialNames[i] ) ) 
+		if ( !Q_stricmp( token, materialNames[i] ) )
 		{
 			shader.surfaceFlags |= i;
 			break;
@@ -2943,13 +2943,13 @@ infoParm_t	infoParms[] = {
 	{ "nonopaque",		~CONTENTS_OPAQUE,					SURF_NONE,			CONTENTS_NONE },		// special hack to clear opaque flag
 	{ "lava",			~CONTENTS_SOLID,					SURF_NONE,			CONTENTS_LAVA },		// very damaging
 	{ "slime",			~CONTENTS_SOLID,					SURF_NONE,			CONTENTS_SLIME },		// mildly damaging
-	{ "water",			~CONTENTS_SOLID,					SURF_NONE,			CONTENTS_WATER },		// 
+	{ "water",			~CONTENTS_SOLID,					SURF_NONE,			CONTENTS_WATER },		//
 	{ "fog",			~CONTENTS_SOLID,					SURF_NONE,			CONTENTS_FOG},			// carves surfaces entering
 	{ "shotclip",		~CONTENTS_SOLID,					SURF_NONE,			CONTENTS_SHOTCLIP },	// block shots, but not people
 	{ "playerclip",		~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_PLAYERCLIP },	// block only the player
-	{ "monsterclip",	~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_MONSTERCLIP },	// 
+	{ "monsterclip",	~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_MONSTERCLIP },	//
 	{ "botclip",		~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_BOTCLIP },		// for bots
-	{ "trigger",		~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_TRIGGER },		// 
+	{ "trigger",		~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_TRIGGER },		//
 	{ "nodrop",			~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_NODROP },		// don't drop items or leave bodies (death fog, lava, etc)
 	{ "terrain",		~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_TERRAIN },		// use special terrain collsion
 	{ "ladder",			~(CONTENTS_SOLID|CONTENTS_OPAQUE),	SURF_NONE,			CONTENTS_LADDER },		// climb up in it like water
@@ -2962,17 +2962,17 @@ infoParm_t	infoParms[] = {
 
 	/* Game surface flags */
 	{ "sky",			CONTENTS_ALL,						SURF_SKY,			CONTENTS_NONE },		// emit light from an environment map
-	{ "slick",			CONTENTS_ALL,						SURF_SLICK,			CONTENTS_NONE },		// 
+	{ "slick",			CONTENTS_ALL,						SURF_SLICK,			CONTENTS_NONE },		//
 
-	{ "nodamage",		CONTENTS_ALL,						SURF_NODAMAGE,		CONTENTS_NONE },		// 
+	{ "nodamage",		CONTENTS_ALL,						SURF_NODAMAGE,		CONTENTS_NONE },		//
 	{ "noimpact",		CONTENTS_ALL,						SURF_NOIMPACT,		CONTENTS_NONE },		// don't make impact explosions or marks
 	{ "nomarks",		CONTENTS_ALL,						SURF_NOMARKS,		CONTENTS_NONE },		// don't make impact marks, but still explode
 	{ "nodraw",			CONTENTS_ALL,						SURF_NODRAW,		CONTENTS_NONE },		// don't generate a drawsurface (or a lightmap)
-	{ "nosteps",		CONTENTS_ALL,						SURF_NOSTEPS,		CONTENTS_NONE },		// 
+	{ "nosteps",		CONTENTS_ALL,						SURF_NOSTEPS,		CONTENTS_NONE },		//
 	{ "nodlight",		CONTENTS_ALL,						SURF_NODLIGHT,		CONTENTS_NONE },		// don't ever add dynamic lights
-	{ "metalsteps",		CONTENTS_ALL,						SURF_METALSTEPS,	CONTENTS_NONE },		// 
+	{ "metalsteps",		CONTENTS_ALL,						SURF_METALSTEPS,	CONTENTS_NONE },		//
 	{ "nomiscents",		CONTENTS_ALL,						SURF_NOMISCENTS,	CONTENTS_NONE },		// No misc ents on this surface
-	{ "forcefield",		CONTENTS_ALL,						SURF_FORCEFIELD,	CONTENTS_NONE },		// 
+	{ "forcefield",		CONTENTS_ALL,						SURF_FORCEFIELD,	CONTENTS_NONE },		//
 	{ "forcesight",		CONTENTS_ALL,						SURF_FORCESIGHT,	CONTENTS_NONE },		// only visible with force sight
 };
 
@@ -3200,7 +3200,7 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 	if (StringContainsWord(heystack, "/taspir/")) return qtrue; // lots of metal... will try this
 	if (StringContainsWord(heystack, "/vjun/")) return qtrue;
 	if (StringContainsWord(heystack, "/wedge/")) return qtrue;
-	
+
 	// MB2 Maps...
 	if (StringContainsWord(heystack, "/epiii_boc/")) return qtrue;
 	if (StringContainsWord(heystack, "/amace_cc/")) return qtrue;
@@ -3281,7 +3281,7 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 
 	// Warzone
 	if (StringContainsWord(heystack, "/impfact/")) return qtrue;
-	
+
 	return qfalse;
 }
 
@@ -3294,7 +3294,7 @@ qboolean IsKnownShinyMap ( const char *heystack )
 
 		return qtrue;
 	}
-	
+
 	return qfalse;
 }
 
@@ -3342,6 +3342,10 @@ int DetectMaterialType ( const char *name )
 	//
 	else if (StringContainsWord(name, "players") && StringContainsWord(name, "eye") || StringContainsWord(name, "goggles"))
 		return MATERIAL_GLASS;
+	else if (StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
+		return MATERIAL_HOLLOWMETAL;
+	else if (!StringContainsWord(name, "players") && StringContainsWord(name, "bespin"))
+		return MATERIAL_MARBLE;
 	else if (StringContainsWord(name, "players") && !StringContainsWord(name, "glass") && (StringContainsWord(name, "sithsoldier") || StringContainsWord(name, "sith_assassin") || StringContainsWord(name, "r2d2") || StringContainsWord(name, "protocol") || StringContainsWord(name, "r5d2") || StringContainsWord(name, "c3po") || StringContainsWord(name, "hk4") || StringContainsWord(name, "hk5") || StringContainsWord(name, "droid") || StringContainsWord(name, "shadowtrooper")))
 		return MATERIAL_SOLIDMETAL;
 	else if (StringContainsWord(name, "players") && StringContainsWord(name, "shadowtrooper"))
@@ -3358,7 +3362,7 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_FLESH;
 	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "skirt") || StringContainsWord(name, "boots") || StringContainsWord(name, "accesories") || StringContainsWord(name, "accessories") || StringContainsWord(name, "vest") || StringContainsWord(name, "holster") || StringContainsWord(name, "cap") || StringContainsWord(name, "collar")))
 		return MATERIAL_FABRIC;
-	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "bespin") || StringContainsWord(name, "_cc")))
+	else if (!StringContainsWord(name, "players") && StringContainsWord(name, "_cc"))
 		return MATERIAL_MARBLE;
 	//
 	// If player model material not found above, use defaults...
@@ -3369,8 +3373,6 @@ int DetectMaterialType ( const char *name )
 	//
 	else if (StringContainsWord(name, "concrete"))
 		return MATERIAL_CONCRETE;
-	else if (StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
-		return MATERIAL_HOLLOWMETAL;
 	else if (!StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && StringContainsWord(name, "models/weapon") && StringContainsWord(name, "saber") && StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
 		return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
 	else if (!StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && (StringContainsWord(name, "models/weapon") || StringContainsWord(name, "scope") || StringContainsWord(name, "blaster") || StringContainsWord(name, "pistol") || StringContainsWord(name, "thermal") || StringContainsWord(name, "bowcaster") || StringContainsWord(name, "cannon") || StringContainsWord(name, "saber") || StringContainsWord(name, "rifle") || StringContainsWord(name, "rocket")))
@@ -3492,7 +3494,7 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_TILES;
 	else
 	{
-		if (!StringContainsWord(name, "gfx/")  
+		if (!StringContainsWord(name, "gfx/")
 			&& !StringContainsWord(name, "hud")
 			&& !StringContainsWord(name, "fire")
 			&& !StringContainsWord(name, "force")
@@ -3513,10 +3515,10 @@ void AssignMaterialType ( const char *name, const char *text )
 {
 	//ri->Printf(PRINT_WARNING, "Check material type for %s.\n", name);
 
-	if (r_disableGfxDirEnhancement->integer 
+	if (r_disableGfxDirEnhancement->integer
 		&& (StringContainsWord(name, "gfx/"))) return;
 
-	if (StringContainsWord(name, "gfx/2d") 
+	if (StringContainsWord(name, "gfx/2d")
 		|| StringContainsWord(name, "gfx/console")
 		|| StringContainsWord(name, "gfx/colors")
 		|| StringContainsWord(name, "gfx/digits")
@@ -3566,6 +3568,10 @@ void AssignMaterialType ( const char *name, const char *text )
 		//
 		else if (StringContainsWord(name, "players") && StringContainsWord(name, "eye"))
 			shader.surfaceFlags |= MATERIAL_GLASS;
+		else if (StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
+			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL;
+		else if (!StringContainsWord(name, "players") && StringContainsWord(name, "bespin"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "sithsoldier") || StringContainsWord(name, "r2d2") || StringContainsWord(name, "protocol") || StringContainsWord(name, "r5d2") || StringContainsWord(name, "c3po")))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hood") || StringContainsWord(name, "robe") || StringContainsWord(name, "cloth") || StringContainsWord(name, "pants")))
@@ -3578,13 +3584,13 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_FLESH;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "skirt") || StringContainsWord(name, "boots") || StringContainsWord(name, "accesories") || StringContainsWord(name, "accessories") || StringContainsWord(name, "vest") || StringContainsWord(name, "holster") || StringContainsWord(name, "cap") || StringContainsWord(name, "collar")))
 			shader.surfaceFlags |= MATERIAL_FABRIC;
-		else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "bespin") || StringContainsWord(name, "_cc")))
+		else if (!StringContainsWord(name, "players") && StringContainsWord(name, "_cc"))
 			shader.surfaceFlags |= MATERIAL_MARBLE;
 		//
 		// If player model material not found above, use defaults...
 		//
 	}
-	
+
 	if (StringContainsWord(name, "common/water") && !StringContainsWord(name, "splash") && !StringContainsWord(name, "drip") && !StringContainsWord(name, "ripple") && !StringContainsWord(name, "bubble") && !StringContainsWord(name, "woosh") && !StringContainsWord(name, "underwater") && !StringContainsWord(name, "bottom"))
 	{
 		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
@@ -3592,12 +3598,12 @@ void AssignMaterialType ( const char *name, const char *text )
 		shader.surfaceFlags |= MATERIAL_WATER;
 		shader.isWater = qtrue;
 	}
-	else if (shader.hasAlpha && 
+	else if (shader.hasAlpha &&
 		!StringContainsWord(name, "billboard") &&
-		(StringContainsWord(name, "grass") || StringContainsWord(name, "foliage") || StringContainsWord(name, "yavin/ground") 
+		(StringContainsWord(name, "grass") || StringContainsWord(name, "foliage") || StringContainsWord(name, "yavin/ground")
 		|| StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "yavinassault/terrain")
-		|| StringContainsWord(name, "tree") || StringContainsWord(name, "plant") || StringContainsWord(name, "bush") 
-		|| StringContainsWord(name, "shrub") || StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves") 
+		|| StringContainsWord(name, "tree") || StringContainsWord(name, "plant") || StringContainsWord(name, "bush")
+		|| StringContainsWord(name, "shrub") || StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves")
 		|| StringContainsWord(name, "branch") || StringContainsWord(name, "flower") || StringContainsWord(name, "weed")))
 	{// Always greenleaves... No parallax...
 		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
@@ -3613,7 +3619,7 @@ void AssignMaterialType ( const char *name, const char *text )
 	}
 	else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "trooper") || StringContainsWord(name, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringContainsWord(name, "grass") || (StringContainsWord(name, "foliage") && !StringContainsWord(name, "billboard")) || StringContainsWord(name, "yavin/ground") 
+	else if (StringContainsWord(name, "grass") || (StringContainsWord(name, "foliage") && !StringContainsWord(name, "billboard")) || StringContainsWord(name, "yavin/ground")
 		|| StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "yavinassault/terrain"))
 		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 
@@ -3693,7 +3699,7 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if ( !Q_stricmp( token, "material" ) || !Q_stricmp( token, "q3map_material" ) )
 		{
 			ParseMaterial( text );
-		}	
+		}
 		// sun parms
 		else if ( !Q_stricmp( token, "sun" ) || !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) || !Q_stricmp( token, "q3gl2_sun" ) ) {
 			float	a, b;
@@ -3711,7 +3717,7 @@ static qboolean ParseShader( const char *name, const char **text )
 			tr.sunLight[1] = atof( token );
 			token = COM_ParseExt( text, qfalse );
 			tr.sunLight[2] = atof( token );
-			
+
 			VectorNormalize( tr.sunLight );
 
 			token = COM_ParseExt( text, qfalse );
@@ -3844,14 +3850,14 @@ static qboolean ParseShader( const char *name, const char **text )
 			continue;
 		}
 		// fogParms
-		else if ( !Q_stricmp( token, "fogParms" ) ) 
+		else if ( !Q_stricmp( token, "fogParms" ) )
 		{
 			if ( !ParseVector( text, 3, shader.fogParms.color ) ) {
 				return qfalse;
 			}
 
 			token = COM_ParseExt( text, qfalse );
-			if ( !token[0] ) 
+			if ( !token[0] )
 			{
 				ri->Printf( PRINT_WARNING, "WARNING: missing parm for 'fogParms' keyword in shader '%s'\n", shader.name );
 				continue;
@@ -3876,13 +3882,13 @@ static qboolean ParseShader( const char *name, const char **text )
 			continue;
 		}
 		// light <value> determines flaring in q3map, not needed here
-		else if ( !Q_stricmp(token, "light") ) 
+		else if ( !Q_stricmp(token, "light") )
 		{
 			COM_ParseExt( text, qfalse );
 			continue;
 		}
 		// cull <face>
-		else if ( !Q_stricmp( token, "cull") ) 
+		else if ( !Q_stricmp( token, "cull") )
 		{
 			token = COM_ParseExt( text, qfalse );
 			if ( token[0] == 0 )
@@ -3934,14 +3940,14 @@ static qboolean ParseShader( const char *name, const char **text )
 
 	shader.explicitlyDefined = qtrue;
 
-	// The basejka rocket lock wedge shader uses the incorrect blending mode.  
-	// It only worked because the shader state was not being set, and relied  
-	// on previous state to be multiplied by alpha. Since fixing RB_RotatePic,  
-	// the shader needs to be fixed here to render correctly.  
-	//  
-	// We match against the retail version of gfx/2d/wedge by calculating the  
-	// hash value of the shader text, and comparing it against a precalculated  
-	// value.  
+	// The basejka rocket lock wedge shader uses the incorrect blending mode.
+	// It only worked because the shader state was not being set, and relied
+	// on previous state to be multiplied by alpha. Since fixing RB_RotatePic,
+	// the shader needs to be fixed here to render correctly.
+	//
+	// We match against the retail version of gfx/2d/wedge by calculating the
+	// hash value of the shader text, and comparing it against a precalculated
+	// value.
 	uint32_t shaderHash = generateHashValueForText(begin, *text - begin);
 	if (shaderHash == RETAIL_ROCKET_WEDGE_SHADER_HASH &&
 		 Q_stricmp(shader.name, "gfx/2d/wedge") == 0)
@@ -4054,7 +4060,7 @@ static void ComputeVertexAttribs(void)
 	{
 		shaderStage_t *pStage = &stages[stage];
 
-		if ( !pStage->active ) 
+		if ( !pStage->active )
 		{
 			break;
 		}
@@ -4141,7 +4147,7 @@ void StripCrap( const char *in, char *out, int destsize )
 		Q_strncpyz(out, in, destsize);
 }
 
-static void CollapseStagesToLightall(shaderStage_t *diffuse, 
+static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *steepmap2, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3, shaderStage_t *splat4, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
@@ -4159,7 +4165,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	// reuse diffuse, mark others inactive
 	diffuse->type = ST_GLSL;
-	
+
 	if (!diffuse->isFoliageChecked)
 	{// Skip the string checks...
 		switch( shader.surfaceFlags & MATERIAL_MASK )
@@ -4168,12 +4174,12 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+			if (diffuse->bundle[TB_DIFFUSEMAP].image[0]
 				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
 			{
 				diffuse->isFoliage = true;
 			}
-			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0]
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trunk")
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark")
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "giant_tree")
@@ -4198,7 +4204,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 	else if (( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES // billboards
 		&& ( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES // tree leaves
-		&& !shader.isSky 
+		&& !shader.isSky
 		&& !diffuse->glow)
 	{
 		diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
@@ -4222,7 +4228,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{
 			if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
 				VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-			
+
 			//VectorCopy4(normal->normalScale, diffuse->normalScale);
 
 			hasRealNormalMap = qtrue;
@@ -4266,18 +4272,18 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& !shader.isSky
 					&& !diffuse->glow
 					&& (!diffuse->bundle[TB_NORMALMAP].image[0] || diffuse->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0]
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 					&& !(diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL 
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR 
-					/*&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY 
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR
+					/*&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2
 
 					// gfx dirs can be exempted I guess...
 					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
@@ -4291,7 +4297,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 						diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
 
 						if (diffuse->bundle[TB_NORMALMAP].image[0] && diffuse->bundle[TB_NORMALMAP].image[0] != tr.whiteImage) diffuse->hasRealNormalMap = true;
-					
+
 						if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
 							VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 					}
@@ -4950,7 +4956,7 @@ static qboolean CollapseStagesToGLSL(void)
 				pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 			{
 				int blendBits = pStage->stateBits & ( GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS );
-				
+
 				if (blendBits != (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
 					&& blendBits != (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_DST_COLOR))
 				{
@@ -5342,7 +5348,7 @@ static qboolean CollapseStagesToGLSL(void)
 			continue;
 		}
 
-		if (hasRealNormalMap) 
+		if (hasRealNormalMap)
 		{
 			stage->hasRealNormalMap = true;
 		}
@@ -5605,7 +5611,7 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	tr.shaders[ tr.numShaders ] = newShader;
 	newShader->index = tr.numShaders;
-	
+
 	tr.sortedShaders[ tr.numShaders ] = newShader;
 	newShader->sortedIndex = tr.numShaders;
 
@@ -5691,7 +5697,7 @@ static void VertexLightingCollapse( void ) {
 		} else {
 			stages[0].rgbGen = CGEN_EXACT_VERTEX;
 		}
-		stages[0].alphaGen = AGEN_SKIP;		
+		stages[0].alphaGen = AGEN_SKIP;
 	} else {
 		// don't use a lightmap (tesla coils)
 		if ( stages[0].bundle[0].isLightmap ) {
@@ -6037,7 +6043,7 @@ static shader_t *FinishShader( void ) {
 				}
 				break;
 			}
-			
+
 			case ST_STEEPMAP2:
 			{
 				if(!pStage->bundle[0].image[0])
@@ -6113,23 +6119,23 @@ static shader_t *FinishShader( void ) {
 		if ( pStage->isDetail && !r_detailTextures->integer )
 		{
 			int index;
-			
+
 			for(index = stage + 1; index < MAX_SHADER_STAGES; index++)
 			{
 				if(!stages[index].active)
 					break;
 			}
-			
+
 			if(index < MAX_SHADER_STAGES)
 				memmove(pStage, pStage + 1, sizeof(*pStage) * (index - stage));
 			else
 			{
 				if(stage + 1 < MAX_SHADER_STAGES)
 					memmove(pStage, pStage + 1, sizeof(*pStage) * (index - stage - 1));
-				
+
 				Com_Memset(&stages[index - 1], 0, sizeof(*stages));
 			}
-			
+
 			continue;
 		}
 
@@ -6197,7 +6203,7 @@ static shader_t *FinishShader( void ) {
 				}
 			}
 		}
-		
+
 		stage++;
 	}
 
@@ -6220,7 +6226,7 @@ static shader_t *FinishShader( void ) {
 	//
 	stage = CollapseStagesToGLSL();
 
-	if ( (shader.lightmapIndex[0] || shader.lightmapIndex[1] || shader.lightmapIndex[2] || shader.lightmapIndex[3]) && !hasLightmapStage ) 
+	if ( (shader.lightmapIndex[0] || shader.lightmapIndex[1] || shader.lightmapIndex[2] || shader.lightmapIndex[3]) && !hasLightmapStage )
 	{
 		ri->Printf( PRINT_DEVELOPER, "WARNING: shader '%s' has lightmap but no lightmap stage!\n", shader.name );
 		// Don't set this, it will just add duplicate shaders to the hash
@@ -6277,7 +6283,7 @@ static const char *FindShaderInShaderText( const char *shadername ) {
 		{
 			p = shaderTextHashTable[hash][i];
 			token = COM_ParseExt(&p, qtrue);
-		
+
 			if(!Q_stricmp(token, shadername))
 				return p;
 		}
@@ -6604,6 +6610,37 @@ char uniqueGenericMetalShader_OLD[] = "{\n"\
 "}\n"\
 "";
 
+char uniqueGenericRockShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"q3map_material	rock\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
+"//rgbGen entity\n"\
+"tcMod scale 4 4\n"\
+"}\n"\
+"%s"\
+"{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen lightingDiffuse\n"\
+"depthFunc equal\n"\
+"}\n"\
+"//{\n"\
+"//map %s\n"\
+"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//rgbGen lightingDiffuse\n"\
+"//alphaGen lightingSpecular\n"\
+"//alphaFunc GE128\n"\
+"//depthFunc equal\n"\
+"//detail\n"\
+"//}\n"\
+"}\n"\
+"";
+
 //"sort seethrough\n"\
 
 #if 0
@@ -6660,17 +6697,19 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (StringContainsWord(name, "raindrop") 
-		|| StringContainsWord(name, "gfx/effects/bubble") 
+	if (StringContainsWord(name, "raindrop")
+		|| StringContainsWord(name, "gfx/effects/bubble")
 		|| StringContainsWord(name, "gfx/water/screen_ripple")
 		|| StringContainsWord(name, "gfx/water/alpha_bubbles")
 		|| StringContainsWord(name, "gfx/water/overlay_bubbles"))
 		return qfalse;
-	else if (text && (StringContainsWord(name, "warzone/foliage") || StringContainsWord(name, "warzone\\foliage")))
+	else if (StringContainsWord(name, "vjun/vj4") || StringContainsWord(name, "vjun\\vj4"))
 		return qtrue;
-	else if (text && ( StringContainsWord(name, "warzone/tree") || StringContainsWord(name, "warzone\\tree")))
+	else if (StringContainsWord(name, "warzone/foliage") || StringContainsWord(name, "warzone\\foliage"))
 		return qtrue;
-	else if (text && ( StringContainsWord(name, "warzone/billboard") || StringContainsWord(name, "warzone\\billboard")))
+	else if (StringContainsWord(name, "warzone/tree") || StringContainsWord(name, "warzone\\tree"))
+		return qtrue;
+	else if ( StringContainsWord(name, "warzone/billboard") || StringContainsWord(name, "warzone\\billboard"))
 		return qtrue;
 	else if (text && (StringsContainWord(name, text, "gfx")))
 		return qfalse;
@@ -6807,7 +6846,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 
 #ifdef ___SHADER_GENERATOR___
-	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && !StringContainsWord(name, "icon")) 
+	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && !StringContainsWord(name, "icon"))
 	{
 		char glowShaderAddition[256] = { 0 };
 		int material = DetectMaterialType( name );
@@ -6867,6 +6906,19 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		else if (StringContainsWord(strippedName, "weapon") || material == MATERIAL_SOLIDMETAL || material == MATERIAL_HOLLOWMETAL)
 		{
 			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, glowShaderAddition, strippedName);
+		}
+		else if (StringContainsWord(name, "vjun/vj4"))
+		{
+			if (StringContainsWord(name, "vjun/vj4_b"))
+			{// pff
+				char realName[128];
+				sprintf(realName, "models/map_objects/vjun/vj4");
+				sprintf(myShader, uniqueGenericRockShader, strippedName, realName, glowShaderAddition, realName);
+			}
+			else
+			{
+				sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			}
 		}
 		else
 		{
@@ -6985,7 +7037,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	return FinishShader();
 }
 
-shader_t *R_FindServerShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) 
+shader_t *R_FindServerShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage )
 {
 	char		strippedName[MAX_QPATH];
 	int			hash;
@@ -7017,7 +7069,7 @@ shader_t *R_FindServerShader( const char *name, const int *lightmapIndexes, cons
 	ClearGlobalShader();
 	Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
 	Com_Memcpy (shader.lightmapIndex, lightmapIndexes, sizeof (shader.lightmapIndex));
-	
+
 	shader.defaultShader = qtrue;
 	return FinishShader();
 }
@@ -7106,11 +7158,11 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, const int *lightmapIndexe
 	}
 
 	sh = FinishShader();
-  return sh->index; 
+  return sh->index;
 }
 
 
-/* 
+/*
 ====================
 RE_RegisterShader
 
@@ -7144,7 +7196,7 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, const int *lightmapIndexe
 }
 
 
-/* 
+/*
 ====================
 RE_RegisterShader
 
@@ -7264,7 +7316,7 @@ void	R_ShaderList_f (void) {
 		} else {
 			ri->Printf (PRINT_ALL, "  ");
 		}
-		
+
 		if ( shader->explicitlyDefined ) {
 			ri->Printf( PRINT_ALL, "E " );
 		} else {
@@ -7344,20 +7396,20 @@ static void ScanAndLoadShaderFiles( void )
 				Com_sprintf( filename, sizeof( filename ), "shaders/%s", shaderFiles[i] );
 			}
 		}
-		
+
 		ri->Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
 		summand = ri->FS_ReadFile( filename, (void **)&buffers[i] );
-		
+
 		if ( !buffers[i] )
 			ri->Error( ERR_DROP, "Couldn't load %s", filename );
-		
+
 		// Do a simple check on the shader structure in that file to make sure one bad shader file cannot fuck up all other shaders.
 		p = buffers[i];
 		COM_BeginParseSession(filename);
 		while(1)
 		{
 			token = COM_ParseExt(&p, qtrue);
-			
+
 			if(!*token)
 				break;
 
@@ -7388,17 +7440,17 @@ static void ScanAndLoadShaderFiles( void )
 				break;
 			}
 		}
-			
-		
+
+
 		if (buffers[i])
-			sum += summand;		
+			sum += summand;
 	}
 
 	// build single large buffer
 	s_shaderText = (char *)ri->Hunk_Alloc( sum + numShaderFiles*2, h_low );
 	s_shaderText[ 0 ] = '\0';
 	textEnd = s_shaderText;
- 
+
 	// free in reverse order, so the temp files are all dumped
 	for ( i = numShaderFiles - 1; i >= 0 ; i-- )
 	{
@@ -7509,7 +7561,7 @@ static void CreateExternalShaders( void ) {
 	if(!tr.flareShader->defaultShader)
 	{
 		int index;
-		
+
 		for(index = 0; index < tr.flareShader->numUnfoggedPasses; index++)
 		{
 			tr.flareShader->stages[index]->adjustColorsForFog = ACFF_NONE;

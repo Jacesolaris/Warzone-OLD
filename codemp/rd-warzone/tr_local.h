@@ -143,6 +143,10 @@ extern cvar_t	*r_foliageDistance;
 extern cvar_t	*r_foliageDensity;
 extern cvar_t	*r_foliageShadows;
 
+extern cvar_t	*r_pebbles;
+extern cvar_t	*r_pebblesPasses;
+extern cvar_t	*r_pebblesDistance;
+
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
 extern cvar_t	*r_rotatez;
@@ -2358,6 +2362,7 @@ typedef struct trGlobals_s {
 	image_t					*foliageMapImage;
 	image_t					*grassImage[3];
 	image_t					*seaGrassImage;
+	image_t					*pebblesImage[4];
 	image_t					*grassMaskImage[10];
 	image_t					*paletteImage;
 
@@ -2496,6 +2501,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterPostShader;
 	shaderProgram_t grassShader;
 	shaderProgram_t grass2Shader;
+	shaderProgram_t pebblesShader;
 	shaderProgram_t sssShader;
 	shaderProgram_t sss2Shader;
 	shaderProgram_t rbmShader;

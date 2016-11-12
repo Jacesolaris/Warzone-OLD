@@ -816,6 +816,7 @@ extern void RemoveAllWP(void);
 extern void BG_ClearVehicleParseParms(void);
 extern void NPC_PrecacheWarzoneNPCs ( void );
 extern void FOLIAGE_LoadTrees( void );
+extern void JKG_InitDamageSystem(void);
 
 gentity_t *SelectRandomDeathmatchSpawnPoint( void );
 void SP_info_jedimaster_start( gentity_t *ent );
@@ -1099,6 +1100,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	NPC_LoadSpawnList( va("%s_empire", mapname.string) );
 	NPC_LoadSpawnList( va("%s_mandalorians", mapname.string) );
 	NPC_LoadSpawnList( va("%s_mercenaries", mapname.string) );
+
+	JKG_InitDamageSystem();
 
 	//trap->Print("MAX_CONFIGSTRINGS is %i.\n", (int)MAX_CONFIGSTRINGS);
 }

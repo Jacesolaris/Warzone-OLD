@@ -1477,9 +1477,9 @@ qboolean RB_ShouldUseTesselation ( int materialType )
 {
 	if ( materialType == MATERIAL_SHORTGRASS 
 		|| materialType == MATERIAL_LONGGRASS
-		|| materialType == MATERIAL_SAND
+		/*|| materialType == MATERIAL_SAND*/
 		|| materialType == MATERIAL_ROCK
-		|| materialType == MATERIAL_ICE)
+		/*|| materialType == MATERIAL_ICE*/)
 		return qtrue;
 
 	return qfalse;
@@ -1492,21 +1492,14 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 	switch( materialType )
 	{
 	case MATERIAL_SHORTGRASS:
-		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
-		break;
 	case MATERIAL_LONGGRASS:
-		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
-		break;
 	case MATERIAL_SAND:
-		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
-		break;
 	case MATERIAL_ROCK:
-		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
-		break;
 	case MATERIAL_ICE:
 		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
 	default:
+		tessAlphaLevel = 0.001;
 		break;
 	}
 
@@ -1521,16 +1514,13 @@ float RB_GetTesselationInnerLevel ( int materialType )
 
 	switch( materialType )
 	{
-	case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 		break;
 	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 		break;
-	case MATERIAL_SAND:				// 8			// sandy beach
+	/*case MATERIAL_SAND:				// 8			// sandy beach
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
 		break;
 	case MATERIAL_CARPET:			// 27			// lush carpet
@@ -1538,11 +1528,11 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		break;
 	case MATERIAL_GRAVEL:			// 9			// lots of small stones
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
+		break;*/
 	case MATERIAL_ROCK:				// 23			//
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
 		break;
-	case MATERIAL_TILES:			// 26			// tiled floor
+	/*case MATERIAL_TILES:			// 26			// tiled floor
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
@@ -1596,25 +1586,19 @@ float RB_GetTesselationInnerLevel ( int materialType )
 	case MATERIAL_PLASTER:			// 28			// drywall style plaster
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
 		break;
-	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		tessInnerLevel = 1.0;
-		break;
 	case MATERIAL_ARMOR:			// 30			// body armor
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, r_tesselationLevel->value);
-		break;
+		break;*/
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 	case MATERIAL_GLASS:			// 10			//
-		tessInnerLevel = 1.0;
-		break;
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		tessInnerLevel = 1.0;
-		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		tessInnerLevel = 1.0;
-		break;
 	default:
+		tessInnerLevel = 1.0;
 		break;
 	}
 
@@ -1639,6 +1623,21 @@ qboolean RB_ShouldUseGeometryGrass (int materialType )
 
 	if ( R_SurfaceIsAllowedFoliage( materialType ) )
 	{// *sigh* due to surfaceFlags mixing materials with other flags, we need to do it this way...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean RB_ShouldUseGeometryPebbles(int materialType)
+{
+	if (materialType <= MATERIAL_NONE)
+	{
+		return qfalse;
+	}
+
+	if (materialType == MATERIAL_SAND || materialType == MATERIAL_DIRT || materialType == MATERIAL_GRAVEL || materialType == MATERIAL_MUD)
+	{
 		return qtrue;
 	}
 
@@ -1789,7 +1788,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
 		shaderStage_t *pStage = input->xstages[stage];
-		shaderProgram_t *sp = NULL, *sp2 = NULL;
+		shaderProgram_t *sp = NULL, *sp2 = NULL, *sp3 = NULL;
 		vec4_t texMatrix;
 		vec4_t texOffTurb;
 		int stateBits;
@@ -1798,8 +1797,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		
 		qboolean isGeneric = qtrue;
 		qboolean isLightAll = qfalse;
+		qboolean useTesselation = qfalse;
 		qboolean isWater = qfalse;
 		qboolean isGrass = qfalse;
+		qboolean isPebbles = qfalse;
 		qboolean multiPass = qtrue;
 		qboolean usingLight = qfalse;
 
@@ -1857,6 +1858,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (r_tesselation->integer && RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
 				{
 					index |= LIGHTDEF_USE_TESSELLATION;
+					useTesselation = qtrue;
 				}
 
 				if (r_foliage->integer 
@@ -1865,6 +1867,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
 				{
 					isGrass = qtrue;
+				}
+				else if (r_pebbles->integer
+					&& r_sunlightMode->integer >= 2
+					&& r_foliageShadows->integer
+					&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+				{
+					isPebbles = qtrue;
 				}
 
 				sp = &pStage->glslShaderGroup[index];
@@ -1908,6 +1917,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
 			{
 				isGrass = qtrue;
+			}
+			else if (r_pebbles->integer
+				&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+			{
+				isPebbles = qtrue;
 			}
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
@@ -1990,6 +2004,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (r_tesselation->integer && RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
+				useTesselation = qtrue;
 			}
 
 			if (pStage->bundle[TB_STEEPMAP].image[0] 
@@ -2061,6 +2076,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					isGrass = qtrue;
 				}
+				else if (r_pebbles->integer
+					&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+				{
+					isPebbles = qtrue;
+				}
 			}
 
 			GLSL_BindProgram(sp);
@@ -2074,19 +2094,34 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!r_foliageShadows->integer || r_sunlightMode->integer < 2)
 			{
 				isGrass = qfalse;
+				isPebbles = qfalse;
 				multiPass = qfalse;
 			}
 		}
 
-		if (isGrass)
+		if (isGrass || isPebbles)
 		{
-			if (r_foliage->integer)
+			if (isGrass && r_foliage->integer)
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
 				passMax = r_foliagePasses->integer;
 
 				//if (ALLOW_GL_400) passMax = 2; // uses hardware invocations instead
+
+				if (r_pebbles->integer)
+				{
+					sp3 = &tr.pebblesShader;
+					passMax = r_foliagePasses->integer + r_pebblesPasses->integer;
+				}
+			}
+			else
+			{
+				if (r_pebbles->integer)
+				{
+					sp2 = &tr.pebblesShader;
+					passMax = r_pebblesPasses->integer;
+				}
 			}
 		}
 
@@ -2663,6 +2698,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
+			float tessInner = 0.0;
+			float tessOuter = 0.0;
+			float tessAlpha = 0.0;
+
+			if (useTesselation)
+			{
+				tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				tessOuter = tessInner;
+				tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+			}
+
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -2721,8 +2767,126 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					}
 				}
 			}
+			else if (isGrass && passNum > r_foliagePasses->integer && sp3)
+			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
+				sp = sp3;
+				sp3 = NULL;
 
-			if (isGrass && passNum > 0)
+				GLSL_BindProgram(sp);
+
+				stateBits = GLS_DEPTHMASK_TRUE;
+
+				RB_SetMaterialBasedProperties(sp, pStage);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+
+				// UQ: Other *needed* stuff... Hope these are correct...
+				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+				GL_BindToTMU(tr.pebblesImage[0], TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.pebblesImage[1], TB_SPLATMAP1);
+				GL_BindToTMU(tr.pebblesImage[2], TB_SPLATMAP2);
+				GL_BindToTMU(tr.pebblesImage[3], TB_OVERLAYMAP );
+
+				vec4_t l10;
+				float tessOffset = useTesselation ? 7.5 : 0.0;
+				VectorSet4(l10, r_pebblesDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+
+				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+
+				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
+				{
+					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+					{
+						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+					}
+					else
+					{
+						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
+					}
+				}
+			}
+			else if (isPebbles && passNum == 1 && sp2)
+			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
+				sp = sp2;
+				sp2 = NULL;
+
+				GLSL_BindProgram(sp);
+
+				stateBits = GLS_DEPTHMASK_TRUE;
+
+				RB_SetMaterialBasedProperties(sp, pStage);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+
+				// UQ: Other *needed* stuff... Hope these are correct...
+				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+				GL_BindToTMU(tr.pebblesImage[0], TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.pebblesImage[1], TB_SPLATMAP1);
+				GL_BindToTMU(tr.pebblesImage[2], TB_SPLATMAP2);
+				GL_BindToTMU(tr.pebblesImage[3], TB_OVERLAYMAP);
+
+				vec4_t l10;
+				float tessOffset = useTesselation ? 7.5 : 0.0;
+				VectorSet4(l10, r_pebblesDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+
+				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+
+				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
+				{
+					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+					{
+						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+					}
+					else
+					{
+						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
+					}
+				}
+			}
+
+			if ((isGrass || isPebbles) && passNum > 0)
 			{// Use grass map...
 				
 			}
@@ -2779,13 +2943,29 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_Cull( CT_TWO_SIDED );
 			}
+			else if (isGrass && passNum > r_foliagePasses->integer && r_pebbles->integer)
+			{// Geometry pebbles drawing passes...
+				vec4_t l8;
+				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (isPebbles && passNum > 0 && r_pebbles->integer)
+			{// Geometry pebbles drawing passes...
+				vec4_t l8;
+				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+
+				GL_Cull(CT_TWO_SIDED);
+			}
 			else if (r_tesselation->integer && sp->tesselation)
 			{
 				tesselation = qtrue;
 
-				float tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
-				float tessOuter = tessInner;
-				float tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				//float tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				//float tessOuter = tessInner;
+				//float tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
 
 				vec4_t l10;
 				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
@@ -2844,7 +3024,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (!multiPass) 
 			{
-				if (isGrass && r_foliage->integer)
+				if ((isGrass && r_foliage->integer) || (isPebbles && r_pebbles->integer))
 				{// Set cull type back to original... Just in case...
 					GL_Cull( input->shader->cullType );
 				}
