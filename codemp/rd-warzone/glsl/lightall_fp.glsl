@@ -94,14 +94,7 @@ flat in float				Slope_FS_in;
 flat in float				usingSteepMap_FS_in;
 
 
-//vec3 m_Normal =				normalize(-Normal_FS_in.xyz);
-//#define m_Normal 			normalize(-Normal_FS_in.xyz)
-//#define m_Normal 			normalize(vec3(Normal_FS_in.xy, Normal_FS_in.z))
-//#if defined(USE_TESSELLATION)
-//#define m_Normal 			normalize(-Normal_FS_in.xyz)
-//#else
 #define m_Normal 			normalize(Normal_FS_in.xyz)
-//#endif
 
 #define m_TexCoords			TexCoord_FS_in
 #define m_vertPos			WorldPos_FS_in
@@ -887,11 +880,11 @@ void main()
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 		ambientColor = lightColor;
-#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
-#else //!
+//#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
+//		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
+//#else //!
 		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
-#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
+//#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 		lightColor /= max(surfNL, 0.25);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
@@ -930,11 +923,11 @@ void main()
 		{
 			float spec = 0.0;
 
-			#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-				NE = clamp(dot(m_Normal.xyz/*N*/, -E), 0.0, 1.0);
-			#else
+			//#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
+			//	NE = clamp(dot(m_Normal.xyz/*N*/, -E), 0.0, 1.0);
+			//#else
 				NE = clamp(dot(m_Normal.xyz/*N*/, E), 0.0, 1.0);
-			#endif
+			//#endif
 			vec3 R = reflect(E, m_Normal.xyz/*N*/);
 			vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
 			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
