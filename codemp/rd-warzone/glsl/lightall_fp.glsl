@@ -773,7 +773,7 @@ void main()
 
 			//vec3 offsetDir = normalize(E * tangentToWorld);
 			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
-			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
+			vec2 ParallaxXY = offsetDir.xy * tex_offset * 0.7;// u_Local1.x;
 
 			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords, displacement);
 			texCoords += ParallaxOffset;
