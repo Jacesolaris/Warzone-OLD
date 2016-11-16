@@ -859,12 +859,15 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	}
 
 #ifdef __DAY_NIGHT__
-	float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
-
-	if (Time24h < 6.0 || Time24h > 22.0)
+	if (DAY_NIGHT_CYCLE_ENABLED)
 	{
-		SUN_VISIBLE = qfalse;
-		return;
+		float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
+
+		if (Time24h < 6.0 || Time24h > 22.0)
+		{
+			SUN_VISIBLE = qfalse;
+			return;
+		}
 	}
 #endif //__DAY_NIGHT__
 

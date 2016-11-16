@@ -74,10 +74,11 @@ void main(void)
 
 	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
 
-#if 0
+#if 1
 	float normPower = length(norm.rgb);
 
-	if (normPower < 0.5 || normPower > 2.5)
+	//if (normPower < 0.5 || normPower > 2.5)
+	if (normPower == 0.0)
 	{// Fallback... Generate some fake normals...
 		norm = ConvertToNormals(color);
 		/*norm.rgb = norm.rgb * 0.5 + 0.5;
@@ -147,7 +148,7 @@ void main(void)
 					vec3 lightDir = normalize(u_lightPositions2[li] - position.xyz);
 					float lambertian3 = dot(lightDir.xyz, N);
 
-					gl_FragColor.rgb += u_lightColors[li].rgb * lightStrength * u_Local2.g /*0.04*/; // Always add some basic light...
+					gl_FragColor.rgb += u_lightColors[li].rgb * lightStrength * /*u_Local2.g*/ 0.04; // Always add some basic light...
 
 					if (lambertian3 > 0.0)
 					{

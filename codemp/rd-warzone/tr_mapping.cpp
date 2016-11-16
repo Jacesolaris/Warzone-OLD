@@ -1163,6 +1163,28 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 	return 0; //guess we never found it.
 }
 
+qboolean DAY_NIGHT_CYCLE_ENABLED = qfalse;
+
+void MAPPING_LoadDayNightCycleInfo ( void )
+{
+	int dayNightEnableValue = atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_ENABLED", "0"));
+
+	DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
+
+	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
+	{// Leave -1 in ini file to override and force it off, just in case...
+		if (StringContainsWord(currentMapName, "baldemnic")
+			|| StringContainsWord(currentMapName, "mandalore")
+			|| !strcmp(currentMapName, "endor")
+			|| !strcmp(currentMapName, "ilum"))
+		{
+			DAY_NIGHT_CYCLE_ENABLED = qtrue;
+		}
+	}
+
+	ri->Printf(PRINT_ALL, "^4*** ^3AUTO-FOLIAGE^4: ^5Day night cycle is ^7%s^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED");
+}
+
 extern const char *materialNames[MATERIAL_LAST];
 extern void ParseMaterial(const char **text);
 
@@ -1275,6 +1297,7 @@ void R_LoadMapInfo(void)
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+	MAPPING_LoadDayNightCycleInfo();
 	FOLIAGE_LoadMapClimateInfo();
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;

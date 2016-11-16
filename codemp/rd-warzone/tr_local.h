@@ -60,7 +60,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
@@ -98,6 +97,10 @@ extern void gameswf_drawflash ( char *filename );
 #ifdef ___WARZONE_AWESOMIUM___
 extern int DrawAwesomium( char *URL, FBO_t *srcFbo );
 #endif //___WARZONE_AWESOMIUM___
+
+#ifdef __DAY_NIGHT__
+extern qboolean DAY_NIGHT_CYCLE_ENABLED;
+#endif //__DAY_NIGHT__
 
 // 14 bits
 // can't be increased without changing bit packing for drawsurfs
