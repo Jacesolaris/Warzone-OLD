@@ -67,6 +67,9 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	{// We have a local file...
 		sfxHandle_t sfxHandle = S_RegisterSound(filename);
 
+		if (!s_knownSfx[sfxHandle].bInMemory)
+			S_memoryLoad(&s_knownSfx[sfxHandle]);
+
 		if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
 		if (S_ShouldCull((float *)origin, qfalse, entityNum))
@@ -79,6 +82,9 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	else if ( TTS_FileExists( filename2 ) )
 	{// We have a local file...
 		sfxHandle_t sfxHandle = S_RegisterSound(filename2);
+
+		if (!s_knownSfx[sfxHandle].bInMemory)
+			S_memoryLoad(&s_knownSfx[sfxHandle]);
 
 		if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
@@ -136,6 +142,9 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 		{// We have a local file...
 			sfxHandle_t sfxHandle = S_RegisterSound(filename);
 
+			if (!s_knownSfx[sfxHandle].bInMemory)
+				S_memoryLoad(&s_knownSfx[sfxHandle]);
+
 			if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
 			//Com_Printf("Playing TTS %s at %f %f %f.\n", filename, 
@@ -150,6 +159,9 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 		else if ( TTS_FileExists( filename2 ) )
 		{// We have a local file...
 			sfxHandle_t sfxHandle = S_RegisterSound(filename2);
+
+			if (!s_knownSfx[sfxHandle].bInMemory)
+				S_memoryLoad(&s_knownSfx[sfxHandle]);
 
 			if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 

@@ -217,7 +217,8 @@ void S_ReloadAllUsedSounds(void)
 			sfx_t *sfx = &s_knownSfx[i];
 
 			if (!sfx->bDefaultSound && sfx->iLastLevelUsedOn == re->RegisterMedia_GetLevel()){
-				S_memoryLoad(sfx);
+				//S_memoryLoad(sfx);
+				sfx->bInMemory = qfalse;
 			}
 		}
 	}
@@ -465,7 +466,7 @@ sfxHandle_t	S_RegisterSound( const char *name)
 
 	sfx->bInMemory = qfalse;
 
-	S_memoryLoad(sfx);
+	//S_memoryLoad(sfx);
 
 	if ( sfx->bDefaultSound ) {
 #ifndef FINAL_BUILD
@@ -507,6 +508,10 @@ Starts an ambient, 'one-shot" sound.
 void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volume, sfxHandle_t sfxHandle )
 {
 	if (sfxHandle >= MAX_SFX) return;
+
+	if (!s_knownSfx[sfxHandle].bInMemory)
+		S_memoryLoad(&s_knownSfx[sfxHandle]);
+
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 	/*
 	if (origin)
@@ -546,6 +551,10 @@ entchannel 0 will never override a playing sound
 void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle )
 {
 	if (sfxHandle >= MAX_SFX) return;
+
+	if (!s_knownSfx[sfxHandle].bInMemory)
+		S_memoryLoad(&s_knownSfx[sfxHandle]);
+
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
 	/*
