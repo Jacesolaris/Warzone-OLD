@@ -3069,6 +3069,7 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		return AVOIDANCE_NONE;
 	}
 
+#if 0
 	{// Try left...
 		vec3_t trypos;
 
@@ -3148,6 +3149,7 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 			return AVOIDANCE_STRAFE_RIGHT;
 		}
 	}
+#endif
 
 	{// Try left 3...
 		vec3_t trypos;

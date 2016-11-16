@@ -4720,6 +4720,9 @@ static void PM_GroundTrace( void ) {
 PM_SetWaterLevel
 =============
 */
+
+#define __NPCS_IGNORE_WATER__
+
 static void PM_SetWaterLevel( void ) {
 	vec3_t		point;
 	int			cont;
@@ -4732,12 +4735,19 @@ static void PM_SetWaterLevel( void ) {
 	pm->waterlevel = 0;
 	pm->watertype = 0;
 
+#ifdef __NPCS_IGNORE_WATER__
+	if (pm->ps->clientNum >= MAX_CLIENTS)
+	{// For CPU usage, NPCs ignore water for now...
+		return;
+	}
+#endif //__NPCS_IGNORE_WATER__
+
 	point[0] = pm->ps->origin[0];
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] + MINS_Z + 1;
 	cont = pm->pointcontents( point, pm->ps->clientNum );
 
-	if ( cont & MASK_WATER ) {
+	if ( cont & MASK_WATER && pm->ps->clientNum < MAX_CLIENTS ) {
 		sample2 = pm->ps->viewheight - MINS_Z;
 		sample1 = sample2 / 2;
 
@@ -4754,7 +4764,13 @@ static void PM_SetWaterLevel( void ) {
 			}
 		}
 	}
-
+#ifndef __NPCS_IGNORE_WATER__
+	else if (cont & MASK_WATER && pm->ps->clientNum >= MAX_CLIENTS) 
+	{// NPCs don't drown... (More to save CPU time on complex maps then anything else)
+		pm->watertype = cont;
+		pm->waterlevel = 1;
+	}
+#endif //__NPCS_IGNORE_WATER__
 }
 
 qboolean PM_CheckDualForwardJumpDuck( void )

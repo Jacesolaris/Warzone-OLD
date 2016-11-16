@@ -1373,10 +1373,6 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 		if ( NPC_ValidEnemy( radEnt ) == qfalse )
 			continue;
 
-		//Must be visible
-		if ( NPC_TargetVisible( radEnt ) == qfalse )
-			continue;
-
 		if (EntIsGlass(radEnt))
 		{
 			continue;
@@ -1394,6 +1390,10 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 		//Found one closer to us
 		if ( distance < nearestDist )
 		{
+			//Must be visible
+			if ( NPC_TargetVisible( radEnt ) == qfalse )
+				continue;
+
 			nearestEntID = radEnt->s.number;
 			nearestDist = distance;
 
