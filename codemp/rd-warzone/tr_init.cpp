@@ -1360,7 +1360,7 @@ void R_Register( void )
 {
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "7.0", CVAR_ARCHIVE );
