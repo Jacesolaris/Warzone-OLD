@@ -84,8 +84,8 @@ dependencies
 	#define Q_ASSIGN_VEC3( a, b, c ) = { a, b, c }
 #else
 	#define Q_EXTERN extern
-	#define Q_ASSIGN( a )	
-	#define Q_ASSIGN_VEC3( a, b, c )	
+	#define Q_ASSIGN( a )
+	#define Q_ASSIGN_VEC3( a, b, c )
 #endif
 
 #if (_MSC_VER < 1300)
@@ -113,10 +113,10 @@ port-related hacks
 ------------------------------------------------------------------------------- */
 
 #define MAC_STATIC_HACK			0
-#if defined( __APPLE__ ) && MAC_STATIC_HACK 
+#if defined( __APPLE__ ) && MAC_STATIC_HACK
 	#define MAC_STATIC			static
 #else
-	#define MAC_STATIC			
+	#define MAC_STATIC
 #endif
 
 #if defined(WIN32) || defined(WIN64)
@@ -267,7 +267,7 @@ constants
 
 #define MIN_LIGHTMAP_SAMPLE_SIZE	    0.1f
 #define DEFAULT_LIGHTMAP_SAMPLE_SIZE	16.0f
-#define DEFAULT_SUBDIVIDE_THRESHOLD		1.0f 
+#define DEFAULT_SUBDIVIDE_THRESHOLD		1.0f
 
 #define	EXTRA_SCALE				2	/* -extrawide = -super 2 */
 #define	EXTRAWIDE_SCALE			2	/* -extrawide = -super 2 -filter */
@@ -304,9 +304,9 @@ constants
 #define SUPER_FLOODLIGHT( x, y )(lm->superFloodLight + ((((y) * lm->sw) + (x)) * SUPER_FLOODLIGHT_SIZE))
 #define SUPER_TRIORIGIN( x, y ) (lm->superTriorigins + ((((y) * lm->sw) + (x)) * SUPER_TRIORIGIN_SIZE))
 #define SUPER_TRINORMAL( x, y ) (lm->superTrinormals + ((((y) * lm->sw) + (x)) * SUPER_TRINORMAL_SIZE))
- 
+
 /* vortex: linear luxel access */
-#define LUXEL_XY( x, y )        (((y) * lm->sw) + (x))  
+#define LUXEL_XY( x, y )        (((y) * lm->sw) + (x))
 #define SUPER_LUXEL_XY( s, i )  (lm->superLuxels[ s ] + (i * SUPER_LUXEL_SIZE))
 #define SUPER_DELUXEL_XY( i )   (lm->superDeluxels + (i * SUPER_DELUXEL_SIZE))
 #define SUPER_CLUSTER_XY( i )   (lm->superClusters + i)
@@ -381,7 +381,7 @@ abstracted bsp file
 #else
 /* ok to increase these at the expense of more memory */
 #define	MAX_MAP_MODELS			0x1000
-#define	MAX_MAP_BRUSHES			0x100000//0x400000
+#define	MAX_MAP_BRUSHES			0x200000//0x100000//0x400000
 #define	MAX_MAP_ENTITIES		0x80000
 #define	MAX_MAP_ENTSTRING		0x80000
 #define	MAX_MAP_SHADERS			0x800
@@ -390,7 +390,7 @@ abstracted bsp file
 #define	MAX_MAP_FOGS			30
 #define	MAX_MAP_PLANES			0x4000000//0x7000000
 #define	MAX_MAP_NODES			0x800000//0xA00000
-#define	MAX_MAP_BRUSHSIDES		0xF00000//0xF00000
+#define	MAX_MAP_BRUSHSIDES		0x1000000//0xF00000//0xF00000
 #define	MAX_MAP_LEAFS			0x800000//0xA00000
 #define	MAX_MAP_LEAFFACES		0x800000//0xA00000
 #define	MAX_MAP_LEAFBRUSHES		0x800000//0xA00000
@@ -433,7 +433,7 @@ typedef struct
 {
 	char		ident[ 4 ];
 	int			version;
-	
+
 	bspLump_t	lumps[ 100 ];	/* theoretical maximum # of bsp lumps */
 }
 bspHeader_t;
@@ -481,13 +481,13 @@ typedef struct
 {
 	int			cluster;			/* -1 = opaque cluster (do I still store these?) */
 	int			area;
-	
+
 	int			mins[ 3 ];			/* for frustum culling */
 	int			maxs[ 3 ];
-	
+
 	int			firstBSPLeafSurface;
 	int			numBSPLeafSurfaces;
-	
+
 	int			firstBSPLeafBrush;
 	int			numBSPLeafBrushes;
 }
@@ -559,22 +559,22 @@ typedef struct
 	int			shaderNum;
 	int			fogNum;
 	int			surfaceType;
-	
+
 	int			firstVert;
 	int			numVerts;
-	
+
 	int			firstIndex;
 	int			numIndexes;
-	
+
 	byte		lightmapStyles[ MAX_LIGHTMAPS ];						/* RBSP */
 	byte		vertexStyles[ MAX_LIGHTMAPS ];							/* RBSP */
 	int			lightmapNum[ MAX_LIGHTMAPS ];							/* RBSP */
 	int			lightmapX[ MAX_LIGHTMAPS ], lightmapY[ MAX_LIGHTMAPS ];	/* RBSP */
 	int			lightmapWidth, lightmapHeight;
-	
+
 	vec3_t		lightmapOrigin;
 	vec3_t		lightmapVecs[ 3 ];	/* on patches, [ 0 ] and [ 1 ] are lodbounds */
-	
+
 	int			patchWidth;
 	int			patchHeight;
 }
@@ -671,7 +671,7 @@ typedef struct sun_s
 sun_t;
 
 
-typedef struct surfaceModel_s 
+typedef struct surfaceModel_s
 {
 	struct surfaceModel_s	*next;
 	char				model[ MAX_QPATH ];
@@ -684,7 +684,7 @@ surfaceModel_t;
 
 
 /* ydnar/sd: foliage stuff for wolf et (engine-supported optimization of the above) */
-typedef struct foliage_s 
+typedef struct foliage_s
 {
 	struct foliage_s	*next;
 	char				model[ MAX_QPATH ];
@@ -765,7 +765,7 @@ typedef struct shaderInfo_s
 	int					compileFlags;
 	qboolean			skipSolidCull;
 	float				value;							/* light value */
-	
+
 	char				*flareShader;					/* for light flares */
 	char				*damageShader;					/* ydnar: sof2 damage shader name */
 	char				*backShader;					/* for surfaces that generate different front and back passes */
@@ -776,22 +776,22 @@ typedef struct shaderInfo_s
 
 	surfaceModel_t		*surfaceModel;					/* ydnar: for distribution of models */
 	foliage_t			*foliage;						/* ydnar/splash damage: wolf et foliage */
-	
+
 	float				subdivisions;					/* from a "tesssize xxx" */
 	float				backsplashFraction;				/* floating point value, usually 0.05 */
 	float				backsplashDistance;				/* default 16 */
 	float				lightSubdivide;					/* default 999 */
 	float				lightFilterRadius;				/* ydnar: lightmap filtering/blurring radius for lights created by this shader (default: 0) */
-	
+
 	float				lightmapSampleSize;				/* lightmap sample size */
 	float				lightmapSampleOffset;			/* ydnar: lightmap sample offset (default: 1.0) */
-	
+
 	float				bounceScale;					/* ydnar: radiosity re-emission [0,1.0+] */
 	float				offset;							/* ydnar: offset in units */
 	float				shadeAngleDegrees;				/* ydnar: breaking angle for smooth shading (degrees) */
-	
+
 	vec3_t				mins, maxs;						/* ydnar: for particle studio vertexDeform move support */
-	
+
 	qboolean			legacyTerrain;					/* ydnar: enable legacy terrain crutches */
 	qboolean			indexed;						/* ydnar: attempt to use indexmap (terrain alphamap style) */
 	qboolean			invert;							/* ydnar: reverse facing */
@@ -824,7 +824,7 @@ typedef struct shaderInfo_s
 	qboolean            lightmapForceStitch;            /* vortex: enable lightmap stitching (if no -stitch set) */
 	qboolean			lightmapMergable;				/* ydnar */
 	byte				styleMarker;					/* ydnar: light styles hack */
-	byte				lightStyle;		
+	byte				lightStyle;
 	qboolean			custom;
 	qboolean			finished;
 	qboolean			warnNoShaderImage;              /* vortex: used in CheckMapForErrors */
@@ -845,29 +845,29 @@ typedef struct shaderInfo_s
 
 	float               aoScale;                        /* vortex: ambient occlusion scale */
 	float               aoGainScale;                    /* vortex: ambient occlusion gain scale */
-	
+
 	char				skyParmsImageBase[ MAX_QPATH ];	/* ydnar: for skies */
-	
+
 	char				editorImagePath[ MAX_QPATH ];	/* use this image to generate texture coordinates */
 	char				lightImagePath[ MAX_QPATH ];	/* use this image to generate color / averageColor */
 	char				normalImagePath[ MAX_QPATH ];	/* ydnar: normalmap image for bumpmapping */
-	
+
 	implicitMap_t		implicitMap;					/* ydnar: enemy territory implicit shaders */
 	char				implicitImagePath[ MAX_QPATH ];
-	
+
 	image_t				*shaderImage;
 	image_t				*lightImage;
 	image_t				*normalImage;
-	
+
 	float				skyLightValue;					/* ydnar */
 	int					skyLightIterations;				/* ydnar */
 	sun_t				*sun;							/* ydnar */
-	
+
 	vec3_t				color;							/* normalized color */
 	vec4_t				averageColor;
-	
+
 	float				floodlightDirectionScale;       /* vortex: per-surface floodlight */
-	vec3_t				floodlightRGB;                  /* vortex: per-surface floodlight */ 
+	vec3_t				floodlightRGB;                  /* vortex: per-surface floodlight */
 	float				floodlightIntensity;            /* vortex: per-surface floodlight */
 	float				floodlightDistance;             /* vortex: per-surface floodlight */
 
@@ -921,9 +921,9 @@ plane_t;
 typedef struct side_s
 {
 	int					planenum;
-	
+
 	int					outputNum;			/* set when the side is written to the file list */
-	
+
 	float				texMat[ 2 ][ 3 ];	/* brush primitive texture matrix */
 	float				vecs[ 2 ][ 4 ];		/* old-style texture coordinate mapping */
 
@@ -968,17 +968,17 @@ typedef struct brush_s
 	struct brush_s		*next;
 	struct brush_s		*nextColorModBrush;	/* ydnar: colorMod volume brushes go here */
 	struct brush_s		*original;			/* chopped up brushes will reference the originals */
-	
+
 	int					entityNum, mapEntityNum, brushNum;/* editor numbering */
 	int					outputNum;			/* set when the brush is written to the file list */
-	
+
 	/* ydnar: for shadowcasting entities */
 	char				castShadows;
 	char				recvShadows;
-	
+
 	shaderInfo_t		*contentShader;
 	shaderInfo_t		*celShader;			/* :) */
-	
+
 	/* ydnar: gs mods */
 	float				lightmapScale;
 	vec3_t              lightmapAxis;
@@ -1028,17 +1028,17 @@ mesh_t;
 typedef struct parseMesh_s
 {
 	struct parseMesh_s	*next;
-	
+
 	int					entityNum, mapEntityNum, brushNum;	/* ydnar: editor numbering */
-	
+
 	/* ydnar: for shadowcasting entities */
 	int					castShadows;
 	int					recvShadows;
-	
+
 	mesh_t				mesh;
 	shaderInfo_t		*shaderInfo;
 	shaderInfo_t		*celShader;				/* :) */
-	
+
 	/* ydnar: gs mods */
 	float				lightmapScale;
 	vec3_t              lightmapAxis;
@@ -1080,14 +1080,14 @@ typedef enum
 	SURFACE_TRIANGLES,
 	SURFACE_FLARE,
 	SURFACE_FOLIAGE,	/* wolf et */
-	
+
 	/* ydnar: compiler-relevant surface types */
 	SURFACE_FORCED_META,
 	SURFACE_META,
 	SURFACE_FOGHULL,
 	SURFACE_DECAL,
 	SURFACE_SHADER,
-	
+
 	NUM_SURFACE_TYPES
 }
 surfaceType_t;
@@ -1119,33 +1119,33 @@ typedef struct mapDrawSurface_s
 	surfaceType_t		type;
 	qboolean			planar;
 	int					outputNum;			/* ydnar: to match this sort of thing up */
-	
+
 	qboolean			fur;				/* ydnar: this is kind of a hack, but hey... */
 	qboolean			skybox;				/* ydnar: yet another fun hack */
 	qboolean			backSide;			/* ydnar: q3map_backShader support */
-	
+
 	struct mapDrawSurface_s	*parent;		/* ydnar: for cloned (skybox) surfaces to share lighting data */
 	struct mapDrawSurface_s	*clone;			/* ydnar: for cloned surfaces */
 	struct mapDrawSurface_s	*cel;			/* ydnar: for cloned cel surfaces */
-	
+
 	shaderInfo_t		*shaderInfo;
 	shaderInfo_t		*celShader;
 	brush_t				*mapBrush;
 	parseMesh_t			*mapMesh;
 	sideRef_t			*sideRef;
-	
+
 	int					fogNum;
-	
+
 	int					numVerts;			/* vertexes and triangles */
 	bspDrawVert_t		*verts;
 	int					numIndexes;
 	int					*indexes;
-	
+
 	int					planeNum;
 	vec3_t				lightmapOrigin;		/* also used for flares */
 	vec3_t				lightmapVecs[ 3 ];	/* also used for flares */
 	int					lightStyle;			/* used for flares */
-	
+
 	/* ydnar: gs mods */
 	float				lightmapScale;
 	int					smoothNormals;
@@ -1156,20 +1156,20 @@ typedef struct mapDrawSurface_s
 	vec3_t              minlight;
 	vec3_t              minvertexlight;
 	vec3_t              ambient;
-	vec3_t              colormod; 
+	vec3_t              colormod;
 
 	/* ydnar: surface classification */
 	vec3_t				mins, maxs;
 	vec3_t				lightmapAxis;
 	float				sampleSize;
-	
+
 	/* ydnar: shadow group support */
 	char				castShadows, recvShadows;
-	
+
 	/* ydnar: texture coordinate range monitoring for hardware with limited texcoord precision (in texel space) */
 	float				bias[ 2 ];
 	int					texMins[ 2 ], texMaxs[ 2 ], texRange[ 2 ];
-		
+
 	/* ydnar: for patches */
 	float				longestCurve;
 	int					maxIterations;
@@ -1181,7 +1181,7 @@ typedef struct mapDrawSurface_s
 
 	/* ydnar/sd: for foliage */
 	int					numFoliageInstances;
-	
+
 	/* ydnar: editor/useful numbering */
 	int					entityNum;
 	int                 mapEntityNum;
@@ -1315,7 +1315,7 @@ typedef struct
 {
 	uint32_t/*int*/					numpoints;
 	vec3_t				points[	MAX_POINTS_ON_FIXED_WINDING	];		/* variable sized */
-} 
+}
 fixedWinding_t;
 
 
@@ -1342,7 +1342,7 @@ typedef struct
 	qboolean			removed;
 	visPlane_t			plane;			/* normal pointing into neighbor */
 	int					leaf;			/* neighbor */
-	
+
 	vec3_t				origin;			/* for fast clip testing */
 	float				radius;
 
@@ -1367,7 +1367,7 @@ typedef struct leaf_s
 }
 leaf_t;
 
-	
+
 typedef struct pstack_s
 {
 	byte				mightsee[ MAX_PORTALS / 8 ];
@@ -1410,15 +1410,15 @@ light structures
 typedef struct light_s
 {
 	struct light_s		*next;
-	
+
 	int					type;
 	int					flags;			/* ydnar: condensed all the booleans into one flags int */
 	shaderInfo_t		*si;
-	
+
 	vec3_t				origin;
 	vec3_t				normal;			/* for surfaces, spotlights, and suns */
 	float				dist;			/* plane location along normal */
-	
+
 	float				photons;
 	int					mindist;		/* vortex: minimum distance to prevent super hot spots (default is 16) */
 	int					style;
@@ -1432,14 +1432,14 @@ typedef struct light_s
 	float				envelope2;		/* ydnar: envelope squared (tiny optimization) */
 	vec3_t				mins, maxs;		/* ydnar: pvs envelope */
 	int					cluster;		/* ydnar: cluster light falls into */
-	
+
 	winding_t			*w;
 	vec3_t				emitColor;		/* full out-of-gamut value */
 
 	int                 devianceRadius;  /* radius of light-casting zone  */
 	int                 devianceSamples; /* number of deviance samples    */
 	vec3_t			   *devianceOrigins; /* deviance origins for penumbra */
-	
+
 	float				falloffTolerance;	/* ydnar: minimum attenuation threshold */
 	float				filterRadius;	/* ydnar: lightmap filter radius in world units, 0 == default */
 }
@@ -1456,25 +1456,25 @@ typedef struct
 	int                 entityNum;
 	int					numSurfaces;
 	int					*surfaces;
-	
+
 	int					numLights;
 	light_t				**lights;
-	
+
 	qboolean			twoSided;
-	
+
 	/* per-sample input */
 	int					cluster;
 	vec3_t				origin, normal;
 	vec_t				inhibitRadius;	/* sphere in which occluding geometry is ignored */
-	
+
 	/* per-light input */
 	light_t				*light;
 	vec3_t				end;
-	
+
 	/* calculated input */
 	vec3_t				displacement, direction;
 	vec_t				distance;
-	
+
 	/* input and output */
 	vec3_t				color;			/* starts out at full color, may be reduced if transparent surfaces are crossed */
 	vec3_t				colorNoShadow;	/* vortex: no shadow tracing for deluxemaps */
@@ -1488,7 +1488,7 @@ typedef struct
 
 	/* working data */
 	int					numTestNodes;
-	int					testNodes[ MAX_TRACE_TEST_NODES ]; 
+	int					testNodes[ MAX_TRACE_TEST_NODES ];
 }
 trace_t;
 
@@ -1549,7 +1549,7 @@ typedef struct rawLightmap_s
 
 	int						firstLightSurface, numLightSurfaces;	/* index into lightSurfaces */
 	int						numLightClusters, *lightClusters;
-	
+
 	float                   sampleSize;
 	float                   actualSampleSize;
 	float                   sampleOffset;
@@ -1560,10 +1560,10 @@ typedef struct rawLightmap_s
 	vec3_t					mins, maxs, axis, origin, *vecs;
 	float					*plane;
 	int						w, h, sw, sh, used;
-	
+
 	qboolean				solid[ MAX_LIGHTMAPS ];
 	vec3_t					solidColor[ MAX_LIGHTMAPS ];
-	
+
 	int						numStyledTwins;
 	struct rawLightmap_s	*twins[ MAX_LIGHTMAPS ];
 
@@ -1586,7 +1586,7 @@ typedef struct rawLightmap_s
 
 	/* vortex: per-surface lighting control */
 	float					floodlightDirectionScale;
-	vec3_t					floodlightRGB; 
+	vec3_t					floodlightRGB;
 	float					floodlightIntensity;
 	float					floodlightDistance;
 	float                   aoScale;
@@ -1607,7 +1607,7 @@ typedef struct rawGridPoint_s
 	qboolean            mapped;        // vortex: inside lightgrid brush (if any)
 	qboolean            flooded;       // vortex: inside wall, flood from the neightbors
 	qboolean            floodOnlyColor;// vortex: do not flood direction
-	qboolean            unused1;       // 
+	qboolean            unused1;       //
 	qboolean            unused2;
 	int                 contributions; // vortex: how many lights contributed to this point
 }
@@ -1916,7 +1916,7 @@ int							LightMain( int argc, char **argv );
 
 /* light_trace.c */
 void						SetupTraceNodes( void );
-void                        SetupTraceNodes_GPU(void); 
+void                        SetupTraceNodes_GPU(void);
 void						TraceLine( trace_t *trace );
 float						SetupTrace( trace_t *trace );
 
@@ -2482,7 +2482,7 @@ Q_EXTERN qboolean lightAngleHL Q_ASSIGN( qfalse );
 Q_EXTERN float				lightmapGamma Q_ASSIGN( 1.0f );
 Q_EXTERN double				lightmapInvGamma Q_ASSIGN( 1.0f );
 Q_EXTERN float				lightmapCompensate Q_ASSIGN( 1.0f );
-Q_EXTERN double				lightmapInvCompensate Q_ASSIGN( 1.0f );			
+Q_EXTERN double				lightmapInvCompensate Q_ASSIGN( 1.0f );
 Q_EXTERN float				lightmapExposure Q_ASSIGN( 1.0f );
 Q_EXTERN double				lightmapInvExposure Q_ASSIGN( 1.0f );
 Q_EXTERN float				lightmapBrightness Q_ASSIGN( 1.0f );
@@ -2734,19 +2734,19 @@ Q_EXTERN bspFog_t			bspFogs[ MAX_MAP_FOGS ];
 
 
 
-/*OpenCL Helper Functions to keep the clutter out of q3map2's source*/ 
-qboolean InitOpenCL( void ); 
-qboolean GetDevice( void ); 
-qboolean CreateContext( void ); 
-qboolean CreateCommandQueue( void ); 
+/*OpenCL Helper Functions to keep the clutter out of q3map2's source*/
+qboolean InitOpenCL( void );
+qboolean GetDevice( void );
+qboolean CreateContext( void );
+qboolean CreateCommandQueue( void );
 
-void CleanOpenCL( void ); /*clean up memory and release ocl objects*/ 
+void CleanOpenCL( void ); /*clean up memory and release ocl objects*/
 
-qboolean LoadProgramSource(char *filename); /*Load a .cl file to a single string. Return value stored in kernels[]*/ 
+qboolean LoadProgramSource(char *filename); /*Load a .cl file to a single string. Return value stored in kernels[]*/
 void BuildAllProgramSource( void ); /*builds all loaded .cl files in to executable code*/
 
-void PushKernel(char *kernel, unsigned int *length); /*push a kernel on to the array*/ 
-void do_stuff(); 
+void PushKernel(char *kernel, unsigned int *length); /*push a kernel on to the array*/
+void do_stuff();
 
 
 /* end marker */

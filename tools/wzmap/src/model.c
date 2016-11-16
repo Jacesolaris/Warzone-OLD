@@ -47,7 +47,7 @@ extern void CullSidesStats( void );
 extern int g_numHiddenFaces, g_numCoinFaces;
 
 
-/* 
+/*
 PicoPrintFunc()
 callback for picomodel.lib
 */
@@ -61,19 +61,19 @@ void PicoPrintFunc( int level, const char *str )
 		case PICO_NORMAL:
 			Sys_Printf( "%s\n", str );
 			break;
-		
+
 		case PICO_VERBOSE:
 			Sys_FPrintf( SYS_VRB, "%s\n", str );
 			break;
-		
+
 		case PICO_WARNING:
 			Sys_Printf( "WARNING: %s\n", str );
 			break;
-		
+
 		case PICO_ERROR:
 			Sys_Printf( "ERROR: %s\n", str );
 			break;
-		
+
 		case PICO_FATAL:
 			Error( "ERROR: %s\n", str );
 			break;
@@ -82,7 +82,7 @@ void PicoPrintFunc( int level, const char *str )
 
 
 
-/* 
+/*
 PicoLoadFileFunc()
 callback for picomodel.lib
 */
@@ -100,20 +100,20 @@ finds an existing picoModel and returns a pointer to the picoModel_t struct or N
 picoModel_t *FindModel( const char *name, int frame )
 {
 	int	i;
-	
+
 	/* init */
 	if( numPicoModels <= 0 )
 		memset( picoModels, 0, sizeof( picoModels ) );
-	
+
 	/* dummy check */
 	if( name == NULL || name[ 0 ] == '\0' )
 		return NULL;
-	
+
 	/* search list */
 	for( i = 0; i < MAX_MODELS; i++ )
 		if( picoModels[ i ] != NULL && !strcmp( PicoGetModelName( picoModels[ i ] ), name ) && PicoGetModelFrameNum( picoModels[ i ] ) == frame )
 			return picoModels[ i ];
-	
+
 	/* no matching picoModel found */
 	return NULL;
 }
@@ -133,16 +133,16 @@ picoModel_t *LoadModel( const char *name, int frame )
 	/* init */
 	if( numPicoModels <= 0 )
 		memset( picoModels, 0, sizeof( picoModels ) );
-	
+
 	/* dummy check */
 	if( name == NULL || name[ 0 ] == '\0' )
 		return NULL;
-	
+
 	/* try to find existing picoModel */
 	model = FindModel( name, frame );
 	if( model != NULL )
 		return model;
-	
+
 	/* none found, so find first non-null picoModel */
 	pm = NULL;
 	for( i = 0; i < MAX_MODELS; i++ )
@@ -153,14 +153,14 @@ picoModel_t *LoadModel( const char *name, int frame )
 			break;
 		}
 	}
-	
+
 	/* too many picoModels? */
 	if( pm == NULL )
 		Error( "MAX_MODELS (%d) exceeded, there are too many model files referenced by the map.", MAX_MODELS );
-	
+
 	/* attempt to parse model */
 	*pm = PicoLoadModel( (char*) name, frame );
-	
+
 	/* if loading failed, make a bogus model to silence the rest of the warnings */
 	if( *pm == NULL )
 	{
@@ -170,19 +170,19 @@ picoModel_t *LoadModel( const char *name, int frame )
 		*pm = PicoNewModel();
 		if( *pm == NULL )
 			return NULL;
-		
+
 		/* set data */
 		PicoSetModelName( *pm, (char *)name );
 		PicoSetModelFrameNum( *pm, frame );
 	}
-	
+
 	/* debug code */
 	#if 0
 	{
 		int				numSurfaces, numVertexes;
 		picoSurface_t	*ps;
-		
-		
+
+
 		Sys_Printf( "Model %s\n", name );
 		numSurfaces = PicoGetModelNumSurfaces( *pm );
 		for( i = 0; i < numSurfaces; i++ )
@@ -193,11 +193,11 @@ picoModel_t *LoadModel( const char *name, int frame )
 		}
 	}
 	#endif
-	
+
 	/* set count */
 	if( *pm != NULL )
 		numPicoModels++;
-	
+
 	/* return the picoModel */
 	return *pm;
 }
@@ -207,7 +207,7 @@ PreloadModel() - vortex
 preloads picomodel, returns true once loaded a model
 */
 
-qboolean PreloadModel( const char *name, int frame) 
+qboolean PreloadModel( const char *name, int frame)
 {
 	picoModel_t	*model;
 
@@ -248,12 +248,14 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 	m4x4_t				identity, nTransform;
 	picoModel_t			*model;
 	float				top = -999999, bottom = 999999;
-	
+
 	/* get model */
 	model = LoadModel( name, frame );
 
 	if( model == NULL )
 		return;
+
+	//printf("DEBUG: Inserting model %s.\n", name);
 
 	qboolean haveLodModel = qfalse;
 
@@ -266,7 +268,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 	StripExtension( tempfileNameOut );
 	sprintf(fileNameIn, "%s_lod.obj", tempfileNameOut);
 	lodModel = FindModel( name, frame );
-		
+
 	if (lodModel)
 	{
 		haveLodModel = qtrue;
@@ -279,12 +281,12 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		m4x4_identity( identity );
 		transform = identity;
 	}
-	
+
 	/* hack: Stable-1_2 and trunk have differing row/column major matrix order
 	   this transpose is necessary with Stable-1_2
 	   uncomment the following line with old m4x4_t (non 1.3/spog_branch) code */
 	//%	m4x4_transpose( transform );
-	
+
 	/* create transform matrix for normals */
 	memcpy( nTransform, transform, sizeof( m4x4_t ) );
 	if( m4x4_invert( nTransform ) )
@@ -309,7 +311,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		/* only handle triangle surfaces initially (fixme: support patches) */
 		if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
 			continue;
-		
+
 		/* copy vertexes */
 		for( i = 0; i < PicoGetSurfaceNumVertexes( surface ); i++ )
 		{
@@ -339,34 +341,50 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		mapDrawSurface_t	*ds;
 		picoSurface_t		*surface;
 		picoIndex_t			*indexes;
+		bool				isTriangles = true;
 
-		/* get surface */
-		surface = PicoGetModelSurface( model, s );
-		if( surface == NULL )
+#pragma omp critical
+		{
+			/* get surface */
+			surface = PicoGetModelSurface(model, s);
+		}
+
+		if (surface == NULL)
 			continue;
 
-		/* only handle triangle surfaces initially (fixme: support patches) */
-		if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
+#pragma omp critical
+		{
+			/* only handle triangle surfaces initially (fixme: support patches) */
+			if (PicoGetSurfaceType(surface) != PICO_TRIANGLES)
+				isTriangles = false;
+		}
+
+		if (!isTriangles)
 			continue;
-		
+
 #pragma omp critical
 		{
 			/* allocate a surface (ydnar: gs mods) */
 			ds = AllocDrawSurface( SURFACE_TRIANGLES );
 		}
+
 		ds->entityNum = entityNum;
 		ds->mapEntityNum = mapEntityNum;
 		ds->castShadows = castShadows;
 		ds->recvShadows = recvShadows;
 		ds->noAlphaFix = noAlphaFix;
 		ds->skybox = skybox;
+
 		if (added_surfaces != NULL)
 			*added_surfaces += 1;
 
-		/* get shader name */
-		/* vortex: support .skin files */
-		picoShaderName = PicoGetSurfaceShaderNameForSkin( surface, skin );
-		
+#pragma omp critical
+		{
+			/* get shader name */
+			/* vortex: support .skin files */
+			picoShaderName = PicoGetSurfaceShaderNameForSkin(surface, skin);
+		}
+
 		/* handle shader remapping */
 		glob = NULL;
 		for( rm = remap; rm != NULL; rm = rm->next )
@@ -381,28 +399,31 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				break;
 			}
 		}
-		
+
 		if( glob != NULL )
 		{
 			Sys_FPrintf( SYS_VRB, "Globbing %s to %s\n", picoShaderName, glob->to );
 			picoShaderName = glob->to;
 		}
-		
-		/* shader renaming for sof2 */
-		if( renameModelShaders )
-		{
-			strcpy( shaderName, picoShaderName );
-			StripExtension( shaderName );
-			if( spawnFlags & 1 )
-				strcat( shaderName, "_RMG_BSP" );
-			else
-				strcat( shaderName, "_BSP" );
-			si = ShaderInfoForShader( shaderName );
-		}
-		else
-			si = ShaderInfoForShader( picoShaderName );
 
-		LoadShaderImages( si );
+		#pragma omp critical
+		{
+			/* shader renaming for sof2 */
+			if (renameModelShaders)
+			{
+				strcpy(shaderName, picoShaderName);
+				StripExtension(shaderName);
+				if (spawnFlags & 1)
+					strcat(shaderName, "_RMG_BSP");
+				else
+					strcat(shaderName, "_BSP");
+				si = ShaderInfoForShader(shaderName);
+			}
+			else
+				si = ShaderInfoForShader(picoShaderName);
+
+			LoadShaderImages(si);
+		}
 
 		/* warn for missing shader */
 		if( si->warnNoShaderImage == qtrue )
@@ -416,7 +437,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				si->warnNoShaderImage = qfalse;
 			}
 		}
-		
+
 		/* set shader */
 		ds->shaderInfo = si;
 
@@ -426,7 +447,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		/* force to meta? */
 		if( (si != NULL && si->forceMeta) || (spawnFlags & 4) )	/* 3rd bit */
 			ds->type = SURFACE_FORCED_META;
-	
+
 		/* fix the surface's normals (jal: conditioned by shader info) */
 		if( !(spawnFlags & 64) && ( shadeAngle <= 0.0f || ds->type != SURFACE_FORCED_META ) )
 			PicoFixSurfaceNormals( surface );
@@ -434,7 +455,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		/* set sample size */
 		if( lightmapSampleSize > 0.0f )
 			ds->sampleSize = lightmapSampleSize;
-		
+
 		/* set lightmap scale */
 		if( lightmapScale > 0.0f )
 			ds->lightmapScale = lightmapScale;
@@ -459,7 +480,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		/* set vertical texture projection */
 		if ( vertTexProj > 0 )
 			ds->vertTexProj = vertTexProj;
-		
+
 		/* set particulars */
 		ds->numVerts = PicoGetSurfaceNumVertexes( surface );
 #pragma omp critical
@@ -503,7 +524,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				forceVecs[ 1 ][ 1 ] = 1.0 / ds->vertTexProj;
 				forceVecs[ 1 ][ 2 ] = 0.0;
 			}
-			
+
 			/* xyz and normal */
 			xyz = PicoGetSurfaceXYZ( surface, i );
 			VectorCopy( xyz, dv->xyz );
@@ -528,7 +549,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				dv->st[ 0 ] = DotProduct( forceVecs[ 0 ], dv->xyz );
 				dv->st[ 1 ] = DotProduct( forceVecs[ 1 ], dv->xyz );
 			}
-		
+
 			/* ydnar: gs mods: added support for explicit shader texcoord generation */
 			else if( si->tcGen )
 			{
@@ -536,7 +557,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				dv->st[ 0 ] = DotProduct( si->vecs[ 0 ], dv->xyz );
 				dv->st[ 1 ] = DotProduct( si->vecs[ 1 ], dv->xyz );
 			}
-			
+
 			/* normal texture coordinates */
 			else
 			{
@@ -548,7 +569,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 			/* scale UV by external key */
 			dv->st[ 0 ] *= uvScale;
 			dv->st[ 1 ] *= uvScale;
-			
+
 			/* set lightmap/color bits */
 			color = PicoGetSurfaceColor( surface, 0, i );
 
@@ -572,7 +593,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				}
 			}
 		}
-		
+
 		/* copy indexes */
 		indexes = PicoGetSurfaceIndexes( surface, 0 );
 
@@ -581,7 +602,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 
 		/* deform vertexes */
 		DeformVertexes( ds, pushVertexes);
-		
+
 		/* set cel shader */
 		ds->celShader = celShader;
 
@@ -603,31 +624,31 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				VectorCopy( dv->xyz, points[ j ] );
 			}
 		}
-		
+
 		/* ydnar: giant hack land: generate clipping brushes for model triangles */
 		if( !haveLodModel && ( si->clipModel || (spawnFlags & 2)) && !noclipmodel )	/* 2nd bit */
 		{
 			vec3_t points[ 4 ], backs[ 3 ];
 			vec4_t plane, reverse, pa, pb, pc;
-			
+
 			if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
 			{
 				continue;
 			}
 
 			/* temp hack */
-			if( !si->clipModel 
+			if( !si->clipModel
 				&& ((si->compileFlags & C_TRANSLUCENT) || !(si->compileFlags & C_SOLID)) )
 			{
 				continue;
 			}
-		
+
 			/* overflow check */
 			if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
 			{
 				continue;
 			}
-			
+
 			/* walk triangle list */
 			for( i = 0; i < ds->numIndexes; i += 3 )
 			{
@@ -639,7 +660,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 					Sys_Warning( mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name );
 					break;
 				}
-				
+
 				/* make points and back points */
 				for( j = 0; j < 3; j++ )
 				{
@@ -648,11 +669,11 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 
 					/* get vertex */
 					dv = &ds->verts[ ds->indexes[ i + j ] ];
-					
+
 					/* copy xyz */
 					VectorCopy( dv->xyz, points[ j ] );
 					VectorCopy( dv->xyz, backs[ j ] );
-					
+
 					/* find nearest axial to normal and push back points opposite */
 					/* note: this doesn't work as well as simply using the plane of the triangle, below */
 					for( k = 0; k < 3; k++ )
@@ -667,7 +688,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 				}
 
 				VectorCopy( points[0], points[3] ); // for cyclic usage
-				
+
 				/* make plane for triangle */
 				// div0: add some extra spawnflags:
 				//   0: snap normals to axial planes for extrusion
@@ -752,7 +773,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 						numSolidSurfs++;
 
 						if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
-						{
+						{// Cull small stuff and the tops of trees...
 							vec3_t mins, maxs;
 							vec3_t size;
 							float sz;
@@ -795,6 +816,40 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 							if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
 
 							if (sz < 36)
+							{
+								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
+								numSizeCulledSurfs++;
+								continue;
+							}
+						}
+						else if (cullSmallSolids || si->isTreeSolid)
+						{// Only cull stuff too small to fall through...
+							vec3_t mins, maxs;
+							vec3_t size;
+							float sz;
+							int z;
+
+							VectorSet(mins, 999999, 999999, 999999);
+							VectorSet(maxs, -999999, -999999, -999999);
+
+							for (z = 0; z < 4; z++)
+							{
+								if (points[z][0] < mins[0]) mins[0] = points[z][0];
+								if (points[z][1] < mins[1]) mins[1] = points[z][1];
+								if (points[z][2] < mins[2]) mins[2] = points[z][2];
+
+								if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
+								if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
+								if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
+							}
+
+							VectorSubtract(maxs, mins, size);
+							//sz = VectorLength(size);
+							sz = maxs[0] - mins[0];
+							if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
+							if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
+
+							if (sz <= 16)
 							{
 								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 								numSizeCulledSurfs++;
@@ -865,7 +920,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 									//%	EmitBrushes( buildBrush, NULL, NULL );
 
 									numsides = buildBrush->numsides;
-									
+
 									if (!RemoveDuplicateBrushPlanes( buildBrush ))
 									{// UQ1: Testing - This would create a mirrored plane... free it...
 										free(buildBrush);
@@ -1524,7 +1579,7 @@ void LoadTriangleModels( void )
 
 		/* get model name */
 		/* vortex: add _model synonim */
-		model = ValueForKey( e, "_model" );	
+		model = ValueForKey( e, "_model" );
 		if( model[ 0 ] == '\0' )
 			model = ValueForKey( e, "model" );
 		if( model[ 0 ] == '\0' )
@@ -1542,7 +1597,7 @@ void LoadTriangleModels( void )
 		loaded = PreloadModel( (char*) model, frame );
 		if ( loaded )
 			numLoadedModels++;
-		
+
 		/* warn about missing models */
 		picoModel = FindModel( (char*) model, frame );
 		if( !picoModel || picoModel->numSurfaces == 0 )
@@ -1594,7 +1649,7 @@ void LoadTriangleModels( void )
 				continue;
 			}
 
-			if( !si->clipModel 
+			if( !si->clipModel
 				&& ((si->compileFlags & C_TRANSLUCENT) || !(si->compileFlags & C_SOLID)) )
 			{
 				continue;
@@ -1688,10 +1743,10 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 	epair_t			*ep;
 	remap_t			*remap, *remap2;
 	char			*split;
-	
+
 	/* note it */
 	if (!quiet) Sys_PrintHeadingVerbose( "--- AddTriangleModels ---\n" );
-	
+
 	/* get current brush entity targetname */
 	e = &entities[ entityNum ];
 	if( e == entities )
@@ -1699,7 +1754,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 	else
 	{
 		targetName = ValueForKey( e, "targetname" );
-	
+
 		/* misc_model entities target non-worldspawn brush model entities */
 		if( targetName[ 0 ] == '\0' )
 		{
@@ -1726,7 +1781,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		baseVertTexProj = IntForKey(e, "_vp");
 	if( baseVertTexProj <= 0 )
 		baseVertTexProj = 0;
-	
+
 	/* walk the entity list */
 	for( num = 1; num < numEntities; num++ )
 	{
@@ -1734,7 +1789,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 
 		/* get e2 */
 		e2 = &entities[ num ];
-		
+
 		/* convert misc_models into raw geometry  */
 		if( Q_stricmp( "misc_model", ValueForKey( e2, "classname" ) ) )
 		{
@@ -1749,10 +1804,10 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 			//Sys_Printf( "Failed Target\n" );
 			continue;
 		}
-		
+
 		/* get model name */
 		/* vortex: add _model synonim */
-		model = ValueForKey( e2, "_model" );	
+		model = ValueForKey( e2, "_model" );
 		if( model[ 0 ] == '\0' )
 			model = ValueForKey( e2, "model" );
 		if( model[ 0 ] == '\0' )
@@ -1761,7 +1816,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 			//Sys_Printf( "Failed Model\n" );
 			continue;
 		}
-		
+
 		/* get model frame */
 		frame = 0;
 		if( KeyExists(e2, "frame" ) )
@@ -1778,14 +1833,14 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 
 		/* get explicit shadow flags */
 		GetEntityShadowFlags( e2, e, &castShadows, &recvShadows, (e == entities) ? qtrue : qfalse );
-		
+
 		/* get spawnflags */
 		spawnFlags = IntForKey( e2, "spawnflags" );
-		
+
 		/* get origin */
 		GetVectorForKey( e2, "origin", origin );
 		VectorSubtract( origin, e->origin, origin );	/* offset by parent */
-		
+
 		/* get scale */
 		scale[ 0 ] = scale[ 1 ] = scale[ 2 ] = 1.0f;
 		temp = FloatForKey( e2, "modelscale" );
@@ -1817,11 +1872,11 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		value = ValueForKey( e2, "angles" );
 		if( value[ 0 ] != '\0' )
 			sscanf( value, "%f %f %f", &angles[ 1 ], &angles[ 2 ], &angles[ 0 ] );
-		
+
 		/* set transform matrix (thanks spog) */
 		m4x4_identity( transform );
 		m4x4_pivoted_transform_by_vec3( transform, origin, angles, eXYZ, scale, vec3_origin );
-		
+
 		/* get shader remappings */
 		remap = NULL;
 		for( ep = e2->epairs; ep != NULL; ep = ep->next )
@@ -1836,7 +1891,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 				remap = (remap_t *)safe_malloc( sizeof( *remap ) );
 				remap->next = remap2;
 				strcpy( remap->from, ep->value );
-				
+
 				/* split the string */
 				split = strchr( remap->from, ';' );
 				if( split == NULL )
@@ -1847,16 +1902,16 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 					Sys_Printf( "Failed Remapping\n" );
 					continue;
 				}
-				
+
 				/* store the split */
 				*split = '\0';
 				strcpy( remap->to, (split + 1) );
-				
+
 				/* note it */
 				//%	Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", remap->from, remap->to );
 			}
 		}
-		
+
 		/* ydnar: cel shader support */
 		value = ValueForKey( e2, "_celshader" );
 		if( value[ 0 ] == '\0' )
@@ -1868,7 +1923,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		}
 		else
 			celShader = NULL;
-		
+
 		/* vortex: get lightmap scaling value for this entity */
 		GetEntityLightmapScale( e2, &lightmapScale, baseLightmapScale);
 
@@ -1911,7 +1966,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		total_added_brushes += added_brushes;
 
 		added_surfaces = added_triangles = added_verts = added_brushes = 0;
-		
+
 		/* free shader remappings */
 		while( remap != NULL )
 		{
@@ -1921,7 +1976,7 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		}
 	}
 
-	if (!quiet) 
+	if (!quiet)
 	{
 		/* emit some stats */
 		Sys_Printf( "%9d surfaces added\n", total_added_surfaces );
