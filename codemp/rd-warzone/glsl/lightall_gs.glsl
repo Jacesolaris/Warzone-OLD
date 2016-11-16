@@ -102,15 +102,20 @@ void main (void)
 	}
 
 	// May as well create a real normal for the surface, since BSP sucks dog balls...
-	//vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz));
+//#if defined(USE_VERTEX_ANIMATION)
+//	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz));
+//#endif
 
 	for(int i = 0; i < 3; i++) 
 	{
 		gl_Position				= u_ModelViewProjectionMatrix * gl_in[i].gl_Position;
 		
 		TexCoord_FS_in			= TexCoord_CS_in[i];
-		//Normal_FS_in			= normal;//*Normal_CS_in[i];//(normal + Normal_CS_in[i]) / 2.0;//normal;//Normal_CS_in[i];
+//#if defined(USE_VERTEX_ANIMATION)
+//		Normal_FS_in			= normal;//*Normal_CS_in[i];//(normal + Normal_CS_in[i]) / 2.0;//normal;//Normal_CS_in[i];
+//#else
 		Normal_FS_in			= Normal_CS_in[i];
+//#endif
 		WorldPos_FS_in			= gl_in[i].gl_Position.xyz;//WorldPos_CS_in[i].xyz;
 
 		ViewDir_FS_in			= ViewDir_CS_in[i];

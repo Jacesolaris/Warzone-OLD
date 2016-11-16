@@ -246,9 +246,11 @@ void main()
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
 	vec4 originalPosition = vec4(attr_Position, 1.0);
-	vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
+	//vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
+	vec4 originalNormal = vec4(attr_Normal * 2.0 - 1.0, 0.0);
 	vec4 tangent4 = vec4(0.0);
-	vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
+	//vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
+	vec4 originalTangent = vec4(attr_Tangent.xyz * 2.0 - 1.0, 0.0);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -262,9 +264,6 @@ void main()
 	position = position4.xyz;
 	normal = normalize(normal4.xyz);
 	vec3 tangent = normalize(tangent4.xyz);
-
-	normal = normal  * 2.0 - 1.0;
-	tangent = tangent * 2.0 - 1.0;
 #else
 	vec3 tangent = attr_Tangent.xyz;
 
@@ -286,23 +285,23 @@ void main()
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
-	vec3 preMMPos = position.xyz;
+	//vec3 preMMPos = position.xyz;
 	/*vec3 preMMNorm = normal.xyz;
 	vec4 preMMtangent = vec4(tangent, 0.0);
 	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);*/
 
-#if defined(USE_MODELMATRIX) && !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
+#if defined(USE_MODELMATRIX) //&& !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
 	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
 	tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
 #endif
 
-	//vec3 preMMPos = position.xyz;
+	vec3 preMMPos = position.xyz;
 	vec3 preMMNorm = normal.xyz;
 	vec4 preMMtangent = vec4(tangent, 0.0);
 	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);
 
-	var_vertPos = position.xyz;
+	//var_vertPos = position.xyz;
 
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 

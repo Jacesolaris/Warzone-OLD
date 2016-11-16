@@ -44,7 +44,7 @@ flat out int				iGrassType;
 // General Settings...
 //
 
-const float					fGrassPatchSize = 192.0;//256.0;//u_Local9.b;//64.0;//48.0;//24.0;
+const float					fGrassPatchSize = 256.0;// 192.0;//256.0;//u_Local9.b;//64.0;//48.0;//24.0;
 const float					fWindStrength = 12.0;
 const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 

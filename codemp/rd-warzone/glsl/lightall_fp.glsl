@@ -665,25 +665,53 @@ void main()
 		discard;
 	}*/
 
+	#if 0
+		#if defined(USE_VERTEX_ANIMATION)
+			gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+			#if defined(USE_GLOW_BUFFER)
+				out_Glow = gl_FragColor;
+			#else
+				out_Glow = vec4(0.0);
+			#endif
+
+			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
+			return;
+		#elif defined(USE_SKELETAL_ANIMATION)
+			gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+
+			#if defined(USE_GLOW_BUFFER)
+				out_Glow = gl_FragColor;
+			#else
+				out_Glow = vec4(0.0);
+			#endif
+
+			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
+			return;
+		#elif defined(USE_MODELMATRIX)
+			gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+
+			#if defined(USE_GLOW_BUFFER)
+				out_Glow = gl_FragColor;
+			#else
+				out_Glow = vec4(0.0);
+			#endif
+
+			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
+			return;
+		#endif
+	#endif
 
 	#if 0
 	//#if defined(USE_TESSELLATION)
 	//if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 32.0)
 	{
-		//gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
-		//gl_FragColor = vec4(vec3(texture( u_NormalMap, texCoords).a), 1.0);
-/*#if defined(USE_VERTEX_ANIMATION)
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-#elif defined(USE_SKELETAL_ANIMATION)
-		gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-#elif defined(USE_MODELMATRIX)
-		gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-#else
-		gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-#endif*/
 		vec4 nm = GetNormal(texCoords, vec2(0.0), 0.0);
-		//gl_FragColor = vec4(nm.xyz, 1.0);
-		gl_FragColor = vec4(nm.a, nm.a, nm.a, 1.0);
+		gl_FragColor = vec4(nm.xyz, 1.0);
+		//gl_FragColor = vec4(nm.a, nm.a, nm.a, 1.0);
 
 		#if defined(USE_GLOW_BUFFER)
 			out_Glow = gl_FragColor;
@@ -715,7 +743,7 @@ void main()
 		}
 	#endif //!defined(USE_GLOW_BUFFER)
 
-	viewDir = /*normalize*/(u_ViewOrigin.xyz - m_vertPos.xyz);
+	viewDir = u_ViewOrigin.xyz - m_vertPos.xyz;
 
 	//mat3 tangentToWorld = mat3(normalize(var_Tangent.xyz), normalize(var_Bitangent.xyz), normalize(m_Normal.xyz));
 	//mat3 tangentToWorld = cotangent_frame(normalize(m_Normal.xyz), -viewDir, texCoords.xy);
@@ -825,19 +853,10 @@ void main()
 	#endif
 
 
-		/*if (diffuse.a <= 0.0)
+		if (diffuse.a <= 0.0)
 		{
-	#if defined(USE_GLOW_BUFFER)
-			out_Glow = gl_FragColor;
-	#else
-			out_Glow = vec4(0.0);
-	#endif
-
-			out_Normal = vec4(N.xyz, specular.a / 8.0);
-			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
-
 			discard; // no point going further??!?!?!
-		}*/
+		}
 
 
 	ambientColor = vec3(0.0);
@@ -859,22 +878,39 @@ void main()
 	#endif //defined(USE_SHADOWMAP)
 
 
+
 	//vec4 norm = vec4(m_Normal.xyz, 0.0);
 	vec4 norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 	N.xy = norm.xy * 2.0 - 1.0;
+
 	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
 	//N.xy *= u_NormalScale.xy;
 	//N.xy *= 0.004;
 	N.xy *= 0.25;
-	//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	N.z = sqrt(1.0 - dot(N.xy, N.xy));
+	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+	//N.z = sqrt(1.0 - dot(N.xy, N.xy));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
 	//N = normalize(tangentToWorld * N);
 
-	if (diffuse.a <= 0.0)
+	#if 0
+		gl_FragColor = vec4(N.xyz, 1.0);
+		//gl_FragColor = vec4(N.a, N.a, N.a, 1.0);
+
+		#if defined(USE_GLOW_BUFFER)
+			out_Glow = gl_FragColor;
+		#else
+			out_Glow = vec4(0.0);
+		#endif
+
+		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
+		return;
+	#endif
+
+	/*if (diffuse.a <= 0.0)
 	{
 		discard; // no point going further??!?!?!
-	}
+	}*/
 
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
@@ -1004,7 +1040,20 @@ void main()
 
 	gl_FragColor.rgb *= lightColor;
 
-	//gl_FragColor.rgb = N.xyz * 0.5 + 0.5;
+	#if 0
+		gl_FragColor = vec4(N.xyz, 1.0);
+		//gl_FragColor = vec4(N.a, N.a, N.a, 1.0);
+
+		#if defined(USE_GLOW_BUFFER)
+			out_Glow = gl_FragColor;
+		#else
+			out_Glow = vec4(0.0);
+		#endif
+
+		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
+		return;
+	#endif
 
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
@@ -1012,7 +1061,10 @@ void main()
 		//out_Position = vec4(m_vertPos, 0.0 );
 	#else
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
-		out_Position = vec4(m_vertPos, u_Local1.a );
+		if (length(N.xyz * 0.5 + 0.5) > 0.0) // *sigh* hack for something screwy with normals and multipass q3 shader spam...
+		{
+			out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+			out_Position = vec4(m_vertPos, u_Local1.a);
+		}
 	#endif
 }

@@ -62,27 +62,31 @@ void main(void)
 
 	if (position.a == 1024.0)
 	{// Skybox... Skip...
+		//gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
 		return;
 	}
 
 	if (position.a == 0.0 && position.xyz == vec3(0.0))
 	{// Unknown... Skip...
+		//gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
 		return;
 	}
 
 	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
 
+#if 0
 	float normPower = length(norm.rgb);
 
 	if (normPower < 0.5 || normPower > 2.5)
 	{// Fallback... Generate some fake normals...
-		vec4 norm = ConvertToNormals(color);
-		norm.rgb = norm.rgb * 0.5 + 0.5;
+		norm = ConvertToNormals(color);
+		/*norm.rgb = norm.rgb * 0.5 + 0.5;
 		float t = norm.b;
 		norm.b = norm.g;
 		norm.g = t;
-		norm.rgb = normalize(norm.rgb);
+		norm.rgb = normalize(norm.rgb);*/
 	}
+#endif
 
 	/*if (u_Local2.a == 1.0)
 	{
@@ -94,6 +98,9 @@ void main(void)
 	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 	vec3 N = norm.xyz;
+
+	//gl_FragColor = vec4(N.xyz * 0.5 + 0.5, 1.0);
+	//return;
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 	float lambertian2 = dot(PrimaryLightDir.xyz, N);
@@ -131,14 +138,16 @@ void main(void)
 			{
 				float lightStrength = 1.0 - (lightDist / lightMax);
 				lightStrength = pow(lightStrength * 0.9, 3.0);
-				if (u_lightColors[li].r == u_lightColors[li].g && u_lightColors[li].r == u_lightColors[li].b) lightStrength *= 0.5; // Reduce true white strength...
+				//if (u_lightColors[li].r == u_lightColors[li].g && u_lightColors[li].r == u_lightColors[li].b) lightStrength *= 0.5; // Reduce true white strength...
+				if (length(u_lightColors[li].rgb) >= 2.0) lightStrength /= 3.0;
+				else if (length(u_lightColors[li].rgb) >= 1.0) lightStrength /= 2.0;
 
 				if (lightStrength > 0.0)
 				{
 					vec3 lightDir = normalize(u_lightPositions2[li] - position.xyz);
 					float lambertian3 = dot(lightDir.xyz, N);
 
-					gl_FragColor.rgb += u_lightColors[li].rgb * lightStrength * u_Local2.g; // Always add some basic light...
+					gl_FragColor.rgb += u_lightColors[li].rgb * lightStrength * u_Local2.g /*0.04*/; // Always add some basic light...
 
 					if (lambertian3 > 0.0)
 					{
@@ -154,4 +163,6 @@ void main(void)
 			}
 		}
 	}
+
+	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }

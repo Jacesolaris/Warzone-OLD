@@ -1,29 +1,29 @@
 /*
-                                                                                                            
-  **    ***    ***            ***   ****                                   *               ***              
-  **    ***    ***            ***  *****                                 ***               ***              
-  ***  *****  ***             ***  ***                                   ***                                
-  ***  *****  ***    *****    *** ******   *****    *** ****    ******  ******    *****    ***  *** ****    
-  ***  *****  ***   *******   *** ******  *******   *********  ***  *** ******   *******   ***  *********   
-  ***  ** **  ***  **** ****  ***  ***   ***   ***  ***   ***  ***       ***    ***   ***  ***  ***   ***   
-  *** *** *** ***  ***   ***  ***  ***   *********  ***   ***  ******    ***    *********  ***  ***   ***   
-   ****** ******   ***   ***  ***  ***   *********  ***   ***   ******   ***    *********  ***  ***   ***   
-   *****   *****   ***   ***  ***  ***   ***        ***   ***    ******  ***    ***        ***  ***   ***   
-   *****   *****   **** ****  ***  ***   ****  ***  ***   ***       ***  ***    ****  ***  ***  ***   ***   
-   ****     ****    *******   ***  ***    *******   ***   ***  ***  ***  *****   *******   ***  ***   ***   
-    ***     ***      *****    ***  ***     *****    ***   ***   ******    ****    *****    ***  ***   ***   
-                                                                                                            
-            ******** **                 ******                        *  **  **                             
-            ******** **                 ******                       **  **  **                             
-               **    **                 **                           **  **                                 
-               **    ** **    ***       **      ** *  ****   ** **  **** **  **  ** **    ***               
-               **    ******  *****      *****   ****  ****   ****** **** **  **  ******  *****              
-               **    **  **  ** **      *****   **   **  **  **  **  **  **  **  **  **  ** **              
-               **    **  **  *****      **      **   **  **  **  **  **  **  **  **  **  *****              
-               **    **  **  **         **      **   **  **  **  **  **  **  **  **  **  **                 
-               **    **  **  ** **      **      **   **  **  **  **  **  **  **  **  **  ** **              
-               **    **  **  *****      **      **    ****   **  **  *** **  **  **  **  *****              
-               **    **  **   ***       **      **    ****   **  **  *** **  **  **  **   ***               
+
+  **    ***    ***            ***   ****                                   *               ***
+  **    ***    ***            ***  *****                                 ***               ***
+  ***  *****  ***             ***  ***                                   ***
+  ***  *****  ***    *****    *** ******   *****    *** ****    ******  ******    *****    ***  *** ****
+  ***  *****  ***   *******   *** ******  *******   *********  ***  *** ******   *******   ***  *********
+  ***  ** **  ***  **** ****  ***  ***   ***   ***  ***   ***  ***       ***    ***   ***  ***  ***   ***
+  *** *** *** ***  ***   ***  ***  ***   *********  ***   ***  ******    ***    *********  ***  ***   ***
+   ****** ******   ***   ***  ***  ***   *********  ***   ***   ******   ***    *********  ***  ***   ***
+   *****   *****   ***   ***  ***  ***   ***        ***   ***    ******  ***    ***        ***  ***   ***
+   *****   *****   **** ****  ***  ***   ****  ***  ***   ***       ***  ***    ****  ***  ***  ***   ***
+   ****     ****    *******   ***  ***    *******   ***   ***  ***  ***  *****   *******   ***  ***   ***
+    ***     ***      *****    ***  ***     *****    ***   ***   ******    ****    *****    ***  ***   ***
+
+            ******** **                 ******                        *  **  **
+            ******** **                 ******                       **  **  **
+               **    **                 **                           **  **
+               **    ** **    ***       **      ** *  ****   ** **  **** **  **  ** **    ***
+               **    ******  *****      *****   ****  ****   ****** **** **  **  ******  *****
+               **    **  **  ** **      *****   **   **  **  **  **  **  **  **  **  **  ** **
+               **    **  **  *****      **      **   **  **  **  **  **  **  **  **  **  *****
+               **    **  **  **         **      **   **  **  **  **  **  **  **  **  **  **
+               **    **  **  ** **      **      **   **  **  **  **  **  **  **  **  **  ** **
+               **    **  **  *****      **      **    ****   **  **  *** **  **  **  **  *****
+               **    **  **   ***       **      **    ****   **  **  *** **  **  **  **   ***
 
 */
 
@@ -143,7 +143,7 @@ float HeightDistance( const vec3_t p1, const vec3_t p2 ) {
 	VectorCopy(p1, p1a);
 	p1a[0] = 0;
 	p1a[1] = 0;
-	
+
 	VectorCopy(p2, p2a);
 	p2a[0] = 0;
 	p2a[1] = 0;
@@ -156,7 +156,7 @@ float VerticalDistance( const vec3_t p1, const vec3_t p2 ) {
 	vec3_t	v, p1a, p2a;
 	VectorCopy(p1, p1a);
 	p1a[2] = 0;
-	
+
 	VectorCopy(p2, p2a);
 	p2a[2] = 0;
 
@@ -319,7 +319,7 @@ int UQ_Get_CPU_Info( void )
     // __cpuid with an InfoType argument of 0 returns the number of
     // valid Ids in CPUInfo[0] and the CPU identification string in
     // the other three array elements. The CPU identification string is
-    // not in linear order. The code below arranges the information 
+    // not in linear order. The code below arranges the information
     // in a human readable form.
     __cpuid(CPUInfo, 0);
     nIds = CPUInfo[0];
@@ -332,7 +332,7 @@ int UQ_Get_CPU_Info( void )
     for (i=0; i<=nIds; ++i)
     {
         __cpuid(CPUInfo, i);
-        /*trap->Print("\nFor InfoType %d\n", i); 
+        /*trap->Print("\nFor InfoType %d\n", i);
         trap->Print("CPUInfo[0] = 0x%x\n", CPUInfo[0]);
         trap->Print("CPUInfo[1] = 0x%x\n", CPUInfo[1]);
         trap->Print("CPUInfo[2] = 0x%x\n", CPUInfo[2]);
@@ -373,7 +373,7 @@ int UQ_Get_CPU_Info( void )
     for (i=0x80000000; i<=nExIds; ++i)
     {
         __cpuid(CPUInfo, i);
-        //trap->Print("\nFor InfoType %x\n", i); 
+        //trap->Print("\nFor InfoType %x\n", i);
         //trap->Print("CPUInfo[0] = 0x%x\n", CPUInfo[0]);
         //trap->Print("CPUInfo[1] = 0x%x\n", CPUInfo[1]);
         //trap->Print("CPUInfo[2] = 0x%x\n", CPUInfo[2]);
@@ -493,7 +493,7 @@ int UQ_Get_CPU_Info( void )
 int sse_memcpy(int* piDst, int* piSrc, unsigned long SizeInBytes)
 {
 //	unsigned long dwNumElements = SizeInBytes / sizeof(int);
-	// not really using it, just for debuging. it keeps number of looping. 
+	// not really using it, just for debuging. it keeps number of looping.
 	// it also means number of packed data.
 	//unsigned long dwNumPacks = dwNumElements / (128/(sizeof(int)*8));
 
@@ -964,7 +964,7 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 	clock_t			total_seconds_left;
 	//qboolean		estimating = qfalse;
 	clock_t			current_time;
-	
+
 	if (aw_percent_complete == 0.0f || aw_percent_complete < aw_last_percent || aw_stage_start_time == 0)
 	{// Init timer...
 		//aw_stage_start_time = trap->Milliseconds();
@@ -1010,7 +1010,7 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 
 	rect.w = 500;
 	rect.h = 30;
-	
+
 	rect.x = 69;
 	rect.y = 369;
 
@@ -1024,7 +1024,7 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 	CG_Text_Paint((rect.x), (rect.y + (rect.h*0.5) - 60), 0.5f, colorWhite, task_string2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
 	CG_Text_Paint((rect.x), (rect.y + (rect.h*0.5) - 40), 0.5f, colorWhite, task_string3, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
 	CG_Text_Paint((rect.x + (rect.w*0.5) - 35), (rect.y + (rect.h*0.5) - 18/*+ 8*/), 1.0f, colorWhite, va("^7%.2f%%", aw_percent_complete), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_LARGE );
-	
+
 	if (aw_percent_complete > 2.0f)
 		CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^3%i ^5minutes ^3%i ^5seconds remaining (estimated)", minutes_left, seconds_left), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
 	else
@@ -1060,7 +1060,7 @@ qboolean AW_Map_Has_Waypoints ( void )
 	//open the node file for reading, return false on error
 	len = trap->FS_Open( va( "nodes/%s.bwp", filename), &f, FS_READ );
 	trap->FS_Close(f);
-		
+
 	if( len <= 0 )
 	{
 		FILE *file;
@@ -1100,7 +1100,7 @@ void GenerateMoverList ( void )
 
 		if (!cent) continue;
 		if (cent->currentState.eType != ET_MOVER_MARKER) continue;
-		
+
 		VectorCopy(cent->currentState.origin, mover_org);
 		mover_org[2] += 128.0; // Look from up a little...
 
@@ -1161,8 +1161,8 @@ NodeIsOnMover ( vec3_t org1 )
 
 	CG_Trace( &tr, newOrg, NULL, NULL, newOrgDown, cg.clientNum, MASK_PLAYERSOLID );
 
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER)
@@ -1190,13 +1190,13 @@ BAD_WP_Height ( vec3_t start, vec3_t end )
 
 	if (distance > 8)
 	{// < 8 is probebly a ladder...
-		if ((start[2] + 32 < end[2]) 
-			&& (height_diff*1.5) > distance 
+		if ((start[2] + 32 < end[2])
+			&& (height_diff*1.5) > distance
 			&& distance > 48)
 			return qtrue;
 
-		if ((start[2] < end[2] + 48) 
-			&& (height_diff*1.5) > distance 
+		if ((start[2] < end[2] + 48)
+			&& (height_diff*1.5) > distance
 			&& distance > 48)
 			return qtrue;
 	}*/
@@ -1249,11 +1249,11 @@ BAD_WP_Distance ( vec3_t start, vec3_t end, qboolean double_distance )
 
 qboolean HasPortalFlags ( int surfaceFlags, int contents )
 {
-	if ( ( (surfaceFlags & SURF_NOMARKS) 
-		&& (surfaceFlags & SURF_NOIMPACT) 
-		&& (surfaceFlags & SURF_NODRAW) 
+	if ( ( (surfaceFlags & SURF_NOMARKS)
+		&& (surfaceFlags & SURF_NOIMPACT)
+		&& (surfaceFlags & SURF_NODRAW)
 #ifndef __DISABLE_PLAYERCLIP__
-		&& (contents & CONTENTS_PLAYERCLIP) 
+		&& (contents & CONTENTS_PLAYERCLIP)
 #endif //__DISABLE_PLAYERCLIP__
 		&& (contents & CONTENTS_TRANSLUCENT) ) )
 		return qtrue;
@@ -1296,7 +1296,7 @@ qboolean VisibleAllowEntType ( int type, int flags )
 	return ( qfalse );
 }
 
-qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin ) 
+qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin )
 {
 #if 0
 	trace_t		trace;
@@ -1309,7 +1309,7 @@ qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin )
 	//vec3_t	maxs = {48, 48, 48};
 	//vec3_t	mins = {-24, -24, 0};
 	//vec3_t	maxs = {24, 24, 48};
-	
+
 	vec3_t	mins = {-26, -26, 0};
 	vec3_t	maxs = {26, 26, 48};
 
@@ -1416,7 +1416,7 @@ int NodeVisible_WithExtraHeightAtTraceEnd( vec3_t from, vec3_t dest, int ignore 
 
 	if ( trace.fraction < 1.0f )
 	{//hit something
-		if (trace.entityNum != ENTITYNUM_NONE 
+		if (trace.entityNum != ENTITYNUM_NONE
 			&& trace.entityNum < ENTITYNUM_MAX_NORMAL )
 		{
 			if (VisibleAllowEntType(cg_entities[trace.entityNum].currentState.eType, cg_entities[trace.entityNum].currentState.eFlags))
@@ -1489,7 +1489,7 @@ int NodeVisible( vec3_t from, vec3_t dest, int ignore )
 
 	if ( trace.fraction < 1.0f )
 	{//hit something
-		if (trace.entityNum != ENTITYNUM_NONE 
+		if (trace.entityNum != ENTITYNUM_NONE
 			&& trace.entityNum < ENTITYNUM_MAX_NORMAL )
 		{
 			if (VisibleAllowEntType(cg_entities[trace.entityNum].currentState.eType, cg_entities[trace.entityNum].currentState.eFlags))
@@ -1565,8 +1565,8 @@ NodeVisible_OLD ( vec3_t org1, vec3_t org2, int ignore )
 		return ( 1 );
 	}
 
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		if (VisibleAllowEntType(cg_entities[tr.entityNum].currentState.eType, cg_entities[tr.entityNum].currentState.eFlags))
@@ -1590,7 +1590,7 @@ NodeVisible_OLD ( vec3_t org1, vec3_t org2, int ignore )
 				if (Distance(org1, ent->currentState.pos.trBase) > waypoint_scatter_distance*waypoint_distance_multiplier
 					|| Distance(org2, ent->currentState.pos.trBase) > waypoint_scatter_distance*waypoint_distance_multiplier)
 					continue;
-				
+
 				if (ent->currentState.eType == ET_GENERAL || ent->currentState.eType == ET_SPEAKER)
 				{
 					return ( 2 ); // Doors???
@@ -1672,8 +1672,8 @@ NodeVisibleJump ( vec3_t org1, vec3_t org2, int ignore )
 		return ( 1 );
 	}
 
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		if (VisibleAllowEntType(cg_entities[tr.entityNum].currentState.eType, cg_entities[tr.entityNum].currentState.eFlags))
@@ -1729,8 +1729,8 @@ NodeVisibleCrouch ( vec3_t org1, vec3_t org2, int ignore )
 		return ( 1 );
 	}
 */
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		if (VisibleAllowEntType(cg_entities[tr.entityNum].currentState.eType, cg_entities[tr.entityNum].currentState.eFlags))
@@ -1761,7 +1761,7 @@ TankNodeVisible ( vec3_t org1, vec3_t org2, vec3_t mins, vec3_t maxs, int ignore
 	newOrg2[2] += 32;	// Look from up a little...
 
 	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID );
-	
+
 	if ( tr.startsolid )
 	{
 		return ( 0 );
@@ -1772,8 +1772,8 @@ TankNodeVisible ( vec3_t org1, vec3_t org2, vec3_t mins, vec3_t maxs, int ignore
 		return ( 1 );
 	}
 
-	/*if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	/*if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		switch (cg_entities[tr.entityNum].currentState.eType)
@@ -1886,7 +1886,7 @@ AIMOD_SaveCoverPoints ( void )
 		*/
 	}
 
-	trap->FS_Close( f );		
+	trap->FS_Close( f );
 
 	trap->Print( "^3*** ^3%s: ^5Cover point table saved to file ^7/nodes/%s.cpw^5.\n", "AUTO-WAYPOINTER", cgs.currentmapname);
 }
@@ -1907,7 +1907,7 @@ AIMOD_LoadCoverPoints2 ( void )
 
 	trap->Cvar_Register( &fs_homepath, "fs_homepath", "", CVAR_SERVERINFO | CVAR_ROM );
 	trap->Cvar_Register( &fs_game, "fs_game", "", CVAR_SERVERINFO | CVAR_ROM );
-	
+
 	f = fopen( va("%s/%s/nodes/%s.cpw", fs_homepath.string, fs_game.string, cgs.currentmapname), "rb" );
 
 	if ( !f )
@@ -1987,7 +1987,7 @@ AIMOD_LoadCoverPoints ( void )
 		return qfalse;
 	}
 
-	trap->FS_Read( &num_cover_spots, sizeof(int), f );	
+	trap->FS_Read( &num_cover_spots, sizeof(int), f );
 
 	for ( i = 0; i < num_cover_spots; i++ )
 	{
@@ -2113,7 +2113,7 @@ void AIMOD_Generate_Cover_Spots ( void )
 			{
 				trap->Print( "^1*** ^3%s^1: ^5 Generated ^7%i^5 coverspot waypoints.\n", "AUTO-WAYPOINTER", num_cover_spots );
 			}
-			
+
 			// Save them for fast loading next time!
 			AIMOD_SaveCoverPoints();
 		}
@@ -2124,7 +2124,7 @@ void AIMOD_Generate_Cover_Spots ( void )
 
 #define NUM_SLOPE_CHECKS 16
 
-qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {  
+qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 	int		j;
 	float	dist, last_height;
 	vec3_t	orgA, orgB, originalOrgB, forward, dir, testangles;
@@ -2193,9 +2193,9 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 		{
 			return qfalse; // Hit LAVA. BAD!
 		}
-		else if (tr.entityNum != ENTITYNUM_NONE 
+		else if (tr.entityNum != ENTITYNUM_NONE
 			&& tr.entityNum < ENTITYNUM_MAX_NORMAL
-			&& VisibleAllowEntType(cg_entities[tr.entityNum].currentState.eType, 0)) 
+			&& VisibleAllowEntType(cg_entities[tr.entityNum].currentState.eType, 0))
 		{// Movers are always OK...
 			continue;
 		}
@@ -2229,7 +2229,7 @@ qboolean AWP_CheckFallPositionOK(vec3_t position)
 	//VectorSet(maxs, 8, 8, 1);
 	VectorSet(mins, -24, -24, -1);
 	VectorSet(maxs, 24, 24, 1);
-	
+
 	VectorCopy(position, testPos);
 	VectorCopy(position, downPos);
 
@@ -2315,10 +2315,10 @@ qboolean AWP_Jump( vec3_t start, vec3_t dest )
 						blocked = qtrue;
 						break;
 					}
-					
+
 					if ( trace.fraction < 1.0f )
 					{//hit something
-						if ( Distance( trace.endpos, dest ) < 128/*96*/ 
+						if ( Distance( trace.endpos, dest ) < 128/*96*/
 							&& AWP_CheckFallPositionOK(trace.endpos) )
 						{//hit the spot, that's perfect!
 							break;
@@ -2889,7 +2889,7 @@ AIMOD_NODES_LoadNodes2 ( void )
 	trap->Cvar_Register( &fs_game, "fs_game", "", CVAR_SERVERINFO | CVAR_ROM );
 
 	i = 0;
-	
+
 	f = fopen( va("%s/%s/nodes/%s.bwp", fs_homepath.string, fs_game.string, cgs.currentmapname), "rb" );
 
 	if ( !f )
@@ -3101,7 +3101,7 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 	vmCvar_t		mapname;
 	int				gLevelFlags;
 	short int		objNum[3] = { 0, 0, 0 };
-	
+
 	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 
 	i = 0;
@@ -3321,7 +3321,7 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 
 		thiswp.disttonext = atof(currentVar);
 
-		
+
 		// Set node objective flags..
 		AIMOD_NODES_SetObjectiveFlags( thiswp.index );
 
@@ -3359,7 +3359,7 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 
 	vmCvar_t mapname;
 	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-	
+
 	aw_num_nodes = number_of_nodes;
 	strcpy( filename, "nodes/" );
 
@@ -3401,14 +3401,14 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 		// Set node objective flags..
 		AIMOD_NODES_SetObjectiveFlags( i );
 	}
-	
+
 	//trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );	//get the map name
 	strcpy( map, cgs.currentmapname);
 	trap->FS_Write( &name, strlen( name) + 1, f );								//write the mod name to the file
 	trap->FS_Write( &version, sizeof(float), f );								//write the version of this file
 	trap->FS_Write( &map, strlen( map) + 1, f );									//write the map name
 	trap->FS_Write( &num_nodes, sizeof(/*short*/ int), f );							//write the number of nodes in the map
-	
+
 	for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )											//loop through all the nodes
 	{
 		//trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
@@ -3529,7 +3529,7 @@ qboolean Waypoint_FloorSurfaceOK ( int surfaceFlags )
 	//if (surfaceFlags & SURF_SKY)
 	//	return qfalse;
 
-	return qfalse;	
+	return qfalse;
 }
 
 qboolean CG_HaveRoofAbove ( vec3_t origin )
@@ -3543,7 +3543,7 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 	org[2]+=4.0;
 	VectorCopy(origin, down_org);
 	down_org[2] = 131072.0f;
-	
+
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID/*|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT*/ );
 
@@ -3587,7 +3587,7 @@ float GroundHeightAt ( vec3_t org )
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
-	
+
 	if ( tr.startsolid || tr.allsolid )
 	{
 		return -131072.0f;
@@ -3608,9 +3608,9 @@ float GroundHeightAt ( vec3_t org )
 		return -131072.0f;
 	}
 
-//	if ( (tr.surfaceFlags & SURF_NODRAW) 
-//		&& (tr.surfaceFlags & SURF_NOMARKS) 
-//		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags) 
+//	if ( (tr.surfaceFlags & SURF_NODRAW)
+//		&& (tr.surfaceFlags & SURF_NOMARKS)
+//		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags)
 //		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/ )
 //	{// Sky...
 //		return -131072.0f;
@@ -3620,26 +3620,26 @@ float GroundHeightAt ( vec3_t org )
 		return -131072.0f;
 
 	// UQ1: MOVER TEST
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		if (NearMoverEntityLocation( tr.endpos ))
 		{
 			return tr.endpos[2];
 		}
-		
+
 		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER)
 		{// Hit a mover... Add waypoints at all of them!
 			return tr.endpos[2];
 		}
 	}
 	/*
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
-		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
+		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER
 			|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
 			|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
 			|| cg_entities[tr.entityNum].currentState.eType == ET_TELEPORT_TRIGGER
@@ -3652,8 +3652,8 @@ float GroundHeightAt ( vec3_t org )
 		}
 	}*/
 
-//	if ( (tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS) 
-//		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags) 
+//	if ( (tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS)
+//		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags)
 //		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/)
 //	{// Sky...
 //		//trap->Print("(tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS)\n");
@@ -3685,7 +3685,7 @@ qboolean BadHeightNearby( vec3_t org )
 	org1[2] += 18;
 
 	AngleVectors( angles, forward, right, NULL );
-	
+
 	// Check forward...
 	VectorMA( org1, 192, forward, org2 );
 
@@ -3778,7 +3778,7 @@ float ShortestWallRangeFrom ( vec3_t org )
 	org2[0] += 512.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
-	
+
 	dist = Distance(tr.endpos, org);
 
 	if (dist < closestRange)
@@ -3790,7 +3790,7 @@ float ShortestWallRangeFrom ( vec3_t org )
 	org2[0] -= 512.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
-	
+
 	dist = Distance(tr.endpos, org);
 
 	if (dist < closestRange)
@@ -3802,7 +3802,7 @@ float ShortestWallRangeFrom ( vec3_t org )
 	org2[1] += 512.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
-	
+
 	dist = Distance(tr.endpos, org);
 
 	if (dist < closestRange)
@@ -3814,7 +3814,7 @@ float ShortestWallRangeFrom ( vec3_t org )
 	org2[1] -= 512.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
-	
+
 	dist = Distance(tr.endpos, org);
 
 	if (dist < closestRange)
@@ -3851,14 +3851,14 @@ float FloorHeightAt ( vec3_t org )
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_WATER );
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
-	
+
 	if (tr.startsolid)
 	{
 		return 131072.0f;
 	}
 
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
+	if ( tr.fraction != 1
+		&& tr.entityNum != ENTITYNUM_NONE
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
 		if (NearMoverEntityLocation( tr.endpos ))
@@ -3869,7 +3869,7 @@ float FloorHeightAt ( vec3_t org )
 			return tr.endpos[2];
 		}
 
-		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
+		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER
 			|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
 			|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
 			|| cg_entities[tr.entityNum].currentState.eType == ET_TELEPORT_TRIGGER
@@ -3922,7 +3922,7 @@ float FloorHeightAt ( vec3_t org )
 	vectoangles( tr.plane.normal, slopeangles );
 
 	pitch = slopeangles[0];
-	
+
 	if (pitch > 180)
 		pitch -= 360;
 
@@ -3978,9 +3978,10 @@ float RoofHeightAt ( vec3_t org )
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
-	
+
 	if ( tr.startsolid || tr.allsolid )
 	{
+		//trap->Print("start or allsolid.\n");
 		return -131072.0f;
 	}
 
@@ -4012,7 +4013,7 @@ float RoofHeightAt ( vec3_t org )
 	|__1__|
 */
 
-void CG_ShowSlope ( void ) {  
+void CG_ShowSlope ( void ) {
 	vec3_t	org;
 	trace_t	 trace;
 	vec3_t	forward, right, up, start, end;
@@ -4176,7 +4177,7 @@ void CG_ShowForwardSurface ( void )
 	VectorCopy(cg.refdef.vieworg, org);
 	AngleVectors( cg.refdef.viewangles, forward, NULL, NULL );
 	VectorMA( cg.refdef.vieworg, 131072.0f, forward, down_org );
-	
+
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
@@ -4336,7 +4337,7 @@ void CG_ShowSurface ( void )
 	//down_org[2]-=48;
 	//down_org[2] = -65000;
 	down_org[2] = -131072.0f;
-	
+
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
@@ -4496,7 +4497,7 @@ void CG_ShowSkySurface ( void )
 	//down_org[2]-=48;
 	//down_org[2] = -65000;
 	down_org[2] = +131072.0f;
-	
+
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
@@ -4903,7 +4904,7 @@ qboolean AIMod_AutoWaypoint_Check_Stepps ( vec3_t org )
 */
 }
 
-qboolean AIMod_AutoWaypoint_Check_Slope ( vec3_t org ) { 
+qboolean AIMod_AutoWaypoint_Check_Slope ( vec3_t org ) {
 	// UQ1: Now down in the floor check code, saves a trace per spot check...
 /*	trace_t	 trace;
 	vec3_t	forward, right, up, start, end;
@@ -4926,7 +4927,7 @@ qboolean AIMod_AutoWaypoint_Check_Slope ( vec3_t org ) {
 	vectoangles( trace.plane.normal, slopeangles );
 
 	pitch = slopeangles[0];
-	
+
 	if (pitch > 180)
 		pitch -= 360;
 
@@ -4971,7 +4972,7 @@ void RepairPosition ( intvec3_t org1 )
 
 		VectorMA(newOrg, 0-(move_ammount+1), forward, newOrg);
 	}
-	
+
 	VectorCopy(newOrg, fixed_position);
 
 	// Prepare for back test...
@@ -4988,7 +4989,7 @@ void RepairPosition ( intvec3_t org1 )
 
 		VectorMA(newOrg, move_ammount+1, forward, newOrg);
 	}
-	
+
 	VectorCopy(newOrg, fixed_position);
 
 	// Prepare for right test...
@@ -5005,7 +5006,7 @@ void RepairPosition ( intvec3_t org1 )
 
 		VectorMA(newOrg, 0-(move_ammount+1), right, newOrg);
 	}
-	
+
 	VectorCopy(newOrg, fixed_position);
 
 	// Prepare for left test...
@@ -5022,7 +5023,7 @@ void RepairPosition ( intvec3_t org1 )
 
 		VectorMA(newOrg, move_ammount+1, right, newOrg);
 	}
-	
+
 	VectorCopy(newOrg, fixed_position);
 
 	// Prepare for solid test...
@@ -5063,7 +5064,7 @@ void RepairPosition ( intvec3_t org1 )
 
 	// Do forward test...
 	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER );
-	
+
 	if ( VectorDistance(newOrg, tr.endpos) < 256 )
 	{// Possibly a hallway.. Can we centralize it?
 		float move_ammount = VectorDistance(newOrg, tr.endpos);
@@ -5253,7 +5254,7 @@ void AIMod_AutoWaypoint_Check_For_Ladders ( vec3_t org )
 		org2[2]+=16;
 
 		trap->CM_BoxTrace( &trace, org1, org2, NULL, NULL,  0, MASK_PLAYERSOLID );
-		
+
 		if (trace.surfaceFlags & SURF_LADDER)
 		{// Ladder found here! Make the waypoints!
 			strcpy( last_node_added_string, va("^5Adding ladder (^3%i^5) waypoints at ^7%f %f %f^5.", aw_num_ladder_positions+1, trace.endpos[0], trace.endpos[1], trace.endpos[2]) );
@@ -5288,6 +5289,7 @@ AIMod_GetMapBounts ( void )
 	vec3_t	org2;
 	vec3_t	mapMins, mapMaxs;
 
+	if (cg.mapcoordsValid) return; // No point doing it twice...
 
 	//
 	// Try to load previously stored bounds from .mapInfo file...
@@ -5304,8 +5306,6 @@ AIMod_GetMapBounts ( void )
 	if (mapMins[0] < 999999.0 && mapMins[1] < 999999.0 && mapMins[2] < 999999.0
 		&& mapMaxs[0] > -999999.0 && mapMaxs[1] > -999999.0 && mapMaxs[2] > -999999.0)
 	{
-		VectorSet(mapMins, MAX_MAP_SIZE, MAX_MAP_SIZE, MAX_MAP_SIZE);
-		VectorSet(mapMaxs, -MAX_MAP_SIZE, -MAX_MAP_SIZE, -MAX_MAP_SIZE);
 		VectorCopy(mapMins, cg.mapcoordsMins);
 		VectorCopy(mapMaxs, cg.mapcoordsMaxs);
 		cg.mapcoordsValid = qtrue;
@@ -5348,7 +5348,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org2, startx, starty, startz );
 			org2[2] += (MAX_MAP_SIZE*2);
 			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
-			
+
 			if ( tr.endpos[2] < mapMins[2] )
 			{
 				mapMins[2] = tr.endpos[2];
@@ -5928,11 +5928,11 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-					if ( tr.fraction != 1 
-						&& tr.entityNum != ENTITYNUM_NONE 
+					if ( tr.fraction != 1
+						&& tr.entityNum != ENTITYNUM_NONE
 						&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 					{
-						if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
+						if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER
 							|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
 							|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
 							|| cg_entities[tr.entityNum].currentState.eType == ET_TELEPORT_TRIGGER
@@ -6066,13 +6066,13 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		// UQ1: Vary scatter based on map size...
 		if (map_size >= 50000)
 		{
-			if (map_size >= 90000) 
+			if (map_size >= 90000)
 			{
 				scatter_min = scatter * 3.0;
 				scatter_max = scatter * 5.0;
 				scatter_z = scatter * 0.33;
 			}
-			else if (map_size >= 80000) 
+			else if (map_size >= 80000)
 			{
 				scatter_min = scatter * 2.0;
 				scatter_max = scatter * 4.0;
@@ -6084,13 +6084,13 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 				scatter_max = scatter * 3.0;
 				scatter_z = scatter * 0.33;
 			}
-			else if (map_size >= 60000) 
+			else if (map_size >= 60000)
 			{
 				scatter_min = scatter * 0.75;
 				scatter_max = scatter * 2.5;
 				scatter_z = scatter * 0.33;
 			}
-			else if (map_size >= 50000) 
+			else if (map_size >= 50000)
 			{
 				scatter_min = scatter * 0.5;
 				scatter_max = scatter * 2.5;
@@ -6132,7 +6132,7 @@ omp_set_nested(0);
 			float	scatter_y = scatter;
 			float	scatter_mult_X = 1.0;
 			vec3_t	last_org;
-			
+
 			// Vary X scatter distance...
 			if (scatter_x == scatter) scatter_x = scatter_min;
 			else if (scatter_x == scatter) scatter_x = scatter_max;
@@ -6326,7 +6326,7 @@ omp_set_nested(0);
 		//temp_ground = GroundHeightAt(temp_org);
 		temp_ground = MOVER_LIST[i][2];
 
-		if (isDoor) 
+		if (isDoor)
 		{
 			arealist[areas][0] = temp_org[0];
 			arealist[areas][1] = temp_org[1];
@@ -6412,7 +6412,7 @@ omp_set_nested(0);
 
 			// Draw a nice little progress bar ;)
 			aw_percent_complete = (float)((float)((float)i/(float)total_areas)*100.0f);
-				
+
 			update_timer++;
 
 			if (update_timer >= 500)
@@ -6447,7 +6447,7 @@ omp_set_nested(0);
 //		{
 //			// Draw a nice little progress bar ;)
 //			aw_percent_complete = (float)((float)((float)i/(float)total_waypoints)*100.0f);
-				
+
 //			update_timer++;
 
 //			if (update_timer >= 100)
@@ -6518,7 +6518,7 @@ omp_set_nested(0);
 	trap->UpdateScreen();
 
 	remove_ratio = (areas / MAX_WPARRAY_SIZE);
-	
+
 	/*
 	if (remove_ratio <= 1.5)
 		remove_ratio *= 7.0; // Hopefully this ratio will provide nearly 32000 waypoints every time...
@@ -6596,7 +6596,7 @@ omp_set_nested(0);
 						//{
 						//	trap->Print("Distance between area %i at %f %f %f and wp %i at %f %f %f is %f. MARKED BAD!\n", i, area_org[0], area_org[1], area_org[2], j, nodes[j].origin[0], nodes[j].origin[1], nodes[j].origin[2], dist );
 						//}
-					
+
 						bad = qtrue;
 						break;
 					}
@@ -6649,7 +6649,7 @@ omp_set_nested(0);
 	{
 		// Draw a nice little progress bar ;)
 		aw_percent_complete = (float)((float)((float)i/(float)total_waypoints)*100.0f);
-				
+
 		update_timer++;
 
 		if (update_timer >= 100)
@@ -6735,7 +6735,7 @@ void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboo
 void AIMod_AutoWaypoint_Clean ( void )
 {
 	char	str[MAX_TOKEN_CHARS];
-	
+
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
@@ -6763,7 +6763,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		DO_FAST_LINK = qtrue;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
-	
+
 	if ( Q_stricmp( str, "convert") == 0 )
 	{
 		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse);
@@ -6814,7 +6814,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 
 		if (number_of_nodes > 0)
 		{// UQ1: Init nodes list!
-			number_of_nodes = 0; 
+			number_of_nodes = 0;
 			optimized_number_of_nodes = 0;
 
 			if (SSE_CPU)
@@ -6852,7 +6852,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 
 		if (number_of_nodes > 0)
 		{// UQ1: Init nodes list!
-			number_of_nodes = 0; 
+			number_of_nodes = 0;
 			optimized_number_of_nodes = 0;
 
 			if (SSE_CPU)
@@ -6926,7 +6926,7 @@ AIMod_AutoWaypoint ( void )
 	DO_NEW_METHOD = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
-	
+
 	if ( Q_stricmp( str, "altmethod") == 0 )
 	{
 		DO_NEW_METHOD = qtrue;
@@ -7286,7 +7286,7 @@ GetFCost ( centity_t *bot, int to, int num, int parentNum, float *gcost )
 	float	gc = 0;
 	float	hc = 0;
 	vec3_t	v;
-	
+
 	if ( gcost[num] == -1 )
 	{
 		if ( parentNum != -1 )
@@ -7483,8 +7483,8 @@ AI_PM_GroundTrace ( vec3_t point, int clientNum )
 	//	bad_surface = qtrue;
 
 	/* TESTING THIS */
-	if ( (trace.surfaceFlags & SURF_NODRAW) 
-		&& (trace.surfaceFlags & SURF_NOMARKS) 
+	if ( (trace.surfaceFlags & SURF_NODRAW)
+		&& (trace.surfaceFlags & SURF_NOMARKS)
 		&& !(
 #ifndef __DISABLE_PLAYERCLIP__
 		(trace.contents & CONTENTS_PLAYERCLIP) &&
@@ -7517,13 +7517,13 @@ void AIMOD_AI_InitNodeContentsFlags ( void )
 			if (!(nodes[i].type & NODE_ICE))
 				nodes[i].type |= NODE_ICE;
 		}
-			
+
 		if (contents & CONTENTS_SLIME)
 		{
 			if (!(nodes[i].type & NODE_ICE))
 				nodes[i].type |= NODE_ICE;
 		}
-			
+
 		if (contents & CONTENTS_WATER)
 		{
 			nodes[i].type |= NODE_WATER;
@@ -7565,7 +7565,7 @@ qboolean IsPathDataTooLarge(const char *mapname)
 
 		fp = fopen(va("%s/botroutes/%s.wnt", MOD_DIRECTORY, mapname), "rb");
 
-		if (!fp) 
+		if (!fp)
 			return qfalse;
 
 		len = FileLength(fp);
@@ -7597,7 +7597,7 @@ qboolean AIMod_AutoWaypoint_Cleaner_NodeHasLinkWithFewLinks ( int node )
 {// Check the links of the current node for any nodes with very few links (so we dont remove an important node for reachability)
 	int i = 0;
 	int removed_neighbours_count = 0;
-	
+
 	for (i = 0; i < nodes[node].enodenum; i++)
 	{
 		if (nodes[node].enodenum > 64)
@@ -7738,7 +7738,7 @@ void CheckForNearbyDupeNodes( int node )
 			if (nodes[i].enodenum-1 > nodes[node].enodenum)
 				continue; // Never remove a better node...
 		}
-		
+
 		if (NodeLinksTo(node, i))
 		{// We link to this node... Ignore us...
 			WE_LINK_TO_THEM = qtrue;
@@ -7795,7 +7795,7 @@ void CheckWalkAround ( int node )
 		if (nodes[thisLink].objectNum[0] == 1)
 			continue; // This link is disabled... Ignore it...
 
-		if (nodes[node].links[i].flags & NODE_JUMP) 
+		if (nodes[node].links[i].flags & NODE_JUMP)
 			continue; // This is a jump-to node... Skip it...
 
 		// Looks like this is a valid place we need to be able to get to... See if the other links around us also go there...
@@ -7803,7 +7803,7 @@ void CheckWalkAround ( int node )
 		{
 			int toLink = nodes[node].links[j].targetNode;
 
-			if (thisLink == toLink) 
+			if (thisLink == toLink)
 				continue; // The same link as we are searching for a link to, ignore...
 
 			if (nodes[toLink].objectNum[0] == 1)
@@ -7911,7 +7911,7 @@ void AIMod_AddLifts ( void )
 
 	if (NUM_LIFT_POINTS <= 0) return;
 
-	if (!cg.mapcoordsValid) 
+	if (!cg.mapcoordsValid)
 		AIMod_GetMapBounts();
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Adding %i lifts...\n", NUM_LIFT_POINTS) );
@@ -7934,7 +7934,7 @@ void AIMod_AddLifts ( void )
 		temp_ground = GroundHeightAt(temp_org);
 
 		temp_org2[2] = temp_roof;
-		
+
 		if (/*temp_roof <= cg.mapcoordsMaxs[2] &&*/ DistanceVertical(temp_org, temp_org2) >= 128)
 		{// Looks like it goes up!
 			int z = 0;
@@ -8309,7 +8309,7 @@ qboolean WP_CheckInSolid (vec3_t position)
 
 	int contents = CONTENTS_TRIGGER;
 	int clipmask = MASK_DEADSOLID;
-	
+
 	VectorSet(mins, -15, -15, DEFAULT_MINS_2);
 	VectorSet(maxs, 15, 15, DEFAULT_MAXS_2);
 
@@ -8348,7 +8348,7 @@ qboolean Warzone_CheckBelowWaypoint( int wp )
 	org2[2] = -131072.0f;//org[2] - 256;
 
 	CG_Trace( &tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_TRIGGER);
-	
+
 	if ( tr.startsolid )
 	{
 		//trap->Print("Waypoint %i is in solid.\n", wp);
@@ -8372,7 +8372,7 @@ qboolean Warzone_CheckBelowWaypoint( int wp )
 		//trap->Print("Waypoint %i is in lava.\n", wp);
 		return qfalse;
 	}
-	
+
 	if ( tr.contents & CONTENTS_SLIME )
 	{
 		//trap->Print("Waypoint %i is in slime.\n", wp);
@@ -8464,9 +8464,9 @@ qboolean Warzone_CheckRoutingFrom( int wp )
 
 		if (Distance(cent->currentState.origin, nodes[goal].origin) < 512)
 			continue; // Need something harder...
-		
+
 		wpCurrent = ClosestNodeTo(cent->currentState.origin, qfalse);
-		
+
 		if (wpCurrent)
 		{
 			pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
@@ -8543,9 +8543,9 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 	if (number_of_nodes > 0)
 	{// UQ1: Init nodes list!
-		number_of_nodes = 0; 
+		number_of_nodes = 0;
 		optimized_number_of_nodes = 0;
-		
+
 		if (SSE_CPU)
 		{
 			sse_memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
@@ -8826,7 +8826,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		num_this_location_nodes = 0;
 		num_marked_height_nodes = 0;
 		total_removed = 0;
-		
+
 		num_passes_completed++;
 
 		for (i = 0; i < number_of_nodes; i++)
@@ -8941,7 +8941,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 					if (nodes[i].enodenum >= 1)
 					{
 						CheckForNearbyDupeNodes(i);
-						
+
 						if (nodes[i].objectNum[0] != 1)
 							CheckWalkAround(i);
 					}
@@ -9055,9 +9055,9 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 		aw_percent_complete = 0.0f;
 		trap->UpdateScreen();
-	
+
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Multipass waypoint cleaner pass #%i completed. Beginning next pass.\n", num_passes_completed);
-		
+
 		initial_pass = qfalse;
 
 		if (!multipass)
@@ -9180,7 +9180,7 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 		re.shaderRGBA[2] = 0x00;
 		re.shaderRGBA[3] = 0xff;
 	}
-	else 
+	else
 #endif //__COVER_SPOTS__
 	if (link_flags & NODE_JUMP)
 	{// This is a jump-to link... Display in blue..
@@ -9221,11 +9221,11 @@ qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV 
 
 	VectorSubtract ( spot, from, deltaVector );
 	vectoangles ( deltaVector, angles );
-	
+
 	deltaAngles[PITCH]	= AngleDelta ( fromAngles[PITCH], angles[PITCH] );
 	deltaAngles[YAW]	= AngleDelta ( fromAngles[YAW], angles[YAW] );
 
-	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
+	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV )
 	{
 		return qtrue;
 	}
@@ -9236,7 +9236,7 @@ qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV 
 void DrawWaypoints()
 {
 	int node = 0;
-	
+
 	if (warzone_waypoint_render.integer <= 0)
 	{
 		if (CURRENTLY_RENDERRING)
@@ -9283,7 +9283,7 @@ void DrawWaypoints()
 
 		VectorSubtract( nodes[node].origin, cg.refdef.vieworg, delta );
 		len = VectorLength( delta );
-		
+
 		if ( len < 20 ) continue;
 		if ( len > 512/*400*//*512*/ ) continue;
 

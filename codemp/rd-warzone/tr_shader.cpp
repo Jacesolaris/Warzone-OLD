@@ -3532,13 +3532,17 @@ void AssignMaterialType ( const char *name, const char *text )
 
 		if (material)
 			shader.surfaceFlags |= material;
+		//else
+		//	shader.surfaceFlags |= MATERIAL_CARPET; // Fallback to a non-shiny default...
 	}
 	else
 	{
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
 		//
-		if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet"))
+		if (StringContainsWord(name, "vj4")) // special case for vjun rock...
+			shader.surfaceFlags |= MATERIAL_ROCK;
+		else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "/ships/") || StringContainsWord(name, "engine") || StringContainsWord(name, "mp/flag"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
@@ -3597,6 +3601,12 @@ void AssignMaterialType ( const char *name, const char *text )
 		if (oldmat) shader.surfaceFlags &= ~oldmat;
 		shader.surfaceFlags |= MATERIAL_WATER;
 		shader.isWater = qtrue;
+	}
+	else if (StringContainsWord(name, "vj4"))
+	{// special case for vjun rock...
+		int oldmat = (shader.surfaceFlags & MATERIAL_MASK);
+		if (oldmat) shader.surfaceFlags &= ~oldmat;
+		shader.surfaceFlags |= MATERIAL_ROCK;
 	}
 	else if (shader.hasAlpha &&
 		!StringContainsWord(name, "billboard") &&
@@ -6612,31 +6622,23 @@ char uniqueGenericMetalShader_OLD[] = "{\n"\
 
 char uniqueGenericRockShader[] = "{\n"\
 "qer_editorimage	%s\n"\
+"//q3map_alphashadow\n"\
 "q3map_material	rock\n"\
+"surfaceparm	noimpact\n"\
+"surfaceparm	nomarks\n"\
 "{\n"\
 "map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"%s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
-"//rgbGen entity\n"\
-"tcMod scale 4 4\n"\
-"}\n"\
-"%s"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
 "}\n"\
 "//{\n"\
-"//map %s\n"\
-"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//map $lightmap\n"\
+"//blendfunc GL_DST_COLOR GL_ZERO\n"\
 "//rgbGen lightingDiffuse\n"\
-"//alphaGen lightingSpecular\n"\
-"//alphaFunc GE128\n"\
 "//depthFunc equal\n"\
-"//detail\n"\
 "//}\n"\
 "}\n"\
 "";
@@ -6673,7 +6675,7 @@ char uniqueGenericShader[] = "{\n"\
 "";
 
 // "rgbGen identity\n"
-#else
+#elif 1
 char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "{\n"\
@@ -6690,6 +6692,26 @@ char uniqueGenericShader[] = "{\n"\
 "rgbGen lightingDiffuse\n"\
 "depthFunc equal\n"\
 "}\n"\
+"}\n"\
+"";
+#else
+char uniqueGenericShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"{\n"\
+"map %s\n"\
+"%s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
+"}\n"\
+"%s"\
+"//{\n"\
+"//map $lightmap\n"\
+"//blendfunc GL_DST_COLOR GL_ZERO\n"\
+"//rgbGen lightingDiffuse\n"\
+"//depthFunc equal\n"\
+"//}\n"\
 "}\n"\
 "";
 #endif
@@ -6885,6 +6907,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			sprintf(myShader, uniqueGenericFoliageBillboardShader, strippedName, strippedName);
 		}
 		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage"))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/plants") || StringContainsWord(strippedName, "warzone\\plants"))
 		{
 			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		}

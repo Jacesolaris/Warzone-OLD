@@ -23,6 +23,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 
 #define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
 #define			__NO_PLANTS__	// Disable plants and only draw grass for everything... Was just for testing FPS difference...
+#define			__NEW_PLANTS__  // Use new ground cover plants (requires __NO_PLANTS__ above to disable the old ones)
 
 // =======================================================================================================================================
 //
@@ -49,8 +50,45 @@ float		NUM_PLANT_SHADERS = 0;
 #define		PLANT_SCALE_MULTIPLIER 1.0
 
 #define		MAX_PLANT_SHADERS 100
+#define		MAX_PLANT_MODELS 6
 
 float		TREE_SCALE_MULTIPLIER = 1.0;
+
+static const char *TropicalPlantsModelsList[] = {
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant04.md3",
+	"models/warzone/plants/groundplant05.md3",
+};
+
+static const char *SpringPlantsModelsList[] = {
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant04.md3",
+	"models/warzone/plants/groundplant05.md3",
+};
+
+static const char *EndorPlantsModelsList[] = {
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant04.md3",
+	"models/warzone/plants/groundplant05.md3",
+};
+
+static const char *SnowPlantsModelsList[] = {
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant04.md3",
+	"models/warzone/plants/groundplant05.md3",
+};
 
 static const char *TropicalPlantsList[] = {
 	"models/warzone/foliage/plant01.png",
@@ -525,6 +563,7 @@ qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[16] = { 0 };
 float		FOLIAGE_TREE_BILLBOARD_SIZE[16] = { 0 };
 
 qhandle_t	FOLIAGE_PLANT_SHADERS[MAX_PLANT_SHADERS] = {0};
+qhandle_t	FOLIAGE_PLANT_MODELS[MAX_PLANT_MODELS] = {0};
 
 int			IN_RANGE_AREAS_LIST_COUNT = 0;
 int			IN_RANGE_AREAS_LIST[1024];
@@ -721,9 +760,9 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs, int areaNum, float minsD
 		|| InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
 		|| InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ ))
 	{
-		if (cg_foliageAreaVisCheck.integer 
-			&& minsDist > 8192.0 
-			&& maxsDist > 8192.0 
+		if (cg_foliageAreaVisCheck.integer
+			&& minsDist > 8192.0
+			&& maxsDist > 8192.0
 			&& FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] + 2000 < trap->Milliseconds())
 		{// Also vis check distant trees, at 2048 above... (but allow hits of SURF_SKY in case the roof is low)
 			vec3_t visMins, visMaxs, viewPos;
@@ -735,7 +774,7 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs, int areaNum, float minsD
 
 			CG_Trace(&tr, viewPos, NULL, NULL, visMins, cg.clientNum, MASK_SOLID);
 
-			if (tr.fraction >= 1.0 || ( tr.surfaceFlags & SURF_SKY )) 
+			if (tr.fraction >= 1.0 || ( tr.surfaceFlags & SURF_SKY ))
 			{
 				FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
 				return qtrue;
@@ -743,7 +782,7 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs, int areaNum, float minsD
 
 			CG_Trace(&tr, viewPos, NULL, NULL, visMaxs, cg.clientNum, MASK_SOLID);
 
-			if (tr.fraction >= 1.0 || ( tr.surfaceFlags & SURF_SKY )) 
+			if (tr.fraction >= 1.0 || ( tr.surfaceFlags & SURF_SKY ))
 			{
 				FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
 				return qtrue;
@@ -870,7 +909,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 		FOLIAGE_SOLID_TREES_DIST[i] = 131072.0;
 	}
 
-	if (cg_foliageTreeRangeMult.value < 8.0) 
+	if (cg_foliageTreeRangeMult.value < 8.0)
 	{
 		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*8.0;
 		trap->Cvar_Set("cg_foliageTreeRangeMult", "8.0");
@@ -893,7 +932,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 			float minsDist = DistanceHorizontal(FOLIAGE_AREAS_MINS[i], cg.refdef.vieworg);
 			float maxsDist = DistanceHorizontal(FOLIAGE_AREAS_MAXS[i], cg.refdef.vieworg);
 
-			if (minsDist < FOLIAGE_VISIBLE_DISTANCE 
+			if (minsDist < FOLIAGE_VISIBLE_DISTANCE
 				|| maxsDist < FOLIAGE_VISIBLE_DISTANCE)
 			{
 				qboolean inFOV = qtrue;
@@ -1107,7 +1146,7 @@ qboolean FOLIAGE_TreeSolidBlocking(vec3_t moveOrg)
 			else
 				hDist = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], cg.refdef.vieworg);
 
-			if (DIST <= TREE_RADIUS 
+			if (DIST <= TREE_RADIUS
 				&& (moveOrg[2] >= FOLIAGE_POSITIONS[THIS_TREE_NUM][2] && moveOrg[2] <= FOLIAGE_POSITIONS[THIS_TREE_NUM][2] + (TREE_HEIGHT*2.0))
 				&& DIST < hDist				// Move pos would be closer
 				&& hDist > TREE_RADIUS)		// Not already stuck in tree...
@@ -1142,7 +1181,7 @@ void FOLIAGE_AddToScreen( int num, int passType ) {
 	if (FOLIAGE_TREE_SELECTION[num] <= 0 && FOLIAGE_PLANT_SCALE[num] < minFoliageScale) return;
 
 #if 0
-	if (cg.renderingThirdPerson) 
+	if (cg.renderingThirdPerson)
 		dist = Distance/*Horizontal*/(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
 	else
 #endif
@@ -1178,6 +1217,7 @@ void FOLIAGE_AddToScreen( int num, int passType ) {
 
 		if (passType == FOLIAGE_PASS_PLANT && !skipPlant && FOLIAGE_PLANT_SELECTION[num] > 0)
 		{// Add plant model as well...
+#ifndef __NEW_PLANTS__
 			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
 
 			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
@@ -1187,6 +1227,15 @@ void FOLIAGE_AddToScreen( int num, int passType ) {
 			re.origin[2] += /*8.0 **/ (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
 			re.hModel = FOLIAGE_PLANT_MODEL[4];
+#else //__NEW_PLANTS__
+			float PLANT_SCALE = 0.4 * FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
+
+			re.reType = RT_PLANT;//RT_MODEL;
+
+			re.origin[2] += 8.0 + (1.0 - FOLIAGE_PLANT_SCALE[num]);
+
+			re.hModel = FOLIAGE_PLANT_MODELS[FOLIAGE_PLANT_SELECTION[num]-1];
+#endif //__NEW_PLANTS__
 
 			VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
@@ -1377,7 +1426,7 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 	float			minFoliageScale = cg_foliageMinFoliageScale.value;
 #ifdef __NO_GRASS__
 	int fileCount = 0;
-	int treeCount = 0;
+	int foliageCount = 0;
 #endif //__NO_GRASS__
 
 	trap->FS_Open( va( "foliage/%s.foliage", cgs.currentmapname), &f, FS_READ );
@@ -1394,25 +1443,30 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 
 	for (i = 0; i < fileCount; i++)
 	{
-		trap->FS_Read( &FOLIAGE_POSITIONS[treeCount], sizeof(vec3_t), f );
-		trap->FS_Read( &FOLIAGE_NORMALS[treeCount], sizeof(vec3_t), f );
-		trap->FS_Read( &FOLIAGE_PLANT_SELECTION[treeCount], sizeof(int), f );
-		trap->FS_Read( &FOLIAGE_PLANT_ANGLES[treeCount], sizeof(float), f );
-		trap->FS_Read( &FOLIAGE_PLANT_SCALE[treeCount], sizeof(float), f );
-		trap->FS_Read( &FOLIAGE_TREE_SELECTION[treeCount], sizeof(int), f );
-		trap->FS_Read( &FOLIAGE_TREE_ANGLES[treeCount], sizeof(float), f );
-		trap->FS_Read( &FOLIAGE_TREE_SCALE[treeCount], sizeof(float), f );
+		trap->FS_Read( &FOLIAGE_POSITIONS[foliageCount], sizeof(vec3_t), f );
+		trap->FS_Read( &FOLIAGE_NORMALS[foliageCount], sizeof(vec3_t), f );
+		trap->FS_Read( &FOLIAGE_PLANT_SELECTION[foliageCount], sizeof(int), f );
+		trap->FS_Read( &FOLIAGE_PLANT_ANGLES[foliageCount], sizeof(float), f );
+		trap->FS_Read( &FOLIAGE_PLANT_SCALE[foliageCount], sizeof(float), f );
+		trap->FS_Read( &FOLIAGE_TREE_SELECTION[foliageCount], sizeof(int), f );
+		trap->FS_Read( &FOLIAGE_TREE_ANGLES[foliageCount], sizeof(float), f );
+		trap->FS_Read( &FOLIAGE_TREE_SCALE[foliageCount], sizeof(float), f );
 
-#ifdef __NO_PLANTS__
-		if (FOLIAGE_TREE_SELECTION[treeCount] > 0 )
+#if defined(__NO_PLANTS__) && !defined(__NEW_PLANTS__)
+		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0 )
 		{// Only keep positions with trees or plants...
-			FOLIAGE_PLANT_SELECTION[treeCount] = 0;
-			treeCount++;
+			FOLIAGE_PLANT_SELECTION[foliageCount] = 0;
+			foliageCount++;
 		}
-#else //!__NO_PLANTS__
-		if (FOLIAGE_TREE_SELECTION[treeCount] > 0 || FOLIAGE_PLANT_SELECTION[treeCount] > 0 )
+#elif defined(__NEW_PLANTS__)
+		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0)
 		{// Only keep positions with trees or plants...
-			treeCount++;
+			FOLIAGE_PLANT_SELECTION[foliageCount] = 0;
+			foliageCount++;
+		}
+		else if (FOLIAGE_TREE_SELECTION[foliageCount] > 0 || FOLIAGE_PLANT_SELECTION[foliageCount] > 0)
+		{// Only keep positions with trees or plants...
+			foliageCount++;
 		}
 #endif //__NO_PLANTS__
 		else
@@ -1421,7 +1475,7 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 		}
 	}
 
-	FOLIAGE_NUM_POSITIONS = treeCount;
+	FOLIAGE_NUM_POSITIONS = foliageCount;
 #else //!__NO_GRASS__
 	trap->FS_Read( &numPositions, sizeof(int), f );
 
@@ -1468,6 +1522,9 @@ qboolean FOLIAGE_SaveFoliagePositions( void )
 {
 	fileHandle_t	f;
 	int				i = 0;
+	int				numTrees = 0;
+	int				numPlants = 0;
+	int				numGrasses = 0;
 
 	trap->FS_Open( va( "foliage/%s.foliage", cgs.currentmapname), &f, FS_WRITE );
 
@@ -1501,14 +1558,21 @@ qboolean FOLIAGE_SaveFoliagePositions( void )
 		trap->FS_Write( &FOLIAGE_TREE_SELECTION[i], sizeof(int), f );
 		trap->FS_Write( &FOLIAGE_TREE_ANGLES[i], sizeof(float), f );
 		trap->FS_Write( &FOLIAGE_TREE_SCALE[i], sizeof(float), f );
+
+		if (FOLIAGE_TREE_SELECTION[i] > 0) 
+			numTrees++;
+		else if (FOLIAGE_PLANT_SELECTION[i] > 0) 
+			numPlants++;
+		else 
+			numGrasses++;
 	}
 
 	trap->FS_Close(f);
 
 	FOLIAGE_Setup_Foliage_Areas();
 
-	trap->Print( "^1*** ^3%s^5: Successfully saved %i grass points to foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
-		FOLIAGE_NUM_POSITIONS, cgs.currentmapname );
+	trap->Print( "^1*** ^3%s^5: Successfully saved %i foliage points (%i trees, %i plants, %i grasses) to foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+		FOLIAGE_NUM_POSITIONS, numTrees, numPlants, numGrasses, cgs.currentmapname );
 
 	return qtrue;
 }
@@ -1594,10 +1658,15 @@ void FOLIAGE_DrawGrass( void )
 			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
 #endif //__NO_GRASS__
 
-#ifndef __NO_PLANTS__
+#if !defined(__NO_PLANTS__)
 			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
+			}
+#elif defined(__NEW_PLANTS__)
+			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(SpringPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -1607,10 +1676,15 @@ void FOLIAGE_DrawGrass( void )
 			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/ferngrass" );
 #endif //__NO_GRASS__
 
-#ifndef __NO_PLANTS__
+#if !defined(__NO_PLANTS__)
 			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(EndorPlantsList[i]);
+			}
+#elif defined(__NEW_PLANTS__)
+			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(EndorPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -1620,10 +1694,15 @@ void FOLIAGE_DrawGrass( void )
 			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasssnowpineforest" );
 #endif //__NO_GRASS__
 
-#ifndef __NO_PLANTS__
+#if !defined(__NO_PLANTS__)
 			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SnowPlantsList[i]);
+			}
+#elif defined(__NEW_PLANTS__)
+			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(SnowPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -1633,10 +1712,15 @@ void FOLIAGE_DrawGrass( void )
 			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
 #endif //__NO_GRASS__
 
-#ifndef __NO_PLANTS__
+#if !defined(__NO_PLANTS__)
 			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
+			}
+#elif defined(__NEW_PLANTS__)
+			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -1646,10 +1730,15 @@ void FOLIAGE_DrawGrass( void )
 			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
 #endif //__NO_GRASS__
 
-#ifndef __NO_PLANTS__
+#if !defined(__NO_PLANTS__)
 			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
+			}
+#elif defined(__NEW_PLANTS__)
+			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -1731,7 +1820,6 @@ void FOLIAGE_DrawGrass( void )
 // =======================================================================================================================================
 
 extern void AIMod_GetMapBounts ( void );
-extern float RoofHeightAt ( vec3_t org );
 
 extern float aw_percent_complete;
 extern char task_string1[255];
@@ -2017,14 +2105,37 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 	return qtrue;
 }
 
+float RoofHeightAbove(vec3_t org)
+{
+	trace_t tr;
+	vec3_t org1, org2;
+	//	float height = 0;
+
+	VectorCopy(org, org1);
+	org1[2] += 16;
+
+	VectorCopy(org, org2);
+	org2[2] = 131072.0f;
+
+	CG_Trace(&tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
+	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
+
+	if (tr.startsolid || tr.allsolid)
+	{
+		trap->Print("start or allsolid.\n");
+		return -131072.0f;
+	}
+
+	return tr.endpos[2];
+}
+
 #define SPOT_TYPE_TREE 1
 #define SPOT_TYPE_PLANT 2
 #define SPOT_TYPE_GRASS 3
 
-void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int tree_density, int num_clearings, float check_density, qboolean ADD_MORE )
+void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_chance, int tree_chance, int num_clearings, float check_density, qboolean ADD_MORE )
 {
 	int				i;
-	vec3_t			vec;
 	float			startx = -131072, starty = -131072, startz = -131072;
 	int				grassSpotCount = 0;
 	vec3_t			*grassSpotList;
@@ -2045,6 +2156,9 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 	int				CLEARING_SPOTS_SIZES[FOLIAGE_AREA_MAX/8] = { 0 };
 	int				CLEARING_SPOTS_NUM = 0;
 	int x;
+	int				numTrees = 0;
+	int				numPlants = 0;
+	int				numGrass = 0;
 
 	if (FOLIAGE_IgnoreFoliageOnMap())
 	{// Ignore this map... We know we don't need grass here...
@@ -2052,6 +2166,10 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 		FOLIAGE_LOADED = qtrue;
 		return;
 	}
+
+	trap->Print("^1*** ^3%s^5: Generate foliage settings...\n", GAME_VERSION);
+	trap->Print("^1*** ^3%s^5: scan_density: %f. plant_chance %i. tree_chance %i. num_clearings %i. check_density %f. ADD_MORE %s...\n", GAME_VERSION, scan_density, plant_chance, tree_chance, num_clearings, check_density, ADD_MORE ? "true" : "false");
+	trap->UpdateScreen();
 
 	if (!ADD_MORE)
 	{
@@ -2286,7 +2404,7 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 					qboolean IS_CLEARING = qfalse;
 					float scale = 1.00;
 
-					if (tree_density > 0 && num_clearings > 0 && CLEARING_SPOTS_NUM > 0)
+					if (tree_chance > 0 && num_clearings > 0 && CLEARING_SPOTS_NUM > 0)
 					{
 						int d = 0;
 						int variation = irand(0, 2048); /* Variation around edges */
@@ -2302,13 +2420,24 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 					}
 
 					if (!IS_CLEARING
-						&& tree_density > 0 
-						&& irand(0, tree_density) >= tree_density 
-						&& RoofHeightAt(vec) - vec[2] > 1024.0)
+						&& tree_chance > 0
+						&& irand_big(0, tree_chance) >= tree_chance)
 					{
-						DO_TREE = qtrue;
+						if (RoofHeightAbove(tr.endpos) - tr.endpos[2] > 1024.0)
+						{
+							DO_TREE = qtrue;
+						}
+						else if(plant_chance > 0 && irand_big(0, plant_chance) >= plant_chance)
+						{
+							DO_PLANT = qtrue;
+							//trap->Print("Failed tree because of roof height. Adding plant instead.\n");
+						}
+						else
+						{
+							//trap->Print("Failed tree because of roof height.\n");
+						}
 					}
-					else if (irand(0, plant_density) >= plant_density)
+					else if (plant_chance > 0 && irand_big(0, plant_chance) >= plant_chance)
 					{
 						DO_PLANT = qtrue;
 					}
@@ -2326,17 +2455,26 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 						{
 							//#pragma omp critical (__ADD_TEMP_NODE__)
 							{
-								if (DO_TREE) 
+								if (DO_TREE)
+								{
 									grassSpotType[grassSpotCount] = SPOT_TYPE_TREE;
-								else if (DO_PLANT) 
+									numTrees++;
+								}
+								else if (DO_PLANT)
+								{
 									grassSpotType[grassSpotCount] = SPOT_TYPE_PLANT;
+									numPlants++;
+								}
 								else
+								{
 									grassSpotType[grassSpotCount] = SPOT_TYPE_GRASS;
+									numGrass++;
+								}
 
 								grassSpotScale[grassSpotCount] = scale;
 								VectorSet(grassSpotList[grassSpotCount], tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
 
-								sprintf(last_node_added_string, "^5Adding potential foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, grassSpotList[grassSpotCount][0], grassSpotList[grassSpotCount][1], grassSpotList[grassSpotCount][2]);
+								sprintf(last_node_added_string, "^5Adding potential foliage point ^3%i ^5at ^7%i %i %i^5. Trees ^7%i^5. Plants ^7%i^5. Grasses ^7%i^5.", grassSpotCount, (int)grassSpotList[grassSpotCount][0], (int)grassSpotList[grassSpotCount][1], (int)grassSpotList[grassSpotCount][2], numTrees, numPlants, numGrass);
 
 								grassSpotCount++;
 								FOUND = qtrue;
@@ -2362,7 +2500,7 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 
 	aw_percent_complete = 0.0f;
 
-	if (!ADD_MORE) 
+	if (!ADD_MORE)
 	{
 		FOLIAGE_NUM_POSITIONS = 0;
 
@@ -2380,9 +2518,6 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 			qboolean DO_TREE = qfalse;
 			qboolean DO_PLANT = qfalse;
 
-			FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
-
 			FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 			FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
 			FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
@@ -2396,14 +2531,18 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 			VectorCopy(grassNormals[i], FOLIAGE_NORMALS[FOLIAGE_NUM_POSITIONS]);
 
 			if (grassSpotType[i] == SPOT_TYPE_TREE)
-			{// Add tree... 
+			{// Add tree...
 				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
 				FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 				FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 			}
 			else if (grassSpotType[i] == SPOT_TYPE_PLANT)
 			{// Add plant...
+#if defined(__NEW_PLANTS__)
+				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_MODELS);
+#else
 				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
+#endif
 				FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
 			}
 			else
@@ -2414,7 +2553,7 @@ void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int t
 			FOLIAGE_NUM_POSITIONS++;
 		}
 
-		trap->Print( "^1*** ^3%s^5: Successfully generated %i grass points...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS );
+		trap->Print( "^1*** ^3%s^5: Successfully generated %i foliage points...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS );
 
 		// Save the generated info to a file for next time...
 		FOLIAGE_SaveFoliagePositions();
@@ -2561,7 +2700,11 @@ void FOLIAGE_FoliageReplant ( int plantPercentage )
 		{
 			if (irand(0,100) <= plantPercentage)
 			{// Replace...
+#if defined(__NEW_PLANTS__)
+				FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS);
+#else
 				FOLIAGE_PLANT_SELECTION[i] = irand(1,MAX_PLANT_SHADERS-1);
+#endif
 				NUM_REPLACED++;
 			}
 			else
@@ -2611,7 +2754,7 @@ void FOLIAGE_GenerateFoliage ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <plant_density> <tree_density> <num_clearings> <check_density>^5.\n" );
+		trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <plant_chance> <tree_chance> <num_clearings> <check_density>^5.\n" );
 		trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"standard\" ^5- Create new foliage map.\n");
 		trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"concrete\" ^5- Create new foliage map. Allow concrete material.\n");
@@ -2634,7 +2777,7 @@ void FOLIAGE_GenerateFoliage ( void )
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 
-	if ( Q_stricmp( str, "standard") == 0 
+	if ( Q_stricmp( str, "standard") == 0
 		|| Q_stricmp( str, "concrete") == 0
 		|| Q_stricmp( str, "sand") == 0
 		|| Q_stricmp( str, "rock") == 0
@@ -2650,8 +2793,8 @@ void FOLIAGE_GenerateFoliage ( void )
 		if ( trap->Cmd_Argc() >= 2 )
 		{// Override normal density...
 			int dist = 256;
-			int plant_density = 512;
-			int tree_density = 1024;
+			int plant_chance = 512;
+			int tree_chance = 1024;
 			int num_clearings = 0;
 
 			trap->Cmd_Argv( 2, str, sizeof(str) );
@@ -2664,10 +2807,10 @@ void FOLIAGE_GenerateFoliage ( void )
 			}
 
 			trap->Cmd_Argv( 3, str, sizeof(str) );
-			plant_density =  atoi(str);
+			plant_chance =  atoi(str);
 
 			trap->Cmd_Argv( 4, str, sizeof(str) );
-			tree_density = atoi(str);
+			tree_chance = atoi(str);
 
 			trap->Cmd_Argv( 5, str, sizeof(str) );
 			num_clearings = atoi(str);
@@ -2678,14 +2821,14 @@ void FOLIAGE_GenerateFoliage ( void )
 				return;
 			}
 
-			FOLIAGE_GenerateFoliage_Real((float)dist, plant_density, tree_density, num_clearings, 0.0, qfalse);
+			FOLIAGE_GenerateFoliage_Real((float)dist, plant_chance, tree_chance, num_clearings, 0.0, qfalse);
 		}
 		else
 		{
 			FOLIAGE_GenerateFoliage_Real(256.0, 512, 1024, 0, 0.0, qfalse);
 		}
 	}
-	else if ( Q_stricmp( str, "add") == 0 
+	else if ( Q_stricmp( str, "add") == 0
 		|| Q_stricmp( str, "addconcrete") == 0
 		|| Q_stricmp( str, "addsand") == 0
 		|| Q_stricmp( str, "addrock") == 0
@@ -2701,8 +2844,8 @@ void FOLIAGE_GenerateFoliage ( void )
 		if ( trap->Cmd_Argc() >= 2 )
 		{// Override normal density...
 			int dist = 256;
-			int plant_density = 512;
-			int tree_density = 1024;
+			int plant_chance = 512;
+			int tree_chance = 1024;
 			int num_clearings = 0;
 			int	check_density = dist;
 
@@ -2718,10 +2861,10 @@ void FOLIAGE_GenerateFoliage ( void )
 			check_density = dist;
 
 			trap->Cmd_Argv( 3, str, sizeof(str) );
-			plant_density =  atoi(str);
+			plant_chance =  atoi(str);
 
 			trap->Cmd_Argv( 4, str, sizeof(str) );
-			tree_density = atoi(str);
+			tree_chance = atoi(str);
 
 			trap->Cmd_Argv( 5, str, sizeof(str) );
 			num_clearings = atoi(str);
@@ -2735,7 +2878,7 @@ void FOLIAGE_GenerateFoliage ( void )
 				return;
 			}
 
-			FOLIAGE_GenerateFoliage_Real((float)dist, plant_density, tree_density, num_clearings, check_density, qtrue);
+			FOLIAGE_GenerateFoliage_Real((float)dist, plant_chance, tree_chance, num_clearings, check_density, qtrue);
 		}
 		else
 		{
