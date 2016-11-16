@@ -777,3 +777,505 @@ models/warzone/trees/bark_0010
     rgbGen identity
   }
 }
+
+// ==========================================================================================
+// NEW
+// ==========================================================================================
+
+models/warzone/trees/-trunk
+{
+  qer_editorimage	models/warzone/trees/-trunk
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/-trunk
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/cypressbark3
+{
+  qer_editorimage	models/warzone/trees/cypressbark3
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/cypressbark3
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/cypressbark4
+{
+  qer_editorimage	models/warzone/trees/cypressbark4
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/cypressbark4
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbbark
+{
+  qer_editorimage	models/warzone/trees/gkbbark
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbbark
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbbark27
+{
+  qer_editorimage	models/warzone/trees/gkbbark27
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbbark27
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbbark30
+{
+  qer_editorimage	models/warzone/trees/gkbbark30
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbbark30
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothbark
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothbark
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothbark
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbark
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbark
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbark
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbark20
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbark20
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbark20
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbark20b
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbark20b
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbark20b
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbark22
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbark22
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbark22
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbark22m
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbark22m
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbark22m
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbark23
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbark23
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbark23
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbarkbloco
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbarkbloco
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbarkbloco
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbsmoothdarkbarkblocororjio
+{
+  qer_editorimage	models/warzone/trees/gkbsmoothdarkbarkblocororjio
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbsmoothdarkbarkblocororjio
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbtundradriftwoodbark01
+{
+  qer_editorimage	models/warzone/trees/gkbtundradriftwoodbark01
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/gkbtundradriftwoodbark01
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treeaspenbarkcomp
+{
+  qer_editorimage	models/warzone/trees/treeaspenbarkcomp
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treeaspenbarkcomp
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp1
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp1
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp1
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp2
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp2
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp2
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp3
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp3
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp3
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp4
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp4
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp4
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp5
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp5
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp5
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomp6
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomp6
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomp6
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompbaj
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompbaj
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompbaj
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompcut1
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompcut1
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompcut1
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompcut2
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompcut2
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompcut2
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompdead
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompdead
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompdead
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcomplog1
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcomplog1
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcomplog1
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompmill
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompmill
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompmill
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompsnow
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompsnow
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompsnow
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/treepineforestbarkcompsnowl
+{
+  qer_editorimage	models/warzone/trees/treepineforestbarkcompsnowl
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/treepineforestbarkcompsnowl
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/tundradriftwoodbark01
+{
+  qer_editorimage	models/warzone/trees/tundradriftwoodbark01
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/tundradriftwoodbark01
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/tundradriftwoodbark02
+{
+  qer_editorimage	models/warzone/trees/tundradriftwoodbark02
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/trees/tundradriftwoodbark02
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+//
+//
+//
+
+models/warzone/deadtrees/driftwoodbark01
+{
+  qer_editorimage	models/warzone/deadtrees/driftwoodbark01
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/deadtrees/driftwoodbark01
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/deadtrees/gkbbark
+{
+  qer_editorimage	models/warzone/deadtrees/gkbbark
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/deadtrees/gkbbark
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/deadtrees/gkbtreeaspenbarkcomp
+{
+  qer_editorimage	models/warzone/deadtrees/gkbtreeaspenbarkcomp
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/deadtrees/gkbtreeaspenbarkcomp
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/deadtrees/rock02
+{
+  qer_editorimage	models/warzone/deadtrees/rock02
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/deadtrees/rock02
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
