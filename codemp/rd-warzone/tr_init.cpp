@@ -1499,7 +1499,7 @@ void R_Register( void )
 	// UQ1: Added...
 	//
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "3.0", CVAR_ARCHIVE );
-	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.5", CVAR_ARCHIVE );
+	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "0.5", CVAR_ARCHIVE );
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "0.15", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );

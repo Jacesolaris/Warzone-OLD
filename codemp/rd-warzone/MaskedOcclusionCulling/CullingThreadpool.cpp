@@ -28,6 +28,8 @@
 #include <assert.h>
 #include "CullingThreadpool.h"
 
+#ifdef __SOFTWARE_OCCLUSION__
+
 #define SAFE_DELETE(X) {if (X != nullptr) delete X; X = nullptr;}
 #define SAFE_DELETE_ARRAY(X) {if (X != nullptr) delete[] X; X = nullptr;}
 
@@ -493,3 +495,5 @@ void CullingThreadpool::ComputePixelDepthBuffer(float *depthData)
 	Flush();
 	mMOC->ComputePixelDepthBuffer(depthData);
 }
+
+#endif //__SOFTWARE_OCCLUSION__

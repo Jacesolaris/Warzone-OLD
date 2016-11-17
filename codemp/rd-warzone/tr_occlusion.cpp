@@ -52,12 +52,12 @@ void OQ_InitOcclusionQuery()
 
 void OQ_ShutdownOcclusionQuery()
 {
-#ifdef __THREADED_OCCLUSION__
+#if defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION__)
 	ctp->Flush();
 	ctp->SuspendThreads();
 	MaskedOcclusionCulling::Destroy(moc);
 	delete ctp;
-#endif //!__THREADED_OCCLUSION__
+#endif //defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION__)
 }
 
 struct ShortVertex { float x, y, z; };
@@ -195,12 +195,14 @@ void RB_UpdateOcclusion()
 
 extern void R_RotateForViewer(void);
 
+//#define __SORT_AREAS__
+
 void RB_LeafOcclusion()
 {
 	int i;
 
 	// first, check any outstanding queries
-	RB_UpdateOcclusion();
+	//RB_UpdateOcclusion();
 
 	/*if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 	{
@@ -267,7 +269,7 @@ void RB_LeafOcclusion()
 		GL_State(0);
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-		//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		//GL_State(GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE);
 		GL_State(GLS_POLYMODE_LINE);
 
@@ -281,6 +283,7 @@ void RB_LeafOcclusion()
 		color[3] = 1.0f;
 
 		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, MVP);
+		//GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 		GLSL_SetUniformVec4(shader, UNIFORM_COLOR, color);
 #endif //__SOFTWARE_OCCLUSION__
@@ -303,6 +306,7 @@ void RB_LeafOcclusion()
 		ClipspaceVertex		xyz2[24];
 #endif //__SOFTWARE_OCCLUSION__
 
+#ifdef __SORT_AREAS__
 		/* Sort from close to far */
 		int			numSorted = 0;
 		qboolean	SORTED_ADDED[8192] = { qfalse };
@@ -312,7 +316,7 @@ void RB_LeafOcclusion()
 
 		while (numSorted < tr.world->numVisibleLeafs[0])
 		{
-			int			best = 0;
+			int			best = -1;
 			float		bestDistance = 999999.9;
 
 			for (i = 0; i < tr.world->numVisibleLeafs[0]; i++)
@@ -350,20 +354,29 @@ void RB_LeafOcclusion()
 				ri->Printf(PRINT_ALL, "Sorted leaf %i is %i.\n", i, SORTED_LEAF_IDS[i]);
 			}
 		}
+#else //!__SORT_AREAS__
+		int numSorted = tr.world->numVisibleLeafs[0];
+#endif //__SORT_AREAS__
 
 		int numRendered = 0;
 		qboolean threadsAwake = qfalse;
 
 		for (i = 0; i < numSorted; i++)
 		{
+#ifdef __SOFTWARE_OCCLUSION__
 			//MaskedOcclusionCulling::ClipPlanes clip = MaskedOcclusionCulling::CLIP_PLANE_ALL;
 			//MaskedOcclusionCulling::ClipPlanes clip = MaskedOcclusionCulling::CLIP_PLANE_SIDES;
 			MaskedOcclusionCulling::ClipPlanes clip = MaskedOcclusionCulling::CLIP_PLANE_NONE;
+#endif //__SOFTWARE_OCCLUSION__
 
 			numVerts = 0;
 			numIndexes = 0;
 
+#ifdef __SORT_AREAS__
 			leaf = tr.world->visibleLeafs[0][SORTED_LEAF_IDS[i]];
+#else //!__SORT_AREAS__
+			leaf = tr.world->visibleLeafs[0][i];
+#endif //__SORT_AREAS__
 
 			if (!leaf->nummarksurfaces)
 			{// Hmm nothing in here... Testing this cube would be a little pointless... Always occluded...
@@ -388,7 +401,7 @@ void RB_LeafOcclusion()
 #endif
 
 			/* Create a cube for this mins/maxs */
-			AddCube(SORTED_MINS_LIST[i], SORTED_MAXS_LIST[i], &numIndexes, indexes, &numVerts, xyz);
+			AddCube(leaf->mins/*SORTED_MINS_LIST[i]*/, leaf->maxs/*SORTED_MAXS_LIST[i]*/, &numIndexes, indexes, &numVerts, xyz);
 
 			/* Test the occlusion for this cube */
 #ifdef __SOFTWARE_OCCLUSION__
@@ -571,6 +584,11 @@ void RB_LeafOcclusion()
 		tr.updateVisibleSurfaces[0] = qtrue;
 
 #else //!__SOFTWARE_OCCLUSION__
+		if (r_occlusion->integer > 1)
+			qglFinish();
+
+		RB_UpdateOcclusion();
+
 		//qglDepthRange( 0, 1 );
 		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		GL_State(GLS_DEFAULT);

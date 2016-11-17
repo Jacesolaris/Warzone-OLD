@@ -51,6 +51,8 @@
 
 #include "MaskedOcclusionCulling.h"
 
+#ifdef __SOFTWARE_OCCLUSION__
+
 class CullingThreadpool
 {
 protected:
@@ -320,3 +322,5 @@ public:
 	 */
 	void ComputePixelDepthBuffer(float *depthData);
 };
+
+#endif //__SOFTWARE_OCCLUSION__
