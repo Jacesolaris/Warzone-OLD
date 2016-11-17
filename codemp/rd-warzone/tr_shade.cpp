@@ -2722,6 +2722,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_AttachTextures();
 		}
 		*/
+		
 
 		while (1)
 		{

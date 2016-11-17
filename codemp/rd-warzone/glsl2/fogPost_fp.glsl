@@ -15,6 +15,8 @@ uniform vec4		u_PrimaryLightOrigin;
 
 varying vec2		var_TexCoords;
 
+#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
+
 vec4 positionMapAtCoord ( vec2 coord )
 {
 	return texture2D(u_PositionMap, coord).xyza;
@@ -55,6 +57,8 @@ void main ( void )
 	vec4 pMap = positionMapAtCoord( var_TexCoords );
 	vec4 pixelColor = texture2D(u_DiffuseMap, var_TexCoords);
 	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);
-	vec3 fogColor = applyFog2( pixelColor.rgb, depth, u_ViewOrigin.xyz/*pMap.xyz*/, normalize(u_ViewOrigin.xyz - pMap.xyz), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );
+	vec3 viewOrg = unOpenGlIsFuckedUpify(u_ViewOrigin.xyz);
+	vec3 sunOrg = unOpenGlIsFuckedUpify(u_PrimaryLightOrigin.xyz);
+	vec3 fogColor = applyFog2( pixelColor.rgb, depth, viewOrg.xyz/*pMap.xyz*/, normalize(viewOrg.xyz - pMap.xyz), normalize(viewOrg.xyz - sunOrg.xyz) );
 	gl_FragColor = vec4(fogColor, 1.0);
 }

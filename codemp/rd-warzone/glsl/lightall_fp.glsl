@@ -1,5 +1,7 @@
 //#define __REGION_TEST__
 
+#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
+
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
 uniform sampler2D			u_SteepMap2;
@@ -1061,10 +1063,10 @@ void main()
 		//out_Position = vec4(m_vertPos, 0.0 );
 	#else
 		out_Glow = vec4(0.0);
-		if (length(N.xyz * 0.5 + 0.5) > 0.0) // *sigh* hack for something screwy with normals and multipass q3 shader spam...
+		if (length(N.xyz * 0.5 + 0.5) > 0.0 && length(m_vertPos.xyz) > 0.0) // *sigh* hack for something screwy with normals and multipass q3 shader spam...
 		{
 			out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
-			out_Position = vec4(m_vertPos, u_Local1.a);
+			out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);
 		}
 	#endif
 }

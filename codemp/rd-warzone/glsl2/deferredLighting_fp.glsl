@@ -18,6 +18,14 @@ uniform vec3		u_lightColors[16];
 
 varying vec2		var_TexCoords;
 
+//#define FULL_LIGHTING
+
+#if defined(FULL_LIGHTING)
+
+//
+// Full lighting... Blinn phong and basic lighting as well...
+//
+
 vec4 ConvertToNormals(vec4 color)
 {
 	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
@@ -139,9 +147,12 @@ void main(void)
 			{
 				float lightStrength = 1.0 - (lightDist / lightMax);
 				lightStrength = pow(lightStrength * 0.9, 3.0);
+				
 				//if (u_lightColors[li].r == u_lightColors[li].g && u_lightColors[li].r == u_lightColors[li].b) lightStrength *= 0.5; // Reduce true white strength...
-				if (length(u_lightColors[li].rgb) >= 2.0) lightStrength /= 3.0;
-				else if (length(u_lightColors[li].rgb) >= 1.0) lightStrength /= 2.0;
+				
+				float lightBrightness = length(u_lightColors[li].rgb);
+				if (lightBrightness > 2.0) lightStrength /= 3.0;
+				else if (lightBrightness > 1.0) lightStrength /= 2.0;
 
 				if (lightStrength > 0.0)
 				{
@@ -151,14 +162,11 @@ void main(void)
 					gl_FragColor.rgb += u_lightColors[li].rgb * lightStrength * /*u_Local2.g*/ 0.04; // Always add some basic light...
 
 					if (lambertian3 > 0.0)
-					{
-						if (lightStrength > 0.0)
-						{// this is blinn phong
-							vec3 halfDir3 = normalize(lightDir.xyz + E);
-							float specAngle3 = max(dot(halfDir3, N), 0.0);
-							float spec3 = pow(specAngle3, 16.0);
-							gl_FragColor.rgb += vec3((1.0 - spec3) * (1.0 - norm.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
-						}
+					{// this is blinn phong
+						vec3 halfDir3 = normalize(lightDir.xyz + E);
+						float specAngle3 = max(dot(halfDir3, N), 0.0);
+						float spec3 = pow(specAngle3, 16.0);
+						gl_FragColor.rgb += vec3((1.0 - spec3) * (1.0 - norm.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
 					}
 				}
 			}
@@ -167,3 +175,74 @@ void main(void)
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }
+
+#else //!defined(FULL_LIGHTING)
+
+//
+// Fast lighting... No blinn phong (or sun) lighting...
+//
+
+#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
+
+void main(void)
+{
+	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
+	gl_FragColor = vec4(color.rgb, 1.0);
+
+	// GLSL distance() can't work with large numbers?!?!??!?!?!!??
+	highp vec3 viewOrg = unOpenGlIsFuckedUpify(abs(u_ViewOrigin.xyz));
+	highp vec4 position = abs(texture2D(u_PositionMap, var_TexCoords));
+	//position.xyz = unOpenGlIsFuckedUpify(position.xyz);
+
+	//gl_FragColor = vec4(clamp(vec3(distance(viewOrg, position.xyz) / (unOpenGlIsFuckedUpify(2048.0))), 0.0, 1.0), 1.0);
+	//return;
+
+	if (position.a == 1024.0)
+	{// Skybox... Skip...
+		//gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
+		return;
+	}
+
+	if (position.a == 0.0 && position.xyz == vec3(0.0))
+	{// Unknown... Skip...
+		//gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
+		return;
+	}
+
+	if (u_lightCount > 0.0)
+	{
+		float addedStrength = 1.0;
+		vec3 addedLight = vec3(0.0);
+
+		for (int li = 0; li < u_lightCount; li++)
+		{
+			float lightDist = distance(unOpenGlIsFuckedUpify(abs(u_lightPositions2[li].xyz)), position.xyz);
+			float lightMax = unOpenGlIsFuckedUpify(u_lightDistances[li]) * 1.5;
+
+			if (lightDist < lightMax)
+			{
+				highp float lightStrength = 1.0 - (lightDist / lightMax);
+				lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0);
+
+				if (lightStrength > 0.0)
+				{
+					highp float lightBrightness = length(u_lightColors[li].rgb);
+					if (lightBrightness > 2.0) lightStrength /= 3.0;
+					else if (lightBrightness > 1.0) lightStrength /= 2.0;
+
+					highp float strength = lightStrength;// *u_Local2.g;
+					addedStrength += strength;
+					addedLight += u_lightColors[li].rgb * strength; // Always add some basic light...
+				}
+			}
+		}
+
+		if (addedStrength > 1.0)
+		{
+			highp vec3 power = (addedLight / addedStrength) * 2.3;// u_Local2.g;
+			gl_FragColor.rgb += (power * 0.1) + (power * 0.9 * gl_FragColor.rgb);
+		}
+	}
+}
+
+#endif //defined(FULL_LIGHTING)

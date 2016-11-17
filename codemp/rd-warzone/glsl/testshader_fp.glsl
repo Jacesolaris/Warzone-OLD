@@ -53,86 +53,12 @@ varying vec3		var_sunOrg;
 varying vec3		var_rayDir;
 varying vec3		var_sunDir;
 
+#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
+
 void main(void)
 {
-	//vec4 norm = texture2D(u_NormalMap, var_TexCoords);
-	//gl_FragColor = vec4(norm.rgb * 0.5 + 0.5, 1.0);
-	//return;
-
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
 	gl_FragColor = vec4(color.rgb, 1.0);
-
-	vec4 position = texture2D(u_PositionMap, var_TexCoords);
-
-	if (position.a == 1024.0)
-	{// Skybox... Skip...
-		return;
-	}
-
-	if (position.a == 0.0 && position.xyz == vec3(0.0))
-	{// Unknown... Skip...
-		return;
-	}
-
-	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
-	norm.rgb = norm.rgb * 2.0 - 1.0;
-	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
-	vec3 N = norm.xyz;
-
-	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
-	float lambertian2 = dot(PrimaryLightDir.xyz, N);
-	float spec2 = 0.0;
-	bool noSunPhong = false;
-	float phongFactor = u_Local2.r;
-
-	if (phongFactor < 0.0)
-	{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
-		noSunPhong = true;
-		phongFactor = 0.0;
-	}
-
-	if (lambertian2 > 0.0)
-	{// this is blinn phong
-		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
-		float specAngle = max(dot(halfDir2, N), 0.0);
-		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 0.3;
-	}
-
-	if (noSunPhong)
-	{// Invert phong value so we still have non-sun lights...
-		phongFactor = -u_Local2.r;
-	}
-
-	if (u_lightCount > 0.0)
-	{
-		for (int li = 0; li < u_lightCount; li++)
-		{
-			vec3 lightDir = normalize(u_lightPositions2[li] - position.xyz);
-			float lambertian3 = dot(lightDir.xyz, N);
-			float spec3 = 0.0;
-
-			if (lambertian3 > 0.0)
-			{
-				float lightDist = distance(u_lightPositions2[li], position.xyz);
-				float lightMax = u_lightDistances[li] * 1.5;//u_Local9.r;
-
-				if (lightDist < lightMax)
-				{
-					float lightStrength = 1.0 - (lightDist / lightMax);
-					lightStrength = pow(lightStrength * 0.9/*u_Local9.g*/, 3.0/*u_Local9.b*/);
-
-					if (lightStrength > 0.0)
-					{// this is blinn phong
-						vec3 halfDir3 = normalize(lightDir.xyz + E);
-						float specAngle3 = max(dot(halfDir3, N), 0.0);
-						spec3 = pow(specAngle3, 16.0);
-						gl_FragColor.rgb += vec3((1.0 - spec3) * (1.0 - norm.a)) * u_lightColors[li].rgb * lightStrength * phongFactor * 0.6;
-					}
-				}
-			}
-		}
-	}
 }
 
 #if 0

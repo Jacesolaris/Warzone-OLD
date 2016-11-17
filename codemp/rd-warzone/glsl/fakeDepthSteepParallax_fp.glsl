@@ -15,6 +15,8 @@ varying vec2				var_TexCoords;
 
 vec3 vLocalSeed;
 
+#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
+
 // This function returns random number from zero to one
 float randZeroOne()
 {
@@ -29,26 +31,7 @@ float randZeroOne()
 
 float GetHeight(vec2 Coord)
 {
-	/*vec3 pos = texture2D( u_PositionMap, Coord ).xyz;
-	vLocalSeed = pos;
-	return randZeroOne();*/
-
-	//return clamp(length(texture2D( u_TextureMap, Coord ).xyz), 0.0, 1.0);
 	return texture2D( u_NormalMap, Coord ).a;
-	
-	/*vec3 color = normal * 1.33333;
-	color = clamp(color, 0.0, 1.0);
-	
-	float combined_color = color.r + color.g + color.b;
-  
-	if (combined_color > 3.0) combined_color /= 10.0;
-	else if (combined_color > 2.0) combined_color /= 7.0;
-	else if (combined_color > 1.0) combined_color /= 5.0;
-  
-	float height = (((0.0 - (combined_color)) * 2.0) - 1.0);
-  
-	//return clamp(height * 0.33333, 0.0, 1.0);
-	return height * 0.33333;*/
 }
 
 mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
@@ -96,6 +79,7 @@ void main (void)
 	}*/
 
 	vec4 coPos = positionMap;
+	//#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 ) // FIXME: If I ever finish this...
 	float dist = distance(u_ViewOrigin.xyz, coPos.xyz);
 	float depth = 1.0 - clamp(dist / 2048.0, 0.0, 1.0);
 
