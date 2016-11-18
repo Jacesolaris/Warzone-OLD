@@ -4,6 +4,7 @@
 #define USE_REFLECTION				// Enable reflections on water.
 //#define HEIGHT_BASED_FOG			// Height based volumetric fog. Works but has some issues I can't be bothered fixing atm.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
+//#define __TEST_WATER__				// Testing experimental water...
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -115,11 +116,13 @@ const vec3 bigDepthColour = vec3(0.0059, 0.1276, 0.18);
 //vec3 bigDepthColour = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 //const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
-const vec3 extinction = vec3(7.0, 96.0, 128.0);			// Horizontal
+//const vec3 extinction = vec3(7.0, 96.0, 128.0);			// Horizontal
+const vec3 extinction = vec3(35.0, 480.0, 640.0);
 //vec3 extinction = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 // Water transparency along eye vector.
-const float visibility = 32.0;
+//const float visibility = 32.0;
+const float visibility = 320.0;
 
 // Increase this value to have more smaller waves.
 const vec2 scale = vec2(0.002, 0.002);
@@ -300,6 +303,255 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 	return mix( rgb, fogColor, fogAmount );
 }
 
+#ifdef __TEST_WATER__
+/*
+"Seascape" by Alexander Alekseev aka TDM - 2014
+License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+Contact: tdmaav@gmail.com
+*/
+
+const int NUM_STEPS = 8;
+const float PI = 3.1415;
+const float EPSILON = 1e-3;
+float EPSILON_NRM = 0.1 / u_Dimensions.x;
+
+#define iGlobalTime u_Time
+
+// sea
+const int ITER_GEOMETRY = 3;
+const int ITER_FRAGMENT = 5;
+const float SEA_HEIGHT = 0.6;
+const float SEA_CHOPPY = 4.0;
+const float SEA_SPEED = 0.8;
+const float SEA_FREQ = 0.16;
+const vec3 SEA_BASE = vec3(0.1, 0.19, 0.22);
+const vec3 SEA_WATER_COLOR = vec3(0.8, 0.9, 0.6);
+float SEA_TIME = 1.0 + iGlobalTime * SEA_SPEED;
+mat2 octave_m = mat2(1.6, 1.2, -1.2, 1.6);
+
+// math
+mat3 fromEuler(vec3 ang) {
+	vec2 a1 = vec2(sin(ang.x), cos(ang.x));
+	vec2 a2 = vec2(sin(ang.y), cos(ang.y));
+	vec2 a3 = vec2(sin(ang.z), cos(ang.z));
+	mat3 m;
+	m[0] = vec3(a1.y*a3.y + a1.x*a2.x*a3.x, a1.y*a2.x*a3.x + a3.y*a1.x, -a2.y*a3.x);
+	m[1] = vec3(-a2.y*a1.x, a1.y*a2.y, a2.x);
+	m[2] = vec3(a3.y*a1.x*a2.x + a1.y*a3.x, a1.x*a3.x - a1.y*a3.y*a2.x, a2.y*a3.y);
+	return m;
+}
+float hash(vec2 p) {
+	float h = dot(p, vec2(127.1, 311.7));
+	return fract(sin(h)*43758.5453123);
+}
+float noise(in vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f*f*(3.0 - 2.0*f);
+	return -1.0 + 2.0*mix(mix(hash(i + vec2(0.0, 0.0)),
+		hash(i + vec2(1.0, 0.0)), u.x),
+		mix(hash(i + vec2(0.0, 1.0)),
+		hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// lighting
+float diffuse(vec3 n, vec3 l, float p) {
+	return pow(dot(n, l) * 0.4 + 0.6, p);
+}
+float specular(vec3 n, vec3 l, vec3 e, float s) {
+	float nrm = (s + 8.0) / (3.1415 * 8.0);
+	return pow(max(dot(reflect(e, n), l), 0.0), s) * nrm;
+}
+
+// sky
+vec3 getSkyColor(vec3 e) {
+	e.y = max(e.y, 0.0);
+	vec3 ret;
+	ret.x = pow(1.0 - e.y, 2.0);
+	ret.y = 1.0 - e.y;
+	ret.z = 0.6 + (1.0 - e.y)*0.4;
+	return ret;
+}
+
+// sea
+float sea_octave(vec2 uv, float choppy) {
+	uv += noise(uv);
+	vec2 wv = 1.0 - abs(sin(uv));
+	vec2 swv = abs(cos(uv));
+	wv = mix(wv, swv, wv);
+	return pow(1.0 - pow(wv.x * wv.y, 0.65), choppy);
+}
+
+float map(vec3 p) {
+	float freq = SEA_FREQ;
+	float amp = SEA_HEIGHT;
+	float choppy = SEA_CHOPPY;
+	vec2 uv = p.xz; uv.x *= 0.75;
+
+	float d, h = 0.0;
+	for (int i = 0; i < ITER_GEOMETRY; i++) {
+		d = sea_octave((uv + SEA_TIME)*freq, choppy);
+		d += sea_octave((uv - SEA_TIME)*freq, choppy);
+		h += d * amp;
+		uv *= octave_m; freq *= 1.9; amp *= 0.22;
+		choppy = mix(choppy, 1.0, 0.2);
+	}
+	return p.y - h;
+}
+
+float map_detailed(vec3 p) {
+	float freq = SEA_FREQ;
+	float amp = SEA_HEIGHT;
+	float choppy = SEA_CHOPPY;
+	vec2 uv = p.xz; uv.x *= 0.75;
+
+	float d, h = 0.0;
+	for (int i = 0; i < ITER_FRAGMENT; i++) {
+		d = sea_octave((uv + SEA_TIME)*freq, choppy);
+		d += sea_octave((uv - SEA_TIME)*freq, choppy);
+		h += d * amp;
+		uv *= octave_m; freq *= 1.9; amp *= 0.22;
+		choppy = mix(choppy, 1.0, 0.2);
+	}
+	return p.y - h;
+}
+
+vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
+	float fresnel = clamp(1.0 - dot(n, -eye), 0.0, 1.0);
+	fresnel = pow(fresnel, 3.0) * 0.65;
+
+	vec3 reflected = getSkyColor(reflect(eye, n));
+	vec3 refracted = SEA_BASE + diffuse(n, l, 80.0) * SEA_WATER_COLOR * 0.12;
+
+	vec3 color = mix(refracted, reflected, fresnel);
+
+	float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
+	color += SEA_WATER_COLOR * (p.y - SEA_HEIGHT) * 0.18 * atten;
+
+	color += vec3(specular(n, l, eye, 60.0));
+
+	return color;
+}
+
+// tracing
+vec3 getNormal(vec3 p, float eps) {
+	vec3 n;
+	n.y = map_detailed(p);
+	n.x = map_detailed(vec3(p.x + eps, p.y, p.z)) - n.y;
+	n.z = map_detailed(vec3(p.x, p.y, p.z + eps)) - n.y;
+	n.y = eps;
+	return normalize(n);
+}
+
+float heightMapTracing(vec3 ori, vec3 dir, out vec3 p) {
+	float tm = 0.0;
+	float tx = 1000.0;
+	float hx = map(ori + dir * tx);
+	if (hx > 0.0) return tx;
+	float hm = map(ori + dir * tm);
+	float tmid = 0.0;
+	for (int i = 0; i < NUM_STEPS; i++) {
+		tmid = mix(tm, tx, hm / (hm - hx));
+		p = ori + dir * tmid;
+		float hmid = map(p);
+		if (hmid < 0.0) {
+			tx = tmid;
+			hx = hmid;
+		}
+		else {
+			tm = tmid;
+			hm = hmid;
+		}
+	}
+	return tmid;
+}
+
+uniform mat4		u_ModelMatrix;
+
+#define M_PI				3.14159265358979323846
+
+float atan2(in float y, in float x)
+{
+	bool s = (abs(x) > abs(y));
+	return mix(PI / 2.0 - atan(x, y), atan(y, x), s);
+	//return x == 0.0 ? sign(y)*M_PI / 2 : atan(y, x)
+}
+
+// main
+void mainImage(out vec4 fragColor, in vec2 fragCoord, in vec4 positionMap, in vec4 waterMap, in vec4 waterMap2, in vec3 screenCenterOrg)
+{
+	//vec2 uv = fragCoord.xy / u_Dimensions.xy;
+	//uv = uv * 2.0 - 1.0;
+	//uv.x *= u_Dimensions.x / u_Dimensions.y;
+	vec2 uv = fragCoord.xy;
+	uv = uv * 2.0 - 1.0;
+	uv.x *= u_Dimensions.x / u_Dimensions.y;
+	float time = iGlobalTime * 0.3;// +iMouse.x*0.01;
+
+	// ray
+	// bteitler: Calculated a vector that smoothly changes over time in a sinusoidal (wave) pattern.  
+	// This will be used to drive where the user is looking in world space.
+	//vec3 ang = vec3(0.0);//vec3(sin(time*3.0)*0.1,sin(time)*0.2+0.3,time);    
+	//vec3 ang = vec3(0.0, iMouse.y * 0.1, iMouse.x * 0.1); // UQ1: This moves based on mouse x,y coords...
+	//vec3 ang = vec3(0.0, (iMouse.y / iResolution.y) * PI, (iMouse.x / iResolution.x) * PI * 2.0); // UQ1: full 360 view available
+
+	// bteitler: Calculate the "origin" of the camera in world space based on time.  Camera is located
+	// at height 3.5, at x 0 (zero), and flies over the ocean in the z axis over time.
+	//vec3 ori = vec3(0.0, 3.5, time*5.0);
+	//vec3 ori = waterMap.xyz;
+	//vec3 ori = (u_ModelViewProjectionMatrix * vec4(waterMap.xyz, 1.0)).xyz;
+	
+	//vec3 ori = vec3(iMouse.x * 0.1,13.5,iMouse.y * 0.1); // UQ1: This moves left/right and forward/back based on mouse...
+	//vec3 ang = vec3(0.0, (iMouse.y / iResolution.y) * PI, (iMouse.x / iResolution.x) * PI * 2.0); // UQ1: full 360 view available
+	
+	//vec3 ori = vec3(u_ViewOrigin.x, u_ViewOrigin.y - waterMap.y, u_ViewOrigin.z) * u_Local0.a
+	highp vec3 vOrg = (u_ViewOrigin.xyz + 524288.0);
+	highp vec3 wOrg = (waterMap.xyz + 524288.0);
+	//highp vec3 ori = vec3(u_ViewOrigin.x / u_Local0.a, (u_ViewOrigin.y - waterMap.y) / u_Local0.b, u_ViewOrigin.z / u_Local0.a);
+	highp vec3 ori = vec3(vOrg.x / u_Local0.a, (vOrg.y - wOrg.y) / u_Local0.b, vOrg.z / u_Local0.a);
+	
+	//vec3 vOri = (u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz, 1.0)).xyz;
+	//vec3 wOri = (u_ModelViewProjectionMatrix * vec4(waterMap.xyz, 1.0)).xyz;
+	//vec3 ori = vec3(vOri.x, vOri.y - wOri.y, vOri.z) * u_Local0.a;
+
+	vec3 vDir = normalize(u_ViewOrigin.xyz - waterMap.xyz) *0.5 + 0.5;
+	vec3 ang = vec3(0.0, vDir.y * PI, vDir.x * PI * 2.0); // UQ1: full 360 view available
+	//vec3 ang = vec3(0.0);
+
+	if (u_Local0.r == 1) ang.y *= -1.0;
+	if (u_Local0.r == 2) ang.z *= -1.0;
+
+	vec3 dir = normalize(vec3(uv.xy, -2.0)); // commented version method...
+	//vec3 dir = normalize(vec3(uv.xy, -2.0)); dir.z += length(uv) * 0.15;
+	dir = normalize(dir) * fromEuler(ang);
+
+	vec3 p;
+	heightMapTracing(ori, dir, p);
+	vec3 dist = p - ori;
+
+	vec3 n = getNormal(p, dot(dist, dist) * EPSILON_NRM);
+	vec3 light = normalize(vec3(0.0, 1.0, 0.8));
+
+	// color
+	vec3 color = mix(
+		fragColor.rgb/*getSkyColor(dir)*/,
+		getSeaColor(p, n, light, dir, dist),
+		pow(smoothstep(0.0, -0.05, dir.y), 0.3));
+
+	// post
+	fragColor = vec4(pow(color, vec3(0.75)), 1.0);
+}
+#endif //__TEST_WATER__
+
+// lighting
+float getdiffuse(vec3 n, vec3 l, float p) {
+	return pow(dot(n, l) * 0.4 + 0.6, p);
+}
+float getspecular(vec3 n, vec3 l, vec3 e, float s) {
+	float nrm = (s + 8.0) / (3.1415 * 8.0);
+	return pow(max(dot(reflect(e, n), l), 0.0), s) * nrm;
+}
+
 void main ( void )
 {
 	vec3 color2 = texture2D(u_DiffuseMap, var_TexCoords).rgb;
@@ -367,95 +619,19 @@ void main ( void )
 		return;
 	}
 
+#ifdef __TEST_WATER__
+	if (pixelIsInWaterRange || pixelIsUnderWater)
+	{
+		vec4 col2 = vec4(0.0);
+		vec3 screenCenterOrg = positionMapAtCoord(vec2(0.0)).xzy;
+		mainImage(col2, var_TexCoords, positionMap.xzya, waterMap.xzya, waterMap2.xzya, screenCenterOrg);
+		color.rgb = col2.rgb;
+	}
+#else //!__TEST_WATER__
+
 	float waterLevel = waterMap.y;
 	float level = waterMap.y;
 	float depth = 0.0;
-
-#if 0
-	if (pixelIsUnderWater)
-	{// If we are underwater let's leave out complex computations
-#if defined(USE_UNDERWATER)
-		depth = length(position - ViewOrigin.xyz);
-		float depthN = depth * fadeSpeed;
-		float depth2 = level - ViewOrigin.y;
-		
-		vec3 waterCol = clamp(length(sunColor) / vec3(sunScale), 0.0, 1.0);
-		waterCol = waterCol * mix(depthColour, bigDepthColour, clamp(depth2 / extinction, 0.0, 1.0));
-
-		//gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-		//return;
-			
-		if (position.y <= level)
-		{
-			color2 = color2 - color2 * clamp(depth2 / extinction, 0.0, 1.0);
-			color = mix(color2, waterCol, clamp(depthN / visibility, 0.0, 1.0));
-		}
-		else
-		{
-			vec3 eyeVec = position - ViewOrigin.xyz;	
-			vec3 eyeVecNorm = normalize(eyeVec);
-			float t = (level - ViewOrigin.xyz.y) / eyeVecNorm.y;
-			vec3 surfacePoint = ViewOrigin.xyz + eyeVecNorm * t;
-			
-			eyeVecNorm = normalize(eyeVecNorm);
-			depth = length(surfacePoint - ViewOrigin.xyz);
-			float depthN = depth * fadeSpeed;
-			
-			float depth2 = level - ViewOrigin.y;
-			
-			vec2 texCoord = vec2(0.0);
-			texCoord = var_TexCoords.xy;
-			texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale);
-			color2 = texture2D(u_DiffuseMap, texCoord).rgb;
-			
-			color2 = color2 - color2 * clamp(depth2 / extinction, 0.0, 1.0);
-			color = mix(color2, waterCol, clamp(depthN / visibility, 0.0, 1.0));
-			
-			vec3 myNormal = normalize(vec3(0.0, 1.0, 0.0));
-		
-			texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
-			mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal0a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
-	
-			texCoord = surfacePoint.xz * 0.8 + wind * timer * 0.00008;
-			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal1a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
-			
-			texCoord = surfacePoint.xz * 0.4 + wind * timer * 0.00004;
-			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal2a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
-			
-			texCoord = surfacePoint.xz * 0.1 + wind * timer * 0.00002;
-			tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-			vec3 normal3a = normalize(tangentFrame * texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0);
-			
-			vec3 normal = normalize(normal0a * normalModifier.x + normal1a * normalModifier.y +
-									  normal2a * normalModifier.z + normal3a * normalModifier.w);
-									  
-			vec3 lightDir = waterMap2.xyz - u_PrimaryLightOrigin.xzy;
-			lightDir.xz = -lightDir.xz;
-
-			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
-			float dotSpec = clamp(dot(mirrorEye.xyz, -lightDir) * 0.5 + 0.5, 0.0, 1.0);
-			//vec3 fresnel = vec3(0.0);
-			float fresnel = fresnelTerm(normal, eyeVecNorm);
-			vec3 specular = (1.0 - fresnel) * clamp(-lightDir.y, 0.0, 1.0) * ((pow(dotSpec, 512.0)) * (shininess * 1.8 + 0.2))* sunColor;
-			specular += specular * 25 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor;
-
-			color = clamp(color + max(specular, sunColor), 0.0, 1.0);
-			//color = mix(refraction, bigDepthColour, fresnel);
-			//color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
-			color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
-		}
-		
-		gl_FragColor = vec4(color, 1.0);
-		return;
-#else //!defined(USE_UNDERWATER)
-		gl_FragColor = vec4(color2, 1.0);
-		return;
-#endif //defined(USE_UNDERWATER)
-	}
-#endif
 
 	if (pixelIsInWaterRange || pixelIsUnderWater)
 	{
@@ -538,22 +714,22 @@ void main ( void )
 
 		texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
 		mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal0a = normalize(tangentFrame * (texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0));
+		vec3 normal0a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
 
 		texCoord = surfacePoint.xz * 0.8 + wind * timer * 0.00008;
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal1a = normalize(tangentFrame * (texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0));
+		vec3 normal1a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
 		
 		texCoord = surfacePoint.xz * 0.4 + wind * timer * 0.00004;
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal2a = normalize(tangentFrame * (texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0));
+		vec3 normal2a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
 		
 		texCoord = surfacePoint.xz * 0.1 + wind * timer * 0.00002;
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal3a = normalize(tangentFrame * (texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0));
+		vec3 normal3a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
 		
-		vec3 normal = normalize((normal0a * normalModifier.x + normal1a * normalModifier.y +
-								  normal2a * normalModifier.z + normal3a * normalModifier.w));
+		vec3 normal = normalize(((normal0a * normalModifier.x) + (normal1a * normalModifier.y) +
+						(normal2a * normalModifier.z) + (normal3a * normalModifier.w)));
 
 		texCoord = var_TexCoords.xy;
 
@@ -577,8 +753,6 @@ void main ( void )
 			refraction = color2;
 		}
 
-		float fresnel = fresnelTerm(normal, eyeVecNorm);
-		
 		float waterCol = clamp(length(sunColor) / sunScale, 0.0, 1.0);
 		
 		vec3 refraction1 = mix(refraction, depthColour * vec3(waterCol), clamp(vec3(depthN) / vec3(visibility), 0.0, 1.0));
@@ -611,10 +785,17 @@ void main ( void )
 		vec3 specular = vec3(0.0);
 
 		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
-		normal *= -myNormal.xyz;
+		//normal *= -myNormal.xyz;
 
 		float lambertian2 = dot(lightDir.xyz, normal);
 		float spec2 = 0.0;
+		
+#if 1
+		float fresnel = clamp(1.0 - dot(normal, -eyeVecNorm), 0.0, 1.0);
+		fresnel = pow(fresnel, 3.0) * 0.65;
+#else
+		float fresnel = fresnelTerm(normal, eyeVecNorm);
+#endif
 
 		if(lambertian2 > 0.0)
 		{// this is blinn phong
@@ -625,18 +806,27 @@ void main ( void )
 			specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
 		}
 
+
+#if 1
+		/* TESTING */
+		vec3 dist = -eyeVecNorm;
+
+		color = mix(refraction, bigDepthColour, fresnel);
+
+		float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
+		color += depthColour.rgb * (clamp(waveHeight - waterMap.y, 0.0, 1.0))* 0.18 * atten;
+
+		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
+		/* END - TESTING */
+#else
+		color = mix(refraction, bigDepthColour, fresnel);
+#endif
+
 #if defined(USE_REFLECTION)
 		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
 		{
-			color = mix(refraction, bigDepthColour, fresnel);
 			color = AddReflection(var_TexCoords, position, vec3(waterMap3.x, level, waterMap3.z), color.rgb);
 		}
-		else
-		{
-			color = mix(refraction, bigDepthColour, fresnel);
-		}
-#else //!defined(USE_REFLECTION)
-		color = mix(refraction, bigDepthColour, fresnel);
 #endif //defined(USE_REFLECTION)
 
 		color = clamp(color + max(specular, foam.rgb * sunColor), 0.0, 1.0);
@@ -655,6 +845,7 @@ void main ( void )
 			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xyz/*position.xzy*/, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );
 		}
 	}
+#endif //__TEST_WATER__
 
 	gl_FragColor = vec4(color, 1.0);
 }

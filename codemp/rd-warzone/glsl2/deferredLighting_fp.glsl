@@ -64,6 +64,15 @@ vec4 ConvertToNormals(vec4 color)
 	return norm;
 }
 
+// Blinn-Phong shading model with rim lighting (diffuse light bleeding to the other side).
+// `normal`, `view` and `light` should be normalized.
+vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor) {
+	vec3 halfLV = normalize(light + view);
+	float spe = pow(max(dot(normal, halfLV), 0.0), 32.0);
+	float dif = dot(normal, light) * 0.5 + 0.75;
+	return dif*diffuseColor + spe*specularColor;
+}
+
 void main(void)
 {
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);

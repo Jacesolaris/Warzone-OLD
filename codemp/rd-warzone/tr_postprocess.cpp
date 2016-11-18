@@ -1753,8 +1753,9 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);// backEnd.viewParms.world.transformMatrix);// backEnd.ori.transformMatrix); //backEnd.ori.modelMatrix //backEnd.viewParms.ori.transformMatrix
 	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
-
+	
 	matrix_t trans, model, mvp, invMvp;
 	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
@@ -1831,6 +1832,9 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
 		GLSL_SetUniformVec4(shader, UNIFORM_MAPINFO, loc);
 	}
+
+	//vec3_t viewAngles;
+	//TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
 
 	{
 		vec4_t loc;
