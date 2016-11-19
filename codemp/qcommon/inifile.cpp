@@ -150,6 +150,35 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 	return(strlen(buffer));
 }
 
+void DebugPrint(char *text)
+{
+#if defined(rd_warzone_x86_EXPORTS)
+	ri->Printf(PRINT_ALL, text);
+#elif defined(_CGAME) || defined(_GAME) || defined(uix86_EXPORTS)
+	trap->Print(text);
+#elif defined(DEDICATED)
+	Com_Printf(text);
+#else
+	Com_Printf(text);
+#endif
+}
+
+void DumpIniData(char *file_name, char *buffer)
+{
+	fileHandle_t wfp = NULL;
+
+	int wfpLen = FS_FOpenFileByMode(file_name, &wfp, FS_WRITE);
+
+	if (!wfp)
+	{
+		DebugPrint(va("unable to open output file.\n"));
+		return;
+	}
+
+	FS_Write(buffer, strlen(buffer), wfp);
+	FS_FCloseFile(wfp);
+}
+
 /*************************************************************************
  * Function:    write_private_profile_string()
  * Arguments:   <char *> section - the name of the section to search for
@@ -158,34 +187,15 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
  *              <char *> file_name - the name of the .ini file to read from
  * Returns:     TRUE if successful, otherwise FALSE
  *************************************************************************/
-int write_private_profile_string(char *section, char *entry, char *buffer, char *filename)
+int write_private_profile_string(char *section, char *entry, char *buffer, char *file_name)
 {
-	fileHandle_t rfp = NULL, wfp = NULL;
-	char file_name[128] = { 0 };
-	char tmp_name[128] = { 0 };
+	fileHandle_t rfp = NULL;
 	char buff[MAX_LINE_LENGTH] = { 0 };
 	char t_section[MAX_LINE_LENGTH] = { 0 };
 	int len = strlen(entry);
-	int rfpLen, wfpLen;
+	int rfpLen;
+	char out_buffer[524288] = { 0 };
 
-#if defined(rd_warzone_x86_EXPORTS)
-	cvar_t  *fs_homepath = ri->Cvar_Get("fs_homepath", "", CVAR_INIT);
-	sprintf(file_name, "%s\\%s", fs_homepath->string, filename);
-#elif defined(_CGAME) || defined(_GAME) || defined(uix86_EXPORTS)
-	char buff2[128];
-	memset(buff2, 0, sizeof(buff2));
-	trap->Cvar_VariableStringBuffer("fs_homepath", buff2, sizeof(buff2));
-	sprintf(file_name, "%s\\%s", buff2, filename);
-#elif defined(DEDICATED)
-	extern cvar_t *Cvar_Get(const char *var_name, const char *var_value, uint32_t flags);
-	cvar_t  *fs_homepath = Cvar_Get("fs_homepath", "", CVAR_INIT);
-	sprintf(file_name, "%s\\%s", fs_homepath->string, filename);
-#else
-	cvar_t  *fs_homepath = Cvar_Get("fs_homepath", "", CVAR_INIT);
-	sprintf(file_name, "%s\\%s", fs_homepath->string, filename);
-#endif
-
-	tmpnam(tmp_name); /* Get a temporary file name to copy to */
 	sprintf(t_section, "[%s]", section);/* Format the section name */
 
 	rfpLen = FS_FOpenFileByMode(file_name, &rfp, FS_READ);
@@ -195,29 +205,14 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 		char sectionText[81] = { 0 };
 		char entryText[1024] = { 0 };
 
-		wfpLen = FS_FOpenFileByMode(file_name, &wfp, FS_WRITE); /*  then make one */
-
-		if (!wfp /*|| !wfpLen*/)
-		{
-			return(0);
-		}
-
 		sprintf(sectionText, "%s\n", t_section);
-		FS_Write(sectionText, strlen(sectionText), wfp);
+		strcat(out_buffer, sectionText);
 
 		sprintf(entryText, "%s=%s\n", entry, buffer);
-		FS_Write(entryText, strlen(entryText), wfp);
+		strcat(out_buffer, entryText);
 
-		FS_FCloseFile(wfp);
+		DumpIniData(file_name, out_buffer);
 		return(1);
-	}
-
-	wfpLen = FS_FOpenFileByMode(tmp_name, &wfp, FS_WRITE);
-
-	if (!wfp /*|| !wfpLen*/)
-	{
-		FS_FCloseFile(rfp);
-		return(0);
 	}
 
 	/* Move through the file one line at a time until a section is
@@ -231,24 +226,27 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 		{
 			char sectionText[81] = { 0 };
 			char entryText[1024] = { 0 };
+			char newlineText[2] = { 0 };
 
 			/* Failed to find section, so add one to the end */
+			sprintf(newlineText, "\n");
+			strcat(out_buffer, sectionText);
+
 			sprintf(sectionText, "%s\n", t_section);
-			FS_Write(sectionText, strlen(sectionText), wfp);
+			strcat(out_buffer, sectionText);
 
 			sprintf(entryText, "%s=%s\n", entry, buffer);
-			FS_Write(entryText, strlen(entryText), wfp);
+			strcat(out_buffer, entryText);
 
-			/* Clean up and rename */
 			FS_FCloseFile(rfp);
-			FS_FCloseFile(wfp);
-			unlink(file_name);
-			rename(tmp_name, file_name);
+
+			DumpIniData(file_name, out_buffer);
 			return(1);
 		}
 
 		sprintf(buffText, "%s\n", buff);
-		FS_Write(buffText, strlen(buffText), wfp);
+		strcat(out_buffer, buffText);
+
 	} while (strncmp(buff, t_section, strlen(t_section)));
 
 	/* Now that the section has been found, find the entry. Stop searching
@@ -264,13 +262,11 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 
 			/* EOF without an entry so make one */
 			sprintf(entryText, "%s=%s\n", entry, buffer);
-			FS_Write(entryText, strlen(entryText), wfp);
+			strcat(out_buffer, entryText);
 
-			/* Clean up and rename */
 			FS_FCloseFile(rfp);
-			FS_FCloseFile(wfp);
-			unlink(file_name);
-			rename(tmp_name, file_name);
+
+			DumpIniData(file_name, out_buffer);
 			return(1);
 		}
 
@@ -278,7 +274,7 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 			break;
 
 		sprintf(buffText, "%s\n", buff);
-		FS_Write(buffText, strlen(buffText), wfp);
+		strcat(out_buffer, buffText);
 	}
 
 	if (buff[0] == '\n'/*'\0'*/)
@@ -286,13 +282,13 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 		char entryText[1024] = { 0 };
 
 		sprintf(entryText, "%s=%s\n", entry, buffer);
-		FS_Write(entryText, strlen(entryText), wfp);
+		strcat(out_buffer, entryText);
 
 		do
 		{
 			char buffText[81] = { 0 };
 			sprintf(buffText, "%s\n", buff);
-			FS_Write(buffText, strlen(buffText), wfp);
+			strcat(out_buffer, buffText);
 		} while (read_line(rfp, buff));
 	}
 	else
@@ -300,21 +296,19 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 		char entryText[1024] = { 0 };
 
 		sprintf(entryText, "%s=%s\n", entry, buffer);
-		FS_Write(entryText, strlen(entryText), wfp);
+		strcat(out_buffer, entryText);
 
 		while (read_line(rfp, buff))
 		{
 			char buffText[81] = { 0 };
 			sprintf(buffText, "%s\n", buff);
-			FS_Write(buffText, strlen(buffText), wfp);
+			strcat(out_buffer, buffText);
 		}
 	}
 
-	/* Clean up and rename */
-	FS_FCloseFile(wfp);
 	FS_FCloseFile(rfp);
-	unlink(file_name);
-	rename(tmp_name, file_name);
+
+	DumpIniData(file_name, out_buffer);
 	return(1);
 }
 

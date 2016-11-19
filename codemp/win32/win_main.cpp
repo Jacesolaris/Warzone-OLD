@@ -12,6 +12,7 @@
 #include <io.h>
 #include <conio.h>
 #include "qcommon/stringed_ingame.h"
+#include <thread>
 
 #define MEM_THRESHOLD 128*1024*1024
 
@@ -938,6 +939,8 @@ int main( int argc, char **argv )
 {
 	int		i;
 	char	commandLine[ MAX_STRING_CHARS ] = { 0 };
+
+	std::thread::id main_thread_id = std::this_thread::get_id();
 
 	Sys_CreateConsole();
 

@@ -213,7 +213,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 		float isWater = wMap.a;
 
-		if (isWater <= 0.0 && pMap.y >= waterMap.y)
+		if (isWater <= 0.0 && (pMap.y >= waterMap.y || length(pMap.xyz) == 0.0))
 		{
 			QLAND_Y = y;
 			break;
@@ -237,7 +237,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 		float isWater = wMap.a;
 
-		if (isWater <= 0.0 && pMap.y >= waterMap.y)
+		if (isWater <= 0.0 && (pMap.y >= waterMap.y || length(pMap.xyz) == 0.0))
 		{
 			LAND_Y = y;
 			break;

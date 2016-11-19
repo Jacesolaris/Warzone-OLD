@@ -1735,12 +1735,29 @@ Info_SetValueForKey
 Changes or adds a key/value pair
 ==================
 */
-void Info_SetValueForKey( char *s, const char *key, const char *value ) {
+void Info_SetValueForKey( char *s, const char *key, const char *newvalue ) {
 	char	newi[MAX_INFO_STRING];
 	const char* blacklist = "\\;\"";
+	char value[MAX_INFO_STRING] = { 0 };
+	int i = 0;
 
 	if ( strlen( s ) >= MAX_INFO_STRING ) {
 		Com_Error( ERR_DROP, "Info_SetValueForKey: oversize infostring" );
+	}
+
+	for (i = 0; i < strlen(newvalue); i++)
+	{// UQ1: Copy the string to a new version and replace the blacklisted '\' characters with '/'... Since both *nix and windows can use them in paths anyway...
+		if (newvalue[i] == '\\')
+		{
+			value[i] = '/';
+
+			if (i + 1 < strlen(newvalue) && newvalue[i + 1] == '\\')
+				i++; // Skip the extra '\'...
+		}
+		else
+		{
+			value[i] = newvalue[i];
+		}
 	}
 
 	for(; *blacklist; ++blacklist)
@@ -1776,12 +1793,29 @@ Changes or adds a key/value pair
 Includes and retains zero-length values
 ==================
 */
-void Info_SetValueForKey_Big( char *s, const char *key, const char *value ) {
+void Info_SetValueForKey_Big( char *s, const char *key, const char *newvalue ) {
 	char	newi[BIG_INFO_STRING];
 	const char* blacklist = "\\;\"";
+	char value[BIG_INFO_STRING] = { 0 };
+	int i = 0;
 
-	if ( strlen( s ) >= BIG_INFO_STRING ) {
-		Com_Error( ERR_DROP, "Info_SetValueForKey_Big: oversize infostring" );
+	if (strlen(s) >= BIG_INFO_STRING) {
+		Com_Error(ERR_DROP, "Info_SetValueForKey_Big: oversize infostring");
+	}
+
+	for (i = 0; i < strlen(newvalue); i++)
+	{// UQ1: Copy the string to a new version and replace the blacklisted '\' characters with '/'... Since both *nix and windows can use them in paths anyway...
+		if (newvalue[i] == '\\')
+		{
+			value[i] = '/';
+
+			if (i + 1 < strlen(newvalue) && newvalue[i + 1] == '\\')
+				i++; // Skip the extra '\'...
+		}
+		else
+		{
+			value[i] = newvalue[i];
+		}
 	}
 
 	for(; *blacklist; ++blacklist)

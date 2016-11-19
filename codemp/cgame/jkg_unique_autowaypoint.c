@@ -288,6 +288,8 @@ qboolean AIMOD_IsWaypointHeightMarkedAsBad( vec3_t org )
 	return qfalse;
 }
 
+int CPU_INFO_VALUE = -1;
+
 int UQ_Get_CPU_Info( void )
 {
 #ifdef _WIN32 // UQ1: Hell, I don't know.. Should work in linux but doesnt...
@@ -313,6 +315,8 @@ int UQ_Get_CPU_Info( void )
     qboolean    bMONITOR_MWAIT = qfalse;
     qboolean    bCPLQualifiedDebugStore = qfalse;
     qboolean    bThermalMonitor2 = qfalse;
+
+	if (CPU_CHECKED) return CPU_INFO_VALUE;
 
 	trap->Print("^4-------------------------- ^5[^7CPU Information^5] ^4--------------------------\n");
 
@@ -474,10 +478,12 @@ int UQ_Get_CPU_Info( void )
 	trap->Print("^4-----------------------------------------------------------------------\n");
 
 	CPU_CHECKED = qtrue;
-	return  nRet;
+	CPU_INFO_VALUE = nRet;
+	return  CPU_INFO_VALUE;
 #else //_WIN32
 	//SSE_CPU = qtrue; // UQ1: Assume because the code doesnt support linux!
-	return -1;
+	CPU_INFO_VALUE = -1;
+	return CPU_INFO_VALUE;
 #endif //_WIN32
 }
 
@@ -5318,8 +5324,8 @@ AIMod_GetMapBounts ( void )
 
 	aw_percent_complete = 0;
 
-	trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^Searching for map bounds.\n" ) );
-	strcpy( task_string1, va( "^4*** ^3AUTO-FOLIAGE^4: ^Searching for map bounds.\n" ) );
+	trap->Print(va("^1*** ^3%s^5: Searching for map bounds.\n", GAME_VERSION));
+	strcpy(task_string1, va("^1*** ^3%s^5: Searching for map bounds.\n", GAME_VERSION));
 	trap->UpdateScreen();
 
 	strcpy( task_string2, va("") );

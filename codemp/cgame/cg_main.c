@@ -2815,6 +2815,7 @@ void CG_PmoveClientPointerUpdate();
 void WP_SaberLoadParms( void );
 void BG_VehicleLoadParms( void );
 extern void CG_PrecacheScopes(void);
+extern int UQ_Get_CPU_Info(void);
 
 /*
 =================
@@ -3064,6 +3065,8 @@ Ghoul2 Insert End
 	trap->Cvar_VariableStringBuffer( "rate", buf, sizeof( buf ) );
 	if ( atoi( buf ) == 4000 )
 		trap->Print( "^3WARNING: Default /rate value detected. Suggest typing /rate 25000 for a smoother connection!\n" );
+
+	UQ_Get_CPU_Info();
 }
 
 //makes sure returned string is in localized format
