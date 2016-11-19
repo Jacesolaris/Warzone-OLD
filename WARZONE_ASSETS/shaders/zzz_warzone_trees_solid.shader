@@ -1267,10 +1267,23 @@ models/warzone/deadtrees/gkbtreeaspenbarkcomp
   }
 }
 
+models/warzone/deadtrees/treeaspenaddon01
+{
+  qer_editorimage	models/warzone/deadtrees/treeaspenaddon01
+  q3map_material	solidwood
+  q3map_clipModel
+  {
+    map models/warzone/deadtrees/treeaspenaddon01
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
 models/warzone/deadtrees/rock02
 {
   qer_editorimage	models/warzone/deadtrees/rock02
-  q3map_material	solidwood
+  q3map_material	rock
   q3map_clipModel
   {
     map models/warzone/deadtrees/rock02

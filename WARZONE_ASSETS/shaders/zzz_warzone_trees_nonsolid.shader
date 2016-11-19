@@ -2343,24 +2343,6 @@ models/warzone/deadtrees/treeaddon01
   }
 }
 
-models/warzone/deadtrees/treeaspenaddon01
-{
-  qer_editorimage	models/warzone/deadtrees/treeaspenaddon01
-  q3map_alphashadow
-  q3map_material	GreenLeaves
-  surfaceparm trans
-  surfaceparm	noimpact
-  surfaceparm	nomarks
-  surfaceparm	nonsolid
-  cull	twosided
-  {
-    map models/warzone/deadtrees/treeaspenaddon01
-    blendfunc GL_ONE GL_ZERO
-    alphaFunc GE128
-    depthWrite
-    rgbGen identity
-  }
-}
 
 models/warzone/deadtrees/treebranch01
 {
@@ -2374,6 +2356,44 @@ models/warzone/deadtrees/treebranch01
   cull	twosided
   {
     map models/warzone/deadtrees/treebranch01
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/deadtrees/treepineforestbranchcompsnow
+{
+  qer_editorimage	models/warzone/deadtrees/treepineforestbranchcompsnow
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/deadtrees/treepineforestbranchcompsnow
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/deadtrees/treepineforestbranchcompsnowl
+{
+  qer_editorimage	models/warzone/deadtrees/treepineforestbranchcompsnowl
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/deadtrees/treepineforestbranchcompsnowl
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     depthWrite
