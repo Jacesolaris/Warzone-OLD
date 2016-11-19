@@ -6478,6 +6478,7 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
+"tcMod scale 2.5 2.5\n"\
 "}\n"\
 "//{\n"\
 "//map $lightmap\n"\
@@ -6914,7 +6915,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		{
 			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		}
-		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree"))
+		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree")
+			|| StringContainsWord(strippedName, "warzone/deadtree") || StringContainsWord(strippedName, "warzone\\deadtree"))
 		{
 			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
 				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");

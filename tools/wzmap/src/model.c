@@ -248,6 +248,9 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 	m4x4_t				identity, nTransform;
 	picoModel_t			*model;
 	float				top = -999999, bottom = 999999;
+	bool				ALLOW_CULL_HALF_SIZE = false;
+
+	if (StringContainsWord(name, "forestpine")) ALLOW_CULL_HALF_SIZE = true; // Special case for high pine trees, we can cull much more for FPS yay! :)
 
 	/* get model */
 	model = LoadModel( name, frame );
@@ -798,6 +801,8 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 								float s = top - bottom;
 								float newtop = bottom + (s / 2.0);
 								//float newtop = bottom + (s / 4.0);
+
+								if (ALLOW_CULL_HALF_SIZE) newtop = bottom + (s / 4.0); // Special case for high pine trees, we can cull much more for FPS yay! :)
 
 								//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
 

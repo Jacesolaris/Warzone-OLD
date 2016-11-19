@@ -437,7 +437,7 @@ void GenerateMapForest ( void )
 
 			ReassignModels();
 
-			for (i = 0; i < FOLIAGE_NUM_POSITIONS && i < 512; i++)
+			for (i = 0; i < FOLIAGE_NUM_POSITIONS /*&& i < 512*/; i++)
 			{
 				printLabelledProgress("GenerateMapForest", i, FOLIAGE_NUM_POSITIONS);
 
