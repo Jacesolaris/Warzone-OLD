@@ -602,7 +602,11 @@ void BeginModel( void )
 	}
 
 	/* ydnar: lightgrid mins/maxs */
+#ifdef __BASEJKA_LIGHTGRID__
+	if (lgMins[0] < 99999)
+#else //!__BASEJKA_LIGHTGRID__
 	if( lgMins[ 0 ] < 999999 )
+#endif //__BASEJKA_LIGHTGRID__
 	{
 		/* use lightgrid bounds */
 		VectorCopy( lgMins, mod->mins );

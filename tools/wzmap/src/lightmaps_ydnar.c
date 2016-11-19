@@ -101,8 +101,11 @@ void WriteTGA24( char *filename, byte *data, int width, int height, qboolean fli
 		fwrite( buffer, 1, c, file );
 	
 	/* close the file */
-	fclose( file );
-	free( buffer );
+	fclose(file);
+#pragma omp critical (__ALLOC__)
+	{
+		free(buffer);
+	}
 }
 
 
@@ -240,8 +243,11 @@ int ImportLightmapsMain( int argc, char **argv )
 		
 		/* parse file into an image */
 		pixels = NULL;
-		LoadTGABuffer( buffer, buffer + len, &pixels, &width, &height );
-		free( buffer );
+		LoadTGABuffer(buffer, buffer + len, &pixels, &width, &height);
+#pragma omp critical (__ALLOC__)
+		{
+			free(buffer);
+		}
 		
 		/* sanity check it */
 		if( pixels == NULL )
@@ -262,7 +268,10 @@ int ImportLightmapsMain( int argc, char **argv )
 		}
 		
 		/* free the image */
-		free( pixels );
+#pragma omp critical (__ALLOC__)
+		{
+			free(pixels);
+		}
 	}
 	
 	/* write the bsp */
@@ -1373,8 +1382,11 @@ void AddStitchLuxels( int lightmap, int lightmapSize, int xy, int cluster, int *
 		newLuxel = (stitchLuxel_t *)safe_malloc(sizeof(stitchLuxel_t) * maxStitchLuxels);
 		if( stitchLuxels != NULL )
 		{
-			memcpy( newLuxel, stitchLuxels, sizeof(stitchLuxel_t) * numStitchLuxels );
-			free( stitchLuxels );
+#pragma omp critical (__ALLOC__)
+			{
+				memcpy(newLuxel, stitchLuxels, sizeof(stitchLuxel_t)* numStitchLuxels);
+				free(stitchLuxels);
+			}
 		}
 		stitchLuxels = newLuxel;
 	}
@@ -1389,8 +1401,11 @@ void AddStitchLuxels( int lightmap, int lightmapSize, int xy, int cluster, int *
 	newLuxel->lightmapSize = lightmapSize;
 	newLuxel->xy = xy;
 	newLuxel->cluster = cluster;
-	memcpy(newLuxel->stitchLightmaps, stitchLightmaps, sizeof(int) * numLuxels);
-	memcpy(newLuxel->stitchXy, stitchXy, sizeof(int) * numLuxels);
+#pragma omp critical (__ALLOC__)
+	{
+		memcpy(newLuxel->stitchLightmaps, stitchLightmaps, sizeof(int)* numLuxels);
+		memcpy(newLuxel->stitchXy, stitchXy, sizeof(int)* numLuxels);
+	}
 	newLuxel->numLuxels = numLuxels;
 }
 
@@ -1606,11 +1621,14 @@ luxelsOut:
 	}
 
 	/* free candidates */
-	for( j = 0; j < numCandidates; j++ )
+#pragma omp critical (__ALLOC__)
 	{
-		candidate = &candidates[ j ];
-		free(candidate->rowmins);
-		free(candidate->rowmaxs);
+		for (j = 0; j < numCandidates; j++)
+		{
+			candidate = &candidates[j];
+			free(candidate->rowmins);
+			free(candidate->rowmaxs);
+		}
 	}
 }
 
@@ -1822,7 +1840,10 @@ void StitchRawLightmaps( void )
 		}
 
 		/* free stitch queue */
-		free( stitchLuxels );
+#pragma omp critical (__ALLOC__)
+		{
+			free(stitchLuxels);
+		}
 		numStitchLuxels = 0;
 		maxStitchLuxels = 0;
 		stitchLuxels = NULL;
@@ -2545,8 +2566,11 @@ static void FindOutLightmaps( rawLightmap_t *lm )
 			olm = (outLightmap_t *)safe_malloc( numOutLightmaps * sizeof( outLightmap_t ) );
 			if ( outLightmaps != NULL && numOutLightmaps > LIGHTMAP_RESERVE_COUNT )
 			{
-				memcpy( olm, outLightmaps, ( numOutLightmaps - LIGHTMAP_RESERVE_COUNT ) * sizeof( outLightmap_t ) );
-				free( outLightmaps );
+#pragma omp critical (__ALLOC__)
+				{
+					memcpy(olm, outLightmaps, (numOutLightmaps - LIGHTMAP_RESERVE_COUNT) * sizeof(outLightmap_t));
+					free(outLightmaps);
+				}
 			}
 			outLightmaps = olm;
 
@@ -2942,8 +2966,11 @@ void FloodLightmapBorders( outLightmap_t *olm )
 	/* multiple passes */
 	for( passes = 0; passes < 4; passes++)
 	{
-		memcpy( sampledLightTex, olm->bspLightBytes, size );
-		memcpy( sampledDirTex, olm->bspDirBytes, size );
+#pragma omp critical (__ALLOC__)
+		{
+			memcpy(sampledLightTex, olm->bspLightBytes, size);
+			memcpy(sampledDirTex, olm->bspDirBytes, size);
+		}
 
 		/* walk all pixels */
 		for( y = 0; y < olm->customHeight; y++ )
@@ -2974,13 +3001,19 @@ void FloodLightmapBorders( outLightmap_t *olm )
 		}
 
 		/* store sampled */
-		memcpy( olm->bspLightBytes, sampledLightTex, size );
-		memcpy( olm->bspDirBytes, sampledDirTex, size );
+#pragma omp critical (__ALLOC__)
+		{
+			memcpy(olm->bspLightBytes, sampledLightTex, size);
+			memcpy(olm->bspDirBytes, sampledDirTex, size);
+		}
 	}
 
 	/* cleanup */
-	free( sampledLightTex );
-	free( sampledDirTex );
+#pragma omp critical (__ALLOC__)
+	{
+		free(sampledLightTex);
+		free(sampledDirTex);
+	}
 }
 
 /*
@@ -3616,12 +3649,15 @@ void StoreSurfaceLightmaps( void )
 	/* kill all existing output lightmaps */
 	if( outLightmaps != NULL )
 	{
-		for( i = 0; i < numOutLightmaps; i++ )
+#pragma omp critical (__ALLOC__)
 		{
-			free( outLightmaps[ i ].lightBits );
-			free( outLightmaps[ i ].bspLightBytes );
+			for (i = 0; i < numOutLightmaps; i++)
+			{
+				free(outLightmaps[i].lightBits);
+				free(outLightmaps[i].bspLightBytes);
+			}
+			free(outLightmaps);
 		}
-		free( outLightmaps );
 		outLightmaps = NULL;
 	}
 	
@@ -3631,13 +3667,19 @@ void StoreSurfaceLightmaps( void )
 	numExtLightmaps = 0;
 	
 	/* find output lightmap */
+//#pragma omp parallel for ordered num_threads(numthreads) // FIXME
 	for( i = 0; i < numRawLightmaps; i++ )
 	{
 		printLabelledProgress("AllocateLightmaps", i, numRawLightmaps);
 
 		/* find */
-		lm = &rawLightmaps[sortLightmaps[i]];
-		FindOutLightmaps( lm );
+		rawLightmap_t *tlm = &rawLightmaps[sortLightmaps[i]];
+		FindOutLightmaps( tlm );
+
+//#pragma omp ordered
+//		{
+//			printLabelledProgress("AllocateLightmaps", i, numRawLightmaps);
+//		}
 	}
 	
 	/* set output numbers in twinned lightmaps */
@@ -3750,8 +3792,11 @@ void StoreSurfaceLightmaps( void )
 	start = I_FloatTime();
 	
 	/* count the bsp lightmaps and allocate space */
-	if( bspLightBytes != NULL )
-		free( bspLightBytes );
+	if (bspLightBytes != NULL)
+#pragma omp critical (__ALLOC__)
+	{
+		free(bspLightBytes);
+	}
 	if( numBSPLightmaps == 0 || externalLightmaps )
 	{
 		numBSPLightBytes = 0;
@@ -3777,13 +3822,19 @@ void StoreSurfaceLightmaps( void )
 		{
 			/* copy lighting data */
 			lb = bspLightBytes + (olm->lightmapNum * game->lightmapSize * game->lightmapSize * 3);
-			memcpy( lb, olm->bspLightBytes, game->lightmapSize * game->lightmapSize * 3 );
+#pragma omp critical (__ALLOC__)
+			{
+				memcpy(lb, olm->bspLightBytes, game->lightmapSize * game->lightmapSize * 3);
+			}
 			
 			/* copy direction data */
 			if( deluxemap )
 			{
 				lb = bspLightBytes + ((olm->lightmapNum + 1) * game->lightmapSize * game->lightmapSize * 3);
-				memcpy( lb, olm->bspDirBytes, game->lightmapSize * game->lightmapSize * 3 );
+#pragma omp critical (__ALLOC__)
+				{
+					memcpy(lb, olm->bspDirBytes, game->lightmapSize * game->lightmapSize * 3);
+				}
 			}
 		}
 		
@@ -3860,25 +3911,34 @@ void StoreSurfaceLightmaps( void )
 		if( info->parentSurfaceNum >= 0 )
 		{
 			/* preserve original data and get parent */
-			parent = &bspDrawSurfaces[ info->parentSurfaceNum ];
-			memcpy( &dsTemp, ds, sizeof( *ds ) );
-			
-			/* overwrite child with parent data */
-			memcpy( ds, parent, sizeof( *ds ) );
+			parent = &bspDrawSurfaces[info->parentSurfaceNum];
+#pragma omp critical (__ALLOC__)
+			{
+				memcpy(&dsTemp, ds, sizeof(*ds));
+
+				/* overwrite child with parent data */
+				memcpy(ds, parent, sizeof(*ds));
+			}
 			
 			/* restore key parts */
 			ds->fogNum = dsTemp.fogNum;
 			ds->firstVert = dsTemp.firstVert;
 			ds->firstIndex = dsTemp.firstIndex;
-			memcpy( ds->lightmapVecs, dsTemp.lightmapVecs, sizeof( dsTemp.lightmapVecs ) );
+#pragma omp critical (__ALLOC__)
+			{
+				memcpy(ds->lightmapVecs, dsTemp.lightmapVecs, sizeof(dsTemp.lightmapVecs));
+			}
 			
 			/* set vertex data */
 			dv = &bspDrawVerts[ ds->firstVert ];
-			dvParent = &bspDrawVerts[ parent->firstVert ];
-			for( j = 0; j < ds->numVerts; j++ )
+			dvParent = &bspDrawVerts[parent->firstVert];
+#pragma omp critical (__ALLOC__)
 			{
-				memcpy( dv[ j ].lightmap, dvParent[ j ].lightmap, sizeof( dv[ j ].lightmap ) );
-				memcpy( dv[ j ].color, dvParent[ j ].color, sizeof( dv[ j ].color ) );
+				for (j = 0; j < ds->numVerts; j++)
+				{
+					memcpy(dv[j].lightmap, dvParent[j].lightmap, sizeof(dv[j].lightmap));
+					memcpy(dv[j].color, dvParent[j].color, sizeof(dv[j].color));
+				}
 			}
 			
 			/* skip the rest */

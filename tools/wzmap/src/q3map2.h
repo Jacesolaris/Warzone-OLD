@@ -420,9 +420,15 @@ abstracted bsp file
 #define	LIGHTMAP_WIDTH			128
 #define	LIGHTMAP_HEIGHT			128
 
+#ifdef __BASEJKA_LIGHTGRID__
+#define MIN_WORLD_COORD			(-65536)
+#define	MAX_WORLD_COORD			(65536)
+#define WORLD_SIZE				(MAX_WORLD_COORD - MIN_WORLD_COORD)
+#else //!__BASEJKA_LIGHTGRID__
 #define MIN_WORLD_COORD			(-524288)//(-65536)
 #define	MAX_WORLD_COORD			(524288)//(65536)
 #define WORLD_SIZE				(MAX_WORLD_COORD - MIN_WORLD_COORD)
+#endif //__BASEJKA_LIGHTGRID__
 
 
 typedef void					(*bspFunc)( const char * );

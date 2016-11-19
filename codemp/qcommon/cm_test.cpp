@@ -1,4 +1,8 @@
 #include "cm_local.h"
+//#include <thread>
+
+//extern std::thread::id MAIN_THREAD_ID;
+
 
 /*
 ==================
@@ -215,6 +219,9 @@ int CM_PointContents( const vec3_t p, clipHandle_t model ) {
 	}
 
 	contents = 0;
+
+	// if not already threaded, spin up threads...
+//#pragma omp parallel for schedule(dynamic) num_threads(Q_max(std::thread::hardware_concurrency() - 2, 2)) if(std::this_thread::get_id() == MAIN_THREAD_ID)
 	for (k=0 ; k<leaf->numLeafBrushes ; k++) {
 		brushnum = local->leafbrushes[leaf->firstLeafBrush+k];
 		b = &local->brushes[brushnum];

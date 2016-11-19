@@ -935,12 +935,14 @@ static int ParseCommandLine(char *cmdline, char **argv)
 #	define DEFAULT_BASEDIR Sys_BinaryPath()
 #endif
 
+std::thread::id MAIN_THREAD_ID;
+
 int main( int argc, char **argv )
 {
 	int		i;
 	char	commandLine[ MAX_STRING_CHARS ] = { 0 };
 
-	std::thread::id main_thread_id = std::this_thread::get_id();
+	MAIN_THREAD_ID = std::this_thread::get_id();
 
 	Sys_CreateConsole();
 
