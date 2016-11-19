@@ -228,10 +228,14 @@ float region3max = WATER_LEVEL + 1024.0;
 float region4min = WATER_LEVEL + 1024.0;
 float region4max = WATER_LEVEL + 1536.0;
 
+float region5min = WATER_LEVEL + 1536.0;
+float region5max = WATER_LEVEL + 4096.0;
+
 #define region1ColorMap u_SteepMap2
-#define region2ColorMap u_SplatMap1
-#define region3ColorMap u_SplatMap2
-#define region4ColorMap u_SteepMap
+#define region2ColorMap u_DiffuseMap
+#define region3ColorMap u_SplatMap1
+#define region4ColorMap u_SplatMap2
+#define region5ColorMap u_SteepMap
 
 vec4 GenerateTerrainMap(vec2 coord)
 {
@@ -241,6 +245,8 @@ vec4 GenerateTerrainMap(vec2 coord)
     float regionMax = 0.0;
     float regionRange = 0.0;
     float regionWeight = 0.0;
+
+	if (height > region5max) height = region5max;
 
     // Terrain region 1.
     regionMin = region1min;
@@ -273,6 +279,14 @@ vec4 GenerateTerrainMap(vec2 coord)
     regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
     regionWeight = max(0.0, regionWeight);
     terrainColor += regionWeight * texture2D(region4ColorMap, coord);
+
+	// Terrain region 5.
+	regionMin = region5min;
+	regionMax = region5max;
+	regionRange = regionMax - regionMin;
+	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
+	regionWeight = max(0.0, regionWeight);
+	terrainColor += regionWeight * texture2D(region5ColorMap, coord);
 
     return terrainColor;
 }
@@ -973,67 +987,6 @@ void main()
 			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a)) * u_CubeMapStrength * 0.5;
 		}
 	#endif
-
-#if 0
-	#if (defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)) && !defined(USE_GLOW_BUFFER)
-		if (u_Local6.r > 0.0)
-		{
-			float lambertian2 = dot(-var_PrimaryLightDir.xyz,N);
-			float spec2 = 0.0;
-			bool noSunPhong = false;
-			float phongFactor = u_Local5.b;
-
-			if (phongFactor < 0.0)
-			{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
-				noSunPhong = true;
-				phongFactor = 0.0;
-			}
-
-			if(lambertian2 > 0.0)
-			{// this is blinn phong
-				vec3 halfDir2 = normalize(-var_PrimaryLightDir.xyz + E);
-				float specAngle = max(dot(halfDir2, N), 0.0);
-				spec2 = pow(specAngle, 16.0);
-				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
-			}
-
-			if (noSunPhong)
-			{// Invert phong value so we still have non-sun lights...
-				phongFactor = -u_Local5.b;
-			}
-
-			if (u_lightCount > 0.0)
-			{
-				for (int li = 0; li < u_lightCount; li++)
-				{
-					vec3 lightDir = normalize(u_lightPositions2[li] - m_vertPos.xyz);
-					float lambertian3 = dot(lightDir.xyz,N);
-					float spec3 = 0.0;
-
-					if(lambertian3 > 0.0)
-					{
-						float lightDist = distance(u_lightPositions2[li], m_vertPos.xyz);
-						float lightMax = u_lightDistances[li] * 1.5;//u_Local9.r;
-
-						if (lightDist < lightMax)
-						{
-							float lightStrength = 1.0 - (lightDist / lightMax);
-							lightStrength = pow(lightStrength * 0.9/*u_Local9.g*/, 3.0/*u_Local9.b*/);
-
-							if(lightStrength > 0.0)
-							{// this is blinn phong
-								vec3 halfDir3 = normalize(lightDir.xyz + E);
-								float specAngle3 = max(dot(halfDir3, N), 0.0);
-								spec3 = pow(specAngle3, 16.0);
-								gl_FragColor.rgb += vec3((1.0 - spec3) * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
-							}
-						}
-					}
-				}
-			}
-		}
-	#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
-#endif
 
 	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
 		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);

@@ -225,8 +225,12 @@ static void FixBrushFaces( entity_t *e )
 
 		/* get surface and early out if possible */
 		ds = &mapDrawSurfs[ i ];
+
+		if (!ds)
+			continue;
+
 		si = ds->shaderInfo;
-		if( (si->compileFlags & C_NODRAW) || si->autosprite || ds->numVerts == 0 || ds->type != SURFACE_FACE )
+		if( !si || (si->compileFlags & C_NODRAW) || si->autosprite || ds->numVerts == 0 || ds->type != SURFACE_FACE )
 			continue;
 
 		/* get bounds, add little bevel */
@@ -250,7 +254,8 @@ static void FixBrushFaces( entity_t *e )
 			ds2 = &mapDrawSurfs[ j ];
 
 			/* test bounds */
-			if( ds2->mins[ 0 ] > maxs[ 0 ] || ds2->maxs[ 0 ] < mins[ 0 ] ||
+			if( !ds2 ||
+				ds2->mins[ 0 ] > maxs[ 0 ] || ds2->maxs[ 0 ] < mins[ 0 ] ||
 				ds2->mins[ 1 ] > maxs[ 1 ] || ds2->maxs[ 1 ] < mins[ 1 ] ||
 				ds2->mins[ 2 ] > maxs[ 2 ] || ds2->maxs[ 2 ] < mins[ 2 ] )
 				continue;
@@ -259,6 +264,10 @@ static void FixBrushFaces( entity_t *e )
 			for( k = 0; k < ds->numVerts; k++)
 			{
 				dv = &ds->verts[ k ];
+
+				if (!dv)
+					continue;
+
 				trystitch = qfalse;
 
 				/* find candidate */
@@ -270,7 +279,7 @@ static void FixBrushFaces( entity_t *e )
 
 					/* don't stitch if origins match completely */
 					dv2 = &ds2->verts[ m ];
-					if( dv2->xyz[ 0 ] == dv->xyz[ 0 ] && dv2->xyz[ 1 ] == dv->xyz[ 1 ] && dv2->xyz[ 2 ] == dv->xyz[ 2 ] )
+					if( !dv2 || dv2->xyz[ 0 ] == dv->xyz[ 0 ] && dv2->xyz[ 1 ] == dv->xyz[ 1 ] && dv2->xyz[ 2 ] == dv->xyz[ 2 ] )
 						continue;
 
 					/* get closest one */
