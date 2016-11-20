@@ -28,8 +28,8 @@
 
 
 
-#define __SOFTWARE_OCCLUSION__
-#define __THREADED_OCCLUSION__
+//#define __SOFTWARE_OCCLUSION__
+//#define __THREADED_OCCLUSION__
 
 
 #pragma once

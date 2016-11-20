@@ -44,14 +44,14 @@
   * threaded culling system. 
   */
 
+#include "MaskedOcclusionCulling.h"
+
+#ifdef __SOFTWARE_OCCLUSION__
+
 #include <thread>
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
-
-#include "MaskedOcclusionCulling.h"
-
-#ifdef __SOFTWARE_OCCLUSION__
 
 class CullingThreadpool
 {

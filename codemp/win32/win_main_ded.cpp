@@ -13,7 +13,7 @@
 #include <io.h>
 #include <conio.h>
 #include "qcommon/stringed_ingame.h"
-#include <thread>
+//#include <thread>
 
 #define MEM_THRESHOLD 128*1024*1024
 
@@ -942,14 +942,14 @@ void Sys_Init( void ) {
 #	define DEFAULT_BASEDIR Sys_BinaryPath()
 #endif
 
-std::thread::id MAIN_THREAD_ID;
+//std::thread::id MAIN_THREAD_ID;
 
 int main( int argc, char **argv )
 {
 	int		i;
 	char	commandLine[ MAX_STRING_CHARS ] = { 0 };
 
-	MAIN_THREAD_ID = std::this_thread::get_id();
+	//MAIN_THREAD_ID = std::this_thread::get_id();
 
 	// done before Com/Sys_Init since we need this for error output
 	//Sys_CreateConsole();

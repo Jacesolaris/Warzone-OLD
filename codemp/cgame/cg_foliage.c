@@ -1659,12 +1659,12 @@ void FOLIAGE_DrawGrass( void )
 #endif //__NO_GRASS__
 
 #if !defined(__NO_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
 			}
 #elif defined(__NEW_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(SpringPlantsModelsList[i]);
 			}
@@ -1677,12 +1677,12 @@ void FOLIAGE_DrawGrass( void )
 #endif //__NO_GRASS__
 
 #if !defined(__NO_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(EndorPlantsList[i]);
 			}
 #elif defined(__NEW_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(EndorPlantsModelsList[i]);
 			}
@@ -1695,12 +1695,12 @@ void FOLIAGE_DrawGrass( void )
 #endif //__NO_GRASS__
 
 #if !defined(__NO_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SnowPlantsList[i]);
 			}
 #elif defined(__NEW_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(SnowPlantsModelsList[i]);
 			}
@@ -1713,12 +1713,12 @@ void FOLIAGE_DrawGrass( void )
 #endif //__NO_GRASS__
 
 #if !defined(__NO_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
 			}
 #elif defined(__NEW_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}
@@ -1731,12 +1731,12 @@ void FOLIAGE_DrawGrass( void )
 #endif //__NO_GRASS__
 
 #if !defined(__NO_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
 			}
 #elif defined(__NEW_PLANTS__)
-			for (int i = 0; i < MAX_PLANT_MODELS; i++)
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}

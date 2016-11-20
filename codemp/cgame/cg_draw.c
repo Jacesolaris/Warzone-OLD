@@ -284,6 +284,8 @@ static void CG_DrawZoomMask( void )
 	}
 	else if ( cg.predictedPlayerState.scopeType )
 	{
+		qboolean drawTick = qfalse;
+
 		//
 		// Paint the scope itself over the view...
 		//
@@ -361,7 +363,7 @@ static void CG_DrawZoomMask( void )
 
 		max *= 58.0f;
 
-		qboolean drawTick = (strncmp(scopeData[cg.predictedPlayerState.scopeType].tickShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].tickShader)));
+		drawTick = (strncmp(scopeData[cg.predictedPlayerState.scopeType].tickShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].tickShader))) ? qtrue : qfalse;
 
 		if (drawTick)
 		{
