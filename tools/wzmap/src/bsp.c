@@ -201,177 +201,181 @@ static void FixBrushFaces( entity_t *e )
 	/* note it */
 	Sys_PrintHeadingVerbose( "--- FixBrushFaces ---\n" );
 
-	/* loop drawsurfaces */
-#pragma omp parallel for ordered num_threads(numthreads)
-	for ( i = e->firstDrawSurf ; i < numMapDrawSurfs ; i++ )
+	if (numMapDrawSurfs > 0 && e && e->firstDrawSurf >= 0)
 	{
-		mapDrawSurface_t *ds, *ds2;
-		shaderInfo_t *si;
-		bspDrawVert_t *dv, *dv2;
-		vec3_t mins, maxs, sub;
-		int j, k, m, best;
-		double dist, bestdist;
-		qboolean stitched, trystitch;
+		/* loop drawsurfaces */
+#pragma omp parallel for ordered num_threads(numthreads)
+		for (i = e->firstDrawSurf; i < numMapDrawSurfs; i++)
+		{
+			mapDrawSurface_t *ds, *ds2;
+			shaderInfo_t *si;
+			bspDrawVert_t *dv, *dv2;
+			vec3_t mins, maxs, sub;
+			int j, k, m, best;
+			double dist, bestdist;
+			qboolean stitched, trystitch;
 
 #ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-		qboolean stripped, n;
-		vec3_t normal, normals[STITCH_MAX_TRIANGLES];
-		int t, numTriangles, indexes[STITCH_MAX_TRIANGLES][3];
+			qboolean stripped, n;
+			vec3_t normal, normals[STITCH_MAX_TRIANGLES];
+			int t, numTriangles, indexes[STITCH_MAX_TRIANGLES][3];
 #endif
+
 #pragma omp ordered
-		{
-			printLabelledProgress("FixBrushFaces", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
-		}
+			{
+				printLabelledProgress("FixBrushFaces", i - e->firstDrawSurf, numMapDrawSurfs - e->firstDrawSurf);
+			}
 
-		/* get surface and early out if possible */
-		ds = &mapDrawSurfs[ i ];
+			/* get surface and early out if possible */
+			ds = &mapDrawSurfs[i];
 
-		if (!ds)
-			continue;
-
-		si = ds->shaderInfo;
-		if( !si || (si->compileFlags & C_NODRAW) || si->autosprite || ds->numVerts == 0 || ds->type != SURFACE_FACE )
-			continue;
-
-		/* get bounds, add little bevel */
-		VectorCopy(ds->mins, mins);
-		VectorCopy(ds->maxs, maxs);
-		mins[ 0 ] -= 4;
-		mins[ 1 ] -= 4;
-		mins[ 2 ] -= 4;
-		maxs[ 0 ] += 4;
-		maxs[ 1 ] += 4;
-		maxs[ 2 ] += 4;
-		
-		/* stitch with neighbour drawsurfaces */
-		stitched = qfalse;
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-		stripped = qfalse;
-#endif
-		for ( j = e->firstDrawSurf; j < numMapDrawSurfs ; j++ )
-		{
-			/* get surface */
-			ds2 = &mapDrawSurfs[ j ];
-
-			/* test bounds */
-			if( !ds2 ||
-				ds2->mins[ 0 ] > maxs[ 0 ] || ds2->maxs[ 0 ] < mins[ 0 ] ||
-				ds2->mins[ 1 ] > maxs[ 1 ] || ds2->maxs[ 1 ] < mins[ 1 ] ||
-				ds2->mins[ 2 ] > maxs[ 2 ] || ds2->maxs[ 2 ] < mins[ 2 ] )
+			if (!ds)
 				continue;
 
-			/* loop verts */
-			for( k = 0; k < ds->numVerts; k++)
-			{
-				dv = &ds->verts[ k ];
+			si = ds->shaderInfo;
+			if (!si || (si->compileFlags & C_NODRAW) || si->autosprite || ds->numVerts == 0 || ds->type != SURFACE_FACE)
+				continue;
 
-				if (!dv)
-					continue;
+			/* get bounds, add little bevel */
+			VectorCopy(ds->mins, mins);
+			VectorCopy(ds->maxs, maxs);
+			mins[0] -= 4;
+			mins[1] -= 4;
+			mins[2] -= 4;
+			maxs[0] += 4;
+			maxs[1] += 4;
+			maxs[2] += 4;
 
-				trystitch = qfalse;
-
-				/* find candidate */
-				best = -1;
-				for( m = 0; m < ds2->numVerts; m++)
-				{
-					if( VectorCompareExt( ds2->verts[ m ].xyz, dv->xyz, STITCH_DISTANCE) == qfalse )
-						continue;
-
-					/* don't stitch if origins match completely */
-					dv2 = &ds2->verts[ m ];
-					if( !dv2 || dv2->xyz[ 0 ] == dv->xyz[ 0 ] && dv2->xyz[ 1 ] == dv->xyz[ 1 ] && dv2->xyz[ 2 ] == dv->xyz[ 2 ] )
-						continue;
-
-					/* get closest one */
-					VectorSubtract( dv2->xyz, dv->xyz, sub );
-					dist = VectorLength( sub );
-					if (best < 0 || dist < bestdist)
-					{
-						best = m;
-						bestdist = dist;
-					}
-				}
-
-				/* nothing found? */
-				if ( best < 0 )
-					continue;
-
-				/* before stitching, get a list of triangles formed by this vertex */ 
+			/* stitch with neighbour drawsurfaces */
+			stitched = qfalse;
 #ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-				if( trystitch == qfalse )
+			stripped = qfalse;
+#endif
+			for (j = e->firstDrawSurf; j < numMapDrawSurfs; j++)
+			{
+				/* get surface */
+				ds2 = &mapDrawSurfs[j];
+
+				/* test bounds */
+				if (!ds2 ||
+					ds2->mins[0] > maxs[0] || ds2->maxs[0] < mins[0] ||
+					ds2->mins[1] > maxs[1] || ds2->maxs[1] < mins[1] ||
+					ds2->mins[2] > maxs[2] || ds2->maxs[2] < mins[2])
+					continue;
+
+				/* loop verts */
+				for (k = 0; k < ds->numVerts; k++)
 				{
-					numTriangles = 0;
-					if ( stripped == qfalse )
+					dv = &ds->verts[k];
+
+					if (!dv)
+						continue;
+
+					trystitch = qfalse;
+
+					/* find candidate */
+					best = -1;
+					for (m = 0; m < ds2->numVerts; m++)
 					{
-						StripFaceSurface( ds, qtrue );
-						stripped = qtrue;
-					}
-					for (t = 0; t < ds->numIndexes; t += 3)
-					{
-						if( ds->indexes[ t ] == k || ds->indexes[ t + 1 ] == k || ds->indexes[ t + 2 ] == k )
+						if (VectorCompareExt(ds2->verts[m].xyz, dv->xyz, STITCH_DISTANCE) == qfalse)
+							continue;
+
+						/* don't stitch if origins match completely */
+						dv2 = &ds2->verts[m];
+						if (!dv2 || dv2->xyz[0] == dv->xyz[0] && dv2->xyz[1] == dv->xyz[1] && dv2->xyz[2] == dv->xyz[2])
+							continue;
+
+						/* get closest one */
+						VectorSubtract(dv2->xyz, dv->xyz, sub);
+						dist = VectorLength(sub);
+						if (best < 0 || dist < bestdist)
 						{
-							indexes[ numTriangles ][ 0 ] = ds->indexes[ t ];
-							indexes[ numTriangles ][ 1 ] = ds->indexes[ t + 1 ];
-							indexes[ numTriangles ][ 2 ] = ds->indexes[ t + 2 ];
-							NormalFromPoints( normals[ numTriangles ], ds->verts[ ds->indexes[ t ] ].xyz, ds->verts[ ds->indexes[ t + 1 ] ].xyz, ds->verts[ ds->indexes[ t + 2 ] ].xyz);
-							numTriangles++;
-							if (numTriangles == STITCH_MAX_TRIANGLES)
-								break;
+							best = m;
+							bestdist = dist;
 						}
 					}
-					trystitch = qtrue;
-				}
+
+					/* nothing found? */
+					if (best < 0)
+						continue;
+
+					/* before stitching, get a list of triangles formed by this vertex */
+#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
+					if( trystitch == qfalse )
+					{
+						numTriangles = 0;
+						if ( stripped == qfalse )
+						{
+							StripFaceSurface( ds, qtrue );
+							stripped = qtrue;
+						}
+						for (t = 0; t < ds->numIndexes; t += 3)
+						{
+							if( ds->indexes[ t ] == k || ds->indexes[ t + 1 ] == k || ds->indexes[ t + 2 ] == k )
+							{
+								indexes[ numTriangles ][ 0 ] = ds->indexes[ t ];
+								indexes[ numTriangles ][ 1 ] = ds->indexes[ t + 1 ];
+								indexes[ numTriangles ][ 2 ] = ds->indexes[ t + 2 ];
+								NormalFromPoints( normals[ numTriangles ], ds->verts[ ds->indexes[ t ] ].xyz, ds->verts[ ds->indexes[ t + 1 ] ].xyz, ds->verts[ ds->indexes[ t + 2 ] ].xyz);
+								numTriangles++;
+								if (numTriangles == STITCH_MAX_TRIANGLES)
+									break;
+							}
+						}
+						trystitch = qtrue;
+					}
 #endif
 
-				/* stitch */
-				VectorCopy( dv->xyz, sub );
-				VectorCopy( ds2->verts[ best ].xyz, dv->xyz );
+					/* stitch */
+					VectorCopy(dv->xyz, sub);
+					VectorCopy(ds2->verts[best].xyz, dv->xyz);
 
 #ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-				/* make sure all triangles don't get their normals perverted */
-				for (t = 0; t < numTriangles; t++)
-				{
-					/* construct new normal */
-					n = NormalFromPoints( normal, ds->verts[ indexes[ t ][ 0 ] ].xyz, ds->verts[ indexes[ t ][ 1 ] ].xyz, ds->verts[ indexes[ t ][ 2 ] ].xyz);
-
-					/* compare, roll back if normal get perverted */
-					if( !n || VectorCompareExt( normals[ t ], normal, STITCH_NORMAL_EPSILON) == qfalse )
+					/* make sure all triangles don't get their normals perverted */
+					for (t = 0; t < numTriangles; t++)
 					{
-						VectorCopy( sub, dv->xyz );
-						break;
-					}
-				}
+						/* construct new normal */
+						n = NormalFromPoints( normal, ds->verts[ indexes[ t ][ 0 ] ].xyz, ds->verts[ indexes[ t ][ 1 ] ].xyz, ds->verts[ indexes[ t ][ 2 ] ].xyz);
 
-				/* done */
-				if (t == numTriangles)
-				{
+						/* compare, roll back if normal get perverted */
+						if( !n || VectorCompareExt( normals[ t ], normal, STITCH_NORMAL_EPSILON) == qfalse )
+						{
+							VectorCopy( sub, dv->xyz );
+							break;
+						}
+					}
+
+					/* done */
+					if (t == numTriangles)
+					{
+						numVertsStitched++;
+						stitched = qtrue;
+					}
+#else
 					numVertsStitched++;
 					stitched = qtrue;
-				}
-#else
-				numVertsStitched++;
-				stitched = qtrue;
 #endif
+				}
 			}
-		}
 
 #ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-		/* clean up after StripFaceSurface */
-		if( stripped )
-		{
-			ds->numIndexes = 0;
-			if ( ds->indexes != NULL )
-				free( ds->indexes );
-			ds->indexes = NULL;
-		}
+			/* clean up after StripFaceSurface */
+			if( stripped )
+			{
+				ds->numIndexes = 0;
+				if ( ds->indexes != NULL )
+					free( ds->indexes );
+				ds->indexes = NULL;
+			}
 #endif
 
-		/* add to stats */
-		if( stitched )
-			numSurfacesStitched++;
-	}
+			/* add to stats */
+			if (stitched)
+				numSurfacesStitched++;
+		}
 
-	printLabelledProgress("FixBrushFaces", numMapDrawSurfs-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf); // finish bar...
+		printLabelledProgress("FixBrushFaces", numMapDrawSurfs - e->firstDrawSurf, numMapDrawSurfs - e->firstDrawSurf); // finish bar...
+	}
 
 	/* emit some statistics */
 	Sys_Printf( "%9d verts stitched\n", numVertsStitched );
