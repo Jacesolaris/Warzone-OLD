@@ -1000,6 +1000,7 @@ models/warzone/trees/treeaspenbarkcomp
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1013,6 +1014,7 @@ models/warzone/trees/treepineforestbarkcomp
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1026,6 +1028,7 @@ models/warzone/trees/treepineforestbarkcomp1
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1039,6 +1042,7 @@ models/warzone/trees/treepineforestbarkcomp2
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1052,6 +1056,7 @@ models/warzone/trees/treepineforestbarkcomp3
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1065,6 +1070,7 @@ models/warzone/trees/treepineforestbarkcomp4
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1078,6 +1084,7 @@ models/warzone/trees/treepineforestbarkcomp5
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1091,6 +1098,7 @@ models/warzone/trees/treepineforestbarkcomp6
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 
@@ -1104,6 +1112,7 @@ models/warzone/trees/treepineforestbarkcompbaj
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity
+    tcMod scale 2.0 2.0
   }
 }
 

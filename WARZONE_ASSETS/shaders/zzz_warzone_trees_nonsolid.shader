@@ -568,6 +568,25 @@ models/warzone/trees/mp_valenwood_tree01
   }
 }
 
+models/warzone/trees/valenwood
+{
+  qer_editorimage	models/warzone/trees/valenwood
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/valenwood
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
 models/warzone/trees/palm1leaves
 {
   qer_editorimage	models/warzone/trees/palm1leaves
@@ -1902,6 +1921,44 @@ models/warzone/trees/gkbtreeaspenbranchcompcyp
   }
 }
 
+models/warzone/trees/gkbtreeaspenbranchcomppalm
+{
+  qer_editorimage	models/warzone/trees/gkbtreeaspenbranchcomppalm
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/gkbtreeaspenbranchcomppalm
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/gkbtreeaspenbranchcomppalm2
+{
+  qer_editorimage	models/warzone/trees/gkbtreeaspenbranchcomppalm2
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/gkbtreeaspenbranchcomppalm2
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
 models/warzone/trees/gkbtreeaspenbranchcompgreen1dark
 {
   qer_editorimage	models/warzone/trees/gkbtreeaspenbranchcompgreen1dark
@@ -2028,6 +2085,44 @@ models/warzone/trees/grandoak12
   cull	twosided
   {
     map models/warzone/trees/grandoak12
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/junglemoss6
+{
+  qer_editorimage	models/warzone/trees/junglemoss6
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/junglemoss6
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/junglemoss11
+{
+  qer_editorimage	models/warzone/trees/junglemoss11
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/junglemoss11
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     depthWrite
