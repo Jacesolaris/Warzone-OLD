@@ -402,7 +402,7 @@ abstracted bsp file
 #else //__BASEJKA_LIGHTGRID__
 #define	MAX_MAP_LIGHTGRID		65535 // matching JKA
 #endif //__BASEJKA_LIGHTGRID__
-#define	MAX_MAP_VISIBILITY		0x2FFFFFFF
+#define	MAX_MAP_VISIBILITY		0x3FFFFFFF
 
 #define	MAX_MAP_DRAW_SURFS		0x200000
 #define	MAX_MAP_DRAW_VERTS		0x4000000
@@ -1350,7 +1350,7 @@ vstatus_t;
 typedef struct
 {
 	int					num;
-	qboolean			hint;			/* true if this portal was created from a hint splitter */
+	int/*qboolean*/			hint;			/* true if this portal was created from a hint splitter */
 	qboolean			removed;
 	visPlane_t			plane;			/* normal pointing into neighbor */
 	int					leaf;			/* neighbor */
@@ -1907,7 +1907,8 @@ fixedWinding_t				*NewFixedWinding( int points );
 int							VisMain( int argc, char **argv );
 
 /* visflow.c */
-int							CountBits( byte *bits, uint32_t numbits );
+//int							CountBits( byte *bits, uint32_t numbits );
+uint32_t					CountBits(byte *bits, uint32_t numbits);
 void						PassageFlow( int portalnum );
 void						CreatePassages( int portalnum );
 void						PassageMemory( void );
@@ -2723,9 +2724,9 @@ Q_EXTERN byte				*bspLightBytes Q_ASSIGN( NULL );
 Q_EXTERN int				numBSPGridPoints Q_ASSIGN( 0 );
 Q_EXTERN bspGridPoint_t		*bspGridPoints Q_ASSIGN( NULL );
 
-Q_EXTERN int				numBSPVisBytes Q_ASSIGN( 0 );
-//Q_EXTERN byte				bspVisBytes[ MAX_MAP_VISIBILITY ];
-Q_EXTERN byte				*bspVisBytes;
+Q_EXTERN uint32_t			numBSPVisBytes Q_ASSIGN( 0 );
+Q_EXTERN byte				bspVisBytes[ MAX_MAP_VISIBILITY ];
+//Q_EXTERN byte				*bspVisBytes;
 
 Q_EXTERN int				numBSPDrawVerts Q_ASSIGN( 0 );
 Q_EXTERN bspDrawVert_t		*bspDrawVerts Q_ASSIGN( NULL );

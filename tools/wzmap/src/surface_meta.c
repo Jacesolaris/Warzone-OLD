@@ -614,7 +614,7 @@ builds meta triangles from brush faces (tristrips and fans)
 
 void MakeEntityMetaTriangles( entity_t *e )
 {
-	int					i, f, fOld, start;
+	int					i, fOld, start;
 	mapDrawSurface_t	*ds;
 	
 	
@@ -788,7 +788,7 @@ fixes t-junctions on meta triangles
 
 void FixMetaTJunctions( void )
 {
-	int				i, j, k, f, fOld, start, vertIndex, triIndex, numTJuncs;
+	int				i, j, k, fOld, start, vertIndex, triIndex, numTJuncs;
 	metaTriangle_t	*tri, *newTri;
 	shaderInfo_t	*si;
 	bspDrawVert_t	*a, *b, *c, junc;
@@ -1109,9 +1109,9 @@ int				indexes[ SMOOTH_MAX_SAMPLES ];
 
 void SmoothMetaTrianglesThread( int vertIndex )
 {
-	int i, j, start, numVerts, startVert, endVert;
+	int i, j, numVerts, startVert, endVert;
 	float shadeAngle, testAngle, vertDist;
-	metaTriangle_t *tri;
+	//metaTriangle_t *tri;
 	vec3_t org, normal, average;
 
 	/* get vert */
@@ -1839,7 +1839,7 @@ void GroupMetaTriangles( void )
 {
 	metaTriangle_t		*head, *end;
 	metaTriangleGroup_t *group;
-	int	i, j, f, fOld, start;
+	int	i, j, fOld, start;
 
 	/* note it */
 	Sys_PrintHeadingVerbose( "--- GroupMetaTriangles ---\n" );

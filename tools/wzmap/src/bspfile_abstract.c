@@ -203,7 +203,7 @@ void SwapBSPFile( void )
 	// vis
 	((int*) &bspVisBytes)[ 0 ] = LittleLong( ((int*) &bspVisBytes)[ 0 ] );
 	((int*) &bspVisBytes)[ 1 ] = LittleLong( ((int*) &bspVisBytes)[ 1 ] );
-	bspVisBytes = (byte*)realloc(bspVisBytes, numBSPVisBytes * sizeof( byte ));
+	//bspVisBytes = (byte*)realloc(bspVisBytes, numBSPVisBytes * sizeof( byte ));
 
 	/* drawverts (don't swap colors) */
 	for( i = 0; i < numBSPDrawVerts; i++ )

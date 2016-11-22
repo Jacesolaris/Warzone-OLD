@@ -749,9 +749,12 @@ void RB_ClearWaterPositionMap ( void )
 #endif //__USE_WATERMAP__
 }
 
+extern void RB_InitOcclusionFrame(void);
+
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
 
+	RB_InitOcclusionFrame();
 	RB_ClearWaterPositionMap();
 
 	// sync with gl if needed

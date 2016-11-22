@@ -60,7 +60,7 @@ void main()
 
 	if (SUN_ID >= 0 && SUN_ID < 16)
 	{
-		if (ScanForSunMaterial(u_lightPositions[SUN_ID])) 
+		//if (ScanForSunMaterial(u_lightPositions[SUN_ID])) 
 			var_SunVisible = 1;
 	}
 }

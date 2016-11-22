@@ -27,6 +27,7 @@
  */
 #pragma once
 
+//#define __LEAF_OCCLUSION__
 //#define __SOFTWARE_OCCLUSION__
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__

@@ -1369,7 +1369,7 @@ does all decoration job
 
 void ProcessDecorations( void )
 {
-	int	i, f, fOld, start;
+	int	i, fOld, start;
 	decoreGroup_t *group;
 
 	/* early out */

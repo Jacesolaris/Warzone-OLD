@@ -6473,13 +6473,13 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "surfaceparm	nomarks\n"\
 "{\n"\
 "map %s\n"\
-"%s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
 "tcMod scale 2.5 2.5\n"\
 "}\n"\
+"%s\n"\
 "//{\n"\
 "//map $lightmap\n"\
 "//blendfunc GL_DST_COLOR GL_ZERO\n"\

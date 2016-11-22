@@ -3727,7 +3727,7 @@ apply shader abd brush colormods to surface vertexes
 
 void ApplyVertexMods(entity_t *e, qboolean showpacifier)
 {
-	int	i, j, f, fOld, start;
+	int	i, j, fOld, start;
 	mapDrawSurface_t *ds;
 	shaderInfo_t *si;
 

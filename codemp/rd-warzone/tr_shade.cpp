@@ -37,6 +37,8 @@ color4ub_t	styleColors[MAX_LIGHT_STYLES];
 
 extern void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input);
 
+extern qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input);
+
 /*
 ==================
 R_DrawElements
@@ -3023,6 +3025,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// draw
 			//
+
+			qboolean occluded = qfalse;
+			
+			if (r_occlusion->integer 
+				&& !isGeneric 
+				&& !(tr.viewParms.flags & VPF_SHADOWPASS) 
+				&& !backEnd.depthFill 
+				/*&& backEnd.viewParms.targetFbo != tr.renderCubeFbo*/)
+			{
+				if (RB_CheckOcclusion(glState.modelviewProjection, input))
+					break;
+			}
 
 			if (input->multiDrawPrimitives)
 			{

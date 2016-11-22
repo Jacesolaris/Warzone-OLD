@@ -1,6 +1,10 @@
 #include "tr_local.h"
+
 #include "MaskedOcclusionCulling/MaskedOcclusionCulling.h"
 
+MaskedOcclusionCulling *moc = NULL;
+
+#if defined(__LEAF_OCCLUSION__)
 #if defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION__)
 #include "MaskedOcclusionCulling/CullingThreadpool.h"
 
@@ -10,8 +14,6 @@ CullingThreadpool *ctp = NULL;
 #if defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION2__)
 #include "../client/tinythread.h"
 #endif //defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION2__)
-
-MaskedOcclusionCulling *moc = NULL;
 
 void OQ_InitOcclusionQuery()
 {
@@ -667,3 +669,213 @@ void	R_AddDrawOcclusionCmd(viewParms_t *parms) {
 
 	cmd->viewParms = *parms;
 }
+
+#else //!defined(__LEAF_OCCLUSION__)
+
+const void	*RB_DrawOcclusion(const void *data) {
+	const drawOcclusionCommand_t	*cmd = (const drawOcclusionCommand_t *)data;
+	return (const void *)(cmd + 1);
+}
+
+void	R_AddDrawOcclusionCmd(viewParms_t *parms) {
+}
+
+#if defined(__SOFTWARE_OCCLUSION__)
+#include "MaskedOcclusionCulling/CullingThreadpool.h"
+
+CullingThreadpool *ctp = NULL;
+
+void OQ_InitOcclusionQuery()
+{
+#if defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+	// Flush denorms to zero to avoid performance issues with small values
+	_mm_setcsr(_mm_getcsr() | 0x8040);
+
+	moc = MaskedOcclusionCulling::Create();
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// Print which version (instruction set) is being used
+	////////////////////////////////////////////////////////////////////////////////////////
+
+	/*MaskedOcclusionCulling::Implementation implementation = moc->GetImplementation();
+
+	switch (implementation)
+	{
+	case MaskedOcclusionCulling::SSE2: ri->Printf(PRINT_ALL, "MaskedOcclusionCulling - Using SSE2 version\n"); break;
+	case MaskedOcclusionCulling::SSE41: ri->Printf(PRINT_ALL, "MaskedOcclusionCulling - Using SSE41 version\n"); break;
+	case MaskedOcclusionCulling::AVX2: ri->Printf(PRINT_ALL, "MaskedOcclusionCulling - Using AVX2 version\n"); break;
+	}*/
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// Setup and state related code
+	////////////////////////////////////////////////////////////////////////////////////////
+
+	// Setup a rendertarget with near clip plane at w = 1.0
+	//const int width = glConfig.vidWidth * r_superSampleMultiplier->value, height = glConfig.vidHeight * r_superSampleMultiplier->value;
+	const int width = 640, height = 480;
+	int numThreads = Q_max(std::thread::hardware_concurrency() - 2, 2);// 1;
+	ctp = new CullingThreadpool(numThreads, 2, numThreads);
+	//ctp = new CullingThreadpool(numThreads, numThreads, numThreads, numThreads);
+	ctp->SetBuffer(moc);
+	ctp->SetResolution(width, height);
+	ctp->SetNearClipPlane(r_znear->value);
+#endif //defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+}
+
+void OQ_ShutdownOcclusionQuery()
+{
+#if defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+	ctp->Flush();
+	ctp->SuspendThreads();
+	MaskedOcclusionCulling::Destroy(moc);
+	delete ctp;
+#endif //defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+}
+
+struct ShortVertex { float x, y, z; };
+struct ClipspaceVertex { float x, y, z, w; };
+
+int PREVIOUS_FRAME_VISIBLE = 0;
+int PREVIOUS_FRAME_OCCLUDED = 0;
+int PREVIOUS_FRAME_CULLED = 0;
+int PREVIOUS_FRAME_TOTAL = 0;
+
+void RB_InitOcclusionFrame(void)
+{
+#if defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+	if (r_occlusion->integer)
+	{
+		if (r_occlusion->integer == 2)
+		{
+			ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. visible %i. occluded %i. culled %i. total %i. %i percent removed.\n", backEnd.refdef.time, PREVIOUS_FRAME_VISIBLE, PREVIOUS_FRAME_OCCLUDED, PREVIOUS_FRAME_CULLED, PREVIOUS_FRAME_TOTAL, int(((float)(PREVIOUS_FRAME_OCCLUDED + PREVIOUS_FRAME_CULLED) / (float)PREVIOUS_FRAME_TOTAL) * 100.0));
+		}
+
+		PREVIOUS_FRAME_VISIBLE = 0;
+		PREVIOUS_FRAME_OCCLUDED = 0;
+		PREVIOUS_FRAME_CULLED = 0;
+		PREVIOUS_FRAME_TOTAL = 0;
+
+		ctp->Flush();
+		ctp->SuspendThreads();
+		ctp->ClearBuffer();
+		ctp->WakeThreads();
+	}
+#endif //defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+}
+
+qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input)
+{
+	qboolean occluded = qfalse;
+
+#if defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+	if (r_occlusion->integer 
+		&& !backEnd.depthFill 
+		&& !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) 
+		/*&& backEnd.viewParms.targetFbo != tr.renderCubeFbo*/)
+	{
+		unsigned int		numIndexes = 0;
+		unsigned int		indexes[SHADER_MAX_INDEXES];
+		unsigned int		numVertexes = 0;
+		ShortVertex			xyz[SHADER_MAX_VERTEXES];
+		ClipspaceVertex		xyz2[SHADER_MAX_VERTEXES];
+
+		MaskedOcclusionCulling::ClipPlanes clip = MaskedOcclusionCulling::CLIP_PLANE_ALL;// CLIP_PLANE_NONE;
+
+		/*
+		if (input->multiDrawPrimitives)
+		{
+			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, tesselation);
+		}
+		else
+		{
+			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
+		}
+		*/
+
+		if (input->multiDrawPrimitives)
+		{
+			/*for (int t = 0; t < input->numVertexes; t++)
+			{
+				xyz[t].x = input->xyz[t][0];
+				xyz[t].y = input->xyz[t][1];
+				xyz[t].z = input->xyz[t][2];
+				numVertexes++;
+			}
+
+			numIndexes = 0;// input->multiDrawNumIndexes;
+
+			memcpy(indexes, input->multiDrawFirstIndex, sizeof(unsigned int) * SHADER_MAX_INDEXES);*/
+			return qfalse;
+		}
+		else
+		{
+			for (int t = 0; t < input->numVertexes; t++)
+			{
+				xyz[t].x = input->xyz[t][0];
+				xyz[t].y = input->xyz[t][1];
+				xyz[t].z = input->xyz[t][2];
+				numVertexes++;
+			}
+
+			numIndexes = input->numIndexes;
+			memcpy(indexes, input->indexes, sizeof(unsigned int) * SHADER_MAX_INDEXES);
+		}
+
+		/* Convert xyz to clip space */
+		moc->TransformVertices(MVP, (const float*)xyz, (float *)xyz2, numVertexes);
+		
+		//MaskedOcclusionCulling::CullingResult result = ctp->TestTriangles((float*)xyz2, (unsigned int*)indexes, numIndexes/* / 3*/, clip);
+		MaskedOcclusionCulling::CullingResult result = ctp->TestTriangles((float*)xyz2, input->indexes, numIndexes / 4, clip);
+		//result = moc->TestRect(-0.6f, -0.6f, -0.4f, -0.4f, 100);
+
+		PREVIOUS_FRAME_TOTAL++;
+
+		if (result == MaskedOcclusionCulling::VISIBLE)
+		{
+			//ri->Printf(PRINT_ALL, "Tested triangle is VISIBLE\n");
+			occluded = qfalse;
+			PREVIOUS_FRAME_VISIBLE++;
+		}
+		else if (result == MaskedOcclusionCulling::OCCLUDED)
+		{
+			//ri->Printf(PRINT_ALL, "Tested triangle is OCCLUDED\n");
+			occluded = qtrue;
+			PREVIOUS_FRAME_OCCLUDED++;
+		}
+		else if (result == MaskedOcclusionCulling::VIEW_CULLED)
+		{
+			//ri->Printf(PRINT_ALL, "Tested triangle is outside view frustum\n");
+			occluded = qtrue;
+			PREVIOUS_FRAME_CULLED++;
+		}
+
+		// Render it to the occlusion buffer if it is not occluded...
+		//if (!occluded)
+		//	moc->RenderTriangles((float*)xyz2, (unsigned int*)indexes, numIndexes / 3, nullptr, clip);
+	}
+#endif //defined(__SOFTWARE_OCCLUSION__) && !defined(__LEAF_OCCLUSION__)
+
+	return occluded;
+}
+
+#else !defined(__SOFTWARE_OCCLUSION__)
+
+void OQ_InitOcclusionQuery()
+{
+}
+
+void OQ_ShutdownOcclusionQuery()
+{
+}
+
+void RB_InitOcclusionFrame(void)
+{
+}
+
+qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input)
+{
+	return qfalse;
+}
+#endif //defined(__SOFTWARE_OCCLUSION__)
+
+#endif //defined(__LEAF_OCCLUSION__)

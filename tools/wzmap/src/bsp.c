@@ -789,7 +789,7 @@ process world + other models into the bsp
 
 void ProcessModels( void )
 {
-	int			f, fOld, start, submodel, submodels;
+	int			fOld, start, submodel, submodels;
 	qboolean	oldVerbose;
 	entity_t	*entity;
 	

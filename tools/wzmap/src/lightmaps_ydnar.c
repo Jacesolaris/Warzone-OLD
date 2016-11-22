@@ -985,7 +985,7 @@ ThreadMutex IlluminateMutex;
 
 void SetupSurfaceLightmaps( void )
 {
-	int					i, j, k, s, num, num2, f, fOld, start, lmNum;
+	int					i, j, k, s, num, num2, fOld, start, lmNum;
 	bspModel_t			*model;
 	bspLeaf_t			*leaf;
 	bspDrawSurface_t	*ds, *ds2;
@@ -1277,7 +1277,7 @@ allocates buffers for lightmaps
 */
 void AllocateSurfaceLightmaps(void)
 {
-	int i, f, fOld, start;
+	int i, fOld, start;
 
 	/* note it */
 	Sys_PrintHeadingVerbose( "--- AllocateSurfaceLightmaps ---\n");
@@ -1677,7 +1677,7 @@ does the job
 
 void StitchRawLightmaps( void )
 {
-	int i, j, ls, f, fOld, start, *cluster, numStitches = 0, bestLuxel;
+	int i, j, ls, fOld, start, *cluster, numStitches = 0, bestLuxel;
 	rawLightmap_t *lm;
 	stitchLuxel_t *stitch;
 	vec3_t average;

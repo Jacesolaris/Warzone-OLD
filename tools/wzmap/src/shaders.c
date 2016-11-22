@@ -2736,7 +2736,7 @@ static void ParseShaderFile( const char *filename )
 					//Sys_Printf("%s set as solid.\n", si->shader);
 				}
 			}
-			else if (StringContainsWord(si->shader, "map_objects")
+			else if ((StringContainsWord(si->shader, "map_objects") || StringContainsWord(si->shader, "solid_objects"))
 				&& !StringContainsWord(si->shader, "leaf")
 				&& !StringContainsWord(si->shader, "leaves"))
 			{

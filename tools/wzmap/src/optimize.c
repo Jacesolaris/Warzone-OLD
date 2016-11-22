@@ -32,7 +32,7 @@ bspShaderMeta_t;
 
 void TidyShaders(void)
 {
-	int i, f, start, fOld, shadernum, modelnum, surfacenum, brushnum, sidenum;
+	int i, start, fOld, shadernum, modelnum, surfacenum, brushnum, sidenum;
 	int numRemappedShaders, numRemappedDrawsurfaces, numRemappedBrushes, numRemappedBrushSides, numDrawSurfacesProcessed, numBrushSidesProcessed;
 	bspShader_t *sh, *newShaders;
 	bspShaderMeta_t *metaShaders, *msh, *msh2;
@@ -263,7 +263,7 @@ bspDrawSurfaceMeta_t;
 
 void MergeDrawSurfaces(void)
 {
-	int i, f, start, fOld, modelnum, surfacenum, leafnum, leafsurfacenum;
+	int i, start, fOld, modelnum, surfacenum, leafnum, leafsurfacenum;
 	int numNewSurfaces, numSkipSurfaces, numMergedSurfaces, numDrawSurfacesProcessed, numDrawVertsProcessed, numDrawIndexesProcessed, numLeafSurfacesProcessed;
 	bspDrawSurfaceMeta_t *metaSurfaces, *ms, *ms2;
 	bspModel_t *model;
@@ -652,7 +652,7 @@ qboolean Vec1CompareExt(float n1, float n2, float epsilon)
 
 void MergeDrawVerts(void)
 {
-	int i, j, k, start, f, fOld, modelnum, surfacenum, vertnum, indexnum, a, b, c;
+	int i, j, k, start, fOld, modelnum, surfacenum, vertnum, indexnum, a, b, c;
 	int numVertsProcessed, numVertsToMerge, numNewVerts, numNewIndexes, numRemovedTriangles, *newDrawIndexes;
 	int firstVert, firstIndex;
 	bspModel_t *model;

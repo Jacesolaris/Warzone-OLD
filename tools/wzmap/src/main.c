@@ -736,7 +736,7 @@ int main( int argc, char **argv )
 	bspNodes = (bspNode_t*)malloc(sizeof(bspNode_t)*MAX_MAP_NODES);
 	bspLeafSurfaces = (int*)malloc(sizeof(int)*MAX_MAP_LEAFFACES);
 	bspLeafBrushes = (int*)malloc(sizeof(int)*MAX_MAP_LEAFBRUSHES);
-	bspVisBytes = (byte*)malloc(sizeof(byte)*MAX_MAP_VISIBILITY);
+	//bspVisBytes = (byte*)malloc(sizeof(byte)*MAX_MAP_VISIBILITY);
 	
 	/* we print out two versions, q3map's main version (since it evolves a bit out of GtkRadiant)
 	   and we put the GtkRadiant version to make it easy to track with what version of Radiant it was built with */
@@ -903,7 +903,7 @@ int main( int argc, char **argv )
 	if (bspBrushes) free(bspBrushes);
 	if (bspBrushSides) free(bspBrushSides);
 	if (bspNodes) free(bspNodes);
-	if (bspVisBytes) free(bspVisBytes);
+	//if (bspVisBytes) free(bspVisBytes);
 	if (bspLeafSurfaces) free(bspLeafSurfaces);
 	if (bspLeafBrushes) free(bspLeafBrushes);
 	//if (portals) free(portals);

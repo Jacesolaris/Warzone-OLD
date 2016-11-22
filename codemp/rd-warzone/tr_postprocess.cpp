@@ -1243,7 +1243,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 				{// This one is further!
 					farthest_light = i;
 					farthest_distance = dist;
-					break;
+					//break;
 				}
 			}
 

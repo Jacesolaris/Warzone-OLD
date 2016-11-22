@@ -3332,7 +3332,7 @@ creates debug drawsurfaces for raw lightmaps
 void WriteRawLightmapsFile( const char *outFile )
 {
 	rawLightmap_t *lm;
-	int i, x, y, f, fOld, start, *cluster, numTris, numVerts;
+	int i, x, y, fOld, start, *cluster, numTris, numVerts;
 	int  addedDrawSurfaces = 0, addedDrawTriangles = 0, addedDrawVerts = 0;
 	float *origin, *normal;
 	vec3_t base, org, right, up;

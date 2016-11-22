@@ -842,7 +842,7 @@ projects decals onto world surfaces
 
 void MakeEntityDecals( entity_t *e )
 {
-	int					i, j, k, f, fOld, start;
+	int					i, j, k, fOld, start;
 	decalProjector_t	dp;
 	mapDrawSurface_t	*ds;
 	vec3_t				identityAxis[ 3 ] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
