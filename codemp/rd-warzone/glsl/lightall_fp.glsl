@@ -676,7 +676,7 @@ void main()
 		isDistant = true;
 	}
 
-	/*if (dist > 16384.0)
+	/*if (u_Local9.r == 1.0 && dist > 16384.0)
 	{// TODO: Fog and not draw?
 		discard;
 	}*/
