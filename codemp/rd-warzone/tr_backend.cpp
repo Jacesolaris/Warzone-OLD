@@ -905,8 +905,8 @@ void RB_BeginDrawingView (void) {
 #define MAX_OCCLUDION_QUERIES 32768
 int occlusionQueryTotal = 0;
 GLuint occlusionQuery[MAX_OCCLUDION_QUERIES] = { -1 };
-int occlusionQueryTarg[MAX_OCCLUDION_QUERIES] = { -1 };
 qboolean occlusionQueryOccluded[MAX_OCCLUDION_QUERIES] = { qfalse };
+drawSurf_t *occlusionQueryDrawSurf[MAX_OCCLUDION_QUERIES] = { NULL };
 
 void RB_UpdateOccludedList(void)
 {
@@ -927,8 +927,10 @@ void RB_UpdateOccludedList(void)
 		if (result)
 		{
 			qglGetQueryObjectuiv(occlusionQuery[i], GL_QUERY_RESULT, &result);
-			//ri->Printf(PRINT_ALL, "leaf %d count %d query %d has %d samples!\n", occlusionQueryTarget[i], occlusionQueryCount[i], occlusionCache[i], result);
-			if (!result)
+
+			//ri->Printf(PRINT_ALL, "surface %i has %d samples!\n", i, result);
+
+			if (result <= 0)
 			{
 				occlusionQueryOccluded[i] = qtrue;
 				occluded++;
@@ -956,12 +958,11 @@ void RB_UpdateOccludedList(void)
 RB_RenderDrawSurfList
 ==================
 */
-void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
+void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery ) {
 	int				i, max_threads_used = 0;
 	float			originalTime;
 	FBO_t*			fbo = NULL;
 	shader_t		*oldShader = NULL;
-	qboolean		inQuery = qfalse;
 	int64_t			oldFogNum = -1;
 	int64_t			oldEntityNum = -1;
 	int64_t			oldDlighted = 0;
@@ -980,13 +981,17 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
 
+	//GL_SetModelviewMatrix(backEnd.viewParms.world.modelMatrix);
+	//matrix_t MVP;
+	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, MVP);
+
 	depth[0] = 0.f;
 	depth[1] = 1.f;
 
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 #ifdef __DEPTH_PREPASS_OCCLUSION__
-	if (r_occlusion->integer && !backEnd.depthFill)
+	if (r_occlusion->integer && !backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && !inQuery)
 	{
 		RB_UpdateOccludedList();
 	}
@@ -1030,22 +1035,21 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		if (!drawSurf->surface) continue;
 
 #ifdef __DEPTH_PREPASS_OCCLUSION__
-		if (r_occlusion->integer && backEnd.depthFill)
-		{
-			inQuery = qtrue;
-			qglGenQueries(1, &occlusionQuery[occlusionQueryTotal]);
-			qglBeginQuery(GL_SAMPLES_PASSED, occlusionQuery[occlusionQueryTotal]);
-			occlusionQueryTarg[occlusionQueryTotal] = i;
-			occlusionQueryTotal++;
-		}
-		else if (r_occlusion->integer)
-		{
-			inQuery = qfalse;
-
+		if (r_occlusion->integer && !inQuery && !backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity) {
 			if (occlusionQueryOccluded[i])
 			{
-				numOccluded++;
-				continue;
+				if (occlusionQueryDrawSurf[i] == drawSurf)
+				{
+					numOccluded++;
+					continue;
+				}
+				/*else
+				{
+					ri->Printf(PRINT_WARNING, "Occlusion query drawSurf %i does not match render drawSurf. cubemapIndex %s. sort %s. surface %s.\n", i,
+						drawSurf->cubemapIndex != occlusionQueryDrawSurf[i]->cubemapIndex ? "DIFFERENT" : "SAME",
+						drawSurf->sort != occlusionQueryDrawSurf[i]->sort ? "DIFFERENT" : "SAME",
+						drawSurf->surface != occlusionQueryDrawSurf[i]->surface ? "DIFFERENT" : "SAME");
+				}*/
 			}
 		}
 #endif //__DEPTH_PREPASS_OCCLUSION__
@@ -1106,13 +1110,25 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 		if ( drawSurf->sort == oldSort && (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex) ) 
 		{// fast path, same as previous sort
-			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
-
 #ifdef __DEPTH_PREPASS_OCCLUSION__
-			if (inQuery) {
+			if (r_occlusion->integer && inQuery && backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity)
+			{
+				qglGenQueries(1, &occlusionQuery[i]);
+				qglBeginQuery(GL_SAMPLES_PASSED, occlusionQuery[i]);
+				occlusionQueryTotal = numDrawSurfs;
+				occlusionQueryDrawSurf[i] = drawSurf;
+				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
 				qglEndQuery(GL_SAMPLES_PASSED);
 			}
+			else
+			{
+				occlusionQueryOccluded[i] = qfalse;
+				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+			}
+#else //!__DEPTH_PREPASS_OCCLUSION__
+			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 #endif //__DEPTH_PREPASS_OCCLUSION__
+
 #ifdef __DEBUG_MERGE__
 			NUM_FAST_PATH++;
 #endif //__DEBUG_MERGE__
@@ -1274,12 +1290,23 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		}
 
 		// add the triangles for this surface
-		rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
-
 #ifdef __DEPTH_PREPASS_OCCLUSION__
-		if (inQuery) {
+		if (r_occlusion->integer && inQuery && backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity)
+		{
+			qglGenQueries(1, &occlusionQuery[i]);
+			qglBeginQuery(GL_SAMPLES_PASSED, occlusionQuery[i]);
+			occlusionQueryTotal = numDrawSurfs;
+			occlusionQueryDrawSurf[i] = drawSurf;
+			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
 			qglEndQuery(GL_SAMPLES_PASSED);
 		}
+		else
+		{
+			occlusionQueryOccluded[i] = qfalse;
+			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+		}
+#else //!__DEPTH_PREPASS_OCCLUSION__
+		rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
 #endif //__DEPTH_PREPASS_OCCLUSION__
 	}
 
@@ -1294,10 +1321,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	if (inQuery) {
 		qglEndQuery(GL_SAMPLES_PASSED);
 	}
-#else //__DEPTH_PREPASS_OCCLUSION__
-	if (inQuery) {
-		qglFlush();
-	}
 #endif //__DEPTH_PREPASS_OCCLUSION__
 
 	FBO_Bind(fbo);
@@ -1306,10 +1329,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	GL_SetModelviewMatrix( backEnd.viewParms.world.modelMatrix );
 
-	//qglDepthRange (0, 1);
 	// Restore depth range for subsequent rendering
 	qglDepthRange( 0.0f, 1.0f );
 
+	/*
 #ifdef __DEPTH_PREPASS_OCCLUSION__
 	if (r_occlusion->integer && inQuery)
 	{
@@ -1324,6 +1347,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		ri->Printf(PRINT_WARNING, "%i draw surfaces. (non depthFill).\n", numDrawSurfs);
 	}
 #endif //__DEPTH_PREPASS_OCCLUSION__
+	*/
 
 #ifdef __DEBUG_MERGE__
 	ri->Printf(PRINT_WARNING, "TOTAL %i, NUM_MERGED %i, NUM_CUBE_MERGED %i, NUM_CUBE_DELETED %i, NUM_FAST_PATH %i, NUM_NULL_SHADERS %i, NUM_SHADER_FAILS %i, NUM_POSTRENDER_FAILS %i, NUM_CUBEMAP_FAILS %i, NUM_MERGABLE_FAILS %i.\n"
@@ -1835,12 +1859,34 @@ const void	*RB_DrawSurfs( const void *data ) {
 	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && (r_depthPrepass->integer || (backEnd.viewParms.flags & VPF_DEPTHSHADOW)))
 	{
 		FBO_t *oldFbo = glState.currentFBO;
+#ifdef __DEPTH_PREPASS_OCCLUSION__
+		qboolean oldColorMask[4];
+		oldColorMask[0] = (qboolean)!backEnd.colorMask[0];
+		oldColorMask[1] = (qboolean)!backEnd.colorMask[1];
+		oldColorMask[2] = (qboolean)!backEnd.colorMask[2];
+		oldColorMask[3] = (qboolean)!backEnd.colorMask[3];
+#endif //__DEPTH_PREPASS_OCCLUSION__
 
 		backEnd.depthFill = qtrue;
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs );
+		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
+
+#ifdef __DEPTH_PREPASS_OCCLUSION__
+		if (r_occlusion->integer /*&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)
+		{
+			backEnd.depthFill = qtrue;
+			qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			qglDepthMask(GL_FALSE);
+			qglDepthFunc(GL_LEQUAL);
+			//qglDepthRange(0, 0);
+			RB_RenderDrawSurfList(cmd->drawSurfs, cmd->numDrawSurfs, qtrue);
+			qglColorMask(oldColorMask[0], oldColorMask[1], oldColorMask[2], oldColorMask[3]);
+			qglFlush();
+			backEnd.depthFill = qfalse;
+		}
+#endif //__DEPTH_PREPASS_OCCLUSION__
 
 #if 0
 		if (tr.msaaResolveFbo)
@@ -2176,7 +2222,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 	if (!(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
-		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs );
+		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 
 		if (r_drawSun->integer)
 		{
