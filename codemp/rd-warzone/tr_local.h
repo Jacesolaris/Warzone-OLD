@@ -40,7 +40,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __PSHADOWS__
 //#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // UQ1: Doesn't detect all texture average colors yet... Also glowmap is good for culling non visible lights...
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
-//#define __DEPTH_PREPASS_OCCLUSION__
+//#define __ORIGINAL_OCCLUSION__
+#define __DEPTH_PREPASS_OCCLUSION__
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -3833,9 +3834,11 @@ OCCLUSION QUERY
 
 ============================================================
 */
+#ifdef __ORIGINAL_OCCLUSION__
 void OQ_InitOcclusionQuery();
 void OQ_ShutdownOcclusionQuery();
 const void *RB_DrawOcclusion( const void *data );
 void R_AddDrawOcclusionCmd( viewParms_t *parms );
+#endif //__ORIGINAL_OCCLUSION__
 
 #endif //TR_LOCAL_H

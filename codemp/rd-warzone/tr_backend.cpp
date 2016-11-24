@@ -749,12 +749,16 @@ void RB_ClearWaterPositionMap ( void )
 #endif //__USE_WATERMAP__
 }
 
+#ifdef __ORIGINAL_OCCLUSION__
 extern void RB_InitOcclusionFrame(void);
+#endif //__ORIGINAL_OCCLUSION__
 
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
 
+#ifdef __ORIGINAL_OCCLUSION__
 	RB_InitOcclusionFrame();
+#endif //__ORIGINAL_OCCLUSION__
 	RB_ClearWaterPositionMap();
 
 	// sync with gl if needed
@@ -3085,9 +3089,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			data = RB_WorldEffects( data );
 			break;
 #endif //__SURFACESPRITES__
+#ifdef __ORIGINAL_OCCLUSION__
 		case RC_DRAW_OCCLUSION:
 			data = RB_DrawOcclusion(data);
 			break;
+#endif //__ORIGINAL_OCCLUSION__
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed

@@ -1010,12 +1010,15 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	dest->projectionMatrix[11] = -1;
 	dest->projectionMatrix[15] = 0;
 
+#ifdef __ORIGINAL_OCCLUSION__
 	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
+#endif //__ORIGINAL_OCCLUSION__
 	{
 		// Now that we have all the data for the projection matrix we can also setup the view frustum.
 		if(computeFrustum)
 			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
 	}
+#ifdef __ORIGINAL_OCCLUSION__
 	else
 	{
 		// Now that we have all the data for the projection matrix we can also setup the view frustum.
@@ -1048,6 +1051,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
 		}
 	}
+#endif //__ORIGINAL_OCCLUSION__
 }
 
 /*
@@ -2259,9 +2263,11 @@ void R_RenderView (viewParms_t *parms) {
 
 	R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 
+#ifdef __ORIGINAL_OCCLUSION__
 	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer && !(tr.viewParms.flags & VPF_SHADOWPASS) && !backEnd.depthFill) {
 		R_AddDrawOcclusionCmd(&tr.viewParms);
 	}
+#endif //__ORIGINAL_OCCLUSION__
 
 	// draw main system development information (surface outlines, etc)
 	R_DebugGraphics();

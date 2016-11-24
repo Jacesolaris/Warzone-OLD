@@ -576,10 +576,13 @@ static void R_AddWorldSurface(msurface_t *surf, int dlightBits, int pshadowBits,
 	else
 		cubemapIndex = 0;
 
+#ifdef __ORIGINAL_OCCLUSION__
 	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
+#endif //__ORIGINAL_OCCLUSION__
 	{
 		R_AddDrawSurf(surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
 	}
+#ifdef __ORIGINAL_OCCLUSION__
 	else
 	{
 		if (dontCache)
@@ -598,6 +601,7 @@ static void R_AddWorldSurface(msurface_t *surf, int dlightBits, int pshadowBits,
 			tr.world->visibleSurfaces[scene][tr.world->numVisibleSurfaces[scene]++] = surf;
 		}
 	}
+#endif //__ORIGINAL_OCCLUSION__
 }
 
 /*
@@ -865,6 +869,7 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
 
+#ifdef __ORIGINAL_OCCLUSION__
 		if (r_occlusion->integer)
 		{// Occlusion culling...
 			if (node->nummarksurfaces > 0)
@@ -875,6 +880,7 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 			}
 			return;
 		}
+#endif //__ORIGINAL_OCCLUSION__
 
 		// add merged and unmerged surfaces
 		if (tr.world->viewSurfaces && !r_nocurves->integer)
@@ -1028,80 +1034,15 @@ static void R_MarkLeaves(void) {
 
 	// if the cluster is the same and the area visibility matrix
 	// hasn't changed, we don't need to mark everything again
-#if 0
-	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
+	for (i = 0; i < MAX_VISCOUNTS; i++)
 	{
-#endif
-		for (i = 0; i < MAX_VISCOUNTS; i++)
+		// if the areamask or r_showcluster was modified, invalidate all visclusters
+		// this caused doors to open into undrawn areas
+		if (tr.refdef.areamaskModified || r_showcluster->modified)
 		{
-			// if the areamask or r_showcluster was modified, invalidate all visclusters
-			// this caused doors to open into undrawn areas
-			if (tr.refdef.areamaskModified || r_showcluster->modified)
-			{
-				tr.visClusters[i] = -2;
-			}
-			else if (tr.visClusters[i] == cluster)
-			{
-				if (tr.visClusters[i] != tr.visClusters[tr.visIndex] && r_showcluster->integer)
-				{
-					ri->Printf(PRINT_ALL, "found cluster:%i  area:%i  index:%i\n", cluster, leaf->area, i);
-				}
-				tr.visIndex = i;
-				return;
-			}
+			tr.visClusters[i] = -2;
 		}
-
-		tr.visIndex = (tr.visIndex + 1) % MAX_VISCOUNTS;
-		tr.visCounts[tr.visIndex]++;
-		tr.visClusters[tr.visIndex] = cluster;
-
-		if (r_showcluster->modified || r_showcluster->integer) {
-			r_showcluster->modified = qfalse;
-			if (r_showcluster->integer) {
-				ri->Printf(PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area);
-			}
-		}
-
-		vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);
-
-		for (i = 0, leaf = tr.world->nodes; i < tr.world->numnodes; i++, leaf++) {
-			cluster = leaf->cluster;
-			if (cluster < 0 || cluster >= tr.world->numClusters) {
-				continue;
-			}
-
-			// check general pvs
-			if (vis && !(vis[cluster >> 3] & (1 << (cluster & 7)))) {
-				continue;
-			}
-
-			// check for door connection
-			if ((tr.refdef.areamask[leaf->area >> 3] & (1 << (leaf->area & 7)))) {
-				continue;		// not visible
-			}
-
-			parent = leaf;
-			do {
-				if (parent->visCounts[tr.visIndex] == tr.visCounts[tr.visIndex])
-					break;
-				parent->visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
-				parent = parent->parent;
-			} while (parent);
-		}
-#if 0
-	}
-	else
-	{
-		for (i = 0; i < MAX_VISCOUNTS; i++)
-		{
-			if (tr.visClusters[i] == cluster)
-			{
-				//tr.visIndex = i;
-				break;
-			}
-		}
-
-		if (i != MAX_VISCOUNTS && !tr.refdef.areamaskModified && !r_showcluster->modified)// && !r_dynamicBspOcclusionCulling->modified)
+		else if (tr.visClusters[i] == cluster)
 		{
 			if (tr.visClusters[i] != tr.visClusters[tr.visIndex] && r_showcluster->integer)
 			{
@@ -1110,68 +1051,45 @@ static void R_MarkLeaves(void) {
 			tr.visIndex = i;
 			return;
 		}
+	}
 
-		// if we don't reuse visIndex i, we'll have two cached visclusters with the same cluster number
-		// this caused doors to open into undrawn areas
-		if (i != MAX_VISCOUNTS)
-		{
-			tr.visIndex = i;
-		}
-		else
-		{
-			tr.visIndex = (tr.visIndex + 1) % MAX_VISCOUNTS;
-		}
+	tr.visIndex = (tr.visIndex + 1) % MAX_VISCOUNTS;
+	tr.visCounts[tr.visIndex]++;
+	tr.visClusters[tr.visIndex] = cluster;
 
-		tr.visCounts[tr.visIndex]++;
-		tr.visClusters[tr.visIndex] = cluster;
-
-		if (r_showcluster->modified || r_showcluster->integer) {
-			r_showcluster->modified = qfalse;
-			if (r_showcluster->integer) {
-				ri->Printf(PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area);
-			}
-		}
-
-		// set all nodes to visible if there is no vis
-		// this caused some levels to simply not render
-		if (r_novis->integer || !tr.world->vis || tr.visClusters[tr.visIndex] == -1) {
-			for (i = 0; i < tr.world->numnodes; i++) {
-				if (tr.world->nodes[i].contents != CONTENTS_SOLID) {
-					tr.world->nodes[i].visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
-				}
-			}
-			return;
-		}
-
-		vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);
-
-		for (i = 0, leaf = tr.world->nodes; i < tr.world->numnodes; i++, leaf++) {
-			cluster = leaf->cluster;
-
-			if (cluster < 0 || cluster >= tr.world->numClusters) {
-				continue;
-			}
-
-			// check general pvs
-			if (vis && !(vis[cluster >> 3] & (1 << (cluster & 7)))) {
-				continue;
-			}
-
-			// check for door connection
-			if ((tr.refdef.areamask[leaf->area >> 3] & (1 << (leaf->area & 7)))) {
-				continue;		// not visible
-			}
-
-			parent = leaf;
-			do {
-				if (parent->visCounts[tr.visIndex] == tr.visCounts[tr.visIndex])
-					break;
-				parent->visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
-				parent = parent->parent;
-			} while (parent);
+	if (r_showcluster->modified || r_showcluster->integer) {
+		r_showcluster->modified = qfalse;
+		if (r_showcluster->integer) {
+			ri->Printf(PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area);
 		}
 	}
-#endif
+
+	vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);
+
+	for (i = 0, leaf = tr.world->nodes; i < tr.world->numnodes; i++, leaf++) {
+		cluster = leaf->cluster;
+		if (cluster < 0 || cluster >= tr.world->numClusters) {
+			continue;
+		}
+
+		// check general pvs
+		if (vis && !(vis[cluster >> 3] & (1 << (cluster & 7)))) {
+			continue;
+		}
+
+		// check for door connection
+		if ((tr.refdef.areamask[leaf->area >> 3] & (1 << (leaf->area & 7)))) {
+			continue;		// not visible
+		}
+
+		parent = leaf;
+		do {
+			if (parent->visCounts[tr.visIndex] == tr.visCounts[tr.visIndex])
+				break;
+			parent->visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
+			parent = parent->parent;
+		} while (parent);
+	}
 }
 
 qboolean G_BoxInBounds(vec3_t point, vec3_t mins, vec3_t maxs, vec3_t boundsMins, vec3_t boundsMaxs)
@@ -1553,11 +1471,14 @@ void R_AddWorldSurfaces(void) {
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW))
 		R_MarkLeaves();
 
+#ifdef __ORIGINAL_OCCLUSION__
 	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
+#endif //__ORIGINAL_OCCLUSION__
 	{
 		// clear out the visible min/max
 		ClearBounds(tr.viewParms.visBounds[0], tr.viewParms.visBounds[1]);
 	}
+#ifdef __ORIGINAL_OCCLUSION__
 	else
 	{
 		if (!r_lazyFrustum->integer)
@@ -1668,6 +1589,7 @@ void R_AddWorldSurfaces(void) {
 		}
 #endif
 	}
+#endif //__ORIGINAL_OCCLUSION__
 
 	// perform frustum culling and flag all the potentially visible surfaces
 	tr.refdef.num_dlights = min(tr.refdef.num_dlights, 32);
@@ -1699,7 +1621,9 @@ void R_AddWorldSurfaces(void) {
 #endif
 	}
 
+#ifdef __ORIGINAL_OCCLUSION__
 	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
+#endif //__ORIGINAL_OCCLUSION__
 	{
 #ifdef __PSHADOWS__
 		R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, pshadowBits);
@@ -1708,6 +1632,7 @@ void R_AddWorldSurfaces(void) {
 #endif //__PSHADOWS__
 		//tr.updateOcclusion[0] = qtrue;
 	}
+#ifdef __ORIGINAL_OCCLUSION__
 	else
 	{
 		if (changeFrustum)
@@ -1797,10 +1722,13 @@ void R_AddWorldSurfaces(void) {
 
 		return;
 	}
+#endif //__ORIGINAL_OCCLUSION__
 
 	// now add all the potentially visible surfaces
 	// also mask invisible dlights for next frame
+#ifdef __ORIGINAL_OCCLUSION__
 	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
+#endif //__ORIGINAL_OCCLUSION__
 	{
 		int i;
 

@@ -1857,10 +1857,12 @@ void R_Init( void ) {
 
 	int shadersStartTime = GLSL_BeginLoadGPUShaders();
 
+#ifdef __ORIGINAL_OCCLUSION__
 	//if (r_occlusion->integer)
 	{
 		OQ_InitOcclusionQuery();
 	}
+#endif //__ORIGINAL_OCCLUSION__
 
 	R_InitVBOs();
 
@@ -1931,10 +1933,12 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 		R_ShutdownVBOs();
 		GLSL_ShutdownGPUShaders();
 
-		if (r_occlusion->integer)
+#ifdef __ORIGINAL_OCCLUSION__
+		//if (r_occlusion->integer)
 		{
 			OQ_ShutdownOcclusionQuery();
 		}
+#endif //__ORIGINAL_OCCLUSION__
 
 		if ( restarting )
 		{

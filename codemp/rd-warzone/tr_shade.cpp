@@ -3028,6 +3028,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			qboolean occluded = qfalse;
 			
+#ifdef __ORIGINAL_OCCLUSION__
 			if (r_occlusion->integer 
 				&& !isGeneric 
 				&& !(tr.viewParms.flags & VPF_SHADOWPASS) 
@@ -3037,6 +3038,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (RB_CheckOcclusion(glState.modelviewProjection, input))
 					break;
 			}
+#endif //__ORIGINAL_OCCLUSION__
 
 			if (input->multiDrawPrimitives)
 			{

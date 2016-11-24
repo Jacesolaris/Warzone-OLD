@@ -1,5 +1,7 @@
 #include "tr_local.h"
 
+#ifdef __ORIGINAL_OCCLUSION__
+
 #include "MaskedOcclusionCulling/MaskedOcclusionCulling.h"
 
 MaskedOcclusionCulling *moc = NULL;
@@ -879,3 +881,5 @@ qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input)
 #endif //defined(__SOFTWARE_OCCLUSION__)
 
 #endif //defined(__LEAF_OCCLUSION__)
+
+#endif //__ORIGINAL_OCCLUSION__
