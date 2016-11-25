@@ -20,7 +20,7 @@ bool ScanForSunMaterial(vec2 coord)
 {
 	float material = texture(u_PositionMap, coord).a;
 
-	if (material == 1024.0/*1025.0*/) 
+	if (material == 1024.0 || material == 1025.0)
 		return true;
 
 	bool found = false;
@@ -31,19 +31,35 @@ bool ScanForSunMaterial(vec2 coord)
 
 		material = texture(u_PositionMap, coord + vec2(0.0, pixel.y * float(y) * 2.0)).a;
 
-		if (material == 1024.0/*1025.0*/) 
+		if (material == 1024.0 || material == 1025.0)
 			found = true;
 
 		material = texture(u_PositionMap, coord + vec2(pixel.x * 2.0, pixel.y * float(y) * 2.0)).a;
 
-		if (material == 1024.0/*1025.0*/) 
+		if (material == 1024.0 || material == 1025.0)
 			found = true;
 
 		material = texture(u_PositionMap, coord + vec2(pixel.x * -2.0, pixel.y * float(y) * 2.0)).a;
 
-		if (material == 1024.0/*1025.0*/) 
+		if (material == 1024.0 || material == 1025.0)
 			found = true;
 	}
+	/*
+	for (int y = -50; y < 50; y++)
+	{
+		if (found) break;
+
+		for (int x = -50; x < 50; x++)
+		{
+			if (found) break;
+
+			material = texture(u_PositionMap, coord + vec2(pixel.x * float(x) * 2.0, pixel.y * float(y) * 2.0)).a;
+
+			if (material == 1024.0 || material == 1025.0)
+				found = true;
+		}
+	}
+	*/
 
 	return found;
 }

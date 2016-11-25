@@ -82,7 +82,7 @@ void main(void)
 	highp vec3 viewOrg = unOpenGlIsFuckedUpify(abs(u_ViewOrigin.xyz));
 	highp vec4 position = abs(texture2D(u_PositionMap, var_TexCoords));
 
-	if (position.a == 1024.0)
+	if (position.a == 1024.0 || position.a == 1025.0)
 	{// Skybox... Skip...
 		//gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
 		return;
@@ -96,7 +96,7 @@ void main(void)
 
 	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
 
-#if 1
+#if 0
 	float normPower = length(norm.rgb);
 
 	//if (normPower < 0.5 || normPower > 2.5)
@@ -155,7 +155,7 @@ void main(void)
 		float addedStrength = 1.0;
 		vec3 addedLight = vec3(0.0);
 
-		for (int li = 0; li < u_lightCount; li++)
+		for (int li = 0; li < u_lightCount /*min(u_lightCount, 1)*/; li++)
 		{
 			vec3 lightPos = unOpenGlIsFuckedUpify(abs(u_lightPositions2[li].xyz));
 
@@ -170,8 +170,8 @@ void main(void)
 				if (lightStrength > 0.0)
 				{
 					highp float lightBrightness = length(u_lightColors[li].rgb);
-					if (lightBrightness > 2.0) lightStrength /= 3.0;
-					else if (lightBrightness > 1.0) lightStrength /= 2.0;
+					//if (lightBrightness > 2.0) lightStrength /= 3.0;
+					//else if (lightBrightness > 1.0) lightStrength /= 2.0;
 
 					highp float strength = lightStrength;// *u_Local2.g;
 					addedStrength += strength;
@@ -191,7 +191,11 @@ void main(void)
 						addedLight += strength * u_lightColors[li].rgb;
 					}
 				}
+				//else
+				//	gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
 			}
+			//else
+			//	gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
 		}
 
 		if (addedStrength > 1.0)

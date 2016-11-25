@@ -292,8 +292,8 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 
 	outOffTurb[0] = 0.0f; outOffTurb[1] = 0.0f; outOffTurb[2] = 0.0f; outOffTurb[3] = 0.0f;
 
-	for ( tm = 0; tm < bundle->numTexMods ; tm++ ) {
-		switch ( bundle->texMods[tm].type )
+	for (tm = 0; tm < bundle->numTexMods; tm++) {
+		switch (bundle->texMods[tm].type)
 		{
 
 		case TMOD_NONE:
@@ -305,40 +305,40 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 			break;
 
 		case TMOD_ENTITY_TRANSLATE:
-			RB_CalcScrollTexMatrix( backEnd.currentEntity->e.shaderTexCoord, matrix );
+			RB_CalcScrollTexMatrix(backEnd.currentEntity->e.shaderTexCoord, matrix);
 			break;
 
 		case TMOD_SCROLL:
-			RB_CalcScrollTexMatrix( bundle->texMods[tm].scroll,
-									 matrix );
+			RB_CalcScrollTexMatrix(bundle->texMods[tm].scroll,
+				matrix);
 			break;
 
 		case TMOD_SCALE:
-			RB_CalcScaleTexMatrix( bundle->texMods[tm].scale,
-								  matrix );
+			RB_CalcScaleTexMatrix(bundle->texMods[tm].scale,
+				matrix);
 			break;
 
 		case TMOD_STRETCH:
-			RB_CalcStretchTexMatrix( &bundle->texMods[tm].wave,
-								   matrix );
+			RB_CalcStretchTexMatrix(&bundle->texMods[tm].wave,
+				matrix);
 			break;
 
 		case TMOD_TRANSFORM:
-			RB_CalcTransformTexMatrix( &bundle->texMods[tm],
-									 matrix );
+			RB_CalcTransformTexMatrix(&bundle->texMods[tm],
+				matrix);
 			break;
 
 		case TMOD_ROTATE:
-			RB_CalcRotateTexMatrix( bundle->texMods[tm].rotateSpeed,
-									matrix );
+			RB_CalcRotateTexMatrix(bundle->texMods[tm].rotateSpeed,
+				matrix);
 			break;
 
 		default:
-			ri->Error( ERR_DROP, "ERROR: unknown texmod '%d' in shader '%s'", bundle->texMods[tm].type, tess.shader->name );
+			ri->Error(ERR_DROP, "ERROR: unknown texmod '%d' in shader '%s'", bundle->texMods[tm].type, tess.shader->name);
 			break;
 		}
 
-		switch ( bundle->texMods[tm].type )
+		switch (bundle->texMods[tm].type)
 		{
 		case TMOD_NONE:
 		case TMOD_TURBULENT:

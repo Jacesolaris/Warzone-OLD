@@ -364,16 +364,9 @@ vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
 
-vec4 GetNonSplatMap( in sampler2D tex, vec2 coord, int fakeMapType )
+vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
 {
-	if (fakeMapType == FAKE_MAP_NORMALMAP)
-	{
-		return ConvertToNormals(texture( u_DiffuseMap, coord ));
-	}
-	else
-	{
-		return ConvertToNormals(texture( tex, coord ));
-	}
+	return texture( tex, coord );
 }
 
 vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inColor, float inA1)
@@ -487,7 +480,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 	else
 	{
-		return GetNonSplatMap(u_DiffuseMap, texCoords, FAKE_MAP_NONE);
+		return GetNonSplatMap(u_DiffuseMap, texCoords);
 	}
 #endif
 }
@@ -519,7 +512,12 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 	else
 	{
-		return GetNonSplatMap(u_NormalMap, texCoords, FAKE_MAP_NORMALMAP);
+		if (u_Local4.r <= 0.0)
+		{
+			return ConvertToNormals(GetNonSplatMap(u_DiffuseMap, texCoords));
+		}
+
+		return texture(u_NormalMap, texCoords);
 	}
 #endif
 }
@@ -535,7 +533,7 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 	if (u_Local4.r <= 0.0)
 	{
-		return ConvertToNormals( GetDiffuse(texCoords, ParallaxOffset, pixRandom) );
+		return ConvertToNormals(texture(u_DiffuseMap, texCoords));
 	}
 
 	return texture(u_NormalMap, texCoords);
@@ -869,10 +867,10 @@ void main()
 	#endif
 
 
-		if (diffuse.a <= 0.0)
+		/*if (diffuse.a <= 0.0)
 		{
 			discard; // no point going further??!?!?!
-		}
+		}*/
 
 
 	ambientColor = vec3(0.0);
@@ -896,7 +894,18 @@ void main()
 
 
 	//vec4 norm = vec4(m_Normal.xyz, 0.0);
-	vec4 norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+
+	vec4 norm;
+
+	if (u_Local4.r <= 0.0)
+	{
+		norm = ConvertToNormals(diffuse);
+	}
+	else
+	{
+		norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+	}
+
 	N.xy = norm.xy * 2.0 - 1.0;
 
 	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
@@ -908,20 +917,34 @@ void main()
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
 	//N = normalize(tangentToWorld * N);
 
-	#if 0
-		gl_FragColor = vec4(N.xyz, 1.0);
+#if 0
+	if (u_Local9.r >= 1)
+	{
+		if (u_Local9.r == 1)
+			gl_FragColor = vec4(N.xyz * 0.5 + 0.5, 1.0);
+		else if (u_Local9.r == 2)
+			gl_FragColor = vec4(diffuse.rgb, 1.0);
+		else if (u_Local9.r == 3)
+			gl_FragColor = vec4(diffuse);
+		else if (u_Local9.r == 4)
+			gl_FragColor = vec4(var_Tangent.xyz * 0.5 + 0.5, 1.0);
+		else if (u_Local9.r == 5)
+			gl_FragColor = vec4(var_Bitangent.xyz * 0.5 + 0.5, 1.0);
+		else if (u_Local9.r == 6)
+			gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
 		//gl_FragColor = vec4(N.a, N.a, N.a, 1.0);
 
-		#if defined(USE_GLOW_BUFFER)
-			out_Glow = gl_FragColor;
-		#else
-			out_Glow = vec4(0.0);
-		#endif
+#if defined(USE_GLOW_BUFFER)
+		out_Glow = gl_FragColor;
+#else
+		out_Glow = vec4(0.0);
+#endif
 
 		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
+		out_Position = vec4(m_vertPos, u_Local1.a);/// MATERIAL_LAST);
 		return;
-	#endif
+	}
+#endif
 
 	/*if (diffuse.a <= 0.0)
 	{
@@ -1016,7 +1039,7 @@ void main()
 		//out_Position = vec4(m_vertPos, 0.0 );
 	#else
 		out_Glow = vec4(0.0);
-		if (length(N.xyz * 0.5 + 0.5) > 0.0 && length(m_vertPos.xyz) > 0.0) // *sigh* hack for something screwy with normals and multipass q3 shader spam...
+		//if (length(N.xyz * 0.5 + 0.5) > 0.0 && length(m_vertPos.xyz) > 0.0) // *sigh* hack for something screwy with normals and multipass q3 shader spam...
 		{
 			out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
 			out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);

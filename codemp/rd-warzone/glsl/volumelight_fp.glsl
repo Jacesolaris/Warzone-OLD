@@ -8,7 +8,6 @@ uniform vec2		u_vlightPositions[16];
 uniform float		u_vlightDistances[16];
 uniform vec3		u_vlightColors[16];
 
-uniform vec2		u_Dimensions;
 uniform vec4		u_Local0;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
@@ -24,8 +23,6 @@ flat varying int	var_SunVisible;
 //#define ADJUST_DEPTH_PIXELS // Gives more shadow effect to the lighting, but also can make it too intense...
 
 #define VOLUMETRIC_THRESHOLD 0.15
-
-vec2 pixel = 1.0 / u_Dimensions;
 
 
 #if defined(HQ_VOLUMETRIC)

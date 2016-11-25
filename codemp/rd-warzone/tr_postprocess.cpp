@@ -1298,15 +1298,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 //#define VOLUME_LIGHT_DEBUG
 //#define VOLUME_LIGHT_SINGLE_PASS
 
-#if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
-	{
-		vec2_t screensize;
-		screensize[0] = tr.volumetricFBOImage->width;
-		screensize[1] = tr.volumetricFBOImage->height;
-
-		GLSL_SetUniformVec2(&tr.volumeLightShader[dlightShader], UNIFORM_DIMENSIONS, screensize);
-	}
-#else //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
@@ -1314,7 +1305,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 		GLSL_SetUniformVec2(&tr.volumeLightShader[dlightShader], UNIFORM_DIMENSIONS, screensize);
 	}
-#endif
 
 	{
 		vec4_t viewInfo;

@@ -31,7 +31,8 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in float distance, // camera to point distance
                in vec3  rayOri,   // camera position
                in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir )  // sun light direction
+               in vec3  sunDir,
+			   in vec4 position )  // sun light direction
 {
 	const float b = 0.5;//0.7;//u_Local0.r; // the falloff of this density
 
@@ -45,10 +46,17 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 
 	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
 	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1, 0.0, 1.0), 0.0 );
-	if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
+	
+	//if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
+	if (!(position.a == 1024.0 || position.a == 1025.0))
+	{// Not Skybox or Sun... No don't do sun color here...
+		sunAmount = 0.0;
+	}
+
     vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
                            vec3(1.0,0.9,0.7), // yellowish
                            pow(sunAmount,8.0) );
+
 	return mix( rgb, fogColor, fogAmount );
 }
 
@@ -59,6 +67,6 @@ void main ( void )
 	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);
 	vec3 viewOrg = unOpenGlIsFuckedUpify(u_ViewOrigin.xyz);
 	vec3 sunOrg = unOpenGlIsFuckedUpify(u_PrimaryLightOrigin.xyz);
-	vec3 fogColor = applyFog2( pixelColor.rgb, depth, viewOrg.xyz/*pMap.xyz*/, normalize(viewOrg.xyz - pMap.xyz), normalize(viewOrg.xyz - sunOrg.xyz) );
+	vec3 fogColor = applyFog2(pixelColor.rgb, depth, viewOrg.xyz/*pMap.xyz*/, normalize(viewOrg.xyz - pMap.xyz), normalize(viewOrg.xyz - sunOrg.xyz), pMap);
 	gl_FragColor = vec4(fogColor, 1.0);
 }
