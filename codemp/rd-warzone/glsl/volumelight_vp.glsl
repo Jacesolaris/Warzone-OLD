@@ -9,7 +9,7 @@ uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
 uniform int			u_lightCount;
-uniform vec2		u_lightPositions[16];
+uniform vec2		u_vlightPositions[16];
 
 varying vec2		var_TexCoords;
 flat varying int	var_SunVisible;
@@ -44,16 +44,17 @@ bool ScanForSunMaterial(vec2 coord)
 		if (material == 1024.0 || material == 1025.0)
 			found = true;
 	}
+	
 	/*
-	for (int y = -50; y < 50; y++)
+	for (int y = -50; y < 50; y += 2.0)
 	{
 		if (found) break;
 
-		for (int x = -50; x < 50; x++)
+		for (int x = -50; x < 50; x += 2.0)
 		{
 			if (found) break;
 
-			material = texture(u_PositionMap, coord + vec2(pixel.x * float(x) * 2.0, pixel.y * float(y) * 2.0)).a;
+			material = texture(u_PositionMap, coord + vec2(pixel.x * float(x), pixel.y * float(y))).a;
 
 			if (material == 1024.0 || material == 1025.0)
 				found = true;
@@ -76,7 +77,7 @@ void main()
 
 	if (SUN_ID >= 0 && SUN_ID < 16)
 	{
-		//if (ScanForSunMaterial(u_lightPositions[SUN_ID])) 
+		if (ScanForSunMaterial(u_vlightPositions[SUN_ID])) 
 			var_SunVisible = 1;
 	}
 }

@@ -1215,6 +1215,19 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		}
 	}
 
+	/*GLuint sampleCount = 0;
+	qglGetQueryObjectuiv(tr.sunFlareVQuery[tr.sunFlareVQueryIndex], GL_QUERY_RESULT, &sampleCount);
+	if (sampleCount) 
+	{
+		ri->Printf(PRINT_WARNING, "SUN: %d samples.\n", sampleCount);
+		SUN_VISIBLE = qtrue;
+	}
+	else
+	{
+		ri->Printf(PRINT_WARNING, "SUN: %d samples.\n", sampleCount);
+		SUN_VISIBLE = qfalse;
+	}*/
+
 	if ( SUN_VISIBLE )
 	{// Add sun...
 		//SUN_SCREEN_POSITION

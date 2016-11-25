@@ -2634,6 +2634,10 @@ typedef struct trGlobals_s {
 	int						sunFlareQueryIndex;
 	qboolean				sunFlareQueryActive[2];
 
+	GLuint					sunFlareVQuery[2];
+	int						sunFlareVQueryIndex;
+	qboolean				sunFlareVQueryActive[2];
+
 	float					sinTable[FUNCTABLE_SIZE];
 	float					squareTable[FUNCTABLE_SIZE];
 	float					triangleTable[FUNCTABLE_SIZE];
