@@ -160,7 +160,7 @@ extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
 //#define HEIGHTMAP_TESSELATION
-#define HEIGHTMAP_TESSELATION2 // NEW
+#define HEIGHTMAP_TESSELATION2 // NEW - GOOD
 //#define PN_TRIANGLES_TESSELATION
 //#define PHONG_TESSELATION
 
@@ -399,6 +399,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "out precise vec3 Blending_ES_in[3];\n"\
 "out float Slope_ES_in[3];\n"\
 "out float usingSteepMap_ES_in[3];\n"\
+"//out float tessScale_ES_in[3];\n"\
 "\n"\
 "bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent) \n"\
 "{\n"\
@@ -467,6 +468,9 @@ const char fallbackShader_genericTessControl_cp[] =
 "	Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
 "	Slope_ES_in[gl_InvocationID]				= Slope_CS_in[gl_InvocationID];\n"\
 "	usingSteepMap_ES_in[gl_InvocationID]		= usingSteepMap_CS_in[gl_InvocationID];\n"\
+"\n"\
+"//	float size = max( max(distance(WorldPos_ES_in[0].xyz, WorldPos_ES_in[1].xyz), distance(WorldPos_ES_in[0].xyz, WorldPos_ES_in[2].xyz)) , distance(WorldPos_ES_in[1].xyz, WorldPos_ES_in[2].xyz));\n"\
+"//   tessScale_ES_in[gl_InvocationID] = size / 1024.0;\n"\
 "\n"\
 "	//if(gl_InvocationID == 0)\n"\
 "	{\n"\
@@ -546,6 +550,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "in precise vec3 Blending_ES_in[];\n"\
 "in float Slope_ES_in[];\n"\
 "in float usingSteepMap_ES_in[];\n"\
+"//in float tessScale_ES_in[];\n"\
 "\n"\
 "out precise vec4 WorldPos_GS_in;\n"\
 "out precise vec2 TexCoord_GS_in;\n"\
@@ -559,6 +564,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "out precise vec3 Blending_GS_in;\n"\
 "out float Slope_GS_in;\n"\
 "out float usingSteepMap_GS_in;\n"\
+"//out float tessScale_GS_in;\n"\
 "\n"\
 "uniform vec4				u_Local9; // testvalue0, 1, 2, 3\n"\
 "\n"\
@@ -576,6 +582,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "	Blending_GS_in = (gl_TessCoord.x * Blending_ES_in[0] + gl_TessCoord.y * Blending_ES_in[1] + gl_TessCoord.z * Blending_ES_in[2]);\n"\
 "	Slope_GS_in = (gl_TessCoord.x * Slope_ES_in[0] + gl_TessCoord.y * Slope_ES_in[1] + gl_TessCoord.z * Slope_ES_in[2]);\n"\
 "	usingSteepMap_GS_in = (gl_TessCoord.x * usingSteepMap_ES_in[0] + gl_TessCoord.y * usingSteepMap_ES_in[1] + gl_TessCoord.z * usingSteepMap_ES_in[2]);\n"\
+"//	tessScale_GS_in = (gl_TessCoord.x * tessScale_ES_in[0] + gl_TessCoord.y * tessScale_ES_in[1] + gl_TessCoord.z * tessScale_ES_in[2]);\n"\
 "//	WorldPos_GS_in.z += u_Local9.r/*16.0*/;\n"\
 "}\n";
 
@@ -608,6 +615,7 @@ const char fallbackShader_genericGeometry[] =
 "in precise vec3 Blending_GS_in[];\n"\
 "in float Slope_GS_in[];\n"\
 "in float usingSteepMap_GS_in[];\n"\
+"//in float tessScale_GS_in[];\n"\
 "\n"\
 "out precise vec3 WorldPos_FS_in;\n"\
 "out precise vec2 TexCoord_FS_in;\n"\
@@ -676,7 +684,7 @@ const char fallbackShader_genericGeometry[] =
 "	 vLocalSeed = WorldPos_GS_in[i].xyx;\n"\
 "//    vec3 height = vec3(randZeroOne() * 2.0 - 1.0, randZeroOne() * 2.0 - 1.0, randZeroOne() * 2.0 - 1.0);\n"\
 "//    vec3 height = vec3(randZeroOne() /** 2.0 - 1.0*/);\n"\
-"    vec3 height = vec3(0.0, 0.0, randZeroOne());\n"\
+"    vec3 height = vec3(0.0, 0.0, randZeroOne());// * tessScale_GS_in[i];\n"\
 "\n"\
 "//	 vec3 offset = normal * (-gDispFactor * height);\n"\
 "//	 vec3 offset = vec3(0.0, 0.0, 1.0) * (-gDispFactor * height);\n"\
@@ -900,8 +908,8 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec4 PrimaryLightDir_FS_in;\n"\
 "out vec2 TexCoord2_FS_in;\n"\
 "out vec3 Blending_FS_in;\n"\
-"out float Slope_FS_in;\n"\
-"out float usingSteepMap_FS_in;\n"\
+"flat out float Slope_FS_in;\n"\
+"flat out float usingSteepMap_FS_in;\n"\
 "\n"\
 "#define b300    gl_in[0].gl_Position.xyz\n"\
 "#define b030    gl_in[1].gl_Position.xyz\n"\
@@ -1143,8 +1151,8 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec4 PrimaryLightDir_FS_in;\n"\
 "out vec2 TexCoord2_FS_in;\n"\
 "out vec3 Blending_FS_in;\n"\
-"out float Slope_FS_in;\n"\
-"out float usingSteepMap_FS_in;\n"\
+"flat out float Slope_FS_in;\n"\
+"flat out float usingSteepMap_FS_in;\n"\
 "\n"\
 "#define Pi  gl_in[0].gl_Position.xyz\n"\
 "#define Pj  gl_in[1].gl_Position.xyz\n"\

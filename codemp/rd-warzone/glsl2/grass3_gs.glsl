@@ -277,8 +277,13 @@ void main()
 
 	float USE_DENSITY = pow(m, 3.0/*8.0*/);//m*m*m;
 
+	float size = max(max(distance(gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz), distance(gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz)), distance(gl_in[1].gl_Position.xyz, gl_in[2].gl_Position.xyz));
+	float vertSizeScale = clamp(size / 1024.0, 0.0, 1.0);
+	float densityScale = pow(vertSizeScale, 3.333);
+	vertSizeScale = vertSizeScale * 0.5 + 0.5; // scale down all grass up to 50% on small surfaces...
+
 	int numAddedVerts = 0;
-	int maxAddedVerts = int(float(MAX_FOLIAGES)*USE_DENSITY);
+	int maxAddedVerts = int(float(MAX_FOLIAGES)*USE_DENSITY*densityScale);
 
 	for (int x = 0; x < MAX_FOLIAGES_LOOP; x++)
 	{
@@ -391,6 +396,7 @@ void main()
 		}
 
 		heightMult *= controlMapScale;
+		heightMult *= vertSizeScale; // scale down by up to 50% by original vert size as well...
 
 		//if (PASS_NUMBER > 6.0)
 		//	heightMult *= 0.5;

@@ -4185,7 +4185,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 			if (diffuse->bundle[TB_DIFFUSEMAP].image[0]
-				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
+				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") 
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
+			{
+				diffuse->isFoliage = true;
+			}
+			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0]
+				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "warzone/plant/") 
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "warzone/plants/")))
 			{
 				diffuse->isFoliage = true;
 			}
@@ -4193,9 +4200,24 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trunk")
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark")
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "giant_tree")
-				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
+				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") 
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/grass")
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree_leaves")
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree1")
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/vine")))
 			{
 				diffuse->isFoliage = true;
+			}
+			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0]
+				&& StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "warzone/deadtree")
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "warzone\\deadtree"))
+			{
+				if (!(StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark") 
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trunk") 
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "giant_tree") 
+					|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "vine01")))
+					diffuse->isFoliage = true;
 			}
 			break;
 		default:
@@ -6908,6 +6930,13 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			sprintf(myShader, uniqueGenericFoliageBillboardShader, strippedName, strippedName);
 		}
 		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage"))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "yavin/grass") || StringContainsWord(strippedName, "yavin\\grass") 
+			|| StringContainsWord(strippedName, "yavin/tree_leaves") || StringContainsWord(strippedName, "yavin\\tree_leaves")
+			|| StringContainsWord(strippedName, "yavin/tree1") || StringContainsWord(strippedName, "yavin\\tree1")
+			|| StringContainsWord(strippedName, "yavin/vine") || StringContainsWord(strippedName, "yavin\\vine"))
 		{
 			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		}

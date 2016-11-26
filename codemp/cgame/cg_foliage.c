@@ -2122,7 +2122,7 @@ float RoofHeightAbove(vec3_t org)
 
 	if (tr.startsolid || tr.allsolid)
 	{
-		trap->Print("start or allsolid.\n");
+		//trap->Print("start or allsolid.\n");
 		return -131072.0f;
 	}
 
