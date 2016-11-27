@@ -42,7 +42,7 @@
     <UseILP64Interfaces>false</UseILP64Interfaces>
     <UseMpiLibrary>INTELMPI</UseMpiLibrary>
     <InterproceduralOptimization>true</InterproceduralOptimization>
-    <PlatformToolset>Intel C++ Compiler XE 15.0</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -143,7 +143,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>false</FunctionLevelLinking>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderOutputFile>.\Release/mathlib.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>..\build\release\x64\mathlib\</AssemblerListingLocation>
