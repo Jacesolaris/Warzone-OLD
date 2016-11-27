@@ -43,7 +43,7 @@
     <UseIntelMKL>No</UseIntelMKL>
     <UseILP64Interfaces>false</UseILP64Interfaces>
     <UseMpiLibrary>INTELMPI</UseMpiLibrary>
-    <PlatformToolset>Intel C++ Compiler XE 15.0</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -183,7 +183,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>false</FunctionLevelLinking>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderOutputFile>.\Release/bloodmap.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\build\release\x64\</AssemblerListingLocation>
@@ -212,7 +212,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>OpenCL64.lib;glib-2.0.lib;wsock32.lib;libxml2.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../dependencies/OpenCL64.lib;glib-2.0.lib;wsock32.lib;libxml2.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\win64\WzMap.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\dependencies\x64\libxml\lib;.\..\dependencies\x64\gtk2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

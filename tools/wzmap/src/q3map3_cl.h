@@ -3,7 +3,7 @@
 #ifndef Q3MAP3_CL_H
 #define Q3MAP3_CL_H
 
-#include "CL/cl.h"
+#include "include/CL/cl.h"
 
 #define PLATFORM_IDS_SIZE 1 
 #define DEVICE_TYPE CL_DEVICE_TYPE_GPU /*default to gpu device. ocl can also use CPU as a device type*/ 
