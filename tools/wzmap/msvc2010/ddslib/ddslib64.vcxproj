@@ -47,7 +47,7 @@
     <UseILP64Interfaces>false</UseILP64Interfaces>
     <UseMpiLibrary>INTELMPI</UseMpiLibrary>
     <InterproceduralOptimization>true</InterproceduralOptimization>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>Intel C++ Compiler XE 15.0</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -162,6 +162,11 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
+      <InterproceduralOptimization>MultiFile</InterproceduralOptimization>
+      <Parallelization>true</Parallelization>
+      <GenerateAlternateCodePaths>SSE41</GenerateAlternateCodePaths>
+      <UseProcessorExtensions>SSE3</UseProcessorExtensions>
+      <OpenMP>GenerateParallelCode</OpenMP>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

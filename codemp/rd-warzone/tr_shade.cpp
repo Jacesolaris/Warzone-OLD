@@ -1479,9 +1479,9 @@ qboolean RB_ShouldUseTesselation ( int materialType )
 {
 	if ( materialType == MATERIAL_SHORTGRASS
 		|| materialType == MATERIAL_LONGGRASS
-		/*|| materialType == MATERIAL_SAND*/
-		|| materialType == MATERIAL_ROCK
-		/*|| materialType == MATERIAL_ICE*/)
+		|| materialType == MATERIAL_SAND
+		//|| materialType == MATERIAL_ROCK
+		|| materialType == MATERIAL_ICE)
 		return qtrue;
 
 	return qfalse;
@@ -1496,7 +1496,7 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 	case MATERIAL_SHORTGRASS:
 	case MATERIAL_LONGGRASS:
 	case MATERIAL_SAND:
-	case MATERIAL_ROCK:
+	//case MATERIAL_ROCK:
 	case MATERIAL_ICE:
 		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
@@ -1522,19 +1522,19 @@ float RB_GetTesselationInnerLevel ( int materialType )
 	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 		break;
-	/*case MATERIAL_SAND:				// 8			// sandy beach
+	case MATERIAL_SAND:				// 8			// sandy beach
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
 		break;
-	case MATERIAL_CARPET:			// 27			// lush carpet
+	/*case MATERIAL_CARPET:			// 27			// lush carpet
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
 		break;
 	case MATERIAL_GRAVEL:			// 9			// lots of small stones
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;*/
+		break;
 	case MATERIAL_ROCK:				// 23			//
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
 		break;
-	/*case MATERIAL_TILES:			// 26			// tiled floor
+	case MATERIAL_TILES:			// 26			// tiled floor
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
@@ -1590,10 +1590,10 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		break;
 	case MATERIAL_ARMOR:			// 30			// body armor
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;
+		break;*/
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, r_tesselationLevel->value);
-		break;*/
+		break;
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 	case MATERIAL_GLASS:			// 10			//

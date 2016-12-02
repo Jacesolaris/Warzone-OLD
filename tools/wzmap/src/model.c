@@ -243,7 +243,9 @@ extern void Decimate(picoModel_t *model, char *fileNameOut);
 int numSolidSurfs = 0, numHeightCulledSurfs = 0, numSizeCulledSurfs = 0, numExperimentalCulled = 0;
 
 //#define __USE_CULL_BOX_SYSTEM__
+//#define __USE_CULL_BOX_SYSTEM2__
 
+#ifndef __USE_CULL_BOX_SYSTEM2__
 #ifdef __USE_CULL_BOX_SYSTEM__
 void AddQuadStamp2(vec3_t quadVerts[4], unsigned int *numIndexes, unsigned int *indexes, unsigned int *numVerts, vec3_t *xyz)
 {
@@ -321,6 +323,7 @@ void AddCube(const vec3_t mins, const vec3_t maxs, unsigned int *numIndexes, uns
 	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
 }
 #endif //__USE_CULL_BOX_SYSTEM__
+#endif //__USE_CULL_BOX_SYSTEM2__
 
 void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids)
 {
@@ -879,16 +882,16 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 				//Sys_Printf("UPPER_MINS is %f %f %f. UPPER_MAXS is %f %f %f.\n", UPPER_MINS[0], UPPER_MINS[1], UPPER_MINS[2], UPPER_MAXS[0], UPPER_MAXS[1], UPPER_MAXS[2]);
 
 #pragma omp critical
-					{
-						if (LOWER_MINS[0] < TREE_MINS[0]) TREE_MINS[0] = LOWER_MINS[0];
-						if (LOWER_MINS[1] < TREE_MINS[1]) TREE_MINS[1] = LOWER_MINS[1];
-						TREE_MINS[2] = bottom;
+				{
+					if (LOWER_MINS[0] < TREE_MINS[0]) TREE_MINS[0] = LOWER_MINS[0];
+					if (LOWER_MINS[1] < TREE_MINS[1]) TREE_MINS[1] = LOWER_MINS[1];
+					TREE_MINS[2] = bottom;
 
-						if (UPPER_MAXS[0] > TREE_MAXS[0]) TREE_MAXS[0] = UPPER_MAXS[0];
-						if (UPPER_MAXS[1] > TREE_MAXS[1]) TREE_MAXS[1] = UPPER_MAXS[1];
-						TREE_MAXS[2] = top;
-					}
-				
+					if (UPPER_MAXS[0] > TREE_MAXS[0]) TREE_MAXS[0] = UPPER_MAXS[0];
+					if (UPPER_MAXS[1] > TREE_MAXS[1]) TREE_MAXS[1] = UPPER_MAXS[1];
+					TREE_MAXS[2] = top;
+				}
+
 				if (TREE_MINS[0] == 999999.9 && TREE_MINS[1] == 999999.9 && TREE_MAXS[0] == -999999.9 && TREE_MAXS[1] == -999999.9)
 				{// Failed... Fall back to old method...
 					isTreeSolid = false;
@@ -898,45 +901,45 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			if (!isTreeSolid)
 			{// Edither this is not a tree, or we failed to find a valid box... Fallback to old method... *sigh*
 				/* walk triangle list */
-				for( i = 0; i < ds->numIndexes; i += 3 )
+				for (i = 0; i < ds->numIndexes; i += 3)
 				{
 					int					j;
 					vec3_t				points[4], backs[3];
 
 					/* overflow hack */
-					if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
+					if ((nummapplanes + 64) >= (MAX_MAP_PLANES >> 1))
 					{
-						Sys_Warning( mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name );
+						Sys_Warning(mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name);
 						break;
 					}
 
 					/* make points and back points */
-					for( j = 0; j < 3; j++ )
+					for (j = 0; j < 3; j++)
 					{
 						bspDrawVert_t		*dv;
 						int					k;
 
 						/* get vertex */
-						dv = &ds->verts[ ds->indexes[ i + j ] ];
+						dv = &ds->verts[ds->indexes[i + j]];
 
 						/* copy xyz */
-						VectorCopy( dv->xyz, points[ j ] );
-						VectorCopy( dv->xyz, backs[ j ] );
+						VectorCopy(dv->xyz, points[j]);
+						VectorCopy(dv->xyz, backs[j]);
 
 						/* find nearest axial to normal and push back points opposite */
 						/* note: this doesn't work as well as simply using the plane of the triangle, below */
-						for( k = 0; k < 3; k++ )
+						for (k = 0; k < 3; k++)
 						{
-							if( fabs( dv->normal[ k ] ) >= fabs( dv->normal[ (k + 1) % 3 ] ) &&
-								fabs( dv->normal[ k ] ) >= fabs( dv->normal[ (k + 2) % 3 ] ) )
+							if (fabs(dv->normal[k]) >= fabs(dv->normal[(k + 1) % 3]) &&
+								fabs(dv->normal[k]) >= fabs(dv->normal[(k + 2) % 3]))
 							{
-								backs[ j ][ k ] += dv->normal[ k ] < 0.0f ? 64.0f : -64.0f;
+								backs[j][k] += dv->normal[k] < 0.0f ? 64.0f : -64.0f;
 								break;
 							}
 						}
 					}
 
-					VectorCopy( points[0], points[3] ); // for cyclic usage
+					VectorCopy(points[0], points[3]); // for cyclic usage
 
 					/* make plane for triangle */
 					// div0: add some extra spawnflags:
@@ -944,7 +947,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 					//   8: extrude with the original normals
 					//  16: extrude only with up/down normals (ideal for terrain)
 					//  24: extrude by distance zero (may need engine changes)
-					if( PlaneFromPoints( plane, points[ 0 ], points[ 1 ], points[ 2 ] ) )
+					if (PlaneFromPoints(plane, points[0], points[1], points[2]))
 					{
 						double				normalEpsilon_save;
 						double				distanceEpsilon_save;
@@ -952,9 +955,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						vec3_t bestNormal;
 						float backPlaneDistance = 2;
 
-						if(spawnFlags & 8) // use a DOWN normal
+						if (spawnFlags & 8) // use a DOWN normal
 						{
-							if(spawnFlags & 16)
+							if (spawnFlags & 16)
 							{
 								// 24: normal as is, and zero width (broken)
 								VectorCopy(plane, bestNormal);
@@ -967,7 +970,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						}
 						else
 						{
-							if(spawnFlags & 16)
+							if (spawnFlags & 16)
 							{
 								// 16: UP/DOWN normal
 								VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
@@ -975,16 +978,16 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							else
 							{
 								// 0: axial normal
-								if(fabs(plane[0]) > fabs(plane[1])) // x>y
-								if(fabs(plane[1]) > fabs(plane[2])) // x>y, y>z
+								if (fabs(plane[0]) > fabs(plane[1])) // x>y
+								if (fabs(plane[1]) > fabs(plane[2])) // x>y, y>z
 									VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
 								else // x>y, z>=y
-								if(fabs(plane[0]) > fabs(plane[2])) // x>z, z>=y
+								if (fabs(plane[0]) > fabs(plane[2])) // x>z, z>=y
 									VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
 								else // z>=x, x>y
 									VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
 								else // y>=x
-								if(fabs(plane[1]) > fabs(plane[2])) // y>z, y>=x
+								if (fabs(plane[1]) > fabs(plane[2])) // y>z, y>=x
 									VectorSet(bestNormal, 0, (plane[1] >= 0 ? 1 : -1), 0);
 								else // z>=y, y>=x
 									VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
@@ -992,30 +995,30 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						}
 
 						/* regenerate back points */
-						for( j = 0; j < 3; j++ )
+						for (j = 0; j < 3; j++)
 						{
 							bspDrawVert_t		*dv;
 
 							/* get vertex */
-							dv = &ds->verts[ ds->indexes[ i + j ] ];
+							dv = &ds->verts[ds->indexes[i + j]];
 
 							// shift by some units
 							VectorMA(dv->xyz, -64.0f, bestNormal, backs[j]); // 64 prevents roundoff errors a bit
 						}
 
 						/* make back plane */
-						VectorScale( plane, -1.0f, reverse );
-						reverse[ 3 ] = -plane[ 3 ];
-						if((spawnFlags & 24) != 24)
+						VectorScale(plane, -1.0f, reverse);
+						reverse[3] = -plane[3];
+						if ((spawnFlags & 24) != 24)
 							reverse[3] += DotProduct(bestNormal, plane) * backPlaneDistance;
 						// that's at least sqrt(1/3) backPlaneDistance, unless in DOWN mode; in DOWN mode, we are screwed anyway if we encounter a plane that's perpendicular to the xy plane)
 
 						normalEpsilon_save = normalEpsilon;
 						distanceEpsilon_save = distanceEpsilon;
 
-						if( PlaneFromPoints( pa, points[ 2 ], points[ 1 ], backs[ 1 ] ) &&
-							PlaneFromPoints( pb, points[ 1 ], points[ 0 ], backs[ 0 ] ) &&
-							PlaneFromPoints( pc, points[ 0 ], points[ 2 ], backs[ 2 ] ) )
+						if (PlaneFromPoints(pa, points[2], points[1], backs[1]) &&
+							PlaneFromPoints(pb, points[1], points[0], backs[0]) &&
+							PlaneFromPoints(pc, points[0], points[2], backs[2]))
 						{
 							//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
 
@@ -1119,7 +1122,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 								{
 
 									/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
-									buildBrush = AllocBrush( 24/*48*/ ); // UQ1: 48 seems to be more then is used... Wasting memory...
+									buildBrush = AllocBrush(24/*48*/); // UQ1: 48 seems to be more then is used... Wasting memory...
 									buildBrush->entityNum = mapEntityNum;
 									buildBrush->mapEntityNum = mapEntityNum;
 									buildBrush->original = buildBrush;
@@ -1136,9 +1139,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 										buildBrush->detail = qfalse;
 
 										// only allow EXACT matches when snapping for these (this is mostly for caulk brushes inside a model)
-										if(normalEpsilon > 0)
+										if (normalEpsilon > 0)
 											normalEpsilon = 0;
-										if(distanceEpsilon > 0)
+										if (distanceEpsilon > 0)
 											distanceEpsilon = 0;
 									}
 									else
@@ -1148,22 +1151,22 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 									/* set up brush sides */
 									buildBrush->numsides = 5;
-									buildBrush->sides[ 0 ].shaderInfo = si;
+									buildBrush->sides[0].shaderInfo = si;
 
-									for( j = 1; j < buildBrush->numsides; j++ )
+									for (j = 1; j < buildBrush->numsides; j++)
 									{
-										buildBrush->sides[ j ].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-										buildBrush->sides[ j ].culled = qtrue;
+										buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+										buildBrush->sides[j].culled = qtrue;
 									}
 
-									buildBrush->sides[ 0 ].planenum = FindFloatPlane( plane, plane[ 3 ], 3, points );
-									buildBrush->sides[ 1 ].planenum = FindFloatPlane( pa, pa[ 3 ], 2, &points[ 1 ] ); // pa contains points[1] and points[2]
-									buildBrush->sides[ 2 ].planenum = FindFloatPlane( pb, pb[ 3 ], 2, &points[ 0 ] ); // pb contains points[0] and points[1]
-									buildBrush->sides[ 3 ].planenum = FindFloatPlane( pc, pc[ 3 ], 2, &points[ 2 ] ); // pc contains points[2] and points[0] (copied to points[3]
-									buildBrush->sides[ 4 ].planenum = FindFloatPlane( reverse, reverse[ 3 ], 3, backs );
+									buildBrush->sides[0].planenum = FindFloatPlane(plane, plane[3], 3, points);
+									buildBrush->sides[1].planenum = FindFloatPlane(pa, pa[3], 2, &points[1]); // pa contains points[1] and points[2]
+									buildBrush->sides[2].planenum = FindFloatPlane(pb, pb[3], 2, &points[0]); // pb contains points[0] and points[1]
+									buildBrush->sides[3].planenum = FindFloatPlane(pc, pc[3], 2, &points[2]); // pc contains points[2] and points[0] (copied to points[3]
+									buildBrush->sides[4].planenum = FindFloatPlane(reverse, reverse[3], 3, backs);
 
 									/* add to entity */
-									if( CreateBrushWindings( buildBrush ) )
+									if (CreateBrushWindings(buildBrush))
 									{
 										int numsides;
 
@@ -1172,7 +1175,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 										numsides = buildBrush->numsides;
 
-										if (!RemoveDuplicateBrushPlanes( buildBrush ))
+										if (!RemoveDuplicateBrushPlanes(buildBrush))
 										{// UQ1: Testing - This would create a mirrored plane... free it...
 											free(buildBrush);
 											//Sys_Printf("Removed a mirrored plane\n");
@@ -1181,9 +1184,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 										{
 											//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
 
-											buildBrush->next = entities[ mapEntityNum ].brushes;
-											entities[ mapEntityNum ].brushes = buildBrush;
-											entities[ mapEntityNum ].numBrushes++;
+											buildBrush->next = entities[mapEntityNum].brushes;
+											entities[mapEntityNum].brushes = buildBrush;
+											entities[mapEntityNum].numBrushes++;
 											if (added_brushes != NULL)
 												*added_brushes += 1;
 										}
@@ -1537,6 +1540,42 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			TREE_MAXS[1] -= 64.0;
 		}
 
+#ifdef __USE_CULL_BOX_SYSTEM2__
+#pragma omp ordered
+		{
+#pragma omp critical
+			{
+				buildBrush = BrushFromBounds(TREE_MINS[0], TREE_MINS[1], TREE_MINS[2], TREE_MAXS[0], TREE_MAXS[1], TREE_MAXS[2], solidSi);
+
+				/*buildBrush->entityNum = mapEntityNum;
+				buildBrush->mapEntityNum = mapEntityNum;
+				buildBrush->original = buildBrush;
+				buildBrush->contentShader = solidSi;
+				buildBrush->compileFlags = solidSi->compileFlags;
+				buildBrush->contentFlags = solidSi->contentFlags;*/
+
+				AddBrushBevels();
+
+				buildBrush->detail = qtrue;
+
+				/* set up brush sides */
+				buildBrush->numsides = 5;
+				buildBrush->sides[0].shaderInfo = solidSi;
+
+				for (i = 1; i < buildBrush->numsides; i++)
+				{
+					buildBrush->sides[i].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+					buildBrush->sides[i].culled = qtrue;
+				}
+
+				buildBrush->next = entities[mapEntityNum].brushes;
+				entities[mapEntityNum].brushes = buildBrush;
+				entities[mapEntityNum].numBrushes++;
+				if (added_brushes != NULL)
+					*added_brushes += 1;
+			}
+		}
+#else //!__USE_CULL_BOX_SYSTEM2__
 		// Create a new cube for this mins/maxs...
 		AddCube(TREE_MINS, TREE_MAXS, &numIndexes, indexes, &numVerts, xyz);
 
@@ -1720,6 +1759,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 				distanceEpsilon = distanceEpsilon_save;
 			}
 		}
+#endif //__USE_CULL_BOX_SYSTEM2__
 	}
 #elif defined(__MODEL_SIMPLIFICATION__)
 	if (haveLodModel)
@@ -2250,20 +2290,20 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 									buildBrush->numsides = 5;
 									buildBrush->sides[ 0 ].shaderInfo = si;
 
-									for( j = 1; j < buildBrush->numsides; j++ )
+									for (j = 1; j < buildBrush->numsides; j++)
 									{
-										buildBrush->sides[ j ].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-										buildBrush->sides[ j ].culled = qtrue;
+										buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+										buildBrush->sides[j].culled = qtrue;
 									}
 
-									buildBrush->sides[ 0 ].planenum = FindFloatPlane( plane, plane[ 3 ], 3, points );
-									buildBrush->sides[ 1 ].planenum = FindFloatPlane( pa, pa[ 3 ], 2, &points[ 1 ] ); // pa contains points[1] and points[2]
-									buildBrush->sides[ 2 ].planenum = FindFloatPlane( pb, pb[ 3 ], 2, &points[ 0 ] ); // pb contains points[0] and points[1]
-									buildBrush->sides[ 3 ].planenum = FindFloatPlane( pc, pc[ 3 ], 2, &points[ 2 ] ); // pc contains points[2] and points[0] (copied to points[3]
-									buildBrush->sides[ 4 ].planenum = FindFloatPlane( reverse, reverse[ 3 ], 3, backs );
+									buildBrush->sides[0].planenum = FindFloatPlane(plane, plane[3], 3, points);
+									buildBrush->sides[1].planenum = FindFloatPlane(pa, pa[3], 2, &points[1]); // pa contains points[1] and points[2]
+									buildBrush->sides[2].planenum = FindFloatPlane(pb, pb[3], 2, &points[0]); // pb contains points[0] and points[1]
+									buildBrush->sides[3].planenum = FindFloatPlane(pc, pc[3], 2, &points[2]); // pc contains points[2] and points[0] (copied to points[3]
+									buildBrush->sides[4].planenum = FindFloatPlane(reverse, reverse[3], 3, backs);
 
 									/* add to entity */
-									if( CreateBrushWindings( buildBrush ) )
+									if (CreateBrushWindings(buildBrush))
 									{
 										int numsides;
 
@@ -2272,7 +2312,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 										numsides = buildBrush->numsides;
 
-										if (!RemoveDuplicateBrushPlanes( buildBrush ))
+										if (!RemoveDuplicateBrushPlanes(buildBrush))
 										{// UQ1: Testing - This would create a mirrored plane... free it...
 											free(buildBrush);
 											//Sys_Printf("Removed a mirrored plane\n");
@@ -2281,9 +2321,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 										{
 											//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
 
-											buildBrush->next = entities[ mapEntityNum ].brushes;
-											entities[ mapEntityNum ].brushes = buildBrush;
-											entities[ mapEntityNum ].numBrushes++;
+											buildBrush->next = entities[mapEntityNum].brushes;
+											entities[mapEntityNum].brushes = buildBrush;
+											entities[mapEntityNum].numBrushes++;
 											if (added_brushes != NULL)
 												*added_brushes += 1;
 										}
@@ -2420,13 +2460,13 @@ void LoadTriangleModels(void)
 				continue;
 			}
 
-			numVerts += PicoGetSurfaceNumVertexes( surface );
-			numIndexes += PicoGetSurfaceNumIndexes( surface );
+			numVerts += PicoGetSurfaceNumVertexes(surface);
+			numIndexes += PicoGetSurfaceNumIndexes(surface);
 		}
 
 		// if (FindModel( name, frame ))
 
-		if( picoModel && picoModel->numSurfaces > 0 /*&& numVerts < 50000*/ )
+		if (picoModel && picoModel->numSurfaces > 0 /*&& numVerts < 50000*/)
 		{// UQ1: Testing... Mesh decimation for collision planes...
 			picoModel_t *picoModel2 = NULL;
 			qboolean loaded2 = qfalse;
@@ -2435,8 +2475,8 @@ void LoadTriangleModels(void)
 			char tempfileNameOut[128] = { 0 };
 
 			strcpy(tempfileNameOut, model);
-			StripExtension( tempfileNameOut );
-			sprintf(fileNameOut, "%s/base/%s_lod.obj", basePaths[ 0 ], tempfileNameOut);
+			StripExtension(tempfileNameOut);
+			sprintf(fileNameOut, "%s/base/%s_lod.obj", basePaths[0], tempfileNameOut);
 			sprintf(fileNameIn, "%s_lod.obj", tempfileNameOut);
 
 			//Sys_Printf("File path is %s.\n", fileNameOut);
@@ -2445,26 +2485,26 @@ void LoadTriangleModels(void)
 			{// Try to load _lod version...
 				//Sys_Printf("Exists: %s.\n", fileNameOut);
 
-				loaded2 = PreloadModel( (char*) fileNameIn, 0 );
-				if ( loaded2 )
+				loaded2 = PreloadModel((char*)fileNameIn, 0);
+				if (loaded2)
 					numLoadedModels++;
 
-				picoModel2 = FindModel( (char*) fileNameIn, 0 );
+				picoModel2 = FindModel((char*)fileNameIn, 0);
 			}
 
-			if( !picoModel2 || picoModel2->numSurfaces == 0 )
+			if (!picoModel2 || picoModel2->numSurfaces == 0)
 			{// No _lod version found to load, or it failed to load... Generate a new one...
-				Sys_Printf("Simplifying model %s. %i surfaces. %i verts. %i indexes.\n", model, PicoGetModelNumSurfaces( picoModel ), numVerts, numIndexes);
+				Sys_Printf("Simplifying model %s. %i surfaces. %i verts. %i indexes.\n", model, PicoGetModelNumSurfaces(picoModel), numVerts, numIndexes);
 
-				Decimate( picoModel, fileNameOut );
+				Decimate(picoModel, fileNameOut);
 
-				loaded2 = PreloadModel( (char*) fileNameIn, 0 );
+				loaded2 = PreloadModel((char*)fileNameIn, 0);
 				if (loaded2) {
 					//Sys_Printf("Loaded model %s.\n", fileNameOut);
 					numLoadedModels++;
 				}
 
-				picoModel2 = FindModel( (char*) fileNameIn, 0 );
+				picoModel2 = FindModel((char*)fileNameIn, 0);
 				//if (picoModel2) Sys_Printf("Found model %s.\n", fileNameOut);
 			}
 			else
@@ -2751,7 +2791,7 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		int percentHeightCulled = 0;
 		int percentSizeCulled = 0;
 		int percentTotalCulled = 0;
-		
+
 		//if (totalExpCulled > 0 && numSolidSurfs > 0)
 		//	percentExpCulled = (int)(((float)totalExpCulled / (float)numSolidSurfs) * 100.0);
 
