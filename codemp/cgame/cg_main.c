@@ -2816,6 +2816,7 @@ void WP_SaberLoadParms( void );
 void BG_VehicleLoadParms( void );
 extern void CG_PrecacheScopes(void);
 extern int UQ_Get_CPU_Info(void);
+extern void FOLIAGE_DrawGrass(void);
 
 /*
 =================
@@ -3015,24 +3016,39 @@ Ghoul2 Insert End
 	CG_TrueViewInit();
 	//[/TrueView]
 #endif
+
+	CG_LoadingString("Initializing Sounds");
 	CG_RegisterSounds();
 
 //	CG_LoadingString( "graphics" );
 
+	CG_LoadingString("Initializing Graphics");
 	CG_RegisterGraphics();
 
 //	CG_LoadingString( "clients" );
 
+	CG_LoadingString("Initializing Clients");
 	CG_RegisterClients();		// if low on memory, some clients will be deferred
 
+	CG_LoadingString("Initializing Asset Cache");
 	CG_AssetCache();
+
+	CG_LoadingString("Initializing HUD");
 	CG_LoadHudMenu();      // load new hud stuff
 
-	cg.loading = qfalse;	// future players will be deferred
-
+	CG_LoadingString("Initializing Local Entities");
 	CG_InitLocalEntities();
 
+	CG_LoadingString("Initializing Mark Polygons");
 	CG_InitMarkPolys();
+
+	CG_LoadingString("Calculating Weather");
+	CG_AtmosphericKludge();
+
+	//CG_LoadingString("Calculating Foliage");
+	//FOLIAGE_DrawGrass();
+
+	cg.loading = qfalse;	// future players will be deferred
 
 	// remove the last loading update
 	cg.infoScreenText[0] = 0;
@@ -3044,9 +3060,6 @@ Ghoul2 Insert End
 
 //	CG_LoadingString( "Clearing light styles" );
 	CG_ClearLightStyles();
-
-	CG_LoadingString( "Adding Warzone Weather" );
-	CG_AtmosphericKludge();
 
 //	CG_LoadingString( "Creating automap data" );
 	//init automap
