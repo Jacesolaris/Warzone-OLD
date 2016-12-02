@@ -41,6 +41,8 @@ extern qboolean InFOV(vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int
 //
 // =======================================================================================================================================
 
+qboolean	FOLIAGE_INITIALIZED = qfalse;
+
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 
 float		NUM_TREE_TYPES = 9;
@@ -1669,7 +1671,7 @@ void FOLIAGE_DrawGrass(void)
 	FOLIAGE_PLANT_VISIBLE_DISTANCE = (FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value);
 	FOLIAGE_TREE_VISIBLE_DISTANCE = (FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value);
 
-	if (!FOLIAGE_PLANT_MODEL[0])
+	if (!FOLIAGE_INITIALIZED)
 	{// Init/register all foliage models...
 		int i = 0;
 
@@ -1783,6 +1785,8 @@ void FOLIAGE_DrawGrass(void)
 			FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
 			FOLIAGE_TREE_ZOFFSET[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeZoffset%i", i), "-4.0"));
 		}
+
+		FOLIAGE_INITIALIZED = qtrue;
 	}
 
 	FOLIAGE_Check_CVar_Change();
