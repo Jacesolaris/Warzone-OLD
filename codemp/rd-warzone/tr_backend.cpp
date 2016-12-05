@@ -3077,6 +3077,21 @@ const void *RB_PostProcess(const void *data)
 	return (const void *)(cmd + 1);
 }
 
+const void *RB_AwesomiumFrame(const void *data) {
+	const awesomiumFrameCommand_t *cmd = (const awesomiumFrameCommand_t *)data;
+
+	vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	R_UpdateSubImage(tr.awesomiumuiImage, (byte *)cmd->buffer, 0, 0, cmd->width, cmd->height);
+	//Free buffer
+	free(cmd->buffer);
+	//
+	FBO_BlitFromTexture(tr.awesomiumuiImage, NULL, NULL, tr.renderFbo, NULL, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA); // GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO
+
+	return (const void *)(cmd + 1);
+
+}
+
 /*
 ====================
 RB_ExecuteRenderCommands
@@ -3112,6 +3127,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_SWAP_BUFFERS:
 			data = RB_SwapBuffers( data );
 			break;
+#ifdef __ORIGINAL_OCCLUSION__
+		case RC_DRAW_OCCLUSION:
+			data = RB_DrawOcclusion(data);
+			break;
+#endif //__ORIGINAL_OCCLUSION__
 		case RC_SCREENSHOT:
 			data = RB_TakeScreenshotCmd( data );
 			break;
@@ -3127,19 +3147,16 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_CAPSHADOWMAP:
 			data = RB_CapShadowMap(data);
 			break;
+#ifdef __SURFACESPRITES__
+		case RC_WORLD_EFFECTS:
+			data = RB_WorldEffects(data);
+			break;
+#endif //__SURFACESPRITES__
 		case RC_POSTPROCESS:
 			data = RB_PostProcess(data);
 			break;
-#ifdef __SURFACESPRITES__
-		case RC_WORLD_EFFECTS:
-			data = RB_WorldEffects( data );
-			break;
-#endif //__SURFACESPRITES__
-#ifdef __ORIGINAL_OCCLUSION__
-		case RC_DRAW_OCCLUSION:
-			data = RB_DrawOcclusion(data);
-			break;
-#endif //__ORIGINAL_OCCLUSION__
+		case RC_DRAWAWESOMIUMFRAME:
+			data = RB_AwesomiumFrame(data);
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed

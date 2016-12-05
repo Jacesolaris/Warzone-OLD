@@ -2407,6 +2407,8 @@ typedef struct trGlobals_s {
 	
 	image_t					*textureDepthImage;
 
+	image_t					*awesomiumuiImage;
+
 	FBO_t					*renderFbo;
 	//FBO_t					*previousRenderFbo;
 	FBO_t					*waterFbo;
@@ -3010,6 +3012,8 @@ typedef _skinSurface_t skinSurface_t;
 void	RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
 void	RE_UploadCinematic (int cols, int rows, const byte *data, int client, qboolean dirty);
 void	RE_SetRangedFog ( float range );
+
+void	RE_DrawAwesomiumFrame(int x, int y, int w, int h, void *buffer);
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
@@ -3624,6 +3628,12 @@ typedef struct {
 	viewParms_t	viewParms;
 } drawOcclusionCommand_t;
 
+typedef struct {
+	int	commandId;
+	int x, y, width, height;
+	void *buffer;
+} awesomiumFrameCommand_t;
+
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -3640,7 +3650,8 @@ typedef enum {
 	RC_CLEARDEPTH,
 	RC_CAPSHADOWMAP,
 	RC_WORLD_EFFECTS,
-	RC_POSTPROCESS
+	RC_POSTPROCESS,
+	RC_DRAWAWESOMIUMFRAME
 } renderCommand_t;
 
 

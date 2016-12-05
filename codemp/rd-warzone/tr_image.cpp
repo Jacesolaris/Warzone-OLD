@@ -3592,6 +3592,8 @@ void R_CreateBuiltinImages( void ) {
 
 	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, width/4.0, height/4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
+	tr.awesomiumuiImage = R_CreateImage("*awesomiumUi", NULL, glConfig.vidWidth, glConfig.vidHeight, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);;
+
 	//
 	// UQ1: End Added...
 	//

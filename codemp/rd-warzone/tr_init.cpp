@@ -2228,6 +2228,7 @@ Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.G2API_AddSkinGore					= G2API_AddSkinGore;
 	re.G2API_ClearSkinGore					= G2API_ClearSkinGore;
 	#endif // _SOF2
+	re.DrawAwesomiumFrame					= RE_DrawAwesomiumFrame;
 
 	/*
 	Ghoul2 Insert End
