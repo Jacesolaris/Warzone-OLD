@@ -21,7 +21,7 @@ namespace Awesomium {
 			const int size = sizeof(error) / sizeof(error[0]);
 			const char *loadpath = va("%s/%s", homepath.c_str(), p.c_str());
 
-			const int len = FS_FOpenFileRead(loadpath, &f, qfalse); // loadpath = "japlus/index.html"
+			const int len = FS_FOpenFileRead(loadpath, &f, qfalse);
 			if (!f) {
 				SendResponse(request_id, size, error, WSLit("text/html"));
 			}
@@ -41,6 +41,8 @@ namespace Awesomium {
 		WebSession *session;
 		PageLoader *loader;
 		bool active;
+		int width;
+		int height;
 	public:
 		static size_t windowsCount;
 		static Window *mainInterface;
@@ -50,16 +52,15 @@ namespace Awesomium {
 		Window() = delete;
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;
-
-
 		Window::Window(int width, int height, const std::string & name);
 		~Window();
 
 		void Resize(int width, int height);
-
 		void Load(const std::string &url);
 
-		const unsigned char *Render(void);
+		virtual void MouseEvent(int x, int y, int rel_x, int rel_y);
+
+		void Render(void);
 		const WebView *GetView(void);
 		const bool getActive(void) const ;
 	};

@@ -81,6 +81,7 @@ cvar_t	*cl_consoleKeys;
 #endif
 
 cvar_t  *cl_lanForcePackets;
+cvar_t  *cl_useAwesomium;
 
 vec3_t cl_windVec;
 
@@ -399,7 +400,12 @@ void CL_DemoCompleted( void ) {
 	//after a demo is finished playing instead.
 	CL_Disconnect_f();
 	S_StopAllSounds();
-	UIVM_SetActiveMenu( UIMENU_MAIN );
+	if (cl_useAwesomium->integer) {
+
+	}
+	else {
+		UIVM_SetActiveMenu(UIMENU_MAIN);
+	}
 
 	CL_NextDemo();
 }
@@ -756,7 +762,12 @@ void CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 	if ( cls.uiStarted && showMainMenu ) {
-		UIVM_SetActiveMenu( UIMENU_NONE );
+		if (cl_useAwesomium->integer) {
+
+		}
+		else {
+			UIVM_SetActiveMenu(UIMENU_NONE);
+		}
 	}
 
 	SCR_StopCinematic ();
@@ -2082,7 +2093,12 @@ void CL_Frame_REAL ( int msec ) {
 		&& !com_sv_running->integer && cls.uiStarted ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		UIVM_SetActiveMenu( UIMENU_MAIN );
+		if (cl_useAwesomium->integer) {
+
+		}
+		else {
+			UIVM_SetActiveMenu(UIMENU_MAIN);
+		}
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -2718,6 +2734,7 @@ void CL_Init( void ) {
 	cl_inGameVideo = Cvar_Get ("r_inGameVideo", "1", CVAR_ARCHIVE);
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
+	cl_useAwesomium = Cvar_Get("cl_useAwesomium", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	// init autoswitch so the ui will have it correctly even
 	// if the cgame hasn't been started

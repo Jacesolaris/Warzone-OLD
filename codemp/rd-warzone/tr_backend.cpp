@@ -3080,13 +3080,11 @@ const void *RB_PostProcess(const void *data)
 const void *RB_AwesomiumFrame(const void *data) {
 	const awesomiumFrameCommand_t *cmd = (const awesomiumFrameCommand_t *)data;
 
-	vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-	R_UpdateSubImage(tr.awesomiumuiImage, (byte *)cmd->buffer, 0, 0, cmd->width, cmd->height);
+	R_UpdateSubImage(tr.awesomiumuiImage, cmd->buffer, cmd->x, cmd->y, cmd->width, cmd->height);
 	//Free buffer
 	free(cmd->buffer);
 	//
-	FBO_BlitFromTexture(tr.awesomiumuiImage, NULL, NULL, tr.renderFbo, NULL, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA); // GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO
+	FBO_BlitFromTexture(tr.awesomiumuiImage, NULL, NULL, tr.renderFbo, NULL, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO); // GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO
 
 	return (const void *)(cmd + 1);
 
@@ -3157,6 +3155,7 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_DRAWAWESOMIUMFRAME:
 			data = RB_AwesomiumFrame(data);
+			break;
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed

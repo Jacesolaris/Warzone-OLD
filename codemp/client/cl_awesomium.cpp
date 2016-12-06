@@ -10,8 +10,21 @@ std::string WebStringToANSI(const Awesomium::WebString &str) {
 	std::string ret = Awesomium::ToString(str);
 	return ret;
 }
+
+static void BGRA8_To_RGBA8(int width, int height, const unsigned char *src, unsigned char *dest) {
+	for (int offset = 0; offset < height * width * 4;) {
+		dest[offset] = src[offset + 2];
+		dest[offset + 1] = src[offset + 1];
+		dest[offset + 2] = src[offset];
+		offset += 4;
+	}
+}
+
 namespace Awesomium {
 	static std::unordered_map<int, Window*> views;
+	static WebConfig config;
+	size_t Window::windowsCount = 0;
+	Window *Window::mainInterface;
 
 	void KeyEvent(int key, qboolean down) {
 		WebKeyboardEvent e;
@@ -57,7 +70,6 @@ namespace Awesomium {
 	}
 
 	void MouseEvent(int x, int y) {
-		WebView *view_current;
 		static int actual_x = 0, actual_y = 0;
 
 		actual_x += x;
@@ -68,33 +80,27 @@ namespace Awesomium {
 		if (actual_y > cls.glconfig.vidHeight) actual_y = cls.glconfig.vidHeight;
 
 		for (auto it = views.begin(); it != views.end(); ++it) { // EpicLoyd::FIX::PIZDETS
-			if (!it->second || (it->second && !it->second->getActive())) continue;
-			view_current = const_cast<WebView*>(it->second->GetView());
-			if (!view_current) continue;
-			view_current->InjectMouseMove(actual_x, actual_y);
+			if (!it->second) continue;
+			it->second->MouseEvent(actual_x, actual_y, x, y);
 		}
 	}
 
-	static WebConfig config;
-	size_t Window::windowsCount = 0;
-	Window *Window::mainInterface;
 	Window::Window(int width, int height, const std::string & path) {
 		config.additional_options.Push(WSLit("--use-gl"));
-		config.remote_debugging_port = 1335;
-		config.remote_debugging_host = WSLit("127.0.0.1");
-		config.log_level = LogLevel::kLogLevel_Verbose;
 
 		this->name = path;
+		this->width = width;
+		this->height = height;
 		this->core = WebCore::instance();
 		if (this->core == nullptr) {
-			Com_Error(ERR_FATAL, "Unable to init awesomium core\n");
+			Com_Error(ERR_FATAL, "Awesomium: Unable to init awesomium core\n");
 		}
 		this->session = core->CreateWebSession(WSLit(""), WebPreferences());
 		this->loader = new PageLoader(path);
 		this->session->AddDataSource(WSLit("data"), this->loader);
-		this->view = this->core->CreateWebView(width, height, session);
+		this->view = this->core->CreateWebView(this->width, this->height, session);
 		if (!this->view) {
-			Com_Error(ERR_FATAL, "Unable to create WebView\n");
+			Com_Error(ERR_FATAL, "Awesomium: Unable to create WebView\n");
 			return;
 		}
 		this->id = windowsCount++;
@@ -109,6 +115,11 @@ namespace Awesomium {
 		views[this->id] = nullptr;
 	}
 
+	void Awesomium::Window::MouseEvent(int x, int y, int rel_x, int rel_y){
+		if (!this->active) return;
+		this->view->InjectMouseMove(x, y);
+	}
+
 	void Window::Resize(int width, int height) {
 		this->view->Resize(width, height);
 	}
@@ -117,12 +128,17 @@ namespace Awesomium {
 		this->view->LoadURL(WebURL(WSLit(url.c_str())));
 	}
 
-	const unsigned char *Window::Render(void) {
+	void Window::Render(void) {
 		core->Update();
-		if (this->view->IsLoading()) return nullptr;
+		if (this->view->IsLoading()) return;
 		Awesomium::BitmapSurface *srf = (BitmapSurface*)this->view->surface();
-		if (!srf) return nullptr;
-		return srf->buffer();
+		if (!srf) return;
+
+		//Swap from bgra to rgba
+		unsigned char *buffer_actual = (unsigned char *)malloc(this->width * this->height * 4);
+		BGRA8_To_RGBA8(this->width, this->height, srf->buffer(), buffer_actual);
+
+		re->DrawAwesomiumFrame(0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, const_cast<unsigned char *>(buffer_actual));
 	}
 
 	const WebView *Awesomium::Window::GetView(void){
@@ -135,6 +151,8 @@ namespace Awesomium {
 	}
 
 	void InitUserInterface(void) {
+		if (!cl_useAwesomium->integer) return;
+
 		if (!WebCore::instance()) {
 			WebCore::Initialize(Awesomium::config);
 		}
@@ -143,32 +161,13 @@ namespace Awesomium {
 		Window::mainInterface = win;
 	}
 
-	static void BGRA8_To_RGBA8(int width, int height, const unsigned char *src, unsigned char *dest) {
-		for (int offset = 0; offset < height * width * 4;) {
-			dest[offset] = src[offset + 2];
-			dest[offset + 1] = src[offset + 1];
-			dest[offset + 2] = src[offset];
-			offset += 4;
-		}
-	}
-
 	void RenderUserInterface(void) {
-		if (!Window::mainInterface) return;
-		const unsigned char *buffer = Window::mainInterface->Render();
-
-		int width = cls.glconfig.vidWidth, 
-			height = cls.glconfig.vidHeight;
-
-		if (!buffer) return;
-		//Swap from bgra to rgba
-		unsigned char *buffer_actual = (unsigned char *)malloc(width * height * 4);
-		BGRA8_To_RGBA8(width, height, buffer, buffer_actual);
-		//
-		re->DrawAwesomiumFrame(0, 0, width, height, buffer_actual);
+		if (!cl_useAwesomium->integer || !Window::mainInterface) return;
+		Window::mainInterface->Render();
 	}
 
 	void ShutdownUserInterface(void) {
-		if (!Window::mainInterface) return;
+		if (!cl_useAwesomium->integer || !Window::mainInterface) return;
 		delete Window::mainInterface;
 		Window::mainInterface = nullptr;
 	}

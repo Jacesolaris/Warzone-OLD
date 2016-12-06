@@ -346,7 +346,12 @@ static void _CL_SetUserCmdValue( int stateValue, float sensitivityScale, float m
 }
 
 static void CL_OpenUIMenu( int menuID ) {
-	UIVM_SetActiveMenu( (uiMenuCommand_t)menuID );
+	if (cl_useAwesomium->integer) {
+
+	}
+	else {
+		UIVM_SetActiveMenu((uiMenuCommand_t)menuID);
+	}
 }
 
 static void CGFX_AddLine( vec3_t start, vec3_t end, float size1, float size2, float sizeParm, float alpha1, float alpha2, float alphaParm, vec3_t sRGB, vec3_t eRGB, float rgbParm, int killTime, qhandle_t shader, int flags ) {

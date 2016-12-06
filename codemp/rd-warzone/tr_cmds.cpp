@@ -658,7 +658,7 @@ void RE_TakeVideoFrame( int width, int height,
 RE_DrawAwesomiumFrame
 =============
 */
-void RE_DrawAwesomiumFrame(int x, int y, int w, int h, void *buffer){
+void RE_DrawAwesomiumFrame(int x, int y, int w, int h, unsigned char *buffer){
 	awesomiumFrameCommand_t	*cmd;
 
 	if (!tr.registered) {

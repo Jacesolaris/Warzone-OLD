@@ -2438,6 +2438,7 @@ typedef struct trGlobals_s {
 	FBO_t					*screenSsaoFbo;
 	FBO_t					*hdrDepthFbo;
 	FBO_t                   *renderCubeFbo;
+	FBO_t					*awesomiumuiFbo;
 
 	shader_t				*defaultShader;
 	shader_t				*shadowShader;
@@ -3013,7 +3014,7 @@ void	RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 void	RE_UploadCinematic (int cols, int rows, const byte *data, int client, qboolean dirty);
 void	RE_SetRangedFog ( float range );
 
-void	RE_DrawAwesomiumFrame(int x, int y, int w, int h, void *buffer);
+void	RE_DrawAwesomiumFrame(int x, int y, int w, int h, unsigned char *buffer);
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
@@ -3631,7 +3632,7 @@ typedef struct {
 typedef struct {
 	int	commandId;
 	int x, y, width, height;
-	void *buffer;
+	unsigned char *buffer;
 } awesomiumFrameCommand_t;
 
 typedef enum {

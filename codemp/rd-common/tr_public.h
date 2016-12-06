@@ -217,7 +217,7 @@ typedef struct refexport_s {
 	void				(*G2API_ClearSkinGore)					( CGhoul2Info_v &ghoul2 );
 	#endif // _SOF2
 	//EpicLoyd:Added
-	void				(*DrawAwesomiumFrame)					( int x, int y, int w, int h, void *buffer);
+	void				(*DrawAwesomiumFrame)					( int x, int y, int w, int h, unsigned char *buffer);
 } refexport_t;
 
 //

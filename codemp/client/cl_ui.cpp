@@ -1,5 +1,6 @@
 #include "client.h"
 #include "cl_uiapi.h"
+#include "cl_awesomium.h"
 
 /*
 ====================
@@ -14,7 +15,12 @@ void CL_ShutdownUI( void ) {
 
 	cls.uiStarted = qfalse;
 
-	CL_UnbindUI();
+	if (cl_useAwesomium->integer) {
+		Awesomium::ShutdownUserInterface();
+	}
+	else {
+		CL_UnbindUI();
+	}
 }
 
 /*
@@ -24,14 +30,19 @@ CL_InitUI
 */
 
 void CL_InitUI( void ) {
-	// load the dll
-	CL_BindUI();
+	if (cl_useAwesomium->integer) {
+		Awesomium::InitUserInterface();
+	}
+	else {
+		// load the dll
+		CL_BindUI();
 
-	// init for this gamestate
-	//rww - changed to <= CA_ACTIVE, because that is the state when we did a vid_restart
-	//ingame (was just < CA_ACTIVE before, resulting in ingame menus getting wiped and
-	//not reloaded on vid restart from ingame menu)
-	UIVM_Init( (qboolean)(cls.state >= CA_AUTHORIZING && cls.state <= CA_ACTIVE) );
+		// init for this gamestate
+		//rww - changed to <= CA_ACTIVE, because that is the state when we did a vid_restart
+		//ingame (was just < CA_ACTIVE before, resulting in ingame menus getting wiped and
+		//not reloaded on vid restart from ingame menu)
+		UIVM_Init((qboolean)(cls.state >= CA_AUTHORIZING && cls.state <= CA_ACTIVE));
+	}
 }
 
 /*
@@ -45,5 +56,10 @@ qboolean UI_GameCommand( void ) {
 	if ( !cls.uiStarted )
 		return qfalse;
 
-	return UIVM_ConsoleCommand( cls.realtime );
+	if (cl_useAwesomium) {
+		return qfalse;
+	}
+	else {
+		return UIVM_ConsoleCommand(cls.realtime);
+	}
 }
