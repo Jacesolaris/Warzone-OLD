@@ -1500,6 +1500,12 @@ int BSPMain( int argc, char **argv )
 			Sys_Warning( "Unknown option \"%s\"", argv[ i ] );
 	}
 
+	if (bevelSnap <= 2)
+	{// UQ1: Snap bevel planes to minimum of 2 Q3 units to reduce waste.
+		bevelSnap = 2;
+		Sys_Printf(" Snapping brush bevel planes to %d units\n", bevelSnap);
+	}
+
 	/* set up lmMaxSurfaceSize */
 	if (lmMaxSurfaceSize == 0)
 		lmMaxSurfaceSize = lmCustomSize;

@@ -206,8 +206,8 @@ int FindFloatPlane( vec3_t normal, vec_t dist, int numPoints, vec3_t *points )
 	vec_t d;
 	
 	/* hash the plane */
-	SnapPlane( normal, &dist );
-	hash = (PLANE_HASHES - 1) & (int)fabs( dist );
+	SnapPlane(normal, &dist);
+	hash = (PLANE_HASHES - 1) & (int)fabs(dist);
 	
 	/* search the border bins as well */
 	for( i = -1; i <= 1; i++ )

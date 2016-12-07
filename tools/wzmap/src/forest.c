@@ -22,6 +22,7 @@ float DistanceHorizontal(const vec3_t p1, const vec3_t p2) {
 
 #define			MAX_FOREST_MODELS 64
 
+qboolean		ADD_CLIFF_FACES = qfalse;
 float			TREE_SCALE_MULTIPLIER = 2.5;
 char			TREE_MODELS[MAX_FOREST_MODELS][128] = { 0 };
 float			TREE_OFFSETS[MAX_FOREST_MODELS] = { -4.0 };
@@ -33,6 +34,8 @@ float			TREE_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
 void FOLIAGE_LoadClimateData( char *filename )
 {
 	int i = 0;
+
+	ADD_CLIFF_FACES = (qboolean)atoi(IniRead(filename, "CLIFFS", "addCliffFaces", "0"));
 
 	// Read all the tree info from the new .climate ini files...
 	TREE_SCALE_MULTIPLIER = atof(IniRead(filename, "TREES", "treeScaleMultiplier", "1.0"));
@@ -157,6 +160,8 @@ float	cliffScale[65536];
 
 void GenerateCliffFaces(void)
 {
+	if (!ADD_CLIFF_FACES) return;
+
 	numCliffs = 0;
 	numDistanceCulled = 0;
 	
