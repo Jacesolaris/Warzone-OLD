@@ -364,6 +364,8 @@ if(BuildMPEngine)
 	#    Source Files
 
 	set(MPEngineClientFiles
+    "${MPDir}/client/cl_awesomium.cpp"
+    "${MPDir}/client/cl_awesomium.h"
 		"${MPDir}/client/cl_avi.cpp"
 		"${MPDir}/client/cl_cgame.cpp"
 		"${MPDir}/client/cl_cgameapi.cpp"
@@ -412,6 +414,35 @@ if(BuildMPEngine)
 		)
 	source_group("client" FILES ${MPEngineClientFiles})
 	set(MPEngineFiles ${MPEngineFiles} ${MPEngineClientFiles})
+	
+	set(MPClientAwesomiumFiles
+	"${MPDir}/rd-warzone/Awesomium/BitmapSurface.h"
+	"${MPDir}/rd-warzone/Awesomium/ChildProcess.h"
+	"${MPDir}/rd-warzone/Awesomium/DataPak.h"
+	"${MPDir}/rd-warzone/Awesomium/DataSource.h"
+	"${MPDir}/rd-warzone/Awesomium/JSArray.h"
+	"${MPDir}/rd-warzone/Awesomium/JSObject.h"
+	"${MPDir}/rd-warzone/Awesomium/JSValue.h"
+	"${MPDir}/rd-warzone/Awesomium/Platform.h"
+	"${MPDir}/rd-warzone/Awesomium/PrintConfig.h"
+	"${MPDir}/rd-warzone/Awesomium/ResourceInterceptor.h"
+	"${MPDir}/rd-warzone/Awesomium/STLHelpers.h"
+	"${MPDir}/rd-warzone/Awesomium/Surface.h"
+	"${MPDir}/rd-warzone/Awesomium/WebConfig.h"
+	"${MPDir}/rd-warzone/Awesomium/WebCore.h"
+	"${MPDir}/rd-warzone/Awesomium/WebKeyboardCodes.h"
+	"${MPDir}/rd-warzone/Awesomium/WebKeyboardEvent.h"
+	"${MPDir}/rd-warzone/Awesomium/WebMenuItem.h"
+	"${MPDir}/rd-warzone/Awesomium/WebPreferences.h"
+	"${MPDir}/rd-warzone/Awesomium/WebSession.h"
+	"${MPDir}/rd-warzone/Awesomium/WebString.h"
+	"${MPDir}/rd-warzone/Awesomium/WebStringArray.h"
+	"${MPDir}/rd-warzone/Awesomium/WebTouchEvent.h"
+	"${MPDir}/rd-warzone/Awesomium/WebURL.h"
+	"${MPDir}/rd-warzone/Awesomium/WebView.h"
+	"${MPDir}/rd-warzone/Awesomium/WebViewListener.h")
+  source_group("Awesomium Headers" FILES ${MPClientAwesomiumFiles})
+  set(MPEngineFiles ${MPEngineFiles} ${MPClientAwesomiumFiles})
 
 	set(MPEngineRatlFiles
 		"${MPDir}/Ratl/bits_vs.h"
@@ -521,7 +552,7 @@ if(BuildMPEngine)
 	set_target_properties(${MPEngine} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${MPEngineDefines};${DebugDefines}")
 	set_target_properties(${MPEngine} PROPERTIES INCLUDE_DIRECTORIES "${MPEngineIncludeDirectories}")
 	set_target_properties(${MPEngine} PROPERTIES PROJECT_LABEL "MP Client")
-	target_link_libraries(${MPEngine} ${MPEngineLibraries} ../../lib/libcurl/libcurl)
+	target_link_libraries(${MPEngine} ${MPEngineLibraries} ../../lib/libcurl/libcurl ../../lib/awesomium)
 endif(BuildMPEngine)
 
 #        Dedicated Server (Engine) (jampded.exe)
