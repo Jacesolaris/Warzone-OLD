@@ -1592,12 +1592,6 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse;
 	}
 
-#ifdef __NPC_USE_SABER_BLOCKING__
-	// Never block when travelling...
-	//NPC->client->ps.powerups[PW_BLOCK] = 0;
-	NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
-#endif //__NPC_USE_SABER_BLOCKING__
-
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
 		NPC->last_move_time = level.time;

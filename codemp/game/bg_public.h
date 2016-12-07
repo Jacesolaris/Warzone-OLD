@@ -743,9 +743,6 @@ typedef enum {
 	PW_FORCE_ENLIGHTENED_DARK,
 	PW_FORCE_BOON,
 	PW_YSALAMIRI,
-	//[SaberSys]
-	PW_BLOCK,
-	//[SaberSys]
 	PW_NUM_POWERUPS
 
 } powerup_t;

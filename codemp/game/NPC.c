@@ -4255,14 +4255,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPCS.ucmd.buttons |= BUTTON_WALKING;
 			}
 
-#ifdef __NPC_USE_SABER_BLOCKING__
-			if (!self->enemy)
-			{// Never, ever use block if we have no enemy...
-			//	self->client->ps.powerups[PW_BLOCK] = 0;
-				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-			}
-#endif //__NPC_USE_SABER_BLOCKING__
-
 			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time - 8000 < level.time)
 			{// Look at the padawan when it is talking to us...
 				NPC_FacePosition( self->padawan->r.currentOrigin, qfalse );
@@ -4320,12 +4312,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				//
 				if (self->npc_cower_time < level.time)
 				{// Just finished cowerring... Stand up again...
-#ifdef __NPC_USE_SABER_BLOCKING__
-					// Never block when cowerring...
-					self->client->ps.powerups[PW_BLOCK] = 0;
-					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-#endif //__NPC_USE_SABER_BLOCKING__
-
 					if (NPCS.NPCInfo->scriptFlags & SCF_CROUCHED)
 					{// Makse sure they are no longer crouching/cowering in place...
 						NPCS.NPCInfo->scriptFlags &= ~SCF_CROUCHED;
@@ -4357,12 +4343,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 							NPC_FacePosition( self->r.currentOrigin, qtrue ); // Should make them look at the ground I hope...
 						}
 					}
-
-#ifdef __NPC_USE_SABER_BLOCKING__
-					// Never block when cowerring...
-					//self->client->ps.powerups[PW_BLOCK] = 0;
-					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-#endif //__NPC_USE_SABER_BLOCKING__
 
 					NPC_GenericFrameCode( self );
 				}
@@ -4570,13 +4550,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				else if (!self->isPadawan && use_pathing && NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");
-
-#ifdef __NPC_USE_SABER_BLOCKING__
-					// Never block when travelling...
-					self->client->ps.powerups[PW_BLOCK] = 0;
-					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-#endif //__NPC_USE_SABER_BLOCKING__
-
 					NPC_GenericFrameCode( self );
 				}
 #endif //__AAS_AI_TESTING__
@@ -4588,13 +4561,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				else if (!self->isPadawan && !use_pathing && NPC_PatrolArea())
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is patroling.\n");
-
-#ifdef __NPC_USE_SABER_BLOCKING__
-					// Never block when patroling...
-					//self->client->ps.powerups[PW_BLOCK] = 0;
-					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-#endif //__NPC_USE_SABER_BLOCKING__
-
 					NPC_GenericFrameCode( self );
 				}
 				else
@@ -4605,12 +4571,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPCS.ucmd.rightmove = 0;
 					NPCS.ucmd.upmove = 0;
 					NPCS.ucmd.buttons = 0;
-
-#ifdef __NPC_USE_SABER_BLOCKING__
-					// Never block when idle...
-					self->client->ps.powerups[PW_BLOCK] = 0;
-					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-#endif //__NPC_USE_SABER_BLOCKING__
 
 					if (!NPCS.NPC->NPC->conversationPartner)
 					{// Not chatting with another NPC... Set idle animation...

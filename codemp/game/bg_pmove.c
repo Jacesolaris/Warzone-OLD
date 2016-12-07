@@ -264,267 +264,6 @@ qboolean QINLINE PM_IsRocketTrooper(void)
 	return qfalse;
 }
 
-
-//Stoiss: old Getsaberstance, not need atm as we god back to BaseJKA saber system
-//int PM_GetSaberStance(void)
-//{
-//	int anim = BOTH_STAND2;
-//	saberInfo_t *saber1 = BG_MySaber(pm->ps->clientNum, 0);
-//	saberInfo_t *saber2 = BG_MySaber(pm->ps->clientNum, 1);
-//
-//	if (!pm->ps->saberEntityNum)
-//	{ //lost it
-//		return BOTH_STAND1;
-//	}
-//
-//	if (BG_SabersOff(pm->ps))
-//	{
-//		return BOTH_STAND1;
-//	}
-//
-//	/*
-//	if (saber1
-//		&& saber1->readyAnim != -1)
-//	{
-//		return saber1->readyAnim;
-//	}
-//
-//	if (saber2
-//		&& saber2->readyAnim != -1)
-//	{
-//		return saber2->readyAnim;
-//	}
-//
-//	if (saber1
-//		&& saber2
-//		&& !pm->ps->saberHolstered)
-//	{//dual sabers, both on
-//		return BOTH_SABERDUAL_STANCE;
-//	}
-//	*/
-//
-///*
-//UQ1: Unused IDLES...
-//anim = BOTH_B6__R___;
-//anim = BOTH_D6__R___;
-//anim = BOTH_B6__L___;
-//anim = BOTH_D7__R___;
-//anim = BOTH_P1_S1_T_;
-//anim = BOTH_D6__L___;
-//anim = BOTH_B7__L___;
-//anim = BOTH_P6_S6_T_;
-//anim = BOTH_P7_S7_TL;
-//anim = BOTH_B7_T____;
-//anim = BOTH_P7_S7_T_;
-//anim = 254;
-//anim = 211;
-//anim = 292;
-//anim = 188;
-//anim = 167;
-//*/
-//
-//	if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-//	{// When blocking, ALWAYS use these ones...
-//		switch (pm->ps->fd.saberAnimLevel)
-//		{
-//		case SS_DUAL:
-//			anim = BOTH_B6__R___;
-//			break;
-//		case SS_STAFF:
-//			anim = BOTH_D6__R___;
-//			break;
-//		case SS_FAST:
-//			anim = BOTH_B6__L___;
-//			break;
-//		case SS_STRONG:
-//			anim = BOTH_D7__R___;
-//			break;
-//		case SS_TAVION:
-//			anim = BOTH_P1_S1_T_;
-//			break;
-//		case SS_DESANN:
-//			anim = BOTH_D6__L___;
-//			break;
-//		case SS_MEDIUM:
-//			//anim = BOTH_P7_S7_TL;
-//			anim = BOTH_B7_T____;
-//		case SS_NONE:
-//		default:
-//			//anim = BOTH_P6_S6_T_;
-//			anim = BOTH_B7_T____;
-//			break;
-//		}
-//
-//		return anim;
-//	}
-//
-//	switch (pm->ps->saberMoveStyle)
-//	{
-//	case 1: // DESANN & TAVION USED!
-//		switch ( pm->ps->fd.saberAnimLevel )
-//		{
-//		case SS_DUAL:
-//			anim = BOTH_SABERDUAL_STANCE;
-//			break;
-//		case SS_STAFF:
-//			anim = BOTH_SABERSTAFF_STANCE;
-//			break;
-//		case SS_FAST:
-//			//anim = BOTH_STAND1;
-//			anim = BOTH_B6__R___;
-//			break;
-//		case SS_TAVION: // OK
-//			anim = BOTH_P1_S1_TR;
-//			break;
-//		case SS_STRONG: // OK
-//			anim = BOTH_STAND3;
-//			break;
-//		case SS_NONE:
-//		case SS_MEDIUM: // OK
-//			anim = BOTH_STAND8;
-//			break;
-//		case SS_DESANN: // OK
-//			//anim = BOTH_STAND5;
-//			//anim = BOTH_D7_TL___;
-//			anim = BOTH_D6__R___;
-//			break;
-//		default:
-//			anim = BOTH_STAND2;
-//			break;
-//		}
-//		break;
-//	case 2: // DESANN USED!
-//		switch ( pm->ps->fd.saberAnimLevel )
-//		{
-//		case SS_DUAL:
-//			anim = BOTH_SABERDUAL_STANCE;
-//			break;
-//		case SS_STAFF:
-//			anim = BOTH_SABERSTAFF_STANCE;
-//			break;
-//		case SS_FAST:
-//			//anim = BOTH_STAND8;
-//			//anim = BOTH_B7_TL___;
-//			//anim = BOTH_D7_TR___;
-//			anim = BOTH_B6__L___;
-//			break;
-//		case SS_TAVION: // OK
-//			//anim = BOTH_P6_S6_TL;
-//			anim = BOTH_D7__R___;
-//			break;
-//		case SS_STRONG: // OK
-//			anim = BOTH_P1_S1_T_;
-//			break;
-//		case SS_NONE:
-//		case SS_MEDIUM: // OK
-//			//anim = BOTH_STAND9;
-//			//anim = BOTH_B7_TR___;
-//			anim = BOTH_D6__L___;
-//			break;
-//		case SS_DESANN: // OK
-//			//anim = BOTH_P1_S1_TL;
-//			anim = BOTH_P7_S7_TR;
-//			break;
-//		default:
-//			anim = BOTH_STAND2;
-//			break;
-//		}
-//		break;
-//	case 3: // NONE USED!
-//		switch ( pm->ps->fd.saberAnimLevel )
-//		{
-//		case SS_DUAL:
-//			anim = BOTH_SABERDUAL_STANCE;
-//			break;
-//		case SS_STAFF:
-//			anim = BOTH_SABERSTAFF_STANCE;
-//			break;
-//		case SS_FAST:
-//			//anim = BOTH_P6_S6_TR;
-//			//anim = BOTH_D7__L___;
-//			anim = BOTH_B7__L___;
-//			break;
-//		case SS_TAVION: // OK
-//			anim = BOTH_P6_S6_T_;
-//			break;
-//		case SS_STRONG: // OK
-//			anim = BOTH_P7_S7_TL;
-//			break;
-//		case SS_NONE:
-//		case SS_MEDIUM: // OK
-//			//anim = BOTH_STAND6;
-//			anim = BOTH_B7_T____;
-//			break;
-//		case SS_DESANN: // OK
-//			anim = BOTH_P7_S7_T_;
-//			break;
-//		default:
-//			anim = BOTH_STAND2;
-//			break;
-//		}
-//		break;
-//	case 4: // NONE USED!
-//		switch ( pm->ps->fd.saberAnimLevel )
-//		{
-//		case SS_DUAL:
-//			anim = BOTH_SABERDUAL_STANCE;
-//			break;
-//		case SS_STAFF:
-//			anim = BOTH_SABERSTAFF_STANCE;
-//			break;
-//		case SS_FAST:
-//			anim = 254;
-//			break;
-//		case SS_TAVION: // OK
-//			anim = 211;
-//			break;
-//		case SS_STRONG: // OK
-//			anim = 292;
-//			break;
-//		case SS_NONE:
-//		case SS_MEDIUM: // OK
-//			anim = 188;
-//			break;
-//		case SS_DESANN: // OK
-//			anim = 167;
-//			break;
-//		default:
-//			anim = BOTH_STAND2;
-//			break;
-//		}
-//		break;
-//	default: // ALL STANCES USED!
-//		switch (pm->ps->fd.saberAnimLevel)
-//		{
-//		case SS_DUAL:
-//			anim = BOTH_SABERDUAL_STANCE;
-//			break;
-//		case SS_STAFF:
-//			anim = BOTH_SABERSTAFF_STANCE;
-//			break;
-//		case SS_FAST:
-//			anim = BOTH_SABERFAST_STANCE;
-//			break;
-//		case SS_STRONG:
-//			anim = BOTH_STAND2IDLE2;
-//			break;
-//		case SS_TAVION:
-//			anim = BOTH_TAVION_STANCE;
-//			break;
-//		case SS_DESANN:
-//			anim = BOTH_DESANN_STANCE;
-//			break;
-//		case SS_MEDIUM:
-//			anim = BOTH_STAND2;
-//		case SS_NONE:
-//		default:
-//			anim = BOTH_STAND2;
-//			break;
-//		}
-//	}
-//	return anim;
-//}
-
 int PM_GetSaberStance(void)
 {
 	int anim = BOTH_STAND2;
@@ -541,59 +280,45 @@ int PM_GetSaberStance(void)
 		return BOTH_STAND1;
 	}
 
-#if 0
-	if (saber1
-		&& saber1->readyAnim != -1)
+	if ( saber1
+		&& saber1->readyAnim != -1 )
 	{
 		return saber1->readyAnim;
 	}
 
-	if (saber2
-		&& saber2->readyAnim != -1)
+	if ( saber2
+		&& saber2->readyAnim != -1 )
 	{
 		return saber2->readyAnim;
 	}
 
-	if (saber1
+	if ( saber1
 		&& saber2
-		&& !pm->ps->saberHolstered)
+		&& !pm->ps->saberHolstered )
 	{//dual sabers, both on
 		return BOTH_SABERDUAL_STANCE;
 	}
-#endif //0
 
 	switch (pm->ps->fd.saberAnimLevel)
 	{
 	case SS_DUAL:
-		//anim = BOTH_SABERDUAL_STANCE;
-		//anim = BOTH_P1_S1_TR; // ok
-		//anim = BOTH_P6_S6_T_;
-		anim = BOTH_P7_S7_T_;
-		//anim = BOTH_D6__R___; // good but bad legs
-		//anim = BOTH_B7_T____; // dumb
+		anim = BOTH_SABERDUAL_STANCE;
 		break;
 	case SS_STAFF:
-		//anim = BOTH_SABERSTAFF_STANCE;
-		anim = BOTH_P7_S7_TR; // good
+		anim = BOTH_SABERSTAFF_STANCE;
 		break;
-	case SS_MEDIUM:
-		//anim = BOTH_STAND2;
-		anim = BOTH_P7_S7_TL; // good
-		break;
-
-		// These are unused...
-	case SS_DESANN:
 	case SS_FAST:
-	case SS_STRONG:
 	case SS_TAVION:
+		anim = BOTH_SABERFAST_STANCE;
+		break;
+	case SS_STRONG:
+		anim = BOTH_SABERSLOW_STANCE;
+		break;
 	case SS_NONE:
+	case SS_MEDIUM:
+	case SS_DESANN:
 	default:
-		//anim = BOTH_SABERFAST_STANCE;
-		//anim = BOTH_P6_S6_T_;
-		//anim = BOTH_P7_S7_T_;
-		//anim = BOTH_D6__R___;
-		anim = BOTH_B7_T____;
-		//anim = BOTH_STAND2;
+		anim = BOTH_STAND2;
 		break;
 	}
 	return anim;
@@ -3776,32 +3501,7 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_duckScale;
 		}
 	}
-#ifdef __DYNAMIC_STANCES__
-	else if (pm->ps->saberMove > LS_PUTAWAY)
-	{// UQ1: When swinging a saber we don't run. Ever!
-		//if (pm->cmd.rightmove != 0 || pm->cmd.upmove < 0)
-		{// Still running forward, but only if not moving left/right or ducking...
-			if (wishspeed > pm->ps->speed * pm_saberwalkScale)
-			{
-				wishspeed = pm->ps->speed * pm_saberwalkScale;
-			}
-		}
-	}
-#endif //__DYNAMIC_STANCES__
-#if 0 //turn walk button of atm
-	else if ((pm->ps->powerups[PW_BLOCK])
-		|| (pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))
-		|| (pm->ps->fd.forcePowersActive&(1 << FP_GRIP))
-		|| (pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
-	{
-		//Defending AND NOT sprinting
-		if (wishspeed > pm->ps->speed * pm_saberwalkScale)
-		{
-			//Defending - which means we go walking speed
-			wishspeed = pm->ps->speed * pm_saberwalkScale;
-		}
-	}
-#endif 
+
 	// clamp the speed lower if wading or walking on the bottom
 	if ( pm->waterlevel ) {
 		float	waterScale;
@@ -5219,7 +4919,7 @@ void PM_FootSlopeTrace( float *pDiff, float *pInterval )
 	}
 }
 
-qboolean PM_InSlopeAnim(int anim)
+qboolean BG_InSlopeAnim(int anim)
 {
 	switch (anim)
 	{
@@ -5905,21 +5605,8 @@ static void PM_Footsteps( void ) {
 		{ //let it finish first
 			bobmove = 0.2f;
 		}
-# if 0
-		else if (!(pm->cmd.buttons & BUTTON_WALKING) && !(pm->ps->powerups[PW_BLOCK]) &&
-			!(pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING)) &&
-			!(pm->ps->fd.forcePowersActive&(1 << FP_GRIP)) &&
-			!(pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
-#else
-#ifdef __DYNAMIC_STANCES__
-		else if (!(pm->cmd.buttons & BUTTON_WALKING) 
-			&& pm->ps->saberMove <= LS_PUTAWAY
-			/*&& !(pm->cmd.rightmove != 0 || pm->cmd.upmove < 0)*/) // UQ1: When swinging a saber we don't run. Ever!
-#else //!__DYNAMIC_STANCES__
-		else if (!(pm->cmd.buttons & BUTTON_WALKING))
-#endif //__DYNAMIC_STANCES__
+		else if ( !( pm->cmd.buttons & BUTTON_WALKING ) )
 		{//running
-#endif
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->clientNum >= MAX_CLIENTS &&
 				pm_entSelf &&
@@ -6173,57 +5860,6 @@ static void PM_Footsteps( void ) {
 				}
 			}
 		}
-
-				//{//[SaberSys]
-				//	switch (pm->ps->fd.saberAnimLevel)
-				//	{
-				//	case SS_STAFF:
-				//		if ( pm->ps->saberHolstered > 1 )
-				//		{
-				//			desiredAnim = BOTH_WALK1;
-				//		}
-				//		else if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-				//		{
-				//			desiredAnim = BOTH_WALK1;
-				//		}
-				//		else
-				//		{
-				//			desiredAnim = BOTH_WALK_STAFF;
-				//		}
-				//		break;
-				//	case SS_DUAL:
-				//		if ( pm->ps->saberHolstered > 1 )
-				//		{
-				//			desiredAnim = BOTH_WALK1;
-				//		}
-				//		else if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-				//		{
-				//			desiredAnim = BOTH_WALK1;
-				//		}
-				//		else
-				//		{
-				//			desiredAnim = BOTH_WALK_DUAL;
-				//		}
-				//		break;
-				//	default:
-				//		if ( pm->ps->saberHolstered )
-				//		{
-				//			desiredAnim = BOTH_WALK1;
-				//		}
-				//		else if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-				//		{
-				//			desiredAnim = BOTH_WALK1;
-				//		}
-				//		else
-				//		{
-				//			desiredAnim = BOTH_WALK2;
-				//		}//[/SaberSys]
-						/*break;
-					}
-				}
-			}
-		}*/
-
 		if (desiredAnim != -1)
 		{
 			int ires = PM_LegsSlopeBackTransition(desiredAnim);
@@ -9188,15 +8824,6 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 			return;
 		}
 	}
-
-#ifdef __NO_SILLY_SABER_SPINAROUND__
-	if (BG_SaberInAttack( ps->saberMove ))
-	{
-		ps->speed = 0;
-		return;
-	}
-#endif //__NO_SILLY_SABER_SPINAROUND__
-
 	//For prediction, always reset speed back to the last known server base speed
 	//If we didn't do this, under lag we'd eventually dwindle speed down to 0 even though
 	//that would not be the correct predicted value.
@@ -10404,38 +10031,6 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	{
 		angles[0] = -30;
 	}
-
-#ifdef __NO_SILLY_SABER_SPINAROUND__
-	if (BG_SaberInAttack( cent->saberMove ))
-	{
-		legsAngles[ROLL] = 0;
-		torsoAngles[ROLL] = 0;
-
-		if ( BG_ClassHasBadBones( cent->NPC_class ) )
-		{
-			int oUp, oRt, oFwd;
-			if ( cent->NPC_class == CLASS_RANCOR )
-			{
-				llAngles[YAW] = llAngles[ROLL] = 0.0f;
-				ulAngles[YAW] = ulAngles[ROLL] = 0.0f;
-			}
-			BG_BoneOrientationsForClass( cent->NPC_class, "upper_lumbar", &oUp, &oRt, &oFwd );
-			trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", ulAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
-			BG_BoneOrientationsForClass( cent->NPC_class, "lower_lumbar", &oUp, &oRt, &oFwd );
-			trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", llAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
-
-			trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-		}
-		else
-		{
-			BG_G2ClientSpineAngles(ghoul2, motionBolt, cent_lerpOrigin, cent_lerpAngles, cent, time, viewAngles, ciLegs, ciTorso, angles, thoracicAngles, ulAngles, llAngles, modelScale, tPitchAngle, tYawAngle, corrTime);
-			trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-			trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-			trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-		}
-		return; //don't have to bother with the rest then
-	}
-#endif //__NO_SILLY_SABER_SPINAROUND__
 
 	if (cent->weapon == WP_EMPLACED_GUN &&
 		emplaced)

@@ -11,8 +11,6 @@
 // A user mod should never modify this file
 
 #define __MMO__
-//#define __NPC_USE_SABER_BLOCKING__
-#define __NO_SILLY_SABER_SPINAROUND__
 //#define __AAS_AI_TESTING__
 #define __NEW_TRUEVIEW__
 
@@ -918,6 +916,7 @@ void		VectorInverse( vec3_t vec );
 void		CrossProduct( const vec3_t vec1, const vec3_t vec2, vec3_t vecOut );
 float		DotProduct( const vec3_t vec1, const vec3_t vec2 );
 qboolean	VectorCompare( const vec3_t vec1, const vec3_t vec2 );
+qboolean	VectorCompare2(const vec3_t v1, const vec3_t v2);
 void		SnapVector( float *v );
 
 #define		VectorAddM( vec1, vec2, vecOut )		((vecOut)[0]=(vec1)[0]+(vec2)[0], (vecOut)[1]=(vec1)[1]+(vec2)[1], (vecOut)[2]=(vec1)[2]+(vec2)[2])
@@ -2015,7 +2014,7 @@ typedef struct siegePers_s
 
 #define BUTTON_SABERTHROW       4096        //+button12
 #define BUTTON_DODGE            8192        //+button13
-#define BUTTON_BLOCK			16384		//+button14 = PW_BLOCK
+#define BUTTON_BLOCK			16384		//+button14
 
 // Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
 // I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.

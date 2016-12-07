@@ -1315,51 +1315,6 @@ qboolean G_ActionButtonPressed(int buttons)
 	return qfalse;
 }
 
-void G_CheckToggleBlock(gentity_t *ent, usercmd_t *ucmd)
-{
-#if 0
-	if (!ent || !ent->client)
-	{
-		return;
-	}
-
-	if (ent->health <= 0 || ent->client->ps.stats[STAT_HEALTH] <= 0 ||
-		ent->client->sess.sessionTeam == FACTION_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
-	{
-		ent->client->ps.powerups[PW_BLOCK] = 0;
-		ent->blockToggleTime = 0;
-		return;
-	}
-
-	if (ucmd->buttons & BUTTON_BLOCK)
-	{
-		if (ent->blockToggleTime > level.time)
-		{// Toggled less then a second ago.. Ignore...
-
-		}
-		else if (!ent->client->ps.powerups[PW_BLOCK])
-		{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
-			ent->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
-			ent->blockToggleTime = level.time + 250; // 250 ms between toggles...
-
-			if (!(ucmd->buttons & BUTTON_WALKING))
-				ucmd->buttons |= BUTTON_WALKING;
-		}
-		else
-		{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
-			ent->client->ps.powerups[PW_BLOCK] = 0;
-			ent->blockToggleTime = level.time + 250; // 250 ms between toggles...
-		}
-	}
-
-	if (ent->client->ps.powerups[PW_BLOCK])
-	{// PW_BLOCK is active. Walk...
-		if (!(ucmd->buttons & BUTTON_WALKING))
-			ucmd->buttons |= BUTTON_WALKING;
-	}
-#endif
-}
-
 void G_CheckClientIdle( gentity_t *ent, usercmd_t *ucmd )
 {
 	vec3_t viewChange;
@@ -2113,9 +2068,6 @@ void ClientThink_real( gentity_t *ent ) {
 			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->maxHealth;
 		}
 	}
-
-	//check if we need to toggle the block powerup on/off..
-	G_CheckToggleBlock(ent, ucmd); // moved up here to make sure it always gets called... (eg: no return; 's before it gets to the check)
 	
 	// This code was moved here from clientThink to fix a problem with g_synchronousClients
 	// being set to 1 when in vehicles.

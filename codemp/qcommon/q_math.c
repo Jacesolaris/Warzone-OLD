@@ -893,6 +893,18 @@ qboolean VectorCompare( const vec3_t vec1, const vec3_t vec2 ) {
 	return qtrue;
 }
 
+qboolean VectorCompare2(const vec3_t v1, const vec3_t v2)
+{
+	if (v1[0] > (v2[0] + 0.0001f) || v1[0] < (v2[0] - 0.0001f) ||
+		v1[1] > (v2[1] + 0.0001f) || v1[1] < (v2[1] + 0.0001f) ||
+		v1[2] > (v2[2] + 0.0001f) || v1[2] < (v2[2] + 0.0001f))
+	{
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
 void SnapVector( float *v ) {
 #if defined(_MSC_VER) && !defined(idx64)
 	// pitiful attempt to reduce _ftol2 calls -rww
