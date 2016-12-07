@@ -2,6 +2,7 @@
 #include "cl_cgameapi.h"
 #include "cl_uiapi.h"
 #include "qcommon/stringed_ingame.h"
+#include "cl_awesomium.h"
 /*
 
 key up events are sent even if in console mode
@@ -1328,11 +1329,26 @@ void CL_KeyDownEvent( int key, unsigned time )
 
 		if ( !(Key_GetCatcher() & KEYCATCH_UI) ) {
 			if ( cls.state == CA_ACTIVE && !clc.demoplaying )
-				UIVM_SetActiveMenu( UIMENU_INGAME );
+				if (cl_useAwesomium->integer) {
+
+				}
+				else {
+					UIVM_SetActiveMenu(UIMENU_INGAME);
+				}
 			else {
 				CL_Disconnect_f();
 				S_StopAllSounds();
-				UIVM_SetActiveMenu( UIMENU_MAIN );
+				if (cl_useAwesomium->integer) {
+
+				}
+				else {
+					if (cl_useAwesomium->integer) {
+
+					}
+					else {
+						UIVM_SetActiveMenu(UIMENU_MAIN);
+					}
+				}
 			}
 			return;
 		}
@@ -1414,6 +1430,7 @@ void CL_KeyEvent (int key, qboolean down, unsigned time) {
 		CL_KeyDownEvent( key, time );
 	else
 		CL_KeyUpEvent( key, time );
+	Awesomium::KeyEvent(key, down);
 }
 
 /*

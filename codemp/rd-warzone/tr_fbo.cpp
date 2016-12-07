@@ -825,6 +825,17 @@ void FBO_Init(void)
 		R_CheckFBO(tr.renderCubeFbo);
 	}
 
+	{
+		tr.awesomiumuiFbo = FBO_Create("_awesomiumui", tr.awesomiumuiImage->width, tr.awesomiumuiImage->height);
+		FBO_Bind(tr.awesomiumuiFbo);
+
+		FBO_AttachTextureImage(tr.awesomiumuiImage, 0);
+
+		FBO_SetupDrawBuffers();
+
+		R_CheckFBO(tr.awesomiumuiFbo);
+	}
+
 	GL_CheckErrors();
 
 	FBO_Bind(NULL);

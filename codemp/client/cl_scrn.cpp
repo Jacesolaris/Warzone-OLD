@@ -2,6 +2,7 @@
 
 #include "client.h"
 #include "cl_uiapi.h"
+#include "cl_awesomium.h"
 
 extern console_t con;
 qboolean	scr_initialized;		// ready to draw
@@ -388,72 +389,82 @@ SCR_DrawScreenField
 This will be called twice if rendering in stereo mode
 ==================
 */
-void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
-	re->BeginFrame( stereoFrame );
+void SCR_DrawScreenField(stereoFrame_t stereoFrame) {
+	re->BeginFrame(stereoFrame);
 
-	qboolean uiFullscreen = (qboolean)(cls.uiStarted && UIVM_IsFullscreen());
+	qboolean uiFullscreen = (qboolean)(cls.uiStarted && (cl_useAwesomium->integer ? qtrue : UIVM_IsFullscreen()));
 
 	// wide aspect ratio screens need to have the sides cleared
 	// unless they are displaying game renderings
-	if ( uiFullscreen || (cls.state != CA_ACTIVE && cls.state != CA_CINEMATIC) ) {
-		if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
-			re->SetColor( g_color_table[0] );
-			re->DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
-			re->SetColor( NULL );
+	if (uiFullscreen || (cls.state != CA_ACTIVE && cls.state != CA_CINEMATIC)) {
+		if (cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640) {
+			re->SetColor(g_color_table[0]);
+			re->DrawStretchPic(0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader);
+			re->SetColor(NULL);
 		}
 	}
 
-	if ( !cls.uiStarted ) {
+	if (!cls.uiStarted) {
 		Com_DPrintf("draw screen without UI loaded\n");
 		return;
 	}
 
-	// if the menu is going to cover the entire screen, we
-	// don't need to render anything under it
-	//actually, yes you do, unless you want clients to cycle out their reliable
-	//commands from sitting in the menu. -rww
-	if ( (cls.uiStarted && !uiFullscreen) || (!(cls.framecount&7) && cls.state == CA_ACTIVE) ) {
-		switch( cls.state ) {
-		default:
-			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
-			break;
-		case CA_CINEMATIC:
+	if (cl_useAwesomium->integer) {
+		if (cls.state == CA_CINEMATIC) {
 			SCR_DrawCinematic();
-			break;
-		case CA_DISCONNECTED:
-			// force menu up
-			S_StopAllSounds();
-			UIVM_SetActiveMenu( UIMENU_MAIN );
-			break;
-		case CA_CONNECTING:
-		case CA_CHALLENGING:
-		case CA_CONNECTED:
-			// connecting clients will only show the connection dialog
-			// refresh to update the time
-			UIVM_Refresh( cls.realtime );
-			UIVM_DrawConnectScreen( qfalse );
-			break;
-		case CA_LOADING:
-		case CA_PRIMED:
-			// draw the game information screen and loading progress
-			CL_CGameRendering( stereoFrame );
-
-			// also draw the connection information, so it doesn't
-			// flash away too briefly on local or lan games
-			// refresh to update the time
-			UIVM_Refresh( cls.realtime );
-			UIVM_DrawConnectScreen( qtrue );
-			break;
-		case CA_ACTIVE:
-			CL_CGameRendering( stereoFrame );
-			SCR_DrawDemoRecording();
-			break;
+		}
+		else {
+			Awesomium::RenderUserInterface();
 		}
 	}
+	else {
+		// if the menu is going to cover the entire screen, we
+		// don't need to render anything under it
+		//actually, yes you do, unless you want clients to cycle out their reliable
+		//commands from sitting in the menu. -rww
+		if ((cls.uiStarted && !uiFullscreen) || (!(cls.framecount & 7) && cls.state == CA_ACTIVE)) {
+			switch (cls.state) {
+			default:
+				Com_Error(ERR_FATAL, "SCR_DrawScreenField: bad cls.state");
+				break;
+			case CA_CINEMATIC:
+				SCR_DrawCinematic();
+				break;
+			case CA_DISCONNECTED:
+				// force menu up
+				S_StopAllSounds();
+				UIVM_SetActiveMenu(UIMENU_MAIN);
+				break;
+			case CA_CONNECTING:
+			case CA_CHALLENGING:
+			case CA_CONNECTED:
+				// connecting clients will only show the connection dialog
+				// refresh to update the time
+				UIVM_Refresh(cls.realtime);
+				UIVM_DrawConnectScreen(qfalse);
+				break;
+			case CA_LOADING:
+			case CA_PRIMED:
+				// draw the game information screen and loading progress
+				CL_CGameRendering(stereoFrame);
 
-	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && cls.uiStarted ) {
-		UIVM_Refresh( cls.realtime );
+				// also draw the connection information, so it doesn't
+				// flash away too briefly on local or lan games
+				// refresh to update the time
+				UIVM_Refresh(cls.realtime);
+				UIVM_DrawConnectScreen(qtrue);
+				break;
+			case CA_ACTIVE:
+				CL_CGameRendering(stereoFrame);
+				SCR_DrawDemoRecording();
+				break;
+			}
+		}
+
+		// the menu draws next
+		if (Key_GetCatcher() & KEYCATCH_UI && cls.uiStarted) {
+			UIVM_Refresh(cls.realtime);
+		}
 	}
 
 	// console draws next

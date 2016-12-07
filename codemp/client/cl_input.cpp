@@ -3,6 +3,7 @@
 #include "client.h"
 #include "cl_cgameapi.h"
 #include "cl_uiapi.h"
+#include "cl_awesomium.h"
 #ifndef _WIN32
 #include <cmath>
 #endif
@@ -365,7 +366,12 @@ void IN_VoiceChatButton(void)
 	{ //ui not loaded so this command is useless
 		return;
 	}
-	UIVM_SetActiveMenu( UIMENU_VOICECHAT );
+	if (cl_useAwesomium->integer) {
+
+	}
+	else {
+		UIVM_SetActiveMenu(UIMENU_VOICECHAT);
+	}
 }
 
 void IN_KeyDown( kbutton_t *b ) {
@@ -918,6 +924,8 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
 	}
+	//Awesomium have right to know mouse coords at any time
+	Awesomium::MouseEvent(dx, dy);
 }
 
 /*

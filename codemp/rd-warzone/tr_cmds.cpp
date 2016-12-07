@@ -652,3 +652,29 @@ void RE_TakeVideoFrame( int width, int height,
 	cmd->encodeBuffer = encodeBuffer;
 	cmd->motionJpeg = motionJpeg;
 }
+
+/*
+=============
+RE_DrawAwesomiumFrame
+=============
+*/
+void RE_DrawAwesomiumFrame(int x, int y, int w, int h, unsigned char *buffer){
+	awesomiumFrameCommand_t	*cmd;
+
+	if (!tr.registered) {
+		return;
+	}
+
+	cmd = (awesomiumFrameCommand_t *)R_GetCommandBuffer(sizeof(*cmd));
+	if (!cmd) {
+		return;
+	}
+
+	cmd->commandId = RC_DRAWAWESOMIUMFRAME;
+
+	cmd->x = x;
+	cmd->y = y;
+	cmd->width = w;
+	cmd->height = h;
+	cmd->buffer = buffer;
+}
