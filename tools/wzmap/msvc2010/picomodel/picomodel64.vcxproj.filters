@@ -6,7 +6,7 @@
       <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="Source Files\lwo">
-      <UniqueIdentifier>{12349628-09cf-4519-a67a-010b5d327e70}</UniqueIdentifier>
+      <UniqueIdentifier>{52c59b16-6b06-4823-bf6c-923079efd386}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>

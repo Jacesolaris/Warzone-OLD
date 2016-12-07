@@ -602,6 +602,7 @@ R_LoadVisibility
 =================
 */
 static	void R_LoadVisibility( lump_t *l ) {
+#if 1
 	int		len;
 	byte	*buf;
 
@@ -625,6 +626,11 @@ static	void R_LoadVisibility( lump_t *l ) {
 		Com_Memcpy( dest, buf + 8, len - 8 );
 		s_worldData.vis = dest;
 	}
+#else
+	s_worldData.vis = (byte *)ri->CM_GetVisibilityData();
+	s_worldData.numClusters = (int)ri->CM_GetVisibilityDataClusterCount();
+	s_worldData.clusterBytes = (int)ri->CM_GetVisibilityDataClusterBytesCount();
+#endif
 }
 
 //===============================================================================
@@ -2159,6 +2165,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 
 	s_worldData.surfaces = out;
 	s_worldData.numsurfaces = count;
+
 	s_worldData.surfacesViewCount = (int *)ri->Hunk_Alloc ( count * sizeof(*s_worldData.surfacesViewCount), h_low );
 	//s_worldData.surfacesDlightBits = (int *)ri->Hunk_Alloc ( count * sizeof(*s_worldData.surfacesDlightBits), h_low );
 #ifdef __PSHADOWS__
@@ -2429,7 +2436,8 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 R_LoadShaders
 =================
 */
-static	void R_LoadShaders( lump_t *l ) {	
+static	void R_LoadShaders( lump_t *l ) {
+#if 1 // Renderer seems to dislike sharing these.
 	int		i, count;
 	dshader_t	*in, *out;
 	
@@ -2448,6 +2456,10 @@ static	void R_LoadShaders( lump_t *l ) {
 		out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );
 		out[i].contentFlags = LittleLong( out[i].contentFlags );
 	}
+#else
+	s_worldData.shaders = (dshader_t *)ri->CM_GetShaderData();
+	s_worldData.numShaders = (int)ri->CM_GetShaderDataCount();
+#endif
 }
 
 
@@ -2457,7 +2469,8 @@ R_LoadMarksurfaces
 =================
 */
 static	void R_LoadMarksurfaces (lump_t *l)
-{	
+{
+#if 0
 	int		i, j, count;
 	int		*in;
 	int     *out;
@@ -2476,6 +2489,10 @@ static	void R_LoadMarksurfaces (lump_t *l)
 		j = LittleLong(in[i]);
 		out[i] = j;
 	}
+#else
+	s_worldData.marksurfaces = (int *)ri->CM_GetLeafSurfacesData();
+	s_worldData.nummarksurfaces = (int)ri->CM_GetLeafSurfacesDataCount();
+#endif
 }
 
 
@@ -2485,6 +2502,7 @@ R_LoadPlanes
 =================
 */
 static	void R_LoadPlanes( lump_t *l ) {
+#if 0
 	int			i, j;
 	cplane_t	*out;
 	dplane_t 	*in;
@@ -2495,24 +2513,28 @@ static	void R_LoadPlanes( lump_t *l ) {
 	if (l->filelen % sizeof(*in))
 		ri->Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
 	count = l->filelen / sizeof(*in);
-	out = (cplane_t *)ri->Hunk_Alloc ( count*2*sizeof(*out), h_low);	
-	
+	out = (cplane_t *)ri->Hunk_Alloc ( count*2*sizeof(*out), h_low);
+
 	s_worldData.planes = out;
 	s_worldData.numplanes = count;
 
-	for ( i=0 ; i<count ; i++, in++, out++) {
+	for (i = 0; i<count; i++, in++, out++) {
 		bits = 0;
-		for (j=0 ; j<3 ; j++) {
-			out->normal[j] = LittleFloat (in->normal[j]);
+		for (j = 0; j<3; j++) {
+			out->normal[j] = LittleFloat(in->normal[j]);
 			if (out->normal[j] < 0) {
-				bits |= 1<<j;
+				bits |= 1 << j;
 			}
 		}
 
-		out->dist = LittleFloat (in->dist);
-		out->type = PlaneTypeForNormal( out->normal );
+		out->dist = LittleFloat(in->dist);
+		out->type = PlaneTypeForNormal(out->normal);
 		out->signbits = bits;
 	}
+#else
+	s_worldData.planes = (cplane_t *)ri->CM_GetPlanesData();
+	s_worldData.numplanes = (int)ri->CM_GetPlanesDataCount();
+#endif
 }
 
 /*

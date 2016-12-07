@@ -795,6 +795,7 @@ int main( int argc, char **argv )
 		Error( "Usage: %s [general options] [options] mapfile", argv[ 0 ] );
 	}
 
+#ifdef __USE_OPENCL__
 	/* Delayed warning message for enabling gpu usage so program information can be sent to console beforehand */
 	if(gpu){
 		Sys_Printf("\nWARNING: GPU will now attempt to use your videocard to accelerate compilation. This is highly experimental and can break!\n\n"); 
@@ -805,6 +806,7 @@ int main( int argc, char **argv )
 			gpu = qfalse; /*fall back to cpu if opencl fails to start for some reason*/ 
 		}
 	}
+#endif //__USE_OPENCL__
 
 	/* fixaas */
 	if( !strcmp( argv[ 1 ], "-fixaas" ) )
@@ -893,9 +895,11 @@ int main( int argc, char **argv )
 		safe_malloc_logend();
 
 	/*Clean up after OpenCL*/ 
+#ifdef __USE_OPENCL__
 	if(gpu){
 	    CleanOpenCL();
 	}
+#endif //__USE_OPENCL__
 
 	if (mapplanes) free(mapplanes);
 	if (bspLeafs) free(bspLeafs);

@@ -621,7 +621,7 @@ void NPC_SetNewGoalAndPath( void )
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, (qboolean)irand(0,1));
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, (qboolean)(irand(0,5) <= 0));
 
 		if (NPC->pathsize > 0)
 		{

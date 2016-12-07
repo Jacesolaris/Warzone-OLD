@@ -422,14 +422,13 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	else*/
 	{
 		//We're not doing traces!
-		bestdist = 999999;
+		bestdist = 2048;// 999999;
 	}
 	bestindex = -1;
 
-//#pragma omp parallel for ordered
 	for (i = 0; i < gWPNum; i++)
 	{
-		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
+		if (/*gWPArray[i] &&*/ gWPArray[i]->inuse && i != badwp)
 		{
 			float flLen = Distance(org, gWPArray[i]->origin);
 
@@ -437,19 +436,13 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC))
 			{//boost the distance for these waypoints so that we will try to avoid using them
 				//if at all possible
-				flLen = flLen + 500;
+				flLen += 500;
 			}
 
 			if (flLen < bestdist)
 			{
-//#pragma omp critical
-				{
-//					if (flLen < bestdist)
-					{// Check it is still better, because of the critical section lock...
-						bestdist = flLen;
-						bestindex = i;
-					}
-				}
+				bestdist = flLen;
+				bestindex = i;
 			}
 		}
 	}

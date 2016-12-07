@@ -2,6 +2,32 @@
 #include "cm_local.h"
 #include "qcommon/qfiles.h"
 
+void *ShaderData;
+uint32_t ShaderDataCount;
+void *LeafsData;
+uint32_t LeafsDataCount;
+void *LeafBrushesData;
+uint32_t LeafBrushesDataCount;
+void *LeafSurfacesData;
+uint32_t LeafSurfacesDataCount;
+void *PlanesData;
+uint32_t PlanesDataCount;
+void *BrushSidesData;
+uint32_t BrushSidesDataCount;
+void *BrushesData;
+uint32_t BrushesDataCount;
+void *SubmodelsData;
+uint32_t SubmodelsDataCount;
+void *NodesData;
+uint32_t NodesDataCount;
+void *EntityStringData;
+uint32_t EntityStringDataCount;
+void *VisibilityData;
+uint32_t VisibilityDataClusterCount;
+uint32_t VisibilityDataClusterBytesCount;
+void *PatchesData;
+uint32_t PatchesDataCount;
+
 #ifdef BSPC
 
 #include "../bspc/l_qfiles.h"
@@ -487,6 +513,9 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 	cm.shaders = (CCMShader *)Hunk_Alloc( (1+count) * sizeof( *cm.shaders ), h_high );
 	cm.numShaders = count;
 
+	ShaderData = cm.shaders;
+	ShaderDataCount = cm.numShaders;
+
 	out = cm.shaders;
 	for ( i = 0; i < count; i++, in++, out++ )
 	{
@@ -542,6 +571,9 @@ void CMod_LoadSubmodels( lump_t *l, clipMap_t &cm ) {
 		Com_Error (ERR_DROP, "Map with no models");
 	cm.cmodels = (struct cmodel_s *)Hunk_Alloc( count * sizeof( *cm.cmodels ), h_high );
 	cm.numSubModels = count;
+
+	SubmodelsData = cm.cmodels;
+	SubmodelsDataCount = cm.numSubModels;
 
 	if ( count > MAX_SUBMODELS ) {
 		Com_Error( ERR_DROP, "MAX_SUBMODELS exceeded" );
@@ -609,6 +641,9 @@ void CMod_LoadNodes( lump_t *l, clipMap_t &cm ) {
 	cm.nodes = (cNode_t *)Hunk_Alloc( count * sizeof( *cm.nodes ), h_high );
 	cm.numNodes = count;
 
+	NodesData = cm.nodes;
+	NodesDataCount = cm.numNodes;
+
 	out = cm.nodes;
 
 	for (i=0 ; i<count ; i++, out++, in++)
@@ -661,6 +696,9 @@ void CMod_LoadBrushes( lump_t *l, clipMap_t	&cm ) {
 	cm.brushes = (cbrush_t *)Hunk_Alloc( ( BOX_BRUSHES + count ) * sizeof( *cm.brushes ), h_high );
 	cm.numBrushes = count;
 
+	BrushesData = cm.brushes;
+	BrushesDataCount = cm.numBrushes;
+
 	out = cm.brushes;
 
 	for ( i=0 ; i<count ; i++, out++, in++ ) {
@@ -700,6 +738,9 @@ void CMod_LoadLeafs (lump_t *l, clipMap_t &cm)
 
 	cm.leafs = (cLeaf_t *)Hunk_Alloc( ( BOX_LEAFS + count ) * sizeof( *cm.leafs ), h_high );
 	cm.numLeafs = count;
+
+	LeafsData = cm.leafs;
+	LeafsDataCount = cm.numLeafs;
 
 	out = cm.leafs;
 	for ( i=0 ; i<count ; i++, in++, out++)
@@ -744,6 +785,9 @@ void CMod_LoadPlanes (lump_t *l, clipMap_t &cm)
 	cm.planes = (struct cplane_s *)Hunk_Alloc( ( BOX_PLANES + count ) * sizeof( *cm.planes ), h_high );
 	cm.numPlanes = count;
 
+	PlanesData = cm.planes;
+	PlanesDataCount = cm.numPlanes;
+
 	out = cm.planes;
 
 	for ( i=0 ; i<count ; i++, in++, out++)
@@ -782,6 +826,9 @@ void CMod_LoadLeafBrushes (lump_t *l, clipMap_t	&cm)
 	cm.leafbrushes = (int *)Hunk_Alloc( (count + BOX_BRUSHES) * sizeof( *cm.leafbrushes ), h_high );
 	cm.numLeafBrushes = count;
 
+	LeafBrushesData = cm.leafbrushes;
+	LeafBrushesDataCount = cm.numLeafBrushes;
+
 	out = cm.leafbrushes;
 
 	for ( i=0 ; i<count ; i++, in++, out++) {
@@ -808,6 +855,9 @@ void CMod_LoadLeafSurfaces( lump_t *l, clipMap_t &cm )
 
 	cm.leafsurfaces = (int *)Hunk_Alloc( count * sizeof( *cm.leafsurfaces ), h_high );
 	cm.numLeafSurfaces = count;
+
+	LeafSurfacesData = cm.leafsurfaces;
+	LeafSurfacesDataCount = cm.numLeafSurfaces;
 
 	out = cm.leafsurfaces;
 
@@ -838,6 +888,9 @@ void CMod_LoadBrushSides (lump_t *l, clipMap_t &cm)
 	cm.brushsides = (cbrushside_t *)Hunk_Alloc( ( BOX_SIDES + count ) * sizeof( *cm.brushsides ), h_high );
 	cm.numBrushSides = count;
 
+	BrushSidesData = cm.brushsides;
+	BrushSidesDataCount = cm.numBrushSides;
+
 	out = cm.brushsides;
 
 	for ( i=0 ; i<count ; i++, in++, out++) {
@@ -860,6 +913,9 @@ void CMod_LoadEntityString( lump_t *l, clipMap_t &cm ) {
 	cm.entityString = (char *)Hunk_Alloc( l->filelen, h_high );
 	cm.numEntityChars = l->filelen;
 	Com_Memcpy (cm.entityString, cmod_base + l->fileofs, l->filelen);
+
+	EntityStringData = cm.entityString;
+	EntityStringDataCount = cm.numEntityChars;
 }
 
 /*
@@ -886,6 +942,10 @@ void CMod_LoadVisibility( lump_t *l, clipMap_t &cm ) {
 	cm.numClusters = LittleLong( ((int *)buf)[0] );
 	cm.clusterBytes = LittleLong( ((int *)buf)[1] );
 	Com_Memcpy (cm.visibility, buf + VIS_HEADER, len - VIS_HEADER );
+
+	VisibilityData = cm.visibility;
+	VisibilityDataClusterCount = cm.numClusters;
+	VisibilityDataClusterBytesCount = cm.clusterBytes;
 }
 
 //==================================================================
@@ -913,6 +973,9 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts, clipMap_t &cm ) {
 		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
 	cm.numSurfaces = count = surfs->filelen / sizeof(*in);
 	cm.surfaces = (cPatch_t ** )Hunk_Alloc( cm.numSurfaces * sizeof( cm.surfaces[0] ), h_high );
+
+	PatchesData = cm.surfaces;
+	PatchesDataCount = cm.numSurfaces;
 
 	dv = (drawVert_t *)(cmod_base + verts->fileofs);
 	if (verts->filelen % sizeof(*dv))

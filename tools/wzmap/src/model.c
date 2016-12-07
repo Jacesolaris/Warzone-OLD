@@ -1329,30 +1329,31 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						PlaneFromPoints( pb, points[ 1 ], points[ 0 ], backs[ 0 ] ) &&
 						PlaneFromPoints( pc, points[ 0 ], points[ 2 ], backs[ 2 ] ) )
 					{
+						vec3_t mins, maxs;
+						int z;
+
+						VectorSet(mins, 999999, 999999, 999999);
+						VectorSet(maxs, -999999, -999999, -999999);
+
+						for (z = 0; z < 4; z++)
+						{
+							if (points[z][0] < mins[0]) mins[0] = points[z][0];
+							if (points[z][1] < mins[1]) mins[1] = points[z][1];
+							if (points[z][2] < mins[2]) mins[2] = points[z][2];
+
+							if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
+							if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
+							if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
+						}
+
 						//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
 
 						numSolidSurfs++;
 
 						if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
 						{// Cull small stuff and the tops of trees...
-							vec3_t mins, maxs;
 							vec3_t size;
 							float sz;
-							int z;
-
-							VectorSet(mins, 999999, 999999, 999999);
-							VectorSet(maxs, -999999, -999999, -999999);
-
-							for (z = 0; z < 4; z++)
-							{
-								if (points[z][0] < mins[0]) mins[0] = points[z][0];
-								if (points[z][1] < mins[1]) mins[1] = points[z][1];
-								if (points[z][2] < mins[2]) mins[2] = points[z][2];
-
-								if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
-								if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
-								if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
-							}
 
 							if (top != -999999 && bottom != -999999)
 							{
@@ -1364,7 +1365,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 								//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
 
-								if (mins[2] > newtop)
+								if (mins[2] > newtop || mins[2] > bottom + 512.0) // 512 is > JKA max jump height...
 								{
 									//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
 									numHeightCulledSurfs++;
@@ -1385,26 +1386,10 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 								continue;
 							}
 						}
-						else if (cullSmallSolids || si->isTreeSolid)
+						else //if (cullSmallSolids || si->isTreeSolid)
 						{// Only cull stuff too small to fall through...
-							vec3_t mins, maxs;
 							vec3_t size;
 							float sz;
-							int z;
-
-							VectorSet(mins, 999999, 999999, 999999);
-							VectorSet(maxs, -999999, -999999, -999999);
-
-							for (z = 0; z < 4; z++)
-							{
-								if (points[z][0] < mins[0]) mins[0] = points[z][0];
-								if (points[z][1] < mins[1]) mins[1] = points[z][1];
-								if (points[z][2] < mins[2]) mins[2] = points[z][2];
-
-								if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
-								if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
-								if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
-							}
 
 							VectorSubtract(maxs, mins, size);
 							//sz = VectorLength(size);
@@ -1412,7 +1397,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
 							if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
 
-							if (sz <= 16)
+							if (sz <= 24)//16)
 							{
 								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 								numSizeCulledSurfs++;
@@ -1430,6 +1415,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 #pragma omp critical
 							{
 
+#if 1
 								/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
 								buildBrush = AllocBrush( 24/*48*/ ); // UQ1: 48 seems to be more then is used... Wasting memory...
 								buildBrush->entityNum = mapEntityNum;
@@ -1484,14 +1470,66 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 									numsides = buildBrush->numsides;
 
+#if 0
+									/* copy sides */
+									if (buildBrush->numsides > 5)
+									{
+										for (z = 5; z < buildBrush->numsides; z++)
+										{
+											if (buildBrush->sides[z - 5].winding != NULL)
+												if (*(unsigned *)buildBrush->sides[z - 5].winding != 0xdeaddead)
+													FreeWinding(buildBrush->sides[z - 5].winding);
+
+											//buildBrush->sides[z - 5] = buildBrush->sides[z];
+											memcpy(&buildBrush->sides[z - 5], &buildBrush->sides[z], sizeof(side_t));
+
+											if (buildBrush->sides[z].winding != NULL)
+												if (*(unsigned *)buildBrush->sides[z].winding != 0xdeaddead)
+													buildBrush->sides[z - 5].winding = CopyWinding(buildBrush->sides[z].winding);
+
+											if (buildBrush->sides[z].winding != NULL)
+												if (*(unsigned *)buildBrush->sides[z].winding != 0xdeaddead)
+													FreeWinding(buildBrush->sides[z].winding);
+
+											memset(&buildBrush->sides[z], 0, sizeof(side_t));
+										}
+
+										//Sys_Printf("orig numsides %i.", buildBrush->numsides);
+
+										buildBrush->numsides -= 5;
+
+										//Sys_Printf(" final numsides %i.\n", buildBrush->numsides);
+									}
+#endif
+
 									if (!RemoveDuplicateBrushPlanes( buildBrush ))
 									{// UQ1: Testing - This would create a mirrored plane... free it...
-										free(buildBrush);
+										FreeBrush(buildBrush);
 										//Sys_Printf("Removed a mirrored plane\n");
 									}
 									else
 									{
+										//int c = (int) &(((brush_t*)0)->sides[buildBrush->numsides]);
+										//buildBrush = (brush_t *)realloc(buildBrush, c);
+
 										//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
+										//Sys_Printf("numsides %i.\n", buildBrush->numsides);
+
+										//brush_t *buildBrush2 = AllocBrush(buildBrush->numsides);
+										//memcpy(buildBrush2, buildBrush, c);
+										//FreeBrush(buildBrush);
+										//buildBrush = buildBrush2;
+
+										//brush_t *buildBrush2 = CopyBrush(buildBrush);
+										//FreeBrush(buildBrush);
+										//buildBrush = buildBrush2;
+
+
+										for (j = 1; j < buildBrush->numsides; j++)
+										{
+											buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+											buildBrush->sides[j].culled = qtrue;
+										}
 
 										buildBrush->next = entities[ mapEntityNum ].brushes;
 										entities[ mapEntityNum ].brushes = buildBrush;
@@ -1502,8 +1540,34 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 								}
 								else
 								{
-									free(buildBrush);
+									FreeBrush(buildBrush);
 								}
+#else
+								for (z = 0; z < 4; z++)
+								{
+									if (backs[z][0] < mins[0]) mins[0] = backs[z][0];
+									if (backs[z][1] < mins[1]) mins[1] = backs[z][1];
+									if (backs[z][2] < mins[2]) mins[2] = backs[z][2];
+
+									if (backs[z][0] > maxs[0]) maxs[0] = backs[z][0];
+									if (backs[z][1] > maxs[1]) maxs[1] = backs[z][1];
+									if (backs[z][2] > maxs[2]) maxs[2] = backs[z][2];
+								}
+
+								buildBrush = BrushFromBounds(mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2], si);
+
+								/*for (j = 1; j < buildBrush->numsides; j++)
+								{
+									buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+									buildBrush->sides[j].culled = qtrue;
+								}*/
+
+								buildBrush->next = entities[mapEntityNum].brushes;
+								entities[mapEntityNum].brushes = buildBrush;
+								entities[mapEntityNum].numBrushes++;
+								if (added_brushes != NULL)
+									*added_brushes += 1;
+#endif
 							} // #pragma omp critical
 						} // #pragma omp ordered
 					}

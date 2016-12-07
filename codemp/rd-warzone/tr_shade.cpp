@@ -1027,8 +1027,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	float	hasOverlay = 0.0;
 	float	doSway = 0.0;
 	float	phongFactor = r_blinnPhong->value;
-	float	hasSteepMap = 0.0;
-	float	hasSteepMap2 = 0.0;
+	float	hasSteepMap = 0;
+	float	hasSteepMap2 = 0;
 	float	hasSplatMap1 = 0;
 	float	hasSplatMap2 = 0;
 	float	hasSplatMap3 = 0;
@@ -1806,6 +1806,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		qboolean multiPass = qtrue;
 		qboolean usingLight = qfalse;
 		qboolean isGlowStage = qfalse;
+		qboolean isUsingRegions = qfalse;
 
 		float cubeMapStrength = 0.0;
 		vec4_t cubeMapVec;
@@ -1828,7 +1829,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!r_surfaceSprites->integer)
 #endif //__SURFACESPRITES__
 			{
-				continue;
+continue;
 			}
 		}
 
@@ -1912,9 +1913,28 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				isLightAll = qfalse;
 			}
 		}
-		else if (pStage->glslShaderGroup == tr.lightallShader)
+		else if (pStage->glslShaderGroup == tr.lightallShader
+			|| pStage->bundle[TB_STEEPMAP].image[0]
+			|| pStage->bundle[TB_STEEPMAP2].image[0]
+			|| pStage->bundle[TB_SPLATMAP1].image[0]
+			|| pStage->bundle[TB_SPLATMAP2].image[0]
+			|| pStage->bundle[TB_SPLATMAP3].image[0]
+			|| pStage->bundle[TB_SPLATMAP4].image[0])
 		{
 			int index = pStage->glslShaderIndex;
+
+			if (pStage->glslShaderGroup != tr.lightallShader
+				&& (pStage->bundle[TB_STEEPMAP].image[0]
+					|| pStage->bundle[TB_STEEPMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP1].image[0]
+					|| pStage->bundle[TB_SPLATMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP3].image[0]
+					|| pStage->bundle[TB_SPLATMAP4].image[0]))
+			{// When we have splatmaps we need to force lightall...
+				pStage->glslShaderGroup = tr.lightallShader;
+				pStage->glslShaderIndex = 0;
+				index = pStage->glslShaderIndex;
+			}
 
 			if (r_foliage->integer
 				&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
@@ -2010,7 +2030,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useTesselation = qtrue;
 			}
 
-			if (pStage->bundle[TB_STEEPMAP].image[0]
+			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+				&& (pStage->bundle[TB_STEEPMAP].image[0]
+					|| pStage->bundle[TB_STEEPMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP1].image[0]
+					|| pStage->bundle[TB_SPLATMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP3].image[0]
+					|| pStage->bundle[TB_SPLATMAP4].image[0]))
+			{
+				isUsingRegions = qtrue;
+				index |= LIGHTDEF_USE_REGIONS;
+			}
+			else if (pStage->bundle[TB_STEEPMAP].image[0]
 				|| pStage->bundle[TB_STEEPMAP2].image[0]
 				|| pStage->bundle[TB_SPLATMAP1].image[0]
 				|| pStage->bundle[TB_SPLATMAP2].image[0]

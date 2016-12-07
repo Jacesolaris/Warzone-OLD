@@ -1,4 +1,4 @@
-//#define __REGION_TEST__
+//#define USE_REGIONS
 
 #define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
 
@@ -200,53 +200,58 @@ vec4 ConvertToNormals ( vec4 color )
 	return norm;
 }
 
-#if defined(USE_TRI_PLANAR)
-vec3 vLocalSeed;
-
-// This function returns random number from zero to one
-float randZeroOne()
+#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+vec4 GetControlMap( sampler2D tex, float scale)
 {
-    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
-    n = n * (n * n * 15731u + 789221u);
-    n = (n >> 9u) | 0x3F800000u;
+	vec4 xaxis = texture( tex, (m_vertPos.yz * scale) * 0.5 + 0.5);
+	vec4 yaxis = texture( tex, (m_vertPos.xz * scale) * 0.5 + 0.5);
+	vec4 zaxis = texture( tex, (m_vertPos.xy * scale) * 0.5 + 0.5);
 
-    float fRes =  2.0 - uintBitsToFloat(n);
-    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-    return fRes;
+	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
+#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
-#if defined(__REGION_TEST__)
-float region1min = WATER_LEVEL - 1024;
-float region1max = WATER_LEVEL + 128.0;
+#if defined(USE_REGIONS)
+float region1min = 0.0;
+float region1max = 0.5;
 
-float region2min = WATER_LEVEL + 128;
-float region2max = WATER_LEVEL + 512.0;
+float region2min = 0.5;
+float region2max = 0.7;
 
-float region3min = WATER_LEVEL + 512.0;
-float region3max = WATER_LEVEL + 1024.0;
+float region3min = 0.7;
+float region3max = 0.85;
 
-float region4min = WATER_LEVEL + 1024.0;
-float region4max = WATER_LEVEL + 1536.0;
+float region4min = 0.85;
+float region4max = 1.0;
 
-float region5min = WATER_LEVEL + 1536.0;
-float region5max = WATER_LEVEL + 4096.0;
+/*
+float region5min = 1.2;
+float region5max = 1.5;
 
-#define region1ColorMap u_SteepMap2
-#define region2ColorMap u_DiffuseMap
-#define region3ColorMap u_SplatMap1
-#define region4ColorMap u_SplatMap2
-#define region5ColorMap u_SteepMap
+float region6min = 1.5;
+float region6max = 1.8;
+
+float region7min = 1.8;
+float region7max = 2.1;
+*/
+
+#define region1ColorMap u_DiffuseMap
+#define region2ColorMap u_SplatMap1
+#define region3ColorMap u_SplatMap2
+#define region4ColorMap u_SplatMap3
+/*#define region5ColorMap u_SplatMap4
+#define region6ColorMap u_SteepMap
+#define region7ColorMap u_SteepMap2*/
 
 vec4 GenerateTerrainMap(vec2 coord)
 {
+	vec4 controlMap = GetControlMap(u_SplatControlMap, 1.0 / u_Local6.b /* control scale */);
     vec4 terrainColor = vec4(0.0, 0.0, 0.0, 1.0);
-    float height = m_vertPos.z;
+    float height = clamp(length(controlMap.rgb) * 3.0, 0.0, 1.0);
     float regionMin = 0.0;
     float regionMax = 0.0;
     float regionRange = 0.0;
     float regionWeight = 0.0;
-
-	if (height > region5max) height = region5max;
 
     // Terrain region 1.
     regionMin = region1min;
@@ -262,7 +267,10 @@ vec4 GenerateTerrainMap(vec2 coord)
     regionRange = regionMax - regionMin;
     regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
     regionWeight = max(0.0, regionWeight);
-    terrainColor += regionWeight * texture2D(region2ColorMap, coord);
+	if (u_Local7.r > 0.0)
+		terrainColor += regionWeight * texture2D(region2ColorMap, coord);
+	else
+		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
 
     // Terrain region 3.
     regionMin = region3min;
@@ -270,7 +278,10 @@ vec4 GenerateTerrainMap(vec2 coord)
     regionRange = regionMax - regionMin;
     regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
     regionWeight = max(0.0, regionWeight);
-    terrainColor += regionWeight * texture2D(region3ColorMap, coord);
+	if (u_Local7.g > 0.0)
+		terrainColor += regionWeight * texture2D(region3ColorMap, coord);
+	else
+		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
 
     // Terrain region 4.
     regionMin = region4min;
@@ -278,19 +289,64 @@ vec4 GenerateTerrainMap(vec2 coord)
     regionRange = regionMax - regionMin;
     regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
     regionWeight = max(0.0, regionWeight);
-    terrainColor += regionWeight * texture2D(region4ColorMap, coord);
+	if (u_Local7.b > 0.0)
+		terrainColor += regionWeight * texture2D(region4ColorMap, coord);
+	else
+		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
 
+	/*
 	// Terrain region 5.
 	regionMin = region5min;
 	regionMax = region5max;
 	regionRange = regionMax - regionMin;
 	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
 	regionWeight = max(0.0, regionWeight);
-	terrainColor += regionWeight * texture2D(region5ColorMap, coord);
+	if (u_Local7.a > 0.0)
+		terrainColor += regionWeight * texture2D(region5ColorMap, coord);
+	else
+		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
+
+	// Terrain region 6.
+	regionMin = region6min;
+	regionMax = region6max;
+	regionRange = regionMax - regionMin;
+	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
+	regionWeight = max(0.0, regionWeight);
+	if (u_Local5.a > 0.0)
+		terrainColor += regionWeight * texture2D(region6ColorMap, coord);
+	else
+		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
+
+	// Terrain region 7.
+	regionMin = region7min;
+	regionMax = region7max;
+	regionRange = regionMax - regionMin;
+	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
+	regionWeight = max(0.0, regionWeight);
+	if (u_Local6.g > 0.0)
+		terrainColor += regionWeight * texture2D(region7ColorMap, coord);
+	else
+		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
+	*/
 
     return terrainColor;
 }
-#endif //defined(__REGION_TEST__)
+#endif //defined(USE_REGIONS)
+
+#if defined(USE_TRI_PLANAR)
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+    n = n * (n * n * 15731u + 789221u);
+    n = (n >> 9u) | 0x3F800000u;
+
+    float fRes =  2.0 - uintBitsToFloat(n);
+    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+    return fRes;
+}
 
 // For fake normal map lookups.
 #define FAKE_MAP_NONE 0
@@ -307,15 +363,6 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
     float b2 = max(texture2.a + a2 - ma, 0);
 
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
-}
-
-vec4 GetControlMap( sampler2D tex, float scale)
-{
-	vec4 xaxis = texture( tex, (m_vertPos.yz * scale) * 0.5 + 0.5);
-	vec4 yaxis = texture( tex, (m_vertPos.xz * scale) * 0.5 + 0.5);
-	vec4 zaxis = texture( tex, (m_vertPos.xy * scale) * 0.5 + 0.5);
-
-	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
 
 vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType)
@@ -423,9 +470,6 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
-#if defined(__REGION_TEST__)
-	return GenerateTerrainMap(texCoords * u_Local9.r);
-#else
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
@@ -482,14 +526,10 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	{
 		return GetNonSplatMap(u_DiffuseMap, texCoords);
 	}
-#endif
 }
 
 vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
-#if defined(__REGION_TEST__)
-	return ConvertToNormals(GenerateTerrainMap(texCoords * u_Local9.r));
-#else
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
@@ -519,24 +559,31 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 
 		return texture(u_NormalMap, texCoords);
 	}
-#endif
 }
 
 #else //!defined(USE_TRI_PLANAR)
 
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
+#if defined(USE_REGIONS)
+	return GenerateTerrainMap(texCoords * u_Local9.r);
+#else
 	return texture(u_DiffuseMap, texCoords);
+#endif
 }
 
 vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
+#if defined(USE_REGIONS)
+	return ConvertToNormals(GenerateTerrainMap(texCoords * u_Local9.r));
+#else
 	if (u_Local4.r <= 0.0)
 	{
 		return ConvertToNormals(texture(u_DiffuseMap, texCoords));
 	}
 
 	return texture(u_NormalMap, texCoords);
+#endif
 }
 #endif //!defined(USE_TRI_PLANAR)
 
@@ -680,48 +727,6 @@ void main()
 	}*/
 
 	#if 0
-		#if defined(USE_VERTEX_ANIMATION)
-			gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-
-			#if defined(USE_GLOW_BUFFER)
-				out_Glow = gl_FragColor;
-			#else
-				out_Glow = vec4(0.0);
-			#endif
-
-			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
-			return;
-		#elif defined(USE_SKELETAL_ANIMATION)
-			gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-
-			#if defined(USE_GLOW_BUFFER)
-				out_Glow = gl_FragColor;
-			#else
-				out_Glow = vec4(0.0);
-			#endif
-
-			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
-			return;
-		#elif defined(USE_MODELMATRIX)
-			gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-
-			#if defined(USE_GLOW_BUFFER)
-				out_Glow = gl_FragColor;
-			#else
-				out_Glow = vec4(0.0);
-			#endif
-
-			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-			out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
-			return;
-		#endif
-	#endif
-
-	#if 0
-	//#if defined(USE_TESSELLATION)
-	//if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 32.0)
 	{
 		vec4 nm = GetNormal(texCoords, vec2(0.0), 0.0);
 		gl_FragColor = vec4(nm.xyz, 1.0);
@@ -737,7 +742,6 @@ void main()
 		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 		return;
 	}
-	//#endif //defined(USE_TESSELLATION)
 	#endif
 
 
@@ -797,26 +801,6 @@ void main()
 			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
 			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
-#if 0
-			displacement = ReliefMapping(texCoords, ParallaxXY.xy);
-			vec2 Coord = texCoords.xy + (ParallaxXY.xy * vec2(displacement));
-			ParallaxOffset = texCoords - Coord;
-			texCoords = Coord;
-
-			#if 0
-				gl_FragColor = vec4(vec3(/*GetDepth(texCoords)*/displacement), 1.0);
-
-				#if defined(USE_GLOW_BUFFER)
-					out_Glow = gl_FragColor;
-				#else
-					out_Glow = vec4(0.0);
-				#endif
-
-				out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-				out_Position = vec4(m_vertPos, u_Local1.a );
-				return;
-			#endif
-#else
 			// Steep Parallax
 			float Step = 0.01;
 			vec2 dt = ParallaxXY * Step;
@@ -850,7 +834,6 @@ void main()
 
 			ParallaxOffset = texCoords - Coord;
 			texCoords = Coord;
-#endif
 
 		#endif //defined(FAST_PARALLAX)
 	}
@@ -993,7 +976,7 @@ void main()
 
 		specular.rgb *= u_SpecularScale.rgb;
 
-	#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER)
+	#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER) && !defined(USE_TRI_PLANAR) && !defined(USE_REGIONS)
 		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
 		{
 			float spec = 0.0;

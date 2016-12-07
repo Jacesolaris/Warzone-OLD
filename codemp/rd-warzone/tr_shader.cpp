@@ -6964,6 +6964,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		{
 			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		}
+		else if (material == MATERIAL_ROCK || StringContainsWord(name, "warzone/rocks"))
+		{
+			sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, glowShaderAddition, strippedName);
+		}
 		else if (StringContainsWord(name, "vjun/vj4"))
 		{
 			if (StringContainsWord(name, "vjun/vj4_b"))

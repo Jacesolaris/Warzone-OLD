@@ -2,55 +2,49 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
-      <UniqueIdentifier>{1bb19931-ce8e-4cbd-baee-b0d223940239}</UniqueIdentifier>
+      <UniqueIdentifier>{d110f142-bac0-491a-a5ed-19beec0b341b}</UniqueIdentifier>
       <Extensions>c;cpp;cxx;cc;C</Extensions>
     </Filter>
     <Filter Include="src\bsp">
-      <UniqueIdentifier>{69d9137e-2ec0-463f-a1a2-d2de64eabb03}</UniqueIdentifier>
+      <UniqueIdentifier>{955bbebc-186a-400b-a308-50c0e57dd639}</UniqueIdentifier>
       <Extensions>.c</Extensions>
     </Filter>
     <Filter Include="src\light">
-      <UniqueIdentifier>{a35bb1e6-d0ea-4e77-a7f0-71d29d5b6d69}</UniqueIdentifier>
+      <UniqueIdentifier>{9e3e7c1f-8e60-4f41-abfa-18c4cd4f922f}</UniqueIdentifier>
       <Extensions>.c</Extensions>
     </Filter>
     <Filter Include="src\vis">
-      <UniqueIdentifier>{52070c3f-997c-4403-9035-fb7ddd259ead}</UniqueIdentifier>
+      <UniqueIdentifier>{7d86f08f-e563-4d7e-ae94-eb6d4b3f837b}</UniqueIdentifier>
       <Extensions>.c</Extensions>
     </Filter>
     <Filter Include="src\convert">
-      <UniqueIdentifier>{892c147d-ea64-4e79-b9f7-cf35a3670030}</UniqueIdentifier>
+      <UniqueIdentifier>{6226dfd1-2054-43a8-8862-6bc3c8f7e184}</UniqueIdentifier>
       <Extensions>.c</Extensions>
     </Filter>
     <Filter Include="src\common">
-      <UniqueIdentifier>{9de559c4-2f34-4b44-b042-c8764f8c7cb6}</UniqueIdentifier>
+      <UniqueIdentifier>{39af1dbf-78b4-431a-932b-cc1f8052a04e}</UniqueIdentifier>
       <Extensions>.c</Extensions>
     </Filter>
     <Filter Include="games">
-      <UniqueIdentifier>{1952b1f9-36f0-4ffe-b4ef-466ee4fcda25}</UniqueIdentifier>
+      <UniqueIdentifier>{ac1a843e-8d60-4e83-bb3c-88a6ef481551}</UniqueIdentifier>
     </Filter>
     <Filter Include="include">
-      <UniqueIdentifier>{0aa5ceed-708b-4320-8c48-9b360fb2e0c4}</UniqueIdentifier>
+      <UniqueIdentifier>{40d5e7a1-18a9-4e98-8308-69659922ded2}</UniqueIdentifier>
       <Extensions>h</Extensions>
     </Filter>
     <Filter Include="include\rc">
-      <UniqueIdentifier>{03876845-1f9a-459d-bba2-b9c05b65229e}</UniqueIdentifier>
+      <UniqueIdentifier>{be4c31b9-f3a5-4241-aef6-b7ef75d659dc}</UniqueIdentifier>
       <Extensions>.rc;.ico</Extensions>
     </Filter>
     <Filter Include="include\common">
-      <UniqueIdentifier>{ae428f22-2961-4123-a68e-b63c4d334fc5}</UniqueIdentifier>
+      <UniqueIdentifier>{30ed97c9-859a-4ee4-b84e-316a25e11b01}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\libs">
-      <UniqueIdentifier>{f3411d6d-4ac7-49f1-bbd7-341fa4c218e4}</UniqueIdentifier>
+      <UniqueIdentifier>{4f679940-52d0-4bb8-af42-cf25345e7c45}</UniqueIdentifier>
     </Filter>
     <Filter Include="doc">
-      <UniqueIdentifier>{a1519fe6-3108-4d85-85c4-b99fdf647186}</UniqueIdentifier>
+      <UniqueIdentifier>{326a29d5-9e8c-4e4e-8879-e4b4d688266e}</UniqueIdentifier>
       <Extensions>*.txt</Extensions>
-    </Filter>
-    <Filter Include="src\meshdecimate">
-      <UniqueIdentifier>{285deb42-676a-4af4-912c-73d803bacfa9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\meshsimplify">
-      <UniqueIdentifier>{dae86a04-ddd7-48fa-b39d-e285b8a1a5f8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -210,15 +204,6 @@
     <ClCompile Include="..\src\inifile.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\q3map3_cl.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\meshdecimation\mdMeshDecimator.cpp">
-      <Filter>src\meshdecimate</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\meshdecimation\decimateMain.cpp">
-      <Filter>src\meshdecimate</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\games\darkplaces.h">
@@ -326,48 +311,31 @@
     <ClInclude Include="..\src\inifile.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\q3map3_cl.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\meshdecimation\mdMeshDecimator.h">
-      <Filter>src\meshdecimate</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\meshdecimation\mdSArray.h">
-      <Filter>src\meshdecimate</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\meshdecimation\mdVector.h">
-      <Filter>src\meshdecimate</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\meshsimplification\simplify.h">
-      <Filter>src\meshsimplify</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\bloodmap.ico">
+    <Image Include="..\src\bloodmap.ico">
       <Filter>include\rc</Filter>
-    </None>
-    <None Include="..\changelog.q3map2.txt">
-      <Filter>doc</Filter>
-    </None>
-    <None Include="..\changelog.q3map2_fs.txt">
-      <Filter>doc</Filter>
-    </None>
-    <None Include="compile_notes.txt">
-      <Filter>doc</Filter>
-    </None>
-    <None Include="..\README">
-      <Filter>doc</Filter>
-    </None>
-    <None Include="..\src\radiosity_kernel.cl" />
-    <None Include="..\src\trace_kernel.cl" />
-    <None Include="..\src\vector_math.cl" />
-    <None Include="..\src\meshdecimation\mdVector.inl">
-      <Filter>src\meshdecimate</Filter>
-    </None>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\bloodmap.rc">
       <Filter>include\rc</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\changelog.q3map2.txt">
+      <Filter>doc</Filter>
+    </Text>
+    <Text Include="..\changelog.q3map2_fs.txt">
+      <Filter>doc</Filter>
+    </Text>
+    <Text Include="compile_notes.txt">
+      <Filter>doc</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README">
+      <Filter>doc</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -144,23 +144,11 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 }
 #endif //defined(USE_TCMOD)
 
-#if defined(USE_TRI_PLANAR)
+#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 void GetBlending(vec3 normal)
 {
 	if (u_Local5.a > 0.0)
 	{// Steep maps...
-		/*
-		// Raise each component of normal vector to 4th power.
-		//vec3 blend = abs(normalize(normal));
-		vec3 blend = clamp(abs(normalize(normal)) - 0.5,0.0,1.0);
-		blend *= blend;
-		blend *= blend;
-
-		// Normalize result by dividing by the sum of its components.
-		blend /= dot(blend, vec3(1.0, 1.0, 1.0));
-		var_Blending = blend;
-		*/
-
 		vec3 blend_weights = abs(normalize(normal.xyz));   // Tighten up the blending zone:
 		blend_weights = (blend_weights - 0.2) * 7.0;
 		blend_weights = max(blend_weights, 0.0);      // Force weights to sum to 1.0 (very important!)
@@ -168,7 +156,7 @@ void GetBlending(vec3 normal)
 		var_Blending = blend_weights;
 	}
 }
-#endif //defined(USE_TRI_PLANAR)
+#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
 #if defined(USE_TRI_PLANAR)
 vec3 vectoangles(in vec3 value1) {
@@ -368,11 +356,11 @@ void main()
 
 	var_Blending = vec3(0.0);
 
-#if defined(USE_TRI_PLANAR)
+#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
 	GetBlending(normalize(attr_Normal.xyz * 2.0 - 1.0));
 
-#endif //defined(USE_TRI_PLANAR)
+#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, attr_Normal.xyz * 2.0 - 1.0);

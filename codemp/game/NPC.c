@@ -3371,6 +3371,8 @@ qboolean NPC_CheckFallPositionOK (gentity_t *NPC, vec3_t position)
 	return qtrue;
 }
 
+//#define __NPC_EXTENDED_FALL_CHECKING__
+
 qboolean NPC_CheckFall (gentity_t *NPC, vec3_t dir)
 {
 	vec3_t forwardPos;
@@ -3390,6 +3392,7 @@ qboolean NPC_CheckFall (gentity_t *NPC, vec3_t dir)
 		return qtrue;
 	}
 
+#ifdef __NPC_EXTENDED_FALL_CHECKING__
 	VectorMA( NPC->r.currentOrigin, 32, dir, forwardPos );
 	forwardPos[2]+=16.0;
 
@@ -3413,6 +3416,7 @@ qboolean NPC_CheckFall (gentity_t *NPC, vec3_t dir)
 	{
 		return qtrue;
 	}
+#endif //__NPC_EXTENDED_FALL_CHECKING__
 
 	return qfalse;
 }
@@ -3733,7 +3737,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	cmd->forwardmove = floor(fDot);
 	cmd->rightmove = floor(rDot);
 
-	if (trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER)
+	if (/*trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER*/self->waterlevel > 0)
 	{// Always go to surface...
 		cmd->upmove = 127.0;
 	}

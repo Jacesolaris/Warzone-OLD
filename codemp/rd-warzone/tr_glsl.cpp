@@ -2863,6 +2863,12 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_TRI_PLANAR\n");
 		}
 
+		if (i & LIGHTDEF_USE_REGIONS)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_REGIONS\n");
+		}
+		
+
 		if (i & LIGHTDEF_USE_SHADOWMAP)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");

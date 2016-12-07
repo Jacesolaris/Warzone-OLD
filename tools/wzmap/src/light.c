@@ -2634,6 +2634,7 @@ int LightMain( int argc, char **argv )
 	if( lightAngleHL )
 		Sys_Printf( " half lambert light angle attenuation enabled \n" );
 
+#ifdef __USE_OPENCL__
 	if(gpu == qtrue) {
 		/*load the source code for the ocl kernels used in the lighting phase of compilation*/
 		LoadProgramSource("radiosity_kernel.cl"); 
@@ -2650,8 +2651,8 @@ int LightMain( int argc, char **argv )
 		}else{
 			Sys_Printf("something failed along the way\n"); 
 		}
-		
 	}
+#endif //__USE_OPENCL__
 
 	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	

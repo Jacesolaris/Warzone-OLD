@@ -37,6 +37,7 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 #include "q3map2.h"
 
 
+extern void GenerateCliffFaces ( void );
 extern void GenerateMapForest ( void );
 
 
@@ -553,6 +554,12 @@ void ProcessWorldModel( void )
 	
 	/* flood from entities */
 	FloodAreas( tree );
+
+	/* UQ1: Generate experimental procedural cliff faces */
+	GenerateCliffFaces();
+
+	/* UQ1: Generate experimental procedural trees/etc */
+	GenerateMapForest();
 	
 	/* create drawsurfs for triangle models */
 	AddTriangleModels( 0, qfalse, qfalse );
