@@ -1,8 +1,0 @@
-FxRunner
-{
-
-	playfx
-	[
-		blasters/shot_yellow_big
-	]
-}

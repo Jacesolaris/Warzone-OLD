@@ -1,9 +1,0 @@
-FxRunner
-{
-	name				Let's use the same good effect for both!
-
-	playfx
-	[
-		force/confusion.efx
-	]
-}

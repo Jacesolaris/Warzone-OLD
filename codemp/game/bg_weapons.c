@@ -166,15 +166,15 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Proton Carbine Rifle",						350,		275,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
 	{ "DH-17 Pistol",								325,		275,			0,      			DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	PISTOL_DMG,		PISTOL_DMG,			PISTOL_SPEED,		PISTOL_ACCURACY,		0,				0,				0,				200,				0,			3,				0,			1700	},
 	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss - UQ1: Grenades should be below here.
-	{ "Merr-Sonn Missile System",					3000,		5000,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				0,						65,				160,			0,				0,					0,			0,				0,			0		},
-	{ "Thermal Detonator",							800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Frag Grenade",								800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Old Frag Grenade",							800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "CryoBan Grenade",							800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
-	{ "Trip Mine",									800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},	
-	{ "Det Pack",									800,		400,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Emplaced Gun",								100,		100,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
-	{ "Turret",										100,		100,			0,				DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Merr-Sonn Missile System",					3000,		5000,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	ROCKET_DAMAGE,	ROCKET_DAMAGE,		1100,				0,						65,				160,			0,				0,					0,			0,				0,			0		},
+	{ "Thermal Detonator",							800,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Frag Grenade",								800,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Old Frag Grenade",							800,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "CryoBan Grenade",							800,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						90,				128,			0,				0,					0,			0,				0,			0		},
+	{ "Trip Mine",									800,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},	
+	{ "Det Pack",									800,		400,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	GRENADE_DAMAGE,	GRENADE_DAMAGE,		GRENADE_SPEED,		0,						0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Emplaced Gun",								100,		100,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
+	{ "Turret",										100,		100,			0,					DEFAULT_BURST_DELAY,	  DEFAULT_BURST_SHOT,	BLASTER_DAMAGE, BLASTER_DAMAGE,		BLASTER_SPEED,		BLASTER_ACCURACY,		0,				0,				0,				0,					0,			0,				0,			0		},
 
 	};
 

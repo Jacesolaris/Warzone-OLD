@@ -1,8 +1,0 @@
-FxRunner
-{
-
-	playfx
-	[
-		explosives/concussion1medium
-	]
-}

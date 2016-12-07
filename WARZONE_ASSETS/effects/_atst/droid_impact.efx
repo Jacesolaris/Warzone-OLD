@@ -1,9 +1,0 @@
-FxRunner
-{
-	name				Wallvariants
-
-	playfx
-	[
-		blasters/red_droid_impact
-	]
-}

@@ -1,9 +1,0 @@
-FxRunner
-{
-	name				Explosion
-
-	playfx
-	[
-		explosives/demomedium_delayed
-	]
-}
