@@ -30,6 +30,8 @@ extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 
 qboolean R_CULL_InFOV(vec3_t spot, vec3_t from)
 {
+	//if (tr.viewParms.flags & VPF_SHADOWPASS) return qtrue; // so object still can generate shadows...
+
 	vec3_t	deltaVector, angles, deltaAngles;
 	vec3_t	fromAnglesCopy;
 	vec3_t	fromAngles;

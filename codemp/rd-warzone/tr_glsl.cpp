@@ -2703,8 +2703,8 @@ static bool GLSL_IsValidPermutationForFog(int shaderCaps)
 
 static bool GLSL_IsValidPermutationForLight(int lightType, int shaderCaps)
 {
-	if (!lightType && (shaderCaps & LIGHTDEF_USE_SHADOWMAP))
-		return false;
+	//if (!lightType && (shaderCaps & LIGHTDEF_USE_SHADOWMAP))
+	//	return false;
 
 	return true;
 }
@@ -2869,7 +2869,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 		
 
-		if (i & LIGHTDEF_USE_SHADOWMAP)
+		/*if (i & LIGHTDEF_USE_SHADOWMAP)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
@@ -2877,7 +2877,7 @@ int GLSL_BeginLoadGPUShaders(void)
 				Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
 			else if (r_sunlightMode->integer >= 2)
 				Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
-		}
+		}*/
 
 		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
 		{
@@ -3474,6 +3474,9 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (r_sunlightMode->integer >= 2)
+		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
 	if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader, "deferredLighting", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load deferredLighting shader!");
@@ -3646,9 +3649,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_deluxeSpecular->value > 0.000001f)
 		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
 
+	/*
 	if (r_dlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
+	*/
 	if (1)
 		Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
 
@@ -3672,7 +3676,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_cubeMapping->integer >= 1)
 		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
 
-	Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+	//Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
 	if (r_sunlightMode->integer == 1)
 		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");

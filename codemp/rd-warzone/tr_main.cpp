@@ -1954,7 +1954,7 @@ static void R_AddEntitySurface (int entityNum)
 
 	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
 	{// Don't draw grass and plants on shadow pass for speed...
-		//if (!r_foliageShadows->integer)
+		if (!r_foliageShadows->integer)
 		{
 			switch ( ent->e.reType ) {
 			case RT_GRASS:
@@ -2753,7 +2753,8 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 	if (r_sunlightMode->integer == 2)
 	{
-		lightViewIndependentOfCameraView = qtrue;
+		//lightViewIndependentOfCameraView = qtrue;
+		lightViewIndependentOfCameraView = qfalse;
 
 		splitZNear = r_znear->value;
 		splitZFar  = 4096;

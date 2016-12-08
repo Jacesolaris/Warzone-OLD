@@ -2630,7 +2630,9 @@ const void *RB_PostProcess(const void *data)
 	dstBox[2] = backEnd.viewParms.viewportWidth;
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
-	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))) 
+	if (!(backEnd.refdef.rdflags & RDF_BLUR)
+		&& !(tr.viewParms.flags & VPF_SHADOWPASS)
+		&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		&& !backEnd.depthFill
 		&& (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer || r_bloom->integer))
 	{

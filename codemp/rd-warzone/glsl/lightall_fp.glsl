@@ -867,12 +867,14 @@ void main()
 	#endif
 
 
+	/*
 	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
 
 		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
 		float shadowValue = texture(u_ShadowMap, shadowTex).r;
 
 	#endif //defined(USE_SHADOWMAP)
+	*/
 
 
 
@@ -994,10 +996,12 @@ void main()
 		}
 	#endif
 
+	/*
 	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
 		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
 		gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
 	#endif //defined(USE_SHADOWMAP)
+	*/
 
 	gl_FragColor.rgb *= lightColor;
 

@@ -1370,7 +1370,7 @@ void R_Register( void )
 	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "2", CVAR_ARCHIVE );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", /*"16384.0"*/"8192.0", CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
-	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "1", CVAR_ARCHIVE );
+	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "0", CVAR_ARCHIVE );
 
 	r_pebbles = ri->Cvar_Get("r_pebbles", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_pebblesPasses = ri->Cvar_Get("r_pebblesPasses", "2", CVAR_ARCHIVE);
@@ -1487,8 +1487,8 @@ void R_Register( void )
 	r_sunlightMode = ri->Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_sunlightSpecular = ri->Cvar_Get( "r_sunlightSpecular", "1", CVAR_ARCHIVE );
 
-	r_shadowBlurPasses = ri->Cvar_Get( "r_shadowBlurPasses", "4", CVAR_ARCHIVE );
-	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_shadowBlurPasses = ri->Cvar_Get( "r_shadowBlurPasses", "0", CVAR_ARCHIVE );
+	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "2048", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZNear = ri->Cvar_Get( "r_shadowCascadeZNear", "4", CVAR_ARCHIVE );
 	r_shadowCascadeZFar = ri->Cvar_Get( "r_shadowCascadeZFar", "3072", CVAR_ARCHIVE );

@@ -18,9 +18,11 @@ uniform sampler2D u_DeluxeMap;
 uniform sampler2D u_SpecularMap;
 //#endif
 
+/*
 #if defined(USE_SHADOWMAP)
 uniform sampler2D u_ShadowMap;
 #endif
+*/
 
 #if defined(USE_CUBEMAP)
 #define textureCubeLod textureLod // UQ1: > ver 140 support
@@ -38,7 +40,7 @@ uniform vec3      u_AmbientLight;
 uniform vec4		u_LightOrigin;
 #endif
 
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
+#if defined(USE_PRIMARY_LIGHT) //|| defined(USE_SHADOWMAP)
 uniform vec3  u_PrimaryLightColor;
 uniform vec3  u_PrimaryLightAmbient;
 #endif
@@ -66,7 +68,7 @@ varying vec3   var_Normal;
 
 varying vec3 var_N;
 
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
+#if defined(USE_PRIMARY_LIGHT) //|| defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
 #endif
 

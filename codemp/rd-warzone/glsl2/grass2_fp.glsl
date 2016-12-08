@@ -5,9 +5,11 @@ uniform sampler2D	u_SplatMap1;
 uniform sampler2D	u_SplatMap2;
 uniform sampler2D	u_OverlayMap;
 
+/*
 #if defined(USE_SHADOWMAP)
 uniform sampler2D	u_ShadowMap;
 #endif
+*/
 
 uniform mat4		u_ModelViewProjectionMatrix;
 uniform mat4		u_ModelMatrix;
@@ -64,6 +66,7 @@ void main()
 
 	if (diffuse.a <= 0.0) discard;
 
+	/*
 	#if defined(USE_SHADOWMAP)
 
 		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
@@ -71,6 +74,7 @@ void main()
 		diffuse.rgb *= clamp(shadowValue, 0.4, 1.0);
 
 	#endif //defined(USE_SHADOWMAP)
+	*/
 
 	gl_FragColor = diffuse;
 

@@ -736,11 +736,11 @@ void RE_RenderScene(const refdef_t *fd) {
 	{
 		if (r_sunlightMode->integer == 2)
 		{// Update distance shadows on timers...
-			int nowTime = ri->Milliseconds();
+			//int nowTime = ri->Milliseconds();
 
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
+			//if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
 			{// Close shadows - fast updates...
-				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
+				//NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
 				R_RenderSunShadowMaps(fd, 0);
 			}
 		}

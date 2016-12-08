@@ -6432,11 +6432,12 @@ char uniqueGenericGlow[] = "{\n"\
 
 char uniqueGenericFoliageShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"//q3map_alphashadow\n"\
+"q3map_alphashadow\n"\
 "q3map_material	GreenLeaves\n"\
-"surfaceparm	trans\n"\
-"surfaceparm	noimpact\n"\
-"surfaceparm	nomarks\n"\
+"//surfaceparm	trans\n"\
+"//surfaceparm	noimpact\n"\
+"//surfaceparm	nomarks\n"\
+"surfaceparm	nonsolid\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -6463,7 +6464,7 @@ char uniqueGenericFoliageShader[] = "{\n"\
 
 char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"//q3map_alphashadow\n"\
+"q3map_alphashadow\n"\
 "q3map_material	DryLeaves\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
@@ -6491,8 +6492,8 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "//q3map_alphashadow\n"\
 "q3map_material	solidwood\n"\
-"surfaceparm	noimpact\n"\
-"surfaceparm	nomarks\n"\
+"//surfaceparm	noimpact\n"\
+"//surfaceparm	nomarks\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
@@ -6753,7 +6754,10 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 	else if (StringContainsWord(name, "warzone/foliage") || StringContainsWord(name, "warzone\\foliage"))
 		return qtrue;
 	else if (StringContainsWord(name, "warzone/tree") || StringContainsWord(name, "warzone\\tree"))
-		return qtrue;
+	{
+		if (!StringContainsWord(text, "q3map_material"))
+			return qtrue;
+	}
 	else if ( StringContainsWord(name, "warzone/billboard") || StringContainsWord(name, "warzone\\billboard"))
 		return qtrue;
 	else if (text && (StringsContainWord(name, text, "gfx")))
@@ -6891,7 +6895,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 
 #ifdef ___SHADER_GENERATOR___
-	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && !StringContainsWord(name, "icon"))
+	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) 
+		&& !StringContainsWord(name, "icon"))
 	{
 		char glowShaderAddition[256] = { 0 };
 		int material = DetectMaterialType( name );
@@ -6947,7 +6952,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree")
 			|| StringContainsWord(strippedName, "warzone/deadtree") || StringContainsWord(strippedName, "warzone\\deadtree"))
 		{
-			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
+			if (StringContainsWord(strippedName, "bark") 
+				|| StringContainsWord(strippedName, "trunk") 
+				|| StringContainsWord(strippedName, "giant_tree") 
+				|| StringContainsWord(strippedName, "vine01"))
 				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
 			else
 				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);

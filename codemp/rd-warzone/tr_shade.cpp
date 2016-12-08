@@ -1962,6 +1962,7 @@ continue;
 				}
 			}
 
+			/*
 			if ((r_sunlightMode->integer >= 2)
 				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
 				&& (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES
@@ -1981,6 +1982,7 @@ continue;
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
+			*/
 
 			if (r_lightmap->integer
 				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES
@@ -2125,7 +2127,7 @@ continue;
 			GLSL_BindProgram(sp);
 		}
 
-		if (!sp->tesselation && (tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.depthFill && backEnd.currentEntity == &tr.worldEntity))
+		if (!sp->tesselation && ((tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.depthFill && backEnd.currentEntity == &tr.worldEntity)))
 		{
 			sp = &tr.shadowPassShader;
 			GLSL_BindProgram(sp);
@@ -2221,7 +2223,8 @@ continue;
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
-			stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+			if (!(tr.viewParms.flags & VPF_SHADOWPASS))
+				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
 		}
 
 		{// UQ1: Used by both generic and lightall...
@@ -2279,6 +2282,7 @@ continue;
 				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
 			}
 
+			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			{
 				vec4_t baseColor;
 				vec4_t vertColor;
@@ -2302,24 +2306,27 @@ continue;
 				GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
 			}
 
-			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
+			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			{
-				vec4_t vec;
-
-				VectorScale(backEnd.currentEntity->ambientLight, 1.0f / 255.0f, vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vec);
-
-				VectorScale(backEnd.currentEntity->directedLight, 1.0f / 255.0f, vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vec);
-
-				VectorCopy(backEnd.currentEntity->lightDir, vec);
-				vec[3] = 0.0f;
-				GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
-
-				if (!isGeneric)
+				if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 				{
-					GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+					vec4_t vec;
+
+					VectorScale(backEnd.currentEntity->ambientLight, 1.0f / 255.0f, vec);
+					GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vec);
+
+					VectorScale(backEnd.currentEntity->directedLight, 1.0f / 255.0f, vec);
+					GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vec);
+
+					VectorCopy(backEnd.currentEntity->lightDir, vec);
+					vec[3] = 0.0f;
+					GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
+					GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
+
+					if (!isGeneric)
+					{
+						GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+					}
 				}
 			}
 
@@ -2330,27 +2337,30 @@ continue;
 
 		if (isGeneric)
 		{// UQ1: Only generic uses these...
-			if (pStage->alphaGen == AGEN_PORTAL)
+			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			{
-				GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
-			}
-
-			if (r_fog->integer)
-			{
-				if ( input->fogNum )
+				if (pStage->alphaGen == AGEN_PORTAL)
 				{
-					vec4_t fogColorMask;
-					GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
-					GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
-					GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
-
-					ComputeFogColorMask(pStage, fogColorMask);
-					GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
+					GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
 				}
-			}
 
-			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
-			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
+				if (r_fog->integer)
+				{
+					if (input->fogNum)
+					{
+						vec4_t fogColorMask;
+						GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
+						GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
+						GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
+
+						ComputeFogColorMask(pStage, fogColorMask);
+						GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
+					}
+				}
+
+				GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
+				GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
+			}
 		}
 		else
 		{// UQ1: Only lightall uses these...
@@ -2502,42 +2512,41 @@ continue;
 			}
 		}
 
-		if ( !backEnd.depthFill )
+		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 		{
 			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
-				if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+				/*if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
 				{
 					GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
 				}
 				else
 				{
 					GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-				}
+				}*/
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
 
-				if (pStage->glow && !pStage->glowColorFound)
+				//if (pStage->glow && !pStage->glowColorFound)
 				{// No light added to glow stages...
 					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
 				}
-				else
+				/*else
 				{
 					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
 					GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
 					GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
 					GLSL_SetUniformFloatx16(sp, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
-				}
+				}*/
 			}
 		}
 
-		GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
-
-		if (!backEnd.depthFill)
+		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 		{
+			GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
 			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
 			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
 		}
@@ -2545,7 +2554,16 @@ continue;
 		//
 		// do multitexture
 		//
-		if ( backEnd.depthFill )
+		if (tr.viewParms.flags & VPF_SHADOWPASS)
+		{
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
+			else if (!(pStage->stateBits & GLS_ATEST_BITS))
+				GL_BindToTMU(tr.whiteImage, 0);
+			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
+		}
+		else if (backEnd.depthFill)
 		{
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU( tr.whiteImage, 0 );
@@ -2816,6 +2834,7 @@ continue;
 
 				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
 
+				/*
 				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 				{
 					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
@@ -2827,6 +2846,7 @@ continue;
 						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
 					}
 				}
+				*/
 			}
 			else if (isGrass && passNum > r_foliagePasses->integer && sp3)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
@@ -2875,6 +2895,7 @@ continue;
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
 
+				/*
 				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 				{
 					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
@@ -2886,6 +2907,7 @@ continue;
 						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
 					}
 				}
+				*/
 			}
 			else if (isPebbles && passNum == 1 && sp2)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
@@ -2934,6 +2956,7 @@ continue;
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
 
+				/*
 				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 				{
 					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
@@ -2945,6 +2968,7 @@ continue;
 						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
 					}
 				}
+				*/
 			}
 
 			if ((isGrass || isPebbles) && passNum > 0)
@@ -2953,15 +2977,18 @@ continue;
 			}
 			else
 			{
-				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
+				if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 				{
-					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
-					GL_BindToTMU( pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP );
-				}
-				else
-				{
-					//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
-					GL_BindToTMU( tr.defaultSplatControlImage, TB_SPLATCONTROLMAP ); // really need to make a blured (possibly also considering heightmap) version of this...
+					if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
+					{
+						//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
+						GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
+					}
+					else
+					{
+						//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
+						GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
+					}
 				}
 			}
 
@@ -3115,6 +3142,7 @@ continue;
 		}
 
 		if (backEnd.depthFill)
+		//if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			break;
 	}
 }

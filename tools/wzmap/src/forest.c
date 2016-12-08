@@ -20,6 +20,27 @@ float DistanceHorizontal(const vec3_t p1, const vec3_t p2) {
 	return sqrt(v[0] * v[0] + v[1] * v[1]); //Leave off the z component
 }
 
+//#define QRAND_MAX 32768
+static uint32_t	holdrand = 0x89abcdef;
+
+void Rand_Init(int seed)
+{
+	holdrand = seed;
+}
+
+int irand(int min, int max)
+{
+	int		result;
+
+	//assert((max - min) < QRAND_MAX);
+
+	max++;
+	holdrand = (holdrand * 214013L) + 2531011L;
+	result = holdrand >> 17;
+	result = ((result * (max - min)) >> 15) + min;
+	return(result);
+}
+
 #define			MAX_FOREST_MODELS 64
 
 qboolean		ADD_CLIFF_FACES = qfalse;
@@ -348,7 +369,7 @@ void GenerateCliffFaces(void)
 		SetKeyValue(mapEnt, "classname", "misc_model");
 		classname = ValueForKey(mapEnt, "classname");
 
-		SetKeyValue(mapEnt, "model", "models/warzone/rocks/cliffface01.md3"); // test tree
+		SetKeyValue(mapEnt, "model", va("models/warzone/rocks/cliffface0%i.md3", irand(1,5))); // test tree
 
 		//Sys_Printf( "Generated cliff face at %f %f %f. Angle %f.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2], cliffAngles[i][1] );
 
@@ -487,27 +508,6 @@ void GenerateCliffFaces(void)
 	}
 }
 
-//#define QRAND_MAX 32768
-static uint32_t	holdrand = 0x89abcdef;
-
-void Rand_Init(int seed)
-{
-	holdrand = seed;
-}
-
-int irand(int min, int max)
-{
-	int		result;
-
-	//assert((max - min) < QRAND_MAX);
-
-	max++;
-	holdrand = (holdrand * 214013L) + 2531011L;
-	result = holdrand >> 17;
-	result = ((result * (max - min)) >> 15) + min;
-	return(result);
-}
-
 void ReassignModels ( void )
 {
 	int				i;
@@ -630,7 +630,7 @@ void ReassignModels ( void )
 
 			for (int z = 0; z < numCliffs; z++)
 			{// Also keep them away from cliff objects...
-				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < 512.0)
+				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -747,7 +747,7 @@ void ReassignModels ( void )
 					DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[POSSIBLES[selected]]));
 				*/
 
-				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < 512.0)
+				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;

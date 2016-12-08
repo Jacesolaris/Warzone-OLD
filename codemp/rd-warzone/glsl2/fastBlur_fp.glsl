@@ -5,7 +5,7 @@ uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
 
-#define BLUR_RADIUS 5.0
+#define BLUR_RADIUS 2.0
 
 #define px (1.0/u_Dimensions.x)
 #define py (1.0/u_Dimensions.y)
