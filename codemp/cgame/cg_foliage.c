@@ -622,12 +622,79 @@ qboolean FOLIAGE_In_Bounds(int areaNum, int foliageNum)
 	return qfalse;
 }
 
+qboolean FOLIAGE_LoadFoliageAreas(void)
+{
+	fileHandle_t	f;
+	int				numPositions = 0;
+
+	trap->FS_Open(va("foliage/%s.foliageAreas", cgs.currentmapname), &f, FS_READ);
+
+	if (!f)
+	{
+		return qfalse;
+	}
+
+	trap->FS_Read(&numPositions, sizeof(int), f);
+
+	if (numPositions != FOLIAGE_NUM_POSITIONS)
+	{// Mismatch... Regenerate...
+		return qfalse;
+	}
+
+	trap->FS_Read(&FOLIAGE_AREAS_COUNT, sizeof(FOLIAGE_AREAS_COUNT), f);
+	trap->FS_Read(&FOLIAGE_AREAS_MINS, sizeof(FOLIAGE_AREAS_MINS), f);
+	trap->FS_Read(&FOLIAGE_AREAS_MAXS, sizeof(FOLIAGE_AREAS_MAXS), f);
+
+	trap->FS_Read(&FOLIAGE_AREAS_LIST_COUNT, sizeof(FOLIAGE_AREAS_LIST_COUNT), f);
+	trap->FS_Read(&FOLIAGE_AREAS_LIST, sizeof(FOLIAGE_AREAS_LIST), f);
+
+	trap->FS_Read(&FOLIAGE_AREAS_TREES_LIST_COUNT, sizeof(FOLIAGE_AREAS_TREES_LIST_COUNT), f);
+	trap->FS_Read(&FOLIAGE_AREAS_TREES_LIST, sizeof(FOLIAGE_AREAS_TREES_LIST), f);
+
+	trap->FS_Close(f);
+
+	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliageAreas to foliageArea file ^7foliage/%s.foliageAreas^5.\n", GAME_VERSION, FOLIAGE_AREAS_COUNT, cgs.currentmapname);
+
+	return qtrue;
+}
+
+void FOLIAGE_SaveFoliageAreas(void)
+{
+	fileHandle_t	f;
+
+	trap->FS_Open(va("foliage/%s.foliageAreas", cgs.currentmapname), &f, FS_WRITE);
+
+	if (!f)
+	{
+		trap->Print("^1*** ^3%s^5: Failed to save foliageAreas file ^7foliage/%s.foliageAreas^5 for save.\n", GAME_VERSION, cgs.currentmapname);
+		return;
+	}
+
+	trap->FS_Write(&FOLIAGE_NUM_POSITIONS, sizeof(FOLIAGE_NUM_POSITIONS), f);
+	trap->FS_Write(&FOLIAGE_AREAS_COUNT, sizeof(FOLIAGE_AREAS_COUNT), f);
+	trap->FS_Write(&FOLIAGE_AREAS_MINS, sizeof(FOLIAGE_AREAS_MINS), f);
+	trap->FS_Write(&FOLIAGE_AREAS_MAXS, sizeof(FOLIAGE_AREAS_MAXS), f);
+
+	trap->FS_Write(&FOLIAGE_AREAS_LIST_COUNT, sizeof(FOLIAGE_AREAS_LIST_COUNT), f);
+	trap->FS_Write(&FOLIAGE_AREAS_LIST, sizeof(FOLIAGE_AREAS_LIST), f);
+	
+	trap->FS_Write(&FOLIAGE_AREAS_TREES_LIST_COUNT, sizeof(FOLIAGE_AREAS_TREES_LIST_COUNT), f);
+	trap->FS_Write(&FOLIAGE_AREAS_TREES_LIST, sizeof(FOLIAGE_AREAS_TREES_LIST), f);
+
+	trap->FS_Close(f);
+
+	trap->Print("^1*** ^3%s^5: Successfully saved %i foliageAreas to foliageArea file ^7foliage/%s.foliageAreas^5.\n", GAME_VERSION, FOLIAGE_AREAS_COUNT, cgs.currentmapname);
+}
+
 void FOLIAGE_Setup_Foliage_Areas(void)
 {
 	int		DENSITY_REMOVED = 0;
 	int		ZERO_SCALE_REMOVED = 0;
 	int		areaNum = 0, i = 0;
 	vec3_t	mins, maxs, mapMins, mapMaxs;
+
+	// Try to load previous areas file...
+	if (FOLIAGE_LoadFoliageAreas()) return;
 
 	VectorSet(mapMins, 128000, 128000, 0);
 	VectorSet(mapMaxs, -128000, -128000, 0);
@@ -738,6 +805,9 @@ void FOLIAGE_Setup_Foliage_Areas(void)
 	OLD_FOLIAGE_DENSITY = __FOLIAGE_DENSITY__;
 
 	trap->Print("Generated %i foliage areas. %i used of %i total foliages. %i removed by density setting. %i removed due to zero scale.\n", FOLIAGE_AREAS_COUNT, FOLIAGE_NUM_POSITIONS - DENSITY_REMOVED, FOLIAGE_NUM_POSITIONS, DENSITY_REMOVED, ZERO_SCALE_REMOVED);
+
+	// Save for future use...
+	FOLIAGE_SaveFoliageAreas();
 }
 
 void FOLIAGE_Check_CVar_Change(void)
