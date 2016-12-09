@@ -28,8 +28,5 @@ void main()
 		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 	}
 
-	//if (u_Local6.a > 0.0)
-	{// Shadow pass... Skip the rest...
-		gl_FragColor = texture(u_DiffuseMap, texCoords);
-	}
+	gl_FragColor = texture(u_DiffuseMap, texCoords);
 }

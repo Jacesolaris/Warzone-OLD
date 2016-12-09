@@ -13,7 +13,8 @@ extern qboolean InFOV(vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int
 // =======================================================================================================================================
 
 
-#define			FOLIAGE_MAX_FOLIAGES 2097152
+//#define			FOLIAGE_MAX_FOLIAGES 2097152
+#define			FOLIAGE_MAX_FOLIAGES 4194304
 
 // =======================================================================================================================================
 //
@@ -1436,7 +1437,7 @@ qboolean FOLIAGE_LoadMapClimateInfo(void)
 	return qtrue;
 }
 
-qboolean FOLIAGE_LoadFoliagePositions(void)
+qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 {
 	fileHandle_t	f;
 	int				i = 0;
@@ -1448,7 +1449,10 @@ qboolean FOLIAGE_LoadFoliagePositions(void)
 	int foliageCount = 0;
 #endif //__NO_GRASS__
 
-	trap->FS_Open(va("foliage/%s.foliage", cgs.currentmapname), &f, FS_READ);
+	if (!filename || filename[0] == '0')
+		trap->FS_Open(va("foliage/%s.foliage", cgs.currentmapname), &f, FS_READ);
+	else
+		trap->FS_Open(va("foliage/%s.foliage", filename), &f, FS_READ);
 
 	if (!f)
 	{
@@ -1544,7 +1548,10 @@ qboolean FOLIAGE_LoadFoliagePositions(void)
 		FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname );
 #endif //__NO_GRASS__
 
-	FOLIAGE_Setup_Foliage_Areas();
+	if (!filename || filename[0] == '0')
+	{// Don't need to waste time on this when doing "copy" function...
+		FOLIAGE_Setup_Foliage_Areas();
+	}
 
 	return qtrue;
 }
@@ -1657,7 +1664,7 @@ void FOLIAGE_DrawGrass(void)
 
 	if (!FOLIAGE_LOADED)
 	{
-		FOLIAGE_LoadFoliagePositions();
+		FOLIAGE_LoadFoliagePositions(NULL);
 		FOLIAGE_LOADED = qtrue;
 		FOLIAGE_LoadMapClimateInfo();
 	}
@@ -2343,16 +2350,16 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	trap->UpdateScreen();
 
 
-	//#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 	for (x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += scan_density)
 	{
 		float current;
 		float complete;
-		float y;
+		/*float*/int y;
 
 		if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 		{
-			continue;
+			break;// continue;
 		}
 
 		current = MAP_INFO_SIZE[0] - (mapMaxs[0] - (float)x);
@@ -2367,13 +2374,15 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		else
 			yoff = scan_density * 0.75;
 
-		for (y = mapMins[1]; y <= mapMaxs[1]; y += yoff)
+//#pragma omp parallel for schedule(dynamic)
+		for (y = (int)mapMins[1]; y <= (int)mapMaxs[1]; y += yoff)
 		{
 			float z;
 
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 			{
 				break;
+				//continue;
 			}
 
 			for (z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
@@ -2529,6 +2538,9 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 	{
 		trap->Print("^1*** ^3%s^5: Too many foliage points detected... Try again with a higher density value...\n", GAME_VERSION);
+		trap->S_Shutup(qfalse);
+		aw_percent_complete = 0.0f;
+		trap->UpdateScreen();
 		return;
 	}
 
@@ -2777,6 +2789,42 @@ void FOLIAGE_FoliageRetree(void)
 	FOLIAGE_SaveFoliagePositions();
 }
 
+void FOLIAGE_CopyAndRescale(char *filename, float mapScale, float objectScale)
+{
+	int i = 0;
+
+	if (!FOLIAGE_LoadFoliagePositions(filename))
+	{
+		trap->Print("^1*** ^3%s^5: Error: File does not exist or can not be loaded...\n", GAME_VERSION);
+		return;
+	}
+
+#pragma omp parallel for ordered schedule(dynamic)
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Check current list...
+		FOLIAGE_POSITIONS[i][2] += 18.0; // undo sinking into surface (so the object position is original surface position)...
+		FOLIAGE_POSITIONS[i][0] *= mapScale;
+		FOLIAGE_POSITIONS[i][1] *= mapScale;
+		FOLIAGE_POSITIONS[i][2] *= mapScale;
+		FOLIAGE_POSITIONS[i][2] -= (18.0 * objectScale); // redo sinking into surface...
+		
+		if (FOLIAGE_TREE_SELECTION[i] > 0)
+		{
+			FOLIAGE_TREE_SCALE[i] *= objectScale;
+		}
+
+		if (FOLIAGE_PLANT_SELECTION[i] > 0)
+		{
+			FOLIAGE_PLANT_SCALE[i] *= objectScale;
+		}
+	}
+
+	trap->Print("^1*** ^3%s^5: Successfully copied %i foliages...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS);
+
+	// Save the generated info to a file for next time...
+	FOLIAGE_SaveFoliagePositions();
+}
+
 void FOLIAGE_GenerateFoliage(void)
 {
 	char	str[MAX_TOKEN_CHARS];
@@ -2807,6 +2855,7 @@ void FOLIAGE_GenerateFoliage(void)
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"copy <original_mapname> <mapScale> <objectScale>\" ^5- Copy from another map's foliage file. Scales are optional.\n");
 		trap->UpdateScreen();
 		return;
 	}
@@ -2924,6 +2973,36 @@ void FOLIAGE_GenerateFoliage(void)
 	else if (Q_stricmp(str, "rescale") == 0)
 	{
 		FOLIAGE_FoliageRescale();
+	}
+	else if (Q_stricmp(str, "copy") == 0)
+	{
+		float mapScale = 1.0;
+		float objectScale = 1.0;
+		char name[32] = { 0 };
+
+		if (trap->Cmd_Argc() >= 2)
+		{// Override normal scale...
+			trap->Cmd_Argv(2, str, sizeof(str));
+
+			if (str[0] == '0')
+			{
+				trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5You need to supply the original map name...\n");
+				return;
+			}
+
+			strcpy(name, str);
+
+			trap->Cmd_Argv(3, str, sizeof(str));
+			mapScale = atoi(str);
+
+			trap->Cmd_Argv(4, str, sizeof(str));
+			objectScale = atoi(str);
+
+			if (mapScale <= 0) mapScale = 1;
+			if (objectScale <= 0) objectScale = 1;
+		}
+
+		FOLIAGE_CopyAndRescale(name, mapScale, objectScale);
 	}
 	else if (Q_stricmp(str, "replant") == 0)
 	{

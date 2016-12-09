@@ -617,6 +617,7 @@ void RE_BeginScene(const refdef_t *fd)
 	//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	backEnd.refdef.dlights = tr.refdef.dlights;
 	backEnd.refdef.num_dlights = tr.refdef.num_dlights;
+
 	RB_AddGlowShaderLights();
 	RB_UpdateCloseLights();
 	//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH

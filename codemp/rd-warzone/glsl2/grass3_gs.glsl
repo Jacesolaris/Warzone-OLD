@@ -5,6 +5,8 @@
 //layout(triangles, invocations = 6) in;
 #endif
 
+#define ICR
+
 #define MAX_FOLIAGES			100
 #define MAX_FOLIAGES_LOOP		64
 
@@ -106,74 +108,7 @@ vec4 GetGrassMap(vec3 m_vertPos)
 	return clamp(pow(control, vec4(0.3)) * 0.5, 0.0, 1.0);
 }
 
-#define M_PI		3.14159265358979323846
-
-vec3 VectorMA(vec3 vec1, vec3 scale, vec3 vec2)
-{
-	vec3 vecOut;
-	vecOut.x = vec1.x + scale.x*vec2.x;
-	vecOut.y = vec1.y + scale.y*vec2.y;
-	vecOut.z = vec1.z + scale.z*vec2.z;
-	return vecOut;
-}
-
-#define DEG2RAD( deg ) ( ((deg)*M_PI) / 180.0f )
-
-vec3 VectorRotate(vec3 invec, mat3x3 matrix)
-{
-	vec3 outvec;
-	outvec[0] = dot(invec, matrix[0]);
-	outvec[1] = dot(invec, matrix[1]);
-	outvec[2] = dot(invec, matrix[2]);
-	return outvec;
-}
-
-vec3 RotatePointAroundVector(vec3 dir, vec3 point, float degrees)
-{
-	vec3 dst;
-	mat3x3  m;
-	float   c, s, t;
-
-	degrees = DEG2RAD(degrees);
-	s = sin(degrees);
-	c = cos(degrees);
-	t = 1 - c;
-
-	m[0][0] = t*dir[0] * dir[0] + c;
-	m[0][1] = t*dir[0] * dir[1] + s*dir[2];
-	m[0][2] = t*dir[0] * dir[2] - s*dir[1];
-
-	m[1][0] = t*dir[0] * dir[1] - s*dir[2];
-	m[1][1] = t*dir[1] * dir[1] + c;
-	m[1][2] = t*dir[1] * dir[2] + s*dir[0];
-
-	m[2][0] = t*dir[0] * dir[2] + s*dir[1];
-	m[2][1] = t*dir[1] * dir[2] - s*dir[0];
-	m[2][2] = t*dir[2] * dir[2] + c;
-	dst = VectorRotate(point, m);
-	return dst;
-}
-
-vec3 rotate_point(vec3 pivotPoint, float angle, vec3 point)
-{
-	vec3 p = point;
-	float s = sin(angle);
-	float c = cos(angle);
-
-	// translate point back to origin:
-	p.x -= pivotPoint.x;
-	p.y -= pivotPoint.y;
-
-	// rotate point
-	float xnew = p.x * c - p.y * s;
-	float ynew = p.x * s + p.y * c;
-
-	// translate point back:
-	p.x = xnew + pivotPoint.x;
-	p.y = ynew + pivotPoint.y;
-	return p;
-}
-
+#if defined(ICR)
 bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent)
 {
 	/* create the bounding box of the object */
@@ -215,6 +150,7 @@ bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent)
 
 	return !inFrustum;
 }
+#endif //defined(ICR)
 
 void main()
 {
@@ -249,6 +185,7 @@ void main()
 	}
 
 	// Do some ICR culling on the base surfaces... Save us looping through extra surfaces...
+#if defined(ICR)
 	vec3 maxs;
 	maxs = max(gl_in[0].gl_Position.xyz - Pos, gl_in[1].gl_Position.xyz - Pos);
 	maxs = max(maxs, gl_in[2].gl_Position.xyz - Pos);
@@ -257,6 +194,7 @@ void main()
 	{
 		return;
 	}
+#endif //defined(ICR)
 
 	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 
@@ -283,28 +221,25 @@ void main()
 	vertSizeScale = vertSizeScale * 0.5 + 0.5; // scale down all grass up to 50% on small surfaces...
 
 	int numAddedVerts = 0;
-	int maxAddedVerts = int(float(MAX_FOLIAGES)*USE_DENSITY*densityScale);
+	float maxAddedVerts = float(MAX_FOLIAGES)*USE_DENSITY*densityScale;
+	float maxUnderwaterVerts = float(maxAddedVerts) * 0.05;//0.025;
 
-	for (int x = 0; x < MAX_FOLIAGES_LOOP; x++)
+	vec3 up = vec3(0.0, 0.0, 1.0);
+
+	for (int x = 0; x < MAX_FOLIAGES_LOOP && float(numAddedVerts) < maxAddedVerts; x++)
 	{
-		if (float(numAddedVerts) >= maxAddedVerts)
-		{
-			break;
-		}
-
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
 
-		if (vGrassFieldPos.z < MAP_WATER_LEVEL && float(numAddedVerts) >= float(maxAddedVerts) * 0.025)
+		bool isUnderwaterVert = false;
+
+		if (vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
 		{
-			break;
-		}
+			isUnderwaterVert = true;
 
-		vec4 controlMap = GetGrassMap(vGrassFieldPos);
-		float controlMapScale = length(controlMap.rgb);
-
-		if (controlMapScale < 0.2)//u_Local9.a)
-		{// Check if this area is on the grass map. If not, there is no grass here...
-			continue;
+			if (float(numAddedVerts) >= maxUnderwaterVerts)
+			{
+				break;
+			}
 		}
 
 		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
@@ -314,8 +249,13 @@ void main()
 			continue;
 		}
 
-		//if (controlMap.a > 0.0) // Testing large plants patches when controlMap alpha channel is active...
-		//	controlMapScale += (controlMapScale * controlMap.a); // long grass patch
+		vec4 controlMap = GetGrassMap(vGrassFieldPos);
+		float controlMapScale = length(controlMap.rgb);
+
+		if (controlMapScale < 0.2)
+		{// Check if this area is on the grass map. If not, there is no grass here...
+			continue;
+		}
 
 		// Fill in the smaller size grass around edges (since we just removed the smallest ones)...
 		controlMapScale *= controlMapScale;
@@ -325,9 +265,9 @@ void main()
 
 		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
 		{
-			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)) && vGrassFieldPos.z > MAP_WATER_LEVEL - 256.0)
+			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)) && !isUnderwaterVert)
 				iGrassType = 3;
-			else if (vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
+			else if (isUnderwaterVert)
 				iGrassType = 4;
 			else
 				continue;
@@ -377,16 +317,12 @@ void main()
 
 		float heightMult = 1.0;
 
-		if (iGrassType < 3 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
-		{// When near water edge, reduce the size of the grass...
-			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
-		}
-		else if (iGrassType >= 4 && vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
+		if (isUnderwaterVert)
 		{// Deep underwater plants draw larger but less of them...
 			float heightMultMult = 1.0 + clamp(((MAP_WATER_LEVEL - 256.0) - vGrassFieldPos.z) / 128.0, 0.0, 4.0);
 			heightMult = fGrassPatchWaterEdgeMod * heightMultMult;
 		}
-		else if (iGrassType >= 3 && vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0)
+		else if (vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}
@@ -397,9 +333,6 @@ void main()
 
 		heightMult *= controlMapScale;
 		heightMult *= vertSizeScale; // scale down by up to 50% by original vert size as well...
-
-		//if (PASS_NUMBER > 6.0)
-		//	heightMult *= 0.5;
 
 		float fGrassPatchHeight = (fGrassPatchWaterEdgeMod * 0.25 + 0.75) * heightMult; // use fGrassPatchWaterEdgeMod random to save doing an extra random
 
@@ -413,12 +346,10 @@ void main()
 
 		fWindPower *= fWindStrength;
 
-#if 1
 		float size = fGrassPatchSize*fGrassPatchHeight;
 		vec3 doublesize = vec3(size * 2.0, size * 2.0, size);
 
 		vec3 direction = vec3(randZeroOne(), randZeroOne(), 0.0);
-		vec3 up = vec3(0.0, 0.0, 1.0/*0.5*/);
 		vec3 normalOffset = (normal * vec3(direction.x, direction.y, 1.0));
 
 		vec3 P = vGrassFieldPos.xyz + (up * (size*0.45));
@@ -450,112 +381,5 @@ void main()
 		EndPrimitive();
 
 		numAddedVerts += 4;
-#elif 0
-		//vec3 rotate_point(vec3 pivotPoint, float angle, vec3 point)
-
-		float size = fGrassPatchSize*fGrassPatchHeight;
-		vec3 doublesize = vec3(size * 2.0, size * 2.0, size);
-
-		vec3 direction = vec3(randZeroOne(), randZeroOne(), 0.0);
-		vec3 up = vec3(0.0, 0.0, 1.0/*0.5*/);
-		vec3 normalOffset = (normal * vec3(direction.x, direction.y, 1.0));
-
-		vec3 P = vGrassFieldPos.xyz + (up * (size*0.45));
-
-		vec3 va = P - ((direction + normalOffset) * doublesize);
-		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-		vTexCoord = vec2(0.0, 1.0);
-		vVertPosition = va.xyz;
-		EmitVertex();
-
-		vec3 vb = P - ((direction - normalOffset) * doublesize);
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
-		vTexCoord = vec2(0.0, 0.0);
-		vVertPosition = vb.xyz;
-		EmitVertex();
-
-		vec3 vd = P + ((direction - normalOffset) * doublesize);
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
-		vTexCoord = vec2(1.0, 1.0);
-		vVertPosition = vd.xyz;
-		EmitVertex();
-
-		vec3 vc = P + ((direction + normalOffset) * doublesize);
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
-		vTexCoord = vec2(1.0, 0.0);
-		vVertPosition = vc.xyz;
-		EmitVertex();
-
-		EndPrimitive();
-
-		numAddedVerts += 4;
-
-		va = rotate_point(P, 3.1, P - ((direction + normalOffset) * doublesize));
-		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-		vTexCoord = vec2(0.0, 1.0);
-		vVertPosition = va.xyz;
-		EmitVertex();
-
-		vb = rotate_point(P, 3.1, P - ((direction - normalOffset) * doublesize));
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
-		vTexCoord = vec2(0.0, 0.0);
-		vVertPosition = vb.xyz;
-		EmitVertex();
-
-		vd = rotate_point(P, 3.1, P + ((direction - normalOffset) * doublesize));
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
-		vTexCoord = vec2(1.0, 1.0);
-		vVertPosition = vd.xyz;
-		EmitVertex();
-
-		vc = rotate_point(P, 3.1, P + ((direction + normalOffset) * doublesize));
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
-		vTexCoord = vec2(1.0, 0.0);
-		vVertPosition = vc.xyz;
-		EmitVertex();
-
-		EndPrimitive();
-
-		numAddedVerts += 4;
-#else
-
-		float size = fGrassPatchSize*fGrassPatchHeight;
-		vec3 doublesize = vec3(size * 2.0, size * 2.0, size);
-
-		vec3 direction = vec3(randZeroOne(), randZeroOne(), 0.0) * doublesize;
-		vec3 up = vec3(0.0, 0.0, 1.0);
-
-		vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
-		vec3 P1 = VectorMA(P, direction, normal);
-		vec3 P2 = VectorMA(P, direction, -normal);
-
-		vec3 va = P2 - (up * doublesize);
-		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-		vTexCoord = vec2(0.0, 1.0);
-		vVertPosition = va.xyz;
-		EmitVertex();
-
-		vec3 vb = P2;
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
-		vTexCoord = vec2(0.0, 0.0);
-		vVertPosition = vb.xyz;
-		EmitVertex();
-
-		vec3 vd = P1 - (up * doublesize);
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
-		vTexCoord = vec2(1.0, 1.0);
-		vVertPosition = vd.xyz;
-		EmitVertex();
-
-		vec3 vc = P1;
-		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
-		vTexCoord = vec2(1.0, 0.0);
-		vVertPosition = vc.xyz;
-		EmitVertex();
-
-		EndPrimitive();
-
-		numAddedVerts += 4;
-#endif
 	}
 }

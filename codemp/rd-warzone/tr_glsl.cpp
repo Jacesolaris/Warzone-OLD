@@ -1538,7 +1538,7 @@ char *GLSL_GetHighestSupportedVersion(void)
 			sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
 			else*/ if (glRefConfig.glslMajorVersion >= 4)
 			{
-				sprintf(GLSL_MAX_VERSION, "#version 400 compatibility\n");
+				sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
 				ALLOW_GL_400 = qtrue;
 			}
 			else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 30)
@@ -2972,14 +2972,14 @@ int GLSL_BeginLoadGPUShaders(void)
 			{
 				Q_strcat(extradefines, 1024, "#define USE_400\n");
 
-				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
 				{
 					ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 				}
 			}
 			else
 			{
-				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
 				{
 					ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 				}
@@ -2991,14 +2991,14 @@ int GLSL_BeginLoadGPUShaders(void)
 			{
 				Q_strcat(extradefines, 1024, "#define USE_400\n");
 
-				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
 				{
 					ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 				}
 			}
 			else
 			{
-				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
 				{
 					ri->Error(ERR_FATAL, "Could not load grass2 shader!");
 				}
@@ -3021,14 +3021,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_400\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load pebbles shader!");
 			}
 		}
 		else
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load pebbles shader!");
 			}
