@@ -622,10 +622,14 @@ qboolean FOLIAGE_In_Bounds(int areaNum, int foliageNum)
 	return qfalse;
 }
 
+const int FOLIAGE_AREA_FILE_VERSION = 1;
+
 qboolean FOLIAGE_LoadFoliageAreas(void)
 {
 	fileHandle_t	f;
 	int				numPositions = 0;
+	int				i = 0;
+	int				version = 0;
 
 	trap->FS_Open(va("foliage/%s.foliageAreas", cgs.currentmapname), &f, FS_READ);
 
@@ -634,22 +638,35 @@ qboolean FOLIAGE_LoadFoliageAreas(void)
 		return qfalse;
 	}
 
+	trap->FS_Read(&version, sizeof(int), f);
+
+	if (version != FOLIAGE_AREA_FILE_VERSION)
+	{// Old version... Update...
+		trap->FS_Close(f);
+		return qfalse;
+	}
+
 	trap->FS_Read(&numPositions, sizeof(int), f);
 
 	if (numPositions != FOLIAGE_NUM_POSITIONS)
 	{// Mismatch... Regenerate...
+		trap->FS_Close(f);
 		return qfalse;
 	}
 
-	trap->FS_Read(&FOLIAGE_AREAS_COUNT, sizeof(FOLIAGE_AREAS_COUNT), f);
-	trap->FS_Read(&FOLIAGE_AREAS_MINS, sizeof(FOLIAGE_AREAS_MINS), f);
-	trap->FS_Read(&FOLIAGE_AREAS_MAXS, sizeof(FOLIAGE_AREAS_MAXS), f);
+	trap->FS_Read(&FOLIAGE_AREAS_COUNT, sizeof(int), f);
 
-	trap->FS_Read(&FOLIAGE_AREAS_LIST_COUNT, sizeof(FOLIAGE_AREAS_LIST_COUNT), f);
-	trap->FS_Read(&FOLIAGE_AREAS_LIST, sizeof(FOLIAGE_AREAS_LIST), f);
+	for (i = 0; i < FOLIAGE_AREAS_COUNT; i++)
+	{
+		trap->FS_Read(&FOLIAGE_AREAS_MINS[i], sizeof(vec3_t), f);
+		trap->FS_Read(&FOLIAGE_AREAS_MAXS[i], sizeof(vec3_t), f);
 
-	trap->FS_Read(&FOLIAGE_AREAS_TREES_LIST_COUNT, sizeof(FOLIAGE_AREAS_TREES_LIST_COUNT), f);
-	trap->FS_Read(&FOLIAGE_AREAS_TREES_LIST, sizeof(FOLIAGE_AREAS_TREES_LIST), f);
+		trap->FS_Read(&FOLIAGE_AREAS_LIST_COUNT[i], sizeof(int), f);
+		trap->FS_Read(&FOLIAGE_AREAS_LIST[i], sizeof(int)*FOLIAGE_AREAS_LIST_COUNT[i], f);
+
+		trap->FS_Read(&FOLIAGE_AREAS_TREES_LIST_COUNT[i], sizeof(int), f);
+		trap->FS_Read(&FOLIAGE_AREAS_TREES_LIST[i], sizeof(int)*FOLIAGE_AREAS_TREES_LIST_COUNT[i], f);
+	}
 
 	trap->FS_Close(f);
 
@@ -661,6 +678,7 @@ qboolean FOLIAGE_LoadFoliageAreas(void)
 void FOLIAGE_SaveFoliageAreas(void)
 {
 	fileHandle_t	f;
+	int				i = 0;
 
 	trap->FS_Open(va("foliage/%s.foliageAreas", cgs.currentmapname), &f, FS_WRITE);
 
@@ -670,16 +688,23 @@ void FOLIAGE_SaveFoliageAreas(void)
 		return;
 	}
 
-	trap->FS_Write(&FOLIAGE_NUM_POSITIONS, sizeof(FOLIAGE_NUM_POSITIONS), f);
-	trap->FS_Write(&FOLIAGE_AREAS_COUNT, sizeof(FOLIAGE_AREAS_COUNT), f);
-	trap->FS_Write(&FOLIAGE_AREAS_MINS, sizeof(FOLIAGE_AREAS_MINS), f);
-	trap->FS_Write(&FOLIAGE_AREAS_MAXS, sizeof(FOLIAGE_AREAS_MAXS), f);
+	trap->FS_Write(&FOLIAGE_AREA_FILE_VERSION, sizeof(int), f);
 
-	trap->FS_Write(&FOLIAGE_AREAS_LIST_COUNT, sizeof(FOLIAGE_AREAS_LIST_COUNT), f);
-	trap->FS_Write(&FOLIAGE_AREAS_LIST, sizeof(FOLIAGE_AREAS_LIST), f);
-	
-	trap->FS_Write(&FOLIAGE_AREAS_TREES_LIST_COUNT, sizeof(FOLIAGE_AREAS_TREES_LIST_COUNT), f);
-	trap->FS_Write(&FOLIAGE_AREAS_TREES_LIST, sizeof(FOLIAGE_AREAS_TREES_LIST), f);
+	trap->FS_Write(&FOLIAGE_NUM_POSITIONS, sizeof(int), f);
+
+	trap->FS_Write(&FOLIAGE_AREAS_COUNT, sizeof(int), f);
+
+	for (i = 0; i < FOLIAGE_AREAS_COUNT; i++)
+	{
+		trap->FS_Write(&FOLIAGE_AREAS_MINS[i], sizeof(vec3_t), f);
+		trap->FS_Write(&FOLIAGE_AREAS_MAXS[i], sizeof(vec3_t), f);
+
+		trap->FS_Write(&FOLIAGE_AREAS_LIST_COUNT[i], sizeof(int), f);
+		trap->FS_Write(&FOLIAGE_AREAS_LIST[i], sizeof(int)*FOLIAGE_AREAS_LIST_COUNT[i], f);
+
+		trap->FS_Write(&FOLIAGE_AREAS_TREES_LIST_COUNT[i], sizeof(int), f);
+		trap->FS_Write(&FOLIAGE_AREAS_TREES_LIST[i], sizeof(int)*FOLIAGE_AREAS_TREES_LIST_COUNT[i], f);
+	}
 
 	trap->FS_Close(f);
 
