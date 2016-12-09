@@ -339,6 +339,18 @@ static void GLW_CreatePFD( PIXELFORMATDESCRIPTOR *pPFD, int colorbits, int depth
 /*
 ** GLW_MakeContext
 */
+
+void GetGLVersion(int *majorVersion, int *minorVersion) {
+	const char* version;
+	version = (const char*)qglGetString(GL_VERSION);
+	*majorVersion = atoi(version);
+	version = strchr(version, '.');
+	version++;
+	*minorVersion = atoi(version);
+}
+
+typedef HGLRC(WINAPI * PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC hDC, HGLRC hShareContext, const int *attribList);
+
 static int GLW_MakeContext( PIXELFORMATDESCRIPTOR *pPFD )
 {
 	int pixelformat;
@@ -385,6 +397,53 @@ static int GLW_MakeContext( PIXELFORMATDESCRIPTOR *pPFD )
 			return TRY_PFD_FAIL_HARD;
 		}
 		Com_Printf ("succeeded\n" );
+
+		// --- OpenGL 3.x-4.x ---
+		qwglMakeCurrent(glw_state.hDC, glw_state.hGLRC);
+
+		int major, minor;
+		GetGLVersion(&major, &minor);
+
+		Com_Printf("...OpenGL Version: Major %i. Minor %i.\n", major, minor);
+
+		/*int attribs[] =
+		{
+			WGL_CONTEXT_MAJOR_VERSION_ARB, major,
+			WGL_CONTEXT_MINOR_VERSION_ARB, minor,
+			WGL_CONTEXT_FLAGS_ARB,
+			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
+			WGL_CONTEXT_PROFILE_MASK_ARB,
+			WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+			0
+		};*/
+
+		// Set the 4.0 version of OpenGL in the attribute list.
+		/*
+		int attribs[] =
+		{
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+
+			0,
+			0,
+			0,
+			WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+			// Null terminate the attribute list.
+			0
+		};
+		*/
+
+		int attribs[] =
+		{
+			0
+		};
+
+		PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)qwglGetProcAddress("wglCreateContextAttribsARB");
+		
+		if (wglCreateContextAttribsARB != NULL)
+		{
+			glw_state.hGLRC = wglCreateContextAttribsARB(glw_state.hDC, 0, attribs);
+		}
 
 		Com_Printf ("...making context current: " );
 		if ( !qwglMakeCurrent( glw_state.hDC, glw_state.hGLRC ) )

@@ -14,7 +14,6 @@ extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir
 //extern qboolean NPC_CoverpointVisible ( gentity_t *NPC, int coverWP );
 extern int DOM_GetRandomCloseWP(vec3_t org, int badwp, int unused);
 extern int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp);
-extern int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp);
 extern int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp);
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 extern void ST_Speech( gentity_t *self, int speechType, float failChance );

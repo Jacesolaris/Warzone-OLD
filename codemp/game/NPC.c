@@ -4255,13 +4255,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPCS.ucmd.buttons |= BUTTON_WALKING;
 			}
 
-			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time - 8000 < level.time)
+			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time - 8000 < level.time && NPC_IsAlive(self->padawan))
 			{// Look at the padawan when it is talking to us...
 				NPC_FacePosition( self->padawan->r.currentOrigin, qfalse );
 				self->beStillTime = level.time + 5000;
 			}
 
-			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time < level.time)
+			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time < level.time && NPC_IsAlive(self->padawan))
 			{// Do any replies to padawan comments...
 				self->padawan_reply_waiting = qfalse;
 				//G_AddEvent( self, EV_PADAWAN_IDLE_REPLY, 0 );
@@ -4287,7 +4287,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (self->beStillTime > level.time && (!self->enemy || !NPC_ValidEnemy(self->enemy)))
 			{// Just idle...
-				if (self->padawan)
+				if (self->padawan && NPC_IsAlive(self->padawan))
 				{// Look at our padawan...
 					vec3_t origin, angles;
 					VectorCopy(self->padawan->r.currentOrigin, origin);
