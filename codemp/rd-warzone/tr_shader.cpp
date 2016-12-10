@@ -6809,6 +6809,11 @@ most world construction surfaces.
 ===============
 */
 
+#include "../client/tinythread.h"
+#include "../client/fast_mutex.h"
+using namespace tthread;
+tthread::fast_mutex findshader_lock;
+
 shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
 	int			hash, flags;
@@ -7159,6 +7164,7 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, const int *lightmapIndexe
 	//
 	// see if the shader is already loaded
 	//
+
 	for (sh=hashTable[hash]; sh; sh=sh->next) {
 		// NOTE: if there was no shader or image available with the name strippedName
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
@@ -7227,7 +7233,7 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, const int *lightmapIndexe
 	}
 
 	sh = FinishShader();
-  return sh->index;
+	return sh->index;
 }
 
 

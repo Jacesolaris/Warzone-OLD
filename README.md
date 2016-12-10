@@ -18,9 +18,9 @@
                                    WARZONE:
                                    ========
 
+                                   EpicLoyd
                                     Stoiss
                                   Unique One
-                                   EpicLoyd
 
 
                                    OPEN-JK:

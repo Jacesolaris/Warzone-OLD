@@ -3216,7 +3216,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	//
 	// load the pic from disk
 	//
-	R_LoadImage( name, &pic, &width, &height );
+#pragma omp critical
+	{
+		R_LoadImage(name, &pic, &width, &height);
+	}
 
 	if ( pic == NULL ) {
 		return NULL;
