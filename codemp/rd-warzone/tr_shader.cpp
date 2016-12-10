@@ -6755,7 +6755,7 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 		return qtrue;
 	else if (StringContainsWord(name, "warzone/tree") || StringContainsWord(name, "warzone\\tree"))
 	{
-		if (!StringContainsWord(text, "q3map_material"))
+		if (text && !StringContainsWord(text, "q3map_material"))
 			return qtrue;
 	}
 	else if ( StringContainsWord(name, "warzone/billboard") || StringContainsWord(name, "warzone\\billboard"))

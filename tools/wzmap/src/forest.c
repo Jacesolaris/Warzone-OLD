@@ -44,6 +44,7 @@ int irand(int min, int max)
 #define			MAX_FOREST_MODELS 64
 
 qboolean		ADD_CLIFF_FACES = qfalse;
+char			CLIFF_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
 char			TREE_MODELS[MAX_FOREST_MODELS][128] = { 0 };
 float			TREE_OFFSETS[MAX_FOREST_MODELS] = { -4.0 };
@@ -51,17 +52,29 @@ float			TREE_SCALES[MAX_FOREST_MODELS] = { 1.0 };
 float			TREE_FORCED_MAX_ANGLE[MAX_FOREST_MODELS] = { 0.0 };
 float			TREE_FORCED_BUFFER_DISTANCE[MAX_FOREST_MODELS] = { 0.0 };
 float			TREE_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
+qboolean		TREE_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { qfalse };
 
 void FOLIAGE_LoadClimateData( char *filename )
 {
 	int i = 0;
 
 	ADD_CLIFF_FACES = (qboolean)atoi(IniRead(filename, "CLIFFS", "addCliffFaces", "0"));
+	strcpy(CLIFF_SHADER, IniRead(filename, "CLIFFS", "cliffShader", ""));
+
+	if (CLIFF_SHADER[0] != '\0')
+	{
+		Sys_Printf("Using climate specified cliff face shader: [%s].\n", CLIFF_SHADER);
+	}
+	else
+	{
+		strcpy(CLIFF_SHADER, "models/warzone/rocks/mountainpeak01");
+		Sys_Printf("Using default cliff face shader: [%s].\n", CLIFF_SHADER);
+	}
 
 	// Read all the tree info from the new .climate ini files...
 	TREE_SCALE_MULTIPLIER = atof(IniRead(filename, "TREES", "treeScaleMultiplier", "1.0"));
 
-	Sys_Printf("Tree scale for this climate is %f.\n", TREE_SCALE_MULTIPLIER);
+	//Sys_Printf("Tree scale for this climate is %f.\n", TREE_SCALE_MULTIPLIER);
 
 	for (i = 0; i < MAX_FOREST_MODELS; i++)
 	{
@@ -71,9 +84,10 @@ void FOLIAGE_LoadClimateData( char *filename )
 		TREE_FORCED_MAX_ANGLE[i] = atof(IniRead(filename, "TREES", va("treeForcedMaxAngle%i", i), "0.0"));
 		TREE_FORCED_BUFFER_DISTANCE[i] = atof(IniRead(filename, "TREES", va("treeForcedBufferDistance%i", i), "0.0"));
 		TREE_FORCED_DISTANCE_FROM_SAME[i] = atof(IniRead(filename, "TREES", va("treeForcedDistanceFromSame%i", i), "0.0"));
+		TREE_FORCED_FULLSOLID[i] = (qboolean)atoi(IniRead(filename, "TREES", va("treeForcedFullSolid%i", i), "0.0"));
 
 		if (strcmp(TREE_MODELS[i], ""))
-			Sys_Printf("Tree %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f.\n", i, TREE_MODELS[i], TREE_OFFSETS[i], TREE_SCALES[i], TREE_FORCED_MAX_ANGLE[i], TREE_FORCED_BUFFER_DISTANCE[i], TREE_FORCED_DISTANCE_FROM_SAME[i]);
+			Sys_Printf("Tree %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f. ForcedSolid: %s.\n", i, TREE_MODELS[i], TREE_OFFSETS[i], TREE_SCALES[i], TREE_FORCED_MAX_ANGLE[i], TREE_FORCED_BUFFER_DISTANCE[i], TREE_FORCED_DISTANCE_FROM_SAME[i], TREE_FORCED_FULLSOLID[i] ? "true" : "false");
 	}
 }
 
@@ -365,6 +379,13 @@ void GenerateCliffFaces(void)
 			SetKeyValue(mapEnt, "angle", str);
 		}
 
+		if (CLIFF_SHADER[0] != '\0')
+		{
+			SetKeyValue(mapEnt, "_overrideShader", CLIFF_SHADER);
+		}
+
+		
+
 		/* ydnar: get classname */
 		SetKeyValue(mapEnt, "classname", "misc_model");
 		classname = ValueForKey(mapEnt, "classname");
@@ -413,8 +434,10 @@ void GenerateCliffFaces(void)
 
 		/* ydnar: get cel shader :) for this entity */
 		value = ValueForKey(mapEnt, "_celshader");
+
 		if (value[0] == '\0')
 			value = ValueForKey(&entities[0], "_celshader");
+
 		if (value[0] != '\0')
 		{
 			sprintf(shader, "textures/%s", value);
@@ -878,6 +901,11 @@ void GenerateMapForest ( void )
 					char str[32];
 					sprintf( str, "%f", FOLIAGE_TREE_ANGLES[i] );
 					SetKeyValue( mapEnt, "angle", str );
+				}
+
+				if (TREE_FORCED_FULLSOLID[FOLIAGE_TREE_SELECTION[i]])
+				{
+					SetKeyValue(mapEnt, "_forcedSolid", "1");
 				}
 
 				/*{

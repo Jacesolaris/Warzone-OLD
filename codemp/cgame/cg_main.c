@@ -901,7 +901,7 @@ static void CG_RegisterSounds( void ) {
 		trap->S_StartBackgroundTrack( "music/mp/duel.mp3", "music/mp/duel.mp3", qfalse );
 	}
 
-	cg.loadLCARSStage = 1;
+	//cg.loadLCARSStage = 1;
 
 	cgs.media.selectSound = trap->S_RegisterSound( "sound/weapons/change.wav" );
 
@@ -1109,7 +1109,7 @@ static void CG_RegisterSounds( void ) {
 		}
 	}
 
-	cg.loadLCARSStage = 2;
+	//cg.loadLCARSStage = 2;
 
 	// FIXME: only needed with item
 	cgs.media.deploySeeker = trap->S_RegisterSound ("sound/chars/seeker/misc/hiss");
@@ -1505,7 +1505,7 @@ static void CG_RegisterGameAssets( void ) {
 		}
 #pragma omp section
 		{// UQ1: This is the slowest section, so I will do percentage complete bar here (cg.loadLCARSStage)...
-			cg.loadLCARSStage = 3;
+			cg.loadLCARSStage = 1;
 
 			for (i = 1; i < MAX_MODELS; i++)
 			{
@@ -1534,7 +1534,7 @@ static void CG_RegisterGameAssets( void ) {
 				}
 			}
 
-			cg.loadLCARSStage = 4;
+			cg.loadLCARSStage = 2;
 
 			cgs.media.itemHoloModel = trap->R_RegisterModel("models/map_objects/mp/holo.md3");
 
@@ -1550,7 +1550,7 @@ static void CG_RegisterGameAssets( void ) {
 				}
 			}
 
-			cg.loadLCARSStage = 5;
+			cg.loadLCARSStage = 3;
 
 			if (cgs.gametype == GT_CTF || cgs.gametype == GT_CTY || com_buildScript.integer) {
 				if (com_buildScript.integer)
@@ -1573,7 +1573,7 @@ static void CG_RegisterGameAssets( void ) {
 				}
 			}
 
-			cg.loadLCARSStage = 6;
+			cg.loadLCARSStage = 4;
 
 			// Chunk models
 			//FIXME: jfm:? bother to conditionally load these if an ent has this material type?
@@ -1590,12 +1590,15 @@ static void CG_RegisterGameAssets( void ) {
 			}
 
 
-			cg.loadLCARSStage = 7;
+			cg.loadLCARSStage = 5;
 
 			/*
 			Ghoul2 Insert Start
 			*/
 			CG_InitItems();
+
+			cg.loadLCARSStage = 6;
+
 			/*
 			Ghoul2 Insert End
 			*/
@@ -1611,7 +1614,7 @@ static void CG_RegisterGameAssets( void ) {
 				}
 			}
 
-			cg.loadLCARSStage = 8;
+			cg.loadLCARSStage = 7;
 
 			// register the inline models
 			breakPoint = cgs.numInlineModels = trap->CM_NumInlineModels();
@@ -1634,7 +1637,7 @@ static void CG_RegisterGameAssets( void ) {
 				}
 			}
 
-			cg.loadLCARSStage = 9;
+			cg.loadLCARSStage = 8;
 
 			//rww - removed and replaced with CS_G2BONES. For custom skins
 			//the new method is to append a * after an indexed model name and
@@ -1951,6 +1954,8 @@ static void CG_RegisterGameAssets( void ) {
 			CG_AtmosphericKludge();
 		}
 	}
+
+	cg.loadLCARSStage = 9;
 }
 
 const char *CG_GetStringEdString(char *refSection, char *refName)

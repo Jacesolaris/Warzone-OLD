@@ -1,6 +1,6 @@
 #pragma once
 
-#define MAX_LINE_LENGTH    80
+#define MAX_LINE_LENGTH    8192
 
 int get_private_profile_string(char *, char *, char *, char *, int, char *);
 int write_private_profile_string(char *, char *, char *, char *);

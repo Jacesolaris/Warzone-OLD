@@ -2097,7 +2097,8 @@ static void R_AddEntitySurface (int entityNum)
 				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 				break;
 			default:
-				ri->Error( ERR_DROP, "R_AddEntitySurfaces: Bad modeltype" );
+				//ri->Error( ERR_DROP, "R_AddEntitySurfaces: Bad modeltype" );
+				assert(0);
 				break;
 			}
 		}

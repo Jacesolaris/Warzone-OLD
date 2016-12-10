@@ -325,7 +325,7 @@ void AddCube(const vec3_t mins, const vec3_t maxs, unsigned int *numIndexes, uns
 #endif //__USE_CULL_BOX_SYSTEM__
 #endif //__USE_CULL_BOX_SYSTEM2__
 
-void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids)
+void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids)
 {
 	int					s, numSurfaces;
 	m4x4_t				identity, nTransform;
@@ -507,8 +507,12 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 #pragma omp critical
 		{
+			if (overrideShader)
+			{
+				si = overrideShader;
+			}
 			/* shader renaming for sof2 */
-			if (renameModelShaders)
+			else if (renameModelShaders)
 			{
 				strcpy(shaderName, picoShaderName);
 				StripExtension(shaderName);
@@ -725,17 +729,18 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 		}
 
 		/* ydnar: giant hack land: generate clipping brushes for model triangles */
-		if (!haveLodModel && (si->clipModel || (spawnFlags & 2)) && !noclipmodel)	/* 2nd bit */
+		if ((!haveLodModel && (si->clipModel || (spawnFlags & 2)) && !noclipmodel) || forcedSolid)	/* 2nd bit */
 		{
 			vec4_t plane, reverse, pa, pb, pc;
 
-			if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
+			if (!forcedSolid && (si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
 			{
 				continue;
 			}
 
 			/* temp hack */
 			if (!si->clipModel
+				&& !forcedSolid
 				&& ((si->compileFlags & C_TRANSLUCENT) || !(si->compileFlags & C_SOLID)))
 			{
 				continue;
@@ -1350,7 +1355,8 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 						numSolidSurfs++;
 
-						if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
+						if (!forcedSolid && 
+							((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid)))
 						{// Cull small stuff and the tops of trees...
 							vec3_t size;
 							float sz;
@@ -2654,6 +2660,9 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 	/* walk the entity list */
 	for (num = 1; num < numEntities; num++)
 	{
+		shaderInfo_t *overrideShader = NULL;
+		qboolean forcedSolid = qfalse;
+
 		if (!quiet) printLabelledProgress("AddTriangleModels", num, numEntities);
 
 		/* get e2 */
@@ -2793,6 +2802,23 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		else
 			celShader = NULL;
 
+		/* ydnar: cel shader support */
+		value = ValueForKey(e2, "_overrideShader");
+		if (value[0] != '\0')
+		{
+			sprintf(shader, "%s", value);
+			overrideShader = ShaderInfoForShader(shader);
+		}
+		else
+			overrideShader = NULL;
+
+		value = ValueForKey(e2, "_forcedSolid");
+
+		if (value[0] != '\0')
+		{
+			forcedSolid = qtrue;
+		}
+
 		/* vortex: get lightmap scaling value for this entity */
 		GetEntityLightmapScale(e2, &lightmapScale, baseLightmapScale);
 
@@ -2825,7 +2851,7 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		pushVertexes += FloatForKey(e2, "_pv2"); // vortex: set by decorator
 
 		/* insert the model */
-		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids);
+		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids);
 
 		//Sys_Printf( "insert model: %s. added_surfaces: %i. added_triangles: %i. added_verts: %i. added_brushes: %i.\n", model, added_surfaces, added_triangles, added_verts, added_brushes );
 
