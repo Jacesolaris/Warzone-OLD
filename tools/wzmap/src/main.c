@@ -386,7 +386,158 @@ int BSPInfo( int count, char **fileNames )
 	return i;
 }
 
+/*
+NavmeshBSPMain()
+UQ1: amaze and confuse your enemies with wierd AI! :)
+*/
 
+#include <cstdio>
+#include <stdlib.h>
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <vector>
+#include <string>
+#include <stdio.h>
+#include <cstring>
+
+#include "Recast/Recast.h"
+#include "InputGeom.h"
+#include "NavMeshGenerate.h"
+#include "NavMeshPathFind.h"
+
+char finalNavmeshFilename[1024] = { 0 };
+
+int NavmeshBSPMain(int argc, char **argv)
+{
+	int			i;
+	float		f, scale;
+	vec3_t		vec;
+	char		str[MAX_OS_PATH];
+	char		outNavmeshFilename[1024] = { 0 };
+
+
+	/* arg checking */
+	if (argc < 1)
+	{
+		Sys_Printf("Usage: q3map -navmesh [-v] <mapname>\n");
+		return 0;
+	}
+
+	/* do some path mangling */
+	strcpy(source, ExpandArg(argv[argc - 1]));
+	StripExtension(source);
+	DefaultExtension(source, ".bsp");
+
+	strcpy(outNavmeshFilename, ExpandArg(argv[argc - 1]));
+	StripExtension(outNavmeshFilename);
+	DefaultExtension(outNavmeshFilename, ".navMesh");
+
+	strcpy(finalNavmeshFilename, outNavmeshFilename);
+
+	/* load the bsp */
+	Sys_PrintHeading("--- LoadBSPFile ---\n");
+	Sys_Printf("loading %s\n", source);
+	LoadBSPFile(source);
+	ParseEntities();
+
+	/* note it */
+	Sys_PrintHeading("--- Navmesh ---\n");
+	Sys_Printf("%9d entities\n", numEntities);
+
+	InputGeom* geom = 0;
+	Sample* sample = 0;
+
+	BuildContext ctx;
+	
+	geom = new InputGeom;
+	sample = new Sample;
+
+	sample->setContext(&ctx);
+	sample->resetCommonSettings();
+	sample->handleCommonSettings();
+	
+	if (!geom->convertBspDataToMesh())
+	{
+		delete geom;
+		geom = 0;
+
+		// Destroy the sample if it already had geometry loaded, as we've just deleted it!
+		if (sample && sample->getInputGeom())
+		{
+			delete sample;
+			sample = 0;
+		}
+
+		Sys_Printf("ERROR: Failed to convert world data.\n");
+		return 0;
+	}
+
+	sample->handleSettings();
+	sample->handleMeshChanged(geom);
+	
+	//const float* bmin = 0;
+	//const float* bmax = 0;
+	//bmin = geom->getNavMeshBoundsMin();
+	//bmax = geom->getNavMeshBoundsMax();
+
+	char text[64];
+	snprintf(text, 64, "Verts: %.1fk  Tris: %.1fk\n",
+		geom->getMesh()->getVertCount() / 1000.0f,
+		geom->getMesh()->getTriCount() / 1000.0f);
+	Sys_Printf("%s", text);
+
+	sample->handleBuild();
+
+	NavMeshGenerate *navMesh = new NavMeshGenerate();
+	navMesh->setContext(&ctx);
+	navMesh->resetCommonSettings();
+	navMesh->handleCommonSettings();
+	navMesh->handleMeshChanged(geom);
+	navMesh->handleBuild();
+
+	NavMeshPathfind *navPath = new NavMeshPathfind;
+	navPath->init(sample);
+	navPath->reset();
+
+	/*
+	TOOLMODE_PATHFIND_FOLLOW,
+	TOOLMODE_PATHFIND_STRAIGHT,
+	TOOLMODE_PATHFIND_SLICED,
+	TOOLMODE_RAYCAST,
+	TOOLMODE_DISTANCE_TO_WALL,
+	TOOLMODE_FIND_POLYS_IN_CIRCLE,
+	TOOLMODE_FIND_POLYS_IN_SHAPE,
+	TOOLMODE_FIND_LOCAL_NEIGHBOURHOOD,
+	*/
+	
+	/*
+	navPath->handleAction(TOOLMODE_PATHFIND_STRAIGHT, DT_STRAIGHTPATH_ALL_CROSSINGS);
+	*/
+	{
+		BuildSettings settings;
+		memset(&settings, 0, sizeof(settings));
+
+		rcVcopy(settings.navMeshBMin, geom->getNavMeshBoundsMin());
+		rcVcopy(settings.navMeshBMax, geom->getNavMeshBoundsMax());
+
+		settings.agentHeight = 64.0;
+		settings.agentRadius = 48.0;
+		settings.agentMaxClimb = 18.0;
+
+		sample->collectSettings(settings);
+
+		geom->saveGeomSet(&settings);
+	}
+	
+	/*
+	for (int i = 0; i < ctx.getLogCount(); i++)
+	{
+		Sys_Printf("%s", ctx.getLogText(i));
+	}
+	*/
+
+	return 0;
+}
 
 /*
 ScaleBSPMain()
@@ -861,6 +1012,10 @@ int main( int argc, char **argv )
 	/* ydnar: bsp scaling */
 	else if( !strcmp( argv[ 1 ], "-scale" ) )
 		r = ScaleBSPMain( argc - 1, argv + 1 );
+
+	/* UQ1: Navmesh Generation */
+	else if (!strcmp(argv[1], "-navmesh"))
+		r = NavmeshBSPMain(argc - 1, argv + 1);
 	
 	/* ydnar: bsp conversion */
 	else if( !strcmp( argv[ 1 ], "-convert" ) )

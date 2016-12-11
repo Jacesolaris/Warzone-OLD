@@ -4,11 +4,6 @@
 #ifndef CKHEAP_H
 #define CKHEAP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 #ifdef __WIN32__
   // don't want to try to get dlmalloc working...
   #define checkHeapNode(n) /*nothing*/
@@ -52,9 +47,5 @@ void walkMallocHeap(HeapWalkFn func);
 
 
 #endif // !__WIN32__
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif // CKHEAP_H

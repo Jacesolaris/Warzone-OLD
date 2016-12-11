@@ -1174,14 +1174,33 @@ qboolean Info_Validate( const char *s );
 qboolean Info_NextPair( const char **s, char *key, char *value );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
-#if defined( _GAME ) || defined( _CGAME ) || defined( _UI )
-	void (*Com_Error)( int level, const char *error, ... );
-	void (*Com_Printf)( const char *msg, ... );
-#else
-	void QDECL Com_Error( int level, const char *error, ... );
-	void QDECL Com_Printf( const char *msg, ... );
-#endif
+//#if defined( _GAME ) || defined( _CGAME ) || defined( _UI )
+//	void (*Com_Error)( int code, const char *fmt, ... );
+//	void (*Com_Printf)( const char *msg, ... );
+//#else
+//	void QDECL Com_Error( int code, const char *fmt, ... );
+//	void QDECL Com_Printf( const char *msg, ... );
+//#endif
 
+#if defined( _CGAME )
+extern void QDECL CG_Error(int level, const char *error, ...);
+extern void QDECL CG_Printf(const char *msg, ...);
+#define Com_Error CG_Error
+#define Com_Printf CG_Printf
+#elif defined( _GAME )
+extern void QDECL G_Error(int level, const char *error, ...);
+extern void QDECL G_Printf(const char *msg, ...);
+#define Com_Error G_Error
+#define Com_Printf G_Printf
+#elif defined( _UI )
+extern void QDECL UI_Error( int level, const char *error, ... );
+extern void QDECL UI_Printf(const char *msg, ...);
+#define Com_Error UI_Error
+#define Com_Printf UI_Printf
+#else
+	void QDECL Com_Error(int code, const char *fmt, ...);
+	void QDECL Com_Printf(const char *msg, ...);
+#endif
 
 /*
 ==========================================================

@@ -76,6 +76,7 @@
     <IntDir>build\release\x64\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;build\release\x64\ddslib;build\release\x64\jpeg6;build\release\x64\l_net;build\release\x64\mathlib;build\release\x64\picomodel</LibraryPath>
+    <IncludePath>D:\! Programming !\Warzone\codemp\Recast;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <BuildLog>
@@ -196,6 +197,40 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\codemp\Recast\ChunkyTriMesh.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\ConvexVolumeTool.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\DetourCrowd\DetourCrowd.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\DetourCrowd\DetourLocalBoundary.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\DetourCrowd\DetourObstacleAvoidance.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\DetourCrowd\DetourPathCorridor.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\DetourCrowd\DetourPathQueue.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\DetourCrowd\DetourProximityGrid.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourAlloc.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourCommon.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourNavMesh.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourNavMeshBuilder.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourNavMeshQuery.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourNode.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\InputGeom.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\MeshLoaderObj.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\NavMeshGenerate.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\NavMeshPathfind.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\NavMeshPruneTool.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\OffMeshConnectionTool.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\PerfTimer.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\Recast.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastAlloc.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastArea.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastContour.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastFilter.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastLayers.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastMesh.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastMeshDetail.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastRasterization.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Recast\RecastRegion.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\Sample.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\SampleInterfaces.cpp" />
+    <ClCompile Include="..\..\..\codemp\Recast\ValueHistory.cpp" />
     <ClCompile Include="..\src\brush.c" />
     <ClCompile Include="..\src\brush_primit.c" />
     <ClCompile Include="..\src\bsp.c" />
@@ -250,6 +285,36 @@
     <ClCompile Include="..\src\writebsp.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\codemp\Recast\ChunkyTriMesh.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\ConvexVolumeTool.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\DetourCrowd\DetourCrowd.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\DetourCrowd\DetourLocalBoundary.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\DetourCrowd\DetourObstacleAvoidance.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\DetourCrowd\DetourPathCorridor.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\DetourCrowd\DetourPathQueue.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\DetourCrowd\DetourProximityGrid.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourAlloc.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourAssert.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourCommon.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourMath.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourNavMesh.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourNavMeshBuilder.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourNavMeshQuery.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourNode.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourStatus.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\InputGeom.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\MeshLoaderObj.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\NavMeshGenerate.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\NavMeshPathfind.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\NavMeshPruneTool.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\OffMeshConnectionTool.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\PerfTimer.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Recast\Recast.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Recast\RecastAlloc.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Recast\RecastAssert.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\Sample.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\SampleInterfaces.h" />
+    <ClInclude Include="..\..\..\codemp\Recast\ValueHistory.h" />
     <ClInclude Include="..\src\common\cmdlib.h" />
     <ClInclude Include="..\src\common\files.h" />
     <ClInclude Include="..\src\common\imagelib.h" />

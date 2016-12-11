@@ -1,5 +1,19 @@
 #include "tr_local.h"
 #include "../cgame/cg_public.h"
+#if 0
+#include <cstdio>
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <vector>
+#include <string>
+
+#include "../Recast/Recast/Recast.h"
+#include "../Recast/InputGeom.h"
+#include "../Recast/NavMeshGenerate.h"
+//#include "../Recast/Sample_TileMesh.h"
+//#include "../Recast/Sample_TempObstacles.h"
+//#include "../Recast/Sample_Debug.h"
+#endif
 
 extern char currentMapName[128];
 
@@ -1224,6 +1238,61 @@ qboolean R_SurfaceIsAllowedFoliage(int materialType)
 	}
 
 	return qfalse;
+}
+
+void R_GenerateNavMesh(void)
+{
+#if 0
+	InputGeom* geom = 0;
+	Sample* sample = 0;
+
+	geom = new InputGeom;
+
+	if (!geom->load(&ctx, path))
+	{
+		delete geom;
+		geom = 0;
+
+		// Destroy the sample if it already had geometry loaded, as we've just deleted it!
+		if (sample && sample->getInputGeom())
+		{
+			delete sample;
+			sample = 0;
+		}
+
+		showLog = true;
+		logScroll = 0;
+		ctx.dumpLog("Geom load log %s:", meshName.c_str());
+	}
+
+	if (sample && geom)
+	{
+		sample->handleMeshChanged(geom);
+	}
+
+	if (geom || sample)
+	{
+		const float* bmin = 0;
+		const float* bmax = 0;
+		if (geom)
+		{
+			bmin = geom->getNavMeshBoundsMin();
+			bmax = geom->getNavMeshBoundsMax();
+		}
+	}
+
+	if (geom)
+	{
+		char text[64];
+		snprintf(text, 64, "Verts: %.1fk  Tris: %.1fk",
+			geom->getMesh()->getVertCount() / 1000.0f,
+			geom->getMesh()->getTriCount() / 1000.0f);
+
+		ri->Printf(PRINT_WARNING, "%s", text);
+	}
+
+	sample->handleBuild();
+#endif
 }
 
 void R_LoadMapInfo(void)

@@ -163,7 +163,7 @@ typedef struct weaponData_s
 	int		dmg;
 	int		dmgAlt;
 
-	float	boltSpeed;
+	int		boltSpeed;
 	int		accuracy;
 
 	int		splashDmg;

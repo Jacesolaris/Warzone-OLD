@@ -65,7 +65,6 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_vbo.cpp"
 	"${MPDir}/rd-warzone/tr_world.cpp"
 	"${MPDir}/game/ckheap.h"
-	"${MPDir}/game/malloc.c"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})
 

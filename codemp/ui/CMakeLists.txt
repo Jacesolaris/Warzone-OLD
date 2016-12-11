@@ -12,11 +12,11 @@ endif(WIN32)
 set(MPUIDefines ${MPSharedDefines} "_UI")
 
 set(MPUIGameFiles
-	"${MPDir}/game/bg_misc.c"
-	"${MPDir}/game/bg_saberLoad.c"
-	"${MPDir}/game/bg_saga.c"
-	"${MPDir}/game/bg_vehicleLoad.c"
-	"${MPDir}/game/bg_weapons.c"
+	"${MPDir}/game/bg_misc.cpp"
+	"${MPDir}/game/bg_saberLoad.cpp"
+	"${MPDir}/game/bg_saga.cpp"
+	"${MPDir}/game/bg_vehicleLoad.cpp"
+	"${MPDir}/game/bg_weapons.cpp"
 	"${MPDir}/game/anims.h"
 	"${MPDir}/game/bg_local.h"
 	"${MPDir}/game/bg_public.h"
@@ -30,8 +30,8 @@ set(MPUIFiles ${MPUIFiles} ${MPUIGameFiles})
 set(MPUICommonFiles
   "${MPDir}/qcommon/inifile.cpp"
   "${MPDir}/qcommon/inifile.h"
-	"${MPDir}/qcommon/q_math.c"
-	"${MPDir}/qcommon/q_shared.c"
+	"${MPDir}/qcommon/q_math.cpp"
+	"${MPDir}/qcommon/q_shared.cpp"
 	"${MPDir}/qcommon/disablewarnings.h"
 	"${MPDir}/qcommon/game_version.h"
 	"${MPDir}/qcommon/q_shared.h"
@@ -43,14 +43,14 @@ source_group("common" FILES ${MPUICommonFiles})
 set(MPUIFiles ${MPUIFiles} ${MPUICommonFiles})
 
 set(MPUIUIFiles
-	"${MPDir}/ui/ui_atoms.c"
-	"${MPDir}/ui/ui_cvar.c"
-	"${MPDir}/ui/ui_force.c"
-	"${MPDir}/ui/ui_gameinfo.c"
-	"${MPDir}/ui/ui_main.c"
-	"${MPDir}/ui/ui_saber.c"
-	"${MPDir}/ui/ui_shared.c"
-	"${MPDir}/ui/ui_syscalls.c"
+	"${MPDir}/ui/ui_atoms.cpp"
+	"${MPDir}/ui/ui_cvar.cpp"
+	"${MPDir}/ui/ui_force.cpp"
+	"${MPDir}/ui/ui_gameinfo.cpp"
+	"${MPDir}/ui/ui_main.cpp"
+	"${MPDir}/ui/ui_saber.cpp"
+	"${MPDir}/ui/ui_shared.cpp"
+	"${MPDir}/ui/ui_syscalls.cpp"
 	"${MPDir}/ui/keycodes.h"
 	"${MPDir}/ui/menudef.h"
 	"${MPDir}/ui/ui_force.h"
@@ -59,7 +59,6 @@ set(MPUIUIFiles
 	"${MPDir}/ui/ui_shared.h"
 	"${MPDir}/ui/ui_xcvar.h"
 	"${MPDir}/game/ckheap.h"
-	"${MPDir}/game/malloc.c"
 	)
 source_group("ui" FILES ${MPUIUIFiles})
 set(MPUIFiles ${MPUIFiles} ${MPUIUIFiles})

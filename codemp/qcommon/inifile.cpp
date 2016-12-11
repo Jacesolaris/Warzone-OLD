@@ -3,14 +3,7 @@
 //
 // Mixing C and C++ in one codebase is soooooo annoying!!!!
 //
-#if defined(rd_warzone_x86_EXPORTS)
 #include "inifile.h"   /* function prototypes in here */
-#else //!defined(rd_warzone_x86_EXPORTS)
-extern "C"
-{
-#include "inifile.h"   /* function prototypes in here */
-}
-#endif //defined(rd_warzone_x86_EXPORTS)
 
 #ifdef _WIN32
 #define unlink _unlink
@@ -24,29 +17,23 @@ extern "C"
 #define FS_Write ri->FS_Write
 #define FS_FCloseFile ri->FS_FCloseFile
 #elif defined(jampgamex86_EXPORTS)
-extern "C" {
 #include "game/g_local.h"
 #define FS_FOpenFileByMode trap->FS_Open
 #define FS_Read trap->FS_Read
 #define FS_Write trap->FS_Write
 #define FS_FCloseFile trap->FS_Close
-}
 #elif defined(cgamex86_EXPORTS)
-extern "C" {
 #include "cgame/cg_local.h"
 #define FS_FOpenFileByMode trap->FS_Open
 #define FS_Read trap->FS_Read
 #define FS_Write trap->FS_Write
 #define FS_FCloseFile trap->FS_Close
-}
 #elif defined(uix86_EXPORTS)
-extern "C" {
 #include "ui/ui_local.h"
 #define FS_FOpenFileByMode trap->FS_Open
 #define FS_Read trap->FS_Read
 #define FS_Write trap->FS_Write
 #define FS_FCloseFile trap->FS_Close
-}
 #else
 #include "q_shared.h"
 extern int FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
@@ -346,7 +333,6 @@ PLAYER_FACTION = IniRead("general.ini","PLAYER_SETTINGS","PLAYER_FACTION","imper
 PLAYER_FACTION_AUTODETECT = atoi(IniRead("general.ini","PLAYER_SETTINGS","PLAYER_HEALTH","100"));
 */
 
-#if defined(rd_warzone_x86_EXPORTS)
 const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 {
 	const char *value = IniReadCPP(aFilespec, aSection, aKey, aDefault);
@@ -362,25 +348,4 @@ void IniWrite(char *aFilespec, char *aSection, char *aKey, char *aValue)
 {
 	IniWriteCPP(aFilespec, aSection, aKey, aValue);
 }
-#else //!defined(rd_warzone_x86_EXPORTS)
-extern "C"
-{
-	const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
-	{
-		const char *value = IniReadCPP(aFilespec, aSection, aKey, aDefault);
-		/*#ifdef _GAME
-				trap->Print("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value);
-				#endif*/
-		if (!strcmp(value, "")) return aDefault;
-
-		return value;
-	}
-
-	void IniWrite(char *aFilespec, char *aSection, char *aKey, char *aValue)
-	{
-		IniWriteCPP(aFilespec, aSection, aKey, aValue);
-	}
-}
-#endif //!defined(rd_warzone_x86_EXPORTS)
-
 #endif //defined(rd_warzone_x86_EXPORTS) || defined(DEDICATED) || defined(jampgamex86_EXPORTS) || defined(cgamex86_EXPORTS) || defined(uix86_EXPORTS)

@@ -90,6 +90,7 @@ if(WIN32)
 
 		# mark 32 bit executables large address aware so they can use > 2GB address space
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 	endif(MSVC)
 	if(WIN64)
 		if(MSVC)
@@ -97,6 +98,7 @@ if(WIN32)
 
 			# mark 32 bit executables large address aware so they can use > 2GB address space
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		else()
 			set(SharedDefines "WIN64")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:SSE2 /Qvec-report:1 /openmp /Ox /Ot /GT")
@@ -107,6 +109,7 @@ if(WIN32)
 
 			# mark 32 bit executables large address aware so they can use > 2GB address space
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		endif()
 	else()
 		if(MSVC)
@@ -119,6 +122,7 @@ if(WIN32)
 
 			# mark 32 bit executables large address aware so they can use > 2GB address space
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		endif()
 	endif()
 else()
