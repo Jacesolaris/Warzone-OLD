@@ -1,3 +1,4 @@
+#include "qcommon/q_shared.h"
 #include "b_local.h"
 #include "g_nav.h"
 #include "anims.h"
@@ -39,6 +40,7 @@ right now it's being developed, feel free to experiment
 
 int NPC_GetNextNode(gentity_t *NPC)
 {
+#ifndef __USE_NAVMESH__
 	int node = WAYPOINT_NONE;
 
 	//we should never call this in BOTSTATE_MOVE with no goal
@@ -101,10 +103,14 @@ int NPC_GetNextNode(gentity_t *NPC)
 		}
 	}
 	return node;
+#else //!__USE_NAVMESH__
+	return -1;
+#endif //__USE_NAVMESH__
 }
 
 qboolean NPC_ShortenJump(gentity_t *NPC, int node)
 {
+#ifndef __USE_NAVMESH__
 	float MAX_JUMP_DISTANCE = 192.0;
 	float dist = Distance(gWPArray[node]->origin, NPC->r.currentOrigin);
 	
@@ -118,12 +124,14 @@ qboolean NPC_ShortenJump(gentity_t *NPC, int node)
 		//trap->Print("%s is shortening path using jump.\n", NPC->client->pers.netname);
 		return qtrue; // next think...
 	}
+#endif //__USE_NAVMESH__
 
 	return qfalse;
 }
 
 void NPC_ShortenPath(gentity_t *NPC)
 {
+#ifndef __USE_NAVMESH__
 #ifdef ___PATH_SHORTEN___
 	qboolean	found = qfalse;
 	int			position = -1;
@@ -166,10 +174,12 @@ void NPC_ShortenPath(gentity_t *NPC)
 		if (found) break;
 	}
 #endif //___PATH_SHORTEN___
+#endif //__USE_NAVMESH__
 }
 
 qboolean NPC_FindNewWaypoint( void )
 {
+#ifndef __USE_NAVMESH__
 	gentity_t	*NPC = NPCS.NPC;
 
 	// Try to find a visible waypoint first...
@@ -197,12 +207,14 @@ qboolean NPC_FindNewWaypoint( void )
 	NPC->wpTravelTime = level.time + 15000;
 	NPC->wpSeenTime = level.time;
 	NPC->last_move_time = level.time;
+#endif //__USE_NAVMESH__
 
 	return qtrue; // all good, we have a new waypoint...
 }
 
 void NPC_SetEnemyGoal( void )
 {
+#ifndef __USE_NAVMESH__
 	qboolean IS_COVERPOINT = qfalse;
 	int			COVERPOINT_WP = -1;
 	int			COVERPOINT_OFC_WP = -1;
@@ -427,10 +439,12 @@ void NPC_SetEnemyGoal( void )
 	NPC->last_move_time = level.time;
 	// Delay before giving up on this new waypoint/route...
 	NPC->wpTravelTime = level.time + 15000;
+#endif //__USE_NAVMESH__
 }
 
 qboolean NPC_CopyPathFromNearbyNPC( void )
 {
+#ifndef __USE_NAVMESH__
 	gentity_t	*NPC = NPCS.NPC;
 	int i = 0;
 
@@ -472,12 +486,14 @@ qboolean NPC_CopyPathFromNearbyNPC( void )
 		//G_Printf("NPC Waypointing Debug: NPC %i (%s) copied a %i waypoint path between waypoints %i and %i from %i (%s).", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, test->s.number, test->NPC_type);
 		return qtrue;
 	}
+#endif //__USE_NAVMESH__
 
 	return qfalse;
 }
 
 int NPC_FindGoal( gentity_t *NPC )
 {
+#ifndef __USE_NAVMESH__
 	int waypoint = irand_big(0, gWPNum-1);
 	int tries = 0;
 
@@ -490,10 +506,14 @@ int NPC_FindGoal( gentity_t *NPC )
 	}
 
 	return waypoint;
+#else //!__USE_NAVMESH__
+	return -1;
+#endif //__USE_NAVMESH__
 }
 
 int NPC_FindTeamGoal( gentity_t *NPC )
 {
+#ifndef __USE_NAVMESH__
 	int waypoint = -1;
 	int i;
 	
@@ -535,10 +555,14 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 	}
 
 	return waypoint;
+#else //!__USE_NAVMESH__
+	return -1;
+#endif //__USE_NAVMESH__
 }
 
 void NPC_SetNewGoalAndPath( void )
 {
+#ifndef __USE_NAVMESH__
 	gentity_t	*NPC = NPCS.NPC;
 	qboolean	padawanPath = qfalse;
 
@@ -638,6 +662,7 @@ void NPC_SetNewGoalAndPath( void )
 			return;
 		}
 	}
+#endif //__USE_NAVMESH__
 }
 
 /*
@@ -799,16 +824,19 @@ qboolean NPC_PointIsMoverLocation( vec3_t org )
 
 void NPC_ClearPathData ( gentity_t *NPC )
 {
+#ifndef __USE_NAVMESH__
 	NPC->longTermGoal = -1;
 	NPC->wpCurrent = -1;
 	NPC->pathsize = -1;
 	NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
 
 	//NPC->wpSeenTime = 0;
+#endif //__USE_NAVMESH__
 }
 
 qboolean NPC_RoutingJumpWaypoint ( int wpLast, int wpCurrent )
 {
+#ifndef __USE_NAVMESH__
 	int			link = 0;
 	qboolean	found = qfalse;
 
@@ -827,12 +855,14 @@ qboolean NPC_RoutingJumpWaypoint ( int wpLast, int wpCurrent )
 	{
 		return qtrue;
 	}
+#endif //__USE_NAVMESH__
 
 	return qfalse;
 }
 
 qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
 {
+#ifndef __USE_NAVMESH__
 	int			link = 0;
 	qboolean	found = qfalse;
 
@@ -856,6 +886,7 @@ qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
 			return qtrue;
 		}
 	}
+#endif //__USE_NAVMESH__
 
 	return qfalse;
 }
@@ -934,6 +965,7 @@ int CheckForFunc(vec3_t org, int ignore)
 
 int WaitingForNow(vec3_t goalpos)
 { //checks if the bot is doing something along the lines of waiting for an elevator to raise up
+#ifndef __USE_NAVMESH__
 	vec3_t		xybot, xywp, a;
 #if 0
 	vec3_t		goalpos2;
@@ -984,6 +1016,7 @@ int WaitingForNow(vec3_t goalpos)
 	{
 		NPCS.NPC->useDebounceTime = level.time + 2000;
 	}
+#endif //__USE_NAVMESH__
 
 	return 0;
 }
@@ -1058,6 +1091,7 @@ qboolean NPC_HaveValidEnemy( void )
 
 void NPC_NewWaypointJump ( void )
 {// Jumping to new waypoint...
+#ifndef __USE_NAVMESH__
 	vec3_t myOrg, wpOrg;
 	qboolean should_jump = qtrue;
 
@@ -1093,10 +1127,12 @@ void NPC_NewWaypointJump ( void )
 		//trap->Print("NPC JUMP DEBUG: NPC_NewWaypointJump\n");
 		return;
 	}
+#endif //__USE_NAVMESH__
 }
 
 qboolean NPC_DoLiftPathing(gentity_t *NPC)
 {
+#ifndef __USE_NAVMESH__
 	if (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum)
 	{
 		qboolean onMover1 = (qboolean)WaitingForNow(gWPArray[NPC->wpCurrent]->origin);
@@ -1172,6 +1208,7 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 			}
 		}
 	}
+#endif //__USE_NAVMESH__
 
 	return qfalse;
 }
@@ -1228,6 +1265,7 @@ qboolean NPC_FollowRoutes( void )
 		return qtrue;
 	}
 
+#ifndef __USE_NAVMESH__
 	if (NPC->isPadawan)
 	{
 		if (NPC->nextPadawanWaypointThink < level.time)
@@ -1469,12 +1507,16 @@ qboolean NPC_FollowRoutes( void )
 	}
 
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+#else //!__USE_NAVMESH__
+	Warzone_Nav_UpdateEntity(NPC);
+#endif //__USE_NAVMESH__
 
 	return qtrue;
 }
 
 void NPC_SetNewEnemyGoalAndPath( void )
 {
+#ifndef __USE_NAVMESH__
 	gentity_t	*NPC = NPCS.NPC;
 
 	if (NPC->npc_dumb_route_time > level.time)
@@ -1548,6 +1590,7 @@ void NPC_SetNewEnemyGoalAndPath( void )
 	NPC->wpSeenTime = level.time + 1000;//30000;
 	// Delay before giving up on this new waypoint/route...
 	NPC->wpTravelTime = level.time + 15000;
+#endif //__USE_NAVMESH__
 }
 
 extern int jediSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several jedi AI from speaking all at once
@@ -1591,6 +1634,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse;
 	}
 
+#ifndef __USE_NAVMESH__
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
 		NPC->last_move_time = level.time;
@@ -1771,6 +1815,9 @@ qboolean NPC_FollowEnemyRoute( void )
 	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 	//NPC_SelectMoveAnimation(qfalse);
+#else //!__USE_NAVMESH__
+	Warzone_Nav_UpdateEntity(NPC);
+#endif //__USE_NAVMESH__
 
 	return qtrue;
 }

@@ -13,6 +13,7 @@
 #include "bg_vehicles.h"
 #include "g_public.h"
 #include "../qcommon/inifile.h"
+#include "ai_dominance_navmesh.h"
 
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
@@ -498,6 +499,11 @@ struct gentity_s {
 
 	int					npc_attack_time;
 	int					npc_counter_time;
+
+#ifdef __USE_NAVMESH__
+	CompNavMeshPath		patrol;
+	CompNavMeshPos		navMeshPos;
+#endif //__USE_NAVMESH__
 };
 
 #define DAMAGEREDIRECT_HEAD		1
@@ -1713,3 +1719,7 @@ qboolean FOLIAGE_TreeSolidBlocking(gentity_t *ent, vec3_t moveOrg);
 
 void BG_SetAnim(playerState_t *ps, animation_t *animations, int setAnimParts, int anim, int setAnimFlags);
 void G_SoundOnEnt(gentity_t *ent, soundChannel_t channel, const char *soundPath);
+
+#ifdef __USE_NAVMESH__
+void Warzone_Nav_UpdateEntity(gentity_t *ent);
+#endif //__USE_NAVMESH__

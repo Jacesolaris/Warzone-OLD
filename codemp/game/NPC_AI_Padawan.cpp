@@ -109,6 +109,8 @@ int NPC_FindPadawanGoal( gentity_t *NPC )
 
 		if (goalWP < 0) goalWP = DOM_GetNearWP(NPC->parent->r.currentOrigin, -1);
 
+		if (goalWP < 0) return -1;
+
 		NPC->padawanNoWaypointTime = level.time + 1000;
 
 		if (Distance(gWPArray[goalWP]->origin, NPC->r.currentOrigin) < 128)

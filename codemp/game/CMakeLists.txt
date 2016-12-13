@@ -10,11 +10,52 @@ if(WIN32)
 	set(MPGameLibraries "winmm")
 endif(WIN32)
 set(MPGameDefines ${MPSharedDefines} "_GAME" )
+
+set(MPGameDetourFiles
+	"${MPDir}/Recast/Detour/DetourAlloc.cpp"
+	"${MPDir}/Recast/Detour/DetourAlloc.h"
+	"${MPDir}/Recast/Detour/DetourAssert.h"
+	"${MPDir}/Recast/Detour/DetourCommon.cpp"
+	"${MPDir}/Recast/Detour/DetourCommon.h"
+	"${MPDir}/Recast/Detour/DetourMath.h"
+	"${MPDir}/Recast/Detour/DetourNavMesh.cpp"
+	"${MPDir}/Recast/Detour/DetourNavMesh.h"
+	"${MPDir}/Recast/Detour/DetourNavMeshBuilder.cpp"
+	"${MPDir}/Recast/Detour/DetourNavMeshBuilder.h"
+	"${MPDir}/Recast/Detour/DetourNavMeshQuery.cpp"
+	"${MPDir}/Recast/Detour/DetourNavMeshQuery.h"
+	"${MPDir}/Recast/Detour/DetourNode.cpp"
+	"${MPDir}/Recast/Detour/DetourNode.h"
+	"${MPDir}/Recast/Detour/DetourStatus.h"
+	)
+source_group("Detour" FILES ${MPGameDetourFiles})
+set(MPGameFiles ${MPCGameFiles} ${MPGameDetourFiles})
+
+set(MPGameRecastFiles
+	"${MPDir}/Recast/Recast/Recast.cpp"
+	"${MPDir}/Recast/Recast/Recast.h"
+	"${MPDir}/Recast/Recast/RecastAlloc.cpp"
+	"${MPDir}/Recast/Recast/RecastAlloc.h"
+	"${MPDir}/Recast/Recast/RecastArea.cpp"
+	"${MPDir}/Recast/Recast/RecastAssert.h"
+	"${MPDir}/Recast/Recast/RecastContour.cpp"
+	"${MPDir}/Recast/Recast/RecastFilter.cpp"
+	"${MPDir}/Recast/Recast/RecastLayers.cpp"
+	"${MPDir}/Recast/Recast/RecastMesh.cpp"
+	"${MPDir}/Recast/Recast/RecastMeshDetail.cpp"
+	"${MPDir}/Recast/Recast/RecastRasterization.cpp"
+	"${MPDir}/Recast/Recast/RecastRegion.cpp"
+	)
+source_group("Recast" FILES ${MPGameRecastFiles})
+set(MPGameFiles ${MPGameFiles} ${MPGameRecastFiles})
+
 set(MPGameGameFiles
 	"${MPDir}/game/ai_dominance.cpp"
 	"${MPDir}/game/ai_dominance.h"
 	"${MPDir}/game/ai_dominance_astar.cpp"
 	"${MPDir}/game/ai_dominance_main.h"
+	"${MPDir}/game/ai_dominance_navmesh.cpp"
+	"${MPDir}/game/ai_dominance_navmesh.h"
 	"${MPDir}/game/ai_dominance_wpnav.cpp"
 	"${MPDir}/game/bg_g2_utils.cpp"
 	"${MPDir}/game/bg_misc.cpp"
@@ -127,7 +168,7 @@ set(MPGameGameFiles
 	"${MPDir}/game/g_xcvar.h"
 	"${MPDir}/game/inv.h"
 	"${MPDir}/game/jkg_damagetypes.cpp"
-    "${MPDir}/game/jkg_damagetypes.h"
+  "${MPDir}/game/jkg_damagetypes.h"
 	"${MPDir}/game/match.h"
 	"${MPDir}/game/say.h"
 	"${MPDir}/game/surfaceflags.h"

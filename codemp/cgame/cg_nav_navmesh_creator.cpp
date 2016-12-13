@@ -23,6 +23,24 @@
 //#include "qcommon/q_shared.h"
 #include "qcommon/qfiles.h"
 
+extern float aw_percent_complete;
+extern char task_string1[255];
+extern char task_string2[255];
+extern char task_string3[255];
+extern char last_node_added_string[255];
+extern clock_t	aw_stage_start_time;
+
+void UpdatePercentBar(float percent, char *text, char *text2, char *text3)
+{
+	aw_percent_complete = percent;
+
+	if (text[0] != '\0') trap->Print("^1*** ^3%s^5: %s\n", GAME_VERSION, text);
+	strcpy(task_string1, va("^5%s", GAME_VERSION, text));
+	strcpy(task_string2, va("^5%s", GAME_VERSION, text2));
+	strcpy(task_string3, va("^5%s", GAME_VERSION, text3));
+	trap->UpdateScreen();
+}
+
 int CountIndices ( const dsurface_t *surfaces, int numSurfaces )
 {
     int count = 0;
@@ -165,8 +183,11 @@ struct navMeshDataHeader_t
     float cellSize;
     float cellHeight;
 };
-void CacheNavMeshData ( const char *mapname, const rcPolyMesh *polyMesh, const rcPolyMeshDetail *detailedPolyMesh, const rcConfig *cfg )
+void CacheNavMeshData ( const rcPolyMesh *polyMesh, const rcPolyMeshDetail *detailedPolyMesh, const rcConfig *cfg )
 {
+	char mapname[128] = { 0 };
+	sprintf(mapname, "maps/%s.jnd", cgs.currentmapname);
+
     navMeshDataHeader_t header;
     int vertsSize = polyMesh->nverts * sizeof (unsigned short) * 3;
     int polysSize = polyMesh->npolys * sizeof (unsigned short) * polyMesh->nvp * 2;
@@ -284,7 +305,7 @@ void CacheNavMeshData ( const char *mapname, const rcPolyMesh *polyMesh, const r
     else
     {
         fileHandle_t f;
-        trap->FS_Open (va ("%s.jnd", mapname), &f, FS_WRITE);
+        trap->FS_Open (mapname, &f, FS_WRITE);
         if ( !f )
         {
             trap->Print ("Failed to create cache file for navmesh.\n");
@@ -334,10 +355,15 @@ void CreateNavMesh ( const char *mapname )
     rcPolyMeshDetail *detailedPolyMesh = NULL;
     
     rcContext context (false);
+
+	aw_stage_start_time = clock();
+
+	UpdatePercentBar(1, "Loading Map Geometry...", "", "");
     
     if ( !LoadMapGeometry (buffer, mapmins, mapmaxs, verts, numverts, tris, numtris) )
     {
         trap->Print (va("Unable to load map geometry from '%s'.\n", mapname));
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
     
@@ -346,8 +372,8 @@ void CreateNavMesh ( const char *mapname )
     memset (&cfg, 0, sizeof (cfg));
     VectorCopy (mapmaxs, cfg.bmax);
     VectorCopy (mapmins, cfg.bmin);
-    cfg.ch = 3.0f;
-    cfg.cs = 15.0f;
+	cfg.ch = 64.0f;// 64.0f;// 9.0f;// 3.0f;
+	cfg.cs = 384.0;// 512.0f;// 128.0;// 45.0f;// 15.0f;
     cfg.walkableSlopeAngle = 45.0f; // worked out from MIN_WALK_NORMAL - i think it's correct? :x
     cfg.walkableHeight = 64 / cfg.ch;
     cfg.walkableClimb = STEPSIZE / cfg.ch;
@@ -359,16 +385,24 @@ void CreateNavMesh ( const char *mapname )
     cfg.maxVertsPerPoly = 6;
     cfg.detailSampleDist = 6.0f * cfg.cs;
     cfg.detailSampleMaxError = 1.0f * cfg.ch;
+
+
+	UpdatePercentBar(2, "Calculating Grid Size...", "", "");
     
     rcCalcGridSize (cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
-    
+
+	UpdatePercentBar(5, "Creating Height Field...", "", "");
+
     // 2. Rasterize input polygon soup!
     heightField = rcAllocHeightfield();
     if ( !rcCreateHeightfield (&context, *heightField, cfg.width, cfg.height, cfg.bmin, cfg.bmax, cfg.cs, cfg.ch) )
     {
         trap->Print ("Failed to create heightfield for navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(10, "Marking Walkable Triangles...", "", "");
     
     triareas = new unsigned char[numtris];
     memset (triareas, 0, numtris);
@@ -376,64 +410,89 @@ void CreateNavMesh ( const char *mapname )
     rcRasterizeTriangles (&context, verts, numverts, tris, triareas, numtris, *heightField, cfg.walkableClimb);
     delete[] triareas;
     triareas = NULL;
+
+	UpdatePercentBar(20, "Filterring Walkable Surfaces...", "", "");
     
     // 3. Filter walkable surfaces
     rcFilterLowHangingWalkableObstacles (&context, cfg.walkableClimb, *heightField);
     rcFilterLedgeSpans (&context, cfg.walkableHeight, cfg.walkableClimb, *heightField);
     rcFilterWalkableLowHeightSpans (&context, cfg.walkableHeight, *heightField);
+
+	UpdatePercentBar(25, "Building Compact Height Field...", "", "");
     
     // 4. Partition walkable surface to simple regions
     compHeightField = rcAllocCompactHeightfield();
     if ( !rcBuildCompactHeightfield (&context, cfg.walkableHeight, cfg.walkableClimb, *heightField, *compHeightField) )
     {
         trap->Print ("Failed to create compact heightfield for navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(30, "Eroding Walkable Area...", "", "");
     
     if ( !rcErodeWalkableArea (&context, cfg.walkableRadius, *compHeightField) )
     {
         trap->Print ("Unable to erode walkable surfaces.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(40, "Building Distance Field...", "", "");
     
     if ( !rcBuildDistanceField (&context, *compHeightField) )
     {
         trap->Print ("Failed to build distance field for navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(50, "Building Regions...", "", "");
     
     if ( !rcBuildRegions (&context, *compHeightField, 0, cfg.minRegionArea, cfg.mergeRegionArea) )
     {
         trap->Print ("Failed to build regions for navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(60, "Creating Contours...", "", "");
     
     // 5. Create contours
     contours = rcAllocContourSet();
     if ( !rcBuildContours (&context, *compHeightField, cfg.maxSimplificationError, cfg.maxEdgeLen, *contours) )
     {
         trap->Print ("Failed to create contour set for navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(70, "Building polygons mesh from contours...", "", "");
     
     // 6. Build polygons mesh from contours
     polyMesh = rcAllocPolyMesh();
     if ( !rcBuildPolyMesh (&context, *contours, cfg.maxVertsPerPoly, *polyMesh) )
     {
         trap->Print ("Failed to triangulate contours.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
+
+	UpdatePercentBar(80, "Creating detail mesh...", "", "");
     
     // 7. Create detail mesh
     detailedPolyMesh = rcAllocPolyMeshDetail();
     if ( !rcBuildPolyMeshDetail (&context, *polyMesh, *compHeightField, cfg.detailSampleDist, cfg.detailSampleMaxError, *detailedPolyMesh) )
     {
         trap->Print ("Failed to create detail mesh for navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
     
+	UpdatePercentBar(90, "Caching nav mesh query object...", "", "");
+
     // Cache the stuffffffff
-    CacheNavMeshData (mapname, polyMesh, detailedPolyMesh, &cfg);
+    CacheNavMeshData (polyMesh, detailedPolyMesh, &cfg);
     
     // 8. Create navigation mesh query object
     dtNavMeshCreateParams nvParams;
@@ -458,16 +517,19 @@ void CreateNavMesh ( const char *mapname )
     nvParams.cs = cfg.cs;
     nvParams.ch = cfg.ch;
     nvParams.buildBvTree = true;
+
+	UpdatePercentBar(100, "Creating Nav Mesh Data...", "", "");
     
     navData = NULL;
     navDataSize = 0;
     if ( !dtCreateNavMeshData (&nvParams, &navData, &navDataSize) )
     {
         trap->Print ("Failed to create navigation mesh.\n");
+		UpdatePercentBar(0, "", "", "");
         goto cleanup;
     }
     
-    
+	UpdatePercentBar(0, "", "", "");
     
 cleanup:
     rcFreeHeightField (heightField);
@@ -481,8 +543,12 @@ cleanup:
     delete[] buffer;
 }
 
-void JKG_Nav_CreateNavMesh(const char* mapname)
+void Warzone_Nav_CreateNavMesh(void)
 {
+	char mapname[128] = { 0 };
+
+	sprintf(mapname, "maps/%s.bsp", cgs.currentmapname);
+
 	trap->Print("Creating navigation mesh...this may take a while.\n");
 	CreateNavMesh(mapname);
 	trap->Print("Finished!\n");

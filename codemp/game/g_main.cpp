@@ -818,6 +818,10 @@ extern void NPC_PrecacheWarzoneNPCs ( void );
 extern void FOLIAGE_LoadTrees( void );
 extern void JKG_InitDamageSystem(void);
 
+#ifdef __USE_NAVMESH__
+extern void Warzone_Nav_CreateNavMesh(void);
+#endif //__USE_NAVMESH__
+
 gentity_t *SelectRandomDeathmatchSpawnPoint(qboolean isbot);
 void SP_info_jedimaster_start( gentity_t *ent );
 void G_InitGame( int levelTime, int randomSeed, int restart ) {
@@ -1104,6 +1108,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	NPC_LoadSpawnList( va("%s_mercenaries", mapname.string) );
 
 	JKG_InitDamageSystem();
+
+#ifdef __USE_NAVMESH__
+	Warzone_Nav_CreateNavMesh();
+#endif //__USE_NAVMESH__
 
 	//trap->Print("MAX_CONFIGSTRINGS is %i.\n", (int)MAX_CONFIGSTRINGS);
 }

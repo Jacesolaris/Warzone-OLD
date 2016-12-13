@@ -4884,6 +4884,7 @@ static const char *g_bindCommands[] = {
 	//[/AUTOWAYPOINT]
 	"generatefoliagepositions",
 	"genfoliage",
+	"navgen",
 };
 
 #define g_bindCount ARRAY_LEN(g_bindCommands)

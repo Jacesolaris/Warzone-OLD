@@ -13,6 +13,7 @@
 #define __MMO__
 //#define __AAS_AI_TESTING__
 #define __NEW_TRUEVIEW__
+//#define __USE_NAVMESH__
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
