@@ -3470,8 +3470,12 @@ intVectorCopy ( const intvec3_t in, intvec3_t out )
 
 /* */
 intvec_t
-intVectorLength ( const intvec3_t v )
+intVectorLength ( const intvec3_t v2 )
 {
+	vec3_t v;
+	v[0] = v2[0];
+	v[1] = v2[1];
+	v[2] = v2[2];
 	return ( sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) );
 }
 
