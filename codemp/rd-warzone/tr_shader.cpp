@@ -3966,7 +3966,6 @@ static qboolean ParseShader( const char *name, const char **text )
 		stages[0].stateBits |= GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
 	}
 
-
 	return qtrue;
 }
 
@@ -5543,7 +5542,7 @@ static void FixRenderCommandList( int newShader ) {
 					const drawSurfsCommand_t *ds_cmd =  (const drawSurfsCommand_t *)curCmd;
 
 					for( i = 0, drawSurf = ds_cmd->drawSurfs; i < ds_cmd->numDrawSurfs; i++, drawSurf++ ) {
-						R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlightMap, &postRender );
+						R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &postRender );
 						sortedIndex = (( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1));
 						if( sortedIndex >= newShader ) {
 							sortedIndex++;

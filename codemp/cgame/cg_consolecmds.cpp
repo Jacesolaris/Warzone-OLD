@@ -396,6 +396,7 @@ int cmdcmp( const void *a, const void *b ) {
 }
 
 extern void Warzone_Nav_CreateNavMesh(void);
+extern void AWP_AutoWaypoint2(void);
 
 /* This array MUST be sorted correctly by alphabetical name field */ // UQ1: And who thought this change was a good idea??? *grrr*
 static consoleCommand_t	commands[] = {
@@ -410,6 +411,7 @@ static consoleCommand_t	commands[] = {
 	{ "awc_addremovalspot",			AIMod_AddRemovalPoint },
 	{ "awc_addwaypoint",			AIMod_AddWayPoint },
 	{ "awp",						AIMod_AutoWaypoint },
+	{ "awp2",						AWP_AutoWaypoint2 },
 	{ "awp_badheight",				AIMod_MarkBadHeight },
 	{ "briefing",					CG_SiegeBriefing_f },
 	{ "cg_entitylist",				Clcmd_EntityList_f },

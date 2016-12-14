@@ -958,6 +958,8 @@ void RB_UpdateOccludedList(void)
 RB_RenderDrawSurfList
 ==================
 */
+
+#ifndef __MERGE_MODEL_SURFACES2__
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery ) {
 	int				i, max_threads_used = 0;
 	float			originalTime;
@@ -981,10 +983,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
 
-	//GL_SetModelviewMatrix(backEnd.viewParms.world.modelMatrix);
-	//matrix_t MVP;
-	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, MVP);
-
 	depth[0] = 0.f;
 	depth[1] = 1.f;
 
@@ -1001,21 +999,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 	originalTime = backEnd.refdef.floatTime;
 
 	fbo = glState.currentFBO;
-
-//#define __DEBUG_MERGE__
-	
-#ifdef __DEBUG_MERGE__
-	int NUM_TOTAL = 0;
-	int NUM_MERGED = 0;
-	int NUM_CUBE_MERGED = 0;
-	int NUM_CUBE_DELETED = 0;
-	int NUM_FAST_PATH = 0;
-	int NUM_NULL_SHADERS = 0;
-	int NUM_SHADER_FAILS = 0;
-	int NUM_POSTRENDER_FAILS = 0;
-	int NUM_CUBEMAP_FAILS = 0;
-	int NUM_MERGABLE_FAILS = 0;
-#endif //__DEBUG_MERGE__
 
 	for (i = 0 ; i < numDrawSurfs ; ++i) 
 	{
@@ -1054,10 +1037,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 		}
 #endif //__DEPTH_PREPASS_OCCLUSION__
 
-#ifdef __DEBUG_MERGE__
-		NUM_TOTAL++;
-#endif //__DEBUG_MERGE__
-
 		// Don't care about these...
 		dlighted = oldDlighted = 0;
 		fogNum = oldFogNum = 0;
@@ -1075,40 +1054,23 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 			else
 			{
 				newCubemapIndex = 0;
-#ifdef __DEBUG_MERGE__
-				NUM_CUBE_DELETED++;
-#endif //__DEBUG_MERGE__
 			}
 
 			if (newCubemapIndex > 0)
 			{// Let's see if we can swap with a close cubemap and merge them...
-#ifdef __DEBUG_MERGE__
-				qboolean mrg = qfalse;
-#endif //__DEBUG_MERGE__
-
-				/*
-				if (oldCubemapIndex > 0 && Distance(tr.cubemapOrigins[newCubemapIndex-1], tr.cubemapOrigins[oldCubemapIndex-1]) < 512.0)
-				{// Can merge with previous cubemap to allow merge...
-					newCubemapIndex = oldCubemapIndex;
-#ifdef __DEBUG_MERGE__
-					NUM_CUBE_MERGED++;
-					mrg = qtrue;
-#endif //__DEBUG_MERGE__
-				}
-				*/
 				
 				if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 				{// Too far away to care about cubemaps... Allow merge...
 					newCubemapIndex = 0;
-#ifdef __DEBUG_MERGE__
-					NUM_CUBE_DELETED++;
-					if (mrg) NUM_CUBE_MERGED--;
-#endif //__DEBUG_MERGE__
 				}
 			}
 		}
 
-		if ( drawSurf->sort == oldSort && (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex) ) 
+		if ( drawSurf->sort == oldSort 
+#ifndef __LAZY_CUBEMAP__
+			&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex) 
+#endif //__LAZY_CUBEMAP__
+			) 
 		{// fast path, same as previous sort
 #ifdef __DEPTH_PREPASS_OCCLUSION__
 			if (r_occlusion->integer && inQuery && backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity)
@@ -1128,15 +1090,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 #else //!__DEPTH_PREPASS_OCCLUSION__
 			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 #endif //__DEPTH_PREPASS_OCCLUSION__
-
-#ifdef __DEBUG_MERGE__
-			NUM_FAST_PATH++;
-#endif //__DEBUG_MERGE__
 			continue;
 		}
 
 		oldSort = drawSurf->sort;
-		R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &postRender );
+		R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &postRender );
 
 		cubemapIndex = newCubemapIndex;
 
@@ -1154,23 +1112,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 				//|| fogNum != oldFogNum 
 				//|| dlighted != oldDlighted 
 				|| postRender != oldPostRender 
+#ifndef __LAZY_CUBEMAP__
 				|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex) 
+#endif //__LAZY_CUBEMAP__
 				|| ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) 
 		{
-#ifdef __DEBUG_MERGE__
-			if (shader != NULL)
-			{
-				if (shader != oldShader) NUM_SHADER_FAILS++;
-				if (postRender != oldPostRender) NUM_POSTRENDER_FAILS++;
-				if (cubemapIndex != oldCubemapIndex) NUM_CUBEMAP_FAILS++;
-				if (entityNum != oldEntityNum && !shader->entityMergable) NUM_MERGABLE_FAILS++;
-			}
-			else
-			{
-				NUM_NULL_SHADERS++;
-			}
-#endif //__DEBUG_MERGE__
-
 			if (oldShader != NULL) 
 			{
 				RB_EndSurface();
@@ -1354,6 +1300,795 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 		, NUM_TOTAL, NUM_MERGED, NUM_CUBE_MERGED, NUM_CUBE_DELETED, NUM_FAST_PATH, NUM_NULL_SHADERS, NUM_SHADER_FAILS, NUM_POSTRENDER_FAILS, NUM_CUBEMAP_FAILS, NUM_MERGABLE_FAILS);
 #endif //__DEBUG_MERGE__
 }
+#else //__MERGE_MODEL_SURFACES2__
+#define MAX_SHADER_MERGED_GROUPS 2048
+#define MAX_SHADER_MERGED_SURFACES 16550
+
+typedef struct sortedDrawInfo_s {
+	int				shaderIndex = -1;
+	qboolean		isPostRender = qfalse;
+	int				cubemapIndex = 0;
+	uint64_t		sort = 0;
+	shader_t		*shader = NULL;
+	uint64_t		numDrawSurfs = 0;
+	drawSurf_t		*drawSurf[MAX_SHADER_MERGED_SURFACES];
+	int				entityNum[MAX_SHADER_MERGED_SURFACES];
+} sortedDrawInfo_t;
+
+sortedDrawInfo_t sortedDrawInfos[MAX_SHADER_MERGED_GROUPS];
+
+void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery) {
+	int				i, max_threads_used = 0;
+	int				j = 0;
+	float			originalTime;
+	FBO_t*			fbo = NULL;
+	shader_t		*oldShader = NULL;
+	int64_t			oldEntityNum = -1;
+	int64_t			oldPostRender = 0;
+	int             oldCubemapIndex = -1;
+	int				oldDepthRange = 0;
+	uint64_t		oldSort = (uint64_t)-1;
+	qboolean		CUBEMAPPING = qfalse;
+	float			depth[2];
+
+	if (r_cubeMapping->integer >= 1) CUBEMAPPING = qtrue;
+
+	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
+
+	// draw everything
+	backEnd.currentEntity = &tr.worldEntity;
+
+	depth[0] = 0.f;
+	depth[1] = 1.f;
+
+	backEnd.pc.c_surfaces += numDrawSurfs;
+
+	// save original time for entity shader offsets
+	originalTime = backEnd.refdef.floatTime;
+
+	fbo = glState.currentFBO;
+
+	if (!r_entitySurfaceMerge->integer)
+	{
+#ifdef __DEBUG_MERGE__
+		int numShaderChanges = 0;
+		int numShaderDraws = 0;
+#endif //__DEBUG_MERGE__
+
+		// First draw world normally...
+		for (i = 0; i < numDrawSurfs; ++i)
+		{
+			int64_t			zero = 0;
+			drawSurf_t		*drawSurf;
+			shader_t		*shader = NULL;
+			int64_t			entityNum;
+			int64_t			postRender;
+			int             cubemapIndex, newCubemapIndex;
+			int				depthRange;
+
+			if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
+
+			drawSurf = &drawSurfs[i];
+
+			if (!drawSurf->surface) continue;
+
+			if (!CUBEMAPPING)
+			{
+				newCubemapIndex = 0;
+			}
+			else
+			{
+				if (r_cubeMapping->integer >= 1)
+				{
+					newCubemapIndex = drawSurf->cubemapIndex;
+				}
+				else
+				{
+					newCubemapIndex = 0;
+				}
+
+				if (newCubemapIndex > 0)
+				{// Let's see if we can swap with a close cubemap and merge them...
+
+					if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex - 1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+					{// Too far away to care about cubemaps... Allow merge...
+						newCubemapIndex = 0;
+					}
+				}
+			}
+
+			if (drawSurf->sort == oldSort 
+#ifndef __LAZY_CUBEMAP__
+				&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
+#endif //__LAZY_CUBEMAP__
+				)
+			{// fast path, same as previous sort
+				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+				numShaderDraws++;
+#endif //__DEBUG_MERGE__
+				continue;
+			}
+
+			oldSort = drawSurf->sort;
+			R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
+
+			cubemapIndex = newCubemapIndex;
+
+			//
+			// change the tess parameters if needed
+			// a "entityMergable" shader is a shader that can have surfaces from seperate
+			// entities merged into a single batch, like smoke and blood puff sprites
+			if (shader != NULL
+				&& (shader != oldShader
+					|| postRender != oldPostRender
+#ifndef __LAZY_CUBEMAP__
+					|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
+#endif //__LAZY_CUBEMAP__
+					))
+			{
+				if (oldShader != NULL)
+				{
+					RB_EndSurface();
+				}
+
+				RB_BeginSurface(shader, 0, cubemapIndex);
+
+				backEnd.pc.c_surfBatches++;
+				oldShader = shader;
+				oldPostRender = postRender;
+				oldCubemapIndex = cubemapIndex;
+#ifdef __DEBUG_MERGE__
+				numShaderChanges++;
+#endif //__DEBUG_MERGE__
+			}
+
+			//
+			// change the modelview matrix if needed
+			//
+			if (entityNum != oldEntityNum)
+			{
+				qboolean sunflare = qfalse;
+				depthRange = 0;
+
+				// we have to reset the shaderTime as well otherwise image animations start
+				// from the wrong frame
+				tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
+
+				if (entityNum != REFENTITYNUM_WORLD)
+				{
+					backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
+					backEnd.refdef.floatTime = originalTime - backEnd.currentEntity->e.shaderTime;
+
+					// set up the transformation matrix
+					R_RotateForEntity(backEnd.currentEntity, &backEnd.viewParms, &backEnd.ori);
+
+					if (backEnd.currentEntity->needDlights)
+					{// set up the dynamic lighting if needed
+						R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
+					}
+
+					if (backEnd.currentEntity->e.renderfx & RF_NODEPTH)
+					{// No depth at all, very rare but some things for seeing through walls
+						depthRange = 2;
+					}
+					else if (backEnd.currentEntity->e.renderfx & RF_DEPTHHACK)
+					{// hack the depth range to prevent view model from poking into walls
+						depthRange = 1;
+					}
+				}
+				else {
+					backEnd.currentEntity = &tr.worldEntity;
+					backEnd.refdef.floatTime = originalTime;
+					backEnd.ori = backEnd.viewParms.world;
+					// we have to reset the shaderTime as well otherwise image animations on
+					// the world (like water) continue with the wrong frame
+					R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
+				}
+
+				GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
+
+				//
+				// change depthrange. Also change projection matrix so first person weapon does not look like coming
+				// out of the screen.
+				//
+				if (oldDepthRange != depthRange)
+				{
+					switch (depthRange) {
+					default:
+					case 0:
+						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+						{
+							GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+						}
+
+						if (!sunflare)
+							qglDepthRange(0.0f, 1.0f);
+
+						depth[0] = 0;
+						depth[1] = 1;
+						break;
+
+					case 1:
+						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+						{
+							viewParms_t temp = backEnd.viewParms;
+
+							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+							GL_SetProjectionMatrix(temp.projectionMatrix);
+						}
+
+						if (!oldDepthRange)
+							qglDepthRange(0.0f, 0.3f);
+
+						break;
+
+					case 2:
+						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+						{
+							viewParms_t temp = backEnd.viewParms;
+
+							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+							GL_SetProjectionMatrix(temp.projectionMatrix);
+						}
+
+						if (!oldDepthRange)
+							qglDepthRange(0.0f, 0.0f);
+
+						break;
+					}
+
+					oldDepthRange = depthRange;
+				}
+
+				oldEntityNum = entityNum;
+			}
+
+			// add the triangles for this surface
+			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+			numShaderDraws++;
+#endif //__DEBUG_MERGE__
+		}
+
+#ifdef __DEBUG_MERGE__
+		ri->Printf(PRINT_ALL, "%i total surface draws. %i shader changes.\n", numShaderDraws, numShaderChanges);
+#endif //__DEBUG_MERGE__
+	}
+	else
+	{
+#ifdef __DEBUG_MERGE__
+		int numShaderChanges = 0;
+		int numShaderDraws = 0;
+#endif //__DEBUG_MERGE__
+
+		while (1)
+		{// Add to the sorted list...
+			if (j >= MAX_SHADER_MERGED_GROUPS)
+			{
+				if (r_entitySurfaceMerge->integer > 2)
+					ri->Printf(PRINT_WARNING, "MAX_SHADER_MERGED_GROUPS\n");
+				break;
+			}
+
+			sortedDrawInfo_t *sorted = &sortedDrawInfos[j];
+
+			if (sorted->shaderIndex == -1) break;
+
+			sorted->shaderIndex = -1;
+			sorted->numDrawSurfs = 0;
+
+			j++;
+		}
+
+		int numTotal = 0;
+		int numSorted = 0;
+
+		j = 0;
+
+		for (i = 0; i < numDrawSurfs; ++i)
+		{
+			int64_t			zero = 0;
+			shader_t		*shader = NULL;
+			int             cubemapIndex, newCubemapIndex;
+			drawSurf_t		*drawSurf;
+			int64_t			entityNum;
+			int64_t			postRender;
+			int				depthRange;
+
+			if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
+
+			drawSurf = &drawSurfs[i];
+
+			if (!drawSurf->surface) continue;
+
+			if (!CUBEMAPPING)
+			{
+				newCubemapIndex = 0;
+			}
+			else
+			{
+				if (r_cubeMapping->integer >= 1)
+				{
+					newCubemapIndex = drawSurf->cubemapIndex;
+				}
+				else
+				{
+					newCubemapIndex = 0;
+				}
+
+				if (newCubemapIndex > 0)
+				{// Let's see if we can swap with a close cubemap and merge them...
+
+					if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex - 1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+					{// Too far away to care about cubemaps... Allow merge...
+						newCubemapIndex = 0;
+					}
+				}
+			}
+
+			R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
+
+			//
+			// Non-world surfaces can be merged and drawn after...
+			//
+
+			if (entityNum != REFENTITYNUM_WORLD)
+			{
+				j = 0;
+
+				while (1)
+				{// Add to the sorted list...
+					if (j >= MAX_SHADER_MERGED_GROUPS)
+					{
+						if (r_entitySurfaceMerge->integer > 2)
+							ri->Printf(PRINT_WARNING, "MAX_SHADER_MERGED_GROUPS\n");
+						break;
+					}
+
+					sortedDrawInfo_t *sorted = &sortedDrawInfos[j];
+
+					if (sorted->shaderIndex == -1)
+					{// Create a new slot...
+						sorted->shaderIndex = shader->index;
+						sorted->shader = shader;
+						sorted->cubemapIndex = newCubemapIndex;
+						sorted->sort = drawSurf->sort;
+						//sorted->entityNum = entityNum;
+						sorted->isPostRender = (qboolean)postRender;
+
+						if (sorted->numDrawSurfs + 1 >= MAX_SHADER_MERGED_SURFACES)
+						{
+							if (r_entitySurfaceMerge->integer > 2)
+								ri->Printf(PRINT_WARNING, "MAX_SHADER_MERGED_SURFACES\n");
+							break;
+						}
+
+						sorted->entityNum[sorted->numDrawSurfs] = entityNum;
+						sorted->drawSurf[sorted->numDrawSurfs] = drawSurf;
+						sorted->numDrawSurfs++;
+						numTotal++;
+						numSorted++;
+						break;
+					}
+
+					if (sorted->shaderIndex == shader->index
+#ifndef __LAZY_CUBEMAP__
+						&& sorted->cubemapIndex == newCubemapIndex
+#endif //__LAZY_CUBEMAP__
+						&& sorted->isPostRender == (qboolean)postRender
+						/*&& sorted->sort == drawSurf->sort*/)
+					{// Add it to this slot's list...
+
+						//sorted->sort = drawSurf->sort;
+						if (sorted->numDrawSurfs + 1 >= MAX_SHADER_MERGED_SURFACES)
+						{
+							if (r_entitySurfaceMerge->integer > 2)
+								ri->Printf(PRINT_WARNING, "MAX_SHADER_MERGED_SURFACES\n");
+							break;
+						}
+
+						sorted->entityNum[sorted->numDrawSurfs] = entityNum;
+						sorted->drawSurf[sorted->numDrawSurfs] = drawSurf;
+						sorted->numDrawSurfs++;
+						numTotal++;
+						break;
+					}
+
+					j++;
+				}
+
+				continue;
+			}
+
+			//
+			// World surfaces are already pre-merged at map load...
+			//
+
+			if (drawSurf->sort == oldSort 
+#ifndef __LAZY_CUBEMAP__
+				&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
+#endif //__LAZY_CUBEMAP__
+				)
+			{// fast path, same as previous sort
+				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+				numShaderDraws++;
+#endif //__DEBUG_MERGE__
+				continue;
+			}
+
+			oldSort = drawSurf->sort;
+			R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
+
+			cubemapIndex = newCubemapIndex;
+
+			//
+			// change the tess parameters if needed
+			// a "entityMergable" shader is a shader that can have surfaces from seperate
+			// entities merged into a single batch, like smoke and blood puff sprites
+			if (shader != NULL
+				&& (shader != oldShader
+					|| postRender != oldPostRender
+#ifndef __LAZY_CUBEMAP__
+					|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
+#endif //__LAZY_CUBEMAP__
+					))
+			{
+				if (oldShader != NULL)
+				{
+					RB_EndSurface();
+				}
+
+				RB_BeginSurface(shader, 0, cubemapIndex);
+
+				backEnd.pc.c_surfBatches++;
+				oldShader = shader;
+				oldPostRender = postRender;
+				oldCubemapIndex = cubemapIndex;
+#ifdef __DEBUG_MERGE__
+				numShaderChanges++;
+#endif //__DEBUG_MERGE__
+			}
+
+			//
+			// change the modelview matrix if needed
+			//
+			if (entityNum != oldEntityNum)
+			{
+				qboolean sunflare = qfalse;
+				depthRange = 0;
+
+				// we have to reset the shaderTime as well otherwise image animations start
+				// from the wrong frame
+				tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
+
+				if (entityNum != REFENTITYNUM_WORLD)
+				{
+					backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
+					backEnd.refdef.floatTime = originalTime - backEnd.currentEntity->e.shaderTime;
+
+					// set up the transformation matrix
+					R_RotateForEntity(backEnd.currentEntity, &backEnd.viewParms, &backEnd.ori);
+
+					if (backEnd.currentEntity->needDlights)
+					{// set up the dynamic lighting if needed
+						R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
+					}
+
+					if (backEnd.currentEntity->e.renderfx & RF_NODEPTH)
+					{// No depth at all, very rare but some things for seeing through walls
+						depthRange = 2;
+					}
+					else if (backEnd.currentEntity->e.renderfx & RF_DEPTHHACK)
+					{// hack the depth range to prevent view model from poking into walls
+						depthRange = 1;
+					}
+				}
+				else {
+					backEnd.currentEntity = &tr.worldEntity;
+					backEnd.refdef.floatTime = originalTime;
+					backEnd.ori = backEnd.viewParms.world;
+					// we have to reset the shaderTime as well otherwise image animations on
+					// the world (like water) continue with the wrong frame
+					R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
+				}
+
+				GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
+
+				//
+				// change depthrange. Also change projection matrix so first person weapon does not look like coming
+				// out of the screen.
+				//
+				if (oldDepthRange != depthRange)
+				{
+					switch (depthRange) {
+					default:
+					case 0:
+						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+						{
+							GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+						}
+
+						if (!sunflare)
+							qglDepthRange(0.0f, 1.0f);
+
+						depth[0] = 0;
+						depth[1] = 1;
+						break;
+
+					case 1:
+						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+						{
+							viewParms_t temp = backEnd.viewParms;
+
+							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+							GL_SetProjectionMatrix(temp.projectionMatrix);
+						}
+
+						if (!oldDepthRange)
+							qglDepthRange(0.0f, 0.3f);
+
+						break;
+
+					case 2:
+						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+						{
+							viewParms_t temp = backEnd.viewParms;
+
+							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+							GL_SetProjectionMatrix(temp.projectionMatrix);
+						}
+
+						if (!oldDepthRange)
+							qglDepthRange(0.0f, 0.0f);
+
+						break;
+					}
+
+					oldDepthRange = depthRange;
+				}
+
+				oldEntityNum = entityNum;
+			}
+
+			// add the triangles for this surface
+			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+			numShaderDraws++;
+#endif //__DEBUG_MERGE__
+		}
+
+		if (r_entitySurfaceMerge->integer > 1)
+			ri->Printf(PRINT_ALL, "%i draw surfs were merged into %i sorted lists.\n", numTotal, numSorted);
+
+		j = 0;
+
+		// Draw sorted entity surface list...
+		while (1)
+		{// Add to the sorted list...
+			if (j >= MAX_SHADER_MERGED_GROUPS)
+			{
+				if (r_entitySurfaceMerge->integer > 2)
+					ri->Printf(PRINT_WARNING, "MAX_SHADER_MERGED_GROUPS2\n");
+				break;
+			}
+
+			sortedDrawInfo_t *sorted = &sortedDrawInfos[j];
+
+			if (sorted->shaderIndex == -1)
+				break;
+
+			for (i = 0; i < sorted->numDrawSurfs; ++i)
+			{
+				int64_t			zero = 0;
+				drawSurf_t		*drawSurf;
+				shader_t		*shader = NULL;
+				int64_t			entityNum;
+				int64_t			postRender;
+				int             cubemapIndex, newCubemapIndex;
+				int				depthRange;
+
+				if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
+
+				drawSurf = sorted->drawSurf[i];
+
+				if (!drawSurf->surface) continue;
+
+				entityNum = sorted->entityNum[i];
+				newCubemapIndex = sorted->cubemapIndex;
+				shader = sorted->shader;
+				postRender = sorted->isPostRender;
+				
+				if (drawSurf->sort == oldSort 
+#ifndef __LAZY_CUBEMAP__
+					&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
+#endif //__LAZY_CUBEMAP__
+					)
+				{// fast path, same as previous sort
+					rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+					numShaderDraws++;
+#endif //__DEBUG_MERGE__
+					continue;
+				}
+
+				oldSort = drawSurf->sort;
+				//R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
+
+				cubemapIndex = newCubemapIndex;
+
+				//
+				// change the tess parameters if needed
+				// a "entityMergable" shader is a shader that can have surfaces from seperate
+				// entities merged into a single batch, like smoke and blood puff sprites
+				if (shader != NULL
+					&& (shader != oldShader
+						|| postRender != oldPostRender
+#ifndef __LAZY_CUBEMAP__
+						|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
+#endif //__LAZY_CUBEMAP__
+						))
+				{
+					if (oldShader != NULL)
+					{
+						RB_EndSurface();
+					}
+
+					RB_BeginSurface(shader, 0, cubemapIndex);
+
+					backEnd.pc.c_surfBatches++;
+					oldShader = shader;
+					oldPostRender = postRender;
+					oldCubemapIndex = cubemapIndex;
+#ifdef __DEBUG_MERGE__
+					numShaderChanges++;
+#endif //__DEBUG_MERGE__
+				}
+
+				//
+				// change the modelview matrix if needed
+				//
+				if (entityNum != oldEntityNum)
+				{
+					qboolean sunflare = qfalse;
+					depthRange = 0;
+
+					// we have to reset the shaderTime as well otherwise image animations start
+					// from the wrong frame
+					tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
+
+					if (entityNum != REFENTITYNUM_WORLD)
+					{
+						backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
+						backEnd.refdef.floatTime = originalTime - backEnd.currentEntity->e.shaderTime;
+
+						// set up the transformation matrix
+						R_RotateForEntity(backEnd.currentEntity, &backEnd.viewParms, &backEnd.ori);
+
+						if (backEnd.currentEntity->needDlights)
+						{// set up the dynamic lighting if needed
+							R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
+						}
+
+						if (backEnd.currentEntity->e.renderfx & RF_NODEPTH)
+						{// No depth at all, very rare but some things for seeing through walls
+							depthRange = 2;
+						}
+						else if (backEnd.currentEntity->e.renderfx & RF_DEPTHHACK)
+						{// hack the depth range to prevent view model from poking into walls
+							depthRange = 1;
+						}
+					}
+					else {
+						backEnd.currentEntity = &tr.worldEntity;
+						backEnd.refdef.floatTime = originalTime;
+						backEnd.ori = backEnd.viewParms.world;
+						// we have to reset the shaderTime as well otherwise image animations on
+						// the world (like water) continue with the wrong frame
+						R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
+					}
+
+					GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
+
+					//
+					// change depthrange. Also change projection matrix so first person weapon does not look like coming
+					// out of the screen.
+					//
+					if (oldDepthRange != depthRange)
+					{
+						switch (depthRange) {
+						default:
+						case 0:
+							if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+							{
+								GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+							}
+
+							if (!sunflare)
+								qglDepthRange(0.0f, 1.0f);
+
+							depth[0] = 0;
+							depth[1] = 1;
+							break;
+
+						case 1:
+							if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+							{
+								viewParms_t temp = backEnd.viewParms;
+
+								R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+								GL_SetProjectionMatrix(temp.projectionMatrix);
+							}
+
+							if (!oldDepthRange)
+								qglDepthRange(0.0f, 0.3f);
+
+							break;
+
+						case 2:
+							if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
+							{
+								viewParms_t temp = backEnd.viewParms;
+
+								R_SetupProjection(&temp, r_znear->value, 0, qfalse);
+
+								GL_SetProjectionMatrix(temp.projectionMatrix);
+							}
+
+							if (!oldDepthRange)
+								qglDepthRange(0.0f, 0.0f);
+
+							break;
+						}
+
+						oldDepthRange = depthRange;
+					}
+
+					oldEntityNum = entityNum;
+				}
+
+				// add the triangles for this surface
+				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+				numShaderDraws++;
+#endif //__DEBUG_MERGE__
+			}
+
+			j++;
+		}
+
+#ifdef __DEBUG_MERGE__
+		ri->Printf(PRINT_ALL, "%i total surface draws. %i shader changes.\n", numShaderDraws, numShaderChanges);
+#endif //__DEBUG_MERGE__
+	}
+
+	backEnd.refdef.floatTime = originalTime;
+
+	// draw the contents of the last shader batch
+	if (oldShader != NULL) {
+		RB_EndSurface();
+	}
+
+	if (inQuery) {
+		qglEndQuery(GL_SAMPLES_PASSED);
+	}
+
+	FBO_Bind(fbo);
+
+	// go back to the world modelview matrix
+
+	GL_SetModelviewMatrix(backEnd.viewParms.world.modelMatrix);
+
+	// Restore depth range for subsequent rendering
+	qglDepthRange(0.0f, 1.0f);
+}
+#endif //__MERGE_MODEL_SURFACES2__
 
 
 /*

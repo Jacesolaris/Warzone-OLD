@@ -30,6 +30,7 @@
 
 using namespace shooter;
 
+//#define __NAVMESH_OLD_METHOD__
 
 int CountIndices(const dsurface_t *surfaces, int numSurfaces)
 {
@@ -232,7 +233,8 @@ namespace {
 
 // based on Sample_SoloMesh::handleBuild()
 NavMesh::NavMesh(
-	float agentHeight,
+#ifdef __NAVMESH_OLD_METHOD__
+	/*float agentHeight,
 	float agentRadius,
 	float agentMaxClimb,
 	float agentWalkableSlopeAngle,
@@ -255,7 +257,20 @@ NavMesh::NavMesh(
 	float initialJumpForwardSpeed,
 	float initialJumpUpSpeed,
 	float idealJumpPointsDist,
+	float maxIntersectionPosHeight*/
+#else
+	const float* verts,
+	const float* normals,
+	const int* tris,
+	int ntris,
+	rcConfig in_cfg,
+	float maxJumpGroundRange,
+	float maxJumpDistance,
+	float initialJumpForwardSpeed,
+	float initialJumpUpSpeed,
+	float idealJumpPointsDist,
 	float maxIntersectionPosHeight
+#endif
 )
 	: m_keepInterResults(true)
 	, m_totalBuildTimeMs(0)
@@ -276,6 +291,7 @@ NavMesh::NavMesh(
 
 	int nverts = ntris * 3;
 
+#ifdef __NAVMESH_OLD_METHOD__
 	m_cfg = new rcConfig();
 	m_cfg->cs = cellSize;
 	m_cfg->ch = cellHeight;
@@ -290,13 +306,20 @@ NavMesh::NavMesh(
 	m_cfg->maxVertsPerPoly = DT_VERTS_PER_POLYGON;
 	m_cfg->detailSampleDist = detailSampleDist < 0.9f ? 0 : cellSize * detailSampleDist;
 	m_cfg->detailSampleMaxError = cellHeight * detailSampleMaxError;
+#else
+	//m_cfg = &in_cfg;
+	m_cfg = new rcConfig();
+	memcpy(m_cfg, (const void *)&in_cfg, sizeof(in_cfg));
+#endif
 
 
 	// Set the area where the navigation will be build.
 	// Here the bounds of the input mesh are used, but the
 	// area could be specified by an user defined box, etc.
+#ifdef __NAVMESH_OLD_METHOD__
 	rcVcopy(m_cfg->bmin, minBound);
 	rcVcopy(m_cfg->bmax, maxBound);
+#endif
 	rcCalcGridSize(m_cfg->bmin, m_cfg->bmax, m_cfg->cs, &m_cfg->width, &m_cfg->height);
 
 	rcContext *m_ctx = new rcContext;
@@ -504,8 +527,13 @@ NavMesh::NavMesh(
 
 	// Build the Jump Down OffMesh connections
 	BuildJumpConnections(
+#ifdef __NAVMESH_OLD_METHOD__
 		agentHeight,
 		agentRadius,
+#else
+		m_cfg->walkableHeight,
+		m_cfg->walkableRadius,
+#endif
 		maxJumpGroundRange,
 		maxJumpDistance,
 		initialJumpForwardSpeed,
@@ -566,9 +594,15 @@ NavMesh::NavMesh(
 	params.offMeshConUserID = &m_OffMeshConUserID[0];
 	params.offMeshConCount = m_OffMeshConVerts.size() / 6;
 
+#ifdef __NAVMESH_OLD_METHOD__
 	params.walkableHeight = agentHeight;
 	params.walkableRadius = agentRadius;
 	params.walkableClimb = agentMaxClimb;
+#else
+	params.walkableHeight = m_cfg->walkableHeight;
+	params.walkableRadius = m_cfg->walkableRadius;
+	params.walkableClimb = m_cfg->walkableClimb;
+#endif
 	rcVcopy(params.bmin, m_pmesh->bmin);
 	rcVcopy(params.bmax, m_pmesh->bmax);
 	params.cs = m_cfg->cs;
@@ -1422,7 +1456,7 @@ void CreateNavMesh(const char *mapname)
 	cfg.detailSampleDist = 6.0f * cfg.cs;
 	cfg.detailSampleMaxError = 1.0f * cfg.ch;
 	*/
-
+#ifdef __NAVMESH_OLD_METHOD__
 	vec3_t size;
 	VectorSet(size, mapmaxs[0] - mapmins[0], mapmaxs[1] - mapmins[1], mapmaxs[2] - mapmins[2]);
 	float largest = max(size[0], size[1]);
@@ -1454,8 +1488,99 @@ void CreateNavMesh(const char *mapname)
 			/*initialJumpForwardSpeed*/		3.f,//512.0f,//3.f, 
 			/*initialJumpUpSpeed*/			4.f,//512.0f,//4.f, 
 			/*idealJumpPointsDist*/			9.f,//512.0f,//.9f, 
-			/*maxIntersectionPosHeight*/	mapmaxs[1]-128.0//18.f
+			/*maxIntersectionPosHeight*/	mapmaxs[1] - 128.0//18.f
 		));
+#else
+	vec3_t bmin, bmax;
+
+	VectorCopy(mapmins, bmin);
+	VectorCopy(mapmaxs, bmax);
+
+	const float MaxSimplificationError = 1.3f;
+
+	const float MinRegionSize = 8;
+	const float MergeRegionSize = 20;
+
+	const int vertsPerPoly = 6;
+
+	const float DetailSampleDist = 8.0;
+	const float DetailSampleMaxError = 0.9;
+
+	const float TileSize = (1600.0 / 3.0) * 60;// 533.0f + (1.0f / 3.0f);
+	const int VoxelCount = 1778;
+	const float CellSize = TileSize / (float)VoxelCount;
+	const float CellHeight = (TileSize / (float)VoxelCount) / 5.0;
+
+	const float WorldUnitWalkableHeight = 64.0 / CellHeight;
+	const float WorldUnitWalkableRadius = 16.0 / CellSize;
+	const float WalkableSlopeAngle = 45.0;
+	const float WorldUnitWalkableClimb = STEPSIZE / CellHeight;
+
+	rcConfig m_cfg;
+	// Init build configuration from GUI
+	memset(&m_cfg, 0, sizeof(m_cfg));
+	m_cfg.cs = CellSize;
+	m_cfg.ch = CellHeight;
+	m_cfg.walkableSlopeAngle = WalkableSlopeAngle;
+	m_cfg.walkableHeight = (int)ceilf(WorldUnitWalkableHeight / m_cfg.ch);
+	m_cfg.walkableClimb = (int)floorf(WorldUnitWalkableClimb / m_cfg.ch);
+	m_cfg.walkableRadius = (int)ceilf(WorldUnitWalkableRadius / m_cfg.cs);
+	m_cfg.maxEdgeLen = 8; //(int)MaxEdgeLen;
+	m_cfg.maxSimplificationError = MaxSimplificationError;
+	m_cfg.minRegionArea = (int)rcSqr(MinRegionSize);		// Note: area = size*size
+	m_cfg.mergeRegionArea = (int)rcSqr(MergeRegionSize);	// Note: area = size*size
+	m_cfg.maxVertsPerPoly = (int)vertsPerPoly;
+	m_cfg.tileSize = (int)TileSize;
+	m_cfg.borderSize = m_cfg.walkableRadius + 3; // Reserve enough padding.
+	m_cfg.width = m_cfg.tileSize;// + m_cfg.borderSize*2;
+	m_cfg.height = m_cfg.tileSize;// + m_cfg.borderSize*2;
+	m_cfg.detailSampleDist = DetailSampleDist;
+	m_cfg.detailSampleMaxError = DetailSampleMaxError;
+
+	trap->Print("Cell size: %0.2f\n", m_cfg.cs);
+	trap->Print("Cell height: %0.2f\n", m_cfg.ch);
+	trap->Print("Walkable slope angle : %0.2f\n", m_cfg.walkableSlopeAngle);
+	trap->Print("Walkable height: %d\n", m_cfg.walkableHeight);
+	trap->Print("Walkable climb: %d\n", m_cfg.walkableClimb);
+	trap->Print("Walkable radius: %d\n", m_cfg.walkableRadius);
+	trap->Print("Max edge length : %d\n", m_cfg.maxEdgeLen);
+	trap->Print("Tile size: %d\n", m_cfg.tileSize);
+	trap->Print("Border size: %d\n", m_cfg.borderSize);
+	trap->Print("Height: %d\n", m_cfg.height);
+	trap->Print("Width: %d\n", m_cfg.width);
+
+	trap->Print("Max edge length float: %0.2f\n", (WorldUnitWalkableRadius / CellSize) * 8);
+	trap->Print("%f %f\n", WorldUnitWalkableRadius, CellSize);
+
+	rcVcopy(m_cfg.bmin, bmin);
+	rcVcopy(m_cfg.bmax, bmax);
+
+	// pad bounds with a border
+	m_cfg.bmin[0] -= m_cfg.borderSize*m_cfg.cs;
+	m_cfg.bmin[2] -= m_cfg.borderSize*m_cfg.cs;
+	m_cfg.bmax[0] += m_cfg.borderSize*m_cfg.cs;
+	m_cfg.bmax[2] += m_cfg.borderSize*m_cfg.cs;
+
+	//trap->Print("Generating mesh(%d, %d) ", tx, ty);
+
+	trap->Print(" 3x3 bounds...\n");
+	trap->Print("  min: {%0.2f, %0.2f, %0.2f}\n", bmin[0], bmin[1], bmin[2]);
+	trap->Print("  max: {%0.2f, %0.2f, %0.2f}\n", bmax[0], bmax[1], bmax[2]);
+
+	mNavMesh.reset(
+		new NavMesh(verts,
+			NULL,//normals,
+			tris,
+			numtris, 
+			m_cfg,
+			/*maxJumpGroundRange*/			6.f,//512.0f,//6.f, 
+			/*maxJumpDistance*/				10.f,//512.0f,//10.f, 
+			/*initialJumpForwardSpeed*/		3.f,//512.0f,//3.f, 
+			/*initialJumpUpSpeed*/			4.f,//512.0f,//4.f, 
+			/*idealJumpPointsDist*/			9.f,//512.0f,//.9f, 
+			/*maxIntersectionPosHeight*/	mapmaxs[1] - 128.0//18.f),
+		));
+#endif
 
 	//delete[] verts;
 	//delete[] tris;

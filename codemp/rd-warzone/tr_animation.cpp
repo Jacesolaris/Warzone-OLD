@@ -309,7 +309,9 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 		}
 
 		if (!personalModel)
-			R_AddDrawSurf( (surfaceType_t *)surface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
+		{
+			R_AddDrawSurf((surfaceType_t *)surface, shader, fogNum, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, ent), cubemapIndex);
+		}
 
 		surface = (mdrSurface_t *)( (byte *)surface + surface->ofsEnd );
 	}

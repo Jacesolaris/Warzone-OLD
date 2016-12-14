@@ -566,7 +566,7 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 #if defined(USE_REGIONS)
-	return GenerateTerrainMap(texCoords * u_Local9.r);
+	return GenerateTerrainMap(texCoords);
 #else
 	return texture(u_DiffuseMap, texCoords);
 #endif
@@ -575,7 +575,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 #if defined(USE_REGIONS)
-	return ConvertToNormals(GenerateTerrainMap(texCoords * u_Local9.r));
+	return ConvertToNormals(GenerateTerrainMap(texCoords));
 #else
 	if (u_Local4.r <= 0.0)
 	{

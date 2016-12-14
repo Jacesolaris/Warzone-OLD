@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include "../Recast/Recast/Recast.h" // for dtPolyRef
 #include "../Recast/Detour/DetourNavMesh.h" // for dtPolyRef
 
 struct rcHeightfield;
@@ -56,6 +57,7 @@ namespace shooter
 		/// and calculates the node intersections positions (where the agent can be revived).
 		/// Most parameters are recast & detour specific config variables in world units (see rcConfig). 
 		NavMesh(
+#if 0
 			float agentHeight,
 			float agentRadius,
 			float agentMaxClimb,
@@ -80,6 +82,20 @@ namespace shooter
 			float initialJumpUpSpeed, ///< Initial jump down upward speed
 			float idealJumpPointsDist, ///< Ideal distance between jump down points on a NavMesh edge
 			float maxIntersectionPosHeight); ///< Maximum height of the intersection positions
+#else
+			const float* verts,
+			const float* normals,
+			const int* tris,
+			int ntris,
+			rcConfig in_cfg,
+			float maxJumpGroundRange,
+			float maxJumpDistance,
+			float initialJumpForwardSpeed,
+			float initialJumpUpSpeed,
+			float idealJumpPointsDist,
+			float maxIntersectionPosHeight
+			);
+#endif
 
 											 /// Destructor
 		~NavMesh();

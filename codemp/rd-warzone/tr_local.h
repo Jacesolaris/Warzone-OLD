@@ -42,6 +42,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
 //#define __ORIGINAL_OCCLUSION__
 //#define __DEPTH_PREPASS_OCCLUSION__
+//#define __MERGE_MODEL_SURFACES__
+#define __MERGE_MODEL_SURFACES2__	// merge entity surfaces into less draws...
+#define __LAZY_CUBEMAP__			// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -223,6 +226,8 @@ extern cvar_t	*r_ext_multitexture;
 extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;
 extern cvar_t	*r_ext_texture_filter_anisotropic;
+
+extern cvar_t  *r_entitySurfaceMerge;
 
 extern cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionDebug;
@@ -2720,6 +2725,8 @@ extern	cvar_t	*r_showcluster;
 
 extern cvar_t	*r_gamma;
 
+extern cvar_t  *r_entitySurfaceMerge;
+
 extern  cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionDebug;
 extern  cvar_t  *r_ext_draw_range_elements;
@@ -2963,7 +2970,7 @@ void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
 void R_AddPolygonSurfaces( void );
 
-void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader, int64_t *fogNum, int64_t *dlightMap, int64_t *postRender);
+void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader, int64_t *fogNum, int64_t *postRender);
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
 				   int64_t fogIndex, int64_t dlightMap, int64_t postRender, int cubemap );
@@ -3843,7 +3850,6 @@ void C_LevelLoadEnd( void );
 void RB_SurfaceGhoul( CRenderableSurface *surf );
 
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage );
-
 
 /*
 ============================================================

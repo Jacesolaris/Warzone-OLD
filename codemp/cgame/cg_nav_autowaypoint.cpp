@@ -28,6 +28,7 @@
 */
 
 #define __AUTOWAYPOINT__
+#define __AUTOWAYPOINT2__
 //#define __COVER_SPOTS__ // UQ1: Not used because we now have NPC bot evasion/cover/etc...
 
 #ifdef _WIN32
@@ -8339,62 +8340,66 @@ qboolean WP_CheckInSolid (vec3_t position)
 	return qfalse;
 }
 
-qboolean Warzone_CheckBelowWaypoint( int wp )
+qboolean Warzone_CheckBelowWaypoint( int wp, qboolean checkSurfaces )
 {
 	trace_t tr;
 	vec3_t org, org2;
 
 	VectorCopy(nodes[wp].origin, org);
-	org[2]+=18;
 
 	if (WP_CheckInSolid(org)) return qfalse;
 
-	VectorCopy(nodes[wp].origin, org);
-	VectorCopy(nodes[wp].origin, org2);
-	org2[2] = -131072.0f;//org[2] - 256;
+	org[2]+=24;
 
-	CG_Trace( &tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_TRIGGER);
-
-	if ( tr.startsolid )
+	if (checkSurfaces)
 	{
-		//trap->Print("Waypoint %i is in solid.\n", wp);
-		return qfalse;
-	}
+		VectorCopy(nodes[wp].origin, org);
+		VectorCopy(nodes[wp].origin, org2);
+		org2[2] = -131072.0f;//org[2] - 256;
 
-	if ( tr.allsolid )
-	{
-		//trap->Print("Waypoint %i is in solid.\n", wp);
-		return qfalse;
-	}
+		CG_Trace(&tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID | CONTENTS_TRIGGER);
 
-	if ( tr.fraction == 1 )
-	{
-		//trap->Print("Waypoint %i is too high above ground.\n", wp);
-		return qfalse;
-	}
+		if (tr.startsolid)
+		{
+			//trap->Print("Waypoint %i is in solid.\n", wp);
+			return qfalse;
+		}
 
-	if ( tr.contents & CONTENTS_LAVA )
-	{
-		//trap->Print("Waypoint %i is in lava.\n", wp);
-		return qfalse;
-	}
+		if (tr.allsolid)
+		{
+			//trap->Print("Waypoint %i is in solid.\n", wp);
+			return qfalse;
+		}
 
-	if ( tr.contents & CONTENTS_SLIME )
-	{
-		//trap->Print("Waypoint %i is in slime.\n", wp);
-		return qfalse;
-	}
+		if (tr.fraction == 1)
+		{
+			//trap->Print("Waypoint %i is too high above ground.\n", wp);
+			return qfalse;
+		}
 
-	if ( tr.contents & CONTENTS_TRIGGER )
-	{
-		//trap->Print("Waypoint %i is in trigger.\n", wp);
-		return qfalse;
-	}
+		if (tr.contents & CONTENTS_LAVA)
+		{
+			//trap->Print("Waypoint %i is in lava.\n", wp);
+			return qfalse;
+		}
 
-	if ( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) )
-	{
-		//trap->Print("Waypoint %i is in trigger.\n", wp);
-		return qfalse;
+		if (tr.contents & CONTENTS_SLIME)
+		{
+			//trap->Print("Waypoint %i is in slime.\n", wp);
+			return qfalse;
+		}
+
+		if (tr.contents & CONTENTS_TRIGGER)
+		{
+			//trap->Print("Waypoint %i is in trigger.\n", wp);
+			return qfalse;
+		}
+
+		if ((tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW))
+		{
+			//trap->Print("Waypoint %i is in trigger.\n", wp);
+			return qfalse;
+		}
 	}
 
 	return qtrue;
@@ -8893,8 +8898,14 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 						continue;
 					}
 
-					if (!Warzone_CheckBelowWaypoint( i ))
-					{// Removes all waypoints without any route to the server's specified spawnpoint location...
+					/*if (checkSurfaces && !Warzone_CheckBelowWaypoint(i, qtrue))
+					{// Removes all waypoints in solids...
+						nodes[i].objectNum[0] = 1;
+						num_allsolid_nodes++;
+						continue;
+					}
+					else*/ if (!Warzone_CheckBelowWaypoint( i, qfalse ))
+					{// Removes all waypoints in solids...
 						nodes[i].objectNum[0] = 1;
 						num_allsolid_nodes++;
 						continue;
@@ -9313,5 +9324,338 @@ void AIMod_MarkBadHeight ( void )
 	NUM_BAD_HEIGHTS++;
 	trap->Print("Height %f marked as bad for waypoints.\n", cg.refdef.vieworg[2]);
 }
+
+#ifdef __AUTOWAYPOINT2__
+void AWP_UpdatePercentBar(float percent, char *text, char *text2, char *text3)
+{
+	aw_percent_complete = percent;
+
+	if (text[0] != '\0') trap->Print("^1*** ^3%s^5: %s\n", GAME_VERSION, text);
+	strcpy(task_string1, va("^5%s", text));
+	strcpy(task_string2, va("^5%s", text2));
+	strcpy(task_string3, va("^5%s", text3));
+	trap->UpdateScreen();
+}
+
+void AWP_UpdatePercentBar2(float percent, char *text, char *text2, char *text3)
+{
+	aw_percent_complete = percent;
+	strcpy(task_string1, va("^5%s", text));
+	strcpy(task_string2, va("^5%s", text2));
+	strcpy(task_string3, va("^5%s", text3));
+	trap->UpdateScreen();
+}
+
+void AWP_UpdatePercentBarOnly(float percent)
+{
+	aw_percent_complete = percent;
+	trap->UpdateScreen();
+}
+
+int AWP_CountIndices(const dsurface_t *surfaces, int numSurfaces)
+{
+	int count = 0;
+	for (int i = 0; i < numSurfaces; i++, surfaces++)
+	{
+		if (surfaces->surfaceType != MST_PLANAR && surfaces->surfaceType != MST_TRIANGLE_SOUP)
+		{
+			continue;
+		}
+
+		count += surfaces->numIndexes;
+	}
+
+	return count;
+}
+
+void AWP_LoadTriangles(const int *indexes, int* tris, const dsurface_t *surfaces, int numSurfaces)
+{
+	int t = 0;
+	int v = 0;
+	for (int i = 0; i < numSurfaces; i++, surfaces++)
+	{
+		if (surfaces->surfaceType != MST_PLANAR && surfaces->surfaceType != MST_TRIANGLE_SOUP)
+		{
+			continue;
+		}
+
+		for (int j = surfaces->firstIndex, k = 0; k < surfaces->numIndexes; j++, k++)
+		{
+			tris[t++] = v + indexes[j];
+		}
+
+		v += surfaces->numVerts;
+	}
+}
+
+void AWP_LoadVertices(const drawVert_t *vertices, float* verts, const dsurface_t *surfaces, const int numSurfaces)
+{
+	int v = 0;
+	for (int i = 0; i < numSurfaces; i++, surfaces++)
+	{
+		// will handle patches later...
+		if (surfaces->surfaceType != MST_PLANAR && surfaces->surfaceType != MST_TRIANGLE_SOUP)
+		{
+			continue;
+		}
+
+		for (int j = surfaces->firstVert, k = 0; k < surfaces->numVerts; j++, k++)
+		{
+			verts[v++] = vertices[j].xyz[0];
+			verts[v++] = vertices[j].xyz[1];
+			verts[v++] = vertices[j].xyz[2];
+		}
+	}
+}
+
+qboolean AWP_LoadMapGeometry(const char *buffer, vec3_t mapmins, vec3_t mapmaxs, float* &verts, int &numverts, int* &tris, int &numtris)
+{
+	const dheader_t *header = (const dheader_t *)buffer;
+	if (header->ident != BSP_IDENT)
+	{
+		trap->Print(va("Expected ident '%d', found %d.\n", BSP_IDENT, header->ident));
+		return qfalse;
+	}
+
+	if (header->version != BSP_VERSION)
+	{
+		trap->Print(va("Expected version '%d', found %d.\n", BSP_VERSION, header->version));
+		return qfalse;
+	}
+
+	// Load indices
+	const int *indexes = (const int *)(buffer + header->lumps[LUMP_DRAWINDEXES].fileofs);
+	const dsurface_t *surfaces = (const dsurface_t *)(buffer + header->lumps[LUMP_SURFACES].fileofs);
+	int numSurfaces = header->lumps[LUMP_SURFACES].filelen / sizeof(dsurface_t);
+
+	numtris = AWP_CountIndices(surfaces, numSurfaces);
+	tris = new int[numtris];
+	numtris /= 3;
+
+	AWP_LoadTriangles(indexes, tris, surfaces, numSurfaces);
+
+	// Load vertices
+	const drawVert_t *vertices = (const drawVert_t *)(buffer + header->lumps[LUMP_DRAWVERTS].fileofs);
+	numverts = header->lumps[LUMP_DRAWVERTS].filelen / sizeof(drawVert_t);
+
+	verts = new float[3 * numverts];
+	AWP_LoadVertices(vertices, verts, surfaces, numSurfaces);
+
+	// Get map bounds. First model is always the entire map
+	const dmodel_t *models = (const dmodel_t *)(buffer + header->lumps[LUMP_MODELS].fileofs);
+	mapmins[0] = models[0].maxs[0];
+	mapmins[1] = models[0].mins[1];
+	mapmins[2] = models[0].maxs[2];
+
+	mapmaxs[0] = models[0].mins[0];
+	mapmaxs[1] = models[0].maxs[1];
+	mapmaxs[2] = models[0].mins[2];
+
+	/*
+	mapmins[0] = -models[0].maxs[0];
+	mapmins[1] = models[0].mins[2];
+	mapmins[2] = -models[0].maxs[1];
+
+	mapmaxs[0] = -models[0].mins[0];
+	mapmaxs[1] = models[0].maxs[2];
+	mapmaxs[2] = -models[0].mins[1];
+	*/
+
+	return qtrue;
+}
+
+qboolean AWP_CheckOrg(vec3_t org, vec3_t mapMins, vec3_t mapMaxs)
+{
+	float floor = FloorHeightAt(org);
+
+	// Set the point found on the floor as the test location...
+	//VectorSet(org, new_org[0], new_org[1], floor);
+
+	if (floor < mapMins[2])
+	{// Can skip this one!
+		return qfalse;
+	}
+	else if (floor > mapMaxs[2])
+	{// Can skip this one!
+		return qfalse;
+	}
+
+	if (!AIMod_AutoWaypoint_Check_PlayerWidth(org))
+	{// Not wide enough for a player to fit!
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+void AWP_CreateWaypoints(const char *mapname)
+{
+	fileHandle_t f = 0;
+	int fileLength = trap->FS_Open(mapname, &f, FS_READ);
+	if (fileLength == -1 || !f)
+	{
+		trap->Print(va("Unable to open '%s' to create the waypoints.\n", mapname));
+		return;
+	}
+
+	char *buffer = new char[fileLength + 1];
+	trap->FS_Read(buffer, fileLength, f);
+	buffer[fileLength] = '\0';
+	trap->FS_Close(f);
+
+	vec3_t mapmins;
+	vec3_t mapmaxs;
+	float *verts = NULL;
+	int numverts;
+	int *tris = NULL;
+	int numtris;
+	short int	objNum[3] = { 0, 0, 0 };
+
+	aw_stage_start_time = clock();
+
+	AWP_UpdatePercentBar(1, "Loading Map Geometry...", "", "");
+
+	if (!AWP_LoadMapGeometry(buffer, mapmins, mapmaxs, verts, numverts, tris, numtris))
+	{
+		trap->Print(va("Unable to load map geometry from '%s'.\n", mapname));
+		AWP_UpdatePercentBar(0, "", "", "");
+		return;
+	}
+
+	AWP_UpdatePercentBar(1, "Generating waypoints from map verts...", "", "");
+
+	AIMod_AutoWaypoint_Init_Memory();
+
+	float prev_completed = 0;
+	float prev_completed2 = 0;
+
+	for (int index = 0; index < numtris; index += 3)
+	{
+		float completed = ((float)index / (float)numverts) * 100.0;
+		
+		if (completed - prev_completed > 1)
+		{
+			if (number_of_nodes > 1)
+			{
+				node_t *wp = &nodes[number_of_nodes - 1];
+				AWP_UpdatePercentBar2(completed, "Generating waypoints from map verts...", va("%i waypoints added.", number_of_nodes), va("Last waypoint was at %f %f %f.", wp->origin[0], wp->origin[1], wp->origin[2]));
+				prev_completed = completed;
+			}
+			else
+			{
+				AWP_UpdatePercentBar2(completed, "Generating waypoints from map verts...", va("%i waypoints added.", number_of_nodes), "");
+				prev_completed = completed;
+			}
+		}
+		else if (completed - prev_completed2 > 0.14)
+		{
+			AWP_UpdatePercentBarOnly(completed);
+			prev_completed2 = completed;
+		}
+
+		if (number_of_nodes + 4 > MAX_WPARRAY_SIZE)
+		{
+			AWP_UpdatePercentBar(0, "", "", "");
+			trap->Print("ERROR: Created too many waypoints...\n");
+			AIMod_AutoWaypoint_Free_Memory();
+			return;
+		}
+
+		vec3_t vert1, vert2, vert3, center;
+		memcpy(&vert1, (const void *)&verts[tris[index]], sizeof(float) * 3);
+		memcpy(&vert2, (const void *)&verts[tris[index + 1]], sizeof(float) * 3);
+		memcpy(&vert3, (const void *)&verts[tris[index + 2]], sizeof(float) * 3);
+
+#if 0
+		// Added -- Check slope...
+		float e0[3], e1[3];
+		for (int j = 0; j < 3; ++j)
+		{
+			e0[j] = vert2[j] - vert1[j];
+			e1[j] = vert3[j] - vert1[j];
+		}
+		vec3_t n;
+		n[0] = e0[1] * e1[2] - e0[2] * e1[1];
+		n[1] = e0[2] * e1[0] - e0[0] * e1[2];
+		n[2] = e0[0] * e1[1] - e0[1] * e1[0];
+		float d = sqrtf(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+		if (d > 0)
+		{
+			d = 1.0f / d;
+			n[0] *= d;
+			n[1] *= d;
+			n[2] *= d;
+		}
+
+		vec3_t slopeangles;
+		vectoangles(n, slopeangles);
+
+		float pitch = slopeangles[0];
+
+		if (pitch > 180)
+			pitch -= 360;
+
+		if (pitch < -180)
+			pitch += 360;
+
+		pitch += 90.0f;
+
+		if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
+			continue; // bad slope...
+#endif
+
+		center[0] = (vert1[0] + vert2[0] + vert3[0]) / 3.0;
+		center[1] = (vert1[1] + vert2[1] + vert3[1]) / 3.0;
+		center[2] = (vert1[2] + vert2[2] + vert3[2]) / 3.0;
+
+		if (AWP_CheckOrg(center, mapmins, mapmaxs)) Load_AddNode(center, 0, objNum, 0);	//add the center node
+
+		vec3_t dir;
+		float dist = 0;
+
+		VectorSubtract(center, vert1, dir);
+		dist = VectorLength(dir);
+		VectorMA(vert1, dist / 3.0, dir, vert1);
+
+		VectorSubtract(center, vert2, dir);
+		dist = VectorLength(dir);
+		VectorMA(vert2, dist / 3.0, dir, vert2);
+
+		VectorSubtract(center, vert3, dir);
+		dist = VectorLength(dir);
+		VectorMA(vert3, dist / 3.0, dir, vert3);
+
+		if (AWP_CheckOrg(vert1, mapmins, mapmaxs)) Load_AddNode(vert1, 0, objNum, 0);	//add the edge nodes
+		if (AWP_CheckOrg(vert2, mapmins, mapmaxs)) Load_AddNode(vert2, 0, objNum, 0);	//add the edge nodes
+		if (AWP_CheckOrg(vert3, mapmins, mapmaxs)) Load_AddNode(vert3, 0, objNum, 0);	//add the edge nodes
+	}
+
+	AWP_UpdatePercentBar(0, "", "", "");
+
+	if (number_of_nodes > 0)
+	{
+		waypoint_scatter_distance = 256.0;
+		waypoint_distance_multiplier = 1.0;
+
+		AIMOD_NODES_SaveNodes_Autowaypointed();
+	}
+
+	AIMod_AutoWaypoint_Free_Memory();
+}
+
+void AWP_AutoWaypoint2(void)
+{
+	char mapname[128] = { 0 };
+	sprintf(mapname, "maps/%s.bsp", cgs.currentmapname);
+	trap->Print("Creating waypoints...\n");
+	AWP_CreateWaypoints(mapname);
+	trap->Print("Finished!\n");
+}
+#else
+void AWP_AutoWaypoint2(void)
+{
+	trap->Printf("Experimental AWP is disabled in this build...\n");
+}
+#endif //__AUTOWAYPOINT2__
 
 #endif //__AUTOWAYPOINT__

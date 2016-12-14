@@ -1466,7 +1466,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 
 	R_RotateForViewer();
 
-	R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &postRender );
+	R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &postRender );
 	RB_BeginSurface( shader, fogNum, drawSurf->cubemapIndex );
 	rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 
@@ -1766,12 +1766,12 @@ R_DecomposeSort
 =================
 */
 void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader,
-					int64_t *fogNum, int64_t *dlightMap, int64_t *postRender) {
+					int64_t *fogNum, int64_t *postRender) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
 	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
 	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 	*postRender = (sort >> QSORT_POSTRENDER_SHIFT ) & 1;
-	*dlightMap = sort & 1;
+	//*dlightMap = sort & 1;
 }
 
 /*
@@ -1816,7 +1816,7 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
-		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &dlighted, &postRender );
+		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &postRender );
 
 		if ( !shader || shader->sort > SS_PORTAL ) {
 			break;
@@ -2009,6 +2009,7 @@ static void R_AddEntitySurface (int entityNum)
 #ifdef __MERGE_MORE__
 			shader->entityMergable = qtrue;
 #endif //__MERGE_MORE__
+
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		}
 		break;
@@ -2114,6 +2115,7 @@ static void R_AddEntitySurface (int entityNum)
 #ifdef __MERGE_MORE__
 		shader->entityMergable = qtrue;
 #endif //__MERGE_MORE__
+
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		break;
 	default:
@@ -2138,7 +2140,7 @@ void R_AddEntitySurfaces (void) {
 		NUM_ENTS_FOV_CULLED = 0;
 		NUM_ENTS_PVS_CULLED = 0;
 	}
-	
+
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
 		R_AddEntitySurface(i);

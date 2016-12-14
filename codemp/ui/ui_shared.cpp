@@ -4872,6 +4872,7 @@ static const char *g_bindCommands[] = {
 	"zoom",
 	//[AUTOWAYPOINT]
 	"awp",
+	"awp2",
 	"autowaypoint",
 	"awc",
 	"autowaypointclean",

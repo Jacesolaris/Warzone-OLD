@@ -129,6 +129,8 @@ cvar_t	*r_ext_texture_env_add;
 cvar_t	*r_ext_texture_filter_anisotropic;
 cvar_t	*r_ext_preferred_tc_method;
 
+cvar_t  *r_entitySurfaceMerge;
+
 cvar_t  *r_occlusion;
 cvar_t  *r_occlusionDebug;
 cvar_t  *r_ext_draw_range_elements;
@@ -1385,6 +1387,8 @@ void R_Register( void )
 	r_ext_compiled_vertex_array = ri->Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_env_add = ri->Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_preferred_tc_method = ri->Cvar_Get( "r_ext_preferred_tc_method", "0", CVAR_ARCHIVE | CVAR_LATCH );
+
+	r_entitySurfaceMerge = ri->Cvar_Get("r_entitySurfaceMerge", "1", CVAR_ARCHIVE);
 
 	r_occlusion = ri->Cvar_Get( "r_occlusion", "0", CVAR_ARCHIVE);
 	r_occlusionDebug = ri->Cvar_Get( "r_occlusionDebug", "0", CVAR_ARCHIVE);

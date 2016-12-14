@@ -22,12 +22,52 @@ uniform vec3		u_lightColors[16];
 
 varying vec2		var_TexCoords;
 
-#define FULL_LIGHTING
-
 
 #define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
 
-#if defined(FULL_LIGHTING)
+float drawObject(in vec3 p){
+    p = abs(fract(p)-.5);
+    return dot(p, vec3(.5));
+}
+
+float cellTile(in vec3 p){
+    p /= 5.5;
+    // Draw four overlapping objects at various positions throughout the tile.
+    vec4 v, d; 
+    d.x = drawObject(p - vec3(.81, .62, .53));
+    p.xy = vec2(p.y-p.x, p.y + p.x)*.7071;
+    d.y = drawObject(p - vec3(.39, .2, .11));
+    p.yz = vec2(p.z-p.y, p.z + p.y)*.7071;
+    d.z = drawObject(p - vec3(.62, .24, .06));
+    p.xz = vec2(p.z-p.x, p.z + p.x)*.7071;
+    d.w = drawObject(p - vec3(.2, .82, .64));
+
+    v.xy = min(d.xz, d.yw), v.z = min(max(d.x, d.y), max(d.z, d.w)), v.w = max(v.x, v.y); 
+   
+    d.x =  min(v.z, v.w) - min(v.x, v.y); // Maximum minus second order, for that beveled Voronoi look. Range [0, 1].
+    //d.x =  min(v.x, v.y); // First order.
+        
+    return d.x*2.66; // Normalize... roughly.
+}
+
+float map(vec3 p){
+    float n = (.5-cellTile(p))*1.5;
+    return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
+}
+
+float calculateAO(in vec3 pos, in vec3 nor)
+{
+	float sca = 2.0, occ = 0.0;
+    for( int i=0; i<5; i++ ){
+    
+        float hr = 0.01 + float(i)*0.5/4.0;        
+        float dd = map(nor * hr + pos);
+        occ += (hr - dd)*sca;
+        sca *= 0.7;
+    }
+    return clamp( 1.0 - occ, 0.0, 1.0 );    
+}
+
 
 //
 // Full lighting... Blinn phong and basic lighting as well...
@@ -165,74 +205,19 @@ void main(void)
 		}
 	}
 
+	//if (u_Local2.g >= 1.0)
+	{
+		float ao = calculateAO(position.xyz, N.xyz);
+
+		ao = clamp(ao * 0.2 + 0.8, 0.0, 1.0);
+		float ao2 = clamp(ao + 0.75, 0.0, 1.0);
+		ao = (ao + ao2) / 2.0;
+		//ao *= ao;
+		ao = pow(ao, 4.0);
+
+		gl_FragColor.rgb *= ao;
+	}
+
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }
 
-#else //!defined(FULL_LIGHTING)
-
-//
-// Fast lighting... No blinn phong (or sun) lighting...
-//
-
-void main(void)
-{
-	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
-	gl_FragColor = vec4(color.rgb, 1.0);
-
-	// GLSL distance() can't work with large numbers?!?!??!?!?!!??
-	highp vec3 viewOrg = unOpenGlIsFuckedUpify(abs(u_ViewOrigin.xyz));
-	highp vec4 position = abs(texture2D(u_PositionMap, var_TexCoords));
-	//position.xyz = unOpenGlIsFuckedUpify(position.xyz);
-
-	//gl_FragColor = vec4(clamp(vec3(distance(viewOrg, position.xyz) / (unOpenGlIsFuckedUpify(2048.0))), 0.0, 1.0), 1.0);
-	//return;
-
-	if (position.a == 1024.0)
-	{// Skybox... Skip...
-		//gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
-		return;
-	}
-
-	if (position.a == 0.0 && position.xyz == vec3(0.0))
-	{// Unknown... Skip...
-		//gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
-		return;
-	}
-
-	if (u_lightCount > 0.0)
-	{
-		float addedStrength = 1.0;
-		vec3 addedLight = vec3(0.0);
-
-		for (int li = 0; li < u_lightCount; li++)
-		{
-			float lightDist = distance(unOpenGlIsFuckedUpify(abs(u_lightPositions2[li].xyz)), position.xyz);
-			float lightMax = unOpenGlIsFuckedUpify(u_lightDistances[li]) * 1.5;
-
-			if (lightDist < lightMax)
-			{
-				highp float lightStrength = 1.0 - (lightDist / lightMax);
-				lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0);
-
-				if (lightStrength > 0.0)
-				{
-					highp float lightBrightness = length(u_lightColors[li].rgb);
-					if (lightBrightness > 2.0) lightStrength /= 3.0;
-					else if (lightBrightness > 1.0) lightStrength /= 2.0;
-
-					highp float strength = lightStrength;// *u_Local2.g;
-					addedStrength += strength;
-					addedLight += u_lightColors[li].rgb * strength; // Always add some basic light...
-				}
-			}
-		}
-
-		if (addedStrength > 1.0)
-		{
-			highp vec3 power = (addedLight / addedStrength) * 2.3;// u_Local2.g;
-			gl_FragColor.rgb += (power * 0.1) + (power * 0.9 * gl_FragColor.rgb);
-		}
-	}
-}
-
-#endif //defined(FULL_LIGHTING)
