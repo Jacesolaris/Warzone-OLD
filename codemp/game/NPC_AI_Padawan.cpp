@@ -11,9 +11,9 @@ extern int DOM_GetNearestWP(vec3_t org, int badwp);
 extern int NPC_GetNextNode(gentity_t *NPC);
 extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
 extern qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent );
-extern qboolean NPC_FindEnemy( qboolean checkAlerts );
+extern qboolean NPC_FindEnemy(gentity_t *aiEnt, qboolean checkAlerts );
 extern qboolean NPC_DoLiftPathing(gentity_t *NPC);
-extern void NPC_NewWaypointJump ( void );
+extern void NPC_NewWaypointJump (gentity_t *aiEnt);
 extern qboolean NPC_NeedsHeal ( gentity_t *NPC );
 
 void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
@@ -87,6 +87,7 @@ int NPC_FindPadawanGoal( gentity_t *NPC )
 {
 	vec3_t traceGoal, fwd, right, up, start, end;
 	trace_t tr;
+	gentity_t *aiEnt = NPC;
 
 	if (NPC->padawanNoWaypointTime > level.time) return -1;
 	if (!NPC->parent) return -1;
@@ -97,7 +98,7 @@ int NPC_FindPadawanGoal( gentity_t *NPC )
 	VectorMA( end, 512, fwd, traceGoal );
 	VectorCopy(NPC->parent->r.currentOrigin, start);
 	start[2] += 48;
-	trap->Trace( &tr, start, NULL, NULL, traceGoal, NPCS.NPC->s.number, MASK_SHOT, qfalse, 0, 0 );
+	trap->Trace( &tr, start, NULL, NULL, traceGoal, aiEnt->s.number, MASK_SHOT, qfalse, 0, 0 );
 	//trap->Print("Trace end %f %f %f.\n", tr.endpos[0], tr.endpos[1], tr.endpos[2]);
 
 	if (NPC->longTermGoal < 0 
@@ -238,24 +239,24 @@ void G_AddPadawanCommentEvent( gentity_t *self, int event, int speakDebounceTime
 	self->NPC->padawanCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 30000+irand(0,30000) : speakDebounceTime);
 }
 
-void NPC_SetNewPadawanGoalAndPath( void )
+void NPC_SetNewPadawanGoalAndPath(gentity_t *aiEnt)
 {
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	if (NPC->npc_dumb_route_time > level.time)
 	{// Try to use JKA routing as a backup until timer runs out...
-		if ( UpdateGoal() )
+		if ( UpdateGoal(aiEnt) )
 		{
-			if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+			if (NPC_CombatMoveToGoal(aiEnt, qtrue, qfalse ))
 			{// Worked!
 				return;
 			}
 		}
 
 		// Failed... Idle...
-		NPCS.ucmd.forwardmove = 0;
-		NPCS.ucmd.rightmove = 0;
-		NPCS.ucmd.upmove = 0;
+		aiEnt->client->pers.cmd.forwardmove = 0;
+		aiEnt->client->pers.cmd.rightmove = 0;
+		aiEnt->client->pers.cmd.upmove = 0;
 		NPC_PickRandomIdleAnimantion(NPC);
 		return;
 	}
@@ -266,13 +267,13 @@ void NPC_SetNewPadawanGoalAndPath( void )
 		return; // wait for next route creation...
 	}
 
-	if (!NPC_FindNewWaypoint())
+	if (!NPC_FindNewWaypoint(aiEnt))
 	{
 		NPC->npc_dumb_route_time = level.time + 10000;
 		return; // wait before trying to get a new waypoint...
 	}
 
-	NPC->longTermGoal = DOM_GetNearestWP(NPCS.NPCInfo->goalEntity->r.currentOrigin, NPC->wpCurrent);
+	NPC->longTermGoal = DOM_GetNearestWP(aiEnt->NPC->goalEntity->r.currentOrigin, NPC->wpCurrent);
 
 	if (NPC->longTermGoal >= 0)
 	{
@@ -315,15 +316,15 @@ void NPC_SetNewPadawanGoalAndPath( void )
 	NPC->wpTravelTime = level.time + 15000;
 }
 
-qboolean NPC_FollowPadawanRoute( void ) 
+qboolean NPC_FollowPadawanRoute(gentity_t *aiEnt)
 {// Quick method of following bot routes...
-	gentity_t	*NPC = NPCS.NPC;
-	usercmd_t	ucmd = NPCS.ucmd;
+	gentity_t	*NPC = aiEnt;
+	usercmd_t	ucmd = aiEnt->client->pers.cmd;
 	float		wpDist = 0.0;
 	qboolean	onMover1 = qfalse;
 	qboolean	onMover2 = qfalse;
 
-	NPCS.NPCInfo->combatMove = qtrue;
+	aiEnt->NPC->combatMove = qtrue;
 
 	if ( !NPC->parent || !NPC_IsAlive(NPC, NPC->parent) )
 	{
@@ -331,11 +332,11 @@ qboolean NPC_FollowPadawanRoute( void )
 		return qfalse;
 	}
 
-	if (!NPCS.NPCInfo->goalEntity)
+	if (!aiEnt->NPC->goalEntity)
 	{
 		//trap->Print("no goal!\n");
 		//return qfalse;
-		NPCS.NPCInfo->goalEntity = NPC->parent;
+		aiEnt->NPC->goalEntity = NPC->parent;
 	}
 
 	if (NPC_GetOffPlayer(NPC))
@@ -350,7 +351,7 @@ qboolean NPC_FollowPadawanRoute( void )
 		return qtrue;
 	}
 
-	if (Distance(NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) <= 128)
+	if (Distance(NPC->r.currentOrigin, aiEnt->NPC->goalEntity->r.currentOrigin) <= 128)
 	{// Close enough already... Don't move...
 		//trap->Print("close!\n");
 		return qfalse;
@@ -398,7 +399,7 @@ qboolean NPC_FollowPadawanRoute( void )
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 
-		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPCS.NPCInfo->goalEntity->r.currentOrigin) > 256.0)
+		|| Distance(gWPArray[NPC->longTermGoal]->origin, aiEnt->NPC->goalEntity->r.currentOrigin) > 256.0)
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 
 		if (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time )
@@ -407,7 +408,7 @@ qboolean NPC_FollowPadawanRoute( void )
 		}
 
 		NPC_ClearPathData(NPC);
-		NPC_SetNewPadawanGoalAndPath();
+		NPC_SetNewPadawanGoalAndPath(aiEnt);
 		G_ClearEnemy(NPC); // UQ1: Give up...
 
 		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
@@ -483,7 +484,7 @@ qboolean NPC_FollowPadawanRoute( void )
 		}
 	}
 
-	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	NPC_FacePosition(aiEnt, gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 
 	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
@@ -497,20 +498,20 @@ qboolean NPC_FollowPadawanRoute( void )
 	}
 	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
-		NPC_NewWaypointJump();
+		NPC_NewWaypointJump(NPC);
 	}
 
-	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
+	if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 	//NPC_SelectMoveAnimation(qfalse);
 
 	return qtrue;
 }
 
-qboolean NPC_PadawanMove( void )
+qboolean NPC_PadawanMove(gentity_t *aiEnt)
 {
-	gentity_t	*NPC = NPCS.NPC;
-	usercmd_t	*ucmd = &NPCS.ucmd;
+	gentity_t	*NPC = aiEnt;
+	usercmd_t	*ucmd = &aiEnt->client->pers.cmd;
 
 	if (NPC->enemy && NPC_IsAlive(NPC, NPC->enemy) && NPC_ValidEnemy2(NPC, NPC->enemy))
 	{// Keep fighting who we are fighting...
@@ -519,7 +520,7 @@ qboolean NPC_PadawanMove( void )
 
 	if (NPC->s.NPC_class == CLASS_PADAWAN)
 	{
-		G_ClearEnemy( NPCS.NPC );
+		G_ClearEnemy( aiEnt );
 
 		if (NPC->parent && NPC_IsAlive(NPC, NPC->parent))
 		{
@@ -548,7 +549,7 @@ qboolean NPC_PadawanMove( void )
 				VectorMA( end, 512, fwd, traceGoal );
 				VectorCopy(NPC->parent->r.currentOrigin, start);
 				start[2] += 48;
-				trap->Trace( &tr, start, NULL, NULL, traceGoal, NPCS.NPC->s.number, MASK_SHOT, qfalse, 0, 0 );
+				trap->Trace( &tr, start, NULL, NULL, traceGoal, aiEnt->s.number, MASK_SHOT, qfalse, 0, 0 );
 
 				if (NPC->longTermGoal >= 0 
 					&& (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) > 1000 || Distance(gWPArray[NPC->longTermGoal]->origin, tr.endpos) > 192))
@@ -556,7 +557,7 @@ qboolean NPC_PadawanMove( void )
 					NPC->padawanWaitTime = 0;
 
 					if (!(NPC->enemy && NPC_IsAlive(NPC, NPC->enemy)))
-						NPC_FindEnemy( qtrue );
+						NPC_FindEnemy( NPC, qtrue );
 				}
 				else if (NPC->longTermGoal >= 0 && NPC->padawanWaitTime < level.time + 500 && NPC->padawanReturnToPlayerTime < level.time)
 				{// Head back to jedi...
@@ -569,7 +570,7 @@ qboolean NPC_PadawanMove( void )
 					NPC_PickRandomIdleAnimantion(NPC);
 
 					if (!(NPC->enemy && NPC_IsAlive(NPC, NPC->enemy)))
-						NPC_FindEnemy( qtrue );
+						NPC_FindEnemy(NPC, qtrue );
 
 					return qtrue;
 				}
@@ -581,7 +582,7 @@ qboolean NPC_PadawanMove( void )
 					NPC_PickRandomIdleAnimantion(NPC);
 
 					if (!(NPC->enemy && NPC_IsAlive(NPC, NPC->enemy)))
-						NPC_FindEnemy( qtrue );
+						NPC_FindEnemy(NPC, qtrue );
 
 					return qtrue;
 				}
@@ -626,38 +627,38 @@ qboolean NPC_PadawanMove( void )
 
 			if (NPC->enemy && NPC_IsAlive(NPC, NPC->enemy))
 			{// Continue using normal movement...
-				if (NPC_FollowEnemyRoute())
+				if (NPC_FollowEnemyRoute(aiEnt))
 				{// Try using waypoints...
 					return qtrue;
 				}
 			}
 			else if (dist > 112 && dist < 256)
 			{// If clear then move stright there...
-				NPC_FacePosition( goal, qfalse );
+				NPC_FacePosition(aiEnt, goal, qfalse );
 
-				NPCS.NPCInfo->goalEntity = goalEnt;
+				aiEnt->NPC->goalEntity = goalEnt;
 
-				if ( UpdateGoal() )
+				if ( UpdateGoal(aiEnt) )
 				{
-					Padawan_CheckForce();
+					Padawan_CheckForce(aiEnt);
 
 					if (dist > 512 
-						&& TIMER_Done( NPCS.NPC, "protect" )
-						&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+						&& TIMER_Done( aiEnt, "protect" )
+						&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
 					{// When the master is a fair way away, use force protect to get to him safer...
-						ForceProtect( NPCS.NPC );
-						TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+						ForceProtect( aiEnt );
+						TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
 					}
 
-					if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+					if (NPC_CombatMoveToGoal(aiEnt, qtrue, qfalse ))
 					{// All is good in the world...
 						return qtrue;
 					}
 					else if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
 					{// Out master is in the air... Don't jump!
-						NPC_ClearGoal();
-						NPCS.NPCInfo->goalEntity = NULL;
-						NPCS.NPCInfo->tempGoal = NULL;
+						NPC_ClearGoal(aiEnt);
+						aiEnt->NPC->goalEntity = NULL;
+						aiEnt->NPC->tempGoal = NULL;
 
 						ucmd->forwardmove = 0;
 						ucmd->rightmove = 0;
@@ -666,10 +667,10 @@ qboolean NPC_PadawanMove( void )
 
 						return qtrue;
 					}
-					else if (NPC_FollowPadawanRoute())
+					else if (NPC_FollowPadawanRoute(aiEnt))
 					{// Try using waypoints...
-						NPCS.NPCInfo->goalEntity = goalEnt;
-						NPC_FacePosition( goal, qfalse );
+						aiEnt->NPC->goalEntity = goalEnt;
+						NPC_FacePosition(aiEnt, goal, qfalse );
 						return qtrue;
 					}
 				}
@@ -681,49 +682,49 @@ qboolean NPC_PadawanMove( void )
 
 				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
-			else if (dist >= 256 && NPC_FollowPadawanRoute())
+			else if (dist >= 256 && NPC_FollowPadawanRoute(aiEnt))
 			{// Try using waypoints...
-				Padawan_CheckForce();
+				Padawan_CheckForce(aiEnt);
 
 				if (dist > 512 
-					&& TIMER_Done( NPCS.NPC, "protect" )
-					&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+					&& TIMER_Done( aiEnt, "protect" )
+					&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
 				{// When the master is a fair way away, use force protect to get to him safer...
-					ForceProtect( NPCS.NPC );
-					TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+					ForceProtect( aiEnt );
+					TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
 				}
 
-				NPCS.NPCInfo->goalEntity = goalEnt;
-				NPC_FacePosition( goal, qfalse );
+				aiEnt->NPC->goalEntity = goalEnt;
+				NPC_FacePosition(aiEnt, goal, qfalse );
 				return qtrue;
 			}
 			else if (dist >= 256)
 			{
-				NPC_FacePosition( goal, qfalse );
+				NPC_FacePosition(aiEnt, goal, qfalse );
 
-				NPCS.NPCInfo->goalEntity = goalEnt;
+				aiEnt->NPC->goalEntity = goalEnt;
 
-				if ( UpdateGoal() )
+				if ( UpdateGoal(aiEnt) )
 				{
-					Padawan_CheckForce();
+					Padawan_CheckForce(aiEnt);
 
 					if (dist > 512 
-						&& TIMER_Done( NPCS.NPC, "protect" )
-						&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+						&& TIMER_Done( aiEnt, "protect" )
+						&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
 					{// When the master is a fair way away, use force protect to get to him safer...
-						ForceProtect( NPCS.NPC );
-						TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+						ForceProtect( aiEnt );
+						TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
 					}
 
-					if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+					if (NPC_CombatMoveToGoal(aiEnt, qtrue, qfalse ))
 					{// All is good in the world...
 						return qtrue;
 					}
 					else if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
 					{// Out master is in the air... Don't jump!
-						NPC_ClearGoal();
-						NPCS.NPCInfo->goalEntity = NULL;
-						NPCS.NPCInfo->tempGoal = NULL;
+						NPC_ClearGoal(aiEnt);
+						aiEnt->NPC->goalEntity = NULL;
+						aiEnt->NPC->tempGoal = NULL;
 
 						ucmd->forwardmove = 0;
 						ucmd->rightmove = 0;
@@ -737,15 +738,15 @@ qboolean NPC_PadawanMove( void )
 //#if 0
 			else if (dist < 96)
 			{// If clear then move back a bit...
-				NPC_FacePosition( goal, qfalse );
+				NPC_FacePosition(aiEnt, goal, qfalse );
 
-				NPCS.NPCInfo->goalEntity = goalEnt;
+				aiEnt->NPC->goalEntity = goalEnt;
 
-				if ( UpdateGoal() )
+				if ( UpdateGoal(aiEnt) )
 				{
-					//if (walk) NPCS.ucmd.buttons |= BUTTON_WALKING;
-					//Jedi_Move( NPCS.NPCInfo->goalEntity, qfalse );
-					NPC_CombatMoveToGoal( qtrue, qtrue );
+					//if (walk) aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+					//Jedi_Move( aiEnt->NPC->goalEntity, qfalse );
+					NPC_CombatMoveToGoal(aiEnt, qtrue, qtrue );
 					return qtrue;
 				}
 
@@ -757,9 +758,9 @@ qboolean NPC_PadawanMove( void )
 //#endif
 			else if (dist <= 128)
 			{// Perfect distance... Stay idle...
-				NPC_ClearGoal();
-				NPCS.NPCInfo->goalEntity = NULL;
-				NPCS.NPCInfo->tempGoal = NULL;
+				NPC_ClearGoal(aiEnt);
+				aiEnt->NPC->goalEntity = NULL;
+				aiEnt->NPC->tempGoal = NULL;
 
 				ucmd->forwardmove = 0;
 				ucmd->rightmove = 0;
@@ -784,9 +785,9 @@ qboolean NPC_PadawanMove( void )
 			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
 				if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
 				{// Out master is in the air... Don't teleport!
-					NPC_ClearGoal();
-					NPCS.NPCInfo->goalEntity = NULL;
-					NPCS.NPCInfo->tempGoal = NULL;
+					NPC_ClearGoal(aiEnt);
+					aiEnt->NPC->goalEntity = NULL;
+					aiEnt->NPC->tempGoal = NULL;
 
 					ucmd->forwardmove = 0;
 					ucmd->rightmove = 0;
@@ -795,10 +796,10 @@ qboolean NPC_PadawanMove( void )
 
 					return qtrue;
 				}
-				else if (NPC_FollowPadawanRoute())
+				else if (NPC_FollowPadawanRoute(aiEnt))
 				{// Try using waypoints...
-					NPCS.NPCInfo->goalEntity = goalEnt;
-					NPC_FacePosition( goal, qfalse );
+					aiEnt->NPC->goalEntity = goalEnt;
+					NPC_FacePosition(aiEnt, goal, qfalse );
 					return qtrue;
 				}
 				else if (NPC->nextPadawanTeleportThink <= level.time)
@@ -811,9 +812,9 @@ qboolean NPC_PadawanMove( void )
 					{
 						TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
 
-						NPC_ClearGoal();
-						NPCS.NPCInfo->goalEntity = NULL;
-						NPCS.NPCInfo->tempGoal = NULL;
+						NPC_ClearGoal(aiEnt);
+						aiEnt->NPC->goalEntity = NULL;
+						aiEnt->NPC->tempGoal = NULL;
 
 						ucmd->forwardmove = 0;
 						ucmd->rightmove = 0;
@@ -877,106 +878,106 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 	return qfalse;
 }
 
-qboolean Padawan_CheckForce ( void )
+qboolean Padawan_CheckForce (gentity_t *aiEnt)
 {// UQ1: New code to make better use of force powers...
 	//
 	// Give them any force powers they might need...
 	//
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_TEAM_HEAL))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_TEAM_HEAL))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TEAM_HEAL);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_TEAM_HEAL);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_HEAL))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_HEAL))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_HEAL);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_HEAL);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_HEAL] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PROTECT))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_PROTECT))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_ABSORB))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_ABSORB))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_ABSORB);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_ABSORB] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_ABSORB);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_ABSORB] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_TELEPATHY))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_TELEPATHY))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TELEPATHY);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_TELEPATHY);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PUSH))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_PUSH))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PUSH);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_PUSH);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PULL))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_PULL))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PULL);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_PULL);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_PULL] = 3;
 	}
-	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_SABERTHROW))) 
+	if (!(aiEnt->client->ps.fd.forcePowersKnown & (1 << FP_SABERTHROW))) 
 	{
-		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_SABERTHROW);
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		aiEnt->client->ps.fd.forcePowersKnown |= (1 << FP_SABERTHROW);
+		aiEnt->client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
 	}
 
-	/*if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
+	/*if ( aiEnt->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
 	{//when draining, don't move
 		return qtrue;
 	}
 
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL) )
+	if ( aiEnt->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL) )
 	{//when team healing, don't move
 		return qtrue;
 	}
 
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL) )
+	if ( aiEnt->client->ps.fd.forcePowersActive&(1<<FP_HEAL) )
 	{//lvl 1 healing, don't move
 		return qtrue;
 	}*/
 
 	// UQ1: Special heals/protects/absorbs - mainly for padawans...
-	if ( TIMER_Done( NPCS.NPC, "teamheal" )
-		&& NPCS.NPC->parent
-		&& NPC_IsAlive(NPCS.NPC, NPCS.NPC->parent)
-		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
-		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
-		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
-		&& NPC_NeedsHeal( NPCS.NPC->parent )
+	if ( TIMER_Done( aiEnt, "teamheal" )
+		&& aiEnt->parent
+		&& NPC_IsAlive(aiEnt, aiEnt->parent)
+		&& Distance(aiEnt->parent->r.currentOrigin, aiEnt->r.currentOrigin) < 256
+		&& aiEnt->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
+		&& (aiEnt->s.NPC_class == CLASS_PADAWAN)
+		&& NPC_NeedsHeal( aiEnt->parent )
 		&& Q_irand( 0, 20 ) < 2)
 	{// Team heal our jedi???
-		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
-		ForceTeamHeal( NPCS.NPC );
-		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
+		NPC_FacePosition(aiEnt, aiEnt->parent->r.currentOrigin, qtrue);
+		ForceTeamHeal( aiEnt );
+		TIMER_Set( aiEnt, "teamheal", irand(5000, 15000) );
 		return qtrue;
 	}
-	else if ( TIMER_Done( NPCS.NPC, "heal" )
-		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL] > 0
-		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
-		&& NPC_NeedsHeal( NPCS.NPC )
+	else if ( TIMER_Done( aiEnt, "heal" )
+		&& aiEnt->client->ps.fd.forcePowerLevel[FP_HEAL] > 0
+		&& (aiEnt->s.NPC_class == CLASS_PADAWAN)
+		&& NPC_NeedsHeal( aiEnt )
 		&& Q_irand( 0, 20 ) < 2)
 	{// We need to heal...
-		ForceHeal( NPCS.NPC );
-		TIMER_Set( NPCS.NPC, "heal", irand(5000, 15000) );
+		ForceHeal( aiEnt );
+		TIMER_Set( aiEnt, "heal", irand(5000, 15000) );
 		return qtrue;
 	}
-	else if ( TIMER_Done( NPCS.NPC, "protect" )
-		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0
+	else if ( TIMER_Done( aiEnt, "protect" )
+		&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0
 		&& (Q_irand( 0, 20 ) < 2 ))
 	{// General buff...
-		ForceProtect( NPCS.NPC );
-		TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+		ForceProtect( aiEnt );
+		TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
 		return qtrue;
 	}
-	else if ( TIMER_Done( NPCS.NPC, "absorb" )
-		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_ABSORB] > 0
+	else if ( TIMER_Done( aiEnt, "absorb" )
+		&& aiEnt->client->ps.fd.forcePowerLevel[FP_ABSORB] > 0
 		&& (Q_irand( 0, 20 ) < 2))
 	{// General buff...
-		ForceAbsorb( NPCS.NPC );
-		TIMER_Set( NPCS.NPC, "absorb", irand(15000, 30000) );
+		ForceAbsorb( aiEnt );
+		TIMER_Set( aiEnt, "absorb", irand(15000, 30000) );
 		return qtrue;
 	}
 
@@ -1026,10 +1027,10 @@ void NPC_Padawan_CopyParentFlags ( gentity_t *me, gentity_t *parent )
 	}
 }
 
-void NPC_DoPadawanStuff ( void )
+void NPC_DoPadawanStuff (gentity_t *aiEnt)
 {
 	int			i = 0;
-	gentity_t	*me = NPCS.NPC;
+	gentity_t	*me = aiEnt;
 	gentity_t	*parent = me->parent;
 	int			best_parent_dist = 999999;
 	gentity_t	*best_parent = NULL;
@@ -1039,19 +1040,19 @@ void NPC_DoPadawanStuff ( void )
 		return;
 	}
 
-	if (NPCS.NPC->client->NPC_class != CLASS_PADAWAN)
+	if (aiEnt->client->NPC_class != CLASS_PADAWAN)
 	{
 		return; // This is only for padawans...
 	}
 
 	NPC_Padawan_CopyParentFlags(me, parent);
 
-	if (NPC_GetOffPlayer(NPCS.NPC))
+	if (NPC_GetOffPlayer(aiEnt))
 	{// Get off of their head!
 		return;
 	}
 
-	if (NPC_MoverCrushCheck(NPCS.NPC))
+	if (NPC_MoverCrushCheck(aiEnt))
 	{// There is a mover gonna crush us... Step back...
 		return;
 	}
@@ -1059,7 +1060,7 @@ void NPC_DoPadawanStuff ( void )
 	if (me->nextPadawanThink > level.time) return;
 
 	// Does he need to heal up, or use a buff???
-	Padawan_CheckForce();
+	Padawan_CheckForce(aiEnt);
 
 	me->nextPadawanThink = level.time + 5000;
 
@@ -1112,7 +1113,7 @@ void NPC_DoPadawanStuff ( void )
 		}
 
 		if (!me->enemy || !NPC_IsAlive(me, me->enemy))
-			NPC_ClearGoal();
+			NPC_ClearGoal(aiEnt);
 
 		return; // Already have a master to follow...
 	}
@@ -1215,7 +1216,7 @@ void NPC_DoPadawanStuff ( void )
 			G_AddPadawanCombatCommentEvent( me, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
 		}
 
-		NPC_ClearGoal();
+		NPC_ClearGoal(aiEnt);
 	}
 	else
 	{// In combat...

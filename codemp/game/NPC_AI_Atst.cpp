@@ -127,17 +127,17 @@ void NPC_ATST_Pain(gentity_t *self, gentity_t *attacker, int damage)
 ATST_Hunt
 -------------------------`
 */
-void ATST_Hunt( qboolean visible, qboolean advance )
+void ATST_Hunt(gentity_t *aiEnt, qboolean visible, qboolean advance )
 {
 
-	if ( NPCS.NPCInfo->goalEntity == NULL )
+	if ( aiEnt->NPC->goalEntity == NULL )
 	{//hunt
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
 	}
 
-	NPCS.NPCInfo->combatMove = qtrue;
+	aiEnt->NPC->combatMove = qtrue;
 
-	NPC_MoveToGoal( qtrue );
+	NPC_MoveToGoal(aiEnt, qtrue );
 
 }
 
@@ -146,26 +146,26 @@ void ATST_Hunt( qboolean visible, qboolean advance )
 ATST_Ranged
 -------------------------
 */
-void ATST_Ranged( qboolean visible, qboolean advance, qboolean altAttack )
+void ATST_Ranged(gentity_t *aiEnt, qboolean visible, qboolean advance, qboolean altAttack )
 {
 
-	if ( TIMER_Done( NPCS.NPC, "atkDelay" ) && visible )	// Attack?
+	if ( TIMER_Done( aiEnt, "atkDelay" ) && visible )	// Attack?
 	{
-		TIMER_Set( NPCS.NPC, "atkDelay", Q_irand( 500, 3000 ) );
+		TIMER_Set( aiEnt, "atkDelay", Q_irand( 500, 3000 ) );
 
 		if (altAttack)
 		{
-			NPCS.ucmd.buttons |= BUTTON_ATTACK|BUTTON_ALT_ATTACK;
+			aiEnt->client->pers.cmd.buttons |= BUTTON_ATTACK|BUTTON_ALT_ATTACK;
 		}
 		else
 		{
-			NPCS.ucmd.buttons |= BUTTON_ATTACK;
+			aiEnt->client->pers.cmd.buttons |= BUTTON_ATTACK;
 		}
 	}
 
-	if ( NPCS.NPCInfo->scriptFlags & SCF_CHASE_ENEMIES )
+	if ( aiEnt->NPC->scriptFlags & SCF_CHASE_ENEMIES )
 	{
-		ATST_Hunt( visible, advance );
+		ATST_Hunt(aiEnt, visible, advance );
 	}
 }
 
@@ -174,7 +174,7 @@ void ATST_Ranged( qboolean visible, qboolean advance, qboolean altAttack )
 ATST_Attack
 -------------------------
 */
-void ATST_Attack( void )
+void ATST_Attack(gentity_t *aiEnt)
 {
 	qboolean	altAttack=qfalse;
 	int			blasterTest,chargerTest,weapon;
@@ -183,26 +183,26 @@ void ATST_Attack( void )
 	qboolean	visible;
 	qboolean	advance;
 
-	if ( NPC_CheckEnemyExt(qfalse) == qfalse )//!NPC->enemy )//
+	if ( NPC_CheckEnemyExt(aiEnt, qfalse) == qfalse )//!NPC->enemy )//
 	{
-		NPCS.NPC->enemy = NULL;
+		aiEnt->enemy = NULL;
 		return;
 	}
 
-	NPC_FaceEnemy( qtrue );
+	NPC_FaceEnemy(aiEnt, qtrue );
 
 	// Rate our distance to the target, and our visibilty
-	distance	= (int) DistanceHorizontalSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
+	distance	= (int) DistanceHorizontalSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
 	distRate	= ( distance > MIN_MELEE_RANGE_SQR ) ? DIST_LONG : DIST_MELEE;
-	visible		= NPC_ClearLOS4( NPCS.NPC->enemy );
+	visible		= NPC_ClearLOS4(aiEnt, aiEnt->enemy );
 	advance		= (qboolean)(distance > MIN_DISTANCE_SQR);
 
 	// If we cannot see our target, move to see it
 	if ( visible == qfalse )
 	{
-		if ( NPCS.NPCInfo->scriptFlags & SCF_CHASE_ENEMIES )
+		if ( aiEnt->NPC->scriptFlags & SCF_CHASE_ENEMIES )
 		{
-			ATST_Hunt( visible, advance );
+			ATST_Hunt(aiEnt, visible, advance );
 			return;
 		}
 	}
@@ -220,8 +220,8 @@ void ATST_Attack( void )
 		//rwwFIXMEFIXME: make atst weaps work.
 
 		// See if the side weapons are there
-		blasterTest = trap->G2API_GetSurfaceRenderStatus( NPCS.NPC->ghoul2, 0, "head_light_blaster_cann" );
-		chargerTest = trap->G2API_GetSurfaceRenderStatus( NPCS.NPC->ghoul2, 0, "head_concussion_charger" );
+		blasterTest = trap->G2API_GetSurfaceRenderStatus( aiEnt->ghoul2, 0, "head_light_blaster_cann" );
+		chargerTest = trap->G2API_GetSurfaceRenderStatus( aiEnt->ghoul2, 0, "head_concussion_charger" );
 
 		// It has both side weapons
 		if ( blasterTest != -1
@@ -253,14 +253,14 @@ void ATST_Attack( void )
 		}
 		else
 		{
-			NPC_ChangeWeapon( WP_NONE );
+			NPC_ChangeWeapon(aiEnt, WP_NONE );
 		}
 		break;
 	}
 
-	NPC_FaceEnemy( qtrue );
+	NPC_FaceEnemy(aiEnt, qtrue );
 
-	ATST_Ranged( visible, advance,altAttack );
+	ATST_Ranged(aiEnt, visible, advance,altAttack );
 }
 
 /*
@@ -268,22 +268,22 @@ void ATST_Attack( void )
 ATST_Patrol
 -------------------------
 */
-void ATST_Patrol( void )
+void ATST_Patrol(gentity_t *aiEnt)
 {
-	if ( NPC_CheckPlayerTeamStealth() )
+	if ( NPC_CheckPlayerTeamStealth(aiEnt) )
 	{
-		NPC_UpdateAngles( qtrue, qtrue );
+		NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 		return;
 	}
 
 	//If we have somewhere to go, then do that
-	if (!NPCS.NPC->enemy)
+	if (!aiEnt->enemy)
 	{
-		if ( UpdateGoal() )
+		if ( UpdateGoal(aiEnt) )
 		{
-			NPCS.ucmd.buttons |= BUTTON_WALKING;
-			NPC_MoveToGoal( qtrue );
-			NPC_UpdateAngles( qtrue, qtrue );
+			aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+			NPC_MoveToGoal(aiEnt, qtrue );
+			NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 		}
 	}
 
@@ -294,12 +294,12 @@ void ATST_Patrol( void )
 ATST_Idle
 -------------------------
 */
-void ATST_Idle( void )
+void ATST_Idle(gentity_t *aiEnt)
 {
 
-	NPC_BSIdle();
+	NPC_BSIdle(aiEnt);
 
-	NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_NORMAL );
+	NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_NORMAL );
 }
 
 /*
@@ -307,22 +307,22 @@ void ATST_Idle( void )
 NPC_BSDroid_Default
 -------------------------
 */
-void NPC_BSATST_Default( void )
+void NPC_BSATST_Default(gentity_t *aiEnt)
 {
-	if ( NPCS.NPC->enemy )
+	if ( aiEnt->enemy )
 	{
-		if( (NPCS.NPCInfo->scriptFlags & SCF_CHASE_ENEMIES) )
+		if( (aiEnt->NPC->scriptFlags & SCF_CHASE_ENEMIES) )
 		{
-			NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+			aiEnt->NPC->goalEntity = aiEnt->enemy;
 		}
-		ATST_Attack();
+		ATST_Attack(aiEnt);
 	}
-	else if ( NPCS.NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES )
+	else if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
 	{
-		ATST_Patrol();
+		ATST_Patrol(aiEnt);
 	}
 	else
 	{
-		ATST_Idle();
+		ATST_Idle(aiEnt);
 	}
 }

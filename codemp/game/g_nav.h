@@ -67,7 +67,7 @@
 	int NAV_GetNearestNode( gentity_t *self, int lastNode );
 	extern int NAV_TestBestNode( gentity_t *self, int startID, int endID, qboolean failEdge );
 
-	qboolean NPC_GetMoveDirection( vec3_t out, float *distance );
+	qboolean NPC_GetMoveDirection(gentity_t *aiEnt, vec3_t out, float *distance );
 	void NPC_MoveToGoalExt( vec3_t point );
 	void NAV_FindPlayerWaypoint( int clNum );
 	qboolean NAV_CheckAhead( gentity_t *self, vec3_t end, trace_t *trace, int clipmask );

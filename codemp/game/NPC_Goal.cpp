@@ -7,11 +7,11 @@ extern qboolean FlyingCreature( gentity_t *ent );
 SetGoal
 */
 
-void SetGoal( gentity_t *goal, float rating )
+void SetGoal( gentity_t *aiEnt, gentity_t *goal, float rating )
 {
-	NPCS.NPCInfo->goalEntity = goal;
+	aiEnt->NPC->goalEntity = goal;
 //	NPCInfo->goalEntityNeed = rating;
-	NPCS.NPCInfo->goalTime = level.time;
+	aiEnt->NPC->goalTime = level.time;
 //	NAV_ClearLastRoute(NPC);
 	if ( goal )
 	{
@@ -28,9 +28,9 @@ void SetGoal( gentity_t *goal, float rating )
 NPC_SetGoal
 */
 
-void NPC_SetGoal( gentity_t *goal, float rating )
+void NPC_SetGoal(gentity_t *aiEnt, gentity_t *goal, float rating )
 {
-	if ( goal == NPCS.NPCInfo->goalEntity )
+	if ( goal == aiEnt->NPC->goalEntity )
 	{
 		return;
 	}
@@ -47,14 +47,14 @@ void NPC_SetGoal( gentity_t *goal, float rating )
 		return;
 	}
 
-	if ( NPCS.NPCInfo->goalEntity )
+	if ( aiEnt->NPC->goalEntity )
 	{
 //		Debug_NPCPrintf( NPC, d_npcai, DEBUG_LEVEL_INFO, "NPC_SetGoal: push %s\n", NPCInfo->goalEntity->classname );
-		NPCS.NPCInfo->lastGoalEntity = NPCS.NPCInfo->goalEntity;
+		aiEnt->NPC->lastGoalEntity = aiEnt->NPC->goalEntity;
 //		NPCInfo->lastGoalEntityNeed = NPCInfo->goalEntityNeed;
 	}
 
-	SetGoal( goal, rating );
+	SetGoal(aiEnt, goal, rating );
 }
 
 
@@ -62,27 +62,27 @@ void NPC_SetGoal( gentity_t *goal, float rating )
 NPC_ClearGoal
 */
 
-void NPC_ClearGoal( void )
+void NPC_ClearGoal(gentity_t *aiEnt)
 {
 	gentity_t	*goal;
 
-	if ( !NPCS.NPCInfo->lastGoalEntity )
+	if ( !aiEnt->NPC->lastGoalEntity )
 	{
-		SetGoal( NULL, 0.0 );
+		SetGoal(aiEnt, NULL, 0.0 );
 		return;
 	}
 
-	goal = NPCS.NPCInfo->lastGoalEntity;
-	NPCS.NPCInfo->lastGoalEntity = NULL;
+	goal = aiEnt->NPC->lastGoalEntity;
+	aiEnt->NPC->lastGoalEntity = NULL;
 //	NAV_ClearLastRoute(NPC);
 	if ( goal->inuse && !(goal->s.eFlags & EF_NODRAW) )
 	{
 //		Debug_NPCPrintf( NPC, d_npcai, DEBUG_LEVEL_INFO, "NPC_ClearGoal: pop %s\n", goal->classname );
-		SetGoal( goal, 0 );//, NPCInfo->lastGoalEntityNeed
+		SetGoal(aiEnt, goal, 0 );//, NPCInfo->lastGoalEntityNeed
 		return;
 	}
 
-	SetGoal( NULL, 0.0 );
+	SetGoal(aiEnt, NULL, 0.0 );
 }
 
 /*
@@ -114,17 +114,17 @@ qboolean G_BoundsOverlap(const vec3_t mins1, const vec3_t maxs1, const vec3_t mi
 	return qtrue;
 }
 
-void NPC_ReachedGoal( void )
+void NPC_ReachedGoal(gentity_t *aiEnt)
 {
 //	Debug_NPCPrintf( NPC, d_npcai, DEBUG_LEVEL_INFO, "UpdateGoal: reached goal entity\n" );
-	NPC_ClearGoal();
-	NPCS.NPCInfo->goalTime = level.time;
+	NPC_ClearGoal(aiEnt);
+	aiEnt->NPC->goalTime = level.time;
 
 //MCG - Begin
-	NPCS.NPCInfo->aiFlags &= ~NPCAI_MOVING;
-	NPCS.ucmd.forwardmove = 0;
+	aiEnt->NPC->aiFlags &= ~NPCAI_MOVING;
+	aiEnt->client->pers.cmd.forwardmove = 0;
 	//Return that the goal was reached
-	trap->ICARUS_TaskIDComplete( (sharedEntity_t *)NPCS.NPC, TID_MOVE_NAV );
+	trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_MOVE_NAV );
 //MCG - End
 }
 /*
@@ -133,7 +133,7 @@ ReachedGoal
 id removed checks against waypoints and is now checking surfaces
 */
 //qboolean NAV_HitNavGoal( vec3_t point, vec3_t mins, vec3_t maxs, gentity_t *goal, qboolean flying );
-qboolean ReachedGoal( gentity_t *goal )
+qboolean ReachedGoal(gentity_t *aiEnt, gentity_t *goal )
 {
 	//FIXME: For script waypoints, need a special check
 /*
@@ -196,9 +196,9 @@ qboolean ReachedGoal( gentity_t *goal )
 		return qfalse;
 	}
 */
-	if ( NPCS.NPCInfo->aiFlags & NPCAI_TOUCHED_GOAL )
+	if ( aiEnt->NPC->aiFlags & NPCAI_TOUCHED_GOAL )
 	{
-		NPCS.NPCInfo->aiFlags &= ~NPCAI_TOUCHED_GOAL;
+		aiEnt->NPC->aiFlags &= ~NPCAI_TOUCHED_GOAL;
 		return qtrue;
 	}
 /*
@@ -227,7 +227,7 @@ qboolean ReachedGoal( gentity_t *goal )
 		}
 	}
 */
-	return NAV_HitNavGoal( NPCS.NPC->r.currentOrigin, NPCS.NPC->r.mins, NPCS.NPC->r.maxs, goal->r.currentOrigin, NPCS.NPCInfo->goalRadius, FlyingCreature( NPCS.NPC ) );
+	return NAV_HitNavGoal( aiEnt->r.currentOrigin, aiEnt->r.mins, aiEnt->r.maxs, goal->r.currentOrigin, aiEnt->NPC->goalRadius, FlyingCreature( aiEnt ) );
 }
 
 /*
@@ -240,26 +240,26 @@ In fact, doesn't seem to be any waypoint info on entities at all any more?
 MCG - Since goal is ALWAYS goalEntity, took out a lot of sending goal entity pointers around for no reason
 */
 
-gentity_t *UpdateGoal( void )
+gentity_t *UpdateGoal(gentity_t *aiEnt)
 {
 	gentity_t	*goal;
 
-	if ( !NPCS.NPCInfo->goalEntity )
+	if ( !aiEnt->NPC->goalEntity )
 	{
 		return NULL;
 	}
 
-	if ( !NPCS.NPCInfo->goalEntity->inuse )
+	if ( !aiEnt->NPC->goalEntity->inuse )
 	{//Somehow freed it, but didn't clear it
-		NPC_ClearGoal();
+		NPC_ClearGoal(aiEnt);
 		return NULL;
 	}
 
-	goal = NPCS.NPCInfo->goalEntity;
+	goal = aiEnt->NPC->goalEntity;
 
-	if ( ReachedGoal( goal ) )
+	if ( ReachedGoal(aiEnt, goal ) )
 	{
-		NPC_ReachedGoal();
+		NPC_ReachedGoal(aiEnt);
 		goal = NULL;//so they don't keep trying to move to it
 	}//else if fail, need to tell script so?
 

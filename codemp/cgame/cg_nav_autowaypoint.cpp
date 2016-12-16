@@ -2223,7 +2223,7 @@ qboolean AWP_Jump( vec3_t start, vec3_t dest )
 
 			VectorScale( targetDir, shotSpeed, shotVel );
 			travelTime = targetDist/shotSpeed;
-			shotVel[2] += travelTime * 0.5 * /*NPCS.NPC->client->ps.gravity*/ 1.0;
+			shotVel[2] += travelTime * 0.5 * /*aiEnt->client->ps.gravity*/ 1.0;
 
 			if ( !hitCount )
 			{//save the first one as the worst case scenario

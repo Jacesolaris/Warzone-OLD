@@ -1602,7 +1602,7 @@ void Warzone_Nav_CreateNavMesh(void)
 
 extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC );
 extern qboolean UQ1_UcmdMoveForDir(gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest);
-extern qboolean NPC_FacePosition(vec3_t position, qboolean doPitch);
+extern qboolean NPC_FacePosition(gentity_t *aiEnt, vec3_t position, qboolean doPitch);
 
 void Warzone_Nav_UpdateEntity(gentity_t *ent)
 {

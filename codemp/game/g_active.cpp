@@ -2006,8 +2006,6 @@ void ClientThink_real( gentity_t *ent ) {
 	if (isNPC)
 	{// UQ1: Why were we not using this???
 		class_t npc_class;
-		
-		memcpy(&ent->client->pers.cmd, &NPCS.ucmd, sizeof(usercmd_t));
 
 		ent->client->ps.extra_flags = ent->s.extra_flags;
 
@@ -3302,7 +3300,7 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 	}
 
-	Pmove (&pmove);
+	Pmove(&pmove);
 
 	if (ent->client->solidHack)
 	{

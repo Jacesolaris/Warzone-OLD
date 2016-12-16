@@ -235,9 +235,9 @@ char	*ClassNames[CLASS_NUM_CLASSES] =
 NPC_ReactionTime
 */
 //FIXME use grandom in here
-int NPC_ReactionTime ( void )
+int NPC_ReactionTime (gentity_t *aiEnt)
 {
-	return 200 * ( 6 - NPCS.NPCInfo->stats.reactions );
+	return 200 * ( 6 - aiEnt->NPC->stats.reactions );
 }
 
 //
@@ -2631,19 +2631,19 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					{
 						NPC->client->ps.primaryWeapon = weap;
 						NPC->client->ps.weapon = weap;
-						NPC_ChangeWeapon(weap);
+						NPC_ChangeWeapon(NPC, weap);
 					}
 					else if (NPC->client->ps.secondaryWeapon <= WP_NONE)
 					{
 						NPC->client->ps.secondaryWeapon = weap;
 						NPC->client->ps.weapon = weap;
-						NPC_ChangeWeapon(weap);
+						NPC_ChangeWeapon(NPC, weap);
 					}
 					else if (NPC->client->ps.temporaryWeapon <= WP_NONE) 
 					{
 						NPC->client->ps.temporaryWeapon = weap;
 						NPC->client->ps.weapon = weap;
-						NPC_ChangeWeapon(weap);
+						NPC_ChangeWeapon(NPC, weap);
 					}
 					else
 					{

@@ -286,8 +286,10 @@ qboolean NAV_ClearPathToPoint( gentity_t *self, vec3_t pmins, vec3_t pmaxs, vec3
 			return qtrue;
 		}
 
+		gentity_t *aiEnt = self;
+
 		//Okay, didn't get all the way there, let's see if we got close enough:
-		if ( NAV_HitNavGoal( self->r.currentOrigin, self->parent->r.mins, self->parent->r.maxs, trace.endpos, NPCS.NPCInfo->goalRadius, FlyingCreature( self->parent ) ) )
+		if ( NAV_HitNavGoal( self->r.currentOrigin, self->parent->r.mins, self->parent->r.maxs, trace.endpos, aiEnt->NPC->goalRadius, FlyingCreature( self->parent ) ) )
 		{
 			return qtrue;
 		}
@@ -701,7 +703,7 @@ qboolean NAV_ResolveBlock( gentity_t *self, gentity_t *blocker, vec3_t blocked_d
 
 	//For now, just complain about it
 	NPC_Blocked( self, blocker );
-	NPC_FaceEntity( blocker, qtrue );
+	NPC_FaceEntity( self, blocker, qtrue );
 
 	return qfalse;
 }
@@ -847,7 +849,7 @@ qboolean NAV_ResolveEntityCollision( gentity_t *self, gentity_t *blocker, vec3_t
 		if ( NAV_StackedCanyon( self, blocker, pathDir ) )
 		{
 			NPC_Blocked( self, blocker );
-			NPC_FaceEntity( blocker, qtrue );
+			NPC_FaceEntity( self, blocker, qtrue );
 
 			return qfalse;
 		}
@@ -885,7 +887,7 @@ qboolean NAV_TestForBlocked( gentity_t *self, gentity_t *goal, gentity_t *blocke
 		if ( distance <= MIN_STOP_DIST )
 		{
 			NPC_Blocked( self, blocker );
-			NPC_FaceEntity( blocker, qtrue );
+			NPC_FaceEntity( self, blocker, qtrue );
 			return qtrue;
 		}
 	}
@@ -905,7 +907,7 @@ qboolean NAV_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t *info )
 	vec3_t	movepos;
 
 	//Clear our block info for this frame
-	NAV_ClearBlockedInfo( NPCS.NPC );
+	NAV_ClearBlockedInfo( self );
 
 	//Cap our distance
 	if ( info->distance > MAX_COLL_AVOID_DIST )
@@ -973,7 +975,7 @@ int NAV_TestBestNode( gentity_t *self, int startID, int endID, qboolean failEdge
 	vec3_t	end;
 	trace_t	trace;
 	vec3_t	mins;
-	int		clipmask = (NPCS.NPC->clipmask&~CONTENTS_BODY)|CONTENTS_BOTCLIP;
+	int		clipmask = (self->clipmask&~CONTENTS_BODY)|CONTENTS_BOTCLIP;
 
 	//get the position for the test choice
 	trap->Nav_GetNodePosition( endID, end );
@@ -1091,11 +1093,11 @@ NAV_MicroError
 -------------------------
 */
 
-qboolean NAV_MicroError( vec3_t start, vec3_t end )
+qboolean NAV_MicroError(gentity_t *aiEnt, vec3_t start, vec3_t end )
 {
 	if ( VectorCompare( start, end ) )
 	{
-		if ( DistanceSquared( NPCS.NPC->r.currentOrigin, start ) < (8*8) )
+		if ( DistanceSquared( aiEnt->r.currentOrigin, start ) < (8*8) )
 		{
 			return qtrue;
 		}
@@ -1168,7 +1170,7 @@ int	NAV_MoveToGoal( gentity_t *self, navInfo_t *info )
 	trap->Nav_GetNodePosition( self->waypoint, end );
 
 	//Basically, see if the path we have isn't helping
-	//if ( NAV_MicroError( origin, end ) )
+	//if ( NAV_MicroError( self, origin, end ) )
 	//	return WAYPOINT_NONE;
 
 	//Test the path connection from our current position to the best node

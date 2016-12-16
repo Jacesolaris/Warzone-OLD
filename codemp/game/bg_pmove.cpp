@@ -12383,11 +12383,7 @@ void Pmove (pmove_t *pmove) {
 		return;	// should not happen
 	}
 
-#ifdef __NPC_THREADING__
-	PmoveLock.lock();
-#endif //__NPC_THREADING__
-
-	if ( finalTime > pmove->ps->commandTime + 1000 ) {
+	if (finalTime > pmove->ps->commandTime + 1000) {
 		pmove->ps->commandTime = finalTime - 1000;
 	}
 
@@ -12408,39 +12404,36 @@ void Pmove (pmove_t *pmove) {
 		pmove->ps->pm_type = PM_NORMAL;		// Hack, i know, but this way we can still do the normal pmove stuff
 	}
 
-	pmove->ps->pmove_framecount = (pmove->ps->pmove_framecount+1) & ((1<<PS_PMOVEFRAMECOUNTBITS)-1);
+	pmove->ps->pmove_framecount = (pmove->ps->pmove_framecount + 1) & ((1 << PS_PMOVEFRAMECOUNTBITS) - 1);
 
 	// chop the move up if it is too long, to prevent framerate
 	// dependent behavior
-	while ( pmove->ps->commandTime != finalTime ) {
+	while (pmove->ps->commandTime != finalTime) {
 		int		msec;
 
 		msec = finalTime - pmove->ps->commandTime;
 
-		if ( pmove->pmove_fixed ) {
-			if ( msec > pmove->pmove_msec ) {
+		if (pmove->pmove_fixed) {
+			if (msec > pmove->pmove_msec) {
 				msec = pmove->pmove_msec;
 			}
 		}
 		else {
-			if ( msec > 66 ) {
+			if (msec > 66) {
 				msec = 66;
 			}
 		}
 		pmove->cmd.serverTime = pmove->ps->commandTime + msec;
 
-		PmoveSingle( pmove );
+#pragma omp critical (__PM_MUTEX__)
+		PmoveSingle(pmove);
 
-		if ( pmove->ps->pm_flags & PMF_JUMP_HELD ) {
+		if (pmove->ps->pm_flags & PMF_JUMP_HELD) {
 			pmove->cmd.upmove = 20;
 		}
 	}
 	if (locked) {
 		pmove->ps->pm_type = PM_NOMOVE;		// Restore it
 	}
-
-#ifdef __NPC_THREADING__
-	PmoveLock.unlock();
-#endif //__NPC_THREADING__
 }
 

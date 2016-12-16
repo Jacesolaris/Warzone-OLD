@@ -14,7 +14,7 @@ extern qboolean Warzone_PointNearMoverEntityLocation( vec3_t org );
 
 qboolean NPC_IsJetpacking ( gentity_t *self )
 {
-	if (NPCS.NPC->s.eFlags & EF_JETPACK_ACTIVE || NPCS.NPC->s.eFlags & EF_JETPACK_FLAMING || NPCS.NPC->s.eFlags & EF_JETPACK_HOVER)
+	if (self->s.eFlags & EF_JETPACK_ACTIVE || self->s.eFlags & EF_JETPACK_FLAMING || self->s.eFlags & EF_JETPACK_HOVER)
 		return qtrue;
 
 	return qfalse;
@@ -108,10 +108,10 @@ qboolean NPC_JetpackHeightCheck (gentity_t *NPC)
 	return qfalse;
 }
 
-void NPC_JetpackCombatThink ( void )
+void NPC_JetpackCombatThink (gentity_t *aiEnt)
 {
-	gentity_t	*self = NPCS.NPC;
-	usercmd_t	*ucmd = &NPCS.ucmd;
+	gentity_t *self = aiEnt;
+	usercmd_t	*ucmd = &aiEnt->client->pers.cmd;
 
 	if (!NPC_IsJetpacking(self) && !NPC_JetpackFallingEmergencyCheck(self))
 	{// We have jetpack off and are falling... Turn it on and save yourself!
@@ -233,10 +233,10 @@ void NPC_JetpackCombatThink ( void )
 	}
 }
 
-void NPC_JetpackTravelThink ( void )
+void NPC_JetpackTravelThink (gentity_t *aiEnt)
 {
-	gentity_t	*self = NPCS.NPC;
-	usercmd_t	*ucmd = &NPCS.ucmd;
+	gentity_t *self = aiEnt;
+	usercmd_t	*ucmd = &aiEnt->client->pers.cmd;
 
 	if (self->wpCurrent >= 0 
 		&& self->wpCurrent < gWPNum
@@ -252,7 +252,7 @@ void NPC_JetpackTravelThink ( void )
 
 		if (self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
 		{// And go there...
-			NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+			NPC_FacePosition(aiEnt, gWPArray[self->wpCurrent]->origin, qfalse );
 			VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
 			UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
 
@@ -289,7 +289,7 @@ void NPC_JetpackTravelThink ( void )
 	{// We have jetpack off and are falling... Turn it on and save yourself!
 		if (self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
 		{
-			NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+			NPC_FacePosition(aiEnt, gWPArray[self->wpCurrent]->origin, qfalse );
 			VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
 			UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
 		}
@@ -338,7 +338,7 @@ void NPC_JetpackTravelThink ( void )
 	{// Land at waypoint...
 		if (DistanceHorizontal(gWPArray[self->wpCurrent]->origin, self->r.currentOrigin) < 24)
 		{// We are directly above our waypoint... Land...
-			NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+			NPC_FacePosition(aiEnt, gWPArray[self->wpCurrent]->origin, qfalse );
 			VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
 			UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
 
@@ -356,7 +356,7 @@ void NPC_JetpackTravelThink ( void )
 		}
 		else if (gWPArray[self->wpCurrent]->origin[2]+64 < self->r.currentOrigin[2] || !NPC_JetpackHeightCheck(self))
 		{// Our waypoint is below us... Go down...
-			NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+			NPC_FacePosition(aiEnt, gWPArray[self->wpCurrent]->origin, qfalse );
 			VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
 			UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
 
@@ -374,7 +374,7 @@ void NPC_JetpackTravelThink ( void )
 		}
 		else if (gWPArray[self->wpCurrent]->origin[2]+64 > self->r.currentOrigin[2])
 		{// Our waypoint is above us... Go up...
-			NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+			NPC_FacePosition(aiEnt, gWPArray[self->wpCurrent]->origin, qfalse );
 			VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
 			UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
 
@@ -403,7 +403,7 @@ void NPC_JetpackTravelThink ( void )
 		}
 		else
 		{// We are at the right height... We need to hover a little over it until in range...
-			NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+			NPC_FacePosition(aiEnt, gWPArray[self->wpCurrent]->origin, qfalse );
 			VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
 			UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
 
@@ -434,10 +434,10 @@ void NPC_JetpackTravelThink ( void )
 	}
 }
 
-void NPC_DoFlyStuff ( void )
+void NPC_DoFlyStuff (gentity_t *aiEnt)
 {// UQ1's uber AI jetpack usage code...
-	gentity_t	*self = NPCS.NPC;
-	usercmd_t	*ucmd = &NPCS.ucmd;
+	gentity_t *self = aiEnt;
+	usercmd_t	*ucmd = &aiEnt->client->pers.cmd;
 
 	if (!self || !self->client || !NPC_IsAlive(self, self)) return;
 
@@ -452,38 +452,38 @@ void NPC_DoFlyStuff ( void )
 
 		if (HAVE_ENEMY)
 		{
-			NPC_JetpackCombatThink();
+			NPC_JetpackCombatThink(aiEnt);
 		}
 		else
 		{
-			NPC_JetpackTravelThink();
+			NPC_JetpackTravelThink(aiEnt);
 		}
 	}
 }
 
-void NPC_CheckFlying ( void )
+void NPC_CheckFlying (gentity_t *aiEnt)
 {
-	if ( NPCS.NPC->client->NPC_class == CLASS_VEHICLE )
+	if ( aiEnt->client->NPC_class == CLASS_VEHICLE )
 	{// Vehicles... Don't do normal jetpack stuff...
 
 	}
 	else
 	{
-		if (NPCS.NPC->health <= 0 || !NPC_IsAlive(NPCS.NPC, NPCS.NPC) || (NPCS.NPC->client->ps.eFlags & EF_DEAD) || NPCS.NPC->client->ps.pm_type == PM_DEAD)
+		if (aiEnt->health <= 0 || !NPC_IsAlive(aiEnt, aiEnt) || (aiEnt->client->ps.eFlags & EF_DEAD) || aiEnt->client->ps.pm_type == PM_DEAD)
 		{// Dead... Return to normal...
-			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
-			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
-			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_HOVER;
-			NPCS.NPC->s.eFlags &= ~EF_JETPACK_ACTIVE;
-			NPCS.NPC->s.eFlags &= ~EF_JETPACK_FLAMING;
-			NPCS.NPC->s.eFlags &= ~EF_JETPACK_HOVER;
-			NPCS.NPC->client->ps.pm_type = PM_DEAD;
+			aiEnt->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+			aiEnt->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+			aiEnt->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+			aiEnt->s.eFlags &= ~EF_JETPACK_ACTIVE;
+			aiEnt->s.eFlags &= ~EF_JETPACK_FLAMING;
+			aiEnt->s.eFlags &= ~EF_JETPACK_HOVER;
+			aiEnt->client->ps.pm_type = PM_DEAD;
 		}
 		else
 		{// If this NPC has a jetpack... Let's make use of it...
-			if (NPC_IsJetpacking( NPCS.NPC ))
+			if (NPC_IsJetpacking( aiEnt ))
 			{// Are we flying???
-				NPC_DoFlyStuff();
+				NPC_DoFlyStuff(aiEnt);
 			}
 		}
 	}

@@ -1269,13 +1269,12 @@ void NPC_Begin (gentity_t *ent)
 		trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
 
 //==NPC initialization
-	SetNPCGlobals( ent );
-
 	ent->enemy = NULL;
-	NPCS.NPCInfo->timeOfDeath = 0;
-	NPCS.NPCInfo->shotTime = 0;
-	NPC_ClearGoal();
-	NPC_ChangeWeapon( ent->client->ps.weapon );
+	gentity_t *aiEnt = ent;
+	aiEnt->NPC->timeOfDeath = 0;
+	aiEnt->NPC->shotTime = 0;
+	NPC_ClearGoal(aiEnt);
+	NPC_ChangeWeapon(aiEnt, ent->client->ps.weapon );
 
 //==Final NPC initialization
 	ent->pain  = NPC_PainFunc( ent ); //painF_NPC_Pain;

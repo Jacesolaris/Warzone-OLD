@@ -1198,7 +1198,7 @@ CM_Trace
 void CM_Trace( trace_t *trace, const vec3_t start, const vec3_t end,
 						  const vec3_t mins, const vec3_t maxs,
 						  clipHandle_t model, const vec3_t origin, int brushmask, int capsule, sphere_t *sphere ) {
-trace_lock.lock();
+//trace_lock.lock();
 							  
 	int			i;
 	traceWork_t	tw;
@@ -1219,7 +1219,7 @@ trace_lock.lock();
 	VectorCopy(origin, tw.modelOrigin);
 
 	if (!local->numNodes) {
-trace_lock.unlock();
+//trace_lock.unlock();
 		return;	// map not loaded, shouldn't happen
 	}
 
@@ -1439,7 +1439,7 @@ trace_lock.unlock();
                trace->fraction == 1.0 ||
                VectorLengthSquared(trace->plane.normal) > 0.9999);
 
-trace_lock.unlock();
+//trace_lock.unlock();
 }
 
 /*

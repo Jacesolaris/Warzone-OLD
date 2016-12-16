@@ -807,7 +807,7 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 /*
 Ghoul2 Insert End
 */
-svtrace_lock.lock();
+//svtrace_lock.lock();
 	moveclip_t	clip;
 	int			i;
 
@@ -825,7 +825,7 @@ svtrace_lock.lock();
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;
-svtrace_lock.unlock();
+//svtrace_lock.unlock();
 		return;		// blocked immediately by the world
 	}
 
@@ -864,7 +864,7 @@ Ghoul2 Insert End
 	SV_ClipMoveToEntities ( &clip );
 
 	*results = clip.trace;
-svtrace_lock.unlock();
+//svtrace_lock.unlock();
 }
 
 

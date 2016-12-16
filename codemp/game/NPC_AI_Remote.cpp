@@ -1,7 +1,7 @@
 #include "b_local.h"
 #include "g_nav.h"
 
-void Remote_Strafe( void );
+void Remote_Strafe(gentity_t *aiEnt);
 
 #define VELOCITY_DECAY	0.85f
 
@@ -12,7 +12,7 @@ enum
 	LSTATE_NONE = 0,
 };
 
-void Remote_Idle( void );
+void Remote_Idle(gentity_t *aiEnt);
 
 void NPC_Remote_Precache(void)
 {
@@ -28,10 +28,7 @@ NPC_Remote_Pain
 */
 void NPC_Remote_Pain(gentity_t *self, gentity_t *attacker, int damage)
 {
-	SaveNPCGlobals();
-	SetNPCGlobals( self );
-	Remote_Strafe();
-	RestoreNPCGlobals();
+	Remote_Strafe(self);
 
 	NPC_Pain( self, attacker, damage );
 }
@@ -41,31 +38,31 @@ void NPC_Remote_Pain(gentity_t *self, gentity_t *attacker, int damage)
 Remote_MaintainHeight
 -------------------------
 */
-void Remote_MaintainHeight( void )
+void Remote_MaintainHeight( gentity_t *aiEnt)
 {
 	float	dif;
 
 	// Update our angles regardless
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 
-	if ( NPCS.NPC->client->ps.velocity[2] )
+	if ( aiEnt->client->ps.velocity[2] )
 	{
-		NPCS.NPC->client->ps.velocity[2] *= VELOCITY_DECAY;
+		aiEnt->client->ps.velocity[2] *= VELOCITY_DECAY;
 
-		if ( fabs( NPCS.NPC->client->ps.velocity[2] ) < 2 )
+		if ( fabs( aiEnt->client->ps.velocity[2] ) < 2 )
 		{
-			NPCS.NPC->client->ps.velocity[2] = 0;
+			aiEnt->client->ps.velocity[2] = 0;
 		}
 	}
 	// If we have an enemy, we should try to hover at or a little below enemy eye level
-	if ( NPCS.NPC->enemy )
+	if ( aiEnt->enemy )
 	{
-		if (TIMER_Done( NPCS.NPC, "heightChange"))
+		if (TIMER_Done( aiEnt, "heightChange"))
 		{
-			TIMER_Set( NPCS.NPC,"heightChange",Q_irand( 1000, 3000 ));
+			TIMER_Set( aiEnt,"heightChange",Q_irand( 1000, 3000 ));
 
 			// Find the height difference
-			dif = (NPCS.NPC->enemy->r.currentOrigin[2] +  Q_irand( 0, NPCS.NPC->enemy->r.maxs[2]+8 )) - NPCS.NPC->r.currentOrigin[2];
+			dif = (aiEnt->enemy->r.currentOrigin[2] +  Q_irand( 0, aiEnt->enemy->r.maxs[2]+8 )) - aiEnt->r.currentOrigin[2];
 
 			// cap to prevent dramatic height shifts
 			if ( fabs( dif ) > 2 )
@@ -75,9 +72,9 @@ void Remote_MaintainHeight( void )
 					dif = ( dif < 0 ? -24 : 24 );
 				}
 				dif *= 10;
-				NPCS.NPC->client->ps.velocity[2] = (NPCS.NPC->client->ps.velocity[2]+dif)/2;
+				aiEnt->client->ps.velocity[2] = (aiEnt->client->ps.velocity[2]+dif)/2;
 			//	NPC->fx_time = level.time;
-				G_Sound( NPCS.NPC, CHAN_AUTO, G_SoundIndex("sound/chars/remote/misc/hiss.wav"));
+				G_Sound( aiEnt, CHAN_AUTO, G_SoundIndex("sound/chars/remote/misc/hiss.wav"));
 			}
 		}
 	}
@@ -85,44 +82,44 @@ void Remote_MaintainHeight( void )
 	{
 		gentity_t *goal = NULL;
 
-		if ( NPCS.NPCInfo->goalEntity )	// Is there a goal?
+		if ( aiEnt->NPC->goalEntity )	// Is there a goal?
 		{
-			goal = NPCS.NPCInfo->goalEntity;
+			goal = aiEnt->NPC->goalEntity;
 		}
 		else
 		{
-			goal = NPCS.NPCInfo->lastGoalEntity;
+			goal = aiEnt->NPC->lastGoalEntity;
 		}
 		if ( goal )
 		{
-			dif = goal->r.currentOrigin[2] - NPCS.NPC->r.currentOrigin[2];
+			dif = goal->r.currentOrigin[2] - aiEnt->r.currentOrigin[2];
 
 			if ( fabs( dif ) > 24 )
 			{
 				dif = ( dif < 0 ? -24 : 24 );
-				NPCS.NPC->client->ps.velocity[2] = (NPCS.NPC->client->ps.velocity[2]+dif)/2;
+				aiEnt->client->ps.velocity[2] = (aiEnt->client->ps.velocity[2]+dif)/2;
 			}
 		}
 	}
 
 	// Apply friction
-	if ( NPCS.NPC->client->ps.velocity[0] )
+	if ( aiEnt->client->ps.velocity[0] )
 	{
-		NPCS.NPC->client->ps.velocity[0] *= VELOCITY_DECAY;
+		aiEnt->client->ps.velocity[0] *= VELOCITY_DECAY;
 
-		if ( fabs( NPCS.NPC->client->ps.velocity[0] ) < 1 )
+		if ( fabs( aiEnt->client->ps.velocity[0] ) < 1 )
 		{
-			NPCS.NPC->client->ps.velocity[0] = 0;
+			aiEnt->client->ps.velocity[0] = 0;
 		}
 	}
 
-	if ( NPCS.NPC->client->ps.velocity[1] )
+	if ( aiEnt->client->ps.velocity[1] )
 	{
-		NPCS.NPC->client->ps.velocity[1] *= VELOCITY_DECAY;
+		aiEnt->client->ps.velocity[1] *= VELOCITY_DECAY;
 
-		if ( fabs( NPCS.NPC->client->ps.velocity[1] ) < 1 )
+		if ( fabs( aiEnt->client->ps.velocity[1] ) < 1 )
 		{
-			NPCS.NPC->client->ps.velocity[1] = 0;
+			aiEnt->client->ps.velocity[1] = 0;
 		}
 	}
 }
@@ -136,34 +133,34 @@ void Remote_MaintainHeight( void )
 Remote_Strafe
 -------------------------
 */
-void Remote_Strafe( void )
+void Remote_Strafe(gentity_t *aiEnt)
 {
 	int		dir;
 	vec3_t	end, right;
 	trace_t	tr;
 
-	AngleVectors( NPCS.NPC->client->renderInfo.eyeAngles, NULL, right, NULL );
+	AngleVectors( aiEnt->client->renderInfo.eyeAngles, NULL, right, NULL );
 
 	// Pick a random strafe direction, then check to see if doing a strafe would be
 	//	reasonable valid
 	dir = ( rand() & 1 ) ? -1 : 1;
-	VectorMA( NPCS.NPC->r.currentOrigin, REMOTE_STRAFE_DIS * dir, right, end );
+	VectorMA( aiEnt->r.currentOrigin, REMOTE_STRAFE_DIS * dir, right, end );
 
-	trap->Trace( &tr, NPCS.NPC->r.currentOrigin, NULL, NULL, end, NPCS.NPC->s.number, MASK_SOLID, qfalse, 0, 0 );
+	trap->Trace( &tr, aiEnt->r.currentOrigin, NULL, NULL, end, aiEnt->s.number, MASK_SOLID, qfalse, 0, 0 );
 
 	// Close enough
 	if ( tr.fraction > 0.9f )
 	{
-		VectorMA( NPCS.NPC->client->ps.velocity, REMOTE_STRAFE_VEL * dir, right, NPCS.NPC->client->ps.velocity );
+		VectorMA( aiEnt->client->ps.velocity, REMOTE_STRAFE_VEL * dir, right, aiEnt->client->ps.velocity );
 
-		G_Sound( NPCS.NPC, CHAN_AUTO, G_SoundIndex("sound/chars/remote/misc/hiss.wav"));
+		G_Sound( aiEnt, CHAN_AUTO, G_SoundIndex("sound/chars/remote/misc/hiss.wav"));
 
 		// Add a slight upward push
-		NPCS.NPC->client->ps.velocity[2] += REMOTE_UPWARD_PUSH;
+		aiEnt->client->ps.velocity[2] += REMOTE_UPWARD_PUSH;
 
 		// Set the strafe start time so we can do a controlled roll
 	//	NPC->fx_time = level.time;
-		NPCS.NPCInfo->standTime = level.time + 3000 + random() * 500;
+		aiEnt->NPC->standTime = level.time + 3000 + random() * 500;
 	}
 }
 
@@ -175,18 +172,18 @@ void Remote_Strafe( void )
 Remote_Hunt
 -------------------------
 */
-void Remote_Hunt( qboolean visible, qboolean advance, qboolean retreat )
+void Remote_Hunt(gentity_t *aiEnt, qboolean visible, qboolean advance, qboolean retreat )
 {
 	float	distance, speed;
 	vec3_t	forward;
 
 	//If we're not supposed to stand still, pursue the player
-	if ( NPCS.NPCInfo->standTime < level.time )
+	if ( aiEnt->NPC->standTime < level.time )
 	{
 		// Only strafe when we can see the player
 		if ( visible )
 		{
-			Remote_Strafe();
+			Remote_Strafe(aiEnt);
 			return;
 		}
 	}
@@ -199,16 +196,16 @@ void Remote_Hunt( qboolean visible, qboolean advance, qboolean retreat )
 	if ( visible == qfalse )
 	{
 		// Move towards our goal
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
-		NPCS.NPCInfo->goalRadius = 12;
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
+		aiEnt->NPC->goalRadius = 12;
 
 		//Get our direction from the navigator if we can't see our target
-		if ( NPC_GetMoveDirection( forward, &distance ) == qfalse )
+		if ( NPC_GetMoveDirection(aiEnt, forward, &distance ) == qfalse )
 			return;
 	}
 	else
 	{
-		VectorSubtract( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, forward );
+		VectorSubtract( aiEnt->enemy->r.currentOrigin, aiEnt->r.currentOrigin, forward );
 		/*distance = */VectorNormalize( forward );
 	}
 
@@ -217,7 +214,7 @@ void Remote_Hunt( qboolean visible, qboolean advance, qboolean retreat )
 	{
 		speed *= -1;
 	}
-	VectorMA( NPCS.NPC->client->ps.velocity, speed, forward, NPCS.NPC->client->ps.velocity );
+	VectorMA( aiEnt->client->ps.velocity, speed, forward, aiEnt->client->ps.velocity );
 }
 
 
@@ -226,7 +223,7 @@ void Remote_Hunt( qboolean visible, qboolean advance, qboolean retreat )
 Remote_Fire
 -------------------------
 */
-void Remote_Fire (void)
+void Remote_Fire (gentity_t *aiEnt)
 {
 	vec3_t	delta1, enemy_org1, muzzle1;
 	vec3_t	angleToEnemy1;
@@ -234,17 +231,17 @@ void Remote_Fire (void)
 //	static	vec3_t	muzzle;
 	gentity_t	*missile;
 
-	CalcEntitySpot( NPCS.NPC->enemy, SPOT_HEAD, enemy_org1 );
-	VectorCopy( NPCS.NPC->r.currentOrigin, muzzle1 );
+	CalcEntitySpot( aiEnt->enemy, SPOT_HEAD, enemy_org1 );
+	VectorCopy( aiEnt->r.currentOrigin, muzzle1 );
 
 	VectorSubtract (enemy_org1, muzzle1, delta1);
 
 	vectoangles ( delta1, angleToEnemy1 );
 	AngleVectors (angleToEnemy1, forward, vright, up);
 
-	missile = CreateMissile( NPCS.NPC->r.currentOrigin, forward, 1000, 10000, NPCS.NPC, qfalse );
+	missile = CreateMissile( aiEnt->r.currentOrigin, forward, 1000, 10000, aiEnt, qfalse );
 
-	G_PlayEffectID( G_EffectIndex("bryar/muzzle_flash"), NPCS.NPC->r.currentOrigin, forward );
+	G_PlayEffectID( G_EffectIndex("bryar/muzzle_flash"), aiEnt->r.currentOrigin, forward );
 
 	missile->classname = "briar";
 	missile->s.weapon = WP_BRYAR_PISTOL;
@@ -261,17 +258,17 @@ void Remote_Fire (void)
 Remote_Ranged
 -------------------------
 */
-void Remote_Ranged( qboolean visible, qboolean advance, qboolean retreat )
+void Remote_Ranged(gentity_t *aiEnt, qboolean visible, qboolean advance, qboolean retreat )
 {
-	if ( TIMER_Done( NPCS.NPC, "attackDelay" ) )	// Attack?
+	if ( TIMER_Done( aiEnt, "attackDelay" ) )	// Attack?
 	{
-		TIMER_Set( NPCS.NPC, "attackDelay", Q_irand( 500, 3000 ) );
-		Remote_Fire();
+		TIMER_Set( aiEnt, "attackDelay", Q_irand( 500, 3000 ) );
+		Remote_Fire(aiEnt);
 	}
 
-	if ( NPCS.NPCInfo->scriptFlags & SCF_CHASE_ENEMIES )
+	if ( aiEnt->NPC->scriptFlags & SCF_CHASE_ENEMIES )
 	{
-		Remote_Hunt( visible, advance, retreat );
+		Remote_Hunt(aiEnt, visible, advance, retreat );
 	}
 }
 
@@ -286,31 +283,31 @@ void Remote_Ranged( qboolean visible, qboolean advance, qboolean retreat )
 Remote_Attack
 -------------------------
 */
-void Remote_Attack( void )
+void Remote_Attack(gentity_t *aiEnt)
 {
 	float		distance;
 	qboolean	visible;
 	float		idealDist;
 	qboolean	advance, retreat;
 
-	if ( TIMER_Done(NPCS.NPC,"spin") )
+	if ( TIMER_Done(aiEnt,"spin") )
 	{
-		TIMER_Set( NPCS.NPC, "spin", Q_irand( 250, 1500 ) );
-		NPCS.NPCInfo->desiredYaw += Q_irand( -200, 200 );
+		TIMER_Set( aiEnt, "spin", Q_irand( 250, 1500 ) );
+		aiEnt->NPC->desiredYaw += Q_irand( -200, 200 );
 	}
 	// Always keep a good height off the ground
-	Remote_MaintainHeight();
+	Remote_MaintainHeight(aiEnt);
 
 	// If we don't have an enemy, just idle
-	if ( NPC_CheckEnemyExt(qfalse) == qfalse )
+	if ( NPC_CheckEnemyExt(aiEnt, qfalse) == qfalse )
 	{
-		Remote_Idle();
+		Remote_Idle(aiEnt);
 		return;
 	}
 
 	// Rate our distance to the target, and our visibilty
-	distance	= (int) DistanceHorizontalSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
-	visible		= NPC_ClearLOS4( NPCS.NPC->enemy );
+	distance	= (int) DistanceHorizontalSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
+	visible		= NPC_ClearLOS4(aiEnt, aiEnt->enemy );
 	idealDist	= MIN_DISTANCE_SQR+(MIN_DISTANCE_SQR*flrand( 0, 1 ));
 	advance		= (qboolean)(distance > idealDist*1.25);
 	retreat		= (qboolean)(distance < idealDist*0.75);
@@ -318,14 +315,14 @@ void Remote_Attack( void )
 	// If we cannot see our target, move to see it
 	if ( visible == qfalse )
 	{
-		if ( NPCS.NPCInfo->scriptFlags & SCF_CHASE_ENEMIES )
+		if ( aiEnt->NPC->scriptFlags & SCF_CHASE_ENEMIES )
 		{
-			Remote_Hunt( visible, advance, retreat );
+			Remote_Hunt(aiEnt, visible, advance, retreat );
 			return;
 		}
 	}
 
-	Remote_Ranged( visible, advance, retreat );
+	Remote_Ranged(aiEnt, visible, advance, retreat );
 
 }
 
@@ -334,11 +331,11 @@ void Remote_Attack( void )
 Remote_Idle
 -------------------------
 */
-void Remote_Idle( void )
+void Remote_Idle(gentity_t *aiEnt)
 {
-	Remote_MaintainHeight();
+	Remote_MaintainHeight(aiEnt);
 
-	NPC_BSIdle();
+	NPC_BSIdle(aiEnt);
 }
 
 /*
@@ -346,22 +343,22 @@ void Remote_Idle( void )
 Remote_Patrol
 -------------------------
 */
-void Remote_Patrol( void )
+void Remote_Patrol(gentity_t *aiEnt)
 {
-	Remote_MaintainHeight();
+	Remote_MaintainHeight(aiEnt);
 
 	//If we have somewhere to go, then do that
-	if (!NPCS.NPC->enemy)
+	if (!aiEnt->enemy)
 	{
-		if ( UpdateGoal() )
+		if ( UpdateGoal(aiEnt) )
 		{
 			//start loop sound once we move
-			NPCS.ucmd.buttons |= BUTTON_WALKING;
-			NPC_MoveToGoal( qtrue );
+			aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+			NPC_MoveToGoal(aiEnt, qtrue );
 		}
 	}
 
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles(aiEnt,  qtrue, qtrue );
 }
 
 
@@ -370,12 +367,12 @@ void Remote_Patrol( void )
 NPC_BSRemote_Default
 -------------------------
 */
-void NPC_BSRemote_Default( void )
+void NPC_BSRemote_Default(gentity_t *aiEnt)
 {
-	if ( NPCS.NPC->enemy )
-		Remote_Attack();
-	else if ( NPCS.NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES )
-		Remote_Patrol();
+	if ( aiEnt->enemy )
+		Remote_Attack(aiEnt);
+	else if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
+		Remote_Patrol(aiEnt);
 	else
-		Remote_Idle();
+		Remote_Idle(aiEnt);
 }

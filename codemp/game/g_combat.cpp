@@ -2347,7 +2347,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		{//ambushing trooper
 			self->client->noclip = qfalse;
 		}
-		NPC_FreeCombatPoint( self->NPC->combatPoint, qfalse );
+		NPC_FreeCombatPoint( self, self->NPC->combatPoint, qfalse );
 		if ( self->NPC->group )
 		{
 			//lastInGroup = (self->NPC->group->numGroup < 2);

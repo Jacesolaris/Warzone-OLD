@@ -2600,7 +2600,7 @@ static qboolean Q3_SetBState( int entID, const char *bs_name )
 
 			if( ent->waypoint != WAYPOINT_NONE )
 			{
-				NPC_BSSearchStart( ent->waypoint, bSID );
+				NPC_BSSearchStart( ent, ent->waypoint, bSID );
 			}
 			else
 			{
@@ -2608,7 +2608,7 @@ static qboolean Q3_SetBState( int entID, const char *bs_name )
 
 				if( ent->waypoint != WAYPOINT_NONE )
 				{
-					NPC_BSSearchStart( ent->waypoint, bSID );
+					NPC_BSSearchStart( ent, ent->waypoint, bSID );
 				}
 				/*else if( ent->lastWaypoint >=0 && ent->lastWaypoint < num_waypoints )
 				{

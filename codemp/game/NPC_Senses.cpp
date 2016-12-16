@@ -44,15 +44,15 @@ or take any AI related factors (for example, the NPC's reaction time) into accou
 
 FIXME do we need fat and thin version of this?
 */
-qboolean CanSee ( gentity_t *ent )
+qboolean CanSee ( gentity_t *aiEnt, gentity_t *ent )
 {
 	trace_t		tr;
 	vec3_t		eyes, spot;
 
-	CalcEntitySpot( NPCS.NPC, SPOT_HEAD_LEAN, eyes );
+	CalcEntitySpot( aiEnt, SPOT_HEAD_LEAN, eyes );
 
 	CalcEntitySpot( ent, SPOT_ORIGIN, spot );
-	trap->Trace ( &tr, eyes, NULL, NULL, spot, NPCS.NPC->s.number, MASK_OPAQUE, qfalse, 0, 0 );
+	trap->Trace ( &tr, eyes, NULL, NULL, spot, aiEnt->s.number, MASK_OPAQUE, qfalse, 0, 0 );
 	ShotThroughGlass (&tr, ent, spot, MASK_OPAQUE);
 	if ( tr.fraction == 1.0 )
 	{
@@ -60,7 +60,7 @@ qboolean CanSee ( gentity_t *ent )
 	}
 
 	CalcEntitySpot( ent, SPOT_HEAD, spot );
-	trap->Trace ( &tr, eyes, NULL, NULL, spot, NPCS.NPC->s.number, MASK_OPAQUE, qfalse, 0, 0 );
+	trap->Trace ( &tr, eyes, NULL, NULL, spot, aiEnt->s.number, MASK_OPAQUE, qfalse, 0, 0 );
 	ShotThroughGlass (&tr, ent, spot, MASK_OPAQUE);
 	if ( tr.fraction == 1.0 )
 	{
@@ -68,7 +68,7 @@ qboolean CanSee ( gentity_t *ent )
 	}
 
 	CalcEntitySpot( ent, SPOT_LEGS, spot );
-	trap->Trace ( &tr, eyes, NULL, NULL, spot, NPCS.NPC->s.number, MASK_OPAQUE, qfalse, 0, 0 );
+	trap->Trace ( &tr, eyes, NULL, NULL, spot, aiEnt->s.number, MASK_OPAQUE, qfalse, 0, 0 );
 	ShotThroughGlass (&tr, ent, spot, MASK_OPAQUE);
 	if ( tr.fraction == 1.0 )
 	{
@@ -206,22 +206,22 @@ qboolean InFOV ( gentity_t *ent, gentity_t *from, int hFOV, int vFOV )
 	return qfalse;
 }
 
-qboolean InVisrange ( gentity_t *ent )
+qboolean InVisrange (gentity_t *aiEnt, gentity_t *ent )
 {//FIXME: make a calculate visibility for ents that takes into account
 	//lighting, movement, turning, crouch/stand up, other anims, hide brushes, etc.
 	vec3_t	eyes;
 	vec3_t	spot;
 	vec3_t	deltaVector;
 #ifdef __MMO__
-	float	visrange = (NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange);
+	float	visrange = (aiEnt->NPC->stats.visrange * aiEnt->NPC->stats.visrange);
 	float	visrange2 = (1024 * 1024);
 
 	if (visrange2 < visrange) visrange = visrange2;
 #else //!__MMO__
-	float	visrange = (NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange);
+	float	visrange = (aiEnt->NPC->stats.visrange * aiEnt->NPC->stats.visrange);
 #endif //__MMO__
 
-	CalcEntitySpot( NPCS.NPC, SPOT_HEAD_LEAN, eyes );
+	CalcEntitySpot( aiEnt, SPOT_HEAD_LEAN, eyes );
 
 	CalcEntitySpot( ent, SPOT_ORIGIN, spot );
 	VectorSubtract ( spot, eyes, deltaVector);
@@ -260,11 +260,11 @@ qboolean InVisrange ( gentity_t *ent )
 NPC_CheckVisibility
 */
 
-visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
+visibility_t NPC_CheckVisibility (gentity_t *aiEnt, gentity_t *ent, int flags )
 {
 	qboolean IS_BREAKABLE = qfalse;
 
-	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, ent))
+	if (aiEnt && NPC_EntityIsBreakable(aiEnt, ent))
 		IS_BREAKABLE = qtrue;
 
 	// flags should never be 0
@@ -276,11 +276,11 @@ visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 	// check PVS
 	if ( flags & CHECK_PVS )
 	{
-		if ( !IS_BREAKABLE && !trap->InPVS ( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) )
+		if ( !IS_BREAKABLE && !trap->InPVS ( ent->r.currentOrigin, aiEnt->r.currentOrigin ) )
 		{
 			return VIS_NOT;
 		}
-		else if ( IS_BREAKABLE && !trap->InPVS ( ent->breakableOrigin, NPCS.NPC->r.currentOrigin ) )
+		else if ( IS_BREAKABLE && !trap->InPVS ( ent->breakableOrigin, aiEnt->r.currentOrigin ) )
 		{
 			return VIS_NOT;
 		}
@@ -293,7 +293,7 @@ visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 	// check within visrange
 	if (flags & CHECK_VISRANGE)
 	{
-		if( !InVisrange ( ent ) )
+		if( !InVisrange (aiEnt, ent ) )
 		{
 			return VIS_PVS;
 		}
@@ -303,7 +303,7 @@ visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 	//Meaning has to be a direct line of site
 	if ( flags & CHECK_360 )
 	{
-		if ( !CanSee ( ent ) )
+		if ( !CanSee (aiEnt, ent ) )
 		{
 			return VIS_PVS;
 		}
@@ -316,7 +316,7 @@ visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 	// check FOV
 	if ( flags & CHECK_FOV )
 	{
-		if ( !InFOV ( ent, NPCS.NPC, NPCS.NPCInfo->stats.hfov, NPCS.NPCInfo->stats.vfov) )
+		if ( !InFOV ( ent, aiEnt, aiEnt->NPC->stats.hfov, aiEnt->NPC->stats.vfov) )
 		{
 			return VIS_360;
 		}
@@ -330,7 +330,7 @@ visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 	// check shootability
 	if ( flags & CHECK_SHOOT )
 	{
-		if ( !CanShoot ( ent, NPCS.NPC ) )
+		if ( !CanShoot ( ent, aiEnt ) )
 		{
 			return VIS_FOV;
 		}
@@ -545,9 +545,9 @@ int G_CheckAlertEvents( gentity_t *self, qboolean checkSight, qboolean checkSoun
 	return bestSoundEvent;
 }
 
-int NPC_CheckAlertEvents( qboolean checkSight, qboolean checkSound, int ignoreAlert, qboolean mustHaveOwner, int minAlertLevel )
+int NPC_CheckAlertEvents( gentity_t *aiEnt, qboolean checkSight, qboolean checkSound, int ignoreAlert, qboolean mustHaveOwner, int minAlertLevel )
 {
-	return G_CheckAlertEvents( NPCS.NPC, checkSight, checkSound, NPCS.NPCInfo->stats.visrange, NPCS.NPCInfo->stats.earshot, ignoreAlert, mustHaveOwner, minAlertLevel );
+	return G_CheckAlertEvents( aiEnt, checkSight, checkSound, aiEnt->NPC->stats.visrange, aiEnt->NPC->stats.earshot, ignoreAlert, mustHaveOwner, minAlertLevel );
 }
 
 qboolean G_CheckForDanger( gentity_t *self, int alertEvent )
@@ -569,7 +569,7 @@ qboolean G_CheckForDanger( gentity_t *self, int alertEvent )
 				}
 				else
 				{
-					NPC_StartFlee( level.alertEvents[alertEvent].owner, level.alertEvents[alertEvent].position, level.alertEvents[alertEvent].level, 3000, 6000 );
+					NPC_StartFlee(self, level.alertEvents[alertEvent].owner, level.alertEvents[alertEvent].position, level.alertEvents[alertEvent].level, 3000, 6000 );
 					return qtrue;
 				}
 			}
@@ -581,9 +581,9 @@ qboolean G_CheckForDanger( gentity_t *self, int alertEvent )
 	}
 	return qfalse;
 }
-qboolean NPC_CheckForDanger( int alertEvent )
+qboolean NPC_CheckForDanger( gentity_t *aiEnt, int alertEvent )
 {//FIXME: more bStates need to call this?
-	return G_CheckForDanger( NPCS.NPC, alertEvent );
+	return G_CheckForDanger( aiEnt, alertEvent );
 }
 
 /*

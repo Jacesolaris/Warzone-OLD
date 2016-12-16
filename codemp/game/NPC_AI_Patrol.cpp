@@ -69,7 +69,7 @@ int NPC_GetPatrolWP(gentity_t *NPC)
 
 qboolean NPC_FindNewPatrolWaypoint()
 {
-	gentity_t *NPC = NPCS.NPC;
+	gentity_t *NPC = aiEnt;
 
 	if (NPC->noWaypointTime > level.time)
 	{// Only try to find a new waypoint every 10 seconds...
@@ -105,7 +105,7 @@ qboolean NPC_FindNewPatrolWaypoint()
 
 qboolean NPC_PatrolArea( void ) 
 {// Quick method of patroling...
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 	qboolean	ENEMY_VISIBLE = qfalse;
 	qboolean	HUNTING_ENEMY = qfalse;
 	qboolean	FORCED_COVERSPOT_FIND = qfalse;
@@ -200,12 +200,12 @@ qboolean NPC_PatrolArea( void )
 		return qfalse; // next think...
 	}
 
-	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	NPC_FacePosition( NPC, gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
+	UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+	if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 		NPC_PickRandomIdleAnimantion(NPC);
 	else
 		NPC_SelectMoveAnimation(qtrue);
@@ -213,9 +213,9 @@ qboolean NPC_PatrolArea( void )
 	return qtrue;
 }
 #else
-qboolean NPC_PatrolArea( void ) 
+qboolean NPC_PatrolArea( gentity_t *aiEnt)
 {// Quick method of patroling... The fastest way possible. Single waypoint using it's neighbours...
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	if (gWPNum <= 0)
 	{// No waypoints available...
@@ -267,15 +267,15 @@ qboolean NPC_PatrolArea( void )
 		return qfalse; // next think...
 	}
 
-	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	NPC_FacePosition(aiEnt, gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir_NoAvoidance/*UQ1_UcmdMoveForDir*/( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
+	UQ1_UcmdMoveForDir_NoAvoidance/*UQ1_UcmdMoveForDir*/( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+	if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 		NPC_PickRandomIdleAnimantion(NPC);
 	else
-		NPC_SelectMoveAnimation(qtrue);
+		NPC_SelectMoveAnimation(aiEnt, qtrue);
 
 	return qtrue;
 }

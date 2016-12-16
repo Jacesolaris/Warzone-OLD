@@ -63,15 +63,15 @@ void NPC_Wampa_Precache( void )
 Wampa_Idle
 -------------------------
 */
-void Wampa_Idle( void )
+void Wampa_Idle( gentity_t *aiEnt)
 {
-	NPCS.NPCInfo->localState = LSTATE_CLEAR;
+	aiEnt->NPC->localState = LSTATE_CLEAR;
 
 	//If we have somewhere to go, then do that
-	if ( UpdateGoal() )
+	if ( UpdateGoal(aiEnt) )
 	{
-		NPCS.ucmd.buttons &= ~BUTTON_WALKING;
-		NPC_MoveToGoal( qtrue );
+		aiEnt->client->pers.cmd.buttons &= ~BUTTON_WALKING;
+		NPC_MoveToGoal(aiEnt, qtrue );
 	}
 }
 
@@ -91,31 +91,31 @@ qboolean Wampa_CheckRoar( gentity_t *self )
 Wampa_Patrol
 -------------------------
 */
-void Wampa_Patrol( void )
+void Wampa_Patrol(gentity_t *aiEnt)
 {
-	NPCS.NPCInfo->localState = LSTATE_CLEAR;
+	aiEnt->NPC->localState = LSTATE_CLEAR;
 
 	//If we have somewhere to go, then do that
-	if ( UpdateGoal() )
+	if ( UpdateGoal(aiEnt) )
 	{
-		NPCS.ucmd.buttons |= BUTTON_WALKING;
-		NPC_MoveToGoal( qtrue );
+		aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+		NPC_MoveToGoal(aiEnt, qtrue );
 	}
 	else
 	{
-		if ( TIMER_Done( NPCS.NPC, "patrolTime" ))
+		if ( TIMER_Done( aiEnt, "patrolTime" ))
 		{
-			TIMER_Set( NPCS.NPC, "patrolTime", crandom() * 5000 + 5000 );
+			TIMER_Set( aiEnt, "patrolTime", crandom() * 5000 + 5000 );
 		}
 	}
 
-	if ( NPC_CheckEnemyExt( qtrue ) == qfalse )
+	if ( NPC_CheckEnemyExt(aiEnt, qtrue ) == qfalse )
 	{
-		Wampa_Idle();
+		Wampa_Idle(aiEnt);
 		return;
 	}
-	Wampa_CheckRoar( NPCS.NPC );
-	TIMER_Set( NPCS.NPC, "lookForNewEnemy", Q_irand( 5000, 15000 ) );
+	Wampa_CheckRoar( aiEnt );
+	TIMER_Set( aiEnt, "lookForNewEnemy", Q_irand( 5000, 15000 ) );
 }
 
 /*
@@ -123,57 +123,57 @@ void Wampa_Patrol( void )
 Wampa_Move
 -------------------------
 */
-void Wampa_Move( qboolean visible )
+void Wampa_Move(gentity_t *aiEnt, qboolean visible )
 {
-	if ( NPCS.NPCInfo->localState != LSTATE_WAITING )
+	if ( aiEnt->NPC->localState != LSTATE_WAITING )
 	{
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
 
-		if ( NPCS.NPC->enemy )
+		if ( aiEnt->enemy )
 		{//pick correct movement speed and anim
 			//run by default
-			NPCS.ucmd.buttons &= ~BUTTON_WALKING;
-			if ( !TIMER_Done( NPCS.NPC, "runfar" )
-				|| !TIMER_Done( NPCS.NPC, "runclose" ) )
+			aiEnt->client->pers.cmd.buttons &= ~BUTTON_WALKING;
+			if ( !TIMER_Done( aiEnt, "runfar" )
+				|| !TIMER_Done( aiEnt, "runclose" ) )
 			{//keep running with this anim & speed for a bit
 			}
-			else if ( !TIMER_Done( NPCS.NPC, "walk" ) )
+			else if ( !TIMER_Done( aiEnt, "walk" ) )
 			{//keep walking for a bit
-				NPCS.ucmd.buttons |= BUTTON_WALKING;
+				aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
 			}
-			else if ( visible && enemyDist > 384 && NPCS.NPCInfo->stats.runSpeed == 180 )
+			else if ( visible && enemyDist > 384 && aiEnt->NPC->stats.runSpeed == 180 )
 			{//fast run, all fours
-				NPCS.NPCInfo->stats.runSpeed = 300;
-				TIMER_Set( NPCS.NPC, "runfar", Q_irand( 2000, 4000 ) );
+				aiEnt->NPC->stats.runSpeed = 300;
+				TIMER_Set( aiEnt, "runfar", Q_irand( 2000, 4000 ) );
 			}
-			else if ( enemyDist > 256 && NPCS.NPCInfo->stats.runSpeed == 300 )
+			else if ( enemyDist > 256 && aiEnt->NPC->stats.runSpeed == 300 )
 			{//slow run, upright
-				NPCS.NPCInfo->stats.runSpeed = 180;
-				TIMER_Set( NPCS.NPC, "runclose", Q_irand( 3000, 5000 ) );
+				aiEnt->NPC->stats.runSpeed = 180;
+				TIMER_Set( aiEnt, "runclose", Q_irand( 3000, 5000 ) );
 			}
 			else if ( enemyDist < 128 )
 			{//walk
-				NPCS.NPCInfo->stats.runSpeed = 180;
-				NPCS.ucmd.buttons |= BUTTON_WALKING;
-				TIMER_Set( NPCS.NPC, "walk", Q_irand( 4000, 6000 ) );
+				aiEnt->NPC->stats.runSpeed = 180;
+				aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+				TIMER_Set( aiEnt, "walk", Q_irand( 4000, 6000 ) );
 			}
 		}
 
-		if ( NPCS.NPCInfo->stats.runSpeed == 300 )
+		if ( aiEnt->NPC->stats.runSpeed == 300 )
 		{//need to use the alternate run - hunched over on all fours
-			NPCS.NPC->client->ps.eFlags2 |= EF2_USE_ALT_ANIM;
+			aiEnt->client->ps.eFlags2 |= EF2_USE_ALT_ANIM;
 		}
-		NPC_MoveToGoal( qtrue );
-		NPCS.NPCInfo->goalRadius = MAX_DISTANCE;	// just get us within combat range
+		NPC_MoveToGoal(aiEnt, qtrue );
+		aiEnt->NPC->goalRadius = MAX_DISTANCE;	// just get us within combat range
 	}
 }
 
 //---------------------------------------------------------
 extern void G_Knockdown( gentity_t *victim );
 extern void G_Dismember( gentity_t *ent, gentity_t *enemy, vec3_t point, int limbType, float limbRollBase, float limbPitchBase, int deathAnim, qboolean postDeath );
-extern int NPC_GetEntsNearBolt( int *radiusEnts, float radius, int boltIndex, vec3_t boltOrg );
+extern int NPC_GetEntsNearBolt( gentity_t *aiEnt, int *radiusEnts, float radius, int boltIndex, vec3_t boltOrg );
 
-void Wampa_Slash( int boltIndex, qboolean backhand )
+void Wampa_Slash(gentity_t *aiEnt, int boltIndex, qboolean backhand )
 {
 	int			radiusEntNums[128];
 	int			numEnts;
@@ -183,7 +183,7 @@ void Wampa_Slash( int boltIndex, qboolean backhand )
 	vec3_t		boltOrg;
 	int			damage = (backhand)?Q_irand(10,15):Q_irand(20,30);
 
-	numEnts = NPC_GetEntsNearBolt( radiusEntNums, radius, boltIndex, boltOrg );
+	numEnts = NPC_GetEntsNearBolt(aiEnt, radiusEntNums, radius, boltIndex, boltOrg );
 
 	for ( i = 0; i < numEnts; i++ )
 	{
@@ -193,7 +193,7 @@ void Wampa_Slash( int boltIndex, qboolean backhand )
 			continue;
 		}
 
-		if ( radiusEnt == NPCS.NPC )
+		if ( radiusEnt == aiEnt )
 		{//Skip the wampa ent
 			continue;
 		}
@@ -206,13 +206,13 @@ void Wampa_Slash( int boltIndex, qboolean backhand )
 		if ( DistanceSquared( radiusEnt->r.currentOrigin, boltOrg ) <= radiusSquared )
 		{
 			//smack
-			G_Damage( radiusEnt, NPCS.NPC, NPCS.NPC, vec3_origin, radiusEnt->r.currentOrigin, damage, ((backhand)?DAMAGE_NO_ARMOR:(DAMAGE_NO_ARMOR|DAMAGE_NO_KNOCKBACK)), MOD_MELEE );
+			G_Damage( radiusEnt, aiEnt, aiEnt, vec3_origin, radiusEnt->r.currentOrigin, damage, ((backhand)?DAMAGE_NO_ARMOR:(DAMAGE_NO_ARMOR|DAMAGE_NO_KNOCKBACK)), MOD_MELEE );
 			if ( backhand )
 			{
 				//actually push the enemy
 				vec3_t pushDir;
 				vec3_t angs;
-				VectorCopy( NPCS.NPC->client->ps.viewangles, angs );
+				VectorCopy( aiEnt->client->ps.viewangles, angs );
 				angs[YAW] += flrand( 25, 50 );
 				angs[PITCH] = flrand( -25, -15 );
 				AngleVectors( angs, pushDir, NULL, NULL );
@@ -244,14 +244,14 @@ void Wampa_Slash( int boltIndex, qboolean backhand )
 					{
 						NPC_SetAnim( radiusEnt, SETANIM_BOTH, BOTH_DEATHBACKWARD2, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
 					}
-					G_Dismember( radiusEnt, NPCS.NPC, radiusEnt->r.currentOrigin, hitLoc, 90, 0, radiusEnt->client->ps.torsoAnim, qtrue);
+					G_Dismember( radiusEnt, aiEnt, radiusEnt->r.currentOrigin, hitLoc, 90, 0, radiusEnt->client->ps.torsoAnim, qtrue);
 				}
 			}
 			else if ( !Q_irand( 0, 3 ) && radiusEnt->health > 0 )
 			{//one out of every 4 normal hits does a knockdown, too
 				vec3_t pushDir;
 				vec3_t angs;
-				VectorCopy( NPCS.NPC->client->ps.viewangles, angs );
+				VectorCopy( aiEnt->client->ps.viewangles, angs );
 				angs[YAW] += flrand( 25, 50 );
 				angs[PITCH] = flrand( -25, -15 );
 				AngleVectors( angs, pushDir, NULL, NULL );
@@ -263,129 +263,129 @@ void Wampa_Slash( int boltIndex, qboolean backhand )
 }
 
 //------------------------------
-void Wampa_Attack( float distance, qboolean doCharge )
+void Wampa_Attack(gentity_t *aiEnt, float distance, qboolean doCharge )
 {
-	if ( !TIMER_Exists( NPCS.NPC, "attacking" ) )
+	if ( !TIMER_Exists( aiEnt, "attacking" ) )
 	{
 		if ( Q_irand(0, 2) && !doCharge )
 		{//double slash
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_ATTACK1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
-			TIMER_Set( NPCS.NPC, "attack_dmg", 750 );
+			NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_ATTACK1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
+			TIMER_Set( aiEnt, "attack_dmg", 750 );
 		}
 		else if ( doCharge || (distance > 270 && distance < 430 && !Q_irand(0, 1)) )
 		{//leap
 			vec3_t	fwd, yawAng;
-			VectorSet( yawAng, 0, NPCS.NPC->client->ps.viewangles[YAW], 0 );
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_ATTACK2, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
-			TIMER_Set( NPCS.NPC, "attack_dmg", 500 );
+			VectorSet( yawAng, 0, aiEnt->client->ps.viewangles[YAW], 0 );
+			NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_ATTACK2, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
+			TIMER_Set( aiEnt, "attack_dmg", 500 );
 			AngleVectors( yawAng, fwd, NULL, NULL );
-			VectorScale( fwd, distance*1.5f, NPCS.NPC->client->ps.velocity );
-			NPCS.NPC->client->ps.velocity[2] = 150;
-			NPCS.NPC->client->ps.groundEntityNum = ENTITYNUM_NONE;
+			VectorScale( fwd, distance*1.5f, aiEnt->client->ps.velocity );
+			aiEnt->client->ps.velocity[2] = 150;
+			aiEnt->client->ps.groundEntityNum = ENTITYNUM_NONE;
 		}
 		else
 		{//backhand
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_ATTACK3, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
-			TIMER_Set( NPCS.NPC, "attack_dmg", 250 );
+			NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_ATTACK3, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
+			TIMER_Set( aiEnt, "attack_dmg", 250 );
 		}
 
-		TIMER_Set( NPCS.NPC, "attacking", NPCS.NPC->client->ps.legsTimer + random() * 200 );
+		TIMER_Set( aiEnt, "attacking", aiEnt->client->ps.legsTimer + random() * 200 );
 		//allow us to re-evaluate our running speed/anim
-		TIMER_Set( NPCS.NPC, "runfar", -1 );
-		TIMER_Set( NPCS.NPC, "runclose", -1 );
-		TIMER_Set( NPCS.NPC, "walk", -1 );
+		TIMER_Set( aiEnt, "runfar", -1 );
+		TIMER_Set( aiEnt, "runclose", -1 );
+		TIMER_Set( aiEnt, "walk", -1 );
 	}
 
 	// Need to do delayed damage since the attack animations encapsulate multiple mini-attacks
 
-	if ( TIMER_Done2( NPCS.NPC, "attack_dmg", qtrue ) )
+	if ( TIMER_Done2( aiEnt, "attack_dmg", qtrue ) )
 	{
-		switch ( NPCS.NPC->client->ps.legsAnim )
+		switch ( aiEnt->client->ps.legsAnim )
 		{
 		case BOTH_ATTACK1:
-			Wampa_Slash( NPCS.NPC->client->renderInfo.handRBolt, qfalse );
+			Wampa_Slash(aiEnt, aiEnt->client->renderInfo.handRBolt, qfalse );
 			//do second hit
-			TIMER_Set( NPCS.NPC, "attack_dmg2", 100 );
+			TIMER_Set( aiEnt, "attack_dmg2", 100 );
 			break;
 		case BOTH_ATTACK2:
-			Wampa_Slash( NPCS.NPC->client->renderInfo.handRBolt, qfalse );
-			TIMER_Set( NPCS.NPC, "attack_dmg2", 100 );
+			Wampa_Slash(aiEnt,  aiEnt->client->renderInfo.handRBolt, qfalse );
+			TIMER_Set( aiEnt, "attack_dmg2", 100 );
 			break;
 		case BOTH_ATTACK3:
-			Wampa_Slash( NPCS.NPC->client->renderInfo.handLBolt, qtrue );
+			Wampa_Slash(aiEnt, aiEnt->client->renderInfo.handLBolt, qtrue );
 			break;
 		}
 	}
-	else if ( TIMER_Done2( NPCS.NPC, "attack_dmg2", qtrue ) )
+	else if ( TIMER_Done2( aiEnt, "attack_dmg2", qtrue ) )
 	{
-		switch ( NPCS.NPC->client->ps.legsAnim )
+		switch ( aiEnt->client->ps.legsAnim )
 		{
 		case BOTH_ATTACK1:
-			Wampa_Slash( NPCS.NPC->client->renderInfo.handLBolt, qfalse );
+			Wampa_Slash(aiEnt, aiEnt->client->renderInfo.handLBolt, qfalse );
 			break;
 		case BOTH_ATTACK2:
-			Wampa_Slash( NPCS.NPC->client->renderInfo.handLBolt, qfalse );
+			Wampa_Slash(aiEnt, aiEnt->client->renderInfo.handLBolt, qfalse );
 			break;
 		}
 	}
 
 	// Just using this to remove the attacking flag at the right time
-	TIMER_Done2( NPCS.NPC, "attacking", qtrue );
+	TIMER_Done2( aiEnt, "attacking", qtrue );
 
-	if ( NPCS.NPC->client->ps.legsAnim == BOTH_ATTACK1 && distance > (NPCS.NPC->r.maxs[0]+MIN_DISTANCE) )
+	if ( aiEnt->client->ps.legsAnim == BOTH_ATTACK1 && distance > (aiEnt->r.maxs[0]+MIN_DISTANCE) )
 	{//okay to keep moving
-		NPCS.ucmd.buttons |= BUTTON_WALKING;
-		Wampa_Move( qtrue );
+		aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+		Wampa_Move(aiEnt, qtrue );
 	}
 }
 
 //----------------------------------
-void Wampa_Combat( void )
+void Wampa_Combat(gentity_t *aiEnt)
 {
 	// If we cannot see our target or we have somewhere to go, then do that
-	if ( !NPC_ClearLOS( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) )
+	if ( !NPC_ClearLOS(aiEnt, aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) )
 	{
 		if ( !Q_irand( 0, 10 ) )
 		{
-			if ( Wampa_CheckRoar( NPCS.NPC ) )
+			if ( Wampa_CheckRoar( aiEnt ) )
 			{
 				return;
 			}
 		}
-		NPCS.NPCInfo->combatMove = qtrue;
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
-		NPCS.NPCInfo->goalRadius = MAX_DISTANCE;	// just get us within combat range
+		aiEnt->NPC->combatMove = qtrue;
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
+		aiEnt->NPC->goalRadius = MAX_DISTANCE;	// just get us within combat range
 
-		Wampa_Move( qfalse );
+		Wampa_Move(aiEnt, qfalse );
 		return;
 	}
-	else if ( UpdateGoal() )
+	else if ( UpdateGoal(aiEnt) )
 	{
-		NPCS.NPCInfo->combatMove = qtrue;
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
-		NPCS.NPCInfo->goalRadius = MAX_DISTANCE;	// just get us within combat range
+		aiEnt->NPC->combatMove = qtrue;
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
+		aiEnt->NPC->goalRadius = MAX_DISTANCE;	// just get us within combat range
 
-		Wampa_Move( qtrue );
+		Wampa_Move(aiEnt, qtrue );
 		return;
 	}
 	else
 	{
-		float		distance = enemyDist = Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
-		qboolean	advance = (qboolean)( distance > (NPCS.NPC->r.maxs[0]+MIN_DISTANCE) ? qtrue : qfalse  );
+		float		distance = enemyDist = Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
+		qboolean	advance = (qboolean)( distance > (aiEnt->r.maxs[0]+MIN_DISTANCE) ? qtrue : qfalse  );
 		qboolean	doCharge = qfalse;
 
 		// Sometimes I have problems with facing the enemy I'm attacking, so force the issue so I don't look dumb
 		//FIXME: always seems to face off to the left or right?!!!!
-		NPC_FaceEnemy( qtrue );
+		NPC_FaceEnemy(aiEnt, qtrue );
 
 
 		if ( advance )
 		{//have to get closer
 			vec3_t	yawOnlyAngles;
-			VectorSet( yawOnlyAngles, 0, NPCS.NPC->r.currentAngles[YAW], 0 );
-			if ( NPCS.NPC->enemy->health > 0//enemy still alive
+			VectorSet( yawOnlyAngles, 0, aiEnt->r.currentAngles[YAW], 0 );
+			if ( aiEnt->enemy->health > 0//enemy still alive
 				&& fabs(distance-350) <= 80 //enemy anywhere from 270 to 430 away
-				&& InFOV3( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, yawOnlyAngles, 20, 20 ) )//enemy generally in front
+				&& InFOV3( aiEnt->enemy->r.currentOrigin, aiEnt->r.currentOrigin, yawOnlyAngles, 20, 20 ) )//enemy generally in front
 			{//10% chance of doing charge anim
 				if ( !Q_irand( 0, 9 ) )
 				{//go for the charge
@@ -395,29 +395,29 @@ void Wampa_Combat( void )
 			}
 		}
 
-		if (( advance || NPCS.NPCInfo->localState == LSTATE_WAITING ) && TIMER_Done( NPCS.NPC, "attacking" )) // waiting monsters can't attack
+		if (( advance || aiEnt->NPC->localState == LSTATE_WAITING ) && TIMER_Done( aiEnt, "attacking" )) // waiting monsters can't attack
 		{
-			if ( TIMER_Done2( NPCS.NPC, "takingPain", qtrue ))
+			if ( TIMER_Done2( aiEnt, "takingPain", qtrue ))
 			{
-				NPCS.NPCInfo->localState = LSTATE_CLEAR;
+				aiEnt->NPC->localState = LSTATE_CLEAR;
 			}
 			else
 			{
-				Wampa_Move( qtrue );
+				Wampa_Move(aiEnt, qtrue );
 			}
 		}
 		else
 		{
 			if ( !Q_irand( 0, 20 ) )
 			{//FIXME: only do this if we just damaged them or vice-versa?
-				if ( Wampa_CheckRoar( NPCS.NPC ) )
+				if ( Wampa_CheckRoar( aiEnt ) )
 				{
 					return;
 				}
 			}
 			if ( !Q_irand( 0, 1 ) )
 			{//FIXME: base on skill
-				Wampa_Attack( distance, doCharge );
+				Wampa_Attack(aiEnt, distance, doCharge );
 			}
 		}
 	}
@@ -501,10 +501,10 @@ void NPC_Wampa_Pain( gentity_t *self, gentity_t *attacker, int damage )
 NPC_BSWampa_Default
 -------------------------
 */
-void NPC_BSWampa_Default( void )
+void NPC_BSWampa_Default(gentity_t *aiEnt)
 {
 
-	NPCS.NPC->client->ps.eFlags2 &= ~EF2_USE_ALT_ANIM;
+	aiEnt->client->ps.eFlags2 &= ~EF2_USE_ALT_ANIM;
 	//NORMAL ANIMS
 	//	stand1 = normal stand
 	//	walk1 = normal, non-angry walk
@@ -517,137 +517,137 @@ void NPC_BSWampa_Default( void )
 	//	walk3_drag = walk5 - walk with drag
 	//	stand2 = hold victim
 	//	stand2to1 = drop victim
-	if ( !TIMER_Done( NPCS.NPC, "rageTime" ) )
+	if ( !TIMER_Done( aiEnt, "rageTime" ) )
 	{//do nothing but roar first time we see an enemy
-		NPC_FaceEnemy( qtrue );
+		NPC_FaceEnemy(aiEnt, qtrue );
 		return;
 	}
-	if ( NPCS.NPC->enemy )
+	if ( aiEnt->enemy )
 	{
-		if ( !TIMER_Done(NPCS.NPC,"attacking") )
+		if ( !TIMER_Done(aiEnt,"attacking") )
 		{//in middle of attack
 			//face enemy
-			NPC_FaceEnemy( qtrue );
+			NPC_FaceEnemy(aiEnt, qtrue );
 			//continue attack logic
-			enemyDist = Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
-			Wampa_Attack( enemyDist, qfalse );
+			enemyDist = Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
+			Wampa_Attack(aiEnt, enemyDist, qfalse );
 			return;
 		}
 		else
 		{
-			if ( TIMER_Done(NPCS.NPC,"angrynoise") )
+			if ( TIMER_Done(aiEnt,"angrynoise") )
 			{
-				G_Sound( NPCS.NPC, CHAN_VOICE, G_SoundIndex( va("sound/chars/wampa/misc/anger%d.wav", Q_irand(1, 2)) ) );
+				G_Sound( aiEnt, CHAN_VOICE, G_SoundIndex( va("sound/chars/wampa/misc/anger%d.wav", Q_irand(1, 2)) ) );
 
-				TIMER_Set( NPCS.NPC, "angrynoise", Q_irand( 5000, 10000 ) );
+				TIMER_Set( aiEnt, "angrynoise", Q_irand( 5000, 10000 ) );
 			}
 			//else, if he's in our hand, we eat, else if he's on the ground, we keep attacking his dead body for a while
-			if( NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->NPC_class == CLASS_WAMPA )
+			if( aiEnt->enemy->client && aiEnt->enemy->client->NPC_class == CLASS_WAMPA )
 			{//got mad at another Wampa, look for a valid enemy
-				if ( TIMER_Done( NPCS.NPC, "wampaInfight" ) )
+				if ( TIMER_Done( aiEnt, "wampaInfight" ) )
 				{
-					NPC_CheckEnemyExt( qtrue );
+					NPC_CheckEnemyExt(aiEnt, qtrue );
 				}
 			}
 			else
 			{
-				if ( ValidEnemy( NPCS.NPC->enemy ) == qfalse )
+				if ( ValidEnemy(aiEnt, aiEnt->enemy ) == qfalse )
 				{
-					TIMER_Remove( NPCS.NPC, "lookForNewEnemy" );//make them look again right now
-					if ( !NPCS.NPC->enemy->inuse || level.time - NPCS.NPC->enemy->s.time > Q_irand( 10000, 15000 ) )
+					TIMER_Remove( aiEnt, "lookForNewEnemy" );//make them look again right now
+					if ( !aiEnt->enemy->inuse || level.time - aiEnt->enemy->s.time > Q_irand( 10000, 15000 ) )
 					{//it's been a while since the enemy died, or enemy is completely gone, get bored with him
-						NPCS.NPC->enemy = NULL;
-						Wampa_Patrol();
-						NPC_UpdateAngles( qtrue, qtrue );
+						aiEnt->enemy = NULL;
+						Wampa_Patrol(aiEnt);
+						NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 						//just lost my enemy
-						if ( (NPCS.NPC->spawnflags&2) )
+						if ( (aiEnt->spawnflags&2) )
 						{//search around me if I don't have an enemy
-							NPC_BSSearchStart( NPCS.NPC->waypoint, BS_SEARCH );
-							NPCS.NPCInfo->tempBehavior = BS_DEFAULT;
+							NPC_BSSearchStart(aiEnt, aiEnt->waypoint, BS_SEARCH );
+							aiEnt->NPC->tempBehavior = BS_DEFAULT;
 						}
-						else if ( (NPCS.NPC->spawnflags&1) )
+						else if ( (aiEnt->spawnflags&1) )
 						{//wander if I don't have an enemy
-							NPC_BSSearchStart( NPCS.NPC->waypoint, BS_WANDER );
-							NPCS.NPCInfo->tempBehavior = BS_DEFAULT;
+							NPC_BSSearchStart(aiEnt, aiEnt->waypoint, BS_WANDER );
+							aiEnt->NPC->tempBehavior = BS_DEFAULT;
 						}
 						return;
 					}
 				}
-				if ( TIMER_Done( NPCS.NPC, "lookForNewEnemy" ) )
+				if ( TIMER_Done( aiEnt, "lookForNewEnemy" ) )
 				{
-					gentity_t *newEnemy, *sav_enemy = NPCS.NPC->enemy;//FIXME: what about NPC->lastEnemy?
-					NPCS.NPC->enemy = NULL;
-					newEnemy = NPC_CheckEnemy((qboolean)(NPCS.NPCInfo->confusionTime < level.time), qfalse, qfalse );
-					NPCS.NPC->enemy = sav_enemy;
+					gentity_t *newEnemy, *sav_enemy = aiEnt->enemy;//FIXME: what about NPC->lastEnemy?
+					aiEnt->enemy = NULL;
+					newEnemy = NPC_CheckEnemy(aiEnt, (qboolean)(aiEnt->NPC->confusionTime < level.time), qfalse, qfalse );
+					aiEnt->enemy = sav_enemy;
 					if ( newEnemy && newEnemy != sav_enemy )
 					{//picked up a new enemy!
-						NPCS.NPC->lastEnemy = NPCS.NPC->enemy;
-						G_SetEnemy( NPCS.NPC, newEnemy );
+						aiEnt->lastEnemy = aiEnt->enemy;
+						G_SetEnemy( aiEnt, newEnemy );
 						//hold this one for at least 5-15 seconds
-						TIMER_Set( NPCS.NPC, "lookForNewEnemy", Q_irand( 5000, 15000 ) );
+						TIMER_Set( aiEnt, "lookForNewEnemy", Q_irand( 5000, 15000 ) );
 					}
 					else
 					{//look again in 2-5 secs
-						TIMER_Set( NPCS.NPC, "lookForNewEnemy", Q_irand( 2000, 5000 ) );
+						TIMER_Set( aiEnt, "lookForNewEnemy", Q_irand( 2000, 5000 ) );
 					}
 				}
 			}
-			Wampa_Combat();
+			Wampa_Combat(aiEnt);
 			return;
 		}
 	}
 	else
 	{
-		if ( TIMER_Done(NPCS.NPC,"idlenoise") )
+		if ( TIMER_Done(aiEnt,"idlenoise") )
 		{
-			G_Sound( NPCS.NPC, CHAN_AUTO, G_SoundIndex( "sound/chars/wampa/misc/anger3.wav" ) );
+			G_Sound( aiEnt, CHAN_AUTO, G_SoundIndex( "sound/chars/wampa/misc/anger3.wav" ) );
 
-			TIMER_Set( NPCS.NPC, "idlenoise", Q_irand( 2000, 4000 ) );
+			TIMER_Set( aiEnt, "idlenoise", Q_irand( 2000, 4000 ) );
 		}
-		if ( (NPCS.NPC->spawnflags&2) )
+		if ( (aiEnt->spawnflags&2) )
 		{//search around me if I don't have an enemy
-			if ( NPCS.NPCInfo->homeWp == WAYPOINT_NONE )
+			if ( aiEnt->NPC->homeWp == WAYPOINT_NONE )
 			{//no homewap, initialize the search behavior
-				NPC_BSSearchStart( WAYPOINT_NONE, BS_SEARCH );
-				NPCS.NPCInfo->tempBehavior = BS_DEFAULT;
+				NPC_BSSearchStart(aiEnt, WAYPOINT_NONE, BS_SEARCH );
+				aiEnt->NPC->tempBehavior = BS_DEFAULT;
 			}
-			NPCS.ucmd.buttons |= BUTTON_WALKING;
-			NPC_BSSearch();//this automatically looks for enemies
+			aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+			NPC_BSSearch(aiEnt);//this automatically looks for enemies
 		}
-		else if ( (NPCS.NPC->spawnflags&1) )
+		else if ( (aiEnt->spawnflags&1) )
 		{//wander if I don't have an enemy
-			if ( NPCS.NPCInfo->homeWp == WAYPOINT_NONE )
+			if ( aiEnt->NPC->homeWp == WAYPOINT_NONE )
 			{//no homewap, initialize the wander behavior
-				NPC_BSSearchStart( WAYPOINT_NONE, BS_WANDER );
-				NPCS.NPCInfo->tempBehavior = BS_DEFAULT;
+				NPC_BSSearchStart(aiEnt, WAYPOINT_NONE, BS_WANDER );
+				aiEnt->NPC->tempBehavior = BS_DEFAULT;
 			}
-			NPCS.ucmd.buttons |= BUTTON_WALKING;
-			NPC_BSWander();
-			if ( NPCS.NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES )
+			aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+			NPC_BSWander(aiEnt);
+			if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
 			{
-				if ( NPC_CheckEnemyExt( qtrue ) == qfalse )
+				if ( NPC_CheckEnemyExt(aiEnt, qtrue ) == qfalse )
 				{
-					Wampa_Idle();
+					Wampa_Idle(aiEnt);
 				}
 				else
 				{
-					Wampa_CheckRoar( NPCS.NPC );
-					TIMER_Set( NPCS.NPC, "lookForNewEnemy", Q_irand( 5000, 15000 ) );
+					Wampa_CheckRoar( aiEnt );
+					TIMER_Set( aiEnt, "lookForNewEnemy", Q_irand( 5000, 15000 ) );
 				}
 			}
 		}
 		else
 		{
-			if ( NPCS.NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES )
+			if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
 			{
-				Wampa_Patrol();
+				Wampa_Patrol(aiEnt);
 			}
 			else
 			{
-				Wampa_Idle();
+				Wampa_Idle(aiEnt);
 			}
 		}
 	}
 
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 }
