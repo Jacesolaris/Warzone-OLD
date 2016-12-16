@@ -36,7 +36,7 @@ NPC_CheckAttacker
 -------------------------
 */
 
-static void NPC_CheckAttacker( gentity_t *other, int mod )
+static void NPC_CheckAttacker(gentity_t *aiEnt, gentity_t *other, int mod )
 {
 	//FIXME: I don't see anything in here that would stop teammates from taking a teammate
 	//			as an enemy.  Ideally, there would be code before this to prevent that from
@@ -45,7 +45,7 @@ static void NPC_CheckAttacker( gentity_t *other, int mod )
 	if ( !VALIDENT( other ) )
 		return;
 
-	if ( other == NPCS.NPC )
+	if ( other == aiEnt )
 		return;
 
 	//Don't take a target that doesn't want to be
@@ -59,31 +59,31 @@ static void NPC_CheckAttacker( gentity_t *other, int mod )
 	//rwwFIXMEFIXME: support this
 
 	//If we haven't taken a target, just get mad
-	if ( NPCS.NPC->enemy == NULL )//was using "other", fixed to NPC
+	if ( aiEnt->enemy == NULL )//was using "other", fixed to NPC
 	{
-		G_SetEnemy( NPCS.NPC, other );
+		G_SetEnemy( aiEnt, other );
 		return;
 	}
 
 	//we have an enemy, see if he's dead
-	if ( NPCS.NPC->enemy->health <= 0 )
+	if ( aiEnt->enemy->health <= 0 )
 	{
-		G_ClearEnemy( NPCS.NPC );
-		G_SetEnemy( NPCS.NPC, other );
+		G_ClearEnemy( aiEnt );
+		G_SetEnemy( aiEnt, other );
 		return;
 	}
 
 	//Don't take the same enemy again
-	if ( other == NPCS.NPC->enemy )
+	if ( other == aiEnt->enemy )
 		return;
 
-	if ( NPCS.NPC->client->ps.weapon == WP_SABER )
+	if ( aiEnt->client->ps.weapon == WP_SABER )
 	{//I'm a jedi
 		if ( mod == MOD_SABER )
 		{//I was hit by a saber  FIXME: what if this was a thrown saber?
 			//always switch to this enemy if I'm a jedi and hit by another saber
-			G_ClearEnemy( NPCS.NPC );
-			G_SetEnemy( NPCS.NPC, other );
+			G_ClearEnemy( aiEnt );
+			G_SetEnemy( aiEnt, other );
 			return;
 		}
 	}
@@ -118,7 +118,7 @@ static void NPC_CheckAttacker( gentity_t *other, int mod )
 		if ( random() > luckThreshold )
 		{
 			G_ClearEnemy( other );
-			other->enemy = NPCS.NPC;
+			other->enemy = aiEnt;
 		}
 
 		return;
@@ -364,6 +364,7 @@ void NPC_Pain(gentity_t *self, gentity_t *attacker, int damage)
 	int mod = gPainMOD;
 	int hitLoc = gPainHitLoc;
 	vec3_t point;
+	gentity_t *aiEnt = self;
 
 	VectorCopy(gPainPoint, point);
 
@@ -483,22 +484,19 @@ void NPC_Pain(gentity_t *self, gentity_t *attacker, int damage)
 		}
 	}
 
-	SaveNPCGlobals();
-	SetNPCGlobals( self );
-
 	//Do extra bits
-	if ( NPCS.NPCInfo->ignorePain == qfalse )
+	if ( aiEnt->NPC->ignorePain == qfalse )
 	{
-		NPCS.NPCInfo->confusionTime = 0;//clear any charm or confusion, regardless
+		aiEnt->NPC->confusionTime = 0;//clear any charm or confusion, regardless
 		if ( damage != -1 )
 		{//-1 == don't play pain anim
 			//Set our proper pain animation
 			NPC_ChoosePainAnimation( self, other, point, damage, mod, hitLoc, voiceEvent );
 		}
 		//Check to take a new enemy
-		if ( NPCS.NPC->enemy != other && NPCS.NPC != other )
+		if ( aiEnt->enemy != other && aiEnt != other )
 		{//not already mad at them
-			NPC_CheckAttacker( other, mod );
+			NPC_CheckAttacker(aiEnt, other, mod );
 		}
 	}
 
@@ -520,8 +518,6 @@ void NPC_Pain(gentity_t *self, gentity_t *attacker, int damage)
 	{
 		G_UseTargets2(self, other, self->paintarget);
 	}
-
-	RestoreNPCGlobals();
 }
 
 /*
@@ -536,8 +532,7 @@ void NPC_Touch(gentity_t *self, gentity_t *other, trace_t *trace)
 	if(!self->NPC)
 		return;
 
-	SaveNPCGlobals();
-	SetNPCGlobals( self );
+	gentity_t *aiEnt = self;
 
 	if ( self->message && self->health <= 0 )
 	{//I am dead and carrying a key
@@ -594,12 +589,12 @@ void NPC_Touch(gentity_t *self, gentity_t *other, trace_t *trace)
 		//Except if not facing one another...
 		if ( other->health > 0 )
 		{
-			NPCS.NPCInfo->touchedByPlayer = other;
+			aiEnt->NPC->touchedByPlayer = other;
 		}
 
-		if ( other == NPCS.NPCInfo->goalEntity )
+		if ( other == aiEnt->NPC->goalEntity )
 		{
-			NPCS.NPCInfo->aiFlags |= NPCAI_TOUCHED_GOAL;
+			aiEnt->NPC->aiFlags |= NPCAI_TOUCHED_GOAL;
 		}
 
 		if( /*!(self->svFlags&SVF_LOCKEDENEMY) && !(self->svFlags&SVF_IGNORE_ENEMIES) &&*/ !(other->flags & FL_NOTARGET) )
@@ -608,12 +603,12 @@ void NPC_Touch(gentity_t *self, gentity_t *other, trace_t *trace)
 			{//See if we bumped into an enemy
 				if ( other->client->playerTeam == self->client->enemyTeam )
 				{//bumped into an enemy
-					if( NPCS.NPCInfo->behaviorState != BS_HUNT_AND_KILL && !NPCS.NPCInfo->tempBehavior )
+					if( aiEnt->NPC->behaviorState != BS_HUNT_AND_KILL && !aiEnt->NPC->tempBehavior )
 					{//MCG - Begin: checking specific BS mode here, this is bad, a HACK
 						//FIXME: not medics?
-						if ( NPCS.NPC->enemy != other )
+						if ( aiEnt->enemy != other )
 						{//not already mad at them
-							G_SetEnemy( NPCS.NPC, other );
+							G_SetEnemy( aiEnt, other );
 						}
 		//				NPCInfo->tempBehavior = BS_HUNT_AND_KILL;
 					}
@@ -636,17 +631,15 @@ void NPC_Touch(gentity_t *self, gentity_t *other, trace_t *trace)
 			//if ( NPC->enemy == other && (other->svFlags&SVF_NONNPC_ENEMY) )
 			if (0) //rwwFIXMEFIXME: Can probably just check if num < MAX_CLIENTS for non-npc enemy stuff
 			{
-				NPCS.NPCInfo->touchedByPlayer = other;
+				aiEnt->NPC->touchedByPlayer = other;
 			}
 		}
 
-		if ( other == NPCS.NPCInfo->goalEntity )
+		if ( other == aiEnt->NPC->goalEntity )
 		{
-			NPCS.NPCInfo->aiFlags |= NPCAI_TOUCHED_GOAL;
+			aiEnt->NPC->aiFlags |= NPCAI_TOUCHED_GOAL;
 		}
 	}
-
-	RestoreNPCGlobals();
 }
 
 /*
@@ -1007,13 +1000,12 @@ extern void Add_Batteries( gentity_t *ent, int *count );
 
 void NPC_Use( gentity_t *self, gentity_t *other, gentity_t *activator )
 {
+	gentity_t *aiEnt = self;
+
 	if (self->client->ps.pm_type == PM_DEAD)
 	{//or just remove ->pain in player_die?
 		return;
 	}
-
-	SaveNPCGlobals();
-	SetNPCGlobals( self );
 
 	if(self->client && self->NPC)
 	{
@@ -1041,9 +1033,9 @@ void NPC_Use( gentity_t *self, gentity_t *other, gentity_t *activator )
 				}
 			}
 		}
-		else if ( Jedi_WaitingAmbush( NPCS.NPC ) )
+		else if ( Jedi_WaitingAmbush(aiEnt ) )
 		{
-			Jedi_Ambush( NPCS.NPC );
+			Jedi_Ambush( aiEnt );
 		}
 		//Run any use instructions
 		if ( activator && activator->s.number >= 0 && activator->s.number < MAX_CLIENTS && self->client->NPC_class == CLASS_GONK )
@@ -1088,11 +1080,9 @@ void NPC_Use( gentity_t *self, gentity_t *other, gentity_t *activator )
 			NPC_UseResponse( self, other, qfalse );
 		}
 	}
-
-	RestoreNPCGlobals();
 }
 
-void NPC_CheckPlayerAim( void )
+void NPC_CheckPlayerAim(gentity_t *aiEnt)
 {
 	//FIXME: need appropriate dialogue
 	/*
@@ -1110,7 +1100,7 @@ void NPC_CheckPlayerAim( void )
 	*/
 }
 
-void NPC_CheckAllClear( void )
+void NPC_CheckAllClear(gentity_t *aiEnt)
 {
 	//FIXME: need to make this happen only once after losing enemies, not over and over again
 	/*

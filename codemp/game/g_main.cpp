@@ -7,7 +7,7 @@
 #include "bg_saga.h"
 #include "jkg_damagetypes.h"
 #include "b_local.h"
-
+#include <thread>
 
 level_locals_t	level;
 
@@ -3534,13 +3534,7 @@ void G_RunThink (gentity_t *ent, qboolean calledFromAIThread) {
 runicarus:
 	if (ent->inuse)
 	{
-		SaveNPCGlobals();
-		if(NPCS.NPCInfo == NULL && ent->NPC != NULL)
-		{
-			SetNPCGlobals( ent );
-		}
 		trap->ICARUS_MaintainTaskManager(ent->s.number);
-		RestoreNPCGlobals();
 	}
 }
 
@@ -3600,7 +3594,6 @@ Advances the non-player objects in the world
 */
 
 void JKG_DamagePlayers(void);
-void ClearNPCGlobals( void );
 void AI_UpdateGroups( void );
 void ClearPlayerAlertEvents( void );
 void SiegeCheckTimers(void);
@@ -3771,6 +3764,7 @@ void G_RunFrame( int levelTime ) {
 	// go through all allocated objects
 	//
 
+//#pragma omp parallel for ordered /*schedule(dynamic)*/ num_threads(std::thread::hardware_concurrency() > 4 ? 2 : 1)
 	for (i=0; i<level.num_entities; i++) 
 	{
 		gentity_t *ent = &g_entities[i];
@@ -3821,13 +3815,7 @@ void G_RunFrame( int levelTime ) {
 		}
 
 		if ( ent->s.eType == ET_MISSILE ) {
-#ifdef __NPC_THREADING__
-			AI_UpdateLock.lock(); // *sigh* stupid NPCS struct... This can use NPC code...
-#endif //__NPC_THREADING__
 			G_RunMissile( ent );
-#ifdef __NPC_THREADING__
-			AI_UpdateLock.unlock();
-#endif //__NPC_THREADING__
 			continue;
 		}
 
@@ -4065,11 +4053,6 @@ void G_RunFrame( int levelTime ) {
 			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd );
 			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
 			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
-		}
-
-		if (g_allowNPC.integer)
-		{
-			ClearNPCGlobals();
 		}
 	}
 #ifdef _G_FRAME_PERFANAL

@@ -108,7 +108,6 @@ extern void GLua_NPCEV_OnThink(gentity_t *self);
 extern qboolean NPC_UpdateAngles(qboolean doPitch, qboolean doYaw);
 extern void NPC_Begin(gentity_t *ent);
 extern void NPC_ExecuteBState(gentity_t *self);
-extern void SetNPCGlobals(gentity_t *ent);
 extern void NPC_Precache ( gentity_t *spawner );
 extern char *G_ValidateUserinfo( const char *userinfo );
 extern qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum );
@@ -849,16 +848,12 @@ extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);
 qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 {
 	qboolean acted = qfalse;
-
-	NPCS.NPC = bot;
-	NPCS.client = NPCS.NPC->client;
-	NPCS.NPCInfo = bot->NPC;
-	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
+	gentity_t *aiEnt = bot;
 	
 	if (bs)
 	{
 		// Set angles... Convert to ideal view angles then run the bot code...
-		VectorSet(bs->ideal_viewangles, SHORT2ANGLE(NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH]), SHORT2ANGLE(NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW]), SHORT2ANGLE(NPCS.ucmd.angles[ROLL] + NPCS.client->ps.delta_angles[ROLL]));
+		VectorSet(bs->ideal_viewangles, SHORT2ANGLE(bot->client->pers.cmd.angles[PITCH] + bot->client->ps.delta_angles[PITCH]), SHORT2ANGLE(bot->client->pers.cmd.angles[YAW] + bot->client->ps.delta_angles[YAW]), SHORT2ANGLE(bot->client->pers.cmd.angles[ROLL] + bot->client->ps.delta_angles[ROLL]));
 		VectorCopy(bs->ideal_viewangles, bs->viewangles);
 		VectorCopy(bs->ideal_viewangles, bot->client->ps.viewangles);
 		//VectorCopy(bs->ideal_viewangles, bot->r.currentAngles);
@@ -867,14 +862,14 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 	}
 
 	/*
-	if (NPCS.NPCInfo->goalEntity)
+	if (bot->NPC->goalEntity)
 	{
 		vec3_t dir;
-		VectorSubtract(NPCS.NPCInfo->goalEntity->r.currentOrigin, bot->r.currentOrigin, dir);
+		VectorSubtract(bot->NPC->goalEntity->r.currentOrigin, bot->r.currentOrigin, dir);
 		VectorCopy(dir, bot->client->ps.moveDir);
 	}
 
-	if (NPCS.ucmd.buttons & BUTTON_WALKING)
+	if (bot->client->pers.cmd.buttons & BUTTON_WALKING)
 	{
 		trap->EA_Action(bot->s.number, ACTION_WALK);
 		trap->EA_Move(bot->s.number, bot->client->ps.moveDir, 5000.0);
@@ -885,17 +880,17 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 	}
 	*/
 
-	if (NPCS.NPC->enemy && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 64)
+	if (bot->enemy && Distance(bot->r.currentOrigin, bot->enemy->r.currentOrigin) > 64)
 	{
 		//vec3_t dir;
 
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+		bot->NPC->goalEntity = bot->enemy;
 		
 		/*
-		VectorSubtract(NPCS.NPCInfo->goalEntity->r.currentOrigin, bot->r.currentOrigin, dir);
+		VectorSubtract(bot->NPC->goalEntity->r.currentOrigin, bot->r.currentOrigin, dir);
 		VectorCopy(dir, bot->client->ps.moveDir);
 
-		if (NPCS.ucmd.buttons & BUTTON_WALKING)
+		if (bot->client->pers.cmd.buttons & BUTTON_WALKING)
 		{
 			trap->EA_Action(bot->s.number, ACTION_WALK);
 			trap->EA_Move(bot->s.number, bot->client->ps.moveDir, 5000.0);
@@ -908,56 +903,56 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		}
 		*/
 
-		NPC_MoveToGoal(qtrue);
+		NPC_MoveToGoal(aiEnt, qtrue);
 		acted = qtrue;
 	}
 
 	/*
-	if (NPCS.ucmd.upmove > 0)
+	if (bot->client->pers.cmd.upmove > 0)
 	{
 		trap->EA_Jump(bot->s.number);
 		acted = qtrue;
 	}
 	
-	if (NPCS.ucmd.upmove < 0)
+	if (bot->client->pers.cmd.upmove < 0)
 	{
 		trap->EA_Crouch(bot->s.number);
 		acted = qtrue;
 	}
 	
-	if (NPCS.ucmd.rightmove > 0)
+	if (bot->client->pers.cmd.rightmove > 0)
 	{
 		trap->EA_MoveRight(bot->s.number);
 		acted = qtrue;
 	}
 
-	if (NPCS.ucmd.rightmove < 0)
+	if (bot->client->pers.cmd.rightmove < 0)
 	{
 		trap->EA_MoveLeft(bot->s.number);
 		acted = qtrue;
 	}
 
-	if (NPCS.ucmd.forwardmove > 0)
+	if (bot->client->pers.cmd.forwardmove > 0)
 	{
 		trap->EA_MoveForward(bot->s.number);
 		acted = qtrue;
 	}
 
-	if (NPCS.ucmd.forwardmove < 0)
+	if (bot->client->pers.cmd.forwardmove < 0)
 	{
 		trap->EA_MoveBack(bot->s.number);
 		acted = qtrue;
 	}
 	*/
 
-	if (NPCS.ucmd.buttons & BUTTON_ATTACK)
+	if (bot->client->pers.cmd.buttons & BUTTON_ATTACK)
 	{
 		/*
-		if (bot->client->ps.weapon == WP_SABER && NPCS.ucmd.rightmove == 0)
+		if (bot->client->ps.weapon == WP_SABER && bot->client->pers.cmd.rightmove == 0)
 		{
 			trap->EA_MoveLeft(bs->client); // UQ1: Also move left for a better animation then the plain one...
 
-			if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+			if (!(aiEnt->client->pers.cmd.buttons & BUTTON_WALKING))
 				trap->EA_Action(bs->client, ACTION_WALK);
 		}
 		*/
@@ -966,20 +961,20 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		acted = qtrue;
 	}
 
-	if (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)
+	if (bot->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)
 	{
 		trap->EA_Alt_Attack(bot->s.number);
 		acted = qtrue;
 	}
 
-	if (NPCS.ucmd.buttons & BUTTON_USE)
+	if (bot->client->pers.cmd.buttons & BUTTON_USE)
 	{
 		trap->EA_Use(bot->s.number);
 		acted = qtrue;
 	}
 
 	/*
-	if (NPCS.ucmd.buttons & BUTTON_WALKING)
+	if (bot->client->pers.cmd.buttons & BUTTON_WALKING)
 	{
 		trap->EA_Action(bot->s.number, ACTION_WALK);
 		acted = qtrue;
@@ -997,28 +992,21 @@ extern void NPC_Think ( gentity_t *self);
 // UQ1: Now lets see if bots can share NPC AI....
 void DOM_StandardBotAI(bot_state_t *bs, float thinktime)
 {
-	gentity_t *bot = &g_entities[bs->client];
+	gentity_t *aiEnt = &g_entities[bs->client];
 
-	NPCS.NPC = bot;
-	NPCS.client = NPCS.NPC->client;
-	NPCS.NPCInfo = bot->NPC;
-	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
+	if (!(aiEnt->s.eFlags & EF_FAKE_NPC_BOT))
+		aiEnt->s.eFlags |= EF_FAKE_NPC_BOT;
+	if (!(aiEnt->client->ps.eFlags & EF_FAKE_NPC_BOT))
+		aiEnt->client->ps.eFlags |= EF_FAKE_NPC_BOT;
 
-	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
-		bot->s.eFlags |= EF_FAKE_NPC_BOT;
-	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
-		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
+	if (!aiEnt->NPC)
+		DOM_InitFakeNPC(aiEnt);
 
-	if (!bot->NPC)
-		DOM_InitFakeNPC(bot);
+	DOM_SetFakeNPCName(aiEnt); // Make sure they have a name...
 
-	DOM_SetFakeNPCName(bot); // Make sure they have a name...
+	memset(&aiEnt->client->pers.cmd, 0, sizeof(aiEnt->client->pers.cmd));
 
-	SetNPCGlobals(bot);
-
-	memset(&NPCS.ucmd, 0, sizeof(NPCS.ucmd));
-
-	if (bot->health < 1 || bot->client->ps.pm_type == PM_DEAD)
+	if (aiEnt->health < 1 || aiEnt->client->ps.pm_type == PM_DEAD)
 	{
 		//RACC - Try to respawn if you're done talking.
 		if (rand() % 10 < 5 &&
@@ -1026,43 +1014,43 @@ void DOM_StandardBotAI(bot_state_t *bs, float thinktime)
 		{
 			trap->EA_Attack(bs->client);
 
-			NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity = NULL; // Clear enemy???
+			aiEnt->enemy = aiEnt->NPC->goalEntity = NULL; // Clear enemy???
 		}
 
 		return;
 	}
 
-	VectorCopy(oldMoveDir, bot->client->ps.moveDir);
+	VectorCopy(oldMoveDir, aiEnt->client->ps.moveDir);
 	//or use client->pers.lastCommand?
 
-	NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
+	aiEnt->NPC->last_ucmd.serverTime = level.time - 50;
 
-	NPC_Think(bot);
-	DOM_FakeNPC_Parse_UCMD(bs, bot);
+	NPC_Think(aiEnt);
+	DOM_FakeNPC_Parse_UCMD(bs, aiEnt);
 
-	trap->ICARUS_MaintainTaskManager(bot->s.number);
-	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);
+	trap->ICARUS_MaintainTaskManager(aiEnt->s.number);
+	VectorCopy(aiEnt->r.currentOrigin, aiEnt->client->ps.origin);
 
-	if (bot->client->ps.pm_flags & PMF_DUCKED && bot->r.maxs[2] > bot->client->ps.crouchheight)
+	if (aiEnt->client->ps.pm_flags & PMF_DUCKED && aiEnt->r.maxs[2] > aiEnt->client->ps.crouchheight)
 	{
-		bot->r.maxs[2] = bot->client->ps.crouchheight;
-		bot->r.maxs[1] = 8;
-		bot->r.maxs[0] = 8;
-		bot->r.mins[1] = -8;
-		bot->r.mins[0] = -8;
-		trap->LinkEntity((sharedEntity_t *)bot);
+		aiEnt->r.maxs[2] = aiEnt->client->ps.crouchheight;
+		aiEnt->r.maxs[1] = 8;
+		aiEnt->r.maxs[0] = 8;
+		aiEnt->r.mins[1] = -8;
+		aiEnt->r.mins[0] = -8;
+		trap->LinkEntity((sharedEntity_t *)aiEnt);
 	}
-	else if (!(bot->client->ps.pm_flags & PMF_DUCKED) && (bot->r.maxs[2] < bot->client->ps.standheight || bot->r.maxs[1] > 10))
+	else if (!(aiEnt->client->ps.pm_flags & PMF_DUCKED) && (aiEnt->r.maxs[2] < aiEnt->client->ps.standheight || aiEnt->r.maxs[1] > 10))
 	{
-		bot->r.maxs[2] = bot->client->ps.standheight;
-		bot->r.maxs[1] = 10;
-		bot->r.maxs[0] = 10;
-		bot->r.mins[1] = -10;
-		bot->r.mins[0] = -10;
-		trap->LinkEntity((sharedEntity_t *)bot);
+		aiEnt->r.maxs[2] = aiEnt->client->ps.standheight;
+		aiEnt->r.maxs[1] = 10;
+		aiEnt->r.maxs[0] = 10;
+		aiEnt->r.mins[1] = -10;
+		aiEnt->r.mins[0] = -10;
+		trap->LinkEntity((sharedEntity_t *)aiEnt);
 	}
 
-	//trap->Print(S_COLOR_RED "Bot [%s] is using NPC AI.\n", bot->client->pers.netname);
+	//trap->Print(S_COLOR_RED "Bot [%s] is using NPC AI.\n", aiEnt->client->pers.netname);
 }
 
 /*
@@ -1493,10 +1481,8 @@ int BotAI(int client, float thinktime) {
 #ifdef _DEBUG
 	start = trap->Milliseconds();
 #endif
-	NPCS.NPC = bot;
-	NPCS.client = NPCS.NPC->client;
-	NPCS.NPCInfo = bot->NPC;
-	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
+
+	gentity_t *aiEnt = bot;
 
 	DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance NPC AI...
 

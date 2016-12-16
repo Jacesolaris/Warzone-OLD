@@ -114,18 +114,18 @@ void NPC_Mark2_Pain(gentity_t *self, gentity_t *attacker, int damage)
 Mark2_Hunt
 -------------------------
 */
-void Mark2_Hunt(void)
+void Mark2_Hunt(gentity_t *aiEnt)
 {
-	if ( NPCS.NPCInfo->goalEntity == NULL )
+	if ( aiEnt->NPC->goalEntity == NULL )
 	{
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
 	}
 
 	// Turn toward him before moving towards him.
-	NPC_FaceEnemy( qtrue );
+	NPC_FaceEnemy(aiEnt, qtrue );
 
-	NPCS.NPCInfo->combatMove = qtrue;
-	NPC_MoveToGoal( qtrue );
+	aiEnt->NPC->combatMove = qtrue;
+	NPC_MoveToGoal(aiEnt, qtrue );
 }
 
 /*
@@ -133,39 +133,39 @@ void Mark2_Hunt(void)
 Mark2_FireBlaster
 -------------------------
 */
-void Mark2_FireBlaster(qboolean advance)
+void Mark2_FireBlaster(gentity_t *aiEnt, qboolean advance)
 {
 	vec3_t	muzzle1,enemy_org1,delta1,angleToEnemy1;
 	static	vec3_t	forward, vright, up;
 //	static	vec3_t	muzzle;
 	gentity_t	*missile;
 	mdxaBone_t	boltMatrix;
-	int bolt = trap->G2API_AddBolt(NPCS.NPC->ghoul2, 0, "*flash");
+	int bolt = trap->G2API_AddBolt(aiEnt->ghoul2, 0, "*flash");
 
-	trap->G2API_GetBoltMatrix( NPCS.NPC->ghoul2, 0,
+	trap->G2API_GetBoltMatrix( aiEnt->ghoul2, 0,
 				bolt,
-				&boltMatrix, NPCS.NPC->r.currentAngles, NPCS.NPC->r.currentOrigin, level.time,
-				NULL, NPCS.NPC->modelScale );
+				&boltMatrix, aiEnt->r.currentAngles, aiEnt->r.currentOrigin, level.time,
+				NULL, aiEnt->modelScale );
 
 	BG_GiveMeVectorFromMatrix( &boltMatrix, ORIGIN, muzzle1 );
 
-	if (NPCS.NPC->health)
+	if (aiEnt->health)
 	{
-		CalcEntitySpot( NPCS.NPC->enemy, SPOT_HEAD, enemy_org1 );
+		CalcEntitySpot( aiEnt->enemy, SPOT_HEAD, enemy_org1 );
 		VectorSubtract (enemy_org1, muzzle1, delta1);
 		vectoangles ( delta1, angleToEnemy1 );
 		AngleVectors (angleToEnemy1, forward, vright, up);
 	}
 	else
 	{
-		AngleVectors (NPCS.NPC->r.currentAngles, forward, vright, up);
+		AngleVectors (aiEnt->r.currentAngles, forward, vright, up);
 	}
 
 	G_PlayEffectID( G_EffectIndex("bryar/muzzle_flash"), muzzle1, forward );
 
-	G_Sound( NPCS.NPC, CHAN_AUTO, G_SoundIndex("sound/chars/mark2/misc/mark2_fire"));
+	G_Sound( aiEnt, CHAN_AUTO, G_SoundIndex("sound/chars/mark2/misc/mark2_fire"));
 
-	missile = CreateMissile( muzzle1, forward, 1600, 10000, NPCS.NPC, qfalse );
+	missile = CreateMissile( muzzle1, forward, 1600, 10000, aiEnt, qfalse );
 
 	missile->classname = "bryar_proj";
 	missile->s.weapon = WP_BRYAR_PISTOL;
@@ -182,24 +182,24 @@ void Mark2_FireBlaster(qboolean advance)
 Mark2_BlasterAttack
 -------------------------
 */
-void Mark2_BlasterAttack(qboolean advance)
+void Mark2_BlasterAttack(gentity_t *aiEnt, qboolean advance)
 {
-	if ( TIMER_Done( NPCS.NPC, "attackDelay" ) )	// Attack?
+	if ( TIMER_Done( aiEnt, "attackDelay" ) )	// Attack?
 	{
-		if (NPCS.NPCInfo->localState == LSTATE_NONE)	// He's up so shoot less often.
+		if (aiEnt->NPC->localState == LSTATE_NONE)	// He's up so shoot less often.
 		{
-			TIMER_Set( NPCS.NPC, "attackDelay", Q_irand( 500, 2000) );
+			TIMER_Set( aiEnt, "attackDelay", Q_irand( 500, 2000) );
 		}
 		else
 		{
-			TIMER_Set( NPCS.NPC, "attackDelay", Q_irand( 100, 500) );
+			TIMER_Set( aiEnt, "attackDelay", Q_irand( 100, 500) );
 		}
-		Mark2_FireBlaster(advance);
+		Mark2_FireBlaster(aiEnt, advance);
 		return;
 	}
 	else if (advance)
 	{
-		Mark2_Hunt();
+		Mark2_Hunt(aiEnt);
 	}
 }
 
@@ -208,88 +208,88 @@ void Mark2_BlasterAttack(qboolean advance)
 Mark2_AttackDecision
 -------------------------
 */
-void Mark2_AttackDecision( void )
+void Mark2_AttackDecision(gentity_t *aiEnt)
 {
 	float		distance;
 	qboolean	visible;
 	qboolean	advance;
 
-	NPC_FaceEnemy( qtrue );
+	NPC_FaceEnemy(aiEnt, qtrue );
 
-	distance	= (int) DistanceHorizontalSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
-	visible		= NPC_ClearLOS4( NPCS.NPC->enemy );
+	distance	= (int) DistanceHorizontalSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
+	visible		= NPC_ClearLOS4(aiEnt, aiEnt->enemy );
 	advance		= (qboolean)(distance > MIN_DISTANCE_SQR);
 
 	// He's been ordered to get up
-	if (NPCS.NPCInfo->localState == LSTATE_RISINGUP)
+	if (aiEnt->NPC->localState == LSTATE_RISINGUP)
 	{
-		NPCS.NPC->flags &= ~FL_SHIELDED;
-		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1START, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
-		if ((NPCS.NPC->client->ps.legsTimer<=0) &&
-			NPCS.NPC->client->ps.torsoAnim == BOTH_RUN1START )
+		aiEnt->flags &= ~FL_SHIELDED;
+		NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_RUN1START, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
+		if ((aiEnt->client->ps.legsTimer<=0) &&
+			aiEnt->client->ps.torsoAnim == BOTH_RUN1START )
 		{
-			NPCS.NPCInfo->localState = LSTATE_NONE;	// He's up again.
+			aiEnt->NPC->localState = LSTATE_NONE;	// He's up again.
 		}
 		return;
 	}
 
 	// If we cannot see our target, move to see it
-	if ((!visible) || (!NPC_FaceEnemy(qtrue)))
+	if ((!visible) || (!NPC_FaceEnemy(aiEnt, qtrue)))
 	{
 		// If he's going down or is down, make him get up
-		if ((NPCS.NPCInfo->localState == LSTATE_DOWN) || (NPCS.NPCInfo->localState == LSTATE_DROPPINGDOWN))
+		if ((aiEnt->NPC->localState == LSTATE_DOWN) || (aiEnt->NPC->localState == LSTATE_DROPPINGDOWN))
 		{
-			if ( TIMER_Done( NPCS.NPC, "downTime" ) )	// Down being down?? (The delay is so he doesn't pop up and down when the player goes in and out of range)
+			if ( TIMER_Done( aiEnt, "downTime" ) )	// Down being down?? (The delay is so he doesn't pop up and down when the player goes in and out of range)
 			{
-				NPCS.NPCInfo->localState = LSTATE_RISINGUP;
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1STOP, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
-				TIMER_Set( NPCS.NPC, "runTime", Q_irand( 3000, 8000) );	// So he runs for a while before testing to see if he should drop down.
+				aiEnt->NPC->localState = LSTATE_RISINGUP;
+				NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_RUN1STOP, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
+				TIMER_Set( aiEnt, "runTime", Q_irand( 3000, 8000) );	// So he runs for a while before testing to see if he should drop down.
 			}
 		}
 		else
 		{
-			Mark2_Hunt();
+			Mark2_Hunt(aiEnt);
 		}
 		return;
 	}
 
 	// He's down but he could advance if he wants to.
-	if ((advance) && (TIMER_Done( NPCS.NPC, "downTime" )) && (NPCS.NPCInfo->localState == LSTATE_DOWN))
+	if ((advance) && (TIMER_Done( aiEnt, "downTime" )) && (aiEnt->NPC->localState == LSTATE_DOWN))
 	{
-		NPCS.NPCInfo->localState = LSTATE_RISINGUP;
-		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1STOP, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
-		TIMER_Set( NPCS.NPC, "runTime", Q_irand( 3000, 8000) );	// So he runs for a while before testing to see if he should drop down.
+		aiEnt->NPC->localState = LSTATE_RISINGUP;
+		NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_RUN1STOP, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
+		TIMER_Set( aiEnt, "runTime", Q_irand( 3000, 8000) );	// So he runs for a while before testing to see if he should drop down.
 	}
 
-	NPC_FaceEnemy( qtrue );
+	NPC_FaceEnemy(aiEnt, qtrue );
 
 	// Dropping down to shoot
-	if (NPCS.NPCInfo->localState == LSTATE_DROPPINGDOWN)
+	if (aiEnt->NPC->localState == LSTATE_DROPPINGDOWN)
 	{
-		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1STOP, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
-		TIMER_Set( NPCS.NPC, "downTime", Q_irand( 3000, 9000) );
+		NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_RUN1STOP, SETANIM_FLAG_HOLD|SETANIM_FLAG_OVERRIDE );
+		TIMER_Set( aiEnt, "downTime", Q_irand( 3000, 9000) );
 
-		if ((NPCS.NPC->client->ps.legsTimer<=0) && NPCS.NPC->client->ps.torsoAnim == BOTH_RUN1STOP )
+		if ((aiEnt->client->ps.legsTimer<=0) && aiEnt->client->ps.torsoAnim == BOTH_RUN1STOP )
 		{
-			NPCS.NPC->flags |= FL_SHIELDED;
-			NPCS.NPCInfo->localState = LSTATE_DOWN;
+			aiEnt->flags |= FL_SHIELDED;
+			aiEnt->NPC->localState = LSTATE_DOWN;
 		}
 	}
 	// He's down and shooting
-	else if (NPCS.NPCInfo->localState == LSTATE_DOWN)
+	else if (aiEnt->NPC->localState == LSTATE_DOWN)
 	{
-		NPCS.NPC->flags |= FL_SHIELDED;//only damagable by lightsabers and missiles
+		aiEnt->flags |= FL_SHIELDED;//only damagable by lightsabers and missiles
 
-		Mark2_BlasterAttack(qfalse);
+		Mark2_BlasterAttack(aiEnt, qfalse);
 	}
-	else if (TIMER_Done( NPCS.NPC, "runTime" ))	// Lowering down to attack. But only if he's done running at you.
+	else if (TIMER_Done( aiEnt, "runTime" ))	// Lowering down to attack. But only if he's done running at you.
 	{
-		NPCS.NPCInfo->localState = LSTATE_DROPPINGDOWN;
+		aiEnt->NPC->localState = LSTATE_DROPPINGDOWN;
 	}
 	else if (advance)
 	{
 		// We can see enemy so shoot him if timer lets you.
-		Mark2_BlasterAttack(advance);
+		Mark2_BlasterAttack(aiEnt, advance);
 	}
 }
 
@@ -299,31 +299,31 @@ void Mark2_AttackDecision( void )
 Mark2_Patrol
 -------------------------
 */
-void Mark2_Patrol( void )
+void Mark2_Patrol(gentity_t *aiEnt)
 {
-	if ( NPC_CheckPlayerTeamStealth() )
+	if ( NPC_CheckPlayerTeamStealth(aiEnt) )
 	{
 //		G_Sound( NPC, G_SoundIndex("sound/chars/mark1/misc/anger.wav"));
-		NPC_UpdateAngles( qtrue, qtrue );
+		NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 		return;
 	}
 
 	//If we have somewhere to go, then do that
-	if (!NPCS.NPC->enemy)
+	if (!aiEnt->enemy)
 	{
-		if ( UpdateGoal() )
+		if ( UpdateGoal(aiEnt) )
 		{
-			NPCS.ucmd.buttons |= BUTTON_WALKING;
-			NPC_MoveToGoal( qtrue );
-			NPC_UpdateAngles( qtrue, qtrue );
+			aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+			NPC_MoveToGoal(aiEnt, qtrue );
+			NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 		}
 
 		//randomly talk
-		if (TIMER_Done(NPCS.NPC,"patrolNoise"))
+		if (TIMER_Done(aiEnt,"patrolNoise"))
 		{
 //			G_Sound( NPC, G_SoundIndex(va("sound/chars/mark1/misc/talk%d.wav",	Q_irand(1, 4))));
 
-			TIMER_Set( NPCS.NPC, "patrolNoise", Q_irand( 2000, 4000 ) );
+			TIMER_Set( aiEnt, "patrolNoise", Q_irand( 2000, 4000 ) );
 		}
 	}
 }
@@ -333,9 +333,9 @@ void Mark2_Patrol( void )
 Mark2_Idle
 -------------------------
 */
-void Mark2_Idle( void )
+void Mark2_Idle(gentity_t *aiEnt)
 {
-	NPC_BSIdle();
+	NPC_BSIdle(aiEnt);
 }
 
 /*
@@ -343,19 +343,19 @@ void Mark2_Idle( void )
 NPC_BSMark2_Default
 -------------------------
 */
-void NPC_BSMark2_Default( void )
+void NPC_BSMark2_Default(gentity_t *aiEnt)
 {
-	if ( NPCS.NPC->enemy )
+	if ( aiEnt->enemy )
 	{
-		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
-		Mark2_AttackDecision();
+		aiEnt->NPC->goalEntity = aiEnt->enemy;
+		Mark2_AttackDecision(aiEnt);
 	}
-	else if ( NPCS.NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES )
+	else if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
 	{
-		Mark2_Patrol();
+		Mark2_Patrol(aiEnt);
 	}
 	else
 	{
-		Mark2_Idle();
+		Mark2_Idle(aiEnt);
 	}
 }

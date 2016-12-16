@@ -39,45 +39,45 @@ typedef enum //# rank_e
 	RANK_CAPTAIN
 } rank_t;
 
-qboolean NPC_CheckPlayerTeamStealth( void );
+qboolean NPC_CheckPlayerTeamStealth(gentity_t *aiEnt);
 
 //AI_GRENADIER
-void NPC_BSGrenadier_Default( void );
+void NPC_BSGrenadier_Default(gentity_t *aiEnt);
 
 //AI_SNIPER
-void NPC_BSSniper_Default( void );
+void NPC_BSSniper_Default( gentity_t *aiEnt );
 
 //AI_STORMTROOPER
-void NPC_BSST_Investigate( void );
-void NPC_BSST_Default( void );
-void NPC_BSST_Sleep( void );
+void NPC_BSST_Investigate(gentity_t *aiEnt);
+void NPC_BSST_Default(gentity_t *aiEnt);
+void NPC_BSST_Sleep(gentity_t *aiEnt);
 
 //AI_JEDI
-void NPC_BSJedi_Investigate( void );
-void NPC_BSJedi_Default( void );
-void NPC_BSJedi_FollowLeader( void );
+void NPC_BSJedi_Investigate(gentity_t *aiEnt);
+void NPC_BSJedi_Default(gentity_t *aiEnt);
+void NPC_BSJedi_FollowLeader(gentity_t *aiEnt);
 
 // AI_DROID
-void NPC_BSDroid_Default( void );
+void NPC_BSDroid_Default(gentity_t *aiEnt);
 
 // AI_ImperialProbe
-void NPC_BSImperialProbe_Default( void );
+void NPC_BSImperialProbe_Default(gentity_t *aiEnt);
 
 // AI_atst
-void NPC_BSATST_Default( void );
+void NPC_BSATST_Default(gentity_t *aiEnt);
 
-void NPC_BSInterrogator_Default( void );
+void NPC_BSInterrogator_Default(gentity_t *aiEnt);
 
 // AI Mark 1
-void NPC_BSMark1_Default( void );
+void NPC_BSMark1_Default(gentity_t *aiEnt);
 
 // AI Mark 2
-void NPC_BSMark2_Default( void );
+void NPC_BSMark2_Default(gentity_t *aiEnt);
 
 
-void NPC_BSMineMonster_Default( void );
-void NPC_BSHowler_Default( void );
-void NPC_BSRancor_Default( void );
+void NPC_BSMineMonster_Default(gentity_t *aiEnt);
+void NPC_BSHowler_Default(gentity_t *aiEnt);
+void NPC_BSRancor_Default(gentity_t *aiEnt);
 
 //Utilities
 //Group AI

@@ -584,6 +584,7 @@ int	NAVNEW_MoveToGoal( gentity_t *self, navInfo_t *info )
 	qboolean	setBlockedInfo = qtrue;
 	qboolean	/*inBestWP, */inGoalWP/*, goalWPFailed = qfalse*/;
 	int			numTries = 0;
+	gentity_t	*aiEnt = self;
 
 	memcpy( &tempInfo, info, sizeof( tempInfo ) );
 
@@ -690,7 +691,7 @@ int	NAVNEW_MoveToGoal( gentity_t *self, navInfo_t *info )
 				if ( bestNode == self->waypoint )
 				{//we fell back to our waypoint, reset the origin
 					self->NPC->aiFlags |= NPCAI_BLOCKED;
-					trap->Nav_GetNodePosition( oldBestNode, NPCS.NPCInfo->blockedDest );
+					trap->Nav_GetNodePosition( oldBestNode, aiEnt->NPC->blockedDest );
 					trap->Nav_GetNodePosition( bestNode, origin );
 				}
 			}
@@ -726,7 +727,7 @@ int	NAVNEW_MoveToGoal( gentity_t *self, navInfo_t *info )
 				if ( info->direction[2] * info->distance > 64 )
 				{
 					self->NPC->aiFlags |= NPCAI_BLOCKED;
-					VectorCopy( origin, NPCS.NPCInfo->blockedDest );
+					VectorCopy( origin, aiEnt->NPC->blockedDest );
 					goto failed;
 				}
 			}
@@ -736,7 +737,7 @@ int	NAVNEW_MoveToGoal( gentity_t *self, navInfo_t *info )
 			if ( setBlockedInfo )
 			{
 				self->NPC->aiFlags |= NPCAI_BLOCKED;
-				trap->Nav_GetNodePosition( bestNode, NPCS.NPCInfo->blockedDest );
+				trap->Nav_GetNodePosition( bestNode, aiEnt->NPC->blockedDest );
 			}
 			//Only set blocked info first time
 			setBlockedInfo = qfalse;

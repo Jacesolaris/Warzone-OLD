@@ -16,8 +16,8 @@
 //Local Variables
 extern npcStatic_t NPCS;
 
-extern qboolean NPC_FacePosition( vec3_t position, qboolean doPitch );
-extern void Jedi_Move( gentity_t *goal, qboolean retreat );
+extern qboolean NPC_FacePosition(gentity_t *aiEnt, vec3_t position, qboolean doPitch );
+extern void Jedi_Move(gentity_t *aiEnt, gentity_t *goal, qboolean retreat );
 
 int			NUM_REGISTERED_CONVO_FILES = 0;
 char		REGISTERED_CONVO_FILES[1024][256];
@@ -26,26 +26,27 @@ qboolean	REGISTERED_CONVO_EXISTS[1024];
 void NPC_EnforceConversationRange ( gentity_t *self )
 {
 	float dist = Distance(self->r.currentOrigin, self->NPC->conversationPartner->r.currentOrigin);
+	gentity_t *aiEnt = self;
 
-	if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
-		NPCS.ucmd.buttons |= BUTTON_WALKING;
+	if (!(aiEnt->client->pers.cmd.buttons & BUTTON_WALKING))
+		aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
 
 	if (dist > 56)
 	{// Too far, move forward...
 		//trap->Print("Dist is %f. Moving closer.\n", dist);
-		Jedi_Move(self->NPC->conversationPartner, qfalse);
+		Jedi_Move(self, self->NPC->conversationPartner, qfalse);
 	}
 	else if (dist < 18 )
 	{// Too close, move back...
 		//trap->Print("Dist is %f. Moving back.\n", dist);
-		Jedi_Move(self->NPC->conversationPartner, qtrue);
+		Jedi_Move(self, self->NPC->conversationPartner, qtrue);
 	}
 	else
 	{
 		//trap->Print("Dist is %f. OK!\n", dist);
-		NPCS.ucmd.forwardmove = 0;
-		NPCS.ucmd.rightmove = 0;
-		NPCS.ucmd.upmove = 0;
+		aiEnt->client->pers.cmd.forwardmove = 0;
+		aiEnt->client->pers.cmd.rightmove = 0;
+		aiEnt->client->pers.cmd.upmove = 0;
 	}
 }
 
@@ -301,10 +302,10 @@ void G_InitNPCConversationSounds ( void )
 	CONVO_SOUNDS_REGISTERED = qtrue;
 }
 
-void NPC_EndConversation()
+void NPC_EndConversation(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	NPC->NPC->conversationRole = 0;
 	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC) NPC->NPC->conversationPartner->NPC->conversationRole = 0;
@@ -321,10 +322,10 @@ void NPC_EndConversation()
 #endif //__NPC_CONVERSATIONS__
 }
 
-void NPC_SetStormtrooperConversationReplyTimer()
+void NPC_SetStormtrooperConversationReplyTimer(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC)
 	{
@@ -335,7 +336,7 @@ void NPC_SetStormtrooperConversationReplyTimer()
 	}
 	else
 	{
-		NPC_EndConversation();
+		NPC_EndConversation(aiEnt);
 	}
 #endif //__NPC_CONVERSATIONS__
 }
@@ -374,10 +375,10 @@ void NPC_ConversationAnimation(gentity_t *NPC)
 #endif //__NPC_CONVERSATIONS__
 }
 
-void NPC_StormTrooperConversation()
+void NPC_StormTrooperConversation(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t		*NPC = NPCS.NPC;
+	gentity_t		*NPC = aiEnt;
 	int				role = NPC->NPC->conversationRole;
 	int				section = NPC->NPC->conversationSection;
 	int				part = NPC->NPC->conversationPart;
@@ -386,7 +387,7 @@ void NPC_StormTrooperConversation()
 
 	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy || !NPC->NPC->conversationPartner->NPC)
 	{// Exit early if they get a target...
-		NPC_EndConversation();
+		NPC_EndConversation(aiEnt);
 		return;
 	}
 
@@ -396,7 +397,7 @@ void NPC_StormTrooperConversation()
 	vectoangles( NPC->move_vector, angles );
 	G_SetAngles(NPC, angles);
 	VectorCopy(angles, NPC->client->ps.viewangles);
-	NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+	NPC_FacePosition( NPC, NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
 
 	if (NPC->NPC->conversationReplyTime > level.time)
 		return; // Wait...
@@ -422,7 +423,7 @@ void NPC_StormTrooperConversation()
 
 #ifdef __SHORT_STORMIE_CONVOS__
 		// Short convo's only play 1 random section...
-		NPC_EndConversation();
+		NPC_EndConversation(aiEnt);
 		return;
 #else //!__SHORT_STORMIE_CONVOS__
 		NPC->NPC->conversationSection++;
@@ -470,7 +471,7 @@ void NPC_StormTrooperConversation()
 	//trap->Print("NPC %i playing sound file %s.\n", NPC->s.number, filename);
 
 	G_NPCSound( NPC, CHAN_VOICE/*CHAN_AUTO*/, G_SoundIndex(filename));
-	NPC_SetStormtrooperConversationReplyTimer();
+	NPC_SetStormtrooperConversationReplyTimer(aiEnt);
 	NPC_ConversationAnimation(NPC);
 #endif //__NPC_CONVERSATIONS__
 }
@@ -504,10 +505,10 @@ int NPC_StormtrooperFindConversationMaxSections( void )
 }
 #endif //__SHORT_STORMIE_CONVOS__
 
-void NPC_StormtrooperFindConversationPartner()
+void NPC_StormtrooperFindConversationPartner(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	if (NPC->client->NPC_class != CLASS_STORMTROOPER && NPC->client->NPC_class != CLASS_STORMTROOPER_ADVANCED) return;
 
@@ -586,11 +587,11 @@ void NPC_StormtrooperFindConversationPartner()
 #ifdef __NPC_CONVERSATION_DEBUG__
 				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i.\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number);
 #endif //__NPC_CONVERSATION_DEBUG__
-				NPC_StormTrooperConversation();
+				NPC_StormTrooperConversation(aiEnt);
 			}
 			else
 			{
-				NPC_EndConversation();
+				NPC_EndConversation(aiEnt);
 				continue;
 			}
 			return;
@@ -631,7 +632,6 @@ void NPC_StormtrooperFindConversationPartner()
 qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
 	char			filename[256];
 
 	// For faster checking without FS wear...
@@ -658,7 +658,6 @@ qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
 	char			filename[256];
 
 	// For faster checking without FS wear...
@@ -685,7 +684,6 @@ qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 qboolean NPC_VendorHasVendorSound(gentity_t *conversationalist, char *name)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
 	char			filename[256];
 
 	sprintf(filename, va("sound/vendor/%s/%s.mp3", conversationalist->NPC_type, name));
@@ -699,10 +697,10 @@ qboolean NPC_VendorHasVendorSound(gentity_t *conversationalist, char *name)
 	return qtrue;
 }
 
-void NPC_SetConversationReplyTimer()
+void NPC_SetConversationReplyTimer(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	NPC->NPC->conversationPart++;
 	NPC->NPC->conversationReplyTime = level.time + 10000;//18000;
@@ -715,10 +713,10 @@ void NPC_SetConversationReplyTimer()
 #endif //__NPC_CONVERSATIONS__
 }
 
-void NPC_NPCConversation()
+void NPC_NPCConversation(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	int				part = NPC->NPC->conversationPart-1;
 //	vec3_t			origin, angles;
@@ -726,18 +724,18 @@ void NPC_NPCConversation()
 
 	if (NPC->client->NPC_class == CLASS_STORMTROOPER || NPC->client->NPC_class == CLASS_STORMTROOPER_ADVANCED)
 	{
-		NPC_StormTrooperConversation();
+		NPC_StormTrooperConversation(aiEnt);
 		return;
 	}
 
 	if (NPC->enemy || NPC->NPC->conversationPartner->enemy || !NPC->NPC->conversationPartner->NPC)
 	{// Exit early if they get a target...
-		NPC_EndConversation();
+		NPC_EndConversation(aiEnt);
 		return;
 	}
 
 	// Look at our partner...
-	NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+	NPC_FacePosition( NPC, NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
 
 	if (NPC->NPC->conversationReplyTime > level.time)
 		return; // Wait...
@@ -751,7 +749,7 @@ void NPC_NPCConversation()
 	{
 		//trap->Print("File %s does not exist. Aborting conversation.\n", filename);
 
-		NPC_EndConversation();
+		NPC_EndConversation(aiEnt);
 
 		return;
 	}
@@ -759,18 +757,18 @@ void NPC_NPCConversation()
 	//trap->Print("NPC %i (%s) playing sound file %s (index %i).\n", NPC->s.number, NPC->NPC_type, filename, G_SoundIndex(filename));
 
 	G_NPCSound( NPC, CHAN_VOICE/*CHAN_AUTO*/, G_SoundIndex(filename));
-	NPC_SetConversationReplyTimer();
+	NPC_SetConversationReplyTimer(aiEnt);
 	NPC_ConversationAnimation(NPC);
 
 	if (NPC->NPC->conversationPart > 50)
-		NPC_EndConversation();
+		NPC_EndConversation(aiEnt);
 #endif //__NPC_CONVERSATIONS__
 }
 
-void NPC_FindConversationPartner()
+void NPC_FindConversationPartner(gentity_t *aiEnt)
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	//if (!CONVO_SOUNDS_REGISTERED) G_InitNPCConversationSounds();
 
@@ -780,7 +778,7 @@ void NPC_FindConversationPartner()
 
 	if (NPC->client->NPC_class == CLASS_STORMTROOPER || NPC->client->NPC_class == CLASS_STORMTROOPER_ADVANCED)
 	{
-		NPC_StormtrooperFindConversationPartner();
+		NPC_StormtrooperFindConversationPartner(aiEnt);
 		return;
 	}
 
@@ -854,11 +852,11 @@ void NPC_FindConversationPartner()
 #ifdef __NPC_CONVERSATION_DEBUG__
 				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i (%s).\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number, NPC->NPC->conversationPartner->NPC_type);
 #endif //__NPC_CONVERSATION_DEBUG__
-				NPC_NPCConversation();
+				NPC_NPCConversation(aiEnt);
 			}
 			else
 			{
-				NPC_EndConversation();
+				NPC_EndConversation(aiEnt);
 				continue;
 			}
 			return;

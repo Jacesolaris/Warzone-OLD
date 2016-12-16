@@ -21,16 +21,16 @@ enum
 R2D2_PartsMove
 -------------------------
 */
-void R2D2_PartsMove(void)
+void R2D2_PartsMove(gentity_t *aiEnt)
 {
 	// Front 'eye' lense
-	if ( TIMER_Done(NPCS.NPC,"eyeDelay") )
+	if ( TIMER_Done(aiEnt,"eyeDelay") )
 	{
-		NPCS.NPC->pos1[1] = AngleNormalize360( NPCS.NPC->pos1[1]);
+		aiEnt->pos1[1] = AngleNormalize360( aiEnt->pos1[1]);
 
-		NPCS.NPC->pos1[0]+=Q_irand( -20, 20 );	// Roll
-		NPCS.NPC->pos1[1]=Q_irand( -20, 20 );
-		NPCS.NPC->pos1[2]=Q_irand( -20, 20 );
+		aiEnt->pos1[0]+=Q_irand( -20, 20 );	// Roll
+		aiEnt->pos1[1]=Q_irand( -20, 20 );
+		aiEnt->pos1[2]=Q_irand( -20, 20 );
 
 		/*
 		if (NPC->genericBone1)
@@ -38,10 +38,10 @@ void R2D2_PartsMove(void)
 			trap->G2API_SetBoneAnglesIndex( &NPC->ghoul2[NPC->playerModel], NPC->genericBone1, NPC->pos1, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, NULL );
 		}
 		*/
-		NPC_SetBoneAngles(NPCS.NPC, "f_eye", NPCS.NPC->pos1);
+		NPC_SetBoneAngles(aiEnt, "f_eye", aiEnt->pos1);
 
 
-		TIMER_Set( NPCS.NPC, "eyeDelay", Q_irand( 100, 1000 ) );
+		TIMER_Set( aiEnt, "eyeDelay", Q_irand( 100, 1000 ) );
 	}
 }
 
@@ -50,7 +50,7 @@ void R2D2_PartsMove(void)
 NPC_BSDroid_Idle
 -------------------------
 */
-void Droid_Idle( void )
+void Droid_Idle(gentity_t *aiEnt)
 {
 //	VectorCopy( NPCInfo->investigateGoal, lookPos );
 
@@ -62,34 +62,34 @@ void Droid_Idle( void )
 R2D2_TurnAnims
 -------------------------
 */
-void R2D2_TurnAnims ( void )
+void R2D2_TurnAnims (gentity_t *aiEnt)
 {
 	float turndelta;
 	int		anim;
 
-	turndelta = AngleDelta(NPCS.NPC->r.currentAngles[YAW], NPCS.NPCInfo->desiredYaw);
+	turndelta = AngleDelta(aiEnt->r.currentAngles[YAW], aiEnt->NPC->desiredYaw);
 
-	if ((fabs(turndelta) > 20) && ((NPCS.NPC->client->NPC_class == CLASS_R2D2) || (NPCS.NPC->client->NPC_class == CLASS_R5D2)))
+	if ((fabs(turndelta) > 20) && ((aiEnt->client->NPC_class == CLASS_R2D2) || (aiEnt->client->NPC_class == CLASS_R5D2)))
 	{
-		anim = NPCS.NPC->client->ps.legsAnim;
+		anim = aiEnt->client->ps.legsAnim;
 		if (turndelta<0)
 		{
 			if (anim != BOTH_TURN_LEFT1)
 			{
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_TURN_LEFT1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_TURN_LEFT1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 		}
 		else
 		{
 			if (anim != BOTH_TURN_RIGHT1)
 			{
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_TURN_RIGHT1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_TURN_RIGHT1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 		}
 	}
 	else
 	{
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_RUN1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 	}
 
 }
@@ -99,62 +99,62 @@ void R2D2_TurnAnims ( void )
 Droid_Patrol
 -------------------------
 */
-void Droid_Patrol( void )
+void Droid_Patrol(gentity_t *aiEnt)
 {
 
-	NPCS.NPC->pos1[1] = AngleNormalize360( NPCS.NPC->pos1[1]);
+	aiEnt->pos1[1] = AngleNormalize360( aiEnt->pos1[1]);
 
-	if ( NPCS.NPC->client && NPCS.NPC->client->NPC_class != CLASS_GONK )
+	if ( aiEnt->client && aiEnt->client->NPC_class != CLASS_GONK )
 	{
-		if (NPCS.NPC->client->NPC_class != CLASS_R5D2)
+		if (aiEnt->client->NPC_class != CLASS_R5D2)
 		{ //he doesn't have an eye.
-			R2D2_PartsMove();		// Get his eye moving.
+			R2D2_PartsMove(aiEnt);		// Get his eye moving.
 		}
-		R2D2_TurnAnims();
+		R2D2_TurnAnims(aiEnt);
 	}
 
 	//If we have somewhere to go, then do that
-	if ( UpdateGoal() )
+	if ( UpdateGoal(aiEnt) )
 	{
-		NPCS.ucmd.buttons |= BUTTON_WALKING;
-		NPC_MoveToGoal( qtrue );
+		aiEnt->client->pers.cmd.buttons |= BUTTON_WALKING;
+		NPC_MoveToGoal(aiEnt, qtrue );
 
-		if( NPCS.NPC->client && NPCS.NPC->client->NPC_class == CLASS_MOUSE )
+		if( aiEnt->client && aiEnt->client->NPC_class == CLASS_MOUSE )
 		{
-			NPCS.NPCInfo->desiredYaw += sin(level.time*.5) * 25; // Weaves side to side a little
+			aiEnt->NPC->desiredYaw += sin(level.time*.5) * 25; // Weaves side to side a little
 
-			if (TIMER_Done(NPCS.NPC,"patrolNoise"))
+			if (TIMER_Done(aiEnt,"patrolNoise"))
 			{
-				G_SoundOnEnt( NPCS.NPC, CHAN_AUTO, va("sound/chars/mouse/misc/mousego%d.wav", Q_irand(1, 3)) );
+				G_SoundOnEnt( aiEnt, CHAN_AUTO, va("sound/chars/mouse/misc/mousego%d.wav", Q_irand(1, 3)) );
 
-				TIMER_Set( NPCS.NPC, "patrolNoise", Q_irand( 2000, 4000 ) );
+				TIMER_Set( aiEnt, "patrolNoise", Q_irand( 2000, 4000 ) );
 			}
 		}
-		else if( NPCS.NPC->client && NPCS.NPC->client->NPC_class == CLASS_R2D2 )
+		else if( aiEnt->client && aiEnt->client->NPC_class == CLASS_R2D2 )
 		{
-			if (TIMER_Done(NPCS.NPC,"patrolNoise"))
+			if (TIMER_Done(aiEnt,"patrolNoise"))
 			{
-				G_SoundOnEnt( NPCS.NPC, CHAN_AUTO, va("sound/chars/r2d2/misc/r2d2talk0%d.wav",	Q_irand(1, 3)) );
+				G_SoundOnEnt( aiEnt, CHAN_AUTO, va("sound/chars/r2d2/misc/r2d2talk0%d.wav",	Q_irand(1, 3)) );
 
-				TIMER_Set( NPCS.NPC, "patrolNoise", Q_irand( 2000, 4000 ) );
+				TIMER_Set( aiEnt, "patrolNoise", Q_irand( 2000, 4000 ) );
 			}
 		}
-		else if( NPCS.NPC->client && NPCS.NPC->client->NPC_class == CLASS_R5D2 )
+		else if( aiEnt->client && aiEnt->client->NPC_class == CLASS_R5D2 )
 		{
-			if (TIMER_Done(NPCS.NPC,"patrolNoise"))
+			if (TIMER_Done(aiEnt,"patrolNoise"))
 			{
-				G_SoundOnEnt( NPCS.NPC, CHAN_AUTO, va("sound/chars/r5d2/misc/r5talk%d.wav", Q_irand(1, 4)) );
+				G_SoundOnEnt( aiEnt, CHAN_AUTO, va("sound/chars/r5d2/misc/r5talk%d.wav", Q_irand(1, 4)) );
 
-				TIMER_Set( NPCS.NPC, "patrolNoise", Q_irand( 2000, 4000 ) );
+				TIMER_Set( aiEnt, "patrolNoise", Q_irand( 2000, 4000 ) );
 			}
 		}
-		if( NPCS.NPC->client && NPCS.NPC->client->NPC_class == CLASS_GONK )
+		if( aiEnt->client && aiEnt->client->NPC_class == CLASS_GONK )
 		{
-			if (TIMER_Done(NPCS.NPC,"patrolNoise"))
+			if (TIMER_Done(aiEnt,"patrolNoise"))
 			{
-				G_SoundOnEnt( NPCS.NPC, CHAN_AUTO, va("sound/chars/gonk/misc/gonktalk%d.wav", Q_irand(1, 2)) );
+				G_SoundOnEnt( aiEnt, CHAN_AUTO, va("sound/chars/gonk/misc/gonktalk%d.wav", Q_irand(1, 2)) );
 
-				TIMER_Set( NPCS.NPC, "patrolNoise", Q_irand( 2000, 4000 ) );
+				TIMER_Set( aiEnt, "patrolNoise", Q_irand( 2000, 4000 ) );
 			}
 		}
 //		else
@@ -163,7 +163,7 @@ void Droid_Patrol( void )
 //		}
 	}
 
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 
 }
 
@@ -172,31 +172,31 @@ void Droid_Patrol( void )
 Droid_Run
 -------------------------
 */
-void Droid_Run( void )
+void Droid_Run(gentity_t *aiEnt)
 {
-	R2D2_PartsMove();
+	R2D2_PartsMove(aiEnt);
 
-	if ( NPCS.NPCInfo->localState == LSTATE_BACKINGUP )
+	if ( aiEnt->NPC->localState == LSTATE_BACKINGUP )
 	{
-		NPCS.ucmd.forwardmove = -127;
-		NPCS.NPCInfo->desiredYaw += 5;
+		aiEnt->client->pers.cmd.forwardmove = -127;
+		aiEnt->NPC->desiredYaw += 5;
 
-		NPCS.NPCInfo->localState = LSTATE_NONE;	// So he doesn't constantly backup.
+		aiEnt->NPC->localState = LSTATE_NONE;	// So he doesn't constantly backup.
 	}
 	else
 	{
-		NPCS.ucmd.forwardmove = 64;
+		aiEnt->client->pers.cmd.forwardmove = 64;
 		//If we have somewhere to go, then do that
-		if ( UpdateGoal() )
+		if ( UpdateGoal(aiEnt) )
 		{
-			if (NPC_MoveToGoal( qfalse ))
+			if (NPC_MoveToGoal(aiEnt, qfalse ))
 			{
-				NPCS.NPCInfo->desiredYaw += sin(level.time*.5) * 5; // Weaves side to side a little
+				aiEnt->NPC->desiredYaw += sin(level.time*.5) * 5; // Weaves side to side a little
 			}
 		}
 	}
 
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 }
 
 /*
@@ -204,65 +204,65 @@ void Droid_Run( void )
 void Droid_Spin( void )
 -------------------------
 */
-void Droid_Spin( void )
+void Droid_Spin(gentity_t *aiEnt)
 {
 	vec3_t dir = {0,0,1};
 
-	R2D2_TurnAnims();
+	R2D2_TurnAnims(aiEnt);
 
 
 	// Head is gone, spin and spark
-	if ( NPCS.NPC->client->NPC_class == CLASS_R5D2
-		|| NPCS.NPC->client->NPC_class == CLASS_R2D2 )
+	if ( aiEnt->client->NPC_class == CLASS_R5D2
+		|| aiEnt->client->NPC_class == CLASS_R2D2 )
 	{
 		// No head?
-		if (trap->G2API_GetSurfaceRenderStatus( NPCS.NPC->ghoul2, 0, "head" )>0)
+		if (trap->G2API_GetSurfaceRenderStatus( aiEnt->ghoul2, 0, "head" )>0)
 		{
-			if (TIMER_Done(NPCS.NPC,"smoke") && !TIMER_Done(NPCS.NPC,"droidsmoketotal"))
+			if (TIMER_Done(aiEnt,"smoke") && !TIMER_Done(aiEnt,"droidsmoketotal"))
 			{
-				TIMER_Set( NPCS.NPC, "smoke", 100);
-				G_PlayEffectID( G_EffectIndex("volumetric/droid_smoke") , NPCS.NPC->r.currentOrigin,dir);
+				TIMER_Set( aiEnt, "smoke", 100);
+				G_PlayEffectID( G_EffectIndex("volumetric/droid_smoke") , aiEnt->r.currentOrigin,dir);
 			}
 
-			if (TIMER_Done(NPCS.NPC,"droidspark"))
+			if (TIMER_Done(aiEnt,"droidspark"))
 			{
-				TIMER_Set( NPCS.NPC, "droidspark", Q_irand(100,500));
-				G_PlayEffectID( G_EffectIndex("sparks/spark"), NPCS.NPC->r.currentOrigin,dir);
+				TIMER_Set( aiEnt, "droidspark", Q_irand(100,500));
+				G_PlayEffectID( G_EffectIndex("sparks/spark"), aiEnt->r.currentOrigin,dir);
 			}
 
-			NPCS.ucmd.forwardmove = Q_irand( -64, 64);
+			aiEnt->client->pers.cmd.forwardmove = Q_irand( -64, 64);
 
-			if (TIMER_Done(NPCS.NPC,"roam"))
+			if (TIMER_Done(aiEnt,"roam"))
 			{
-				TIMER_Set( NPCS.NPC, "roam", Q_irand( 250, 1000 ) );
-				NPCS.NPCInfo->desiredYaw = Q_irand( 0, 360 ); // Go in random directions
+				TIMER_Set( aiEnt, "roam", Q_irand( 250, 1000 ) );
+				aiEnt->NPC->desiredYaw = Q_irand( 0, 360 ); // Go in random directions
 			}
 		}
 		else
 		{
-			if (TIMER_Done(NPCS.NPC,"roam"))
+			if (TIMER_Done(aiEnt,"roam"))
 			{
-				NPCS.NPCInfo->localState = LSTATE_NONE;
+				aiEnt->NPC->localState = LSTATE_NONE;
 			}
 			else
 			{
-				NPCS.NPCInfo->desiredYaw = AngleNormalize360(NPCS.NPCInfo->desiredYaw + 40); // Spin around
+				aiEnt->NPC->desiredYaw = AngleNormalize360(aiEnt->NPC->desiredYaw + 40); // Spin around
 			}
 		}
 	}
 	else
 	{
-		if (TIMER_Done(NPCS.NPC,"roam"))
+		if (TIMER_Done(aiEnt,"roam"))
 		{
-			NPCS.NPCInfo->localState = LSTATE_NONE;
+			aiEnt->NPC->localState = LSTATE_NONE;
 		}
 		else
 		{
-			NPCS.NPCInfo->desiredYaw = AngleNormalize360(NPCS.NPCInfo->desiredYaw + 40); // Spin around
+			aiEnt->NPC->desiredYaw = AngleNormalize360(aiEnt->NPC->desiredYaw + 40); // Spin around
 		}
 	}
 
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 }
 
 /*
@@ -439,11 +439,11 @@ void NPC_Droid_Pain(gentity_t *self, gentity_t *attacker, int damage)
 Droid_Pain
 -------------------------
 */
-void Droid_Pain(void)
+void Droid_Pain(gentity_t *aiEnt)
 {
-	if (TIMER_Done(NPCS.NPC,"droidpain"))	//He's done jumping around
+	if (TIMER_Done(aiEnt,"droidpain"))	//He's done jumping around
 	{
-		NPCS.NPCInfo->localState = LSTATE_NONE;
+		aiEnt->NPC->localState = LSTATE_NONE;
 	}
 }
 
@@ -561,7 +561,7 @@ R5D2_LookAround
 -------------------------
 */
 /*
-static void R5D2_LookAround( void )
+static void R5D2_LookAround( gentity_t *aiEnt )
 {
 	vec3_t	lookPos;
 	float	perc = (float) ( level.time - NPCInfo->pauseTime ) / (float) NPCInfo->investigateDebounceTime;
@@ -584,7 +584,7 @@ static void R5D2_LookAround( void )
 		R5D2_OffsetLook( -45.0f, lookPos );
 	}
 
-	NPC_FacePosition( lookPos );
+	NPC_FacePosition( aiEnt, lookPos );
 }
 
 */
@@ -594,28 +594,28 @@ static void R5D2_LookAround( void )
 NPC_BSDroid_Default
 -------------------------
 */
-void NPC_BSDroid_Default( void )
+void NPC_BSDroid_Default(gentity_t *aiEnt)
 {
 
-	if ( NPCS.NPCInfo->localState == LSTATE_SPINNING )
+	if ( aiEnt->NPC->localState == LSTATE_SPINNING )
 	{
-		Droid_Spin();
+		Droid_Spin(aiEnt);
 	}
-	else if ( NPCS.NPCInfo->localState == LSTATE_PAIN )
+	else if ( aiEnt->NPC->localState == LSTATE_PAIN )
 	{
-		Droid_Pain();
+		Droid_Pain(aiEnt);
 	}
-	else if ( NPCS.NPCInfo->localState == LSTATE_DROP )
+	else if ( aiEnt->NPC->localState == LSTATE_DROP )
 	{
-		NPC_UpdateAngles( qtrue, qtrue );
-		NPCS.ucmd.upmove = crandom() * 64;
+		NPC_UpdateAngles(aiEnt, qtrue, qtrue );
+		aiEnt->client->pers.cmd.upmove = crandom() * 64;
 	}
-	else if ( NPCS.NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES )
+	else if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
 	{
-		Droid_Patrol();
+		Droid_Patrol(aiEnt);
 	}
 	else
 	{
-		Droid_Run();
+		Droid_Run(aiEnt);
 	}
 }

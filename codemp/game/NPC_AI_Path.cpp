@@ -177,10 +177,10 @@ void NPC_ShortenPath(gentity_t *NPC)
 #endif //__USE_NAVMESH__
 }
 
-qboolean NPC_FindNewWaypoint( void )
+qboolean NPC_FindNewWaypoint( gentity_t *aiEnt)
 {
 #ifndef __USE_NAVMESH__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	// Try to find a visible waypoint first...
 	if (NPC->wpCurrent >= 0 
@@ -212,13 +212,13 @@ qboolean NPC_FindNewWaypoint( void )
 	return qtrue; // all good, we have a new waypoint...
 }
 
-void NPC_SetEnemyGoal( void )
+void NPC_SetEnemyGoal(gentity_t *aiEnt)
 {
 #ifndef __USE_NAVMESH__
 	qboolean IS_COVERPOINT = qfalse;
 	int			COVERPOINT_WP = -1;
 	int			COVERPOINT_OFC_WP = -1;
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	//if (NPC->wpSeenTime > level.time)
 	//	return; // wait for next route creation...
@@ -230,7 +230,7 @@ void NPC_SetEnemyGoal( void )
 		G_Printf("Bad wps (lt: %i) (ps: %i) (wc: %i) (wn: %i)\n", NPC->longTermGoal, NPC->pathsize, NPC->wpCurrent, NPC->wpNext);
 	*/
 
-	if (!NPC_FindNewWaypoint())
+	if (!NPC_FindNewWaypoint(aiEnt))
 		return; // wait before trying to get a new waypoint...
 
 	// UQ1: Gunner NPCs find cover...
@@ -442,10 +442,10 @@ void NPC_SetEnemyGoal( void )
 #endif //__USE_NAVMESH__
 }
 
-qboolean NPC_CopyPathFromNearbyNPC( void )
+qboolean NPC_CopyPathFromNearbyNPC(gentity_t *aiEnt)
 {
 #ifndef __USE_NAVMESH__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 	int i = 0;
 
 	for (i = MAX_CLIENTS; i < MAX_GENTITIES; i++)
@@ -525,7 +525,7 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 		if (ent == NPC) continue;
 		if (ent->s.eType != ET_NPC && ent->s.eType != ET_PLAYER) continue;
 		if (!ent->client) continue;
-		if (!NPC_ValidEnemy(ent)) continue;
+		if (!NPC_ValidEnemy(NPC, ent)) continue;
 
 		if (ent->s.eType == ET_PLAYER)
 		{
@@ -560,10 +560,10 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 #endif //__USE_NAVMESH__
 }
 
-void NPC_SetNewGoalAndPath( void )
+void NPC_SetNewGoalAndPath(gentity_t *aiEnt)
 {
 #ifndef __USE_NAVMESH__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 	qboolean	padawanPath = qfalse;
 
 	//if (NPC->client->NPC_class != CLASS_TRAVELLING_VENDOR)
@@ -588,7 +588,7 @@ void NPC_SetNewGoalAndPath( void )
 		return; // wait for next route creation...
 	}
 
-	if (!NPC_FindNewWaypoint())
+	if (!NPC_FindNewWaypoint(aiEnt))
 	{
 		//trap->Print("Unable to find waypoint.\n");
 		//player_die(NPC, NPC, NPC, 99999, MOD_CRUSH);
@@ -668,7 +668,7 @@ void NPC_SetNewGoalAndPath( void )
 /*
 void NPC_SetNewWarzoneGoalAndPath()
 {
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	//if (NPC->client->NPC_class == CLASS_TRAVELLING_VENDOR)
 	//{
@@ -963,7 +963,7 @@ int CheckForFunc(vec3_t org, int ignore)
 	return 0;
 }
 
-int WaitingForNow(vec3_t goalpos)
+int WaitingForNow(gentity_t *aiEnt, vec3_t goalpos)
 { //checks if the bot is doing something along the lines of waiting for an elevator to raise up
 #ifndef __USE_NAVMESH__
 	vec3_t		xybot, xywp, a;
@@ -972,33 +972,33 @@ int WaitingForNow(vec3_t goalpos)
 	qboolean	have_goalpos2 = qfalse;
 #endif
 
-	if (NPCS.NPC->wpCurrent < 0 || NPCS.NPC->wpCurrent >= gWPNum)
+	if (aiEnt->wpCurrent < 0 || aiEnt->wpCurrent >= gWPNum)
 	{
 		return 0;
 	}
 
 #if 0
-	if (NPCS.NPC->wpNext >= 0 && NPCS.NPC->wpNext < gWPNum)
+	if (aiEnt->wpNext >= 0 && aiEnt->wpNext < gWPNum)
 	{
-		VectorCopy(gWPArray[NPCS.NPC->wpNext]->origin, goalpos2);
+		VectorCopy(gWPArray[aiEnt->wpNext]->origin, goalpos2);
 		have_goalpos2 = qtrue;
 	}
 
-	if ((int)goalpos[0] != (int)gWPArray[NPCS.NPC->wpCurrent]->origin[0] ||
-		(int)goalpos[1] != (int)gWPArray[NPCS.NPC->wpCurrent]->origin[1] ||
-		(int)goalpos[2] != (int)gWPArray[NPCS.NPC->wpCurrent]->origin[2])
+	if ((int)goalpos[0] != (int)gWPArray[aiEnt->wpCurrent]->origin[0] ||
+		(int)goalpos[1] != (int)gWPArray[aiEnt->wpCurrent]->origin[1] ||
+		(int)goalpos[2] != (int)gWPArray[aiEnt->wpCurrent]->origin[2])
 	{
 		return 0;
 	}
 
-	if (CheckForFuncAbove(goalpos, NPCS.NPC->s.number) > 0 || (have_goalpos2 && CheckForFuncAbove(goalpos2, NPCS.NPC->s.number) > 0))
+	if (CheckForFuncAbove(goalpos, aiEnt->s.number) > 0 || (have_goalpos2 && CheckForFuncAbove(goalpos2, aiEnt->s.number) > 0))
 	{// Squisher above alert!
 		return 1;
 	}
 #endif
 
-	VectorCopy(NPCS.NPC->r.currentOrigin, xybot);
-	VectorCopy(gWPArray[NPCS.NPC->wpCurrent]->origin, xywp);
+	VectorCopy(aiEnt->r.currentOrigin, xybot);
+	VectorCopy(gWPArray[aiEnt->wpCurrent]->origin, xywp);
 
 	xybot[2] = 0;
 	xywp[2] = 0;
@@ -1007,14 +1007,14 @@ int WaitingForNow(vec3_t goalpos)
 
 	if (VectorLength(a) < 16)
 	{
-		if (CheckForFunc(NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number) > 0)
+		if (CheckForFunc(aiEnt->r.currentOrigin, aiEnt->s.number) > 0)
 		{
 			return 1; //we're probably standing on an elevator and riding up/down. Or at least we hope so.
 		}
 	}
-	else if (VectorLength(a) < 64 && CheckForFunc(NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number))
+	else if (VectorLength(a) < 64 && CheckForFunc(aiEnt->r.currentOrigin, aiEnt->s.number))
 	{
-		NPCS.NPC->useDebounceTime = level.time + 2000;
+		aiEnt->useDebounceTime = level.time + 2000;
 	}
 #endif //__USE_NAVMESH__
 
@@ -1033,9 +1033,9 @@ qboolean NPC_MoverCrushCheck ( gentity_t *NPC )
 		if (!ABOVE_ENT) return qfalse;
 
 		// Looks like there is a mover above us... Step back!
-		NPC_FacePosition( ABOVE_ENT->r.currentOrigin, qfalse );
+		NPC_FacePosition( NPC, ABOVE_ENT->r.currentOrigin, qfalse );
 
-		NPCS.NPCInfo->goalEntity = ABOVE_ENT;
+		aiEnt->NPC->goalEntity = ABOVE_ENT;
 
 		if ( UpdateGoal() )
 		{// Retreat until we are off of them...
@@ -1064,13 +1064,13 @@ qboolean NPC_GetOffPlayer ( gentity_t *NPC )
 		if (!on->client) return qfalse;
 
 		// Looks like we are on a player or NPC... Get off of them...
-		NPC_FacePosition( on->r.currentOrigin, qfalse );
+		NPC_FacePosition(NPC, on->r.currentOrigin, qfalse );
 
-		NPCS.NPCInfo->goalEntity = on;
+		NPC->NPC->goalEntity = on;
 
-		if ( UpdateGoal() )
+		if ( UpdateGoal(NPC) )
 		{// Retreat until we are off of them...
-			NPC_CombatMoveToGoal( qtrue, qtrue );
+			NPC_CombatMoveToGoal( NPC, qtrue, qtrue );
 		}
 		else
 		{// Fallback...
@@ -1083,46 +1083,46 @@ qboolean NPC_GetOffPlayer ( gentity_t *NPC )
 	return qfalse;
 }
 
-qboolean NPC_HaveValidEnemy( void )
+qboolean NPC_HaveValidEnemy(gentity_t *aiEnt)
 {
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 	return NPC_IsAlive(NPC, NPC->enemy);
 }
 
-void NPC_NewWaypointJump ( void )
+void NPC_NewWaypointJump (gentity_t *aiEnt)
 {// Jumping to new waypoint...
 #ifndef __USE_NAVMESH__
 	vec3_t myOrg, wpOrg;
 	qboolean should_jump = qtrue;
 
-	VectorCopy(NPCS.NPC->r.currentOrigin, myOrg);
+	VectorCopy(aiEnt->r.currentOrigin, myOrg);
 	myOrg[2]+= 8;
 
-	if (NPCS.NPC->wpCurrent < 0 || NPCS.NPC->wpCurrent >= gWPNum)
+	if (aiEnt->wpCurrent < 0 || aiEnt->wpCurrent >= gWPNum)
 	{
 		return;
 	}
 
-	VectorCopy(gWPArray[NPCS.NPC->wpCurrent]->origin, wpOrg);
+	VectorCopy(gWPArray[aiEnt->wpCurrent]->origin, wpOrg);
 	//wpOrg[2]+= 8;
 
-	if (!NPCS.NPC->npc_jumping && NPCS.NPC->wpLast >= 0 && NPCS.NPC->wpLast < gWPNum)
+	if (!aiEnt->npc_jumping && aiEnt->wpLast >= 0 && aiEnt->wpLast < gWPNum)
 	{// Have a wpLast... We are mid route...
-		if (OrgVisible(myOrg, wpOrg, NPCS.NPC->s.number))
+		if (OrgVisible(myOrg, wpOrg, aiEnt->s.number))
 			return;
 	}
-	else if (!NPCS.NPC->npc_jumping && wpOrg[2] <= myOrg[2]+8)
+	else if (!aiEnt->npc_jumping && wpOrg[2] <= myOrg[2]+8)
 	{// No wpLast, we are on a new route, but this waypoint is walkable...
-		if (OrgVisible(myOrg, wpOrg, NPCS.NPC->s.number))
+		if (OrgVisible(myOrg, wpOrg, aiEnt->s.number))
 			return; // No need to jump to this...
 	}
 
-	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
+	if (aiEnt->enemy && NPC_IsAlive(aiEnt, aiEnt->enemy))
 	{// Don't jump when we are chasing an enemy, and they are not above me...
-		should_jump = NPC_EnemyAboveMe(NPCS.NPC);
+		should_jump = NPC_EnemyAboveMe(aiEnt);
 	}
 
-	if (should_jump && NPC_Jump( NPCS.NPC, wpOrg ))
+	if (should_jump && NPC_Jump( aiEnt, wpOrg ))
 	{// Continue the jump...
 		//trap->Print("NPC JUMP DEBUG: NPC_NewWaypointJump\n");
 		return;
@@ -1132,10 +1132,11 @@ void NPC_NewWaypointJump ( void )
 
 qboolean NPC_DoLiftPathing(gentity_t *NPC)
 {
+	gentity_t *aiEnt = NPC;
 #ifndef __USE_NAVMESH__
 	if (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum)
 	{
-		qboolean onMover1 = (qboolean)WaitingForNow(gWPArray[NPC->wpCurrent]->origin);
+		qboolean onMover1 = (qboolean)WaitingForNow(aiEnt, gWPArray[NPC->wpCurrent]->origin);
 		qboolean onMover2 = NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin);
 
 		if ((onMover1 || onMover2) 
@@ -1158,7 +1159,7 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 					if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
 						break;
 
-					onMover1 = (qboolean)WaitingForNow(gWPArray[NPC->wpCurrent]->origin);
+					onMover1 = (qboolean)WaitingForNow(aiEnt, gWPArray[NPC->wpCurrent]->origin);
 					onMover2 = NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin);
 				}
 
@@ -1166,7 +1167,7 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 					&& NPC->wpCurrent < gWPNum
 					&& gWPArray[NPC->wpCurrent]->origin[2] >= NPC->r.currentOrigin[2])
 				{// Next waypoint is above us... Jump to it if possible...
-					NPC_FacePosition(gWPArray[NPC->wpCurrent]->origin, qfalse);
+					NPC_FacePosition(aiEnt, gWPArray[NPC->wpCurrent]->origin, qfalse);
 
 					if ((NPC_IsJedi(NPC) || NPC_IsBountyHunter(NPC)) 
 						&& NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
@@ -1178,9 +1179,9 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 				}
 
 				// Idle...
-				NPCS.ucmd.forwardmove = 0;
-				NPCS.ucmd.rightmove = 0;
-				NPCS.ucmd.upmove = 0;
+				aiEnt->client->pers.cmd.forwardmove = 0;
+				aiEnt->client->pers.cmd.rightmove = 0;
+				aiEnt->client->pers.cmd.upmove = 0;
 				NPC_PickRandomIdleAnimantion(NPC);
 
 				return qtrue;
@@ -1191,7 +1192,7 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 					&& NPC->wpCurrent < gWPNum
 					&& gWPArray[NPC->wpCurrent]->origin[2] >= NPC->r.currentOrigin[2])
 				{// Next waypoint is above us... Jump to it if possible...
-					NPC_FacePosition(gWPArray[NPC->wpCurrent]->origin, qfalse);
+					NPC_FacePosition(aiEnt, gWPArray[NPC->wpCurrent]->origin, qfalse);
 
 					if ((NPC_IsJedi(NPC) || NPC_IsBountyHunter(NPC)) 
 						&& NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
@@ -1203,7 +1204,7 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 				}
 
 				// If waypoing is below us, we can simply walk off...
-				UQ1_UcmdMoveForDir_NoAvoidance( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin );
+				UQ1_UcmdMoveForDir_NoAvoidance( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin );
 				return qtrue;
 			}
 		}
@@ -1213,18 +1214,18 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 	return qfalse;
 }
 
-qboolean NPC_FollowRoutes( void ) 
+qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 {// Quick method of following bot routes...
-	gentity_t	*NPC = NPCS.NPC;
-	usercmd_t	ucmd = NPCS.ucmd;
+	gentity_t	*NPC = aiEnt;
+	usercmd_t	ucmd = aiEnt->client->pers.cmd;
 	float		wpDist = 0.0;
 	qboolean	padawanPath = qfalse;
 	qboolean	onMover1 = qfalse;
 	qboolean	onMover2 = qfalse;
 
-	NPCS.NPCInfo->combatMove = qtrue;
+	aiEnt->NPC->combatMove = qtrue;
 
-	if ( !NPC_HaveValidEnemy() )
+	if ( !NPC_HaveValidEnemy(aiEnt) )
 	{
 		switch (NPC->client->NPC_class)
 		{
@@ -1310,7 +1311,7 @@ qboolean NPC_FollowRoutes( void )
 		}
 
 		NPC_ClearPathData(NPC);
-		NPC_SetNewGoalAndPath();
+		NPC_SetNewGoalAndPath(aiEnt);
 	}
 
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
@@ -1402,7 +1403,7 @@ qboolean NPC_FollowRoutes( void )
 		NPC->wpSeenTime = level.time;
 	}
 
-	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	NPC_FacePosition(aiEnt, gWPArray[NPC->wpCurrent]->origin, qfalse );
 	NPC->s.angles[PITCH] = NPC->client->ps.viewangles[PITCH] = 0; // Init view PITCH angle so we always look forward, not down or up...
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	
@@ -1422,27 +1423,27 @@ qboolean NPC_FollowRoutes( void )
 	}
 	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
-		NPC_NewWaypointJump();
+		NPC_NewWaypointJump(aiEnt);
 	}
 
 	if (NPC_IsCivilian(NPC))
 	{
 		if (NPC->npc_cower_runaway)
 		{// A civilian running away from combat...
-			if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
+			if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
 			{
-				if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+				if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 					NPC_PickRandomIdleAnimantion(NPC);
 				else
-					NPC_SelectMoveRunAwayAnimation();
+					NPC_SelectMoveRunAwayAnimation(NPC);
 
 				return qtrue;
 			}
 
-			if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+			if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 				NPC_PickRandomIdleAnimantion(NPC);
 			else
-				NPC_SelectMoveRunAwayAnimation();
+				NPC_SelectMoveRunAwayAnimation(NPC);
 
 			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
@@ -1452,35 +1453,35 @@ qboolean NPC_FollowRoutes( void )
 		{// Civilian humanoid... Force walk/run anims...
 			if (NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
 			{// When nearby a mover, run!
-				if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
+				if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
 				{ 
-					if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+					if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 						NPC_PickRandomIdleAnimantion(NPC);
 					else
-						NPC_SelectMoveAnimation(qfalse);
+						NPC_SelectMoveAnimation(aiEnt, qfalse);
 
 					return qtrue; 
 				}
 
-				if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+				if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 					NPC_PickRandomIdleAnimantion(NPC);
 				else
-					NPC_SelectMoveAnimation(qtrue); // UQ1: Always set civilian walk animation...
+					NPC_SelectMoveAnimation(aiEnt, qtrue); // UQ1: Always set civilian walk animation...
 			}
-			else if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
+			else if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
 			{
-				if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+				if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 					NPC_PickRandomIdleAnimantion(NPC);
 				else
-					NPC_SelectMoveAnimation(qtrue);
+					NPC_SelectMoveAnimation(aiEnt, qtrue);
 
 				return qtrue;
 			}
 
-			if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+			if (aiEnt->client->pers.cmd.forwardmove == 0 && aiEnt->client->pers.cmd.rightmove == 0 && aiEnt->client->pers.cmd.upmove == 0)
 				NPC_PickRandomIdleAnimantion(NPC);
 			else
-				NPC_SelectMoveAnimation(qtrue);
+				NPC_SelectMoveAnimation(aiEnt, qtrue);
 		}
 		else
 		{// Civilian non-humanoid... let bg_ set anim...
@@ -1489,7 +1490,7 @@ qboolean NPC_FollowRoutes( void )
 	}
 	else if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
 	{
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
+		if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
 		{ 
 			return qtrue; 
 		}
@@ -1498,9 +1499,9 @@ qboolean NPC_FollowRoutes( void )
 	{
 		qboolean walk = qtrue;
 
-		if (NPC_HaveValidEnemy()) walk = qfalse;
+		if (NPC_HaveValidEnemy(aiEnt)) walk = qfalse;
 
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, gWPArray[NPC->wpCurrent]->origin )) 
+		if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, walk, gWPArray[NPC->wpCurrent]->origin )) 
 		{
 			return qtrue; 
 		}
@@ -1514,25 +1515,25 @@ qboolean NPC_FollowRoutes( void )
 	return qtrue;
 }
 
-void NPC_SetNewEnemyGoalAndPath( void )
+void NPC_SetNewEnemyGoalAndPath(gentity_t *aiEnt)
 {
 #ifndef __USE_NAVMESH__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t	*NPC = aiEnt;
 
 	if (NPC->npc_dumb_route_time > level.time)
 	{// Try to use JKA routing as a backup until timer runs out...
-		if ( UpdateGoal() )
+		if ( UpdateGoal(aiEnt) )
 		{
-			if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+			if (NPC_CombatMoveToGoal(aiEnt, qtrue, qfalse ))
 			{// Worked!
 				return;
 			}
 		}
 
 		// Failed... Idle...
-		NPCS.ucmd.forwardmove = 0;
-		NPCS.ucmd.rightmove = 0;
-		NPCS.ucmd.upmove = 0;
+		aiEnt->client->pers.cmd.forwardmove = 0;
+		aiEnt->client->pers.cmd.rightmove = 0;
+		aiEnt->client->pers.cmd.upmove = 0;
 		NPC_PickRandomIdleAnimantion(NPC);
 		return;
 	}
@@ -1543,13 +1544,13 @@ void NPC_SetNewEnemyGoalAndPath( void )
 		return; // wait for next route creation...
 	}
 
-	if (!NPC_FindNewWaypoint())
+	if (!NPC_FindNewWaypoint(aiEnt))
 	{
 		NPC->npc_dumb_route_time = level.time + 10000;
 		return; // wait before trying to get a new waypoint...
 	}
 
-	NPC->longTermGoal = DOM_GetNearestWP(NPCS.NPC->enemy->r.currentOrigin, NPC->wpCurrent);
+	NPC->longTermGoal = DOM_GetNearestWP(aiEnt->enemy->r.currentOrigin, NPC->wpCurrent);
 
 	if (NPC->longTermGoal >= 0)
 	{
@@ -1596,17 +1597,17 @@ void NPC_SetNewEnemyGoalAndPath( void )
 extern int jediSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several jedi AI from speaking all at once
 extern int groupSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several group AI from speaking all at once
 
-qboolean NPC_FollowEnemyRoute( void ) 
+qboolean NPC_FollowEnemyRoute(gentity_t *aiEnt)
 {// Quick method of following bot routes...
-	gentity_t	*NPC = NPCS.NPC;
-	usercmd_t	ucmd = NPCS.ucmd;
+	gentity_t	*NPC = aiEnt;
+	usercmd_t	ucmd = aiEnt->client->pers.cmd;
 	float		wpDist = 0.0;
 	qboolean	onMover1 = qfalse;
 	qboolean	onMover2 = qfalse;
 
-	NPCS.NPCInfo->combatMove = qtrue;
+	aiEnt->NPC->combatMove = qtrue;
 
-	if ( !NPC_HaveValidEnemy() )
+	if ( !NPC_HaveValidEnemy(aiEnt) )
 	{
 		return qfalse;
 	}
@@ -1622,13 +1623,13 @@ qboolean NPC_FollowEnemyRoute( void )
 	}
 
 	if ((NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& Distance(NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) <= 48)
+		&& Distance(NPC->r.currentOrigin, aiEnt->enemy->r.currentOrigin) <= 48)
 	{// Close enough already... Don't move...
 		//trap->Print("close!\n");
 		return qfalse;
 	}
 	else if ( !(NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& NPC_ClearLOS4( NPCS.NPC->enemy ))
+		&& NPC_ClearLOS4(aiEnt, aiEnt->enemy ))
 	{// Already visible to shoot... Don't move...
 		//trap->Print("close wp!\n");
 		return qfalse;
@@ -1703,23 +1704,23 @@ qboolean NPC_FollowEnemyRoute( void )
 		}
 
 		NPC_ClearPathData(NPC);
-		NPC_SetNewEnemyGoalAndPath();
+		NPC_SetNewEnemyGoalAndPath(aiEnt);
 		G_ClearEnemy(NPC); // UQ1: Give up...
 
-		if (NPC_IsJedi(NPCS.NPC))
+		if (NPC_IsJedi(aiEnt))
 		{
-			if ( !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time )
+			if ( !Q_irand( 0, 10 ) && aiEnt->NPC->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[aiEnt->client->playerTeam] < level.time )
 			{
-				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
-				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
+				G_AddVoiceEvent( aiEnt, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+				jediSpeechDebounceTime[aiEnt->client->playerTeam] = aiEnt->NPC->blockedSpeechDebounceTime = level.time + 10000;
 			}
 		}
 		else
 		{
-			if ( !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && groupSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time )
+			if ( !Q_irand( 0, 10 ) && aiEnt->NPC->blockedSpeechDebounceTime < level.time && groupSpeechDebounceTime[aiEnt->client->playerTeam] < level.time )
 			{
-				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_GIVEUP1, EV_GIVEUP4 ), 10000 );
-				groupSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
+				G_AddVoiceEvent( aiEnt, Q_irand( EV_GIVEUP1, EV_GIVEUP4 ), 10000 );
+				groupSpeechDebounceTime[aiEnt->client->playerTeam] = aiEnt->NPC->blockedSpeechDebounceTime = level.time + 10000;
 			}
 		}
 
@@ -1795,7 +1796,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		}
 	}
 
-	//NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	//NPC_FacePosition( NPC, gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 
 	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
@@ -1809,10 +1810,10 @@ qboolean NPC_FollowEnemyRoute( void )
 	}
 	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
-		NPC_NewWaypointJump();
+		NPC_NewWaypointJump(aiEnt);
 	}
 
-	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
+	if (!UQ1_UcmdMoveForDir( NPC, &aiEnt->client->pers.cmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 	//NPC_SelectMoveAnimation(qfalse);
 #else //!__USE_NAVMESH__

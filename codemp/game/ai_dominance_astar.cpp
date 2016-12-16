@@ -178,312 +178,315 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 		return (-1);
 	}
 
-	// Check if memory needs to be allocated...
-	AllocatePathFindingMemory();
-
-	// Init waypoint link costs if needed...
-	//ASTAR_InitWaypointCosts();
-
-	memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
-	memset(gcost, 0, (sizeof(float)* gWPNum));
-	memset(fcost, 0, (sizeof(int)* gWPNum));
-	memset(list, 0, (sizeof(char)* gWPNum));
-	memset(parent, 0, (sizeof(int)* gWPNum));
-
-	for (i = 0; i < gWPNum; i++)
+#pragma omp critical (__ASTAR_MUTEX__)
 	{
-		gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
-	}
+		// Check if memory needs to be allocated...
+		AllocatePathFindingMemory();
 
-	openlist[gWPNum + 1] = 0;
+		// Init waypoint link costs if needed...
+		//ASTAR_InitWaypointCosts();
 
-	openlist[1] = from;																	//add the starting node to the open list
-	numOpen++;
-	gcost[from] = 0;																	//its f and g costs are obviously 0
-	fcost[from] = 0;
+		memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
+		memset(gcost, 0, (sizeof(float)* gWPNum));
+		memset(fcost, 0, (sizeof(int)* gWPNum));
+		memset(list, 0, (sizeof(char)* gWPNum));
+		memset(parent, 0, (sizeof(int)* gWPNum));
+
+		for (i = 0; i < gWPNum; i++)
+		{
+			gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
+		}
+
+		openlist[gWPNum + 1] = 0;
+
+		openlist[1] = from;																	//add the starting node to the open list
+		numOpen++;
+		gcost[from] = 0;																	//its f and g costs are obviously 0
+		fcost[from] = 0;
 
 #ifdef __ALT_PATH_METHOD_1__
-	if (altPath)
-	{// Mark some locations as bad to alter the path...
-		for (i = irand(0,gWPNum*0.2); i < gWPNum; i+=irand(1+(gWPNum*0.1),gWPNum*0.3))
-		{
-			if (Distance(gWPArray[i]->origin, gWPArray[from]->origin) > 384/*256*/
-				&& Distance(gWPArray[i]->origin, gWPArray[to]->origin) > 384/*256*/)
+		if (altPath)
+		{// Mark some locations as bad to alter the path...
+			for (i = irand(0, gWPNum*0.2); i < gWPNum; i += irand(1 + (gWPNum*0.1), gWPNum*0.3))
 			{
-				IGNORE_AREAS[IGNORE_AREAS_NUM] = i;
-				IGNORE_AREAS_NUM++;
-			}
+				if (Distance(gWPArray[i]->origin, gWPArray[from]->origin) > 384/*256*/
+					&& Distance(gWPArray[i]->origin, gWPArray[to]->origin) > 384/*256*/)
+				{
+					IGNORE_AREAS[IGNORE_AREAS_NUM] = i;
+					IGNORE_AREAS_NUM++;
+				}
 
-			//if (IGNORE_AREAS_NUM >= 16) break;
-			if (IGNORE_AREAS_NUM >= 8) break;
+				//if (IGNORE_AREAS_NUM >= 16) break;
+				if (IGNORE_AREAS_NUM >= 8) break;
+			}
 		}
-	}
 #endif //__ALT_PATH_METHOD_1__
 
 #ifdef __ALT_PATH_METHOD_3__
-	if (altPath)
-	{// Mark a location as bad to alter the path...
-		int tries = 0;
-		int divider = 1;
+		if (altPath)
+		{// Mark a location as bad to alter the path...
+			int tries = 0;
+			int divider = 1;
+
+			while (1)
+			{
+				int choice = irand_big(0, gWPNum - 1);
+
+				if (tries > 5)
+				{// Reduce range check so that we never hit an endless loop...
+					divider++;
+					tries = 0;
+				}
+
+				if (Distance(gWPArray[choice]->origin, gWPArray[from]->origin) <= IGNORE_RANGE / divider
+					|| Distance(gWPArray[choice]->origin, gWPArray[to]->origin) <= IGNORE_RANGE / divider)
+				{// Make sure this is not too close to my, or my target's location...
+					//trap->Print("Range %i. Divider %i. Tries %i.\n", IGNORE_RANGE / divider, divider, tries);
+					tries++;
+					continue;
+				}
+
+				IGNORE_AREA = choice;
+				IGNORE_RANGE /= divider;
+				break;
+			}
+		}
+#endif //__ALT_PATH_METHOD_3__
 
 		while (1)
 		{
-			int choice = irand_big(0, gWPNum-1);
-
-			if (tries > 5)
-			{// Reduce range check so that we never hit an endless loop...
-				divider++;
-				tries = 0;
-			}
-
-			if (Distance(gWPArray[choice]->origin, gWPArray[from]->origin) <= IGNORE_RANGE / divider
-				|| Distance(gWPArray[choice]->origin, gWPArray[to]->origin) <= IGNORE_RANGE / divider)
-			{// Make sure this is not too close to my, or my target's location...
-				//trap->Print("Range %i. Divider %i. Tries %i.\n", IGNORE_RANGE / divider, divider, tries);
-				tries++;
-				continue;
-			}
-
-			IGNORE_AREA = choice;
-			IGNORE_RANGE /= divider;
-			break;
-		}
-	}
-#endif //__ALT_PATH_METHOD_3__
-
-	while (1)
-	{
-		if (numOpen != 0)																//if there are still items in the open list
-		{
-			//pop the top item off of the list
-			atNode = openlist[1];
-			list[atNode] = 2;															//put the node on the closed list so we don't check it again
-			numOpen--;
-			openlist[1] = openlist[numOpen + 1];										//move the last item in the list to the top position
-			v = 1;
-
-			//this while loop reorders the list so that the new lowest fcost is at the top again
-			while (1)
+			if (numOpen != 0)																//if there are still items in the open list
 			{
-				u = v;
-				if ((2 * u + 1) < numOpen)											//if both children exist
-				{
-					if (fcost[openlist[u]] >= fcost[openlist[2 * u]])
-					{
-						v = 2 * u;
-					}
+				//pop the top item off of the list
+				atNode = openlist[1];
+				list[atNode] = 2;															//put the node on the closed list so we don't check it again
+				numOpen--;
+				openlist[1] = openlist[numOpen + 1];										//move the last item in the list to the top position
+				v = 1;
 
-					if (fcost[openlist[v]] >= fcost[openlist[2 * u + 1]])
-					{
-						v = 2 * u + 1;
-					}
-				}
-				else
+				//this while loop reorders the list so that the new lowest fcost is at the top again
+				while (1)
 				{
-					if ((2 * u) < numOpen)											//if only one child exists
+					u = v;
+					if ((2 * u + 1) < numOpen)											//if both children exist
 					{
 						if (fcost[openlist[u]] >= fcost[openlist[2 * u]])
 						{
 							v = 2 * u;
 						}
+
+						if (fcost[openlist[v]] >= fcost[openlist[2 * u + 1]])
+						{
+							v = 2 * u + 1;
+						}
 					}
-				}
-
-				if (u != v)															//if they're out of order, swap this item with its parent
-				{
-					temp = openlist[u];
-					openlist[u] = openlist[v];
-					openlist[v] = temp;
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			for (i = 0; i < gWPArray[atNode]->neighbornum && i < MAX_NODELINKS; i++)								//loop through all the links for this node
-			{
-				newnode = gWPArray[atNode]->neighbors[i].num;
-
-				if (newnode >= gWPNum)
-					continue;
-
-				if (newnode < 0)
-					continue;
-
-				if (list[newnode] == 2)
-				{																		//if this node is on the closed list, skip it
-					continue;
-				}
-
-#ifdef __ALT_PATH_METHOD_1__
-				if (altPath)
-				{// Doing an alt path. Check this waypoint is not too close to a marked random location...
-					int			badWP = 0;
-					qboolean	bad = qfalse;
-
-					for (badWP = 0; badWP < IGNORE_AREAS_NUM; badWP++)
+					else
 					{
-						if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREAS[bad]]->origin) <= 384/*256*/)
-						{// Too close to bad location...
-							bad = qtrue;
-							break;
+						if ((2 * u) < numOpen)											//if only one child exists
+						{
+							if (fcost[openlist[u]] >= fcost[openlist[2 * u]])
+							{
+								v = 2 * u;
+							}
 						}
 					}
 
-					if (bad)
-					{// This wp is too close to a marked bad location. Ignore it...
-						continue;
+					if (u != v)															//if they're out of order, swap this item with its parent
+					{
+						temp = openlist[u];
+						openlist[u] = openlist[v];
+						openlist[v] = temp;
+					}
+					else
+					{
+						break;
 					}
 				}
+
+				for (i = 0; i < gWPArray[atNode]->neighbornum && i < MAX_NODELINKS; i++)								//loop through all the links for this node
+				{
+					newnode = gWPArray[atNode]->neighbors[i].num;
+
+					if (newnode >= gWPNum)
+						continue;
+
+					if (newnode < 0)
+						continue;
+
+					if (list[newnode] == 2)
+					{																		//if this node is on the closed list, skip it
+						continue;
+					}
+
+#ifdef __ALT_PATH_METHOD_1__
+					if (altPath)
+					{// Doing an alt path. Check this waypoint is not too close to a marked random location...
+						int			badWP = 0;
+						qboolean	bad = qfalse;
+
+						for (badWP = 0; badWP < IGNORE_AREAS_NUM; badWP++)
+						{
+							if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREAS[bad]]->origin) <= 384/*256*/)
+							{// Too close to bad location...
+								bad = qtrue;
+								break;
+							}
+						}
+
+						if (bad)
+						{// This wp is too close to a marked bad location. Ignore it...
+							continue;
+						}
+					}
 #endif //__ALT_PATH_METHOD_1__
 
 #ifdef __ALT_PATH_METHOD_3__
-				if (altPath)
-				{// Doing an alt path. Check this waypoint is not too close to a marked random location...
-					if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREA]->origin) <= IGNORE_RANGE)
-					{// Too close to bad location...
-						continue;
+					if (altPath)
+					{// Doing an alt path. Check this waypoint is not too close to a marked random location...
+						if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREA]->origin) <= IGNORE_RANGE)
+						{// Too close to bad location...
+							continue;
+						}
 					}
-				}
 #endif //__ALT_PATH_METHOD_3__
 
-				if (list[newnode] != 1)												//if this node is not already on the open list
-				{
-					openlist[++numOpen] = newnode;										//add the new node to the open list
-					list[newnode] = 1;
-					parent[newnode] = atNode;											//record the node's parent
+					if (list[newnode] != 1)												//if this node is not already on the open list
+					{
+						openlist[++numOpen] = newnode;										//add the new node to the open list
+						list[newnode] = 1;
+						parent[newnode] = atNode;											//record the node's parent
 
-					if (newnode == to)
-					{																	//if we've found the goal, don't keep computing paths!
-						break;															//this will break the 'for' and go all the way to 'if (list[to] == 1)'
-					}
+						if (newnode == to)
+						{																	//if we've found the goal, don't keep computing paths!
+							break;															//this will break the 'for' and go all the way to 'if (list[to] == 1)'
+						}
 
 #ifdef __ALT_PATH_METHOD_2__
-					if (altPath)
-					{// Let's try simply adding random multiplier to costs...
-						if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
-							fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3,5);	//store it's f cost value
-						else
-							fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1,3);	//store it's f cost value
-					}
-					else
-#endif //__ALT_PATH_METHOD_2__
-					fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);	//store it's f cost value
-					
-					/*if (fcost[newnode] <= 0 && newnode != from)
-					{
-						trap->Print("ASTAR WARNING: Missing fcost for node %i. This should not happen!\n", newnode);
-					}*/
-
-					//this loop re-orders the heap so that the lowest fcost is at the top
-					m = numOpen;
-
-					while (m != 1)													//while this item isn't at the top of the heap already
-					{
-						if (fcost[openlist[m]] <= fcost[openlist[m / 2]])				//if it has a lower fcost than its parent
-						{
-							temp = openlist[m / 2];
-							openlist[m / 2] = openlist[m];
-							openlist[m] = temp;											//swap them
-							m /= 2;
+						if (altPath)
+						{// Let's try simply adding random multiplier to costs...
+							if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
+								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3, 5);	//store it's f cost value
+							else
+								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1, 3);	//store it's f cost value
 						}
 						else
-						{
-							break;
-						}
-					}
-				}
-				else										//if this node is already on the open list
-				{
-					gc = gcost[atNode];
-
-					if (gWPArray[atNode]->neighbors[i].cost > 0)// && gWPArray[atNode]->neighbors[i].cost < 32768/*9999*/)
-					{// UQ1: Already have a cost value, skip the calculations!
-						gc += gWPArray[atNode]->neighbors[i].cost;
-					}
-					else
-					{
-						vec3_t	vec;
-
-						VectorSubtract(gWPArray[newnode]->origin, gWPArray[atNode]->origin, vec);
-						gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
-						gWPArray[atNode]->neighbors[i].cost = VectorLength(vec);
-
-						if (gWPArray[atNode]->neighbors[i].forceJumpTo > 0)
-							gWPArray[atNode]->neighbors[i].cost *= 5.0;
-
-						//trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
-					}
-
-#ifdef __ALT_PATH_METHOD_2__
-					if (altPath)
-					{// Let's try simply adding random multiplier to costs...
-						if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
-							gc *= irand(8,10);	//store it's f cost value
-						else
-							gc *= irand(1,10);	//store it's f cost value
-					}
 #endif //__ALT_PATH_METHOD_2__
+							fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);	//store it's f cost value
 
-					if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
-					{
-						parent[newnode] = atNode;			//set the new parent for this node
-						gcost[newnode] = gc;				//and the new g cost
-
-						for (j = 1; j < numOpen; j++)		//loop through all the items on the open list
-						{
-							if (openlist[j] == newnode)	//find this node in the list
+							/*if (fcost[newnode] <= 0 && newnode != from)
 							{
-								//calculate the new fcost and store it
+								trap->Print("ASTAR WARNING: Missing fcost for node %i. This should not happen!\n", newnode);
+							}*/
+
+							//this loop re-orders the heap so that the lowest fcost is at the top
+						m = numOpen;
+
+						while (m != 1)													//while this item isn't at the top of the heap already
+						{
+							if (fcost[openlist[m]] <= fcost[openlist[m / 2]])				//if it has a lower fcost than its parent
+							{
+								temp = openlist[m / 2];
+								openlist[m / 2] = openlist[m];
+								openlist[m] = temp;											//swap them
+								m /= 2;
+							}
+							else
+							{
+								break;
+							}
+						}
+					}
+					else										//if this node is already on the open list
+					{
+						gc = gcost[atNode];
+
+						if (gWPArray[atNode]->neighbors[i].cost > 0)// && gWPArray[atNode]->neighbors[i].cost < 32768/*9999*/)
+						{// UQ1: Already have a cost value, skip the calculations!
+							gc += gWPArray[atNode]->neighbors[i].cost;
+						}
+						else
+						{
+							vec3_t	vec;
+
+							VectorSubtract(gWPArray[newnode]->origin, gWPArray[atNode]->origin, vec);
+							gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
+							gWPArray[atNode]->neighbors[i].cost = VectorLength(vec);
+
+							if (gWPArray[atNode]->neighbors[i].forceJumpTo > 0)
+								gWPArray[atNode]->neighbors[i].cost *= 5.0;
+
+							//trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
+						}
+
 #ifdef __ALT_PATH_METHOD_2__
-								if (altPath)
-								{// Let's try simply adding random multiplier to costs...
-									if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
-										fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3,5);	//store it's f cost value
-									else
-										fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1,3);	//store it's f cost value
-								}
-								else
+						if (altPath)
+						{// Let's try simply adding random multiplier to costs...
+							if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
+								gc *= irand(8, 10);	//store it's f cost value
+							else
+								gc *= irand(1, 10);	//store it's f cost value
+						}
 #endif //__ALT_PATH_METHOD_2__
-								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);
 
-								//reorder the list again, with the lowest fcost item on top
-								m = j;
+						if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
+						{
+							parent[newnode] = atNode;			//set the new parent for this node
+							gcost[newnode] = gc;				//and the new g cost
 
-								while (m != 1)
+							for (j = 1; j < numOpen; j++)		//loop through all the items on the open list
+							{
+								if (openlist[j] == newnode)	//find this node in the list
 								{
-									if (fcost[openlist[m]] < fcost[openlist[m / 2]])	//if the item has a lower fcost than it's parent
-									{
-										temp = openlist[m / 2];
-										openlist[m / 2] = openlist[m];
-										openlist[m] = temp;								//swap them
-										m /= 2;
+									//calculate the new fcost and store it
+#ifdef __ALT_PATH_METHOD_2__
+									if (altPath)
+									{// Let's try simply adding random multiplier to costs...
+										if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
+											fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3, 5);	//store it's f cost value
+										else
+											fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1, 3);	//store it's f cost value
 									}
 									else
-									{
-										break;
-									}
-								}
-								break;													//exit the 'for' loop because we already changed this node
-							}															//if
-						}																//for
-					}											//if (gc < gcost[newnode])
-				}												//if (list[newnode] != 1) --> else
-			}													//for (loop through links)
-		}														//if (numOpen != 0)
-		else
-		{
-			found = qfalse;										//there is no path between these nodes
-			break;
-		}
+#endif //__ALT_PATH_METHOD_2__
+										fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);
 
-		if (list[to] == 1)									//if the destination node is on the open list, we're done
-		{
-			found = qtrue;
-			break;
-		}
-	}															//while (1)
+									//reorder the list again, with the lowest fcost item on top
+									m = j;
+
+									while (m != 1)
+									{
+										if (fcost[openlist[m]] < fcost[openlist[m / 2]])	//if the item has a lower fcost than it's parent
+										{
+											temp = openlist[m / 2];
+											openlist[m / 2] = openlist[m];
+											openlist[m] = temp;								//swap them
+											m /= 2;
+										}
+										else
+										{
+											break;
+										}
+									}
+									break;													//exit the 'for' loop because we already changed this node
+								}															//if
+							}																//for
+						}											//if (gc < gcost[newnode])
+					}												//if (list[newnode] != 1) --> else
+				}													//for (loop through links)
+			}														//if (numOpen != 0)
+			else
+			{
+				found = qfalse;										//there is no path between these nodes
+				break;
+			}
+
+			if (list[to] == 1)									//if the destination node is on the open list, we're done
+			{
+				found = qtrue;
+				break;
+			}
+		}															//while (1)
+	}
 
 	if (found == qtrue)							//if we found a path, and are trying to store the pathlist...
 	{
