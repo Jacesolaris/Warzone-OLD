@@ -3043,54 +3043,56 @@ int CheckArmor (gentity_t *ent, int damage, int dflags)
 }
 
 
-void G_ApplyKnockback( gentity_t *targ, vec3_t newDir, float knockback )
+//[NewSaberSys]
+void G_ApplyKnockback(gentity_t *targ, vec3_t newDir, float knockback)
 {
 	vec3_t	kvel;
 	float	mass;
 
-	if ( targ->physicsBounce > 0 )	//overide the mass
+	if (targ->physicsBounce > 0)	//overide the mass
 		mass = targ->physicsBounce;
 	else
 		mass = 200;
 
-	if ( g_gravity.value > 0 )
+	if (g_gravity.value > 0)
 	{
-		VectorScale( newDir, g_knockback.value * (float)knockback / mass * 0.8, kvel );
-		kvel[2] = newDir[2] * g_knockback.value * (float)knockback / mass * 1.5;
+		VectorScale(newDir, (float)KNOCKBACKDISTEN * (float)knockback / mass * 0.8, kvel);
+		kvel[2] = newDir[2] * (float)KNOCKBACKDISTEN * (float)knockback / mass * 1.5;
 	}
 	else
 	{
-		VectorScale( newDir, g_knockback.value * (float)knockback / mass, kvel );
+		VectorScale(newDir, (float)KNOCKBACKDISTEN * (float)knockback / mass, kvel);
 	}
 
-	if ( targ->client )
+	if (targ->client)
 	{
-		VectorAdd( targ->client->ps.velocity, kvel, targ->client->ps.velocity );
+		VectorAdd(targ->client->ps.velocity, kvel, targ->client->ps.velocity);
 	}
-	else if ( targ->s.pos.trType != TR_STATIONARY && targ->s.pos.trType != TR_LINEAR_STOP && targ->s.pos.trType != TR_NONLINEAR_STOP )
+	else if (targ->s.pos.trType != TR_STATIONARY && targ->s.pos.trType != TR_LINEAR_STOP && targ->s.pos.trType != TR_NONLINEAR_STOP)
 	{
-		VectorAdd( targ->s.pos.trDelta, kvel, targ->s.pos.trDelta );
-		VectorCopy( targ->r.currentOrigin, targ->s.pos.trBase );
+		VectorAdd(targ->s.pos.trDelta, kvel, targ->s.pos.trDelta);
+		VectorCopy(targ->r.currentOrigin, targ->s.pos.trBase);
 		targ->s.pos.trTime = level.time;
 	}
 
 	// set the timer so that the other client can't cancel
 	// out the movement immediately
-	if ( targ->client && !targ->client->ps.pm_time )
+	if (targ->client && !targ->client->ps.pm_time)
 	{
 		int		t;
 
 		t = knockback * 2;
-		if ( t < 50 ) {
+		if (t < 50) {
 			t = 50;
 		}
-		if ( t > 200 ) {
+		if (t > 200) {
 			t = 200;
 		}
 		targ->client->ps.pm_time = t;
 		targ->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 	}
 }
+//[/NewSaberSys]
 
 /*
 ================
@@ -4272,7 +4274,12 @@ void G_CheckForDismemberment(gentity_t *ent, gentity_t *enemy, vec3_t point, int
 	}
 	else
 	{
-		if (d_saberGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time)
+		//[BUGFIX12]
+		if (d_saberGhoul2Collision.integer && ent->client
+			&& ent->client->g2LastSurfaceTime == level.time
+			&& ent->client->g2LastSurfaceModel == G2MODEL_PLAYER)
+		//if (d_saberGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time)
+		//[/BUGFIX12]
 		{
 			char hitSurface[MAX_QPATH];
 
@@ -4439,8 +4446,17 @@ void G_LocationBasedDamageModifier(gentity_t *ent, vec3_t point, int mod, int df
 		return;
 	}
 
-	if ((d_saberGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time && mod == MOD_SABER) || //using ghoul2 collision? Then if the mod is a saber we should have surface data from the last hit (unless thrown).
-		(d_projectileGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time)) //It's safe to assume we died from the projectile that just set our surface index. So, go ahead and use that as the surf I guess.
+	//[BugFix12]
+	if ((d_saberGhoul2Collision.integer && ent->client
+		&& ent->client->g2LastSurfaceTime == level.time
+		&& ent->client->g2LastSurfaceModel == G2MODEL_PLAYER
+		&& mod == MOD_SABER) || //using ghoul2 collision? Then if the mod is a saber we should have surface data from the last hit (unless thrown).
+		(d_projectileGhoul2Collision.integer
+		&& ent->client && ent->client->g2LastSurfaceModel == G2MODEL_PLAYER
+		&& ent->client->g2LastSurfaceTime == level.time)) //It's safe to assume we died from the projectile that just set our surface index. So, go ahead and use that as the surf I guess.
+		//if ((d_saberGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time && mod == MOD_SABER) || //using ghoul2 collision? Then if the mod is a saber we should have surface data from the last hit (unless thrown).
+		//	(d_projectileGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time)) //It's safe to assume we died from the projectile that just set our surface index. So, go ahead and use that as the surf I guess.
+		//[/BugFix12]
 	{
 		char hitSurface[MAX_QPATH];
 
@@ -5243,7 +5259,13 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 			}
 			if ( targ->m_pVehicle->m_pVehicleInfo->type == VH_FIGHTER )
 			{//get the last surf that was hit
-				if ( targ->client && targ->client->g2LastSurfaceTime == level.time)
+				//[BugFix12]
+				//racc - I'm still adding in the model index check incase there's another
+				//model attached (like a pilot or something
+				if (targ->client && targ->client->g2LastSurfaceModel == G2MODEL_PLAYER
+					&& targ->client->g2LastSurfaceTime == level.time)
+				//if ( targ->client && targ->client->g2LastSurfaceTime == level.time)
+				//[/BugFix12]
 				{
 					char hitSurface[MAX_QPATH];
 
@@ -5701,7 +5723,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 
 		//We want to go ahead and set gPainHitLoc regardless of if we have a pain func,
 		//so we can adjust the location damage too.
-		if (targ->client && targ->ghoul2 && targ->client->g2LastSurfaceTime == level.time)
+		//[BugFix12]
+		if (targ->client && targ->ghoul2 && targ->client->g2LastSurfaceModel == G2MODEL_PLAYER
+			&& targ->client->g2LastSurfaceTime == level.time)
+		//if (targ->client && targ->ghoul2 && targ->client->g2LastSurfaceTime == level.time)
+		//[/BugFix12]
 		{ //We updated the hit surface this frame, so it's valid.
 			char hitSurface[MAX_QPATH];
 

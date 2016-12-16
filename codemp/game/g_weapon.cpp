@@ -812,6 +812,9 @@ static void WP_DisruptorMainFire(gentity_t *ent)
 			{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
 				traceEnt->client->g2LastSurfaceHit = tr.surfaceFlags;
 				traceEnt->client->g2LastSurfaceTime = level.time;
+				//[BugFix12]
+				traceEnt->client->g2LastSurfaceModel = G2MODEL_PLAYER;
+				//[/BugFix12]
 				tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
 			}
 		}
@@ -834,7 +837,9 @@ static void WP_DisruptorMainFire(gentity_t *ent)
 		}
 		else if (traceEnt && traceEnt->client && traceEnt->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] >= FORCE_LEVEL_3)
 		{
-			if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
+			//if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
+			if (WP_SaberCanBlock(ent, traceEnt, tr.endpos, ent->r.currentOrigin,
+				0, MOD_DISRUPTOR, qtrue, damage, qfalse))
 			{ //broadcast and stop the shot because it was blocked
 				gentity_t *te = NULL;
 
@@ -1047,7 +1052,9 @@ void WP_DisruptorAltFire(gentity_t *ent)
 		}
 		else if (traceEnt && traceEnt->client && traceEnt->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] >= FORCE_LEVEL_3)
 		{
-			if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR_SNIPER, qtrue, 0))
+			//if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
+			if (WP_SaberCanBlock(ent, traceEnt, tr.endpos, ent->r.currentOrigin,
+				0, MOD_DISRUPTOR, qtrue, damage, qfalse))
 			{ //broadcast and stop the shot because it was blocked
 				gentity_t *te = NULL;
 
@@ -4277,14 +4284,14 @@ void WP_FireMelee(gentity_t *ent, qboolean alt_fire)
 	else if (ent->s.eType == ET_PLAYER
 		&& ent->s.weapon != WP_SABER
 		&& ent->client
-		&& (ent->client->pers.cmd.buttons & BUTTON_BLOCK))
+		&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
 	{// UQ1: Added... At close range players can hit you with their rifle butt...
 
 	}
 	else if (ent->s.eType == ET_PLAYER
 		&& ent->s.weapon != WP_SABER
 		&& ent->client
-		&& (ent->client->pers.cmd.buttons & BUTTON_DODGE))
+		&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
 	{// UQ1: Added... At close range players can kick you...
 
 	}
@@ -5548,7 +5555,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		else if (ent->s.eType == ET_PLAYER
 			&& ent->s.weapon != WP_SABER
 			&& ent->client
-			&& (ent->client->pers.cmd.buttons & BUTTON_BLOCK))
+			&& (ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 		{// UQ1: Added... At close range players can hit you with their rifle butt...
 			WP_FireMelee(ent, qfalse);
 			return;
@@ -5556,7 +5563,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		else if (ent->s.eType == ET_PLAYER
 			&& ent->s.weapon != WP_SABER
 			&& ent->client
-			&& (ent->client->pers.cmd.buttons & BUTTON_DODGE))
+			&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON1))
 		{// UQ1: Added... At close range players can kick you...
 			WP_FireMelee(ent, qtrue);
 			return;

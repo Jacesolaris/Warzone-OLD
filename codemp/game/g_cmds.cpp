@@ -3135,7 +3135,7 @@ void Cmd_EngageDuel_f(gentity_t *ent)
 }
 
 #ifndef FINAL_BUILD
-extern stringID_table_t animTable[MAX_ANIMATIONS+1];
+extern stringID_table_t animTable[MAX_ANIMATIONS + 1];
 
 void Cmd_DebugSetSaberMove_f(gentity_t *self)
 {
@@ -3147,7 +3147,7 @@ void Cmd_DebugSetSaberMove_f(gentity_t *self)
 		return;
 	}
 
-	trap->Argv( 1, arg, sizeof( arg ) );
+	trap->Argv(1, arg, sizeof(arg));
 
 	if (!arg[0])
 	{
@@ -3159,10 +3159,10 @@ void Cmd_DebugSetSaberMove_f(gentity_t *self)
 
 	if (self->client->ps.saberMove >= LS_MOVE_MAX)
 	{
-		self->client->ps.saberMove = LS_MOVE_MAX-1;
+		self->client->ps.saberMove = LS_MOVE_MAX - 1;
 	}
 
-	Com_Printf("Anim for move: %s\n", animTable[saberMoveData/*[self->client->ps.saberMoveStyle]*/[self->client->ps.saberMove].animToUse].name);
+	Com_Printf("Anim for move: %s\n", animTable[saberMoveData[self->client->ps.saberMove].animToUse].name);
 }
 
 void Cmd_DebugSetBodyAnim_f(gentity_t *self)
@@ -3176,7 +3176,7 @@ void Cmd_DebugSetBodyAnim_f(gentity_t *self)
 		return;
 	}
 
-	trap->Argv( 1, arg, sizeof( arg ) );
+	trap->Argv(1, arg, sizeof(arg));
 
 	if (!arg[0])
 	{
@@ -3198,7 +3198,7 @@ void Cmd_DebugSetBodyAnim_f(gentity_t *self)
 		return;
 	}
 
-	G_SetAnim(self, NULL, SETANIM_BOTH, i, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0);
+	G_SetAnim(self, NULL, SETANIM_BOTH, i, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
 
 	Com_Printf("Set body anim to %s\n", arg);
 }

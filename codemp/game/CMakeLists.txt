@@ -151,6 +151,7 @@ set(MPGameGameFiles
 	"${MPDir}/game/tri_coll_test.cpp"
 	"${MPDir}/game/w_force.cpp"
 	"${MPDir}/game/w_saber.cpp"
+	"${MPDir}/game/w_saberblock.cpp"
 	"${MPDir}/game/anims.h"
 	"${MPDir}/game/b_local.h"
 	"${MPDir}/game/b_public.h"

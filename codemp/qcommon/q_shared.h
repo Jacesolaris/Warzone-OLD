@@ -2032,9 +2032,9 @@ typedef struct siegePers_s
 
 #define BUTTON_FORCE_DRAIN		2048
 
-#define BUTTON_SABERTHROW       4096        //+button12
-#define BUTTON_DODGE            8192        //+button13
-#define BUTTON_BLOCK			16384		//+button14
+#define BUTTON_SABERTHROW       4096        //+button12			//+button12 //Also a small force use button for repulse
+#define BUTTON_SPECIALBUTTON1   8192        //+button13			//+button13 Slap Button
+#define BUTTON_SPECIALBUTTON2	16384		//+button14			//+button14 Block Button
 
 // Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
 // I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.
@@ -2489,6 +2489,9 @@ float flrand(float min, float max);
 int irand(int min, int max);
 int Q_irand(int value1, int value2);
 uint32_t irand_big(uint32_t a, uint32_t b);
+//[SaberSys]
+float VectorDistances(vec3_t v1, vec3_t v2);
+//[/SaberSys]
 
 /*
 Ghoul2 Insert Start

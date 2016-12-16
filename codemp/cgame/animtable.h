@@ -743,6 +743,8 @@ stringID_table_t animTable [MAX_ANIMATIONS+1] =
 	ENUM2STRING(BOTH_P1_S1_TL),	//# Block shot/saber top left
 	ENUM2STRING(BOTH_P1_S1_BL),	//# Block shot/saber bottom left
 	ENUM2STRING(BOTH_P1_S1_BR),	//# Block shot/saber bottom right
+	ENUM2STRING(BOTH_P1_S1_R),	//# Block shot/saber Bottom Right new.
+	ENUM2STRING(BOTH_P1_S1_L),	//# Block shot/saber Bottom Left new.
 	//Saber knockaway
 	ENUM2STRING(BOTH_K1_S1_T_),	//# knockaway saber top
 	ENUM2STRING(BOTH_K1_S1_TR),	//# knockaway saber top right

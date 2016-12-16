@@ -372,7 +372,12 @@ void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 G_MissileImpact
 ================
 */
+//[SaberSys]
+#ifdef __MISSILES_AUTO_PARRY__
 void WP_SaberBlockNonRandom(gentity_t *self, vec3_t hitloc, qboolean missileBlock);
+#endif // __MISSILES_AUTO_PARRY__
+extern int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum);
+//[/SaberSys]
 void WP_flechette_alt_blow(gentity_t *ent);
 void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	gentity_t		*other;
@@ -594,7 +599,8 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		ent->methodOfDeath != MOD_CONC_ALT &&
 		other->client->ps.saberBlockTime < level.time &&
 		!isKnockedSaber &&
-		WP_SaberCanBlock(other, ent->r.currentOrigin, 0, 0, qtrue, 0))
+		WP_SaberCanBlock(ent, other, ent->r.currentOrigin, ent->s.pos.trBase, 0, ent->methodOfDeath, qtrue, ent->damage, qfalse))
+		//WP_SaberCanBlock(other, ent->r.currentOrigin, 0, 0, qtrue, 0))
 	{ //only block one projectile per 200ms (to prevent giant swarms of projectiles being blocked)
 		vec3_t fwd;
 		gentity_t *te;
@@ -679,7 +685,13 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 			//WP_SaberCanBlock(otherOwner, ent->r.currentOrigin, 0, 0, qtrue, 0);
 			if (otherOwner->client && otherOwner->client->ps.weaponTime <= 0)
 			{
+				//[SaberSys]
+#ifdef __MISSILES_AUTO_PARRY__
 				WP_SaberBlockNonRandom(otherOwner, ent->r.currentOrigin, qtrue);
+#else
+				OJP_SaberCanBlock(other, ent, qfalse, trace->endpos, -1, -1);
+#endif //__MISSILES_AUTO_PARRY__
+				//[/SaberSys]
 			}
 
 			te = G_TempEntity(ent->r.currentOrigin, EV_SABER_BLOCK);

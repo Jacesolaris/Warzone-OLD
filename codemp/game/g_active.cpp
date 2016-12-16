@@ -1299,6 +1299,16 @@ qboolean G_ActionButtonPressed(int buttons)
 	{
 		return qtrue;
 	}
+	//[NewSaberSys]
+	else if (buttons & BUTTON_SPECIALBUTTON2)
+	{
+		return qtrue;
+	}
+	else if (buttons & BUTTON_SPECIALBUTTON1)
+	{
+		return qtrue;
+	}
+	//[/NewSaberSys]
 	else if (buttons & BUTTON_FORCEPOWER)
 	{
 		return qtrue;
@@ -2622,6 +2632,19 @@ void ClientThink_real( gentity_t *ent ) {
 			}
 		}
 	}
+
+	//[NewSaberSys]
+	if (ent->client->ps.groundEntityNum != ENTITYNUM_NONE &&
+		((ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) ||
+		(ent->client->pers.cmd.buttons & BUTTON_WALKING) ||
+			(ent->client->ps.pm_flags & PMF_DUCKED) ||
+			(!ent->client->pers.cmd.forwardmove &&
+				!ent->client->pers.cmd.rightmove &&
+				!ent->client->pers.cmd.upmove)))
+	{
+		/*return;*/
+	}
+	//[/NewSaberSys]
 
 	if (ent->client->ps.duelInProgress)
 	{

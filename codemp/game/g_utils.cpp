@@ -2298,3 +2298,13 @@ void GetAnglesForDirection( const vec3_t p1, const vec3_t p2, vec3_t out )
 	VectorSubtract( p2, p1, v );
 	vectoangles( v, out );
 }
+
+//[SaberSys]
+float VectorDistances(vec3_t v1, vec3_t v2)
+{//returns the distance between the two points.
+	vec3_t dir;
+
+	VectorSubtract(v2, v1, dir);
+	return VectorLength(dir);
+}
+//[/SaberSys]

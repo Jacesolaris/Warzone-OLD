@@ -17,6 +17,9 @@
 #define SES_LEAVING		1
 #define SES_HOVERING	1//2
 #define SES_RETURNING	1//3
+//[NewSaberSys]
+#define SES_DOWNED      4
+//[/NewSaberSys]
 //This is a hack because ATM the saberEntityState is only non-0 if out or 0 if in, and we
 //at least want NPCs knowing when their saber is out regardless.
 

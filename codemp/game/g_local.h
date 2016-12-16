@@ -38,12 +38,22 @@ extern vec3_t gPainPoint;
 //#define INFINITE			1000000
 //#endif
 
+//[SaberSys]
+//#define __MISSILES_AUTO_PARRY__
+//[/SaberSys]
+
 #define	FRAMETIME			100					// msec
 #define	CARNAGE_REWARD_TIME	3000
 #define REWARD_SPRITE_TIME	2000
 
 #define	INTERMISSION_DELAY_TIME	1000
 #define	SP_INTERMISSION_DELAY_TIME	5000
+
+//[NewSaberSys]
+#define MAX_KICKTRACKING_ENTS 10
+#define KNOCKBACKDISTEN		1000
+#define UNLIMITED_BOUNCES	-5
+//[/NewSaberSys]
 
 //primarily used by NPCs
 #define	START_TIME_LINK_ENTS		FRAMETIME*1 // time-delay after map start at which all ents have been spawned, so can link them
@@ -149,6 +159,33 @@ typedef enum
 	HL_GENERIC6,
 	HL_MAX
 } hitLocation_t;
+
+//[NewSaberSys]
+static qboolean saberDoClashEffect = qfalse;
+static vec3_t saberClashPos = { 0 };
+static vec3_t saberClashNorm = { 0 };
+static int saberClashEventParm = 1;
+static int saberClashOther = -1;  //the clientNum for the other player involved in the saber clash.
+static qboolean saberDoBodyHitEffect = qfalse;
+static vec3_t saberBodyHitPos = { 0 };
+static vec3_t saberBodyHitNorm = { 0 };
+static int saberBodyHitEventParm = 0;
+
+
+typedef enum
+{
+	BLOCKING_NONE = 0,
+	BLOCKING_LEFT,
+	BLOCKING_LEFT_TOP,
+	BLOCKING_TOP,
+	BLOCKING_RIGHT_TOP,
+	BLOCKING_RIGHT,
+	BLOCKING_RIGHT_DOWN,
+	BLOCKING_DOWN,
+	BLOCKING_LEFT_DOWN,
+	NUM_BLOCKING_DIRECTIONS
+} blockingDirection_t;
+//[/NewSaberSys]
 
 //[Linux]
 #ifndef __linux__
@@ -378,6 +415,10 @@ struct gentity_s {
 	gentity_t	*activator;
 	gentity_t	*teamchain;		// next entity in team
 	gentity_t	*teammaster;	// master of the team
+
+	//[NewSaberSys]
+	blockingDirection_t block_direction;
+	//[/NewSaberSys]
 
 	int			watertype;
 	int			waterlevel;
@@ -649,7 +690,11 @@ typedef struct renderInfo_s
 	vec3_t		headPoint;//Where your tag_head is
 	vec3_t		headAngles;//where the tag_head in the torso is pointing
 	vec3_t		handRPoint;//where your right hand is
+	//[NewSaberSys]
+	int			handRTime;
 	vec3_t		handLPoint;//where your left hand is
+	int			handLTime;
+	//[/NewSaberSys]
 	vec3_t		crotchPoint;//Where your crotch is
 	vec3_t		footRPoint;//where your right hand is
 	vec3_t		footLPoint;//where your left hand is
@@ -681,6 +726,15 @@ typedef struct renderInfo_s
 	int			boltValidityTime;
 } renderInfo_t;
 
+//[SaberSys]
+typedef struct
+{
+	int EntityNum;
+	int Debounce;
+	int SaberNum;
+	int BladeNum;
+}  sabimpact_t;
+//[/SaberSys]
 
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
@@ -774,7 +828,7 @@ struct gclient_s {
 	int			g2LastSurfaceTime; //time when the surface index was set (to make sure it's up to date)
 	//[BUGFIX12]
 	int			g2LastSurfaceModel; //the index of the model on the ghoul2 that was hit during the lastest hit.
-	//[BUGFIX12]
+	//[/BUGFIX12]
 	int			corrTime;
 
 	vec3_t		lastHeadAngles;
@@ -874,9 +928,11 @@ struct gclient_s {
 
 	int			tempSpectate; //time to force spectator mode
 
+	//[NewSaberSys]
 	//keep track of last person kicked and the time so we don't hit multiple times per kick
-	int			jediKickIndex;
+	int			jediKickIndex[MAX_KICKTRACKING_ENTS];
 	int			jediKickTime;
+	//[/NewSaberSys]
 
 	//special moves (designed for kyle boss npc, but useable by players in mp)
 	int			grappleIndex;
@@ -887,6 +943,33 @@ struct gclient_s {
 	int			noLightningTime;
 
 	unsigned	mGameFlags;
+
+	//[SaberSys]
+	//the SaberNum of the last enemy blade that you hit.
+	int			lastSaberCollided;
+	//the BladeNum of the last enemy blade that you hit.
+	int			lastBladeCollided;
+	sabimpact_t	sabimpact[MAX_SABERS][MAX_BLADES];
+	//[/SaberSys]
+
+	//[NewSaberSys]
+	int			nMBlockDeflect;
+	int			nMBlockDeflectCooldown;
+	int			nStaggerTime;
+	int			knockedDownBy;
+	int			nSlapKnockdownCooldownAfterPull;
+	vec3_t		cacheDir;
+	vec3_t		cacheEnd;
+	int			nMeleeCounterCooldown;
+	qboolean	meleeHit;	// True if the current melee move has impacted something
+	qboolean	hasShield;
+	int			nSaberMeleeDelay;
+	int			nSlickKnockdownCount; // For knocking people on their asses if they try to bunnyhop on slick surfaces.
+	int			nTauntSpamFloodProtect;
+	int			meditateStartTime;
+	int			nSaberLockMoveTimer;
+	int			nSaberLockDebounce;
+	//[/NewSaberSys]
 
 	//fallen duelist
 	qboolean	iAmALoser;
@@ -1551,8 +1634,13 @@ gentity_t *G_PreDefSound(vec3_t org, int pdSound);
 qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
-
-int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+//[NewSaberSys]
+qboolean WP_SaberCanBlock(gentity_t * atk, gentity_t *self, vec3_t point, vec3_t originpoint, int dflags, int mod, qboolean projectile, int attackStr, qboolean shotsaber);
+void saberKnockDown(gentity_t *saberent, gentity_t *saberOwner, gentity_t *other);
+void G_SaberPerformeBounce(gentity_t* self, gentity_t* other, qboolean bodyhit);
+qboolean WP_PlayerSaberAttack(gentity_t *self);
+//void G_CombatStuffTemp(gentity_t *ent);
+//[/NewSaberSys]
 
 void WP_SaberInitBladeData( gentity_t *ent );
 void WP_InitForcePowers( gentity_t *ent );
@@ -1572,6 +1660,9 @@ void ForceThrow( gentity_t *self, qboolean pull );
 void ForceTelepathy(gentity_t *self);
 qboolean Jedi_DodgeEvasion( gentity_t *self, gentity_t *shooter, trace_t *tr, int hitLoc );
 
+//[SaberSys]
+void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc, qboolean *didHit, qboolean otherHitSaberBlade);
+//[/SaberSys]
 // g_log.c
 void QDECL G_LogWeaponPickup(int client, int weaponid);
 void QDECL G_LogWeaponFire(int client, int weaponid);

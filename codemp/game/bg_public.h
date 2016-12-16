@@ -11,8 +11,6 @@
 #include "anims.h"
 #include "bg_vehicles.h"
 
-#define STYLE_MAX 7 // Max SP Anim Styles. MP used to use just 1.. lol. - DarkTide.
-
 #define GRENADE_MAX_CHARGE_TIME 5000
 
 //these two defs are shared now because we do clientside ent parsing
@@ -65,6 +63,10 @@
 #define	DEAD_VIEWHEIGHT		-16
 
 #define MAX_CLIENT_SCORE_SEND 20
+
+//[NewSaberSys]
+#define SP_MELEE_COOLDOWN 5000
+//[/NewSaberSys]
 
 //
 // config strings are a general means of communicating variable length strings
@@ -508,6 +510,11 @@ typedef struct pmove_s {
 	qboolean	gauntletHit;		// true if a gauntlet attack would actually hit something
 
 	int			framecount;
+
+	//[NewSaberSys]
+	// Melee tracking
+	qboolean	meleeHit;					// true if the last melee move hit something and so is comboable
+	//[/NewSaberSys]
 
 	// results (out)
 	int			numtouch;
@@ -1256,6 +1263,14 @@ qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 #define	MASK_OPAQUE				(CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_TERRAIN)
 #define	MASK_SHOT				(CONTENTS_SOLID|CONTENTS_BODY|CONTENTS_CORPSE|CONTENTS_TERRAIN)
 
+//[BUGFIX12]
+//as part of this fix I'm giving some defines for the ghoul2 model indexes.
+#define		G2MODEL_PLAYER				0
+#define		G2MODEL_INUSE_WEAPON1		1
+#define		G2MODEL_INUSE_WEAPON2		2
+#define		G2MODEL_JETPACK				3
+//[/BUGFIX12]
+
 
 // ET_FX States (stored in modelindex2)
 
@@ -1312,9 +1327,9 @@ typedef enum {
 
 typedef enum {
 	//totally invalid
-	LS_INVALID	= -1,
+	LS_INVALID = -1,
 	// Invalid, or saber not armed
-	LS_NONE		= 0,
+	LS_NONE = 0,
 
 	// General movements with saber
 	LS_READY,
@@ -1365,6 +1380,9 @@ typedef enum {
 	LS_KICK_B_AIR,
 	LS_KICK_R_AIR,
 	LS_KICK_L_AIR,
+	LS_JUMPKICK_F,
+	LS_SLIDE,
+	LS_LEGSWEEP,
 	LS_STABDOWN,
 	LS_STABDOWN_STAFF,
 	LS_STABDOWN_DUAL,
@@ -1380,6 +1398,7 @@ typedef enum {
 	LS_DUAL_FB,
 	LS_DUAL_LR,
 	LS_HILT_BASH,
+
 
 	//starts
 	LS_S_TL2BR,//26
@@ -1493,6 +1512,8 @@ typedef enum {
 	LS_PARRY_UL,
 	LS_PARRY_LR,
 	LS_PARRY_LL,
+	LS_PARRY_SLR,
+	LS_PARRY_SLL,
 
 	// Projectile Reflections
 	LS_REFLECT_UP,//
@@ -1502,7 +1523,8 @@ typedef enum {
 	LS_REFLECT_LL,
 
 	LS_MOVE_MAX//
-} saberMoveName_t;
+};
+typedef int saberMoveName_t;
 
 typedef enum {
 	Q_BR,
@@ -1513,6 +1535,10 @@ typedef enum {
 	Q_L,
 	Q_BL,
 	Q_B,
+	Q_SR,
+	Q_SL,
+	Q_SBL,
+	Q_SBR,
 	Q_NUM_QUADS
 } saberQuadrant_t;
 
@@ -1529,8 +1555,6 @@ typedef struct saberMoveData_s {
 	int trailLength;
 } saberMoveData_t;
 extern saberMoveData_t	saberMoveData[LS_MOVE_MAX];
-
-//extern saberMoveData_t	saberMoveData[STYLE_MAX][LS_MOVE_MAX];
 
 
 typedef enum saberType_e {
@@ -1775,6 +1799,22 @@ qboolean BG_InSaberLock( int anim );
 //[SaberSys]
 qboolean BG_InWalk(int anim);
 //[/SaberSys]
+
+//[NewSaberSys]
+qboolean BG_InKnockDownOnGround(playerState_t *ps);
+qboolean BG_LongLeapAnim(int anim);
+qboolean BG_RegularKickingAnim(int anim);
+qboolean BG_InDashMove(int anim);
+qboolean BG_AirKickAnim(int anim);
+qboolean BG_PunchAnim(int anim);
+qboolean PM_DoKick(void); //pm function for performing kicks
+qboolean BG_SaberMeleePowerCheck(int forcepower);
+qboolean BG_InKnockDown(int anim);
+qboolean BG_InKnockDownOnly(int anim);
+qboolean BG_BlockAnim(int anim);
+qboolean BG_BounceAnim(int anim);
+qboolean BG_InSlopeAnim(int anim);
+//[/NewSaberSys]
 
 void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
 

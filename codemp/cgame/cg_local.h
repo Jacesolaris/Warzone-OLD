@@ -166,6 +166,9 @@ typedef struct playerEntity_s {
 	float			barrelAngle;
 	int				barrelTime;
 	qboolean		barrelSpinning;
+	//[NewSaberSys]
+	qboolean		meleeHit;
+	//[/NewSaberSys]
 } playerEntity_t;
 
 typedef struct debuffVisualsData_s

@@ -77,7 +77,10 @@ qboolean PM_InRollComplete( playerState_t *ps, int anim );
 
 int PM_AnimLength( int index, animNumber_t anim );
 
-int PM_GetSaberStance(void);
+//[NewSaberSys]
+//int PM_GetSaberStance(void);
+int PM_GetSaberStance();
+//[/NewSaberSys]
 float PM_GroundDistance(void);
 qboolean PM_SomeoneInFront(trace_t *tr);
 saberMoveName_t PM_SaberFlipOverAttackMove(void);
@@ -105,4 +108,23 @@ void PM_SetSaberMove(short newMove);
 void PM_SetForceJumpZStart(float value);
 
 void BG_CycleInven(playerState_t *ps, int direction);
-qboolean PM_Stagger(int anim);
+
+//[Melee]
+qboolean PM_DoKick(void); //pm function for performing kicks
+//[/Melee]
+
+ //[NewSaberSys]
+qboolean PM_InGetUpAnimation(int anim);
+qboolean PM_StaggerAnim(int anim);
+qboolean BG_InKnockDown(int anim);
+qboolean BG_SuperBreakWinAnim(int anim);
+qboolean BG_InGetUpAnim(playerState_t *ps);
+//[/NewSaberSys]
+
+//[SaberSys]
+//for now, I've dramatically reduced the cost of the saber special moves to
+//racc - force cost of doing cartwheels.
+#define SABER_ALT_ATTACK_POWER		50//75?
+#define SABER_ALT_ATTACK_POWER_LR	10//30?
+#define SABER_ALT_ATTACK_POWER_FB	25//30/50?
+//[/SaberSys]

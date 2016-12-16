@@ -45,6 +45,13 @@ char	*cg_customSoundNames[MAX_CUSTOM_SOUNDS] = {
 	"*gasp",
 	"*land1",
 	"*taunt",
+	//[SaberSys]
+	//moved these sounds in the default combat sounds so that players can make grunt sounds when
+	//stunned, slow bounced, etc.
+	"*pushed1",	//Say when force-pushed
+	"*pushed2",
+	"*pushed3",
+	//[/SaberSys]
 	NULL
 };
 
@@ -62,9 +69,15 @@ const char	*cg_customCombatSoundNames[MAX_CUSTOM_COMBAT_SOUNDS] =
 	"*confuse1",	//Say when confused
 	"*confuse2",
 	"*confuse3",
+	//[SaberSys]
+	//moved these sounds in the default combat sounds so that players can make grunt sounds when
+	//stunned, slow bounced, etc.
+	/*
 	"*pushed1",	//Say when force-pushed
 	"*pushed2",
 	"*pushed3",
+	*/
+	//[/SaberSys]
 	"*choke1",
 	"*choke2",
 	"*choke3",
@@ -12847,32 +12860,6 @@ float GetSelfTorsoAnimPoint(void)
 {
 	//[BugFix2]
 	return BG_GetTorsoAnimPoint(&cg.predictedPlayerState, cg_entities[cg.predictedPlayerState.clientNum].localAnimIndex);
-
-	/*
-	int animindex = cg_entities[cg.predictedPlayerState.clientNum].localAnimIndex;
-	int speedDif = 0;
-	float attackAnimLength = bgAllAnims[animindex].anims[cg.predictedPlayerState.torsoAnim].numFrames * fabs(bgAllAnims[animindex].anims[cg.predictedPlayerState.torsoAnim].frameLerp);
-	float currentPoint = 0;
-	float animSpeedFactor = 1.0f;
-	float animPercentage = 0;
-
-	//Be sure to scale by the proper anim speed just as if we were going to play the animation
-
-	//[FatigueSys]
-	BG_SaberStartTransAnim(cg.predictedPlayerState.clientNum, cg.predictedPlayerState.fd.saberAnimLevel, cg.predictedPlayerState.weapon, cg.predictedPlayerState.torsoAnim, &animSpeedFactor, cg.predictedPlayerState.brokenLimbs, cg_entities[cg.predictedPlayerState.clientNum].currentState.userInt3);
-	//BG_SaberStartTransAnim(cg.predictedPlayerState.clientNum, cg.predictedPlayerState.fd.saberAnimLevel, cg.predictedPlayerState.weapon, cg.predictedPlayerState.torsoAnim, &animSpeedFactor, cg.predictedPlayerState.brokenLimbs);
-	//[/FatigueSys]
-	speedDif = attackAnimLength - (attackAnimLength * animSpeedFactor);
-	attackAnimLength += speedDif;
-
-	currentPoint = cg.predictedPlayerState.torsoTimer;
-
-	animPercentage = currentPoint/attackAnimLength;
-
-	//Com_Printf("Torso Animation Float Percentage: %f\n", animPercentage);
-
-	return animPercentage;
-	*/
 	//[/BugFix2]
 }
 
