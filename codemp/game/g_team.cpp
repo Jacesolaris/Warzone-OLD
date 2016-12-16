@@ -179,7 +179,7 @@ void AddTeamScore(vec3_t origin, int team, int score) {
 	level.teamScores[ team ] += score;
 }
 
-extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
 extern qboolean NPC_IsCivilian(gentity_t *NPC);
 extern qboolean NPC_IsVendor(gentity_t *NPC);
 extern qboolean NPC_IsAnimalEnemyFaction ( gentity_t *self );

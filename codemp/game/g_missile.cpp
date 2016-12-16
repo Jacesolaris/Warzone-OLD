@@ -281,7 +281,7 @@ void G_RunStuckMissile( gentity_t *ent )
 		}
 	}
 	// check think function
-	G_RunThink( ent );
+	G_RunThink( ent, qfalse);
 }
 
 /*
@@ -1051,7 +1051,7 @@ void G_RunMissile(gentity_t *ent) {
 
 			if ((ent->s.weapon == WP_SABER && ent->isSaberEntity) || isKnockedSaber)
 			{
-				G_RunThink(ent);
+				G_RunThink(ent, qfalse);
 				return;
 			}
 			else if (ent->s.weapon != G2_MODEL_PART)
@@ -1119,7 +1119,7 @@ passthrough:
 	}
 
 	// check think function after bouncing
-	G_RunThink(ent);
+	G_RunThink(ent, qfalse);
 }
 
 

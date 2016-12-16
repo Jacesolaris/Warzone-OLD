@@ -3145,7 +3145,7 @@ void G_RunItem( gentity_t *ent ) {
 
 	if ( ent->s.pos.trType == TR_STATIONARY ) {
 		// check think function
-		G_RunThink( ent );
+		G_RunThink( ent, qfalse );
 		return;
 	}
 
@@ -3170,7 +3170,7 @@ void G_RunItem( gentity_t *ent ) {
 	trap->LinkEntity( (sharedEntity_t *)ent );	// FIXME: avoid this for stationary?
 
 	// check think function
-	G_RunThink( ent );
+	G_RunThink( ent, qfalse );
 
 	if ( tr.fraction == 1 ) {
 		return;

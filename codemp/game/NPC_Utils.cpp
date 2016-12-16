@@ -1100,7 +1100,7 @@ qboolean NPC_ClearLOS2( gentity_t *ent, const vec3_t end )
 NPC_ValidEnemy
 -------------------------
 */
-extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
 extern qboolean NPC_IsAnimalEnemyFaction ( gentity_t *self );
 
 qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
@@ -1125,7 +1125,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		return qfalse;
 	}
 
-	if ( !NPC_IsAlive(ent) && ent->health <= 0 )
+	if ( !NPC_IsAlive(self, ent) && ent->health <= 0 )
 	{//Must be alive
 		return qfalse;
 	}
@@ -1175,7 +1175,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 			return qfalse;
 		}
 
-		if (self->parent && NPC_IsAlive(self->parent))
+		if (self->parent && NPC_IsAlive(self, self->parent))
 		{// They just copy their master's enemy instead...
 			if (Distance(self->r.currentOrigin, ent->r.currentOrigin) > 1024
 				|| Distance(self->parent->r.currentOrigin, ent->r.currentOrigin) > 1024)
@@ -1508,12 +1508,12 @@ qboolean NPC_CheckEnemyExt( qboolean checkAlerts )
 {
 	//return NPC_FindEnemy( checkAlerts ); // UQ1: Why is a check function finding new enemies???
 
-	if (!NPCS.NPC || !NPC_IsAlive(NPCS.NPC))
+	if (!NPCS.NPC || !NPC_IsAlive(NPCS.NPC, NPCS.NPC))
 	{
 		return qfalse;
 	}
 
-	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && NPC_ValidEnemy(NPCS.NPC->enemy))
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy) && NPC_ValidEnemy(NPCS.NPC->enemy))
 	{
 		return qtrue;
 	}

@@ -6,6 +6,9 @@
 
 #include "tr_local.h"
 
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
 #include <set>
 
 #ifdef _MSC_VER
@@ -2103,10 +2106,13 @@ void G2API_CollisionDetectCache(CollisionRecord_t *collRecMap, CGhoul2Info_v &gh
 	}
 }
 
+tthread::fast_mutex G2trace_lock;
 
 void G2API_CollisionDetect(CollisionRecord_t *collRecMap, CGhoul2Info_v &ghoul2, const vec3_t angles, const vec3_t position,
 										  int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, IHeapAllocator *G2VertSpace, int traceFlags, int useLod, float fRadius)
 {
+	G2trace_lock.lock();
+	
 	/*
 	if (1)
 	{
@@ -2153,6 +2159,8 @@ void G2API_CollisionDetect(CollisionRecord_t *collRecMap, CGhoul2Info_v &ghoul2,
 		qsort( collRecMap, i,
 			sizeof( CollisionRecord_t ), QsortDistance );
 	}
+
+	G2trace_lock.unlock();
 }
 
 qboolean G2API_SetGhoul2ModelFlags(CGhoul2Info *ghlInfo, const int flags)

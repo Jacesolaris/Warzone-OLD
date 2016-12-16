@@ -1600,7 +1600,7 @@ void Warzone_Nav_CreateNavMesh(void)
 	CreateNavMesh(mapname);
 }
 
-extern qboolean NPC_IsAlive(gentity_t *NPC);
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC );
 extern qboolean UQ1_UcmdMoveForDir(gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest);
 extern qboolean NPC_FacePosition(vec3_t position, qboolean doPitch);
 
@@ -1654,7 +1654,7 @@ void Warzone_Nav_UpdateEntity(gentity_t *ent)
 		
 		if (/*(state & BS_HUNT_AND_KILL) 
 			&&*/ ent->enemy 
-			&& NPC_IsAlive(ent->enemy)
+			&& NPC_IsAlive(ent, ent->enemy)
 			&& ent->enemy == ent->NPC->goalEntity)
 		{
 			VectorCopy(ent->enemy->r.currentOrigin, pathEnd);

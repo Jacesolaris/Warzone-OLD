@@ -349,7 +349,7 @@ void Use_Multi( gentity_t *ent, gentity_t *other, gentity_t *activator )
 }
 
 qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
-extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
 
 void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 {
@@ -432,7 +432,7 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 			&& other->s.eType == ET_NPC
 			&& other->s.NPC_class != CLASS_VEHICLE
 			//&& !other->m_pVehicle
-			&& !(other->enemy && NPC_IsAlive(other->enemy))
+			&& !(other->enemy && NPC_IsAlive(other, other->enemy))
 			&& self->genericValue7
 			&& G_PointInBounds( other->client->ps.origin, self->r.absmin, self->r.absmax ))
 		{// UQ1: Force NPCs to hack stuff that might be blocking their path...
@@ -503,7 +503,7 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 		if (other->client 
 			&& other->s.eType == ET_NPC
 			&& other->s.NPC_class != CLASS_VEHICLE
-			&& !(other->enemy && NPC_IsAlive(other->enemy)))
+			&& !(other->enemy && NPC_IsAlive(other, other->enemy)))
 		{// NPCs should shoot as well...
 			other->alt_fire = qtrue;
 			other->client->pers.cmd.buttons |= BUTTON_ATTACK;

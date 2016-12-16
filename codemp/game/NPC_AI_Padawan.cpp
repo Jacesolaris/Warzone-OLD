@@ -90,7 +90,7 @@ int NPC_FindPadawanGoal( gentity_t *NPC )
 
 	if (NPC->padawanNoWaypointTime > level.time) return -1;
 	if (!NPC->parent) return -1;
-	if (!NPC_IsAlive(NPC->parent)) return -1;
+	if (!NPC_IsAlive(NPC, NPC->parent)) return -1;
 
 	AngleVectors( NPC->parent->client->ps.viewangles, fwd, right, up );
 	CalcMuzzlePoint( NPC->parent, fwd, right, up, end );
@@ -325,7 +325,7 @@ qboolean NPC_FollowPadawanRoute( void )
 
 	NPCS.NPCInfo->combatMove = qtrue;
 
-	if ( !NPC->parent || !NPC_IsAlive(NPC->parent) )
+	if ( !NPC->parent || !NPC_IsAlive(NPC, NPC->parent) )
 	{
 		//trap->Print("parent dead!\n");
 		return qfalse;
@@ -512,7 +512,7 @@ qboolean NPC_PadawanMove( void )
 	gentity_t	*NPC = NPCS.NPC;
 	usercmd_t	*ucmd = &NPCS.ucmd;
 
-	if (NPC->enemy && NPC_IsAlive(NPC->enemy) && NPC_ValidEnemy2(NPC, NPC->enemy))
+	if (NPC->enemy && NPC_IsAlive(NPC, NPC->enemy) && NPC_ValidEnemy2(NPC, NPC->enemy))
 	{// Keep fighting who we are fighting...
 		return qtrue;
 	}
@@ -521,7 +521,7 @@ qboolean NPC_PadawanMove( void )
 	{
 		G_ClearEnemy( NPCS.NPC );
 
-		if (NPC->parent && NPC_IsAlive(NPC->parent))
+		if (NPC->parent && NPC_IsAlive(NPC, NPC->parent))
 		{
 			int			goalWP = -1;
 			vec3_t		goal, angles;
@@ -555,7 +555,7 @@ qboolean NPC_PadawanMove( void )
 				{// Player has looked somewhere else, start moving there instantly...
 					NPC->padawanWaitTime = 0;
 
-					if (!(NPC->enemy && NPC_IsAlive(NPC->enemy)))
+					if (!(NPC->enemy && NPC_IsAlive(NPC, NPC->enemy)))
 						NPC_FindEnemy( qtrue );
 				}
 				else if (NPC->longTermGoal >= 0 && NPC->padawanWaitTime < level.time + 500 && NPC->padawanReturnToPlayerTime < level.time)
@@ -568,7 +568,7 @@ qboolean NPC_PadawanMove( void )
 					ucmd->upmove = 0;
 					NPC_PickRandomIdleAnimantion(NPC);
 
-					if (!(NPC->enemy && NPC_IsAlive(NPC->enemy)))
+					if (!(NPC->enemy && NPC_IsAlive(NPC, NPC->enemy)))
 						NPC_FindEnemy( qtrue );
 
 					return qtrue;
@@ -580,7 +580,7 @@ qboolean NPC_PadawanMove( void )
 					ucmd->upmove = 0;
 					NPC_PickRandomIdleAnimantion(NPC);
 
-					if (!(NPC->enemy && NPC_IsAlive(NPC->enemy)))
+					if (!(NPC->enemy && NPC_IsAlive(NPC, NPC->enemy)))
 						NPC_FindEnemy( qtrue );
 
 					return qtrue;
@@ -624,7 +624,7 @@ qboolean NPC_PadawanMove( void )
 			VectorSet(angles, 0.0, 0.0, 0.0);
 			G_SetAngles( goalEnt, angles );
 
-			if (NPC->enemy && NPC_IsAlive(NPC->enemy))
+			if (NPC->enemy && NPC_IsAlive(NPC, NPC->enemy))
 			{// Continue using normal movement...
 				if (NPC_FollowEnemyRoute())
 				{// Try using waypoints...
@@ -849,7 +849,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 		gentity_t *parent2 = &g_entities[i];
 
 		if ( parent2
-			&& NPC_IsAlive(parent2)
+			&& NPC_IsAlive(parent2, parent2)
 			&& parent2->client
 			&& parent2->client->sess.sessionTeam == FACTION_REBEL
 			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
@@ -858,7 +858,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 		}
 		else if ( parent2
 			&& parent2->client
-			&& NPC_IsAlive(parent2)
+			&& NPC_IsAlive(parent2, parent2)
 			//&& parent2->client->sess.sessionTeam == FACTION_REBEL
 			&& parent2->client->NPC_class == CLASS_PADAWAN)
 		{// This is a padawan on our team...
@@ -941,7 +941,7 @@ qboolean Padawan_CheckForce ( void )
 	// UQ1: Special heals/protects/absorbs - mainly for padawans...
 	if ( TIMER_Done( NPCS.NPC, "teamheal" )
 		&& NPCS.NPC->parent
-		&& NPC_IsAlive(NPCS.NPC->parent)
+		&& NPC_IsAlive(NPCS.NPC, NPCS.NPC->parent)
 		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
 		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
@@ -985,12 +985,12 @@ qboolean Padawan_CheckForce ( void )
 
 void NPC_Padawan_CopyParentFlags ( gentity_t *me, gentity_t *parent )
 {
-	if (!me || !NPC_IsAlive(me))
+	if (!me || !NPC_IsAlive(me, me))
 	{
 		return;
 	}
 	
-	if (!parent || !NPC_IsAlive(parent))
+	if (!parent || !NPC_IsAlive(me, parent))
 	{// Reset all flags if parent is dead...
 		if (me->flags & FL_NOTARGET)
 		{
@@ -1068,32 +1068,32 @@ void NPC_DoPadawanStuff ( void )
 	if (me->client->sess.sessionTeam != FACTION_REBEL)
 		me->client->sess.sessionTeam = FACTION_REBEL; // must have been manually spawned.. set team info...
 
-	if (parent && NPC_IsAlive(parent))
+	if (parent && NPC_IsAlive(me, parent))
 	{
 		parent->padawan = me;
 		NPC_Padawan_CopyParentFlags(me, parent);
 
-		if (parent->enemy && NPC_IsAlive(parent->enemy))
+		if (parent->enemy && NPC_IsAlive(parent, parent->enemy))
 		{// Padawan assists jedi...
 			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);
 			float Edist = Distance(me->r.currentOrigin, parent->enemy->r.currentOrigin);
 
 			if ( Jdist <= 384 && Edist <= 384 )
 			{
-				if (!me->enemy || !NPC_IsAlive(me->enemy))
+				if (!me->enemy || !NPC_IsAlive(me, me->enemy))
 					me->enemy = parent->enemy;
 			}
 		}
 		else
 		{
-			if (me->enemy && NPC_IsAlive(me->enemy))
+			if (me->enemy && NPC_IsAlive(me, me->enemy))
 			{// Jedi assists padawan... No range limit on jedi helping the padawan...
-				if (!parent->enemy || !NPC_IsAlive(parent->enemy))
+				if (!parent->enemy || !NPC_IsAlive(me, parent->enemy))
 					parent->enemy = me->enemy;
 			}
 		}
 
-		if (!(me->enemy && NPC_IsAlive(me->enemy)))
+		if (!(me->enemy && NPC_IsAlive(me, me->enemy)))
 		{
 			if (parent->client->ps.saberHolstered > 0)
 			{// Copy our master's saber holster setting...
@@ -1111,13 +1111,13 @@ void NPC_DoPadawanStuff ( void )
 			}
 		}
 
-		if (!me->enemy || !NPC_IsAlive(me->enemy))
+		if (!me->enemy || !NPC_IsAlive(me, me->enemy))
 			NPC_ClearGoal();
 
 		return; // Already have a master to follow...
 	}
 
-	if (me->enemy && NPC_IsAlive(me->enemy) && NPC_ValidEnemy2(me, me->enemy))
+	if (me->enemy && NPC_IsAlive(me, me->enemy) && NPC_ValidEnemy2(me, me->enemy))
 	{// Keep fighting who we are fighting...
 		return;
 	}
@@ -1135,11 +1135,11 @@ void NPC_DoPadawanStuff ( void )
 		gentity_t *parent2 = &g_entities[i];
 
 		if ( parent2
-			&& NPC_IsAlive(parent2)
+			&& NPC_IsAlive(parent2, parent2)
 			&& parent2->client
 			&& parent2->client->sess.sessionTeam == me->client->sess.sessionTeam
 			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->s.eType == ET_PLAYER)
-			&& (!parent2->padawan || !NPC_IsAlive(parent2->padawan)) )
+			&& (!parent2->padawan || !NPC_IsAlive(parent2, parent2->padawan)) )
 		{// This is a jedi on our team...
 			float dist = Distance(me->r.currentOrigin, parent2->r.currentOrigin);
 			
@@ -1164,27 +1164,27 @@ void NPC_DoPadawanStuff ( void )
 
 		//trap->Print("Padawan %s found a new jedi (%s).\n", me->client->pers.netname, parent->client->pers.netname);
 
-		if (parent->enemy && NPC_IsAlive(parent->enemy))
+		if (parent->enemy && NPC_IsAlive(me, parent->enemy))
 		{// Padawan assists jedi...
 			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);
 			float Edist = Distance(me->r.currentOrigin, parent->enemy->r.currentOrigin);
 
 			if ( Jdist <= 384 && Edist <= 384 )
 			{
-				if (!me->enemy || !NPC_IsAlive(me->enemy))
+				if (!me->enemy || !NPC_IsAlive(me, me->enemy))
 					me->enemy = parent->enemy;
 			}
 		}
 		else
 		{
-			if (me->enemy && NPC_IsAlive(me->enemy))
+			if (me->enemy && NPC_IsAlive(me, me->enemy))
 			{// Jedi assists padawan... No range limit on jedi helping the padawan...
-				if (!parent->enemy || !NPC_IsAlive(parent->enemy))
+				if (!parent->enemy || !NPC_IsAlive(me, parent->enemy))
 					parent->enemy = me->enemy;
 			}
 		}
 
-		if (!(me->enemy && NPC_IsAlive(me->enemy)))
+		if (!(me->enemy && NPC_IsAlive(me, me->enemy)))
 		{
 			if (parent->client->ps.saberHolstered > 0)
 			{// Copy our master's saber holster setting...
@@ -1208,9 +1208,9 @@ void NPC_DoPadawanStuff ( void )
 		me->parent = NULL;
 	}
 
-	if (!me->enemy || !NPC_IsAlive(me->enemy))
+	if (!me->enemy || !NPC_IsAlive(me, me->enemy))
 	{// Not in combat...
-		if (me->enemy && !NPC_IsAlive(me->enemy))
+		if (me->enemy && !NPC_IsAlive(me, me->enemy))
 		{// Looks like we just killed someone... Make a kill comment...
 			G_AddPadawanCombatCommentEvent( me, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
 		}

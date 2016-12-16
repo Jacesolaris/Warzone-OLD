@@ -98,14 +98,14 @@ qboolean NPC_EntityIsBreakable ( gentity_t *self, gentity_t *ent )
 	return qfalse;
 }
 
-qboolean NPC_IsAlive ( gentity_t *NPC )
+qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC )
 {
 	if (!NPC)
 	{
 		return qfalse;
 	}
 
-	if (NPCS.NPC && NPCS.NPC->client && NPC_EntityIsBreakable(NPCS.NPC, NPC) && NPC->health > 0)
+	if (self && self->client && NPC_EntityIsBreakable(self, NPC) && NPC->health > 0)
 	{
 		return qtrue;
 	}
@@ -130,14 +130,14 @@ qboolean NPC_IsAlive ( gentity_t *NPC )
 	return qtrue;
 }
 
-int NPC_GetHealthPercent ( gentity_t *NPC )
+int NPC_GetHealthPercent ( gentity_t *self, gentity_t *NPC )
 {
 	if (!NPC)
 	{
 		return 0;
 	}
 
-	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, NPC))
+	if (self && NPC_EntityIsBreakable(self, NPC))
 	{
 		return (int)(((float)NPC->health / (float)NPC->maxHealth) * 100);
 	}
@@ -171,7 +171,7 @@ int NPC_GetHealthPercent ( gentity_t *NPC )
 
 qboolean NPC_NeedsHeal ( gentity_t *NPC )
 {
-	if (NPC_GetHealthPercent(NPC) < 50)
+	if (NPC_GetHealthPercent(NPCS.NPC, NPC) < 50)
 		return qtrue;
 
 	return qfalse;
@@ -180,8 +180,8 @@ qboolean NPC_NeedsHeal ( gentity_t *NPC )
 void CorpsePhysics( gentity_t *self )
 {
 	// run the bot through the server like it was a real client
-	memset( &NPCS.ucmd, 0, sizeof( NPCS.ucmd ) );
-	ClientThink( self->s.number, &NPCS.ucmd );
+	memset( &self->client->pers.cmd, 0, sizeof( usercmd_t ) );
+	ClientThink( self->s.number, &self->client->pers.cmd);
 	//VectorCopy( self->s.origin, self->s.origin2 );
 	//rww - don't get why this is happening.
 
@@ -454,12 +454,12 @@ Effect to be applied when ditching the corpse
 ----------------------------------------
 */
 
-static void NPC_RemoveBodyEffect(void)
+static void NPC_RemoveBodyEffect(gentity_t *NPC)
 {
 //	vec3_t		org;
 //	gentity_t	*tent;
 
-	if ( !NPCS.NPC || !NPCS.NPC->client || (NPCS.NPC->s.eFlags & EF_NODRAW) )
+	if ( !NPC || !NPC->client || (NPC->s.eFlags & EF_NODRAW) )
 		return;
 /*
 	switch(NPC->client->playerTeam)
@@ -485,7 +485,7 @@ static void NPC_RemoveBodyEffect(void)
 	// team no longer indicates species/race, so in this case we'd use NPC_class, but
 
 	// stub code
-	switch(NPCS.NPC->client->NPC_class)
+	switch(NPC->client->NPC_class)
 	{
 	case CLASS_PROBE:
 	case CLASS_SEEKER:
@@ -507,8 +507,6 @@ static void NPC_RemoveBodyEffect(void)
 	default:
 		break;
 	}
-
-
 }
 
 
@@ -609,73 +607,73 @@ void pitch_roll_for_slope( gentity_t *forwhom, vec3_t pass_slope )
 DeadThink
 ----------------------------------------
 */
-static void DeadThink ( void )
+static void DeadThink ( gentity_t *NPC )
 {
 	trace_t	trace;
 
 	// Remove NPC name...
-	NPCS.NPC->s.NPC_NAME_ID = 0;
-	memset(NPCS.NPC->client->pers.netname, 0, sizeof(char)*36);
+	NPC->s.NPC_NAME_ID = 0;
+	memset(NPC->client->pers.netname, 0, sizeof(char)*36);
 
 	//HACKHACKHACKHACKHACK
 	//We should really have a seperate G2 bounding box (seperate from the physics bbox) for G2 collisions only
 	//FIXME: don't ever inflate back up?
-	NPCS.NPC->r.maxs[2] = NPCS.NPC->client->renderInfo.eyePoint[2] - NPCS.NPC->r.currentOrigin[2] + 4;
-	if ( NPCS.NPC->r.maxs[2] < -8 )
+	NPC->r.maxs[2] = NPC->client->renderInfo.eyePoint[2] - NPC->r.currentOrigin[2] + 4;
+	if ( NPC->r.maxs[2] < -8 )
 	{
-		NPCS.NPC->r.maxs[2] = -8;
+		NPC->r.maxs[2] = -8;
 	}
-	if ( VectorCompare( NPCS.NPC->client->ps.velocity, vec3_origin ) )
+	if ( VectorCompare( NPC->client->ps.velocity, vec3_origin ) )
 	{//not flying through the air
-		if ( NPCS.NPC->r.mins[0] > -32 )
+		if ( NPC->r.mins[0] > -32 )
 		{
-			NPCS.NPC->r.mins[0] -= 1;
-			trap->Trace (&trace, NPCS.NPC->r.currentOrigin, NPCS.NPC->r.mins, NPCS.NPC->r.maxs, NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number, NPCS.NPC->clipmask, qfalse, 0, 0 );
+			NPC->r.mins[0] -= 1;
+			trap->Trace (&trace, NPC->r.currentOrigin, NPC->r.mins, NPC->r.maxs, NPC->r.currentOrigin, NPC->s.number, NPC->clipmask, qfalse, 0, 0 );
 			if ( trace.allsolid )
 			{
-				NPCS.NPC->r.mins[0] += 1;
+				NPC->r.mins[0] += 1;
 			}
 		}
-		if ( NPCS.NPC->r.maxs[0] < 32 )
+		if ( NPC->r.maxs[0] < 32 )
 		{
-			NPCS.NPC->r.maxs[0] += 1;
-			trap->Trace (&trace, NPCS.NPC->r.currentOrigin, NPCS.NPC->r.mins, NPCS.NPC->r.maxs, NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number, NPCS.NPC->clipmask, qfalse, 0, 0 );
+			NPC->r.maxs[0] += 1;
+			trap->Trace (&trace, NPC->r.currentOrigin, NPC->r.mins, NPC->r.maxs, NPC->r.currentOrigin, NPC->s.number, NPC->clipmask, qfalse, 0, 0 );
 			if ( trace.allsolid )
 			{
-				NPCS.NPC->r.maxs[0] -= 1;
+				NPC->r.maxs[0] -= 1;
 			}
 		}
-		if ( NPCS.NPC->r.mins[1] > -32 )
+		if ( NPC->r.mins[1] > -32 )
 		{
-			NPCS.NPC->r.mins[1] -= 1;
-			trap->Trace (&trace, NPCS.NPC->r.currentOrigin, NPCS.NPC->r.mins, NPCS.NPC->r.maxs, NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number, NPCS.NPC->clipmask, qfalse, 0, 0 );
+			NPC->r.mins[1] -= 1;
+			trap->Trace (&trace, NPC->r.currentOrigin, NPC->r.mins, NPC->r.maxs, NPC->r.currentOrigin, NPC->s.number, NPC->clipmask, qfalse, 0, 0 );
 			if ( trace.allsolid )
 			{
-				NPCS.NPC->r.mins[1] += 1;
+				NPC->r.mins[1] += 1;
 			}
 		}
-		if ( NPCS.NPC->r.maxs[1] < 32 )
+		if ( NPC->r.maxs[1] < 32 )
 		{
-			NPCS.NPC->r.maxs[1] += 1;
-			trap->Trace (&trace, NPCS.NPC->r.currentOrigin, NPCS.NPC->r.mins, NPCS.NPC->r.maxs, NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number, NPCS.NPC->clipmask, qfalse, 0, 0 );
+			NPC->r.maxs[1] += 1;
+			trap->Trace (&trace, NPC->r.currentOrigin, NPC->r.mins, NPC->r.maxs, NPC->r.currentOrigin, NPC->s.number, NPC->clipmask, qfalse, 0, 0 );
 			if ( trace.allsolid )
 			{
-				NPCS.NPC->r.maxs[1] -= 1;
+				NPC->r.maxs[1] -= 1;
 			}
 		}
 	}
 	//HACKHACKHACKHACKHACK
 
 	//death anim done (or were given a specific amount of time to wait before removal), wait the requisite amount of time them remove
-	if ( level.time >= NPCS.NPCInfo->timeOfDeath + BodyRemovalPadTime( NPCS.NPC ) )
+	if ( level.time >= NPC->NPC->timeOfDeath + BodyRemovalPadTime( NPC ) )
 	{
-		if ( NPCS.NPC->client->ps.eFlags & EF_NODRAW )
+		if ( NPC->client->ps.eFlags & EF_NODRAW )
 		{
-			//if (!trap->ICARUS_IsRunning(NPCS.NPC->s.number))
+			//if (!trap->ICARUS_IsRunning(NPC->s.number))
 			{
-				if ( NPCS.NPC->client && NPCS.NPC->client->ps.saberEntityNum > 0 && NPCS.NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
+				if ( NPC->client && NPC->client->ps.saberEntityNum > 0 && NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
 				{
-					gentity_t *saberent = &g_entities[NPCS.NPC->client->ps.saberEntityNum];
+					gentity_t *saberent = &g_entities[NPC->client->ps.saberEntityNum];
 
 					if ( saberent )
 					{
@@ -683,24 +681,24 @@ static void DeadThink ( void )
 					}
 				}
 
-				trap->ICARUS_FreeEnt((sharedEntity_t*)NPCS.NPC); // UQ1: This???
-				//G_FreeEntity( NPCS.NPC );
+				trap->ICARUS_FreeEnt((sharedEntity_t*)NPC); // UQ1: This???
+				//G_FreeEntity( NPC );
 
-				NPCS.NPC->think = G_FreeEntity;
-				NPCS.NPC->nextthink = level.time + FRAMETIME;
+				NPC->think = G_FreeEntity;
+				NPC->nextthink = level.time + FRAMETIME;
 			}
-			//trap->ICARUS_FreeEnt(NPCS.NPC); // UQ1: This???
+			//trap->ICARUS_FreeEnt(NPC); // UQ1: This???
 		}
 		else
 		{
 			class_t	npc_class;
 
 			// Start the body effect first, then delay 400ms before ditching the corpse
-			NPC_RemoveBodyEffect();
+			NPC_RemoveBodyEffect(NPC);
 
-			if ( NPCS.NPC->client && NPCS.NPC->client->ps.saberEntityNum > 0 && NPCS.NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
+			if ( NPC->client && NPC->client->ps.saberEntityNum > 0 && NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
 			{
-				gentity_t *saberent = &g_entities[NPCS.NPC->client->ps.saberEntityNum];
+				gentity_t *saberent = &g_entities[NPC->client->ps.saberEntityNum];
 
 				if ( saberent )
 				{
@@ -709,38 +707,38 @@ static void DeadThink ( void )
 			}
 
 			//FIXME: keep it running through physics somehow?
-			NPCS.NPC->think = NPC_RemoveBody;
-			NPCS.NPC->nextthink = level.time + FRAMETIME;
+			NPC->think = NPC_RemoveBody;
+			NPC->nextthink = level.time + FRAMETIME;
 
-			npc_class = NPCS.NPC->client->NPC_class;
+			npc_class = NPC->client->NPC_class;
 
 			// check for droids
 			if ( npc_class == CLASS_SEEKER || npc_class == CLASS_REMOTE || npc_class == CLASS_PROBE || npc_class == CLASS_MOUSE ||
 				npc_class == CLASS_GONK || npc_class == CLASS_R2D2 || npc_class == CLASS_R5D2 ||
 				npc_class == CLASS_MARK2 || npc_class == CLASS_SENTRY )//npc_class == CLASS_PROTOCOL ||
 			{
-				NPCS.NPC->client->ps.eFlags |= EF_NODRAW;
-				NPCS.NPCInfo->timeOfDeath = level.time + FRAMETIME * 8;
+				NPC->client->ps.eFlags |= EF_NODRAW;
+				NPC->NPC->timeOfDeath = level.time + FRAMETIME * 8;
 			}
 			else
-				NPCS.NPCInfo->timeOfDeath = level.time + FRAMETIME * 4;
+				NPC->NPC->timeOfDeath = level.time + FRAMETIME * 4;
 		}
 		return;
 	}
 
 	// If the player is on the ground and the resting position contents haven't been set yet...(BounceCount tracks the contents)
-	if ( NPCS.NPC->bounceCount < 0 && NPCS.NPC->s.groundEntityNum >= 0 )
+	if ( NPC->bounceCount < 0 && NPC->s.groundEntityNum >= 0 )
 	{
 		// if client is in a nodrop area, make him/her nodraw
-		int contents = NPCS.NPC->bounceCount = trap->PointContents( NPCS.NPC->r.currentOrigin, -1 );
+		int contents = NPC->bounceCount = trap->PointContents( NPC->r.currentOrigin, -1 );
 
 		if ( ( contents & CONTENTS_NODROP ) )
 		{
-			NPCS.NPC->client->ps.eFlags |= EF_NODRAW;
+			NPC->client->ps.eFlags |= EF_NODRAW;
 		}
 	}
 
-	CorpsePhysics( NPCS.NPC );
+	CorpsePhysics( NPC );
 }
 
 
@@ -3445,12 +3443,19 @@ int NPC_CheckFallJump (gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 	return 0;
 }
 
+extern vmCvar_t npc_pathing;
+
 qboolean UQ_MoveDirClear ( int forwardmove, int rightmove, qboolean reset )
 {
 	vec3_t	forward, right, testPos, angles, mins;
 	trace_t	trace;
 	float	fwdDist, rtDist;
 	float	bottom_max = -STEPSIZE*4 - 1;
+
+	if (!npc_pathing.integer)
+	{// Ignore this completely when patroling, for FPS...
+		return qtrue;
+	}
 
 	if ( !forwardmove && !rightmove )
 	{//not even moving
@@ -4098,7 +4103,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 		self->health = self->s.health = self->client->ps.stats[STAT_HEALTH] = 0;
 
-		DeadThink();
+		DeadThink(self);
 
 		if ( NPCS.NPCInfo->nextBStateThink <= level.time )
 		{
@@ -4205,11 +4210,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				G_ClearEnemy(self);
 			}
 
-			if ((!self->enemy || !NPC_IsAlive(self->enemy)) && !is_civilian && self->next_enemy_check_time < level.time)
+			if ((!self->enemy || !NPC_IsAlive(self, self->enemy)) && !is_civilian && self->next_enemy_check_time < level.time)
 			{
 				NPC_FindEnemy( qtrue );
 
-				if (self->enemy && NPC_IsAlive(self->enemy))
+				if (self->enemy && NPC_IsAlive(self, self->enemy))
 				{// UQ1: Ummmm sounds please!
 					if (NPC_IsJedi(self))
 					{
@@ -4229,7 +4234,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 							ST_Speech( self, SPEECH_SIGHT, 0 );
 					}
 
-					if (!self->enemy->enemy || (self->enemy->enemy && !NPC_IsAlive(self->enemy->enemy)))
+					if (!self->enemy->enemy || (self->enemy->enemy && !NPC_IsAlive(self, self->enemy->enemy)))
 					{// Make me their enemy if they have none too...
 						self->enemy->enemy = self;
 					}
@@ -4254,13 +4259,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPCS.ucmd.buttons |= BUTTON_WALKING;
 			}
 
-			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time - 8000 < level.time && NPC_IsAlive(self->padawan))
+			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time - 8000 < level.time && NPC_IsAlive(self, self->padawan))
 			{// Look at the padawan when it is talking to us...
 				NPC_FacePosition( self->padawan->r.currentOrigin, qfalse );
 				self->beStillTime = level.time + 5000;
 			}
 
-			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time < level.time && NPC_IsAlive(self->padawan))
+			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time < level.time && NPC_IsAlive(self, self->padawan))
 			{// Do any replies to padawan comments...
 				self->padawan_reply_waiting = qfalse;
 				//G_AddEvent( self, EV_PADAWAN_IDLE_REPLY, 0 );
@@ -4286,7 +4291,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (self->beStillTime > level.time && (!self->enemy || !NPC_ValidEnemy(self->enemy)))
 			{// Just idle...
-				if (self->padawan && NPC_IsAlive(self->padawan))
+				if (self->padawan && NPC_IsAlive(self, self->padawan))
 				{// Look at our padawan...
 					vec3_t origin, angles;
 					VectorCopy(self->padawan->r.currentOrigin, origin);
@@ -4587,7 +4592,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 #if 0 // UQ1: Should be handled in behavior now...
 				if (self->enemy 
-					&& NPC_IsAlive(self->enemy)
+					&& NPC_IsAlive(self, self->enemy)
 					&& NPC_IsJedi(self) 
 					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 64)
 				{
@@ -4598,7 +4603,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 						NPC_MoveToGoal( qtrue );
 				}
 				else if (self->enemy 
-					&& NPC_IsAlive(self->enemy)
+					&& NPC_IsAlive(self, self->enemy)
 					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 64
 					&& NPC_CheckVisibility ( NPCS.NPC->enemy, CHECK_360|CHECK_VISRANGE ) < VIS_FOV)
 				{

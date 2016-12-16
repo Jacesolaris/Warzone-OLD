@@ -484,7 +484,7 @@ This is called every frame, and can also be called explicitly to flush
 text to the screen.
 ==================
 */
-void SCR_UpdateScreen_REAL( void ) {
+void SCR_UpdateScreen( void ) {
 	static int	recursive;
 
 	if ( !scr_initialized ) {
@@ -517,45 +517,3 @@ void SCR_UpdateScreen_REAL( void ) {
 
 	recursive = 0;
 }
-
-#include "fast_mutex.h"
-#include "tinythread.h"
-
-using namespace tthread;
-
-//#define ___RENDER_MULTITHREAD___
-
-#ifdef ___RENDER_MULTITHREAD___
-
-thread *RENDER_UPDATE_THREAD;
-
-void RENDER_UpdateThread(void * aArg)
-{
-	SCR_UpdateScreen_REAL();
-}
-
-void SCR_UpdateScreen( void )
-{
-	if (com_frameMsec < 1000 /*com_cl_active->integer < 1000*/ || com_cl_active->integer <= 0)
-	{
-		SCR_UpdateScreen_REAL();
-	}
-	else
-	{
-		if (RENDER_UPDATE_THREAD) {
-			RENDER_UPDATE_THREAD->join();
-			RENDER_UPDATE_THREAD = NULL;
-		} else {
-			RENDER_UPDATE_THREAD = NULL;
-		}
-
-		// Run in background thread...
-		RENDER_UPDATE_THREAD = new thread (RENDER_UpdateThread, (void *)NULL);
-	}
-}
-#else //!___RENDER_MULTITHREAD___
-void SCR_UpdateScreen( void )
-{
-	SCR_UpdateScreen_REAL();
-}
-#endif //___RENDER_MULTITHREAD___

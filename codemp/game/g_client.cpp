@@ -8,7 +8,7 @@
 
 extern int DOM_GetNearWP(vec3_t org, int badwp);
 extern void SP_NPC_spawner2( gentity_t *self);
-extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
 extern qboolean NPC_NeedPadawan_Spawn ( void );
 
 // g_client.c -- client functions that don't happen every frame

@@ -24,7 +24,7 @@ extern void NPC_ClearPathData ( gentity_t *NPC );
 extern qboolean BG_SabersOff( playerState_t *ps );
 
 extern qboolean NPC_NeedsHeal ( gentity_t *NPC );
-extern int NPC_GetHealthPercent ( gentity_t *NPC );
+extern int NPC_GetHealthPercent (gentity_t *self, gentity_t *NPC);
 
 extern void CG_DrawAlert( vec3_t origin, float rating );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
@@ -113,7 +113,7 @@ enum
 qboolean NPC_EnemyAboveMe( gentity_t *NPC )
 {
 	if (!NPC) return qfalse;
-	if (!NPC->enemy || !NPC_IsAlive(NPC->enemy)) return qfalse;
+	if (!NPC->enemy || !NPC_IsAlive(NPC, NPC->enemy)) return qfalse;
 
 	if (NPC->enemy->r.currentOrigin[2] > NPC->r.currentOrigin[2] + 64) return qtrue;
 	if (NPC->enemy->r.currentOrigin[2] < NPC->r.currentOrigin[2] - 64) return qtrue; // also allow jump down
@@ -124,7 +124,7 @@ qboolean NPC_EnemyAboveMe( gentity_t *NPC )
 qboolean NPC_EnemyAttackingMeWithSaber( gentity_t *NPC )
 {
 	if (!NPC) return qfalse;
-	if (!NPC->enemy || !NPC_IsAlive(NPC->enemy)) return qfalse;
+	if (!NPC->enemy || !NPC_IsAlive(NPC, NPC->enemy)) return qfalse;
 	if (NPC->s.weapon != WP_SABER || NPC->enemy->s.weapon != WP_SABER) return qfalse;
 
 	if (BG_SaberInAttack(NPC->client->ps.saberMove)) return qtrue;
@@ -135,25 +135,25 @@ qboolean NPC_EnemyAttackingMeWithSaber( gentity_t *NPC )
 void Jedi_CopyAttackCounterInfo(gentity_t *NPC)
 {
 	// Copy info to our padawan/master...
-	if (NPC->parent && NPC_IsAlive(NPC->parent) && NPC->parent->enemy == NPC->enemy)
+	if (NPC->parent && NPC_IsAlive(NPC, NPC->parent) && NPC->parent->enemy == NPC->enemy)
 	{
 		NPC->parent->npc_attack_time = NPC->npc_attack_time;
 		NPC->parent->npc_counter_time = NPC->npc_counter_time;
 	}
 
-	if (NPC->padawan && NPC_IsAlive(NPC->padawan) && NPC->padawan->enemy == NPC->enemy)
+	if (NPC->padawan && NPC_IsAlive(NPC, NPC->padawan) && NPC->padawan->enemy == NPC->enemy)
 	{
 		NPC->padawan->npc_attack_time = NPC->npc_attack_time;
 		NPC->padawan->npc_counter_time = NPC->npc_counter_time;
 	}
 
-	if (NPC->enemy->parent && NPC_IsAlive(NPC->enemy->parent) && NPC->enemy->parent->enemy == NPC->enemy->enemy)
+	if (NPC->enemy->parent && NPC_IsAlive(NPC, NPC->enemy->parent) && NPC->enemy->parent->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->parent->npc_attack_time = NPC->enemy->npc_attack_time;
 		NPC->enemy->parent->npc_counter_time = NPC->enemy->npc_counter_time;
 	}
 
-	if (NPC->enemy->padawan && NPC_IsAlive(NPC->enemy->padawan) && NPC->enemy->padawan->enemy == NPC->enemy->enemy)
+	if (NPC->enemy->padawan && NPC_IsAlive(NPC, NPC->enemy->padawan) && NPC->enemy->padawan->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->padawan->npc_attack_time = NPC->enemy->npc_attack_time;
 		NPC->enemy->padawan->npc_counter_time = NPC->enemy->npc_counter_time;
@@ -162,12 +162,12 @@ void Jedi_CopyAttackCounterInfo(gentity_t *NPC)
 
 qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 {
-	if (!NPC || !NPC_IsAlive(NPC)) 
+	if (!NPC || !NPC_IsAlive(NPC, NPC)) 
 	{
 		return qfalse;
 	}
 	
-	if (!NPC->enemy || !NPC_IsAlive(NPC->enemy))
+	if (!NPC->enemy || !NPC_IsAlive(NPC, NPC->enemy))
 	{
 		NPC->npc_counter_time = 0;
 		NPC->npc_attack_time = 0;
@@ -232,7 +232,7 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 
 qboolean NPC_Jedi_EnemyInForceRange ( void )
 {
-	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return qfalse;
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy)) return qfalse;
 
 	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 256) return qfalse;
 	//if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) < 48) return qfalse;
@@ -242,7 +242,7 @@ qboolean NPC_Jedi_EnemyInForceRange ( void )
 
 qboolean NPC_Jedi_EntityInForceRange ( gentity_t *ent )
 {
-	if (!ent || !NPC_IsAlive(ent)) return qfalse;
+	if (!ent || !NPC_IsAlive(ent, ent)) return qfalse;
 
 	if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 256) return qfalse;
 	//if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) < 48) return qfalse;
@@ -4639,7 +4639,7 @@ static void Jedi_CombatIdle( int enemy_dist )
 
 static qboolean Jedi_AttackDecide( int enemy_dist )
 {
-	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy))
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 	{
 		return qfalse;
 	}
@@ -4753,7 +4753,7 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 
 				if (!BG_SaberInAttack(NPCS.NPC->client->ps.saberMove) && !Jedi_SaberBusy( NPCS.NPC ))
 				{
-					if (NPC_GetHealthPercent( NPCS.NPC ) < 30)
+					if (NPC_GetHealthPercent( NPCS.NPC, NPCS.NPC ) < 30)
 					{// Back away while attacking...
 						int rand = irand(0,100);
 
@@ -5704,7 +5704,7 @@ static void Jedi_Combat( void )
 	qboolean	haveEnemy = qfalse;
 	qboolean	enemyJumping = qfalse;
 
-	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 		haveEnemy = qtrue;
 
 	if (haveEnemy)
@@ -5713,7 +5713,7 @@ static void Jedi_Combat( void )
 			enemyJumping = qtrue;
 	}
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))) return;
 
 	//See where enemy will be 300 ms from now
 	Jedi_SetEnemyInfo( enemy_dest, enemy_dir, &enemy_dist, enemy_movedir, &enemy_movespeed, 300 );
@@ -5806,7 +5806,7 @@ static void Jedi_Combat( void )
 	//maintain a distance from enemy appropriate for our aggression level
 	Jedi_CombatDistance( enemy_dist );
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))) return;
 
 	if ( !enemy_lost )
 	{
@@ -5852,7 +5852,7 @@ static void Jedi_Combat( void )
 		qboolean attacked = qfalse;
 
 		if ( NPCS.NPC->enemy 
-			&& NPC_IsAlive(NPCS.NPC->enemy)
+			&& NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy)
 			&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
 			&& (NPCS.NPC->client->ps.weapon == WP_SABER || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
 			&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
@@ -5872,7 +5872,7 @@ static void Jedi_Combat( void )
 			NPCS.NPC->next_rifle_butt_time = level.time + 10000;
 			NPCS.NPC->next_kick_time = level.time + 15000;
 
-			if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && irand(0, 100) <= 25)
+			if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy) && irand(0, 100) <= 25)
 			{// 25% of the time, knock them over...
 				int desiredAnim = 0;
 
@@ -6394,7 +6394,7 @@ void NPC_BSJedi_FollowLeader( void )
 	qboolean enemyJumping = qfalse;
 	float enemy_dist;
 
-	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 		haveEnemy = qtrue;
 
 	if (haveEnemy)
@@ -7359,7 +7359,7 @@ qboolean Jedi_CheckForce ( void )
 	// UQ1: Special heals/protects/absorbs - mainly for padawans...
 	if ( TIMER_Done( NPCS.NPC, "teamheal" )
 		&& NPCS.NPC->padawan
-		&& NPC_IsAlive(NPCS.NPC->padawan)
+		&& NPC_IsAlive(NPCS.NPC, NPCS.NPC->padawan)
 		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
 		&& Distance(NPCS.NPC->padawan->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
 		&& NPC_NeedsHeal( NPCS.NPC->padawan )
@@ -7372,7 +7372,7 @@ qboolean Jedi_CheckForce ( void )
 	}
 	else if ( TIMER_Done( NPCS.NPC, "teamheal" )
 		&& NPCS.NPC->parent
-		&& NPC_IsAlive(NPCS.NPC->parent)
+		&& NPC_IsAlive(NPCS.NPC, NPCS.NPC->parent)
 		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
 		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
 		&& NPC_NeedsHeal( NPCS.NPC->parent )
@@ -7558,7 +7558,7 @@ qboolean NPC_MoveIntoOptimalAttackPosition ( void )
 	qboolean	enemyJumping = qfalse;
 	float		enemy_dist, diff;
 
-	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 		haveEnemy = qtrue;
 
 	if (haveEnemy)
@@ -7641,7 +7641,7 @@ qboolean NPC_JediCheckFall ( void )
 		return qfalse;
 	}
 
-	if (NPC_IsAlive(NPC->enemy) && NPC->enemy->r.currentOrigin < NPC->r.currentOrigin && NPC->enemy->s.groundEntityNum != ENTITYNUM_NONE)
+	if (NPC_IsAlive(NPCS.NPC, NPC->enemy) && NPC->enemy->r.currentOrigin < NPC->r.currentOrigin && NPC->enemy->s.groundEntityNum != ENTITYNUM_NONE)
 	{// Our enemy is below us... That is fine...
 		return qfalse;
 	}
@@ -7658,7 +7658,7 @@ qboolean NPC_JediCheckFall ( void )
 		TIMER_Set( NPCS.NPC, "emergencyJump", 1000 );
 
 		if (NPC->enemy 
-			&& NPC_IsAlive(NPC->enemy) 
+			&& NPC_IsAlive(NPCS.NPC, NPC->enemy) 
 			&& Jedi_Jump(NPC->enemy->r.currentOrigin, NPC->enemy->s.number))
 		{// Use enemy as our target point...
 			// Play a sound to make the unbelievable, believable.... lol...
@@ -7757,7 +7757,7 @@ void NPC_BSJedi_Default( void )
 		return;
 	}
 
-	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy))
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 	{
 		return;
 	}
@@ -7810,7 +7810,7 @@ void NPC_BSJedi_Default( void )
 			return;
 		}*/
 
-		if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))
+		if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 		{
 			if (NPCS.NPC->s.weapon != WP_SABER || NPCS.NPC->enemy->s.weapon != WP_SABER)
 			{// Normal non-jedi NPC or enemy... Use normal system...

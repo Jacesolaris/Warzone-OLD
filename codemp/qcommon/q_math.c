@@ -1174,9 +1174,11 @@ float Q_flrand(float min, float max)
 	return flrand(min,max);
 }
 
+#include <random>
 //
 uint32_t irand_big(uint32_t min, uint32_t max) 
 {
+#if 0
     uint32_t v;
     uint32_t range;
     uint32_t upper;
@@ -1212,6 +1214,15 @@ uint32_t irand_big(uint32_t min, uint32_t max)
             return lower + v;
         }
     }
+#else
+	/* Seed */
+	std::random_device rd;
+	/* Random number generator */
+	std::default_random_engine generator(rd());
+	/* Distribution on which to apply the generator */
+	std::uniform_int_distribution<long long unsigned> distribution(/*0*/min, /*0xFFFFFFFFFFFFFFFF*/max);
+	return (uint32_t)distribution(generator);
+#endif
 }
 
 // Returns an integer min <= x <= max (ie inclusive)

@@ -116,7 +116,7 @@ qboolean NPC_PatrolArea( void )
 		return qfalse;
 	}
 
-	if (NPC->enemy && NPC_IsAlive(NPC->enemy))
+	if (NPC->enemy && NPC_IsAlive(NPC, NPC->enemy))
 	{// Chase them...
 		NPC->return_home = qtrue;
 		return qfalse;
@@ -234,6 +234,11 @@ qboolean NPC_PatrolArea( void )
 		NPC->longTermGoal = DOM_GetNearestWP(NPC->r.currentOrigin, -1);
 	}
 
+	if (NPC->longTermGoal < 0)
+	{
+		return qfalse;
+	}
+
 	if (gWPArray[NPC->longTermGoal]->neighbornum <= 0)
 	{// This wp happens to have no neighbours.. Just stand idle...
 		NPC_PickRandomIdleAnimantion(NPC);
@@ -264,7 +269,7 @@ qboolean NPC_PatrolArea( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
+	UQ1_UcmdMoveForDir_NoAvoidance/*UQ1_UcmdMoveForDir*/( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)

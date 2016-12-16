@@ -5546,7 +5546,7 @@ static void FixRenderCommandList( int newShader ) {
 						sortedIndex = (( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1));
 						if( sortedIndex >= newShader ) {
 							sortedIndex++;
-							drawSurf->sort = (sortedIndex << QSORT_SHADERNUM_SHIFT) | (entityNum << QSORT_REFENTITYNUM_SHIFT) | ( fogNum << QSORT_FOGNUM_SHIFT ) | ( postRender << QSORT_POSTRENDER_SHIFT) | dlightMap;
+							drawSurf->sort = (sortedIndex << QSORT_SHADERNUM_SHIFT) | (entityNum << QSORT_REFENTITYNUM_SHIFT) | (fogNum << QSORT_FOGNUM_SHIFT) | (postRender << QSORT_POSTRENDER_SHIFT);// | dlightMap;
 						}
 					}
 					curCmd = (const void *)(ds_cmd + 1);
