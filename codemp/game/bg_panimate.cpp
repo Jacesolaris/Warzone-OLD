@@ -29,9 +29,10 @@ BEGIN: Animation utility functions (sequence checking)
 // need multiple copies of this, but it's much easier (and less likely to
 // break in the future) if I keep separate namespace versions now.
 
-qboolean BG_SaberStanceAnim( int anim )
+//[NewSaberSys]
+qboolean BG_SaberStanceAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_STAND1://not really a saberstance anim, actually... "saber off" stance
 	case BOTH_STAND2://single-saber, medium style
@@ -39,20 +40,23 @@ qboolean BG_SaberStanceAnim( int anim )
 	case BOTH_SABERSLOW_STANCE://single-saber, strong style
 	case BOTH_SABERSTAFF_STANCE://saber staff style
 	case BOTH_SABERDUAL_STANCE://dual saber style
-	//[SaberSys]
-	//dedicated stance animations for the hidden styles
 	case BOTH_TAVION_STANCE:
 	case BOTH_DESANN_STANCE:
-	//[/SaberSys]
+	case TRIPLE3_BLUESTANCE:
+	case TRIPLE3_YELLOWSTANCE:
+	case TRIPLE3_REDSTANCE:
+	case TRIPLE3_DUALSSTANCE:
+	case TRIPLE3_STAFFSTANCE:
 		return qtrue;
 		break;
 	}
 	return qfalse;
 }
+//[/NewSaberSys]
 
-qboolean BG_CrouchAnim( int anim )
+qboolean BG_CrouchAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_SIT1:				//# Normal chair sit.
 	case BOTH_SIT2:				//# Lotus position.
@@ -81,9 +85,10 @@ qboolean BG_CrouchAnim( int anim )
 	return qfalse;
 }
 
-qboolean BG_InSpecialJump( int anim )
+//[NewSaberSys]
+qboolean BG_InSpecialJump(int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
 	case BOTH_WALL_RUN_RIGHT:
 	case BOTH_WALL_RUN_RIGHT_STOP:
@@ -113,7 +118,6 @@ qboolean BG_InSpecialJump( int anim )
 	case BOTH_ARIAL_F1:
 	case BOTH_CARTWHEEL_LEFT:
 	case BOTH_CARTWHEEL_RIGHT:
-
 	case BOTH_FORCELONGLEAP_START:
 	case BOTH_FORCELONGLEAP_ATTACK:
 	case BOTH_FORCEWALLRUNFLIP_START:
@@ -125,61 +129,54 @@ qboolean BG_InSpecialJump( int anim )
 	case BOTH_A7_SOULCAL:
 		return qtrue;
 	}
-	if ( BG_InReboundJump( anim ) )
+	if (BG_InReboundJump(anim))
 	{
 		return qtrue;
 	}
-	if ( BG_InReboundHold( anim ) )
+	if (BG_InReboundHold(anim))
 	{
 		return qtrue;
 	}
-	if ( BG_InReboundRelease( anim ) )
+	if (BG_InReboundRelease(anim))
 	{
 		return qtrue;
 	}
-	if ( BG_InBackFlip( anim ) )
+	if (BG_InBackFlip(anim))
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
+//[/NewSaberSys]
 
-qboolean PM_Stagger(int anim)
-{
-	switch (anim)
-	{
-	case BOTH_H1_S1_TL:
-	case BOTH_BASHED1:
-	case BOTH_H1_S1_BR:
-	case BOTH_H1_S1_T_:
-		return qtrue;
-	default: return qfalse;
-	}
-}
-
+//[NewSaberSys]
 qboolean BG_InSaberStandAnim(int anim)
 {
 	switch ((anim))
 	{
 	case BOTH_SABERFAST_STANCE:
+	case BOTH_TAVION_STANCE:
 	case BOTH_STAND2:
 	case BOTH_SABERSLOW_STANCE:
+	case BOTH_DESANN_STANCE:
 	case BOTH_SABERDUAL_STANCE:
 	case BOTH_SABERSTAFF_STANCE:
-		//[SaberSys]
-		//dedicated stance animations for the hidden styles
-	case BOTH_TAVION_STANCE:
-	case BOTH_DESANN_STANCE:
-		//[/SaberSys]
+	case TRIPLE3_BLUESTANCE:
+	case TRIPLE3_YELLOWSTANCE:
+	case TRIPLE3_REDSTANCE:
+	case TRIPLE3_DUALSSTANCE:
+	case TRIPLE3_STAFFSTANCE:
 		return qtrue;
 	default:
 		return qfalse;
 	}
 }
+//[/NewSaberSys]
 
-qboolean BG_InReboundJump( int anim )
+
+qboolean BG_InReboundJump(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_FORCEWALLREBOUND_FORWARD:
 	case BOTH_FORCEWALLREBOUND_LEFT:
@@ -191,9 +188,9 @@ qboolean BG_InReboundJump( int anim )
 	return qfalse;
 }
 
-qboolean BG_InReboundHold( int anim )
+qboolean BG_InReboundHold(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_FORCEWALLHOLD_FORWARD:
 	case BOTH_FORCEWALLHOLD_LEFT:
@@ -205,9 +202,9 @@ qboolean BG_InReboundHold( int anim )
 	return qfalse;
 }
 
-qboolean BG_InReboundRelease( int anim )
+qboolean BG_InReboundRelease(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_FORCEWALLRELEASE_FORWARD:
 	case BOTH_FORCEWALLRELEASE_LEFT:
@@ -219,9 +216,9 @@ qboolean BG_InReboundRelease( int anim )
 	return qfalse;
 }
 
-qboolean BG_InBackFlip( int anim )
+qboolean BG_InBackFlip(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_FLIP_BACK1:
 	case BOTH_FLIP_BACK2:
@@ -232,9 +229,9 @@ qboolean BG_InBackFlip( int anim )
 	return qfalse;
 }
 
-qboolean BG_DirectFlippingAnim( int anim )
+qboolean BG_DirectFlippingAnim(int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
 	case BOTH_FLIP_F:			//# Flip forward
 	case BOTH_FLIP_B:			//# Flip backwards
@@ -247,115 +244,21 @@ qboolean BG_DirectFlippingAnim( int anim )
 	return qfalse;
 }
 
-qboolean BG_SaberInAttackPure( int move )
-{
-	if ( move >= LS_A_TL2BR && move <= LS_A_T2B )
-	{
-		return qtrue;
-	}
-	return qfalse;
-}
-qboolean BG_SaberInAttack( int move )
-{
-	if ( move >= LS_A_TL2BR && move <= LS_A_T2B )
-	{
-		return qtrue;
-	}
-
-	switch ( move )
-	{
-	case LS_A_BACK:
-	case LS_A_BACK_CR:
-	case LS_A_BACKSTAB:
-	case LS_ROLL_STAB:
-	case LS_A_LUNGE:
-	case LS_A_JUMP_T__B_:
-	case LS_A_FLIP_STAB:
-	case LS_A_FLIP_SLASH:
-	case LS_JUMPATTACK_DUAL:
-	case LS_JUMPATTACK_ARIAL_LEFT:
-	case LS_JUMPATTACK_ARIAL_RIGHT:
-	case LS_JUMPATTACK_CART_LEFT:
-	case LS_JUMPATTACK_CART_RIGHT:
-	case LS_JUMPATTACK_STAFF_LEFT:
-	case LS_JUMPATTACK_STAFF_RIGHT:
-	case LS_BUTTERFLY_LEFT:
-	case LS_BUTTERFLY_RIGHT:
-	case LS_A_BACKFLIP_ATK:
-	case LS_SPINATTACK_DUAL:
-	case LS_SPINATTACK:
-	case LS_LEAP_ATTACK:
-	case LS_SWOOP_ATTACK_RIGHT:
-	case LS_SWOOP_ATTACK_LEFT:
-	case LS_TAUNTAUN_ATTACK_RIGHT:
-	case LS_TAUNTAUN_ATTACK_LEFT:
-	case LS_KICK_F:
-	case LS_KICK_B:
-	case LS_KICK_R:
-	case LS_KICK_L:
-	case LS_KICK_S:
-	case LS_KICK_BF:
-	case LS_KICK_RL:
-	case LS_KICK_F_AIR:
-	case LS_KICK_B_AIR:
-	case LS_KICK_R_AIR:
-	case LS_KICK_L_AIR:
-	case LS_STABDOWN:
-	case LS_STABDOWN_STAFF:
-	case LS_STABDOWN_DUAL:
-	case LS_DUAL_SPIN_PROTECT:
-	case LS_STAFF_SOULCAL:
-	case LS_A1_SPECIAL:
-	case LS_A2_SPECIAL:
-	case LS_A3_SPECIAL:
-	case LS_UPSIDE_DOWN_ATTACK:
-	case LS_PULL_ATTACK_STAB:
-	case LS_PULL_ATTACK_SWING:
-	case LS_SPINATTACK_ALORA:
-	case LS_DUAL_FB:
-	case LS_DUAL_LR:
-	case LS_HILT_BASH:
-		return qtrue;
-		break;
-	}
-	return qfalse;
-}
-
-qboolean BG_SaberInKata( int saberMove )
-{
-	switch ( saberMove )
-	{
-	case LS_A1_SPECIAL:
-	case LS_A2_SPECIAL:
-	case LS_A3_SPECIAL:
-	case LS_DUAL_SPIN_PROTECT:
-	case LS_STAFF_SOULCAL:
-		return qtrue;
-	}
-	return qfalse;
-}
-
-qboolean BG_InKataAnim(int anim)
-{
-	switch (anim)
-	{
-	case BOTH_A6_SABERPROTECT:
-	case BOTH_A7_SOULCAL:
-	case BOTH_A1_SPECIAL:
-	case BOTH_A2_SPECIAL:
-	case BOTH_A3_SPECIAL:
-		return qtrue;
-	}
-	return qfalse;
-}
-
-qboolean PM_SaberInDamageMove(int move)
+qboolean BG_SaberInAttackPure(int move)
 {
 	if (move >= LS_A_TL2BR && move <= LS_A_T2B)
 	{
 		return qtrue;
 	}
+	return qfalse;
+}
 
+qboolean BG_SaberInAttack(int move)
+{
+	if (move >= LS_A_TL2BR && move <= LS_A_T2B)
+	{
+		return qtrue;
+	}
 	switch (move)
 	{
 	case LS_A_BACK:
@@ -383,6 +286,19 @@ qboolean PM_SaberInDamageMove(int move)
 	case LS_SWOOP_ATTACK_LEFT:
 	case LS_TAUNTAUN_ATTACK_RIGHT:
 	case LS_TAUNTAUN_ATTACK_LEFT:
+	case LS_KICK_F:
+	case LS_KICK_B:
+	case LS_KICK_R:
+	case LS_KICK_L:
+	case LS_KICK_S:
+	case LS_KICK_BF:
+	case LS_KICK_RL:
+	case LS_KICK_F_AIR:
+	case LS_KICK_B_AIR:
+	case LS_KICK_R_AIR:
+	case LS_KICK_L_AIR:
+	case LS_JUMPKICK_F:
+	case LS_LEGSWEEP:
 	case LS_STABDOWN:
 	case LS_STABDOWN_STAFF:
 	case LS_STABDOWN_DUAL:
@@ -398,22 +314,293 @@ qboolean PM_SaberInDamageMove(int move)
 	case LS_DUAL_FB:
 	case LS_DUAL_LR:
 	case LS_HILT_BASH:
+	case LS_SLIDE:
 		return qtrue;
 		break;
 	}
 	return qfalse;
 }
 
-qboolean BG_SaberInSpecial( int move )
+qboolean BG_SaberInKata(int saberMove)
 {
-#ifdef __SABERS_ALWAYS_DAMAGE__
-	if (move >= LS_A_TL2BR && move <= LS_A_T2B)
+	switch (saberMove)
 	{
+	case LS_A1_SPECIAL:
+	case LS_A2_SPECIAL:
+	case LS_A3_SPECIAL:
+	case LS_DUAL_SPIN_PROTECT:
+	case LS_STAFF_SOULCAL:
 		return qtrue;
 	}
-#endif //__SABERS_ALWAYS_DAMAGE__
+	return qfalse;
+}
 
-	switch( move )
+qboolean BG_InKataAnim(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_A6_SABERPROTECT:
+	case BOTH_A7_SOULCAL:
+	case BOTH_A1_SPECIAL:
+	case BOTH_A2_SPECIAL:
+	case BOTH_A3_SPECIAL:
+		return qtrue;
+	}
+	return qfalse;
+}
+
+qboolean BG_KickMove(int move)
+{
+	switch (move)
+	{
+	case LS_KICK_F:
+	case LS_KICK_B:
+	case LS_KICK_R:
+	case LS_KICK_L:
+	case LS_KICK_S:
+	case LS_KICK_BF:
+	case LS_KICK_RL:
+	case LS_KICK_F_AIR:
+	case LS_KICK_B_AIR:
+	case LS_KICK_R_AIR:
+	case LS_KICK_L_AIR:
+	case LS_JUMPKICK_F:
+	case LS_LEGSWEEP:
+	case LS_HILT_BASH:
+	case LS_SLIDE:
+		return qtrue;
+	}
+	return qfalse;
+}
+
+qboolean BG_SaberInIdle(int move)
+{
+	switch (move)
+	{
+	case LS_NONE:
+	case LS_READY:
+	case LS_DRAW:
+	case LS_PUTAWAY:
+		return qtrue;
+		break;
+	}
+	return qfalse;
+}
+
+qboolean BG_InExtraDefenseSaberMove(int move)
+{
+	switch (move)
+	{
+	case LS_SPINATTACK_DUAL:
+	case LS_SPINATTACK:
+	case LS_DUAL_SPIN_PROTECT:
+	case LS_STAFF_SOULCAL:
+	case LS_A1_SPECIAL:
+	case LS_A2_SPECIAL:
+	case LS_A3_SPECIAL:
+	case LS_JUMPATTACK_DUAL:
+		return qtrue;
+		break;
+	}
+	return qfalse;
+}
+
+//[SPPortComplete]
+//BG clone of PM_FlippingAnim
+qboolean BG_FlippingAnim(int anim)
+{//racc - checks anim to see if it's a flip anim. 
+	switch (anim)
+	{
+	case BOTH_FLIP_F:			//# Flip forward
+	case BOTH_FLIP_B:			//# Flip backwards
+	case BOTH_FLIP_L:			//# Flip left
+	case BOTH_FLIP_R:			//# Flip right
+								//[CoOp]
+								//alora's moves
+	case BOTH_ALORA_FLIP_1:
+	case BOTH_ALORA_FLIP_2:
+	case BOTH_ALORA_FLIP_3:
+	case BOTH_ALORA_FLIP_B:
+		//[/CoOp]
+	case BOTH_WALL_RUN_RIGHT_FLIP:
+	case BOTH_WALL_RUN_LEFT_FLIP:
+	case BOTH_WALL_FLIP_RIGHT:
+	case BOTH_WALL_FLIP_LEFT:
+	case BOTH_FLIP_BACK1:
+	case BOTH_FLIP_BACK2:
+	case BOTH_FLIP_BACK3:
+	case BOTH_WALL_FLIP_BACK1:
+		//Not really flips, but...
+	case BOTH_WALL_RUN_RIGHT:
+	case BOTH_WALL_RUN_LEFT:
+	case BOTH_WALL_RUN_RIGHT_STOP:
+	case BOTH_WALL_RUN_LEFT_STOP:
+	case BOTH_BUTTERFLY_LEFT:
+	case BOTH_BUTTERFLY_RIGHT:
+	case BOTH_BUTTERFLY_FL1:
+	case BOTH_BUTTERFLY_FR1:
+		//
+	case BOTH_ARIAL_LEFT:
+	case BOTH_ARIAL_RIGHT:
+	case BOTH_ARIAL_F1:
+	case BOTH_CARTWHEEL_LEFT:
+	case BOTH_CARTWHEEL_RIGHT:
+	case BOTH_JUMPFLIPSLASHDOWN1:
+	case BOTH_JUMPFLIPSTABDOWN:
+	case BOTH_JUMPATTACK6:
+	case BOTH_JUMPATTACK7:
+		//JKA
+	case BOTH_FORCEWALLRUNFLIP_END:
+	case BOTH_FORCEWALLRUNFLIP_ALT:
+	case BOTH_FLIP_ATTACK7:
+	case BOTH_A7_SOULCAL:
+		return qtrue;
+		break;
+	}
+	return qfalse;
+}
+
+
+//racc - clone of PM_SpinningSaberAnim
+qboolean BG_SpinningSaberAnim(int anim)
+{//racc - is this a move where the player spins?
+	switch (anim)
+	{
+		//level 1 - FIXME: level 1 will have *no* spins
+	case BOTH_T1_BR_BL:
+	case BOTH_T1__R__L:
+	case BOTH_T1__R_BL:
+	case BOTH_T1_TR_BL:
+	case BOTH_T1_BR_TL:
+	case BOTH_T1_BR__L:
+	case BOTH_T1_TL_BR:
+	case BOTH_T1__L_BR:
+	case BOTH_T1__L__R:
+	case BOTH_T1_BL_BR:
+	case BOTH_T1_BL__R:
+	case BOTH_T1_BL_TR:
+		//level 2
+	case BOTH_T2_BR__L:
+	case BOTH_T2_BR_BL:
+	case BOTH_T2__R_BL:
+	case BOTH_T2__L_BR:
+	case BOTH_T2_BL_BR:
+	case BOTH_T2_BL__R:
+		//level 3
+	case BOTH_T3_BR__L:
+	case BOTH_T3_BR_BL:
+	case BOTH_T3__R_BL:
+	case BOTH_T3__L_BR:
+	case BOTH_T3_BL_BR:
+	case BOTH_T3_BL__R:
+		//level 4
+	case BOTH_T4_BR__L:
+	case BOTH_T4_BR_BL:
+	case BOTH_T4__R_BL:
+	case BOTH_T4__L_BR:
+	case BOTH_T4_BL_BR:
+	case BOTH_T4_BL__R:
+		//level 5
+	case BOTH_T5_BR_BL:
+	case BOTH_T5__R__L:
+	case BOTH_T5__R_BL:
+	case BOTH_T5_TR_BL:
+	case BOTH_T5_BR_TL:
+	case BOTH_T5_BR__L:
+	case BOTH_T5_TL_BR:
+	case BOTH_T5__L_BR:
+	case BOTH_T5__L__R:
+	case BOTH_T5_BL_BR:
+	case BOTH_T5_BL__R:
+	case BOTH_T5_BL_TR:
+		//level 6
+	case BOTH_T6_BR_TL:
+	case BOTH_T6__R_TL:
+	case BOTH_T6__R__L:
+	case BOTH_T6__R_BL:
+	case BOTH_T6_TR_TL:
+	case BOTH_T6_TR__L:
+	case BOTH_T6_TR_BL:
+	case BOTH_T6_T__TL:
+	case BOTH_T6_T__BL:
+	case BOTH_T6_TL_BR:
+	case BOTH_T6__L_BR:
+	case BOTH_T6__L__R:
+	case BOTH_T6_TL__R:
+	case BOTH_T6_TL_TR:
+	case BOTH_T6__L_TR:
+	case BOTH_T6__L_T_:
+	case BOTH_T6_BL_T_:
+	case BOTH_T6_BR__L:
+	case BOTH_T6_BR_BL:
+	case BOTH_T6_BL_BR:
+	case BOTH_T6_BL__R:
+	case BOTH_T6_BL_TR:
+		//level 7
+	case BOTH_T7_BR_TL:
+	case BOTH_T7_BR__L:
+	case BOTH_T7_BR_BL:
+	case BOTH_T7__R__L:
+	case BOTH_T7__R_BL:
+	case BOTH_T7_TR__L:
+	case BOTH_T7_T___R:
+	case BOTH_T7_TL_BR:
+	case BOTH_T7__L_BR:
+	case BOTH_T7__L__R:
+	case BOTH_T7_BL_BR:
+	case BOTH_T7_BL__R:
+	case BOTH_T7_BL_TR:
+	case BOTH_T7_TL_TR:
+	case BOTH_T7_T__BR:
+	case BOTH_T7__L_TR:
+	case BOTH_V7_BL_S7:
+		//special
+		//case BOTH_A2_STABBACK1:
+	case BOTH_ATTACK_BACK:
+	case BOTH_CROUCHATTACKBACK1:
+	case BOTH_BUTTERFLY_LEFT:
+	case BOTH_BUTTERFLY_RIGHT:
+	case BOTH_FJSS_TR_BL:
+	case BOTH_FJSS_TL_BR:
+	case BOTH_JUMPFLIPSLASHDOWN1:
+	case BOTH_JUMPFLIPSTABDOWN:
+		return qtrue;
+		break;
+	}
+	return qfalse;
+}
+//[/SPPortComplete]
+
+qboolean PM_LockedAnim(int anim)
+{//anims that can *NEVER* be overridden, regardless
+	switch (anim)
+	{
+	case BOTH_KYLE_PA_1:
+	case BOTH_KYLE_PA_2:
+	case BOTH_KYLE_PA_3:
+	case BOTH_PLAYER_PA_1:
+	case BOTH_PLAYER_PA_2:
+	case BOTH_PLAYER_PA_3:
+	case BOTH_PLAYER_PA_3_FLY:
+	case BOTH_TAVION_SCEPTERGROUND:
+	case BOTH_TAVION_SWORDPOWER:
+	case BOTH_SCEPTER_START:
+	case BOTH_SCEPTER_HOLD:
+	case BOTH_SCEPTER_STOP:
+		//grabbed by wampa
+	case BOTH_GRABBED:	//#
+	case BOTH_RELEASED:	//#	when Wampa drops player, transitions into fall on back
+	case BOTH_HANG_IDLE:	//#
+	case BOTH_HANG_ATTACK:	//#
+	case BOTH_HANG_PAIN:	//#
+		return qtrue;
+	}
+	return qfalse;
+}
+
+qboolean BG_SaberInSpecial(int move)
+{
+	switch (move)
 	{
 	case LS_A_BACK:
 	case LS_A_BACK_CR:
@@ -451,6 +638,8 @@ qboolean BG_SaberInSpecial( int move )
 	case LS_KICK_B_AIR:
 	case LS_KICK_R_AIR:
 	case LS_KICK_L_AIR:
+	case LS_JUMPKICK_F:
+	case LS_LEGSWEEP:
 	case LS_STABDOWN:
 	case LS_STABDOWN_STAFF:
 	case LS_STABDOWN_DUAL:
@@ -466,221 +655,24 @@ qboolean BG_SaberInSpecial( int move )
 	case LS_DUAL_FB:
 	case LS_DUAL_LR:
 	case LS_HILT_BASH:
+	case LS_SLIDE:
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean BG_KickMove( int move )
+qboolean PM_SaberInDeflect(int move)
 {
-	switch( move )
+	if (move >= LS_D1_BR && move <= LS_D1_B_)
 	{
-	case LS_KICK_F:
-	case LS_KICK_B:
-	case LS_KICK_R:
-	case LS_KICK_L:
-	case LS_KICK_S:
-	case LS_KICK_BF:
-	case LS_KICK_RL:
-	case LS_KICK_F_AIR:
-	case LS_KICK_B_AIR:
-	case LS_KICK_R_AIR:
-	case LS_KICK_L_AIR:
-	case LS_HILT_BASH:
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean BG_SaberInIdle( int move )
+qboolean BG_SaberInSpecialAttack(int anim)
 {
-	switch ( move )
-	{
-	case LS_NONE:
-	case LS_READY:
-	case LS_DRAW:
-	case LS_PUTAWAY:
-		return qtrue;
-		break;
-	}
-	return qfalse;
-}
-
-qboolean BG_InExtraDefenseSaberMove( int move )
-{
-	switch ( move )
-	{
-	case LS_SPINATTACK_DUAL:
-	case LS_SPINATTACK:
-	case LS_DUAL_SPIN_PROTECT:
-	case LS_STAFF_SOULCAL:
-	case LS_A1_SPECIAL:
-	case LS_A2_SPECIAL:
-	case LS_A3_SPECIAL:
-	case LS_JUMPATTACK_DUAL:
-		return qtrue;
-		break;
-	}
-	return qfalse;
-}
-
-qboolean BG_FlippingAnim( int anim )
-{
-	switch ( anim )
-	{
-	case BOTH_FLIP_F:			//# Flip forward
-	case BOTH_FLIP_B:			//# Flip backwards
-	case BOTH_FLIP_L:			//# Flip left
-	case BOTH_FLIP_R:			//# Flip right
-	case BOTH_WALL_RUN_RIGHT_FLIP:
-	case BOTH_WALL_RUN_LEFT_FLIP:
-	case BOTH_WALL_FLIP_RIGHT:
-	case BOTH_WALL_FLIP_LEFT:
-	case BOTH_FLIP_BACK1:
-	case BOTH_FLIP_BACK2:
-	case BOTH_FLIP_BACK3:
-	case BOTH_WALL_FLIP_BACK1:
-	//Not really flips, but...
-	case BOTH_WALL_RUN_RIGHT:
-	case BOTH_WALL_RUN_LEFT:
-	case BOTH_WALL_RUN_RIGHT_STOP:
-	case BOTH_WALL_RUN_LEFT_STOP:
-	case BOTH_BUTTERFLY_LEFT:
-	case BOTH_BUTTERFLY_RIGHT:
-	case BOTH_BUTTERFLY_FL1:
-	case BOTH_BUTTERFLY_FR1:
-	//
-	case BOTH_ARIAL_LEFT:
-	case BOTH_ARIAL_RIGHT:
-	case BOTH_ARIAL_F1:
-	case BOTH_CARTWHEEL_LEFT:
-	case BOTH_CARTWHEEL_RIGHT:
-	case BOTH_JUMPFLIPSLASHDOWN1:
-	case BOTH_JUMPFLIPSTABDOWN:
-	case BOTH_JUMPATTACK6:
-	case BOTH_JUMPATTACK7:
-	//JKA
-	case BOTH_FORCEWALLRUNFLIP_END:
-	case BOTH_FORCEWALLRUNFLIP_ALT:
-	case BOTH_FLIP_ATTACK7:
-	case BOTH_A7_SOULCAL:
-		return qtrue;
-		break;
-	}
-	return qfalse;
-}
-
-qboolean BG_SpinningSaberAnim( int anim )
-{
-	switch ( anim )
-	{
-	//level 1 - FIXME: level 1 will have *no* spins
-	case BOTH_T1_BR_BL:
-	case BOTH_T1__R__L:
-	case BOTH_T1__R_BL:
-	case BOTH_T1_TR_BL:
-	case BOTH_T1_BR_TL:
-	case BOTH_T1_BR__L:
-	case BOTH_T1_TL_BR:
-	case BOTH_T1__L_BR:
-	case BOTH_T1__L__R:
-	case BOTH_T1_BL_BR:
-	case BOTH_T1_BL__R:
-	case BOTH_T1_BL_TR:
-	//level 2
-	case BOTH_T2_BR__L:
-	case BOTH_T2_BR_BL:
-	case BOTH_T2__R_BL:
-	case BOTH_T2__L_BR:
-	case BOTH_T2_BL_BR:
-	case BOTH_T2_BL__R:
-	//level 3
-	case BOTH_T3_BR__L:
-	case BOTH_T3_BR_BL:
-	case BOTH_T3__R_BL:
-	case BOTH_T3__L_BR:
-	case BOTH_T3_BL_BR:
-	case BOTH_T3_BL__R:
-	//level 4
-	case BOTH_T4_BR__L:
-	case BOTH_T4_BR_BL:
-	case BOTH_T4__R_BL:
-	case BOTH_T4__L_BR:
-	case BOTH_T4_BL_BR:
-	case BOTH_T4_BL__R:
-	//level 5
-	case BOTH_T5_BR_BL:
-	case BOTH_T5__R__L:
-	case BOTH_T5__R_BL:
-	case BOTH_T5_TR_BL:
-	case BOTH_T5_BR_TL:
-	case BOTH_T5_BR__L:
-	case BOTH_T5_TL_BR:
-	case BOTH_T5__L_BR:
-	case BOTH_T5__L__R:
-	case BOTH_T5_BL_BR:
-	case BOTH_T5_BL__R:
-	case BOTH_T5_BL_TR:
-	//level 6
-	case BOTH_T6_BR_TL:
-	case BOTH_T6__R_TL:
-	case BOTH_T6__R__L:
-	case BOTH_T6__R_BL:
-	case BOTH_T6_TR_TL:
-	case BOTH_T6_TR__L:
-	case BOTH_T6_TR_BL:
-	case BOTH_T6_T__TL:
-	case BOTH_T6_T__BL:
-	case BOTH_T6_TL_BR:
-	case BOTH_T6__L_BR:
-	case BOTH_T6__L__R:
-	case BOTH_T6_TL__R:
-	case BOTH_T6_TL_TR:
-	case BOTH_T6__L_TR:
-	case BOTH_T6__L_T_:
-	case BOTH_T6_BL_T_:
-	case BOTH_T6_BR__L:
-	case BOTH_T6_BR_BL:
-	case BOTH_T6_BL_BR:
-	case BOTH_T6_BL__R:
-	case BOTH_T6_BL_TR:
-	//level 7
-	case BOTH_T7_BR_TL:
-	case BOTH_T7_BR__L:
-	case BOTH_T7_BR_BL:
-	case BOTH_T7__R__L:
-	case BOTH_T7__R_BL:
-	case BOTH_T7_TR__L:
-	case BOTH_T7_T___R:
-	case BOTH_T7_TL_BR:
-	case BOTH_T7__L_BR:
-	case BOTH_T7__L__R:
-	case BOTH_T7_BL_BR:
-	case BOTH_T7_BL__R:
-	case BOTH_T7_BL_TR:
-	case BOTH_T7_TL_TR:
-	case BOTH_T7_T__BR:
-	case BOTH_T7__L_TR:
-	case BOTH_V7_BL_S7:
-	//special
-	//case BOTH_A2_STABBACK1:
-	case BOTH_ATTACK_BACK:
-	case BOTH_CROUCHATTACKBACK1:
-	case BOTH_BUTTERFLY_LEFT:
-	case BOTH_BUTTERFLY_RIGHT:
-	case BOTH_FJSS_TR_BL:
-	case BOTH_FJSS_TL_BR:
-	case BOTH_JUMPFLIPSLASHDOWN1:
-	case BOTH_JUMPFLIPSTABDOWN:
-		return qtrue;
-		break;
-	}
-	return qfalse;
-}
-
-qboolean BG_SaberInSpecialAttack( int anim )
-{
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_A2_STABBACK1:
 	case BOTH_ATTACK_BACK:
@@ -716,6 +708,7 @@ qboolean BG_SaberInSpecialAttack( int anim )
 	case BOTH_A7_KICK_B_AIR:
 	case BOTH_A7_KICK_R_AIR:
 	case BOTH_A7_KICK_L_AIR:
+	case BOTH_JUMPKICK1:
 	case BOTH_STABDOWN:
 	case BOTH_STABDOWN_STAFF:
 	case BOTH_STABDOWN_DUAL:
@@ -731,14 +724,81 @@ qboolean BG_SaberInSpecialAttack( int anim )
 	case BOTH_A6_FB:
 	case BOTH_A6_LR:
 	case BOTH_A7_HILT:
+	case SPY_SLIDE:
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean BG_KickingAnim( int anim )
+//[SaberSys]
+//Are you in a punching animation?
+qboolean BG_PunchAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
+	{
+	case BOTH_MELEE1:
+	case BOTH_MELEE2:
+		return qtrue;
+		break;
+	};
+	return qfalse;
+}
+//[/SaberSys]
+
+//[/NewSaberSys]
+qboolean BG_LongLeapAnim(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_FORCELONGLEAP_START:
+	case BOTH_FORCELONGLEAP_ATTACK:
+	case BOTH_FORCELONGLEAP_LAND:
+		return qtrue;
+	}
+	return qfalse;
+}
+//[/NewSaberSys]
+
+//[/NewSaberSys]
+qboolean BG_AirKickAnim(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_A7_KICK_F_AIR:
+	case BOTH_A7_KICK_B_AIR:
+	case BOTH_A7_KICK_R_AIR:
+	case BOTH_A7_KICK_L_AIR:
+	case BOTH_JUMPKICK1:
+	case SPY_SLIDE:			//Fake air anim, act as a air anim, but keep on the ground
+		return qtrue;
+		break;
+	}
+	return qfalse;
+}
+//[/NewSaberSys]
+
+//[NewSaberSys]
+qboolean BG_InDashMove(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_A7_KICK_BF_STOP:
+	case BOTH_HOP_L:
+	case BOTH_HOP_F:
+	case BOTH_HOP_B:
+	case BOTH_HOP_R:
+	case SPY_SPRINT:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+//[/NewSaberSys]
+
+//[NewSaberSys]
+qboolean BG_KickingAnim(int anim)
+{
+	switch (anim)
 	{
 	case BOTH_A7_KICK_F:
 	case BOTH_A7_KICK_B:
@@ -752,43 +812,69 @@ qboolean BG_KickingAnim( int anim )
 	case BOTH_A7_KICK_R_AIR:
 	case BOTH_A7_KICK_L_AIR:
 	case BOTH_A7_HILT:
-	//NOT kicks, but do kick traces anyway
+		//NOT kicks, but do kick traces anyway
 	case BOTH_GETUP_BROLL_B:
 	case BOTH_GETUP_BROLL_F:
 	case BOTH_GETUP_FROLL_B:
 	case BOTH_GETUP_FROLL_F:
+		//Saber melee moves
+	case BOTH_MELEE_BACKHAND:
+	case BOTH_MELEE_BACKKICK:
+	case BOTH_MELEE_SPINKICK:
+	case BOTH_LEGSWEEP:
+	case BOTH_KICKFINISHER:
+	case SPY_SLIDE:
 		return qtrue;
 		break;
 	}
 	return qfalse;
 }
+//[/NewSaberSys]
 
+
+//[NewSaberSys]
 int BG_InGrappleMove(int anim)
 {
 	switch (anim)
 	{
 	case BOTH_KYLE_GRAB:
+	case SPY_GRAB:
 	case BOTH_KYLE_MISS:
 		return 1; //grabbing at someone
 	case BOTH_KYLE_PA_1:
 	case BOTH_KYLE_PA_2:
+		//[MELEE]
+	case BOTH_KYLE_PA_3:
+		//[/MELEE]
+	case SPY_KILL:
+	case SPY_STAB:
+	case SPY_SLICE:
 		return 2; //beating the shit out of someone
 	case BOTH_PLAYER_PA_1:
 	case BOTH_PLAYER_PA_2:
+		//[MELEE]
+	case BOTH_PLAYER_PA_3:
+		//[/MELEE]
 	case BOTH_PLAYER_PA_FLY:
+
+	case SPY_VICTIM:
+	case SPY_STABBED:
+	case SPY_SLICED:
+
 		return 3; //getting the shit beaten out of you
 		break;
 	}
 
 	return 0;
 }
+//[/NewSaberSys]
 
-int BG_BrokenParryForAttack( int move )
+int BG_BrokenParryForAttack(int move)
 {
 	//Our attack was knocked away by a knockaway parry
 	//FIXME: need actual anims for this
 	//FIXME: need to know which side of the saber was hit!  For now, we presume the saber gets knocked away from the center
-	switch ( saberMoveData[move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
+	switch (saberMoveData[move].startQuad)
 	{
 	case Q_B:
 		return LS_V1_B_;
@@ -818,15 +904,15 @@ int BG_BrokenParryForAttack( int move )
 	return LS_NONE;
 }
 
-int BG_BrokenParryForParry( int move )
+int BG_BrokenParryForParry(int move)
 {
 	//FIXME: need actual anims for this
 	//FIXME: need to know which side of the saber was hit!  For now, we presume the saber gets knocked away from the center
-	switch ( move )
+	switch (move)
 	{
 	case LS_PARRY_UP:
 		//Hmm... since we don't know what dir the hit came from, randomly pick knock down or knock back
-		if ( Q_irand( 0, 1 ) )
+		if (Q_irand(0, 1))
 		{
 			return LS_H1_B_;
 		}
@@ -861,7 +947,6 @@ int BG_KnockawayForParry(int move)
 	switch (move)
 	{
 	case BLOCKED_TOP://LS_PARRY_UP:
-	case BLOCKED_LIGHTNING:
 		return LS_K1_T_;//push up
 		break;
 	case BLOCKED_UPPER_RIGHT://LS_PARRY_UR:
@@ -881,9 +966,9 @@ int BG_KnockawayForParry(int move)
 	//return LS_NONE;
 }
 
-qboolean BG_InRoll( playerState_t *ps, int anim )
+qboolean BG_InRoll(playerState_t *ps, int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
 	case BOTH_GETUP_BROLL_B:
 	case BOTH_GETUP_BROLL_F:
@@ -897,7 +982,7 @@ qboolean BG_InRoll( playerState_t *ps, int anim )
 	case BOTH_ROLL_B:
 	case BOTH_ROLL_R:
 	case BOTH_ROLL_L:
-		if ( ps->legsTimer > 0 )
+		if (ps->legsTimer > 0)
 		{
 			return qtrue;
 		}
@@ -906,9 +991,9 @@ qboolean BG_InRoll( playerState_t *ps, int anim )
 	return qfalse;
 }
 
-qboolean BG_InSpecialDeathAnim( int anim )
+qboolean BG_InSpecialDeathAnim(int anim)
 {
-	switch( anim )
+	switch (anim)
 	{
 	case BOTH_DEATH_ROLL:		//# Death anim from a roll
 	case BOTH_DEATH_FLIP:		//# Death anim from a flip
@@ -928,9 +1013,9 @@ qboolean BG_InSpecialDeathAnim( int anim )
 	}
 }
 
-qboolean BG_InDeathAnim ( int anim )
+qboolean BG_InDeathAnim(int anim)
 {//Purposely does not cover stumbledeath and falldeath...
-	switch( anim )
+	switch (anim)
 	{
 	case BOTH_DEATH1:		//# First Death anim
 	case BOTH_DEATH2:			//# Second Death anim
@@ -939,26 +1024,26 @@ qboolean BG_InDeathAnim ( int anim )
 	case BOTH_DEATH5:			//# Fifth Death anim
 	case BOTH_DEATH6:			//# Sixth Death anim
 	case BOTH_DEATH7:			//# Seventh Death anim
-	case BOTH_DEATH8:			//#
-	case BOTH_DEATH9:			//#
-	case BOTH_DEATH10:			//#
+	case BOTH_DEATH8:			//# 
+	case BOTH_DEATH9:			//# 
+	case BOTH_DEATH10:			//# 
 	case BOTH_DEATH11:			//#
-	case BOTH_DEATH12:			//#
-	case BOTH_DEATH13:			//#
-	case BOTH_DEATH14:			//#
+	case BOTH_DEATH12:			//# 
+	case BOTH_DEATH13:			//# 
+	case BOTH_DEATH14:			//# 
 	case BOTH_DEATH14_UNGRIP:	//# Desann's end death (cin #35)
 	case BOTH_DEATH14_SITUP:		//# Tavion sitting up after having been thrown (cin #23)
-	case BOTH_DEATH15:			//#
-	case BOTH_DEATH16:			//#
-	case BOTH_DEATH17:			//#
-	case BOTH_DEATH18:			//#
-	case BOTH_DEATH19:			//#
-	case BOTH_DEATH20:			//#
-	case BOTH_DEATH21:			//#
-	case BOTH_DEATH22:			//#
-	case BOTH_DEATH23:			//#
-	case BOTH_DEATH24:			//#
-	case BOTH_DEATH25:			//#
+	case BOTH_DEATH15:			//# 
+	case BOTH_DEATH16:			//# 
+	case BOTH_DEATH17:			//# 
+	case BOTH_DEATH18:			//# 
+	case BOTH_DEATH19:			//# 
+	case BOTH_DEATH20:			//# 
+	case BOTH_DEATH21:			//# 
+	case BOTH_DEATH22:			//# 
+	case BOTH_DEATH23:			//# 
+	case BOTH_DEATH24:			//# 
+	case BOTH_DEATH25:			//# 
 
 	case BOTH_DEATHFORWARD1:		//# First Death in which they get thrown forward
 	case BOTH_DEATHFORWARD2:		//# Second Death in which they get thrown forward
@@ -972,7 +1057,7 @@ qboolean BG_InDeathAnim ( int anim )
 	case BOTH_FALLDEATH1:		//# Fall forward off a high cliff and splat death - start
 	case BOTH_FALLDEATH1INAIR:	//# Fall forward off a high cliff and splat death - loop
 	case BOTH_FALLDEATH1LAND:	//# Fall forward off a high cliff and splat death - hit bottom
-	//# #sep case BOTH_ DEAD POSES # Should be last frame of corresponding previous anims
+								//# #sep case BOTH_ DEAD POSES # Should be last frame of corresponding previous anims
 	case BOTH_DEAD1:				//# First Death finished pose
 	case BOTH_DEAD2:				//# Second Death finished pose
 	case BOTH_DEAD3:				//# Third Death finished pose
@@ -980,24 +1065,25 @@ qboolean BG_InDeathAnim ( int anim )
 	case BOTH_DEAD5:				//# Fifth Death finished pose
 	case BOTH_DEAD6:				//# Sixth Death finished pose
 	case BOTH_DEAD7:				//# Seventh Death finished pose
-	case BOTH_DEAD8:				//#
-	case BOTH_DEAD9:				//#
-	case BOTH_DEAD10:			//#
+	case BOTH_DEAD8:				//# 
+	case BOTH_DEAD9:				//# 
+	case BOTH_DEAD10:			//# 
 	case BOTH_DEAD11:			//#
-	case BOTH_DEAD12:			//#
-	case BOTH_DEAD13:			//#
-	case BOTH_DEAD14:			//#
-	case BOTH_DEAD15:			//#
-	case BOTH_DEAD16:			//#
-	case BOTH_DEAD17:			//#
-	case BOTH_DEAD18:			//#
-	case BOTH_DEAD19:			//#
-	case BOTH_DEAD20:			//#
-	case BOTH_DEAD21:			//#
-	case BOTH_DEAD22:			//#
-	case BOTH_DEAD23:			//#
-	case BOTH_DEAD24:			//#
-	case BOTH_DEAD25:			//#
+	case BOTH_DEAD12:			//# 
+	case BOTH_DEAD13:			//# 
+	case BOTH_DEAD14:			//# 
+	case BOTH_DEAD15:			//# 
+	case BOTH_DEAD16:			//# 
+	case BOTH_DEAD17:			//# 
+	case BOTH_DEAD18:			//# 
+	case BOTH_DEAD19:			//# 
+	case BOTH_DEAD20:			//# 
+	case BOTH_DEAD21:			//# 
+	case BOTH_DEAD22:			//# 
+	case BOTH_DEAD23:			//# 
+	case BOTH_DEAD24:			//# 
+	case BOTH_DEAD25:			//# 
+	//case SBD_DEATH:
 	case BOTH_DEADFORWARD1:		//# First thrown forward death finished pose
 	case BOTH_DEADFORWARD2:		//# Second thrown forward death finished pose
 	case BOTH_DEADBACKWARD1:		//# First thrown backward death finished pose
@@ -1005,7 +1091,7 @@ qboolean BG_InDeathAnim ( int anim )
 	case BOTH_LYINGDEAD1:		//# Killed lying down death finished pose
 	case BOTH_STUMBLEDEAD1:		//# Stumble forward death finished pose
 	case BOTH_FALLDEAD1LAND:		//# Fall forward and splat death finished pose
-	//# #sep case BOTH_ DEAD TWITCH/FLOP # React to being shot from death poses
+									//# #sep case BOTH_ DEAD TWITCH/FLOP # React to being shot from death poses
 	case BOTH_DEADFLOP1:		//# React to being shot from First Death finished pose
 	case BOTH_DEADFLOP2:		//# React to being shot from Second Death finished pose
 	case BOTH_DISMEMBER_HEAD1:	//#
@@ -1017,14 +1103,14 @@ qboolean BG_InDeathAnim ( int anim )
 		return qtrue;
 		break;
 	default:
-		return BG_InSpecialDeathAnim( anim );
+		return BG_InSpecialDeathAnim(anim);
 		break;
 	}
 }
 
-qboolean BG_InKnockDownOnly( int anim )
+qboolean BG_InKnockDownOnly(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_KNOCKDOWN1:
 	case BOTH_KNOCKDOWN2:
@@ -1036,9 +1122,9 @@ qboolean BG_InKnockDownOnly( int anim )
 	return qfalse;
 }
 
-qboolean BG_InSaberLockOld( int anim )
+qboolean BG_InSaberLockOld(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_BF2LOCK:
 	case BOTH_BF1LOCK:
@@ -1049,9 +1135,9 @@ qboolean BG_InSaberLockOld( int anim )
 	return qfalse;
 }
 
-qboolean BG_InSaberLock( int anim )
+qboolean BG_InSaberLock(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_LK_S_DL_S_L_1:		//lock if I'm using single vs. a dual
 	case BOTH_LK_S_DL_T_L_1:		//lock if I'm using single vs. a dual
@@ -1080,16 +1166,16 @@ qboolean BG_InSaberLock( int anim )
 		return qtrue;
 		break;
 	default:
-		return BG_InSaberLockOld( anim );
+		return BG_InSaberLockOld(anim);
 		break;
 	}
 	//return qfalse;
 }
 
 //Called only where pm is valid (not all require pm, but some do):
-qboolean PM_InCartwheel( int anim )
+qboolean PM_InCartwheel(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_ARIAL_LEFT:
 	case BOTH_ARIAL_RIGHT:
@@ -1102,9 +1188,9 @@ qboolean PM_InCartwheel( int anim )
 	return qfalse;
 }
 
-qboolean BG_InKnockDownOnGround( playerState_t *ps )
+qboolean BG_InKnockDownOnGround(playerState_t *ps)
 {
-	switch ( ps->legsAnim )
+	switch (ps->legsAnim)
 	{
 	case BOTH_KNOCKDOWN1:
 	case BOTH_KNOCKDOWN2:
@@ -1113,10 +1199,10 @@ qboolean BG_InKnockDownOnGround( playerState_t *ps )
 	case BOTH_KNOCKDOWN5:
 	case BOTH_RELEASED:
 		//if ( PM_AnimLength( g_entities[ps->clientNum].client->clientInfo.animFileIndex, (animNumber_t)ps->legsAnim ) - ps->legsAnimTimer > 300 )
-		{//at end of fall down anim
-			return qtrue;
-		}
-		break;
+	{//at end of fall down anim
+		return qtrue;
+	}
+	break;
 	case BOTH_GETUP1:
 	case BOTH_GETUP2:
 	case BOTH_GETUP3:
@@ -1132,7 +1218,7 @@ qboolean BG_InKnockDownOnGround( playerState_t *ps )
 	case BOTH_FORCE_GETUP_B4:
 	case BOTH_FORCE_GETUP_B5:
 	case BOTH_FORCE_GETUP_B6:
-		if ( BG_AnimLength( 0, (animNumber_t)ps->legsAnim ) - ps->legsTimer < 500 )
+		if (BG_AnimLength(0, (animNumber_t)ps->legsAnim) - ps->legsTimer < 500)
 		{//at beginning of getup anim
 			return qtrue;
 		}
@@ -1145,19 +1231,19 @@ qboolean BG_InKnockDownOnGround( playerState_t *ps )
 	case BOTH_GETUP_FROLL_F:
 	case BOTH_GETUP_FROLL_L:
 	case BOTH_GETUP_FROLL_R:
-		if ( BG_AnimLength( 0, (animNumber_t)ps->legsAnim ) - ps->legsTimer < 500 )
+		if (BG_AnimLength(0, (animNumber_t)ps->legsAnim) - ps->legsTimer < 500)
 		{//at beginning of getup anim
 			return qtrue;
 		}
 		break;
 	case BOTH_LK_DL_ST_T_SB_1_L:
-		if ( ps->legsTimer < 1000 )
+		if (ps->legsTimer < 1000)
 		{
 			return qtrue;
 		}
 		break;
 	case BOTH_PLAYER_PA_3_FLY:
-		if ( ps->legsTimer < 300 )
+		if (ps->legsTimer < 300)
 		{
 			return qtrue;
 		}
@@ -1166,9 +1252,9 @@ qboolean BG_InKnockDownOnGround( playerState_t *ps )
 	return qfalse;
 }
 
-qboolean BG_StabDownAnim( int anim )
+qboolean BG_StabDownAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_STABDOWN:
 	case BOTH_STABDOWN_STAFF:
@@ -1178,9 +1264,118 @@ qboolean BG_StabDownAnim( int anim )
 	return qfalse;
 }
 
-int PM_SaberBounceForAttack( int move )
+//[NewSaberSys]
+qboolean PM_InGetUpAnimation(int anim)
 {
-	switch ( saberMoveData[move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
+	switch (anim)
+	{
+	case BOTH_GETUP_BROLL_B:
+	case BOTH_GETUP_BROLL_F:
+	case BOTH_GETUP_BROLL_L:
+	case BOTH_GETUP_BROLL_R:
+	case BOTH_GETUP_FROLL_B:
+	case BOTH_GETUP_FROLL_F:
+	case BOTH_FORCE_GETUP_F1:
+	case BOTH_FORCE_GETUP_F2:
+
+		return qtrue;
+	default: return qfalse;
+	}
+}
+//[/NewSaberSys]
+
+//[NewSaberSys]
+qboolean PM_StaggerAnim(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_H1_S1_TL:
+	case BOTH_BASHED1:
+	case BOTH_H1_S1_BR:
+	case BOTH_H1_S1_T_:
+		return qtrue;
+	default: return qfalse;
+	}
+}
+//[/NewSaberSys]
+
+//[NewSaberSys]
+qboolean BG_InGetUpAnim(playerState_t *ps)
+{
+	switch ((ps->legsAnim))
+	{
+	case BOTH_GETUP1:
+	case BOTH_GETUP2:
+	case BOTH_GETUP3:
+	case BOTH_GETUP4:
+	case BOTH_GETUP5:
+	case BOTH_FORCE_GETUP_F1:
+	case BOTH_FORCE_GETUP_F2:
+	case BOTH_FORCE_GETUP_B1:
+	case BOTH_FORCE_GETUP_B2:
+	case BOTH_FORCE_GETUP_B3:
+	case BOTH_FORCE_GETUP_B4:
+	case BOTH_FORCE_GETUP_B5:
+	case BOTH_GETUP_BROLL_B:
+	case BOTH_GETUP_BROLL_F:
+	case BOTH_GETUP_BROLL_L:
+	case BOTH_GETUP_BROLL_R:
+	case BOTH_GETUP_FROLL_B:
+	case BOTH_GETUP_FROLL_F:
+	case BOTH_GETUP_FROLL_L:
+	case BOTH_GETUP_FROLL_R:
+		return qtrue;
+	}
+
+	switch ((ps->torsoAnim))
+	{
+	case BOTH_GETUP1:
+	case BOTH_GETUP2:
+	case BOTH_GETUP3:
+	case BOTH_GETUP4:
+	case BOTH_GETUP5:
+	case BOTH_FORCE_GETUP_F1:
+	case BOTH_FORCE_GETUP_F2:
+	case BOTH_FORCE_GETUP_B1:
+	case BOTH_FORCE_GETUP_B2:
+	case BOTH_FORCE_GETUP_B3:
+	case BOTH_FORCE_GETUP_B4:
+	case BOTH_FORCE_GETUP_B5:
+	case BOTH_GETUP_BROLL_B:
+	case BOTH_GETUP_BROLL_F:
+	case BOTH_GETUP_BROLL_L:
+	case BOTH_GETUP_BROLL_R:
+	case BOTH_GETUP_FROLL_B:
+	case BOTH_GETUP_FROLL_F:
+	case BOTH_GETUP_FROLL_L:
+	case BOTH_GETUP_FROLL_R:
+		return qtrue;
+	}
+
+	return qfalse;
+}
+//[/NewSaberSys]
+
+//[SaberSys]
+qboolean PM_SaberReturnAnim(int anim)
+{
+	if ((anim >= BOTH_R1_B__S1 && anim <= BOTH_R1_TR_S1)
+		|| (anim >= BOTH_R2_B__S1 && anim <= BOTH_R2_TR_S1)
+		|| (anim >= BOTH_R3_B__S1 && anim <= BOTH_R3_TR_S1)
+		|| (anim >= BOTH_R4_B__S1 && anim <= BOTH_R4_TR_S1)
+		|| (anim >= BOTH_R5_B__S1 && anim <= BOTH_R5_TR_S1)
+		|| (anim >= BOTH_R6_B__S6 && anim <= BOTH_R6_TR_S6)
+		|| (anim >= BOTH_R7_B__S7 && anim <= BOTH_R7_TR_S7))
+	{
+		return qtrue;
+	}
+	return qfalse;
+}
+//[/SaberSys]
+
+int PM_SaberBounceForAttack(int move)
+{
+	switch (saberMoveData[move].startQuad)
 	{
 	case Q_B:
 	case Q_BR:
@@ -1208,46 +1403,9 @@ int PM_SaberBounceForAttack( int move )
 	return LS_NONE;
 }
 
-//[SaberSys]
-int InvertQuad(int quad)
-{//Returns the reflection quad for the given quad.
-	//This is used for setting a player's block direction based on his attacker's move's start/end quad.
-	switch (quad)
-	{
-	case Q_B:
-		return Q_B;
-		break;
-	case Q_BR:
-		return Q_BL;
-		break;
-	case Q_R:
-		return Q_L;
-		break;
-	case Q_TR:
-		return Q_TL;
-		break;
-	case Q_T:
-		return Q_T;
-		break;
-	case Q_TL:
-		return Q_TR;
-		break;
-	case Q_L:
-		return Q_R;
-		break;
-	case Q_BL:
-		return Q_BR;
-		break;
-	default:
-		return quad;
-		break;
-	};
-}
-//[/SaberSys]
-
-int PM_SaberDeflectionForQuad( int quad )
+int PM_SaberDeflectionForQuad(int quad)
 {
-	switch ( quad )
+	switch (quad)
 	{
 	case Q_B:
 		return LS_D1_B_;
@@ -1277,139 +1435,71 @@ int PM_SaberDeflectionForQuad( int quad )
 	return LS_NONE;
 }
 
-qboolean PM_SaberInDeflect( int move )
+qboolean PM_SaberInParry(int move)
 {
-	if ( move >= LS_D1_BR && move <= LS_D1_B_ )
+	if (move >= LS_PARRY_UP && move <= LS_PARRY_LL)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean PM_SaberInParry( int move )
+qboolean PM_SaberInKnockaway(int move)
 {
-	if ( move >= LS_PARRY_UP && move <= LS_PARRY_LL )
+	if (move >= LS_K1_T_ && move <= LS_K1_BL)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-//[SaberSys]
-qboolean BG_InWalk(int anim)
+qboolean PM_SaberInReflect(int move)
 {
-	switch (anim)
-	{
-	case BOTH_WALK1:
-	case BOTH_WALK1TALKCOMM1:
-	case BOTH_WALK2:
-	case BOTH_WALK5:
-	case BOTH_WALK6:
-	case BOTH_WALK7:
-	case BOTH_WALK_DUAL:
-	case BOTH_WALK_STAFF:
-	case BOTH_WALKBACK1:
-	case BOTH_WALKBACK2:
-	case BOTH_WALKBACK_DUAL:
-	case BOTH_WALKBACK_STAFF:
-		return qtrue;
-		break;
-
-	default:
-		return qfalse;
-		break;
-
-	};
-}
-//[/SaberSys]
-
-qboolean PM_SaberInKnockaway( int move )
-{
-	if ( move >= LS_K1_T_ && move <= LS_K1_BL )
+	if (move >= LS_REFLECT_UP && move <= LS_REFLECT_LL)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-//[SaberSys]
-qboolean PM_KnockawayAnim(int anim)
-{//animation based version of PM_SaberInKnockaway used for BG_SaberStartTransAnim
-	if (anim >= BOTH_K1_S1_T_ && anim <= BOTH_K1_S1_BR)
-	{//single saber
-		return qtrue;
-	}
-
-	if (anim >= BOTH_K6_S6_T_ && anim <= BOTH_K6_S6_BR)
-	{//dual saber
-		return qtrue;
-	}
-
-	if (anim >= BOTH_K7_S7_T_ && anim <= BOTH_K7_S7_BR)
-	{//staff saber
-		return qtrue;
-	}
-	return qfalse;
-}
-//[/SaberSys]
-
-qboolean PM_SaberInReflect( int move )
+qboolean PM_SaberInStart(int move)
 {
-	if ( move >= LS_REFLECT_UP && move <= LS_REFLECT_LL )
+	if (move >= LS_S_TL2BR && move <= LS_S_T2B)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean PM_SaberInStart( int move )
+qboolean PM_SaberInReturn(int move)
 {
-	if ( move >= LS_S_TL2BR && move <= LS_S_T2B )
+	if (move >= LS_R_TL2BR && move <= LS_R_T2B)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean PM_SaberInReturn( int move )
+qboolean BG_SaberInReturn(int move)
 {
-	if ( move >= LS_R_TL2BR && move <= LS_R_T2B )
+	return PM_SaberInReturn(move);
+}
+
+qboolean PM_InSaberAnim(int anim)
+{
+	if ((anim) >= BOTH_A1_T__B_ && (anim) <= BOTH_H1_S1_BR)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean BG_SaberInReturn( int move )
-{
-	return PM_SaberInReturn( move );
-}
-
-qboolean PM_InSaberAnim( int anim )
-{
-	if ( (anim) >= BOTH_A1_T__B_ && (anim) <= BOTH_H1_S1_BR )
+//[KnockdownSys]
+//[SPPortCompete]
+qboolean PM_InForceGetUp(playerState_t *ps)
+{//racc - Are we in a getup animation that uses the Force?
+	switch (ps->legsAnim)
 	{
-		return qtrue;
-	}
-	return qfalse;
-}
-
-qboolean PM_InKnockDown( playerState_t *ps )
-{
-	switch ( (ps->legsAnim) )
-	{
-	case BOTH_KNOCKDOWN1:
-	case BOTH_KNOCKDOWN2:
-	case BOTH_KNOCKDOWN3:
-	case BOTH_KNOCKDOWN4:
-	case BOTH_KNOCKDOWN5:
-		return qtrue;
-		break;
-	case BOTH_GETUP1:
-	case BOTH_GETUP2:
-	case BOTH_GETUP3:
-	case BOTH_GETUP4:
-	case BOTH_GETUP5:
 	case BOTH_FORCE_GETUP_F1:
 	case BOTH_FORCE_GETUP_F2:
 	case BOTH_FORCE_GETUP_B1:
@@ -1417,6 +1507,7 @@ qboolean PM_InKnockDown( playerState_t *ps )
 	case BOTH_FORCE_GETUP_B3:
 	case BOTH_FORCE_GETUP_B4:
 	case BOTH_FORCE_GETUP_B5:
+	case BOTH_FORCE_GETUP_B6:
 	case BOTH_GETUP_BROLL_B:
 	case BOTH_GETUP_BROLL_F:
 	case BOTH_GETUP_BROLL_L:
@@ -1425,7 +1516,7 @@ qboolean PM_InKnockDown( playerState_t *ps )
 	case BOTH_GETUP_FROLL_F:
 	case BOTH_GETUP_FROLL_L:
 	case BOTH_GETUP_FROLL_R:
-		if ( ps->legsTimer )
+		if (ps->legsTimer)
 		{
 			return qtrue;
 		}
@@ -1434,121 +1525,178 @@ qboolean PM_InKnockDown( playerState_t *ps )
 	return qfalse;
 }
 
-qboolean PM_PainAnim( int anim )
-{
-	switch ( (anim) )
+qboolean PM_InGetUp(playerState_t *ps)
+{//racc - player in getup animation.
+	switch (ps->legsAnim)
 	{
-		case BOTH_PAIN1:				//# First take pain anim
-		case BOTH_PAIN2:				//# Second take pain anim
-		case BOTH_PAIN3:				//# Third take pain anim
-		case BOTH_PAIN4:				//# Fourth take pain anim
-		case BOTH_PAIN5:				//# Fifth take pain anim - from behind
-		case BOTH_PAIN6:				//# Sixth take pain anim - from behind
-		case BOTH_PAIN7:				//# Seventh take pain anim - from behind
-		case BOTH_PAIN8:				//# Eigth take pain anim - from behind
-		case BOTH_PAIN9:				//#
-		case BOTH_PAIN10:			//#
-		case BOTH_PAIN11:			//#
-		case BOTH_PAIN12:			//#
-		case BOTH_PAIN13:			//#
-		case BOTH_PAIN14:			//#
-		case BOTH_PAIN15:			//#
-		case BOTH_PAIN16:			//#
-		case BOTH_PAIN17:			//#
-		case BOTH_PAIN18:			//#
+	case BOTH_GETUP1:
+	case BOTH_GETUP2:
+	case BOTH_GETUP3:
+	case BOTH_GETUP4:
+	case BOTH_GETUP5:
+	case BOTH_GETUP_CROUCH_F1:
+	case BOTH_GETUP_CROUCH_B1:
+	case BOTH_GETUP_BROLL_B:
+	case BOTH_GETUP_BROLL_F:
+	case BOTH_GETUP_BROLL_L:
+	case BOTH_GETUP_BROLL_R:
+	case BOTH_GETUP_FROLL_B:
+	case BOTH_GETUP_FROLL_F:
+	case BOTH_GETUP_FROLL_L:
+	case BOTH_GETUP_FROLL_R:
+		if (ps->legsTimer)
+		{
+			return qtrue;
+		}
+		break;
+
+	default:
+		return PM_InForceGetUp(ps);
+		break;
+	}
+	//what the hell, redundant, but...
+	return qfalse;
+}
+//[/KnockdownSys]
+
+
+qboolean PM_InKnockDown(playerState_t *ps)
+{
+	//[KnockdownSys] 
+	//Porting in SP Code for this stuff.
+	switch (ps->legsAnim)
+	{
+	case BOTH_DEATH8:
+	case BOTH_DEATH6:
+	case BOTH_DEATH5:
+	case BOTH_KNOCKDOWN1:
+	case BOTH_KNOCKDOWN2:
+	case BOTH_KNOCKDOWN3:
+	case BOTH_KNOCKDOWN4:
+	case BOTH_KNOCKDOWN5:
+		//special anims:
+	case BOTH_RELEASED:
+		return qtrue;
+		break;
+	case BOTH_LK_DL_ST_T_SB_1_L:
+		if (ps->legsTimer < 550)
+		{
+			return qtrue;
+		}
+		break;
+	case BOTH_PLAYER_PA_3_FLY:
+		if (ps->legsTimer < 300)
+		{
+			return qtrue;
+		}
+		break;
+	default:
+		return PM_InGetUp(ps);
+		break;
+	}
+	return qfalse;
+	//[/KnockdownSys]
+}
+//[/SPPortCompete]
+
+qboolean PM_PainAnim(int anim)
+{
+	switch ((anim))
+	{
+	case BOTH_PAIN1:				//# First take pain anim
+	case BOTH_PAIN2:				//# Second take pain anim
+	case BOTH_PAIN3:				//# Third take pain anim
+	case BOTH_PAIN4:				//# Fourth take pain anim
+	case BOTH_PAIN5:				//# Fifth take pain anim - from behind
+	case BOTH_PAIN6:				//# Sixth take pain anim - from behind
+	case BOTH_PAIN7:				//# Seventh take pain anim - from behind
+	case BOTH_PAIN8:				//# Eigth take pain anim - from behind
+	case BOTH_PAIN9:				//# 
+	case BOTH_PAIN10:			//# 
+	case BOTH_PAIN11:			//# 
+	case BOTH_PAIN12:			//# 
+	case BOTH_PAIN13:			//# 
+	case BOTH_PAIN14:			//# 
+	case BOTH_PAIN15:			//# 
+	case BOTH_PAIN16:			//# 
+	case BOTH_PAIN17:			//# 
+	case BOTH_PAIN18:			//# 
 		return qtrue;
 		break;
 	}
 	return qfalse;
 }
 
-qboolean PM_JumpingAnim( int anim )
+qboolean PM_JumpingAnim(int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
-		case BOTH_JUMP1:				//# Jump - wind-up and leave ground
-		case BOTH_INAIR1:			//# In air loop (from jump)
-		case BOTH_LAND1:				//# Landing (from in air loop)
-		case BOTH_LAND2:				//# Landing Hard (from a great height)
-		case BOTH_JUMPBACK1:			//# Jump backwards - wind-up and leave ground
-		case BOTH_INAIRBACK1:		//# In air loop (from jump back)
-		case BOTH_LANDBACK1:			//# Landing backwards(from in air loop)
-		case BOTH_JUMPLEFT1:			//# Jump left - wind-up and leave ground
-		case BOTH_INAIRLEFT1:		//# In air loop (from jump left)
-		case BOTH_LANDLEFT1:			//# Landing left(from in air loop)
-		case BOTH_JUMPRIGHT1:		//# Jump right - wind-up and leave ground
-		case BOTH_INAIRRIGHT1:		//# In air loop (from jump right)
-		case BOTH_LANDRIGHT1:		//# Landing right(from in air loop)
-		case BOTH_FORCEJUMP1:				//# Jump - wind-up and leave ground
-		case BOTH_FORCEINAIR1:			//# In air loop (from jump)
-		case BOTH_FORCELAND1:				//# Landing (from in air loop)
-		case BOTH_FORCEJUMPBACK1:			//# Jump backwards - wind-up and leave ground
-		case BOTH_FORCEINAIRBACK1:		//# In air loop (from jump back)
-		case BOTH_FORCELANDBACK1:			//# Landing backwards(from in air loop)
-		case BOTH_FORCEJUMPLEFT1:			//# Jump left - wind-up and leave ground
-		case BOTH_FORCEINAIRLEFT1:		//# In air loop (from jump left)
-		case BOTH_FORCELANDLEFT1:			//# Landing left(from in air loop)
-		case BOTH_FORCEJUMPRIGHT1:		//# Jump right - wind-up and leave ground
-		case BOTH_FORCEINAIRRIGHT1:		//# In air loop (from jump right)
-		case BOTH_FORCELANDRIGHT1:		//# Landing right(from in air loop)
+	case BOTH_JUMP1:				//# Jump - wind-up and leave ground
+	case BOTH_INAIR1:			//# In air loop (from jump)
+	case BOTH_LAND1:				//# Landing (from in air loop)
+	case BOTH_LAND2:				//# Landing Hard (from a great height)
+	case BOTH_JUMPBACK1:			//# Jump backwards - wind-up and leave ground
+	case BOTH_INAIRBACK1:		//# In air loop (from jump back)
+	case BOTH_LANDBACK1:			//# Landing backwards(from in air loop)
+	case BOTH_JUMPLEFT1:			//# Jump left - wind-up and leave ground
+	case BOTH_INAIRLEFT1:		//# In air loop (from jump left)
+	case BOTH_LANDLEFT1:			//# Landing left(from in air loop)
+	case BOTH_JUMPRIGHT1:		//# Jump right - wind-up and leave ground
+	case BOTH_INAIRRIGHT1:		//# In air loop (from jump right)
+	case BOTH_LANDRIGHT1:		//# Landing right(from in air loop)
+	case BOTH_FORCEJUMP1:				//# Jump - wind-up and leave ground
+	case BOTH_FORCEINAIR1:			//# In air loop (from jump)
+	case BOTH_FORCELAND1:				//# Landing (from in air loop)
+	case BOTH_FORCEJUMPBACK1:			//# Jump backwards - wind-up and leave ground
+	case BOTH_FORCEINAIRBACK1:		//# In air loop (from jump back)
+	case BOTH_FORCELANDBACK1:			//# Landing backwards(from in air loop)
+	case BOTH_FORCEJUMPLEFT1:			//# Jump left - wind-up and leave ground
+	case BOTH_FORCEINAIRLEFT1:		//# In air loop (from jump left)
+	case BOTH_FORCELANDLEFT1:			//# Landing left(from in air loop)
+	case BOTH_FORCEJUMPRIGHT1:		//# Jump right - wind-up and leave ground
+	case BOTH_FORCEINAIRRIGHT1:		//# In air loop (from jump right)
+	case BOTH_FORCELANDRIGHT1:		//# Landing right(from in air loop)
 		return qtrue;
 		break;
 	}
 	return qfalse;
 }
 
-qboolean PM_LandingAnim( int anim )
+qboolean PM_LandingAnim(int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
-		case BOTH_LAND1:				//# Landing (from in air loop)
-		case BOTH_LAND2:				//# Landing Hard (from a great height)
-		case BOTH_LANDBACK1:			//# Landing backwards(from in air loop)
-		case BOTH_LANDLEFT1:			//# Landing left(from in air loop)
-		case BOTH_LANDRIGHT1:		//# Landing right(from in air loop)
-		case BOTH_FORCELAND1:		//# Landing (from in air loop)
-		case BOTH_FORCELANDBACK1:	//# Landing backwards(from in air loop)
-		case BOTH_FORCELANDLEFT1:	//# Landing left(from in air loop)
-		case BOTH_FORCELANDRIGHT1:	//# Landing right(from in air loop)
+	case BOTH_LAND1:				//# Landing (from in air loop)
+	case BOTH_LAND2:				//# Landing Hard (from a great height)
+	case BOTH_LANDBACK1:			//# Landing backwards(from in air loop)
+	case BOTH_LANDLEFT1:			//# Landing left(from in air loop)
+	case BOTH_LANDRIGHT1:		//# Landing right(from in air loop)
+	case BOTH_FORCELAND1:		//# Landing (from in air loop)
+	case BOTH_FORCELANDBACK1:	//# Landing backwards(from in air loop)
+	case BOTH_FORCELANDLEFT1:	//# Landing left(from in air loop)
+	case BOTH_FORCELANDRIGHT1:	//# Landing right(from in air loop)
 		return qtrue;
 		break;
 	}
 	return qfalse;
 }
 
-//[SaberSys]
-qboolean PM_SaberReturnAnim(int anim)
-{
-	if ((anim >= BOTH_R1_B__S1 && anim <= BOTH_R1_TR_S1)
-		|| (anim >= BOTH_R2_B__S1 && anim <= BOTH_R2_TR_S1)
-		|| (anim >= BOTH_R3_B__S1 && anim <= BOTH_R3_TR_S1)
-		|| (anim >= BOTH_R4_B__S1 && anim <= BOTH_R4_TR_S1)
-		|| (anim >= BOTH_R5_B__S1 && anim <= BOTH_R5_TR_S1)
-		|| (anim >= BOTH_R6_B__S6 && anim <= BOTH_R6_TR_S6)
-		|| (anim >= BOTH_R7_B__S7 && anim <= BOTH_R7_TR_S7))
-	{
-		return qtrue;
-	}
-	return qfalse;
-}
-//[/SaberSys]
-
-qboolean PM_SpinningAnim( int anim )
+qboolean PM_SpinningAnim(int anim)
 {
 	/*
 	switch ( anim )
 	{
 	//FIXME: list any other spinning anims
 	default:
-		break;
+	break;
 	}
 	*/
-	return BG_SpinningSaberAnim( anim );
+	return BG_SpinningSaberAnim(anim);
 }
 
-qboolean PM_InOnGroundAnim ( int anim )
+qboolean PM_InOnGroundAnim(int anim)
 {
-	switch( anim )
+	switch (anim)
 	{
 	case BOTH_DEAD1:
 	case BOTH_DEAD2:
@@ -1562,11 +1710,11 @@ qboolean PM_InOnGroundAnim ( int anim )
 	case BOTH_LYINGDEATH1:
 	case BOTH_LYINGDEAD1:
 	case BOTH_SLEEP1:			//# laying on back-rknee up-rhand on torso
-	case BOTH_KNOCKDOWN1:		//#
-	case BOTH_KNOCKDOWN2:		//#
-	case BOTH_KNOCKDOWN3:		//#
-	case BOTH_KNOCKDOWN4:		//#
-	case BOTH_KNOCKDOWN5:		//#
+	case BOTH_KNOCKDOWN1:		//# 
+	case BOTH_KNOCKDOWN2:		//# 
+	case BOTH_KNOCKDOWN3:		//# 
+	case BOTH_KNOCKDOWN4:		//# 
+	case BOTH_KNOCKDOWN5:		//# 
 	case BOTH_GETUP1:
 	case BOTH_GETUP2:
 	case BOTH_GETUP3:
@@ -1597,15 +1745,15 @@ qboolean PM_InOnGroundAnim ( int anim )
 	return qfalse;
 }
 
-qboolean PM_InRollComplete( playerState_t *ps, int anim )
+qboolean PM_InRollComplete(playerState_t *ps, int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
 	case BOTH_ROLL_F:
 	case BOTH_ROLL_B:
 	case BOTH_ROLL_R:
 	case BOTH_ROLL_L:
-		if ( ps->legsTimer < 1 )
+		if (ps->legsTimer < 1)
 		{
 			return qtrue;
 		}
@@ -1614,20 +1762,20 @@ qboolean PM_InRollComplete( playerState_t *ps, int anim )
 	return qfalse;
 }
 
-qboolean PM_CanRollFromSoulCal( playerState_t *ps )
+qboolean PM_CanRollFromSoulCal(playerState_t *ps)
 {
-	if ( ps->legsAnim == BOTH_A7_SOULCAL
+	if (ps->legsAnim == BOTH_A7_SOULCAL
 		&& ps->legsTimer < 700
-		&& ps->legsTimer > 250 )
+		&& ps->legsTimer > 250)
 	{
 		return qtrue;
 	}
 	return qfalse;
 }
 
-qboolean BG_SuperBreakLoseAnim( int anim )
+qboolean BG_SuperBreakLoseAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_LK_S_DL_S_SB_1_L:	//super break I lost
 	case BOTH_LK_S_DL_T_SB_1_L:	//super break I lost
@@ -1653,9 +1801,9 @@ qboolean BG_SuperBreakLoseAnim( int anim )
 	return qfalse;
 }
 
-qboolean BG_SuperBreakWinAnim( int anim )
+qboolean BG_SuperBreakWinAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_LK_S_DL_S_SB_1_W:	//super break I won
 	case BOTH_LK_S_DL_T_SB_1_W:	//super break I won
@@ -1682,9 +1830,9 @@ qboolean BG_SuperBreakWinAnim( int anim )
 }
 
 
-qboolean BG_SaberLockBreakAnim( int anim )
+qboolean BG_SaberLockBreakAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_BF1BREAK:
 	case BOTH_BF2BREAK:
@@ -1729,13 +1877,13 @@ qboolean BG_SaberLockBreakAnim( int anim )
 		return qtrue;
 		break;
 	}
-	return (qboolean)(BG_SuperBreakLoseAnim(anim)||BG_SuperBreakWinAnim(anim));
+	return (qboolean)(BG_SuperBreakLoseAnim(anim) || BG_SuperBreakWinAnim(anim));
 }
 
 
-qboolean BG_FullBodyTauntAnim( int anim )
+qboolean BG_FullBodyTauntAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case BOTH_GESTURE1:
 	case BOTH_DUAL_TAUNT:
@@ -2945,69 +3093,117 @@ void PM_SetTorsoAnimTimer(int time )
 }
 
 //[SaberSys]
-qboolean BG_BounceAnim(int anim);
 qboolean PM_SaberReturnAnim(int anim);
-void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken )
+//[/SaberSys]
 
+//[NewSaberSys]
+void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken)
 {
-	if (weapon != WP_SABER) return; // UQ1: Hmmm why are we doing this with non-sabers at all???
+	//I don't like having to do this every time but it's the best I can think of for now.
+	float	saberanimscale = 0.80f;
+	float	redanimscale = 1.1f;
+	float	dualanimscale = 1.25f;
+	float	staffanimscale = 1.0f;
+	float	blueanimscale = 2.0f;
+	float	mediumanimscale = 1.1f;
+	float	tavionanimscale = 1.1f;
 
-	if ( anim >= BOTH_A1_T__B_ && anim <= BOTH_ROLL_STAB )
+	if (anim >= BOTH_A1_T__B_ && anim <= BOTH_ROLL_STAB)
 	{
-		if ( weapon == WP_SABER )
+		if (weapon == WP_SABER)
 		{
-			saberInfo_t *saber = BG_MySaber( clientNum, 0 );
-			if ( saber
-				&& saber->animSpeedScale != 1.0f )
+			saberInfo_t *saber = BG_MySaber(clientNum, 0);
+			if (saber
+				&& saber->animSpeedScale != 1.0f)
 			{
 				*animSpeed *= saber->animSpeedScale;
 			}
-			saber = BG_MySaber( clientNum, 1 );
-			if ( saber
-				&& saber->animSpeedScale != 1.0f )
+			saber = BG_MySaber(clientNum, 1);
+			if (saber
+				&& saber->animSpeedScale != 1.0f)
 			{
 				*animSpeed *= saber->animSpeedScale;
 			}
 		}
 	}
 
-	if ( ( (anim) >= BOTH_T1_BR__R &&
-		(anim) <= BOTH_T1_BL_TL ) ||
-		( (anim) >= BOTH_T2_BR__R &&
-		(anim) <= BOTH_T2_BL_TL ) ||
-		( (anim) >= BOTH_T3_BR__R &&
-		(anim) <= BOTH_T3_BL_TL ) )
+	if ((anim) >= BOTH_A1_T__B_ &&
+		(anim) <= BOTH_H7_S7_BR)
 	{
-		if ( saberAnimLevel == FORCE_LEVEL_1 )
+		if (saberAnimLevel == SS_STRONG)
 		{
-			*animSpeed *= 1.5f;
+			//*animSpeed *= 1.5f;
+			*animSpeed *= redanimscale;
 		}
-		else if ( saberAnimLevel == FORCE_LEVEL_3 )
+		else if (saberAnimLevel == SS_DUAL)
 		{
-			*animSpeed *= 0.75f;
+			//*animSpeed *= 1.25f;
+			*animSpeed *= dualanimscale;
+		}
+		else if (saberAnimLevel == SS_STAFF)
+		{
+			*animSpeed *= staffanimscale;
+		}
+	}
+
+	if (saberAnimLevel == SS_MEDIUM)
+	{
+		//*animSpeed *= 1.5f;
+		*animSpeed *= mediumanimscale;
+	}
+
+	if (((anim) >= BOTH_T1_BR__R &&
+		(anim) <= BOTH_T1_BL_TL) ||
+		((anim) >= BOTH_T2_BR__R &&
+		(anim) <= BOTH_T2_BL_TL) ||
+			((anim) >= BOTH_T3_BR__R &&
+		(anim) <= BOTH_T3_BL_TL))
+	{
+		if (saberAnimLevel == SS_FAST)
+		{
+			*animSpeed *= blueanimscale;
+		}
+		else if (saberAnimLevel == SS_TAVION)
+		{
+			*animSpeed *= tavionanimscale;
 		}
 
-		if (broken & (1<<BROKENLIMB_RARM))
+		if (broken & (1 << BROKENLIMB_RARM))
 		{
 			*animSpeed *= 0.5f;
 		}
-		else if (broken & (1<<BROKENLIMB_LARM))
+		else if (broken & (1 << BROKENLIMB_LARM))
 		{
 			*animSpeed *= 0.65f;
 		}
 	}
 	else if (broken && PM_InSaberAnim(anim))
 	{
-		if (broken & (1<<BROKENLIMB_RARM))
+		if (broken & (1 << BROKENLIMB_RARM))
 		{
 			*animSpeed *= 0.5f;
 		}
-		else if (broken & (1<<BROKENLIMB_LARM))
+		else if (broken & (1 << BROKENLIMB_LARM))
 		{
 			*animSpeed *= 0.65f;
 		}
 	}
+
+	if (weapon == WP_SABER && PM_InSaberAnim(anim)) {
+		if (saberAnimLevel == SS_FAST)
+		{
+			*animSpeed *= 0.75f;
+		}
+	}
+
+	//slow down the saber speeds
+	if (anim >= BOTH_A1_T__B_ && anim <= BOTH_ROLL_STAB && !BG_SaberInSpecialAttack(anim)
+		&& !PM_SaberReturnAnim(anim))
+	{
+		*animSpeed *= saberanimscale;
+	}
 }
+//[/NewSaberSys]
 
 /*
 -------------------------
