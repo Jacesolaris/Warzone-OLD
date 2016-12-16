@@ -15,7 +15,7 @@ extern void G_LetGoOfWall( gentity_t *ent );
 extern void BG_ClearRocketLock( playerState_t *ps );
 extern void BubbleShield_TurnOff(gentity_t *self);
 
-extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
 
 //rww - pd
 void BotDamageNotification(gclient_t *bot, gentity_t *attacker);
@@ -5873,7 +5873,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		&& attacker 
 		&& attacker->client
 		&& (targ->s.eType == ET_PLAYER || attacker->s.eType == ET_PLAYER)
-		&& ((targ->padawan && NPC_IsAlive(targ->padawan)) || (attacker->padawan && NPC_IsAlive(attacker->padawan))))
+		&& ((targ->padawan && NPC_IsAlive(targ, targ->padawan)) || (attacker->padawan && NPC_IsAlive(attacker, attacker->padawan))))
 	{
 		int targ_team = targ->client->playerTeam;
 		int attk_team = attacker->client->playerTeam;
@@ -5889,9 +5889,9 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 			&& attacker
 			&& targ->padawan
 			&& targ_team != attk_team
-			&& NPC_IsAlive(targ->padawan))
+			&& NPC_IsAlive(targ, targ->padawan))
 		{// A player who has a padawan just got hit... Set his enemy to the attacker so that the padawan knows who to fight...
-			if (!targ->enemy || !NPC_IsAlive(targ->enemy))
+			if (!targ->enemy || !NPC_IsAlive(targ, targ->enemy))
 			{
 				targ->enemy = attacker;
 				targ->padawan->enemy = attacker;
@@ -5903,9 +5903,9 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 			&& targ
 			&& attacker->padawan
 			&& targ_team != attk_team
-			&& NPC_IsAlive(attacker->padawan))
+			&& NPC_IsAlive(attacker, attacker->padawan))
 		{// A player who has a padawan just hit someone... Set his enemy to the attacker so that the padawan knows who to fight...
-			if (!attacker->enemy || !NPC_IsAlive(attacker->enemy))
+			if (!attacker->enemy || !NPC_IsAlive(attacker, attacker->enemy))
 			{
 				attacker->enemy = targ;
 				attacker->padawan->enemy = targ;

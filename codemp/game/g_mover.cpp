@@ -512,7 +512,7 @@ void G_RunMover( gentity_t *ent ) {
 	}
 
 	// check think function
-	G_RunThink( ent );
+	G_RunThink( ent, qfalse);
 }
 
 /*

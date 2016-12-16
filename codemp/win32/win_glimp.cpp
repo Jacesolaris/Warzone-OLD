@@ -1593,7 +1593,7 @@ static qboolean GLW_CheckOSVersion( void )
 ** GLimp_win.c internal function that attempts to load and use
 ** a specific OpenGL DLL.
 */
-static qboolean GLW_LoadOpenGL( )
+/*static*/ qboolean GLW_LoadOpenGL( )
 {
 	qboolean cdsFullscreen;
 

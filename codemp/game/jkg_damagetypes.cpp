@@ -4,7 +4,7 @@
 
 //#define __JKG_CHARGEDAMAGEOVERRIDE__
 
-extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
 
 typedef struct damageInstance_s
 {
@@ -334,7 +334,7 @@ void JKG_DoPlayerDamageEffects(gentity_t *ent)
 {
 	int i = 0;
 
-	if (ent->health <= 0 || (ent->s.eType == ET_NPC && !NPC_IsAlive(ent)))
+	if (ent->health <= 0 || (ent->s.eType == ET_NPC && !NPC_IsAlive(ent, ent)))
 	{
 		// dead, remove all damage types
 		// and clear timers.
@@ -491,7 +491,7 @@ static void DamagePlayersInArea(damageArea_t *area)
 			continue;
 		}
 
-		if (ent->health <= 0 || (ent->s.eType == ET_NPC && !NPC_IsAlive(ent)))
+		if (ent->health <= 0 || (ent->s.eType == ET_NPC && !NPC_IsAlive(ent, ent)))
 		{
 			continue;
 		}

@@ -14,6 +14,7 @@
 //#define __AAS_AI_TESTING__
 #define __NEW_TRUEVIEW__
 //#define __USE_NAVMESH__
+//#define __NPC_THREADING__
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
@@ -638,6 +639,8 @@ typedef enum //# material_e
 } material_t;
 
 //rww - bot stuff that needs to be shared
+//#define MAX_WPARRAY_SIZE 1048576
+//#define MAX_WPARRAY_SIZE 524288
 #define MAX_WPARRAY_SIZE 131072
 //#define MAX_WPARRAY_SIZE 65536
 //#define MAX_WPARRAY_SIZE 32000
@@ -2609,6 +2612,4 @@ qboolean HaveWeapon( playerState_t *ps, int weapon );
 qboolean WeaponSniperCharge(int weapon);
 qboolean WeaponIsSniperNoCharge ( int weapon );
 qboolean IsRollWithPistols(int weapon);
-
-
 

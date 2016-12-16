@@ -1543,7 +1543,7 @@ void G_PowerDuelCount(int *loners, int *doubles, qboolean countSpec);
 void FindIntermissionPoint( void );
 void SetLeader(int team, int client);
 void CheckTeamLeader( int team );
-void G_RunThink (gentity_t *ent);
+void G_RunThink (gentity_t *ent, qboolean calledFromAIThread);
 void AddTournamentQueue(gclient_t *client);
 void QDECL G_LogPrintf( const char *fmt, ... );
 void QDECL G_SecurityLogPrintf( const char *fmt, ... );

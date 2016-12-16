@@ -1419,7 +1419,7 @@ qboolean ValidEnemy(gentity_t *ent)
 	//if ( !NPC->client->enemyTeam )
 	//	return qfalse;
 
-	if( NPC_IsAlive(ent) )
+	if( NPC_IsAlive(ent, ent) )
 	{
 		if( !ent->client )
 		{

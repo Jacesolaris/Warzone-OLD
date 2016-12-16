@@ -597,13 +597,13 @@ void NPC_SetNewGoalAndPath( void )
 
 	if (NPC->isPadawan)
 	{
-		if (!NPC->parent || !NPC_IsAlive(NPC->parent))
+		if (!NPC->parent || !NPC_IsAlive(NPC, NPC->parent))
 		{
 			NPC->parent = NULL;
 			return; // wait...
 		}
 
-		if (NPC->parent && NPC_IsAlive(NPC->parent))
+		if (NPC->parent && NPC_IsAlive(NPC, NPC->parent))
 		{// Need a new path to our master...
 			padawanPath = qtrue;
 		}
@@ -1086,7 +1086,7 @@ qboolean NPC_GetOffPlayer ( gentity_t *NPC )
 qboolean NPC_HaveValidEnemy( void )
 {
 	gentity_t	*NPC = NPCS.NPC;
-	return NPC_IsAlive(NPC->enemy);
+	return NPC_IsAlive(NPC, NPC->enemy);
 }
 
 void NPC_NewWaypointJump ( void )
@@ -1117,7 +1117,7 @@ void NPC_NewWaypointJump ( void )
 			return; // No need to jump to this...
 	}
 
-	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC, NPCS.NPC->enemy))
 	{// Don't jump when we are chasing an enemy, and they are not above me...
 		should_jump = NPC_EnemyAboveMe(NPCS.NPC);
 	}

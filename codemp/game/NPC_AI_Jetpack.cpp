@@ -439,7 +439,7 @@ void NPC_DoFlyStuff ( void )
 	gentity_t	*self = NPCS.NPC;
 	usercmd_t	*ucmd = &NPCS.ucmd;
 
-	if (!self || !self->client || !NPC_IsAlive(self)) return;
+	if (!self || !self->client || !NPC_IsAlive(self, self)) return;
 
 	if (self->client->ps.groundEntityNum == ENTITYNUM_WORLD)
 	{
@@ -448,7 +448,7 @@ void NPC_DoFlyStuff ( void )
 
 	if (self->client->ps.eFlags & EF_JETPACK)
 	{
-		qboolean HAVE_ENEMY = (qboolean)(self->enemy && NPC_IsAlive(self->enemy));
+		qboolean HAVE_ENEMY = (qboolean)(self->enemy && NPC_IsAlive(self, self->enemy));
 
 		if (HAVE_ENEMY)
 		{
@@ -469,7 +469,7 @@ void NPC_CheckFlying ( void )
 	}
 	else
 	{
-		if (NPCS.NPC->health <= 0 || !NPC_IsAlive(NPCS.NPC) || (NPCS.NPC->client->ps.eFlags & EF_DEAD) || NPCS.NPC->client->ps.pm_type == PM_DEAD)
+		if (NPCS.NPC->health <= 0 || !NPC_IsAlive(NPCS.NPC, NPCS.NPC) || (NPCS.NPC->client->ps.eFlags & EF_DEAD) || NPCS.NPC->client->ps.pm_type == PM_DEAD)
 		{// Dead... Return to normal...
 			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
 			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_FLAMING;

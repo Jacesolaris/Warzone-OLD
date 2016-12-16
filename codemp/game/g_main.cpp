@@ -8,6 +8,7 @@
 #include "jkg_damagetypes.h"
 #include "b_local.h"
 
+
 level_locals_t	level;
 
 int		eventClearTime = 0;
@@ -552,8 +553,6 @@ void CreateSpawnpoints( void )
 		gentity_t	*redspot = NULL;
 		vec3_t		blue_angles = { 0 };
 		vec3_t		red_angles = { 0 };
-		int			n = 0;
-		int			o = 0;
 		int			MOST_DISTANT_POINTS[2];
 		float		MOST_DISTANT_DISTANCE = 0.0f;
 		int			BLUE_BEST_LIST[32] = { -1 };
@@ -599,13 +598,13 @@ void CreateSpawnpoints( void )
 			MOST_DISTANT_POINTS[1] = -1;
 			MOST_DISTANT_DISTANCE = 0.0;
 
-			for (n = 0; n < gWPNum; n++)
+#pragma omp parallel for schedule(dynamic)
+			for (int n = 0; n < gWPNum; n++)
 			{
 				if (Warzone_SpawnpointNearMoverEntityLocation( gWPArray[n]->origin )) 
 					continue;
 
-#pragma omp parallel for schedule(dynamic)
-				for (o = 0; o < gWPNum; o++)
+				for (int o = 0; o < gWPNum; o++)
 				{
 					float dist;
 					if (n == o) continue;
@@ -643,7 +642,7 @@ void CreateSpawnpoints( void )
 			float	RED_CLOSEST_DIST = 0;
 
 #pragma omp parallel for schedule(dynamic)
-			for (n = 0; n < gWPNum; n++)
+			for (int n = 0; n < gWPNum; n++)
 			{
 				qboolean alreadyInList = qfalse;
 				float bdist, rdist;
@@ -651,10 +650,7 @@ void CreateSpawnpoints( void )
 				if (MOST_DISTANT_POINTS[0] == n || MOST_DISTANT_POINTS[1] == n)
 					continue;
 
-				if (!CheckSpawnPosition(gWPArray[n]->origin)) 
-					continue; // Bad spawnpoint position...
-
-				for (o = 0; o < LIST_TOTAL; o++)
+				for (int o = 0; o < LIST_TOTAL; o++)
 				{
 					if (n == BLUE_BEST_LIST[o] || n == RED_BEST_LIST[o])
 					{
@@ -672,6 +668,9 @@ void CreateSpawnpoints( void )
 
 				if (bdist < BLUE_CLOSEST_DIST || BLUE_CLOSEST == -1)
 				{// This one is better...
+					if (!CheckSpawnPosition(gWPArray[n]->origin))
+						continue; // Bad spawnpoint position...
+
 #pragma omp critical (__SET_DIST_POINT_BLUE__)
 					{
 						BLUE_CLOSEST_DIST = bdist;
@@ -681,6 +680,9 @@ void CreateSpawnpoints( void )
 				
 				if (rdist < RED_CLOSEST_DIST || RED_CLOSEST == -1)
 				{// This one is better...
+					if (!CheckSpawnPosition(gWPArray[n]->origin))
+						continue; // Bad spawnpoint position...
+
 #pragma omp critical (__SET_DIST_POINT_RED__)
 					{
 						RED_CLOSEST_DIST = rdist;
@@ -696,7 +698,7 @@ void CreateSpawnpoints( void )
 		}
 
 		// We now have lists for each team... Make the spawnpoints...
-		for (n = 0; n < LIST_TOTAL; n++)
+		for (int n = 0; n < LIST_TOTAL; n++)
 		{
 			if (BLUE_BEST_LIST[n] != -1)
 			{
@@ -765,7 +767,7 @@ void CreateSpawnpoints( void )
 		while (1)
 		{
 			int			j = 0;
-			int			choice = (int)(random() * gWPNum);
+			int			choice = irand_big(0, gWPNum-1);
 			qboolean	bad = qfalse;
 			vec3_t		zeroOrg = { 0 };
 			
@@ -1115,8 +1117,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	//trap->Print("MAX_CONFIGSTRINGS is %i.\n", (int)MAX_CONFIGSTRINGS);
 }
-
-
 
 /*
 =================
@@ -3513,7 +3513,7 @@ G_RunThink
 Runs thinking code for this frame if necessary
 =============
 */
-void G_RunThink (gentity_t *ent) {
+void G_RunThink (gentity_t *ent, qboolean calledFromAIThread) {
 	float	thinktime;
 
 	thinktime = ent->nextthink;
@@ -3532,7 +3532,7 @@ void G_RunThink (gentity_t *ent) {
 	ent->think (ent);
 
 runicarus:
-	if ( ent->inuse )
+	if (ent->inuse)
 	{
 		SaveNPCGlobals();
 		if(NPCS.NPCInfo == NULL && ent->NPC != NULL)
@@ -3611,6 +3611,7 @@ qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
 int g_siegeRespawnCheck = 0;
 void SetMoverState( gentity_t *ent, moverState_t moverState, int time );
 int FRAME_TIME = 0;
+
 void G_RunFrame( int levelTime ) {
 	int			i;
 #ifdef _G_FRAME_PERFANAL
@@ -3763,16 +3764,15 @@ void G_RunFrame( int levelTime ) {
 	JKG_DamagePlayers();
 
 
-
-
 #ifdef _G_FRAME_PERFANAL
 	trap->PrecisionTimer_Start(&timer_ItemRun);
 #endif
 	//
 	// go through all allocated objects
 	//
-	
-	for (i=0; i<level.num_entities; i++) {
+
+	for (i=0; i<level.num_entities; i++) 
+	{
 		gentity_t *ent = &g_entities[i];
 
 		if ( !ent->inuse ) {
@@ -3821,7 +3821,13 @@ void G_RunFrame( int levelTime ) {
 		}
 
 		if ( ent->s.eType == ET_MISSILE ) {
+#ifdef __NPC_THREADING__
+			AI_UpdateLock.lock(); // *sigh* stupid NPCS struct... This can use NPC code...
+#endif //__NPC_THREADING__
 			G_RunMissile( ent );
+#ifdef __NPC_THREADING__
+			AI_UpdateLock.unlock();
+#endif //__NPC_THREADING__
 			continue;
 		}
 
@@ -4054,7 +4060,7 @@ void G_RunFrame( int levelTime ) {
 			}
 		}
 
-		G_RunThink( ent );
+		G_RunThink( ent, qfalse );
 
 		if (ent->s.eType == ET_NPC)
 		{
