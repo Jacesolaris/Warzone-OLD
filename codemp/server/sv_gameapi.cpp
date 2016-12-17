@@ -1450,448 +1450,531 @@ static int SV_CM_RegisterTerrain( const char *config ) {
 
 static void SV_RMG_Init( void ) { }
 
-static void SV_G2API_ListModelSurfaces( void *ghlInfo ) {
+static void SV_G2API_ListModelSurfaces(void *ghlInfo) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_ListSurfaces( (CGhoul2Info *)ghlInfo );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_ListSurfaces((CGhoul2Info *)ghlInfo);
+	}
 }
 
-static void SV_G2API_ListModelBones( void *ghlInfo, int frame ) {
+static void SV_G2API_ListModelBones(void *ghlInfo, int frame) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_ListBones( (CGhoul2Info *)ghlInfo, frame );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_ListBones((CGhoul2Info *)ghlInfo, frame);
+	}
 }
 
-static void SV_G2API_SetGhoul2ModelIndexes( void *ghoul2, qhandle_t *modelList, qhandle_t *skinList ) {
+static void SV_G2API_SetGhoul2ModelIndexes(void *ghoul2, qhandle_t *modelList, qhandle_t *skinList) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_SetGhoul2ModelIndexes( *((CGhoul2Info_v *)ghoul2), modelList, skinList );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_SetGhoul2ModelIndexes(*((CGhoul2Info_v *)ghoul2), modelList, skinList);
+	}
 }
 
-static qboolean SV_G2API_HaveWeGhoul2Models( void *ghoul2) {
+static qboolean SV_G2API_HaveWeGhoul2Models(void *ghoul2) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_HaveWeGhoul2Models( *((CGhoul2Info_v *)ghoul2) );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_HaveWeGhoul2Models(*((CGhoul2Info_v *)ghoul2));
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_GetBoltMatrix( void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale ) {
+static qboolean SV_G2API_GetBoltMatrix(void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_GetBoltMatrix( *((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_GetBoltMatrix(*((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_GetBoltMatrix_NoReconstruct( void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale ) {
+static qboolean SV_G2API_GetBoltMatrix_NoReconstruct(void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	re->G2API_BoltMatrixReconstruction( qfalse );
-	SV_APILock.lock();
-	qboolean ret = re->G2API_GetBoltMatrix( *((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale );
-	SV_APILock.unlock();
+	re->G2API_BoltMatrixReconstruction(qfalse);
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_GetBoltMatrix(*((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_GetBoltMatrix_NoRecNoRot( void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale ) {
+static qboolean SV_G2API_GetBoltMatrix_NoRecNoRot(void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_BoltMatrixReconstruction( qfalse );
-	re->G2API_BoltMatrixSPMethod( qtrue );
-	qboolean ret = re->G2API_GetBoltMatrix( *((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		re->G2API_BoltMatrixReconstruction(qfalse);
+		re->G2API_BoltMatrixSPMethod(qtrue);
+		ret = re->G2API_GetBoltMatrix(*((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale);
+	}
 	return ret;
 }
 
-static int SV_G2API_InitGhoul2Model( void **ghoul2Ptr, const char *fileName, int modelIndex, qhandle_t customSkin, qhandle_t customShader, int modelFlags, int lodBias ) {
+static int SV_G2API_InitGhoul2Model(void **ghoul2Ptr, const char *fileName, int modelIndex, qhandle_t customSkin, qhandle_t customShader, int modelFlags, int lodBias) {
 #ifdef _FULL_G2_LEAK_CHECKING
-		g_G2AllocServer = 1;
+	g_G2AllocServer = 1;
 #endif
 	if (!re) return 0; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	int ret = re->G2API_InitGhoul2Model( (CGhoul2Info_v **)ghoul2Ptr, fileName, modelIndex, customSkin, customShader, modelFlags, lodBias );
-	SV_APILock.unlock();
+	int ret = 0;
+#pragma omp critical
+	{
+		ret = re->G2API_InitGhoul2Model((CGhoul2Info_v **)ghoul2Ptr, fileName, modelIndex, customSkin, customShader, modelFlags, lodBias);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_SetSkin( void *ghoul2, int modelIndex, qhandle_t customSkin, qhandle_t renderSkin ) {
+static qboolean SV_G2API_SetSkin(void *ghoul2, int modelIndex, qhandle_t customSkin, qhandle_t renderSkin) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	qboolean ret = re->G2API_SetSkin( g2, modelIndex, customSkin, renderSkin );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
+		ret = re->G2API_SetSkin(g2, modelIndex, customSkin, renderSkin);
+	}
 	return ret;
 }
 
-static void SV_G2API_CollisionDetect( CollisionRecord_t *collRecMap, void* ghoul2, const vec3_t angles, const vec3_t position, int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, int traceFlags, int useLod, float fRadius ) {
+static void SV_G2API_CollisionDetect(CollisionRecord_t *collRecMap, void* ghoul2, const vec3_t angles, const vec3_t position, int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, int traceFlags, int useLod, float fRadius) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_CollisionDetect( collRecMap, *((CGhoul2Info_v *)ghoul2), angles, position, frameNumber, entNum, rayStart, rayEnd, scale, G2VertSpaceServer, traceFlags, useLod, fRadius );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_CollisionDetect(collRecMap, *((CGhoul2Info_v *)ghoul2), angles, position, frameNumber, entNum, rayStart, rayEnd, scale, G2VertSpaceServer, traceFlags, useLod, fRadius);
+	}
 }
 
-static void SV_G2API_CollisionDetectCache( CollisionRecord_t *collRecMap, void* ghoul2, const vec3_t angles, const vec3_t position, int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, int traceFlags, int useLod, float fRadius ) {
+static void SV_G2API_CollisionDetectCache(CollisionRecord_t *collRecMap, void* ghoul2, const vec3_t angles, const vec3_t position, int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, int traceFlags, int useLod, float fRadius) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_CollisionDetectCache( collRecMap, *((CGhoul2Info_v *)ghoul2), angles, position, frameNumber, entNum, rayStart, rayEnd, scale, G2VertSpaceServer, traceFlags, useLod, fRadius );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_CollisionDetectCache(collRecMap, *((CGhoul2Info_v *)ghoul2), angles, position, frameNumber, entNum, rayStart, rayEnd, scale, G2VertSpaceServer, traceFlags, useLod, fRadius);
+	}
 }
 
-static void SV_G2API_CleanGhoul2Models( void **ghoul2Ptr ) {
+static void SV_G2API_CleanGhoul2Models(void **ghoul2Ptr) {
 #ifdef _FULL_G2_LEAK_CHECKING
-		g_G2AllocServer = 1;
+	g_G2AllocServer = 1;
 #endif
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_CleanGhoul2Models( (CGhoul2Info_v **)ghoul2Ptr );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_CleanGhoul2Models((CGhoul2Info_v **)ghoul2Ptr);
+	}
 }
 
-static qboolean SV_G2API_SetBoneAngles( void *ghoul2, int modelIndex, const char *boneName, const vec3_t angles, const int flags, const int up, const int right, const int forward, qhandle_t *modelList, int blendTime , int currentTime ) {
+static qboolean SV_G2API_SetBoneAngles(void *ghoul2, int modelIndex, const char *boneName, const vec3_t angles, const int flags, const int up, const int right, const int forward, qhandle_t *modelList, int blendTime, int currentTime) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_SetBoneAngles( *((CGhoul2Info_v *)ghoul2), modelIndex, boneName, angles, flags, (const Eorientations)up, (const Eorientations)right, (const Eorientations)forward, modelList, blendTime , currentTime );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_SetBoneAngles(*((CGhoul2Info_v *)ghoul2), modelIndex, boneName, angles, flags, (const Eorientations)up, (const Eorientations)right, (const Eorientations)forward, modelList, blendTime, currentTime);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_SetBoneAnim( void *ghoul2, const int modelIndex, const char *boneName, const int startFrame, const int endFrame, const int flags, const float animSpeed, const int currentTime, const float setFrame, const int blendTime ) {
+static qboolean SV_G2API_SetBoneAnim(void *ghoul2, const int modelIndex, const char *boneName, const int startFrame, const int endFrame, const int flags, const float animSpeed, const int currentTime, const float setFrame, const int blendTime) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_SetBoneAnim( *((CGhoul2Info_v *)ghoul2), modelIndex, boneName, startFrame, endFrame, flags, animSpeed, currentTime, setFrame, blendTime );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_SetBoneAnim(*((CGhoul2Info_v *)ghoul2), modelIndex, boneName, startFrame, endFrame, flags, animSpeed, currentTime, setFrame, blendTime);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_GetBoneAnim( void *ghoul2, const char *boneName, const int currentTime, float *currentFrame, int *startFrame, int *endFrame, int *flags, float *animSpeed, int *modelList, const int modelIndex ) {
+static qboolean SV_G2API_GetBoneAnim(void *ghoul2, const char *boneName, const int currentTime, float *currentFrame, int *startFrame, int *endFrame, int *flags, float *animSpeed, int *modelList, const int modelIndex) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	qboolean ret = re->G2API_GetBoneAnim( g2, modelIndex, boneName, currentTime, currentFrame, startFrame, endFrame, flags, animSpeed, modelList );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
+		ret = re->G2API_GetBoneAnim(g2, modelIndex, boneName, currentTime, currentFrame, startFrame, endFrame, flags, animSpeed, modelList);
+	}
 	return ret;
 }
 
-static void SV_G2API_GetGLAName( void *ghoul2, int modelIndex, char *fillBuf ) {
+static void SV_G2API_GetGLAName(void *ghoul2, int modelIndex, char *fillBuf) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	char *tmp = re->G2API_GetGLAName( *((CGhoul2Info_v *)ghoul2), modelIndex );
-	strcpy( fillBuf, tmp );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		char *tmp = re->G2API_GetGLAName(*((CGhoul2Info_v *)ghoul2), modelIndex);
+		strcpy(fillBuf, tmp);
+	}
 }
 
-static int SV_G2API_CopyGhoul2Instance( void *g2From, void *g2To, int modelIndex ) {
+static int SV_G2API_CopyGhoul2Instance(void *g2From, void *g2To, int modelIndex) {
 	if (!re) return 0; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	int ret = re->G2API_CopyGhoul2Instance( *((CGhoul2Info_v *)g2From), *((CGhoul2Info_v *)g2To), modelIndex );
-	SV_APILock.unlock();
+	int ret = 0;
+#pragma omp critical
+	{
+		ret = re->G2API_CopyGhoul2Instance(*((CGhoul2Info_v *)g2From), *((CGhoul2Info_v *)g2To), modelIndex);
+	}
 	return ret;
 }
 
-static void SV_G2API_CopySpecificGhoul2Model( void *g2From, int modelFrom, void *g2To, int modelTo ) {
+static void SV_G2API_CopySpecificGhoul2Model(void *g2From, int modelFrom, void *g2To, int modelTo) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_CopySpecificG2Model( *((CGhoul2Info_v *)g2From), modelFrom, *((CGhoul2Info_v *)g2To), modelTo );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_CopySpecificG2Model(*((CGhoul2Info_v *)g2From), modelFrom, *((CGhoul2Info_v *)g2To), modelTo);
+	}
 }
 
-static void SV_G2API_DuplicateGhoul2Instance( void *g2From, void **g2To ) {
+static void SV_G2API_DuplicateGhoul2Instance(void *g2From, void **g2To) {
 #ifdef _FULL_G2_LEAK_CHECKING
-		g_G2AllocServer = 1;
+	g_G2AllocServer = 1;
 #endif
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_DuplicateGhoul2Instance( *((CGhoul2Info_v *)g2From), (CGhoul2Info_v **)g2To );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_DuplicateGhoul2Instance(*((CGhoul2Info_v *)g2From), (CGhoul2Info_v **)g2To);
+	}
 }
 
-static qboolean SV_G2API_HasGhoul2ModelOnIndex( void *ghlInfo, int modelIndex ) {
+static qboolean SV_G2API_HasGhoul2ModelOnIndex(void *ghlInfo, int modelIndex) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_HasGhoul2ModelOnIndex( (CGhoul2Info_v **)ghlInfo, modelIndex );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_HasGhoul2ModelOnIndex((CGhoul2Info_v **)ghlInfo, modelIndex);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_RemoveGhoul2Model( void *ghlInfo, int modelIndex ) {
-#ifdef _FULL_G2_LEAK_CHECKING
-		g_G2AllocServer = 1;
-#endif
-	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RemoveGhoul2Model( (CGhoul2Info_v **)ghlInfo, modelIndex );
-	SV_APILock.unlock();
-	return ret;
-}
-
-static qboolean SV_G2API_RemoveGhoul2Models( void *ghlInfo ) {
+static qboolean SV_G2API_RemoveGhoul2Model(void *ghlInfo, int modelIndex) {
 #ifdef _FULL_G2_LEAK_CHECKING
 	g_G2AllocServer = 1;
 #endif
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	return re->G2API_RemoveGhoul2Models( (CGhoul2Info_v **)ghlInfo );
-	SV_APILock.unlock();
-}
-
-static int SV_G2API_Ghoul2Size( void *ghlInfo ) {
-	if (!re) return 0; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	int ret = re->G2API_Ghoul2Size( *((CGhoul2Info_v *)ghlInfo) );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RemoveGhoul2Model((CGhoul2Info_v **)ghlInfo, modelIndex);
+	}
 	return ret;
 }
 
-static int SV_G2API_AddBolt( void *ghoul2, int modelIndex, const char *boneName ) {
+static qboolean SV_G2API_RemoveGhoul2Models(void *ghlInfo) {
+#ifdef _FULL_G2_LEAK_CHECKING
+	g_G2AllocServer = 1;
+#endif
+	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		return re->G2API_RemoveGhoul2Models((CGhoul2Info_v **)ghlInfo);
+	}
+}
+
+static int SV_G2API_Ghoul2Size(void *ghlInfo) {
 	if (!re) return 0; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	int ret = re->G2API_AddBolt( *((CGhoul2Info_v *)ghoul2), modelIndex, boneName );
-	SV_APILock.unlock();
+	int ret = 0;
+#pragma omp critical
+	{
+		ret = re->G2API_Ghoul2Size(*((CGhoul2Info_v *)ghlInfo));
+	}
 	return ret;
 }
 
-static void SV_G2API_SetBoltInfo( void *ghoul2, int modelIndex, int boltInfo ) {
+static int SV_G2API_AddBolt(void *ghoul2, int modelIndex, const char *boneName) {
+	if (!re) return 0; // UQ1: Fix for Warzone not registerring re functions...
+	int ret = 0;
+#pragma omp critical
+	{
+		ret = re->G2API_AddBolt(*((CGhoul2Info_v *)ghoul2), modelIndex, boneName);
+	}
+	return ret;
+}
+
+static void SV_G2API_SetBoltInfo(void *ghoul2, int modelIndex, int boltInfo) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_SetBoltInfo( *((CGhoul2Info_v *)ghoul2), modelIndex, boltInfo );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_SetBoltInfo(*((CGhoul2Info_v *)ghoul2), modelIndex, boltInfo);
+	}
 }
 
-static qboolean SV_G2API_SetRootSurface( void *ghoul2, const int modelIndex, const char *surfaceName ) {
+static qboolean SV_G2API_SetRootSurface(void *ghoul2, const int modelIndex, const char *surfaceName) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_SetRootSurface( *((CGhoul2Info_v *)ghoul2), modelIndex, surfaceName );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_SetRootSurface(*((CGhoul2Info_v *)ghoul2), modelIndex, surfaceName);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_SetSurfaceOnOff( void *ghoul2, const char *surfaceName, const int flags ) {
+static qboolean SV_G2API_SetSurfaceOnOff(void *ghoul2, const char *surfaceName, const int flags) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_SetSurfaceOnOff( *((CGhoul2Info_v *)ghoul2), surfaceName, flags );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_SetSurfaceOnOff(*((CGhoul2Info_v *)ghoul2), surfaceName, flags);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_SetNewOrigin( void *ghoul2, const int boltIndex ) {
+static qboolean SV_G2API_SetNewOrigin(void *ghoul2, const int boltIndex) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_SetNewOrigin( *((CGhoul2Info_v *)ghoul2), boltIndex );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_SetNewOrigin(*((CGhoul2Info_v *)ghoul2), boltIndex);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_DoesBoneExist( void *ghoul2, int modelIndex, const char *boneName ) {
+static qboolean SV_G2API_DoesBoneExist(void *ghoul2, int modelIndex, const char *boneName) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	qboolean ret = re->G2API_DoesBoneExist( g2, modelIndex, boneName );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
+		ret = re->G2API_DoesBoneExist(g2, modelIndex, boneName);
+	}
 	return ret;
 }
 
-static int SV_G2API_GetSurfaceRenderStatus( void *ghoul2, const int modelIndex, const char *surfaceName ) {
+static int SV_G2API_GetSurfaceRenderStatus(void *ghoul2, const int modelIndex, const char *surfaceName) {
 	if (!re) return 0; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	int ret = re->G2API_GetSurfaceRenderStatus( g2, modelIndex, surfaceName );
-	SV_APILock.unlock();
+	int ret = 0;
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
+		ret = re->G2API_GetSurfaceRenderStatus(g2, modelIndex, surfaceName);
+	}
 	return ret;
 }
 
-static void SV_G2API_AbsurdSmoothing( void *ghoul2, qboolean status ) {
+static void SV_G2API_AbsurdSmoothing(void *ghoul2, qboolean status) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	re->G2API_AbsurdSmoothing( g2, status );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
+		re->G2API_AbsurdSmoothing(g2, status);
+	}
 }
 
-static void SV_G2API_SetRagDoll( void *ghoul2, sharedRagDollParams_t *params ) {
+static void SV_G2API_SetRagDoll(void *ghoul2, sharedRagDollParams_t *params) {
 	CRagDollParams rdParams;
 
-	SV_APILock.lock();
-
-	if ( !params ) {
+	if (!params) {
 		if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-		SV_APILock.unlock();
-		re->G2API_ResetRagDoll( *((CGhoul2Info_v *)ghoul2) );
+#pragma omp critical
+		{
+			re->G2API_ResetRagDoll(*((CGhoul2Info_v *)ghoul2));
+		}
 		return;
 	}
 
-	VectorCopy( params->angles, rdParams.angles );
-	VectorCopy( params->position, rdParams.position );
-	VectorCopy( params->scale, rdParams.scale );
-	VectorCopy( params->pelvisAnglesOffset, rdParams.pelvisAnglesOffset );
-	VectorCopy( params->pelvisPositionOffset, rdParams.pelvisPositionOffset );
+#pragma omp critical
+	{
+		VectorCopy(params->angles, rdParams.angles);
+		VectorCopy(params->position, rdParams.position);
+		VectorCopy(params->scale, rdParams.scale);
+		VectorCopy(params->pelvisAnglesOffset, rdParams.pelvisAnglesOffset);
+		VectorCopy(params->pelvisPositionOffset, rdParams.pelvisPositionOffset);
 
-	rdParams.fImpactStrength = params->fImpactStrength;
-	rdParams.fShotStrength = params->fShotStrength;
-	rdParams.me = params->me;
+		rdParams.fImpactStrength = params->fImpactStrength;
+		rdParams.fShotStrength = params->fShotStrength;
+		rdParams.me = params->me;
 
-	rdParams.startFrame = params->startFrame;
-	rdParams.endFrame = params->endFrame;
+		rdParams.startFrame = params->startFrame;
+		rdParams.endFrame = params->endFrame;
 
-	rdParams.collisionType = params->collisionType;
-	rdParams.CallRagDollBegin = params->CallRagDollBegin;
+		rdParams.collisionType = params->collisionType;
+		rdParams.CallRagDollBegin = params->CallRagDollBegin;
 
-	rdParams.RagPhase = (CRagDollParams::ERagPhase)params->RagPhase;
-	rdParams.effectorsToTurnOff = (CRagDollParams::ERagEffector)params->effectorsToTurnOff;
+		rdParams.RagPhase = (CRagDollParams::ERagPhase)params->RagPhase;
+		rdParams.effectorsToTurnOff = (CRagDollParams::ERagEffector)params->effectorsToTurnOff;
+	}
 
 	if (!re)
 	{
-		SV_APILock.unlock();
 		return; // UQ1: Fix for Warzone not registerring re functions...
 	}
 
-	re->G2API_SetRagDoll( *((CGhoul2Info_v *)ghoul2), &rdParams );
-
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_SetRagDoll(*((CGhoul2Info_v *)ghoul2), &rdParams);
+	}
 }
 
-static void SV_G2API_AnimateG2Models( void *ghoul2, int time, sharedRagDollUpdateParams_t *params ) {
+static void SV_G2API_AnimateG2Models(void *ghoul2, int time, sharedRagDollUpdateParams_t *params) {
 	CRagDollUpdateParams rduParams;
 
-	if ( !params )
+	if (!params)
 		return;
 
-	SV_APILock.lock();
+#pragma omp critical
+	{
+		VectorCopy(params->angles, rduParams.angles);
+		VectorCopy(params->position, rduParams.position);
+		VectorCopy(params->scale, rduParams.scale);
+		VectorCopy(params->velocity, rduParams.velocity);
 
-	VectorCopy( params->angles, rduParams.angles );
-	VectorCopy( params->position, rduParams.position );
-	VectorCopy( params->scale, rduParams.scale );
-	VectorCopy( params->velocity, rduParams.velocity );
-
-	rduParams.me = params->me;
-	rduParams.settleFrame = params->settleFrame;
+		rduParams.me = params->me;
+		rduParams.settleFrame = params->settleFrame;
+	}
 
 	if (!re)
 	{
-		SV_APILock.unlock();
 		return; // UQ1: Fix for Warzone not registerring re functions...
 	}
 
-	re->G2API_AnimateG2ModelsRag( *((CGhoul2Info_v *)ghoul2), time, &rduParams );
-
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_AnimateG2ModelsRag(*((CGhoul2Info_v *)ghoul2), time, &rduParams);
+	}
 }
 
-static qboolean SV_G2API_RagPCJConstraint( void *ghoul2, const char *boneName, vec3_t min, vec3_t max ) {
+static qboolean SV_G2API_RagPCJConstraint(void *ghoul2, const char *boneName, vec3_t min, vec3_t max) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RagPCJConstraint( *((CGhoul2Info_v *)ghoul2), boneName, min, max );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RagPCJConstraint(*((CGhoul2Info_v *)ghoul2), boneName, min, max);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_RagPCJGradientSpeed( void *ghoul2, const char *boneName, const float speed ) {
+static qboolean SV_G2API_RagPCJGradientSpeed(void *ghoul2, const char *boneName, const float speed) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RagPCJGradientSpeed( *((CGhoul2Info_v *)ghoul2), boneName, speed );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RagPCJGradientSpeed(*((CGhoul2Info_v *)ghoul2), boneName, speed);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_RagEffectorGoal( void *ghoul2, const char *boneName, vec3_t pos ) {
+static qboolean SV_G2API_RagEffectorGoal(void *ghoul2, const char *boneName, vec3_t pos) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RagEffectorGoal( *((CGhoul2Info_v *)ghoul2), boneName, pos );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RagEffectorGoal(*((CGhoul2Info_v *)ghoul2), boneName, pos);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_GetRagBonePos( void *ghoul2, const char *boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale ) {
+static qboolean SV_G2API_GetRagBonePos(void *ghoul2, const char *boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_GetRagBonePos( *((CGhoul2Info_v *)ghoul2), boneName, pos, entAngles, entPos, entScale );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_GetRagBonePos(*((CGhoul2Info_v *)ghoul2), boneName, pos, entAngles, entPos, entScale);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_RagEffectorKick( void *ghoul2, const char *boneName, vec3_t velocity ) {
+static qboolean SV_G2API_RagEffectorKick(void *ghoul2, const char *boneName, vec3_t velocity) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RagEffectorKick( *((CGhoul2Info_v *)ghoul2), boneName, velocity );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RagEffectorKick(*((CGhoul2Info_v *)ghoul2), boneName, velocity);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_RagForceSolve( void *ghoul2, qboolean force ) {
+static qboolean SV_G2API_RagForceSolve(void *ghoul2, qboolean force) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RagForceSolve( *((CGhoul2Info_v *)ghoul2), force );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RagForceSolve(*((CGhoul2Info_v *)ghoul2), force);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_SetBoneIKState( void *ghoul2, int time, const char *boneName, int ikState, sharedSetBoneIKStateParams_t *params ) {
+static qboolean SV_G2API_SetBoneIKState(void *ghoul2, int time, const char *boneName, int ikState, sharedSetBoneIKStateParams_t *params) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	return re->G2API_SetBoneIKState( *((CGhoul2Info_v *)ghoul2), time, boneName, ikState, params );
-}
-
-static qboolean SV_G2API_IKMove( void *ghoul2, int time, sharedIKMoveParams_t *params ) {
-	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	qboolean ret = re->G2API_IKMove( *((CGhoul2Info_v *)ghoul2), time, params );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_SetBoneIKState(*((CGhoul2Info_v *)ghoul2), time, boneName, ikState, params);
+	}
 	return ret;
 }
 
-static qboolean SV_G2API_RemoveBone( void *ghoul2, const char *boneName, int modelIndex ) {
+static qboolean SV_G2API_IKMove(void *ghoul2, int time, sharedIKMoveParams_t *params) {
+	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_IKMove(*((CGhoul2Info_v *)ghoul2), time, params);
+	}
+	return ret;
+}
+
+static qboolean SV_G2API_RemoveBone(void *ghoul2, const char *boneName, int modelIndex) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	SV_APILock.lock();
-	qboolean ret = re->G2API_RemoveBone( g2, modelIndex, boneName );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		ret = re->G2API_RemoveBone(g2, modelIndex, boneName);
+	}
 	return ret;
 }
 
-static void SV_G2API_AttachInstanceToEntNum( void *ghoul2, int entityNum, qboolean server ) {
+static void SV_G2API_AttachInstanceToEntNum(void *ghoul2, int entityNum, qboolean server) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_AttachInstanceToEntNum( *((CGhoul2Info_v *)ghoul2), entityNum, server );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_AttachInstanceToEntNum(*((CGhoul2Info_v *)ghoul2), entityNum, server);
+	}
 }
 
-static void SV_G2API_ClearAttachedInstance( int entityNum ) {
+static void SV_G2API_ClearAttachedInstance(int entityNum) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_ClearAttachedInstance( entityNum );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_ClearAttachedInstance(entityNum);
+	}
 }
 
-static void SV_G2API_CleanEntAttachments( void ) {
+static void SV_G2API_CleanEntAttachments(void) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	re->G2API_CleanEntAttachments();
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		re->G2API_CleanEntAttachments();
+	}
 }
 
-static qboolean SV_G2API_OverrideServer( void *serverInstance ) {
+static qboolean SV_G2API_OverrideServer(void *serverInstance) {
 	if (!re) return qfalse; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)serverInstance);
-	qboolean ret = re->G2API_OverrideServerWithClientData( g2, 0 );
-	SV_APILock.unlock();
+	qboolean ret = qfalse;
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)serverInstance);
+		ret = re->G2API_OverrideServerWithClientData(g2, 0);
+	}
 	return ret;
 }
 
-static void SV_G2API_GetSurfaceName( void *ghoul2, int surfNumber, int modelIndex, char *fillBuf ) {
+static void SV_G2API_GetSurfaceName(void *ghoul2, int surfNumber, int modelIndex, char *fillBuf) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-	SV_APILock.lock();
-	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
-	char *tmp = re->G2API_GetSurfaceName( g2, modelIndex, surfNumber );
-	strcpy( fillBuf, tmp );
-	SV_APILock.unlock();
+#pragma omp critical
+	{
+		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
+		char *tmp = re->G2API_GetSurfaceName(g2, modelIndex, surfNumber);
+		strcpy(fillBuf, tmp);
+	}
 }
 
 static void GVM_Cvar_Set( const char *var_name, const char *value ) {
-	SV_APILock.lock();
+#pragma omp critical
+	{
 	Cvar_VM_Set( var_name, value, VM_GAME );
-	SV_APILock.unlock();
+	}
 }
 
 // legacy syscall
