@@ -3820,6 +3820,43 @@ static float saberHitFraction = 1.0f;
 //This is a large function. I feel sort of bad inlining it. But it does get called tons of times per frame.
 qboolean BG_SuperBreakWinAnim( int anim );
 
+#define norm2(v)	(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+#define norm(v)		(sqrt(norm2(v)))
+#define dot(u,v)	((u)[0] * (v)[0] + (u)[1] * (v)[1] + (u)[2] * (v)[2])
+#define cross(b,c)	vec3_t{(b[1] * c[2] - c[1] * b[2], b[2] * c[0] - c[2] * b[0], b[0] * c[1] - c[0] * b[1])}
+
+bool intersection(const vec3_t a[2], const vec3_t b[2], vec3_t ip)
+// http://mathworld.wolfram.com/Line-LineIntersection.html
+// in 3d; will also work in 2d if z components are 0
+{
+	vec3_t da;
+	VectorSubtract(a[1], a[0], da);
+	vec3_t db;
+	VectorSubtract(b[1], b[0], db);
+	vec3_t dc;
+	VectorSubtract(b[0], a[0], dc);
+
+	if (dot(dc, cross(da, db)) != 0.0) // lines are not coplanar
+		return false;
+
+	vec3_t s{ dot(cross(dc, db), cross(da, db)) / norm2(cross(da, db)) };
+
+	if (VectorLength(s) >= 0.0 && VectorLength(s) <= 1.0)
+	{
+		vec3_t out;
+		VectorCopy(a[0], out);
+		VectorAdd(out, da, out);
+		out[0] *= s[0];
+		out[1] *= s[1];
+		out[2] *= s[2];
+	
+		VectorCopy(out, ip);
+		return true;
+	}
+
+	return false;
+}
+
 static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, vec3_t saberStart, vec3_t saberEnd, qboolean doInterpolate, int trMask, qboolean extrapolate )
 {
 	static trace_t tr;

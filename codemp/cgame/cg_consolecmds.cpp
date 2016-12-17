@@ -395,7 +395,9 @@ int cmdcmp( const void *a, const void *b ) {
 	return Q_stricmp( (const char *)a, ((consoleCommand_t*)b)->cmd );
 }
 
+#ifdef __USE_NAVMESH__
 extern void Warzone_Nav_CreateNavMesh(void);
+#endif //__USE_NAVMESH__
 extern void AWP_AutoWaypoint2(void);
 
 /* This array MUST be sorted correctly by alphabetical name field */ // UQ1: And who thought this change was a good idea??? *grrr*
@@ -423,7 +425,9 @@ static consoleCommand_t	commands[] = {
 	{ "invnext",					CG_NextInventory_f },
 	{ "invprev",					CG_PrevInventory_f },
 	{ "loaddeferred",				CG_LoadDeferredPlayers },
+#ifdef __USE_NAVMESH__
 	{ "navgen",						Warzone_Nav_CreateNavMesh },
+#endif //__USE_NAVMESH__
 	{ "nextframe",					CG_TestModelNextFrame_f },
 	{ "nextskin",					CG_TestModelNextSkin_f },
 	{ "prevframe",					CG_TestModelPrevFrame_f },

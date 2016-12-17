@@ -3559,6 +3559,9 @@ void CG_ManualEntityRender(centity_t *cent)
 
 //[AUTOWAYPOINT]
 void DrawWaypoints();
+#ifdef __USE_NAVMESH__
+void Warzone_Nav_VisualizeNavMesh(void);
+#endif //__USE_NAVMESH__
 //[/AUTOWAYPOINT]
 
 void FOLIAGE_DrawGrass( void );
@@ -3577,6 +3580,9 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 
 //[AUTOWAYPOINT]
 	DrawWaypoints();
+#ifdef __USE_NAVMESH__
+	Warzone_Nav_VisualizeNavMesh();
+#endif //__USE_NAVMESH__
 //[/AUTOWAYPOINT]
 
 	if (isPortal)

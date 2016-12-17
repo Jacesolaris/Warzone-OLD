@@ -500,6 +500,7 @@ extern vmCvar_t npc_wptonav;
 
 int LoadPathData(const char *filename)
 {
+#ifndef __USE_NAVMESH__
 	if (AIMOD_NODES_LoadNodes()) 
 	{
 		trap->Cvar_Register( &npc_wptonav, "npc_wptonav", "0", CVAR_ARCHIVE );
@@ -548,6 +549,7 @@ int LoadPathData(const char *filename)
 	}
 
 	Com_Printf("*** Warzone: Navigation system update completed.\n");
+#endif //__USE_NAVMESH__
 	return 0;
 }
 

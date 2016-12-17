@@ -197,7 +197,17 @@ void CacheNavMeshData ( const rcPolyMesh *polyMesh, const rcPolyMeshDetail *deta
     int dVertsSize = detailedPolyMesh->nverts * sizeof (float) * 3;
     int dTrisSize = detailedPolyMesh->ntris * sizeof (unsigned char) * 3;
     char *buffer = NULL;
-    
+
+	/*
+	trap->Print("vertsSize %i\n", vertsSize);
+	trap->Print("polysSize %i\n", polysSize);
+	trap->Print("areasSize %i\n", areasSize);
+	trap->Print("flagsSize %i\n", flagsSize);
+	trap->Print("dMeshesSize %i\n", dMeshesSize);
+	trap->Print("dVertsSize %i\n", dVertsSize);
+	trap->Print("dTrisSize %i\n", dTrisSize);
+    */
+
     int ptr = sizeof (header);
     
     header.version = 1;
@@ -543,7 +553,7 @@ cleanup:
     delete[] buffer;
 }
 
-void Warzone_Nav_CreateNavMesh(void)
+void Warzone_Nav_CreateNavMesh_Xycaleth(void)
 {
 	char mapname[128] = { 0 };
 
