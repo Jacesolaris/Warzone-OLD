@@ -11806,6 +11806,7 @@ void PmoveSingle (pmove_t *pmove) {
 
 	// set groundentity, watertype, and waterlevel
 	PM_GroundTrace();
+
 	if ( pm_flying == FLY_HOVER )
 	{//never stick to the ground
 		PM_HoverTrace();

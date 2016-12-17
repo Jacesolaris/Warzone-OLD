@@ -949,7 +949,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 					break;
 				}
 
-				if ( ent->s.eType != ET_PLAYER )
+				if ( ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC )
 				{
 					break;		// not in the player model
 				}
@@ -3956,7 +3956,7 @@ void ClientEndFrame( gentity_t *ent ) {
 		isNPC = qtrue;
 	}
 
-	if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
+	if ( !isNPC && ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 		SpectatorClientEndFrame( ent );
 		return;
 	}
@@ -4018,7 +4018,8 @@ void ClientEndFrame( gentity_t *ent ) {
 		ent->s.eType = ET_NPC;
 	}
 
-	SendPendingPredictableEvents( &ent->client->ps );
+	if (!isNPC)
+		SendPendingPredictableEvents( &ent->client->ps );
 
 	// set the bit for the reachability area the client is currently in
 //	i = trap->AAS_PointReachabilityAreaIndex( ent->client->ps.origin );

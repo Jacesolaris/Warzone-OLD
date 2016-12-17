@@ -677,12 +677,14 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 
 	numbumps = 4;
 
+	/*
 	if (pm_entSelf
 		&& pm_entSelf->s.eType == ET_NPC
 		&& pm_entSelf->s.NPC_class != CLASS_VEHICLE)
 	{// UQ1: Test, to reduce horrible CPU usage...
 		numbumps = 1;
 	}
+	*/
 
 	VectorCopy (pm->ps->velocity, primal_velocity);
 	VectorCopy (pm->ps->velocity, endVelocity);

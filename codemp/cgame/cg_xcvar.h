@@ -239,4 +239,5 @@ XCVAR_DEF(cg_foliagePlantSize,						"0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_atmosphericFrameParticleOverride,		"0",				NULL, CVAR_ARCHIVE)
 // Debug stuff...
 XCVAR_DEF(cg_debugMuzzle,							"0",				NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_smoothNPC,								"0",				NULL, CVAR_ARCHIVE)
 #undef XCVAR_DEF
