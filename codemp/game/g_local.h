@@ -900,6 +900,7 @@ struct gclient_s {
 	int         damageTypeLastEffectTime[NUM_DAMAGE_TYPES];
 	gentity_t    *damageTypeOwner[NUM_DAMAGE_TYPES];
 
+	int			npcFavoredStance;
 
 	struct force {
 		int		regenDebounce;

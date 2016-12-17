@@ -3912,9 +3912,16 @@ void NPC_CheckTypeStuff ( gentity_t *aiEnt)
 	}
 }
 
+extern void Jedi_AdjustSaberAnimLevel(gentity_t *self, int newLevel);
+
 void NPC_GenericFrameCode ( gentity_t *self )
 {
 	gentity_t *aiEnt = self;
+
+	if (NPC_IsJedi(aiEnt))
+	{
+		Jedi_AdjustSaberAnimLevel(aiEnt, 0);
+	}
 
 	// UQ1: Check any jetpack stuff...
 	NPC_CheckFlying(aiEnt);

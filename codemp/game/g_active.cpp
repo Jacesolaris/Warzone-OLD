@@ -1743,6 +1743,7 @@ void G_SetTauntAnim( gentity_t *ent, int taunt )
 					anim = BOTH_ENGAGETAUNT;
 					break;
 				case SS_DUAL:
+				case SS_WARZONE:
 					if ( ent->client->ps.saberHolstered == 1
 						&& ent->client->saber[1].model[0] )
 					{//turn on second saber
@@ -1859,6 +1860,9 @@ void G_SetTauntAnim( gentity_t *ent, int taunt )
 					case SS_STAFF:
 						anim = BOTH_SHOWOFF_STAFF;
 						break;
+					case SS_WARZONE:
+						anim = BOTH_SHOWOFF_DUAL;
+						break;
 					}
 				}
 			}
@@ -1886,6 +1890,7 @@ void G_SetTauntAnim( gentity_t *ent, int taunt )
 					break;
 				case SS_STRONG:
 				case SS_DESANN:
+				case SS_WARZONE:
 					if ( ent->client->ps.saberHolstered )
 					{//turn on first
 						G_Sound( ent, CHAN_WEAPON, ent->client->saber[0].soundOn );
@@ -3186,6 +3191,7 @@ void ClientThink_real( gentity_t *ent ) {
 							break;
 						case SS_STRONG:
 						case SS_DESANN:
+						case SS_WARZONE:
 							lockHits = 3;
 							break;
 						}
