@@ -3822,10 +3822,10 @@ void G_RunFrame( int levelTime ) {
 		ACTIVE_ENTS_NUM++;
 	}
 
-	int			thinkTime = trap->Milliseconds();
-	int			numThreads = 0;
+	//int			thinkTime = trap->Milliseconds();
+	//int			numThreads = 0;
 
-	if (ACTIVE_ENTS_NUM > 512)
+	/*if (ACTIVE_ENTS_NUM > 512)
 	{
 		numThreads = std::thread::hardware_concurrency() > 5 ? 5 : 4;
 	}
@@ -3845,7 +3845,7 @@ void G_RunFrame( int levelTime ) {
 	if (numThreads > std::thread::hardware_concurrency() - 2)
 	{
 		numThreads = max(std::thread::hardware_concurrency() - 2, 1);
-	}
+	}*/
 
 //#pragma omp parallel for num_threads(numThreads) if (ACTIVE_ENTS_NUM > 128 && numThreads > 0)
 	for (int aEnt = 0; aEnt < ACTIVE_ENTS_NUM; aEnt++)
@@ -4118,9 +4118,9 @@ void G_RunFrame( int levelTime ) {
 		}
 	}
 
-	thinkTime = trap->Milliseconds() - thinkTime;
+	//thinkTime = trap->Milliseconds() - thinkTime;
 
-	trap->Print("Thinktime was %i ms.\n", thinkTime);
+	//trap->Print("Thinktime was %i ms.\n", thinkTime);
 
 #ifdef _G_FRAME_PERFANAL
 	iTimer_ItemRun = trap->PrecisionTimer_End(timer_ItemRun);
