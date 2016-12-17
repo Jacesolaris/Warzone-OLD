@@ -3185,25 +3185,6 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 		}
 	}
 
-	if ( cg.nextSnap && cent->currentState.eType == ET_NPC && cg_smoothNPC.integer )
-	{// UQ1: If we have a snapshot, and this is an NPC, interpolate to stop jitter!
-		cent->nextState.pos.trType = TR_INTERPOLATE;
-		//cent->currentState.pos.trType = TR_INTERPOLATE;
-		cent->currentState.pos.trType = TR_LINEAR_STOP;
-		cent->interpolate = qtrue;
-		//trap->Print("NPC %i using TR_INTERPOLATE.\n", cent->currentState.number);
-	}
-
-	/*
-	if (cg.nextSnap && (cent->currentState.eType == ET_NPC || cent->currentState.eType == ET_PLAYER))
-	{
-		if (cent->currentState.eType == ET_NPC)
-			trap->Print("NPC %i using %i and %i.\n", cent->currentState.number, cent->nextState.pos.trType, cent->currentState.pos.trType);
-		if (cent->currentState.eType == ET_PLAYER)
-			trap->Print("PLAYER %i using %i and %i.\n", cent->currentState.number, cent->nextState.pos.trType, cent->currentState.pos.trType);
-	}
-	*/
-
 	if (cg.predictedPlayerState.m_iVehicleNum &&
 		cg.predictedPlayerState.m_iVehicleNum == cent->currentState.number &&
 		cent->currentState.eType == ET_NPC && cent->currentState.NPC_class == CLASS_VEHICLE)
