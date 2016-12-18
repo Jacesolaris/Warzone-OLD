@@ -2323,6 +2323,26 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 		if ( pm->cmd.forwardmove > 0 )
 		{//forward= T2B slash
 			if (!noSpecials&&
+				pm->ps->fd.saberAnimLevelBase == SS_WARZONE &&
+				pm->ps->velocity[2] > 100 &&
+				PM_GroundDistance() < 32 &&
+				!BG_InSpecialJump(pm->ps->legsAnim) &&
+				!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
+				BG_EnoughForcePowerForMove(SABER_ALT_ATTACK_POWER_FB))
+			{ //FLIP AND DOWNWARD ATTACK
+			  //trace_t tr;
+
+			  //if (PM_SomeoneInFront(&tr))
+				{
+					newmove = PM_SaberFlipOverAttackMove();
+					if (newmove != LS_A_T2B
+						&& newmove != LS_NONE)
+					{
+						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
+					}
+				}
+			}
+			else if (!noSpecials&&
 				(pm->ps->fd.saberAnimLevel == SS_DUAL || pm->ps->fd.saberAnimLevel == SS_STAFF) &&
 				pm->ps->fd.forceRageRecoveryTime < pm->cmd.serverTime &&
 				//pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 &&
@@ -2358,26 +2378,6 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 					newmove = PM_SaberFlipOverAttackMove();
 					if ( newmove != LS_A_T2B
 						&& newmove != LS_NONE )
-					{
-						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
-					}
-				}
-			}
-			else if (!noSpecials&&
-				pm->ps->fd.saberAnimLevel == SS_WARZONE &&
-				pm->ps->velocity[2] > 100 &&
-				PM_GroundDistance() < 32 &&
-				!BG_InSpecialJump(pm->ps->legsAnim) &&
-				!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
-				BG_EnoughForcePowerForMove(SABER_ALT_ATTACK_POWER_FB))
-			{ //FLIP AND DOWNWARD ATTACK
-			  //trace_t tr;
-
-			  //if (PM_SomeoneInFront(&tr))
-				{
-					newmove = PM_SaberFlipOverAttackMove();
-					if (newmove != LS_A_T2B
-						&& newmove != LS_NONE)
 					{
 						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
 					}
@@ -3004,7 +3004,33 @@ void PM_WeaponLightsaber(void)
 
 	if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK) )
 	{ //might as well just check for a saber throw right here
-		if (pm->ps->fd.saberAnimLevel == SS_STAFF)
+		if ((pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+			&& (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+			&& ((pm->cmd.rightmove != 0 && pm->cmd.forwardmove <= 0) || pm->cmd.forwardmove < 0))
+		{// Warzone stance can kick left or right or back. Normal saber throw when moving forward...
+			//kick instead of doing a throw
+			//if in a saber attack return anim, can interrupt it with a kick
+			if (pm->ps->weaponTime > 0//can't fire yet
+				&& PM_SaberInReturn(pm->ps->saberMove)//in a saber return move - FIXME: what about transitions?
+													  //&& pm->ps->weaponTime <= 250//should be able to fire soon
+													  //&& pm->ps->torsoTimer <= 250//torso almost done
+				&& pm->ps->saberBlocked == BLOCKED_NONE//not interacting with any other saber
+				&& !(pm->cmd.buttons&BUTTON_ATTACK))//not trying to swing the saber
+			{
+				if ((pm->cmd.forwardmove || pm->cmd.rightmove)//trying to kick in a specific direction
+					&& PM_CheckAltKickAttack())//trying to do a kick
+				{//allow them to do the kick now!
+					int kickMove = PM_KickMoveForConditions();
+					if (kickMove != -1)
+					{
+						pm->ps->weaponTime = 0;
+						PM_SetSaberMove(kickMove);
+						return;
+					}
+				}
+			}
+		}
+		else if (pm->ps->fd.saberAnimLevel == SS_STAFF)
 		{ //kick instead of doing a throw
 			//if in a saber attack return anim, can interrupt it with a kick
 			if ( pm->ps->weaponTime > 0//can't fire yet
@@ -3474,7 +3500,73 @@ weapChecks:
 	// *********************************************************
 	// Check for WEAPON ATTACK
 	// *********************************************************
-	if ((pm->ps->fd.saberAnimLevel == SS_STAFF || pm->ps->fd.saberAnimLevel == SS_WARZONE) &&
+	if ((pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+		&& (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+		&& ((pm->cmd.rightmove != 0 && pm->cmd.forwardmove <= 0) || pm->cmd.forwardmove < 0))
+	{// Warzone stance can kick left or right or back. Normal saber throw when moving forward...
+		int kickMove = -1;
+
+		if (!BG_KickingAnim(pm->ps->torsoAnim) &&
+			!BG_KickingAnim(pm->ps->legsAnim) &&
+			!BG_InRoll(pm->ps, pm->ps->legsAnim) &&
+			//			!BG_KickMove( pm->ps->saberMove )//not already in a kick
+			pm->ps->saberMove == LS_READY
+			&& !(pm->ps->pm_flags&PMF_DUCKED)//not ducked
+			&& (pm->cmd.upmove >= 0) //not trying to duck
+			)//&& pm->ps->groundEntityNum != ENTITYNUM_NONE)
+		{//player kicks
+			kickMove = PM_KickMoveForConditions();
+		}
+
+		if (kickMove != -1)
+		{
+			if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+			{//if in air, convert kick to an in-air kick
+				float gDist = PM_GroundDistance();
+				//let's only allow air kicks if a certain distance from the ground
+				//it's silly to be able to do them right as you land.
+				//also looks wrong to transition from a non-complete flip anim...
+				if ((!BG_FlippingAnim(pm->ps->legsAnim) || pm->ps->legsTimer <= 0) &&
+					gDist > 64.0f && //strict minimum
+					gDist > (-pm->ps->velocity[2]) - 64.0f //make sure we are high to ground relative to downward velocity as well
+					)
+				{
+					switch (kickMove)
+					{
+					case LS_KICK_F:
+						kickMove = LS_KICK_F_AIR;
+						break;
+					case LS_KICK_B:
+						kickMove = LS_KICK_B_AIR;
+						break;
+					case LS_KICK_R:
+						kickMove = LS_KICK_R_AIR;
+						break;
+					case LS_KICK_L:
+						kickMove = LS_KICK_L_AIR;
+						break;
+					default: //oh well, can't do any other kick move while in-air
+						kickMove = -1;
+						break;
+					}
+				}
+				else
+				{//leave it as a normal kick unless we're too high up
+					if (gDist > 128.0f || pm->ps->velocity[2] >= 0)
+					{ //off ground, but too close to ground
+						kickMove = -1;
+					}
+				}
+			}
+
+			if (kickMove != -1)
+			{
+				PM_SetSaberMove(kickMove);
+				return;
+			}
+		}
+	}
+	else if ((pm->ps->fd.saberAnimLevel == SS_STAFF) &&
 		(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 	{ //ok, try a kick I guess.
 		int kickMove = -1;
