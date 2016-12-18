@@ -581,7 +581,7 @@ int PM_GetSaberStance()
 
 	if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
 	{
-		return BOTH_DOOKU_STANCE;
+		return TRIPLE3_YELLOWSTANCE;
 	}
 
 	switch (pm->ps->fd.saberAnimLevel)
