@@ -9,10 +9,8 @@ extern stringID_table_t StanceTable[];
 extern qboolean BG_SabersOff(playerState_t *ps);
 extern qboolean BG_StabDownAnim(int anim);
 extern qboolean G_ClientIdleInWorld(gentity_t *ent);
-extern qboolean PM_StaggerAnim(int anim);
 extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
 extern qboolean WP_SabersCheckLock(gentity_t *ent1, gentity_t *ent2);
-//extern bot_state_t *botstates[MAX_CLIENTS];
 extern stringID_table_t animTable[MAX_ANIMATIONS + 1];
 //[SaberSys]
 #ifdef __MISSILES_AUTO_PARRY__
@@ -78,11 +76,6 @@ void SabBeh_AttackVsBlock( gentity_t *attacker, gentity_t *blocker, vec3_t hitLo
 
 void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc, qboolean *didHit, qboolean otherHitSaberBlade)
 {	
-	if(!otherOwner)
-	{//not a saber-on-saber hit, no mishap handling.
-		return;
-	}
-
 	if(BG_SaberInNonIdleDamageMove(&self->client->ps, self->localAnimIndex) )
 	{//self is attacking
 		if(BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex)) 
@@ -110,7 +103,7 @@ void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc,
 	else
 	{//whatever other states self can be in.  (returns, bounces, or something)
 		G_SaberBounce(otherOwner, self, qfalse);
-		G_SaberBounce(self, otherOwner, qfalse);
+		//G_SaberBounce(self, otherOwner, qfalse);
 	}
 }
 
