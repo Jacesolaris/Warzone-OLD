@@ -280,6 +280,12 @@ int PM_GetSaberStance(void)
 		return BOTH_STAND1;
 	}
 
+	if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+	{
+		pm->ps->fd.saberAnimLevel = SS_WARZONE;
+		return BOTH_P7_S7_T_;
+	}
+
 	if ( saber1
 		&& saber1->readyAnim != -1 )
 	{
