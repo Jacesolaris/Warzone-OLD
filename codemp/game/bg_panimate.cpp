@@ -2791,7 +2791,7 @@ int BG_ParseAnimationFile(const char *filename, animation_t *animset, qboolean i
 		if ( fps < 0 )
 		{//backwards
 			animset[animNum].frameLerp = floor(1000.0f / fps);
-
+			//well this can't be here
 #ifdef __SABER_ANIMATION_SLOW__
 			{// UQ1: Slow down saber moves...
 				int x;

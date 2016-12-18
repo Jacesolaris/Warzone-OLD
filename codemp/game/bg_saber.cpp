@@ -2,6 +2,11 @@
 #include "bg_public.h"
 #include "bg_local.h"
 #include "w_saber.h"
+
+#if defined(_CGAME)
+#include "../cgame/cg_local.h"
+#endif
+
 #define __NON_MULTISABERSWING__
 //#define  __MULTISABERSWING__
 
@@ -4722,6 +4727,186 @@ weapChecks:
 				anim = BOTH_S6_S1;
 			}
 		}
+		else if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE
+			&& newMove != LS_READY
+			&& newMove != LS_DRAW
+			&& newMove != LS_PUTAWAY
+			&& !BG_SaberInIdle(newMove)
+			&& !PM_SaberInParry(newMove)
+			&& !PM_SaberInKnockaway(newMove)
+			&& !PM_SaberInBrokenParry(newMove)
+			&& !PM_SaberInReflect(newMove)
+			&& !BG_SaberInSpecial(newMove)
+			&& ((newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL) || saberMoveData[pm->ps->saberMove].animToUse == anim))
+		{ // Experimental crazy stance :) Randomly select an attack anim  from all stances hehehe
+			int randomSelect;
+
+#if defined(_UI)
+			int time = 0;
+#elif defined(_GAME)
+			int time = level.time;
+#elif defined(_CGAME)
+			int time = cg.time;
+#endif
+
+			//
+			// Make more of these to select *any* anim sets for *any* direction...
+			//
+			if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove == 0)
+			{// Standing still example. Only use TAVION.
+				pm->ps->fd.saberAnimLevel = SS_TAVION;
+
+				// I sorta like it without doing this. Havn't tried with...
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+			else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove == 0)
+			{// Moving forward only. Only use STAFF.
+				pm->ps->fd.saberAnimLevel = SS_STAFF;
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+			else if (pm->cmd.forwardmove < 0 && pm->cmd.rightmove == 0)
+			{// Moving back only. Only use STAFF.
+				pm->ps->fd.saberAnimLevel = SS_STAFF;
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+			else if (pm->cmd.forwardmove < 0 && pm->cmd.rightmove > 0)
+			{// Moving to back right example. Only use FAST, TAVION and DUAL.
+				if (pm->ps->nextStyleSwitch < time)
+				{
+					switch (pm->ps->fd.saberAnimLevel)
+					{
+					case SS_FAST:
+						randomSelect = SS_TAVION;
+						break;
+					default:
+						randomSelect = SS_DUAL;
+						break;
+					}
+
+					pm->ps->nextStyleSwitch = time + 600;
+
+					pm->ps->fd.saberAnimLevel = randomSelect;
+					randomSelect -= 1;
+				}
+				else if (pm->ps->fd.saberAnimLevel != SS_DUAL
+					&& pm->ps->fd.saberAnimLevel != SS_TAVION)
+				{// Don't use staff anim... Crap anim...
+					pm->ps->fd.saberAnimLevel = SS_DUAL;
+					randomSelect = pm->ps->fd.saberAnimLevel;
+					randomSelect -= 1;
+				}
+			}
+			else if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove < 0)
+			{// Moving to left example. Only use FAST, TAVION and DUAL.
+				if (pm->ps->nextStyleSwitch < time)
+				{
+					switch (pm->ps->fd.saberAnimLevel)
+					{
+					case SS_FAST:
+						randomSelect = SS_TAVION;
+						break;
+					case SS_TAVION:
+						randomSelect = SS_DUAL;
+						break;
+					default:
+						randomSelect = SS_FAST;
+						break;
+					}
+
+					pm->ps->nextStyleSwitch = time + 600;
+
+					pm->ps->fd.saberAnimLevel = randomSelect;
+					randomSelect -= 1;
+				}
+				else if (pm->ps->fd.saberAnimLevel != SS_FAST
+					&& pm->ps->fd.saberAnimLevel != SS_DUAL
+					&& pm->ps->fd.saberAnimLevel != SS_TAVION)
+				{// Don't use staff anim... Crap anim...
+					pm->ps->fd.saberAnimLevel = SS_FAST;
+					randomSelect = pm->ps->fd.saberAnimLevel;
+					randomSelect -= 1;
+				}
+			}
+			else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove < 0)
+			{// Moving forward and left example. Only use TAVION.
+				pm->ps->fd.saberAnimLevel = SS_TAVION;
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+			else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove > 0)
+			{// Moving forward and right example. Only use FAST, TAVION and SS_DESANN.
+				if (pm->ps->nextStyleSwitch < time)
+				{
+					switch (pm->ps->fd.saberAnimLevel)
+					{
+					case SS_FAST:
+						randomSelect = SS_TAVION;
+						break;
+					case SS_TAVION:
+						randomSelect = SS_DESANN;
+						break;
+					default:
+						randomSelect = SS_FAST;
+						break;
+					}
+
+					pm->ps->nextStyleSwitch = time + 600;
+
+					pm->ps->fd.saberAnimLevel = randomSelect;
+					randomSelect -= 1;
+				}
+				else if (pm->ps->fd.saberAnimLevel != SS_FAST
+					&& pm->ps->fd.saberAnimLevel != SS_DESANN
+					&& pm->ps->fd.saberAnimLevel != SS_TAVION)
+				{// Don't use staff anim... Crap anim...
+					pm->ps->fd.saberAnimLevel = SS_FAST;
+					randomSelect = pm->ps->fd.saberAnimLevel;
+					randomSelect -= 1;
+				}
+			}
+			else
+			{// Defaults... Switch between TAVION, DUAL, STAFF, FAST...
+				if (pm->ps->nextStyleSwitch < time)
+				{
+					switch (pm->ps->fd.saberAnimLevel)
+					{
+					case SS_FAST:
+						randomSelect = SS_TAVION;
+						break;
+					case SS_TAVION:
+						randomSelect = SS_DUAL;
+						break;
+					case SS_DUAL:
+						randomSelect = SS_STAFF;
+						break;
+					default:
+						randomSelect = SS_FAST;
+						break;
+					}
+
+					pm->ps->nextStyleSwitch = time + 600;
+
+					pm->ps->fd.saberAnimLevel = randomSelect;
+					randomSelect -= 1;
+				}
+			}
+
+			if (randomSelect == SS_DUAL - 1 && newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
+			{//there aren't 1-7, just 1, 6 and 7, so just set it
+				anim = BOTH_P6_S6_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
+			}
+			else if (randomSelect == SS_STAFF - 1 && newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
+			{//there aren't 1-7, just 1, 6 and 7, so just set it
+				anim = BOTH_P7_S7_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
+			}
+			else
+			{//add the appropriate animLevel
+				anim += (pm->ps->fd.saberAnimLevel - FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
+			}
+		}
 		else if (pm->ps->fd.saberAnimLevel == SS_STAFF && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL)
 		{//staff has an entirely new set of anims, besides special attacks
 		 //FIXME: include ready and draw/putaway?
@@ -4748,227 +4933,6 @@ weapChecks:
 				anim += (pm->ps->fd.saberAnimLevel - SS_FAST) * SABER_ANIM_GROUP_SIZE;
 			}
 		}
-#ifdef BLOCKING_STANCE_TAVION
-		else if (pm->ps->fd.saberAnimLevel == SS_TAVION && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL)
-		{
-<<<<<<< HEAD
-			if (newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
-			{//there aren't 1-7, just 1, 6 and 7, so just set it
-				anim = BOTH_TAVION_T + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
-			}
-			else
-			{//add the appropriate animLevel
-				anim += (pm->ps->fd.saberAnimLevel - SS_FAST) * SABER_ANIM_GROUP_SIZE;
-			}
-=======
-			anim = BOTH_S6_S1;
-		}
-	}
-	else if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE 
-		&& newMove != LS_READY
-		&& newMove != LS_DRAW
-		&& newMove != LS_PUTAWAY
-		&& !BG_SaberInIdle(newMove) 
-		&& !PM_SaberInParry(newMove) 
-		&& !PM_SaberInKnockaway(newMove) 
-		&& !PM_SaberInBrokenParry(newMove) 
-		&& !PM_SaberInReflect(newMove) 
-		&& !BG_SaberInSpecial(newMove)
-		&& ((newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL) || saberMoveData[pm->ps->saberMove].animToUse == anim))
-	{ // Experimental crazy stance :) Randomly select an attack anim  from all stances hehehe
-		int randomSelect;
-
-#if defined(_GAME)
-		int time = level.time;
-#elif defined(_CGAME)
-		int time = cg.time;
-#endif
-
-		//
-		// Make more of these to select *any* anim sets for *any* direction...
-		//
-		if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove == 0)
-		{// Standing still example. Only use TAVION.
-			pm->ps->fd.saberAnimLevel = SS_TAVION;
-
-			// I sorta like it without doing this. Havn't tried with...
-			randomSelect = pm->ps->fd.saberAnimLevel;
-			randomSelect -= 1;
-		}
-		else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove == 0)
-		{// Moving forward only. Only use STAFF.
-			pm->ps->fd.saberAnimLevel = SS_STAFF;
-			randomSelect = pm->ps->fd.saberAnimLevel;
-			randomSelect -= 1;
-		}
-		else if (pm->cmd.forwardmove < 0 && pm->cmd.rightmove == 0)
-		{// Moving back only. Only use STAFF.
-			pm->ps->fd.saberAnimLevel = SS_STAFF;
-			randomSelect = pm->ps->fd.saberAnimLevel;
-			randomSelect -= 1;
-		}
-		else if (pm->cmd.forwardmove < 0 && pm->cmd.rightmove > 0)
-		{// Moving to back right example. Only use FAST, TAVION and DUAL.
-			if (pm->ps->nextStyleSwitch < time)
-			{
-				switch (pm->ps->fd.saberAnimLevel)
-				{
-				case SS_FAST:
-					randomSelect = SS_TAVION;
-					break;
-				default:
-					randomSelect = SS_DUAL;
-					break;
-				}
-
-				pm->ps->nextStyleSwitch = time + 600;
-
-				pm->ps->fd.saberAnimLevel = randomSelect;
-				randomSelect -= 1;
-			}
-			else if (pm->ps->fd.saberAnimLevel != SS_DUAL
-				&& pm->ps->fd.saberAnimLevel != SS_TAVION)
-			{// Don't use staff anim... Crap anim...
-				pm->ps->fd.saberAnimLevel = SS_DUAL;
-				randomSelect = pm->ps->fd.saberAnimLevel;
-				randomSelect -= 1;
-			}
-		}
-		else if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove < 0)
-		{// Moving to left example. Only use FAST, TAVION and DUAL.
-			if (pm->ps->nextStyleSwitch < time)
-			{
-				switch (pm->ps->fd.saberAnimLevel)
-				{
-				case SS_FAST:
-					randomSelect = SS_TAVION;
-					break;
-				case SS_TAVION:
-					randomSelect = SS_DUAL;
-					break;
-				default:
-					randomSelect = SS_FAST;
-					break;
-				}
-
-				pm->ps->nextStyleSwitch = time + 600;
-
-				pm->ps->fd.saberAnimLevel = randomSelect;
-				randomSelect -= 1;
-			}
-			else if (pm->ps->fd.saberAnimLevel != SS_FAST
-				&& pm->ps->fd.saberAnimLevel != SS_DUAL
-				&& pm->ps->fd.saberAnimLevel != SS_TAVION)
-			{// Don't use staff anim... Crap anim...
-				pm->ps->fd.saberAnimLevel = SS_FAST;
-				randomSelect = pm->ps->fd.saberAnimLevel;
-				randomSelect -= 1;
-			}
-		}
-		else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove < 0)
-		{// Moving forward and left example. Only use TAVION.
-			pm->ps->fd.saberAnimLevel = SS_TAVION;
-			randomSelect = pm->ps->fd.saberAnimLevel;
-			randomSelect -= 1;
-		}
-		else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove > 0)
-		{// Moving forward and right example. Only use FAST, TAVION and SS_DESANN.
-			if (pm->ps->nextStyleSwitch < time)
-			{
-				switch (pm->ps->fd.saberAnimLevel)
-				{
-				case SS_FAST:
-					randomSelect = SS_TAVION;
-					break;
-				case SS_TAVION:
-					randomSelect = SS_DESANN;
-					break;
-				default:
-					randomSelect = SS_FAST;
-					break;
-				}
-
-				pm->ps->nextStyleSwitch = time + 600;
-
-				pm->ps->fd.saberAnimLevel = randomSelect;
-				randomSelect -= 1;
-			}
-			else if (pm->ps->fd.saberAnimLevel != SS_FAST
-				&& pm->ps->fd.saberAnimLevel != SS_DESANN
-				&& pm->ps->fd.saberAnimLevel != SS_TAVION)
-			{// Don't use staff anim... Crap anim...
-				pm->ps->fd.saberAnimLevel = SS_FAST;
-				randomSelect = pm->ps->fd.saberAnimLevel;
-				randomSelect -= 1;
-			}
-		}
-		else
-		{// Defaults... Switch between TAVION, DUAL, STAFF, FAST...
-			if (pm->ps->nextStyleSwitch < time)
-			{
-				switch (pm->ps->fd.saberAnimLevel)
-				{
-				case SS_FAST:
-					randomSelect = SS_TAVION;
-					break;
-				case SS_TAVION:
-					randomSelect = SS_DUAL;
-					break;
-				case SS_DUAL:
-					randomSelect = SS_STAFF;
-					break;
-				default:
-					randomSelect = SS_FAST;
-					break;
-				}
-
-				pm->ps->nextStyleSwitch = time + 600;
-
-				pm->ps->fd.saberAnimLevel = randomSelect;
-				randomSelect -= 1;
-			}
-		}
-
-		if (randomSelect == SS_DUAL - 1 && newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
-		{//there aren't 1-7, just 1, 6 and 7, so just set it
-			anim = BOTH_P6_S6_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
-		}
-		else if (randomSelect == SS_STAFF - 1 && newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
-		{//there aren't 1-7, just 1, 6 and 7, so just set it
-			anim = BOTH_P7_S7_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
-		}
-		else
-		{//add the appropriate animLevel
-			anim += (pm->ps->fd.saberAnimLevel - FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
-		}
-	}
-	else if ( pm->ps->fd.saberAnimLevel == SS_STAFF && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL )
-	{//staff has an entirely new set of anims, besides special attacks
-		//FIXME: include ready and draw/putaway?
-		//FIXME: get hand-made bounces and deflections?
-		if ( newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL )
-		{//there aren't 1-7, just 1, 6 and 7, so just set it
-			anim = BOTH_P7_S7_T_ + (anim-BOTH_P1_S1_T_);//shift it up to the proper set
-		}
-		else
-		{//add the appropriate animLevel
-			anim += (pm->ps->fd.saberAnimLevel-FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
-		}
-	}
-	else if ( pm->ps->fd.saberAnimLevel == SS_DUAL && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL )
-	{ //akimbo has an entirely new set of anims, besides special attacks
-		//FIXME: include ready and draw/putaway?
-		//FIXME: get hand-made bounces and deflections?
-		if ( newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL )
-		{//there aren't 1-7, just 1, 6 and 7, so just set it
-			anim = BOTH_P6_S6_T_ + (anim-BOTH_P1_S1_T_);//shift it up to the proper set
-		}
-		else
-		{//add the appropriate animLevel
-			anim += (pm->ps->fd.saberAnimLevel-FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
->>>>>>> 72881defbb4982cbb65296d239d00a92c21c361c
-		}
-#endif
 		/*
 		else if ( newMove == LS_DRAW && pm->ps->SaberStaff() )
 		{//hold saber out front as we turn it on
