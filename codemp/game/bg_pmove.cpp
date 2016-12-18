@@ -280,10 +280,19 @@ int PM_GetSaberStance(void)
 		return BOTH_STAND1;
 	}
 
+	/*
+	TRIPLE3_BLUESTANCE,
+    TRIPLE3_YELLOWSTANCE, // Used by SS_WARZONE
+    TRIPLE3_REDSTANCE,
+    TRIPLE3_DUALSSTANCE,
+    TRIPLE3_STAFFSTANCE,
+    BOTH_DOOKU_STANCE,
+	*/
+
 	if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
 	{
 		pm->ps->fd.saberAnimLevel = SS_WARZONE;
-		return BOTH_P7_S7_T_;
+		return TRIPLE3_YELLOWSTANCE;// BOTH_P7_S7_T_;
 	}
 
 	if ( saber1
