@@ -579,6 +579,11 @@ int PM_GetSaberStance()
 		return BOTH_SABERDUAL_STANCE;
 	}
 
+	if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+	{
+		return BOTH_DOOKU_STANCE;
+	}
+
 	switch (pm->ps->fd.saberAnimLevel)
 	{
 	case SS_DUAL:
@@ -593,7 +598,6 @@ int PM_GetSaberStance()
 	case SS_TAVION:
 		anim = TRIPLE3_BLUESTANCE;
 		break;
-	case SS_WARZONE:
 	case SS_STRONG:
 		anim = BOTH_SABERSLOW_STANCE;
 		break;
