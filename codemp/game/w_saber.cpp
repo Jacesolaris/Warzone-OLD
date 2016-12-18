@@ -3038,7 +3038,6 @@ qboolean PM_RunningAnim(int anim);
 //qboolean OJP_UsingDualSaberAsPrimary(playerState_t *ps);
 extern qboolean BG_SuperBreakWinAnim(int anim);
 extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
-extern int ReflectionLevel(gentity_t*ent);
 int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum)
 {//similar to WP_SaberCanBlock but without the same sorts of restrictions.
 #if 1
@@ -4696,7 +4695,6 @@ extern qboolean BG_SaberInTransitionDamageMove(playerState_t *ps);
 extern qboolean BG_SaberInFullDamageMove(playerState_t *ps, int AnimIndex);
 void DebounceSaberImpact(gentity_t *self, gentity_t *otherSaberer,
 	int rSaberNum, int rBladeNum, int sabimpactentitynum);
-extern void G_Stagger(gentity_t *hitEnt, gentity_t *atk, int currentBP);
 static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, vec3_t saberStart, vec3_t saberEnd, qboolean doInterpolate, int trMask, qboolean extrapolate)
 {
 	static trace_t tr;
@@ -5014,7 +5012,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		{
 			return qfalse;
 		}
-
+		// if i didnt do that missiles auto parry thing down there. the saber would auto parry shots from npcs or who else was shooting at me same goes to auto parry for the saber. ok
 		if (OJP_SaberCanBlock(&g_entities[tr.entityNum], self, qfalse, tr.endpos, -1, -1))
 		{//hit victim is able to block, block!
 			didHit = qfalse;
@@ -5246,33 +5244,22 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		}
 	}
 
-	//if (self->client->ps.saberInFlight && !OJP_UsingDualSaberAsPrimary(&self->client->ps))
-	//{//saber in flight and it has hit something.  deactivate it.
-	//	saberCheckKnockdown_Smashed(&g_entities[self->client->ps.saberEntityNum], self, otherOwner, dmg);
-	//}
-	//else 
-	if (SaberStagger)
-	{
-		G_Stagger(self, otherOwner, qfalse);
-	}
-	else
-	{//Didn't go into a special animation, so do a saber lock/bounce/deflection/etc that's approprate
-		if (otherOwner && otherOwner->inuse && otherOwner->client)
-		{//saberlock test		
-			if (dmg > SABER_NONATTACK_DAMAGE || BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex))
-			{
-				int lockFactor = g_saberLockFactor.integer;
+	
+	if (otherOwner && otherOwner->inuse && otherOwner->client)
+	{//saber lock test		
+		if (dmg > SABER_NONATTACK_DAMAGE || BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex))
+		{
+			int lockFactor = g_saberLockFactor.integer;
 
-				if (Q_irand(1, 20) < lockFactor)
+			if (Q_irand(1, 20) < lockFactor)
+			{
+				if (WP_SabersCheckLock(self, otherOwner))
 				{
-					if (WP_SabersCheckLock(self, otherOwner))
-					{
-						self->client->ps.saberBlocked = BLOCKED_NONE;
-						otherOwner->client->ps.saberBlocked = BLOCKED_NONE;
-						//add saber impact debounce
-						DebounceSaberImpact(self, otherOwner, rSaberNum, rBladeNum, sabimpactentitynum);
-						return qtrue;
-					}
+					self->client->ps.saberBlocked = BLOCKED_NONE;
+					otherOwner->client->ps.saberBlocked = BLOCKED_NONE;
+					//add saber impact debounce
+					DebounceSaberImpact(self, otherOwner, rSaberNum, rBladeNum, sabimpactentitynum);
+					return qtrue;
 				}
 			}
 		}
@@ -5330,21 +5317,14 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 	}
 	if (otherOwner && otherOwner->inuse && otherOwner->client)
 	{
-		if (SaberStagger)
+		if (BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex)  //otherOwner was doing a damaging move
+			&& otherOwner->client->ps.saberLockTime < level.time //otherOwner isn't in a saberlock (this can change mid-impact)
+			&& (self->client->ps.saberBlocked != BLOCKED_NONE //self reacted to this impact.
+				|| !idleDamage))  //or self was in an attack move (and probably mishaped from this impact)  
 		{
-			G_Stagger(otherOwner, self, qfalse);
-		}
-		else
-		{//Didn't go into a special animation, so do a saber lock/bounce/deflection/etc that's approprate
-			if (BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex)  //otherOwner was doing a damaging move
-				&& otherOwner->client->ps.saberLockTime < level.time //otherOwner isn't in a saberlock (this can change mid-impact)
-				&& (self->client->ps.saberBlocked != BLOCKED_NONE //self reacted to this impact.
-					|| !idleDamage))  //or self was in an attack move (and probably mishaped from this impact)  
-			{
-				//G_Printf("%i: %i: Saber Bounced %s\n", level.time, otherOwner->s.number, 
-				//	GetStringForID( animTable, otherOwner->client->ps.torsoAnim ));
-				otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-			}
+			//G_Printf("%i: %i: Saber Bounced %s\n", level.time, otherOwner->s.number, 
+			//	GetStringForID( animTable, otherOwner->client->ps.torsoAnim ));
+			otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 		}
 	}
 
@@ -5824,7 +5804,7 @@ static QINLINE qboolean CheckThrownSaberDamaged(gentity_t *saberent, gentity_t *
 			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
 			{ //Slice them
 				if (!saberOwner->client->ps.isJediMaster &&
-					(WP_SaberCanBlock(saberOwner, ent, tr.endpos, tr.endpos, 0, MOD_SABER, qfalse, 999, qfalse)
+					(WP_SaberCanBlock(saberOwner, ent, tr.endpos, tr.endpos, 0, MOD_SABER, qfalse, 999)
 						|| (ent->client->ps.weapon == WP_SABER && !G_ClientIdleInWorld(ent) && !(ent->client->ps.saberInFlight)
 							&& !ent->client->ps.saberHolstered //Don't block if our saber is holstered
 							&& InFront(tr.endpos, ent->client->ps.origin, ent->client->ps.viewangles, -0.25f))))
@@ -6831,10 +6811,7 @@ qboolean saberCheckKnockdown_Thrown(gentity_t *saberent, gentity_t *saberOwner, 
 	}
 
 	defenLevel = other->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE];
-	//[SaberThrowSys]
-	//throwLevel = saberOwner->client->ps.fd.forcePowerLevel[FP_SABERTHROW];
-	throwLevel = 1;
-	//[/SaberThrowSys]
+	throwLevel = saberOwner->client->ps.fd.forcePowerLevel[FP_SABERTHROW];
 
 	if (defenLevel > throwLevel)
 	{
@@ -6930,8 +6907,6 @@ void saberBackToOwner(gentity_t *saberent)
 		saberMoveBack(saberent, qtrue);
 		VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
 
-		/*
-		//[SaberThrowSys]
 		if (saberOwner->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
 		{ //allow players with high saber throw rank to control the return speed of the saber
 			baseSpeed = 900;
@@ -6943,8 +6918,7 @@ void saberBackToOwner(gentity_t *saberent)
 			baseSpeed = 700;
 			saberent->speed = level.time + 50;
 		}
-		//[/SaberThrowSys]
-		*/
+		
 		//Gradually slow down as it approaches, so it looks smoother coming into the hand.
 		if (ownerLen < 64)
 		{
@@ -7116,7 +7090,7 @@ void saberFirstThrown(gentity_t *saberent)
 
 	if ((level.time - saberOwn->client->ps.saberDidThrowTime) > 500)
 	{
-		if (!(saberOwn->client->buttons & BUTTON_ALT_ATTACK))
+		if (!(saberOwn->client->buttons & BUTTON_SABERTHROW))
 		{ //If owner releases altattack 500ms or later after throwing saber, it autoreturns
 			thrownSaberTouch(saberent, saberent, NULL);
 			goto runMin;
@@ -7143,16 +7117,12 @@ void saberFirstThrown(gentity_t *saberent)
 	VectorSubtract(saberOwn->client->ps.origin, saberent->r.currentOrigin, vSub);
 	vLen = VectorLength(vSub);
 
-	//[SaberThrowSys]
-	if (vLen >= (SABER_MAX_THROW_DISTANCE/**saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW]*/))
+	if (vLen >= (SABER_MAX_THROW_DISTANCE*saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW]))
 	{
 		thrownSaberTouch(saberent, saberent, NULL);
 		goto runMin;
 	}
-	//[/SaberThrowSys]
 
-	/*
-	//[SaberThrowSys]
 	if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_2 &&
 		saberent->speed < level.time)
 	{ //if owner is rank 3 in saber throwing, the saber goes where he points
@@ -7165,9 +7135,9 @@ void saberFirstThrown(gentity_t *saberent)
 		traceFrom[2] += saberOwn->client->ps.viewheight;
 
 		VectorCopy(traceFrom, traceTo);
-		traceTo[0] += fwd[0]*4096;
-		traceTo[1] += fwd[1]*4096;
-		traceTo[2] += fwd[2]*4096;
+		traceTo[0] += fwd[0] * 4096;
+		traceTo[1] += fwd[1] * 4096;
+		traceTo[2] += fwd[2] * 4096;
 
 		saberMoveBack(saberent, qfalse);
 		VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
@@ -7185,7 +7155,7 @@ void saberFirstThrown(gentity_t *saberent)
 
 		VectorNormalize(dir);
 
-		VectorScale(dir, 500, saberent->s.pos.trDelta );
+		VectorScale(dir, 500, saberent->s.pos.trDelta);
 		saberent->s.pos.trTime = level.time;
 
 		if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
@@ -7197,8 +7167,6 @@ void saberFirstThrown(gentity_t *saberent)
 			saberent->speed = level.time + 400;
 		}
 	}
-	//[/SaberThrowSys]
-	*/
 runMin:
 
 	saberCheckRadiusDamage(saberent, 0);
@@ -7416,25 +7384,13 @@ void UpdateClientRenderinfo(gentity_t *self, vec3_t renderOrigin, vec3_t renderA
 	}
 }
 
-extern qboolean BG_InKnockDown(int anim);
-#define STAFF_KICK_RANGE 13
-gentity_t *G_MeleePunchTrace(gentity_t *ent, vec3_t punchDir, float punchDist, vec3_t punchStart,
-	vec3_t punchEnd, int punchDamage, float punchPush, qboolean knockDown);
+#define STAFF_KICK_RANGE 16
 extern void G_GetBoltPosition(gentity_t *self, int boltIndex, vec3_t pos, int modelIndex); //NPC_utils.c
-static QINLINE qboolean G_PrettyCloseIGuess(float a, float b, float tolerance)
-{
-	if ((a - b) < tolerance &&
-		(a - b) > -tolerance)
-	{
-		return qtrue;
-	}
 
-	return qfalse;
-}
-
-static qboolean G_MeleeKickDownable(gentity_t *ent, qboolean bSaberMeleeSpecial)
+extern qboolean BG_InKnockDown(int anim);
+static qboolean G_KickDownable(gentity_t *ent)
 {
-	if (/*!d_saberKickTweak.integer*/0)
+	if (!d_saberKickTweak.integer)
 	{
 		return qtrue;
 	}
@@ -7450,67 +7406,19 @@ static qboolean G_MeleeKickDownable(gentity_t *ent, qboolean bSaberMeleeSpecial)
 		return qfalse;
 	}
 
-	if (ent->client->ps.groundEntityNum == ENTITYNUM_NONE) {
-		return qtrue;
-	}
-
-	if ((ent->client->ps.weaponTime <= 0 || bSaberMeleeSpecial) &&
+	if (ent->client->ps.weaponTime <= 0 &&
 		ent->client->ps.weapon == WP_SABER &&
 		ent->client->ps.groundEntityNum != ENTITYNUM_NONE)
 	{
-		if (bSaberMeleeSpecial)
-		{
-			if (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
-			{
-				return qtrue;
-
-			}
-		}
-		else if (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
-		{
-			return qtrue;
-
-		}
+		return qfalse;
 	}
 
 	return qtrue;
 }
 
-
-/*  void pushPunchDown
-*	Pushes the punch trace's end a little forward along its direction based on the view angle of the player.
-*  This is to compensate for the loss of distance in the traces vs the old, untraced, method when the player is
-*  looking up or down.
-*	-87 to 87 are the max and min view angles
-*/
-void G_MeleePushPunchDown(gentity_t *ent, vec3_t *punchEnd)
+static void G_TossTheMofo(gentity_t *ent, vec3_t tossDir, float tossStr)
 {
-	float pitch;
-
-	if (!ent || !ent->client)
-	{
-		return;
-	}
-
-	// Scale an increse in the dist by view angle
-	pitch = ent->client->ps.viewangles[PITCH];
-	pitch /= 87.0f;
-	if (pitch < 0)
-	{// Looking up
-	 // Only want to increse the punch distance for looking down for now
-	 // We're only restoring the ability of players to punch things below them, it's ok if we've lost some minimal distance
-	 // above.  The traces are at least more accurate, and the major issue here is that looking down keeps the traces
-	 // within the bbox of the player, but looking up doesn't.
-		return;
-	}
-
-	(*punchEnd)[2] -= pitch * 20.0f;
-}
-
-static void G_MeleeTossTheMofo(gentity_t *ent, gentity_t *entTosser, vec3_t tossDir, float tossStr,
-	qboolean bSaberMeleeSpecial, qboolean crouchedKnockDown)
-{
-	if (!ent || !ent->inuse || !ent->client)
+	if (!ent->inuse || !ent->client)
 	{ //no good
 		return;
 	}
@@ -7520,165 +7428,40 @@ static void G_MeleeTossTheMofo(gentity_t *ent, gentity_t *entTosser, vec3_t toss
 		return;
 	}
 
-	if (!crouchedKnockDown &&
-		(ent->client->ps.pm_flags & PMF_DUCKED &&				//ducking
-			!(ent->client->ps.eFlags & EF_JETPACK_ACTIVE) 			//and not in jetpack
-			&& ent->client->ps.groundEntityNum != ENTITYNUM_NONE))	//and not in midair
-	{ // If we crouch, we can't be knocked down by kicks/slaps. 
-	  // Stops crouching Slaps from being whored too badly on people trying to get away after a knockdown. -- Azuvector
-		VectorMA(ent->client->ps.velocity, (tossStr * 2), tossDir, ent->client->ps.velocity);
-		//ent->client->ps.velocity[2] = 100;
-	}
-	else
-	{
-		VectorMA(ent->client->ps.velocity, tossStr, tossDir, ent->client->ps.velocity);
-		ent->client->ps.velocity[2] = 200;
-		if (ent->health > 0 && ent->client->ps.forceHandExtend != HANDEXTEND_KNOCKDOWN &&
-			BG_KnockDownable(&ent->client->ps) &&
-			G_MeleeKickDownable(ent, bSaberMeleeSpecial) &&
-
-			!((entTosser->client->ps.weapon == WP_SABER) && (ent->client->ps.weapon == WP_SABER) && (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(ent->client->ps.groundEntityNum == ENTITYNUM_NONE)) &&
-
-			!(ent->client->nSlapKnockdownCooldownAfterPull > level.time && ent->client->ps.otherKiller == entTosser->s.number && ent->client->pers.cmd.buttons & BUTTON_WALKING))
-		{ //if they are alive, knock them down I suppose
-
-			if ((ent->client->ps.weapon == WP_SABER) && (!ent->client->pers.cmd.forwardmove &&
-				!ent->client->pers.cmd.rightmove && !(ent->client->ps.groundEntityNum == ENTITYNUM_NONE)) && (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
-			{ // If standing and blocking with saber as a Jedi
-				G_SetAnim(ent, &(ent->client->pers.cmd), SETANIM_TORSO, BOTH_BASHED1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
-				if (PM_StaggerAnim(ent->client->ps.torsoAnim))
-				{
-					ent->client->ps.saberMove = LS_NONE;
-					ent->client->ps.saberBlocked = BLOCKED_NONE;
-					ent->client->ps.weaponTime = ent->client->ps.torsoTimer;
-					ent->client->nStaggerTime = ent->client->ps.torsoTimer + level.time;
-				} // Stagger instead of knock-down
-			}
-			else
-			{
-
-				ent->client->ps.forceHandExtend = HANDEXTEND_KNOCKDOWN;
-				ent->client->ps.forceHandExtendTime = level.time + 700;
-				ent->client->ps.forceDodgeAnim = 0; //this toggles between 1 and 0, when it's 1 we should play the get up anim
-				ent->client->knockedDownBy = entTosser->s.number;
-			}
-
-		}
-
-		else if (ent->health > 0 && ent->client->ps.forceHandExtend != HANDEXTEND_KNOCKDOWN
-			&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
-		{//put stuff here
-			if (ent->client->ps.weapon == WP_SABER)
-			{//we are blocking with a saber, and survived a knockdown, so make us stagger
-
-			}
-		}
-
+	VectorMA(ent->client->ps.velocity, tossStr, tossDir, ent->client->ps.velocity);
+	ent->client->ps.velocity[2] = 200;
+	if (ent->health > 0 && ent->client->ps.forceHandExtend != HANDEXTEND_KNOCKDOWN &&
+		BG_KnockDownable(&ent->client->ps) &&
+		G_KickDownable(ent))
+	{ //if they are alive, knock them down I suppose
+		ent->client->ps.forceHandExtend = HANDEXTEND_KNOCKDOWN;
+		ent->client->ps.forceHandExtendTime = level.time + 700;
+		ent->client->ps.forceDodgeAnim = 0; //this toggles between 1 and 0, when it's 1 we should play the get up anim
+											//ent->client->ps.quickerGetup = qtrue;
 	}
 }
 
-static void G_MeleeAddKickTarget(gentity_t *self, short target)
-{
-	int i;
-	for (i = 0; i < MAX_KICKTRACKING_ENTS; i++)
-	{
-		if (self->client->jediKickIndex[i] == target)
-		{//Already added
-			return;
-		}
-		else if (self->client->jediKickIndex[i] < 0)
-		{
-			self->client->jediKickIndex[i] = target;
-			return;
-		}
-	}
-}
-
-void G_MeleeStartNewKickTargets(gentity_t *self, qboolean bTorsoKick)
-{
-	int i;
-	//Clean the old kick data
-	for (i = 0; i < MAX_KICKTRACKING_ENTS; i++)
-	{
-		self->client->jediKickIndex[i] = -1;
-	}
-
-	// Update the timer for the new kick
-	if (!bTorsoKick)
-	{
-		self->client->jediKickTime = level.time + self->client->ps.legsTimer;
-	}
-	else
-	{
-		self->client->jediKickTime = level.time + self->client->ps.torsoTimer;
-	}
-
-	if (level.time + self->client->ps.weaponTime > self->client->jediKickTime)
-	{
-		self->client->jediKickTime = level.time + self->client->ps.weaponTime;
-	}
-}
-
-static qboolean G_MeleeHasHitThisKick(gentity_t *self, short target)
-{
-	int i;
-	if (self->client->jediKickTime <= level.time)
-	{
-		return qfalse;
-	}
-
-	for (i = 0; i < MAX_KICKTRACKING_ENTS; i++)
-	{
-		if (self->client->jediKickIndex[i] == target)
-		{
-			return qtrue;
-		}
-	}
-
-	return qfalse;
-}
-
-static gentity_t *G_MeleeKickTrace(gentity_t *ent, vec3_t kickDir, float kickDist, vec3_t kickEnd, int kickDamage, float kickPush,
-	float kickHeight, qboolean bSaberMeleeSpecial, qboolean bTorsoKick, qboolean crouchedKnockDown)
+static gentity_t *G_KickTrace(gentity_t *ent, vec3_t kickDir, float kickDist, vec3_t kickEnd, int kickDamage, float kickPush)
 {
 	vec3_t	traceOrg, traceEnd, kickMins, kickMaxs;
 	trace_t	trace;
 	gentity_t	*hitEnt = NULL;
 	VectorSet(kickMins, -2.0f, -2.0f, -2.0f);
 	VectorSet(kickMaxs, 2.0f, 2.0f, 2.0f);
-
-	if (!ent || !ent->client)
-	{// Only clients can kick, so just to be carefull...
-		return NULL;
-	}
-
+	//FIXME: variable kick height?
 	if (kickEnd && !VectorCompare(kickEnd, vec3_origin))
 	{//they passed us the end point of the trace, just use that
-		vec3_t temp;
-		//this makes the trace flat
-		//VectorSet( traceOrg, ent->r.currentOrigin[0], ent->r.currentOrigin[1], kickEnd[2] );
-
-		//just kidding. Angled traces are in.
-		if (ent->client->renderInfo.torsoBolt != -1)
-		{
-			G_GetBoltPosition(ent, ent->client->renderInfo.torsoBolt, traceOrg, 0);
-
-		}
-		else {
-			VectorCopy(ent->r.currentOrigin, traceOrg);
-		}
-		VectorSubtract(kickEnd, traceOrg, temp);
-		VectorNormalize(temp);
-		VectorMA(traceOrg, kickDist, temp, traceEnd);
-		//VectorCopy( kickEnd, traceEnd );
+	 //this makes the trace flat
+		VectorSet(traceOrg, ent->r.currentOrigin[0], ent->r.currentOrigin[1], kickEnd[2]);
+		VectorCopy(kickEnd, traceEnd);
 	}
 	else
 	{//extrude
-		VectorSet(traceOrg, ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2] + kickHeight);
+		VectorSet(traceOrg, ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2] + ent->r.maxs[2] * 0.5f);
 		VectorMA(traceOrg, kickDist, kickDir, traceEnd);
 	}
 
-	if (1)
+	if (d_saberKickTweak.integer)
 	{
 		trap->Trace(&trace, traceOrg, kickMins, kickMaxs, traceEnd, ent->s.number, MASK_SHOT, qfalse, G2TRFLAG_DOGHOULTRACE | G2TRFLAG_GETSURFINDEX | G2TRFLAG_THICK | G2TRFLAG_HITCORPSES, g_g2TraceLod.integer);
 	}
@@ -7690,20 +7473,15 @@ static gentity_t *G_MeleeKickTrace(gentity_t *ent, vec3_t kickDir, float kickDis
 	//G_TestLine(traceOrg, traceEnd, 0x0000ff, 5000);
 	if (trace.fraction < 1.0f && !trace.startsolid && !trace.allsolid)
 	{
-		// Track hit ents to make sure we don't hit more than once per kick move
-		if (ent->client->jediKickTime <= level.time)
+		if (ent->client->jediKickTime > level.time)
 		{
-			G_MeleeStartNewKickTargets(ent, bTorsoKick);
-			G_MeleeAddKickTarget(ent, trace.entityNum);
+			if (trace.entityNum == ent->client->jediKickIndex)
+			{ //we are hitting the same ent we last hit in this same anim, don't hit it again
+				return NULL;
+			}
 		}
-		else if (G_MeleeHasHitThisKick(ent, trace.entityNum))
-		{ //we are hitting the same ent we last hit in this same anim, don't hit it again
-			return NULL;
-		}
-		else
-		{
-			G_MeleeAddKickTarget(ent, trace.entityNum);
-		}
+		ent->client->jediKickIndex = trace.entityNum;
+		ent->client->jediKickTime = level.time + ent->client->ps.legsTimer;
 
 		hitEnt = &g_entities[trace.entityNum];
 		//FIXME: regardless of what we hit, do kick hit sound and impact effect
@@ -7718,193 +7496,82 @@ static gentity_t *G_MeleeKickTrace(gentity_t *ent, vec3_t kickDir, float kickDis
 		}
 		if (hitEnt->inuse)
 		{//we hit an entity
+		 //FIXME: don't hit same ent more than once per kick
 			if (hitEnt->takedamage)
 			{//hurt it
-
 				if (hitEnt->client)
 				{
-					if (!BG_InKnockDown(hitEnt->client->ps.legsAnim) &&
-						!BG_InGetUpAnim(&hitEnt->client->ps))
+					hitEnt->client->ps.otherKiller = ent->s.number;
+					hitEnt->client->ps.otherKillerDebounceTime = level.time + 10000;
+					hitEnt->client->ps.otherKillerTime = level.time + 10000;
+				}
+
+				if (d_saberKickTweak.integer)
+				{
+					G_Damage(hitEnt, ent, ent, kickDir, trace.endpos, kickDamage*0.2f, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
+				}
+				else
+				{
+					G_Damage(hitEnt, ent, ent, kickDir, trace.endpos, kickDamage, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
+				}
+			}
+			if (hitEnt->client
+				&& !(hitEnt->client->ps.pm_flags&PMF_TIME_KNOCKBACK) //not already flying through air?  Intended to stop multiple hits, but...
+				&& G_CanBeEnemy(ent, hitEnt))
+			{//FIXME: this should not always work
+				if (hitEnt->health <= 0)
+				{//we kicked a dead guy
+				 //throw harder - FIXME: no matter how hard I push them, they don't go anywhere... corpses use less physics???
+				 //	G_Throw( hitEnt, kickDir, kickPush*4 );
+				 //see if we should play a better looking death on them
+				 //	G_ThrownDeathAnimForDeathAnim( hitEnt, trace.endpos );
+					G_TossTheMofo(hitEnt, kickDir, kickPush*4.0f);
+				}
+				else
+				{
+					/*
+					G_Throw( hitEnt, kickDir, kickPush );
+					if ( kickPush >= 75.0f && !Q_irand( 0, 2 ) )
 					{
-						G_Damage(hitEnt, ent, ent, kickDir, trace.endpos, MELEE_SWING2_DAMAGE, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
+					G_Knockdown( hitEnt, ent, kickDir, 300, qtrue );
+					}
+					else
+					{
+					G_Knockdown( hitEnt, ent, kickDir, kickPush, qtrue );
+					}
+					*/
+					if (kickPush >= 75.0f && !Q_irand(0, 2))
+					{
+						G_TossTheMofo(hitEnt, kickDir, 300.0f);
+					}
+					else
+					{
+						G_TossTheMofo(hitEnt, kickDir, kickPush);
 					}
 				}
-				else //Feels like we should be doing a check here....Defiant 1/11/2011
-				{
-					G_Damage(hitEnt, ent, ent, kickDir, trace.endpos, MELEE_SWING2_DAMAGE, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
-				}
-			}
-
-			else if (hitEnt->client	&& (BG_InKnockDown(hitEnt->client->ps.legsAnim) ||
-					hitEnt->client->ps.forceHandExtend == HANDEXTEND_KNOCKDOWN))
-			{// Heavy damage
-				G_Damage(hitEnt, ent, ent, kickDir, trace.endpos, kickDamage*2.0f, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
-			}
-			else
-			{
-				G_Damage(hitEnt, ent, ent, kickDir, trace.endpos, kickDamage*0.2f, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
-			}
-		}
-		if (hitEnt->client
-			&& !(hitEnt->client->ps.pm_flags&PMF_TIME_KNOCKBACK)
-			&& G_CanBeEnemy(ent, hitEnt))
-		{//FIXME: this should not always work
-			if (hitEnt->health <= 0)
-			{//we kicked a dead guy
-				G_MeleeTossTheMofo(hitEnt, ent, kickDir, kickPush*4.0f, bSaberMeleeSpecial, qfalse);
-			}
-			else
-			{
-				G_MeleeTossTheMofo(hitEnt, ent, kickDir, kickPush, bSaberMeleeSpecial, crouchedKnockDown);
 			}
 		}
 	}
-
 	return (hitEnt);
 }
 
-void G_MeleePunchSomeMofos(gentity_t *ent)
-{
-	vec3_t	punchDir, punchEnd, fwdAngs, punchStart;
-	float animLength = BG_AnimLength(ent->localAnimIndex, (animNumber_t)ent->client->ps.torsoAnim);
-	// Torso timmer is 0 when moving, so use weapon time in that case
-	float elapsedTime = (float)(animLength - ((!ent->client->ps.torsoTimer) ? ent->client->ps.weaponTime : ent->client->ps.torsoTimer));
-	float remainingTime = (animLength - elapsedTime);
-	float punchDist = (ent->r.maxs[0] * 1.5f) + STAFF_KICK_RANGE + 8.0f;
-	int	  punchDamage = 2;
-	int	  punchPush = flrand(50.0f, 100.0f);
-	qboolean doPunch = qfalse, traceHand = qfalse, doknockDown = qtrue;
-	renderInfo_t *ri = &ent->client->renderInfo;
-
-	VectorSet(punchDir, 0.0f, 0.0f, 0.0f);
-	VectorSet(punchEnd, 0.0f, 0.0f, 0.0f);
-	VectorSet(fwdAngs, 0.0f, ent->client->ps.viewangles[YAW], 0.0f);
-
-	switch (ent->client->ps.torsoAnim)
-	{
-	case BOTH_MELEE1:
-		if (elapsedTime >= 10 && remainingTime >= 50)
-		{//front
-			if (ri->handLBolt != -1)
-			{//actually trace to a bolt
-				if (ri->handLTime + animLength / 2 > level.time)
-				{
-					VectorCopy(ri->handLPoint, punchStart);
-				}
-				else
-				{ // This initalization mostly matches the starting point of the old melee punch code
-					if (!ent->client)
-					{
-						VectorCopy(ent->r.currentOrigin, punchStart);
-						punchStart[2] += 8;
-					}
-					else
-					{
-						VectorCopy(ent->client->ps.origin, punchStart);
-						punchStart[2] += ent->client->ps.viewheight - 6;
-					}
-				}
-				G_GetBoltPosition(ent, ri->handLBolt, punchEnd, 0);
-				VectorCopy(punchEnd, ri->handLPoint);
-				ri->handLTime = level.time;
-				VectorSubtract(punchEnd, ent->r.currentOrigin, punchDir);
-				VectorNormalize(punchDir);
-				punchDist = 6.0f;
-				traceHand = qtrue;
-				doPunch = qtrue;
-				punchDamage = MELEE_SWING1_DAMAGE;
-				punchPush = 0;
-				doknockDown = qfalse;
-
-				G_MeleePushPunchDown(ent, &punchEnd);
-			}
-		}
-		break;
-
-	case BOTH_MELEE2:
-		if (elapsedTime >= 100 && remainingTime >= 50)
-		{//front
-			if (ri->handRBolt != -1)
-			{//actually trace to a bolt
-				if (ri->handRTime + animLength / 2 > level.time)
-				{
-					VectorCopy(ri->handRPoint, punchStart);
-				}
-				else
-				{ // This initalization mostly matches the starting point of the old melee punch code
-					if (!ent->client)
-					{
-						VectorCopy(ent->r.currentOrigin, punchStart);
-						punchStart[2] += 8;
-					}
-					else
-					{
-						VectorCopy(ent->client->ps.origin, punchStart);
-						punchStart[2] += ent->client->ps.viewheight - 6;
-					}
-				}
-				G_GetBoltPosition(ent, ri->handRBolt, punchEnd, 0);
-				VectorCopy(punchEnd, ri->handRPoint);
-				ri->handRTime = level.time;
-				VectorSubtract(punchEnd, ent->r.currentOrigin, punchDir);
-				VectorNormalize(punchDir);
-				punchDist = 6.0f;
-				traceHand = qtrue;
-				doPunch = qtrue;
-				punchDamage = MELEE_SWING2_DAMAGE;
-				punchPush = 0;
-				doknockDown = qfalse;
-
-
-				G_MeleePushPunchDown(ent, &punchEnd);
-			}
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	if (ent->client->ps.fd.forcePowersActive & FP_SPEED)
-	{
-		punchDamage *= 1.7f;
-	}
-
-	if (doPunch)
-	{
-		if (traceHand)
-		{
-			G_MeleePunchTrace(ent, punchDir, punchDist, punchStart, punchEnd, punchDamage, punchPush, doknockDown);
-		}
-		else
-		{
-			G_MeleePunchTrace(ent, punchDir, punchDist, NULL, NULL, punchDamage, punchPush, doknockDown);
-		}
-	}
-}
-
-//TODO: name this better?
-#define VectorFraction(a,b,c,e)	(((c)[0]=((a)[0]+(b)[0])/((float)e)),((c)[1]=((a)[1]+(b)[1])/(float)e),((c)[2]=((a)[2]+(b)[2])/(float)e))
-void G_MeleeKickSomeMofos(gentity_t *ent)
+static void G_KickSomeMofos(gentity_t *ent)
 {
 	vec3_t	kickDir, kickEnd, fwdAngs;
 	float animLength = BG_AnimLength(ent->localAnimIndex, (animNumber_t)ent->client->ps.legsAnim);
 	float elapsedTime = (float)(animLength - ent->client->ps.legsTimer);
 	float remainingTime = (animLength - elapsedTime);
-	float kickDist = (ent->r.maxs[0] * 1.5f) + STAFF_KICK_RANGE + 8.0f;
-	float kickHeight = ent->r.maxs[2] * 0.5f - 10.0f;
-	int	  kickDamage = Q_irand(10, 15);
-	int	  kickPush = flrand(70.0f, 80.0f);
+	float kickDist = (ent->r.maxs[0] * 1.5f) + STAFF_KICK_RANGE + 8.0f;//fudge factor of 8
+	int	  kickDamage = Q_irand(10, 15);//Q_irand( 3, 8 ); //since it can only hit a guy once now
+	int	  kickPush = flrand(50.0f, 100.0f);
 	qboolean doKick = qfalse;
 	renderInfo_t *ri = &ent->client->renderInfo;
-	qboolean bTorsoKick = qfalse;
-	qboolean crouchedKnockDown = qfalse;
-	qboolean arcTrace = qfalse;
 
 	VectorSet(kickDir, 0.0f, 0.0f, 0.0f);
 	VectorSet(kickEnd, 0.0f, 0.0f, 0.0f);
 	VectorSet(fwdAngs, 0.0f, ent->client->ps.viewangles[YAW], 0.0f);
 
+	//HMM... or maybe trace from origin to footRBolt/footLBolt?  Which one?  G2 trace?  Will do hitLoc, if so...
 	if (ent->client->ps.torsoAnim == BOTH_A7_HILT)
 	{
 		if (elapsedTime >= 250 && remainingTime >= 250)
@@ -7914,6 +7581,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 			{//actually trace to a bolt
 				G_GetBoltPosition(ent, ri->handRBolt, kickEnd, 0);
 				VectorSubtract(kickEnd, ent->client->ps.origin, kickDir);
+				kickDir[2] = 0;//ah, flatten it, I guess...
 				VectorNormalize(kickDir);
 			}
 			else
@@ -7930,9 +7598,6 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 		case BOTH_GETUP_BROLL_F:
 		case BOTH_GETUP_FROLL_B:
 		case BOTH_GETUP_FROLL_F:
-
-			kickDamage = 10;
-
 			if (elapsedTime >= 250 && remainingTime >= 250)
 			{//front
 				doKick = qtrue;
@@ -7940,7 +7605,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->client->ps.origin, kickDir);
-					//kickDir[2] = 0;//ah, flatten it, I guess...
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
 				}
 				else
@@ -7953,9 +7618,6 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 		case BOTH_A7_KICK_B_AIR:
 		case BOTH_A7_KICK_R_AIR:
 		case BOTH_A7_KICK_L_AIR:
-
-			kickDamage = 40;
-
 			if (elapsedTime >= 100 && remainingTime >= 250)
 			{//air
 				doKick = qtrue;
@@ -7963,7 +7625,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
-					//kickDir[2] = 0;//ah, flatten it, I guess...
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
 				}
 				else
@@ -7972,58 +7634,16 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				}
 			}
 			break;
-		case BOTH_JUMPKICK1:
-			kickDamage = 40;
-		case BOTH_KICKFINISHER:
-			kickDamage = 100;
 		case BOTH_A7_KICK_F:
-			kickDamage = 25; // Normal kick does about 5 damage
-
-		case BOTH_MELEE_BACKKICK:
 			//FIXME: push forward?
-			if (elapsedTime >= 250 && remainingTime >= 150)
+			if (elapsedTime >= 250 && remainingTime >= 250)
 			{//front
 				doKick = qtrue;
 				if (ri->footRBolt != -1)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
-					VectorNormalize(kickDir);
-				}
-				else
-				{//guess
-					AngleVectors(fwdAngs, kickDir, NULL, NULL);
-				}
-			}
-			break;
-
-		case BOTH_MELEE_BACKHAND:
-			bTorsoKick = qtrue;
-			if (elapsedTime >= 150 && remainingTime >= 150)
-			{//front
-				doKick = qtrue;
-				if (ri->handLBolt != -1)
-				{//actually trace to a bolt
-					G_GetBoltPosition(ent, ri->handLBolt, kickEnd, 0);
-					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
-					VectorNormalize(kickDir);
-				}
-				else
-				{//guess
-					AngleVectors(fwdAngs, kickDir, NULL, NULL);
-				}
-			}
-			break;
-
-		case BOTH_MELEE_SPINKICK:
-			//FIXME: push forward?
-			if (elapsedTime >= 150 && remainingTime >= 150)
-			{//front
-				doKick = qtrue;
-				if (ri->footLBolt != -1)
-				{//actually trace to a bolt
-					G_GetBoltPosition(ent, ri->footLBolt, kickEnd, 0);
-					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
 				}
 				else
@@ -8033,8 +7653,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 			}
 			break;
 		case BOTH_A7_KICK_B:
-			kickDamage = 25;
-
+			//FIXME: push back?
 			if (elapsedTime >= 250 && remainingTime >= 250)
 			{//back
 				doKick = qtrue;
@@ -8042,6 +7661,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
 				}
 				else
@@ -8053,8 +7673,6 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 			break;
 		case BOTH_A7_KICK_R:
 			//FIXME: push right?
-			kickDamage = 25;
-
 			if (elapsedTime >= 250 && remainingTime >= 250)
 			{//right
 				doKick = qtrue;
@@ -8062,6 +7680,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
 				}
 				else
@@ -8072,8 +7691,6 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 			break;
 		case BOTH_A7_KICK_L:
 			//FIXME: push left?
-			kickDamage = 25;
-
 			if (elapsedTime >= 250 && remainingTime >= 250)
 			{//left
 				doKick = qtrue;
@@ -8081,30 +7698,13 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footLBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
 				}
 				else
 				{//guess
 					AngleVectors(fwdAngs, NULL, kickDir, NULL);
 					VectorScale(kickDir, -1, kickDir);
-				}
-			}
-			break;
-		case BOTH_LEGSWEEP:
-			kickPush = flrand(5.0f, 15.0f);
-			if (ri->footRBolt != -1)
-			{//actually trace to a bolt
-				if (elapsedTime >= 20
-					&& elapsedTime <= 1000)
-				{
-					doKick = qtrue;
-					crouchedKnockDown = qtrue;
-					//arcTrace = qtrue;
-					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
-					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
-					kickDir[2] = 0;//ah, flatten it, I guess...
-					VectorNormalize(kickDir);
-					kickHeight = -20; //trace very low
 				}
 			}
 			break;
@@ -8118,7 +7718,9 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 					doKick = qtrue;
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
+					//NOTE: have to fudge this a little because it's not getting enough range with the anim as-is
 					VectorMA(kickEnd, 8.0f, kickDir, kickEnd);
 				}
 			}
@@ -8190,7 +7792,9 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 					doKick = qtrue;
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
+					//NOTE: have to fudge this a little because it's not getting enough range with the anim as-is
 					VectorMA(kickEnd, 8, kickDir, kickEnd);
 				}
 			}
@@ -8213,6 +7817,11 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 			kickPush = flrand(75.0f, 125.0f);
 			kickDist += 10.0f;
 
+			//ok, I'm tracing constantly on these things, they NEVER hit otherwise (in MP at least)
+
+			//FIXME: auto aim at enemies on the side of us?
+			//overridAngles = PM_AdjustAnglesForRLKick( ent, ucmd, fwdAngs, qboolean(elapsedTime<850) )?qtrue:overridAngles;
+			//if ( elapsedTime >= 250 && elapsedTime < 350 )
 			if (level.framenum & 1)
 			{//right
 				doKick = qtrue;
@@ -8220,7 +7829,9 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
+					//NOTE: have to fudge this a little because it's not getting enough range with the anim as-is
 					VectorMA(kickEnd, 8, kickDir, kickEnd);
 				}
 				else
@@ -8228,6 +7839,7 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 					AngleVectors(fwdAngs, NULL, kickDir, NULL);
 				}
 			}
+			//else if ( elapsedTime >= 350 && elapsedTime < 450 )
 			else
 			{//left
 				doKick = qtrue;
@@ -8235,7 +7847,9 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 				{//actually trace to a bolt
 					G_GetBoltPosition(ent, ri->footLBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					kickDir[2] = 0;//ah, flatten it, I guess...
 					VectorNormalize(kickDir);
+					//NOTE: have to fudge this a little because it's not getting enough range with the anim as-is
 					VectorMA(kickEnd, 8, kickDir, kickEnd);
 				}
 				else
@@ -8250,212 +7864,20 @@ void G_MeleeKickSomeMofos(gentity_t *ent)
 
 	if (doKick)
 	{
-		vec3_t tempAng1, tempAng2, crossVec;
-		const vec3_t nullVec = { 0, 0, 0 };
-		qboolean bSaberMeleeSpecial =
-			(qboolean)(ent->client->ps.legsAnim == BOTH_MELEE_BACKHAND ||
-				ent->client->ps.legsAnim == BOTH_MELEE_BACKKICK ||
-				ent->client->ps.legsAnim == BOTH_MELEE_SPINKICK ||
-				ent->client->ps.legsAnim == BOTH_A7_HILT);
-
-		if (arcTrace)
-		{// we want to trace 20 degrees to either side of kickDir as well
-			vec3_t kickDirL, kickDirR;
-			vec3_t rot[3] = { { 0.9397f, -0.3420f, 0 },
-			{ 0.3420f, 0.9397f, 0 },
-			{ 0, 0, 1 } };
-
-			VectorRotate(kickDir, rot, kickDirR);
-			rot[0][1] = -rot[0][1];
-			rot[1][0] = -rot[1][0];
-			VectorRotate(kickDir, rot, kickDirL);
-
-			G_MeleeKickTrace(ent, kickDirL, kickDist, NULL, kickDamage, kickPush, kickHeight,
-				bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-			G_MeleeKickTrace(ent, kickDirR, kickDist, NULL, kickDamage, kickPush, kickHeight,
-				bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-			G_MeleeKickTrace(ent, kickDir, kickDist, NULL, kickDamage, kickPush, kickHeight,
-				bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-		}
-		else
-		{
-
-
-			if (bTorsoKick)
-			{
-				G_MeleeKickTrace(ent, kickDir, kickDist, kickEnd, kickDamage, kickPush, kickHeight,
-					bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-			}
-			else
-			{
-				kickDir[2] = 0;
-				VectorNormalize(kickDir);
-				G_MeleeKickTrace(ent, kickDir, kickDist, NULL, kickDamage, kickPush, kickHeight,
-					bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-			}
-
-			//converts attack direction vectors to angles
-			vectoangles(ent->client->cacheDir, tempAng1);
-			vectoangles(kickDir, tempAng2);
-
-			//if there is a previous frame to work with
-			if (!VectorCompare(ent->client->cacheDir, nullVec))
-			{
-				//the smallest angle we can have in between traces
-				const int minimumAngle = 20;
-
-				//get the number of subdivisions we need to do. 
-				int fraction = fabs(AngleSubtract(tempAng1[YAW], tempAng2[YAW])) / minimumAngle + 1;
-
-				//get the vector between this frame and the last
-				VectorSubtract(ent->client->cacheEnd, kickEnd, crossVec);
-
-				for (; fraction >= 2; fraction--)
-				{
-					//shrink the vector, removing 1 / (starting value of fraction) every pass
-					VectorScale(crossVec, (float)(fraction - 1) / fraction, crossVec);
-
-					//add the crossvector to the current frame's trace to get an interpolation trace
-					VectorAdd(kickEnd, crossVec, ent->client->cacheEnd);
-
-					//get the correct direction for the endpoint of this trace
-					VectorSubtract(ent->client->cacheEnd, ent->r.currentOrigin, ent->client->cacheDir);
-					if (!bTorsoKick)
-					{
-						ent->client->cacheDir[2] = 0;
-					}
-					VectorNormalize(ent->client->cacheDir);
-
-					//kick those mofos!
-					if (bTorsoKick)
-					{
-						G_MeleeKickTrace(ent, ent->client->cacheDir, kickDist, ent->client->cacheEnd, kickDamage, kickPush, kickHeight,
-							bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-					}
-					else
-					{
-						G_MeleeKickTrace(ent, ent->client->cacheDir, kickDist, NULL, kickDamage, kickPush, kickHeight,
-							bSaberMeleeSpecial, bTorsoKick, crouchedKnockDown);
-					}
-				}
-
-			}
-			//copy the current frame's trace vector to the cache
-			VectorCopy(kickDir, ent->client->cacheDir);
-			VectorCopy(kickEnd, ent->client->cacheEnd);
-		}
-	}
-	else
-	{
-		//no kick, reset the vectors.
-		VectorSet(ent->client->cacheDir, 0, 0, 0);
-		VectorSet(ent->client->cacheEnd, 0, 0, 0);
+		//		G_KickTrace( ent, kickDir, kickDist, kickEnd, kickDamage, kickPush );
+		G_KickTrace(ent, kickDir, kickDist, NULL, kickDamage, kickPush);
 	}
 }
 
-gentity_t *G_MeleePunchTrace(gentity_t *ent, vec3_t punchDir, float punchDist, vec3_t punchStart,
-	vec3_t punchEnd, int punchDamage, float punchPush, qboolean knockDown)
+static QINLINE qboolean G_PrettyCloseIGuess(float a, float b, float tolerance)
 {
-	vec3_t	traceOrg, traceEnd, punchMins, punchMaxs;
-	trace_t	trace;
-	gentity_t	*hitEnt = NULL;
-
-	if (!ent || !ent->client)
-	{// Only clients can punch, just to be careful
-		return NULL;
-	}
-
-	VectorSet(punchMins, -2.0f, -2.0f, -2.0f);
-	VectorSet(punchMaxs, 2.0f, 2.0f, 2.0f);
-
-	if (punchEnd && !VectorCompare(punchEnd, vec3_origin))
-	{//they passed us the end point of the trace, just use that
-		VectorSet(traceOrg, ent->r.currentOrigin[0], ent->r.currentOrigin[1], punchEnd[2]);
-		VectorCopy(punchEnd, traceEnd);
-	}
-	else
-	{//extrude
-		VectorSet(traceOrg, ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2]);
-		VectorMA(traceOrg, punchDist, punchDir, traceEnd);
-	}
-
-	if (punchStart && !VectorCompare(punchEnd, vec3_origin))
-	{// They passed us the starting point, use that
-		VectorCopy(punchStart, traceOrg);
-
-		if (punchEnd && !VectorCompare(punchEnd, vec3_origin))
-		{// We have start and end, so use punchDist as the size of mins and maxs
-			VectorSet(punchMins, -punchDist, -punchDist, -punchDist);
-			VectorSet(punchMaxs, punchDist, punchDist, punchDist);
-		}
-	}
-
-	trap->Trace(&trace, traceOrg, punchMins, punchMaxs, traceEnd, ent->s.number, MASK_SHOT, qfalse, 0, 0);
-
-	if (trace.fraction < 1.0f || trace.startsolid || trace.allsolid)
+	if ((a - b) < tolerance &&
+		(a - b) > -tolerance)
 	{
-		// Track hit ents to make sure we don't hit more than once per punch move
-		// We'll use the same code that we use for kick tracking
-		if (ent->client->jediKickTime < level.time)
-		{
-			G_MeleeStartNewKickTargets(ent, qtrue);
-			G_MeleeAddKickTarget(ent, trace.entityNum);
-		}
-		else if (G_MeleeHasHitThisKick(ent, trace.entityNum))
-		{ //we are hitting the same ent we last hit in this same anim, don't hit it again
-			return NULL;
-		}
-		else
-		{
-			G_MeleeAddKickTarget(ent, trace.entityNum);
-		}
-
-		hitEnt = &g_entities[trace.entityNum];
-
-		if (trace.entityNum == ENTITYNUM_WORLD)
-		{// Do we want to allow comboing off of the world?
-			ent->client->meleeHit = qtrue;
-		}
-
-		G_Sound(ent, CHAN_AUTO, G_SoundIndex(va("sound/weapons/melee/punch%d", Q_irand(1, 4))));
-
-		if (hitEnt->takedamage)
-		{//hurt it
-			int flags = DAMAGE_NO_ARMOR;
-			if (hitEnt->client)
-			{
-				hitEnt->client->ps.otherKiller = ent->s.number;
-				hitEnt->client->ps.otherKillerDebounceTime = level.time + 10000;
-				hitEnt->client->ps.otherKillerTime = level.time + 10000;
-			}
-			VectorScale(punchDir, 0, punchDir);
-			G_Damage(hitEnt, ent, ent, punchDir, trace.endpos, punchDamage, flags, MOD_MELEE);
-
-		}
-
-		if (hitEnt->client && knockDown
-			&& G_CanBeEnemy(ent, hitEnt))
-		{//FIXME: this should not always work
-			if (hitEnt->health <= 0)
-			{//we punched a dead guy
-				G_MeleeTossTheMofo(hitEnt, ent, punchDir, punchPush*4.0f, qfalse, qfalse);
-			}
-			else if ((hitEnt->client->ps.torsoAnim == BOTH_H1_S1_T_ && hitEnt->client->ps.weaponTime > 0) ||
-				!(hitEnt->client->ps.weapon == WP_SABER && hitEnt->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
-			{// Staggering or not blocking with a lightsaber
-				G_MeleeTossTheMofo(hitEnt, ent, punchDir, punchPush, qfalse, qfalse);
-			}
-			else
-			{//Not blocking/crouching. Make them stagger
-				G_SetAnim(hitEnt, &(hitEnt->client->pers.cmd), SETANIM_TORSO, BOTH_H1_S1_T_, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
-				hitEnt->client->ps.saberMove = LS_NONE;
-				hitEnt->client->ps.saberBlocked = BLOCKED_NONE;
-				hitEnt->client->ps.weaponTime = hitEnt->client->ps.torsoTimer;
-				hitEnt->client->nStaggerTime = hitEnt->client->ps.torsoTimer + level.time;
-			}
-		}
+		return qtrue;
 	}
-	return (hitEnt);
+
+	return qfalse;
 }
 
 static void G_GrabSomeMofos(gentity_t *self)
@@ -8573,449 +7995,6 @@ static void G_GrabSomeMofos(gentity_t *self)
 	}
 }
 
-//Here to get combat stuff out of w_saber.c
-//void G_CombatStuffTemp(gentity_t *self)
-//{
-//	if ((self->client->ps.torsoAnim == BOTH_KYLE_GRAB || self->client->ps.torsoAnim == SPY_GRAB))
-//	{
-//		G_GrabSomeMofos(self);
-//	}
-//
-//	if (BG_KickingAnim(self->client->ps.legsAnim))
-//	{ //do some kick traces and stuff if we're in the appropriate anim
-//		G_MeleeKickSomeMofos(self);
-//	}
-//	else if (BG_PunchAnim(self->client->ps.torsoAnim))
-//	{
-//		G_MeleePunchSomeMofos(self);
-//	}
-//
-//	else if (self->client->grappleState)
-//	{
-//		gentity_t *grappler = &g_entities[self->client->grappleIndex];
-//		qboolean selfIsAttacker;
-//
-//		selfIsAttacker = (BG_InGrappleMove(self->client->ps.torsoAnim) == 2);
-//		if (!grappler->inuse || !grappler->client || grappler->client->grappleIndex != self->s.number ||
-//			!BG_InGrappleMove(grappler->client->ps.torsoAnim) || !BG_InGrappleMove(grappler->client->ps.legsAnim) ||
-//			!BG_InGrappleMove(self->client->ps.torsoAnim) || !BG_InGrappleMove(self->client->ps.legsAnim) ||
-//			!self->client->grappleState || !grappler->client->grappleState ||
-//			grappler->health < 1 || self->health < 1 ||
-//			!G_PrettyCloseIGuess(self->client->ps.origin[2], grappler->client->ps.origin[2], 4.0f))
-//		{
-//			self->client->grappleState = 0;
-//
-//			if (BG_InGrappleMove(self->client->ps.torsoAnim) || BG_InGrappleMove(self->client->ps.legsAnim))
-//			{ //if they're pretty far from finishing the anim then shove them into another anim
-//				G_SetAnim(self, &self->client->pers.cmd, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
-//				if (self->client->ps.torsoAnim == BOTH_KYLE_MISS)
-//				{ //providing the anim set succeeded..
-//					self->client->ps.weaponTime = self->client->ps.torsoTimer;
-//				}
-//			}
-//		}
-//		else if (!selfIsAttacker)
-//		{// self is the guy getting grappled
-//			vec3_t grapAng;
-//			VectorSubtract(grappler->client->ps.origin, self->client->ps.origin, grapAng);
-//
-//			if (VectorLength(grapAng) > 64.0f)
-//			{ //too far away, break it off
-//				if ((BG_InGrappleMove(self->client->ps.torsoAnim) && self->client->ps.torsoTimer > 100) ||
-//					(BG_InGrappleMove(self->client->ps.legsAnim) && self->client->ps.legsTimer > 100))
-//				{
-//					self->client->grappleState = 0;
-//
-//					G_SetAnim(self, &self->client->pers.cmd, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
-//					if (self->client->ps.torsoAnim == BOTH_KYLE_MISS)
-//					{ //providing the anim set succeeded..
-//						self->client->ps.weaponTime = self->client->ps.torsoTimer;
-//					}
-//
-//				}
-//			}
-//			else
-//			{
-//				vectoangles(grapAng, grapAng);
-//				SetClientViewAngle(self, grapAng);
-//
-//				if (self->client->grappleState >= 20)
-//				{ //grapplee
-//				  //try to position myself at the correct distance from my grappler
-//					float idealDist;
-//					vec3_t gFwd, idealSpot;
-//					trace_t trace;
-//
-//					if (self->client->ps.torsoAnim == BOTH_PLAYER_PA_1)
-//					{ //grab punch
-//						idealDist = 46.0f;
-//					}
-//					else if (self->client->ps.torsoAnim == BOTH_PLAYER_PA_2)
-//					{ //knee-throw
-//						idealDist = 46.0f;
-//						//idealDist = 34.0f;
-//					}
-//					else if (self->client->ps.torsoAnim == BOTH_THROWEE)
-//					{
-//						idealDist = 40.0f;
-//					}
-//					else
-//					{ //head lock and counter throws
-//						idealDist = 46.0f;
-//					}
-//
-//
-//					AngleVectors(grappler->client->ps.viewangles, gFwd, 0, 0);
-//					VectorMA(grappler->client->ps.origin, idealDist, gFwd, idealSpot);
-//
-//					trap->Trace(&trace, self->client->ps.origin, self->r.mins, self->r.maxs, idealSpot, self->s.number, self->clipmask);
-//					if (!trace.startsolid && !trace.allsolid && trace.fraction == 1.0f)
-//					{ //go there
-//						G_SetOrigin(self, idealSpot);
-//						VectorCopy(idealSpot, self->client->ps.origin);
-//					}
-//
-//					self->client->grappleState = 19;
-//				}
-//			}
-//		}
-//		else
-//		{// Self is the one doing the grappling
-//			vec3_t grapAng;
-//
-//			VectorSubtract(grappler->client->ps.origin, self->client->ps.origin, grapAng);
-//
-//			if (VectorLength(grapAng) > 64.0f)
-//			{ //too far away, break it off
-//				if ((BG_InGrappleMove(self->client->ps.torsoAnim) && self->client->ps.torsoTimer > 100) ||
-//					(BG_InGrappleMove(self->client->ps.legsAnim) && self->client->ps.legsTimer > 100))
-//				{
-//
-//					self->client->grappleState = 0;
-//					G_SetAnim(self, &self->client->pers.cmd, SETANIM_BOTH, BOTH_KYLE_MISS, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
-//					if (self->client->ps.torsoAnim == BOTH_KYLE_MISS)
-//					{ //providing the anim set succeeded..
-//						self->client->ps.weaponTime = self->client->ps.torsoTimer;
-//					}
-//				}
-//			}
-//			else
-//			{
-//				if (self->client->ps.torsoAnim == BOTH_THROW)
-//				{// Want to face them for all but the bug-backwards-kata
-//					VectorScale(grapAng, -1, grapAng);
-//				}
-//				vectoangles(grapAng, grapAng);
-//				SetClientViewAngle(self, grapAng);
-//
-//				if (self->client->grappleState >= 1)
-//				{ //grappler
-//					if (grappler->client->ps.weapon == WP_SABER)
-//					{ //make sure their saber is shut off
-//						if (!grappler->client->ps.saberHolstered)
-//						{
-//							grappler->client->ps.saberHolstered = 2;
-//							if (grappler->client->saber[0].soundOff)
-//							{
-//								G_Sound(grappler, CHAN_AUTO, grappler->client->saber[0].soundOff);
-//							}
-//							if (grappler->client->saber[1].soundOff &&
-//								grappler->client->saber[1].model[0])
-//							{
-//								G_Sound(grappler, CHAN_AUTO, grappler->client->saber[1].soundOff);
-//							}
-//						}
-//					}
-//
-//					//check for smash events
-//					if (self->client->ps.torsoAnim == BOTH_KYLE_PA_1)
-//					{ //grab punch
-//						if (self->client->grappleState == 1)
-//						{ //smack
-//							if (self->client->ps.torsoTimer < 3400)
-//							{
-//								int grapplerAnim = grappler->client->ps.torsoAnim;
-//								int grapplerTime = grappler->client->ps.torsoTimer;
-//
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 10, 0, MOD_MELEE);
-//
-//								//it might try to put them into a pain anim or something, so override it back again
-//								if (grappler->health > 0)
-//								{
-//									grappler->client->ps.torsoAnim = grapplerAnim;
-//									grappler->client->ps.torsoTimer = grapplerTime;
-//									grappler->client->ps.legsAnim = grapplerAnim;
-//									grappler->client->ps.legsTimer = grapplerTime;
-//									grappler->client->ps.weaponTime = grapplerTime;
-//								}
-//								self->client->grappleState++;
-//							}
-//						}
-//						else if (self->client->grappleState == 2)
-//						{ //smack!
-//							if (self->client->ps.torsoTimer < 2550)
-//							{
-//								int grapplerAnim = grappler->client->ps.torsoAnim;
-//								int grapplerTime = grappler->client->ps.torsoTimer;
-//
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 10, 0, MOD_MELEE);
-//
-//								if (grappler->health > 0)
-//								{
-//									grappler->client->ps.torsoAnim = grapplerAnim;
-//									grappler->client->ps.torsoTimer = grapplerTime;
-//									grappler->client->ps.legsAnim = grapplerAnim;
-//									grappler->client->ps.legsTimer = grapplerTime;
-//									grappler->client->ps.weaponTime = grapplerTime;
-//								}
-//								self->client->grappleState++;
-//							}
-//						}
-//						else
-//						{ //SMACK!
-//							if (self->client->ps.torsoTimer < 1300)
-//							{
-//								vec3_t tossDir;
-//
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 30, 0, MOD_MELEE);
-//
-//								self->client->grappleState = 0;
-//
-//								VectorSubtract(grappler->client->ps.origin, self->client->ps.origin, tossDir);
-//								VectorNormalize(tossDir);
-//								VectorScale(tossDir, 500.0f, tossDir);
-//								tossDir[2] = 200.0f;
-//
-//								VectorAdd(grappler->client->ps.velocity, tossDir, grappler->client->ps.velocity);
-//
-//								if (grappler->health > 0 && BG_KnockDownable(&grappler->client->ps))
-//								{ //if still alive knock them down
-//									G_Knockdown(grappler, self->s.number);
-//									grappler->client->ps.forceDodgeAnim = -BOTH_GETUP2;
-//									grappler->client->ps.forceHandExtendTime = level.time + BG_AnimLength(grappler->localAnimIndex, BOTH_GETUP2);;
-//
-//									//Count as kill for attacker if the other player falls to his death.
-//									grappler->client->ps.otherKiller = self->s.number;
-//									grappler->client->ps.otherKillerTime = level.time + 8000;
-//									grappler->client->ps.otherKillerDebounceTime = level.time + 100;
-//								}
-//							}
-//						}
-//					}
-//					else if (self->client->ps.torsoAnim == BOTH_KYLE_PA_2)
-//					{ //knee throw
-//						if (self->client->grappleState == 1)
-//						{ //knee to the face
-//							if (self->client->ps.torsoTimer < 3200)
-//							{
-//								int grapplerAnim = grappler->client->ps.torsoAnim;
-//								int grapplerTime = grappler->client->ps.torsoTimer;
-//
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 20, 0, MOD_MELEE);
-//
-//								//it might try to put them into a pain anim or something, so override it back again
-//								if (grappler->health > 0)
-//								{
-//									grappler->client->ps.torsoAnim = grapplerAnim;
-//									grappler->client->ps.torsoTimer = grapplerTime;
-//									grappler->client->ps.legsAnim = grapplerAnim;
-//									grappler->client->ps.legsTimer = grapplerTime;
-//									grappler->client->ps.weaponTime = grapplerTime;
-//								}
-//								self->client->grappleState++;
-//							}
-//						}
-//						else if (self->client->grappleState == 2)
-//						{ //smashed on the ground
-//							if (self->client->ps.torsoTimer < 2000)
-//							{
-//								G_EntitySound(grappler, CHAN_VOICE, G_SoundIndex("*pain100.wav"));
-//								self->client->grappleState++;
-//							}
-//						}
-//						else
-//						{ //and another smash
-//							if (self->client->ps.torsoTimer < 1000)
-//							{
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 30, 0, MOD_MELEE);
-//								G_Sound(grappler, CHAN_AUTO, G_SoundIndex(va("sound/weapons/melee/punch%d", Q_irand(1, 4))));
-//
-//								//it might try to put them into a pain anim or something, so override it back again
-//								if (grappler->health > 0)
-//								{
-//									grappler->client->ps.torsoTimer = 1000;
-//									//set the correct exit player angle
-//									SetClientViewAngle(grappler, grapAng);
-//									G_SetAnim(grappler, &grappler->client->pers.cmd, SETANIM_BOTH, BOTH_GETUP3, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
-//									grappler->client->ps.weaponTime = grappler->client->ps.torsoTimer;
-//									grappler->client->grappleState = 0;
-//								}
-//								else
-//								{ //override death anim
-//								  //set the correct exit player angle
-//									SetClientViewAngle(grappler, grapAng);
-//									grappler->client->ps.torsoAnim = BOTH_DEADFLOP1;
-//									grappler->client->ps.legsAnim = BOTH_DEADFLOP1;
-//
-//								}
-//
-//								self->client->grappleState = 0;
-//							}
-//						}
-//					}
-//
-//
-//					else if (self->client->ps.torsoAnim == BOTH_KYLE_PA_3)
-//					{//Head Lock
-//						if ((self->client->grappleState == 1 && self->client->ps.torsoTimer < 5034) ||
-//							(self->client->grappleState == 2 && self->client->ps.torsoTimer < 3965))
-//						{//choke noises				
-//							self->client->grappleState++;
-//						}
-//						else if (self->client->grappleState == 3)
-//						{ //throw to ground 
-//							if (self->client->ps.torsoTimer < 2379)
-//							{
-//								int grapplerAnim = grappler->client->ps.torsoAnim;
-//								int grapplerTime = grappler->client->ps.torsoTimer;
-//
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 50, 0, MOD_MELEE);
-//
-//								//it might try to put them into a pain anim or something, so override it back again
-//								if (grappler->health > 0)
-//								{
-//									grappler->client->ps.torsoAnim = grapplerAnim;
-//									grappler->client->ps.torsoTimer = grapplerTime;
-//									grappler->client->ps.legsAnim = grapplerAnim;
-//									grappler->client->ps.legsTimer = grapplerTime;
-//									grappler->client->ps.weaponTime = grapplerTime;
-//								}
-//								else
-//								{//he bought it.  Make sure it looks right.
-//								 //set the correct exit player angle
-//									SetClientViewAngle(grappler, grapAng);
-//
-//									grappler->client->ps.torsoAnim = BOTH_DEADFLOP1;
-//									grappler->client->ps.legsAnim = BOTH_DEADFLOP1;
-//								}
-//								self->client->grappleState++;
-//							}
-//						}
-//						else if (self->client->grappleState == 4)
-//						{
-//							if (self->client->ps.torsoTimer < 758)
-//							{
-//								vec3_t tossDir;
-//
-//								VectorSubtract(grappler->client->ps.origin, self->client->ps.origin, tossDir);
-//								VectorNormalize(tossDir);
-//								VectorScale(tossDir, 500.0f, tossDir);
-//								tossDir[2] = 200.0f;
-//
-//								VectorAdd(grappler->client->ps.velocity, tossDir, grappler->client->ps.velocity);
-//
-//								if (grappler->health > 0 && BG_KnockDownable(&grappler->client->ps))
-//								{
-//									G_Knockdown(grappler, self->s.number);
-//									grappler->client->ps.forceDodgeAnim = -BOTH_GETUP2;
-//									grappler->client->ps.forceHandExtendTime = level.time + BG_AnimLength(grappler->localAnimIndex, BOTH_GETUP2);;
-//									grappler->client->grappleState = 0;
-//
-//									//Count as kill for attacker if the other player falls to his death.
-//									grappler->client->ps.otherKiller = self->s.number;
-//									grappler->client->ps.otherKillerTime = level.time + 8000;
-//									grappler->client->ps.otherKillerDebounceTime = level.time + 100;
-//								}
-//							}
-//						}
-//					}
-//					else if (self->client->ps.torsoAnim == BOTH_THROW)
-//					{
-//						if (self->client->grappleState == 1)
-//						{
-//							if (self->client->ps.torsoTimer < 100)
-//							{
-//								vec3_t fwd, newOrigin, displacement;
-//								trace_t trace;
-//
-//								//Get the displacement between us and my forward vector
-//								VectorSubtract(grappler->client->ps.origin, self->client->ps.origin, displacement);
-//								AngleVectors(self->client->ps.viewangles, fwd, NULL, NULL);
-//								fwd[2] = 0; // Flatten view
-//								VectorNormalizeFast(fwd);
-//
-//								//Move his origin infront of me
-//								// If something is there that would block that
-//								//    swap our origins
-//								VectorCopy(self->client->ps.origin, newOrigin);
-//								VectorMA(newOrigin, 80, fwd, newOrigin);
-//
-//								trap->UnlinkEntity((sharedEntity_t *)self);//so throw doesn't collide with thrower
-//														// Check if our new origin is safe
-//								trap->Trace(&trace, grappler->client->ps.origin, grappler->r.mins, grappler->r.maxs, newOrigin, grappler->s.number, grappler->clipmask, qfalse, 0, 0);
-//								if (trace.startsolid || trace.allsolid || trace.fraction < 1.0f)
-//								{
-//									newOrigin[2] += 20; // Try a little up to see if we're throwing him onto something short
-//									trap->Trace(&trace, grappler->client->ps.origin, grappler->r.mins, grappler->r.maxs, newOrigin, grappler->s.number, grappler->clipmask, qfalse, 0, 0);
-//									if (!(trace.startsolid || trace.allsolid || trace.fraction < 1.0f))
-//									{// Set the new origin
-//										VectorCopy(newOrigin, grappler->client->ps.origin);
-//										grappler->client->ps.eFlags ^= EF_TELEPORT_BIT;
-//									}
-//									else
-//									{
-//										// Something is in the way, all else has failed, so swap our origins
-//										VectorCopy(grappler->client->ps.origin, newOrigin);
-//										VectorCopy(self->client->ps.origin, grappler->client->ps.origin);
-//										VectorCopy(newOrigin, self->client->ps.origin);
-//										grappler->client->ps.eFlags ^= EF_TELEPORT_BIT;
-//										self->client->ps.eFlags ^= EF_TELEPORT_BIT;
-//									}
-//								}
-//								else
-//								{// Set the new origin
-//									VectorCopy(newOrigin, grappler->client->ps.origin);
-//									grappler->client->ps.eFlags ^= EF_TELEPORT_BIT;
-//								}
-//
-//								trap->LinkEntity((sharedEntity_t *)self);
-//
-//								//Damage them
-//								G_Damage(grappler, self, self, NULL, self->client->ps.origin, 20, 0, MOD_MELEE);
-//
-//								if (grappler->health > 0 && BG_KnockDownable(&grappler->client->ps))
-//								{
-//									// Set this specific getup animation
-//									G_Knockdown(grappler, self->s.number);
-//									grappler->client->ps.forceDodgeAnim = -BOTH_GETUP2;
-//									grappler->client->ps.forceHandExtendTime = level.time + BG_AnimLength(grappler->localAnimIndex, BOTH_GETUP2);
-//									grappler->client->grappleState = 0;
-//
-//									//Count as kill for attacker if the other player falls to his death.
-//									grappler->client->ps.otherKiller = self->s.number;
-//									grappler->client->ps.otherKillerTime = level.time + 8000;
-//									grappler->client->ps.otherKillerDebounceTime = level.time + 100;
-//								}
-//								else if (grappler->health <= 0)
-//								{// He died, make it look right
-//								 //set the correct exit player angle
-//									VectorScale(grapAng, -1, grapAng);
-//									SetClientViewAngle(grappler, grapAng);
-//
-//									grappler->client->ps.torsoAnim = BOTH_DEADFLOP2;
-//									grappler->client->ps.legsAnim = BOTH_DEADFLOP2;
-//								}
-//
-//								self->client->grappleState++;
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
-
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 { //rww - keep the saber position as updated as possible on the server so that we can try to do realistic-looking contact stuff
   //Note that this function also does the majority of working in maintaining the server g2 client instance (updating angles/anims/etc)
@@ -9080,11 +8059,11 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 
 	if (BG_KickingAnim(self->client->ps.legsAnim))
 	{ //do some kick traces and stuff if we're in the appropriate anim
-		G_MeleeKickSomeMofos(self);
+		G_KickSomeMofos(self);
 	}
-	else if (BG_PunchAnim(self->client->ps.torsoAnim))
-	{
-		G_MeleePunchSomeMofos(self);
+	else if (self->client->ps.torsoAnim == BOTH_KYLE_GRAB)
+	{ //try to grab someone
+		G_GrabSomeMofos(self);
 	}
 	else if (self->client->grappleState)
 	{
@@ -10214,7 +9193,6 @@ int WP_MissileBlockForBlock( int saberBlock )
 
 
 //[SaberSys]
-#ifdef __MISSILES_AUTO_PARRY__
 void WP_SaberBlock(gentity_t *playerent, vec3_t hitloc, qboolean missileBlock); //below
 
 void WP_SaberBlockNonRandom(gentity_t *self, vec3_t hitloc, qboolean missileBlock)
@@ -10290,19 +9268,20 @@ void WP_SaberBlockNonRandom(gentity_t *self, vec3_t hitloc, qboolean missileBloc
 		self->client->ps.saberBlocked = WP_MissileBlockForBlock( self->client->ps.saberBlocked );
 	}
 #else
-	if (self->s.eType != ET_NPC) return;
-
 	WP_SaberBlock(self, hitloc, missileBlock);
 #endif
 }
-#endif //__MISSILES_AUTO_PARRY__
 //[/SaberSys]
+
+extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC);
 
 void WP_SaberBlock( gentity_t *playerent, vec3_t hitloc, qboolean missileBlock )
 {
 	vec3_t diff, fwdangles={0,0,0}, right;
 	float rightdot;
 	float zdiff;
+
+	if (!playerent || !playerent->client || !NPC_IsAlive(playerent, playerent)) return;
 
 	VectorSubtract(hitloc, playerent->client->ps.origin, diff);
 	VectorNormalize(diff);
@@ -10375,36 +9354,24 @@ void WP_SaberBlock( gentity_t *playerent, vec3_t hitloc, qboolean missileBlock )
 }
 
 //[SaberSys]
-#ifdef __MISSILES_AUTO_PARRY__
 qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr); // below...
-#endif //__MISSILES_AUTO_PARRY__
 //[/SaberSys]
-	
 //[NewSaberSys]
-qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t originpoint, int dflags, int mod, qboolean projectile, int attackStr, qboolean shotsaber)
+qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t originpoint, int dflags, int mod, qboolean projectile, int attackStr)
 {
 	qboolean thrownSaber = qfalse;
 	float blockFactor = 0;
-	qboolean bAttacking;
+	qboolean saberInAttack = WP_PlayerSaberAttack(self);
 
-#ifdef __MISSILES_AUTO_PARRY__
 	if (self->s.eType == ET_NPC) // really, you probably should make a new one of WP_SaberCanBlock_NPC that does your WP_SaberCanBlock stuff for them too...
 		return (qboolean)WP_SaberCanBlock_NPC(self, point, dflags, mod, projectile, attackStr);
-#endif //__MISSILES_AUTO_PARRY__
 
 	if (!self || !self->client || !point)
 		return qfalse;
 
-	/*if(self->client->isHacking)
-	return qfalse;*/
 
 	if (self->client->ps.forceHandExtend == HANDEXTEND_KNOCKDOWN)
 		return qfalse;
-
-	if (projectile && PM_StaggerAnim(self->client->ps.torsoAnim))
-	{
-		return qfalse;
-	}
 
 	if (self->client->ps.saberInFlight)
 	{
@@ -10426,7 +9393,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 	{
 		if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
 		{
-			return qtrue;//G_DoCheckBlockBoints(atk, self, point, thrownSaber);
+			return qtrue;
 		}
 		else
 		{
@@ -10434,20 +9401,12 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		}
 	}
 
-	//if(projectile && !IsBlockable(mod))
-	//{
-	//	return qfalse;
-	//}
-
 	if (projectile && (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON1))
 	{
 		return qfalse;
-		//no blocking while slapping
+		//no blocking when useing melee
 	}
 
-
-
-	bAttacking = WP_PlayerSaberAttack(self);
 	switch (self->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE])
 	{ // These actually make more sense to be separate from SABER blocking arcs.
 	case FORCE_LEVEL_3:
@@ -10472,7 +9431,6 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 			blockFactor -= 0.25f;
 		}
 
-		//if (attackStr)
 		if (!projectile)
 		{ //blocking a saber, not a projectile.
 			blockFactor -= 0.25f;
@@ -10481,9 +9439,8 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 
 	if (projectile)
 	{
-		if (self->client->pers.cmd.buttons & BUTTON_ATTACK &&
-			!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
-		{ //don't block when the player is trying to sZlash
+		if ((self->client->pers.cmd.buttons & BUTTON_ATTACK) && !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		{ //can't block a proj when we are doing a attack.
 			return qtrue;
 		}
 	}
@@ -10496,19 +9453,17 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		}
 	}
 
-	if (!InFront(originpoint, self->client->ps.origin, self->client->ps.viewangles, blockFactor)) //orig 0.2f
+	if (!InFront(originpoint, self->client->ps.origin, self->client->ps.viewangles, blockFactor))
 	{
 		return qfalse;
 	}
 
-	if (G_ClientIdleInWorld(self)
-		&& !bAttacking)
+	if (!saberInAttack && G_ClientIdleInWorld(self))
 	{
 		return qfalse;
 	}
 
-	if (!projectile &&
-		!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (!projectile && !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
 	{
 		//Never block a saber without block button held or if we don't have enough BP 
 		//Oh - unless the saber is being thrown at us, in which case it's ok  
@@ -10525,42 +9480,23 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		return qtrue;
 	}
 
-	if (self && self->client && self->client->nStaggerTime > level.time &&
-		(self->client->ps.torsoAnim == BOTH_H1_S1_T_) &&
-		self->client->ps.weaponTime > level.time)
-	{
-		return qfalse;
-	}
-
-	if (projectile && bAttacking && InFront(originpoint, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
-		&& (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(self->client->buttons & BUTTON_ATTACK)
-		&& !PM_StaggerAnim(self->client->ps.torsoAnim) && !PM_InGetUpAnimation(self->client->ps.legsAnim))
+	if (projectile && saberInAttack && InFront(originpoint, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
+		&& (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(self->client->buttons & BUTTON_ATTACK))
 	{
 		self->client->ps.saberMove = LS_NONE;
 		self->client->ps.saberBlocked = BLOCKED_NONE;
 		return qtrue;
 	}
 
-	if (bAttacking && !thrownSaber)
+	if (saberInAttack && !thrownSaber)
 	{
-		//Were most probably not gonna be able to block this shot
-		//So first of all, assume we can't block
-		qboolean bCantBlock = qtrue;
-
-		//Gotta be a projectile were blocking to have a chance
-		//(We can NEVER block a saber attack while we are attacking)
+		//projectile was blocking 
 		if (projectile)
 		{
-			if (!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+			if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
 			{
-				bCantBlock = qfalse;
+				return qfalse;
 			}
-		}
-
-		if (bCantBlock)
-		{
-			//No block
-			return qfalse;
 		}
 	}
 
@@ -10595,9 +9531,9 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 	}
 
 	if (projectile &&
-		self->client->nMBlockDeflectCooldown > level.time &&
-		self->client->nMBlockDeflect <= level.time)
-	{ // If we've just tried an mblock-deflect, but are no longer holding the required buttons, we can't block.
+		self->client->manualblockdeflectCD > level.time &&
+		self->client->manualblockdeflect <= level.time)
+	{ // If we've just tried an manual block deflect, we can't block if not holding down button block
 		return qfalse;
 	}
 
@@ -10625,14 +9561,12 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 //[/NewSaberSys]
 
 //[SaberSys]
-#ifdef __MISSILES_AUTO_PARRY__
 qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)
 {
 	qboolean thrownSaber = qfalse;
 	float blockFactor = 0;
-	//[NewSaberSys]
-	qboolean bAttacking;
-	//[/NewSaberSys]
+
+	qboolean saberInAttack = qfalse;
 
 	if (!self || !self->client || !point)
 	{
@@ -10663,12 +9597,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 	{
 		return qfalse;
 	}
-	//[NewSaberSys]
-	if (projectile && PM_StaggerAnim(self->client->ps.torsoAnim))
-	{
-		return qfalse;
-	}
-	//[/NewSaberSys]
+
 	if (!self->client->ps.saberEntityNum)
 	{ //saber is knocked away
 		return qfalse;
@@ -10720,7 +9649,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 		return qfalse;
 	}
 
-	bAttacking = WP_PlayerSaberAttack(self);
+	saberInAttack = WP_PlayerSaberAttack(self);
 	if (self->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
 	{
 		if (d_saberGhoul2Collision.integer)
@@ -10745,16 +9674,6 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 		return qfalse;
 	}
 
-	//if (thrownSaber)
-	//{
-	//	blockFactor -= 0.25f;
-	//}
-
-	//if (attackStr)
-	//{ //blocking a saber, not a projectile.
-	//	blockFactor -= 0.25f;
-	//}
-
 	//[NewSaberSys]
 	if (!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
 	{
@@ -10763,16 +9682,14 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 			blockFactor -= 0.25f;
 		}
 
-		//if (attackStr)
 		if (!projectile)
 		{ //blocking a saber, not a projectile.
 			blockFactor -= 0.25f;
 		}
 	}
 
-	if (projectile && bAttacking && InFront(point, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
-		&& (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(self->client->buttons & BUTTON_ATTACK)
-		&& !PM_StaggerAnim(self->client->ps.torsoAnim) && !PM_InGetUpAnimation(self->client->ps.legsAnim))
+	if (projectile && saberInAttack && InFront(point, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
+		&& (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(self->client->buttons & BUTTON_ATTACK))
 	{
 		self->client->ps.saberMove = LS_NONE;
 		self->client->ps.saberBlocked = BLOCKED_NONE;
@@ -10781,7 +9698,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 	//[/NewSaberSys]
 
 	if (G_ClientIdleInWorld(self)
-		&& !bAttacking)
+		&& !saberInAttack)
 	{
 		return qfalse;
 	}
@@ -10809,7 +9726,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 	}
 	return qtrue;
 }
-#endif //__MISSILES_AUTO_PARRY__
+
 //[/SaberSys]
 
 qboolean HasSetSaberOnly(void)

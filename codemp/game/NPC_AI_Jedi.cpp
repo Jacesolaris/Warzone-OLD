@@ -139,24 +139,44 @@ void Jedi_CopyAttackCounterInfo(gentity_t *NPC)
 	{
 		NPC->parent->npc_attack_time = NPC->npc_attack_time;
 		NPC->parent->npc_counter_time = NPC->npc_counter_time;
+
+		if (NPC->parent->npc_counter_time > level.time)
+			NPC->parent->client->pers.cmd.buttons |= BUTTON_SPECIALBUTTON2;
+		else
+			NPC->parent->client->pers.cmd.buttons &= ~BUTTON_SPECIALBUTTON2;
 	}
 
 	if (NPC->padawan && NPC_IsAlive(NPC, NPC->padawan) && NPC->padawan->enemy == NPC->enemy)
 	{
 		NPC->padawan->npc_attack_time = NPC->npc_attack_time;
 		NPC->padawan->npc_counter_time = NPC->npc_counter_time;
+
+		if (NPC->padawan->npc_counter_time > level.time)
+			NPC->padawan->client->pers.cmd.buttons |= BUTTON_SPECIALBUTTON2;
+		else
+			NPC->padawan->client->pers.cmd.buttons &= ~BUTTON_SPECIALBUTTON2;
 	}
 
 	if (NPC->enemy->parent && NPC_IsAlive(NPC, NPC->enemy->parent) && NPC->enemy->parent->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->parent->npc_attack_time = NPC->enemy->npc_attack_time;
 		NPC->enemy->parent->npc_counter_time = NPC->enemy->npc_counter_time;
+
+		if (NPC->enemy->parent->npc_counter_time > level.time)
+			NPC->enemy->parent->client->pers.cmd.buttons |= BUTTON_SPECIALBUTTON2;
+		else
+			NPC->enemy->parent->client->pers.cmd.buttons &= ~BUTTON_SPECIALBUTTON2;
 	}
 
 	if (NPC->enemy->padawan && NPC_IsAlive(NPC, NPC->enemy->padawan) && NPC->enemy->padawan->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->padawan->npc_attack_time = NPC->enemy->npc_attack_time;
 		NPC->enemy->padawan->npc_counter_time = NPC->enemy->npc_counter_time;
+
+		if (NPC->enemy->padawan->npc_counter_time > level.time)
+			NPC->enemy->padawan->client->pers.cmd.buttons |= BUTTON_SPECIALBUTTON2;
+		else
+			NPC->enemy->padawan->client->pers.cmd.buttons &= ~BUTTON_SPECIALBUTTON2;
 	}
 }
 
@@ -203,6 +223,7 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 			NPC->enemy->npc_attack_time = level.time + 5000; // also init our enemy's setting...
 			NPC->enemy->npc_counter_time = 0;
 
+			NPC->client->pers.cmd.buttons |= BUTTON_SPECIALBUTTON2;
 			Jedi_CopyAttackCounterInfo(NPC);
 			return qfalse;
 		}
@@ -214,17 +235,20 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 			NPC->enemy->npc_counter_time = level.time + 5000;
 			NPC->enemy->npc_attack_time = 0;
 
+			NPC->client->pers.cmd.buttons &= ~BUTTON_SPECIALBUTTON2;
 			Jedi_CopyAttackCounterInfo(NPC);
 			return qtrue;
 		}
 	}
 	else if (NPC->npc_counter_time >= level.time)
 	{// Continue counterring...
+		NPC->client->pers.cmd.buttons |= BUTTON_SPECIALBUTTON2;
 		Jedi_CopyAttackCounterInfo(NPC);
 		return qfalse;
 	}
 	else
 	{// Continue attacking...
+		NPC->client->pers.cmd.buttons &= ~BUTTON_SPECIALBUTTON2;
 		Jedi_CopyAttackCounterInfo(NPC);
 		return qtrue;
 	}

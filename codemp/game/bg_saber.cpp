@@ -10,7 +10,6 @@ saberInfo_t *BG_MySaber(int clientNum, int saberNum);
 
 //[NewSaberSys]
 extern void PM_DoPunch(void);
-extern usercmd_t intendedCmd;
 //[/NewSaberSys]
 
 int PM_irand_timesync(int val1, int val2)
@@ -1260,8 +1259,6 @@ void PM_SaberLockBreak(playerState_t *genemy, qboolean victory, int strength)
 	pm->ps->saberLockEnemy = genemy->saberLockEnemy = 0;
 
 	pm->ps->forceHandExtend = HANDEXTEND_WEAPONREADY;
-
-	//pm->ps->eFlags &= ~EF_FAST_SABERLOCK;
 }
 //[/SaberLockSys]
 
@@ -2773,11 +2770,11 @@ int PM_KickMoveForConditions(void)
 	//return LS_JUMPKICK_F;
 	//return LS_LEGSWEEP;
 
-	if (pm->cmd.rightmove && pm->ps->weapon == WP_MELEE) // Can't perform normal melee moves just after a special one... except in melee
+	if (pm->cmd.rightmove && pm->ps->weapon == WP_MELEE) 
 	{//kick to side
 	 // check for special right and left kicks 
-		int right = (int)PM_CheckEnemyPresence(DIR_RIGHT, 25.0f);//Too large, adjust this number
-		int left = (int)PM_CheckEnemyPresence(DIR_LEFT, 25.0f);//Too large, adjust this number
+		int right = (int)PM_CheckEnemyPresence(DIR_RIGHT, 25.0f);
+		int left = (int)PM_CheckEnemyPresence(DIR_LEFT, 25.0f);
 
 		if ((right) && (left))
 		{
@@ -2929,14 +2926,14 @@ qboolean PM_SaberPowerCheck(void)
 {
 	if (pm->ps->saberInFlight)
 	{ //so we don't keep doing stupid force out thing while guiding saber.
-		if (pm->ps->fd.forcePower > forcePowerNeeded[/*pm->ps->fd.forcePowerLevel[FP_SABERTHROW]*/1][FP_SABERTHROW])
+		if (pm->ps->fd.forcePower > forcePowerNeeded[pm->ps->fd.forcePowerLevel[FP_SABERTHROW]][FP_SABERTHROW])
 		{
 			return qtrue;
 		}
 	}
 	else
 	{
-		return BG_EnoughForcePowerForMove(forcePowerNeeded[/*pm->ps->fd.forcePowerLevel[FP_SABERTHROW]*/1][FP_SABERTHROW]);
+		return BG_EnoughForcePowerForMove(forcePowerNeeded[pm->ps->fd.forcePowerLevel[FP_SABERTHROW]][FP_SABERTHROW]);
 	}
 
 	return qfalse;
@@ -3290,7 +3287,7 @@ void PM_WeaponLightsaber(void)
 
 		//[RACC]
 		//[NewSaberSys]
-		if (pm->ps->weaponTime < 1 && ((pm->cmd.buttons & BUTTON_ALT_ATTACK) || (pm->cmd.buttons & BUTTON_ATTACK)))//don't fix this. it makes some wierd saber anim code needs to look like this. Stoiss
+		if (pm->ps->weaponTime < 1 && ((pm->cmd.buttons & BUTTON_ALT_ATTACK) || (pm->cmd.buttons & BUTTON_ATTACK)))
 		{
 			if (pm->ps->duelTime < pm->cmd.serverTime)
 			{
@@ -3395,7 +3392,7 @@ void PM_WeaponLightsaber(void)
 			 //This will get set to false again once the saber makes it back to its owner game-side
 				if (!pm->ps->saberInFlight)
 				{
-					pm->ps->fd.forcePower -= forcePowerNeeded[/*pm->ps->fd.forcePowerLevel[FP_SABERTHROW]*/1][FP_SABERTHROW];
+					pm->ps->fd.forcePower -= forcePowerNeeded[pm->ps->fd.forcePowerLevel[FP_SABERTHROW]][FP_SABERTHROW];
 				}
 
 				pm->ps->saberInFlight = qtrue;
@@ -3763,15 +3760,6 @@ void PM_WeaponLightsaber(void)
 			}
 		}
 
-		//[SaberSys]-- Stoiss-- Test check and see if this do any diff to our combat system
-		if (((pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
-			&& !(pm->cmd.buttons&BUTTON_ATTACK))
-		{//You're trying to do a manual block, see if you want to change positions and then exit
-			PM_GetSaberStance();
-			return;
-		}
-		//[/SaberSys]
-
 		//what the? I don't know why I was doing this.
 		/*
 		if (pm->ps->saberBlocked != BLOCKED_ATK_BOUNCE && pm->ps->saberBlocked != BLOCKED_PARRY_BROKEN && pm->ps->weaponTime < 1)
@@ -3792,18 +3780,18 @@ void PM_WeaponLightsaber(void)
 	}
 
 weapChecks:
-	//[SaberThrowSys] 
 	if (pm->ps->saberEntityNum)
 	{ //only check if we have our saber with us
+	  // check for weapon change
+	  // can't change if weapon is firing, but can change again if lowering or raising
+	  //if ( pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING ) {
 		if (pm->ps->weaponTime <= 0 && pm->ps->torsoTimer <= 0)
 		{
-			if (pm->ps->weapon != pm->cmd.weapon)
-			{
+			if (pm->ps->weapon != pm->cmd.weapon) {
 				PM_BeginWeaponChange(pm->cmd.weapon);
 			}
 		}
 	}
-	//[/SaberThrowSys]
 
 	//[SaberSys]
 	//Removed Katas.
@@ -4064,27 +4052,78 @@ weapChecks:
 			{
 				if (BG_SaberMeleePowerCheck(pm->ps->fd.forcePower))
 				{
-					int MidairKickSingle = 1;
-					int MidairKickStaff = 1;
-					int MidairKickDual = 1;
-					int MidairKickHalf = 1;
-					int stance = pm->ps->fd.saberAnimLevelBase;
-					int style = pm->ps->fd.saberAnimLevel;
-
-					if (((MidairKickSingle && (style == SS_DESANN || style == SS_TAVION || style == SS_FAST || style == SS_MEDIUM || style == SS_STRONG) && (stance != SS_STAFF && stance != SS_DUAL))
-						|| ((MidairKickStaff && stance == SS_STAFF && style == SS_STAFF) || (MidairKickHalf && stance == SS_STAFF && style == SS_MEDIUM))
-						|| ((MidairKickDual && stance == SS_DUAL && style == SS_DUAL) || (MidairKickHalf && stance == SS_DUAL && style == SS_FAST))) &&
-						(!BG_KickingAnim(pm->ps->torsoAnim) &&
-							!BG_KickingAnim(pm->ps->legsAnim) &&
-							!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
-							!BG_SaberInSpecialAttack(pm->ps->legsAnim) &&
-							!BG_LongLeapAnim(pm->ps->torsoAnim) &&
-							!BG_LongLeapAnim(pm->ps->legsAnim)))
+					switch (pm->ps->fd.saberAnimLevelBase)
 					{
-						BG_ForcePowerDrain(pm->ps, (forcePowers_t)0, 5);
-						PM_SetSaberMove(kickMove);
-						pm->cmd.buttons |= BUTTON_SPECIALBUTTON1; //To turn off damage and other nasty things
-						return;
+					case SS_STAFF:
+						switch (pm->ps->fd.saberAnimLevel)
+						{
+						case SS_STAFF:
+						case SS_MEDIUM:
+							{
+								if (!BG_KickingAnim(pm->ps->torsoAnim) &&
+									!BG_KickingAnim(pm->ps->legsAnim) &&
+									!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
+									!BG_SaberInSpecialAttack(pm->ps->legsAnim) &&
+									!BG_LongLeapAnim(pm->ps->torsoAnim) &&
+									!BG_LongLeapAnim(pm->ps->legsAnim))
+								{
+									BG_ForcePowerDrain(pm->ps, (forcePowers_t)0, 5);
+									PM_SetSaberMove(kickMove);
+									pm->cmd.buttons |= BUTTON_SPECIALBUTTON1; //To turn off damage and other nasty things
+									return;
+								}
+							}
+							break;
+						case SS_DUAL:
+							switch (pm->ps->fd.saberAnimLevel)
+							{
+							case SS_STAFF:
+							case SS_MEDIUM:
+								{
+									if (!BG_KickingAnim(pm->ps->torsoAnim) &&
+										!BG_KickingAnim(pm->ps->legsAnim) &&
+										!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
+										!BG_SaberInSpecialAttack(pm->ps->legsAnim) &&
+										!BG_LongLeapAnim(pm->ps->torsoAnim) &&
+										!BG_LongLeapAnim(pm->ps->legsAnim))
+									{
+										BG_ForcePowerDrain(pm->ps, (forcePowers_t)0, 5);
+										PM_SetSaberMove(kickMove);
+										pm->cmd.buttons |= BUTTON_SPECIALBUTTON1; //To turn off damage and other nasty things
+										return;
+									}
+								}
+								break;
+							default:
+								break;
+							}
+							break;
+						default:
+							switch (pm->ps->fd.saberAnimLevel)
+							{
+							case SS_FAST:
+							case SS_MEDIUM:
+							case SS_STRONG:
+								{
+									if (!BG_KickingAnim(pm->ps->torsoAnim) &&
+										!BG_KickingAnim(pm->ps->legsAnim) &&
+										!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
+										!BG_SaberInSpecialAttack(pm->ps->legsAnim) &&
+										!BG_LongLeapAnim(pm->ps->torsoAnim) &&
+										!BG_LongLeapAnim(pm->ps->legsAnim))
+									{
+										BG_ForcePowerDrain(pm->ps, (forcePowers_t)0, 5);
+										PM_SetSaberMove(kickMove);
+										pm->cmd.buttons |= BUTTON_SPECIALBUTTON1; //To turn off damage and other nasty things
+										return;
+									}
+								}
+								break;
+							default:
+								break;
+							}
+							break;
+						}
 					}
 				}
 				pm->cmd.buttons &= ~BUTTON_SPECIALBUTTON1;

@@ -1857,6 +1857,14 @@ typedef enum //# animNumber_e
 	BOTH_MELEE_WOOKIEE,
 	BOTH_LEGSWEEP,
 	BOTH_WOOKGETUP,
+	BOTH_BURST,
+	BOTH_BURSTMISS,
+	BOTH_THROW1,
+	BOTH_THROWED1,
+	BOTH_THROW2,
+	BOTH_THROWED2,
+	BOTH_THROW,			//Judo throw
+	BOTH_THROWEE,		//Recieving end of Judo Throw
 
 	//Spy anim, not used at all yet might be cool to use later on
 	SPY_KILL,

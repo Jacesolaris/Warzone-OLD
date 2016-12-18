@@ -837,9 +837,8 @@ static void WP_DisruptorMainFire(gentity_t *ent)
 		}
 		else if (traceEnt && traceEnt->client && traceEnt->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] >= FORCE_LEVEL_3)
 		{
-			//if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
 			if (WP_SaberCanBlock(ent, traceEnt, tr.endpos, ent->r.currentOrigin,
-				0, MOD_DISRUPTOR, qtrue, damage, qfalse))
+				0, MOD_DISRUPTOR, qtrue, damage))
 			{ //broadcast and stop the shot because it was blocked
 				gentity_t *te = NULL;
 
@@ -1054,7 +1053,7 @@ void WP_DisruptorAltFire(gentity_t *ent)
 		{
 			//if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
 			if (WP_SaberCanBlock(ent, traceEnt, tr.endpos, ent->r.currentOrigin,
-				0, MOD_DISRUPTOR, qtrue, damage, qfalse))
+				0, MOD_DISRUPTOR, qtrue, damage))
 			{ //broadcast and stop the shot because it was blocked
 				gentity_t *te = NULL;
 

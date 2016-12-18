@@ -115,7 +115,6 @@ qboolean PM_DoKick(void); //pm function for performing kicks
 
  //[NewSaberSys]
 qboolean PM_InGetUpAnimation(int anim);
-qboolean PM_StaggerAnim(int anim);
 qboolean BG_InKnockDown(int anim);
 qboolean BG_SuperBreakWinAnim(int anim);
 qboolean BG_InGetUpAnim(playerState_t *ps);

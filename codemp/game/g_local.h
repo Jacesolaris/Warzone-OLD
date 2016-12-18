@@ -930,7 +930,7 @@ struct gclient_s {
 
 	//[NewSaberSys]
 	//keep track of last person kicked and the time so we don't hit multiple times per kick
-	int			jediKickIndex[MAX_KICKTRACKING_ENTS];
+	int			jediKickIndex;
 	int			jediKickTime;
 	//[/NewSaberSys]
 
@@ -953,22 +953,11 @@ struct gclient_s {
 	//[/SaberSys]
 
 	//[NewSaberSys]
-	int			nMBlockDeflect;
-	int			nMBlockDeflectCooldown;
-	int			nStaggerTime;
-	int			knockedDownBy;
-	int			nSlapKnockdownCooldownAfterPull;
-	vec3_t		cacheDir;
-	vec3_t		cacheEnd;
-	int			nMeleeCounterCooldown;
-	qboolean	meleeHit;	// True if the current melee move has impacted something
+	//i renmaed this
+	int			manualblockdeflect;
+	int			manualblockdeflectCD;
 	qboolean	hasShield;
-	int			nSaberMeleeDelay;
-	int			nSlickKnockdownCount; // For knocking people on their asses if they try to bunnyhop on slick surfaces.
-	int			nTauntSpamFloodProtect;
-	int			meditateStartTime;
-	int			nSaberLockMoveTimer;
-	int			nSaberLockDebounce;
+	int			FPdeflectblockdrain;
 	//[/NewSaberSys]
 
 	//fallen duelist
@@ -1635,11 +1624,10 @@ qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
 //[NewSaberSys]
-qboolean WP_SaberCanBlock(gentity_t * atk, gentity_t *self, vec3_t point, vec3_t originpoint, int dflags, int mod, qboolean projectile, int attackStr, qboolean shotsaber);
+qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t originpoint, int dflags, int mod, qboolean projectile, int attackStr);
 void saberKnockDown(gentity_t *saberent, gentity_t *saberOwner, gentity_t *other);
-void G_SaberPerformeBounce(gentity_t* self, gentity_t* other, qboolean bodyhit);
+void G_SaberBounce(gentity_t* self, gentity_t* other, qboolean bodyhit);
 qboolean WP_PlayerSaberAttack(gentity_t *self);
-//void G_CombatStuffTemp(gentity_t *ent);
 //[/NewSaberSys]
 
 void WP_SaberInitBladeData( gentity_t *ent );

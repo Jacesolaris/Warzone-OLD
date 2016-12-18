@@ -856,10 +856,10 @@ int BG_InGrappleMove(int anim)
 	case BOTH_PLAYER_PA_3:
 		//[/MELEE]
 	case BOTH_PLAYER_PA_FLY:
-
 	case SPY_VICTIM:
 	case SPY_STABBED:
 	case SPY_SLICED:
+	case BOTH_THROWEE:
 
 		return 3; //getting the shit beaten out of you
 		break;
@@ -1278,21 +1278,6 @@ qboolean PM_InGetUpAnimation(int anim)
 	case BOTH_FORCE_GETUP_F1:
 	case BOTH_FORCE_GETUP_F2:
 
-		return qtrue;
-	default: return qfalse;
-	}
-}
-//[/NewSaberSys]
-
-//[NewSaberSys]
-qboolean PM_StaggerAnim(int anim)
-{
-	switch (anim)
-	{
-	case BOTH_H1_S1_TL:
-	case BOTH_BASHED1:
-	case BOTH_H1_S1_BR:
-	case BOTH_H1_S1_T_:
 		return qtrue;
 	default: return qfalse;
 	}

@@ -21,7 +21,7 @@ extern void WP_SaberBlockNonRandom(gentity_t *self, vec3_t hitloc, qboolean miss
 extern void WP_SaberBlock(gentity_t *playerent, vec3_t hitloc, qboolean missileBlock);
 #endif //__MISSILES_AUTO_PARRY__
 //[/SaberSys]
-extern void G_SaberPerformeBounce(gentity_t* self, gentity_t* other, qboolean bodyhit);
+extern void G_SaberBounce(gentity_t* self, gentity_t* other, qboolean hitBody);
 extern int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum);
 extern int PM_SaberBounceForAttack(int move);
 qboolean SaberAttacking(gentity_t *self);
@@ -29,7 +29,6 @@ extern qboolean saberKnockOutOfHand(gentity_t *saberent, gentity_t *saberOwner, 
 extern qboolean BG_InKnockDown(int anim);
 extern qboolean BG_SaberInTransitionAny(int move);
 qboolean PM_SaberInBrokenParry(int move);
-extern void G_Stagger(gentity_t *hitEnt, gentity_t *atk, int currentBP);
 extern qboolean CheckManualBlocking(gentity_t *attacker, gentity_t *defender);
 
 void SabBeh_AttackVsAttack(gentity_t *self,	gentity_t *otherOwner)
@@ -55,16 +54,9 @@ void SabBeh_AttackVsBlock( gentity_t *attacker, gentity_t *blocker, vec3_t hitLo
 {//set the saber behavior for an attacking vs blocking/parrying blade impact
 	qboolean startSaberLock = qfalse;
 
-	if (SaberAttacking(attacker))		//Perfect blocked
+	if (SaberAttacking(attacker))
 	{
-		G_SaberPerformeBounce(blocker, attacker, qfalse);
-
-		if (!(WP_PlayerSaberAttack(blocker) && (blocker->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) &&
-			(blocker->client->nStaggerTime < level.time) && !(BG_InKnockDown(blocker->client->ps.legsAnim) ||
-			BG_InKnockDown(blocker->client->ps.torsoAnim) || (blocker->client->ps.forceHandExtend == HANDEXTEND_KNOCKDOWN))))
-		{ // Also can't be staggering or be in knock-down
-
-		}
+		G_SaberBounce(blocker, attacker, qfalse);
 	}
 
 	if(!OnSameTeam(attacker, blocker) || g_friendlySaber.integer)
@@ -103,10 +95,6 @@ void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc,
 			SabBeh_AttackVsBlock(self, otherOwner, hitLoc, otherHitSaberBlade);
 			*didHit = qfalse;
 		}
-		else
-		{//otherOwner in some other state
-			G_Stagger(self, otherOwner, qfalse);
-		}
 	}
 	else if( OJP_SaberCanBlock(self, otherOwner, qfalse, hitLoc, -1, -1) )
 	{//self is blocking or parrying
@@ -118,69 +106,33 @@ void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc,
 		{//and otherOwner is blocking or parrying
 			CheckManualBlocking(self, otherOwner);
 		}
-		else
-		{//otherOwner in some other state
-			G_Stagger(otherOwner, self, qfalse);
-		}
 	}
 	else
 	{//whatever other states self can be in.  (returns, bounces, or something)
-		G_SaberPerformeBounce(otherOwner, self, qfalse);
-		G_SaberPerformeBounce(self, otherOwner, qfalse);
+		G_SaberBounce(otherOwner, self, qfalse);
+		G_SaberBounce(self, otherOwner, qfalse);
 	}
 }
 
 //[NewSaberSys]
-void G_SaberPerformeBounce(gentity_t* self, gentity_t* other, qboolean bodyhit)
+extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC); // Also valid for non-npcs.
+
+void G_SaberBounce(gentity_t* self, gentity_t* other, qboolean hitBody)
 {
-	if (((other->client && other->client->ps.stats[STAT_HEALTH] > 0) || (!other->client && g_entities[other->s.number].health > 0)) &&
-		!BG_SaberInSpecialAttack(self->client->ps.torsoAnim) && // Unless we're doing a special attack...
-		(!PM_StaggerAnim(self->client->ps.torsoAnim) && !bodyhit)) //Or staggering and its not the bodyhit
-	{//The attack didn't kill your opponent, bounce the saber back to prevent passthru.
-		if (SaberAttacking(self))
+	if (other->client && NPC_IsAlive(self, other))
+	{
+		if (!BG_SaberInSpecialAttack(self->client->ps.torsoAnim))
 		{
-			self->client->ps.saberMove = PM_SaberBounceForAttack(self->client->ps.saberMove);
-			self->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
+			if (SaberAttacking(self))
+			{// Saber is in attack, use bounce for this attack.
+				self->client->ps.saberMove = PM_SaberBounceForAttack(self->client->ps.saberMove);
+				self->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
+			}
+			else
+			{// Saber is in defense, use defensive bounce.
+				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+			}
 		}
-		else
-		{
-			self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-		}
-	}
-}
-//[/NewSaberSys]
-
-//[NewSaberSys]
-void G_Stagger(gentity_t *hitEnt, gentity_t *atk, int currentBP)
-{
-	if (PM_StaggerAnim(hitEnt->client->ps.torsoAnim) || PM_StaggerAnim(atk->client->ps.torsoAnim))
-	{
-		return;
-	}
-	if (PM_InGetUpAnimation(hitEnt->client->ps.legsAnim))
-	{
-		return;
-	}
-	if (hitEnt->client->ps.forceHandExtend == HANDEXTEND_KNOCKDOWN &&
-		hitEnt->client->ps.forceHandExtendTime > level.time)
-	{
-		return;//Don't allow stagger if the defender is in a slap animation.
-	}
-
-	if ((atk->client->ps.torsoAnim != BOTH_JUMPFLIPSLASHDOWN1 || atk->client->ps.torsoTimer < 800)
-		&& (atk->client->ps.torsoAnim != BOTH_JUMPATTACK6 || atk->client->ps.torsoTimer < 200))
-	{
-		return;// Only yellow DFA or dual butterfly can stagger opponents
-	}
-
-	G_SetAnim(hitEnt, &(hitEnt->client->pers.cmd), SETANIM_TORSO, BOTH_BASHED1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
-
-	if (PM_StaggerAnim(hitEnt->client->ps.torsoAnim))
-	{
-		hitEnt->client->ps.saberMove = LS_NONE;
-		hitEnt->client->ps.saberBlocked = BLOCKED_NONE; // Needed to prevent nudge bugging the stagger.
-		hitEnt->client->ps.weaponTime = hitEnt->client->ps.torsoTimer;
-		hitEnt->client->nStaggerTime = hitEnt->client->ps.torsoTimer + level.time;
 	}
 }
 //[/NewSaberSys]

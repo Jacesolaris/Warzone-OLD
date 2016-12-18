@@ -64,10 +64,6 @@
 
 #define MAX_CLIENT_SCORE_SEND 20
 
-//[NewSaberSys]
-#define SP_MELEE_COOLDOWN 5000
-//[/NewSaberSys]
-
 //
 // config strings are a general means of communicating variable length strings
 // from the server to all connected clients.
@@ -513,7 +509,7 @@ typedef struct pmove_s {
 
 	//[NewSaberSys]
 	// Melee tracking
-	qboolean	meleeHit;					// true if the last melee move hit something and so is comboable
+	qboolean	incomminghit;		// true if the last melee move hit something and so is comboable
 	//[/NewSaberSys]
 
 	// results (out)

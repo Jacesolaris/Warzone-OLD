@@ -167,7 +167,7 @@ typedef struct playerEntity_s {
 	int				barrelTime;
 	qboolean		barrelSpinning;
 	//[NewSaberSys]
-	qboolean		meleeHit;
+	qboolean		incomminghit;
 	//[/NewSaberSys]
 } playerEntity_t;
 

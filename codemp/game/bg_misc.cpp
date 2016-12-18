@@ -702,10 +702,7 @@ qboolean BG_LegalizedForcePowers(char *powerOut, size_t powerOutSize, int maxRan
 				if (final_Powers[c] && final_Powers[c] < powerCycle)
 				{ //kill in order of lowest powers, because the higher powers are probably more important
 					if (c == FP_SABER_OFFENSE &&
-						//[SaberThrowSys]
-						(final_Powers[FP_SABER_DEFENSE] > minPow ))
-						//(final_Powers[FP_SABER_DEFENSE] > minPow || final_Powers[FP_SABERTHROW] > 0))
-						//[/SaberThrowSys]
+						(final_Powers[FP_SABER_DEFENSE] > minPow || final_Powers[FP_SABERTHROW] > 0))
 					{ //if we're on saber attack, only suck it down if we have no def or throw either
 						int whichOne = FP_SABERTHROW; //first try throw
 
