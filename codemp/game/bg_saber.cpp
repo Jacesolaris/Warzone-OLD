@@ -3482,48 +3482,44 @@ void PM_WeaponLightsaber(void)
 			!BG_LongLeapAnim(pm->ps->legsAnim) &&
 			pm->ps->groundEntityNum != ENTITYNUM_NONE)
 		{
-			int sabermeleeMove = -1, kickmove = -1;
+			int meleestylecombo = -1, kickmove = -1;
 
-			if (pm->cmd.buttons & BUTTON_USE)
-			{// Allow saber users to kick instead of slap when pressing the use (also now the melee) button
-			 // And flying forward kick if not crouching & only moving forward
-				if (!(pm->ps->pm_flags & PMF_DUCKED) && (pm->cmd.forwardmove > 0) && (pm->cmd.rightmove == 0))
-				{
-					kickmove = PM_KickMoveForConditions();
-				}
-				else
-				{
-					kickmove = PM_KickMoveForConditions();
-				}
+			if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+			{// Allow saber users to kick.
+				kickmove = PM_KickMoveForConditions();
 			}
-
-			//this needs a rewrite
 
 			if (kickmove != -1 && kickmove != LS_KICK_F && kickmove != LS_HILT_BASH)
 			{
-				sabermeleeMove = saberMoveData[kickmove].animToUse;
+				meleestylecombo = saberMoveData[kickmove].animToUse;
 			}
-			else if (pm->ps->fd.saberAnimLevel == SS_TAVION ||
-				pm->ps->fd.saberAnimLevel == SS_DESANN ||
-				pm->ps->fd.saberAnimLevel == SS_FAST ||
-				pm->ps->fd.saberAnimLevel == SS_MEDIUM ||
-				pm->ps->fd.saberAnimLevel == SS_STRONG)
+			else
 			{
-				sabermeleeMove = BOTH_MELEE_BACKHAND;
-			}
-			else if (pm->ps->fd.saberAnimLevel == SS_STAFF)
-			{
-				sabermeleeMove = BOTH_MELEE_SPINKICK;
-			}
-			else if (pm->ps->fd.saberAnimLevel == SS_DUAL)
-			{
-				sabermeleeMove = BOTH_MELEE_BACKKICK;
+				switch (pm->ps->fd.saberAnimLevel)
+				{
+				case SS_TAVION:
+				case SS_DESANN:
+				case SS_FAST:
+				case SS_MEDIUM:
+				case SS_STRONG:
+				default:
+					meleestylecombo = BOTH_MELEE_BACKHAND;
+					break;
+				case SS_STAFF:
+				case SS_WARZONE:
+					meleestylecombo = BOTH_MELEE_SPINKICK;
+					break;
+				case SS_DUAL:
+					meleestylecombo = BOTH_MELEE_BACKKICK;
+					break;
+				}
 			}
 
-			if (sabermeleeMove != -1)
+
+			if (meleestylecombo != -1)
 			{
-				PM_SetAnim(SETANIM_BOTH, sabermeleeMove, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
-				if (pm->ps->legsAnim == sabermeleeMove)
+				PM_SetAnim(SETANIM_BOTH, meleestylecombo, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+				if (pm->ps->legsAnim == meleestylecombo)
 				{
 					pm->ps->weaponTime = pm->ps->legsTimer;
 					return;
