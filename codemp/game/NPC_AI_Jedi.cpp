@@ -1749,7 +1749,7 @@ static void Jedi_Advance( gentity_t *aiEnt)
 	//TIMER_Set( NPC, "duck", 0 );
 }
 
-static void Jedi_AdjustSaberAnimLevel( gentity_t *self, int newLevel )
+void Jedi_AdjustSaberAnimLevel( gentity_t *self, int newLevel )
 {
 	if ( !self || !self->client )
 	{
@@ -1819,7 +1819,156 @@ static void Jedi_AdjustSaberAnimLevel( gentity_t *self, int newLevel )
 	}
 #endif //__FUCK_THIS__
 
-	Cmd_SaberAttackCycle_f(self);
+	if (self->client->NPC_class == CLASS_TAVION)
+	{//special attacks
+		self->client->ps.fd.saberAnimLevel = SS_TAVION;
+		self->client->ps.fd.saberAnimLevelBase = SS_TAVION;
+		self->client->ps.fd.saberDrawAnimLevel = SS_TAVION;
+		self->client->npcFavoredStance = SS_TAVION;
+		return;
+	}
+	else if (self->client->NPC_class == CLASS_DESANN)
+	{//special attacks
+		self->client->ps.fd.saberAnimLevel = SS_DESANN;
+		self->client->ps.fd.saberAnimLevelBase = SS_DESANN;
+		self->client->ps.fd.saberDrawAnimLevel = SS_DESANN;
+		self->client->npcFavoredStance = SS_DESANN;
+		return;
+	}
+	else
+	{
+		//Cmd_SaberAttackCycle_f(self);
+
+		/*
+		RANK_CIVILIAN,
+		RANK_CREWMAN,
+		RANK_ENSIGN,
+		RANK_LT_JG,
+		RANK_LT,
+		RANK_LT_COMM,
+		RANK_COMMANDER,
+		RANK_CAPTAIN
+		*/
+		/*if (self->NPC->rank == RANK_CIVILIAN || self->NPC->rank == RANK_LT_JG)
+		{//grunt and fencer always uses quick attacks
+			self->client->ps.fd.saberAnimLevel = SS_FAST;
+			self->client->ps.fd.saberAnimLevelBase = SS_FAST;
+			self->client->ps.fd.saberDrawAnimLevel = SS_FAST;
+			return;
+		}
+		if (self->NPC->rank == RANK_CREWMAN || self->NPC->rank == RANK_ENSIGN)
+		{//acrobat & force-users always use medium attacks
+			self->client->ps.fd.saberAnimLevel = SS_MEDIUM;
+			self->client->ps.fd.saberAnimLevelBase = SS_MEDIUM;
+			self->client->ps.fd.saberDrawAnimLevel = SS_MEDIUM;
+			return;
+		}
+		if ( self->NPC->rank == RANK_LT )
+		{//boss always uses strong attacks
+			self->client->ps.fd.saberAnimLevel = SS_STRONG;
+			self->client->ps.fd.saberAnimLevelBase = SS_STRONG;
+			self->client->ps.fd.saberDrawAnimLevel = SS_STRONG;
+			return;
+		}
+		else
+		{
+			self->client->ps.fd.saberAnimLevel = SS_WARZONE;
+			self->client->ps.fd.saberAnimLevelBase = SS_WARZONE;
+			self->client->ps.fd.saberDrawAnimLevel = SS_WARZONE;
+			return;
+		}*/
+
+		if (self->client->npcFavoredStance >= SS_FAST)
+		{// Already selected a favored stance...
+			self->client->ps.fd.saberAnimLevel = self->client->npcFavoredStance;
+			self->client->ps.fd.saberAnimLevelBase = self->client->npcFavoredStance;
+			self->client->ps.fd.saberDrawAnimLevel = self->client->npcFavoredStance;
+			return;
+		}
+
+		if (self->client->saber[0].model[0] && self->client->saber[1].model[0])
+		{// Dual sabers...
+			int styleChoice = irand(0, 1);
+
+			switch (styleChoice)
+			{
+			case 0:
+				self->client->ps.fd.saberAnimLevel = SS_DUAL;
+				self->client->ps.fd.saberAnimLevelBase = SS_DUAL;
+				self->client->ps.fd.saberDrawAnimLevel = SS_DUAL;
+				break;
+			default:
+				self->client->ps.fd.saberAnimLevel = SS_WARZONE;
+				self->client->ps.fd.saberAnimLevelBase = SS_WARZONE;
+				self->client->ps.fd.saberDrawAnimLevel = SS_WARZONE;
+				break;
+			}
+		}
+		else if (self->client->saber[0].numBlades > 1)
+		{// Dual blade...
+			int styleChoice = irand(0, 1);
+
+			switch (styleChoice)
+			{
+			case 0:
+				self->client->ps.fd.saberAnimLevel = SS_STAFF;
+				self->client->ps.fd.saberAnimLevelBase = SS_STAFF;
+				self->client->ps.fd.saberDrawAnimLevel = SS_STAFF;
+				break;
+			default:
+				self->client->ps.fd.saberAnimLevel = SS_WARZONE;
+				self->client->ps.fd.saberAnimLevelBase = SS_WARZONE;
+				self->client->ps.fd.saberDrawAnimLevel = SS_WARZONE;
+				break;
+			}
+		}
+		else
+		{// Single saber...
+			int styleChoice = irand(0, 11);
+
+			switch (styleChoice)
+			{
+			case 0:
+			case 1:
+				self->client->ps.fd.saberAnimLevel = SS_FAST;
+				self->client->ps.fd.saberAnimLevelBase = SS_FAST;
+				self->client->ps.fd.saberDrawAnimLevel = SS_FAST;
+				break;
+			case 2:
+			case 3:
+				self->client->ps.fd.saberAnimLevel = SS_MEDIUM;
+				self->client->ps.fd.saberAnimLevelBase = SS_MEDIUM;
+				self->client->ps.fd.saberDrawAnimLevel = SS_MEDIUM;
+				break;
+			case 4:
+				self->client->ps.fd.saberAnimLevel = SS_STRONG;
+				self->client->ps.fd.saberAnimLevelBase = SS_STRONG;
+				self->client->ps.fd.saberDrawAnimLevel = SS_STRONG;
+				break;
+			case 5:
+			case 6:
+				self->client->ps.fd.saberAnimLevel = SS_DESANN;
+				self->client->ps.fd.saberAnimLevelBase = SS_DESANN;
+				self->client->ps.fd.saberDrawAnimLevel = SS_DESANN;
+				break;
+			case 7:
+			case 8:
+				self->client->ps.fd.saberAnimLevel = SS_TAVION;
+				self->client->ps.fd.saberAnimLevelBase = SS_TAVION;
+				self->client->ps.fd.saberDrawAnimLevel = SS_TAVION;
+				break;
+			default:
+				self->client->ps.fd.saberAnimLevel = SS_WARZONE;
+				self->client->ps.fd.saberAnimLevelBase = SS_WARZONE;
+				self->client->ps.fd.saberDrawAnimLevel = SS_WARZONE;
+				break;
+			}
+		}
+
+		// Remember our favored stance...
+		self->client->npcFavoredStance = self->client->ps.fd.saberAnimLevel;
+		//trap->Print("NPC %s selected stance %i.\n", self->client->pers.netname, self->client->npcFavoredStance);
+	}
 }
 
 extern void ForceTelepathy(gentity_t *self);
@@ -7698,9 +7847,6 @@ qboolean NPC_JediCheckFall ( gentity_t *aiEnt)
 	// Uber fail... Die jedi! I could search for a waypoint he can jump to, but what's the point???
 	return qfalse;
 }
-
-extern void NPC_BSST_Patrol( void );
-extern void NPC_BSSniper_Default( void );
 
 void NPC_BSJedi_Default( gentity_t *aiEnt)
 {

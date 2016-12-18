@@ -1415,6 +1415,7 @@ netField_t	playerStateFields[] =
 { PSF(hackingBaseTime), 16 }, //up to 65536ms, over 10 seconds would just be silly anyway
 //{ PSF(hyperSpaceAngles[0]), 0 },//only used by vehicle?
 //{ PSF(hyperSpaceAngles[2]), 0 },//only used by vehicle?
+{ PSF(nextStyleSwitch), 32 },
 
 //rww - for use by mod authors only
 { PSF(userInt1), 1 },
@@ -1597,6 +1598,7 @@ netField_t	pilotPlayerStateFields[] =
 //{ PSF(hyperSpaceAngles[1]), 0 },//only used by vehicle?
 //{ PSF(hyperSpaceAngles[0]), 0 },//only used by vehicle?
 //{ PSF(hyperSpaceAngles[2]), 0 },//only used by vehicle?
+{ PSF(nextStyleSwitch), 32 },
 
 //rww - for use by mod authors only
 { PSF(userInt1), 1 },
@@ -1683,6 +1685,7 @@ netField_t	vehPlayerStateFields[] =
 { PSF(vehSurfaces), 16 }, //allow up to 16 surfaces in the flag I guess
 { PSF(hyperSpaceAngles[0]), 0 },
 { PSF(hyperSpaceAngles[2]), 0 },
+{ PSF(nextStyleSwitch), 32 },
 
 //rww - for use by mod authors only
 { PSF(userInt1), 1 },
@@ -1846,6 +1849,7 @@ netField_t	playerStateFields[] =
 { PSF(hackingBaseTime), 16 }, //up to 65536ms, over 10 seconds would just be silly anyway
 { PSF(hyperSpaceAngles[0]), 0 },
 { PSF(hyperSpaceAngles[2]), 0 },
+{ PSF(nextStyleSwitch), 32 },
 
 //rww - for use by mod authors only
 { PSF(userInt1), 1 },

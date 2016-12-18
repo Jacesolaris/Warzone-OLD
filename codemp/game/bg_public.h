@@ -1589,6 +1589,7 @@ typedef enum saber_styles_e {
 	SS_TAVION,
 	SS_DUAL,
 	SS_STAFF,
+	SS_WARZONE,
 	SS_NUM_SABER_STYLES
 } saber_styles_t;
 

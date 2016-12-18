@@ -2364,6 +2364,26 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 				}
 			}
 			else if (!noSpecials&&
+				pm->ps->fd.saberAnimLevel == SS_WARZONE &&
+				pm->ps->velocity[2] > 100 &&
+				PM_GroundDistance() < 32 &&
+				!BG_InSpecialJump(pm->ps->legsAnim) &&
+				!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
+				BG_EnoughForcePowerForMove(SABER_ALT_ATTACK_POWER_FB))
+			{ //FLIP AND DOWNWARD ATTACK
+			  //trace_t tr;
+
+			  //if (PM_SomeoneInFront(&tr))
+				{
+					newmove = PM_SaberFlipOverAttackMove();
+					if (newmove != LS_A_T2B
+						&& newmove != LS_NONE)
+					{
+						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
+					}
+				}
+			}
+			else if (!noSpecials&&
 				pm->ps->fd.saberAnimLevel == SS_STRONG &&
 				pm->ps->velocity[2] > 100 &&
 				PM_GroundDistance() < 32 &&
@@ -3356,6 +3376,9 @@ weapChecks:
 			case SS_STAFF:
 				PM_SetSaberMove( LS_STAFF_SOULCAL );
 				break;
+			case SS_WARZONE:
+				PM_SetSaberMove(LS_A3_SPECIAL);
+				break;
 			}
 			pm->ps->weaponstate = WEAPON_FIRING;
 			//G_DrainPowerForSpecialMove( pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER );//FP_SPEED, SINGLE_SPECIAL_POWER );
@@ -3451,7 +3474,7 @@ weapChecks:
 	// *********************************************************
 	// Check for WEAPON ATTACK
 	// *********************************************************
-	if (pm->ps->fd.saberAnimLevel == SS_STAFF &&
+	if ((pm->ps->fd.saberAnimLevel == SS_STAFF || pm->ps->fd.saberAnimLevel == SS_WARZONE) &&
 		(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 	{ //ok, try a kick I guess.
 		int kickMove = -1;
@@ -3819,6 +3842,63 @@ void PM_SetSaberMove(short newMove)
 		else if ( pm->ps->fd.saberAnimLevel == SS_DUAL )
 		{
 			anim = BOTH_S6_S1;
+		}
+	}
+	else if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE 
+		&& newMove != LS_READY
+		&& newMove != LS_DRAW
+		&& newMove != LS_PUTAWAY
+		&& !BG_SaberInIdle(newMove) 
+		&& !PM_SaberInParry(newMove) 
+		&& !PM_SaberInKnockaway(newMove) 
+		&& !PM_SaberInBrokenParry(newMove) 
+		&& !PM_SaberInReflect(newMove) 
+		&& !BG_SaberInSpecial(newMove)
+		&& ((newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL) || saberMoveData[pm->ps->saberMove].animToUse == anim))
+	{ // Experimental crazy stance :) Randomly select an attack anim  from all stances hehehe
+		int randomSelect;
+
+#if defined(_GAME)
+		int time = level.time;
+#elif defined(_CGAME)
+		int time = cg.time;
+#endif
+
+		if (pm->ps->nextStyleSwitch < time)
+		{
+			switch (pm->ps->fd.saberAnimLevel)
+			{
+			case SS_FAST:
+				randomSelect = SS_TAVION;
+				break;
+			case SS_TAVION:
+				randomSelect = SS_DUAL;
+				break;
+			case SS_DUAL:
+				randomSelect = SS_STAFF;
+				break;
+			default:
+				randomSelect = SS_FAST;
+				break;
+			}
+
+			pm->ps->nextStyleSwitch = time + 600;
+
+			pm->ps->fd.saberAnimLevel = randomSelect;
+			randomSelect -= 1;
+		}
+
+		if (newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL && randomSelect == SS_DUAL - 1)
+		{//there aren't 1-7, just 1, 6 and 7, so just set it
+			anim = BOTH_P6_S6_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
+		}
+		else if (newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL && randomSelect == SS_STAFF - 1)
+		{//there aren't 1-7, just 1, 6 and 7, so just set it
+			anim = BOTH_P7_S7_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
+		}
+		else
+		{//add the appropriate animLevel
+			anim += (pm->ps->fd.saberAnimLevel - FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
 		}
 	}
 	else if ( pm->ps->fd.saberAnimLevel == SS_STAFF && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL )
