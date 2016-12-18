@@ -949,7 +949,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 					break;
 				}
 
-				if ( ent->s.eType != ET_PLAYER )
+				if ( ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC )
 				{
 					break;		// not in the player model
 				}
@@ -1753,6 +1753,7 @@ void G_SetTauntAnim( gentity_t *ent, int taunt )
 					anim = BOTH_ENGAGETAUNT;
 					break;
 				case SS_DUAL:
+				case SS_WARZONE:
 					if ( ent->client->ps.saberHolstered == 1
 						&& ent->client->saber[1].model[0] )
 					{//turn on second saber
@@ -1869,6 +1870,9 @@ void G_SetTauntAnim( gentity_t *ent, int taunt )
 					case SS_STAFF:
 						anim = BOTH_SHOWOFF_STAFF;
 						break;
+					case SS_WARZONE:
+						anim = BOTH_SHOWOFF_DUAL;
+						break;
 					}
 				}
 			}
@@ -1896,6 +1900,7 @@ void G_SetTauntAnim( gentity_t *ent, int taunt )
 					break;
 				case SS_STRONG:
 				case SS_DESANN:
+				case SS_WARZONE:
 					if ( ent->client->ps.saberHolstered )
 					{//turn on first
 						G_Sound( ent, CHAN_WEAPON, ent->client->saber[0].soundOn );
@@ -3209,6 +3214,7 @@ void ClientThink_real( gentity_t *ent ) {
 							break;
 						case SS_STRONG:
 						case SS_DESANN:
+						case SS_WARZONE:
 							lockHits = 3;
 							break;
 						}
@@ -3979,7 +3985,7 @@ void ClientEndFrame( gentity_t *ent ) {
 		isNPC = qtrue;
 	}
 
-	if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
+	if ( !isNPC && ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 		SpectatorClientEndFrame( ent );
 		return;
 	}
@@ -4041,7 +4047,8 @@ void ClientEndFrame( gentity_t *ent ) {
 		ent->s.eType = ET_NPC;
 	}
 
-	SendPendingPredictableEvents( &ent->client->ps );
+	if (!isNPC)
+		SendPendingPredictableEvents( &ent->client->ps );
 
 	// set the bit for the reachability area the client is currently in
 //	i = trap->AAS_PointReachabilityAreaIndex( ent->client->ps.origin );

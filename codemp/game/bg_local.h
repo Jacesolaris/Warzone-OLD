@@ -15,6 +15,8 @@ qboolean WeaponSniperCharge(int weapon);
 qboolean WeaponIsSniperNoCharge ( int weapon );
 qboolean IsRollWithPistols(int weapon);
 
+#define __SABER_ANIMATION_SLOW__	// UQ1: Slows down fast, medium, desann and tavion by a little, and dual and staff by a bit more...
+
 // all of the locals will be zeroed before each
 // pmove, just to make damn sure we don't have
 // any differences when running on client or server

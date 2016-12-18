@@ -2450,7 +2450,27 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 	{//not moving left or right
 		if (pm->cmd.forwardmove > 0)
 		{//forward= T2B slash
-			if (!noSpecials &&
+			if (!noSpecials&&
+				pm->ps->fd.saberAnimLevelBase == SS_WARZONE &&
+				pm->ps->velocity[2] > 100 &&
+				PM_GroundDistance() < 32 &&
+				!BG_InSpecialJump(pm->ps->legsAnim) &&
+				!BG_SaberInSpecialAttack(pm->ps->torsoAnim) &&
+				BG_EnoughForcePowerForMove(SABER_ALT_ATTACK_POWER_FB))
+			{ //FLIP AND DOWNWARD ATTACK
+			  //trace_t tr;
+
+			  //if (PM_SomeoneInFront(&tr))
+				{
+					newmove = PM_SaberFlipOverAttackMove();
+					if (newmove != LS_A_T2B
+						&& newmove != LS_NONE)
+					{
+						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
+					}
+				}
+			}
+			else if (!noSpecials&&
 				(pm->ps->fd.saberAnimLevel == SS_DUAL || pm->ps->fd.saberAnimLevel == SS_STAFF) &&
 				//pm->ps->fd.forceRageRecoveryTime < pm->cmd.serverTime &&
 				//pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 &&
@@ -3365,13 +3385,62 @@ void PM_WeaponLightsaber(void)
 	if ((pm->cmd.buttons & BUTTON_SABERTHROW))
 		//if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK) )
 	{ //might as well just check for a saber throw right here
-		if (pm->ps->weaponTime < 1 &&
-			pm->ps->saberCanThrow &&
-			//pm->ps->fd.forcePower >= forcePowerNeeded[pm->ps->fd.forcePowerLevel[FP_SABERTHROW]][FP_SABERTHROW] &&
-			!BG_HasYsalamiri(pm->gametype, pm->ps) &&
-			BG_CanUseFPNow(pm->gametype, pm->ps, pm->cmd.serverTime, FP_SABERTHROW) &&
-			/*pm->ps->fd.forcePowerLevel[FP_SABERTHROW] > 0 &&*/
-			PM_SaberPowerCheck() && !BG_SabersOff(pm->ps))
+		if ((pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+			&& (pm->cmd.buttons & BUTTON_SABERTHROW)
+			&& ((pm->cmd.rightmove != 0 && pm->cmd.forwardmove <= 0) || pm->cmd.forwardmove < 0))
+		{// Warzone stance can kick left or right or back. Normal saber throw when moving forward...
+			//kick instead of doing a throw
+			//if in a saber attack return anim, can interrupt it with a kick
+			if (pm->ps->weaponTime > 0//can't fire yet
+				&& PM_SaberInReturn(pm->ps->saberMove)//in a saber return move - FIXME: what about transitions?
+													  //&& pm->ps->weaponTime <= 250//should be able to fire soon
+													  //&& pm->ps->torsoTimer <= 250//torso almost done
+				&& pm->ps->saberBlocked == BLOCKED_NONE//not interacting with any other saber
+				&& !(pm->cmd.buttons&BUTTON_ATTACK))//not trying to swing the saber
+			{
+				if ((pm->cmd.forwardmove || pm->cmd.rightmove)//trying to kick in a specific direction
+					&& PM_CheckAltKickAttack())//trying to do a kick
+				{//allow them to do the kick now!
+					int kickMove = PM_KickMoveForConditions();
+					if (kickMove != -1)
+					{
+						pm->ps->weaponTime = 0;
+						PM_SetSaberMove(kickMove);
+						return;
+					}
+				}
+			}
+		}
+		else if (pm->ps->fd.saberAnimLevel == SS_STAFF)
+		{ //kick instead of doing a throw
+			//if in a saber attack return anim, can interrupt it with a kick
+			if ( pm->ps->weaponTime > 0//can't fire yet
+				&& PM_SaberInReturn( pm->ps->saberMove )//in a saber return move - FIXME: what about transitions?
+				//&& pm->ps->weaponTime <= 250//should be able to fire soon
+				//&& pm->ps->torsoTimer <= 250//torso almost done
+				&& pm->ps->saberBlocked == BLOCKED_NONE//not interacting with any other saber
+				&& !(pm->cmd.buttons&BUTTON_ATTACK) )//not trying to swing the saber
+			{
+				if ( (pm->cmd.forwardmove||pm->cmd.rightmove)//trying to kick in a specific direction
+					&& PM_CheckAltKickAttack() )//trying to do a kick
+				{//allow them to do the kick now!
+					int kickMove = PM_KickMoveForConditions();
+					if (kickMove != -1)
+					{
+						pm->ps->weaponTime = 0;
+						PM_SetSaberMove( kickMove );
+						return;
+					}
+				}
+			}
+		}
+		else if ( pm->ps->weaponTime < 1&&
+				pm->ps->saberCanThrow &&
+				//pm->ps->fd.forcePower >= forcePowerNeeded[pm->ps->fd.forcePowerLevel[FP_SABERTHROW]][FP_SABERTHROW] &&
+				!BG_HasYsalamiri(pm->gametype, pm->ps) &&
+				BG_CanUseFPNow(pm->gametype, pm->ps, pm->cmd.serverTime, FP_SABERTHROW) &&
+				pm->ps->fd.forcePowerLevel[FP_SABERTHROW] > 0 &&
+				PM_SaberPowerCheck() )
 		{
 			trace_t sabTr;
 			vec3_t	fwd, minFwd, sabMins, sabMaxs;
@@ -3427,6 +3496,8 @@ void PM_WeaponLightsaber(void)
 					kickmove = PM_KickMoveForConditions();
 				}
 			}
+
+			//this needs a rewrite
 
 			if (kickmove != -1 && kickmove != LS_KICK_F && kickmove != LS_HILT_BASH)
 			{
@@ -3814,6 +3885,7 @@ weapChecks:
 	/*
 	if ( PM_CanDoKata() )
 	{
+<<<<<<< HEAD
 	saberMoveName_t overrideMove = LS_INVALID;
 	saberInfo_t *saber1 = BG_MySaber( pm->ps->clientNum, 0 );
 	saberInfo_t *saber2 = BG_MySaber( pm->ps->clientNum, 1 );
@@ -3876,6 +3948,84 @@ weapChecks:
 	pm->ps->weaponstate = WEAPON_FIRING;
 	//G_DrainPowerForSpecialMove( pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER );//FP_SPEED, SINGLE_SPECIAL_POWER );
 	BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER);
+=======
+		saberMoveName_t overrideMove = LS_INVALID;
+		saberInfo_t *saber1 = BG_MySaber( pm->ps->clientNum, 0 );
+		saberInfo_t *saber2 = BG_MySaber( pm->ps->clientNum, 1 );
+		//see if we have an overridden (or cancelled) kata move
+		if ( saber1 && saber1->kataMove != LS_INVALID )
+		{
+			if ( saber1->kataMove != LS_NONE )
+			{
+				overrideMove = (saberMoveName_t)saber1->kataMove;
+			}
+		}
+		if ( overrideMove == LS_INVALID )
+		{//not overridden by first saber, check second
+			if ( saber2
+				&& saber2->kataMove != LS_INVALID )
+			{
+				if ( saber2->kataMove != LS_NONE )
+				{
+					overrideMove = (saberMoveName_t)saber2->kataMove;
+				}
+			}
+		}
+		//no overrides, cancelled?
+		if ( overrideMove == LS_INVALID )
+		{
+			if ( saber2
+				&& saber2->kataMove == LS_NONE )
+			{
+				overrideMove = LS_NONE;
+			}
+			else if ( saber2
+				&& saber2->kataMove == LS_NONE )
+			{
+				overrideMove = LS_NONE;
+			}
+		}
+		if ( overrideMove == LS_INVALID )
+		{//not overridden
+			//FIXME: make sure to turn on saber(s)!
+			switch ( pm->ps->fd.saberAnimLevel )
+			{
+			case SS_FAST:
+			case SS_TAVION:
+				PM_SetSaberMove( LS_A1_SPECIAL );
+				break;
+			case SS_MEDIUM:
+				PM_SetSaberMove( LS_A2_SPECIAL );
+				break;
+			case SS_STRONG:
+			case SS_DESANN:
+				PM_SetSaberMove( LS_A3_SPECIAL );
+				break;
+			case SS_DUAL:
+				PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );//PM_CheckDualSpinProtect();
+				break;
+			case SS_STAFF:
+				PM_SetSaberMove( LS_STAFF_SOULCAL );
+				break;
+			case SS_WARZONE:
+				PM_SetSaberMove(LS_A3_SPECIAL);
+				break;
+			}
+			pm->ps->weaponstate = WEAPON_FIRING;
+			//G_DrainPowerForSpecialMove( pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER );//FP_SPEED, SINGLE_SPECIAL_POWER );
+			BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER);
+		}
+		else if ( overrideMove != LS_NONE )
+		{
+			PM_SetSaberMove( overrideMove );
+			pm->ps->weaponstate = WEAPON_FIRING;
+			BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER);
+		}
+		if ( overrideMove != LS_NONE )
+		{//not cancelled
+			return;
+		}
+>>>>>>> 72881defbb4982cbb65296d239d00a92c21c361c
 	}
 	else if ( overrideMove != LS_NONE )
 	{
@@ -3998,9 +4148,74 @@ weapChecks:
 	// *********************************************************
 	// Check for WEAPON ATTACK
 	// *********************************************************
-	//[MELEE]
-	if ((pm->cmd.buttons & BUTTON_SPECIALBUTTON1))
+	if ((pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+		&& (pm->cmd.buttons & BUTTON_SPECIALBUTTON1)
+		&& ((pm->cmd.rightmove != 0 && pm->cmd.forwardmove <= 0) || pm->cmd.forwardmove < 0))
+	{// Warzone stance can kick left or right or back. Normal saber throw when moving forward...
+		int kickMove = -1;
 
+		if (!BG_KickingAnim(pm->ps->torsoAnim) &&
+			!BG_KickingAnim(pm->ps->legsAnim) &&
+			!BG_InRoll(pm->ps, pm->ps->legsAnim) &&
+			//			!BG_KickMove( pm->ps->saberMove )//not already in a kick
+			pm->ps->saberMove == LS_READY
+			&& !(pm->ps->pm_flags&PMF_DUCKED)//not ducked
+			&& (pm->cmd.upmove >= 0) //not trying to duck
+			)//&& pm->ps->groundEntityNum != ENTITYNUM_NONE)
+		{//player kicks
+			kickMove = PM_KickMoveForConditions();
+		}
+
+		if (kickMove != -1)
+		{
+			if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+			{//if in air, convert kick to an in-air kick
+				float gDist = PM_GroundDistance();
+				//let's only allow air kicks if a certain distance from the ground
+				//it's silly to be able to do them right as you land.
+				//also looks wrong to transition from a non-complete flip anim...
+				if ((!BG_FlippingAnim(pm->ps->legsAnim) || pm->ps->legsTimer <= 0) &&
+					gDist > 64.0f && //strict minimum
+					gDist > (-pm->ps->velocity[2]) - 64.0f //make sure we are high to ground relative to downward velocity as well
+					)
+				{
+					switch (kickMove)
+					{
+					case LS_KICK_F:
+						kickMove = LS_KICK_F_AIR;
+						break;
+					case LS_KICK_B:
+						kickMove = LS_KICK_B_AIR;
+						break;
+					case LS_KICK_R:
+						kickMove = LS_KICK_R_AIR;
+						break;
+					case LS_KICK_L:
+						kickMove = LS_KICK_L_AIR;
+						break;
+					default: //oh well, can't do any other kick move while in-air
+						kickMove = -1;
+						break;
+					}
+				}
+				else
+				{//leave it as a normal kick unless we're too high up
+					if (gDist > 128.0f || pm->ps->velocity[2] >= 0)
+					{ //off ground, but too close to ground
+						kickMove = -1;
+					}
+				}
+			}
+
+			if (kickMove != -1)
+			{
+				PM_SetSaberMove(kickMove);
+				return;
+			}
+		}
+	}
+	//[MELEE]
+	else if (pm->cmd.buttons & BUTTON_SPECIALBUTTON1)
 	{ //ok, try a kick I guess.
 		int kickMove = -1;
 
@@ -4540,6 +4755,7 @@ weapChecks:
 #ifdef BLOCKING_STANCE_TAVION
 		else if (pm->ps->fd.saberAnimLevel == SS_TAVION && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL)
 		{
+<<<<<<< HEAD
 			if (newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
 			{//there aren't 1-7, just 1, 6 and 7, so just set it
 				anim = BOTH_TAVION_T + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
@@ -4548,6 +4764,213 @@ weapChecks:
 			{//add the appropriate animLevel
 				anim += (pm->ps->fd.saberAnimLevel - SS_FAST) * SABER_ANIM_GROUP_SIZE;
 			}
+=======
+			anim = BOTH_S6_S1;
+		}
+	}
+	else if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE 
+		&& newMove != LS_READY
+		&& newMove != LS_DRAW
+		&& newMove != LS_PUTAWAY
+		&& !BG_SaberInIdle(newMove) 
+		&& !PM_SaberInParry(newMove) 
+		&& !PM_SaberInKnockaway(newMove) 
+		&& !PM_SaberInBrokenParry(newMove) 
+		&& !PM_SaberInReflect(newMove) 
+		&& !BG_SaberInSpecial(newMove)
+		&& ((newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL) || saberMoveData[pm->ps->saberMove].animToUse == anim))
+	{ // Experimental crazy stance :) Randomly select an attack anim  from all stances hehehe
+		int randomSelect;
+
+#if defined(_GAME)
+		int time = level.time;
+#elif defined(_CGAME)
+		int time = cg.time;
+#endif
+
+		//
+		// Make more of these to select *any* anim sets for *any* direction...
+		//
+		if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove == 0)
+		{// Standing still example. Only use TAVION.
+			pm->ps->fd.saberAnimLevel = SS_TAVION;
+
+			// I sorta like it without doing this. Havn't tried with...
+			randomSelect = pm->ps->fd.saberAnimLevel;
+			randomSelect -= 1;
+		}
+		else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove == 0)
+		{// Moving forward only. Only use STAFF.
+			pm->ps->fd.saberAnimLevel = SS_STAFF;
+			randomSelect = pm->ps->fd.saberAnimLevel;
+			randomSelect -= 1;
+		}
+		else if (pm->cmd.forwardmove < 0 && pm->cmd.rightmove == 0)
+		{// Moving back only. Only use STAFF.
+			pm->ps->fd.saberAnimLevel = SS_STAFF;
+			randomSelect = pm->ps->fd.saberAnimLevel;
+			randomSelect -= 1;
+		}
+		else if (pm->cmd.forwardmove < 0 && pm->cmd.rightmove > 0)
+		{// Moving to back right example. Only use FAST, TAVION and DUAL.
+			if (pm->ps->nextStyleSwitch < time)
+			{
+				switch (pm->ps->fd.saberAnimLevel)
+				{
+				case SS_FAST:
+					randomSelect = SS_TAVION;
+					break;
+				default:
+					randomSelect = SS_DUAL;
+					break;
+				}
+
+				pm->ps->nextStyleSwitch = time + 600;
+
+				pm->ps->fd.saberAnimLevel = randomSelect;
+				randomSelect -= 1;
+			}
+			else if (pm->ps->fd.saberAnimLevel != SS_DUAL
+				&& pm->ps->fd.saberAnimLevel != SS_TAVION)
+			{// Don't use staff anim... Crap anim...
+				pm->ps->fd.saberAnimLevel = SS_DUAL;
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+		}
+		else if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove < 0)
+		{// Moving to left example. Only use FAST, TAVION and DUAL.
+			if (pm->ps->nextStyleSwitch < time)
+			{
+				switch (pm->ps->fd.saberAnimLevel)
+				{
+				case SS_FAST:
+					randomSelect = SS_TAVION;
+					break;
+				case SS_TAVION:
+					randomSelect = SS_DUAL;
+					break;
+				default:
+					randomSelect = SS_FAST;
+					break;
+				}
+
+				pm->ps->nextStyleSwitch = time + 600;
+
+				pm->ps->fd.saberAnimLevel = randomSelect;
+				randomSelect -= 1;
+			}
+			else if (pm->ps->fd.saberAnimLevel != SS_FAST
+				&& pm->ps->fd.saberAnimLevel != SS_DUAL
+				&& pm->ps->fd.saberAnimLevel != SS_TAVION)
+			{// Don't use staff anim... Crap anim...
+				pm->ps->fd.saberAnimLevel = SS_FAST;
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+		}
+		else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove < 0)
+		{// Moving forward and left example. Only use TAVION.
+			pm->ps->fd.saberAnimLevel = SS_TAVION;
+			randomSelect = pm->ps->fd.saberAnimLevel;
+			randomSelect -= 1;
+		}
+		else if (pm->cmd.forwardmove > 0 && pm->cmd.rightmove > 0)
+		{// Moving forward and right example. Only use FAST, TAVION and SS_DESANN.
+			if (pm->ps->nextStyleSwitch < time)
+			{
+				switch (pm->ps->fd.saberAnimLevel)
+				{
+				case SS_FAST:
+					randomSelect = SS_TAVION;
+					break;
+				case SS_TAVION:
+					randomSelect = SS_DESANN;
+					break;
+				default:
+					randomSelect = SS_FAST;
+					break;
+				}
+
+				pm->ps->nextStyleSwitch = time + 600;
+
+				pm->ps->fd.saberAnimLevel = randomSelect;
+				randomSelect -= 1;
+			}
+			else if (pm->ps->fd.saberAnimLevel != SS_FAST
+				&& pm->ps->fd.saberAnimLevel != SS_DESANN
+				&& pm->ps->fd.saberAnimLevel != SS_TAVION)
+			{// Don't use staff anim... Crap anim...
+				pm->ps->fd.saberAnimLevel = SS_FAST;
+				randomSelect = pm->ps->fd.saberAnimLevel;
+				randomSelect -= 1;
+			}
+		}
+		else
+		{// Defaults... Switch between TAVION, DUAL, STAFF, FAST...
+			if (pm->ps->nextStyleSwitch < time)
+			{
+				switch (pm->ps->fd.saberAnimLevel)
+				{
+				case SS_FAST:
+					randomSelect = SS_TAVION;
+					break;
+				case SS_TAVION:
+					randomSelect = SS_DUAL;
+					break;
+				case SS_DUAL:
+					randomSelect = SS_STAFF;
+					break;
+				default:
+					randomSelect = SS_FAST;
+					break;
+				}
+
+				pm->ps->nextStyleSwitch = time + 600;
+
+				pm->ps->fd.saberAnimLevel = randomSelect;
+				randomSelect -= 1;
+			}
+		}
+
+		if (randomSelect == SS_DUAL - 1 && newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
+		{//there aren't 1-7, just 1, 6 and 7, so just set it
+			anim = BOTH_P6_S6_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
+		}
+		else if (randomSelect == SS_STAFF - 1 && newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL)
+		{//there aren't 1-7, just 1, 6 and 7, so just set it
+			anim = BOTH_P7_S7_T_ + (anim - BOTH_P1_S1_T_);//shift it up to the proper set
+		}
+		else
+		{//add the appropriate animLevel
+			anim += (pm->ps->fd.saberAnimLevel - FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
+		}
+	}
+	else if ( pm->ps->fd.saberAnimLevel == SS_STAFF && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL )
+	{//staff has an entirely new set of anims, besides special attacks
+		//FIXME: include ready and draw/putaway?
+		//FIXME: get hand-made bounces and deflections?
+		if ( newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL )
+		{//there aren't 1-7, just 1, 6 and 7, so just set it
+			anim = BOTH_P7_S7_T_ + (anim-BOTH_P1_S1_T_);//shift it up to the proper set
+		}
+		else
+		{//add the appropriate animLevel
+			anim += (pm->ps->fd.saberAnimLevel-FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
+		}
+	}
+	else if ( pm->ps->fd.saberAnimLevel == SS_DUAL && newMove >= LS_S_TL2BR && newMove < LS_REFLECT_LL )
+	{ //akimbo has an entirely new set of anims, besides special attacks
+		//FIXME: include ready and draw/putaway?
+		//FIXME: get hand-made bounces and deflections?
+		if ( newMove >= LS_V1_BR && newMove <= LS_REFLECT_LL )
+		{//there aren't 1-7, just 1, 6 and 7, so just set it
+			anim = BOTH_P6_S6_T_ + (anim-BOTH_P1_S1_T_);//shift it up to the proper set
+		}
+		else
+		{//add the appropriate animLevel
+			anim += (pm->ps->fd.saberAnimLevel-FORCE_LEVEL_1) * SABER_ANIM_GROUP_SIZE;
+>>>>>>> 72881defbb4982cbb65296d239d00a92c21c361c
 		}
 #endif
 		/*

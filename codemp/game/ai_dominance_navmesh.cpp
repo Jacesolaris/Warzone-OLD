@@ -5,13 +5,16 @@
 #include <math.h>
 #include <vector>
 
-#include "g_local.h"
 #include "qcommon/qfiles.h"
 #include "qcommon/q_shared.h"
 #include "botlib/botlib.h"
-#include "ai_dominance_main.h"
-
 #ifdef __USE_NAVMESH__
+#if defined(_GAME)
+#include "g_local.h"
+#include "ai_dominance_main.h"
+#else
+#include "../cgame/cg_local.h"
+#endif
 #include "ai_dominance_navmesh.h"
 
 #include "../Recast/Recast/Recast.h"
@@ -23,16 +26,68 @@
 #include "../Recast/Detour/DetourNavMesh.h"
 #include "../Recast/Detour/DetourNavMeshBuilder.h"
 #include "../Recast/Detour/DetourNavMeshQuery.h"
-//#include "../Recast/Detour/DebugDraw.h"
-//#include "../Recast/Detour/RecastDebugDraw.h"
-//#include "../Recast/Detour/RecastDump.h"
-//#include "../Recast/Detour/DetourDebugDraw.h"
+#if defined(_CGAME)
+#include "../Recast/Detour/DebugDraw.h"
+#include "../Recast/Detour/RecastDebugDraw.h"
+#include "../Recast/Detour/RecastDump.h"
+#include "../Recast/Detour/DetourDebugDraw.h"
+#endif
 
 using namespace shooter;
 
 //#define __NAVMESH_OLD_METHOD__
 
-int CountIndices(const dsurface_t *surfaces, int numSurfaces)
+#if defined(_CGAME)
+extern qboolean CG_WorldCoordToScreenCoordFloat(vec3_t worldCoord, float *x, float *y);
+
+void CG_DrawDebugLine(const vec3_t from, const vec3_t to, vec4_t color)
+{
+	refEntity_t		re;
+
+	memset(&re, 0, sizeof(re));
+
+	re.reType = RT_LINE;
+	re.radius = 1;
+
+	re.shaderRGBA[0] = color[0] / 255.0;
+	re.shaderRGBA[1] = color[1] / 255.0;
+	re.shaderRGBA[2] = color[2] / 255.0;
+	re.shaderRGBA[3] = color[3] / 255.0;
+
+	re.customShader = cgs.media.whiteShader;
+
+	VectorCopy(from, re.origin);
+	//re.origin[2] += 16;
+	VectorCopy(to, re.oldorigin);
+	//re.oldorigin[2] += 16;
+
+	AddRefEntityToScene(&re);
+}
+
+void CG_DrawDebugBox(const vec3_t bmin, const vec3_t bmax, vec4_t color)
+{
+	float x, y, x2, y2;
+	vec4_t col;
+	VectorSet4(col, color[0] / 255.0, color[1] / 255.0, color[2] / 255.0, color[3] / 255.0);
+	CG_WorldCoordToScreenCoordFloat((float *)bmin, &x, &y);
+	CG_WorldCoordToScreenCoordFloat((float *)bmax, &x2, &y2);
+	CG_DrawRect(x, y, x2-x, y2-y, 1.0f, col);
+}
+
+void CG_DrawDebugTriangle(const vec3_t point1, const vec3_t point2, const vec3_t point3, vec4_t color)
+{
+	CG_DrawDebugLine(point1, point2, color);
+	CG_DrawDebugLine(point2, point3, color);
+	CG_DrawDebugLine(point3, point1, color);
+}
+
+void CG_DrawDebugPoint(const vec3_t point, vec4_t color)
+{
+	CG_DrawDebugLine(point, point, color);
+}
+#endif
+
+int NavMesh_CountIndices(const dsurface_t *surfaces, int numSurfaces)
 {
 	int count = 0;
 	for (int i = 0; i < numSurfaces; i++, surfaces++)
@@ -48,7 +103,7 @@ int CountIndices(const dsurface_t *surfaces, int numSurfaces)
 	return count;
 }
 
-void LoadTriangles(const int *indexes, int* tris, const dsurface_t *surfaces, int numSurfaces)
+void NavMesh_LoadTriangles(const int *indexes, int* tris, const dsurface_t *surfaces, int numSurfaces)
 {
 	int t = 0;
 	int v = 0;
@@ -68,7 +123,7 @@ void LoadTriangles(const int *indexes, int* tris, const dsurface_t *surfaces, in
 	}
 }
 
-void LoadVertices(const drawVert_t *vertices, float* verts, const dsurface_t *surfaces, const int numSurfaces)
+void NavMesh_LoadVertices(const drawVert_t *vertices, float* verts, const dsurface_t *surfaces, const int numSurfaces)
 {
 	int v = 0;
 	for (int i = 0; i < numSurfaces; i++, surfaces++)
@@ -150,23 +205,16 @@ namespace {
 		return 0;
 	}
 
-#if 0
+#if defined(_CGAME)
 	/// OpenGL debug draw implementation.
 	class DebugDrawGL : public duDebugDraw
 	{
 	public:
-		virtual void depthMask(bool state) { glDepthMask(state ? GL_TRUE : GL_FALSE); }
+		virtual void depthMask(bool state) {  }
 
 		virtual void texture(bool state)
 		{
-			if (state)
-			{
-				glEnable(GL_TEXTURE_2D);
-			}
-			else
-			{
-				glDisable(GL_TEXTURE_2D);
-			}
+			
 		}
 
 		virtual void begin(duDebugDrawPrimitives prim, float size = 1.0f)
@@ -174,57 +222,57 @@ namespace {
 			switch (prim)
 			{
 			case DU_DRAW_POINTS:
-				glPointSize(size);
-				glBegin(GL_POINTS);
+				//glPointSize(size);
+				//glBegin(GL_POINTS);
 				break;
 			case DU_DRAW_LINES:
-				glLineWidth(size);
-				glBegin(GL_LINES);
+				//glLineWidth(size);
+				//glBegin(GL_LINES);
 				break;
 			case DU_DRAW_LINE_STRIP:
-				glLineWidth(size);
-				glBegin(GL_LINE_STRIP);
+				//glLineWidth(size);
+				//glBegin(GL_LINE_STRIP);
 				break;
 			case DU_DRAW_TRIS:
-				glBegin(GL_TRIANGLES);
+				//glBegin(GL_TRIANGLES);
 				break;
 			case DU_DRAW_QUADS:
-				glBegin(GL_QUADS);
+				//glBegin(GL_QUADS);
 				break;
 			};
 		}
 
 		virtual void vertex(const float* pos, unsigned int color)
 		{
-			glColor4ubv((GLubyte*)&color);
-			glVertex3fv(pos);
+			//glColor4ubv((GLubyte*)&color);
+			//glVertex3fv(pos);
 		}
 
 		virtual void vertex(const float x, const float y, const float z, unsigned int color)
 		{
-			glColor4ubv((GLubyte*)&color);
-			glVertex3f(x, y, z);
+			//glColor4ubv((GLubyte*)&color);
+			//glVertex3f(x, y, z);
 		}
 
 		virtual void vertex(const float* pos, unsigned int color, const float* uv)
 		{
-			glColor4ubv((GLubyte*)&color);
-			glTexCoord2fv(uv);
-			glVertex3fv(pos);
+			//glColor4ubv((GLubyte*)&color);
+			//glTexCoord2fv(uv);
+			//glVertex3fv(pos);
 		}
 
 		virtual void vertex(const float x, const float y, const float z, unsigned int color, const float u, const float v)
 		{
-			glColor4ubv((GLubyte*)&color);
-			glTexCoord2f(u, v);
-			glVertex3f(x, y, z);
+			//glColor4ubv((GLubyte*)&color);
+			//glTexCoord2f(u, v);
+			//glVertex3f(x, y, z);
 		}
 
 		virtual void end()
 		{
-			glEnd();
-			glLineWidth(1.0f);
-			glPointSize(1.0f);
+			//glEnd();
+			//glLineWidth(1.0f);
+			//glPointSize(1.0f);
 		}
 	};
 #endif
@@ -687,7 +735,114 @@ shooter::NavMesh::~NavMesh()
 	delete m_cfg;
 }
 
-#if 0
+#if defined(_CGAME)
+void duDebugDrawPolyMeshDetail2(duDebugDraw* dd, const struct rcPolyMeshDetail& dmesh)
+{
+	if (!dd) return;
+
+	//dd->begin(DU_DRAW_TRIS);
+
+	for (int i = 0; i < dmesh.nmeshes; ++i)
+	{
+		const unsigned int* m = &dmesh.meshes[i * 4];
+		const unsigned int bverts = m[0];
+		const unsigned int btris = m[2];
+		const int ntris = (int)m[3];
+		const float* verts = &dmesh.verts[bverts * 3];
+		const unsigned char* tris = &dmesh.tris[btris * 4];
+
+		unsigned int color = duIntToCol(i, 192);
+
+		for (int j = 0; j < ntris; ++j)
+		{
+			//dd->vertex(&verts[tris[j * 4 + 0] * 3], color);
+			//dd->vertex(&verts[tris[j * 4 + 1] * 3], color);
+			//dd->vertex(&verts[tris[j * 4 + 2] * 3], color);
+			CG_DrawDebugTriangle(&verts[tris[j * 4 + 0] * 3], &verts[tris[j * 4 + 1] * 3], &verts[tris[j * 4 + 2] * 3], vec4_t{ (float)i / (float)dmesh.nmeshes, (float)i / (float)dmesh.nmeshes, (float)i / (float)dmesh.nmeshes, 192 });
+		}
+	}
+	//dd->end();
+
+	// Internal edges.
+	//dd->begin(DU_DRAW_LINES, 1.0f);
+	const unsigned int coli = duRGBA(0, 0, 0, 64);
+	for (int i = 0; i < dmesh.nmeshes; ++i)
+	{
+		const unsigned int* m = &dmesh.meshes[i * 4];
+		const unsigned int bverts = m[0];
+		const unsigned int btris = m[2];
+		const int ntris = (int)m[3];
+		const float* verts = &dmesh.verts[bverts * 3];
+		const unsigned char* tris = &dmesh.tris[btris * 4];
+
+		for (int j = 0; j < ntris; ++j)
+		{
+			const unsigned char* t = &tris[j * 4];
+			for (int k = 0, kp = 2; k < 3; kp = k++)
+			{
+				unsigned char ef = (t[3] >> (kp * 2)) & 0x3;
+				if (ef == 0)
+				{
+					// Internal edge
+					if (t[kp] < t[k])
+					{
+						//dd->vertex(&verts[t[kp] * 3], coli);
+						//dd->vertex(&verts[t[k] * 3], coli);
+
+						//CG_DrawDebugTriangle(&verts[t[kp] * 3], &verts[t[kp] * 3], &verts[t[kp] * 3], vec4_t{ 0, 0, 0, 64 });
+						CG_DrawDebugLine(&verts[t[kp] * 3], &verts[t[k] * 3], vec4_t{ 0, 0, 0, 64 });
+					}
+				}
+			}
+		}
+	}
+	//dd->end();
+
+	// External edges.
+	//dd->begin(DU_DRAW_LINES, 2.0f);
+	const unsigned int cole = duRGBA(0, 0, 0, 64);
+	for (int i = 0; i < dmesh.nmeshes; ++i)
+	{
+		const unsigned int* m = &dmesh.meshes[i * 4];
+		const unsigned int bverts = m[0];
+		const unsigned int btris = m[2];
+		const int ntris = (int)m[3];
+		const float* verts = &dmesh.verts[bverts * 3];
+		const unsigned char* tris = &dmesh.tris[btris * 4];
+
+		for (int j = 0; j < ntris; ++j)
+		{
+			const unsigned char* t = &tris[j * 4];
+			for (int k = 0, kp = 2; k < 3; kp = k++)
+			{
+				unsigned char ef = (t[3] >> (kp * 2)) & 0x3;
+				if (ef != 0)
+				{
+					// Ext edge
+					//dd->vertex(&verts[t[kp] * 3], cole);
+					//dd->vertex(&verts[t[k] * 3], cole);
+					CG_DrawDebugLine(&verts[t[kp] * 3], &verts[t[k] * 3], vec4_t{ 0, 0, 0, 64 });
+				}
+			}
+		}
+	}
+	//dd->end();
+
+	//dd->begin(DU_DRAW_POINTS, 3.0f);
+	const unsigned int colv = duRGBA(0, 0, 0, 64);
+	for (int i = 0; i < dmesh.nmeshes; ++i)
+	{
+		const unsigned int* m = &dmesh.meshes[i * 4];
+		const unsigned int bverts = m[0];
+		const int nverts = (int)m[1];
+		const float* verts = &dmesh.verts[bverts * 3];
+		for (int j = 0; j < nverts; ++j)
+			//dd->vertex(&verts[j * 3], colv);
+			CG_DrawDebugLine(&verts[j * 3], &verts[j * 3], vec4_t{ 0, 0, 0, 64 });
+	}
+	//dd->end();
+}
+
 void NavMesh::DebugRender() const
 {
 	DebugDrawGL dd;
@@ -695,10 +850,14 @@ void NavMesh::DebugRender() const
 	// Draw bounds
 	const float* bmin = m_cfg->bmin;
 	const float* bmax = m_cfg->bmax;
-	duDebugDrawBoxWire(&dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], duRGBA(255, 255, 255, 128), 1.0f);
-	dd.begin(DU_DRAW_POINTS, 5.0f);
-	dd.vertex(bmin[0], bmin[1], bmin[2], duRGBA(255, 255, 255, 128));
-	dd.end();
+
+	//duDebugDrawBoxWire(&dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], duRGBA(255, 255, 255, 128), 1.0f);
+	CG_DrawDebugBox(bmin, bmax, vec4_t{ 255, 255, 255, 128 });
+
+	//dd.begin(DU_DRAW_POINTS, 5.0f);
+	//dd.vertex(bmin[0], bmin[1], bmin[2], duRGBA(255, 255, 255, 128));
+	//dd.end();
+	CG_DrawDebugPoint(bmin, vec4_t{ 255, 255, 255, 128 });
 
 	// Draw mesh
 	//duDebugDrawHeightfieldSolid(&dd, *m_hf);
@@ -709,33 +868,36 @@ void NavMesh::DebugRender() const
 	//duDebugDrawContours(&dd, *m_cset);
 	//duDebugDrawRegionConnections(&dd, *m_cset);
 	//duDebugDrawPolyMesh(&dd, *m_pmesh);
-	duDebugDrawPolyMeshDetail(&dd, *m_dmesh);
+	duDebugDrawPolyMeshDetail2(&dd, *m_dmesh);
 	//duDebugDrawNavMesh(&dd, *m_navMesh, 0);
 	//duDebugDrawNavMeshNodes(&dd, *m_navQuery);
 
 	for (const auto& verts : m_DebugOffMeshConVerts)
 	{
-		dd.begin(DU_DRAW_LINE_STRIP, 1.f);
+		//dd.begin(DU_DRAW_LINE_STRIP, 1.f);
 		for (unsigned i = 0; i < verts.size(); i += 3)
 		{
-			dd.vertex(verts[i], verts[i + 1], verts[i + 2], duRGBA(255, 0, 0, 255));
+			//dd.vertex(verts[i], verts[i + 1], verts[i + 2], duRGBA(255, 0, 0, 255));
+			CG_DrawDebugTriangle(&verts[i], &verts[i + 1], &verts[i + 2], vec4_t{ 255, 0, 0, 255 });
 		}
-		dd.end();
+		//dd.end();
 
-		dd.begin(DU_DRAW_POINTS, 2.f);
+		//dd.begin(DU_DRAW_POINTS, 2.f);
 		for (unsigned i = 0; i < verts.size(); i += 3)
 		{
-			dd.vertex(verts[i], verts[i + 1], verts[i + 2], duRGBA(0, 255, 0, 255));
+			//dd.vertex(verts[i], verts[i + 1], verts[i + 2], duRGBA(0, 255, 0, 255));
+			CG_DrawDebugTriangle(&verts[i], &verts[i + 1], &verts[i + 2], vec4_t{ 0, 255, 0, 255 });
 		}
-		dd.end();
+		//dd.end();
 	}
 
-	dd.begin(DU_DRAW_POINTS, 5.f);
+	//dd.begin(DU_DRAW_POINTS, 5.f);
 	for (unsigned i = 0; i < m_IntersectionPositions.size(); i += 3)
 	{
-		dd.vertex(m_IntersectionPositions[i], m_IntersectionPositions[i + 1], m_IntersectionPositions[i + 2], duRGBA(0, 255, 0, 255));
+		//dd.vertex(m_IntersectionPositions[i], m_IntersectionPositions[i + 1], m_IntersectionPositions[i + 2], duRGBA(0, 255, 0, 255));
+		CG_DrawDebugTriangle(&m_IntersectionPositions[i], &m_IntersectionPositions[i + 1], &m_IntersectionPositions[i + 2], vec4_t{ 0, 255, 0, 255 });
 	}
-	dd.end();
+	//dd.end();
 }
 #endif
 
@@ -1299,7 +1461,7 @@ void NavMesh::CalcIntersectionPositions(float maxIntersectionPosHeight)
 
 std::unique_ptr<NavMesh> mNavMesh; ///< Navigation Mesh
 
-qboolean LoadMapGeometry(const char *buffer, vec3_t mapmins, vec3_t mapmaxs, float* &verts, int &numverts, int* &tris, int &numtris)
+qboolean NavMesh_LoadMapGeometry(const char *buffer, vec3_t mapmins, vec3_t mapmaxs, float* &verts, int &numverts, int* &tris, int &numtris)
 {
 	const dheader_t *header = (const dheader_t *)buffer;
 	if (header->ident != BSP_IDENT)
@@ -1319,18 +1481,18 @@ qboolean LoadMapGeometry(const char *buffer, vec3_t mapmins, vec3_t mapmaxs, flo
 	const dsurface_t *surfaces = (const dsurface_t *)(buffer + header->lumps[LUMP_SURFACES].fileofs);
 	int numSurfaces = header->lumps[LUMP_SURFACES].filelen / sizeof(dsurface_t);
 
-	numtris = CountIndices(surfaces, numSurfaces);
+	numtris = NavMesh_CountIndices(surfaces, numSurfaces);
 	tris = new int[numtris];
 	numtris /= 3;
 
-	LoadTriangles(indexes, tris, surfaces, numSurfaces);
+	NavMesh_LoadTriangles(indexes, tris, surfaces, numSurfaces);
 
 	// Load vertices
 	const drawVert_t *vertices = (const drawVert_t *)(buffer + header->lumps[LUMP_DRAWVERTS].fileofs);
 	numverts = header->lumps[LUMP_DRAWVERTS].filelen / sizeof(drawVert_t);
 
 	verts = new float[3 * numverts];
-	LoadVertices(vertices, verts, surfaces, numSurfaces);
+	NavMesh_LoadVertices(vertices, verts, surfaces, numSurfaces);
 
 	// Get map bounds. First model is always the entire map
 	const dmodel_t *models = (const dmodel_t *)(buffer + header->lumps[LUMP_MODELS].fileofs);
@@ -1347,7 +1509,7 @@ qboolean LoadMapGeometry(const char *buffer, vec3_t mapmins, vec3_t mapmaxs, flo
 	return qtrue;
 }
 
-void CreateNavMesh(const char *mapname)
+void NavMesh_CreateNavMesh(const char *mapname)
 {
 	fileHandle_t f = 0;
 	int fileLength = trap->FS_Open(mapname, &f, FS_READ);
@@ -1369,7 +1531,7 @@ void CreateNavMesh(const char *mapname)
 	int *tris = NULL;
 	int numtris;
 
-	if (!LoadMapGeometry(buffer, mapmins, mapmaxs, verts, numverts, tris, numtris))
+	if (!NavMesh_LoadMapGeometry(buffer, mapmins, mapmaxs, verts, numverts, tris, numtris))
 	{
 		trap->Print(va("Unable to load map geometry from '%s'.\n", mapname));
 		return;
@@ -1537,6 +1699,21 @@ void CreateNavMesh(const char *mapname)
 	m_cfg.detailSampleDist = DetailSampleDist;
 	m_cfg.detailSampleMaxError = DetailSampleMaxError;
 
+	/* Xyc's settings */
+	m_cfg.ch = 64.0f;// 64.0f;// 9.0f;// 3.0f;
+	m_cfg.cs = 384.0;// 512.0f;// 128.0;// 45.0f;// 15.0f;
+	m_cfg.walkableSlopeAngle = 45.0f; // worked out from MIN_WALK_NORMAL - i think it's correct? :x
+	m_cfg.walkableHeight = 64 / m_cfg.ch;
+	m_cfg.walkableClimb = STEPSIZE / m_cfg.ch;
+	m_cfg.walkableRadius = 15 / m_cfg.cs;
+	m_cfg.maxEdgeLen = 12 / m_cfg.cs;
+	m_cfg.maxSimplificationError = 1.3f;
+	m_cfg.minRegionArea = 64;
+	m_cfg.mergeRegionArea = 400;
+	m_cfg.maxVertsPerPoly = 6;
+	m_cfg.detailSampleDist = 6.0f * m_cfg.cs;
+	m_cfg.detailSampleMaxError = 1.0f * m_cfg.ch;
+
 	trap->Print("Cell size: %0.2f\n", m_cfg.cs);
 	trap->Print("Cell height: %0.2f\n", m_cfg.ch);
 	trap->Print("Walkable slope angle : %0.2f\n", m_cfg.walkableSlopeAngle);
@@ -1589,17 +1766,29 @@ void CreateNavMesh(const char *mapname)
 
 void Warzone_Nav_CreateNavMesh(void)
 {
+#if defined(_GAME)
 	char			mapname[128] = { 0 };
 	vmCvar_t		cvmapname;
-
 	trap->Cvar_Register(&cvmapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM);
-
 	sprintf(mapname, "maps/%s.bsp", cvmapname.string);
+#else //!defined(_GAME)
+	char mapname[128] = { 0 };
+	sprintf(mapname, "maps/%s.bsp", cgs.currentmapname);
+#endif //!defined(_GAME)
 
 	trap->Print("Creating navigation mesh...\n");
-	CreateNavMesh(mapname);
+	NavMesh_CreateNavMesh(mapname);
 }
 
+#if defined(_CGAME)
+void Warzone_Nav_VisualizeNavMesh(void)
+{
+	if (nav_render.integer && mNavMesh && mNavMesh.get())
+		mNavMesh.get()->DebugRender();
+}
+#endif
+
+#if defined(_GAME)
 extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC );
 extern qboolean UQ1_UcmdMoveForDir(gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest);
 extern qboolean NPC_FacePosition(gentity_t *aiEnt, vec3_t position, qboolean doPitch);
@@ -1771,7 +1960,8 @@ void Warzone_Nav_UpdateEntity(gentity_t *ent)
 	trap->Print("Goal distance %f.\n", Distance(pos, patrol->pathEndPos));
 	*/
 
-	NPC_FacePosition(steerPos, qfalse);
+	NPC_FacePosition(ent, steerPos, qfalse);
 	UQ1_UcmdMoveForDir(ent, &ent->client->pers.cmd, steerDir, qfalse, steerPos);
 }
+#endif //defined(_GAME)
 #endif //__USE_NAVMESH__

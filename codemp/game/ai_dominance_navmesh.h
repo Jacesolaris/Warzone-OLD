@@ -107,7 +107,7 @@ namespace shooter
 
 		/// Debug Rendering function. 
 		/// Render the NavMesh, OffMesh connections and the intersection positions. 
-#if 0
+#if defined(_CGAME)
 		void DebugRender() const;
 #endif
 

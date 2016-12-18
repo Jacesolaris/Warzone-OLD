@@ -3606,7 +3606,6 @@ void SetMoverState( gentity_t *ent, moverState_t moverState, int time );
 int FRAME_TIME = 0;
 
 void G_RunFrame( int levelTime ) {
-	int			i;
 #ifdef _G_FRAME_PERFANAL
 	int			iTimer_ItemRun = 0;
 	int			iTimer_ROFF = 0;
@@ -3627,7 +3626,7 @@ void G_RunFrame( int levelTime ) {
 		g_siegeRespawnCheck < level.time)
 	{ //check for a respawn wave
 		gentity_t *clEnt;
-		for ( i=0; i < MAX_CLIENTS; i++ )
+		for ( int i=0; i < MAX_CLIENTS; i++ )
 		{
 			clEnt = &g_entities[i];
 
@@ -3724,8 +3723,9 @@ void G_RunFrame( int levelTime ) {
 		}
 		trap->Nav_ClearCheckedNodes();
 
+		/*
 		//remember last waypoint, clear current one
-		for ( i = 0; i < level.num_entities ; i++)
+		for ( int i = 0; i < level.num_entities ; i++)
 		{
 			gentity_t *ent = &g_entities[i];
 
@@ -3743,6 +3743,7 @@ void G_RunFrame( int levelTime ) {
 				trap->Nav_CheckFailedNodes( (sharedEntity_t *)ent );
 			}
 		}
+		*/
 
 		//Look to clear out old events
 		ClearPlayerAlertEvents();
@@ -3764,27 +3765,29 @@ void G_RunFrame( int levelTime ) {
 	// go through all allocated objects
 	//
 
-//#pragma omp parallel for ordered /*schedule(dynamic)*/ num_threads(std::thread::hardware_concurrency() > 4 ? 2 : 1)
-	for (i=0; i<level.num_entities; i++) 
-	{
+	int ACTIVE_ENTS[MAX_GENTITIES];
+	int ACTIVE_ENTS_NUM = 0;
+
+	for (int i = 0; i < level.num_entities; i++)
+	{// Lets see how much stuff needs to do a full think...
 		gentity_t *ent = &g_entities[i];
 
-		if ( !ent->inuse ) {
+		if (!ent->inuse) {
 			continue;
 		}
 
 		// clear events that are too old
-		if ( level.time - ent->eventTime > EVENT_VALID_MSEC ) {
-			if ( ent->s.event ) {
+		if (level.time - ent->eventTime > EVENT_VALID_MSEC) {
+			if (ent->s.event) {
 				ent->s.event = 0;	// &= EV_EVENT_BITS;
-				if ( ent->client ) {
+				if (ent->client) {
 					ent->client->ps.externalEvent = 0;
 					// predicted events should never be set to zero
 					//ent->client->ps.events[0] = 0;
 					//ent->client->ps.events[1] = 0;
 				}
 			}
-			if ( ent->freeAfterEvent ) {
+			if (ent->freeAfterEvent) {
 				// tempEntities or dropped items completely go away after their event
 				if (ent->s.eFlags & EF_SOUNDTRACKER)
 				{ //don't trigger the event again..
@@ -3795,22 +3798,63 @@ void G_RunFrame( int levelTime ) {
 				}
 				else
 				{
-					G_FreeEntity( ent );
+					G_FreeEntity(ent);
 					continue;
 				}
-			} else if ( ent->unlinkAfterEvent ) {
+			}
+			else if (ent->unlinkAfterEvent) {
 				// items that will respawn will hide themselves after their pickup event
 				ent->unlinkAfterEvent = qfalse;
-				trap->UnlinkEntity( (sharedEntity_t *)ent );
+				trap->UnlinkEntity((sharedEntity_t *)ent);
 			}
 		}
 
 		// temporary entities don't think
-		if ( ent->freeAfterEvent ) {
+		if (ent->freeAfterEvent) {
 			continue;
 		}
 
-		if ( !ent->r.linked && ent->neverFree ) {
+		if (!ent->r.linked && ent->neverFree) {
+			continue;
+		}
+
+		ACTIVE_ENTS[ACTIVE_ENTS_NUM] = i;
+		ACTIVE_ENTS_NUM++;
+	}
+
+	//int			thinkTime = trap->Milliseconds();
+	//int			numThreads = 0;
+
+	/*if (ACTIVE_ENTS_NUM > 512)
+	{
+		numThreads = std::thread::hardware_concurrency() > 5 ? 5 : 4;
+	}
+	else if (ACTIVE_ENTS_NUM > 384)
+	{
+		numThreads = std::thread::hardware_concurrency() > 4 ? 4 : 3;
+	}
+	else if (ACTIVE_ENTS_NUM > 256)
+	{
+		numThreads = std::thread::hardware_concurrency() > 3 ? 3 : 2;
+	}
+	else if (ACTIVE_ENTS_NUM > 128)
+	{
+		numThreads = std::thread::hardware_concurrency() > 2 ? 2 : 1;
+	}
+
+	if (numThreads > std::thread::hardware_concurrency() - 2)
+	{
+		numThreads = max(std::thread::hardware_concurrency() - 2, 1);
+	}*/
+
+//#pragma omp parallel for num_threads(numThreads) if (ACTIVE_ENTS_NUM > 128 && numThreads > 0)
+	for (int aEnt = 0; aEnt < ACTIVE_ENTS_NUM; aEnt++)
+	{
+		int i = ACTIVE_ENTS[aEnt];
+
+		gentity_t *ent = &g_entities[i];
+
+		if ( !ent->inuse ) {
 			continue;
 		}
 
@@ -3842,6 +3886,24 @@ void G_RunFrame( int levelTime ) {
 		if ( ent->s.eType == ET_MOVER ) {
 			G_RunMover( ent );
 			continue;
+		}
+
+		if (g_allowNPC.integer)
+		{
+			//if (ent->s.eType == ET_NPC)
+			{
+				//remember last waypoint, clear current one
+				if (ent->waypoint != WAYPOINT_NONE
+					&& ent->noWaypointTime < level.time)
+				{
+					ent->lastWaypoint = ent->waypoint;
+					ent->waypoint = WAYPOINT_NONE;
+				}
+				if (d_altRoutes.integer)
+				{
+					trap->Nav_CheckFailedNodes((sharedEntity_t *)ent);
+				}
+			}
 		}
 
 		//fix for self-deactivating areaportals in Siege
@@ -3883,7 +3945,7 @@ void G_RunFrame( int levelTime ) {
 
 				ent->client->ps.weaponTime = ent->client->ps.torsoTimer;
 
-				if (!(ent->client->pers.cmd.buttons & BUTTON_USE) && ent->s.eType == ET_PLAYER)
+				if (!(ent->client->pers.cmd.buttons & BUTTON_USE) && (ent->s.eType == ET_PLAYER || ent->s.eType == ET_NPC))
 				{ //have to keep holding use
 					ent->client->isHacking = 0;
 					ent->client->ps.hackingTime = 0;
@@ -3898,7 +3960,7 @@ void G_RunFrame( int levelTime ) {
 					ent->client->isHacking = 0;
 					ent->client->ps.hackingTime = 0;
 				}
-				else if (VectorLength(angDif) > 10.0f && ent->s.eType == ET_PLAYER)
+				else if (VectorLength(angDif) > 10.0f && (ent->s.eType == ET_PLAYER || ent->s.eType == ET_NPC))
 				{ //must remain facing generally the same angle as when we start (UQ1: But only for players)
 					ent->client->isHacking = 0;
 					ent->client->ps.hackingTime = 0;
@@ -4055,6 +4117,11 @@ void G_RunFrame( int levelTime ) {
 			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
 		}
 	}
+
+	//thinkTime = trap->Milliseconds() - thinkTime;
+
+	//trap->Print("Thinktime was %i ms.\n", thinkTime);
+
 #ifdef _G_FRAME_PERFANAL
 	iTimer_ItemRun = trap->PrecisionTimer_End(timer_ItemRun);
 #endif
@@ -4075,13 +4142,114 @@ void G_RunFrame( int levelTime ) {
 	trap->PrecisionTimer_Start(&timer_ClientEndframe);
 #endif
 	// perform final fixups on the players
-	for ( i=0 ; i < level.maxclients ; i++ ) {
+#if 0
+	for ( int i=0 ; i < level.maxclients ; i++ ) {
 		gentity_t *ent = &g_entities[i];
 
 		if ( ent->inuse ) {
 			ClientEndFrame( ent );
 		}
 	}
+#else
+//#pragma omp parallel for num_threads(numThreads) if (ACTIVE_ENTS_NUM > 128 && numThreads > 0)
+	for (int aEnt = 0; aEnt < ACTIVE_ENTS_NUM; aEnt++)
+	{
+		int i = ACTIVE_ENTS[aEnt];
+		gentity_t *ent = &g_entities[i];
+
+		if (ent->inuse && ent->client)
+		{
+			if (ent->s.eType == ET_PLAYER) 
+			{
+				ClientEndFrame(ent);
+			} 
+			else if (ent->s.eType == ET_NPC) 
+			{
+				playerState_t *ps = &ent->client->ps;
+				entityState_t *s = &ent->s;
+
+				ent->client->ps.commandTime = level.time - 100;
+
+				//s->pos.trType = TR_INTERPOLATE;
+				s->pos.trType = TR_LINEAR_STOP;
+				
+				qboolean FULL_UPDATE = qfalse;
+
+				if (ent->next_full_update <= level.time)
+				{
+					FULL_UPDATE = qtrue;
+				}
+
+				if (FULL_UPDATE || Distance(ent->prev_posTrBase, ps->origin) > 2)
+				{
+					VectorCopy(ps->origin, s->pos.trBase);
+					VectorCopy(s->pos.trBase, ent->prev_posTrBase);
+				}
+				else
+				{
+					VectorCopy(ent->prev_posTrBase, s->pos.trBase);
+				}
+
+				//if (snap) {
+				//	SnapVector(s->pos.trBase);
+				//}
+
+				// set the trDelta for flag direction
+				if (FULL_UPDATE || Distance(ent->prev_posTrDelta, ps->velocity) > 16)
+				{
+					VectorCopy(ps->velocity, s->pos.trDelta);
+					VectorCopy(s->pos.trDelta, ent->prev_posTrDelta);
+				}
+				else
+				{
+					VectorCopy(ent->prev_posTrDelta, s->pos.trDelta);
+				}
+
+				s->apos.trType = TR_INTERPOLATE;
+
+				if (FULL_UPDATE || Distance(ent->prev_aposTrBase, ps->viewangles) > 32)
+				{
+					VectorCopy(ps->viewangles, s->apos.trBase);
+					VectorCopy(s->apos.trBase, ent->prev_aposTrBase);
+				}
+				else
+				{
+					VectorCopy(ent->prev_aposTrBase, s->apos.trBase);
+				}
+
+				//if (snap) {
+				//	SnapVector(s->apos.trBase);
+				//}
+
+				if (FULL_UPDATE || ent->prev_moveDir - ps->movementDir > 24 || ent->prev_moveDir - ps->movementDir < -24 || ps->movementDir == 0)
+				{
+					s->angles2[YAW] = ps->movementDir;
+					ent->prev_moveDir = ps->movementDir;
+				}
+				else
+				{
+					s->angles2[YAW] = ent->prev_moveDir;
+				}
+
+				if (FULL_UPDATE || ent->prev_speed - ps->speed > 8 || ent->prev_speed - ps->speed < -8 || ps->speed == 0)
+				{
+					s->speed = ps->speed;
+				}
+				else
+				{
+					s->speed = ent->prev_speed;
+				}
+
+				if (FULL_UPDATE) ent->next_full_update = level.time + 2000; // Force a full update every 2 seconds...
+
+																			// set maximum extra polation time
+				s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+
+				s->apos.trType = TR_INTERPOLATE;
+			}
+		}
+	}
+#endif
 #ifdef _G_FRAME_PERFANAL
 	iTimer_ClientEndframe = trap->PrecisionTimer_End(timer_ClientEndframe);
 #endif

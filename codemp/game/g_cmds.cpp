@@ -2923,10 +2923,26 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	}
 	else
 	{
+		/*
+		SS_NONE=0,
+		SS_FAST,
+		SS_MEDIUM,
+		SS_STRONG,
+		SS_DESANN,
+		SS_TAVION,
+		SS_DUAL,
+		SS_STAFF,
+		SS_WARZONE,
+		SS_NUM_SABER_STYLES
+		*/
+
 		selectLevel++;
-		if (selectLevel > ent->client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE])
+		if (selectLevel > SS_TAVION/*ent->client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE]*/)
 		{
-			selectLevel = FORCE_LEVEL_1;
+			if (selectLevel < SS_WARZONE)
+				selectLevel = SS_WARZONE;
+			else
+				selectLevel = FORCE_LEVEL_1;
 		}
 		if (d_saberStanceDebug.integer)
 		{
@@ -2949,6 +2965,9 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	}
 	#endif
 	*/
+	
+	//trap->Print("Lightsaber Combat Style: %i\n", selectLevel);
+
 	if (!usingSiegeStyle)
 	{
 		//make sure it's valid, change it if not

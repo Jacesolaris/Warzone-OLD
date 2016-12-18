@@ -3185,13 +3185,6 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 		}
 	}
 
-	if ( cg.nextSnap && cent->currentState.eType == ET_NPC )
-	{// UQ1: If we have a snapshot, and this is an NPC, interpolate to stop jitter!
-		cent->currentState.pos.trType = TR_INTERPOLATE;
-		cent->nextState.pos.trType = TR_INTERPOLATE;
-		cent->interpolate = qtrue;
-	}
-
 	if (cg.predictedPlayerState.m_iVehicleNum &&
 		cg.predictedPlayerState.m_iVehicleNum == cent->currentState.number &&
 		cent->currentState.eType == ET_NPC && cent->currentState.NPC_class == CLASS_VEHICLE)
@@ -3566,6 +3559,9 @@ void CG_ManualEntityRender(centity_t *cent)
 
 //[AUTOWAYPOINT]
 void DrawWaypoints();
+#ifdef __USE_NAVMESH__
+void Warzone_Nav_VisualizeNavMesh(void);
+#endif //__USE_NAVMESH__
 //[/AUTOWAYPOINT]
 
 void FOLIAGE_DrawGrass( void );
@@ -3584,6 +3580,9 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 
 //[AUTOWAYPOINT]
 	DrawWaypoints();
+#ifdef __USE_NAVMESH__
+	Warzone_Nav_VisualizeNavMesh();
+#endif //__USE_NAVMESH__
 //[/AUTOWAYPOINT]
 
 	if (isPortal)

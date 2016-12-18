@@ -283,6 +283,21 @@ int PM_GetSaberStance(void)
 		return BOTH_STAND1;
 	}
 
+	/*
+	TRIPLE3_BLUESTANCE,
+    TRIPLE3_YELLOWSTANCE, // Used by SS_WARZONE
+    TRIPLE3_REDSTANCE,
+    TRIPLE3_DUALSSTANCE,
+    TRIPLE3_STAFFSTANCE,
+    BOTH_DOOKU_STANCE,
+	*/
+
+	if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+	{
+		pm->ps->fd.saberAnimLevel = SS_WARZONE;
+		return TRIPLE3_YELLOWSTANCE;// BOTH_P7_S7_T_;
+	}
+
 	if ( saber1
 		&& saber1->readyAnim != -1 )
 	{
@@ -316,6 +331,9 @@ int PM_GetSaberStance(void)
 		break;
 	case SS_STRONG:
 		anim = BOTH_SABERSLOW_STANCE;
+		break;
+	case SS_WARZONE:
+		anim = BOTH_P7_S7_T_;
 		break;
 	case SS_NONE:
 	case SS_MEDIUM:
@@ -12255,6 +12273,7 @@ void PmoveSingle (pmove_t *pmove) {
 
 	// set groundentity, watertype, and waterlevel
 	PM_GroundTrace();
+
 	if ( pm_flying == FLY_HOVER )
 	{//never stick to the ground
 		PM_HoverTrace();

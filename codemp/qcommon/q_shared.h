@@ -1982,6 +1982,8 @@ typedef struct playerState_s {
 	int		csSounds_Extra;
 	int		csSounds_Jedi;
 
+	int			nextStyleSwitch;
+
 	//rww - spare values specifically for use by mod authors.
 	//See psf_overrides.txt if you want to increase the send
 	//amount of any of these above 1 bit.
@@ -1998,6 +2000,7 @@ typedef struct playerState_s {
 	int			deltaOneBits;
 	int			deltaNumBits;
 #endif
+
 } playerState_t;
 
 typedef struct siegePers_s
