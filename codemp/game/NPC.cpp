@@ -3564,6 +3564,26 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	//vec3_t		faceDir, faceAngles, facePos;
 	gentity_t	*aiEnt = self;
 
+	if (self->client
+		&& self->client->ps.weapon == WP_SABER
+		&& self->enemy
+		&& self->enemy->client
+		&& self->enemy->client->ps.weapon == WP_SABER
+		&& NPC_IsAlive(self, self->enemy)
+		&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) < 96.0)
+	{// Jedi always walk when in combat with saber...
+		//cmd->buttons |= BUTTON_WALKING;
+		walk = qtrue;
+		//walkSpeed = 64.0;
+		walkSpeed = 55 * 1.1;
+	}
+	else if (self->NPC)
+	{
+		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
+		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
+		walkSpeed = 55 * 1.1;
+	}
+
 	if (self->NPC->conversationPartner && self->NPC->conversationPartner->NPC)
 	{
 		cmd->upmove = 0;
@@ -3572,19 +3592,14 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		return qfalse;
 	}
 
-	if (self->NPC)
-	{
-		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
-		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
-		walkSpeed = 55 * 1.1;
-	}
-
 	AngleVectors( self->r.currentAngles, forward, right, NULL );
 	
 	cmd->upmove = 0;
 
 	dir[2] = 0;
 	VectorNormalize(dir);
+	VectorNormalize(forward);
+	VectorNormalize(right);
 
 #ifdef __NPC_STRAFE__
 	if (self->s.groundEntityNum != ENTITYNUM_NONE)
@@ -3756,7 +3771,20 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 	vec3_t		faceDir, faceAngles, facePos;
 	gentity_t	*aiEnt = self;
 
-	if (self->NPC)
+	if (self->client
+		&& self->client->ps.weapon == WP_SABER
+		&& self->enemy
+		&& self->enemy->client
+		&& self->enemy->client->ps.weapon == WP_SABER
+		&& NPC_IsAlive(self, self->enemy)
+		&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) < 96.0)
+	{// Jedi always walk when in combat with saber...
+		//cmd->buttons |= BUTTON_WALKING;
+		walk = qtrue;
+		//walkSpeed = 64.0;
+		walkSpeed = 55 * 1.1;
+	}
+	else if (self->NPC)
 	{
 		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
 		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
@@ -3767,7 +3795,10 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 	
 	cmd->upmove = 0;
 
+	dir[2] = 0;
 	VectorNormalize(dir);
+	VectorNormalize(forward);
+	VectorNormalize(right);
 
 	if (self->beStillTime > level.time)
 	{// Screwed...
