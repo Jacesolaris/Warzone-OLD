@@ -603,7 +603,6 @@ int PM_GetSaberStance()
 		break;
 	case SS_DESANN:
 		anim = TRIPLE3_REDSTANCE;
-
 		break;
 	case SS_NONE:
 	case SS_MEDIUM:

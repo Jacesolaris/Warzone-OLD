@@ -44,6 +44,7 @@ int irand(int min, int max)
 #define			MAX_FOREST_MODELS 64
 
 qboolean		ADD_CLIFF_FACES = qfalse;
+float			CLIFF_FACES_CULL_MULTIPLIER = 1.0;
 char			CLIFF_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
 char			TREE_MODELS[MAX_FOREST_MODELS][128] = { 0 };
@@ -59,6 +60,8 @@ void FOLIAGE_LoadClimateData( char *filename )
 	int i = 0;
 
 	ADD_CLIFF_FACES = (qboolean)atoi(IniRead(filename, "CLIFFS", "addCliffFaces", "0"));
+	CLIFF_FACES_CULL_MULTIPLIER = atof(IniRead(filename, "CLIFFS", "cliffFacesCullScale", "1.0"));
+
 	strcpy(CLIFF_SHADER, IniRead(filename, "CLIFFS", "cliffShader", ""));
 
 	if (CLIFF_SHADER[0] != '\0')
@@ -84,7 +87,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 		TREE_FORCED_MAX_ANGLE[i] = atof(IniRead(filename, "TREES", va("treeForcedMaxAngle%i", i), "0.0"));
 		TREE_FORCED_BUFFER_DISTANCE[i] = atof(IniRead(filename, "TREES", va("treeForcedBufferDistance%i", i), "0.0"));
 		TREE_FORCED_DISTANCE_FROM_SAME[i] = atof(IniRead(filename, "TREES", va("treeForcedDistanceFromSame%i", i), "0.0"));
-		TREE_FORCED_FULLSOLID[i] = (qboolean)atoi(IniRead(filename, "TREES", va("treeForcedFullSolid%i", i), "0.0"));
+		TREE_FORCED_FULLSOLID[i] = (qboolean)atoi(IniRead(filename, "TREES", va("treeForcedFullSolid%i", i), "0"));
 
 		if (strcmp(TREE_MODELS[i], ""))
 			Sys_Printf("Tree %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f. ForcedSolid: %s.\n", i, TREE_MODELS[i], TREE_OFFSETS[i], TREE_SCALES[i], TREE_FORCED_MAX_ANGLE[i], TREE_FORCED_BUFFER_DISTANCE[i], TREE_FORCED_DISTANCE_FROM_SAME[i], TREE_FORCED_FULLSOLID[i] ? "true" : "false");
@@ -306,7 +309,7 @@ void GenerateCliffFaces(void)
 
 			for (int j = 0; j < numCliffs; j++)
 			{
-				if (Distance(cliffPositions[j], center) < 48.0 * cliffScale[j])
+				if (Distance(cliffPositions[j], center) < (48.0 * cliffScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
 				{
 					bad = qtrue;
 					numDistanceCulled++;
@@ -906,6 +909,10 @@ void GenerateMapForest ( void )
 				if (TREE_FORCED_FULLSOLID[FOLIAGE_TREE_SELECTION[i]])
 				{
 					SetKeyValue(mapEnt, "_forcedSolid", "1");
+				}
+				else
+				{
+					SetKeyValue(mapEnt, "_forcedSolid", "0");
 				}
 
 				/*{

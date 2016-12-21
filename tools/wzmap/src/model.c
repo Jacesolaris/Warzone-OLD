@@ -343,8 +343,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 	if (StringContainsWord(name, "forestpine")
 		|| StringContainsWord(name, "junglepalm")
 		|| StringContainsWord(name, "cypress")
-		|| StringContainsWord(name, "cedar"))
-	{// Special case for high pine trees, we can cull much more for FPS yay! :)
+		|| StringContainsWord(name, "cedar")
+		|| StringContainsWord(name, "uqoak"))
+	{// Special case for high trees, we can cull much more for FPS yay! :)
 		ALLOW_CULL_HALF_SIZE = true;
 	}
 
@@ -2814,9 +2815,13 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 
 		value = ValueForKey(e2, "_forcedSolid");
 
-		if (value[0] != '\0')
+		if (atoi(value) >= 1)
 		{
 			forcedSolid = qtrue;
+		}
+		else
+		{
+			forcedSolid = qfalse;
 		}
 
 		/* vortex: get lightmap scaling value for this entity */
