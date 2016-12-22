@@ -147,11 +147,17 @@ int Convert_AWP_Flags ( int flags )
 												//area before moving to this waypoint.
 #define WPFLAG_FORCEPULL			0x10000000 //force pull all the active func_doors in the
 												//area before moving to this waypoint.			
+												#define WPFLAG_COVER				0x20000000 //cover point
+
+												#define WPFLAG_WATER				0x40000000 //water point
 //[/TABBot]
 */
 
 	if (flags & NODE_FASTHOP)
 		out_flags |= WPFLAG_JUMP;
+
+	if (flags & NODE_WATER)
+		out_flags |= WPFLAG_WATER;
 
 	if (flags & NODE_JUMP)
 		out_flags |= WPFLAG_JUMP;

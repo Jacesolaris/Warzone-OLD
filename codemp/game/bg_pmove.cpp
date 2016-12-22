@@ -16,6 +16,12 @@
 	#include "ui/ui_local.h"
 #endif
 
+#ifdef _GAME
+#include "ai_dominance_main.h"
+extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
+extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC);
+#endif
+
 #if defined (_CGAME)
 extern qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle );
 #endif
@@ -3194,6 +3200,7 @@ static void PM_WaterJumpMove( void ) {
 	}
 }
 
+
 /*
 ===================
 PM_WaterMove
@@ -3212,6 +3219,7 @@ static void PM_WaterMove( void ) {
 		PM_WaterJumpMove();
 		return;
 	}
+
 #if 0
 	// jump = head for surface
 	if ( pm->cmd.upmove >= 10 ) {
@@ -4727,7 +4735,7 @@ PM_SetWaterLevel
 =============
 */
 
-#define __NPCS_IGNORE_WATER__
+//#define __NPCS_IGNORE_WATER__
 
 static void PM_SetWaterLevel( void ) {
 	vec3_t		point;
@@ -4741,19 +4749,57 @@ static void PM_SetWaterLevel( void ) {
 	pm->waterlevel = 0;
 	pm->watertype = 0;
 
-#ifdef __NPCS_IGNORE_WATER__
+#ifdef _GAME
+	if (pm->ps->clientNum >= MAX_CLIENTS)
+	{// NPCs can use current waypoint info to save CPU time on traces...
+		gentity_t *ent = &g_entities[pm->ps->clientNum];
+		
+		if (ent->enemy && ent->enemy->client && NPC_IsAlive(ent, ent->enemy))
+		{// When we have a valid enemy, always check water level so we don't drown while attacking them...
+
+		}
+		else
+		{
+			if (gWPNum <= 0) return;
+			if (!ent || !ent->client || !NPC_IsAlive(ent, ent)) return;
+			if (ent->wpCurrent < 0 || ent->wpCurrent > gWPNum) return;
+
+			if (gWPArray[ent->wpCurrent]->flags & WPFLAG_WATER)
+			{
+				pm->watertype = CONTENTS_WATER;
+
+				if (pm->ps->eFlags & EF_JETPACK)
+				{// Fly over :)
+					pm->waterlevel = 2;
+					return;
+				}
+				else
+				{
+					pm->waterlevel = 1;
+					pm->watertype = CONTENTS_WATER;
+				}
+
+				//return; // Do proper check below if we are in water...
+			}
+			else
+			{
+				return;
+			}
+		}
+	}
+#else
 	if (pm->ps->clientNum >= MAX_CLIENTS)
 	{// For CPU usage, NPCs ignore water for now...
 		return;
 	}
-#endif //__NPCS_IGNORE_WATER__
+#endif
 
 	point[0] = pm->ps->origin[0];
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] + MINS_Z + 1;
 	cont = pm->pointcontents( point, pm->ps->clientNum );
 
-	if ( cont & MASK_WATER && pm->ps->clientNum < MAX_CLIENTS ) {
+	if ( cont & MASK_WATER /*&& pm->ps->clientNum < MAX_CLIENTS*/ ) {
 		sample2 = pm->ps->viewheight - MINS_Z;
 		sample1 = sample2 / 2;
 
@@ -4770,13 +4816,13 @@ static void PM_SetWaterLevel( void ) {
 			}
 		}
 	}
-#ifndef __NPCS_IGNORE_WATER__
+/*#ifndef __NPCS_IGNORE_WATER__
 	else if (cont & MASK_WATER && pm->ps->clientNum >= MAX_CLIENTS) 
 	{// NPCs don't drown... (More to save CPU time on complex maps then anything else)
 		pm->watertype = cont;
 		pm->waterlevel = 1;
 	}
-#endif //__NPCS_IGNORE_WATER__
+#endif //__NPCS_IGNORE_WATER__*/
 }
 
 qboolean PM_CheckDualForwardJumpDuck( void )

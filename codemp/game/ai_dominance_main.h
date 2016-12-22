@@ -81,6 +81,8 @@
 //area before moving to this waypoint.	
 #define WPFLAG_COVER				0x20000000 //cover point
 
+#define WPFLAG_WATER				0x40000000 //water point
+
 #define LEVELFLAG_NOPOINTPREDICTION			1 //don't take waypoint beyond current into account when adjusting path view angles
 #define LEVELFLAG_IGNOREINFALLBACK			2 //ignore enemies when in a fallback navigation routine
 #define LEVELFLAG_IMUSTNTRUNAWAY			4 //don't be scared

@@ -99,7 +99,10 @@ void ASTAR_InitWaypointCosts ( void )
 				gWPArray[i]->neighbors[j].cost *= ht;
 
 				if (gWPArray[i]->neighbors[j].forceJumpTo > 0)
-					gWPArray[i]->neighbors[j].cost *= 20.0;//5.0;
+					gWPArray[i]->neighbors[j].cost *= 20.0; // Don't jump unless absolutely necessary!
+
+				if (gWPArray[i]->flags & WPFLAG_WATER)
+					gWPArray[i]->neighbors[j].cost *= 100.0; // Get out of water ASAP!
 
 				if (!LinkCanReachMe(i, gWPArray[i]->neighbors[j].num) || !LinkCanReachMe(gWPArray[i]->neighbors[j].num, i))
 				{// One way links are bad... Make them cost much more...

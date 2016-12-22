@@ -3564,6 +3564,23 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	//vec3_t		faceDir, faceAngles, facePos;
 	gentity_t	*aiEnt = self;
 
+	if (self->waterlevel > 0 && self->enemy && self->enemy->client && NPC_IsAlive(self, self->enemy))
+	{// When we have a valid enemy, always check water level so we don't drown while attacking them...
+
+	}
+	else if (gWPNum > 0 && self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
+	{
+		if (gWPArray[self->wpCurrent]->flags & WPFLAG_WATER)
+		{// Use current waypoint info to save CPU time on traces...
+			self->watertype = CONTENTS_WATER;
+			
+			if (self->client->ps.eFlags & EF_JETPACK)
+				self->waterlevel = 2;
+			else
+				self->waterlevel = 1;
+		}
+	}
+
 	if (self->client
 		&& self->client->ps.weapon == WP_SABER
 		&& self->enemy
@@ -3770,6 +3787,23 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
 	vec3_t		faceDir, faceAngles, facePos;
 	gentity_t	*aiEnt = self;
+
+	if (self->waterlevel > 0 && self->enemy && self->enemy->client && NPC_IsAlive(self, self->enemy))
+	{// When we have a valid enemy, always check water level so we don't drown while attacking them...
+
+	}
+	else if (gWPNum > 0 && self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
+	{
+		if (gWPArray[self->wpCurrent]->flags & WPFLAG_WATER)
+		{// Use current waypoint info to save CPU time on traces...
+			self->watertype = CONTENTS_WATER;
+			
+			if (self->client->ps.eFlags & EF_JETPACK)
+				self->waterlevel = 2;
+			else
+				self->waterlevel = 1;
+		}
+	}
 
 	if (self->client
 		&& self->client->ps.weapon == WP_SABER

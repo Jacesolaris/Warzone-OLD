@@ -6,6 +6,7 @@
 #include "g_nav.h"
 #include "bg_saga.h"
 #include "jkg_damagetypes.h"
+#include "ai_dominance_main.h"
 #include "b_local.h"
 #include <thread>
 
@@ -352,6 +353,12 @@ qboolean CheckSpawnPosition( vec3_t position )
 		return qfalse;
 	}
 
+	if (tr.contents & CONTENTS_WATER)
+	{
+		//trap->Print("Waypoint %i is in trigger.\n");
+		return qfalse;
+	}
+
 	if ( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) )
 	{
 		//trap->Print("Waypoint %i is in trigger.\n");
@@ -601,6 +608,9 @@ void CreateSpawnpoints( void )
 #pragma omp parallel for schedule(dynamic)
 			for (int n = 0; n < gWPNum; n++)
 			{
+				if (gWPArray[n]->flags & WPFLAG_WATER)
+					continue;
+
 				if (Warzone_SpawnpointNearMoverEntityLocation( gWPArray[n]->origin )) 
 					continue;
 
@@ -608,6 +618,9 @@ void CreateSpawnpoints( void )
 				{
 					float dist;
 					if (n == o) continue;
+
+					if (gWPArray[o]->flags & WPFLAG_WATER)
+						continue;
 
 					if (Warzone_SpawnpointNearMoverEntityLocation( gWPArray[o]->origin )) 
 						continue;
@@ -648,6 +661,9 @@ void CreateSpawnpoints( void )
 				float bdist, rdist;
 
 				if (MOST_DISTANT_POINTS[0] == n || MOST_DISTANT_POINTS[1] == n)
+					continue;
+
+				if (gWPArray[n]->flags & WPFLAG_WATER)
 					continue;
 
 				for (int o = 0; o < LIST_TOTAL; o++)
@@ -770,6 +786,9 @@ void CreateSpawnpoints( void )
 			int			choice = irand_big(0, gWPNum-1);
 			qboolean	bad = qfalse;
 			vec3_t		zeroOrg = { 0 };
+
+			if (gWPArray[choice]->flags & WPFLAG_WATER)
+				continue;
 			
 			// Find 32 that are not close to eachother...
 			for (j = 0; j < count; j++)

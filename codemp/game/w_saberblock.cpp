@@ -74,8 +74,16 @@ void SabBeh_AttackVsBlock( gentity_t *attacker, gentity_t *blocker, vec3_t hitLo
 	}
 }
 
+extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC); // Also valid for non-npcs.
+
 void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc, qboolean *didHit, qboolean otherHitSaberBlade)
 {	
+	if (!self || !self->client || !NPC_IsAlive(self, self))
+		return;
+
+	if (!otherOwner || !otherOwner->client || !NPC_IsAlive(self, otherOwner))
+		return;
+
 	if(BG_SaberInNonIdleDamageMove(&self->client->ps, self->localAnimIndex) )
 	{//self is attacking
 		if(BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex)) 
@@ -108,11 +116,9 @@ void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc,
 }
 
 //[NewSaberSys]
-extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC); // Also valid for non-npcs.
-
 void G_SaberBounce(gentity_t* self, gentity_t* other, qboolean hitBody)
 {
-	if (other->client && NPC_IsAlive(self, other))
+	if (self && self->client && NPC_IsAlive(self, self) && other->client && NPC_IsAlive(self, other))
 	{
 		if (!BG_SaberInSpecialAttack(self->client->ps.torsoAnim))
 		{

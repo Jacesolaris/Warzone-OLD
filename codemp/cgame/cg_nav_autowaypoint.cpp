@@ -37,7 +37,7 @@
 //#define MAX_NODES           65536
 #define MAX_NODES           MAX_WPARRAY_SIZE//131072
 #define INVALID				-1
-#define MAX_TEMP_AREAS		4194304//2048000
+#define MAX_TEMP_AREAS		8388608//4194304//2048000
 
 #ifdef _WIN32
 #include <windows.h>
@@ -107,7 +107,7 @@ qboolean DO_THOROUGH = qfalse;
 qboolean DO_TRANSLUCENT = qfalse;
 qboolean DO_FAST_LINK = qfalse;
 qboolean DO_ULTRAFAST = qfalse;
-qboolean DO_NOWATER = qfalse;
+qboolean DO_WATER = qfalse;
 qboolean DO_NOSKY = qfalse;
 qboolean DO_OPEN_AREA_SPREAD = qfalse;
 qboolean DO_NEW_METHOD = qfalse;
@@ -1782,7 +1782,7 @@ int
 OrgVisible ( vec3_t org1, vec3_t org2, int ignore )
 {
 	trace_t tr;
-	CG_Trace( &tr, org1, NULL, NULL, org2, ignore, MASK_SOLID | MASK_OPAQUE | MASK_WATER );
+	CG_Trace( &tr, org1, NULL, NULL, org2, ignore, MASK_SOLID | MASK_OPAQUE /*| MASK_WATER*/ );
 	if ( tr.fraction == 1 )
 	{
 		return ( 1 );
@@ -2376,109 +2376,6 @@ extern qboolean FOLIAGE_TreeSolidBlocking_AWP_Path(vec3_t from, vec3_t to);
 int
 AIMOD_MAPPING_CreateNodeLinks ( int node )
 {
-#if 0
-	vec3_t	tmp;
-	int		loop, dist_loop = 0;
-	int		linknum = 0;
-	//vec3_t	tankMaxsSize = {96, 96, 0};
-	//vec3_t	tankMinsSize = {-96, -96, 0};
-
-	VectorCopy( nodes[node].origin, tmp );
-	tmp[2]+=8;
-
-	for ( dist_loop = 0; dist_loop < 2; dist_loop++)
-	{
-		qboolean double_range = qfalse;
-
-		if (dist_loop == 1)
-		{
-			double_range = qtrue;
-
-			if (nodes[node].enodenum >= MAX_AWP_NODELINKS)
-				break; // Already have enough links for this one...
-		}
-
-		for ( loop = 0; loop < number_of_nodes; loop++ )
-		{
-			if (loop == node)
-				continue;
-
-			if ( linknum >= MAX_AWP_NODELINKS)
-			{
-				break;
-				//continue;
-			}
-
-			if ( !BAD_WP_Distance( nodes[node].origin, nodes[loop].origin, double_range) )
-			{
-				int		visCheck = 0;
-				vec3_t	this_org;
-
-				VectorCopy(nodes[loop].origin, this_org);
-				this_org[2]+=8;
-
-				if (DO_FAST_LINK)
-				{// It's in range... Just accept the linkage... Could easy be bad, but oh well...
-					nodes[node].links[linknum].targetNode = loop;
-					nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (VerticalDistance(nodes[loop].origin, nodes[node].origin)*VerticalDistance(nodes[loop].origin, nodes[node].origin));
-					nodes[node].links[linknum].flags = 0;
-
-					if (HeightDistance(nodes[node].origin, nodes[loop].origin) > VerticalDistance(nodes[node].origin, nodes[loop].origin))
-					{// Force jump...
-						nodes[node].links[linknum].flags |= NODE_JUMP;
-					}
-					else if (AIMod_Check_Slope_Between(tmp, this_org))
-					{// No need for jump...
-
-					}
-					else if (AWP_Jump( tmp, this_org ))
-					{// Can jump there!
-						nodes[node].links[linknum].flags |= NODE_JUMP;
-					}
-
-					linknum++;
-					continue;
-				}
-
-//#pragma omp critical (__NODE_VISIBLE_CHECK__)
-				{
-					visCheck = NodeVisible( this_org, tmp, -1 );
-				}
-
-				//0 = wall in way
-				//1 = player or no obstruction
-				//2 = useable door in the way.
-				//3 = door entity in the way.
-				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/ )
-				{
-//#pragma omp critical (__SLOPE_CHECK__)
-					{
-						if (AIMod_Check_Slope_Between(tmp, this_org))
-						{
-							if (!FOLIAGE_TreeSolidBlocking_AWP_Path(this_org, tmp))
-							{
-								nodes[node].links[linknum].targetNode = loop;
-								nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
-								nodes[node].links[linknum].flags = 0;
-								linknum++;
-							}
-						}
-						else if (/*double_range &&*/ AWP_Jump( tmp, this_org ))
-						{// Can jump there!
-							if (!FOLIAGE_TreeSolidBlocking_AWP_Path(this_org, tmp))
-							{
-								nodes[node].links[linknum].targetNode = loop;
-								nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
-								nodes[node].links[linknum].flags |= NODE_JUMP;
-								linknum++;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-#else
 	vec3_t	upOrg;
 	int		linknum = 0;
 
@@ -2559,48 +2456,56 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 			{// Force jump...
 				addNode->links[linknum].flags |= NODE_JUMP;
 			}
-
-			linknum++;
-			continue;
-		}
-
-		visCheck = NodeVisible(this_org, upOrg, cg.clientNum);
-
-		//0 = wall in way
-		//1 = player or no obstruction
-		//2 = useable door in the way.
-		//3 = door entity in the way.
-		if (visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/)
-		{
-			float vdist = DistanceVertical(closeNode->origin, addNode->origin);
-			float hdist = DistanceHorizontal(closeNode->origin, addNode->origin);
-
-			addNode->links[linknum].targetNode = currentNode;
-			addNode->links[linknum].cost = currentDistance + (vdist*vdist);
-			addNode->links[linknum].flags = 0;
-
-			if (hdist * 1.3 < vdist)
-			{// Force jump...
-				addNode->links[linknum].flags |= NODE_JUMP;
-			}
-			else if (AIMod_Check_Slope_Between(upOrg, this_org))
-			{// No need for jump...
-
-			}
-			else if (AWP_Jump(upOrg, this_org))
-			{// Can jump there!
-				addNode->links[linknum].flags |= NODE_JUMP;
+			else if (addNode->type == NODE_WATER || closeNode->type == NODE_WATER)
+			{
+				addNode->links[linknum].flags |= NODE_WATER;
 			}
 
-			fails = 0;
 			linknum++;
 		}
 		else
 		{
-			fails++;
+			visCheck = NodeVisible(this_org, upOrg, cg.clientNum);
+
+			//0 = wall in way
+			//1 = player or no obstruction
+			//2 = useable door in the way.
+			//3 = door entity in the way.
+			if (visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/)
+			{
+				float vdist = DistanceVertical(closeNode->origin, addNode->origin);
+				float hdist = DistanceHorizontal(closeNode->origin, addNode->origin);
+
+				addNode->links[linknum].targetNode = currentNode;
+				addNode->links[linknum].cost = currentDistance + (vdist*vdist);
+				addNode->links[linknum].flags = 0;
+
+				if (hdist * 1.3 < vdist)
+				{// Force jump...
+					addNode->links[linknum].flags |= NODE_JUMP;
+				}
+				else if (addNode->type == NODE_WATER || closeNode->type == NODE_WATER)
+				{
+					addNode->links[linknum].flags |= NODE_WATER;
+				}
+				else if (AIMod_Check_Slope_Between(upOrg, this_org))
+				{// No need for jump...
+
+				}
+				else if (AWP_Jump(upOrg, this_org))
+				{// Can jump there!
+					addNode->links[linknum].flags |= NODE_JUMP;
+				}
+
+				fails = 0;
+				linknum++;
+			}
+			else
+			{
+				fails++;
+			}
 		}
 	}
-#endif
 
 	nodes[node].enodenum = linknum;
 
@@ -2637,8 +2542,6 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 {	// Need to check for duck (etc) nodes and mark them...
 	trace_t tr;
 	vec3_t	up, temp, uporg;
-	vec3_t	tankMaxsSize = {96, 96, 0};
-	vec3_t	tankMinsSize = {-96, -96, 0};
 
 	if (!DO_FAST_LINK)
 	{
@@ -2661,13 +2564,21 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an ice (slick) node.\n", GAME_VERSION, node );
 		}
 
+		VectorCopy(nodes[node].origin, temp);
+		temp[2] += 1;
+		nodes[node].type &= ~NODE_WATER;
+		VectorCopy(nodes[node].origin, up);
+		up[2] -= 256.0;
+		CG_Trace(&tr, nodes[node].origin, NULL, NULL, up, -1, MASK_SHOT | MASK_OPAQUE | MASK_WATER /*MASK_ALL*/);
+
+		if ((tr.contents & CONTENTS_WATER) || (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		{	// This node is on slippery ice... Mark it...
+			nodes[node].type |= NODE_WATER;
+			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an water node.\n", GAME_VERSION, node );
+		}
+
 		VectorCopy(nodes[node].origin, uporg);
 		uporg[2]+=104;
-
-		//if ( TankNodeVisible( nodes[node].origin, uporg, tankMinsSize, tankMaxsSize, -1) == 1 )
-		//{
-		//	nodes[node].type |= NODE_LAND_VEHICLE;
-		//}
 	}
 }
 
@@ -3592,7 +3503,7 @@ float GroundHeightAt ( vec3_t org )
 		return -131072.0f;
 	}
 
-	if ( tr.contents & CONTENTS_WATER )
+	if (!DO_WATER && (tr.contents & CONTENTS_WATER) )
 	{// Water. Bad m'kay...
 		return -131072.0f;
 	}
@@ -3894,19 +3805,31 @@ float FloorHeightAt ( vec3_t org )
 		return 131072.0f;
 	}
 
-	if ( /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
+	if (!DO_WATER && /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
 	{// Water... I'm just gonna ignore these!
-		//trap->Print("CONTENTS_WATER\n");
-		if (DO_NOWATER)
-			return -131072.0f;
-		else
-			return 131072.0f;
+		trap->Print("CONTENTS_WATER\n");
+		return 131072.0f;
 	}
 
-	if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
+	if ( !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
 	{// Invisible surface... I'm just gonna ignore these!
-		//trap->Print("CONTENTS_TRANSLUCENT\n");
-		return 131072.0f;
+		if (DO_WATER)
+		{
+			if (/*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+			{
+
+			}
+			else
+			{
+				//trap->Print("CONTENTS_TRANSLUCENT\n");
+				return 131072.0f;
+			}
+		}
+		else
+		{
+			//trap->Print("CONTENTS_TRANSLUCENT\n");
+			return 131072.0f;
+		}
 	}
 
 	aw_floor_trace_hit_mover = qfalse;
@@ -5341,7 +5264,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[2] += (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/ );
 
 			if ( tr.endpos[2] < mapMins[2] )
 			{
@@ -5374,7 +5297,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[2] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/ );
 			if ( tr.endpos[2] > mapMaxs[2] )
 			{
 				mapMaxs[2] = tr.endpos[2];
@@ -5410,7 +5333,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[0] += (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/ );
 			if ( tr.endpos[0] < mapMins[0] )
 			{
 				starty += INCRUMENT;
@@ -5442,7 +5365,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[0] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/ );
 			if ( tr.endpos[0] > mapMaxs[0] )
 			{
 				mapMaxs[0] = tr.endpos[0];
@@ -5478,7 +5401,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[1] += (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/ );
 			if ( tr.endpos[1] < mapMins[1] )
 			{
 				mapMins[1] = tr.endpos[1];
@@ -5510,7 +5433,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[1] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/ );
 			if ( tr.endpos[1] > mapMaxs[1] )
 			{
 				mapMaxs[1] = tr.endpos[1];
@@ -5627,6 +5550,9 @@ qboolean MaterialIsValidForWP(int materialType)
 		return qtrue;
 		break;
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		if (DO_WATER) 
+			return qtrue;
+		break;
 	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 		break;
@@ -5729,7 +5655,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					VectorSet(org2, startx, starty, startz);
 					org2[2] -= (MAX_MAP_SIZE * 2);
 
-					CG_Trace(&tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER);
+					CG_Trace(&tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID /*| MASK_WATER*/);
 
 					if (tr.endpos[2] > highest_z_point)
 					{
@@ -5902,7 +5828,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-					if ( tr.contents & CONTENTS_WATER )
+					if ( !DO_WATER && (tr.contents & CONTENTS_WATER) )
 					{// Anything below here is underwater...
 						continue;
 					}
@@ -5912,7 +5838,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-					if ( tr.contents & CONTENTS_TRANSLUCENT )
+					if ( (tr.contents & CONTENTS_TRANSLUCENT) && !(DO_WATER && (tr.contents & CONTENTS_WATER)))
 					{// Invisible surface... I'm just gonna ignore these!
 						continue;
 					}
@@ -5948,10 +5874,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-					if (!AIMod_AutoWaypoint_Check_PlayerWidth(pos2))
+					/*if (!AIMod_AutoWaypoint_Check_PlayerWidth(pos2))
 					{
 						continue;
-					}
+					}*/
 
 					if ( tr.fraction != 1
 						&& tr.entityNum != ENTITYNUM_NONE
@@ -6836,7 +6762,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method> <vischeck>^5. (vicheck can be anything)\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method> <novischeck>^5. (novicheck can be anything)\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are: Generally only a pathtest pass is needed.\n" );
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to Warzone format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
@@ -6855,9 +6781,9 @@ void AIMod_AutoWaypoint_Clean ( void )
 	}
 
 	if ( trap->Cmd_Argc() >= 2 )
-		DO_FAST_LINK = qfalse;
-	else
 		DO_FAST_LINK = qtrue;
+	else
+		DO_FAST_LINK = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 
@@ -6980,17 +6906,16 @@ AIMod_AutoWaypoint ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> ^5or ^3/awp <method> <scatter_distance>^5. Distance is optional.\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> <openspread>^5. Distance and Openspread are optional.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"altmethod\" ^5- For standard multi-level maps (alternative method).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nosky\" ^5- For standard multi-level maps. Don't check for sky.\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowater\" ^5- For standard multi-level maps.\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"openspread\" ^5- This version spreads out waypoints in large open areas. May be inacurate indoors.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"water\" ^5- For standard multi-level maps. Also add waypoints on water.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"translucent\" ^5- Allow translucent surfaces (for maps with surfaces being ignored by standard).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"fast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowaterfast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"waterfast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"ultrafast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"noclean\" ^5- For standard multi-level maps (with no cleaning passes).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"outdoor_only\" ^5- For standard single level maps.\n");
@@ -7002,7 +6927,7 @@ AIMod_AutoWaypoint ( void )
 	DO_TRANSLUCENT = qfalse;
 	DO_FAST_LINK = qfalse;
 	DO_ULTRAFAST = qfalse;
-	DO_NOWATER = qfalse;
+	DO_WATER = qfalse;
 	DO_OPEN_AREA_SPREAD = qfalse;
 	DO_NEW_METHOD = qfalse;
 
@@ -7027,6 +6952,10 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
+
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
@@ -7058,42 +6987,14 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
-			waypoint_scatter_distance = dist;
-			AIMod_AutoWaypoint_StandardMethod();
-
-			waypoint_scatter_distance = original_wp_scatter_dist;
-		}
-		else
-		{
-			AIMod_AutoWaypoint_StandardMethod();
-		}
-	}
-	else if ( Q_stricmp( str, "openspread") == 0 )
-	{
-		if ( trap->Cmd_Argc() >= 2 )
-		{
-			// Override normal scatter distance...
-			int dist = waypoint_scatter_distance;
-
-			trap->Cmd_Argv( 2, str, sizeof(str) );
-			dist = atoi(str);
-
-			if (dist <= 4)
-			{
-				// Fallback and warning...
-				dist = original_wp_scatter_dist;
-
-				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
-			}
-
-			DO_OPEN_AREA_SPREAD = qtrue;
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
 			waypoint_scatter_distance = original_wp_scatter_dist;
-
-			DO_OPEN_AREA_SPREAD = qfalse;
 		}
 		else
 		{
@@ -7120,6 +7021,10 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
+
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7132,9 +7037,9 @@ AIMod_AutoWaypoint ( void )
 
 		DO_NOSKY = qfalse;
 	}
-	else if ( Q_stricmp( str, "nowater") == 0 )
+	else if ( Q_stricmp( str, "water") == 0 )
 	{
-		DO_NOWATER = qtrue;
+		DO_WATER = qtrue;
 
 		if ( trap->Cmd_Argc() >= 2 )
 		{
@@ -7152,6 +7057,10 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
+
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7162,7 +7071,7 @@ AIMod_AutoWaypoint ( void )
 			AIMod_AutoWaypoint_StandardMethod();
 		}
 
-		DO_NOWATER = qfalse;
+		DO_WATER = qfalse;
 	}
 	else if ( Q_stricmp( str, "fast") == 0 )
 	{
@@ -7183,6 +7092,10 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
+
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
@@ -7217,6 +7130,10 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
+
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7230,11 +7147,11 @@ AIMod_AutoWaypoint ( void )
 		DO_FAST_LINK = qfalse;
 		DO_ULTRAFAST = qfalse;
 	}
-	else if ( Q_stricmp( str, "nowaterfast") == 0 )
+	else if ( Q_stricmp( str, "waterfast") == 0 )
 	{
 		DO_FAST_LINK = qtrue;
 		DO_ULTRAFAST = qtrue;
-		DO_NOWATER = qtrue;
+		DO_WATER = qtrue;
 
 		if ( trap->Cmd_Argc() >= 2 )
 		{
@@ -7252,6 +7169,10 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
+
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7264,7 +7185,7 @@ AIMod_AutoWaypoint ( void )
 
 		DO_FAST_LINK = qfalse;
 		DO_ULTRAFAST = qfalse;
-		DO_NOWATER = qfalse;
+		DO_WATER = qfalse;
 	}
 	else if ( Q_stricmp( str, "thorough") == 0 )
 	{
@@ -7283,6 +7204,10 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
+
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 
@@ -7317,6 +7242,10 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
+			trap->Cmd_Argv(3, str, sizeof(str));
+			if (str[0] != '\0')
+				DO_OPEN_AREA_SPREAD = qtrue;
+
 			waypoint_scatter_distance = dist;
 
 			DO_TRANSLUCENT = qtrue;
@@ -7343,6 +7272,8 @@ AIMod_AutoWaypoint ( void )
 	}*/
 
 	//AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qtrue, qtrue, qfalse);
+
+	DO_OPEN_AREA_SPREAD = qfalse;
 }
 
 //
@@ -7511,7 +7442,7 @@ int ClosestNodeTo(vec3_t origin, qboolean isEntity)
 {
 	int		i;
 	float	AREA_SEPERATION = DEFAULT_AREA_SEPERATION;
-	float	closest_dist = 1024.0f;//AREA_SEPERATION*1.5;
+	float	closest_dist = 8192.0f;// 1024.0f;//AREA_SEPERATION*1.5;
 	int		closest_node = -1;
 
 	for (i = 0; i < number_of_nodes; i++)
@@ -7547,36 +7478,43 @@ int		aw_num_bad_surfaces = 0;
 
 /* */
 int
-AI_PM_GroundTrace ( vec3_t point, int clientNum )
+AI_PM_GroundTrace ( vec3_t point, int clientNum, trace_t *trace )
 {
 	vec3_t	playerMins = {-18, -18, -24};
 	vec3_t	playerMaxs = {18, 18, 48};
-	trace_t trace;
 	vec3_t	point2;
 	VectorCopy( point, point2 );
 	point2[2] -= 128.0f;
 
 	bad_surface = qfalse;
 
-	CG_Trace( &trace, point, playerMins, playerMaxs, point2, clientNum, (MASK_PLAYERSOLID | MASK_WATER) & ~CONTENTS_BODY/*MASK_SHOT*/ );
+	CG_Trace( trace, point, playerMins, playerMaxs, point2, clientNum, (MASK_PLAYERSOLID | MASK_WATER) & ~CONTENTS_BODY/*MASK_SHOT*/ );
 
 	//if ( (trace.surfaceFlags & SURF_NODRAW) && (trace.surfaceFlags & SURF_NOMARKS) && !HasPortalFlags(trace.surfaceFlags, trace.contents) )
 	//	bad_surface = qtrue;
 
 	/* TESTING THIS */
-	if ( (trace.surfaceFlags & SURF_NODRAW)
-		&& (trace.surfaceFlags & SURF_NOMARKS)
+	if ( (trace->surfaceFlags & SURF_NODRAW)
+		&& (trace->surfaceFlags & SURF_NOMARKS)
+		&& !((trace->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 		&& !(
 #ifndef __DISABLE_PLAYERCLIP__
-		(trace.contents & CONTENTS_PLAYERCLIP) &&
+		(trace->contents & CONTENTS_PLAYERCLIP) &&
 #endif //__DISABLE_PLAYERCLIP__
-		(trace.contents & CONTENTS_TRANSLUCENT)) )
+		(trace->contents & CONTENTS_TRANSLUCENT)) )
 		bad_surface = qtrue;
 
-	if ( (trace.surfaceFlags & SURF_SKY) )
+	if ( (trace->surfaceFlags & SURF_SKY) )
 		bad_surface = qtrue;
 
-	return (trace.contents);
+	if ((trace->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+	{
+		int contents = trace->contents;
+		contents |= CONTENTS_WATER;
+		return contents;
+	}
+
+	return (trace->contents);
 }
 
 void AIMOD_AI_InitNodeContentsFlags ( void )
@@ -7585,13 +7523,14 @@ void AIMOD_AI_InitNodeContentsFlags ( void )
 
 	for (i = 0; i < number_of_nodes; i++)
 	{
+		trace_t tr;
 		int contents = 0;
 		vec3_t up_pos;
 
 		VectorCopy(nodes[i].origin, up_pos);
 		up_pos[2]+= 32;
 
-		contents = AI_PM_GroundTrace(nodes[i].origin, -1);
+		contents = AI_PM_GroundTrace(nodes[i].origin, -1, &tr);
 
 		if (contents & CONTENTS_LAVA)
 		{// Not ICE, but still avoid if possible!
@@ -7605,7 +7544,7 @@ void AIMOD_AI_InitNodeContentsFlags ( void )
 				nodes[i].type |= NODE_ICE;
 		}
 
-		if (contents & CONTENTS_WATER)
+		if (contents & CONTENTS_WATER || (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER || (tr.contents & CONTENTS_WATER))
 		{
 			nodes[i].type |= NODE_WATER;
 		}
@@ -8395,7 +8334,7 @@ qboolean WP_CheckInSolid (vec3_t position)
 	VectorSet(maxs, 15, 15, DEFAULT_MAXS_2);
 
 	VectorCopy(position, pos);
-	pos[2]+=28;
+	pos[2] += 32;// 28;
 	VectorCopy(pos, end);
 	end[2] += mins[2];
 	mins[2] = 0;
@@ -8420,10 +8359,9 @@ qboolean Warzone_CheckBelowWaypoint( int wp, qboolean checkSurfaces )
 	vec3_t org, org2;
 
 	VectorCopy(nodes[wp].origin, org);
+	org[2] += 24;
 
 	if (WP_CheckInSolid(org)) return qfalse;
-
-	org[2]+=24;
 
 	if (checkSurfaces)
 	{
@@ -9265,7 +9203,14 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 	}
 	else
 #endif //__COVER_SPOTS__
-	if (link_flags & NODE_JUMP)
+	if (link_flags & NODE_WATER || nodes[wp_from].type == NODE_WATER || nodes[wp_to].type == NODE_WATER)
+	{// This is a water link... Display in yellow..
+		re.shaderRGBA[0] = 0xff;
+		re.shaderRGBA[1] = 0xff;
+		re.shaderRGBA[2] = 0x00;
+		re.shaderRGBA[3] = 0xff;
+	}
+	else if (link_flags & NODE_JUMP)
 	{// This is a jump-to link... Display in blue..
 		re.shaderRGBA[0] = 0x00;
 		re.shaderRGBA[1] = 0x00;
