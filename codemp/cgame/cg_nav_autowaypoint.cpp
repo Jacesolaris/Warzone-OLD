@@ -6829,7 +6829,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method> <novischeck>^5. (novicheck can be anything)\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method> <novischeck 0/1>^5. (novicheck can be anything)\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are: Generally only a pathtest pass is needed.\n" );
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to Warzone format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
@@ -6847,10 +6847,19 @@ void AIMod_AutoWaypoint_Clean ( void )
 		return;
 	}
 
-	if ( trap->Cmd_Argc() >= 2 )
-		DO_FAST_LINK = qtrue;
+	if (trap->Cmd_Argc() >= 2)
+	{
+		trap->Cmd_Argv(2, str, sizeof(str));
+
+		if (atoi(str) == 1)
+			DO_FAST_LINK = qtrue;
+		else
+			DO_FAST_LINK = qfalse;
+	}
 	else
+	{
 		DO_FAST_LINK = qfalse;
+	}
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 
