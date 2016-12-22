@@ -28,6 +28,30 @@ uint32_t VisibilityDataClusterBytesCount;
 void *PatchesData;
 uint32_t PatchesDataCount;
 
+//#define __RANDOM_TERRAIN_GENERATOR__
+
+#ifdef __RANDOM_TERRAIN_GENERATOR__
+#include "../terrainGenerator/rfHillTerrain.h"
+
+using namespace RobotFrog; // the class is in this namespace
+void Terrain(void)
+{
+	HillTerrain *terrain = new RobotFrog::HillTerrain/*terrain()*/; // you can also specify terrain params here
+
+	terrain->SetIsland(true);
+	terrain->Generate();
+	
+	for (int x = 0; x < terrain->GetSize(); ++x)
+	{
+		for (int y = 0; y < terrain->GetSize(); ++y)
+		{
+			float z = terrain->GetCell(x, y);
+			// do whatever with the z values here to draw your terrain
+		}
+	}
+}
+#endif //__RANDOM_TERRAIN_GENERATOR__
+
 #ifdef BSPC
 
 #include "../bspc/l_qfiles.h"

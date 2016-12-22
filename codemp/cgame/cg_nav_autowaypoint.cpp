@@ -108,9 +108,11 @@ qboolean DO_TRANSLUCENT = qfalse;
 qboolean DO_FAST_LINK = qfalse;
 qboolean DO_ULTRAFAST = qfalse;
 qboolean DO_WATER = qfalse;
+qboolean DO_ROCK = qfalse;
 qboolean DO_NOSKY = qfalse;
 qboolean DO_OPEN_AREA_SPREAD = qfalse;
 qboolean DO_NEW_METHOD = qfalse;
+qboolean DO_EXTRA_REACH = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -2387,7 +2389,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 	VectorCopy(addNode->origin, upOrg);
 	upOrg[2] += 8;
 
-	while (linknum < MAX_AWP_NODELINKS)
+	while (linknum < DO_EXTRA_REACH ? MAX_NODELINKS : MAX_AWP_NODELINKS)
 	{
 		float	currentClosestDistance = 999999.0;
 		int		currentClosestNode = -1;
@@ -2396,7 +2398,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 
 		for (int loop = 0; loop < number_of_nodes; loop++)
 		{
-			if (linknum >= MAX_AWP_NODELINKS)
+			if (linknum >= DO_EXTRA_REACH ? MAX_NODELINKS : MAX_AWP_NODELINKS)
 			{
 				break;
 			}
@@ -2678,7 +2680,7 @@ ConnectNodes ( int from, int to, int flags )
 {
 
 	//check that we don't have too many connections from the 'from' node already
-	if ( nodes[from].enodenum + 1 > MAX_AWP_NODELINKS)
+	if ( nodes[from].enodenum + 1 > DO_EXTRA_REACH ? MAX_NODELINKS : MAX_AWP_NODELINKS)
 	{
 		return ( qfalse );
 	}
@@ -3442,7 +3444,7 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 	VectorCopy(origin, org);
 	org[2]+=4.0;
 	VectorCopy(origin, down_org);
-	down_org[2] = 131072.0f;
+	down_org[2] = MAX_MAP_SIZE;
 
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID/*|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT*/ );
@@ -3452,6 +3454,12 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 	//
 
 	if (tr.fraction >= 1.0 || tr.endpos[2] >= down_org[2])//tr.surfaceFlags == 0 && tr.contents == 0)
+		return qfalse;
+
+	if (!DO_ROCK && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+		return qfalse;
+
+	if (DO_WATER && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 		return qfalse;
 
 	return qtrue;
@@ -3466,7 +3474,7 @@ float GroundHeightNoSurfaceChecks ( vec3_t org )
 	org1[2]+=48;
 
 	VectorCopy(org, org2);
-	org2[2]= -131072.0f;
+	org2[2]= -MAX_MAP_SIZE;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
 
@@ -3483,29 +3491,29 @@ float GroundHeightAt ( vec3_t org )
 	org1[2]+=48;
 
 	VectorCopy(org, org2);
-	org2[2]= -131072.0f;
+	org2[2]= -MAX_MAP_SIZE;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 
 	if ( tr.startsolid || tr.allsolid )
 	{
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 	}
 
 	if ( tr.surfaceFlags & SURF_SKY )
 	{// Sky...
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 	}
 
 	if ( tr.contents & CONTENTS_TRIGGER )
 	{// Trigger hurt???
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 	}
 
 	if (!DO_WATER && (tr.contents & CONTENTS_WATER) )
 	{// Water. Bad m'kay...
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 	}
 
 //	if ( (tr.surfaceFlags & SURF_NODRAW)
@@ -3513,11 +3521,11 @@ float GroundHeightAt ( vec3_t org )
 //		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags)
 //		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/ )
 //	{// Sky...
-//		return -131072.0f;
+//		return -MAX_MAP_SIZE;
 //	}
 
 	if (tr.endpos[2] < -131000)
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 
 	// UQ1: MOVER TEST
 	if ( tr.fraction != 1
@@ -3557,7 +3565,7 @@ float GroundHeightAt ( vec3_t org )
 //		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/)
 //	{// Sky...
 //		//trap->Print("(tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS)\n");
-//		return 131072.0f;
+//		return MAX_MAP_SIZE;
 //	}
 
 	VectorCopy(org, org1);
@@ -3565,12 +3573,12 @@ float GroundHeightAt ( vec3_t org )
 
 	if (WP_CheckInSolid(org1))
 	{
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	if (!CG_HaveRoofAbove(org1))
 	{
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	return tr.endpos[2];
@@ -3668,7 +3676,7 @@ float ShortestWallRangeFrom ( vec3_t org )
 	trace_t tr;
 	vec3_t org1, org2;
 	float dist;
-	float closestRange = 131072.0f;
+	float closestRange = MAX_MAP_SIZE;
 
 	if (!DO_OPEN_AREA_SPREAD) return 0.0;
 
@@ -3725,6 +3733,58 @@ float ShortestWallRangeFrom ( vec3_t org )
 	return closestRange;
 }
 
+qboolean MaterialIsValidForWP(int materialType)
+{
+	switch (materialType)
+	{
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+	case MATERIAL_SAND:				// 8			// sandy beach
+	case MATERIAL_CARPET:			// 27			// lush carpet
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+	case MATERIAL_TILES:			// 26			// tiled floor
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+	case MATERIAL_CANVAS:			// 22			// tent material
+	case MATERIAL_MARBLE:			// 12			// marble floors
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+	case MATERIAL_MUD:				// 17			// wet soil
+	case MATERIAL_DIRT:				// 7			// hard mud
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+	case MATERIAL_PLASTIC:			// 25			//
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+	case MATERIAL_ARMOR:			// 30			// body armor
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+	case MATERIAL_GLASS:			// 10			//
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		return qtrue;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		if (DO_ROCK)
+			return qtrue;
+		break;
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		if (DO_WATER)
+			return qtrue;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		break;
+	default:
+		//return qtrue; // no material.. just accept...
+		break;
+	}
+
+	return qfalse;
+}
+
 qboolean aw_floor_trace_hit_mover = qfalse;
 int aw_floor_trace_hit_ent = -1;
 
@@ -3733,28 +3793,45 @@ float FloorHeightAt ( vec3_t org )
 	trace_t tr;
 	vec3_t org1, org2, slopeangles;
 	float pitch = 0;
+	qboolean HIT_WATER = qfalse;
 
 	aw_floor_trace_hit_mover = qfalse;
 
 	/*
 	if (AIMOD_IsWaypointHeightMarkedAsBad( org ))
 	{
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 	*/
 
 	VectorCopy(org, org1);
 	org1[2]+=8;
-
+	
 	VectorCopy(org, org2);
-	org2[2]= -131072.0f;
+	org2[2]= -MAX_MAP_SIZE;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_WATER );
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 
 	if (tr.startsolid)
 	{
-		return 131072.0f;
+		if (DO_WATER && (tr.contents & CONTENTS_WATER))
+		{// If we started in water, do another trace ignoring water...
+			VectorCopy(org, org1);
+			org1[2] += 8;
+
+			VectorCopy(org, org2);
+			org2[2] = -MAX_MAP_SIZE;
+
+			HIT_WATER = qtrue;
+
+			CG_Trace(&tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
+		}
+	}
+
+	if (tr.startsolid)
+	{
+		return MAX_MAP_SIZE;
 	}
 
 	if ( tr.fraction != 1
@@ -3785,30 +3862,30 @@ float FloorHeightAt ( vec3_t org )
 
 	if (tr.endpos[2] < -131000.0f /*|| tr.endpos[2] < cg.mapcoordsMins[2]-2000*/)
 	{
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 	}
 
 	if ( tr.surfaceFlags & SURF_SKY )
 	{// Sky...
 		//trap->Print("SURF_SKY\n");
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	if ( tr.contents & CONTENTS_LAVA )
 	{// Lava...
 		//trap->Print("CONTENTS_LAVA\n");
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	if ( /*(tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) &&*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_NONE)
 	{// Invisible brush?!?!? Probably skybox above or below the map...
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	if (!DO_WATER && /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
 	{// Water... I'm just gonna ignore these!
-		trap->Print("CONTENTS_WATER\n");
-		return 131072.0f;
+		//trap->Print("CONTENTS_WATER\n");
+		return MAX_MAP_SIZE;
 	}
 
 	if ( !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
@@ -3822,14 +3899,22 @@ float FloorHeightAt ( vec3_t org )
 			else
 			{
 				//trap->Print("CONTENTS_TRANSLUCENT\n");
-				return 131072.0f;
+				return MAX_MAP_SIZE;
 			}
 		}
 		else
 		{
 			//trap->Print("CONTENTS_TRANSLUCENT\n");
-			return 131072.0f;
+			return MAX_MAP_SIZE;
 		}
+	}
+
+	if (!MaterialIsValidForWP((tr.surfaceFlags & MATERIAL_MASK)))
+	{
+		if (!DO_ROCK && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+			return -MAX_MAP_SIZE;
+
+		return MAX_MAP_SIZE;
 	}
 
 	aw_floor_trace_hit_mover = qfalse;
@@ -3849,18 +3934,18 @@ float FloorHeightAt ( vec3_t org )
 	pitch += 90.0f;
 
 	if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
-		return 131072.0f; // bad slope...
+		return MAX_MAP_SIZE; // bad slope...
 
 	if ( tr.startsolid || tr.allsolid )
 	{
 		//trap->Print("ALLSOLID\n");
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	if (DO_THOROUGH && BadHeightNearby( org ))
 	{
 		//trap->Print("BAD_HEIGHT\n");
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	VectorCopy(org, org1);
@@ -3869,13 +3954,18 @@ float FloorHeightAt ( vec3_t org )
 	if (WP_CheckInSolid(org1))
 	{
 		//trap->Print("INSOLID\n");
-		return 131072.0f;
+		return MAX_MAP_SIZE;
 	}
 
 	if (!CG_HaveRoofAbove(org1))
 	{
 		//trap->Print("NOROOF\n");
-		return 131072.0f;
+		return MAX_MAP_SIZE;
+	}
+
+	if (HIT_WATER)
+	{// Always skip water bottom, but let the traces under it continue (eg: areas under the water)...
+		return MAX_MAP_SIZE;
 	}
 
 	return tr.endpos[2];
@@ -3891,7 +3981,7 @@ float RoofHeightAt ( vec3_t org )
 	org1[2]+=4;
 
 	VectorCopy(org, org2);
-	org2[2]= 131072.0f;
+	org2[2]= MAX_MAP_SIZE;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
@@ -3899,7 +3989,7 @@ float RoofHeightAt ( vec3_t org )
 	if ( tr.startsolid || tr.allsolid )
 	{
 		//trap->Print("start or allsolid.\n");
-		return -131072.0f;
+		return -MAX_MAP_SIZE;
 	}
 
 	if (tr.surfaceFlags & SURF_SKY)
@@ -4093,7 +4183,7 @@ void CG_ShowForwardSurface ( void )
 
 	VectorCopy(cg.refdef.vieworg, org);
 	AngleVectors( cg.refdef.viewangles, forward, NULL, NULL );
-	VectorMA( cg.refdef.vieworg, 131072.0f, forward, down_org );
+	VectorMA( cg.refdef.vieworg, MAX_MAP_SIZE, forward, down_org );
 
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
@@ -4253,7 +4343,7 @@ void CG_ShowSurface ( void )
 	VectorCopy(cg_entities[cg.clientNum].lerpOrigin, down_org);
 	//down_org[2]-=48;
 	//down_org[2] = -65000;
-	down_org[2] = -131072.0f;
+	down_org[2] = -MAX_MAP_SIZE;
 
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
@@ -4413,7 +4503,7 @@ void CG_ShowSkySurface ( void )
 	VectorCopy(cg_entities[cg.clientNum].lerpOrigin, down_org);
 	//down_org[2]-=48;
 	//down_org[2] = -65000;
-	down_org[2] = +131072.0f;
+	down_org[2] = +MAX_MAP_SIZE;
 
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
@@ -4955,18 +5045,18 @@ void RepairPosition ( intvec3_t org1 )
 	{// Bad waypoint. Remove it!
 		fixed_position[0] = 0.0f;
 		fixed_position[1] = 0.0f;
-		fixed_position[2] = -131072.0f;
+		fixed_position[2] = -MAX_MAP_SIZE;
 		return;
 	}
 
 	// New floor test...
 	/*fixed_position[2]=FloorHeightAt(fixed_position)+16;
 
-	if (fixed_position[2] == -131072.0f || fixed_position[2] == 131072.0f)
+	if (fixed_position[2] == -MAX_MAP_SIZE || fixed_position[2] == MAX_MAP_SIZE)
 	{// Bad waypoint. Remove it!
 		fixed_position[0] = 0.0f;
 		fixed_position[1] = 0.0f;
-		fixed_position[2] = -131072.0f;
+		fixed_position[2] = -MAX_MAP_SIZE;
 		return;
 	}*/
 
@@ -5515,54 +5605,6 @@ AIMod_GetMapBounts ( void )
 	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS2", va("%f", mapMaxs[2]));
 }
 
-qboolean MaterialIsValidForWP(int materialType)
-{
-	switch( materialType )
-	{
-	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-	case MATERIAL_SAND:				// 8			// sandy beach
-	case MATERIAL_CARPET:			// 27			// lush carpet
-	case MATERIAL_GRAVEL:			// 9			// lots of small stones
-	case MATERIAL_ROCK:				// 23			//
-	case MATERIAL_TILES:			// 26			// tiled floor
-	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
-	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-	case MATERIAL_CANVAS:			// 22			// tent material
-	case MATERIAL_MARBLE:			// 12			// marble floors
-	case MATERIAL_SNOW:				// 14			// freshly laid snow
-	case MATERIAL_MUD:				// 17			// wet soil
-	case MATERIAL_DIRT:				// 7			// hard mud
-	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-	case MATERIAL_PLASTIC:			// 25			//
-	case MATERIAL_PLASTER:			// 28			// drywall style plaster
-	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-	case MATERIAL_ARMOR:			// 30			// body armor
-	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-	case MATERIAL_GLASS:			// 10			//
-	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		return qtrue;
-		break;
-	case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		if (DO_WATER) 
-			return qtrue;
-		break;
-	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		break;
-	default:
-		//return qtrue; // no material.. just accept...
-		break;
-	}
-
-	return qfalse;
-}
 
 extern qboolean FOLIAGE_TreeSolidBlocking_AWP(vec3_t moveOrg);
 
@@ -5949,6 +5991,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 			trap->Print( "^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", GAME_VERSION );
 			aw_percent_complete = 0.0f;
 			trap->S_Shutup(qfalse);
+			AIMod_AutoWaypoint_Free_Memory();
 			return;
 		}
 
@@ -6080,6 +6123,11 @@ omp_set_nested(0);
 			float	scatter_mult_X = 1.0;
 			vec3_t	last_org;
 
+			if (areas+1 >= MAX_TEMP_AREAS)
+			{
+				break;
+			}
+
 			// Vary X scatter distance...
 			if (scatter_x == scatter) scatter_x = scatter_min;
 			else if (scatter_x == scatter) scatter_x = scatter_max;
@@ -6106,6 +6154,11 @@ omp_set_nested(0);
 				float	current_height = mapMaxs[2]; // Init the current height to max map height...
 				float	scatter_mult_Y = 1.0;
 
+				if (areas + 1 >= MAX_TEMP_AREAS)
+				{
+					break;
+				}
+
 				// Vary Y scatter distance...
 				if (scatter_y == scatter) scatter_y = scatter_min;
 				else if (scatter_y == scatter) scatter_y = scatter_max;
@@ -6122,6 +6175,11 @@ omp_set_nested(0);
 					float		floor = 0;
 					qboolean	force_continue = qfalse;
 					clock_t		current_time = clock();
+
+					if (areas + 1 >= MAX_TEMP_AREAS)
+					{
+						break;
+					}
 
 					// Update the current test number...
 					final_tests++;
@@ -6237,6 +6295,15 @@ omp_set_nested(0);
 					}
 				}
 			}
+		}
+
+		if (areas + 1 >= MAX_TEMP_AREAS)
+		{
+			trap->Print("^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", GAME_VERSION);
+			aw_percent_complete = 0.0f;
+			trap->S_Shutup(qfalse);
+			AIMod_AutoWaypoint_Free_Memory();
+			return;
 		}
 	}
 
@@ -6373,7 +6440,7 @@ omp_set_nested(0);
 			area_org[1] = arealist[i][1];
 			area_org[2] = arealist[i][2];
 
-			if (area_org[2] <= -131072.0f)
+			if (area_org[2] <= -MAX_MAP_SIZE)
 			{// This is a bad height!
 				continue;
 			}
@@ -6594,7 +6661,7 @@ omp_set_nested(0);
 			area_org[1] = arealist[i][1];
 			area_org[2] = arealist[i][2];
 
-			if (area_org[2] <= -131072.0f)
+			if (area_org[2] <= -MAX_MAP_SIZE)
 			{// This is a bad height!
 				continue;
 			}
@@ -6906,7 +6973,7 @@ AIMod_AutoWaypoint ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> <openspread>^5. Distance and Openspread are optional.\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> <allowRock 0/1> <openspread 0/1>^5. Distance, allowRock and Openspread are optional.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"altmethod\" ^5- For standard multi-level maps (alternative method).\n");
@@ -6928,10 +6995,31 @@ AIMod_AutoWaypoint ( void )
 	DO_FAST_LINK = qfalse;
 	DO_ULTRAFAST = qfalse;
 	DO_WATER = qfalse;
+	DO_ROCK = qfalse;
 	DO_OPEN_AREA_SPREAD = qfalse;
 	DO_NEW_METHOD = qfalse;
 
-	trap->Cmd_Argv( 1, str, sizeof(str) );
+	if (trap->Cmd_Argc() >= 3)
+	{
+		trap->Cmd_Argv(3, str, sizeof(str));
+		if (atoi(str) == 1)
+			DO_ROCK = qtrue;
+		else
+			DO_ROCK = qfalse;
+	}
+	else
+	{
+		DO_ROCK = qtrue;
+	}
+
+	if (trap->Cmd_Argc() >= 4)
+	{
+		trap->Cmd_Argv(4, str, sizeof(str));
+		if (str[0] != '\0' && atoi(str) != 0)
+			DO_OPEN_AREA_SPREAD = qtrue;
+	}
+
+	trap->Cmd_Argv(1, str, sizeof(str));
 
 	if ( Q_stricmp( str, "altmethod") == 0 )
 	{
@@ -6952,10 +7040,6 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
-
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
@@ -6987,10 +7071,6 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
-
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7020,10 +7100,6 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
-
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
@@ -7057,10 +7133,6 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
-
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7092,10 +7164,6 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
-
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
@@ -7129,10 +7197,6 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
-
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
@@ -7169,10 +7233,6 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
-
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
@@ -7204,10 +7264,6 @@ AIMod_AutoWaypoint ( void )
 
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
-
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
 
 			waypoint_scatter_distance = dist;
 
@@ -7242,10 +7298,6 @@ AIMod_AutoWaypoint ( void )
 				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
 			}
 
-			trap->Cmd_Argv(3, str, sizeof(str));
-			if (str[0] != '\0')
-				DO_OPEN_AREA_SPREAD = qtrue;
-
 			waypoint_scatter_distance = dist;
 
 			DO_TRANSLUCENT = qtrue;
@@ -7274,6 +7326,7 @@ AIMod_AutoWaypoint ( void )
 	//AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qtrue, qtrue, qfalse);
 
 	DO_OPEN_AREA_SPREAD = qfalse;
+	DO_ROCK = qfalse;
 }
 
 //
@@ -8367,7 +8420,7 @@ qboolean Warzone_CheckBelowWaypoint( int wp, qboolean checkSurfaces )
 	{
 		VectorCopy(nodes[wp].origin, org);
 		VectorCopy(nodes[wp].origin, org2);
-		org2[2] = -131072.0f;//org[2] - 256;
+		org2[2] = -MAX_MAP_SIZE;//org[2] - 256;
 
 		CG_Trace(&tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID | CONTENTS_TRIGGER);
 
@@ -8643,11 +8696,18 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		}
 	}
 
+	DO_EXTRA_REACH = qfalse;
+
 	if (extra_reach)
+	{
+		DO_EXTRA_REACH = qtrue;
+	}
+
+	/*if (extra_reach)
 	{// 1.5x?
 		original_wp_max_distance *= 1.5f;
 	}
-	else if (convert_old)
+	else*/ if (convert_old)
 	{
 		original_wp_max_distance = 4096.0f;
 	}
@@ -8731,6 +8791,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 		AIMod_AutoWaypoint_Free_Memory();
 		AIMod_AutoWaypoint_Optimize_Free_Memory();
+		DO_EXTRA_REACH = qfalse;
 		return;
 	}
 
@@ -8996,6 +9057,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 			// Restore the original multiplier...
 			waypoint_distance_multiplier = original_wp_scatter_multiplier;
+			DO_EXTRA_REACH = qfalse;
 			return;
 		}
 		else if (total_removed == 0 && !relink_only )
@@ -9007,6 +9069,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 			// Restore the original multiplier...
 			waypoint_distance_multiplier = original_wp_scatter_multiplier;
+			DO_EXTRA_REACH = qfalse;
 			return;
 		}
 
@@ -9125,6 +9188,8 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 	// Restore the original multiplier...
 	waypoint_distance_multiplier = original_wp_scatter_multiplier;
+	
+	DO_EXTRA_REACH = qfalse;
 
 	//trap->SendConsoleCommand( "!loadnodes\n" );
 }
