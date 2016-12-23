@@ -67,4 +67,20 @@ void	    ChopDWindingInPlace( dwinding_t **dw, vec3_t normal, vec_t dist, vec_t 
 qboolean    FixDWinding( dwinding_t *dw );
 winding_t  *WindingFromDWinding( dwinding_t *w );
 
+///////////////////////////////////////////////////////////////////////////////////////
+// Below is double-precision stuff.  This was initially needed by the base winding code
+// in q3map2 brush processing.
+///////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct
+{
+	int numpoints;
+	vec3_accu_t p[4]; // variable sized
+} winding_accu_t;
+
+winding_accu_t  *BaseWindingForPlaneAccu(vec3_t normal, vec_t dist);
+void    ChopWindingInPlaceAccu(winding_accu_t **w, vec3_t normal, vec_t dist, vec_t epsilon);
+winding_t   *CopyWindingAccuToRegular(winding_accu_t *w);
+void    FreeWindingAccu(winding_accu_t *w);
+
 #endif

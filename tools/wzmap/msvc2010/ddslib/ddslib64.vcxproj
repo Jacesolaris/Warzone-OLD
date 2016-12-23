@@ -92,7 +92,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <PrecompiledHeaderOutputFile>.\Release/ddslib.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>..\build\release\x64\ddslib\</AssemblerListingLocation>
       <ObjectFileName>..\build\release\x64\ddslib\</ObjectFileName>

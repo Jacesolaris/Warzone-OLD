@@ -44,6 +44,7 @@ int irand(int min, int max)
 #define			MAX_FOREST_MODELS 64
 
 qboolean		ADD_CLIFF_FACES = qfalse;
+float			CLIFF_FACES_SCALE = 1.0;
 float			CLIFF_FACES_CULL_MULTIPLIER = 1.0;
 char			CLIFF_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
@@ -53,6 +54,7 @@ float			TREE_SCALES[MAX_FOREST_MODELS] = { 1.0 };
 float			TREE_FORCED_MAX_ANGLE[MAX_FOREST_MODELS] = { 0.0 };
 float			TREE_FORCED_BUFFER_DISTANCE[MAX_FOREST_MODELS] = { 0.0 };
 float			TREE_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
+char			TREE_FORCED_OVERRIDE_SHADER[MAX_FOREST_MODELS][128] = { 0 };
 qboolean		TREE_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { qfalse };
 
 void FOLIAGE_LoadClimateData( char *filename )
@@ -60,7 +62,10 @@ void FOLIAGE_LoadClimateData( char *filename )
 	int i = 0;
 
 	ADD_CLIFF_FACES = (qboolean)atoi(IniRead(filename, "CLIFFS", "addCliffFaces", "0"));
+	CLIFF_FACES_SCALE = atof(IniRead(filename, "CLIFFS", "cliffFacesScale", "1.0"));
 	CLIFF_FACES_CULL_MULTIPLIER = atof(IniRead(filename, "CLIFFS", "cliffFacesCullScale", "1.0"));
+
+	CLIFF_FACES_CULL_MULTIPLIER *= CLIFF_FACES_SCALE;
 
 	strcpy(CLIFF_SHADER, IniRead(filename, "CLIFFS", "cliffShader", ""));
 
@@ -88,9 +93,10 @@ void FOLIAGE_LoadClimateData( char *filename )
 		TREE_FORCED_BUFFER_DISTANCE[i] = atof(IniRead(filename, "TREES", va("treeForcedBufferDistance%i", i), "0.0"));
 		TREE_FORCED_DISTANCE_FROM_SAME[i] = atof(IniRead(filename, "TREES", va("treeForcedDistanceFromSame%i", i), "0.0"));
 		TREE_FORCED_FULLSOLID[i] = (qboolean)atoi(IniRead(filename, "TREES", va("treeForcedFullSolid%i", i), "0"));
+		strcpy(TREE_FORCED_OVERRIDE_SHADER[i], IniRead(filename, "TREES", va("overrideShader%i", i), ""));
 
 		if (strcmp(TREE_MODELS[i], ""))
-			Sys_Printf("Tree %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f. ForcedSolid: %s.\n", i, TREE_MODELS[i], TREE_OFFSETS[i], TREE_SCALES[i], TREE_FORCED_MAX_ANGLE[i], TREE_FORCED_BUFFER_DISTANCE[i], TREE_FORCED_DISTANCE_FROM_SAME[i], TREE_FORCED_FULLSOLID[i] ? "true" : "false");
+			Sys_Printf("Tree %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f. ForcedSolid: %s. Shader: %s.\n", i, TREE_MODELS[i], TREE_OFFSETS[i], TREE_SCALES[i], TREE_FORCED_MAX_ANGLE[i], TREE_FORCED_BUFFER_DISTANCE[i], TREE_FORCED_DISTANCE_FROM_SAME[i], TREE_FORCED_FULLSOLID[i] ? "true" : "false", TREE_FORCED_OVERRIDE_SHADER[i][0] != '\0' ? TREE_FORCED_OVERRIDE_SHADER[i] : "Default");
 	}
 }
 
@@ -324,7 +330,7 @@ void GenerateCliffFaces(void)
 
 			//Sys_Printf("cliff found at %f %f %f. angles0 %f %f %f. angles1 %f %f %f. angles2 %f %f %f.\n", center[0], center[1], center[2], angles[0][0], angles[0][1], angles[0][2], angles[1][0], angles[1][1], angles[1][2], angles[2][0], angles[2][1], angles[2][2]);
 
-			cliffScale[numCliffs] = smallestSize / 64.0;
+			cliffScale[numCliffs] = (smallestSize * CLIFF_FACES_SCALE) / 64.0;
 			VectorCopy(center, cliffPositions[numCliffs]);
 			VectorCopy(angles[0], cliffAngles[numCliffs]);
 			cliffAngles[numCliffs][0] += 90.0;
@@ -913,6 +919,11 @@ void GenerateMapForest ( void )
 				else
 				{
 					SetKeyValue(mapEnt, "_forcedSolid", "0");
+				}
+
+				if (TREE_FORCED_OVERRIDE_SHADER[FOLIAGE_TREE_SELECTION[i]] != '\0')
+				{
+					SetKeyValue(mapEnt, "_overrideShader", TREE_FORCED_OVERRIDE_SHADER[FOLIAGE_TREE_SELECTION[i]]);
 				}
 
 				/*{

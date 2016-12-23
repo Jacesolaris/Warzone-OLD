@@ -1529,6 +1529,10 @@ int BSPMain( int argc, char **argv )
 		if (!FOLIAGE_LoadFoliagePositions( filename ))
 		{
 			Sys_Printf( "Failed to load foliage file. No forests will be added...\n" );
+
+			char filename2[1024] = { 0 };
+			sprintf(filename2, "%s.climate", source);
+			FOLIAGE_LoadClimateData(filename2);
 		}
 		else
 		{

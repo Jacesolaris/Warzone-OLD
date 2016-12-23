@@ -157,7 +157,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <PrecompiledHeaderOutputFile>.\Release/bloodmap.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\build\release\x64\</AssemblerListingLocation>
       <ObjectFileName>.\build\release\x64\</ObjectFileName>

@@ -149,30 +149,90 @@ int CreateNewFloatPlane (vec3_t normal, vec_t dist)
 	return nummapplanes - 2;
 }
 
+#define Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX 1
+#define Q3MAP2_EXPERIMENTAL_SNAP_PLANE_FIX 1
+
 /*
 SnapNormal()
 snaps a near-axial normal vector
 */
 
-void SnapNormal( vec3_t normal )
-{
-	int		i;
+qboolean SnapNormal(vec3_t normal) {
+#if Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX
+	int i;
+	qboolean adjusted = qfalse;
 
-	for( i = 0; i < 3; i++ )
+	// A change from the original SnapNormal() is that we snap each
+	// component that's close to 0.  So for example if a normal is
+	// (0.707, 0.707, 0.0000001), it will get snapped to lie perfectly in the
+	// XY plane (its Z component will be set to 0 and its length will be
+	// normalized).  The original SnapNormal() didn't snap such vectors - it
+	// only snapped vectors that were near a perfect axis.
+
+	for (i = 0; i < 3; i++)
 	{
-		if( fabs( normal[ i ] - 1 ) < normalEpsilon )
-		{
-			VectorClear( normal );
-			normal[ i ] = 1;
-			break;
-		}
-		if( fabs( normal[ i ] - -1 ) < normalEpsilon )
-		{
-			VectorClear( normal );
-			normal[ i ] = -1;
-			break;
+		if (normal[i] != 0.0 && -normalEpsilon < normal[i] && normal[i] < normalEpsilon) {
+			normal[i] = 0.0;
+			adjusted = qtrue;
 		}
 	}
+
+	if (adjusted) {
+		VectorNormalize(normal, normal);
+		return qtrue;
+	}
+	return qfalse;
+#else
+	int i;
+
+	// I would suggest that you uncomment the following code and look at the
+	// results:
+
+	/*
+	Sys_Printf("normalEpsilon is %f\n", normalEpsilon);
+	for (i = 0;; i++)
+	{
+	normal[0] = 1.0;
+	normal[1] = 0.0;
+	normal[2] = i * 0.000001;
+	VectorNormalize(normal, normal);
+	if (1.0 - normal[0] >= normalEpsilon) {
+	Sys_Printf("(%f %f %f)\n", normal[0], normal[1], normal[2]);
+	Error("SnapNormal: test completed");
+	}
+	}
+	*/
+
+	// When the normalEpsilon is 0.00001, the loop will break out when normal is
+	// (0.999990 0.000000 0.004469).  In other words, this is the vector closest
+	// to axial that will NOT be snapped.  Anything closer will be snaped.  Now,
+	// 0.004469 is close to 1/225.  The length of a circular quarter-arc of radius
+	// 1 is PI/2, or about 1.57.  And 0.004469/1.57 is about 0.0028, or about
+	// 1/350.  Expressed a different way, 1/350 is also about 0.26/90.
+	// This means is that a normal with an angle that is within 1/4 of a degree
+	// from axial will be "snapped".  My belief is that the person who wrote the
+	// code below did not intend it this way.  I think the person intended that
+	// the epsilon be measured against the vector components close to 0, not 1.0.
+	// I think the logic should be: if 2 of the normal components are within
+	// epsilon of 0, then the vector can be snapped to be perfectly axial.
+	// We may consider adjusting the epsilon to a larger value when we make this
+	// code fix.
+
+	for (i = 0; i < 3; i++)
+	{
+		if (fabs(normal[i] - 1) < normalEpsilon) {
+			VectorClear(normal);
+			normal[i] = 1;
+			return qtrue;
+		}
+		if (fabs(normal[i] - -1) < normalEpsilon) {
+			VectorClear(normal);
+			normal[i] = -1;
+			return qtrue;
+		}
+	}
+	return qfalse;
+#endif
 }
 
 /*
@@ -193,63 +253,126 @@ void SnapPlane( vec3_t normal, vec_t *dist )
 }
 
 /*
+SnapPlaneImproved()
+snaps a plane to normal/distance epsilons, improved code
+*/
+void SnapPlaneImproved(vec3_t normal, vec_t *dist, int numPoints, const vec3_t *points) {
+	int i;
+	vec3_t center;
+	vec_t distNearestInt;
+
+	if (SnapNormal(normal)) {
+		if (numPoints > 0) {
+			// Adjust the dist so that the provided points don't drift away.
+			VectorClear(center);
+			for (i = 0; i < numPoints; i++)
+			{
+				VectorAdd(center, points[i], center);
+			}
+			for (i = 0; i < 3; i++) { center[i] = center[i] / numPoints; }
+			*dist = DotProduct(normal, center);
+		}
+	}
+
+	if (VectorIsOnAxis(normal)) {
+		// Only snap distance if the normal is an axis.  Otherwise there
+		// is nothing "natural" about snapping the distance to an integer.
+		distNearestInt = Q_rint(*dist);
+		if (-distanceEpsilon < *dist - distNearestInt && *dist - distNearestInt < distanceEpsilon) {
+			*dist = distNearestInt;
+		}
+	}
+}
+
+/*
 FindFloatPlane()
 ydnar: changed to allow a number of test points to be supplied that
 must be within an epsilon distance of the plane
 */
 
-int FindFloatPlane( vec3_t normal, vec_t dist, int numPoints, vec3_t *points )
-{
+int FindFloatPlane(vec3_t normal, vec_t dist, int numPoints, vec3_t *points)
+
 #ifdef USE_HASHING
-	int	i, j, hash, h;
-	plane_t	*p;
+
+{
+	int i, j, hash, h;
+	plane_t *p;
 	vec_t d;
-	
-	/* hash the plane */
+
+
+#if Q3MAP2_EXPERIMENTAL_SNAP_PLANE_FIX
+	SnapPlaneImproved(normal, &dist, numPoints, (const vec3_t *)points);
+#else
 	SnapPlane(normal, &dist);
+#endif
+	/* hash the plane */
 	hash = (PLANE_HASHES - 1) & (int)fabs(dist);
-	
+
 	/* search the border bins as well */
-	for( i = -1; i <= 1; i++ )
+	for (i = -1; i <= 1; i++)
 	{
 		h = (hash + i) & (PLANE_HASHES - 1);
-		for( p = planehash[ h ]; p != NULL; p = p->hash_chain )
+		for (p = planehash[h]; p != NULL; p = p->hash_chain)
 		{
 			/* do standard plane compare */
-			if( !PlaneEqual( p, normal, dist ) )
+			if (!PlaneEqual(p, normal, dist)) {
 				continue;
-			
+			}
+
 			/* ydnar: uncomment the following line for old-style plane finding */
 			//%	return p - mapplanes;
-			
-			/* ydnar: test supplied points against this plane */
-			for( j = 0; j < numPoints; j++ )
-			{
-				d = DotProduct( points[ j ], normal ) - dist;
-				if( fabs( d ) > distanceEpsilon )
-					break;
-			}
-			
-			/* found a matching plane */
-			if( j >= numPoints )
-				return p - mapplanes;
-		}
-	}
-#else
-	int		i;
-	plane_t	*p;
 
-	SnapPlane( normal, &dist );
-	for( i = 0, p = mapplanes; i < nummapplanes; i++, p++ )
-	{
-		if( PlaneEqual( p, normal, dist ) )
-			return i;
-	}
-#endif
+			/* ydnar: test supplied points against this plane */
+			for (j = 0; j < numPoints; j++)
+			{
+				// NOTE: When dist approaches 2^16, the resolution of 32 bit floating
+				// point number is greatly decreased.  The distanceEpsilon cannot be
+				// very small when world coordinates extend to 2^16.  Making the
+				// dot product here in 64 bit land will not really help the situation
+				// because the error will already be carried in dist.
+				d = DotProduct(points[j], normal) - dist;
+				d = fabs(d);
+				if (d != 0.0 && d >= distanceEpsilon) {
+					break; // Point is too far from plane.
+				}
+			}
+
+			/* found a matching plane */
+			if (j >= numPoints) {
+				return p - mapplanes;
+			}
+			}
+		}
 
 	/* none found, so create a new one */
-	return CreateNewFloatPlane( normal, dist );
+	return CreateNewFloatPlane(normal, dist);
+	}
+
+#else
+
+{
+	int i;
+	plane_t *p;
+
+#if Q3MAP2_EXPERIMENTAL_SNAP_PLANE_FIX
+	SnapPlaneImproved(normal, &dist, numPoints, (const vec3_t *)points);
+#else
+	SnapPlane(normal, &dist);
+#endif
+	for (i = 0, p = mapplanes; i < nummapplanes; i++, p++)
+	{
+		if (PlaneEqual(p, normal, dist)) {
+			return i;
+		}
+		// TODO: Note that the non-USE_HASHING code does not compute epsilons
+		// for the provided points.  It should do that.  I think this code
+		// is unmaintained because nobody sets USE_HASHING to off.
+	}
+
+	return CreateNewFloatPlane(normal, dist);
 }
+
+#endif
 
 /*
 MapPlaneFromPoints()

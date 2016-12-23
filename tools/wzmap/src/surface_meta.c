@@ -1224,7 +1224,9 @@ void SmoothMetaTriangles( void )
 	numSmoothVerts = 0;
 	smoothVerts = (smoothVert_t *)safe_malloc( numMetaVerts * sizeof( smoothVert_t ) );
 
-	RunThreadsOnIndividual( "MetaTriangleFindAreaWeight", numMetaTriangles, qtrue, MetaTriangleFindAreaWeight );
+	if (numMetaTriangles > 0)
+		RunThreadsOnIndividual( "MetaTriangleFindAreaWeight", numMetaTriangles, qtrue, MetaTriangleFindAreaWeight );
+
 	free( metaTrianglePlaneTriangles );
 
 	for( i = 0; i < numMetaTriangles; i++ )

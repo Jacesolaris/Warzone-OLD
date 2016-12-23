@@ -32,6 +32,8 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 #define BRUSH_C
 
 
+//#define Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+
 
 /* dependencies */
 #include "q3map2.h"
@@ -231,6 +233,7 @@ qboolean BoundBrush( brush_t *brush )
 	return qtrue;
 }
 
+#ifndef Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
 qboolean CreateBrushWindings( brush_t *brush )
 {
 	dwinding_t	*dw;
@@ -261,7 +264,7 @@ qboolean CreateBrushWindings( brush_t *brush )
 			ChopDWindingInPlace( &dw, plane->normal, plane->dist, 0 );
 			
 			/* ydnar: fix broken windings that would generate trifans */
-			FixDWinding( dw );
+			//FixDWinding( dw );
 		}
 
 		/* set side winding */
@@ -276,6 +279,204 @@ qboolean CreateBrushWindings( brush_t *brush )
 	/* find brush bounds */
 	return BoundBrush( brush );
 }
+
+#else //!Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+
+#define DEGENERATE_EPSILON  0.1
+#define SNAP_EPSILON    0.01
+
+/*
+==================
+SnapWeldVectorAccu
+Welds two vectors into a third, taking into account nearest-to-integer
+instead of averaging.
+==================
+*/
+void SnapWeldVectorAccu(vec3_accu_t a, vec3_accu_t b, vec3_accu_t out) {
+	// I'm just preserving what I think was the intended logic of the original
+	// SnapWeldVector().  I'm not actually sure where this function should even
+	// be used.  I'd like to know which kinds of problems this function addresses.
+
+	// TODO: I thought we're snapping all coordinates to nearest 1/8 unit?
+	// So what is natural about snapping to the nearest integer?  Maybe we should
+	// be snapping to the nearest 1/8 unit instead?
+
+	int i;
+	vec_accu_t ai, bi, ad, bd;
+
+	if (a == NULL || b == NULL || out == NULL) {
+		Error("SnapWeldVectorAccu: NULL argument");
+	}
+
+	for (i = 0; i < 3; i++)
+	{
+		ai = Q_rintAccu(a[i]);
+		bi = Q_rintAccu(b[i]);
+		ad = fabs(ai - a[i]);
+		bd = fabs(bi - b[i]);
+
+		if (ad < bd) {
+			if (ad < SNAP_EPSILON) {
+				out[i] = ai;
+			}
+			else { out[i] = a[i]; }
+		}
+		else
+		{
+			if (bd < SNAP_EPSILON) {
+				out[i] = bi;
+			}
+			else { out[i] = b[i]; }
+		}
+	}
+}
+
+/*
+==================
+FixWindingAccu
+Removes degenerate edges (edges that are too short) from a winding.
+Returns qtrue if the winding has been altered by this function.
+Returns qfalse if the winding is untouched by this function.
+It's advised that you check the winding after this function exits to make
+sure it still has at least 3 points.  If that is not the case, the winding
+cannot be considered valid.  The winding may degenerate to one or two points
+if the some of the winding's points are close together.
+==================
+*/
+qboolean FixWindingAccu(winding_accu_t *w) {
+	int i, j, k;
+	vec3_accu_t vec;
+	vec_accu_t dist;
+	qboolean done, altered;
+
+	if (w == NULL) {
+		Error("FixWindingAccu: NULL argument");
+	}
+
+	altered = qfalse;
+
+	while (qtrue)
+	{
+		if (w->numpoints < 2) {
+			break;                   // Don't remove the only remaining point.
+		}
+		done = qtrue;
+		for (i = 0; i < w->numpoints; i++)
+		{
+			j = (((i + 1) == w->numpoints) ? 0 : (i + 1));
+
+			VectorSubtractAccu(w->p[i], w->p[j], vec);
+			dist = VectorLengthAccu(vec);
+			if (dist < DEGENERATE_EPSILON) {
+				// TODO: I think the "snap weld vector" was written before
+				// some of the math precision fixes, and its purpose was
+				// probably to address math accuracy issues.  We can think
+				// about changing the logic here.  Maybe once plane distance
+				// gets 64 bits, we can look at it then.
+				SnapWeldVectorAccu(w->p[i], w->p[j], vec);
+				VectorCopyAccu(vec, w->p[i]);
+				for (k = j + 1; k < w->numpoints; k++)
+				{
+					VectorCopyAccu(w->p[k], w->p[k - 1]);
+				}
+				w->numpoints--;
+				altered = qtrue;
+				// The only way to finish off fixing the winding consistently and
+				// accurately is by fixing the winding all over again.  For example,
+				// the point at index i and the point at index i-1 could now be
+				// less than the epsilon distance apart.  There are too many special
+				// case problems we'd need to handle if we didn't start from the
+				// beginning.
+				done = qfalse;
+				break; // This will cause us to return to the "while" loop.
+			}
+		}
+		if (done) {
+			break;
+		}
+	}
+
+	return altered;
+}
+
+qboolean CreateBrushWindings(brush_t *brush) {
+	int i, j;
+#ifdef Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+	winding_accu_t  *w;
+#else
+	winding_t   *w;
+#endif
+	side_t      *side;
+	plane_t     *plane;
+
+
+	/* walk the list of brush sides */
+	for (i = 0; i < brush->numsides; i++)
+	{
+		/* get side and plane */
+		side = &brush->sides[i];
+		plane = &mapplanes[side->planenum];
+
+		/* make huge winding */
+#ifdef Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+		w = BaseWindingForPlaneAccu(plane->normal, plane->dist);
+#else
+		w = BaseWindingForPlane(plane->normal, plane->dist);
+#endif
+
+		/* walk the list of brush sides */
+		for (j = 0; j < brush->numsides && w != NULL; j++)
+		{
+			if (i == j) {
+				continue;
+			}
+			if (brush->sides[j].planenum == (brush->sides[i].planenum ^ 1)) {
+				continue;       /* back side clipaway */
+			}
+			if (brush->sides[j].bevel) {
+				continue;
+			}
+			plane = &mapplanes[brush->sides[j].planenum ^ 1];
+#ifdef Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+			ChopWindingInPlaceAccu(&w, plane->normal, plane->dist, 0);
+#else
+			ChopWindingInPlace(&w, plane->normal, plane->dist, 0); // CLIP_EPSILON );
+#endif
+
+																   /* ydnar: fix broken windings that would generate trifans */
+#ifdef Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+																   // I think it's better to FixWindingAccu() once after we chop with all planes
+																   // so that error isn't multiplied.  There is nothing natural about welding
+																   // the points unless they are the final endpoints.  ChopWindingInPlaceAccu()
+																   // is able to handle all kinds of degenerate windings.
+#else
+			FixWinding(w);
+#endif
+		}
+
+		/* set side winding */
+#ifdef Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
+		if (w != NULL) {
+			FixWindingAccu(w);
+			if (w->numpoints < 3) {
+				FreeWindingAccu(w);
+				w = NULL;
+			}
+		}
+		side->winding = (w ? CopyWindingAccuToRegular(w) : NULL);
+		if (w) {
+			FreeWindingAccu(w);
+		}
+#else
+		side->winding = w;
+#endif
+	}
+
+	/* find brush bounds */
+	return BoundBrush(brush);
+}
+
+#endif //Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
 
 /*
 ==================

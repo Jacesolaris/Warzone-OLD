@@ -2389,7 +2389,10 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 	VectorCopy(addNode->origin, upOrg);
 	upOrg[2] += 8;
 
-	while (linknum < DO_EXTRA_REACH ? MAX_NODELINKS : MAX_AWP_NODELINKS)
+	int maxLinks = MAX_AWP_NODELINKS;
+	if (DO_EXTRA_REACH) maxLinks = MAX_NODELINKS;
+
+	while (linknum < maxLinks)
 	{
 		float	currentClosestDistance = 999999.0;
 		int		currentClosestNode = -1;
@@ -2398,7 +2401,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 
 		for (int loop = 0; loop < number_of_nodes; loop++)
 		{
-			if (linknum >= DO_EXTRA_REACH ? MAX_NODELINKS : MAX_AWP_NODELINKS)
+			if (linknum >= maxLinks)
 			{
 				break;
 			}
@@ -2678,9 +2681,11 @@ Connects 2 nodes and sets the flags for the path between them
 qboolean
 ConnectNodes ( int from, int to, int flags )
 {
+	int maxLinks = MAX_AWP_NODELINKS;
+	if (DO_EXTRA_REACH) maxLinks = MAX_NODELINKS;
 
 	//check that we don't have too many connections from the 'from' node already
-	if ( nodes[from].enodenum + 1 > DO_EXTRA_REACH ? MAX_NODELINKS : MAX_AWP_NODELINKS)
+	if ( nodes[from].enodenum + 1 > maxLinks)
 	{
 		return ( qfalse );
 	}
@@ -6982,7 +6987,7 @@ AIMod_AutoWaypoint ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> <allowRock 0/1> <openspread 0/1>^5. Distance, allowRock and Openspread are optional.\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> <allowRock 0/1> <openSpread 0/1> <doClean 0/1>^5. Distance, allowRock, openSpread and doClean are optional.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"altmethod\" ^5- For standard multi-level maps (alternative method).\n");
@@ -7008,6 +7013,8 @@ AIMod_AutoWaypoint ( void )
 	DO_OPEN_AREA_SPREAD = qfalse;
 	DO_NEW_METHOD = qfalse;
 
+	qboolean DO_CLEANER = qfalse;
+
 	if (trap->Cmd_Argc() >= 3)
 	{
 		trap->Cmd_Argv(3, str, sizeof(str));
@@ -7024,8 +7031,27 @@ AIMod_AutoWaypoint ( void )
 	if (trap->Cmd_Argc() >= 4)
 	{
 		trap->Cmd_Argv(4, str, sizeof(str));
-		if (str[0] != '\0' && atoi(str) != 0)
+		if (atoi(str) == 1)
 			DO_OPEN_AREA_SPREAD = qtrue;
+		else
+			DO_OPEN_AREA_SPREAD = qfalse;
+	}
+	else
+	{
+		DO_OPEN_AREA_SPREAD = qfalse;
+	}
+
+	if (trap->Cmd_Argc() >= 5)
+	{
+		trap->Cmd_Argv(3, str, sizeof(str));
+		if (atoi(str) == 1)
+			DO_CLEANER = qtrue;
+		else
+			DO_CLEANER = qfalse;
+	}
+	else
+	{
+		DO_CLEANER = qtrue;
 	}
 
 	trap->Cmd_Argv(1, str, sizeof(str));
@@ -7053,11 +7079,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 
 		DO_NEW_METHOD = qfalse;
@@ -7083,11 +7115,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 	}
 	else if ( Q_stricmp( str, "nosky") == 0 )
@@ -7113,11 +7151,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 
 		DO_NOSKY = qfalse;
@@ -7145,11 +7189,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 
 		DO_WATER = qfalse;
@@ -7177,11 +7227,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 
 		DO_FAST_LINK = qfalse;
@@ -7210,11 +7266,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 
 		DO_FAST_LINK = qfalse;
@@ -7245,11 +7307,17 @@ AIMod_AutoWaypoint ( void )
 			waypoint_scatter_distance = dist;
 			AIMod_AutoWaypoint_StandardMethod();
 
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
 			waypoint_scatter_distance = original_wp_scatter_dist;
 		}
 		else
 		{
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 
 		DO_FAST_LINK = qfalse;
@@ -7281,12 +7349,18 @@ AIMod_AutoWaypoint ( void )
 			AIMod_AutoWaypoint_StandardMethod();
 
 			waypoint_scatter_distance = original_wp_scatter_dist;
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 		else
 		{
 			DO_THOROUGH = qtrue;
 
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 	}
 	else if ( Q_stricmp( str, "translucent") == 0 )
@@ -7314,25 +7388,21 @@ AIMod_AutoWaypoint ( void )
 			AIMod_AutoWaypoint_StandardMethod();
 
 			waypoint_scatter_distance = original_wp_scatter_dist;
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 		else
 		{
 			DO_TRANSLUCENT = qtrue;
 
 			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
 	}
-	/*else if ( Q_stricmp( str, "noclean") == 0 )
-	{
-		AIMod_AutoWaypoint_StandardMethod();
-		return;
-	}
-	else if ( Q_stricmp( str, "outdoor_only") == 0 )
-	{
-		//AIMod_AutoWaypoint_OutdoorMethod();
-	}*/
-
-	//AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qtrue, qtrue, qfalse);
+	
 
 	DO_OPEN_AREA_SPREAD = qfalse;
 	DO_ROCK = qfalse;

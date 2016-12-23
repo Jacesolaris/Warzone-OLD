@@ -117,7 +117,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <PrecompiledHeader />
       <AssemblerListingLocation>..\build\release\x64\jpeg6\</AssemblerListingLocation>
       <ObjectFileName>..\build\release\x64\jpeg6\</ObjectFileName>
