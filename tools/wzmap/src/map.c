@@ -1811,6 +1811,7 @@ loads a map file into a list of entities
 
 extern void GenerateCliffFaces ( void );
 extern void GenerateMapForest ( void );
+extern void GenerateMapCity(void);
 
 void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBrushes, qboolean onlyFoliage, qboolean externalFile )
 {		
@@ -1869,11 +1870,34 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 	{
 		/* set map bounds */
 		ClearBounds( mapMins, mapMaxs );
+		ClearBounds(mapPlayableMins, mapPlayableMaxs);
 		for( b = entities[ 0 ].brushes; b; b = b->next )
 		{
 			AddPointToBounds( b->mins, mapMins, mapMaxs );
 			AddPointToBounds( b->maxs, mapMins, mapMaxs );
+			
+			// UQ1: Also record actual map playable area mins/maxs...
+			if (!(b->compileFlags & C_SKY) 
+				&& !(b->compileFlags & C_SKIP) 
+				&& !(b->compileFlags & C_HINT) 
+				&& !(b->compileFlags & C_NODRAW))
+			{
+				for (int s = 0; s < b->numsides; s++)
+				{
+					if (!(b->sides[s].compileFlags & C_SKY) 
+						&& !(b->sides[s].compileFlags & C_SKIP) 
+						&& !(b->sides[s].compileFlags & C_HINT) 
+						&& !(b->sides[s].compileFlags & C_NODRAW))
+					{
+						AddPointToBounds(b->mins, mapPlayableMins, mapPlayableMaxs);
+						AddPointToBounds(b->maxs, mapPlayableMins, mapPlayableMaxs);
+					}
+				}
+			}
 		}
+
+		// Override playable maxs height with the full map version, we only want the lower extent of playable area...
+		mapMaxs[2] = mapPlayableMaxs[2];
 
 		/* region seal */
 		if ( mapRegion == qtrue )
@@ -1918,6 +1942,7 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 			Sys_Warning( "Over 90 percent structural map detected. Compile time may be adversely affected." );
 
 		/* UQ1: Generate experimental procedural trees/etc */
+		//GenerateMapCity();
 		//GenerateMapForest();
 
 		/* emit some statistics */

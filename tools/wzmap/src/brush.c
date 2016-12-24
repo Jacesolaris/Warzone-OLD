@@ -200,6 +200,83 @@ brush_t *CopyBrush( brush_t *brush )
 }
 
 
+brush_t *InsertModelCopyBrush(brush_t *brush)
+{
+	brush_t		*newBrush;
+	int			size;
+	int			i;
+	int			numSides = 0;
+
+	for (i = 0; i < brush->numsides; i++)
+	{
+		if (brush->sides[i].culled) 
+			continue;
+
+		//if (brush->sides[i].winding == NULL)
+		//	continue;
+
+		numSides++;
+	}
+
+	if (numSides < 1) return NULL;
+
+	/* copy brush */
+	size = (int) &(((brush_t*)0)->sides[numSides]);
+	newBrush = AllocBrush(numSides);
+	//memcpy(newBrush, brush, size);
+	
+	memcpy(&newBrush, &brush, sizeof(brush_t *));
+	/*
+	newBrush->brushNum = brush->brushNum;
+	memcpy(newBrush->ambient, brush->ambient, sizeof(brush->ambient));
+	newBrush->castShadows = brush->castShadows;
+	memcpy(newBrush->celShader, brush->celShader, sizeof(brush->celShader));
+	memcpy(newBrush->colormod, brush->colormod, sizeof(brush->colormod));
+	newBrush->compileFlags = brush->compileFlags;
+	newBrush->contentFlags = brush->contentFlags;
+	memcpy(newBrush->contentShader, brush->contentShader, sizeof(brush->contentShader));
+	newBrush->detail = brush->detail;
+	memcpy(newBrush->eMaxs, brush->eMaxs, sizeof(brush->eMaxs));
+	memcpy(newBrush->eMins, brush->eMins, sizeof(brush->eMins));
+	newBrush->entityNum = brush->entityNum;
+	memcpy(newBrush->im, brush->im, sizeof(brush->im));
+	memcpy(newBrush->lightmapAxis, brush->lightmapAxis, sizeof(brush->lightmapAxis));
+	memcpy(newBrush->im, brush->im, sizeof(brush->im));
+	memcpy(newBrush->im, brush->im, sizeof(brush->im));
+	memcpy(newBrush->im, brush->im, sizeof(brush->im));
+	memcpy(newBrush->im, brush->im, sizeof(brush->im));
+	*/
+
+	/* ydnar: nuke linked list */
+	newBrush->next = NULL;
+
+	newBrush->numsides = 0;
+	
+	/* copy sides */
+	for (i = 0; i < brush->numsides; i++)
+	{
+		if (brush->sides[i].culled) 
+			continue;
+
+		if (brush->sides[i].winding == NULL)
+		{
+			brush->sides[newBrush->numsides].winding = NULL;
+			newBrush->numsides++;
+			continue;
+		}
+		
+		memcpy(&newBrush->sides[newBrush->numsides], &brush->sides[i], sizeof(side_t));
+
+		if (brush->sides[i].visibleHull)
+			memcpy(&newBrush->sides[newBrush->numsides].visibleHull, &brush->sides[i].visibleHull, sizeof(winding_t));
+
+		newBrush->sides[newBrush->numsides].winding = CopyWinding(brush->sides[i].winding);
+		newBrush->numsides++;
+	}
+
+	/* return it */
+	return newBrush;
+}
 
 
 /*

@@ -1178,12 +1178,17 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 }
 
 qboolean DAY_NIGHT_CYCLE_ENABLED = qfalse;
+qboolean FOG_POST_ENABLED = qtrue;
 
 void MAPPING_LoadDayNightCycleInfo ( void )
 {
+	ri->Printf(PRINT_ALL, "dir: %s.\n", va("maps/%s.mapInfo", currentMapName));
+
 	int dayNightEnableValue = atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_ENABLED", "0"));
 
 	DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
+
+	FOG_POST_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "DISABLE_FOG", "0")) > 0 ? qfalse : qtrue);
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
@@ -1196,7 +1201,11 @@ void MAPPING_LoadDayNightCycleInfo ( void )
 		}
 	}
 
+	if (StringContainsWord(currentMapName, "tatooine"))
+		FOG_POST_ENABLED = qfalse;
+
 	ri->Printf(PRINT_ALL, "^4*** ^3AUTO-FOLIAGE^4: ^5Day night cycle is ^7%s^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3AUTO-FOLIAGE^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
 }
 
 extern const char *materialNames[MATERIAL_LAST];

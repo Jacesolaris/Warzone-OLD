@@ -51,6 +51,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define PATHSEPERATOR   '/'
 
 qboolean generateforest;
+qboolean generatecity;
 
 
 #if defined(WIN32) || defined(WIN64)

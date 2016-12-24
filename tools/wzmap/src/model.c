@@ -240,105 +240,284 @@ float Distance(vec3_t pos1, vec3_t pos2)
 extern void LoadShaderImages(shaderInfo_t *si);
 extern void Decimate(picoModel_t *model, char *fileNameOut);
 
-int numSolidSurfs = 0, numHeightCulledSurfs = 0, numSizeCulledSurfs = 0, numExperimentalCulled = 0;
+int numSolidSurfs = 0, numHeightCulledSurfs = 0, numSizeCulledSurfs = 0, numExperimentalCulled = 0, numBoundsCulledSurfs = 0;
 
-//#define __USE_CULL_BOX_SYSTEM__
-//#define __USE_CULL_BOX_SYSTEM2__
+int removed_numHiddenFaces = 0;
+int removed_numCoinFaces = 0;
 
-#ifndef __USE_CULL_BOX_SYSTEM2__
-#ifdef __USE_CULL_BOX_SYSTEM__
-void AddQuadStamp2(vec3_t quadVerts[4], unsigned int *numIndexes, unsigned int *indexes, unsigned int *numVerts, vec3_t *xyz)
+qboolean InsertModelSideInBrush(side_t *side, brush_t *b)
 {
-	int             ndx;
+	int			i, s;
+	plane_t		*plane;
 
-	ndx = *numVerts;
+	/* ignore sides w/o windings or shaders */
+	if (side->winding == NULL || side->shaderInfo == NULL)
+		return qtrue;
 
-	// triangle indexes for a simple quad
-	indexes[*numIndexes] = ndx;
-	indexes[*numIndexes + 1] = ndx + 1;
-	indexes[*numIndexes + 2] = ndx + 3;
+	/* ignore culled sides and translucent brushes */
+	if (side->culled == qtrue || (b->compileFlags & C_TRANSLUCENT))
+		return qfalse;
 
-	indexes[*numIndexes + 3] = ndx + 3;
-	indexes[*numIndexes + 4] = ndx + 1;
-	indexes[*numIndexes + 5] = ndx + 2;
+	/* side iterator */
+	for (i = 0; i < b->numsides; i++)
+	{
+		/* fail if any sides are caulk */
+		if (b->sides[i].compileFlags & C_NODRAW)
+			return qfalse;
 
-	xyz[ndx + 0][0] = quadVerts[0][0];
-	xyz[ndx + 0][1] = quadVerts[0][1];
-	xyz[ndx + 0][2] = quadVerts[0][2];
+		/* check if side's winding is on or behind the plane */
+		plane = &mapplanes[b->sides[i].planenum];
+		s = WindingOnPlaneSide(side->winding, plane->normal, plane->dist);
+		if (s == SIDE_FRONT || s == SIDE_CROSS)
+			return qfalse;
+	}
 
-	xyz[ndx + 1][0] = quadVerts[1][0];
-	xyz[ndx + 1][1] = quadVerts[1][1];
-	xyz[ndx + 1][2] = quadVerts[1][2];
+	/* don't cull autosprite or polygonoffset surfaces */
+	if (side->shaderInfo)
+	{
+		if (side->shaderInfo->autosprite || side->shaderInfo->polygonOffset)
+			return qfalse;
+	}
 
-	xyz[ndx + 2][0] = quadVerts[2][0];
-	xyz[ndx + 2][1] = quadVerts[2][1];
-	xyz[ndx + 2][2] = quadVerts[2][2];
-
-	xyz[ndx + 3][0] = quadVerts[3][0];
-	xyz[ndx + 3][1] = quadVerts[3][1];
-	xyz[ndx + 3][2] = quadVerts[3][2];
-
-	*numVerts += 4;
-	*numIndexes += 6;
+	/* inside */
+	side->culled = qtrue;
+	removed_numHiddenFaces++;
+	return qtrue;
 }
 
-void AddCube(const vec3_t mins, const vec3_t maxs, unsigned int *numIndexes, unsigned int *indexes, unsigned int *numVerts, vec3_t *xyz)
+int NUM_ORIGINAL_BRUSHES = 0;
+
+void InsertModelCullSides(entity_t *e, brush_t *inBrush)
 {
-	vec3_t quadVerts[4];
+	const float CULL_EPSILON = 0.1f;
+	int			numPoints;
+	int			i, j, k, l, first, second, dir;
+	winding_t	*w1, *w2;
+	brush_t		*b1, *b2;
+	side_t		*side1, *side2;
+	//int			current = 0;// , count = 0;
 
-	VectorSet(quadVerts[0], mins[0], mins[1], mins[2]);
-	VectorSet(quadVerts[1], mins[0], maxs[1], mins[2]);
-	VectorSet(quadVerts[2], mins[0], maxs[1], maxs[2]);
-	VectorSet(quadVerts[3], mins[0], mins[1], maxs[2]);
-	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
+	removed_numHiddenFaces = 0;
+	removed_numCoinFaces = 0;
 
-	VectorSet(quadVerts[0], maxs[0], mins[1], maxs[2]);
-	VectorSet(quadVerts[1], maxs[0], maxs[1], maxs[2]);
-	VectorSet(quadVerts[2], maxs[0], maxs[1], mins[2]);
-	VectorSet(quadVerts[3], maxs[0], mins[1], mins[2]);
-	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
+	//for (b1 = e->brushes; b1; b1 = b1->next)
+	//	count++;
 
-	VectorSet(quadVerts[0], mins[0], mins[1], maxs[2]);
-	VectorSet(quadVerts[1], mins[0], maxs[1], maxs[2]);
-	VectorSet(quadVerts[2], maxs[0], maxs[1], maxs[2]);
-	VectorSet(quadVerts[3], maxs[0], mins[1], maxs[2]);
-	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
+	b1 = inBrush;
 
-	VectorSet(quadVerts[0], maxs[0], mins[1], mins[2]);
-	VectorSet(quadVerts[1], maxs[0], maxs[1], mins[2]);
-	VectorSet(quadVerts[2], mins[0], maxs[1], mins[2]);
-	VectorSet(quadVerts[3], mins[0], mins[1], mins[2]);
-	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
+	/* brush interator 1 */
+	//for (b1 = e->brushes; b1; b1 = b1->next)
+	{
+		int current = 0;
 
-	VectorSet(quadVerts[0], mins[0], mins[1], mins[2]);
-	VectorSet(quadVerts[1], mins[0], mins[1], maxs[2]);
-	VectorSet(quadVerts[2], maxs[0], mins[1], maxs[2]);
-	VectorSet(quadVerts[3], maxs[0], mins[1], mins[2]);
-	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
+		//printLabelledProgress("CullSides", current, count);
+		//current++;
 
-	VectorSet(quadVerts[0], maxs[0], maxs[1], mins[2]);
-	VectorSet(quadVerts[1], maxs[0], maxs[1], maxs[2]);
-	VectorSet(quadVerts[2], mins[0], maxs[1], maxs[2]);
-	VectorSet(quadVerts[3], mins[0], maxs[1], mins[2]);
-	AddQuadStamp2(quadVerts, numIndexes, indexes, numVerts, xyz);
+		/* sides check */
+		if (b1->numsides < 1)
+			//continue;
+			return;
+
+		/* brush iterator 2 */
+		for (b2 = b1->next; b2; b2 = b2->next)
+		{
+			current++;
+
+			if (current >= NUM_ORIGINAL_BRUSHES)
+				break;
+
+			/* sides check */
+			if (b2->numsides < 1)
+				continue;
+
+			/* original check */
+			if (b1->original == b2->original && b1->original != NULL)
+				continue;
+
+			/* bbox check */
+			j = 0;
+			for (i = 0; i < 3; i++)
+				if (b1->mins[i] > b2->maxs[i] || b1->maxs[i] < b2->mins[i])
+					j++;
+			if (j)
+				continue;
+
+#if 1
+			/* cull inside sides */
+			//#pragma omp parallel for ordered num_threads(numthreads)
+			for (i = 0; i < b1->numsides; i++)
+				InsertModelSideInBrush(&b1->sides[i], b2);
+			//#pragma omp parallel for ordered num_threads(numthreads)
+			for (i = 0; i < b2->numsides; i++)
+				InsertModelSideInBrush(&b2->sides[i], b1);
+#endif
+
+			/* side iterator 1 */
+			//#pragma omp parallel for ordered num_threads(numthreads)
+			for (i = 0; i < b1->numsides; i++)
+			{
+				/* winding check */
+				side1 = &b1->sides[i];
+				w1 = side1->winding;
+				if (w1 == NULL)
+					continue;
+				numPoints = w1->numpoints;
+				if (side1->shaderInfo == NULL)
+					continue;
+
+				/* side iterator 2 */
+				for (j = 0; j < b2->numsides; j++)
+				{
+					/* winding check */
+					side2 = &b2->sides[j];
+					w2 = side2->winding;
+					if (w2 == NULL)
+						continue;
+					if (side2->shaderInfo == NULL)
+						continue;
+					if (w1->numpoints != w2->numpoints)
+						continue;
+					if (side1->culled == qtrue && side2->culled == qtrue)
+						continue;
+
+					/* compare planes */
+					if ((side1->planenum & ~0x00000001) != (side2->planenum & ~0x00000001))
+						continue;
+
+					/* get autosprite and polygonoffset status */
+					if (side1->shaderInfo &&
+						(side1->shaderInfo->autosprite || side1->shaderInfo->polygonOffset))
+						continue;
+					if (side2->shaderInfo &&
+						(side2->shaderInfo->autosprite || side2->shaderInfo->polygonOffset))
+						continue;
+
+					/* find first common point */
+					first = -1;
+					for (k = 0; k < numPoints; k++)
+					{
+						if (VectorCompare(w1->p[0], w2->p[k]))
+						{
+							first = k;
+							k = numPoints;
+						}
+					}
+					if (first == -1)
+						continue;
+
+					/* find second common point (regardless of winding order) */
+					second = -1;
+					dir = 0;
+					if ((first + 1) < numPoints)
+						second = first + 1;
+					else
+						second = 0;
+					if (VectorCompareExt(w1->p[1], w2->p[second], CULL_EPSILON))
+						dir = 1;
+					else
+					{
+						if (first > 0)
+							second = first - 1;
+						else
+							second = numPoints - 1;
+						if (VectorCompareExt(w1->p[1], w2->p[second], CULL_EPSILON))
+							dir = -1;
+					}
+					if (dir == 0)
+						continue;
+
+					/* compare the rest of the points */
+					l = first;
+					for (k = 0; k < numPoints; k++)
+					{
+						if (!VectorCompareExt(w1->p[k], w2->p[l], CULL_EPSILON))
+							k = 100000;
+
+						l += dir;
+						if (l < 0)
+							l = numPoints - 1;
+						else if (l >= numPoints)
+							l = 0;
+					}
+					if (k >= 100000)
+						continue;
+
+					/* cull face 1 */
+					if (!side2->culled && !(side2->compileFlags & C_TRANSLUCENT) && !(side2->compileFlags & C_NODRAW))
+					{
+						side1->culled = qtrue;
+						removed_numCoinFaces++;
+					}
+
+					if (side1->planenum == side2->planenum && side1->culled == qtrue)
+						continue;
+
+					/* cull face 2 */
+					if (!side1->culled && !(side1->compileFlags & C_TRANSLUCENT) && !(side1->compileFlags & C_NODRAW))
+					{
+						side2->culled = qtrue;
+						removed_numCoinFaces++;
+					}
+				}
+			}
+		}
+
+		//Sys_Printf(" %9d entityNum\n", entityNum);
+		/*if (removed_numHiddenFaces > 0 || removed_numCoinFaces > 0)
+		{
+			Sys_Printf("%9d hidden faces culled\n", removed_numHiddenFaces);
+			Sys_Printf("%9d coincident faces culled\n", removed_numCoinFaces);
+		}*/
+	}
 }
-#endif //__USE_CULL_BOX_SYSTEM__
-#endif //__USE_CULL_BOX_SYSTEM2__
 
-void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids)
+extern brush_t *InsertModelCopyBrush(brush_t *brush);
+extern float DistanceHorizontal(const vec3_t p1, const vec3_t p2);
+
+#define CULL_BY_LOWEST_NEAR_POINT
+
+#ifdef CULL_BY_LOWEST_NEAR_POINT
+float LowestMapPointNear(vec3_t pos)
+{// So we can cull surfaces below this height...
+	vec3_t nMins, nMaxs;
+
+	nMins[2] = 999999.0f;
+
+	for (brush_t *b = entities[0].brushes; b; b = b->next)
+	{
+		if (!(b->compileFlags & C_SKY)
+			&& !(b->compileFlags & C_SKIP)
+			&& !(b->compileFlags & C_HINT)
+			&& !(b->compileFlags & C_NODRAW))
+		{
+			for (int s = 0; s < b->numsides; s++)
+			{
+				if (!(b->sides[s].compileFlags & C_SKY)
+					&& !(b->sides[s].compileFlags & C_SKIP)
+					&& !(b->sides[s].compileFlags & C_HINT)
+					&& !(b->sides[s].compileFlags & C_NODRAW))
+				{
+					if (DistanceHorizontal(pos, b->mins) < 4096.0 || DistanceHorizontal(pos, b->maxs) < 4096.0)
+					{
+						AddPointToBounds(b->mins, nMins, nMaxs);
+						AddPointToBounds(b->maxs, nMins, nMaxs);
+					}
+				}
+			}
+		}
+	}
+
+	return nMins[2];
+}
+#endif //CULL_BY_LOWEST_NEAR_POINT
+
+void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids, float LOWEST_NEAR_POINT)
 {
 	int					s, numSurfaces;
 	m4x4_t				identity, nTransform;
 	picoModel_t			*model;
 	float				top = -999999, bottom = 999999;
 	bool				ALLOW_CULL_HALF_SIZE = false;
-#ifdef __USE_CULL_BOX_SYSTEM__
-	bool				isTreeSolid = false;
-	shaderInfo_t		*solidSi = NULL;
-	vec3_t				TREE_MINS, TREE_MAXS;
-	VectorSet(TREE_MINS, 999999.9, 999999.9, 999999.9);
-	VectorSet(TREE_MAXS, -999999.9, -999999.9, -999999.9);
-#endif //__USE_CULL_BOX_SYSTEM__
 
 	if (StringContainsWord(name, "forestpine")
 		|| StringContainsWord(name, "junglepalm")
@@ -358,22 +537,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 	//printf("DEBUG: Inserting model %s.\n", name);
 
 	qboolean haveLodModel = qfalse;
-
-#ifdef __MODEL_SIMPLIFICATION__
-	picoModel_t *lodModel = NULL;
-	char fileNameIn[128] = { 0 };
-	char tempfileNameOut[128] = { 0 };
-
-	strcpy(tempfileNameOut, model->fileName);
-	StripExtension( tempfileNameOut );
-	sprintf(fileNameIn, "%s_lod.obj", tempfileNameOut);
-	lodModel = FindModel( name, frame );
-
-	if (lodModel)
-	{
-		haveLodModel = qtrue;
-	}
-#endif //__MODEL_SIMPLIFICATION__
 
 	/* handle null matrix */
 	if (transform == NULL)
@@ -430,7 +593,8 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 	//Sys_Printf( "Model %s has %d surfaces\n", name, numSurfaces );
 
-#pragma omp parallel for ordered num_threads((numSurfaces < numthreads) ? numSurfaces : numthreads)
+//#pragma omp parallel for ordered num_threads((numSurfaces < numthreads) ? numSurfaces : numthreads)
+//#pragma omp parallel for ordered num_threads(numthreads)
 	for (s = 0; s < numSurfaces; s++)
 	{
 		int					i;
@@ -607,6 +771,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			*added_triangles += (ds->numIndexes / 3);
 
 		/* copy vertexes */
+//#pragma omp parallel for ordered num_threads((ds->numVerts < numthreads) ? ds->numVerts : numthreads)
 		for (i = 0; i < ds->numVerts; i++)
 		{
 			int					j;
@@ -753,469 +918,8 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 				continue;
 			}
 
-#ifdef __USE_CULL_BOX_SYSTEM__
-			if (si->isTreeSolid && !(si->skipSolidCull || si->isMapObjectSolid))
-			{
-				// vec3_t		TREE_MINS, TREE_MAXS;
-				float			LOWEST_HEIGHT = bottom;
-				vec3_t			LOWER_MINS, LOWER_MAXS;
-				vec3_t			UPPER_MINS, UPPER_MAXS;
-
-				isTreeSolid = true;
-				if (!solidSi) solidSi = si;
-
-				VectorSet(LOWER_MINS, 999999.9, 999999.9, 999999.9);
-				VectorSet(LOWER_MAXS, -999999.9, -999999.9, -999999.9);
-				VectorSet(UPPER_MINS, 999999.9, 999999.9, 999999.9);
-				VectorSet(UPPER_MAXS, -999999.9, -999999.9, -999999.9);
-
-				//				Sys_Printf("LOWEST_HEIGHT is %f.\n", LOWEST_HEIGHT);
-
-				/* walk triangle list - find the mins and maxs near the lowest point */
-				for (i = 0; i < ds->numIndexes; i += 3)
-				{
-					int					j;
-					vec3_t				points[4], backs[3];
-
-					/* overflow hack */
-					if ((nummapplanes + 64) >= (MAX_MAP_PLANES >> 1))
-					{
-						Sys_Warning(mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name);
-						break;
-					}
-
-					/* make points and back points */
-					for (j = 0; j < 3; j++)
-					{
-						bspDrawVert_t		*dv;
-						int					k;
-
-						/* get vertex */
-						dv = &ds->verts[ds->indexes[i + j]];
-
-						/* copy xyz */
-						VectorCopy(dv->xyz, points[j]);
-						VectorCopy(dv->xyz, backs[j]);
-					}
-
-					VectorCopy(points[0], points[3]); // for cyclic usage
-
-					/* make plane for triangle */
-					// div0: add some extra spawnflags:
-					//   0: snap normals to axial planes for extrusion
-					//   8: extrude with the original normals
-					//  16: extrude only with up/down normals (ideal for terrain)
-					//  24: extrude by distance zero (may need engine changes)
-					{
-						int z;
-
-						for (z = 0; z < 4; z++)
-						{
-							if (points[z][2] <= bottom + 128.0 && points[z][2] >= bottom + 64.0)
-							{// Only look at points near the base of the tree, so that we can get trunk thickness...
-								if (points[z][0] < LOWER_MINS[0]) LOWER_MINS[0] = points[z][0];
-								if (points[z][1] < LOWER_MINS[1]) LOWER_MINS[1] = points[z][1];
-								//if (points[z][2] < LOWER_MINS[2]) LOWER_MINS[2] = points[z][2];
-
-								if (points[z][0] > LOWER_MAXS[0]) LOWER_MAXS[0] = points[z][0];
-								if (points[z][1] > LOWER_MAXS[1]) LOWER_MAXS[1] = points[z][1];
-								//if (points[z][2] > LOWER_MAXS[2]) LOWER_MAXS[2] = points[z][2];
-							}
-						}
-					}
-				}
-
-				//Sys_Printf("LOWER_MINS is %f %f %f. LOWER_MAXS is %f %f %f.\n", LOWER_MINS[0], LOWER_MINS[1], LOWER_MINS[2], LOWER_MAXS[0], LOWER_MAXS[1], LOWER_MAXS[2]);
-
-				/* walk triangle list - find the highest point within the lower mins and maxs (x and y only) */
-				for (i = 0; i < ds->numIndexes; i += 3)
-				{
-					int					j;
-					vec3_t				points[4], backs[3];
-
-					/* overflow hack */
-					if ((nummapplanes + 64) >= (MAX_MAP_PLANES >> 1))
-					{
-						Sys_Warning(mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name);
-						break;
-					}
-
-					/* make points and back points */
-					for (j = 0; j < 3; j++)
-					{
-						bspDrawVert_t		*dv;
-						int					k;
-
-						/* get vertex */
-						dv = &ds->verts[ds->indexes[i + j]];
-
-						/* copy xyz */
-						VectorCopy(dv->xyz, points[j]);
-						VectorCopy(dv->xyz, backs[j]);
-					}
-
-					VectorCopy(points[0], points[3]); // for cyclic usage
-
-					/* make plane for triangle */
-					// div0: add some extra spawnflags:
-					//   0: snap normals to axial planes for extrusion
-					//   8: extrude with the original normals
-					//  16: extrude only with up/down normals (ideal for terrain)
-					//  24: extrude by distance zero (may need engine changes)
-					{
-						int z;
-
-						for (z = 0; z < 4; z++)
-						{
-							if (points[z][2] <= bottom + 128.0 && points[z][2] >= bottom + 64.0)
-							{// Only look at points near the base of the tree, so that we can get trunk thickness...
-								if (points[z][0] <= LOWER_MAXS[0] && points[z][0] >= LOWER_MINS[0]
-									&& points[z][1] <= LOWER_MAXS[1] && points[z][1] >= LOWER_MINS[1])
-								{// Only look at points within the mins and maxs of the base of the tree (x and y), so that we can get trunk height...
-									if (points[z][0] < UPPER_MINS[0]) UPPER_MINS[0] = points[z][0];
-									if (points[z][1] < UPPER_MINS[1]) UPPER_MINS[1] = points[z][1];
-									//if (points[z][2] < UPPER_MINS[2]) UPPER_MINS[2] = points[z][2];
-
-									if (points[z][0] > UPPER_MAXS[0]) UPPER_MAXS[0] = points[z][0];
-									if (points[z][1] > UPPER_MAXS[1]) UPPER_MAXS[1] = points[z][1];
-									//if (points[z][2] > UPPER_MAXS[2]) UPPER_MAXS[2] = points[z][2];
-								}
-							}
-						}
-					}
-				}
-
-				//Sys_Printf("UPPER_MINS is %f %f %f. UPPER_MAXS is %f %f %f.\n", UPPER_MINS[0], UPPER_MINS[1], UPPER_MINS[2], UPPER_MAXS[0], UPPER_MAXS[1], UPPER_MAXS[2]);
-
-#pragma omp critical
-				{
-					if (LOWER_MINS[0] < TREE_MINS[0]) TREE_MINS[0] = LOWER_MINS[0];
-					if (LOWER_MINS[1] < TREE_MINS[1]) TREE_MINS[1] = LOWER_MINS[1];
-					TREE_MINS[2] = bottom;
-
-					if (UPPER_MAXS[0] > TREE_MAXS[0]) TREE_MAXS[0] = UPPER_MAXS[0];
-					if (UPPER_MAXS[1] > TREE_MAXS[1]) TREE_MAXS[1] = UPPER_MAXS[1];
-					TREE_MAXS[2] = top;
-				}
-
-				if (TREE_MINS[0] == 999999.9 && TREE_MINS[1] == 999999.9 && TREE_MAXS[0] == -999999.9 && TREE_MAXS[1] == -999999.9)
-				{// Failed... Fall back to old method...
-					isTreeSolid = false;
-				}
-			}
-
-			if (!isTreeSolid)
-			{// Edither this is not a tree, or we failed to find a valid box... Fallback to old method... *sigh*
-				/* walk triangle list */
-				for (i = 0; i < ds->numIndexes; i += 3)
-				{
-					int					j;
-					vec3_t				points[4], backs[3];
-
-					/* overflow hack */
-					if ((nummapplanes + 64) >= (MAX_MAP_PLANES >> 1))
-					{
-						Sys_Warning(mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name);
-						break;
-					}
-
-					/* make points and back points */
-					for (j = 0; j < 3; j++)
-					{
-						bspDrawVert_t		*dv;
-						int					k;
-
-						/* get vertex */
-						dv = &ds->verts[ds->indexes[i + j]];
-
-						/* copy xyz */
-						VectorCopy(dv->xyz, points[j]);
-						VectorCopy(dv->xyz, backs[j]);
-
-						/* find nearest axial to normal and push back points opposite */
-						/* note: this doesn't work as well as simply using the plane of the triangle, below */
-						for (k = 0; k < 3; k++)
-						{
-							if (fabs(dv->normal[k]) >= fabs(dv->normal[(k + 1) % 3]) &&
-								fabs(dv->normal[k]) >= fabs(dv->normal[(k + 2) % 3]))
-							{
-								backs[j][k] += dv->normal[k] < 0.0f ? 64.0f : -64.0f;
-								break;
-							}
-						}
-					}
-
-					VectorCopy(points[0], points[3]); // for cyclic usage
-
-					/* make plane for triangle */
-					// div0: add some extra spawnflags:
-					//   0: snap normals to axial planes for extrusion
-					//   8: extrude with the original normals
-					//  16: extrude only with up/down normals (ideal for terrain)
-					//  24: extrude by distance zero (may need engine changes)
-					if (PlaneFromPoints(plane, points[0], points[1], points[2]))
-					{
-						double				normalEpsilon_save;
-						double				distanceEpsilon_save;
-
-						vec3_t bestNormal;
-						float backPlaneDistance = 2;
-
-						if (spawnFlags & 8) // use a DOWN normal
-						{
-							if (spawnFlags & 16)
-							{
-								// 24: normal as is, and zero width (broken)
-								VectorCopy(plane, bestNormal);
-							}
-							else
-							{
-								// 8: normal as is
-								VectorCopy(plane, bestNormal);
-							}
-						}
-						else
-						{
-							if (spawnFlags & 16)
-							{
-								// 16: UP/DOWN normal
-								VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-							}
-							else
-							{
-								// 0: axial normal
-								if (fabs(plane[0]) > fabs(plane[1])) // x>y
-								if (fabs(plane[1]) > fabs(plane[2])) // x>y, y>z
-									VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
-								else // x>y, z>=y
-								if (fabs(plane[0]) > fabs(plane[2])) // x>z, z>=y
-									VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
-								else // z>=x, x>y
-									VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-								else // y>=x
-								if (fabs(plane[1]) > fabs(plane[2])) // y>z, y>=x
-									VectorSet(bestNormal, 0, (plane[1] >= 0 ? 1 : -1), 0);
-								else // z>=y, y>=x
-									VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-							}
-						}
-
-						/* regenerate back points */
-						for (j = 0; j < 3; j++)
-						{
-							bspDrawVert_t		*dv;
-
-							/* get vertex */
-							dv = &ds->verts[ds->indexes[i + j]];
-
-							// shift by some units
-							VectorMA(dv->xyz, -64.0f, bestNormal, backs[j]); // 64 prevents roundoff errors a bit
-						}
-
-						/* make back plane */
-						VectorScale(plane, -1.0f, reverse);
-						reverse[3] = -plane[3];
-						if ((spawnFlags & 24) != 24)
-							reverse[3] += DotProduct(bestNormal, plane) * backPlaneDistance;
-						// that's at least sqrt(1/3) backPlaneDistance, unless in DOWN mode; in DOWN mode, we are screwed anyway if we encounter a plane that's perpendicular to the xy plane)
-
-						normalEpsilon_save = normalEpsilon;
-						distanceEpsilon_save = distanceEpsilon;
-
-						if (PlaneFromPoints(pa, points[2], points[1], backs[1]) &&
-							PlaneFromPoints(pb, points[1], points[0], backs[0]) &&
-							PlaneFromPoints(pc, points[0], points[2], backs[2]))
-						{
-							//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
-
-							numSolidSurfs++;
-
-							if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
-							{// Cull small stuff and the tops of trees...
-								vec3_t mins, maxs;
-								vec3_t size;
-								float sz;
-								int z;
-
-								VectorSet(mins, 999999, 999999, 999999);
-								VectorSet(maxs, -999999, -999999, -999999);
-
-								for (z = 0; z < 4; z++)
-								{
-									if (points[z][0] < mins[0]) mins[0] = points[z][0];
-									if (points[z][1] < mins[1]) mins[1] = points[z][1];
-									if (points[z][2] < mins[2]) mins[2] = points[z][2];
-
-									if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
-									if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
-									if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
-								}
-
-								if (top != -999999 && bottom != -999999)
-								{
-									float s = top - bottom;
-									float newtop = bottom + (s / 2.0);
-									//float newtop = bottom + (s / 4.0);
-
-									if (ALLOW_CULL_HALF_SIZE) newtop = bottom + (s / 4.0); // Special case for high pine trees, we can cull much more for FPS yay! :)
-
-									//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
-
-									if (mins[2] > newtop)
-									{
-										//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
-										numHeightCulledSurfs++;
-										continue;
-									}
-								}
-
-								VectorSubtract(maxs, mins, size);
-								//sz = VectorLength(size);
-								sz = maxs[0] - mins[0];
-								if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
-								if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
-
-								if (sz < 36)
-								{
-									//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
-									numSizeCulledSurfs++;
-									continue;
-								}
-							}
-							else if (cullSmallSolids || si->isTreeSolid)
-							{// Only cull stuff too small to fall through...
-								vec3_t mins, maxs;
-								vec3_t size;
-								float sz;
-								int z;
-
-								VectorSet(mins, 999999, 999999, 999999);
-								VectorSet(maxs, -999999, -999999, -999999);
-
-								for (z = 0; z < 4; z++)
-								{
-									if (points[z][0] < mins[0]) mins[0] = points[z][0];
-									if (points[z][1] < mins[1]) mins[1] = points[z][1];
-									if (points[z][2] < mins[2]) mins[2] = points[z][2];
-
-									if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
-									if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
-									if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
-								}
-
-								VectorSubtract(maxs, mins, size);
-								//sz = VectorLength(size);
-								sz = maxs[0] - mins[0];
-								if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
-								if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
-
-								if (sz <= 16)
-								{
-									//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
-									numSizeCulledSurfs++;
-									continue;
-								}
-							}
-
-							//#define __FORCE_TREE_META__
-#if defined(__FORCE_TREE_META__)
-							if (meta) si->forceMeta = qtrue; // much slower...
-#endif
-
-#pragma omp ordered
-							{
-#pragma omp critical
-								{
-
-									/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
-									buildBrush = AllocBrush(24/*48*/); // UQ1: 48 seems to be more then is used... Wasting memory...
-									buildBrush->entityNum = mapEntityNum;
-									buildBrush->mapEntityNum = mapEntityNum;
-									buildBrush->original = buildBrush;
-									buildBrush->contentShader = si;
-									buildBrush->compileFlags = si->compileFlags;
-									buildBrush->contentFlags = si->contentFlags;
-
-									if (si->isTreeSolid || si->isMapObjectSolid || (si->compileFlags & C_DETAIL))
-									{
-										buildBrush->detail = qtrue;
-									}
-									else if (si->compileFlags & C_STRUCTURAL) // allow forced structural brushes here
-									{
-										buildBrush->detail = qfalse;
-
-										// only allow EXACT matches when snapping for these (this is mostly for caulk brushes inside a model)
-										if (normalEpsilon > 0)
-											normalEpsilon = 0;
-										if (distanceEpsilon > 0)
-											distanceEpsilon = 0;
-									}
-									else
-									{
-										buildBrush->detail = qtrue;
-									}
-
-									/* set up brush sides */
-									buildBrush->numsides = 5;
-									buildBrush->sides[0].shaderInfo = si;
-
-									for (j = 1; j < buildBrush->numsides; j++)
-									{
-										buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-										buildBrush->sides[j].culled = qtrue;
-									}
-
-									buildBrush->sides[0].planenum = FindFloatPlane(plane, plane[3], 3, points);
-									buildBrush->sides[1].planenum = FindFloatPlane(pa, pa[3], 2, &points[1]); // pa contains points[1] and points[2]
-									buildBrush->sides[2].planenum = FindFloatPlane(pb, pb[3], 2, &points[0]); // pb contains points[0] and points[1]
-									buildBrush->sides[3].planenum = FindFloatPlane(pc, pc[3], 2, &points[2]); // pc contains points[2] and points[0] (copied to points[3]
-									buildBrush->sides[4].planenum = FindFloatPlane(reverse, reverse[3], 3, backs);
-
-									/* add to entity */
-									if (CreateBrushWindings(buildBrush))
-									{
-										int numsides;
-
-										AddBrushBevels();
-										//%	EmitBrushes( buildBrush, NULL, NULL );
-
-										numsides = buildBrush->numsides;
-
-										if (!RemoveDuplicateBrushPlanes(buildBrush))
-										{// UQ1: Testing - This would create a mirrored plane... free it...
-											free(buildBrush);
-											//Sys_Printf("Removed a mirrored plane\n");
-										}
-										else
-										{
-											//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
-
-											buildBrush->next = entities[mapEntityNum].brushes;
-											entities[mapEntityNum].brushes = buildBrush;
-											entities[mapEntityNum].numBrushes++;
-											if (added_brushes != NULL)
-												*added_brushes += 1;
-										}
-									}
-									else
-									{
-										free(buildBrush);
-									}
-								} // #pragma omp critical
-							} // #pragma omp ordered
-						}
-						else
-						{
-							continue;
-						}
-
-						normalEpsilon = normalEpsilon_save;
-						distanceEpsilon = distanceEpsilon_save;
-					}
-				}
-			}
-#else //!__USE_CULL_BOX_SYSTEM__
 			/* walk triangle list */
+//#pragma omp parallel for ordered num_threads((ds->numIndexes < numthreads) ? ds->numIndexes : numthreads)
 			for( i = 0; i < ds->numIndexes; i += 3 )
 			{
 				int					j;
@@ -1352,9 +1056,68 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
 						}
 
-						//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
-
 						numSolidSurfs++;
+
+						//Sys_Printf("mapmins %f %f %f. mapmaxs %f %f %f.\n", mapPlayableMins[0], mapPlayableMins[1], mapPlayableMins[2], mapPlayableMaxs[0], mapPlayableMaxs[1], mapPlayableMaxs[2]);
+						//Sys_Printf("mins %f %f %f. maxs %f %f %f.\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
+
+#ifdef CULL_BY_LOWEST_NEAR_POINT
+						{
+							//Sys_Printf("LOWEST_NEAR_POINT %f.\n", LOWEST_NEAR_POINT);
+
+							if (LOWEST_NEAR_POINT != 999999.0f && mins[2] < LOWEST_NEAR_POINT && maxs[2] < LOWEST_NEAR_POINT)
+							{// Below map's lowest known near point, definately cull...
+								//Sys_Printf("Culled one!\n");
+								numBoundsCulledSurfs++;
+								continue;
+							}
+						}
+#endif //CULL_BY_LOWEST_NEAR_POINT
+
+						if (mins[2] < mapPlayableMins[2] && maxs[2] < mapPlayableMins[2])
+						{// Outside map bounds, definately cull...
+							//Sys_Printf("Culled one!\n");
+							numBoundsCulledSurfs++;
+							continue;
+						}
+
+						/* // Hmm don't cull the tops od trees, sticking out of the map, etc...
+						if (mins[2] > mapPlayableMaxs[2] && maxs[2] > mapPlayableMaxs[2])
+						{// Outside map bounds, definately cull...
+							//Sys_Printf("Culled one!\n");
+							numBoundsCulledSurfs++;
+							continue;
+						}*/
+
+						if (mins[1] < mapPlayableMins[1] && maxs[1] < mapPlayableMins[1])
+						{// Outside map bounds, definately cull...
+							//Sys_Printf("Culled one!\n");
+							numBoundsCulledSurfs++;
+							continue;
+						}
+
+						if (mins[1] > mapPlayableMaxs[1] && maxs[1] > mapPlayableMaxs[1])
+						{// Outside map bounds, definately cull...
+							//Sys_Printf("Culled one!\n");
+							numBoundsCulledSurfs++;
+							continue;
+						}
+
+						if (mins[0] < mapPlayableMins[0] && maxs[0] < mapPlayableMins[0])
+						{// Outside map bounds, definately cull...
+							//Sys_Printf("Culled one!\n");
+							numBoundsCulledSurfs++;
+							continue;
+						}
+
+						if (mins[0] > mapPlayableMaxs[0] && maxs[0] > mapPlayableMaxs[0])
+						{// Outside map bounds, definately cull...
+							//Sys_Printf("Culled one!\n");
+							numBoundsCulledSurfs++;
+							continue;
+						}
+
+						//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
 
 						if (!forcedSolid && 
 							((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid)))
@@ -1421,8 +1184,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{
 #pragma omp critical
 							{
-
-#if 1
 								/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
 								buildBrush = AllocBrush( 24/*48*/ ); // UQ1: 48 seems to be more then is used... Wasting memory...
 								buildBrush->entityNum = mapEntityNum;
@@ -1477,38 +1238,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 									numsides = buildBrush->numsides;
 
-#if 0
-									/* copy sides */
-									if (buildBrush->numsides > 5)
-									{
-										for (z = 5; z < buildBrush->numsides; z++)
-										{
-											if (buildBrush->sides[z - 5].winding != NULL)
-												if (*(unsigned *)buildBrush->sides[z - 5].winding != 0xdeaddead)
-													FreeWinding(buildBrush->sides[z - 5].winding);
-
-											//buildBrush->sides[z - 5] = buildBrush->sides[z];
-											memcpy(&buildBrush->sides[z - 5], &buildBrush->sides[z], sizeof(side_t));
-
-											if (buildBrush->sides[z].winding != NULL)
-												if (*(unsigned *)buildBrush->sides[z].winding != 0xdeaddead)
-													buildBrush->sides[z - 5].winding = CopyWinding(buildBrush->sides[z].winding);
-
-											if (buildBrush->sides[z].winding != NULL)
-												if (*(unsigned *)buildBrush->sides[z].winding != 0xdeaddead)
-													FreeWinding(buildBrush->sides[z].winding);
-
-											memset(&buildBrush->sides[z], 0, sizeof(side_t));
-										}
-
-										//Sys_Printf("orig numsides %i.", buildBrush->numsides);
-
-										buildBrush->numsides -= 5;
-
-										//Sys_Printf(" final numsides %i.\n", buildBrush->numsides);
-									}
-#endif
-
 									if (!RemoveDuplicateBrushPlanes( buildBrush ))
 									{// UQ1: Testing - This would create a mirrored plane... free it...
 										FreeBrush(buildBrush);
@@ -1535,48 +1264,25 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 										for (j = 1; j < buildBrush->numsides; j++)
 										{
 											buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-											buildBrush->sides[j].culled = qtrue;
+											//buildBrush->sides[j].culled = qtrue;
 										}
+
+										//InsertModelCullSides(&entities[mapEntityNum], buildBrush);
 
 										buildBrush->next = entities[ mapEntityNum ].brushes;
 										entities[ mapEntityNum ].brushes = buildBrush;
 										entities[ mapEntityNum ].numBrushes++;
-										if (added_brushes != NULL)
-											*added_brushes += 1;
 									}
 								}
 								else
 								{
 									FreeBrush(buildBrush);
 								}
-#else
-								for (z = 0; z < 4; z++)
-								{
-									if (backs[z][0] < mins[0]) mins[0] = backs[z][0];
-									if (backs[z][1] < mins[1]) mins[1] = backs[z][1];
-									if (backs[z][2] < mins[2]) mins[2] = backs[z][2];
-
-									if (backs[z][0] > maxs[0]) maxs[0] = backs[z][0];
-									if (backs[z][1] > maxs[1]) maxs[1] = backs[z][1];
-									if (backs[z][2] > maxs[2]) maxs[2] = backs[z][2];
-								}
-
-								buildBrush = BrushFromBounds(mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2], si);
-
-								/*for (j = 1; j < buildBrush->numsides; j++)
-								{
-									buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-									buildBrush->sides[j].culled = qtrue;
-								}*/
-
-								buildBrush->next = entities[mapEntityNum].brushes;
-								entities[mapEntityNum].brushes = buildBrush;
-								entities[mapEntityNum].numBrushes++;
-								if (added_brushes != NULL)
-									*added_brushes += 1;
-#endif
 							} // #pragma omp critical
 						} // #pragma omp ordered
+
+						//if (buildBrush && !(*((int*)buildBrush) == 0xFEFEFEFE))
+						//	InsertModelCullSides(&entities[mapEntityNum], buildBrush);
 					}
 					else
 					{
@@ -1587,840 +1293,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 					distanceEpsilon = distanceEpsilon_save;
 				}
 			}
-#endif //__USE_CULL_BOX_SYSTEM__
 		}
 	}
-
-#ifdef __USE_CULL_BOX_SYSTEM__
-	if (isTreeSolid && TREE_MINS[0] < 999999.9 && TREE_MINS[1] < 999999.9 && TREE_MINS[2] < 999999.9)
-	{
-		int i;
-		unsigned int numIndexes = 0;
-		unsigned int indexes[64] = { 0 };
-		unsigned int numVerts = 0;
-		vec3_t xyz[64] = { 0 };
-		vec4_t plane, reverse, pa, pb, pc;
-
-		//Sys_Printf("TREE_MINS %f %f %f. TREE_MAXS %f %f %f.\n", TREE_MINS[0], TREE_MINS[1], TREE_MINS[2], TREE_MAXS[0], TREE_MAXS[1], TREE_MAXS[2]);
-
-		if (TREE_MAXS[0] - TREE_MINS[0] > 156.0 && TREE_MAXS[1] - TREE_MINS[1] > 156.0)
-		{// Reduce the box size a bit, so that the corners don't stick out so far...
-			TREE_MINS[0] += 64.0;
-			TREE_MINS[1] += 64.0;
-			TREE_MAXS[0] -= 64.0;
-			TREE_MAXS[1] -= 64.0;
-		}
-
-#ifdef __USE_CULL_BOX_SYSTEM2__
-#pragma omp ordered
-		{
-#pragma omp critical
-			{
-				buildBrush = BrushFromBounds(TREE_MINS[0], TREE_MINS[1], TREE_MINS[2], TREE_MAXS[0], TREE_MAXS[1], TREE_MAXS[2], solidSi);
-
-				/*buildBrush->entityNum = mapEntityNum;
-				buildBrush->mapEntityNum = mapEntityNum;
-				buildBrush->original = buildBrush;
-				buildBrush->contentShader = solidSi;
-				buildBrush->compileFlags = solidSi->compileFlags;
-				buildBrush->contentFlags = solidSi->contentFlags;*/
-
-				AddBrushBevels();
-
-				buildBrush->detail = qtrue;
-
-				/* set up brush sides */
-				buildBrush->numsides = 5;
-				buildBrush->sides[0].shaderInfo = solidSi;
-
-				for (i = 1; i < buildBrush->numsides; i++)
-				{
-					buildBrush->sides[i].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-					buildBrush->sides[i].culled = qtrue;
-				}
-
-				buildBrush->next = entities[mapEntityNum].brushes;
-				entities[mapEntityNum].brushes = buildBrush;
-				entities[mapEntityNum].numBrushes++;
-				if (added_brushes != NULL)
-					*added_brushes += 1;
-			}
-		}
-#else //!__USE_CULL_BOX_SYSTEM2__
-		// Create a new cube for this mins/maxs...
-		AddCube(TREE_MINS, TREE_MAXS, &numIndexes, indexes, &numVerts, xyz);
-
-		/* create solidity from this new cube */
-		for (i = 0; i < numIndexes; i += 3)
-		{
-			int					j;
-			vec3_t				points[4], backs[3];
-
-			/* overflow hack */
-			if ((nummapplanes + 64) >= (MAX_MAP_PLANES >> 1))
-			{
-				Sys_Warning(mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name);
-				break;
-			}
-
-			/* make points and back points */
-			for (j = 0; j < 3; j++)
-			{
-				/* copy xyz */
-				VectorCopy(xyz[indexes[i + j]], points[j]);
-				VectorCopy(xyz[indexes[i + j]], backs[j]);
-			}
-
-			VectorCopy(points[0], points[3]); // for cyclic usage
-
-			/* make plane for triangle */
-			// div0: add some extra spawnflags:
-			//   0: snap normals to axial planes for extrusion
-			//   8: extrude with the original normals
-			//  16: extrude only with up/down normals (ideal for terrain)
-			//  24: extrude by distance zero (may need engine changes)
-			if (PlaneFromPoints(plane, points[0], points[1], points[2]))
-			{
-				double				normalEpsilon_save;
-				double				distanceEpsilon_save;
-
-				vec3_t bestNormal;
-				float backPlaneDistance = 2;
-
-				if (spawnFlags & 8) // use a DOWN normal
-				{
-					if (spawnFlags & 16)
-					{
-						// 24: normal as is, and zero width (broken)
-						VectorCopy(plane, bestNormal);
-					}
-					else
-					{
-						// 8: normal as is
-						VectorCopy(plane, bestNormal);
-					}
-				}
-				else
-				{
-					if (spawnFlags & 16)
-					{
-						// 16: UP/DOWN normal
-						VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-					}
-					else
-					{
-						// 0: axial normal
-						if (fabs(plane[0]) > fabs(plane[1])) // x>y
-						if (fabs(plane[1]) > fabs(plane[2])) // x>y, y>z
-							VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
-						else // x>y, z>=y
-						if (fabs(plane[0]) > fabs(plane[2])) // x>z, z>=y
-							VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
-						else // z>=x, x>y
-							VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-						else // y>=x
-						if (fabs(plane[1]) > fabs(plane[2])) // y>z, y>=x
-							VectorSet(bestNormal, 0, (plane[1] >= 0 ? 1 : -1), 0);
-						else // z>=y, y>=x
-							VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-					}
-				}
-
-				/* regenerate back points */
-				for (j = 0; j < 3; j++)
-				{
-					// shift by some units
-					VectorMA(xyz[indexes[i + j]], -64.0f, bestNormal, backs[j]); // 64 prevents roundoff errors a bit
-				}
-
-				/* make back plane */
-				VectorScale(plane, -1.0f, reverse);
-				reverse[3] = -plane[3];
-				if ((spawnFlags & 24) != 24)
-					reverse[3] += DotProduct(bestNormal, plane) * backPlaneDistance;
-				// that's at least sqrt(1/3) backPlaneDistance, unless in DOWN mode; in DOWN mode, we are screwed anyway if we encounter a plane that's perpendicular to the xy plane)
-
-				normalEpsilon_save = normalEpsilon;
-				distanceEpsilon_save = distanceEpsilon;
-
-				if (PlaneFromPoints(pa, points[2], points[1], backs[1]) &&
-					PlaneFromPoints(pb, points[1], points[0], backs[0]) &&
-					PlaneFromPoints(pc, points[0], points[2], backs[2]))
-				{
-					//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
-
-					numSolidSurfs++;
-
-					//#define __FORCE_TREE_META__
-#if defined(__FORCE_TREE_META__)
-					if (meta) si->forceMeta = qtrue; // much slower...
-#endif
-
-#pragma omp ordered
-					{
-#pragma omp critical
-						{
-
-							/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
-							buildBrush = AllocBrush(24/*48*/); // UQ1: 48 seems to be more then is used... Wasting memory...
-							buildBrush->entityNum = mapEntityNum;
-							buildBrush->mapEntityNum = mapEntityNum;
-							buildBrush->original = buildBrush;
-							buildBrush->contentShader = solidSi;
-							buildBrush->compileFlags = solidSi->compileFlags;
-							buildBrush->contentFlags = solidSi->contentFlags;
-
-							buildBrush->detail = qtrue;
-
-							/* set up brush sides */
-							buildBrush->numsides = 5;
-							buildBrush->sides[0].shaderInfo = solidSi;
-
-							for (j = 1; j < buildBrush->numsides; j++)
-							{
-								buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-								buildBrush->sides[j].culled = qtrue;
-							}
-
-							buildBrush->sides[0].planenum = FindFloatPlane(plane, plane[3], 3, points);
-							buildBrush->sides[1].planenum = FindFloatPlane(pa, pa[3], 2, &points[1]); // pa contains points[1] and points[2]
-							buildBrush->sides[2].planenum = FindFloatPlane(pb, pb[3], 2, &points[0]); // pb contains points[0] and points[1]
-							buildBrush->sides[3].planenum = FindFloatPlane(pc, pc[3], 2, &points[2]); // pc contains points[2] and points[0] (copied to points[3]
-							buildBrush->sides[4].planenum = FindFloatPlane(reverse, reverse[3], 3, backs);
-
-							/* add to entity */
-							if (CreateBrushWindings(buildBrush))
-							{
-								int numsides;
-
-								AddBrushBevels();
-								//%	EmitBrushes( buildBrush, NULL, NULL );
-
-								numsides = buildBrush->numsides;
-
-								if (!RemoveDuplicateBrushPlanes(buildBrush))
-								{// UQ1: Testing - This would create a mirrored plane... free it...
-									free(buildBrush);
-									//Sys_Printf("Removed a mirrored plane\n");
-								}
-								else
-								{
-									//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
-
-									buildBrush->next = entities[mapEntityNum].brushes;
-									entities[mapEntityNum].brushes = buildBrush;
-									entities[mapEntityNum].numBrushes++;
-									if (added_brushes != NULL)
-										*added_brushes += 1;
-								}
-							}
-							else
-							{
-								free(buildBrush);
-							}
-						} // #pragma omp critical
-					} // #pragma omp ordered
-				}
-				else
-				{
-					continue;
-				}
-
-				normalEpsilon = normalEpsilon_save;
-				distanceEpsilon = distanceEpsilon_save;
-			}
-		}
-#endif //__USE_CULL_BOX_SYSTEM2__
-	}
-#elif defined(__MODEL_SIMPLIFICATION__)
-	if (haveLodModel)
-	{
-		model = lodModel;
-
-		/* hack: Stable-1_2 and trunk have differing row/column major matrix order
-		this transpose is necessary with Stable-1_2
-		uncomment the following line with old m4x4_t (non 1.3/spog_branch) code */
-		//%	m4x4_transpose( transform );
-
-		/* create transform matrix for normals */
-		memcpy( nTransform, transform, sizeof( m4x4_t ) );
-		if( m4x4_invert( nTransform ) )
-			Sys_Warning( mapEntityNum, "Can't invert model transform matrix, using transpose instead" );
-		m4x4_transpose( nTransform );
-
-		/* each surface on the model will become a new map drawsurface */
-		numSurfaces = PicoGetModelNumSurfaces( model );
-
-#pragma omp parallel for ordered num_threads((numSurfaces < numthreads) ? numSurfaces : numthreads)
-		for( s = 0; s < numSurfaces; s++ )
-		{
-			int					i;
-			char				*picoShaderName;
-			char				shaderName[ MAX_QPATH ];
-			remap_t				*rm, *glob;
-			shaderInfo_t		*si;
-			mapDrawSurface_t	*ds;
-			picoSurface_t		*surface;
-			picoIndex_t			*indexes;
-
-			/* get surface */
-			surface = PicoGetModelSurface( model, s );
-			if( surface == NULL )
-				continue;
-
-			/* only handle triangle surfaces initially (fixme: support patches) */
-			if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
-				continue;
-
-#pragma omp critical
-			{
-				/* allocate a surface (ydnar: gs mods) */
-				ds = AllocDrawSurface( SURFACE_TRIANGLES );
-			}
-			ds->entityNum = entityNum;
-			ds->mapEntityNum = mapEntityNum;
-			ds->castShadows = castShadows;
-			ds->recvShadows = recvShadows;
-			ds->noAlphaFix = noAlphaFix;
-			ds->skybox = skybox;
-			if (added_surfaces != NULL)
-				*added_surfaces += 1;
-
-			/* get shader name */
-			/* vortex: support .skin files */
-			picoShaderName = PicoGetSurfaceShaderNameForSkin( surface, skin );
-
-			/* handle shader remapping */
-			glob = NULL;
-			for( rm = remap; rm != NULL; rm = rm->next )
-			{
-				if( rm->from[ 0 ] == '*' && rm->from[ 1 ] == '\0' )
-					glob = rm;
-				else if( !Q_stricmp( picoShaderName, rm->from ) )
-				{
-					Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", picoShaderName, rm->to );
-					picoShaderName = rm->to;
-					glob = NULL;
-					break;
-				}
-			}
-
-			if( glob != NULL )
-			{
-				Sys_FPrintf( SYS_VRB, "Globbing %s to %s\n", picoShaderName, glob->to );
-				picoShaderName = glob->to;
-			}
-
-			/* shader renaming for sof2 */
-			if( renameModelShaders )
-			{
-				strcpy( shaderName, picoShaderName );
-				StripExtension( shaderName );
-				if( spawnFlags & 1 )
-					strcat( shaderName, "_RMG_BSP" );
-				else
-					strcat( shaderName, "_BSP" );
-				si = ShaderInfoForShader( shaderName );
-			}
-			else
-				si = ShaderInfoForShader( picoShaderName );
-
-			LoadShaderImages( si );
-			if (si)
-			{
-				si->clipModel = qtrue;
-				si->isMapObjectSolid = qtrue;
-				si->skipSolidCull = qtrue;
-				si->compileFlags |= C_NODRAW;
-			}
-
-			/* warn for missing shader */
-			if( si->warnNoShaderImage == qtrue )
-			{
-				if( mapEntityNum >= 0 )
-					Sys_Warning( mapEntityNum, "Failed to load shader image '%s'", si->shader );
-				else
-				{
-					/* external entity, just show single warning */
-					Sys_Warning( "Failed to load shader image '%s' for model '%s'", si->shader, PicoGetModelFileName( model ) );
-					si->warnNoShaderImage = qfalse;
-				}
-			}
-
-			/* set shader */
-			ds->shaderInfo = si;
-
-			/* set shading angle */
-			ds->smoothNormals = shadeAngle;
-
-			/* force to meta? */
-			if( (si != NULL && si->forceMeta) || (spawnFlags & 4) )	/* 3rd bit */
-				ds->type = SURFACE_FORCED_META;
-
-			/* fix the surface's normals (jal: conditioned by shader info) */
-			if( !(spawnFlags & 64) && ( shadeAngle <= 0.0f || ds->type != SURFACE_FORCED_META ) )
-				PicoFixSurfaceNormals( surface );
-
-			/* set sample size */
-			if( lightmapSampleSize > 0.0f )
-				ds->sampleSize = lightmapSampleSize;
-
-			/* set lightmap scale */
-			if( lightmapScale > 0.0f )
-				ds->lightmapScale = lightmapScale;
-
-			/* set lightmap axis */
-			if (lightmapAxis != NULL)
-				VectorCopy( lightmapAxis, ds->lightmapAxis );
-
-			/* set minlight/ambient/colormod */
-			if (minlight != NULL)
-			{
-				VectorCopy( minlight, ds->minlight );
-				VectorCopy( minlight, ds->minvertexlight );
-			}
-			if (minvertexlight != NULL)
-				VectorCopy( minvertexlight, ds->minvertexlight );
-			if (ambient != NULL)
-				VectorCopy( ambient, ds->ambient );
-			if (colormod != NULL)
-				VectorCopy( colormod, ds->colormod );
-
-			/* set vertical texture projection */
-			if ( vertTexProj > 0 )
-				ds->vertTexProj = vertTexProj;
-
-			/* set particulars */
-			ds->numVerts = PicoGetSurfaceNumVertexes( surface );
-#pragma omp critical
-			{
-				ds->verts = (bspDrawVert_t *)safe_malloc( ds->numVerts * sizeof( ds->verts[ 0 ] ) );
-				memset( ds->verts, 0, ds->numVerts * sizeof( ds->verts[ 0 ] ) );
-			}
-
-			if (added_verts != NULL)
-				*added_verts += ds->numVerts;
-
-			ds->numIndexes = PicoGetSurfaceNumIndexes( surface );
-#pragma omp critical
-			{
-				ds->indexes = (int *)safe_malloc( ds->numIndexes * sizeof( ds->indexes[ 0 ] ) );
-				memset( ds->indexes, 0, ds->numIndexes * sizeof( ds->indexes[ 0 ] ) );
-			}
-
-			if (added_triangles != NULL)
-				*added_triangles += (ds->numIndexes / 3);
-
-			/* copy vertexes */
-			for( i = 0; i < ds->numVerts; i++ )
-			{
-				int					j;
-				bspDrawVert_t		*dv;
-				vec3_t				forceVecs[ 2 ];
-				picoVec_t			*xyz, *normal, *st;
-				picoByte_t			*color;
-
-				/* get vertex */
-				dv = &ds->verts[ i ];
-
-				/* vortex: create forced tcGen vecs for vertical texture projection */
-				if (ds->vertTexProj > 0)
-				{
-					forceVecs[ 0 ][ 0 ] = 1.0 / ds->vertTexProj;
-					forceVecs[ 0 ][ 1 ] = 0.0;
-					forceVecs[ 0 ][ 2 ] = 0.0;
-					forceVecs[ 1 ][ 0 ] = 0.0;
-					forceVecs[ 1 ][ 1 ] = 1.0 / ds->vertTexProj;
-					forceVecs[ 1 ][ 2 ] = 0.0;
-				}
-
-				/* xyz and normal */
-				xyz = PicoGetSurfaceXYZ( surface, i );
-				VectorCopy( xyz, dv->xyz );
-				m4x4_transform_point( transform, dv->xyz );
-
-				normal = PicoGetSurfaceNormal( surface, i );
-				VectorCopy( normal, dv->normal );
-				m4x4_transform_normal( nTransform, dv->normal );
-				VectorNormalize( dv->normal, dv->normal );
-
-				/* ydnar: tek-fu celshading support for flat shaded shit */
-				if( flat )
-				{
-					dv->st[ 0 ] = si->stFlat[ 0 ];
-					dv->st[ 1 ] = si->stFlat[ 1 ];
-				}
-
-				/* vortex: entity-set _vp/_vtcproj will force drawsurface to "tcGen ivector ( value 0 0 ) ( 0 value 0 )"  */
-				else if( ds->vertTexProj > 0 )
-				{
-					/* project the texture */
-					dv->st[ 0 ] = DotProduct( forceVecs[ 0 ], dv->xyz );
-					dv->st[ 1 ] = DotProduct( forceVecs[ 1 ], dv->xyz );
-				}
-
-				/* ydnar: gs mods: added support for explicit shader texcoord generation */
-				else if( si->tcGen )
-				{
-					/* project the texture */
-					dv->st[ 0 ] = DotProduct( si->vecs[ 0 ], dv->xyz );
-					dv->st[ 1 ] = DotProduct( si->vecs[ 1 ], dv->xyz );
-				}
-
-				/* normal texture coordinates */
-				else
-				{
-					st = PicoGetSurfaceST( surface, 0, i );
-					dv->st[ 0 ] = st[ 0 ];
-					dv->st[ 1 ] = st[ 1 ];
-				}
-
-				/* scale UV by external key */
-				dv->st[ 0 ] *= uvScale;
-				dv->st[ 1 ] *= uvScale;
-
-				/* set lightmap/color bits */
-				color = PicoGetSurfaceColor( surface, 0, i );
-
-				for( j = 0; j < MAX_LIGHTMAPS; j++ )
-				{
-					dv->lightmap[ j ][ 0 ] = 0.0f;
-					dv->lightmap[ j ][ 1 ] = 0.0f;
-					if(spawnFlags & 32) // spawnflag 32: model color -> alpha hack
-					{
-						dv->color[ j ][ 0 ] = 255.0f;
-						dv->color[ j ][ 1 ] = 255.0f;
-						dv->color[ j ][ 2 ] = 255.0f;
-						dv->color[ j ][ 3 ] = color[ 0 ] * 0.3f + color[ 1 ] * 0.59f + color[ 2 ] * 0.11f;
-					}
-					else
-					{
-						dv->color[ j ][ 0 ] = color[ 0 ];
-						dv->color[ j ][ 1 ] = color[ 1 ];
-						dv->color[ j ][ 2 ] = color[ 2 ];
-						dv->color[ j ][ 3 ] = color[ 3 ];
-					}
-				}
-			}
-
-			/* copy indexes */
-			indexes = PicoGetSurfaceIndexes( surface, 0 );
-
-			for( i = 0; i < ds->numIndexes; i++ )
-				ds->indexes[ i ] = indexes[ i ];
-
-			/* deform vertexes */
-			DeformVertexes( ds, pushVertexes);
-
-			/* set cel shader */
-			ds->celShader = celShader;
-
-			/* walk triangle list */
-			for( i = 0; i < ds->numIndexes; i += 3 )
-			{
-				bspDrawVert_t		*dv;
-				int					j;
-
-				vec3_t points[ 4 ];
-
-				/* make points and back points */
-				for( j = 0; j < 3; j++ )
-				{
-					/* get vertex */
-					dv = &ds->verts[ ds->indexes[ i + j ] ];
-
-					/* copy xyz */
-					VectorCopy( dv->xyz, points[ j ] );
-				}
-			}
-
-			/* ydnar: giant hack land: generate clipping brushes for model triangles */
-			if( !noclipmodel )	/* 2nd bit */
-			{
-				vec3_t points[ 4 ], backs[ 3 ];
-				vec4_t plane, reverse, pa, pb, pc;
-
-				/* overflow check */
-				if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
-				{
-					continue;
-				}
-
-				/* walk triangle list */
-				for( i = 0; i < ds->numIndexes; i += 3 )
-				{
-					int					j;
-
-					/* overflow hack */
-					if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
-					{
-						Sys_Warning( mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name );
-						break;
-					}
-
-					/* make points and back points */
-					for( j = 0; j < 3; j++ )
-					{
-						bspDrawVert_t		*dv;
-						int					k;
-
-						/* get vertex */
-						dv = &ds->verts[ ds->indexes[ i + j ] ];
-
-						/* copy xyz */
-						VectorCopy( dv->xyz, points[ j ] );
-						VectorCopy( dv->xyz, backs[ j ] );
-
-						/* find nearest axial to normal and push back points opposite */
-						/* note: this doesn't work as well as simply using the plane of the triangle, below */
-						for( k = 0; k < 3; k++ )
-						{
-							if( fabs( dv->normal[ k ] ) >= fabs( dv->normal[ (k + 1) % 3 ] ) &&
-								fabs( dv->normal[ k ] ) >= fabs( dv->normal[ (k + 2) % 3 ] ) )
-							{
-								backs[ j ][ k ] += dv->normal[ k ] < 0.0f ? 64.0f : -64.0f;
-								break;
-							}
-						}
-					}
-
-					VectorCopy( points[0], points[3] ); // for cyclic usage
-
-					/* make plane for triangle */
-					// div0: add some extra spawnflags:
-					//   0: snap normals to axial planes for extrusion
-					//   8: extrude with the original normals
-					//  16: extrude only with up/down normals (ideal for terrain)
-					//  24: extrude by distance zero (may need engine changes)
-					if( PlaneFromPoints( plane, points[ 0 ], points[ 1 ], points[ 2 ] ) )
-					{
-						double				normalEpsilon_save;
-						double				distanceEpsilon_save;
-
-						vec3_t bestNormal;
-						float backPlaneDistance = 2;
-
-						if(spawnFlags & 8) // use a DOWN normal
-						{
-							if(spawnFlags & 16)
-							{
-								// 24: normal as is, and zero width (broken)
-								VectorCopy(plane, bestNormal);
-							}
-							else
-							{
-								// 8: normal as is
-								VectorCopy(plane, bestNormal);
-							}
-						}
-						else
-						{
-							if(spawnFlags & 16)
-							{
-								// 16: UP/DOWN normal
-								VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-							}
-							else
-							{
-								// 0: axial normal
-								if(fabs(plane[0]) > fabs(plane[1])) // x>y
-								if(fabs(plane[1]) > fabs(plane[2])) // x>y, y>z
-									VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
-								else // x>y, z>=y
-								if(fabs(plane[0]) > fabs(plane[2])) // x>z, z>=y
-									VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
-								else // z>=x, x>y
-									VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-								else // y>=x
-								if(fabs(plane[1]) > fabs(plane[2])) // y>z, y>=x
-									VectorSet(bestNormal, 0, (plane[1] >= 0 ? 1 : -1), 0);
-								else // z>=y, y>=x
-									VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
-							}
-						}
-
-						/* regenerate back points */
-						for( j = 0; j < 3; j++ )
-						{
-							bspDrawVert_t		*dv;
-
-							/* get vertex */
-							dv = &ds->verts[ ds->indexes[ i + j ] ];
-
-							// shift by some units
-							VectorMA(dv->xyz, -64.0f, bestNormal, backs[j]); // 64 prevents roundoff errors a bit
-						}
-
-						/* make back plane */
-						VectorScale( plane, -1.0f, reverse );
-						reverse[ 3 ] = -plane[ 3 ];
-						if((spawnFlags & 24) != 24)
-							reverse[3] += DotProduct(bestNormal, plane) * backPlaneDistance;
-						// that's at least sqrt(1/3) backPlaneDistance, unless in DOWN mode; in DOWN mode, we are screwed anyway if we encounter a plane that's perpendicular to the xy plane)
-
-						normalEpsilon_save = normalEpsilon;
-						distanceEpsilon_save = distanceEpsilon;
-
-						if( PlaneFromPoints( pa, points[ 2 ], points[ 1 ], backs[ 1 ] ) &&
-							PlaneFromPoints( pb, points[ 1 ], points[ 0 ], backs[ 0 ] ) &&
-							PlaneFromPoints( pc, points[ 0 ], points[ 2 ], backs[ 2 ] ) )
-						{
-							//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
-
-							numSolidSurfs++;
-
-							if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
-							{
-								vec3_t mins, maxs;
-								vec3_t size;
-								float sz;
-								int z;
-
-								VectorSet(mins, 999999, 999999, 999999);
-								VectorSet(maxs, -999999, -999999, -999999);
-
-								for (z = 0; z < 4; z++)
-								{
-									if (points[z][0] < mins[0]) mins[0] = points[z][0];
-									if (points[z][1] < mins[1]) mins[1] = points[z][1];
-									if (points[z][2] < mins[2]) mins[2] = points[z][2];
-
-									if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
-									if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
-									if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
-								}
-
-								if (top != -999999 && bottom != -999999)
-								{
-									float s = top - bottom;
-									float newtop = bottom + (s / 2.0);
-
-									//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
-
-									if (mins[2] > newtop)
-									{
-										//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
-										numHeightCulledSurfs++;
-										continue;
-									}
-								}
-
-								VectorSubtract(maxs, mins, size);
-								//sz = VectorLength(size);
-								sz = maxs[0] - mins[0];
-								if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
-								if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
-
-								if (sz < 36)
-								{
-									//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
-									numSizeCulledSurfs++;
-									continue;
-								}
-							}
-
-							//#define __FORCE_TREE_META__
-#if defined(__FORCE_TREE_META__)
-							if (meta) si->forceMeta = qtrue; // much slower...
-#endif
-
-#pragma omp ordered
-							{
-#pragma omp critical
-								{
-
-									/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
-									buildBrush = AllocBrush( 24/*48*/ ); // UQ1: 48 seems to be more then is used... Wasting memory...
-									buildBrush->entityNum = mapEntityNum;
-									buildBrush->mapEntityNum = mapEntityNum;
-									buildBrush->original = buildBrush;
-									buildBrush->contentShader = si;
-									buildBrush->compileFlags = si->compileFlags;
-									buildBrush->contentFlags = si->contentFlags;
-
-									if (si->isTreeSolid || si->isMapObjectSolid || (si->compileFlags & C_DETAIL))
-									{
-										buildBrush->detail = qtrue;
-									}
-									else if (si->compileFlags & C_STRUCTURAL) // allow forced structural brushes here
-									{
-										buildBrush->detail = qfalse;
-
-										// only allow EXACT matches when snapping for these (this is mostly for caulk brushes inside a model)
-										if(normalEpsilon > 0)
-											normalEpsilon = 0;
-										if(distanceEpsilon > 0)
-											distanceEpsilon = 0;
-									}
-									else
-									{
-										buildBrush->detail = qtrue;
-									}
-
-									/* set up brush sides */
-									buildBrush->numsides = 5;
-									buildBrush->sides[ 0 ].shaderInfo = si;
-
-									for (j = 1; j < buildBrush->numsides; j++)
-									{
-										buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-										buildBrush->sides[j].culled = qtrue;
-									}
-
-									buildBrush->sides[0].planenum = FindFloatPlane(plane, plane[3], 3, points);
-									buildBrush->sides[1].planenum = FindFloatPlane(pa, pa[3], 2, &points[1]); // pa contains points[1] and points[2]
-									buildBrush->sides[2].planenum = FindFloatPlane(pb, pb[3], 2, &points[0]); // pb contains points[0] and points[1]
-									buildBrush->sides[3].planenum = FindFloatPlane(pc, pc[3], 2, &points[2]); // pc contains points[2] and points[0] (copied to points[3]
-									buildBrush->sides[4].planenum = FindFloatPlane(reverse, reverse[3], 3, backs);
-
-									/* add to entity */
-									if (CreateBrushWindings(buildBrush))
-									{
-										int numsides;
-
-										AddBrushBevels();
-										//%	EmitBrushes( buildBrush, NULL, NULL );
-
-										numsides = buildBrush->numsides;
-
-										if (!RemoveDuplicateBrushPlanes(buildBrush))
-										{// UQ1: Testing - This would create a mirrored plane... free it...
-											free(buildBrush);
-											//Sys_Printf("Removed a mirrored plane\n");
-										}
-										else
-										{
-											//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
-
-											buildBrush->next = entities[mapEntityNum].brushes;
-											entities[mapEntityNum].brushes = buildBrush;
-											entities[mapEntityNum].numBrushes++;
-											if (added_brushes != NULL)
-												*added_brushes += 1;
-										}
-									}
-									else
-									{
-										free(buildBrush);
-									}
-								} // #pragma omp critical
-							} // #pragma omp ordered
-						}
-						else
-						{
-							continue;
-						}
-
-						normalEpsilon = normalEpsilon_save;
-						distanceEpsilon = distanceEpsilon_save;
-					}
-				}
-			}
-		}
-	}
-#endif //__MODEL_SIMPLIFICATION__
 }
-
 
 /*
 LoadTriangleModels()
@@ -2594,6 +1469,7 @@ void LoadTriangleModels(void)
 	Sys_Printf("%9i unique model/frame combinations\n", numLoadedModels);
 }
 
+
 /*
 AddTriangleModels()
 adds misc_model surfaces to the bsp
@@ -2625,6 +1501,12 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 
 	/* get current brush entity targetname */
 	e = &entities[entityNum];
+
+	NUM_ORIGINAL_BRUSHES = 0;
+
+	for (brush_t *b1 = e->brushes; b1; b1 = b1->next)
+		NUM_ORIGINAL_BRUSHES++;
+
 	if (e == entities)
 		targetName = "";
 	else
@@ -2657,6 +1539,55 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		baseVertTexProj = IntForKey(e, "_vp");
 	if (baseVertTexProj <= 0)
 		baseVertTexProj = 0;
+
+#ifdef CULL_BY_LOWEST_NEAR_POINT
+	/* walk the entity list */
+	for (num = 1; num < numEntities; num++)
+	{
+		shaderInfo_t *overrideShader = NULL;
+		qboolean forcedSolid = qfalse;
+
+		if (!quiet) printLabelledProgress("FindLowestPoints", num, numEntities);
+
+		/* get e2 */
+		e2 = &entities[num];
+
+		/* convert misc_models into raw geometry  */
+		if (Q_stricmp("misc_model", ValueForKey(e2, "classname")))
+		{
+			//Sys_Printf( "Failed Classname\n" );
+			continue;
+		}
+
+		/* ydnar: added support for md3 models on non-worldspawn models */
+		target = ValueForKey(e2, "target");
+		if (strcmp(target, targetName))
+		{
+			//Sys_Printf( "Failed Target\n" );
+			continue;
+		}
+
+		/* get model name */
+		/* vortex: add _model synonim */
+		model = ValueForKey(e2, "_model");
+		if (model[0] == '\0')
+			model = ValueForKey(e2, "model");
+		if (model[0] == '\0')
+		{
+			Sys_Warning(e2->mapEntityNum, "misc_model at %i %i %i without a model key", (int)origin[0], (int)origin[1], (int)origin[2]);
+			//Sys_Printf( "Failed Model\n" );
+			continue;
+		}
+
+		/* get origin */
+		GetVectorForKey(e2, "origin", origin);
+		VectorSubtract(origin, e->origin, origin);	/* offset by parent */
+
+		e2->lowestPointNear = LowestMapPointNear(origin);
+		//Sys_Printf("origin %f %f %f.\n", origin[0], origin[1], origin[2]);
+		//Sys_Printf("LOWEST_NEAR_POINT %f.\n", e2->lowestPointNear);
+	}
+#endif //CULL_BY_LOWEST_NEAR_POINT
 
 	/* walk the entity list */
 	for (num = 1; num < numEntities; num++)
@@ -2856,7 +1787,11 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		pushVertexes += FloatForKey(e2, "_pv2"); // vortex: set by decorator
 
 		/* insert the model */
-		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids);
+#ifdef CULL_BY_LOWEST_NEAR_POINT
+		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
+#else //!CULL_BY_LOWEST_NEAR_POINT
+		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
+#endif //CULL_BY_LOWEST_NEAR_POINT
 
 		//Sys_Printf( "insert model: %s. added_surfaces: %i. added_triangles: %i. added_verts: %i. added_brushes: %i.\n", model, added_surfaces, added_triangles, added_verts, added_brushes );
 
@@ -2881,9 +1816,11 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		//int totalExpCulled = numExperimentalCulled;
 		int totalHeightCulled = numHeightCulledSurfs;
 		int totalSizeCulled = numSizeCulledSurfs;
-		int totalTotalCulled = numExperimentalCulled + numHeightCulledSurfs + numSizeCulledSurfs;
+		int totalBoundsCulled = numBoundsCulledSurfs;
+		int totalTotalCulled = numExperimentalCulled + numHeightCulledSurfs + numSizeCulledSurfs + totalBoundsCulled;
 		int percentExpCulled = 0;
 		int percentHeightCulled = 0;
+		int percentBoundsCulled = 0;
 		int percentSizeCulled = 0;
 		int percentTotalCulled = 0;
 
@@ -2892,6 +1829,9 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 
 		if (totalHeightCulled > 0 && numSolidSurfs > 0)
 			percentHeightCulled = (int)(((float)totalHeightCulled / (float)numSolidSurfs) * 100.0);
+
+		if (totalBoundsCulled > 0 && numSolidSurfs > 0)
+			percentBoundsCulled = (int)(((float)totalBoundsCulled / (float)numSolidSurfs) * 100.0);
 
 		if (totalSizeCulled > 0 && numSolidSurfs > 0)
 			percentSizeCulled = (int)(((float)totalSizeCulled / (float)numSolidSurfs) * 100.0);
@@ -2906,9 +1846,12 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		Sys_Printf("%9d brushes added\n", total_added_brushes);
 		//Sys_Printf("%9i of %i solid surfaces culled by experimental culling (%i percent).\n", totalExpCulled, numSolidSurfs, percentExpCulled);
 		Sys_Printf("%9i of %i solid surfaces culled for height (%i percent).\n", totalHeightCulled, numSolidSurfs, percentHeightCulled);
+		Sys_Printf("%9i of %i solid surfaces culled for map bounds (%i percent).\n", totalBoundsCulled, numSolidSurfs, percentBoundsCulled);
 		Sys_Printf("%9i of %i solid surfaces culled for tiny size (%i percent).\n", totalSizeCulled, numSolidSurfs, percentSizeCulled);
 		Sys_Printf("%9i of %i total solid surfaces culled (%i percent).\n", totalTotalCulled, numSolidSurfs, percentTotalCulled);
 	}
+
+	//InsertModelCullSides(&entities[mapEntityNum]);
 
 	//g_numHiddenFaces = 0;
 	//g_numCoinFaces = 0;

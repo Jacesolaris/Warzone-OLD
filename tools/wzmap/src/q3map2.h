@@ -1247,6 +1247,7 @@ typedef struct
 	qboolean			forceSubmodel; /* vortex: entity goes thru SubModel code */
 	epair_t				*epairs;
 	vec3_t              originbrush_origin;
+	float				lowestPointNear;
 }
 entity_t;
 
@@ -1810,7 +1811,7 @@ void						PicoPrintFunc( int level, const char *str );
 void						PicoLoadFileFunc( char *name, byte **buffer, int *bufSize );
 picoModel_t					*FindModel( const char *name, int frame );
 picoModel_t					*LoadModel( const char *name, int frame );
-void						InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids );
+void						InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids, float LOWEST_POINT_NEAR );
 void						AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids );
 
 
@@ -2236,6 +2237,7 @@ Q_EXTERN int				allocatedmapplanes Q_ASSIGN(0);
 Q_EXTERN int				numMapPatches;
 Q_EXTERN vec3_t				mapMins, mapMaxs;
 Q_EXTERN vec3_t				mapRegionMins, mapRegionMaxs;
+Q_EXTERN vec3_t				mapPlayableMins, mapPlayableMaxs;
 Q_EXTERN qboolean			mapRegion Q_ASSIGN( qfalse );
 Q_EXTERN qboolean			mapRegionBrushes Q_ASSIGN( qtrue );
 Q_EXTERN int				defaultFogNum Q_ASSIGN( -1 );	/* ydnar: cleaner fog handling */

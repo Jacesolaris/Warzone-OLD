@@ -1798,6 +1798,7 @@ int OptimizeBSPMain( int argc, char **argv )
 	{
 		char filename[1024] = { 0 };
 		generateforest = qfalse;
+		generatecity = qfalse;
 
 		sprintf(filename, "%s.foliage", source);
 		
@@ -1810,9 +1811,10 @@ int OptimizeBSPMain( int argc, char **argv )
 			char filename2[1024] = { 0 };
 
 			generateforest = qtrue;
+			generatecity = qtrue;
 
-			Sys_PrintHeading ( "--- Forest generation enabled ---\n" );
-			Sys_Printf( "Loaded %i tree points from foliage file.\n", FOLIAGE_NUM_POSITIONS );
+			Sys_PrintHeading("--- Procedural geometry generation enabled ---\n");
+			Sys_Printf( "Loaded %i map points from foliage file.\n", FOLIAGE_NUM_POSITIONS );
 
 			sprintf(filename2, "%s.climate", source);
 			FOLIAGE_LoadClimateData(filename2);

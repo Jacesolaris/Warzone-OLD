@@ -1637,10 +1637,7 @@ culls obscured or buried brushsides from the map
 void CullSides( entity_t *e )
 {
 	int			numPoints;
-	int			i, j, k, l, first, second, dir;
-	winding_t	*w1, *w2;
-	brush_t	*b1, *b2;
-	side_t		*side1, *side2;
+	brush_t		*b1;
 	int			current = 0, count = 0;
 	
 	g_numHiddenFaces = 0;
@@ -1652,6 +1649,8 @@ void CullSides( entity_t *e )
 	/* brush interator 1 */
 	for( b1 = e->brushes; b1; b1 = b1->next )
 	{
+		brush_t		*b2;
+
 		printLabelledProgress("CullSides", current, count);
 		current++;
 
@@ -1662,6 +1661,8 @@ void CullSides( entity_t *e )
 		/* brush iterator 2 */
 		for( b2 = b1->next; b2; b2 = b2->next )
 		{
+			int			i, j2;
+			
 			/* sides check */
 			if( b2->numsides < 1 )
 				continue;
@@ -1671,25 +1672,29 @@ void CullSides( entity_t *e )
 				continue;
 			
 			/* bbox check */
-			j = 0;
+			j2 = 0;
 			for( i = 0; i < 3; i++ )
 				if( b1->mins[ i ] > b2->maxs[ i ] || b1->maxs[ i ] < b2->mins[ i ] )
-					j++;
-			if( j )
+					j2++;
+			if( j2 )
 				continue;
 
 			/* cull inside sides */
-//#pragma omp parallel for ordered num_threads(numthreads)
+#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b1->numsides; i++ )
 				SideInBrush( &b1->sides[ i ], b2 );
-//#pragma omp parallel for ordered num_threads(numthreads)
+#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b2->numsides; i++ )
 				SideInBrush( &b2->sides[ i ], b1 );
 			
 			/* side iterator 1 */
-//#pragma omp parallel for ordered num_threads(numthreads)
+#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b1->numsides; i++ )
 			{
+				winding_t	*w1, *w2;
+				side_t		*side1, *side2;
+				int			j, k, l, first, second, dir;
+
 				/* winding check */
 				side1 = &b1->sides[ i ];
 				w1 = side1->winding;
@@ -3229,7 +3234,7 @@ int AddSurfaceModelsToTriangle_r( mapDrawSurface_t *ds, surfaceModel_t *model, b
 			}
 			
 			/* insert the model */
-			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, NULL, qfalse, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse );
+			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, NULL, qfalse, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse, 999999.0f);
 			
 			/* return to sender */
 			return 1;

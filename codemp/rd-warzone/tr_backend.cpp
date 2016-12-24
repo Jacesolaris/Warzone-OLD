@@ -3318,6 +3318,8 @@ RB_PostProcess
 =============
 */
 
+extern qboolean FOG_POST_ENABLED;
+
 extern void GLSL_AttachPostTextures( void );
 
 const void *RB_PostProcess(const void *data)
@@ -3402,7 +3404,7 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (!SCREEN_BLUR && r_fogPost->integer)
+		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer)
 		{
 			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);

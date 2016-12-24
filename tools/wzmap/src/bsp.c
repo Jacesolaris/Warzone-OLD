@@ -38,6 +38,7 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 
 
 extern void GenerateCliffFaces ( void );
+extern void GenerateMapCity(void);
 extern void GenerateMapForest ( void );
 
 
@@ -557,6 +558,9 @@ void ProcessWorldModel( void )
 
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
+
+	/* UQ1: Generate experimental procedural city */
+	GenerateMapCity();
 
 	/* UQ1: Generate experimental procedural trees/etc */
 	GenerateMapForest();
@@ -1523,6 +1527,7 @@ int BSPMain( int argc, char **argv )
 	{
 		char filename[1024] = { 0 };
 		generateforest = qfalse;
+		generatecity = qfalse;
 
 		sprintf(filename, "%s.foliage", source);
 		
@@ -1539,8 +1544,9 @@ int BSPMain( int argc, char **argv )
 			char filename2[1024] = { 0 };
 
 			generateforest = qtrue;
+			generatecity = qtrue;
 
-			Sys_PrintHeading ( "--- Forest generation enabled ---\n" );
+			Sys_PrintHeading ( "--- Procedural geometry generation enabled ---\n" );
 			Sys_Printf( "Loaded %i tree points from foliage file.\n", FOLIAGE_NUM_POSITIONS );
 
 			sprintf(filename2, "%s.climate", source);
