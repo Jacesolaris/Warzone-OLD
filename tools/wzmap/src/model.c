@@ -771,7 +771,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			*added_triangles += (ds->numIndexes / 3);
 
 		/* copy vertexes */
-//#pragma omp parallel for ordered num_threads((ds->numVerts < numthreads) ? ds->numVerts : numthreads)
+#pragma omp parallel for ordered num_threads((ds->numVerts < numthreads) ? ds->numVerts : numthreads)
 		for (i = 0; i < ds->numVerts; i++)
 		{
 			int					j;
@@ -897,8 +897,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 		/* ydnar: giant hack land: generate clipping brushes for model triangles */
 		if ((!haveLodModel && (si->clipModel || (spawnFlags & 2)) && !noclipmodel) || forcedSolid)	/* 2nd bit */
 		{
-			vec4_t plane, reverse, pa, pb, pc;
-
 			if (!forcedSolid && (si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
 			{
 				continue;
@@ -919,11 +917,12 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			}
 
 			/* walk triangle list */
-//#pragma omp parallel for ordered num_threads((ds->numIndexes < numthreads) ? ds->numIndexes : numthreads)
+#pragma omp parallel for ordered num_threads((ds->numIndexes < numthreads) ? ds->numIndexes : numthreads)
 			for( i = 0; i < ds->numIndexes; i += 3 )
 			{
 				int					j;
 				vec3_t				points[4], backs[3];
+				vec4_t				plane, reverse, pa, pb, pc;
 
 				/* overflow hack */
 				if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
