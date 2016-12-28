@@ -46,6 +46,7 @@ extern void CullSidesStats(void);
 
 extern int g_numHiddenFaces, g_numCoinFaces;
 
+extern qboolean FORCED_MODEL_META;
 
 /*
 PicoPrintFunc()
@@ -706,6 +707,11 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			}
 		}
 
+		if (FORCED_MODEL_META)
+		{
+			si->forceMeta = qtrue;
+		}
+
 		/* set shader */
 		ds->shaderInfo = si;
 
@@ -1175,9 +1181,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						}
 
 						//#define __FORCE_TREE_META__
-#if defined(__FORCE_TREE_META__)
-						if (meta) si->forceMeta = qtrue; // much slower...
-#endif
+//#if defined(__FORCE_TREE_META__)
+//						if (meta) si->forceMeta = qtrue; // much slower...
+//#endif
 
 #pragma omp ordered
 						{

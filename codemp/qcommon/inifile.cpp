@@ -12,6 +12,7 @@
 
 #if defined(rd_warzone_x86_EXPORTS)
 #include "tr_local.h"
+#include "../rd-common/tr_public.h"
 #define FS_FOpenFileByMode ri->FS_FOpenFileByMode
 #define FS_Read ri->FS_Read
 #define FS_Write ri->FS_Write
@@ -313,9 +314,12 @@ const char *IniReadCPP(char *aFilespec, char *aSection, char *aKey, char *aDefau
 
 	char	szBuffer[65535] = { 0 };					// Max ini file size is 65535 under 95
 
-	get_private_profile_string(aSection, aKey, aDefault, szBuffer, sizeof(szBuffer), aFilespec);
+	if (!get_private_profile_string(aSection, aKey, aDefault, szBuffer, sizeof(szBuffer), aFilespec))
+	{
+		return aDefault;
+	}
 
-	return va(szBuffer);
+	return va("%s", szBuffer);
 }
 
 void IniWriteCPP(char *aFilespec, char *aSection, char *aKey, char *aValue)
@@ -330,7 +334,7 @@ void IniWriteCPP(char *aFilespec, char *aSection, char *aKey, char *aValue)
 /*
 // Example usage
 PLAYER_FACTION = IniRead("general.ini","PLAYER_SETTINGS","PLAYER_FACTION","imperial");
-PLAYER_FACTION_AUTODETECT = atoi(IniRead("general.ini","PLAYER_SETTINGS","PLAYER_HEALTH","100"));
+PLAYER_HEALTH = atoi(IniRead("general.ini","PLAYER_SETTINGS","PLAYER_HEALTH","100"));
 */
 
 const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
@@ -339,7 +343,10 @@ const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 	/*#ifdef _GAME
 		trap->Print("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value);
 		#endif*/
-	if (!strcmp(value, "")) return aDefault;
+	if (value[0] == '\0' || !strcmp(value, "") || !strcmp(value, aDefault))
+	{
+		return aDefault;
+	}
 
 	return value;
 }

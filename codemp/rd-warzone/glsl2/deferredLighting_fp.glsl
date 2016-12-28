@@ -15,10 +15,12 @@ uniform vec3		u_ViewOrigin;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
+#define MAX_LIGHTALL_DLIGHTS 64//16
+
 uniform int			u_lightCount;
-uniform vec3		u_lightPositions2[16];
-uniform float		u_lightDistances[16];
-uniform vec3		u_lightColors[16];
+uniform vec3		u_lightPositions2[MAX_LIGHTALL_DLIGHTS];
+uniform float		u_lightDistances[MAX_LIGHTALL_DLIGHTS];
+uniform vec3		u_lightColors[MAX_LIGHTALL_DLIGHTS];
 
 varying vec2		var_TexCoords;
 
@@ -165,7 +167,7 @@ void main(void)
 			if (lightDist < lightMax)
 			{
 				highp float lightStrength = 1.0 - (lightDist / lightMax);
-				lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0);
+				lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0) * 0.5;
 
 				if (lightStrength > 0.0)
 				{

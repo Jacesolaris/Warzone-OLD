@@ -81,6 +81,7 @@ void *safe_malloc_info( size_t size, char* info );
 
 extern qboolean generateforest;
 extern qboolean generatecity;
+extern qboolean FORCED_MODEL_META;
 
 // VorteX: memlog.txt writing
 extern qboolean memlog;

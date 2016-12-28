@@ -69,12 +69,6 @@ uniform vec4				u_SpecularScale;
 uniform vec4				u_CubeMapInfo;
 uniform float				u_CubeMapStrength;
 
-
-uniform int					u_lightCount;
-uniform vec3				u_lightPositions2[16];
-uniform float				u_lightDistances[16];
-uniform vec3				u_lightColors[16];
-
 uniform vec3				u_ViewOrigin;
 
 

@@ -922,7 +922,8 @@ void RB_AddGlowShaderLights ( void )
 {
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
 	{// Add (close) map glows as dynamic lights as well...
-		const int	MAX_WORLD_GLOW_DLIGHTS = 15;
+		const int	MAX_WORLD_GLOW_DLIGHTS = MAX_LIGHTALL_DLIGHTS - 1;// 15;
+		const float MAX_WORLD_GLOW_DLIGHT_RANGE = 16384.0; //4096.0;
 		int			CLOSE_TOTAL = 0;
 		int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
 		float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -933,7 +934,7 @@ void RB_AddGlowShaderLights ( void )
 			float distance = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
 
-			if (distance > 4096.0) continue;
+			if (distance > MAX_WORLD_GLOW_DLIGHT_RANGE) continue;
 
 #ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			if (distance > 512.0 && !TR_InFOV( MAP_GLOW_LOCATIONS[maplight], tr.refdef.vieworg ))
@@ -1010,15 +1011,15 @@ void RB_AddGlowShaderLights ( void )
 			if (MAP_GLOW_COLORS_AVILABLE[CLOSE_LIST[i]])
 			{
 				vec4_t glowColor = { 0 };
-
+				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
-
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, glowColor[0] * 0.25, glowColor[1] * 0.25, glowColor[2] * 0.25, qfalse, qtrue );
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0 * strength, glowColor[0] * 0.25, glowColor[1] * 0.25, glowColor[2] * 0.25, qfalse, qtrue );
 				num_colored++;
 			}
 			else
 			{
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -1.0, -1.0, -1.0, qfalse, qtrue );
+				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0 * strength, -1.0, -1.0, -1.0, qfalse, qtrue );
 				num_uncolored++;
 			}
 #endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
@@ -1341,8 +1342,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTCOUNT, NUM_CLOSE_VLIGHTS);
 	GLSL_SetUniformVec2x16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformVec3x16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTCOLORS, CLOSEST_VLIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformFloatx16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTDISTANCES, CLOSEST_VLIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformVec3xX(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTCOLORS, CLOSEST_VLIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformFloatxX(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTDISTANCES, CLOSEST_VLIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
 
 #if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
 	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.volumeLightShader[dlightShader], color, 0);
@@ -2639,9 +2640,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	GLSL_SetUniformVec3x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformVec3x16(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformFloatx16(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -2725,9 +2726,9 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	GLSL_SetUniformVec3x16(&tr.testshaderShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformVec3x16(&tr.testshaderShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformFloatx16(&tr.testshaderShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformFloatxX(&tr.testshaderShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
 
 	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);

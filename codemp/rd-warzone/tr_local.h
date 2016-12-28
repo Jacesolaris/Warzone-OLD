@@ -52,7 +52,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_DYNAMIC_SHADOWS 4
 #endif //__DYNAMIC_SHADOWS__
 
-#define	MAX_LIGHTALL_DLIGHTS 16
+#define	MAX_LIGHTALL_DLIGHTS 64//16
 
 
 // Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
@@ -3349,8 +3349,8 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
 void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
-void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
-void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
+void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
+void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
 void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
 void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
 

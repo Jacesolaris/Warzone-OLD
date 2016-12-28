@@ -85,8 +85,11 @@ int irand(int min, int max)
 
 #define			MAX_FOREST_MODELS 64
 
+qboolean		FORCED_MODEL_META = qfalse;
+
 qboolean		ADD_CLIFF_FACES = qfalse;
 float			CLIFF_FACES_SCALE = 1.0;
+qboolean		CLIFF_FACES_SCALE_XY = qfalse;
 float			CLIFF_FACES_CULL_MULTIPLIER = 1.0;
 qboolean		CLIFF_CHEAP = qfalse;
 char			CLIFF_SHADER[MAX_QPATH] = { 0 };
@@ -104,9 +107,14 @@ float			CITY_SCALE_MULTIPLIER = 2.5;
 float			CITY_CLIFF_CULL_RADIUS = 1.0;
 vec3_t			CITY_LOCATION = { 0 };
 float			CITY_RADIUS = 0;
+vec3_t			CITY2_LOCATION = { 0 };
+float			CITY2_RADIUS = 0;
+vec3_t			CITY3_LOCATION = { 0 };
+float			CITY3_RADIUS = 0;
 char			CITY_MODELS[MAX_FOREST_MODELS][128] = { 0 };
 float			CITY_OFFSETS[MAX_FOREST_MODELS] = { -4.0 };
 float			CITY_SCALES[MAX_FOREST_MODELS] = { 1.0 };
+qboolean		CITY_CENTRAL_ONCE[MAX_FOREST_MODELS] = { qfalse };
 float			CITY_FORCED_MAX_ANGLE[MAX_FOREST_MODELS] = { 0.0 };
 float			CITY_FORCED_BUFFER_DISTANCE[MAX_FOREST_MODELS] = { 0.0 };
 float			CITY_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
@@ -116,6 +124,13 @@ qboolean		CITY_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { qfalse };
 void FOLIAGE_LoadClimateData( char *filename )
 {
 	int i = 0;
+
+	FORCED_MODEL_META = (qboolean)atoi(IniRead(filename, "GENERAL", "forcedModelMeta", "0"));
+
+	if (FORCED_MODEL_META)
+	{
+		Sys_Printf("Forcing all models to use meta surfaces.\n");
+	}
 
 	ADD_CLIFF_FACES = (qboolean)atoi(IniRead(filename, "CLIFFS", "addCliffFaces", "0"));
 	CLIFF_FACES_SCALE = atof(IniRead(filename, "CLIFFS", "cliffFacesScale", "1.0"));
@@ -135,6 +150,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 		Sys_Printf("Using default cliff face shader: [%s].\n", CLIFF_SHADER);
 	}
 
+	CLIFF_FACES_SCALE_XY = (qboolean)atoi(IniRead(filename, "CLIFFS", "cliffScaleOnlyXY", "0"));
 	CLIFF_CHEAP = (qboolean)atoi(IniRead(filename, "CLIFFS", "cheapCliffs", "0"));
 
 	// Read all the tree info from the new .climate ini files...
@@ -179,6 +195,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 			strcpy(CITY_MODELS[i], IniRead(filename, "CITY", va("cityModel%i", i), ""));
 			CITY_OFFSETS[i] = atof(IniRead(filename, "CITY", va("cityZoffset%i", i), "-4.0"));
 			CITY_SCALES[i] = atof(IniRead(filename, "CITY", va("cityScale%i", i), "1.0"));
+			CITY_CENTRAL_ONCE[i] = (qboolean)atoi(IniRead(filename, "CITY", va("cityCentralOneOnly%i", i), "0"));
 			CITY_FORCED_MAX_ANGLE[i] = atof(IniRead(filename, "CITY", va("cityForcedMaxAngle%i", i), "0.0"));
 			CITY_FORCED_BUFFER_DISTANCE[i] = atof(IniRead(filename, "CITY", va("cityForcedBufferDistance%i", i), "0.0"));
 			CITY_FORCED_DISTANCE_FROM_SAME[i] = atof(IniRead(filename, "CITY", va("cityForcedDistanceFromSame%i", i), "0.0"));
@@ -186,8 +203,30 @@ void FOLIAGE_LoadClimateData( char *filename )
 			strcpy(CITY_FORCED_OVERRIDE_SHADER[i], IniRead(filename, "CITY", va("overrideShader%i", i), ""));
 
 			if (strcmp(CITY_MODELS[i], ""))
-				Sys_Printf("Building %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f. ForcedSolid: %s. Shader: %s.\n", i, CITY_MODELS[i], CITY_OFFSETS[i], CITY_SCALES[i], CITY_FORCED_MAX_ANGLE[i], CITY_FORCED_BUFFER_DISTANCE[i], CITY_FORCED_DISTANCE_FROM_SAME[i], CITY_FORCED_FULLSOLID[i] ? "true" : "false", CITY_FORCED_OVERRIDE_SHADER[i][0] != '\0' ? CITY_FORCED_OVERRIDE_SHADER[i] : "Default");
+				Sys_Printf("Building %i. Model %s. Offset %f. Scale %f. MaxAngle %i. BufferDist %f. InstanceDist %f. ForcedSolid: %s. Shader: %s. OneOnly: %s.\n", i, CITY_MODELS[i], CITY_OFFSETS[i], CITY_SCALES[i], CITY_FORCED_MAX_ANGLE[i], CITY_FORCED_BUFFER_DISTANCE[i], CITY_FORCED_DISTANCE_FROM_SAME[i], CITY_FORCED_FULLSOLID[i] ? "true" : "false", CITY_FORCED_OVERRIDE_SHADER[i][0] != '\0' ? CITY_FORCED_OVERRIDE_SHADER[i] : "Default", CITY_CENTRAL_ONCE[i] ? "true" : "false");
 		}
+	}
+
+	float CITY2_LOCATION_X = atof(IniRead(filename, "CITY", "city2LocationX", "0"));
+	float CITY2_LOCATION_Y = atof(IniRead(filename, "CITY", "city2LocationY", "0"));
+	float CITY2_LOCATION_Z = atof(IniRead(filename, "CITY", "city2LocationZ", "0"));
+
+	VectorSet(CITY2_LOCATION, CITY2_LOCATION_X, CITY2_LOCATION_Y, CITY2_LOCATION_Z);
+
+	if (VectorLength(CITY2_LOCATION) != 0.0)
+	{
+		CITY2_RADIUS = atof(IniRead(filename, "CITY", "city2Radius", "0"));
+	}
+
+	float CITY3_LOCATION_X = atof(IniRead(filename, "CITY", "city3LocationX", "0"));
+	float CITY3_LOCATION_Y = atof(IniRead(filename, "CITY", "city3LocationY", "0"));
+	float CITY3_LOCATION_Z = atof(IniRead(filename, "CITY", "city3LocationZ", "0"));
+
+	VectorSet(CITY3_LOCATION, CITY3_LOCATION_X, CITY3_LOCATION_Y, CITY3_LOCATION_Z);
+
+	if (VectorLength(CITY3_LOCATION) != 0.0)
+	{
+		CITY3_RADIUS = atof(IniRead(filename, "CITY", "city3Radius", "0"));
 	}
 }
 
@@ -292,6 +331,7 @@ int		numDistanceCulled = 0;
 vec3_t	cliffPositions[65536];
 vec3_t	cliffAngles[65536];
 float	cliffScale[65536];
+float	cliffHeight[65536];
 
 void GenerateCliffFaces(void)
 {
@@ -437,6 +477,7 @@ void GenerateCliffFaces(void)
 			//Sys_Printf("cliff found at %f %f %f. angles0 %f %f %f. angles1 %f %f %f. angles2 %f %f %f.\n", center[0], center[1], center[2], angles[0][0], angles[0][1], angles[0][2], angles[1][0], angles[1][1], angles[1][2], angles[2][0], angles[2][1], angles[2][2]);
 
 			cliffScale[numCliffs] = (smallestSize * CLIFF_FACES_SCALE) / 64.0;
+			cliffHeight[numCliffs] = smallestSize / 64.0;
 			VectorCopy(center, cliffPositions[numCliffs]);
 			VectorCopy(angles[0], cliffAngles[numCliffs]);
 			cliffAngles[numCliffs][0] += 90.0;
@@ -482,10 +523,18 @@ void GenerateCliffFaces(void)
 			SetKeyValue(mapEnt, "origin", str);
 		}
 
-		{
+		if (!CLIFF_FACES_SCALE_XY)
+		{// Scale X, Y & Z axis...
 			char str[32];
 			sprintf(str, "%f", cliffScale[i]);
 			SetKeyValue(mapEnt, "modelscale", str);
+		}
+		else
+		{// Scale X & Y only...
+			char str[128];
+			sprintf(str, "%f %f %f", cliffScale[i], cliffScale[i], cliffHeight[i]);
+			//Sys_Printf("%s\n", str);
+			SetKeyValue(mapEnt, "modelscale_vec", str);
 		}
 
 		{
@@ -1244,6 +1293,11 @@ void ReassignCityModels(void)
 			continue;
 		}
 
+		if (CITY_CENTRAL_ONCE[i])
+		{
+			continue;
+		}
+
 		if (!strcmp(CITY_MODELS[i], ""))
 		{
 			continue;
@@ -1260,6 +1314,117 @@ void ReassignCityModels(void)
 	for (i = 0; i < NUM_POSSIBLES; i++)
 	{
 		Sys_Printf("%i - %s.\n", i, CITY_MODELS[POSSIBLES[i]]);
+	}
+
+	// One-Off models...
+	for (i = 0; i < MAX_FOREST_MODELS; i++)
+	{
+		printLabelledProgress("PlaceOneOffModels", i, MAX_FOREST_MODELS);
+
+		if (!strcmp(CITY_MODELS[i], ""))
+		{
+			continue;
+		}
+
+		if (CITY_CENTRAL_ONCE[i])
+		{
+			float	bestDist = 99999.9f;
+			int		best = -1;
+
+			// Find the best spot...
+			for (int j = 0; j < FOLIAGE_NUM_POSITIONS; j++)
+			{
+				if (BUILDING_ASSIGNED[j])
+				{
+					continue;
+				}
+
+				float dist = Distance(CITY_LOCATION, FOLIAGE_POSITIONS[j]);
+
+				if (dist < bestDist)
+				{
+					qboolean bad = qfalse;
+
+					if (CITY_FORCED_MAX_ANGLE[i] != 0.0)
+					{// Need to check angles...
+						vec3_t angles;
+						vectoangles(FOLIAGE_NORMALS[j], angles);
+						float pitch = angles[0];
+						if (pitch > 180)
+							pitch -= 360;
+
+						if (pitch < -180)
+							pitch += 360;
+
+						pitch += 90.0f;
+
+						if (pitch > CITY_FORCED_MAX_ANGLE[i] || pitch < -CITY_FORCED_MAX_ANGLE[i])
+						{// Bad slope...
+						 //Sys_Printf("Position %i angles too great (%f).\n", i, pitch);
+							continue;
+						}
+					}
+
+					for (int z = 0; z < numCliffs; z++)
+					{// Also keep them away from cliff objects...
+						if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[j]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+						{
+							bad = qtrue;
+							NUM_CLOSE_CLIFFS++;
+							break;
+						}
+					}
+
+					if (bad)
+					{
+						continue;
+					}
+
+					for (int k = 0; k < FOLIAGE_NUM_POSITIONS; k++)
+					{
+						if (j == k)
+						{
+							continue;
+						}
+
+						if (!BUILDING_ASSIGNED[k])
+						{
+							continue;
+						}
+
+						float dist2 = Distance(FOLIAGE_POSITIONS[k], FOLIAGE_POSITIONS[j]);
+
+						if (dist2 <= CITY_FORCED_BUFFER_DISTANCE[i] || dist2 <= CITY_FORCED_BUFFER_DISTANCE[FOLIAGE_TREE_SELECTION[k]])
+						{// Not within this object's buffer range... OK!
+							bad = qtrue;
+							break;
+						}
+					}
+
+					if (bad)
+					{
+						continue;
+					}
+
+					best = j;
+					bestDist = dist;
+				}
+			}
+
+			if (best >= 0)
+			{
+				FOLIAGE_TREE_SELECTION[best] = i;
+				BUILDING_BUFFER_RANGES[best] = CITY_FORCED_BUFFER_DISTANCE[i];
+				BUILDING_SAME_RANGES[best] = CITY_FORCED_DISTANCE_FROM_SAME[i];
+				BUILDING_ASSIGNED[best] = qtrue;
+				FOLIAGE_TREE_SCALE[best] = 1.0; // Once-Off models always use exact size stated.
+				NUM_PLACED[i]++;
+			}
+			else
+			{
+				Sys_Printf("Warning: Failed to find a place for once off model %i [%s].\n", i, CITY_MODELS[i]);
+			}
+		}
 	}
 
 	//Sys_Printf("Assign angles models from %i possibles.\n", NUM_POSSIBLES);
@@ -1280,7 +1445,9 @@ void ReassignCityModels(void)
 				continue;
 			}
 
-			if (Distance(FOLIAGE_POSITIONS[i], CITY_LOCATION) > CITY_RADIUS)
+			if (Distance(FOLIAGE_POSITIONS[i], CITY_LOCATION) > CITY_RADIUS 
+				&& Distance(FOLIAGE_POSITIONS[i], CITY2_LOCATION) > CITY2_RADIUS
+				&& Distance(FOLIAGE_POSITIONS[i], CITY3_LOCATION) > CITY3_RADIUS)
 			{
 				continue;
 			}
@@ -1301,7 +1468,7 @@ void ReassignCityModels(void)
 
 				float dist = Distance(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[j]);
 
-				if (dist <= BUILDING_BUFFER_RANGES[j])
+				if (dist <= BUILDING_BUFFER_RANGES[j] || dist <= BUILDING_BUFFER_RANGES[i])
 				{// Not within this object's buffer range... OK!
 					bad = qtrue;
 					break;
@@ -1373,6 +1540,11 @@ void ReassignCityModels(void)
 			continue;
 		}
 
+		if (CITY_CENTRAL_ONCE[i])
+		{
+			continue;
+		}
+
 		if (!strcmp(CITY_MODELS[i], ""))
 		{
 			continue;
@@ -1430,7 +1602,7 @@ void ReassignCityModels(void)
 
 				float dist = Distance(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[j]);
 
-				if (dist <= BUILDING_BUFFER_RANGES[j])
+				if (dist <= BUILDING_BUFFER_RANGES[j] || dist <= BUILDING_BUFFER_RANGES[i])
 				{// Not within this object's buffer range... OK!
 					bad = qtrue;
 					break;

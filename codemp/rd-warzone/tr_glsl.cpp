@@ -1384,10 +1384,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local10", GLSL_VEC4, 1 },
 
 	{ "u_lightCount", GLSL_INT, 1 },
-	{ "u_lightPositions2", GLSL_VEC3, 16 },
-	{ "u_lightPositions", GLSL_VEC2, 16 },
-	{ "u_lightDistances", GLSL_FLOAT, 16 },
-	{ "u_lightColors", GLSL_VEC3, 16 },
+	{ "u_lightPositions2", GLSL_VEC3, MAX_LIGHTALL_DLIGHTS },
+	{ "u_lightPositions", GLSL_VEC2, MAX_LIGHTALL_DLIGHTS },
+	{ "u_lightDistances", GLSL_FLOAT, MAX_LIGHTALL_DLIGHTS },
+	{ "u_lightColors", GLSL_VEC3, MAX_LIGHTALL_DLIGHTS },
 	{ "u_vlightPositions2", GLSL_VEC3, 16 },
 	{ "u_vlightPositions", GLSL_VEC2, 16 },
 	{ "u_vlightDistances", GLSL_FLOAT, 16 },
@@ -2478,7 +2478,7 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 	qglUniform3f(uniforms[uniformNum], v[0], v[1], v[2]);
 }
 
-void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements)
+void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
 	float *compare;
@@ -2488,7 +2488,7 @@ void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
 	{
-		ri->Printf(PRINT_WARNING, "GLSL_SetUniformVec3x16: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri->Printf(PRINT_WARNING, "GLSL_SetUniformVec3xX: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -2582,7 +2582,7 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 	qglUniform1fv(uniforms[uniformNum], 5, v);
 }
 
-void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
+void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
 	float *compare;
@@ -2592,7 +2592,7 @@ void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const flo
 
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
 	{
-		ri->Printf(PRINT_WARNING, "GLSL_SetUniformFloatx16: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri->Printf(PRINT_WARNING, "GLSL_SetUniformFloatxX: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
