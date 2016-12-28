@@ -1524,6 +1524,7 @@ void ReassignCityModels(void)
 			BUILDING_BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			BUILDING_SAME_RANGES[i] = POSSIBLES_BUILDING_SAME_RANGES[selected];
 			BUILDING_ASSIGNED[i] = qtrue;
+			FOLIAGE_TREE_SCALE[i] = 1.0; // City models always use exact size stated.
 			NUM_PLACED[POSSIBLES[selected]]++;
 		}
 	}
@@ -1644,6 +1645,7 @@ void ReassignCityModels(void)
 			BUILDING_BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			BUILDING_SAME_RANGES[i] = POSSIBLES_BUILDING_SAME_RANGES[selected];
 			BUILDING_ASSIGNED[i] = qtrue;
+			FOLIAGE_TREE_SCALE[i] = 1.0; // City models always use exact size stated.
 			NUM_PLACED[POSSIBLES[selected]]++;
 		}
 	}

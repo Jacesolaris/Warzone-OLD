@@ -1172,7 +1172,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
 							if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
 
-							if (sz <= 24)//16)
+							if (sz <= 16)//24)//16)
 							{
 								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 								numSizeCulledSurfs++;

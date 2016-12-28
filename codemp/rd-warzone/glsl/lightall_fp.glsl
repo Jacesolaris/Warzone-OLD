@@ -1016,14 +1016,14 @@ void main()
 
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
-		//out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
-		//out_Position = vec4(m_vertPos, 0.0 );
-	#else
-		out_Glow = vec4(0.0);
-		//if (length(N.xyz * 0.5 + 0.5) > 0.0 && length(m_vertPos.xyz) > 0.0) // *sigh* hack for something screwy with normals and multipass q3 shader spam...
-		{
+		if (gl_FragColor.a >= 1.0)
+		{// Only write to position/normal map when the alpha is solid, and drawing over the background surface completely.
 			out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
 			out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);
 		}
+	#else
+		out_Glow = vec4(0.0);
+		out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+		out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);
 	#endif
 }
