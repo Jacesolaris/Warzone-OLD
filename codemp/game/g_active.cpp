@@ -2637,16 +2637,18 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	//[NewSaberSys]
+	/*
 	if (ent->client->ps.groundEntityNum != ENTITYNUM_NONE &&
-		((ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) ||
+		((ent->s.weapon == WP_SABER && (ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)) ||
 		(ent->client->pers.cmd.buttons & BUTTON_WALKING) ||
 			(ent->client->ps.pm_flags & PMF_DUCKED) ||
 			(!ent->client->pers.cmd.forwardmove &&
 				!ent->client->pers.cmd.rightmove &&
 				!ent->client->pers.cmd.upmove)))
 	{
-		/*return;*/
+		//return;
 	}
+	*/
 	//[/NewSaberSys]
 
 	if (ent->client->ps.duelInProgress)

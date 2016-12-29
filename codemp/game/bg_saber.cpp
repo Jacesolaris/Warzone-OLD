@@ -3289,7 +3289,7 @@ void PM_WeaponLightsaber(void)
 	//[/SaberLockSys]
 
 	//[NewSaberSys]
-	if (BG_SabersOff(pm->ps) /*|| !pm->cmd.buttons & BUTTON_SPECIALBUTTON2*/)
+	if (BG_SabersOff(pm->ps) /*|| !(pm->cmd.buttons & BUTTON_ALT_ATTACK)*/)
 	{// well at least this now works
 
 		if (pm->ps->saberMove != LS_READY)
@@ -4986,7 +4986,7 @@ weapChecks:
 				anim = PM_GetSaberStance();
 			}
 
-			if ((pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+			if (pm->ps->weapon == WP_SABER && (pm->cmd.buttons & BUTTON_ALT_ATTACK))
 			{
 				anim = PM_GetSaberStance();
 			}

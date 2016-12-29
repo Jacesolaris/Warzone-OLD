@@ -38,7 +38,8 @@ cvar_t	*sv_filterCommands; // strict filtering on commands (replace: \r \n ;)
 cvar_t	*sv_autoDemo;
 cvar_t	*sv_autoDemoBots;
 cvar_t	*sv_autoDemoMaxMaps;
-cvar_t	*sv_blockJumpSelect;
+cvar_t	*sv_blockJumpSelect; // hide stance from enemies with stoiss's block system. This is default for duel gametypes (and later arena areas)...
+cvar_t	*sv_saberHideStance;
 
 /*
 =============================================================================

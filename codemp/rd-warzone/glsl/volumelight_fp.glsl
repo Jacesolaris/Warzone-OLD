@@ -3,10 +3,12 @@ uniform sampler2D	u_DeluxeMap;
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
 
+#define				MAX_VLIGHTS 16
+
 uniform int			u_lightCount;
-uniform vec2		u_vlightPositions[16];
-uniform float		u_vlightDistances[16];
-uniform vec3		u_vlightColors[16];
+uniform vec2		u_vlightPositions[MAX_VLIGHTS];
+uniform float		u_vlightDistances[MAX_VLIGHTS];
+uniform vec3		u_vlightColors[MAX_VLIGHTS];
 
 uniform vec4		u_Local0;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
@@ -77,8 +79,10 @@ void main ( void )
 	float		lightDepths[16];
 	int			numInRange = 0;
 
-	for (int i = 0; i < u_lightCount; i++)
+	for (int i = 0; i < MAX_VLIGHTS/*u_lightCount*/; i++) // MAX_VLIGHTS to use constant loop size
 	{
+		if (i >= u_lightCount) continue;
+
 		float dist = length(var_TexCoords - u_vlightPositions[i]);
 		//float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_vlightPositions[i]).r);
 		float depth = 1.0 - u_vlightDistances[i];
@@ -213,8 +217,10 @@ void main ( void )
 
 	vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-	for (int i = 0; i < numInRange; i++)
+	for (int i = 0; i < MAX_VLIGHTS/*numInRange*/; i++) // MAX_VLIGHTS to use constant loop size
 	{
+		if (i >= numInRange) continue;
+
 		vec4	lens = vec4(0.0, 0.0, 0.0, 0.0);
 		vec2	ScreenLightPos = inRangePositions[i];
 		vec2	texCoord = var_TexCoords;

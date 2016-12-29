@@ -1016,11 +1016,12 @@ void main()
 
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
-		if (gl_FragColor.a >= 1.0)
+		/*if (gl_FragColor.a >= 1.0)
 		{// Only write to position/normal map when the alpha is solid, and drawing over the background surface completely.
-			out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+			//out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.05);
 			out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);
-		}
+		}*/
 	#else
 		out_Glow = vec4(0.0);
 		out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);

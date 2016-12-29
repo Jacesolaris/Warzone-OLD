@@ -3016,6 +3016,7 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 			server->humans = atoi( Info_ValueForKey( info, "g_humanplayers" ) );
 			server->bots = atoi( Info_ValueForKey( info, "bots" ) );
 //			server->pure = (qboolean)atoi(Info_ValueForKey(info, "pure" ));
+			server->hideStance = (qboolean)atoi(Info_ValueForKey(info, "sv_saberHideStance"));
 		}
 		server->ping = ping;
 	}

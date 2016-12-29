@@ -159,6 +159,8 @@ void CG_ParseServerinfo( void ) {
 		cg.timelimitWarnings &= ~(1|2);
 	cgs.timelimit = i;
 
+	cgs.hideStance = (qboolean)Com_Clampi(0, 1, atoi(Info_ValueForKey(info, "sv_saberHideStance")));
+
 	cgs.maxclients = Com_Clampi( 0, MAX_CLIENTS, atoi( Info_ValueForKey( info, "sv_maxclients" ) ) );
 	mapname = Info_ValueForKey( info, "mapname" );
 

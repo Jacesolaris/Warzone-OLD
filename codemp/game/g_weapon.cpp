@@ -4283,14 +4283,14 @@ void WP_FireMelee(gentity_t *ent, qboolean alt_fire)
 	else if (ent->s.eType == ET_PLAYER
 		&& ent->s.weapon != WP_SABER
 		&& ent->client
-		&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		&& (ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{// UQ1: Added... At close range players can hit you with their rifle butt...
 
 	}
 	else if (ent->s.eType == ET_PLAYER
 		&& ent->s.weapon != WP_SABER
 		&& ent->client
-		&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		&& (ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{// UQ1: Added... At close range players can kick you...
 
 	}

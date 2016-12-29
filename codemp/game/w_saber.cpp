@@ -1966,7 +1966,7 @@ qboolean CheckManualBlocking(gentity_t *attacker, gentity_t *defender)
 
 		int buttons = parriedEnt->client->pers.cmd.buttons;
 
-		if (buttons & BUTTON_SPECIALBUTTON2)
+		if (parriedEnt->s.weapon == WP_SABER && (buttons & BUTTON_ALT_ATTACK))
 		{
 			return qfalse;
 		}
@@ -2479,7 +2479,7 @@ static QINLINE qboolean G_ClientIdleInWorld(gentity_t *ent)
 		//[NewSaberSys]
 		!(ent->client->pers.cmd.buttons & BUTTON_ATTACK) &&
 		!(ent->client->pers.cmd.buttons & BUTTON_SABERTHROW) &&
-		!(ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) &&
+		!(ent->s.weapon == WP_SABER && (ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)) &&
 		!(PM_RunningAnim(ent->client->ps.legsAnim)))
 		//[/NewSaberSys]
 		return qtrue;
@@ -3067,7 +3067,7 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 		return 0;
 	}
 
-	if (!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (!(self->s.weapon == WP_SABER && (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)))
 	{//you can't block if you don't hold down block button.
 		return 0;
 	}
@@ -3122,7 +3122,7 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 		}
 	}
 
-	if (PM_InKnockDown(&self->client->ps) && (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (PM_InKnockDown(&self->client->ps) && (self->s.weapon == WP_SABER && (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)))
 	{//can't block while knocked down or getting up from knockdown.
 		return 0;
 	}
@@ -4777,7 +4777,8 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 	}
 	else if (BG_SaberInFullDamageMove(&self->client->ps, self->localAnimIndex))
 	{//full damage moves
-		if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2 || !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		//if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2 || !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		// This line makes absolutely no sense... It's always true.
 		{
 			dmg = SABER_HITDAMAGE;
 			if (self->client->ps.fd.saberAnimLevel == SS_STAFF ||
@@ -4896,7 +4897,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 			return qtrue;//true cause even though we didn't get a hit, we don't want to do those extra traces because the debounce time says not to.
 		}
 		trMask &= ~CONTENTS_LIGHTSABER;
-		if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
+		if (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)
 		{
 			dmg = SABER_NONATTACK_DAMAGE;
 		}
@@ -9391,7 +9392,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 
 	if (thrownSaber)
 	{
-		if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
+		if (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)
 		{
 			return qtrue;
 		}
@@ -9424,7 +9425,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 			return qfalse;
 	}
 
-	if (!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (!(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{
 		if (thrownSaber)
 		{
@@ -9439,7 +9440,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 
 	if (projectile)
 	{
-		if ((self->client->pers.cmd.buttons & BUTTON_ATTACK) && !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		if ((self->client->pers.cmd.buttons & BUTTON_ATTACK) && !(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 		{ //can't block a proj when we are doing a attack.
 			return qtrue;
 		}
@@ -9463,7 +9464,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		return qfalse;
 	}
 
-	if (!projectile && !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (!projectile && !(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{
 		//Never block a saber without block button held or if we don't have enough BP 
 		//Oh - unless the saber is being thrown at us, in which case it's ok  
@@ -9481,7 +9482,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 	}
 
 	if (projectile && saberInAttack && InFront(originpoint, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
-		&& (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(self->client->buttons & BUTTON_ATTACK))
+		&& (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK) && !(self->client->buttons & BUTTON_ATTACK))
 	{
 		self->client->ps.saberMove = LS_NONE;
 		self->client->ps.saberBlocked = BLOCKED_NONE;
@@ -9493,7 +9494,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		//projectile was blocking 
 		if (projectile)
 		{
-			if (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2)
+			if (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)
 			{
 				return qfalse;
 			}
@@ -9548,7 +9549,7 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		}
 	}
 
-	if (self->client->hasShield && !(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (self->client->hasShield && !(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{
 		return qfalse;
 	}
@@ -9675,7 +9676,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 	}
 
 	//[NewSaberSys]
-	if (!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+	if (!(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{
 		if (thrownSaber)
 		{
@@ -9689,7 +9690,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 	}
 
 	if (projectile && saberInAttack && InFront(point, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
-		&& (self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2) && !(self->client->buttons & BUTTON_ATTACK))
+		&& (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK) && !(self->client->buttons & BUTTON_ATTACK))
 	{
 		self->client->ps.saberMove = LS_NONE;
 		self->client->ps.saberBlocked = BLOCKED_NONE;
@@ -9704,7 +9705,7 @@ qboolean WP_SaberCanBlock_NPC(gentity_t *self, vec3_t point, int dflags, int mod
 	}
 	//[NewSaberSys]
 	if (!projectile &&
-		!(self->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
+		!(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{
 		//Never block a saber without block button held or if we don't have enough BP 
 		//Oh - unless the saber is being thrown at us, in which case it's ok  

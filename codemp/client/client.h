@@ -259,6 +259,7 @@ typedef struct serverInfo_s {
 	int			weaponDisable;
 	int			forceDisable;
 	int			humans, bots;
+	qboolean	hideStance;
 } serverInfo_t;
 
 typedef struct clientStatic_s {

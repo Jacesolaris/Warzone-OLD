@@ -368,11 +368,28 @@ int PM_GetSaberStance()
 		}
 	}
 
-	if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2)
-		&& !(pm->ps->weaponstate == WEAPON_DROPPING
-			|| pm->ps->weaponstate == WEAPON_RAISING))
+	qboolean hideStance = qfalse;
+
+#if defined(_GAME)
+	if (sv_saberHideStance.integer || level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
 	{
-		return BOTH_STAND1;
+		hideStance = qtrue;
+	}
+#elif defined(_CGAME)
+	if (cgs.hideStance || cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL)
+	{
+		hideStance = qtrue;
+	}
+#endif
+
+	if (hideStance)
+	{
+		if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK)
+			&& !(pm->ps->weaponstate == WEAPON_DROPPING
+				|| pm->ps->weaponstate == WEAPON_RAISING))
+		{
+			return BOTH_STAND1;
+		}
 	}
 
 	if (BG_SabersOff(pm->ps) && !(pm->ps->weaponstate == WEAPON_DROPPING
@@ -381,7 +398,7 @@ int PM_GetSaberStance()
 		return BOTH_STAND1;
 	}
 
-	if (pm->cmd.buttons & BUTTON_SPECIALBUTTON2)
+	if (!hideStance || (pm->cmd.buttons & BUTTON_ALT_ATTACK))
 	{//for now I'll assume that we're using an inverted control system.
 		SET_BLOCK_DIRECTION(BLOCKING_NONE)
 			if (forwardmove < 0)
@@ -3791,7 +3808,7 @@ static void PM_WalkMove( void ) {
 		}
 	}
 	//[NewSaberSys]
-	else if ((pm->cmd.buttons & BUTTON_SPECIALBUTTON2)
+	else if ((pm->ps->weapon == WP_SABER && (pm->cmd.buttons & BUTTON_ALT_ATTACK))
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_GRIP))
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
@@ -5976,7 +5993,7 @@ static void PM_Footsteps( void ) {
 		}
 		//[NewSaberSys]
 		else if (!(pm->cmd.buttons & BUTTON_WALKING)
-			&& !(pm->cmd.buttons & BUTTON_SPECIALBUTTON2)
+			&& !(pm->ps->weapon == WP_SABER && (pm->cmd.buttons & BUTTON_ALT_ATTACK))
 			&& !(pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))
 			&& !(pm->ps->fd.forcePowersActive&(1 << FP_GRIP))
 			&& !(pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
@@ -6143,7 +6160,7 @@ static void PM_Footsteps( void ) {
 					switch (pm->ps->fd.saberAnimLevel)
 					{
 					case SS_STAFF:
-						if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+						if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 						{
 							desiredAnim = BOTH_WALKBACK2;
 						}
@@ -6161,7 +6178,7 @@ static void PM_Footsteps( void ) {
 						}
 						break;
 					case SS_DUAL:
-						if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+						if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 						{
 							desiredAnim = BOTH_WALKBACK2;
 						}
@@ -6179,7 +6196,7 @@ static void PM_Footsteps( void ) {
 						}
 						break;
 					default:
-						if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+						if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 						{
 							desiredAnim = BOTH_WALKBACK2;
 						}
@@ -6215,7 +6232,7 @@ static void PM_Footsteps( void ) {
 						switch (pm->ps->fd.saberAnimLevel)
 						{
 						case SS_STAFF:
-							if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+							if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 							{
 								desiredAnim = BOTH_WALK1;
 							}
@@ -6233,7 +6250,7 @@ static void PM_Footsteps( void ) {
 							}
 							break;
 						case SS_DUAL:
-							if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+							if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 							{
 								desiredAnim = BOTH_WALK1;
 							}
@@ -6251,7 +6268,7 @@ static void PM_Footsteps( void ) {
 							}
 							break;
 						default:
-							if (!(pm->cmd.buttons & BUTTON_SPECIALBUTTON2))
+							if (!(pm->cmd.buttons & BUTTON_ALT_ATTACK))
 							{
 								desiredAnim = BOTH_WALK1;
 							}

@@ -2,6 +2,7 @@
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_DeluxeMap;
+uniform sampler2D	u_GlowMap;
 
 #if defined(USE_SHADOWMAP)
 uniform sampler2D	u_ShadowMap;
@@ -95,6 +96,10 @@ void main(void)
 	gl_FragColor.rgb *= clamp(shadowValue, 0.85, 1.0);
 #endif //defined(USE_SHADOWMAP)
 
+	//vec4 glow = texture2D(u_GlowMap, var_TexCoords);
+	//float glowMult = clamp(1.0 - (length(glow) / 3.0), 0.0, 1.0);
+	float glowMult = 1.0;
+
 	// GLSL distance() can't work with large numbers?!?!??!?!?!!??
 	highp vec3 viewOrg = unOpenGlIsFuckedUpify(abs(u_ViewOrigin.xyz));
 	highp vec4 position = abs(texture2D(u_PositionMap, var_TexCoords));
@@ -112,6 +117,11 @@ void main(void)
 	}
 
 	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
+
+	if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0 && norm.a == 0.05)
+	{// Generic GLSL. Probably a glow or something, ignore the lighting...
+		return;
+	}
 
 	/*if (u_Local2.a == 1.0)
 	{
@@ -144,7 +154,7 @@ void main(void)
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
 		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor /** 0.3*/;
+		gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * glowMult;
 	}
 
 	if (noSunPhong)
@@ -154,7 +164,6 @@ void main(void)
 
 	if (u_lightCount > 0.0)
 	{
-		float addedStrength = 1.0;
 		vec3 addedLight = vec3(0.0);
 
 		for (int li = 0; li < u_lightCount /*min(u_lightCount, 1)*/; li++)
@@ -162,52 +171,46 @@ void main(void)
 			vec3 lightPos = unOpenGlIsFuckedUpify(abs(u_lightPositions2[li].xyz));
 
 			float lightDist = distance(lightPos, position.xyz);
-			float lightMax = unOpenGlIsFuckedUpify(u_lightDistances[li]) * 1.5;
+			float lightMax = unOpenGlIsFuckedUpify(u_lightDistances[li]) /** 1.5*/;
 
 			if (lightDist < lightMax)
 			{
-				highp float lightStrength = 1.0 - (lightDist / lightMax);
-				lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0) * 0.5;
+				highp float lightStrength = clamp(1.0 - (lightDist / lightMax), 0.0, 1.0);
+				//lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0) * 0.5;
+				lightStrength = pow(lightStrength, 2.0) * 0.1;
 
 				if (lightStrength > 0.0)
 				{
-					highp float lightBrightness = length(u_lightColors[li].rgb);
-					//if (lightBrightness > 2.0) lightStrength /= 3.0;
-					//else if (lightBrightness > 1.0) lightStrength /= 2.0;
-
-					highp float strength = lightStrength;// *u_Local2.g;
-					addedStrength += strength;
-					addedLight += u_lightColors[li].rgb * strength; // Always add some basic light...
+					// Add some basic light...
+					addedLight += u_lightColors[li].rgb * lightStrength; // Always add some basic light...
 
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float lambertian3 = dot(lightDir.xyz, N);
 
 					if (lambertian3 > 0.0)
 					{// this is blinn phong
+						// Diffuse...
+						addedLight += (u_lightColors[li].rgb * lightStrength) * gl_FragColor.rgb * lambertian3;
+
+						// Specular...
 						vec3 halfDir3 = normalize(lightDir.xyz + E);
 						float specAngle3 = max(dot(halfDir3, N), 0.0);
 						float spec3 = pow(specAngle3, 16.0);
 
-						strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength * phongFactor;
-						addedStrength += strength;
-						addedLight += strength * u_lightColors[li].rgb;
+						highp float strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength * phongFactor;
+						addedLight +=  u_lightColors[li].rgb * strength * 0.5;
 					}
 				}
-				//else
-				//	gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
 			}
-			//else
-			//	gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
 		}
 
-		if (addedStrength > 1.0)
-		{
-			highp vec3 power = (addedLight / addedStrength) * 2.3;// u_Local2.g;
-			gl_FragColor.rgb += (power * 0.1) + (power * 0.9 * gl_FragColor.rgb);
-		}
+		//gl_FragColor.rgb += (addedLight * u_Local2.g) / u_lightCount;
+		gl_FragColor.rgb += addedLight * glowMult;
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
 	}
 
 	//if (u_Local2.g >= 1.0)
+	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)
 	{
 		float ao = calculateAO(position.xyz, N.xyz);
 

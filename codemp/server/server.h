@@ -255,6 +255,7 @@ extern	cvar_t	*sv_autoDemo;
 extern	cvar_t	*sv_autoDemoBots;
 extern	cvar_t	*sv_autoDemoMaxMaps;
 extern	cvar_t	*sv_blockJumpSelect;
+extern	cvar_t	*sv_saberHideStance;
 
 //===========================================================
 
