@@ -351,6 +351,12 @@ int PM_GetSaberStance()
 
 	int mblockforstance = pm->ps->fd.saberAnimLevel;
 
+	if (pm->ps->fd.saberAnimLevelBase == SS_WARZONE)
+	{
+		pm->ps->fd.saberAnimLevel = SS_WARZONE;// pm->ps->fd.saberAnimLevelBase;
+		mblockforstance = SS_TAVION;// pm->ps->fd.saberAnimLevelBase;
+	}
+
 	if (!pm->ps->saberEntityNum)
 	{ //lost it
 		return BOTH_STAND1;
@@ -649,6 +655,9 @@ int PM_GetSaberStance()
 		break;
 	case SS_DESANN:
 		anim = TRIPLE3_REDSTANCE;
+		break;
+	case SS_WARZONE:
+		anim = TRIPLE3_YELLOWSTANCE;
 		break;
 	case SS_NONE:
 	case SS_MEDIUM:
