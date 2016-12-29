@@ -15,7 +15,7 @@ uniform vec3		u_ViewOrigin;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
-#define MAX_LIGHTALL_DLIGHTS 64//16
+#define MAX_LIGHTALL_DLIGHTS 24
 
 uniform int			u_lightCount;
 uniform vec3		u_lightPositions2[MAX_LIGHTALL_DLIGHTS];

@@ -119,7 +119,7 @@ float			CITY_FORCED_MAX_ANGLE[MAX_FOREST_MODELS] = { 0.0 };
 float			CITY_FORCED_BUFFER_DISTANCE[MAX_FOREST_MODELS] = { 0.0 };
 float			CITY_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
 char			CITY_FORCED_OVERRIDE_SHADER[MAX_FOREST_MODELS][128] = { 0 };
-qboolean		CITY_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { qfalse };
+int				CITY_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { 0 };
 
 void FOLIAGE_LoadClimateData( char *filename )
 {
@@ -199,7 +199,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 			CITY_FORCED_MAX_ANGLE[i] = atof(IniRead(filename, "CITY", va("cityForcedMaxAngle%i", i), "0.0"));
 			CITY_FORCED_BUFFER_DISTANCE[i] = atof(IniRead(filename, "CITY", va("cityForcedBufferDistance%i", i), "0.0"));
 			CITY_FORCED_DISTANCE_FROM_SAME[i] = atof(IniRead(filename, "CITY", va("cityForcedDistanceFromSame%i", i), "0.0"));
-			CITY_FORCED_FULLSOLID[i] = (qboolean)atoi(IniRead(filename, "CITY", va("cityForcedFullSolid%i", i), "0"));
+			CITY_FORCED_FULLSOLID[i] = atoi(IniRead(filename, "CITY", va("cityForcedFullSolid%i", i), "0"));
 			strcpy(CITY_FORCED_OVERRIDE_SHADER[i], IniRead(filename, "CITY", va("overrideShader%i", i), ""));
 
 			if (strcmp(CITY_MODELS[i], ""))
@@ -1755,7 +1755,11 @@ void GenerateMapCity(void)
 				*/
 				SetKeyValue(mapEnt, "angle", "0");
 
-				if (CITY_FORCED_FULLSOLID[FOLIAGE_TREE_SELECTION[i]])
+				if (CITY_FORCED_FULLSOLID[FOLIAGE_TREE_SELECTION[i]] >= 2)
+				{
+					SetKeyValue(mapEnt, "_forcedSolid", "2");
+				}
+				else if (CITY_FORCED_FULLSOLID[FOLIAGE_TREE_SELECTION[i]])
 				{
 					SetKeyValue(mapEnt, "_forcedSolid", "1");
 				}

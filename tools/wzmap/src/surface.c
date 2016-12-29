@@ -3234,7 +3234,7 @@ int AddSurfaceModelsToTriangle_r( mapDrawSurface_t *ds, surfaceModel_t *model, b
 			}
 			
 			/* insert the model */
-			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, NULL, qfalse, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse, 999999.0f);
+			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, NULL, qfalse, qfalse, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse, 999999.0f);
 			
 			/* return to sender */
 			return 1;
@@ -3800,9 +3800,10 @@ will have valid final indexes
 
 void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 {
-	int	i, fOld, start;
+	//int	fOld, start;
 	int	numSurfs, numRefs, numSkyboxSurfaces, numPotentialBad;
-	
+	//ThreadMutex       FilterDrawsurfsIntoTreeMutex;
+
 	/* apply mods */
 	ApplyVertexMods( e, showpacifier );
 
@@ -3814,8 +3815,8 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		Sys_PrintHeading ( "--- FilterDrawsurfsIntoTree ---\n" );
 
 	/* init pacifier */
-	start = I_FloatTime();
-	fOld = -1;
+	//start = I_FloatTime();
+	//fOld = -1;
 
 	/* filter surfaces into the tree */
 	numSurfs = 0;
@@ -3823,8 +3824,11 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 	numSkyboxSurfaces = 0;
 	numPotentialBad = 0;
 
-#pragma omp parallel for ordered num_threads(numthreads)
-	for( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
+	int numTotal = numMapDrawSurfs - e->firstDrawSurf;
+	int numCompleted = 0;
+
+//#pragma omp parallel for ordered num_threads(numthreads)
+	for (int zzz = 0; zzz < numTotal; zzz++)
 	{
 		qboolean forceMeta;
 		mapDrawSurface_t *ds;
@@ -3832,9 +3836,13 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		vec3_t origin, mins, maxs;
 		int refs;
 
-#pragma omp ordered
+		int i = e->firstDrawSurf + zzz;
+
+		numCompleted++;
+
+		#pragma omp critical (__FilterDrawsurfsIntoTree__)
 		{
-			printLabelledProgress("FilterDrawsurfsIntoTree", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+			printLabelledProgress("FilterDrawsurfsIntoTree", numCompleted, numTotal);
 		}
 
 		/* get surface and try to early out */
@@ -3889,72 +3897,76 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		if( ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] )
 			ds->shaderInfo = ShaderInfoForShader( ds->shaderInfo->remapShader );
 		
-		/* ydnar: gs mods: handle the various types of surfaces */
-		switch( ds->type )
+		// UQ1: It seems that we need the output to match the input order... *sigh*
+#pragma omp ordered
 		{
-			/* handle brush faces */
+			/* ydnar: gs mods: handle the various types of surfaces */
+			switch (ds->type)
+			{
+				/* handle brush faces */
 			case SURFACE_FACE:
 			case SURFACE_DECAL:
-				if( refs == 0 )
-					refs = FilterFaceIntoTree( ds, tree );
-				if( refs > 0 )
-					EmitFaceSurface( ds );
+				if (refs == 0)
+					refs = FilterFaceIntoTree(ds, tree);
+				if (refs > 0)
+					EmitFaceSurface(ds);
 				break;
-			
-			/* handle patches */
+
+				/* handle patches */
 			case SURFACE_PATCH:
-				if( refs == 0 )
-					refs = FilterPatchIntoTree( ds, tree );
-				if( refs > 0 )
-					EmitPatchSurface( e, ds );
+				if (refs == 0)
+					refs = FilterPatchIntoTree(ds, tree);
+				if (refs > 0)
+					EmitPatchSurface(e, ds);
 				break;
-			
-			/* handle triangle surfaces */
+
+				/* handle triangle surfaces */
 			case SURFACE_TRIANGLES:
 			case SURFACE_FORCED_META:
 			case SURFACE_META:
 				//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%1d] %4d verts %s\n", numSurfs, ds->planar, ds->numVerts, si->shader );
-				if( refs == 0 )
-					refs = FilterTrianglesIntoTree( ds, tree );
-				if( refs > 0 )
-					EmitTriangleSurface( ds );
+				if (refs == 0)
+					refs = FilterTrianglesIntoTree(ds, tree);
+				if (refs > 0)
+					EmitTriangleSurface(ds);
 				break;
-			
-			/* handle foliage surfaces (splash damage/wolf et) */
+
+				/* handle foliage surfaces (splash damage/wolf et) */
 			case SURFACE_FOLIAGE:
 				//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
-				if( refs == 0 )
-					refs = FilterFoliageIntoTree( ds, tree );
-				if( refs > 0 )
-					EmitTriangleSurface( ds );
+				if (refs == 0)
+					refs = FilterFoliageIntoTree(ds, tree);
+				if (refs > 0)
+					EmitTriangleSurface(ds);
 				break;
-			
-			/* handle foghull surfaces */
+
+				/* handle foghull surfaces */
 			case SURFACE_FOGHULL:
-				if( refs == 0 )
-					refs = AddReferenceToTree_r( ds, tree->headnode, qfalse );
-				if( refs > 0 )
-					EmitTriangleSurface( ds );
+				if (refs == 0)
+					refs = AddReferenceToTree_r(ds, tree->headnode, qfalse);
+				if (refs > 0)
+					EmitTriangleSurface(ds);
 				break;
-			
-			/* handle flares */
+
+				/* handle flares */
 			case SURFACE_FLARE:
-				if( refs == 0 )
-					refs = FilterFlareSurfIntoTree( ds, tree );
-				if( refs > 0 )
-					EmitFlareSurface( ds );
+				if (refs == 0)
+					refs = FilterFlareSurfIntoTree(ds, tree);
+				if (refs > 0)
+					EmitFlareSurface(ds);
 				break;
-			
-			/* handle shader-only surfaces */
+
+				/* handle shader-only surfaces */
 			case SURFACE_SHADER:
 				refs = 1;
-				EmitFlareSurface( ds );
+				EmitFlareSurface(ds);
 				break;
-			
-			/* no references */
+
+				/* no references */
 			default:
 				refs = 0;
 				break;
+			}
 		}
 
 		/* tot up the references */
@@ -3990,7 +4002,7 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		}
 	}
 
-	printLabelledProgress("FilterDrawsurfsIntoTree", numMapDrawSurfs-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+	printLabelledProgress("FilterDrawsurfsIntoTree", numTotal, numTotal);
 
 	/* print time */
 	//if( showpacifier == qtrue )

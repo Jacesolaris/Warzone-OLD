@@ -141,19 +141,24 @@ matches brushsides back to their appropriate drawsurface and shader
 
 static void FixBrushSides( entity_t *e )
 {
-	int					i;
-	
+	int numTotal = numMapDrawSurfs - e->firstDrawSurf;
+	int numCompleted = 0;
+
 	/* walk list of drawsurfaces */
-#pragma omp parallel for ordered num_threads(numthreads)
-	for( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
+//#pragma omp parallel for ordered num_threads(numthreads)
+	for (int zzz = 0; zzz < numTotal; zzz++)
 	{
 		mapDrawSurface_t	*ds;
 		sideRef_t			*sideRef;
 		bspBrushSide_t		*side;
 
-#pragma omp ordered
+		int i = e->firstDrawSurf + zzz;
+
+		numCompleted++;
+
+#pragma omp critical (__FixBrushSides__)
 		{
-			printLabelledProgress("FixBrushSides", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+			printLabelledProgress("FixBrushSides", numCompleted, numTotal);
 		}
 
 		/* get surface and try to early out */
@@ -197,7 +202,6 @@ performs a bugfixing of brush faces
 
 static void FixBrushFaces( entity_t *e )
 {
-	int i;
 	int numVertsStitched = 0, numSurfacesStitched = 0;
 
 	/* note it */
@@ -206,8 +210,12 @@ static void FixBrushFaces( entity_t *e )
 	if (numMapDrawSurfs > 0 && e && e->firstDrawSurf >= 0)
 	{
 		/* loop drawsurfaces */
-#pragma omp parallel for ordered num_threads(numthreads)
-		for (i = e->firstDrawSurf; i < numMapDrawSurfs; i++)
+		int numTotal = numMapDrawSurfs - e->firstDrawSurf;
+		int numCompleted = 0;
+
+		/* walk list of drawsurfaces */
+//#pragma omp parallel for ordered num_threads(numthreads)
+		for (int zzz = 0; zzz < numTotal; zzz++)
 		{
 			mapDrawSurface_t *ds, *ds2;
 			shaderInfo_t *si;
@@ -223,9 +231,13 @@ static void FixBrushFaces( entity_t *e )
 			int t, numTriangles, indexes[STITCH_MAX_TRIANGLES][3];
 #endif
 
-#pragma omp ordered
+			int i = e->firstDrawSurf + numCompleted;
+
+			numCompleted++;
+
+#pragma omp critical (__FixBrushFaces__)
 			{
-				printLabelledProgress("FixBrushFaces", i - e->firstDrawSurf, numMapDrawSurfs - e->firstDrawSurf);
+				printLabelledProgress("FixBrushFaces", numCompleted, numTotal);
 			}
 
 			/* get surface and early out if possible */

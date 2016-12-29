@@ -512,7 +512,7 @@ float LowestMapPointNear(vec3_t pos)
 }
 #endif //CULL_BY_LOWEST_NEAR_POINT
 
-void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids, float LOWEST_NEAR_POINT)
+void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, qboolean forcedFullSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids, float LOWEST_NEAR_POINT)
 {
 	int					s, numSurfaces;
 	m4x4_t				identity, nTransform;
@@ -1124,8 +1124,9 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 
 						//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
 
-						if (!forcedSolid && 
-							((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid)))
+						if (!forcedFullSolid
+							&& !forcedSolid 
+							&& ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid)))
 						{// Cull small stuff and the tops of trees...
 							vec3_t size;
 							float sz;
@@ -1161,7 +1162,7 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 								continue;
 							}
 						}
-						else //if (cullSmallSolids || si->isTreeSolid)
+						else if (!forcedFullSolid)//if (cullSmallSolids || si->isTreeSolid)
 						{// Only cull stuff too small to fall through...
 							vec3_t size;
 							float sz;
@@ -1550,7 +1551,6 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 	for (num = 1; num < numEntities; num++)
 	{
 		shaderInfo_t *overrideShader = NULL;
-		qboolean forcedSolid = qfalse;
 
 		if (!quiet) printLabelledProgress("FindLowestPoints", num, numEntities);
 
@@ -1599,6 +1599,7 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 	{
 		shaderInfo_t *overrideShader = NULL;
 		qboolean forcedSolid = qfalse;
+		qboolean forcedFullSolid = qfalse;
 
 		if (!quiet) printLabelledProgress("AddTriangleModels", num, numEntities);
 
@@ -1751,7 +1752,12 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 
 		value = ValueForKey(e2, "_forcedSolid");
 
-		if (atoi(value) >= 1)
+		if (atoi(value) >= 2)
+		{
+			forcedSolid = qtrue;
+			forcedFullSolid = qtrue;
+		}
+		else if (atoi(value) >= 1)
 		{
 			forcedSolid = qtrue;
 		}
@@ -1793,9 +1799,9 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 
 		/* insert the model */
 #ifdef CULL_BY_LOWEST_NEAR_POINT
-		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
+		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, forcedFullSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
 #else //!CULL_BY_LOWEST_NEAR_POINT
-		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
+		InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, forcedFullSolid, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
 #endif //CULL_BY_LOWEST_NEAR_POINT
 
 		//Sys_Printf( "insert model: %s. added_surfaces: %i. added_triangles: %i. added_verts: %i. added_brushes: %i.\n", model, added_surfaces, added_triangles, added_verts, added_brushes );

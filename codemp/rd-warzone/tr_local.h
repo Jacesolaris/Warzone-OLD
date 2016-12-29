@@ -52,7 +52,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_DYNAMIC_SHADOWS 4
 #endif //__DYNAMIC_SHADOWS__
 
-#define	MAX_LIGHTALL_DLIGHTS 64//16
+#define	MAX_LIGHTALL_DLIGHTS 24
 
 
 // Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...

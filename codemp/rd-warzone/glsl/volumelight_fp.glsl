@@ -160,7 +160,7 @@ void main ( void )
 				}
 			}
 #else //!USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-			if (lightColors[numInRange].r < 0.0 && lightColors[numInRange].g < 0.0 && lightColors[numInRange].b < 0.0)
+			//if (lightColors[numInRange].r < 0.0 && lightColors[numInRange].g < 0.0 && lightColors[numInRange].b < 0.0)
 			{// < 1.0 means no average color was found by game code. Need to fallback to glow map lookups...
 				vec3 spotColor = texture2D(u_DeluxeMap, vec2(inRangePositions[numInRange].x, 1.0 - inRangePositions[numInRange].y)).rgb;
 
@@ -176,6 +176,7 @@ void main ( void )
 					}
 
 					lightColors[numInRange] = -(spotColor + 0.5); // + 0.5 to make sure all .rgb are negative...
+					lightColors[numInRange] *= 0.22;
 				}
 				else
 				{// Not bright enough for a volumetric light...

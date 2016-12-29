@@ -1087,6 +1087,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 			continue;
 		}
 
+#ifdef __VOLUME_LIGHT_TRACE__
 		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin, qfalse))
 		{// Trace to actual position failed... Try above...
 			vec3_t tmpOrg;
@@ -1117,6 +1118,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 				}
 			}
 		}
+#endif //__VOLUME_LIGHT_TRACE__
 
 		int	xcenter, ycenter;
 		vec3_t	local, transformed;
