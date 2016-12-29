@@ -582,6 +582,29 @@ int PM_GetSaberStance()
 							return /*BOTH_P1_S1_TR*/BOTH_P1_S1_R;
 						}
 				}
+				else if (!hideStance && (pm->cmd.buttons & BUTTON_ALT_ATTACK))
+				{// Default when stance is not set to hidden by server or gametype. Block top (to make it look different to default stance)
+					//Top Block
+					SET_BLOCK_DIRECTION(BLOCKING_TOP)
+
+						if (mblockforstance == SS_DUAL)
+						{
+							return BOTH_P6_S6_T_;
+						}
+						else if (mblockforstance == SS_STAFF)
+						{
+							return BOTH_P7_S7_T_;
+						}
+
+						else if (mblockforstance == SS_TAVION)
+						{
+							return BOTH_P1_S1_T_;
+						}
+						else
+						{
+							return BOTH_P1_S1_T_;
+						}
+				}
 			}
 	}
 

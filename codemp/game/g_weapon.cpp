@@ -5554,7 +5554,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		else if (ent->s.eType == ET_PLAYER
 			&& ent->s.weapon != WP_SABER
 			&& ent->client
-			&& (ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
+			&& (ent->client->pers.cmd.buttons & BUTTON_SPECIALBUTTON2))
 		{// UQ1: Added... At close range players can hit you with their rifle butt...
 			WP_FireMelee(ent, qfalse);
 			return;
