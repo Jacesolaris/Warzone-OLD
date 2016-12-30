@@ -5334,7 +5334,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 	return qtrue;
 				}
 //[/SaberSys]
-
+#include <mutex>
 #define MAX_SABER_SWING_INC 0.33f
 qboolean BG_SaberInTransitionAny( int move );
 qboolean WP_ForcePowerUsable( gentity_t *self, forcePowers_t forcePower );
@@ -5343,6 +5343,9 @@ qboolean Jedi_WaitingAmbush( gentity_t *self );
 void Jedi_Ambush( gentity_t *self );
 evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc, vec3_t phitDir, gentity_t *incoming, float dist );
 void NPC_SetLookTarget( gentity_t *self, int entNum, int clearTime );
+
+std::mutex AreaEntities_Mutex;
+
 void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd  )
 {
 	float		dist;
@@ -5447,7 +5450,9 @@ void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd  )
 		maxs[i] = self->r.currentOrigin[i] + radius;
 	}
 
+	AreaEntities_Mutex.lock();
 	numListedEntities = trap->EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
+	AreaEntities_Mutex.unlock();
 
 	closestDist = radius;
 

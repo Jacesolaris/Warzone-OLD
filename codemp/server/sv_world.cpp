@@ -357,8 +357,10 @@ bounds.  This does NOT mean that they actually touch in the case of bmodels.
 */
 
 typedef struct areaParms_s {
-	const float	*mins;
-	const float	*maxs;
+	//const float	*mins;
+	//const float	*maxs;
+	vec3_t		mins;
+	vec3_t		maxs;
 	int			*list;
 	int			count, maxcount;
 } areaParms_t;
@@ -425,15 +427,15 @@ SV_AreaEntities
 int SV_AreaEntities( const vec3_t mins, const vec3_t maxs, int *entityList, int maxcount ) {
 	areaParms_t		ap;
 
-	ap.mins = mins;
-	ap.maxs = maxs;
+	//ap.mins = mins;
+	//ap.maxs = maxs;
+	VectorCopy(mins, ap.mins);
+	VectorCopy(maxs, ap.maxs);
 	ap.list = entityList;
 	ap.count = 0;
 	ap.maxcount = maxcount;
 
-//AreaEntities_lock.lock();
 	SV_AreaEntities_r( sv_worldSectors, &ap );
-//AreaEntities_lock.unlock();
 
 	return ap.count;
 }

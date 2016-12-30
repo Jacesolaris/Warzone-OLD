@@ -9777,6 +9777,8 @@ void CG_AddGhoul2Mark(int shader, float size, vec3_t start, vec3_t end, int entn
 
 	assert(ghoul2);
 
+	if (!ghoul2) return;
+
 	memset ( &goreSkin, 0, sizeof(goreSkin) );
 
 	if (trap->G2API_GetNumGoreMarks(ghoul2, 0) >= cg_ghoul2Marks.integer)
