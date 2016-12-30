@@ -48,7 +48,6 @@ qboolean WP_SaberBladeDoTransitionDamage( saberInfo_t *saber, int bladeNum );
 //[SaberSys]
 extern float VectorDistances(vec3_t v1, vec3_t v2);
 qboolean G_FindClosestPointOnLineSegment(const vec3_t start, const vec3_t end, const vec3_t from, vec3_t result);
-extern void G_Knockdown(gentity_t *victim, int attackerNumber);
 extern void G_AddVoiceEvent(gentity_t *self, int event, int speakDebounceTime);
 //Default damage for a thrown saber
 #define DAMAGE_THROWN			50
@@ -57,8 +56,7 @@ extern void G_AddVoiceEvent(gentity_t *self, int event, int speakDebounceTime);
 //[NewSaberSys]
 void saberKnockDown(gentity_t *saberent, gentity_t *saberOwner, gentity_t *other);
 qboolean SaberAttacking(gentity_t *self);
-int g_SaberDmgTimer = 0;
-qboolean instaslashFix = qfalse;
+qboolean Saberslash = qfalse;
 //[/NewSaberSys]
 
 
@@ -4901,11 +4899,6 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		{
 			dmg = SABER_NONATTACK_DAMAGE;
 		}
-
-		if (dmg == SABER_NONATTACK_DAMAGE && g_SaberDmgTimer <= level.time)
-		{
-			g_SaberDmgTimer = level.time + 75;
-		}
 		idleDamage = qtrue;
 	}
 	else
@@ -5740,7 +5733,7 @@ void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd  )
 #endif //__MISSILES_AUTO_PARRY__
 			//[/SaberSys]
 			//[NewSaberSys]
-			instaslashFix = qfalse;
+			Saberslash = qfalse;
 			//[/NewSaberSys]
 			if ( owner && owner->client && (!self->enemy || self->enemy->s.weapon != WP_SABER) )//keep enemy jedi over shooters
 			{
@@ -7571,6 +7564,7 @@ static void G_KickSomeMofos(gentity_t *ent)
 	int	  kickDamage = Q_irand(10, 15);//Q_irand( 3, 8 ); //since it can only hit a guy once now
 	int	  kickPush = flrand(50.0f, 100.0f);
 	qboolean doKick = qfalse;
+	qboolean DoTorsoKick = qfalse;
 	renderInfo_t *ri = &ent->client->renderInfo;
 
 	VectorSet(kickDir, 0.0f, 0.0f, 0.0f);
@@ -7678,7 +7672,7 @@ static void G_KickSomeMofos(gentity_t *ent)
 			break;
 
 		case BOTH_MELEE_BACKHAND:
-			DotorsoKick = qtrue;
+			DoTorsoKick = qtrue;
 			if (elapsedTime >= 150 && remainingTime >= 150)
 			{//front
 				doKick = qtrue;
@@ -9602,10 +9596,10 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 	{
 		vec_t dist = Distance(originpoint, point);
 
-		if (dist<100)  instaslashFix = qtrue;
+		if (dist<100)  Saberslash = qtrue;
 		else
 		{
-			instaslashFix = qfalse;
+			Saberslash = qfalse;
 		}
 	}
 
