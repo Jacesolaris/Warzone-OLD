@@ -877,7 +877,7 @@ qboolean NAV_TestForBlocked( gentity_t *self, gentity_t *goal, gentity_t *blocke
 	if ( goal == NULL )
 		return qfalse;
 
-	if ( blocker->s.eType == ET_ITEM )
+	if ( !blocker || blocker->s.eType == ET_ITEM )
 		return qfalse;
 
 	if ( NAV_HitNavGoal( blocker->r.currentOrigin, blocker->r.mins, blocker->r.maxs, goal->r.currentOrigin, 12, qfalse ) )

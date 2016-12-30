@@ -370,6 +370,7 @@ SV_AreaEntities_r
 
 ====================
 */
+
 void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {
 	svEntity_t	*check, *next;
 	sharedEntity_t *gcheck;
@@ -415,6 +416,12 @@ void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {
 SV_AreaEntities
 ================
 */
+
+#include <thread>
+#include <mutex>
+
+//std::mutex AreaEntities_lock;
+
 int SV_AreaEntities( const vec3_t mins, const vec3_t maxs, int *entityList, int maxcount ) {
 	areaParms_t		ap;
 
@@ -424,7 +431,9 @@ int SV_AreaEntities( const vec3_t mins, const vec3_t maxs, int *entityList, int 
 	ap.count = 0;
 	ap.maxcount = maxcount;
 
+//AreaEntities_lock.lock();
 	SV_AreaEntities_r( sv_worldSectors, &ap );
+//AreaEntities_lock.unlock();
 
 	return ap.count;
 }

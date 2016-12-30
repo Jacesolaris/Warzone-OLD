@@ -483,7 +483,7 @@ qboolean NAVNEW_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t *inf
 		//	return qtrue;
 
 		//Test for blocking by standing on goal
-		if ( NAV_TestForBlocked( self, goal, info->blocker, info->distance, &info->flags ) == qtrue )
+		if (info->blocker && NAV_TestForBlocked( self, goal, info->blocker, info->distance, &info->flags ) == qtrue )
 			return qfalse;
 
 		//If the above function said we're blocked, don't do the extra checks
