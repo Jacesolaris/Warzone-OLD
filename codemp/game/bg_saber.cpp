@@ -3886,7 +3886,7 @@ weapChecks:
 	/*
 	if ( PM_CanDoKata() )
 	{
-<<<<<<< HEAD
+
 	saberMoveName_t overrideMove = LS_INVALID;
 	saberInfo_t *saber1 = BG_MySaber( pm->ps->clientNum, 0 );
 	saberInfo_t *saber2 = BG_MySaber( pm->ps->clientNum, 1 );
@@ -3949,7 +3949,7 @@ weapChecks:
 	pm->ps->weaponstate = WEAPON_FIRING;
 	//G_DrainPowerForSpecialMove( pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER );//FP_SPEED, SINGLE_SPECIAL_POWER );
 	BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER);
-=======
+
 		saberMoveName_t overrideMove = LS_INVALID;
 		saberInfo_t *saber1 = BG_MySaber( pm->ps->clientNum, 0 );
 		saberInfo_t *saber2 = BG_MySaber( pm->ps->clientNum, 1 );
@@ -4026,7 +4026,6 @@ weapChecks:
 		{//not cancelled
 			return;
 		}
->>>>>>> 72881defbb4982cbb65296d239d00a92c21c361c
 	}
 	else if ( overrideMove != LS_NONE )
 	{
