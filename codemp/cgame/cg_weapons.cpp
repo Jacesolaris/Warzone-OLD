@@ -1845,14 +1845,39 @@ void CG_Weapon_f( void ) {
 		return;
 	}
 
+	//if (num == 1 && cg.snap->ps.weapon == WP_SABER)
+	//{
+	//	if (cg.predictedPlayerState.weaponTime < 1)
+	////	if (cg.snap->ps.weaponTime < 1)
+	//	{
+	//		trap->SendConsoleCommand("sv_saberswitch\n");
+	//	}
+	//	return;
+	//}
 	if (num == 1 && cg.snap->ps.weapon == WP_SABER)
 	{
-		if (cg.predictedPlayerState.weaponTime < 1)
-	//	if (cg.snap->ps.weaponTime < 1)
+		//[MELEE]
+		//Switch to melee when blade is toggled if ojp_sabermelee is on
+		if (cg.snap->ps.weaponTime < 1)
 		{
-			trap->SendConsoleCommand("sv_saberswitch\n");
+			if (ojp_sabermelee.integer && !cg.snap->ps.saberHolstered && CG_WeaponSelectable(WP_MELEE))
+			{
+				num = WP_MELEE;
+
+				cg.weaponSelectTime = cg.time;
+
+				if (cg.weaponSelect != num)
+				{
+					trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+				}
+
+				cg.weaponSelect = num;
+			}
+			else
+			{
+				trap->SendConsoleCommand("sv_saberswitch\n");
+			}
 		}
-		return;
 	}
 
 	//rww - hack to make weapon numbers same as single player

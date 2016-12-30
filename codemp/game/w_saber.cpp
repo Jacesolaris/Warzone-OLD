@@ -7571,6 +7571,7 @@ static void G_KickSomeMofos(gentity_t *ent)
 	int	  kickDamage = Q_irand(10, 15);//Q_irand( 3, 8 ); //since it can only hit a guy once now
 	int	  kickPush = flrand(50.0f, 100.0f);
 	qboolean doKick = qfalse;
+	qboolean DotorsoKick = qfalse;
 	renderInfo_t *ri = &ent->client->renderInfo;
 
 	VectorSet(kickDir, 0.0f, 0.0f, 0.0f);
@@ -7650,6 +7651,60 @@ static void G_KickSomeMofos(gentity_t *ent)
 					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
 					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
 					kickDir[2] = 0;//ah, flatten it, I guess...
+					VectorNormalize(kickDir);
+				}
+				else
+				{//guess
+					AngleVectors(fwdAngs, kickDir, NULL, NULL);
+				}
+			}
+			break;
+
+		case BOTH_MELEE_BACKKICK:
+			//FIXME: push forward?
+			if (elapsedTime >= 250 && remainingTime >= 150)
+			{//front
+				doKick = qtrue;
+				if (ri->footRBolt != -1)
+				{//actually trace to a bolt
+					G_GetBoltPosition(ent, ri->footRBolt, kickEnd, 0);
+					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					VectorNormalize(kickDir);
+				}
+				else
+				{//guess
+					AngleVectors(fwdAngs, kickDir, NULL, NULL);
+				}
+			}
+			break;
+
+		case BOTH_MELEE_BACKHAND:
+			DotorsoKick = qtrue;
+			if (elapsedTime >= 150 && remainingTime >= 150)
+			{//front
+				doKick = qtrue;
+				if (ri->handLBolt != -1)
+				{//actually trace to a bolt
+					G_GetBoltPosition(ent, ri->handLBolt, kickEnd, 0);
+					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
+					VectorNormalize(kickDir);
+				}
+				else
+				{//guess
+					AngleVectors(fwdAngs, kickDir, NULL, NULL);
+				}
+			}
+			break;
+
+		case BOTH_MELEE_SPINKICK:
+			//FIXME: push forward?
+			if (elapsedTime >= 150 && remainingTime >= 150)
+			{//front
+				doKick = qtrue;
+				if (ri->footLBolt != -1)
+				{//actually trace to a bolt
+					G_GetBoltPosition(ent, ri->footLBolt, kickEnd, 0);
+					VectorSubtract(kickEnd, ent->r.currentOrigin, kickDir);
 					VectorNormalize(kickDir);
 				}
 				else

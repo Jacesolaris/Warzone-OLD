@@ -377,12 +377,12 @@ int PM_GetSaberStance()
 	qboolean hideStance = qfalse;
 
 #if defined(_GAME)
-	if (sv_saberHideStance.integer || level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
+	if (sv_saberHideStance.integer || level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL || level.gametype == GT_WARZONE)
 	{
 		hideStance = qtrue;
 	}
 #elif defined(_CGAME)
-	if (cgs.hideStance || cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL)
+	if (cgs.hideStance || cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL )
 	{
 		hideStance = qtrue;
 	}
@@ -8470,7 +8470,7 @@ static void PM_Weapon( void )
 			//[MELEE]
 			//You can do kick without debugMelee turned on
 			}
-			else if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+			else if (pm->cmd.buttons & BUTTON_SPECIALBUTTON2)
 			//[/MELEE]
 				{ //kicks
 				  //[MELEE]
