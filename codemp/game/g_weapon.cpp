@@ -608,7 +608,7 @@ void WP_FireEmplacedMissile(gentity_t *ent, vec3_t start, vec3_t dir, qboolean a
 //---------------------------------------------------------
 {
 	int velocity = weaponData[ent->client->ps.weapon].boltSpeed;
-	int	damage = weaponData[pm->ps->weapon].dmg;
+	int	damage = weaponData[ent->client->ps.weapon].dmg;
 	gentity_t *missile;
 
 	missile = CreateMissile(start, dir, velocity, 10000, ent, altFire);
@@ -5607,9 +5607,9 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_A200_ACP_PISTOL:
 		case WP_SPOTING_BLASTER:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed * 3, weaponData[pm->ps->weapon].dmg, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed * 3, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
 			CalcFirstMuzzlePoint(ent, forward, vright, up, muzzle);
 			CalcSecondMuzzlePoint(ent, forward, vright, up, secondmuzzle);
 			break;
@@ -5631,16 +5631,16 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, 0.5, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.5, ent->s.weapon);
 			break;
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed * 3, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
 		case WP_DC15:
@@ -5661,14 +5661,14 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
 			break;
 
 		case WP_BRYAR_RIFLE:
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
 
@@ -5677,7 +5677,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
 		case WP_DC_17_CLONE_PISTOL:
@@ -5685,7 +5685,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			if (altFire)
 				WP_FireBowcaster(ent, altFire);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
 		case WP_BRYAR_RIFLE_SCOPE:
@@ -5694,7 +5694,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 				WP_FireChargedShot(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, 0.0);
 			//WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
 
@@ -5723,7 +5723,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			if (altFire)
 				WP_FireBowcaster(ent, altFire);
 			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[pm->ps->weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
 		case WP_DC15_EXT:

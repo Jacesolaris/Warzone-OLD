@@ -493,7 +493,7 @@ qboolean NAVNEW_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t *inf
 		*/
 
 		//See if we can get that entity to move out of our way
-		if ( NAVNEW_ResolveEntityCollision( self, info->blocker, movedir, info->pathDirection, setBlockedInfo ) == qfalse )
+		if (info->blocker && NAVNEW_ResolveEntityCollision( self, info->blocker, movedir, info->pathDirection, setBlockedInfo ) == qfalse )
 			return qfalse;
 
 		VectorCopy( movedir, info->direction );

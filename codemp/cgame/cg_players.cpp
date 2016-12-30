@@ -16817,9 +16817,20 @@ void CG_Player( centity_t *cent ) {
 	{
 		clientNum = cent->currentState.clientNum;
 		if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
-			trap->Error( ERR_DROP, "Bad clientNum on player entity");
+			if (cent->npcClient)
+			{// Hmmm... Threading issue?
+				cent->currentState.eType = ET_NPC;
+				ci = cent->npcClient;
+			}
+			else
+			{
+				trap->Error(ERR_DROP, "Bad clientNum on player entity");
+			}
 		}
-		ci = &cgs.clientinfo[ clientNum ];
+		else
+		{
+			ci = &cgs.clientinfo[clientNum];
+		}
 	}
 	else
 	{

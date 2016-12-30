@@ -14,7 +14,7 @@
 //#define __AAS_AI_TESTING__
 #define __NEW_TRUEVIEW__
 //#define __USE_NAVMESH__
-//#define __NPC_THREADING__
+#define __NPC_DYNAMIC_THREADS__ // New version of threading AI... Experimental...
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )

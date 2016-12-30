@@ -3033,89 +3033,7 @@ int NPC_SelectBestAvoidanceMethod ( gentity_t *aiEnt, vec3_t moveDir )
 		return AVOIDANCE_NONE;
 	}
 
-#if 0
-	{// Try left...
-		vec3_t trypos;
-
-		VectorCopy(NPC->r.currentOrigin, trypos);
-		VectorMA(trypos, -18, right, trypos);
-
-		VectorCopy(trypos, org1);
-		org1[2] += 32;
-
-		VectorCopy(goalPos, org2);
-		org2[2] += 32;
-
-		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
-		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
-		{// It is accessable normally...
-			return AVOIDANCE_STRAFE_LEFT;
-		}
-	}
-
-	{// Try right...
-		vec3_t trypos;
-
-		VectorCopy(NPC->r.currentOrigin, trypos);
-		VectorMA(trypos, 18, right, trypos);
-
-		VectorCopy(trypos, org1);
-		org1[2] += 32;
-
-		VectorCopy(goalPos, org2);
-		org2[2] += 32;
-
-		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
-		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
-		{// It is accessable normally...
-			return AVOIDANCE_STRAFE_RIGHT;
-		}
-	}
-
 	{// Try left 2...
-		vec3_t trypos;
-
-		VectorCopy(NPC->r.currentOrigin, trypos);
-		VectorMA(trypos, -32, right, trypos);
-
-		VectorCopy(trypos, org1);
-		org1[2] += 32;
-
-		VectorCopy(goalPos, org2);
-		org2[2] += 32;
-
-		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
-		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
-		{// It is accessable normally...
-			return AVOIDANCE_STRAFE_LEFT;
-		}
-	}
-
-	{// Try right 2...
-		vec3_t trypos;
-
-		VectorCopy(NPC->r.currentOrigin, trypos);
-		VectorMA(trypos, 32, right, trypos);
-
-		VectorCopy(trypos, org1);
-		org1[2] += 32;
-
-		VectorCopy(goalPos, org2);
-		org2[2] += 32;
-
-		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
-		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
-		{// It is accessable normally...
-			return AVOIDANCE_STRAFE_RIGHT;
-		}
-	}
-#endif
-
-	{// Try left 3...
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
@@ -3129,13 +3047,13 @@ int NPC_SelectBestAvoidanceMethod ( gentity_t *aiEnt, vec3_t moveDir )
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
+		if (!tr.startsolid && !tr.allsolid /*&& tr.fraction >= 0.9f*/ && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_LEFT;
 		}
 	}
 
-	{// Try right 3...
+	{// Try right 2...
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
@@ -3149,7 +3067,7 @@ int NPC_SelectBestAvoidanceMethod ( gentity_t *aiEnt, vec3_t moveDir )
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
+		if (!tr.startsolid && !tr.allsolid /*&& tr.fraction >= 0.9f*/ && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_RIGHT;
 		}

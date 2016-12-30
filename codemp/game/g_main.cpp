@@ -1137,6 +1137,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	//trap->Print("MAX_CONFIGSTRINGS is %i.\n", (int)MAX_CONFIGSTRINGS);
 }
 
+#ifdef __NPC_DYNAMIC_THREADS__
+extern void AI_ThreadsShutdown(void);
+#endif //__NPC_DYNAMIC_THREADS__
+
 /*
 =================
 G_ShutdownGame
@@ -1218,6 +1222,10 @@ void G_ShutdownGame( int restart ) {
 	}
 
 	G_CleanAllFakeClients(); //get rid of dynamically allocated fake client structs.
+
+#ifdef __NPC_DYNAMIC_THREADS__
+	AI_ThreadsShutdown();
+#endif //__NPC_DYNAMIC_THREADS__
 }
 
 /*
@@ -3604,6 +3612,357 @@ int BG_GetTime(void)
 	return level.time;
 }
 
+void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd);
+
+int ACTIVE_ENTS[MAX_GENTITIES];
+int ACTIVE_ENTS_NUM = 0;
+
+#ifdef __NPC_DYNAMIC_THREADS__
+#include <thread>
+#include <mutex>
+
+int ACTIVE_NPCS[MAX_GENTITIES];
+int ACTIVE_NPCS_NUM = 0;
+
+std::thread *ai_thread1 = NULL;
+std::thread *ai_thread2 = NULL;
+std::thread *ai_thread3 = NULL;
+std::thread *ai_thread4 = NULL;
+std::mutex active_ents_mutex;
+
+qboolean ai_shutdown1 = qfalse;
+qboolean ai_shutdown2 = qfalse;
+qboolean ai_shutdown3 = qfalse;
+qboolean ai_shutdown4 = qfalse;
+
+qboolean ai_running1 = qfalse;
+qboolean ai_running2 = qfalse;
+qboolean ai_running3 = qfalse;
+qboolean ai_running4 = qfalse;
+
+int ai_next_think1 = 0;
+int ai_next_think2 = 0;
+int ai_next_think3 = 0;
+int ai_next_think4 = 0;
+
+#define AI_THINK_TIME 50
+
+void AI_ThinkThread1(void)
+{
+	while (!ai_shutdown1)
+	{
+		while (ai_next_think1 > level.time)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+			if (ai_shutdown1)
+				break;
+		}
+
+		if (ai_shutdown1)
+			break;
+
+		for (int aEnt = 0; aEnt < ACTIVE_NPCS_NUM && aEnt < 128; aEnt++)
+		{
+			int i = ACTIVE_NPCS[aEnt];
+
+			gentity_t *ent = &g_entities[i];
+
+			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+				continue;
+
+			G_RunThink(ent, qtrue);
+
+			// turn off any expired powerups
+			for (int j = 0; j < MAX_POWERUPS; j++) {
+				if (ent->client->ps.powerups[j] < level.time) {
+					ent->client->ps.powerups[j] = 0;
+				}
+			}
+
+			JKG_DoPlayerDamageEffects(ent);
+			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+		}
+
+		ai_next_think1 = level.time + AI_THINK_TIME;
+	}
+
+	trap->Print("Spun down AI thread #1.\n");
+	ai_running1 = qfalse;
+}
+
+void AI_ThinkThread2(void)
+{
+	while (!ai_shutdown2)
+	{
+		while (ai_next_think2 > level.time)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+			if (ai_shutdown2)
+				break;
+		}
+
+		if (ai_shutdown2)
+			break;
+
+		for (int aEnt = 128; aEnt < ACTIVE_NPCS_NUM && aEnt < 256; aEnt++)
+		{
+			int i = ACTIVE_NPCS[aEnt];
+
+			gentity_t *ent = &g_entities[i];
+
+			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+				continue;
+
+			G_RunThink(ent, qtrue);
+
+			// turn off any expired powerups
+			for (int j = 0; j < MAX_POWERUPS; j++) {
+				if (ent->client->ps.powerups[j] < level.time) {
+					ent->client->ps.powerups[j] = 0;
+				}
+			}
+
+			JKG_DoPlayerDamageEffects(ent);
+			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+		}
+
+		ai_next_think2 = level.time + AI_THINK_TIME;
+	}
+
+	trap->Print("Spun down AI thread #2.\n");
+	ai_running2 = qfalse;
+}
+
+void AI_ThinkThread3(void)
+{
+	while (!ai_shutdown3)
+	{
+		while (ai_next_think3 > level.time)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+			if (ai_shutdown3)
+				break;
+		}
+
+		if (ai_shutdown3)
+			break;
+
+		for (int aEnt = 256; aEnt < ACTIVE_NPCS_NUM && aEnt < 384; aEnt++)
+		{
+			int i = ACTIVE_NPCS[aEnt];
+
+			gentity_t *ent = &g_entities[i];
+
+			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+				continue;
+
+			G_RunThink(ent, qtrue);
+
+			// turn off any expired powerups
+			for (int j = 0; j < MAX_POWERUPS; j++) {
+				if (ent->client->ps.powerups[j] < level.time) {
+					ent->client->ps.powerups[j] = 0;
+				}
+			}
+
+			JKG_DoPlayerDamageEffects(ent);
+			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+		}
+
+		ai_next_think3 = level.time + AI_THINK_TIME;
+	}
+
+	trap->Print("Spun down AI thread #3.\n");
+	ai_running3 = qfalse;
+}
+
+void AI_ThinkThread4(void)
+{
+	while (!ai_shutdown4)
+	{
+		while (ai_next_think4 > level.time)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+			if (ai_shutdown4)
+				break;
+		}
+
+		if (ai_shutdown4)
+			break;
+
+		for (int aEnt = 512; aEnt < ACTIVE_NPCS_NUM; aEnt++)
+		{
+			int i = ACTIVE_NPCS[aEnt];
+
+			gentity_t *ent = &g_entities[i];
+
+			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+				continue;
+
+			G_RunThink(ent, qtrue);
+
+			// turn off any expired powerups
+			for (int j = 0; j < MAX_POWERUPS; j++) {
+				if (ent->client->ps.powerups[j] < level.time) {
+					ent->client->ps.powerups[j] = 0;
+				}
+			}
+
+			JKG_DoPlayerDamageEffects(ent);
+			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+		}
+
+		ai_next_think4 = level.time + AI_THINK_TIME;
+	}
+
+	trap->Print("Spun down AI thread #4.\n");
+	ai_running4 = qfalse;
+}
+
+void AI_Theads(void)
+{
+	if (dedicated.integer)
+	{// Only thread when dedicated... Fucking G2API threading unsafe crap...
+		if (!ai_running1 && ACTIVE_NPCS_NUM > 0)
+		{
+			ai_thread1 = new std::thread(AI_ThinkThread1);
+			ai_thread1->detach();
+			trap->Print("Spun up AI thread #1.\n");
+			ai_shutdown1 = qfalse;
+			ai_running1 = qtrue;
+			ai_next_think1 = level.time;
+		}
+
+		/*
+		if (ai_running1 && ACTIVE_NPCS_NUM <= 0)
+		{
+			ai_shutdown1 = qtrue;
+			//ai_thread1->join();
+		}
+		*/
+
+		if (!ai_running2 && ACTIVE_NPCS_NUM > 0)//128)
+		{
+			ai_thread2 = new std::thread(AI_ThinkThread2);
+			ai_thread2->detach();
+			trap->Print("Spun up AI thread #2.\n");
+			ai_shutdown2 = qfalse;
+			ai_running2 = qtrue;
+			ai_next_think2 = level.time;
+		}
+
+		/*
+		if (ai_running2 && ACTIVE_NPCS_NUM <= 128)
+		{
+			ai_shutdown2 = qtrue;
+			//ai_thread2->join();
+		}
+		*/
+
+		if (!ai_running3 && ACTIVE_NPCS_NUM > 0)//256)
+		{
+			ai_thread3 = new std::thread(AI_ThinkThread3);
+			ai_thread3->detach();
+			trap->Print("Spun up AI thread #3.\n");
+			ai_shutdown3 = qfalse;
+			ai_running3 = qtrue;
+			ai_next_think3 = level.time;
+		}
+
+		/*
+		if (ai_running3 && ACTIVE_NPCS_NUM <= 256)
+		{
+			ai_shutdown3 = qtrue;
+			//ai_thread3->join();
+		}
+		*/
+
+		if (!ai_running4 && ACTIVE_NPCS_NUM > 0)//384)
+		{
+			ai_thread4 = new std::thread(AI_ThinkThread4);
+			ai_thread4->detach();
+			trap->Print("Spun up AI thread #4.\n");
+			ai_shutdown4 = qfalse;
+			ai_running4 = qtrue;
+			ai_next_think4 = level.time;
+		}
+
+		/*
+		if (ai_running4 && ACTIVE_NPCS_NUM <= 384)
+		{
+			ai_shutdown4 = qtrue;
+			//ai_thread4->join();
+		}
+		*/
+	}
+	else
+	{
+		for (int aEnt = 0; aEnt < ACTIVE_NPCS_NUM; aEnt++)
+		{
+			int i = ACTIVE_NPCS[aEnt];
+
+			gentity_t *ent = &g_entities[i];
+
+			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+				continue;
+
+			G_RunThink(ent, qtrue);
+
+			// turn off any expired powerups
+			for (int j = 0; j < MAX_POWERUPS; j++) {
+				if (ent->client->ps.powerups[j] < level.time) {
+					ent->client->ps.powerups[j] = 0;
+				}
+			}
+
+			JKG_DoPlayerDamageEffects(ent);
+			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+		}
+	}
+}
+
+void AI_ThreadsShutdown(void)
+{
+	if (dedicated.integer)
+	{// Only thread when dedicated... Fucking G2API threading unsafe crap...
+		ACTIVE_NPCS_NUM = 0;
+
+		ai_shutdown1 = qtrue;
+		ai_shutdown2 = qtrue;
+		ai_shutdown3 = qtrue;
+		ai_shutdown4 = qtrue;
+
+		trap->Print("Waiting for AI threads to shut down...\n");
+
+		while (ai_running1 || ai_running2 || ai_running3 || ai_running4)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		}
+
+		trap->Print("AI threads have shut down...\n");
+
+		ai_thread1 = NULL;
+		ai_thread2 = NULL;
+		ai_thread3 = NULL;
+		ai_thread4 = NULL;
+	}
+}
+#endif //__NPC_DYNAMIC_THREADS__
+
 /*
 ================
 G_RunFrame
@@ -3616,7 +3975,6 @@ void JKG_DamagePlayers(void);
 void AI_UpdateGroups( void );
 void ClearPlayerAlertEvents( void );
 void SiegeCheckTimers(void);
-void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd );
 extern void Jedi_Decloak( gentity_t *self );
 qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
 
@@ -3639,6 +3997,12 @@ void G_RunFrame( int levelTime ) {
 #endif
 	FRAME_TIME = trap->Milliseconds();
 
+#ifdef __NPC_DYNAMIC_THREADS__
+	active_ents_mutex.lock();
+	ACTIVE_NPCS_NUM = 0;
+#endif //__NPC_DYNAMIC_THREADS__
+	ACTIVE_ENTS_NUM = 0;
+	
 
 	if (level.gametype == GT_SIEGE &&
 		g_siegeRespawn.integer &&
@@ -3720,6 +4084,9 @@ void G_RunFrame( int levelTime ) {
 
 	// if we are waiting for the level to restart, do nothing
 	if ( level.restarted ) {
+#ifdef __NPC_DYNAMIC_THREADS__
+		active_ents_mutex.unlock();
+#endif //__NPC_DYNAMIC_THREADS__
 		return;
 	}
 
@@ -3784,9 +4151,6 @@ void G_RunFrame( int levelTime ) {
 	// go through all allocated objects
 	//
 
-	int ACTIVE_ENTS[MAX_GENTITIES];
-	int ACTIVE_ENTS_NUM = 0;
-
 	for (int i = 0; i < level.num_entities; i++)
 	{// Lets see how much stuff needs to do a full think...
 		gentity_t *ent = &g_entities[i];
@@ -3839,34 +4203,21 @@ void G_RunFrame( int levelTime ) {
 
 		ACTIVE_ENTS[ACTIVE_ENTS_NUM] = i;
 		ACTIVE_ENTS_NUM++;
+		
+#ifdef __NPC_DYNAMIC_THREADS__
+		if (ent->s.eType == ET_NPC)
+		{
+			ACTIVE_NPCS[ACTIVE_NPCS_NUM] = i;
+			ACTIVE_NPCS_NUM++;
+		}
+#endif //__NPC_DYNAMIC_THREADS__
 	}
 
-	//int			thinkTime = trap->Milliseconds();
-	//int			numThreads = 0;
+#ifdef __NPC_DYNAMIC_THREADS__
+	active_ents_mutex.unlock();
+	AI_Theads();
+#endif //__NPC_DYNAMIC_THREADS__
 
-	/*if (ACTIVE_ENTS_NUM > 512)
-	{
-		numThreads = std::thread::hardware_concurrency() > 5 ? 5 : 4;
-	}
-	else if (ACTIVE_ENTS_NUM > 384)
-	{
-		numThreads = std::thread::hardware_concurrency() > 4 ? 4 : 3;
-	}
-	else if (ACTIVE_ENTS_NUM > 256)
-	{
-		numThreads = std::thread::hardware_concurrency() > 3 ? 3 : 2;
-	}
-	else if (ACTIVE_ENTS_NUM > 128)
-	{
-		numThreads = std::thread::hardware_concurrency() > 2 ? 2 : 1;
-	}
-
-	if (numThreads > std::thread::hardware_concurrency() - 2)
-	{
-		numThreads = max(std::thread::hardware_concurrency() - 2, 1);
-	}*/
-
-//#pragma omp parallel for num_threads(numThreads) if (ACTIVE_ENTS_NUM > 128 && numThreads > 0)
 	for (int aEnt = 0; aEnt < ACTIVE_ENTS_NUM; aEnt++)
 	{
 		int i = ACTIVE_ENTS[aEnt];
@@ -4115,6 +4466,7 @@ void G_RunFrame( int levelTime ) {
 			G_RunClient( ent );
 			continue;
 		}
+#ifndef __NPC_DYNAMIC_THREADS__
 		else if (ent->s.eType == ET_NPC)
 		{
 			int j;
@@ -4125,7 +4477,14 @@ void G_RunFrame( int levelTime ) {
 				}
 			}
 		}
+#endif //__NPC_DYNAMIC_THREADS__
 
+#ifdef __NPC_DYNAMIC_THREADS__
+		if (ent->s.eType != ET_NPC)
+		{
+			G_RunThink(ent, qfalse);
+		}
+#else //!__NPC_DYNAMIC_THREADS__
 		G_RunThink( ent, qfalse );
 
 		if (ent->s.eType == ET_NPC)
@@ -4135,6 +4494,7 @@ void G_RunFrame( int levelTime ) {
 			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
 			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
 		}
+#endif //__NPC_DYNAMIC_THREADS__
 	}
 
 	//thinkTime = trap->Milliseconds() - thinkTime;
@@ -4170,7 +4530,6 @@ void G_RunFrame( int levelTime ) {
 		}
 	}
 #else
-//#pragma omp parallel for num_threads(numThreads) if (ACTIVE_ENTS_NUM > 128 && numThreads > 0)
 	for (int aEnt = 0; aEnt < ACTIVE_ENTS_NUM; aEnt++)
 	{
 		int i = ACTIVE_ENTS[aEnt];
@@ -4181,13 +4540,13 @@ void G_RunFrame( int levelTime ) {
 			if (ent->s.eType == ET_PLAYER) 
 			{
 				ClientEndFrame(ent);
-			} 
+			}
 			else if (ent->s.eType == ET_NPC) 
 			{
 				playerState_t *ps = &ent->client->ps;
 				entityState_t *s = &ent->s;
 
-				ent->client->ps.commandTime = level.time - 100;
+				ent->client->ps.commandTime = level.time - 50;// 100;
 
 				//s->pos.trType = TR_INTERPOLATE;
 				s->pos.trType = TR_LINEAR_STOP;

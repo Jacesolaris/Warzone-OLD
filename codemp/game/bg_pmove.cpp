@@ -12460,14 +12460,12 @@ Can be called by either the server or the client
 ================
 */
 
-#ifdef __NPC_THREADING__
-#include "../client/tinythread.h"
-#include "../client/fast_mutex.h"
+#ifdef __NPC_DYNAMIC_THREADS__
+#include <thread>
+#include <mutex>
 
-using namespace tthread;
-
-tthread::fast_mutex PmoveLock;
-#endif //__NPC_THREADING__
+std::mutex pmove_mutex;
+#endif //__NPC_DYNAMIC_THREADS__
 
 void Pmove (pmove_t *pmove) {
 	int			finalTime;
@@ -12479,9 +12477,9 @@ void Pmove (pmove_t *pmove) {
 		return;	// should not happen
 	}
 
-#ifdef __NPC_THREADING__
-	PmoveLock.lock();
-#endif //__NPC_THREADING__
+#ifdef __NPC_DYNAMIC_THREADS__
+	pmove_mutex.lock();
+#endif //__NPC_DYNAMIC_THREADS__
 
 	if ( finalTime > pmove->ps->commandTime + 1000 ) {
 		pmove->ps->commandTime = finalTime - 1000;
@@ -12535,8 +12533,8 @@ void Pmove (pmove_t *pmove) {
 		pmove->ps->pm_type = PM_NOMOVE;		// Restore it
 	}
 
-#ifdef __NPC_THREADING__
-	PmoveLock.unlock();
-#endif //__NPC_THREADING__
+#ifdef __NPC_DYNAMIC_THREADS__
+	pmove_mutex.unlock();
+#endif //__NPC_DYNAMIC_THREADS__
 }
 
