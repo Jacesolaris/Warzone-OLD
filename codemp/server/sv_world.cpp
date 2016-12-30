@@ -4,8 +4,9 @@
 #include "ghoul2/ghoul2_shared.h"
 #include "qcommon/cm_public.h"
 
-#include "../client/fast_mutex.h"
-#include "../client/tinythread.h"
+#include <thread>
+#include <mutex>
+
 
 /*
 ================
@@ -801,13 +802,13 @@ passEntityNum and entities owned by passEntityNum are explicitly not checked.
 Ghoul2 Insert Start
 */
 
-tthread::fast_mutex svtrace_lock;
+std::mutex pmtrace_lock;
 
 void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, int capsule, int traceFlags, int useLod ) {
 /*
 Ghoul2 Insert End
 */
-//svtrace_lock.lock();
+pmtrace_lock.lock();
 	moveclip_t	clip;
 	int			i;
 
@@ -825,7 +826,7 @@ Ghoul2 Insert End
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;
-//svtrace_lock.unlock();
+pmtrace_lock.unlock();
 		return;		// blocked immediately by the world
 	}
 
@@ -864,7 +865,7 @@ Ghoul2 Insert End
 	SV_ClipMoveToEntities ( &clip );
 
 	*results = clip.trace;
-//svtrace_lock.unlock();
+pmtrace_lock.unlock();
 }
 
 

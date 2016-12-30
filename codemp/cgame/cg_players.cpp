@@ -16813,19 +16813,11 @@ void CG_Player( centity_t *cent ) {
 	// the client number is stored in clientNum.  It can't be derived
 	// from the entity number, because a single client may have
 	// multiple corpses on the level using the same clientinfo
-	if (cent->currentState.eType != ET_NPC)
+	if (cent->currentState.eType == ET_PLAYER)
 	{
 		clientNum = cent->currentState.clientNum;
 		if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
-			if (cent->npcClient)
-			{// Hmmm... Threading issue?
-				cent->currentState.eType = ET_NPC;
-				ci = cent->npcClient;
-			}
-			else
-			{
-				trap->Error(ERR_DROP, "Bad clientNum on player entity");
-			}
+			trap->Error(ERR_DROP, "Bad clientNum %i on player entity", clientNum);
 		}
 		else
 		{
