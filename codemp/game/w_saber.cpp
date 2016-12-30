@@ -7571,7 +7571,6 @@ static void G_KickSomeMofos(gentity_t *ent)
 	int	  kickDamage = Q_irand(10, 15);//Q_irand( 3, 8 ); //since it can only hit a guy once now
 	int	  kickPush = flrand(50.0f, 100.0f);
 	qboolean doKick = qfalse;
-	qboolean DotorsoKick = qfalse;
 	renderInfo_t *ri = &ent->client->renderInfo;
 
 	VectorSet(kickDir, 0.0f, 0.0f, 0.0f);
@@ -7713,6 +7712,7 @@ static void G_KickSomeMofos(gentity_t *ent)
 				}
 			}
 			break;
+
 		case BOTH_A7_KICK_B:
 			//FIXME: push back?
 			if (elapsedTime >= 250 && remainingTime >= 250)

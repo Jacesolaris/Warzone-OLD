@@ -8470,7 +8470,7 @@ static void PM_Weapon( void )
 			//[MELEE]
 			//You can do kick without debugMelee turned on
 			}
-			else if (pm->cmd.buttons & BUTTON_SPECIALBUTTON2)
+			else if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 			//[/MELEE]
 				{ //kicks
 				  //[MELEE]
