@@ -1793,14 +1793,9 @@ qboolean BG_InDeathAnim( int anim );
 qboolean BG_InSaberLockOld( int anim );
 qboolean BG_InSaberLock( int anim );
 
-//[SaberSys]
-qboolean BG_InWalk(int anim);
-//[/SaberSys]
-
 //[NewSaberSys]
 qboolean BG_InKnockDownOnGround(playerState_t *ps);
 qboolean BG_LongLeapAnim(int anim);
-qboolean BG_RegularKickingAnim(int anim);
 qboolean BG_InDashMove(int anim);
 qboolean BG_AirKickAnim(int anim);
 qboolean BG_PunchAnim(int anim);

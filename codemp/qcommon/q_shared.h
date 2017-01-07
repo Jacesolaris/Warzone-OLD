@@ -2040,7 +2040,7 @@ typedef struct siegePers_s
 
 #define BUTTON_SABERTHROW       4096        //+button12			//+button12 //Also a small force use button for repulse
 #define BUTTON_SPECIALBUTTON1   8192        //+button13			//+button13 Slap Button
-#define BUTTON_SPECIALBUTTON2	16384		//+button14			//+button14 Block Button
+#define BUTTON_SPECIALBUTTON2	16384		//+button14			//+button14 kick button
 
 // Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
 // I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.
