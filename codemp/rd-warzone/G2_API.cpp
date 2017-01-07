@@ -2848,8 +2848,9 @@ qboolean G2_TestModelPointers(CGhoul2Info *ghlInfo) // returns true if the model
 		ghlInfo->currentModel = R_GetModelByHandle(ghlInfo->mModel);
 		if (ghlInfo->currentModel)
 		{
-			if (ghlInfo->currentModel->data.glm &&
-				ghlInfo->currentModel->data.glm->header)
+			if (ghlInfo->currentModel->type == MOD_MDXM
+				&& ghlInfo->currentModel->data.glm
+				&& ghlInfo->currentModel->data.glm->header)
 			{
 				mdxmHeader_t *mdxm = ghlInfo->currentModel->data.glm->header;
 				if (ghlInfo->currentModelSize)

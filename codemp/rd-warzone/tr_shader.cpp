@@ -4899,7 +4899,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	diffuse->glslShaderIndex = defs;
 }
 
-static qboolean CollapseStagesToGLSL(void)
+static int CollapseStagesToGLSL(void)
 {
 	int i, j, numStages;
 	qboolean skip = qfalse;
@@ -5484,7 +5484,7 @@ static qboolean CollapseStagesToGLSL(void)
 	}
 #endif
 
-	return (qboolean)numStages;
+	return numStages;
 }
 
 /*

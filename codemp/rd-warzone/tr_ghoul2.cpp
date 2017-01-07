@@ -4269,7 +4269,8 @@ qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &
 			if ( niObj->IsDerivedType( NiGeometry::TYPE ) ) {
 				NiGeometryRef niGeom = DynamicCast<NiGeometry>(niObj);
 				Ref<NiGeometryData> niGeomData = DynamicCast<NiGeometryData>( niGeom->GetData() );
-				niGeomData->GetVertices().begin();
+				//niGeomData->GetVertices().begin();
+				//niGeomData->GetVertexIndices().begin();
 			}
 		}
 	}
