@@ -45,6 +45,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __MERGE_MODEL_SURFACES__
 #define __MERGE_MODEL_SURFACES2__	// merge entity surfaces into less draws...
 #define __LAZY_CUBEMAP__			// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
+//#define __INSTANCED_MODELS__		// experimenting with model instancing for foliage...
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -64,6 +65,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 
 
+#ifdef __INSTANCED_MODELS__
+#define MAX_INSTANCED_MODEL_TYPES		1024
+#define MAX_INSTANCED_MODEL_INSTANCES	2048
+#endif //__INSTANCED_MODELS__
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
@@ -618,6 +623,10 @@ typedef struct VBO_s
 	uint32_t        ofs_tangent;
 	uint32_t		ofs_boneweights;
 	uint32_t		ofs_boneindexes;
+#ifdef __INSTANCED_MODELS__
+	uint32_t		ofs_instancesMVP;
+	uint32_t		ofs_instances;
+#endif //__INSTANCED_MODELS__
 
 	uint32_t        stride_xyz;
 	uint32_t        stride_normal;
@@ -627,6 +636,10 @@ typedef struct VBO_s
 	uint32_t        stride_tangent;
 	uint32_t		stride_boneweights;
 	uint32_t		stride_boneindexes;
+#ifdef __INSTANCED_MODELS__
+	uint32_t		stride_instancesMVP;
+	uint32_t		stride_instances;
+#endif //__INSTANCED_MODELS__
 
 	uint32_t        size_xyz;
 	uint32_t        size_normal;
@@ -1132,7 +1145,13 @@ enum
 	// GPU vertex animations
 	ATTR_INDEX_POSITION2,
 	ATTR_INDEX_TANGENT2,
-	ATTR_INDEX_NORMAL2
+	ATTR_INDEX_NORMAL2,
+
+#ifdef __INSTANCED_MODELS__
+	// Instancing
+	ATTR_INDEX_INSTANCES_POS,
+	/*ATTR_INDEX_INSTANCES_MVP,*/
+#endif //__INSTANCED_MODELS__
 };
 
 enum
@@ -1217,8 +1236,8 @@ enum
 enum
 {
 	ATTR_POSITION =       0x0001,
-	ATTR_TEXCOORD0 =       0x0002,
-	ATTR_TEXCOORD1 =     0x0004,
+	ATTR_TEXCOORD0 =      0x0002,
+	ATTR_TEXCOORD1 =      0x0004,
 	ATTR_TANGENT =        0x0008,
 	ATTR_NORMAL =         0x0010,
 	ATTR_COLOR =          0x0020,
@@ -1231,6 +1250,11 @@ enum
 	ATTR_POSITION2 =      0x0400,
 	ATTR_TANGENT2 =       0x0800,
 	ATTR_NORMAL2 =        0x1000,
+
+#ifdef __INSTANCED_MODELS__
+	ATTR_INSTANCES_POS =  0x2000,
+	//ATTR_INSTANCES_MVP =  0x4000,
+#endif //__INSTANCED_MODELS__
 
 	ATTR_DEFAULT = ATTR_POSITION,
 	ATTR_BITS =	ATTR_POSITION |
@@ -1246,6 +1270,10 @@ enum
 				ATTR_POSITION2 |
 				ATTR_TANGENT2 |
 				ATTR_NORMAL2
+#ifdef __INSTANCED_MODELS__
+				| ATTR_INSTANCES_POS
+				/*| ATTR_INSTANCES_MVP*/
+#endif //__INSTANCED_MODELS__
 };
 
 enum
@@ -1476,6 +1504,9 @@ typedef struct shaderProgram_s
 
 	qboolean tesselation;
 	qboolean geometry;
+
+	//GLuint instances_mvp = 0;
+	GLuint instances_buffer = 0;
 } shaderProgram_t;
 
 // trRefdef_t holds everything that comes in refdef_t,
@@ -2037,6 +2068,8 @@ typedef struct mdvModel_s
 	srfVBOMDVMesh_t  *vboSurfaces;
 
 	int             numSkins;
+
+	GLuint			vao; // VAO
 } mdvModel_t;
 
 
@@ -2479,6 +2512,9 @@ typedef struct trGlobals_s {
 	//
 	shaderProgram_t genericShader[GENERICDEF_COUNT];
 	shaderProgram_t textureColorShader;
+#ifdef __INSTANCED_MODELS__
+	shaderProgram_t instanceShader;
+#endif //__INSTANCED_MODELS__
 	shaderProgram_t occlusionShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];

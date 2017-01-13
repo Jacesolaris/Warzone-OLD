@@ -797,6 +797,12 @@ qhandle_t RE_RegisterServerModel( const char *name ) {
 R_LoadMD3
 =================
 */
+
+#ifdef __INSTANCED_MODELS__
+#include "VectorUtils3.h"
+#include "tr_instancing.h"
+#endif //__INSTANCED_MODELS__
+
 static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modName)
 {
 	int             f, i, j;
@@ -1098,6 +1104,12 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 		vboSurf = mdvModel->vboSurfaces;
 		surf = mdvModel->surfaces;
+
+#ifdef __INSTANCED_MODELS__
+		qglGenVertexArrays(1, &mdvModel->vao);
+		qglBindVertexArray(mdvModel->vao);
+#endif //__INSTANCED_MODELS__
+
 		for (i = 0; i < mdvModel->numSurfaces; i++, vboSurf++, surf++)
 		{
 			vec3_t *verts;
@@ -1108,8 +1120,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			byte *data;
 			int dataSize;
 
-			int ofs_xyz, ofs_normal, ofs_st;
-			int ofs_tangent;
+			int ofs_xyz, ofs_normal, ofs_st, ofs_tangent;
 
 			dataSize = 0;
 
@@ -1125,12 +1136,30 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			ofs_st = dataSize;
 			dataSize += surf->numVerts * sizeof(*texcoords);
 
-			data = (byte *)Z_Malloc(dataSize, TAG_MODEL_MD3);
+#ifdef __INSTANCED_MODELS__
+			vec3_t *iPos;
+			int ofs_instances;
+
+			ofs_instances = dataSize;
+			dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iPos);
+
+			//mat4 *iMVP;
+			int ofs_instancesMVP;
+			//ofs_instancesMVP = dataSize;
+			//dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iMVP);
+#endif //__INSTANCED_MODELS__
+
+			data = (byte *)Z_Malloc(dataSize, TAG_MODEL_MD3, qtrue);
 
 			verts =      (vec3_t *)(data + ofs_xyz);
 			normals =    (uint32_t *)(data + ofs_normal);
 			tangents =   (uint32_t *)(data + ofs_tangent);
 			texcoords =  (vec2_t *)(data + ofs_st);
+
+#ifdef __INSTANCED_MODELS__
+			//iMVP = (mat4 *)(data + ofs_instancesMVP);
+			iPos = (vec3_t *)(data + ofs_instances);
+#endif //__INSTANCED_MODELS__
 		
 			v = surf->verts;
 			for ( j = 0; j < surf->numVerts * mdvModel->numFrames ; j++, v++ )
@@ -1169,11 +1198,20 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->vbo->ofs_normal    = ofs_normal;
 			vboSurf->vbo->ofs_tangent   = ofs_tangent;
 			vboSurf->vbo->ofs_st        = ofs_st;
+#ifdef __INSTANCED_MODELS__
+			//vboSurf->vbo->ofs_instancesMVP = ofs_instancesMVP;
+			vboSurf->vbo->ofs_instances = ofs_instances;
+#endif //__INSTANCED_MODELS__
+			
 
 			vboSurf->vbo->stride_xyz       = sizeof(*verts);
 			vboSurf->vbo->stride_normal    = sizeof(*normals);
 			vboSurf->vbo->stride_tangent   = sizeof(*tangents);
 			vboSurf->vbo->stride_st        = sizeof(*st);
+#ifdef __INSTANCED_MODELS__
+			//vboSurf->vbo->stride_instancesMVP = sizeof(*iMVP);
+			vboSurf->vbo->stride_instances = sizeof(*iPos);
+#endif //__INSTANCED_MODELS__
 
 			vboSurf->vbo->size_xyz    = sizeof(*verts) * surf->numVerts;
 			vboSurf->vbo->size_normal = sizeof(*normals) * surf->numVerts;
@@ -1182,6 +1220,11 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 			vboSurf->ibo = R_CreateIBO ((byte *)surf->indexes, sizeof (glIndex_t) * surf->numIndexes, VBO_USAGE_STATIC);
 		}
+
+#ifdef __INSTANCED_MODELS__
+		setupInstancedVertexAttributes(mdvModel);
+		qglBindVertexArray(0);
+#endif //__INSTANCED_MODELS__
 	}
 
 	return qtrue;

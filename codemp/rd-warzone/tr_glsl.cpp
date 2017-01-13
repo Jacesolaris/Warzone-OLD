@@ -61,6 +61,8 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_instance_vp;
+extern const char *fallbackShader_instance_fp;
 extern const char *fallbackShader_occlusion_vp;
 extern const char *fallbackShader_occlusion_fp;
 extern const char *fallbackShader_generateNormalMap_vp;
@@ -2130,6 +2132,14 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	if (attribs & ATTR_BONE_WEIGHTS)
 		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS, "attr_BoneWeights");
 
+#ifdef __INSTANCED_MODELS__
+	//if (attribs & ATTR_INSTANCES_MVP)
+	//	qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
+
+	if (attribs & ATTR_INSTANCES_POS)
+		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POS, "attr_InstancesPos");
+#endif //__INSTANCED_MODELS__
+
 	GLSL_LinkProgram(program->program);
 
 	// Won't be needing these anymore...
@@ -2778,6 +2788,15 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load texturecolor shader!");
 	}
+
+#ifdef __INSTANCED_MODELS__
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_INSTANCES_POS /*| ATTR_INSTANCES_MVP*/;
+
+	if (!GLSL_BeginLoadGPUShader(&tr.instanceShader, "instance", attribs, qtrue, qfalse, qfalse, NULL, qfalse, "330", fallbackShader_instance_vp, fallbackShader_instance_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load instance shader!");
+	}
+#endif //__INSTANCED_MODELS__
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 
@@ -3810,6 +3829,24 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_FinishGPUShader(&tr.textureColorShader);
 
 	numEtcShaders++;
+
+
+#ifdef __INSTANCED_MODELS__
+	if (!GLSL_EndLoadGPUShader(&tr.instanceShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load instance shader!");
+	}
+
+	GLSL_InitUniforms(&tr.instanceShader);
+
+	qglUseProgram(tr.instanceShader.program);
+	GLSL_SetUniformInt(&tr.instanceShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+	qglUseProgram(0);
+
+	GLSL_FinishGPUShader(&tr.instanceShader);
+
+	numEtcShaders++;
+#endif //__INSTANCED_MODELS__
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.occlusionShader))
@@ -5855,6 +5892,9 @@ void GLSL_ShutdownGPUShaders(void)
 		GLSL_DeleteGPUShader(&tr.genericShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
+#ifdef __INSTANCED_MODELS__
+	GLSL_DeleteGPUShader(&tr.instanceShader);
+#endif //__INSTANCED_MODELS__
 	GLSL_DeleteGPUShader(&tr.occlusionShader);
 
 	for (i = 0; i < FOGDEF_COUNT; i++)
@@ -6161,6 +6201,36 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
+#ifdef __INSTANCED_MODELS__
+	/*if (diff & ATTR_INSTANCES_MVP)
+	{
+		if (stateBits & ATTR_INSTANCES_MVP)
+		{
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_MVP )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+		}
+		else
+		{
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_MVP )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+		}
+	}*/
+
+	if (diff & ATTR_INSTANCES_POS)
+	{
+		if (stateBits & ATTR_INSTANCES_POS)
+		{
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
+		}
+		else
+		{
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
+		}
+	}
+#endif //__INSTANCED_MODELS__
+
 	glState.vertexAttribsState = stateBits;
 }
 
@@ -6302,6 +6372,25 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		glState.vertexAttribPointersSet |= ATTR_BONE_WEIGHTS;
 	}
 
+#ifdef __INSTANCED_MODELS__
+	/*if ((attribBits & ATTR_INSTANCES_MVP) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_MVP))
+	{
+		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_MVP )\n");
+
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 4, GL_FLOAT, 0, vbo->stride_instancesMVP, BUFFER_OFFSET(vbo->ofs_instancesMVP));
+		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
+		glState.vertexAttribPointersSet |= ATTR_INSTANCES_MVP;
+	}*/
+
+	if ((attribBits & ATTR_INSTANCES_POS) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_POS))
+	{
+		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_POS )\n");
+
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POS, 3, GL_FLOAT, 0, vbo->stride_instances, BUFFER_OFFSET(vbo->ofs_instances));
+		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POS, 1);
+		glState.vertexAttribPointersSet |= ATTR_INSTANCES_POS;
+	}
+#endif //__INSTANCED_MODELS__
 }
 
 

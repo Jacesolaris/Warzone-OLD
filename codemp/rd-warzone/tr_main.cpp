@@ -2128,6 +2128,9 @@ static void R_AddEntitySurface (int entityNum)
 R_AddEntitySurfaces
 =============
 */
+#ifdef __INSTANCED_MODELS__
+extern void R_AddInstancedModelsToScene(void);
+#endif //__INSTANCED_MODELS__
 void R_AddEntitySurfaces (void) {
 	int i;
 
@@ -2145,6 +2148,10 @@ void R_AddEntitySurfaces (void) {
 	{
 		R_AddEntitySurface(i);
 	}
+
+#ifdef __INSTANCED_MODELS__
+	R_AddInstancedModelsToScene();
+#endif //__INSTANCED_MODELS__
 
 	if (r_entityCull->integer >= 2)
 		ri->Printf(PRINT_WARNING, "Culled %i entities. %i FOV and %i PVS.\n", NUM_ENTS_CULLED, NUM_ENTS_FOV_CULLED, NUM_ENTS_PVS_CULLED);

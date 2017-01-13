@@ -682,6 +682,73 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 	}
 }
 
+#ifdef __INSTANCED_MODELS__
+extern void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *angles, matrix_t MVP);
+
+int			INSTANCED_MODEL_TYPES = 0;
+
+int			INSTANCED_MODEL_COUNT[MAX_INSTANCED_MODEL_TYPES] = { 0 };
+mdvModel_t	*INSTANCED_MODEL_MODEL[MAX_INSTANCED_MODEL_TYPES] = { NULL };
+vec3_t		INSTANCED_MODEL_ORIGINS[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+vec3_t		INSTANCED_MODEL_ANGLES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+
+void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles)
+{
+	qboolean	FOUND = qfalse;
+	int			modelID = 0;
+
+	for (modelID = 0; modelID < INSTANCED_MODEL_TYPES; modelID++)
+	{
+		if (INSTANCED_MODEL_MODEL[modelID] == NULL)
+		{
+			break;
+		}
+
+		if (INSTANCED_MODEL_MODEL[modelID] == model)
+		{
+			FOUND = qtrue;
+			break;
+		}
+	}
+
+	if (!FOUND)
+	{
+		if (INSTANCED_MODEL_TYPES + 1 >= MAX_INSTANCED_MODEL_TYPES) return; // Uh oh...
+
+		INSTANCED_MODEL_TYPES++;
+		INSTANCED_MODEL_MODEL[modelID] = model;
+	}
+
+	if (INSTANCED_MODEL_COUNT[modelID] < MAX_INSTANCED_MODEL_INSTANCES)
+	{
+		VectorCopy(origin, INSTANCED_MODEL_ORIGINS[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		VectorCopy(angles, INSTANCED_MODEL_ANGLES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		INSTANCED_MODEL_COUNT[modelID]++;
+	}
+}
+
+void R_AddInstancedModelsToScene(void)
+{
+	// Draw them for this scene...
+	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES; modelID++)
+	{
+		if (INSTANCED_MODEL_COUNT[modelID] > 0)
+		{
+			drawModelInstanced(INSTANCED_MODEL_MODEL[modelID], INSTANCED_MODEL_COUNT[modelID], INSTANCED_MODEL_ORIGINS[modelID], INSTANCED_MODEL_ANGLES[modelID], glState.modelviewProjection);
+		}
+	}
+
+	// Clear the buffer ready for next scene...
+	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES; modelID++)
+	{
+		INSTANCED_MODEL_COUNT[modelID] = 0;
+		INSTANCED_MODEL_MODEL[modelID] = NULL;
+	}
+
+	INSTANCED_MODEL_TYPES = 0;
+}
+#endif //__INSTANCED_MODELS__
+
 /*
 =================
 R_AddMD3Surfaces
@@ -764,6 +831,14 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = 0;
+
+#ifdef __INSTANCED_MODELS__
+	if (ent->e.frame == 0 && ent->e.oldframe == 0 && !ent->e.customShader && !ent->e.customSkin /*&& model->numSurfaces == 1*/)
+	{// Only if not animated for now...
+		R_AddInstancedModelToList(model, ent->e.origin, ent->e.angles);
+		return;
+	}
+#endif //__INSTANCED_MODELS__
 
 //#define __MERGE_MD3_TEST__
 

@@ -803,6 +803,7 @@ extern PFNGLVERTEXATTRIBPOINTERPROC qglVertexAttribPointer;
 extern PFNGLVERTEXATTRIBIPOINTERPROC qglVertexAttribIPointer;
 extern PFNGLENABLEVERTEXATTRIBARRAYPROC qglEnableVertexAttribArray;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC qglDisableVertexAttribArray;
+extern PFNGLVERTEXATTRIBDIVISORPROC qglVertexAttribDivisor;
 
 // Vertex array objects
 extern PFNGLGENVERTEXARRAYSPROC qglGenVertexArrays;

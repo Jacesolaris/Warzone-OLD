@@ -40,6 +40,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_glsl.cpp"
 	"${MPDir}/rd-warzone/tr_image.cpp"
 	"${MPDir}/rd-warzone/tr_init.cpp"
+	"${MPDir}/rd-warzone/tr_instancing.cpp"
+	"${MPDir}/rd-warzone/tr_instancing.h"
 	"${MPDir}/rd-warzone/tr_light.cpp"
 	"${MPDir}/rd-warzone/tr_local.h"
 	"${MPDir}/rd-warzone/tr_main.cpp"
@@ -64,6 +66,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_surface.cpp"
 	"${MPDir}/rd-warzone/tr_vbo.cpp"
 	"${MPDir}/rd-warzone/tr_world.cpp"
+	"${MPDir}/rd-warzone/VectorUtils3.cpp"
+	"${MPDir}/rd-warzone/VectorUtils3.h"
 	"${MPDir}/game/ckheap.h"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})

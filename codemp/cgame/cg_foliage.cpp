@@ -560,6 +560,7 @@ float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 qhandle_t	FOLIAGE_PLANT_MODEL[5] = { 0 };
 qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER = 0;
 qhandle_t	FOLIAGE_TREE_MODEL[16] = { 0 };
+//void		*FOLIAGE_TREE_G2_MODEL[16] = { NULL };
 float		FOLIAGE_TREE_RADIUS[16] = { 0 };
 float		FOLIAGE_TREE_ZOFFSET[16] = { 0 };
 qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[16] = { 0 };
@@ -1471,6 +1472,11 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 			re.reType = RT_MODEL;
 			re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num] - 1];
 
+			/*if (FOLIAGE_TREE_G2_MODEL[FOLIAGE_TREE_SELECTION[num] - 1] != NULL)
+			{// G2 Instance of this model...
+				re.ghoul2 = FOLIAGE_TREE_G2_MODEL[FOLIAGE_TREE_SELECTION[num] - 1];
+			}*/
+
 			VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER);
 
 			re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num] - 1];
@@ -1882,6 +1888,12 @@ void FOLIAGE_DrawGrass(void)
 		for (i = 0; i < 9; i++)
 		{
 			FOLIAGE_TREE_MODEL[i] = trap->R_RegisterModel(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""));
+
+			/*if (StringContainsWord(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""), ".glm"))
+			{// Init G2 instance if this is a GLM...
+				trap->G2API_InitGhoul2Model(&FOLIAGE_TREE_G2_MODEL[i], IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""), 0, 0, 0, 0, 0);
+			}*/
+
 			FOLIAGE_TREE_BILLBOARD_SHADER[i] = trap->R_RegisterShader(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardShader%i", i), ""));
 			FOLIAGE_TREE_BILLBOARD_SIZE[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardSize%i", i), "128.0"));
 			FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
