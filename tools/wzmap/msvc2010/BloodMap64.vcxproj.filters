@@ -58,6 +58,9 @@
     <Filter Include="Recast\DetourCrowd">
       <UniqueIdentifier>{238a4227-83ab-4a28-b0eb-60e30c81cf59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Detour">
+      <UniqueIdentifier>{76652ea4-1bb0-49d7-99aa-0c16dcf5253f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\bspfile_abstract.c">
@@ -318,6 +321,30 @@
     <ClCompile Include="..\..\..\codemp\Recast\NavMeshPathfind.cpp">
       <Filter>Recast</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\nav.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\fastlz\fastlz.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DebugDraw.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourDebugDraw.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourTileCache.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\DetourTileCacheBuilder.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\RecastDebugDraw.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\codemp\Recast\Detour\RecastDump.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\games\darkplaces.h">
@@ -514,6 +541,39 @@
     </ClInclude>
     <ClInclude Include="..\..\..\codemp\Recast\NavMeshPathfind.h">
       <Filter>Recast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\navgen.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\bot_convert.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\bot_types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\nav.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\fastlz\fastlz.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DebugDraw.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourDebugDraw.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourTileCache.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\DetourTileCacheBuilder.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\RecastDebugDraw.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\codemp\Recast\Detour\RecastDump.h">
+      <Filter>Detour</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

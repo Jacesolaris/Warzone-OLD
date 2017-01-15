@@ -762,6 +762,8 @@ main()
 q3map mojo...
 */
 
+extern int NavMain(int argc, char **argv);
+
 int main( int argc, char **argv )
 {
 	int	i, r;
@@ -999,6 +1001,18 @@ int main( int argc, char **argv )
 		Sys_Warning( "VLight is no longer supported, defaulting to -light -fast instead" );
 		argv[ 1 ] = "-fast";	/* eek a hack */
 		r = LightMain( argc, argv );
+	}
+
+	/* syphter: Navigation Mesh Generation */
+	else if (!strcmp(argv[1], "-nav"))
+	{
+		r = NavMain(argc - 1, argv + 1);
+	}
+	/* syphter: NavMesh Help */
+	else if (!strcmp(argv[1], "-navhelp"))
+	{
+		Sys_Printf("Usage: %s -nav -threads 1 -game ja <mapname.bsp> ", argv[0]);
+		exit(2);
 	}
 	
 	/* ydnar: lightmap export */

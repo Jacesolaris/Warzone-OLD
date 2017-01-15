@@ -199,7 +199,7 @@ enum concol
 	white=15
 };
 
-extern inline void setcolor(concol textcol,concol backcol);
+//extern inline void setcolor(concol textcol,concol backcol);
 extern inline void setcolor(int textcol,int backcol);
 
 #endif
