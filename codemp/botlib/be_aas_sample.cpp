@@ -210,7 +210,7 @@ int AAS_PointAreaNum(vec3_t point)
 	nodenum = 1;
 	while (nodenum > 0)
 	{
-//		botimport.Print(PRT_MESSAGE, "[%d]", nodenum);
+		//botimport.Print(PRT_MESSAGE, "[%d]", nodenum);
 #ifdef AAS_SAMPLE_DEBUG
 		if (nodenum >= aasworld.numnodes)
 		{
@@ -228,8 +228,16 @@ int AAS_PointAreaNum(vec3_t point)
 #endif //AAS_SAMPLE_DEBUG
 		plane = &aasworld.planes[node->planenum];
 		dist = DotProduct(point, plane->normal) - plane->dist;
-		if (dist > 0) nodenum = node->children[0];
-		else nodenum = node->children[1];
+		if (dist > 0) {
+			//if (node->children[0] == 0) break; // UQ1: Dunno. something wrong with generated AAS files???
+
+			nodenum = node->children[0];
+		}
+		else {
+			//if (node->children[1] == 0) break; // UQ1: Dunno. something wrong with generated AAS files???
+
+			nodenum = node->children[1];
+		}
 	} //end while
 	if (!nodenum)
 	{

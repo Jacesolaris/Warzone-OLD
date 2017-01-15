@@ -3992,6 +3992,12 @@ extern void G_SpeechEvent( gentity_t *self, int event );
 
 extern vmCvar_t npc_pathing;
 
+#ifdef __AAS_AI_TESTING__
+#include "botlib/aasfile.h"
+extern void BotUpdateInput(bot_state_t *bs, int time, int elapsed_time);
+extern bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl);
+#endif //__AAS_AI_TESTING__
+
 //#define __LOW_THINK_AI__
 
 #if	AI_TIMERS
@@ -4412,7 +4418,7 @@ void NPC_Think ( gentity_t *self )//, int msec )
 							if (!ent->inuse) continue;
 							if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC && ent->s.eType != ET_ITEM) continue;
 							if (ent->s.eType == ET_PLAYER && ent->client->sess.sessionTeam == FACTION_SPECTATOR) continue;
-							if (!NPC_ValidEnemy(ent)) continue;
+							if (!NPC_ValidEnemy(self, ent)) continue;
 							
 							//if (irand(0, 3) < 1)
 							{
@@ -4434,79 +4440,130 @@ void NPC_Think ( gentity_t *self )//, int msec )
 					{
 						bot_moveresult_t moveresult;
 						bot_state_t *bs = botstates[self->s.number];
+						bot_input_t *bi = &bs->bi;
 
+						memcpy(&bs->cur_ps, &aiEnt->client->ps, sizeof(playerState_t));
+						
 						if ((bs->goal.origin[0] == 0 && bs->goal.origin[1] == 0 && bs->goal.origin[2] == 0)
 							|| Distance(self->r.currentOrigin, bs->goal.origin) < 64)
 						{// New goal
 							VectorCopy(aiEnt->NPC->goalEntity->r.currentOrigin, bs->goal.origin);
+							//bs->goal.origin[2] += 64;
 							VectorCopy(aiEnt->NPC->goalEntity->r.mins, bs->goal.mins);
 							VectorCopy(aiEnt->NPC->goalEntity->r.maxs, bs->goal.maxs);
+							//VectorSet(bs->goal.mins, -8, -8, -8);
+							//VectorSet(bs->goal.maxs, 8, 8, 8);
 							bs->goal.areanum = trap->AAS_PointAreaNum(aiEnt->NPC->goalEntity->r.currentOrigin);
 							bs->goal.entitynum = aiEnt->NPC->goalEntity->s.number;
 							bs->goal.flags = 0;
 							bs->goal.iteminfo = 0;
 							bs->goal.number = 0;
+							self->longTermGoal = bs->goal.areanum;
 						}
 
 						trap->BotUpdateEntityItems();
-						trap->BotCalculatePaths(0);
+						//trap->BotCalculatePaths(0);
 						
-						trap->EA_ResetInput(self->s.number);
-						BotUpdateInput(bs, level.time, 100);
+						//trap->EA_ResetInput(self->s.number);
+						//trap->EA_GetInput(bs->client, (float)level.time / 1000, bi);
+						BotUpdateInput(bs, level.time, 50);
 						//trap->Print("NPC %s following path.\n", self->NPC_type);
 						
 						self->wpCurrent = trap->AAS_PointAreaNum(self->s.origin);
 
-						trap->AAS_EnableRoutingArea(self->wpCurrent, qtrue);
-						trap->AAS_EnableRoutingArea(bs->goal.areanum, qtrue);
-
-						//self->longTermGoal = trap->AAS_PointAreaNum(aiEnt->NPC->goalEntity->r.currentOrigin);
-						self->pathsize = trap->AAS_PredictRoute(self->pathlist, self->wpCurrent, self->r.currentOrigin, bs->goal.areanum, 0, -1, -1, -1, -1, -1, -1);
-						trap->BotMoveToGoal(&moveresult, bs->ms, &bs->goal, 0);
-						
-						//VectorCopy(moveresult.movedir, self->movedir);
-						
-						if (!moveresult.blocked && !moveresult.blockentity && !moveresult.failure)
+						if (self->wpCurrent >= 0)
 						{
-							vec3_t angles, forward, right, up, movePos;
-							bot_input_t bi;
-
-							//vectoangles(moveresult.movedir, angles);
-							//AngleVectors( moveresult.ideal_viewangles, forward, right, up );
-
-							//VectorMA(self->r.currentOrigin, 256, forward, movePos);
-
-							//NPC_FacePosition(self, moveresult.ideal_viewangles, qfalse);
+							trap->AAS_EnableRoutingArea(self->wpCurrent, qtrue);
+							trap->AAS_EnableRoutingArea(self->longTermGoal, qtrue);
 							
-							//VectorNormalize(moveresult.movedir);
+							//self->longTermGoal = trap->AAS_PointAreaNum(aiEnt->NPC->goalEntity->r.currentOrigin);
+							self->pathsize = trap->AAS_PredictRoute(self->pathlist, self->wpCurrent, self->r.currentOrigin, bs->goal.areanum, 0, -1, -1, -1, -1, -1, -1);
 
-							//self->movedir[0] = moveresult.movedir[1];
-							//self->movedir[1] = moveresult.movedir[0];
-							//self->movedir[2] = moveresult.movedir[2];
+							//trap->BotMoveToGoal(&moveresult, bs->ms, &bs->goal, 0);
+							/*
+							//travel flags
+#define TFL_INVALID				0x00000001	//traveling temporary not possible
+#define TFL_WALK				0x00000002	//walking
+#define TFL_CROUCH				0x00000004	//crouching
+#define TFL_BARRIERJUMP			0x00000008	//jumping onto a barrier
+#define TFL_JUMP				0x00000010	//jumping
+#define TFL_LADDER				0x00000020	//climbing a ladder
+#define TFL_WALKOFFLEDGE		0x00000080	//walking of a ledge
+#define TFL_SWIM				0x00000100	//swimming
+#define TFL_WATERJUMP			0x00000200	//jumping out of the water
+#define TFL_TELEPORT			0x00000400	//teleporting
+#define TFL_ELEVATOR			0x00000800	//elevator
+#define TFL_ROCKETJUMP			0x00001000	//rocket jumping
+#define TFL_BFGJUMP				0x00002000	//bfg jumping
+#define TFL_GRAPPLEHOOK			0x00004000	//grappling hook
+#define TFL_DOUBLEJUMP			0x00008000	//double jump
+#define TFL_RAMPJUMP			0x00010000	//ramp jump
+#define TFL_STRAFEJUMP			0x00020000	//strafe jump
+#define TFL_JUMPPAD				0x00040000	//jump pad
+#define TFL_AIR					0x00080000	//travel through air
+#define TFL_WATER				0x00100000	//travel through water
+#define TFL_SLIME				0x00200000	//travel through slime
+#define TFL_LAVA				0x00400000	//travel through lava
+#define TFL_DONOTENTER			0x00800000	//travel through donotenter area
+#define TFL_FUNCBOB				0x01000000	//func bobbing
+#define TFL_FLIGHT				0x02000000	//flight
+#define TFL_BRIDGE				0x04000000	//move over a bridge
+//
+#define TFL_NOTTEAM1			0x08000000	//not team 1
+#define TFL_NOTTEAM2			0x10000000	//not team 2
+*/
 
-							trap->BotUserCommand(self->s.number, &aiEnt->client->pers.cmd);
-							
-							//UQ1_UcmdMoveForDir( self, &aiEnt->client->pers.cmd, self->movedir, qfalse, movePos );
-							//trap->BotMoveInDirection(bs->ms, bi.dir, bi.speed, 0);
+							moveresult = BotAttackMove(bs, 0);
 
-							AngleVectors( bi.viewangles, forward, right, up );
-							VectorMA(self->r.currentOrigin, 256, forward, movePos);
-							NPC_FacePosition(self, bi.viewangles, qfalse);
-							
-							//trap->EA_GetInput(self->s.number, 100, &bi);
-							
-							
-							//moveresult.movedir[0] = -moveresult.movedir[0];
-							//moveresult.movedir[1] = -moveresult.movedir[1];
-							VectorNormalize(forward);
-							UQ1_UcmdMoveForDir( self, &aiEnt->client->pers.cmd, forward/*bi.dir*/, qfalse, movePos );
-							//trap->BotUserCommand(self->s.number, &aiEnt->client->pers.cmd);
+							//VectorCopy(moveresult.movedir, self->movedir);
 
-							trap->Print("move to entity %i. %f %f %f. dir %f %f %f. ucmd %i %i %i.\n"
-								, aiEnt->NPC->goalEntity->s.number
-								, movePos[0], movePos[1], movePos[2]
-								, forward[0], forward[1], forward[2]
-								, (int)aiEnt->client->pers.cmd.forwardmove, (int)aiEnt->client->pers.cmd.rightmove, (int)aiEnt->client->pers.cmd.upmove);
+							if (!moveresult.blocked && !moveresult.blockentity && !moveresult.failure)
+							{
+								vec3_t angles, forward, right, up, movePos;
+
+								VectorCopy(self->client->ps.viewangles, bi->viewangles);
+
+								//vectoangles(moveresult.movedir, angles);
+								//AngleVectors( moveresult.ideal_viewangles, forward, right, up );
+
+								//VectorMA(self->r.currentOrigin, 256, forward, movePos);
+
+								//NPC_FacePosition(self, moveresult.ideal_viewangles, qfalse);
+
+								//VectorNormalize(moveresult.movedir);
+
+								//self->movedir[0] = moveresult.movedir[1];
+								//self->movedir[1] = moveresult.movedir[0];
+								//self->movedir[2] = moveresult.movedir[2];
+
+								//trap->BotUserCommand(self->s.number, &aiEnt->client->pers.cmd);
+
+								//UQ1_UcmdMoveForDir( self, &aiEnt->client->pers.cmd, self->movedir, qfalse, movePos );
+								//trap->BotMoveInDirection(bs->ms, bi.dir, bi.speed, 0);
+
+								//AngleVectors(bi->viewangles, forward, right, up);
+								VectorMA(self->r.currentOrigin, 256, moveresult.movedir/*forward*/, movePos);
+								NPC_FacePosition(self, movePos, qfalse);
+
+								trap->EA_GetInput(self->s.number, 50, bi);
+
+
+								//moveresult.movedir[0] = -moveresult.movedir[0];
+								//moveresult.movedir[1] = -moveresult.movedir[1];
+								//VectorNormalize(forward);
+								VectorCopy(bi->dir, moveresult.movedir);
+								VectorCopy(moveresult.movedir, bs->moveDir);
+								VectorCopy(moveresult.movedir, self->movedir);
+								UQ1_UcmdMoveForDir_NoAvoidance(self, &aiEnt->client->pers.cmd, self->movedir/*forward bi->dir*/, qfalse, movePos);
+								//trap->BotUserCommand(self->s.number, &aiEnt->client->pers.cmd);
+
+								trap->Print("move to entity %i. pos %f %f %f. dir %f %f %f. movedir %f %f %f. ucmd %i %i %i.\n"
+									, aiEnt->NPC->goalEntity->s.number
+									, movePos[0], movePos[1], movePos[2]
+									, bi->dir[0], bi->dir[1], bi->dir[2]
+									, self->movedir[0], self->movedir[1], self->movedir[2]
+									, (int)aiEnt->client->pers.cmd.forwardmove, (int)aiEnt->client->pers.cmd.rightmove, (int)aiEnt->client->pers.cmd.upmove);
+							}
 						}
 					}
 

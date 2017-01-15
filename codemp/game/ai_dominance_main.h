@@ -9,6 +9,8 @@
 #define __DOMINANCE_AI__ // UnqueOne's AI.
 
 #ifdef __AAS_AI_TESTING__
+#include "../botlib/be_aas.h"
+
 //travel types
 #define MAX_TRAVELTYPES				32
 #define TRAVEL_INVALID				1		//temporary not possible
@@ -200,6 +202,36 @@ typedef struct bot_settings_s
 	float skill;
 	char team[MAX_BOTSETTINGS_FILEPATH];
 } bot_settings_t;
+
+#ifdef __AAS_AI_TESTING__
+#define MAX_ACTIVATESTACK		8
+#define MAX_ACTIVATEAREAS		32
+
+typedef struct bot_activategoal_s
+{
+	int inuse;
+	bot_goal_t goal;						//goal to activate (buttons etc.)
+	float time;								//time to activate something
+	float start_time;						//time starting to activate something
+	float justused_time;					//time the goal was used
+	int shoot;								//true if bot has to shoot to activate
+	int weapon;								//weapon to be used for activation
+	vec3_t target;							//target to shoot at to activate something
+	vec3_t origin;							//origin of the blocking entity to activate
+	int areas[MAX_ACTIVATEAREAS];			//routing areas disabled by blocking entity
+	int numareas;							//number of disabled routing areas
+	int areasdisabled;						//true if the areas are disabled for the routing
+	struct bot_activategoal_s *next;		//next activate goal on stack
+} bot_activategoal_t;
+
+#define BFL_STRAFENONE		0
+#define BFL_ATTACKED		1
+#define BFL_STRAFERIGHT		2
+#define BFL_STRAFELEFT		3
+#define BFL_IDEALVIEWSET	4
+#define BFL_AVOIDRIGHT		5
+#define BFL_AVOIDLEFT		6
+#endif //__AAS_AI_TESTING__
 
 //bot state
 typedef struct bot_state_s
@@ -494,8 +526,42 @@ typedef struct bot_state_s
 
 #ifdef __AAS_AI_TESTING__
 	bot_goal_t			goal;
+	bot_input_t			bi;
+	int					areanum;
+	int					predictobstacles_goalareanum;
+	float				predictobstacles_time;
+	float				attackchase_time;
+	float				attackcrouch_time;
+	float				attackjump_time;
+	float				attackstrafe_time;
+	float				teleport_time;
+	float				weaponchange_time;
+	float				firethrottlewait_time;
+	float				firethrottleshoot_time;
+	float				notblocked_time;
+	float				enemysight_time;
+	float				enemydeath_time;
+	float				enemyvisible_time;
+	float				enemyposition_time;
+	qboolean			enemysuicide;
+	vec3_t				enemyvelocity;
+	vec3_t				enemyorigin;
+	int					lastenemyareanum;
+	vec3_t				lastenemyorigin;
+	int					flags;
+	int					tfl;
+	vec3_t				aimtarget;
+
+	bot_activategoal_t *activatestack;				//first activate goal on the stack
+	bot_activategoal_t activategoalheap[MAX_ACTIVATESTACK];	//activate goal heap
+
+	float				reachedaltroutegoal_time;
+	bot_goal_t			altroutegoal;
+
+	vec3_t				moveDir;
 #endif //__AAS_AI_TESTING__
 } bot_state_t;
+
 
 //used for objective dependancy stuff
 #define		MAX_OBJECTIVES			6

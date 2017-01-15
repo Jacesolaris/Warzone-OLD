@@ -50,6 +50,8 @@ source_group("Recast" FILES ${MPGameRecastFiles})
 set(MPGameFiles ${MPGameFiles} ${MPGameRecastFiles})
 
 set(MPGameGameFiles
+  "${MPDir}/game/ai_dmq3.cpp"
+	"${MPDir}/game/ai_dmq3.h"
 	"${MPDir}/game/ai_dominance.cpp"
 	"${MPDir}/game/ai_dominance.h"
 	"${MPDir}/game/ai_dominance_astar.cpp"

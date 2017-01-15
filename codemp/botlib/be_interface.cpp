@@ -174,6 +174,7 @@ int Export_BotLibSetup(void)
 		botimport.Print(PRT_MESSAGE, "BotSetupWeaponAI failed.\n");
 		return errnum;
 	}
+	*/
 	
 	botimport.Print(PRT_MESSAGE, "* Running BotSetupGoalAI.\n");
 	errnum = BotSetupGoalAI();		//be_ai_goal.c
@@ -182,6 +183,7 @@ int Export_BotLibSetup(void)
 		return errnum;
 	}
 
+	/*
 	botimport.Print(PRT_MESSAGE, "* Running BotSetupChatAI.\n");
 	errnum = BotSetupChatAI();		//be_ai_chat.c
 	if (errnum != BLERR_NOERROR) {

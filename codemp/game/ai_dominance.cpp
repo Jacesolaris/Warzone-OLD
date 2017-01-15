@@ -1115,6 +1115,7 @@ BotEntityInfo
 ==============
 */
 void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
+	if (entnum < 0) return;
 	trap->AAS_EntityInfo(entnum, info);
 }
 
@@ -1611,6 +1612,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->setupcount = 4;
 	bs->entergame_time = FloatTime();
 	bs->ms = trap->BotAllocMoveState();
+	trap->BotResetMoveState(bs->ms);
 	numbots++;
 
 	//NOTE: reschedule the bot thinking
@@ -1951,9 +1953,10 @@ int BotAISetup( int restart ) {
 	//initialize the bot states
 	memset( botstates, 0, sizeof(botstates) );
 
-	if (!trap->BotLibSetup())
+	if (trap->BotLibSetup() != 0)
 	{
-		return qfalse; //wts?!
+		//trap->Print("BOTLIB SETUP FAILED!?!?!?\n");
+		return qfalse; //wtf?!
 	}
 
 #ifdef __AAS_AI_TESTING__
@@ -1963,6 +1966,11 @@ int BotAISetup( int restart ) {
 		trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		loaded = trap->BotLibLoadMap(mapname.string);
 		//trap->Print("BOTLIB LOAD MAP: %i.\n", loaded);
+
+		if (trap->BotLibStartFrame(FloatTime()) == 1)
+		{
+			trap->Print("BOTLIB STARTFRAME FAILED!?!?!?\n");
+		}
 	}
 #endif //__AAS_AI_TESTING__
 

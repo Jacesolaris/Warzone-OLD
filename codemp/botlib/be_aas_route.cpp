@@ -1226,6 +1226,13 @@ void AAS_InitRouting(void)
 	max_routingcachesize = 1024 * (int) LibVarValue("max_routingcache", "4096");
 	// read any routing cache if available
 	AAS_ReadRouteCache();
+
+	/*
+	for (int i = 0; i < aasworld.numareas; i++)
+	{
+		AAS_EnableRoutingArea(i, 1);
+	}
+	*/
 } //end of the function AAS_InitRouting
 //===========================================================================
 //

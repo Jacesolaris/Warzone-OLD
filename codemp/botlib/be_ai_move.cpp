@@ -3106,6 +3106,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 						result->blocked = qtrue;
 						result->blockentity = ent;
 						result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
+						//botimport.Print(PRT_MESSAGE, "client %d: movetogoal -> no reachability\n", ms->client);
 						return;
 					} //end if
 				} //end else if
@@ -3114,6 +3115,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					result->blocked = qtrue;
 					result->blockentity = ent;
 					result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
+					//botimport.Print(PRT_MESSAGE, "client %d: movetogoal -> obstacle\n", ms->client);
 					return;
 				} //end else
 			} //end if
@@ -3126,19 +3128,22 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	//if the bot is on the ground, swimming or against a ladder
 	if (ms->moveflags & (MFL_ONGROUND|MFL_SWIMMING|MFL_AGAINSTLADDER))
 	{
-		//botimport.Print(PRT_MESSAGE, "%s: onground, swimming or against ladder\n", ClientName(ms->entitynum-1));
+		//botimport.Print(PRT_MESSAGE, "%d: onground, swimming or against ladder\n", ms->client);
 		//
 		AAS_ReachabilityFromNum(ms->lastreachnum, &lastreach);
 		//reachability area the bot is in
 		//ms->areanum = BotReachabilityArea(ms->origin, ((lastreach.traveltype & TRAVELTYPE_MASK) != TRAVEL_ELEVATOR));
+		//ms->areanum = AAS_PointAreaNum(ms->origin);
 		ms->areanum = BotFuzzyPointReachabilityArea(ms->origin);
 		//
+		//botimport.Print(PRT_MESSAGE, "client %d: movetogoal -> moving. areanum: %i. org: %f %f %f.\n", ms->client, ms->areanum, ms->origin[0], ms->origin[1], ms->origin[2]);
 		if ( !ms->areanum )
 		{
 			result->failure = qtrue;
 			result->blocked = qtrue;
 			result->blockentity = 0;
 			result->type = RESULTTYPE_INSOLIDAREA;
+			//botimport.Print(PRT_MESSAGE, "client %d: movetogoal -> in solid. org: %f %f %f.\n", ms->client, ms->origin[0], ms->origin[1], ms->origin[2]);
 			return;
 		} //end if
 		//if the bot is in the goal area

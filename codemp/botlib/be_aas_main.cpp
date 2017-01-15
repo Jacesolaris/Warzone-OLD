@@ -93,11 +93,25 @@ void AAS_SetInitialized(void)
 void AAS_ContinueInit(float time)
 {
 	//if no AAS file loaded
-	if (!aasworld.loaded) return;
+	if (!aasworld.loaded)
+	{
+		botimport.Print(PRT_ERROR, "AAS_ContinueInit - Error: aasworld not loaded!\n");
+		return;
+	}
 	//if AAS is already initialized
-	if (aasworld.initialized) return;
+	if (aasworld.initialized)
+	{
+		botimport.Print(PRT_ERROR, "AAS_ContinueInit - Error: aasworld not initialized!\n");
+		return;
+	}
+
 	//calculate reachability, if not finished return
-	if (AAS_ContinueInitReachability(time)) return;
+	if (AAS_ContinueInitReachability(time))
+	{
+		botimport.Print(PRT_ERROR, "AAS_ContinueInit - Error: InitReachability failed!\n");
+		return;
+	}
+
 	//initialize clustering for the new map
 	AAS_InitClustering();
 	//if reachability has been calculated and an AAS file should be written
