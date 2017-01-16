@@ -40,6 +40,7 @@ struct Character_nav
 	float height; //height of agents (BBox maxs[2] - BBox mins[2])
 };
 
+#if 0
 static const Character_nav navcharacters[] = {
 	{ "builder",     20, 40 },
 //	{ "builderupg",  20, 40 },
@@ -57,6 +58,11 @@ static const Character_nav navcharacters[] = {
 	{ "level3upg",   26, 66 },
 	{ "level4",      32, 92 }
 };
+#else
+static const Character_nav navcharacters[] = {
+	{ "humanoid",     16, 56 }
+};
+#endif
 
 //flag for excluding caulk surfaces
 static qboolean excludeCaulk = qtrue;
@@ -1242,7 +1248,7 @@ static void BuildNavMesh( int characterNum )
 		}
 	}
 
-	rcContext context( false );
+	rcContext context( true/*false*/ );
 
 	for ( int y = 0; y < th; y++ )
 	{
@@ -1299,7 +1305,7 @@ extern int NavMain(int argc, char **argv)
 	}
 
 	/* note it */
-	Sys_Printf("--- Nav ---\n");
+	Sys_PrintHeading("--- Nav ---\n");
 
 	/* process arguments */
 	for(i = 1; i < (argc - 1); i++)
