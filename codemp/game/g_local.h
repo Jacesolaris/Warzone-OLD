@@ -8,6 +8,8 @@
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
 
+#define _G_LOCAL_H
+
 #include "qcommon/q_shared.h"
 #include "bg_public.h"
 #include "bg_vehicles.h"
@@ -20,6 +22,12 @@ typedef struct gclient_s gclient_t;
 
 //npc stuff
 #include "b_public.h"
+
+#ifdef _GAME
+#ifdef __USE_NAVLIB__
+#include "../navlib/navlib_api.h"
+#endif //__USE_NAVLIB__
+#endif //_GAME
 
 extern int gPainMOD;
 extern int gPainHitLoc;
@@ -736,6 +744,33 @@ typedef struct
 }  sabimpact_t;
 //[/SaberSys]
 
+#if defined(__USE_NAVLIB__) && defined(NAVLIB)
+// output from navigation
+struct navlibNavCmd_t
+{
+	float						pos[3];
+	float						tpos[3];
+	float						dir[3];
+	float						lookPos[3];
+	int							directPathToGoal;
+	int							havePath;
+};
+
+typedef struct navlibTargetGoal_t
+{
+	float						origin[3];
+	gentity_t					*ent;
+	qboolean					haveGoal;
+};
+
+typedef struct navlibTarget_t
+{
+	navlibTargetGoal_t			goal;
+	navlibNavCmd_t				nav;
+};
+#endif //defined(__USE_NAVLIB__) && defined(NAVLIB)
+
+
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
 struct gclient_s {
@@ -745,6 +780,10 @@ struct gclient_s {
 	// the rest of the structure is private to game
 	clientPersistant_t	pers;
 	clientSession_t		sess;
+
+#ifdef __USE_NAVLIB__
+	navlibTarget_t	navigation;
+#endif //__USE_NAVLIB__
 
 	saberInfo_t	saber[MAX_SABERS];
 	void		*weaponGhoul2[MAX_SABERS];
@@ -1805,3 +1844,4 @@ void G_SoundOnEnt(gentity_t *ent, soundChannel_t channel, const char *soundPath)
 #ifdef __USE_NAVMESH__
 void Warzone_Nav_UpdateEntity(gentity_t *ent);
 #endif //__USE_NAVMESH__
+

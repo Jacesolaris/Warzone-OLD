@@ -3678,20 +3678,32 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	if (aiEnt->s.eType == ET_PLAYER)
 	{
+		vec3_t viewAngles;
+		vectoangles(dir, viewAngles);
+		trap->EA_View(aiEnt->s.number, viewAngles);
+
 		if (aiEnt->client->pers.cmd.buttons & BUTTON_WALKING)
 		{
 			trap->EA_Action(aiEnt->s.number, 0x0080000);
 			trap->EA_Move(aiEnt->s.number, dir, 100);
 
-			if (self->bot_strafe_left_timer > level.time)
+			if (self->bot_strafe_jump_timer > level.time)
+				trap->EA_Jump(aiEnt->s.number);
+			else if (self->bot_strafe_left_timer > level.time)
 				trap->EA_MoveLeft(aiEnt->s.number);
+			else if (self->bot_strafe_right_timer > level.time)
+				trap->EA_MoveRight(aiEnt->s.number);
 		}
 		else
 		{
 			trap->EA_Move(aiEnt->s.number, dir, 200);
 
-			if (self->bot_strafe_left_timer > level.time)
+			if (self->bot_strafe_jump_timer > level.time)
+				trap->EA_Jump(aiEnt->s.number);
+			else if (self->bot_strafe_left_timer > level.time)
 				trap->EA_MoveLeft(aiEnt->s.number);
+			else if (self->bot_strafe_right_timer > level.time)
+				trap->EA_MoveRight(aiEnt->s.number);
 		}
 	}
 
@@ -3831,20 +3843,32 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 
 	if (aiEnt->s.eType == ET_PLAYER)
 	{
+		vec3_t viewAngles;
+		vectoangles(dir, viewAngles);
+		trap->EA_View(aiEnt->s.number, viewAngles);
+
 		if (aiEnt->client->pers.cmd.buttons & BUTTON_WALKING)
 		{
 			trap->EA_Action(aiEnt->s.number, 0x0080000);
 			trap->EA_Move(aiEnt->s.number, dir, 100);
 
-			if (self->bot_strafe_left_timer > level.time)
+			if (self->bot_strafe_jump_timer > level.time)
+				trap->EA_Jump(aiEnt->s.number);
+			else if (self->bot_strafe_left_timer > level.time)
 				trap->EA_MoveLeft(aiEnt->s.number);
+			else if (self->bot_strafe_right_timer > level.time)
+				trap->EA_MoveRight(aiEnt->s.number);
 		}
 		else
 		{
 			trap->EA_Move(aiEnt->s.number, dir, 200);
 
-			if (self->bot_strafe_left_timer > level.time)
+			if (self->bot_strafe_jump_timer > level.time)
+				trap->EA_Jump(aiEnt->s.number);
+			else if (self->bot_strafe_left_timer > level.time)
 				trap->EA_MoveLeft(aiEnt->s.number);
+			else if (self->bot_strafe_right_timer > level.time)
+				trap->EA_MoveRight(aiEnt->s.number);
 		}
 	}
 
@@ -3938,8 +3962,10 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	NPC_CheckAttackHold(aiEnt);
 	NPC_ApplyScriptFlags(aiEnt);
 
+#if !defined(__USE_NAVLIB__) && !defined(__USE_NAVLIB_INTERNAL_MOVEMENT__)
 	//cliff and wall avoidance
 	NPC_AvoidWallsAndCliffs(aiEnt);
+#endif //!defined(__USE_NAVLIB__) && !defined(__USE_NAVLIB_INTERNAL_MOVEMENT__)
 
 	// run the bot through the server like it was a real client
 	//=== Save the ucmd for the second no-think Pmove ============================
@@ -4480,39 +4506,6 @@ void NPC_Think ( gentity_t *self )//, int msec )
 							self->pathsize = trap->AAS_PredictRoute(self->pathlist, self->wpCurrent, self->r.currentOrigin, bs->goal.areanum, 0, -1, -1, -1, -1, -1, -1);
 
 							//trap->BotMoveToGoal(&moveresult, bs->ms, &bs->goal, 0);
-							/*
-							//travel flags
-#define TFL_INVALID				0x00000001	//traveling temporary not possible
-#define TFL_WALK				0x00000002	//walking
-#define TFL_CROUCH				0x00000004	//crouching
-#define TFL_BARRIERJUMP			0x00000008	//jumping onto a barrier
-#define TFL_JUMP				0x00000010	//jumping
-#define TFL_LADDER				0x00000020	//climbing a ladder
-#define TFL_WALKOFFLEDGE		0x00000080	//walking of a ledge
-#define TFL_SWIM				0x00000100	//swimming
-#define TFL_WATERJUMP			0x00000200	//jumping out of the water
-#define TFL_TELEPORT			0x00000400	//teleporting
-#define TFL_ELEVATOR			0x00000800	//elevator
-#define TFL_ROCKETJUMP			0x00001000	//rocket jumping
-#define TFL_BFGJUMP				0x00002000	//bfg jumping
-#define TFL_GRAPPLEHOOK			0x00004000	//grappling hook
-#define TFL_DOUBLEJUMP			0x00008000	//double jump
-#define TFL_RAMPJUMP			0x00010000	//ramp jump
-#define TFL_STRAFEJUMP			0x00020000	//strafe jump
-#define TFL_JUMPPAD				0x00040000	//jump pad
-#define TFL_AIR					0x00080000	//travel through air
-#define TFL_WATER				0x00100000	//travel through water
-#define TFL_SLIME				0x00200000	//travel through slime
-#define TFL_LAVA				0x00400000	//travel through lava
-#define TFL_DONOTENTER			0x00800000	//travel through donotenter area
-#define TFL_FUNCBOB				0x01000000	//func bobbing
-#define TFL_FLIGHT				0x02000000	//flight
-#define TFL_BRIDGE				0x04000000	//move over a bridge
-//
-#define TFL_NOTTEAM1			0x08000000	//not team 1
-#define TFL_NOTTEAM2			0x10000000	//not team 2
-*/
-
 							moveresult = BotAttackMove(bs, 0);
 
 							//VectorCopy(moveresult.movedir, self->movedir);

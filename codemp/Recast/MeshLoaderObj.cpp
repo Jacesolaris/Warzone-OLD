@@ -249,14 +249,14 @@ bool rcMeshLoaderObj::load(const std::string& filename)
 extern world_t				s_worldData;
 #endif
 
-#if !(defined (QAGAME) || defined (CGAMEDLL) || defined(_GAME) || defined(rd_warzone_x86_EXPORTS))
+#if !(defined (QAGAME) || defined (CGAMEDLL) || defined(_GAME) || defined(rd_warzone_x86_EXPORTS) || defined(NAVLIB))
 #include "../q3map2.h"
 extern char finalNavmeshFilename[1024];
 #endif
 
 bool rcMeshLoaderObj::generateFromWorldData(void)
 {
-#if (defined (QAGAME) || defined (CGAMEDLL) || defined(_GAME) || defined(rd_warzone_x86_EXPORTS))
+#if (defined (QAGAME) || defined (CGAMEDLL) || defined(_GAME) || defined(rd_warzone_x86_EXPORTS) || defined(NAVLIB))
 	/*world_t *w = &s_worldData;
 
 	for (int i = 0; i < w->numsurfaces; i++)

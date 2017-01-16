@@ -382,5 +382,22 @@ void FOLIAGE_LoadTrees( void )
 		FOLIAGE_TREE_BILLBOARD_SIZE[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardSize%i", i), "128.0"));
 		FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
 	}
+
+	/* // Hmm max of 64... this won't work :(
+#ifdef __USE_NAVLIB__
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{
+		if (FOLIAGE_TREE_SELECTION[i] > 0)
+		{// Only keep positions with trees...
+			int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[i] - 1;
+			float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[i] * TREE_SCALE_MULTIPLIER;
+			vec3_t mins, maxs;
+			VectorSet(mins, -(TREE_RADIUS / 0.65), -(TREE_RADIUS / 0.65), 0.0);
+			VectorSet(maxs, TREE_RADIUS / 0.65, TREE_RADIUS / 0.65, 512.0);
+			NavlibAddObstacle(mins, maxs, (qhandle_t *)(4096 + i));
+		}
+	}
+#endif //__USE_NAVLIB__
+	*/
 }
 

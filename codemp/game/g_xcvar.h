@@ -1,3 +1,4 @@
+#ifndef NAVLIB
 
 #ifdef XCVAR_PROTO
 	#define XCVAR_DEF( name, defVal, update, flags, announce ) extern vmCvar_t name;
@@ -160,3 +161,5 @@ XCVAR_DEF( g_debugValue,				"0.1",			NULL,				CVAR_ARCHIVE,									qfalse )
 XCVAR_DEF(sv_saberHideStance,			"0",			NULL,				CVAR_SERVERINFO|CVAR_ARCHIVE,					qfalse )
 
 #undef XCVAR_DEF
+
+#endif //NAVLIB

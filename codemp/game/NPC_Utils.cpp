@@ -1283,6 +1283,13 @@ qboolean NPC_FacePosition( gentity_t *aiEnt, vec3_t position, qboolean doPitch )
 	//Find the desired angles
 	GetAnglesForDirection( muzzle, position, angles );
 
+	if (!doPitch)
+	{
+		angles[ROLL] = 0;
+		angles[PITCH] = 0;
+		VectorCopy(angles, aiEnt->client->ps.viewangles);
+	}
+
 	aiEnt->NPC->desiredYaw		= AngleNormalize360( angles[YAW] );
 	aiEnt->NPC->desiredPitch	= AngleNormalize360( angles[PITCH] );
 
@@ -1325,6 +1332,11 @@ qboolean NPC_FacePosition( gentity_t *aiEnt, vec3_t position, qboolean doPitch )
 			if ( fabs( pitchDelta ) > VALID_ATTACK_CONE )
 				facing = qfalse;
 		}
+	}
+
+	if (aiEnt->s.eType == ET_PLAYER)
+	{
+		trap->EA_View(aiEnt->s.number, angles);
 	}
 
 	return facing;

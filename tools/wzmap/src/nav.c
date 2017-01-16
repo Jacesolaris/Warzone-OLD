@@ -60,7 +60,8 @@ static const Character_nav navcharacters[] = {
 };
 #else
 static const Character_nav navcharacters[] = {
-	{ "humanoid",     16, 56 }
+	//{ "humanoid",     16, 56 }
+	{ "humanoid",     32, 64 }
 };
 #endif
 
@@ -125,6 +126,14 @@ static void WriteNavMeshFile( const char* agentname, const dtTileCache *tileCach
 	}
 
 	fwrite( &header, sizeof( header ), 1, file );
+
+	float *bmin = (float *)geo.getMins();
+	float *bmax = (float *)geo.getMaxs();
+	recast2quake(bmin);
+	recast2quake(bmax);
+	printf("mins: %f %f %f. maxs: %f %f %f.\n", bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2]);
+	fwrite(&bmin, sizeof(vec3_t), 1, file);
+	fwrite(&bmax, sizeof(vec3_t), 1, file);
 
 	for( int i = 0; i < maxTiles; i++ )
 	{

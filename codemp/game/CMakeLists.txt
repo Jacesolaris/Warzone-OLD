@@ -7,7 +7,7 @@ endif(NOT InWarzone)
 
 set(MPGameIncludeDirectories "${MPDir}")
 if(WIN32)
-	set(MPGameLibraries "winmm")
+	set(MPGameLibraries "winmm" "../../../lib/navlib")
 endif(WIN32)
 set(MPGameDefines ${MPSharedDefines} "_GAME" )
 
@@ -181,6 +181,7 @@ set(MPGameGameFiles
 	"${MPDir}/client/tinythread.cpp"
 	"${MPDir}/client/tinythread.h"
 	"${MPDir}/client/fast_mutex.h"
+	"${MPDir}/navlib/navlib_api.h"
 	)
 source_group("game" FILES ${MPGameGameFiles})
 set(MPGameFiles ${MPGameFiles} ${MPGameGameFiles})

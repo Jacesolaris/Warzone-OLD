@@ -1945,6 +1945,10 @@ int BotAISetup( int restart ) {
 	trap->Cvar_Update(&bot_forcepowers);
 	//end rww
 
+#ifdef __USE_NAVLIB__
+	G_NavlibNavInit();
+#endif //__USE_NAVLIB__
+
 	//if the game is restarted for a tournament
 	if (restart) {
 		return qtrue;
@@ -1973,7 +1977,7 @@ int BotAISetup( int restart ) {
 		}
 	}
 #endif //__AAS_AI_TESTING__
-
+	
 	trap->Print("-------- BotAISetup Completed ---------\n");
 
 	return qtrue;
@@ -1988,6 +1992,10 @@ int BotAIShutdown( int restart ) {
 
 	int i;
 
+#ifdef __USE_NAVLIB__
+	G_NavlibNavCleanup();
+#endif //__USE_NAVLIB__
+
 	//if the game is restarted for a tournament
 	if ( restart ) {
 		//shutdown all the bots in the botlib
@@ -2001,5 +2009,6 @@ int BotAIShutdown( int restart ) {
 	else {
 		trap->BotLibShutdown();
 	}
+
 	return qtrue;
 }
