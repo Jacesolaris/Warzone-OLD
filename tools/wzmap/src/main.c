@@ -1027,9 +1027,11 @@ int main( int argc, char **argv )
 	else if( !strcmp( argv[ 1 ], "-scale" ) )
 		r = ScaleBSPMain( argc - 1, argv + 1 );
 
+#if 0
 	/* UQ1: Navmesh Generation */
 	else if (!strcmp(argv[1], "-navmesh"))
 		r = NavmeshBSPMain(argc - 1, argv + 1);
+#endif
 	
 	/* ydnar: bsp conversion */
 	else if( !strcmp( argv[ 1 ], "-convert" ) )
