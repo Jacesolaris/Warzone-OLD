@@ -750,6 +750,9 @@ NOTE TTimo: this goes with FS_FOpenFileWrite for opening the file afterwards
 */
 qboolean FS_FileExists( const char *file )
 {
+	if (FS_FileInPathExists(FS_BuildOSPath(fs_basepath->string, fs_gamedir, file))) 
+		return qtrue;
+
 	return FS_FileInPathExists(FS_BuildOSPath(fs_homepath->string, fs_gamedir, file));
 }
 

@@ -568,7 +568,6 @@ typedef struct image_s {
 
 #ifdef __DEFERRED_IMAGE_LOADING__
 	bool		deferredLoad = qfalse;
-	char		deferredLoadName[64] = { 0 };
 	imgType_t	deferredLoadType;
 	int			deferredLoadFlags;
 #endif //__DEFERRED_IMAGE_LOADING__
