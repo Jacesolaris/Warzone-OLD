@@ -1502,7 +1502,7 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
-	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "3.0", CVAR_ARCHIVE );
+	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "0.5", CVAR_ARCHIVE );
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "0.15", CVAR_ARCHIVE );
@@ -1684,7 +1684,7 @@ void R_Register( void )
 	r_skipBackEnd = ri->Cvar_Get ("r_skipBackEnd", "0", CVAR_CHEAT);
 
 	r_measureOverdraw = ri->Cvar_Get( "r_measureOverdraw", "0", CVAR_CHEAT );
-	r_lodscale = ri->Cvar_Get( "r_lodscale", "5", CVAR_CHEAT );
+	r_lodscale = ri->Cvar_Get( "r_lodscale", "3", CVAR_CHEAT );
 	r_norefresh = ri->Cvar_Get ("r_norefresh", "0", CVAR_CHEAT);
 	r_drawentities = ri->Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
 	r_ignore = ri->Cvar_Get( "r_ignore", "1", CVAR_CHEAT );

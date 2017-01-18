@@ -27,7 +27,7 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 ------------------------------------------------------------------------------- */
 
 
-#define __BASEJKA_LIGHTGRID__
+//#define __BASEJKA_LIGHTGRID__
 
 
 /* marker */
@@ -169,6 +169,80 @@ constants
 #else
 	#define EPAIR_STRCMP		strcmp
 #endif
+
+
+#define MATERIAL_BITS			5
+#define MATERIAL_MASK			0x1f	// mask to get the material type
+
+#define MATERIAL_NONE			0			// for when the artist hasn't set anything up =)
+#define MATERIAL_SOLIDWOOD		1			// freshly cut timber
+#define MATERIAL_HOLLOWWOOD		2			// termite infested creaky wood
+#define MATERIAL_SOLIDMETAL		3			// solid girders
+#define MATERIAL_HOLLOWMETAL	4			// hollow metal machines
+#define MATERIAL_SHORTGRASS		5			// manicured lawn
+#define MATERIAL_LONGGRASS		6			// long jungle grass
+#define MATERIAL_DIRT			7			// hard mud
+#define MATERIAL_SAND			8			// sandy beach
+#define MATERIAL_GRAVEL			9			// lots of small stones
+#define MATERIAL_GLASS			10			//
+#define MATERIAL_CONCRETE		11			// hardened concrete pavement
+#define MATERIAL_MARBLE			12			// marble floors
+#define MATERIAL_WATER			13			// light covering of water on a surface
+#define MATERIAL_SNOW			14			// freshly laid snow
+#define MATERIAL_ICE			15			// packed snow/solid ice
+#define MATERIAL_FLESH			16			// hung meat, corpses in the world
+#define MATERIAL_MUD			17			// wet soil
+#define MATERIAL_BPGLASS		18			// bulletproof glass
+#define MATERIAL_DRYLEAVES		19			// dried up leaves on the floor
+#define MATERIAL_GREENLEAVES	20			// fresh leaves still on a tree
+#define MATERIAL_FABRIC			21			// Cotton sheets
+#define MATERIAL_CANVAS			22			// tent material
+#define MATERIAL_ROCK			23			//
+#define MATERIAL_RUBBER			24			// hard tire like rubber
+#define MATERIAL_PLASTIC		25			//
+#define MATERIAL_TILES			26			// tiled floor
+#define MATERIAL_CARPET			27			// lush carpet
+#define MATERIAL_PLASTER		28			// drywall style plaster
+#define MATERIAL_SHATTERGLASS	29			// glass with the Crisis Zone style shattering
+#define MATERIAL_ARMOR			30			// body armor
+#define MATERIAL_COMPUTER		31			// computers/electronic equipment
+#define MATERIAL_LAST			32			// number of materials
+
+// Defined as a macro here so one change will affect all the relevant files
+
+#define MATERIALS	\
+	"none",			\
+	"solidwood",	\
+	"hollowwood",	\
+	"solidmetal",	\
+	"hollowmetal",	\
+	"shortgrass",	\
+	"longgrass",	\
+	"dirt",	   		\
+	"sand",	   		\
+	"gravel",		\
+	"glass",		\
+	"concrete",		\
+	"marble",		\
+	"water",		\
+	"snow",	   		\
+	"ice",			\
+	"flesh",		\
+	"mud",			\
+	"bpglass",		\
+	"dryleaves",	\
+	"greenleaves",	\
+	"fabric",		\
+	"canvas",		\
+	"rock",			\
+	"rubber",		\
+	"plastic",		\
+	"tiles",		\
+	"carpet",		\
+	"plaster",		\
+	"shatterglass",	\
+	"armor",		\
+	"computer"/* this was missing, see enums above, plus ShaderEd2 pulldown options */
 
 
 /* ydnar: compiler flags, because games have widely varying content/surface flags */
@@ -397,11 +471,11 @@ abstracted bsp file
 #define	MAX_MAP_LEAFFACES		0x800000//0xA00000
 #define	MAX_MAP_LEAFBRUSHES		0x800000//0xA00000
 #define	MAX_MAP_PORTALS			0x800000//0xA00000
-#ifndef __BASEJKA_LIGHTGRID__
+//#ifndef __BASEJKA_LIGHTGRID__
 #define	MAX_MAP_LIGHTGRID		0x800000//0xF00000
-#else //__BASEJKA_LIGHTGRID__
-#define	MAX_MAP_LIGHTGRID		65535 // matching JKA
-#endif //__BASEJKA_LIGHTGRID__
+//#else //__BASEJKA_LIGHTGRID__
+//#define	MAX_MAP_LIGHTGRID		65535 // matching JKA
+//#endif //__BASEJKA_LIGHTGRID__
 #define	MAX_MAP_VISIBILITY		0x3FFFFFFF
 
 #define	MAX_MAP_DRAW_SURFS		0x200000
@@ -423,10 +497,14 @@ abstracted bsp file
 #ifdef __BASEJKA_LIGHTGRID__
 #define MIN_WORLD_COORD			(-65536)
 #define	MAX_WORLD_COORD			(65536)
+#define MIN_WORLD_LIGHT_COORD			(-65536)
+#define	MAX_WORLD_LIGHT_COORD			(65536)
 #define WORLD_SIZE				(MAX_WORLD_COORD - MIN_WORLD_COORD)
 #else //!__BASEJKA_LIGHTGRID__
 #define MIN_WORLD_COORD			(-524288)//(-65536)
 #define	MAX_WORLD_COORD			(524288)//(65536)
+#define MIN_WORLD_LIGHT_COORD			(-65536)
+#define	MAX_WORLD_LIGHT_COORD			(65536)
 #define WORLD_SIZE				(MAX_WORLD_COORD - MIN_WORLD_COORD)
 #endif //__BASEJKA_LIGHTGRID__
 

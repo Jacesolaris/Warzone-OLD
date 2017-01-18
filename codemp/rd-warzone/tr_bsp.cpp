@@ -3713,7 +3713,56 @@ void R_MergeLeafSurfaces(void)
 
 		for (j = 0; j < leaf->nummarksurfaces; j++)
 		{
-#ifdef __MERGE_MORE__
+#if defined(__PLAYER_BASED_CUBEMAPS__)
+			msurface_t *surf1;
+			shader_t *shader1;
+			int fogIndex1;
+			int cubemapIndex1;
+			int surfNum1;
+
+			surfNum1 = *(s_worldData.marksurfaces + leaf->firstmarksurface + j);
+
+			if (s_worldData.surfacesViewCount[surfNum1] != -1)
+				continue;
+
+			surf1 = s_worldData.surfaces + surfNum1;
+
+			shader1 = surf1->shader;
+
+			if (shader1->isSky)
+				continue;
+
+			if (shader1->isPortal)
+				continue;
+
+			if (ShaderRequiresCPUDeforms(shader1))
+				continue;
+
+			fogIndex1 = surf1->fogIndex;
+
+			cubemapIndex1 = surf1->cubemapIndex;
+
+			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
+
+			for (k = j + 1; k < leaf->nummarksurfaces; k++)
+			{
+				msurface_t *surf2;
+				shader_t *shader2;
+				int cubemapIndex2;
+				int surfNum2;
+
+				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
+
+				if (s_worldData.surfacesViewCount[surfNum2] != -1)
+					continue;
+
+				surf2 = s_worldData.surfaces + surfNum2;
+
+				shader2 = surf2->shader;
+
+				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
+			}
+#elif defined(__MERGE_MORE__)
 			msurface_t *surf1;
 			shader_t *shader1;
 			int fogIndex1;

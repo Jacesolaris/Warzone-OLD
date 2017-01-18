@@ -27,9 +27,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 Geometry geo;
 
+
+#define __IGNORE_EXTRA_SURFACES__
+
+
 #define STEPSIZE 18
 
 float cellHeight = 2.0f;
+qboolean ignoreRock = qfalse;
+qboolean ignoreTreeLeaves = qfalse;
+float tileSizeMult = 1.0;
+float mergeSizeMult = 1.0;
 float stepSize = STEPSIZE;
 int   tileSize = 64;
 
@@ -131,7 +139,7 @@ static void WriteNavMeshFile( const char* agentname, const dtTileCache *tileCach
 	float *bmax = (float *)geo.getMaxs();
 	recast2quake(bmin);
 	recast2quake(bmax);
-	printf("mins: %f %f %f. maxs: %f %f %f.\n", bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2]);
+	//printf("mins: %f %f %f. maxs: %f %f %f.\n", bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2]);
 	fwrite(&bmin, sizeof(vec3_t), 1, file);
 	fwrite(&bmax, sizeof(vec3_t), 1, file);
 
@@ -187,6 +195,16 @@ static void AddTri(std::vector<float> &verts, std::vector<int> &tris, vec3_t v1,
 	AddVert(verts, tris, v3);
 }
 
+extern qboolean StringContainsWord(const char *haystack, const char *needle);
+
+qboolean isTreeSolid( char *strippedName )
+{
+	if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
+		return qtrue;
+
+	return qfalse;
+}
+
 static void LoadBrushTris(std::vector<float> &verts, std::vector<int> &tris) {
 	int             j;
 
@@ -211,14 +229,28 @@ static void LoadBrushTris(std::vector<float> &verts, std::vector<int> &tris) {
 		std::cout << "If you're trying to generate navMeshes rebuild map with final settings" << std::endl;
 		exit(0);
 	}
+
+	int totalCount = 0;
+	int currentCount = 0;
+
+	for (int i = model->firstBSPBrush, m = 0; m < model->numBSPBrushes; i++, m++) 
+	{
+		totalCount++;
+	}
+	
 	//go through the brushes
-	for(int i=model->firstBSPBrush,m=0;m<model->numBSPBrushes;i++,m++) {
+	for(int i=model->firstBSPBrush,m=0;m<model->numBSPBrushes;i++,m++) 
+	{
+		printLabelledProgress("LoadBrushTris", currentCount, totalCount);
+		currentCount++;
+
 		int numSides = bspBrushes[i].numSides;
 		int firstSide = bspBrushes[i].firstSide;
 		bspShader_t *brushShader = &bspShaders[bspBrushes[i].shaderNum];
 
 		if(!(brushShader->contentFlags & solidFlags))
 				continue;
+
 		/* walk the list of brush sides */
 		for(int p = 0; p < numSides; p++)
 		{
@@ -232,8 +264,42 @@ static void LoadBrushTris(std::vector<float> &verts, std::vector<int> &tris) {
 				continue;
 			}
 
+#ifndef __IGNORE_EXTRA_SURFACES__
 			if(excludeCaulk && !Q_stricmp(shader->shader, "textures/common/caulk"))
+			{
 				continue;
+			}
+#endif //__IGNORE_EXTRA_SURFACES__
+
+#ifdef __IGNORE_EXTRA_SURFACES__
+			if (ignoreRock && StringContainsWord(shader->shader, "warzone/rock"))
+			{
+				continue;
+			}
+
+			if (ignoreTreeLeaves && StringContainsWord(shader->shader, "warzone/tree") && !isTreeSolid(shader->shader))
+			{
+				continue;
+			}
+
+			/*
+			if (!(shader->contentFlags & solidFlags))
+			{
+				continue;
+			}
+			*/
+
+			if (excludeCaulk && StringContainsWord(shader->shader, "caulk"))
+			{
+				continue;
+			}
+			
+
+			if (excludeCaulk && StringContainsWord(shader->shader, "skip"))
+			{
+				continue;
+			}
+#endif //__IGNORE_EXTRA_SURFACES__
 
 			/* make huge winding */
 			winding_t *w = BaseWindingForPlane(plane->normal, plane->dist);
@@ -615,8 +681,20 @@ static void LoadPatchTris(std::vector<float> &verts, std::vector<int> &tris) {
 
 	/* get model, index 0 is worldspawn entity */
 	const bspModel_t *model = &bspModels[0];
+
+	int totalCount = 0;
+	int currentCount = 0;
+
+	for (int k = model->firstBSPSurface, n = 0; n < model->numBSPSurfaces; k++, n++)
+	{
+		totalCount++;
+	}
+
 	for ( int k = model->firstBSPSurface, n = 0; n < model->numBSPSurfaces; k++,n++)
 	{
+		printLabelledProgress("LoadPatchTris", currentCount, totalCount);
+		currentCount++;
+
 		const bspDrawSurface_t *surface = &bspDrawSurfaces[k];
 
 		if ( !( bspShaders[surface->shaderNum].contentFlags & solidFlags ) ) {
@@ -631,6 +709,30 @@ static void LoadPatchTris(std::vector<float> &verts, std::vector<int> &tris) {
 		if( !surface->patchWidth ) {
 			continue;
 		}
+
+#ifdef __IGNORE_EXTRA_SURFACES__
+		bspShader_t *shader = &bspShaders[surface->shaderNum];
+
+		if (ignoreRock && StringContainsWord(shader->shader, "warzone/rock"))
+		{
+			continue;
+		}
+
+		if (ignoreTreeLeaves && StringContainsWord(shader->shader, "warzone/tree") && !isTreeSolid(shader->shader))
+		{
+			continue;
+		}
+
+		if (excludeCaulk && StringContainsWord(shader->shader, "caulk"))
+		{
+			continue;
+		}
+
+		if (excludeCaulk && StringContainsWord(shader->shader, "skip"))
+		{
+			continue;
+		}
+#endif //__IGNORE_EXTRA_SURFACES__
 
 		cGrid_t grid;
 		grid.width = surface->patchWidth;
@@ -699,7 +801,8 @@ static void LoadGeometry()
 	std::vector<float> verts;
 	std::vector<int> tris;
 
-	Sys_Printf("loading geometry...\n");
+	//Sys_Printf("Loading geometry...\n");
+	Sys_PrintHeading("--- Loading geometry ---\n");
 	int numVerts, numTris;
 
 	//count surfaces
@@ -717,9 +820,9 @@ static void LoadGeometry()
 	const float *mins = geo.getMins();
 	const float *maxs = geo.getMaxs();
 
-	Sys_Printf("set recast world bounds to\n");
-	Sys_Printf("min: %f %f %f\n", mins[0], mins[1], mins[2]);
-	Sys_Printf("max: %f %f %f\n", maxs[0], maxs[1], maxs[2]);
+	Sys_Printf("Set recast world bounds to:\n");
+	Sys_Printf(" min: %f %f %f\n", mins[0], mins[1], mins[2]);
+	Sys_Printf(" max: %f %f %f\n", maxs[0], maxs[1], maxs[2]);
 }
 
 // Modified version of Recast's rcErodeWalkableArea that uses an AABB instead of a cylindrical radius
@@ -1180,17 +1283,19 @@ static int rasterizeTileLayers( rcContext &context, int tx, int ty, const rcConf
 
 static void BuildNavMesh( int characterNum )
 {
+	Sys_PrintHeading("--- BuildNavMesh ---\n");
+
 	const Character_nav &agent = navcharacters[ characterNum ];
 
 	dtTileCache *tileCache;
 	const float *bmin = geo.getMins();
 	const float *bmax = geo.getMaxs();
 	int gw = 0, gh = 0;
-	const float cellSize = agent.radius / 4.0f;
+	const float cellSize = (agent.radius / 4.0f);
 
 	rcCalcGridSize( bmin, bmax, cellSize, &gw, &gh );
 
-	const int ts = tileSize;
+	const int ts = tileSize * tileSizeMult;
 	const int tw = ( gw + ts - 1 ) / ts;
 	const int th = ( gh + ts - 1 ) / ts;
 
@@ -1199,14 +1304,14 @@ static void BuildNavMesh( int characterNum )
 
 	cfg.cs = cellSize;
 	cfg.ch = cellHeight;
-	cfg.walkableSlopeAngle = RAD2DEG( acosf( MIN_WALK_NORMAL ) );
+	cfg.walkableSlopeAngle = RAD2DEG(acosf(MIN_WALK_NORMAL));
 	cfg.walkableHeight = ( int ) ceilf( agent.height / cfg.ch );
 	cfg.walkableClimb = ( int ) floorf( stepSize / cfg.ch );
 	cfg.walkableRadius = ( int ) ceilf( agent.radius / cfg.cs );
-	cfg.maxEdgeLen = 0;
+	cfg.maxEdgeLen = 0;// 12 / cfg.cs; //0;
 	cfg.maxSimplificationError = 1.3f;
-	cfg.minRegionArea = rcSqr( 25 );
-	cfg.mergeRegionArea = rcSqr( 50 );
+	cfg.minRegionArea = rcSqr(25);
+	cfg.mergeRegionArea = rcSqr(50) * mergeSizeMult;
 	cfg.maxVertsPerPoly = 6;
 	cfg.tileSize = ts;
 	cfg.borderSize = cfg.walkableRadius * 2;
@@ -1257,12 +1362,18 @@ static void BuildNavMesh( int characterNum )
 		}
 	}
 
-	rcContext context( true/*false*/ );
+	rcContext context( false );
+
+	int currentCount = 0;
+	int totalCount = th*tw;
 
 	for ( int y = 0; y < th; y++ )
 	{
 		for ( int x = 0; x < tw; x++ )
 		{
+			printLabelledProgress("BuildNavMesh", currentCount, totalCount);
+			currentCount++;
+
 			TileCacheData tiles[ MAX_LAYERS ];
 			memset( tiles, 0, sizeof( tiles ) );
 
@@ -1309,7 +1420,7 @@ extern int NavMain(int argc, char **argv)
 
 	if(argc < 2)
 	{
-		Sys_Printf("Usage: wzmap -nav [-cellheight F] [-stepsize F] [-includecaulk] [-includesky] [-nogapfilter] MAPNAME\n");
+		Sys_Printf("Usage: wzmap -nav [-ignoreRock] [-ignoreTreeLeaves] [-cellheight F] [-tileSizeMult F] [-mergeSizeMult F] [-stepsize F] [-includecaulk] [-includesky] [-nogapfilter] MAPNAME\n");
 		return 0;
 	}
 
@@ -1319,12 +1430,28 @@ extern int NavMain(int argc, char **argv)
 	/* process arguments */
 	for(i = 1; i < (argc - 1); i++)
 	{
-		if(!Q_stricmp(argv[i],"-cellheight")) {
+		if (!Q_stricmp(argv[i], "-cellheight")) {
 			i++;
-			if(i<(argc - 1)) {
+			if (i < (argc - 1)) {
 				temp = atof(argv[i]);
-				if(temp > 0) {
+				if (temp > 0) {
 					cellHeight = temp;
+				}
+			}
+		} else if (!Q_stricmp(argv[i], "-tileSizeMult")) {
+			i++;
+			if (i < (argc - 1)) {
+				temp = atof(argv[i]);
+				if (temp > 0) {
+					tileSizeMult = temp;
+				}
+			}
+		} else if (!Q_stricmp(argv[i], "-mergeSizeMult")) {
+			i++;
+			if (i < (argc - 1)) {
+				temp = atof(argv[i]);
+				if (temp > 0) {
+					mergeSizeMult = temp;
 				}
 			}
 		} else if (!Q_stricmp(argv[i], "-stepsize")) {
@@ -1335,6 +1462,10 @@ extern int NavMain(int argc, char **argv)
 					stepSize = temp;
 				}
 			}
+		} else if (!Q_stricmp(argv[i], "-ignoreRock")) {
+			ignoreRock = qtrue;
+		} else if (!Q_stricmp(argv[i], "-ignoreTreeLeaves")) {
+			ignoreTreeLeaves = qtrue;
 		} else if(!Q_stricmp(argv[i], "-includecaulk")) {
 			excludeCaulk = qfalse;
 		} else if(!Q_stricmp(argv[i], "-includesky")) {
@@ -1383,7 +1514,11 @@ extern int NavMain(int argc, char **argv)
 		Sys_Printf("New cellheight: %f\n", cellHeight);
 	}
 
-	RunThreadsOnIndividual( "Nav", sizeof( navcharacters ) / sizeof( navcharacters[ 0 ] ), qtrue, BuildNavMesh );
+	//RunThreadsOnIndividual( "Nav", sizeof( navcharacters ) / sizeof( navcharacters[ 0 ] ), qtrue, BuildNavMesh );
+	for (i = 0; i < sizeof(navcharacters) / sizeof(navcharacters[0]); i++)
+	{
+		BuildNavMesh(i);
+	}
 
 	return 0;
 }

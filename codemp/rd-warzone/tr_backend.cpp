@@ -1317,6 +1317,12 @@ typedef struct sortedDrawInfo_s {
 
 sortedDrawInfo_t sortedDrawInfos[MAX_SHADER_MERGED_GROUPS];
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+int			currentPlayerCubemap = 0;
+vec4_t		currentPlayerCubemapVec = { 0.0 };
+float		currentPlayerCubemapDistance = 0;
+#endif //__PLAYER_BASED_CUBEMAPS__
+
 void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery) {
 	int				i, max_threads_used = 0;
 	int				j = 0;
@@ -1348,6 +1354,22 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 	fbo = glState.currentFBO;
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+	currentPlayerCubemap = 0;
+
+	if (CUBEMAPPING)
+	{
+		currentPlayerCubemap = R_CubemapForPoint(tr.refdef.vieworg);
+
+		currentPlayerCubemapVec[0] = tr.cubemapOrigins[currentPlayerCubemap - 1][0] - tr.refdef.vieworg/*backEnd.viewParms.ori.origin*/[0];
+		currentPlayerCubemapVec[1] = tr.cubemapOrigins[currentPlayerCubemap - 1][1] - tr.refdef.vieworg/*backEnd.viewParms.ori.origin*/[1];
+		currentPlayerCubemapVec[2] = tr.cubemapOrigins[currentPlayerCubemap - 1][2] - tr.refdef.vieworg/*backEnd.viewParms.ori.origin*/[2];
+		currentPlayerCubemapVec[3] = 1.0f;
+
+		currentPlayerCubemapDistance = Distance(tr.refdef.vieworg, tr.cubemapOrigins[currentPlayerCubemap - 1]);
+	}
+#endif //__PLAYER_BASED_CUBEMAPS__
+
 	if (!r_entitySurfaceMerge->integer)
 	{
 #ifdef __DEBUG_MERGE__
@@ -1372,6 +1394,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 			if (!drawSurf->surface) continue;
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+			newCubemapIndex = currentPlayerCubemap;
+#else //!__PLAYER_BASED_CUBEMAPS__
 			if (!CUBEMAPPING)
 			{
 				newCubemapIndex = 0;
@@ -1396,11 +1421,12 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					}
 				}
 			}
+#endif //__PLAYER_BASED_CUBEMAPS__
 
 			if (drawSurf->sort == oldSort 
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 				&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 				)
 			{// fast path, same as previous sort
 				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
@@ -1422,9 +1448,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			if (shader != NULL
 				&& (shader != oldShader
 					|| postRender != oldPostRender
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 					|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 					))
 			{
 				if (oldShader != NULL)
@@ -1604,6 +1630,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 			if (!drawSurf->surface) continue;
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+			newCubemapIndex = currentPlayerCubemap;
+#else //!__PLAYER_BASED_CUBEMAPS__
 			if (!CUBEMAPPING)
 			{
 				newCubemapIndex = 0;
@@ -1628,6 +1657,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					}
 				}
 			}
+#endif //__PLAYER_BASED_CUBEMAPS__
 
 			R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
 
@@ -1675,9 +1705,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					}
 
 					if (sorted->shaderIndex == shader->index
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 						&& sorted->cubemapIndex == newCubemapIndex
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 						&& sorted->isPostRender == (qboolean)postRender
 						/*&& sorted->sort == drawSurf->sort*/)
 					{// Add it to this slot's list...
@@ -1708,9 +1738,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			//
 
 			if (drawSurf->sort == oldSort 
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 				&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 				)
 			{// fast path, same as previous sort
 				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
@@ -1732,9 +1762,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			if (shader != NULL
 				&& (shader != oldShader
 					|| postRender != oldPostRender
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 					|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 					))
 			{
 				if (oldShader != NULL)
@@ -1899,15 +1929,19 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 				if (!drawSurf->surface) continue;
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+				newCubemapIndex = currentPlayerCubemap;
+#endif //!__PLAYER_BASED_CUBEMAPS__
+
 				entityNum = sorted->entityNum[i];
 				newCubemapIndex = sorted->cubemapIndex;
 				shader = sorted->shader;
 				postRender = sorted->isPostRender;
 				
 				if (drawSurf->sort == oldSort 
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 					&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 					)
 				{// fast path, same as previous sort
 					rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
@@ -1929,9 +1963,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 				if (shader != NULL
 					&& (shader != oldShader
 						|| postRender != oldPostRender
-#ifndef __LAZY_CUBEMAP__
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 						|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
-#endif //__LAZY_CUBEMAP__
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 						))
 				{
 					if (oldShader != NULL)

@@ -494,8 +494,39 @@ qboolean NPC_CopyPathFromNearbyNPC(gentity_t *aiEnt)
 int NPC_FindGoal( gentity_t *NPC )
 {
 #ifdef __USE_NAVLIB__
-	NavlibFindRandomPointOnMesh(NPC, NPC->client->navigation.goal.origin);
-	//trap->Print("[%s] newGoal: %f %f %f.\n", NPC->client->pers.netname, NPC->client->navigation.goal.origin[0], NPC->client->navigation.goal.origin[1], NPC->client->navigation.goal.origin[2]);
+#if 1
+	if (gWPNum > 0)
+	{
+		int waypoint = irand_big(0, gWPNum - 1);
+		int tries = 0;
+
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue)
+		{
+			if (tries > 10) return -1; // Try again next frame...
+
+			waypoint = irand_big(0, gWPNum - 1);
+			tries++;
+		}
+
+#pragma omp critical
+		{
+			NavlibFindRandomPointInRadius(NPC->s.number, gWPArray[waypoint]->origin, NPC->client->navigation.goal.origin, 99999999.9);
+		}
+		//trap->Print("[%s] newGoal: %f %f %f.\n", NPC->client->pers.netname, NPC->client->navigation.goal.origin[0], NPC->client->navigation.goal.origin[1], NPC->client->navigation.goal.origin[2]);
+	}
+	else
+	{
+#pragma omp critical
+		{
+			NavlibFindRandomPointOnMesh(NPC, NPC->client->navigation.goal.origin);
+		}
+		//trap->Print("[%s] newGoal: %f %f %f.\n", NPC->client->pers.netname, NPC->client->navigation.goal.origin[0], NPC->client->navigation.goal.origin[1], NPC->client->navigation.goal.origin[2]);
+	}
+#else
+	NavlibFindRandomPatrolPoint(NPC->s.number, NPC->client->navigation.goal.origin);
+	if (VectorLength(NPC->client->navigation.goal.origin) == 0)
+		return -1;
+#endif
 	return 1;
 #endif //__USE_NAVLIB__
 
@@ -520,7 +551,10 @@ int NPC_FindGoal( gentity_t *NPC )
 int NPC_FindTeamGoal( gentity_t *NPC )
 {
 #ifdef __USE_NAVLIB__
-	NavlibFindRandomPointOnMesh(NPC, NPC->client->navigation.goal.origin);
+#pragma omp critical
+	{
+		NavlibFindRandomPointOnMesh(NPC, NPC->client->navigation.goal.origin);
+	}
 	return 1;
 #endif //__USE_NAVLIB__
 
@@ -576,14 +610,15 @@ void NPC_SetNewGoalAndPath(gentity_t *aiEnt)
 #ifdef __USE_NAVLIB__
 	if (NPC_FindGoal(aiEnt))
 	{
-		if (NavlibFindRouteToTarget(aiEnt, aiEnt->client->navigation.goal, qtrue))
+#pragma omp critical
 		{
-			aiEnt->client->navigation.goal.haveGoal = qtrue;
-			//trap->Print("%s found a route.\n", aiEnt->client->pers.netname);
-			return;
+			aiEnt->client->navigation.goal.haveGoal = (qboolean)NavlibFindRouteToTarget(aiEnt, aiEnt->client->navigation.goal, qtrue);
 		}
 
-		aiEnt->client->navigation.goal.haveGoal = qfalse;
+		if (aiEnt->client->navigation.goal.haveGoal)
+			trap->Print("%s found a route.\n", aiEnt->client->pers.netname);
+		else
+			trap->Print("%s failed to find a route.\n", aiEnt->client->pers.netname);
 	}
 #endif //__USE_NAVLIB__
 
@@ -697,11 +732,11 @@ void NPC_SetPadawanGoalAndPath(gentity_t *aiEnt)
 	{// Parent is alive, follow route to him, if he is at range...
 		if (Distance(aiEnt->r.currentOrigin, aiEnt->parent->r.currentOrigin) > 128.0)
 		{
-			if (NavlibFindRouteToTarget(aiEnt, aiEnt->client->navigation.goal, qtrue))
+			aiEnt->client->navigation.goal.ent = aiEnt->parent;
+
+#pragma omp critical
 			{
-				aiEnt->client->navigation.goal.ent = aiEnt->parent;
-				aiEnt->client->navigation.goal.haveGoal = qtrue;
-				//trap->Print("%s found a padawan route.\n", aiEnt->client->pers.netname);
+				aiEnt->client->navigation.goal.haveGoal = (qboolean)NavlibFindRouteToTarget(aiEnt, aiEnt->client->navigation.goal, qtrue);
 			}
 
 			return;
@@ -1353,7 +1388,10 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 					&& !GoalInRange(NPC, NavlibGetGoalRadius(NPC) * 4.0))
 				{// Have a goal to our parent... Go there...
 					NavlibSetNavMesh(NPC->s.number, 0);
-					NavlibMoveToGoal(NPC);
+#pragma omp critical
+					{
+						NavlibMoveToGoal(NPC);
+					}
 					NPC_FacePosition(NPC, NPC->client->navigation.nav.lookPos, qfalse);
 					VectorSubtract(NPC->client->navigation.nav.pos, NPC->r.currentOrigin, NPC->movedir);
 
@@ -1441,7 +1479,10 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 			}
 
 			NavlibSetNavMesh(NPC->s.number, 0);
-			NavlibMoveToGoal(NPC);
+#pragma omp critical
+			{
+				NavlibMoveToGoal(NPC);
+			}
 			NPC_FacePosition(NPC, NPC->client->navigation.nav.lookPos, qfalse);
 			VectorSubtract(NPC->client->navigation.nav.lookPos, NPC->r.currentOrigin, NPC->movedir);
 
@@ -1508,7 +1549,10 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 
 			if (NPC->client->navigation.goal.haveGoal)
 			{
-				NavlibMoveToGoal(NPC);
+#pragma omp critical
+				{
+					NavlibMoveToGoal(NPC);
+				}
 				NPC_FacePosition(NPC, NPC->client->navigation.nav.lookPos, qfalse);
 				VectorSubtract(NPC->client->navigation.nav.lookPos, NPC->r.currentOrigin, NPC->movedir);
 

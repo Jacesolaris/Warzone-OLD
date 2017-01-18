@@ -762,7 +762,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	shader_t		*shader = NULL;
 	int				cull;
 	int				lod;
-	int64_t			fogNum;
+	int				fogNum;
 	int             cubemapIndex;
 	qboolean		personalModel;
 

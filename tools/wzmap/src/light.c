@@ -137,7 +137,7 @@ static void CreateSunLight( sun_t *sun )
 		light->style = noStyles ? LS_NORMAL : sun->style;
 		
 		/* set the light's position out to infinity */
-		VectorMA( vec3_origin, (MAX_WORLD_COORD * 8.0f), direction, light->origin );	/* MAX_WORLD_COORD * 2.0f */
+		VectorMA( vec3_origin, (MAX_WORLD_LIGHT_COORD * 8.0f), direction, light->origin );	/* MAX_WORLD_LIGHT_COORD * 2.0f */
 		
 		/* set the facing to be the inverse of the sun direction */
 		VectorScale( direction, -1.0, light->normal );

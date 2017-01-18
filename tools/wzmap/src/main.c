@@ -1011,7 +1011,7 @@ int main( int argc, char **argv )
 	/* syphter: NavMesh Help */
 	else if (!strcmp(argv[1], "-navhelp"))
 	{
-		Sys_Printf("Usage: %s -nav -threads 1 -game ja <mapname.bsp> ", argv[0]);
+		Sys_Printf("Usage: wzmap -nav [-cellheight F] [-cellSizeMult F] [-stepsize F] [-includecaulk] [-includesky] [-nogapfilter] MAPNAME\n");
 		exit(2);
 	}
 	

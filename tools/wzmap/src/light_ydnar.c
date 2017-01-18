@@ -4390,9 +4390,9 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 		{
 			/* special cased */
 			light->cluster = 0;
-			light->envelope = MAX_WORLD_COORD * 8.0f;
-			VectorSet( light->mins, MIN_WORLD_COORD * 8.0f, MIN_WORLD_COORD * 8.0f, MIN_WORLD_COORD * 8.0f );
-			VectorSet( light->maxs, MAX_WORLD_COORD * 8.0f, MAX_WORLD_COORD * 8.0f, MAX_WORLD_COORD * 8.0f );
+			light->envelope = MAX_WORLD_LIGHT_COORD * 8.0f;
+			VectorSet( light->mins, MIN_WORLD_LIGHT_COORD * 8.0f, MIN_WORLD_LIGHT_COORD * 8.0f, MIN_WORLD_LIGHT_COORD * 8.0f );
+			VectorSet( light->maxs, MAX_WORLD_LIGHT_COORD * 8.0f, MAX_WORLD_LIGHT_COORD * 8.0f, MAX_WORLD_LIGHT_COORD * 8.0f );
 		}
 		
 		/* everything else */
@@ -4468,7 +4468,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 					
 					/* check for fast mode */
 					if( !(light->flags & LIGHT_FAST) && !(light->flags & LIGHT_FAST_TEMP) )
-						light->envelope = MAX_WORLD_COORD * 8.0f;
+						light->envelope = MAX_WORLD_LIGHT_COORD * 8.0f;
 				}
 				else
 				{
@@ -4481,7 +4481,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 				{
 					/* solve distance for non-distance lights */
 					if( !(light->flags & LIGHT_ATTEN_DISTANCE) )
-						light->envelope = MAX_WORLD_COORD * 8.0f;
+						light->envelope = MAX_WORLD_LIGHT_COORD * 8.0f;
 					
 					/* solve distance for linear lights */
 					else if( (light->flags & LIGHT_ATTEN_LINEAR ) )

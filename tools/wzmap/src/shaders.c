@@ -43,6 +43,176 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 
 vec3_t	colorModRandom[COLORMOD_RANDOM_GRIDSIZE];
 
+//#define __MATERIAL_TYPES__
+
+#ifdef __MATERIAL_TYPES__
+/*
+=================
+ParseMaterial
+=================
+*/
+const char *materialNames[MATERIAL_LAST] =
+{
+	MATERIALS
+};
+
+#define	MAX_TOKEN_CHARS		1024	// max length of an individual token
+
+int com_lines = 0;
+
+const char *SkipWhitespace(const char *data, qboolean *hasNewLines) {
+	int c;
+
+	while ((c = *(const unsigned char* /*eurofix*/)data) <= ' ') {
+		if (!c) {
+			return NULL;
+		}
+		if (c == '\n') {
+			com_lines++;
+			*hasNewLines = qtrue;
+		}
+		data++;
+	}
+
+	return data;
+}
+
+char *COM_ParseExt(const char **data_p, qboolean allowLineBreaks)
+{
+	int c = 0, len;
+	qboolean hasNewLines = qfalse;
+	const char *data;
+
+	data = *data_p;
+	len = 0;
+	com_token[0] = 0;
+	int com_tokenline = 0;
+	int com_lines = 0;
+
+	// make sure incoming data is valid
+	if (!data)
+	{
+		*data_p = NULL;
+		return com_token;
+	}
+
+	while (1)
+	{
+		// skip whitespace
+		data = SkipWhitespace(data, &hasNewLines);
+		if (!data)
+		{
+			*data_p = NULL;
+			return com_token;
+		}
+		if (hasNewLines && !allowLineBreaks)
+		{
+			*data_p = data;
+			return com_token;
+		}
+
+		c = *data;
+
+		// skip double slash comments
+		if (c == '/' && data[1] == '/')
+		{
+			data += 2;
+			while (*data && *data != '\n') {
+				data++;
+			}
+		}
+		// skip /* */ comments
+		else if (c == '/' && data[1] == '*')
+		{
+			data += 2;
+			while (*data && (*data != '*' || data[1] != '/'))
+			{
+				if (*data == '\n')
+				{
+					com_lines++;
+				}
+				data++;
+			}
+			if (*data)
+			{
+				data += 2;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// token starts on this line
+	com_tokenline = com_lines;
+
+	// handle quoted strings
+	if (c == '\"')
+	{
+		data++;
+		while (1)
+		{
+			c = *data++;
+			if (c == '\"' || !c)
+			{
+				com_token[len] = 0;
+				*data_p = (char *)data;
+				return com_token;
+			}
+			if (c == '\n')
+			{
+				com_lines++;
+			}
+			if (len < MAX_TOKEN_CHARS - 1)
+			{
+				com_token[len] = c;
+				len++;
+			}
+		}
+	}
+
+	// parse a regular word
+	do
+	{
+		if (len < MAX_TOKEN_CHARS - 1)
+		{
+			com_token[len] = c;
+			len++;
+		}
+		data++;
+		c = *data;
+	} while (c>32);
+
+	com_token[len] = 0;
+
+	*data_p = (char *)data;
+	return com_token;
+}
+
+
+void ParseMaterial(const char **text, shaderInfo_t *shader)
+{
+	char	*token;
+	int		i;
+
+	token = COM_ParseExt(text, qfalse);
+	if (token[0] == 0)
+	{
+		printf("WARNING: missing material in shader '%s'\n", shader->shader);
+		return;
+	}
+	for (i = 0; i < MATERIAL_LAST; i++)
+	{
+		if (!Q_stricmp(token, materialNames[i]))
+		{
+			shader->surfaceFlags |= i;
+			break;
+		}
+	}
+}
+#endif //__MATERIAL_TYPES__
+
 /*
 ColorModBuildRandomGrid()
 builds a random colormod grid
@@ -2541,6 +2711,15 @@ static void ParseShaderFile( const char *filename )
 					else
 						Sys_Warning( "%s: Unknown q3map_colorMod method: %s", filename, token );
 				}
+
+#ifdef __MATERIAL_TYPES__
+				else if (!Q_stricmp(token, "material") || !Q_stricmp(token, "q3map_material"))
+				{
+					/* get material */
+					GetTokenAppend(shaderText, qfalse);
+					ParseMaterial((const char **)&token, si);
+				}
+#endif //__MATERIAL_TYPES__
 
 				/* ydnar: gs mods: q3map_tcMod <style> <parameters> */
 				else if( !Q_stricmp( token, "q3map_tcMod" ) )

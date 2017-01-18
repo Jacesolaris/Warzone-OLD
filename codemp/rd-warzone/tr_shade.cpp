@@ -235,6 +235,13 @@ because a surface may be forced to perform a RB_End due
 to overflow.
 ==============
 */
+
+#ifdef __PLAYER_BASED_CUBEMAPS__
+extern int			currentPlayerCubemap;
+extern vec4_t		currentPlayerCubemapVec;
+extern float		currentPlayerCubemapDistance;
+#endif //__PLAYER_BASED_CUBEMAPS__
+
 void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 
 	shader_t *state = (shader->remappedShader) ? shader->remappedShader : shader;
@@ -245,7 +252,11 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.multiDrawPrimitives = 0;
 	tess.shader = state;
 	tess.fogNum = fogNum;
+#ifdef __PLAYER_BASED_CUBEMAPS__
+	tess.cubemapIndex = currentPlayerCubemap;
+#else //!__PLAYER_BASED_CUBEMAPS__
 	tess.cubemapIndex = cubemapIndex;
+#endif //__PLAYER_BASED_CUBEMAPS__
 	//tess.dlightBits = 0;		// will be OR'd in by surface functions
 #ifdef __PSHADOWS__
 	tess.pshadowBits = 0;       // will be OR'd in by surface functions
@@ -1788,6 +1799,135 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	RB_UpdateMatrixes();
 	//RB_UpdateCloseLights();
 
+	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+	{
+
+	}
+
+	//
+	// UQ1: I think we only need to do all these once, not per stage... Waste of FPS!
+	//
+
+	qboolean ADD_CUBEMAP_INDEX = qfalse;
+	qboolean useTesselation = qfalse;
+	qboolean isWater = qfalse;
+	qboolean isGrass = qfalse;
+	qboolean isPebbles = qfalse;
+
+	float tessInner = 0.0;
+	float tessOuter = 0.0;
+	float tessAlpha = 0.0;
+
+	float cubeMapStrength = 0.0;
+	vec4_t cubeMapVec;
+
+	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+	{
+		if (r_foliage->integer
+			&& r_sunlightMode->integer >= 2
+			&& r_foliageShadows->integer
+			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isGrass = qtrue;
+		}
+		else if (r_pebbles->integer
+			&& r_sunlightMode->integer >= 2
+			&& r_foliageShadows->integer
+			&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isPebbles = qtrue;
+		}
+	}
+	else
+	{
+		if (r_foliage->integer
+			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isGrass = qtrue;
+		}
+		else if (r_pebbles->integer
+			&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isPebbles = qtrue;
+		}
+	}
+
+	if (r_tesselation->integer 
+		&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+	{
+		useTesselation = qtrue;
+
+		tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+		tessOuter = tessInner;
+		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+	}
+
+	//
+	// testing cube map
+	//
+#ifdef __PLAYER_BASED_CUBEMAPS__
+	if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
+	{
+		VectorCopy(currentPlayerCubemapVec, cubeMapVec); // TODO: not need to copy for even more speed...
+		float dist = currentPlayerCubemapDistance;
+		float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+		if (dist < r_cubemapCullRange->value)
+		{// In range for full effect...
+			cubeMapStrength = 1.0;
+			ADD_CUBEMAP_INDEX = qtrue;
+		}
+		else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+		{// Further scale the strength of the cubemap by the fade-out distance...
+			float extraDist = dist - r_cubemapCullRange->value;
+			float falloffDist = (r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+			float strength = (falloffDist - extraDist) / falloffDist;
+
+			cubeMapStrength = strength;
+			ADD_CUBEMAP_INDEX = qtrue;
+		}
+		else
+		{// Out of range completely...
+			cubeMapStrength = 0.0;
+			ADD_CUBEMAP_INDEX = qfalse;
+		}
+	}
+#else //!__PLAYER_BASED_CUBEMAPS__
+	if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
+	{
+		cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
+		cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
+		cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
+		cubeMapVec[3] = 1.0f;
+
+		float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
+		float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+		if (dist < r_cubemapCullRange->value)
+		{// In range for full effect...
+			cubeMapStrength = 1.0;
+			//index |= LIGHTDEF_USE_CUBEMAP;
+			ADD_CUBEMAP_INDEX = qtrue;
+		}
+		else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+		{// Further scale the strength of the cubemap by the fade-out distance...
+			float extraDist = dist - r_cubemapCullRange->value;
+			float falloffDist = (r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+			float strength = (falloffDist - extraDist) / falloffDist;
+
+			cubeMapStrength = strength;
+			//index |= LIGHTDEF_USE_CUBEMAP;
+			ADD_CUBEMAP_INDEX = qtrue;
+		}
+		else
+		{// Out of range completely...
+			cubeMapStrength = 0.0;
+			//index &= ~LIGHTDEF_USE_CUBEMAP;
+			ADD_CUBEMAP_INDEX = qfalse;
+		}
+	}
+#endif //__PLAYER_BASED_CUBEMAPS__
+
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
 		shaderStage_t *pStage = input->xstages[stage];
@@ -1799,17 +1939,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
 		qboolean isGeneric = qtrue;
 		qboolean isLightAll = qfalse;
-		qboolean useTesselation = qfalse;
-		qboolean isWater = qfalse;
-		qboolean isGrass = qfalse;
-		qboolean isPebbles = qfalse;
 		qboolean multiPass = qtrue;
 		qboolean usingLight = qfalse;
 		qboolean isGlowStage = qfalse;
 		qboolean isUsingRegions = qfalse;
-
-		float cubeMapStrength = 0.0;
-		vec4_t cubeMapVec;
 
 		int passNum = 0, passMax = 0;
 
@@ -1859,25 +1992,9 @@ continue;
 					index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 				}
 
-				if (r_tesselation->integer && RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+				if (useTesselation)
 				{
 					index |= LIGHTDEF_USE_TESSELLATION;
-					useTesselation = qtrue;
-				}
-
-				if (r_foliage->integer
-					&& r_sunlightMode->integer >= 2
-					&& r_foliageShadows->integer
-					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
-				{
-					isGrass = qtrue;
-				}
-				else if (r_pebbles->integer
-					&& r_sunlightMode->integer >= 2
-					&& r_foliageShadows->integer
-					&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
-				{
-					isPebbles = qtrue;
 				}
 
 				sp = &pStage->glslShaderGroup[index];
@@ -1936,17 +2053,6 @@ continue;
 				index = pStage->glslShaderIndex;
 			}
 
-			if (r_foliage->integer
-				&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
-			{
-				isGrass = qtrue;
-			}
-			else if (r_pebbles->integer
-				&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
-			{
-				isPebbles = qtrue;
-			}
-
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
 				index |= LIGHTDEF_ENTITY;
@@ -1962,28 +2068,6 @@ continue;
 				}
 			}
 
-			/*
-			if ((r_sunlightMode->integer >= 2)
-				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
-				&& (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES
-					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS
-					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS))
-			{
-				index |= LIGHTDEF_USE_SHADOWMAP;
-			}
-			else if ((r_sunlightMode->integer >= 2)
-				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
-				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_DRYLEAVES)
-			{// No shadows on dryleaves (billboards)...
-
-			}
-			else if ((r_sunlightMode->integer >= 2)
-				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT)))
-			{
-				index |= LIGHTDEF_USE_SHADOWMAP;
-			}
-			*/
-
 			if (r_lightmap->integer
 				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES
 				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES
@@ -1995,41 +2079,14 @@ continue;
 			//
 			// testing cube map
 			//
-			if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
+			if (ADD_CUBEMAP_INDEX)
 			{
-				cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
-				cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
-				cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
-				cubeMapVec[3] = 1.0f;
-
-				float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
-				float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
-
-				if (dist < r_cubemapCullRange->value)
-				{// In range for full effect...
-					cubeMapStrength = 1.0;
-					index |= LIGHTDEF_USE_CUBEMAP;
-				}
-				else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
-				{// Further scale the strength of the cubemap by the fade-out distance...
-					float extraDist =		dist - r_cubemapCullRange->value;
-					float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
-					float strength =		(falloffDist - extraDist) / falloffDist;
-
-					cubeMapStrength = strength;
-					index |= LIGHTDEF_USE_CUBEMAP;
-				}
-				else
-				{// Out of range completely...
-					cubeMapStrength = 0.0;
-					index &= ~LIGHTDEF_USE_CUBEMAP;
-				}
+				index |= LIGHTDEF_USE_CUBEMAP;
 			}
 
-			if (r_tesselation->integer && RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+			if (useTesselation)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
-				useTesselation = qtrue;
 			}
 
 			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
@@ -2077,7 +2134,6 @@ continue;
 		{
 #ifdef __USE_WATERMAP__
 			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
-			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 			{
 				sp = &tr.waterShader;
 				pStage->glslShaderGroup = &tr.waterShader;
@@ -2111,17 +2167,6 @@ continue;
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				sp = &pStage->glslShaderGroup[0];
-
-				if (r_foliage->integer
-					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
-				{
-					isGrass = qtrue;
-				}
-				else if (r_pebbles->integer
-					&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
-				{
-					isPebbles = qtrue;
-				}
 			}
 
 			GLSL_BindProgram(sp);
@@ -2777,17 +2822,6 @@ continue;
 
 		while (1)
 		{
-			float tessInner = 0.0;
-			float tessOuter = 0.0;
-			float tessAlpha = 0.0;
-
-			if (useTesselation)
-			{
-				tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
-				tessOuter = tessInner;
-				tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
-			}
-
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
