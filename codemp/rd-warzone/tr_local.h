@@ -43,9 +43,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __ORIGINAL_OCCLUSION__
 //#define __DEPTH_PREPASS_OCCLUSION__
 //#define __MERGE_MODEL_SURFACES__
-#define __MERGE_MODEL_SURFACES2__	// merge entity surfaces into less draws...
-#define __LAZY_CUBEMAP__			// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
-//#define __INSTANCED_MODELS__		// experimenting with model instancing for foliage...
+#define __MERGE_MODEL_SURFACES2__		// merge entity surfaces into less draws...
+#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
+//#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
+
+#define __DEFERRED_IMAGE_LOADING__		// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
+//#define __DEFERRED_MAP_IMAGE_LOADING__	// also load map images deferred...
+
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -53,6 +57,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_DYNAMIC_SHADOWS 4
 #endif //__DYNAMIC_SHADOWS__
 
+#define DISTANCE_BETWEEN_CUBEMAPS 384 //256
 #define	MAX_LIGHTALL_DLIGHTS 24
 
 
@@ -560,6 +565,13 @@ typedef struct image_s {
 	vec4_t		lightColor;
 
 	bool		generatedNormalMap;
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+	bool		deferredLoad = qfalse;
+	char		deferredLoadName[64] = { 0 };
+	imgType_t	deferredLoadType;
+	int			deferredLoadFlags;
+#endif //__DEFERRED_IMAGE_LOADING__
 
 	struct image_s*	next;
 } image_t;
@@ -3772,6 +3784,12 @@ void RE_AddDecalToScene ( qhandle_t shader, const vec3_t origin, const vec3_t di
 void R_AddDecals( void );
 
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags );
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags);
+image_t *R_LoadDeferredImage(image_t *deferredImage);
+#endif //__DEFERRED_IMAGE_LOADING__
+
 qhandle_t RE_RegisterShader( const char *name );
 qhandle_t RE_RegisterShaderNoMip( const char *name );
 const char		*RE_ShaderNameFromIndex(int index);

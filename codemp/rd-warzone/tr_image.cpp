@@ -3185,6 +3185,103 @@ char previous_name_loaded[256];
 
 extern void StripCrap( const char *in, char *out, int destsize );
 
+#ifdef __DEFERRED_IMAGE_LOADING__
+int			DEFERRED_IMAGES_NUM = 0;
+image_t		DEFERRED_IMAGES[32768]; // Hopefully more than enough...
+
+#if defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+qboolean	DEFERRED_IMAGES_FORCE_LOAD = qfalse; // Used to force loading of map textures...
+#endif //defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+
+image_t *R_LoadDeferredImage(image_t *deferredImage)
+{
+	image_t *newImage = R_FindImageFile((const char *)deferredImage->imgName, deferredImage->deferredLoadType, deferredImage->deferredLoadFlags);
+	memset(&deferredImage->imgName, 0, sizeof(deferredImage->imgName));
+	deferredImage->deferredLoad = qfalse;
+	return newImage;
+}
+
+image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
+{
+	image_t	*image = NULL;
+
+	if (!name || ri->Cvar_VariableIntegerValue("dedicated")) {
+		return NULL;
+	}
+
+	if (name[0] == '\0')
+	{
+		return NULL;
+	}
+
+#if defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+	if (DEFERRED_IMAGES_FORCE_LOAD)
+	{// Loading map images...
+		return R_FindImageFile(name, type, flags);
+	}
+#endif //defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+
+	if (type != IMGTYPE_COLORALPHA 
+		&& type != IMGTYPE_NORMAL 
+		&& type != IMGTYPE_SPECULAR
+		&& type != TB_OVERLAYMAP
+		&& type != TB_STEEPMAP
+		&& type != TB_STEEPMAP2
+		&& type != TB_SPLATCONTROLMAP
+		&& type != TB_SPLATMAP1
+		&& type != TB_SPLATMAP2
+		&& type != TB_SPLATMAP3
+		&& type != TB_SPLATMAP4)
+	{// Only defer diffusemaps for now...
+		return R_FindImageFile(name, type, flags);
+	}
+
+	int slot = -1;
+
+	/*
+	for (int i = 0; i < DEFERRED_IMAGES_NUM; i++)
+	{
+		if (DEFERRED_IMAGES[i].imgName[0] != '\0' && !strncmp(name, DEFERRED_IMAGES[i].imgName, 64))
+		{// Already in the list...
+			return &DEFERRED_IMAGES[i];
+		}
+	}
+	*/
+
+	for (int i = 0; i < DEFERRED_IMAGES_NUM; i++)
+	{
+		if (!DEFERRED_IMAGES[i].deferredLoad && DEFERRED_IMAGES[i].imgName[0] == '\0')
+		{// Found a slot we can reuse...
+			slot = i;
+			break;
+		}
+	}
+
+	if (slot == -1)
+	{// Create new slot...
+		image = &DEFERRED_IMAGES[DEFERRED_IMAGES_NUM];
+		DEFERRED_IMAGES_NUM++;
+
+		image->deferredLoad = true;
+		memset(&image->imgName, 0, sizeof(image->imgName));
+		strcpy(image->imgName, name);
+		image->deferredLoadFlags = flags;
+		image->deferredLoadType = type;
+	}
+	else
+	{// Reuse old slot...
+		image = &DEFERRED_IMAGES[slot];
+		image->deferredLoad = true;
+		memset(&image->imgName, 0, sizeof(image->imgName));
+		strcpy(image->imgName, name);
+		image->deferredLoadFlags = flags;
+		image->deferredLoadType = type;
+	}
+
+	return image;
+}
+#endif //__DEFERRED_IMAGE_LOADING__
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;

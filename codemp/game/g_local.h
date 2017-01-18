@@ -525,6 +525,7 @@ struct gentity_s {
 	int                     next_rifle_butt_time;
 	int                     next_flamer_time;
 	int                     next_kick_time;
+	int						next_pathfind_time;
 
 	int						blockToggleTime;
 

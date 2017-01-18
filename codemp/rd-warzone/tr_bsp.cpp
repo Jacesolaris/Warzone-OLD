@@ -27,6 +27,10 @@ extern char currentMapName[128];
 
 extern void R_LoadMapInfo ( void );
 
+#if defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+extern qboolean DEFERRED_IMAGES_FORCE_LOAD;
+#endif //defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+
 /*
 
 Loads and prepares a map file for scene rendering.
@@ -665,7 +669,13 @@ static shader_t *ShaderForShaderNum( int shaderNum, const int *lightmapNums, con
 		lightmapNums = lightmapsFullBright;
 	}
 
+#if defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+	DEFERRED_IMAGES_FORCE_LOAD = qtrue;
+#endif //defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
 	shader = R_FindShader( dsh->shader, lightmapNums, styles, qtrue );
+#if defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+	DEFERRED_IMAGES_FORCE_LOAD = qfalse;
+#endif //defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
@@ -3544,7 +3554,7 @@ static void R_LoadCubemapWaypoints( void )
 
 			for (int j = 0; j < numcubeOrgs; j++)
 			{
-				if (Distance(cubeOrgs[j], surfOrigin) < 256)
+				if (Distance(cubeOrgs[j], surfOrigin) < DISTANCE_BETWEEN_CUBEMAPS)
 				{
 					bad = qtrue;
 					break;

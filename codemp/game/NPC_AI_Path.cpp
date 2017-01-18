@@ -513,6 +513,7 @@ int NPC_FindGoal( gentity_t *NPC )
 			NavlibFindRandomPointInRadius(NPC->s.number, gWPArray[waypoint]->origin, NPC->client->navigation.goal.origin, 99999999.9);
 		}
 		//trap->Print("[%s] newGoal: %f %f %f.\n", NPC->client->pers.netname, NPC->client->navigation.goal.origin[0], NPC->client->navigation.goal.origin[1], NPC->client->navigation.goal.origin[2]);
+		return 1;
 	}
 	else
 	{
@@ -521,6 +522,7 @@ int NPC_FindGoal( gentity_t *NPC )
 			NavlibFindRandomPointOnMesh(NPC, NPC->client->navigation.goal.origin);
 		}
 		//trap->Print("[%s] newGoal: %f %f %f.\n", NPC->client->pers.netname, NPC->client->navigation.goal.origin[0], NPC->client->navigation.goal.origin[1], NPC->client->navigation.goal.origin[2]);
+		return 1;
 	}
 #else
 	NavlibFindRandomPatrolPoint(NPC->s.number, NPC->client->navigation.goal.origin);
@@ -607,6 +609,13 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 
 void NPC_SetNewGoalAndPath(gentity_t *aiEnt)
 {
+	if (aiEnt->next_pathfind_time > level.time)
+	{
+		return;
+	}
+
+	aiEnt->next_pathfind_time = level.time + 10000 + irand(0, 1000);
+
 #ifdef __USE_NAVLIB__
 	if (NPC_FindGoal(aiEnt))
 	{
@@ -620,6 +629,7 @@ void NPC_SetNewGoalAndPath(gentity_t *aiEnt)
 		else
 			trap->Print("%s failed to find a route.\n", aiEnt->client->pers.netname);
 	}
+	return;
 #endif //__USE_NAVLIB__
 
 #ifndef __USE_NAVMESH__
@@ -728,6 +738,13 @@ void NPC_SetNewGoalAndPath(gentity_t *aiEnt)
 #ifdef __USE_NAVLIB__
 void NPC_SetPadawanGoalAndPath(gentity_t *aiEnt)
 {
+	if (aiEnt->next_pathfind_time > level.time)
+	{
+		return;
+	}
+
+	aiEnt->next_pathfind_time = level.time + 10000 + irand(0, 1000);
+
 	if (aiEnt->parent && NPC_IsAlive(aiEnt, aiEnt->parent))
 	{// Parent is alive, follow route to him, if he is at range...
 		if (Distance(aiEnt->r.currentOrigin, aiEnt->parent->r.currentOrigin) > 128.0)
@@ -1364,6 +1381,8 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 
 	if (G_NavmeshIsLoaded())
 	{
+		qboolean walk = qfalse;
+
 		if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 		{
 			NPC->last_move_time = level.time;
@@ -1396,7 +1415,12 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 					VectorSubtract(NPC->client->navigation.nav.pos, NPC->r.currentOrigin, NPC->movedir);
 
 #ifndef __USE_NAVLIB_INTERNAL_MOVEMENT__
-					if (UQ1_UcmdMoveForDir(NPC, ucmd, NPC->movedir, qfalse, NPC->client->navigation.nav.pos))
+					if (Distance(NPC->r.currentOrigin, NPC->client->navigation.goal.ent->r.currentOrigin) < 256)
+					{
+						walk = qtrue;
+					}
+
+					if (UQ1_UcmdMoveForDir(NPC, ucmd, NPC->movedir, walk, NPC->client->navigation.nav.pos))
 					{
 						if (NPC->last_move_time < level.time - 2000)
 						{
@@ -1487,7 +1511,12 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 			VectorSubtract(NPC->client->navigation.nav.lookPos, NPC->r.currentOrigin, NPC->movedir);
 
 #ifndef __USE_NAVLIB_INTERNAL_MOVEMENT__
-			if (UQ1_UcmdMoveForDir(NPC, ucmd, NPC->movedir, qfalse, NPC->client->navigation.nav.lookPos))
+			if (Distance(NPC->r.currentOrigin, NPC->client->navigation.goal.origin) < 256)
+			{
+				walk = qtrue;
+			}
+
+			if (UQ1_UcmdMoveForDir(NPC, ucmd, NPC->movedir, walk, NPC->client->navigation.nav.lookPos))
 			{
 				if (NPC->last_move_time < level.time - 2000)
 				{
@@ -1557,7 +1586,12 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 				VectorSubtract(NPC->client->navigation.nav.lookPos, NPC->r.currentOrigin, NPC->movedir);
 
 #ifndef __USE_NAVLIB_INTERNAL_MOVEMENT__
-				if (UQ1_UcmdMoveForDir(NPC, ucmd, NPC->movedir, qfalse, NPC->client->navigation.nav.lookPos))
+				if (Distance(NPC->r.currentOrigin, NPC->client->navigation.goal.origin) < 256)
+				{
+					walk = qtrue;
+				}
+
+				if (UQ1_UcmdMoveForDir(NPC, ucmd, NPC->movedir, walk, NPC->client->navigation.nav.lookPos))
 				{
 					return qtrue;
 				}
@@ -1603,8 +1637,14 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 				trap->EA_MoveRight(NPC->s.number);
 			}
 
-			return qfalse;
+			return qtrue;
 		}
+
+		ucmd->forwardmove = 0;
+		ucmd->rightmove = 0;
+		ucmd->upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse;
 	}
 #endif //__USE_NAVLIB__
 

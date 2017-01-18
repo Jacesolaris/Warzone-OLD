@@ -1444,8 +1444,11 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 {
 	vec2_t dimensions;
 
-	dimensions[0] = pStage->bundle[0].image[0]->width;
-	dimensions[1] = pStage->bundle[0].image[0]->height;
+	if (pStage->bundle[0].image[0])
+	{
+		dimensions[0] = pStage->bundle[0].image[0]->width;
+		dimensions[1] = pStage->bundle[0].image[0]->height;
+	}
 
 	if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 	{
@@ -1962,9 +1965,77 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!r_surfaceSprites->integer)
 #endif //__SURFACESPRITES__
 			{
-continue;
+				continue;
 			}
 		}
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+		if (pStage->bundle[TB_DIFFUSEMAP].image[0]
+			&& pStage->bundle[TB_DIFFUSEMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_DIFFUSEMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_DIFFUSEMAP].image[0]);
+		}
+
+		if (pStage->bundle[TB_NORMALMAP].image[0]
+			&& pStage->bundle[TB_NORMALMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_NORMALMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_NORMALMAP].image[0]);
+		}
+
+		if (pStage->bundle[TB_SPECULARMAP].image[0]
+			&& pStage->bundle[TB_SPECULARMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_SPECULARMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPECULARMAP].image[0]);
+		}
+
+		if (pStage->bundle[TB_OVERLAYMAP].image[0]
+			&& pStage->bundle[TB_OVERLAYMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_OVERLAYMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_OVERLAYMAP].image[0]);
+		}
+
+		if (pStage->bundle[TB_STEEPMAP].image[0]
+			&& pStage->bundle[TB_STEEPMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_STEEPMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_STEEPMAP].image[0]);
+		}
+
+		if (pStage->bundle[TB_STEEPMAP2].image[0]
+			&& pStage->bundle[TB_STEEPMAP2].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_STEEPMAP2].image[0] = R_LoadDeferredImage(pStage->bundle[TB_STEEPMAP2].image[0]);
+		}
+
+		if (pStage->bundle[TB_SPLATCONTROLMAP].image[0]
+			&& pStage->bundle[TB_SPLATCONTROLMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_SPLATCONTROLMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATCONTROLMAP].image[0]);
+		}
+
+		if (pStage->bundle[TB_SPLATMAP1].image[0]
+			&& pStage->bundle[TB_SPLATMAP1].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_SPLATMAP1].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP1].image[0]);
+		}
+
+		if (pStage->bundle[TB_SPLATMAP2].image[0]
+			&& pStage->bundle[TB_SPLATMAP2].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_SPLATMAP2].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP2].image[0]);
+		}
+
+		if (pStage->bundle[TB_SPLATMAP3].image[0]
+			&& pStage->bundle[TB_SPLATMAP3].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_SPLATMAP3].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP3].image[0]);
+		}
+
+		if (pStage->bundle[TB_SPLATMAP4].image[0]
+			&& pStage->bundle[TB_SPLATMAP4].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_SPLATMAP4].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP4].image[0]);
+		}
+#endif //__DEFERRED_IMAGE_LOADING__
 
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
