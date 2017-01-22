@@ -582,8 +582,8 @@ void BeginModel( void )
 		/* ydnar: lightgrid bounds */
 		if( b->compileFlags & C_LIGHTGRID )
 		{
-			AddPointToBounds( b->mins, lgMins, lgMaxs );
-			AddPointToBounds( b->maxs, lgMins, lgMaxs );
+			AddPointToBoundsLighting( b->mins, lgMins, lgMaxs );
+			AddPointToBoundsLighting( b->maxs, lgMins, lgMaxs );
 		}
 	}
 	
@@ -602,11 +602,11 @@ void BeginModel( void )
 	}
 
 	/* ydnar: lightgrid mins/maxs */
-#ifdef __BASEJKA_LIGHTGRID__
+//#ifdef __BASEJKA_LIGHTGRID__
 	if (lgMins[0] < 99999)
-#else //!__BASEJKA_LIGHTGRID__
-	if( lgMins[ 0 ] < 999999 )
-#endif //__BASEJKA_LIGHTGRID__
+//#else //!__BASEJKA_LIGHTGRID__
+//	if( lgMins[ 0 ] < 999999 )
+//#endif //__BASEJKA_LIGHTGRID__
 	{
 		/* use lightgrid bounds */
 		VectorCopy( lgMins, mod->mins );

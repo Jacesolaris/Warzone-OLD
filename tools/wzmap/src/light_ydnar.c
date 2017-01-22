@@ -1417,14 +1417,14 @@ void MapRawLightmap(int rawLightmapNum)
 					continue;
 				
 				/* check if within the bounding boxes of all surfaces referenced */
-				ClearBounds( mins, maxs );
+				ClearBoundsLighting( mins, maxs );
 				for( n = 0; n < lm->numLightSurfaces; n++ )
 				{
 					int TOL;
 					info = &surfaceInfos[ lightSurfaces[ lm->firstLightSurface + n ] ];
 					TOL = info->sampleSize + 2;
-					AddPointToBounds( info->mins, mins, maxs );
-					AddPointToBounds( info->maxs, mins, maxs );
+					AddPointToBoundsLighting( info->mins, mins, maxs );
+					AddPointToBoundsLighting( info->maxs, mins, maxs );
 					if( origin[ 0 ] > (info->mins[ 0 ] - TOL) && origin[ 0 ] < (info->maxs[ 0 ] + TOL) &&
 						origin[ 1 ] > (info->mins[ 1 ] - TOL) && origin[ 1 ] < (info->maxs[ 1 ] + TOL) &&
 						origin[ 2 ] > (info->mins[ 2 ] - TOL) && origin[ 2 ] < (info->maxs[ 2 ] + TOL) )
@@ -4511,7 +4511,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 				/* chop radius against pvs */
 				{
 					/* clear bounds */
-					ClearBounds( mins, maxs );
+					ClearBoundsLighting( mins, maxs );
 					
 					/* check all leaves */
 					for( i = 0; i < numBSPLeafs; i++ )
@@ -4527,9 +4527,9 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 						
 						/* add this leafs bbox to the bounds */
 						VectorCopy( leaf->mins, origin );
-						AddPointToBounds( origin, mins, maxs );
+						AddPointToBoundsLighting( origin, mins, maxs );
 						VectorCopy( leaf->maxs, origin );
-						AddPointToBounds( origin, mins, maxs );
+						AddPointToBoundsLighting( origin, mins, maxs );
 					}
 					
 					/* test to see if bounds encompass light */
@@ -4541,7 +4541,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 							//% 	mins[ 0 ], mins[ 1 ], mins[ 2 ],
 							//% 	maxs[ 0 ], maxs[ 1 ], maxs[ 2 ],
 							//% 	numLights, light->origin[ 0 ], light->origin[ 1 ], light->origin[ 2 ] );
-							AddPointToBounds( light->origin, mins, maxs );
+							AddPointToBoundsLighting( light->origin, mins, maxs );
 						}
 					}
 					
@@ -4557,11 +4557,11 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 					//%	VectorMA( light->origin, -1.0f, origin, origin );
 					VectorScale( light->origin, 2, origin );
 					VectorSubtract( origin, maxs, origin );
-					AddPointToBounds( origin, mins, maxs );
+					AddPointToBoundsLighting( origin, mins, maxs );
 					//%	VectorMA( light->origin, -1.0f, mins, origin );
 					VectorScale( light->origin, 2, origin );
 					VectorSubtract( origin, mins, origin );
-					AddPointToBounds( origin, mins, maxs );
+					AddPointToBoundsLighting( origin, mins, maxs );
 					 
 					/* calculate spherical bounds */
 					VectorSubtract( maxs, light->origin, dir );
@@ -4830,12 +4830,12 @@ void CreateTraceLightsForSurface( int num, trace_t *trace )
 	info = &surfaceInfos[ num ];
 	
 	/* get the mins/maxs for the dsurf */
-	ClearBounds( mins, maxs );
+	ClearBoundsLighting( mins, maxs );
 	VectorCopy( bspDrawVerts[ ds->firstVert ].normal, normal );
 	for( i = 0; i < ds->numVerts; i++ )
 	{
 		dv = &yDrawVerts[ ds->firstVert + i ];
-		AddPointToBounds( dv->xyz, mins, maxs );
+		AddPointToBoundsLighting( dv->xyz, mins, maxs );
 		if( !VectorCompare( dv->normal, normal ) )
 			VectorClear( normal );
 	}

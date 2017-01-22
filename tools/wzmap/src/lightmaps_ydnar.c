@@ -731,8 +731,8 @@ qboolean AddSurfaceToRawLightmap( int num, rawLightmap_t *lm )
 		lm->plane = NULL;
 	
 	/* add surface to lightmap bounds */
-	AddPointToBounds( info->mins, lm->mins, lm->maxs );
-	AddPointToBounds( info->maxs, lm->mins, lm->maxs );
+	AddPointToBoundsLighting( info->mins, lm->mins, lm->maxs );
+	AddPointToBoundsLighting( info->maxs, lm->mins, lm->maxs );
 	
 	/* check to see if this is a non-planar patch */
 	if( ds->surfaceType == MST_PATCH && lm->axis[ 0 ] == 0.0f && lm->axis[ 1 ] == 0.0f && lm->axis[ 2 ] == 0.0f )
@@ -1008,7 +1008,7 @@ void SetupSurfaceLightmaps( void )
 	}
 	
 	/* clear map bounds */
-	ClearBounds( mapMins, mapMaxs );
+	ClearBoundsLighting( mapMins, mapMaxs );
 	
 	/* allocate a list of surface clusters */
 	numSurfaceClusters = 0;
@@ -1090,11 +1090,11 @@ void SetupSurfaceLightmaps( void )
 				surfaceInfos[ info->parentSurfaceNum ].childSurfaceNum = j;
 			
 			/* determine surface bounds */
-			ClearBounds( info->mins, info->maxs );
+			ClearBoundsLighting( info->mins, info->maxs );
 			for( k = 0; k < ds->numVerts; k++ )
 			{
-				AddPointToBounds( yDrawVerts[ ds->firstVert + k ].xyz, mapMins, mapMaxs );
-				AddPointToBounds( yDrawVerts[ ds->firstVert + k ].xyz, info->mins, info->maxs );
+				AddPointToBoundsLighting( yDrawVerts[ ds->firstVert + k ].xyz, mapMins, mapMaxs );
+				AddPointToBoundsLighting( yDrawVerts[ ds->firstVert + k ].xyz, info->mins, info->maxs );
 			}
 			
 			/* find all the bsp clusters the surface falls into */
@@ -1493,7 +1493,7 @@ void StitchRawLightmap( int rawLightmapNum )
 			maxs = candidate->rowmaxs[ y2 ];
 
 			/* calc bounds */
-			ClearBounds( mins, maxs );
+			ClearBoundsLighting( mins, maxs );
 			for( x2 = 0; x2 < lm->sw; x2++ )
 			{
 				/* get luxel */
@@ -1506,7 +1506,7 @@ void StitchRawLightmap( int rawLightmapNum )
 
 				/* add to bounds */
 				origin = SUPER_TRIORIGIN( x2, y2 );
-				AddPointToBounds(origin, mins, maxs );
+				AddPointToBoundsLighting(origin, mins, maxs );
 			}
 
 			/* add some hull */
@@ -3232,7 +3232,7 @@ void StoreSurfaceLightmaps( void )
 			
 			/* setup */
 			lm->used = 0;
-			ClearBounds( colorMins, colorMaxs );
+			ClearBoundsLighting( colorMins, colorMaxs );
 			
 			/* clean up and store into bsp luxels */
 			for( y = 0; y < lm->h; y++ )
@@ -3340,7 +3340,7 @@ void StoreSurfaceLightmaps( void )
 					
 					/* add color to bounds for solid checking */
 					if( samples > 0.0f )
-						AddPointToBounds( bspLuxel, colorMins, colorMaxs );
+						AddPointToBoundsLighting( bspLuxel, colorMins, colorMaxs );
 				}
 			}
 			

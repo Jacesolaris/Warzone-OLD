@@ -196,6 +196,36 @@ int PicoModuleLoadModel( const picoModule_t* pm, char* fileName, picoByte_t* buf
 	return 0;
 }
 
+int StringContainsWord(const char *haystack, const char *needle)
+{
+	if (!*needle)
+	{
+		return 0;
+	}
+	for (; *haystack; ++haystack)
+	{
+		if (toupper(*haystack) == toupper(*needle))
+		{
+			/*
+			* Matched starting char -- loop through remaining chars.
+			*/
+			const char *h, *n;
+			for (h = haystack, n = needle; *h && *n; ++h, ++n)
+			{
+				if (toupper(*h) != toupper(*n))
+				{
+					break;
+				}
+			}
+			if (!*n) /* matched all of 'needle' to null termination */
+			{
+				return 1; /* return the start of the match */
+			}
+		}
+	}
+	return 0;
+}
+
 /*
 PicoLoadModel()
 the meat and potatoes function
@@ -219,7 +249,9 @@ picoModel_t	*PicoLoadModel( char *fileName, int frameNum )
 	_pico_load_file( fileName, &buffer, &bufSize );
 	if( bufSize < 0 )
 	{
-		_pico_printf( PICO_ERROR, "PicoLoadModel: Failed loading model %s", fileName );
+		if (!StringContainsWord(fileName, "_collision"))
+			_pico_printf( PICO_ERROR, "PicoLoadModel: Failed loading model %s", fileName );
+
 		return NULL;
 	}
 

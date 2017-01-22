@@ -299,16 +299,22 @@ void SnapWeldVector( vec3_t a, vec3_t b, vec3_t out )
 }
 
 // NOTE: added these from Ritual's Q3Radiant
-#define __BASEJKA_LIGHTGRID__
+//#define __BASEJKA_LIGHTGRID__
 
 #ifdef __BASEJKA_LIGHTGRID__
 #define INVALID_BOUNDS 99999
 #else //__BASEJKA_LIGHTGRID__
-#define INVALID_BOUNDS 999999
+#define INVALID_BOUNDS 524288
+#define INVALID_LIGHTING_BOUNDS 99999
 #endif //__BASEJKA_LIGHTGRID__
 void ClearBounds( vec3_t mins, vec3_t maxs ){
 	mins[0] = mins[1] = mins[2] = +INVALID_BOUNDS;
 	maxs[0] = maxs[1] = maxs[2] = -INVALID_BOUNDS;
+}
+
+void ClearBoundsLighting(vec3_t mins, vec3_t maxs) {
+	mins[0] = mins[1] = mins[2] = +INVALID_LIGHTING_BOUNDS;
+	maxs[0] = maxs[1] = maxs[2] = -INVALID_LIGHTING_BOUNDS;
 }
 
 void AddPointToBounds( vec3_t v, vec3_t mins, vec3_t maxs ){
@@ -329,6 +335,29 @@ void AddPointToBounds( vec3_t v, vec3_t mins, vec3_t maxs ){
 			mins[i] = val;
 		}
 		if ( val > maxs[i] ) {
+			maxs[i] = val;
+		}
+	}
+}
+
+void AddPointToBoundsLighting(vec3_t v, vec3_t mins, vec3_t maxs) {
+	int i;
+	vec_t val;
+
+	if (mins[0] == +INVALID_LIGHTING_BOUNDS) {
+		if (maxs[0] == -INVALID_LIGHTING_BOUNDS) {
+			VectorCopy(v, mins);
+			VectorCopy(v, maxs);
+		}
+	}
+
+	for (i = 0; i < 3; i++)
+	{
+		val = v[i];
+		if (val < mins[i]) {
+			mins[i] = val;
+		}
+		if (val > maxs[i]) {
 			maxs[i] = val;
 		}
 	}

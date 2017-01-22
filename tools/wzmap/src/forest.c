@@ -240,6 +240,7 @@ vec3_t			FOLIAGE_NORMALS[FOLIAGE_MAX_FOLIAGES];
 float			FOLIAGE_TREE_ANGLES[FOLIAGE_MAX_FOLIAGES];
 int				FOLIAGE_TREE_SELECTION[FOLIAGE_MAX_FOLIAGES];
 float			FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
+float			FOLIAGE_TREE_BUFFER[FOLIAGE_MAX_FOLIAGES];
 
 qboolean FOLIAGE_LoadFoliagePositions( char *filename )
 {
@@ -783,8 +784,32 @@ void ReassignTreeModels ( void )
 
 				float dist = Distance(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[j]);
 
-				if (dist <= BUFFER_RANGES[j])
+				if (dist <= BUFFER_RANGES[j] || dist <= FOLIAGE_TREE_BUFFER[j] || dist <= BUFFER_RANGES[i] || dist <= FOLIAGE_TREE_BUFFER[i])
 				{// Not within this object's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY_LOCATION, FOLIAGE_POSITIONS[i]);
+				
+				if (dist <= CITY_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY2_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY2_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY3_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY3_RADIUS)
+				{// Not within this city's buffer range... OK!
 					bad = qtrue;
 					break;
 				}
@@ -836,7 +861,7 @@ void ReassignTreeModels ( void )
 			//Sys_Printf("Position %i angles OK! (%f).\n", i, pitch);
 
 			FOLIAGE_TREE_SELECTION[i] = POSSIBLES[selected];
-			BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
+			FOLIAGE_TREE_BUFFER[i] = BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			SAME_RANGES[i] = POSSIBLES_SAME_RANGES[selected];
 			FOLIAGE_ASSIGNED[i] = qtrue;
 			NUM_PLACED[POSSIBLES[selected]]++;
@@ -912,8 +937,32 @@ void ReassignTreeModels ( void )
 
 				float dist = Distance(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[j]);
 
-				if (dist <= BUFFER_RANGES[j])
+				if (dist <= BUFFER_RANGES[j] || dist <= FOLIAGE_TREE_BUFFER[j] || dist <= BUFFER_RANGES[i] || dist <= FOLIAGE_TREE_BUFFER[i])
 				{// Not within this object's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY2_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY2_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY3_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY3_RADIUS)
+				{// Not within this city's buffer range... OK!
 					bad = qtrue;
 					break;
 				}
@@ -951,7 +1000,7 @@ void ReassignTreeModels ( void )
 			}
 
 			FOLIAGE_TREE_SELECTION[i] = POSSIBLES[selected];
-			BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
+			FOLIAGE_TREE_BUFFER[i] = BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			SAME_RANGES[i] = POSSIBLES_SAME_RANGES[selected];
 			FOLIAGE_ASSIGNED[i] = qtrue;
 			NUM_PLACED[POSSIBLES[selected]]++;
@@ -1414,7 +1463,7 @@ void ReassignCityModels(void)
 			if (best >= 0)
 			{
 				FOLIAGE_TREE_SELECTION[best] = i;
-				BUILDING_BUFFER_RANGES[best] = CITY_FORCED_BUFFER_DISTANCE[i];
+				FOLIAGE_TREE_BUFFER[best] = BUILDING_BUFFER_RANGES[best] = CITY_FORCED_BUFFER_DISTANCE[i];
 				BUILDING_SAME_RANGES[best] = CITY_FORCED_DISTANCE_FROM_SAME[i];
 				BUILDING_ASSIGNED[best] = qtrue;
 				FOLIAGE_TREE_SCALE[best] = 1.0; // Once-Off models always use exact size stated.
@@ -1521,7 +1570,7 @@ void ReassignCityModels(void)
 			//Sys_Printf("Position %i angles OK! (%f).\n", i, pitch);
 
 			FOLIAGE_TREE_SELECTION[i] = POSSIBLES[selected];
-			BUILDING_BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
+			FOLIAGE_TREE_BUFFER[i] = BUILDING_BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			BUILDING_SAME_RANGES[i] = POSSIBLES_BUILDING_SAME_RANGES[selected];
 			BUILDING_ASSIGNED[i] = qtrue;
 			FOLIAGE_TREE_SCALE[i] = 1.0; // City models always use exact size stated.
@@ -1642,7 +1691,7 @@ void ReassignCityModels(void)
 			}
 
 			FOLIAGE_TREE_SELECTION[i] = POSSIBLES[selected];
-			BUILDING_BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
+			FOLIAGE_TREE_BUFFER[i] = BUILDING_BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			BUILDING_SAME_RANGES[i] = POSSIBLES_BUILDING_SAME_RANGES[selected];
 			BUILDING_ASSIGNED[i] = qtrue;
 			FOLIAGE_TREE_SCALE[i] = 1.0; // City models always use exact size stated.

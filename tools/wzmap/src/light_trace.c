@@ -192,7 +192,7 @@ static int AllocTraceNode( void )
 	/* add the node */
 	memset( &traceNodes[ numTraceNodes ], 0, sizeof( traceNode_t ) );
 	traceNodes[ numTraceNodes ].type = TRACE_LEAF;
-	ClearBounds( traceNodes[ numTraceNodes ].mins, traceNodes[ numTraceNodes ].maxs );
+	ClearBoundsLighting( traceNodes[ numTraceNodes ].mins, traceNodes[ numTraceNodes ].maxs );
 	numTraceNodes++;
 	
 	/* return the count */
@@ -676,7 +676,7 @@ static void SubdivideTraceNode_r( int nodeNum, int depth )
 	}
 	
 	/* bound the node */
-	ClearBounds( node->mins, node->maxs );
+	ClearBoundsLighting( node->mins, node->maxs );
 	VectorClear( average );
 	count = 0;
 	for( i = 0; i < node->numItems; i++ )
@@ -687,7 +687,7 @@ static void SubdivideTraceNode_r( int nodeNum, int depth )
 		/* walk its verts */
 		for( j = 0; j < tw->numVerts; j++ )
 		{
-			AddPointToBounds( tw->v[ j ].xyz, node->mins, node->maxs );
+			AddPointToBoundsLighting( tw->v[ j ].xyz, node->mins, node->maxs );
 			average[ 0 ] += tw->v[ j ].xyz[ 0 ];
 			average[ 1 ] += tw->v[ j ].xyz[ 1 ];
 			average[ 2 ] += tw->v[ j ].xyz[ 2 ];

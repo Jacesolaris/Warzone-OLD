@@ -96,6 +96,8 @@ void SnapWeldVector( vec3_t a, vec3_t b, vec3_t out );
 // NOTE: added these from Ritual's Q3Radiant
 void ClearBounds( vec3_t mins, vec3_t maxs );
 void AddPointToBounds( vec3_t v, vec3_t mins, vec3_t maxs );
+void ClearBoundsLighting(vec3_t mins, vec3_t maxs);
+void AddPointToBoundsLighting(vec3_t v, vec3_t mins, vec3_t maxs);
 
 #define	PITCH 0 // up / down
 #define	YAW	  1 // left / right

@@ -265,7 +265,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 	
 	
 	/* initial setup */
-	ClearBounds( mins, maxs );
+	ClearBoundsLighting( mins, maxs );
 	VectorClear( average );
 	VectorClear( gradient );
 	alpha = 0;
@@ -291,7 +291,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 			for( i = 0; i < 3; i++ )
 				color[ i ] = (textureColor[ i ] / 255) * (rw->verts[ samples ].color[ lightmapNum ][ i ] / 255.0f);
 			
-			AddPointToBounds( color, mins, maxs );
+			AddPointToBoundsLighting( color, mins, maxs );
 			VectorAdd( average, color, average );
 			
 			/* get alpha */
@@ -371,7 +371,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						for( int j = 0; j < 3; j++ )
 							color[ j ] = (textureColor[ i ] / 255) * (radLuxel[ i ] / 255);
 						
-						AddPointToBounds( color, mins, maxs );
+						AddPointToBoundsLighting( color, mins, maxs );
 						VectorAdd( average, color, average );
 						
 						/* get alpha */
@@ -432,9 +432,9 @@ static void RadSubdivideDiffuseLight( int lightmapNum, bspDrawSurface_t *ds, raw
 		return;
 	
 	/* get bounds for winding */
-	ClearBounds( mins, maxs );
+	ClearBoundsLighting( mins, maxs );
 	for( i = 0; i < rw->numVerts; i++ )
-		AddPointToBounds( rw->verts[ i ].xyz, mins, maxs );
+		AddPointToBoundsLighting( rw->verts[ i ].xyz, mins, maxs );
 	
 	/* subdivide if necessary */
 	for( i = 0; i < 3; i++ )
