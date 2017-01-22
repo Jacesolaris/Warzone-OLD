@@ -53,44 +53,68 @@ float		NUM_PLANT_SHADERS = 0;
 #define		PLANT_SCALE_MULTIPLIER 1.0
 
 #define		MAX_PLANT_SHADERS 100
-#define		MAX_PLANT_MODELS 6
+#define		MAX_PLANT_MODELS 12
 
 float		TREE_SCALE_MULTIPLIER = 1.0;
 
 static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant04.md3",
 	"models/warzone/plants/groundplant05.md3",
+	"models/warzone/plants/groundplant06.md3",
+	"models/warzone/plants/fern01.md3",
+	"models/warzone/plants/smalltree01.md3",
 };
 
 static const char *SpringPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant04.md3",
 	"models/warzone/plants/groundplant05.md3",
+	"models/warzone/plants/groundplant06.md3",
+	"models/warzone/plants/fern01.md3",
+	"models/warzone/plants/smalltree01.md3",
 };
 
 static const char *EndorPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant04.md3",
 	"models/warzone/plants/groundplant05.md3",
+	"models/warzone/plants/groundplant06.md3",
+	"models/warzone/plants/fern01.md3",
+	"models/warzone/plants/smalltree01.md3",
 };
 
 static const char *SnowPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant04.md3",
 	"models/warzone/plants/groundplant05.md3",
+	"models/warzone/plants/groundplant06.md3",
+	"models/warzone/plants/fern01.md3",
+	"models/warzone/plants/smalltree01.md3",
 };
 
 static const char *TropicalPlantsList[] = {

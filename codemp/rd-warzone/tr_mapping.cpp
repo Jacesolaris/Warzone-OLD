@@ -137,9 +137,56 @@ void R_SetupMapInfo(void)
 	if (MAP_INFO_SIZE[1] > MAP_INFO_MAXSIZE) MAP_INFO_MAXSIZE = MAP_INFO_SIZE[1];
 }
 
+void R_CreateDefaultDetail(void)
+{
+	byte	data;
+	int		i = 0;
+
+	// write tga
+	fileHandle_t f;
+
+	f = ri->FS_FOpenFileWrite("gfx/defaultDetail.tga", qfalse);
+
+	// header
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
+
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++) {
+		for (int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++) {
+			int pixel = irand(96, 160);
+			data = pixel; ri->FS_Write(&data, sizeof(data), f);	// b
+			data = pixel; ri->FS_Write(&data, sizeof(data), f);	// g
+			data = pixel; ri->FS_Write(&data, sizeof(data), f);	// r
+			data = 1.0; ri->FS_Write(&data, sizeof(data), f);	// a
+		}
+	}
+
+	// footer
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
+
+	ri->FS_FCloseFile(f);
+}
+
 void R_CreateRandom2KImage(char *variation)
 {
-	// Hopefully now we have a map image... Save it...
 	byte	data;
 	int		i = 0;
 
@@ -1308,7 +1355,7 @@ void R_LoadMapInfo(void)
 {
 	R_SetupMapInfo();
 
-	if (!ri->FS_FileExists("gfx/random2K.tga"))
+	if (!R_TextureFileExists("gfx/random2K.tga"))
 	{
 		R_CreateRandom2KImage("");
 		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1318,7 +1365,7 @@ void R_LoadMapInfo(void)
 		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	if (!ri->FS_FileExists("gfx/random2Ka.tga"))
+	if (!R_TextureFileExists("gfx/random2Ka.tga"))
 	{
 		R_CreateRandom2KImage("a");
 		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1328,7 +1375,17 @@ void R_LoadMapInfo(void)
 		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	if (!ri->FS_FileExists("gfx/splatControlImage.tga"))
+	if (!R_TextureFileExists("gfx/defaultDetail.tga"))
+	{
+		R_CreateDefaultDetail();
+		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION);
+	}
+	else
+	{
+		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION);
+	}
+
+	if (!R_TextureFileExists("gfx/splatControlImage.tga"))
 	{
 		R_CreateRandom2KImage("splatControl");
 		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
@@ -1444,7 +1501,7 @@ void R_LoadMapInfo(void)
 	}
 
 #if 0
-	if (!ri->FS_FileExists(va("mapImage/%s.tga", currentMapName)))
+	if (!R_TextureFileExists(va("mapImage/%s.tga", currentMapName)))
 	{
 		R_CreateBspMapImage();
 		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1456,7 +1513,7 @@ void R_LoadMapInfo(void)
 #endif
 
 #if 0
-	if (!ri->FS_FileExists(va("heightMapImage/%s.tga", currentMapName)))
+	if (!R_TextureFileExists(va("heightMapImage/%s.tga", currentMapName)))
 	{
 		R_CreateHeightMapImage();
 		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1468,7 +1525,7 @@ void R_LoadMapInfo(void)
 #endif
 
 #if 0
-	if (!ri->FS_FileExists(va("foliageMapImage/%s.tga", currentMapName)))
+	if (!R_TextureFileExists(va("foliageMapImage/%s.tga", currentMapName)))
 	{
 		R_CreateFoliageMapImage();
 		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);

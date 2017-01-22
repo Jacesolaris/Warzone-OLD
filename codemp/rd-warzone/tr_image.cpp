@@ -3231,7 +3231,8 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 		&& type != TB_SPLATMAP1
 		&& type != TB_SPLATMAP2
 		&& type != TB_SPLATMAP3
-		&& type != TB_SPLATMAP4)
+		&& type != TB_SPLATMAP4
+		&& type != TB_DETAILMAP)
 	{// Only defer diffusemaps for now...
 		return R_FindImageFile(name, type, flags);
 	}
@@ -3348,9 +3349,18 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 #endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
-		&& type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ 
-		&& type != IMGTYPE_OVERLAY && type != IMGTYPE_STEEPMAP && type != IMGTYPE_STEEPMAP2 
-		&& type != IMGTYPE_SPLATMAP1 && type != IMGTYPE_SPLATMAP2 && type != IMGTYPE_SPLATMAP3 && type != IMGTYPE_SPLATMAP4 && type != IMGTYPE_SPLATCONTROLMAP
+		&& type != IMGTYPE_NORMAL 
+		&& type != IMGTYPE_SPECULAR 
+		/*&& type != IMGTYPE_SUBSURFACE*/ 
+		&& type != IMGTYPE_OVERLAY 
+		&& type != IMGTYPE_STEEPMAP 
+		&& type != IMGTYPE_STEEPMAP2 
+		&& type != IMGTYPE_SPLATMAP1 
+		&& type != IMGTYPE_SPLATMAP2 
+		&& type != IMGTYPE_SPLATMAP3 
+		&& type != IMGTYPE_SPLATMAP4 
+		&& type != IMGTYPE_SPLATCONTROLMAP
+		&& type != IMGTYPE_DETAILMAP
 		&& !(flags & IMGFLAG_CUBEMAP))
 	{
 		if (image && r_textureClean->integer)

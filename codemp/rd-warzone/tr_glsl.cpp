@@ -1281,6 +1281,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_SplatNormalMap2", GLSL_INT, 1 },
 	{ "u_SplatNormalMap3", GLSL_INT, 1 },
 	{ "u_SplatNormalMap4", GLSL_INT, 1 },
+	{ "u_DetailMap", GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
 	{ "u_ScreenDepthMap", GLSL_INT, 1 },
@@ -3918,6 +3919,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)

@@ -5027,6 +5027,46 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP4].image[1] = NULL;
 			}
 		}
+
+		{
+			// Detail Map
+			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+			char splatName[MAX_QPATH];
+			char splatName2[MAX_QPATH];
+			image_t *splatImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+			COM_StripExtension(diffuseImg->imgName, splatName, sizeof(splatName));
+			StripCrap(splatName, splatName2, sizeof(splatName));
+			Q_strcat(splatName2, sizeof(splatName2), "_detail");
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+			if (R_TextureFileExists(splatName2))
+			{
+				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_DETAILMAP, specularFlags);
+			}
+			else
+			{
+				splatImg = NULL;
+			}
+#else //!__DEFERRED_IMAGE_LOADING__
+			splatImg = R_FindImageFile(splatName2, IMGTYPE_DETAILMAP, specularFlags);
+#endif //__DEFERRED_IMAGE_LOADING__
+
+			if (splatImg)
+			{
+				diffuse->bundle[TB_DETAILMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_DETAILMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_DETAILMAP].image[0] = splatImg;
+			}
+			else
+			{
+				diffuse->bundle[TB_DETAILMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_DETAILMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_DETAILMAP].image[0] = NULL;
+			}
+		}
 	}
 
 	if (tcgen || diffuse->bundle[0].numTexMods)

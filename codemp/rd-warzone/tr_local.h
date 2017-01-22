@@ -524,6 +524,7 @@ typedef enum
 	IMGTYPE_SPLATMAP2,
 	IMGTYPE_SPLATMAP3,
 	IMGTYPE_SPLATMAP4,
+	IMGTYPE_DETAILMAP,
 } imgType_t;
 
 typedef enum
@@ -931,7 +932,8 @@ enum
 	TB_SPLATNORMALMAP2	= 25,
 	TB_SPLATNORMALMAP3	= 26,
 	TB_SPLATNORMALMAP4	= 27,
-	NUM_TEXTURE_BUNDLES = 28
+	TB_DETAILMAP		= 28,
+	NUM_TEXTURE_BUNDLES = 29
 };
 
 typedef enum
@@ -1377,6 +1379,7 @@ typedef enum
 	UNIFORM_SPLATNORMALMAP2,
 	UNIFORM_SPLATNORMALMAP3,
 	UNIFORM_SPLATNORMALMAP4,
+	UNIFORM_DETAILMAP,
 
 	UNIFORM_SCREENIMAGEMAP,
 	UNIFORM_SCREENDEPTHMAP,
@@ -2409,6 +2412,7 @@ typedef struct trGlobals_s {
 	image_t					*random2KImage[2];
 	image_t					*defaultSplatControlImage;
 	image_t					*defaultGrassMapImage;
+	image_t					*defaultDetail;
 	
 	image_t					*waterFoamImage;
 	image_t					*waterHeightImage;
@@ -3905,6 +3909,8 @@ void C_LevelLoadEnd( void );
 void RB_SurfaceGhoul( CRenderableSurface *surf );
 
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage );
+
+qboolean R_TextureFileExists(char *name);
 
 /*
 ============================================================

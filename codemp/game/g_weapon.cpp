@@ -2011,7 +2011,7 @@ void rocketThink(gentity_t *ent)
 	vec3_t	org;
 	float dot, dot2, dis;
 	int i;
-	float vel = (ent->spawnflags & 1) ? ent->speed : weaponData[ent->client->ps.weapon].accuracy;
+	float vel = (ent->spawnflags & 1) ? ent->speed : weaponData[ent->s.weapon].accuracy;
 
 	if (ent->genericValue1 && ent->genericValue1 < level.time)
 	{//time's up, we're done, remove us

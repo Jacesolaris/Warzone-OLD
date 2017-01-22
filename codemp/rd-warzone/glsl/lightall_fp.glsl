@@ -14,6 +14,7 @@ uniform sampler2D			u_SplatNormalMap1;
 uniform sampler2D			u_SplatNormalMap2;
 uniform sampler2D			u_SplatNormalMap3;
 uniform sampler2D			u_SplatNormalMap4;
+uniform sampler2D			u_DetailMap;
 
 uniform sampler2D			u_LightMap;
 
@@ -194,6 +195,30 @@ vec4 ConvertToNormals ( vec4 color )
 	return norm;
 }
 
+
+// Used on everything...
+const float detailRepeatFine = 64.0;//32.0;//7.5;
+
+#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+const float detailRepeatTerrain1 = 2.5;
+const float detailRepeatTerrain2 = 7.5;
+#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+   
+void AddDetail(inout vec4 color, in vec2 tc)
+{
+	// Add fine detail to everything...
+    vec3 detail = texture(u_DetailMap, tc * detailRepeatFine).rgb;
+    color.rgb *= detail * 2.0;
+#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+	// Add a much less fine detail over terrains to help hide texture repetition...
+	detail = texture(u_DetailMap, tc * detailRepeatTerrain1).rgb;
+    color.rgb *= detail * 2.0;
+	// And a second, even less fine pass...
+	detail = texture(u_DetailMap, tc * detailRepeatTerrain2).rgb;
+    color.rgb *= detail * 2.0;
+#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+}
+
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 vec4 GetControlMap( sampler2D tex, float scale)
 {
@@ -218,24 +243,10 @@ float region3max = 0.85;
 float region4min = 0.85;
 float region4max = 1.0;
 
-/*
-float region5min = 1.2;
-float region5max = 1.5;
-
-float region6min = 1.5;
-float region6max = 1.8;
-
-float region7min = 1.8;
-float region7max = 2.1;
-*/
-
 #define region1ColorMap u_DiffuseMap
 #define region2ColorMap u_SplatMap1
 #define region3ColorMap u_SplatMap2
 #define region4ColorMap u_SplatMap3
-/*#define region5ColorMap u_SplatMap4
-#define region6ColorMap u_SteepMap
-#define region7ColorMap u_SteepMap2*/
 
 vec4 GenerateTerrainMap(vec2 coord)
 {
@@ -287,41 +298,6 @@ vec4 GenerateTerrainMap(vec2 coord)
 		terrainColor += regionWeight * texture2D(region4ColorMap, coord);
 	else
 		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-	/*
-	// Terrain region 5.
-	regionMin = region5min;
-	regionMax = region5max;
-	regionRange = regionMax - regionMin;
-	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-	regionWeight = max(0.0, regionWeight);
-	if (u_Local7.a > 0.0)
-		terrainColor += regionWeight * texture2D(region5ColorMap, coord);
-	else
-		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-	// Terrain region 6.
-	regionMin = region6min;
-	regionMax = region6max;
-	regionRange = regionMax - regionMin;
-	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-	regionWeight = max(0.0, regionWeight);
-	if (u_Local5.a > 0.0)
-		terrainColor += regionWeight * texture2D(region6ColorMap, coord);
-	else
-		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-	// Terrain region 7.
-	regionMin = region7min;
-	regionMax = region7max;
-	regionRange = regionMax - regionMin;
-	regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-	regionWeight = max(0.0, regionWeight);
-	if (u_Local6.g > 0.0)
-		terrainColor += regionWeight * texture2D(region7ColorMap, coord);
-	else
-		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-	*/
 
     return terrainColor;
 }
@@ -634,70 +610,6 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
 
-
-
-float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower)
-{
-    vec3 halfAngle = normalize(normalVec + lightVec);
-    return pow(clamp(dot(normalVec,halfAngle),0.0,1.0),specPower);
-}
-
-//---------------------------------------------------------------------------------------------
-// Normal Blending Techniques
-//---------------------------------------------------------------------------------------------
-
-// RNM
-vec3 NormalBlend_RNM(vec3 n1, vec3 n2)
-{
-    // Unpack (see article on why it's not just n*2-1)
-	n1 = n1*vec3( 2,  2, 2) + vec3(-1, -1,  0);
-    n2 = n2*vec3(-2, -2, 2) + vec3( 1,  1, -1);
-
-    // Blend
-    return n1*dot(n1, n2)/n1.z - n2;
-}
-
-// Linear Blending
-vec3 NormalBlend_Linear(vec3 n1, vec3 n2)
-{
-    // Unpack
-	n1 = n1*2.0 - 1.0;
-    n2 = n2*2.0 - 1.0;
-
-	return normalize(n1 + n2);
-}
-
-#define TECHNIQUE_RNM 				 0
-#define TECHNIQUE_Linear		     1
-
-// Combine normals
-vec3 CombineNormal(vec3 n1, vec3 n2, int technique)
-{
- 	if (technique == TECHNIQUE_RNM)
-        return NormalBlend_RNM(n1, n2);
-    else
-        return NormalBlend_Linear(n1, n2);
-}
-
-mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
-{
-	// get edge vectors of the pixel triangle
-	vec3 dp1 = dFdx( p );
-	vec3 dp2 = dFdy( p );
-	vec2 duv1 = dFdx( uv );
-	vec2 duv2 = dFdy( uv );
-
-	// solve the linear system
-	vec3 dp2perp = cross( dp2, N );
-	vec3 dp1perp = cross( N, dp1 );
-	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
-
-	// construct a scale-invariant frame
-	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-	return mat3( T * invmax, B * invmax, N );
-}
-
 void main()
 {
 	vec3 viewDir = vec3(0.0), lightColor = vec3(0.0), ambientColor = vec3(0.0);
@@ -756,9 +668,6 @@ void main()
 	#endif //!defined(USE_GLOW_BUFFER)
 
 	viewDir = u_ViewOrigin.xyz - m_vertPos.xyz;
-
-	//mat3 tangentToWorld = mat3(normalize(var_Tangent.xyz), normalize(var_Bitangent.xyz), normalize(m_Normal.xyz));
-	//mat3 tangentToWorld = cotangent_frame(normalize(m_Normal.xyz), -viewDir, texCoords.xy);
 
 	E = normalize(viewDir);
 
@@ -861,18 +770,11 @@ void main()
 	#endif
 
 
-	/*
-	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
-
-		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
-		float shadowValue = texture(u_ShadowMap, shadowTex).r;
-
-	#endif //defined(USE_SHADOWMAP)
-	*/
-
-
-
 	//vec4 norm = vec4(m_Normal.xyz, 0.0);
+
+
+	AddDetail(diffuse, texCoords);
+
 
 	vec4 norm;
 
@@ -895,41 +797,6 @@ void main()
 	//N.z = sqrt(1.0 - dot(N.xy, N.xy));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
 	//N = normalize(tangentToWorld * N);
-
-#if 0
-	if (u_Local9.r >= 1)
-	{
-		if (u_Local9.r == 1)
-			gl_FragColor = vec4(N.xyz * 0.5 + 0.5, 1.0);
-		else if (u_Local9.r == 2)
-			gl_FragColor = vec4(diffuse.rgb, 1.0);
-		else if (u_Local9.r == 3)
-			gl_FragColor = vec4(diffuse);
-		else if (u_Local9.r == 4)
-			gl_FragColor = vec4(var_Tangent.xyz * 0.5 + 0.5, 1.0);
-		else if (u_Local9.r == 5)
-			gl_FragColor = vec4(var_Bitangent.xyz * 0.5 + 0.5, 1.0);
-		else if (u_Local9.r == 6)
-			gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
-		//gl_FragColor = vec4(N.a, N.a, N.a, 1.0);
-
-#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-#else
-		out_Glow = vec4(0.0);
-#endif
-
-		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-		out_Position = vec4(m_vertPos, u_Local1.a);/// MATERIAL_LAST);
-		return;
-	}
-#endif
-
-	/*if (diffuse.a <= 0.0)
-	{
-		discard; // no point going further??!?!?!
-	}*/
-
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
@@ -990,29 +857,9 @@ void main()
 		}
 	#endif
 
-	/*
-	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
-		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
-		gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
-	#endif //defined(USE_SHADOWMAP)
-	*/
 
 	gl_FragColor.rgb *= lightColor;
 
-	#if 0
-		gl_FragColor = vec4(N.xyz, 1.0);
-		//gl_FragColor = vec4(N.a, N.a, N.a, 1.0);
-
-		#if defined(USE_GLOW_BUFFER)
-			out_Glow = gl_FragColor;
-		#else
-			out_Glow = vec4(0.0);
-		#endif
-
-		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
-		return;
-	#endif
 
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;

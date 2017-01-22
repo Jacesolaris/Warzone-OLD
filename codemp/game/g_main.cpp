@@ -3628,7 +3628,8 @@ std::thread *ai_thread1 = NULL;
 std::thread *ai_thread2 = NULL;
 std::thread *ai_thread3 = NULL;
 std::thread *ai_thread4 = NULL;
-std::mutex active_ents_mutex;
+
+std::mutex active_thread_mutex[4];
 
 qboolean ai_shutdown1 = qfalse;
 qboolean ai_shutdown2 = qfalse;
@@ -3645,6 +3646,9 @@ int ai_next_think2 = 0;
 int ai_next_think3 = 0;
 int ai_next_think4 = 0;
 
+int AI_THREAD_ENTITIES_START[4] = { -1 };
+int AI_THREAD_ENTITIES_END[4] = { -1 };
+
 #define AI_THINK_TIME 50
 
 void AI_ThinkThread1(void)
@@ -3659,10 +3663,12 @@ void AI_ThinkThread1(void)
 				break;
 		}
 
+		active_thread_mutex[0].lock();
+
 		if (ai_shutdown1)
 			break;
 
-		for (int aEnt = 0; aEnt < ACTIVE_NPCS_NUM && aEnt < 128; aEnt++)
+		for (int aEnt = AI_THREAD_ENTITIES_START[0]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[0]; aEnt++)
 		{
 			int i = ACTIVE_NPCS[aEnt];
 
@@ -3675,16 +3681,22 @@ void AI_ThinkThread1(void)
 
 			// turn off any expired powerups
 			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client->ps.powerups[j] < level.time) {
+				if (ent->client && ent->client->ps.powerups[j] < level.time) {
 					ent->client->ps.powerups[j] = 0;
 				}
 			}
 
-			JKG_DoPlayerDamageEffects(ent);
-			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+
+			if (ent->client)
+			{
+				JKG_DoPlayerDamageEffects(ent);
+				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			}
 		}
+
+		active_thread_mutex[0].unlock();
 
 		ai_next_think1 = level.time + AI_THINK_TIME;
 	}
@@ -3708,7 +3720,9 @@ void AI_ThinkThread2(void)
 		if (ai_shutdown2)
 			break;
 
-		for (int aEnt = 128; aEnt < ACTIVE_NPCS_NUM && aEnt < 256; aEnt++)
+		active_thread_mutex[1].lock();
+
+		for (int aEnt = AI_THREAD_ENTITIES_START[1]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[1]; aEnt++)
 		{
 			int i = ACTIVE_NPCS[aEnt];
 
@@ -3721,16 +3735,22 @@ void AI_ThinkThread2(void)
 
 			// turn off any expired powerups
 			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client->ps.powerups[j] < level.time) {
+				if (ent->client && ent->client->ps.powerups[j] < level.time) {
 					ent->client->ps.powerups[j] = 0;
 				}
 			}
 
-			JKG_DoPlayerDamageEffects(ent);
-			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+
+			if (ent->client)
+			{
+				JKG_DoPlayerDamageEffects(ent);
+				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			}
 		}
+
+		active_thread_mutex[1].unlock();
 
 		ai_next_think2 = level.time + AI_THINK_TIME;
 	}
@@ -3754,7 +3774,9 @@ void AI_ThinkThread3(void)
 		if (ai_shutdown3)
 			break;
 
-		for (int aEnt = 256; aEnt < ACTIVE_NPCS_NUM && aEnt < 384; aEnt++)
+		active_thread_mutex[2].lock();
+
+		for (int aEnt = AI_THREAD_ENTITIES_START[2]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[2]; aEnt++)
 		{
 			int i = ACTIVE_NPCS[aEnt];
 
@@ -3767,16 +3789,22 @@ void AI_ThinkThread3(void)
 
 			// turn off any expired powerups
 			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client->ps.powerups[j] < level.time) {
+				if (ent->client && ent->client->ps.powerups[j] < level.time) {
 					ent->client->ps.powerups[j] = 0;
 				}
 			}
 
-			JKG_DoPlayerDamageEffects(ent);
-			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+
+			if (ent->client)
+			{
+				JKG_DoPlayerDamageEffects(ent);
+				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			}
 		}
+
+		active_thread_mutex[2].unlock();
 
 		ai_next_think3 = level.time + AI_THINK_TIME;
 	}
@@ -3800,7 +3828,9 @@ void AI_ThinkThread4(void)
 		if (ai_shutdown4)
 			break;
 
-		for (int aEnt = 512; aEnt < ACTIVE_NPCS_NUM; aEnt++)
+		active_thread_mutex[3].lock();
+
+		for (int aEnt = AI_THREAD_ENTITIES_START[3]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[3]; aEnt++)
 		{
 			int i = ACTIVE_NPCS[aEnt];
 
@@ -3813,16 +3843,21 @@ void AI_ThinkThread4(void)
 
 			// turn off any expired powerups
 			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client->ps.powerups[j] < level.time) {
+				if (ent->client && ent->client->ps.powerups[j] < level.time) {
 					ent->client->ps.powerups[j] = 0;
 				}
 			}
 
-			JKG_DoPlayerDamageEffects(ent);
-			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			if (ent->client)
+			{
+				JKG_DoPlayerDamageEffects(ent);
+				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			}
 		}
+
+		active_thread_mutex[3].unlock();
 
 		ai_next_think4 = level.time + AI_THINK_TIME;
 	}
@@ -3998,7 +4033,11 @@ void G_RunFrame( int levelTime ) {
 	FRAME_TIME = trap->Milliseconds();
 
 #ifdef __NPC_DYNAMIC_THREADS__
-	active_ents_mutex.lock();
+	active_thread_mutex[0].lock();
+	active_thread_mutex[1].lock();
+	active_thread_mutex[2].lock();
+	active_thread_mutex[3].lock();
+
 	ACTIVE_NPCS_NUM = 0;
 #endif //__NPC_DYNAMIC_THREADS__
 	ACTIVE_ENTS_NUM = 0;
@@ -4085,7 +4124,10 @@ void G_RunFrame( int levelTime ) {
 	// if we are waiting for the level to restart, do nothing
 	if ( level.restarted ) {
 #ifdef __NPC_DYNAMIC_THREADS__
-		active_ents_mutex.unlock();
+		active_thread_mutex[0].unlock();
+		active_thread_mutex[1].unlock();
+		active_thread_mutex[2].unlock();
+		active_thread_mutex[3].unlock();
 #endif //__NPC_DYNAMIC_THREADS__
 		return;
 	}
@@ -4214,7 +4256,20 @@ void G_RunFrame( int levelTime ) {
 	}
 
 #ifdef __NPC_DYNAMIC_THREADS__
-	active_ents_mutex.unlock();
+	int NUM_ENTS_PER_THREAD = ACTIVE_NPCS_NUM / 4;
+	AI_THREAD_ENTITIES_START[0] = 0;
+	AI_THREAD_ENTITIES_END[0] = NUM_ENTS_PER_THREAD;
+	AI_THREAD_ENTITIES_START[1] = NUM_ENTS_PER_THREAD;
+	AI_THREAD_ENTITIES_END[1] = NUM_ENTS_PER_THREAD * 2;
+	AI_THREAD_ENTITIES_START[2] = NUM_ENTS_PER_THREAD * 2;
+	AI_THREAD_ENTITIES_END[2] = NUM_ENTS_PER_THREAD * 3;
+	AI_THREAD_ENTITIES_START[3] = NUM_ENTS_PER_THREAD * 3;
+	AI_THREAD_ENTITIES_END[3] = ACTIVE_NPCS_NUM;
+	active_thread_mutex[0].unlock();
+	active_thread_mutex[1].unlock();
+	active_thread_mutex[2].unlock();
+	active_thread_mutex[3].unlock();
+
 	AI_Theads();
 #endif //__NPC_DYNAMIC_THREADS__
 

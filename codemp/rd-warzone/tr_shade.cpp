@@ -2035,6 +2035,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{// Load the actual image file...
 			pStage->bundle[TB_SPLATMAP4].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP4].image[0]);
 		}
+
+		if (pStage->bundle[TB_DETAILMAP].image[0]
+			&& pStage->bundle[TB_DETAILMAP].image[0]->deferredLoad)
+		{// Load the actual image file...
+			pStage->bundle[TB_DETAILMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_DETAILMAP].image[0]);
+		}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
@@ -2511,6 +2517,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
+			if (pStage->bundle[TB_DETAILMAP].image[0])
+			{
+				GL_BindToTMU(pStage->bundle[TB_DETAILMAP].image[0], TB_DETAILMAP);
+			}
+			else
+			{
+				GL_BindToTMU(tr.defaultDetail, TB_DETAILMAP);
+			}
+
 			if (pStage->bundle[TB_STEEPMAP].image[0])
 			{
 				//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
