@@ -691,8 +691,9 @@ void G_InitGentity( gentity_t *e ) {
 	e->s.number = e - g_entities;
 	e->r.ownerNum = ENTITYNUM_NONE;
 	e->s.modelGhoul2 = 0; //assume not
-
+#ifndef __NO_ICARUS__
 	trap->ICARUS_FreeEnt( (sharedEntity_t *)e );	//ICARUS information must be added after this point
+#endif //__NO_ICARUS__
 }
 
 //give us some decent info on all the active ents -rww
@@ -954,7 +955,9 @@ void G_FreeEntity( gentity_t *ed ) {
 
 	trap->UnlinkEntity ((sharedEntity_t *)ed);		// unlink from world
 
+#ifndef __NO_ICARUS__
 	trap->ICARUS_FreeEnt( (sharedEntity_t *)ed );	//ICARUS information must be added after this point
+#endif //__NO_ICARUS__
 
 	if ( ed->neverFree ) {
 		return;

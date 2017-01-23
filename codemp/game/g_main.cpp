@@ -973,7 +973,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 //	Com_Printf("------ ICARUS Initialization ------\n");
 
+#ifndef __NO_ICARUS__
 	trap->ICARUS_Init();
+#endif //__NO_ICARUS__
 
 //	Com_Printf ("-----------------------------------\n");
 
@@ -1191,8 +1193,10 @@ void G_ShutdownGame( int restart ) {
 		precachedKyle = NULL;
 	}
 
+#ifndef __NO_ICARUS__
 //	Com_Printf ("... ICARUS_Shutdown\n");
 	trap->ICARUS_Shutdown ();	//Shut ICARUS down
+#endif //__NO_ICARUS__
 
 //	Com_Printf ("... Reference Tags Cleared\n");
 	TAG_Init();	//Clear the reference tags
@@ -3559,10 +3563,17 @@ void G_RunThink (gentity_t *ent, qboolean calledFromAIThread) {
 	ent->think (ent);
 
 runicarus:
+#ifndef __NO_ICARUS__
 	if (ent->inuse)
 	{
 		trap->ICARUS_MaintainTaskManager(ent->s.number);
 	}
+#else //__NO_ICARUS__
+	if (ent->inuse)
+	{
+
+	}
+#endif //__NO_ICARUS__
 }
 
 int g_LastFrameTime = 0;
@@ -4516,7 +4527,9 @@ void G_RunFrame( int levelTime ) {
 				NAV_FindPlayerWaypoint(i);
 			}
 
+#ifndef __NO_ICARUS__
 			trap->ICARUS_MaintainTaskManager(ent->s.number);
+#endif //__NO_ICARUS__
 
 			G_RunClient( ent );
 			continue;

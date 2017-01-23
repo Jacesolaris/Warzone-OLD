@@ -2422,6 +2422,7 @@ void ClientThink_real( gentity_t *ent ) {
 		ent->client->ps.forceHandExtend = HANDEXTEND_WEAPONREADY;
 	}
 
+#if 0 // UQ1: Fuck this. Ucmdmovefordir handles this crap...
 	if (ent->NPC && ent->s.NPC_class != CLASS_VEHICLE) //vehicles manage their own speed
 	{
 		//FIXME: swoop should keep turning (and moving forward?) for a little bit?
@@ -2583,7 +2584,9 @@ void ClientThink_real( gentity_t *ent ) {
 		}
 		client->ps.basespeed = client->ps.speed;
 	}
-	else if (!client->ps.m_iVehicleNum &&
+	else 
+#endif
+	if (!client->ps.m_iVehicleNum &&
 		(!ent->NPC || ent->s.NPC_class != CLASS_VEHICLE)) //if riding a vehicle it will manage our speed and such
 	{
 		// set speed

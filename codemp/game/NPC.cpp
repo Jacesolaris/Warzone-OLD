@@ -256,11 +256,13 @@ void NPC_RemoveBody( gentity_t *self )
 
 	self->nextthink = level.time + FRAMETIME;
 
+#ifndef __NO_ICARUS__
 	if ( self->NPC->nextBStateThink <= level.time )
 	{
 		trap->ICARUS_MaintainTaskManager(self->s.number);
 	}
 	self->NPC->nextBStateThink = level.time + FRAMETIME;
+#endif //__NO_ICARUS__
 
 	if ( self->message )
 	{//I still have a key
@@ -282,8 +284,10 @@ void NPC_RemoveBody( gentity_t *self )
 		|| self->client->NPC_class == CLASS_INTERROGATOR
 		|| self->client->NPC_class == CLASS_MARK2 )
 	{
+#ifndef __NO_ICARUS__
 		//if ( !self->taskManager || !self->taskManager->IsRunning() )
 		if (!trap->ICARUS_IsRunning(self->s.number))
+#endif //__NO_ICARUS__
 		{
 			if ( !self->activator || !self->activator->client || !(self->activator->client->ps.eFlags2&EF2_HELD_BY_MONSTER) )
 			{//not being held by a Rancor
@@ -341,7 +345,9 @@ void NPC_RemoveBody( gentity_t *self )
 						}
 					}
 
+#ifndef __NO_ICARUS__
 					trap->ICARUS_FreeEnt((sharedEntity_t*)self); // UQ1: This???
+#endif //__NO_ICARUS__
 					self->s.eType = ET_INVISIBLE;
 
 					//G_FreeEntity( self );
@@ -681,7 +687,9 @@ static void DeadThink ( gentity_t *NPC )
 					}
 				}
 
+#ifndef __NO_ICARUS__
 				trap->ICARUS_FreeEnt((sharedEntity_t*)NPC); // UQ1: This???
+#endif //__NO_ICARUS__
 				//G_FreeEntity( NPC );
 
 				NPC->think = G_FreeEntity;
@@ -3476,11 +3484,16 @@ qboolean UQ_MoveDirClear ( gentity_t *aiEnt, int forwardmove, int rightmove, qbo
 qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
 {
 	vec3_t		forward, right;
-	float		fDot, rDot;
 	qboolean	jumping = qfalse;
-	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
-	//vec3_t		faceDir, faceAngles, facePos;
+	float		walkSpeed = 63.0;// 60.5;// 55 * 1.1;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
 	gentity_t	*aiEnt = self;
+
+	/*
+	if (self->s.eType == ET_NPC)
+	{
+		walkSpeed = self->NPC->stats.walkSpeed*1.1;
+	}
+	*/
 
 	if (self->waterlevel > 0 && self->enemy && self->enemy->client && NPC_IsAlive(self, self->enemy))
 	{// When we have a valid enemy, always check water level so we don't drown while attacking them...
@@ -3507,16 +3520,12 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		&& NPC_IsAlive(self, self->enemy)
 		&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) < 96.0)
 	{// Jedi always walk when in combat with saber...
-		//cmd->buttons |= BUTTON_WALKING;
 		walk = qtrue;
-		//walkSpeed = 64.0;
-		walkSpeed = 55 * 1.1;
 	}
-	else if (self->NPC)
+
+	if (walk)
 	{
-		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
-		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
-		walkSpeed = 55 * 1.1;
+		cmd->buttons |= BUTTON_WALKING;
 	}
 
 	if (self->NPC->conversationPartner && self->NPC->conversationPartner->NPC)
@@ -3527,13 +3536,15 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		return qfalse;
 	}
 
-	AngleVectors( self->r.currentAngles, forward, right, NULL );
+	AngleVectors(self->client->ps.viewangles/*self->r.currentAngles*/, forward, right, NULL);
 	
 	cmd->upmove = 0;
 
 	dir[2] = 0;
 	VectorNormalize(dir);
+	forward[2] = 0;
 	VectorNormalize(forward);
+	right[2] = 0;
 	VectorNormalize(right);
 
 #ifdef __NPC_STRAFE__
@@ -3598,69 +3609,31 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
 	VectorCopy( dir, self->client->ps.moveDir );
-	
-	/*
-	if (!self->enemy || !NPC_ValidEnemy(self->enemy))
-	{// Always face the move position...
-		vectoangles(dir, faceAngles);
-		AngleVectors( faceAngles, faceDir, NULL, NULL );
 
-		//flaten up/down
-		faceDir[2] = 0;
-		VectorMA( self->r.currentOrigin, 18, faceDir, facePos);
-		NPC_FacePosition( self, facePos, qfalse );
-	}
-	*/
+	// get direction and non-optimal magnitude
+	float speed = walk ? walkSpeed : 127.0f;
+	float forwardmove = speed * DotProduct(forward, dir);
+	float rightmove = speed * DotProduct(right, dir);
 
-	if (walk)
+	// find optimal magnitude to make speed as high as possible
+	if (Q_fabs(forwardmove) > Q_fabs(rightmove))
 	{
-		fDot = DotProduct( forward, dir ) * walkSpeed;
-		rDot = DotProduct( right, dir ) * walkSpeed;
+		float highestforward = forwardmove < 0 ? -speed : speed;
 
-		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
-		if ( fDot > walkSpeed )
-		{
-			fDot = walkSpeed;
-		}
-		if ( fDot < -walkSpeed )
-		{
-			fDot = -walkSpeed;
-		}
-		if ( rDot > walkSpeed )
-		{
-			rDot = walkSpeed;
-		}
-		if ( rDot < -walkSpeed )
-		{
-			rDot = -walkSpeed;
-		}
+		float highestright = highestforward * rightmove / forwardmove;
+
+		cmd->forwardmove = ClampChar(highestforward);
+		cmd->rightmove = ClampChar(highestright);
 	}
 	else
 	{
-		fDot = DotProduct( forward, dir ) * 127.0f;
-		rDot = DotProduct( right, dir ) * 127.0f;
+		float highestright = rightmove < 0 ? -speed : speed;
 
-		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
-		if ( fDot > 127.0f )
-		{
-			fDot = 127.0f;
-		}
-		if ( fDot < -127.0f )
-		{
-			fDot = -127.0f;
-		}
-		if ( rDot > 127.0f )
-		{
-			rDot = 127.0f;
-		}
-		if ( rDot < -127.0f )
-		{
-			rDot = -127.0f;
-		}
+		float highestforward = highestright * forwardmove / rightmove;
+
+		cmd->forwardmove = ClampChar(highestforward);
+		cmd->rightmove = ClampChar(highestright);
 	}
-
-	cmd->forwardmove = floor(fDot);
-	cmd->rightmove = floor(rDot);
 
 	if (/*trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER*/self->waterlevel > 0)
 	{// Always go to surface...
@@ -3713,10 +3686,15 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
 {
 	vec3_t		forward, right;
-	float		fDot, rDot;
-	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
-	vec3_t		faceDir, faceAngles, facePos;
+	float		walkSpeed = 63.0;// 60.5;// 55 * 1.1;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
 	gentity_t	*aiEnt = self;
+
+	/*
+	if (self->s.eType == ET_NPC)
+	{
+		walkSpeed = self->NPC->stats.walkSpeed*1.1;
+	}
+	*/
 
 	if (self->waterlevel > 0 && self->enemy && self->enemy->client && NPC_IsAlive(self, self->enemy))
 	{// When we have a valid enemy, always check water level so we don't drown while attacking them...
@@ -3743,25 +3721,23 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 		&& NPC_IsAlive(self, self->enemy)
 		&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) < 96.0)
 	{// Jedi always walk when in combat with saber...
-		//cmd->buttons |= BUTTON_WALKING;
 		walk = qtrue;
-		//walkSpeed = 64.0;
-		walkSpeed = 55 * 1.1;
-	}
-	else if (self->NPC)
-	{
-		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
-		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
-		walkSpeed = 55 * 1.1;
 	}
 
-	AngleVectors( self->r.currentAngles, forward, right, NULL );
+	if (walk)
+	{
+		cmd->buttons |= BUTTON_WALKING;
+	}
+
+	AngleVectors(self->client->ps.viewangles/*self->r.currentAngles*/, forward, right, NULL );
 	
 	cmd->upmove = 0;
 
 	dir[2] = 0;
 	VectorNormalize(dir);
+	forward[2] = 0;
 	VectorNormalize(forward);
+	right[2] = 0;
 	VectorNormalize(right);
 
 	if (self->beStillTime > level.time)
@@ -3775,7 +3751,7 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
 	VectorCopy( dir, self->client->ps.moveDir );
 
-	if (!self->enemy || !NPC_ValidEnemy(aiEnt, self->enemy))
+	/*if (!self->enemy || !NPC_ValidEnemy(aiEnt, self->enemy))
 	{// Always face the move position...
 		vectoangles(dir, faceAngles);
 		AngleVectors( faceAngles, faceDir, NULL, NULL );
@@ -3784,59 +3760,40 @@ qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_
 		faceDir[2] = 0;
 		VectorMA( self->r.currentOrigin, 18, faceDir, facePos);
 		NPC_FacePosition(aiEnt, facePos, qfalse );
-	}
+	}*/
 
-	if (walk)
+	AngleVectors(self->client->ps.viewangles, forward, right, nullptr);
+	forward[2] = 0;
+	VectorNormalize(forward);
+	right[2] = 0;
+	VectorNormalize(right);
+
+	// get direction and non-optimal magnitude
+	float speed = walk ? walkSpeed : 127.0f;
+	float forwardmove = speed * DotProduct(forward, dir);
+	float rightmove = speed * DotProduct(right, dir);
+
+	// find optimal magnitude to make speed as high as possible
+	if (Q_fabs(forwardmove) > Q_fabs(rightmove))
 	{
-		fDot = DotProduct( forward, dir ) * walkSpeed;
-		rDot = DotProduct( right, dir ) * walkSpeed;
+		float highestforward = forwardmove < 0 ? -speed : speed;
 
-		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
-		if ( fDot > walkSpeed )
-		{
-			fDot = walkSpeed;
-		}
-		if ( fDot < -walkSpeed )
-		{
-			fDot = -walkSpeed;
-		}
-		if ( rDot > walkSpeed )
-		{
-			rDot = walkSpeed;
-		}
-		if ( rDot < -walkSpeed )
-		{
-			rDot = -walkSpeed;
-		}
+		float highestright = highestforward * rightmove / forwardmove;
+
+		cmd->forwardmove = ClampChar(highestforward);
+		cmd->rightmove = ClampChar(highestright);
 	}
 	else
 	{
-		fDot = DotProduct( forward, dir ) * 127.0f;
-		rDot = DotProduct( right, dir ) * 127.0f;
+		float highestright = rightmove < 0 ? -speed : speed;
 
-		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
-		if ( fDot > 127.0f )
-		{
-			fDot = 127.0f;
-		}
-		if ( fDot < -127.0f )
-		{
-			fDot = -127.0f;
-		}
-		if ( rDot > 127.0f )
-		{
-			rDot = 127.0f;
-		}
-		if ( rDot < -127.0f )
-		{
-			rDot = -127.0f;
-		}
+		float highestforward = highestright * forwardmove / rightmove;
+
+		cmd->forwardmove = ClampChar(highestforward);
+		cmd->rightmove = ClampChar(highestright);
 	}
 
-	cmd->forwardmove = floor(fDot);
-	cmd->rightmove = floor(rDot);
-
-	if (trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER)
+	if (/*trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER*/self->waterlevel > 0)
 	{// Always go to surface...
 		cmd->upmove = 127.0;
 	}
@@ -4099,10 +4056,12 @@ void NPC_Think ( gentity_t *self )//, int msec )
 
 		DeadThink(self);
 
+#ifndef __NO_ICARUS__
 		if ( aiEnt->NPC->nextBStateThink <= level.time )
 		{
 			trap->ICARUS_MaintainTaskManager(self->s.number);
 		}
+#endif //__NO_ICARUS__
 
 		if (self->client)
 			VectorCopy(self->r.currentOrigin, self->client->ps.origin);
@@ -4128,7 +4087,9 @@ void NPC_Think ( gentity_t *self )//, int msec )
 		if (self->client->ps.m_iVehicleNum)
 		{//we don't think on our own
 			//well, run scripts, though...
+#ifndef __NO_ICARUS__
 			trap->ICARUS_MaintainTaskManager(self->s.number);
+#endif //__NO_ICARUS__
 			return;
 		}
 		else
@@ -4677,8 +4638,10 @@ void NPC_Think ( gentity_t *self )//, int msec )
 #endif //__LOW_THINK_AI__
 	}
 
+#ifndef __NO_ICARUS__
 	//must update icarus *every* frame because of certain animation completions in the pmove stuff that can leave a 50ms gap between ICARUS animation commands
 	trap->ICARUS_MaintainTaskManager(self->s.number);
+#endif //__NO_ICARUS__
 
 	VectorCopy(self->r.currentOrigin, self->client->ps.origin);
 }

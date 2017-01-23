@@ -990,6 +990,7 @@ void G_SpawnGEntityFromSpawnVars( qboolean inSubBSP ) {
 	}
 
 	//Tag on the ICARUS scripting information only to valid recipients
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_ValidEnt( (sharedEntity_t *)ent ) )
 	{
 		trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
@@ -1002,6 +1003,7 @@ void G_SpawnGEntityFromSpawnVars( qboolean inSubBSP ) {
 			}
 		}
 	}
+#endif //__NO_ICARUS__
 }
 
 /*
@@ -1660,10 +1662,12 @@ void G_SpawnEntitiesFromString( qboolean inSubBSP ) {
 			script_runner->think = scriptrunner_run;
 			script_runner->nextthink = level.time + 100;
 
+#ifndef __NO_ICARUS__
 			if ( script_runner->inuse )
 			{
 				trap->ICARUS_InitEnt( (sharedEntity_t *)script_runner );
 			}
+#endif //__NO_ICARUS__
 		}
 	}
 

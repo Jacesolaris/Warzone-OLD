@@ -324,10 +324,12 @@ qboolean NPC_UpdateAngles ( gentity_t *aiEnt, qboolean doPitch, qboolean doYaw )
 
 	aiEnt->client->pers.cmd.angles[ROLL] = ANGLE2SHORT ( aiEnt->client->ps.viewangles[ROLL] ) - aiEnt->client->ps.delta_angles[ROLL];
 
+#ifndef __NO_ICARUS__
 	if ( exact && trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_ANGLE_FACE ) )
 	{
 		trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_ANGLE_FACE );
 	}
+#endif //__NO_ICARUS__
 	return exact;
 }
 
@@ -634,7 +636,9 @@ qboolean G_ActivateBehavior (gentity_t *self, int bset )
 		{
 			G_DebugPrint( WL_VERBOSE, "%s attempting to run bSet %s (%s)\n", self->targetname, GetStringForID( BSETTable, bset ), bs_name );
 		}
+#ifndef __NO_ICARUS__
 		trap->ICARUS_RunScript( (sharedEntity_t *)self, va( "%s/%s", Q3_SCRIPT_DIR, bs_name ) );
+#endif //__NO_ICARUS__
 	}
 	return qtrue;
 }

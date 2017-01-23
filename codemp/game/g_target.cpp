@@ -787,6 +787,7 @@ void scriptrunner_run (gentity_t *self)
 				return;
 			}
 
+#ifndef __NO_ICARUS__
 			//if ( !self->activator->sequencer || !self->activator->taskManager )
 			if (!trap->ICARUS_IsInitialized(self->s.number))
 			{//Need to be initialized through ICARUS
@@ -809,12 +810,15 @@ void scriptrunner_run (gentity_t *self)
 					return;
 				}
 			}
+#endif //__NO_ICARUS__
 
 			if (developer.integer)
 			{
 				Com_Printf( "target_scriptrunner running %s on activator %s\n", self->behaviorSet[BSET_USE], self->activator->targetname );
 			}
+#ifndef __NO_ICARUS__
 			trap->ICARUS_RunScript( (sharedEntity_t *)self->activator, va( "%s/%s", Q3_SCRIPT_DIR, self->behaviorSet[BSET_USE] ) );
+#endif //__NO_ICARUS__
 		}
 		else
 		{

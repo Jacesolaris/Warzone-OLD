@@ -1225,7 +1225,9 @@ void NPC_BSFace (gentity_t *aiEnt)
 	//Once this is over, it snaps back to what it was facing before- WHY???
 	if( NPC_UpdateAngles (aiEnt, qtrue, qtrue ) )
 	{
+#ifndef __NO_ICARUS__
 		trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_BSTATE );
+#endif //__NO_ICARUS__
 
 		aiEnt->NPC->desiredYaw = aiEnt->client->ps.viewangles[YAW];
 		aiEnt->NPC->desiredPitch = aiEnt->client->ps.viewangles[PITCH];
@@ -1240,7 +1242,9 @@ void NPC_BSPointShoot (gentity_t *aiEnt, qboolean shoot)
 
 	if ( !aiEnt->enemy || !aiEnt->enemy->inuse || (aiEnt->enemy->NPC && aiEnt->enemy->health <= 0) )
 	{//FIXME: should still keep shooting for a second or two after they actually die...
+#ifndef __NO_ICARUS__
 		trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_BSTATE );
+#endif //__NO_ICARUS__
 		goto finished;
 		return;
 	}
@@ -1286,7 +1290,9 @@ void NPC_BSPointShoot (gentity_t *aiEnt, qboolean shoot)
 		//if ( !shoot || !(NPC->svFlags & SVF_LOCKEDENEMY) )
 		if (1)
 		{//If locked_enemy is on, dont complete until it is destroyed...
+#ifndef __NO_ICARUS__
 			trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_BSTATE );
+#endif //__NO_ICARUS__
 			goto finished;
 		}
 	}
@@ -1512,7 +1518,10 @@ void NPC_BSDefault( gentity_t *aiEnt)
 		NPC_CheckGetNewWeapon(aiEnt);
 		if ( aiEnt->client->leader
 			&& aiEnt->NPC->goalEntity == aiEnt->client->leader
-			&& !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
+#ifndef __NO_ICARUS__
+			&& !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) 
+#endif //__NO_ICARUS__
+			)
 		{
 			NPC_ClearGoal(aiEnt);
 		}
@@ -1627,7 +1636,10 @@ void NPC_BSDefault( gentity_t *aiEnt)
 		if ( !aiEnt->enemy
 			&& aiEnt->client->leader
 			&& aiEnt->NPC->goalEntity == aiEnt->client->leader
-			&& !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
+#ifndef __NO_ICARUS__
+			&& !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) 
+#endif //__NO_ICARUS__
+			)
 		{
 			NPC_BSFollowLeader(aiEnt);
 		}

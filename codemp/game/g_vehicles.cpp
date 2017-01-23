@@ -1717,8 +1717,9 @@ static qboolean UpdateRider( Vehicle_t *pVeh, bgEntity_t *pRider, usercmd_t *pUm
 				VectorScale( parent->client->ps.velocity, 0.5f, rider->client->ps.velocity );
 				rider->client->ps.velocity[2] += JUMP_VELOCITY;
 				rider->client->ps.fd.forceJumpZStart = rider->client->ps.origin[2];
-
+#ifndef __NO_ICARUS__
 				if (!trap->ICARUS_TaskIDPending((sharedEntity_t *)rider, TID_CHAN_VOICE))
+#endif //__NO_ICARUS__
 				{
 					G_AddEvent( rider, EV_JUMP, 0 );
 				}

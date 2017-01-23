@@ -1028,7 +1028,9 @@ void DOM_StandardBotAI(bot_state_t *bs, float thinktime)
 	NPC_Think(aiEnt);
 	DOM_FakeNPC_Parse_UCMD(bs, aiEnt);
 
+#ifndef __NO_ICARUS__
 	trap->ICARUS_MaintainTaskManager(aiEnt->s.number);
+#endif //__NO_ICARUS__
 	VectorCopy(aiEnt->r.currentOrigin, aiEnt->client->ps.origin);
 
 	if (aiEnt->client->ps.pm_flags & PMF_DUCKED && aiEnt->r.maxs[2] > aiEnt->client->ps.crouchheight)

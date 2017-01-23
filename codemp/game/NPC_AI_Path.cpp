@@ -1374,11 +1374,11 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 		return qtrue;
 	}
 
-#ifdef __USE_NAVLIB__
 	ucmd->forwardmove = 0;
 	ucmd->rightmove = 0;
 	ucmd->upmove = 0;
 
+#ifdef __USE_NAVLIB__
 	if (G_NavmeshIsLoaded())
 	{
 		qboolean walk = qfalse;
@@ -1885,7 +1885,71 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 
 		if (!UQ1_UcmdMoveForDir( NPC, ucmd, NPC->movedir, walk, gWPArray[NPC->wpCurrent]->origin ))
 		{
-			return qtrue; 
+			if (NPC->bot_strafe_jump_timer > level.time)
+			{
+				ucmd->upmove = 127;
+
+				if (NPC->s.eType == ET_PLAYER)
+				{
+					trap->EA_Jump(NPC->s.number);
+				}
+			}
+			else if (NPC->bot_strafe_left_timer > level.time)
+			{
+				ucmd->rightmove = -127;
+				trap->EA_MoveLeft(NPC->s.number);
+			}
+			else if (NPC->bot_strafe_right_timer > level.time)
+			{
+				ucmd->rightmove = 127;
+				trap->EA_MoveRight(NPC->s.number);
+			}
+
+			if (NPC->last_move_time < level.time - 2000)
+			{
+				ucmd->upmove = 127;
+
+				if (NPC->s.eType == ET_PLAYER)
+				{
+					trap->EA_Jump(NPC->s.number);
+				}
+			}
+		}
+		else if (NPC->bot_strafe_jump_timer > level.time)
+		{
+			ucmd->upmove = 127;
+
+			if (NPC->s.eType == ET_PLAYER)
+			{
+				trap->EA_Jump(NPC->s.number);
+			}
+		}
+		else if (NPC->bot_strafe_left_timer > level.time)
+		{
+			ucmd->rightmove = -127;
+			trap->EA_MoveLeft(NPC->s.number);
+		}
+		else if (NPC->bot_strafe_right_timer > level.time)
+		{
+			ucmd->rightmove = 127;
+			trap->EA_MoveRight(NPC->s.number);
+		}
+
+		if (NPC->last_move_time < level.time - 4000)
+		{
+			NPC_ClearPathData(NPC);
+			NPC_SetNewGoalAndPath(aiEnt);
+			return qfalse;
+		}
+
+		if (NPC->last_move_time < level.time - 2000)
+		{
+			ucmd->upmove = 127;
+
+			if (NPC->s.eType == ET_PLAYER)
+			{
+				trap->EA_Jump(NPC->s.number);
+			}
 		}
 	}
 

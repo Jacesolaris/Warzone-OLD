@@ -133,7 +133,9 @@ void NPC_SetPainEvent( gentity_t *self )
 	//	if( self->client->playerTeam != TEAM_BORG )
 	//	{
 			//if ( !Q3_TaskIDPending( self, TID_CHAN_VOICE ) )
+#ifndef __NO_ICARUS__
 			if (!trap->ICARUS_TaskIDPending((sharedEntity_t *)self, TID_CHAN_VOICE) && self->client)
+#endif //__NO_ICARUS__
 			{
 				//G_AddEvent( self, EV_PAIN, floor((float)self->health/self->max_health*100.0f) );
 				G_AddEvent( self, EV_PAIN, floor((float)self->health/self->client->ps.stats[STAT_MAX_HEALTH]*100.0f) );

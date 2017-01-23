@@ -123,8 +123,11 @@ void NPC_ReachedGoal(gentity_t *aiEnt)
 //MCG - Begin
 	aiEnt->NPC->aiFlags &= ~NPCAI_MOVING;
 	aiEnt->client->pers.cmd.forwardmove = 0;
+
+#ifndef __NO_ICARUS__
 	//Return that the goal was reached
 	trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_MOVE_NAV );
+#endif //__NO_ICARUS__
 //MCG - End
 }
 /*

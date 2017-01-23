@@ -151,10 +151,12 @@ void G_AddPadawanCombatCommentEvent( gentity_t *self, int event, int speakDeboun
 		return;
 	}
 
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_CHAN_VOICE ) )
 	{
 		return;
 	}
+#endif //__NO_ICARUS__
 
 	//FIXME: Also needs to check for teammates. Don't want
 	//		everyone babbling at once
@@ -186,10 +188,12 @@ void G_AddPadawanIdleNoReplyCommentEvent( gentity_t *self, int event, int speakD
 		return;
 	}
 
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_CHAN_VOICE ) )
 	{
 		return;
 	}
+#endif //__NO_ICARUS__
 
 	//FIXME: Also needs to check for teammates. Don't want
 	//		everyone babbling at once
@@ -218,10 +222,12 @@ void G_AddPadawanCommentEvent( gentity_t *self, int event, int speakDebounceTime
 		return;
 	}
 
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_CHAN_VOICE ) )
 	{
 		return;
 	}
+#endif //__NO_ICARUS__
 
 	//FIXME: Also needs to check for teammates. Don't want
 	//		everyone babbling at once

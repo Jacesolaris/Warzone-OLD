@@ -308,7 +308,9 @@ static void ST_HoldPosition(gentity_t *aiEnt)
 	TIMER_Set( aiEnt, "verifyCP", Q_irand( 1000, 3000 ) );//don't look for another one for a few seconds
 	NPC_FreeCombatPoint(aiEnt, aiEnt->NPC->combatPoint, qtrue );
 	//NPCInfo->combatPoint = -1;//???
+#ifndef __NO_ICARUS__
 	if ( !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
+#endif //__NO_ICARUS__
 	{//don't have a script waiting for me to get to my point, okay to stop trying and stand
 		AI_GroupUpdateSquadstates( aiEnt->NPC->group, aiEnt, SQUAD_STAND_AND_SHOOT );
 		aiEnt->NPC->goalEntity = NULL;
@@ -381,7 +383,9 @@ static qboolean ST_Move(gentity_t *aiEnt)
 	//If our move failed, then reset
 	if ( moved == qfalse )
 	{//FIXME: if we're going to a combat point, need to pick a different one
+#ifndef __NO_ICARUS__
 		if ( !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
+#endif //__NO_ICARUS__
 		{//can't transfer movegoal or stop when a script we're running is waiting to complete
 			if ( info.blocker && info.blocker->NPC && aiEnt->NPC->group != NULL && info.blocker->NPC->group == aiEnt->NPC->group )//(NPCInfo->aiFlags&NPCAI_BLOCKED) && NPCInfo->group != NULL )
 			{//dammit, something is in our way
@@ -1245,12 +1249,15 @@ ST_CheckMoveState
 static void ST_CheckMoveState(gentity_t *aiEnt)
 {
 
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
 	{//moving toward a goal that a script is waiting on, so don't stop for anything!
 		move = qtrue;
 	}
 	//See if we're a scout
-	else if ( aiEnt->NPC->squadState == SQUAD_SCOUT )
+	else 
+#endif //__NO_ICARUS__
+	if ( aiEnt->NPC->squadState == SQUAD_SCOUT )
 	{
 		//If we're supposed to stay put, then stand there and fire
 		if ( TIMER_Done( aiEnt, "stick" ) == qfalse )
@@ -1355,8 +1362,11 @@ static void ST_CheckMoveState(gentity_t *aiEnt)
 	if ( ( aiEnt->NPC->goalEntity != aiEnt->enemy ) && ( aiEnt->NPC->goalEntity != NULL ) )
 	{
 		//Did we make it?
-		if ( NAV_HitNavGoal( aiEnt->r.currentOrigin, aiEnt->r.mins, aiEnt->r.maxs, aiEnt->NPC->goalEntity->r.currentOrigin, 16, FlyingCreature( aiEnt ) ) ||
-			( !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) && aiEnt->NPC->squadState == SQUAD_SCOUT && enemyLOS && enemyDist <= 10000 ) )
+		if ( NAV_HitNavGoal( aiEnt->r.currentOrigin, aiEnt->r.mins, aiEnt->r.maxs, aiEnt->NPC->goalEntity->r.currentOrigin, 16, FlyingCreature( aiEnt ) ) 
+#ifndef __NO_ICARUS__
+			|| ( !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) && aiEnt->NPC->squadState == SQUAD_SCOUT && enemyLOS && enemyDist <= 10000 ) 
+#endif //__NO_ICARUS__
+			)
 		{//either hit our navgoal or our navgoal was not a crucial (scripted) one (maybe a combat point) and we're scouting and found our enemy
 			int	newSquadState = SQUAD_STAND_AND_SHOOT;
 			//we got where we wanted to go, set timers based on why we were running
@@ -1632,10 +1642,12 @@ void ST_TransferTimers( gentity_t *self, gentity_t *other )
 
 void ST_TransferMoveGoal( gentity_t *self, gentity_t *other )
 {
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_MOVE_NAV ) )
 	{//can't transfer movegoal when a script we're running is waiting to complete
 		return;
 	}
+#endif //__NO_ICARUS__
 	if ( self->NPC->combatPoint != -1 )
 	{//I've got a combatPoint I'm going to, give it to him
 		self->NPC->lastFailedCombatPoint = other->NPC->combatPoint = self->NPC->combatPoint;
@@ -1794,10 +1806,12 @@ void ST_Commander(gentity_t *aiEnt)
 		{
 			member = &g_entities[group->member[i].number];
 
+#ifndef __NO_ICARUS__
 			if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
 			{//running somewhere that a script requires us to go, don't break from that
 				continue;
 			}
+#endif //__NO_ICARUS__
 			if ( !(aiEnt->NPC->scriptFlags&SCF_CHASE_ENEMIES) )
 			{//not allowed to move on my own
 				continue;
@@ -1916,10 +1930,12 @@ void ST_Commander(gentity_t *aiEnt)
 			continue;
 		}
 
+#ifndef __NO_ICARUS__
 		if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
 		{//running somewhere that a script requires us to go
 			continue;
 		}
+#endif //__NO_ICARUS__
 
 		if ( aiEnt->s.weapon == WP_NONE
 			&& aiEnt->NPC->goalEntity

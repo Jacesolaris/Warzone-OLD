@@ -1264,9 +1264,11 @@ void NPC_Begin (gentity_t *ent)
 		G_UseTargets( spawnPoint, ent );
 	}
 
+#ifndef __NO_ICARUS__
 	//ICARUS include
 	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) ) // UQ1: Already set up for clients it seems...
 		trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
+#endif //__NO_ICARUS__
 
 //==NPC initialization
 	ent->enemy = NULL;
@@ -1323,11 +1325,13 @@ void NPC_Begin (gentity_t *ent)
 	}
 	VectorClear( ent->NPC->lastClearOrigin );
 
+#ifndef __NO_ICARUS__
 	//Run a script if you have one assigned to you
 	if ( G_ActivateBehavior( ent, BSET_SPAWN ) )
 	{
 		trap->ICARUS_MaintainTaskManager(ent->s.number);
 	}
+#endif //__NO_ICARUS__
 
 	VectorCopy( ent->r.currentOrigin, ent->client->renderInfo.eyePoint );
 

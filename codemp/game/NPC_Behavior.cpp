@@ -171,10 +171,12 @@ void NPC_BSAdvanceFight (gentity_t *aiEnt )
 
 	if(!aiEnt->client->pers.cmd.forwardmove && !aiEnt->client->pers.cmd.rightmove)
 	{//We reached our captureGoal
+#ifndef __NO_ICARUS__
 		if(trap->ICARUS_IsInitialized(aiEnt->s.number))
 		{
 			trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_BSTATE );
 		}
+#endif //__NO_ICARUS__
 	}
 }
 
@@ -894,8 +896,11 @@ void NPC_BSJump (gentity_t *aiEnt)
 			aiEnt->NPC->aiFlags &= ~NPCAI_MOVING;
 			aiEnt->client->pers.cmd.forwardmove = 0;
 			aiEnt->flags &= ~FL_NO_KNOCKBACK;
+
+#ifndef __NO_ICARUS__
 			//Return that the goal was reached
 			trap->ICARUS_TaskIDComplete( (sharedEntity_t *)aiEnt, TID_MOVE_NAV );
+#endif //__NO_ICARUS__
 
 			//Or should we keep jumping until reached goal?
 
@@ -1394,8 +1399,11 @@ void NPC_Surrender(gentity_t *aiEnt)
 
 qboolean NPC_CheckSurrender(gentity_t *aiEnt)
 {
-	if ( !trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV )
-		&& aiEnt->client->ps.groundEntityNum != ENTITYNUM_NONE
+	if (
+#ifndef __NO_ICARUS__
+		!trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) &&
+#endif //__NO_ICARUS__
+		aiEnt->client->ps.groundEntityNum != ENTITYNUM_NONE
 		&& !aiEnt->client->ps.weaponTime && !PM_InKnockDown( &aiEnt->client->ps )
 		&& aiEnt->enemy && aiEnt->enemy->client && aiEnt->enemy->enemy == aiEnt && aiEnt->enemy->s.weapon != WP_NONE && aiEnt->enemy->s.weapon != WP_STUN_BATON
 		&& aiEnt->enemy->health > 20 && aiEnt->enemy->painDebounceTime < level.time - 3000 && aiEnt->enemy->client->ps.fd.forcePowerDebounce[FP_SABER_DEFENSE] < level.time - 1000 )
@@ -1614,10 +1622,12 @@ void NPC_StartFlee( gentity_t *aiEnt, gentity_t *enemy, vec3_t dangerPoint, int 
 {
 	int cp = -1;
 
+#ifndef __NO_ICARUS__
 	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)aiEnt, TID_MOVE_NAV ) )
 	{//running somewhere that a script requires us to go, don't interrupt that!
 		return;
 	}
+#endif //__NO_ICARUS__
 
 	//if have a fleescript, run that instead
 	if ( G_ActivateBehavior( aiEnt, BSET_FLEE ) )
