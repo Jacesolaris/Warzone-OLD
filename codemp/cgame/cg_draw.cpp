@@ -3305,6 +3305,10 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 		hcolor[0] = .2f;
 		hcolor[1] = .2f;
 		hcolor[2] = 1;
+	} else if (team == FACTION_WILDLIFE) {
+		hcolor[0] = .4f;
+		hcolor[1] = .4f;
+		hcolor[2] = 0;
 	} else {
 		return;
 	}
@@ -4371,6 +4375,19 @@ void CG_DrawEnemyStatus( void )
 			tclr2[0] = 0.125f;
 			tclr2[1] = 1.0f;
 			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+		}
+		else if (cgs.clientinfo[currentCrosshairEntity].team == FACTION_WILDLIFE)
+		{
+			sprintf(str2, "< Wildlife >");
+			tclr[0] = 1.0f;
+			tclr[1] = 1.0f;
+			tclr[2] = 0.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 1.0f;
+			tclr2[2] = 0.0f;
 			tclr2[3] = 1.0f;
 		}
 		else
@@ -5551,7 +5568,8 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	if ( cg.snap->ps.persistant[PERS_TEAM] != FACTION_EMPIRE 
 		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_REBEL
 		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_MANDALORIAN
-		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_MERC ) {
+		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_MERC
+		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_WILDLIFE) {
 		return y; // Not on any team
 	}
 
@@ -5622,6 +5640,11 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_MERC) {
 		hcolor[0] = 0.125f;
 		hcolor[1] = 0.75f;
+		hcolor[2] = 0.125f;
+		hcolor[3] = 1.0f;
+	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_WILDLIFE) {
+		hcolor[0] = 0.9f;
+		hcolor[1] = 0.9f;
 		hcolor[2] = 0.125f;
 		hcolor[3] = 1.0f;
 	} else { // if ( cg.snap->ps.persistant[PERS_TEAM] == FACTION_REBEL )
@@ -6793,7 +6816,8 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 				else if ( crossEnt->currentState.teamowner == FACTION_EMPIRE
 					|| crossEnt->currentState.teamowner == FACTION_REBEL
 					|| crossEnt->currentState.teamowner == FACTION_MANDALORIAN
-					|| crossEnt->currentState.teamowner == FACTION_MERC)
+					|| crossEnt->currentState.teamowner == FACTION_MERC
+					|| crossEnt->currentState.teamowner == FACTION_WILDLIFE)
 				{
 					if (cgs.gametype < GT_TEAM)
 					{ //not teamplay, just neutral then
@@ -7899,6 +7923,19 @@ void CG_DrawNPCNames( void )
 				sprintf(str2, "< Mandalorian >");
 				tclr[0] = 0.75f;
 				tclr[1] = 0.75f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr[0] = 0.75f;
+				tclr[1] = 0.75f;
+				tclr[2] = 0.125f;
+				tclr2[3] = 1.0f;
+			}
+			else if (cgs.clientinfo[i].team == FACTION_WILDLIFE)
+			{
+				sprintf(str2, "< Wildlife >");
+				tclr[0] = 0.9f;
+				tclr[1] = 0.9f;
 				tclr[2] = 0.125f;
 				tclr[3] = 1.0f;
 
@@ -9259,6 +9296,8 @@ static void CG_DrawTeamVote(void) {
 		cs_offset = 2;
 	else if ( cgs.clientinfo[cg.clientNum].team == FACTION_MERC )
 		cs_offset = 3;
+	else if (cgs.clientinfo[cg.clientNum].team == FACTION_WILDLIFE)
+		cs_offset = 4;
 	else
 		return;
 

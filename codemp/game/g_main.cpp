@@ -1129,6 +1129,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	NPC_LoadSpawnList( va("%s_empire", mapname.string) );
 	NPC_LoadSpawnList( va("%s_mandalorians", mapname.string) );
 	NPC_LoadSpawnList( va("%s_mercenaries", mapname.string) );
+	NPC_LoadSpawnList(va("%s_wildlife", mapname.string));
 
 	JKG_InitDamageSystem();
 

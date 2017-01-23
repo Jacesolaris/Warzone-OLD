@@ -4,8 +4,8 @@
 
 #include "client/client.h" // hi i'm bad
 
-#include "../client/fast_mutex.h"
-#include "../client/tinythread.h"
+#include <thread>
+#include <mutex>
 
 ////////////////////////////////////////////////
 //
@@ -155,7 +155,7 @@ StaticMem_t gNumberString[] = {
 
 qboolean gbMemFreeupOccured = qfalse;
 
-tthread::fast_mutex zmalloc_lock;
+std::mutex zmalloc_lock;
 
 void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iUnusedAlign /* = 4 */)
 {
@@ -289,11 +289,14 @@ void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iU
 //
 void Z_MorphMallocTag( void *pvAddress, memtag_t eDesiredTag )
 {
+	zmalloc_lock.lock();
+
 	zoneHeader_t *pMemory = ((zoneHeader_t *)pvAddress) - 1;
 
 	if (pMemory->iMagic != ZONE_MAGIC)
 	{
 		Com_Error(ERR_FATAL, "Z_MorphMallocTag(): Not a valid zone header!");
+		zmalloc_lock.unlock();
 		return;	// won't get here
 	}
 
@@ -314,6 +317,7 @@ void Z_MorphMallocTag( void *pvAddress, memtag_t eDesiredTag )
 //	TheZone.Stats.iCount	- unchanged
 	TheZone.Stats.iSizesPerTag	[pMemory->eTag] += pMemory->iSize;
 	TheZone.Stats.iCountsPerTag	[pMemory->eTag]++;
+	zmalloc_lock.unlock();
 }
 
 static void Zone_FreeBlock(zoneHeader_t *pMemory)
@@ -389,10 +393,13 @@ void Z_Free(void *pvAddress)
 		return;
 	}
 
+	zmalloc_lock.lock();
+
 	zoneHeader_t *pMemory = ((zoneHeader_t *)pvAddress) - 1;
 
 	if (pMemory->eTag == TAG_STATIC)
 	{
+		zmalloc_lock.unlock();
 		return;
 	}
 
@@ -404,6 +411,7 @@ void Z_Free(void *pvAddress)
 	if (iAllocCount <= 0)
 	{
 		Com_Error(ERR_FATAL, "Z_Free(): Block already-freed, or not allocated through Z_Malloc!");
+		zmalloc_lock.unlock();
 		return;
 	}
 	#endif
@@ -411,15 +419,18 @@ void Z_Free(void *pvAddress)
 	if (pMemory->iMagic != ZONE_MAGIC)
 	{
 		Com_Error(ERR_FATAL, "Z_Free(): Corrupt zone header!");
+		zmalloc_lock.unlock();
 		return;
 	}
 	if (ZoneTailFromHeader(pMemory)->iMagic != ZONE_MAGIC)
 	{
 		Com_Error(ERR_FATAL, "Z_Free(): Corrupt zone tail!");
+		zmalloc_lock.unlock();
 		return;
 	}
 
 	Zone_FreeBlock(pMemory);
+	zmalloc_lock.unlock();
 }
 
 
@@ -432,6 +443,8 @@ int Z_MemSize(memtag_t eTag)
 //
 void Z_TagFree(memtag_t eTag)
 {
+	zmalloc_lock.lock();
+
 //#ifdef _DEBUG
 //	int iZoneBlocks = TheZone.Stats.iCount;
 //#endif
@@ -454,6 +467,8 @@ void Z_TagFree(memtag_t eTag)
 //	int iBlocksFreed = iZoneBlocks - TheZone.Stats.iCount;
 //#pragma warning( default : 4189)
 //#endif
+
+	zmalloc_lock.unlock();
 }
 
 
@@ -465,6 +480,8 @@ void *S_Malloc( int iSize ) {
 #ifdef _DEBUG
 static void Z_MemRecoverTest_f(void)
 {
+	zmalloc_lock.lock();
+
 	// needs to be in _DEBUG only, not good for final game!
 	// fixme: findmeste: Remove this sometime
 	//
@@ -480,6 +497,8 @@ static void Z_MemRecoverTest_f(void)
 	}
 
 	Z_TagFree(TAG_SPECIAL_MEM_TEST);
+
+	zmalloc_lock.unlock();
 }
 #endif
 
@@ -556,8 +575,10 @@ void Com_ShutdownZoneMemory(void)
 
 void Com_InitZoneMemory( void )
 {
+	zmalloc_lock.lock();
 	memset(&TheZone, 0, sizeof(TheZone));
 	TheZone.Header.iMagic = ZONE_MAGIC;
+	zmalloc_lock.unlock();
 }
 
 void Com_InitZoneMemoryVars( void ) {

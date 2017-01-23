@@ -10810,7 +10810,7 @@ JustDoIt:
 		}
 		//[/Movie Sabers]
 
-		if (cg.time > saberTrail->inAction)
+		if (saberTrail && cg.time > saberTrail->inAction)
 		{
 			saberTrail->inAction = cg.time;
 
@@ -19547,6 +19547,11 @@ stillDoSaber:
 			case FACTION_MERC:
 				legs.shaderRGBA[0] = 50;
 				legs.shaderRGBA[1] = 255;
+				legs.shaderRGBA[2] = 50;
+				break;
+			case FACTION_WILDLIFE:
+				legs.shaderRGBA[0] = 210;
+				legs.shaderRGBA[1] = 210;
 				legs.shaderRGBA[2] = 50;
 				break;
 			default:

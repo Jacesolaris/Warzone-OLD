@@ -21,6 +21,7 @@ char *factionNames[FACTION_NUM_FACTIONS] = {
 	"Rebels", // blue
 	"Mandalorians", // orange
 	"Mercenaries", // green
+	"Wildlife", // yellow
 	"Spectator",
 };
 

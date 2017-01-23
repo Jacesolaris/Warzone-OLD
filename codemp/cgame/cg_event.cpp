@@ -781,6 +781,8 @@ const char *CG_TeamName(int team)
 		return "Mandalorian";
 	else if (team==FACTION_MERC)
 		return "Merc";
+	else if (team == FACTION_WILDLIFE)
+		return "Wildlife";
 	else if (team==FACTION_SPECTATOR)
 		return "SPECTATOR";
 	return "FREE";

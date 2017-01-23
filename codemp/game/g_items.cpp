@@ -1141,6 +1141,10 @@ void ItemUse_Seeker(gentity_t *ent)
 			{
 				remote->client->playerTeam = NPCTEAM_NEUTRAL;
 			}
+			else if (ent->client->sess.sessionTeam == FACTION_WILDLIFE)
+			{
+				remote->client->playerTeam = NPCTEAM_NEUTRAL;
+			}
 			else
 			{
 				remote->client->playerTeam = NPCTEAM_NEUTRAL;

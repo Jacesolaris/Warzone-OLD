@@ -2302,6 +2302,8 @@ void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
 {
 	int randAnim = irand(0,10);
 
+	if (!NPC_IsHumanoid(NPC)) return;
+
 	switch (randAnim)
 	{
 	case 0:
@@ -2343,6 +2345,8 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 	if (NPC->s.eType != ET_NPC && NPC->s.eType != ET_PLAYER) return;
 
 	if (NPC->enemy) return; // No idle anims when we got an enemy...
+
+	if (!NPC_IsHumanoid(NPC)) return;
 
 	//VectorClear( NPC->client->ps.velocity );
 	NPC->client->ps.velocity[0] = 0;
@@ -2415,6 +2419,8 @@ qboolean NPC_SelectMoveRunAwayAnimation( gentity_t *aiEnt)
 {
 	int animChoice = irand(0,1);
 
+	if (!NPC_IsHumanoid(aiEnt)) return qfalse;
+
 	if (aiEnt->client->pers.cmd.forwardmove < 0) 
 		NPC_SetAnim( aiEnt, SETANIM_LEGS, BOTH_RUNBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 	else 
@@ -2480,6 +2486,8 @@ qboolean NPC_SetCivilianMoveAnim( gentity_t *aiEnt, qboolean walk )
 
 void NPC_SelectMoveAnimation(gentity_t *aiEnt, qboolean walk)
 {
+	if (!NPC_IsHumanoid(aiEnt)) return;
+
 	if (aiEnt->client->ps.crouchheight <= 0)
 		aiEnt->client->ps.crouchheight = CROUCH_MAXS_2;
 
