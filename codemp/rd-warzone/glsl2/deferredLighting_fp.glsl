@@ -215,7 +215,7 @@ void main(void)
 		float ao = calculateAO(position.xyz, N.xyz);
 
 		ao = clamp(ao * 0.2 + 0.8, 0.0, 1.0);
-		float ao2 = clamp(ao + 0.75, 0.0, 1.0);
+		float ao2 = clamp(ao + 0.85, 0.0, 1.0);
 		ao = (ao + ao2) / 2.0;
 		//ao *= ao;
 		ao = pow(ao, 4.0);

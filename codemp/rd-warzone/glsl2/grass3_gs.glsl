@@ -5,7 +5,7 @@
 //layout(triangles, invocations = 6) in;
 #endif
 
-#define ICR
+//#define ICR
 
 #define MAX_FOLIAGES			100
 #define MAX_FOLIAGES_LOOP		64
@@ -71,7 +71,7 @@ float randZeroOne()
 
 	float fRes = 2.0 - uintBitsToFloat(n);
 	vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-	return fRes;
+	return clamp(fRes, 0.0, 1.0);
 }
 
 int randomInt(int min, int max)
@@ -85,19 +85,29 @@ vec4 randomBarycentricCoordinate() {
 	float R = randZeroOne();
 	float S = randZeroOne();
 
+#if 1
 	if (R + S >= 1) {
 		R = 1 - R;
 		S = 1 - S;
 	}
 
 	return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
+#else
+	vec4 P = vec4(0.0, 0.0, 0.0, 1.0);
+	vec4 A = gl_in[0].gl_Position;
+	vec4 B = gl_in[1].gl_Position;
+	vec4 C = gl_in[2].gl_Position;
+	P.x = (1.0 - sqrt(R)) * A.x + (sqrt(R) * (1.0 - S)) * B.x + (sqrt(R) * S) * C.x;
+	P.y = (1.0 - sqrt(R)) * A.y + (sqrt(R) * (1.0 - S)) * B.y + (sqrt(R) * S) * C.y;
+	return P;
+#endif
 }
 
 vec4 GetControlMap(vec3 m_vertPos)
 {
-	vec4 xaxis = texture2D(u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
-	vec4 yaxis = texture2D(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
-	vec4 zaxis = texture2D(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
+	vec4 xaxis = texture(u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
+	vec4 yaxis = texture(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
+	vec4 zaxis = texture(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
 
 	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
 }
@@ -215,8 +225,8 @@ void main()
 
 	float USE_DENSITY = pow(m, 3.0/*8.0*/);//m*m*m;
 
-	float size = max(max(distance(gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz), distance(gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz)), distance(gl_in[1].gl_Position.xyz, gl_in[2].gl_Position.xyz));
-	float vertSizeScale = clamp(size / 1024.0, 0.0, 1.0);
+	float vsize = max(max(distance(gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz), distance(gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz)), distance(gl_in[1].gl_Position.xyz, gl_in[2].gl_Position.xyz));
+	float vertSizeScale = clamp(vsize / 1024.0, 0.0, 1.0);
 	float densityScale = pow(vertSizeScale, 3.333);
 	vertSizeScale = vertSizeScale * 0.5 + 0.5; // scale down all grass up to 50% on small surfaces...
 
