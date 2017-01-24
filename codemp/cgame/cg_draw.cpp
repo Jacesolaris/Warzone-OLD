@@ -4202,14 +4202,14 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_SWAMP:
 		case CLASS_RANCOR:
 		case CLASS_WAMPA:
-			sprintf(str2, "< Animal >");
+			sprintf(str2, "< Wildlife >");
 			tclr[0] = 1.0f;
-			tclr[1] = 0.125f;
+			tclr[1] = 1.0f;
 			tclr[2] = 0.125f;
 			tclr[3] = 1.0f;
 
 			tclr2[0] = 1.0f;
-			tclr2[1] = 0.125f;
+			tclr2[1] = 1.0f;
 			tclr2[2] = 0.125f;
 			tclr2[3] = 1.0f;
 			break;
@@ -8245,14 +8245,14 @@ void CG_DrawNPCNames( void )
 			case CLASS_SWAMP:
 			case CLASS_RANCOR:
 			case CLASS_WAMPA:
-				sprintf(str2, "< Animal >");
+				sprintf(str2, "< Wildlife >");
 				tclr[0] = 1.0f;
-				tclr[1] = 0.125f;
+				tclr[1] = 1.0f;
 				tclr[2] = 0.125f;
 				tclr[3] = 1.0f;
 
 				tclr2[0] = 1.0f;
-				tclr2[1] = 0.125f;
+				tclr2[1] = 1.0f;
 				tclr2[2] = 0.125f;
 				tclr2[3] = 1.0f;
 				break;
