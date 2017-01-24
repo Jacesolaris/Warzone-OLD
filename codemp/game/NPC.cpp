@@ -2081,50 +2081,55 @@ void NPC_ExecuteBState ( gentity_t *self )//, int msec )
 		}
 	}
 
-	if(!(aiEnt->client->pers.cmd.buttons & BUTTON_ATTACK) && aiEnt->attackDebounceTime > level.time)
-	{//We just shot but aren't still shooting, so hold the gun up for a while
-		if(aiEnt->client->ps.weapon == WP_SABER )
-		{//One-handed
-			NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
-		}
-		else if(aiEnt->client->ps.weapon == WP_BRYAR_PISTOL)
-		{//Sniper pose
-			//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
-			NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);
-		}
-		/*//FIXME: What's the proper solution here?
-		else
-		{//heavy weapon
-			NPC_SetAnim(NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
-		}
-		*/
-		else
-		{//we just shot at someone. Hold weapon in attack anim for now
-			NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
-		}
-	}
-	else if (!TIMER_Done( aiEnt, "attackDelay" ))
+#ifndef __NPCS_USE_BG_ANIMS__
+	if (NPC_IsHumanoid(aiEnt))
 	{
-		if(aiEnt->client->ps.weapon == WP_SABER )
-		{//One-handed
-			NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
+		if (!(aiEnt->client->pers.cmd.buttons & BUTTON_ATTACK) && aiEnt->attackDebounceTime > level.time)
+		{//We just shot but aren't still shooting, so hold the gun up for a while
+			if (aiEnt->client->ps.weapon == WP_SABER)
+			{//One-handed
+				NPC_SetAnim(aiEnt, SETANIM_TORSO, TORSO_WEAPONREADY1, SETANIM_FLAG_NORMAL);
+			}
+			else if (aiEnt->client->ps.weapon == WP_BRYAR_PISTOL)
+			{//Sniper pose
+				//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
+				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);
+			}
+			/*//FIXME: What's the proper solution here?
+			else
+			{//heavy weapon
+				NPC_SetAnim(NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
+			}
+			*/
+			else
+			{//we just shot at someone. Hold weapon in attack anim for now
+				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
+			}
 		}
-		else
-		{//we just shot at someone. Hold weapon in attack anim for now
-			NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
-		}
-	}
-	else if ( !aiEnt->enemy )//HACK!
-	{
-//		if(client->ps.weapon != WP_TRICORDER)
+		else if (!TIMER_Done(aiEnt, "attackDelay"))
 		{
-			if( aiEnt->s.torsoAnim == TORSO_WEAPONREADY1 || aiEnt->s.torsoAnim == TORSO_WEAPONREADY3 )
-			{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-				//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
-				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponReadyAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
+			if (aiEnt->client->ps.weapon == WP_SABER)
+			{//One-handed
+				NPC_SetAnim(aiEnt, SETANIM_TORSO, TORSO_WEAPONREADY1, SETANIM_FLAG_NORMAL);
+			}
+			else
+			{//we just shot at someone. Hold weapon in attack anim for now
+				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
+			}
+		}
+		else if (!aiEnt->enemy)//HACK!
+		{
+			//		if(client->ps.weapon != WP_TRICORDER)
+			{
+				if (aiEnt->s.torsoAnim == TORSO_WEAPONREADY1 || aiEnt->s.torsoAnim == TORSO_WEAPONREADY3)
+				{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+					//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+					NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponReadyAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
+				}
 			}
 		}
 	}
+#endif //__NPCS_USE_BG_ANIMS__
 
 #if 0 // UQ1: This is run in npc_think instead...
 	NPC_CheckAttackHold();
@@ -2300,6 +2305,7 @@ qboolean NPC_IsCivilianHumanoid(gentity_t *NPC)
 
 void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
 {
+#ifndef __NPCS_USE_BG_ANIMS__
 	int randAnim = irand(0,10);
 
 	if (!NPC_IsHumanoid(NPC)) return;
@@ -2334,10 +2340,12 @@ void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
 		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	}
+#endif //__NPCS_USE_BG_ANIMS__
 }
 
 void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 {
+#ifndef __NPCS_USE_BG_ANIMS__
 	int randAnim = 0;
 
 	if (!NPC || !NPC->client) return;
@@ -2413,10 +2421,12 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	}
+#endif //__NPCS_USE_BG_ANIMS__
 }
 
 qboolean NPC_SelectMoveRunAwayAnimation( gentity_t *aiEnt)
 {
+#ifndef __NPCS_USE_BG_ANIMS__
 	int animChoice = irand(0,1);
 
 	if (!NPC_IsHumanoid(aiEnt)) return qfalse;
@@ -2451,10 +2461,14 @@ qboolean NPC_SelectMoveRunAwayAnimation( gentity_t *aiEnt)
 	aiEnt->client->ps.torsoTimer = 200;
 
 	return qtrue;
+#else //__NPCS_USE_BG_ANIMS__
+	return qfalse;
+#endif //__NPCS_USE_BG_ANIMS__
 }
 
 qboolean NPC_SetCivilianMoveAnim( gentity_t *aiEnt, qboolean walk )
 {
+#ifndef __NPCS_USE_BG_ANIMS__
 	if (NPC_IsCivilianHumanoid(aiEnt))
 	{// Set better torso anims when not holding a weapon.
 		if (walk)
@@ -2480,12 +2494,14 @@ qboolean NPC_SetCivilianMoveAnim( gentity_t *aiEnt, qboolean walk )
 		//trap->Print("Civilian %s NPC anim set. Weapon %i.\n", aiEnt->client->modelname, aiEnt->client->ps.weapon);
 		return qtrue;
 	}
+#endif //__NPCS_USE_BG_ANIMS__
 
 	return qfalse;
 }
 
 void NPC_SelectMoveAnimation(gentity_t *aiEnt, qboolean walk)
 {
+#ifndef __NPCS_USE_BG_ANIMS__
 	if (!NPC_IsHumanoid(aiEnt)) return;
 
 	if (aiEnt->client->ps.crouchheight <= 0)
@@ -2657,6 +2673,7 @@ void NPC_SelectMoveAnimation(gentity_t *aiEnt, qboolean walk)
 			NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
 		}
 	}
+#endif //__NPCS_USE_BG_ANIMS__
 }
 
 typedef enum
@@ -3903,26 +3920,31 @@ void NPC_GenericFrameCode ( gentity_t *self )
 		aiEnt->client->ps.weaponstate = WEAPON_IDLE;
 	}
 
-	if (!self->NPC->conversationPartner &&
-		(self->client->ps.weapon > WP_SABER || self->client->ps.weapon == WP_NONE) &&
-		!(aiEnt->s.torsoAnim == TORSO_WEAPONREADY1 || aiEnt->s.torsoAnim == TORSO_WEAPONREADY3))
-	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-		//NPC_SetAnim(aiEnt, SETANIM_TORSO, TORSO_WEAPONIDLE3, SETANIM_FLAG_NORMAL);
-		NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponReadyAnim[aiEnt->s.weapon], 0);
-	}
+#ifndef __NPCS_USE_BG_ANIMS__
+	if (NPC_IsHumanoid(aiEnt))
+	{
+		if (!self->NPC->conversationPartner &&
+			(self->client->ps.weapon > WP_SABER || self->client->ps.weapon == WP_NONE) &&
+			!(aiEnt->s.torsoAnim == TORSO_WEAPONREADY1 || aiEnt->s.torsoAnim == TORSO_WEAPONREADY3))
+		{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+			//NPC_SetAnim(aiEnt, SETANIM_TORSO, TORSO_WEAPONIDLE3, SETANIM_FLAG_NORMAL);
+			NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponReadyAnim[aiEnt->s.weapon], 0);
+		}
 
-	//if(aiEnt->attackDebounceTime > level.time)
-	if (!TIMER_Done( aiEnt, "attackDelay" ))
-	{//We just shot but aren't still shooting, so hold the gun up for a while
-		if(aiEnt->client->ps.weapon == WP_SABER )
-		{//One-handed
-			//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
-		}
-		else
-		{//we just shot at someone. Hold weapon in attack anim for now
-			NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
+		//if(aiEnt->attackDebounceTime > level.time)
+		if (!TIMER_Done(aiEnt, "attackDelay"))
+		{//We just shot but aren't still shooting, so hold the gun up for a while
+			if (aiEnt->client->ps.weapon == WP_SABER)
+			{//One-handed
+				//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
+			}
+			else
+			{//we just shot at someone. Hold weapon in attack anim for now
+				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
+			}
 		}
 	}
+#endif //__NPCS_USE_BG_ANIMS__
 
 	NPC_CheckAttackHold(aiEnt);
 	NPC_ApplyScriptFlags(aiEnt);
@@ -4557,9 +4579,12 @@ void NPC_Think ( gentity_t *self )//, int msec )
 					aiEnt->client->pers.cmd.upmove = 0;
 					aiEnt->client->pers.cmd.buttons = 0;
 
-					if (!aiEnt->NPC->conversationPartner)
-					{// Not chatting with another NPC... Set idle animation...
-						NPC_PickRandomIdleAnimantion(aiEnt);
+					if (NPC_IsHumanoid(aiEnt))
+					{
+						if (!aiEnt->NPC->conversationPartner)
+						{// Not chatting with another NPC... Set idle animation...
+							NPC_PickRandomIdleAnimantion(aiEnt);
+						}
 					}
 
 					NPC_GenericFrameCode( self );
@@ -4788,10 +4813,16 @@ void NPC_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const v
 
 //#define __NEW__
 
+extern stringID_table_t animTable[MAX_ANIMATIONS + 1];
 void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 {	// FIXME : once torsoAnim and legsAnim are in the same structure for NCP and Players
 	// rename PM_SETAnimFinal to PM_SetAnim and have both NCP and Players call PM_SetAnim
 #ifndef __NEW__
+	/*if (ent->s.NPC_class == CLASS_WAMPA)
+	{
+		trap->Print("WAMPA NPC %i set anim %s.\n", ent->s.number, animTable[anim].name);
+	}*/
+
 	G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
 #endif //__NEW__
 

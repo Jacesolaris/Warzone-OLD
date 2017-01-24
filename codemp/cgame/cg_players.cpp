@@ -475,8 +475,6 @@ CG_RegisterClientModelname
 qboolean BG_IsValidCharacterModel(const char *modelName, const char *skinName);
 qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team, float *colors );
 
-#define ___ALLOW_ANY_GLM___
-
 static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelName, const char *skinName, const char *teamName, int clientNum ) {
 	int handle;
 	char		afilename[MAX_QPATH];
@@ -3376,17 +3374,19 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 		anim->firstFrame == 0 &&
 		anim->numFrames == 0)
 	{ //We'll allow this for non-humanoids.
+		//trap->Print("CG_SetLerpFrameAnimation: Non-Humanoid!\n");
 		return;
 	}
 
-	if ( cg_debugAnim.integer && (cg_debugAnim.integer < 0 || cg_debugAnim.integer == cent->currentState.clientNum) ) {
+	if ( cg_debugAnim.integer && (cg_debugAnim.integer < 0 || cg_debugAnim.integer == cent->currentState.clientNum) ) 
+	{
 		if (lf == &cent->pe.legs)
 		{
-			trap->Print( "%d: %d TORSO Anim: %i, '%s'\n", cg.time, cent->currentState.clientNum, newAnimation, GetStringForID(animTable, newAnimation));
+			trap->Print( "%d: %d localAnimIndex: %i, TORSO Anim: %i, '%s', firstFrame %i, numFrames %i\n", cg.time, cent->currentState.clientNum, cent->localAnimIndex, newAnimation, GetStringForID(animTable, newAnimation), anim->firstFrame, anim->numFrames);
 		}
 		else
 		{
-			trap->Print( "%d: %d LEGS Anim: %i, '%s'\n", cg.time, cent->currentState.clientNum, newAnimation, GetStringForID(animTable, newAnimation));
+			trap->Print( "%d: %d localAnimIndex: %i, LEGS Anim: %i, '%s', firstFrame %i, numFrames %i\n", cg.time, cent->currentState.clientNum, cent->localAnimIndex, newAnimation, GetStringForID(animTable, newAnimation), anim->firstFrame, anim->numFrames);
 		}
 	}
 
@@ -3447,7 +3447,10 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 
 		animSpeed *= animSpeedMult;
 
-		BG_SaberStartTransAnim(cent->currentState.number, cent->currentState.fireflag, cent->currentState.weapon, newAnimation, &animSpeed, cent->currentState.brokenLimbs);
+		if (cent->currentState.weapon == WP_SABER)
+		{
+			BG_SaberStartTransAnim(cent->currentState.number, cent->currentState.fireflag, cent->currentState.weapon, newAnimation, &animSpeed, cent->currentState.brokenLimbs);
+		}
 
 
 		if (torsoOnly)
@@ -3473,6 +3476,7 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 		if ( cent->currentState.NPC_class == CLASS_VEHICLE )
 		{
 			trap->G2API_SetBoneAnim(cent->ghoul2, 0, "model_root", firstFrame, lastFrame, flags, animSpeed,cg.time, beginFrame, blendTime);
+			//trap->Print("CG_SetLerpFrameAnimation: Is vehicle!\n");
 			return;
 		}
 
@@ -3506,6 +3510,10 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 			if (ci)
 			{
 				ci->torsoAnim = newAnimation;
+			}
+			else
+			{
+				//trap->Print("CG_SetLerpFrameAnimation: No clientinfo #1!\n");
 			}
 		}
 		else
@@ -3541,6 +3549,10 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 			if (ci)
 			{
 				ci->legsAnim = newAnimation;
+			}
+			else
+			{
+				//trap->Print("CG_SetLerpFrameAnimation: No clientinfo #2!\n");
 			}
 		}
 
@@ -3707,6 +3719,10 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 			}
 		}
 #endif
+	}
+	else
+	{
+		//trap->Print("CG_SetLerpFrameAnimation: No ghoul2!\n");
 	}
 }
 
