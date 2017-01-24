@@ -173,9 +173,6 @@ typedef struct weaponData_s
 	int		altChargeSubTime;	// above for secondary
 
 	int		altChargeSub;		// above for secondary
-
-	int		maxCharge;			// stop subtracting once charged for this many ms
-	int		altMaxCharge;		// above for secondary
 } weaponData_t;
 
 
