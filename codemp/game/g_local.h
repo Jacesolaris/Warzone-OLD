@@ -1799,8 +1799,9 @@ void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
 // NPC.c --- Spawn Groups System...
 //
 
-#define MAX_SPAWNGROUP_FILES 128
-#define MAX_SPAWNS_PER_GROUP 512
+#define MAX_SPAWNGROUP_FILES		128
+#define MAX_SPAWNS_PER_GROUP		512
+#define MAX_NPCS_PER_SPAWNGROUP		4
 
 extern int	spawnGroupTotalNPCS;
 
@@ -1816,7 +1817,7 @@ enum spawnGroupRarity_t {
 };
 
 typedef struct {
-	char					npcNames[4+1][64+1];							// Maximum of 4 npcs per spawn...
+	char					npcNames[MAX_NPCS_PER_SPAWNGROUP+1][64+1];							// Maximum of 4 npcs per spawn...
 	int						npcCount;									// Count of npcs in this spawn...
 } spawnGroup_t;
 

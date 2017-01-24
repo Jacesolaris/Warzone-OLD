@@ -237,6 +237,9 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	}
 	com_errorEntered = qtrue;
 
+	// UQ1: Force crash instead of displaying a message. This way we can debug...
+	abort();
+
 	// when we are running automated scripts, make sure we
 	// know if anything failed
 	if ( com_buildScript && com_buildScript->integer ) {

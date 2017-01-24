@@ -1258,32 +1258,7 @@ void G_CheckMinimumNpcs(void)
 
 	if (min_imperials <= 0 && min_rebels <= 0 && min_mandalorians <= 0 && min_mercs <= 0 && min_wildlife <= 0) return;
 
-	if (min_imperials > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3)
-	{
-		min_imperials = ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3;
-	}
-
-	if (min_rebels > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3)
-	{
-		min_rebels = ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3;
-	}
-
-	if (min_mercs > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3)
-	{
-		min_mercs = ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3;
-	}
-
-	if (min_mandalorians > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3)
-	{
-		min_mandalorians = ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3;
-	}
-
-	if (min_wildlife > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3)
-	{
-		min_wildlife = ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3;
-	}
-
-	if (min_imperials + min_rebels + min_mandalorians + min_mercs + min_wildlife > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS * 3)
+	if (min_imperials + min_rebels + min_mandalorians + min_mercs + min_wildlife > ENTITYNUM_MAX_NORMAL - (MAX_CLIENTS * 3))
 	{
 		min_imperials = 0;
 		min_rebels = 0;
@@ -1301,19 +1276,23 @@ void G_CheckMinimumNpcs(void)
 
 		if (!npc) continue;
 		if (npc->s.eType != ET_NPC) continue;
+		if (!npc->client) continue;
 		if (NPC_IsCivilian(npc)) continue;
 		if (NPC_IsVendor(npc)) continue;
-		if (npc->s.teamowner == FACTION_EMPIRE)
+		if (npc->client->sess.sessionTeam == FACTION_EMPIRE)
 			num_imperial_npcs++;
-		if (npc->s.teamowner == FACTION_REBEL)
+		if (npc->client->sess.sessionTeam == FACTION_REBEL)
 			num_rebel_npcs++;
-		if (npc->s.teamowner == FACTION_MANDALORIAN)
+		if (npc->client->sess.sessionTeam == FACTION_MANDALORIAN)
 			num_mandalorian_npcs++;
-		if (npc->s.teamowner == FACTION_MERC)
+		if (npc->client->sess.sessionTeam == FACTION_MERC)
 			num_merc_npcs++;
-		if (npc->s.teamowner == FACTION_WILDLIFE)
+		if (npc->client->sess.sessionTeam == FACTION_WILDLIFE)
 			num_wildlife_npcs++;
 	}
+
+	//trap->Print("Cvars are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife);
+	//trap->Print("There are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", num_imperial_npcs, num_rebel_npcs, num_mandalorian_npcs, num_merc_npcs, num_wildlife_npcs);
 
 	if (!SPAWN_FACTIONS_CHECKED)
 	{
@@ -2276,19 +2255,19 @@ void G_InitBots( void ) {
 	G_LoadBots();
 	G_LoadArenas();
 
-	trap->Cvar_Register( &bot_minplayers, "bot_minplayers", "0", CVAR_SERVERINFO );
+	trap->Cvar_Register(&bot_minplayers, "bot_minplayers", "0", CVAR_SERVERINFO);
 
 #ifdef __NPC_MINPLAYERS__
-	trap->Cvar_Register( &npc_imperials, "npc_imperials", "0", CVAR_ARCHIVE );
-	trap->Cvar_Register(&npc_imperials, "npc_rebels", "0", CVAR_ARCHIVE);
-	trap->Cvar_Register(&npc_imperials, "npc_mandalorians", "0", CVAR_ARCHIVE);
-	trap->Cvar_Register(&npc_imperials, "npc_mercs", "0", CVAR_ARCHIVE);
-	trap->Cvar_Register(&npc_imperials, "npc_wildlife", "0", CVAR_ARCHIVE);
-	trap->Cvar_Register( &npc_civilians, "npc_civilians", "0", CVAR_ARCHIVE );
-	trap->Cvar_Register( &npc_vendors, "npc_vendors", "0", CVAR_ARCHIVE );
+	trap->Cvar_Register(&npc_imperials, "npc_imperials", "0", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_rebels, "npc_rebels", "0", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_mandalorians, "npc_mandalorians", "0", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_mercs, "npc_mercs", "0", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_wildlife, "npc_wildlife", "0", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_civilians, "npc_civilians", "0", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_vendors, "npc_vendors", "0", CVAR_ARCHIVE);
 #endif //__NPC_MINPLAYERS__
-	trap->Cvar_Register( &npc_pathing, "npc_pathing", "2", CVAR_ARCHIVE );
-	trap->Cvar_Register( &npc_wptonav, "npc_wptonav", "0", CVAR_ARCHIVE );
+	trap->Cvar_Register(&npc_pathing, "npc_pathing", "2", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_wptonav, "npc_wptonav", "0", CVAR_ARCHIVE);
 
 	//rww - new bot route stuff
 	LoadPath_ThisLevel();
