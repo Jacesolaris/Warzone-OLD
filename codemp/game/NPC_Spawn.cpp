@@ -1980,7 +1980,8 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	}
 
 	newent->client->ps.persistant[PERS_TEAM] = newent->client->sess.sessionTeam;
-
+	newent->s.teamowner = newent->client->sess.sessionTeam;
+	
 	trap->LinkEntity ((sharedEntity_t *)newent);
 
 	if(!ent->use)
@@ -2624,6 +2625,7 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 	self->s.angles[PITCH] = 0;
 	self->s.angles[YAW] = irand(0,359);
 	self->s.angles[ROLL] = 0;
+	self->team = NULL;
 
 	if (level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE)
 	{
