@@ -172,7 +172,6 @@ typedef struct weaponData_s
 	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 	int		altChargeSubTime;	// above for secondary
 
-	int		chargeSub;			// amount to subtract during charge on each interval
 	int		altChargeSub;		// above for secondary
 
 	int		maxCharge;			// stop subtracting once charged for this many ms
