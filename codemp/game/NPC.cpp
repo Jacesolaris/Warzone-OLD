@@ -4047,6 +4047,7 @@ void NPC_Think ( gentity_t *self )//, int msec )
 	botstates[self->s.number]->client = self->s.number;
 #endif //__AAS_AI_TESTING__
 
+	/*
 	if (!(self->s.eFlags & EF_CLIENTSMOOTH)) {
 		self->s.eFlags |= EF_CLIENTSMOOTH;
 	}
@@ -4054,6 +4055,7 @@ void NPC_Think ( gentity_t *self )//, int msec )
 	if (!(self->client->ps.eFlags & EF_CLIENTSMOOTH)) {
 		self->client->ps.eFlags |= EF_CLIENTSMOOTH;
 	}
+	*/
 
 	memset( &aiEnt->client->pers.cmd, 0, sizeof( aiEnt->client->pers.cmd ) );
 
@@ -4652,17 +4654,17 @@ void NPC_Think ( gentity_t *self )//, int msec )
 
 		//or use client->pers.lastCommand?
 		aiEnt->NPC->last_ucmd.serverTime = level.time - 50;
-		//if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
+		if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
 		{//If we were following a roff, we don't do normal pmoves.
 			//FIXME: firing angles (no aim offset) or regular angles?
 			//if (self->enemy) NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &aiEnt->client->pers.cmd, &aiEnt->NPC->last_ucmd, sizeof( usercmd_t ) );
 			ClientThink(aiEnt->s.number, &aiEnt->client->pers.cmd);
 		}
-		//else
-		//{
-		//	NPC_ApplyRoff();
-		//}
+		else
+		{
+			NPC_ApplyRoff(aiEnt);
+		}
 #else //!__LOW_THINK_AI__
 		//VectorCopy( oldMoveDir, self->client->ps.moveDir );
 

@@ -3176,12 +3176,11 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 	qboolean goAway = qfalse;
 
 	// if this player does not want to see extrapolated players
-	if ( !cg_smoothClients.integer ) {
+	if (!cg_smoothClients.integer) {
 		// make sure the clients use TR_INTERPOLATE
-		if ( (cent->currentState.number != cg.clientNum && cent->currentState.number < MAX_CLIENTS) || cent->currentState.eType == ET_NPC ) {
-			//cent->currentState.pos.trType = TR_INTERPOLATE;
+		if ((cent->currentState.number != cg.clientNum && cent->currentState.number < MAX_CLIENTS) || cent->currentState.eType == ET_NPC) { // UQ1: NPCs too pls!!!
+			cent->currentState.pos.trType = TR_INTERPOLATE;
 			cent->nextState.pos.trType = TR_INTERPOLATE;
-			cent->currentState.pos.trType = TR_LINEAR_STOP;
 		}
 	}
 
@@ -3206,22 +3205,22 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 
 	// first see if we can interpolate between two snaps for
 	// linear extrapolated clients
-	if ( cent->interpolate && cent->currentState.pos.trType == TR_LINEAR_STOP
-		&& ((cent->currentState.number != cg.clientNum && cent->currentState.number < MAX_CLIENTS) || cent->currentState.eType == ET_NPC) ) {
-		CG_InterpolateEntityPosition( cent );
+	if (cent->interpolate && cent->currentState.pos.trType == TR_LINEAR_STOP
+		&& ((cent->currentState.number != cg.clientNum && cent->currentState.number < MAX_CLIENTS) || cent->currentState.eType == ET_NPC)) { // UQ1: NPCs too pls!!!
+		CG_InterpolateEntityPosition(cent);
 		goAway = qtrue;
 	}
 	else if (cent->interpolate &&
 		cent->currentState.eType == ET_NPC && cent->currentState.NPC_class == CLASS_VEHICLE)
 	{
-		CG_InterpolateEntityPosition( cent );
+		CG_InterpolateEntityPosition(cent);
 		goAway = qtrue;
 	}
 	else
 	{
 		// just use the current frame and evaluate as best we can
-		BG_EvaluateTrajectory( &cent->currentState.pos, cg.time, cent->lerpOrigin );
-		BG_EvaluateTrajectory( &cent->currentState.apos, cg.time, cent->lerpAngles );
+		BG_EvaluateTrajectory(&cent->currentState.pos, cg.time, cent->lerpOrigin);
+		BG_EvaluateTrajectory(&cent->currentState.apos, cg.time, cent->lerpAngles);
 	}
 
 #if 0
