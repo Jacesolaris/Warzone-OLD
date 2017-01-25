@@ -5878,7 +5878,12 @@ static void Jedi_Combat( gentity_t *aiEnt)
 	}
 
 	//If we can't get straight at him
-	if ( enemy_dist > 256 && !Jedi_ClearPathToSpot(aiEnt, enemy_dest, aiEnt->enemy->s.number ) )
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	// UQ1: Testing G_ClearLOS4 here for cached results...
+	if (enemy_dist > 256 && !G_ClearLOS4(aiEnt, aiEnt->enemy))
+#else //!__NPC_CPU_USAGE_TWEAKS__
+	if ( enemy_dist > 256 && !Jedi_ClearPathToSpot(aiEnt, enemy_dest, aiEnt->enemy->s.number ))
+#endif //__NPC_CPU_USAGE_TWEAKS__
 	{//hunt him down
 		//Com_Printf( "No Clear Path\n" );
 		if ( (NPC_ClearLOS4(aiEnt, aiEnt->enemy )||aiEnt->NPC->enemyLastSeenTime>level.time-500) && NPC_FaceEnemy(aiEnt, qtrue ) )//( NPCInfo->rank == RANK_CREWMAN || NPCInfo->rank > RANK_LT_JG ) &&

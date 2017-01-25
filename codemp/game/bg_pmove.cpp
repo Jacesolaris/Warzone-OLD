@@ -4616,7 +4616,7 @@ void NPC_SetNoBBox ( void ) {
 PM_GroundTrace
 =============
 */
-static void PM_GroundTrace( void ) {
+static void PM_GroundTrace(void) {
 	vec3_t		point;
 	trace_t		trace;
 	float minNormal = (float)MIN_WALK_NORMAL;
@@ -4627,7 +4627,7 @@ static void PM_GroundTrace( void ) {
 		PATHING_NPC = qtrue;
 	}
 
-	if ( pm->ps->clientNum >= MAX_CLIENTS)
+	if (pm->ps->clientNum >= MAX_CLIENTS)
 	{
 		bgEntity_t *pEnt = pm_entSelf;
 
@@ -4641,7 +4641,28 @@ static void PM_GroundTrace( void ) {
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] - 0.25;
 
+#if defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME)
+	if (pm->ps->clientNum >= MAX_CLIENTS)
+	{// Server can cache previous traces for a while to save CPU...
+		gentity_t *ent = &g_entities[pm->ps->clientNum];
+		if (ent->CACHE_last_trace > level.time - 500)
+		{
+			trace = ent->CACHE_trace;
+		}
+		else
+		{
+			pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+			ent->CACHE_trace = trace;
+			ent->CACHE_last_trace = level.time;
+		}
+	}
+	else
+	{
+		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+	}
+#else //!(defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME))
 	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+#endif //defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME)
 	pml.groundTrace = trace;
 
 	// do something corrective if the trace starts in a solid...

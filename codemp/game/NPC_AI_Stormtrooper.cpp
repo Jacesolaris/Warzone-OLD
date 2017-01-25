@@ -488,7 +488,12 @@ void NPC_BSST_Sleep(gentity_t *aiEnt)
 			for ( i=0; i<MAX_CLIENTS; i++ ) {
 				ent = &g_entities[i];
 				if ( ent->inuse && ent->health > 0 && !(ent->client->ps.eFlags & EF_DEAD) &&
-					G_ClearLOS( aiEnt, aiEnt->s.origin, ent->s.origin ) )
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+					G_ClearLOS4( aiEnt, ent ) 
+#else //!__NPC_CPU_USAGE_TWEAKS__
+					G_ClearLOS(aiEnt, aiEnt->s.origin, ent->s.origin)
+#endif //__NPC_CPU_USAGE_TWEAKS__
+					)
 				{
 					if ( ( dist = Distance( aiEnt->s.origin, ent->s.origin ) ) < bestDist )
 					{

@@ -187,7 +187,7 @@ qboolean NPC_FindNewWaypoint( gentity_t *aiEnt)
 		&& NPC->wpCurrent < gWPNum 
 		&& Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 128
 		&& InFOV2(gWPArray[NPC->wpCurrent]->origin, NPC, 120, 180)
-		&& OrgVisible(NPC->r.currentOrigin, gWPArray[NPC->wpCurrent]->origin, NPC->s.number))
+		&& (NPC->wpSeenTime > level.time || OrgVisible(NPC->r.currentOrigin, gWPArray[NPC->wpCurrent]->origin, NPC->s.number)))
 	{// Current one looks fine...
 		NPC->wpTravelTime = level.time + 15000;
 		NPC->wpSeenTime = level.time;
@@ -1739,9 +1739,12 @@ qboolean NPC_FollowRoutes(gentity_t *aiEnt)
 		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
 		upOrg2[2]+=18;
 
-		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		if (NPC->wpSeenTime <= level.time)
 		{
-			NPC->wpSeenTime = level.time;
+			if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+			{
+				NPC->wpSeenTime = level.time;
+			}
 		}
 
 		if (NPC_IsJetpacking(NPC))
@@ -2098,9 +2101,12 @@ qboolean NPC_FollowEnemyRoute(gentity_t *aiEnt)
 		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
 		upOrg2[2]+=18;
 
-		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		if (NPC->wpSeenTime <= level.time)
 		{
-			NPC->wpSeenTime = level.time;
+			if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+			{
+				NPC->wpSeenTime = level.time;
+			}
 		}
 
 		if (NPC_IsJetpacking(NPC))
@@ -2236,9 +2242,12 @@ qboolean NPC_FollowEnemyRoute(gentity_t *aiEnt)
 		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
 		upOrg2[2]+=18;
 
-		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		if (NPC->wpSeenTime <= level.time)
 		{
-			NPC->wpSeenTime = level.time;
+			if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+			{
+				NPC->wpSeenTime = level.time;
+			}
 		}
 	}
 

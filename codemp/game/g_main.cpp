@@ -3682,29 +3682,34 @@ void AI_ThinkThread1(void)
 
 		for (int aEnt = AI_THREAD_ENTITIES_START[0]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[0]; aEnt++)
 		{
-			int i = ACTIVE_NPCS[aEnt];
+			try {
+				int i = ACTIVE_NPCS[aEnt];
 
-			gentity_t *ent = &g_entities[i];
+				gentity_t *ent = &g_entities[i];
 
-			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
-				continue;
+				if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+					continue;
 
-			G_RunThink(ent, qtrue);
+				G_RunThink(ent, qtrue);
 
-			// turn off any expired powerups
-			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client && ent->client->ps.powerups[j] < level.time) {
-					ent->client->ps.powerups[j] = 0;
+				// turn off any expired powerups
+				for (int j = 0; j < MAX_POWERUPS; j++) {
+					if (ent->client && ent->client->ps.powerups[j] < level.time) {
+						ent->client->ps.powerups[j] = 0;
+					}
 				}
-			}
 
 
-			if (ent->client)
-			{
-				JKG_DoPlayerDamageEffects(ent);
-				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+				if (ent->client)
+				{
+					JKG_DoPlayerDamageEffects(ent);
+					WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+				}
+			} catch (int code ) {
+				// TODO: Debug dump...
+				trap->Print("AI think failed on entity %i.\n", aEnt);
 			}
 		}
 
@@ -3736,29 +3741,35 @@ void AI_ThinkThread2(void)
 
 		for (int aEnt = AI_THREAD_ENTITIES_START[1]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[1]; aEnt++)
 		{
-			int i = ACTIVE_NPCS[aEnt];
+			try {
+				int i = ACTIVE_NPCS[aEnt];
 
-			gentity_t *ent = &g_entities[i];
+				gentity_t *ent = &g_entities[i];
 
-			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
-				continue;
+				if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+					continue;
 
-			G_RunThink(ent, qtrue);
+				G_RunThink(ent, qtrue);
 
-			// turn off any expired powerups
-			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client && ent->client->ps.powerups[j] < level.time) {
-					ent->client->ps.powerups[j] = 0;
+				// turn off any expired powerups
+				for (int j = 0; j < MAX_POWERUPS; j++) {
+					if (ent->client && ent->client->ps.powerups[j] < level.time) {
+						ent->client->ps.powerups[j] = 0;
+					}
+				}
+
+
+				if (ent->client)
+				{
+					JKG_DoPlayerDamageEffects(ent);
+					WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
 				}
 			}
-
-
-			if (ent->client)
-			{
-				JKG_DoPlayerDamageEffects(ent);
-				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			catch (int code) {
+				// TODO: Debug dump...
+				trap->Print("AI think failed on entity %i.\n", aEnt);
 			}
 		}
 
@@ -3790,29 +3801,35 @@ void AI_ThinkThread3(void)
 
 		for (int aEnt = AI_THREAD_ENTITIES_START[2]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[2]; aEnt++)
 		{
-			int i = ACTIVE_NPCS[aEnt];
+			try {
+				int i = ACTIVE_NPCS[aEnt];
 
-			gentity_t *ent = &g_entities[i];
+				gentity_t *ent = &g_entities[i];
 
-			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
-				continue;
+				if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+					continue;
 
-			G_RunThink(ent, qtrue);
+				G_RunThink(ent, qtrue);
 
-			// turn off any expired powerups
-			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client && ent->client->ps.powerups[j] < level.time) {
-					ent->client->ps.powerups[j] = 0;
+				// turn off any expired powerups
+				for (int j = 0; j < MAX_POWERUPS; j++) {
+					if (ent->client && ent->client->ps.powerups[j] < level.time) {
+						ent->client->ps.powerups[j] = 0;
+					}
+				}
+
+
+				if (ent->client)
+				{
+					JKG_DoPlayerDamageEffects(ent);
+					WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
 				}
 			}
-
-
-			if (ent->client)
-			{
-				JKG_DoPlayerDamageEffects(ent);
-				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			catch (int code) {
+				// TODO: Debug dump...
+				trap->Print("AI think failed on entity %i.\n", aEnt);
 			}
 		}
 
@@ -3844,28 +3861,34 @@ void AI_ThinkThread4(void)
 
 		for (int aEnt = AI_THREAD_ENTITIES_START[3]; aEnt < ACTIVE_NPCS_NUM && aEnt < AI_THREAD_ENTITIES_END[3]; aEnt++)
 		{
-			int i = ACTIVE_NPCS[aEnt];
+			try {
+				int i = ACTIVE_NPCS[aEnt];
 
-			gentity_t *ent = &g_entities[i];
+				gentity_t *ent = &g_entities[i];
 
-			if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
-				continue;
+				if (!(ent && ent->inuse && ent->client && ent->r.linked && ent->s.eType == ET_NPC))
+					continue;
 
-			G_RunThink(ent, qtrue);
+				G_RunThink(ent, qtrue);
 
-			// turn off any expired powerups
-			for (int j = 0; j < MAX_POWERUPS; j++) {
-				if (ent->client && ent->client->ps.powerups[j] < level.time) {
-					ent->client->ps.powerups[j] = 0;
+				// turn off any expired powerups
+				for (int j = 0; j < MAX_POWERUPS; j++) {
+					if (ent->client && ent->client->ps.powerups[j] < level.time) {
+						ent->client->ps.powerups[j] = 0;
+					}
+				}
+
+				if (ent->client)
+				{
+					JKG_DoPlayerDamageEffects(ent);
+					WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
+					WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
 				}
 			}
-
-			if (ent->client)
-			{
-				JKG_DoPlayerDamageEffects(ent);
-				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
-				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
+			catch (int code) {
+				// TODO: Debug dump...
+				trap->Print("AI think failed on entity %i.\n", aEnt);
 			}
 		}
 
@@ -4045,10 +4068,10 @@ void G_RunFrame( int levelTime ) {
 	FRAME_TIME = trap->Milliseconds();
 
 #ifdef __NPC_DYNAMIC_THREADS__
-	active_thread_mutex[0].lock();
-	active_thread_mutex[1].lock();
-	active_thread_mutex[2].lock();
-	active_thread_mutex[3].lock();
+	//active_thread_mutex[0].lock();
+	//active_thread_mutex[1].lock();
+	//active_thread_mutex[2].lock();
+	//active_thread_mutex[3].lock();
 
 	ACTIVE_NPCS_NUM = 0;
 #endif //__NPC_DYNAMIC_THREADS__
@@ -4136,10 +4159,10 @@ void G_RunFrame( int levelTime ) {
 	// if we are waiting for the level to restart, do nothing
 	if ( level.restarted ) {
 #ifdef __NPC_DYNAMIC_THREADS__
-		active_thread_mutex[0].unlock();
-		active_thread_mutex[1].unlock();
-		active_thread_mutex[2].unlock();
-		active_thread_mutex[3].unlock();
+		//active_thread_mutex[0].unlock();
+		//active_thread_mutex[1].unlock();
+		//active_thread_mutex[2].unlock();
+		//active_thread_mutex[3].unlock();
 #endif //__NPC_DYNAMIC_THREADS__
 		return;
 	}
@@ -4277,10 +4300,10 @@ void G_RunFrame( int levelTime ) {
 	AI_THREAD_ENTITIES_END[2] = NUM_ENTS_PER_THREAD * 3;
 	AI_THREAD_ENTITIES_START[3] = NUM_ENTS_PER_THREAD * 3;
 	AI_THREAD_ENTITIES_END[3] = ACTIVE_NPCS_NUM;
-	active_thread_mutex[0].unlock();
-	active_thread_mutex[1].unlock();
-	active_thread_mutex[2].unlock();
-	active_thread_mutex[3].unlock();
+	//active_thread_mutex[0].unlock();
+	//active_thread_mutex[1].unlock();
+	//active_thread_mutex[2].unlock();
+	//active_thread_mutex[3].unlock();
 
 	AI_Theads();
 #endif //__NPC_DYNAMIC_THREADS__

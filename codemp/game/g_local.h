@@ -550,6 +550,14 @@ struct gentity_s {
 	int					npc_attack_time;
 	int					npc_counter_time;
 
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	int					LOS_last_checked[MAX_GENTITIES];
+	qboolean			LOS_visible[MAX_GENTITIES];
+
+	int					CACHE_last_trace;
+	trace_t				CACHE_trace;
+#endif //__NPC_CPU_USAGE_TWEAKS__
+
 #ifdef __USE_NAVMESH__
 	CompNavMeshPath		patrol;
 	CompNavMeshPos		navMeshPos;

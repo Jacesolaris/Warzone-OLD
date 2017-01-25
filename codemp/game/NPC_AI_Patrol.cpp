@@ -312,9 +312,12 @@ qboolean NPC_PatrolArea(gentity_t *aiEnt)
 		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
 		upOrg2[2] += 18;
 
-		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		if (NPC->wpSeenTime <= level.time)
 		{
-			NPC->wpSeenTime = level.time;
+			if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+			{
+				NPC->wpSeenTime = level.time;
+			}
 		}
 
 		if (NPC_IsJetpacking(NPC))

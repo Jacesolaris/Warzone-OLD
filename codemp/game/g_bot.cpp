@@ -1311,7 +1311,6 @@ void G_CheckMinimumNpcs(void)
 	//
 	// Spawn the IMPERIAL team...
 	//
-
 	if (num_imperial_npcs < min_imperials)
 	{
 		int			waypoint = irand_big(0, gWPNum - 1);
@@ -1389,7 +1388,6 @@ void G_CheckMinimumNpcs(void)
 	//
 	// Spawn the REBEL team...
 	//
-
 	if (num_rebel_npcs < min_rebels)
 	{
 		int			waypoint = irand_big(0, gWPNum - 1);

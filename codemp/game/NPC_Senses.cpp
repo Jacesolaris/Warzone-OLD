@@ -774,11 +774,14 @@ qboolean G_ClearLOS( gentity_t *self, const vec3_t start, const vec3_t end )
 				continue;
 			}
 		}
+		
 		return qfalse;
 	}
 
-	if ( tr.fraction == 1.0 )
+	if (tr.fraction == 1.0)
+	{
 		return qtrue;
+	}
 
 	return qfalse;
 }
@@ -819,14 +822,38 @@ qboolean G_ClearLOS_Breakable( gentity_t *self, const vec3_t start, const vec3_t
 	return qfalse;
 }
 
+
+#define ENTITY_VISIBILITY_CACHE_TIME 3000
+
+
 //Entity to position
 qboolean G_ClearLOS2( gentity_t *self, gentity_t *ent, const vec3_t end )
 {
 	vec3_t	eyes;
 
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	if (self->LOS_visible[ent->s.number] && self->LOS_last_checked[ent->s.number] > level.time - ENTITY_VISIBILITY_CACHE_TIME)
+	{// Cache entity visibiliy for ENTITY_VISIBILITY_CACHE_TIME...
+		return self->LOS_visible[ent->s.number];
+	}
+
+	self->LOS_last_checked[ent->s.number] = level.time;
+#endif //__NPC_CPU_USAGE_TWEAKS__
+
 	CalcEntitySpot( ent, SPOT_HEAD_LEAN, eyes );
 
-	return G_ClearLOS( self, eyes, end );
+	if (G_ClearLOS(self, eyes, end))
+	{
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+		self->LOS_visible[ent->s.number] = qtrue;
+#endif //__NPC_CPU_USAGE_TWEAKS__
+		return qtrue;
+	}
+	
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	self->LOS_visible[ent->s.number] = qfalse;
+#endif //__NPC_CPU_USAGE_TWEAKS__
+	return qfalse;
 }
 
 //Position to entity
@@ -834,23 +861,50 @@ qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent )
 {
 	vec3_t		spot;
 
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	if (self->LOS_visible[ent->s.number] && self->LOS_last_checked[ent->s.number] > level.time - ENTITY_VISIBILITY_CACHE_TIME)
+	{// Cache entity visibiliy for ENTITY_VISIBILITY_CACHE_TIME...
+		return self->LOS_visible[ent->s.number];
+	}
+
+	self->LOS_last_checked[ent->s.number] = level.time;
+#endif //__NPC_CPU_USAGE_TWEAKS__
+
 	//Look for the chest first
 	CalcEntitySpot( ent, SPOT_ORIGIN, spot );
 
 	if ( G_ClearLOS( self, start, spot ) )
+	{
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+		self->LOS_visible[ent->s.number] = qtrue;
+#endif //__NPC_CPU_USAGE_TWEAKS__
 		return qtrue;
+	}
 
 	//Look for the head next
 	CalcEntitySpot( ent, SPOT_HEAD_LEAN, spot );
 
-	if ( ent 
-		&& G_EntIsBreakable(ent->s.number) 
-		&& G_ClearLOS_Breakable(self, start, spot, ent ) )
+	if (ent
+		&& G_EntIsBreakable(ent->s.number)
+		&& G_ClearLOS_Breakable(self, start, spot, ent))
+	{
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+		self->LOS_visible[ent->s.number] = qtrue;
+#endif //__NPC_CPU_USAGE_TWEAKS__
 		return qtrue;
+	}
 
-	if ( G_ClearLOS( self, start, spot ) )
+	if (G_ClearLOS(self, start, spot))
+	{
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+		self->LOS_visible[ent->s.number] = qtrue;
+#endif //__NPC_CPU_USAGE_TWEAKS__
 		return qtrue;
+	}
 
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	self->LOS_visible[ent->s.number] = qfalse;
+#endif //__NPC_CPU_USAGE_TWEAKS__
 	return qfalse;
 }
 
@@ -858,6 +912,15 @@ qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent )
 qboolean G_ClearLOS4( gentity_t *self, gentity_t *ent )
 {
 	vec3_t	eyes;
+
+#ifdef __NPC_CPU_USAGE_TWEAKS__
+	if (self->LOS_visible[ent->s.number] && self->LOS_last_checked[ent->s.number] > level.time - ENTITY_VISIBILITY_CACHE_TIME)
+	{// Cache entity visibiliy for ENTITY_VISIBILITY_CACHE_TIME...
+		return self->LOS_visible[ent->s.number];
+	}
+
+	self->LOS_last_checked[ent->s.number] = level.time;
+#endif //__NPC_CPU_USAGE_TWEAKS__
 
 	//Calculate my position
 	CalcEntitySpot( self, SPOT_HEAD_LEAN, eyes );
