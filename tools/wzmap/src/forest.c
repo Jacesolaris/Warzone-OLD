@@ -93,6 +93,12 @@ qboolean		CLIFF_FACES_SCALE_XY = qfalse;
 float			CLIFF_FACES_CULL_MULTIPLIER = 1.0;
 qboolean		CLIFF_CHEAP = qfalse;
 char			CLIFF_SHADER[MAX_QPATH] = { 0 };
+qboolean		ADD_LEDGE_FACES = qfalse;
+float			LEDGE_FACES_SCALE = 1.0;
+qboolean		LEDGE_FACES_SCALE_XY = qfalse;
+float			LEDGE_FACES_CULL_MULTIPLIER = 1.0;
+qboolean		LEDGE_CHEAP = qfalse;
+char			LEDGE_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
 float			TREE_CLIFF_CULL_RADIUS = 1.0;
 char			TREE_MODELS[MAX_FOREST_MODELS][128] = { 0 };
@@ -132,6 +138,10 @@ void FOLIAGE_LoadClimateData( char *filename )
 		Sys_Printf("Forcing all models to use meta surfaces.\n");
 	}
 
+	//
+	// Cliffs...
+	//
+
 	ADD_CLIFF_FACES = (qboolean)atoi(IniRead(filename, "CLIFFS", "addCliffFaces", "0"));
 	CLIFF_FACES_SCALE = atof(IniRead(filename, "CLIFFS", "cliffFacesScale", "1.0"));
 	CLIFF_FACES_CULL_MULTIPLIER = atof(IniRead(filename, "CLIFFS", "cliffFacesCullScale", "1.0"));
@@ -152,6 +162,34 @@ void FOLIAGE_LoadClimateData( char *filename )
 
 	CLIFF_FACES_SCALE_XY = (qboolean)atoi(IniRead(filename, "CLIFFS", "cliffScaleOnlyXY", "0"));
 	CLIFF_CHEAP = (qboolean)atoi(IniRead(filename, "CLIFFS", "cheapCliffs", "0"));
+
+	//
+	// Ledges...
+	//
+
+	ADD_LEDGE_FACES = (qboolean)atoi(IniRead(filename, "LEDGES", "addLedgeFaces", "0"));
+	LEDGE_FACES_SCALE = atof(IniRead(filename, "LEDGES", "ledgeFacesScale", "1.0"));
+	LEDGE_FACES_CULL_MULTIPLIER = atof(IniRead(filename, "LEDGES", "ledgeFacesCullScale", "1.0"));
+
+	strcpy(LEDGE_SHADER, IniRead(filename, "LEDGES", "ledgeShader", ""));
+
+	if (LEDGE_SHADER[0] != '\0')
+	{
+		Sys_Printf("Using climate specified ledge face shader: [%s].\n", LEDGE_SHADER);
+	}
+	else
+	{
+		strcpy(LEDGE_SHADER, "models/warzone/rocks/ledge");
+		Sys_Printf("Using default ledge face shader: [%s].\n", LEDGE_SHADER);
+	}
+
+	LEDGE_FACES_SCALE_XY = (qboolean)atoi(IniRead(filename, "LEDGES", "ledgeScaleOnlyXY", "0"));
+
+
+
+	//
+	// Trees...
+	//
 
 	// Read all the tree info from the new .climate ini files...
 	TREE_SCALE_MULTIPLIER = atof(IniRead(filename, "TREES", "treeScaleMultiplier", "1.0"));
@@ -699,6 +737,376 @@ void GenerateCliffFaces(void)
 	}
 }
 
+int		numLedges = 0;
+int		numLedgesDistanceCulled = 0;
+vec3_t	ledgePositions[65536];
+vec3_t	ledgeAngles[65536];
+float	ledgeScale[65536];
+float	ledgeHeight[65536];
+
+void GenerateLedgeFaces(void)
+{
+	if (!ADD_LEDGE_FACES) return;
+
+	numLedges = 0;
+	numLedgesDistanceCulled = 0;
+
+	Sys_Printf("%i map draw surfs.\n", numMapDrawSurfs);
+
+	for (int s = 0; s < numMapDrawSurfs /*&& numLedges < 128*/; s++)
+	{
+		printLabelledProgress("AddLedgeFaces", s, numMapDrawSurfs);
+
+		/* get drawsurf */
+		mapDrawSurface_t *ds = &mapDrawSurfs[s];
+		shaderInfo_t *si = ds->shaderInfo;
+
+		if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
+		{
+			continue;
+		}
+
+		if (!(si->compileFlags & C_SOLID))
+		{
+			continue;
+		}
+
+		//Sys_Printf("drawsurf %i. %i indexes. %i verts.\n", s, ds->numIndexes, ds->numVerts);
+
+		if (ds->numIndexes == 0 && ds->numVerts == 3)
+		{
+			qboolean	isCliff = qfalse;
+			int			lowPositionCount = 0;
+			vec3_t		mins, maxs;
+			vec3_t		angles[3];
+
+			VectorSet(mins, 999999, 999999, 999999);
+			VectorSet(maxs, -999999, -999999, -999999);
+
+			for (int j = 0; j < 3; j++)
+			{
+				/* get vertex */
+				bspDrawVert_t		*dv = &ds->verts[j];
+
+				if (dv->xyz[0] < mins[0]) mins[0] = dv->xyz[0];
+				if (dv->xyz[1] < mins[1]) mins[1] = dv->xyz[1];
+				if (dv->xyz[2] < mins[2]) mins[2] = dv->xyz[2];
+
+				if (dv->xyz[0] > maxs[0]) maxs[0] = dv->xyz[0];
+				if (dv->xyz[1] > maxs[1]) maxs[1] = dv->xyz[1];
+				if (dv->xyz[2] > maxs[2]) maxs[2] = dv->xyz[2];
+			}
+
+			if (mins[0] == 999999 || mins[1] == 999999 || mins[2] == 999999 || maxs[0] == -999999 || maxs[1] == -999999 || maxs[2] == -999999)
+			{
+				continue;
+			}
+
+			if (!BoundsWithinPlayableArea(mins, maxs))
+			{
+				continue;
+			}
+
+			float cliffTop = ((maxs[2] - mins[2])) + mins[2];
+			float cliffTopCheck = ((maxs[2] - mins[2]) * 0.7) + mins[2];
+
+			for (int j = 0; j < 3; j++)
+			{
+				/* get vertex */
+				bspDrawVert_t		*dv = &ds->verts[j];
+
+				vectoangles(dv->normal, angles[j]);
+
+				float pitch = angles[j][0];
+
+				if (pitch > 180)
+					pitch -= 360;
+
+				if (pitch < -180)
+					pitch += 360;
+
+				pitch += 90.0f;
+
+				//if ((pitch > 80.0 && pitch < 100.0) || (pitch < -80.0 && pitch > -100.0))
+				//	Sys_Printf("pitch %f.\n", pitch);
+
+#define MIN_LEDGE_SLOPE 22.0//28.0
+#define MAX_LEDGE_SLOPE 28.0//30.0
+				if (pitch == 180.0 || pitch == -180.0)
+				{// Horrible hack to skip the surfaces created under the map by q3map2 code... Why are boxes needed for triangles?
+					continue;
+				}
+				else if ((pitch > MIN_LEDGE_SLOPE && pitch < MAX_LEDGE_SLOPE) || (pitch < -MIN_LEDGE_SLOPE && pitch > -MAX_LEDGE_SLOPE))
+				{
+					isCliff = qtrue;
+				}
+
+				if (!(dv->xyz[2] >= cliffTopCheck))
+					lowPositionCount++; // only select positions with 2 triangles down low...
+			}
+
+			if (!isCliff || lowPositionCount < 2)
+			{
+				continue;
+			}
+
+			vec3_t center;
+			vec3_t size;
+			float smallestSize;
+
+			center[0] = (mins[0] + maxs[0]) * 0.5f;
+			center[1] = (mins[1] + maxs[1]) * 0.5f;
+			center[2] = (mins[2] + maxs[2]) * 0.5f;
+
+
+			size[0] = (maxs[0] - mins[0]);
+			size[1] = (maxs[1] - mins[1]);
+			size[2] = (maxs[2] - mins[2]);
+
+			smallestSize = size[0];
+			if (size[1] < smallestSize) smallestSize = size[1];
+			if (size[2] < smallestSize) smallestSize = size[2];
+
+			qboolean bad = qfalse;
+
+			for (int j = 0; j < numLedges; j++)
+			{
+				if (Distance(ledgePositions[j], center) < (48.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
+					//if ((DistanceHorizontal(ledgePositions[j], center) < (64.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER || DistanceVertical(ledgePositions[j], center) < (192.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
+					//	&& Distance(ledgePositions[j], center) < (192.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
+				{
+					bad = qtrue;
+					numLedgesDistanceCulled++;
+					break;
+				}
+			}
+
+			if (bad)
+			{
+				continue;
+			}
+
+			//Sys_Printf("cliff found at %f %f %f. angles0 %f %f %f. angles1 %f %f %f. angles2 %f %f %f.\n", center[0], center[1], center[2], angles[0][0], angles[0][1], angles[0][2], angles[1][0], angles[1][1], angles[1][2], angles[2][0], angles[2][1], angles[2][2]);
+
+			ledgeScale[numLedges] = (smallestSize * CLIFF_FACES_SCALE) / 64.0;
+			ledgeHeight[numLedges] = smallestSize / 64.0;
+			VectorCopy(center, ledgePositions[numLedges]);
+			VectorCopy(angles[0], ledgeAngles[numLedges]);
+			ledgeAngles[numLedges][0] += 90.0;
+			numLedges++;
+		}
+	}
+
+	Sys_Printf("Found %i ledge surfaces.\n", numLedges);
+	Sys_Printf("%i ledge objects were culled by distance.\n", numLedgesDistanceCulled);
+
+	for (int i = 0; i < numLedges; i++)
+	{
+		printLabelledProgress("GenerateLedges", i, numLedges);
+
+		const char		*classname, *value;
+		float			lightmapScale;
+		vec3_t          lightmapAxis;
+		int			    smoothNormals;
+		int				vertTexProj;
+		char			shader[MAX_QPATH];
+		shaderInfo_t	*celShader = NULL;
+		brush_t			*brush;
+		parseMesh_t		*patch;
+		qboolean		funcGroup;
+		char			castShadows, recvShadows;
+		qboolean		forceNonSolid, forceNoClip, forceNoTJunc, forceMeta;
+		vec3_t          minlight, minvertexlight, ambient, colormod;
+		float           patchQuality, patchSubdivision;
+
+		/* setup */
+		entitySourceBrushes = 0;
+		mapEnt = &entities[numEntities];
+		numEntities++;
+		memset(mapEnt, 0, sizeof(*mapEnt));
+
+		mapEnt->mapEntityNum = 0;
+
+		VectorCopy(ledgePositions[i], mapEnt->origin);
+
+		{
+			char str[32];
+			sprintf(str, "%f %f %f", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2]);
+			SetKeyValue(mapEnt, "origin", str);
+		}
+
+		if (!LEDGE_FACES_SCALE_XY)
+		{// Scale X, Y & Z axis...
+			char str[32];
+			sprintf(str, "%f", ledgeScale[i]);
+			SetKeyValue(mapEnt, "modelscale", str);
+		}
+		else
+		{// Scale X & Y only...
+			char str[128];
+			sprintf(str, "%f %f %f", ledgeScale[i], ledgeScale[i], ledgeHeight[i]);
+			//Sys_Printf("%s\n", str);
+			SetKeyValue(mapEnt, "modelscale_vec", str);
+		}
+
+		{
+			char str[32];
+			sprintf(str, "%f", ledgeAngles[i][1] - 180.0);
+			SetKeyValue(mapEnt, "angle", str);
+		}
+
+		if (LEDGE_SHADER[0] != '\0')
+		{
+			SetKeyValue(mapEnt, "_overrideShader", LEDGE_SHADER);
+		}
+
+
+
+		/* ydnar: get classname */
+		SetKeyValue(mapEnt, "classname", "misc_model");
+		classname = ValueForKey(mapEnt, "classname");
+
+		SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledge0%i.md3", irand(1,4)));
+
+		//Sys_Printf( "Generated cliff face at %f %f %f. Angle %f.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2], ledgeAngles[i][1] );
+
+		funcGroup = qfalse;
+
+		/* get explicit shadow flags */
+		GetEntityShadowFlags(mapEnt, NULL, &castShadows, &recvShadows, (funcGroup || mapEnt->mapEntityNum == 0) ? qtrue : qfalse);
+
+		/* vortex: get lightmap scaling value for this entity */
+		GetEntityLightmapScale(mapEnt, &lightmapScale, 0);
+
+		/* vortex: get lightmap axis for this entity */
+		GetEntityLightmapAxis(mapEnt, lightmapAxis, NULL);
+
+		/* vortex: per-entity normal smoothing */
+		GetEntityNormalSmoothing(mapEnt, &smoothNormals, 0);
+
+		/* vortex: per-entity _minlight, _ambient, _color, _colormod  */
+		GetEntityMinlightAmbientColor(mapEnt, NULL, minlight, minvertexlight, ambient, colormod, qtrue);
+		if (mapEnt == &entities[0])
+		{
+			/* worldspawn have it empty, since it's keys sets global parms */
+			VectorSet(minlight, 0, 0, 0);
+			VectorSet(minvertexlight, 0, 0, 0);
+			VectorSet(ambient, 0, 0, 0);
+			VectorSet(colormod, 1, 1, 1);
+		}
+
+		/* vortex: _patchMeta, _patchQuality, _patchSubdivide support */
+		GetEntityPatchMeta(mapEnt, &forceMeta, &patchQuality, &patchSubdivision, 1.0, patchSubdivisions);
+
+		/* vortex: vertical texture projection */
+		if (strcmp("", ValueForKey(mapEnt, "_vtcproj")) || strcmp("", ValueForKey(mapEnt, "_vp")))
+		{
+			vertTexProj = IntForKey(mapEnt, "_vtcproj");
+			if (vertTexProj <= 0.0f)
+				vertTexProj = IntForKey(mapEnt, "_vp");
+		}
+		else
+			vertTexProj = 0;
+
+		/* ydnar: get cel shader :) for this entity */
+		value = ValueForKey(mapEnt, "_celshader");
+
+		if (value[0] == '\0')
+			value = ValueForKey(&entities[0], "_celshader");
+
+		if (value[0] != '\0')
+		{
+			sprintf(shader, "textures/%s", value);
+			celShader = ShaderInfoForShader(shader);
+			//Sys_FPrintf (SYS_VRB, "Entity %d (%s) has cel shader %s\n", mapEnt->mapEntityNum, classname, celShader->shader );
+		}
+		else
+			celShader = NULL;
+
+		/* vortex: _nonsolid forces detail non-solid brush */
+		forceNonSolid = ((IntForKey(mapEnt, "_nonsolid") > 0) || (IntForKey(mapEnt, "_ns") > 0)) ? qtrue : qfalse;
+
+		/* vortex: preserve original face winding, don't clip by bsp tree */
+		forceNoClip = ((IntForKey(mapEnt, "_noclip") > 0) || (IntForKey(mapEnt, "_nc") > 0)) ? qtrue : qfalse;
+
+		/* vortex: do not apply t-junction fixing (preserve original face winding) */
+		forceNoTJunc = ((IntForKey(mapEnt, "_notjunc") > 0) || (IntForKey(mapEnt, "_ntj") > 0)) ? qtrue : qfalse;
+
+		/* attach stuff to everything in the entity */
+		for (brush = mapEnt->brushes; brush != NULL; brush = brush->next)
+		{
+			brush->entityNum = mapEnt->mapEntityNum;
+			brush->mapEntityNum = mapEnt->mapEntityNum;
+			brush->castShadows = castShadows;
+			brush->recvShadows = recvShadows;
+			brush->lightmapScale = lightmapScale;
+			VectorCopy(lightmapAxis, brush->lightmapAxis); /* vortex */
+			brush->smoothNormals = smoothNormals; /* vortex */
+			brush->noclip = forceNoClip; /* vortex */
+			brush->noTJunc = forceNoTJunc; /* vortex */
+			brush->vertTexProj = vertTexProj; /* vortex */
+			VectorCopy(minlight, brush->minlight); /* vortex */
+			VectorCopy(minvertexlight, brush->minvertexlight); /* vortex */
+			VectorCopy(ambient, brush->ambient); /* vortex */
+			VectorCopy(colormod, brush->colormod); /* vortex */
+			brush->celShader = celShader;
+			if (forceNonSolid == qtrue)
+			{
+				brush->detail = qtrue;
+				brush->nonsolid = qtrue;
+				brush->noclip = qtrue;
+			}
+		}
+
+		for (patch = mapEnt->patches; patch != NULL; patch = patch->next)
+		{
+			patch->entityNum = mapEnt->mapEntityNum;
+			patch->mapEntityNum = mapEnt->mapEntityNum;
+			patch->castShadows = castShadows;
+			patch->recvShadows = recvShadows;
+			patch->lightmapScale = lightmapScale;
+			VectorCopy(lightmapAxis, patch->lightmapAxis); /* vortex */
+			patch->smoothNormals = smoothNormals; /* vortex */
+			patch->vertTexProj = vertTexProj; /* vortex */
+			patch->celShader = celShader;
+			patch->patchMeta = forceMeta; /* vortex */
+			patch->patchQuality = patchQuality; /* vortex */
+			patch->patchSubdivisions = patchSubdivision; /* vortex */
+			VectorCopy(minlight, patch->minlight); /* vortex */
+			VectorCopy(minvertexlight, patch->minvertexlight); /* vortex */
+			VectorCopy(ambient, patch->ambient); /* vortex */
+			VectorCopy(colormod, patch->colormod); /* vortex */
+			patch->nonsolid = forceNonSolid;
+		}
+
+		/* vortex: store map entity num */
+		{
+			char buf[32];
+			sprintf(buf, "%i", mapEnt->mapEntityNum);
+			SetKeyValue(mapEnt, "_mapEntityNum", buf);
+		}
+
+		/* ydnar: gs mods: set entity bounds */
+		SetEntityBounds(mapEnt);
+
+		/* ydnar: gs mods: load shader index map (equivalent to old terrain alphamap) */
+		LoadEntityIndexMap(mapEnt);
+
+		/* get entity origin and adjust brushes */
+		GetVectorForKey(mapEnt, "origin", mapEnt->origin);
+		if (mapEnt->originbrush_origin[0] || mapEnt->originbrush_origin[1] || mapEnt->originbrush_origin[2])
+			AdjustBrushesForOrigin(mapEnt);
+
+
+#if defined(__ADD_TREES_EARLY__)
+		AddTriangleModels(0, qtrue, qtrue);
+		EmitBrushes(mapEnt->brushes, &mapEnt->firstBrush, &mapEnt->numBrushes);
+		//MoveBrushesToWorld( mapEnt );
+		numEntities--;
+#endif
+	}
+}
+
 void ReassignTreeModels ( void )
 {
 	int				i;
@@ -845,7 +1253,8 @@ void ReassignTreeModels ( void )
 
 			for (int z = 0; z < numCliffs; z++)
 			{// Also keep them away from cliff objects...
-				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS)
+				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS
+					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -986,7 +1395,8 @@ void ReassignTreeModels ( void )
 					DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[POSSIBLES[selected]]));
 				*/
 
-				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS)
+				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS
+					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -1416,7 +1826,8 @@ void ReassignCityModels(void)
 
 					for (int z = 0; z < numCliffs; z++)
 					{// Also keep them away from cliff objects...
-						if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[j]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+						if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[j]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS
+							|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[j]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
 						{
 							bad = qtrue;
 							NUM_CLOSE_CLIFFS++;
@@ -1554,7 +1965,8 @@ void ReassignCityModels(void)
 
 			for (int z = 0; z < numCliffs; z++)
 			{// Also keep them away from cliff objects...
-				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS
+					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -1677,7 +2089,8 @@ void ReassignCityModels(void)
 			 DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[POSSIBLES[selected]]));
 			 */
 
-				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS
+					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;

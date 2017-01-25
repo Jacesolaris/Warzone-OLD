@@ -38,6 +38,7 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 
 
 extern void GenerateCliffFaces ( void );
+extern void GenerateLedgeFaces(void);
 extern void GenerateMapCity(void);
 extern void GenerateMapForest ( void );
 
@@ -570,6 +571,9 @@ void ProcessWorldModel( void )
 
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
+
+	/* UQ1: Generate experimental procedural ledge faces */
+	GenerateLedgeFaces();
 
 	/* UQ1: Generate experimental procedural city */
 	GenerateMapCity();
