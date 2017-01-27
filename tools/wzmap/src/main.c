@@ -766,72 +766,72 @@ float subdivisionMult;				/* default face subdivisions multipier */
 
 extern int NavMain(int argc, char **argv);
 
-int main( int argc, char **argv )
+int main(int argc, char **argv)
 {
 	int	i, r;
 	double start, end;
-	
+
 	/* we want consistent 'randomness' */
-	srand( 0 );
-	
+	srand(0);
+
 	/* start timer */
 	start = I_FloatTime();
-	
+
 	/* set exit call */
-	atexit( ExitQ3Map );
+	atexit(ExitQ3Map);
 
 	gpu = qfalse;
 
 	subdivisionMult = 1.0;
 
 	/* read general options first */
-	for( i = 1; i < argc && argv[ i ]; i++ )
+	for (i = 1; i < argc && argv[i]; i++)
 	{
 		/* -buildconfig */
-		if( !strcmp( argv[ i ], "-buildconfig" ) )
+		if (!strcmp(argv[i], "-buildconfig"))
 		{
 			useBuildCfg = qtrue;
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 		}
 
 		/* -custinfoparms */
-		else if( !strcmp( argv[ i ],  "-custinfoparms") )
+		else if (!strcmp(argv[i], "-custinfoparms"))
 		{
 			useCustomInfoParms = qtrue;
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 		}
 
 		/* -connect */
-		else if( !strcmp( argv[ i ], "-connect" ) )
+		else if (!strcmp(argv[i], "-connect"))
 		{
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 			i++;
-			Broadcast_Setup( argv[ i ] );
-			argv[ i ] = NULL;
+			Broadcast_Setup(argv[i]);
+			argv[i] = NULL;
 		}
-		
+
 		/* verbose */
-		else if( !strcmp( argv[ i ], "-v" ) )
+		else if (!strcmp(argv[i], "-v"))
 		{
 			verbose = qtrue;
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 		}
-		
+
 		/* force */
-		else if( !strcmp( argv[ i ], "-force" ) )
+		else if (!strcmp(argv[i], "-force"))
 		{
 			force = qtrue;
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 		}
-		
+
 		/* patch subdivisions */
-		else if( !strcmp( argv[ i ], "-subdivisions" ) )
+		else if (!strcmp(argv[i], "-subdivisions"))
 		{
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 			i++;
-			patchSubdivisions = atof( argv[ i ] );
-			argv[ i ] = NULL;
-			if( patchSubdivisions <= 0.0 )
+			patchSubdivisions = atof(argv[i]);
+			argv[i] = NULL;
+			if (patchSubdivisions <= 0.0)
 				patchSubdivisions = 1.0;
 		}
 
@@ -846,56 +846,56 @@ int main( int argc, char **argv )
 		}
 
 		/* threads */
-		else if( !strcmp( argv[ i ], "-threads" ) )
+		else if (!strcmp(argv[i], "-threads"))
 		{
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 			i++;
-			numthreads = atoi( argv[ i ] );
-			argv[ i ] = NULL;
+			numthreads = atoi(argv[i]);
+			argv[i] = NULL;
 		}
 
-		else if( !strcmp( argv[i], "-gpu")){
+		else if (!strcmp(argv[i], "-gpu")) {
 			//gpu = qtrue;
 
-			argv[i] = NULL; 
+			argv[i] = NULL;
 		}
 
 		/* memlog (write a memlog.txt) */
-		else if( !strcmp( argv[ i ], "-memlog" ) )
+		else if (!strcmp(argv[i], "-memlog"))
 		{
 			memlog = qtrue;
 			safe_malloc_logstart();
-			argv[ i ] = NULL;
+			argv[i] = NULL;
 		}
 
 		/* vortex: fake launch to make Radiant monitor happy */
-		else if( !strcmp( argv[ i ], "-fake" ) )
+		else if (!strcmp(argv[i], "-fake"))
 		{
 			/* shut down connection */
 			Broadcast_Shutdown();
 			return 0;
 		}
 	}
-	
+
 	/* init model library */
 	PicoInit();
-	PicoSetMallocFunc( safe_malloc_f );
-	PicoSetFreeFunc( free );
-	PicoSetPrintFunc( PicoPrintFunc );
-	PicoSetLoadFileFunc( PicoLoadFileFunc );
-	PicoSetFreeFileFunc( free );
-	
+	PicoSetMallocFunc(safe_malloc_f);
+	PicoSetFreeFunc(free);
+	PicoSetPrintFunc(PicoPrintFunc);
+	PicoSetLoadFileFunc(PicoLoadFileFunc);
+	PicoSetFreeFileFunc(free);
+
 	/* set number of threads */
 	ThreadSetDefault();
-	
+
 	/* generate sinusoid jitter table */
-	for( i = 0; i < MAX_JITTERS; i++ )
+	for (i = 0; i < MAX_JITTERS; i++)
 	{
-		jitters[ i ] = sin( i * 139.54152147 );
+		jitters[i] = sin(i * 139.54152147);
 		//%	Sys_Printf( "Jitter %4d: %f\n", i, jitters[ i ] );
 	}
 
-	
+
 	bspLeafs = (bspLeaf_t*)malloc(sizeof(bspLeaf_t)*MAX_MAP_LEAFS);
 	bspPlanes = (bspPlane_t*)malloc(sizeof(bspPlane_t)*MAX_MAP_PLANES);
 	bspBrushes = (bspBrush_t*)malloc(sizeof(bspBrush_t)*MAX_MAP_BRUSHES);
@@ -904,31 +904,31 @@ int main( int argc, char **argv )
 	bspLeafSurfaces = (int*)malloc(sizeof(int)*MAX_MAP_LEAFFACES);
 	bspLeafBrushes = (int*)malloc(sizeof(int)*MAX_MAP_LEAFBRUSHES);
 	//bspVisBytes = (byte*)malloc(sizeof(byte)*MAX_MAP_VISIBILITY);
-	
+
 	/* we print out two versions, q3map's main version (since it evolves a bit out of GtkRadiant)
 	   and we put the GtkRadiant version to make it easy to track with what version of Radiant it was built with */
-	
+
 	setcolor(blue, black);
 	Sys_Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	setcolor(magenta, black);
-	Sys_Printf(" Q3Map         - v1.0r (c) 1999 Id Software Inc.\n" );
-	Sys_Printf(" Q3Map (ydnar) - v2.5.16 FS20g\n" );
-	Sys_Printf(" GtkRadiant    - v1.5.0\n" );
-	Sys_Printf(" BloodMap      - v1.5.3 - (c) Pavel [VorteX] Timofeyev\n" );
+	Sys_Printf(" Q3Map         - v1.0r (c) 1999 Id Software Inc.\n");
+	Sys_Printf(" Q3Map (ydnar) - v2.5.16 FS20g\n");
+	Sys_Printf(" GtkRadiant    - v1.5.0\n");
+	Sys_Printf(" BloodMap      - v1.5.3 - (c) Pavel [VorteX] Timofeyev\n");
 	setcolor(yellow, black);
-	Sys_Printf(" WzMap         - v" WZMAP_VERSION " - " __DATE__ " " __TIME__ " - by UniqueOne\n" );
+	Sys_Printf(" WzMap         - v" WZMAP_VERSION " - " __DATE__ " " __TIME__ " - by UniqueOne\n");
 	setcolor(white, black);
-	Sys_Printf(" %s\n", WZMAP_MOTD );
+	Sys_Printf(" %s\n", WZMAP_MOTD);
 	setcolor(red, black);
-	if( useBuildCfg )
-		Sys_Printf( " Enabled usage of .build config file\n" );
-	if( useCustomInfoParms )
-		Sys_Printf( " Custom info parms enabled\n" );
+	if (useBuildCfg)
+		Sys_Printf(" Enabled usage of .build config file\n");
+	if (useCustomInfoParms)
+		Sys_Printf(" Custom info parms enabled\n");
 #if defined(__HIGH_MEMORY__)
-		Sys_Printf( " High memory enabled (only for computers with *more* than 16 GB of RAM!!!).\n" );
+	Sys_Printf(" High memory enabled (only for computers with *more* than 16 GB of RAM!!!).\n");
 #endif
 #if MAX_LIGHTMAPS == 1
-	Sys_Printf( " Light styles are disabled in this build\n" );
+	Sys_Printf(" Light styles are disabled in this build\n");
 #endif
 	setcolor(cyan, black);
 	ThreadStats();
@@ -937,7 +937,7 @@ int main( int argc, char **argv )
 
 	setcolor(gray, black);
 
-	Sys_PrintHeading ( "--- Memory Usage ---\n" );
+	Sys_PrintHeading("--- Memory Usage ---\n");
 	Sys_Printf("mapplanes: %i MB.\n", sizeof(plane_t)*MAX_MAP_PLANES / (1024 * 1024));
 	Sys_Printf("bspLeafs: %i MB.\n", sizeof(bspLeaf_t)*MAX_MAP_LEAFS / (1024 * 1024));
 	Sys_Printf("bspPlanes: %i MB.\n", sizeof(bspPlane_t)*MAX_MAP_PLANES / (1024 * 1024));
@@ -949,72 +949,72 @@ int main( int argc, char **argv )
 	Sys_Printf("bspVisBytes: %i MB.\n", sizeof(byte)*MAX_MAP_VISIBILITY / (1024 * 1024));
 
 	/* ydnar: new path initialization */
-	InitPaths( &argc, argv );
+	InitPaths(&argc, argv);
 
 	/* set game options */
 	if (patchSubdivisions <= 0.0)
 		patchSubdivisions = game->patchSubdivisions;
-	
+
 	/* check if we have enough options left to attempt something */
-	if( argc < 2 )
+	if (argc < 2)
 	{
 		setcolor(white, black);
-		Error( "Usage: %s [general options] [options] mapfile", argv[ 0 ] );
+		Error("Usage: %s [general options] [options] mapfile", argv[0]);
 	}
 
 #ifdef __USE_OPENCL__
 	/* Delayed warning message for enabling gpu usage so program information can be sent to console beforehand */
-	if(gpu){
-		Sys_Printf("\nWARNING: GPU will now attempt to use your videocard to accelerate compilation. This is highly experimental and can break!\n\n"); 
-		
+	if (gpu) {
+		Sys_Printf("\nWARNING: GPU will now attempt to use your videocard to accelerate compilation. This is highly experimental and can break!\n\n");
+
 		/*Identify ocl platforms and devices then set up the context and command queue
-		  for compilation and execution of the ocl kernels*/ 
-		if(!InitOpenCL()){
-			gpu = qfalse; /*fall back to cpu if opencl fails to start for some reason*/ 
+		  for compilation and execution of the ocl kernels*/
+		if (!InitOpenCL()) {
+			gpu = qfalse; /*fall back to cpu if opencl fails to start for some reason*/
 		}
 	}
 #endif //__USE_OPENCL__
 
 	/* fixaas */
-	if( !strcmp( argv[ 1 ], "-fixaas" ) )
-		r = FixAAS( argc - 1, argv + 1 );
-	
+	if (!strcmp(argv[1], "-fixaas"))
+		r = FixAAS(argc - 1, argv + 1);
+
 	/* analyze */
-	else if( !strcmp( argv[ 1 ], "-analyze" ) )
-		r = AnalyzeBSP( argc - 1, argv + 1 );
-	
+	else if (!strcmp(argv[1], "-analyze"))
+		r = AnalyzeBSP(argc - 1, argv + 1);
+
 	/* info */
-	else if( !strcmp( argv[ 1 ], "-info" ) )
-		r = BSPInfo( argc - 2, argv + 2 );
-	
+	else if (!strcmp(argv[1], "-info"))
+		r = BSPInfo(argc - 2, argv + 2);
+
 	/* vis */
-	else if( !strcmp( argv[ 1 ], "-vis" ) )
+	else if (!strcmp(argv[1], "-vis"))
 	{
 		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF*2);
 		//sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
 		//sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
 		//memset(sorted_portals, 0, (sizeof(vportal_t*)*MAX_MAP_PORTALS * 2));
-		r = VisMain( argc - 1, argv + 1 );
+		r = VisMain(argc - 1, argv + 1);
 	}
-	
+
 	/* light */
-	else if( !strcmp( argv[ 1 ], "-light" ) )
+	else if (!strcmp(argv[1], "-light"))
 	{
 		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
 		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
 		//*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
-		r = LightMain( argc - 1, argv + 1 );
+		r = LightMain(argc - 1, argv + 1);
 	}
-	
+
 	/* vlight */
-	else if( !strcmp( argv[ 1 ], "-vlight" ) )
+	else if (!strcmp(argv[1], "-vlight"))
 	{
 		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
 		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
 		//*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
-		Sys_Warning( "VLight is no longer supported, defaulting to -light -fast instead" );
-		argv[ 1 ] = "-fast";	/* eek a hack */
-		r = LightMain( argc, argv );
+		Sys_Warning("VLight is no longer supported, defaulting to -light -fast instead");
+		argv[1] = "-fast";	/* eek a hack */
+		r = LightMain(argc, argv);
 	}
 
 	/* syphter: Navigation Mesh Generation */
@@ -1028,28 +1028,31 @@ int main( int argc, char **argv )
 		Sys_Printf("Usage: wzmap -nav [-cellheight F] [-cellSizeMult F] [-stepsize F] [-includecaulk] [-includesky] [-nogapfilter] MAPNAME\n");
 		exit(2);
 	}
-	
+
 	/* ydnar: lightmap export */
-	else if( !strcmp( argv[ 1 ], "-export" ) )
-		r = ExportLightmapsMain( argc - 1, argv + 1 );
-	
+	else if (!strcmp(argv[1], "-export"))
+		r = ExportLightmapsMain(argc - 1, argv + 1);
+
 	/* ydnar: lightmap import */
-	else if( !strcmp( argv[ 1 ], "-import" ) )
-		r = ImportLightmapsMain( argc - 1, argv + 1 );
-	
+	else if (!strcmp(argv[1], "-import"))
+		r = ImportLightmapsMain(argc - 1, argv + 1);
+
 	/* ydnar: bsp scaling */
-	else if( !strcmp( argv[ 1 ], "-scale" ) )
-		r = ScaleBSPMain( argc - 1, argv + 1 );
+	else if (!strcmp(argv[1], "-scale"))
+		r = ScaleBSPMain(argc - 1, argv + 1);
 
 #if 0
 	/* UQ1: Navmesh Generation */
 	else if (!strcmp(argv[1], "-navmesh"))
 		r = NavmeshBSPMain(argc - 1, argv + 1);
 #endif
-	
+
 	/* ydnar: bsp conversion */
-	else if( !strcmp( argv[ 1 ], "-convert" ) )
-		r = ConvertBSPMain( argc - 1, argv + 1 );
+	else if (!strcmp(argv[1], "-convert"))
+	{
+		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
+		r = ConvertBSPMain(argc - 1, argv + 1);
+	}
 
 	/* vortex: bsp optimisation */
 	else if( !strcmp( argv[ 1 ], "-optimize" ) )
