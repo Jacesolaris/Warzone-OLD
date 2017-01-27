@@ -269,6 +269,11 @@ static void LoadBrushTris(std::vector<float> &verts, std::vector<int> &tris) {
 			{
 				continue;
 			}
+
+			if (excludeCaulk && !Q_stricmp(shader->shader, "textures/system/caulk"))
+			{
+				continue;
+			}
 #endif //__IGNORE_EXTRA_SURFACES__
 
 #ifdef __IGNORE_EXTRA_SURFACES__

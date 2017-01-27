@@ -481,6 +481,7 @@ void InsertModelCullSides(entity_t *e, brush_t *inBrush)
 
 extern brush_t *InsertModelCopyBrush(brush_t *brush);
 extern float DistanceHorizontal(const vec3_t p1, const vec3_t p2);
+extern qboolean StringContainsWord(const char *haystack, const char *needle);
 
 #define CULL_BY_LOWEST_NEAR_POINT
 
@@ -519,7 +520,7 @@ float LowestMapPointNear(vec3_t pos)
 }
 #endif //CULL_BY_LOWEST_NEAR_POINT
 
-void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, shaderInfo_t *overrideShader, qboolean forcedSolid, qboolean forcedFullSolid, qboolean forcedNoSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids, float LOWEST_NEAR_POINT)
+void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, qboolean ledgeOverride, shaderInfo_t *overrideShader, qboolean forcedSolid, qboolean forcedFullSolid, qboolean forcedNoSolid, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids, float LOWEST_NEAR_POINT)
 {
 	int					s, numSurfaces;
 	m4x4_t				identity, nTransform;
@@ -699,7 +700,23 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 			{
 				if (overrideShader)
 				{
-					si = overrideShader;
+					if (ledgeOverride)
+					{
+						//Sys_Printf("surfname %s.\n", surface->name);
+
+						if (StringContainsWord(surface->name, "ledge"))
+						{
+							si = overrideShader;
+						}
+						else
+						{
+							si = ShaderInfoForShader(picoShaderName);
+						}
+					}
+					else
+					{
+						si = overrideShader;
+					}
 				}
 				/* shader renaming for sof2 */
 				else if (renameModelShaders)
@@ -1825,7 +1842,18 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 			celShader = NULL;
 
 		/* ydnar: cel shader support */
-		value = ValueForKey(e2, "_overrideShader");
+		qboolean ledgeOverride = qfalse;
+
+		value = ValueForKey(e2, "_overrideLedgeShader");
+		if (value[0] != '\0')
+		{
+			sprintf(shader, "%s", value);
+			overrideShader = ShaderInfoForShader(shader);
+			ledgeOverride = qtrue;
+		}
+		else
+			value = ValueForKey(e2, "_overrideShader");
+
 		if (value[0] != '\0')
 		{
 			sprintf(shader, "%s", value);
@@ -1886,28 +1914,28 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 		if (HAVE_COLLISION_MODEL)
 		{
 			// Add the actual model...
-			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, qfalse, qfalse, qtrue, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
+			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, ledgeOverride, overrideShader, qfalse, qfalse, qtrue, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
 			// Add the collision planes...
 			overrideShader = ShaderInfoForShader("textures/system/nodraw_solid");
 			//Sys_Printf("Adding collision model %s surfaces.\n", collisionModel);
-			InsertModel((char*)collisionModel, frame, NULL, transform, uvScale, NULL, NULL, overrideShader, qtrue, qtrue, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, qfalse, e2->lowestPointNear);
+			InsertModel((char*)collisionModel, frame, NULL, transform, uvScale, NULL, NULL, ledgeOverride, overrideShader, qtrue, qtrue, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, qfalse, e2->lowestPointNear);
 		}
 		else
 		{
-			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, forcedFullSolid, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
+			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, ledgeOverride, overrideShader, forcedSolid, forcedFullSolid, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, e2->lowestPointNear);
 		}
 #else //!CULL_BY_LOWEST_NEAR_POINT
 		if (HAVE_COLLISION_MODEL)
 		{
 			// Add the actual model...
-			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, qfalse, qfalse, qtrue, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
+			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, ledgeOverride, overrideShader, qfalse, qfalse, qtrue, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
 			// Add the collision planes...
 			overrideShader = ShaderInfoForShader("textures/system/nodraw_solid");
-			InsertModel((char*)collisionModel, frame, NULL, transform, uvScale, NULL, NULL, overrideShader, qtrue, qtrue, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, qfalse, 999999.0f);
+			InsertModel((char*)collisionModel, frame, NULL, transform, uvScale, NULL, NULL, ledgeOverride, overrideShader, qtrue, qtrue, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, qfalse, 999999.0f);
 		}
 		else
 		{
-			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, overrideShader, forcedSolid, forcedFullSolid, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
+			InsertModel((char*)model, frame, skin, transform, uvScale, remap, celShader, ledgeOverride, overrideShader, forcedSolid, forcedFullSolid, qfalse, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids, 999999.0f);
 		}
 #endif //CULL_BY_LOWEST_NEAR_POINT
 

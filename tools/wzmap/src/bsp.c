@@ -420,9 +420,11 @@ ProcessWorldModel()
 creates a full bsp + surfaces for the worldspawn entity
 */
 
+extern float subdivisionMult;
 extern vec3_t        mergeBlock;
 void MergeDrawSurfaces( void );
 void MergeDrawVerts( void );
+extern void CaulkifyStuff(void);
 
 void ProcessWorldModel( void )
 {
@@ -569,6 +571,9 @@ void ProcessWorldModel( void )
 	/* flood from entities */
 	FloodAreas( tree );
 
+	// Remove crap...
+	CaulkifyStuff();
+
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
 
@@ -589,6 +594,9 @@ void ProcessWorldModel( void )
 
 	ShowDetailedStats();
 
+	// Remove crap...
+	CaulkifyStuff();
+
 	//mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
 	
 	/* generate bsp brushes from map brushes */
@@ -602,8 +610,10 @@ void ProcessWorldModel( void )
 		FogDrawSurfaces( e );
 	
 	/* subdivide each drawsurf as required by shader tesselation */
-	if( !nosubdivide )
-		SubdivideFaceSurfaces( e, tree );
+	if (!nosubdivide)
+	{
+		SubdivideFaceSurfaces(e, tree);
+	}
 
 	/* vortex: fix degenerate brush faces */
 	FixBrushFaces( e );
@@ -1176,6 +1186,7 @@ extern int FOLIAGE_NUM_POSITIONS;
 extern void FOLIAGE_LoadClimateData( char *filename );
 extern qboolean FOLIAGE_LoadFoliagePositions( char *filename );
 
+
 int BSPMain( int argc, char **argv )
 {
 	int			i;
@@ -1627,7 +1638,7 @@ int BSPMain( int argc, char **argv )
 
 	/* ydnar: cloned brush model entities */
 	SetCloneModelNumbers();
-	
+
 	/* process world and submodels */
 	ProcessModels();
 	

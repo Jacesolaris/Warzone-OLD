@@ -762,6 +762,8 @@ main()
 q3map mojo...
 */
 
+float subdivisionMult;				/* default face subdivisions multipier */
+
 extern int NavMain(int argc, char **argv);
 
 int main( int argc, char **argv )
@@ -779,6 +781,8 @@ int main( int argc, char **argv )
 	atexit( ExitQ3Map );
 
 	gpu = qfalse;
+
+	subdivisionMult = 1.0;
 
 	/* read general options first */
 	for( i = 1; i < argc && argv[ i ]; i++ )
@@ -830,7 +834,17 @@ int main( int argc, char **argv )
 			if( patchSubdivisions <= 0.0 )
 				patchSubdivisions = 1.0;
 		}
-		
+
+		else if (!strcmp(argv[i], "-subdivisionMult"))
+		{
+			argv[i] = NULL;
+			i++;
+			subdivisionMult = atof(argv[i]);
+			argv[i] = NULL;
+			if (subdivisionMult <= 0.0)
+				subdivisionMult = 1.0;
+		}
+
 		/* threads */
 		else if( !strcmp( argv[ i ], "-threads" ) )
 		{

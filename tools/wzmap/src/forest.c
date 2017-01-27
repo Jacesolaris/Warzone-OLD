@@ -86,6 +86,7 @@ int irand(int min, int max)
 #define			MAX_FOREST_MODELS 64
 
 qboolean		FORCED_MODEL_META = qfalse;
+qboolean		CAULKIFY_CRAP = qfalse;
 
 qboolean		ADD_CLIFF_FACES = qfalse;
 float			CLIFF_FACES_SCALE = 1.0;
@@ -127,15 +128,26 @@ float			CITY_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
 char			CITY_FORCED_OVERRIDE_SHADER[MAX_FOREST_MODELS][128] = { 0 };
 int				CITY_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { 0 };
 
+void CaulkifyStuff(void);
+
 void FOLIAGE_LoadClimateData( char *filename )
 {
 	int i = 0;
+
+	Sys_PrintHeading("--- LoadClimateData ---\n");
 
 	FORCED_MODEL_META = (qboolean)atoi(IniRead(filename, "GENERAL", "forcedModelMeta", "0"));
 
 	if (FORCED_MODEL_META)
 	{
 		Sys_Printf("Forcing all models to use meta surfaces.\n");
+	}
+
+	CAULKIFY_CRAP = (qboolean)atoi(IniRead(filename, "GENERAL", "caulkifyCrap", "0"));
+
+	if (CAULKIFY_CRAP)
+	{
+		Sys_Printf("Caulkifying some map unneeded surfaces.\n");
 	}
 
 	//
@@ -268,6 +280,84 @@ void FOLIAGE_LoadClimateData( char *filename )
 	}
 }
 
+void vectoangles(const vec3_t value1, vec3_t angles);
+extern qboolean StringContainsWord(const char *haystack, const char *needle);
+
+void CaulkifyStuff(void)
+{
+	if (!CAULKIFY_CRAP) return;
+
+	Sys_PrintHeading("--- CaulkifyJunk ---\n");
+
+	int numCalkified = 0;
+	int numNoDrawAdded = 0;
+	int numSkipAdded = 0;
+	shaderInfo_t *caulkShader = ShaderInfoForShader("textures/system/caulk");
+
+	for (int s = 0; s < numMapDrawSurfs; s++)
+	{
+		printLabelledProgress("CaulkifyJunk", s, numMapDrawSurfs);
+
+		/* get drawsurf */
+		mapDrawSurface_t *ds = &mapDrawSurfs[s];
+		shaderInfo_t *si = ds->shaderInfo;
+
+		if ((si->compileFlags & C_SKIP) && !(si->compileFlags & C_NODRAW))
+		{
+			si->compileFlags |= C_NODRAW;
+			numNoDrawAdded++;
+		}
+
+		if (!(si->compileFlags & C_SKIP) && (si->compileFlags & C_NODRAW))
+		{
+			si->compileFlags |= C_SKIP;
+			numSkipAdded++;
+		}
+
+		if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
+		{
+			continue;
+		}
+
+		if (!(si->compileFlags & C_SOLID))
+		{
+			continue;
+		}
+
+		if (si == caulkShader)
+		{
+			continue;
+		}
+
+		if (ds->skybox)
+		{
+			continue;
+		}
+
+		if (StringContainsWord(si->shader, "sky"))
+		{// Never on skies...
+			continue;
+		}
+
+		if (StringContainsWord(si->shader, "caulk"))
+		{// Already caulk...
+			continue;
+		}
+
+		if (!(si->compileFlags & C_SKY))
+		{
+			if (ds->numIndexes == 0 && ds->numVerts == 4)
+			{// This is under-terrain junk...
+				ds->shaderInfo = caulkShader;
+				numCalkified++;
+			}
+		}
+	}
+
+	Sys_Printf("%d shaders set to nodraw.\n", numNoDrawAdded);
+	Sys_Printf("%d shaders set to skip.\n", numSkipAdded);
+	Sys_Printf("%d of %d surfaces were caulkified.\n", numCalkified, numMapDrawSurfs);
+}
 
 #define			FOLIAGE_MAX_FOLIAGES 2097152
 
@@ -286,6 +376,8 @@ qboolean FOLIAGE_LoadFoliagePositions( char *filename )
 	int				i = 0;
 	int				fileCount = 0;
 	int				treeCount = 0;
+
+	Sys_PrintHeading("--- LoadFoliagePositions ---\n");
 
 	f = fopen (filename, "rb");
 
@@ -376,10 +468,12 @@ void GenerateCliffFaces(void)
 {
 	if (!ADD_CLIFF_FACES) return;
 
+	Sys_PrintHeading("--- GenerateCliffs ---\n");
+
 	numCliffs = 0;
 	numDistanceCulled = 0;
 	
-	Sys_Printf("%i map draw surfs.\n", numMapDrawSurfs);
+	//Sys_Printf("%i map draw surfs.\n", numMapDrawSurfs);
 
 	for (int s = 0; s < numMapDrawSurfs /*&& numCliffs < 128*/; s++)
 	{
@@ -748,10 +842,12 @@ void GenerateLedgeFaces(void)
 {
 	if (!ADD_LEDGE_FACES) return;
 
+	Sys_PrintHeading("--- GenerateLedges ---\n");
+
 	numLedges = 0;
 	numLedgesDistanceCulled = 0;
 
-	Sys_Printf("%i map draw surfs.\n", numMapDrawSurfs);
+	//Sys_Printf("%i map draw surfs.\n", numMapDrawSurfs);
 
 	for (int s = 0; s < numMapDrawSurfs /*&& numLedges < 128*/; s++)
 	{
@@ -830,7 +926,7 @@ void GenerateLedgeFaces(void)
 				//if ((pitch > 80.0 && pitch < 100.0) || (pitch < -80.0 && pitch > -100.0))
 				//	Sys_Printf("pitch %f.\n", pitch);
 
-#define MIN_LEDGE_SLOPE 22.0//28.0
+#define MIN_LEDGE_SLOPE 16.0//22.0//28.0
 #define MAX_LEDGE_SLOPE 28.0//30.0
 				if (pitch == 180.0 || pitch == -180.0)
 				{// Horrible hack to skip the surfaces created under the map by q3map2 code... Why are boxes needed for triangles?
@@ -871,7 +967,7 @@ void GenerateLedgeFaces(void)
 
 			for (int j = 0; j < numLedges; j++)
 			{
-				if (Distance(ledgePositions[j], center) < (48.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
+				if (Distance(ledgePositions[j], center) < (48.0 * ledgeScale[j]) * LEDGE_FACES_CULL_MULTIPLIER)
 					//if ((DistanceHorizontal(ledgePositions[j], center) < (64.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER || DistanceVertical(ledgePositions[j], center) < (192.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
 					//	&& Distance(ledgePositions[j], center) < (192.0 * ledgeScale[j]) * CLIFF_FACES_CULL_MULTIPLIER)
 				{
@@ -888,7 +984,7 @@ void GenerateLedgeFaces(void)
 
 			//Sys_Printf("cliff found at %f %f %f. angles0 %f %f %f. angles1 %f %f %f. angles2 %f %f %f.\n", center[0], center[1], center[2], angles[0][0], angles[0][1], angles[0][2], angles[1][0], angles[1][1], angles[1][2], angles[2][0], angles[2][1], angles[2][2]);
 
-			ledgeScale[numLedges] = (smallestSize * CLIFF_FACES_SCALE) / 64.0;
+			ledgeScale[numLedges] = (smallestSize * LEDGE_FACES_SCALE) / 64.0;
 			ledgeHeight[numLedges] = smallestSize / 64.0;
 			VectorCopy(center, ledgePositions[numLedges]);
 			VectorCopy(angles[0], ledgeAngles[numLedges]);
@@ -955,18 +1051,31 @@ void GenerateLedgeFaces(void)
 			SetKeyValue(mapEnt, "angle", str);
 		}
 
-		if (LEDGE_SHADER[0] != '\0')
-		{
-			SetKeyValue(mapEnt, "_overrideShader", LEDGE_SHADER);
-		}
-
-
 
 		/* ydnar: get classname */
 		SetKeyValue(mapEnt, "classname", "misc_model");
 		classname = ValueForKey(mapEnt, "classname");
 
-		SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledge0%i.md3", irand(1,4)));
+		int choice = irand(1, 5);
+		
+		if (choice < 5)
+		{
+			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledge0%i.md3", choice));
+
+			if (LEDGE_SHADER[0] != '\0')
+			{// Override the whole model's shader...
+				SetKeyValue(mapEnt, "_overrideShader", LEDGE_SHADER);
+			}
+		}
+		else
+		{
+			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledgerocks01.md3"));
+
+			if (LEDGE_SHADER[0] != '\0')
+			{// Only override the ledge component's shader...
+				SetKeyValue(mapEnt, "_overrideLedgeShader", LEDGE_SHADER);
+			}
+		}
 
 		//Sys_Printf( "Generated cliff face at %f %f %f. Angle %f.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2], ledgeAngles[i][1] );
 
@@ -1155,7 +1264,7 @@ void ReassignTreeModels ( void )
 	Sys_Printf("Restricted angle possibles:\n");
 	for (i = 0; i < NUM_POSSIBLES; i++)
 	{
-		Sys_Printf("%i - %s.\n", i, TREE_MODELS[POSSIBLES[i]]);
+		Sys_Printf("%d - %s.\n", i, TREE_MODELS[POSSIBLES[i]]);
 	}
 
 	//Sys_Printf("Assign angles models from %i possibles.\n", NUM_POSSIBLES);
@@ -1254,7 +1363,7 @@ void ReassignTreeModels ( void )
 			for (int z = 0; z < numCliffs; z++)
 			{// Also keep them away from cliff objects...
 				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS
-					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS)
+					/*|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS*/)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -1305,7 +1414,7 @@ void ReassignTreeModels ( void )
 	Sys_Printf("Non restricted angle possibles:\n");
 	for (i = 0; i < NUM_POSSIBLES; i++)
 	{
-		Sys_Printf("%i - %s.\n", i, TREE_MODELS[POSSIBLES[i]]);
+		Sys_Printf("%d - %s.\n", i, TREE_MODELS[POSSIBLES[i]]);
 	}
 
 	// Now add other options...
@@ -1396,7 +1505,7 @@ void ReassignTreeModels ( void )
 				*/
 
 				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS
-					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS)
+					/*|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * TREE_CLIFF_CULL_RADIUS*/)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -1462,6 +1571,8 @@ void GenerateMapForest ( void )
 		if (FOLIAGE_NUM_POSITIONS > 0)
 		{// First re-assign model types based on buffer ranges and instance type ranges...
 			int i;
+
+			Sys_PrintHeading("--- GenerateMapForest ---\n");
 
 #if defined(__ADD_TREES_EARLY__)
 			Sys_Printf( "Adding %i trees to bsp.\n", FOLIAGE_NUM_POSITIONS );
@@ -1827,7 +1938,7 @@ void ReassignCityModels(void)
 					for (int z = 0; z < numCliffs; z++)
 					{// Also keep them away from cliff objects...
 						if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[j]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS
-							|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[j]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+							/*|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[j]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS*/)
 						{
 							bad = qtrue;
 							NUM_CLOSE_CLIFFS++;
@@ -1966,7 +2077,7 @@ void ReassignCityModels(void)
 			for (int z = 0; z < numCliffs; z++)
 			{// Also keep them away from cliff objects...
 				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS
-					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+					/*|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS*/)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -2090,7 +2201,7 @@ void ReassignCityModels(void)
 			 */
 
 				if (DistanceHorizontal(cliffPositions[z], FOLIAGE_POSITIONS[i]) < cliffScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS
-					|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS)
+					/*|| DistanceHorizontal(ledgePositions[z], FOLIAGE_POSITIONS[i]) < ledgeScale[z] * 256.0 * CITY_CLIFF_CULL_RADIUS*/)
 				{
 					bad = qtrue;
 					NUM_CLOSE_CLIFFS++;
@@ -2147,6 +2258,8 @@ void GenerateMapCity(void)
 		if (FOLIAGE_NUM_POSITIONS > 0)
 		{// First re-assign model types based on buffer ranges and instance type ranges...
 			int i;
+
+			Sys_PrintHeading("--- GenerateMapCities ---\n");
 
 #if defined(__ADD_TREES_EARLY__)
 			Sys_Printf("Adding %i buildings to bsp.\n", FOLIAGE_NUM_POSITIONS);

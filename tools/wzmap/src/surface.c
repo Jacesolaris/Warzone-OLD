@@ -1445,6 +1445,8 @@ chop up brush face surfaces that have subdivision attributes
 ydnar: and subdivide surfaces that exceed specified texture coordinate range
 */
 
+extern float subdivisionMult;
+
 void SubdivideFaceSurfaces( entity_t *e, tree_t *tree )
 {
 	int					i, j, numBaseDrawSurfs, fogNum;
@@ -1484,7 +1486,20 @@ void SubdivideFaceSurfaces( entity_t *e, tree_t *tree )
 		/* ydnar: don't subdivide sky surfaces */
 		if( si->compileFlags & C_SKY )
 			continue;
-		
+
+		// UQ1: face subdivision multiplier...
+		/*if (si->subdivisions < subdivisionMult)
+		{
+			if ((si->compileFlags & C_SKIP) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
+			{
+				continue;
+			}
+
+			si->subdivisions = subdivisionMult;
+
+			printf("Surface %i. Subdivs %f.\n", i, si->subdivisions);
+		}*/
+
 		/* do texture coordinate range check */
 		ClassifySurfaces( 1, ds );
 		if( CalcSurfaceTextureRange( ds ) == qfalse )
@@ -1513,6 +1528,7 @@ void SubdivideFaceSurfaces( entity_t *e, tree_t *tree )
 		/* get subdivisions from shader */
 		if(	si->subdivisions > 0 && si->subdivisions < subdivisions )
 			subdivisions = si->subdivisions;
+
 		if( subdivisions < 1.0f )
 			continue;
 		
@@ -2142,7 +2158,6 @@ int	FilterFaceIntoTree( mapDrawSurface_t *ds, tree_t *tree )
 {
 	winding_t	*w;
 	int			refs = 0;
-	
 	
 	/* make a winding and filter it into the tree */
 	w = WindingFromDrawSurf( ds );
@@ -3234,7 +3249,7 @@ int AddSurfaceModelsToTriangle_r( mapDrawSurface_t *ds, surfaceModel_t *model, b
 			}
 			
 			/* insert the model */
-			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, NULL, qfalse, qfalse, qfalse, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse, 999999.0f);
+			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, qfalse, NULL, qfalse, qfalse, qfalse, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse, 999999.0f);
 			
 			/* return to sender */
 			return 1;
