@@ -113,7 +113,7 @@ void main ( void )
 
 				if (i == SUN_ID) 
 				{
-					lightColors[numInRange] *= u_Local0.z;
+					lightColors[numInRange] *= 0.005;
 				}
 
 #ifdef DEBUG_POSITIONS
