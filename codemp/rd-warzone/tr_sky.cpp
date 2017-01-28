@@ -848,6 +848,7 @@ extern vec3_t VOLUMETRIC_ROOF;
 extern qboolean RB_UpdateSunFlareVis(void);
 extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
 extern void Volumetric_RoofHeight(vec3_t from);
+extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
 
 /*
 ** RB_DrawSun
@@ -931,6 +932,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 		VectorCopy(pos, SUN_POSITION);
 	
+		/*
 		// project sun point
 		Matrix16Transform(mvp, pos, hpos);
 
@@ -940,7 +942,12 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		pos[0] = 0.5f + hpos[0] * hpos[3];
 		pos[1] = 0.5f + hpos[1] * hpos[3];
 
-		VectorCopy(pos, SUN_SCREEN_POSITION);
+		SUN_SCREEN_POSITION[0] = pos[0];
+		SUN_SCREEN_POSITION[1] = pos[1];
+		*/
+
+		VectorAdd(SUN_POSITION, backEnd.refdef.vieworg, SUN_POSITION);
+		WorldCoordToScreenCoord(SUN_POSITION, &SUN_SCREEN_POSITION[0], &SUN_SCREEN_POSITION[1]);
 		
 		if (dot < cutoff)
 		{
@@ -953,7 +960,8 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 			SUN_VISIBLE = qfalse;
 			return;
 		}
-
+		
+#if 0
 		if (!Volumetric_Visible(backEnd.refdef.vieworg, SUN_POSITION, qtrue))
 		{// Trace to actual position failed... Try above...
 			vec3_t tmpOrg;
@@ -988,6 +996,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 				}
 			}
 		}
+#endif
 
 		SUN_VISIBLE = qtrue;
 	}

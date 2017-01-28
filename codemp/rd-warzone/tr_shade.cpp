@@ -1687,6 +1687,7 @@ void RB_UpdateMatrixes ( void )
 int			NUM_CLOSE_LIGHTS = 0;
 int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS] = {0};
 vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS] = {0};
+vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_LIGHTALL_DLIGHTS];
 float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
 vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
 
@@ -1700,23 +1701,44 @@ void RB_UpdateCloseLights ( void )
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
 
-#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 		if (dl->color[0] < 0.0 && dl->color[1] < 0.0 && dl->color[2] < 0.0)
 		{// Surface glow light... But has no color assigned...
 			continue;
 		}
-#endif
 
 		float distance = Distance(tr.refdef.vieworg, dl->origin);
 
+		// 2D positions for VLIGHT...
+		vec4_t pos, hpos;
+		VectorSet4(pos, dl->origin[0], dl->origin[1], dl->origin[2], 1.0);
+
+		// project sun point
+		Matrix16Transform(glState.modelviewProjection, pos, hpos);
+
+		// transform to UV coords
+		hpos[3] = 0.5f / hpos[3];
+
+		pos[0] = 0.5f + hpos[0] * hpos[3];
+		pos[1] = 0.5f + hpos[1] * hpos[3];
+
+		float x = pos[0];
+		float y = pos[1];
+
+		if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+			continue;
+		//
+
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
+
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
 			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = dl->radius;
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2];
+			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][0] = x;
+			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][1] = y;
 			NUM_CLOSE_LIGHTS++;
 			continue;
 		}
@@ -1746,6 +1768,8 @@ void RB_UpdateCloseLights ( void )
 				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0];
 				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1];
 				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2];
+				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][0] = x;
+				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][1] = y;
 			}
 		}
 	}
@@ -1756,15 +1780,6 @@ void RB_UpdateCloseLights ( void )
 		{// Remove volume light markers...
 			CLOSEST_LIGHTS_DISTANCES[i] = -CLOSEST_LIGHTS_DISTANCES[i];
 		}
-
-#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-		if (CLOSEST_LIGHTS_COLORS[i][0] < 0.0 && CLOSEST_LIGHTS_COLORS[i][1] < 0.0 && CLOSEST_LIGHTS_COLORS[i][2] < 0.0)
-		{// Surface glow lights...
-			CLOSEST_LIGHTS_COLORS[i][0] = -CLOSEST_LIGHTS_COLORS[i][0] * 0.5;
-			CLOSEST_LIGHTS_COLORS[i][1] = -CLOSEST_LIGHTS_COLORS[i][1] * 0.5;
-			CLOSEST_LIGHTS_COLORS[i][2] = -CLOSEST_LIGHTS_COLORS[i][2] * 0.5;
-		}
-#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 		// Double the range on all lights...
 		CLOSEST_LIGHTS_DISTANCES[i] *= 2.0;
@@ -1800,12 +1815,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
 
 	RB_UpdateMatrixes();
-	//RB_UpdateCloseLights();
-
-	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-	{
-
-	}
 
 	//
 	// UQ1: I think we only need to do all these once, not per stage... Waste of FPS!

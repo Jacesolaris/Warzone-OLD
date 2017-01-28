@@ -922,8 +922,8 @@ void RB_AddGlowShaderLights ( void )
 {
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
 	{// Add (close) map glows as dynamic lights as well...
-		const int	MAX_WORLD_GLOW_DLIGHTS = MAX_LIGHTALL_DLIGHTS - 1;// 15;
-		const float MAX_WORLD_GLOW_DLIGHT_RANGE = 16384.0; //4096.0;
+		const int	MAX_WORLD_GLOW_DLIGHTS = MAX_LIGHTALL_DLIGHTS - 1;
+		const float MAX_WORLD_GLOW_DLIGHT_RANGE = 16384.0;
 		int			CLOSE_TOTAL = 0;
 		int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
 		float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -933,7 +933,7 @@ void RB_AddGlowShaderLights ( void )
 		{
 			float distance = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
-
+#if 1
 			if (distance > MAX_WORLD_GLOW_DLIGHT_RANGE) continue;
 
 #ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
@@ -945,7 +945,7 @@ void RB_AddGlowShaderLights ( void )
 
 			for (int i = 0; i < CLOSE_TOTAL; i++)
 			{
-				if (Distance(CLOSE_POS[i], MAP_GLOW_LOCATIONS[maplight]) < 32.0)//192.0)//r_testvalue0->value)
+				if (Distance(CLOSE_POS[i], MAP_GLOW_LOCATIONS[maplight]) < 32.0)
 				{// Too close to another light...
 					bad = qtrue;
 					break;
@@ -956,7 +956,7 @@ void RB_AddGlowShaderLights ( void )
 			{
 				continue;
 			}
-
+#endif
 			if (CLOSE_TOTAL < MAX_WORLD_GLOW_DLIGHTS)
 			{// Have free light slots for a new light...
 				CLOSE_LIST[CLOSE_TOTAL] = maplight;
@@ -998,16 +998,6 @@ void RB_AddGlowShaderLights ( void )
 
 		for (int i = 0; i < CLOSE_TOTAL && tr.refdef.num_dlights < MAX_DLIGHTS; i++)
 		{
-#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-			vec4_t glowColor = { 0 };
-
-			VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
-
-			if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)
-				VectorSet4(glowColor, 2.0, 2.0, 2.0, 2.0);
-
-			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -glowColor[0], -glowColor[1], -glowColor[2], qfalse, qtrue );
-#else //!USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			if (MAP_GLOW_COLORS_AVILABLE[CLOSE_LIST[i]])
 			{
 				vec4_t glowColor = { 0 };
@@ -1022,13 +1012,71 @@ void RB_AddGlowShaderLights ( void )
 				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0 * strength, -1.0, -1.0, -1.0, qfalse, qtrue );
 				num_uncolored++;
 			}
-#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+
 			backEnd.refdef.num_dlights++;
 		}
 
 		//ri->Printf(PRINT_ALL, "Added %i glow lights with color. %i without.\n", num_colored, num_uncolored);
 	}
 }
+
+void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y)
+{
+#if 1
+	int	xcenter, ycenter;
+	vec3_t	local, transformed;
+	vec3_t	vfwd, vright, vup, viewAngles;
+
+	TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+
+	//NOTE: did it this way because most draw functions expect virtual 640x480 coords
+	//	and adjust them for current resolution
+	xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+	ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+
+	VectorSubtract(origin, backEnd.refdef.vieworg, local);
+
+	AngleVectors(viewAngles, vfwd, vright, vup);
+
+	transformed[0] = DotProduct(local, vright);
+	transformed[1] = DotProduct(local, vup);
+	transformed[2] = DotProduct(local, vfwd);
+
+	// Make sure Z is not negative.
+	/*if(transformed[2] < 0.01)
+	{
+	//return false;
+	//transformed[2] = 2.0 - transformed[2];
+	}*/
+
+	// Simple convert to screen coords.
+	float xzi = xcenter / transformed[2] * (90.0 / backEnd.refdef.fov_x);
+	float yzi = ycenter / transformed[2] * (90.0 / backEnd.refdef.fov_y);
+
+	*x = (xcenter + xzi * transformed[0]);
+	*y = (ycenter - yzi * transformed[1]);
+
+	*x = *x / 640;
+	*y = 1.0 - (*y / 480);
+#else
+	vec4_t pos, hpos;
+	VectorSet4(pos, origin[0], origin[1], origin[2], 1.0);
+
+	// project sun point
+	Matrix16Transform(glState.modelviewProjection, pos, hpos);
+
+	// transform to UV coords
+	hpos[3] = 0.5f / hpos[3];
+
+	pos[0] = 0.5f + hpos[0] * hpos[3];
+	pos[1] = 0.5f + hpos[1] * hpos[3];
+
+	*x = pos[0];
+	*y = pos[1];
+#endif
+}
+
+extern int			r_numdlights;
 
 qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -1042,19 +1090,20 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i glow positions.\n", NUM_MAP_GLOW_LOCATIONS);
-
 //#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	RB_AddGlowShaderLights();
 //#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
-	//ri->Printf(PRINT_WARNING, "VLIGHT GLOWS DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
+//	backEnd.refdef.num_dlights = r_numdlights; // This is being disabled somewhere...
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i glow positions.\n", NUM_MAP_GLOW_LOCATIONS);
 
+	//ri->Printf(PRINT_WARNING, "VLIGHT GLOWS DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
+	/*
 	if ( !backEnd.refdef.num_dlights && !SUN_VISIBLE ) {
 		//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: 0 dlights.\n");
 		return qfalse;
-	}
+	}*/
 
 	//
 	// UQ1: Now going to allow a maximum of MAX_VOLUMETRIC_LIGHTS volumetric lights on screen for FPS...
@@ -1077,15 +1126,18 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
 
+#if 0
 		if (!TR_InFOV( dl->origin, backEnd.refdef.vieworg ))
 		{
 			continue; // not on screen...
 		}
 
+		
 		if (distance > 4096.0)
 		{
 			continue;
 		}
+#endif
 
 #ifdef __VOLUME_LIGHT_TRACE__
 		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin, qfalse))
@@ -1120,38 +1172,10 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		}
 #endif //__VOLUME_LIGHT_TRACE__
 
-		int	xcenter, ycenter;
-		vec3_t	local, transformed;
-		vec3_t	vfwd, vright, vup, viewAngles;
+		WorldCoordToScreenCoord(dl->origin, &x, &y);
 
-		TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
-
-		//NOTE: did it this way because most draw functions expect virtual 640x480 coords
-		//	and adjust them for current resolution
-		xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
-		ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
-
-		VectorSubtract (dl->origin, backEnd.refdef.vieworg, local);
-
-		AngleVectors (viewAngles, vfwd, vright, vup);
-
-		transformed[0] = DotProduct(local,vright);
-		transformed[1] = DotProduct(local,vup);
-		transformed[2] = DotProduct(local,vfwd);
-
-		// Make sure Z is not negative.
-		/*if(transformed[2] < 0.01)
-		{
-			//return false;
-			//transformed[2] = 2.0 - transformed[2];
-		}*/
-
-		// Simple convert to screen coords.
-		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
-		float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
-
-		x = (xcenter + xzi * transformed[0]);
-		y = (ycenter - yzi * transformed[1]);
+		if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+			continue;
 
 		float depth = (distance/4096.0);
 		if (depth > 1.0) depth = 1.0;
@@ -1159,8 +1183,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		if (NUM_CLOSE_VLIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
 		{// Have free light slots for a new light...
 			CLOSEST_VLIGHTS[NUM_CLOSE_VLIGHTS] = l;
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = x / 640;
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = 1.0 - (y / 480);
+			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = x;
+			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = y;
 			CLOSEST_VLIGHTS_DISTANCES[NUM_CLOSE_VLIGHTS] = depth;
 			if (dl->isGlowBased)
 			{// Always force glsl color lookup...
@@ -1198,8 +1222,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 			if (Distance(dl->origin, backEnd.refdef.vieworg) < farthest_distance)
 			{// This light is closer. Replace this one in our array of closest lights...
 				CLOSEST_VLIGHTS[farthest_light] = l;
-				CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = x / 640;
-				CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
+				CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = x;
+				CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = y;
 				CLOSEST_VLIGHTS_DISTANCES[farthest_light] = depth;
 
 				if (dl->isGlowBased)
@@ -1299,20 +1323,42 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_DELUXEMAP);
+
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
-	GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
-	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
+	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_GLOWMAP, TB_GLOWMAP);
+	
+	float glowDimensionsX, glowDimensionsY;
 
-	GLSL_SetUniformMatrix16(&tr.volumeLightShader[dlightShader], UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+	// Use the most blurred version of glow...
+	if (r_anamorphic->integer)
+	{
+		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+		glowDimensionsX = tr.anamorphicRenderFBOImage->width;
+		glowDimensionsY = tr.anamorphicRenderFBOImage->height;
+	}
+	else if (r_bloom->integer)
+	{
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
+		glowDimensionsX = tr.bloomRenderFBOImage[0]->width;
+		glowDimensionsY = tr.bloomRenderFBOImage[0]->height;
+	}
+	else
+	{
+		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+		glowDimensionsX = tr.glowFboScaled[0]->colorImage[0]->width;
+		glowDimensionsY = tr.glowFboScaled[0]->colorImage[0]->height;
+	}
 
-//#define VOLUME_LIGHT_DEBUG
-//#define VOLUME_LIGHT_SINGLE_PASS
+	//GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	//GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
+	//GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
+
+	//GLSL_SetUniformMatrix16(&tr.volumeLightShader[dlightShader], UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+	GLSL_SetUniformMatrix16(&tr.volumeLightShader[dlightShader], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	{
 		vec2_t screensize;
@@ -1326,7 +1372,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		vec4_t viewInfo;
 
 		//float zmax = backEnd.viewParms.zFar;
-		float zmax = 4096.0;//2048.0;//backEnd.viewParms.zFar;
+		float zmax = 4096.0;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, (float)SUN_ID);
@@ -1337,15 +1383,19 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	
 	{
 		vec4_t local0;
-		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		VectorSet4(local0, glowDimensionsX, glowDimensionsY, r_testvalue0->value, r_testvalue1->value);
 		GLSL_SetUniformVec4(&tr.volumeLightShader[dlightShader], UNIFORM_LOCAL0, local0);
 	}
 	
 
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTCOUNT, NUM_CLOSE_VLIGHTS);
 	GLSL_SetUniformVec2x16(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformVec3xX(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTCOLORS, CLOSEST_VLIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformFloatxX(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTDISTANCES, CLOSEST_VLIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
+	//GLSL_SetUniformVec3xX(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTCOLORS, CLOSEST_VLIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
+	//GLSL_SetUniformFloatxX(&tr.volumeLightShader[dlightShader], UNIFORM_VLIGHTDISTANCES, CLOSEST_VLIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
+
+//#define VOLUME_LIGHT_DEBUG
+//#define VOLUME_LIGHT_SINGLE_PASS
+
 
 #if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
 	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.volumeLightShader[dlightShader], color, 0);

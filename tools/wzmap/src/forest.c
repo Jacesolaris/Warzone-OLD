@@ -1883,7 +1883,7 @@ void ReassignCityModels(void)
 	Sys_Printf("Restricted angle possibles:\n");
 	for (i = 0; i < NUM_POSSIBLES; i++)
 	{
-		Sys_Printf("%i - %s.\n", i, CITY_MODELS[POSSIBLES[i]]);
+		Sys_Printf("%d - %s.\n", i, CITY_MODELS[POSSIBLES[i]]);
 	}
 
 	// One-Off models...
@@ -2134,7 +2134,7 @@ void ReassignCityModels(void)
 	Sys_Printf("Non restricted angle possibles:\n");
 	for (i = 0; i < NUM_POSSIBLES; i++)
 	{
-		Sys_Printf("%i - %s.\n", i, CITY_MODELS[POSSIBLES[i]]);
+		Sys_Printf("%d - %s.\n", i, CITY_MODELS[POSSIBLES[i]]);
 	}
 
 	// Now add other options...

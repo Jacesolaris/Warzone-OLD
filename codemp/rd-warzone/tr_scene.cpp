@@ -340,6 +340,15 @@ float DAY_NIGHT_AMBIENT_SCALE = 0.0;
 vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
 vec4_t DAY_NIGHT_AMBIENT_COLOR_CURRENT;
 
+extern qboolean SUN_VISIBLE;
+extern vec3_t SUN_POSITION;
+extern vec2_t SUN_SCREEN_POSITION;
+
+extern qboolean RB_UpdateSunFlareVis(void);
+extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
+extern void Volumetric_RoofHeight(vec3_t from);
+extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
+
 void RB_UpdateDayNightCycle()
 {
 	int nowTime = ri->Milliseconds();
@@ -421,6 +430,97 @@ void RB_UpdateDayNightCycle()
 	tr.sunDirection[0] = cos(a) * cos(b);
 	tr.sunDirection[1] = sin(a) * cos(b);
 	tr.sunDirection[2] = sin(b);
+
+	//
+	// Update sun position info for post process stuff...
+	//
+
+	const float cutoff = 0.25f;
+	float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
+
+	float dist;
+	vec4_t pos, hpos;
+	matrix_t trans, model, mvp;
+
+	Matrix16Translation(backEnd.viewParms.ori.origin, trans);
+	Matrix16Multiply(backEnd.viewParms.world.modelMatrix, trans, model);
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+
+	//dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+	dist = 4096.0;
+	//dist = 32768.0;
+
+	VectorScale(tr.sunDirection, dist, pos);
+
+	VectorCopy(pos, SUN_POSITION);
+
+	/*
+	// project sun point
+	Matrix16Transform(mvp, pos, hpos);
+
+	// transform to UV coords
+	hpos[3] = 0.5f / hpos[3];
+
+	pos[0] = 0.5f + hpos[0] * hpos[3];
+	pos[1] = 0.5f + hpos[1] * hpos[3];
+
+	SUN_SCREEN_POSITION[0] = pos[0];
+	SUN_SCREEN_POSITION[1] = pos[1];
+	*/
+
+	VectorAdd(SUN_POSITION, backEnd.refdef.vieworg, SUN_POSITION);
+	WorldCoordToScreenCoord(SUN_POSITION, &SUN_SCREEN_POSITION[0], &SUN_SCREEN_POSITION[1]);
+
+	if (dot < cutoff)
+	{
+		SUN_VISIBLE = qfalse;
+		return;
+	}
+
+	if (!RB_UpdateSunFlareVis())
+	{
+		SUN_VISIBLE = qfalse;
+		return;
+	}
+
+#if 0
+	if (!Volumetric_Visible(backEnd.refdef.vieworg, SUN_POSITION, qtrue))
+	{// Trace to actual position failed... Try above...
+		vec3_t tmpOrg;
+		vec3_t eyeOrg;
+		vec3_t tmpRoof;
+		vec3_t eyeRoof;
+
+		// Calculate ceiling heights at both positions...
+		//Volumetric_RoofHeight(SUN_POSITION);
+		//VectorCopy(VOLUMETRIC_ROOF, tmpRoof);
+		//Volumetric_RoofHeight(backEnd.refdef.vieworg);
+		//VectorCopy(VOLUMETRIC_ROOF, eyeRoof);
+
+		VectorSet(tmpRoof, SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2] + 512.0);
+		VectorSet(eyeRoof, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2] + 128.0);
+
+		VectorSet(tmpOrg, tmpRoof[0], SUN_POSITION[1], SUN_POSITION[2]);
+		VectorSet(eyeOrg, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+		if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
+		{// Trace to above position failed... Try trace from above viewer...
+			VectorSet(tmpOrg, SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]);
+			VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+			if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
+			{// Trace from above viewer failed... Try trace from above, to above...
+				VectorSet(tmpOrg, tmpRoof[0], SUN_POSITION[1], SUN_POSITION[2]);
+				VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+				if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
+				{// Trace from/to above viewer failed...
+					SUN_VISIBLE = qfalse;
+					return; // Can't see this...
+				}
+			}
+		}
+	}
+#endif
+
+	SUN_VISIBLE = qtrue;
 }
 
 extern void R_LocalPointToWorld(const vec3_t local, vec3_t world);
@@ -433,6 +533,8 @@ extern void RB_UpdateCloseLights();
 void RE_BeginScene(const refdef_t *fd)
 {
 	Com_Memcpy(tr.refdef.text, fd->text, sizeof(tr.refdef.text));
+
+	//ri->Printf(PRINT_WARNING, "New scene.\n");
 
 	tr.refdef.x = fd->x;
 	tr.refdef.y = fd->y;
@@ -614,13 +716,11 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];
 
-	//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	backEnd.refdef.dlights = tr.refdef.dlights;
 	backEnd.refdef.num_dlights = tr.refdef.num_dlights;
 
 	RB_AddGlowShaderLights();
 	RB_UpdateCloseLights();
-	//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	// Add the decals here because decals add polys and we need to ensure
 	// that the polys are added before the the renderer is prepared

@@ -16,7 +16,6 @@ varying vec2		var_ScreenTex;
 
 //#define APPLY_CONTRAST
 //#define APPLY_CONTRAST2
-//#define EXPERIMENTAL_SHADOWS
 
 #ifdef RANDOMIZE_PIXELS
 //noise producing function to eliminate banding (got it from someone else´s shader):
@@ -60,7 +59,6 @@ void main()
 #endif
 #ifdef APPLY_CONTRAST2
 	float contrast = clamp(((volumeLight.r + volumeLight.g + volumeLight.b) / 1.5) + 0.25, 0.25, 1.5);
-	//diffuseColor.rgb *= contrast;
 	volumeLight.rgb *= contrast;
 #endif
 
@@ -73,19 +71,6 @@ void main()
 #ifdef RANDOMIZE_PIXELS
 	gl_FragColor = diffuseColor + vec4(volumeLight*random, 0.0);
 #else
-
-#ifdef EXPERIMENTAL_SHADOWS
-	if (pixelLight.a <= 0.0)
-	{
-		diffuseColor.rgb *= 0.2;
-		gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
-	}
-	else
-	{
-		gl_FragColor = diffuseColor + vec4(volumeLight, 0.0);
-	}
-#else
 	gl_FragColor = vec4(diffuseColor.rgb + volumeLight, 1.0);
-#endif
 #endif	
 }

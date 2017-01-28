@@ -199,11 +199,15 @@ void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iU
 			// ditch the BSP cache...
 			//
 			extern qboolean CM_DeleteCachedMap(qboolean bGuaranteedOkToDelete);
+			// UQ1: Need to unlock for this call, and then re-lock after... It uses Z_Free()
+			zmalloc_lock.unlock();
 			if (CM_DeleteCachedMap(qfalse))
 			{
+				zmalloc_lock.lock();
 				gbMemFreeupOccured = qtrue;
 				continue;		// we've just ditched a whole load of memory, so try again with the malloc
 			}
+			zmalloc_lock.lock();
 
 
 			// ditch any sounds not used on this level...
