@@ -9,11 +9,11 @@ uniform sampler2D			u_SplatControlMap;
 uniform sampler2D			u_SplatMap1;
 uniform sampler2D			u_SplatMap2;
 uniform sampler2D			u_SplatMap3;
-uniform sampler2D			u_SplatMap4;
+//uniform sampler2D			u_SplatMap4;
 uniform sampler2D			u_SplatNormalMap1;
 uniform sampler2D			u_SplatNormalMap2;
 uniform sampler2D			u_SplatNormalMap3;
-uniform sampler2D			u_SplatNormalMap4;
+//uniform sampler2D			u_SplatNormalMap4;
 uniform sampler2D			u_DetailMap;
 
 uniform sampler2D			u_LightMap;

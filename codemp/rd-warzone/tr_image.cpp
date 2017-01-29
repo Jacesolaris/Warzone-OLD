@@ -3113,6 +3113,7 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, normalFlags);
 }
 
+#if 0
 static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int height, int flags )
 {
 	char SubsurfaceName[MAX_QPATH];
@@ -3127,6 +3128,7 @@ static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP4, normalFlags);
 }
+#endif
 
 void R_GetTextureAverageColor(const byte *in, int width, int height, vec4_t avgColor)
 {
@@ -3231,7 +3233,7 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 		&& type != TB_SPLATMAP1
 		&& type != TB_SPLATMAP2
 		&& type != TB_SPLATMAP3
-		&& type != TB_SPLATMAP4
+		//&& type != TB_SPLATMAP4
 		&& type != TB_DETAILMAP)
 	{// Only defer diffusemaps for now...
 		return R_FindImageFile(name, type, flags);
@@ -3358,7 +3360,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_SPLATMAP1 
 		&& type != IMGTYPE_SPLATMAP2 
 		&& type != IMGTYPE_SPLATMAP3 
-		&& type != IMGTYPE_SPLATMAP4 
+		//&& type != IMGTYPE_SPLATMAP4 
 		&& type != IMGTYPE_SPLATCONTROLMAP
 		&& type != IMGTYPE_DETAILMAP
 		&& !(flags & IMGFLAG_CUBEMAP))
@@ -3390,7 +3392,9 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		R_CreateSplatMap1( name, pic, width, height, flags );
 		R_CreateSplatMap2( name, pic, width, height, flags );
 		R_CreateSplatMap3( name, pic, width, height, flags );
+#if 0
 		R_CreateSplatMap4( name, pic, width, height, flags );
+#endif
 
 		R_CreateSteepMap( name, pic, width, height, flags );
 		R_CreateSteepMap2( name, pic, width, height, flags );

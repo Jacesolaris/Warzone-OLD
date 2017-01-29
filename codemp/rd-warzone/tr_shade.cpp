@@ -1092,11 +1092,11 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			hasSplatMap3 = 1;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP4].image[0]
+		/*if ((pStage->bundle[TB_SPLATMAP4].image[0]
 			&& pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
 		{
 			hasSplatMap4 = 1;
-		}
+		}*/
 
 		if (pStage->isWater && r_glslWater->integer)
 		{
@@ -2039,11 +2039,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->bundle[TB_SPLATMAP3].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP3].image[0]);
 		}
 
-		if (pStage->bundle[TB_SPLATMAP4].image[0]
+		/*if (pStage->bundle[TB_SPLATMAP4].image[0]
 			&& pStage->bundle[TB_SPLATMAP4].image[0]->deferredLoad)
 		{// Load the actual image file...
 			pStage->bundle[TB_SPLATMAP4].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP4].image[0]);
-		}
+		}*/
 
 		if (pStage->bundle[TB_DETAILMAP].image[0]
 			&& pStage->bundle[TB_DETAILMAP].image[0]->deferredLoad)
@@ -2122,7 +2122,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			|| pStage->bundle[TB_SPLATMAP1].image[0]
 			|| pStage->bundle[TB_SPLATMAP2].image[0]
 			|| pStage->bundle[TB_SPLATMAP3].image[0]
-			|| pStage->bundle[TB_SPLATMAP4].image[0])
+			/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/)
 		{
 			int index = pStage->glslShaderIndex;
 
@@ -2132,7 +2132,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
 					|| pStage->bundle[TB_SPLATMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP3].image[0]
-					|| pStage->bundle[TB_SPLATMAP4].image[0]))
+					/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/))
 			{// When we have splatmaps we need to force lightall...
 				pStage->glslShaderGroup = tr.lightallShader;
 				pStage->glslShaderIndex = 0;
@@ -2181,7 +2181,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
 					|| pStage->bundle[TB_SPLATMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP3].image[0]
-					|| pStage->bundle[TB_SPLATMAP4].image[0]))
+					/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/))
 			{
 				isUsingRegions = qtrue;
 				index |= LIGHTDEF_USE_REGIONS;
@@ -2191,7 +2191,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				|| pStage->bundle[TB_SPLATMAP1].image[0]
 				|| pStage->bundle[TB_SPLATMAP2].image[0]
 				|| pStage->bundle[TB_SPLATMAP3].image[0]
-				|| pStage->bundle[TB_SPLATMAP4].image[0])
+				/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/)
 			{
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
@@ -2614,7 +2614,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
+			/*if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
 			{
 				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
 				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
@@ -2631,7 +2631,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
 					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
 				}
-			}
+			}*/
 
 			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
 			{

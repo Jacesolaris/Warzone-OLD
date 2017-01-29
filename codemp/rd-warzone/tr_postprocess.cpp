@@ -2925,21 +2925,7 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix); //*
-	//GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWMATRIX, model);
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELMATRIX, backEnd.viewParms.world.modelMatrix/*model*/); //*
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_VIEWMATRIX, backEnd.viewParms.world.transformMatrix);//trans);
-
-	matrix_t invProj, proj;
-	Matrix16SimpleInverse( model/*backEnd.viewParms.world.modelMatrix*//*backEnd.viewParms.projectionMatrix*/, invProj);
-	Matrix16SimpleInverse( invProj, proj);
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_INVEYEPROJECTIONMATRIX, invProj);
-
-
-
-	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	
 	GLSL_SetUniformFloat(&tr.fogPostShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
@@ -2953,7 +2939,7 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	{
 		vec4_t viewInfo;
-		float zmax = 2048.0;
+		float zmax = 4096.0;// 2048.0;
 		//float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);

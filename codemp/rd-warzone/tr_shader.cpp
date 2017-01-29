@@ -4206,7 +4206,7 @@ qboolean R_TextureFileExists(char *name)
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse,
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *steepmap2, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3, shaderStage_t *splat4, qboolean parallax, qboolean tcgen)
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *steepmap2, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3/*, shaderStage_t *splat4*/, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
@@ -4972,6 +4972,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 		}
 
+#if 0
 		if (splat4 && splat4->bundle[0].image[0] && splat4->bundle[0].image[0] != tr.whiteImage)
 		{// Got one...
 			diffuse->bundle[TB_SPLATMAP4] = splat4->bundle[0];
@@ -5027,6 +5028,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP4].image[1] = NULL;
 			}
 		}
+#endif
 
 		{
 			// Detail Map
@@ -5285,7 +5287,7 @@ static int CollapseStagesToGLSL(void)
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
-			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep, *steep2, *splatControl, *splat1, *splat2, *splat3, *splat4;
+			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep, *steep2, *splatControl, *splat1, *splat2, *splat3/*, *splat4*/;
 			qboolean parallax, tcgen;
 
 			if (!pStage->active)
@@ -5312,7 +5314,7 @@ static int CollapseStagesToGLSL(void)
 			splat1 = NULL;
 			splat2 = NULL;
 			splat3 = NULL;
-			splat4 = NULL;
+			//splat4 = NULL;
 
 
 			// we have a diffuse map, find matching normal, specular, and lightmap
@@ -5405,10 +5407,12 @@ static int CollapseStagesToGLSL(void)
 							splat3 = pStage2;
 						}
 
+#if 0
 					case ST_SPLATMAP4:
 						{
 							splat4 = pStage2;
 						}
+#endif
 
 					case ST_COLORMAP:
 						if (pStage2->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
@@ -5434,7 +5438,7 @@ static int CollapseStagesToGLSL(void)
 				tcgen = qtrue;
 			}
 
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, steep, steep2, splatControl, splat1, splat2, splat3, splat4, parallax, tcgen);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, steep, steep2, splatControl, splat1, splat2, splat3/*, splat4*/, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages
@@ -5524,10 +5528,12 @@ static int CollapseStagesToGLSL(void)
 			pStage->active = qfalse;
 		}
 
+#if 0
 		if (pStage->type == ST_SPLATMAP4)
 		{
 			pStage->active = qfalse;
 		}
+#endif
 	}
 
 	// remove inactive stages
@@ -5710,10 +5716,12 @@ static int CollapseStagesToGLSL(void)
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap3.\n", i);
 			}
+#if 0
 			else if (pStage->type == ST_SPLATMAP4)
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap4.\n", i);
 			}
+#endif
 			else
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is %i.\n", i, pStage->type);
@@ -5774,7 +5782,7 @@ static void FixRenderCommandList( int newShader ) {
 					shader_t	*shader;
 					int64_t		fogNum;
 					int64_t		entityNum;
-					int64_t		dlightMap;
+					//int64_t		dlightMap;
 					int64_t		sortedIndex;
 					int64_t		postRender;
 					const drawSurfsCommand_t *ds_cmd =  (const drawSurfsCommand_t *)curCmd;
@@ -6369,6 +6377,7 @@ static shader_t *FinishShader( void ) {
 				}
 				break;
 			}
+#if 0
 			case ST_SPLATMAP4:
 			{
 				if(!pStage->bundle[0].image[0])
@@ -6380,6 +6389,7 @@ static shader_t *FinishShader( void ) {
 				}
 				break;
 			}
+#endif
 		}
 
 		//

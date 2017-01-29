@@ -1276,11 +1276,11 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_SplatMap1", GLSL_INT, 1 },
 	{ "u_SplatMap2", GLSL_INT, 1 },
 	{ "u_SplatMap3", GLSL_INT, 1 },
-	{ "u_SplatMap4", GLSL_INT, 1 },
+//	{ "u_SplatMap4", GLSL_INT, 1 },
 	{ "u_SplatNormalMap1", GLSL_INT, 1 },
 	{ "u_SplatNormalMap2", GLSL_INT, 1 },
 	{ "u_SplatNormalMap3", GLSL_INT, 1 },
-	{ "u_SplatNormalMap4", GLSL_INT, 1 },
+//	{ "u_SplatNormalMap4", GLSL_INT, 1 },
 	{ "u_DetailMap", GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
@@ -3914,11 +3914,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP4, TB_SPLATMAP4);
+//		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP4, TB_SPLATMAP4);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
+//		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
 		qglUseProgram(0);
 
