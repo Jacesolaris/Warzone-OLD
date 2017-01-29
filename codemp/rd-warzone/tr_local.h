@@ -60,6 +60,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define DISTANCE_BETWEEN_CUBEMAPS 384 //256
 #define	MAX_LIGHTALL_DLIGHTS 24
 
+#define MAX_IMAGE_PATH 256 //MAX_QPATH
+
 
 // Merge the whole damn lot and use player's closest cubemap...
 #define __PLAYER_BASED_CUBEMAPS__
@@ -550,7 +552,7 @@ typedef enum
 } animMapType_t;
 
 typedef struct image_s {
-	char		imgName[MAX_QPATH];		// game path, including extension
+	char		imgName[MAX_IMAGE_PATH];		// game path, including extension
 	int			width, height;				// source image
 	int			uploadWidth, uploadHeight;	// after power of two and picmip but not including clamp to MAX_TEXTURE_SIZE
 	GLuint		texnum;					// gl texture binding

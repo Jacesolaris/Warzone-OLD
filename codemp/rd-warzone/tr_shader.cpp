@@ -158,7 +158,7 @@ static long generateHashValue( const char *fname, const int size ) {
 }
 
 void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset) {
-	char		strippedName[MAX_QPATH];
+	char		strippedName[MAX_IMAGE_PATH];
 	int			hash;
 	shader_t	*sh, *sh2;
 	qhandle_t	h;
@@ -2810,7 +2810,7 @@ skyParms <outerbox> <cloudheight> <innerbox>
 static void ParseSkyParms( const char **text ) {
 	char				*token;
 	static const char	*suf[6] = {"rt", "lf", "bk", "ft", "up", "dn"};
-	char		pathname[MAX_QPATH];
+	char		pathname[MAX_IMAGE_PATH];
 	int			i;
 	int imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
 
@@ -4170,7 +4170,7 @@ void StripCrap( const char *in, char *out, int destsize )
 
 qboolean R_TextureFileExists(char *name)
 {
-	char texName[MAX_QPATH] = { 0 };
+	char texName[MAX_IMAGE_PATH] = { 0 };
 	COM_StripExtension(name, texName, sizeof(texName));
 	sprintf(texName, "%s.jpg", name);
 
@@ -4182,7 +4182,7 @@ qboolean R_TextureFileExists(char *name)
 		return qtrue;
 	}
 
-	memset(&texName, 0, sizeof(char) * MAX_QPATH);
+	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
 	COM_StripExtension(name, texName, sizeof(texName));
 	sprintf(texName, "%s.tga", name);
 
@@ -4192,7 +4192,7 @@ qboolean R_TextureFileExists(char *name)
 		return qtrue;
 	}
 
-	memset(&texName, 0, sizeof(char) * MAX_QPATH);
+	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
 	COM_StripExtension(name, texName, sizeof(texName));
 	sprintf(texName, "%s.png", name);
 
@@ -4336,7 +4336,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 		else if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded)//if (lightmap || useLightVector || useLightVertex)
 		{
-			char normalName[MAX_QPATH];
+			char normalName[MAX_IMAGE_PATH];
 			image_t *normalImg;
 			int normalFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
 
@@ -4427,8 +4427,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 		else if (!diffuse->bundle[TB_SPECULARMAP].specularLoaded)
 		{// Check if we can load one...
-			char specularName[MAX_QPATH];
-			char specularName2[MAX_QPATH];
+			char specularName[MAX_IMAGE_PATH];
+			char specularName2[MAX_IMAGE_PATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
 
@@ -4499,8 +4499,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 		else if (!diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded)
 		{// Check if we can load one...
-			char specularName[MAX_QPATH];
-			char specularName2[MAX_QPATH];
+			char specularName[MAX_IMAGE_PATH];
+			char specularName2[MAX_IMAGE_PATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
 
@@ -4552,8 +4552,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 		else if (!diffuse->bundle[TB_OVERLAYMAP].overlayLoaded)
 		{// Check if we can load one...
-			char specularName[MAX_QPATH];
-			char specularName2[MAX_QPATH];
+			char specularName[MAX_IMAGE_PATH];
+			char specularName2[MAX_IMAGE_PATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4637,8 +4637,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 		else if (!diffuse->bundle[TB_STEEPMAP].steepMapLoaded)
 		{// Check if we can load one...
-			char specularName[MAX_QPATH];
-			char specularName2[MAX_QPATH];
+			char specularName[MAX_IMAGE_PATH];
+			char specularName2[MAX_IMAGE_PATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4702,8 +4702,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 		else if (!diffuse->bundle[TB_STEEPMAP2].steepMapLoaded2)
 		{// Check if we can load one...
-			char specularName[MAX_QPATH];
-			char specularName2[MAX_QPATH];
+			char specularName[MAX_IMAGE_PATH];
+			char specularName2[MAX_IMAGE_PATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4763,8 +4763,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			// Splat Control Map - We will allow each shader to have it's own map-wide spatter control image...
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-			char splatName[MAX_QPATH];
-			char splatName2[MAX_QPATH];
+			char splatName[MAX_IMAGE_PATH];
+			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4813,8 +4813,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			// Splat Map #1
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-			char splatName[MAX_QPATH];
-			char splatName2[MAX_QPATH];
+			char splatName[MAX_IMAGE_PATH];
+			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4869,8 +4869,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			// Splat Map #2
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-			char splatName[MAX_QPATH];
-			char splatName2[MAX_QPATH];
+			char splatName[MAX_IMAGE_PATH];
+			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4925,8 +4925,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			// Splat Map #3
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-			char splatName[MAX_QPATH];
-			char splatName2[MAX_QPATH];
+			char splatName[MAX_IMAGE_PATH];
+			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -4982,8 +4982,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			// Splat Map #4
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-			char splatName[MAX_QPATH];
-			char splatName2[MAX_QPATH];
+			char splatName[MAX_IMAGE_PATH];
+			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -5034,8 +5034,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			// Detail Map
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-			char splatName[MAX_QPATH];
-			char splatName2[MAX_QPATH];
+			char splatName[MAX_IMAGE_PATH];
+			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
@@ -6603,7 +6603,7 @@ default shader if the real one can't be found.
 ==================
 */
 shader_t *R_FindShaderByName( const char *name ) {
-	char		strippedName[MAX_QPATH];
+	char		strippedName[MAX_IMAGE_PATH];
 	int			hash;
 	shader_t	*sh;
 
@@ -7062,7 +7062,7 @@ using namespace tthread;
 tthread::fast_mutex findshader_lock;
 
 shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
-	char		strippedName[MAX_QPATH];
+	char		strippedName[MAX_IMAGE_PATH];
 	int			hash, flags;
 	const char	*shaderText;
 	image_t		*image;
@@ -7156,7 +7156,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		shader.defaultShader = qfalse;
 
 		// Check if this texture has a _glow component...
-		char glowName[MAX_QPATH] = { 0 };
+		char glowName[MAX_IMAGE_PATH] = { 0 };
 
 		flags = IMGFLAG_NONE;
 
@@ -7183,7 +7183,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 		else
 		{
-			memset(glowName, 0, sizeof(char) * MAX_QPATH);
+			memset(glowName, 0, sizeof(char) * MAX_IMAGE_PATH);
 			sprintf(glowName, "%s_glw", strippedName);
 
 			if (R_TextureFileExists(glowName))
@@ -7376,7 +7376,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 shader_t *R_FindServerShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage )
 {
-	char		strippedName[MAX_QPATH];
+	char		strippedName[MAX_IMAGE_PATH];
 	int			hash;
 	shader_t	*sh;
 
@@ -7514,8 +7514,8 @@ way to ask for different implicit lighting modes (vertex, lightmap, etc)
 qhandle_t RE_RegisterShaderLightMap( const char *name, const int *lightmapIndexes, const byte *styles ) {
 	shader_t	*sh;
 
-	if ( strlen( name ) >= MAX_QPATH ) {
-		ri->Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
+	if ( strlen( name ) >= MAX_IMAGE_PATH) {
+		ri->Printf( PRINT_ALL, "Shader name exceeds MAX_IMAGE_PATH\n" );
 		return 0;
 	}
 
@@ -7548,8 +7548,8 @@ way to ask for different implicit lighting modes (vertex, lightmap, etc)
 qhandle_t RE_RegisterShader( const char *name ) {
 	shader_t	*sh;
 
-	if ( strlen( name ) >= MAX_QPATH ) {
-		ri->Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
+	if ( strlen( name ) >= MAX_IMAGE_PATH) {
+		ri->Printf( PRINT_ALL, "Shader name exceeds MAX_IMAGE_PATH\n" );
 		return 0;
 	}
 
@@ -7578,8 +7578,8 @@ For menu graphics that should never be picmiped
 qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	shader_t	*sh;
 
-	if ( strlen( name ) >= MAX_QPATH ) {
-		ri->Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
+	if ( strlen( name ) >= MAX_IMAGE_PATH) {
+		ri->Printf( PRINT_ALL, "Shader name exceeds MAX_IMAGE_PATH\n" );
 		return 0;
 	}
 
@@ -7698,7 +7698,7 @@ static void ScanAndLoadShaderFiles( void )
 	int i;
 	char *oldp, *token, *hashMem, *textEnd;
 	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
-	char shaderName[MAX_QPATH];
+	char shaderName[MAX_IMAGE_PATH];
 	int shaderLine;
 
 	long sum = 0, summand;
@@ -7718,7 +7718,7 @@ static void ScanAndLoadShaderFiles( void )
 	// load and parse shader files
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
-		char filename[MAX_QPATH];
+		char filename[MAX_IMAGE_PATH];
 
 		// look for a .mtr file first
 		{

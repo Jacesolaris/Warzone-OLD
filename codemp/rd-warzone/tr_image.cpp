@@ -2320,7 +2320,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	long		hash;
 	int         glWrapClampMode;
 
-	if (strlen(name) >= MAX_QPATH ) {
+	if (strlen(name) >= MAX_IMAGE_PATH) {
 		ri->Error (ERR_DROP, "R_CreateImage: \"%s\" is too long", name);
 	}
 	if ( !strncmp( name, "*lightmap", 9 ) ) {
@@ -2925,14 +2925,14 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 
 image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
 {
-	char normalName[MAX_QPATH];
+	char normalName[MAX_IMAGE_PATH];
 	image_t *normalImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
-	COM_StripExtension(name, normalName, MAX_QPATH);
-	Q_strcat(normalName, MAX_QPATH, "_n");
+	COM_StripExtension(name, normalName, MAX_IMAGE_PATH);
+	Q_strcat(normalName, MAX_IMAGE_PATH, "_n");
 
 	// find normalmap in case it's there
 	normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
@@ -2947,14 +2947,14 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 
 static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char specularName[MAX_QPATH];
+	char specularName[MAX_IMAGE_PATH];
 	image_t *specularImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
-	COM_StripExtension(name, specularName, MAX_QPATH);
-	Q_strcat(specularName, MAX_QPATH, "_s");
+	COM_StripExtension(name, specularName, MAX_IMAGE_PATH);
+	Q_strcat(specularName, MAX_IMAGE_PATH, "_s");
 	
 	// find normalmap in case it's there
 	specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, normalFlags);
@@ -2965,22 +2965,22 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 	if (specularImage == NULL)
 	{
 		memset(specularName, 0, sizeof(specularName));
-		COM_StripExtension(name, specularName, MAX_QPATH);
-		Q_strcat(specularName, MAX_QPATH, "_spec");
+		COM_StripExtension(name, specularName, MAX_IMAGE_PATH);
+		Q_strcat(specularName, MAX_IMAGE_PATH, "_spec");
 		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, normalFlags);
 	}
 }
 /*
 static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_sub");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_sub");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
@@ -2991,22 +2991,22 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 	if (SubsurfaceImage == NULL)
 	{
 		memset(SubsurfaceName, 0, sizeof(SubsurfaceName));
-		COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-		Q_strcat(SubsurfaceName, MAX_QPATH, "_subsurface");
+		COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+		Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_subsurface");
 		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
 	}
 }
 */
 static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_o");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_o");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
@@ -3017,22 +3017,22 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 	if (SubsurfaceImage == NULL)
 	{
 		memset(SubsurfaceName, 0, sizeof(SubsurfaceName));
-		COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-		Q_strcat(SubsurfaceName, MAX_QPATH, "_overlay");
+		COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+		Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_overlay");
 		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
 	}
 }
 
 static void R_CreateSteepMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_steep");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_steep");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, normalFlags);
@@ -3040,14 +3040,14 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 
 static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_steep2");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_steep2");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP2, normalFlags);
@@ -3055,14 +3055,14 @@ static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int heig
 
 static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATCONTROLMAP, normalFlags);
@@ -3070,14 +3070,14 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 
 static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat1");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat1");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP1, normalFlags);
@@ -3085,14 +3085,14 @@ static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int heig
 
 static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat2");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat2");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP2, normalFlags);
@@ -3100,14 +3100,14 @@ static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int heig
 
 static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat3");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat3");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, normalFlags);
@@ -3116,14 +3116,14 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 #if 0
 static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_QPATH];
+	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
-	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
-	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat4");
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat4");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP4, normalFlags);
