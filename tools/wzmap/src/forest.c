@@ -98,6 +98,8 @@ qboolean		ADD_LEDGE_FACES = qfalse;
 float			LEDGE_FACES_SCALE = 1.0;
 qboolean		LEDGE_FACES_SCALE_XY = qfalse;
 float			LEDGE_FACES_CULL_MULTIPLIER = 1.0;
+float			LEDGE_MIN_SLOPE = 22.0;
+float			LEDGE_MAX_SLOPE = 28.0;
 qboolean		LEDGE_CHEAP = qfalse;
 char			LEDGE_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
@@ -182,6 +184,9 @@ void FOLIAGE_LoadClimateData( char *filename )
 	ADD_LEDGE_FACES = (qboolean)atoi(IniRead(filename, "LEDGES", "addLedgeFaces", "0"));
 	LEDGE_FACES_SCALE = atof(IniRead(filename, "LEDGES", "ledgeFacesScale", "1.0"));
 	LEDGE_FACES_CULL_MULTIPLIER = atof(IniRead(filename, "LEDGES", "ledgeFacesCullScale", "1.0"));
+
+	LEDGE_MIN_SLOPE = atof(IniRead(filename, "LEDGES", "ledgeMinSlope", "22.0"));
+	LEDGE_MAX_SLOPE = atof(IniRead(filename, "LEDGES", "ledgeMaxSlope", "28.0"));
 
 	strcpy(LEDGE_SHADER, IniRead(filename, "LEDGES", "ledgeShader", ""));
 
@@ -926,13 +931,11 @@ void GenerateLedgeFaces(void)
 				//if ((pitch > 80.0 && pitch < 100.0) || (pitch < -80.0 && pitch > -100.0))
 				//	Sys_Printf("pitch %f.\n", pitch);
 
-#define MIN_LEDGE_SLOPE 16.0//22.0//28.0
-#define MAX_LEDGE_SLOPE 28.0//30.0
 				if (pitch == 180.0 || pitch == -180.0)
 				{// Horrible hack to skip the surfaces created under the map by q3map2 code... Why are boxes needed for triangles?
 					continue;
 				}
-				else if ((pitch > MIN_LEDGE_SLOPE && pitch < MAX_LEDGE_SLOPE) || (pitch < -MIN_LEDGE_SLOPE && pitch > -MAX_LEDGE_SLOPE))
+				else if ((pitch > LEDGE_MIN_SLOPE && pitch < LEDGE_MAX_SLOPE) || (pitch < -LEDGE_MIN_SLOPE && pitch > -LEDGE_MAX_SLOPE))
 				{
 					isCliff = qtrue;
 				}
