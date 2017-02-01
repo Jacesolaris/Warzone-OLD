@@ -53,7 +53,7 @@ float		NUM_PLANT_SHADERS = 0;
 #define		PLANT_SCALE_MULTIPLIER 1.0
 
 #define		MAX_PLANT_SHADERS 100
-#define		MAX_PLANT_MODELS 12
+#define		MAX_PLANT_MODELS 55
 
 float		TREE_SCALE_MULTIPLIER = 1.0;
 
@@ -61,61 +61,65 @@ static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant02.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant03.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
+	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant02.md3",
 	"models/warzone/plants/groundplant02.md3",
 	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant03.md3",
 	"models/warzone/plants/groundplant04.md3",
-	"models/warzone/plants/groundplant05.md3",
-	"models/warzone/plants/groundplant06.md3",
 	"models/warzone/plants/fern01.md3",
+	// Near trees/walls, or normal...
 	"models/warzone/plants/smalltree01.md3",
+	// Near trees/walls...
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern03.md3",
+	"models/warzone/plants/fern04.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fernplants01.md3",
 };
 
-static const char *SpringPlantsModelsList[] = {
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant02.md3",
-	"models/warzone/plants/groundplant02.md3",
-	"models/warzone/plants/groundplant03.md3",
-	"models/warzone/plants/groundplant03.md3",
-	"models/warzone/plants/groundplant04.md3",
-	"models/warzone/plants/groundplant05.md3",
-	"models/warzone/plants/groundplant06.md3",
-	"models/warzone/plants/fern01.md3",
-	"models/warzone/plants/smalltree01.md3",
-};
-
-static const char *EndorPlantsModelsList[] = {
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant02.md3",
-	"models/warzone/plants/groundplant02.md3",
-	"models/warzone/plants/groundplant03.md3",
-	"models/warzone/plants/groundplant03.md3",
-	"models/warzone/plants/groundplant04.md3",
-	"models/warzone/plants/groundplant05.md3",
-	"models/warzone/plants/groundplant06.md3",
-	"models/warzone/plants/fern01.md3",
-	"models/warzone/plants/smalltree01.md3",
-};
-
-static const char *SnowPlantsModelsList[] = {
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant01.md3",
-	"models/warzone/plants/groundplant02.md3",
-	"models/warzone/plants/groundplant02.md3",
-	"models/warzone/plants/groundplant03.md3",
-	"models/warzone/plants/groundplant03.md3",
-	"models/warzone/plants/groundplant04.md3",
-	"models/warzone/plants/groundplant05.md3",
-	"models/warzone/plants/groundplant06.md3",
-	"models/warzone/plants/fern01.md3",
-	"models/warzone/plants/smalltree01.md3",
-};
+#define SpringPlantsModelsList TropicalPlantsModelsList
+#define EndorPlantsModelsList TropicalPlantsModelsList
+#define SnowPlantsModelsList TropicalPlantsModelsList
 
 static const char *TropicalPlantsList[] = {
 	"models/warzone/foliage/plant01.png",
@@ -1311,6 +1315,88 @@ void FOLIAGE_AddFoliageEntityToScene(refEntity_t *ent)
 	AddRefEntityToScene(ent);
 }
 
+void FOLIAGE_ApplyAxisRotation(vec3_t axis[3], int rotType, float value)
+{//apply matrix rotation to this axis.
+ //rotType = type of rotation (PITCH, YAW, ROLL)
+ //value = size of rotation in degrees, no action if == 0
+	vec3_t result[3];  //The resulting axis
+	vec3_t rotation[3];  //rotation matrix
+	int i, j; //multiplication counters
+
+	if (value == 0)
+	{//no rotation, just return.
+		return;
+	}
+
+	//init rotation matrix
+	switch (rotType)
+	{
+	case ROLL: //R_X
+		rotation[0][0] = 1;
+		rotation[0][1] = 0;
+		rotation[0][2] = 0;
+
+		rotation[1][0] = 0;
+		rotation[1][1] = cos(value / 360 * (2 * M_PI));
+		rotation[1][2] = -sin(value / 360 * (2 * M_PI));
+
+		rotation[2][0] = 0;
+		rotation[2][1] = sin(value / 360 * (2 * M_PI));
+		rotation[2][2] = cos(value / 360 * (2 * M_PI));
+		break;
+
+	case PITCH: //R_Y
+		rotation[0][0] = cos(value / 360 * (2 * M_PI));
+		rotation[0][1] = 0;
+		rotation[0][2] = sin(value / 360 * (2 * M_PI));
+
+		rotation[1][0] = 0;
+		rotation[1][1] = 1;
+		rotation[1][2] = 0;
+
+		rotation[2][0] = -sin(value / 360 * (2 * M_PI));
+		rotation[2][1] = 0;
+		rotation[2][2] = cos(value / 360 * (2 * M_PI));
+		break;
+
+	case YAW: //R_Z
+		rotation[0][0] = cos(value / 360 * (2 * M_PI));
+		rotation[0][1] = -sin(value / 360 * (2 * M_PI));
+		rotation[0][2] = 0;
+
+		rotation[1][0] = sin(value / 360 * (2 * M_PI));
+		rotation[1][1] = cos(value / 360 * (2 * M_PI));
+		rotation[1][2] = 0;
+
+		rotation[2][0] = 0;
+		rotation[2][1] = 0;
+		rotation[2][2] = 1;
+		break;
+
+	default:
+		trap->Print("Error:  Bad rotType %i given to ApplyAxisRotation\n", rotType);
+		break;
+	};
+
+	//apply rotation
+	for (i = 0; i < 3; i++)
+	{
+		for (j = 0; j < 3; j++)
+		{
+			result[i][j] = rotation[i][0] * axis[0][j] + rotation[i][1] * axis[1][j]
+				+ rotation[i][2] * axis[2][j];
+			/* post apply method
+			result[i][j] = axis[i][0]*rotation[0][j] + axis[i][1]*rotation[1][j]
+			+ axis[i][2]*rotation[2][j];
+			*/
+		}
+	}
+
+	//copy result
+	AxisCopy(result, axis);
+
+}
+
 void FOLIAGE_AddToScreen(int num, int passType) {
 	refEntity_t		re;
 	vec3_t			angles;
@@ -1381,13 +1467,18 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 			vectoangles(FOLIAGE_NORMALS[num], angles);
 			angles[PITCH] += 90;
-			//angles[YAW] += FOLIAGE_PLANT_ANGLES[num];
+			//angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
+			//angles[YAW] += 90.0 + FOLIAGE_PLANT_ANGLES[num];
 
 			VectorCopy(angles, re.angles);
 			AnglesToAxis(angles, re.axis);
 
+			//FOLIAGE_ApplyAxisRotation(re.axis, PITCH, AngOffset[PITCH]);
+			FOLIAGE_ApplyAxisRotation(re.axis, YAW, FOLIAGE_PLANT_ANGLES[num]);
+			//FOLIAGE_ApplyAxisRotation(re.axis, ROLL, AngOffset[ROLL]);
+
 			// Add extra rotation so it's different to grass angle...
-			//RotateAroundDirection( re.axis, FOLIAGE_PLANT_ANGLES[num]+45 );
+			//RotateAroundDirection( re.axis, FOLIAGE_PLANT_ANGLES[num] );
 
 			ScaleModelAxis(&re);
 
@@ -2702,7 +2793,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
 
 			FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+			FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = irand(0, 180);
 
 			VectorCopy(grassSpotList[i], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]);
 			FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS][2] -= 18.0;
@@ -2900,6 +2991,255 @@ void FOLIAGE_FoliageReplant(int plantPercentage)
 	FOLIAGE_SaveFoliagePositions();
 }
 
+qboolean FOLIAGE_MaterialIsWallSolid(int mateiral)
+{
+	if (mateiral != MATERIAL_SHORTGRASS
+		&& mateiral != MATERIAL_LONGGRASS
+		&& mateiral != MATERIAL_GREENLEAVES
+		/*&& mateiral != MATERIAL_NONE*/)
+	{// Looks like a tree or wall here.. Yay!
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+#define TREE_SEARCH_DISTANCE 96.0//72.0//128.0
+
+qboolean FOLIAGE_NearbyWall(vec3_t org)
+{
+	trace_t tr;
+	vec3_t pos, end;
+
+	VectorCopy(org, pos);
+	pos[2] += 48.0;
+	
+	VectorCopy(pos, end);
+	end[0] += TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[1] += TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[0] -= TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[1] -= TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[0] += TREE_SEARCH_DISTANCE;
+	end[1] += TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[0] -= TREE_SEARCH_DISTANCE;
+	end[1] += TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[0] += TREE_SEARCH_DISTANCE;
+	end[1] -= TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	VectorCopy(pos, end);
+	end[0] -= TREE_SEARCH_DISTANCE;
+	end[1] -= TREE_SEARCH_DISTANCE;
+	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
+	if (tr.fraction < 1.0)
+	{
+		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		{// Looks like a tree or wall here.. Yay!
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+qboolean FOLIAGE_TreeLocationNearby(vec3_t org)
+{
+	int i = 0;
+
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{
+		if (FOLIAGE_TREE_SELECTION[i] > 0)
+		{
+			if (Distance(FOLIAGE_POSITIONS[i], org) <= (TREE_SEARCH_DISTANCE * 1.5) + (FOLIAGE_TREE_RADIUS[FOLIAGE_TREE_SELECTION[i]-1] * FOLIAGE_TREE_SCALE[i] * TREE_SCALE_MULTIPLIER))
+			{
+				return qtrue;
+			}
+		}
+	}
+
+	return qfalse;
+}
+
+qboolean FOLIAGE_AnotherBigPlantNearby(vec3_t org, int upToPosition)
+{
+	int i = 0;
+
+	for (i = 0; i < upToPosition; i++)
+	{
+		if (FOLIAGE_PLANT_SELECTION[i] > 0)
+		{
+			if (Distance(FOLIAGE_POSITIONS[i], org) <= TREE_SEARCH_DISTANCE)
+			{
+				return qtrue;
+			}
+		}
+	}
+
+	return qfalse;
+}
+
+void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
+{
+	int i = 0;
+	int NUM_REPLACED = 0;
+	int NUM_OBJECT_PLANTS = 0;
+	int NUM_PLANTS_TOTAL = 0;
+
+	int previous_time = clock();
+	aw_stage_start_time = clock();
+	aw_percent_complete = 0;
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Rescaling foliage points. This could take a while...\n"));
+	strcpy(task_string1, va("^5Rescaling foliage points. This could take a while..."));
+	trap->UpdateScreen();
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Rescaling foliage points...\n"));
+	strcpy(task_string2, va("^5Rescaling foliage points..."));
+	trap->UpdateScreen();
+
+	strcpy(task_string3, "");
+
+	trap->UpdateScreen();
+
+	trap->S_Shutup(qtrue);
+
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Check current list...
+		FOLIAGE_PLANT_SELECTION[i] = 0;
+
+		aw_percent_complete = (float)((float)i / (float)FOLIAGE_NUM_POSITIONS) * 100.0;
+
+		if (clock() - previous_time > 500) // update display every 500ms...
+		{
+			previous_time = clock();
+			trap->UpdateScreen();
+		}
+
+		if (FOLIAGE_TREE_SELECTION[i] <= 0)
+		{
+			NUM_PLANTS_TOTAL++;
+
+#if defined(__NEW_PLANTS__)
+			if (FOLIAGE_TreeLocationNearby(FOLIAGE_POSITIONS[i]) || FOLIAGE_NearbyWall(FOLIAGE_POSITIONS[i]))
+			{// 1 in 2 (or if no other nearby yet) are fern or tall plant...
+				//if (irand(1,2) == 1 || !FOLIAGE_AnotherBigPlantNearby(FOLIAGE_POSITIONS[i], i-1))
+				//{
+				FOLIAGE_PLANT_SELECTION[i] = irand(MAX_PLANT_MODELS - 9, MAX_PLANT_MODELS);
+				NUM_OBJECT_PLANTS++;
+				//}
+				//else
+				//	FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS - 1);
+
+				sprintf(last_node_added_string, "^3%i ^5near object plants replaced. ^3%i ^5normal replaced. ^3%i ^5total plants.", NUM_OBJECT_PLANTS, NUM_REPLACED, NUM_PLANTS_TOTAL);
+			}
+			else
+			{
+				if (irand(0, 100) <= plantPercentage)
+				{// Replace...
+					FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS - 8);
+					NUM_REPLACED++;
+
+					sprintf(last_node_added_string, "^3%i ^5near object plants replaced. ^3%i ^5normal replaced. ^3%i ^5total plants.", NUM_OBJECT_PLANTS, NUM_REPLACED, NUM_PLANTS_TOTAL);
+				}
+				else
+				{
+					FOLIAGE_PLANT_SELECTION[i] = 0;
+					NUM_REPLACED++;
+
+					sprintf(last_node_added_string, "^3%i ^5near object plants replaced. ^3%i ^5normal replaced. ^3%i ^5total plants.", NUM_OBJECT_PLANTS, NUM_REPLACED, NUM_PLANTS_TOTAL);
+				}
+			}
+#else
+			if (irand(0, 100) <= plantPercentage)
+			{// Replace...
+				FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_SHADERS - 1);
+			}
+			else
+			{
+				FOLIAGE_PLANT_SELECTION[i] = 0;
+				NUM_REPLACED++;
+			}
+#endif
+		}
+	}
+
+	trap->S_Shutup(qfalse);
+
+	aw_percent_complete = 0.0f;
+
+	trap->Print("^1*** ^3%s^5: Successfully replaced %i plants (%i near objects)...\n", GAME_VERSION, NUM_REPLACED, NUM_OBJECT_PLANTS);
+
+	// Save the generated info to a file for next time...
+	FOLIAGE_SaveFoliagePositions();
+}
+
 void FOLIAGE_FoliageRetree(void)
 {
 	int i = 0;
@@ -2985,6 +3325,7 @@ void FOLIAGE_GenerateFoliage(void)
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"addsnow\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replantspecial\" ^5- Reselect all grasses/plants (tree aware).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"copy <original_mapname> <mapScale> <objectScale>\" ^5- Copy from another map's foliage file. Scales are optional.\n");
 		trap->UpdateScreen();
@@ -3151,6 +3492,29 @@ void FOLIAGE_GenerateFoliage(void)
 			}
 
 			FOLIAGE_FoliageReplant(plantPercentage);
+		}
+		else
+		{
+			trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n");
+			trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage replant <plantPercent>^5. Use plantPercent 0 for default.\n");
+		}
+	}
+	else if (Q_stricmp(str, "replantspecial") == 0)
+	{
+		if (trap->Cmd_Argc() >= 2)
+		{// Override normal density...
+			int plantPercentage = 20;
+
+			trap->Cmd_Argv(2, str, sizeof(str));
+			plantPercentage = atoi(str);
+
+			if (plantPercentage <= 0)
+			{// Fallback and warning...
+				plantPercentage = 20;
+				trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid plant percentage set (%i). Using default (%i)...\n", atoi(str), plantPercentage);
+			}
+
+			FOLIAGE_FoliageReplantSpecial(plantPercentage);
 		}
 		else
 		{

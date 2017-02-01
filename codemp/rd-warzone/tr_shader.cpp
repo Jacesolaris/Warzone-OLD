@@ -1404,7 +1404,7 @@ qboolean ForceGlow ( char *shader )
 	{
 		return qtrue;
 	}
-	else if (StringContains(shader, "white", 0))
+	else if (StringContains(shader, "white", 0) && !StringContains(shader, "flower", 0))
 	{
 		return qtrue;
 	}
@@ -3312,10 +3312,19 @@ qboolean IsKnownShinyMap ( const char *heystack )
 
 int DetectMaterialType ( const char *name )
 {
+	if (StringContainsWord(name, "warzone/plant"))
+		return MATERIAL_GREENLEAVES;
+	else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+		return MATERIAL_SOLIDWOOD;
+	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+		&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+		return MATERIAL_SOLIDWOOD;
+
 	//
 	// Special cases - where we are pretty sure we want lots of specular and reflection...
 	//
-	if (StringContainsWord(name, "jetpack"))
+	else if (StringContainsWord(name, "jetpack"))
 		return MATERIAL_SOLIDMETAL;
 	else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet") || StringContainsWord(name, "feather"))
 		return MATERIAL_PLASTIC;
@@ -3549,10 +3558,19 @@ void AssignMaterialType ( const char *name, const char *text )
 	}
 	else
 	{
+		if (StringContainsWord(name, "warzone/plant"))
+			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+				&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+				&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
 		//
-		if (StringContainsWord(name, "vj4")) // special case for vjun rock...
+		else if (StringContainsWord(name, "vj4")) // special case for vjun rock...
 			shader.surfaceFlags |= MATERIAL_ROCK;
 		else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
@@ -3626,7 +3644,8 @@ void AssignMaterialType ( const char *name, const char *text )
 		|| StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "yavinassault/terrain")
 		|| StringContainsWord(name, "tree") || StringContainsWord(name, "plant") || StringContainsWord(name, "bush")
 		|| StringContainsWord(name, "shrub") || StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves")
-		|| StringContainsWord(name, "branch") || StringContainsWord(name, "flower") || StringContainsWord(name, "weed")))
+		|| StringContainsWord(name, "branch") || StringContainsWord(name, "flower") || StringContainsWord(name, "weed")
+		|| StringContainsWord(name, "warzone/plant")))
 	{// Always greenleaves... No parallax...
 		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
 		if (oldmat) shader.surfaceFlags &= ~oldmat;
@@ -6990,6 +7009,13 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
+	if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+		return qtrue;
+	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+		&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+		return qtrue;
+
 	if (StringContainsWord(name, "raindrop")
 		|| StringContainsWord(name, "gfx/effects/bubble")
 		|| StringContainsWord(name, "gfx/water/screen_ripple")
@@ -7197,7 +7223,17 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		{
 			sprintf(myShader, uniqueGenericFoliageBillboardShader, strippedName, strippedName);
 		}
-		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage"))
+		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+			&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+			&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(name, "warzone/plant"))
 		{
 			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		}

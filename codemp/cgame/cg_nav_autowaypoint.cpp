@@ -9277,7 +9277,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 void CG_Waypoint( int wp_num ) {
 	refEntity_t		re;
-	vec3_t			angles, vec, dir, up;
+	vec3_t			angles;// , vec, dir, up;
 	int				i, numdigits, digits[10], temp_num;
 
 	memset( &re, 0, sizeof( re ) );
@@ -9297,9 +9297,11 @@ void CG_Waypoint( int wp_num ) {
 	VectorClear(angles);
 	AnglesToAxis( angles, re.axis );
 
+	/*
 	VectorSubtract(cg.refdef.vieworg, re.origin, dir);
 	CrossProduct(dir, up, vec);
 	VectorNormalize(vec);
+	*/
 
 	temp_num = wp_num;
 

@@ -3200,6 +3200,12 @@ image_t *R_LoadDeferredImage(image_t *deferredImage)
 	image_t *newImage = R_FindImageFile((const char *)deferredImage->imgName, deferredImage->deferredLoadType, deferredImage->deferredLoadFlags);
 	memset(&deferredImage->imgName, 0, sizeof(deferredImage->imgName));
 	deferredImage->deferredLoad = qfalse;
+	
+	if (!newImage)
+	{// If the file is not found, then return defaultImage...
+		newImage = tr.defaultImage;
+	}
+
 	return newImage;
 }
 
@@ -3222,6 +3228,13 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 		return R_FindImageFile(name, type, flags);
 	}
 #endif //defined(__DEFERRED_IMAGE_LOADING__) && !defined(__DEFERRED_MAP_IMAGE_LOADING__)
+
+	if (StringContainsWord(name, "levelshots/")
+		|| StringContainsWord(name, "ui")
+		|| StringContainsWord(name, "menu"))
+	{
+		return R_FindImageFile(name, type, flags);
+	}
 
 	if (type != IMGTYPE_COLORALPHA 
 		&& type != IMGTYPE_NORMAL 

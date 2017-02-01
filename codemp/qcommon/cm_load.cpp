@@ -294,6 +294,13 @@ int GetMaterialType ( const char *name, int materialType )
 		|| StringContainsWord(name, "gfx/menu")) 
 		return MATERIAL_NONE;
 
+	if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+		return MATERIAL_SOLIDWOOD;
+	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+		&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+		return MATERIAL_SOLIDWOOD;
+
 	if (!HaveSurfaceType(materialType))
 	{
 		//
@@ -464,6 +471,13 @@ int GetMaterialType ( const char *name, int materialType )
 	}
 	else
 	{
+		if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+			&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+			return MATERIAL_SOLIDWOOD;
+		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+			&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+			return MATERIAL_SOLIDWOOD;
+
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
 		//

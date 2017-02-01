@@ -1,7 +1,5 @@
 //#define USE_REGIONS
 
-#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
-
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
 uniform sampler2D			u_SteepMap2;
@@ -788,13 +786,8 @@ void main()
 	}
 
 	N.xy = norm.xy * 2.0 - 1.0;
-
-	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
-	//N.xy *= u_NormalScale.xy;
-	//N.xy *= 0.004;
 	N.xy *= 0.25;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	//N.z = sqrt(1.0 - dot(N.xy, N.xy));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
 	//N = normalize(tangentToWorld * N);
 
@@ -867,11 +860,11 @@ void main()
 		{// Only write to position/normal map when the alpha is solid, and drawing over the background surface completely.
 			//out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
 			out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.05);
-			out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 		}*/
 	#else
 		out_Glow = vec4(0.0);
 		out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
-		out_Position = vec4(unOpenGlIsFuckedUpify(m_vertPos), u_Local1.a);
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 	#endif
 }

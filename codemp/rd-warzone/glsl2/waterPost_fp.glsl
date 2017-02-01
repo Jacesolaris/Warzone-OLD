@@ -184,13 +184,11 @@ vec4 waterMap2AtCoord ( vec2 coord )
 	return texture2D(u_WaterPositionMap, coord).xzyw;
 }
 
-//#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
-
 vec4 positionMapAtCoord ( vec2 coord )
 {
 	//return texture2D(u_PositionMap, coord).xzyw;
 	vec4 pos = texture2D(u_PositionMap, coord);
-	pos.xyz *= 524288.0;
+	//pos.xyz *= 524288.0;
 	return pos.xzyw;
 }
 

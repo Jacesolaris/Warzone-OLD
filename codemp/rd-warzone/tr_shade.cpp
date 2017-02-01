@@ -1724,8 +1724,8 @@ void RB_UpdateCloseLights ( void )
 		float x = pos[0];
 		float y = pos[1];
 
-		if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-			continue;
+		//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+		//	continue;
 		//
 
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)

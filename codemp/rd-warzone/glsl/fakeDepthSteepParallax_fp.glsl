@@ -15,8 +15,6 @@ varying vec2				var_TexCoords;
 
 vec3 vLocalSeed;
 
-#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 )
-
 // This function returns random number from zero to one
 float randZeroOne()
 {
@@ -79,7 +77,6 @@ void main (void)
 	}*/
 
 	vec4 coPos = positionMap;
-	//#define unOpenGlIsFuckedUpify(x) ( x / 524288.0 ) // FIXME: If I ever finish this...
 	float dist = distance(u_ViewOrigin.xyz, coPos.xyz);
 	float depth = 1.0 - clamp(dist / 2048.0, 0.0, 1.0);
 

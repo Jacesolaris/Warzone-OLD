@@ -273,11 +273,6 @@ void main()
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
-	//vec3 preMMPos = position.xyz;
-	/*vec3 preMMNorm = normal.xyz;
-	vec4 preMMtangent = vec4(tangent, 0.0);
-	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);*/
-
 #if defined(USE_MODELMATRIX) && defined(USE_VERTEX_ANIMATION) //&& !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
 	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
@@ -286,10 +281,6 @@ void main()
 
 	vec3 preMMPos = position.xyz;
 	vec3 preMMNorm = normal.xyz;
-	vec4 preMMtangent = vec4(tangent, 0.0);
-	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);
-
-	//var_vertPos = position.xyz;
 
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 
@@ -390,7 +381,7 @@ void main()
 
 #else
 
-	var_vertPos = preMMPos.xyz;
+	var_vertPos = position.xyz;//preMMPos.xyz;
 
 #endif //defined(USE_TESSELLATION)
 }

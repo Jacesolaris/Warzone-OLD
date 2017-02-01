@@ -17,8 +17,6 @@ uniform float		u_Time;
 
 varying vec2		var_TexCoords;
 
-#define unOpenGlIsFuckedUpify(x) ( x * 524288.0 )
-
 vec4 positionMapAtCoord ( vec2 coord )
 {
 	return texture2D(u_PositionMap, coord).xyzw;
@@ -105,7 +103,7 @@ void main ( void )
 {
 #ifdef VFOG
 	vec3 col = texture2D(u_DiffuseMap, var_TexCoords).rgb;
-	vec4 pMap = unOpenGlIsFuckedUpify(positionMapAtCoord( var_TexCoords ));
+	vec4 pMap = positionMapAtCoord( var_TexCoords );
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec3 rayDir = normalize(viewOrg.xyz - pMap.xyz);
 	float mt = u_Local0.r;
@@ -125,7 +123,7 @@ void main ( void )
 
 	vec3 fogColor = col;
 #else //!VFOG
-	vec4 pMap = unOpenGlIsFuckedUpify(positionMapAtCoord( var_TexCoords ));
+	vec4 pMap = positionMapAtCoord( var_TexCoords );
 	vec4 pixelColor = texture2D(u_DiffuseMap, var_TexCoords);
 	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);
 	vec3 viewOrg = u_ViewOrigin.xyz;
