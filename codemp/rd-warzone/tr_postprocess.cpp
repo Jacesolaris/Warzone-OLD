@@ -1043,11 +1043,13 @@ void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y)
 	transformed[2] = DotProduct(local, vfwd);
 
 	// Make sure Z is not negative.
-	/*if(transformed[2] < 0.01)
+	if(transformed[2] < 0.01)
 	{
-	//return false;
-	//transformed[2] = 2.0 - transformed[2];
-	}*/
+		*x = -1;
+		*y = -1;
+		return;
+		//transformed[2] = 2.0 - transformed[2];
+	}
 
 	// Simple convert to screen coords.
 	float xzi = xcenter / transformed[2] * (90.0 / backEnd.refdef.fov_x);
@@ -2225,7 +2227,20 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+	//GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+	// Use the most blurred version of glow...
+	if (r_anamorphic->integer)
+	{
+		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+	}
+	else if (r_bloom->integer)
+	{
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
+	}
+	else
+	{
+		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+	}
 
 	{
 		vec2_t screensize;
@@ -2660,6 +2675,7 @@ void transpose(float *src, float *dst, const int N, const int M) {
 
 extern int			NUM_CLOSE_LIGHTS;
 extern int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS];
+extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_LIGHTALL_DLIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS];
 extern float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS];
@@ -2691,7 +2707,21 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	GL_BindToTMU(tr.glowImage, TB_GLOWMAP);
+	//GL_BindToTMU(tr.glowImage, TB_GLOWMAP);
+	
+	// Use the most blurred version of glow...
+	if (r_anamorphic->integer)
+	{
+		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+	}
+	else if (r_bloom->integer)
+	{
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
+	}
+	else
+	{
+		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+	}
 
 	/*for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 	{
@@ -2700,6 +2730,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+	GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_LIGHTALL_DLIGHTS);
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
 	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
@@ -2743,6 +2774,9 @@ void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	color[3] = 1.0f;
 
 	GLSL_BindProgram(&tr.showNormalsShader);
+
+	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
@@ -2876,7 +2910,21 @@ void RB_ColorCorrection(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ld
 	GL_BindToTMU(tr.paletteImage, TB_DELUXEMAP);
 
 	GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	GL_BindToTMU(tr.glowImageScaled[5], TB_GLOWMAP);
+	//GL_BindToTMU(tr.glowImageScaled[5], TB_GLOWMAP);
+
+	// Use the most blurred version of glow...
+	if (r_anamorphic->integer)
+	{
+		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+	}
+	else if (r_bloom->integer)
+	{
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
+	}
+	else
+	{
+		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+	}
 
 	matrix_t trans, model, mvp;
 	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
@@ -3074,7 +3122,20 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 		GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 		GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+		//GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+		// Use the most blurred version of glow...
+		if (r_anamorphic->integer)
+		{
+			GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+		}
+		else if (r_bloom->integer)
+		{
+			GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
+		}
+		else
+		{
+			GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+		}
 
 		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

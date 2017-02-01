@@ -2864,6 +2864,7 @@ extern  cvar_t  *r_deluxeMapping;
 extern  cvar_t  *r_parallaxMapping;
 extern  cvar_t  *r_cubeMapping;
 extern	cvar_t  *r_cubeMapSize;
+extern	cvar_t  *r_cubemapStrength;
 extern  cvar_t  *r_deluxeSpecular;
 extern  cvar_t  *r_specularIsMetallic;
 extern  cvar_t  *r_baseNormalX;

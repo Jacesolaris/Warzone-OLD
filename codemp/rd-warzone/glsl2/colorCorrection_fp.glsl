@@ -1,4 +1,4 @@
-﻿uniform sampler2D	u_DiffuseMap;
+uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_DeluxeMap;
 uniform sampler2D	u_GlowMap;
 

@@ -19,12 +19,16 @@ uniform vec3		u_PrimaryLightColor;
 #define MAX_LIGHTALL_DLIGHTS 16//24
 
 uniform int			u_lightCount;
+uniform vec2		u_lightPositions[MAX_LIGHTALL_DLIGHTS];
 uniform vec3		u_lightPositions2[MAX_LIGHTALL_DLIGHTS];
 uniform float		u_lightDistances[MAX_LIGHTALL_DLIGHTS];
 uniform vec3		u_lightColors[MAX_LIGHTALL_DLIGHTS];
 
 varying vec2		var_TexCoords;
 
+
+#define LIGHT_THRESHOLD  0.01//0.001
+#define LIGHT_COLOR_SEARCH
 
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
@@ -69,6 +73,70 @@ float calculateAO(in vec3 pos, in vec3 nor)
     return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
 
+vec3 GlowAtPosition ( vec2 coord )
+{// Since dlight positions are not accurate in JKA/Q3... Scan a little around it's origin for a better color...
+	vec3 color = texture( u_GlowMap, coord ).rgb;
+	float colLen = length(color);
+	vec2 px = vec2(1.0) / u_Dimensions.xy;
+
+	for (float x = -2.0; x <= 2.0; x += 1.0)
+	{
+		for (float y = -2.0; y <= 2.0; y += 1.0)
+		{
+			vec3 newcolor = texture( u_GlowMap, coord + (px * (4.0 * vec2(x, y))) ).rgb;
+			float ncLen = length(newcolor);
+
+			if (ncLen > colLen)
+			{
+				color = newcolor;
+				colLen = ncLen;
+			}
+		}
+	}
+
+	return color;
+}
+
+vec4 ConvertToNormals ( vec4 color )
+{
+	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
+	// wasting vram on real normals.
+	//
+	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
+	// for the very noticable FPS boost over texture lookups.
+
+	vec3 color2 = color.rgb;
+
+	vec3 N = vec3(clamp(color2.r + color2.b, 0.0, 1.0), clamp(color2.g + color2.b, 0.0, 1.0), clamp(color2.r + color2.g, 0.0, 1.0));
+
+	vec3 brightness = color2.rgb; //adaptation luminance
+	brightness = (brightness/(brightness+1.0));
+	brightness = vec3(max(brightness.x, max(brightness.y, brightness.z)));
+	vec3 brightnessMult = (vec3(1.0) - brightness) * 0.5;
+
+	color2 = pow(clamp(color2 + brightnessMult, 0.0, 1.0), vec3(2.0));
+
+	N.xy = 1.0 - N.xy;
+	N.xyz = N.xyz * 0.5 + 0.5;
+	N.xyz = pow(N.xyz, vec3(2.0));
+	N.xyz *= 0.8;
+
+	//float displacement = brightness.r;
+	float displacement = clamp(length(color.rgb), 0.0, 1.0);
+	//float displacement = clamp(length(color2.rgb), 0.0, 1.0);
+#define const_1 ( 32.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
+
+	vec4 norm = vec4(N, displacement);
+
+	if (norm.g > norm.b)
+	{// Switch them for screen space fakes...
+		norm.gb = norm.bg;
+	}
+
+	return norm;
+}
 
 //
 // Full lighting... Blinn phong and basic lighting as well...
@@ -89,10 +157,15 @@ void main(void)
 	gl_FragColor = vec4(color.rgb, 1.0);
 
 	/*{
+		vec3 lightColor = texture( u_GlowMap, var_TexCoords ).rgb;
+		gl_FragColor.rgb = lightColor;
+		return;
+	}*/
+
+	/*{
 		vec4 position = texture2D(u_PositionMap, var_TexCoords);
 		float dist = distance(position.xyz, u_ViewOrigin.xyz);
-		dist = dist / 4096.0;
-		if (dist > 1.0) dist = 1.0;
+		dist = clamp(dist / 4096.0, 0.0, 1.0);
 		gl_FragColor.rgb = vec3(dist);
 		return;
 	}*/
@@ -112,17 +185,22 @@ void main(void)
 		return;
 	}
 
-	if (position.a == 0.0 && position.xyz == vec3(0.0))
+	/*if (position.a == 0.0 && position.xyz == vec3(0.0))
 	{// Unknown... Skip...
 		//gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
 		return;
-	}
+	}*/
 
 	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
 
-	if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0 && norm.a == 0.05)
+	/*if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0 && norm.a == 0.05)
 	{// Generic GLSL. Probably a glow or something, ignore the lighting...
 		return;
+	}*/
+
+	if (norm.a < 0.05 || length(norm.xyz) <= 0.05)
+	{
+		norm = ConvertToNormals(color);
 	}
 
 	norm.a = norm.a * 0.5 + 0.5;
@@ -165,6 +243,17 @@ void main(void)
 
 		for (int li = 0; li < u_lightCount; li++)
 		{
+			/*{
+				if (distance(u_lightPositions[li], var_TexCoords) < 0.1)
+				{
+					//gl_FragColor.rgb = vec3(0.0, 0.0, 1.0);
+					//return;
+					vec3 lightColor = GlowAtPosition(u_lightPositions[li]);
+					addedLight += lightColor;
+					continue;
+				}
+			}*/
+
 			vec3 lightPos = u_lightPositions2[li].xyz;
 
 			float lightDist = distance(lightPos, position.xyz);
@@ -173,37 +262,52 @@ void main(void)
 			if (lightDist < lightMax)
 			{
 				float lightStrength = clamp(1.0 - (lightDist / lightMax), 0.0, 1.0);
-				//lightStrength = clamp(pow(lightStrength * 0.9, 3.0), 0.0, 1.0) * 0.5;
 				lightStrength = pow(lightStrength, 2.0) * 0.1;
 
-				if (lightStrength > 0.0)
+				if (lightStrength > LIGHT_THRESHOLD)
 				{
-					// Add some basic light...
-					addedLight += u_lightColors[li].rgb * lightStrength; // Always add some basic light...
+#ifndef LIGHT_COLOR_SEARCH
+					vec3 lightColor = u_lightColors[li].rgb;
+#else //LIGHT_COLOR_SEARCH
+					vec3 lightColor = GlowAtPosition(u_lightPositions[li]);
+#endif //LIGHT_COLOR_SEARCH
+					float lightColorLength = length(lightColor);
 
-					vec3 lightDir = normalize(lightPos - position.xyz);
-					float lambertian3 = dot(lightDir.xyz, N);
+					if (lightColorLength > LIGHT_THRESHOLD)
+					{
+						// Try to maximize light strengths...
+						float mult = 3.0 / lightColorLength;
+						lightColor += lightColor * mult;
 
-					if (lambertian3 > 0.0)
-					{// this is blinn phong
-						// Diffuse...
-						addedLight += (u_lightColors[li].rgb * lightStrength) * gl_FragColor.rgb * lambertian3;
+						// Add some basic light...
+						addedLight += lightColor * lightStrength; // Always add some basic light...
 
-						// Specular...
-						vec3 halfDir3 = normalize(lightDir.xyz + E);
-						float specAngle3 = max(dot(halfDir3, N), 0.0);
-						float spec3 = pow(specAngle3, 16.0);
+						vec3 lightDir = normalize(lightPos - position.xyz);
+						float lambertian3 = dot(lightDir.xyz, N);
 
-						float strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength * phongFactor;
-						addedLight +=  u_lightColors[li].rgb * strength * 0.5;
+						if (lambertian3 > 0.0)
+						{// this is blinn phong
+							// Diffuse...
+							addedLight += (lightColor * lightStrength) * gl_FragColor.rgb * lambertian3;
+
+							// Specular...
+							vec3 halfDir3 = normalize(lightDir.xyz + E);
+							float specAngle3 = max(dot(halfDir3, N), 0.0);
+							float spec3 = pow(specAngle3, 16.0);
+
+							float strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength * 5.0;//phongFactor;
+							addedLight +=  lightColor * strength * 0.5;
+						}
 					}
 				}
 			}
 		}
 
-		//gl_FragColor.rgb += (addedLight * u_Local2.g) / u_lightCount;
-		gl_FragColor.rgb += addedLight;
-		gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
+		if (length(addedLight) > 0.0)
+		{
+			gl_FragColor.rgb += clamp(addedLight * 0.22/*u_Local2.g*//*0.1*/, 0.0, 1.0);
+			gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
+		}
 	}
 
 	//if (u_Local2.g >= 1.0)

@@ -1326,6 +1326,9 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			cubemapScale = pStage->cubeMapScale;
 		}
 
+		// Apply r_cubemapStrength value...
+		cubemapScale *= r_cubemapStrength->value;
+
 		if (pStage->isFoliage)
 		{
 			doSway = 0.7;
@@ -1691,6 +1694,8 @@ vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_LIGHTALL_DLIGHTS];
 float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
 vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
 
+extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
+
 void RB_UpdateCloseLights ( void )
 {
 	if (!CLOSE_LIGHTS_UPDATE) return; // Already done for this frame...
@@ -1708,6 +1713,7 @@ void RB_UpdateCloseLights ( void )
 
 		float distance = Distance(tr.refdef.vieworg, dl->origin);
 
+		/*
 		// 2D positions for VLIGHT...
 		vec4_t pos, hpos;
 		VectorSet4(pos, dl->origin[0], dl->origin[1], dl->origin[2], 1.0);
@@ -1727,9 +1733,15 @@ void RB_UpdateCloseLights ( void )
 		//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
 		//	continue;
 		//
+		*/
 
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
+			float x, y;
+			WorldCoordToScreenCoord(dl->origin, &x, &y);
+
+			if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+				continue;
 
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
@@ -1762,6 +1774,12 @@ void RB_UpdateCloseLights ( void )
 
 			if (Distance(dl->origin, tr.refdef.vieworg) < farthest_distance)
 			{// This light is closer. Replace this one in our array of closest lights...
+				float x, y;
+				WorldCoordToScreenCoord(dl->origin, &x, &y);
+
+				if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+					continue;
+
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
 				CLOSEST_LIGHTS_DISTANCES[farthest_light] = dl->radius;

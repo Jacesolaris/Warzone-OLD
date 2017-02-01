@@ -1,4 +1,4 @@
-﻿//#define HEIGHT_BASED_FOG
+//#define HEIGHT_BASED_FOG
 //#define VFOG
 
 uniform sampler2D	u_DiffuseMap;

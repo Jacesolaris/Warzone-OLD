@@ -793,6 +793,8 @@ qboolean G_ClearLOS_Breakable( gentity_t *self, const vec3_t start, const vec3_t
 	trace_t		tr;
 	int			traceCount = 0;
 
+	if (!ent) return qfalse;
+
 	//FIXME: ENTITYNUM_NONE ok? // UQ1: ummm, no!
 	if (self)
 		trap->Trace ( &tr, start, NULL, NULL, end, self->s.number, CONTENTS_OPAQUE/*CONTENTS_SOLID*//*(CONTENTS_SOLID|CONTENTS_MONSTERCLIP)*/, qfalse, 0, 0 );
@@ -831,6 +833,8 @@ qboolean G_ClearLOS2( gentity_t *self, gentity_t *ent, const vec3_t end )
 {
 	vec3_t	eyes;
 
+	if (!ent) return qfalse;
+
 #ifdef __NPC_CPU_USAGE_TWEAKS__
 	if (self->LOS_visible[ent->s.number] && self->LOS_last_checked[ent->s.number] > level.time - ENTITY_VISIBILITY_CACHE_TIME)
 	{// Cache entity visibiliy for ENTITY_VISIBILITY_CACHE_TIME...
@@ -860,6 +864,8 @@ qboolean G_ClearLOS2( gentity_t *self, gentity_t *ent, const vec3_t end )
 qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent )
 {
 	vec3_t		spot;
+
+	if (!ent) return qfalse;
 
 #ifdef __NPC_CPU_USAGE_TWEAKS__
 	if (self->LOS_visible[ent->s.number] && self->LOS_last_checked[ent->s.number] > level.time - ENTITY_VISIBILITY_CACHE_TIME)
@@ -912,6 +918,8 @@ qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent )
 qboolean G_ClearLOS4( gentity_t *self, gentity_t *ent )
 {
 	vec3_t	eyes;
+
+	if (!ent) return qfalse;
 
 #ifdef __NPC_CPU_USAGE_TWEAKS__
 	if (self->LOS_visible[ent->s.number] && self->LOS_last_checked[ent->s.number] > level.time - ENTITY_VISIBILITY_CACHE_TIME)

@@ -863,8 +863,25 @@ void main()
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 		}*/
 	#else
-		out_Glow = vec4(0.0);
-		out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		if (/*specular.a > 0.05 &&*/ length(N.xyz * 0.5 + 0.5) > 0.05)
+		{
+			out_Glow = vec4(0.0);
+			out_Normal = vec4(N.xyz * 0.5 + 0.5, specular.a);
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		}
+/*#if defined(USE_MODELMATRIX)
+	gl_FragColor.rgb = vec3(0.0, 0.0, 1.0);
+#elif defined(USE_VERTEX_ANIMATION)
+	gl_FragColor.rgb = vec3(1.0, 0.0, 0.0);
+#elif defined(USE_SKELETAL_ANIMATION)
+	gl_FragColor.rgb = vec3(0.0, 1.0, 0.0);
+#endif*/
+
+	/*{
+		float dist = distance(m_vertPos.xyz, u_ViewOrigin.xyz);
+		dist = clamp(dist / 4096.0, 0.0, 1.0);
+		gl_FragColor.rgb = vec3(dist);
+		return;
+	}*/
 	#endif
 }

@@ -5035,6 +5035,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	qglUseProgram(tr.showNormalsShader.program);
 
+	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 
 	qglUseProgram(0);
