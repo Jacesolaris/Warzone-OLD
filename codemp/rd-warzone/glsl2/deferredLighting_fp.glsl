@@ -500,6 +500,7 @@ void main(void)
 	}
 #endif
 
+#if 0
 	//if (u_Local2.g >= 1.0)
 	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)
 	{
@@ -513,6 +514,7 @@ void main(void)
 
 		gl_FragColor.rgb *= ao;
 	}
+#endif
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }
