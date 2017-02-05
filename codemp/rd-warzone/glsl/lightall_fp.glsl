@@ -519,6 +519,11 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
+		if (u_Local4.r <= 0.0)
+		{
+			return ConvertToNormals(GetDiffuse(texCoords, ParallaxOffset, pixRandom));
+		}
+
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 
 		vec4 tex1 = GetMap(u_NormalMap3, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP3);
@@ -531,10 +536,20 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
+		if (u_Local4.r <= 0.0)
+		{
+			return ConvertToNormals(GetDiffuse(texCoords, ParallaxOffset, pixRandom));
+		}
+
 		return GetMap(u_NormalMap2, 0.0025, ParallaxOffset, FAKE_MAP_NORMALMAP2);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (normal angles)...
+		if (u_Local4.r <= 0.0)
+		{
+			return ConvertToNormals(GetDiffuse(texCoords, ParallaxOffset, pixRandom));
+		}
+
 		return GetMap(u_NormalMap, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP);
 	}
 	else
@@ -665,22 +680,22 @@ void main()
 
 
 #if defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
-	vec2 tex_offset;
+	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 	bool calcE = false;
 	bool calcVD = false;
 
 	#if defined(__CUBEMAPS_ENABLED__)
 		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
 		{
-			calcE = true;
 			calcVD = true;
+			calcE = true;
 		}
 	#endif //defined(__CUBEMAPS_ENABLED__)
 	#if defined(__PARALLAX_ENABLED__)
 		if (u_Local1.x > 0.0 && !isDistant)
 		{
 			calcVD = true;
-			tex_offset = vec2(1.0 / u_Dimensions);
+			calcE = true;
 		}
 	#endif //defined(__PARALLAX_ENABLED__)
 

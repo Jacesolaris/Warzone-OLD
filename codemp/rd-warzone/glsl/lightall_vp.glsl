@@ -252,7 +252,7 @@ void main()
 	var_TexCoords.xy = texCoords;
 #endif
 
-	if (!(u_textureScale.x == 0.0 && u_textureScale.y == 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
 	{
 		var_TexCoords *= u_textureScale;
 	}

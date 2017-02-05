@@ -4636,7 +4636,7 @@ void G_RunFrame( int levelTime ) {
 			else if (ent->s.eType == ET_NPC) 
 			{
 				playerState_t *ps = &ent->client->ps;
-				entityState_t *s = &ent->s;
+				entityState_t *s = &ent->s; 
 
 				//ps->commandTime = level.time - 50;// ((1000 / sv_fps.integer) * 2.0)/*25*/;// 100;
 

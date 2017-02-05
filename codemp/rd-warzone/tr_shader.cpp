@@ -4661,9 +4661,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
-			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
-			StripCrap( specularName, specularName2, sizeof(specularName));
-			Q_strcat( specularName2, sizeof( specularName2 ), "_steep" );
+			COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
+			StripCrap(specularName, specularName2, sizeof(specularName));
+			Q_strcat(specularName2, sizeof(specularName2), "_steep");
 
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2))
@@ -4690,7 +4690,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				{
 					char imgname[64];
 					sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP].image[0]->imgName);
-					diffuse->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_STEEPMAP].image[0]->width, diffuse->bundle[TB_STEEPMAP].image[0]->height, diffuse->bundle[TB_STEEPMAP].image[0]->flags, diffuse->bundle[TB_STEEPMAP].image[0] );
+					diffuse->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL(imgname, NULL, diffuse->bundle[TB_STEEPMAP].image[0]->width, diffuse->bundle[TB_STEEPMAP].image[0]->height, diffuse->bundle[TB_STEEPMAP].image[0]->flags, diffuse->bundle[TB_STEEPMAP].image[0]);
 				}
 			}
 			else
@@ -4704,11 +4704,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{
 			hasRealSteepMap = qfalse;
 		}
-	}
-
-	if (1 && checkNormals)
-	{
-		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
 		if (steepmap2 && steepmap2->bundle[0].image[0] && steepmap2->bundle[0].image[0] != tr.whiteImage)
 		{// Got one...

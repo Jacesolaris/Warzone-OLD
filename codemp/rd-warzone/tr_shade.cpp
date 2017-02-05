@@ -1701,6 +1701,7 @@ float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
 vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
 
 extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
+extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
 
 void RB_UpdateCloseLights ( void )
 {
@@ -1718,28 +1719,31 @@ void RB_UpdateCloseLights ( void )
 		}
 
 		float distance = Distance(tr.refdef.vieworg, dl->origin);
+		/*qboolean skip = qfalse;
 
-		/*
-		// 2D positions for VLIGHT...
-		vec4_t pos, hpos;
-		VectorSet4(pos, dl->origin[0], dl->origin[1], dl->origin[2], 1.0);
+		for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+		{// Find the most distance light in our current list to replace, if this new option is closer...
+			dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+			float		dist = Distance(thisLight->origin, dl->origin);
+			if (dist < 128.0)
+			{
+				skip = qtrue;
+				break;
+			}
+		}
 
-		// project sun point
-		Matrix16Transform(glState.modelviewProjection, pos, hpos);
+		if (skip)
+		{
+			continue;
+		}*/
 
-		// transform to UV coords
-		hpos[3] = 0.5f / hpos[3];
-
-		pos[0] = 0.5f + hpos[0] * hpos[3];
-		pos[1] = 0.5f + hpos[1] * hpos[3];
-
-		float x = pos[0];
-		float y = pos[1];
-
-		//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-		//	continue;
-		//
-		*/
+		vec3_t from;
+		VectorCopy(tr.refdef.vieworg, from);
+		from[2] += 48.0;
+		if (!Volumetric_Visible(tr.refdef.vieworg, dl->origin, qfalse))
+		{
+			continue;
+		}
 
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
@@ -2076,6 +2080,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 #endif //__DEFERRED_IMAGE_LOADING__
 
+		int SHADER_INDEX = 0;
+
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->glslShaderGroup == tr.lightallShader)
@@ -2110,6 +2116,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				sp = &pStage->glslShaderGroup[index];
 				isGeneric = qfalse;
 				isLightAll = qtrue;
+
+				SHADER_INDEX = index;
 			}
 			else
 			{
@@ -2138,6 +2146,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				sp = &tr.genericShader[shaderAttribs];
 				isGeneric = qtrue;
 				isLightAll = qfalse;
+
+				SHADER_INDEX = shaderAttribs;
 			}
 		}
 		else if (pStage->glslShaderGroup == tr.lightallShader
@@ -2229,6 +2239,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			isGeneric = qfalse;
 			isLightAll = qtrue;
 
+			SHADER_INDEX = index;
+
 			backEnd.pc.c_lightallDraws++;
 		}
 		else
@@ -2236,6 +2248,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			sp = GLSL_GetGenericShaderProgram(stage);
 			isGeneric = qtrue;
 			isLightAll = qfalse;
+
+			SHADER_INDEX = 0;
 
 			backEnd.pc.c_genericDraws++;
 		}
@@ -2282,9 +2296,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 		}
 
-		if (!sp->tesselation && ((tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.depthFill && backEnd.currentEntity == &tr.worldEntity)))
-		{
-			sp = &tr.shadowPassShader;
+		if (!sp->tesselation 
+			&& ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill))
+		{// Can use fast shader for this instead of lightall/generic for more FPS...
+			sp = &tr.shadowPassShader[SHADER_INDEX];
 			GLSL_BindProgram(sp);
 
 			if (!r_foliageShadows->integer || r_sunlightMode->integer < 2)

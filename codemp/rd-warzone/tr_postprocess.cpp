@@ -882,8 +882,8 @@ qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun)
 			return qfalse;
 	}*/
 
-	//if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64)
-	if (trace.fraction < 0.7)
+	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 96)
+	//if (trace.fraction < 0.7)
 	{
 		return qfalse;
 	}
@@ -2710,7 +2710,10 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+	if (SHADOWS_ENABLED)
+		GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+	else
+		GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.glowImage, TB_GLOWMAP);
@@ -2755,7 +2758,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	vec4_t local2;
-	VectorSet4(local2, r_blinnPhong->value, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
+	VectorSet4(local2, r_blinnPhong->value, SHADOWS_ENABLED ? 1.0 : 0.0, r_testshaderValue1->value, r_testshaderValue2->value);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  local2);
 
 	{

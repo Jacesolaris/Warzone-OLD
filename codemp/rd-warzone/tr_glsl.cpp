@@ -2972,7 +2972,142 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	for (i = 0; i < LIGHTDEF_COUNT; i++)
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
 
+		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_dlightMode->integer >= 2)
+			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
+
+		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (i & LIGHTDEF_USE_LIGHTMAP)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
+
+			if (r_deluxeMapping->integer)
+				Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
+		}
+
+		if (r_specularMapping->integer)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
+		}
+
+		if (r_cubeMapping->integer && (i & LIGHTDEF_USE_CUBEMAP))
+		{
+			Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
+		}
+
+		if (r_parallaxMapping->integer) // Parallax without normal maps...
+		{
+			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
+
+			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
+		}
+
+		//Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
+		if (i & LIGHTDEF_USE_TRIPLANAR)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_TRI_PLANAR\n");
+		}
+
+		if (i & LIGHTDEF_USE_REGIONS)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_REGIONS\n");
+		}
+
+
+		/*if (i & LIGHTDEF_USE_SHADOWMAP)
+		{
+		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+		if (r_sunlightMode->integer == 1)
+		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
+		else if (r_sunlightMode->integer >= 2)
+		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
+		}*/
+
+		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
+			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
+		}
+
+		/*
+		if (r_normalMapping->integer)
+		{
+		attribs |= ATTR_TANGENT2;
+		}
+		*/
+
+		if (i & LIGHTDEF_ENTITY)
+		{
+			if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
+			{
+				Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+			}
+			else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
+			{
+				Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
+				attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+			}
+
+
+			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+			/*attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+
+			if (r_normalMapping->integer)
+			{
+			attribs |= ATTR_TANGENT2;
+			}
+			*/
+		}
+
+		if (i & LIGHTDEF_USE_GLOW_BUFFER)
+			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
+
+		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
+		{
+			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
+
+#ifdef HEIGHTMAP_TESSELATION2
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
+			{
+				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+			}
+		}
+		else if (r_instanceCloudReductionCulling->integer)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_ICR_CULLING\n");
+
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, fallbackShader_lightall_gs))
+			{
+				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+			}
+		}
+		else
+		{
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
+			{
+				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+			}
+		}
+	}
+
+	/*
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
 
 	extradefines[0] = '\0';
@@ -2981,7 +3116,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
 	}
-
+	*/
 
 
 
@@ -3138,11 +3273,11 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_shadowFilter->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOW_FILTER2\n");
 
-	if (r_sunlightMode->integer == 2)
+	if (r_sunlightMode->integer == 2 && SHADOWS_ENABLED)
 	{// Fast shadows... no cascade...
 		Q_strcat(extradefines, 1024, "#define USE_FAST_SHADOW\n");
 	}
-	else if (r_sunlightMode->integer == 3)
+	else if (r_sunlightMode->integer == 3 && SHADOWS_ENABLED)
 	{// Regular shadows... 2 levels of cascade...
 		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
 	}
@@ -3940,22 +4075,25 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		numLightShaders++;
 	}
 
-	if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader))
+	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
-		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
-	}
+		if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader[i]))
+		{
+			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+		}
 
-	GLSL_InitUniforms(&tr.shadowPassShader);
+		GLSL_InitUniforms(&tr.shadowPassShader[i]);
 
-	qglUseProgram(tr.shadowPassShader.program);
-	GLSL_SetUniformInt(&tr.shadowPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
+		qglUseProgram(tr.shadowPassShader[i].program);
+		GLSL_SetUniformInt(&tr.shadowPassShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.shadowPassShader);
+		GLSL_FinishGPUShader(&tr.shadowPassShader[i]);
 #endif
 
-	numLightShaders++;
+		numLightShaders++;
+	}
 
 
 	if (r_foliage->integer)
@@ -5951,6 +6089,9 @@ void GLSL_ShutdownGPUShaders(void)
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.lightallShader[i]);
+
+	for (i = 0; i < LIGHTDEF_COUNT; i++)
+		GLSL_DeleteGPUShader(&tr.shadowPassShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);

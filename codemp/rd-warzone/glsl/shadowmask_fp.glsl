@@ -1,6 +1,7 @@
 uniform sampler2D u_ScreenDepthMap;
 
 uniform sampler2D u_ShadowMap;
+
 #if defined(USE_SHADOW_CASCADE2)
 uniform sampler2D u_ShadowMap2;
 uniform sampler2D u_ShadowMap3;
@@ -43,13 +44,17 @@ float random( const vec2 p )
   return mod( 123456789., 1e-7 + 256. * dot(p,r) );  
 }
 
+vec2 PixelOffset = vec2(1.0) / r_shadowMapSize;
+
 float PCF(const sampler2D shadowmap, const vec2 st, const float dist)
 {
+#if 0
 	float mult;
 	float scale = 2.0 / r_shadowMapSize;
 
 #if defined(USE_SHADOW_FILTER)
 	float r = random(var_DepthTex.xy);
+	//float r = 0.5;
 	float sinr = sin(r) * scale;
 	float cosr = cos(r) * scale;
 	mat2 rmat = mat2(cosr, sinr, -sinr, cosr);
@@ -72,6 +77,11 @@ float PCF(const sampler2D shadowmap, const vec2 st, const float dist)
 #else
 	mult = step(dist, texture2D(shadowmap, st).r);
 #endif
+
+#else
+	// Fuck this. I'm gonna do the blur in post on screen space instead... And fuck dither, it looks SHIIIIIITTTTTT!!!!!!!!!!!!!!##!!$!%!$$###!!!
+	float mult = step(dist, texture2D(shadowmap, st).r);
+#endif
 		
 	return mult;
 }
@@ -89,6 +99,7 @@ const float blendRange2 = 4096.0;
 const float blendRange3 = 65536.0;
 #endif
 
+
 void main()
 {
 	float result;
@@ -102,6 +113,7 @@ void main()
 	
 #if defined(USE_SHADOW_CASCADE) || defined(USE_SHADOW_CASCADE2) || defined(USE_FAST_SHADOW)
 	const float fadeTo = 1.0;
+	//const float fadeTo = 0.0;
 	result = fadeTo;
 #else
 	result = 0.0;
@@ -112,6 +124,7 @@ void main()
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 		result = PCF(u_ShadowMap, shadowpos.xy, shadowpos.z);
 	}
+
 #if defined(USE_FAST_SHADOW)
 	if (sampleZ / blendRange1 >= 1.0)
 	{// In blend range...
@@ -161,6 +174,19 @@ void main()
 
 				float fade = clamp(sampleZ / r_shadowCascadeZFar * 10.0 - 9.0, 0.0, 1.0);
 				result = mix(result, fadeTo, fade);
+			}
+
+			float fadeStart = abs(shadowpos.w);
+
+			if (sampleZ > r_shadowCascadeZFar) 
+			{
+				result = 1.0;
+			}
+			else if (sampleZ > fadeStart)
+			{
+				result = 1.0 - result;
+				result *= (1.0 - pow(clamp(sampleZ - fadeStart, 0.0, r_shadowCascadeZFar) / r_shadowCascadeZFar, 4.0));
+				result = 1.0 - result;
 			}
 		}
 	}

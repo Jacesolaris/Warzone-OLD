@@ -1928,7 +1928,7 @@ static void R_AddEntitySurface (int entityNum)
 
 	if (backEnd.refdef.rdflags & RDF_BLUR)
 	{
-		if (Distance(ent->e.origin, tr.refdef.vieworg) > 1024)
+		if (Distance(ent->e.origin, backEnd.refdef.vieworg/*tr.refdef.vieworg*/) > 1024)
 		{// Don't draw distant entities in scope blured background view...
 			return;
 		}
@@ -1955,6 +1955,7 @@ static void R_AddEntitySurface (int entityNum)
 		tr.defaultShader->cullType = CT_TWO_SIDED;
 #endif //__MERGE_MORE__
 
+#if 1
 	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
 	{// Don't draw grass and plants on shadow pass for speed...
 		if (!r_foliageShadows->integer)
@@ -1969,6 +1970,7 @@ static void R_AddEntitySurface (int entityNum)
 			}
 		}
 
+		
 		if (tr.viewParms.flags & VPF_SHADOWPASS)
 		{
 			if (Distance(ent->e.origin, tr.refdef.vieworg) > tr.viewParms.maxEntityRange)
@@ -1979,7 +1981,9 @@ static void R_AddEntitySurface (int entityNum)
 			if (Distance(ent->e.origin, tr.refdef.vieworg) > 4096.0)
 				return; // Too far away to bother rendering to shadowmap...
 		}
+		
 	}
+#endif
 
 	// simple generated models, like sprites and beams, are not culled
 	switch ( ent->e.reType ) {
@@ -3108,7 +3112,7 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 
 		// FIXME: sun shadows aren't rendered correctly in cubemaps
 		// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
-		if(0) //(glRefConfig.framebufferObject && r_sunlightMode->integer && (r_forceSun->integer || tr.sunShadows))
+		if(0 && SHADOWS_ENABLED) //(glRefConfig.framebufferObject && r_sunlightMode->integer && (r_forceSun->integer || tr.sunShadows))
 		{
 			R_RenderSunShadowMaps(&refdef, 0);
 			R_RenderSunShadowMaps(&refdef, 1);

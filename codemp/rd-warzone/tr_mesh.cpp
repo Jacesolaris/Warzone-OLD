@@ -767,8 +767,8 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	qboolean		personalModel;
 
 	// don't add third_person objects if not in a portal
-	personalModel = (qboolean)((ent->e.renderfx & RF_THIRD_PERSON) && !(tr.viewParms.isPortal 
-	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW))));
+	personalModel = (qboolean)((ent->e.renderfx & RF_THIRD_PERSON) 
+		&& !(tr.viewParms.isPortal || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW))));
 
 	if(personalModel) return; // Seems to never draw in this code, why waste time?
 

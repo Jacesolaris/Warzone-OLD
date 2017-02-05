@@ -2678,7 +2678,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, tr.hdrDepthFbo, NULL, NULL, NULL, 0);
 		}
 
-		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT)
+		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED)
 		{
 			vec4_t quadVerts[4];
 			vec2_t texCoords[4];
@@ -2722,12 +2722,12 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
 			
-			if (r_sunlightMode->integer >= 3)
+			if (r_sunlightMode->integer >= 3 && SHADOWS_ENABLED)
 			{
 				GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
 				GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
 				
-				if (r_sunlightMode->integer >= 4)
+				if (r_sunlightMode->integer >= 4 && SHADOWS_ENABLED)
 				{
 					GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
@@ -3725,7 +3725,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(srcFbo, srcBox, tr.previousRenderFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}*/
 
-	if (0 && r_sunlightMode->integer)
+	if (0 && r_sunlightMode->integer && SHADOWS_ENABLED)
 	{
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 0, 0, 128, 128);

@@ -1225,6 +1225,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 }
 
 qboolean DAY_NIGHT_CYCLE_ENABLED = qfalse;
+qboolean SHADOWS_ENABLED = qfalse;
 qboolean FOG_POST_ENABLED = qtrue;
 
 void MAPPING_LoadDayNightCycleInfo ( void )
@@ -1237,23 +1238,45 @@ void MAPPING_LoadDayNightCycleInfo ( void )
 
 	FOG_POST_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "DISABLE_FOG", "0")) > 0 ? qfalse : qtrue);
 
+	SHADOWS_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOWS_ENABLED", "0")) > 0 ? qtrue : qfalse);
+
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
 		if (StringContainsWord(currentMapName, "baldemnic")
 			|| StringContainsWord(currentMapName, "mandalore")
-			|| !strcmp(currentMapName, "endor")
-			|| !strcmp(currentMapName, "ilum")
-			|| !strcmp(currentMapName, "scarif"))
+			|| StringContainsWord(currentMapName, "endor")
+			|| StringContainsWord(currentMapName, "ilum")
+			|| StringContainsWord(currentMapName, "taanab")
+			|| StringContainsWord(currentMapName, "tatooine")
+			|| StringContainsWord(currentMapName, "scarif"))
 		{
 			DAY_NIGHT_CYCLE_ENABLED = qtrue;
 		}
 	}
 
+	if (DAY_NIGHT_CYCLE_ENABLED)
+	{
+		SHADOWS_ENABLED = qtrue;
+	}
+
+	if (!SHADOWS_ENABLED
+		&& (StringContainsWord(currentMapName, "baldemnic")
+			|| StringContainsWord(currentMapName, "mandalore")
+			|| StringContainsWord(currentMapName, "endor")
+			|| StringContainsWord(currentMapName, "ilum")
+			|| StringContainsWord(currentMapName, "taanab")
+			|| StringContainsWord(currentMapName, "tatooine")
+			|| StringContainsWord(currentMapName, "scarif")))
+	{
+		SHADOWS_ENABLED = qtrue;
+	}
+
 	if (StringContainsWord(currentMapName, "tatooine"))
 		FOG_POST_ENABLED = qfalse;
 
-	ri->Printf(PRINT_ALL, "^4*** ^3AUTO-FOLIAGE^4: ^5Day night cycle is ^7%s^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3AUTO-FOLIAGE^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
 }
 
 extern const char *materialNames[MATERIAL_LAST];

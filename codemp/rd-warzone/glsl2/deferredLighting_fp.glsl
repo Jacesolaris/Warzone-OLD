@@ -33,7 +33,7 @@ varying vec2		var_TexCoords;
 #define textureCubeLod textureLod // UQ1: > ver 140 support
 
 
-#define LIGHT_THRESHOLD  0.01//0.001
+#define LIGHT_THRESHOLD  0.001//0.01//0.001
 #define LIGHT_COLOR_SEARCH
 
 vec2 encode (vec3 n)
@@ -172,8 +172,9 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
 
-float pw = (1.0/u_Dimensions.x);
-float ph = (1.0/u_Dimensions.y);
+vec2 pixel = vec2(1.0) / u_Dimensions;
+float pw = pixel.x;
+float ph = pixel.y;
 
 vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStrength)
 {
@@ -329,9 +330,26 @@ void main(void)
 	}*/
 
 #if defined(USE_SHADOWMAP)
-	float shadowValue = texture(u_ShadowMap, var_TexCoords).r;
-	//gl_FragColor.rgb *= clamp(shadowValue, 0.85, 1.0);
-	gl_FragColor.rgb *= clamp(shadowValue + 0.75, 0.75, 1.3);
+	if (u_Local2.g > 0.0)
+	{
+		float shadowValue = 0.0;
+
+#ifdef HIGH_QUALITY_SHADOWS
+		for (float y = -3.5 ; y <=3.5 ; y+=1.0)
+			for (float x = -3.5 ; x <=3.5 ; x+=1.0)
+				shadowValue += texture(u_ShadowMap, var_TexCoords + (vec2(x, y) * pixel * 3.0)).r;
+
+		shadowValue /= 64.0;
+#else //!HIGH_QUALITY_SHADOWS
+		for (float y = -1.75 ; y <=1.75 ; y+=1.0)
+			for (float x = -1.75 ; x <=1.75 ; x+=1.0)
+				shadowValue += texture(u_ShadowMap, var_TexCoords + (vec2(x, y) * pixel * 3.0)).r;
+
+		shadowValue /= 32.0;
+#endif //HIGH_QUALITY_SHADOWS
+
+		gl_FragColor.rgb *= clamp(shadowValue + 0.6, 0.6, 1.3);
+	}
 #endif //defined(USE_SHADOWMAP)
 
 	if (/*norm.a < 0.05 ||*/ length(norm.xyz) <= 0.05)
@@ -407,7 +425,7 @@ void main(void)
 				float lightStrength = clamp(1.0 - (lightDist / lightMax), 0.0, 1.0);
 				lightStrength = pow(lightStrength, 2.0) * 0.1;
 
-				if (lightStrength > LIGHT_THRESHOLD)
+				if (lightStrength > 0.01)
 				{
 #ifndef LIGHT_COLOR_SEARCH
 					vec3 lightColor = u_lightColors[li].rgb;
@@ -448,7 +466,7 @@ void main(void)
 
 		if (length(addedLight) > 0.0)
 		{
-			gl_FragColor.rgb += clamp(addedLight * 0.22/*u_Local2.g*//*0.1*/, 0.0, 1.0);
+			gl_FragColor.rgb += clamp(addedLight * 0.05, 0.0, 1.0);
 			gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
 		}
 	}

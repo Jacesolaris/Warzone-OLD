@@ -833,7 +833,8 @@ void RE_RenderScene(const refdef_t *fd) {
 	// playing with even more shadows
 	if (!(fd->rdflags & RDF_NOWORLDMODEL)
 		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
-		&& !backEnd.depthFill)
+		&& !backEnd.depthFill
+		&& SHADOWS_ENABLED)
 	{
 		if (r_sunlightMode->integer == 2)
 		{// Update distance shadows on timers...

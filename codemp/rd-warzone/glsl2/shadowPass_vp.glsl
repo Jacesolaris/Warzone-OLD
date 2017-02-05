@@ -1,4 +1,5 @@
 attribute vec2 attr_TexCoord0;
+attribute vec2 attr_TexCoord1;
 
 attribute vec4 attr_Color;
 
@@ -49,6 +50,8 @@ uniform float  u_VertexLerp;
 uniform mat4   u_BoneMatrices[20];
 #endif
 
+uniform vec2	u_textureScale;
+
 varying vec2   var_TexCoords;
 
 #if defined(USE_TCGEN)
@@ -95,20 +98,17 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 
 void main()
 {
-	vec3 normal = vec3(attr_Normal.xyz);
-	vec3 position = vec3(attr_Position.xyz);
-
 #if defined(USE_VERTEX_ANIMATION)
-	position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-	normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp);
-	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
+	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;;
+	//vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;;
 #elif defined(USE_SKELETAL_ANIMATION)
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
+	//vec4 tangent4 = vec4(0.0);
 	vec4 originalPosition = vec4(attr_Position, 1.0);
 	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
-	vec4 tangent4 = vec4(0.0);
-	vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
+	//vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -116,19 +116,16 @@ void main()
 
 		position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
 		normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
-		tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
+		//tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
 	}
 
-	position = position4.xyz;
-	normal = normalize (normal4.xyz);
-	vec3 tangent = normalize (tangent4.xyz);
+	vec3 position = position4.xyz;
+	vec3 normal = normalize (normal4.xyz);
+	//vec3 tangent = normalize (tangent4.xyz);
 #else
-	vec3 tangent   = attr_Tangent.xyz;
-#endif
-
-#if !defined(USE_SKELETAL_ANIMATION)
-	normal  = normal  * 2.0 - vec3(1.0);
-	tangent = tangent * 2.0 - vec3(1.0);
+	vec3 position  = attr_Position;
+	vec3 normal    = attr_Normal * 2.0 - 1.0;
+	//vec3 tangent   = attr_Tangent.xyz * 2.0 - 1.0;
 #endif
 
 #if defined(USE_TCGEN)
@@ -142,6 +139,11 @@ void main()
 #else
 	var_TexCoords.xy = texCoords;
 #endif
+
+	if (!(u_textureScale.x == 0.0 && u_textureScale.y == 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	{
+		var_TexCoords *= u_textureScale;
+	}
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 }
