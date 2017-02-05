@@ -495,6 +495,10 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, vector);
+
+		vec2_t scale;
+		scale[0] = scale[1] = 1.0;
+		GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
 	}
 
 	if (r_tesselation->integer)
@@ -860,6 +864,15 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 	if ( !backEnd.skyRenderedThisView ) {
 		return;
+	}
+
+	if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL))
+	{// This fixes some skybox issues... For some wierd reason...
+		if (!SKIP_CULL_FRAME_DONE)
+		{
+			SKIP_CULL_FRAME = qtrue;
+			SKIP_CULL_FRAME_DONE = qtrue;
+		}
 	}
 
 #ifdef __DAY_NIGHT__

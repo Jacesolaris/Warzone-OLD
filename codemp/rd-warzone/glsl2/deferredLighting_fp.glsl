@@ -3,6 +3,7 @@ uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_DeluxeMap;
 uniform sampler2D	u_GlowMap;
+uniform samplerCube	u_CubeMap;
 
 #if defined(USE_SHADOWMAP)
 uniform sampler2D	u_ShadowMap;
@@ -16,6 +17,9 @@ uniform vec3		u_ViewOrigin;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
+uniform vec4		u_CubeMapInfo;
+uniform float		u_CubeMapStrength;
+
 #define MAX_LIGHTALL_DLIGHTS 16//24
 
 uniform int			u_lightCount;
@@ -26,9 +30,28 @@ uniform vec3		u_lightColors[MAX_LIGHTALL_DLIGHTS];
 
 varying vec2		var_TexCoords;
 
+#define textureCubeLod textureLod // UQ1: > ver 140 support
+
 
 #define LIGHT_THRESHOLD  0.01//0.001
 #define LIGHT_COLOR_SEARCH
+
+vec2 encode (vec3 n)
+{
+    float p = sqrt(n.z*8+8);
+    return vec2(n.xy/p + 0.5);
+}
+
+vec3 decode (vec2 enc)
+{
+    vec2 fenc = enc*4-2;
+    float f = dot(fenc,fenc);
+    float g = sqrt(1-f/4);
+    vec3 n;
+    n.xy = fenc*g;
+    n.z = 1-f/2;
+    return n;
+}
 
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
@@ -105,25 +128,14 @@ vec4 ConvertToNormals ( vec4 color )
 	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
 	// for the very noticable FPS boost over texture lookups.
 
-	vec3 color2 = color.rgb;
-
-	vec3 N = vec3(clamp(color2.r + color2.b, 0.0, 1.0), clamp(color2.g + color2.b, 0.0, 1.0), clamp(color2.r + color2.g, 0.0, 1.0));
-
-	vec3 brightness = color2.rgb; //adaptation luminance
-	brightness = (brightness/(brightness+1.0));
-	brightness = vec3(max(brightness.x, max(brightness.y, brightness.z)));
-	vec3 brightnessMult = (vec3(1.0) - brightness) * 0.5;
-
-	color2 = pow(clamp(color2 + brightnessMult, 0.0, 1.0), vec3(2.0));
+	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 
 	N.xy = 1.0 - N.xy;
 	N.xyz = N.xyz * 0.5 + 0.5;
 	N.xyz = pow(N.xyz, vec3(2.0));
 	N.xyz *= 0.8;
 
-	//float displacement = brightness.r;
 	float displacement = clamp(length(color.rgb), 0.0, 1.0);
-	//float displacement = clamp(length(color2.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
 #define const_2 (255.0 / 219.0)
 	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
@@ -151,6 +163,119 @@ vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 spe
 	return dif*diffuseColor + spe*specularColor;
 }
 
+vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
+{
+	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
+	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
+	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
+	float a1 = t.w;
+	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
+}
+
+float pw = (1.0/u_Dimensions.x);
+float ph = (1.0/u_Dimensions.y);
+
+vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStrength)
+{
+	// Quick scan for pixel that is not water...
+	float QLAND_Y = 0.0;
+
+	for (float y = coord.y; y < 1.0; y += ph * 50.0)
+	{
+		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+		bool isSameMaterial = false;
+		
+		if (positionMap.a == pMap.a)
+			isSameMaterial = true;
+
+		if (!isSameMaterial)
+		{
+			QLAND_Y = y;
+			break;
+		}
+	}
+
+	if (QLAND_Y <= 0.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+	
+	QLAND_Y -= ph * 50.0;
+
+	for (float y = coord.y; y < 1.0; y += ph * 5.0)
+	{
+		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+		bool isSameMaterial = false;
+		
+		if (positionMap.a == pMap.a)
+			isSameMaterial = true;
+
+		if (!isSameMaterial)
+		{
+			QLAND_Y = y;
+			break;
+		}
+	}
+
+	if (QLAND_Y <= 0.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+	
+	QLAND_Y -= ph * 5.0;
+	
+	// Full scan from within 5 px for the real 1st pixel...
+	float upPos = coord.y;
+	float LAND_Y = 0.0;
+
+	for (float y = QLAND_Y; y < 1.0; y += ph)
+	{
+		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+		bool isSameMaterial = false;
+
+		if (positionMap.a == pMap.a)
+			isSameMaterial = true;
+
+		if (!isSameMaterial)
+		{
+			LAND_Y = y;
+			break;
+		}
+	}
+
+	if (LAND_Y <= 0.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+
+	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0), 0.0, 1.0);
+
+	if (upPos > 1.0 || upPos < 0.0)
+	{// Not on screen...
+		return inColor;
+	}
+
+	//vec4 wMap = waterMapAtCoord(vec2(coord.x, upPos));
+
+	//if (wMap.a > 0.0)
+	//{// This position is water, or it is closer then the reflection pixel...
+	//	return inColor;
+	//}
+
+	vec4 landColor = texture2D(u_DiffuseMap, vec2(coord.x, upPos));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos + ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos - ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos + ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos - ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos - ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos + ph));
+	landColor /= 9.0;
+
+	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * reflectStrength/*0.28*//*u_Local0.r*/);
+}
+
 void main(void)
 {
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
@@ -170,12 +295,6 @@ void main(void)
 		return;
 	}*/
 
-#if defined(USE_SHADOWMAP)
-	float shadowValue = texture(u_ShadowMap, var_TexCoords/*gl_FragCoord.xy * r_FBufScale*/).r;
-	//gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
-	gl_FragColor.rgb *= clamp(shadowValue, 0.85, 1.0);
-#endif //defined(USE_SHADOWMAP)
-
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec4 position = texture2D(u_PositionMap, var_TexCoords);
 
@@ -192,15 +311,39 @@ void main(void)
 	}*/
 
 	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
+	norm.xyz = decode(norm.xy);
+
+	vec3 unpackedCubeStuff = decode(norm.zw);
+	float enableCubeMap = unpackedCubeStuff.x;
+	float cubeStrength = clamp(unpackedCubeStuff.y * 10.0, 0.0, 1.0);
+	float specularScale = clamp(unpackedCubeStuff.z * 10.0, 0.0, 1.0);
+
+	/*
+	vec2 encode (vec3 n)
+	vec3 decode (vec2 enc)
+	*/
 
 	/*if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0 && norm.a == 0.05)
 	{// Generic GLSL. Probably a glow or something, ignore the lighting...
 		return;
 	}*/
 
-	if (norm.a < 0.05 || length(norm.xyz) <= 0.05)
+#if defined(USE_SHADOWMAP)
+	float shadowValue = texture(u_ShadowMap, var_TexCoords).r;
+	//gl_FragColor.rgb *= clamp(shadowValue, 0.85, 1.0);
+	gl_FragColor.rgb *= clamp(shadowValue + 0.75, 0.75, 1.3);
+#endif //defined(USE_SHADOWMAP)
+
+	if (/*norm.a < 0.05 ||*/ length(norm.xyz) <= 0.05)
 	{
 		norm = ConvertToNormals(color);
+	}
+	else
+	{
+		float displacement = clamp(length(color.rgb), 0.0, 1.0);
+#define const_1 ( 32.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+		norm.a = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 	}
 
 	norm.a = norm.a * 0.5 + 0.5;
@@ -309,6 +452,35 @@ void main(void)
 			gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
 		}
 	}
+
+#if 0
+	if (u_CubeMapStrength > 0.0 && enableCubeMap * 2.0 > 0.0)
+	{
+		vec4 specular;
+		specular.rgb = gl_FragColor.rgb;
+#define specLower ( 64.0 / 255.0)
+#define specUpper (255.0 / 192.0)
+		specular.rgb = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
+		//specular.a = ((clamp(cubeStrength, 0.0, 1.0) + clamp(specularScale, 0.0, 1.0)) / 2.0) * 1.6;
+		specular.a = norm.a;
+
+		specular.rgb *= enableCubeMap * 2.0;
+
+		float NE = clamp(dot(N, E), 0.0, 1.0);
+
+		vec3 R = reflect(E, N);
+		vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
+		vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * (u_ViewOrigin.xyz - position.xyz);//viewDir;
+		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * 0.25;
+		gl_FragColor.rgb += (cubeLightColor * reflectance * (cubeStrength * specular.a)) * u_CubeMapStrength * 0.5;
+	}
+#elif 0
+	// Screen space reflections...
+	if (enableCubeMap > 0.0)
+	{
+		gl_FragColor.rgb = AddReflection(var_TexCoords, position, gl_FragColor.rgb, 0.15/*u_CubeMapStrength*/ * cubeStrength);
+	}
+#endif
 
 	//if (u_Local2.g >= 1.0)
 	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)

@@ -36,7 +36,7 @@ uniform float  u_DeformParams[5];
 
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform mat4	u_ModelMatrix;
-uniform mat4	u_invEyeProjectionMatrix;
+//uniform mat4	u_invEyeProjectionMatrix;
 
 varying vec2   var_DiffuseTex;
 varying vec4   var_Color;

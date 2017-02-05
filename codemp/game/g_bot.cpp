@@ -1224,12 +1224,13 @@ void G_CheckMinimumNpcs(void)
 
 	if (level.intermissiontime) return;
 
-	//only check once each 1 seconds - NPCs can spawn faster then bots...
-	if (level.numConnectedClients > 0 && checkminimumnpcs_time > level.time - 1000) {
+	// only check once each 1 seconds - NPCs can spawn faster then bots... If i use a 1ms extra on these, it should offset their thinks
+	// to spread them out and reduce the occurances of npcs all thinking on the same frames all the time...
+	if (level.numConnectedClients > 0 && checkminimumnpcs_time > level.time - 1001) {
 		return;
 	}
 
-	if (level.numConnectedClients <= 0 && checkminimumnpcs_time > level.time - 500) {
+	if (level.numConnectedClients <= 0 && checkminimumnpcs_time > level.time - 501) {
 		return;
 	}
 

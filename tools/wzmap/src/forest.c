@@ -103,6 +103,7 @@ float			LEDGE_MAX_SLOPE = 28.0;
 qboolean		LEDGE_CHEAP = qfalse;
 char			LEDGE_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
+int				TREE_PERCENTAGE = 100;
 float			TREE_CLIFF_CULL_RADIUS = 1.0;
 char			TREE_MODELS[MAX_FOREST_MODELS][128] = { 0 };
 float			TREE_OFFSETS[MAX_FOREST_MODELS] = { -4.0 };
@@ -210,6 +211,8 @@ void FOLIAGE_LoadClimateData( char *filename )
 
 	// Read all the tree info from the new .climate ini files...
 	TREE_SCALE_MULTIPLIER = atof(IniRead(filename, "TREES", "treeScaleMultiplier", "1.0"));
+
+	TREE_PERCENTAGE = atof(IniRead(filename, "TREES", "treeAssignPercent", "100"));
 
 	//Sys_Printf("Tree scale for this climate is %f.\n", TREE_SCALE_MULTIPLIER);
 
@@ -358,6 +361,46 @@ void CaulkifyStuff(void)
 			}
 		}
 	}
+
+	// Now that we have calkified stuff, re-check playableMapBounds, so we can cull most stuff that would be below the map...
+	vec3_t oldMapPlayableMins, oldMapPlayableMaxs;
+	VectorCopy(mapPlayableMins, oldMapPlayableMins);
+	VectorCopy(mapPlayableMaxs, oldMapPlayableMaxs);
+
+	ClearBounds(mapPlayableMins, mapPlayableMaxs);
+	for (int s = 0; s < numMapDrawSurfs; s++)
+	{
+		printLabelledProgress("ImproveMapBounds", s, numMapDrawSurfs);
+
+		/* get drawsurf */
+		mapDrawSurface_t *ds = &mapDrawSurfs[s];
+		shaderInfo_t *si = ds->shaderInfo;
+
+		ClearBounds(ds->mins, ds->maxs);
+		for (int i = 0; i < ds->numVerts; i++)
+			AddPointToBounds(ds->verts[i].xyz, ds->mins, ds->maxs);
+		
+		// UQ1: Also record actual map playable area mins/maxs...
+		if (!(si->compileFlags & C_SKY)
+			&& !(si->compileFlags & C_SKIP)
+			&& !(si->compileFlags & C_HINT)
+			&& !(si->compileFlags & C_NODRAW)
+			&& !StringContainsWord(si->shader, "sky")
+			&& !StringContainsWord(si->shader, "caulk")
+			&& !StringContainsWord(si->shader, "common/water"))
+		{
+			//if (!StringContainsWord(si->shader, "/sand"))
+			//Sys_Printf("ds %i [%s] bounds %f %f %f x %f %f %f.\n", s, si->shader, ds->mins[0], ds->mins[1], ds->mins[2], ds->maxs[0], ds->maxs[1], ds->maxs[2]);
+			AddPointToBounds(ds->mins, mapPlayableMins, mapPlayableMaxs);
+			AddPointToBounds(ds->maxs, mapPlayableMins, mapPlayableMaxs);
+		}
+	}
+
+	// Override playable maxs height with the full map version, we only want the lower extent of playable area...
+	mapMaxs[2] = mapPlayableMaxs[2];
+
+	Sys_Printf("Old map bounds %f %f %f x %f %f %f.\n", oldMapPlayableMins[0], oldMapPlayableMins[1], oldMapPlayableMins[2], oldMapPlayableMaxs[0], oldMapPlayableMaxs[1], oldMapPlayableMaxs[2]);
+	Sys_Printf("New map bounds %f %f %f x %f %f %f.\n", mapPlayableMins[0], mapPlayableMins[1], mapPlayableMins[2], mapPlayableMaxs[0], mapPlayableMaxs[1], mapPlayableMaxs[2]);
 
 	Sys_Printf("%d shaders set to nodraw.\n", numNoDrawAdded);
 	Sys_Printf("%d shaders set to skip.\n", numSkipAdded);
@@ -836,12 +879,13 @@ void GenerateCliffFaces(void)
 	}
 }
 
-int		numLedges = 0;
-int		numLedgesDistanceCulled = 0;
-vec3_t	ledgePositions[65536];
-vec3_t	ledgeAngles[65536];
-float	ledgeScale[65536];
-float	ledgeHeight[65536];
+int			numLedges = 0;
+int			numLedgesDistanceCulled = 0;
+vec3_t		ledgePositions[65536];
+vec3_t		ledgeAngles[65536];
+float		ledgeScale[65536];
+float		ledgeHeight[65536];
+int			ledgeIsLowAngle[65536];
 
 void GenerateLedgeFaces(void)
 {
@@ -851,6 +895,9 @@ void GenerateLedgeFaces(void)
 
 	numLedges = 0;
 	numLedgesDistanceCulled = 0;
+	
+	int numLowAngleLedges = 0;
+	int numVeryLowAngleLedges = 0;
 
 	//Sys_Printf("%i map draw surfs.\n", numMapDrawSurfs);
 
@@ -861,6 +908,7 @@ void GenerateLedgeFaces(void)
 		/* get drawsurf */
 		mapDrawSurface_t *ds = &mapDrawSurfs[s];
 		shaderInfo_t *si = ds->shaderInfo;
+		int isLowAngle = 0;
 
 		if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
 		{
@@ -940,6 +988,18 @@ void GenerateLedgeFaces(void)
 					isCliff = qtrue;
 				}
 
+				if (isCliff && !(pitch > 20 || pitch < -20))
+				{// Mark this as a low angle slope, so we can lower the ledge a bit when adding it. This should allow for some ledges on flattish surfaces...
+					if (!(pitch > 16 || pitch < -16))
+					{
+						isLowAngle = 1;
+					}
+					else
+					{
+						isLowAngle = 2;
+					}
+				}
+
 				if (!(dv->xyz[2] >= cliffTopCheck))
 					lowPositionCount++; // only select positions with 2 triangles down low...
 			}
@@ -992,11 +1052,24 @@ void GenerateLedgeFaces(void)
 			VectorCopy(center, ledgePositions[numLedges]);
 			VectorCopy(angles[0], ledgeAngles[numLedges]);
 			ledgeAngles[numLedges][0] += 90.0;
+			ledgeIsLowAngle[numLedges] = isLowAngle;
+
+			if (isLowAngle == 1)
+			{
+				numLowAngleLedges++;
+			}
+			else if (isLowAngle == 2)
+			{
+				numVeryLowAngleLedges++;
+			}
+
 			numLedges++;
 		}
 	}
 
 	Sys_Printf("Found %i ledge surfaces.\n", numLedges);
+	Sys_Printf("%i ledge slopes are low angles.\n", numLowAngleLedges);
+	Sys_Printf("%i ledge slopes are very low angles.\n", numVeryLowAngleLedges);
 	Sys_Printf("%i ledge objects were culled by distance.\n", numLedgesDistanceCulled);
 
 	for (int i = 0; i < numLedges; i++)
@@ -1030,7 +1103,19 @@ void GenerateLedgeFaces(void)
 
 		{
 			char str[32];
-			sprintf(str, "%f %f %f", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2]);
+
+			if (ledgeIsLowAngle[i] == 1)
+			{// Special case for low angle slopes... Dig it further into the ground more...
+				sprintf(str, "%f %f %f", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2]-32.0);
+			}
+			else if (ledgeIsLowAngle[i] == 2)
+			{// Special case for *very* low angle slopes... Dig it further into the ground more...
+				sprintf(str, "%f %f %f", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2] - 48.0);
+			}
+			else
+			{
+				sprintf(str, "%f %f %f", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2]);
+			}
 			SetKeyValue(mapEnt, "origin", str);
 		}
 
@@ -1059,9 +1144,10 @@ void GenerateLedgeFaces(void)
 		SetKeyValue(mapEnt, "classname", "misc_model");
 		classname = ValueForKey(mapEnt, "classname");
 
-		int choice = irand(1, 5);
+		//int choice = irand(1, 5);
+		int choice = irand(1, 4);
 		
-		if (choice < 5)
+		//if (choice < 5)
 		{
 			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledge0%i.md3", choice));
 
@@ -1070,7 +1156,7 @@ void GenerateLedgeFaces(void)
 				SetKeyValue(mapEnt, "_overrideShader", LEDGE_SHADER);
 			}
 		}
-		else
+		/*else
 		{
 			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledgerocks01.md3"));
 
@@ -1078,7 +1164,7 @@ void GenerateLedgeFaces(void)
 			{// Only override the ledge component's shader...
 				SetKeyValue(mapEnt, "_overrideLedgeShader", LEDGE_SHADER);
 			}
-		}
+		}*/
 
 		//Sys_Printf( "Generated cliff face at %f %f %f. Angle %f.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2], ledgeAngles[i][1] );
 
@@ -1531,6 +1617,19 @@ void ReassignTreeModels ( void )
 
 	free(BUFFER_RANGES);
 	free(SAME_RANGES);
+
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Now check our percentage of how many we should actually use... Disable extras...
+		if (FOLIAGE_ASSIGNED[i])
+		{
+			if (irand(0, 100) > TREE_PERCENTAGE)
+			{
+				FOLIAGE_ASSIGNED[i] = qfalse;
+				FOLIAGE_TREE_SELECTION[i] = 0;
+				FOLIAGE_TREE_BUFFER[i] = 0;
+			}
+		}
+	}
 
 	int count = 0;
 

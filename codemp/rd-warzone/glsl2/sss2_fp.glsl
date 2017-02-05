@@ -102,7 +102,7 @@ uniform sampler2D					u_ScreenDepthMap;
 uniform sampler2D					u_NormalMap;
 
 uniform mat4						u_ModelViewProjectionMatrix;
-uniform mat4						u_ProjectionMatrix;
+//uniform mat4						u_ProjectionMatrix;
 uniform mat4						u_NormalMatrix;
 uniform mat4						u_invProjectionMatrix;
 uniform vec4						u_ViewInfo; // zmin, zmax, zmax / zmin

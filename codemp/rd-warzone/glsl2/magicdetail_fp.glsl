@@ -7,7 +7,7 @@ varying vec2		var_ScreenTex;
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo; // zfar / znear, zfar
-uniform mat4		u_invEyeProjectionMatrix;
+//uniform mat4		u_invEyeProjectionMatrix;
 uniform vec4		u_Local0;
 
 vec2 PixelSize = vec2(1.0f / var_Dimensions.x, 1.0f / var_Dimensions.y);

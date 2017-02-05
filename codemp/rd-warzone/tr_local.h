@@ -106,6 +106,9 @@ typedef unsigned int glIndex_t;
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+extern qboolean SKIP_CULL_FRAME;
+extern qboolean SKIP_CULL_FRAME_DONE;
+
 //#define ___WARZONE_FLASH___
 #define ___WARZONE_AWESOMIUM___
 
@@ -1402,6 +1405,8 @@ typedef enum
 	UNIFORM_TCGEN0,
 	UNIFORM_TCGEN0VECTOR0,
 	UNIFORM_TCGEN0VECTOR1,
+
+	UNIFORM_TEXTURESCALE,
 
 	UNIFORM_DEFORMGEN,
 	UNIFORM_DEFORMPARAMS,

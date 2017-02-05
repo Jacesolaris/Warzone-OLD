@@ -1242,7 +1242,8 @@ void MAPPING_LoadDayNightCycleInfo ( void )
 		if (StringContainsWord(currentMapName, "baldemnic")
 			|| StringContainsWord(currentMapName, "mandalore")
 			|| !strcmp(currentMapName, "endor")
-			|| !strcmp(currentMapName, "ilum"))
+			|| !strcmp(currentMapName, "ilum")
+			|| !strcmp(currentMapName, "scarif"))
 		{
 			DAY_NIGHT_CYCLE_ENABLED = qtrue;
 		}

@@ -11,8 +11,8 @@ uniform sampler2D	u_ShadowMap;
 
 uniform mat4		u_ModelViewProjectionMatrix;
 uniform mat4		u_ModelMatrix;
-uniform mat4		u_invEyeProjectionMatrix;
-uniform mat4		u_ModelViewMatrix;
+//uniform mat4		u_invEyeProjectionMatrix;
+//uniform mat4		u_ModelViewMatrix;
 
 uniform vec4		u_Local9;
 

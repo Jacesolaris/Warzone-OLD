@@ -3,7 +3,7 @@ attribute vec2					attr_TexCoord0;
 
 uniform mat4					u_ModelViewProjectionMatrix;
 uniform mat4					u_ModelViewMatrix;
-uniform mat4					u_ProjectionMatrix;
+//uniform mat4					u_ProjectionMatrix;
 uniform mat4					u_invProjectionMatrix;
 uniform vec2					u_Dimensions;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin

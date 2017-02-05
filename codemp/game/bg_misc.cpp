@@ -3991,13 +3991,19 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	// set the time for linear prediction
 	//s->pos.trTime = time;
 #ifdef CGAMEDLL
-	s->pos.trTime = cg.time - 100; // UQ1: NPC think time...
+	s->pos.trTime = cg.time - 50; // UQ1: NPC think time...
 #else //!CGAMEDLL
 	s->pos.trTime = 0;
 #endif //CGAMEDLL
 
 	// set maximum extra polation time
-	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+#ifdef _GAME
+	s->pos.trDuration = 1000 / sv_fps.integer;// 50; // 1000 / sv_fps (default = 20)
+#elif defined(_CGAME)
+	s->pos.trDuration = 1000 / sv_fps.integer;// 50; // 1000 / sv_fps (default = 20)
+#else
+	s->pos.trDuration = 100; // 1000 / sv_fps (default = 20)
+#endif
 
 	s->apos.trType = TR_INTERPOLATE;
 

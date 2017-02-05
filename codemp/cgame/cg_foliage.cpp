@@ -53,7 +53,7 @@ float		NUM_PLANT_SHADERS = 0;
 #define		PLANT_SCALE_MULTIPLIER 1.0
 
 #define		MAX_PLANT_SHADERS 100
-#define		MAX_PLANT_MODELS 55
+#define		MAX_PLANT_MODELS 69
 
 float		TREE_SCALE_MULTIPLIER = 1.0;
 
@@ -110,11 +110,25 @@ static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/fern02.md3",
 	"models/warzone/plants/fern02.md3",
 	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
 	"models/warzone/plants/fern03.md3",
+	"models/warzone/plants/fern03.md3",
+	"models/warzone/plants/fern04.md3",
 	"models/warzone/plants/fern04.md3",
 	"models/warzone/plants/fern05.md3",
 	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fern05.md3",
 	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/smalltree02.md3",
+	"models/warzone/plants/smalltree03.md3",
+	"models/warzone/plants/smalltree04.md3",
+	"models/warzone/plants/smalltree05.md3",
+	"models/warzone/plants/smalltree06.md3",
 };
 
 #define SpringPlantsModelsList TropicalPlantsModelsList
@@ -1798,6 +1812,26 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		down[2] -= 128;
 		CG_Trace(&tr, up, NULL, NULL, down, -1, MASK_SOLID);
 		VectorCopy(tr.plane.normal, FOLIAGE_NORMALS[i]);
+
+		vec3_t slopeangles;
+		vectoangles(FOLIAGE_NORMALS[i], slopeangles);
+
+		float pitch = slopeangles[0];
+
+		if (pitch > 180)
+			pitch -= 360;
+
+		if (pitch < -180)
+			pitch += 360;
+
+		pitch += 90.0f;
+
+#define MAX_FOLIAGE_ALLOW_SLOPE 46.0
+
+		if (pitch > MAX_FOLIAGE_ALLOW_SLOPE || pitch < -MAX_FOLIAGE_ALLOW_SLOPE)
+		{// We hit something bad in our trace (most likely a wall or tree), instead use flat...
+			VectorSet(FOLIAGE_NORMALS[i], 0, 0, 0);
+		}
 	}
 
 	trap->FS_Write(&FOLIAGE_NUM_POSITIONS, sizeof(int), f);
@@ -2991,14 +3025,22 @@ void FOLIAGE_FoliageReplant(int plantPercentage)
 	FOLIAGE_SaveFoliagePositions();
 }
 
-qboolean FOLIAGE_MaterialIsWallSolid(int mateiral)
+qboolean FOLIAGE_MaterialIsWallSolid(vec3_t normal, int mateiral)
 {
 	if (mateiral != MATERIAL_SHORTGRASS
 		&& mateiral != MATERIAL_LONGGRASS
 		&& mateiral != MATERIAL_GREENLEAVES
+		&& mateiral != MATERIAL_SAND
+		&& mateiral != MATERIAL_GRAVEL
+		&& mateiral != MATERIAL_SNOW
+		&& mateiral != MATERIAL_MUD
+		&& mateiral != MATERIAL_DIRT
 		/*&& mateiral != MATERIAL_NONE*/)
 	{// Looks like a tree or wall here.. Yay!
-		return qtrue;
+		if (!FOLIAGE_CheckSlope(normal))
+		{// Also check it's slope, to make sure it's on a non-walkable angle...
+			return qtrue;
+		}
 	}
 
 	return qfalse;
@@ -3019,7 +3061,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3030,7 +3072,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3041,7 +3083,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3052,7 +3094,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3064,7 +3106,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3076,7 +3118,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3088,7 +3130,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3100,7 +3142,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3191,7 +3233,7 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 			{// 1 in 2 (or if no other nearby yet) are fern or tall plant...
 				//if (irand(1,2) == 1 || !FOLIAGE_AnotherBigPlantNearby(FOLIAGE_POSITIONS[i], i-1))
 				//{
-				FOLIAGE_PLANT_SELECTION[i] = irand(MAX_PLANT_MODELS - 9, MAX_PLANT_MODELS);
+				FOLIAGE_PLANT_SELECTION[i] = irand(MAX_PLANT_MODELS - 23, MAX_PLANT_MODELS);
 				NUM_OBJECT_PLANTS++;
 				//}
 				//else
@@ -3203,7 +3245,7 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 			{
 				if (irand(0, 100) <= plantPercentage)
 				{// Replace...
-					FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS - 8);
+					FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS - 22);
 					NUM_REPLACED++;
 
 					sprintf(last_node_added_string, "^3%i ^5near object plants replaced. ^3%i ^5normal replaced. ^3%i ^5total plants.", NUM_OBJECT_PLANTS, NUM_REPLACED, NUM_PLANTS_TOTAL);

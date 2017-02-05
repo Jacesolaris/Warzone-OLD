@@ -13,7 +13,7 @@ layout(triangle_strip, max_vertices = MAX_PEBBLES) out;
 
 uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
-uniform mat4				u_ModelViewMatrix;
+//uniform mat4				u_ModelViewMatrix;
 uniform mat4				u_NormalMatrix;
 
 uniform sampler2D			u_SplatControlMap;

@@ -50,6 +50,9 @@ refimport_t	*ri = NULL;
 // point at this for their sorting surface
 surfaceType_t	entitySurface = SF_ENTITY;
 
+qboolean SKIP_CULL_FRAME = qfalse;
+qboolean SKIP_CULL_FRAME_DONE = qfalse;
+
 /*
 ================
 R_CompareVert
@@ -419,7 +422,7 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 	int			anyBack;
 	int			front, back;
 
-	if ( r_nocull->integer ) {
+	if ( r_nocull->integer || SKIP_CULL_FRAME) {
 		return CULL_CLIP;
 	}
 
@@ -470,7 +473,7 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 	vec3_t          v;
 	vec3_t          worldBounds[2];
 
-	if(r_nocull->integer)
+	if(r_nocull->integer || SKIP_CULL_FRAME)
 	{
 		return CULL_CLIP;
 	}
@@ -559,7 +562,7 @@ int R_CullPointAndRadiusEx( const vec3_t pt, float radius, const cplane_t* frust
 	const cplane_t	*frust;
 	qboolean mightBeClipped = qfalse;
 
-	if ( r_nocull->integer ) {
+	if ( r_nocull->integer || SKIP_CULL_FRAME) {
 		return CULL_CLIP;
 	}
 
@@ -1849,7 +1852,7 @@ int NUM_ENTS_FOV_CULLED = 0;
 int NUM_ENTS_PVS_CULLED = 0;
 
 qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
-	if ( r_nocull->integer || !r_entityCull->integer) {
+	if ( r_nocull->integer || !r_entityCull->integer || SKIP_CULL_FRAME) {
 		return qfalse;
 	}
 

@@ -3902,6 +3902,7 @@ void NPC_CheckTypeStuff ( gentity_t *aiEnt)
 }
 
 extern void Jedi_AdjustSaberAnimLevel(gentity_t *self, int newLevel);
+extern void ClientThink_real(gentity_t *ent);
 
 void NPC_GenericFrameCode ( gentity_t *self )
 {
@@ -3975,14 +3976,14 @@ void NPC_GenericFrameCode ( gentity_t *self )
 		//trap->Print(va("%s set torso anim.\n", aiEnt->client->modelname));
 	}
 
-	if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
-	{//If we were following a roff, we don't do normal pmoves.
+	//if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
+	//{//If we were following a roff, we don't do normal pmoves.
 		ClientThink( aiEnt->s.number, &aiEnt->client->pers.cmd );
-	}
-	else
-	{
-		NPC_ApplyRoff(aiEnt);
-	}
+	//}
+	//else
+	//{
+	//	NPC_ApplyRoff(aiEnt);
+	//}
 
 	// end of thinking cleanup
 	aiEnt->NPC->touchedByPlayer = NULL;
@@ -4139,16 +4140,17 @@ void NPC_Think ( gentity_t *self )//, int msec )
 		G_DroidSounds( self );
 	}
 
+	if (aiEnt->s.eType != ET_NPC && aiEnt->s.eType != ET_PLAYER)
+	{//Something drastic happened in our script
+		return;
+	}
+
 	if ( aiEnt->NPC->nextBStateThink <= level.time
 		&& !aiEnt->s.m_iVehicleNum )//NPCs sitting in Vehicles do NOTHING
 	{
 #if	AI_TIMERS
 		int	startTime = GetTime(0);
 #endif//	AI_TIMERS
-		if ( aiEnt->s.eType != ET_NPC && aiEnt->s.eType != ET_PLAYER )
-		{//Something drastic happened in our script
-			return;
-		}
 
 		// UQ1: Think more often!
 #ifndef __LOW_THINK_AI__
@@ -4646,6 +4648,8 @@ void NPC_Think ( gentity_t *self )//, int msec )
 		AITime += addTime;
 #endif//	AI_TIMERS
 
+		//ClientThink(aiEnt->s.number, &aiEnt->client->pers.cmd);
+
 	}
 	else
 	{
@@ -4654,18 +4658,19 @@ void NPC_Think ( gentity_t *self )//, int msec )
 
 		//or use client->pers.lastCommand?
 		aiEnt->NPC->last_ucmd.serverTime = level.time - 50;
-		if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
+		//if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
 		{//If we were following a roff, we don't do normal pmoves.
 			//FIXME: firing angles (no aim offset) or regular angles?
 			//if (self->enemy) NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &aiEnt->client->pers.cmd, &aiEnt->NPC->last_ucmd, sizeof( usercmd_t ) );
-			ClientThink(aiEnt->s.number, &aiEnt->client->pers.cmd);
+			NPC_GenericFrameCode(self);
+			//ClientThink(aiEnt->s.number, &aiEnt->client->pers.cmd);
 		}
-		else
-		{
-			NPC_ApplyRoff(aiEnt);
-		}
-#else //!__LOW_THINK_AI__
+		//else
+		//{
+		//	NPC_ApplyRoff(aiEnt);
+		//}
+#else //__LOW_THINK_AI__
 		//VectorCopy( oldMoveDir, self->client->ps.moveDir );
 
 		NPC_GenericFrameCode( self );

@@ -46,6 +46,8 @@ uniform sampler2D			u_DiffuseMap;
 
 uniform float	u_Time;
 
+uniform vec2	u_textureScale;
+
 #if defined(USE_DELUXEMAP)
 uniform vec4   u_EnableTextures; // x = normal, y = deluxe, z = specular, w = cube
 #endif
@@ -65,7 +67,7 @@ uniform vec4   u_DiffuseTexOffTurb;
 #endif
 
 uniform mat4   u_ModelViewProjectionMatrix;
-uniform mat4	u_ViewProjectionMatrix;
+//uniform mat4	u_ViewProjectionMatrix;
 uniform mat4   u_ModelMatrix;
 uniform mat4	u_NormalMatrix;
 
@@ -202,43 +204,22 @@ vec3 vectoangles(in vec3 value1) {
 }
 #endif //defined(USE_TRI_PLANAR)
 
-vec4 ConvertToNormals(vec4 color)
-{
-	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
-	// wasting vram on real normals.
-	//
-	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
-	// for the very noticable FPS boost over texture lookups.
-
-	//N = vec3((color.r + color.b) / 2.0, (color.g + color.b) / 2.0, (color.r + color.g) / 2.0);
-	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
-	N.xy = 1.0 - N.xy;
-	N.xyz *= 0.04;
-	vec4 norm = vec4(N, 1.0 - (length(N.xyz) / 3.0));
-	return norm;
-}
+//out vec3 o_toLightInTangentSpace;
+//out vec3 o_toCameraInTangentSpace;
 
 void main()
 {
-	vec3 normal = vec3(attr_Normal.xyz);
-	vec3 position = vec3(attr_Position.xyz);
-
 #if defined(USE_VERTEX_ANIMATION)
-	position = mix(attr_Position, attr_Position2, u_VertexLerp);
-	normal = mix(attr_Normal, attr_Normal2, u_VertexLerp);
-	vec3 tangent = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
-
-	normal = normal  * 2.0 - 1.0;
-	tangent = tangent * 2.0 - 1.0;
+	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;;
+	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;;
 #elif defined(USE_SKELETAL_ANIMATION)
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
-	vec4 originalPosition = vec4(attr_Position, 1.0);
-	//vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
-	vec4 originalNormal = vec4(attr_Normal * 2.0 - 1.0, 0.0);
 	vec4 tangent4 = vec4(0.0);
-	//vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
-	vec4 originalTangent = vec4(attr_Tangent.xyz * 2.0 - 1.0, 0.0);
+	vec4 originalPosition = vec4(attr_Position, 1.0);
+	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
+	vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -249,15 +230,15 @@ void main()
 		tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
 	}
 
-	position = position4.xyz;
-	normal = normalize(normal4.xyz);
-	vec3 tangent = normalize(tangent4.xyz);
+	vec3 position = position4.xyz;
+	vec3 normal = normalize (normal4.xyz);
+	vec3 tangent = normalize (tangent4.xyz);
 #else
-	vec3 tangent = attr_Tangent.xyz;
-
-	normal = normal  * 2.0 - 1.0;
-	tangent = tangent * 2.0 - 1.0;
+	vec3 position  = attr_Position;
+	vec3 normal    = attr_Normal * 2.0 - 1.0;
+	vec3 tangent   = attr_Tangent.xyz * 2.0 - 1.0;
 #endif
+
 
 #if defined(USE_TCGEN)
 	vec2 texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
@@ -271,9 +252,16 @@ void main()
 	var_TexCoords.xy = texCoords;
 #endif
 
+	if (!(u_textureScale.x == 0.0 && u_textureScale.y == 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	{
+		var_TexCoords *= u_textureScale;
+	}
+
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
+	//vec3 preMMPos = position.xyz + u_ViewOrigin.xyz;
 	vec3 preMMPos = position.xyz;
+
 
 #if defined(USE_MODELMATRIX) && defined(USE_VERTEX_ANIMATION) //&& !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
 	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
@@ -281,10 +269,42 @@ void main()
 	tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
 #endif
 
+	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
+
+
 	//vec3 preMMPos = position.xyz;
+	//vec3 preMMPos = position.xyz + u_ViewOrigin.xyz;
 	vec3 preMMNorm = normal.xyz;
 
-	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
+
+
+/*
+	// transform to world space
+   vec3 worldNormal	= normalize(normal);
+   vec3 worldTangent	= normalize(tangent);
+
+	// calculate vectors to the camera and to the light
+   vec3 worldDirectionToLight	= normalize(u_PrimaryLightOrigin.xyz - preMMPos.xyz);
+   vec3 worldDirectionToCamera	= normalize(u_ViewOrigin - preMMPos.xyz);
+
+   // calculate bitangent from normal and tangent
+   vec3 worldBitangnent	= normalize(bitangent);
+
+   // transform direction to the light to tangent space
+   o_toLightInTangentSpace = vec3(
+         dot(worldDirectionToLight, worldTangent),
+         dot(worldDirectionToLight, worldBitangnent),
+         dot(worldDirectionToLight, worldNormal)
+      );
+
+   // transform direction to the camera to tangent space
+   o_toCameraInTangentSpace = vec3(
+         dot(worldDirectionToCamera, worldTangent),
+         dot(worldDirectionToCamera, worldBitangnent),
+         dot(worldDirectionToCamera, worldNormal)
+      );
+*/
+
 
 #if defined(USE_LIGHTMAP)
 	var_TexCoords2 = attr_TexCoord1.st;
@@ -297,7 +317,7 @@ void main()
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
 	var_PrimaryLightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius;
 
-	vec3 viewDir = u_ViewOrigin - position;
+	vec3 viewDir = u_ViewOrigin - preMMPos;
 	var_ViewDir = viewDir;
 
 	// store view direction in tangent space to save on varyings
@@ -356,18 +376,8 @@ void main()
 #endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, attr_Normal.xyz * 2.0 - 1.0);
-	//vec4 color = texture(u_DiffuseMap, var_TexCoords.xy);
-	//vec4 no = ConvertToNormals(color);
-	//vec3 nMap = normalize(tangentToWorld * ((no * 2.0 - 1.0).xyz * no.a));
-	//vec3 nMap = normalize(attr_Normal.xyz * 2.0 - 1.0);
-	//vec3 nMap = normalize(tangentToWorld * attr_Normal.xyz * 2.0 - 1.0);
-	//nMap.z = sqrt(clamp((0.25 - nMap.x * nMap.x) - nMap.y * nMap.y, 0.0, 1.0));
-
 	WorldPos_CS_in = vec4(preMMPos, 1.0);
-	//WorldPos_CS_in = vec4(var_vertPos.xyz, 1.0);
 	TexCoord_CS_in = var_TexCoords.xy;
-	//Normal_CS_in = /*nMap.xyz;*/attr_Normal.xyz * 2.0 - 1.0;//-preMMNorm.xyz;//-var_Normal.xyz;
 	Normal_CS_in = var_Normal.xyz;
 	ViewDir_CS_in = var_ViewDir;
 	Tangent_CS_in = var_Tangent;
@@ -379,11 +389,10 @@ void main()
 	Slope_CS_in = var_Slope;
 	usingSteepMap_CS_in = var_usingSteepMap;
 	gl_Position = vec4(preMMPos, 1.0);
-	//gl_Position = vec4(var_vertPos.xyz, 1.0);
 
 #else
 
-	var_vertPos = position.xyz;//preMMPos.xyz;
+	var_vertPos = preMMPos.xyz;
 
 #endif //defined(USE_TESSELLATION)
 }

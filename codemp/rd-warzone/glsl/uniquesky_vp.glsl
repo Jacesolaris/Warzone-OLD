@@ -1,8 +1,8 @@
 //#version 120
 
-uniform mat4	u_ModelViewMatrix;
+//uniform mat4	u_ModelViewMatrix;
 uniform mat4	u_ModelViewProjectionMatrix;
-uniform mat4	u_invProjectionMatrix;
+//uniform mat4	u_invProjectionMatrix;
 uniform mat4	u_NormalMatrix;
 attribute vec3	attr_Position;
 attribute vec3	attr_Normal;

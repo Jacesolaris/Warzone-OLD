@@ -3181,6 +3181,7 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 		if ((cent->currentState.number != cg.clientNum && cent->currentState.number < MAX_CLIENTS) || cent->currentState.eType == ET_NPC) { // UQ1: NPCs too pls!!!
 			cent->currentState.pos.trType = TR_INTERPOLATE;
 			cent->nextState.pos.trType = TR_INTERPOLATE;
+			cent->interpolate = qtrue;
 		}
 	}
 
@@ -3635,7 +3636,7 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 	ps = &cg.predictedPlayerState;
 
 	CG_CheckPlayerG2Weapons(ps, &cg_entities[cg.predictedPlayerState.clientNum]);
-	BG_PlayerStateToEntityState( ps, &cg_entities[cg.predictedPlayerState.clientNum].currentState, qfalse );
+	BG_PlayerStateToEntityState(ps, &cg_entities[cg.predictedPlayerState.clientNum].currentState, qfalse);
 
 	if (cg.predictedPlayerState.m_iVehicleNum)
 	{ //add the vehicle I'm riding first

@@ -4,7 +4,7 @@ uniform sampler2D				u_NormalMap;
 uniform sampler2D				u_PositionMap;
 
 uniform mat4					u_ModelViewProjectionMatrix;
-uniform mat4					u_invEyeProjectionMatrix;
+//uniform mat4					u_invEyeProjectionMatrix;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec3					u_ViewOrigin;
 uniform vec4					u_LightOrigin;

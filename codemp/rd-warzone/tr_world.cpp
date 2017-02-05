@@ -145,7 +145,7 @@ added to the sorting list.
 */
 static qboolean	R_CullSurface(msurface_t *surf) {
 #if 0
-	if ( r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE) {
+	if ( r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
 		return qfalse;
 	}
 
@@ -250,7 +250,7 @@ static qboolean	R_CullSurface(msurface_t *surf) {
 
 	return qfalse;
 #else
-	if (r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE) {
+	if (r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
 		return qfalse;
 	}
 
@@ -716,7 +716,7 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 		// if the bounding volume is outside the frustum, nothing
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
-		if (!r_nocull->integer) {
+		if (!r_nocull->integer || SKIP_CULL_FRAME) {
 			int		r;
 
 			if (planeBits & 1) {

@@ -286,11 +286,13 @@ extern float EvalWaveForm( const waveForm_t *wf );
 extern float EvalWaveFormClamped( const waveForm_t *wf );
 
 
-static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatrix, float *outOffTurb)
+static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatrix, float *outOffTurb, float *outScale)
 {
 	int tm;
 	float matrix[6], currentmatrix[6];
 	textureBundle_t *bundle = &pStage->bundle[bundleNum];
+
+	outScale[0] = outScale[1] = 1.0;
 
 	matrix[0] = 1.0f; matrix[2] = 0.0f; matrix[4] = 0.0f;
 	matrix[1] = 0.0f; matrix[3] = 1.0f; matrix[5] = 0.0f;
@@ -325,8 +327,10 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 			break;
 
 		case TMOD_SCALE:
-			RB_CalcScaleTexMatrix(bundle->texMods[tm].scale,
-				matrix);
+			//RB_CalcScaleTexMatrix(bundle->texMods[tm].scale,
+			//	matrix);
+			outScale[0] = bundle->texMods[tm].scale[0];
+			outScale[1] = bundle->texMods[tm].scale[1];
 			break;
 
 		case TMOD_STRETCH:
@@ -356,9 +360,11 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 		default:
 			break;
 
+		case TMOD_SCALE:
+			break;
+
 		case TMOD_ENTITY_TRANSLATE:
 		case TMOD_SCROLL:
-		case TMOD_SCALE:
 		case TMOD_STRETCH:
 		case TMOD_TRANSFORM:
 		case TMOD_ROTATE:
@@ -2379,18 +2385,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{// UQ1: Used by both generic and lightall...
 			RB_SetStageImageDimensions(sp, pStage);
 
-			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 			// UQ: Other *needed* stuff... Hope these are correct...
-			GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 			GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+			//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 			GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -2479,9 +2485,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			ComputeTexMods( pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb );
+			vec2_t scale;
+			ComputeTexMods( pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb, scale );
 			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
 			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
+			GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
 		}
 
 		if (isGeneric)

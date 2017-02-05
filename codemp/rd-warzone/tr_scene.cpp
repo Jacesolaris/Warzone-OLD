@@ -934,5 +934,7 @@ void RE_RenderScene(const refdef_t *fd) {
 
 	RE_EndScene();
 
+	SKIP_CULL_FRAME = qfalse;
+
 	tr.frontEndMsec += ri->Milliseconds() - startTime;
 }

@@ -4638,10 +4638,10 @@ void G_RunFrame( int levelTime ) {
 				playerState_t *ps = &ent->client->ps;
 				entityState_t *s = &ent->s;
 
-				ent->client->ps.commandTime = level.time - 50;// 100;
+				//ps->commandTime = level.time - 50;// ((1000 / sv_fps.integer) * 2.0)/*25*/;// 100;
 
-				//s->pos.trType = TR_INTERPOLATE;
-				s->pos.trType = TR_LINEAR_STOP;
+				s->pos.trType = TR_INTERPOLATE;
+				//s->pos.trType = TR_LINEAR_STOP;
 				
 				qboolean FULL_UPDATE = qfalse;
 
@@ -4713,7 +4713,7 @@ void G_RunFrame( int levelTime ) {
 				if (FULL_UPDATE) ent->next_full_update = level.time + 2000; // Force a full update every 2 seconds...
 
 																			// set maximum extra polation time
-				s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+				s->pos.trDuration = 1000 / sv_fps.integer;
 
 				s->apos.trType = TR_INTERPOLATE;
 			}

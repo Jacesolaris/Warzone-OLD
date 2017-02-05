@@ -241,6 +241,7 @@ void RB_InstantQuad(vec4_t quadVerts[4])
 
 extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
 
+#ifdef __RENDERER_FOLIAGE__
 static void RB_GrassQuad( void ) {
 	vec3_t	left, up;
 	float	radius;
@@ -406,6 +407,7 @@ static void RB_PlantQuad( void ) {
 	RB_AddQuadStamp( newOrg, left, up, color );
 #endif //__GRASS_BLOBS__
 }
+#endif //__RENDERER_FOLIAGE__
 
 /*
 ==============
@@ -2186,12 +2188,14 @@ static void RB_SurfaceEntity( surfaceType_t *surfType ) {
 	case RT_ORIENTED_QUAD:
 		RB_SurfaceOrientedQuad();
 		break;
+#ifdef __RENDERER_FOLIAGE__
 	case RT_GRASS:
 		RB_GrassQuad();
 		break;
 	case RT_PLANT:
 		RB_PlantQuad();
 		break;
+#endif //__RENDERER_FOLIAGE__
 	case RT_BEAM:
 		RB_SurfaceBeam();
 		break;

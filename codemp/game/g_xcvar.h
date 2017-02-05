@@ -154,7 +154,11 @@ XCVAR_DEF( pmove_float,					"0",			NULL,				CVAR_SYSTEMINFO|CVAR_ARCHIVE,					qt
 XCVAR_DEF( pmove_msec,					"8",			NULL,				CVAR_SYSTEMINFO|CVAR_ARCHIVE,					qtrue )
 XCVAR_DEF( RMG,							"0",			NULL,				CVAR_NONE,										qtrue )
 XCVAR_DEF( sv_cheats,					"1",			NULL,				CVAR_NONE,										qfalse )
+#ifdef __MMO__
+XCVAR_DEF(sv_fps, "15", NULL, CVAR_ARCHIVE | CVAR_SERVERINFO, qtrue)
+#else //!__MMO__
 XCVAR_DEF( sv_fps,						"40",			NULL,				CVAR_ARCHIVE|CVAR_SERVERINFO,					qtrue )
+#endif //__MMO__
 XCVAR_DEF( sv_maxclients,				"8",			NULL,				CVAR_SERVERINFO|CVAR_LATCH|CVAR_ARCHIVE,		qfalse )
 XCVAR_DEF( timelimit,					"0",			NULL,				CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NORESTART,	qtrue )
 XCVAR_DEF( g_debugValue,				"0.1",			NULL,				CVAR_ARCHIVE,									qfalse )

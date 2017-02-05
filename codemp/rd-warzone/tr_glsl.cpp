@@ -1302,6 +1302,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_TCGen0Vector0", GLSL_VEC3, 1 },
 	{ "u_TCGen0Vector1", GLSL_VEC3, 1 },
 
+	{ "u_textureScale", GLSL_VEC2, 1 },
+
 	{ "u_DeformGen", GLSL_INT, 1 },
 	{ "u_DeformParams", GLSL_FLOAT5, 1 },
 
@@ -2836,7 +2838,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
 
 		extradefines[0] = '\0';
 
@@ -2905,6 +2907,13 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
 		}
 
+		/*
+		if (r_normalMapping->integer)
+		{
+			attribs |= ATTR_TANGENT2;
+		}
+		*/
+
 		if (i & LIGHTDEF_ENTITY)
 		{
 			if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
@@ -2917,13 +2926,15 @@ int GLSL_BeginLoadGPUShaders(void)
 				attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 			}
 
+			
 			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+			/*attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
 
 			if (r_normalMapping->integer)
 			{
 				attribs |= ATTR_TANGENT2;
 			}
+			*/
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -5063,6 +5074,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_TIME, backEnd.refdef.floatTime);

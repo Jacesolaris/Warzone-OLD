@@ -31,6 +31,8 @@ uniform vec3   u_TCGen0Vector0;
 uniform vec3   u_TCGen0Vector1;
 #endif
 
+uniform vec2	u_textureScale;
+
 #if defined(USE_FOG)
 uniform vec4   u_FogDistance;
 uniform vec4   u_FogDepth;
@@ -262,6 +264,11 @@ void main()
 #else
     var_DiffuseTex = tex;
 #endif
+
+	if (!(u_textureScale.x == 0.0 && u_textureScale.y == 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	{
+		var_DiffuseTex *= u_textureScale;
+	}
 
 #if defined(USE_RGBAGEN)
 	var_Color = CalcColor(position, normal);

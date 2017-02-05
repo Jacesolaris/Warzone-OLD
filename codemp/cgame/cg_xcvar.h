@@ -196,6 +196,11 @@ XCVAR_DEF( ui_tm2_c4_cnt,						"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_tm2_c5_cnt,						"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_tm2_cnt,							"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_tm3_cnt,							"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
+#ifdef __MMO__
+XCVAR_DEF(sv_fps, "15", NULL, CVAR_ARCHIVE | CVAR_SERVERINFO)
+#else //!__MMO__
+XCVAR_DEF(sv_fps, "40", NULL, CVAR_ARCHIVE | CVAR_SERVERINFO)
+#endif //__MMO__
 //[RGBSabers]
 XCVAR_DEF(rgb_saber1,							"0,150,150",			NULL, CVAR_USERINFO | CVAR_ARCHIVE)
 XCVAR_DEF(rgb_saber2,						    "150,0,150",			NULL, CVAR_USERINFO | CVAR_ARCHIVE)

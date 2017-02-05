@@ -215,27 +215,43 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 
 	if (NPC->npc_counter_time <= level.time && NPC->npc_attack_time <= level.time)
 	{// Pick if we should initally attack or defend...
+		if (NPC->enemy->s.eType == ET_PLAYER && irand(0, 5) < 5)
+		{// When enemy is a player, only pick defend once in every 6 checks...
+			NPC->npc_attack_time = level.time + 5000;
+			NPC->npc_counter_time = 0;
+
+			NPC->enemy->npc_counter_time = level.time + 5000;
+			NPC->enemy->npc_attack_time = 0;
+
+			NPC->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+			NPC->enemy->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
+			Jedi_CopyAttackCounterInfo(NPC);
+			return qtrue;
+		}
+
 		if (NPC->enemy->npc_attack_time >= level.time || NPC_EnemyAttackingMeWithSaber(NPC->enemy))
 		{// Enemy is already attacking, start by defending...
-			NPC->npc_counter_time = level.time + 5000;
+			NPC->npc_attack_time = level.time + 5000;
 			NPC->npc_counter_time = 0;
 			
 			NPC->enemy->npc_attack_time = level.time + 5000; // also init our enemy's setting...
 			NPC->enemy->npc_counter_time = 0;
 
 			NPC->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
+			NPC->enemy->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
 			Jedi_CopyAttackCounterInfo(NPC);
 			return qfalse;
 		}
 		else
 		{// Enemy is not attacking, start by attacking...
 			NPC->npc_attack_time = level.time + 5000;
-			NPC->npc_attack_time = 0;
+			NPC->npc_counter_time = 0;
 
 			NPC->enemy->npc_counter_time = level.time + 5000;
 			NPC->enemy->npc_attack_time = 0;
 
 			NPC->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+			NPC->enemy->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 			Jedi_CopyAttackCounterInfo(NPC);
 			return qtrue;
 		}
@@ -243,12 +259,14 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 	else if (NPC->npc_counter_time >= level.time)
 	{// Continue counterring...
 		NPC->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
+		NPC->enemy->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
 		Jedi_CopyAttackCounterInfo(NPC);
 		return qfalse;
 	}
 	else
 	{// Continue attacking...
 		NPC->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+		NPC->enemy->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 		Jedi_CopyAttackCounterInfo(NPC);
 		return qtrue;
 	}
@@ -5878,12 +5896,12 @@ static void Jedi_Combat( gentity_t *aiEnt)
 	}
 
 	//If we can't get straight at him
-#ifdef __NPC_CPU_USAGE_TWEAKS__
-	// UQ1: Testing G_ClearLOS4 here for cached results...
-	if (enemy_dist > 256 && !G_ClearLOS4(aiEnt, aiEnt->enemy))
-#else //!__NPC_CPU_USAGE_TWEAKS__
+//#ifdef __NPC_CPU_USAGE_TWEAKS__
+//	// UQ1: Testing G_ClearLOS4 here for cached results...
+//	if (enemy_dist > 256 && !G_ClearLOS4(aiEnt, aiEnt->enemy))
+//#else //!__NPC_CPU_USAGE_TWEAKS__
 	if ( enemy_dist > 256 && !Jedi_ClearPathToSpot(aiEnt, enemy_dest, aiEnt->enemy->s.number ))
-#endif //__NPC_CPU_USAGE_TWEAKS__
+//#endif //__NPC_CPU_USAGE_TWEAKS__
 	{//hunt him down
 		//Com_Printf( "No Clear Path\n" );
 		if ( (NPC_ClearLOS4(aiEnt, aiEnt->enemy )||aiEnt->NPC->enemyLastSeenTime>level.time-500) && NPC_FaceEnemy(aiEnt, qtrue ) )//( NPCInfo->rank == RANK_CREWMAN || NPCInfo->rank > RANK_LT_JG ) &&

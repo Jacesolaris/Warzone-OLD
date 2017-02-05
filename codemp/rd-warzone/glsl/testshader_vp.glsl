@@ -2,12 +2,12 @@ attribute vec3	attr_Position;
 attribute vec2	attr_TexCoord0;
 
 uniform mat4	u_ModelViewProjectionMatrix;
-uniform mat4	u_ModelMatrix;
-uniform mat4	u_ModelViewMatrix;
-uniform mat4	u_ProjectionMatrix;
-uniform mat4	u_ViewProjectionMatrix;
-uniform mat4	u_ViewMatrix;
-uniform mat4	u_invEyeProjectionMatrix;
+//uniform mat4	u_ModelMatrix;
+//uniform mat4	u_ModelViewMatrix;
+//uniform mat4	u_ProjectionMatrix;
+//uniform mat4	u_ViewProjectionMatrix;
+//uniform mat4	u_ViewMatrix;
+//uniform mat4	u_invEyeProjectionMatrix;
 
 uniform vec2	u_Dimensions;
 uniform vec4	u_ViewInfo; // zfar / znear, zfar

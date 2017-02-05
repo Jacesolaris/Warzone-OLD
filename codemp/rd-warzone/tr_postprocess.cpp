@@ -2680,6 +2680,12 @@ extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS];
 extern float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS];
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+extern int			currentPlayerCubemap;
+extern vec4_t		currentPlayerCubemapVec;
+extern float		currentPlayerCubemapDistance;
+#endif //__PLAYER_BASED_CUBEMAPS__
+
 void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2759,6 +2765,46 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 		GLSL_SetUniformVec2(&tr.deferredLightingShader, UNIFORM_DIMENSIONS, screensize);
 	}
+
+	float cubeMapStrength = 0.0;
+#if 0
+	if (!(backEnd.viewParms.flags & VPF_NOCUBEMAPS) && r_cubeMapping->integer >= 1)
+	{
+		vec4_t cubeMapVec;
+		VectorCopy4(currentPlayerCubemapVec, cubeMapVec); // TODO: not need to copy for even more speed...
+		float dist = currentPlayerCubemapDistance;
+		float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+		if (dist < r_cubemapCullRange->value)
+		{// In range for full effect...
+			cubeMapStrength = 1.0;
+		}
+		else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+		{// Further scale the strength of the cubemap by the fade-out distance...
+			float extraDist = dist - r_cubemapCullRange->value;
+			float falloffDist = (r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+			float strength = (falloffDist - extraDist) / falloffDist;
+
+			cubeMapStrength = strength;
+		}
+		else
+		{// Out of range completely...
+			cubeMapStrength = 0.0;
+		}
+
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GL_BindToTMU(tr.cubemaps[currentPlayerCubemap - 1], TB_CUBEMAP);
+		GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
+		VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
+		GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_CUBEMAPINFO, cubeMapVec);
+	}
+	else
+	{
+		GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+	}
+#else
+	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
+#endif
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.deferredLightingShader, color, 0);
 }
