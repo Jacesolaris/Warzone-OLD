@@ -1462,6 +1462,8 @@ static void CG_RegisterGameAssets( void ) {
 	{
 #pragma omp section
 		{
+			CG_LoadingString("World data");
+
 			trap->R_LoadWorld(cgs.mapname);
 
 			for (i = 1; i < MAX_SUB_BSP; i++)
@@ -1507,6 +1509,8 @@ static void CG_RegisterGameAssets( void ) {
 		{// UQ1: This is the slowest section, so I will do percentage complete bar here (cg.loadLCARSStage)...
 			cg.loadLCARSStage = 1;
 
+			CG_LoadingString("Game models");
+
 			for (i = 1; i < MAX_MODELS; i++)
 			{
 				const char		*cModelName;
@@ -1516,6 +1520,8 @@ static void CG_RegisterGameAssets( void ) {
 				if (!cModelName[0]) {
 					break;
 				}
+
+				CG_LoadingString(va("%s (server model)", cModelName));
 
 				strcpy(modelName, cModelName);
 				if (strstr(modelName, ".glm") || modelName[0] == '$')
@@ -1536,6 +1542,8 @@ static void CG_RegisterGameAssets( void ) {
 
 			cg.loadLCARSStage = 2;
 
+			CG_LoadingString("Holocrons");
+
 			cgs.media.itemHoloModel = trap->R_RegisterModel("models/map_objects/mp/holo.md3");
 
 			if (cgs.gametype == GT_HOLOCRON || com_buildScript.integer)
@@ -1551,6 +1559,8 @@ static void CG_RegisterGameAssets( void ) {
 			}
 
 			cg.loadLCARSStage = 3;
+
+			CG_LoadingString("CTF Assets");
 
 			if (cgs.gametype == GT_CTF || cgs.gametype == GT_CTY || com_buildScript.integer) {
 				if (com_buildScript.integer)
@@ -1575,6 +1585,8 @@ static void CG_RegisterGameAssets( void ) {
 
 			cg.loadLCARSStage = 4;
 
+			CG_LoadingString("Chunk models");
+
 			// Chunk models
 			//FIXME: jfm:? bother to conditionally load these if an ent has this material type?
 			for (i = 0; i < NUM_CHUNK_MODELS; i++)
@@ -1591,6 +1603,8 @@ static void CG_RegisterGameAssets( void ) {
 
 
 			cg.loadLCARSStage = 5;
+
+			CG_LoadingString("Items");
 
 			/*
 			Ghoul2 Insert Start
@@ -1623,6 +1637,8 @@ static void CG_RegisterGameAssets( void ) {
 				vec3_t			mins, maxs;
 				int				j;
 
+				CG_LoadingString(va("%s (inline model)", name));
+
 				Com_sprintf(name, sizeof(name), "*%i", i);
 				cgs.inlineDrawModel[i] = trap->R_RegisterModel(name);
 				if (!cgs.inlineDrawModel[i])
@@ -1646,10 +1662,13 @@ static void CG_RegisterGameAssets( void ) {
 
 			CG_InitG2Weapons();
 
+			CG_LoadingString(va("%s (md3)", "testboom"));
 			cgs.media.halfShieldModel = trap->R_RegisterModel("models/weaphits/testboom.md3");
 		}
 #pragma omp section
 		{
+			CG_LoadingString("Shaders");
+
 			for (i = 0; i < 11; i++) {
 				cgs.media.numberShaders[i] = trap->R_RegisterShader(sb_nums[i]);
 			}
@@ -1842,6 +1861,8 @@ static void CG_RegisterGameAssets( void ) {
 		}
 #pragma omp section
 		{
+			CG_LoadingString("Effects");
+
 			trap->FX_InitSystem(&cg.refdef);
 			CG_RegisterEffects();
 
@@ -1924,6 +1945,8 @@ static void CG_RegisterGameAssets( void ) {
 		}
 #pragma omp section
 		{
+			CG_LoadingString("Sounds");
+
 			CG_RegisterSounds();
 
 			cgs.media.chunkSound = trap->S_RegisterSound("sound/weapons/explosions/glasslcar");
@@ -1948,9 +1971,16 @@ static void CG_RegisterGameAssets( void ) {
 		}
 #pragma omp section
 		{
+			CG_LoadingString("Clients");
 			CG_RegisterClients();		// if low on memory, some clients will be deferred
+
+			CG_LoadingString("Local Entities");
 			CG_InitLocalEntities();
+
+			CG_LoadingString("Mark Polys");
 			CG_InitMarkPolys();
+
+			CG_LoadingString("Atmospherics");
 			CG_AtmosphericKludge();
 		}
 	}

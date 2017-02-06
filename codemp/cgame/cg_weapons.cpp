@@ -2695,6 +2695,9 @@ void CG_InitG2Weapons(void)
 		{
 			assert(item->giTag < WP_NUM_WEAPONS);
 
+			//CG_LoadingString(CG_GetStringEdString("SP_INGAME", Q_strupr(item->classname))); // FIXME: Add the names to the strings file and enable this one!
+			CG_LoadingString(va("%s (G2 model)", item->classname));
+
 			// initialise model
 			trap->G2API_InitGhoul2Model(&g2WeaponInstances[/*i*/item->giTag], item->world_model[0], 0, 0, 0, 0, 0);
 			//[VisualWeapons]
