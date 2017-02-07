@@ -1720,6 +1720,8 @@ void RB_UpdateCloseLights ( void )
 
 		float distance = Distance(tr.refdef.vieworg, dl->origin);
 
+		if (distance > 4096.0) continue; // Don't even check at this range. Traces are costly!
+
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
 			vec3_t from;
