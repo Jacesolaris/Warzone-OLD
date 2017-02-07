@@ -1199,6 +1199,9 @@ qboolean	HAVE_MANDALORIANS = qfalse;
 qboolean	HAVE_MERCS = qfalse;
 qboolean	HAVE_WILDLIFE = qfalse;
 
+int next_npc_max_warning_time = 0;
+int next_npc_stats_time = 0;
+
 void G_CheckMinimumNpcs(void) 
 {
 	vmCvar_t	mapname;
@@ -1259,7 +1262,7 @@ void G_CheckMinimumNpcs(void)
 
 	if (min_imperials <= 0 && min_rebels <= 0 && min_mandalorians <= 0 && min_mercs <= 0 && min_wildlife <= 0) return;
 
-	if (min_imperials + min_rebels + min_mandalorians + min_mercs + min_wildlife > ENTITYNUM_MAX_NORMAL - (MAX_CLIENTS * 3))
+	if (min_imperials + min_rebels + min_mandalorians + min_mercs + min_wildlife > ENTITYNUM_MAX_NORMAL - (MAX_CLIENTS * 4))
 	{
 		min_imperials = 0;
 		min_rebels = 0;
@@ -1267,7 +1270,11 @@ void G_CheckMinimumNpcs(void)
 		min_mercs = 0;
 		min_wildlife = 0;
 
-		trap->Print("Too many NPCs to spawn! Check the value of cvars - min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife!\n");
+		if (next_npc_max_warning_time <= level.time)
+		{
+			trap->Print("Too many NPCs to spawn! Check the value of cvars - min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife!\n");
+			next_npc_max_warning_time = level.time + 10000;
+		}
 		return;
 	}
 
@@ -1275,11 +1282,10 @@ void G_CheckMinimumNpcs(void)
 	{
 		gentity_t *npc = &g_entities[i];
 
-		if (!npc) continue;
-		if (npc->s.eType != ET_NPC) continue;
-		if (!npc->client) continue;
+		if (!(npc && npc->inuse && npc->client && npc->r.linked && npc->s.eType == ET_NPC)) continue;
 		if (NPC_IsCivilian(npc)) continue;
 		if (NPC_IsVendor(npc)) continue;
+		//if (!NPC_IsAlive(npc, npc)) continue;
 		if (npc->client->sess.sessionTeam == FACTION_EMPIRE)
 			num_imperial_npcs++;
 		if (npc->client->sess.sessionTeam == FACTION_REBEL)
@@ -1292,8 +1298,12 @@ void G_CheckMinimumNpcs(void)
 			num_wildlife_npcs++;
 	}
 
-	//trap->Print("Cvars are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife);
-	//trap->Print("There are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", num_imperial_npcs, num_rebel_npcs, num_mandalorian_npcs, num_merc_npcs, num_wildlife_npcs);
+	if (next_npc_stats_time <= level.time)
+	{
+		trap->Print("Cvars are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife);
+		trap->Print("There are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", num_imperial_npcs, num_rebel_npcs, num_mandalorian_npcs, num_merc_npcs, num_wildlife_npcs);
+		next_npc_stats_time = level.time + 10000;
+	}
 
 	if (!SPAWN_FACTIONS_CHECKED)
 	{

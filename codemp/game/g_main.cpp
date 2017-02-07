@@ -4047,6 +4047,7 @@ void ClearPlayerAlertEvents( void );
 void SiegeCheckTimers(void);
 extern void Jedi_Decloak( gentity_t *self );
 qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
+extern void NPC_PrintNumActiveNPCs(void);
 
 int g_siegeRespawnCheck = 0;
 void SetMoverState( gentity_t *ent, moverState_t moverState, int time );
@@ -4784,6 +4785,8 @@ void G_RunFrame( int levelTime ) {
 		iTimer_GameChecks,
 		iTimer_Queues);
 #endif
+
+	NPC_PrintNumActiveNPCs();
 
 	g_LastFrameTime = level.time;
 }

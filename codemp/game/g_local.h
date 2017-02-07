@@ -550,6 +550,10 @@ struct gentity_s {
 	int					npc_attack_time;
 	int					npc_counter_time;
 
+	int					npc_activate_check_time;
+	int					npc_activate_time;
+	int					npc_deactivated_forced_clientthink_time;
+
 #ifdef __NPC_CPU_USAGE_TWEAKS__
 	int					LOS_last_checked[MAX_GENTITIES];
 	qboolean			LOS_visible[MAX_GENTITIES];

@@ -4014,6 +4014,93 @@ extern bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl);
 
 //#define __LOW_THINK_AI__
 
+int next_active_npc_print = 0;
+
+void NPC_PrintNumActiveNPCs(void)
+{
+	if (!dedicated.integer) return;
+	if (next_active_npc_print > level.time) return;
+
+	int num_active_npcs = 0;
+	int num_inactive_npcs = 0;
+	int num_total_npcs = 0;
+
+	for (int i = level.maxclients; i < MAX_GENTITIES; i++)
+	{
+		gentity_t *NPC = &g_entities[i];
+
+		if (!NPC) continue;
+		if (!(NPC && NPC->inuse && NPC->client && NPC->r.linked && NPC->s.eType == ET_NPC)) continue;
+		//if (!NPC_IsAlive(NPC, NPC)) continue;
+
+		if (NPC->npc_activate_time > level.time)
+		{
+			num_active_npcs++;
+		}
+		else
+		{
+			num_inactive_npcs++;
+		}
+
+		num_total_npcs++;
+		continue;
+	}
+
+	int percActive = (int)(((float)num_active_npcs / (float)num_total_npcs) * 100.0);
+	int percInactive = (int)(((float)num_inactive_npcs / (float)num_total_npcs) * 100.0);
+
+	if (num_total_npcs <= 0)
+	{
+		percActive = percInactive = 0;
+	}
+
+	trap->Print("%i (%i percent) active and %i (%i percent) inactive NPCs.\n", num_active_npcs, percActive, num_inactive_npcs, percInactive);
+
+	next_active_npc_print = level.time + 10000;
+}
+
+qboolean NPC_CheckNearbyPlayers(gentity_t *NPC)
+{
+	if (level.numConnectedClients <= 0)
+	{
+		return qfalse;
+	}
+
+	if (NPC->npc_activate_time > level.time)
+	{
+		return qtrue;
+	}
+
+	if (NPC->npc_activate_check_time > level.time)
+	{
+		return qfalse;
+	}
+
+	for (int i = 0; i < sv_maxclients.integer; i++)
+	{
+		gclient_t *cl = level.clients + i;
+		gentity_t *ent = &g_entities[i];
+
+		if (cl->pers.connected != CON_CONNECTED) 
+		{
+			continue;
+		}
+		
+		if (Distance(NPC->r.currentOrigin, cl->ps.origin) > 4096.0)
+		{
+			continue;
+		}
+
+		// Looks like he's close enough... Activate the NPC...
+		NPC->npc_activate_time = level.time + 30000;
+		return qtrue;
+	}
+
+	NPC->npc_activate_check_time = level.time + 5000;
+	NPC->npc_activate_time = 0;
+	return qfalse;
+}
+
 #if	AI_TIMERS
 extern int AITime;
 #endif//	AI_TIMERS
@@ -4142,6 +4229,22 @@ void NPC_Think ( gentity_t *self )//, int msec )
 
 	if (aiEnt->s.eType != ET_NPC && aiEnt->s.eType != ET_PLAYER)
 	{//Something drastic happened in our script
+		return;
+	}
+
+	if (!NPC_CheckNearbyPlayers(self))
+	{// Don't think...
+		if (self->npc_deactivated_forced_clientthink_time > level.time)
+		{
+			VectorCopy(self->r.currentOrigin, self->client->ps.origin);
+			return;
+		}
+		
+		// Do a quick clientthink every 5 sec...
+		self->npc_deactivated_forced_clientthink_time = level.time + 5000;
+		NPC_UpdateAngles(aiEnt, qtrue, qtrue);
+		ClientThink(self->s.number, &self->client->pers.cmd);
+		VectorCopy(self->r.currentOrigin, self->client->ps.origin);
 		return;
 	}
 
