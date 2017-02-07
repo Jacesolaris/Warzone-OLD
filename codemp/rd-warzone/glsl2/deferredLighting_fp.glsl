@@ -447,8 +447,8 @@ void main(void)
 
 						// Add some basic light...
 						vec3 ambientLight = lightColor * lightStrength;
-						addedLight += ambientLight * 0.5;//u_Local3.r; // Always add some basic light...
-						addedLight += ambientLight * gl_FragColor.rgb * 0.5;//u_Local3.g; // Always add some basic light...
+						addedLight += ambientLight * 0.25;//u_Local3.r; // Always add some basic light...
+						addedLight += ambientLight * gl_FragColor.rgb * 0.25;//u_Local3.g; // Always add some basic light...
 
 						vec3 lightDir = normalize(position.xyz - lightPos);
 						float lambertian3 = dot(lightDir.xyz, N);
@@ -460,7 +460,7 @@ void main(void)
 							float specAngle3 = max(dot(halfDir3, N), 0.0);
 							float spec3 = pow(specAngle3, 16.0);
 
-							float strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength /** 5.0*/ * 0.5;//u_Local3.b;
+							float strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength * 0.25;//u_Local3.b;
 							addedLight +=  lightColor * strength * 0.5;
 						}
 					}

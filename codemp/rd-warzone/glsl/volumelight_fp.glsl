@@ -183,7 +183,8 @@ void main ( void )
 
 				if (i == SUN_ID) 
 				{
-					lightColors[numInRange] *= 0.005;
+					//lightColors[numInRange] *= 0.005;
+					lightColors[numInRange] *= 0.125;
 				}
 
 #ifdef DEBUG_POSITIONS
@@ -265,7 +266,7 @@ void main ( void )
 	}
 
 	//totalColor.rgb *= 100.0;
-	totalColor.rgb *= 1.5;//u_Local0.b;
+	totalColor.rgb *= 0.5;//1.5;//u_Local0.b;
 
 #ifdef DUAL_PASS
 	totalColor.a = 1.0;
