@@ -1719,39 +1719,22 @@ void RB_UpdateCloseLights ( void )
 		}
 
 		float distance = Distance(tr.refdef.vieworg, dl->origin);
-		/*qboolean skip = qfalse;
-
-		for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
-		{// Find the most distance light in our current list to replace, if this new option is closer...
-			dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
-			float		dist = Distance(thisLight->origin, dl->origin);
-			if (dist < 128.0)
-			{
-				skip = qtrue;
-				break;
-			}
-		}
-
-		if (skip)
-		{
-			continue;
-		}*/
-
-		vec3_t from;
-		VectorCopy(tr.refdef.vieworg, from);
-		from[2] += 48.0;
-		if (!Volumetric_Visible(tr.refdef.vieworg, dl->origin, qfalse))
-		{
-			continue;
-		}
 
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
+			vec3_t from;
+			VectorCopy(tr.refdef.vieworg, from);
+			from[2] += 64.0;
+			if (!Volumetric_Visible(tr.refdef.vieworg, dl->origin, qfalse))
+			{
+				continue;
+			}
+
 			float x, y;
 			WorldCoordToScreenCoord(dl->origin, &x, &y);
 
-			if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-				continue;
+			//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+			//	continue;
 
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
@@ -1778,17 +1761,25 @@ void RB_UpdateCloseLights ( void )
 				{// This one is further!
 					farthest_light = i;
 					farthest_distance = dist;
-					break;
+					//break;
 				}
 			}
 
-			if (Distance(dl->origin, tr.refdef.vieworg) < farthest_distance)
+			if (distance < farthest_distance)
 			{// This light is closer. Replace this one in our array of closest lights...
+				vec3_t from;
+				VectorCopy(tr.refdef.vieworg, from);
+				from[2] += 64.0;
+				if (!Volumetric_Visible(tr.refdef.vieworg, dl->origin, qfalse))
+				{
+					continue;
+				}
+
 				float x, y;
 				WorldCoordToScreenCoord(dl->origin, &x, &y);
 
-				if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-					continue;
+				//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
+				//	continue;
 
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
@@ -2090,8 +2081,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
-					index |= LIGHTDEF_ENTITY;
-
 					if (glState.vertexAnimation)
 					{
 						index |= LIGHTDEF_USE_VERTEX_ANIMATION;
@@ -2155,18 +2144,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			|| pStage->bundle[TB_STEEPMAP2].image[0]
 			|| pStage->bundle[TB_SPLATMAP1].image[0]
 			|| pStage->bundle[TB_SPLATMAP2].image[0]
-			|| pStage->bundle[TB_SPLATMAP3].image[0]
-			/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/)
+			|| pStage->bundle[TB_SPLATMAP3].image[0])
 		{
 			int index = pStage->glslShaderIndex;
 
-			if (pStage->glslShaderGroup != tr.lightallShader
-				&& (pStage->bundle[TB_STEEPMAP].image[0]
-					|| pStage->bundle[TB_STEEPMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP1].image[0]
-					|| pStage->bundle[TB_SPLATMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP3].image[0]
-					/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/))
+			if ((pStage->bundle[TB_STEEPMAP].image[0]
+				|| pStage->bundle[TB_STEEPMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]))
 			{// When we have splatmaps we need to force lightall...
 				pStage->glslShaderGroup = tr.lightallShader;
 				pStage->glslShaderIndex = 0;
@@ -2175,8 +2161,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
-				index |= LIGHTDEF_ENTITY;
-
 				if (glState.vertexAnimation)
 				{
 					index |= LIGHTDEF_USE_VERTEX_ANIMATION;
@@ -2214,8 +2198,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					|| pStage->bundle[TB_STEEPMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
 					|| pStage->bundle[TB_SPLATMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP3].image[0]
-					/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/))
+					|| pStage->bundle[TB_SPLATMAP3].image[0]))
 			{
 				isUsingRegions = qtrue;
 				index |= LIGHTDEF_USE_REGIONS;
@@ -2224,8 +2207,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				|| pStage->bundle[TB_STEEPMAP2].image[0]
 				|| pStage->bundle[TB_SPLATMAP1].image[0]
 				|| pStage->bundle[TB_SPLATMAP2].image[0]
-				|| pStage->bundle[TB_SPLATMAP3].image[0]
-				/*|| pStage->bundle[TB_SPLATMAP4].image[0]*/)
+				|| pStage->bundle[TB_SPLATMAP3].image[0])
 			{
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}

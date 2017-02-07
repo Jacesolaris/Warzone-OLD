@@ -1448,6 +1448,22 @@ qboolean ForceGlow ( char *shader )
 	{
 		return qtrue;
 	}
+	else if (StringContains(shader, "_blend", 0) && StringContains(shader, "light", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_blend", 0) && StringContains(shader, "strip", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_blend", 0) && StringContains(shader, "step", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "mp/s_flat", 0))
+	{
+		return qtrue;
+	}
 	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "cmuzzle", 0)) // GFX
 	{
 		return qtrue;

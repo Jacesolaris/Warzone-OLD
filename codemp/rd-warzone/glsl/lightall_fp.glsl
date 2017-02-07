@@ -34,18 +34,12 @@ uniform sampler2D			u_NormalMap3;
 
 uniform sampler2D			u_DeluxeMap;
 
-#if defined(USE_SPECULARMAP)
 uniform sampler2D			u_SpecularMap;
-#endif
 
-#if defined(USE_SHADOWMAP)
 uniform sampler2D			u_ShadowMap;
-#endif
 
-#if defined(USE_CUBEMAP)
 #define textureCubeLod textureLod // UQ1: > ver 140 support
 uniform samplerCube			u_CubeMap;
-#endif
 
 uniform sampler2D			u_OverlayMap;
 
@@ -668,7 +662,42 @@ void main()
 	float pixRandom = 0.0; // Don't use it anyway...
 #endif //defined(USE_TRI_PLANAR)
 
+#if 0
+	vec3 debugColor = vec3(0.0);
+	#if defined(USE_VERTEX_ANIMATION)
+		debugColor.r = 1.0;
+	#elif defined(USE_SKELETAL_ANIMATION)
+		debugColor.g = 1.0;
+	#elif defined(USE_TCGEN)
+		debugColor.b = 1.0;
+	#elif defined(USE_TCMOD)
+		debugColor.r = 1.0;
+		debugColor.g = 1.0;
+	#elif defined(USE_MODELMATRIX)
+		debugColor.r = 1.0;
+		debugColor.b = 1.0;
+	#elif defined(USE_LIGHTMAP)
+		debugColor.g = 1.0;
+		debugColor.b = 1.0;
+	#elif defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+		debugColor.r = 1.0;
+		debugColor.g = 1.0;
+		debugColor.b = 1.0;
+	#endif
 
+	gl_FragColor = vec4(debugColor, 1.0);
+
+	#if defined(USE_GLOW_BUFFER)
+		out_Glow = gl_FragColor;
+	#else
+		out_Glow = vec4(0.0);
+		vec2 normData = encode(vec3(1.0));
+		vec2 cubeData = vec2(0.0, 1.0);
+		out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+	#endif
+	return;
+#endif
 
 	#if !defined(USE_GLOW_BUFFER)
 		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
@@ -892,14 +921,20 @@ void main()
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
 	#else
-		if (length(N.xyz * 0.5 + 0.5) > 0.05)
+#if defined(USE_LIGHTMAP)
+		// Fucking lightmap passes shit...
+		if (length(lightColor.rgb/*gl_FragColor.rgb*/) > 0.0)
+#endif //defined(USE_LIGHTMAP)
 		{
 			out_Glow = vec4(0.0);
 			vec2 normData = encode(N.xyz * 0.5 + 0.5);
 #if defined(DEFERRED_REFLECTIONS)
 			vec2 cubeData = encode(vec3(enableCubemap, u_Local3.a / 10.0, u_Local1.g / 10.0));
 #else //!defined(DEFERRED_REFLECTIONS)
-			vec2 cubeData = vec2(0.0);
+			float enabled = 0.0;
+			if (u_Local1.a != 1024.0 && u_Local1.a != 1025.0)
+				enabled = 1.0;
+			vec2 cubeData = vec2(0.0, enabled);
 #endif //defined(DEFERRED_REFLECTIONS)
 			out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);

@@ -15,9 +15,7 @@ out float Slope_CS_in;
 out float usingSteepMap_CS_in;
 #endif
 
-#if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
-#endif
 attribute vec4 attr_Color;
 
 attribute vec3 attr_Position;
@@ -263,7 +261,7 @@ void main()
 	vec3 preMMPos = position.xyz;
 
 
-#if defined(USE_MODELMATRIX) && defined(USE_VERTEX_ANIMATION) //&& !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
+#if defined(USE_MODELMATRIX) && defined(USE_VERTEX_ANIMATION)
 	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
 	tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;

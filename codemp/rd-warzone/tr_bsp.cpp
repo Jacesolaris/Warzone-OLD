@@ -3381,10 +3381,11 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			{
 				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
 				{
-#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 					hasGlow = qtrue;
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
-#else
+					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
+/*#else
 					if (surf->shader->stages[stage]->glowColorFound)
 					{
 						hasGlow = qtrue;
@@ -3394,7 +3395,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					{
 						hasGlow = qfalse;
 					}
-#endif
+#endif*/
 					break;
 				}
 			}
@@ -3500,10 +3501,11 @@ static void R_LoadCubemapWaypoints( void )
 			{
 				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
 				{
-#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 					hasGlow = qtrue;
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
-#else
+					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
+/*#else
 					if (surf->shader->stages[stage]->glowColorFound)
 					{
 						hasGlow = qtrue;
@@ -3513,7 +3515,7 @@ static void R_LoadCubemapWaypoints( void )
 					{
 						hasGlow = qfalse;
 					}
-#endif
+#endif*/
 					break;
 				}
 			}

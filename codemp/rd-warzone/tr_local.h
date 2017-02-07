@@ -58,7 +58,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif //__DYNAMIC_SHADOWS__
 
 #define DISTANCE_BETWEEN_CUBEMAPS 384 //256
-#define	MAX_LIGHTALL_DLIGHTS 16//24
+#define	MAX_LIGHTALL_DLIGHTS 64//16//24
+#define MAX_VOLUMETRIC_LIGHTS 16//64
 
 #define MAX_IMAGE_PATH 256 //MAX_QPATH
 
@@ -305,6 +306,7 @@ extern cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern cvar_t  *r_drawSunRays;
+extern cvar_t  *r_shadowContrast;
 extern cvar_t  *r_shadowBlurPasses;
 extern cvar_t  *r_shadowFilter;
 extern cvar_t  *r_shadowMapSize;
@@ -1327,22 +1329,21 @@ enum
 	DLIGHTDEF_COUNT                = 0x0002,
 };
 
+
 enum
 {
 	LIGHTDEF_USE_LIGHTMAP			= 0x0001,
-	LIGHTDEF_ENTITY					= 0x0002,
-	LIGHTDEF_USE_TCGEN_AND_TCMOD	= 0x0003,
-	LIGHTDEF_USE_VERTEX_ANIMATION	= 0x0004,
-	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0008,
-	LIGHTDEF_USE_GLOW_BUFFER		= 0x0010,
+	LIGHTDEF_USE_TCGEN_AND_TCMOD	= 0x0002,
+	LIGHTDEF_USE_GLOW_BUFFER		= 0x0004,
+	LIGHTDEF_USE_VERTEX_ANIMATION	= 0x0008,
+	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0010,
 	LIGHTDEF_USE_CUBEMAP			= 0x0020,
 	LIGHTDEF_USE_TESSELLATION		= 0x0040,
 	LIGHTDEF_USE_TRIPLANAR			= 0x0080,
 	LIGHTDEF_USE_REGIONS			= 0x0100,
 	LIGHTDEF_COUNT					= 0x0200
-	//LIGHTDEF_USE_SHADOWMAP			= 0x0200,
-	//LIGHTDEF_COUNT					= 0x0300
 };
+
 
 enum
 {
@@ -2895,6 +2896,7 @@ extern  cvar_t  *r_forceSunAmbientScale;
 extern  cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern  cvar_t  *r_drawSunRays;
+extern cvar_t  *r_shadowContrast;
 extern  cvar_t  *r_shadowBlurPasses;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowMapSize;

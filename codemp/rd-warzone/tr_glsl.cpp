@@ -1393,10 +1393,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_lightPositions", GLSL_VEC2, MAX_LIGHTALL_DLIGHTS },
 	{ "u_lightDistances", GLSL_FLOAT, MAX_LIGHTALL_DLIGHTS },
 	{ "u_lightColors", GLSL_VEC3, MAX_LIGHTALL_DLIGHTS },
-	{ "u_vlightPositions2", GLSL_VEC3, 16 },
-	{ "u_vlightPositions", GLSL_VEC2, 16 },
-	{ "u_vlightDistances", GLSL_FLOAT, 16 },
-	{ "u_vlightColors", GLSL_VEC3, 16 },
+	{ "u_vlightPositions2", GLSL_VEC3, MAX_VOLUMETRIC_LIGHTS },
+	{ "u_vlightPositions", GLSL_VEC2, MAX_VOLUMETRIC_LIGHTS },
+	{ "u_vlightDistances", GLSL_FLOAT, MAX_VOLUMETRIC_LIGHTS },
+	{ "u_vlightColors", GLSL_VEC3, MAX_VOLUMETRIC_LIGHTS },
 };
 
 static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
@@ -2879,7 +2879,6 @@ int GLSL_BeginLoadGPUShaders(void)
 				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 		}
 
-		//Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
 		if (i & LIGHTDEF_USE_TRIPLANAR)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_TRI_PLANAR\n");
@@ -2889,17 +2888,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_REGIONS\n");
 		}
-		
-
-		/*if (i & LIGHTDEF_USE_SHADOWMAP)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-			if (r_sunlightMode->integer == 1)
-				Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-			else if (r_sunlightMode->integer >= 2)
-				Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
-		}*/
 
 		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
 		{
@@ -2907,34 +2895,16 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
 		}
 
-		/*
-		if (r_normalMapping->integer)
+		if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
 		{
-			attribs |= ATTR_TANGENT2;
-		}
-		*/
-
-		if (i & LIGHTDEF_ENTITY)
-		{
-			if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
-			{
-				Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-			}
-			else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
-			{
-				Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-				attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-			}
-
-			
 			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			/*attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-
-			if (r_normalMapping->integer)
-			{
-				attribs |= ATTR_TANGENT2;
-			}
-			*/
+			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+		}
+		else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
+			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -3026,51 +2996,22 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_REGIONS\n");
 		}
 
-
-		/*if (i & LIGHTDEF_USE_SHADOWMAP)
-		{
-		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-		if (r_sunlightMode->integer == 1)
-		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-		else if (r_sunlightMode->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
-		}*/
-
 		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
 			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
 		}
 
-		/*
-		if (r_normalMapping->integer)
+		if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
 		{
-		attribs |= ATTR_TANGENT2;
-		}
-		*/
-
-		if (i & LIGHTDEF_ENTITY)
-		{
-			if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
-			{
-				Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-			}
-			else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
-			{
-				Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-				attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-			}
-
-
 			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			/*attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-
-			if (r_normalMapping->integer)
-			{
-			attribs |= ATTR_TANGENT2;
-			}
-			*/
+			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+		}
+		else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
+			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)

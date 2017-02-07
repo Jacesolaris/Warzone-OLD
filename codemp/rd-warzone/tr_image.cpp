@@ -3130,46 +3130,69 @@ static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int heig
 }
 #endif
 
-void R_GetTextureAverageColor(const byte *in, int width, int height, vec4_t avgColor)
+void R_GetTextureAverageColor(const byte *in, int width, int height, float *avgColor)
 {
 	int NUM_PIXELS = 0;
-	vec4_t average = { 0 };
+	vec3_t average = { 0 };
 
-	if (!in || !in[0]) return;
+	if (!in) return;
 
-	for (int y = 0; y < height; y++)
+	qboolean USE_ALPHA = RawImage_HasAlpha(in, width * height);
+	//ri->Printf(PRINT_WARNING, "USE_ALPHA: %s\n", USE_ALPHA ? "true" : "false");
+
+	byte *inByte = (byte *)&in[0];
+
+	if (USE_ALPHA)
 	{
-		const byte *inbyte  = in  + y * width * 4;
-
-		for (int x = 0; x < width; x++)
+		for (int y = 0; y < height; y++)
 		{
-			float currentR = ByteToFloat(inbyte[0]);
-			float currentG = ByteToFloat(inbyte[1]);
-			float currentB = ByteToFloat(inbyte[2]);
-			float currentA = ByteToFloat(inbyte[3]);
+			for (int x = 0; x < width; x++)
+			{
+				float currentR = ByteToFloat(*inByte++);
+				float currentG = ByteToFloat(*inByte++);
+				float currentB = ByteToFloat(*inByte++);
+				float currentA = ByteToFloat(*inByte++);
 
-			if (currentA > 0 && (currentR > 0 || currentG > 0 || currentB > 0))
-			{// Ignore black and zero-alpha pixels.
-				average[0] += currentR;
-				average[1] += currentG;
-				average[2] += currentB;
-				average[3] += currentA;
-				NUM_PIXELS++;
+				if (currentA > 0.1 && (currentR > 0.1 || currentG > 0.1 || currentB > 0.1))
+				{// Ignore black and zero-alpha pixels.
+					average[0] += currentR;
+					average[1] += currentG;
+					average[2] += currentB;
+					NUM_PIXELS++;
+				}
 			}
+		}
+	}
+	else
+	{
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				float currentR = ByteToFloat(*inByte++);
+				float currentG = ByteToFloat(*inByte++);
+				float currentB = ByteToFloat(*inByte++);
+				*inByte++;
 
-			inbyte  += 4;
+				if (currentR > 0.1 || currentG > 0.1 || currentB > 0.1)
+				{// Ignore black and zero-alpha pixels.
+					average[0] += currentR;
+					average[1] += currentG;
+					average[2] += currentB;
+					NUM_PIXELS++;
+				}
+			}
 		}
 	}
 
 	average[0] /= NUM_PIXELS;
 	average[1] /= NUM_PIXELS;
 	average[2] /= NUM_PIXELS;
-//	average[3] /= NUM_PIXELS;
 
 	avgColor[0] = average[0];
 	avgColor[1] = average[1];
 	avgColor[2] = average[2];
-	avgColor[3] = average[3];
+	avgColor[3] = 1.0;// average[3];
 }
 
 /*
@@ -3353,7 +3376,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	else
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
-#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	//if (flags & IMGFLAG_GLOW)
 	{
 		vec4_t avgColor = { 0 };
@@ -3361,7 +3384,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
 		VectorCopy4(avgColor, image->lightColor);
 	}
-#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
 		&& type != IMGTYPE_NORMAL 

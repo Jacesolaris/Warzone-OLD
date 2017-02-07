@@ -55,24 +55,11 @@ void main(void)
 	vec4 norm = texture(u_NormalMap, var_TexCoords);
 	norm.xyz = decode(norm.xy);
 
-	vec4 color = texture(u_DiffuseMap, var_TexCoords);
-
-	/*
-	vec2 encode (vec3 n)
-	vec3 decode (vec2 enc)
-	*/
-
-	if (/*norm.a < 0.05 ||*/ length(norm.xyz) <= 0.05)
+	/*if (norm.a < 0.05 || length(norm.xyz) <= 0.05)
 	{
+		vec4 color = texture(u_DiffuseMap, var_TexCoords);
 		norm = ConvertToNormals(color);
-	}
-	else
-	{
-		float displacement = clamp(length(color.rgb), 0.0, 1.0);
-#define const_1 ( 32.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-		norm.a = clamp((clamp(norm.a - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
-	}
+	}*/
 
 	gl_FragColor = vec4(norm.rgb, 1.0);
 }

@@ -9,7 +9,7 @@ varying vec2		var_ScreenTex;
 //#define DEBUG
 
 // Shall we blur the result?
-#define BLUR_WIDTH 1.0
+#define BLUR_WIDTH 3.0
 
 // Shall we pixelize randomly the output? -- Sucks!
 //#define RANDOMIZE_PIXELS
@@ -69,7 +69,7 @@ void main()
 #endif
 
 #ifdef RANDOMIZE_PIXELS
-	gl_FragColor = diffuseColor + vec4(volumeLight*random, 0.0);
+	gl_FragColor = diffuseColor + vec4(volumeLight*(random * 0.5 + 0.5), 0.0);
 #else
 	gl_FragColor = vec4(diffuseColor.rgb + volumeLight, 1.0);
 #endif	
