@@ -1040,7 +1040,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	float   parallaxScale = 1.0;
 	float	cubemapScale = 0.0;
 	float	isMetalic = 0.0;
-	float	useSteepParallax = 0.0;
 	float	hasOverlay = 0.0;
 	float	doSway = 0.0;
 	float	phongFactor = r_blinnPhong->value;
@@ -1107,6 +1106,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		if (pStage->isWater && r_glslWater->integer)
 		{
 			specularScale = 1.5;
+			cubemapScale = 1.5;
 			materialType = (float)MATERIAL_WATER;
 			parallaxScale = 2.0;
 		}
@@ -1118,21 +1118,21 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				specularScale = 1.0;
 				cubemapScale = 1.5;
 				materialType = (float)MATERIAL_WATER;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 				specularScale = 0.05;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SHORTGRASS;
-				parallaxScale = 2.0;
-				phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
+				parallaxScale = 1.5;
+				//phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
 				break;
 			case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 				specularScale = 0.05;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_LONGGRASS;
-				parallaxScale = 2.5;
-				phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
+				parallaxScale = 1.5;
+				//phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
 				break;
 			case MATERIAL_SAND:				// 8			// sandy beach
 				specularScale = 0.15;
@@ -1156,42 +1156,38 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				specularScale = 0.15;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_ROCK;
-				parallaxScale = 2.5;
-				useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_TILES:			// 26			// tiled floor
 				specularScale = 0.56;
 				cubemapScale = 0.15;
 				materialType = (float)MATERIAL_TILES;
-				parallaxScale = 2.5;
-				useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				specularScale = 0.15;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SOLIDWOOD;
-				parallaxScale = 2.5;
-				//useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 				specularScale = 0.15;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_HOLLOWWOOD;
-				parallaxScale = 2.5;
-				//useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 				specularScale = 0.98;
 				cubemapScale = 0.98;
 				materialType = (float)MATERIAL_SOLIDMETAL;
-				parallaxScale = 2.5;
+				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
 				specularScale = 1.0;
 				cubemapScale = 1.0;
 				materialType = (float)MATERIAL_HOLLOWMETAL;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
@@ -1199,61 +1195,54 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_DRYLEAVES;
 				parallaxScale = 0.0;
-				//useSteepParallax = 1.0;
 				break;
 			case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 				specularScale = 0.35;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_GREENLEAVES;
 				parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
-				//useSteepParallax = 1.0;
 				break;
 			case MATERIAL_FABRIC:			// 21			// Cotton sheets
 				specularScale = 0.25;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_FABRIC;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_CANVAS:			// 22			// tent material
 				specularScale = 0.25;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_CANVAS;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_MARBLE:			// 12			// marble floors
 				specularScale = 0.2;
 				cubemapScale = 0.6;
 				materialType = (float)MATERIAL_MARBLE;
-				parallaxScale = 2.0;
-				//useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SNOW:				// 14			// freshly laid snow
 				specularScale = 0.3;
 				cubemapScale = 0.25;
 				materialType = (float)MATERIAL_SNOW;
-				parallaxScale = 3.0;
-				useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_MUD:				// 17			// wet soil
 				specularScale = 0.25;
 				cubemapScale = 0.1;
 				materialType = (float)MATERIAL_MUD;
 				parallaxScale = 1.5;
-				useSteepParallax = 1.0;
 				break;
 			case MATERIAL_DIRT:				// 7			// hard mud
 				specularScale = 0.15;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_DIRT;
 				parallaxScale = 1.5;
-				useSteepParallax = 1.0;
 				break;
 			case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 				specularScale = 0.25;
 				cubemapScale = 0.05;
 				materialType = (float)MATERIAL_CONCRETE;
-				parallaxScale = 2.5;
-				//useSteepParallax = 1.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 				specularScale = 0.15;
@@ -1277,7 +1266,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				specularScale = 0.3;
 				cubemapScale = 0.05;
 				materialType = (float)MATERIAL_PLASTER;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 				specularScale = 0.88;
@@ -1289,7 +1278,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				specularScale = 0.4;
 				cubemapScale = 0.4;
 				materialType = (float)MATERIAL_ARMOR;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_ICE:				// 15			// packed snow/solid ice
@@ -1297,7 +1286,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				cubemapScale = 0.4;
 				materialType = (float)MATERIAL_ICE;
 				parallaxScale = 2.0;
-				useSteepParallax = 1.5;
 				break;
 			case MATERIAL_GLASS:			// 10			//
 				specularScale = 0.95;
@@ -1315,7 +1303,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 				specularScale = 0.92;
 				cubemapScale = 0.92;
 				materialType = (float)MATERIAL_COMPUTER;
-				parallaxScale = 2.0;
+				parallaxScale = 1.5;
 				break;
 			default:
 				specularScale = 0.0;
@@ -1418,21 +1406,23 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	{
 		VectorSet4(specMult, specularScale, specularScale, specularScale, 1.0);
 
-		if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == 30.0 /* ARMOR */
-			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == 25.0 /* PLASTIC */
-			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == 12.0 /* MARBLE */)
+		if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_ARMOR /* ARMOR */
+			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_PLASTIC /* PLASTIC */
+			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_MARBLE /* MARBLE */)
 		{// Armor, plastic, and marble should remain somewhat shiny...
 			specMult[0] = 0.333;
 			specMult[1] = 0.333;
 			specMult[2] = 0.333;
 			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
 		}
-		else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) != 0.0 /* METALS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 10.0 /* GLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 29.0 /* SHATTERGLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 18.0 /* BPGLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 31.0 /* COMPUTER */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 15.0 /* ICE */)
+		else if ( !(isMetalic > 0.0)
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_SOLIDMETAL
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_HOLLOWMETAL
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GLASS /* GLASS */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_SHATTERGLASS /* SHATTERGLASS */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_BPGLASS /* BPGLASS */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_COMPUTER /* COMPUTER */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_ICE /* ICE */)
 		{// Only if not metalic... Metals should remain nice and shiny...
 			specMult[0] *= 0.04;
 			specMult[1] *= 0.04;
@@ -1445,19 +1435,12 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		}
 	}
 
-	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 }
 
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 {
 	vec2_t dimensions;
-
-	if (pStage->bundle[0].image[0])
-	{
-		dimensions[0] = pStage->bundle[0].image[0]->width;
-		dimensions[1] = pStage->bundle[0].image[0]->height;
-	}
 
 	if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 	{

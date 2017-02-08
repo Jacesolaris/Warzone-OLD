@@ -1,4 +1,9 @@
-﻿uniform sampler2D	u_DiffuseMap;
+﻿//#define __CUBEMAP__
+//#define __SSR__
+//#define __AMBIENT_OCCLUSION__
+//#define __BUMP__
+
+uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_DeluxeMap;
@@ -34,8 +39,11 @@ varying vec2		var_TexCoords;
 #define textureCubeLod textureLod // UQ1: > ver 140 support
 
 
-#define LIGHT_THRESHOLD  0.001//0.01//0.001
-//#define LIGHT_COLOR_SEARCH
+#define LIGHT_THRESHOLD  0.001
+
+
+vec2 pixel = vec2(1.0) / u_Dimensions;
+
 
 vec2 encode (vec3 n)
 {
@@ -54,6 +62,7 @@ vec3 decode (vec2 enc)
     return n;
 }
 
+#ifdef __AMBIENT_OCCLUSION__
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
     return dot(p, vec3(.5));
@@ -96,30 +105,7 @@ float calculateAO(in vec3 pos, in vec3 nor)
     }
     return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
-
-vec3 GlowAtPosition ( vec2 coord )
-{// Since dlight positions are not accurate in JKA/Q3... Scan a little around it's origin for a better color...
-	vec3 color = texture( u_GlowMap, coord ).rgb;
-	float colLen = length(color);
-	vec2 px = vec2(1.0) / u_Dimensions.xy;
-
-	for (float x = -2.0; x <= 2.0; x += 1.0)
-	{
-		for (float y = -2.0; y <= 2.0; y += 1.0)
-		{
-			vec3 newcolor = texture( u_GlowMap, coord + (px * (4.0 * vec2(x, y))) ).rgb;
-			float ncLen = length(newcolor);
-
-			if (ncLen > colLen)
-			{
-				color = newcolor;
-				colLen = ncLen;
-			}
-		}
-	}
-
-	return color;
-}
+#endif //__AMBIENT_OCCLUSION__
 
 vec4 ConvertToNormals ( vec4 color )
 {
@@ -164,6 +150,7 @@ vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 spe
 	return dif*diffuseColor + spe*specularColor;
 }
 
+#ifdef __CUBEMAP__
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
 	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
@@ -172,8 +159,9 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	float a1 = t.w;
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
+#endif //__CUBEMAP__
 
-vec2 pixel = vec2(1.0) / u_Dimensions;
+#ifdef __SSR__
 float pw = pixel.x;
 float ph = pixel.y;
 
@@ -277,20 +265,42 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * reflectStrength/*0.28*//*u_Local0.r*/);
 }
+#endif //__SSR__
+
+#ifdef __BUMP__
+vec3 doBump( in vec3 pos, in vec3 nor, in float signal, in float scale )
+{
+    // build frame	
+    vec3  s = dFdx( pos );
+    vec3  t = dFdy( pos );
+    vec3  u = cross( t, nor );
+    vec3  v = cross( nor, s );
+    float d = dot( s, u );
+
+    // compute bump	
+    float bs = dFdx( signal );
+    float bt = dFdy( signal );
+	
+    // offset normal	
+#if 1
+    return normalize( nor - scale*(bs*u + bt*v)/d );
+#else
+    // if you cannot ensure the frame is not null	
+    vec3 vSurfGrad = sign( d ) * ( bs * u + bt * v );
+    return normalize( abs(d)*nor - scale*vSurfGrad );
+#endif
+}
+#endif //__BUMP__
 
 void main(void)
 {
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
 	gl_FragColor = vec4(color.rgb, 1.0);
 
-	/*{
-		vec3 lightColor = texture( u_GlowMap, var_TexCoords ).rgb;
-		gl_FragColor.rgb = lightColor;
-		return;
-	}*/
+	vec2 texCoords = var_TexCoords;
 
 	/*{
-		vec4 position = texture2D(u_PositionMap, var_TexCoords);
+		vec4 position = texture2D(u_PositionMap, texCoords);
 		float dist = distance(position.xyz, u_ViewOrigin.xyz);
 		dist = clamp(dist / 4096.0, 0.0, 1.0);
 		gl_FragColor.rgb = vec3(dist);
@@ -298,7 +308,7 @@ void main(void)
 	}*/
 
 	vec3 viewOrg = u_ViewOrigin.xyz;
-	vec4 position = texture2D(u_PositionMap, var_TexCoords);
+	vec4 position = texture2D(u_PositionMap, texCoords);
 
 	if (position.a == 1024.0 || position.a == 1025.0)
 	{// Skybox... Skip...
@@ -312,47 +322,26 @@ void main(void)
 		return;
 	}*/
 
-	vec4 norm = texture2D(u_NormalMap, var_TexCoords);
+	vec4 norm = texture2D(u_NormalMap, texCoords);
 	norm.xyz = decode(norm.xy);
 
+#ifdef __CUBEMAP__
 	vec3 unpackedCubeStuff = decode(norm.zw);
 	float enableCubeMap = unpackedCubeStuff.x;
 	float cubeStrength = clamp(unpackedCubeStuff.y * 10.0, 0.0, 1.0);
 	float specularScale = clamp(unpackedCubeStuff.z * 10.0, 0.0, 1.0);
+#endif //__CUBEMAP__
 
 	/*if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0 && norm.a == 0.05)
 	{// Generic GLSL. Probably a glow or something, ignore the lighting...
 		return;
 	}*/
 
-#if defined(USE_SHADOWMAP)
-	if (u_Local2.g > 0.0)
-	{
-		float shadowValue = 0.0;
-
-#ifdef HIGH_QUALITY_SHADOWS
-		for (float y = -3.5 ; y <=3.5 ; y+=1.0)
-			for (float x = -3.5 ; x <=3.5 ; x+=1.0)
-				shadowValue += texture(u_ShadowMap, var_TexCoords + (vec2(x, y) * pixel * 3.0)).r;
-
-		shadowValue /= 64.0;
-#else //!HIGH_QUALITY_SHADOWS
-		for (float y = -1.75 ; y <=1.75 ; y+=1.0)
-			for (float x = -1.75 ; x <=1.75 ; x+=1.0)
-				shadowValue += texture(u_ShadowMap, var_TexCoords + (vec2(x, y) * pixel * 3.0)).r;
-
-		shadowValue /= 32.0;
-#endif //HIGH_QUALITY_SHADOWS
-
-		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, 1.3);
-	}
-#endif //defined(USE_SHADOWMAP)
-
-	if (norm.a < 0.05 || length(norm.xyz) <= 0.05)
+	/*if (norm.a < 0.05 || length(norm.xyz) <= 0.05)
 	{
 		norm = ConvertToNormals(color);
 	}
-	else
+	else*/
 	{
 		float displacement = clamp(length(color.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
@@ -368,6 +357,55 @@ void main(void)
 	//gl_FragColor = vec4(N.xyz * 0.5 + 0.5, 1.0);
 	//return;
 
+#ifdef __BUMP__
+	//vec3 N2 = N;
+#define N2 N
+
+	if (u_Local3.r != 0.0)
+	{
+		N2.xyz = doBump( position.xyz/*E*/, N.xyz, dot(gl_FragColor.rgb,vec3(0.33)), u_Local3.r );
+	}
+
+	if (u_Local3.g != 0.0)
+	{
+		gl_FragColor.rgb = N2.xyz * 0.5 + 0.5;
+		return;
+	}
+
+	float occ = 0.5 + 0.5*N2.y;
+	occ = 1.0 - clamp(occ * 0.75, 0.0, 1.0);
+	//float occ = 1.0;
+
+	if (u_Local3.b != 0.0)
+	{
+		gl_FragColor.rgb = vec3(occ);
+		return;
+	}
+#endif //__BUMP__
+
+#if defined(USE_SHADOWMAP)
+	if (u_Local2.g > 0.0)
+	{
+		float shadowValue = 0.0;
+
+#ifdef HIGH_QUALITY_SHADOWS
+		for (float y = -3.5 ; y <=3.5 ; y+=1.0)
+			for (float x = -3.5 ; x <=3.5 ; x+=1.0)
+				shadowValue += texture(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0)).r;
+
+		shadowValue /= 64.0;
+#else //!HIGH_QUALITY_SHADOWS
+		for (float y = -1.75 ; y <=1.75 ; y+=1.0)
+			for (float x = -1.75 ; x <=1.75 ; x+=1.0)
+				shadowValue += texture(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0)).r;
+
+		shadowValue /= 32.0;
+#endif //HIGH_QUALITY_SHADOWS
+
+		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, 1.3);
+	}
+#endif //defined(USE_SHADOWMAP)
+
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 	float lambertian2 = dot(PrimaryLightDir.xyz, N);
 	float spec2 = 0.0;
@@ -380,13 +418,12 @@ void main(void)
 		phongFactor = 0.0;
 	}
 
-
 	if (!noSunPhong && lambertian2 > 0.0)
 	{// this is blinn phong
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
 		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += vec3(spec2 * (1.0 - norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
+		gl_FragColor.rgb += vec3(spec2 * (norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
 	}
 
 	if (noSunPhong)
@@ -402,17 +439,6 @@ void main(void)
 		{
 			if (li > u_lightCount) break;
 
-			/*{
-				if (distance(u_lightPositions[li], var_TexCoords) < 0.1)
-				{
-					//gl_FragColor.rgb = vec3(0.0, 0.0, 1.0);
-					//return;
-					vec3 lightColor = GlowAtPosition(u_lightPositions[li]);
-					addedLight += lightColor;
-					continue;
-				}
-			}*/
-
 			vec3 lightPos = u_lightPositions2[li].xyz;
 
 			float lightDist = distance(lightPos, position.xyz);
@@ -425,24 +451,12 @@ void main(void)
 
 				if (lightStrength > 0.01)
 				{
-#ifndef LIGHT_COLOR_SEARCH
 					vec3 lightColor = u_lightColors[li].rgb;
 					float lightColorLength = length(lightColor);
-#else //LIGHT_COLOR_SEARCH
-					vec3 lightColor = GlowAtPosition(u_lightPositions[li]);
-					float lightColorLength = length(lightColor);
-
-					if (lightColorLength < LIGHT_THRESHOLD && length(u_lightColors[li].rgb) > 0.0)
-					{
-						lightColor = u_lightColors[li].rgb;
-					}
-#endif //LIGHT_COLOR_SEARCH
 
 					if (lightColorLength > LIGHT_THRESHOLD)
 					{
 						// Try to maximize light strengths...
-						//float mult = (3.0 / lightColorLength);
-						//lightColor += lightColor * mult;
 						lightColor /= lightColorLength;
 
 						// Add some basic light...
@@ -460,7 +474,7 @@ void main(void)
 							float specAngle3 = max(dot(halfDir3, N), 0.0);
 							float spec3 = pow(specAngle3, 16.0);
 
-							float strength = ((1.0 - spec3) * (1.0 - norm.a)) * lightStrength * 0.25;//u_Local3.b;
+							float strength = ((1.0 - spec3) * (norm.a)) * lightStrength * 0.25;//u_Local3.b;
 							addedLight +=  lightColor * strength * 0.5;
 						}
 					}
@@ -476,7 +490,7 @@ void main(void)
 		}
 	}
 
-#if 0
+#ifdef __CUBEMAP__
 	if (u_CubeMapStrength > 0.0 && enableCubeMap * 2.0 > 0.0)
 	{
 		vec4 specular;
@@ -497,15 +511,15 @@ void main(void)
 		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * 0.25;
 		gl_FragColor.rgb += (cubeLightColor * reflectance * (cubeStrength * specular.a)) * u_CubeMapStrength * 0.5;
 	}
-#elif 0
+#elif defined(__SSR__)
 	// Screen space reflections...
 	if (enableCubeMap > 0.0)
 	{
-		gl_FragColor.rgb = AddReflection(var_TexCoords, position, gl_FragColor.rgb, 0.15/*u_CubeMapStrength*/ * cubeStrength);
+		gl_FragColor.rgb = AddReflection(texCoords, position, gl_FragColor.rgb, 0.15/*u_CubeMapStrength*/ * cubeStrength);
 	}
-#endif
+#endif //__CUBEMAP__ || __SSR__
 
-#if 0
+#ifdef __AMBIENT_OCCLUSION__
 	//if (u_Local2.g >= 1.0)
 	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)
 	{
@@ -519,7 +533,11 @@ void main(void)
 
 		gl_FragColor.rgb *= ao;
 	}
-#endif
+#endif //__AMBIENT_OCCLUSION__
+
+#ifdef __BUMP__
+	gl_FragColor.rgb *= occ;
+#endif //__BUMP__
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }

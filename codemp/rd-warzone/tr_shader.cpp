@@ -2066,7 +2066,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					stage->type = ST_NORMALPARALLAXMAP;
 				else
 					stage->type = ST_NORMALMAP;
-					VectorSet4(stage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+				VectorSet4(stage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 			}
 			else if(!Q_stricmp(token, "specularMap"))
 			{
@@ -3328,6 +3328,10 @@ qboolean IsKnownShinyMap ( const char *heystack )
 
 int DetectMaterialType ( const char *name )
 {
+	if (StringContainsWord(name, "gfx/water"))
+		return MATERIAL_NONE;
+	if (StringContainsWord(name, "gfx/atmospheric"))
+		return MATERIAL_NONE;
 	if (StringContainsWord(name, "warzone/plant"))
 		return MATERIAL_GREENLEAVES;
 	else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
@@ -3574,7 +3578,11 @@ void AssignMaterialType ( const char *name, const char *text )
 	}
 	else
 	{
-		if (StringContainsWord(name, "warzone/plant"))
+		if (StringContainsWord(name, "gfx/water"))
+			shader.surfaceFlags |= MATERIAL_NONE;
+		else if (StringContainsWord(name, "gfx/atmospheric"))
+			shader.surfaceFlags |= MATERIAL_NONE;
+		else if (StringContainsWord(name, "warzone/plant"))
 			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
 		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 				&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
@@ -3641,7 +3649,11 @@ void AssignMaterialType ( const char *name, const char *text )
 		//
 	}
 
-	if (StringContainsWord(name, "common/water") && !StringContainsWord(name, "splash") && !StringContainsWord(name, "drip") && !StringContainsWord(name, "ripple") && !StringContainsWord(name, "bubble") && !StringContainsWord(name, "woosh") && !StringContainsWord(name, "underwater") && !StringContainsWord(name, "bottom"))
+	if (StringContainsWord(name, "gfx/water"))
+		shader.surfaceFlags |= MATERIAL_NONE;
+	else if (StringContainsWord(name, "gfx/atmospheric"))
+		shader.surfaceFlags |= MATERIAL_NONE;
+	else if (StringContainsWord(name, "common/water") && !StringContainsWord(name, "splash") && !StringContainsWord(name, "drip") && !StringContainsWord(name, "ripple") && !StringContainsWord(name, "bubble") && !StringContainsWord(name, "woosh") && !StringContainsWord(name, "underwater") && !StringContainsWord(name, "bottom"))
 	{
 		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
 		if (oldmat) shader.surfaceFlags &= ~oldmat;
@@ -7020,7 +7032,11 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+	if (StringContainsWord(name, "gfx/water"))
+		return qfalse;
+	else if (StringContainsWord(name, "gfx/atmospheric"))
+		return qfalse;
+	else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
 		return qtrue;
 	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))

@@ -2875,7 +2875,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
-			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
 				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 		}
 
@@ -2981,7 +2981,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
-			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
 				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 		}
 

@@ -2,11 +2,11 @@
 //#define DEFERRED_REFLECTIONS
 
 
-#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER) && !defined(USE_MODELMATRIX) && !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION)
+#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER) //&& !defined(USE_MODELMATRIX) && !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION) && !defined(USE_TRI_PLANAR) && !defined(USE_REGIONS)
 #define __PARALLAX_ENABLED__
 #endif
 
-#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER) && !defined(USE_TRI_PLANAR) && !defined(USE_REGIONS)
+#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER) //&& !defined(USE_TRI_PLANAR) && !defined(USE_REGIONS)
 #define __CUBEMAPS_ENABLED__
 #endif
 
@@ -75,6 +75,8 @@ uniform vec4				u_CubeMapInfo;
 uniform float				u_CubeMapStrength;
 
 uniform vec3				u_ViewOrigin;
+
+uniform vec2				u_textureScale;
 
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
@@ -233,9 +235,13 @@ void AddDetail(inout vec4 color, in vec2 tc)
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 vec4 GetControlMap( sampler2D tex, float scale)
 {
-	vec4 xaxis = texture( tex, (m_vertPos.yz * scale) * 0.5 + 0.5);
-	vec4 yaxis = texture( tex, (m_vertPos.xz * scale) * 0.5 + 0.5);
-	vec4 zaxis = texture( tex, (m_vertPos.xy * scale) * 0.5 + 0.5);
+	vec2 tScale = vec2(1.0);
+	//if (u_textureScale.x > 0.0) tScale.x = u_textureScale.x;
+	//if (u_textureScale.y > 0.0) tScale.y = u_textureScale.y;
+	
+	vec4 xaxis = texture( tex, (m_vertPos.yz * tScale * scale) * 0.5 + 0.5);
+	vec4 yaxis = texture( tex, (m_vertPos.xz * tScale * scale) * 0.5 + 0.5);
+	vec4 zaxis = texture( tex, (m_vertPos.xy * tScale * scale) * 0.5 + 0.5);
 
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
@@ -353,35 +359,39 @@ vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType
 	vec4 yaxis;
 	vec4 zaxis;
 
+	vec2 tScale = vec2(1.0);
+	//if (u_textureScale.x > 0.0) tScale.x = u_textureScale.x;
+	//if (u_textureScale.y > 0.0) tScale.y = u_textureScale.y;
+
 	if (fakeMapType == FAKE_MAP_NORMALMAP)
 	{
 		fakeNormal = true;
 
-		xaxis = texture( u_DiffuseMap, (m_vertPos.yz * scale) + ParallaxOffset.xy);
-		yaxis = texture( u_DiffuseMap, (m_vertPos.xz * scale) + ParallaxOffset.xy);
-		zaxis = texture( u_DiffuseMap, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+		xaxis = texture( u_DiffuseMap, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
+		yaxis = texture( u_DiffuseMap, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
+		zaxis = texture( u_DiffuseMap, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
 	}
 	else if (fakeMapType == FAKE_MAP_NORMALMAP2)
 	{
 		fakeNormal = true;
 
-		xaxis = texture( u_SteepMap, (m_vertPos.yz * scale) + ParallaxOffset.xy);
-		yaxis = texture( u_SteepMap, (m_vertPos.xz * scale) + ParallaxOffset.xy);
-		zaxis = texture( u_SteepMap, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+		xaxis = texture( u_SteepMap, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
+		yaxis = texture( u_SteepMap, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
+		zaxis = texture( u_SteepMap, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
 	}
 	else if (fakeMapType == FAKE_MAP_NORMALMAP3)
 	{
 		fakeNormal = true;
 
-		xaxis = texture( u_SteepMap2, (m_vertPos.yz * scale) + ParallaxOffset.xy);
-		yaxis = texture( u_SteepMap2, (m_vertPos.xz * scale) + ParallaxOffset.xy);
-		zaxis = texture( u_SteepMap2, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+		xaxis = texture( u_SteepMap2, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
+		yaxis = texture( u_SteepMap2, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
+		zaxis = texture( u_SteepMap2, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
 	}
 	else
 	{
-		xaxis = texture( tex, (m_vertPos.yz * scale) + ParallaxOffset.xy);
-		yaxis = texture( tex, (m_vertPos.xz * scale) + ParallaxOffset.xy);
-		zaxis = texture( tex, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+		xaxis = texture( tex, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
+		yaxis = texture( tex, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
+		zaxis = texture( tex, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
 	}
 
 	if (fakeNormal)
@@ -562,20 +572,20 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 #if defined(USE_REGIONS)
-	return GenerateTerrainMap(texCoords);
+	return GenerateTerrainMap(texCoords + ParallaxOffset);
 #else
-	return texture(u_DiffuseMap, texCoords);
+	return texture(u_DiffuseMap, texCoords + ParallaxOffset);
 #endif
 }
 
 vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 #if defined(USE_REGIONS)
-	return ConvertToNormals(GenerateTerrainMap(texCoords));
+	return ConvertToNormals(GenerateTerrainMap(texCoords + ParallaxOffset));
 #else
 	if (u_Local4.r <= 0.0)
 	{
-		return ConvertToNormals(texture(u_DiffuseMap, texCoords));
+		return ConvertToNormals(texture(u_DiffuseMap, texCoords + ParallaxOffset));
 	}
 
 	return texture(u_NormalMap, texCoords);
@@ -596,7 +606,7 @@ float RayIntersectDisplaceMap(vec2 dp, inout float displacement)
 		return 0.0;
 
 	displacement = GetDepth(dp);
-	return (displacement - 1.0) * u_Local1.x;
+	return (1.0 - displacement) * 0.5 + 0.5;
 }
 
 float ReliefMapping(vec2 dp, vec2 ds)
@@ -709,37 +719,15 @@ void main()
 
 
 #if defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
-	vec2 tex_offset = vec2(1.0 / u_Dimensions);
-	bool calcE = false;
-	bool calcVD = false;
-
-	#if defined(__CUBEMAPS_ENABLED__)
-		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
-		{
-			calcVD = true;
-			calcE = true;
-		}
-	#endif //defined(__CUBEMAPS_ENABLED__)
-	#if defined(__PARALLAX_ENABLED__)
-		if (u_Local1.x > 0.0 && !isDistant)
-		{
-			calcVD = true;
-			calcE = true;
-		}
-	#endif //defined(__PARALLAX_ENABLED__)
-
 	vec3 viewDir;
 	vec3 E;
 
-	if (calcVD)
+	if ((!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0) || (u_Local1.x > 0.0 && !isDistant))
 	{
-		viewDir = u_ViewOrigin.xyz - m_vertPos.xyz;
-
-		if (calcE)
-		{
-			E = normalize(viewDir);
-		}
+		viewDir = m_ViewDir;
+		E = normalize(viewDir);
 	}
+
 #endif //defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
 
 
@@ -751,17 +739,16 @@ void main()
 #if defined(__PARALLAX_ENABLED__)
 	if (u_Local1.x > 0.0 && !isDistant)
 	{
-		#if defined(FAST_PARALLAX)
+		vec2 tex_offset = vec2(1.0 / u_Dimensions);
+		vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
+		vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
-			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
-			vec2 ParallaxXY = offsetDir.xy * tex_offset * 0.7;// u_Local1.x;
+		#if defined(FAST_PARALLAX)
 
 			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords, displacement);
 			texCoords += ParallaxOffset;
 
 		#else //!defined(FAST_PARALLAX)
-			vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
-			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
 			// Steep Parallax
 			float Step = 0.01;

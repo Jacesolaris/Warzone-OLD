@@ -1144,11 +1144,10 @@ void GenerateLedgeFaces(void)
 		SetKeyValue(mapEnt, "classname", "misc_model");
 		classname = ValueForKey(mapEnt, "classname");
 
-		//int choice = irand(1, 5);
-		int choice = irand(1, 4);
-		
-		//if (choice < 5)
-		{
+		if (ledgeIsLowAngle[i] > 1)
+		{// Can use model 4...
+			int choice = irand(1, 4);
+
 			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledge0%i.md3", choice));
 
 			if (LEDGE_SHADER[0] != '\0')
@@ -1156,15 +1155,17 @@ void GenerateLedgeFaces(void)
 				SetKeyValue(mapEnt, "_overrideShader", LEDGE_SHADER);
 			}
 		}
-		/*else
-		{
-			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledgerocks01.md3"));
+		else
+		{// Can't use model 4, it requires a very low angle slope...
+			int choice = irand(1, 3);
+
+			SetKeyValue(mapEnt, "model", va("models/warzone/rocks/ledge0%i.md3", choice));
 
 			if (LEDGE_SHADER[0] != '\0')
-			{// Only override the ledge component's shader...
-				SetKeyValue(mapEnt, "_overrideLedgeShader", LEDGE_SHADER);
+			{// Override the whole model's shader...
+				SetKeyValue(mapEnt, "_overrideShader", LEDGE_SHADER);
 			}
-		}*/
+		}
 
 		//Sys_Printf( "Generated cliff face at %f %f %f. Angle %f.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2], ledgeAngles[i][1] );
 

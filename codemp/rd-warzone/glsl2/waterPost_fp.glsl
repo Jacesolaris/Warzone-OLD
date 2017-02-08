@@ -129,7 +129,7 @@ const vec2 scale = vec2(0.002, 0.002);
 const float refractionScale = 0.005;
 
 // Wind force in x and z axes.
-const vec2 wind = vec2(-0.3, 0.7);
+//const vec2 wind = vec2(-0.3, 0.7);
 
 
 float linearize(float depth)
@@ -554,6 +554,7 @@ void main ( void )
 {
 	vec3 color2 = texture2D(u_DiffuseMap, var_TexCoords).rgb;
 	vec4 waterMap2 = waterMap2AtCoord(var_TexCoords);
+	waterMap2.y += waveHeight;
 	bool IS_UNDERWATER = false;
 
 	if (u_Local1.b > 0.0) 
@@ -633,9 +634,11 @@ void main ( void )
 
 	if (pixelIsInWaterRange || pixelIsUnderWater)
 	{
+		vec2 wind = normalize(waterMap.xz); // Waves head toward center of map. Should suit current WZ maps...
+
 		// Find intersection with water surface
-		//vec3 eyeVecNorm = normalize(waterMap.xyz/*position*/ - ViewOrigin);
-		vec3 eyeVecNorm = normalize(ViewOrigin - waterMap.xyz/*position*/);
+		vec3 eyeVecNorm = normalize(waterMap.xyz/*position*/ - ViewOrigin);
+		//vec3 eyeVecNorm = normalize(ViewOrigin - waterMap.xyz/*position*/);
 		float t = ((level - ViewOrigin.y) / eyeVecNorm.y);
 		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
 		//vec3 surfacePoint = waterMap.xyz;
@@ -700,6 +703,7 @@ void main ( void )
 		}
 
 		eyeVecNorm = normalize(ViewOrigin - /*waterMap2.xyz*/surfacePoint);
+		//eyeVecNorm = normalize(ViewOrigin - waterMap2.xyz);
 
 		float normal1 = texture2D(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
 		float normal2 = texture2D(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
