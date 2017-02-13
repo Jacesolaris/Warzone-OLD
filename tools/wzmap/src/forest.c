@@ -131,7 +131,7 @@ float			CITY_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
 char			CITY_FORCED_OVERRIDE_SHADER[MAX_FOREST_MODELS][128] = { 0 };
 int				CITY_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { 0 };
 
-void CaulkifyStuff(void);
+void CaulkifyStuff(qboolean findBounds);
 
 void FOLIAGE_LoadClimateData( char *filename )
 {
@@ -291,7 +291,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 void vectoangles(const vec3_t value1, vec3_t angles);
 extern qboolean StringContainsWord(const char *haystack, const char *needle);
 
-void CaulkifyStuff(void)
+void CaulkifyStuff(qboolean findBounds)
 {
 	if (!CAULKIFY_CRAP) return;
 
@@ -362,45 +362,48 @@ void CaulkifyStuff(void)
 		}
 	}
 
-	// Now that we have calkified stuff, re-check playableMapBounds, so we can cull most stuff that would be below the map...
-	vec3_t oldMapPlayableMins, oldMapPlayableMaxs;
-	VectorCopy(mapPlayableMins, oldMapPlayableMins);
-	VectorCopy(mapPlayableMaxs, oldMapPlayableMaxs);
-
-	ClearBounds(mapPlayableMins, mapPlayableMaxs);
-	for (int s = 0; s < numMapDrawSurfs; s++)
+	if (findBounds)
 	{
-		printLabelledProgress("ImproveMapBounds", s, numMapDrawSurfs);
+		// Now that we have calkified stuff, re-check playableMapBounds, so we can cull most stuff that would be below the map...
+		vec3_t oldMapPlayableMins, oldMapPlayableMaxs;
+		VectorCopy(mapPlayableMins, oldMapPlayableMins);
+		VectorCopy(mapPlayableMaxs, oldMapPlayableMaxs);
 
-		/* get drawsurf */
-		mapDrawSurface_t *ds = &mapDrawSurfs[s];
-		shaderInfo_t *si = ds->shaderInfo;
-
-		ClearBounds(ds->mins, ds->maxs);
-		for (int i = 0; i < ds->numVerts; i++)
-			AddPointToBounds(ds->verts[i].xyz, ds->mins, ds->maxs);
-		
-		// UQ1: Also record actual map playable area mins/maxs...
-		if (!(si->compileFlags & C_SKY)
-			&& !(si->compileFlags & C_SKIP)
-			&& !(si->compileFlags & C_HINT)
-			&& !(si->compileFlags & C_NODRAW)
-			&& !StringContainsWord(si->shader, "sky")
-			&& !StringContainsWord(si->shader, "caulk")
-			&& !StringContainsWord(si->shader, "common/water"))
+		ClearBounds(mapPlayableMins, mapPlayableMaxs);
+		for (int s = 0; s < numMapDrawSurfs; s++)
 		{
-			//if (!StringContainsWord(si->shader, "/sand"))
-			//Sys_Printf("ds %i [%s] bounds %f %f %f x %f %f %f.\n", s, si->shader, ds->mins[0], ds->mins[1], ds->mins[2], ds->maxs[0], ds->maxs[1], ds->maxs[2]);
-			AddPointToBounds(ds->mins, mapPlayableMins, mapPlayableMaxs);
-			AddPointToBounds(ds->maxs, mapPlayableMins, mapPlayableMaxs);
+			printLabelledProgress("ImproveMapBounds", s, numMapDrawSurfs);
+
+			/* get drawsurf */
+			mapDrawSurface_t *ds = &mapDrawSurfs[s];
+			shaderInfo_t *si = ds->shaderInfo;
+
+			ClearBounds(ds->mins, ds->maxs);
+			for (int i = 0; i < ds->numVerts; i++)
+				AddPointToBounds(ds->verts[i].xyz, ds->mins, ds->maxs);
+
+			// UQ1: Also record actual map playable area mins/maxs...
+			if (!(si->compileFlags & C_SKY)
+				&& !(si->compileFlags & C_SKIP)
+				&& !(si->compileFlags & C_HINT)
+				&& !(si->compileFlags & C_NODRAW)
+				&& !StringContainsWord(si->shader, "sky")
+				&& !StringContainsWord(si->shader, "caulk")
+				&& !StringContainsWord(si->shader, "common/water"))
+			{
+				//if (!StringContainsWord(si->shader, "/sand"))
+				//Sys_Printf("ds %i [%s] bounds %f %f %f x %f %f %f.\n", s, si->shader, ds->mins[0], ds->mins[1], ds->mins[2], ds->maxs[0], ds->maxs[1], ds->maxs[2]);
+				AddPointToBounds(ds->mins, mapPlayableMins, mapPlayableMaxs);
+				AddPointToBounds(ds->maxs, mapPlayableMins, mapPlayableMaxs);
+			}
 		}
+
+		// Override playable maxs height with the full map version, we only want the lower extent of playable area...
+		mapMaxs[2] = mapPlayableMaxs[2];
+
+		Sys_Printf("Old map bounds %f %f %f x %f %f %f.\n", oldMapPlayableMins[0], oldMapPlayableMins[1], oldMapPlayableMins[2], oldMapPlayableMaxs[0], oldMapPlayableMaxs[1], oldMapPlayableMaxs[2]);
+		Sys_Printf("New map bounds %f %f %f x %f %f %f.\n", mapPlayableMins[0], mapPlayableMins[1], mapPlayableMins[2], mapPlayableMaxs[0], mapPlayableMaxs[1], mapPlayableMaxs[2]);
 	}
-
-	// Override playable maxs height with the full map version, we only want the lower extent of playable area...
-	mapMaxs[2] = mapPlayableMaxs[2];
-
-	Sys_Printf("Old map bounds %f %f %f x %f %f %f.\n", oldMapPlayableMins[0], oldMapPlayableMins[1], oldMapPlayableMins[2], oldMapPlayableMaxs[0], oldMapPlayableMaxs[1], oldMapPlayableMaxs[2]);
-	Sys_Printf("New map bounds %f %f %f x %f %f %f.\n", mapPlayableMins[0], mapPlayableMins[1], mapPlayableMins[2], mapPlayableMaxs[0], mapPlayableMaxs[1], mapPlayableMaxs[2]);
 
 	Sys_Printf("%d shaders set to nodraw.\n", numNoDrawAdded);
 	Sys_Printf("%d shaders set to skip.\n", numSkipAdded);

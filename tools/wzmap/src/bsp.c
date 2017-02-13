@@ -424,7 +424,7 @@ extern float subdivisionMult;
 extern vec3_t        mergeBlock;
 void MergeDrawSurfaces( void );
 void MergeDrawVerts( void );
-extern void CaulkifyStuff(void);
+extern void CaulkifyStuff(qboolean findBounds);
 
 void ProcessWorldModel( void )
 {
@@ -572,7 +572,7 @@ void ProcessWorldModel( void )
 	FloodAreas( tree );
 
 	// Remove crap...
-	CaulkifyStuff();
+	CaulkifyStuff(qtrue);
 
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
@@ -595,7 +595,7 @@ void ProcessWorldModel( void )
 	ShowDetailedStats();
 
 	// Remove crap...
-	CaulkifyStuff();
+	CaulkifyStuff(qfalse);
 
 	//mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
 	

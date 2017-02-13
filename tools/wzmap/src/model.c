@@ -489,37 +489,6 @@ extern void vectoangles(const vec3_t value1, vec3_t angles);
 #ifdef CULL_BY_LOWEST_NEAR_POINT
 float LowestMapPointNear(vec3_t pos)
 {// So we can cull surfaces below this height...
-	/*vec3_t nMins, nMaxs;
-
-	nMins[2] = 999999.0f;
-
-	for (brush_t *b = entities[0].brushes; b; b = b->next)
-	{
-		if (!(b->compileFlags & C_SKY)
-			&& !(b->compileFlags & C_SKIP)
-			&& !(b->compileFlags & C_HINT)
-			&& !(b->compileFlags & C_NODRAW))
-		{
-			for (int s = 0; s < b->numsides; s++)
-			{
-				if (!(b->sides[s].compileFlags & C_SKY)
-					&& !(b->sides[s].compileFlags & C_SKIP)
-					&& !(b->sides[s].compileFlags & C_HINT)
-					&& !(b->sides[s].compileFlags & C_NODRAW))
-				{
-					if (DistanceHorizontal(pos, b->mins) < 4096.0 || DistanceHorizontal(pos, b->maxs) < 4096.0)
-					{
-						AddPointToBounds(b->mins, nMins, nMaxs);
-						AddPointToBounds(b->maxs, nMins, nMaxs);
-					}
-				}
-			}
-		}
-	}
-	
-	return nMins[2];
-	*/
-
 	// This is about as good as I think I can do to minimize crap from the additions...
 	float nMins = pos[2];
 
@@ -590,7 +559,7 @@ void RemoveSurface(mapDrawSurface_t *ds)
 
 	if ((ds->shaderInfo->compileFlags & C_SKIP) || (ds->shaderInfo->compileFlags & C_NODRAW) || (ds->shaderInfo->compileFlags & C_HINT) || StringContainsWord(ds->shaderInfo->shader, "caulk"))
 	{
-		//ClearSurface(ds);
+		ClearSurface(ds);
 	}
 }
 
@@ -1236,7 +1205,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							{// Below map's lowest known near point, definately cull...
 								//Sys_Printf("Culled one!\n");
 								numBoundsCulledSurfs++;
-								RemoveSurface(ds);
 								continue;
 							}
 						}
@@ -1246,7 +1214,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{// Outside map bounds, definately cull...
 							//Sys_Printf("Culled one!\n");
 							numBoundsCulledSurfs++;
-							RemoveSurface(ds);
 							continue;
 						}
 
@@ -1255,7 +1222,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{// Outside map bounds, definately cull...
 							//Sys_Printf("Culled one!\n");
 							numBoundsCulledSurfs++;
-							RemoveSurface(ds);
 							continue;
 						}*/
 
@@ -1263,7 +1229,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{// Outside map bounds, definately cull...
 							//Sys_Printf("Culled one!\n");
 							numBoundsCulledSurfs++;
-							RemoveSurface(ds);
 							continue;
 						}
 
@@ -1271,7 +1236,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{// Outside map bounds, definately cull...
 							//Sys_Printf("Culled one!\n");
 							numBoundsCulledSurfs++;
-							RemoveSurface(ds);
 							continue;
 						}
 
@@ -1279,7 +1243,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{// Outside map bounds, definately cull...
 							//Sys_Printf("Culled one!\n");
 							numBoundsCulledSurfs++;
-							RemoveSurface(ds);
 							continue;
 						}
 
@@ -1287,7 +1250,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 						{// Outside map bounds, definately cull...
 							//Sys_Printf("Culled one!\n");
 							numBoundsCulledSurfs++;
-							RemoveSurface(ds);
 							continue;
 						}
 
@@ -1315,10 +1277,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 								{
 									//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
 									numHeightCulledSurfs++;
-
-									if (HAS_COLLISION_INFO && IS_COLLISION_SURFACE)
-										RemoveSurface(ds);
-
 									continue;
 								}
 							}
@@ -1333,10 +1291,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							{
 								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 								numSizeCulledSurfs++;
-
-								if (HAS_COLLISION_INFO && IS_COLLISION_SURFACE)
-									RemoveSurface(ds);
-
 								continue;
 							}
 						}
@@ -1355,10 +1309,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 							{
 								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 								numSizeCulledSurfs++;
-
-								if (HAS_COLLISION_INFO && IS_COLLISION_SURFACE)
-									RemoveSurface(ds);
-
 								continue;
 							}
 						}
@@ -1429,8 +1379,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 									if (!RemoveDuplicateBrushPlanes( buildBrush ))
 									{// UQ1: Testing - This would create a mirrored plane... free it...
 										FreeBrush(buildBrush);
-										if (HAS_COLLISION_INFO && IS_COLLISION_SURFACE)
-											RemoveSurface(ds);
 										//Sys_Printf("Removed a mirrored plane\n");
 									}
 									else
@@ -1467,8 +1415,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 								else
 								{
 									FreeBrush(buildBrush);
-									if (HAS_COLLISION_INFO && IS_COLLISION_SURFACE)
-										RemoveSurface(ds);
 								}
 							} // #pragma omp critical
 						} // #pragma omp ordered
@@ -1478,9 +1424,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 					}
 					else
 					{
-						if (HAS_COLLISION_INFO && IS_COLLISION_SURFACE)
-							RemoveSurface(ds);
-
 						continue;
 					}
 
