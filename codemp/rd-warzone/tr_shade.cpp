@@ -2277,6 +2277,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
+		if (r_proceduralSun->integer && tess.shader == tr.sunShader)
+		{// Special case for procedural sun...
+			sp = &tr.sunPassShader;
+			GLSL_BindProgram(sp);
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			isPebbles = qfalse;
+			multiPass = qfalse;
+		}
+
 		if (isGrass || isPebbles)
 		{
 			if (isGrass && r_foliage->integer)

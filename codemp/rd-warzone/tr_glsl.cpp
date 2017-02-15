@@ -39,6 +39,8 @@ extern const char *fallbackShader_generic_fp;
 extern const char *fallbackShader_lightall_vp;
 extern const char *fallbackShader_lightall_gs;
 extern const char *fallbackShader_lightall_fp;
+extern const char *fallbackShader_sun_vp;
+extern const char *fallbackShader_sun_fp;
 extern const char *fallbackShader_shadowPass_vp;
 extern const char *fallbackShader_shadowPass_fp;
 extern const char *fallbackShader_pshadow_vp;
@@ -3060,6 +3062,13 @@ int GLSL_BeginLoadGPUShaders(void)
 	*/
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.sunPassShader, "sun", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sun_vp, fallbackShader_sun_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load sun shader!");
+	}
 
 
 	if (r_foliage->integer)
@@ -4035,6 +4044,24 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		numLightShaders++;
 	}
+
+	if (!GLSL_EndLoadGPUShader(&tr.sunPassShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load sun shader!");
+	}
+
+	GLSL_InitUniforms(&tr.sunPassShader);
+
+	qglUseProgram(tr.sunPassShader.program);
+	GLSL_SetUniformInt(&tr.sunPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.sunPassShader);
+#endif
+
+	numLightShaders++;
+
 
 
 	if (r_foliage->integer)
@@ -6033,6 +6060,8 @@ void GLSL_ShutdownGPUShaders(void)
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.shadowPassShader[i]);
+
+	GLSL_DeleteGPUShader(&tr.sunPassShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);

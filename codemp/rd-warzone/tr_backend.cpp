@@ -1704,7 +1704,8 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 						break;
 					}
 
-					if (sorted->shaderIndex == shader->index
+					if (shader != NULL 
+						&& sorted->shaderIndex == shader->index
 #if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 						&& sorted->cubemapIndex == newCubemapIndex
 #endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)

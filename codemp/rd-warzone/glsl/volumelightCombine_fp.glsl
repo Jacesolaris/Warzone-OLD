@@ -15,7 +15,6 @@ varying vec2		var_ScreenTex;
 //#define RANDOMIZE_PIXELS
 
 //#define APPLY_CONTRAST
-//#define APPLY_CONTRAST2
 
 #ifdef RANDOMIZE_PIXELS
 //noise producing function to eliminate banding (got it from someone else´s shader):
@@ -53,13 +52,9 @@ void main()
 #endif
 
 #ifdef APPLY_CONTRAST
-#define const_1 ( 18.0 / 255.0)
-#define const_2 (255.0 / 248.0)
+#define const_1 ( 64.0 / 255.0)
+#define const_2 (255.0 / 255.0)
 	volumeLight.rgb = clamp((clamp(volumeLight.rgb - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
-#endif
-#ifdef APPLY_CONTRAST2
-	float contrast = clamp(((volumeLight.r + volumeLight.g + volumeLight.b) / 1.5) + 0.25, 0.25, 1.5);
-	volumeLight.rgb *= contrast;
 #endif
 
 #ifdef DEBUG

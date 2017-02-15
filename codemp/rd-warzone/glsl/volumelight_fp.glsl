@@ -12,6 +12,7 @@ uniform vec4			u_Local0;
 uniform vec4			u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
 varying vec2			var_TexCoords;
+flat varying highp vec3		var_LightColor[MAX_VOLUMETRIC_LIGHTS];
 
 // Debugging...
 //#define DEBUG_POSITIONS
@@ -19,17 +20,19 @@ varying vec2			var_TexCoords;
 //#define DEBUG_POSITIONS2
 
 // General options...
-#define VOLUMETRIC_THRESHOLD  0.001 //u_Local0.b
+#define VOLUMETRIC_THRESHOLD	0.0//u_Local0.a//0.001 //u_Local0.b
+
+#define VOLUMETRIC_STRENGTH		u_Local0.b
 
 
 #if defined(HQ_VOLUMETRIC)
-const float	iBloomraySamples = 32.0;
+const int	iBloomraySamples = 32;
 const float	fBloomrayDecay = 0.96875;
 #elif defined (MQ_VOLUMETRIC)
-const float	iBloomraySamples = 16.0;
+const int	iBloomraySamples = 16;
 const float	fBloomrayDecay = 0.9375;
 #else //!defined(HQ_VOLUMETRIC) && !defined(MQ_VOLUMETRIC)
-const float	iBloomraySamples = 8.0;
+const int	iBloomraySamples = 8;
 const float	fBloomrayDecay = 0.875;
 #endif //defined(HQ_VOLUMETRIC) && defined(MQ_VOLUMETRIC)
 
@@ -71,6 +74,7 @@ void main ( void )
 	highp vec3		lightColors[MAX_VOLUMETRIC_LIGHTS];
 	highp float		fallOffRanges[MAX_VOLUMETRIC_LIGHTS];
 	highp float		lightDepths[MAX_VOLUMETRIC_LIGHTS];
+	bool			isSun[MAX_VOLUMETRIC_LIGHTS];
 	int			inRangeSunID = -1;
 	int			numInRange = 0;
 
@@ -105,17 +109,15 @@ void main ( void )
 
 				vec3 spotColor = u_vlightColors[i];
 				
-				//if (i == SUN_ID) 
-				{
-					if (length(texture( u_GlowMap, u_vlightPositions[i] ).rgb) <= VOLUMETRIC_THRESHOLD)
-					{// If it doesnt appear on the glow map, then it's not on the screen...
-						continue;
-					}
+				if (length(texture( u_GlowMap, u_vlightPositions[i] ).rgb) <= VOLUMETRIC_THRESHOLD)
+				{// If it doesnt appear on the glow map, then it's not on the screen...
+					continue;
 				}
 
 				if (length(spotColor) > VOLUMETRIC_THRESHOLD)
 				{
 					debugColor += vec3(0.0, 0.0, 1.0);
+					//debugColor = vec3(0.0, 0.0, 1.0);
 				}
 			}
 		}
@@ -137,7 +139,8 @@ void main ( void )
 		if (i == SUN_ID) 
 		{
 			//fall *= 4.0;
-			fall = 1.0;
+			//fall = 1.0;
+			fall = pow(clamp((2.0 - dist) / 2.0, 0.0, 1.0), 2.0);
 		}
 
 		if (fall > 0.0)
@@ -156,35 +159,36 @@ void main ( void )
 
 			//vec3 spotColor = texture( u_GlowMap, u_vlightPositions[i] ).rgb;
 			highp vec3 spotColor = u_vlightColors[i];
+			highp vec3 glowColor = var_LightColor[i];
 
-			//if (i == SUN_ID) 
+			if (length(glowColor) <= VOLUMETRIC_THRESHOLD)
+			{// If it doesnt appear on the glow map, then it's not on the screen...
+				continue;
+			}
+
+			if (i == SUN_ID)
 			{
-				if (length(texture( u_GlowMap, u_vlightPositions[i] ).rgb) <= VOLUMETRIC_THRESHOLD)
-				{// If it doesnt appear on the glow map, then it's not on the screen...
-					continue;
-				}
+				spotColor = glowColor;
 			}
 
 			highp float lightColorLength = length(spotColor);
 
 			if (lightColorLength > VOLUMETRIC_THRESHOLD)
 			{
-				/*
-				if (lightColorLength < 3.0)
-				{// Try to maximize light strengths...
-					float mult = (3.0 / lightColorLength);
-					spotColor += spotColor * mult;
-				}*/
-
+				// Try to maximize light strengths...
 				spotColor /= lightColorLength;
 
 				lightColors[numInRange] = spotColor;
-				lightColors[numInRange] *= 1.5;//u_Local0.a;//0.22;
 
 				if (i == SUN_ID) 
 				{
-					//lightColors[numInRange] *= 0.005;
-					lightColors[numInRange] *= 0.125;
+					isSun[numInRange] = true;
+					lightColors[numInRange] *= 1.5;
+				}
+				else
+				{
+					isSun[numInRange] = false;
+					lightColors[numInRange] *= 1.5;
 				}
 
 #ifdef DEBUG_POSITIONS
@@ -230,31 +234,29 @@ void main ( void )
 		return;
 	}
 
-	highp vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
+	highp vec3 totalColor = vec3(0.0, 0.0, 0.0);
 
 	for (int i = 0; i < MAX_VOLUMETRIC_LIGHTS; i++) // MAX_VOLUMETRIC_LIGHTS to use constant loop size
 	{
 		if (i >= numInRange) break;
 
-		highp vec4	lens = vec4(0.0, 0.0, 0.0, 0.0);
+		highp float	lens = 0.0;
 		highp vec2	ScreenLightPos = inRangePositions[i];
 		highp vec2	texCoord = var_TexCoords;
 		highp float	lightDepth = lightDepths[i];
 		highp vec2	deltaTexCoord = (texCoord.xy - ScreenLightPos.xy);
 
-		deltaTexCoord *= 1.0 / float(iBloomraySamples * fBloomrayDensity);
+		deltaTexCoord *= 1.0 / float(float(iBloomraySamples) * fBloomrayDensity);
 
 		highp float illuminationDecay = 1.0;
 
-		for(int g = 0; g < int(iBloomraySamples); g++)
+		for(int g = 0; g < iBloomraySamples; g++)
 		{
 			texCoord -= deltaTexCoord;
 
 			highp float linDepth = linearize(texture(u_ScreenDepthMap, texCoord.xy).r);
 
-			highp float sample2 = linDepth * illuminationDecay * fBloomrayWeight;
-
-			lens.xyz += (sample2 * 0.5) * lightColors[i];
+			lens += linDepth * illuminationDecay * fBloomrayWeight;
 
 			illuminationDecay *= fBloomrayDecay;
 
@@ -262,17 +264,21 @@ void main ( void )
 				break;
 		}
 
-		totalColor += clamp((lens * lightDepth) * fallOffRanges[i], 0.0, 1.0);
+		if (isSun[i])
+		{
+			totalColor += clamp(lightColors[i].rgb * (lens * 0.05) * fallOffRanges[i], 0.0, 1.0);
+		}
+		else
+		{
+			totalColor += clamp((lightColors[i].rgb * (lens * 0.1) * (1.0 - lightDepth)) * fallOffRanges[i], 0.0, 1.0);
+		}
 	}
 
-	//totalColor.rgb *= 100.0;
-	totalColor.rgb *= 0.5;//1.5;//u_Local0.b;
+	totalColor.rgb *= VOLUMETRIC_STRENGTH;
 
 #ifdef DUAL_PASS
-	totalColor.a = 1.0;
-	gl_FragColor = totalColor;
+	gl_FragColor = vec4(totalColor, 1.0);
 #else //!DUAL_PASS
-	totalColor.a = 0.0;
-	gl_FragColor = diffuseColor + totalColor;
+	gl_FragColor = vec4(diffuseColor + totalColor, 1.0);
 #endif //DUAL_PASS
 }

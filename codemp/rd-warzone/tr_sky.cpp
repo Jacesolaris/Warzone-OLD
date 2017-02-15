@@ -903,6 +903,11 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	//dist = 32768.0;
 	size = dist * scale;
 
+	if (r_proceduralSun->integer)
+	{
+		size *= r_proceduralSunScale->value;
+	}
+
 	//VectorSet(tr.sunDirection, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	VectorScale( tr.sunDirection, dist, origin );
 
