@@ -3977,14 +3977,14 @@ void ClientSpawn(gentity_t *ent) {
 			//make sure they only use the saber
 			client->ps.weapon = WP_SABER;
 			client->ps.primaryWeapon = WP_SABER;
-			client->ps.secondaryWeapon = WP_BRYAR_PISTOL;
+			client->ps.secondaryWeapon = WP_DH_17_PISTOL;
 		}
 		else
 		{//no force powers set
 			client->ps.trueNonJedi = qtrue;
 			client->ps.trueJedi = qfalse;
 			client->ps.primaryWeapon = WP_MELEE;
-			client->ps.secondaryWeapon = WP_BRYAR_PISTOL;
+			client->ps.secondaryWeapon = WP_DH_17_PISTOL;
 		}
 	}
 	else
@@ -4009,7 +4009,7 @@ void ClientSpawn(gentity_t *ent) {
 
 		if (level.gametype != GT_SIEGE)
 		{
-			client->ps.secondaryWeapon = WP_BRYAR_PISTOL;
+			client->ps.secondaryWeapon = WP_DH_17_PISTOL;
 		}
 
 		if (level.gametype == GT_JEDIMASTER)
@@ -4021,9 +4021,9 @@ void ClientSpawn(gentity_t *ent) {
 		{
 			client->ps.weapon = WP_SABER;
 		}
-		else if (HaveWeapon(&client->ps, WP_BRYAR_PISTOL))
+		else if (HaveWeapon(&client->ps, WP_DH_17_PISTOL))
 		{
-			client->ps.weapon = WP_BRYAR_PISTOL;
+			client->ps.weapon = WP_DH_17_PISTOL;
 		}
 		else
 		{
@@ -4059,15 +4059,15 @@ void ClientSpawn(gentity_t *ent) {
 
 		// UQ1: TODO: Fix class weapons... --- bgSiegeClasses[client->siegeClass].weapons;
 		client->ps.primaryWeapon = WP_SABER; // temporary
-		client->ps.secondaryWeapon = WP_BRYAR_PISTOL; // temporary
+		client->ps.secondaryWeapon = WP_DH_17_PISTOL; // temporary
 
 		if (HaveWeapon(&client->ps, WP_SABER))
 		{
 			client->ps.weapon = WP_SABER;
 		}
-		else if (HaveWeapon(&client->ps, WP_BRYAR_PISTOL))
+		else if (HaveWeapon(&client->ps, WP_DH_17_PISTOL))
 		{
-			client->ps.weapon = WP_BRYAR_PISTOL;
+			client->ps.weapon = WP_DH_17_PISTOL;
 		}
 		else
 		{
@@ -4238,7 +4238,7 @@ void ClientSpawn(gentity_t *ent) {
 			//client->ps.weaponstate = FIRST_WEAPON;
 			if (client->ps.weapon <= WP_NONE)
 			{
-				client->ps.weapon = WP_BRYAR_PISTOL;
+				client->ps.weapon = WP_DH_17_PISTOL;
 			}
 
 			client->ps.torsoTimer = client->ps.legsTimer = 0;
