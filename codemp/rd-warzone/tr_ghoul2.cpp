@@ -4548,6 +4548,8 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		// +1 to add total vertex count
 		int *baseVertexes = (int *)ri->Hunk_AllocateTempMemory (sizeof (int) * (mdxm->numSurfaces + 1));
 		int *indexOffsets = (int *)ri->Hunk_AllocateTempMemory (sizeof (int) * mdxm->numSurfaces);
+		memset(baseVertexes, 0, sizeof(int) * (mdxm->numSurfaces + 1));
+		memset(indexOffsets, 0, sizeof(int) * mdxm->numSurfaces);
 
 		vboModel->numVBOMeshes = mdxm->numSurfaces;
 		vboModel->vboMeshes = (mdxmVBOMesh_t *)ri->Hunk_Alloc (sizeof (mdxmVBOMesh_t) * mdxm->numSurfaces, h_low);
@@ -4570,7 +4572,9 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		baseVertexes[mdxm->numSurfaces] = numVerts;
 
 		tangentsf = (vec3_t *)ri->Hunk_AllocateTempMemory (sizeof (vec3_t) * numVerts);
-		bitangentsf = (vec3_t *)ri->Hunk_AllocateTempMemory (sizeof (vec3_t) * numVerts);;
+		bitangentsf = (vec3_t *)ri->Hunk_AllocateTempMemory (sizeof (vec3_t) * numVerts);
+		memset(tangentsf, 0, sizeof (vec3_t) * numVerts);
+		memset(bitangentsf, 0, sizeof (vec3_t) * numVerts);
 
 		dataSize += numVerts * sizeof (*verts);
 		dataSize += numVerts * sizeof (*normals);

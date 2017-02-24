@@ -186,10 +186,7 @@ vec4 waterMap2AtCoord ( vec2 coord )
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
-	//return texture2D(u_PositionMap, coord).xzyw;
-	vec4 pos = texture2D(u_PositionMap, coord);
-	//pos.xyz *= 524288.0;
-	return pos.xzyw;
+	return texture2D(u_PositionMap, coord).xzyw;
 }
 
 float pw = (1.0/u_Dimensions.x);

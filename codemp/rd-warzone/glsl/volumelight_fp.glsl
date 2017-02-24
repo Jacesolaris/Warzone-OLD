@@ -177,6 +177,7 @@ void main ( void )
 			{
 				// Try to maximize light strengths...
 				spotColor /= lightColorLength;
+				//spotColor.rgb /= (1.0 - (lightColorLength / 3.0));
 
 				lightColors[numInRange] = spotColor;
 

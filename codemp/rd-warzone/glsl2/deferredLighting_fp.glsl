@@ -107,36 +107,6 @@ float calculateAO(in vec3 pos, in vec3 nor)
 }
 #endif //__AMBIENT_OCCLUSION__
 
-vec4 ConvertToNormals ( vec4 color )
-{
-	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
-	// wasting vram on real normals.
-	//
-	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
-	// for the very noticable FPS boost over texture lookups.
-
-	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
-
-	N.xy = 1.0 - N.xy;
-	N.xyz = N.xyz * 0.5 + 0.5;
-	N.xyz = pow(N.xyz, vec3(2.0));
-	N.xyz *= 0.8;
-
-	float displacement = clamp(length(color.rgb), 0.0, 1.0);
-#define const_1 ( 32.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
-
-	vec4 norm = vec4(N, displacement);
-
-	if (norm.g > norm.b)
-	{// Switch them for screen space fakes...
-		norm.gb = norm.bg;
-	}
-
-	return norm;
-}
-
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
@@ -173,6 +143,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 	for (float y = coord.y; y < 1.0; y += ph * 50.0)
 	{
 		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+
 		bool isSameMaterial = false;
 		
 		if (positionMap.a == pMap.a)
@@ -195,6 +166,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 	for (float y = coord.y; y < 1.0; y += ph * 5.0)
 	{
 		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+
 		bool isSameMaterial = false;
 		
 		if (positionMap.a == pMap.a)
@@ -221,6 +193,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 	for (float y = QLAND_Y; y < 1.0; y += ph)
 	{
 		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+
 		bool isSameMaterial = false;
 
 		if (positionMap.a == pMap.a)
@@ -299,13 +272,30 @@ void main(void)
 
 	vec2 texCoords = var_TexCoords;
 
-	/*{
+#if 1
+	if (u_Local3.g >= 2.0)
+	{
 		vec4 position = texture2D(u_PositionMap, texCoords);
+
+		if (u_Local3.g >= 4.0)
+			gl_FragColor.rgb = vec3((position.rg / u_Local3.r), 0.0) * 0.5 + 0.5;
+		else if (u_Local3.g >= 3.0)
+			gl_FragColor.rgb = vec3(position.b / u_Local3.r) * 0.5 + 0.5;
+		else
+			gl_FragColor.rgb = vec3(position.rgb / u_Local3.r) * 0.5 + 0.5;
+		return;
+	}
+
+	if (u_Local3.g >= 1.0)
+	{
+		vec4 position = texture2D(u_PositionMap, texCoords);
+
 		float dist = distance(position.xyz, u_ViewOrigin.xyz);
 		dist = clamp(dist / 4096.0, 0.0, 1.0);
 		gl_FragColor.rgb = vec3(dist);
 		return;
-	}*/
+	}
+#endif
 
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec4 position = texture2D(u_PositionMap, texCoords);
@@ -337,17 +327,10 @@ void main(void)
 		return;
 	}*/
 
-	/*if (norm.a < 0.05 || length(norm.xyz) <= 0.05)
-	{
-		norm = ConvertToNormals(color);
-	}
-	else*/
-	{
-		float displacement = clamp(length(color.rgb), 0.0, 1.0);
+	float displacement = clamp(length(color.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
 #define const_2 (255.0 / 219.0)
-		norm.a = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
-	}
+	norm.a = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
 	norm.a = norm.a * 0.5 + 0.5;
 	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
@@ -458,6 +441,7 @@ void main(void)
 					{
 						// Try to maximize light strengths...
 						lightColor /= lightColorLength;
+						//lightColor.rgb /= (1.0 - (lightColorLength / 3.0));
 
 						// Add some basic light...
 						vec3 ambientLight = lightColor * lightStrength;
@@ -485,8 +469,9 @@ void main(void)
 		if (length(addedLight) > 0.0)
 		{
 			//gl_FragColor.rgb += clamp(addedLight * 0.05, 0.0, 1.0);
-			gl_FragColor.rgb += clamp(addedLight * 0.3/*u_Local3.a*/, 0.0, 1.0);
-			gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
+			//gl_FragColor.rgb += clamp(addedLight * /*0.3*/u_Local3.a, 0.0, 1.0);
+			gl_FragColor.rgb += addedLight * 0.3;
+			//gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
 		}
 	}
 

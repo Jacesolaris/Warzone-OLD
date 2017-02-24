@@ -165,6 +165,8 @@ extern cvar_t	*r_tesselation;
 extern cvar_t	*r_tesselationLevel;
 extern cvar_t	*r_tesselationAlpha;
 
+extern cvar_t	*r_cartoon;
+
 extern cvar_t	*r_foliage;
 extern cvar_t	*r_foliagePasses;
 extern cvar_t	*r_foliageDistance;
@@ -2573,6 +2575,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t darkexpandShader;
 	shaderProgram_t hdrShader;
 	shaderProgram_t magicdetailShader;
+	shaderProgram_t cellShadeShader;
+	shaderProgram_t paintShader;
 	shaderProgram_t dofShader[3];
 	shaderProgram_t fakedepthShader;
 	shaderProgram_t fakedepthSteepParallaxShader;

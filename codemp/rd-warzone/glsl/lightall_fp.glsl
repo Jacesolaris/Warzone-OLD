@@ -53,6 +53,7 @@ uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, swa
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4				u_Local8; // stageNum, 0, 0, 0
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define WATER_LEVEL			u_Local6.a
@@ -183,13 +184,16 @@ vec3 decode (vec2 enc)
 	return smoothstep ( threshold - afwidth , threshold + afwidth , value ) ;
 }*/
 
-vec4 ConvertToNormals ( vec4 color )
+vec4 ConvertToNormals ( vec4 colorIn )
 {
 	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
 	// wasting vram on real normals.
 	//
 	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
 	// for the very noticable FPS boost over texture lookups.
+
+	vec4 color = colorIn;
+	//color.rgb /= (1.0 - (length(color.rgb) / 3.0)); // Maximize the brightness for normal generation... Should result in higher variance in the normals, and fix dark texture usage...
 
 	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 
@@ -799,6 +803,7 @@ void main()
 	#endif
 
 
+	vec3 origDiffuse = diffuse.rgb;
 	AddDetail(diffuse, texCoords);
 
 
@@ -908,10 +913,13 @@ void main()
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
 	#else
-#if defined(USE_LIGHTMAP)
-		// Fucking lightmap passes shit...
-		if (length(lightColor.rgb/*gl_FragColor.rgb*/) > 0.0)
-#endif //defined(USE_LIGHTMAP)
+//#if defined(USE_LIGHTMAP)
+//		// Fucking lightmap passes shit...
+//		if (length(lightColor.rgb/*gl_FragColor.rgb*/) > 0.0 /*|| length(origDiffuse.rgb) > 0.0*/ && length(var_TexCoords2.xy) != 0.0 && gl_FragColor.a > 0.0)
+//#else
+		//if (length(origDiffuse.rgb) > 0.0 && gl_FragColor.a > 0.0)
+		if (u_Local8.r == 0.0)
+//#endif //defined(USE_LIGHTMAP)
 		{
 			out_Glow = vec4(0.0);
 			vec2 normData = encode(N.xyz * 0.5 + 0.5);

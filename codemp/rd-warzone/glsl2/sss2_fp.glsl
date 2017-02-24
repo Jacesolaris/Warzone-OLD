@@ -22,7 +22,7 @@ float linearize(float depth)
 
 vec4 WorldSpacePositionData ( vec2 coord )
 {
-	return texture2D(u_PositionMap, coord);
+	return texture2D(u_PositionMap, coord).xyzw;
 }
 
 float DepthFromPositionInfo ( vec4 positionInfo )

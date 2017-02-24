@@ -1490,6 +1490,84 @@ void RB_MagicDetail(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.magicdetailShader, color, 0);
 }
 
+void RB_CellShade(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.cellShadeShader);
+
+	GLSL_SetUniformMatrix16(&tr.cellShadeShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.cellShadeShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = r_testvalue0->value;// 1024.0;// 2048.0;//backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, zmin, /*zmax*/r_testvalue1->value);
+
+		GLSL_SetUniformVec4(&tr.cellShadeShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.cellShadeShader, color, 0);
+}
+
+void RB_Paint(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.paintShader);
+
+	GLSL_SetUniformMatrix16(&tr.paintShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformInt(&tr.paintShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.paintShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_testvalue1->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.paintShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.paintShader, color, 0);
+}
+
 void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;

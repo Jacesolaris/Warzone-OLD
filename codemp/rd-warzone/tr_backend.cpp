@@ -3439,6 +3439,18 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
+		if (r_cartoon->integer >= 2.0)
+		{
+			RB_CellShade(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (r_cartoon->integer >= 3.0)
+		{
+			RB_Paint(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer)
 		{
 			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);

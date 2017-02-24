@@ -3349,6 +3349,19 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		}
 	}
 
+	if (r_cartoon->integer 
+		&& type != IMGTYPE_COLORALPHA 
+		&& type != IMGTYPE_DETAILMAP
+		&& type != IMGTYPE_STEEPMAP
+		&& type != IMGTYPE_STEEPMAP2
+		/*&& type != IMGTYPE_SPLATMAP1 
+		&& type != IMGTYPE_SPLATMAP2 
+		&& type != IMGTYPE_SPLATMAP3*/
+		&& type != IMGTYPE_SPLATCONTROLMAP)
+	{// Don't bother to load anything but diffuse maps in cartoon mode. Save ram/vram. We don't need any of it...
+		return NULL;
+	}
+
 	//
 	// load the pic from disk
 	//
@@ -3360,6 +3373,78 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	if ( pic == NULL ) {
 		return NULL;
 	}
+
+//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+	vec4_t avgColor = { 0 };
+	R_GetTextureAverageColor(pic, width, height, avgColor);
+	//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
+
+	qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
+
+	if (r_cartoon->integer 
+		&& type != IMGTYPE_DETAILMAP 
+		&& type != IMGTYPE_SPLATCONTROLMAP
+		&& !(flags & IMGFLAG_GLOW)
+		&& !StringContainsWord(name, "sky")
+		&& !StringContainsWord(name, "skies")
+		&& (StringContainsWord(name, "textures/") 
+			|| (StringContainsWord(name, "models/") && !StringContainsWord(name, "icon") && !StringContainsWord(name, "players/"))
+			/*|| (StringContainsWord(name, "gfx/") && USE_ALPHA)*/))
+	{
+		if (!USE_ALPHA)
+		{
+			Z_Free(pic);
+
+			width = height = 2;
+
+			pic = (byte *)Z_Malloc(width * height * 4 * sizeof(byte), TAG_IMAGE_T, qfalse, 0);
+
+			byte *inByte = (byte *)&pic[0];
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					*inByte++ = FloatToByte(avgColor[0]);
+					*inByte++ = FloatToByte(avgColor[1]);
+					*inByte++ = FloatToByte(avgColor[2]);
+					*inByte++ = FloatToByte(avgColor[3]);
+				}
+			}
+
+			flags |= IMGFLAG_MIPMAP;
+			flags &= ~IMGFLAG_CLAMPTOEDGE;
+		}
+		else
+		{
+			byte *pic2 = pic;
+			pic = NULL;
+
+			pic = (byte *)Z_Malloc(width * height * 4 * sizeof(byte), TAG_IMAGE_T, qfalse, 0);
+
+			byte *inByte = (byte *)&pic2[0];
+			byte *outByte = (byte *)&pic[0];
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					inByte+=3;
+					float currentA = ByteToFloat(*inByte++);
+
+					*outByte++ = FloatToByte(avgColor[0]);
+					*outByte++ = FloatToByte(avgColor[1]);
+					*outByte++ = FloatToByte(avgColor[2]);
+					*outByte++ = FloatToByte(currentA);
+				}
+			}
+
+			flags |= IMGFLAG_MIPMAP;
+
+			Z_Free(pic2);
+		}
+	}
+//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (!(flags & IMGFLAG_MIPMAP) && type != IMGTYPE_SPLATCONTROLMAP && R_ShouldMipMap(name))
 	{// UQ: Testing mipmap all...
@@ -3377,13 +3462,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
 //#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-	//if (flags & IMGFLAG_GLOW)
-	{
-		vec4_t avgColor = { 0 };
-		R_GetTextureAverageColor(pic, width, height, avgColor);
-		//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
-		VectorCopy4(avgColor, image->lightColor);
-	}
+	VectorCopy4(avgColor, image->lightColor);
 //#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
@@ -3690,10 +3769,20 @@ void R_CreateBuiltinImages( void ) {
 	tr.waterPositionMapImage2 = R_CreateImage("*waterPositionMap2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F);
 
 	{
-		byte	*gData = (byte *)malloc(width * height * 4 * sizeof(byte));
-		memset(gData, 0, width * height * 4 * sizeof(byte));
-		tr.glowImage = R_CreateImage("*glow", gData, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-		free(gData);
+		if (hdrFormat == GL_RGBA8)
+		{
+			byte	*gData = (byte *)malloc(width * height * 4 * sizeof(byte));
+			memset(gData, 0, width * height * 4 * sizeof(byte));
+			tr.glowImage = R_CreateImage("*glow", gData, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+			free(gData);
+		}
+		else
+		{
+			byte	*gData = (byte *)malloc(width * height * 8 * sizeof(byte));
+			memset(gData, 0, width * height * 8 * sizeof(byte));
+			tr.glowImage = R_CreateImage("*glow", gData, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+			free(gData);
+		}
 	}
 #if 0
 	tr.glowImageScaled[0] = R_CreateImage("*glowScaled0", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);

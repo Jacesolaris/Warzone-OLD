@@ -110,6 +110,7 @@ void main (void)
 	while( HeightMap >= Height && (/*material != positionMap.a ||*/ origDist >= dist) )
 	{
 		coPos = texture2D( u_PositionMap, Coord );
+
 		//material = coPos.a;
 		dist = distance(u_ViewOrigin.xyz, coPos.xyz);
 
@@ -190,7 +191,7 @@ void main (void)
 #endif
 
 		color = texture2D(u_TextureMap, uvoffset);
-		float depth2 = distance(u_ViewOrigin.xyz, texture2D( u_PositionMap, uvoffset_d.xy).xyz);
+		float depth2 = distance(u_ViewOrigin.xyz, texture2D( u_PositionMap, uvoffset_d.xy).xyz - 524288.0);
 
 		if (depth2 < depth)
 		{

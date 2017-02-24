@@ -1032,7 +1032,7 @@ void RB_AdvanceOverlaySway ( void )
 extern float MAP_WATER_LEVEL;
 extern float MAP_INFO_MAXSIZE;
 
-void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
+void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum)
 {
 	vec4_t	local1, local3, local4, local5;
 	float	specularScale = 1.0;
@@ -1350,6 +1350,10 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		vec4_t local7;
 		VectorSet4(local7, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
+
+		vec4_t local8;
+		VectorSet4(local8, (float)stageNum, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 	else
 	{// Don't waste time on unneeded stuff... Absolute minimum shader complexity...
@@ -1481,14 +1485,34 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
 
-qboolean RB_ShouldUseTesselation ( int materialType )
+qboolean RB_ShouldUseTesselation ( shaderCommands_t *input )
 {
+	/*
+	int materialType = tess.shader->surfaceFlags & MATERIAL_MASK);
+
 	if ( materialType == MATERIAL_SHORTGRASS
 		|| materialType == MATERIAL_LONGGRASS
 		|| materialType == MATERIAL_SAND
 		//|| materialType == MATERIAL_ROCK
 		|| materialType == MATERIAL_ICE)
 		return qtrue;
+	*/
+
+	for (int stage = 0; stage < MAX_SHADER_STAGES; stage++)
+	{
+		shaderStage_t *pStage = input->xstages[stage];
+
+		if (!pStage) break;
+
+		if (pStage->bundle[TB_STEEPMAP].image[0]
+			|| pStage->bundle[TB_STEEPMAP2].image[0]
+			|| pStage->bundle[TB_SPLATMAP1].image[0]
+			|| pStage->bundle[TB_SPLATMAP2].image[0]
+			|| pStage->bundle[TB_SPLATMAP3].image[0])
+		{
+			return qtrue;
+		}
+	}
 
 	return qfalse;
 }
@@ -1496,7 +1520,7 @@ qboolean RB_ShouldUseTesselation ( int materialType )
 float RB_GetTesselationAlphaLevel ( int materialType )
 {
 	float tessAlphaLevel = r_tesselationAlpha->value;
-
+	/*
 	switch( materialType )
 	{
 	case MATERIAL_SHORTGRASS:
@@ -1510,6 +1534,8 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 		tessAlphaLevel = 0.001;
 		break;
 	}
+	*/
+	tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 
 	return tessAlphaLevel;
 }
@@ -1518,6 +1544,7 @@ float RB_GetTesselationInnerLevel ( int materialType )
 {
 	return r_tesselationLevel->value;
 
+#if 0
 	float tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 
 	switch( materialType )
@@ -1609,6 +1636,9 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		tessInnerLevel = 1.0;
 		break;
 	}
+#endif
+
+	float tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 
 	return tessInnerLevel;
 }
@@ -1652,26 +1682,171 @@ qboolean RB_ShouldUseGeometryPebbles(int materialType)
 	return qfalse;
 }
 
+bool theOriginalGluInvertMatrix(const float m[16], float invOut[16])
+{
+	double inv[16], det;
+	int i;
+
+	inv[0] = m[5] * m[10] * m[15] -
+		m[5] * m[11] * m[14] -
+		m[9] * m[6] * m[15] +
+		m[9] * m[7] * m[14] +
+		m[13] * m[6] * m[11] -
+		m[13] * m[7] * m[10];
+
+	inv[4] = -m[4] * m[10] * m[15] +
+		m[4] * m[11] * m[14] +
+		m[8] * m[6] * m[15] -
+		m[8] * m[7] * m[14] -
+		m[12] * m[6] * m[11] +
+		m[12] * m[7] * m[10];
+
+	inv[8] = m[4] * m[9] * m[15] -
+		m[4] * m[11] * m[13] -
+		m[8] * m[5] * m[15] +
+		m[8] * m[7] * m[13] +
+		m[12] * m[5] * m[11] -
+		m[12] * m[7] * m[9];
+
+	inv[12] = -m[4] * m[9] * m[14] +
+		m[4] * m[10] * m[13] +
+		m[8] * m[5] * m[14] -
+		m[8] * m[6] * m[13] -
+		m[12] * m[5] * m[10] +
+		m[12] * m[6] * m[9];
+
+	inv[1] = -m[1] * m[10] * m[15] +
+		m[1] * m[11] * m[14] +
+		m[9] * m[2] * m[15] -
+		m[9] * m[3] * m[14] -
+		m[13] * m[2] * m[11] +
+		m[13] * m[3] * m[10];
+
+	inv[5] = m[0] * m[10] * m[15] -
+		m[0] * m[11] * m[14] -
+		m[8] * m[2] * m[15] +
+		m[8] * m[3] * m[14] +
+		m[12] * m[2] * m[11] -
+		m[12] * m[3] * m[10];
+
+	inv[9] = -m[0] * m[9] * m[15] +
+		m[0] * m[11] * m[13] +
+		m[8] * m[1] * m[15] -
+		m[8] * m[3] * m[13] -
+		m[12] * m[1] * m[11] +
+		m[12] * m[3] * m[9];
+
+	inv[13] = m[0] * m[9] * m[14] -
+		m[0] * m[10] * m[13] -
+		m[8] * m[1] * m[14] +
+		m[8] * m[2] * m[13] +
+		m[12] * m[1] * m[10] -
+		m[12] * m[2] * m[9];
+
+	inv[2] = m[1] * m[6] * m[15] -
+		m[1] * m[7] * m[14] -
+		m[5] * m[2] * m[15] +
+		m[5] * m[3] * m[14] +
+		m[13] * m[2] * m[7] -
+		m[13] * m[3] * m[6];
+
+	inv[6] = -m[0] * m[6] * m[15] +
+		m[0] * m[7] * m[14] +
+		m[4] * m[2] * m[15] -
+		m[4] * m[3] * m[14] -
+		m[12] * m[2] * m[7] +
+		m[12] * m[3] * m[6];
+
+	inv[10] = m[0] * m[5] * m[15] -
+		m[0] * m[7] * m[13] -
+		m[4] * m[1] * m[15] +
+		m[4] * m[3] * m[13] +
+		m[12] * m[1] * m[7] -
+		m[12] * m[3] * m[5];
+
+	inv[14] = -m[0] * m[5] * m[14] +
+		m[0] * m[6] * m[13] +
+		m[4] * m[1] * m[14] -
+		m[4] * m[2] * m[13] -
+		m[12] * m[1] * m[6] +
+		m[12] * m[2] * m[5];
+
+	inv[3] = -m[1] * m[6] * m[11] +
+		m[1] * m[7] * m[10] +
+		m[5] * m[2] * m[11] -
+		m[5] * m[3] * m[10] -
+		m[9] * m[2] * m[7] +
+		m[9] * m[3] * m[6];
+
+	inv[7] = m[0] * m[6] * m[11] -
+		m[0] * m[7] * m[10] -
+		m[4] * m[2] * m[11] +
+		m[4] * m[3] * m[10] +
+		m[8] * m[2] * m[7] -
+		m[8] * m[3] * m[6];
+
+	inv[11] = -m[0] * m[5] * m[11] +
+		m[0] * m[7] * m[9] +
+		m[4] * m[1] * m[11] -
+		m[4] * m[3] * m[9] -
+		m[8] * m[1] * m[7] +
+		m[8] * m[3] * m[5];
+
+	inv[15] = m[0] * m[5] * m[10] -
+		m[0] * m[6] * m[9] -
+		m[4] * m[1] * m[10] +
+		m[4] * m[2] * m[9] +
+		m[8] * m[1] * m[6] -
+		m[8] * m[2] * m[5];
+
+	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+	if (det == 0)
+	{
+		for (i = 0; i < 16; i++)
+			invOut[i] = 0;
+
+		return false;
+	}
+
+	det = 1.0 / det;
+
+	for (i = 0; i < 16; i++)
+		invOut[i] = inv[i] * det;
+
+	return true;
+}
+
 matrix_t MATRIX_TRANS, MATRIX_MODEL, MATRIX_MVP, MATRIX_INVTRANS, MATRIX_NORMAL, MATRIX_VP, MATRIX_INVMV;
 
 void RB_UpdateMatrixes ( void )
 {
 	if (!MATRIX_UPDATE) return;
 
+#if 0
 	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
 	Matrix16Translation( backEnd.viewParms.ori.origin, MATRIX_TRANS );
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, MATRIX_TRANS, MATRIX_MODEL );
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, MATRIX_MODEL, MATRIX_MVP);
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, MATRIX_VP);
 
-	Matrix16SimpleInverse( MATRIX_TRANS, MATRIX_INVTRANS);
+	//Matrix16SimpleInverse( MATRIX_TRANS, MATRIX_INVTRANS);
+	theOriginalGluInvertMatrix((const float *)MATRIX_MVP, (float *)MATRIX_INVTRANS);
+	
 	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, MATRIX_NORMAL);
-
 
 	//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
 	Matrix16SimpleInverse( MATRIX_MODEL, MATRIX_INVMV);
+#else
+	//Matrix16Translation(backEnd.viewParms.ori.origin, MATRIX_TRANS);
+	//Matrix16Multiply(backEnd.viewParms.world.modelMatrix, MATRIX_TRANS, MATRIX_MODEL);
+
+	theOriginalGluInvertMatrix((const float *)glState.modelviewProjection, (float *)MATRIX_INVTRANS);
+
+	Matrix16SimpleInverse(backEnd.viewParms.projectionMatrix, MATRIX_NORMAL);
+#endif
 
 	MATRIX_UPDATE = qfalse;
 }
@@ -1869,7 +2044,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	}
 
 	if (r_tesselation->integer 
-		&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+		&& RB_ShouldUseTesselation(input))
 	{
 		useTesselation = qtrue;
 
@@ -2178,7 +2353,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+			if (/*!r_cartoon->integer
+				&&*/ (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_STEEPMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2188,11 +2364,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				isUsingRegions = qtrue;
 				index |= LIGHTDEF_USE_REGIONS;
 			}
-			else if (pStage->bundle[TB_STEEPMAP].image[0]
-				|| pStage->bundle[TB_STEEPMAP2].image[0]
-				|| pStage->bundle[TB_SPLATMAP1].image[0]
-				|| pStage->bundle[TB_SPLATMAP2].image[0]
-				|| pStage->bundle[TB_SPLATMAP3].image[0])
+			else if (/*!r_cartoon->integer
+				&&*/ (pStage->bundle[TB_STEEPMAP].image[0]
+					|| pStage->bundle[TB_STEEPMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP1].image[0]
+					|| pStage->bundle[TB_SPLATMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP3].image[0]))
 			{
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
@@ -2220,7 +2397,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			backEnd.pc.c_genericDraws++;
 		}
-
+		
 		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
 #ifdef __USE_WATERMAP__
@@ -2230,7 +2407,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glslShaderGroup = &tr.waterShader;
 				GLSL_BindProgram(sp);
 
-				RB_SetMaterialBasedProperties(sp, pStage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 				isGeneric = qfalse;
 				isLightAll = qfalse;
@@ -2245,7 +2422,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->glslShaderGroup = &tr.waterShader;
 			GLSL_BindProgram(sp);
 
-			RB_SetMaterialBasedProperties(sp, pStage);
+			RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 			isGeneric = qfalse;
 			isLightAll = qfalse;
@@ -2328,7 +2505,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		// UQ1: Split up uniforms by what is actually used...
 		//
 
-		RB_SetMaterialBasedProperties(sp, pStage);
+		RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 		stateBits = pStage->stateBits;
 
@@ -2810,7 +2987,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
 						{
 							pStage->hasRealNormalMap = true;
-							RB_SetMaterialBasedProperties(sp, pStage);
+							RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 							if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
 							{
@@ -2944,22 +3121,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE;
 
-				RB_SetMaterialBasedProperties(sp, pStage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 				// UQ: Other *needed* stuff... Hope these are correct...
-				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -3004,22 +3181,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE;
 
-				RB_SetMaterialBasedProperties(sp, pStage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 				// UQ: Other *needed* stuff... Hope these are correct...
-				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -3065,22 +3242,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE;
 
-				RB_SetMaterialBasedProperties(sp, pStage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 				// UQ: Other *needed* stuff... Hope these are correct...
-				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);

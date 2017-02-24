@@ -159,6 +159,11 @@ extern const char *fallbackShader_deferredLighting_vp;
 extern const char *fallbackShader_deferredLighting_fp;
 extern const char *fallbackShader_colorCorrection_vp;
 extern const char *fallbackShader_colorCorrection_fp;
+extern const char *fallbackShader_cellShade_vp;
+extern const char *fallbackShader_cellShade_fp;
+extern const char *fallbackShader_paint_vp;
+extern const char *fallbackShader_paint_fp;
+
 
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
@@ -2840,7 +2845,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -2873,7 +2878,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
 		}
 
-		if (r_parallaxMapping->integer) // Parallax without normal maps...
+		if (r_parallaxMapping->integer && !r_cartoon->integer) // Parallax without normal maps...
 		{
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
@@ -2906,7 +2911,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
 			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+			//attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -2979,7 +2984,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
 		}
 
-		if (r_parallaxMapping->integer) // Parallax without normal maps...
+		if (r_parallaxMapping->integer && !r_cartoon->integer) // Parallax without normal maps...
 		{
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
@@ -3429,6 +3434,22 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.hdrShader, "hdr", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_truehdr_vp, fallbackShader_truehdr_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load hdr shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.cellShadeShader, "cellShade", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_cellShade_vp, fallbackShader_cellShade_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load cellShade shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.paintShader, "paint", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_paint_vp, fallbackShader_paint_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load paint shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -4944,6 +4965,86 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.cellShadeShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load cellShade shader!");
+	}
+
+	GLSL_InitUniforms(&tr.cellShadeShader);
+
+	qglUseProgram(tr.cellShadeShader.program);
+
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.cellShadeShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.cellShadeShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.cellShadeShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.paintShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load paint shader!");
+	}
+
+	GLSL_InitUniforms(&tr.paintShader);
+
+	qglUseProgram(tr.paintShader.program);
+
+	GLSL_SetUniformInt(&tr.paintShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.paintShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.paintShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+
 	if (!GLSL_EndLoadGPUShader(&tr.magicdetailShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
@@ -6084,6 +6185,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.darkexpandShader);
 	GLSL_DeleteGPUShader(&tr.hdrShader);
 	GLSL_DeleteGPUShader(&tr.magicdetailShader);
+	GLSL_DeleteGPUShader(&tr.cellShadeShader);
+	GLSL_DeleteGPUShader(&tr.paintShader);
 	GLSL_DeleteGPUShader(&tr.esharpeningShader);
 	GLSL_DeleteGPUShader(&tr.esharpening2Shader);
 	GLSL_DeleteGPUShader(&tr.fakedepthShader);

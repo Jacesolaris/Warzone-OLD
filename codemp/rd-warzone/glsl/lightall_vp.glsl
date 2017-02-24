@@ -209,8 +209,8 @@ void main()
 {
 #if defined(USE_VERTEX_ANIMATION)
 	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;;
-	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;;
+	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
+	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
 #elif defined(USE_SKELETAL_ANIMATION)
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
@@ -218,6 +218,8 @@ void main()
 	vec4 originalPosition = vec4(attr_Position, 1.0);
 	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
 	vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
+	//vec4 originalNormal = vec4(attr_Normal.xyz * 2.0 - 1.0, 0.0);
+	//vec4 originalTangent = vec4(attr_Tangent.xyz * 2.0 - 1.0, 0.0);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -229,8 +231,8 @@ void main()
 	}
 
 	vec3 position = position4.xyz;
-	vec3 normal = normalize (normal4.xyz);
-	vec3 tangent = normalize (tangent4.xyz);
+	vec3 normal = normalize(normal4.xyz);
+	vec3 tangent = normalize(tangent4.xyz);
 #else
 	vec3 position  = attr_Position;
 	vec3 normal    = attr_Normal * 2.0 - 1.0;
@@ -261,7 +263,7 @@ void main()
 	vec3 preMMPos = position.xyz;
 
 
-#if defined(USE_MODELMATRIX) && defined(USE_VERTEX_ANIMATION)
+#if defined(USE_MODELMATRIX) //&& defined(USE_VERTEX_ANIMATION)
 	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
 	tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
@@ -390,7 +392,7 @@ void main()
 
 #else
 
-	var_vertPos = preMMPos.xyz;
+	var_vertPos = position.xyz;//preMMPos.xyz;
 
 #endif //defined(USE_TESSELLATION)
 }
