@@ -13,16 +13,6 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 
 #define			FOLIAGE_MAX_FOLIAGES 2097152
 
-//
-// BEGIN - FOLIAGE OPTIONS
-//
-
-//#define		__NO_PLANTS__ // Disable plants...
-
-#define			__FOLIAGE_DENSITY__ 0
-//
-// END - FOLIAGE OPTIONS
-//
 
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 
