@@ -3408,20 +3408,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			// draw
 			//
 
-			qboolean occluded = qfalse;
-			
-#ifdef __ORIGINAL_OCCLUSION__
-			if (r_occlusion->integer 
-				&& !isGeneric 
-				&& !(tr.viewParms.flags & VPF_SHADOWPASS) 
-				&& !backEnd.depthFill 
-				/*&& backEnd.viewParms.targetFbo != tr.renderCubeFbo*/)
-			{
-				if (RB_CheckOcclusion(glState.modelviewProjection, input))
-					break;
-			}
-#endif //__ORIGINAL_OCCLUSION__
-
 			if (input->multiDrawPrimitives)
 			{
 				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, tesselation);

@@ -1149,6 +1149,8 @@ extern void AI_ThreadsShutdown(void);
 G_ShutdownGame
 =================
 */
+extern void FOLIAGE_FreeMemory(void);
+
 void G_ShutdownGame( int restart ) {
 	int i = 0;
 	gentity_t *ent;
@@ -1231,6 +1233,8 @@ void G_ShutdownGame( int restart ) {
 #ifdef __NPC_DYNAMIC_THREADS__
 	AI_ThreadsShutdown();
 #endif //__NPC_DYNAMIC_THREADS__
+
+	FOLIAGE_FreeMemory();
 }
 
 /*

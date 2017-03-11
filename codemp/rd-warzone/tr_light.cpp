@@ -500,7 +500,7 @@ int R_CubemapForPoint( vec3_t point )
 
 		for (int i = 0; i < tr.numCubemaps; i++)
 		{
-			vec3_t diff;
+			//vec3_t diff;
 			float length;
 
 #ifdef __PLAYER_BASED_CUBEMAPS__

@@ -27,11 +27,6 @@
  */
 #pragma once
 
-//#define __LEAF_OCCLUSION__
-//#define __SOFTWARE_OCCLUSION__
-//#define __THREADED_OCCLUSION__
-//#define __THREADED_OCCLUSION2__
-
 /*!
  *  \file MaskedOcclusionCulling.h
  *  \brief Masked Occlusion Culling

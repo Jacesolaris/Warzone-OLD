@@ -3156,6 +3156,8 @@ Called before every level change or subsystem restart
 =================
 */
 
+extern void FOLIAGE_FreeMemory(void);
+
 void CG_Shutdown( void )
 {
 	BG_ClearAnimsets(); //free all dynamic allocations made through the engine
@@ -3174,6 +3176,9 @@ void CG_Shutdown( void )
 
 	// some mods may need to do cleanup work here,
 	// like closing files or archiving session data
+
+	// Free any foliage system memory...
+	FOLIAGE_FreeMemory();
 }
 
 /*

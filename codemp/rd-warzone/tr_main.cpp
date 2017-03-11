@@ -1460,7 +1460,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	int numTriangles;
 	shader_t *shader;
 	int64_t fogNum;
-	int64_t dlighted;
+	//int64_t dlighted;
 	int64_t postRender;
 	vec4_t clip, eye;
 	int i;
@@ -1786,7 +1786,7 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	shader_t		*shader;
 	int64_t			fogNum;
 	int64_t			entityNum;
-	int64_t			dlighted;
+	//int64_t			dlighted;
 	int64_t			postRender;
 	int				i;
 
@@ -2254,6 +2254,7 @@ A view may be either the actual camera view,
 or a mirror / remote location
 ================
 */
+
 void R_RenderView (viewParms_t *parms) {
 	int		firstDrawSurf;
 
@@ -2279,12 +2280,6 @@ void R_RenderView (viewParms_t *parms) {
 	R_GenerateDrawSurfs();
 
 	R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
-
-#ifdef __ORIGINAL_OCCLUSION__
-	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer && !(tr.viewParms.flags & VPF_SHADOWPASS) && !backEnd.depthFill) {
-		R_AddDrawOcclusionCmd(&tr.viewParms);
-	}
-#endif //__ORIGINAL_OCCLUSION__
 
 	// draw main system development information (surface outlines, etc)
 	R_DebugGraphics();

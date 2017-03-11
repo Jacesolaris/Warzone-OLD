@@ -1,4 +1,5 @@
-#extension GL_EXT_draw_instanced : enable
+//#extension GL_EXT_draw_instanced : enable
+#extension GL_ARB_draw_instanced : enable
 
 attribute vec3 attr_Position;
 attribute vec4 attr_TexCoord0;

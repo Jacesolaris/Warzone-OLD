@@ -935,7 +935,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
 
 		float dist;
-		vec4_t pos, hpos;
+		vec4_t pos;// , hpos;
 		matrix_t trans, model, mvp;
 
 		Matrix16Translation( backEnd.viewParms.ori.origin, trans );

@@ -32,9 +32,15 @@ float		TREE_SCALE_MULTIPLIER = 1.0;
 
 qboolean	FOLIAGE_LOADED = qfalse;
 int			FOLIAGE_NUM_POSITIONS = 0;
+#if 0
 vec3_t		FOLIAGE_POSITIONS[FOLIAGE_MAX_FOLIAGES];
 int			FOLIAGE_TREE_SELECTION[FOLIAGE_MAX_FOLIAGES];
 float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
+#else
+vec3_t		*FOLIAGE_POSITIONS = NULL;
+int			*FOLIAGE_TREE_SELECTION = NULL;
+float		*FOLIAGE_TREE_SCALE = NULL;
+#endif
 
 #define		FOLIAGE_AREA_SIZE				512
 #define		FOLIAGE_VISIBLE_DISTANCE		(FOLIAGE_AREA_SIZE*2.5)
@@ -259,6 +265,20 @@ qboolean FOLIAGE_LoadMapClimateInfo( void )
 	return qtrue;
 }
 
+void FOLIAGE_FreeMemory(void)
+{
+	if (FOLIAGE_POSITIONS)
+	{
+		free(FOLIAGE_POSITIONS);
+		free(FOLIAGE_TREE_SELECTION);
+		free(FOLIAGE_TREE_SCALE);
+
+		FOLIAGE_POSITIONS = NULL;
+		FOLIAGE_TREE_SELECTION = NULL;
+		FOLIAGE_TREE_SCALE = NULL;
+	}
+}
+
 qboolean FOLIAGE_LoadFoliagePositions( void )
 {
 	fileHandle_t	f;
@@ -277,6 +297,13 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 	}
 
 	trap->FS_Read( &fileCount, sizeof(int), f );
+
+	FOLIAGE_FreeMemory();
+	
+	// Alloc max possible needed memory...
+	FOLIAGE_POSITIONS = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
+	FOLIAGE_TREE_SELECTION = (int *)malloc(fileCount * sizeof(int));
+	FOLIAGE_TREE_SCALE = (float *)malloc(fileCount * sizeof(float));
 
 	for (i = 0; i < fileCount; i++)
 	{
@@ -302,6 +329,17 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 	FOLIAGE_NUM_POSITIONS = treeCount;
 
 	trap->FS_Close(f);
+
+	if (FOLIAGE_NUM_POSITIONS > 0)
+	{// Re-alloc to whats actually used...
+		FOLIAGE_POSITIONS = (vec3_t *)realloc(FOLIAGE_POSITIONS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
+		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+	}
+	else
+	{
+		FOLIAGE_FreeMemory();
+	}
 
 	trap->Print( "*** %s: Successfully loaded %i foliage points from foliage file foliage/%s.foliage. Found %i trees.\n", GAME_VERSION,
 		fileCount, mapname.string, FOLIAGE_NUM_POSITIONS );

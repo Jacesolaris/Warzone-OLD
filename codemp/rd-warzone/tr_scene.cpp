@@ -439,7 +439,7 @@ void RB_UpdateDayNightCycle()
 	float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
 
 	float dist;
-	vec4_t pos, hpos;
+	vec4_t pos;// , hpos;
 	matrix_t trans, model, mvp;
 
 	Matrix16Translation(backEnd.viewParms.ori.origin, trans);
@@ -748,6 +748,10 @@ void RE_BeginScene(const refdef_t *fd)
 	// each scene / view.
 	tr.frameSceneNum++;
 	tr.sceneCount++;
+
+#ifdef __ORIGINAL_OCCLUSION__
+	tr.world->numVisibleLeafs = 0;
+#endif //__ORIGINAL_OCCLUSION__
 }
 
 void RE_EndScene()

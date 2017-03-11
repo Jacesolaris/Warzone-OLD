@@ -1870,7 +1870,6 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	else if(aa->cubemapIndex > bb->cubemapIndex)
 		return 1;
 
-
 	return 0;
 }
 
@@ -1931,11 +1930,22 @@ static void R_CreateWorldVBOs(void)
 	msurface_t   *surface, **firstSurf, **lastSurf, **currSurf;
 	msurface_t  **surfacesSorted;
 
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+	vec3_t mins, maxs;
+
+	tr.world->numWorldVbos = 0;
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+
 	VBO_t *vbo;
 	IBO_t *ibo;
 
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+	int maxVboSize = 16 * 4 * 1024;
+	int maxIboSize = 4 * 4 * 1024;
+#else //!(defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__))
 	int maxVboSize = 16 * 1024 * 1024;
 	int maxIboSize = 4 * 1024 * 1024;
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
 	int             startTime, endTime;
 
@@ -2096,6 +2106,10 @@ static void R_CreateWorldVBOs(void)
 				}
 
 				vert.lightDirection = R_VboPackNormal (bspSurf->verts[i].lightdir);
+
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+				AddPointToBounds(vert.position, mins, maxs);
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 			}
 		}
 
@@ -2129,6 +2143,16 @@ static void R_CreateWorldVBOs(void)
 
 		ri->Hunk_FreeTempMemory(indexes);
 		ri->Hunk_FreeTempMemory(verts);
+
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+		ri->Printf(PRINT_WARNING, "VBO: %i. Mins: %i %i %i. Maxs: %i %i %i.\n", tr.world->numWorldVbos, (int)mins[0], (int)mins[1], (int)mins[2], (int)maxs[0], (int)maxs[1], (int)maxs[2]);
+		tr.world->vbos[tr.world->numWorldVbos] = vbo;
+		VectorCopy(mins, tr.world->vboMins[tr.world->numWorldVbos]);
+		VectorCopy(maxs, tr.world->vboMaxs[tr.world->numWorldVbos]);
+		tr.world->numWorldVbos++;
+		VectorClear(mins);
+		VectorClear(maxs);
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
 		k++;
 	}
@@ -2433,10 +2457,10 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 	// chain decendants
 	R_SetParent (s_worldData.nodes, NULL);
 
-	s_worldData.visibleLeafs[0] = (mnode_t **)ri->Hunk_Alloc( numLeafs * sizeof(mnode_t *), h_low);	
-	s_worldData.visibleLeafs[1] = (mnode_t **)ri->Hunk_Alloc( numLeafs * sizeof(mnode_t *), h_low);	
-	s_worldData.numVisibleLeafs[0] = 0;
-	s_worldData.numVisibleLeafs[1] = 0;
+#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
+	s_worldData.visibleLeafs = (mnode_t **)ri->Hunk_Alloc( numLeafs * sizeof(mnode_t *), h_low);	
+	s_worldData.numVisibleLeafs = 0;
+#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
 }
 
 //=============================================================================
@@ -3481,7 +3505,12 @@ static void R_LoadCubemapWaypoints( void )
 	vec3_t	*cubeOrgs;
 	int		numcubeOrgs = 0;
 
-	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t)*1048576);
+	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t)*65568/*1048576*/);
+
+	if (!cubeOrgs)
+	{
+		ri->Error(ERR_DROP, "Failed to allocate cubeOrg memory.\n");
+	}
 
 	w = &s_worldData;
 
@@ -3760,7 +3789,7 @@ void R_MergeLeafSurfaces(void)
 			{
 				msurface_t *surf2;
 				shader_t *shader2;
-				int cubemapIndex2;
+				//int cubemapIndex2;
 				int surfNum2;
 
 				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
@@ -4536,17 +4565,17 @@ void RE_LoadWorldMap( const char *name ) {
 		R_SetupMapGlowsAndWaterPlane();
 	}
 
+	s_worldData.dataSize = (byte *)ri->Hunk_Alloc(0, h_low) - startMarker;
+
+	// only set tr.world now that we know the entire level has loaded properly
+	tr.world = &s_worldData;
+
 	// create static VBOS from the world
 	R_CreateWorldVBOs();
 	if (r_mergeLeafSurfaces->integer)
 	{
 		R_MergeLeafSurfaces();
 	}
-
-	s_worldData.dataSize = (byte *)ri->Hunk_Alloc(0, h_low) - startMarker;
-
-	// only set tr.world now that we know the entire level has loaded properly
-	tr.world = &s_worldData;
 
 	// make sure the VBO glState entries are safe
 	R_BindNullVBO();

@@ -697,7 +697,7 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles)
 	qboolean	FOUND = qfalse;
 	int			modelID = 0;
 
-	for (modelID = 0; modelID < INSTANCED_MODEL_TYPES; modelID++)
+	for (modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
 		if (INSTANCED_MODEL_MODEL[modelID] == NULL)
 		{
@@ -719,7 +719,7 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles)
 		INSTANCED_MODEL_MODEL[modelID] = model;
 	}
 
-	if (INSTANCED_MODEL_COUNT[modelID] < MAX_INSTANCED_MODEL_INSTANCES)
+	if (INSTANCED_MODEL_COUNT[modelID] + 1 < MAX_INSTANCED_MODEL_INSTANCES)
 	{
 		VectorCopy(origin, INSTANCED_MODEL_ORIGINS[modelID][INSTANCED_MODEL_COUNT[modelID]]);
 		VectorCopy(angles, INSTANCED_MODEL_ANGLES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
@@ -730,7 +730,7 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles)
 void R_AddInstancedModelsToScene(void)
 {
 	// Draw them for this scene...
-	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES; modelID++)
+	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
 		if (INSTANCED_MODEL_COUNT[modelID] > 0)
 		{
@@ -739,7 +739,7 @@ void R_AddInstancedModelsToScene(void)
 	}
 
 	// Clear the buffer ready for next scene...
-	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES; modelID++)
+	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
 		INSTANCED_MODEL_COUNT[modelID] = 0;
 		INSTANCED_MODEL_MODEL[modelID] = NULL;

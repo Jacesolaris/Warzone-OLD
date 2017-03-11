@@ -641,6 +641,11 @@ static qboolean RB_SurfaceVbo(VBO_t *vbo, IBO_t *ibo, int numVerts, int numIndex
 
 	RB_CheckVBOandIBO(vbo, ibo);
 
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+	if (vbo->occluded)
+		return qtrue; // return qtrue so it doesn't try to use other code to draw it...
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+
 	//tess.dlightBits |= dlightBits;
 #ifdef __PSHADOWS__
 	tess.pshadowBits |= pshadowBits;
@@ -2257,6 +2262,14 @@ static void RB_SurfaceFlare(srfFlare_t *surf)
 
 static void RB_SurfaceVBOMesh(srfBspSurface_t * srf)
 {
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+	if (!srf->vbo || !srf->ibo)
+		return;
+
+	if (srf->vbo->occluded) 
+		return;
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+
 #ifdef __PSHADOWS__
 	RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex,
 			srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qfalse );
@@ -2276,6 +2289,10 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 
 	if(!surface->vbo || !surface->ibo)
 		return;
+
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+	if (surface->vbo->occluded) return;
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
 	//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
 	RB_EndSurface();

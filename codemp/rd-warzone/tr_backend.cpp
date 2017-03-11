@@ -901,65 +901,13 @@ void RB_BeginDrawingView (void) {
 #define	MAC_EVENT_PUMP_MSEC		5
 
 
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-#define MAX_OCCLUDION_QUERIES 32768
-int occlusionQueryTotal = 0;
-GLuint occlusionQuery[MAX_OCCLUDION_QUERIES] = { -1 };
-qboolean occlusionQueryOccluded[MAX_OCCLUDION_QUERIES] = { qfalse };
-drawSurf_t *occlusionQueryDrawSurf[MAX_OCCLUDION_QUERIES] = { NULL };
-
-void RB_UpdateOccludedList(void)
-{
-	int i;
-	int occluded = 0;
-	int visible = 0;
-	int noResult = 0;
-
-	qglFinish();
-
-	// first, check any outstanding queries
-	for (i = 0; i < occlusionQueryTotal; i++)
-	{
-		GLuint result;
-
-		qglGetQueryObjectuiv(occlusionQuery[i], GL_QUERY_RESULT_AVAILABLE, &result);
-
-		if (result)
-		{
-			qglGetQueryObjectuiv(occlusionQuery[i], GL_QUERY_RESULT, &result);
-
-			//ri->Printf(PRINT_ALL, "surface %i has %d samples!\n", i, result);
-
-			if (result <= 0)
-			{
-				occlusionQueryOccluded[i] = qtrue;
-				occluded++;
-			}
-			else
-			{
-				occlusionQueryOccluded[i] = qfalse;
-				visible++;
-			}
-		}
-		else
-		{
-			occlusionQueryOccluded[i] = qfalse;
-			noResult++;
-		}
-	}
-
-	ri->Printf(PRINT_WARNING, "%i queries. %i occluded. %i visible. %i noResult.\n", occlusionQueryTotal, occluded, visible, noResult);
-	occlusionQueryTotal = 0;
-}
-#endif //__DEPTH_PREPASS_OCCLUSION__
-
 /*
 ==================
 RB_RenderDrawSurfList
 ==================
 */
 
-#ifndef __MERGE_MODEL_SURFACES2__
+#ifndef __MERGE_MODEL_SURFACES__
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery ) {
 	int				i, max_threads_used = 0;
 	float			originalTime;
@@ -988,13 +936,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-	if (r_occlusion->integer && !backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && !inQuery)
-	{
-		RB_UpdateOccludedList();
-	}
-#endif //__DEPTH_PREPASS_OCCLUSION__
-
 	// save original time for entity shader offsets
 	originalTime = backEnd.refdef.floatTime;
 
@@ -1016,26 +957,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 		drawSurf = &drawSurfs[i];
 
 		if (!drawSurf->surface) continue;
-
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-		if (r_occlusion->integer && !inQuery && !backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity) {
-			if (occlusionQueryOccluded[i])
-			{
-				if (occlusionQueryDrawSurf[i] == drawSurf)
-				{
-					numOccluded++;
-					continue;
-				}
-				/*else
-				{
-					ri->Printf(PRINT_WARNING, "Occlusion query drawSurf %i does not match render drawSurf. cubemapIndex %s. sort %s. surface %s.\n", i,
-						drawSurf->cubemapIndex != occlusionQueryDrawSurf[i]->cubemapIndex ? "DIFFERENT" : "SAME",
-						drawSurf->sort != occlusionQueryDrawSurf[i]->sort ? "DIFFERENT" : "SAME",
-						drawSurf->surface != occlusionQueryDrawSurf[i]->surface ? "DIFFERENT" : "SAME");
-				}*/
-			}
-		}
-#endif //__DEPTH_PREPASS_OCCLUSION__
 
 		// Don't care about these...
 		dlighted = oldDlighted = 0;
@@ -1072,24 +993,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 #endif //__LAZY_CUBEMAP__
 			) 
 		{// fast path, same as previous sort
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-			if (r_occlusion->integer && inQuery && backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity)
-			{
-				qglGenQueries(1, &occlusionQuery[i]);
-				qglBeginQuery(GL_SAMPLES_PASSED, occlusionQuery[i]);
-				occlusionQueryTotal = numDrawSurfs;
-				occlusionQueryDrawSurf[i] = drawSurf;
-				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-				qglEndQuery(GL_SAMPLES_PASSED);
-			}
-			else
-			{
-				occlusionQueryOccluded[i] = qfalse;
-				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-			}
-#else //!__DEPTH_PREPASS_OCCLUSION__
 			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
-#endif //__DEPTH_PREPASS_OCCLUSION__
 			continue;
 		}
 
@@ -1236,24 +1140,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 		}
 
 		// add the triangles for this surface
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-		if (r_occlusion->integer && inQuery && backEnd.depthFill && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW) && backEnd.currentEntity != &tr.worldEntity)
-		{
-			qglGenQueries(1, &occlusionQuery[i]);
-			qglBeginQuery(GL_SAMPLES_PASSED, occlusionQuery[i]);
-			occlusionQueryTotal = numDrawSurfs;
-			occlusionQueryDrawSurf[i] = drawSurf;
-			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-			qglEndQuery(GL_SAMPLES_PASSED);
-		}
-		else
-		{
-			occlusionQueryOccluded[i] = qfalse;
-			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-		}
-#else //!__DEPTH_PREPASS_OCCLUSION__
 		rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-#endif //__DEPTH_PREPASS_OCCLUSION__
 	}
 
 	backEnd.refdef.floatTime = originalTime;
@@ -1262,12 +1149,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 	if (oldShader != NULL) {
 		RB_EndSurface();
 	}
-
-#ifndef __DEPTH_PREPASS_OCCLUSION__
-	if (inQuery) {
-		qglEndQuery(GL_SAMPLES_PASSED);
-	}
-#endif //__DEPTH_PREPASS_OCCLUSION__
 
 	FBO_Bind(fbo);
 
@@ -1278,29 +1159,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 	// Restore depth range for subsequent rendering
 	qglDepthRange( 0.0f, 1.0f );
 
-	/*
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-	if (r_occlusion->integer && inQuery)
-	{
-		ri->Printf(PRINT_WARNING, "%i draw surfaces. %i occlusion queries.\n", numDrawSurfs, occlusionQueryTotal);
-	}
-	else if (r_occlusion->integer && !inQuery)
-	{
-		ri->Printf(PRINT_WARNING, "%i draw surfaces. %i occluded.\n", numDrawSurfs, numOccluded);
-	}
-	else if (r_occlusion->integer && !backEnd.depthFill)
-	{
-		ri->Printf(PRINT_WARNING, "%i draw surfaces. (non depthFill).\n", numDrawSurfs);
-	}
-#endif //__DEPTH_PREPASS_OCCLUSION__
-	*/
 
 #ifdef __DEBUG_MERGE__
 	ri->Printf(PRINT_WARNING, "TOTAL %i, NUM_MERGED %i, NUM_CUBE_MERGED %i, NUM_CUBE_DELETED %i, NUM_FAST_PATH %i, NUM_NULL_SHADERS %i, NUM_SHADER_FAILS %i, NUM_POSTRENDER_FAILS %i, NUM_CUBEMAP_FAILS %i, NUM_MERGABLE_FAILS %i.\n"
 		, NUM_TOTAL, NUM_MERGED, NUM_CUBE_MERGED, NUM_CUBE_DELETED, NUM_FAST_PATH, NUM_NULL_SHADERS, NUM_SHADER_FAILS, NUM_POSTRENDER_FAILS, NUM_CUBEMAP_FAILS, NUM_MERGABLE_FAILS);
 #endif //__DEBUG_MERGE__
 }
-#else //__MERGE_MODEL_SURFACES2__
+#else //__MERGE_MODEL_SURFACES__
 #define MAX_SHADER_MERGED_GROUPS 2048
 #define MAX_SHADER_MERGED_SURFACES 16550
 
@@ -2123,7 +1988,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	// Restore depth range for subsequent rendering
 	qglDepthRange(0.0f, 1.0f);
 }
-#endif //__MERGE_MODEL_SURFACES2__
+#endif //__MERGE_MODEL_SURFACES__
 
 
 /*
@@ -2605,6 +2470,10 @@ RB_DrawSurfs
 =============
 */
 
+#ifdef __ORIGINAL_OCCLUSION__
+extern void RB_LeafOcclusion();
+#endif //__ORIGINAL_OCCLUSION__
+
 const void	*RB_DrawSurfs( const void *data ) {
 	const drawSurfsCommand_t	*cmd;
 
@@ -2629,34 +2498,38 @@ const void	*RB_DrawSurfs( const void *data ) {
 	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && (r_depthPrepass->integer || (backEnd.viewParms.flags & VPF_DEPTHSHADOW)))
 	{
 		FBO_t *oldFbo = glState.currentFBO;
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-		qboolean oldColorMask[4];
-		oldColorMask[0] = (qboolean)!backEnd.colorMask[0];
-		oldColorMask[1] = (qboolean)!backEnd.colorMask[1];
-		oldColorMask[2] = (qboolean)!backEnd.colorMask[2];
-		oldColorMask[3] = (qboolean)!backEnd.colorMask[3];
-#endif //__DEPTH_PREPASS_OCCLUSION__
 
 		backEnd.depthFill = qtrue;
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
-		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
-		backEnd.depthFill = qfalse;
+		//qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-#ifdef __DEPTH_PREPASS_OCCLUSION__
-		if (r_occlusion->integer /*&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)
-		{
-			backEnd.depthFill = qtrue;
-			qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-			qglDepthMask(GL_FALSE);
-			qglDepthFunc(GL_LEQUAL);
-			//qglDepthRange(0, 0);
-			RB_RenderDrawSurfList(cmd->drawSurfs, cmd->numDrawSurfs, qtrue);
-			qglColorMask(oldColorMask[0], oldColorMask[1], oldColorMask[2], oldColorMask[3]);
-			qglFlush();
-			backEnd.depthFill = qfalse;
+#ifdef __ORIGINAL_OCCLUSION__
+		if (r_occlusion->integer && backEnd.depthFill && glState.currentFBO != tr.renderCubeFbo)
+		{// After occlusion pass is done, check for occlusion before the draw pass...
+#ifdef __VBO_BASED_OCCLUSION__
+			for (int i = 0; i < tr.world->numWorldVbos; i++)
+			{
+				tr.world->vbos[i]->occluded = qfalse;
+			}
+#else //!__VBO_BASED_OCCLUSION__
+			for (int i = 0; i < tr.world->numVisibleLeafs; i++)
+			{
+				mnode_t *leaf = tr.world->visibleLeafs[i];
+				//mnode_t *leaf = &tr.world->nodes[i];
+				leaf->occluded = qfalse;
+			}
+#endif //__VBO_BASED_OCCLUSION__
+
+			RB_LeafOcclusion();
+
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		}
-#endif //__DEPTH_PREPASS_OCCLUSION__
+#endif //__ORIGINAL_OCCLUSION__
+
+		//qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		backEnd.depthFill = qfalse;
 
 #if 0
 		if (tr.msaaResolveFbo)

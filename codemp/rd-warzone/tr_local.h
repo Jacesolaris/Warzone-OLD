@@ -40,15 +40,21 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __PSHADOWS__
 //#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // UQ1: Doesn't detect all texture average colors yet... Also glowmap is good for culling non visible lights...
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
-//#define __ORIGINAL_OCCLUSION__
-//#define __DEPTH_PREPASS_OCCLUSION__
-//#define __MERGE_MODEL_SURFACES__
-#define __MERGE_MODEL_SURFACES2__		// merge entity surfaces into less draws...
+#define __MERGE_MODEL_SURFACES__		// merge entity surfaces into less draws...
 #define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 //#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
 
 //#define __DEFERRED_IMAGE_LOADING__		// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
 //#define __DEFERRED_MAP_IMAGE_LOADING__	// also load map images deferred...
+
+
+//#define __ORIGINAL_OCCLUSION__
+//#define __VBO_BASED_OCCLUSION__
+
+//#define __SOFTWARE_OCCLUSION__
+//#define __THREADED_OCCLUSION__
+//#define __THREADED_OCCLUSION2__
+//#define __LEAF_OCCLUSION__
 
 
 
@@ -76,8 +82,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 #ifdef __INSTANCED_MODELS__
-#define MAX_INSTANCED_MODEL_TYPES		1024
-#define MAX_INSTANCED_MODEL_INSTANCES	2048
+#define MAX_INSTANCED_MODEL_TYPES		128
+#define MAX_INSTANCED_MODEL_INSTANCES	16384
 #endif //__INSTANCED_MODELS__
 
 #include "../qcommon/q_shared.h"
@@ -670,6 +676,8 @@ typedef struct VBO_s
 
 	uint32_t        size_xyz;
 	uint32_t        size_normal;
+
+	qboolean		occluded;
 } VBO_t;
 
 typedef struct IBO_s
@@ -1934,7 +1942,7 @@ typedef struct mnode_s {
 	int			nummarksurfaces;
 
 	// Occlusion culling...
-	qboolean    occluded[2];
+	qboolean    occluded;
 } mnode_t;
 
 typedef struct {
@@ -2018,12 +2026,21 @@ typedef struct {
 	char		*entityString;
 	char		*entityParsePoint;
 
+#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
 	// Occlusion culling...
-	int numVisibleLeafs[2];
-	mnode_t **visibleLeafs[2];
+	int numVisibleLeafs;
+	mnode_t **visibleLeafs;
 
-	int numVisibleSurfaces[2];
-	msurface_t *visibleSurfaces[2][0x10000 /*MAX_DRAWSURFS*/];
+	int numVisibleSurfaces;
+	msurface_t *visibleSurfaces[0x10000 /*MAX_DRAWSURFS*/];
+#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
+
+#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
+	int numWorldVbos;
+	vec3_t vboMins[MAX_VBOS];
+	vec3_t vboMaxs[MAX_VBOS];
+	VBO_t *vbos[MAX_VBOS];
+#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 } world_t;
 
 
@@ -2675,11 +2692,11 @@ typedef struct trGlobals_s {
 	int						frontEndMsec;		// not in pc due to clearing issue
 
 	// Occlusion culling...
-	int						previousVisIndex[2];
-	cplane_t                previousFrustum[2][4];
-	vec3_t                  previousVisBounds[2][2];
-	qboolean                updateVisibleSurfaces[2];
-	int						updateOcclusion[2];
+	int						previousVisIndex;
+	cplane_t                previousFrustum[4];
+	vec3_t                  previousVisBounds[2];
+	qboolean                updateVisibleSurfaces;
+	int						updateOcclusion;
 
 	//
 	// put large tables at the end, so most elements will be
