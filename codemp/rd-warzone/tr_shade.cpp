@@ -1352,7 +1352,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 
 		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, 0.0, 0.0, 0.0);
+		VectorSet4(local8, (float)stageNum, r_glowStrength->value, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 	else
@@ -1393,6 +1393,10 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		vec4_t local7;
 		VectorSet4(local7, 0.0, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
+
+		vec4_t local8;
+		VectorSet4(local8, (float)stageNum, r_glowStrength->value, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 
 	vec4_t specMult;

@@ -687,7 +687,7 @@ static mnode_t *occlusionQueryTarget[MAX_OCCLUSION_QUERIES];
 static int occlusionQueryCount[MAX_OCCLUSION_QUERIES];
 static int occlusionCachePos = 0;
 
-void RB_UpdateOcclusion()
+void RB_UpdateOcclusion(int inOcclusions)
 {
 	int numOccluded = 0;
 
@@ -705,7 +705,12 @@ void RB_UpdateOcclusion()
 			if (!result)
 			{
 				occlusionQueryTarget[i]->occluded = qtrue;
+				occlusionQueryTarget[i]->lastOcclusionCheckResult = qtrue;
 				numOccluded++;
+			}
+			else
+			{
+				occlusionQueryTarget[i]->lastOcclusionCheckResult = qfalse;
 			}
 		}
 	}
@@ -790,6 +795,8 @@ void RB_LeafOcclusion()
 		tess.minIndex = 0;
 		tess.maxIndex = 0;
 
+		int preOcclusions = 0;
+
 		/* Switched from rend2 normal arrays to using the example's array formats */
 		for (int i = 0; i < tr.world->numWorldVbos; i++)
 		{
@@ -805,6 +812,18 @@ void RB_LeafOcclusion()
 				leaf->occluded = qfalse;
 				continue;
 			}
+
+			if (/*leaf->lastOcclusionCheckResult &&*/ leaf->nextOcclusionCheckTime > backEnd.refdef.time - 100)
+			{// If leaf was previously occluded, re-use the value for a time... Inaccurate, but saves occlusion checks...
+				leaf->occluded = leaf->lastOcclusionCheckResult;
+
+				if (leaf->lastOcclusionCheckResult)
+					preOcclusions++;
+
+				continue;
+			}
+
+			leaf->nextOcclusionCheckTime = backEnd.refdef.time;
 
 			/* Test the occlusion for this cube */
 			qglGenQueries(1, &occlusionCache[occlusionCachePos]);
@@ -830,7 +849,7 @@ void RB_LeafOcclusion()
 		qglFinish();
 		//qglFlush();
 
-		RB_UpdateOcclusion();
+		RB_UpdateOcclusion(preOcclusions);
 
 		//qglDepthRange( 0, 1 );
 		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -880,28 +899,47 @@ void RB_LeafOcclusion()
 		tess.minIndex = 0;
 		tess.maxIndex = 0;
 
+		int preOcclusions = 0;
+
 		/* Switched from rend2 normal arrays to using the example's array formats */
 		for (int i = 0; i < tr.world->numVisibleLeafs; i++)
 		{
 			mnode_t *leaf = tr.world->visibleLeafs[i];
 
-			//if (!leaf->nummarksurfaces)
-			if (leaf->nummarksurfaces < 64)
+			if (!leaf->nummarksurfaces)
+			//if (leaf->nummarksurfaces < 64)
 			{// Hmm nothing in here... Testing this cube would be a little pointless... Always occluded...
 				//leaf->occluded = qtrue;
 				continue;
 			}
 
-			if (backEnd.refdef.vieworg[0] >= leaf->mins[0] 
-				&& backEnd.refdef.vieworg[0] <= leaf->maxs[0]
-				&& backEnd.refdef.vieworg[1] >= leaf->mins[1] 
-				&& backEnd.refdef.vieworg[1] <= leaf->maxs[1]
-				&& backEnd.refdef.vieworg[2] >= leaf->mins[2]
-				&& backEnd.refdef.vieworg[2] <= leaf->maxs[2])
+			if (tr.refdef.vieworg[0] >= leaf->mins[0] 
+				&& tr.refdef.vieworg[0] <= leaf->maxs[0]
+				&& tr.refdef.vieworg[1] >= leaf->mins[1] 
+				&& tr.refdef.vieworg[1] <= leaf->maxs[1]
+				&& tr.refdef.vieworg[2] >= leaf->mins[2]
+				&& tr.refdef.vieworg[2] <= leaf->maxs[2])
 			{// Never occlude a leaf we are inside...
 				leaf->occluded = qfalse;
 				continue;
 			}
+
+			if (backEnd.refdef.time < leaf->nextOcclusionCheckTime)
+			{// Inaccurate, but saves occlusion checks...
+				leaf->occluded = leaf->lastOcclusionCheckResult;
+
+				if (leaf->lastOcclusionCheckResult)
+					preOcclusions++;
+
+				continue;
+			}
+
+			vec3_t center;
+			VectorSet(center, (leaf->mins[0] + leaf->maxs[0]) * 0.5f, (leaf->mins[1] + leaf->maxs[1]) * 0.5f, (leaf->mins[2] + leaf->maxs[2]) * 0.5f);
+			float dist = 16.0 / (Distance(tr.refdef.vieworg, center) / 1024.0);
+			float mult = Q_clamp(0, 1 - dist, 1);
+
+			leaf->nextOcclusionCheckTime = backEnd.refdef.time + 100;// (1000 * mult);
 
 			if (occlusionCachePos + 1 >= MAX_OCCLUSION_QUERIES)
 			{// never over-run the max queries array...
@@ -911,9 +949,7 @@ void RB_LeafOcclusion()
 				break;
 			}
 
-			vec3_t center;
-			VectorSet(center, (leaf->mins[0] + leaf->maxs[0]) * 0.5f, (leaf->mins[1] + leaf->maxs[1]) * 0.5f, (leaf->mins[2] + leaf->maxs[2]) * 0.5f);
-			if (Distance(center, backEnd.refdef.vieworg) <= 2048.0)//r_testvalue0->value)
+			if (Distance(tr.refdef.vieworg, center) <= 2048.0)
 			{// Just skip checking occlusion on close leafs...
 				/*ri->Printf(PRINT_ALL, "Distance from %i %i %i to %i %i %i is %i (< %i).\n"
 					, (int)backEnd.refdef.vieworg[0], (int)backEnd.refdef.vieworg[1], (int)backEnd.refdef.vieworg[2]
@@ -947,7 +983,7 @@ void RB_LeafOcclusion()
 			qglFinish();
 		//qglFlush();
 
-		RB_UpdateOcclusion();
+		RB_UpdateOcclusion(preOcclusions);
 
 		//qglDepthRange( 0, 1 );
 		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);

@@ -200,6 +200,7 @@ cvar_t  *r_forceSunLightScale;
 cvar_t  *r_forceSunAmbientScale;
 cvar_t  *r_proceduralSun;
 cvar_t  *r_proceduralSunScale;
+cvar_t  *r_glowStrength;
 cvar_t  *r_sunlightMode;
 cvar_t  *r_sunlightSpecular;
 cvar_t  *r_drawSunRays;
@@ -1490,6 +1491,8 @@ void R_Register( void )
 	r_imageUpsampleMaxSize = ri->Cvar_Get( "r_imageUpsampleMaxSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsampleType = ri->Cvar_Get( "r_imageUpsampleType", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_genNormalMaps = ri->Cvar_Get( "r_genNormalMaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
+
+	r_glowStrength = ri->Cvar_Get("r_glowStrength", "1.75", CVAR_ARCHIVE);
 
 	r_dlightShadows = ri->Cvar_Get( "r_dlightShadows", "0", CVAR_ARCHIVE );
 	r_forceSun = ri->Cvar_Get( "r_forceSun", "0", CVAR_ARCHIVE | CVAR_LATCH );

@@ -313,6 +313,7 @@ extern cvar_t  *r_forceSunLightScale;
 extern cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_proceduralSun;
 extern cvar_t  *r_proceduralSunScale;
+extern cvar_t  *r_glowStrength;
 extern cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern cvar_t  *r_drawSunRays;
@@ -678,6 +679,8 @@ typedef struct VBO_s
 	uint32_t        size_normal;
 
 	qboolean		occluded;
+	int				nextOcclusionCheckTime;
+	qboolean		lastOcclusionCheckResult;
 } VBO_t;
 
 typedef struct IBO_s
@@ -1943,6 +1946,8 @@ typedef struct mnode_s {
 
 	// Occlusion culling...
 	qboolean    occluded;
+	int			nextOcclusionCheckTime;
+	qboolean	lastOcclusionCheckResult;
 } mnode_t;
 
 typedef struct {
@@ -2919,6 +2924,7 @@ extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_proceduralSun;
 extern cvar_t  *r_proceduralSunScale;
+extern cvar_t  *r_glowStrength;
 extern  cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern  cvar_t  *r_drawSunRays;

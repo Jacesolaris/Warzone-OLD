@@ -53,7 +53,7 @@ uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, swa
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4				u_Local8; // stageNum, 0, 0, 0
+uniform vec4				u_Local8; // stageNum, glowStrength, 0, 0
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define WATER_LEVEL			u_Local6.a
@@ -911,6 +911,7 @@ void main()
 	*/
 
 	#if defined(USE_GLOW_BUFFER)
+		gl_FragColor.rgb *= u_Local8.g;
 		out_Glow = gl_FragColor;
 	#else
 //#if defined(USE_LIGHTMAP)
