@@ -13,19 +13,13 @@ uniform vec4	u_Local9;
 varying vec2      var_TexCoords;
 
 
-#define m_Normal		var_Normal
-#define m_TexCoords		var_TexCoords
-#define m_vertPos		var_vertPos
-#define m_ViewDir		var_ViewDir
-
-
 void main()
 {
-	vec2 texCoords = m_TexCoords.xy;
+	vec2 texCoords = var_TexCoords;
 
 	if (u_Local4.a > 0.0)
 	{// Sway...
-		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
+		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - texCoords.y) + 1.0), 0.0);
 	}
 
 	gl_FragColor = texture(u_DiffuseMap, texCoords);

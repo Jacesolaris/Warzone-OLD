@@ -99,33 +99,40 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 void main()
 {
 #if defined(USE_VERTEX_ANIMATION)
+
 	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+#if defined(USE_TCGEN)
 	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;;
-	//vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;;
+#endif //defined(USE_TCGEN)
+
 #elif defined(USE_SKELETAL_ANIMATION)
+
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
-	//vec4 tangent4 = vec4(0.0);
 	vec4 originalPosition = vec4(attr_Position, 1.0);
 	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
-	//vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
 	for (int i = 0; i < 4; i++)
 	{
 		int boneIndex = int(attr_BoneIndexes[i]);
-
 		position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
+#if defined(USE_TCGEN)
 		normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
-		//tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
+#endif //defined(USE_TCGEN)
 	}
 
 	vec3 position = position4.xyz;
+#if defined(USE_TCGEN)
 	vec3 normal = normalize (normal4.xyz);
-	//vec3 tangent = normalize (tangent4.xyz);
+#endif //defined(USE_TCGEN)
+
 #else
+
 	vec3 position  = attr_Position;
+#if defined(USE_TCGEN)
 	vec3 normal    = attr_Normal * 2.0 - 1.0;
-	//vec3 tangent   = attr_Tangent.xyz * 2.0 - 1.0;
+#endif //defined(USE_TCGEN)
+
 #endif
 
 #if defined(USE_TCGEN)
