@@ -5,6 +5,8 @@ varying vec4		var_Color;
 varying vec3		var_Normal;
 varying vec3		var_VertPos;
 
+uniform vec4				u_Local8; // stageNum, glowStrength, 0, 0
+
 out vec4 out_Glow;
 /*out vec4 out_Position;
 out vec4 out_Normal;*/
@@ -19,6 +21,7 @@ void main()
 	//gl_FragColor.rgb = vec3(1.0, 0.0, 0.0);
 
 	#if defined(USE_GLOW_BUFFER)
+		gl_FragColor.rgb *= u_Local8.g;
 		out_Glow = gl_FragColor;
 	#else
 		out_Glow = vec4(0.0);
