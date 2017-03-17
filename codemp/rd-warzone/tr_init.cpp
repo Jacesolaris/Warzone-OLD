@@ -1400,7 +1400,7 @@ void R_Register( void )
 	r_ext_texture_env_add = ri->Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_preferred_tc_method = ri->Cvar_Get( "r_ext_preferred_tc_method", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_entitySurfaceMerge = ri->Cvar_Get("r_entitySurfaceMerge", "1", CVAR_ARCHIVE);
+	r_entitySurfaceMerge = ri->Cvar_Get("r_entitySurfaceMerge", "0", CVAR_ARCHIVE);
 
 	r_occlusion = ri->Cvar_Get( "r_occlusion", "0", CVAR_ARCHIVE);
 	r_occlusionDebug = ri->Cvar_Get( "r_occlusionDebug", "0", CVAR_ARCHIVE);
@@ -1711,7 +1711,7 @@ void R_Register( void )
 	r_drawentities = ri->Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
 	r_ignore = ri->Cvar_Get( "r_ignore", "1", CVAR_CHEAT );
 	r_nocull = ri->Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
-	r_entityCull = ri->Cvar_Get ("r_entityCull", "1", CVAR_CHEAT);
+	r_entityCull = ri->Cvar_Get ("r_entityCull", "0", CVAR_CHEAT);
 	r_fovCull = ri->Cvar_Get ("r_fovCull", "0", CVAR_CHEAT);
 	r_novis = ri->Cvar_Get ("r_novis", "0", CVAR_CHEAT);
 	r_showcluster = ri->Cvar_Get ("r_showcluster", "0", CVAR_CHEAT);
