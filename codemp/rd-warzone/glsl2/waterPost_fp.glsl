@@ -199,10 +199,16 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 		return inColor;
 	}
 
+	vec4 wMapCheck = waterMapAtCoord(vec2(coord.x, 1.0));
+	if (wMapCheck.a > 0.0)
+	{// Top of screen pixel is water, don't check...
+		return inColor;
+	}
+
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
 
-	for (float y = coord.y; y < 1.0; y += ph * 5.0)
+	for (float y = coord.y; y <= 1.0; y += ph * 5.0)
 	{
 		vec4 wMap = waterMapAtCoord(vec2(coord.x, y));
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
@@ -215,7 +221,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 		}
 	}
 
-	if (QLAND_Y <= 0.0)
+	if (QLAND_Y <= 0.0 || QLAND_Y >= 1.0)
 	{// Found no non-water surfaces...
 		return inColor;
 	}
@@ -226,7 +232,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 	float upPos = coord.y;
 	float LAND_Y = 0.0;
 
-	for (float y = QLAND_Y; y < 1.0; y += ph)
+	for (float y = QLAND_Y; y <= 1.0; y += ph)
 	{
 		vec4 wMap = waterMapAtCoord(vec2(coord.x, y));
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
@@ -239,7 +245,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 		}
 	}
 
-	if (LAND_Y <= 0.0)
+	if (QLAND_Y <= 0.0 || QLAND_Y >= 1.0)
 	{// Found no non-water surfaces...
 		return inColor;
 	}
