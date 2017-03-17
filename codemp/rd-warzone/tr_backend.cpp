@@ -3497,7 +3497,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_bloom->integer)
+		if (!SCREEN_BLUR && r_bloom->integer == 1 )
 		{
 			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
@@ -3519,6 +3519,12 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_bloom->integer >= 2)
+		{
+			RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_ssgi->integer)

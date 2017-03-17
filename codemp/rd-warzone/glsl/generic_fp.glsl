@@ -21,6 +21,9 @@ void main()
 	//gl_FragColor.rgb = vec3(1.0, 0.0, 0.0);
 
 	#if defined(USE_GLOW_BUFFER)
+#define glow_const_1 ( 23.0 / 255.0)
+#define glow_const_2 (255.0 / 229.0)
+		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		gl_FragColor.rgb *= u_Local8.g;
 		out_Glow = gl_FragColor;
 	#else

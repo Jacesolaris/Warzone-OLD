@@ -151,6 +151,8 @@ extern const char *fallbackShader_fastBlur_vp;
 extern const char *fallbackShader_fastBlur_fp;
 extern const char *fallbackShader_distanceBlur_vp;
 extern const char *fallbackShader_distanceBlur_fp;
+extern const char *fallbackShader_bloomRays_vp;
+extern const char *fallbackShader_bloomRays_fp;
 extern const char *fallbackShader_fogPost_vp;
 extern const char *fallbackShader_fogPost_fp;
 extern const char *fallbackShader_showNormals_vp;
@@ -3549,6 +3551,15 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.bloomRaysShader, "bloomRays", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_bloomRays_vp, fallbackShader_bloomRays_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load bloomRays shader!");
+	}
+
+
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -5379,6 +5390,38 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
+
+	if (!GLSL_EndLoadGPUShader(&tr.bloomRaysShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load bloomRays shader!");
+	}
+
+	GLSL_InitUniforms(&tr.bloomRaysShader);
+
+	qglUseProgram(tr.bloomRaysShader.program);
+
+	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.bloomRaysShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.bloomRaysShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+
 	for (i = 0; i < 4; i++)
 	{
 		if (!GLSL_EndLoadGPUShader(&tr.distanceBlurShader[i]))
@@ -6228,6 +6271,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
 	GLSL_DeleteGPUShader(&tr.vibrancyShader);
 	GLSL_DeleteGPUShader(&tr.fastBlurShader);
+	GLSL_DeleteGPUShader(&tr.bloomRaysShader);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[0]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[1]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[2]);
