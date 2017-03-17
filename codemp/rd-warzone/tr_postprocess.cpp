@@ -1037,16 +1037,6 @@ void RB_AddGlowShaderLights ( void )
 #if 1
 			if (distance > MAX_WORLD_GLOW_DLIGHT_RANGE) continue;
 
-/*
-#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-			if (distance > 512.0 && !TR_InFOV( MAP_GLOW_LOCATIONS[maplight], tr.refdef.vieworg ))
-			{// 512.0 to still allow close lights just behind the player...
-				continue; // not on screen...
-			}
-#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
-*/
-
-			
 			for (int i = 0; i < CLOSE_TOTAL; i++)
 			{
 				if (Distance(CLOSE_POS[i], MAP_GLOW_LOCATIONS[maplight]) < 64.0)
@@ -1200,9 +1190,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-//#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	RB_AddGlowShaderLights();
-//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 //	backEnd.refdef.num_dlights = r_numdlights; // This is being disabled somewhere...
 	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);

@@ -3379,7 +3379,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
-//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	vec4_t avgColor = { 0 };
 	R_GetTextureAverageColor(pic, width, height, avgColor);
 	//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
@@ -3449,7 +3448,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			Z_Free(pic2);
 		}
 	}
-//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (!(flags & IMGFLAG_MIPMAP) && type != IMGTYPE_SPLATCONTROLMAP && R_ShouldMipMap(name))
 	{// UQ: Testing mipmap all...
@@ -3466,9 +3464,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	else
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
-//#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	VectorCopy4(avgColor, image->lightColor);
-//#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
 		&& type != IMGTYPE_NORMAL 
