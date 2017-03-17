@@ -2,11 +2,11 @@
 //#define DEFERRED_REFLECTIONS
 
 
-#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER) //&& !defined(USE_MODELMATRIX) && !defined(USE_VERTEX_ANIMATION) && !defined(USE_SKELETAL_ANIMATION) && !defined(USE_TRI_PLANAR) && !defined(USE_REGIONS)
+#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER)
 #define __PARALLAX_ENABLED__
 #endif
 
-#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER) //&& !defined(USE_TRI_PLANAR) && !defined(USE_REGIONS)
+#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER)
 #define __CUBEMAPS_ENABLED__
 #endif
 
@@ -918,13 +918,7 @@ void main()
 
 		out_Glow = gl_FragColor;
 	#else
-//#if defined(USE_LIGHTMAP)
-//		// Fucking lightmap passes shit...
-//		if (length(lightColor.rgb/*gl_FragColor.rgb*/) > 0.0 /*|| length(origDiffuse.rgb) > 0.0*/ && length(var_TexCoords2.xy) != 0.0 && gl_FragColor.a > 0.0)
-//#else
-		//if (length(origDiffuse.rgb) > 0.0 && gl_FragColor.a > 0.0)
 		if (u_Local8.r == 0.0)
-//#endif //defined(USE_LIGHTMAP)
 		{
 			out_Glow = vec4(0.0);
 			vec2 normData = encode(N.xyz * 0.5 + 0.5);

@@ -3332,6 +3332,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
+	if (r_normalMapping->integer < 2 && type == IMGTYPE_NORMAL)
+	{// Never load normal maps when r_normalMapping < 2. A waste of vram...
+		return NULL;
+	}
+
 	hash = generateHashValue(name);
 
 	//
