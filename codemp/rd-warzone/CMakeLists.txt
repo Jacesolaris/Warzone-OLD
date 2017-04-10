@@ -35,6 +35,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_extratypes.h"
 	"${MPDir}/rd-warzone/tr_fbo.cpp"
 	"${MPDir}/rd-warzone/tr_fbo.h"
+	"${MPDir}/rd-warzone/tr_foliage.cpp"
 	"${MPDir}/rd-warzone/tr_flares.cpp"
 	"${MPDir}/rd-warzone/tr_ghoul2.cpp"
 	"${MPDir}/rd-warzone/tr_glsl.cpp"

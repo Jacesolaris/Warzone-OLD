@@ -19,7 +19,7 @@ varying vec2		var_TexCoords;
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
-	return texture2D(u_PositionMap, coord);
+	return textureLod(u_PositionMap, coord, 0.0);
 }
 
 float linearize(float depth)
@@ -102,7 +102,7 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 void main ( void )
 {
 #ifdef VFOG
-	vec3 col = texture2D(u_DiffuseMap, var_TexCoords).rgb;
+	vec3 col = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
 	vec4 pMap = positionMapAtCoord( var_TexCoords );
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec3 rayDir = normalize(viewOrg.xyz - pMap.xyz);
@@ -124,8 +124,8 @@ void main ( void )
 	vec3 fogColor = col;
 #else //!VFOG
 	vec4 pMap = positionMapAtCoord( var_TexCoords );
-	vec4 pixelColor = texture2D(u_DiffuseMap, var_TexCoords);
-	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);
+	vec4 pixelColor = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
+	float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec3 sunOrg = u_PrimaryLightOrigin.xyz;
 

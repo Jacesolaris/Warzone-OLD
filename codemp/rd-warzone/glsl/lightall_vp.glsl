@@ -102,6 +102,8 @@ varying float	var_usingSteepMap;
 
 varying vec2   var_nonTCtexCoords; // for steep maps
 
+varying vec3	var_fogDir;
+
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
@@ -329,6 +331,12 @@ void main()
 
 	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;
+
+#if !defined(USE_GLOW_BUFFER)
+	var_fogDir = var_ViewDir / 40.0;
+	//var_fogCrd = gl_Vertex.xyz * fogScaleBias.w + fogScaleBias.xyz;
+	//var_fogCrd = position.xyz * fogScaleBias.w + fogScaleBias.xyz;
+#endif //!defined(USE_GLOW_BUFFER)
 
 #if defined(USE_TRI_PLANAR)
 

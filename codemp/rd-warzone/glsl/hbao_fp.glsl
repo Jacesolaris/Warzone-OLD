@@ -58,14 +58,14 @@ vec3 generateEnhancedNormal( vec2 fragCoord )
 {// Generates a normal map with enhanced edges... Not so good for parallax...
 	const float threshold = 0.085;
 
-	vec3 rgb = texture2D(u_DiffuseMap, fragCoord).rgb;
+	vec3 rgb = textureLod(u_DiffuseMap, fragCoord, 0.0).rgb;
 	vec3 bw = vec3(1.0, 1.0, 1.0);
 	vec3 bw2 = vec3(1.0, 1.0, 1.0);
 
-	vec3 rgbUp = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y+tex_offset.y)).rgb;
-	vec3 rgbDown = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y-tex_offset.y)).rgb;
-	vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(fragCoord.x+tex_offset.x,fragCoord.y)).rgb;
-	vec3 rgbRight = texture2D(u_DiffuseMap, vec2(fragCoord.x-tex_offset.x,fragCoord.y)).rgb;
+	vec3 rgbUp = textureLod(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y+tex_offset.y), 0.0).rgb;
+	vec3 rgbDown = textureLod(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y-tex_offset.y), 0.0).rgb;
+	vec3 rgbLeft = textureLod(u_DiffuseMap, vec2(fragCoord.x+tex_offset.x,fragCoord.y), 0.0).rgb;
+	vec3 rgbRight = textureLod(u_DiffuseMap, vec2(fragCoord.x-tex_offset.x,fragCoord.y), 0.0).rgb;
 
 	float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
 	float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
@@ -97,11 +97,11 @@ vec3 generateBumpyNormal( vec2 fragCoord )
 	const float x=1.0;
 	const float y=1.0;
 
-	float M =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(0., 0.)*tex_offset).rgb) / 3.0);
-	float L =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(x, 0.)*tex_offset).rgb) / 3.0);
-	float R =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(-x, 0.)*tex_offset).rgb) / 3.0);	
-	float U =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(0., y)*tex_offset).rgb) / 3.0);;
-	float D =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(0., -y)*tex_offset).rgb) / 3.0);
+	float M =abs(length(textureLod(u_DiffuseMap, fragCoord + vec2(0., 0.)*tex_offset, 0.0).rgb) / 3.0);
+	float L =abs(length(textureLod(u_DiffuseMap, fragCoord + vec2(x, 0.)*tex_offset, 0.0).rgb) / 3.0);
+	float R =abs(length(textureLod(u_DiffuseMap, fragCoord + vec2(-x, 0.)*tex_offset, 0.0).rgb) / 3.0);	
+	float U =abs(length(textureLod(u_DiffuseMap, fragCoord + vec2(0., y)*tex_offset, 0.0).rgb) / 3.0);;
+	float D =abs(length(textureLod(u_DiffuseMap, fragCoord + vec2(0., -y)*tex_offset, 0.0).rgb) / 3.0);
 	float X = ((R-M)+(M-L))*0.5;
 	float Y = ((D-M)+(M-U))*0.5;
 
@@ -119,8 +119,8 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
 	vec2 offset1 = vec2(0.0, fvTexelSize.y);
 	vec2 offset2 = vec2(fvTexelSize.x, 0.0);
 
-	float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r;
-	float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r;
+	float depth1 = textureLod(u_ScreenDepthMap, texcoords + offset1, 0.0).r;
+	float depth2 = textureLod(u_ScreenDepthMap, texcoords + offset2, 0.0).r;
 
 	depth1 = hbao_linearizeDepth(depth1);
 	depth2 = hbao_linearizeDepth(depth2);
@@ -148,7 +148,7 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
 
 vec3 SampleNormals(vec2 coord)  
 {
-	float depth = texture2D(u_ScreenDepthMap, coord).r;
+	float depth = textureLod(u_ScreenDepthMap, coord, 0.0).r;
 
 	depth = hbao_linearizeDepth(depth);
 
@@ -173,7 +173,7 @@ vec4 GetHBAO ( void )
 #if defined (C_HBAO_DISPLAY_DEPTH)
 //	if (u_Local0.a >= 2.0)
 	{
-		float depth = hbao_linearizeDepth(texture2D(u_ScreenDepthMap, var_ScreenTex.xy).r);
+		float depth = hbao_linearizeDepth(textureLod(u_ScreenDepthMap, var_ScreenTex.xy, 0.0).r);
 		return vec4(depth, depth, depth, 1.0);
 	}
 #elif defined (C_HBAO_DISPLAY_NORMALS)
@@ -183,9 +183,9 @@ vec4 GetHBAO ( void )
 	}
 #else
 //#if 1
-	vec4 origColor = texture2D(u_DiffuseMap, var_ScreenTex.xy);
+	vec4 origColor = textureLod(u_DiffuseMap, var_ScreenTex.xy, 0.0);
 
-	float start_Z = texture2D(u_ScreenDepthMap, var_ScreenTex.xy).r; // returns value (z/w+1)/2
+	float start_Z = textureLod(u_ScreenDepthMap, var_ScreenTex.xy, 0.0).r; // returns value (z/w+1)/2
 
 	start_Z = hbao_linearizeDepth(start_Z);
 
@@ -237,7 +237,7 @@ vec4 GetHBAO ( void )
 			vec2 sampleOffset = float(j+1) * SAMPLING_STEP * sampleDir;
 			vec2 offTex = var_ScreenTex.xy + sampleOffset;
 
-			float off_start_Z = texture2D(u_ScreenDepthMap, offTex.xy).r;
+			float off_start_Z = textureLod(u_ScreenDepthMap, offTex.xy, 0.0).r;
 
 			off_start_Z = hbao_linearizeDepth(off_start_Z);
 

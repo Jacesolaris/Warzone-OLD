@@ -36,7 +36,7 @@ void main(void)
 	if (AnaglyphType <= 1.0)
 	{// Simple anaglyph 3D not using depth map...
 		vec2 Depth = vec2(1.0f / viewWidth, 1.0f / viewHeight); // calculated from screen size now
-		vec4 Anaglyph = texture2D(u_DiffuseMap, texCoord);
+		vec4 Anaglyph = textureLod(u_DiffuseMap, texCoord, 0.0);
 
 		// Dubois anaglyph method. best option - not working...
 		// Authors page: http://www.site.uottawa.ca/~edubois/anaglyph/
@@ -49,10 +49,10 @@ void main(void)
 		// glasses. See also the remarks in http://research.csc.ncsu.edu/stereographics/LS.pdf
 		// (where slightly different values are used).
     
-		vec4 color_l = texture2D(u_DiffuseMap, vec2(texCoord + (vec2(-AnaglyphParallax,0)*Depth)));
+		vec4 color_l = textureLod(u_DiffuseMap, vec2(texCoord + (vec2(-AnaglyphParallax,0)*Depth)), 0.0);
 
 		// Right Eye (Cyan)
-		vec4 color_r = texture2D(u_DiffuseMap, vec2(texCoord + (vec2(AnaglyphParallax,0)*Depth)));
+		vec4 color_r = textureLod(u_DiffuseMap, vec2(texCoord + (vec2(AnaglyphParallax,0)*Depth)), 0.0);
 
 		mat3x3 m0 = mat3x3(
                 0.4155, -0.0458, -0.0545,
@@ -72,7 +72,7 @@ void main(void)
 		vec2 ps = vec2(1.0f / viewWidth, 1.0f / viewHeight); // calculated from screen size now
 		vec2 tc = texCoord;
 	
-		float depth = texture2D( u_ScreenDepthMap, tc ).x;
+		float depth = textureLod( u_ScreenDepthMap, tc, 0.0 ).x;
 		depth=pow(depth, 255);
 		//gl_FragColor = vec4(vec3((depth*AnaglyphParallax)*(depth*AnaglyphParallax)), 1.0);
 		//gl_FragColor = vec4(vec3(depth), 1.0);
@@ -84,8 +84,8 @@ void main(void)
 		lineardepth*=AnaglyphParallax;
 		float shift=lineardepth;
 
-		vec4 color_l = texture2D(u_DiffuseMap, vec2(tc.x-ps.x*shift,tc.y));
-		vec4 color_r = texture2D(u_DiffuseMap, vec2(tc.x+ps.x*shift,tc.y));
+		vec4 color_l = textureLod(u_DiffuseMap, vec2(tc.x-ps.x*shift,tc.y), 0.0);
+		vec4 color_r = textureLod(u_DiffuseMap, vec2(tc.x+ps.x*shift,tc.y), 0.0);
 
 		// Dubois anaglyph method. Best option...
 		// Authors page: http://www.site.uottawa.ca/~edubois/anaglyph/

@@ -42,7 +42,7 @@ vec4 GetMatsoDOFCA(vec2 tex, float CoC)
 	vec2 tg = ((2.0 * tex - 1.0) * chroma.g) * 0.5 + 0.5;
 	vec2 tb = ((2.0 * tex - 1.0) * chroma.b) * 0.5 + 0.5;
 	
-	vec3 color = vec3(texture2D(u_DiffuseMap, tr).r, texture2D(u_DiffuseMap, tg).g, texture2D(u_DiffuseMap, tb).b) * (1.0 - CoC);
+	vec3 color = vec3(textureLod(u_DiffuseMap, tr, 0.0).r, textureLod(u_DiffuseMap, tg, 0.0).g, textureLod(u_DiffuseMap, tb, 0.0).b) * (1.0 - CoC);
 	
 	return vec4(color, 1.0);
 }
@@ -55,8 +55,8 @@ float linearize(float depth)
 
 vec4 DistantBlur(void)
 {
-	vec4 color = texture2D(u_DiffuseMap, var_TexCoords.xy);
-	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords.xy).r);
+	vec4 color = textureLod(u_DiffuseMap, var_TexCoords.xy, 0.0);
+	float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords.xy, 0.0).r);
 
 	if (depth < BLUR_DEPTH)
 	{
@@ -88,7 +88,7 @@ vec4 DistantBlur(void)
 #ifdef DOFCA
 			vec3 color2 = GetMatsoDOFCA(vec2(var_TexCoords.x + x, var_TexCoords.y + y), x).rgb;
 #else //!DOFCA
-			vec3 color2 = texture2D(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).rgb;
+			vec3 color2 = textureLod(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y), 0.0).rgb;
 #endif //DOFCA
 
 #ifndef MATSO_DOF_BOKEH
@@ -179,7 +179,7 @@ float GetGlowStrength(vec2 coord)
 {
 	vec2 coord2 = coord;
 	coord2.y = 1.0 - coord2.y;
-	vec4 glow = texture2D(u_GlowMap, coord2.xy);
+	vec4 glow = textureLod(u_GlowMap, coord2.xy, 0.0);
 	float glowStrength = clamp(length(glow.rgb), 0.0, 1.0);
 	return glowStrength;
 }
@@ -195,15 +195,15 @@ vec4 GetMatsoDOFCA(sampler2D col, vec2 tex, float CoC)
 	vec2 tg = ((2.0 * tex - 1.0) * chroma.g) * 0.5 + 0.5;
 	vec2 tb = ((2.0 * tex - 1.0) * chroma.b) * 0.5 + 0.5;
 	
-	vec3 color = vec3(texture2D(col, tr).r, texture2D(col, tg).g, texture2D(col, tb).b) * (1.0 - CoC);
+	vec3 color = vec3(textureLod(col, tr, 0.0).r, textureLod(col, tg, 0.0).g, textureLod(col, tb, 0.0).b) * (1.0 - CoC);
 
 	return vec4(color, 1.0);
 }
 
 vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 {
-	vec4 tcol = texture2D(SamplerHDRX, coord.xy);
-	float depth = texture2D(u_ScreenDepthMap, coord.xy).x;
+	vec4 tcol = textureLod(SamplerHDRX, coord.xy, 0.0);
+	float depth = textureLod(u_ScreenDepthMap, coord.xy, 0.0).x;
 	float lDepth = linearize(depth);
 
 	if (lDepth < BLUR_DEPTH)
@@ -258,7 +258,7 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 			ct = GetMatsoDOFCA(SamplerHDRX, tcoord.xy, discRadius.x);
 		else
 #endif
-			ct = texture2D(SamplerHDRX, tcoord.xy);
+			ct = textureLod(SamplerHDRX, tcoord.xy, 0.0);
 
 		// my own pseudo-bokeh weighting
 		float b = dot(length(ct.rgb),0.333) + length(ct.rgb) + 0.1;

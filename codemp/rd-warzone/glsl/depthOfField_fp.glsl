@@ -144,7 +144,7 @@ float bdepth(vec2 coords) //blurring depth
 	
 	for( int i=0; i<9; i++ )
 	{
-		float tmp = texture2D(u_ScreenDepthMap, coords + offset[i]).r * 255;
+		float tmp = textureLod(u_ScreenDepthMap, coords + offset[i], 0.0).r * 255;
 		d += tmp * kernel[i];
 	}
 	
@@ -156,9 +156,9 @@ vec3 color(vec2 coords,float blur) //processing the sample
 {
 	vec3 col = vec3(0.0);
 	
-	col.r = texture2D(u_TextureMap,coords + vec2(0.0,1.0)*texel*fringe*blur).r;
-	col.g = texture2D(u_TextureMap,coords + vec2(-0.866,-0.5)*texel*fringe*blur).g;
-	col.b = texture2D(u_TextureMap,coords + vec2(0.866,-0.5)*texel*fringe*blur).b;
+	col.r = textureLod(u_TextureMap,coords + vec2(0.0,1.0)*texel*fringe*blur, 0.0).r;
+	col.g = textureLod(u_TextureMap,coords + vec2(-0.866,-0.5)*texel*fringe*blur, 0.0).g;
+	col.b = textureLod(u_TextureMap,coords + vec2(0.866,-0.5)*texel*fringe*blur, 0.0).b;
 	
 	const vec3 lumcoeff = vec3(0.299,0.587,0.114);
 	float lum = dot(col.rgb, lumcoeff);
@@ -209,11 +209,15 @@ void main()
 
 	//scene depth calculation
 	
-	float depth = linearize(texture2D(u_ScreenDepthMap,var_TexCoords.xy).x * 255);
+	float depth;
 	
 	if (depthblur)
 	{
 		depth = linearize(bdepth(var_TexCoords.xy));
+	}
+	else
+	{
+		depth = linearize(textureLod(u_ScreenDepthMap,var_TexCoords.xy, 0.0).x * 255);
 	}
 	
 	//focal plane calculation
@@ -222,18 +226,18 @@ void main()
 	
 	if (autofocus)
 	{
-		fDepth = linearize(texture2D(u_ScreenDepthMap,focus).x * 255);
+		fDepth = linearize(textureLod(u_ScreenDepthMap,focus, 0.0).x * 255);
 	}
 
 	if (!autofocus && depth <= fDepth)
 	{
-		gl_FragColor.rgb = texture(u_TextureMap, var_TexCoords.xy).rgb;
+		gl_FragColor.rgb = textureLod(u_TextureMap, var_TexCoords.xy, 0.0).rgb;
 		gl_FragColor.a = 1.0;
 		return;
 	}
 	else if (autofocus && blur_distant_only && depth <= fDepth && (constant_distant_blur && 0.0 - depth > constant_distant_blur_depth))
 	{
-		gl_FragColor.rgb = texture(u_TextureMap, var_TexCoords.xy).rgb;
+		gl_FragColor.rgb = textureLod(u_TextureMap, var_TexCoords.xy, 0.0).rgb;
 		gl_FragColor.a = 1.0;
 		return;
 	}
@@ -305,11 +309,11 @@ void main()
 	
 	if(blur < 0.05) //some optimization thingy
 	{
-		col = texture2D(u_TextureMap, var_TexCoords.xy).rgb;
+		col = textureLod(u_TextureMap, var_TexCoords.xy, 0.0).rgb;
 	}
 	else
 	{
-		col = texture2D(u_TextureMap, var_TexCoords.xy).rgb;
+		col = textureLod(u_TextureMap, var_TexCoords.xy, 0.0).rgb;
 		float s = 1.0;
 		int ringsamples;
 		
@@ -344,7 +348,7 @@ void main()
 		col *= vignette();
 	}
 	
-	//gl_FragColor.rgb = texture(u_ScreenDepthMap, texcoord).rgb;
+	//gl_FragColor.rgb = textureLod(u_ScreenDepthMap, texcoord, 0.0).rgb;
 	gl_FragColor.rgb = col;
 	gl_FragColor.a = 1.0;
 }

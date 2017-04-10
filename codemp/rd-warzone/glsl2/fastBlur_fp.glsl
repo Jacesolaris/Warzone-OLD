@@ -20,7 +20,7 @@ float linearize(float depth)
 
 vec4 FastBlur(void)
 {
-	vec4 color = texture2D(u_DiffuseMap, var_TexCoords.xy);
+	vec4 color = texture(u_DiffuseMap, var_TexCoords.xy);
 
 	int NUM_BLUR_PIXELS = 1;
 
@@ -28,7 +28,7 @@ vec4 FastBlur(void)
 	{
 		for (float y = -RADIUS_Y; y <= RADIUS_Y; y += py)
 		{
-			color.rgb += texture2D(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).rgb;
+			color.rgb += texture(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).rgb;
 			NUM_BLUR_PIXELS++;
 		}
 	}

@@ -143,6 +143,8 @@ varying vec3				var_Blending;
 varying float				var_Slope;
 varying float				var_usingSteepMap;
 
+varying vec3				var_fogDir;
+
 
 #define m_Normal			var_Normal
 #define m_TexCoords			var_TexCoords
@@ -243,9 +245,9 @@ vec4 GetControlMap( sampler2D tex, float scale)
 	//if (u_textureScale.x > 0.0) tScale.x = u_textureScale.x;
 	//if (u_textureScale.y > 0.0) tScale.y = u_textureScale.y;
 	
-	vec4 xaxis = texture( tex, (m_vertPos.yz * tScale * scale) * 0.5 + 0.5);
-	vec4 yaxis = texture( tex, (m_vertPos.xz * tScale * scale) * 0.5 + 0.5);
-	vec4 zaxis = texture( tex, (m_vertPos.xy * tScale * scale) * 0.5 + 0.5);
+	vec4 xaxis = textureLod( tex, (m_vertPos.yz * tScale * scale) * 0.5 + 0.5, 0.0);
+	vec4 yaxis = textureLod( tex, (m_vertPos.xz * tScale * scale) * 0.5 + 0.5, 0.0);
+	vec4 zaxis = textureLod( tex, (m_vertPos.xy * tScale * scale) * 0.5 + 0.5, 0.0);
 
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
@@ -567,7 +569,7 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			return ConvertToNormals(GetNonSplatMap(u_DiffuseMap, texCoords));
 		}
 
-		return texture(u_NormalMap, texCoords);
+		return textureLod(u_NormalMap, texCoords, 0.0);
 	}
 }
 
@@ -592,7 +594,7 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 		return ConvertToNormals(texture(u_DiffuseMap, texCoords + ParallaxOffset));
 	}
 
-	return texture(u_NormalMap, texCoords);
+	return textureLod(u_NormalMap, texCoords, 0.0);
 #endif
 }
 #endif //!defined(USE_TRI_PLANAR)
@@ -832,7 +834,7 @@ void main()
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
-		vec4 lightmapColor = texture(u_LightMap, var_TexCoords2.st);
+		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
 
 		#if defined(RGBM_LIGHTMAP)
 			lightmapColor.rgb *= lightmapColor.a;
@@ -861,7 +863,7 @@ void main()
 			#if defined(USE_SPECULARMAP) && !defined(USE_GLOW_BUFFER)
 			if (u_Local1.g != 0.0)
 			{// Real specMap...
-				specular = texture(u_SpecularMap, texCoords);
+				specular = textureLod(u_SpecularMap, texCoords, 0.0);
 			}
 			else
 			#endif //defined(USE_SPECULARMAP)
@@ -904,6 +906,48 @@ void main()
 #endif //defined(DEFERRED_REFLECTIONS)
 
 	gl_FragColor.rgb *= lightColor;
+
+
+//#define EXPERIMENTAL_VOLUMETRIC_FOG
+
+#if defined(EXPERIMENTAL_VOLUMETRIC_FOG)
+#if !defined(USE_GLOW_BUFFER)
+	const vec3 fogColor = vec3(0.9, 1.0, 0.8);
+	const float fogDensity = 0.005;
+
+	float n = fogDensity * length(var_fogDir);
+
+	//vec3 fogCoord = var_fogCrd;
+	//vec3 shadowCoord = shadowCrd;
+
+	float a = 1.0;
+	float b = 0.0;
+
+#define COUNT 40
+const vec4 fogScaleBias = vec4(0.0, -0.06 /* * time */, 0.0, 0.0008);
+vec3 fogCoord = vec3(var_TexCoords2.st, 0.0);
+
+	// Volumetric fog computation
+	for (int i = 0; i < COUNT; i++) {
+		fogCoord += fogScaleBias.w * var_fogDir;
+		//shadowCoord += shadowScale * var_fogDir;
+
+		//float fog = texture3D(Fog, fogCoord).x;
+		//float shadow = texture3D(LightMap, shadowCoord).x;
+
+		float fog = length(textureLod(u_LightMap, fogCoord.xy).rgb, 0.0) / 3.0;
+		float shadow = 1.0 - fog;
+
+		// Compute weighting factors. This implements the commented out lerp more efficiently.
+		float x = 1.0 - fog * n;
+		a *= x;
+		b = mix(shadow, b, x);
+	}
+
+	gl_FragColor.rgb = gl_FragColor.rgb * a + fogColor * b;
+#endif //!defined(USE_GLOW_BUFFER)
+#endif //defined(EXPERIMENTAL_VOLUMETRIC_FOG)
+
 
 	/*
 	vec2 encode (vec3 n)

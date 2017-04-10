@@ -48,15 +48,15 @@ float linearize(float depth)
 void main ( void )
 {
 #ifndef DUAL_PASS
-	vec4 diffuseColor = texture(u_DiffuseMap, var_TexCoords.xy);
+	vec4 diffuseColor = textureLod(u_DiffuseMap, var_TexCoords.xy, 0.0);
 #endif //DUAL_PASS
 	int  SUN_ID = int(u_ViewInfo.a);
 
-	//gl_FragColor.rgb = texture( u_GlowMap, var_TexCoords ).rgb;
+	//gl_FragColor.rgb = textureLod( u_GlowMap, var_TexCoords, 0.0 ).rgb;
 	//gl_FragColor.a = 1.0;
 	//return;
 
-	//gl_FragColor.rgb = vec3(linearize(texture( u_ScreenDepthMap, var_TexCoords ).r));
+	//gl_FragColor.rgb = vec3(linearize(textureLod( u_ScreenDepthMap, var_TexCoords, 0.0 ).r));
 	//gl_FragColor.a = 1.0;
 	//return;
 
@@ -95,7 +95,7 @@ void main ( void )
 		{
 			debugColor += vec3(1.0, 0.0, 0.0);
 
-			float invDepth = clamp(1.0 - linearize(texture( u_ScreenDepthMap, u_vlightPositions[i] ).r), 0.0, 1.0);
+			float invDepth = clamp(1.0 - linearize(textureLod( u_ScreenDepthMap, u_vlightPositions[i], 0.0 ).r), 0.0, 1.0);
 			float fall = clamp((fBloomrayFalloffRange * invDepth) - dist, 0.0, 1.0) * invDepth;
 
 			if (i == SUN_ID) 
@@ -109,7 +109,7 @@ void main ( void )
 
 				vec3 spotColor = u_vlightColors[i];
 				
-				if (length(texture( u_GlowMap, u_vlightPositions[i] ).rgb) <= VOLUMETRIC_THRESHOLD)
+				if (length(textureLod( u_GlowMap, u_vlightPositions[i], 0.0 ).rgb) <= VOLUMETRIC_THRESHOLD)
 				{// If it doesnt appear on the glow map, then it's not on the screen...
 					continue;
 				}
@@ -133,7 +133,7 @@ void main ( void )
 		if (i >= u_lightCount) break;
 
 		highp float dist = length(var_TexCoords - u_vlightPositions[i]);
-		highp float invDepth = clamp(1.0 - linearize(texture( u_ScreenDepthMap, u_vlightPositions[i] ).r), 0.0, 1.0);
+		highp float invDepth = clamp(1.0 - linearize(textureLod( u_ScreenDepthMap, u_vlightPositions[i], 0.0 ).r), 0.0, 1.0);
 		highp float fall = clamp((fBloomrayFalloffRange * invDepth) - dist, 0.0, 1.0) * invDepth;
 
 		if (i == SUN_ID) 
@@ -157,7 +157,7 @@ void main ( void )
 				fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
 			}
 
-			//vec3 spotColor = texture( u_GlowMap, u_vlightPositions[i] ).rgb;
+			//vec3 spotColor = textureLod( u_GlowMap, u_vlightPositions[i], 0.0 ).rgb;
 			highp vec3 spotColor = u_vlightColors[i];
 			highp vec3 glowColor = var_LightColor[i];
 
@@ -255,7 +255,7 @@ void main ( void )
 		{
 			texCoord -= deltaTexCoord;
 
-			highp float linDepth = linearize(texture(u_ScreenDepthMap, texCoord.xy).r);
+			highp float linDepth = linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
 
 			lens += linDepth * illuminationDecay * fBloomrayWeight;
 

@@ -1284,7 +1284,7 @@ extern void ParseMaterial(const char **text);
 
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 
-qboolean FOLIAGE_LoadMapClimateInfo(void)
+qboolean MAPPING_LoadMapClimateInfo(void)
 {
 	const char		*climateName = NULL;
 
@@ -1457,7 +1457,7 @@ void R_LoadMapInfo(void)
 	}
 
 	MAPPING_LoadDayNightCycleInfo();
-	FOLIAGE_LoadMapClimateInfo();
+	MAPPING_LoadMapClimateInfo();
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
 

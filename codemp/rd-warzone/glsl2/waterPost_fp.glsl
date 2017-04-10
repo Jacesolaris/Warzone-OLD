@@ -173,20 +173,20 @@ float fresnelTerm(vec3 normal, vec3 eyeVec)
 
 vec4 waterMapAtCoord ( vec2 coord )
 {
-	vec4 wmap = texture2D(u_WaterPositionMap, coord).xzyw;
+	vec4 wmap = textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
 	wmap.y -= waveHeight;
 	return wmap;
 }
 
 vec4 waterMap2AtCoord ( vec2 coord )
 {
-	//return texture2D(u_WaterPositionMap2, coord).xzyw;
-	return texture2D(u_WaterPositionMap, coord).xzyw;
+	//return textureLod(u_WaterPositionMap2, coord, 0.0).xzyw;
+	return textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
 }
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
-	return texture2D(u_PositionMap, coord).xzyw;
+	return textureLod(u_PositionMap, coord, 0.0).xzyw;
 }
 
 float pw = (1.0/u_Dimensions.x);
@@ -265,15 +265,15 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 		return inColor;
 	}
 
-	vec4 landColor = texture2D(u_DiffuseMap, vec2(coord.x, upPos));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos + ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos - ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos + ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos - ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos - ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos + ph));
+	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x, upPos + ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos + ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos + ph), 0.0);
 	landColor /= 9.0;
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
@@ -555,7 +555,7 @@ float getspecular(vec3 n, vec3 l, vec3 e, float s) {
 
 void main ( void )
 {
-	vec3 color2 = texture2D(u_DiffuseMap, var_TexCoords).rgb;
+	vec3 color2 = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
 	vec4 waterMap2 = waterMap2AtCoord(var_TexCoords);
 	waterMap2.y += waveHeight;
 	bool IS_UNDERWATER = false;
@@ -616,7 +616,7 @@ void main ( void )
 		vec2 texCoord = var_TexCoords.xy;
 		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * refractionScale;
 
-		vec3 refraction = texture2D(u_DiffuseMap, texCoord).rgb;
+		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
 		gl_FragColor = vec4(mix(depthColour, refraction, 0.7), 1.0);
 		return;
 	}
@@ -656,7 +656,7 @@ void main ( void )
 		{
 			texCoord = ((surfacePoint.xz + eyeVecNorm.xz * 0.1) * scale + timer * 0.000005 * wind) * waveDensity;
 			
-			float bias = texture2D(u_WaterHeightMap, texCoord).r;
+			float bias = textureLod(u_WaterHeightMap, texCoord, 0.0).r;
 	
 			bias *= 0.1;
 			level += bias * waveHeight;
@@ -708,10 +708,10 @@ void main ( void )
 		eyeVecNorm = normalize(ViewOrigin - /*waterMap2.xyz*/surfacePoint);
 		//eyeVecNorm = normalize(ViewOrigin - waterMap2.xyz);
 
-		float normal1 = texture2D(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
-		float normal2 = texture2D(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
-		float normal3 = texture2D(u_WaterHeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0))).r;
-		float normal4 = texture2D(u_WaterHeightMap, (texCoord + (vec2(0.0, 1.0) / 256.0))).r;
+		float normal1 = textureLod(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0)), 0.0).r;
+		float normal2 = textureLod(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0)), 0.0).r;
+		float normal3 = textureLod(u_WaterHeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0)), 0.0).r;
+		float normal4 = textureLod(u_WaterHeightMap, (texCoord + (vec2(0.0, 1.0) / 256.0)), 0.0).r;
 		
 		vec3 myNormal = normalize(vec3((normal1 - normal2) * waveHeight,
 										   normalScale,
@@ -719,19 +719,19 @@ void main ( void )
 
 		texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
 		mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal0a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
+		vec3 normal0a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
 
 		texCoord = surfacePoint.xz * 0.8 + wind * timer * 0.00008;
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal1a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
+		vec3 normal1a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
 		
 		texCoord = surfacePoint.xz * 0.4 + wind * timer * 0.00004;
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal2a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
+		vec3 normal2a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
 		
 		texCoord = surfacePoint.xz * 0.1 + wind * timer * 0.00002;
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal3a = normalize(tangentFrame * (2.0 * texture2D(u_NormalMap, texCoord).xyz - 1.0));
+		vec3 normal3a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
 		
 		vec3 normal = normalize(((normal0a * normalModifier.x) + (normal1a * normalModifier.y) +
 						(normal2a * normalModifier.z) + (normal3a * normalModifier.w)));
@@ -740,7 +740,7 @@ void main ( void )
 
 		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale * min(depth2, 1.0));
 
-		vec3 refraction = texture2D(u_DiffuseMap, texCoord).rgb;
+		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
 
 		vec4 position2 = positionMapAtCoord(texCoord);
 		vec4 waterMap3 = waterMapAtCoord(texCoord);
@@ -771,18 +771,18 @@ void main ( void )
 		
 		if (depth2 < foamExistence.x)
 		{
-			foam = (texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5;
+			foam = (texture(u_OverlayMap, texCoord) + texture(u_OverlayMap, texCoord2)) * 0.5;
 		}
 		else if (depth2 < foamExistence.y)
 		{
-			foam = mix((texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5, vec4(0.0),
+			foam = mix((texture(u_OverlayMap, texCoord) + texture(u_OverlayMap, texCoord2)) * 0.5, vec4(0.0),
 						 vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
 		}
 		
 		
 		if (waveHeight - foamExistence.z > 0.0001)
 		{
-			foam += (texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5 * 
+			foam += (texture(u_OverlayMap, texCoord) + texture(u_OverlayMap, texCoord2)) * 0.5 * 
 				clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
 		}
 		
@@ -846,7 +846,7 @@ void main ( void )
 		}
 		else*/
 		{
-			float depthMap = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);//length(u_ViewOrigin.xyz - position.xzy);
+			float depthMap = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);//length(u_ViewOrigin.xyz - position.xzy);
 			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xyz/*position.xzy*/, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );
 		}
 	}

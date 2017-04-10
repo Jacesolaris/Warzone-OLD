@@ -41,14 +41,14 @@ float linearlizeDepth(float nonlinearDepth)
 
 vec3 normals(vec2 tex)//get normal vector from depthmap
 {
-	float deltax = linearlizeDepth( texture(u_DepthMap, vec2((tex.x + pixelSize.x), tex.y)).x) - linearlizeDepth( texture(u_DepthMap, vec2((tex.x - pixelSize.x), tex.y)).x);
-	float deltay = linearlizeDepth( texture(u_DepthMap, vec2( tex.x, (tex.y + pixelSize.y))).x) - linearlizeDepth( texture(u_DepthMap, vec2( tex.x, (tex.y - pixelSize.y))).x);	
+	float deltax = linearlizeDepth( textureLod(u_DepthMap, vec2((tex.x + pixelSize.x), tex.y), 0.0).x) - linearlizeDepth( textureLod(u_DepthMap, vec2((tex.x - pixelSize.x), tex.y), 0.0).x);
+	float deltay = linearlizeDepth( textureLod(u_DepthMap, vec2( tex.x, (tex.y + pixelSize.y)), 0.0).x) - linearlizeDepth( textureLod(u_DepthMap, vec2( tex.x, (tex.y - pixelSize.y)), 0.0).x);	
 	return normalize(vec3( (deltax / 2.0 / pixelSize.x), (deltay / 2.0 / pixelSize.y), 1.0));
 }
 #else
 vec3 normals(vec2 tex)//get normal vector from normalmap
 {
-	return texture(u_NormalMap, tex).xyz * 2.0 - 1.0;
+	return textureLod(u_NormalMap, tex, 0.0).xyz * 2.0 - 1.0;
 }
 #endif
 
@@ -60,7 +60,7 @@ void main (void)
 {
 	vec2 tex = var_TexCoords.xy;
 	
-	vec4 res = texture(u_DiffuseMap, tex);
+	vec4 res = textureLod(u_DiffuseMap, tex, 0.0);
 	
 	vec3 Gx[3];
 	Gx[0] = vec3(-1.0, 0.0, 1.0);

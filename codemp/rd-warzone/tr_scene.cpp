@@ -527,6 +527,12 @@ extern void R_LocalPointToWorld(const vec3_t local, vec3_t world);
 extern void R_WorldToLocal(const vec3_t world, vec3_t local);
 #endif //__DAY_NIGHT__
 
+extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
+
+#ifdef __RENDERER_GROUND_FOLIAGE__
+extern void FOLIAGE_DrawGrass(void);
+#endif //__RENDERER_GROUND_FOLIAGE__
+
 extern void RB_AddGlowShaderLights(void);
 extern void RB_UpdateCloseLights();
 
@@ -752,6 +758,16 @@ void RE_BeginScene(const refdef_t *fd)
 #ifdef __ORIGINAL_OCCLUSION__
 	tr.world->numVisibleLeafs = 0;
 #endif //__ORIGINAL_OCCLUSION__
+
+	// UQ1: Set refdef.viewangles... Hopefully this place is good enough to do it?!?!?!?
+	TR_AxisToAngles(tr.refdef.viewaxis, tr.refdef.viewangles);
+
+#ifdef __RENDERER_GROUND_FOLIAGE__
+	//if (backEnd.depthFill && !(tr.refdef.rdflags & RDF_NOWORLDMODEL))
+	{
+		FOLIAGE_DrawGrass();
+	}
+#endif //__RENDERER_GROUND_FOLIAGE__
 }
 
 void RE_EndScene()

@@ -10,7 +10,7 @@ const float gauss[4] = float[4](0.40, 0.24, 0.054, 0.0044);
 
 float getLinearDepth(sampler2D depthMap, const vec2 tex, const float zFarDivZNear)
 {
-		float sampleZDivW = texture2D(depthMap, tex).r;
+		float sampleZDivW = textureLod(depthMap, tex, 0.0).r;
 		return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
 }
 
@@ -27,7 +27,7 @@ vec4 depthGaussian1D(sampler2D imageMap, sampler2D depthMap, vec2 tex, float zFa
 	float depthCenter = zFar * getLinearDepth(depthMap, tex, zFarDivZNear);
 	vec2 centerSlope = vec2(dFdx(depthCenter), dFdy(depthCenter)) / vec2(dFdx(tex.x), dFdy(tex.y));
 		
-	vec4 result = texture2D(imageMap, tex) * gauss[0];
+	vec4 result = textureLod(imageMap, tex, 0.0) * gauss[0];
 	float total = gauss[0];
 
 	int i, j;
@@ -40,7 +40,7 @@ vec4 depthGaussian1D(sampler2D imageMap, sampler2D depthMap, vec2 tex, float zFa
 			float depthExpected = depthCenter + dot(centerSlope, offset);
 			if(abs(depthSample - depthExpected) < 5.0)
 			{
-				result += texture2D(imageMap, tex + offset) * gauss[j];
+				result += textureLod(imageMap, tex + offset, 0.0) * gauss[j];
 				total += gauss[j];
 			}
 		}

@@ -34,7 +34,7 @@ float DepthToZPosition(in float depth) {
 
 float GetDepth(in vec2 texcoord)
 {
-	return linearize(texture2D(u_ScreenDepthMap, texcoord).x);
+	return linearize(textureLod(u_ScreenDepthMap, texcoord, 0.0).x);
 }
 
 float readZPosition(in vec2 texcoord) {

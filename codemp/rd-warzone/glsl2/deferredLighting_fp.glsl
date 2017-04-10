@@ -142,7 +142,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 
 	for (float y = coord.y; y < 1.0; y += ph * 50.0)
 	{
-		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
 
 		bool isSameMaterial = false;
 		
@@ -165,7 +165,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 
 	for (float y = coord.y; y < 1.0; y += ph * 5.0)
 	{
-		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
 
 		bool isSameMaterial = false;
 		
@@ -192,7 +192,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 
 	for (float y = QLAND_Y; y < 1.0; y += ph)
 	{
-		vec4 pMap = texture2D(u_PositionMap, vec2(coord.x, y));
+		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
 
 		bool isSameMaterial = false;
 
@@ -225,15 +225,15 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectStre
 	//	return inColor;
 	//}
 
-	vec4 landColor = texture2D(u_DiffuseMap, vec2(coord.x, upPos));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos + ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos - ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos + ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos - ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos - ph));
-	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos + ph));
+	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x, upPos + ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos + ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos + ph), 0.0);
 	landColor /= 9.0;
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * reflectStrength/*0.28*//*u_Local0.r*/);
@@ -267,15 +267,15 @@ vec3 doBump( in vec3 pos, in vec3 nor, in float signal, in float scale )
 
 void main(void)
 {
-	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
+	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
 	gl_FragColor = vec4(color.rgb, 1.0);
 
 	vec2 texCoords = var_TexCoords;
 
-#if 1
+#if 0 // Debugging stuff
 	if (u_Local3.g >= 2.0)
 	{
-		vec4 position = texture2D(u_PositionMap, texCoords);
+		vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
 
 		if (u_Local3.g >= 4.0)
 			gl_FragColor.rgb = vec3((position.rg / u_Local3.r), 0.0) * 0.5 + 0.5;
@@ -288,7 +288,7 @@ void main(void)
 
 	if (u_Local3.g >= 1.0)
 	{
-		vec4 position = texture2D(u_PositionMap, texCoords);
+		vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
 
 		float dist = distance(position.xyz, u_ViewOrigin.xyz);
 		dist = clamp(dist / 4096.0, 0.0, 1.0);
@@ -298,7 +298,7 @@ void main(void)
 #endif
 
 	vec3 viewOrg = u_ViewOrigin.xyz;
-	vec4 position = texture2D(u_PositionMap, texCoords);
+	vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
 
 	if (position.a == 1024.0 || position.a == 1025.0)
 	{// Skybox... Skip...
@@ -312,7 +312,7 @@ void main(void)
 		return;
 	}*/
 
-	vec4 norm = texture2D(u_NormalMap, texCoords);
+	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	norm.xyz = decode(norm.xy);
 
 #ifdef __CUBEMAP__
@@ -374,13 +374,13 @@ void main(void)
 #ifdef HIGH_QUALITY_SHADOWS
 		for (float y = -3.5 ; y <=3.5 ; y+=1.0)
 			for (float x = -3.5 ; x <=3.5 ; x+=1.0)
-				shadowValue += texture(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0)).r;
+				shadowValue += textureLod(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0), 0.0).r;
 
 		shadowValue /= 64.0;
 #else //!HIGH_QUALITY_SHADOWS
 		for (float y = -1.75 ; y <=1.75 ; y+=1.0)
 			for (float x = -1.75 ; x <=1.75 ; x+=1.0)
-				shadowValue += texture(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0)).r;
+				shadowValue += textureLod(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0), 0.0).r;
 
 		shadowValue /= 32.0;
 #endif //HIGH_QUALITY_SHADOWS

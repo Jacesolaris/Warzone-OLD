@@ -25,7 +25,7 @@ float rand(vec2 co){
 
 void main()
 {
-	vec4 diffuseColor = texture2D(u_DiffuseMap, var_ScreenTex);
+	vec4 diffuseColor = textureLod(u_DiffuseMap, var_ScreenTex, 0.0);
 #ifdef RANDOMIZE_PIXELS
 	float random = rand(var_ScreenTex);
 #endif
@@ -33,22 +33,22 @@ void main()
 #if defined(BLUR_WIDTH)
 	vec2 offset = vec2(1.0) / u_Dimensions;
 
-	vec4 pixelLight = texture2D(u_NormalMap, var_ScreenTex);
+	vec4 pixelLight = textureLod(u_NormalMap, var_ScreenTex, 0.0);
 	vec3 volumeLight = pixelLight.rgb;
 	
 	for (float i = 1.0; i < BLUR_WIDTH+1.0; i+=1.0)
 	{
-		volumeLight += texture2D(u_NormalMap, var_ScreenTex + (offset * vec2(i, 0.0))).rgb;
-		volumeLight += texture2D(u_NormalMap, var_ScreenTex + (offset * vec2(0.0, i))).rgb;
-		volumeLight += texture2D(u_NormalMap, var_ScreenTex + (offset * vec2(i, i))).rgb;
-		volumeLight += texture2D(u_NormalMap, var_ScreenTex + (offset * vec2(-i, 0.0))).rgb;
-		volumeLight += texture2D(u_NormalMap, var_ScreenTex + (offset * vec2(0.0, -i))).rgb;
-		volumeLight += texture2D(u_NormalMap, var_ScreenTex + (offset * vec2(-i, -i))).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(i, 0.0)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(0.0, i)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(i, i)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(-i, 0.0)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(0.0, -i)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(-i, -i)), 0.0).rgb;
 	}
 
 	volumeLight /= ((6.0 * (BLUR_WIDTH+1.0)) + 1.0);
 #else
-	vec3 volumeLight = texture2D(u_NormalMap, var_ScreenTex).rgb;
+	vec3 volumeLight = textureLod(u_NormalMap, var_ScreenTex, 0.0).rgb;
 #endif
 
 #ifdef APPLY_CONTRAST

@@ -753,6 +753,8 @@ void RB_ClearWaterPositionMap ( void )
 extern void RB_InitOcclusionFrame(void);
 #endif //__ORIGINAL_OCCLUSION__
 
+extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
+
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
 
@@ -896,6 +898,9 @@ void RB_BeginDrawingView (void) {
 #endif
 		GL_SetModelviewMatrix( s_flipMatrix );
 	}
+
+	// UQ1: Set refdef.viewangles... Hopefully this place is good enough to do it?!?!?!?
+	//TR_AxisToAngles(tr.refdef.viewaxis, tr.refdef.viewangles);
 }
 
 #define	MAC_EVENT_PUMP_MSEC		5
