@@ -25,7 +25,7 @@ extern qboolean InFOV(vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int
 #define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
 #define			__NO_PLANTS__	// Disable plants and only draw grass for everything... Was just for testing FPS difference...
 #define			__NEW_PLANTS__  // Use new ground cover plants (requires __NO_PLANTS__ above to disable the old ones)
-//#define		__USE_GPU__
+//#define			__USE_GPU__		// Experimenting with using C++ AMP to do some calculation on the GPU...
 
 // =======================================================================================================================================
 //
@@ -33,6 +33,13 @@ extern qboolean InFOV(vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int
 //
 // =======================================================================================================================================
 
+#ifdef __USE_GPU__
+#include <amp.h>
+#include <amp_math.h>
+using namespace concurrency;
+//using namespace concurrency::precise_math;
+using namespace concurrency::fast_math;
+#endif //__USE_GPU__
 
 // =======================================================================================================================================
 //
@@ -1129,13 +1136,16 @@ void FOLIAGE_VisibleAreaSortTrees(void)
 	}
 }
 
-#include <amp.h>
-#include <amp_math.h>
-using namespace concurrency;
-using namespace concurrency::precise_math;
 
 void FOLIAGE_Calc_In_Range_Areas(void)
 {
+	if (FOLIAGE_AREAS_COUNT <= 0)
+	{
+		IN_RANGE_AREAS_LIST_COUNT = 0;
+		IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
+		return;
+	}
+
 	int i = 0;
 
 	FOLIAGE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
@@ -1169,88 +1179,122 @@ void FOLIAGE_Calc_In_Range_Areas(void)
 
 		// Calculate currently-in-range areas to use...
 #ifdef __USE_GPU__
-		int TEMP_FOLIAGE_VISIBLE_DISTANCE[1] = { FOLIAGE_VISIBLE_DISTANCE };
-		int TEMP_FOLIAGE_TREE_VISIBLE_DISTANCE[1] = { FOLIAGE_TREE_VISIBLE_DISTANCE };
-		array_view<const int, 1> FOLIAGE_VISIBLE_DISTANCE_GPU(1, TEMP_FOLIAGE_VISIBLE_DISTANCE);
-		array_view<const int, 1> FOLIAGE_TREE_VISIBLE_DISTANCE_GPU(1, TEMP_FOLIAGE_TREE_VISIBLE_DISTANCE);
-		array_view<const float, 1> VIEWORG_GPU(3, cg.refdef.vieworg);
+
+		//
+		// Static stuff...
+		//
+
+		// Mins/Maxs Inputs...
+		std::vector<float> GPU_FOLIAGE_MINS(FOLIAGE_AREAS_COUNT*3);
+		std::vector<float> GPU_FOLIAGE_MAXS(FOLIAGE_AREAS_COUNT*3);
+		for (int i = 0; i < FOLIAGE_AREAS_COUNT; i++)
+		{
+			GPU_FOLIAGE_MINS[(i * 3)] = FOLIAGE_AREAS_MINS[i][0];
+			GPU_FOLIAGE_MINS[(i * 3) + 1] = FOLIAGE_AREAS_MINS[i][1];
+			GPU_FOLIAGE_MINS[(i * 3) + 2] = FOLIAGE_AREAS_MINS[i][2];
+
+			GPU_FOLIAGE_MAXS[(i * 3)] = FOLIAGE_AREAS_MAXS[i][0];
+			GPU_FOLIAGE_MAXS[(i * 3) + 1] = FOLIAGE_AREAS_MAXS[i][1];
+			GPU_FOLIAGE_MAXS[(i * 3) + 2] = FOLIAGE_AREAS_MAXS[i][2];
+		}
 		
-		int TEMP_MAP_HAS_TREES[1] = { MAP_HAS_TREES };
-		array_view<const int, 1> MAP_HAS_TREES_GPU(1, TEMP_MAP_HAS_TREES);
-		array_view<const float, 1> FOLIAGE_AREAS_MINS_GPU(131072, (const float *)FOLIAGE_AREAS_MINS);
-		array_view<const float, 1> FOLIAGE_AREAS_MAXS_GPU(131072, (const float *)FOLIAGE_AREAS_MINS);
+		array<float, 1> fmins(FOLIAGE_AREAS_COUNT*3, GPU_FOLIAGE_MINS.begin(), GPU_FOLIAGE_MINS.end());
+		array<float, 1> fmaxs(FOLIAGE_AREAS_COUNT*3, GPU_FOLIAGE_MAXS.begin(), GPU_FOLIAGE_MAXS.end());
 
-		int TEMP_IN_RANGE_AREAS_LIST_COUNT[1] = { 0 };
-		int TEMP_IN_RANGE_TREE_AREAS_LIST_COUNT[1] = { 0 };
 
-		array_view<int, 1> IN_RANGE_AREAS_LIST_COUNT_GPU(1, TEMP_IN_RANGE_AREAS_LIST_COUNT);
-		array_view<int, 1> IN_RANGE_AREAS_LIST_GPU(8192, IN_RANGE_AREAS_LIST);
-		array_view<float, 1> IN_RANGE_AREAS_DISTANCE_GPU(8192, IN_RANGE_AREAS_DISTANCE);
+		// Distance Outputs...
+		std::vector<float> GPU_FOLIAGE_MINS_DISTANCES(FOLIAGE_AREAS_COUNT);
+		std::vector<float> GPU_FOLIAGE_MAXS_DISTANCES(FOLIAGE_AREAS_COUNT);
+		
+		array_view<float, 1> gfMinDist(FOLIAGE_AREAS_COUNT, GPU_FOLIAGE_MINS_DISTANCES);
+		array_view<float, 1> gfMaxDist(FOLIAGE_AREAS_COUNT, GPU_FOLIAGE_MAXS_DISTANCES);
 
-		array_view<int, 1> IN_RANGE_TREE_AREAS_LIST_COUNT_GPU(1, TEMP_IN_RANGE_TREE_AREAS_LIST_COUNT);
-		array_view<int, 1> IN_RANGE_TREE_AREAS_LIST_GPU(131072, IN_RANGE_TREE_AREAS_LIST);
-		array_view<float, 1> IN_RANGE_TREE_AREAS_DISTANCE_GPU(131072, IN_RANGE_TREE_AREAS_DISTANCE);
+		gfMinDist.discard_data();
+		gfMaxDist.discard_data();
+		//
+		//
+		//
 
-		parallel_for_each(
-			// Define the compute domain, which is the set of threads that are created.  
-			FOLIAGE_AREAS_MINS_GPU.extent/3,
-			// Define the code to run on each thread on the accelerator.  
-			[=](index<1> idx) restrict(amp)
+		//
+		// Dynamic stuff...
+		//
+		std::vector<float> GPU_VIEWPOS(3);
+		GPU_VIEWPOS[0] = cg.refdef.vieworg[0];
+		GPU_VIEWPOS[1] = cg.refdef.vieworg[1];
+		GPU_VIEWPOS[2] = cg.refdef.vieworg[2];
+		array_view<float, 1> gviewPos(3, GPU_VIEWPOS);
+
+		std::vector<float> AMP_TEMPVEC3(3);
+		array_view<float, 1> gtempVec(3, AMP_TEMPVEC3);
+
+		gtempVec.discard_data();
+		//
+		//
+		//
+
+		concurrency::parallel_for_each(
+			fmins.extent / 3,
+			[=, &fmins](index<1> idx) restrict(amp)
 		{
-			float minsDist, maxsDist;
-			vec3_t	v;
-			v[0] = FOLIAGE_AREAS_MINS_GPU[idx*3] - VIEWORG_GPU[0];
-			v[1] = FOLIAGE_AREAS_MINS_GPU[(idx * 3) + 1] - VIEWORG_GPU[1];
-			v[2] = FOLIAGE_AREAS_MINS_GPU[(idx * 3) + 2] - VIEWORG_GPU[2];
-			minsDist = sqrt(v[0] * v[0] + v[1] * v[1]); //Leave off the z component
+			// mins dist
+			gtempVec[0] = fmins[(idx*3)] - gviewPos[0];
+			gtempVec[1] = fmins[(idx * 3) + 1] - gviewPos[1];
+			gtempVec[2] = fmins[(idx * 3) + 2] - gviewPos[2];
+			
+			gfMinDist[idx] = sqrt(gtempVec[0] * gtempVec[0] + gtempVec[1] * gtempVec[1]); //Leave off the z component
+		});
 
-			v[0] = FOLIAGE_AREAS_MAXS_GPU[idx*3] - VIEWORG_GPU[0];
-			v[1] = FOLIAGE_AREAS_MAXS_GPU[(idx * 3) + 1] - VIEWORG_GPU[1];
-			v[2] = FOLIAGE_AREAS_MAXS_GPU[(idx * 3) + 2] - VIEWORG_GPU[2];
-			maxsDist = sqrt(v[0] * v[0] + v[1] * v[1]); //Leave off the z component
+		concurrency::parallel_for_each(
+			fmaxs.extent / 3,
+			[=, &fmaxs](index<1> idx) restrict(amp)
+		{
+			// maxs dist
+			gtempVec[0] = fmaxs[(idx * 3)] - gviewPos[0];
+			gtempVec[1] = fmaxs[(idx * 3) + 1] - gviewPos[1];
+			gtempVec[2] = fmaxs[(idx * 3) + 2] - gviewPos[2];
 
-			if (minsDist < FOLIAGE_VISIBLE_DISTANCE_GPU[0]
-				|| maxsDist < FOLIAGE_VISIBLE_DISTANCE_GPU[0])
+			gfMaxDist[idx] = sqrt(gtempVec[0] * gtempVec[0] + gtempVec[1] * gtempVec[1]); //Leave off the z component
+		});
+
+
+		for (i = 0; i < FOLIAGE_AREAS_COUNT; i++)
+		{
+			float minsDist = GPU_FOLIAGE_MINS_DISTANCES[i];
+			float maxsDist = GPU_FOLIAGE_MAXS_DISTANCES[i];
+
+			if (minsDist < FOLIAGE_VISIBLE_DISTANCE
+				|| maxsDist < FOLIAGE_VISIBLE_DISTANCE)
 			{
-				IN_RANGE_AREAS_LIST_GPU[IN_RANGE_AREAS_LIST_COUNT_GPU[0]] = idx[0];
+				IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
 
 				if (minsDist < maxsDist)
-					IN_RANGE_AREAS_DISTANCE_GPU[IN_RANGE_AREAS_LIST_COUNT_GPU[0]] = minsDist;
+					IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = minsDist;
 				else
-					IN_RANGE_AREAS_DISTANCE_GPU[IN_RANGE_AREAS_LIST_COUNT_GPU[0]] = maxsDist;
+					IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = maxsDist;
 
-				IN_RANGE_AREAS_LIST_COUNT_GPU[0]++;
+				IN_RANGE_AREAS_LIST_COUNT++;
 			}
-			else if (MAP_HAS_TREES_GPU[0] > 0
-				&& (minsDist < FOLIAGE_TREE_VISIBLE_DISTANCE_GPU[0] || maxsDist < FOLIAGE_TREE_VISIBLE_DISTANCE_GPU[0]))
+			else if (MAP_HAS_TREES
+				&& (minsDist < FOLIAGE_TREE_VISIBLE_DISTANCE || maxsDist < FOLIAGE_TREE_VISIBLE_DISTANCE))
 			{
-				IN_RANGE_TREE_AREAS_LIST_GPU[IN_RANGE_TREE_AREAS_LIST_COUNT_GPU[0]] = idx[0];
+				if (FOLIAGE_Box_In_FOV(FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i], i, minsDist, maxsDist))
+				{
+					IN_RANGE_TREE_AREAS_LIST[IN_RANGE_TREE_AREAS_LIST_COUNT] = i;
 
-				if (minsDist < maxsDist)
-					IN_RANGE_TREE_AREAS_DISTANCE_GPU[IN_RANGE_TREE_AREAS_LIST_COUNT_GPU[0]] = minsDist;
-				else
-					IN_RANGE_TREE_AREAS_DISTANCE_GPU[IN_RANGE_TREE_AREAS_LIST_COUNT_GPU[0]] = maxsDist;
+					if (minsDist < maxsDist)
+						IN_RANGE_TREE_AREAS_DISTANCE[IN_RANGE_TREE_AREAS_LIST_COUNT] = minsDist;
+					else
+						IN_RANGE_TREE_AREAS_DISTANCE[IN_RANGE_TREE_AREAS_LIST_COUNT] = maxsDist;
 
-				IN_RANGE_TREE_AREAS_LIST_COUNT_GPU[0]++;
+					IN_RANGE_TREE_AREAS_LIST_COUNT++;
+				}
 			}
 		}
-		);
 
-		IN_RANGE_AREAS_LIST_COUNT = IN_RANGE_AREAS_LIST_COUNT_GPU[0];
-		for (int i2 = 0; i2 < IN_RANGE_AREAS_LIST_COUNT; i2++)
-		{
-			IN_RANGE_AREAS_LIST[i2] = IN_RANGE_AREAS_LIST_GPU[i2];
-			IN_RANGE_AREAS_DISTANCE[i2] = IN_RANGE_AREAS_DISTANCE_GPU[i2];
-		}
+		// Free GPU memory...
+		amp_uninitialize();
 
-		IN_RANGE_TREE_AREAS_LIST_COUNT = IN_RANGE_TREE_AREAS_LIST_COUNT_GPU[0];
-		for (int i2 = 0; i2 < IN_RANGE_TREE_AREAS_LIST_COUNT; i2++)
-		{
-			IN_RANGE_TREE_AREAS_LIST[i2] = IN_RANGE_TREE_AREAS_LIST_GPU[i2];
-			IN_RANGE_TREE_AREAS_DISTANCE[i2] = IN_RANGE_TREE_AREAS_DISTANCE_GPU[i2];
-		}
-
-		trap->Print("IN_RANGE_AREAS_LIST_COUNT: %i. IN_RANGE_TREE_AREAS_LIST_COUNT: %i.\n", IN_RANGE_AREAS_LIST_COUNT, IN_RANGE_TREE_AREAS_LIST_COUNT);
+		//trap->Print("IN_RANGE_AREAS_LIST_COUNT: %i. IN_RANGE_TREE_AREAS_LIST_COUNT: %i.\n", IN_RANGE_AREAS_LIST_COUNT, IN_RANGE_TREE_AREAS_LIST_COUNT);
 #else //!__USE_GPU__
 		for (i = 0; i < FOLIAGE_AREAS_COUNT; i++)
 		{
