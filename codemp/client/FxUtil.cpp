@@ -134,7 +134,7 @@ static SEffectList *FX_GetValidEffect()
 	}
 
 	int			i, best_replace = 0, best_replace_time = cl.serverTime + 10000;
-	SEffectList	*ef;
+	SEffectList	*ef = NULL;
 
 	// Blah..plow through the list till we find something that is currently untainted
 	for ( i = 0, ef = effectList; i < MAX_EFFECTS; i++, ef++ )

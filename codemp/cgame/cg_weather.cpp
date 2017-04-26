@@ -34,6 +34,21 @@ int			ATMOSPHERIC_WEATHER_TYPE = WEATHER_NONE;
 int			ATMOSPHERIC_NEXT_LIGHTNING_FLASH_TIME = 0;
 int			ATMOSPHERIC_NEXT_SOUND_TIME = 0;
 
+
+qhandle_t WEATHER_RAIN_EFX = NULL;
+qhandle_t WEATHER_HEAVY_RAIN_EFX = NULL;
+qhandle_t WEATHER_RAIN_STORM_EFX = NULL;
+qhandle_t WEATHER_SNOW_EFX = NULL;
+qhandle_t WEATHER_HEAVY_SNOW_EFX = NULL;
+qhandle_t WEATHER_SNOW_STORM_EFX = NULL;
+qhandle_t WEATHER_VOLUMETRIC_FOG_EFX = NULL;
+
+qhandle_t WEATHER_RAIN_SOUND = NULL;
+qhandle_t WEATHER_HEAVY_RAIN_SOUND = NULL;
+qhandle_t WEATHER_RAIN_STORM_SOUND = NULL;
+qhandle_t WEATHER_LIGHTNING_SOUNDS[4] = { NULL };
+
+
 qhandle_t	lightning1 = -1;
 qhandle_t	lightning2 = -1;
 qhandle_t	lightning3 = -1;
@@ -127,6 +142,10 @@ void CG_LightningFlash( vec3_t spot )
 		lightning2 = trap->FX_RegisterEffect("effects/atmospherics/lightning_flash2.efx");
 		lightning3 = trap->FX_RegisterEffect("effects/atmospherics/lightning_flash3.efx");
 		lightningExplode = trap->FX_RegisterEffect("effects/env/lightning_explode.efx");
+		WEATHER_LIGHTNING_SOUNDS[0] = trap->S_RegisterSound("sound/atmospherics/thunder0.wav");
+		WEATHER_LIGHTNING_SOUNDS[1] = trap->S_RegisterSound("sound/atmospherics/thunder1.wav");
+		WEATHER_LIGHTNING_SOUNDS[2] = trap->S_RegisterSound("sound/atmospherics/thunder2.wav");
+		WEATHER_LIGHTNING_SOUNDS[3] = trap->S_RegisterSound("sound/atmospherics/thunder3.wav");
 	}
 
 	scale = (spot[2] - cg.refdef.vieworg[2]) / 256.0;
@@ -150,7 +169,7 @@ void CG_LightningFlash( vec3_t spot )
 
 	//trap->Print("Flash OK at %f %f %f.\n", spot[0], spot[1], spot[2]);
 
-	trap->S_StartLocalSound(trap->S_RegisterSound(va("sound/atmospherics/thunder%i.wav", rand()%3)), CHAN_AUTO);
+	trap->S_StartLocalSound(WEATHER_LIGHTNING_SOUNDS[rand()%3], CHAN_AUTO);
 }
 
 qboolean CG_CheckRangedFog( void )
@@ -172,7 +191,7 @@ void CG_AddVolumetricFog( void )
 	{
 		vec3_t direction = { 0, 1, 0 };
 		vec3_t spot = { ((rand()%512)+cg.refdef.vieworg[0])-256, ((rand()%512)+cg.refdef.vieworg[1])-256, ((rand()%512)+cg.refdef.vieworg[2])-256 };
-		trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/fog.efx"), spot, direction, 0, 0, qfalse);
+		trap->FX_PlayEffectID(WEATHER_VOLUMETRIC_FOG_EFX, spot, direction, 0, 0, qfalse);
 	}
 }
 
@@ -186,6 +205,35 @@ void CG_AddAtmosphericEffects()
 	if (!ATMOSPHERICS_INITIIALIZED)
 	{
 		CG_AtmosphericKludge();
+
+		switch (ATMOSPHERIC_WEATHER_TYPE)
+		{
+		case WEATHER_RAIN:
+			WEATHER_RAIN_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_rain.efx");
+			WEATHER_RAIN_SOUND = trap->S_RegisterSound("sound/atmospherics/rain.wav");
+			break;
+		case WEATHER_HEAVY_RAIN:
+			WEATHER_HEAVY_RAIN_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_heavyrain.efx");
+			WEATHER_HEAVY_RAIN_SOUND = trap->S_RegisterSound("sound/atmospherics/heavy_rain.wav");
+			break;
+		case WEATHER_RAIN_STORM:
+			WEATHER_RAIN_STORM_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_storm.efx");
+			WEATHER_RAIN_STORM_SOUND = trap->S_RegisterSound("sound/atmospherics/heavy_rain.wav");
+			break;
+		case WEATHER_SNOW:
+			WEATHER_SNOW_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snow.efx");
+			break;
+		case WEATHER_HEAVY_SNOW:
+			WEATHER_HEAVY_SNOW_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_heavysnow.efx");
+			break;
+		case WEATHER_SNOW_STORM:
+			WEATHER_SNOW_STORM_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snowstorm.efx");
+			WEATHER_VOLUMETRIC_FOG_EFX = trap->FX_RegisterEffect("effects/atmospherics/fog.efx");
+			break;
+		default:
+			break;
+		}
+		
 		ATMOSPHERICS_INITIIALIZED = qtrue;
 	}
 
@@ -264,40 +312,40 @@ void CG_AddAtmosphericEffects()
 		switch (ATMOSPHERIC_WEATHER_TYPE)
 		{
 		case WEATHER_RAIN:
-			trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/atmospheric_rain.efx"), spot, down, 0, 0, qfalse);
+			trap->FX_PlayEffectID(WEATHER_RAIN_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
-				trap->S_StartLocalSound(trap->S_RegisterSound("sound/atmospherics/rain.wav"), CHAN_AUTO);
+				trap->S_StartLocalSound(WEATHER_RAIN_SOUND, CHAN_AUTO);
 				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 27000;
 			}
 			break;
 		case WEATHER_HEAVY_RAIN:
-			trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/atmospheric_heavyrain.efx"), spot, down, 0, 0, qfalse);
+			trap->FX_PlayEffectID(WEATHER_HEAVY_RAIN_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
-				trap->S_StartLocalSound(trap->S_RegisterSound("sound/atmospherics/heavy_rain.wav"), CHAN_AUTO);
+				trap->S_StartLocalSound(WEATHER_HEAVY_RAIN_SOUND, CHAN_AUTO);
 				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 27000;
 			}
 			break;
 		case WEATHER_RAIN_STORM:
-			trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/atmospheric_storm.efx"), spot, down, 0, 0, qfalse);
+			trap->FX_PlayEffectID(WEATHER_RAIN_STORM_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
-				trap->S_StartLocalSound(trap->S_RegisterSound("sound/atmospherics/heavy_rain.wav"), CHAN_AUTO);
+				trap->S_StartLocalSound(WEATHER_RAIN_STORM_SOUND, CHAN_AUTO);
 				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 27000;
 			}
 			break;
 		case WEATHER_SNOW:
-			trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snow.efx"), spot, down, 0, 0, qfalse);
+			trap->FX_PlayEffectID(WEATHER_SNOW_EFX, spot, down, 0, 0, qfalse);
 			break;
 		case WEATHER_HEAVY_SNOW:
-			trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/atmospheric_heavysnow.efx"), spot, down, 0, 0, qfalse);
+			trap->FX_PlayEffectID(WEATHER_HEAVY_SNOW_EFX, spot, down, 0, 0, qfalse);
 			break;
 		case WEATHER_SNOW_STORM:
-			trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snowstorm.efx"), spot, down, 0, 0, qfalse);
+			trap->FX_PlayEffectID(WEATHER_SNOW_STORM_EFX, spot, down, 0, 0, qfalse);
 			break;
 		default:
 			break;
