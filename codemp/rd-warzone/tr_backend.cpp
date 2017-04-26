@@ -660,8 +660,8 @@ void GL_SetProjectionMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
-	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
+	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
+	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
 
 	/*
 	matrix_t CameraTranslationTrans, CameraRotateTrans;
@@ -679,8 +679,8 @@ void GL_SetModelviewMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.modelview);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
-	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
+	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
+	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
 }
 
 

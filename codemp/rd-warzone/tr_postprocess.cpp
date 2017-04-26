@@ -3056,8 +3056,8 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	{
 		vec4_t viewInfo;
-		float zmax = 2048.0;
-		//float zmax = backEnd.viewParms.zFar;
+		//float zmax = 2048.0;
+		float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
