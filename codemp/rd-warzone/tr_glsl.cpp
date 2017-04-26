@@ -1757,7 +1757,7 @@ static int GLSL_EnqueueCompileGPUShader(GLuint program, GLuint *prevShader, cons
 static int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	GLenum shaderType, char *dest, int destSize)
 {
-	char            filename[MAX_QPATH];
+	char            filename[128/*MAX_QPATH*/];
 	GLcharARB      *buffer = NULL;
 	const GLcharARB *shaderText = NULL;
 	int             size;
@@ -2784,8 +2784,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & GENERICDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
+		char *name = (char *)malloc(sizeof(char) * 64);
+		sprintf(name, "generic%i", i);
 
-		if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, NULL, NULL, NULL))
+		if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], (const char *)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load generic shader!");
 		}
@@ -2839,7 +2841,10 @@ int GLSL_BeginLoadGPUShaders(void)
 			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		}
 
-		if (!GLSL_BeginLoadGPUShader(&tr.fogShader[i], "fogpass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp, NULL, NULL, NULL))
+		char *name = (char *)malloc(sizeof(char) * 64);
+		sprintf(name, "fogpass%i", i);
+
+		if (!GLSL_BeginLoadGPUShader(&tr.fogShader[i], (const char*)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load fogpass shader!");
 		}
@@ -2919,14 +2924,17 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
+		char *name = (char *)malloc(sizeof(char) * 64);
+		sprintf(name, "lightall%i", i);
+
 		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
 		{
 			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
 
 #ifdef HEIGHTMAP_TESSELATION2
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
 #else
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
 #endif
 			{
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
@@ -2936,14 +2944,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_ICR_CULLING\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
 		}
 		else
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 			{
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
@@ -3026,14 +3034,17 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
+		char *name = (char *)malloc(sizeof(char) * 64);
+		sprintf(name, "shadowPass%i", i);
+
 		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
 		{
 			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
 
 #ifdef HEIGHTMAP_TESSELATION2
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
 #else
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
 #endif
 			{
 				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
@@ -3043,14 +3054,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_ICR_CULLING\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, fallbackShader_lightall_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, fallbackShader_lightall_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
 			}
 		}
 		else
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
+			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
 			{
 				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
 			}
@@ -6294,6 +6305,9 @@ void GLSL_BindProgram(shaderProgram_t * program)
 {
 	if (!program)
 	{
+		//if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+		//	ri->Printf(PRINT_WARNING, "DEBUG: Binding program NULL.\n");
+
 		GLSL_BindNullProgram();
 		return;
 	}
@@ -6306,6 +6320,9 @@ void GLSL_BindProgram(shaderProgram_t * program)
 
 	if (glState.currentProgram != program)
 	{
+		//if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+		//	ri->Printf(PRINT_WARNING, "DEBUG: Binding program %s. Last program was %s\n", program->name, glState.currentProgram ? glState.currentProgram->name : "NULL");
+
 		qglUseProgram(program->program);
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;

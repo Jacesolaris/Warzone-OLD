@@ -2303,6 +2303,79 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				SHADER_INDEX = shaderAttribs;
 			}
 		}
+#if 0
+		else if (pStage->glslShaderGroup == tr.lightallShader
+			&& backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity
+			&& glState.vertexAnimation)
+		{
+			int index = 0;
+
+			index |= LIGHTDEF_USE_VERTEX_ANIMATION;
+
+			/*if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
+			}*/
+
+			sp = &pStage->glslShaderGroup[index];
+			isGeneric = qfalse;
+			isLightAll = qtrue;
+
+			SHADER_INDEX = index;
+		}
+		else if (pStage->glslShaderGroup != tr.lightallShader
+			&& backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity
+			&& glState.vertexAnimation)
+		{
+			int shaderAttribs = 0;
+
+			/*if (tess.shader->numDeforms && !ShaderRequiresCPUDeforms(tess.shader))
+			{
+				shaderAttribs |= GENERICDEF_USE_DEFORM_VERTEXES;
+			}*/
+
+			shaderAttribs |= GENERICDEF_USE_VERTEX_ANIMATION;
+
+			/*if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				shaderAttribs |= GENERICDEF_USE_TCGEN_AND_TCMOD;
+			}*/
+
+			sp = &tr.genericShader[shaderAttribs];
+			isGeneric = qtrue;
+			isLightAll = qfalse;
+
+			SHADER_INDEX = shaderAttribs;
+		}
+#endif
+#if 1
+		else if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity
+			&& glState.vertexAnimation)
+		{
+			int index = 0;
+
+			index |= LIGHTDEF_USE_VERTEX_ANIMATION;
+			index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
+
+			//
+			// testing cube map
+			//
+			if (ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 2)
+			{
+				index |= LIGHTDEF_USE_CUBEMAP;
+			}
+
+			if (pStage->glslShaderGroup)
+				sp = &pStage->glslShaderGroup[index];
+			else
+				sp = &tr.lightallShader[index];
+
+			isGeneric = qfalse;
+			isLightAll = qtrue;
+
+			SHADER_INDEX = index;
+		}
+#endif
 		else if (pStage->glslShaderGroup == tr.lightallShader
 			|| pStage->bundle[TB_STEEPMAP].image[0]
 			|| pStage->bundle[TB_STEEPMAP2].image[0]
@@ -2402,6 +2475,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			backEnd.pc.c_genericDraws++;
 		}
 		
+		/* Instead of just binding the above choices, optimize and enhance... */
 		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
 #ifdef __USE_WATERMAP__
@@ -2433,18 +2507,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			isWater = qtrue;
 #endif //__USE_WATERMAP__
 		}
-		else
-		{
-			if (!sp || !sp->program)
-			{
-				pStage->glslShaderGroup = tr.lightallShader;
-				sp = &pStage->glslShaderGroup[0];
-			}
-
-			GLSL_BindProgram(sp);
-		}
-
-		if (!sp->tesselation 
+		else if ((!sp || !sp->tesselation)
 			&& ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill))
 		{// Can use fast shader for this instead of lightall/generic for more FPS...
 			sp = &tr.shadowPassShader[SHADER_INDEX];
@@ -2457,8 +2520,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				multiPass = qfalse;
 			}
 		}
-
-		if (r_proceduralSun->integer && tess.shader == tr.sunShader)
+		else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 		{// Special case for procedural sun...
 			sp = &tr.sunPassShader;
 			GLSL_BindProgram(sp);
@@ -2467,9 +2529,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			isPebbles = qfalse;
 			multiPass = qfalse;
 		}
-
-		if (isGrass || isPebbles)
+		else if (isGrass || isPebbles)
 		{
+			if (!sp || !sp->program)
+			{
+				pStage->glslShaderGroup = tr.lightallShader;
+				sp = &pStage->glslShaderGroup[0];
+			}
+
+			GLSL_BindProgram(sp);
+
 			if (isGrass && r_foliage->integer)
 			{
 				sp2 = &tr.grass2Shader;
@@ -2492,6 +2561,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					passMax = r_pebblesPasses->integer;
 				}
 			}
+		}
+		else
+		{
+			if (!sp || !sp->program)
+			{
+				pStage->glslShaderGroup = tr.lightallShader;
+				sp = &pStage->glslShaderGroup[0];
+			}
+
+			GLSL_BindProgram(sp);
 		}
 
 		/*
