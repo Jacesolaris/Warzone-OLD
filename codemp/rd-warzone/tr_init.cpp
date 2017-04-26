@@ -1504,7 +1504,7 @@ void R_Register( void )
 	r_forceSunAmbientScale = ri->Cvar_Get( "r_forceSunAmbientScale", "0.5", CVAR_CHEAT );
 	r_drawSunRays = ri->Cvar_Get( "r_drawSunRays", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_proceduralSun = ri->Cvar_Get("r_proceduralSun", "1", CVAR_ARCHIVE);
-	r_proceduralSunScale = ri->Cvar_Get("r_proceduralSunScale", "3.5", CVAR_ARCHIVE);
+	r_proceduralSunScale = ri->Cvar_Get("r_proceduralSunScale", "1.75"/*"3.5"*/, CVAR_ARCHIVE);
 	r_sunlightMode = ri->Cvar_Get( "r_sunlightMode", "4", CVAR_ARCHIVE | CVAR_LATCH );
 	r_sunlightSpecular = ri->Cvar_Get( "r_sunlightSpecular", "1", CVAR_ARCHIVE );
 
