@@ -2294,45 +2294,61 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 	if (surface->vbo->occluded) return;
 #endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
-	//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
-	RB_EndSurface();
-	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
-
-	R_BindVBO(surface->vbo);
-	R_BindIBO(surface->ibo);
-
-	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
-		tess.useInternalVBO = qtrue;
-	else
-		tess.useInternalVBO = qfalse;
-
-	tess.numIndexes += surface->numIndexes;
-	tess.numVertexes += surface->numVerts;
-	tess.minIndex = surface->minIndex;
-	tess.maxIndex = surface->maxIndex;
-
-	//mdvModel = surface->mdvModel;
-	//mdvSurface = surface->mdvSurface;
-
-	refEnt = &backEnd.currentEntity->e;
-
-	if(refEnt->oldframe == refEnt->frame)
+	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW && surface->mdvModel->numFrames <= 1)
 	{
-		glState.vertexAttribsInterpolation = 0;
+		RB_SurfaceVbo(surface->vbo, surface->ibo, surface->numVerts, surface->numIndexes, 0/*surface->firstIndex*/,
+			surface->minIndex, surface->maxIndex, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/, qfalse);
 	}
 	else
 	{
-		glState.vertexAttribsInterpolation = refEnt->backlerp;
+		//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
+		RB_EndSurface();
+		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
+
+		R_BindVBO(surface->vbo);
+		R_BindIBO(surface->ibo);
+
+		if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
+			tess.useInternalVBO = qtrue;
+		else
+			tess.useInternalVBO = qfalse;
+
+		tess.numIndexes += surface->numIndexes;
+		tess.numVertexes += surface->numVerts;
+		tess.minIndex = surface->minIndex;
+		tess.maxIndex = surface->maxIndex;
+
+		//mdvModel = surface->mdvModel;
+		//mdvSurface = surface->mdvSurface;
+
+		refEnt = &backEnd.currentEntity->e;
+
+		if (refEnt->oldframe == refEnt->frame)
+		{
+			glState.vertexAttribsInterpolation = 0;
+		}
+		else
+		{
+			glState.vertexAttribsInterpolation = refEnt->backlerp;
+		}
+
+		glState.vertexAttribsOldFrame = refEnt->oldframe;
+		glState.vertexAttribsNewFrame = refEnt->frame;
+
+		//if (surface->mdvModel->numFrames > 1)
+		{
+			glState.vertexAnimation = qtrue;
+		}
+		/*else
+		{
+			glState.vertexAnimation = qfalse;
+		}*/
+
+		RB_EndSurface();
+
+		// So we don't lerp surfaces that shouldn't be lerped
+		glState.vertexAnimation = qfalse;
 	}
-
-	glState.vertexAttribsOldFrame = refEnt->oldframe;
-	glState.vertexAttribsNewFrame = refEnt->frame;
-	glState.vertexAnimation = qtrue;
-
-	RB_EndSurface();
-
-	// So we don't lerp surfaces that shouldn't be lerped
-	glState.vertexAnimation = qfalse;
 }
 
 static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {

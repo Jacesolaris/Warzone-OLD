@@ -1174,11 +1174,11 @@ void FOLIAGE_Calc_In_Range_Areas(void)
 		VectorCopy(cg.refdef.vieworg, LAST_ORG);
 		VectorCopy(cg.refdef.viewangles, LAST_ANG);
 
-		IN_RANGE_AREAS_LIST_COUNT = 0;
-		IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
-
 		// Calculate currently-in-range areas to use...
 #ifdef __USE_GPU__
+
+		IN_RANGE_AREAS_LIST_COUNT = 0;
+		IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
 
 		//
 		// Static stuff...
@@ -1296,6 +1296,9 @@ void FOLIAGE_Calc_In_Range_Areas(void)
 
 		//trap->Print("IN_RANGE_AREAS_LIST_COUNT: %i. IN_RANGE_TREE_AREAS_LIST_COUNT: %i.\n", IN_RANGE_AREAS_LIST_COUNT, IN_RANGE_TREE_AREAS_LIST_COUNT);
 #else //!__USE_GPU__
+		IN_RANGE_AREAS_LIST_COUNT = 0;
+		IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
+
 		for (i = 0; i < FOLIAGE_AREAS_COUNT; i++)
 		{
 			float minsDist = DistanceHorizontal(FOLIAGE_AREAS_MINS[i], cg.refdef.vieworg);

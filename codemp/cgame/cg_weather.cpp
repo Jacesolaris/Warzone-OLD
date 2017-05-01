@@ -295,22 +295,22 @@ void CG_AddAtmosphericEffects()
 	switch (ATMOSPHERIC_WEATHER_TYPE)
 	{
 	case WEATHER_RAIN:
-		MAX_FRAME_PARTICLES = 32;
+		MAX_FRAME_PARTICLES = 16;
 		break;
 	case WEATHER_HEAVY_RAIN:
-		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;// 64;//128; // reduced for more FPS
 		break;
 	case WEATHER_RAIN_STORM:
-		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;// 64;//128; // reduced for more FPS
 		break;
 	case WEATHER_SNOW:
-		MAX_FRAME_PARTICLES = 32;
+		MAX_FRAME_PARTICLES = 16; //32
 		break;
 	case WEATHER_HEAVY_SNOW:
-		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;// 64;//128; // reduced for more FPS
 		break;
 	case WEATHER_SNOW_STORM:
-		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;//128; // reduced for more FPS
 		break;
 	case WEATHER_FOREST:
 		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
