@@ -20,6 +20,10 @@ typedef enum {
 	WEATHER_SNOW,
 	WEATHER_HEAVY_SNOW,
 	WEATHER_SNOW_STORM,
+	WEATHER_FOREST,
+	WEATHER_FOREST_ISLAND,
+	WEATHER_TROPICAL_ISLAND,
+	WEATHER_DESERT,
 };
 
 // Max MAP height...
@@ -46,7 +50,12 @@ qhandle_t WEATHER_VOLUMETRIC_FOG_EFX = NULL;
 qhandle_t WEATHER_RAIN_SOUND = NULL;
 qhandle_t WEATHER_HEAVY_RAIN_SOUND = NULL;
 qhandle_t WEATHER_RAIN_STORM_SOUND = NULL;
-qhandle_t WEATHER_LIGHTNING_SOUNDS[4] = { NULL };
+qhandle_t WEATHER_FOREST_SOUND = NULL;
+//qhandle_t WEATHER_FOREST_NIGHT_SOUND = NULL;// TODO: Day/Night Integration...
+qhandle_t WEATHER_FOREST_ISLAND_SOUND = NULL;
+qhandle_t WEATHER_TROPICAL_ISLAND_SOUND = NULL;
+qhandle_t WEATHER_DESERT_SOUND = NULL;
+qhandle_t WEATHER_LIGHTNING_SOUNDS[12] = { NULL };
 
 
 qhandle_t	lightning1 = -1;
@@ -142,10 +151,18 @@ void CG_LightningFlash( vec3_t spot )
 		lightning2 = trap->FX_RegisterEffect("effects/atmospherics/lightning_flash2.efx");
 		lightning3 = trap->FX_RegisterEffect("effects/atmospherics/lightning_flash3.efx");
 		lightningExplode = trap->FX_RegisterEffect("effects/env/lightning_explode.efx");
-		WEATHER_LIGHTNING_SOUNDS[0] = trap->S_RegisterSound("sound/atmospherics/thunder0.wav");
-		WEATHER_LIGHTNING_SOUNDS[1] = trap->S_RegisterSound("sound/atmospherics/thunder1.wav");
-		WEATHER_LIGHTNING_SOUNDS[2] = trap->S_RegisterSound("sound/atmospherics/thunder2.wav");
-		WEATHER_LIGHTNING_SOUNDS[3] = trap->S_RegisterSound("sound/atmospherics/thunder3.wav");
+		WEATHER_LIGHTNING_SOUNDS[0] = trap->S_RegisterSound("sound/atmospherics/thunder00.mp3");
+		WEATHER_LIGHTNING_SOUNDS[1] = trap->S_RegisterSound("sound/atmospherics/thunder01.mp3");
+		WEATHER_LIGHTNING_SOUNDS[2] = trap->S_RegisterSound("sound/atmospherics/thunder02.mp3");
+		WEATHER_LIGHTNING_SOUNDS[3] = trap->S_RegisterSound("sound/atmospherics/thunder03.mp3");
+		WEATHER_LIGHTNING_SOUNDS[4] = trap->S_RegisterSound("sound/atmospherics/thunder04.mp3");
+		WEATHER_LIGHTNING_SOUNDS[5] = trap->S_RegisterSound("sound/atmospherics/thunder05.mp3");
+		WEATHER_LIGHTNING_SOUNDS[6] = trap->S_RegisterSound("sound/atmospherics/thunder06.mp3");
+		WEATHER_LIGHTNING_SOUNDS[7] = trap->S_RegisterSound("sound/atmospherics/thunder07.mp3");
+		WEATHER_LIGHTNING_SOUNDS[8] = trap->S_RegisterSound("sound/atmospherics/thunder08.mp3");
+		WEATHER_LIGHTNING_SOUNDS[9] = trap->S_RegisterSound("sound/atmospherics/thunder09.mp3");
+		WEATHER_LIGHTNING_SOUNDS[10] = trap->S_RegisterSound("sound/atmospherics/thunder10.mp3");
+		WEATHER_LIGHTNING_SOUNDS[11] = trap->S_RegisterSound("sound/atmospherics/thunder11.mp3");
 	}
 
 	scale = (spot[2] - cg.refdef.vieworg[2]) / 256.0;
@@ -169,7 +186,7 @@ void CG_LightningFlash( vec3_t spot )
 
 	//trap->Print("Flash OK at %f %f %f.\n", spot[0], spot[1], spot[2]);
 
-	trap->S_StartLocalSound(WEATHER_LIGHTNING_SOUNDS[rand()%3], CHAN_AUTO);
+	trap->S_StartLocalSound(WEATHER_LIGHTNING_SOUNDS[irand(0,11)], CHAN_AUTO);
 }
 
 qboolean CG_CheckRangedFog( void )
@@ -210,15 +227,15 @@ void CG_AddAtmosphericEffects()
 		{
 		case WEATHER_RAIN:
 			WEATHER_RAIN_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_rain.efx");
-			WEATHER_RAIN_SOUND = trap->S_RegisterSound("sound/atmospherics/rain.wav");
+			WEATHER_RAIN_SOUND = trap->S_RegisterSound("sound/atmospherics/light_rain.mp3");
 			break;
 		case WEATHER_HEAVY_RAIN:
 			WEATHER_HEAVY_RAIN_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_heavyrain.efx");
-			WEATHER_HEAVY_RAIN_SOUND = trap->S_RegisterSound("sound/atmospherics/heavy_rain.wav");
+			WEATHER_HEAVY_RAIN_SOUND = trap->S_RegisterSound("sound/atmospherics/heavy_rain.mp3");
 			break;
 		case WEATHER_RAIN_STORM:
 			WEATHER_RAIN_STORM_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_storm.efx");
-			WEATHER_RAIN_STORM_SOUND = trap->S_RegisterSound("sound/atmospherics/heavy_rain.wav");
+			WEATHER_RAIN_STORM_SOUND = trap->S_RegisterSound("sound/atmospherics/thunder_storm.mp3");
 			break;
 		case WEATHER_SNOW:
 			WEATHER_SNOW_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snow.efx");
@@ -229,6 +246,19 @@ void CG_AddAtmosphericEffects()
 		case WEATHER_SNOW_STORM:
 			WEATHER_SNOW_STORM_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snowstorm.efx");
 			WEATHER_VOLUMETRIC_FOG_EFX = trap->FX_RegisterEffect("effects/atmospherics/fog.efx");
+			break;
+		case WEATHER_FOREST:
+			WEATHER_FOREST_SOUND = trap->S_RegisterSound("sound/atmospherics/forest.mp3");
+			//WEATHER_FOREST_NIGHT_SOUND = trap->S_RegisterSound("sound/atmospherics/forest_night.mp3"); // TODO: Day/Night Integration...
+			break;
+		case WEATHER_FOREST_ISLAND:
+			WEATHER_FOREST_ISLAND_SOUND = trap->S_RegisterSound("sound/atmospherics/forest_island.mp3");
+			break;
+		case WEATHER_TROPICAL_ISLAND:
+			WEATHER_TROPICAL_ISLAND_SOUND = trap->S_RegisterSound("sound/atmospherics/tropical_island.mp3");
+			break;
+		case WEATHER_DESERT:
+			WEATHER_DESERT_SOUND = trap->S_RegisterSound("sound/atmospherics/desert.mp3");
 			break;
 		default:
 			break;
@@ -282,6 +312,39 @@ void CG_AddAtmosphericEffects()
 	case WEATHER_SNOW_STORM:
 		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
 		break;
+	case WEATHER_FOREST:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_FOREST_SOUND, CHAN_AMBIENT);
+			//trap->S_StartLocalSound(WEATHER_FOREST_NIGHT_SOUND, CHAN_AUTO); // TODO: Day/Night Integration...
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_FOREST_ISLAND:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_FOREST_ISLAND_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_TROPICAL_ISLAND:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_TROPICAL_ISLAND_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_DESERT:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_DESERT_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
 	default:
 		MAX_FRAME_PARTICLES = 32;
 		break;
@@ -316,8 +379,8 @@ void CG_AddAtmosphericEffects()
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
-				trap->S_StartLocalSound(WEATHER_RAIN_SOUND, CHAN_AUTO);
-				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 27000;
+				trap->S_StartLocalSound(WEATHER_RAIN_SOUND, CHAN_AMBIENT);
+				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
 			}
 			break;
 		case WEATHER_HEAVY_RAIN:
@@ -325,8 +388,8 @@ void CG_AddAtmosphericEffects()
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
-				trap->S_StartLocalSound(WEATHER_HEAVY_RAIN_SOUND, CHAN_AUTO);
-				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 27000;
+				trap->S_StartLocalSound(WEATHER_HEAVY_RAIN_SOUND, CHAN_AMBIENT);
+				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
 			}
 			break;
 		case WEATHER_RAIN_STORM:
@@ -334,8 +397,8 @@ void CG_AddAtmosphericEffects()
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
-				trap->S_StartLocalSound(WEATHER_RAIN_STORM_SOUND, CHAN_AUTO);
-				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 27000;
+				trap->S_StartLocalSound(WEATHER_RAIN_STORM_SOUND, CHAN_AMBIENT);
+				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
 			}
 			break;
 		case WEATHER_SNOW:
@@ -418,6 +481,30 @@ qboolean CG_AtmosphericKludge()
 		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7snowstorm^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SNOW_STORM;
   	  	return( kludgeResult = qtrue );
+	}
+	else if (!Q_stricmp(atmosphericString, "forest_island"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7forest_island^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST_ISLAND;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "forest"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7forest^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "tropical_island"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7tropical_island^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_TROPICAL_ISLAND;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "desert"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7desert^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_DESERT;
+		return(kludgeResult = qtrue);
 	}
 
 	//
@@ -507,6 +594,13 @@ qboolean CG_AtmosphericKludge()
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
+
+	if (!Q_stricmp(cgs.currentmapname, "maps/mp/ctf3"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
+		return(kludgeResult = qtrue);
+	}
 
   	return( kludgeResult = qfalse );
 }

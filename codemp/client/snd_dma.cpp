@@ -156,7 +156,7 @@ void S_Init( void ) {
 	s_volume = Cvar_Get ("s_volume", "1.0", CVAR_ARCHIVE);
 	s_volumeVoice= Cvar_Get ("s_volumeVoice", "1.0", CVAR_ARCHIVE);
 	s_volumeEffects= Cvar_Get ("s_volumeEffects", "0.7", CVAR_ARCHIVE);
-	s_volumeAmbient= Cvar_Get ("s_volumeAmbient", "0.5", CVAR_ARCHIVE);
+	s_volumeAmbient= Cvar_Get ("s_volumeAmbient", "1.0", CVAR_ARCHIVE);
 	s_volumeWeapon= Cvar_Get ("s_volumeWeapon", "0.5", CVAR_ARCHIVE);
 	s_volumeItem= Cvar_Get ("s_volumeItem", "0.5", CVAR_ARCHIVE);
 	s_volumeBody= Cvar_Get ("s_volumeBody", "0.5", CVAR_ARCHIVE);

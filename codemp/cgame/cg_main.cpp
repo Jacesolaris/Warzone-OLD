@@ -1117,10 +1117,6 @@ static void CG_RegisterSounds( void ) {
 
 	cgs.media.winnerSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM006" );
 	cgs.media.loserSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM010" );
-	// Weather
-	/*cgs.media.heavyRain = trap->S_RegisterSound("sound/ambient/rain_hard");
-	cgs.media.regularRain = trap->S_RegisterSound("sound/ambient/rain_mid");
-	cgs.media.lightRain = trap->S_RegisterSound("sound/ambient/rain_light");*/
 }
 
 

@@ -590,6 +590,12 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 		IS_LOCAL_SOUND = qtrue;
 	}
 
+	if (c->entityChannel == CHAN_AMBIENT)
+	{// Force all ambient sounds to local...
+		VectorSet(c->origin, 0, 0, 0);
+		IS_LOCAL_SOUND = qtrue;
+	}
+
 	c->vel.x = 0;
 	c->vel.y = 0;
 	c->vel.z = 0;
@@ -1437,6 +1443,11 @@ void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel,
 	if (origin) VectorCopy(origin, c->origin);
 	else VectorSet(c->origin, 0, 0, 0);
 
+	if (c->entityChannel == CHAN_AMBIENT)
+	{// Force all ambient sounds to local...
+		VectorSet(c->origin, 0, 0, 0);
+	}
+
 	c->isActive = qtrue;
 	c->isLooping = qfalse;
 	c->startRequest = qtrue;
@@ -1497,6 +1508,11 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 
 	if (origin) VectorCopy(origin, c->origin);
 	else VectorSet(c->origin, 0, 0, 0);
+
+	if (c->entityChannel == CHAN_AMBIENT)
+	{// Force all ambient sounds to local...
+		VectorSet(c->origin, 0, 0, 0);
+	}
 
 	c->isActive = qtrue;
 	c->isLooping = qtrue;
