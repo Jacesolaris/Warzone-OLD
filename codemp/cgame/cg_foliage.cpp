@@ -1009,7 +1009,7 @@ qboolean FOLIAGE_Box_In_FOV(vec3_t mins, vec3_t maxs, int areaNum, float minsDis
 		|| InFOV(edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/)
 		|| InFOV(edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/))
 	{
-		if (cg_foliageAreaVisCheck.integer
+		if (MAP_HAS_TREES && cg_foliageAreaVisCheck.integer
 			&& minsDist > 8192.0
 			&& maxsDist > 8192.0
 			&& FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] + 2000 < trap->Milliseconds())
@@ -1042,7 +1042,7 @@ qboolean FOLIAGE_Box_In_FOV(vec3_t mins, vec3_t maxs, int areaNum, float minsDis
 		}
 		else
 		{
-			FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
+			if (MAP_HAS_TREES) FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
 			return qtrue;
 		}
 	}

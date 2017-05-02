@@ -207,6 +207,12 @@ void S_Init( void ) {
 
 // only called from snd_restart. QA request...
 //
+void S_memoryFree(sfx_t *sfx)
+{
+	BASS_FreeSampleMemory(sfx->bassSampleID);
+	sfx->bInMemory = qfalse;
+}
+
 void S_ReloadAllUsedSounds(void)
 {
 	{
@@ -218,10 +224,61 @@ void S_ReloadAllUsedSounds(void)
 
 			if (!sfx->bDefaultSound && sfx->iLastLevelUsedOn == re->RegisterMedia_GetLevel()){
 				//S_memoryLoad(sfx);
+				S_memoryFree(sfx);
 				sfx->bInMemory = qfalse;
 			}
 		}
 	}
+}
+
+int S_NEXT_SOUND_FREE_CHECK = 0;
+
+void S_FreeOldSamples(void)
+{// Remove any bass sample memory that has not been used in the last 30 seconds...
+//#define __SOUND_CLEANUP_DEBUG__ // Enable to debug what gets cleaned...
+
+	// Run cleanup once every 5 seconds...
+	if (S_NEXT_SOUND_FREE_CHECK > Com_Milliseconds()) return;
+	S_NEXT_SOUND_FREE_CHECK = Com_Milliseconds() + 5000;
+
+#ifdef __SOUND_CLEANUP_DEBUG__
+	Com_Printf("Sound cleanup at time %i.\n", Com_Milliseconds() / 1000);
+#endif //__SOUND_CLEANUP_DEBUG__
+
+	for (int i = 0; i < s_numSfx; i++)
+	{
+		sfx_t *sfx = &s_knownSfx[i];
+
+		if (sfx)
+		{
+			if (sfx->bInMemory && !sfx->bDefaultSound)
+			{
+#ifdef __SOUND_CLEANUP_DEBUG__
+				Com_Printf("[%i] Sample: %s. Loaded: %s. LastUse: %i.", i, sfx->sSoundName, sfx->bInMemory ? "true" : "false", sfx->iLastTimeUsed / 1000);
+#endif //__SOUND_CLEANUP_DEBUG__
+
+				if (sfx->iLastTimeUsed <= Com_Milliseconds() - 30000)
+				{
+					if (!BASS_SampleIsPlaying(sfx->bassSampleID) 
+						&& !StringContainsWord(sfx->sSoundName, "***default***") 
+						&& !StringContainsWord(sfx->sSoundName, "sound/atmospherics") 
+						&& !StringContainsWord(sfx->sSoundName, "music/"))
+					{// Never free the ambient weather sounds, or music, they take a moment to load again due to their size...
+						S_memoryFree(sfx);
+#ifdef __SOUND_CLEANUP_DEBUG__
+						Com_Printf("- Freeing sample from memory.");
+#endif //__SOUND_CLEANUP_DEBUG__
+					}
+				}
+
+#ifdef __SOUND_CLEANUP_DEBUG__
+				Com_Printf("\n");
+#endif //__SOUND_CLEANUP_DEBUG__
+			}
+		}
+	}
+
+	//Com_Printf("Sound cleanup completed.\n");
 }
 
 // =======================================================================

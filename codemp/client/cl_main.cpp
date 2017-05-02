@@ -2189,6 +2189,9 @@ void CL_Frame ( int msec )
 		return;
 	}
 
+	// Free any old sound samples from memory that have not been used recently...
+	S_FreeOldSamples();
+
 	CL_Frame_REAL(msec);
 	CL_Frame_REAL2(msec);
 

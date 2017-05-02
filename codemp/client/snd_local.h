@@ -9,6 +9,8 @@
 #define		MAX_SOUNDPATH	512
 #define		MAX_SFX			14000	//512 * 2
 
+extern void S_FreeOldSamples(void);
+
 extern qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum );
 extern void S_TextToSpeech( const char *text, const char *voice, int entityNum, float *origin );
 extern qboolean S_DownloadVoice( const char *text, const char *voice );
@@ -16,6 +18,8 @@ extern qboolean S_DownloadVoice( const char *text, const char *voice );
 extern qboolean BASS_Initialize ( void );
 extern void BASS_Shutdown ( void );
 extern void BASS_UnloadSamples ( void );
+extern void BASS_FreeSampleMemory(DWORD sample);
+extern qboolean BASS_SampleIsPlaying(DWORD sample);
 extern DWORD BASS_LoadMemorySample ( void *memory, int length );
 extern DWORD BASS_LoadMusicSample ( void *memory, int length );
 extern void BASS_AddDynamicTrack ( char *name );

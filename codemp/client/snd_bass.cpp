@@ -303,6 +303,20 @@ void BASS_Shutdown ( void )
 	BASS_INITIALIZED = qfalse;
 }
 
+void BASS_FreeSampleMemory(DWORD sample)
+{
+	BASS_SampleFree(sample);
+	BASS_MusicFree(sample);
+	BASS_StreamFree(sample);
+}
+
+qboolean BASS_SampleIsPlaying(DWORD sample)
+{
+	if (BASS_ChannelIsActive(sample) >= BASS_ACTIVE_PLAYING) return qtrue;
+
+	return qfalse;
+}
+
 qboolean BASS_CheckSoundDisabled( void )
 {
 	if (s_disable->integer)

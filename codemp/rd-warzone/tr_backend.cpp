@@ -1227,7 +1227,18 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #ifdef __PLAYER_BASED_CUBEMAPS__
 	currentPlayerCubemap = 0;
 
-	if (CUBEMAPPING)
+	if (!tr.cubemapOrigins)
+	{
+		currentPlayerCubemap = 0;
+
+		currentPlayerCubemapVec[0] = 0;
+		currentPlayerCubemapVec[1] = 0;
+		currentPlayerCubemapVec[2] = 0;
+		currentPlayerCubemapVec[3] = 1.0;
+
+		currentPlayerCubemapDistance = 0.0;
+	}
+	else if (CUBEMAPPING)
 	{
 		currentPlayerCubemap = R_CubemapForPoint(tr.refdef.vieworg);
 
