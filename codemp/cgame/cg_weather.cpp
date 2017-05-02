@@ -24,6 +24,13 @@ typedef enum {
 	WEATHER_FOREST_ISLAND,
 	WEATHER_TROPICAL_ISLAND,
 	WEATHER_DESERT,
+	WEATHER_CITY,
+	WEATHER_CANTINA,
+	WEATHER_INDUSTRIAL,
+	WEATHER_SPACEPORT,
+	WEATHER_IMPERIAL_BASE,
+	WEATHER_SITH_TOMB,
+	WEATHER_JEDI_TEMPLE,
 };
 
 // Max MAP height...
@@ -50,11 +57,20 @@ qhandle_t WEATHER_VOLUMETRIC_FOG_EFX = NULL;
 qhandle_t WEATHER_RAIN_SOUND = NULL;
 qhandle_t WEATHER_HEAVY_RAIN_SOUND = NULL;
 qhandle_t WEATHER_RAIN_STORM_SOUND = NULL;
+qhandle_t WEATHER_SNOW_SOUND = NULL;
+qhandle_t WEATHER_SNOW_STORM_SOUND = NULL;
 qhandle_t WEATHER_FOREST_SOUND = NULL;
 //qhandle_t WEATHER_FOREST_NIGHT_SOUND = NULL;// TODO: Day/Night Integration...
 qhandle_t WEATHER_FOREST_ISLAND_SOUND = NULL;
 qhandle_t WEATHER_TROPICAL_ISLAND_SOUND = NULL;
 qhandle_t WEATHER_DESERT_SOUND = NULL;
+qhandle_t WEATHER_CITY_SOUND = NULL;
+qhandle_t WEATHER_CANTINA_SOUND = NULL;
+qhandle_t WEATHER_INDUSTRIAL_SOUND = NULL;
+qhandle_t WEATHER_SPACEPORT_SOUND = NULL;
+qhandle_t WEATHER_IMPERIAL_BASE_SOUND = NULL;
+qhandle_t WEATHER_SITH_TOMB_SOUND = NULL;
+qhandle_t WEATHER_JEDI_TEMPLE_SOUND = NULL;
 qhandle_t WEATHER_LIGHTNING_SOUNDS[12] = { NULL };
 
 
@@ -239,13 +255,16 @@ void CG_AddAtmosphericEffects()
 			break;
 		case WEATHER_SNOW:
 			WEATHER_SNOW_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snow.efx");
+			WEATHER_SNOW_SOUND = trap->S_RegisterSound("sound/atmospherics/snow.mp3");
 			break;
 		case WEATHER_HEAVY_SNOW:
 			WEATHER_HEAVY_SNOW_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_heavysnow.efx");
+			WEATHER_SNOW_SOUND = trap->S_RegisterSound("sound/atmospherics/snow.mp3");
 			break;
 		case WEATHER_SNOW_STORM:
 			WEATHER_SNOW_STORM_EFX = trap->FX_RegisterEffect("effects/atmospherics/atmospheric_snowstorm.efx");
 			WEATHER_VOLUMETRIC_FOG_EFX = trap->FX_RegisterEffect("effects/atmospherics/fog.efx");
+			WEATHER_SNOW_STORM_SOUND = trap->S_RegisterSound("sound/atmospherics/snow_storm.mp3");
 			break;
 		case WEATHER_FOREST:
 			WEATHER_FOREST_SOUND = trap->S_RegisterSound("sound/atmospherics/forest.mp3");
@@ -259,6 +278,27 @@ void CG_AddAtmosphericEffects()
 			break;
 		case WEATHER_DESERT:
 			WEATHER_DESERT_SOUND = trap->S_RegisterSound("sound/atmospherics/desert.mp3");
+			break;
+		case WEATHER_CITY:
+			WEATHER_CITY_SOUND = trap->S_RegisterSound("sound/atmospherics/city.mp3");
+			break;
+		case WEATHER_CANTINA:
+			WEATHER_CANTINA_SOUND = trap->S_RegisterSound("sound/atmospherics/cantina.mp3");
+			break;
+		case WEATHER_INDUSTRIAL:
+			WEATHER_INDUSTRIAL_SOUND = trap->S_RegisterSound("sound/atmospherics/industrial.mp3");
+			break;
+		case WEATHER_SPACEPORT:
+			WEATHER_SPACEPORT_SOUND = trap->S_RegisterSound("sound/atmospherics/spaceport.mp3");
+			break;
+		case WEATHER_IMPERIAL_BASE:
+			WEATHER_IMPERIAL_BASE_SOUND = trap->S_RegisterSound("sound/atmospherics/imp_base.mp3");
+			break;
+		case WEATHER_SITH_TOMB:
+			WEATHER_SITH_TOMB_SOUND = trap->S_RegisterSound("sound/atmospherics/sith_tomb.mp3");
+			break;
+		case WEATHER_JEDI_TEMPLE:
+			WEATHER_JEDI_TEMPLE_SOUND = trap->S_RegisterSound("sound/atmospherics/jedi_temple.mp3");
 			break;
 		default:
 			break;
@@ -345,6 +385,62 @@ void CG_AddAtmosphericEffects()
 		}
 		return;
 		break;
+	case WEATHER_CITY:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_CITY_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_CANTINA:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_CANTINA_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 175000;
+		}
+		return;
+		break;
+	case WEATHER_INDUSTRIAL:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_INDUSTRIAL_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_SPACEPORT:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_SPACEPORT_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_IMPERIAL_BASE:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_IMPERIAL_BASE_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_SITH_TOMB:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_SITH_TOMB_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_JEDI_TEMPLE:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_JEDI_TEMPLE_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
 	default:
 		MAX_FRAME_PARTICLES = 32;
 		break;
@@ -403,12 +499,30 @@ void CG_AddAtmosphericEffects()
 			break;
 		case WEATHER_SNOW:
 			trap->FX_PlayEffectID(WEATHER_SNOW_EFX, spot, down, 0, 0, qfalse);
+
+			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+			{
+				trap->S_StartLocalSound(WEATHER_SNOW_SOUND, CHAN_AMBIENT);
+				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+			}
 			break;
 		case WEATHER_HEAVY_SNOW:
 			trap->FX_PlayEffectID(WEATHER_HEAVY_SNOW_EFX, spot, down, 0, 0, qfalse);
+
+			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+			{
+				trap->S_StartLocalSound(WEATHER_SNOW_SOUND, CHAN_AMBIENT);
+				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+			}
 			break;
 		case WEATHER_SNOW_STORM:
 			trap->FX_PlayEffectID(WEATHER_SNOW_STORM_EFX, spot, down, 0, 0, qfalse);
+
+			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+			{
+				trap->S_StartLocalSound(WEATHER_SNOW_STORM_SOUND, CHAN_AMBIENT);
+				ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+			}
 			break;
 		default:
 			break;
@@ -506,6 +620,49 @@ qboolean CG_AtmosphericKludge()
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_DESERT;
 		return(kludgeResult = qtrue);
 	}
+	else if (!Q_stricmp(atmosphericString, "city"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7city^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_CITY;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "cantina"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7cantina^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_CANTINA;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "industrial"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7industrial^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_INDUSTRIAL;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "spaceport"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7spaceport^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SPACEPORT;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "imp_base"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7imp_base^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_IMPERIAL_BASE;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "sith_tomb"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7sith_tomb^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SITH_TOMB;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "jedi_temple"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7jedi_temple^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_JEDI_TEMPLE;
+		return(kludgeResult = qtrue);
+	}
+
 
 	//
 	// And some hard coded maps, if not overridden above...

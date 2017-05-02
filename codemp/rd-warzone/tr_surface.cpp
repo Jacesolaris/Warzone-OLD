@@ -2323,7 +2323,7 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 
 		refEnt = &backEnd.currentEntity->e;
 
-		if (refEnt->oldframe == refEnt->frame)
+		if (refEnt->oldframe == refEnt->frame || surface->mdvModel->numFrames <= 1)
 		{
 			glState.vertexAttribsInterpolation = 0;
 		}
@@ -2335,14 +2335,14 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 		glState.vertexAttribsOldFrame = refEnt->oldframe;
 		glState.vertexAttribsNewFrame = refEnt->frame;
 
-		//if (surface->mdvModel->numFrames > 1)
+		if (surface->mdvModel->numFrames > 1)
 		{
 			glState.vertexAnimation = qtrue;
 		}
-		/*else
+		else
 		{
 			glState.vertexAnimation = qfalse;
-		}*/
+		}
 
 		RB_EndSurface();
 
