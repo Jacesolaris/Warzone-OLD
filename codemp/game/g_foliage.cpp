@@ -22,15 +22,9 @@ float		TREE_SCALE_MULTIPLIER = 1.0;
 
 qboolean	FOLIAGE_LOADED = qfalse;
 int			FOLIAGE_NUM_POSITIONS = 0;
-#if 0
-vec3_t		FOLIAGE_POSITIONS[FOLIAGE_MAX_FOLIAGES];
-int			FOLIAGE_TREE_SELECTION[FOLIAGE_MAX_FOLIAGES];
-float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
-#else
 vec3_t		*FOLIAGE_POSITIONS = NULL;
 int			*FOLIAGE_TREE_SELECTION = NULL;
 float		*FOLIAGE_TREE_SCALE = NULL;
-#endif
 
 #define		FOLIAGE_AREA_SIZE				512
 #define		FOLIAGE_VISIBLE_DISTANCE		(FOLIAGE_AREA_SIZE*2.5)
@@ -39,11 +33,17 @@ float		*FOLIAGE_TREE_SCALE = NULL;
 #define		FOLIAGE_AREA_MAX				131072
 #define		FOLIAGE_AREA_MAX_FOLIAGES		256
 
+typedef int		ivec256_t[FOLIAGE_AREA_MAX_FOLIAGES];
+
 int			FOLIAGE_AREAS_COUNT = 0;
-int			FOLIAGE_AREAS_LIST_COUNT[FOLIAGE_AREA_MAX];
+/*int			FOLIAGE_AREAS_LIST_COUNT[FOLIAGE_AREA_MAX];
 int			FOLIAGE_AREAS_LIST[FOLIAGE_AREA_MAX][FOLIAGE_AREA_MAX_FOLIAGES];
 vec3_t		FOLIAGE_AREAS_MINS[FOLIAGE_AREA_MAX];
-vec3_t		FOLIAGE_AREAS_MAXS[FOLIAGE_AREA_MAX];
+vec3_t		FOLIAGE_AREAS_MAXS[FOLIAGE_AREA_MAX];*/
+int			*FOLIAGE_AREAS_LIST_COUNT = NULL;
+ivec256_t	*FOLIAGE_AREAS_LIST = NULL;
+vec3_t		*FOLIAGE_AREAS_MINS = NULL;
+vec3_t		*FOLIAGE_AREAS_MAXS = NULL;
 
 float		FOLIAGE_TREE_RADIUS[16] = { 0 };
 float		FOLIAGE_TREE_BILLBOARD_SIZE[16] = { 0 };
@@ -283,6 +283,10 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 
 	if ( !f )
 	{
+		if (FOLIAGE_AREAS_LIST_COUNT) free(FOLIAGE_AREAS_LIST_COUNT);
+		if (FOLIAGE_AREAS_LIST) free(FOLIAGE_AREAS_LIST);
+		if (FOLIAGE_AREAS_MINS) free(FOLIAGE_AREAS_MINS);
+		if (FOLIAGE_AREAS_MAXS) free(FOLIAGE_AREAS_MAXS);
 		return qfalse;
 	}
 
@@ -325,10 +329,28 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 		FOLIAGE_POSITIONS = (vec3_t *)realloc(FOLIAGE_POSITIONS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
 		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
 		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+
+		if (!FOLIAGE_AREAS_LIST_COUNT) FOLIAGE_AREAS_LIST_COUNT = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
+		if (!FOLIAGE_AREAS_LIST) FOLIAGE_AREAS_LIST = (ivec256_t *)malloc(sizeof(ivec256_t) * FOLIAGE_AREA_MAX);
+		if (!FOLIAGE_AREAS_MINS) FOLIAGE_AREAS_MINS = (vec3_t *)malloc(sizeof(vec3_t) * FOLIAGE_AREA_MAX);
+		if (!FOLIAGE_AREAS_MAXS) FOLIAGE_AREAS_MAXS = (vec3_t *)malloc(sizeof(vec3_t) * FOLIAGE_AREA_MAX);
 	}
 	else
 	{
 		FOLIAGE_FreeMemory();
+
+		if (FOLIAGE_AREAS_LIST_COUNT) free(FOLIAGE_AREAS_LIST_COUNT);
+		if (FOLIAGE_AREAS_LIST) free(FOLIAGE_AREAS_LIST);
+		if (FOLIAGE_AREAS_MINS) free(FOLIAGE_AREAS_MINS);
+		if (FOLIAGE_AREAS_MAXS) free(FOLIAGE_AREAS_MAXS);
+
+		FOLIAGE_AREAS_LIST_COUNT = NULL;
+		FOLIAGE_AREAS_LIST = NULL;
+		FOLIAGE_AREAS_MINS = NULL;
+		FOLIAGE_AREAS_MAXS = NULL;
+
+		trap->Print("*** %s: No tree points in foliage file foliage/%s.foliage. Memory freed.\n", GAME_VERSION, mapname.string);
+		return qfalse;
 	}
 
 	trap->Print( "*** %s: Successfully loaded %i foliage points from foliage file foliage/%s.foliage. Found %i trees.\n", GAME_VERSION,
@@ -386,6 +408,16 @@ void FOLIAGE_LoadTrees( void )
 		FOLIAGE_NUM_POSITIONS = 0;
 		FOLIAGE_LOADED = qtrue;
 		trap->Print("*** Warzone: Trees are ignored on this map.\n");
+
+		if (FOLIAGE_AREAS_LIST_COUNT) free(FOLIAGE_AREAS_LIST_COUNT);
+		if (FOLIAGE_AREAS_LIST) free(FOLIAGE_AREAS_LIST);
+		if (FOLIAGE_AREAS_MINS) free(FOLIAGE_AREAS_MINS);
+		if (FOLIAGE_AREAS_MAXS) free(FOLIAGE_AREAS_MAXS);
+
+		FOLIAGE_AREAS_LIST_COUNT = NULL;
+		FOLIAGE_AREAS_LIST = NULL;
+		FOLIAGE_AREAS_MINS = NULL;
+		FOLIAGE_AREAS_MAXS = NULL;
 		return;
 	}
 
@@ -398,7 +430,17 @@ void FOLIAGE_LoadTrees( void )
 
 	if (FOLIAGE_NUM_POSITIONS <= 0)
 	{
-		trap->Print("*** Warzone: No foliage positions found for map.\n");
+		trap->Print("*** Warzone: No tree positions found for map.\n");
+
+		if (FOLIAGE_AREAS_LIST_COUNT) free(FOLIAGE_AREAS_LIST_COUNT);
+		if (FOLIAGE_AREAS_LIST) free(FOLIAGE_AREAS_LIST);
+		if (FOLIAGE_AREAS_MINS) free(FOLIAGE_AREAS_MINS);
+		if (FOLIAGE_AREAS_MAXS) free(FOLIAGE_AREAS_MAXS);
+
+		FOLIAGE_AREAS_LIST_COUNT = NULL;
+		FOLIAGE_AREAS_LIST = NULL;
+		FOLIAGE_AREAS_MINS = NULL;
+		FOLIAGE_AREAS_MAXS = NULL;
 		return;
 	}
 

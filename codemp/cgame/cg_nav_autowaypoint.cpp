@@ -3074,10 +3074,10 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 		thiswp.origin[0] = 0;
 		thiswp.origin[1] = 0;
 		thiswp.origin[2] = 0;
-		thiswp.weight = 0;
-		thiswp.associated_entity = ENTITYNUM_NONE;
-		thiswp.forceJumpTo = 0;
-		thiswp.disttonext = 0;
+		//thiswp.weight = 0;
+		//thiswp.associated_entity = ENTITYNUM_NONE;
+		//thiswp.forceJumpTo = 0;
+		//thiswp.disttonext = 0;
 		nei_num = 0;
 
 		while (nei_num < MAX_NEIGHBOR_SIZE)
@@ -3122,7 +3122,7 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 		}
 		currentVar[i_cv] = '\0';
 
-		thiswp.weight = atof(currentVar);
+		//thiswp.weight = atof(currentVar);
 
 		i_cv = 0;
 		i++;
@@ -3222,7 +3222,7 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 		}
 		currentVar[i_cv] = '\0';
 
-		thiswp.disttonext = atof(currentVar);
+		//thiswp.disttonext = atof(currentVar);
 
 
 		// Set node objective flags..

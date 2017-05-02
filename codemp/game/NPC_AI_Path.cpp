@@ -500,7 +500,7 @@ int NPC_FindGoal( gentity_t *NPC )
 		int waypoint = irand_big(0, gWPNum - 1);
 		int tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue)
+		while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true)
 		{
 			if (tries > 10) return -1; // Try again next frame...
 
@@ -536,7 +536,7 @@ int NPC_FindGoal( gentity_t *NPC )
 	int waypoint = irand_big(0, gWPNum-1);
 	int tries = 0;
 
-	while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue)
+	while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true)
 	{
 		if (tries > 10) return -1; // Try again next frame...
 

@@ -900,16 +900,16 @@ qboolean Warzone_CheckRoutingFrom( int wp )
 	
 	spot->pathsize = ASTAR_FindPathFast(spot->wpCurrent, spot->longTermGoal, spot->pathlist, qfalse);
 
-	gWPArray[wp]->wpIsBadChecked = qtrue;
+	gWPArray[wp]->wpIsBadChecked = true;
 
 	if (spot->pathsize > 0)
 	{
 		//trap->Print("Routing was %i. Spot is at %f %f %f.\n", spot->pathsize, spot->s.origin[0], spot->s.origin[1], spot->s.origin[2]);
-		gWPArray[wp]->wpIsBad = qfalse;
+		gWPArray[wp]->wpIsBad = false;
 		return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
 	}
 
-	gWPArray[wp]->wpIsBad = qtrue;
+	gWPArray[wp]->wpIsBad = true;
 	return qfalse;
 }
 
@@ -951,13 +951,13 @@ void G_CheckVendorNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
+		while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 			|| !Warzone_CheckBelowWaypoint(waypoint) || !Warzone_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
 			)
 		{
-			gWPArray[waypoint]->inuse = qfalse; // set it bad!
+			gWPArray[waypoint]->inuse = false; // set it bad!
 
 			if (tries > 10)
 			{
@@ -1031,13 +1031,13 @@ void G_CheckCivilianNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
+		while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 			|| !Warzone_CheckBelowWaypoint(waypoint) || !Warzone_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
 			)
 		{
-			gWPArray[waypoint]->inuse = qfalse; // set it bad!
+			gWPArray[waypoint]->inuse = false; // set it bad!
 
 			if (tries > 10)
 			{
@@ -1375,9 +1375,9 @@ void G_CheckMinimumNpcs(void)
 		}
 		else
 		{// Mandalorians and Mercs always spawn at random waypoints (for now)...
-			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || WAYPOINT_PARTOL_BAD_LIST[waypoint])
+			while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || WAYPOINT_PARTOL_BAD_LIST[waypoint])
 			{
-				gWPArray[waypoint]->inuse = qfalse; // set it bad!
+				gWPArray[waypoint]->inuse = false; // set it bad!
 
 				if (tries > 10)
 				{
@@ -1452,9 +1452,9 @@ void G_CheckMinimumNpcs(void)
 		}
 		else
 		{// Mandalorians and Mercs always spawn at random waypoints (for now)...
-			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || WAYPOINT_PARTOL_BAD_LIST[waypoint])
+			while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || WAYPOINT_PARTOL_BAD_LIST[waypoint])
 			{
-				gWPArray[waypoint]->inuse = qfalse; // set it bad!
+				gWPArray[waypoint]->inuse = false; // set it bad!
 
 				if (tries > 10)
 				{
@@ -1523,9 +1523,9 @@ void G_CheckMinimumNpcs(void)
 #endif //__ALL_JEDI_NPCS__
 
 			// Mandalorians and Mercs always spawn at random waypoints (for now)...
-			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || WAYPOINT_PARTOL_BAD_LIST[waypoint])
+			while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || WAYPOINT_PARTOL_BAD_LIST[waypoint])
 			{
-				gWPArray[waypoint]->inuse = qfalse; // set it bad!
+				gWPArray[waypoint]->inuse = false; // set it bad!
 
 				if (tries > 10)
 				{
@@ -1594,9 +1594,9 @@ void G_CheckMinimumNpcs(void)
 #endif //__ALL_JEDI_NPCS__
 
 			// Mandalorians and Mercs always spawn at random waypoints (for now)...
-			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || WAYPOINT_PARTOL_BAD_LIST[waypoint])
+			while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || WAYPOINT_PARTOL_BAD_LIST[waypoint])
 			{
-				gWPArray[waypoint]->inuse = qfalse; // set it bad!
+				gWPArray[waypoint]->inuse = false; // set it bad!
 
 				if (tries > 10)
 				{
@@ -1665,9 +1665,9 @@ void G_CheckMinimumNpcs(void)
 #endif //__ALL_JEDI_NPCS__
 
 			// Wildlife always spawn at random waypoints (for now)...
-			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || WAYPOINT_PARTOL_BAD_LIST[waypoint])
+			while (gWPArray[waypoint]->inuse == false || gWPArray[waypoint]->wpIsBad == true || WAYPOINT_PARTOL_BAD_LIST[waypoint])
 			{
-				gWPArray[waypoint]->inuse = qfalse; // set it bad!
+				gWPArray[waypoint]->inuse = false; // set it bad!
 
 				if (tries > 10)
 				{

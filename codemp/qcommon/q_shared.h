@@ -668,21 +668,15 @@ typedef struct wpneighbor_s
 
 typedef struct wpobject_s
 {
-	vec3_t origin;
-	int inuse;
+	bool inuse;
 	int index;
-	float weight;
-	float disttonext;
+	vec3_t origin;
 	int flags;
-	int associated_entity;
 
-	int forceJumpTo;
+	bool wpIsBadChecked;
+	bool wpIsBad;
 
 	int neighbornum;
-
-	qboolean wpIsBadChecked;
-	qboolean wpIsBad;
-
 	wpneighbor_t neighbors[MAX_NEIGHBOR_SIZE];
 } wpobject_t;
 

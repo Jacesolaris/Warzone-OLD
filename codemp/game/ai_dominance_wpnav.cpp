@@ -6,8 +6,8 @@
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
 
-wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
 int gWPNum = 0;
+wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
 
 void G_TestLine(vec3_t start, vec3_t end, int color, int time)
 {
@@ -53,12 +53,12 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 	//trap->Print("DEBUG: Adding waypoint (%i) %i at %f %f %f with %i links.\n", gWPNum, index, origin[0], origin[1], origin[2], num_links);
 
 	gWPArray[gWPNum]->flags = flags;
-	gWPArray[gWPNum]->weight = weight;
-	gWPArray[gWPNum]->associated_entity = associated_entity;
-	gWPArray[gWPNum]->disttonext = disttonext;
-	gWPArray[gWPNum]->forceJumpTo = forceJumpTo;
+	//gWPArray[gWPNum]->weight = weight;
+	//gWPArray[gWPNum]->associated_entity = associated_entity;
+	//gWPArray[gWPNum]->disttonext = disttonext;
+	//gWPArray[gWPNum]->forceJumpTo = forceJumpTo;
 	gWPArray[gWPNum]->index = index;
-	gWPArray[gWPNum]->inuse = 1;
+	gWPArray[gWPNum]->inuse = true;
 	VectorCopy(origin, gWPArray[gWPNum]->origin);
 	gWPArray[gWPNum]->neighbornum = num_links;
 	
@@ -467,9 +467,9 @@ void Warzone_WaypointCheck ( void )
 	{
 		qboolean wpOK = qtrue;
 
-		gWPArray[i]->wpIsBadChecked = qfalse;
-		gWPArray[i]->wpIsBad = qfalse;
-		gWPArray[i]->inuse = qtrue;
+		gWPArray[i]->wpIsBadChecked = false;
+		gWPArray[i]->wpIsBad = false;
+		gWPArray[i]->inuse = true;
 
 		wpOK = Warzone_CheckRoutingFrom( i );
 		if (wpOK) wpOK = Warzone_CheckBelowWaypoint( i );
@@ -477,17 +477,17 @@ void Warzone_WaypointCheck ( void )
 		if (wpOK)
 		{
 			// Found a route to spawnpoint. Mark it as good...
-			gWPArray[i]->inuse = qtrue;
-			gWPArray[i]->wpIsBadChecked = qtrue;
-			gWPArray[i]->wpIsBad = qfalse;
+			gWPArray[i]->inuse = true;
+			gWPArray[i]->wpIsBadChecked = true;
+			gWPArray[i]->wpIsBad = false;
 			NUM_GOOD++;
 		}
 		else
 		{
 			// No route to spawnpoint. Mark it as bad...
-			gWPArray[i]->inuse = qfalse;
-			gWPArray[i]->wpIsBadChecked = qtrue;
-			gWPArray[i]->wpIsBad = qtrue;
+			gWPArray[i]->inuse = false;
+			gWPArray[i]->wpIsBadChecked = true;
+			gWPArray[i]->wpIsBad = true;
 			NUM_BAD++;
 		}
 	}
