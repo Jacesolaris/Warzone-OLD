@@ -420,56 +420,36 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	tess.maxIndex = tess.numVertexes;
 
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
-	//RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
-	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 /*| ATTR_COLOR*/ | ATTR_NORMAL | ATTR_TANGENT /*| ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION*/);
-/*
-	{
-		shaderProgram_t *sp = &tr.textureColorShader;
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 
-		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
-		GLSL_BindProgram(sp);
-		
-		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		
-		color[0] = 
-		color[1] = 
-		color[2] = tr.identityLight;
-		color[3] = 1.0f;
-		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, color);
-	}
-*/
 	{
-		shaderProgram_t *sp = &tr.lightallShader[0];
+		shaderProgram_t *sp = &tr.shadowPassShader;// &tr.lightallShader[0];
 		vec4_t vector;
 
-		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION);
+		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 		GLSL_BindProgram(sp);
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, vector);
 
-		//GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
-		GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
-		GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
-		GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
-		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
-		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
-		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
-		//GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
+		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
+			vec4_t vec;
+			float isTextureClamped = 0.0;
 
-		GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
-		GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
-		GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
+			//if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE))
+			//{
+			//	isTextureClamped = 1.0;
+			//}
+
+			VectorSet4(vec, 0, 0, 0, isTextureClamped);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
+
+			VectorSet4(vec, 0, 0, 0, 0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
+		}
 
 		GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, vector);
 
@@ -505,11 +485,6 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qtrue);
 	else
 		R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
-
-	//qglDrawElements(GL_TRIANGLES, tess.numIndexes - tess.firstIndex, GL_INDEX_TYPE, BUFFER_OFFSET(tess.firstIndex * sizeof(glIndex_t)));
-	
-	//R_BindNullVBO();
-	//R_BindNullIBO();
 
 	tess.numIndexes = tess.firstIndex;
 	tess.numVertexes = firstVertex;
@@ -888,8 +863,6 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	}
 #endif //__DAY_NIGHT__
 
-	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
 	{
 		// FIXME: this could be a lot cleaner
 		matrix_t translation, modelview;
@@ -899,8 +872,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		GL_SetModelviewMatrix( modelview );
 	}
 
-	dist = 	backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
-	//dist = 32768.0;
+	dist = 	backEnd.viewParms.zFar / 1.75;
 	size = dist * scale;
 
 	if (r_proceduralSun->integer)
@@ -908,7 +880,6 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		size *= r_proceduralSunScale->value;
 	}
 
-	//VectorSet(tr.sunDirection, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	VectorScale( tr.sunDirection, dist, origin );
 
 	PerpendicularVector( vec1, tr.sunDirection );
@@ -922,7 +893,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 	RB_BeginSurface( shader, 0, 0 );
 
-	RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol/*colorWhite*/);
+	RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol);
 
 	RB_EndSurface();
 
@@ -935,34 +906,18 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
 
 		float dist;
-		vec4_t pos;// , hpos;
+		vec4_t pos;
 		matrix_t trans, model, mvp;
 
 		Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
-		//dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
 		dist = 4096.0;
-		//dist = 32768.0;
 
 		VectorScale( tr.sunDirection, dist, pos );
 
 		VectorCopy(pos, SUN_POSITION);
-	
-		/*
-		// project sun point
-		Matrix16Transform(mvp, pos, hpos);
-
-		// transform to UV coords
-		hpos[3] = 0.5f / hpos[3];
-
-		pos[0] = 0.5f + hpos[0] * hpos[3];
-		pos[1] = 0.5f + hpos[1] * hpos[3];
-
-		SUN_SCREEN_POSITION[0] = pos[0];
-		SUN_SCREEN_POSITION[1] = pos[1];
-		*/
 
 		VectorAdd(SUN_POSITION, backEnd.refdef.vieworg, SUN_POSITION);
 		WorldCoordToScreenCoord(SUN_POSITION, &SUN_SCREEN_POSITION[0], &SUN_SCREEN_POSITION[1]);
@@ -978,43 +933,6 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 			SUN_VISIBLE = qfalse;
 			return;
 		}
-		
-#if 0
-		if (!Volumetric_Visible(backEnd.refdef.vieworg, SUN_POSITION, qtrue))
-		{// Trace to actual position failed... Try above...
-			vec3_t tmpOrg;
-			vec3_t eyeOrg;
-			vec3_t tmpRoof;
-			vec3_t eyeRoof;
-
-			// Calculate ceiling heights at both positions...
-			//Volumetric_RoofHeight(SUN_POSITION);
-			//VectorCopy(VOLUMETRIC_ROOF, tmpRoof);
-			//Volumetric_RoofHeight(backEnd.refdef.vieworg);
-			//VectorCopy(VOLUMETRIC_ROOF, eyeRoof);
-
-			VectorSet(tmpRoof, SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2] + 512.0);
-			VectorSet(eyeRoof, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2] + 128.0);
-			
-			VectorSet(tmpOrg, tmpRoof[0], SUN_POSITION[1], SUN_POSITION[2]);
-			VectorSet(eyeOrg, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-			if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
-			{// Trace to above position failed... Try trace from above viewer...
-				VectorSet(tmpOrg, SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]);
-				VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-				if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
-				{// Trace from above viewer failed... Try trace from above, to above...
-					VectorSet(tmpOrg, tmpRoof[0], SUN_POSITION[1], SUN_POSITION[2]);
-					VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-					if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
-					{// Trace from/to above viewer failed...
-						SUN_VISIBLE = qfalse;
-						return; // Can't see this...
-					}
-				}
-			}
-		}
-#endif
 
 		SUN_VISIBLE = qtrue;
 	}
@@ -1033,21 +951,6 @@ void DrawSkyDome ( shader_t *skyShader )
 
 	GLSL_BindProgram(&tr.uniqueskyShader);
 	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
-
-	/*
-	matrix_t trans, model, mvp, invTrans;
-
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	
-	Matrix16SimpleInverse( trans, invTrans);
-					
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWMATRIX, model);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_VIEWMATRIX, trans);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_INVVIEWMATRIX, invTrans);
-	*/
 
 	matrix_t trans, model, mvp, invMvp, normalMatrix;
 

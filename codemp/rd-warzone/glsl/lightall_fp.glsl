@@ -45,6 +45,18 @@ uniform sampler2D			u_OverlayMap;
 
 
 
+uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, USE_TEXTURECLAMP
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
+
+#define USE_TC				u_Settings0.r
+#define USE_DEFORM			u_Settings0.g
+#define USE_RGBA			u_Settings0.b
+#define USE_TEXTURECLAMP	u_Settings0.a
+
+#define USE_VERTEX_ANIM		u_Settings1.r
+#define USE_SKELETAL_ANIM	u_Settings1.g
+
+
 uniform vec2				u_Dimensions;
 uniform vec4				u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4				u_Local2; // ExtinctionCoefficient
@@ -186,6 +198,19 @@ vec3 decode (vec2 enc)
 	return smoothstep ( threshold - afwidth , threshold + afwidth , value ) ;
 }*/
 
+void AddContrast ( inout vec3 color )
+{
+	const float contrast = 3.0;
+	const float brightness = 0.03;
+	//float contrast = u_Local9.r;
+	//float brightness = u_Local9.g;
+	// Apply contrast.
+	color.rgb = ((color.rgb - 0.5f) * max(contrast, 0)) + 0.5f;
+	// Apply brightness.
+	color.rgb += brightness;
+	//color.rgb = clamp(color.rgb, 0.0, 1.0);
+}
+
 vec4 ConvertToNormals ( vec4 colorIn )
 {
 	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
@@ -195,7 +220,6 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	// for the very noticable FPS boost over texture lookups.
 
 	vec4 color = colorIn;
-	//color.rgb /= (1.0 - (length(color.rgb) / 3.0)); // Maximize the brightness for normal generation... Should result in higher variance in the normals, and fix dark texture usage...
 
 	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 
@@ -204,6 +228,10 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	N.xyz = pow(N.xyz, vec3(2.0));
 	N.xyz *= 0.8;
 
+	// Centralize the color, then stretch, generating lots of contrast...
+	N.rgb = N.rgb * 0.5 + 0.5;
+	AddContrast(N.rgb);
+
 	float displacement = clamp(length(color.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
 #define const_2 (255.0 / 219.0)
@@ -211,7 +239,7 @@ vec4 ConvertToNormals ( vec4 colorIn )
 
 	vec4 norm = vec4(N, displacement);
 
-	return norm;
+	return norm * colorIn.a;
 }
 
 
@@ -225,16 +253,25 @@ const float detailRepeatTerrain2 = 7.5;
    
 void AddDetail(inout vec4 color, in vec2 tc)
 {
+	if (USE_TEXTURECLAMP > 0.0) return;
+
+	vec4 origColor = color;
+
 	// Add fine detail to everything...
     vec3 detail = texture(u_DetailMap, tc * detailRepeatFine).rgb;
-    color.rgb *= detail * 2.0;
+
+	//if (length(detail.rgb) == 0.0) return;
+
+	color.rgb = color.rgb * detail.rgb * 2.0;
+
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 	// Add a much less fine detail over terrains to help hide texture repetition...
 	detail = texture(u_DetailMap, tc * detailRepeatTerrain1).rgb;
-    color.rgb *= detail * 2.0;
+	color.rgb = color.rgb * detail.rgb * 2.0;
+
 	// And a second, even less fine pass...
 	detail = texture(u_DetailMap, tc * detailRepeatTerrain2).rgb;
-    color.rgb *= detail * 2.0;
+	color.rgb = color.rgb * detail.rgb * 2.0;
 #endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 }
 
@@ -665,11 +702,6 @@ void main()
 		isDistant = true;
 	}
 
-	/*if (u_Local9.r == 1.0 && dist > 16384.0)
-	{// TODO: Fog and not draw?
-		discard;
-	}*/
-
 
 #if defined(USE_TRI_PLANAR)
 	vLocalSeed = m_vertPos.xyz;
@@ -679,28 +711,6 @@ void main()
 #endif //defined(USE_TRI_PLANAR)
 
 #if 0
-	vec3 debugColor = vec3(0.0);
-	#if defined(USE_VERTEX_ANIMATION)
-		debugColor.r = 1.0;
-	#elif defined(USE_SKELETAL_ANIMATION)
-		debugColor.g = 1.0;
-	#elif defined(USE_TCGEN)
-		debugColor.b = 1.0;
-	#elif defined(USE_TCMOD)
-		debugColor.r = 1.0;
-		debugColor.g = 1.0;
-	#elif defined(USE_MODELMATRIX)
-		debugColor.r = 1.0;
-		debugColor.b = 1.0;
-	#elif defined(USE_LIGHTMAP)
-		debugColor.g = 1.0;
-		debugColor.b = 1.0;
-	#elif defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
-		debugColor.r = 1.0;
-		debugColor.g = 1.0;
-		debugColor.b = 1.0;
-	#endif
-
 	gl_FragColor = vec4(debugColor, 1.0);
 
 	#if defined(USE_GLOW_BUFFER)
@@ -743,7 +753,7 @@ void main()
 
 
 #if defined(__PARALLAX_ENABLED__)
-	if (u_Local1.x > 0.0 && !isDistant)
+	if (u_Local1.x > 0.0 && !isDistant && USE_TEXTURECLAMP <= 0.0)
 	{
 		vec2 tex_offset = vec2(1.0 / u_Dimensions);
 		vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
@@ -805,22 +815,23 @@ void main()
 	#endif
 
 
-	vec3 origDiffuse = diffuse.rgb;
+
 	AddDetail(diffuse, texCoords);
+
 
 
 #if !defined(USE_GLOW_BUFFER)
 	vec4 norm;
 	vec3 N;
 
-	if (u_Local4.r <= 0.0)
-	{
-		norm = ConvertToNormals(diffuse);
-	}
-	else
-	{
-		norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
-	}
+	//if (u_Local4.r <= 0.0)
+	//{
+		norm = ConvertToNormals(diffuse * var_Color.rgba);
+	//}
+	//else
+	//{
+	//	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+	//}
 
 	N.xy = norm.xy * 2.0 - 1.0;
 	N.xy *= 0.25;
@@ -841,8 +852,15 @@ void main()
 		#endif //defined(RGBM_LIGHTMAP)
 
 		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
-		lmBrightMult *= lmBrightMult * 0.7;
-		lightColor	= lightmapColor.rgb * lmBrightMult * var_Color.rgb;
+		
+		//lmBrightMult *= lmBrightMult * 0.7;
+#define lm_const_1 ( 56.0 / 255.0)
+#define lm_const_2 (255.0 / 200.0)
+		lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
+		lmBrightMult = lmBrightMult * 0.7;
+
+		//lightColor	= mix(lightmapColor.rgb * lmBrightMult, lightmapColor.rgb * lmBrightMult * var_Color.rgb, var_Color.a);
+		lightColor	= lightmapColor.rgb * lmBrightMult;
 
 		ambientColor = lightColor;
 		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
@@ -856,9 +874,19 @@ void main()
 		gl_FragColor = vec4(diffuse.rgb + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
 
 
+
+		bool outputNormals = false;
+
+		if (gl_FragColor.a >= 0.996 || ((u_Local1.a == 5.0 || u_Local1.a == 6.0 || u_Local1.a == 19.0 || u_Local1.a == 20.0) && gl_FragColor.a >= 0.5))
+		{// Hmm how to handle transparancies with deferred... Maybe I should add a second alpha normals map...
+			outputNormals = true;
+		}
+
+
+
 #if !defined(DEFERRED_REFLECTIONS)
 	#if defined(__CUBEMAPS_ENABLED__)
-		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
+		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && outputNormals)
 		{
 			#if defined(USE_SPECULARMAP) && !defined(USE_GLOW_BUFFER)
 			if (u_Local1.g != 0.0)
@@ -883,9 +911,6 @@ void main()
 
 			vec3  H  = normalize(var_PrimaryLightDir.xyz + E);
 			float NE = clamp(dot(m_Normal.xyz/*N*/, E), 0.0, 1.0);
-			//float NE = abs(dot(N, E)) + 1e-5;
-			//float NL = clamp(dot(N, var_PrimaryLightDir), 0.0, 1.0);
-			//float LH = clamp(dot(var_PrimaryLightDir, H), 0.0, 1.0);
 
 			vec3 R = reflect(E, m_Normal.xyz);
 			vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
@@ -893,19 +918,20 @@ void main()
 			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w * 0.25;
 			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a)) * u_CubeMapStrength * 0.5;
 		}
-	//#else //!__CUBEMAPS_ENABLED__
-		//specular.a = ((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6;
 	#endif //__CUBEMAPS_ENABLED__
 #else //defined(DEFERRED_REFLECTIONS)
 	float enableCubemap = 0.0; // For deferred cubemaps...
 
 	if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
 	{
-		enableCubemap = 1.0;//clamp(length(u_SpecularScale.rgb) / 6.0, 0.0, 1.0);
+		enableCubemap = 1.0;
 	}
 #endif //defined(DEFERRED_REFLECTIONS)
 
+
+
 	gl_FragColor.rgb *= lightColor;
+	
 
 
 //#define EXPERIMENTAL_VOLUMETRIC_FOG
@@ -962,7 +988,7 @@ vec3 fogCoord = vec3(var_TexCoords2.st, 0.0);
 
 		out_Glow = gl_FragColor;
 	#else
-		if (u_Local8.r == 0.0)
+		if (/*u_Local8.r == 0.0 &&*/ outputNormals)
 		{
 			out_Glow = vec4(0.0);
 			vec2 normData = encode(N.xyz * 0.5 + 0.5);

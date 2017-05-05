@@ -729,7 +729,6 @@ extern float MAP_WATER_LEVEL;
 
 void RB_ClearWaterPositionMap ( void )
 {
-#ifdef __USE_WATERMAP__
 	if (r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 	{
 		FBO_Bind(tr.waterFbo);
@@ -746,7 +745,6 @@ void RB_ClearWaterPositionMap ( void )
 		FBO_Bind(NULL);
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 	}
-#endif //__USE_WATERMAP__
 }
 
 #ifdef __ORIGINAL_OCCLUSION__

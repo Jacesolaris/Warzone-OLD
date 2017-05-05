@@ -20,13 +20,28 @@ vec3 decode (vec2 enc)
     return n;
 }
 
-vec4 ConvertToNormals ( vec4 color )
+void AddContrast ( inout vec3 color )
+{
+	const float contrast = 3.0;
+	const float brightness = 0.03;
+	//float contrast = u_Local9.r;
+	//float brightness = u_Local9.g;
+	// Apply contrast.
+	color.rgb = ((color.rgb - 0.5f) * max(contrast, 0)) + 0.5f;
+	// Apply brightness.
+	color.rgb += brightness;
+	//color.rgb = clamp(color.rgb, 0.0, 1.0);
+}
+
+vec4 ConvertToNormals ( vec4 colorIn )
 {
 	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
 	// wasting vram on real normals.
 	//
 	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
 	// for the very noticable FPS boost over texture lookups.
+
+	vec4 color = colorIn;
 
 	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 
@@ -35,6 +50,10 @@ vec4 ConvertToNormals ( vec4 color )
 	N.xyz = pow(N.xyz, vec3(2.0));
 	N.xyz *= 0.8;
 
+	// Centralize the color, then stretch, generating lots of contrast...
+	N.rgb = N.rgb * 0.5 + 0.5;
+	AddContrast(N.rgb);
+
 	float displacement = clamp(length(color.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
 #define const_2 (255.0 / 219.0)
@@ -42,12 +61,7 @@ vec4 ConvertToNormals ( vec4 color )
 
 	vec4 norm = vec4(N, displacement);
 
-	if (norm.g > norm.b)
-	{// Switch them for screen space fakes...
-		norm.gb = norm.bg;
-	}
-
-	return norm;
+	return norm * colorIn.a;
 }
 
 void main(void)

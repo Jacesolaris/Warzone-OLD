@@ -5113,10 +5113,12 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
+	/*
 	if (tcgen || diffuse->bundle[0].numTexMods)
 	{
 		defs |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 	}
+	*/
 
 	if (diffuse->glow)
 		defs |= LIGHTDEF_USE_GLOW_BUFFER;
@@ -5598,7 +5600,7 @@ static int CollapseStagesToGLSL(void)
 
 	// convert any remaining lightmap stages to a lighting pass with a white texture
 	// only do this with r_sunlightMode non-zero, as it's only for correct shadows.
-	if (r_sunlightMode->integer && shader.numDeforms == 0)
+	if (r_sunlightMode->integer /*&& shader.numDeforms == 0*/)
 	{
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
@@ -5626,7 +5628,7 @@ static int CollapseStagesToGLSL(void)
 	}
 
 	// convert any remaining lightingdiffuse stages to a lighting pass
-	if (shader.numDeforms == 0)
+	//if (shader.numDeforms == 0)
 	{
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
@@ -5648,8 +5650,8 @@ static int CollapseStagesToGLSL(void)
 					pStage->glslShaderGroup = tr.lightallShader;
 				}
 
-				if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)
-					pStage->glslShaderIndex |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
+				/*if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)
+					pStage->glslShaderIndex |= LIGHTDEF_USE_TCGEN_AND_TCMOD;*/
 			}
 		}
 	}

@@ -1385,6 +1385,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_MapInfo", GLSL_VEC4, 1 },
 
 	{ "u_Dimensions", GLSL_VEC2, 1 },
+	{ "u_Settings0", GLSL_VEC4, 1 },
+	{ "u_Settings1", GLSL_VEC4, 1 },
 	{ "u_Local0", GLSL_VEC4, 1 },
 	{ "u_Local1", GLSL_VEC4, 1 },
 	{ "u_Local2", GLSL_VEC4, 1 },
@@ -2703,16 +2705,6 @@ void GLSL_DeleteGPUShader(shaderProgram_t *program)
 	}
 }
 
-static bool GLSL_IsValidPermutationForGeneric(int shaderCaps)
-{
-	if ((shaderCaps & (GENERICDEF_USE_VERTEX_ANIMATION | GENERICDEF_USE_SKELETAL_ANIMATION)) == (GENERICDEF_USE_VERTEX_ANIMATION | GENERICDEF_USE_SKELETAL_ANIMATION))
-	{
-		return false;
-	}
-
-	return true;
-}
-
 static bool GLSL_IsValidPermutationForFog(int shaderCaps)
 {
 	if ((shaderCaps & (FOGDEF_USE_VERTEX_ANIMATION | FOGDEF_USE_SKELETAL_ANIMATION)) == (FOGDEF_USE_VERTEX_ANIMATION | FOGDEF_USE_SKELETAL_ANIMATION))
@@ -2743,57 +2735,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	R_IssuePendingRenderCommands();
 
 	startTime = ri->Milliseconds();
-
-	for (i = 0; i < GENERICDEF_COUNT; i++)
-	{
-		if (!GLSL_IsValidPermutationForGeneric(i))
-		{
-			continue;
-		}
-
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR | ATTR_LIGHTDIRECTION;;
-		extradefines[0] = '\0';
-
-		if (i & GENERICDEF_USE_DEFORM_VERTEXES)
-			Q_strcat(extradefines, 1024, "#define USE_DEFORM_VERTEXES\n");
-
-		if (i & GENERICDEF_USE_TCGEN_AND_TCMOD)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-		}
-
-		if (i & GENERICDEF_USE_VERTEX_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-			attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-		}
-
-		if (i & GENERICDEF_USE_SKELETAL_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-		}
-
-		if (i & GENERICDEF_USE_FOG)
-			Q_strcat(extradefines, 1024, "#define USE_FOG\n");
-
-		if (i & GENERICDEF_USE_RGBAGEN)
-			Q_strcat(extradefines, 1024, "#define USE_RGBAGEN\n");
-
-		if (i & GENERICDEF_USE_GLOW_BUFFER)
-			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
-
-		char *name = (char *)malloc(sizeof(char) * 64);
-		sprintf(name, "generic%i", i);
-
-		if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], (const char *)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, NULL, NULL, NULL))
-		{
-			ri->Error(ERR_FATAL, "Could not load generic shader!");
-		}
-	}
-
-	//ri->Error(ERR_DROP, "Oh noes!\n");
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -2859,9 +2800,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeSpecular->value > 0.000001f)
 			Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
 
-		if (r_dlightMode->integer >= 2)
-			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 
@@ -2901,24 +2839,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_REGIONS)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_REGIONS\n");
-		}
-
-		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-		}
-
-		if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-		}
-		else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			//attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -2959,125 +2879,16 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
-		if (r_deluxeSpecular->value > 0.000001f)
-			Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
-
-		if (r_dlightMode->integer >= 2)
-			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-		if (r_hdr->integer && !glRefConfig.floatLightmap)
-			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
-
-		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
-
-		if (i & LIGHTDEF_USE_LIGHTMAP)
+		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
 		{
-			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
-
-			if (r_deluxeMapping->integer)
-				Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-		}
-
-		if (r_specularMapping->integer)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
-		}
-
-		if (r_cubeMapping->integer && (i & LIGHTDEF_USE_CUBEMAP))
-		{
-			Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
-		}
-
-		if (r_parallaxMapping->integer && !r_cartoon->integer) // Parallax without normal maps...
-		{
-			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-
-			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
-				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
-		}
-
-		//Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
-		if (i & LIGHTDEF_USE_TRIPLANAR)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_TRI_PLANAR\n");
-		}
-
-		if (i & LIGHTDEF_USE_REGIONS)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_REGIONS\n");
-		}
-
-		if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-			Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-		}
-
-		if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-		}
-		else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-		}
-
-		if (i & LIGHTDEF_USE_GLOW_BUFFER)
-			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
-
-		char *name = (char *)malloc(sizeof(char) * 64);
-		sprintf(name, "shadowPass%i", i);
-
-		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
-		{
-			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
-
-#ifdef HEIGHTMAP_TESSELATION2
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
-#else
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
-#endif
-			{
-				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
-			}
-		}
-		else if (r_instanceCloudReductionCulling->integer)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_ICR_CULLING\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, fallbackShader_lightall_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
-			}
-		}
-		else
-		{
-			if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader[i], (const char *)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
-			{
-				ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
-			}
+			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
 		}
 	}
-
-	/*
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
-
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
-	}
-	*/
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
@@ -3929,32 +3740,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	int i;
 	int numGenShaders = 0, numLightShaders = 0, numEtcShaders = 0;
 
-	for (i = 0; i < GENERICDEF_COUNT; i++)
-	{
-		if (!GLSL_IsValidPermutationForGeneric(i))
-		{
-			continue;
-		}
-
-		if (!GLSL_EndLoadGPUShader(&tr.genericShader[i]))
-		{
-			ri->Error(ERR_FATAL, "Could not load fogpass shader!");
-		}
-
-		GLSL_InitUniforms(&tr.genericShader[i]);
-
-		qglUseProgram(tr.genericShader[i].program);
-		GLSL_SetUniformInt(&tr.genericShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.genericShader[i], UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-		qglUseProgram(0);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.genericShader[i]);
-#endif
-
-		numGenShaders++;
-	}
-
 	if (!GLSL_EndLoadGPUShader(&tr.textureColorShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load texturecolor shader!");
@@ -4068,25 +3853,25 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		numLightShaders++;
 	}
 
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
+
+	if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader))
 	{
-		if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader[i]))
-		{
-			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
-		}
+		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+	}
 
-		GLSL_InitUniforms(&tr.shadowPassShader[i]);
+	GLSL_InitUniforms(&tr.shadowPassShader);
 
-		qglUseProgram(tr.shadowPassShader[i].program);
-		GLSL_SetUniformInt(&tr.shadowPassShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		qglUseProgram(0);
+	qglUseProgram(tr.shadowPassShader.program);
+	GLSL_SetUniformInt(&tr.shadowPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	qglUseProgram(0);
 
 #if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.shadowPassShader[i]);
+	GLSL_FinishGPUShader(&tr.shadowPassShader);
 #endif
 
-		numLightShaders++;
-	}
+	numLightShaders++;
+
+
 
 	if (!GLSL_EndLoadGPUShader(&tr.sunPassShader))
 	{
@@ -6198,9 +5983,6 @@ void GLSL_ShutdownGPUShaders(void)
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_WEIGHTS);
 	GLSL_BindNullProgram();
 
-	for (i = 0; i < GENERICDEF_COUNT; i++)
-		GLSL_DeleteGPUShader(&tr.genericShader[i]);
-
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
 #ifdef __INSTANCED_MODELS__
 	GLSL_DeleteGPUShader(&tr.instanceShader);
@@ -6213,8 +5995,7 @@ void GLSL_ShutdownGPUShaders(void)
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.lightallShader[i]);
 
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
-		GLSL_DeleteGPUShader(&tr.shadowPassShader[i]);
+	GLSL_DeleteGPUShader(&tr.shadowPassShader);
 
 	GLSL_DeleteGPUShader(&tr.sunPassShader);
 
@@ -6717,65 +6498,3 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 #endif //__INSTANCED_MODELS__
 }
 
-
-shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
-{
-	shaderStage_t *pStage = tess.xstages[stage];
-	int shaderAttribs = 0;
-
-	if (tess.fogNum && pStage->adjustColorsForFog)
-	{
-		shaderAttribs |= GENERICDEF_USE_FOG;
-	}
-
-	switch (pStage->rgbGen)
-	{
-	case CGEN_LIGHTING_DIFFUSE:
-		shaderAttribs |= GENERICDEF_USE_RGBAGEN;
-		break;
-	default:
-		break;
-	}
-
-	switch (pStage->alphaGen)
-	{
-	case AGEN_LIGHTING_SPECULAR:
-	case AGEN_PORTAL:
-		shaderAttribs |= GENERICDEF_USE_RGBAGEN;
-		break;
-	default:
-		break;
-	}
-
-	if (pStage->bundle[0].tcGen != TCGEN_TEXTURE)
-	{
-		shaderAttribs |= GENERICDEF_USE_TCGEN_AND_TCMOD;
-	}
-
-	if (tess.shader->numDeforms && !ShaderRequiresCPUDeforms(tess.shader))
-	{
-		shaderAttribs |= GENERICDEF_USE_DEFORM_VERTEXES;
-	}
-
-	if (glState.vertexAnimation)
-	{
-		shaderAttribs |= GENERICDEF_USE_VERTEX_ANIMATION;
-	}
-
-	if (glState.skeletalAnimation)
-	{
-		shaderAttribs |= GENERICDEF_USE_SKELETAL_ANIMATION;
-	}
-
-	if (pStage->bundle[0].numTexMods)
-	{
-		shaderAttribs |= GENERICDEF_USE_TCGEN_AND_TCMOD;
-	}
-
-	if (pStage->glow)
-	{
-		shaderAttribs |= GENERICDEF_USE_GLOW_BUFFER;
-	}
-
-	return &tr.genericShader[shaderAttribs];
-}

@@ -22,14 +22,22 @@ attribute vec3 attr_Position;
 attribute vec3 attr_Normal;
 attribute vec4 attr_Tangent;
 
-#if defined(USE_VERTEX_ANIMATION)
 attribute vec3 attr_Position2;
 attribute vec3 attr_Normal2;
 attribute vec4 attr_Tangent2;
-#elif defined(USE_SKELETAL_ANIMATION)
 attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
-#endif
+
+uniform vec4				u_Settings0; // useTC, useDeform, useRGBA
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
+
+#define USE_TC				u_Settings0.r
+#define USE_DEFORM			u_Settings0.g
+#define USE_RGBA			u_Settings0.b
+
+#define USE_VERTEX_ANIM		u_Settings1.r
+#define USE_SKELETAL_ANIM	u_Settings1.g
+
 
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4	u_Local2; // ExtinctionCoefficient
@@ -52,17 +60,24 @@ uniform vec4   u_EnableTextures; // x = normal, y = deluxe, z = specular, w = cu
 
 uniform vec3   u_ViewOrigin;
 
-#if defined(USE_TCGEN)
 uniform int    u_TCGen0;
 uniform vec3   u_TCGen0Vector0;
 uniform vec3   u_TCGen0Vector1;
-uniform vec3   u_LocalViewOrigin;
-#endif
 
-#if defined(USE_TCMOD)
+uniform vec3   u_LocalViewOrigin;
+
 uniform vec4   u_DiffuseTexMatrix;
 uniform vec4   u_DiffuseTexOffTurb;
-#endif
+
+uniform int    u_ColorGen;
+uniform int    u_AlphaGen;
+uniform vec3   u_AmbientLight;
+uniform vec3   u_DirectedLight;
+uniform vec3   u_ModelLightDir;
+uniform float  u_PortalRange;
+
+uniform int    u_DeformGen;
+uniform float  u_DeformParams[5];
 
 uniform mat4   u_ModelViewProjectionMatrix;
 //uniform mat4	u_ViewProjectionMatrix;
@@ -72,11 +87,8 @@ uniform mat4	u_NormalMatrix;
 uniform vec4   u_BaseColor;
 uniform vec4   u_VertColor;
 
-#if defined(USE_VERTEX_ANIMATION)
 uniform float  u_VertexLerp;
-#elif defined(USE_SKELETAL_ANIMATION)
 uniform mat4   u_BoneMatrices[20];
-#endif
 
 uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
@@ -104,7 +116,54 @@ varying vec2   var_nonTCtexCoords; // for steep maps
 
 varying vec3	var_fogDir;
 
-#if defined(USE_TCGEN)
+vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
+{
+	float base =      u_DeformParams[0];
+	float amplitude = u_DeformParams[1];
+	float phase =     u_DeformParams[2];
+	float frequency = u_DeformParams[3];
+	float spread =    u_DeformParams[4];
+
+	if (u_DeformGen == DGEN_BULGE)
+	{
+		phase *= st.x;
+	}
+	else // if (u_DeformGen <= DGEN_WAVE_INVERSE_SAWTOOTH)
+	{
+		phase += dot(pos.xyz, vec3(spread));
+	}
+
+	float value = phase + (u_Time * frequency);
+	float func;
+
+	if (u_DeformGen == DGEN_WAVE_SIN)
+	{
+		func = sin(value * 2.0 * M_PI);
+	}
+	else if (u_DeformGen == DGEN_WAVE_SQUARE)
+	{
+		func = sign(fract(0.5 - value));
+	}
+	else if (u_DeformGen == DGEN_WAVE_TRIANGLE)
+	{
+		func = abs(fract(value + 0.75) - 0.5) * 4.0 - 1.0;
+	}
+	else if (u_DeformGen == DGEN_WAVE_SAWTOOTH)
+	{
+		func = fract(value);
+	}
+	else if (u_DeformGen == DGEN_WAVE_INVERSE_SAWTOOTH)
+	{
+		func = (1.0 - fract(value));
+	}
+	else // if (u_DeformGen == DGEN_BULGE)
+	{
+		func = sin(value);
+	}
+
+	return pos + normal * (base + func * amplitude);
+}
+
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
 	vec2 tex = attr_TexCoord0.st;
@@ -127,9 +186,7 @@ vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3
 
 	return tex;
 }
-#endif //defined(USE_TCGEN)
 
-#if defined(USE_TCMOD)
 vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 {
 	float amplitude = offTurb.z;
@@ -144,7 +201,37 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 
 	return st2 + texOffset * amplitude;
 }
-#endif //defined(USE_TCMOD)
+
+
+vec4 CalcColor(vec3 position, vec3 normal)
+{
+	vec4 color = u_VertColor * attr_Color + u_BaseColor;
+	
+	if (u_ColorGen == CGEN_LIGHTING_DIFFUSE)
+	{
+		float incoming = clamp(dot(normal, u_ModelLightDir), 0.0, 1.0);
+
+		color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0);
+	}
+	
+	vec3 viewer = u_LocalViewOrigin - position;
+
+	if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
+	{
+		vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
+		vec3 reflected = -reflect(lightDir, normal);
+		
+		color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);
+		color.a *= color.a;
+		color.a *= color.a;
+	}
+	else if (u_AlphaGen == AGEN_PORTAL)
+	{
+		color.a = clamp(length(viewer) / u_PortalRange, 0.0, 1.0);
+	}
+	
+	return color;
+}
 
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 void GetBlending(vec3 normal)
@@ -204,108 +291,89 @@ vec3 vectoangles(in vec3 value1) {
 }
 #endif //defined(USE_TRI_PLANAR)
 
-//out vec3 o_toLightInTangentSpace;
-//out vec3 o_toCameraInTangentSpace;
 
 void main()
 {
-#if defined(USE_VERTEX_ANIMATION)
-	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
-	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
-#elif defined(USE_SKELETAL_ANIMATION)
-	vec4 position4 = vec4(0.0);
-	vec4 normal4 = vec4(0.0);
-	vec4 tangent4 = vec4(0.0);
-	vec4 originalPosition = vec4(attr_Position, 1.0);
-	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
-	vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
-	//vec4 originalNormal = vec4(attr_Normal.xyz * 2.0 - 1.0, 0.0);
-	//vec4 originalTangent = vec4(attr_Tangent.xyz * 2.0 - 1.0, 0.0);
+	vec3 position;
+	vec3 normal;
+	vec3 tangent;
 
-	for (int i = 0; i < 4; i++)
+	if (USE_VERTEX_ANIM == 1.0)
 	{
-		int boneIndex = int(attr_BoneIndexes[i]);
+		position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+		normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
+		tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
+	}
+	else if (USE_SKELETAL_ANIM == 1.0)
+	{
+		vec4 position4 = vec4(0.0);
+		vec4 normal4 = vec4(0.0);
+		vec4 tangent4 = vec4(0.0);
+		vec4 originalPosition = vec4(attr_Position, 1.0);
+		vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
+		vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
-		position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
-		normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
-		tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
+		for (int i = 0; i < 4; i++)
+		{
+			int boneIndex = int(attr_BoneIndexes[i]);
+
+			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
+			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
+			tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
+		}
+
+		position = position4.xyz;
+		normal = normalize(normal4.xyz);
+		tangent = normalize(tangent4.xyz);
+	}
+	else
+	{
+		position  = attr_Position;
+		normal    = attr_Normal * 2.0 - 1.0;
+		tangent   = attr_Tangent.xyz * 2.0 - 1.0;
 	}
 
-	vec3 position = position4.xyz;
-	vec3 normal = normalize(normal4.xyz);
-	vec3 tangent = normalize(tangent4.xyz);
-#else
-	vec3 position  = attr_Position;
-	vec3 normal    = attr_Normal * 2.0 - 1.0;
-	vec3 tangent   = attr_Tangent.xyz * 2.0 - 1.0;
-#endif
 
+	vec2 texCoords;
 
-#if defined(USE_TCGEN)
-	vec2 texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
-#else
-	vec2 texCoords = attr_TexCoord0.st;
-#endif
-
-#if defined(USE_TCMOD)
-	var_TexCoords.xy = ModTexCoords(texCoords, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
-#else
-	var_TexCoords.xy = texCoords;
-#endif
+	if (USE_TC == 1.0)
+	{
+		texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
+		var_TexCoords.xy = ModTexCoords(texCoords, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
+	}
+	else
+	{
+		vec2 texCoords = attr_TexCoord0.st;
+		var_TexCoords.xy = texCoords;
+	}
 
 	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
 	{
 		var_TexCoords *= u_textureScale;
 	}
 
+	if (USE_DEFORM == 1.0)
+	{
+		position = DeformPosition(position, normal, attr_TexCoord0.st);
+	}
+
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
-	//vec3 preMMPos = position.xyz + u_ViewOrigin.xyz;
 	vec3 preMMPos = position.xyz;
 
 
-#if defined(USE_MODELMATRIX) //&& defined(USE_VERTEX_ANIMATION)
-	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
-	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
-	tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
-#endif
+	if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
+	{
+		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
+		normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
+		tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
+	}
 
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 
 
-	//vec3 preMMPos = position.xyz;
-	//vec3 preMMPos = position.xyz + u_ViewOrigin.xyz;
 	vec3 preMMNorm = normal.xyz;
 
-
-
-/*
-	// transform to world space
-   vec3 worldNormal	= normalize(normal);
-   vec3 worldTangent	= normalize(tangent);
-
-	// calculate vectors to the camera and to the light
-   vec3 worldDirectionToLight	= normalize(u_PrimaryLightOrigin.xyz - preMMPos.xyz);
-   vec3 worldDirectionToCamera	= normalize(u_ViewOrigin - preMMPos.xyz);
-
-   // calculate bitangent from normal and tangent
-   vec3 worldBitangnent	= normalize(bitangent);
-
-   // transform direction to the light to tangent space
-   o_toLightInTangentSpace = vec3(
-         dot(worldDirectionToLight, worldTangent),
-         dot(worldDirectionToLight, worldBitangnent),
-         dot(worldDirectionToLight, worldNormal)
-      );
-
-   // transform direction to the camera to tangent space
-   o_toCameraInTangentSpace = vec3(
-         dot(worldDirectionToCamera, worldTangent),
-         dot(worldDirectionToCamera, worldBitangnent),
-         dot(worldDirectionToCamera, worldNormal)
-      );
-*/
 
 
 #if defined(USE_LIGHTMAP)
@@ -314,7 +382,14 @@ void main()
 	var_TexCoords2 = vec2(0.0);
 #endif
 
-	var_Color = u_VertColor * attr_Color + u_BaseColor;
+	if (USE_RGBA == 1.0)
+	{
+		var_Color = CalcColor(position, normal);
+	}
+	else
+	{
+		var_Color = u_VertColor * attr_Color + u_BaseColor;
+	}
 
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
 	var_PrimaryLightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius;

@@ -401,12 +401,14 @@ void main(void)
 		phongFactor = 0.0;
 	}
 
+	float normStrength = (norm.a * 0.5 + 0.5) * 0.2;//u_Local3.r;
+
 	if (!noSunPhong && lambertian2 > 0.0)
 	{// this is blinn phong
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
 		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += vec3(spec2 * (norm.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
+		gl_FragColor.rgb += vec3(clamp(spec2, 0.0, 1.0) * normStrength) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
 	}
 
 	if (noSunPhong)
@@ -458,7 +460,7 @@ void main(void)
 							float specAngle3 = max(dot(halfDir3, N), 0.0);
 							float spec3 = pow(specAngle3, 16.0);
 
-							float strength = ((1.0 - spec3) * (norm.a)) * lightStrength * 0.25;//u_Local3.b;
+							float strength = (clamp(1.0 - spec3, 0.0, 1.0) * normStrength) * lightStrength * 0.25;//u_Local3.b;
 							addedLight +=  lightColor * strength * 0.5;
 						}
 					}

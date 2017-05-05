@@ -31,7 +31,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 //#define __USE_QGL_FINISH__
 #define __USE_QGL_FLUSH__
-#define __USE_WATERMAP__
 //#define __RENDERER_FOLIAGE__
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
@@ -1320,19 +1319,6 @@ enum
 
 enum
 {
-	GENERICDEF_USE_DEFORM_VERTEXES  = 0x0001,
-	GENERICDEF_USE_TCGEN_AND_TCMOD  = 0x0002,
-	GENERICDEF_USE_VERTEX_ANIMATION = 0x0004,
-	GENERICDEF_USE_FOG              = 0x0008,
-	GENERICDEF_USE_RGBAGEN          = 0x0010,
-	GENERICDEF_USE_SKELETAL_ANIMATION = 0x0020,
-	GENERICDEF_USE_GLOW_BUFFER      = 0x0040,
-	GENERICDEF_ALL                  = 0x007F,
-	GENERICDEF_COUNT                = 0x0080,
-};
-
-enum
-{
 	FOGDEF_USE_DEFORM_VERTEXES  = 0x0001,
 	FOGDEF_USE_VERTEX_ANIMATION = 0x0002,
 	FOGDEF_USE_SKELETAL_ANIMATION = 0x0004,
@@ -1342,24 +1328,13 @@ enum
 
 enum
 {
-	DLIGHTDEF_USE_DEFORM_VERTEXES  = 0x0001,
-	DLIGHTDEF_ALL                  = 0x0001,
-	DLIGHTDEF_COUNT                = 0x0002,
-};
-
-
-enum
-{
-	LIGHTDEF_USE_LIGHTMAP			= 0x0001,
-	LIGHTDEF_USE_TCGEN_AND_TCMOD	= 0x0002,
-	LIGHTDEF_USE_GLOW_BUFFER		= 0x0004,
-	LIGHTDEF_USE_VERTEX_ANIMATION	= 0x0008,
-	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0010,
-	LIGHTDEF_USE_CUBEMAP			= 0x0020,
-	LIGHTDEF_USE_TESSELLATION		= 0x0040,
-	LIGHTDEF_USE_TRIPLANAR			= 0x0080,
-	LIGHTDEF_USE_REGIONS			= 0x0100,
-	LIGHTDEF_COUNT					= 0x0200
+	LIGHTDEF_USE_LIGHTMAP = 0x0001,
+	LIGHTDEF_USE_GLOW_BUFFER = 0x0002,
+	LIGHTDEF_USE_CUBEMAP = 0x0004,
+	LIGHTDEF_USE_TESSELLATION = 0x0008,
+	LIGHTDEF_USE_TRIPLANAR = 0x0010,
+	LIGHTDEF_USE_REGIONS = 0x0020,
+	LIGHTDEF_COUNT = 0x0045
 };
 
 
@@ -1501,6 +1476,8 @@ typedef enum
 	UNIFORM_MAPINFO,
 
 	UNIFORM_DIMENSIONS,
+	UNIFORM_SETTINGS0,
+	UNIFORM_SETTINGS1,
 	UNIFORM_LOCAL0,
 	UNIFORM_LOCAL1,
 	UNIFORM_LOCAL2,
@@ -2376,10 +2353,9 @@ typedef struct {
 	int		c_flareRenders;
 
 	int     c_glslShaderBinds;
-	int     c_genericDraws;
+	int     c_shadowPassDraws;
 	int     c_lightallDraws;
 	int     c_fogDraws;
-	int     c_dlightDraws;
 
 	int		msec;			// total msec for backend run
 } backEndCounters_t;
@@ -2567,16 +2543,14 @@ typedef struct trGlobals_s {
 	//
 	// GPU shader programs
 	//
-	shaderProgram_t genericShader[GENERICDEF_COUNT];
 	shaderProgram_t textureColorShader;
 #ifdef __INSTANCED_MODELS__
 	shaderProgram_t instanceShader;
 #endif //__INSTANCED_MODELS__
 	shaderProgram_t occlusionShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
-	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
-	shaderProgram_t shadowPassShader[LIGHTDEF_COUNT];
+	shaderProgram_t shadowPassShader;
 	shaderProgram_t sunPassShader;
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
@@ -3458,8 +3432,6 @@ void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_
 void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
 void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
 void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
-
-shaderProgram_t *GLSL_GetGenericShaderProgram(int stage);
 
 /*
 ============================================================

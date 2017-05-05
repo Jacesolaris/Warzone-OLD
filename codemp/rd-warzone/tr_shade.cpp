@@ -1160,7 +1160,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_TILES:			// 26			// tiled floor
 				specularScale = 0.56;
-				cubemapScale = 0.15;
+				cubemapScale = 0.25;
 				materialType = (float)MATERIAL_TILES;
 				parallaxScale = 1.5;
 				break;
@@ -1178,14 +1178,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 				specularScale = 0.98;
-				cubemapScale = 0.98;
+				cubemapScale = 1.98;
 				materialType = (float)MATERIAL_SOLIDMETAL;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
 				specularScale = 1.0;
-				cubemapScale = 1.0;
+				cubemapScale = 2.0;
 				materialType = (float)MATERIAL_HOLLOWMETAL;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
@@ -1216,13 +1216,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_MARBLE:			// 12			// marble floors
 				specularScale = 0.2;
-				cubemapScale = 0.6;
+				cubemapScale = 0.9;
 				materialType = (float)MATERIAL_MARBLE;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SNOW:				// 14			// freshly laid snow
 				specularScale = 0.3;
-				cubemapScale = 0.25;
+				cubemapScale = 0.35;
 				materialType = (float)MATERIAL_SNOW;
 				parallaxScale = 1.5;
 				break;
@@ -1240,7 +1240,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 				specularScale = 0.25;
-				cubemapScale = 0.05;
+				cubemapScale = 0.1;
 				materialType = (float)MATERIAL_CONCRETE;
 				parallaxScale = 1.5;
 				break;
@@ -1258,50 +1258,50 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_PLASTIC:			// 25			//
 				specularScale = 0.58;
-				cubemapScale = 0.3;
+				cubemapScale = 0.4;
 				materialType = (float)MATERIAL_PLASTIC;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_PLASTER:			// 28			// drywall style plaster
 				specularScale = 0.3;
-				cubemapScale = 0.05;
+				cubemapScale = 0.1;
 				materialType = (float)MATERIAL_PLASTER;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 				specularScale = 0.88;
-				cubemapScale = 1.0;
+				cubemapScale = 2.0;
 				materialType = (float)MATERIAL_SHATTERGLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_ARMOR:			// 30			// body armor
 				specularScale = 0.4;
-				cubemapScale = 0.4;
+				cubemapScale = 0.6;
 				materialType = (float)MATERIAL_ARMOR;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_ICE:				// 15			// packed snow/solid ice
 				specularScale = 0.45;
-				cubemapScale = 0.4;
+				cubemapScale = 0.7;
 				materialType = (float)MATERIAL_ICE;
 				parallaxScale = 2.0;
 				break;
 			case MATERIAL_GLASS:			// 10			//
 				specularScale = 0.95;
-				cubemapScale = 1.0;
+				cubemapScale = 2.0;
 				materialType = (float)MATERIAL_GLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 				specularScale = 0.93;
-				cubemapScale = 0.93;
+				cubemapScale = 1.93;
 				materialType = (float)MATERIAL_BPGLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 				specularScale = 0.92;
-				cubemapScale = 0.92;
+				cubemapScale = 1.92;
 				materialType = (float)MATERIAL_COMPUTER;
 				parallaxScale = 1.5;
 				break;
@@ -1827,30 +1827,8 @@ void RB_UpdateMatrixes ( void )
 {
 	if (!MATRIX_UPDATE) return;
 
-#if 0
-	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
-	Matrix16Translation( backEnd.viewParms.ori.origin, MATRIX_TRANS );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, MATRIX_TRANS, MATRIX_MODEL );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, MATRIX_MODEL, MATRIX_MVP);
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, MATRIX_VP);
-
-	//Matrix16SimpleInverse( MATRIX_TRANS, MATRIX_INVTRANS);
-	theOriginalGluInvertMatrix((const float *)MATRIX_MVP, (float *)MATRIX_INVTRANS);
-	
-	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, MATRIX_NORMAL);
-
-	//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
-	Matrix16SimpleInverse( MATRIX_MODEL, MATRIX_INVMV);
-#else
-	//Matrix16Translation(backEnd.viewParms.ori.origin, MATRIX_TRANS);
-	//Matrix16Multiply(backEnd.viewParms.world.modelMatrix, MATRIX_TRANS, MATRIX_MODEL);
-
-	theOriginalGluInvertMatrix((const float *)glState.modelviewProjection, (float *)MATRIX_INVTRANS);
-
+	//theOriginalGluInvertMatrix((const float *)glState.modelviewProjection, (float *)MATRIX_INVTRANS);
 	Matrix16SimpleInverse(backEnd.viewParms.projectionMatrix, MATRIX_NORMAL);
-#endif
 
 	MATRIX_UPDATE = qfalse;
 }
@@ -2123,6 +2101,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	}
 #endif //__PLAYER_BASED_CUBEMAPS__
 
+	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
+
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
 		shaderStage_t *pStage = input->xstages[stage];
@@ -2132,10 +2112,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		int stateBits;
 		colorGen_t forceRGBGen = CGEN_BAD;
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
-		qboolean isGeneric = qtrue;
-		qboolean isLightAll = qfalse;
 		qboolean multiPass = qtrue;
-		qboolean usingLight = qfalse;
 		qboolean isGlowStage = qfalse;
 		qboolean isUsingRegions = qfalse;
 
@@ -2235,354 +2212,245 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 #endif //__DEFERRED_IMAGE_LOADING__
 
-		int SHADER_INDEX = 0;
+		float useTC = 0.0;
+		float useDeform = 0.0;
+		float useRGBA = 0.0;
 
-		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		float useVertexAnim = 0.0;
+		float useSkeletalAnim = 0.0;
+
+		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
-			if (pStage->glslShaderGroup == tr.lightallShader)
+			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
 			{
-				int index = 0;
-
-				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
-				{
-					if (glState.vertexAnimation)
-					{
-						index |= LIGHTDEF_USE_VERTEX_ANIMATION;
-					}
-
-					if (glState.skeletalAnimation)
-					{
-						index |= LIGHTDEF_USE_SKELETAL_ANIMATION;
-					}
-				}
-
-				if (pStage->stateBits & GLS_ATEST_BITS)
-				{
-					index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
-				}
-
-				if (useTesselation)
-				{
-					index |= LIGHTDEF_USE_TESSELLATION;
-				}
-
-				sp = &pStage->glslShaderGroup[index];
-				isGeneric = qfalse;
-				isLightAll = qtrue;
-
-				SHADER_INDEX = index;
+				sp = &tr.waterShader;
+				pStage->glslShaderGroup = &tr.waterShader;
+				isWater = qtrue;
+				isGrass = qfalse;
+				isPebbles = qfalse;
+				multiPass = qfalse;
 			}
 			else
-			{
-				int shaderAttribs = 0;
-
-				if (tess.shader->numDeforms && !ShaderRequiresCPUDeforms(tess.shader))
-				{
-					shaderAttribs |= GENERICDEF_USE_DEFORM_VERTEXES;
-				}
-
-				if (glState.vertexAnimation)
-				{
-					shaderAttribs |= GENERICDEF_USE_VERTEX_ANIMATION;
-				}
-
-				if (glState.skeletalAnimation)
-				{
-					shaderAttribs |= GENERICDEF_USE_SKELETAL_ANIMATION;
-				}
-
-				if (pStage->stateBits & GLS_ATEST_BITS)
-				{
-					shaderAttribs |= GENERICDEF_USE_TCGEN_AND_TCMOD;
-				}
-
-				sp = &tr.genericShader[shaderAttribs];
-				isGeneric = qtrue;
-				isLightAll = qfalse;
-
-				SHADER_INDEX = shaderAttribs;
-			}
-		}
-#if 0
-		else if (pStage->glslShaderGroup == tr.lightallShader
-			&& backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity
-			&& glState.vertexAnimation)
-		{
-			int index = 0;
-
-			index |= LIGHTDEF_USE_VERTEX_ANIMATION;
-
-			/*if (pStage->stateBits & GLS_ATEST_BITS)
-			{
-				index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
-			}*/
-
-			sp = &pStage->glslShaderGroup[index];
-			isGeneric = qfalse;
-			isLightAll = qtrue;
-
-			SHADER_INDEX = index;
-		}
-		else if (pStage->glslShaderGroup != tr.lightallShader
-			&& backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity
-			&& glState.vertexAnimation)
-		{
-			int shaderAttribs = 0;
-
-			/*if (tess.shader->numDeforms && !ShaderRequiresCPUDeforms(tess.shader))
-			{
-				shaderAttribs |= GENERICDEF_USE_DEFORM_VERTEXES;
-			}*/
-
-			shaderAttribs |= GENERICDEF_USE_VERTEX_ANIMATION;
-
-			/*if (pStage->stateBits & GLS_ATEST_BITS)
-			{
-				shaderAttribs |= GENERICDEF_USE_TCGEN_AND_TCMOD;
-			}*/
-
-			sp = &tr.genericShader[shaderAttribs];
-			isGeneric = qtrue;
-			isLightAll = qfalse;
-
-			SHADER_INDEX = shaderAttribs;
-		}
-#endif
-#if 1
-		else if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity
-			&& glState.vertexAnimation)
-		{
-			int index = 0;
-
-			index |= LIGHTDEF_USE_VERTEX_ANIMATION;
-			index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
-
-			//
-			// testing cube map
-			//
-			if (ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 2)
-			{
-				index |= LIGHTDEF_USE_CUBEMAP;
+			{// Only do one stage on GLSL water...
+				break;
 			}
 
-			if (pStage->glslShaderGroup)
-				sp = &pStage->glslShaderGroup[index];
-			else
-				sp = &tr.lightallShader[index];
-
-			isGeneric = qfalse;
-			isLightAll = qtrue;
-
-			SHADER_INDEX = index;
+			GLSL_BindProgram(sp);
 		}
-#endif
-		else if (pStage->glslShaderGroup == tr.lightallShader
-			|| pStage->bundle[TB_STEEPMAP].image[0]
-			|| pStage->bundle[TB_STEEPMAP2].image[0]
-			|| pStage->bundle[TB_SPLATMAP1].image[0]
-			|| pStage->bundle[TB_SPLATMAP2].image[0]
-			|| pStage->bundle[TB_SPLATMAP3].image[0])
-		{
+		else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
+		{// Special case for procedural sun...
+			sp = &tr.sunPassShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			isPebbles = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
+		else if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		{// testing - force lightall
 			int index = pStage->glslShaderIndex;
-
-			if ((pStage->bundle[TB_STEEPMAP].image[0]
-				|| pStage->bundle[TB_STEEPMAP2].image[0]
-				|| pStage->bundle[TB_SPLATMAP1].image[0]
-				|| pStage->bundle[TB_SPLATMAP2].image[0]
-				|| pStage->bundle[TB_SPLATMAP3].image[0]))
-			{// When we have splatmaps we need to force lightall...
-				pStage->glslShaderGroup = tr.lightallShader;
-				pStage->glslShaderIndex = 0;
-				index = pStage->glslShaderIndex;
-			}
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
 				if (glState.vertexAnimation)
 				{
-					index |= LIGHTDEF_USE_VERTEX_ANIMATION;
+					useVertexAnim = 1.0;
 				}
 
 				if (glState.skeletalAnimation)
 				{
-					index |= LIGHTDEF_USE_SKELETAL_ANIMATION;
+					useSkeletalAnim = 1.0;
 				}
 			}
 
-			if (r_lightmap->integer
-				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES
-				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES
-				&& !tess.shader->isSky && !pStage->glow)
+			if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods)
 			{
-				index = LIGHTDEF_USE_LIGHTMAP;
+				useTC = 1.0;
 			}
 
-			//
-			// testing cube map
-			//
-			if (ADD_CUBEMAP_INDEX)
+			if (tess.shader->numDeforms || usingDeforms)
 			{
-				index |= LIGHTDEF_USE_CUBEMAP;
+				useDeform = 1.0;
 			}
+
+			if (useTesselation)
+			{
+				index |= LIGHTDEF_USE_TESSELLATION;
+
+				sp = &tr.lightallShader[index];
+				pStage->glslShaderGroup = tr.lightallShader;
+
+				backEnd.pc.c_lightallDraws++;
+			}
+			else
+			{
+				sp = &tr.shadowPassShader;
+				pStage->glslShaderGroup = &tr.shadowPassShader;
+
+				backEnd.pc.c_shadowPassDraws++;
+			}
+
+			GLSL_BindProgram(sp);
+		}
+		else
+		{
+			int index = pStage->glslShaderIndex;
+			
+			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+			{
+				if (glState.vertexAnimation)
+				{
+					useVertexAnim = 1.0;
+				}
+
+				if (glState.skeletalAnimation)
+				{
+					useSkeletalAnim = 1.0;
+				}
+			}
+
 
 			if (useTesselation)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			if (/*!r_cartoon->integer
-				&&*/ (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
-				&& (pStage->bundle[TB_STEEPMAP].image[0]
-					|| pStage->bundle[TB_STEEPMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP1].image[0]
-					|| pStage->bundle[TB_SPLATMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP3].image[0]))
+			//
+			// testing cube map
+			//
+			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			{
-				isUsingRegions = qtrue;
-				index |= LIGHTDEF_USE_REGIONS;
-			}
-			else if (/*!r_cartoon->integer
-				&&*/ (pStage->bundle[TB_STEEPMAP].image[0]
-					|| pStage->bundle[TB_STEEPMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP1].image[0]
-					|| pStage->bundle[TB_SPLATMAP2].image[0]
-					|| pStage->bundle[TB_SPLATMAP3].image[0]))
-			{
-				index |= LIGHTDEF_USE_TRIPLANAR;
-			}
-
-			if (index & LIGHTDEF_USE_GLOW_BUFFER)
-			{
-				isGlowStage = qtrue;
-			}
-
-			sp = &pStage->glslShaderGroup[index];
-			isGeneric = qfalse;
-			isLightAll = qtrue;
-
-			SHADER_INDEX = index;
-
-			backEnd.pc.c_lightallDraws++;
-		}
-		else
-		{
-			sp = GLSL_GetGenericShaderProgram(stage);
-			isGeneric = qtrue;
-			isLightAll = qfalse;
-
-			SHADER_INDEX = 0;
-
-			backEnd.pc.c_genericDraws++;
-		}
-		
-		/* Instead of just binding the above choices, optimize and enhance... */
-		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
-		{
-#ifdef __USE_WATERMAP__
-			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
-			{
-				sp = &tr.waterShader;
-				pStage->glslShaderGroup = &tr.waterShader;
-				GLSL_BindProgram(sp);
-
-				RB_SetMaterialBasedProperties(sp, pStage, stage);
-
-				isGeneric = qfalse;
-				isLightAll = qfalse;
-				isWater = qtrue;
-			}
-			else
-			{// Only do one stage on GLSL water...
-				break;
-			}
-#else //!__USE_WATERMAP__
-			sp = &tr.waterShader;
-			pStage->glslShaderGroup = &tr.waterShader;
-			GLSL_BindProgram(sp);
-
-			RB_SetMaterialBasedProperties(sp, pStage, stage);
-
-			isGeneric = qfalse;
-			isLightAll = qfalse;
-			isWater = qtrue;
-#endif //__USE_WATERMAP__
-		}
-		else if ((!sp || !sp->tesselation)
-			&& ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill))
-		{// Can use fast shader for this instead of lightall/generic for more FPS...
-			sp = &tr.shadowPassShader[SHADER_INDEX];
-			GLSL_BindProgram(sp);
-
-			if (!r_foliageShadows->integer || r_sunlightMode->integer < 2)
-			{
-				isGrass = qfalse;
-				isPebbles = qfalse;
-				multiPass = qfalse;
-			}
-		}
-		else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
-		{// Special case for procedural sun...
-			sp = &tr.sunPassShader;
-			GLSL_BindProgram(sp);
-			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-			isGrass = qfalse;
-			isPebbles = qfalse;
-			multiPass = qfalse;
-		}
-		else if (isGrass || isPebbles)
-		{
-			if (!sp || !sp->program)
-			{
-				pStage->glslShaderGroup = tr.lightallShader;
-				sp = &pStage->glslShaderGroup[0];
-			}
-
-			GLSL_BindProgram(sp);
-
-			if (isGrass && r_foliage->integer)
-			{
-				sp2 = &tr.grass2Shader;
-				multiPass = qtrue;
-				passMax = r_foliagePasses->integer;
-
-				//if (ALLOW_GL_400) passMax = 2; // uses hardware invocations instead
-
-				if (r_pebbles->integer)
+				if (ADD_CUBEMAP_INDEX)
 				{
-					sp3 = &tr.pebblesShader;
-					passMax = r_foliagePasses->integer + r_pebblesPasses->integer;
+					if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+					{
+						if (glState.vertexAnimation)
+						{
+							if (r_cubeMapping->integer >= 2)
+							{
+								index |= LIGHTDEF_USE_CUBEMAP;
+							}
+						}
+						else if (glState.skeletalAnimation)
+						{
+							if (r_cubeMapping->integer >= 1)
+							{
+								index |= LIGHTDEF_USE_CUBEMAP;
+							}
+						}
+					}
+					else
+					{
+						index |= LIGHTDEF_USE_CUBEMAP;
+					}
+				}
+
+				if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+					&& (pStage->bundle[TB_STEEPMAP].image[0]
+						|| pStage->bundle[TB_STEEPMAP2].image[0]
+						|| pStage->bundle[TB_SPLATMAP1].image[0]
+						|| pStage->bundle[TB_SPLATMAP2].image[0]
+						|| pStage->bundle[TB_SPLATMAP3].image[0]))
+				{
+					isUsingRegions = qtrue;
+					index |= LIGHTDEF_USE_REGIONS;
+				}
+				else if ((pStage->bundle[TB_STEEPMAP].image[0]
+					|| pStage->bundle[TB_STEEPMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP1].image[0]
+					|| pStage->bundle[TB_SPLATMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP3].image[0]))
+				{
+					index |= LIGHTDEF_USE_TRIPLANAR;
+				}
+
+				if ((index & LIGHTDEF_USE_GLOW_BUFFER) || pStage->glow)
+				{
+					isGlowStage = qtrue;
+				}
+
+				switch (pStage->rgbGen)
+				{
+				case CGEN_LIGHTING_DIFFUSE:
+					useRGBA = 1.0;
+					break;
+				default:
+					break;
+				}
+
+				switch (pStage->alphaGen)
+				{
+				case AGEN_LIGHTING_SPECULAR:
+				case AGEN_PORTAL:
+					useRGBA = 1.0;
+					break;
+				default:
+					break;
 				}
 			}
-			else
+
+			if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods)
 			{
-				if (r_pebbles->integer)
+				useTC = 1.0;
+			}
+
+			if (tess.shader->numDeforms || usingDeforms)
+			{
+				useDeform = 1.0;
+			}
+
+			pStage->glslShaderGroup = tr.lightallShader;
+			sp = &pStage->glslShaderGroup[index];
+
+			backEnd.pc.c_lightallDraws++;
+
+			GLSL_BindProgram(sp);
+
+
+			if ((r_foliage->integer || r_pebbles->integer) && (isGrass || isPebbles))
+			{// Special extra pass stuff for grass or pebbles...
+				if (isGrass && r_foliage->integer)
+				{
+					sp2 = &tr.grass2Shader;
+					multiPass = qtrue;
+					passMax = r_foliagePasses->integer;
+
+					//if (ALLOW_GL_400) passMax = 2; // uses hardware invocations instead
+
+					if (isPebbles && r_pebbles->integer)
+					{
+						sp3 = &tr.pebblesShader;
+						passMax = r_foliagePasses->integer + r_pebblesPasses->integer;
+					}
+				}
+				else if (isPebbles && r_pebbles->integer)
 				{
 					sp2 = &tr.pebblesShader;
 					passMax = r_pebblesPasses->integer;
 				}
-			}
-		}
-		else
-		{
-			if (!sp || !sp->program)
-			{
-				pStage->glslShaderGroup = tr.lightallShader;
-				sp = &pStage->glslShaderGroup[0];
-			}
 
-			GLSL_BindProgram(sp);
+				GLSL_BindProgram(sp);
+			}
 		}
 
-		/*
-		if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
-		{// Attach dummy water output textures...
-			if (glState.currentFBO == tr.renderFbo)
+
+		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
+			vec4_t vec;
+			float isTextureClamped = 0.0;
+
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE))
 			{
-				multiPass = qtrue;
-				passMax = 2;
+				isTextureClamped = 1.0;
 			}
+
+			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
+
+			VectorSet4(vec, useVertexAnim, useSkeletalAnim, 0, 0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 		}
-		*/
+
 
 		//
 		// UQ1: Split up uniforms by what is actually used...
@@ -2591,17 +2459,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 		stateBits = pStage->stateBits;
-
-		/*if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-		{
-			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS;
-		}
-		else
-		{
-			//stateBits &= ~GLS_DEPTHMASK_TRUE;
-			//stateBits |= GLS_DEPTHFUNC_LESS;
-			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS;
-		}*/
 
 		if ( backEnd.currentEntity )
 		{
@@ -2634,125 +2491,64 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
 		}
 
-		{// UQ1: Used by both generic and lightall...
-			RB_SetStageImageDimensions(sp, pStage);
+		// UQ1: Used by both generic and lightall...
+		RB_SetStageImageDimensions(sp, pStage);
 
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
 
-			// UQ: Other *needed* stuff... Hope these are correct...
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-			//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
+		GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
-			GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
-			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
-			GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
-
-			if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
-			{
-				vec4_t normalScale;
-				VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
-			}
-			else
-			{
-				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
-			}
-
-			if (glState.skeletalAnimation)
-			{
-				GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
-			}
-
-			GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
-			if (deformGen != DGEN_NONE)
-			{
-				GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-			}
-
-			GLSL_SetUniformInt(sp, UNIFORM_TCGEN0, pStage->bundle[0].tcGen);
-			if (pStage->bundle[0].tcGen == TCGEN_VECTOR)
-			{
-				vec3_t vec;
-
-				VectorCopy(pStage->bundle[0].tcGenVectors[0], vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR0, vec);
-				VectorCopy(pStage->bundle[0].tcGenVectors[1], vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
-			}
-
-			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
-			{
-				vec4_t baseColor;
-				vec4_t vertColor;
-
-				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
-
-				if ((backEnd.refdef.colorScale != 1.0f) && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
-				{
-					// use VectorScale to only scale first three values, not alpha
-					VectorScale(baseColor, backEnd.refdef.colorScale, baseColor);
-					VectorScale(vertColor, backEnd.refdef.colorScale, vertColor);
-				}
-
-				if ( backEnd.currentEntity != NULL &&
-					(backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA) )
-				{
-					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
-				}
-
-				GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
-				GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
-			}
-
-			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
-			{
-				if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
-				{
-					vec4_t vec;
-
-					VectorScale(backEnd.currentEntity->ambientLight, 1.0f / 255.0f, vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vec);
-
-					VectorScale(backEnd.currentEntity->directedLight, 1.0f / 255.0f, vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vec);
-
-					VectorCopy(backEnd.currentEntity->lightDir, vec);
-					vec[3] = 0.0f;
-					GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
-
-					if (!isGeneric)
-					{
-						GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
-					}
-				}
-			}
-
-			vec2_t scale;
-			ComputeTexMods( pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb, scale );
-			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
-			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
-			GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
+		if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+		{
+			vec4_t normalScale;
+			VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
+		}
+		else
+		{
+			GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
 		}
 
+		if (glState.skeletalAnimation)
+		{
+			GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
+		}
+
+		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
+		if (deformGen != DGEN_NONE)
+		{
+			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+		}
+
+		GLSL_SetUniformInt(sp, UNIFORM_TCGEN0, pStage->bundle[0].tcGen);
+		if (pStage->bundle[0].tcGen == TCGEN_VECTOR)
+		{
+			vec3_t vec;
+
+			VectorCopy(pStage->bundle[0].tcGenVectors[0], vec);
+			GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR0, vec);
+			VectorCopy(pStage->bundle[0].tcGenVectors[1], vec);
+			GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
+		}
+
+
+		vec2_t scale;
+		ComputeTexMods(pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb, scale);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
+		GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
+
+		/*
 		if (isGeneric)
 		{// UQ1: Only generic uses these...
 			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			{
-				if (pStage->alphaGen == AGEN_PORTAL)
-				{
-					GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
-				}
-
 				if (r_fog->integer)
 				{
 					if (input->fogNum)
@@ -2766,12 +2562,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
 					}
 				}
-
-				GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
-				GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
 			}
 		}
-		else
+		else*/
 		{// UQ1: Only lightall uses these...
 			//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
 
@@ -2785,7 +2578,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 			}
-			else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
+			else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
 			{
 				GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
 				GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
@@ -2804,6 +2597,62 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
+			vec4_t baseColor;
+			vec4_t vertColor;
+
+			if (pStage->rgbGen || pStage->alphaGen)
+			{
+				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
+
+				if ((backEnd.refdef.colorScale != 1.0f) && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
+				{
+					// use VectorScale to only scale first three values, not alpha
+					VectorScale(baseColor, backEnd.refdef.colorScale, baseColor);
+					VectorScale(vertColor, backEnd.refdef.colorScale, vertColor);
+				}
+
+				if (backEnd.currentEntity != NULL &&
+					(backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA))
+				{
+					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
+				}
+			}
+			else
+			{
+				VectorSet4(baseColor, 1, 1, 1, 1);
+				VectorSet4(vertColor, 1, 1, 1, 1);
+			}
+
+			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
+			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
+
+
+			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
+			{
+				vec4_t vec;
+
+				VectorScale(backEnd.currentEntity->ambientLight, 1.0f / 255.0f, vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vec);
+
+				VectorScale(backEnd.currentEntity->directedLight, 1.0f / 255.0f, vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vec);
+
+				VectorCopy(backEnd.currentEntity->lightDir, vec);
+				vec[3] = 0.0f;
+				GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
+				GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+			}
+
+			if (pStage->alphaGen == AGEN_PORTAL)
+			{
+				GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
+			}
+
+			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
+			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
+
+
 			if (pStage->bundle[TB_DETAILMAP].image[0])
 			{
 				GL_BindToTMU(pStage->bundle[TB_DETAILMAP].image[0], TB_DETAILMAP);
@@ -2928,42 +2777,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
 			}
-		}
 
-		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
-		{
 			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
-				/*if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-				{
-					GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
-				}
-				else
-				{
-					GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-				}*/
-
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
-
-				//if (pStage->glow && !pStage->glowColorFound)
-				{// No light added to glow stages...
-					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
-				}
-				/*else
-				{
-					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-					GLSL_SetUniformVec3xX(sp, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-					GLSL_SetUniformVec3xX(sp, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
-					GLSL_SetUniformFloatxX(sp, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
-				}*/
+				GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
 			}
-		}
 
-		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
-		{
 			GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
 			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
 			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
@@ -2972,14 +2795,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		// do multitexture
 		//
-		if (tr.viewParms.flags & VPF_SHADOWPASS)
+		if ((tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 			else if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
-			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
-				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
 		}
 		else if (backEnd.depthFill)
 		{
@@ -2988,7 +2809,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader ) )
+		else if ( pStage->glslShaderGroup == tr.lightallShader || sp == &tr.shadowPassShader )
 		{
 			int i;
 			vec4_t enableTextures;
@@ -3016,12 +2837,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else
 			{
-				qboolean light = qtrue;
-				qboolean fastLight = qfalse;
-
-				if (light && !fastLight)
-					usingLight = qtrue;
-
 				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 
@@ -3039,7 +2854,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				//if ((light || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
 				{
 					if (r_normalMapping->integer >= 2
 						&& !input->shader->isPortal
@@ -3157,41 +2971,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
 		}
 
-#if 0
-		if (glState.currentFBO == tr.renderFbo)
-		{
-			if (isGeneric /*|| tess.shader->hasAlpha*/ || (pStage->type != ST_DIFFUSEMAP && pStage->type != ST_GLSL))
-			{// So we dont ever output to position and normal maps...
-				GLSL_AttachGenericTextures();
-			}
-			else
-			{
-				GLSL_AttachTextures();
-			}
-		}
-#endif
-
-		/*
-		// Seems to work, but doesnt seem to be required...
-		if (isGeneric)
-		{
-			//GLSL_AttachGenericTextures();
-		}
-		else if (isLightAll && isGlowStage)
-		{
-			GLSL_AttachGlowTextures();
-		}
-		else if (isLightAll && pStage->type != ST_GLSL)
-		{
-			//GLSL_AttachGlowTextures();
-			GLSL_AttachGenericTextures();
-		}
-		else if (isLightAll)
-		{
-			GLSL_AttachTextures();
-		}
-		*/
-		
 
 		while (1)
 		{
@@ -3208,18 +2987,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
-				// UQ: Other *needed* stuff... Hope these are correct...
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -3268,18 +3039,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-
-				// UQ: Other *needed* stuff... Hope these are correct...
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -3329,18 +3091,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-
-				// UQ: Other *needed* stuff... Hope these are correct...
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-				//GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -3399,7 +3152,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-#ifdef __USE_WATERMAP__
 			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
@@ -3421,12 +3173,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					break;
 				}
 			}
-#else //!__USE_WATERMAP__
-			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
-			{
-				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-			}
-#endif //__USE_WATERMAP__
 
 			qboolean tesselation = qfalse;
 
@@ -3471,7 +3217,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
-#ifdef __USE_WATERMAP__
 			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
@@ -3481,7 +3226,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
 				}
 			}
-#endif //__USE_WATERMAP__
 
 			UpdateTexCoords (pStage);
 
@@ -3500,7 +3244,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
 			}
 
-#ifdef __USE_WATERMAP__
 			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 			{// Unattach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
@@ -3508,7 +3251,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_AttachTextures();
 				}
 			}
-#endif //__USE_WATERMAP__
 
 			passNum++;
 
