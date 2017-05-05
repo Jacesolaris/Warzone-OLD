@@ -1,7 +1,3 @@
-//#define USE_REGIONS
-//#define DEFERRED_REFLECTIONS
-
-
 #if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER)
 #define __PARALLAX_ENABLED__
 #endif
