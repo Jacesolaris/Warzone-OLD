@@ -251,7 +251,13 @@ PAIN_FUNC *NPC_PainFunc( gentity_t *ent )
 			break;
 
 		case CLASS_HOWLER:
+		case CLASS_REEK:
+		case CLASS_NEXU:
 			func = NPC_Howler_Pain;
+			break;
+
+		case CLASS_ACKLAY:
+			func = NPC_Rancor_Pain;
 			break;
 
 		// all other droids, did I miss any?

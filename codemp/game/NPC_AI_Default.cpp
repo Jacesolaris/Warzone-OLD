@@ -176,6 +176,9 @@ qboolean NPC_IsAnimalEnemyFaction ( gentity_t *self )
 	//case CLASS_GONK:				// droid
 	//case CLASS_GRAN:
 	case CLASS_HOWLER:
+	case CLASS_REEK:
+	case CLASS_NEXU:
+	case CLASS_ACKLAY:
 	//case CLASS_IMPERIAL:
 	//case CLASS_IMPWORKER:
 	//case CLASS_INTERROGATOR:		// droid 

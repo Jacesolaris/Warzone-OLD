@@ -402,7 +402,10 @@ qboolean AI_ValidateGroupMember( AIGroupInfo_t *group, gentity_t *member )
 		member->client->NPC_class == CLASS_MINEMONSTER ||
 		member->client->NPC_class == CLASS_HOWLER ||
 		member->client->NPC_class == CLASS_MARK1 ||
-		member->client->NPC_class == CLASS_MARK2 )
+		member->client->NPC_class == CLASS_MARK2 ||
+		member->client->NPC_class == CLASS_REEK ||
+		member->client->NPC_class == CLASS_NEXU ||
+		member->client->NPC_class == CLASS_ACKLAY)
 	{//these kinds of enemies don't actually use this group AI
 		return qfalse;
 	}

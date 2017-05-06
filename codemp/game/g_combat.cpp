@@ -4667,7 +4667,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		&& attacker->s.eType == ET_NPC
 		&& mod != MOD_CRUSH
 		&& mod != MOD_FALLING
-		&& attacker->client->playerTeam == targ->client->playerTeam
+		&& OnSameTeam(attacker, targ)
 		&& targ != attacker)
 	{// UQ1: NPCs don't take damage from other same team NPCs (unless they suicide somehow, like falling).
 		return;

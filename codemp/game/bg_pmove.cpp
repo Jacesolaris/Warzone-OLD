@@ -4645,8 +4645,8 @@ static void PM_GroundTrace(void) {
 	if (pm->ps->clientNum >= MAX_CLIENTS)
 	{// Server can cache previous traces for a while to save CPU...
 		gentity_t *ent = &g_entities[pm->ps->clientNum];
-		if (ent->CACHE_last_trace > level.time - 500)
-		{
+		if (ent->CACHE_last_trace > level.time - 500 && !ent->CACHE_trace.allsolid)
+		{// We still force a full trace again, if allsolid was detected last frame (to stop flying NPCs, lol!)
 			trace = ent->CACHE_trace;
 		}
 		else

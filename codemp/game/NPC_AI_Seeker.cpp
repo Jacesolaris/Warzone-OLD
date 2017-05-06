@@ -2,6 +2,7 @@
 #include "g_nav.h"
 
 extern void Boba_FireDecide(gentity_t *aiEnt);
+extern void Boba_FireFlameThrower(gentity_t *self);
 
 void Seeker_Strafe(gentity_t *aiEnt);
 
@@ -372,7 +373,14 @@ void Seeker_Attack(gentity_t *aiEnt)
 		}
 	}
 
-	Seeker_Ranged(aiEnt, visible, advance );
+	if (aiEnt->client->NPC_class == CLASS_GLIDER)
+	{// UQ1: Meh, this will do for now...
+		Boba_FireFlameThrower(aiEnt);
+	}
+	else
+	{
+		Seeker_Ranged(aiEnt, visible, advance);
+	}
 }
 
 //------------------------------------
@@ -551,12 +559,12 @@ void NPC_BSSeeker_Default(gentity_t *aiEnt)
 	if ( aiEnt->enemy && aiEnt->enemy->health && aiEnt->enemy->inuse )
 	{
 		//OJKFIXME: clientnum 0
-		if ( aiEnt->client->NPC_class != CLASS_BOBAFETT && ( aiEnt->enemy->s.number == 0 || ( aiEnt->enemy->client && aiEnt->enemy->client->NPC_class == CLASS_SEEKER )) )
+		/*if ( aiEnt->client->NPC_class != CLASS_BOBAFETT && ( aiEnt->enemy->s.number == 0 || ( aiEnt->enemy->client && aiEnt->enemy->client->NPC_class == CLASS_SEEKER )) )
 		{
 			//hacked to never take the player as an enemy, even if the player shoots at it
 			aiEnt->enemy = NULL;
 		}
-		else
+		else*/
 		{
 			Seeker_Attack(aiEnt);
 			if ( aiEnt->client->NPC_class == CLASS_BOBAFETT )

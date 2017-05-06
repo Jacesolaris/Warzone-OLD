@@ -1036,7 +1036,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 	// test the player position if they were a stepheight higher
 	pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
 
-	if ( trace.allsolid ) {
+	if ( trace.allsolid || trace.entityNum != ENTITYNUM_WORLD) {
 		if ( pm->debugLevel ) {
 			Com_Printf("%i:bend can't step\n", c_pmove);
 		}
@@ -1049,7 +1049,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 			isGiant = qtrue;
 
 			pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
-			if ( trace.allsolid ) {
+			if ( trace.allsolid || trace.entityNum != ENTITYNUM_WORLD ) {
 				if ( pm->debugLevel ) {
 					Com_Printf("%i:bend can't step\n", c_pmove);
 				}
@@ -1101,7 +1101,8 @@ void PM_StepSlideMove( qboolean gravity ) {
 	{
 		if ( pm->ps->clientNum >= MAX_CLIENTS//NPC
 			&& isGiant
-			&& trace.entityNum < MAX_CLIENTS
+			//&& trace.entityNum < MAX_CLIENTS
+			&& trace.entityNum != ENTITYNUM_WORLD
 			&& pEnt
 			&& pEnt->s.NPC_class == CLASS_RANCOR )
 		{//Rancor don't step on clients
@@ -1129,7 +1130,8 @@ void PM_StepSlideMove( qboolean gravity ) {
 		}
 		*/
 		else if ( pm->ps->clientNum >= MAX_CLIENTS//NPC
-			&& trace.entityNum < MAX_CLIENTS
+			//&& trace.entityNum < MAX_CLIENTS
+			&& trace.entityNum != ENTITYNUM_WORLD
 			&& pEnt
 			&& (pEnt->s.eType == ET_NPC || (pEnt->s.eFlags & EF_FAKE_NPC_BOT)))
 		{// UQ1: NPCs and BOTs no longer step on clients...

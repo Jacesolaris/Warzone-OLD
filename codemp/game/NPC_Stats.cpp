@@ -86,6 +86,10 @@ stringID_table_t ClassTable[] =
 	ENUM2STRING(CLASS_RANCOR),
 	ENUM2STRING(CLASS_WAMPA),
 
+	ENUM2STRING(CLASS_REEK),
+	ENUM2STRING(CLASS_NEXU),
+	ENUM2STRING(CLASS_ACKLAY),
+
 	// UQ1: Extras from SP...
 	ENUM2STRING(CLASS_SAND_CREATURE),
 	ENUM2STRING(CLASS_SABOTEUR),
@@ -1714,6 +1718,22 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					continue;
 				}
 				ri->headPitchRangeDown = n;
+				continue;
+			}
+
+			if (!Q_stricmp(token, "showHealth"))
+			{
+				if (COM_ParseInt(&p, &n))
+				{
+					SkipRestOfLine(&p);
+					continue;
+				}
+				if (n < 0)
+				{
+					Com_Printf(S_COLOR_YELLOW"WARNING: bad %s in NPC '%s'\n", token, NPCName);
+					continue;
+				}
+				// UQ1: Ignored...
 				continue;
 			}
 

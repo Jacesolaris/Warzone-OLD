@@ -1,14 +1,14 @@
 #include "b_local.h"
 
-// These define the working combat range for these suckers
-#define MIN_DISTANCE		54
-#define MIN_DISTANCE_SQR	( MIN_DISTANCE * MIN_DISTANCE )
+//
+// UQ1: This is now a generic quadruped animal AI...
+//
 
-#define MAX_DISTANCE		128
-#define MAX_DISTANCE_SQR	( MAX_DISTANCE * MAX_DISTANCE )
+extern void Jedi_Advance(gentity_t *aiEnt);
+extern void Jedi_Retreat(gentity_t *aiEnt);
 
-#define LSTATE_CLEAR		0
-#define LSTATE_WAITING		1
+extern int NPC_GetEntsNearBolt(gentity_t *aiEnt, int *radiusEnts, float radius, int boltIndex, vec3_t boltOrg);
+extern void G_Knockdown(gentity_t *victim);
 
 /*
 -------------------------
@@ -19,6 +19,21 @@ void NPC_Howler_Precache( void )
 {
 }
 
+void Howler_SetBolts(gentity_t *aiEnt)
+{
+	if (aiEnt && aiEnt->client)
+	{
+		renderInfo_t *ri = &aiEnt->client->renderInfo;
+
+		if (!ri->handRBolt)
+		{
+			ri->handRBolt = trap->G2API_AddBolt(aiEnt->ghoul2, 0, "*r_hand");
+			ri->handLBolt = trap->G2API_AddBolt(aiEnt->ghoul2, 0, "*l_hand");
+			ri->headBolt = trap->G2API_AddBolt(aiEnt->ghoul2, 0, "*head_eyes");
+			ri->torsoBolt = trap->G2API_AddBolt(aiEnt->ghoul2, 0, "jaw_bone");
+		}
+	}
+}
 
 /*
 -------------------------
@@ -26,143 +41,323 @@ Howler_Idle
 -------------------------
 */
 void Howler_Idle(gentity_t *aiEnt) {
+	TIMER_Remove(aiEnt, "attacking");
+	NPC_SetAnim(aiEnt, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+	Howler_SetBolts(aiEnt);
 }
 
-
-/*
--------------------------
-Howler_Patrol
--------------------------
-*/
-void Howler_Patrol( gentity_t *aiEnt)
+void Howler_Swipe(gentity_t *aiEnt)
 {
-	vec3_t dif;
+	// Sometimes I have problems with facing the enemy I'm attacking, so force the issue so I don't look dumb
+	NPC_FaceEnemy(aiEnt, qtrue);
 
-	aiEnt->NPC->localState = LSTATE_CLEAR;
+	int			radiusEntNums[128];
+	int			numEnts;
+	int			i;
+	vec3_t		boltOrg;
 
-	//If we have somewhere to go, then do that
-	if ( UpdateGoal(aiEnt) )
+	float		attackRange = 128;
+	int			damage = 30;
+	int			throwDist = 10;
+	int			anim = BOTH_ATTACK1;
+
+	switch (aiEnt->client->NPC_class)
 	{
-		aiEnt->client->pers.cmd.buttons &= ~BUTTON_WALKING;
-		NPC_MoveToGoal(aiEnt, qtrue );
+	case CLASS_REEK:
+		attackRange = 96;
+		damage = irand(40, 70);
+		throwDist = 10;
+		anim = BOTH_VT_BUCK;// BOTH_VT_ATB;
+		break;
+	case CLASS_NEXU:
+		attackRange = 96;
+		damage = irand(40, 70);
+		throwDist = 10;
+		anim = BOTH_ATTACK1 + irand(0, 8);
+		break;
+	case CLASS_ACKLAY:
+		attackRange = 128;
+		damage = irand(40, 90);
+		throwDist = 20;
+		anim = BOTH_ATTACK1 + irand(0, 2);
+		break;
+	case CLASS_HOWLER:
+	default:
+		attackRange = 72;
+		damage = irand(20, 30);
+		throwDist = 5;
+		break;
 	}
-	else
-	{
-		if ( TIMER_Done( aiEnt, "patrolTime" ))
+
+	NPC_SetAnim(aiEnt, SETANIM_BOTH, anim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+
+	numEnts = NPC_GetEntsNearBolt(aiEnt, radiusEntNums, attackRange, aiEnt->client->renderInfo.handRBolt, boltOrg);
+
+	for (i = 0; i < numEnts; i++)
+	{// FIXME: Find correct anims for this...
+		gentity_t *radiusEnt = &g_entities[radiusEntNums[i]];
+
+		if (!radiusEnt->inuse)
 		{
-			TIMER_Set( aiEnt, "patrolTime", crandom() * 5000 + 5000 );
+			continue;
+		}
+
+		if (radiusEnt == aiEnt)
+		{//Skip the rancor ent
+			continue;
+		}
+
+		if (radiusEnt->client == NULL)
+		{//must be a client
+			continue;
+		}
+
+		if ((radiusEnt->client->ps.eFlags2 & EF2_HELD_BY_MONSTER))
+		{//can't be one already being held
+			continue;
+		}
+
+		if (!ValidEnemy(aiEnt, radiusEnt))
+		{
+			continue;
+		}
+
+		if (radiusEnt->client->NPC_class != aiEnt->client->NPC_class)
+		{
+			vec3_t pushDir;
+			vec3_t angs;
+
+			G_Sound(radiusEnt, CHAN_AUTO, G_SoundIndex("sound/chars/rancor/swipehit.wav"));
+
+			//actually push the enemy
+			VectorCopy(aiEnt->client->ps.viewangles, angs);
+			angs[YAW] += flrand(25, 50);
+			angs[PITCH] = flrand(-25, -15);
+			AngleVectors(angs, pushDir, NULL, NULL);
+
+			G_Damage(radiusEnt, aiEnt, aiEnt, vec3_origin, radiusEnt->r.currentOrigin, damage, DAMAGE_NO_ARMOR | DAMAGE_NO_KNOCKBACK, MOD_MELEE);
+
+			G_Throw(radiusEnt, pushDir, throwDist);
+
+			if (radiusEnt->health > 0 && throwDist > 5 && damage >= 40)
+			{//do pain on enemy
+				G_Knockdown(radiusEnt);
+			}
 		}
 	}
+}
 
-	//rwwFIXMEFIXME: Care about all clients, not just client 0
-	//OJK: clientnum 0
-	VectorSubtract( g_entities[0].r.currentOrigin, aiEnt->r.currentOrigin, dif );
+void Howler_Slam(gentity_t *aiEnt)
+{
+	// Sometimes I have problems with facing the enemy I'm attacking, so force the issue so I don't look dumb
+	NPC_FaceEnemy(aiEnt, qtrue);
 
-	if ( VectorLengthSquared( dif ) < 256 * 256 )
-	{
-		G_SetEnemy( aiEnt, &g_entities[0] );
+	int			radiusEntNums[128];
+	int			numEnts;
+	int			i;
+	vec3_t		boltOrg;
+
+	float		attackRange = 128;
+	int			damage = 30;
+	int			throwDist = 10;
+	int			anim = BOTH_ATTACK1;
+
+	switch (aiEnt->client->NPC_class)
+	{// FIXME: Find correct anims for this...
+	case CLASS_REEK:
+		attackRange = 96;
+		damage = irand(30, 50);
+		throwDist = 5;
+		anim = BOTH_VT_BUCK;// BOTH_VT_ATB;
+		break;
+	case CLASS_NEXU:
+		attackRange = 96;
+		damage = irand(30, 50);
+		throwDist = 5;
+		anim = BOTH_ATTACK1 + irand(0, 8);
+		break;
+	case CLASS_ACKLAY:
+		attackRange = 128;
+		damage = irand(20, 50);
+		throwDist = 10;
+		anim = BOTH_ATTACK1 + irand(0, 2);
+		break;
+	case CLASS_HOWLER:
+	default:
+		attackRange = 64;
+		damage = irand(10, 15);
+		throwDist = 3;
+		anim = BOTH_ATTACK1;
+		break;
 	}
 
-	if ( NPC_CheckEnemyExt(aiEnt, qtrue ) == qfalse )
+	NPC_SetAnim(aiEnt, SETANIM_BOTH, anim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+
+	numEnts = NPC_GetEntsNearBolt(aiEnt, radiusEntNums, attackRange, aiEnt->client->renderInfo.handRBolt, boltOrg);
+
+	for (i = 0; i < numEnts; i++)
 	{
-		Howler_Idle(aiEnt);
-		return;
+		gentity_t *radiusEnt = &g_entities[radiusEntNums[i]];
+
+		if (!radiusEnt->inuse)
+		{
+			continue;
+		}
+
+		if (radiusEnt == aiEnt)
+		{//Skip the rancor ent
+			continue;
+		}
+
+		if (radiusEnt->client == NULL)
+		{//must be a client
+			continue;
+		}
+
+		if ((radiusEnt->client->ps.eFlags2 & EF2_HELD_BY_MONSTER))
+		{//can't be one already being held
+			continue;
+		}
+
+		if (!ValidEnemy(aiEnt, radiusEnt))
+		{
+			continue;
+		}
+
+		if (radiusEnt->client->NPC_class != aiEnt->client->NPC_class)
+		{
+			G_Sound(radiusEnt, CHAN_AUTO, G_SoundIndex("sound/chars/rancor/swipehit.wav"));
+
+			G_Damage(radiusEnt, aiEnt, aiEnt, vec3_origin, radiusEnt->r.currentOrigin, damage, DAMAGE_NO_ARMOR | DAMAGE_NO_KNOCKBACK, MOD_MELEE);
+
+			if (radiusEnt->health > 0 && throwDist > 3 && damage >= 30)
+			{//do pain on enemy
+				G_Knockdown(radiusEnt);
+			}
+		}
 	}
 }
 
-/*
--------------------------
-Howler_Move
--------------------------
-*/
-void Howler_Move(gentity_t *aiEnt, qboolean visible )
+void Howler_Charge(gentity_t *aiEnt)
 {
-	if ( aiEnt->NPC->localState != LSTATE_WAITING )
-	{
-		aiEnt->NPC->goalEntity = aiEnt->enemy;
-		NPC_MoveToGoal(aiEnt, qtrue );
-		aiEnt->NPC->goalRadius = MAX_DISTANCE;	// just get us within combat range
-	}
+	NPC_FaceEnemy(aiEnt, qtrue);
+
+	vec3_t	fwd, yawAng;
+	
+	float distance = DistanceHorizontal(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin);
+
+	VectorSet(yawAng, 0, aiEnt->client->ps.viewangles[YAW], 0);
+	AngleVectors(yawAng, fwd, NULL, NULL);
+	VectorScale(fwd, distance*1.5f, aiEnt->client->ps.velocity);
+	aiEnt->client->ps.velocity[2] = distance - 128;// 150;
+	aiEnt->client->ps.groundEntityNum = ENTITYNUM_NONE;
+
+	NPC_SetAnim(aiEnt, SETANIM_BOTH, BOTH_MELEE2, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
 }
 
 //---------------------------------------------------------
 void Howler_TryDamage(gentity_t *aiEnt, gentity_t *enemy, int damage )
 {
-	vec3_t	end, dir;
-	trace_t	tr;
-
-	if ( !enemy )
-	{
-		return;
-	}
-
-	AngleVectors( aiEnt->client->ps.viewangles, dir, NULL, NULL );
-	VectorMA( aiEnt->r.currentOrigin, MIN_DISTANCE, dir, end );
-
-	// Should probably trace from the mouth, but, ah well.
-	trap->Trace( &tr, aiEnt->r.currentOrigin, vec3_origin, vec3_origin, end, aiEnt->s.number, MASK_SHOT, qfalse, 0, 0 );
-
-	if ( tr.entityNum != ENTITYNUM_WORLD )
-	{
-		G_Damage( &g_entities[tr.entityNum], aiEnt, aiEnt, dir, tr.endpos, damage, DAMAGE_NO_KNOCKBACK, MOD_MELEE );
-	}
+	vec3_t	dir;
+	AngleVectors(aiEnt->r.currentAngles, dir, NULL, NULL);
+	G_Damage(enemy, aiEnt, aiEnt, dir, enemy->r.currentOrigin, damage, DAMAGE_NO_KNOCKBACK, MOD_MELEE);
 }
 
 //------------------------------
 void Howler_Attack(gentity_t *aiEnt)
 {
-	if ( !TIMER_Exists( aiEnt, "attacking" ))
+	NPC_FaceEnemy(aiEnt, qtrue);
+
+	if ( !TIMER_Exists( aiEnt, "attacking" ) || TIMER_Done(aiEnt, "attacking"))
 	{
 		// Going to do ATTACK1
-		TIMER_Set( aiEnt, "attacking", 1700 + random() * 200 );
-		NPC_SetAnim( aiEnt, SETANIM_BOTH, BOTH_ATTACK1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
+		TIMER_Set( aiEnt, "attacking", 1700 + irand(0, 200) );
 
-		TIMER_Set( aiEnt, "attack_dmg", 200 ); // level two damage
+		int attackChoice = irand(0, 12);
+
+		if (aiEnt->client->NPC_class == CLASS_HOWLER)
+		{// Howlers are too small to do the big moves...
+			attackChoice = 12;
+		}
+
+		if (attackChoice <= 1)
+		{
+			Howler_Swipe(aiEnt);
+		}
+		else if (attackChoice <= 5)
+		{
+			Howler_Slam(aiEnt);
+		}
+		else
+		{
+			int damage = 20;
+			int anim = BOTH_ATTACK1;
+
+			switch (aiEnt->client->NPC_class)
+			{
+			case CLASS_REEK:
+				damage = 50;
+				anim = BOTH_VT_BUCK;// BOTH_VT_ATB;
+				break;
+			case CLASS_NEXU:
+				damage = 60;
+				anim = BOTH_ATTACK1 + irand(0, 8);
+				break;
+			case CLASS_ACKLAY:
+				damage = 80;
+				anim = BOTH_ATTACK1 + irand(0, 2);
+				break;
+			case CLASS_HOWLER:
+			default:
+				damage = 20;
+				anim = BOTH_ATTACK1;
+				break;
+			}
+
+			NPC_SetAnim(aiEnt, SETANIM_BOTH, anim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+
+			Howler_TryDamage(aiEnt, aiEnt->enemy, damage);
+		}
 	}
-
-	// Need to do delayed damage since the attack animations encapsulate multiple mini-attacks
-	if ( TIMER_Done2( aiEnt, "attack_dmg", qtrue ))
-	{
-		Howler_TryDamage(aiEnt, aiEnt->enemy, 5 );
-	}
-
-	// Just using this to remove the attacking flag at the right time
-	TIMER_Done2( aiEnt, "attacking", qtrue );
 }
 
 //----------------------------------
 void Howler_Combat(gentity_t *aiEnt)
 {
-	float distance;
-	qboolean advance;
-
-	// If we cannot see our target or we have somewhere to go, then do that
-	if ( !NPC_ClearLOS4(aiEnt, aiEnt->enemy ) || UpdateGoal(aiEnt))
-	{
-		aiEnt->NPC->combatMove = qtrue;
-		aiEnt->NPC->goalEntity = aiEnt->enemy;
-		aiEnt->NPC->goalRadius = MAX_DISTANCE;	// just get us within combat range
-
-		NPC_MoveToGoal(aiEnt, qtrue );
-		return;
-	}
-
 	// Sometimes I have problems with facing the enemy I'm attacking, so force the issue so I don't look dumb
 	NPC_FaceEnemy(aiEnt, qtrue );
 
-	distance	= DistanceHorizontalSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
-	advance = (qboolean)( distance > MIN_DISTANCE_SQR ? qtrue : qfalse  );
+	float attackRange;
 
-	if (( advance || aiEnt->NPC->localState == LSTATE_WAITING ) && TIMER_Done( aiEnt, "attacking" )) // waiting monsters can't attack
+	switch (aiEnt->client->NPC_class)
 	{
-		if ( TIMER_Done2( aiEnt, "takingPain", qtrue ))
-		{
-			aiEnt->NPC->localState = LSTATE_CLEAR;
-		}
-		else
-		{
-			Howler_Move(aiEnt, qtrue );
-		}
+	case CLASS_REEK:
+	case CLASS_NEXU:
+		attackRange = 172;
+		break;
+	case CLASS_ACKLAY:
+		attackRange = 256;
+		break;
+	case CLASS_HOWLER:
+	default:
+		attackRange = 96;
+		break;
+	}
+
+	float distance	= Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin );
+
+	if (TIMER_Done2(aiEnt, "takingPain", qtrue))
+	{
+		TIMER_Remove(aiEnt, "attacking");
+	}
+	else if (distance > attackRange)
+	{
+		TIMER_Remove(aiEnt, "attacking");
+
+		//if (distance < attackRange * 1.5)
+		//	Howler_Charge(aiEnt);
+		//else
+			Jedi_Advance(aiEnt);
 	}
 	else
 	{
@@ -177,7 +372,7 @@ NPC_Howler_Pain
 */
 void NPC_Howler_Pain( gentity_t *self, gentity_t *attacker, int damage )
 {
-	if ( damage >= 10 )
+	if ( damage >= 50 )
 	{
 		TIMER_Remove( self, "attacking" );
 		TIMER_Set( self, "takingPain", 2900 );
@@ -185,11 +380,6 @@ void NPC_Howler_Pain( gentity_t *self, gentity_t *attacker, int damage )
 		VectorCopy( self->NPC->lastPathAngles, self->s.angles );
 
 		NPC_SetAnim( self, SETANIM_BOTH, BOTH_PAIN1, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD );
-
-		if ( self->NPC )
-		{
-			self->NPC->localState = LSTATE_WAITING;
-		}
 	}
 }
 
@@ -201,12 +391,16 @@ NPC_BSHowler_Default
 */
 void NPC_BSHowler_Default(gentity_t *aiEnt)
 {
-	if ( aiEnt->enemy )
+	if (aiEnt->enemy && ValidEnemy(aiEnt, aiEnt->enemy))
+	{
 		Howler_Combat(aiEnt);
-	else if ( aiEnt->NPC->scriptFlags & SCF_LOOK_FOR_ENEMIES )
-		Howler_Patrol(aiEnt);
+		return;
+	}
 	else
+	{
+		aiEnt->enemy = NULL;
 		Howler_Idle(aiEnt);
+	}
 
 	NPC_UpdateAngles(aiEnt, qtrue, qtrue );
 }

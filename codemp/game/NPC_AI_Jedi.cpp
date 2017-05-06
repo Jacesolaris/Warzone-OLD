@@ -1764,7 +1764,7 @@ static qboolean Jedi_Track( gentity_t *aiEnt)
 }
 
 
-static void Jedi_Retreat( gentity_t *aiEnt)
+void Jedi_Retreat( gentity_t *aiEnt)
 {
 	if ( !TIMER_Done( aiEnt, "noRetreat" ) )
 	{//don't actually move
@@ -1776,7 +1776,7 @@ static void Jedi_Retreat( gentity_t *aiEnt)
 	Jedi_Move(aiEnt, aiEnt->enemy, qtrue );
 }
 
-static void Jedi_Advance( gentity_t *aiEnt)
+void Jedi_Advance( gentity_t *aiEnt)
 {
 	if ( !aiEnt->client->ps.saberInFlight )
 	{

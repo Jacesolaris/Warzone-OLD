@@ -1713,7 +1713,10 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 	{//jedi
 		NPC_BehaviorSet_Jedi(aiEnt, bState );
 	}
-	else if ( aiEnt->client->NPC_class == CLASS_HOWLER )
+	else if ( aiEnt->client->NPC_class == CLASS_HOWLER
+		|| aiEnt->client->NPC_class == CLASS_REEK
+		|| aiEnt->client->NPC_class == CLASS_NEXU
+		/*|| aiEnt->client->NPC_class == CLASS_ACKLAY*/)
 	{
 		NPC_BehaviorSet_Howler(aiEnt, bState );
 		return;
@@ -1725,6 +1728,10 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 	else if ( aiEnt->client->NPC_class == CLASS_SABER_DROID )
 	{//saber droid
 		NPC_BSSD_Default(aiEnt);
+	}
+	else if (aiEnt->client->NPC_class == CLASS_GLIDER)
+	{
+		NPC_BehaviorSet_Seeker(aiEnt, bState);
 	}
 	else if ( aiEnt->client->NPC_class == CLASS_WAMPA )
 	{//wampa
@@ -1789,7 +1796,18 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 				NPC_BehaviorSet_MineMonster(aiEnt, bState );
 				return;
 			case CLASS_HOWLER:
-				NPC_BehaviorSet_Howler(aiEnt, bState );
+				NPC_BehaviorSet_Howler(aiEnt, bState);
+				return;
+			case CLASS_REEK:
+				//NPC_BehaviorSet_Jedi(aiEnt, bState);
+				NPC_BehaviorSet_Howler(aiEnt, bState);
+				return;
+			case CLASS_NEXU:
+				NPC_BehaviorSet_Howler(aiEnt, bState);
+				//NPC_BehaviorSet_Rancor(aiEnt, bState);
+				return;
+			case CLASS_ACKLAY:
+				NPC_BehaviorSet_Rancor(aiEnt, bState );
 				return;
 			case CLASS_MARK1:
 				NPC_BehaviorSet_Mark1(aiEnt, bState );

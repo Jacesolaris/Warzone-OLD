@@ -3891,6 +3891,15 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_HOWLER:
 				sprintf(str1, "Howler");
 				break;
+			case CLASS_REEK:
+				sprintf(str1, "Reek");
+				break;
+			case CLASS_NEXU:
+				sprintf(str1, "Nexu");
+				break;
+			case CLASS_ACKLAY:
+				sprintf(str1, "Acklay");
+				break;
 			case CLASS_LIZARD:
 				sprintf(str1, "Lizard");
 				break;
@@ -4197,6 +4206,9 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_FLIER2:
 		case CLASS_GLIDER:
 		case CLASS_HOWLER:
+		case CLASS_REEK:
+		case CLASS_NEXU:
+		case CLASS_ACKLAY:
 		case CLASS_LIZARD:
 		case CLASS_MINEMONSTER:
 		case CLASS_SWAMP:
@@ -8247,6 +8259,9 @@ void CG_DrawNPCNames( void )
 			case CLASS_FLIER2:
 			case CLASS_GLIDER:
 			case CLASS_HOWLER:
+			case CLASS_REEK:
+			case CLASS_NEXU:
+			case CLASS_ACKLAY:
 			case CLASS_LIZARD:
 			case CLASS_MINEMONSTER:
 			case CLASS_SWAMP:
@@ -8425,6 +8440,15 @@ void CG_DrawNPCNames( void )
 					break;
 				case CLASS_HOWLER:
 					sprintf(str1, "Howler");
+					break;
+				case CLASS_REEK:
+					sprintf(str1, "Reek");
+					break;
+				case CLASS_NEXU:
+					sprintf(str1, "Nexu");
+					break;
+				case CLASS_ACKLAY:
+					sprintf(str1, "Acklay");
 					break;
 				case CLASS_LIZARD:
 					sprintf(str1, "Lizard");

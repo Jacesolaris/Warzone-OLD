@@ -249,14 +249,14 @@ const float detailRepeatTerrain2 = 7.5;
    
 void AddDetail(inout vec4 color, in vec2 tc)
 {
-	if (USE_TEXTURECLAMP > 0.0) return;
+	if (USE_TEXTURECLAMP > 0.0 /*|| USE_DEFORM > 0.0 || USE_RGBA > 0.0*/) return;
 
 	vec4 origColor = color;
 
 	// Add fine detail to everything...
     vec3 detail = texture(u_DetailMap, tc * detailRepeatFine).rgb;
 
-	//if (length(detail.rgb) == 0.0) return;
+	if (length(detail.rgb) == 0.0) return;
 
 	color.rgb = color.rgb * detail.rgb * 2.0;
 

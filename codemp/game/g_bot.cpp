@@ -1233,7 +1233,7 @@ void G_CheckMinimumNpcs(void)
 		return;
 	}
 
-	if (level.numConnectedClients <= 0 && checkminimumnpcs_time > level.time - 501) {
+	if (level.numConnectedClients <= 0 && checkminimumnpcs_time > level.time - 51) {
 		return;
 	}
 
