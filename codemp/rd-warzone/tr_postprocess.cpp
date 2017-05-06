@@ -3022,6 +3022,9 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0]/*tr.glowImageScaled[5]*/, TB_GLOWMAP);
 
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GL_BindToTMU(tr.random2KImage[0], TB_SPECULARMAP);
+
 
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
 	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
@@ -3067,13 +3070,13 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		VectorSet4(loc, 2.0, 0, 0, 0);// r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, loc);
 	}
 	
 	{
 		vec4_t loc;
-		VectorSet4(loc, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		VectorSet4(loc, 0.6, MAP_WATER_LEVEL /*-1800*/, 128, 0);//r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL1, loc);
 	}
 

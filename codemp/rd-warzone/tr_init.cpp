@@ -1534,7 +1534,7 @@ void R_Register( void )
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
 	r_grassWaveSize = ri->Cvar_Get( "r_grassWaveSize", "0.5", CVAR_ARCHIVE );
 
-	r_fog = ri->Cvar_Get( "r_fog", "1", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
+	r_fog = ri->Cvar_Get( "r_fog", "0", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
 	r_multithread = ri->Cvar_Get( "r_multithread", "0", CVAR_ARCHIVE );
 	r_multithread2 = ri->Cvar_Get( "r_multithread2", "0", CVAR_ARCHIVE );
 	r_fOff1X = ri->Cvar_Get( "r_fOff1X", "-24.0", CVAR_ARCHIVE );
@@ -2255,6 +2255,7 @@ Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.G2API_ClearSkinGore					= G2API_ClearSkinGore;
 	#endif // _SOF2
 	re.DrawAwesomiumFrame					= RE_DrawAwesomiumFrame;
+	re.MenuOpenFrame						= RE_MenuOpenFrame;
 
 	/*
 	Ghoul2 Insert End

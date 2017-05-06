@@ -3320,6 +3320,7 @@ const void *RB_PostProcess(const void *data)
 		// UQ1: Added...
 		//
 		qboolean SCREEN_BLUR = qfalse;
+		qboolean SCREEN_BLUR_MENU = glConfig.menuIsOpen;
 
 		if (backEnd.refdef.rdflags & RDF_BLUR)
 		{// Skip most of the fancy stuff when doing a blured screen...
@@ -3356,12 +3357,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_testshader->integer)
-		{
-			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (r_colorCorrection->integer)
 		{
 			RB_ColorCorrection(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -3386,7 +3381,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-//#define CRAZY_SLOW_GAUSSIAN_BLUR //  UQ1: Let's do scope background blur with a fast blur instead...
+#define CRAZY_SLOW_GAUSSIAN_BLUR //  UQ1: Let's do scope background blur with a fast blur instead...
 #ifdef CRAZY_SLOW_GAUSSIAN_BLUR
 		if (SCREEN_BLUR)
 		{
@@ -3579,6 +3574,26 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_Anaglyph(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_testshader->integer)
+		{
+			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (SCREEN_BLUR_MENU)
+		{
+			// Blur some times
+			float	spread = 1.0f;
+			int		numPasses = 8;
+
+			for (int i = 0; i < numPasses; i++)
+			{
+				RB_GaussianBlur(currentFbo, tr.genericFbo2, currentOutFbo, spread);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				spread += 0.6f * 0.25f;
+			}
 		}
 
 		//FBO_Blit(currentFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, 0);

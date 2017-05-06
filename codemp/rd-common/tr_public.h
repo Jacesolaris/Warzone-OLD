@@ -218,6 +218,7 @@ typedef struct refexport_s {
 	#endif // _SOF2
 	//EpicLoyd:Added
 	void				(*DrawAwesomiumFrame)					( int x, int y, int w, int h, unsigned char *buffer);
+	void				(*MenuOpenFrame)						(qboolean menuIsOpen);
 } refexport_t;
 
 //

@@ -3103,6 +3103,7 @@ void	RE_UploadCinematic (int cols, int rows, const byte *data, int client, qbool
 void	RE_SetRangedFog ( float range );
 
 void	RE_DrawAwesomiumFrame(int x, int y, int w, int h, unsigned char *buffer);
+void	RE_MenuOpenFrame(qboolean menuIsOpen);
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );

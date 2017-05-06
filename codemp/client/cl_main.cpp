@@ -2181,6 +2181,8 @@ void CL_Frame_REAL4 ( int msec )
 	}
 }
 
+extern qboolean MENU_IS_OPEN;
+
 void CL_Frame ( int msec )
 {
 	takeVideoFrame = qfalse;
@@ -2210,6 +2212,8 @@ void CL_Frame ( int msec )
 
 	// decide on the serverTime to render
 	CL_SetCGameTime();
+
+	//re->MenuOpenFrame(MENU_IS_OPEN);
 
 	SCR_UpdateScreen();
 
@@ -2918,6 +2922,8 @@ void CL_Init( void ) {
 	CL_UpdateGUID( NULL, 0 );
 
 	CURL_Init();
+
+	re->MenuOpenFrame(qfalse);
 
 //	Com_Printf( "----- Client Initialization Complete -----\n" );
 }

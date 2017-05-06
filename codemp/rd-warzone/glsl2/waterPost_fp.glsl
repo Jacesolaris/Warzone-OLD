@@ -171,14 +171,14 @@ float fresnelTerm(vec3 normal, vec3 eyeVec)
 #endif //SIMPLIFIED_FRESNEL
 }
 
-vec4 waterMapAtCoord ( vec2 coord )
+vec4 waterMapLowerAtCoord ( vec2 coord )
 {
 	vec4 wmap = textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
 	wmap.y -= waveHeight;
 	return wmap;
 }
 
-vec4 waterMap2AtCoord ( vec2 coord )
+vec4 waterMapUpperAtCoord ( vec2 coord )
 {
 	//return textureLod(u_WaterPositionMap2, coord, 0.0).xzyw;
 	return textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
@@ -192,14 +192,14 @@ vec4 positionMapAtCoord ( vec2 coord )
 float pw = (1.0/u_Dimensions.x);
 float ph = (1.0/u_Dimensions.y);
 
-vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
+vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor)
 {
-	if (positionMap.y > waterMap.y)
+	if (positionMap.y > waterMapLower.y)
 	{
 		return inColor;
 	}
 
-	vec4 wMapCheck = waterMapAtCoord(vec2(coord.x, 1.0));
+	vec4 wMapCheck = waterMapLowerAtCoord(vec2(coord.x, 1.0));
 	if (wMapCheck.a > 0.0)
 	{// Top of screen pixel is water, don't check...
 		return inColor;
@@ -210,11 +210,11 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 
 	for (float y = coord.y; y <= 1.0; y += ph * 5.0)
 	{
-		vec4 wMap = waterMapAtCoord(vec2(coord.x, y));
+		vec4 wMap = waterMapLowerAtCoord(vec2(coord.x, y));
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 		float isWater = wMap.a;
 
-		if (isWater <= 0.0 && (pMap.y >= waterMap.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0 && (pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
 		{
 			QLAND_Y = y;
 			break;
@@ -234,11 +234,11 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 
 	for (float y = QLAND_Y; y <= 1.0; y += ph)
 	{
-		vec4 wMap = waterMapAtCoord(vec2(coord.x, y));
+		vec4 wMap = waterMapLowerAtCoord(vec2(coord.x, y));
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 		float isWater = wMap.a;
 
-		if (isWater <= 0.0 && (pMap.y >= waterMap.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0 && (pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
 		{
 			LAND_Y = y;
 			break;
@@ -258,7 +258,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 	}
 
 
-	vec4 wMap = waterMapAtCoord(vec2(coord.x, upPos));
+	vec4 wMap = waterMapLowerAtCoord(vec2(coord.x, upPos));
 
 	if (wMap.a > 0.0)
 	{// This position is water, or it is closer then the reflection pixel...
@@ -479,7 +479,7 @@ float atan2(in float y, in float x)
 }
 
 // main
-void mainImage(out vec4 fragColor, in vec2 fragCoord, in vec4 positionMap, in vec4 waterMap, in vec4 waterMap2, in vec3 screenCenterOrg)
+void mainImage(out vec4 fragColor, in vec2 fragCoord, in vec4 positionMap, in vec4 waterMapLower, in vec4 waterMapUpper, in vec3 screenCenterOrg)
 {
 	//vec2 uv = fragCoord.xy / u_Dimensions.xy;
 	//uv = uv * 2.0 - 1.0;
@@ -499,23 +499,23 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord, in vec4 positionMap, in ve
 	// bteitler: Calculate the "origin" of the camera in world space based on time.  Camera is located
 	// at height 3.5, at x 0 (zero), and flies over the ocean in the z axis over time.
 	//vec3 ori = vec3(0.0, 3.5, time*5.0);
-	//vec3 ori = waterMap.xyz;
-	//vec3 ori = (u_ModelViewProjectionMatrix * vec4(waterMap.xyz, 1.0)).xyz;
+	//vec3 ori = waterMapLower.xyz;
+	//vec3 ori = (u_ModelViewProjectionMatrix * vec4(waterMapLower.xyz, 1.0)).xyz;
 	
 	//vec3 ori = vec3(iMouse.x * 0.1,13.5,iMouse.y * 0.1); // UQ1: This moves left/right and forward/back based on mouse...
 	//vec3 ang = vec3(0.0, (iMouse.y / iResolution.y) * PI, (iMouse.x / iResolution.x) * PI * 2.0); // UQ1: full 360 view available
 	
-	//vec3 ori = vec3(u_ViewOrigin.x, u_ViewOrigin.y - waterMap.y, u_ViewOrigin.z) * u_Local0.a
+	//vec3 ori = vec3(u_ViewOrigin.x, u_ViewOrigin.y - waterMapLower.y, u_ViewOrigin.z) * u_Local0.a
 	highp vec3 vOrg = (u_ViewOrigin.xyz + 524288.0);
-	highp vec3 wOrg = (waterMap.xyz + 524288.0);
-	//highp vec3 ori = vec3(u_ViewOrigin.x / u_Local0.a, (u_ViewOrigin.y - waterMap.y) / u_Local0.b, u_ViewOrigin.z / u_Local0.a);
+	highp vec3 wOrg = (waterMapLower.xyz + 524288.0);
+	//highp vec3 ori = vec3(u_ViewOrigin.x / u_Local0.a, (u_ViewOrigin.y - waterMapLower.y) / u_Local0.b, u_ViewOrigin.z / u_Local0.a);
 	highp vec3 ori = vec3(vOrg.x / u_Local0.a, (vOrg.y - wOrg.y) / u_Local0.b, vOrg.z / u_Local0.a);
 	
 	//vec3 vOri = (u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz, 1.0)).xyz;
-	//vec3 wOri = (u_ModelViewProjectionMatrix * vec4(waterMap.xyz, 1.0)).xyz;
+	//vec3 wOri = (u_ModelViewProjectionMatrix * vec4(waterMapLower.xyz, 1.0)).xyz;
 	//vec3 ori = vec3(vOri.x, vOri.y - wOri.y, vOri.z) * u_Local0.a;
 
-	vec3 vDir = normalize(u_ViewOrigin.xyz - waterMap.xyz) *0.5 + 0.5;
+	vec3 vDir = normalize(u_ViewOrigin.xyz - waterMapLower.xyz) *0.5 + 0.5;
 	vec3 ang = vec3(0.0, vDir.y * PI, vDir.x * PI * 2.0); // UQ1: full 360 view available
 	//vec3 ang = vec3(0.0);
 
@@ -556,8 +556,8 @@ float getspecular(vec3 n, vec3 l, vec3 e, float s) {
 void main ( void )
 {
 	vec3 color2 = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
-	vec4 waterMap2 = waterMap2AtCoord(var_TexCoords);
-	waterMap2.y += waveHeight;
+	vec4 waterMapUpper = waterMapUpperAtCoord(var_TexCoords);
+	waterMapUpper.y += waveHeight;
 	bool IS_UNDERWATER = false;
 
 	if (u_Local1.b > 0.0) 
@@ -565,7 +565,7 @@ void main ( void )
 		IS_UNDERWATER = true;
 	}
 
-	if (waterMap2.a <= 0.0)
+	if (waterMapUpper.a <= 0.0)
 	{// Should be safe to skip everything.
 		gl_FragColor = vec4(color2, 1.0);
 		return;
@@ -576,8 +576,8 @@ void main ( void )
 	bool pixelIsWaterfall = false;
 	vec3 color = color2;
 
-	vec4 waterMap = waterMap2;//waterMapAtCoord(var_TexCoords);
-	waterMap.y -= waveHeight;
+	vec4 waterMapLower = waterMapUpper;//waterMapLowerAtCoord(var_TexCoords);
+	waterMapLower.y -= waveHeight;
 
 	vec4 positionMap = positionMapAtCoord(var_TexCoords);
 	vec3 position = positionMap.xyz;
@@ -585,22 +585,31 @@ void main ( void )
 #if defined(FIX_WATER_DEPTH_ISSUES)
 	if (positionMap.a == 1024.0)
 	{
-		position.xyz = waterMap.xyz;
+		position.xyz = waterMapLower.xyz;
 		position.y -= 1024.0;
 	}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
-	if (waterMap.a >= 2.0 || waterMap2.a >= 2.0)
+	if (waterMapLower.a >= 2.0 || waterMapUpper.a >= 2.0)
 	{// Low horizontal normal, this is a waterfall...
 		pixelIsWaterfall = true;
 	}
-	else if (/*waterMap.a > 0.0 ||*/ position.y <= waterMap.y)
-	{
-		pixelIsInWaterRange = true;
-	}
-	else if (IS_UNDERWATER || waterMap.y > ViewOrigin.y)
+	else if (IS_UNDERWATER || waterMapLower.y > ViewOrigin.y)
 	{
 		pixelIsUnderWater = true;
+	}
+	else if (waterMapUpper.y >= position.y)
+	{
+		if (waterMapLower.y < position.y)
+		{
+			waterMapLower.y = position.y;
+			waterMapLower.a = 0.0;
+		}
+
+		if (waterMapUpper.y >= position.y)
+		{
+			pixelIsInWaterRange = true;
+		}
 	}
 
 	if (!pixelIsInWaterRange && !pixelIsWaterfall && !pixelIsUnderWater)
@@ -626,25 +635,26 @@ void main ( void )
 	{
 		vec4 col2 = vec4(0.0);
 		vec3 screenCenterOrg = positionMapAtCoord(vec2(0.0)).xzy;
-		mainImage(col2, var_TexCoords, positionMap.xzyw, waterMap.xzyw, waterMap2.xzyw, screenCenterOrg);
+		mainImage(col2, var_TexCoords, positionMap.xzyw, waterMapLower.xzyw, waterMapUpper.xzyw, screenCenterOrg);
 		color.rgb = col2.rgb;
 	}
 #else //!__TEST_WATER__
 
-	float waterLevel = waterMap.y;
-	float level = waterMap.y;
+	float waterLevel = waterMapLower.y;
+	float level = waterMapLower.y;
 	float depth = 0.0;
 
 	if (pixelIsInWaterRange || pixelIsUnderWater)
 	{
-		vec2 wind = normalize(waterMap.xz); // Waves head toward center of map. Should suit current WZ maps...
+		vec2 wind = normalize(waterMapLower.xz); // Waves head toward center of map. Should suit current WZ maps...
 
 		// Find intersection with water surface
-		vec3 eyeVecNorm = normalize(waterMap.xyz/*position*/ - ViewOrigin);
-		//vec3 eyeVecNorm = normalize(ViewOrigin - waterMap.xyz/*position*/);
+		//vec3 eyeVecNorm = normalize(waterMapUpper.xyz - ViewOrigin);
+		//vec3 eyeVecNorm = normalize(waterMapLower.xyz - ViewOrigin);
+		vec3 eyeVecNorm = normalize(ViewOrigin - waterMapLower.xyz/*position*/);
 		float t = ((level - ViewOrigin.y) / eyeVecNorm.y);
 		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
-		//vec3 surfacePoint = waterMap.xyz;
+		//vec3 surfacePoint = waterMapLower.xyz;
 
 
 		vec2 texCoord;
@@ -663,8 +673,6 @@ void main ( void )
 
 			t = ((level - ViewOrigin.y) / eyeVecNorm.y);
 			surfacePoint = ViewOrigin + eyeVecNorm * t;
-			//surfacePoint = waterMap.xyz + vec3(0.0, level, 0.0);
-			//surfacePoint = waterMap.xyz + (eyeVecNorm * level);
 		}
 
 		//level = surfacePoint.y;
@@ -675,17 +683,9 @@ void main ( void )
 
 		if (pixelIsUnderWater)
 		{
-			//depth = -depth;
-			//depth2 = -depth2;
-			//depthN = depth * fadeSpeed;
-
 			depth = length(surfacePoint - position);
 			depth2 = position.y - surfacePoint.y;
 			depthN = depth * fadeSpeed;
-
-			//depth = length(position - ViewOrigin.xyz);
-			//depthN = depth * fadeSpeed;
-			//depth2 = level - ViewOrigin.y;
 
 			if (position.y <= level)
 			{// This pixel is below the water line... Fast path...
@@ -699,14 +699,19 @@ void main ( void )
 				return;
 			}
 		}
-		else if (position.y > level)
+		/*else if (position.y > level && waterMapUpper.a <= 0.0)
+		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
+			gl_FragColor = vec4(color2, 1.0);
+			return;
+		}*/
+		else if (depth2 < 0.0)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			gl_FragColor = vec4(color2, 1.0);
 			return;
 		}
 
-		eyeVecNorm = normalize(ViewOrigin - /*waterMap2.xyz*/surfacePoint);
-		//eyeVecNorm = normalize(ViewOrigin - waterMap2.xyz);
+		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
+		//eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
 
 		float normal1 = textureLod(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0)), 0.0).r;
 		float normal2 = textureLod(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0)), 0.0).r;
@@ -743,12 +748,12 @@ void main ( void )
 		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
 
 		vec4 position2 = positionMapAtCoord(texCoord);
-		vec4 waterMap3 = waterMapAtCoord(texCoord);
+		vec4 waterMapLower3 = waterMapLowerAtCoord(texCoord);
 
 #if defined(FIX_WATER_DEPTH_ISSUES)
 		if (position2.a == 1024.0)
 		{
-			position2.xyz = waterMap3.xyz;
+			position2.xyz = waterMapLower3.xyz;
 			position2.y -= 1024.0;
 		}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
@@ -819,7 +824,7 @@ void main ( void )
 		color = mix(refraction, bigDepthColour, fresnel);
 
 		float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
-		color += depthColour.rgb * (clamp(waveHeight - waterMap.y, 0.0, 1.0))* 0.18 * atten;
+		color += depthColour.rgb * (clamp(waveHeight - waterMapLower.y, 0.0, 1.0))* 0.18 * atten;
 
 		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
 		/* END - TESTING */
@@ -830,7 +835,7 @@ void main ( void )
 #if defined(USE_REFLECTION)
 		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
 		{
-			color = AddReflection(var_TexCoords, position, vec3(waterMap3.x, level, waterMap3.z), color.rgb);
+			color = AddReflection(var_TexCoords, position, vec3(waterMapLower3.x, level, waterMapLower3.z), color.rgb);
 		}
 #endif //defined(USE_REFLECTION)
 
@@ -840,11 +845,11 @@ void main ( void )
 
 		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
 
-		/*if (position.y > level && waterMap.a <= 0.0)
+		if (position2.y/*position.y*/ > level && waterMapLower.a <= 0.0)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			color = color2;
 		}
-		else*/
+		else
 		{
 			float depthMap = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);//length(u_ViewOrigin.xyz - position.xzy);
 			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xyz/*position.xzy*/, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );

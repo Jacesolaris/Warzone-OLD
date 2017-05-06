@@ -507,7 +507,7 @@ void SCR_UpdateScreen( void ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
-
+		
 		if ( com_speeds->integer ) {
 			re->EndFrame( &time_frontend, &time_backend );
 		} else {

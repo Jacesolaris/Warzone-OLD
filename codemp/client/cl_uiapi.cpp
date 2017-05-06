@@ -21,6 +21,8 @@ static vm_t *uivm; // ui vm, valid for legacy and new api
 //
 
 void UIVM_Init( qboolean inGameLoad ) {
+	re->MenuOpenFrame(qfalse);
+
 	if ( uivm->isLegacy ) {
 		VM_Call( uivm, UI_INIT, inGameLoad );
 		return;
@@ -31,6 +33,8 @@ void UIVM_Init( qboolean inGameLoad ) {
 }
 
 void UIVM_Shutdown( void ) {
+	re->MenuOpenFrame(qfalse);
+
 	if ( uivm->isLegacy ) {
 		VM_Call( uivm, UI_SHUTDOWN );
 		VM_Call( uivm, UI_MENU_RESET );
@@ -81,7 +85,21 @@ qboolean UIVM_IsFullscreen( void ) {
 	return uie->IsFullscreen();
 }
 
+qboolean MENU_IS_OPEN = qfalse;
+
 void UIVM_SetActiveMenu( uiMenuCommand_t menu ) {
+	/*if (cl.snap.valid && menu == UIMENU_INGAME)
+	{
+		re->MenuOpenFrame(qtrue);
+		MENU_IS_OPEN = qtrue;
+		//Com_Printf("Menu %i is open.\n", (int)menu);
+	}
+	else
+	{
+		re->MenuOpenFrame(qfalse);
+		MENU_IS_OPEN = qfalse;
+	}*/
+
 	if ( uivm->isLegacy ) {
 		VM_Call( uivm, UI_SET_ACTIVE_MENU, menu );
 		return;

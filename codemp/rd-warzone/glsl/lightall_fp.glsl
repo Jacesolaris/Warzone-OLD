@@ -929,48 +929,6 @@ void main()
 	gl_FragColor.rgb *= lightColor;
 	
 
-
-//#define EXPERIMENTAL_VOLUMETRIC_FOG
-
-#if defined(EXPERIMENTAL_VOLUMETRIC_FOG)
-#if !defined(USE_GLOW_BUFFER)
-	const vec3 fogColor = vec3(0.9, 1.0, 0.8);
-	const float fogDensity = 0.005;
-
-	float n = fogDensity * length(var_fogDir);
-
-	//vec3 fogCoord = var_fogCrd;
-	//vec3 shadowCoord = shadowCrd;
-
-	float a = 1.0;
-	float b = 0.0;
-
-#define COUNT 40
-const vec4 fogScaleBias = vec4(0.0, -0.06 /* * time */, 0.0, 0.0008);
-vec3 fogCoord = vec3(var_TexCoords2.st, 0.0);
-
-	// Volumetric fog computation
-	for (int i = 0; i < COUNT; i++) {
-		fogCoord += fogScaleBias.w * var_fogDir;
-		//shadowCoord += shadowScale * var_fogDir;
-
-		//float fog = texture3D(Fog, fogCoord).x;
-		//float shadow = texture3D(LightMap, shadowCoord).x;
-
-		float fog = length(textureLod(u_LightMap, fogCoord.xy).rgb, 0.0) / 3.0;
-		float shadow = 1.0 - fog;
-
-		// Compute weighting factors. This implements the commented out lerp more efficiently.
-		float x = 1.0 - fog * n;
-		a *= x;
-		b = mix(shadow, b, x);
-	}
-
-	gl_FragColor.rgb = gl_FragColor.rgb * a + fogColor * b;
-#endif //!defined(USE_GLOW_BUFFER)
-#endif //defined(EXPERIMENTAL_VOLUMETRIC_FOG)
-
-
 	/*
 	vec2 encode (vec3 n)
 	vec3 decode (vec2 enc)

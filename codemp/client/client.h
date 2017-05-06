@@ -102,6 +102,8 @@ typedef struct clientActive_s {
 	int			cgameForceSelection;
 	int			cgameInvenSelection;
 
+	qboolean	menuIsOpen;
+
 	qboolean	gcmdSendValue;
 	qboolean	gcmdSentValue;
 	byte		gcmdValue;

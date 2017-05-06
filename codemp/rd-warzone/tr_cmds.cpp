@@ -655,6 +655,17 @@ void RE_TakeVideoFrame( int width, int height,
 
 /*
 =============
+RE_MenuOpenFrame
+=============
+*/
+
+void RE_MenuOpenFrame(qboolean menuIsOpen)
+{
+	glConfig.menuIsOpen = menuIsOpen;
+}
+
+/*
+=============
 RE_DrawAwesomiumFrame
 =============
 */
