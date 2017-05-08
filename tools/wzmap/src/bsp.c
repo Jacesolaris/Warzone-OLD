@@ -292,12 +292,13 @@ static void FixBrushFaces( entity_t *e )
 					best = -1;
 					for (m = 0; m < ds2->numVerts; m++)
 					{
-						if (VectorCompareExt(ds2->verts[m].xyz, dv->xyz, STITCH_DISTANCE) == qfalse)
-							continue;
-
 						/* don't stitch if origins match completely */
 						dv2 = &ds2->verts[m];
+
 						if (!dv2 || dv2->xyz[0] == dv->xyz[0] && dv2->xyz[1] == dv->xyz[1] && dv2->xyz[2] == dv->xyz[2])
+							continue;
+
+						if (VectorCompareExt(ds2->verts[m].xyz, dv->xyz, STITCH_DISTANCE) == qfalse)
 							continue;
 
 						/* get closest one */
