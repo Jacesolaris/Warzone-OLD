@@ -420,7 +420,7 @@ void ProcessWorldModel( void )
 	MakeTreePortals( tree, qfalse );
 	FilterStructuralBrushesIntoTree( e, tree, qfalse );
 
-#if 1
+#if 0
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
 
@@ -527,7 +527,7 @@ void ProcessWorldModel( void )
 	// Remove crap...
 	CaulkifyStuff(qtrue);
 
-#if 0
+#if 1
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
 
