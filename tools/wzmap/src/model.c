@@ -991,6 +991,10 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 		{// We have actual solid information for this model, don't generate planes for the other crap...
 			IS_COLLISION_SURFACE = true;
 		}
+		else if (forcedSolid)
+		{
+			IS_COLLISION_SURFACE = true;
+		}
 
 #ifdef CULL_BY_LOWEST_NEAR_POINT
 		qboolean shouldLowestPointCull = qtrue;
@@ -1021,9 +1025,13 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 #endif //CULL_BY_LOWEST_NEAR_POINT
 
 		/* ydnar: giant hack land: generate clipping brushes for model triangles */
-		if (ds->verts && !forcedNoSolid && (!haveLodModel && (si->clipModel || (spawnFlags & 2)) && !noclipmodel) || forcedSolid)	/* 2nd bit */
+		if (ds->verts && !forcedNoSolid && (!haveLodModel && (si->clipModel || (spawnFlags & 2)) && !noclipmodel) || forcedSolid || IS_COLLISION_SURFACE)	/* 2nd bit */
 		{
-			if (HAS_COLLISION_INFO && !IS_COLLISION_SURFACE)
+			if (forcedSolid)
+			{
+
+			}
+			else if (HAS_COLLISION_INFO && !IS_COLLISION_SURFACE)
 			{
 				continue;
 			}
@@ -1383,22 +1391,6 @@ void InsertModel(char *name, int frame, int skin, m4x4_t transform, float uvScal
 									}
 									else
 									{
-										//int c = (int) &(((brush_t*)0)->sides[buildBrush->numsides]);
-										//buildBrush = (brush_t *)realloc(buildBrush, c);
-
-										//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
-										//Sys_Printf("numsides %i.\n", buildBrush->numsides);
-
-										//brush_t *buildBrush2 = AllocBrush(buildBrush->numsides);
-										//memcpy(buildBrush2, buildBrush, c);
-										//FreeBrush(buildBrush);
-										//buildBrush = buildBrush2;
-
-										//brush_t *buildBrush2 = CopyBrush(buildBrush);
-										//FreeBrush(buildBrush);
-										//buildBrush = buildBrush2;
-
-
 										for (j = 1; j < buildBrush->numsides; j++)
 										{
 											buildBrush->sides[j].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
@@ -1443,10 +1435,6 @@ preload triangle models map is using
 void LoadTriangleModels(void)
 {
 	int num, frame, start, numLoadedModels;
-	picoModel_t *picoModel;
-	qboolean loaded;
-	const char *model;
-	entity_t *e;
 
 	numLoadedModels = 0;
 
@@ -1457,10 +1445,13 @@ void LoadTriangleModels(void)
 	start = I_FloatTime();
 	for (num = 1; num < numEntities; num++)
 	{
+		picoModel_t *picoModel;
+		qboolean loaded;
+
 		//printLabelledProgress("LoadTriangleModels", num, numEntities);
 
 		/* get ent */
-		e = &entities[num];
+		entity_t *e = &entities[num];
 
 		/* convert misc_models into raw geometry  */
 		if (Q_stricmp("misc_model", ValueForKey(e, "classname")) && Q_stricmp("misc_gamemodel", ValueForKey(e, "classname")))
@@ -1468,7 +1459,7 @@ void LoadTriangleModels(void)
 
 		/* get model name */
 		/* vortex: add _model synonim */
-		model = ValueForKey(e, "_model");
+		const char *model = ValueForKey(e, "_model");
 		if (model[0] == '\0')
 			model = ValueForKey(e, "model");
 		if (model[0] == '\0')
@@ -1497,6 +1488,7 @@ void LoadTriangleModels(void)
 
 		/* warn about missing models */
 		picoModel = FindModel((char*)model, frame);
+
 		if (!picoModel || picoModel->numSurfaces == 0)
 			Sys_Warning(e->mapEntityNum, "Failed to load model '%s' frame %i", model, frame);
 
@@ -1510,7 +1502,18 @@ void LoadTriangleModels(void)
 		picoModel = FindModel((char*)collisionModel, frame);
 
 		if (loaded && picoModel)
+		{
+			Sys_Printf("loaded model %s. collision model %s.\n", model, collisionModel);
 			numLoadedModels++;
+		}
+		else if (!loaded && picoModel)
+		{
+			Sys_Printf("loaded model %s. collision model %s.\n", model, collisionModel);
+		}
+		else
+		{
+			Sys_Printf("loaded model %s. collision model %s. Suggestion: Create a <modelname>_collision.%s\n", model, "none", tempCollisionModelExt);
+		}
 
 #ifdef __MODEL_SIMPLIFICATION__
 		//
@@ -2071,5 +2074,8 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 	//g_numHiddenFaces = 0;
 	//g_numCoinFaces = 0;
 	//CullSides( &entities[ mapEntityNum ] );
+	//CullSidesStats();
+
+	//CullSides(&entities[mapEntityNum]);
 	//CullSidesStats();
 }

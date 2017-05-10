@@ -215,7 +215,7 @@ static void FixBrushFaces( entity_t *e )
 		int numCompleted = 0;
 
 		/* walk list of drawsurfaces */
-//#pragma omp parallel for ordered num_threads(numthreads)
+#pragma omp parallel for ordered num_threads(numthreads)
 		for (int zzz = 0; zzz < numTotal; zzz++)
 		{
 			mapDrawSurface_t *ds, *ds2;
@@ -224,22 +224,16 @@ static void FixBrushFaces( entity_t *e )
 			vec3_t mins, maxs, sub;
 			int j, k, m, best;
 			double dist, bestdist;
-			qboolean stitched, trystitch;
-
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-			qboolean stripped, n;
-			vec3_t normal, normals[STITCH_MAX_TRIANGLES];
-			int t, numTriangles, indexes[STITCH_MAX_TRIANGLES][3];
-#endif
+			qboolean stitched;
 
 			int i = e->firstDrawSurf + numCompleted;
 
-			numCompleted++;
-
-#pragma omp critical (__FixBrushFaces__)
+#pragma omp critical (__PROGRESS_BAR__)
 			{
 				printLabelledProgress("FixBrushFaces", numCompleted, numTotal);
 			}
+
+			numCompleted++;
 
 			/* get surface and early out if possible */
 			ds = &mapDrawSurfs[i];
@@ -263,9 +257,7 @@ static void FixBrushFaces( entity_t *e )
 
 			/* stitch with neighbour drawsurfaces */
 			stitched = qfalse;
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-			stripped = qfalse;
-#endif
+
 			for (j = e->firstDrawSurf; j < numMapDrawSurfs; j++)
 			{
 				/* get surface */
@@ -286,8 +278,6 @@ static void FixBrushFaces( entity_t *e )
 					if (!dv)
 						continue;
 
-					trystitch = qfalse;
-
 					/* find candidate */
 					best = -1;
 					for (m = 0; m < ds2->numVerts; m++)
@@ -295,15 +285,16 @@ static void FixBrushFaces( entity_t *e )
 						/* don't stitch if origins match completely */
 						dv2 = &ds2->verts[m];
 
-						if (!dv2 || dv2->xyz[0] == dv->xyz[0] && dv2->xyz[1] == dv->xyz[1] && dv2->xyz[2] == dv->xyz[2])
+						if (!dv2 || (dv2->xyz[0] == dv->xyz[0] && dv2->xyz[1] == dv->xyz[1] && dv2->xyz[2] == dv->xyz[2]))
 							continue;
 
-						if (VectorCompareExt(ds2->verts[m].xyz, dv->xyz, STITCH_DISTANCE) == qfalse)
+						if (VectorCompareExt(dv2->xyz, dv->xyz, STITCH_DISTANCE) == qfalse)
 							continue;
 
 						/* get closest one */
 						VectorSubtract(dv2->xyz, dv->xyz, sub);
 						dist = VectorLength(sub);
+
 						if (best < 0 || dist < bestdist)
 						{
 							best = m;
@@ -315,75 +306,14 @@ static void FixBrushFaces( entity_t *e )
 					if (best < 0)
 						continue;
 
-					/* before stitching, get a list of triangles formed by this vertex */
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-					if( trystitch == qfalse )
-					{
-						numTriangles = 0;
-						if ( stripped == qfalse )
-						{
-							StripFaceSurface( ds, qtrue );
-							stripped = qtrue;
-						}
-						for (t = 0; t < ds->numIndexes; t += 3)
-						{
-							if( ds->indexes[ t ] == k || ds->indexes[ t + 1 ] == k || ds->indexes[ t + 2 ] == k )
-							{
-								indexes[ numTriangles ][ 0 ] = ds->indexes[ t ];
-								indexes[ numTriangles ][ 1 ] = ds->indexes[ t + 1 ];
-								indexes[ numTriangles ][ 2 ] = ds->indexes[ t + 2 ];
-								NormalFromPoints( normals[ numTriangles ], ds->verts[ ds->indexes[ t ] ].xyz, ds->verts[ ds->indexes[ t + 1 ] ].xyz, ds->verts[ ds->indexes[ t + 2 ] ].xyz);
-								numTriangles++;
-								if (numTriangles == STITCH_MAX_TRIANGLES)
-									break;
-							}
-						}
-						trystitch = qtrue;
-					}
-#endif
-
 					/* stitch */
 					VectorCopy(dv->xyz, sub);
 					VectorCopy(ds2->verts[best].xyz, dv->xyz);
 
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-					/* make sure all triangles don't get their normals perverted */
-					for (t = 0; t < numTriangles; t++)
-					{
-						/* construct new normal */
-						n = NormalFromPoints( normal, ds->verts[ indexes[ t ][ 0 ] ].xyz, ds->verts[ indexes[ t ][ 1 ] ].xyz, ds->verts[ indexes[ t ][ 2 ] ].xyz);
-
-						/* compare, roll back if normal get perverted */
-						if( !n || VectorCompareExt( normals[ t ], normal, STITCH_NORMAL_EPSILON) == qfalse )
-						{
-							VectorCopy( sub, dv->xyz );
-							break;
-						}
-					}
-
-					/* done */
-					if (t == numTriangles)
-					{
-						numVertsStitched++;
-						stitched = qtrue;
-					}
-#else
 					numVertsStitched++;
 					stitched = qtrue;
-#endif
 				}
 			}
-
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-			/* clean up after StripFaceSurface */
-			if( stripped )
-			{
-				ds->numIndexes = 0;
-				if ( ds->indexes != NULL )
-					free( ds->indexes );
-				ds->indexes = NULL;
-			}
-#endif
 
 			/* add to stats */
 			if (stitched)
@@ -405,7 +335,7 @@ extern int						c_areaportals;
 
 void ShowDetailedStats ( void )
 {
-	Sys_Printf(  "%9d total world brushes\n", CountBrushList( entities[ 0 ].brushes ) );
+	Sys_Printf( "%9d total world brushes\n", CountBrushList( entities[ 0 ].brushes ) );
 
 	Sys_Printf( "%9d detail brushes\n", c_detail );
 	Sys_Printf( "%9d patches\n", numMapPatches);
@@ -489,6 +419,28 @@ void ProcessWorldModel( void )
 	tree = FaceBSP( faces, qfalse );
 	MakeTreePortals( tree, qfalse );
 	FilterStructuralBrushesIntoTree( e, tree, qfalse );
+
+#if 1
+	/* UQ1: Generate experimental procedural cliff faces */
+	GenerateCliffFaces();
+
+	/* UQ1: Generate experimental procedural ledge faces */
+	GenerateLedgeFaces();
+
+	/* UQ1: Generate experimental procedural city */
+	GenerateMapCity();
+
+	/* UQ1: Generate experimental procedural trees/etc */
+	GenerateMapForest();
+
+	/* create drawsurfs for triangle models */
+	AddTriangleModels(0, qfalse, qfalse);
+
+	/* create drawsurfs for surface models */
+	AddEntitySurfaceModels(e);
+
+	ShowDetailedStats();
+#endif
 
 	/* note BSP phase (non-verbose-mode) */
 	if( !verbose )
@@ -575,6 +527,7 @@ void ProcessWorldModel( void )
 	// Remove crap...
 	CaulkifyStuff(qtrue);
 
+#if 0
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
 
@@ -597,6 +550,7 @@ void ProcessWorldModel( void )
 
 	// Remove crap...
 	CaulkifyStuff(qfalse);
+#endif
 
 	//mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
 	
@@ -1532,11 +1486,13 @@ int BSPMain( int argc, char **argv )
 			Sys_Warning( "Unknown option \"%s\"", argv[ i ] );
 	}
 
+#if 1
 	if (bevelSnap <= 2)
 	{// UQ1: Snap bevel planes to minimum of 2 Q3 units to reduce waste.
 		bevelSnap = 2;
-		Sys_Printf(" Snapping brush bevel planes to %d units\n", bevelSnap);
+		Sys_Printf(" Forced snapping of brush bevel planes to %d units to reduce plane count\n", bevelSnap);
 	}
+#endif
 
 	/* set up lmMaxSurfaceSize */
 	if (lmMaxSurfaceSize == 0)

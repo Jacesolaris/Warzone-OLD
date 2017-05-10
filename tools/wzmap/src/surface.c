@@ -1617,6 +1617,10 @@ qboolean SideInBrush( side_t *side, brush_t *b )
 	if( side->culled == qtrue || (b->compileFlags & C_TRANSLUCENT) )
 		return qfalse;
 
+	/* don't cull autosprite or polygonoffset surfaces */
+	if (side->shaderInfo && (side->shaderInfo->autosprite || side->shaderInfo->polygonOffset))
+		return qfalse;
+
 	/* side iterator */
 	for( i = 0; i < b->numsides; i++ )
 	{
@@ -1628,13 +1632,6 @@ qboolean SideInBrush( side_t *side, brush_t *b )
 		plane = &mapplanes[ b->sides[ i ].planenum ];
 		s = WindingOnPlaneSide( side->winding, plane->normal, plane->dist );
 		if( s == SIDE_FRONT || s == SIDE_CROSS )
-			return qfalse;
-	}
-	
-	/* don't cull autosprite or polygonoffset surfaces */
-	if( side->shaderInfo )
-	{
-		if( side->shaderInfo->autosprite || side->shaderInfo->polygonOffset )
 			return qfalse;
 	}
 	
@@ -1653,22 +1650,36 @@ culls obscured or buried brushsides from the map
 void CullSides( entity_t *e )
 {
 	int			numPoints;
-	brush_t		*b1;
+	//brush_t		*b1;
 	int			current = 0, count = 0;
 	
 	g_numHiddenFaces = 0;
 	g_numCoinFaces = 0;
 
-	for( b1 = e->brushes; b1; b1 = b1->next )
+	for(brush_t *b1 = e->brushes; b1; b1 = b1->next )
 		count++;
 	
+	int done = 0;
+
 	/* brush interator 1 */
-	for( b1 = e->brushes; b1; b1 = b1->next )
+#pragma omp parallel for ordered num_threads(numthreads)
+	for (int current = 0; current < count; current++)
 	{
 		brush_t		*b2;
+		brush_t		*b1 = e->brushes;
 
-		printLabelledProgress("CullSides", current, count);
-		current++;
+		int th = 0;
+		while (th < current)
+		{
+			b1 = b1->next;
+			th++;
+		}
+
+#pragma omp critical (__PROGRESS_BAR__)
+		{
+			printLabelledProgress("CullSides", done, count);
+		}
+		done++;
 
 		/* sides check */
 		if( b1->numsides < 1 )
@@ -1689,22 +1700,29 @@ void CullSides( entity_t *e )
 			
 			/* bbox check */
 			j2 = 0;
-			for( i = 0; i < 3; i++ )
-				if( b1->mins[ i ] > b2->maxs[ i ] || b1->maxs[ i ] < b2->mins[ i ] )
+
+			for (i = 0; i < 3; i++)
+			{
+				if (b1->mins[i] > b2->maxs[i] || b1->maxs[i] < b2->mins[i])
+				{
 					j2++;
+					break; // UQ1: Break out and skip the rest of the loop, since it will continue below...
+				}
+			}
+
 			if( j2 )
 				continue;
 
 			/* cull inside sides */
-#pragma omp parallel for ordered num_threads(numthreads)
+//#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b1->numsides; i++ )
 				SideInBrush( &b1->sides[ i ], b2 );
-#pragma omp parallel for ordered num_threads(numthreads)
+//#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b2->numsides; i++ )
 				SideInBrush( &b2->sides[ i ], b1 );
 			
 			/* side iterator 1 */
-#pragma omp parallel for ordered num_threads(numthreads)
+//#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b1->numsides; i++ )
 			{
 				winding_t	*w1, *w2;
@@ -1714,11 +1732,14 @@ void CullSides( entity_t *e )
 				/* winding check */
 				side1 = &b1->sides[ i ];
 				w1 = side1->winding;
+
 				if( w1 == NULL )
 					continue;
-				numPoints = w1->numpoints;
-				if( side1->shaderInfo == NULL )
+
+				if (side1->shaderInfo == NULL)
 					continue;
+
+				numPoints = w1->numpoints;
 				
 				/* side iterator 2 */
 				for( j = 0; j < b2->numsides; j++ )
@@ -1726,14 +1747,21 @@ void CullSides( entity_t *e )
 					/* winding check */
 					side2 = &b2->sides[ j ];
 					w2 = side2->winding;
+
 					if( w2 == NULL )
 						continue;
+
 					if( side2->shaderInfo == NULL )
 						continue;
+
 					if( w1->numpoints != w2->numpoints )
 						continue;
+
 					if( side1->culled == qtrue && side2->culled == qtrue )
 						continue;
+
+					if (((side1->compileFlags & C_TRANSLUCENT) || (side1->compileFlags & C_NODRAW)) && ((side2->compileFlags & C_TRANSLUCENT) || (side2->compileFlags & C_NODRAW)))
+						continue; // UQ1: Early skip these as they can't get culled anyway...
 					
 					/* compare planes */
 					if( (side1->planenum & ~0x00000001) != (side2->planenum & ~0x00000001) )
@@ -1743,6 +1771,7 @@ void CullSides( entity_t *e )
 					if( side1->shaderInfo &&
 						(side1->shaderInfo->autosprite || side1->shaderInfo->polygonOffset) )
 						continue;
+
 					if( side2->shaderInfo &&
 						(side2->shaderInfo->autosprite || side2->shaderInfo->polygonOffset) )
 						continue;

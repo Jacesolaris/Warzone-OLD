@@ -681,14 +681,18 @@ void FixTJunctions( entity_t *ent )
 	axialEdgeLines = numEdgeLines;
 
 	// sort the non-axial edges by length
+	printLabelledProgress("QsortTJunctions", 0, 100); // Cant draw actual percent, but we can let the user know whats going on...
 	qsort( originalEdges, numOriginalEdges, sizeof(originalEdges[0]), EdgeCompare );
+	printLabelledProgress("QsortTJunctions", 100, 100);
 
 	// add the non-axial edges, longest first
 	// this gives the most accurate edge description
 	for ( i = 0 ; i < numOriginalEdges ; i++ ) {
+		printLabelledProgress("AddNonAxialEdges", i, numOriginalEdges);
 		e = &originalEdges[i];
 		e->dv[ 0 ]->lightmap[ 0 ][ 0 ] = AddEdge( e->dv[ 0 ]->xyz, e->dv[ 1 ]->xyz, qtrue );
 	}
+	printLabelledProgress("AddNonAxialEdges", (numOriginalEdges > 0) ? numOriginalEdges : 100, (numOriginalEdges > 0) ? numOriginalEdges : 100);
 
 	Sys_Printf( "%9d axial edge lines\n", axialEdgeLines );
 	Sys_Printf( "%9d non-axial edge lines\n", numEdgeLines - axialEdgeLines );
@@ -697,6 +701,8 @@ void FixTJunctions( entity_t *ent )
 	// insert any needed vertexes
 	for( i = ent->firstDrawSurf; i < numMapDrawSurfs ; i++ )
 	{
+		printLabelledProgress("FixSurfaceJunctions", i - ent->firstDrawSurf, numMapDrawSurfs - ent->firstDrawSurf);
+
 		/* get surface and early out if possible */
 		ds = &mapDrawSurfs[ i ];
 		si = ds->shaderInfo;

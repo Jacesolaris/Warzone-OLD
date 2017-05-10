@@ -1366,7 +1366,7 @@ int AddMetaVertToSurface( mapDrawSurface_t *ds, bspDrawVert_t *dv1, int *coincid
 	}
 
 	/* overflow check */
-	if( ds->numVerts >= ((ds->shaderInfo->compileFlags & C_VERTEXLIT) ? maxSurfaceVerts : maxLMSurfaceVerts) )
+	if( ds->numVerts >= ((ds->shaderInfo && (ds->shaderInfo->compileFlags & C_VERTEXLIT)) ? maxSurfaceVerts : maxLMSurfaceVerts) )
 		return VERTS_EXCEEDED;
 	
 	/* made it this far, add the vert and return */
@@ -1591,25 +1591,31 @@ creates map drawsurface(s) from the list of possibles
 
 uint32_t completedGroups = 0;
 
-static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles, bspDrawVert_t *verts, int *indexes )
+static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles/*, bspDrawVert_t *verts, int *indexes*/ )
 {
 	int					i;
 
 	float singlePercent = ((float)1.0 / (float)numMetaTriangleGroups) * 100.0;
 	float groupPercent = singlePercent * completedGroups;
+	int completedPercent = 0;
+	int numCompleted = 0;
 
 	/* walk the list of triangles */
+#pragma omp parallel for ordered num_threads(numthreads)
 	for( i = 0; i < numPossibles; i++ )
 	{
-		int					j, best, score, bestScore;
-		metaTriangle_t		*seed, *test;
+		metaTriangle_t		*seed;
 		mapDrawSurface_t	*ds;
 		qboolean			added;
 
-		float thisPercent = (float)i / (float)numPossibles;
-		int completedPercent = (int)(groupPercent + (thisPercent * singlePercent));
+#pragma omp critical (__PROGRESS_BAR__)
+		{
+			printLabelledProgress("MergeMetaTriangles", completedPercent, 100);
+		}
 
-		printLabelledProgress("MergeMetaTriangles", completedPercent, 100);
+		float thisPercent = (float)numCompleted / (float)numPossibles;
+		completedPercent = (int)(groupPercent + (thisPercent * singlePercent));
+		numCompleted++;
 
 		seed = &possibles[i];
 
@@ -1622,9 +1628,25 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 		   ----------------------------------------------------------------- */
 		
 		/* start a new drawsurface */
-		ThreadMutexLock(&MetaTrianglesToSurfaceMutex);
-		ds = AllocDrawSurface( SURFACE_META );
-		ThreadMutexUnlock(&MetaTrianglesToSurfaceMutex);
+#pragma omp critical (__ALLOC_DS_META__)
+		{
+			ds = AllocDrawSurface(SURFACE_META);
+		}
+
+		// Moved these to local vars for threading...
+		bspDrawVert_t *verts = NULL;
+		int *indexes = NULL;
+
+#pragma omp critical (__ALLOC_VERTS__)
+		{
+			/* allocate arrays */
+			verts = (bspDrawVert_t *)safe_malloc(sizeof(*verts) * maxMetaTrianglesInGroup * 3);
+			indexes = (int *)safe_malloc(sizeof(*indexes) * maxMetaTrianglesInGroup * 3);
+
+			/* clear verts/indexes */
+			memset(verts, 0, sizeof(verts));
+			memset(indexes, 0, sizeof(indexes));
+		}
 
 		ds->entityNum = seed->entityNum;
 		ds->mapEntityNum = seed->mapEntityNum;
@@ -1643,18 +1665,18 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 		ds->indexes = indexes;
 		VectorCopy( seed->lightmapAxis, ds->lightmapAxis );
 
-		ThreadMutexLock(&MetaTrianglesToSurfaceMutex2);
-		ds->sideRef = AllocSideRef( seed->side, NULL );
-		ThreadMutexUnlock(&MetaTrianglesToSurfaceMutex2);
+#pragma omp critical (__ALLOC_SIDEREF_META__)
+		{
+			ds->sideRef = AllocSideRef(seed->side, NULL);
+		}
 
 		ClearBounds( ds->mins, ds->maxs );
 		
-		/* clear verts/indexes */
-		memset( verts, 0, sizeof( verts ) );
-		memset( indexes, 0, sizeof( indexes ) );
-		
 		/* add the first triangle */
-		AddMetaTriangleToSurface( ds, seed, qfalse );
+//#pragma omp critical (__ADD_META_TRIANGLE__)
+		{
+			AddMetaTriangleToSurface(ds, seed, qfalse);
+		}
 		
 		/* -----------------------------------------------------------------
 		   add triangles
@@ -1665,6 +1687,9 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 
 		while( added )
 		{
+			metaTriangle_t		*test;
+			int					best, score, bestScore, j;
+
 			/* reset best score */
 			best = -1;
 			bestScore = 0;
@@ -1678,7 +1703,11 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 					continue;
 
 				/* score this triangle */
-				score = AddMetaTriangleToSurface( ds, test, qtrue );
+//#pragma omp critical (__ADD_META_TRIANGLE__)
+				{
+					score = AddMetaTriangleToSurface(ds, test, qtrue);
+				}
+
 				if( score > bestScore )
 				{
 					best = j;
@@ -1687,7 +1716,10 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 					/* if we have a score over a certain threshold, just use it */
 					if( bestScore >= GOOD_SCORE )
 					{
-						AddMetaTriangleToSurface( ds, &possibles[ best ], qfalse );
+//#pragma omp critical (__ADD_META_TRIANGLE__)
+						{
+							AddMetaTriangleToSurface(ds, &possibles[best], qfalse);
+						}
 
 						/* reset */
 						best = -1;
@@ -1700,26 +1732,36 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 			/* add best candidate */
 			if( best >= 0 && bestScore > ADEQUATE_SCORE )
 			{
-				AddMetaTriangleToSurface( ds, &possibles[ best ], qfalse );
+//#pragma omp critical (__ADD_META_TRIANGLE__)
+				{
+					AddMetaTriangleToSurface(ds, &possibles[best], qfalse);
+				}
 
 				/* reset */
 				added = qtrue;
 			}
 		}
 
-		/* copy the verts and indexes to the new surface */
-		ds->verts = (bspDrawVert_t *)safe_malloc( ds->numVerts * sizeof( bspDrawVert_t ) );
-		memcpy( ds->verts, verts, ds->numVerts * sizeof( bspDrawVert_t ) );
-		ds->indexes = (int *)safe_malloc( ds->numIndexes * sizeof( int ) );
-		memcpy( ds->indexes, indexes, ds->numIndexes * sizeof( int ) );
+//#pragma omp critical (__META_COPY_VERTS__)
+		{
+			/* copy the verts and indexes to the new surface */
+			ds->verts = (bspDrawVert_t *)safe_malloc(ds->numVerts * sizeof(bspDrawVert_t));
+			memcpy(ds->verts, verts, ds->numVerts * sizeof(bspDrawVert_t));
+			ds->indexes = (int *)safe_malloc(ds->numIndexes * sizeof(int));
+			memcpy(ds->indexes, indexes, ds->numIndexes * sizeof(int));
+		}
 
 		/* classify the surface */
 		ClassifySurfaces( 1, ds );
 		
 		/* add to count */
-		ThreadMutexLock(&MetaTrianglesToSurfaceMutex3);
 		numMergedSurfaces++;
-		ThreadMutexUnlock(&MetaTrianglesToSurfaceMutex3);
+
+#pragma omp critical (__ALLOC_VERTS__)
+		{
+			free(verts);
+			free(indexes);
+		}
 	}
 
 	completedGroups++;
@@ -1919,8 +1961,8 @@ void MergeMetaTrianglesThread( int threadnum )
 	int *indexes;
 
 	/* allocate arrays */
-	verts = (bspDrawVert_t *)safe_malloc( sizeof( *verts ) * maxMetaTrianglesInGroup * 3 );
-	indexes = (int *)safe_malloc( sizeof( *indexes ) * maxMetaTrianglesInGroup * 3 );
+	//verts = (bspDrawVert_t *)safe_malloc( sizeof( *verts ) * maxMetaTrianglesInGroup * 3 );
+	//indexes = (int *)safe_malloc( sizeof( *indexes ) * maxMetaTrianglesInGroup * 3 );
 
 	/* cycle */
 	while( (work = GetThreadWork()) >= 0 )
@@ -1939,13 +1981,13 @@ void MergeMetaTrianglesThread( int threadnum )
 				continue;
 
 			/* try to merge this list of possible merge candidates */
-			MetaTrianglesToSurface( (group->nextTriangle - i), head, verts, indexes );
+			MetaTrianglesToSurface( (group->nextTriangle - i), head/*, verts, indexes*/ );
 		}
 	}
 
 	/* free arrays */
-	free( verts );
-	free( indexes );
+	//free( verts );
+	//free( indexes );
 }
 
 /*
@@ -1986,9 +2028,8 @@ void MergeMetaTriangles( void )
 	/* run threaded */
 	/* vortex: real threaded implemetation is still crashy */
 	if( numMetaTriangleGroups )
-		//RunSameThreadOn("MergeMetaTriangles", numMetaTriangleGroups, qtrue, MergeMetaTrianglesThread);
 		RunSameThreadOn("MergeMetaTriangles", numMetaTriangleGroups, qfalse, MergeMetaTrianglesThread);
-		//RunThreadsOn("MergeMetaTriangles", numMetaTriangleGroups, qtrue, MergeMetaTrianglesThread);
+		//RunThreadsOn("MergeMetaTriangles", numMetaTriangleGroups, qfalse, MergeMetaTrianglesThread);
 		//RunThreadsOnIndividual("MergeMetaTriangles", numMetaTriangleGroups, qtrue, MergeMetaTrianglesThread);
 
 	printLabelledProgress("MergeMetaTriangles", 100, 100); // complete bar...

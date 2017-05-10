@@ -167,7 +167,17 @@ void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
 	//progress width
     int pwidth = 72;
 
-    int percent = ( step * 100 ) / total;
+	int percent = 0;
+
+	if (total > 0)
+	{
+		percent = (step * 100) / total;
+	}
+	else
+	{
+		percent = 0;
+		return;
+	}
 
 	if (percent > 100) percent = 100; // Just in case...
 
