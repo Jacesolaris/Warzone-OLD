@@ -1809,10 +1809,6 @@ LoadMapFile()
 loads a map file into a list of entities
 */
 
-extern void GenerateCliffFaces ( void );
-extern void GenerateMapForest ( void );
-extern void GenerateMapCity(void);
-
 void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBrushes, qboolean onlyFoliage, qboolean externalFile )
 {		
 	FILE		*file;
@@ -1941,14 +1937,10 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 		if( (float) c_detail / (float) numMapBrushes < 0.10f && numMapBrushes > 500 )
 			Sys_Warning( "Over 90 percent structural map detected. Compile time may be adversely affected." );
 
-		/* UQ1: Generate experimental procedural trees/etc */
-		//GenerateMapCity();
-		//GenerateMapForest();
-
 		/* emit some statistics */
 		Sys_Printf(  "%9d total world brushes\n", numMapBrushes );
 		numMapBrushes = CountBrushList( entities[ 0 ].brushes );
-		Sys_Printf(  "%9d total world brushes with trees added\n", numMapBrushes );
+		//Sys_Printf(  "%9d total world brushes with trees added\n", numMapBrushes );
 
 		Sys_Printf( "%9d detail brushes\n", c_detail );
 		Sys_Printf( "%9d patches\n", numMapPatches);

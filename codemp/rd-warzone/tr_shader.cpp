@@ -3326,8 +3326,19 @@ qboolean IsKnownShinyMap ( const char *heystack )
 	return qfalse;
 }
 
+extern char currentMapName[128];
+
+qboolean IsNonDetectionMap(void)
+{
+	if (StringContainsWord(currentMapName, "jh3-te")) return qtrue;
+
+	return qfalse;
+}
+
 int DetectMaterialType ( const char *name )
 {
+	if (IsNonDetectionMap()) return MATERIAL_NONE;
+
 	if (StringContainsWord(name, "gfx/water"))
 		return MATERIAL_NONE;
 	if (StringContainsWord(name, "gfx/atmospheric"))
@@ -7034,6 +7045,8 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
+	if (IsNonDetectionMap()) return qfalse;
+
 	if (StringContainsWord(name, "gfx/water"))
 		return qfalse;
 	else if (StringContainsWord(name, "gfx/atmospheric"))

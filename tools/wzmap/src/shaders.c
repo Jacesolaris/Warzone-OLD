@@ -1244,7 +1244,10 @@ shaderInfo_t *ShaderInfoForShader( const char *shaderName )
 	}
 
 	/* allocate a default shader */
-	si = AllocShaderInfo();
+#pragma omp critical (__ALLOC_SI__)
+	{
+		si = AllocShaderInfo();
+	}
 	strcpy( si->shader, shader );
 	LoadShaderImages( si );
 	FinishShader( si );

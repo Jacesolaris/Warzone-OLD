@@ -153,7 +153,10 @@ void SetSurfaceExtra( mapDrawSurface_t *ds, int num )
 		return;
 	
 	/* get a new extra */
-	se = AllocSurfaceExtra();
+#pragma omp critical (__ALLOC_EXTRA_SURFACE__)
+	{
+		se = AllocSurfaceExtra();
+	}
 	
 	/* copy out the relevant bits */
 	se->mds = ds;

@@ -3871,7 +3871,7 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 	int numTotal = numMapDrawSurfs - e->firstDrawSurf;
 	int numCompleted = 0;
 
-//#pragma omp parallel for ordered num_threads(numthreads)
+#pragma omp parallel for ordered num_threads(numthreads)
 	for (int zzz = 0; zzz < numTotal; zzz++)
 	{
 		qboolean forceMeta;
@@ -3906,7 +3906,10 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		/* ydnar: skybox surfaces are special */
 		if( ds->skybox )
 		{
-			refs = AddReferenceToTree_r( ds, tree->headnode, qtrue );
+#pragma omp critical (__EMIT__)
+			{
+				refs = AddReferenceToTree_r(ds, tree->headnode, qtrue);
+			}
 			ds->skybox = qfalse;
 		}
 		else
@@ -3941,76 +3944,93 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		if( ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] )
 			ds->shaderInfo = ShaderInfoForShader( ds->shaderInfo->remapShader );
 		
-		// UQ1: It seems that we need the output to match the input order... *sigh*
-#pragma omp ordered
+		/* ydnar: gs mods: handle the various types of surfaces */
+		switch (ds->type)
 		{
-			/* ydnar: gs mods: handle the various types of surfaces */
-			switch (ds->type)
-			{
-				/* handle brush faces */
-			case SURFACE_FACE:
-			case SURFACE_DECAL:
-				if (refs == 0)
-					refs = FilterFaceIntoTree(ds, tree);
-				if (refs > 0)
-					EmitFaceSurface(ds);
-				break;
+			/* handle brush faces */
+		case SURFACE_FACE:
+		case SURFACE_DECAL:
+#pragma omp critical (__EMIT__)
+		{
+			if (refs == 0)
+				refs = FilterFaceIntoTree(ds, tree);
+			if (refs > 0)
+				EmitFaceSurface(ds);
+		}
+			break;
 
-				/* handle patches */
-			case SURFACE_PATCH:
-				if (refs == 0)
-					refs = FilterPatchIntoTree(ds, tree);
-				if (refs > 0)
-					EmitPatchSurface(e, ds);
-				break;
+			/* handle patches */
+		case SURFACE_PATCH:
+#pragma omp critical (__EMIT__)
+		{
+			if (refs == 0)
+				refs = FilterPatchIntoTree(ds, tree);
+			if (refs > 0)
+				EmitPatchSurface(e, ds);
+		}
+			break;
 
-				/* handle triangle surfaces */
-			case SURFACE_TRIANGLES:
-			case SURFACE_FORCED_META:
-			case SURFACE_META:
-				//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%1d] %4d verts %s\n", numSurfs, ds->planar, ds->numVerts, si->shader );
-				if (refs == 0)
-					refs = FilterTrianglesIntoTree(ds, tree);
-				if (refs > 0)
-					EmitTriangleSurface(ds);
-				break;
+			/* handle triangle surfaces */
+		case SURFACE_TRIANGLES:
+		case SURFACE_FORCED_META:
+		case SURFACE_META:
+#pragma omp critical (__EMIT__)
+		{
+			//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%1d] %4d verts %s\n", numSurfs, ds->planar, ds->numVerts, si->shader );
+			if (refs == 0)
+				refs = FilterTrianglesIntoTree(ds, tree);
+			if (refs > 0)
+				EmitTriangleSurface(ds);
+		}
+			break;
 
-				/* handle foliage surfaces (splash damage/wolf et) */
-			case SURFACE_FOLIAGE:
-				//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
-				if (refs == 0)
-					refs = FilterFoliageIntoTree(ds, tree);
-				if (refs > 0)
-					EmitTriangleSurface(ds);
-				break;
+			/* handle foliage surfaces (splash damage/wolf et) */
+		case SURFACE_FOLIAGE:
+#pragma omp critical (__EMIT__)
+		{
+			//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
+			if (refs == 0)
+				refs = FilterFoliageIntoTree(ds, tree);
+			if (refs > 0)
+				EmitTriangleSurface(ds);
+		}
+			break;
 
-				/* handle foghull surfaces */
-			case SURFACE_FOGHULL:
-				if (refs == 0)
-					refs = AddReferenceToTree_r(ds, tree->headnode, qfalse);
-				if (refs > 0)
-					EmitTriangleSurface(ds);
-				break;
+			/* handle foghull surfaces */
+		case SURFACE_FOGHULL:
+#pragma omp critical (__EMIT__)
+		{
+			if (refs == 0)
+				refs = AddReferenceToTree_r(ds, tree->headnode, qfalse);
+			if (refs > 0)
+				EmitTriangleSurface(ds);
+		}
+			break;
 
-				/* handle flares */
-			case SURFACE_FLARE:
-				if (refs == 0)
-					refs = FilterFlareSurfIntoTree(ds, tree);
-				if (refs > 0)
-					EmitFlareSurface(ds);
-				break;
-
-				/* handle shader-only surfaces */
-			case SURFACE_SHADER:
-				refs = 1;
+			/* handle flares */
+		case SURFACE_FLARE:
+#pragma omp critical (__EMIT__)
+		{
+			if (refs == 0)
+				refs = FilterFlareSurfIntoTree(ds, tree);
+			if (refs > 0)
 				EmitFlareSurface(ds);
-				break;
+		}
+			break;
 
-				/* no references */
-			default:
-				refs = 0;
-				break;
+			/* handle shader-only surfaces */
+		case SURFACE_SHADER:
+			refs = 1;
+#pragma omp critical (__EMIT__)
+			{
+				EmitFlareSurface(ds);
 			}
+			break;
+
+			/* no references */
+		default:
+			refs = 0;
+			break;
 		}
 
 		/* tot up the references */
@@ -4021,8 +4041,11 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 			numRefs += refs;
 			
 			/* emit extra surface data */
-			SetSurfaceExtra( ds, numBSPDrawSurfaces - 1 );
-			//%	Sys_FPrintf( SYS_VRB, "%d verts %d indexes\n", ds->numVerts, ds->numIndexes );
+#pragma omp critical (__SURFEXTRA__)
+			{
+				SetSurfaceExtra(ds, numBSPDrawSurfaces - 1);
+				//%	Sys_FPrintf( SYS_VRB, "%d verts %d indexes\n", ds->numVerts, ds->numIndexes );
+			}
 			
 			/* one last sanity check */
 			{

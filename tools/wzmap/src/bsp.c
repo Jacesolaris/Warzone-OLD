@@ -41,6 +41,7 @@ extern void GenerateCliffFaces ( void );
 extern void GenerateLedgeFaces(void);
 extern void GenerateMapCity(void);
 extern void GenerateMapForest ( void );
+extern void GenerateStaticEntities(void);
 
 
 /* -------------------------------------------------------------------------------
@@ -420,28 +421,6 @@ void ProcessWorldModel( void )
 	MakeTreePortals( tree, qfalse );
 	FilterStructuralBrushesIntoTree( e, tree, qfalse );
 
-#if 0
-	/* UQ1: Generate experimental procedural cliff faces */
-	GenerateCliffFaces();
-
-	/* UQ1: Generate experimental procedural ledge faces */
-	GenerateLedgeFaces();
-
-	/* UQ1: Generate experimental procedural city */
-	GenerateMapCity();
-
-	/* UQ1: Generate experimental procedural trees/etc */
-	GenerateMapForest();
-
-	/* create drawsurfs for triangle models */
-	AddTriangleModels(0, qfalse, qfalse);
-
-	/* create drawsurfs for surface models */
-	AddEntitySurfaceModels(e);
-
-	ShowDetailedStats();
-#endif
-
 	/* note BSP phase (non-verbose-mode) */
 	if( !verbose )
 		Sys_PrintHeading ( "--- BuildBSP ---\n" );
@@ -527,12 +506,14 @@ void ProcessWorldModel( void )
 	// Remove crap...
 	CaulkifyStuff(qtrue);
 
-#if 1
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();
 
 	/* UQ1: Generate experimental procedural ledge faces */
 	GenerateLedgeFaces();
+
+	/* UQ1: Generate static entities from ini */
+	GenerateStaticEntities();
 
 	/* UQ1: Generate experimental procedural city */
 	GenerateMapCity();
@@ -550,7 +531,6 @@ void ProcessWorldModel( void )
 
 	// Remove crap...
 	CaulkifyStuff(qfalse);
-#endif
 
 	//mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
 	

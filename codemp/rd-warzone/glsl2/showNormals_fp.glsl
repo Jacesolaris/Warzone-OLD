@@ -1,4 +1,4 @@
-﻿uniform sampler2D	u_DiffuseMap;
+uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_NormalMap;
 
 varying vec2		var_TexCoords;

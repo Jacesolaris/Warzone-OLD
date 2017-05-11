@@ -1631,6 +1631,8 @@ AddTriangleModels()
 adds misc_model surfaces to the bsp
 */
 
+extern qboolean CULLSIDES_AFTER_MODEL_ADITION;
+
 void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 {
 	int				added_surfaces = 0, added_triangles = 0, added_verts = 0, added_brushes = 0;
@@ -2076,6 +2078,9 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 	//CullSides( &entities[ mapEntityNum ] );
 	//CullSidesStats();
 
-	//CullSides(&entities[mapEntityNum]);
-	//CullSidesStats();
+	if (CULLSIDES_AFTER_MODEL_ADITION && total_added_surfaces > 0)
+	{// Do a second cullsides, to remove excess crap (stuff inside other stuff, etc) after everything was added...
+		CullSides(&entities[mapEntityNum]);
+		CullSidesStats();
+	}
 }

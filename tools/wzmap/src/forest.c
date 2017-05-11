@@ -83,10 +83,12 @@ int irand(int min, int max)
 	return(result);
 }
 
-#define			MAX_FOREST_MODELS 64
+#define			MAX_FOREST_MODELS				64
+#define			MAX_STATIC_ENTITY_MODELS		64
 
 qboolean		FORCED_MODEL_META = qfalse;
 qboolean		CAULKIFY_CRAP = qfalse;
+qboolean		CULLSIDES_AFTER_MODEL_ADITION = qfalse;
 
 qboolean		ADD_CLIFF_FACES = qfalse;
 float			CLIFF_FACES_SCALE = 1.0;
@@ -117,10 +119,15 @@ float			CITY_SCALE_MULTIPLIER = 2.5;
 float			CITY_CLIFF_CULL_RADIUS = 1.0;
 vec3_t			CITY_LOCATION = { 0 };
 float			CITY_RADIUS = 0;
+qboolean		CITY_RANDOM_ANGLES = qfalse;
 vec3_t			CITY2_LOCATION = { 0 };
 float			CITY2_RADIUS = 0;
 vec3_t			CITY3_LOCATION = { 0 };
 float			CITY3_RADIUS = 0;
+vec3_t			CITY4_LOCATION = { 0 };
+float			CITY4_RADIUS = 0;
+vec3_t			CITY5_LOCATION = { 0 };
+float			CITY5_RADIUS = 0;
 char			CITY_MODELS[MAX_FOREST_MODELS][128] = { 0 };
 float			CITY_OFFSETS[MAX_FOREST_MODELS] = { -4.0 };
 float			CITY_SCALES[MAX_FOREST_MODELS] = { 1.0 };
@@ -130,6 +137,11 @@ float			CITY_FORCED_BUFFER_DISTANCE[MAX_FOREST_MODELS] = { 0.0 };
 float			CITY_FORCED_DISTANCE_FROM_SAME[MAX_FOREST_MODELS] = { 0.0 };
 char			CITY_FORCED_OVERRIDE_SHADER[MAX_FOREST_MODELS][128] = { 0 };
 int				CITY_FORCED_FULLSOLID[MAX_FOREST_MODELS] = { 0 };
+
+char			STATIC_MODEL[MAX_STATIC_ENTITY_MODELS][128] = { 0 };
+vec3_t			STATIC_ORIGIN[MAX_STATIC_ENTITY_MODELS] = { 0 };
+float			STATIC_ANGLE[MAX_STATIC_ENTITY_MODELS] = { 0 };
+float			STATIC_SCALE[MAX_STATIC_ENTITY_MODELS] = { 0 };
 
 void CaulkifyStuff(qboolean findBounds);
 
@@ -151,6 +163,13 @@ void FOLIAGE_LoadClimateData( char *filename )
 	if (CAULKIFY_CRAP)
 	{
 		Sys_Printf("Caulkifying some map unneeded surfaces.\n");
+	}
+
+	CULLSIDES_AFTER_MODEL_ADITION = (qboolean)atoi(IniRead(filename, "GENERAL", "cullSidesAfterModelAddition", "0"));
+
+	if (CULLSIDES_AFTER_MODEL_ADITION)
+	{
+		Sys_Printf("Cullsides will be run again after adding models.\n");
 	}
 
 	//
@@ -247,6 +266,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 	{
 		CITY_RADIUS = atof(IniRead(filename, "CITY", "cityRadius", "0"));
 		CITY_CLIFF_CULL_RADIUS = atof(IniRead(filename, "CITY", "cliffFacesCullScale", "1.0"));
+		CITY_RANDOM_ANGLES = (atoi(IniRead(filename, "CITY", "cityRandomizeAngles", "0")) > 0) ? qtrue : qfalse;
 
 		for (i = 0; i < MAX_FOREST_MODELS; i++)
 		{
@@ -285,6 +305,42 @@ void FOLIAGE_LoadClimateData( char *filename )
 	if (VectorLength(CITY3_LOCATION) != 0.0)
 	{
 		CITY3_RADIUS = atof(IniRead(filename, "CITY", "city3Radius", "0"));
+	}
+
+	float CITY4_LOCATION_X = atof(IniRead(filename, "CITY", "city4LocationX", "0"));
+	float CITY4_LOCATION_Y = atof(IniRead(filename, "CITY", "city4LocationY", "0"));
+	float CITY4_LOCATION_Z = atof(IniRead(filename, "CITY", "city4LocationZ", "0"));
+
+	VectorSet(CITY4_LOCATION, CITY4_LOCATION_X, CITY4_LOCATION_Y, CITY4_LOCATION_Z);
+
+	if (VectorLength(CITY4_LOCATION) != 0.0)
+	{
+		CITY4_RADIUS = atof(IniRead(filename, "CITY", "city4Radius", "0"));
+	}
+
+	float CITY5_LOCATION_X = atof(IniRead(filename, "CITY", "city5LocationX", "0"));
+	float CITY5_LOCATION_Y = atof(IniRead(filename, "CITY", "city5LocationY", "0"));
+	float CITY5_LOCATION_Z = atof(IniRead(filename, "CITY", "city5LocationZ", "0"));
+
+	VectorSet(CITY5_LOCATION, CITY5_LOCATION_X, CITY5_LOCATION_Y, CITY5_LOCATION_Z);
+
+	if (VectorLength(CITY5_LOCATION) != 0.0)
+	{
+		CITY5_RADIUS = atof(IniRead(filename, "CITY", "city5Radius", "0"));
+	}
+
+
+	for (i = 0; i < MAX_STATIC_ENTITY_MODELS; i++)
+	{
+		strcpy(STATIC_MODEL[i], IniRead(filename, "STATIC", va("staticModel%i", i), ""));
+		STATIC_ORIGIN[i][0] = atof(IniRead(filename, "STATIC", va("staticOriginX%i", i), "0.0"));
+		STATIC_ORIGIN[i][1] = atof(IniRead(filename, "STATIC", va("staticOriginY%i", i), "0.0"));
+		STATIC_ORIGIN[i][2] = atof(IniRead(filename, "STATIC", va("staticOriginZ%i", i), "0.0"));
+		STATIC_SCALE[i] = atof(IniRead(filename, "STATIC", va("staticScale%i", i), "1.0"));
+		STATIC_ANGLE[i] = atof(IniRead(filename, "STATIC", va("staticAngle%i", i), "0.0"));
+
+		if (strcmp(STATIC_MODEL[i], ""))
+			Sys_Printf("Static %i. Model %s. Origin %i %i %i. Angle %f. Scale %f.\n", i, STATIC_MODEL[i], (int)STATIC_ORIGIN[i][0], (int)STATIC_ORIGIN[i][1], (int)STATIC_ORIGIN[i][2], (float)STATIC_ANGLE[i], (float)STATIC_SCALE[i]);
 	}
 }
 
@@ -640,6 +696,27 @@ void GenerateCliffFaces(void)
 			if (size[2] < smallestSize) smallestSize = size[2];
 
 			qboolean bad = qfalse;
+
+			for (int k = 0; k < MAX_STATIC_ENTITY_MODELS; k++)
+			{// Check if this position is too close to a static model location...
+				if (STATIC_MODEL[k][0] == 0 || strlen(STATIC_MODEL[k]) <= 0)
+				{// Was not assigned a model... Must be too close to something else...
+					continue;
+				}
+
+				float dist = Distance(STATIC_ORIGIN[k], center);
+
+				if (dist <= 256.0 * STATIC_SCALE[k])
+				{// Not within this static object's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (bad)
+			{
+				continue;
+			}
 
 			for (int j = 0; j < numCliffs; j++)
 			{
@@ -1020,6 +1097,29 @@ void GenerateLedgeFaces(void)
 			center[1] = (mins[1] + maxs[1]) * 0.5f;
 			center[2] = (mins[2] + maxs[2]) * 0.5f;
 
+			qboolean bad = qfalse;
+
+			for (int k = 0; k < MAX_STATIC_ENTITY_MODELS; k++)
+			{// Check if this position is too close to a static model location...
+				if (STATIC_MODEL[k][0] == 0 || strlen(STATIC_MODEL[k]) <= 0)
+				{// Was not assigned a model... Must be too close to something else...
+					continue;
+				}
+
+				float dist = Distance(STATIC_ORIGIN[k], center);
+
+				if (dist <= 256.0 * STATIC_SCALE[k])
+				{// Not within this static object's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (bad)
+			{
+				continue;
+			}
+
 
 			size[0] = (maxs[0] - mins[0]);
 			size[1] = (maxs[1] - mins[1]);
@@ -1028,8 +1128,6 @@ void GenerateLedgeFaces(void)
 			smallestSize = size[0];
 			if (size[1] < smallestSize) smallestSize = size[1];
 			if (size[2] < smallestSize) smallestSize = size[2];
-
-			qboolean bad = qfalse;
 
 			for (int j = 0; j < numLedges; j++)
 			{
@@ -1378,6 +1476,27 @@ void ReassignTreeModels ( void )
 				continue;
 			}
 
+			for (int k = 0; k < MAX_STATIC_ENTITY_MODELS; k++)
+			{// Check if this position is too close to a static model location...
+				if (STATIC_MODEL[k][0] == 0 || strlen(STATIC_MODEL[k]) <= 0)
+				{// Was not assigned a model... Must be too close to something else...
+					continue;
+				}
+
+				float dist = Distance(STATIC_ORIGIN[k], FOLIAGE_POSITIONS[i]);
+
+				if (dist <= 256.0 * STATIC_SCALE[k])
+				{// Not within this static object's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (bad)
+			{
+				continue;
+			}
+
 			int selected = irand(0,NUM_POSSIBLES-1);
 
 			for (j = 0; j < FOLIAGE_NUM_POSITIONS; j++)
@@ -1419,6 +1538,22 @@ void ReassignTreeModels ( void )
 				dist = Distance(CITY3_LOCATION, FOLIAGE_POSITIONS[i]);
 
 				if (dist <= CITY3_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY4_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY4_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY5_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY5_RADIUS)
 				{// Not within this city's buffer range... OK!
 					bad = qtrue;
 					break;
@@ -1526,6 +1661,27 @@ void ReassignTreeModels ( void )
 				continue;
 			}
 
+			for (int k = 0; k < MAX_STATIC_ENTITY_MODELS; k++)
+			{// Check if this position is too close to a static model location...
+				if (STATIC_MODEL[k][0] == 0 || strlen(STATIC_MODEL[k]) <= 0)
+				{// Was not assigned a model... Must be too close to something else...
+					continue;
+				}
+
+				float dist = Distance(STATIC_ORIGIN[k], FOLIAGE_POSITIONS[i]);
+
+				if (dist <= 256.0 * STATIC_SCALE[k])
+				{// Not within this static object's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (bad)
+			{
+				continue;
+			}
+
 			int selected = irand(0,NUM_POSSIBLES-1);
 
 			for (j = 0; j < FOLIAGE_NUM_POSITIONS; j++)
@@ -1573,6 +1729,22 @@ void ReassignTreeModels ( void )
 				dist = Distance(CITY3_LOCATION, FOLIAGE_POSITIONS[i]);
 
 				if (dist <= CITY3_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY4_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY4_RADIUS)
+				{// Not within this city's buffer range... OK!
+					bad = qtrue;
+					break;
+				}
+
+				dist = Distance(CITY5_LOCATION, FOLIAGE_POSITIONS[i]);
+
+				if (dist <= CITY5_RADIUS)
 				{// Not within this city's buffer range... OK!
 					bad = qtrue;
 					break;
@@ -1686,7 +1858,7 @@ void GenerateMapForest ( void )
 
 			ReassignTreeModels();
 
-			for (i = 0; i < FOLIAGE_NUM_POSITIONS /*&& i < 512*/; i++)
+			for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 			{
 				printLabelledProgress("GenerateMapForest", i, FOLIAGE_NUM_POSITIONS);
 
@@ -1930,6 +2102,204 @@ void GenerateMapForest ( void )
 	}
 }
 
+void GenerateStaticEntities(void)
+{
+	int i;
+
+	Sys_PrintHeading("--- GenerateStaticEntities ---\n");
+
+	for (i = 0; i < MAX_STATIC_ENTITY_MODELS; i++)
+	{
+		printLabelledProgress("GenerateStaticEntities", i, MAX_STATIC_ENTITY_MODELS);
+
+		if (STATIC_MODEL[i][0] == 0 || strlen(STATIC_MODEL[i]) <= 0)
+		{// Was not assigned a model... Must be too close to something else...
+			continue;
+		}
+
+		const char		*classname, *value;
+		float			lightmapScale;
+		vec3_t          lightmapAxis;
+		int			    smoothNormals;
+		int				vertTexProj;
+		char			shader[MAX_QPATH];
+		shaderInfo_t	*celShader = NULL;
+		brush_t			*brush;
+		parseMesh_t		*patch;
+		qboolean		funcGroup;
+		char			castShadows, recvShadows;
+		qboolean		forceNonSolid, forceNoClip, forceNoTJunc, forceMeta;
+		vec3_t          minlight, minvertexlight, ambient, colormod;
+		float           patchQuality, patchSubdivision;
+
+		/* setup */
+		entitySourceBrushes = 0;
+		mapEnt = &entities[numEntities];
+		numEntities++;
+		memset(mapEnt, 0, sizeof(*mapEnt));
+
+		mapEnt->mapEntityNum = 0;
+
+		VectorCopy(STATIC_ORIGIN[i], mapEnt->origin);
+
+		{
+			char str[32];
+			sprintf(str, "%f %f %f", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2]);
+			SetKeyValue(mapEnt, "origin", str);
+		}
+
+		{
+			char str[32];
+			sprintf(str, "%f", STATIC_SCALE[i]);
+			SetKeyValue(mapEnt, "modelscale", str);
+		}
+
+		{
+			char str[32];
+			sprintf(str, "%f", STATIC_ANGLE[i]);
+			SetKeyValue(mapEnt, "angle", str);
+		}
+
+		SetKeyValue(mapEnt, "_forcedSolid", "1");
+		//SetKeyValue(mapEnt, "_forcedSolid", "0");
+
+
+		//Sys_Printf( "Generated mapent at %f %f %f.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2] );
+
+
+		/* ydnar: get classname */
+		SetKeyValue(mapEnt, "classname", "misc_model");
+		classname = ValueForKey(mapEnt, "classname");
+
+		SetKeyValue(mapEnt, "model", STATIC_MODEL[i]);
+
+		funcGroup = qfalse;
+
+		/* get explicit shadow flags */
+		GetEntityShadowFlags(mapEnt, NULL, &castShadows, &recvShadows, (funcGroup || mapEnt->mapEntityNum == 0) ? qtrue : qfalse);
+
+		/* vortex: get lightmap scaling value for this entity */
+		GetEntityLightmapScale(mapEnt, &lightmapScale, 0);
+
+		/* vortex: get lightmap axis for this entity */
+		GetEntityLightmapAxis(mapEnt, lightmapAxis, NULL);
+
+		/* vortex: per-entity normal smoothing */
+		GetEntityNormalSmoothing(mapEnt, &smoothNormals, 0);
+
+		/* vortex: per-entity _minlight, _ambient, _color, _colormod  */
+		GetEntityMinlightAmbientColor(mapEnt, NULL, minlight, minvertexlight, ambient, colormod, qtrue);
+		if (mapEnt == &entities[0])
+		{
+			/* worldspawn have it empty, since it's keys sets global parms */
+			VectorSet(minlight, 0, 0, 0);
+			VectorSet(minvertexlight, 0, 0, 0);
+			VectorSet(ambient, 0, 0, 0);
+			VectorSet(colormod, 1, 1, 1);
+		}
+
+		/* vortex: _patchMeta, _patchQuality, _patchSubdivide support */
+		GetEntityPatchMeta(mapEnt, &forceMeta, &patchQuality, &patchSubdivision, 1.0, patchSubdivisions);
+
+		/* vortex: vertical texture projection */
+		if (strcmp("", ValueForKey(mapEnt, "_vtcproj")) || strcmp("", ValueForKey(mapEnt, "_vp")))
+		{
+			vertTexProj = IntForKey(mapEnt, "_vtcproj");
+			if (vertTexProj <= 0.0f)
+				vertTexProj = IntForKey(mapEnt, "_vp");
+		}
+		else
+			vertTexProj = 0;
+
+		/* ydnar: get cel shader :) for this entity */
+		value = ValueForKey(mapEnt, "_celshader");
+		if (value[0] == '\0')
+			value = ValueForKey(&entities[0], "_celshader");
+		if (value[0] != '\0')
+		{
+			sprintf(shader, "textures/%s", value);
+			celShader = ShaderInfoForShader(shader);
+			//Sys_FPrintf (SYS_VRB, "Entity %d (%s) has cel shader %s\n", mapEnt->mapEntityNum, classname, celShader->shader );
+		}
+		else
+			celShader = NULL;
+
+		/* vortex: _nonsolid forces detail non-solid brush */
+		forceNonSolid = ((IntForKey(mapEnt, "_nonsolid") > 0) || (IntForKey(mapEnt, "_ns") > 0)) ? qtrue : qfalse;
+
+		/* vortex: preserve original face winding, don't clip by bsp tree */
+		forceNoClip = ((IntForKey(mapEnt, "_noclip") > 0) || (IntForKey(mapEnt, "_nc") > 0)) ? qtrue : qfalse;
+
+		/* vortex: do not apply t-junction fixing (preserve original face winding) */
+		forceNoTJunc = ((IntForKey(mapEnt, "_notjunc") > 0) || (IntForKey(mapEnt, "_ntj") > 0)) ? qtrue : qfalse;
+
+		/* attach stuff to everything in the entity */
+		for (brush = mapEnt->brushes; brush != NULL; brush = brush->next)
+		{
+			brush->entityNum = mapEnt->mapEntityNum;
+			brush->mapEntityNum = mapEnt->mapEntityNum;
+			brush->castShadows = castShadows;
+			brush->recvShadows = recvShadows;
+			brush->lightmapScale = lightmapScale;
+			VectorCopy(lightmapAxis, brush->lightmapAxis); /* vortex */
+			brush->smoothNormals = smoothNormals; /* vortex */
+			brush->noclip = forceNoClip; /* vortex */
+			brush->noTJunc = forceNoTJunc; /* vortex */
+			brush->vertTexProj = vertTexProj; /* vortex */
+			VectorCopy(minlight, brush->minlight); /* vortex */
+			VectorCopy(minvertexlight, brush->minvertexlight); /* vortex */
+			VectorCopy(ambient, brush->ambient); /* vortex */
+			VectorCopy(colormod, brush->colormod); /* vortex */
+			brush->celShader = celShader;
+			if (forceNonSolid == qtrue)
+			{
+				brush->detail = qtrue;
+				brush->nonsolid = qtrue;
+				brush->noclip = qtrue;
+			}
+		}
+
+		for (patch = mapEnt->patches; patch != NULL; patch = patch->next)
+		{
+			patch->entityNum = mapEnt->mapEntityNum;
+			patch->mapEntityNum = mapEnt->mapEntityNum;
+			patch->castShadows = castShadows;
+			patch->recvShadows = recvShadows;
+			patch->lightmapScale = lightmapScale;
+			VectorCopy(lightmapAxis, patch->lightmapAxis); /* vortex */
+			patch->smoothNormals = smoothNormals; /* vortex */
+			patch->vertTexProj = vertTexProj; /* vortex */
+			patch->celShader = celShader;
+			patch->patchMeta = forceMeta; /* vortex */
+			patch->patchQuality = patchQuality; /* vortex */
+			patch->patchSubdivisions = patchSubdivision; /* vortex */
+			VectorCopy(minlight, patch->minlight); /* vortex */
+			VectorCopy(minvertexlight, patch->minvertexlight); /* vortex */
+			VectorCopy(ambient, patch->ambient); /* vortex */
+			VectorCopy(colormod, patch->colormod); /* vortex */
+			patch->nonsolid = forceNonSolid;
+		}
+
+		/* vortex: store map entity num */
+		{
+			char buf[32];
+			sprintf(buf, "%i", mapEnt->mapEntityNum);
+			SetKeyValue(mapEnt, "_mapEntityNum", buf);
+		}
+
+		/* ydnar: gs mods: set entity bounds */
+		SetEntityBounds(mapEnt);
+
+		/* ydnar: gs mods: load shader index map (equivalent to old terrain alphamap) */
+		LoadEntityIndexMap(mapEnt);
+
+		/* get entity origin and adjust brushes */
+		GetVectorForKey(mapEnt, "origin", mapEnt->origin);
+		if (mapEnt->originbrush_origin[0] || mapEnt->originbrush_origin[1] || mapEnt->originbrush_origin[2])
+			AdjustBrushesForOrigin(mapEnt);
+	}
+}
+
 //
 // Cities...
 //
@@ -2124,7 +2494,9 @@ void ReassignCityModels(void)
 
 			if (Distance(FOLIAGE_POSITIONS[i], CITY_LOCATION) > CITY_RADIUS 
 				&& Distance(FOLIAGE_POSITIONS[i], CITY2_LOCATION) > CITY2_RADIUS
-				&& Distance(FOLIAGE_POSITIONS[i], CITY3_LOCATION) > CITY3_RADIUS)
+				&& Distance(FOLIAGE_POSITIONS[i], CITY3_LOCATION) > CITY3_RADIUS
+				&& Distance(FOLIAGE_POSITIONS[i], CITY4_LOCATION) > CITY4_RADIUS
+				&& Distance(FOLIAGE_POSITIONS[i], CITY5_LOCATION) > CITY5_RADIUS)
 			{
 				continue;
 			}
@@ -2434,7 +2806,13 @@ void GenerateMapCity(void)
 					SetKeyValue(mapEnt, "angle", str);
 				}
 				*/
-				SetKeyValue(mapEnt, "angle", "0");
+				
+
+				if (!CITY_RANDOM_ANGLES)
+					SetKeyValue(mapEnt, "angle", "0");
+				else
+					SetKeyValue(mapEnt, "angle", va("%i", irand(0, 360)));
+
 
 				if (CITY_FORCED_FULLSOLID[FOLIAGE_TREE_SELECTION[i]] >= 2)
 				{

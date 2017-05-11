@@ -56,6 +56,15 @@ bool ends_with ( const std::string& s, const std::string& suffix )
 	return s.compare (s.length() - suffix.length(), suffix.length(), suffix) == 0;
 }
 
+bool invalidChar(char c)
+{
+	return !(c >= 0 && c <128);
+}
+void stripUnicode(std::string &str)
+{
+	str.erase(remove_if(str.begin(), str.end(), invalidChar), str.end());
+}
+
 int main ( int argc, char *argv[] )
 {
 	string_list args (argv, argv + argc);
@@ -100,7 +109,7 @@ int main ( int argc, char *argv[] )
 			std::cerr << *it << " could not be opened.\n";
 			continue;
 		}
-
+		
 		output += "const char *fallbackShader_" + shaderName + " = \"";
 		while ( std::getline (fs, line) )
 		{
@@ -108,6 +117,8 @@ int main ( int argc, char *argv[] )
 			{
 				continue;
 			}*/
+
+			stripUnicode(line);
 
 			output += escape_string (line) + "\\n\"\\\n\"";
 		}
