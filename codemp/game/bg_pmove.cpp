@@ -8974,26 +8974,52 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 		}
 	}
 
+	primFireDown = (qboolean)(pm->cmd.buttons & BUTTON_ATTACK);
+
+	//Burst fire
 	// JKG: Keep attack button 'pressed' until no more shots
 	// are remaining.
-	if (pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT)
+	if (weaponData[pm->ps->weapon].firingType == FT_BURST)
 	{
-		if (pm->ps->eFlags & EF_FIRING)
+		if (pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT)
 		{
-			if (weaponData[pm->ps->weapon].firingType == FT_BURST)
+			if (pm->ps->eFlags & EF_FIRING)
 			{
-				pm->cmd.buttons |= BUTTON_ATTACK;
+				if (weaponData[pm->ps->weapon].firingType == FT_BURST)
+				{
+					pm->cmd.buttons |= BUTTON_ATTACK;
+				}
+			}
+
+			if (pm->ps->weaponTime <= 0 || pm->ps->shotsRemaining <= 0)
+			{
+				pm->cmd.buttons &= ~BUTTON_ATTACK;
+				primFireDown = qfalse;
+			}
+		}
+		else if (!(pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT) 
+			&& (primFireDown && !(pm->ps->eFlags & EF_FIRING)))
+		{
+			if (pm->ps->weaponTime <= 0)
+			{
+				pm->ps->shotsRemaining = weaponData[pm->ps->weapon].shotsPerBurst & ~SHOTS_TOGGLEBIT;
+			}
+			else
+			{
+				pm->cmd.buttons &= ~BUTTON_ATTACK;
+				primFireDown = qfalse;
 			}
 		}
 	}
 
-	primFireDown = (qboolean)(pm->cmd.buttons & BUTTON_ATTACK);
-
 	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
 	if (WeaponSniperCharge(pmove->ps->weapon) && pmove->ps->weaponstate == WEAPON_READY)
 	{
-		if ( !(pmove->ps->eFlags & EF_ALT_FIRING) && (pmove->cmd.buttons & BUTTON_ALT_ATTACK) &&
-			pmove->cmd.upmove <= 0 && !pmove->cmd.forwardmove && !pmove->cmd.rightmove)
+		if ( !(pmove->ps->eFlags & EF_ALT_FIRING) 
+			&& (pmove->cmd.buttons & BUTTON_ALT_ATTACK)
+			&& pmove->cmd.upmove <= 0 
+			&& !pmove->cmd.forwardmove 
+			&& !pmove->cmd.rightmove)
 		{
 			// We just pressed the alt-fire key
 			if ( !pmove->ps->scopeType && pmove->ps->pm_type != PM_DEAD )
@@ -9047,6 +9073,8 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				
 				pmove->ps->zoomLockTime = pmove->cmd.serverTime + 50;
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+
+				trap->Print("DEBUG_ZOOM: enter zoom mode\n");
 			}
 			else if (pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
 			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
@@ -9054,11 +9082,28 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				pmove->ps->scopeType = SCOPE_NONE;
 				pmove->ps->zoomTime = pmove->ps->commandTime;
 				pmove->ps->zoomLocked = qfalse;
+				weaponData[pm->ps->weapon].firingType = weaponData[pmove->ps->weapon].firingType;
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
 				pmove->ps->weaponTime = 1000;
+				trap->Print("DEBUG_ZOOM: exit zoom mode 1\n");
 			}
 		}
-		else if ( !(pmove->cmd.buttons & BUTTON_ALT_ATTACK ) && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
+		else if (pmove->ps->scopeType >= SCOPE_BINOCULARS
+			&& (pmove->ps->eFlags & EF_ALT_FIRING)
+			&& pmove->ps->zoomLockTime < pmove->cmd.serverTime
+			&& ((pmove->cmd.buttons & BUTTON_ALT_ATTACK)
+				|| pmove->cmd.upmove > 0 
+				|| pmove->cmd.forwardmove
+				|| pmove->cmd.rightmove))
+		{
+			pmove->ps->scopeType = SCOPE_NONE;
+			pmove->ps->zoomTime = pmove->ps->commandTime;
+			pmove->ps->zoomLocked = qfalse;
+			weaponData[pm->ps->weapon].firingType = weaponData[pmove->ps->weapon].firingType;
+			PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+			trap->Print("DEBUG_ZOOM: exit zoom mode 2\n");
+		}
+		/*else if ( !(pmove->cmd.buttons & BUTTON_ALT_ATTACK ) && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
 		{
 			// Not pressing zoom any more
 			if ( pmove->ps->scopeType )
@@ -9079,15 +9124,6 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				pmove->ps->zoomLocked = qtrue;
 			}
 		}
-		//This seemed like a good idea, but apparently it confuses people. So disabled for now.
-		/*
-		else if (!(pmove->ps->eFlags & EF_ALT_FIRING) && (pmove->cmd.buttons & BUTTON_ALT_ATTACK) &&
-			(pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove))
-		{ //if you try to zoom while moving, just convert it into a primary attack
-			pmove->cmd.buttons &= ~BUTTON_ALT_ATTACK;
-			pmove->cmd.buttons |= BUTTON_ATTACK;
-		}
-		*/
 		else if (pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
 		{
 			if (pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
@@ -9095,41 +9131,27 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				pmove->ps->scopeType = SCOPE_NONE;
 				pmove->ps->zoomTime = pmove->ps->commandTime;
 				pmove->ps->zoomLocked = qfalse;
+				weaponData[pm->ps->weapon].firingType = weaponData[pmove->ps->weapon].firingType;
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+				trap->Print("DEBUG_ZOOM: exit zoom mode 3\n");
 			}
-		}
+		}*/
 		
 	}
 	else if (WeaponSniperCharge(pmove->ps->weapon)) //still perform certain checks, even if the weapon is not ready
 	{
-		if (pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
+		if ((pmove->cmd.buttons & BUTTON_ALT_ATTACK) || pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
 		{
 			if (pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
 			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
 				pmove->ps->scopeType = SCOPE_NONE;
 				pmove->ps->zoomTime = pmove->ps->commandTime;
 				pmove->ps->zoomLocked = qfalse;
+				weaponData[pm->ps->weapon].firingType = weaponData[pmove->ps->weapon].firingType;
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+				trap->Print("DEBUG_ZOOM: exit zoom mode 4\n");
 			}
 		}
-	}
-
-	//Burst fire
-	if ( !(pm->ps->shotsRemaining & ~SHOTS_TOGGLEBIT) &&
-			(primFireDown && !(pm->ps->eFlags & EF_FIRING)) )
-	{
-	    if ( pm->ps->weaponTime <= 0 )
-	    {
-       		if ( weaponData[pm->ps->weapon].firingType == FT_BURST )
-            {
-				pm->ps->shotsRemaining = weaponData[pm->ps->weapon].shotsPerBurst & ~SHOTS_TOGGLEBIT;
-            }
-        }
-        else
-        {
-			pm->cmd.buttons &= ~BUTTON_ATTACK;
-            primFireDown =  qfalse;
-        }
 	}
 
 	// set the firing flag for continuous beam weapons, saber will fire even if out of ammo
@@ -9146,10 +9168,12 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 		if ( pmove->cmd.buttons & BUTTON_ALT_ATTACK )
 		{
 			pmove->ps->eFlags |= EF_ALT_FIRING;
+			trap->Print("DEBUG_ZOOM: set alt fire\n");
 		}
 		else
 		{
 			pmove->ps->eFlags &= ~EF_ALT_FIRING;
+			trap->Print("DEBUG_ZOOM: exit alt fire\n");
 		}
 
 		// This flag should always get set, even when alt-firing
@@ -9170,16 +9194,18 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	// disruptor should convert a main fire to an alt-fire if the gun is currently zoomed
 	if (WeaponSniperCharge(pmove->ps->weapon))
 	{
-		if (pmove->cmd.buttons & BUTTON_ATTACK && pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLocked)
+		if ((pmove->cmd.buttons & BUTTON_ATTACK) && pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLocked)
 		{
 			// converting the main fire to an alt-fire
 			pmove->cmd.buttons |= BUTTON_ALT_ATTACK;
 			pmove->ps->eFlags |= EF_ALT_FIRING;
+			trap->Print("DEBUG_ZOOM: zoomLocked alt\n");
 		}
-		else if (pmove->cmd.buttons & BUTTON_ALT_ATTACK && pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLocked)
+		else if ((pmove->cmd.buttons & BUTTON_ALT_ATTACK) && pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLocked)
 		{
 			pmove->cmd.buttons &= ~BUTTON_ALT_ATTACK;
 			pmove->ps->eFlags &= ~EF_ALT_FIRING;
+			trap->Print("DEBUG_ZOOM: zoomLocked alt exit\n");
 		}
 	}
 }

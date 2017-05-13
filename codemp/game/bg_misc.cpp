@@ -1476,9 +1476,9 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 	{
 		"weapon_a280",
 		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/a280/a280_w.glm",
-		0, 0, 0},
-		/* view */		"models/weapons2/a280/a280.md3",
+		{ "models/Weapons/a280/A280_W.glm",
+		0, 0, 0 },
+		/* view */		"models/Weapons/A280/heavy_repeater.md3",
 		/* icon */		"gfx/hud/w_icon_a280",
 		/* pickup *///	"A280",
 		100,
@@ -1488,7 +1488,6 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 		/* sounds */ "",
 		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 	},
-
 
 
 	/*QUAKED weapon_dc_15_ext(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
