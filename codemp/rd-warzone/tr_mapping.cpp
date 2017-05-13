@@ -1266,13 +1266,16 @@ void MAPPING_LoadDayNightCycleInfo ( void )
 			|| StringContainsWord(currentMapName, "ilum")
 			|| StringContainsWord(currentMapName, "taanab")
 			|| StringContainsWord(currentMapName, "tatooine")
-			|| StringContainsWord(currentMapName, "scarif")))
+			|| StringContainsWord(currentMapName, "scarif")
+			|| StringContainsWord(currentMapName, "cyt")))
 	{
 		SHADOWS_ENABLED = qtrue;
 	}
 
-	if (StringContainsWord(currentMapName, "tatooine"))
+	if (StringContainsWord(currentMapName, "tatooine")) 
+	{
 		FOG_POST_ENABLED = qfalse;
+	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");

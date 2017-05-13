@@ -13,7 +13,11 @@
 #if defined(rd_warzone_x86_EXPORTS)
 #include "tr_local.h"
 #include "../rd-common/tr_public.h"
-#define FS_FOpenFileByMode ri->FS_FOpenFileByMode
+int FS_FOpenFileByMode(const char *qpath, fileHandle_t *f, fsMode_t mode)
+{
+	return ri->FS_FOpenFileByMode(va("warzone/%s", qpath), f, mode);
+}
+//#define FS_FOpenFileByMode ri->FS_FOpenFileByMode
 #define FS_Read ri->FS_Read
 #define FS_Write ri->FS_Write
 #define FS_FCloseFile ri->FS_FCloseFile

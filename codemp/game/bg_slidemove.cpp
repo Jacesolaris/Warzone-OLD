@@ -924,6 +924,27 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 	return ( (qboolean)(bumpcount != 0) );
 }
 
+qboolean PM_TracedEntityIsPlayerNPC(int entityNum)
+{
+#ifdef _CGAME
+	centity_t *ent = &cg_entities[entityNum];
+
+	if (ent && ent->currentState.eType == ET_PLAYER || ent->currentState.eType == ET_NPC)
+	{
+		return qtrue;
+	}
+#elif _GAME
+	gentity_t *ent = &g_entities[entityNum];
+
+	if (ent && ent->s.eType == ET_PLAYER || ent->s.eType == ET_NPC)
+	{
+		return qtrue;
+	}
+#endif
+
+	return qfalse;
+}
+
 /*
 ==================
 PM_StepSlideMove
@@ -1036,7 +1057,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 	// test the player position if they were a stepheight higher
 	pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
 
-	if ( trace.allsolid || trace.entityNum != ENTITYNUM_WORLD) {
+	if ( trace.allsolid || PM_TracedEntityIsPlayerNPC(trace.entityNum)) {
 		if ( pm->debugLevel ) {
 			Com_Printf("%i:bend can't step\n", c_pmove);
 		}
@@ -1049,7 +1070,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 			isGiant = qtrue;
 
 			pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
-			if ( trace.allsolid || trace.entityNum != ENTITYNUM_WORLD ) {
+			if ( trace.allsolid || PM_TracedEntityIsPlayerNPC(trace.entityNum)) {
 				if ( pm->debugLevel ) {
 					Com_Printf("%i:bend can't step\n", c_pmove);
 				}
@@ -1102,7 +1123,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 		if ( pm->ps->clientNum >= MAX_CLIENTS//NPC
 			&& isGiant
 			//&& trace.entityNum < MAX_CLIENTS
-			&& trace.entityNum != ENTITYNUM_WORLD
+			&& PM_TracedEntityIsPlayerNPC(trace.entityNum)
 			&& pEnt
 			&& pEnt->s.NPC_class == CLASS_RANCOR )
 		{//Rancor don't step on clients
@@ -1131,7 +1152,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 		*/
 		else if ( pm->ps->clientNum >= MAX_CLIENTS//NPC
 			//&& trace.entityNum < MAX_CLIENTS
-			&& trace.entityNum != ENTITYNUM_WORLD
+			&& PM_TracedEntityIsPlayerNPC(trace.entityNum)
 			&& pEnt
 			&& (pEnt->s.eType == ET_NPC || (pEnt->s.eFlags & EF_FAKE_NPC_BOT)))
 		{// UQ1: NPCs and BOTs no longer step on clients...
