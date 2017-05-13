@@ -1403,6 +1403,14 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_BindProgram(&tr.volumeLightShader[dlightShader]);
 
+	// Flip between previous and next volumetric fbo...
+	FBO_t *tempF = tr.volumetricFbo;
+	image_t *tempI = tr.volumetricFBOImage;
+	tr.volumetricFbo = tr.volumetricPreviousFbo;
+	tr.volumetricPreviousFbo = tempF;
+	tr.volumetricFBOImage = tr.volumetricPreviousFBOImage;
+	tr.volumetricPreviousFBOImage = tempI;
+
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
@@ -1410,6 +1418,9 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GL_BindToTMU(tr.volumetricPreviousFBOImage, TB_SPECULARMAP);
 	
 	float glowDimensionsX, glowDimensionsY;
 

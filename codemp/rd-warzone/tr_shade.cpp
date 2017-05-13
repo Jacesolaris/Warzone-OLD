@@ -2221,7 +2221,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
-			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
+			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+			{
+				break;
+			}
+			else if (stage <= 0)
 			{
 				sp = &tr.waterShader;
 				pStage->glslShaderGroup = &tr.waterShader;
@@ -2487,7 +2491,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
-			if (!(tr.viewParms.flags & VPF_SHADOWPASS))
+			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
 				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
 		}
 

@@ -543,6 +543,11 @@ void FBO_Init(void)
 		FBO_Bind(tr.volumetricFbo);
 		FBO_AttachTextureImage(tr.volumetricFBOImage, 0);
 		R_CheckFBO(tr.volumetricFbo);
+
+		tr.volumetricPreviousFbo = FBO_Create("_volumetricPrevious", tr.volumetricPreviousFBOImage->width, tr.volumetricPreviousFBOImage->height);
+		FBO_Bind(tr.volumetricPreviousFbo);
+		FBO_AttachTextureImage(tr.volumetricPreviousFBOImage, 0);
+		R_CheckFBO(tr.volumetricPreviousFbo);
 	}
 	
 #if 0

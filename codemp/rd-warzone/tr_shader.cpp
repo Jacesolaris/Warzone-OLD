@@ -3309,6 +3309,7 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 
 	// Warzone
 	if (StringContainsWord(heystack, "/impfact/")) return qtrue;
+	//if (StringContainsWord(heystack, "jh3")) return qtrue;
 
 	return qfalse;
 }
@@ -3330,7 +3331,7 @@ extern char currentMapName[128];
 
 qboolean IsNonDetectionMap(void)
 {
-	if (StringContainsWord(currentMapName, "jh3-te")) return qtrue;
+	//if (StringContainsWord(currentMapName, "jh3-te")) return qtrue;
 
 	return qfalse;
 }

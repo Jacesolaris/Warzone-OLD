@@ -26,6 +26,7 @@ float rand(vec2 co){
 void main()
 {
 	vec4 diffuseColor = textureLod(u_DiffuseMap, var_ScreenTex, 0.0);
+	
 #ifdef RANDOMIZE_PIXELS
 	float random = rand(var_ScreenTex);
 #endif

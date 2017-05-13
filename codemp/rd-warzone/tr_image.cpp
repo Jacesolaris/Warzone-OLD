@@ -3831,6 +3831,7 @@ void R_CreateBuiltinImages( void ) {
 	tr.ssgiRenderFBOImage[2]  = R_CreateImage("_ssgi2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, width/4.0, height/4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.volumetricPreviousFBOImage = R_CreateImage("_volumetricPrevious", NULL, width / 4.0, height / 4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	//
 	// UQ1: End Added...

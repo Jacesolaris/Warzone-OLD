@@ -1,5 +1,6 @@
 uniform sampler2D		u_DiffuseMap;
 uniform sampler2D		u_GlowMap;
+uniform sampler2D		u_SpecularMap;
 uniform sampler2D		u_ScreenDepthMap;
 
 #define					MAX_VOLUMETRIC_LIGHTS 16//64
@@ -7,6 +8,7 @@ uniform sampler2D		u_ScreenDepthMap;
 uniform int				u_lightCount;
 uniform vec2			u_vlightPositions[MAX_VOLUMETRIC_LIGHTS];
 uniform vec3			u_vlightColors[MAX_VOLUMETRIC_LIGHTS];
+uniform float			u_vlightDistances[MAX_VOLUMETRIC_LIGHTS];
 
 uniform vec4			u_Local0;
 uniform vec4			u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
@@ -45,12 +47,65 @@ float linearize(float depth)
 	return (1.0 / mix(u_ViewInfo.z, 1.0, depth));
 }
 
+/*
+vec3 GetAdaption ( vec3 current, vec3 old )
+{
+	//vec3 colorChanged = current.rgb - old.rgb;
+	//return clamp(old.rgb + (colorChanged.rgb / 100.0), 0.0, 1.0); // fade bright/dark over time...
+	
+	vec3 colorChanged = vec3(0.0);
+
+	float r = 0.0;
+	float g = 0.0;
+	float b = 0.0;
+
+	if (current.r > old.r)
+	{
+		r = current.r - old.r;
+		colorChanged.r = clamp(old.r + (r / 100.0), 0.0, 1.0);
+	}
+	else
+	{
+		r = old.r - current.r;
+		colorChanged.r = clamp(old.r - (0.1 * current.r), 0.0, 1.0);
+	}
+
+	if (current.g > old.g)
+	{
+		g = current.g - old.g;
+		colorChanged.g = clamp(old.g + (g / 100.0), 0.0, 1.0);
+	}
+	else
+	{
+		g = old.g - current.g;
+		colorChanged.g = clamp(old.g - (0.1 * current.g), 0.0, 1.0);
+	}
+
+	if (current.b > old.b)
+	{
+		b = current.b - old.b;
+		colorChanged.b = clamp(old.b + (b / 100.0), 0.0, 1.0);
+	}
+	else
+	{
+		b = old.b - current.b;
+		colorChanged.b = clamp(old.b - (0.1 * current.b), 0.0, 1.0);
+	}
+
+	return colorChanged;
+}
+*/
+
 void main ( void )
 {
 #ifndef DUAL_PASS
 	vec4 diffuseColor = textureLod(u_DiffuseMap, var_TexCoords.xy, 0.0);
 #endif //DUAL_PASS
 	int  SUN_ID = int(u_ViewInfo.a);
+
+
+	//vec4 previousColor = textureLod(u_SpecularMap, var_TexCoords, 0.0);
+
 
 	//gl_FragColor.rgb = textureLod( u_GlowMap, var_TexCoords, 0.0 ).rgb;
 	//gl_FragColor.a = 1.0;
@@ -64,6 +119,7 @@ void main ( void )
 	{
 #ifdef DUAL_PASS
 		gl_FragColor = vec4(0.0);
+		//gl_FragColor = vec4(GetAdaption( vec3(0.0), previousColor.rgb ), 0.0);
 #else //!DUAL_PASS
 		gl_FragColor = diffuseColor;
 #endif //DUAL_PASS
@@ -95,7 +151,16 @@ void main ( void )
 		{
 			debugColor += vec3(1.0, 0.0, 0.0);
 
+			//float invDepth = u_vlightDistances[i];
+
+			
 			float invDepth = clamp(1.0 - linearize(textureLod( u_ScreenDepthMap, u_vlightPositions[i], 0.0 ).r), 0.0, 1.0);
+
+			/*if (invDepth > u_vlightDistances[i] * 0.9)
+			{
+				continue;
+			}*/
+
 			float fall = clamp((fBloomrayFalloffRange * invDepth) - dist, 0.0, 1.0) * invDepth;
 
 			if (i == SUN_ID) 
@@ -229,6 +294,7 @@ void main ( void )
 	{// Nothing in range...
 #ifdef DUAL_PASS
 		gl_FragColor = vec4(0.0);
+		//gl_FragColor = vec4(GetAdaption( vec3(0.0), previousColor.rgb ), 0.0);
 #else //!DUAL_PASS
 		gl_FragColor = diffuseColor;
 #endif //DUAL_PASS
@@ -276,6 +342,8 @@ void main ( void )
 	}
 
 	totalColor.rgb *= VOLUMETRIC_STRENGTH;
+
+	//totalColor.rgb = GetAdaption( totalColor.rgb, previousColor.rgb );
 
 #ifdef DUAL_PASS
 	gl_FragColor = vec4(totalColor, 1.0);

@@ -21,9 +21,9 @@ void main(void)
 		vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((u_Local0.xy * width) * PIXEL_OFFSET)).rgb;
 		vec3 add_color = ((col0 / 2.0) + ((col1 + col2) * (dist_mult * 2.0))) / 4.0;
 
-		vec3 BLUE_SHIFT_MOD = vec3(0.333, 0.333, 3.0);
-		vec3 add_color_blue = clamp(add_color * (BLUE_SHIFT_MOD * (1.0 - clamp(dist_mult*3.5, 0.0, 1.0))), 0.0, 1.0);
-		add_color.rgb += clamp(((add_color + add_color + add_color_blue) * 0.37), 0.0, 1.0);
+		//vec3 BLUE_SHIFT_MOD = vec3(0.333, 0.333, 3.0);
+		//vec3 add_color_blue = clamp(add_color * (BLUE_SHIFT_MOD * (1.0 - clamp(dist_mult*3.5, 0.0, 1.0))), 0.0, 1.0);
+		//add_color.rgb += clamp(((add_color + add_color + add_color_blue) * 0.37), 0.0, 1.0);
 
 		gl_FragColor.rgb += add_color;
 		NUM_VALUES += 1.0;

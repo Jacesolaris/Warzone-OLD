@@ -70,7 +70,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 // Merge the whole damn lot and use player's closest cubemap...
-#define __PLAYER_BASED_CUBEMAPS__
+//#define __PLAYER_BASED_CUBEMAPS__
 // Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
 #define __MERGE_MORE__
 // Merge matching shader names...
@@ -2630,6 +2630,7 @@ typedef struct trGlobals_s {
 	image_t        *bloomRenderFBOImage[3];
 	image_t        *ssgiRenderFBOImage[3];
 	image_t        *volumetricFBOImage;
+	image_t        *volumetricPreviousFBOImage;
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
 	image_t        *genericFBO3Image;
@@ -2642,6 +2643,7 @@ typedef struct trGlobals_s {
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t          *ssgiRenderFBO[3];
 	FBO_t		   *volumetricFbo;
+	FBO_t		   *volumetricPreviousFbo;
 	FBO_t		   *genericFbo;
 	FBO_t		   *genericFbo2;
 	FBO_t		   *genericFbo3;

@@ -507,6 +507,7 @@ int R_CubemapForPoint( vec3_t point )
 			length = DistanceHorizontal(point, tr.cubemapOrigins[i]);
 			length += (DistanceVertical(point, tr.cubemapOrigins[i]) * 8.0); // We *MUCH* prefer a cubemap ar our own height! 8.0 seems to be about the sweet spot...
 #else //!__PLAYER_BASED_CUBEMAPS__
+			vec3_t diff;
 			VectorSubtract(point, tr.cubemapOrigins[i], diff);
 			length = DotProduct(diff, diff);
 #endif //__PLAYER_BASED_CUBEMAPS__
