@@ -491,12 +491,18 @@ Ghoul2 Insert Start
 		{
 			if (cent->pe.lightningFiring)
 			{
-				trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+				if (cent->currentState.clientNum == cg.clientNum)
+					trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
+				else
+					trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
 			}
 		}
 		else if (weapon->readySound > 0) 
 		{
-			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+			if (cent->currentState.clientNum == cg.clientNum)
+				trap->S_AddLoopingSound(cent->currentState.number, vec3_origin, vec3_origin, weapon->readySound);
+			else
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
 		}
 		cent->pe.lightningFiring = qfalse;
 	}
@@ -588,7 +594,10 @@ Ghoul2 Insert Start
 				{
 					if (cent->pe.lightningFiring)
 					{
-						trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+						if (cent->currentState.clientNum == cg.clientNum)
+							trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
+						else
+							trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
 					}
 				}
 				else if (weapon->readySound > 0) { // Getting initalized to -1 sometimes... readySound isn't even referenced anywere else in code
@@ -1761,6 +1770,7 @@ void CG_NextWeapon_f( void ) {
 	else
 	{
 		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPONLOCAL);
 	}
 }
 
@@ -1816,6 +1826,7 @@ void CG_PrevWeapon_f( void ) {
 	else
 	{
 		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPONLOCAL);
 	}
 }
 
@@ -1869,6 +1880,7 @@ void CG_Weapon_f( void ) {
 				if (cg.weaponSelect != num)
 				{
 					trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+					trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPONLOCAL);
 				}
 
 				cg.weaponSelect = num;
@@ -1969,6 +1981,7 @@ void CG_Weapon_f( void ) {
 	if (cg.weaponSelect != num)
 	{
 		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPONLOCAL);
 	}
 
 	cg.weaponSelect = num;
@@ -2090,6 +2103,7 @@ void CG_WeaponClean_f( void ) {
 	if (cg.weaponSelect != num)
 	{
 		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+		trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPONLOCAL);
 	}
 
 	cg.weaponSelect = num;
@@ -2133,6 +2147,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 	}
 
 	trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+	trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPONLOCAL);
 #endif
 }
 
@@ -2320,7 +2335,10 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			c = rand() % c;
 			if ( weap->altFlashSound[c] )
 			{
-				trap->S_StartSound( NULL, ent->number, CHAN_WEAPON, weap->altFlashSound[c] );
+				if (ent->number == cg.clientNum)
+					trap->S_StartSound(NULL, ent->number, CHAN_WEAPONLOCAL, weap->altFlashSound[c]);
+				else
+					trap->S_StartSound( NULL, ent->number, CHAN_WEAPON, weap->altFlashSound[c] );
 			}
 		}
 //		if ( weap->altFlashSnd )
@@ -2340,7 +2358,10 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			c = rand() % c;
 			if ( weap->flashSound[c] )
 			{
-				trap->S_StartSound( NULL, ent->number, CHAN_WEAPON, weap->flashSound[c] );
+				if (ent->number == cg.clientNum)
+					trap->S_StartSound(NULL, ent->number, CHAN_WEAPONLOCAL, weap->flashSound[c]);
+				else
+					trap->S_StartSound( NULL, ent->number, CHAN_WEAPON, weap->flashSound[c] );
 			}
 		}
 	}

@@ -860,7 +860,7 @@ void NPC_BSRancor_Default(gentity_t *aiEnt)
 			return;
 		}
 
-		aiEnt->count == 0;
+		aiEnt->count = 0;
 		aiEnt->activator = NULL;
 		aiEnt->enemy = NULL;
 	}

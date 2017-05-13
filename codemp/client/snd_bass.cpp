@@ -522,7 +522,7 @@ float BASS_GetVolumeForChannel ( int entchannel )
 	{
 		volume = voice_vol;
 	}
-	else if (entchannel == CHAN_WEAPON)
+	else if (entchannel == CHAN_WEAPON || entchannel == CHAN_WEAPONLOCAL)
 	{
 		volume = weapon_vol;
 	}
@@ -604,7 +604,7 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 		IS_LOCAL_SOUND = qtrue;
 	}
 
-	if (c->entityChannel == CHAN_AMBIENT)
+	if (c->entityChannel == CHAN_AMBIENT || c->entityChannel == CHAN_WEAPONLOCAL)
 	{// Force all ambient sounds to local...
 		VectorSet(c->origin, 0, 0, 0);
 		IS_LOCAL_SOUND = qtrue;
@@ -1457,7 +1457,7 @@ void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel,
 	if (origin) VectorCopy(origin, c->origin);
 	else VectorSet(c->origin, 0, 0, 0);
 
-	if (c->entityChannel == CHAN_AMBIENT)
+	if (c->entityChannel == CHAN_AMBIENT || c->entityChannel == CHAN_WEAPONLOCAL)
 	{// Force all ambient sounds to local...
 		VectorSet(c->origin, 0, 0, 0);
 	}
@@ -1523,7 +1523,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	if (origin) VectorCopy(origin, c->origin);
 	else VectorSet(c->origin, 0, 0, 0);
 
-	if (c->entityChannel == CHAN_AMBIENT)
+	if (c->entityChannel == CHAN_AMBIENT || c->entityChannel == CHAN_WEAPONLOCAL)
 	{// Force all ambient sounds to local...
 		VectorSet(c->origin, 0, 0, 0);
 	}
