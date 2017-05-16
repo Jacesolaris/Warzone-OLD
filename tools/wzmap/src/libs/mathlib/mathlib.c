@@ -299,10 +299,11 @@ void SnapWeldVector( vec3_t a, vec3_t b, vec3_t out )
 }
 
 // NOTE: added these from Ritual's Q3Radiant
-//#define __BASEJKA_LIGHTGRID__
+#define __BASEJKA_LIGHTGRID__
 
 #ifdef __BASEJKA_LIGHTGRID__
 #define INVALID_BOUNDS 99999
+#define INVALID_LIGHTING_BOUNDS 99999
 #else //__BASEJKA_LIGHTGRID__
 #define INVALID_BOUNDS 524288
 #define INVALID_LIGHTING_BOUNDS 99999

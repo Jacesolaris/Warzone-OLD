@@ -368,8 +368,8 @@ qboolean CalcSurfaceTextureRange( mapDrawSurface_t *ds )
 		ds->bias[ j ] = -floor( 0.5f * (mins[ j ] + maxs[ j ]) );
 	
 	/* find biased texture coordinate mins/maxs */
-	size[ 0 ] = ds->shaderInfo->shaderWidth;
-	size[ 1 ] = ds->shaderInfo->shaderHeight;
+	size[ 0 ] = (ds->shaderInfo) ? ds->shaderInfo->shaderWidth : 0;
+	size[ 1 ] = (ds->shaderInfo) ? ds->shaderInfo->shaderHeight : 0;
 	ds->texMins[ 0 ] = 999999;
 	ds->texMins[ 1 ] = 999999;
 	ds->texMaxs[ 0 ] = -999999;
@@ -581,7 +581,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds )
 		   ----------------------------------------------------------------- */
 		
 		/* vertex lit surfaces don't need this information */
-		if( si->compileFlags & C_VERTEXLIT || ds->type == SURFACE_TRIANGLES )
+		if( (si && (si->compileFlags & C_VERTEXLIT)) || ds->type == SURFACE_TRIANGLES )
 		{
 			VectorClear( ds->lightmapAxis );
 			//%	VectorClear( ds->lightmapVecs[ 2 ] );
@@ -592,7 +592,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds )
 		/* the shader can specify an explicit lightmap axis */
 		if ( ds->lightmapAxis[ 0 ] == ds->lightmapAxis[ 1 ] && ds->lightmapAxis[ 0 ] == ds->lightmapAxis[ 2 ] && ds->lightmapAxis[ 0 ] == 0 )
 		{
-			if( si->lightmapAxis[ 0 ] || si->lightmapAxis[ 1 ] || si->lightmapAxis[ 2 ] )
+			if( si && (si->lightmapAxis[ 0 ] || si->lightmapAxis[ 1 ] || si->lightmapAxis[ 2 ]) )
 				VectorCopy( si->lightmapAxis, ds->lightmapAxis );
 			else if( ds->type == SURFACE_FORCED_META || ds->type == SURFACE_TRIANGLES )
 				VectorClear( ds->lightmapAxis );
@@ -1998,7 +1998,7 @@ int AddReferenceToLeaf( mapDrawSurface_t *ds, node_t *node )
 	/* ydnar: sky/skybox surfaces */
 	if( node->skybox )
 		ds->skybox = qtrue;
-	if( ds->shaderInfo->compileFlags & C_SKY )
+	if(ds->shaderInfo && ds->shaderInfo->compileFlags & C_SKY )
 		node->sky = qtrue;
 	
 	/* return */
@@ -2367,7 +2367,9 @@ void EmitDrawVerts( mapDrawSurface_t *ds, bspDrawSurface_t *out, int bspModelNum
 	
 	/* get stuff */
 	si = ds->shaderInfo;
-	offset = si->offset;
+
+	if (!si) offset = 0;
+	else offset = si->offset;
 	
 	/* copy the verts */
 	out->firstVert = numBSPDrawVerts;
@@ -2828,7 +2830,7 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds )
 	bspDrawSurface_t		*out;
 
 	/* invert the surface if necessary */
-	if( ds->backSide || ds->shaderInfo->invert )
+	if( ds->backSide || (ds->shaderInfo && ds->shaderInfo->invert) )
 	{
 		/* walk the indexes, reverse the triangle order */
 		for( i = 0; i < ds->numIndexes; i += 3 )
@@ -2870,11 +2872,17 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds )
 	else
 		out->surfaceType = MST_PLANAR;
 	
+	if (!ds->shaderInfo)
+	{
+		Sys_Printf("WARNING: A drawsurf has no shaderinfo! Emiting debug shader.\n");
+	}
+
 	/* set it up */
-	if( debugSurfaces )
+	if( debugSurfaces || !ds->shaderInfo)
 		out->shaderNum = EmitShader( "debugsurfaces", NULL, NULL );
 	else
 		out->shaderNum = EmitShader( ds->shaderInfo->shader, &ds->shaderInfo->contentFlags, &ds->shaderInfo->surfaceFlags );
+
 	out->patchWidth = ds->patchWidth;
 	out->patchHeight = ds->patchHeight;
 	out->fogNum = ds->fogNum;
@@ -3146,7 +3154,7 @@ void BiasSurfaceTextures( mapDrawSurface_t *ds )
 	CalcSurfaceTextureRange( ds );
 	
 	/* don't bias globaltextured shaders */
-	if( ds->shaderInfo->globalTexture )
+	if( !ds->shaderInfo || ds->shaderInfo->globalTexture )
 		return;
 	
 	/* bias the texture coordinates */
@@ -3586,6 +3594,10 @@ void FixDrawsurfVertexAlpha(int dsnum)
 	
 	ds = &mapDrawSurfs[ alphaFixEntity->firstDrawSurf + dsnum ];
 	si = ds->shaderInfo;
+
+	if (!si)
+		return;
+
 	numSurfs = numMapDrawSurfs - alphaFixEntity->firstDrawSurf;;
 
 	/* early out conditions */
@@ -3803,6 +3815,9 @@ void ApplyVertexMods(entity_t *e, qboolean showpacifier)
 		/* get shader */
 		si = ds->shaderInfo;
 
+		if (!si)
+			continue;
+
 		/* apply texture coordinate mods */
 		for( j = 0; j < ds->numVerts; j++ )
 			TCMod( si->mod, ds->verts[ j ].st );
@@ -3897,7 +3912,7 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		/* vortex: patchMeta with noBSP flag doesn't require patch surface to be emitted */
 		GetEntityPatchMeta( e, &forceMeta, NULL, NULL, ds->patchQuality, ds->patchSubdivisions);
 		if( patchMeta || forceMeta || ds->patchMeta )
-			if ( ds->noClip || ds->shaderInfo->noBSP )
+			if ( ds->noClip || (ds->shaderInfo && ds->shaderInfo->noBSP) )
 				continue;
 		
 		/* get shader */
@@ -3918,14 +3933,14 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 			refs = 0;
 			
 			/* ydnar: don't emit nodraw surfaces (like nodraw fog) */
-			if( si != NULL && (si->compileFlags & C_NODRAW) && ds->type != SURFACE_PATCH )
+			if( si && (si->compileFlags & C_NODRAW) && ds->type != SURFACE_PATCH )
 				continue;
 			
 			/* ydnar: bias the surface textures */
 			BiasSurfaceTextures( ds );
 			
 			/* ydnar: globalizing of fog volume handling (eek a hack) */
-			if( e != entities && si->noFog == qfalse )
+			if( e != entities && si && si->noFog == qfalse )
 			{
 				/* find surface origin and offset by entity origin */
 				VectorAdd( ds->mins, ds->maxs, origin );
@@ -3941,7 +3956,7 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		}
 		
 		/* ydnar: remap shader */
-		if( ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] )
+		if(ds->shaderInfo && ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] )
 			ds->shaderInfo = ShaderInfoForShader( ds->shaderInfo->remapShader );
 		
 		/* ydnar: gs mods: handle the various types of surfaces */

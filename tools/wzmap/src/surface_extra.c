@@ -169,7 +169,7 @@ void SetSurfaceExtra( mapDrawSurface_t *ds, int num )
 	se->sampleSize = ds->sampleSize;
 	se->longestCurve = ds->longestCurve;
 	se->shadeAngle = ds->smoothNormals;
-	se->lightmapStitch = (ds->shaderInfo->lightmapNoStitch == qtrue) ? qfalse : qtrue;
+	se->lightmapStitch = (ds->shaderInfo && ds->shaderInfo->lightmapNoStitch == qtrue) ? qfalse : qtrue;
 	VectorCopy( ds->lightmapAxis, se->lightmapAxis );
 	VectorCopy( ds->ambient, se->ambient );
 	VectorCopy( ds->minlight, se->minlight );

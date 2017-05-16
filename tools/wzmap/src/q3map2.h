@@ -27,7 +27,7 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 ------------------------------------------------------------------------------- */
 
 
-//#define __BASEJKA_LIGHTGRID__
+#define __BASEJKA_LIGHTGRID__
 
 
 /* marker */
@@ -471,11 +471,11 @@ abstracted bsp file
 #define	MAX_MAP_LEAFFACES		0x800000//0xA00000
 #define	MAX_MAP_LEAFBRUSHES		0x800000//0xA00000
 #define	MAX_MAP_PORTALS			0x800000//0xA00000
-//#ifndef __BASEJKA_LIGHTGRID__
+#ifndef __BASEJKA_LIGHTGRID__
 #define	MAX_MAP_LIGHTGRID		0x800000//0xF00000
-//#else //__BASEJKA_LIGHTGRID__
-//#define	MAX_MAP_LIGHTGRID		65535 // matching JKA
-//#endif //__BASEJKA_LIGHTGRID__
+#else //__BASEJKA_LIGHTGRID__
+#define	MAX_MAP_LIGHTGRID		65535 // matching JKA
+#endif //__BASEJKA_LIGHTGRID__
 #define	MAX_MAP_VISIBILITY		0x3FFFFFFF
 
 #define	MAX_MAP_DRAW_SURFS		0x200000

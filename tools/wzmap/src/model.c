@@ -1983,6 +1983,13 @@ void AddTriangleModels(int entityNum, qboolean quiet, qboolean cullSmallSolids)
 			pushVertexes = FloatForKey(e2, "_pv");
 		pushVertexes += FloatForKey(e2, "_pv2"); // vortex: set by decorator
 
+		qboolean forceIntoMapdata = (IntForKey(e2, "forceIntoMapdata") > 0) ? qtrue : qfalse;
+
+		if (forceIntoMapdata)
+		{// UQ1: Force any marked with these into map entity surfaces...
+			e2->mapEntityNum = 0;
+		}
+
 		/* insert the model */
 #ifdef CULL_BY_LOWEST_NEAR_POINT
 		if (HAVE_COLLISION_MODEL)

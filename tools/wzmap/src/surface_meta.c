@@ -1418,7 +1418,7 @@ static int AddMetaTriangleToSurface( mapDrawSurface_t *ds, metaTriangle_t *tri, 
 		return 0;
 
 	/* planar surfaces will only merge with triangles in the same plane */
-	if( npDegrees <= 0.0f && ds->shaderInfo->nonplanar == qfalse && ds->smoothNormals == 0 && ds->planeNum >= 0 )
+	if( npDegrees <= 0.0f && ds->shaderInfo && ds->shaderInfo->nonplanar == qfalse && ds->smoothNormals == 0 && ds->planeNum >= 0 )
 	{
 		if( VectorCompare( mapplanes[ ds->planeNum ].normal, tri->plane ) == qfalse || mapplanes[ ds->planeNum ].dist != tri->plane[3] )
 			return 0;
@@ -1431,7 +1431,7 @@ static int AddMetaTriangleToSurface( mapDrawSurface_t *ds, metaTriangle_t *tri, 
 	score = (tri->ds == ds) ? SURFACE_SCORE : 0;
 	
 	/* score the the dot product of lightmap axis to plane */
-	if( (ds->shaderInfo->compileFlags & C_VERTEXLIT) || VectorCompare( ds->lightmapAxis, tri->lightmapAxis ) )
+	if(ds->shaderInfo && ((ds->shaderInfo->compileFlags & C_VERTEXLIT) || VectorCompare( ds->lightmapAxis, tri->lightmapAxis )) )
 		score += AXIS_SCORE;
 	else
 		score += AXIS_SCORE * DotProduct( ds->lightmapAxis, tri->plane );
@@ -1463,7 +1463,7 @@ static int AddMetaTriangleToSurface( mapDrawSurface_t *ds, metaTriangle_t *tri, 
 	AddPointToBounds( metaVerts[ tri->indexes[ 2 ] ].xyz, mins, maxs );
 	
 	/* check lightmap bounds overflow (after at least 1 triangle has been added) */
-	if( !(ds->shaderInfo->compileFlags & C_VERTEXLIT) && ds->numIndexes > 0 && !VectorIsNull( ds->lightmapAxis ) &&(VectorCompare( ds->mins, mins ) == qfalse || VectorCompare( ds->maxs, maxs ) == qfalse) )
+	if(ds->shaderInfo && (!(ds->shaderInfo->compileFlags & C_VERTEXLIT) && ds->numIndexes > 0 && !VectorIsNull( ds->lightmapAxis ) &&(VectorCompare( ds->mins, mins ) == qfalse || VectorCompare( ds->maxs, maxs ) == qfalse)) )
 	{
 		/* set maximum size before lightmap scaling (normally 2032 units) */
 		/* 2004-02-24: scale lightmap test size by 2 to catch larger brush faces */

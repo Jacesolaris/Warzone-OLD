@@ -181,10 +181,14 @@ static void FixBrushSides( entity_t *e )
 			//%	Sys_FPrintf( SYS_VRB, "DS: %7d Side: %7d     ", ds->outputNum, sideRef->side->outputNum );
 			
 			/* set shader */
-			if( strcmp( bspShaders[ side->shaderNum ].shader, ds->shaderInfo->shader ) )
+			if(ds->shaderInfo && strcmp( bspShaders[ side->shaderNum ].shader, ds->shaderInfo->shader ) )
 			{
 				//%	Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", bspShaders[ side->shaderNum ].shader, ds->shaderInfo->shader );
 				side->shaderNum = EmitShader( ds->shaderInfo->shader, &ds->shaderInfo->contentFlags, &ds->shaderInfo->surfaceFlags );
+			}
+			else if (!ds->shaderInfo)
+			{
+				side->shaderNum = 0;
 			}
 		}
 	}
