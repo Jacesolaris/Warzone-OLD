@@ -896,9 +896,13 @@ void FOLIAGE_Setup_Foliage_Areas(void)
 		if (mins[1] > mapMaxs[1]) break; // found our last area...
 
 		FOLIAGE_AREAS_LIST_COUNT[areaNum] = 0;
-		FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum] = 0;
-		FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] = 0;
-		FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
+		
+		if (MAP_HAS_TREES)
+		{
+			FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum] = 0;
+			FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] = 0;
+			FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
+		}
 
 		while (FOLIAGE_AREAS_LIST_COUNT[areaNum] == 0 && mins[1] <= mapMaxs[1])
 		{// While loop is so we can skip zero size areas for speed...
@@ -2083,7 +2087,7 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 			VectorSet(FOLIAGE_NORMALS[i], 0, 0, 0);
 		}
 
-		if (FOLIAGE_TREE_SELECTION[i] > 0)
+		if (FOLIAGE_TREE_SELECTION && FOLIAGE_TREE_SELECTION[i] > 0)
 		{
 			MAP_HAS_TREES = qtrue;
 		}
