@@ -904,7 +904,7 @@ static unsigned int RB_CalcShaderVertexAttribs( const shader_t *shader )
 
 	if(glState.vertexAnimation)
 	{
-		vertexAttribs &= ~ATTR_COLOR;
+		//vertexAttribs &= ~ATTR_COLOR;
 		vertexAttribs |= ATTR_POSITION2;
 		if (vertexAttribs & ATTR_NORMAL)
 		{
@@ -1862,6 +1862,9 @@ void RB_UpdateCloseLights ( void )
 
 		if (distance > 4096.0) continue; // Don't even check at this range. Traces are costly!
 
+		float x, y;
+		WorldCoordToScreenCoord(dl->origin, &x, &y);
+
 		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
 		{// Have free light slots for a new light...
 			vec3_t from;
@@ -1871,12 +1874,6 @@ void RB_UpdateCloseLights ( void )
 			{
 				continue;
 			}
-
-			float x, y;
-			WorldCoordToScreenCoord(dl->origin, &x, &y);
-
-			//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-			//	continue;
 
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
@@ -1916,12 +1913,6 @@ void RB_UpdateCloseLights ( void )
 				{
 					continue;
 				}
-
-				float x, y;
-				WorldCoordToScreenCoord(dl->origin, &x, &y);
-
-				//if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-				//	continue;
 
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
