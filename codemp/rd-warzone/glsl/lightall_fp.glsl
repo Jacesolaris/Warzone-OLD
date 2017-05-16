@@ -224,6 +224,8 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	N.xyz = pow(N.xyz, vec3(2.0));
 	N.xyz *= 0.8;
 
+	vec3 N2 = N;
+
 	// Centralize the color, then stretch, generating lots of contrast...
 	N.rgb = N.rgb * 0.5 + 0.5;
 	AddContrast(N.rgb);
@@ -233,9 +235,15 @@ vec4 ConvertToNormals ( vec4 colorIn )
 #define const_2 (255.0 / 219.0)
 	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
-	vec4 norm = vec4(N, displacement);
-
-	return norm * colorIn.a;
+	//vec4 norm = vec4((N + N2 + (1.0 - N.brg)) / 3.0, displacement);
+	vec4 norm = vec4((N + N2) / 2.0, displacement);
+	//norm.z = dot(N.xyz, 1.0 - N2.xyz);
+	//norm.z = sqrt(clamp((1.0 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
+	//norm.z = (N.x + N.y) / 2.0;
+	norm.rgb = norm.rbg;
+	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
+	//return norm;// * colorIn.a;
+	return vec4(vec3(1.0)-norm.rgb * 0.5, norm.a);
 }
 
 
@@ -707,6 +715,21 @@ void main()
 #endif //defined(USE_TRI_PLANAR)
 
 #if 0
+	vec3 debugColor;
+
+	if (USE_VERTEX_ANIM == 1.0)
+	{
+		debugColor = vec3(1.0, 0.0, 0.0);
+	}
+	else if (USE_SKELETAL_ANIM == 1.0)
+	{
+		debugColor = vec3(0.0, 1.0, 0.0);
+	}
+	else
+	{
+		debugColor = vec3(0.0, 0.0, 1.0);
+	}
+
 	gl_FragColor = vec4(debugColor, 1.0);
 
 	#if defined(USE_GLOW_BUFFER)
@@ -822,14 +845,15 @@ void main()
 
 	//if (u_Local4.r <= 0.0)
 	//{
-		norm = ConvertToNormals(diffuse * var_Color.rgba);
+		norm = ConvertToNormals(diffuse /** (var_Color.rgba * 0.5 + 0.5)*/);
 	//}
 	//else
 	//{
 	//	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 	//}
 
-	N.xy = norm.xy * 2.0 - 1.0;
+	//N.xy = norm.xy * 2.0 - 1.0;
+	N.xyz = norm.xyz * 2.0 - 1.0;
 	N.xy *= 0.25;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
@@ -859,8 +883,8 @@ void main()
 		lightColor	= lightmapColor.rgb * lmBrightMult;
 
 		ambientColor = lightColor;
-		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
-		lightColor /= max(surfNL, 0.25);
+		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz) /** u_Local9.g*/, 0.0, 1.0);
+		lightColor /= max(surfNL, 0.35/*u_Local9.r*//*0.25*/);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
 

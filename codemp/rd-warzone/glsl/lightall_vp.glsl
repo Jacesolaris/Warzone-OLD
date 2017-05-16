@@ -301,8 +301,10 @@ void main()
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-		normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
-		tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
+		//normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
+		//tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
+		normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp);
+		tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
 	}
 	else if (USE_SKELETAL_ANIM == 1.0)
 	{
@@ -310,7 +312,7 @@ void main()
 		vec4 normal4 = vec4(0.0);
 		vec4 tangent4 = vec4(0.0);
 		vec4 originalPosition = vec4(attr_Position, 1.0);
-		vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
+		vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
 		vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
 		for (int i = 0; i < 4; i++)
@@ -360,7 +362,7 @@ void main()
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
 	vec3 preMMPos = position.xyz;
-
+	vec3 preMMNorm = normal.xyz;
 
 	if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
 	{
@@ -370,10 +372,6 @@ void main()
 	}
 
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
-
-
-	vec3 preMMNorm = normal.xyz;
-
 
 
 #if defined(USE_LIGHTMAP)
