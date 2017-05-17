@@ -50,6 +50,8 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	N.xyz = pow(N.xyz, vec3(2.0));
 	N.xyz *= 0.8;
 
+	vec3 N2 = N;
+
 	// Centralize the color, then stretch, generating lots of contrast...
 	N.rgb = N.rgb * 0.5 + 0.5;
 	AddContrast(N.rgb);
@@ -59,9 +61,15 @@ vec4 ConvertToNormals ( vec4 colorIn )
 #define const_2 (255.0 / 219.0)
 	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
-	vec4 norm = vec4(N, displacement);
-
-	return norm * colorIn.a;
+	//vec4 norm = vec4((N + N2 + (1.0 - N.brg)) / 3.0, displacement);
+	vec4 norm = vec4((N + N2) / 2.0, displacement);
+	//norm.z = dot(N.xyz, 1.0 - N2.xyz);
+	//norm.z = sqrt(clamp((1.0 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
+	//norm.z = (N.x + N.y) / 2.0;
+	norm.rgb = norm.rbg;
+	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
+	//return norm;// * colorIn.a;
+	return vec4(vec3(1.0)-norm.rgb * 0.5, norm.a);
 }
 
 void main(void)

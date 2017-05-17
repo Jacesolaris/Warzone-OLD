@@ -34,6 +34,8 @@ uniform vec4		u_MapInfo;				// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE
 
 uniform vec4		u_Local0;				// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER
+uniform vec4		u_Local2;				// WATER_COLOR_SHALLOW_R, WATER_COLOR_SHALLOW_G, WATER_COLOR_SHALLOW_B
+uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLOR_DEEP_B
 uniform vec4		u_Local10;				// waveHeight, waveDensity
 
 uniform vec2		u_Dimensions;
@@ -76,7 +78,8 @@ const float R0 = 0.5;
 #define waveDensity u_Local10.g
 
 // Colour of the sun
-vec3 sunColor = u_PrimaryLightColor.rgb;
+//vec3 sunColor = (u_PrimaryLightColor.rgb + vec3(1.0) + vec3(1.0) + vec3(1.0)) / 4.0; // 1/4 real sun color, 3/4 white...
+vec3 sunColor = vec3(1.0);
 
 // The smaller this value is, the more soft the transition between
 // shore and water. If you want hard edges use very big value.
@@ -108,12 +111,12 @@ const float specularScale = 0.07;
 
 
 // Colour of the water surface
-const vec3 depthColour = vec3(0.0078, 0.5176, 0.7);
+//const vec3 waterColorShallow = vec3(0.0078, 0.5176, 0.7);
+vec3 waterColorShallow = u_Local2.rgb;
 
 // Colour of the water depth
-//const vec3 bigDepthColour = vec3(0.0059, 0.3096, 0.445);
-const vec3 bigDepthColour = vec3(0.0059, 0.1276, 0.18);
-//vec3 bigDepthColour = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
+//const vec3 waterColorDeep = vec3(0.0059, 0.1276, 0.18);
+vec3 waterColorDeep = u_Local3.rgb;
 
 //const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
 //const vec3 extinction = vec3(7.0, 96.0, 128.0);			// Horizontal
@@ -626,7 +629,7 @@ void main ( void )
 		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * refractionScale;
 
 		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
-		gl_FragColor = vec4(mix(depthColour, refraction, 0.7), 1.0);
+		gl_FragColor = vec4(mix(waterColorShallow, refraction, 0.7), 1.0);
 		return;
 	}
 
@@ -690,7 +693,7 @@ void main ( void )
 			if (position.y <= level)
 			{// This pixel is below the water line... Fast path...
 				vec3 waterCol = clamp(length(sunColor) / vec3(sunScale), 0.0, 1.0);
-				waterCol = waterCol * mix(depthColour, bigDepthColour, clamp(depth2 / extinction, 0.0, 1.0));
+				waterCol = waterCol * mix(waterColorShallow, waterColorDeep, clamp(depth2 / extinction, 0.0, 1.0));
 
 				color2 = color2 - color2 * clamp(depth2 / extinction, 0.0, 1.0);
 				color = mix(color2, waterCol, clamp(depthN / visibility, 0.0, 1.0));
@@ -765,8 +768,8 @@ void main ( void )
 
 		float waterCol = clamp(length(sunColor) / sunScale, 0.0, 1.0);
 		
-		vec3 refraction1 = mix(refraction, depthColour * vec3(waterCol), clamp(vec3(depthN) / vec3(visibility), 0.0, 1.0));
-		refraction = mix(refraction1, bigDepthColour * vec3(waterCol), clamp(vec3(depth2) / vec3(extinction), 0.0, 1.0));
+		vec3 refraction1 = mix(refraction, waterColorShallow * vec3(waterCol), clamp(vec3(depthN) / vec3(visibility), 0.0, 1.0));
+		refraction = mix(refraction1, waterColorDeep * vec3(waterCol), clamp(vec3(depth2) / vec3(extinction), 0.0, 1.0));
 
 		vec4 foam = vec4(0.0);
 
@@ -821,15 +824,15 @@ void main ( void )
 		/* TESTING */
 		vec3 dist = -eyeVecNorm;
 
-		color = mix(refraction, bigDepthColour, fresnel);
+		color = mix(refraction, waterColorDeep, fresnel);
 
 		float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
-		color += depthColour.rgb * (clamp(waveHeight - waterMapLower.y, 0.0, 1.0))* 0.18 * atten;
+		color += waterColorShallow.rgb * (clamp(waveHeight - waterMapLower.y, 0.0, 1.0))* 0.18 * atten;
 
 		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
 		/* END - TESTING */
 #else
-		color = mix(refraction, bigDepthColour, fresnel);
+		color = mix(refraction, waterColorDeep, fresnel);
 #endif
 
 #if defined(USE_REFLECTION)

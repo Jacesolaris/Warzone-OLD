@@ -3036,6 +3036,17 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, normalFlags);
+
+	if (!SubsurfaceImage)
+	{
+		char SubsurfaceName2[MAX_IMAGE_PATH];
+
+		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
+		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_steep1");
+
+		// find normalmap in case it's there
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP, normalFlags);
+	}
 }
 
 static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int height, int flags )
@@ -3047,10 +3058,21 @@ static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int heig
 	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
-	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_steep2");
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_riverbed");
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP2, normalFlags);
+
+	if (!SubsurfaceImage)
+	{
+		char SubsurfaceName2[MAX_IMAGE_PATH];
+
+		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
+		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_steep2");
+
+		// find normalmap in case it's there
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP2, normalFlags);
+	}
 }
 
 static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, int height, int flags )
@@ -3066,6 +3088,17 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 	
 	// find normalmap in case it's there
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATCONTROLMAP, normalFlags);
+
+	if (!SubsurfaceImage)
+	{
+		char SubsurfaceName2[MAX_IMAGE_PATH];
+
+		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
+		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_splatControl");
+
+		// find normalmap in case it's there
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_SPLATCONTROLMAP, normalFlags);
+	}
 }
 
 static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int height, int flags )

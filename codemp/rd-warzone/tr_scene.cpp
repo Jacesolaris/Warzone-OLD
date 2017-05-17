@@ -536,6 +536,11 @@ extern void FOLIAGE_DrawGrass(void);
 extern void RB_AddGlowShaderLights(void);
 extern void RB_UpdateCloseLights();
 
+extern vec3_t		SUN_COLOR_MAIN;
+extern vec3_t		SUN_COLOR_SECONDARY;
+extern vec3_t		SUN_COLOR_TERTIARY;
+extern vec3_t		SUN_COLOR_AMBIENT;
+
 void RE_BeginScene(const refdef_t *fd)
 {
 	Com_Memcpy(tr.refdef.text, fd->text, sizeof(tr.refdef.text));
@@ -631,6 +636,7 @@ void RE_BeginScene(const refdef_t *fd)
 				VectorNormalize(tr.sunDirection);
 				VectorCopy(tr.sunDirection, tr.refdef.sunDir);
 
+				/*
 				tr.refdef.sunCol[0] =
 					tr.refdef.sunCol[1] =
 					tr.refdef.sunCol[2] = 1.0f;
@@ -638,9 +644,14 @@ void RE_BeginScene(const refdef_t *fd)
 				tr.refdef.sunAmbCol[0] =
 					tr.refdef.sunAmbCol[1] =
 					tr.refdef.sunAmbCol[2] = ambCol;
+				*/
+
+				VectorCopy(SUN_COLOR_MAIN, tr.refdef.sunCol);
+				VectorCopy(SUN_COLOR_AMBIENT, tr.refdef.sunAmbCol);
 			}
 			else
 			{
+				/*
 				tr.refdef.sunCol[0] =
 					tr.refdef.sunCol[1] =
 					tr.refdef.sunCol[2] = 1.0f;
@@ -648,6 +659,10 @@ void RE_BeginScene(const refdef_t *fd)
 				tr.refdef.sunAmbCol[0] =
 					tr.refdef.sunAmbCol[1] =
 					tr.refdef.sunAmbCol[2] = ambCol;
+				*/
+
+				VectorCopy(SUN_COLOR_MAIN, tr.refdef.sunCol);
+				VectorCopy(SUN_COLOR_AMBIENT, tr.refdef.sunAmbCol);
 			}
 #endif //__DAY_NIGHT__
 		}

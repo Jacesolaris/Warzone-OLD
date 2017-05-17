@@ -9,6 +9,8 @@ uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec2		u_Dimensions;
 
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
+uniform vec4		u_Local2;		// FOG_COLOR
+uniform vec4		u_Local3;		// FOG_COLOR_SUN
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec3		u_ViewOrigin;
@@ -91,8 +93,14 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 		sunAmount = 0.0;
 	}
 
+	/*
     vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
                            vec3(1.0,0.9,0.7), // yellowish
+                           pow(sunAmount,8.0) );
+	*/
+
+	vec3  fogColor  = mix( u_Local2.rgb, // bluish
+                           u_Local3.rgb, // yellowish
                            pow(sunAmount,8.0) );
 
 	return mix( rgb, fogColor, fogAmount );

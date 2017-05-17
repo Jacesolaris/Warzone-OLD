@@ -61,7 +61,7 @@ uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, swa
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4				u_Local8; // stageNum, glowStrength, 0, 0
+uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], 0
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define WATER_LEVEL			u_Local6.a
@@ -283,103 +283,24 @@ void AddDetail(inout vec4 color, in vec2 tc)
 vec4 GetControlMap( sampler2D tex, float scale)
 {
 	vec2 tScale = vec2(1.0);
-	//if (u_textureScale.x > 0.0) tScale.x = u_textureScale.x;
-	//if (u_textureScale.y > 0.0) tScale.y = u_textureScale.y;
 	
+#if defined(USE_REGIONS)
+	// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
+#define SNOW_HEIGHT_STRENGTH 0.25
+	float maxHeightOverWater = u_Local8.b - u_Local6.a;
+	float currentheightOverWater = u_Local8.b - m_vertPos.z;
+	float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH/*u_Local9.r*/);
+	float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
+	vec4 xaxis = textureLod( tex, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+	vec4 yaxis = textureLod( tex, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+	vec4 zaxis = textureLod( tex, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+#else //!defined(USE_REGIONS)
 	vec4 xaxis = textureLod( tex, (m_vertPos.yz * tScale * scale) * 0.5 + 0.5, 0.0);
 	vec4 yaxis = textureLod( tex, (m_vertPos.xz * tScale * scale) * 0.5 + 0.5, 0.0);
 	vec4 zaxis = textureLod( tex, (m_vertPos.xy * tScale * scale) * 0.5 + 0.5, 0.0);
-
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-}
-#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
-
-#if defined(USE_REGIONS)
-float region1min = 0.0;
-float region1max = 0.5;
-
-float region2min = 0.5;
-float region2max = 0.7;
-
-float region3min = 0.7;
-float region3max = 0.85;
-
-float region4min = 0.85;
-float region4max = 1.0;
-
-#define region1ColorMap u_DiffuseMap
-#define region2ColorMap u_SplatMap1
-#define region3ColorMap u_SplatMap2
-#define region4ColorMap u_SplatMap3
-
-vec4 GenerateTerrainMap(vec2 coord)
-{
-	vec4 controlMap = GetControlMap(u_SplatControlMap, 1.0 / u_Local6.b /* control scale */);
-    vec4 terrainColor = vec4(0.0, 0.0, 0.0, 1.0);
-    float height = clamp(length(controlMap.rgb) * 3.0, 0.0, 1.0);
-    float regionMin = 0.0;
-    float regionMax = 0.0;
-    float regionRange = 0.0;
-    float regionWeight = 0.0;
-
-    // Terrain region 1.
-    regionMin = region1min;
-    regionMax = region1max;
-    regionRange = regionMax - regionMin;
-    regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-    regionWeight = max(0.0, regionWeight);
-    terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-    // Terrain region 2.
-    regionMin = region2min;
-    regionMax = region2max;
-    regionRange = regionMax - regionMin;
-    regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-    regionWeight = max(0.0, regionWeight);
-	if (u_Local7.r > 0.0)
-		terrainColor += regionWeight * texture2D(region2ColorMap, coord);
-	else
-		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-    // Terrain region 3.
-    regionMin = region3min;
-    regionMax = region3max;
-    regionRange = regionMax - regionMin;
-    regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-    regionWeight = max(0.0, regionWeight);
-	if (u_Local7.g > 0.0)
-		terrainColor += regionWeight * texture2D(region3ColorMap, coord);
-	else
-		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-    // Terrain region 4.
-    regionMin = region4min;
-    regionMax = region4max;
-    regionRange = regionMax - regionMin;
-    regionWeight = (regionRange - abs(height - regionMax)) / regionRange;
-    regionWeight = max(0.0, regionWeight);
-	if (u_Local7.b > 0.0)
-		terrainColor += regionWeight * texture2D(region4ColorMap, coord);
-	else
-		terrainColor += regionWeight * texture2D(region1ColorMap, coord);
-
-    return terrainColor;
-}
 #endif //defined(USE_REGIONS)
-
-#if defined(USE_TRI_PLANAR)
-vec3 vLocalSeed;
-
-// This function returns random number from zero to one
-float randZeroOne()
-{
-    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
-    n = n * (n * n * 15731u + 789221u);
-    n = (n >> 9u) | 0x3F800000u;
-
-    float fRes =  2.0 - uintBitsToFloat(n);
-    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-    return fRes;
 }
 
 // For fake normal map lookups.
@@ -409,6 +330,11 @@ vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType
 	vec2 tScale = vec2(1.0);
 	//if (u_textureScale.x > 0.0) tScale.x = u_textureScale.x;
 	//if (u_textureScale.y > 0.0) tScale.y = u_textureScale.y;
+
+	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	{
+		tScale *= u_textureScale;
+	}
 
 	if (fakeMapType == FAKE_MAP_NORMALMAP)
 	{
@@ -447,11 +373,6 @@ vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType
 	}
 
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-}
-
-vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
-{
-	return texture( tex, coord );
 }
 
 vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inColor, float inA1)
@@ -504,6 +425,39 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 	*/
 
 	return splatColor;
+}
+#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+
+#if defined(USE_REGIONS)
+vec4 GenerateTerrainMap(vec2 coord)
+{
+	// Splat mapping...
+#define SNOW_HEIGHT 0.001
+	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/, vec2(0.0), FAKE_MAP_NONE);
+	float a1 = 0.0;
+	a1 = ConvertToNormals(tex).a;
+	return GetSplatMap(coord, vec2(0.0), 0.0, tex, a1);
+}
+#endif //defined(USE_REGIONS)
+
+#if defined(USE_TRI_PLANAR)
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+    n = n * (n * n * 15731u + 789221u);
+    n = (n >> 9u) | 0x3F800000u;
+
+    float fRes =  2.0 - uintBitsToFloat(n);
+    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+    return fRes;
+}
+
+vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
+{
+	return texture( tex, coord );
 }
 
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
@@ -717,6 +671,8 @@ void main()
 #if 0
 	vec3 debugColor;
 
+	
+	/*
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		debugColor = vec3(1.0, 0.0, 0.0);
@@ -729,6 +685,27 @@ void main()
 	{
 		debugColor = vec3(0.0, 0.0, 1.0);
 	}
+	*/
+	
+	/*if (USE_TC == 1.0)
+	{
+		debugColor = vec3(1.0, 0.0, 0.0);
+	}
+	else if (USE_DEFORM == 1.0)
+	{
+		debugColor = vec3(0.0, 1.0, 0.0);
+	}
+	else if (USE_RGBA == 1.0)
+	{
+		debugColor = vec3(1.0, 1.0, 1.0);
+	}
+	else
+	{
+		debugColor = vec3(0.0, 0.0, 1.0);
+	}*/
+
+	//debugColor = texture(u_SplatControlMap, m_TexCoords.xy).rgb;
+	debugColor = m_Normal.xyz;
 
 	gl_FragColor = vec4(debugColor, 1.0);
 

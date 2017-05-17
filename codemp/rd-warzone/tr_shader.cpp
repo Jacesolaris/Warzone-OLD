@@ -4532,7 +4532,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
+				////ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
 				diffuse->bundle[TB_SPECULARMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPECULARMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPECULARMAP].image[0] = specularImg;
@@ -4716,6 +4716,16 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
 			specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+
+			if (!specularImg)
+			{
+				memset(specularName, 0, sizeof(char)*MAX_IMAGE_PATH);
+				COM_StripExtension(diffuseImg->imgName, specularName2, sizeof(specularName2));
+				StripCrap(specularName, specularName2, sizeof(specularName2));
+				Q_strcat(specularName2, sizeof(specularName2), "_steep1");
+
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (specularImg)
@@ -4763,7 +4773,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
 			StripCrap( specularName, specularName2, sizeof(specularName));
-			Q_strcat( specularName2, sizeof( specularName2 ), "_steep2" );
+			Q_strcat( specularName2, sizeof( specularName2 ), "_riverbed" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2))
@@ -4776,6 +4786,16 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
 			specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP2, specularFlags);
+
+			if (!specularImg)
+			{
+				memset(specularName, 0, sizeof(char)*MAX_IMAGE_PATH);
+				COM_StripExtension(diffuseImg->imgName, specularName2, sizeof(specularName2));
+				StripCrap(specularName, specularName2, sizeof(specularName2));
+				Q_strcat(specularName2, sizeof(specularName2), "_steep2");
+
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP2, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (specularImg)
@@ -4837,6 +4857,16 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
 			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+
+			if (!splatImg)
+			{
+				memset(splatName, 0, sizeof(char)*MAX_IMAGE_PATH);
+				COM_StripExtension(diffuseImg->imgName, splatName, sizeof(splatName));
+				StripCrap(splatName, splatName2, sizeof(splatName));
+				Q_strcat(splatName2, sizeof(splatName2), "_splatControl");
+
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (splatImg)

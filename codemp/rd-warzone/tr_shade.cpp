@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 qboolean MATRIX_UPDATE = qtrue;
 qboolean CLOSE_LIGHTS_UPDATE = qtrue;
 
+extern qboolean WATER_ENABLED;
+
 color4ub_t	styleColors[MAX_LIGHT_STYLES];
 
 extern void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input);
@@ -1031,6 +1033,8 @@ void RB_AdvanceOverlaySway ( void )
 
 extern float MAP_WATER_LEVEL;
 extern float MAP_INFO_MAXSIZE;
+extern vec3_t  MAP_INFO_MINS;
+extern vec3_t  MAP_INFO_MAXS;
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum)
 {
@@ -1103,7 +1107,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			hasSplatMap4 = 1;
 		}*/
 
-		if (pStage->isWater && r_glslWater->integer)
+		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 		{
 			specularScale = 1.5;
 			cubemapScale = 1.5;
@@ -1352,7 +1356,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 
 		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, r_glowStrength->value, 0.0, 0.0);
+		VectorSet4(local8, (float)stageNum, r_glowStrength->value, MAP_INFO_MAXS[2], 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 	else
@@ -1944,6 +1948,10 @@ void RB_UpdateCloseLights ( void )
 
 extern image_t *skyImage;
 
+extern vec3_t		SUN_COLOR_MAIN;
+extern vec3_t		SUN_COLOR_SECONDARY;
+extern vec3_t		SUN_COLOR_TERTIARY;
+
 float waveTime = 0.5;
 float waveFreq = 0.1;
 
@@ -2210,7 +2218,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		float useVertexAnim = 0.0;
 		float useSkeletalAnim = 0.0;
 
-		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
 			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 			{
@@ -2969,6 +2977,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
+			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+			{
+				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
+				{
+					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
+					GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
+				}
+				else
+				{
+					GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
+				}
+			}
+
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -3126,28 +3147,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				*/
 			}
 
-			if ((isGrass || isPebbles) && passNum > 0)
-			{// Use grass map...
-
-			}
-			else
-			{
-				if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
-				{
-					if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
-					{
-						//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
-						GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
-					}
-					else
-					{
-						//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
-						GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
-					}
-				}
-			}
-
-			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
@@ -3212,7 +3212,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
-			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
@@ -3220,6 +3220,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					VectorSet4(passInfo, /*passNum*/0.0, r_waterWaveHeight->value, 0.0, 0.0);
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
 				}
+			}
+
+			if (r_proceduralSun->integer && tess.shader == tr.sunShader)
+			{// Procedural sun...
+				vec4_t loc;
+				VectorSet4(loc, SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, loc);
+
+				VectorSet4(loc, SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, loc);
+
+				VectorSet4(loc, SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, loc);
+
+				GL_Cull(CT_TWO_SIDED);
 			}
 
 			UpdateTexCoords (pStage);
@@ -3239,7 +3254,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
 			}
 
-			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 			{// Unattach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
@@ -3414,12 +3429,12 @@ void RB_StageIteratorGeneric( void )
 	// UQ1: Set up any special shaders needed for this surface/contents type...
 	//
 
-	if ((tess.shader->isWater && r_glslWater->integer)
+	if ((tess.shader->isWater && r_glslWater->integer && WATER_ENABLED)
 		|| (tess.shader->contentFlags & CONTENTS_WATER)
 		/*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/
 		|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 	{
-		if (input && input->xstages[0] && input->xstages[0]->isWater == 0 && r_glslWater->integer) // In case it is already set, no need looping more then once on the same shader...
+		if (input && input->xstages[0] && input->xstages[0]->isWater == 0 && r_glslWater->integer && WATER_ENABLED) // In case it is already set, no need looping more then once on the same shader...
 		{
 			int isWater = 1;
 

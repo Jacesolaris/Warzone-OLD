@@ -1,5 +1,9 @@
 #if defined(rd_warzone_x86_EXPORTS) || defined(DEDICATED) || defined(jampgamex86_EXPORTS) || defined(cgamex86_EXPORTS) || defined(uix86_EXPORTS)
 
+
+//#define __INI_DEBUG__
+
+
 //
 // Mixing C and C++ in one codebase is soooooo annoying!!!!
 //
@@ -12,10 +16,15 @@
 
 #if defined(rd_warzone_x86_EXPORTS)
 #include "tr_local.h"
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qfiles.h"
+#include "../qcommon/qcommon.h"
 #include "../rd-common/tr_public.h"
+#include "../rd-common/tr_common.h"
 int FS_FOpenFileByMode(const char *qpath, fileHandle_t *f, fsMode_t mode)
 {
-	return ri->FS_FOpenFileByMode(va("warzone/%s", qpath), f, mode);
+	//return ri->FS_FOpenFileByMode(va("warzone/%s", qpath), f, mode);
+	return ri->FS_FOpenFileRead(qpath, f, qfalse);
 }
 //#define FS_FOpenFileByMode ri->FS_FOpenFileByMode
 #define FS_Read ri->FS_Read
@@ -46,6 +55,23 @@ extern int FS_Read( void *buffer, int len, fileHandle_t f );
 extern int FS_Write( const void *buffer, int len, fileHandle_t h );
 extern void FS_FCloseFile( fileHandle_t f );
 #endif
+
+void DebugPrint(char *text)
+{
+#ifdef __INI_DEBUG__
+
+#if defined(rd_warzone_x86_EXPORTS)
+	ri->Printf(PRINT_ALL, text);
+#elif defined(_CGAME) || defined(_GAME) || defined(uix86_EXPORTS)
+	trap->Print(text);
+#elif defined(DEDICATED)
+	Com_Printf(text);
+#else
+	Com_Printf(text);
+#endif
+
+#endif //__INI_DEBUG__
+}
 
 char FS_GetC(fileHandle_t fp)
 {
@@ -101,22 +127,41 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 	char *ep;
 	char t_section[MAX_LINE_LENGTH] = { 0 };
 	int len = strlen(entry);
-
+	
 	int fpLen = FS_FOpenFileByMode(file_name, &fp, FS_READ);
 
-	if (!fp || !fpLen) return(0);
+	if (!fp || !fpLen)
+	{
+#ifdef __INI_DEBUG__
+		DebugPrint(">> File not found, or zero length.\n");
+#endif //__INI_DEBUG__
+		return(0);
+	}
 
 	sprintf(t_section, "[%s]", section);    /* Format the section name */
+
+#ifdef __INI_DEBUG__
+	DebugPrint(va(">> Searching for: [section] %s [key] %s\n", section, entry));
+#endif //__INI_DEBUG__
 
 	/*  Move through file 1 line at a time until a section is matched or EOF */
 	do
 	{
 		if (!read_line(fp, buff))
 		{
+#ifdef __INI_DEBUG__
+			DebugPrint(">> File end looking for section.\n");
+#endif //__INI_DEBUG__
+
 			FS_FCloseFile(fp);
 			strncpy(buffer, def, buffer_len);
 			return(strlen(buffer));
 		}
+
+#ifdef __INI_DEBUG__
+		DebugPrint(va(">> Line: %s", buff));
+#endif //__INI_DEBUG__
+
 	} while (strncmp(buff, t_section, strlen(t_section)));
 
 	/* Now that the section has been found, find the entry.
@@ -125,34 +170,39 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 	{
 		if (!read_line(fp, buff) || buff[0] == '\0')
 		{
+#ifdef __INI_DEBUG__
+			DebugPrint(">> File end looking for key.\n");
+#endif //__INI_DEBUG__
+
 			FS_FCloseFile(fp);
 			strncpy(buffer, def, buffer_len);
 			return(strlen(buffer));
 		}
+
+#ifdef __INI_DEBUG__
+		DebugPrint(va(">> Line: %s", buff));
+#endif //__INI_DEBUG__
+
 	} while (strncmp(buff, entry, len));
 
 	ep = strrchr(buff, '=');    /* Parse out the equal sign */
 	ep++;
 
 	/* Copy up to buffer_len chars to buffer */
+#if defined(rd_warzone_x86_EXPORTS) 
+	strncpy(buffer, ep, strlen(ep)); // WTF OJK, Why does the render version strip the newlines... the others don't! lol
+#else
 	strncpy(buffer, ep, strlen(ep) - 1); // -1 to remove the trailing \n
+#endif
 
 	FS_FCloseFile(fp);               /* Clean up and return the amount copied */
 
-	return(strlen(buffer));
-}
+#ifdef __INI_DEBUG__
+	DebugPrint(va(">> [ep] %s. [count] %i.\n", ep, strlen(ep) - 1));
+	DebugPrint(va(">> Found: %s\n", buffer));
+#endif //__INI_DEBUG__
 
-void DebugPrint(char *text)
-{
-#if defined(rd_warzone_x86_EXPORTS)
-	ri->Printf(PRINT_ALL, text);
-#elif defined(_CGAME) || defined(_GAME) || defined(uix86_EXPORTS)
-	trap->Print(text);
-#elif defined(DEDICATED)
-	Com_Printf(text);
-#else
-	Com_Printf(text);
-#endif
+	return(strlen(buffer));
 }
 
 void DumpIniData(char *file_name, char *buffer)
@@ -344,13 +394,18 @@ PLAYER_HEALTH = atoi(IniRead("general.ini","PLAYER_SETTINGS","PLAYER_HEALTH","10
 const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 {
 	const char *value = IniReadCPP(aFilespec, aSection, aKey, aDefault);
-	/*#ifdef _GAME
-		trap->Print("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value);
-		#endif*/
+	
 	if (value[0] == '\0' || !strcmp(value, "") || !strcmp(value, aDefault))
 	{
+#ifdef __INI_DEBUG__
+		DebugPrint(va("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, aDefault));
+#endif //__INI_DEBUG__
 		return aDefault;
 	}
+
+#ifdef __INI_DEBUG__
+	DebugPrint(va("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value));
+#endif //__INI_DEBUG__
 
 	return value;
 }

@@ -7,7 +7,9 @@ uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapSca
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, shadowPass
-uniform vec4	u_Local9;
+uniform vec4	u_Local7; // SUN_COLOR_MAIN
+uniform vec4	u_Local8; // SUN_COLOR_SECONDARY
+uniform vec4	u_Local9; // SUN_COLOR_TERTIARY
 
 uniform float	u_Time;
 
@@ -24,14 +26,14 @@ out vec4 out_Glow;
 
 
 /*
-const vec3 sunColor1 = vec3(1.0,1.0,0.0);
-const vec3 sunColor2 = vec3(1.0,0.0,0.0);
-const vec3 sunColor3 = vec3(1.0,0.0,1.0);
-*/
-
 const vec3 sunColor1 = vec3(1.0,0.7,0.0);
 const vec3 sunColor2 = vec3(0.3,0.2,0.0);
 const vec3 sunColor3 = vec3(0.2,0.1,1.0);
+*/
+
+vec3 sunColor1 = u_Local7.rgb;
+vec3 sunColor2 = u_Local8.rgb;
+vec3 sunColor3 = u_Local9.rgb;
 
 // animated noise
 vec4 NC0=vec4(0.0,157.0,113.0,270.0);
@@ -204,11 +206,11 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
     
     float s1=noiseSpere(ray,pos,1.0,mr,0.5,vec3(0.0),time);
     s1=pow(min(1.0,s1*2.4),2.0);
-	s1 *= 0.25;//u_Local9.r;
+	s1 *= 0.25;
 
     float s2=noiseSpere(ray,pos,1.0,mr,4.0,vec3(83.23,34.34,67.453),time);
     s2=min(1.0,s2*2.2);
-	s2 *= 0.7;//u_Local9.g;
+	s2 *= 0.7;
 
     fragColor = vec4( mix(sunColor1,vec3(1.0),pow(s1,60.0))*s1, 1.0 );
     fragColor += vec4( mix(mix(sunColor2,sunColor3,pow(s2,2.0)),vec3(1.0),pow(s2,10.0))*s2, 1.0 );
@@ -238,6 +240,6 @@ void main()
 {
 	vec2 texCoords = m_TexCoords.xy * u_Dimensions.xy;
 	getSun( gl_FragColor, texCoords );
-	gl_FragColor.rgb *= 2.0;//u_Local9.a;
+	gl_FragColor.rgb *= 2.0;
 	out_Glow = gl_FragColor;
 }

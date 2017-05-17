@@ -1957,13 +1957,16 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.rbmShader, color, 0);
 }
 
-extern float MAP_WATER_LEVEL;
-extern vec3_t  MAP_INFO_MINS;
-extern vec3_t  MAP_INFO_MAXS;
-extern vec3_t	MAP_INFO_SIZE;
-extern vec3_t	MAP_INFO_PIXELSIZE;
-extern vec3_t	MAP_INFO_SCATTEROFFSET;
-extern float	MAP_INFO_MAXSIZE;
+extern float		MAP_WATER_LEVEL;
+extern vec3_t		MAP_INFO_MINS;
+extern vec3_t		MAP_INFO_MAXS;
+extern vec3_t		MAP_INFO_SIZE;
+extern vec3_t		MAP_INFO_PIXELSIZE;
+extern vec3_t		MAP_INFO_SCATTEROFFSET;
+extern float		MAP_INFO_MAXSIZE;
+
+extern vec3_t		WATER_COLOR_SHALLOW;
+extern vec3_t		WATER_COLOR_DEEP;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -2077,10 +2080,22 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
+		VectorSet4(loc, WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL3, loc);
+	}
+
+	{
+		vec4_t loc;
 		VectorSet4(loc, r_waterWaveHeight->value, r_waterWaveDensity->value, 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
-	
+
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
@@ -3161,6 +3176,9 @@ void RB_ColorCorrection(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ld
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.colorCorrectionShader, color, 0);
 }
 
+extern vec3_t		FOG_COLOR;
+extern vec3_t		FOG_COLOR_SUN;
+
 void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -3236,6 +3254,18 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		vec4_t loc;
 		VectorSet4(loc, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL1, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], 0.0);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL2, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2], 0.0);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL3, loc);
 	}
 
 

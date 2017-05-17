@@ -120,6 +120,14 @@ void R_SetupMapInfo(void)
 	MAP_INFO_MAXS[1] -= 64.0;
 	MAP_INFO_MAXS[2] -= 64.0;
 
+	if (MAP_INFO_MINS[0] == 0.0 && MAP_INFO_MINS[1] == 0.0 && MAP_INFO_MINS[2] == 0.0
+		&& MAP_INFO_MAXS[0] == 0.0 && MAP_INFO_MAXS[1] == 0.0 && MAP_INFO_MAXS[2] == 0.0)
+	{// Fallback in case the map size is not found from the surfaces above...
+		ri->Printf(PRINT_WARNING, "Couldn't find map size from map surfaces. Terrain? Using max.\n");
+		VectorSet(MAP_INFO_MINS, -128000, -128000, -128000);
+		VectorSet(MAP_INFO_MAXS, 128000, 128000, 128000);
+	}
+
 	memset(MAP_INFO_SIZE, 0, sizeof(MAP_INFO_SIZE));
 	memset(MAP_INFO_PIXELSIZE, 0, sizeof(MAP_INFO_PIXELSIZE));
 	memset(MAP_INFO_SCATTEROFFSET, 0, sizeof(MAP_INFO_SCATTEROFFSET));
@@ -135,6 +143,12 @@ void R_SetupMapInfo(void)
 
 	MAP_INFO_MAXSIZE = MAP_INFO_SIZE[0];
 	if (MAP_INFO_SIZE[1] > MAP_INFO_MAXSIZE) MAP_INFO_MAXSIZE = MAP_INFO_SIZE[1];
+
+	ri->Printf(PRINT_WARNING, "MAPINFO: maxsze: %.2f. size: %.2f %.2f %.2f. mins: %.2f %.2f %.2f. maxs: %.2f %.2f %.2f.\n",
+		MAP_INFO_MAXSIZE,
+		MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2],
+		MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2],
+		MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2]);
 }
 
 void R_CreateDefaultDetail(void)
@@ -1224,21 +1238,63 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 	return 0; //guess we never found it.
 }
 
-qboolean DAY_NIGHT_CYCLE_ENABLED = qfalse;
-qboolean SHADOWS_ENABLED = qfalse;
-qboolean FOG_POST_ENABLED = qtrue;
+qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
+vec3_t		SUN_COLOR_MAIN = { 0 };
+vec3_t		SUN_COLOR_SECONDARY = { 0 };
+vec3_t		SUN_COLOR_TERTIARY = { 0 };
+vec3_t		SUN_COLOR_AMBIENT = { 0 };
+qboolean	SHADOWS_ENABLED = qfalse;
+qboolean	FOG_POST_ENABLED = qtrue;
+vec3_t		FOG_COLOR = { 0 };
+vec3_t		FOG_COLOR_SUN = { 0 };
+qboolean	WATER_ENABLED = qtrue;
+vec3_t		WATER_COLOR_SHALLOW = { 0 };
+vec3_t		WATER_COLOR_DEEP = { 0 };
 
 void MAPPING_LoadDayNightCycleInfo ( void )
 {
-	ri->Printf(PRINT_ALL, "dir: %s.\n", va("maps/%s.mapInfo", currentMapName));
+	ri->Printf(PRINT_ALL, "Searching for mapInfo: dir: %s.\n", va("maps/%s.mapInfo", currentMapName));
 
 	int dayNightEnableValue = atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_ENABLED", "0"));
 
 	DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
 
+	if (!DAY_NIGHT_CYCLE_ENABLED)
+	{// Also check under SUN section...
+		dayNightEnableValue = atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "DAY_NIGHT_CYCLE_ENABLED", "0"));
+		DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
+	}
+
+	SUN_COLOR_MAIN[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_R", "1.0"));
+	SUN_COLOR_MAIN[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_G", "0.7"));
+	SUN_COLOR_MAIN[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_B", "0.0"));
+	SUN_COLOR_SECONDARY[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_SECONDARY_R", "0.3"));
+	SUN_COLOR_SECONDARY[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_SECONDARY_G", "0.2"));
+	SUN_COLOR_SECONDARY[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_SECONDARY_B", "0.0"));
+	SUN_COLOR_TERTIARY[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_TERTIARY_R", "0.2"));
+	SUN_COLOR_TERTIARY[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_TERTIARY_G", "0.1"));
+	SUN_COLOR_TERTIARY[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_TERTIARY_B", "1.0"));
+	SUN_COLOR_AMBIENT[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_AMBIENT_R", "1.0"));
+	SUN_COLOR_AMBIENT[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_AMBIENT_G", "0.7"));
+	SUN_COLOR_AMBIENT[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_AMBIENT_B", "0.0"));
+
 	FOG_POST_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "DISABLE_FOG", "0")) > 0 ? qfalse : qtrue);
+	FOG_COLOR[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_R", "0.5"));
+	FOG_COLOR[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_G", "0.6"));
+	FOG_COLOR[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_B", "0.7"));
+	FOG_COLOR_SUN[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_R", "1.0"));
+	FOG_COLOR_SUN[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_G", "0.9"));
+	FOG_COLOR_SUN[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_B", "0.7"));
 
 	SHADOWS_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOWS_ENABLED", "0")) > 0 ? qtrue : qfalse);
+
+	WATER_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_ENABLED", "1")) > 0 ? qtrue : qfalse);
+	WATER_COLOR_SHALLOW[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
+	WATER_COLOR_SHALLOW[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
+	WATER_COLOR_SHALLOW[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
+	WATER_COLOR_DEEP[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
+	WATER_COLOR_DEEP[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
+	WATER_COLOR_DEEP[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_DEEP_B", "0.18"));
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
@@ -1278,8 +1334,15 @@ void MAPPING_LoadDayNightCycleInfo ( void )
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
+
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");
+
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog color (main) ^7%.4f %.4f %.4f^5 (sun) ^7%.4f %.4f %.4f^5 on this map.\n", FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2]);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Enhanced water is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
 }
 
 extern const char *materialNames[MATERIAL_LAST];
