@@ -22,6 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+extern vec3_t		FOG_COLOR;
+extern vec3_t		FOG_COLOR_SUN;
+extern float		FOG_DENSITY;
+
 void RB_ToneMap(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int autoExposure)
 {
 	vec4i_t srcBox, dstBox;
@@ -2092,6 +2096,24 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
+		VectorSet4(loc, FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL4, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL5, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, FOG_DENSITY, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL6, loc);
+	}
+
+	{
+		vec4_t loc;
 		VectorSet4(loc, r_waterWaveHeight->value, r_waterWaveDensity->value, 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
@@ -2864,6 +2886,9 @@ extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS];
 extern float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS];
 
+extern float		SHADOW_MINBRIGHT;
+extern float		SHADOW_MAXBRIGHT;
+
 #ifdef __PLAYER_BASED_CUBEMAPS__
 extern int			currentPlayerCubemap;
 extern vec4_t		currentPlayerCubemapVec;
@@ -2942,7 +2967,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	vec4_t local2;
-	VectorSet4(local2, r_blinnPhong->value, SHADOWS_ENABLED ? 1.0 : 0.0, r_shadowContrast->value, 0.0);
+	VectorSet4(local2, r_blinnPhong->value, SHADOWS_ENABLED ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  local2);
 
 	vec4_t local3;
@@ -3176,8 +3201,6 @@ void RB_ColorCorrection(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ld
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.colorCorrectionShader, color, 0);
 }
 
-extern vec3_t		FOG_COLOR;
-extern vec3_t		FOG_COLOR_SUN;
 
 void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -3268,6 +3291,11 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL3, loc);
 	}
 
+	{
+		vec4_t loc;
+		VectorSet4(loc, FOG_DENSITY, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL4, loc);
+	}
 
 	{
 		vec4_t loc;

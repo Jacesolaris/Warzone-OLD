@@ -11,6 +11,7 @@ uniform vec2		u_Dimensions;
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local2;		// FOG_COLOR
 uniform vec4		u_Local3;		// FOG_COLOR_SUN
+uniform vec4		u_Local4;		// FOG_DENSITY
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec3		u_ViewOrigin;
@@ -71,10 +72,10 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in float distance, // camera to point distance
                in vec3  rayOri,   // camera position
                in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir,
-			   in vec4 position )  // sun light direction
+               in vec3  sunDir,    // sun light direction
+			   in vec4 position )
 {
-	const float b = 0.5;//0.7;//u_Local0.r; // the falloff of this density
+	/*const*/ float b = u_Local4.r;//0.5;//0.7;//u_Local0.r; // the falloff of this density
 
 #if defined(HEIGHT_BASED_FOG)
 	float c = u_Local0.g; // height falloff
@@ -92,12 +93,6 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 	{// Not Skybox or Sun... No don't do sun color here...
 		sunAmount = 0.0;
 	}
-
-	/*
-    vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
-                           vec3(1.0,0.9,0.7), // yellowish
-                           pow(sunAmount,8.0) );
-	*/
 
 	vec3  fogColor  = mix( u_Local2.rgb, // bluish
                            u_Local3.rgb, // yellowish
@@ -137,7 +132,7 @@ void main ( void )
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec3 sunOrg = u_PrimaryLightOrigin.xyz;
 
-	vec3 fogColor = applyFog2(pixelColor.rgb, depth, viewOrg.xyz/*pMap.xyz*/, normalize(viewOrg.xyz - pMap.xyz), normalize(viewOrg.xyz - sunOrg.xyz), pMap);
+	vec3 fogColor = applyFog2(pixelColor.rgb, depth, viewOrg.xzy/*pMap.xyz*/, normalize(viewOrg.xzy - pMap.xzy), normalize(viewOrg.xzy - sunOrg.xzy), pMap.rbga);
 #endif //VFOG
 	
 	gl_FragColor = vec4(fogColor, 1.0);

@@ -1244,9 +1244,12 @@ vec3_t		SUN_COLOR_SECONDARY = { 0 };
 vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
 qboolean	SHADOWS_ENABLED = qfalse;
+float		SHADOW_MINBRIGHT = 0.7;
+float		SHADOW_MAXBRIGHT = 1.3;
 qboolean	FOG_POST_ENABLED = qtrue;
 vec3_t		FOG_COLOR = { 0 };
 vec3_t		FOG_COLOR_SUN = { 0 };
+float		FOG_DENSITY = 0.5;
 qboolean	WATER_ENABLED = qtrue;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
@@ -1285,8 +1288,11 @@ void MAPPING_LoadDayNightCycleInfo ( void )
 	FOG_COLOR_SUN[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_R", "1.0"));
 	FOG_COLOR_SUN[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_G", "0.9"));
 	FOG_COLOR_SUN[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_B", "0.7"));
+	FOG_DENSITY = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_DENSITY", "0.5"));
 
 	SHADOWS_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOWS_ENABLED", "0")) > 0 ? qtrue : qfalse);
+	SHADOW_MINBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MINBRIGHT", "0.7"));
+	SHADOW_MAXBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MAXBRIGHT", "1.3"));
 
 	WATER_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_ENABLED", "1")) > 0 ? qtrue : qfalse);
 	WATER_COLOR_SHALLOW[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));

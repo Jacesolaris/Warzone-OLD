@@ -36,6 +36,9 @@ uniform vec4		u_Local0;				// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER
 uniform vec4		u_Local2;				// WATER_COLOR_SHALLOW_R, WATER_COLOR_SHALLOW_G, WATER_COLOR_SHALLOW_B
 uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLOR_DEEP_B
+uniform vec4		u_Local4;				// FOG_COLOR
+uniform vec4		u_Local5;				// FOG_COLOR_SUN
+uniform vec4		u_Local6;				// FOG_DENSITY
 uniform vec4		u_Local10;				// waveHeight, waveDensity
 
 uniform vec2		u_Dimensions;
@@ -286,12 +289,13 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in float distance, // camera to point distance
                in vec3  rayOri,   // camera position
                in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir )  // sun light direction
+               in vec3  sunDir,    // sun light direction
+			   in vec4 position )
 {
-	const float b = 0.5;//0.7;//u_Local0.r; // the falloff of this density
+	/*const*/ float b = u_Local4.r;//0.5;//0.7;//u_Local0.r; // the falloff of this density
 
 #if defined(HEIGHT_BASED_FOG)
-	float c = u_Local0.g; // height falloff
+	float c = u_Local6.g; // height falloff
 
     float fogAmount = c * exp(-rayOri.z*b) * (1.0-exp( -distance*rayDir.z*b ))/rayDir.z; // height based fog
 #else //!defined(HEIGHT_BASED_FOG)
@@ -299,11 +303,18 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 #endif //defined(HEIGHT_BASED_FOG)
 
 	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
-	float sunAmount = max( clamp(dot( rayDir, sunDir )/**u_Local0.b*/, 0.0, 1.0), 0.0 );
-	if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
-    vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
-                           vec3(1.0,0.9,0.7), // yellowish
+	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1, 0.0, 1.0), 0.0 );
+	
+	//if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
+	if (!(position.a == 1024.0 || position.a == 1025.0))
+	{// Not Skybox or Sun... No don't do sun color here...
+		sunAmount = 0.0;
+	}
+
+	vec3  fogColor  = mix( u_Local4.rgb, // bluish
+                           u_Local5.rgb, // yellowish
                            pow(sunAmount,8.0) );
+
 	return mix( rgb, fogColor, fogAmount );
 }
 
@@ -854,8 +865,8 @@ void main ( void )
 		}
 		else
 		{
-			float depthMap = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);//length(u_ViewOrigin.xyz - position.xzy);
-			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xyz/*position.xzy*/, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );
+			float depthMap = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
+			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xzy, normalize(u_ViewOrigin.xzy - surfacePoint.xyz), normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy), vec4(surfacePoint.xyz, positionMap.a) );
 		}
 	}
 #endif //__TEST_WATER__

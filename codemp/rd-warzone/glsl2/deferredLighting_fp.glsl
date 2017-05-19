@@ -16,7 +16,7 @@ uniform sampler2D	u_ShadowMap;
 
 uniform vec2		u_Dimensions;
 
-uniform vec4		u_Local2; // r_blinnPhong, SHADOWS_ENABLED, r_shadowContrast, 0.0
+uniform vec4		u_Local2; // r_blinnPhong, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 
 uniform vec3		u_ViewOrigin;
@@ -385,7 +385,7 @@ void main(void)
 		shadowValue /= 32.0;
 #endif //HIGH_QUALITY_SHADOWS
 
-		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, 1.3);
+		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
 	}
 #endif //defined(USE_SHADOWMAP)
 
