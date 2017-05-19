@@ -22,9 +22,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+extern qboolean		FOG_STANDARD_ENABLE;
 extern vec3_t		FOG_COLOR;
 extern vec3_t		FOG_COLOR_SUN;
 extern float		FOG_DENSITY;
+extern float		FOG_ACCUMULATION_MODIFIER;
+extern float		FOG_RANGE_MULTIPLIER;
+extern qboolean		FOG_VOLUMETRIC_ENABLE;
+extern vec3_t		FOG_VOLUMETRIC_COLOR;
+extern float		FOG_VOLUMETRIC_DENSITY;
+extern float		FOG_VOLUMETRIC_STRENGTH;
+extern float		FOG_VOLUMETRIC_CLOUDINESS;
+extern float		FOG_VOLUMETRIC_WIND;
+extern float		FOG_VOLUMETRIC_VELOCITY;
 
 void RB_ToneMap(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int autoExposure)
 {
@@ -3220,6 +3230,9 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
+	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
+
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
@@ -3246,7 +3259,7 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	
-	GLSL_SetUniformFloat(&tr.fogPostShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+	GLSL_SetUniformFloat(&tr.fogPostShader, UNIFORM_TIME, backEnd.refdef.floatTime * 0.3/*r_testvalue3->value*/);
 
 	{
 		vec2_t screensize;
@@ -3258,8 +3271,8 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	{
 		vec4_t viewInfo;
-		float zmax = 4096.0;// 2048.0;
-		//float zmax = backEnd.viewParms.zFar;
+		//float zmax = 4096.0;// 2048.0;
+		float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -3281,20 +3294,32 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], 0.0);
+		VectorSet4(loc, FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_STANDARD_ENABLE ? 1.0 : 0.0);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL2, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2], 0.0);
+		VectorSet4(loc, FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2], FOG_RANGE_MULTIPLIER);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL3, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_DENSITY, 0.0, 0.0, 0.0);
+		VectorSet4(loc, FOG_DENSITY, FOG_VOLUMETRIC_ENABLE ? 1.0 : 0.0, FOG_VOLUMETRIC_DENSITY + 0.23, FOG_VOLUMETRIC_VELOCITY);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL4, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, FOG_VOLUMETRIC_COLOR[0], FOG_VOLUMETRIC_COLOR[1], FOG_VOLUMETRIC_COLOR[2], FOG_VOLUMETRIC_STRENGTH);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL5, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_INFO_MAXSIZE, FOG_ACCUMULATION_MODIFIER, FOG_VOLUMETRIC_CLOUDINESS, FOG_VOLUMETRIC_WIND);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL6, loc);
 	}
 
 	{

@@ -1,17 +1,19 @@
 //#define HEIGHT_BASED_FOG
-//#define VFOG
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
+uniform sampler2D	u_WaterMap;
 
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec2		u_Dimensions;
 
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
-uniform vec4		u_Local2;		// FOG_COLOR
-uniform vec4		u_Local3;		// FOG_COLOR_SUN
-uniform vec4		u_Local4;		// FOG_DENSITY
+uniform vec4		u_Local2;		// FOG_COLOR_R, FOG_COLOR_G, FOG_COLOR_B, FOG_STANDARD_ENABLE
+uniform vec4		u_Local3;		// FOG_COLOR_SUN_R, FOG_COLOR_SUN_G, FOG_COLOR_SUN_B, FOG_RANGE_MULTIPLIER
+uniform vec4		u_Local4;		// FOG_DENSITY, FOG_VOLUMETRICS, FOG_VOLUMETRIC_DENSITY, FOG_VOLUMETRIC_VELOCITY
+uniform vec4		u_Local5;		// FOG_VOLUMETRIC_COLOR_R, FOG_VOLUMETRIC_COLOR_G, FOG_VOLUMETRIC_COLOR_B, FOG_VOLUMETRIC_STRENGTH
+uniform vec4		u_Local6;		// MAP_INFO_MAXSIZE, FOG_ACCUMULATION_MODIFIER, FOG_VOLUMETRIC_CLOUDINESS, FOG_VOLUMETRIC_WIND
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec3		u_ViewOrigin;
@@ -22,7 +24,15 @@ varying vec2		var_TexCoords;
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
-	return textureLod(u_PositionMap, coord, 0.0);
+	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
+	/*vec4 wpos = textureLod(u_WaterMap, coord, 0.0);
+
+	if (wpos.a > 0.0 && wpos.y > pos.y)
+	{// If the watermap is higher, use it's position instead...
+		pos = wpos;
+	}*/
+
+	return pos;
 }
 
 float linearize(float depth)
@@ -30,23 +40,24 @@ float linearize(float depth)
 	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
 }
 
-#ifdef VFOG
-#define time u_Time
-
+//
+// Volumetric fog...
+//
 float tri(in float x){return abs(fract(x)-.5);}
 vec3 tri3(in vec3 p){return vec3( tri(p.z+tri(p.y*1.)), tri(p.z+tri(p.x*1.)), tri(p.y+tri(p.x*1.)));}
                                  
-mat2 m2 = mat2(0.970,  0.242, -0.242,  0.970);
+//mat2 m2 = mat2(0.970,  0.242, -0.242,  0.970);
 
 float triNoise3d(vec3 p, float spd)
 {
     float z=1.4;
-	float rz = 0.;
+	float rz = 0.0;
     vec3 bp = p;
+
 	for (float i=0.; i<=3.; i++ )
 	{
         vec3 dg = tri3(bp*2.);
-        p += (dg+time*spd);
+        p += (dg+u_Time*spd);
 
         bp *= 1.8;
 		z *= 1.5;
@@ -61,13 +72,16 @@ float triNoise3d(vec3 p, float spd)
 
 float fogmap(vec3 p, float d)
 {
-    p.x += time*1.5;
+	p.xyz *= (100.0 * u_Local6.b);
+    p.x += u_Time * u_Local6.a;
     p.z += sin(p.x*.5);
     return triNoise3d(p*2.2/(d+20.),0.2)*(1.-smoothstep(0.,.7,p.y));
 }
 
-#else //!VFOG
 
+//
+// Normal fog...
+//
 vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in float distance, // camera to point distance
                in vec3  rayOri,   // camera position
@@ -75,20 +89,20 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
                in vec3  sunDir,    // sun light direction
 			   in vec4 position )
 {
-	/*const*/ float b = u_Local4.r;//0.5;//0.7;//u_Local0.r; // the falloff of this density
+	float b = u_Local4.r; // the falloff of this density
 
 #if defined(HEIGHT_BASED_FOG)
-	float c = u_Local0.g; // height falloff
+	float c = u_Local0.r; // height falloff
 
     float fogAmount = c * exp(-rayOri.z*b) * (1.0-exp( -distance*rayDir.z*b ))/rayDir.z; // height based fog
 #else //!defined(HEIGHT_BASED_FOG)
-	float fogAmount = 1.0 - exp( -distance*b );
+	float fogExp = clamp(exp( -pow(distance, u_Local6.g) * b ), 0.0, 1.0);
+	float fogAmount = 1.0 - fogExp;
 #endif //defined(HEIGHT_BASED_FOG)
 
-	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
-	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1, 0.0, 1.0), 0.0 );
+	fogAmount = clamp(fogAmount * u_Local3.a, 0.1, 1.0);
+	float sunAmount = max( clamp(dot( rayDir, sunDir ) * 1.1, 0.0, 1.0), 0.0 );
 	
-	//if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
 	if (!(position.a == 1024.0 || position.a == 1025.0))
 	{// Not Skybox or Sun... No don't do sun color here...
 		sunAmount = 0.0;
@@ -100,40 +114,58 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 
 	return mix( rgb, fogColor, fogAmount );
 }
-#endif //VFOG
 
+//
+// Shared...
+//
 void main ( void )
 {
-#ifdef VFOG
 	vec3 col = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
 	vec4 pMap = positionMapAtCoord( var_TexCoords );
 	vec3 viewOrg = u_ViewOrigin.xyz;
-	vec3 rayDir = normalize(viewOrg.xyz - pMap.xyz);
-	float mt = u_Local0.r;
-
-	float dafuck = 0.5;
-    for(int i=0; i<7; i++)
-    {
-        vec3 pos = rayDir*dafuck;
-        float rz = fogmap(pos, dafuck);
-
-		float grd =  clamp((rz - fogmap(pos+0.8-float(i)*0.1,dafuck))*3.0, 0.1, 1.0 );
-        vec3 col2 = (vec3(0.1,0.8,0.5)*0.5 + 0.5*vec3(0.5, 0.8, 1.0)*(1.7-grd))*0.55;
-        col = mix(col,col2,clamp(rz*smoothstep(dafuck-0.4,dafuck+2.0+dafuck*0.75,mt),0.0,1.0) );
-        dafuck *= 1.5+0.3;
-        if (dafuck>mt)break;
-    }
-
 	vec3 fogColor = col;
-#else //!VFOG
-	vec4 pMap = positionMapAtCoord( var_TexCoords );
-	vec4 pixelColor = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
-	float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
-	vec3 viewOrg = u_ViewOrigin.xyz;
-	vec3 sunOrg = u_PrimaryLightOrigin.xyz;
 
-	vec3 fogColor = applyFog2(pixelColor.rgb, depth, viewOrg.xzy/*pMap.xyz*/, normalize(viewOrg.xzy - pMap.xzy), normalize(viewOrg.xzy - sunOrg.xzy), pMap.rbga);
-#endif //VFOG
-	
+	//
+	// Normal fog...
+	//
+	if (u_Local2.a > 0.0)
+	{
+		vec3 rayDir = normalize(viewOrg.xyz - pMap.xyz);
+		vec3 lightDir = normalize(viewOrg.xyz - u_PrimaryLightOrigin.xyz);
+		float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
+		fogColor = applyFog2(fogColor.rgb, depth, viewOrg.xyz, rayDir, lightDir, pMap);
+	}
+
+	//
+	// Volumetric fog...
+	//
+	if (u_Local4.g > 0.0)
+	{
+		vec3 pM = pMap.xzy;
+		vec3 vO = vec3(0.0, -viewOrg.z, 0.0);
+		pM.z += 524288.0;
+		vO.z += 524288.0;
+		vec3 rayDir = normalize(vO - pM);
+		vec3 fog = vec3(0.0);
+		float dafuck = 0.5;
+		float numAdded = 0.0;
+		float mt = u_Local4.b;
+
+		for(int i=0; i<7; i++)
+		{
+			vec3 pos = rayDir*dafuck;
+			float rz = fogmap(pos, dafuck);
+
+			float grd =  clamp((rz - fogmap(pos+0.8-float(i)*0.1,dafuck))*3.0, 0.1, 1.0 );
+			vec3 col2 = clamp(u_Local5.rgb * (1.7-grd), 0.0, 1.0) * u_Local5.a;
+			fog = mix(fog,col2,clamp(rz*smoothstep(dafuck-0.4,dafuck+2.0+dafuck*0.75,mt),0.0,1.0) );
+			dafuck *= 0.45;
+			numAdded += 1.0;
+			if (dafuck>mt)break;
+		}
+
+		fogColor += (fog / numAdded) * 5.0;
+	}
+
 	gl_FragColor = vec4(fogColor, 1.0);
 }

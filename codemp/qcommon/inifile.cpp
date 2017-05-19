@@ -2,6 +2,7 @@
 
 
 //#define __INI_DEBUG__
+//#define __INI_DEBUG_VERBOSE__
 
 
 //
@@ -58,7 +59,7 @@ extern void FS_FCloseFile( fileHandle_t f );
 
 void DebugPrint(char *text)
 {
-#ifdef __INI_DEBUG__
+#if defined(__INI_DEBUG_VERBOSE__) || defined(__INI_DEBUG__)
 
 #if defined(rd_warzone_x86_EXPORTS)
 	ri->Printf(PRINT_ALL, text);
@@ -70,7 +71,7 @@ void DebugPrint(char *text)
 	Com_Printf(text);
 #endif
 
-#endif //__INI_DEBUG__
+#endif //defined(__INI_DEBUG_VERBOSE__) || defined(__INI_DEBUG__)
 }
 
 char FS_GetC(fileHandle_t fp)
@@ -130,19 +131,28 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 	
 	int fpLen = FS_FOpenFileByMode(file_name, &fp, FS_READ);
 
-	if (!fp || !fpLen)
+	if (!fp)
 	{
-#ifdef __INI_DEBUG__
+#ifdef __INI_DEBUG_VERBOSE__
 		DebugPrint(">> File not found, or zero length.\n");
-#endif //__INI_DEBUG__
+#endif //__INI_DEBUG_VERBOSE__
+		return(0);
+	}
+
+	if (!fpLen)
+	{
+#ifdef __INI_DEBUG_VERBOSE__
+		DebugPrint(">> File not found, or zero length.\n");
+#endif //__INI_DEBUG_VERBOSE__
+		FS_FCloseFile(fp);               /* Clean up and return the amount copied */
 		return(0);
 	}
 
 	sprintf(t_section, "[%s]", section);    /* Format the section name */
 
-#ifdef __INI_DEBUG__
+#ifdef __INI_DEBUG_VERBOSE__
 	DebugPrint(va(">> Searching for: [section] %s [key] %s\n", section, entry));
-#endif //__INI_DEBUG__
+#endif //__INI_DEBUG_VERBOSE__
 
 	/*  Move through file 1 line at a time until a section is matched or EOF */
 	do
@@ -158,9 +168,9 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 			return(strlen(buffer));
 		}
 
-#ifdef __INI_DEBUG__
-		DebugPrint(va(">> Line: %s", buff));
-#endif //__INI_DEBUG__
+#ifdef __INI_DEBUG_VERBOSE__
+		DebugPrint(va(">> Line: %s\n", buff));
+#endif //__INI_DEBUG_VERBOSE__
 
 	} while (strncmp(buff, t_section, strlen(t_section)));
 
@@ -179,9 +189,9 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 			return(strlen(buffer));
 		}
 
-#ifdef __INI_DEBUG__
-		DebugPrint(va(">> Line: %s", buff));
-#endif //__INI_DEBUG__
+#ifdef __INI_DEBUG_VERBOSE__
+		DebugPrint(va(">> Line: %s\n", buff));
+#endif //__INI_DEBUG_VERBOSE__
 
 	} while (strncmp(buff, entry, len));
 
@@ -197,8 +207,10 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 
 	FS_FCloseFile(fp);               /* Clean up and return the amount copied */
 
-#ifdef __INI_DEBUG__
+#ifdef __INI_DEBUG_VERBOSE__
 	DebugPrint(va(">> [ep] %s. [count] %i.\n", ep, strlen(ep) - 1));
+#endif //__INI_DEBUG_VERBOSE__
+#ifdef __INI_DEBUG__
 	DebugPrint(va(">> Found: %s\n", buffer));
 #endif //__INI_DEBUG__
 
@@ -366,7 +378,7 @@ const char *IniReadCPP(char *aFilespec, char *aSection, char *aKey, char *aDefau
 	if (!aKey || !aKey[0])
 		return "";
 
-	char	szBuffer[65535] = { 0 };					// Max ini file size is 65535 under 95
+	char	szBuffer[524288/*65535*/] = { 0 };					// Max ini file size is 65535 under 95 -- UQ1: Fuck windows 95!
 
 	if (!get_private_profile_string(aSection, aKey, aDefault, szBuffer, sizeof(szBuffer), aFilespec))
 	{
@@ -398,7 +410,7 @@ const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 	if (value[0] == '\0' || !strcmp(value, "") || !strcmp(value, aDefault))
 	{
 #ifdef __INI_DEBUG__
-		DebugPrint(va("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, aDefault));
+		DebugPrint(va("[file] %s [section] %s [key] %s [default value] %s\n", aFilespec, aSection, aKey, aDefault));
 #endif //__INI_DEBUG__
 		return aDefault;
 	}

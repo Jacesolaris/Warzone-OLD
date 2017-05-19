@@ -3339,21 +3339,9 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer)
-		{
-			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_deferredLighting->integer)
 		{
 			RB_DeferredLighting(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_shownormals->integer)
-		{
-			RB_ShowNormals(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
@@ -3426,6 +3414,12 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer)
+		{
+			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_distanceBlur->integer)
@@ -3579,6 +3573,12 @@ const void *RB_PostProcess(const void *data)
 		if (!SCREEN_BLUR && r_testshader->integer)
 		{
 			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_shownormals->integer)
+		{
+			RB_ShowNormals(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 

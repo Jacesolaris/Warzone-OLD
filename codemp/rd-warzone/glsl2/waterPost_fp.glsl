@@ -2,7 +2,6 @@
 #define REAL_WAVES					// You probably always want this turned on.
 #define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
-//#define HEIGHT_BASED_FOG			// Height based volumetric fog. Works but has some issues I can't be bothered fixing atm.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 //#define __TEST_WATER__				// Testing experimental water...
 
@@ -283,39 +282,6 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	landColor /= 9.0;
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
-}
-
-vec3 applyFog2( in vec3  rgb,      // original color of the pixel
-               in float distance, // camera to point distance
-               in vec3  rayOri,   // camera position
-               in vec3  rayDir,   // camera to point vector
-               in vec3  sunDir,    // sun light direction
-			   in vec4 position )
-{
-	/*const*/ float b = u_Local4.r;//0.5;//0.7;//u_Local0.r; // the falloff of this density
-
-#if defined(HEIGHT_BASED_FOG)
-	float c = u_Local6.g; // height falloff
-
-    float fogAmount = c * exp(-rayOri.z*b) * (1.0-exp( -distance*rayDir.z*b ))/rayDir.z; // height based fog
-#else //!defined(HEIGHT_BASED_FOG)
-	float fogAmount = 1.0 - exp( -distance*b );
-#endif //defined(HEIGHT_BASED_FOG)
-
-	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
-	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1, 0.0, 1.0), 0.0 );
-	
-	//if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
-	if (!(position.a == 1024.0 || position.a == 1025.0))
-	{// Not Skybox or Sun... No don't do sun color here...
-		sunAmount = 0.0;
-	}
-
-	vec3  fogColor  = mix( u_Local4.rgb, // bluish
-                           u_Local5.rgb, // yellowish
-                           pow(sunAmount,8.0) );
-
-	return mix( rgb, fogColor, fogAmount );
 }
 
 #ifdef __TEST_WATER__
@@ -862,11 +828,6 @@ void main ( void )
 		if (position2.y/*position.y*/ > level && waterMapLower.a <= 0.0)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			color = color2;
-		}
-		else
-		{
-			float depthMap = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
-			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xzy, normalize(u_ViewOrigin.xzy - surfacePoint.xyz), normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy), vec4(surfacePoint.xyz, positionMap.a) );
 		}
 	}
 #endif //__TEST_WATER__
