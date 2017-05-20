@@ -238,7 +238,8 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	com_errorEntered = qtrue;
 
 	// UQ1: Force crash instead of displaying a message. This way we can debug...
-	abort();
+	//abort();
+	{ cvar_t *N = NULL; N->flags = 1; } // force crash
 
 	// when we are running automated scripts, make sure we
 	// know if anything failed

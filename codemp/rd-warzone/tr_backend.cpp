@@ -2619,6 +2619,15 @@ const void	*RB_DrawSurfs( const void *data ) {
 				{
 					GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
+					
+					if (r_sunlightMode->integer >= 5 && SHADOWS_ENABLED)
+					{
+						GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
+						GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
+
+						GL_BindToTMU(tr.sunShadowDepthImage[4], TB_SHADOWMAP5);
+						GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP5, backEnd.refdef.sunShadowMvp[4]);
+					}
 				}
 			}
 			

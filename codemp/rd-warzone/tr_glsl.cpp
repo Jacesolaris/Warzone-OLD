@@ -1298,10 +1298,14 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ShadowMap", GLSL_INT, 1 },
 	{ "u_ShadowMap2", GLSL_INT, 1 },
 	{ "u_ShadowMap3", GLSL_INT, 1 },
+	{ "u_ShadowMap4", GLSL_INT, 1 },
+	{ "u_ShadowMap5", GLSL_INT, 1 },
 
 	{ "u_ShadowMvp", GLSL_MAT16, 1 },
 	{ "u_ShadowMvp2", GLSL_MAT16, 1 },
 	{ "u_ShadowMvp3", GLSL_MAT16, 1 },
+	{ "u_ShadowMvp4", GLSL_MAT16, 1 },
+	{ "u_ShadowMvp5", GLSL_MAT16, 1 },
 
 	{ "u_EnableTextures", GLSL_VEC4, 1 },
 	{ "u_DiffuseTexMatrix", GLSL_VEC4, 1 },
@@ -3063,6 +3067,9 @@ int GLSL_BeginLoadGPUShaders(void)
 	else
 	{// Old stupid rend2 shadows, 3 levels of wasteful, FPS killing stupidity...
 		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE2\n");
+
+		if (r_sunlightMode->integer > 4)
+			Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE3\n");
 	}
 
 	Q_strcat(extradefines, 1024, va("#define r_shadowMapSize %d\n", r_shadowMapSize->integer));
@@ -4076,6 +4083,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP2, TB_SHADOWMAP2);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP3, TB_SHADOWMAP3);
+	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP4, TB_SHADOWMAP4);
+	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP5, TB_SHADOWMAP5);
 	qglUseProgram(0);
 
 #if defined(_DEBUG)

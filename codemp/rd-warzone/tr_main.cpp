@@ -2726,38 +2726,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 	MATRIX_UPDATE = qtrue;
 
-	/*if (r_forceSun->integer == 2)
-	{
-		int scale = 32768;
-		float angle = (fd->time % scale) / (float)scale * M_PI;
-		lightDir[0] = cos(angle);
-		lightDir[1] = sin(35.0f * M_PI / 180.0f);
-		lightDir[2] = sin(angle) * cos(35.0f * M_PI / 180.0f);
-		lightDir[3] = 0.0f;
-
-		if (1) //((fd->time % (scale * 2)) < scale)
-		{
-			lightCol[0] = 
-			lightCol[1] = 
-			lightCol[2] = CLAMP(sin(angle) * 2.0f, 0.0f, 1.0f) * 2.0f;
-			lightCol[3] = 1.0f;
-		}
-		else
-		{
-			lightCol[0] = 
-			lightCol[1] = 
-			lightCol[2] = CLAMP(sin(angle) * 2.0f * 0.1f, 0.0f, 0.1f);
-			lightCol[3] = 1.0f;
-		}
-
-		VectorCopy4(lightDir, tr.refdef.sunDir);
-		VectorCopy4(lightCol, tr.refdef.sunCol);
-		VectorScale4(lightCol, 0.2f, tr.refdef.sunAmbCol);
-	}
-	else*/
-	{
-		VectorCopy4(tr.refdef.sunDir, lightDir);
-	}
+	VectorCopy4(tr.refdef.sunDir, lightDir);
 
 	viewZNear = r_shadowCascadeZNear->value;
 	viewZFar = r_shadowCascadeZFar->value;
@@ -2788,7 +2757,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			break;
 		}
 	}
-	else
+	else if (r_sunlightMode->integer == 4)
 	{
 		switch(level)
 		{
@@ -2810,6 +2779,33 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			splitZFar = viewZFar;
 			//splitZNear = 896;
 			//splitZFar  = 3072;
+			break;
+		}
+	}
+	else
+	{
+		switch (level)
+		{
+		case 0:
+		default:
+			splitZNear = viewZNear;
+			splitZFar = CalcSplit(viewZNear, viewZFar, 1, 5) + splitBias;
+			break;
+		case 1:
+			splitZNear = CalcSplit(viewZNear, viewZFar, 1, 5) + splitBias;
+			splitZFar = CalcSplit(viewZNear, viewZFar, 2, 5) + splitBias;
+			break;
+		case 2:
+			splitZNear = CalcSplit(viewZNear, viewZFar, 2, 5) + splitBias;
+			splitZFar = viewZFar;
+			break;
+		case 3:
+			splitZNear = viewZFar;
+			splitZFar = 16384;
+			break;
+		case 4:
+			splitZNear = 16384;
+			splitZFar = 131072;
 			break;
 		}
 	}
@@ -2986,6 +2982,15 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		{
 			shadowParms.maxEntityRange = 8192;
 		}
+		else if (r_sunlightMode->integer == 4)
+		{
+			if (level <= 1)
+				shadowParms.maxEntityRange = 2048;
+			else if (level <= 2)
+				shadowParms.maxEntityRange = 3192;
+			else if (level <= 3)
+				shadowParms.maxEntityRange = 4096;
+		}
 		else
 		{
 			if (level <= 1)
@@ -2994,6 +2999,8 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 				shadowParms.maxEntityRange = 3192;
 			else if (level <= 3)
 				shadowParms.maxEntityRange = 4096;
+			else if (level <= 4)
+				shadowParms.maxEntityRange = 8192;
 		}
 
 		VectorCopy(lightOrigin, shadowParms.ori.origin);

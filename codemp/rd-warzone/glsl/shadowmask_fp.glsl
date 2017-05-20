@@ -5,6 +5,10 @@ uniform sampler2D u_ShadowMap;
 #if defined(USE_SHADOW_CASCADE2)
 uniform sampler2D u_ShadowMap2;
 uniform sampler2D u_ShadowMap3;
+#if defined(USE_SHADOW_CASCADE3)
+uniform sampler2D u_ShadowMap4;
+uniform sampler2D u_ShadowMap5;
+#endif
 #elif defined(USE_SHADOW_CASCADE)
 uniform sampler2D u_ShadowMap2;
 #endif
@@ -13,6 +17,10 @@ uniform mat4      u_ShadowMvp;
 #if defined(USE_SHADOW_CASCADE2)
 uniform mat4      u_ShadowMvp2;
 uniform mat4      u_ShadowMvp3;
+#if defined(USE_SHADOW_CASCADE3)
+uniform mat4      u_ShadowMvp4;
+uniform mat4      u_ShadowMvp5;
+#endif
 #elif defined(USE_SHADOW_CASCADE)
 uniform mat4      u_ShadowMvp2;
 #endif
@@ -163,6 +171,38 @@ void main()
 			shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 			result = PCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
 		}
+	#if defined(USE_SHADOW_CASCADE3)
+		else
+		{
+			shadowpos = u_ShadowMvp3 * biasPos;
+
+			if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
+			{
+				shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+				result = PCF(u_ShadowMap3, shadowpos.xy, shadowpos.z);
+			}
+			else
+			{
+				shadowpos = u_ShadowMvp4 * biasPos;
+
+				if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
+				{
+					shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+					result = PCF(u_ShadowMap4, shadowpos.xy, shadowpos.z);
+				}
+				else
+				{
+					shadowpos = u_ShadowMvp5 * biasPos;
+
+					if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
+					{
+						shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+						result = PCF(u_ShadowMap5, shadowpos.xy, shadowpos.z);
+					}
+				}
+			}
+		}
+	#else
 		else
 		{
 			shadowpos = u_ShadowMvp3 * biasPos;
@@ -189,6 +229,7 @@ void main()
 				result = 1.0 - result;
 			}
 		}
+	#endif
 	}
 #endif
 		

@@ -959,7 +959,9 @@ enum
 	TB_SPLATNORMALMAP3	= 26,
 	//TB_SPLATNORMALMAP4	= 27,
 	TB_DETAILMAP		= 28,
-	NUM_TEXTURE_BUNDLES = 29
+	TB_SHADOWMAP4		= 29,
+	TB_SHADOWMAP5		= 30,
+	NUM_TEXTURE_BUNDLES = 31
 };
 
 typedef enum
@@ -1390,10 +1392,14 @@ typedef enum
 	UNIFORM_SHADOWMAP,
 	UNIFORM_SHADOWMAP2,
 	UNIFORM_SHADOWMAP3,
+	UNIFORM_SHADOWMAP4,
+	UNIFORM_SHADOWMAP5,
 
 	UNIFORM_SHADOWMVP,
 	UNIFORM_SHADOWMVP2,
 	UNIFORM_SHADOWMVP3,
+	UNIFORM_SHADOWMVP4,
+	UNIFORM_SHADOWMVP5,
 
 	UNIFORM_ENABLETEXTURES,
 
@@ -1578,7 +1584,7 @@ typedef struct {
 #ifdef __DYNAMIC_SHADOWS__
 	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
 #endif //__DYNAMIC_SHADOWS__
-	float       sunShadowMvp[3][16];
+	float       sunShadowMvp[5][16];
 	float       sunDir[4];
 	float       sunCol[4];
 	float       sunAmbCol[4];
@@ -2469,7 +2475,7 @@ typedef struct trGlobals_s {
 	image_t					*calcLevelsImage;
 	image_t					*targetLevelsImage;
 	image_t					*fixedLevelsImage;
-	image_t					*sunShadowDepthImage[3];
+	image_t					*sunShadowDepthImage[5];
 	image_t                 *screenShadowImage;
 #ifdef __DYNAMIC_SHADOWS__
 	image_t					*dlightShadowDepthImage[MAX_DYNAMIC_SHADOWS][3];
@@ -2503,7 +2509,7 @@ typedef struct trGlobals_s {
 	FBO_t                   *quarterFbo[2];
 	FBO_t					*calcLevelsFbo;
 	FBO_t					*targetLevelsFbo;
-	FBO_t					*sunShadowFbo[3];
+	FBO_t					*sunShadowFbo[5];
 	FBO_t					*screenShadowFbo;
 	FBO_t					*screenShadowBlurFbo;
 #ifdef __DYNAMIC_SHADOWS__

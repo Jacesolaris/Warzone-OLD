@@ -896,11 +896,19 @@ void RE_RenderScene(const refdef_t *fd) {
 				R_RenderSunShadowMaps(fd, 1);
 			}
 		}
+		else if (r_sunlightMode->integer == 4)
+		{
+			R_RenderSunShadowMaps(fd, 0);
+			R_RenderSunShadowMaps(fd, 1);
+			R_RenderSunShadowMaps(fd, 2);
+		}
 		else
 		{
 			R_RenderSunShadowMaps(fd, 0);
 			R_RenderSunShadowMaps(fd, 1);
 			R_RenderSunShadowMaps(fd, 2);
+			R_RenderSunShadowMaps(fd, 3);
+			R_RenderSunShadowMaps(fd, 4);
 		}
 	}
 
