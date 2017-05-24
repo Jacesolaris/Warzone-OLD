@@ -25,7 +25,7 @@ extern image_t	*R_FindImageFile(const char *name, imgType_t type, int flags);
 #define	MASK_WATER				(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
 #define	MASK_ALL				(0xFFFFFFFFu)
 
-#define MAP_INFO_TRACEMAP_SIZE 1024
+#define MAP_INFO_TRACEMAP_SIZE 4096
 
 vec3_t  MAP_INFO_MINS;
 vec3_t  MAP_INFO_MAXS;
@@ -397,6 +397,8 @@ void R_CreateGrassImages(void)
 
 void R_CreateBspMapImage(void)
 {
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Generating world map. The game will appear to freeze while constructing. Please wait...\n", "Warzone");
+
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
 	UINT8	*red[MAP_INFO_TRACEMAP_SIZE];
@@ -455,16 +457,6 @@ void R_CreateBspMapImage(void)
 					continue;
 				}
 
-				/*
-				if ( tr.surfaceFlags & SURF_NOIMPACT )
-				{// don't make missile explosions
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-				*/
-
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
 					red[imageX][imageY] = 0;
@@ -472,70 +464,6 @@ void R_CreateBspMapImage(void)
 					blue[imageX][imageY] = 0;
 					continue;
 				}
-
-				/*
-				if ( tr.surfaceFlags & SURF_NOSTEPS )
-				{// no footstep sounds
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-
-				if ( tr.surfaceFlags & SURF_NODLIGHT )
-				{// don't dlight even if solid (solid lava, skies)
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-
-				if ( tr.surfaceFlags & SURF_NOMISCENTS )
-				{// no client models allowed on this surface
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-				*/
-
-				/*
-				if ( tr.contents & CONTENTS_TRIGGER )
-				{// Trigger hurt???
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-
-				if (tr.contents & CONTENTS_DETAIL || tr.contents & CONTENTS_NODROP )
-				{
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-				*/
-
-				/*
-				if (tr.contents & CONTENTS_NOSHOT )
-				{
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-				*/
-
-				/*
-				if (tr.contents & CONTENTS_TRANSLUCENT)
-				{
-				red[imageX][imageY] = 0;
-				green[imageX][imageY] = 0;
-				blue[imageX][imageY] = 0;
-				continue;
-				}
-				*/
 
 				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
 				float HEIGHT_COLOR_MULT = ((1.0 - (DIST_FROM_ROOF / MAP_INFO_SIZE[2])) * 0.5) + 0.5;
@@ -572,6 +500,28 @@ void R_CreateBspMapImage(void)
 					blue[imageX][imageY] = 0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
+				case MATERIAL_ROCK:				// 23			//
+					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					FOUND = qtrue;
+					break;
+				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					FOUND = qtrue;
+					break;
+				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+				case MATERIAL_PLASTER:			// 28			// drywall style plaster
+					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					FOUND = qtrue;
+					break;
 #if 0
 				case MATERIAL_CARPET:			// 27			// lush carpet
 					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
@@ -583,12 +533,6 @@ void R_CreateBspMapImage(void)
 					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
 					green[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
 					blue[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
-					FOUND = qtrue;
-					break;
-				case MATERIAL_ROCK:				// 23			//
-					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_TILES:			// 26			// tiled floor
@@ -609,13 +553,6 @@ void R_CreateBspMapImage(void)
 					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
 					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
 					blue[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					FOUND = qtrue;
-					break;
-				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_FABRIC:			// 21			// Cotton sheets
@@ -647,13 +584,6 @@ void R_CreateBspMapImage(void)
 					FOUND = qtrue;
 					break;
 #if 0
-				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-				case MATERIAL_PLASTER:			// 28			// drywall style plaster
-					red[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					FOUND = qtrue;
-					break;
 				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
 					green[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
@@ -760,6 +690,8 @@ void R_CreateBspMapImage(void)
 
 void R_CreateHeightMapImage(void)
 {
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Generating world heightmap. The game will appear to freeze while constructing. Please wait...\n", "Warzone");
+
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
 	UINT8	*red[MAP_INFO_TRACEMAP_SIZE];
