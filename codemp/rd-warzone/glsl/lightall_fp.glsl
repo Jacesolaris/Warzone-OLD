@@ -61,7 +61,7 @@ uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, swa
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], 0
+uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], r_showsplat
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define WATER_LEVEL			u_Local6.a
@@ -280,9 +280,10 @@ void AddDetail(inout vec4 color, in vec2 tc)
 }
 
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
-vec4 GetControlMap( sampler2D tex, float scale)
+vec4 GetControlMap( sampler2D tex)
 {
-	vec2 tScale = vec2(1.0);
+	float scale = 1.0 / u_Local6.b; /* control scale */
+	vec4 control;
 	
 #if defined(USE_REGIONS)
 	// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
@@ -294,13 +295,30 @@ vec4 GetControlMap( sampler2D tex, float scale)
 	vec4 xaxis = textureLod( tex, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
 	vec4 yaxis = textureLod( tex, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
 	vec4 zaxis = textureLod( tex, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
-	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+	control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 #else //!defined(USE_REGIONS)
-	vec4 xaxis = textureLod( tex, (m_vertPos.yz * tScale * scale) * 0.5 + 0.5, 0.0);
-	vec4 yaxis = textureLod( tex, (m_vertPos.xz * tScale * scale) * 0.5 + 0.5, 0.0);
-	vec4 zaxis = textureLod( tex, (m_vertPos.xy * tScale * scale) * 0.5 + 0.5, 0.0);
-	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+	/*vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) * 0.5 + 0.5, 0.0);
+	vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) * 0.5 + 0.5, 0.0);
+	vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) * 0.5 + 0.5, 0.0);*/
+
+	/*vec4 xaxis = textureLod( tex, (m_vertPos.yze * scale), 0.0);
+	vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale), 0.0);
+	vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale), 0.0);*/
+
+	float offset = (u_Local6.b / 2.0) * scale;
+	vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) + offset, 0.0);
+	vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) + offset, 0.0);
+	vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) + offset, 0.0);
+	control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 #endif //defined(USE_REGIONS)
+
+	//control = clamp(pow(control, vec4(2.5)) * 10.0, 0.0, 1.0);
+	//control = clamp(pow(control, vec4(2.5)), 0.0, 1.0);
+	//control = control * 0.7 + 0.3;
+	//control *= 10.0;
+	control = clamp(control * 10.0, 0.0, 1.0);
+	
+	return control;
 }
 
 // For fake normal map lookups.
@@ -391,8 +409,7 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 
 	vec4 splatColor = inColor;
 
-	vec4 control = GetControlMap(u_SplatControlMap, 1.0 / u_Local6.b /* control scale */);
-	control = clamp(pow(control, vec4(2.5)) * 10.0, 0.0, 1.0);
+	vec4 control = GetControlMap(u_SplatControlMap);
 
 	if (length(control.rgb/*a*/) <= 0.0)
 	{
@@ -431,6 +448,12 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 #if defined(USE_REGIONS)
 vec4 GenerateTerrainMap(vec2 coord)
 {
+	if (u_Local8.a > 0.0)
+	{
+		vec4 control = GetControlMap(u_SplatControlMap);
+		return vec4(control.rgb, 1.0);
+	}
+
 	// Splat mapping...
 #define SNOW_HEIGHT 0.001
 	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/, vec2(0.0), FAKE_MAP_NONE);
@@ -462,6 +485,12 @@ vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
 
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
+	if (u_Local8.a > 0.0)
+	{
+		vec4 control = GetControlMap(u_SplatControlMap);
+		return vec4(control.rgb, 1.0);
+	}
+
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
@@ -672,7 +701,7 @@ void main()
 	vec3 debugColor;
 
 	
-	/*
+	
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		debugColor = vec3(1.0, 0.0, 0.0);
@@ -685,7 +714,7 @@ void main()
 	{
 		debugColor = vec3(0.0, 0.0, 1.0);
 	}
-	*/
+	
 	
 	/*if (USE_TC == 1.0)
 	{
@@ -705,7 +734,7 @@ void main()
 	}*/
 
 	//debugColor = texture(u_SplatControlMap, m_TexCoords.xy).rgb;
-	debugColor = m_Normal.xyz;
+	//debugColor = m_Normal.xyz;
 
 	gl_FragColor = vec4(debugColor, 1.0);
 
@@ -805,13 +834,6 @@ void main()
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
 
 
-
-	#if defined(USE_GAMMA2_TEXTURES)
-		diffuse.rgb *= diffuse.rgb;
-	#endif
-
-
-
 	AddDetail(diffuse, texCoords);
 
 
@@ -822,15 +844,14 @@ void main()
 
 	//if (u_Local4.r <= 0.0)
 	//{
-		norm = ConvertToNormals(diffuse /** (var_Color.rgba * 0.5 + 0.5)*/);
+		norm = ConvertToNormals(diffuse /** var_Color.rgba*/);
 	//}
 	//else
 	//{
 	//	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 	//}
 
-	//N.xy = norm.xy * 2.0 - 1.0;
-	N.xyz = norm.xyz * 2.0 - 1.0;
+	N.xy = norm.xy * 2.0 - 1.0;
 	N.xy *= 0.25;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
@@ -839,6 +860,7 @@ void main()
 
 	vec3 ambientColor = vec3(0.0);
 	vec3 lightColor = var_Color.rgb;
+
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
@@ -860,8 +882,8 @@ void main()
 		lightColor	= lightmapColor.rgb * lmBrightMult;
 
 		ambientColor = lightColor;
-		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz) /** u_Local9.g*/, 0.0, 1.0);
-		lightColor /= max(surfNL, 0.35/*u_Local9.r*//*0.25*/);
+		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
+		lightColor /= max(surfNL, 0.35/*0.25*/);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
 
@@ -899,10 +921,6 @@ void main()
 				specular.rgb = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
 				specular.a = ((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6;
 			}
-
-			#if defined(USE_GAMMA2_TEXTURES)
-				specular.rgb *= specular.rgb;
-			#endif //defined(USE_GAMMA2_TEXTURES)
 
 			specular.rgb *= u_SpecularScale.rgb;
 

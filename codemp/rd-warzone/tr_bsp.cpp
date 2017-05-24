@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+//#define __REGEN_NORMALS__
+
 extern char currentMapName[128];
 
 extern void R_LoadMapInfo ( void );
@@ -685,6 +687,28 @@ static shader_t *ShaderForShaderNum( int shaderNum, const int *lightmapNums, con
 	return shader;
 }
 
+#ifdef __REGEN_NORMALS__
+void GenerateNormalsForXZY(vec3_t *xyz, vec3_t *normals)
+{
+	/*
+	vec3_t cr1, cr2;
+	VectorSet(cr1, (xyz[2][0] - xyz[0][0]), (xyz[2][1] - xyz[0][1]), (xyz[2][2] - xyz[0][2]));
+	VectorSet(cr2, (xyz[1][0] - xyz[0][0]), (xyz[1][1] - xyz[0][1]), (xyz[1][2] - xyz[0][2]));
+	CrossProduct(cr1, cr2, *normals);
+	VectorNormalize(*normals);
+	*/
+	
+	float* a = xyz[0];
+	float* b = xyz[1];
+	float* c = xyz[2];
+	vec3_t ba, ca;
+	VectorSubtract(b, a, ba);
+	VectorSubtract(c, a, ca);
+	CrossProduct(ca, ba, *normals);
+	VectorNormalize(*normals);
+}
+#endif //__REGEN_NORMALS__
+
 /*
 ===============
 ParseFace
@@ -738,6 +762,10 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	for(i = 0; i < numVerts; i++)
 	{
 		vec4_t color;
+
+#ifdef __REGEN_NORMALS__
+		GenerateNormalsForXZY(&verts[i].xyz, &verts[i].normal);
+#endif
 
 		for(j = 0; j < 3; j++)
 		{
@@ -892,6 +920,10 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	{
 		vec4_t color;
 
+#ifdef __REGEN_NORMALS__
+		GenerateNormalsForXZY(&verts[i].xyz, &verts[i].normal);
+#endif
+
 		for(j = 0; j < 3; j++)
 		{
 			points[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
@@ -996,6 +1028,10 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	for(i = 0; i < numVerts; i++)
 	{
 		vec4_t color;
+
+#ifdef __REGEN_NORMALS__
+		GenerateNormalsForXZY(&verts[i].xyz, &verts[i].normal);
+#endif
 
 		for(j = 0; j < 3; j++)
 		{
@@ -1887,6 +1923,10 @@ static void CopyVert(const srfVert_t * in, srfVert_t * out)
 		out->lightdir[j]  = in->lightdir[j];
 	}
 
+#ifdef __REGEN_NORMALS__
+	GenerateNormalsForXZY(&out->xyz, &out->normal);
+#endif
+
 	out->tangent[3] = in->tangent[3];
 
 	for(j = 0; j < 2; j++)
@@ -2091,6 +2131,11 @@ static void R_CreateWorldVBOs(void)
 				packedVertex_t& vert = verts[numVerts++];
 
 				VectorCopy (bspSurf->verts[i].xyz, vert.position);
+
+#ifdef __REGEN_NORMALS__
+				GenerateNormalsForXZY(&bspSurf->verts[i].xyz, &bspSurf->verts[i].normal);
+#endif
+
 				vert.normal = R_VboPackNormal (bspSurf->verts[i].normal);
 				vert.tangent = R_VboPackTangent (bspSurf->verts[i].tangent);
 				VectorCopy2 (bspSurf->verts[i].st, vert.texcoords[0]);

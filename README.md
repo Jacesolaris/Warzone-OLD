@@ -18,6 +18,7 @@
                                    WARZONE:
                                    ========
 
+                                 Angel Modder
                                    EpicLoyd
                                     Stoiss
                                   Unique One
@@ -56,6 +57,7 @@
                                    WARZONE:
                                    ========
                                    
+                                Angel Modder
                                     Echo
                           UniqueOne (just test maps)
 

@@ -28,8 +28,8 @@ attribute vec4 attr_Tangent2;
 attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
 
-uniform vec4				u_Settings0; // useTC, useDeform, useRGBA
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
+uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -37,6 +37,7 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
 
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
+#define USE_FOG				u_Settings1.b
 
 
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
@@ -78,6 +79,11 @@ uniform float  u_PortalRange;
 
 uniform int    u_DeformGen;
 uniform float  u_DeformParams[5];
+
+uniform vec4   u_FogDistance;
+uniform vec4   u_FogDepth;
+uniform float  u_FogEyeT;
+uniform vec4   u_FogColorMask;
 
 uniform mat4   u_ModelViewProjectionMatrix;
 //uniform mat4	u_ViewProjectionMatrix;
@@ -231,6 +237,20 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	}
 	
 	return color;
+}
+
+float CalcFog(vec3 position)
+{
+	float s = dot(vec4(position, 1.0), u_FogDistance) * 8.0;
+	float t = dot(vec4(position, 1.0), u_FogDepth);
+
+	float eyeOutside = float(u_FogEyeT < 0.0);
+	float fogged = float(t < eyeOutside);
+
+	t += 1e-6;
+	t *= fogged / (t - u_FogEyeT * eyeOutside);
+
+	return s * t;
 }
 
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
@@ -387,6 +407,11 @@ void main()
 	else
 	{
 		var_Color = u_VertColor * attr_Color + u_BaseColor;
+	}
+
+	if (USE_FOG == 1.0)
+	{
+		var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
 	}
 
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);

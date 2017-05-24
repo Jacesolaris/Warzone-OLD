@@ -256,8 +256,8 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 
 	if (!rfp || !rfpLen)  /* If the .ini file doesn't exist */
 	{
-		char sectionText[81] = { 0 };
-		char entryText[1024] = { 0 };
+		char sectionText[16384/*81*/] = { 0 };
+		char entryText[16384/*1024*/] = { 0 };
 
 		sprintf(sectionText, "%s\n", t_section);
 		strcat(out_buffer, sectionText);
@@ -274,12 +274,12 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 
 	do
 	{
-		char buffText[81] = { 0 };
+		char buffText[16384/*81*/] = { 0 };
 
 		if (!read_line(rfp, buff))
 		{
-			char sectionText[81] = { 0 };
-			char entryText[1024] = { 0 };
+			char sectionText[16384/*81*/] = { 0 };
+			char entryText[16384/*1024*/] = { 0 };
 			char newlineText[2] = { 0 };
 
 			/* Failed to find section, so add one to the end */
@@ -308,11 +308,11 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 	 * create an entry if one is not found.  */
 	while (1)
 	{
-		char buffText[81] = { 0 };
+		char buffText[16384/*81*/] = { 0 };
 
 		if (!read_line(rfp, buff))
 		{
-			char entryText[1024] = { 0 };
+			char entryText[16384/*1024*/] = { 0 };
 
 			/* EOF without an entry so make one */
 			sprintf(entryText, "%s=%s\n", entry, buffer);
@@ -333,28 +333,28 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 
 	if (buff[0] == '\n'/*'\0'*/)
 	{
-		char entryText[1024] = { 0 };
+		char entryText[16384/*1024*/] = { 0 };
 
 		sprintf(entryText, "%s=%s\n", entry, buffer);
 		strcat(out_buffer, entryText);
 
 		do
 		{
-			char buffText[81] = { 0 };
+			char buffText[16384/*81*/] = { 0 };
 			sprintf(buffText, "%s\n", buff);
 			strcat(out_buffer, buffText);
 		} while (read_line(rfp, buff));
 	}
 	else
 	{
-		char entryText[1024] = { 0 };
+		char entryText[16384/*1024*/] = { 0 };
 
 		sprintf(entryText, "%s=%s\n", entry, buffer);
 		strcat(out_buffer, entryText);
 
 		while (read_line(rfp, buff))
 		{
-			char buffText[81] = { 0 };
+			char buffText[16384/*81*/] = { 0 };
 			sprintf(buffText, "%s\n", buff);
 			strcat(out_buffer, buffText);
 		}

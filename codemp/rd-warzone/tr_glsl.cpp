@@ -2846,7 +2846,9 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
+		{
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
+		}
 
 		char *name = (char *)malloc(sizeof(char) * 64);
 		sprintf(name, "lightall%i", i);

@@ -4145,7 +4145,7 @@ static void ComputeVertexAttribs(void)
 			break;
 		}
 
-		if (pStage->glslShaderGroup == tr.lightallShader)
+		//if (pStage->glslShaderGroup == tr.lightallShader)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
 			shader.vertexAttribs |= ATTR_TANGENT;
@@ -5238,12 +5238,16 @@ static int CollapseStagesToGLSL(void)
 
 	//ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
+#define EXPERIMENTAL_MERGE_STUFF
+	
 	// skip shaders with deforms
+#ifndef EXPERIMENTAL_MERGE_STUFF
 	if (shader.numDeforms != 0)
 	{
 		skip = qtrue;
 		//ri->Printf (PRINT_DEVELOPER, "> Shader has vertex deformations. Aborting stage collapsing\n");
 	}
+#endif //EXPERIMENTAL_MERGE_STUFF
 
 	//ri->Printf (PRINT_DEVELOPER, "> Original shader stage order:\n");
 
@@ -5303,12 +5307,18 @@ static int CollapseStagesToGLSL(void)
 			if (!pStage->active)
 				continue;
 
-			if (pStage->adjustColorsForFog)
+
+			if (pStage->adjustColorsForFog 
+#ifdef EXPERIMENTAL_MERGE_STUFF
+				&& !pStage->glow
+#endif //EXPERIMENTAL_MERGE_STUFF
+				)
 			{
 				skip = qtrue;
 				break;
 			}
-
+			
+#ifndef EXPERIMENTAL_MERGE_STUFF
 			if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 				pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 			{
@@ -5321,7 +5331,9 @@ static int CollapseStagesToGLSL(void)
 					break;
 				}
 			}
+#endif //EXPERIMENTAL_MERGE_STUFF
 
+#ifndef __EXTRA_PRETTY__
 			switch(pStage->bundle[0].tcGen)
 			{
 				case TCGEN_TEXTURE:
@@ -5333,12 +5345,12 @@ static int CollapseStagesToGLSL(void)
 				case TCGEN_VECTOR:
 					break;
 				default:
-#ifndef __EXTRA_PRETTY__
 					skip = qtrue;
-#endif //__EXTRA_PRETTY__
 					break;
 			}
+#endif //__EXTRA_PRETTY__
 
+#ifndef EXPERIMENTAL_MERGE_STUFF
 			switch(pStage->alphaGen)
 			{
 #ifndef __EXTRA_PRETTY__
@@ -5350,6 +5362,7 @@ static int CollapseStagesToGLSL(void)
 				default:
 					break;
 			}
+#endif //EXPERIMENTAL_MERGE_STUFF
 		}
 	}
 
@@ -5654,6 +5667,11 @@ static int CollapseStagesToGLSL(void)
 			if (pStage->adjustColorsForFog)
 				continue;
 
+#ifdef EXPERIMENTAL_MERGE_STUFF
+			// UQ1: Added, always use lightall...
+			pStage->glslShaderGroup = tr.lightallShader;
+#endif //EXPERIMENTAL_MERGE_STUFF
+
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen >= TCGEN_LIGHTMAP && pStage->bundle[TB_DIFFUSEMAP].tcGen <= TCGEN_LIGHTMAP3)
 			{
 				if (hasRealNormalMap) pStage->hasRealNormalMap = true;
@@ -5679,7 +5697,11 @@ static int CollapseStagesToGLSL(void)
 			if (!pStage->active)
 				continue;
 
-			if (pStage->adjustColorsForFog)
+			if (pStage->adjustColorsForFog
+#ifdef EXPERIMENTAL_MERGE_STUFF
+				&& !pStage->glow
+#endif //EXPERIMENTAL_MERGE_STUFF
+				)
 				continue;
 
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE ||

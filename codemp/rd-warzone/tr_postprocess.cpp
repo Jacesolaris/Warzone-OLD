@@ -991,19 +991,12 @@ qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun)
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 
-	/*if (isSun)
+	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to) > 96))
 	{
-		if (trace.fraction < 0.7)
-			return qfalse;
-	}*/
-
-	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 96)
-	//if (trace.fraction < 0.7)
-	{
-		return qfalse;
+		return qtrue;
 	}
 
-	return qtrue;
+	return qfalse;
 #endif
 }
 

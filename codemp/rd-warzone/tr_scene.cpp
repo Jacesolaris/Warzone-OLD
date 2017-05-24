@@ -340,6 +340,8 @@ float DAY_NIGHT_AMBIENT_SCALE = 0.0;
 vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
 vec4_t DAY_NIGHT_AMBIENT_COLOR_CURRENT;
 
+extern float DAY_NIGHT_CYCLE_SPEED;
+
 extern qboolean SUN_VISIBLE;
 extern vec3_t SUN_POSITION;
 extern vec2_t SUN_SCREEN_POSITION;
@@ -364,7 +366,7 @@ void RB_UpdateDayNightCycle()
 		vec4_t sunColor;
 		float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
 
-		DAY_NIGHT_CURRENT_TIME += r_dayNightCycleSpeed->value;
+		DAY_NIGHT_CURRENT_TIME += (r_dayNightCycleSpeed->value * DAY_NIGHT_CYCLE_SPEED);
 
 		if (Time24h > 24.0)
 		{

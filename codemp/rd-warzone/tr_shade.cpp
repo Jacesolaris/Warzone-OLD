@@ -1356,7 +1356,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 
 		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, r_glowStrength->value, MAP_INFO_MAXS[2], 0.0);
+		VectorSet4(local8, (float)stageNum, r_glowStrength->value, MAP_INFO_MAXS[2], r_showsplat->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 	else
@@ -1846,6 +1846,65 @@ vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
 
 extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
 extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
+extern void Volumetric_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask);
+
+qboolean Light_Visible(vec3_t from, vec3_t to, qboolean isSun, float radius)
+{
+	if (isSun)
+		return qtrue;
+
+	float scanRad = radius;
+	if (scanRad < 0) scanRad = -scanRad;
+	scanRad *= 4.0;
+
+	trace_t trace;
+
+	Volumetric_Trace(&trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to) > scanRad))
+	{
+		return qtrue;
+	}
+
+	vec3_t to2;
+	VectorCopy(to, to2);
+	to2[0] += scanRad;
+	Volumetric_Trace(&trace, from, NULL, NULL, to2, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to2) > scanRad))
+	{
+		return qtrue;
+	}
+
+	VectorCopy(to, to2);
+	to2[0] -= scanRad;
+	Volumetric_Trace(&trace, from, NULL, NULL, to2, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to2) > scanRad))
+	{
+		return qtrue;
+	}
+
+	VectorCopy(to, to2);
+	to2[1] += scanRad;
+	Volumetric_Trace(&trace, from, NULL, NULL, to2, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to2) > scanRad))
+	{
+		return qtrue;
+	}
+
+	VectorCopy(to, to2);
+	to2[1] -= scanRad;
+	Volumetric_Trace(&trace, from, NULL, NULL, to2, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to2) > scanRad))
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
 
 void RB_UpdateCloseLights ( void )
 {
@@ -1874,7 +1933,7 @@ void RB_UpdateCloseLights ( void )
 			vec3_t from;
 			VectorCopy(tr.refdef.vieworg, from);
 			from[2] += 64.0;
-			if (!Volumetric_Visible(tr.refdef.vieworg, dl->origin, qfalse))
+			if (!Light_Visible(tr.refdef.vieworg, dl->origin, qfalse, dl->radius))
 			{
 				continue;
 			}
@@ -1913,7 +1972,7 @@ void RB_UpdateCloseLights ( void )
 				vec3_t from;
 				VectorCopy(tr.refdef.vieworg, from);
 				from[2] += 64.0;
-				if (!Volumetric_Visible(tr.refdef.vieworg, dl->origin, qfalse))
+				if (!Light_Visible(tr.refdef.vieworg, dl->origin, qfalse, dl->radius))
 				{
 					continue;
 				}
@@ -1938,7 +1997,7 @@ void RB_UpdateCloseLights ( void )
 		}
 
 		// Double the range on all lights...
-		CLOSEST_LIGHTS_DISTANCES[i] *= 2.0;
+		CLOSEST_LIGHTS_DISTANCES[i] *= 4.0;
 	}
 
 	//ri->Printf(PRINT_ALL, "Found %i close lights this frame.\n", NUM_CLOSE_LIGHTS);
@@ -1961,6 +2020,7 @@ extern void GLSL_AttachGlowTextures( void );
 extern void GLSL_AttachWaterTextures( void );
 extern void GLSL_AttachWaterTextures2( void );
 
+extern world_t				s_worldData;
 extern qboolean ALLOW_GL_400;
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
@@ -2214,6 +2274,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		float useTC = 0.0;
 		float useDeform = 0.0;
 		float useRGBA = 0.0;
+		float useFog = 0.0;
 
 		float useVertexAnim = 0.0;
 		float useSkeletalAnim = 0.0;
@@ -2299,6 +2360,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else
 		{
 			int index = pStage->glslShaderIndex;
+
+			if (s_worldData.lightGridArray == NULL && (index & LIGHTDEF_USE_LIGHTMAP))
+			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
+				index &= ~LIGHTDEF_USE_LIGHTMAP;
+			}
 			
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
@@ -2403,6 +2469,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useDeform = 1.0;
 			}
 
+			if (input->fogNum)
+			{
+				useFog = 1.0;
+			}
+
 			pStage->glslShaderGroup = tr.lightallShader;
 			sp = &pStage->glslShaderGroup[index];
 
@@ -2432,8 +2503,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					sp2 = &tr.pebblesShader;
 					passMax = r_pebblesPasses->integer;
 				}
-
-				GLSL_BindProgram(sp);
 			}
 		}
 
@@ -2450,7 +2519,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
 
-			VectorSet4(vec, useVertexAnim, useSkeletalAnim, 0, 0);
+			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, 0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 		}
 
@@ -2547,47 +2616,41 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
 		GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
 
-		/*
-		if (isGeneric)
-		{// UQ1: Only generic uses these...
-			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+		{
+			//if (r_fog->integer) //useFog
 			{
-				if (r_fog->integer)
+				if (input->fogNum)
 				{
-					if (input->fogNum)
-					{
-						vec4_t fogColorMask;
-						GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
-						GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
-						GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
+					vec4_t fogColorMask;
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
+					GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
 
-						ComputeFogColorMask(pStage, fogColorMask);
-						GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
-					}
+					ComputeFogColorMask(pStage, fogColorMask);
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
 				}
 			}
 		}
-		else*/
-		{// UQ1: Only lightall uses these...
-			//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
 
-			//
-			// testing cube map
-			//
-			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-			{
-				GL_BindToTMU( tr.blackImage, TB_CUBEMAP);
-				GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
-				VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
-			}
-			else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
-			{
-				GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
-				GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
-				VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
-				GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
-			}
+		//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
+
+		//
+		// testing cube map
+		//
+		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		{
+			GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
+			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+		}
+		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
+		{
+			GL_BindToTMU(tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
+			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
+			VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
+			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}
 
 		//

@@ -272,31 +272,6 @@ void main(void)
 
 	vec2 texCoords = var_TexCoords;
 
-#if 0 // Debugging stuff
-	if (u_Local3.g >= 2.0)
-	{
-		vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
-
-		if (u_Local3.g >= 4.0)
-			gl_FragColor.rgb = vec3((position.rg / u_Local3.r), 0.0) * 0.5 + 0.5;
-		else if (u_Local3.g >= 3.0)
-			gl_FragColor.rgb = vec3(position.b / u_Local3.r) * 0.5 + 0.5;
-		else
-			gl_FragColor.rgb = vec3(position.rgb / u_Local3.r) * 0.5 + 0.5;
-		return;
-	}
-
-	if (u_Local3.g >= 1.0)
-	{
-		vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
-
-		float dist = distance(position.xyz, u_ViewOrigin.xyz);
-		dist = clamp(dist / 4096.0, 0.0, 1.0);
-		gl_FragColor.rgb = vec3(dist);
-		return;
-	}
-#endif
-
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
 
@@ -311,6 +286,27 @@ void main(void)
 		//gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
 		return;
 	}*/
+
+#if 0 // Debugging stuff
+	/*if (u_Local3.g >= 2.0)
+	{
+		if (u_Local3.g >= 4.0)
+			gl_FragColor.rgb = vec3((position.rg / u_Local3.r), 0.0) * 0.5 + 0.5;
+		else if (u_Local3.g >= 3.0)
+			gl_FragColor.rgb = vec3(position.b / u_Local3.r) * 0.5 + 0.5;
+		else
+			gl_FragColor.rgb = vec3(position.rgb / u_Local3.r) * 0.5 + 0.5;
+		return;
+	}
+
+	if (u_Local3.g >= 1.0)
+	{*/
+		float dist = distance(position.xyz, u_ViewOrigin.xyz);
+		dist = clamp(dist / 4096.0, 0.0, 1.0);
+		gl_FragColor.rgb = vec3(dist);
+		return;
+	//}
+#endif
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	norm.xyz = decode(norm.xy);
@@ -389,6 +385,8 @@ void main(void)
 	}
 #endif //defined(USE_SHADOWMAP)
 
+	float lightScale = clamp((1.0 - max(max(color.r, color.g), color.b)) - 0.2, 0.0, 1.0);
+
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 	float lambertian2 = dot(PrimaryLightDir.xyz, N);
 	float spec2 = 0.0;
@@ -442,39 +440,29 @@ void main(void)
 					if (lightColorLength > LIGHT_THRESHOLD)
 					{
 						// Try to maximize light strengths...
-						lightColor /= lightColorLength;
-						//lightColor.rgb /= (1.0 - (lightColorLength / 3.0));
+						//lightColor /= lightColorLength;
 
 						// Add some basic light...
-						vec3 ambientLight = lightColor * lightStrength;
-						addedLight += ambientLight * 0.25;//u_Local3.r; // Always add some basic light...
-						addedLight += ambientLight * gl_FragColor.rgb * 0.25;//u_Local3.g; // Always add some basic light...
+						vec3 ambientLight = lightColor * lightStrength * lightScale * 0.1;//u_Local3.r;
+						vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 0.5;//u_Local3.g;
+						addedLight += ambientLight; // Always add some basic light...
+						addedLight += diffuseLight; // Always add some basic diffuse light...
+						vec3 lightDir = -normalize(lightPos - position.xyz);
 
-						vec3 lightDir = normalize(position.xyz - lightPos);
-						float lambertian3 = dot(lightDir.xyz, N);
+						// Specular...
+						vec3 halfDir3 = normalize(lightDir.xyz + E);
+						vec3 R = normalize(-reflect(lightDir,N));
+						float specAngle3 = max(-dot(R,E),0.0);
+						//float spec3 = pow(specAngle3, 16.0);
+						float spec3 = clamp(pow(specAngle3, 0.7/*u_Local3.a*/), 0.0, 1.0);
 
-						if (lambertian3 > 0.0)
-						{// this is blinn phong
-							// Specular...
-							vec3 halfDir3 = normalize(lightDir.xyz + E);
-							float specAngle3 = max(dot(halfDir3, N), 0.0);
-							float spec3 = pow(specAngle3, 16.0);
-
-							float strength = (clamp(1.0 - spec3, 0.0, 1.0) * normStrength) * lightStrength * 0.25;//u_Local3.b;
-							addedLight +=  lightColor * strength * 0.5;
-						}
+						addedLight += diffuseLight * (spec3 * (norm.a * 0.5 + 0.5)) * phongFactor * 48.0;//u_Local3.b;
 					}
 				}
 			}
 		}
 
-		if (length(addedLight) > 0.0)
-		{
-			//gl_FragColor.rgb += clamp(addedLight * 0.05, 0.0, 1.0);
-			//gl_FragColor.rgb += clamp(addedLight * /*0.3*/u_Local3.a, 0.0, 1.0);
-			gl_FragColor.rgb += addedLight * 0.3;
-			//gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
-		}
+		gl_FragColor.rgb += clamp(addedLight, 0.0, 1.0) * lightScale;
 	}
 
 #ifdef __CUBEMAP__

@@ -23,6 +23,7 @@ typedef enum {
 	WEATHER_FOREST,
 	WEATHER_FOREST_ISLAND,
 	WEATHER_TROPICAL_ISLAND,
+	WEATHER_DAGOBAH,
 	WEATHER_DESERT,
 	WEATHER_CITY,
 	WEATHER_CANTINA,
@@ -63,6 +64,7 @@ qhandle_t WEATHER_FOREST_SOUND = NULL;
 //qhandle_t WEATHER_FOREST_NIGHT_SOUND = NULL;// TODO: Day/Night Integration...
 qhandle_t WEATHER_FOREST_ISLAND_SOUND = NULL;
 qhandle_t WEATHER_TROPICAL_ISLAND_SOUND = NULL;
+qhandle_t WEATHER_DAGOBAH_SOUND = NULL;
 qhandle_t WEATHER_DESERT_SOUND = NULL;
 qhandle_t WEATHER_CITY_SOUND = NULL;
 qhandle_t WEATHER_CANTINA_SOUND = NULL;
@@ -276,6 +278,9 @@ void CG_AddAtmosphericEffects()
 		case WEATHER_TROPICAL_ISLAND:
 			WEATHER_TROPICAL_ISLAND_SOUND = trap->S_RegisterSound("sound/atmospherics/tropical_island.mp3");
 			break;
+		case WEATHER_DAGOBAH:
+			WEATHER_DAGOBAH_SOUND = trap->S_RegisterSound("sound/atmospherics/dagobah.mp3");
+			break;
 		case WEATHER_DESERT:
 			WEATHER_DESERT_SOUND = trap->S_RegisterSound("sound/atmospherics/desert.mp3");
 			break;
@@ -373,6 +378,14 @@ void CG_AddAtmosphericEffects()
 		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 		{
 			trap->S_StartLocalSound(WEATHER_TROPICAL_ISLAND_SOUND, CHAN_AMBIENT);
+			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
+		}
+		return;
+		break;
+	case WEATHER_DAGOBAH:
+		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
+		{
+			trap->S_StartLocalSound(WEATHER_DAGOBAH_SOUND, CHAN_AMBIENT);
 			ATMOSPHERIC_NEXT_SOUND_TIME = cg.time + 595000;
 		}
 		return;
@@ -612,6 +625,12 @@ qboolean CG_AtmosphericKludge()
 	{
 		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7tropical_island^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_TROPICAL_ISLAND;
+		return(kludgeResult = qtrue);
+	}
+	else if (!Q_stricmp(atmosphericString, "dagobah"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7dagobah^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_DAGOBAH;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "desert"))
