@@ -900,7 +900,19 @@ void main()
 #if !defined(USE_GLOW_BUFFER)
 		bool outputNormals = false;
 
-		if (USE_NO_NORMALS == 0.0)
+/*
+#define USE_TC				u_Settings0.r
+#define USE_DEFORM			u_Settings0.g
+#define USE_RGBA			u_Settings0.b
+#define USE_TEXTURECLAMP	u_Settings0.a
+
+#define USE_VERTEX_ANIM		u_Settings1.r
+#define USE_SKELETAL_ANIM	u_Settings1.g
+#define USE_FOG				u_Settings1.b
+#define USE_NO_NORMALS		u_Settings1.a
+*/
+
+		if (USE_NO_NORMALS == 0.0 /*&& USE_TC == 0.0 && USE_DEFORM == 0.0 && USE_RGBA == 0.0 && USE_TEXTURECLAMP == 0.0 && USE_FOG == 0.0*/)
 		{
 			if (gl_FragColor.a >= 0.3/*u_Local9.r*//*0.996*/ || ((u_Local1.a == 5.0 || u_Local1.a == 6.0 || u_Local1.a == 19.0 || u_Local1.a == 20.0) && gl_FragColor.a >= 0.5))
 			{// Hmm how to handle transparancies with deferred... Maybe I should add a second alpha normals map...

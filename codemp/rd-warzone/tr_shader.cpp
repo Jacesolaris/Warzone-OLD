@@ -5761,6 +5761,11 @@ static int CollapseStagesToGLSL(void)
 			stage->hasRealSteepMap2 = true;
 		}
 
+		if (stage->glslShaderGroup != tr.lightallShader)
+		{
+
+		}
+
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
 

@@ -443,17 +443,16 @@ void main(void)
 						//lightColor /= lightColorLength;
 
 						// Add some basic light...
-						vec3 ambientLight = lightColor * lightStrength * lightScale * 0.1;//u_Local3.r;
-						vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 0.5;//u_Local3.g;
+						vec3 ambientLight = lightColor * lightStrength * lightScale * 0.1;
+						vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 0.5;
 						addedLight += ambientLight; // Always add some basic light...
 						addedLight += diffuseLight; // Always add some basic diffuse light...
-						vec3 lightDir = -normalize(lightPos - position.xyz);
 						
 						// Specular...
-						vec3 halfDir3 = normalize(lightDir.xyz + E);
+						vec3 lightDir = -normalize(lightPos - position.xyz);
 						vec3 R = normalize(-reflect(lightDir,N));
 						float specAngle3 = max(-dot(R,E),0.0);
-						float spec3 = clamp(pow(specAngle3, 0.7/*u_Local3.a*/), 0.0, 1.0);
+						float spec3 = clamp(pow(specAngle3, 0.7), 0.0, 1.0);
 						
 						addedLight += lightColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 0.5 * (spec3 * (norm.a * 0.5 + 0.5)) * phongFactor * 48.0;
 					}
@@ -461,7 +460,7 @@ void main(void)
 			}
 		}
 
-		gl_FragColor.rgb += clamp(addedLight, 0.0, 1.0) * lightScale;
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb + clamp(addedLight, 0.0, 1.0) * lightScale, 0.0, 1.0);
 	}
 
 #ifdef __CUBEMAP__

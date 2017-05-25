@@ -2349,8 +2349,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 
+				//pStage->glslShaderGroup = tr.lightallShader;
+				//sp = &pStage->glslShaderGroup[index];
 				sp = &tr.lightallShader[index];
-				pStage->glslShaderGroup = tr.lightallShader;
 
 				backEnd.pc.c_lightallDraws++;
 			}
@@ -2368,7 +2369,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			int index = pStage->glslShaderIndex;
 
-			if (s_worldData.lightGridArray == NULL && (index & LIGHTDEF_USE_LIGHTMAP))
+			if ((s_worldData.lightGridArray == NULL && (index & LIGHTDEF_USE_LIGHTMAP))
+				|| (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity))
 			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
 				if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 					&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
@@ -2402,75 +2404,72 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// testing cube map
 			//
-			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+			if (ADD_CUBEMAP_INDEX)
 			{
-				if (ADD_CUBEMAP_INDEX)
+				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
-					if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+					if (glState.vertexAnimation)
 					{
-						if (glState.vertexAnimation)
+						if (r_cubeMapping->integer >= 2)
 						{
-							if (r_cubeMapping->integer >= 2)
-							{
-								index |= LIGHTDEF_USE_CUBEMAP;
-							}
-						}
-						else if (glState.skeletalAnimation)
-						{
-							if (r_cubeMapping->integer >= 1)
-							{
-								index |= LIGHTDEF_USE_CUBEMAP;
-							}
+							index |= LIGHTDEF_USE_CUBEMAP;
 						}
 					}
-					else
+					else if (glState.skeletalAnimation)
 					{
-						index |= LIGHTDEF_USE_CUBEMAP;
+						if (r_cubeMapping->integer >= 1)
+						{
+							index |= LIGHTDEF_USE_CUBEMAP;
+						}
 					}
 				}
+				else
+				{
+					index |= LIGHTDEF_USE_CUBEMAP;
+				}
+			}
 
-				if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
-					&& (pStage->bundle[TB_STEEPMAP].image[0]
-						|| pStage->bundle[TB_STEEPMAP2].image[0]
-						|| pStage->bundle[TB_SPLATMAP1].image[0]
-						|| pStage->bundle[TB_SPLATMAP2].image[0]
-						|| pStage->bundle[TB_SPLATMAP3].image[0]))
-				{
-					isUsingRegions = qtrue;
-					index |= LIGHTDEF_USE_REGIONS;
-				}
-				else if ((pStage->bundle[TB_STEEPMAP].image[0]
+			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_STEEPMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
 					|| pStage->bundle[TB_SPLATMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP3].image[0]))
-				{
-					index |= LIGHTDEF_USE_TRIPLANAR;
-				}
+			{
+				isUsingRegions = qtrue;
+				index |= LIGHTDEF_USE_REGIONS;
+			}
+			else if ((pStage->bundle[TB_STEEPMAP].image[0]
+				|| pStage->bundle[TB_STEEPMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]))
+			{
+				index |= LIGHTDEF_USE_TRIPLANAR;
+			}
 
-				if ((index & LIGHTDEF_USE_GLOW_BUFFER) || pStage->glow)
-				{
-					isGlowStage = qtrue;
-				}
+			if ((index & LIGHTDEF_USE_GLOW_BUFFER) || pStage->glow)
+			{
+				isGlowStage = qtrue;
+			}
 
-				switch (pStage->rgbGen)
-				{
-				case CGEN_LIGHTING_DIFFUSE:
-					useRGBA = 1.0;
-					break;
-				default:
-					break;
-				}
+			switch (pStage->rgbGen)
+			{
+			case CGEN_LIGHTING_DIFFUSE:
+				useRGBA = 1.0;
+				break;
+			default:
+				break;
+			}
 
-				switch (pStage->alphaGen)
-				{
-				case AGEN_LIGHTING_SPECULAR:
-				case AGEN_PORTAL:
-					useRGBA = 1.0;
-					break;
-				default:
-					break;
-				}
+			switch (pStage->alphaGen)
+			{
+			case AGEN_LIGHTING_SPECULAR:
+			case AGEN_PORTAL:
+				useRGBA = 1.0;
+				break;
+			default:
+				break;
 			}
 
 			if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods)
@@ -2488,8 +2487,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useFog = 1.0;
 			}
 
-			pStage->glslShaderGroup = tr.lightallShader;
-			sp = &pStage->glslShaderGroup[index];
+			//pStage->glslShaderGroup = tr.lightallShader;
+			//sp = &pStage->glslShaderGroup[index];
+			sp = &tr.lightallShader[index];
 
 			backEnd.pc.c_lightallDraws++;
 
@@ -2558,14 +2558,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		float noNormOutputs = 0.0;
 
-		//if ((stateBits & GL_DST_COLOR) && (stateBits & GL_SRC_COLOR))
-		/*if ((stateBits & GLS_SRCBLEND_DST_COLOR) 
-			|| (stateBits & GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
-			|| (stateBits & GLS_DSTBLEND_SRC_COLOR)
-			|| (stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR))
+		/*if (pStage->glslShaderGroup != tr.lightallShader)
 		{
 			noNormOutputs = 1.0;
 		}*/
+
+		if (pStage->adjustColorsForFog)
+		{
+			noNormOutputs = 1.0;
+		}
 
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
 			vec4_t vec;
@@ -2704,11 +2705,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
 				}
 			}
-			else
+			/*else
 			{
 				VectorSet4(baseColor, 1, 1, 1, 1);
 				VectorSet4(vertColor, 1, 1, 1, 1);
-			}
+			}*/
 
 			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
