@@ -448,15 +448,14 @@ void main(void)
 						addedLight += ambientLight; // Always add some basic light...
 						addedLight += diffuseLight; // Always add some basic diffuse light...
 						vec3 lightDir = -normalize(lightPos - position.xyz);
-
+						
 						// Specular...
 						vec3 halfDir3 = normalize(lightDir.xyz + E);
 						vec3 R = normalize(-reflect(lightDir,N));
 						float specAngle3 = max(-dot(R,E),0.0);
-						//float spec3 = pow(specAngle3, 16.0);
 						float spec3 = clamp(pow(specAngle3, 0.7/*u_Local3.a*/), 0.0, 1.0);
-
-						addedLight += diffuseLight * (spec3 * (norm.a * 0.5 + 0.5)) * phongFactor * 48.0;//u_Local3.b;
+						
+						addedLight += lightColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 0.5 * (spec3 * (norm.a * 0.5 + 0.5)) * phongFactor * 48.0;
 					}
 				}
 			}

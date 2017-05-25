@@ -42,7 +42,7 @@ uniform sampler2D			u_OverlayMap;
 
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, USE_TEXTURECLAMP
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, noNormOutputs
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -51,6 +51,8 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
 
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
+#define USE_FOG				u_Settings1.b
+#define USE_NO_NORMALS		u_Settings1.a
 
 
 uniform vec2				u_Dimensions;
@@ -855,6 +857,7 @@ void main()
 	N.xy *= 0.25;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
+	N.rgb *= diffuse.a * var_Color.a;
 #endif //!defined(USE_GLOW_BUFFER)
 
 
@@ -887,22 +890,27 @@ void main()
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
 
-	#endif //defined(USE_LIGHTMAP)
+	#endif //defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 
 		gl_FragColor = vec4(diffuse.rgb + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
 
 
 
+#if !defined(USE_GLOW_BUFFER)
 		bool outputNormals = false;
 
-		if (gl_FragColor.a >= 0.996 || ((u_Local1.a == 5.0 || u_Local1.a == 6.0 || u_Local1.a == 19.0 || u_Local1.a == 20.0) && gl_FragColor.a >= 0.5))
-		{// Hmm how to handle transparancies with deferred... Maybe I should add a second alpha normals map...
-			outputNormals = true;
+		if (USE_NO_NORMALS == 0.0)
+		{
+			if (gl_FragColor.a >= 0.3/*u_Local9.r*//*0.996*/ || ((u_Local1.a == 5.0 || u_Local1.a == 6.0 || u_Local1.a == 19.0 || u_Local1.a == 20.0) && gl_FragColor.a >= 0.5))
+			{// Hmm how to handle transparancies with deferred... Maybe I should add a second alpha normals map...
+				outputNormals = true;
+			}
 		}
+#endif //!defined(USE_GLOW_BUFFER)
 
 
-
+#if !defined(USE_GLOW_BUFFER)
 #if !defined(DEFERRED_REFLECTIONS)
 	#if defined(__CUBEMAPS_ENABLED__)
 		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && outputNormals)
@@ -942,7 +950,7 @@ void main()
 		enableCubemap = 1.0;
 	}
 #endif //defined(DEFERRED_REFLECTIONS)
-
+#endif //!defined(USE_GLOW_BUFFER)
 
 
 	gl_FragColor.rgb *= lightColor;

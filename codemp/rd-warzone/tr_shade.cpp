@@ -2315,6 +2315,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{// testing - force lightall
 			int index = pStage->glslShaderIndex;
 
+			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
+				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
+				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
+			{// No point at all in doing this stage...
+				continue;
+			}
+
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
 				if (glState.vertexAnimation)
@@ -2363,6 +2370,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (s_worldData.lightGridArray == NULL && (index & LIGHTDEF_USE_LIGHTMAP))
 			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
+				if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
+					&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
+					&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
+				{// No point at all in doing this stage...
+					continue;
+				}
+
 				index &= ~LIGHTDEF_USE_LIGHTMAP;
 			}
 			
@@ -2507,27 +2521,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 
 
-		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
-			vec4_t vec;
-			float isTextureClamped = 0.0;
-
-			if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE))
-			{
-				isTextureClamped = 1.0;
-			}
-
-			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
-
-			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, 0);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
-		}
-
-
-		//
-		// UQ1: Split up uniforms by what is actually used...
-		//
-
 		RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 		stateBits = pStage->stateBits;
@@ -2561,6 +2554,33 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
 			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
 				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+		}
+
+		float noNormOutputs = 0.0;
+
+		//if ((stateBits & GL_DST_COLOR) && (stateBits & GL_SRC_COLOR))
+		/*if ((stateBits & GLS_SRCBLEND_DST_COLOR) 
+			|| (stateBits & GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
+			|| (stateBits & GLS_DSTBLEND_SRC_COLOR)
+			|| (stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR))
+		{
+			noNormOutputs = 1.0;
+		}*/
+
+		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
+			vec4_t vec;
+			float isTextureClamped = 0.0;
+
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE))
+			{
+				isTextureClamped = 1.0;
+			}
+
+			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
+
+			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, noNormOutputs);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 		}
 
 		// UQ1: Used by both generic and lightall...
@@ -2619,6 +2639,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 		{
 			//if (r_fog->integer) //useFog
+			if (useFog)
 			{
 				if (input->fogNum)
 				{

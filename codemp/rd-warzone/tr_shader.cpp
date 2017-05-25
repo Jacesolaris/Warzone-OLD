@@ -5318,7 +5318,7 @@ static int CollapseStagesToGLSL(void)
 				break;
 			}
 			
-#ifndef EXPERIMENTAL_MERGE_STUFF
+//#ifndef EXPERIMENTAL_MERGE_STUFF
 			if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 				pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 			{
@@ -5331,7 +5331,7 @@ static int CollapseStagesToGLSL(void)
 					break;
 				}
 			}
-#endif //EXPERIMENTAL_MERGE_STUFF
+//#endif //EXPERIMENTAL_MERGE_STUFF
 
 #ifndef __EXTRA_PRETTY__
 			switch(pStage->bundle[0].tcGen)

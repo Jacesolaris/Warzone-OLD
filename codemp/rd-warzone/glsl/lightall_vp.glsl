@@ -34,6 +34,7 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
 #define USE_RGBA			u_Settings0.b
+#define USE_TEXTURECLAMP	u_Settings0.a
 
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g

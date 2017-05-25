@@ -2329,6 +2329,7 @@ void NPC_PrecacheType( char *NPC_type )
 
 void NPC_PrecacheWarzoneNPCs ( void )
 {
+#ifdef __PRECACHE_NPCS__
 	int i;
 
 	//
@@ -2435,6 +2436,7 @@ void NPC_PrecacheWarzoneNPCs ( void )
 	NPC_PrecacheType( "civilian_weequay3" );
 	NPC_PrecacheType( "civilian_weequay4" );
 	NPC_PrecacheType( "civilian_r5d2" );
+#endif //__PRECACHE_NPCS__
 }
 
 void SP_NPC_spawner2( gentity_t *self)
