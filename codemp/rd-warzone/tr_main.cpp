@@ -1872,7 +1872,7 @@ qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
 		return qfalse;
 	}
 
-
+#if 0
 	if (!R_CULL_InFOV(ent->e.origin, tr.refdef.vieworg)) {
 		// Not in FOV? Cull the bitch!
 		NUM_ENTS_FOV_CULLED++;
@@ -1884,6 +1884,7 @@ qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
 		NUM_ENTS_PVS_CULLED++;
 		return qtrue;
 	}
+#endif
 
 	if (ent->e.radius > 0.0)
 	{
@@ -1926,9 +1927,11 @@ static void R_AddEntitySurface (int entityNum)
 
 	ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
 
+	if (!ent) return;
+
 	if (backEnd.refdef.rdflags & RDF_BLUR)
 	{
-		if (Distance(ent->e.origin, backEnd.refdef.vieworg/*tr.refdef.vieworg*/) > 1024)
+		if (ent && Distance(ent->e.origin, backEnd.refdef.vieworg/*tr.refdef.vieworg*/) > 1024)
 		{// Don't draw distant entities in scope blured background view...
 			return;
 		}
@@ -1973,15 +1976,14 @@ static void R_AddEntitySurface (int entityNum)
 		
 		if (tr.viewParms.flags & VPF_SHADOWPASS)
 		{
-			if (Distance(ent->e.origin, tr.refdef.vieworg) > tr.viewParms.maxEntityRange)
+			if (ent && Distance(ent->e.origin, tr.refdef.vieworg) > tr.viewParms.maxEntityRange)
 				return; // Too far away to bother rendering to shadowmap...
 		}
 		else 
 		{
-			if (Distance(ent->e.origin, tr.refdef.vieworg) > 4096.0)
+			if (ent && Distance(ent->e.origin, tr.refdef.vieworg) > 4096.0)
 				return; // Too far away to bother rendering to shadowmap...
 		}
-		
 	}
 #endif
 
@@ -2004,13 +2006,13 @@ static void R_AddEntitySurface (int entityNum)
 			return;
 		}
 
-		if (R_CullPointAndRadius( ent->e.origin, ent->e.radius ) != CULL_OUT)
+		//if (R_CullPointAndRadius( ent->e.origin, ent->e.radius ) != CULL_OUT)
 		{
-			if ( R_CullEntitySurface( ent ) ) {
+			/*if ( r_entityCull->integer && R_CullEntitySurface( ent ) ) {
 				// Well, that's a lot of stuff we don't need to draw...
 				if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
 				return;
-			}
+			}*/
 
 			shader = R_GetShaderByHandle( ent->e.customShader );
 #ifdef __MERGE_MORE__
