@@ -125,6 +125,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		return;
 	}
 
+#ifndef __FULL_VERSION_WEAPONS__
+	if (!strcmp(item->view_model, "models/weapons/E-11_Carbine/viewmodel.md3"))
+	{// If this is a disabled weapon, skip loading fx.
+		return;
+	}
+#endif
+
 	CG_RegisterItemVisuals( item - bg_itemlist );
 
 	// UQ1: Set all names in the bg_weapons.c struct and copy it here... Don't set them below...

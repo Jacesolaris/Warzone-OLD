@@ -849,6 +849,7 @@ An item fires all of its targets when it is picked up.  If the toucher can't car
 "count" override quantity or duration on most items.
 */
 
+#ifdef __FULL_VERSION_WEAPONS__
 gitem_t	bg_itemlist[] =
 {
 	{
@@ -2533,6 +2534,1694 @@ Only in One Flag CTF games
 	// end of list marker
 	{NULL}
 };
+#else //!__FULL_VERSION_WEAPONS__
+gitem_t	bg_itemlist[] =
+{
+	{
+		NULL,				// classname
+		NULL,				// pickup_sound
+		{ NULL,			// world_model[0]
+		NULL,			// world_model[1]
+		0, 0 } ,			// world_model[2],[3]
+		NULL,				// view_model
+		/* icon */		NULL,		// icon
+									/* pickup */	//NULL,		// pickup_name
+									0,					// quantity
+									IT_BAD,				// giType (IT_*)
+									0,					// giTag
+									/* precache */ "",			// precaches
+									/* sounds */ "",			// sounds
+									""					// description
+	},	// leave index 0 alone
+
+		//
+		// Pickups
+		//
+
+		/*QUAKED item_shield_sm_instant (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+		Instant shield pickup, restores 25
+		*/
+	{
+		"item_shield_sm_instant",
+		"sound/player/pickupshield.wav",
+		{ "models/map_objects/mp/psd_sm.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/mp/small_shield",
+		/* pickup *///	"Shield Small",
+		25,
+		IT_ARMOR,
+		1, //special for shield - max on pickup is maxhealth*tag, thus small shield goes up to 100 shield
+		/* precache */ "",
+		/* sounds */ ""
+		""					// description
+	},
+
+	/*QUAKED item_shield_lrg_instant (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Instant shield pickup, restores 100
+	*/
+	{
+		"item_shield_lrg_instant",
+		"sound/player/pickupshield.wav",
+		{ "models/map_objects/mp/psd.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/mp/large_shield",
+		/* pickup *///	"Shield Large",
+		100,
+		IT_ARMOR,
+		2, //special for shield - max on pickup is maxhealth*tag, thus large shield goes up to 200 shield
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED item_medpak_instant (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Instant medpack pickup, heals 25
+	*/
+	{
+		"item_medpak_instant",
+		"sound/player/pickuphealth.wav",
+		{ "models/map_objects/mp/medpac.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_medkit",
+		/* pickup *///	"Medpack",
+		25,
+		IT_HEALTH,
+		0,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+
+	//
+	// ITEMS
+	//
+
+	/*QUAKED item_seeker (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	30 seconds of seeker drone
+	*/
+	{
+		"item_seeker",
+		"sound/weapons/w_pkup.wav",
+		{ "models/items/remote.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_seeker",
+		/* pickup *///	"Seeker Drone",
+		120,
+		IT_HOLDABLE,
+		HI_SEEKER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_AN_ATTACK_DRONE_SIMILAR"					// description
+	},
+
+	/*QUAKED item_shield (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Portable shield
+	*/
+	{
+		"item_shield",
+		"sound/weapons/w_pkup.wav",
+		{ "models/map_objects/mp/shield.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_shieldwall",
+		/* pickup *///	"Forcefield",
+		120,
+		IT_HOLDABLE,
+		HI_SHIELD,
+		/* precache */ "",
+		/* sounds */ "sound/weapons/detpack/stick.wav sound/movers/doors/forcefield_on.wav sound/movers/doors/forcefield_off.wav sound/movers/doors/forcefield_lp.wav sound/effects/bumpfield.wav",
+		"@MENUS_THIS_STATIONARY_ENERGY"					// description
+	},
+
+	/*QUAKED item_medpac (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Bacta canister pickup, heals 25 on use
+	*/
+	{
+		"item_medpac",	//should be item_bacta
+		"sound/weapons/w_pkup.wav",
+		{ "models/map_objects/mp/bacta.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_bacta",
+		/* pickup *///	"Bacta Canister",
+		25,
+		IT_HOLDABLE,
+		HI_MEDPAC,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BACTA_DESC"					// description
+	},
+
+	/*QUAKED item_medpac_big (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Big bacta canister pickup, heals 50 on use
+	*/
+	{
+		"item_medpac_big",	//should be item_bacta
+		"sound/weapons/w_pkup.wav",
+		{ "models/items/big_bacta.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_big_bacta",
+		/* pickup *///	"Bacta Canister",
+		25,
+		IT_HOLDABLE,
+		HI_MEDPAC_BIG,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BACTA_DESC"					// description
+	},
+
+	/*QUAKED item_binoculars (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	These will be standard equipment on the player - DO NOT PLACE
+	*/
+	{
+		"item_binoculars",
+		"sound/weapons/w_pkup.wav",
+		{ "models/items/binoculars.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_zoom",
+		/* pickup *///	"Binoculars",
+		60,
+		IT_HOLDABLE,
+		HI_BINOCULARS,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_LA_GOGGLES_DESC"					// description
+	},
+
+	/*QUAKED item_sentry_gun (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Sentry gun inventory pickup.
+	*/
+	{
+		"item_sentry_gun",
+		"sound/weapons/w_pkup.wav",
+		{ "models/items/psgun.glm",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_sentrygun",
+		/* pickup *///	"Sentry Gun",
+		120,
+		IT_HOLDABLE,
+		HI_SENTRY_GUN,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THIS_DEADLY_WEAPON_IS"					// description
+	},
+
+	/*QUAKED item_jetpack (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Do not place.
+	*/
+	{
+		"item_jetpack",
+		"sound/weapons/w_pkup.wav",
+		{ "models/items/psgun.glm", //FIXME: no model
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_jetpack",
+		/* pickup *///	"Sentry Gun",
+		120,
+		IT_HOLDABLE,
+		HI_JETPACK,
+
+		///* precache */ "effects/boba/jet.efx",
+		///* sounds */ "sound/chars/boba/JETON.wav sound/chars/boba/JETHOVER.wav sound/effects/fire_lp.wav",
+		/* precache */ "effects/Player/jetpack.efx",
+		/* sounds */ "sound/jkg/jetpack/JETON.wav sound/jkg/jetpack/jetoff.wav sound/jkg/jetpack/jethover.wav sound/jkg/jetpack/jetlp.wav",
+		"@MENUS_JETPACK_DESC"					// description
+	},
+
+	/*QUAKED item_healthdisp (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Do not place. For siege classes ONLY.
+	*/
+	{
+		"item_healthdisp",
+		"sound/weapons/w_pkup.wav",
+		{ "models/map_objects/mp/bacta.md3", //replace me
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_healthdisp",
+		/* pickup *///	"Sentry Gun",
+		120,
+		IT_HOLDABLE,
+		HI_HEALTHDISP,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED item_ammodisp (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Do not place. For siege classes ONLY.
+	*/
+	{
+		"item_ammodisp",
+		"sound/weapons/w_pkup.wav",
+		{ "models/map_objects/mp/bacta.md3", //replace me
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_ammodisp",
+		/* pickup *///	"Sentry Gun",
+		120,
+		IT_HOLDABLE,
+		HI_AMMODISP,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED item_eweb_holdable (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	Do not place. For siege classes ONLY.
+	*/
+	{
+		"item_eweb_holdable",
+		"sound/interface/shieldcon_empty",
+		{ "models/map_objects/hoth/eweb_model.glm",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_eweb",
+		/* pickup *///	"Sentry Gun",
+		120,
+		IT_HOLDABLE,
+		HI_EWEB,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_EWEB_DESC"					// description
+	},
+
+	/*QUAKED item_seeker (.3 .3 1) (-8 -8 -0) (8 8 16) suspended
+	30 seconds of seeker drone
+	*/
+	{
+		"item_cloak",
+		"sound/weapons/w_pkup.wav",
+		{ "models/items/psgun.glm", //FIXME: no model
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_cloak",
+		/* pickup *///	"Seeker Drone",
+		120,
+		IT_HOLDABLE,
+		HI_CLOAK,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_CLOAK_DESC"					// description
+	},
+
+	/*QUAKED item_force_enlighten_light (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Adds one rank to all Force powers temporarily. Only light jedi can use.
+	*/
+	{
+		"item_force_enlighten_light",
+		"sound/player/enlightenment.wav",
+		{ "models/map_objects/mp/jedi_enlightenment.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/mpi_jlight",
+		/* pickup *///	"Light Force Enlightenment",
+		25,
+		IT_POWERUP,
+		PW_FORCE_ENLIGHTENED_LIGHT,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED item_force_enlighten_dark (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Adds one rank to all Force powers temporarily. Only dark jedi can use.
+	*/
+	{
+		"item_force_enlighten_dark",
+		"sound/player/enlightenment.wav",
+		{ "models/map_objects/mp/dk_enlightenment.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/mpi_dklight",
+		/* pickup *///	"Dark Force Enlightenment",
+		25,
+		IT_POWERUP,
+		PW_FORCE_ENLIGHTENED_DARK,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED item_force_boon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Unlimited Force Pool for a short time.
+	*/
+	{
+		"item_force_boon",
+		"sound/player/boon.wav",
+		{ "models/map_objects/mp/force_boon.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/mpi_fboon",
+		/* pickup *///	"Force Boon",
+		25,
+		IT_POWERUP,
+		PW_FORCE_BOON,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED item_ysalimari (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	A small lizard carried on the player, which prevents the possessor from using any Force power.  However, he is unaffected by any Force power.
+	*/
+	{
+		"item_ysalimari",
+		"sound/player/ysalimari.wav",
+		{ "models/map_objects/mp/ysalimari.md3",
+		0, 0, 0 } ,
+		/* view */		NULL,
+		/* icon */		"gfx/hud/mpi_ysamari",
+		/* pickup *///	"Ysalamiri",
+		25,
+		IT_POWERUP,
+		PW_YSALAMIRI,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	//
+	// WEAPONS
+	//
+
+	/*QUAKED weapon_stun_baton (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_stun_baton",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_stunbaton",
+		/* pickup *///	"Stun Baton",
+		100,
+		IT_WEAPON,
+		WP_STUN_BATON,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED weapon_melee (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_melee",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/stun_baton/baton_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons2/stun_baton/baton.md3",
+		/* icon */		"gfx/hud/w_icon_melee",
+		/* pickup *///	"Stun Baton",
+		100,
+		IT_WEAPON,
+		WP_MELEE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_MELEE_DESC"					// description
+	},
+
+	/*QUAKED weapon_saber (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_saber",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/saber/saber_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons2/saber/saber_w.md3",
+		/* icon */		"gfx/hud/w_icon_lightsaber",
+		/* pickup *///	"Lightsaber",
+		100,
+		IT_WEAPON,
+		WP_SABER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_AN_ELEGANT_WEAPON_FOR"				// description
+	},
+
+	/*QUAKED weapon_bryar_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		//"weapon_bryar_pistol",
+		"weapon_blaster_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_blaster_pistol",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_BRYAR_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_BLASTER_PISTOL_DESC"					// description
+	},
+
+	/*QUAKED weapon_concussion_rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_concussion_rifle",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_darkconc",
+		/* pickup *///	"Concussion Rifle",
+		50,
+		IT_WEAPON,
+		WP_CONCUSSION,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_CONC_RIFLE_DESC"					// description
+	},
+
+
+	/*QUAKED weapon_bryar_pistol_old (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_bryar_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/E-11_Carbine/icon_default",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_BRYAR_OLD,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BLASTER_PISTOL"					// description
+	},
+
+	/*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_blaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/E-11_Carbine/icon_default",
+		/* pickup *///	"E11 Blaster Rifle",
+		100,
+		IT_WEAPON,
+		WP_BLASTER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_disruptor (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_disruptor",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_disruptor",
+		/* pickup *///	"Tenloss Disruptor Rifle",
+		100,
+		IT_WEAPON,
+		WP_DISRUPTOR,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THIS_NEFARIOUS_WEAPON"					// description
+	},
+
+	/*QUAKED weapon_bowcaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_bowcaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bowcaster/icon_default",
+		/* pickup *///	"Wookiee Bowcaster",
+		100,
+		IT_WEAPON,
+		WP_BOWCASTER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THIS_ARCHAIC_LOOKING"					// description
+	},
+
+	/*QUAKED weapon_repeater (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_repeater",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_imperial_repeater",
+		/* pickup *///	"Imperial Heavy Repeater",
+		100,
+		IT_WEAPON,
+		WP_REPEATER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THIS_DESTRUCTIVE_PROJECTILE"					// description
+	},
+
+	/*QUAKED weapon_demp2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	NOTENOTE This weapon is not yet complete.  Don't place it.
+	*/
+	{
+		"weapon_demp2",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_demp2",
+		/* pickup *///	"DEMP2",
+		100,
+		IT_WEAPON,
+		WP_DEMP2,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_COMMONLY_REFERRED_TO"					// description
+	},
+
+	/*QUAKED weapon_flechette (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_flechette",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_golancr1",
+		/* pickup *///	"Golan Arms Flechette",
+		100,
+		IT_WEAPON,
+		WP_FLECHETTE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_WIDELY_USED_BY_THE_CORPORATE"					// description
+	},
+
+	/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_rocket_launcher",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_merrsonn",
+		/* pickup *///	"Merr-Sonn Missile System",
+		3,
+		IT_WEAPON,
+		WP_ROCKET_LAUNCHER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
+	},
+
+
+	//New Guns add here.
+
+	/*QUAKED weapon_a280 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_a280",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_a280",
+		/* pickup *///	"A280",
+		100,
+		IT_WEAPON,
+		WP_A280,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+
+
+	/*QUAKED weapon_dc_15_ext(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_dc_15_ext",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_cw-w5g",
+		/* pickup *///	"dc-15",
+		100,
+		IT_WEAPON,
+		WP_DC15,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_westarm5",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_cw-w5",
+		/* pickup *///	"weastarm 5",
+		100,
+		IT_WEAPON,
+		WP_WESTARM5,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+
+	/*QUAKED weapon_t_21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_t_21",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_t-21",
+
+
+		//{ "models/weapons3/t-21/t-21_w.glm",
+		//0, 0, 0 },
+		///* view */		"models/weapons3/t-21/t-21.md3",
+		///* icon */		"gfx/hud/w_icon_t-21",
+
+		/* pickup *///	"t-21",
+		100,
+		IT_WEAPON,
+		WP_T21,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_ee3_Blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_ee3_Blaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_ee-3",
+		/* pickup *///	"t-21",
+		100,
+		IT_WEAPON,
+		WP_EE3,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+
+	/*QUAKED weapon_DLT_19_Blaster(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_DLT_19_Blaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/DLT-19_HeavyBlaster/icon_scope",
+		/* pickup *///	"t-21",
+		100,
+		IT_WEAPON,
+		WP_DLT_19,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+
+	/*QUAKED weapon_DC_15A_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_DC_15A_Rifle",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/DC-15A_Rifle/icon_default.tga",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_DC_15A_Rifle,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_dc_17_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_dc_17_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_clonepistol_1",
+		/* pickup *///	"clone_pistol_1",
+		100,
+		IT_WEAPON,
+		WP_DC_15S_CLONE_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_wester_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_wester_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_westar",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_WESTER_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BLASTER_PISTOL"					// description
+	},
+
+	//
+	/*QUAKED weapon_egl_3e_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_egl-3e_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/ELG-3A_Pistol/icon_default",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_ELG_3A,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BLASTER_PISTOL"					// description
+	},
+
+	//
+	/*QUAKED weapon_s5_heavy_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_s5_heavy_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_s5",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_S5_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BLASTER_PISTOL"					// description
+	},
+
+	/*QUAKED weapon_Z-6_rotary_blaster_cannon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_Z6_rotary_blaster_cannon",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_rotary_cannon",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_Z6_BLASTER_CANON,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BLASTER_PISTOL"					// description
+	},
+
+
+
+	/*QUAKED weapon_Wookie_Bowcaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Wookie_Bowcaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bowcaster_Heavy/icon_default",
+		/* pickup *///	"Wookie Bowcaster",
+		100,
+		IT_WEAPON,
+		WP_HEAVY_BOWCASTER_SCOPE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+
+
+
+	//
+	/*QUAKED weapon_Wookie_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_Wookie_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_wsidearm",
+		/* pickup *///	"Bryar Pistol",
+		100,
+		IT_WEAPON,
+		WP_WOOKIES_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@SP_INGAME_BLASTER_PISTOL"					// description
+	},
+
+
+
+
+	/*QUAKED weapon_dc-15s_blaster 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_dc-15s_blaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_dc-15s",
+		/* pickup *///	"weastarm 5",
+		100,
+		IT_WEAPON,
+		WP_CLONE_BLASTER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+
+	/*QUAKED weapon_dc-15_ext (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_dc-15_ext",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_clonerifle_blobs",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_DC15_EXT,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_e60r_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_e60r_launcher",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */        "gfx/hud/w_icon_e60r_launcher",
+		/* pickup *///	"Merr-Sonn Missile System",
+		3,
+		IT_WEAPON,
+		WP_E60_ROCKET_LAUNCHER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
+	},
+
+	/*QUAKED weapon_cw_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_cw_launcher",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */        "gfx/hud/w_icon_cw_launcher",
+		/* pickup *///	"Merr-Sonn Missile System",
+		3,
+		IT_WEAPON,
+		WP_CW_ROCKET_LAUNCHER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
+	},
+
+	//Put any weapon models in this box here and edit you stuff in WP_TEST_GUN in cg_weaponinit.c and find the right stuff you want when testing
+	//it's a good way to test stuff out so you don't mess with they other guns.
+	/*QUAKED TEST GUN (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Test_Gun",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons3/leias_pistol/w_icon_leias_pistol",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_TESTGUN,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_clone_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_clone_pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"gfx/hud/w_icon_dc-17s",
+		/* pickup *///	"clone_pistol_1",
+		100,
+		IT_WEAPON,
+		WP_DC_17_CLONE_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED WP_SPOTING_BLASTER (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Spoting_Blaster",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons3/leias_pistol/w_icon_leias_pistol",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_SPOTING_BLASTER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_A200_ACP_BattleRifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_A200_ACP_BattleRifle",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/A200_ACP_BattleRifle/icon_default",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_A200_ACP_BATTLERIFLE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_A200_ACP_Pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_A200_ACP_Pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/A200_ACP_Pistol/icon_default",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_A200_ACP_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_ACP_ArrayGun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_ACP_ArrayGun",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/ACP_ArrayGun/icon_default",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_ACP_ARRAYGUN,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_Double_ACP_ArrayGun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Double_ACP_ArrayGun",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/ACP_SniperRifle/icon_default",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_ACP_SNIPER_RIFLE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_ARC_CasterImperial (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_ARC_CasterImperial",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/ARC_CasterImperial/icon_default",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_ARC_CASTER_IMPERIAL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_Rifle_Bowcaster_Classic (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Rifle_Bowcaster_Classic",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bowcaster_Classic/icon_default",
+		/* pickup *///	"Wookie Bowcaster",
+		100,
+		IT_WEAPON,
+		WP_BOWCASTER_CLASSIC,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_Rifle_Bowcaster_Heavy (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Rifle_Bowcaster_Heavy",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bowcaster_Heavy/icon_scope",
+		/* pickup *///	"Wookie Bowcaster",
+		100,
+		IT_WEAPON,
+		WP_HEAVY_SCOPE_BOWCASTER,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_bryar_carbine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_bryar_carbine",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bryar_Carbine/icon_default",
+		/* pickup *///	"E11 Blaster Rifle",
+		100,
+		IT_WEAPON,
+		WP_BRYAR_CARBINE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_sniper_bryar_rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_sniper_bryar_rifle",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bryar_Rifle/icon_default",
+		/* pickup *///	"t-21",
+		100,
+		IT_WEAPON,
+		WP_BRYAR_RIFLE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_sniper_bryar_rifle_scope (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_sniper_bryar_rifle_scope",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/Bryar_Rifle/icon_scope",
+		/* pickup *///	"t-21",
+		100,
+		IT_WEAPON,
+		WP_BRYAR_RIFLE_SCOPE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_Pulse_Canon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_Pulse_Canon",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/PulseCannon/icon_default.tga",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_PULSECANON,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_proton_carbine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_proton_carbine",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/ProtonCarbine/icon_default",
+		/* pickup *///	"t-21",
+		100,
+		IT_WEAPON,
+		WP_PROTON_CARBINE_RIFLE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
+	/*QUAKED weapon_DH_17_Pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_DH_17_Pistol",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/E-11_Carbine/model.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* icon */		"models/weapons/DH-17_Pistol/icon_default",
+		/* pickup *///	"E11 Blaster Rifle",
+		100,
+		IT_WEAPON,
+		WP_DH_17_PISTOL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+#ifndef __MMO__
+	/*QUAKED ammo_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"ammo_thermal",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/thermal/thermal_pu.md3",
+		"models/weapons2/thermal/thermal_w.glm", 0, 0 },
+		/* view */		"models/weapons2/thermal/thermal.md3",
+		/* icon */		"gfx/hud/w_icon_thermal",
+		/* pickup *///	"Thermal Detonators",
+		4,
+		IT_AMMO,
+		AMMO_THERMAL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_THERMAL_DETONATOR"					// description
+	},
+
+	/*QUAKED ammo_tripmine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"ammo_tripmine",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/laser_trap/laser_trap_pu.md3",
+		"models/weapons2/laser_trap/laser_trap_w.glm", 0, 0 },
+		/* view */		"models/weapons2/laser_trap/laser_trap.md3",
+		/* icon */		"gfx/hud/w_icon_tripmine",
+		/* pickup *///	"Trip Mines",
+		3,
+		IT_AMMO,
+		AMMO_TRIPMINE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_TRIP_MINES_CONSIST_OF"					// description
+	},
+
+	/*QUAKED ammo_detpack (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"ammo_detpack",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/detpack/det_pack_pu.md3", "models/weapons2/detpack/det_pack_proj.glm", "models/weapons2/detpack/det_pack_w.glm", 0 },
+		/* view */		"models/weapons2/detpack/det_pack.md3",
+		/* icon */		"gfx/hud/w_icon_detpack",
+		/* pickup *///	"Det Packs",
+		3,
+		IT_AMMO,
+		AMMO_DETPACK,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_A_DETONATION_PACK_IS"					// description
+	},
+#endif //__MMO__
+
+	/*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_thermal",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/Grenade_Thermal/model.glm", "models/weapons/Grenade_Thermal/model_proj.md3",
+		0, 0 },
+		/* view */		"models/weapons/Grenade_Thermal/viewmodel.md3",
+		/* icon */		"models/weapons/Grenade_Thermal/icon_default",
+		/* pickup *///	"Thermal Detonator",
+		4,
+		IT_WEAPON,
+		WP_THERMAL,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_THERMAL_DETONATOR"					// description
+	},
+
+	/*QUAKED weapon_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_fraggrenade",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons3/fraggrenade/thermal_w.glm", "models/weapons3/fraggrenade/thermal_pu.md3",
+		0, 0 },
+		/* view */		"models/weapons3/fraggrenade/thermal.md3",
+		/* icon */		"gfx/hud/w_icon_fraggrenade",
+		/* pickup *///	"Thermal Detonator",
+		4,
+		IT_WEAPON,
+		WP_FRAG_GRENADE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_THERMAL_DETONATOR"					// description
+	},
+
+	/*QUAKED weapon_old_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_old_fraggrenade",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons3/oldfraggrenade/thermal_w.glm", "models/weapons3/oldfraggrenade/thermal_pu.md3",
+		0, 0 },
+		/* view */		"models/weapons3/oldfraggrenade/thermal.md3",
+		/* icon */		"gfx/hud/w_icon_oldfraggrenade",
+		/* pickup *///	"Thermal Detonator",
+		4,
+		IT_WEAPON,
+		WP_FRAG_GRENADE_OLD,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_THERMAL_DETONATOR"					// description
+	},
+
+	/*QUAKED weapon_grenade_cryoban (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_grenade_cryoban ",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/Grenade_CryoBan/model.glm", "models/weapons/Grenade_CryoBan/model_proj.md3",
+		0, 0 },
+		/* view */		"models/weapons/Grenade_CryoBan/viewmodel.md3",
+		/* icon */		"models/weapons/Grenade_CryoBan/icon_default",
+		/* pickup *///	"Thermal Detonator",
+		4,
+		IT_WEAPON,
+		WP_CYROBAN_GRENADE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_THERMAL_DETONATOR"					// description
+	},
+
+	/*QUAKED weapon_trip_mine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_trip_mine",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons/Mine_LaserTrip/model.glm",
+		0, 0 },
+		/* view */		"models/Weapons/Mine_LaserTrip/viewmodel.md3",
+		/* icon */		"models/weapons/Mine_LaserTrip/icon_default",
+		//        { "models/weapons2/laser_trap/laser_trap_w.glm", "models/weapons2/laser_trap/laser_trap_pu.md3",
+		//		0, 0},
+		///* view */		"models/weapons2/laser_trap/laser_trap.md3",
+		///* icon */		"gfx/hud/w_icon_tripmine",
+		/* pickup *///	"Trip Mine",
+		3,
+		IT_WEAPON,
+		WP_TRIP_MINE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_TRIP_MINES_CONSIST_OF"					// description
+	},
+
+	/*QUAKED weapon_det_pack (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_det_pack",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/detpack/det_pack_proj.glm", "models/weapons2/detpack/det_pack_pu.md3", "models/weapons2/detpack/det_pack_w.glm", 0 },
+		/* view */		"models/weapons2/detpack/det_pack.md3",
+		/* icon */		"gfx/hud/w_icon_detpack",
+		/* pickup *///	"Det Pack",
+		3,
+		IT_WEAPON,
+		WP_DET_PACK,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_A_DETONATION_PACK_IS"					// description
+	},
+
+	/*QUAKED weapon_emplaced (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_emplaced",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/blaster_r/blaster_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons2/blaster_r/blaster.md3",
+		/* icon */		"gfx/hud/w_icon_blaster",
+		/* pickup *///	"Emplaced Gun",
+		50,
+		IT_WEAPON,
+		WP_EMPLACED_GUN,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+
+	//NOTE: This is to keep things from messing up because the turret weapon type isn't real
+	{
+		"weapon_turretwp",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/blaster_r/blaster_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons2/blaster_r/blaster.md3",
+		/* icon */		"gfx/hud/w_icon_blaster",
+		/* pickup *///	"Turret Gun",
+		50,
+		IT_WEAPON,
+		WP_TURRET,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+#ifndef __MMO__
+	//
+	// AMMO ITEMS
+	//
+
+	/*QUAKED ammo_force (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"ammo_force",
+		"sound/player/pickupenergy.wav",
+		{ "models/items/energy_cell.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/hud/w_icon_blaster",
+		/* pickup *///	"Force??",
+		100,
+		IT_AMMO,
+		AMMO_FORCE,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED ammo_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Ammo for the Bryar and Blaster pistols.
+	*/
+	{
+		"ammo_blaster",
+		"sound/player/pickupenergy.wav",
+		{ "models/items/energy_cell.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/hud/i_icon_battery",
+		/* pickup *///	"Blaster Pack",
+		100,
+		IT_AMMO,
+		AMMO_BLASTER,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED ammo_powercell (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Ammo for Tenloss Disruptor, Wookie Bowcaster, and the Destructive Electro Magnetic Pulse (demp2 ) guns
+	*/
+	{
+		"ammo_powercell",
+		"sound/player/pickupenergy.wav",
+		{ "models/items/power_cell.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/mp/ammo_power_cell",
+		/* pickup *///	"Power Cell",
+		100,
+		IT_AMMO,
+		AMMO_POWERCELL,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED ammo_metallic_bolts (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Ammo for Imperial Heavy Repeater and the Golan Arms Flechette
+	*/
+	{
+		"ammo_metallic_bolts",
+		"sound/player/pickupenergy.wav",
+		{ "models/items/metallic_bolts.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/mp/ammo_metallic_bolts",
+		/* pickup *///	"Metallic Bolts",
+		100,
+		IT_AMMO,
+		AMMO_METAL_BOLTS,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED ammo_rockets (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Ammo for Merr-Sonn portable missile launcher
+	*/
+	{
+		"ammo_rockets",
+		"sound/player/pickupenergy.wav",
+		{ "models/items/rockets.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/mp/ammo_rockets",
+		/* pickup *///	"Rockets",
+		3,
+		IT_AMMO,
+		AMMO_ROCKETS,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED ammo_all (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	DO NOT PLACE in a map, this is only for siege classes that have ammo
+	dispensing ability
+	*/
+	{
+		"ammo_all",
+		"sound/player/pickupenergy.wav",
+		{ "models/items/battery.md3",  //replace me
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/mp/ammo_rockets", //replace me
+											   /* pickup *///	"Rockets",
+											   0,
+											   IT_AMMO,
+											   -1,
+											   /* precache */ "",
+											   /* sounds */ "",
+											   ""					// description
+	},
+#endif //__MMO__
+
+	//
+	// POWERUP ITEMS
+	//
+	/*QUAKED team_CTF_redflag (1 0 0) (-16 -16 -16) (16 16 16)
+	Only in CTF games
+	*/
+	{
+		"team_CTF_redflag",
+		NULL,
+		{ "models/flags/r_flag.md3",
+		"models/flags/r_flag_ysal.md3", 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/hud/mpi_rflag",
+		/* pickup *///	"Red Flag",
+		0,
+		IT_TEAM,
+		PW_REDFLAG,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	/*QUAKED team_CTF_blueflag (0 0 1) (-16 -16 -16) (16 16 16)
+	Only in CTF games
+	*/
+	{
+		"team_CTF_blueflag",
+		NULL,
+		{ "models/flags/b_flag.md3",
+		"models/flags/b_flag_ysal.md3", 0, 0 },
+		/* view */		NULL,
+		/* icon */		"gfx/hud/mpi_bflag",
+		/* pickup *///	"Blue Flag",
+		0,
+		IT_TEAM,
+		PW_BLUEFLAG,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	//
+	// PERSISTANT POWERUP ITEMS
+	//
+
+	/*QUAKED team_CTF_neutralflag (0 0 1) (-16 -16 -16) (16 16 16)
+	Only in One Flag CTF games
+	*/
+	{
+		"team_CTF_neutralflag",
+		NULL,
+		{ "models/flags/n_flag.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"icons/iconf_neutral1",
+		/* pickup *///	"Neutral Flag",
+		0,
+		IT_TEAM,
+		PW_NEUTRALFLAG,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	{
+		"item_redcube",
+		"sound/player/pickupenergy.wav",
+		{ "models/powerups/orb/r_orb.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"icons/iconh_rorb",
+		/* pickup *///	"Red Cube",
+		0,
+		IT_TEAM,
+		0,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	{
+		"item_bluecube",
+		"sound/player/pickupenergy.wav",
+		{ "models/powerups/orb/b_orb.md3",
+		0, 0, 0 },
+		/* view */		NULL,
+		/* icon */		"icons/iconh_borb",
+		/* pickup *///	"Blue Cube",
+		0,
+		IT_TEAM,
+		0,
+		/* precache */ "",
+		/* sounds */ "",
+		""					// description
+	},
+
+	// end of list marker
+	{ NULL }
+};
+#endif //__FULL_VERSION_WEAPONS__
 
 int		bg_numItems = sizeof(bg_itemlist) / sizeof(bg_itemlist[0]) - 1;
 

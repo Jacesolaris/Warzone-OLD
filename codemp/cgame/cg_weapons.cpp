@@ -1487,6 +1487,23 @@ static qboolean CG_WeaponSelectable( int i ) {
 		return qfalse;
 	}
 
+#ifndef __FULL_VERSION_WEAPONS__
+	gitem_t *item = NULL;
+	weaponInfo_t *weaponInfo = &cg_weapons[i];
+
+	for (item = bg_itemlist + 1; item->classname; item++) {
+		if (item->giType == IT_WEAPON && item->giTag == i) {
+			weaponInfo->item = item;
+			break;
+		}
+	}
+
+	if (!strcmp(item->view_model, "models/weapons/E-11_Carbine/viewmodel.md3"))
+	{// If this is a disabled weapon, skip loading fx.
+		return qfalse;
+	}
+#endif
+
 	return qtrue;
 }
 
