@@ -115,6 +115,7 @@ void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 
 void FX_WeaponAwesomeBolt(vec3_t org, vec3_t fwd, float length, float radius, vec3_t color)
 {
+#if 0
 	// Do the hot core
 	refEntity_t saber;
 
@@ -135,6 +136,34 @@ void FX_WeaponAwesomeBolt(vec3_t org, vec3_t fwd, float length, float radius, ve
 	saber.shaderRGBA[3] = 255;
 
 	AddRefEntityToScene(&saber);
+#else
+	refEntity_t ent;
+
+	memset(&ent, 0, sizeof(refEntity_t));
+	ent.reType = RT_MODEL;
+
+	ent.customShader = cgs.media.solidWhite;
+
+	for (int i = 0; i<3; i++)
+	{
+		ent.shaderRGBA[i] = color[i];
+	}
+	ent.shaderRGBA[3] = 255;
+
+	//ent.radius = radius;
+	ent.modelScale[0] = length;
+	ent.modelScale[1] = radius;
+	ent.modelScale[2] = radius;
+
+	VectorCopy(org, ent.origin);
+	vectoangles(fwd, ent.angles);
+	AnglesToAxis(ent.angles, ent.axis);
+	ScaleModelAxis(&ent);
+
+	ent.hModel = trap->R_RegisterModel("models/warzone/laserbolt.md3");
+
+	AddRefEntityToScene(&ent);
+#endif
 }
 
 /*
@@ -151,10 +180,13 @@ void FX_WeaponProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 		forward[2] = 1.0f;
 	}
 
-	if (weapon->missileRenderfx)
-		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	else
-		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	//if (weapon->missileRenderfx)
+	//	PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	//else
+	//	PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+
+	vec3_t color = { 255, 255, 255 };
+	FX_WeaponAwesomeBolt(cent->lerpOrigin, forward, 4, 1, color);
 
 	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }

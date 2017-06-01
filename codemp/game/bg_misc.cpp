@@ -3787,9 +3787,9 @@ gitem_t	bg_itemlist[] =
 	{
 		"weapon_DH_17_Pistol",
 		"sound/weapons/w_pkup.wav",
-		{ "models/weapons/E-11_Carbine/model.glm",
+		{ "models/weapons/DH-17_Pistol/model.glm",
 		0, 0, 0 },
-		/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
+		/* view */		"models/weapons/DH-17_Pistol/viewmodel.md3",
 		/* icon */		"models/weapons/DH-17_Pistol/icon_default",
 		/* pickup *///	"E11 Blaster Rifle",
 		100,
