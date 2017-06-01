@@ -113,6 +113,30 @@ void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	}
 }
 
+void FX_WeaponAwesomeBolt(vec3_t org, vec3_t fwd, float length, float radius, vec3_t color)
+{
+	// Do the hot core
+	refEntity_t saber;
+
+	VectorMA(org, length, fwd, saber.origin);
+	VectorMA(org, -1, fwd, saber.oldorigin);
+
+	saber.customShader = cgs.media.ep3SaberCoreShader;
+	saber.reType = RT_LINE;
+
+	saber.radius = radius;
+
+	saber.shaderTexCoord[0] = saber.shaderTexCoord[1] = 1.0f;
+	
+	for (int i = 0; i<3; i++)
+	{
+		saber.shaderRGBA[i] = color[i];
+	}
+	saber.shaderRGBA[3] = 255;
+
+	AddRefEntityToScene(&saber);
+}
+
 /*
 -------------------------
 FX_WeaponProjectileThink
