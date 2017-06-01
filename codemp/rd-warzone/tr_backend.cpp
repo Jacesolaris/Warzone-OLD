@@ -3354,6 +3354,12 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && (r_ssr->value > 0.0 || r_sse->value > 0.0))
+		{
+			RB_ScreenSpaceReflections(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (r_colorCorrection->integer)
 		{
 			RB_ColorCorrection(currentFbo, srcBox, currentOutFbo, dstBox);

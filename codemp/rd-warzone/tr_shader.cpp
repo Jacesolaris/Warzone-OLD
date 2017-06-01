@@ -2545,7 +2545,23 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		else if ( Q_stricmp( token, "glow" ) == 0 )
 		{
 			stage->glow = qtrue;
+			
+			if (!stage->emissiveScale) 
+				stage->emissiveScale = 1.0;
 
+			continue;
+		}
+		else if (Q_stricmp(token, "emissiveScale") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveScale exponent in shader '%s'\n", shader.name);
+				stage->emissiveScale = 1.0;
+				continue;
+			}
+			
+			stage->emissiveScale = atof(token);
 			continue;
 		}
 		//

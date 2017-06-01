@@ -121,7 +121,6 @@ varying float	var_usingSteepMap;
 
 varying vec2   var_nonTCtexCoords; // for steep maps
 
-varying vec3	var_fogDir;
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -181,7 +180,7 @@ vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3
 	}
 	else if (TCGen == TCGEN_ENVIRONMENT_MAPPED)
 	{
-		vec3 viewer = normalize(u_LocalViewOrigin - position);
+		vec3 viewer = u_ViewOrigin/*u_LocalViewOrigin*/ - position; // UQ1: WTF! position is in world space!!!
 		vec2 ref = reflect(viewer, normal).yz;
 		tex.s = ref.x * -0.5 + 0.5;
 		tex.t = ref.y *  0.5 + 0.5;
@@ -221,11 +220,11 @@ vec4 CalcColor(vec3 position, vec3 normal)
 		color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0);
 	}
 	
-	vec3 viewer = u_LocalViewOrigin - position;
-
 	if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
 	{
-		vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
+		vec3 viewer = /*u_ViewOrigin*/u_LocalViewOrigin - position; // UQ1: WTF! position is in world space!!!
+		//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position); // UQ1: And wtf is this hard coded value???
+		vec3 lightDir = (u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position;
 		vec3 reflected = -reflect(lightDir, normal);
 		
 		color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);
@@ -234,12 +233,14 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	}
 	else if (u_AlphaGen == AGEN_PORTAL)
 	{
+		vec3 viewer = normalize(/*u_ViewOrigin*/u_LocalViewOrigin - position); // UQ1: WTF! position is in world space!!!
 		color.a = clamp(length(viewer) / u_PortalRange, 0.0, 1.0);
 	}
 	
 	return color;
 }
 
+#if 0
 float CalcFog(vec3 position)
 {
 	float s = dot(vec4(position, 1.0), u_FogDistance) * 8.0;
@@ -253,6 +254,7 @@ float CalcFog(vec3 position)
 
 	return s * t;
 }
+#endif
 
 #if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 void GetBlending(vec3 normal)
@@ -392,6 +394,7 @@ void main()
 		tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
 	}
 
+
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 
 
@@ -401,24 +404,19 @@ void main()
 	var_TexCoords2 = vec2(0.0);
 #endif
 
-	if (USE_RGBA == 1.0)
-	{
-		var_Color = CalcColor(position, normal);
-	}
-	else
-	{
-		var_Color = u_VertColor * attr_Color + u_BaseColor;
-	}
+	var_Color = CalcColor(position, normal);
 
+#if 0
 	if (USE_FOG == 1.0)
 	{
 		var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
 	}
+#endif
 
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
 	var_PrimaryLightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius;
 
-	vec3 viewDir = u_ViewOrigin - preMMPos;
+	vec3 viewDir = u_ViewOrigin - position;//preMMPos;
 	var_ViewDir = viewDir;
 
 	// store view direction in tangent space to save on varyings
@@ -431,11 +429,6 @@ void main()
 	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;
 
-#if !defined(USE_GLOW_BUFFER)
-	var_fogDir = var_ViewDir / 40.0;
-	//var_fogCrd = gl_Vertex.xyz * fogScaleBias.w + fogScaleBias.xyz;
-	//var_fogCrd = position.xyz * fogScaleBias.w + fogScaleBias.xyz;
-#endif //!defined(USE_GLOW_BUFFER)
 
 #if defined(USE_TRI_PLANAR)
 

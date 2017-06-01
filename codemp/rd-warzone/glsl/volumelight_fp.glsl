@@ -92,7 +92,7 @@ void main ( void )
 				fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
 			}
 
-			float lightColorLength = length(spotColor);
+			float lightColorLength = length(spotColor) / 3.0;
 
 			// Try to maximize light strengths...
 			spotColor /= lightColorLength;

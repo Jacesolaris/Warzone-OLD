@@ -1110,7 +1110,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 		{
 			specularScale = 1.5;
-			cubemapScale = 1.5;
+			cubemapScale = 1.0;
 			materialType = (float)MATERIAL_WATER;
 			parallaxScale = 2.0;
 		}
@@ -1120,7 +1120,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			{
 			case MATERIAL_WATER:			// 13			// light covering of water on a surface
 				specularScale = 1.0;
-				cubemapScale = 1.5;
+				cubemapScale = 1.0;
 				materialType = (float)MATERIAL_WATER;
 				parallaxScale = 1.5;
 				break;
@@ -1182,14 +1182,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 				specularScale = 0.98;
-				cubemapScale = 1.98;
+				cubemapScale = 0.98;
 				materialType = (float)MATERIAL_SOLIDMETAL;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
 				specularScale = 1.0;
-				cubemapScale = 2.0;
+				cubemapScale = 1.0;
 				materialType = (float)MATERIAL_HOLLOWMETAL;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
@@ -1220,7 +1220,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_MARBLE:			// 12			// marble floors
 				specularScale = 0.2;
-				cubemapScale = 0.9;
+				cubemapScale = 0.6;
 				materialType = (float)MATERIAL_MARBLE;
 				parallaxScale = 1.5;
 				break;
@@ -1274,7 +1274,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 				specularScale = 0.88;
-				cubemapScale = 2.0;
+				cubemapScale = 0.7;
 				materialType = (float)MATERIAL_SHATTERGLASS;
 				parallaxScale = 1.0;
 				break;
@@ -1293,19 +1293,19 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_GLASS:			// 10			//
 				specularScale = 0.95;
-				cubemapScale = 2.0;
+				cubemapScale = 0.7;
 				materialType = (float)MATERIAL_GLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 				specularScale = 0.93;
-				cubemapScale = 1.93;
+				cubemapScale = 0.73;
 				materialType = (float)MATERIAL_BPGLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 				specularScale = 0.92;
-				cubemapScale = 1.92;
+				cubemapScale = 0.92;
 				materialType = (float)MATERIAL_COMPUTER;
 				parallaxScale = 1.5;
 				break;
@@ -1324,9 +1324,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			cubemapScale = pStage->cubeMapScale;
 		}
 
-		// Apply r_cubemapStrength value...
-		cubemapScale *= r_cubemapStrength->value;
-
 		if (pStage->isFoliage)
 		{
 			doSway = 0.7;
@@ -1339,8 +1336,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-		//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
-		VectorSet4(local3, 0.0/*pStage->subsurfaceRimScalar*/, 0.0/*pStage->subsurfaceMaterialThickness*/, 0.0/*pStage->subsurfaceSpecularPower*/, cubemapScale);
+		VectorSet4(local3, 0.0, 0.0, r_cubemapCullRange->value, cubemapScale);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 		VectorSet4(local4, hasNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
@@ -2050,7 +2046,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	float tessOuter = 0.0;
 	float tessAlpha = 0.0;
 
-	float cubeMapStrength = 0.0;
 	vec4_t cubeMapVec;
 
 	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
@@ -2094,73 +2089,25 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
 	}
 
-	//
-	// testing cube map
-	//
+	if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
+	{
 #ifdef __PLAYER_BASED_CUBEMAPS__
-	if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
-	{
-		VectorCopy(currentPlayerCubemapVec, cubeMapVec); // TODO: not need to copy for even more speed...
-		float dist = currentPlayerCubemapDistance;
-		float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
-
-		if (dist < r_cubemapCullRange->value)
-		{// In range for full effect...
-			cubeMapStrength = 1.0;
-			ADD_CUBEMAP_INDEX = qtrue;
-		}
-		else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
-		{// Further scale the strength of the cubemap by the fade-out distance...
-			float extraDist = dist - r_cubemapCullRange->value;
-			float falloffDist = (r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
-			float strength = (falloffDist - extraDist) / falloffDist;
-
-			cubeMapStrength = strength;
-			ADD_CUBEMAP_INDEX = qtrue;
-		}
-		else
-		{// Out of range completely...
-			cubeMapStrength = 0.0;
-			ADD_CUBEMAP_INDEX = qfalse;
-		}
-	}
+		cubeMapVec[0] = currentPlayerCubemapVec[0];// -backEnd.viewParms.ori.origin[0];
+		cubeMapVec[1] = currentPlayerCubemapVec[1];// - backEnd.viewParms.ori.origin[1];
+		cubeMapVec[2] = currentPlayerCubemapVec[2];// - backEnd.viewParms.ori.origin[2];
+		cubeMapVec[3] = 1.0f;
+		ADD_CUBEMAP_INDEX = qtrue;
 #else //!__PLAYER_BASED_CUBEMAPS__
-	if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
-	{
 		cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
 		cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
 		cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
 		cubeMapVec[3] = 1.0f;
-
-		float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
-		float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
-
-		if (dist < r_cubemapCullRange->value)
-		{// In range for full effect...
-			cubeMapStrength = 1.0;
-			//index |= LIGHTDEF_USE_CUBEMAP;
-			ADD_CUBEMAP_INDEX = qtrue;
-		}
-		else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
-		{// Further scale the strength of the cubemap by the fade-out distance...
-			float extraDist = dist - r_cubemapCullRange->value;
-			float falloffDist = (r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
-			float strength = (falloffDist - extraDist) / falloffDist;
-
-			cubeMapStrength = strength;
-			//index |= LIGHTDEF_USE_CUBEMAP;
-			ADD_CUBEMAP_INDEX = qtrue;
-		}
-		else
-		{// Out of range completely...
-			cubeMapStrength = 0.0;
-			//index &= ~LIGHTDEF_USE_CUBEMAP;
-			ADD_CUBEMAP_INDEX = qfalse;
-		}
-	}
+		ADD_CUBEMAP_INDEX = qtrue;
 #endif //__PLAYER_BASED_CUBEMAPS__
+	}
 
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
+	qboolean didNonDetail = qfalse;
 
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -2178,7 +2125,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		int passNum = 0, passMax = 0;
 
 		if ( !pStage )
-		{
+		{// How does this happen???
 			break;
 		}
 
@@ -2186,6 +2133,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{// Shouldn't this be here, just in case???
 			continue;
 		}
+
+		int index = pStage->glslShaderIndex;
 
 		if ( pStage->isSurfaceSprite )
 		{
@@ -2313,14 +2262,44 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{// testing - force lightall
-			int index = pStage->glslShaderIndex;
-
 			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
 				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 			{// No point at all in doing this stage...
 				continue;
 			}
+
+			if (stage > 0 && didNonDetail && !pStage->glow)
+			{
+				continue;
+			}
+
+			if (pStage->isDetail && !pStage->glow)
+			{// Don't waste the time...
+				continue;
+			}
+
+			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL && !pStage->glow)
+			{// Don't output these to position and normal map...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			/*if ((stateBits & GLS_SRCBLEND_SRC_ALPHA)
+			&& (stateBits & GLS_DSTBLEND_ONE))
+			{// Don't output these to position and normal map...
+			index |= LIGHTDEF_IS_DETAIL;
+			}*/
+
+			if ((!pStage->bundle[TB_DIFFUSEMAP].image[0] || pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_COLORALPHA) && !pStage->glow)
+			{// Don't output these to position and normal map...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (!(index & LIGHTDEF_IS_DETAIL) && !pStage->glow)
+			{
+				didNonDetail = qtrue;
+			}
+
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
@@ -2345,12 +2324,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useDeform = 1.0;
 			}
 
+			pStage->glslShaderGroup = tr.lightallShader;
+
 			if (useTesselation)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 
-				//pStage->glslShaderGroup = tr.lightallShader;
-				//sp = &pStage->glslShaderGroup[index];
 				sp = &tr.lightallShader[index];
 
 				backEnd.pc.c_lightallDraws++;
@@ -2367,8 +2346,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			int index = pStage->glslShaderIndex;
-
 			if ((s_worldData.lightGridArray == NULL && (index & LIGHTDEF_USE_LIGHTMAP))
 				|| (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity))
 			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
@@ -2487,8 +2464,55 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useFog = 1.0;
 			}
 
-			//pStage->glslShaderGroup = tr.lightallShader;
-			//sp = &pStage->glslShaderGroup[index];
+			if (stage > 0 && didNonDetail)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (pStage->isDetail)
+			{// Don't output these to position and normal map...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL)
+			{// Don't output these to position and normal map...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+#if 0
+			if (/*(stateBits & GLS_SRCBLEND_SRC_ALPHA)
+					&& (stateBits & GLS_DSTBLEND_ONE)*/(stateBits & GLS_DSTBLEND_ZERO))
+			{// Don't output these to position and normal map...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+#endif
+
+			if (!pStage->bundle[TB_DIFFUSEMAP].image[0]
+				|| pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_COLORALPHA)
+			{// Don't output these to position and normal map...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
+				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
+				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
+			{// No point at all in doing this stage...
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (!(index & LIGHTDEF_IS_DETAIL))
+			{
+				didNonDetail = qtrue;
+			}
+
+
+			if (index >= LIGHTDEF_COUNT)
+			{
+				ri->Printf(PRINT_WARNING, "Shader %s, stage %i, tried to use the lightall GLSL %i > %i (max).\n", input->shader->name, stage, index, LIGHTDEF_COUNT);
+				index = LIGHTDEF_COUNT - 1;
+			}
+			
+			pStage->glslShaderGroup = tr.lightallShader;
 			sp = &tr.lightallShader[index];
 
 			backEnd.pc.c_lightallDraws++;
@@ -2556,18 +2580,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
 		}
 
-		float noNormOutputs = 0.0;
-
-		/*if (pStage->glslShaderGroup != tr.lightallShader)
-		{
-			noNormOutputs = 1.0;
-		}*/
-
-		if (pStage->adjustColorsForFog)
-		{
-			noNormOutputs = 1.0;
-		}
-
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
 			vec4_t vec;
 			float isTextureClamped = 0.0;
@@ -2580,7 +2592,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
 
-			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, noNormOutputs);
+			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 		}
 
@@ -2667,11 +2679,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}
-		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
+		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1)
 		{
+			//ri->Printf(PRINT_ALL, "%s stage %i is using cubemap (correct lightall: %s)\n", input->shader->name, stage, (index & LIGHTDEF_USE_CUBEMAP) ? "true" : "false");
 			GL_BindToTMU(tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
-			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
+			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
 			VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
+			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+		}
+		else
+		{
+			GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
+			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}
 

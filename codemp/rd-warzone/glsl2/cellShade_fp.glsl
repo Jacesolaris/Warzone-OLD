@@ -1,5 +1,5 @@
 uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_DepthMap;
+uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_NormalMap;
 
 uniform vec2		u_Dimensions;
@@ -41,8 +41,8 @@ float linearlizeDepth(float nonlinearDepth)
 
 vec3 normals(vec2 tex)//get normal vector from depthmap
 {
-	float deltax = linearlizeDepth( textureLod(u_DepthMap, vec2((tex.x + pixelSize.x), tex.y), 0.0).x) - linearlizeDepth( textureLod(u_DepthMap, vec2((tex.x - pixelSize.x), tex.y), 0.0).x);
-	float deltay = linearlizeDepth( textureLod(u_DepthMap, vec2( tex.x, (tex.y + pixelSize.y)), 0.0).x) - linearlizeDepth( textureLod(u_DepthMap, vec2( tex.x, (tex.y - pixelSize.y)), 0.0).x);	
+	float deltax = linearlizeDepth( textureLod(u_ScreenDepthMap, vec2((tex.x + pixelSize.x), tex.y), 0.0).x) - linearlizeDepth( textureLod(u_ScreenDepthMap, vec2((tex.x - pixelSize.x), tex.y), 0.0).x);
+	float deltay = linearlizeDepth( textureLod(u_ScreenDepthMap, vec2( tex.x, (tex.y + pixelSize.y)), 0.0).x) - linearlizeDepth( textureLod(u_ScreenDepthMap, vec2( tex.x, (tex.y - pixelSize.y)), 0.0).x);	
 	return normalize(vec3( (deltax / 2.0 / pixelSize.x), (deltay / 2.0 / pixelSize.y), 1.0));
 }
 #else

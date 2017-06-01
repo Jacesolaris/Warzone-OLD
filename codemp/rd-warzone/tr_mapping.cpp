@@ -1178,7 +1178,7 @@ vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
 qboolean	SHADOWS_ENABLED = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
-float		SHADOW_MAXBRIGHT = 1.3;
+float		SHADOW_MAXBRIGHT = 1.0;
 qboolean	FOG_POST_ENABLED = qtrue;
 qboolean	FOG_STANDARD_ENABLE = qtrue;
 vec3_t		FOG_COLOR = { 0 };
@@ -1259,7 +1259,7 @@ void MAPPING_LoadMapInfo ( void )
 	//
 	SHADOWS_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOWS_ENABLED", "0")) > 0) ? qtrue : qfalse;
 	SHADOW_MINBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MINBRIGHT", "0.7"));
-	SHADOW_MAXBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MAXBRIGHT", "1.3"));
+	SHADOW_MAXBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MAXBRIGHT", "1.0"));
 
 	//
 	// Water...

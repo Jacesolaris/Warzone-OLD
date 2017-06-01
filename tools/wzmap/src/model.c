@@ -496,7 +496,14 @@ float LowestMapPointNear(vec3_t pos)
 	{
 		/* get drawsurf */
 		mapDrawSurface_t *ds = &mapDrawSurfs[s];
+
+		if (!ds)
+			continue;
+
 		shaderInfo_t *si = ds->shaderInfo;
+
+		if (!si)
+			continue;
 
 		if (!(si->compileFlags & C_SKY)
 			&& !(si->compileFlags & C_SKIP)

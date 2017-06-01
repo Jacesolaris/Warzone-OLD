@@ -42,7 +42,7 @@ uniform sampler2D			u_OverlayMap;
 
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, USE_TEXTURECLAMP
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, noNormOutputs
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, 0.0
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -52,13 +52,13 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, noNormOu
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
 #define USE_FOG				u_Settings1.b
-#define USE_NO_NORMALS		u_Settings1.a
+#define USE_NO_DEFERRED		u_Settings1.a
 
 
 uniform vec2				u_Dimensions;
 uniform vec4				u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4				u_Local2; // ExtinctionCoefficient
-uniform vec4				u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
+uniform vec4				u_Local3; // 0, 0, r_cubemapCullRange->value, cubemapScale
 uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
@@ -88,6 +88,9 @@ uniform float				u_CubeMapStrength;
 uniform vec3				u_ViewOrigin;
 
 uniform vec2				u_textureScale;
+
+uniform int					u_ColorGen;
+uniform int					u_AlphaGen;
 
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
@@ -153,8 +156,6 @@ varying vec3				var_Blending;
 varying float				var_Slope;
 varying float				var_usingSteepMap;
 
-varying vec3				var_fogDir;
-
 
 #define m_Normal			var_Normal
 #define m_TexCoords			var_TexCoords
@@ -219,7 +220,7 @@ vec4 ConvertToNormals ( vec4 colorIn )
 
 	vec4 color = colorIn;
 
-	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
+	vec3 N = vec3(clamp((color.r + color.b) / 2.0, 0.0, 1.0), clamp((color.g + color.b) / 2.0, 0.0, 1.0), clamp((color.r + color.g) / 2.0, 0.0, 1.0));
 
 	N.xy = 1.0 - N.xy;
 	N.xyz = N.xyz * 0.5 + 0.5;
@@ -237,15 +238,10 @@ vec4 ConvertToNormals ( vec4 colorIn )
 #define const_2 (255.0 / 219.0)
 	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
-	//vec4 norm = vec4((N + N2 + (1.0 - N.brg)) / 3.0, displacement);
 	vec4 norm = vec4((N + N2) / 2.0, displacement);
-	//norm.z = dot(N.xyz, 1.0 - N2.xyz);
-	//norm.z = sqrt(clamp((1.0 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
-	//norm.z = (N.x + N.y) / 2.0;
 	norm.rgb = norm.rbg;
 	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
-	//return norm;// * colorIn.a;
-	return vec4(vec3(1.0)-norm.rgb * 0.5, norm.a);
+	return vec4((vec3(1.0)-norm.rgb) * 0.5, norm.a);
 }
 
 
@@ -678,18 +674,30 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
 
+mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
+{
+	// get edge vectors of the pixel triangle
+	vec3 dp1 = dFdx( p );
+	vec3 dp2 = dFdy( p );
+	vec2 duv1 = dFdx( uv );
+	vec2 duv2 = dFdy( uv );
+
+	// solve the linear system
+	vec3 dp2perp = cross( dp2, N );
+	vec3 dp1perp = cross( N, dp1 );
+	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+	// construct a scale-invariant frame 
+	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+	return mat3( T * invmax, B * invmax, N );
+}
+
+
 void main()
 {
 	vec4 specular = vec4(0.0);
 	vec2 texCoords = m_TexCoords.xy;
-
-	float dist = distance(m_vertPos.xyz, u_ViewOrigin.xyz);
-	bool isDistant = false;
-
-	if (dist > 4096.0)
-	{
-		isDistant = true;
-	}
 
 
 #if defined(USE_TRI_PLANAR)
@@ -698,6 +706,24 @@ void main()
 #else //!defined(USE_TRI_PLANAR)
 	float pixRandom = 0.0; // Don't use it anyway...
 #endif //defined(USE_TRI_PLANAR)
+
+#if 0
+	if (length(m_vertPos.xyz) <= 0.0)
+	{
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+		#if defined(USE_GLOW_BUFFER)
+			out_Glow = gl_FragColor;
+		#else
+			out_Glow = vec4(0.0);
+			vec2 normData = encode(vec3(1.0));
+			vec2 cubeData = vec2(0.0, 1.0);
+			out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		#endif
+		return;
+	}
+#endif
 
 #if 0
 	vec3 debugColor;
@@ -765,11 +791,10 @@ void main()
 	vec3 viewDir;
 	vec3 E;
 
-	if ((!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0) || (u_Local1.x > 0.0 && !isDistant))
-	{
-		viewDir = m_ViewDir;
-		E = normalize(viewDir);
-	}
+	viewDir = m_ViewDir;
+	E = normalize(viewDir);
+	//mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, texCoords.xy);
+	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 
 #endif //defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
 
@@ -780,7 +805,7 @@ void main()
 
 
 #if defined(__PARALLAX_ENABLED__)
-	if (u_Local1.x > 0.0 && !isDistant && USE_TEXTURECLAMP <= 0.0)
+	if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0)
 	{
 		vec2 tex_offset = vec2(1.0 / u_Dimensions);
 		vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
@@ -836,8 +861,7 @@ void main()
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
 
 
-	AddDetail(diffuse, texCoords);
-
+	float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
 
 
 #if !defined(USE_GLOW_BUFFER)
@@ -846,23 +870,29 @@ void main()
 
 	//if (u_Local4.r <= 0.0)
 	//{
-		norm = ConvertToNormals(diffuse /** var_Color.rgba*/);
+		norm = ConvertToNormals(diffuse);
 	//}
 	//else
 	//{
 	//	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 	//}
 
+	
 	N.xy = norm.xy * 2.0 - 1.0;
 	N.xy *= 0.25;
+	//N.xyz *= vec3(0.25, 0.25, 3.0);
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
-	N.rgb *= diffuse.a * var_Color.a;
+	//N *= tangentToWorld;
+
 #endif //!defined(USE_GLOW_BUFFER)
 
 
+	AddDetail(diffuse, texCoords);
+
+
 	vec3 ambientColor = vec3(0.0);
-	vec3 lightColor = var_Color.rgb;
+	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
 
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
@@ -881,56 +911,45 @@ void main()
 		lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
 		lmBrightMult = lmBrightMult * 0.7;
 
-		//lightColor	= mix(lightmapColor.rgb * lmBrightMult, lightmapColor.rgb * lmBrightMult * var_Color.rgb, var_Color.a);
 		lightColor	= lightmapColor.rgb * lmBrightMult;
 
 		ambientColor = lightColor;
 		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
-		lightColor /= max(surfNL, 0.35/*0.25*/);
+		lightColor /= clamp(max(surfNL, 0.35/*0.25*/), 0.0, 1.0);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
 
 	#endif //defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 
-		gl_FragColor = vec4(diffuse.rgb + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
+#if defined(USE_GLOW_BUFFER)
+		gl_FragColor = vec4(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale), clamp(diffuse.a * var_Color.a, 0.0, 1.0));
+#else
+		gl_FragColor = vec4(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale), clamp(diffuse.a * var_Color.a, 0.0, 1.0));
+#endif
+
+		//lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)) - 0.2, 0.0, 1.0);
 
 
-
-#if !defined(USE_GLOW_BUFFER)
-		bool outputNormals = false;
-
-/*
-#define USE_TC				u_Settings0.r
-#define USE_DEFORM			u_Settings0.g
-#define USE_RGBA			u_Settings0.b
-#define USE_TEXTURECLAMP	u_Settings0.a
-
-#define USE_VERTEX_ANIM		u_Settings1.r
-#define USE_SKELETAL_ANIM	u_Settings1.g
-#define USE_FOG				u_Settings1.b
-#define USE_NO_NORMALS		u_Settings1.a
-*/
-
-		if (USE_NO_NORMALS == 0.0 /*&& USE_TC == 0.0 && USE_DEFORM == 0.0 && USE_RGBA == 0.0 && USE_TEXTURECLAMP == 0.0 && USE_FOG == 0.0*/)
-		{
-			if (gl_FragColor.a >= 0.3/*u_Local9.r*//*0.996*/ || ((u_Local1.a == 5.0 || u_Local1.a == 6.0 || u_Local1.a == 19.0 || u_Local1.a == 20.0) && gl_FragColor.a >= 0.5))
-			{// Hmm how to handle transparancies with deferred... Maybe I should add a second alpha normals map...
-				outputNormals = true;
-			}
-		}
-#endif //!defined(USE_GLOW_BUFFER)
-
-
-#if !defined(USE_GLOW_BUFFER)
-#if !defined(DEFERRED_REFLECTIONS)
 	#if defined(__CUBEMAPS_ENABLED__)
-		if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && outputNormals)
+
+#define cubeStrength u_Local3.a
+#define cubeMaxDist u_Local3.b
+
+		float curDist = distance(u_ViewOrigin.xyz, m_vertPos.xyz);
+		float cubeFade = 0.0;
+		
+		if (curDist < cubeMaxDist)
+		{
+			cubeFade = clamp(1.0 - (curDist / cubeMaxDist), 0.0, 1.0);
+		}
+
+		if (u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && cubeFade > 0.0)
 		{
 			#if defined(USE_SPECULARMAP) && !defined(USE_GLOW_BUFFER)
 			if (u_Local1.g != 0.0)
 			{// Real specMap...
-				specular = textureLod(u_SpecularMap, texCoords, 0.0);
+				specular = texture(u_SpecularMap, texCoords);
 			}
 			else
 			#endif //defined(USE_SPECULARMAP)
@@ -939,39 +958,32 @@ void main()
 #define specLower ( 64.0 / 255.0)
 #define specUpper (255.0 / 192.0)
 				specular.rgb = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
-				specular.a = ((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6;
+				specular.a = clamp(((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6, 0.0, 1.0);
 			}
 
 			specular.rgb *= u_SpecularScale.rgb;
 
-			vec3  H  = normalize(var_PrimaryLightDir.xyz + E);
-			float NE = clamp(dot(m_Normal.xyz/*N*/, E), 0.0, 1.0);
+#define gloss specular.a
 
-			vec3 R = reflect(E, m_Normal.xyz);
-			vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
-			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
-			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w * 0.25;
-			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a)) * u_CubeMapStrength * 0.5;
+			float NE = clamp(dot(normalize(m_Normal.xyz)/*N*/, E), 0.0, 1.0);
+			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
+
+			vec3 R = reflect(E, N);
+			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * (u_ViewOrigin.xyz - m_vertPos.xyz);//viewDir;
+			vec3 parallax = (u_CubeMapInfo.xyz / curDist) + u_CubeMapInfo.w * vec3(-viewDir.xy, viewDir.z);
+			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+			//vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;// * 0.25;
+			vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
+
+			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w, 0.0, 1.0));
 		}
+
 	#endif //__CUBEMAPS_ENABLED__
-#else //defined(DEFERRED_REFLECTIONS)
-	float enableCubemap = 0.0; // For deferred cubemaps...
-
-	if (!isDistant && u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0)
-	{
-		enableCubemap = 1.0;
-	}
-#endif //defined(DEFERRED_REFLECTIONS)
-#endif //!defined(USE_GLOW_BUFFER)
 
 
-	gl_FragColor.rgb *= lightColor;
+	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 	
-
-	/*
-	vec2 encode (vec3 n)
-	vec3 decode (vec2 enc)
-	*/
 
 	#if defined(USE_GLOW_BUFFER)
 #define glow_const_1 ( 23.0 / 255.0)
@@ -981,20 +993,10 @@ void main()
 
 		out_Glow = gl_FragColor;
 	#else
-		if (/*u_Local8.r == 0.0 &&*/ outputNormals)
-		{
 			out_Glow = vec4(0.0);
-			vec2 normData = encode(N.xyz * 0.5 + 0.5);
-#if defined(DEFERRED_REFLECTIONS)
-			vec2 cubeData = encode(vec3(enableCubemap, u_Local3.a / 10.0, u_Local1.g / 10.0));
-#else //!defined(DEFERRED_REFLECTIONS)
-			float enabled = 0.0;
-			if (u_Local1.a != 1024.0 && u_Local1.a != 1025.0)
-				enabled = 1.0;
-			vec2 cubeData = vec2(0.0, enabled);
-#endif //defined(DEFERRED_REFLECTIONS)
-			out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
+		#if !defined(IS_DETAIL)
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, gl_FragColor.a/*norm.a*/ );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		}
+		#endif //!defined(IS_DETAIL)
 	#endif
 }

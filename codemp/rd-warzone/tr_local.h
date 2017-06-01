@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __PSHADOWS__
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
 #define __MERGE_MODEL_SURFACES__		// merge entity surfaces into less draws...
-#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
+//#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 //#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
 //#define __RENDERER_GROUND_FOLIAGE__		// in-progress port of cgame foliage system to renderer...
 
@@ -461,6 +461,10 @@ extern cvar_t  *r_rbm;
 extern cvar_t  *r_rbmStrength;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_deferredLighting;
+extern cvar_t  *r_ssr;
+extern cvar_t  *r_ssrStrength;
+extern cvar_t  *r_sse;
+extern cvar_t  *r_sseStrength;
 extern cvar_t  *r_colorCorrection;
 extern cvar_t  *r_steepParallax;
 extern cvar_t  *r_trueAnaglyph;
@@ -1062,6 +1066,8 @@ typedef struct {
 
 	surfaceSprite_t	*ss;
 
+	float			emissiveScale;
+
 	bool			isFoliage;
 	bool			isFoliageChecked;
 } shaderStage_t;
@@ -1331,15 +1337,15 @@ enum
 
 enum
 {
-	//LIGHTDEF_COUNT = 0x0040
 	LIGHTDEF_USE_LIGHTMAP = 0x0001,
 	LIGHTDEF_USE_GLOW_BUFFER = 0x0002,
 	LIGHTDEF_USE_CUBEMAP = 0x0004,
 	LIGHTDEF_USE_TESSELLATION = 0x0008,
 	LIGHTDEF_USE_TRIPLANAR = 0x0010,
 	LIGHTDEF_USE_REGIONS = 0x0020,
+	LIGHTDEF_IS_DETAIL = 0x0040,
 	
-	LIGHTDEF_COUNT = (LIGHTDEF_USE_LIGHTMAP | LIGHTDEF_USE_GLOW_BUFFER | LIGHTDEF_USE_CUBEMAP | LIGHTDEF_USE_TESSELLATION | LIGHTDEF_USE_TRIPLANAR | LIGHTDEF_USE_REGIONS)
+	LIGHTDEF_COUNT = 1+(LIGHTDEF_USE_LIGHTMAP | LIGHTDEF_USE_GLOW_BUFFER | LIGHTDEF_USE_CUBEMAP | LIGHTDEF_USE_TESSELLATION | LIGHTDEF_USE_TRIPLANAR | LIGHTDEF_USE_REGIONS | LIGHTDEF_IS_DETAIL)
 };
 
 
@@ -2633,6 +2639,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t showNormalsShader;
 	shaderProgram_t deferredLightingShader;
+	shaderProgram_t ssrShader;
+	shaderProgram_t ssrCombineShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *anamorphicRenderFBOImage;
