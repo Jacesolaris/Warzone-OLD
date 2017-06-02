@@ -2294,12 +2294,14 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 	if (surface->vbo->occluded) return;
 #endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
+#if 0
 	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW && surface->mdvModel->numFrames <= 1)
 	{
 		RB_SurfaceVbo(surface->vbo, surface->ibo, surface->numVerts, surface->numIndexes, 0/*surface->firstIndex*/,
 			surface->minIndex, surface->maxIndex, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/, qfalse);
 	}
 	else
+#endif
 	{
 		//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
 		RB_EndSurface();

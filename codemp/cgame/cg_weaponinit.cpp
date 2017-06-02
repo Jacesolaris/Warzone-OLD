@@ -79,6 +79,105 @@ void CG_SetWeaponHandModel(weaponInfo_t    *weaponInfo, int weaponType)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/disruptor/disruptor_hand.md3");
 }
 
+//
+// 3D Blaster bolts...
+//
+qboolean DEFAULT_BLASTER_SHADERS_INITIALIZED = qfalse;
+
+void CG_RegisterDefaultBlasterShaders(void)
+{// New blaster 3D bolt shader colors can be registered here and reused, rather then for each gun...
+	if (DEFAULT_BLASTER_SHADERS_INITIALIZED) return;
+
+	DEFAULT_BLASTER_SHADERS_INITIALIZED = qtrue;
+
+	cgs.media.whiteBlasterShot = trap->R_RegisterShader("laserbolt_white");
+	cgs.media.yellowBlasterShot = trap->R_RegisterShader("laserbolt_yellow");
+	cgs.media.redBlasterShot = trap->R_RegisterShader("laserbolt_red");
+	cgs.media.blueBlasterShot = trap->R_RegisterShader("laserbolt_blue");
+	cgs.media.greenBlasterShot = trap->R_RegisterShader("laserbolt_green");
+}
+
+qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolean altFire)
+{
+	if (!weaponInfo) return cgs.media.whiteBlasterShot; // Fallback...
+
+	if (altFire)
+	{
+		if (weaponInfo->bolt3DShaderAlt)
+		{
+			return weaponInfo->bolt3DShaderAlt;
+		}
+
+		return -1; // Fall back to old system...
+	}
+	else
+	{
+		if (weaponInfo->bolt3DShader)
+		{
+			return weaponInfo->bolt3DShader;
+		}
+
+		return -1; // Fall back to old system...
+	}
+
+	return cgs.media.whiteBlasterShot; // Fallback...
+}
+
+float CG_Get3DWeaponBoltLength(const struct weaponInfo_s *weaponInfo, qboolean altFire)
+{
+	if (!weaponInfo) return 4.0; // Default size...
+
+	if (altFire)
+	{
+		if (weaponInfo->bolt3DLengthAlt)
+		{
+			return weaponInfo->bolt3DLengthAlt;
+		}
+
+		return 4.0; // Default size...
+	}
+	else
+	{
+		if (weaponInfo->bolt3DLength)
+		{
+			return weaponInfo->bolt3DLength;
+		}
+
+		return 4.0; // Default size...
+	}
+
+	return 4.0; // Default size...
+}
+
+float CG_Get3DWeaponBoltWidth(const struct weaponInfo_s *weaponInfo, qboolean altFire)
+{
+	if (!weaponInfo) return 1.0; // Default size...
+
+	if (altFire)
+	{
+		if (weaponInfo->bolt3DWidthAlt)
+		{
+			return weaponInfo->bolt3DWidthAlt;
+		}
+
+		return 1.0; // Default size...
+	}
+	else
+	{
+		if (weaponInfo->bolt3DWidth)
+		{
+			return weaponInfo->bolt3DWidth;
+		}
+
+		return 1.0; // Default size...
+	}
+
+	return 1.0; // Default size...
+}
+//
+//
+//
+
 /*
 =================
 CG_RegisterWeapon
@@ -98,6 +197,9 @@ void CG_RegisterWeapon( int weaponNum) {
 	{// Missing SP weapons...
 		return;
 	}
+
+	// Always register all the blaster bolt colors...
+	CG_RegisterDefaultBlasterShaders();
 
 	if (!cgs.effects.rocketExplosionEffect) cgs.effects.rocketExplosionEffect = trap->FX_RegisterEffect("explosives/demomedium");
 
@@ -2335,6 +2437,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DH_17_PISTOL:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 3.0; // If not set, 4.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 3.5; // If not set, 4.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/dl-44_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/dl-44_1.mp3");

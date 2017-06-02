@@ -113,44 +113,16 @@ void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	}
 }
 
-void FX_WeaponAwesomeBolt(vec3_t org, vec3_t fwd, float length, float radius, vec3_t color)
+void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_t shader)
 {
-#if 0
-	// Do the hot core
-	refEntity_t saber;
-
-	VectorMA(org, length, fwd, saber.origin);
-	VectorMA(org, -1, fwd, saber.oldorigin);
-
-	saber.customShader = cgs.media.ep3SaberCoreShader;
-	saber.reType = RT_LINE;
-
-	saber.radius = radius;
-
-	saber.shaderTexCoord[0] = saber.shaderTexCoord[1] = 1.0f;
-	
-	for (int i = 0; i<3; i++)
-	{
-		saber.shaderRGBA[i] = color[i];
-	}
-	saber.shaderRGBA[3] = 255;
-
-	AddRefEntityToScene(&saber);
-#else
 	refEntity_t ent;
 
+	// Draw the bolt core...
 	memset(&ent, 0, sizeof(refEntity_t));
 	ent.reType = RT_MODEL;
 
-	ent.customShader = cgs.media.solidWhite;
+	ent.customShader = shader;
 
-	for (int i = 0; i<3; i++)
-	{
-		ent.shaderRGBA[i] = color[i];
-	}
-	ent.shaderRGBA[3] = 255;
-
-	//ent.radius = radius;
 	ent.modelScale[0] = length;
 	ent.modelScale[1] = radius;
 	ent.modelScale[2] = radius;
@@ -160,10 +132,25 @@ void FX_WeaponAwesomeBolt(vec3_t org, vec3_t fwd, float length, float radius, ve
 	AnglesToAxis(ent.angles, ent.axis);
 	ScaleModelAxis(&ent);
 
-	ent.hModel = trap->R_RegisterModel("models/warzone/laserbolt.md3");
+	ent.hModel = trap->R_RegisterModel("models/warzone/lasers/laserbolt.md3");
 
 	AddRefEntityToScene(&ent);
-#endif
+
+	// Now add glow... Maybe one day if the bloom/anamorphic glows are not enough... Probably not worth drawing a second model for...
+	/*ent.modelScale[0] = length * 1.25;
+	ent.modelScale[1] = radius * 3.0;
+	ent.modelScale[2] = radius * 3.0;
+
+	ent.customShader = trap->R_RegisterShader("laserbolt_glow");
+
+	vec3_t org2, back;
+	VectorMA(org, -(((length * 1.25) - length) / 2.0), fwd, org2);
+	VectorCopy(org2, ent.origin);
+	vectoangles(fwd, ent.angles);
+	AnglesToAxis(ent.angles, ent.axis);
+	ScaleModelAxis(&ent);
+
+	AddRefEntityToScene(&ent);*/
 }
 
 /*
@@ -180,13 +167,20 @@ void FX_WeaponProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 		forward[2] = 1.0f;
 	}
 
-	//if (weapon->missileRenderfx)
-	//	PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	//else
-	//	PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	qhandle_t bolt3D = CG_Get3DWeaponBoltColor(weapon, qfalse);
 
-	vec3_t color = { 255, 255, 255 };
-	FX_WeaponAwesomeBolt(cent->lerpOrigin, forward, 4, 1, color);
+	if (bolt3D)
+	{// New 3D bolt enabled...
+		FX_WeaponBolt3D(cent->lerpOrigin, forward, CG_Get3DWeaponBoltLength(weapon, qfalse), CG_Get3DWeaponBoltWidth(weapon, qfalse), bolt3D);
+	}
+	else if (weapon->missileRenderfx)
+	{// Old 2D system...
+		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{// Omg, we still have these?!?!?!
+		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
 
 	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
@@ -205,12 +199,18 @@ void FX_WeaponAltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 		forward[2] = 1.0f;
 	}
 	
-	if (weapon->altMissileRenderfx)
-	{
+	qhandle_t bolt3D = CG_Get3DWeaponBoltColor(weapon, qtrue);
+
+	if (bolt3D)
+	{// New 3D bolt enabled...
+		FX_WeaponBolt3D(cent->lerpOrigin, forward, CG_Get3DWeaponBoltLength(weapon, qtrue), CG_Get3DWeaponBoltWidth(weapon, qtrue), bolt3D);
+	}
+	else if (weapon->altMissileRenderfx)
+	{// Old 2D system...
 		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
-	{
+	{// Omg, we still have these?!?!?!
 		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 

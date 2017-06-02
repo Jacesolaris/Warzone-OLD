@@ -43,6 +43,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_init.cpp"
 	"${MPDir}/rd-warzone/tr_instancing.cpp"
 	"${MPDir}/rd-warzone/tr_instancing.h"
+	"${MPDir}/rd-warzone/tr_lasermanager.cpp"
+	"${MPDir}/rd-warzone/tr_lasermanager.h"
 	"${MPDir}/rd-warzone/tr_light.cpp"
 	"${MPDir}/rd-warzone/tr_local.h"
 	"${MPDir}/rd-warzone/tr_main.cpp"

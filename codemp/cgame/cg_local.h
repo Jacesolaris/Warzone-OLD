@@ -768,6 +768,15 @@ typedef struct weaponInfo_s {
 
 	qhandle_t		ammoModel;
 
+	// New 3D blaster bolts - When these are set, the system uses 3D stuff, otherwise it uses the old system //
+	qhandle_t		bolt3DShader;
+	qhandle_t		bolt3DShaderAlt;
+	float			bolt3DLength;
+	float			bolt3DLengthAlt;
+	float			bolt3DWidth;
+	float			bolt3DWidthAlt;
+	// New 3D blaster bolts - When these are set, the system uses 3D stuff, otherwise it uses the old system //
+
 	sfxHandle_t		flashSound[8];		// fast firing weapons randomly choose
 	sfxHandle_t		firingSound;
 	sfxHandle_t		chargeSound;
@@ -1225,6 +1234,14 @@ typedef struct cgMedia_s {
 	qhandle_t	loadBarLED;
 	qhandle_t	loadBarLEDCap;
 	qhandle_t	loadBarLEDSurround;
+
+	// New 3D blaster bolt shaders //
+	fxHandle_t	whiteBlasterShot;
+	fxHandle_t	yellowBlasterShot;
+	fxHandle_t	redBlasterShot;
+	fxHandle_t	blueBlasterShot;
+	fxHandle_t	greenBlasterShot;
+	// New 3D blaster bolt shaders //
 
 	qhandle_t	bryarFrontFlash;
 	//qhandle_t	greenFrontFlash;
@@ -2202,6 +2219,10 @@ void CG_WeaponClean_f( void );
 
 void CG_RegisterWeapon( int weaponNum);
 void CG_RegisterItemVisuals( int itemNum );
+
+qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolean altFire);
+float CG_Get3DWeaponBoltLength(const struct weaponInfo_s *weaponInfo, qboolean altFire);
+float CG_Get3DWeaponBoltWidth(const struct weaponInfo_s *weaponInfo, qboolean altFire);
 
 void CG_FireWeapon( centity_t *cent, qboolean alt_fire );
 void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, impactSound_t soundType, qboolean alt_fire, int charge);
