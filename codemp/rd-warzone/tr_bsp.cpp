@@ -3067,15 +3067,18 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 
 	tr.numCubemaps = numCubemaps;
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
-
+	
 	numCubemaps = 0;
 	while(R_ParseSpawnVars(spawnVarChars, sizeof(spawnVarChars), &numSpawnVars, spawnVars))
 	{
 		int i;
 		qboolean isCubemap = qfalse;
 		qboolean positionSet = qfalse;
+		qboolean radiusSet = qfalse;
 		vec3_t origin;
+		float radius = 1024.0;
 
 		for (i = 0; i < numSpawnVars; i++)
 		{
@@ -3087,12 +3090,23 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 				sscanf(spawnVars[i][1], "%f %f %f", &origin[0], &origin[1], &origin[2]);
 				positionSet = qtrue;
 			}
+
+			if (!Q_stricmp(spawnVars[i][0], "radius"))
+			{
+				sscanf(spawnVars[i][1], "%f", &radius);
+				radiusSet = qtrue;
+			}
 		}
 
 		if (isCubemap && positionSet)
 		{
 			//ri.Printf(PRINT_ALL, "cubemap at %f %f %f\n", origin[0], origin[1], origin[2]);
 			VectorCopy(origin, tr.cubemapOrigins[numCubemaps]);
+
+			if (radiusSet)
+				tr.cubemapRadius[numCubemaps] = radius;
+			else
+				tr.cubemapRadius[numCubemaps] = 1024.0;
 			numCubemaps++;
 		}
 	}

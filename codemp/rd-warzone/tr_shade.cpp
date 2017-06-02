@@ -2047,6 +2047,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	float tessAlpha = 0.0;
 
 	vec4_t cubeMapVec;
+	float cubeMapRadius;
 
 	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
@@ -2096,12 +2097,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		cubeMapVec[1] = currentPlayerCubemapVec[1];// - backEnd.viewParms.ori.origin[1];
 		cubeMapVec[2] = currentPlayerCubemapVec[2];// - backEnd.viewParms.ori.origin[2];
 		cubeMapVec[3] = 1.0f;
+		cubeMapRadius = tr.cubemapRadius[currentPlayerCubemap];
 		ADD_CUBEMAP_INDEX = qtrue;
 #else //!__PLAYER_BASED_CUBEMAPS__
 		cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
 		cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
 		cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
 		cubeMapVec[3] = 1.0f;
+		cubeMapRadius = tr.cubemapRadius[input->cubemapIndex - 1];
 		ADD_CUBEMAP_INDEX = qtrue;
 #endif //__PLAYER_BASED_CUBEMAPS__
 	}
@@ -2684,7 +2687,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//ri->Printf(PRINT_ALL, "%s stage %i is using cubemap (correct lightall: %s)\n", input->shader->name, stage, (index & LIGHTDEF_USE_CUBEMAP) ? "true" : "false");
 			GL_BindToTMU(tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
 			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
-			VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
+			VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}
 		else

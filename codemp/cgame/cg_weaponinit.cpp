@@ -410,6 +410,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->handsModel = 0;
 	}
 
+	/*
 	// Debugging...
 	weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
 	weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
@@ -417,7 +418,7 @@ void CG_RegisterWeapon( int weaponNum) {
 	weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
 	weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
 	weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
-	
+	*/
 
 	switch ( weaponNum ) {
 	case WP_STUN_BATON:

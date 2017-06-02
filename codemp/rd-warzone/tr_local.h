@@ -2547,6 +2547,7 @@ typedef struct trGlobals_s {
 
 	int                     numCubemaps;
 	vec3_t                  *cubemapOrigins;
+	float					*cubemapRadius;
 	image_t                 **cubemaps;
 
 	trRefEntity_t			*currentEntity;
