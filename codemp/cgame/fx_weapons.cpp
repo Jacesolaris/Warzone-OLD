@@ -136,21 +136,36 @@ void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle
 
 	AddRefEntityToScene(&ent);
 
-	// Now add glow... Maybe one day if the bloom/anamorphic glows are not enough... Probably not worth drawing a second model for...
-	/*ent.modelScale[0] = length * 1.25;
-	ent.modelScale[1] = radius * 3.0;
-	ent.modelScale[2] = radius * 3.0;
+	// Now add glow...
+	memset(&ent, 0, sizeof(refEntity_t));
 
-	ent.customShader = trap->R_RegisterShader("laserbolt_glow");
+	qhandle_t glowColorShader = CG_Get3DWeaponBoltGlowColor(shader);
 
-	vec3_t org2, back;
-	VectorMA(org, -(((length * 1.25) - length) / 2.0), fwd, org2);
-	VectorCopy(org2, ent.origin);
-	vectoangles(fwd, ent.angles);
-	AnglesToAxis(ent.angles, ent.axis);
-	ScaleModelAxis(&ent);
+	if (glowColorShader)
+	{// Now add glow...
+		vec3_t org2, back;
+		VectorMA(org, -((length * 1.25 * 16.0) - length * 16.0) * 4.0, fwd, org2);
+		VectorCopy(org2, ent.origin);
+		VectorCopy(fwd, ent.axis[0]);
 
-	AddRefEntityToScene(&ent);*/
+		ent.saberLength = length * 1.25 * 16.0 * 1.5;
+
+		float radius2 = radius * 16.0;
+		float radiusRange = radius2 * 0.075f;
+		float radiusStart = radius2 - radiusRange;
+		float radiusmult = 1.0;
+		ent.radius = (radiusStart + crandom() * radiusRange)*radiusmult;
+
+		ent.renderfx |= RF_RGB_TINT;
+		ent.shaderRGBA[0] = 255;
+		ent.shaderRGBA[1] = 255;
+		ent.shaderRGBA[2] = 255;
+		ent.shaderRGBA[3] = 128.0;// cg_gunX.value;// 64;
+		ent.reType = RT_SABER_GLOW;
+		ent.customShader = glowColorShader;
+
+		AddRefEntityToScene(&ent);
+	}
 }
 
 /*

@@ -84,17 +84,59 @@ void CG_SetWeaponHandModel(weaponInfo_t    *weaponInfo, int weaponType)
 //
 qboolean DEFAULT_BLASTER_SHADERS_INITIALIZED = qfalse;
 
+int numBoltGlowIndexes = 0;
+qhandle_t boltBoltIndexes[1024] = { 0 };
+qhandle_t boltGlowIndexes[1024] = { 0 };
+
+void CG_MakeShaderBoltGlow(qhandle_t boltShader, qhandle_t newBoltGlowShader)
+{// Make a list of all the glows matching the original bolts...
+	boltBoltIndexes[numBoltGlowIndexes] = boltShader;
+	boltGlowIndexes[numBoltGlowIndexes] = newBoltGlowShader;
+	numBoltGlowIndexes++;
+}
+
 void CG_RegisterDefaultBlasterShaders(void)
 {// New blaster 3D bolt shader colors can be registered here and reused, rather then for each gun...
 	if (DEFAULT_BLASTER_SHADERS_INITIALIZED) return;
 
 	DEFAULT_BLASTER_SHADERS_INITIALIZED = qtrue;
 
-	cgs.media.whiteBlasterShot = trap->R_RegisterShader("laserbolt_white");
+	//
+	//
+	// Add any new bolt/glow color combos here...
+	//
+	// Note: do not resuse the same shader with a different glow. Make a new shader for each if a different glow is needed...
+	//
+
+	cgs.media.whiteBlasterShot = trap->R_RegisterShader("laserbolt_white"); // the basic color of the actual bolt...
+	CG_MakeShaderBoltGlow(cgs.media.whiteBlasterShot, trap->R_RegisterShader("laserbolt_white_glow")); // a glow shader matching the bolt color...
+
 	cgs.media.yellowBlasterShot = trap->R_RegisterShader("laserbolt_yellow");
+	CG_MakeShaderBoltGlow(cgs.media.yellowBlasterShot, trap->R_RegisterShader("laserbolt_yellow_glow"));
+
 	cgs.media.redBlasterShot = trap->R_RegisterShader("laserbolt_red");
+	CG_MakeShaderBoltGlow(cgs.media.redBlasterShot, trap->R_RegisterShader("laserbolt_red_glow"));
+
 	cgs.media.blueBlasterShot = trap->R_RegisterShader("laserbolt_blue");
+	CG_MakeShaderBoltGlow(cgs.media.blueBlasterShot, trap->R_RegisterShader("laserbolt_blue_glow"));
+
 	cgs.media.greenBlasterShot = trap->R_RegisterShader("laserbolt_green");
+	CG_MakeShaderBoltGlow(cgs.media.greenBlasterShot, trap->R_RegisterShader("laserbolt_green_glow"));
+}
+
+
+
+qhandle_t CG_Get3DWeaponBoltGlowColor(qhandle_t boltShader)
+{
+	for (int i = 0; i < numBoltGlowIndexes; i++)
+	{
+		if (boltBoltIndexes[i] == boltShader)
+		{
+			return boltGlowIndexes[i];
+		}
+	}
+
+	return -1;
 }
 
 qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolean altFire)
@@ -125,7 +167,7 @@ qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolea
 
 float CG_Get3DWeaponBoltLength(const struct weaponInfo_s *weaponInfo, qboolean altFire)
 {
-	if (!weaponInfo) return 4.0; // Default size...
+	if (!weaponInfo) return 1.0; // Default size...
 
 	if (altFire)
 	{
@@ -134,7 +176,7 @@ float CG_Get3DWeaponBoltLength(const struct weaponInfo_s *weaponInfo, qboolean a
 			return weaponInfo->bolt3DLengthAlt;
 		}
 
-		return 4.0; // Default size...
+		return 1.0; // Default size...
 	}
 	else
 	{
@@ -143,10 +185,10 @@ float CG_Get3DWeaponBoltLength(const struct weaponInfo_s *weaponInfo, qboolean a
 			return weaponInfo->bolt3DLength;
 		}
 
-		return 4.0; // Default size...
+		return 1.0; // Default size...
 	}
 
-	return 4.0; // Default size...
+	return 1.0; // Default size...
 }
 
 float CG_Get3DWeaponBoltWidth(const struct weaponInfo_s *weaponInfo, qboolean altFire)
@@ -367,6 +409,15 @@ void CG_RegisterWeapon( int weaponNum) {
 	{
 		weaponInfo->handsModel = 0;
 	}
+
+	// Debugging...
+	weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+	weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+	weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+	weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+	weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+	weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+	
 
 	switch ( weaponNum ) {
 	case WP_STUN_BATON:
@@ -2439,8 +2490,8 @@ void CG_RegisterWeapon( int weaponNum) {
 	case WP_DH_17_PISTOL:
 		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
 		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
-		weaponInfo->bolt3DLength = 3.0; // If not set, 4.0 is the default length.
-		weaponInfo->bolt3DLengthAlt = 3.5; // If not set, 4.0 is the default length.
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
 		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
 		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
 
