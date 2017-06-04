@@ -1743,7 +1743,7 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 
 	if (r_cubeMapping->integer)
 	{
-		int cubeMipSize = CUBE_MAP_SIZE; // r_cubemapSize->integer;
+		int cubeMipSize = CUBE_MAP_SIZE;// r_cubeMapSize->integer;// CUBE_MAP_SIZE;
 		int numRoughnessMips = 0;
 
 		while (cubeMipSize)
@@ -3903,6 +3903,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
 //		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_ENVBRDFMAP, TB_ENVBRDFMAP);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)

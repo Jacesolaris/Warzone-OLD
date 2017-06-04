@@ -1336,7 +1336,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-		VectorSet4(local3, 0.0, 0.0, r_cubemapCullRange->value, cubemapScale);
+		VectorSet4(local3, 0.0, 0.0, r_cubemapCullRange->value, cubemapScale * 0.5);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 		VectorSet4(local4, hasNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
