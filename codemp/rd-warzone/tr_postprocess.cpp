@@ -1091,6 +1091,7 @@ void RB_AddGlowShaderLights ( void )
 			}
 			
 #endif
+
 			if (!R_inPVS(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight], tr.refdef.areamask))
 			{// Not in PVS, don't add it...
 				continue;
@@ -1144,7 +1145,7 @@ void RB_AddGlowShaderLights ( void )
 				vec4_t glowColor = { 0 };
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, glowColor[0] * 0.25, glowColor[1] * 0.25, glowColor[2] * 0.25, qfalse, qtrue );
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue );
 				num_colored++;
 
 				//if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)

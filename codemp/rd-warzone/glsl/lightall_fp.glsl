@@ -835,14 +835,14 @@ void main()
 	vec4 norm;
 	vec3 N;
 
-	//if (u_Local4.r <= 0.0)
-	//{
+	if (u_Local4.r <= 0.0)
+	{
 		norm = ConvertToNormals(diffuse);
-	//}
-	//else
-	//{
-	//	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
-	//}
+	}
+	else
+	{
+		norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+	}
 
 	
 	N.xy = norm.xy * 2.0 - 1.0;

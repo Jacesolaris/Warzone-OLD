@@ -994,14 +994,15 @@ qboolean R_inPVS(const vec3_t p1, const vec3_t p2, byte *mask) {
 	int		leafnum;
 	int		cluster;
 
-	leafnum = ri->CM_PointLeafnum(p1);
-	cluster = ri->CM_LeafCluster(leafnum);
+	mnode_t *leaf = R_PointInLeaf(p1);
+	cluster = leaf->cluster;
 
 	//agh, the damn snapshot mask doesn't work for this
-	mask = (byte *)ri->CM_ClusterPVS(cluster);
+	mask = (byte *)R_ClusterPVS(cluster);
 
-	leafnum = ri->CM_PointLeafnum(p2);
-	cluster = ri->CM_LeafCluster(leafnum);
+	leaf = R_PointInLeaf(p2);
+	cluster = leaf->cluster;
+
 	if (mask && (!(mask[cluster >> 3] & (1 << (cluster & 7)))))
 		return qfalse;
 
