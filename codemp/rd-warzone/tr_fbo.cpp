@@ -832,7 +832,7 @@ void FBO_Init(void)
 
 	if (tr.renderCubeImage != NULL)
 	{
-		tr.preFilterEnvMapFbo = FBO_Create("_preFilterEnvMapFbo", tr.renderCubeImage->width, tr.renderCubeImage->height);
+		tr.preFilterEnvMapFbo = FBO_Create("_preFilterEnvMapFbo", tr.prefilterEnvMapImage->width, tr.prefilterEnvMapImage->height);
 		FBO_Bind(tr.preFilterEnvMapFbo);
 		FBO_AttachTextureImage(tr.prefilterEnvMapImage, 0);
 		FBO_SetupDrawBuffers();

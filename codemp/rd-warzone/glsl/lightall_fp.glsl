@@ -951,7 +951,7 @@ void main()
 				metalness = 0.7;
 
 			float roughness = max(specular.a, 0.02);
-			specular.rgb = mix(DIELECTRIC_SPECULAR,		specular.rgb,   metalness);
+			specular.rgb = mix(DIELECTRIC_SPECULAR,		diffuse.rgb,   metalness);
 			gl_FragColor.rgb  = mix(gl_FragColor.rgb,	METAL_DIFFUSE,	metalness);
 
 			float NE = abs(dot(/*normalize(m_Normal.xyz)*/N, E)) + 1e-5;

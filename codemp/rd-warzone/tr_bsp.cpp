@@ -4394,10 +4394,10 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.toneMinAvgMaxLevel[2] = 0.0f;
 
 	// Render all cubemaps
-	if (r_cubeMapping->integer && tr.numCubemaps)
+	/*if (r_cubeMapping->integer && tr.numCubemaps)
 	{
 		R_RenderAllCubemaps();
-	}
+	}*/
 
 	tr.worldMapLoaded = qtrue;
 
