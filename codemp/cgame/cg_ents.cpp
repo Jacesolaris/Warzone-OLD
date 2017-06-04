@@ -3453,38 +3453,6 @@ Ghoul2 Insert Start
 		}
 	}
 
-#if 0
-#ifdef __MMO__
-	// UQ1: Only process objects in our FOV...
-	if (cent->currentState.eType != ET_MOVER
-		&& cent->currentState.eType != ET_MOVER_MARKER
-		&& cent->currentState.eType != ET_MISSILE
-		&& cent->currentState.eType != ET_PORTAL) // Don't cull these...
-	{
-		float dist = Distance( cent->lerpOrigin, cg.refdef.vieworg);
-
-		// Distance cull...
-		if (dist > 3072)
-		{
-			return;
-		}
-
-		// FOV cull...
-		/* your friend should fix this magic */
-/*		if (!CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
-		{
-			return;
-		}*/
-
-		// Visibility cull...
-		/*if (dist > 256 && !CULL_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))
-		{
-			return;
-		}*/
-	}
-#endif //__MMO__
-#endif //0
-
 	// add automatic effects
 	CG_EntityEffects( cent ); // UQ1: Moved after sounds, so we don't cull ambient sounds...
 
@@ -3680,30 +3648,6 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 					if (cg.snap->entities[j].number == cent->currentState.m_iVehicleNum)
 					{
 						centity_t *veh = &cg_entities[cg.snap->entities[j].number];
-#if 0
-						byte mask;
-
-						if (!veh->currentState.isPortalEnt
-							&& veh->currentState.eType != ET_MOVER
-							&& veh->currentState.eType != ET_MOVER_MARKER
-							&& veh->currentState.eType != ET_PORTAL
-							&& veh->currentState.eType != ET_MISSILE
-							&& (veh->currentState.eType == ET_INVISIBLE || veh->currentState.eType == ET_FREED || !trap->R_InPVS(cg.refdef.vieworg, veh->lerpOrigin, &mask)))
-						{// UQ1: This is not on screen. We should be able to skip render...
-							continue;
-						}
-
-						/*if (!veh->currentState.isPortalEnt
-							&& veh->currentState.eType != ET_MOVER
-							&& veh->currentState.eType != ET_MOVER_MARKER
-							&& veh->currentState.eType != ET_PORTAL
-							&& veh->currentState.eType != ET_MISSILE
-							&& !CG_InFOV( veh->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.3, cg.refdef.fov_y * 1.3))
-						{// UQ1: This is not on screen. We should be able to skip render...
-							continue;
-						}*/
-
-#endif
 						CG_AddCEntity(veh);
 						veh->bodyHeight = cg.time; //indicate we have already been added
 						break;
@@ -3720,40 +3664,6 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 				continue;
 			}
 
-#if 0
-			{
-				byte mask;
-				//float dist = Distance( cent->lerpOrigin, cg.refdef.vieworg);
-
-				if (!cent->currentState.isPortalEnt
-					&& cent->currentState.eType != ET_MOVER
-					&& cent->currentState.eType != ET_MOVER_MARKER
-					&& cent->currentState.eType != ET_PORTAL
-					&& cent->currentState.eType != ET_MISSILE
-					&& (cent->currentState.eType == ET_INVISIBLE || cent->currentState.eType == ET_FREED || !trap->R_InPVS(cg.refdef.vieworg, cent->lerpOrigin, &mask)))
-				{// UQ1: This is not on screen. We should be able to skip render...
-					continue;
-				}
-
-				/*
-				if (!cent->currentState.isPortalEnt
-					&& cent->currentState.eType != ET_MOVER
-					&& cent->currentState.eType != ET_MOVER_MARKER
-					&& cent->currentState.eType != ET_PORTAL
-					&& cent->currentState.eType != ET_MISSILE
-					&& !CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.3, cg.refdef.fov_y * 1.3))
-				{// UQ1: This is not on screen. We should be able to skip render...
-					continue;
-				}
-
-				// Distance cull...
-				if (dist > 3072)
-				{// UQ1: This is not on screen. We should be able to skip render...
-					continue;
-				}
-				*/
-			}
-#endif
 			CG_AddCEntity( cent );
 		}
 	}

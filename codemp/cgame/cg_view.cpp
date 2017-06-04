@@ -585,7 +585,7 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 				CG_Trace(&trace, cameraCurTarget, cameramins, cameramaxs, cameraCurLoc, cg.snap->ps.clientNum, MASK_CAMERACLIP);
 
 				//copy old data back in
-				mover->currentState.pos.trType = (trType_t) curTr;
+				mover->currentState.pos.trType = (trType_t)curTr;
 				VectorCopy(curTrB, mover->currentState.pos.trBase);
 			}
 			if (trace.fraction < 1.0f)
@@ -595,7 +595,7 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 		}
 		else
 		{
-			VectorCopy( trace.endpos, cameraCurLoc );
+			VectorCopy(trace.endpos, cameraCurLoc);
 		}
 	}
 
