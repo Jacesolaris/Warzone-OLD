@@ -725,58 +725,6 @@ void main()
 	}
 #endif
 
-#if 0
-	vec3 debugColor;
-
-	
-	
-	if (USE_VERTEX_ANIM == 1.0)
-	{
-		debugColor = vec3(1.0, 0.0, 0.0);
-	}
-	else if (USE_SKELETAL_ANIM == 1.0)
-	{
-		debugColor = vec3(0.0, 1.0, 0.0);
-	}
-	else
-	{
-		debugColor = vec3(0.0, 0.0, 1.0);
-	}
-	
-	
-	/*if (USE_TC == 1.0)
-	{
-		debugColor = vec3(1.0, 0.0, 0.0);
-	}
-	else if (USE_DEFORM == 1.0)
-	{
-		debugColor = vec3(0.0, 1.0, 0.0);
-	}
-	else if (USE_RGBA == 1.0)
-	{
-		debugColor = vec3(1.0, 1.0, 1.0);
-	}
-	else
-	{
-		debugColor = vec3(0.0, 0.0, 1.0);
-	}*/
-
-	//debugColor = texture(u_SplatControlMap, m_TexCoords.xy).rgb;
-	//debugColor = m_Normal.xyz;
-
-	gl_FragColor = vec4(debugColor, 1.0);
-
-	#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-	#else
-		out_Glow = vec4(0.0);
-		vec2 normData = encode(vec3(1.0));
-		vec2 cubeData = vec2(0.0, 1.0);
-		out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-	#endif
-	return;
-#endif
 
 	#if !defined(USE_GLOW_BUFFER)
 		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
@@ -788,11 +736,9 @@ void main()
 
 
 #if defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
-	vec3 viewDir;
-	vec3 E;
 
-	viewDir = m_ViewDir;
-	E = normalize(viewDir);
+	vec3 viewDir = m_ViewDir;
+	vec3 E = normalize(viewDir);
 	//mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, texCoords.xy);
 	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 
@@ -880,10 +826,8 @@ void main()
 	
 	N.xy = norm.xy * 2.0 - 1.0;
 	N.xy *= 0.25;
-	//N.xyz *= vec3(0.25, 0.25, 3.0);
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
-	//N *= tangentToWorld;
 
 #endif //!defined(USE_GLOW_BUFFER)
 
@@ -905,7 +849,6 @@ void main()
 
 		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
 		
-		//lmBrightMult *= lmBrightMult * 0.7;
 #define lm_const_1 ( 56.0 / 255.0)
 #define lm_const_2 (255.0 / 200.0)
 		lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
@@ -927,8 +870,6 @@ void main()
 #else
 		gl_FragColor = vec4(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale), clamp(diffuse.a * var_Color.a, 0.0, 1.0));
 #endif
-
-		//lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)) - 0.2, 0.0, 1.0);
 
 
 	#if defined(__CUBEMAPS_ENABLED__)

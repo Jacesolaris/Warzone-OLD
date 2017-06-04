@@ -172,22 +172,31 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
-	vec2 tex = attr_TexCoord0.st;
+	vec2 tex = attr_TexCoord0;
 
-	if (TCGen >= TCGEN_LIGHTMAP && TCGen <= TCGEN_LIGHTMAP3)
+	switch (TCGen)
 	{
-		tex = attr_TexCoord1.st;
-	}
-	else if (TCGen == TCGEN_ENVIRONMENT_MAPPED)
-	{
-		vec3 viewer = u_ViewOrigin/*u_LocalViewOrigin*/ - position; // UQ1: WTF! position is in world space!!!
-		vec2 ref = reflect(viewer, normal).yz;
-		tex.s = ref.x * -0.5 + 0.5;
-		tex.t = ref.y *  0.5 + 0.5;
-	}
-	else if (TCGen == TCGEN_VECTOR)
-	{
-		tex = vec2(dot(position, TCGenVector0), dot(position, TCGenVector1));
+		case TCGEN_LIGHTMAP:
+		case TCGEN_LIGHTMAP1:
+		case TCGEN_LIGHTMAP2:
+		case TCGEN_LIGHTMAP3:
+			tex = attr_TexCoord1;
+		break;
+
+		case TCGEN_ENVIRONMENT_MAPPED:
+		{
+			vec3 viewer = normalize(u_LocalViewOrigin - position);
+			vec2 ref = reflect(viewer, normal).yz;
+			tex.s = ref.x * -0.5 + 0.5;
+			tex.t = ref.y *  0.5 + 0.5;
+		}
+		break;
+
+		case TCGEN_VECTOR:
+		{
+			tex = vec2(dot(position, TCGenVector0), dot(position, TCGenVector1));
+		}
+		break;
 	}
 
 	return tex;
@@ -222,9 +231,9 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	
 	if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
 	{
-		vec3 viewer = /*u_ViewOrigin*/u_LocalViewOrigin - position; // UQ1: WTF! position is in world space!!!
-		//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position); // UQ1: And wtf is this hard coded value???
-		vec3 lightDir = (u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position;
+		vec3 viewer = normalize(u_LocalViewOrigin - position);
+		//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
+		vec3 lightDir = normalize((u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
 		vec3 reflected = -reflect(lightDir, normal);
 		
 		color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);
@@ -233,7 +242,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	}
 	else if (u_AlphaGen == AGEN_PORTAL)
 	{
-		vec3 viewer = normalize(/*u_ViewOrigin*/u_LocalViewOrigin - position); // UQ1: WTF! position is in world space!!!
+		vec3 viewer = normalize(u_LocalViewOrigin - position);
 		color.a = clamp(length(viewer) / u_PortalRange, 0.0, 1.0);
 	}
 	

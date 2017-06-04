@@ -51,6 +51,7 @@ vec4 ProcessBloomRays(vec2 inTC)
 			vec2	ScreenLightPos = lightPositions[i];
 			vec2	texCoord = inTC.xy;
 			vec2	deltaTexCoord = (texCoord.xy - ScreenLightPos.xy);
+			float	lightLinDepth = linearize(textureLod(u_ScreenDepthMap, lightPositions[i], 0.0).r);
           
 			deltaTexCoord *= 1.0 / float(float(BLOOMRAYS_STEPS) * BLOOMRAYS_DENSITY);
           
@@ -61,6 +62,7 @@ vec4 ProcessBloomRays(vec2 inTC)
 				texCoord -= deltaTexCoord;
 
 				float linDepth = linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
+				linDepth = clamp(linDepth / lightLinDepth, 0.0, 1.0) * 0.75;
 
 				vec4 sample2 = texture(u_GlowMap, texCoord.xy);
 				sample2.w = 1.0;
@@ -88,7 +90,5 @@ vec4 ProcessBloomRays(vec2 inTC)
 
 void main()
 {
-	//vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
-	//gl_FragColor = vec4(color.rgb + ProcessBloomRays(var_TexCoords).rgb, 1.0);
 	gl_FragColor = vec4(ProcessBloomRays(var_TexCoords).rgb, 1.0);
 }

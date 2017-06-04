@@ -1605,9 +1605,9 @@ void R_Register( void )
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
 	r_ssr = ri->Cvar_Get("r_ssr", "0", CVAR_ARCHIVE);
-	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.02", CVAR_ARCHIVE);
+	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.05", CVAR_ARCHIVE);
 	r_sse = ri->Cvar_Get("r_sse", "0", CVAR_ARCHIVE);
-	r_sseStrength = ri->Cvar_Get("r_sseStrength", "0.02", CVAR_ARCHIVE);
+	r_sseStrength = ri->Cvar_Get("r_sseStrength", "0.05", CVAR_ARCHIVE);
 	r_colorCorrection = ri->Cvar_Get( "r_colorCorrection", "1", CVAR_ARCHIVE );
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );
 	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "10.0", CVAR_ARCHIVE );
