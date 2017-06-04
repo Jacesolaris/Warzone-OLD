@@ -4393,6 +4393,7 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.toneMinAvgMaxLevel[2] = 0.0f;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 	// Render all cubemaps
 	if (r_cubeMapping->integer && tr.numCubemaps)
@@ -4401,6 +4402,8 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 >>>>>>> parent of 7923aa0... stuff
+=======
+>>>>>>> parent of 25eeb39... PBR WIP stuff
 	tr.worldMapLoaded = qtrue;
 
 	// load it

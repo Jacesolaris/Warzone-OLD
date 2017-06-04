@@ -831,6 +831,7 @@ void FBO_Init(void)
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 	if (tr.renderCubeImage != NULL)
 	{
@@ -842,6 +843,8 @@ void FBO_Init(void)
 	}
 
 >>>>>>> parent of 7923aa0... stuff
+=======
+>>>>>>> parent of 25eeb39... PBR WIP stuff
 	{
 		tr.awesomiumuiFbo = FBO_Create("_awesomiumui", tr.awesomiumuiImage->width, tr.awesomiumuiImage->height);
 		FBO_Bind(tr.awesomiumuiFbo);

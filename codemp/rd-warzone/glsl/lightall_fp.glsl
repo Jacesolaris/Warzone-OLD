@@ -926,6 +926,7 @@ void main()
 			specular.rgb *= u_SpecularScale.rgb;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 			// diffuse is actually base color, and red of specular is metalness
 			const vec3 DIELECTRIC_SPECULAR = vec3(0.04);
@@ -959,6 +960,8 @@ void main()
 #endif
 
 >>>>>>> parent of 7923aa0... stuff
+=======
+>>>>>>> parent of 25eeb39... PBR WIP stuff
 #define gloss specular.a
 
 			float NE = clamp(dot(normalize(m_Normal.xyz)/*N*/, E), 0.0, 1.0);
