@@ -3946,6 +3946,13 @@ void R_CreateBuiltinImages( void ) {
 	{
 		//tr.renderCubeImage = R_CreateImage("*renderCube", NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, rgbFormat);
 		tr.renderCubeImage = R_CreateImage("*renderCube", NULL, r_cubeMapSize->integer, r_cubeMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, rgbFormat);
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+		tr.prefilterEnvMapImage = R_CreateImage("*prefilterEnvMapFbo", NULL, CUBE_MAP_SIZE / 2, CUBE_MAP_SIZE / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, rgbFormat);
+>>>>>>> parent of 7923aa0... stuff
+=======
+>>>>>>> parent of 25eeb39... PBR WIP stuff
 	}
 	tr.awesomiumuiImage = R_CreateImage("*awesomiumUi", NULL, glConfig.vidWidth, glConfig.vidHeight, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 }

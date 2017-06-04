@@ -830,6 +830,21 @@ void FBO_Init(void)
 		R_CheckFBO(tr.renderCubeFbo);
 	}
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+	if (tr.renderCubeImage != NULL)
+	{
+		tr.preFilterEnvMapFbo = FBO_Create("_preFilterEnvMapFbo", tr.renderCubeImage->width, tr.renderCubeImage->height);
+		FBO_Bind(tr.preFilterEnvMapFbo);
+		FBO_AttachTextureImage(tr.prefilterEnvMapImage, 0);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.preFilterEnvMapFbo);
+	}
+
+>>>>>>> parent of 7923aa0... stuff
+=======
+>>>>>>> parent of 25eeb39... PBR WIP stuff
 	{
 		tr.awesomiumuiFbo = FBO_Create("_awesomiumui", tr.awesomiumuiImage->width, tr.awesomiumuiImage->height);
 		FBO_Bind(tr.awesomiumuiFbo);
