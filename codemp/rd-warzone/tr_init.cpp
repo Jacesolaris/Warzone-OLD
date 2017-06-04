@@ -1562,7 +1562,7 @@ void R_Register( void )
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "0", CVAR_ARCHIVE );
 	//r_bloomRays = ri->Cvar_Get("r_bloomRays", "1", CVAR_ARCHIVE);
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.975", CVAR_ARCHIVE);
-	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.45"/*"0.35"*/, CVAR_ARCHIVE);
+	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.5"/*"0.35"*/, CVAR_ARCHIVE);
 	r_bloomRaysDensity = ri->Cvar_Get("r_bloomRaysDensity", "1.0", CVAR_ARCHIVE);
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicStrength = ri->Cvar_Get("r_anamorphicStrength", "0.5", CVAR_ARCHIVE);

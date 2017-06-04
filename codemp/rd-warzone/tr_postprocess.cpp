@@ -1091,10 +1091,10 @@ void RB_AddGlowShaderLights ( void )
 			}
 			
 #endif
-			/*if (!R_inPVS(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight], tr.refdef.areamask))
+			if (!R_inPVS(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight], tr.refdef.areamask))
 			{// Not in PVS, don't add it...
 				continue;
-			}*/
+			}
 
 			if (CLOSE_TOTAL < MAX_WORLD_GLOW_DLIGHTS)
 			{// Have free light slots for a new light...
