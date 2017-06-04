@@ -3565,6 +3565,7 @@ static void R_LoadCubemapWaypoints( void )
 
 	tr.numCubemaps = numCubemaps;
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
 
 	numCubemaps = 0;
@@ -3719,6 +3720,7 @@ static void R_LoadCubemapWaypoints( void )
 
 	tr.numCubemaps = numcubeOrgs;
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
 
 	numCubemaps = 0;
@@ -3726,6 +3728,7 @@ static void R_LoadCubemapWaypoints( void )
 	for (int i = 0; i < numcubeOrgs; i++)
 	{// Copy to real list...
 		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
+		tr.cubemapRadius[numCubemaps] = 1024.0;
 		numCubemaps++;
 	}
 
