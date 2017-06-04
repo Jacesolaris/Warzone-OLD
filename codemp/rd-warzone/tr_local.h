@@ -151,7 +151,7 @@ extern qboolean SHADOWS_ENABLED;
 #define MAX_CALC_PSHADOWS    64
 #define MAX_DRAWN_PSHADOWS    16 // do not increase past 32, because bit flags are used on surfaces
 #define PSHADOW_MAP_SIZE      512
-#define CUBE_MAP_MIPS      8//7 using SomaZ value instead
+#define CUBE_MAP_MIPS      7
 #define CUBE_MAP_SIZE      (1 << CUBE_MAP_MIPS)
 
 /*
@@ -958,15 +958,15 @@ enum
 	TB_SPLATMAP1		= 20,
 	TB_SPLATMAP2		= 21,
 	TB_SPLATMAP3		= 22,
+	TB_ENVBRDFMAP		= 23,
 	//TB_SPLATMAP4		= 23,
-	TB_SPLATNORMALMAP1	= 23,
-	TB_SPLATNORMALMAP2	= 24,
-	TB_SPLATNORMALMAP3	= 25,
+	TB_SPLATNORMALMAP1	= 24,
+	TB_SPLATNORMALMAP2	= 25,
+	TB_SPLATNORMALMAP3	= 26,
 	//TB_SPLATNORMALMAP4	= 27,
-	TB_DETAILMAP		= 26,
-	TB_SHADOWMAP4		= 27,
-	TB_SHADOWMAP5		= 28,
-	TB_ENVBRDFMAP		= 29,
+	TB_DETAILMAP		= 28,
+	TB_SHADOWMAP4		= 29,
+	TB_SHADOWMAP5		= 30,
 	NUM_TEXTURE_BUNDLES = 31
 };
 
@@ -1380,7 +1380,6 @@ typedef enum
 	UNIFORM_TEXTUREMAP,
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
-	UNIFORM_ENVBRDFMAP,
 	UNIFORM_OVERLAYMAP,
 	UNIFORM_STEEPMAP,
 	UNIFORM_STEEPMAP2,
@@ -1388,7 +1387,10 @@ typedef enum
 	UNIFORM_SPLATMAP1,
 	UNIFORM_SPLATMAP2,
 	UNIFORM_SPLATMAP3,
-	
+<<<<<<< HEAD
+=======
+	UNIFORM_ENVBRDFMAP,
+>>>>>>> parent of 7923aa0... stuff
 	//UNIFORM_SPLATMAP4,
 	UNIFORM_SPLATNORMALMAP1,
 	UNIFORM_SPLATNORMALMAP2,
@@ -2496,9 +2498,6 @@ typedef struct trGlobals_s {
 	image_t					*hdrDepthImage;
 	image_t                 *renderCubeImage;
 	
-	image_t                 *prefilterEnvMapImage;
-	image_t                 *envBrdfImage;
-
 	image_t					*textureDepthImage;
 
 	image_t					*awesomiumuiImage;
@@ -2532,7 +2531,6 @@ typedef struct trGlobals_s {
 	FBO_t					*screenSsaoFbo;
 	FBO_t					*hdrDepthFbo;
 	FBO_t                   *renderCubeFbo;
-	FBO_t                    *preFilterEnvMapFbo;
 	FBO_t					*awesomiumuiFbo;
 
 	shader_t				*defaultShader;
@@ -2585,7 +2583,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t ssaoShader;
 	shaderProgram_t depthBlurShader[2];
 	shaderProgram_t testcubeShader;
-	shaderProgram_t prefilterEnvMapShader;
 	shaderProgram_t gaussianBlurShader[2];
 	shaderProgram_t glowCompositeShader;
 	shaderProgram_t dglowDownsample;
@@ -2601,7 +2598,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t magicdetailShader;
 	shaderProgram_t cellShadeShader;
 	shaderProgram_t paintShader;
-	shaderProgram_t prefilterEnvMap;
 	shaderProgram_t dofShader[3];
 	shaderProgram_t fakedepthShader;
 	shaderProgram_t fakedepthSteepParallaxShader;
@@ -3734,11 +3730,6 @@ typedef struct capShadowmapCommand_s {
 	int cubeSide;
 } capShadowmapCommand_t;
 
-typedef struct convolveCubemapCommand_s {
-	int commandId;
-	int cubemap;
-} convolveCubemapCommand_t;
-
 typedef struct postProcessCommand_s {
 	int		commandId;
 	trRefdef_t	refdef;
@@ -3772,7 +3763,6 @@ typedef enum {
 	RC_COLORMASK,
 	RC_CLEARDEPTH,
 	RC_CAPSHADOWMAP,
-	RC_CONVOLVECUBEMAP,
 	RC_WORLD_EFFECTS,
 	RC_POSTPROCESS,
 	RC_DRAWAWESOMIUMFRAME
@@ -3817,7 +3807,6 @@ void R_IssuePendingRenderCommands( void );
 
 void R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs );
 void R_AddCapShadowmapCmd( int dlight, int cubeSide );
-void R_AddConvolveCubemapCmd(int cubemap);
 void R_AddPostProcessCmd (void);
 
 void RE_SetColor( const float *rgba );

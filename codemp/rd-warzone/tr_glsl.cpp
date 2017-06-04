@@ -169,9 +169,7 @@ extern const char *fallbackShader_cellShade_vp;
 extern const char *fallbackShader_cellShade_fp;
 extern const char *fallbackShader_paint_vp;
 extern const char *fallbackShader_paint_fp;
-//Stoiss added
-extern const char  *fallbackShader_prefilterEnvMap_vp;
-extern const char  *fallbackShader_prefilterEnvMap_fp;
+
 
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
@@ -1284,7 +1282,6 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_TextureMap", GLSL_INT, 1 },
 	{ "u_LevelsMap", GLSL_INT, 1 },
 	{ "u_CubeMap", GLSL_INT, 1 },
-	{ "u_EnvBrdfMap", GLSL_INT, 1 },
 	{ "u_OverlayMap", GLSL_INT, 1 },
 	{ "u_SteepMap", GLSL_INT, 1 },
 	{ "u_SteepMap2", GLSL_INT, 1 },
@@ -1740,20 +1737,6 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 	Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
-
-	if (r_cubeMapping->integer)
-	{
-		int cubeMipSize = CUBE_MAP_SIZE; // r_cubemapSize->integer;
-		int numRoughnessMips = 0;
-
-		while (cubeMipSize)
-		{
-			cubeMipSize >>= 1;
-			numRoughnessMips++;
-		}
-		numRoughnessMips = MAX(1, numRoughnessMips - 2);
-		Q_strcat(dest, size, va("#define ROUGHNESS_MIPS float(%d)\n", numRoughnessMips));
-	}
 
 	if (extra)
 	{
@@ -3314,14 +3297,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.prefilterEnvMap, "prefilterEnvMap", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_prefilterEnvMap_vp, fallbackShader_prefilterEnvMap_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load prefilterEnvMap shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
 	if (!GLSL_BeginLoadGPUShader(&tr.magicdetailShader, "magicdetail", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicdetail_vp, fallbackShader_magicdetail_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
@@ -4840,11 +4815,13 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		ri->Error(ERR_FATAL, "Could not load cellShade shader!");
 	}
 
-	GLSL_InitUniforms(&tr.prefilterEnvMapShader);
+	GLSL_InitUniforms(&tr.cellShadeShader);
 
-	qglUseProgram(tr.prefilterEnvMapShader.program);
+	qglUseProgram(tr.cellShadeShader.program);
 
-	GLSL_SetUniformInt(&tr.prefilterEnvMapShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 
 	{
 		vec4_t viewInfo;
@@ -4855,27 +4832,28 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
 
-		GLSL_SetUniformVec4(&tr.prefilterEnvMapShader, UNIFORM_VIEWINFO, viewInfo);
+		GLSL_SetUniformVec4(&tr.cellShadeShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.cellShadeShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
 	qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.prefilterEnvMapShader);
+	GLSL_FinishGPUShader(&tr.cellShadeShader);
 #endif
 
 	numEtcShaders++;
 
 
-
-	;
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.prefilterEnvMapShader);
-#endif
-
-	numEtcShaders++;
-	
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.paintShader))
@@ -6114,11 +6092,11 @@ void GLSL_ShutdownGPUShaders(void)
 		GLSL_DeleteGPUShader(&tr.depthBlurShader[i]);
 
 
+
 	// UQ1: Added...
 	GLSL_DeleteGPUShader(&tr.darkexpandShader);
 	GLSL_DeleteGPUShader(&tr.hdrShader);
 	GLSL_DeleteGPUShader(&tr.magicdetailShader);
-	GLSL_DeleteGPUShader(&tr.prefilterEnvMapShader);
 	GLSL_DeleteGPUShader(&tr.cellShadeShader);
 	GLSL_DeleteGPUShader(&tr.paintShader);
 	GLSL_DeleteGPUShader(&tr.esharpeningShader);

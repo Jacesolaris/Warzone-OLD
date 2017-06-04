@@ -852,13 +852,25 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 		tr.pc.c_leafs++;
 
 		// add to z buffer bounds
-		tr.viewParms.visBounds[0][0] = MIN(node->mins[0], tr.viewParms.visBounds[0][0]);
-		tr.viewParms.visBounds[0][1] = MIN(node->mins[1], tr.viewParms.visBounds[0][1]);
-		tr.viewParms.visBounds[0][2] = MIN(node->mins[2], tr.viewParms.visBounds[0][2]);
+		if (node->mins[0] < tr.viewParms.visBounds[0][0]) {
+			tr.viewParms.visBounds[0][0] = node->mins[0];
+		}
+		if (node->mins[1] < tr.viewParms.visBounds[0][1]) {
+			tr.viewParms.visBounds[0][1] = node->mins[1];
+		}
+		if (node->mins[2] < tr.viewParms.visBounds[0][2]) {
+			tr.viewParms.visBounds[0][2] = node->mins[2];
+		}
 
-		tr.viewParms.visBounds[1][0] = MAX(node->maxs[0], tr.viewParms.visBounds[1][0]);
-		tr.viewParms.visBounds[1][1] = MAX(node->maxs[1], tr.viewParms.visBounds[1][1]);
-		tr.viewParms.visBounds[1][2] = MAX(node->maxs[2], tr.viewParms.visBounds[1][2]);
+		if (node->maxs[0] > tr.viewParms.visBounds[1][0]) {
+			tr.viewParms.visBounds[1][0] = node->maxs[0];
+		}
+		if (node->maxs[1] > tr.viewParms.visBounds[1][1]) {
+			tr.viewParms.visBounds[1][1] = node->maxs[1];
+		}
+		if (node->maxs[2] > tr.viewParms.visBounds[1][2]) {
+			tr.viewParms.visBounds[1][2] = node->maxs[2];
+		}
 
 #if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
 		if (r_occlusion->integer)

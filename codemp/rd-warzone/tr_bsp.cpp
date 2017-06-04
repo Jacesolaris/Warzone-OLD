@@ -3806,7 +3806,6 @@ static void R_RenderAllCubemaps(void)
 			R_IssuePendingRenderCommands();
 			R_InitNextFrame();
 		}
-		R_AddConvolveCubemapCmd(i);
 	}
 }
 
@@ -4393,12 +4392,15 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.toneMinAvgMaxLevel[1] = -2.0f;
 	tr.toneMinAvgMaxLevel[2] = 0.0f;
 
+<<<<<<< HEAD
+=======
 	// Render all cubemaps
-	/*if (r_cubeMapping->integer && tr.numCubemaps)
+	if (r_cubeMapping->integer && tr.numCubemaps)
 	{
 		R_RenderAllCubemaps();
-	}*/
+	}
 
+>>>>>>> parent of 7923aa0... stuff
 	tr.worldMapLoaded = qtrue;
 
 	// load it
