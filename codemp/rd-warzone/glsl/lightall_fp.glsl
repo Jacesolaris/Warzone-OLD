@@ -42,7 +42,7 @@ uniform sampler2D			u_OverlayMap;
 
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, USE_TEXTURECLAMP
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, 0.0
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -52,7 +52,7 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, 0.0
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
 #define USE_FOG				u_Settings1.b
-#define USE_NO_DEFERRED		u_Settings1.a
+#define USE_IS2D			u_Settings1.a
 
 
 uniform vec2				u_Dimensions;
@@ -233,13 +233,7 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	N.rgb = N.rgb * 0.5 + 0.5;
 	AddContrast(N.rgb);
 
-	float displacement = clamp(length(color.rgb), 0.0, 1.0);
-#define const_1 ( 32.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-	displacement = clamp((clamp(displacement - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
-
-	vec4 norm = vec4((N + N2) / 2.0, displacement);
-	norm.rgb = norm.rbg;
+	vec4 norm = vec4((N + N2) / 2.0, 0.0).rbga;
 	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
 	return vec4((vec3(1.0)-norm.rgb) * 0.5, norm.a);
 }
@@ -621,20 +615,41 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 }
 #endif //!defined(USE_TRI_PLANAR)
 
+void DepthContrast ( inout float depth )
+{
+	const float contrast = 3.0;
+	const float brightness = 0.03;
+	// Apply contrast.
+	depth = ((depth - 0.5f) * max(contrast, 0)) + 0.5f;
+	// Apply brightness.
+	depth += brightness;
+	depth = clamp(depth, 0.0, 1.0);
+}
+
 float GetDepth(vec2 t)
 {
-	return 1.0 - GetNormal(t, vec2(0.0), 0.0).a;
+	vec4 diffuse = GetDiffuse(t, vec2(0.0), 0.0);
+
+	if (diffuse.a * var_Color.a <= 0.0)
+	{
+		return 0.0;
+	}
+
+	float displacement = clamp(max(max(diffuse.r, diffuse.g), diffuse.b), 0.0, 1.0);
+	//displacement = (displacement + (length(diffuse.rgb) / 2.0)); // 50/50 mix between max color and color average...
+	//displacement = displacement * 0.5 + 0.5; // centralize the color...
+	DepthContrast(displacement); // Enhance the dark/lights...
+	return 1.0 - displacement;
 }
 
 #if defined(USE_PARALLAXMAP)
 
-float RayIntersectDisplaceMap(vec2 dp, inout float displacement)
+float RayIntersectDisplaceMap(vec2 dp)
 {
 	if (u_Local1.x == 0.0)
 		return 0.0;
 
-	displacement = GetDepth(dp);
-	return (1.0 - displacement) * 0.5 + 0.5;
+	return (1.0 - GetDepth(dp));
 }
 
 float ReliefMapping(vec2 dp, vec2 ds)
@@ -747,11 +762,10 @@ void main()
 
 
 	vec2 ParallaxOffset = vec2(0.0);
-	float displacement = 0.0;
 
 
 #if defined(__PARALLAX_ENABLED__)
-	if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0)
+	if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0)
 	{
 		vec2 tex_offset = vec2(1.0 / u_Dimensions);
 		vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
@@ -759,7 +773,7 @@ void main()
 
 		#if defined(FAST_PARALLAX)
 
-			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords, displacement);
+			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords);
 			texCoords += ParallaxOffset;
 
 		#else //!defined(FAST_PARALLAX)
@@ -785,13 +799,10 @@ void main()
 				HeightMap = GetDepth( Coord );
 			}
 
-			displacement = HeightMap;
-
 			if( Height < 0.0 )
 			{
 				Coord = oldCoord;
 				Height = 0.0;
-				displacement = oldHeightMap;
 			}
 
 			ParallaxOffset = texCoords - Coord;
@@ -805,6 +816,16 @@ void main()
 
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
+
+
+	// Set alpha early so that we can cull early...
+	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
+
+	/*if (gl_FragColor.a <= 0.0)
+	{// Not adding anything to the output? Discard without doing all the extra crap...
+		discard;
+		return;
+	}*/
 
 
 	float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
@@ -866,9 +887,9 @@ void main()
 
 
 #if defined(USE_GLOW_BUFFER)
-		gl_FragColor = vec4(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale), clamp(diffuse.a * var_Color.a, 0.0, 1.0));
+		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale));
 #else
-		gl_FragColor = vec4(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale), clamp(diffuse.a * var_Color.a, 0.0, 1.0));
+		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale));
 #endif
 
 
@@ -924,6 +945,12 @@ void main()
 
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
+
+	/*if (gl_FragColor.a <= 0.0)
+	{
+		discard;
+		return;
+	}*/
 	
 
 	#if defined(USE_GLOW_BUFFER)

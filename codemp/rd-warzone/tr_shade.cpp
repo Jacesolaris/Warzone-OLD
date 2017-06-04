@@ -1448,42 +1448,12 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 {
-	vec2_t dimensions;
+	vec2_t dimensions = { 0.0 };
 
 	if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 	{
 		dimensions[0] = pStage->bundle[TB_DIFFUSEMAP].image[0]->width;
 		dimensions[1] = pStage->bundle[TB_DIFFUSEMAP].image[0]->height;
-	}
-	else if (pStage->bundle[TB_NORMALMAP].image[0])
-	{
-		dimensions[0] = pStage->bundle[TB_NORMALMAP].image[0]->width;
-		dimensions[1] = pStage->bundle[TB_NORMALMAP].image[0]->height;
-	}
-	else if (pStage->bundle[TB_SPECULARMAP].image[0])
-	{
-		dimensions[0] = pStage->bundle[TB_SPECULARMAP].image[0]->width;
-		dimensions[1] = pStage->bundle[TB_SPECULARMAP].image[0]->height;
-	}
-	/*else if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
-	{
-		dimensions[0] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->width;
-		dimensions[1] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->height;
-	}*/
-	else if (pStage->bundle[TB_OVERLAYMAP].image[0])
-	{
-		dimensions[0] = pStage->bundle[TB_OVERLAYMAP].image[0]->width;
-		dimensions[1] = pStage->bundle[TB_OVERLAYMAP].image[0]->height;
-	}
-	else if (pStage->bundle[TB_STEEPMAP].image[0])
-	{
-		dimensions[0] = pStage->bundle[TB_STEEPMAP].image[0]->width;
-		dimensions[1] = pStage->bundle[TB_STEEPMAP].image[0]->height;
-	}
-	else if (pStage->bundle[TB_STEEPMAP2].image[0])
-	{
-		dimensions[0] = pStage->bundle[TB_STEEPMAP2].image[0]->width;
-		dimensions[1] = pStage->bundle[TB_STEEPMAP2].image[0]->height;
 	}
 
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
@@ -2046,6 +2016,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	float tessOuter = 0.0;
 	float tessAlpha = 0.0;
 
+	int cubeMapNum = 0;
 	vec4_t cubeMapVec;
 	float cubeMapRadius;
 
@@ -2093,6 +2064,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
 	{
 #ifdef __PLAYER_BASED_CUBEMAPS__
+		cubeMapNum = currentPlayerCubemap;
 		cubeMapVec[0] = currentPlayerCubemapVec[0];// -backEnd.viewParms.ori.origin[0];
 		cubeMapVec[1] = currentPlayerCubemapVec[1];// - backEnd.viewParms.ori.origin[1];
 		cubeMapVec[2] = currentPlayerCubemapVec[2];// - backEnd.viewParms.ori.origin[2];
@@ -2100,6 +2072,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		cubeMapRadius = tr.cubemapRadius[currentPlayerCubemap];
 		ADD_CUBEMAP_INDEX = qtrue;
 #else //!__PLAYER_BASED_CUBEMAPS__
+		cubeMapNum = input->cubemapIndex - 1;
 		cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
 		cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
 		cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
@@ -2298,6 +2271,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
+			//GLS_DEPTHTEST_DISABLE
+			if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
 			if (!(index & LIGHTDEF_IS_DETAIL) && !pStage->glow)
 			{
 				didNonDetail = qtrue;
@@ -2489,6 +2468,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 #endif
+			//GLS_DEPTHTEST_DISABLE
+			if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
 
 			if (!pStage->bundle[TB_DIFFUSEMAP].image[0]
 				|| pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_COLORALPHA)
@@ -2595,7 +2579,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
 
-			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, 0.0);
+			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 		}
 
@@ -2685,7 +2669,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1)
 		{
 			//ri->Printf(PRINT_ALL, "%s stage %i is using cubemap (correct lightall: %s)\n", input->shader->name, stage, (index & LIGHTDEF_USE_CUBEMAP) ? "true" : "false");
-			GL_BindToTMU(tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
+			GL_BindToTMU(tr.cubemaps[cubeMapNum], TB_CUBEMAP);
 			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
 			VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
