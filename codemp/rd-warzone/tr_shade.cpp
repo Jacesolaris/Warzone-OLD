@@ -2689,6 +2689,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
 			VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+			GL_BindToTMU(tr.envBrdfImage, TB_ENVBRDFMAP);//ok here we go :D
 		}
 		else
 		{
