@@ -835,14 +835,14 @@ void main()
 	vec4 norm;
 	vec3 N;
 
-	if (u_Local4.r <= 0.0)
-	{
+	//if (u_Local4.r <= 0.0)
+	//{
 		norm = ConvertToNormals(diffuse);
-	}
-	else
-	{
-		norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
-	}
+	//}
+	//else
+	//{
+	//	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+	//}
 
 	
 	N.xy = norm.xy * 2.0 - 1.0;
@@ -925,119 +925,20 @@ void main()
 
 			specular.rgb *= u_SpecularScale.rgb;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> parent of 81ebd05... * final commit for reference before i revert.
-			// diffuse is actually base color, and red of specular is metalness
-			const vec3 DIELECTRIC_SPECULAR = vec3(0.04);
-			const vec3 METAL_DIFFUSE       = vec3(0.0);
-
-#if 0
-			/* PBR */
-			float metalness = specular.r;
-			float roughness = max(specular.a, 0.02);
-			specular.rgb = mix(DIELECTRIC_SPECULAR, diffuse.rgb,   metalness);
-			diffuse.rgb  = mix(diffuse.rgb,         METAL_DIFFUSE, metalness);
-
-			vec3  H  = normalize(L + E);
-			float NE = abs(dot(N, E)) + 1e-5;
-			float NL = clamp(dot(N, L), 0.0, 1.0);
-			float LH = clamp(dot(L, H), 0.0, 1.0);
-#endif
-			/* PARTIAL PBR - Just using material types */
-			float metalness = 0.0;
-			
-			if (u_Local1.a == 3.0 || u_Local1.a == 4.0) // Metal material types
-				metalness = 1.0;
-			else if (u_Local1.a == 30.0 || u_Local1.a == 31.0) // Armour & Computer materials
-				metalness = 0.7;
-
-			float roughness = max(specular.a, 0.02);
-<<<<<<< HEAD
-			specular.rgb = mix(DIELECTRIC_SPECULAR,		specular.rgb,   metalness);
-=======
-			specular.rgb = mix(DIELECTRIC_SPECULAR,		diffuse.rgb,   metalness);
->>>>>>> parent of 81ebd05... * final commit for reference before i revert.
-			gl_FragColor.rgb  = mix(gl_FragColor.rgb,	METAL_DIFFUSE,	metalness);
-
-			float NE = abs(dot(/*normalize(m_Normal.xyz)*/N, E)) + 1e-5;
-#endif
-
-<<<<<<< HEAD
->>>>>>> parent of 7923aa0... stuff
-=======
->>>>>>> parent of 25eeb39... PBR WIP stuff
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-			// diffuse is actually base color, and red of specular is metalness
-			const vec3 DIELECTRIC_SPECULAR = vec3(0.04);
-			const vec3 METAL_DIFFUSE       = vec3(0.0);
-
-#if 0
-			/* PBR */
-			float metalness = specular.r;
-			float roughness = max(specular.a, 0.02);
-			specular.rgb = mix(DIELECTRIC_SPECULAR, diffuse.rgb,   metalness);
-			diffuse.rgb  = mix(diffuse.rgb,         METAL_DIFFUSE, metalness);
-
-			vec3  H  = normalize(L + E);
-			float NE = abs(dot(N, E)) + 1e-5;
-			float NL = clamp(dot(N, L), 0.0, 1.0);
-			float LH = clamp(dot(L, H), 0.0, 1.0);
-#endif
-			/* PARTIAL PBR - Just using material types */
-			float metalness = 0.0;
-			
-			if (u_Local1.a == 3.0 || u_Local1.a == 4.0) // Metal material types
-				metalness = 1.0;
-			else if (u_Local1.a == 30.0 || u_Local1.a == 31.0) // Armour & Computer materials
-				metalness = 0.7;
-
-			float roughness = max(specular.a, 0.02);
-			specular.rgb = mix(DIELECTRIC_SPECULAR,		specular.rgb,   metalness);
-			gl_FragColor.rgb  = mix(gl_FragColor.rgb,	METAL_DIFFUSE,	metalness);
-
-			float NE = abs(dot(/*normalize(m_Normal.xyz)*/N, E)) + 1e-5;
-#endif
-
->>>>>>> parent of 7923aa0... stuff
-=======
->>>>>>> parent of 25eeb39... PBR WIP stuff
 #define gloss specular.a
 
 			float NE = clamp(dot(normalize(m_Normal.xyz)/*N*/, E), 0.0, 1.0);
 			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
-=======
-#define gloss specular.a
-
-			//float NE = clamp(dot(normalize(m_Normal.xyz)/*N*/, E), 0.0, 1.0);
-			//vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
-			
-			vec3 EnvBRDF = texture(u_EnvBrdfMap, vec2(1.0 - roughness, NE)).rgb;
-			
->>>>>>> parent of 81ebd05... * final commit for reference before i revert.
 			vec3 R = reflect(E, N);
 			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * (u_ViewOrigin.xyz - m_vertPos.xyz);//viewDir;
 			vec3 parallax = (u_CubeMapInfo.xyz / curDist) + u_CubeMapInfo.w * vec3(-viewDir.xy, viewDir.z);
 			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 			//vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;// * 0.25;
-<<<<<<< HEAD
 			vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
 
 			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
 			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w, 0.0, 1.0));
-=======
-			//vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
-			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, roughness * ROUGHNESS_MIPS).rgb * u_EnableTextures.w;
-
-			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor /** reflectance*/ * (specular.rgb * EnvBRDF.x + EnvBRDF.y), clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w, 0.0, 1.0));
->>>>>>> parent of 81ebd05... * final commit for reference before i revert.
 		}
 
 	#endif //__CUBEMAPS_ENABLED__

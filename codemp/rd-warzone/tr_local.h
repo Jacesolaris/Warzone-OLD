@@ -1386,13 +1386,6 @@ typedef enum
 	UNIFORM_SPLATMAP1,
 	UNIFORM_SPLATMAP2,
 	UNIFORM_SPLATMAP3,
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-	UNIFORM_ENVBRDFMAP,
->>>>>>> parent of 7923aa0... stuff
-=======
->>>>>>> parent of 25eeb39... PBR WIP stuff
 	//UNIFORM_SPLATMAP4,
 	UNIFORM_SPLATNORMALMAP1,
 	UNIFORM_SPLATNORMALMAP2,

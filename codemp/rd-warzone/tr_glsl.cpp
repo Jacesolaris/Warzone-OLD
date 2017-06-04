@@ -1738,23 +1738,6 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 	Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
 
-<<<<<<< HEAD
-=======
-	if (r_cubeMapping->integer)
-	{
-		int cubeMipSize = CUBE_MAP_SIZE; // r_cubemapSize->integer;
-		int numRoughnessMips = 0;
-
-		while (cubeMipSize)
-		{
-			cubeMipSize >>= 1;
-			numRoughnessMips++;
-		}
-		numRoughnessMips = MAX(1, numRoughnessMips - 2);
-		Q_strcat(dest, size, va("#define ROUGHNESS_MIPS float(%d)\n", numRoughnessMips));
-	}
-
->>>>>>> parent of 81ebd05... * final commit for reference before i revert.
 	if (extra)
 	{
 		Q_strcat(dest, size, extra);
