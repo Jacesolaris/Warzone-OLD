@@ -27,13 +27,13 @@ uniform float		u_CubeMapStrength;
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 
-#define MAX_LIGHTALL_DLIGHTS 256//64//16//24
+#define MAX_DEFERRED_LIGHTS 128//64//16//24
 
 uniform int			u_lightCount;
-uniform vec2		u_lightPositions[MAX_LIGHTALL_DLIGHTS];
-uniform vec3		u_lightPositions2[MAX_LIGHTALL_DLIGHTS];
-uniform float		u_lightDistances[MAX_LIGHTALL_DLIGHTS];
-uniform vec3		u_lightColors[MAX_LIGHTALL_DLIGHTS];
+uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
+uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
+uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
+uniform vec3		u_lightColors[MAX_DEFERRED_LIGHTS];
 
 varying vec2		var_TexCoords;
 
@@ -266,7 +266,7 @@ void main(void)
 	{
 		vec3 addedLight = vec3(0.0);
 
-		for (int li = 0; li < MAX_LIGHTALL_DLIGHTS; li++)
+		for (int li = 0; li < MAX_DEFERRED_LIGHTS; li++)
 		{
 			if (li > u_lightCount) break;
 

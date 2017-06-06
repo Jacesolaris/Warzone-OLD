@@ -3472,7 +3472,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		vec3_t				surfOrigin;
 		qboolean			bad = qfalse;
 		float				radius = 0.0;
-		float				emissiveScale = 0.0;
+		float				emissiveRadiusScale = 0.0;
+		float				emissiveColorScale = 0.0;
 
 		qboolean	hasGlow = qfalse;
 		vec4_t		glowColor = { 0 };
@@ -3485,7 +3486,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 				{
 					hasGlow = qtrue;
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
-					emissiveScale = surf->shader->stages[stage]->emissiveScale;
+					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
+					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
 					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
 					break;
 				}
@@ -3517,9 +3519,12 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
 		{
+			radius = Q_clamp(0.0, radius, 128.0);
 			VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+			VectorScale(glowColor, 0.333, glowColor);
+			VectorScale(glowColor, emissiveColorScale, glowColor);
 			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-			MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveScale * 3.0;
+			MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
 			MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 			//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
 			//averageRadius += radius;
@@ -3604,7 +3609,8 @@ static void R_LoadCubemapWaypoints( void )
 		vec3_t				surfOrigin;
 		qboolean			bad = qfalse;
 		float				radius = 0.0;
-		float				emissiveScale = 0.0;
+		float				emissiveRadiusScale = 0.0;
+		float				emissiveColorScale = 0.0;
 
 		qboolean	hasGlow = qfalse;
 		vec4_t		glowColor = { 0 };
@@ -3617,7 +3623,8 @@ static void R_LoadCubemapWaypoints( void )
 				{
 					hasGlow = qtrue;
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
-					emissiveScale = surf->shader->stages[stage]->emissiveScale;
+					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
+					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
 					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
 					break;
 				}
@@ -3653,9 +3660,12 @@ static void R_LoadCubemapWaypoints( void )
 
 			if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
 			{
+				radius = Q_clamp(0.0, radius, 128.0);
 				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				VectorScale(glowColor, 0.333, glowColor);
+				VectorScale(glowColor, emissiveColorScale, glowColor);
 				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveScale * 3.0;
+				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
 				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 				//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
 				//averageRadius += radius;
@@ -3701,9 +3711,12 @@ static void R_LoadCubemapWaypoints( void )
 
 			if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
 			{
+				radius = Q_clamp(0.0, radius, 128.0);
 				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				VectorScale(glowColor, 0.333, glowColor);
+				VectorScale(glowColor, emissiveColorScale, glowColor);
 				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveScale * 3.0;
+				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
 				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 				//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
 				//averageRadius += radius;

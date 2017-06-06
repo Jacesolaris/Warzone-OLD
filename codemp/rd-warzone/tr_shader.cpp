@@ -2546,22 +2546,38 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		{
 			stage->glow = qtrue;
 			
-			if (!stage->emissiveScale) 
-				stage->emissiveScale = 1.0;
+			if (!stage->emissiveRadiusScale) 
+				stage->emissiveRadiusScale = 1.0;
+
+			if (!stage->emissiveColorScale)
+				stage->emissiveColorScale = 1.0;
 
 			continue;
 		}
-		else if (Q_stricmp(token, "emissiveScale") == 0)
+		else if (Q_stricmp(token, "emissiveRadiusScale") == 0)
 		{
 			token = COM_ParseExt(text, qfalse);
 			if (token[0] == 0)
 			{
-				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveScale exponent in shader '%s'\n", shader.name);
-				stage->emissiveScale = 1.0;
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveRadiusScale exponent in shader '%s'\n", shader.name);
+				stage->emissiveRadiusScale = 1.0;
 				continue;
 			}
 			
-			stage->emissiveScale = atof(token);
+			stage->emissiveRadiusScale = atof(token);
+			continue;
+		}
+		else if (Q_stricmp(token, "emissiveColorScale") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveColorScale exponent in shader '%s'\n", shader.name);
+				stage->emissiveColorScale = 1.0;
+				continue;
+			}
+
+			stage->emissiveColorScale = atof(token);
 			continue;
 		}
 		//

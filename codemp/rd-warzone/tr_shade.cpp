@@ -1804,11 +1804,11 @@ void RB_UpdateMatrixes ( void )
 }
 
 int			NUM_CLOSE_LIGHTS = 0;
-int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS] = {0};
-vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS] = {0};
-vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_LIGHTALL_DLIGHTS];
-float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
-vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
+int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS] = {0};
+vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS] = {0};
+vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
+float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS] = {0};
+vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS] = {0};
 
 extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
 extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
@@ -1900,7 +1900,7 @@ void RB_UpdateCloseLights ( void )
 		float x, y;
 		WorldCoordToScreenCoord(dl->origin, &x, &y);
 
-		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
+		if (NUM_CLOSE_LIGHTS < MAX_DEFERRED_LIGHTS)
 		{// Have free light slots for a new light...
 			vec3_t from;
 			VectorCopy(tr.refdef.vieworg, from);

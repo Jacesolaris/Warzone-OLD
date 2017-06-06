@@ -283,6 +283,8 @@ cvar_t	*r_saveFontData;
 //
 cvar_t	*r_parallaxScale;
 cvar_t	*r_blinnPhong;
+cvar_t	*r_debugEmissiveRadiusScale;
+cvar_t	*r_debugEmissiveColorScale;
 cvar_t  *r_skynum;
 cvar_t  *r_volumeLightStrength;
 cvar_t	*r_disableGfxDirEnhancement;
@@ -1529,7 +1531,9 @@ void R_Register( void )
 	// UQ1: Added...
 	//
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
-	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "0.5", CVAR_ARCHIVE );
+	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
+	r_debugEmissiveRadiusScale = ri->Cvar_Get("r_debugEmissiveRadiusScale", "1.0", CVAR_ARCHIVE);
+	r_debugEmissiveColorScale = ri->Cvar_Get("r_debugEmissiveColorScale", "1.0", CVAR_ARCHIVE);
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.0", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1662,7 +1666,7 @@ void R_Register( void )
 	r_fastsky = ri->Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE );
 	r_inGameVideo = ri->Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE );
 	r_drawSun = ri->Cvar_Get( "r_drawSun", "1", CVAR_ARCHIVE );
-	r_dynamiclight = ri->Cvar_Get( "r_dynamiclight", "0", CVAR_ARCHIVE );
+	r_dynamiclight = ri->Cvar_Get( "r_dynamiclight", "6", CVAR_ARCHIVE );
 	r_finish = ri->Cvar_Get ("r_finish", "0", CVAR_ARCHIVE);
 	r_textureMode = ri->Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
 	r_swapInterval = ri->Cvar_Get( "r_swapInterval", "0",
