@@ -1061,7 +1061,7 @@ void RB_AddGlowShaderLights ( void )
 {
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
 	{// Add (close) map glows as dynamic lights as well...
-		const int	MAX_WORLD_GLOW_DLIGHTS = MAX_LIGHTALL_DLIGHTS - 1;
+		const int	MAX_WORLD_GLOW_DLIGHTS = MAX_DEFERRED_LIGHTS - 1;
 		const float MAX_WORLD_GLOW_DLIGHT_RANGE = 16384.0;
 		int			CLOSE_TOTAL = 0;
 		int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -1145,9 +1145,12 @@ void RB_AddGlowShaderLights ( void )
 				vec4_t glowColor = { 0 };
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue );
+				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue );
 				num_colored++;
 
+				cvar_t	*r_debugEmissiveRadiusScale;
+				cvar_t	*r_debugEmissiveColorScale;
 				//if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)
 				//	ri->Printf(PRINT_ALL, "glow location missing color. %f %f %f.\n", glowColor[0], glowColor[1], glowColor[2]);
 			}
@@ -2923,11 +2926,11 @@ void transpose(float *src, float *dst, const int N, const int M) {
 }
 
 extern int			NUM_CLOSE_LIGHTS;
-extern int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS];
-extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_LIGHTALL_DLIGHTS];
-extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS];
-extern float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS];
-extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS];
+extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
+extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
+extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
 
 extern float		SHADOW_MINBRIGHT;
 extern float		SHADOW_MAXBRIGHT;
@@ -2994,10 +2997,10 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -3230,9 +3233,9 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
-	GLSL_SetUniformFloatxX(&tr.testshaderShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
+	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(&tr.testshaderShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformFloatxX(&tr.testshaderShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);
 
 	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);

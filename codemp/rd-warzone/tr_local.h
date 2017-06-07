@@ -63,7 +63,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif //__DYNAMIC_SHADOWS__
 
 #define DISTANCE_BETWEEN_CUBEMAPS 384 //256
-#define	MAX_LIGHTALL_DLIGHTS 256//64//16//24
+#define	MAX_DEFERRED_LIGHTS 128//64//16//24
 #define MAX_VOLUMETRIC_LIGHTS 16//64
 
 #define MAX_IMAGE_PATH 256 //MAX_QPATH
@@ -404,6 +404,8 @@ extern int		max_polyverts;
 //
 extern cvar_t	*r_parallaxScale;
 extern cvar_t	*r_blinnPhong;
+extern cvar_t	*r_debugEmissiveRadiusScale;
+extern cvar_t	*r_debugEmissiveColorScale;
 extern cvar_t	*r_skynum;
 extern cvar_t	*r_volumeLightStrength;
 extern cvar_t	*r_fog;
@@ -1066,7 +1068,8 @@ typedef struct {
 
 	surfaceSprite_t	*ss;
 
-	float			emissiveScale;
+	float			emissiveRadiusScale;
+	float			emissiveColorScale;
 
 	bool			isFoliage;
 	bool			isFoliageChecked;
