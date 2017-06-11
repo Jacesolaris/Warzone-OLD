@@ -683,7 +683,7 @@ typedef enum {
 #define	EF2_BRACKET_ENTITY		(1<<6)		// Draw as bracketed
 #define	EF2_SHIP_DEATH			(1<<7)		// "died in ship" mode
 #define	EF2_NOT_USED_1			(1<<8)		// not used
-#define EF2_BOWCASTERSCOPE		(1<<9)//[BowcasterScope]
+#define EF2_NOT_USED			(1<<9)		
 //[SPShield]
 #define EF2_PLAYERHIT			(1<<10)
 //[/SPShield]

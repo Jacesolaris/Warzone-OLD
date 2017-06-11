@@ -4299,12 +4299,6 @@ static void PM_CrashLand( void ) {
 		{
 			PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 		}
-		//[BowcasterScope]
-		else if (pm->ps->weapon == WP_BOWCASTER && pm->ps->scopeType)
-		{
-			PM_StartTorsoAnim(TORSO_WEAPONREADY4);
-		}
-		//[/BowcasterScope]
 		else
 		{
 			if (pm->ps->weapon == WP_EMPLACED_GUN)
@@ -5908,14 +5902,6 @@ static void PM_Footsteps( void ) {
 					//yeah.. the anim has a valid pose for the legs, it uses it (you can't move while using disruptor)
 					PM_ContinueLegsAnim( TORSO_WEAPONREADY4 );
 				}
-				//[BowcasterScope]
-				if (pm->ps->weapon == WP_BOWCASTER && pm->ps->scopeType)
-				{
-					///????  continue legs anim on a torso anim...??!!!
-					//yeah.. the anim has a valid pose for the legs, it uses it (you can't move while using disruptor)
-					PM_ContinueLegsAnim(TORSO_WEAPONREADY4);
-				}
-				//[/BowcasterScope]
 				else
 				{
 					if (pm->ps->weapon == WP_SABER && BG_SabersOff( pm->ps ) )
@@ -7533,12 +7519,6 @@ static void PM_Weapon( void )
 				//PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 				PM_StartTorsoAnim( TORSO_RAISEWEAP1);
 			}
-			//[BowcasterScope]
-			else if(pm->ps->weapon == WP_BOWCASTER && pm->ps->scopeType)
-			{
-				PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
-			}
-			//[/BowcasterScope]
 			else
 			{
 				if (pm->ps->weapon == WP_EMPLACED_GUN)
@@ -8193,15 +8173,6 @@ static void PM_Weapon( void )
 	{
 		PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 	}
-	//[BowcasterScope]
-	else if (((pm->ps->torsoAnim) != TORSO_WEAPONREADY4 &&
-		(pm->ps->torsoAnim) != BOTH_ATTACK4) &&
-		PM_CanSetWeaponAnims() &&
-		(pm->ps->weapon == WP_BOWCASTER && pm->ps->scopeType))
-	{
-		PM_StartTorsoAnim(TORSO_WEAPONREADY4);
-	}
-	//[/BowcasterScope]
 
 	if (pm->ps->clientNum >= MAX_CLIENTS &&
 		pm_entSelf &&
@@ -8417,12 +8388,7 @@ static void PM_Weapon( void )
 	{
 		PM_StartTorsoAnim( BOTH_ATTACK4 );
 	}
-	//[BowcasterScope]
-	else if (pm->ps->weapon == WP_BOWCASTER && pm->ps->scopeType)
-	{
-		PM_StartTorsoAnim(BOTH_ATTACK4);
-	}
-	//[/BowcasterScope]
+
 #ifndef QAGAME
 	else if (pm->ps->weapon == WP_MELEE)
 #else //!QAGAME
@@ -8553,6 +8519,10 @@ static void PM_Weapon( void )
 		//{	// were far too spammy before?  So says Rick.
 		//	addTime *= 2;
 		//}
+	}
+
+	if (pm->cmd.buttons & BUTTON_ATTACK) 
+	{
 
 		switch (weaponData[pm->ps->weapon].firingType)
 		{
