@@ -1050,12 +1050,13 @@ extern vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
 extern vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
 extern qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
 extern float	MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
+extern float	MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
 
 extern vec3_t SUN_POSITION;
 extern vec2_t SUN_SCREEN_POSITION;
 extern qboolean SUN_VISIBLE;
 
-extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased );
+extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale );
 
 void RB_AddGlowShaderLights ( void )
 {
@@ -1068,6 +1069,7 @@ void RB_AddGlowShaderLights ( void )
 		float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
 		vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
 		float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+		float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
 
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
@@ -1103,6 +1105,7 @@ void RB_AddGlowShaderLights ( void )
 				CLOSE_DIST[CLOSE_TOTAL] = distance;
 				VectorCopy(MAP_GLOW_LOCATIONS[maplight], CLOSE_POS[CLOSE_TOTAL]);
 				CLOSE_RADIUS[CLOSE_TOTAL] = MAP_GLOW_RADIUSES[maplight];
+				CLOSE_HEIGHTSCALES[CLOSE_TOTAL] = MAP_GLOW_HEIGHTSCALES[maplight];
 				CLOSE_TOTAL++;
 				continue;
 			}
@@ -1129,6 +1132,7 @@ void RB_AddGlowShaderLights ( void )
 					CLOSE_DIST[farthest_light] = distance;
 					VectorCopy(MAP_GLOW_LOCATIONS[maplight], CLOSE_POS[farthest_light]);
 					CLOSE_RADIUS[farthest_light] = MAP_GLOW_RADIUSES[maplight];
+					CLOSE_HEIGHTSCALES[farthest_light] = MAP_GLOW_HEIGHTSCALES[maplight];
 				}
 			}
 		}
@@ -1146,18 +1150,16 @@ void RB_AddGlowShaderLights ( void )
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue );
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_colored++;
 
-				cvar_t	*r_debugEmissiveRadiusScale;
-				cvar_t	*r_debugEmissiveColorScale;
 				//if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)
 				//	ri->Printf(PRINT_ALL, "glow location missing color. %f %f %f.\n", glowColor[0], glowColor[1], glowColor[2]);
 			}
 			else
 			{
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue );
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_uncolored++;
 			}
 
@@ -1277,6 +1279,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	if (r_dynamiclight->integer < 3 || (r_dynamiclight->integer > 3 && r_dynamiclight->integer < 6))
 		strengthMult = 2.0; // because the lower samples result in less color...
 
+#ifdef __VOLUME_LIGHT_DLIGHTS__
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
@@ -1285,18 +1288,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
 
-#if 0
-		if (!TR_InFOV( dl->origin, backEnd.refdef.vieworg ))
-		{
-			continue; // not on screen...
-		}
-
-		
-		if (distance > 4096.0)
-		{
-			continue;
-		}
-#endif
 
 		WorldCoordToScreenCoord(dl->origin, &x, &y);
 		float xy[2];
@@ -1305,39 +1296,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 		if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
 			continue;
-
-#ifdef __VOLUME_LIGHT_TRACE__
-		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin, qfalse))
-		{// Trace to actual position failed... Try above...
-			vec3_t tmpOrg;
-			vec3_t eyeOrg;
-			vec3_t tmpRoof;
-			vec3_t eyeRoof;
-
-			// Calculate ceiling heights at both positions...
-			Volumetric_RoofHeight(dl->origin);
-			VectorCopy(VOLUMETRIC_ROOF, tmpRoof);
-			Volumetric_RoofHeight(backEnd.refdef.vieworg);
-			VectorCopy(VOLUMETRIC_ROOF, eyeRoof);
-
-			VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
-			VectorSet(eyeOrg, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-			if (!Volumetric_Visible(eyeOrg, tmpOrg, qfalse))
-			{// Trace to above position failed... Try trace from above viewer...
-				VectorSet(tmpOrg, dl->origin[0], dl->origin[1], dl->origin[2]);
-				VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-				if (!Volumetric_Visible(eyeOrg, tmpOrg, qfalse))
-				{// Trace from above viewer failed... Try trace from above, to above...
-					VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
-					VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-					if (!Volumetric_Visible(eyeOrg, tmpOrg, qfalse))
-					{// Trace from/to above viewer failed...
-						continue; // Can't see this...
-					}
-				}
-			}
-		}
-#endif //__VOLUME_LIGHT_TRACE__
 
 		float depth = (distance/4096.0);
 		if (depth > 1.0) depth = 1.0;
@@ -1387,6 +1345,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 			}
 		}
 	}
+#endif //__VOLUME_LIGHT_DLIGHTS__
 
 	/*GLuint sampleCount = 0;
 	qglGetQueryObjectuiv(tr.sunFlareVQuery[tr.sunFlareVQueryIndex], GL_QUERY_RESULT, &sampleCount);
@@ -2930,8 +2889,10 @@ extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
 extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
 extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
+extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
 
+extern float		SUN_PHONG_SCALE;
 extern float		SHADOW_MINBRIGHT;
 extern float		SHADOW_MAXBRIGHT;
 
@@ -3001,6 +2962,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTHEIGHTSCALES, CLOSEST_LIGHTS_HEIGHTSCALES, MAX_DEFERRED_LIGHTS);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -3015,8 +2977,12 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	//GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
+	vec4_t local1;
+	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL1, local1);
+
 	vec4_t local2;
-	VectorSet4(local2, r_blinnPhong->value, SHADOWS_ENABLED ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+	VectorSet4(local2, 0.0, SHADOWS_ENABLED ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  local2);
 
 	vec4_t local3;

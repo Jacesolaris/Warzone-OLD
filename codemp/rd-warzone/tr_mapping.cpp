@@ -1172,6 +1172,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
+float		SUN_PHONG_SCALE = 1.0;
 vec3_t		SUN_COLOR_MAIN = { 0 };
 vec3_t		SUN_COLOR_SECONDARY = { 0 };
 vec3_t		SUN_COLOR_TERTIARY = { 0 };
@@ -1215,6 +1216,8 @@ void MAPPING_LoadMapInfo ( void )
 		DAY_NIGHT_CYCLE_SPEED = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
 		DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
 	}
+
+	SUN_PHONG_SCALE = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_PHONG_SCALE", "1.0"));
 
 	SUN_COLOR_MAIN[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_R", "1.0"));
 	SUN_COLOR_MAIN[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_G", "0.7"));
@@ -1310,6 +1313,7 @@ void MAPPING_LoadMapInfo ( void )
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");

@@ -288,7 +288,7 @@ RE_AddDynamicLightToScene
 
 =====================
 */
-void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased) {
+void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale) {
 	dlight_t	*dl;
 
 	if (!tr.registered) {
@@ -309,6 +309,7 @@ void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float
 	dl->color[2] = b;
 	dl->additive = additive;
 	dl->isGlowBased = isGlowBased;
+	dl->heightScale = heightScale;
 }
 
 /*
@@ -318,7 +319,7 @@ RE_AddLightToScene
 =====================
 */
 void RE_AddLightToScene(const vec3_t org, float intensity, float r, float g, float b) {
-	RE_AddDynamicLightToScene(org, intensity, r, g, b, qfalse, qfalse);
+	RE_AddDynamicLightToScene(org, intensity, r, g, b, qfalse, qfalse, 0);
 }
 
 /*
@@ -328,7 +329,7 @@ RE_AddAdditiveLightToScene
 =====================
 */
 void RE_AddAdditiveLightToScene(const vec3_t org, float intensity, float r, float g, float b) {
-	RE_AddDynamicLightToScene(org, intensity, r, g, b, qtrue, qfalse);
+	RE_AddDynamicLightToScene(org, intensity, r, g, b, qtrue, qfalse, 0);
 }
 
 #ifdef __DAY_NIGHT__

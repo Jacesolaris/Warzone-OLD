@@ -19,9 +19,11 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
 #define USE_RGBA			u_Settings0.b
+#define USE_TEXTURECLAMP	u_Settings0.a
 
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
+#define USE_FOG				u_Settings1.b
 
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4	u_Local2; // ExtinctionCoefficient
@@ -56,9 +58,17 @@ uniform mat4   u_BoneMatrices[20];
 
 uniform vec2	u_textureScale;
 
+uniform int    u_AlphaGen;
+uniform vec4   u_BaseColor;
+uniform vec4   u_VertColor;
+
+uniform float	u_PortalRange;
+uniform vec4	u_PrimaryLightOrigin;
+
 varying vec2   var_TexCoords;
 varying vec3   var_Position;
 varying vec3   var_Normal;
+varying vec4   var_Color;
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -110,22 +120,31 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
-	vec2 tex = attr_TexCoord0.st;
+	vec2 tex = attr_TexCoord0;
 
-	if (TCGen >= TCGEN_LIGHTMAP && TCGen <= TCGEN_LIGHTMAP3)
+	switch (TCGen)
 	{
-		tex = attr_TexCoord1.st;
-	}
-	else if (TCGen == TCGEN_ENVIRONMENT_MAPPED)
-	{
-		vec3 viewer = normalize(u_LocalViewOrigin - position);
-		vec2 ref = reflect(viewer, normal).yz;
-		tex.s = ref.x * -0.5 + 0.5;
-		tex.t = ref.y *  0.5 + 0.5;
-	}
-	else if (TCGen == TCGEN_VECTOR)
-	{
-		tex = vec2(dot(position, TCGenVector0), dot(position, TCGenVector1));
+		case TCGEN_LIGHTMAP:
+		case TCGEN_LIGHTMAP1:
+		case TCGEN_LIGHTMAP2:
+		case TCGEN_LIGHTMAP3:
+			tex = attr_TexCoord1;
+		break;
+
+		case TCGEN_ENVIRONMENT_MAPPED:
+		{
+			vec3 viewer = normalize(u_LocalViewOrigin - position);
+			vec2 ref = reflect(viewer, normal).yz;
+			tex.s = ref.x * -0.5 + 0.5;
+			tex.t = ref.y *  0.5 + 0.5;
+		}
+		break;
+
+		case TCGEN_VECTOR:
+		{
+			tex = vec2(dot(position, TCGenVector0), dot(position, TCGenVector1));
+		}
+		break;
 	}
 
 	return tex;
@@ -146,6 +165,33 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 	return st2 + texOffset * amplitude;
 }
 
+vec4 CalcColor(vec3 position, vec3 normal)
+{
+	vec4 color = u_VertColor * attr_Color + u_BaseColor;
+	
+	if (USE_RGBA > 0.0)
+	{
+		if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
+		{
+			vec3 viewer = u_LocalViewOrigin - position;
+			//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
+			vec3 lightDir = normalize((u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
+			vec3 reflected = -reflect(lightDir, normal);
+		
+			color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);
+			color.a *= color.a;
+			color.a *= color.a;
+		}
+		else if (u_AlphaGen == AGEN_PORTAL)
+		{
+			vec3 viewer = u_LocalViewOrigin - position;
+			color.a = clamp(length(viewer) / u_PortalRange, 0.0, 1.0);
+		}
+	}
+	
+	return color;
+}
+
 void main()
 {
 	vec3 position;
@@ -160,10 +206,8 @@ void main()
 	{
 		vec4 position4 = vec4(0.0);
 		vec4 normal4 = vec4(0.0);
-		vec4 tangent4 = vec4(0.0);
 		vec4 originalPosition = vec4(attr_Position, 1.0);
-		vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
-		vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
+		vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -182,30 +226,34 @@ void main()
 		normal    = attr_Normal * 2.0 - 1.0;
 	}
 
-	vec2 texCoords;
-
-	if (USE_TC == 1.0)
-	{
-		texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
-		var_TexCoords.xy = ModTexCoords(texCoords, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
-	}
-	else
-	{
-		texCoords = attr_TexCoord0.st;
-		var_TexCoords.xy = texCoords;
-	}
-
-	if (!(u_textureScale.x == 0.0 && u_textureScale.y == 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
-	{
-		var_TexCoords *= u_textureScale;
-	}
+	vec2 texCoords = attr_TexCoord0.st;
 
 	if (USE_DEFORM == 1.0)
 	{
 		position = DeformPosition(position, normal, attr_TexCoord0.st);
 	}
 
+	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
+
+	if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
+	{
+		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
+		normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
+	}
+
+	if (USE_TC == 1.0)
+	{
+		texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
+		texCoords = ModTexCoords(texCoords, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
+	}
+
+	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	{
+		texCoords *= u_textureScale;
+	}
+
+	var_Color = CalcColor(position, normal);
 	var_Position = position;
 	var_Normal = normal;
-	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
+	var_TexCoords = texCoords;
 }

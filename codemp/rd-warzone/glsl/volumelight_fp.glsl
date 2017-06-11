@@ -85,7 +85,8 @@ void main ( void )
 			if (i == SUN_ID) 
 			{
 				fallOffRanges[numInRange] = fall;
-				spotColor = var_LightColor[i].rgb;
+				//spotColor = var_LightColor[i].rgb;
+				spotColor = u_vlightColors[i].rgb;
 			}
 			else
 			{
@@ -95,7 +96,7 @@ void main ( void )
 			float lightColorLength = length(spotColor) / 3.0;
 
 			// Try to maximize light strengths...
-			spotColor /= lightColorLength;
+			//spotColor /= lightColorLength;
 
 			lightColors[numInRange] = spotColor;
 

@@ -1,5 +1,4 @@
-﻿//#define __AMBIENT_OCCLUSION__
-//#define __BUMP__
+﻿#define __AMBIENT_OCCLUSION__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -15,7 +14,8 @@ uniform sampler2D	u_ShadowMap;
 
 uniform vec2		u_Dimensions;
 
-uniform vec4		u_Local2; // r_blinnPhong, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
+uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, 0, 0
+uniform vec4		u_Local2; // 0, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 
 uniform vec3		u_ViewOrigin;
@@ -33,6 +33,7 @@ uniform int			u_lightCount;
 uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
 uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
+uniform float		u_lightHeightScales[MAX_DEFERRED_LIGHTS];
 uniform vec3		u_lightColors[MAX_DEFERRED_LIGHTS];
 
 varying vec2		var_TexCoords;
@@ -104,37 +105,10 @@ vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 spe
 	return dif*diffuseColor + spe*specularColor;
 }
 
-#ifdef __BUMP__
-vec3 doBump( in vec3 pos, in vec3 nor, in float signal, in float scale )
-{
-    // build frame	
-    vec3  s = dFdx( pos );
-    vec3  t = dFdy( pos );
-    vec3  u = cross( t, nor );
-    vec3  v = cross( nor, s );
-    float d = dot( s, u );
-
-    // compute bump	
-    float bs = dFdx( signal );
-    float bt = dFdy( signal );
-	
-    // offset normal	
-#if 1
-    return normalize( nor - scale*(bs*u + bt*v)/d );
-#else
-    // if you cannot ensure the frame is not null	
-    vec3 vSurfGrad = sign( d ) * ( bs * u + bt * v );
-    return normalize( abs(d)*nor - scale*vSurfGrad );
-#endif
-}
-#endif //__BUMP__
-
 void main(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
 	gl_FragColor = vec4(color.rgb, 1.0);
-
-	float lightScale = clamp((1.0 - max(max(color.r, color.g), color.b)) - 0.2, 0.0, 1.0);
 
 	vec2 texCoords = var_TexCoords;
 
@@ -185,31 +159,6 @@ void main(void)
 #define const_2 (255.0 / 219.0)
 	norm.a = clamp((clamp(norm.a - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 
-#ifdef __BUMP__
-	//vec3 N2 = N;
-#define N2 N
-
-	if (u_Local3.r != 0.0)
-	{
-		N2.xyz = doBump( position.xyz/*E*/, N.xyz, dot(gl_FragColor.rgb,vec3(0.33)), u_Local3.r );
-	}
-
-	if (u_Local3.g != 0.0)
-	{
-		gl_FragColor.rgb = N2.xyz * 0.5 + 0.5;
-		return;
-	}
-
-	float occ = 0.5 + 0.5*N2.y;
-	occ = 1.0 - clamp(occ * 0.75, 0.0, 1.0);
-	//float occ = 1.0;
-
-	if (u_Local3.b != 0.0)
-	{
-		gl_FragColor.rgb = vec3(occ);
-		return;
-	}
-#endif //__BUMP__
 
 #if defined(USE_SHADOWMAP)
 	if (u_Local2.g > 0.0)
@@ -230,16 +179,19 @@ void main(void)
 		shadowValue /= 32.0;
 #endif //HIGH_QUALITY_SHADOWS
 
-		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a * lightScale);
+		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
 	}
 #endif //defined(USE_SHADOWMAP)
 
+	float lightScale = clamp((1.0 - max(max(color.r, color.g), color.b)) - 0.2, 0.0, 1.0);
+
+	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 	float lambertian2 = dot(PrimaryLightDir.xyz, N);
 	float spec2 = 0.0;
 	bool noSunPhong = false;
-	float phongFactor = u_Local2.r;
+	float phongFactor = u_Local1.r;
 
 	if (phongFactor < 0.0)
 	{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
@@ -254,31 +206,45 @@ void main(void)
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
 		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += (vec3(clamp(spec2, 0.0, 1.0) * normStrength) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor) * lightScale;
+		gl_FragColor.rgb += (vec3(clamp(spec2, 0.0, 1.0) * normStrength) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale;
 	}
 
 	if (noSunPhong)
 	{// Invert phong value so we still have non-sun lights...
-		phongFactor = -u_Local2.r;
+		phongFactor = -u_Local1.r;
 	}
 
 	if (u_lightCount > 0.0)
 	{
 		vec3 addedLight = vec3(0.0);
 
-		for (int li = 0; li < MAX_DEFERRED_LIGHTS; li++)
+		for (int li = 0; li < u_lightCount/*MAX_DEFERRED_LIGHTS*/; li++)
 		{
-			if (li > u_lightCount) break;
+			//if (li > u_lightCount) break;
 
 			vec3 lightPos = u_lightPositions2[li].xyz;
 
 			float lightDist = distance(lightPos, position.xyz);
+
+			if (u_lightHeightScales[li] > 0.0)
+			{// ignore height differences, check later...
+				lightDist -= length(lightPos.z - position.z);
+			}
+
 			float lightMax = u_lightDistances[li];
 
 			if (lightDist < lightMax)
 			{
-				float lightStrength = clamp(1.0 - clamp(lightDist / lightMax, 0.0, 1.0), 0.0, 1.0);
-				lightStrength = pow(lightStrength, 4.0);// * 0.1;
+				/*if (u_lightHeightScales[li] > 0.0)
+				{// Check height difference...
+					if (length(lightPos.z - position.z) > lightMax * u_lightHeightScales[li])
+					{// Out of height range...
+						continue;
+					}
+				}*/
+
+				float lightStrength = clamp(1.0 - clamp(lightDist / lightMax, 0.0, 1.0), 0.0, 1.0);;
+				lightStrength = pow(lightStrength, 4.0);
 
 				if (lightStrength > 0.01)
 				{
@@ -287,22 +253,35 @@ void main(void)
 
 					if (lightColorLength > LIGHT_THRESHOLD)
 					{
-						// Try to maximize light strengths...
-						//lightColor /= lightColorLength;
+						vec3 lightDir = normalize(lightPos - position.xyz);
 
 						// Add some basic light...
 						vec3 ambientLight = lightColor * lightStrength * lightScale * 0.5;
+						vec3 ambient = ambientLight; // Always add some basic light...
+
 						vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 8.0;
-						addedLight += ambientLight; // Always add some basic light...
-						addedLight += diffuseLight; // Always add some basic diffuse light...
+						float diffuseCoefficient = max(0.0, dot(N, lightDir));
+						vec3 diffuse = diffuseLight * diffuseCoefficient; // Always add some basic diffuse light...
 						
 						// Specular...
-						vec3 lightDir = -normalize(lightPos - position.xyz);
-						vec3 R = normalize(-reflect(lightDir,N));
-						float specAngle3 = max(-dot(R,E),0.0);
-						float spec3 = clamp(pow(specAngle3, 0.7), 0.0, 1.0);
-						
-						addedLight += lightColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 0.5 * (spec3 * (norm.a * 0.5 + 0.5)) * phongFactor * 8.0;
+						float specularCoefficient = 0.0;
+						if(diffuseCoefficient > 0.0)
+							specularCoefficient = pow(max(0.0, dot(surfaceToCamera, reflect(-lightDir, N))), 1.0/*materialShininess*/);
+						vec3 specular = specularCoefficient * lightColor;
+						specular = specular * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 0.5 * (norm.a * 0.5 + 0.5) * phongFactor * 8.0;
+
+						//attenuation
+						float distanceToLight = length(lightPos - position.xyz);
+						float attenuation = 1.0 / (1.0 + (norm.a * 0.5 + 0.5) * pow(distanceToLight, 2.0));
+
+						//linear color (color before gamma correction)
+						vec3 linearColor = ambient + attenuation*(diffuse + specular);
+    
+						//final color (after gamma correction)
+						vec3 gamma = vec3(1.0/2.2);
+						vec3 finalColor = pow(linearColor, gamma);
+
+						addedLight += finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0;
 					}
 				}
 			}
@@ -323,13 +302,12 @@ void main(void)
 		//ao *= ao;
 		ao = pow(ao, 4.0);
 
-		gl_FragColor.rgb *= ao;
+		//if (u_Local3.r > 0.0)
+		//	gl_FragColor.rgb = vec3(ao);
+		//else
+			gl_FragColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
-
-#ifdef __BUMP__
-	gl_FragColor.rgb *= occ;
-#endif //__BUMP__
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }

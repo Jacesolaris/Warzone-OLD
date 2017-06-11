@@ -1694,6 +1694,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
 
+				stage->noScreenMap = qtrue;
+
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$deluxemap" ) )
@@ -1717,6 +1719,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
 				}
+
+				stage->noScreenMap = qtrue;
+
 				//UQ1: END - Testing - Force glow to obvious glow components...
 				continue;
 			}
@@ -1741,31 +1746,43 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 					if (stage->type == ST_NORMALPARALLAXMAP)
 						type = IMGTYPE_NORMALHEIGHT;
+
+					stage->noScreenMap = qtrue;
 				}
 				else if (stage->type == ST_SPECULARMAP)
 				{
 					type = IMGTYPE_SPECULAR;
 					flags |= IMGFLAG_NOLIGHTSCALE;
+
+					stage->noScreenMap = qtrue;
 				}
 				/*else if (stage->type == ST_SUBSURFACEMAP)
 				{
 					type = IMGTYPE_SUBSURFACE;
 					flags |= IMGFLAG_NOLIGHTSCALE;
+
+					stage->noScreenMap = qtrue;
 				}*/
 				else if (stage->type == ST_OVERLAYMAP)
 				{
 					type = IMGTYPE_OVERLAY;
 					//flags |= IMGFLAG_NOLIGHTSCALE;
+
+					stage->noScreenMap = qtrue;
 				}
 				else if (stage->type == ST_STEEPMAP)
 				{
 					type = IMGTYPE_STEEPMAP;
 					//flags |= IMGFLAG_NOLIGHTSCALE;
+
+					stage->noScreenMap = qtrue;
 				}
 				else if (stage->type == ST_STEEPMAP2)
 				{
 					type = IMGTYPE_STEEPMAP2;
 					//flags |= IMGFLAG_NOLIGHTSCALE;
+
+					stage->noScreenMap = qtrue;
 				}
 				else
 				{
@@ -1997,6 +2014,13 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		else if ( !Q_stricmp( token, "detail" ) )
 		{
 			stage->isDetail = qtrue;
+		}
+		//
+		// Don't output this stage to position and normal maps...
+		//
+		else if (!Q_stricmp(token, "noScreenMap"))
+		{
+			stage->noScreenMap = qtrue;
 		}
 		//
 		// blendfunc <srcFactor> <dstFactor>
@@ -2550,7 +2574,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				stage->emissiveRadiusScale = 1.0;
 
 			if (!stage->emissiveColorScale)
-				stage->emissiveColorScale = 1.0;
+				stage->emissiveColorScale = 1.5;
+
+			stage->emissiveHeightScale = 0.0;
 
 			continue;
 		}
@@ -2573,11 +2599,24 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			if (token[0] == 0)
 			{
 				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveColorScale exponent in shader '%s'\n", shader.name);
-				stage->emissiveColorScale = 1.0;
+				stage->emissiveColorScale = 1.5;
 				continue;
 			}
 
 			stage->emissiveColorScale = atof(token);
+			continue;
+		}
+		else if (Q_stricmp(token, "emissiveHeightScale") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveHeightScale exponent in shader '%s'\n", shader.name);
+				stage->emissiveHeightScale = 0.0;
+				continue;
+			}
+
+			stage->emissiveHeightScale = atof(token);
 			continue;
 		}
 		//
@@ -6838,12 +6877,6 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
 "}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
 "}\n"\
 "";
 
@@ -6868,12 +6901,6 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
 "}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
 "}\n"\
 "";
 
@@ -6895,12 +6922,6 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "tcMod scale 2.5 2.5\n"\
 "}\n"\
 "%s\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
 "}\n"\
 "";
 
@@ -6934,6 +6955,7 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
 "rgbGen lightingDiffuse\n"\
 "depthFunc equal\n"\
+"noScreenMap\n"\
 "}\n"\
 "}\n"\
 "";
@@ -6969,6 +6991,7 @@ char uniqueGenericArmorShader[] = "{\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
 "rgbGen lightingDiffuse\n"\
 "depthFunc equal\n"\
+"noScreenMap\n"\
 "}\n"\
 "}\n"\
 "";
@@ -7004,34 +7027,7 @@ char uniqueGenericMetalShader[] = "{\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
 "rgbGen lightingDiffuse\n"\
 "depthFunc equal\n"\
-"}\n"\
-"}\n"\
-"";
-
-char uniqueGenericMetalShader_OLD[] = "{\n"\
-"qer_editorimage	%s\n"\
-"q3map_material	hollowmetal\n"\
-"//q3map_alphashadow\n"\
-"surfaceparm	trans\n"\
-"surfaceparm	noimpact\n"\
-"surfaceparm	nomarks\n"\
-"cull	twosided\n"\
-"{\n"\
-"map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
-"alphaFunc GE128\n"\
-"depthWrite\n"\
-"rgbGen entity\n"\
-"}\n"\
-"%s"\
-"{\n"\
-"map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"alphaFunc GE128\n"\
-"depthFunc equal\n"\
-"detail\n"\
+"noScreenMap\n"\
 "}\n"\
 "}\n"\
 "";
@@ -7050,48 +7046,11 @@ char uniqueGenericRockShader[] = "{\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
 "}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
 "}\n"\
 "";
 
 //"sort seethrough\n"\
 
-#if 0
-char uniqueGenericShader[] = "{\n"\
-"qer_editorimage	%s\n"\
-"{\n"\
-"map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
-"alphaFunc GE128\n"\
-"rgbGen vertex\n"\
-"depthWrite\n"\
-"}\n"\
-"%s"\
-"{\n"\
-"map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"alphaFunc GE128\n"\
-"depthFunc equal\n"\
-"detail\n"\
-"}\n"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"}\n"\
-"}\n"\
-"";
-
-// "rgbGen identity\n"
-#elif 1
 char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "{\n"\
@@ -7107,30 +7066,10 @@ char uniqueGenericShader[] = "{\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
 "rgbGen lightingDiffuse\n"\
 "depthFunc equal\n"\
+"noScreenMap\n"\
 "}\n"\
 "}\n"\
 "";
-#else
-char uniqueGenericShader[] = "{\n"\
-"qer_editorimage	%s\n"\
-"{\n"\
-"map %s\n"\
-"%s\n"\
-"blendfunc GL_ONE GL_ZERO\n"\
-"alphaFunc GE128\n"\
-"depthWrite\n"\
-"rgbGen identity\n"\
-"}\n"\
-"%s"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
-"}\n"\
-"";
-#endif
 
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )

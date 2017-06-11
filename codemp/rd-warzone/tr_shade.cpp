@@ -1461,6 +1461,9 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 
 qboolean RB_ShouldUseTesselation ( shaderCommands_t *input )
 {
+	if (/*backEnd.currentEntity != &tr.worldEntity &&*/ backEnd.currentEntity != &backEnd.entity2D)
+		return qtrue;
+
 	/*
 	int materialType = tess.shader->surfaceFlags & MATERIAL_MASK);
 
@@ -1808,6 +1811,7 @@ int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS] = {0};
 vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS] = {0};
 vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
 float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS] = {0};
+float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS] = { 0 };
 vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS] = {0};
 
 extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
@@ -1913,6 +1917,7 @@ void RB_UpdateCloseLights ( void )
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
 			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = dl->radius;
+			CLOSEST_LIGHTS_HEIGHTSCALES[NUM_CLOSE_LIGHTS] = dl->heightScale;
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2];
@@ -1952,6 +1957,7 @@ void RB_UpdateCloseLights ( void )
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
 				CLOSEST_LIGHTS_DISTANCES[farthest_light] = dl->radius;
+				CLOSEST_LIGHTS_HEIGHTSCALES[farthest_light] = dl->heightScale;
 				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0];
 				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1];
 				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2];
@@ -2261,6 +2267,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				continue;
 			}
 
+			if (pStage->noScreenMap)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (pStage->bundle[0].isLightmap)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			/*if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+			{
+				continue;
+			}*/
+
 			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL && !pStage->glow)
 			{// Don't output these to position and normal map...
 				index |= LIGHTDEF_IS_DETAIL;
@@ -2278,7 +2299,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			//GLS_DEPTHTEST_DISABLE
-			if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			if (backEnd.currentEntity == &backEnd.entity2D)// || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
@@ -2287,9 +2308,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				didNonDetail = qtrue;
 			}
+			else
+			{
+				continue;
+			}
 
 
-			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+			if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
 			{
 				if (glState.vertexAnimation)
 				{
@@ -2325,7 +2350,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else
 			{
 				sp = &tr.shadowPassShader;
-				pStage->glslShaderGroup = &tr.shadowPassShader;
+				//pStage->glslShaderGroup = &tr.shadowPassShader;
 
 				backEnd.pc.c_shadowPassDraws++;
 			}
@@ -2462,20 +2487,23 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
+			if (pStage->noScreenMap)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (pStage->bundle[0].isLightmap)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
 			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL)
 			{// Don't output these to position and normal map...
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
-#if 0
-			if (/*(stateBits & GLS_SRCBLEND_SRC_ALPHA)
-					&& (stateBits & GLS_DSTBLEND_ONE)*/(stateBits & GLS_DSTBLEND_ZERO))
-			{// Don't output these to position and normal map...
-				index |= LIGHTDEF_IS_DETAIL;
-			}
-#endif
 			//GLS_DEPTHTEST_DISABLE
-			if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			if (backEnd.currentEntity == &backEnd.entity2D)// || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
@@ -2489,7 +2517,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
 				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
-			{// No point at all in doing this stage...
+			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
@@ -2593,6 +2621,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		RB_SetStageImageDimensions(sp, pStage);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
 
@@ -2694,7 +2723,46 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
+			vec4_t baseColor;
+			vec4_t vertColor;
 
+			if (pStage->rgbGen || pStage->alphaGen)
+			{
+				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
+
+				if ((backEnd.refdef.colorScale != 1.0f) && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
+				{
+					// use VectorScale to only scale first three values, not alpha
+					VectorScale(baseColor, backEnd.refdef.colorScale, baseColor);
+					VectorScale(vertColor, backEnd.refdef.colorScale, vertColor);
+				}
+
+				if (backEnd.currentEntity != NULL &&
+					(backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA))
+				{
+					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
+				}
+			}
+
+			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
+			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
+
+			if (pStage->alphaGen == AGEN_PORTAL)
+			{
+				GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
+			}
+
+			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
+			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
+
+			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
+			{
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+
+				GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
+			}
 		}
 		else
 		{
@@ -2718,11 +2786,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
 				}
 			}
-			/*else
-			{
-				VectorSet4(baseColor, 1, 1, 1, 1);
-				VectorSet4(vertColor, 1, 1, 1, 1);
-			}*/
 
 			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);

@@ -8,6 +8,7 @@ uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMa
 varying vec2	var_TexCoords;
 varying vec3	var_Position;
 varying vec3	var_Normal;
+varying vec4	var_Color;
 
 out vec4 out_Glow;
 out vec4 out_Position;
@@ -73,6 +74,8 @@ void main()
 	}
 
 	gl_FragColor = texture(u_DiffuseMap, texCoords);
+	gl_FragColor.a *= var_Color.a;
+
 	out_Glow = vec4(0.0);
 	out_Position = vec4(var_Position.rgb, 1024.0);
 	out_Normal = ConvertToNormals ( gl_FragColor );

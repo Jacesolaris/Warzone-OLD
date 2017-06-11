@@ -38,6 +38,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __EXTRA_PRETTY__
 //#define __PSHADOWS__
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
+//#define __VOLUME_LIGHT_DLIGHTS__ // Do volumetric lights for dlights (sun will still be a volume light though)? Now we have bloom rays, I see little point...
+
 #define __MERGE_MODEL_SURFACES__		// merge entity surfaces into less draws...
 //#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 //#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
@@ -618,6 +620,7 @@ typedef struct dlight_s {
 #endif //__DYNAMIC_SHADOWS__
 
 	qboolean isGlowBased;
+	float heightScale;
 } dlight_t;
 
 // a trRefEntity_t has all the information passed in by
@@ -1022,6 +1025,7 @@ typedef struct surfaceSprite_s
 typedef struct {
 	qboolean		active;
 	qboolean		isDetail;
+	qboolean		noScreenMap;
 	int				isWater;
 	bool			hasSpecular;
 	bool			hasRealNormalMap;
@@ -1070,6 +1074,7 @@ typedef struct {
 
 	float			emissiveRadiusScale;
 	float			emissiveColorScale;
+	float			emissiveHeightScale;
 
 	bool			isFoliage;
 	bool			isFoliageChecked;
@@ -1512,6 +1517,7 @@ typedef enum
 	UNIFORM_LIGHTPOSITIONS2,
 	UNIFORM_LIGHTPOSITIONS,
 	UNIFORM_LIGHTDISTANCES,
+	UNIFORM_LIGHTHEIGHTSCALES,
 	UNIFORM_LIGHTCOLORS,
 	UNIFORM_VLIGHTPOSITIONS2,
 	UNIFORM_VLIGHTPOSITIONS,
@@ -3077,7 +3083,7 @@ void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader,
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
 				   int64_t fogIndex, int64_t dlightMap, int64_t postRender, int cubemap );
-bool R_IsPostRenderEntity ( int refEntityNum, const trRefEntity_t *refEntity );
+bool R_IsPostRenderEntity(int refEntityNum, const trRefEntity_t *refEntity);
 
 void R_CalcTexDirs(vec3_t sdir, vec3_t tdir, const vec3_t v1, const vec3_t v2,
 					const vec3_t v3, const vec2_t w1, const vec2_t w2, const vec2_t w3);

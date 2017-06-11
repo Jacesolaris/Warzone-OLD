@@ -3432,6 +3432,7 @@ int			NUM_MAP_GLOW_LOCATIONS = 0;
 vec3_t		MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS] = { 0 };
 vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS] = { 0 };
 float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS] = { 0 };
+float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS] = { 0 };
 qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS] = { qfalse };
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
@@ -3474,6 +3475,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		float				radius = 0.0;
 		float				emissiveRadiusScale = 0.0;
 		float				emissiveColorScale = 0.0;
+		float				emissiveHeightScale = 0.0;
 
 		qboolean	hasGlow = qfalse;
 		vec4_t		glowColor = { 0 };
@@ -3488,6 +3490,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
 					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
 					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
+					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;
 					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
 					break;
 				}
@@ -3525,6 +3528,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			VectorScale(glowColor, emissiveColorScale, glowColor);
 			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
 			MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
+			MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
 			MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 			//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
 			//averageRadius += radius;
@@ -3611,6 +3615,7 @@ static void R_LoadCubemapWaypoints( void )
 		float				radius = 0.0;
 		float				emissiveRadiusScale = 0.0;
 		float				emissiveColorScale = 0.0;
+		float				emissiveHeightScale = 0.0;
 
 		qboolean	hasGlow = qfalse;
 		vec4_t		glowColor = { 0 };
@@ -3625,6 +3630,7 @@ static void R_LoadCubemapWaypoints( void )
 					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
 					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
 					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
+					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;
 					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
 					break;
 				}
@@ -3666,6 +3672,7 @@ static void R_LoadCubemapWaypoints( void )
 				VectorScale(glowColor, emissiveColorScale, glowColor);
 				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
 				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
+				MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
 				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 				//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
 				//averageRadius += radius;
@@ -3717,6 +3724,7 @@ static void R_LoadCubemapWaypoints( void )
 				VectorScale(glowColor, emissiveColorScale, glowColor);
 				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
 				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
+				MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
 				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 				//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
 				//averageRadius += radius;

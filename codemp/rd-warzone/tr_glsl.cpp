@@ -537,6 +537,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "		gl_TessLevelOuter[2] = 0.0;\n"\
 "		gl_TessLevelInner[0] = 0.0;\n"\
 "		gl_TessLevelInner[1] = 0.0;\n"\
+"		return;\n"\
 "	}\n"\
 "#endif\n"\
 "\n"\
@@ -659,28 +660,8 @@ const char fallbackShader_genericGeometry[] =
 "    return fRes;\n"\
 "}\n"\
 "\n"\
-"vec4 ConvertToNormals ( vec4 color )\n"\
-"{\n"\
-"	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or\n"\
-"	// wasting vram on real normals.\n"\
-"	//\n"\
-"	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2\n"\
-"	// for the very noticable FPS boost over texture lookups.\n"\
-"\n"\
-"	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));\n"\
-"	N.xy = 1.0 - N.xy;\n"\
-"	N.xyz = N.xyz * 2.0 - 1.0;\n"\
-"	vec4 norm = vec4(N, clamp(length(N.xyz), 0.0, 1.0));\n"\
-"//	norm.a = float(int(norm.a * 10.0)) / 10.0;\n"\
-"	norm.a = 1.0-norm.a;\n"\
-"	return norm;\n"\
-"}\n"\
-"\n"\
 "void createPt(int i, vec3 normal)\n"\
 "{\n"\
-"//	 Normal_FS_in = normalize(vec3(normal.xy, normal.z));\n"\
-"//	 normal.z *= 65536.0; // Ummmmm.... WTF???!?!?!?! Why is this needed?!?!?!?!??\n"\
-"//	 normal = normalize(normal);\n"\
 "    TexCoord_FS_in = TexCoord_GS_in[i];\n"\
 "    ViewDir_FS_in = ViewDir_GS_in[i];\n"\
 "    Tangent_FS_in = Tangent_GS_in[i];\n"\
@@ -692,40 +673,31 @@ const char fallbackShader_genericGeometry[] =
 "    Slope_FS_in = Slope_GS_in[i];\n"\
 "    usingSteepMap_FS_in = usingSteepMap_GS_in[i];\n"\
 "\n"\
-"//	vec4 dispData = ConvertToNormals(texture2D(u_DiffuseMap, TexCoord_FS_in));\n"\
-"//	float height = 0.33*dispData.x + 0.33*dispData.y + 0.33*dispData.z;\n"\
-"//	float height = dispData.a;\n"\
-"//	 vLocalSeed = WorldPos_GS_in[i].xyz;\n"\
-"	 vLocalSeed = WorldPos_GS_in[i].xyx;\n"\
-"//    vec3 height = vec3(randZeroOne() * 2.0 - 1.0, randZeroOne() * 2.0 - 1.0, randZeroOne() * 2.0 - 1.0);\n"\
-"//    vec3 height = vec3(randZeroOne() /** 2.0 - 1.0*/);\n"\
-"    vec3 height = vec3(0.0, 0.0, randZeroOne());// * tessScale_GS_in[i];\n"\
+"//	 vLocalSeed = WorldPos_GS_in[i].xyx;\n"\
+"//    vec3 height = vec3(0.0, 0.0, randZeroOne());// * tessScale_GS_in[i];\n"\
 "\n"\
-"//	 vec3 offset = normal * (-gDispFactor * height);\n"\
+"	 vec3 offset = normal * -gDispFactor;\n"\
 "//	 vec3 offset = vec3(0.0, 0.0, 1.0) * (-gDispFactor * height);\n"\
 "//	 vec3 offset = height * -gDispFactor; // screw normals, in rend2 they are fucked up...\n"\
-"	 vec3 offset = height * clamp(gDispFactor, 0.0, 256.0); // screw normals, in rend2 they are fucked up...\n"\
+"//	 vec3 offset = height * clamp(gDispFactor, 0.0, 256.0); // screw normals, in rend2 they are fucked up...\n"\
 "\n"\
 "    vec4 newPos = vec4(WorldPos_GS_in[i].xyz + offset.xyz, 1.0);\n"\
 "//	 newPos.z -= 8.0; // Lower the surfaces all down so that the player's legs don't sink in...\n"\
 "	 newPos.z += 4.0; // Raise position a little just to make sure we are above depth prepass position...\n"\
 "	 WorldPos_FS_in = newPos.xyz;\n"\
 "\n"\
-"	 // Need to re-generate normal for the displacement...\n"\
-"	 Normal_FS_in = normalize(cross((WorldPos_GS_in[2].xyz + offset.xyz) - (WorldPos_GS_in[0].xyz + offset.xyz), (WorldPos_GS_in[1].xyz + offset.xyz) - (WorldPos_GS_in[0].xyz + offset.xyz)));\n"\
-"\n"\
 "    gl_Position = u_ModelViewProjectionMatrix * newPos;\n"\
 "}\n"\
 "\n"\
 "void main()\n"\
 "{\n"\
-"	vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
+"	//vec3 normal = normalize(cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz));\n"\
+"	vec3 normal = normalize(Normal_GS_in[0]);\n"\
 "\n"\
 "	for(int i = 0; i < gl_VerticesIn; i++)\n"\
 "	{\n"\
+"		normal = normalize(Normal_GS_in[i]);\n"\
 "		Normal_FS_in = normal;\n"\
-"//		Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
-"//		vec3 normal = Normal_FS_in;\n"\
 "		createPt(i, normal);\n"\
 "		Normal_FS_in = normal;\n"\
 "		EmitVertex();\n"\
@@ -1411,6 +1383,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_lightPositions2", GLSL_VEC3, MAX_DEFERRED_LIGHTS },
 	{ "u_lightPositions", GLSL_VEC2, MAX_DEFERRED_LIGHTS },
 	{ "u_lightDistances", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
+	{ "u_lightHeightScales", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
 	{ "u_lightColors", GLSL_VEC3, MAX_DEFERRED_LIGHTS },
 	{ "u_vlightPositions2", GLSL_VEC3, MAX_VOLUMETRIC_LIGHTS },
 	{ "u_vlightPositions", GLSL_VEC2, MAX_VOLUMETRIC_LIGHTS },

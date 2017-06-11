@@ -644,7 +644,7 @@ float GetDepth(vec2 t)
 
 #if defined(USE_PARALLAXMAP)
 
-float RayIntersectDisplaceMap(vec2 dp)
+float FastDisplacementMap(vec2 dp)
 {
 	if (u_Local1.x == 0.0)
 		return 0.0;
@@ -723,9 +723,30 @@ void main()
 #endif //defined(USE_TRI_PLANAR)
 
 #if 0
-	if (length(m_vertPos.xyz) <= 0.0)
+	//gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
+	gl_FragColor = vec4(var_Tangent.xyz * 0.5 + 0.5, 1.0);
+
+	#if defined(USE_GLOW_BUFFER)
+		out_Glow = gl_FragColor;
+	#else
+		out_Glow = vec4(0.0);
+		vec2 normData = encode(vec3(1.0));
+		vec2 cubeData = vec2(0.0, 1.0);
+		out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+	#endif
+	return;
+#endif
+
+#if 0
+	if (u_ColorGen == CGEN_LIGHTING_DIFFUSE || u_AlphaGen == AGEN_LIGHTING_SPECULAR || u_AlphaGen == AGEN_PORTAL)
 	{
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		if (u_AlphaGen == AGEN_PORTAL)
+			gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		else if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
+			gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+		else if (u_ColorGen == CGEN_LIGHTING_DIFFUSE)
+			gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
 
 		#if defined(USE_GLOW_BUFFER)
 			out_Glow = gl_FragColor;
@@ -750,6 +771,9 @@ void main()
 
 
 
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+
+
 #if defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
 
 	vec3 viewDir = m_ViewDir;
@@ -767,52 +791,20 @@ void main()
 #if defined(__PARALLAX_ENABLED__)
 	if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0)
 	{
+		//vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
+		vec3 offsetDir = normalize(E * tangentToWorld);
 		vec2 tex_offset = vec2(1.0 / u_Dimensions);
-		vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
 		vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
 		#if defined(FAST_PARALLAX)
-
-			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords);
+			ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
 			texCoords += ParallaxOffset;
-
 		#else //!defined(FAST_PARALLAX)
-
-			// Steep Parallax
-			float Step = 0.01;
-			vec2 dt = ParallaxXY * Step;
-			float Height = 0.5;
-			float oldHeight = 0.5;
-			vec2 Coord = texCoords;
-			vec2 oldCoord = Coord;
-			float HeightMap = GetDepth( Coord );
-			float oldHeightMap = HeightMap;
-
-			while( Height >= 0.0 && HeightMap < Height )
-			{
-				oldHeightMap = HeightMap;
-				oldHeight = Height;
-				oldCoord = Coord;
-
-				Height -= Step;
-				Coord += dt;
-				HeightMap = GetDepth( Coord );
-			}
-
-			if( Height < 0.0 )
-			{
-				Coord = oldCoord;
-				Height = 0.0;
-			}
-
-			ParallaxOffset = texCoords - Coord;
-			texCoords = Coord;
-
+			ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
+			texCoords += ParallaxOffset;
 		#endif //defined(FAST_PARALLAX)
 	}
 	#endif //defined(__PARALLAX_ENABLED__)
-
-
 
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
@@ -832,6 +824,7 @@ void main()
 
 
 #if !defined(USE_GLOW_BUFFER)
+
 	vec4 norm;
 	vec3 N;
 
@@ -848,7 +841,10 @@ void main()
 	N.xy = norm.xy * 2.0 - 1.0;
 	N.xy *= 0.25;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
+	//N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
+	N = tangentToWorld * N;
+
+	//N = normalize(cross(normalize(m_Normal.xyz + (norm.xyz * 2.0 - 1.0)), E));
 
 #endif //!defined(USE_GLOW_BUFFER)
 
@@ -878,7 +874,7 @@ void main()
 		lightColor	= lightmapColor.rgb * lmBrightMult;
 
 		ambientColor = lightColor;
-		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
+		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
 		lightColor /= clamp(max(surfNL, 0.35/*0.25*/), 0.0, 1.0);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
