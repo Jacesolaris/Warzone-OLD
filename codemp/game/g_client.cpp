@@ -2537,6 +2537,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		G_SetSaber( ent, 1, Info_ValueForKey( userinfo, "saber2" ), qfalse );
 	}
 
+#if 0
 	// set max health
 	if ( level.gametype == GT_SIEGE && client->siegeClass != -1 ) {
 		siegeClass_t *scl = &bgSiegeClasses[client->siegeClass];
@@ -2548,10 +2549,17 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	}
 	else
 		health = Com_Clampi( 1, 100, atoi( Info_ValueForKey( userinfo, "handicap" ) ) );
+#else
+	health = 1000;
+#endif
 
 	client->pers.maxHealth = health;
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > maxHealth )
+#if 0
 		client->pers.maxHealth = 100;
+#else
+		client->pers.maxHealth = 1000;
+#endif
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
 	if ( level.gametype >= GT_TEAM )
@@ -3850,6 +3858,7 @@ void ClientSpawn(gentity_t *ent) {
 
 	client->airOutTime = level.time + 12000;
 
+#if 0
 	// set max health
 	if (/*level.gametype == GT_SIEGE &&*/ client->siegeClass != -1)
 	{
@@ -3865,9 +3874,16 @@ void ClientSpawn(gentity_t *ent) {
 	{
 		maxHealth = Com_Clampi( 1, 100, atoi( Info_ValueForKey( userinfo, "handicap" ) ) );
 	}
+#else
+	maxHealth = 1000;
+#endif
 	client->pers.maxHealth = maxHealth;//atoi( Info_ValueForKey( userinfo, "handicap" ) );
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > maxHealth ) {
+#if 0
 		client->pers.maxHealth = 100;
+#else
+		client->pers.maxHealth = 1000;
+#endif
 	}
 	// clear entity values
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;

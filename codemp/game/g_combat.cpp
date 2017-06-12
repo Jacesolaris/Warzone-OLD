@@ -4595,6 +4595,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	if (!targ)
 		return;
 
+	if (mod == MOD_SABER)
+	{// Quick hack to increase saber damage to match player/npc healths...
+		damage *= 25;
+	}
+
 	if (targ
 		&& targ->client
 		&& targ->s.eType == ET_NPC 

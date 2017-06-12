@@ -1,4 +1,4 @@
-﻿#define __AMBIENT_OCCLUSION__
+﻿//#define __AMBIENT_OCCLUSION__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -91,6 +91,7 @@ float calculateAO(in vec3 pos, in vec3 nor)
     return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
 #endif //__AMBIENT_OCCLUSION__
+
 
 //
 // Full lighting... Blinn phong and basic lighting as well...
@@ -294,17 +295,19 @@ void main(void)
 	//if (u_Local2.g >= 1.0)
 	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)
 	{
-		float ao = calculateAO(position.xyz / 524288.0, -N.xyz);
+		float ao = calculateAO((position.xyz / 524288.0) * 0.5 + 0.5, -N.xyz);
 
+		/*
 		ao = clamp(ao * 0.1 + 0.9, 0.0, 1.0);
 		float ao2 = clamp(ao + 0.95, 0.0, 1.0);
 		ao = (ao + ao2) / 2.0;
 		//ao *= ao;
 		ao = pow(ao, 4.0);
+		*/
 
-		//if (u_Local3.r > 0.0)
-		//	gl_FragColor.rgb = vec3(ao);
-		//else
+		if (u_Local3.r > 0.0)
+			gl_FragColor.rgb = vec3(ao);
+		else
 			gl_FragColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
