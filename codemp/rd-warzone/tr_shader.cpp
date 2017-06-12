@@ -5292,7 +5292,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->hasRealSteepMap2 = false;
 	}
 
-	diffuse->glslShaderGroup = tr.lightallShader;
+	//diffuse->glslShaderGroup = tr.lightallShader;
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -5740,14 +5740,14 @@ static int CollapseStagesToGLSL(void)
 
 #ifdef EXPERIMENTAL_MERGE_STUFF
 			// UQ1: Added, always use lightall...
-			pStage->glslShaderGroup = tr.lightallShader;
+			//pStage->glslShaderGroup = tr.lightallShader;
 #endif //EXPERIMENTAL_MERGE_STUFF
 
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen >= TCGEN_LIGHTMAP && pStage->bundle[TB_DIFFUSEMAP].tcGen <= TCGEN_LIGHTMAP3)
 			{
 				if (hasRealNormalMap) pStage->hasRealNormalMap = true;
 
-				pStage->glslShaderGroup = tr.lightallShader;
+				//pStage->glslShaderGroup = tr.lightallShader;
 
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
@@ -5778,11 +5778,11 @@ static int CollapseStagesToGLSL(void)
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE ||
 				pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 			{
-				if (pStage->glslShaderGroup != tr.lightallShader)
+				//if (pStage->glslShaderGroup != tr.lightallShader)
 				{
 					if (hasRealNormalMap) pStage->hasRealNormalMap = true;
 
-					pStage->glslShaderGroup = tr.lightallShader;
+					//pStage->glslShaderGroup = tr.lightallShader;
 				}
 
 				/*if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)
@@ -5832,10 +5832,10 @@ static int CollapseStagesToGLSL(void)
 			stage->hasRealSteepMap2 = true;
 		}
 
-		if (stage->glslShaderGroup != tr.lightallShader)
-		{
-
-		}
+		//if (stage->glslShaderGroup != tr.lightallShader)
+		//{
+//
+		//}
 
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}

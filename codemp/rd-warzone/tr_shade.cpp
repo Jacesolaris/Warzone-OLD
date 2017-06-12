@@ -2337,13 +2337,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useDeform = 1.0;
 			}
 
-			pStage->glslShaderGroup = tr.lightallShader;
+			//pStage->glslShaderGroup = tr.lightallShader;
 
 			if (useTesselation)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 
-				sp = &tr.lightallShader[index];
+				sp = &tr.lightallMergedShader;
 
 				backEnd.pc.c_lightallDraws++;
 			}
@@ -2533,8 +2533,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index = LIGHTDEF_COUNT - 1;
 			}
 			
-			pStage->glslShaderGroup = tr.lightallShader;
-			sp = &tr.lightallShader[index];
+			//pStage->glslShaderGroup = tr.lightallShader;
+			sp = &tr.lightallMergedShader;
 
 			backEnd.pc.c_lightallDraws++;
 
@@ -2610,11 +2610,24 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				isTextureClamped = 1.0;
 			}
 
+#if 0
+			uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+			uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
+			uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+			uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
+#endif
+
 			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
 
 			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
+
+			VectorSet4(vec, (index & LIGHTDEF_USE_LIGHTMAP) ? 1.0 : 0.0, (index & LIGHTDEF_USE_GLOW_BUFFER) ? 1.0 : 0.0, (index & LIGHTDEF_USE_CUBEMAP) ? 1.0 : 0.0, (index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
+
+			VectorSet4(vec, (index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, (index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
 
 		// UQ1: Used by both generic and lightall...
@@ -2973,7 +2986,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( pStage->glslShaderGroup == tr.lightallShader || sp == &tr.shadowPassShader )
+		else if ( sp == &tr.lightallMergedShader || sp == &tr.shadowPassShader )
 		{
 			int i;
 			vec4_t enableTextures;
@@ -3329,6 +3342,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					break;
 				}
 			}
+			else if (index & LIGHTDEF_USE_GLOW_BUFFER)
+			{
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachGlowTextures();
+				}
+			}
+			else if (index & LIGHTDEF_IS_DETAIL)
+			{
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachGenericTextures();
+				}
+			}
 
 			qboolean tesselation = qfalse;
 
@@ -3417,6 +3444,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 			{// Unattach dummy water output textures...
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachTextures();
+				}
+			}
+			else if (index & LIGHTDEF_USE_GLOW_BUFFER)
+			{
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachTextures();
+				}
+			}
+			else if (index & LIGHTDEF_IS_DETAIL)
+			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
 					GLSL_AttachTextures();

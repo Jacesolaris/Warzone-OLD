@@ -69,8 +69,10 @@ void R_PerformanceCounters( void ) {
 		ri->Printf( PRINT_ALL, "VBO draws: static %i dynamic %i (%.2fKB)\nMultidraws: %i merged %i\n",
 			backEnd.pc.c_staticVboDraws, backEnd.pc.c_dynamicVboDraws, backEnd.pc.c_dynamicVboTotalSize / (1024.0f),
 			backEnd.pc.c_multidraws, backEnd.pc.c_multidrawsMerged );
-		ri->Printf( PRINT_ALL, "GLSL binds: %i  draws: shadowPass %i lightAll %i fog %i\n",
-			backEnd.pc.c_glslShaderBinds, backEnd.pc.c_shadowPassDraws, backEnd.pc.c_lightallDraws, backEnd.pc.c_fogDraws);
+		ri->Printf( PRINT_ALL, "GLSL binds: %i  shadowPass %i lightAll %i\n",
+			backEnd.pc.c_glslShaderBinds, backEnd.pc.c_shadowPassBinds, backEnd.pc.c_lightallBinds);
+		ri->Printf(PRINT_ALL, "GLSL draws: %i  shadowPass %i lightAll %i\n",
+			backEnd.pc.c_shadowPassDraws + backEnd.pc.c_lightallDraws, backEnd.pc.c_shadowPassDraws, backEnd.pc.c_lightallDraws);
 	}
 
 	Com_Memset( &tr.pc, 0, sizeof( tr.pc ) );

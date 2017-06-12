@@ -1,12 +1,3 @@
-#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER)
-#define __PARALLAX_ENABLED__
-#endif
-
-#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER)
-#define __CUBEMAPS_ENABLED__
-#endif
-
-
 
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
@@ -40,9 +31,10 @@ uniform samplerCube			u_CubeMap;
 uniform sampler2D			u_OverlayMap;
 
 
-
-uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, USE_TEXTURECLAMP
+uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
+uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -53,6 +45,14 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
 #define USE_SKELETAL_ANIM	u_Settings1.g
 #define USE_FOG				u_Settings1.b
 #define USE_IS2D			u_Settings1.a
+
+#define USE_LIGHTMAP		u_Settings2.r
+#define USE_GLOW_BUFFER		u_Settings2.g
+#define USE_CUBEMAP			u_Settings2.b
+#define USE_TRIPLANAR		u_Settings2.a
+
+#define USE_REGIONS			u_Settings3.r
+#define USE_ISDETAIL		u_Settings3.g
 
 
 uniform vec2				u_Dimensions;
@@ -242,10 +242,8 @@ vec4 ConvertToNormals ( vec4 colorIn )
 // Used on everything...
 const float detailRepeatFine = 64.0;
 
-#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 const float detailRepeatTerrain1 = 2.5;
 const float detailRepeatTerrain2 = 7.5;
-#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
    
 void AddDetail(inout vec4 color, in vec2 tc)
 {
@@ -260,54 +258,53 @@ void AddDetail(inout vec4 color, in vec2 tc)
 
 	color.rgb = color.rgb * detail.rgb * 2.0;
 
-#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
-	// Add a much less fine detail over terrains to help hide texture repetition...
-	detail = texture(u_DetailMap, tc * detailRepeatTerrain1).rgb;
-	color.rgb = color.rgb * detail.rgb * 2.0;
+	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
+	{
+		// Add a much less fine detail over terrains to help hide texture repetition...
+		detail = texture(u_DetailMap, tc * detailRepeatTerrain1).rgb;
+		color.rgb = color.rgb * detail.rgb * 2.0;
 
-	// And a second, even less fine pass...
-	detail = texture(u_DetailMap, tc * detailRepeatTerrain2).rgb;
-	color.rgb = color.rgb * detail.rgb * 2.0;
-#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+		// And a second, even less fine pass...
+		detail = texture(u_DetailMap, tc * detailRepeatTerrain2).rgb;
+		color.rgb = color.rgb * detail.rgb * 2.0;
+	}
 }
 
-#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 vec4 GetControlMap( sampler2D tex)
 {
 	float scale = 1.0 / u_Local6.b; /* control scale */
 	vec4 control;
 	
-#if defined(USE_REGIONS)
-	// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
+	if (USE_REGIONS > 0.0)
+	{
+		// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
 #define SNOW_HEIGHT_STRENGTH 0.25
-	float maxHeightOverWater = u_Local8.b - u_Local6.a;
-	float currentheightOverWater = u_Local8.b - m_vertPos.z;
-	float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH/*u_Local9.r*/);
-	float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
-	vec4 xaxis = textureLod( tex, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
-	vec4 yaxis = textureLod( tex, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
-	vec4 zaxis = textureLod( tex, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
-	control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-#else //!defined(USE_REGIONS)
-	/*vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) * 0.5 + 0.5, 0.0);
-	vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) * 0.5 + 0.5, 0.0);
-	vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) * 0.5 + 0.5, 0.0);*/
+		float maxHeightOverWater = u_Local8.b - u_Local6.a;
+		float currentheightOverWater = u_Local8.b - m_vertPos.z;
+		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH/*u_Local9.r*/);
+		float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
+		vec4 xaxis = textureLod( tex, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+		vec4 yaxis = textureLod( tex, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+		vec4 zaxis = textureLod( tex, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+	}
+	else
+	{
+		/*vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) * 0.5 + 0.5, 0.0);
+		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) * 0.5 + 0.5, 0.0);
+		vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) * 0.5 + 0.5, 0.0);*/
 
-	/*vec4 xaxis = textureLod( tex, (m_vertPos.yze * scale), 0.0);
-	vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale), 0.0);
-	vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale), 0.0);*/
+		/*vec4 xaxis = textureLod( tex, (m_vertPos.yze * scale), 0.0);
+		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale), 0.0);
+		vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale), 0.0);*/
 
-	float offset = (u_Local6.b / 2.0) * scale;
-	vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) + offset, 0.0);
-	vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) + offset, 0.0);
-	vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) + offset, 0.0);
-	control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-#endif //defined(USE_REGIONS)
+		float offset = (u_Local6.b / 2.0) * scale;
+		vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) + offset, 0.0);
+		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) + offset, 0.0);
+		vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) + offset, 0.0);
+		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+	}
 
-	//control = clamp(pow(control, vec4(2.5)) * 10.0, 0.0, 1.0);
-	//control = clamp(pow(control, vec4(2.5)), 0.0, 1.0);
-	//control = control * 0.7 + 0.3;
-	//control *= 10.0;
 	control = clamp(control * 10.0, 0.0, 1.0);
 	
 	return control;
@@ -435,9 +432,7 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 
 	return splatColor;
 }
-#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
-#if defined(USE_REGIONS)
 vec4 GenerateTerrainMap(vec2 coord)
 {
 	if (u_Local8.a > 0.0)
@@ -453,9 +448,7 @@ vec4 GenerateTerrainMap(vec2 coord)
 	a1 = ConvertToNormals(tex).a;
 	return GetSplatMap(coord, vec2(0.0), 0.0, tex, a1);
 }
-#endif //defined(USE_REGIONS)
 
-#if defined(USE_TRI_PLANAR)
 vec3 vLocalSeed;
 
 // This function returns random number from zero to one
@@ -477,6 +470,16 @@ vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
 
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
+	if (USE_TRIPLANAR <= 0.0)
+	{
+		if (USE_REGIONS > 0.0)
+		{
+			return GenerateTerrainMap(texCoords + ParallaxOffset);
+		}
+
+		return texture(u_DiffuseMap, texCoords + ParallaxOffset);
+	}
+
 	if (u_Local8.a > 0.0)
 	{
 		vec4 control = GetControlMap(u_SplatControlMap);
@@ -543,6 +546,20 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 
 vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
+	if (USE_TRIPLANAR <= 0.0)
+	{
+		if (USE_REGIONS > 0.0)
+		{
+			return ConvertToNormals(GenerateTerrainMap(texCoords + ParallaxOffset));
+		}
+		else if (u_Local4.r <= 0.0)
+		{
+			return ConvertToNormals(texture(u_DiffuseMap, texCoords + ParallaxOffset));
+		}
+
+		return textureLod(u_NormalMap, texCoords, 0.0);
+	}
+
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
 		if (u_Local4.r <= 0.0)
@@ -589,32 +606,6 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 }
 
-#else //!defined(USE_TRI_PLANAR)
-
-vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
-{
-#if defined(USE_REGIONS)
-	return GenerateTerrainMap(texCoords + ParallaxOffset);
-#else
-	return texture(u_DiffuseMap, texCoords + ParallaxOffset);
-#endif
-}
-
-vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
-{
-#if defined(USE_REGIONS)
-	return ConvertToNormals(GenerateTerrainMap(texCoords + ParallaxOffset));
-#else
-	if (u_Local4.r <= 0.0)
-	{
-		return ConvertToNormals(texture(u_DiffuseMap, texCoords + ParallaxOffset));
-	}
-
-	return textureLod(u_NormalMap, texCoords, 0.0);
-#endif
-}
-#endif //!defined(USE_TRI_PLANAR)
-
 void DepthContrast ( inout float depth )
 {
 	const float contrast = 3.0;
@@ -641,8 +632,6 @@ float GetDepth(vec2 t)
 	DepthContrast(displacement); // Enhance the dark/lights...
 	return 1.0 - displacement;
 }
-
-#if defined(USE_PARALLAXMAP)
 
 float FastDisplacementMap(vec2 dp)
 {
@@ -678,7 +667,6 @@ float ReliefMapping(vec2 dp, vec2 ds)
 	}
 	return clamp(best_depth, 0.0, 1.0);
 }
-#endif //defined(USE_PARALLAXMAP)
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
@@ -713,99 +701,51 @@ void main()
 {
 	vec4 specular = vec4(0.0);
 	vec2 texCoords = m_TexCoords.xy;
-
-
-#if defined(USE_TRI_PLANAR)
-	vLocalSeed = m_vertPos.xyz;
-	float pixRandom = randZeroOne();
-#else //!defined(USE_TRI_PLANAR)
 	float pixRandom = 0.0; // Don't use it anyway...
-#endif //defined(USE_TRI_PLANAR)
 
-#if 0
-	//gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
-	gl_FragColor = vec4(var_Tangent.xyz * 0.5 + 0.5, 1.0);
-
-	#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-	#else
-		out_Glow = vec4(0.0);
-		vec2 normData = encode(vec3(1.0));
-		vec2 cubeData = vec2(0.0, 1.0);
-		out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-	#endif
-	return;
-#endif
-
-#if 0
-	if (u_ColorGen == CGEN_LIGHTING_DIFFUSE || u_AlphaGen == AGEN_LIGHTING_SPECULAR || u_AlphaGen == AGEN_PORTAL)
+	if (USE_TRIPLANAR > 0.0)
 	{
-		if (u_AlphaGen == AGEN_PORTAL)
-			gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-		else if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
-			gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-		else if (u_ColorGen == CGEN_LIGHTING_DIFFUSE)
-			gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-
-		#if defined(USE_GLOW_BUFFER)
-			out_Glow = gl_FragColor;
-		#else
-			out_Glow = vec4(0.0);
-			vec2 normData = encode(vec3(1.0));
-			vec2 cubeData = vec2(0.0, 1.0);
-			out_Normal = vec4( normData.x, normData.y, cubeData.x, cubeData.y );
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		#endif
-		return;
+		vLocalSeed = m_vertPos.xyz;
+		pixRandom = randZeroOne();
 	}
-#endif
 
-
-	#if !defined(USE_GLOW_BUFFER)
+	if (USE_GLOW_BUFFER <= 0.0)
+	{
 		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 		{// Sway...
 			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 		}
-	#endif //!defined(USE_GLOW_BUFFER)
-
+	}
 
 
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-
-
-#if defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
-
 	vec3 viewDir = m_ViewDir;
 	vec3 E = normalize(viewDir);
-	//mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, texCoords.xy);
-	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-
-#endif //defined(__PARALLAX_ENABLED__) || defined(__CUBEMAPS_ENABLED__)
-
 
 
 	vec2 ParallaxOffset = vec2(0.0);
 
 
-#if defined(__PARALLAX_ENABLED__)
-	if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0)
+#if defined(USE_PARALLAXMAP)
+	if (USE_GLOW_BUFFER <= 0.0)
 	{
-		//vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
-		vec3 offsetDir = normalize(E * tangentToWorld);
-		vec2 tex_offset = vec2(1.0 / u_Dimensions);
-		vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
+		if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0)
+		{
+			//vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
+			vec3 offsetDir = normalize(E * tangentToWorld);
+			vec2 tex_offset = vec2(1.0 / u_Dimensions);
+			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
-		#if defined(FAST_PARALLAX)
-			ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
-			texCoords += ParallaxOffset;
-		#else //!defined(FAST_PARALLAX)
-			ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
-			texCoords += ParallaxOffset;
-		#endif //defined(FAST_PARALLAX)
+			#if defined(FAST_PARALLAX)
+				ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
+				texCoords += ParallaxOffset;
+			#else //!defined(FAST_PARALLAX)
+				ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
+				texCoords += ParallaxOffset;
+			#endif //defined(FAST_PARALLAX)
+		}
 	}
-	#endif //defined(__PARALLAX_ENABLED__)
-
+#endif
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
 
@@ -823,30 +763,29 @@ void main()
 	float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
 
 
-#if !defined(USE_GLOW_BUFFER)
+	vec4 norm = vec4(0.0);
+	vec3 N = vec3(0.0);
 
-	vec4 norm;
-	vec3 N;
-
-	if (u_Local4.r <= 0.0)
+	if (USE_GLOW_BUFFER <= 0.0)
 	{
-		norm = ConvertToNormals(diffuse);
-	}
-	else
-	{
-		norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
-	}
+		if (u_Local4.r <= 0.0)
+		{
+			norm = ConvertToNormals(diffuse);
+		}
+		else
+		{
+			norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+		}
 
 	
-	N.xy = norm.xy * 2.0 - 1.0;
-	N.xy *= 0.25;
-	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	//N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
-	N = tangentToWorld * N;
+		N.xy = norm.xy * 2.0 - 1.0;
+		N.xy *= 0.25;
+		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		//N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
+		N = tangentToWorld * N;
 
-	//N = normalize(cross(normalize(m_Normal.xyz + (norm.xyz * 2.0 - 1.0)), E));
-
-#endif //!defined(USE_GLOW_BUFFER)
+		//N = normalize(cross(normalize(m_Normal.xyz + (norm.xyz * 2.0 - 1.0)), E));
+	}
 
 
 	AddDetail(diffuse, texCoords);
@@ -856,8 +795,8 @@ void main()
 	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
 
 
-	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
-
+	if (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0)
+	{
 		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
 
 		#if defined(RGBM_LIGHTMAP)
@@ -878,19 +817,17 @@ void main()
 		lightColor /= clamp(max(surfNL, 0.35/*0.25*/), 0.0, 1.0);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
+	}
 
-	#endif //defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
-
-#if defined(USE_GLOW_BUFFER)
+	if (USE_GLOW_BUFFER > 0.0)
 		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale));
-#else
+	else
 		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale));
-#endif
 
 
-	#if defined(__CUBEMAPS_ENABLED__)
-
+	if (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0)
+	{
 #define cubeStrength u_Local3.a
 #define cubeMaxDist u_Local3.b
 
@@ -904,13 +841,11 @@ void main()
 
 		if (u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && cubeFade > 0.0)
 		{
-			#if defined(USE_SPECULARMAP) && !defined(USE_GLOW_BUFFER)
-			if (u_Local1.g != 0.0)
+			if (USE_GLOW_BUFFER <= 0.0 && u_Local1.g != 0.0)
 			{// Real specMap...
 				specular = texture(u_SpecularMap, texCoords);
 			}
 			else
-			#endif //defined(USE_SPECULARMAP)
 			{// Fake it...
 				specular.rgb = gl_FragColor.rgb;
 #define specLower ( 64.0 / 255.0)
@@ -936,8 +871,7 @@ void main()
 			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
 			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w, 0.0, 1.0));
 		}
-
-	#endif //__CUBEMAPS_ENABLED__
+	}
 
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
@@ -947,20 +881,24 @@ void main()
 		discard;
 		return;
 	}*/
-	
 
-	#if defined(USE_GLOW_BUFFER)
+	if (USE_GLOW_BUFFER > 0.0)
+	{
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
 		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		gl_FragColor.rgb *= u_Local8.g;
 
 		out_Glow = gl_FragColor;
-	#else
-			out_Glow = vec4(0.0);
-		#if !defined(IS_DETAIL)
+	}
+	else
+	{
+		out_Glow = vec4(0.0);
+		
+		if (USE_ISDETAIL <= 0.0)
+		{
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, gl_FragColor.a/*norm.a*/ );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		#endif //!defined(IS_DETAIL)
-	#endif
+		}
+	}
 }

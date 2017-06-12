@@ -1367,6 +1367,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Dimensions", GLSL_VEC2, 1 },
 	{ "u_Settings0", GLSL_VEC4, 1 },
 	{ "u_Settings1", GLSL_VEC4, 1 },
+	{ "u_Settings2", GLSL_VEC4, 1 },
+	{ "u_Settings3", GLSL_VEC4, 1 },
 	{ "u_Local0", GLSL_VEC4, 1 },
 	{ "u_Local1", GLSL_VEC4, 1 },
 	{ "u_Local2", GLSL_VEC4, 1 },
@@ -2772,6 +2774,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 	}
 
+	/*
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
@@ -2864,8 +2867,18 @@ int GLSL_BeginLoadGPUShaders(void)
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
 		}
-	}
+	}*/
 
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+		extradefines[0] = '\0';
+
+		if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+		}
+	}
 
 	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
@@ -3817,7 +3830,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		numEtcShaders++;
 	}
 
-
+	/*
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
 		if (!GLSL_EndLoadGPUShader(&tr.lightallShader[i]))
@@ -3858,7 +3871,50 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 		numLightShaders++;
+	}*/
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.lightallMergedShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
 	}
+
+	GLSL_InitUniforms(&tr.lightallMergedShader);
+
+	qglUseProgram(tr.lightallMergedShader.program);
+	GLSL_InitUniforms(&tr.lightallMergedShader);
+
+	qglUseProgram(tr.lightallMergedShader.program);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	//		GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP4, TB_SPLATMAP4);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
+	//		GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.lightallMergedShader);
+#endif
+
+	numLightShaders++;
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader))
@@ -6042,8 +6098,10 @@ void GLSL_ShutdownGPUShaders(void)
 	for (i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);
 
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
-		GLSL_DeleteGPUShader(&tr.lightallShader[i]);
+	//for (i = 0; i < LIGHTDEF_COUNT; i++)
+	//	GLSL_DeleteGPUShader(&tr.lightallShader[i]);
+
+	GLSL_DeleteGPUShader(&tr.lightallMergedShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowPassShader);
 
@@ -6159,6 +6217,11 @@ void GLSL_BindProgram(shaderProgram_t * program)
 		qglUseProgram(program->program);
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;
+
+		if (program == &tr.lightallMergedShader)
+			backEnd.pc.c_lightallBinds++;
+		else if (program == &tr.shadowPassShader)
+			backEnd.pc.c_shadowPassBinds++;
 	}
 }
 

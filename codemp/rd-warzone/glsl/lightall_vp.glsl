@@ -1,20 +1,5 @@
 attribute vec2 attr_TexCoord0;
 
-#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-out vec3 Normal_CS_in;
-out vec2 TexCoord_CS_in;
-out vec4 WorldPos_CS_in;
-out vec3 ViewDir_CS_in;
-out vec4 Tangent_CS_in;
-out vec4 Bitangent_CS_in;
-out vec4 Color_CS_in;
-out vec4 PrimaryLightDir_CS_in;
-out vec2 TexCoord2_CS_in;
-out vec3 Blending_CS_in;
-out float Slope_CS_in;
-out float usingSteepMap_CS_in;
-#endif
-
 attribute vec2 attr_TexCoord1;
 attribute vec4 attr_Color;
 
@@ -29,7 +14,9 @@ attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
+uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -39,6 +26,15 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
 #define USE_FOG				u_Settings1.b
+#define USE_IS2D			u_Settings1.a
+
+#define USE_LIGHTMAP		u_Settings2.r
+#define USE_GLOW_BUFFER		u_Settings2.g
+#define USE_CUBEMAP			u_Settings2.b
+#define USE_TRIPLANAR		u_Settings2.a
+
+#define USE_REGIONS			u_Settings3.r
+#define USE_ISDETAIL		u_Settings3.g
 
 
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
@@ -56,9 +52,7 @@ uniform float	u_Time;
 
 uniform vec2	u_textureScale;
 
-#if defined(USE_DELUXEMAP)
 uniform vec4   u_EnableTextures; // x = normal, y = deluxe, z = specular, w = cube
-#endif
 
 uniform vec3   u_ViewOrigin;
 
@@ -99,6 +93,21 @@ uniform mat4   u_BoneMatrices[20];
 
 uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
+
+#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
+out vec3 Normal_CS_in;
+out vec2 TexCoord_CS_in;
+out vec4 WorldPos_CS_in;
+out vec3 ViewDir_CS_in;
+out vec4 Tangent_CS_in;
+out vec4 Bitangent_CS_in;
+out vec4 Color_CS_in;
+out vec4 PrimaryLightDir_CS_in;
+out vec2 TexCoord2_CS_in;
+out vec3 Blending_CS_in;
+out float Slope_CS_in;
+out float usingSteepMap_CS_in;
+#endif
 
 varying vec2   var_TexCoords;
 varying vec2   var_TexCoords2;
@@ -266,7 +275,6 @@ float CalcFog(vec3 position)
 }
 #endif
 
-#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 void GetBlending(vec3 normal)
 {
 	if (u_Local5.a > 0.0)
@@ -278,9 +286,7 @@ void GetBlending(vec3 normal)
 		var_Blending = blend_weights;
 	}
 }
-#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
 
-#if defined(USE_TRI_PLANAR)
 vec3 vectoangles(in vec3 value1) {
 	float	forward;
 	float	yaw, pitch;
@@ -322,7 +328,6 @@ vec3 vectoangles(in vec3 value1) {
 
 	return angles;
 }
-#endif //defined(USE_TRI_PLANAR)
 
 vec3 TangentFromNormal ( vec3 normal )
 {
@@ -434,11 +439,14 @@ void main()
 	var_TexCoords = texCoords;
 
 
-#if defined(USE_LIGHTMAP)
-	var_TexCoords2 = attr_TexCoord1.st;
-#else
-	var_TexCoords2 = vec2(0.0);
-#endif
+	if (USE_LIGHTMAP > 0.0)
+	{
+		var_TexCoords2 = attr_TexCoord1.st;
+	}
+	else
+	{
+		var_TexCoords2 = vec2(0.0);
+	}
 
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
 	//var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - position;
@@ -463,53 +471,50 @@ void main()
 	var_Slope = 0.0;
 
 
-#if defined(USE_TRI_PLANAR)
+	if (USE_TRIPLANAR > 0.0)
+	{
+		//
+		// Steep Maps...
+		//
 
-	//
-	// Steep Maps...
-	//
+		if (u_Local5.a > 0.0)
+		{// Steep maps...
+			float pitch = vectoangles(normalize(normal.xyz)).r;
 
-	if (u_Local5.a > 0.0)
-	{// Steep maps...
-		float pitch = vectoangles(normalize(normal.xyz)).r;
+			if (pitch > 180)
+				pitch -= 360;
 
-		if (pitch > 180)
-			pitch -= 360;
+			if (pitch < -180)
+				pitch += 360;
 
-		if (pitch < -180)
-			pitch += 360;
+			pitch += 90.0f;
 
-		pitch += 90.0f;
-
-		if (pitch > 46.0 || pitch < -46.0)
-		{
-			var_usingSteepMap = 1.0;
-			var_Slope = 1.0;
-		}
-		else if (pitch > 26.0 || pitch < -26.0)
-		{// do not add to foliage map on this slope, but still do original texture
-			var_usingSteepMap = 1.0;
-			var_Slope = 0.0;
-		}
-		else
-		{
-			var_usingSteepMap = 0.0;
-			var_Slope = 0.0;
+			if (pitch > 46.0 || pitch < -46.0)
+			{
+				var_usingSteepMap = 1.0;
+				var_Slope = 1.0;
+			}
+			else if (pitch > 26.0 || pitch < -26.0)
+			{// do not add to foliage map on this slope, but still do original texture
+				var_usingSteepMap = 1.0;
+				var_Slope = 0.0;
+			}
+			else
+			{
+				var_usingSteepMap = 0.0;
+				var_Slope = 0.0;
+			}
 		}
 	}
 
-#endif //defined(USE_TRI_PLANAR)
-
 	var_Blending = vec3(0.0);
 
-#if defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
-
-	GetBlending(normalize(attr_Normal.xyz * 2.0 - 1.0));
-
-#endif //defined(USE_TRI_PLANAR) || defined(USE_REGIONS)
+	if (USE_REGIONS > 0.0 || USE_TRIPLANAR > 0.0)
+	{
+		GetBlending(normalize(attr_Normal.xyz * 2.0 - 1.0));
+	}
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-
 	WorldPos_CS_in = vec4(preMMPos, 1.0);
 	TexCoord_CS_in = var_TexCoords.xy;
 	Normal_CS_in = var_Normal.xyz;
@@ -523,11 +528,9 @@ void main()
 	Slope_CS_in = var_Slope;
 	usingSteepMap_CS_in = var_usingSteepMap;
 	gl_Position = vec4(preMMPos, 1.0);
-
-#else
+#endif
 
 	//var_vertPos = preMMPos.xyz;
 	var_vertPos = position.xyz;
 
-#endif //defined(USE_TESSELLATION)
 }

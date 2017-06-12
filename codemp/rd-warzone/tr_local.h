@@ -1501,6 +1501,8 @@ typedef enum
 	UNIFORM_DIMENSIONS,
 	UNIFORM_SETTINGS0,
 	UNIFORM_SETTINGS1,
+	UNIFORM_SETTINGS2,
+	UNIFORM_SETTINGS3,
 	UNIFORM_LOCAL0,
 	UNIFORM_LOCAL1,
 	UNIFORM_LOCAL2,
@@ -2377,6 +2379,8 @@ typedef struct {
 	int		c_flareRenders;
 
 	int     c_glslShaderBinds;
+	int     c_shadowPassBinds;
+	int     c_lightallBinds;
 	int     c_shadowPassDraws;
 	int     c_lightallDraws;
 	int     c_fogDraws;
@@ -2574,7 +2578,8 @@ typedef struct trGlobals_s {
 #endif //__INSTANCED_MODELS__
 	shaderProgram_t occlusionShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
-	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
+	//shaderProgram_t lightallShader[LIGHTDEF_COUNT];
+	shaderProgram_t lightallMergedShader;
 	shaderProgram_t shadowPassShader;
 	shaderProgram_t sunPassShader;
 	shaderProgram_t shadowmapShader;
