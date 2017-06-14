@@ -950,7 +950,6 @@ void DrawSkyDome ( shader_t *skyShader )
 	color[3] = 1.0f;
 
 	GLSL_BindProgram(&tr.uniqueskyShader);
-	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
 
 	matrix_t trans, model, mvp, invMvp, normalMatrix;
 
@@ -972,7 +971,11 @@ void DrawSkyDome ( shader_t *skyShader )
 
 	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+	//GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+	vec3_t out;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
 
 	vec4_t l0;
 	VectorSet4(l0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
@@ -981,6 +984,9 @@ void DrawSkyDome ( shader_t *skyShader )
 	vec4_t l1;
 	VectorSet4(l1, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
 	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LOCAL1, l1);
+
+#ifdef __OLD_SKYDOME__
+	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
 
 	if (skyShader->sky.outerbox[0])
 	{
@@ -1020,6 +1026,69 @@ void DrawSkyDome ( shader_t *skyShader )
 
 		FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
 	}
+#else //!__OLD_SKYDOME__
+
+	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+
+/*
+uniform sampler2D			u_DiffuseMap;
+uniform sampler2D			u_SteepMap;
+uniform sampler2D			u_SteepMap2;
+uniform sampler2D			u_SplatMap1;
+uniform sampler2D			u_SplatMap2;
+uniform sampler2D			u_SplatMap3;
+
+#define tint	u_DiffuseMap			//the color of the sky on the half-sphere where the sun is. (time x height)
+#define tint2	u_SteepMap				//the color of the sky on the opposite half-sphere. (time x height)
+#define sun		u_SteepMap2				//sun texture (radius x time)
+#define moon	u_SplatMap1				//moon texture (circular)
+#define clouds1 u_SplatMap2				//light clouds texture (spherical UV projection)
+#define clouds2 u_SplatMap3				//heavy clouds texture (spherical UV projection)
+*/
+	image_t *tintImage = R_FindImageFile("textures/skydomes/default_tint", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+	image_t *tint2Image = R_FindImageFile("textures/skydomes/default_tint2", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+	image_t *sunImage = R_FindImageFile("textures/skydomes/default_sun", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_GLOW);
+	image_t *moonImage = R_FindImageFile("textures/skydomes/default_moon", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_GLOW);
+	image_t *clouds1Image = R_FindImageFile("textures/skydomes/default_clouds1", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+	image_t *clouds2Image = R_FindImageFile("textures/skydomes/default_clouds2", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+
+	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(tintImage, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+	GL_BindToTMU(tint2Image, TB_STEEPMAP);
+	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+	GL_BindToTMU(sunImage, TB_STEEPMAP2);
+	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GL_BindToTMU(moonImage, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GL_BindToTMU(clouds1Image, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	GL_BindToTMU(clouds2Image, TB_SPLATMAP3);
+
+	vec2_t screensize;
+	//screensize[0] = backEnd.viewParms.viewportWidth;
+	//screensize[1] = backEnd.viewParms.viewportHeight;
+	screensize[0] = tintImage->width;
+	screensize[1] = tintImage->height;
+
+	GLSL_SetUniformVec2(&tr.uniqueskyShader, UNIFORM_DIMENSIONS, screensize);
+
+	vec4i_t		imageBox;
+	imageBox[0] = 0;
+	imageBox[1] = 0;
+	imageBox[2] = tr.whiteImage->width;
+	imageBox[3] = tr.whiteImage->height;
+
+	vec4i_t		screenBox;
+	screenBox[0] = backEnd.viewParms.viewportX;
+	screenBox[1] = backEnd.viewParms.viewportY;
+	screenBox[2] = backEnd.viewParms.viewportWidth;
+	screenBox[3] = backEnd.viewParms.viewportHeight;
+
+	FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+#endif //__OLD_SKYDOME__
 }
 
 /*
@@ -1066,8 +1135,32 @@ void RB_StageIteratorSky( void ) {
 
 	if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
 	{// UQ1: Set a default image...
+		matrix_t oldmodelview;
+
 		GL_State( 0 );
+
+		matrix_t trans, product;
+		Matrix16Copy(glState.modelview, oldmodelview);
+		Matrix16Translation(backEnd.viewParms.ori.origin, trans);
+		Matrix16Multiply(glState.modelview, trans, product);
+		GL_SetModelviewMatrix(product);
+
 		DrawSkyDome(tess.shader);
+
+		GL_SetModelviewMatrix(oldmodelview);
+
+		// generate the vertexes for all the clouds, which will be drawn
+		// by the generic shader routine
+		R_BuildCloudData(&tess);
+		RB_StageIteratorGeneric();
+
+		// back to normal depth range
+		qglDepthRange(0.0, 1.0);
+
+		// note that sky was drawn so we will draw a sun later
+		backEnd.skyRenderedThisView = qtrue;
+
+		return;
 	}
 	else
 	{// draw the outer skybox
@@ -1078,16 +1171,11 @@ void RB_StageIteratorSky( void ) {
 		GL_State( 0 );
 		//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
 
-		{
-			// FIXME: this could be a lot cleaner
-			matrix_t trans, product;
-
-			Matrix16Copy( glState.modelview, oldmodelview );
-			Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-			Matrix16Multiply( glState.modelview, trans, product );
-			GL_SetModelviewMatrix( product );
-
-		}
+		matrix_t trans, product;
+		Matrix16Copy( glState.modelview, oldmodelview );
+		Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+		Matrix16Multiply( glState.modelview, trans, product );
+		GL_SetModelviewMatrix( product );
 
 		DrawSkyBox( tess.shader );
 

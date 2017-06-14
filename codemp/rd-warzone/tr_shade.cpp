@@ -1988,6 +1988,7 @@ extern image_t *skyImage;
 extern vec3_t		SUN_COLOR_MAIN;
 extern vec3_t		SUN_COLOR_SECONDARY;
 extern vec3_t		SUN_COLOR_TERTIARY;
+extern vec3_t		MAP_AMBIENT_COLOR;
 
 float waveTime = 0.5;
 float waveFreq = 0.1;
@@ -2304,6 +2305,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
+			/*if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}*/
+
 			if (!(index & LIGHTDEF_IS_DETAIL) && !pStage->glow)
 			{
 				didNonDetail = qtrue;
@@ -2476,7 +2482,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				useFog = 1.0;
 			}
-
+			
 			if (stage > 0 && didNonDetail)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
@@ -2520,6 +2526,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
+			
+			/*if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}*/
 
 			if (!(index & LIGHTDEF_IS_DETAIL))
 			{
@@ -2603,12 +2614,50 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
 			vec4_t vec;
-			float isTextureClamped = 0.0;
 
-			if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE))
+			if (r_debugMapAmbientR->value + r_debugMapAmbientG->value + r_debugMapAmbientB->value > 0.0)
+				VectorSet4(vec, r_debugMapAmbientR->value, r_debugMapAmbientG->value, r_debugMapAmbientB->value, 0.0);
+			else
+				VectorSet4(vec, MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MAP_AMBIENT, vec);
+
+			vec2_t atest = { 0 };
+
+			if (stateBits & GLS_ATEST_BITS)
 			{
-				isTextureClamped = 1.0;
+				useTC = 1.0;
+
+				switch (stateBits & GLS_ATEST_BITS)
+				{
+				case GLS_ATEST_GT_0:
+					atest[0] = ATEST_GT;
+					atest[1] = 0.0;
+					break;
+				case GLS_ATEST_LT_128:
+					atest[0] = ATEST_LT;
+					atest[1] = 0.5;
+					break;
+				case GLS_ATEST_GE_128:
+					atest[0] = ATEST_GE;
+					atest[1] = 0.5;
+					break;
+				case GLS_ATEST_GE_192:
+					atest[0] = ATEST_GE;
+					atest[1] = 0.75;
+					break;
+				default:
+					atest[0] = ATEST_GT;
+					atest[1] = 0.0;
+					break;
+				}
 			}
+			else
+			{
+				atest[0] = ATEST_GT;
+				atest[1] = 0.0;
+			}
+
+			GLSL_SetUniformVec2(sp, UNIFORM_ALPHATEST, atest);
 
 #if 0
 			uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
@@ -2617,16 +2666,30 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 #endif
 
-			VectorSet4(vec, useTC, useDeform, useRGBA, isTextureClamped);
+			VectorSet4(vec, 
+				useTC, 
+				useDeform, 
+				useRGBA, 
+				(pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
 
-			VectorSet4(vec, useVertexAnim, useSkeletalAnim, useFog, (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE)) ? 1.0 : 0.0);
+			VectorSet4(vec, 
+				useVertexAnim, 
+				useSkeletalAnim, 
+				useFog, 
+				(backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 
-			VectorSet4(vec, (index & LIGHTDEF_USE_LIGHTMAP) ? 1.0 : 0.0, (index & LIGHTDEF_USE_GLOW_BUFFER) ? 1.0 : 0.0, (index & LIGHTDEF_USE_CUBEMAP) ? 1.0 : 0.0, (index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
+			VectorSet4(vec, 
+				(index & LIGHTDEF_USE_LIGHTMAP) ? 1.0 : 0.0, 
+				(index & LIGHTDEF_USE_GLOW_BUFFER) ? 1.0 : 0.0, 
+				(!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && cubeMapNum && ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 1) ? 1.0 : 0.0,
+				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
 
-			VectorSet4(vec, (index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, (index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 0.0, 0.0);
+			VectorSet4(vec, 
+				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
+				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 0.0, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
 
@@ -2714,7 +2777,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}
-		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && input->cubemapIndex && r_cubeMapping->integer >= 1)
+		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && cubeMapNum && ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 1)
 		{
 			//ri->Printf(PRINT_ALL, "%s stage %i is using cubemap (correct lightall: %s)\n", input->shader->name, stage, (index & LIGHTDEF_USE_CUBEMAP) ? "true" : "false");
 			GL_BindToTMU(tr.cubemaps[cubeMapNum], TB_CUBEMAP);

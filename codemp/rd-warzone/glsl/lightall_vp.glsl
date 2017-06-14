@@ -230,7 +230,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 {
 	vec4 color = u_VertColor * attr_Color + u_BaseColor;
 	
-	if (USE_RGBA > 0.0)
+	//if (USE_RGBA > 0.0)
 	{
 		if (u_ColorGen == CGEN_LIGHTING_DIFFUSE)
 		{
@@ -414,6 +414,7 @@ void main()
 	//vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 	vec3 bitangent = normalize(cross(normal, tangent));
 
+	var_nonTCtexCoords = attr_TexCoord0.st;
 
 	if (USE_TC == 1.0)
 	{
@@ -464,8 +465,6 @@ void main()
 	var_Normal = vec4(normal, var_ViewDir.x);
 	var_Tangent = vec4(tangent, var_ViewDir.y);
 	var_Bitangent = vec4(bitangent, var_ViewDir.z);
-
-	var_nonTCtexCoords = attr_TexCoord0.st;
 
 	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;

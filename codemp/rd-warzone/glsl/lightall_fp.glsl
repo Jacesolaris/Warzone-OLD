@@ -30,6 +30,7 @@ uniform samplerCube			u_CubeMap;
 
 uniform sampler2D			u_OverlayMap;
 
+uniform vec4				u_MapAmbient; // a basic light/color addition across the whole map...
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
@@ -91,6 +92,13 @@ uniform vec2				u_textureScale;
 
 uniform int					u_ColorGen;
 uniform int					u_AlphaGen;
+
+uniform vec2				u_AlphaTestValues;
+
+#define ATEST_NONE	0
+#define ATEST_LT	1
+#define ATEST_GT	2
+#define ATEST_GE	3
 
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
@@ -749,9 +757,21 @@ void main()
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
 
-
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
+
+	if (u_AlphaTestValues.r > 0.0)
+	{
+		if (u_AlphaTestValues.r == ATEST_LT)
+			if (gl_FragColor.a >= u_AlphaTestValues.g)
+				discard;
+		if (u_AlphaTestValues.r == ATEST_GT)
+			if (gl_FragColor.a <= u_AlphaTestValues.g)
+				discard;
+		if (u_AlphaTestValues.r == ATEST_GE)
+			if (gl_FragColor.a < u_AlphaTestValues.g)
+				discard;
+	}
 
 	/*if (gl_FragColor.a <= 0.0)
 	{// Not adding anything to the output? Discard without doing all the extra crap...
@@ -814,17 +834,21 @@ void main()
 
 		ambientColor = lightColor;
 		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
-		lightColor /= clamp(max(surfNL, 0.35/*0.25*/), 0.0, 1.0);
+		lightColor /= clamp(max(surfNL, /*0.35*/0.25), 0.0, 1.0);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
 	}
 
 
-	if (USE_GLOW_BUFFER > 0.0)
-		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale));
+	if (USE_GLOW_BUFFER > 0.0 || USE_IS2D > 0.0)
+		gl_FragColor.rgb = vec3(mix(diffuse.rgb, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale));
 	else
 		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale));
 
+
+	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0)
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb + u_MapAmbient.rgb, 0.0, 1.0);
+	
 
 	if (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0)
 	{
@@ -841,17 +865,18 @@ void main()
 
 		if (u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && cubeFade > 0.0)
 		{
-			if (USE_GLOW_BUFFER <= 0.0 && u_Local1.g != 0.0)
-			{// Real specMap...
-				specular = texture(u_SpecularMap, texCoords);
-			}
-			else
+			//if (u_Local1.g > 0.0)
+			//{// Real specMap...
+			//	specular = texture(u_SpecularMap, texCoords);
+			//}
+			//else
 			{// Fake it...
 				specular.rgb = gl_FragColor.rgb;
-#define specLower ( 64.0 / 255.0)
+#define specLower ( 48.0 / 255.0)
 #define specUpper (255.0 / 192.0)
 				specular.rgb = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
 				specular.a = clamp(((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6, 0.0, 1.0);
+				//specular.a = clamp((max(max(specular.r, specular.g), specular.b)), 0.0, 1.0);
 			}
 
 			specular.rgb *= u_SpecularScale.rgb;
@@ -861,15 +886,15 @@ void main()
 			float NE = clamp(dot(normalize(m_Normal.xyz)/*N*/, E), 0.0, 1.0);
 			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
-			vec3 R = reflect(E, N);
+			vec3 R = reflect(E, normalize(m_Normal.xyz)/*N*/);
 			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * (u_ViewOrigin.xyz - m_vertPos.xyz);//viewDir;
-			vec3 parallax = (u_CubeMapInfo.xyz / curDist) + u_CubeMapInfo.w * vec3(-viewDir.xy, viewDir.z);
-			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
-			//vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;// * 0.25;
-			vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
+			//vec3 parallax = (u_CubeMapInfo.xyz / curDist) + u_CubeMapInfo.w * vec3(-viewDir.xy, viewDir.z);
+			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
+			//vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
 
 			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w, 0.0, 1.0));
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0));
 		}
 	}
 

@@ -444,6 +444,9 @@ extern cvar_t	*r_truehdr;
 extern cvar_t  *r_magicdetail;
 extern cvar_t  *r_magicdetailStrength;
 extern cvar_t  *r_dof;
+extern cvar_t  *r_debugMapAmbientR;
+extern cvar_t  *r_debugMapAmbientG;
+extern cvar_t  *r_debugMapAmbientB;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_testvalue2;
@@ -1345,6 +1348,14 @@ enum
 
 enum
 {
+	ATEST_NONE,
+	ATEST_LT,
+	ATEST_GT,
+	ATEST_GE
+};
+
+enum
+{
 	LIGHTDEF_USE_LIGHTMAP = 0x0001,
 	LIGHTDEF_USE_GLOW_BUFFER = 0x0002,
 	LIGHTDEF_USE_CUBEMAP = 0x0004,
@@ -1498,7 +1509,10 @@ typedef enum
 	UNIFORM_MAXS,
 	UNIFORM_MAPINFO,
 
+	UNIFORM_ALPHATEST,
+
 	UNIFORM_DIMENSIONS,
+	UNIFORM_MAP_AMBIENT,
 	UNIFORM_SETTINGS0,
 	UNIFORM_SETTINGS1,
 	UNIFORM_SETTINGS2,
@@ -3024,6 +3038,9 @@ extern cvar_t  *r_fOff2X;
 extern cvar_t  *r_fOff2Y;
 extern cvar_t  *r_fOff3X;
 extern cvar_t  *r_fOff3Y;
+extern cvar_t  *r_debugMapAmbientR;
+extern cvar_t  *r_debugMapAmbientG;
+extern cvar_t  *r_debugMapAmbientB;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_testvalue2;

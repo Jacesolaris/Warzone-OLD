@@ -1177,6 +1177,7 @@ vec3_t		SUN_COLOR_MAIN = { 0 };
 vec3_t		SUN_COLOR_SECONDARY = { 0 };
 vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
+vec3_t		MAP_AMBIENT_COLOR = { 0 };
 qboolean	SHADOWS_ENABLED = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
 float		SHADOW_MAXBRIGHT = 1.0;
@@ -1198,92 +1199,110 @@ qboolean	WATER_ENABLED = qtrue;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
 
-void MAPPING_LoadMapInfo ( void )
+void MAPPING_LoadMapInfo(void)
 {
-	//ri->Printf(PRINT_ALL, "Searching for mapInfo: dir: %s.\n", va("maps/%s.mapInfo", currentMapName));
+	char mapname[256] = { 0 };
+	
+	// because JKA uses mp/ dir, why??? so pointless...
+	if (IniExists(va("maps/%s.mapInfo", currentMapName)))
+		sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+	else if (IniExists(va("maps/mp/%s.mapInfo", currentMapName)))
+		sprintf(mapname, "maps/mp/%s.mapInfo", currentMapName);
+	else
+		sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Using mapInfo file: %s.\n", mapname);
 
 	//
 	// Sun + Day/Night...
 	//
-	int dayNightEnableValue = atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_ENABLED", "0"));
-	DAY_NIGHT_CYCLE_SPEED = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
+	int dayNightEnableValue = atoi(IniRead(mapname, "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_ENABLED", "0"));
+	DAY_NIGHT_CYCLE_SPEED = atof(IniRead(mapname, "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
 
 	DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
 
 	if (!DAY_NIGHT_CYCLE_ENABLED)
 	{// Also check under SUN section...
-		dayNightEnableValue = atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "DAY_NIGHT_CYCLE_ENABLED", "0"));
-		DAY_NIGHT_CYCLE_SPEED = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
+		dayNightEnableValue = atoi(IniRead(mapname, "SUN", "DAY_NIGHT_CYCLE_ENABLED", "0"));
+		DAY_NIGHT_CYCLE_SPEED = atof(IniRead(mapname, "SUN", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
 		DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
 	}
 
-	SUN_PHONG_SCALE = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_PHONG_SCALE", "1.0"));
+	SUN_PHONG_SCALE = atof(IniRead(mapname, "SUN", "SUN_PHONG_SCALE", "1.0"));
 
-	SUN_COLOR_MAIN[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_R", "1.0"));
-	SUN_COLOR_MAIN[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_G", "0.7"));
-	SUN_COLOR_MAIN[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_MAIN_B", "0.0"));
-	SUN_COLOR_SECONDARY[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_SECONDARY_R", "0.3"));
-	SUN_COLOR_SECONDARY[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_SECONDARY_G", "0.2"));
-	SUN_COLOR_SECONDARY[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_SECONDARY_B", "0.0"));
-	SUN_COLOR_TERTIARY[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_TERTIARY_R", "0.2"));
-	SUN_COLOR_TERTIARY[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_TERTIARY_G", "0.1"));
-	SUN_COLOR_TERTIARY[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_TERTIARY_B", "1.0"));
-	SUN_COLOR_AMBIENT[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_AMBIENT_R", "1.0"));
-	SUN_COLOR_AMBIENT[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_AMBIENT_G", "0.7"));
-	SUN_COLOR_AMBIENT[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SUN", "SUN_COLOR_AMBIENT_B", "0.0"));
+	SUN_COLOR_MAIN[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_R", "1.0"));
+	SUN_COLOR_MAIN[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_G", "0.7"));
+	SUN_COLOR_MAIN[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_B", "0.0"));
+	SUN_COLOR_SECONDARY[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_SECONDARY_R", "0.3"));
+	SUN_COLOR_SECONDARY[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_SECONDARY_G", "0.2"));
+	SUN_COLOR_SECONDARY[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_SECONDARY_B", "0.0"));
+	SUN_COLOR_TERTIARY[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_R", "0.2"));
+	SUN_COLOR_TERTIARY[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_G", "0.1"));
+	SUN_COLOR_TERTIARY[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_B", "1.0"));
+	SUN_COLOR_AMBIENT[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_R", "1.0"));
+	SUN_COLOR_AMBIENT[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_G", "0.7"));
+	SUN_COLOR_AMBIENT[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_B", "0.0"));
+
+	//
+	// Palette...
+	//
+	MAP_AMBIENT_COLOR[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_R", "0.0"));
+	MAP_AMBIENT_COLOR[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_G", "0.0"));
+	MAP_AMBIENT_COLOR[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_B", "0.0"));
 
 	//
 	// Fog...
 	//
-	FOG_POST_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "DISABLE_FOG", "0")) > 0) ? qfalse : qtrue;
-	FOG_STANDARD_ENABLE = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_STANDARD_ENABLE", "1")) > 0) ? qtrue : qfalse;
-	FOG_COLOR[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_R", "0.5"));
-	FOG_COLOR[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_G", "0.6"));
-	FOG_COLOR[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_B", "0.7"));
-	FOG_COLOR_SUN[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_R", "1.0"));
-	FOG_COLOR_SUN[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_G", "0.9"));
-	FOG_COLOR_SUN[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_COLOR_SUN_B", "0.7"));
-	FOG_DENSITY = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_DENSITY", "0.5"));
-	FOG_ACCUMULATION_MODIFIER = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_ACCUMULATION_MODIFIER", "3.0"));
-	FOG_RANGE_MULTIPLIER = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_RANGE_MULTIPLIER", "1.0"));
+	FOG_POST_ENABLED = (atoi(IniRead(mapname, "FOG", "DISABLE_FOG", "0")) > 0) ? qfalse : qtrue;
+	FOG_STANDARD_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_STANDARD_ENABLE", "1")) > 0) ? qtrue : qfalse;
+	FOG_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_R", "0.5"));
+	FOG_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_G", "0.6"));
+	FOG_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_B", "0.7"));
+	FOG_COLOR_SUN[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_R", "1.0"));
+	FOG_COLOR_SUN[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_G", "0.9"));
+	FOG_COLOR_SUN[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_B", "0.7"));
+	FOG_DENSITY = atof(IniRead(mapname, "FOG", "FOG_DENSITY", "0.5"));
+	FOG_ACCUMULATION_MODIFIER = atof(IniRead(mapname, "FOG", "FOG_ACCUMULATION_MODIFIER", "3.0"));
+	FOG_RANGE_MULTIPLIER = atof(IniRead(mapname, "FOG", "FOG_RANGE_MULTIPLIER", "1.0"));
 
-	FOG_VOLUMETRIC_ENABLE = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_ENABLE", "0")) > 0) ? qtrue : qfalse;
-	FOG_VOLUMETRIC_DENSITY = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_DENSITY", "0.01"));
-	FOG_VOLUMETRIC_STRENGTH = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_STRENGTH", "1.0"));
-	FOG_VOLUMETRIC_VELOCITY = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_VELOCITY", "0.1"));
-	FOG_VOLUMETRIC_CLOUDINESS = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_CLOUDINESS", "1.0"));
-	FOG_VOLUMETRIC_WIND = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_WIND", "1.0"));
-	FOG_VOLUMETRIC_COLOR[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_COLOR_R", "1.0"));
-	FOG_VOLUMETRIC_COLOR[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_COLOR_G", "1.0"));
-	FOG_VOLUMETRIC_COLOR[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "FOG", "FOG_VOLUMETRIC_COLOR_B", "1.0"));
+	FOG_VOLUMETRIC_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ENABLE", "0")) > 0) ? qtrue : qfalse;
+	FOG_VOLUMETRIC_DENSITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_DENSITY", "0.01"));
+	FOG_VOLUMETRIC_STRENGTH = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_STRENGTH", "1.0"));
+	FOG_VOLUMETRIC_VELOCITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_VELOCITY", "0.1"));
+	FOG_VOLUMETRIC_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_CLOUDINESS", "1.0"));
+	FOG_VOLUMETRIC_WIND = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_WIND", "1.0"));
+	FOG_VOLUMETRIC_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_R", "1.0"));
+	FOG_VOLUMETRIC_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_G", "1.0"));
+	FOG_VOLUMETRIC_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_B", "1.0"));
 
 	//
 	// Shadows...
 	//
-	SHADOWS_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOWS_ENABLED", "0")) > 0) ? qtrue : qfalse;
-	SHADOW_MINBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MINBRIGHT", "0.7"));
-	SHADOW_MAXBRIGHT = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "SHADOWS", "SHADOW_MAXBRIGHT", "1.0"));
+	SHADOWS_ENABLED = (atoi(IniRead(mapname, "SHADOWS", "SHADOWS_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	SHADOW_MINBRIGHT = atof(IniRead(mapname, "SHADOWS", "SHADOW_MINBRIGHT", "0.7"));
+	SHADOW_MAXBRIGHT = atof(IniRead(mapname, "SHADOWS", "SHADOW_MAXBRIGHT", "1.0"));
 
 	//
 	// Water...
 	//
-	WATER_ENABLED = (atoi(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_ENABLED", "1")) > 0) ? qtrue : qfalse;
-	WATER_COLOR_SHALLOW[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
-	WATER_COLOR_SHALLOW[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
-	WATER_COLOR_SHALLOW[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
-	WATER_COLOR_DEEP[0] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
-	WATER_COLOR_DEEP[1] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
-	WATER_COLOR_DEEP[2] = atof(IniRead(va("maps/%s.mapInfo", currentMapName), "WATER", "WATER_COLOR_DEEP_B", "0.18"));
+	WATER_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
+	WATER_COLOR_SHALLOW[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
+	WATER_COLOR_SHALLOW[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
+	WATER_COLOR_DEEP[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
+	WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
+	WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
-		if (StringContainsWord(currentMapName, "baldemnic")
-			|| StringContainsWord(currentMapName, "mandalore")
-			|| StringContainsWord(currentMapName, "endor")
-			|| StringContainsWord(currentMapName, "ilum")
-			|| StringContainsWord(currentMapName, "taanab")
-			|| StringContainsWord(currentMapName, "tatooine")
-			|| StringContainsWord(currentMapName, "scarif"))
+		if (StringContainsWord(mapname, "baldemnic")
+			|| StringContainsWord(mapname, "mandalore")
+			|| StringContainsWord(mapname, "endor")
+			|| StringContainsWord(mapname, "ilum")
+			|| StringContainsWord(mapname, "taanab")
+			|| StringContainsWord(mapname, "tatooine")
+			|| StringContainsWord(mapname, "scarif")
+			&& !StringContainsWord(mapname, "tatooine_nights"))
 		{
 			DAY_NIGHT_CYCLE_ENABLED = qtrue;
 		}
@@ -1295,19 +1314,21 @@ void MAPPING_LoadMapInfo ( void )
 	}
 
 	if (!SHADOWS_ENABLED
-		&& (StringContainsWord(currentMapName, "baldemnic")
-			|| StringContainsWord(currentMapName, "mandalore")
-			|| StringContainsWord(currentMapName, "endor")
-			|| StringContainsWord(currentMapName, "ilum")
-			|| StringContainsWord(currentMapName, "taanab")
-			|| StringContainsWord(currentMapName, "tatooine")
-			|| StringContainsWord(currentMapName, "scarif")
-			|| StringContainsWord(currentMapName, "cyt")))
+		&& (StringContainsWord(mapname, "baldemnic")
+			|| StringContainsWord(mapname, "mandalore")
+			|| StringContainsWord(mapname, "endor")
+			|| StringContainsWord(mapname, "ilum")
+			|| StringContainsWord(mapname, "taanab")
+			|| StringContainsWord(mapname, "tatooine")
+			|| StringContainsWord(mapname, "scarif")
+			|| StringContainsWord(mapname, "cyt"))
+		&& !StringContainsWord(mapname, "tatooine_nights"))
 	{
 		SHADOWS_ENABLED = qtrue;
 	}
 
-	if (StringContainsWord(currentMapName, "tatooine")) 
+	if (StringContainsWord(mapname, "tatooine")
+		&& !StringContainsWord(mapname, "tatooine_nights"))
 	{
 		FOG_POST_ENABLED = qfalse;
 	}
@@ -1315,6 +1336,7 @@ void MAPPING_LoadMapInfo ( void )
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");
 
@@ -1342,7 +1364,17 @@ qboolean MAPPING_LoadMapClimateInfo(void)
 {
 	const char		*climateName = NULL;
 
-	climateName = IniRead(va("foliage/%s.climateInfo", currentMapName), "CLIMATE", "CLIMATE_TYPE", "");
+	char mapname[256] = { 0 };
+
+	// because JKA uses mp/ dir, why??? so pointless...
+	if (IniExists(va("foliage/%s.climateInfo", currentMapName)))
+		sprintf(mapname, "foliage/%s.climateInfo", currentMapName);
+	else if (IniExists(va("foliage/mp/%s.climateInfo", currentMapName)))
+		sprintf(mapname, "foliage/mp/%s.climateInfo", currentMapName);
+	else
+		sprintf(mapname, "foliage/%s.climateInfo", currentMapName);
+
+	climateName = IniRead(mapname, "CLIMATE", "CLIMATE_TYPE", "");
 
 	memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
 	strncpy(CURRENT_CLIMATE_OPTION, climateName, strlen(climateName));

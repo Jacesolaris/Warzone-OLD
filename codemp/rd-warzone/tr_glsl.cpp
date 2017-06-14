@@ -1364,7 +1364,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Maxs", GLSL_VEC4, 1 },
 	{ "u_MapInfo", GLSL_VEC4, 1 },
 
+	{ "u_AlphaTestValues", GLSL_VEC2, 1 },
+
 	{ "u_Dimensions", GLSL_VEC2, 1 },
+	{ "u_MapAmbient", GLSL_VEC4, 1 },
 	{ "u_Settings0", GLSL_VEC4, 1 },
 	{ "u_Settings1", GLSL_VEC4, 1 },
 	{ "u_Settings2", GLSL_VEC4, 1 },
@@ -2873,6 +2876,25 @@ int GLSL_BeginLoadGPUShaders(void)
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
+
+		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_deluxeMapping->integer)
+			strcat(extradefines, "#define USE_DELUXEMAP\n");
+
+		if (r_parallaxMapping->integer && !r_cartoon->integer) // Parallax without normal maps...
+		{
+			strcat(extradefines, "#define USE_PARALLAXMAP\n");
+
+			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
+				strcat(extradefines, "#define FAST_PARALLAX\n");
+		}
 
 		if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{

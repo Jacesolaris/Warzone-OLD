@@ -370,6 +370,27 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 // C++ Interface Layer Functions - For simple usage from C++ code...
 // ==============================================================================================================
 
+bool IniExists(char *file_name)
+{
+	fileHandle_t fp = NULL;
+
+	int fpLen = FS_FOpenFileByMode(file_name, &fp, FS_READ);
+
+	if (!fp)
+	{
+		return false;
+	}
+
+	if (!fpLen)
+	{
+		FS_FCloseFile(fp);
+		return false;
+	}
+
+	FS_FCloseFile(fp);
+	return true;
+}
+
 const char *IniReadCPP(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 {
 	if (!aDefault || !*aDefault)
@@ -378,7 +399,7 @@ const char *IniReadCPP(char *aFilespec, char *aSection, char *aKey, char *aDefau
 	if (!aKey || !aKey[0])
 		return "";
 
-	char	szBuffer[524288/*65535*/] = { 0 };					// Max ini file size is 65535 under 95 -- UQ1: Fuck windows 95!
+	char	szBuffer[524288] = { 0 };					// Max ini file size is 65535 under 95 -- UQ1: Fuck windows 95!
 
 	if (!get_private_profile_string(aSection, aKey, aDefault, szBuffer, sizeof(szBuffer), aFilespec))
 	{
