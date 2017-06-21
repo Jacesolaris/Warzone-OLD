@@ -61,7 +61,7 @@ qboolean ShouldCull ( vec3_t org, qboolean check_angles )
 
 void AddRefEntityToScene ( refEntity_t *ent )
 {
-	if (!ent->ignoreCull && ShouldCull(ent->origin, qtrue)) return;
+	//if (!ent->ignoreCull && ShouldCull(ent->origin, qtrue)) return;
 
 	trap->R_AddRefEntityToScene( ent );
 }

@@ -22,118 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include "tr_occlusion.h"
 
-int NUM_WORLD_FOV_CULLS = 0;
-int NUM_WORLDMERGED_FOV_CULLS = 0;
-
 extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
 extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
-
-qboolean R_CULL_InFOV(vec3_t spot, vec3_t from)
-{
-	//if (tr.viewParms.flags & VPF_SHADOWPASS) return qtrue; // so object still can generate shadows...
-
-	vec3_t	deltaVector, angles, deltaAngles;
-	vec3_t	fromAnglesCopy;
-	vec3_t	fromAngles;
-	//int hFOV = tr.refdef.fov_x + 5.0;
-	//int vFOV = tr.refdef.fov_y + 5.0;
-	int hFOV = 100;//backEnd.refdef.fov_x + 5.0;//100;
-	int vFOV = 140;//backEnd.refdef.fov_y + 5.0;//100;
-
-	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
-		TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
-	else
-		TR_AxisToAngles(backEnd.refdef.viewaxis/*tr.refdef.viewaxis*/, fromAngles);
-
-	VectorSubtract(spot, from, deltaVector);
-	vectoangles(deltaVector, angles);
-	VectorCopy(fromAngles, fromAnglesCopy);
-
-	deltaAngles[PITCH] = AngleDelta(fromAnglesCopy[PITCH], angles[PITCH]);
-	deltaAngles[YAW] = AngleDelta(fromAnglesCopy[YAW], angles[YAW]);
-
-	if (fabs(deltaAngles[PITCH]) <= vFOV && fabs(deltaAngles[YAW]) <= hFOV)
-	{
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
-qboolean R_Box_In_FOV(vec3_t mins, vec3_t maxs)
-{
-	vec3_t edge, edge2;
-
-	VectorSet(edge, maxs[0], mins[1], maxs[2]);
-	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
-
-	if (!R_CULL_InFOV(mins, tr.refdef.vieworg)
-		&& !R_CULL_InFOV(maxs, tr.refdef.vieworg)
-		&& !R_CULL_InFOV(edge, tr.refdef.vieworg)
-		&& !R_CULL_InFOV(edge2, tr.refdef.vieworg))
-		return qfalse;
-
-	return qtrue;
-}
-
-static qboolean	R_FovCullSurface(msurface_t *surf)
-{
-	if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo /*&& backEnd.depthFill*/)
-	{
-#if 1
-		vec3_t bounds[2];
-
-		bounds[0][0] = surf->cullinfo.bounds[0][0];
-		bounds[0][1] = surf->cullinfo.bounds[1][1];
-		bounds[0][2] = surf->cullinfo.bounds[0][2];
-
-		bounds[1][0] = surf->cullinfo.bounds[1][0];
-		bounds[1][1] = surf->cullinfo.bounds[0][1];
-		bounds[1][2] = surf->cullinfo.bounds[1][2];
-
-		if (Distance(surf->cullinfo.bounds[0], tr.refdef.vieworg) < 256
-			|| Distance(surf->cullinfo.bounds[1], tr.refdef.vieworg) < 256
-			|| Distance(bounds[0], tr.refdef.vieworg) < 256
-			|| Distance(bounds[1], tr.refdef.vieworg) < 256)
-		{// Don't cull close stuff, ever...
-			return qfalse;
-		}
-
-		/*if (!R_CULL_InFOV(surf->cullinfo.bounds[0], tr.refdef.vieworg)
-			&& !R_CULL_InFOV(surf->cullinfo.bounds[1], tr.refdef.vieworg)
-			&& !R_CULL_InFOV(bounds[0], tr.refdef.vieworg)
-			&& !R_CULL_InFOV(bounds[1], tr.refdef.vieworg))
-			{// No corner of this surface is on screen...
-			NUM_WORLD_FOV_CULLS++;
-			return qtrue;
-			}*/
-
-		if (!R_CULL_InFOV(surf->cullinfo.bounds[0], backEnd.refdef.vieworg)
-			&& !R_CULL_InFOV(surf->cullinfo.bounds[1], backEnd.refdef.vieworg)
-			&& !R_CULL_InFOV(bounds[0], backEnd.refdef.vieworg)
-			&& !R_CULL_InFOV(bounds[1], backEnd.refdef.vieworg))
-		{
-			NUM_WORLD_FOV_CULLS++;
-			return qtrue;
-		}
-
-		/*if (!R_inPVS( tr.refdef.vieworg, surf->cullinfo.bounds[0], tr.refdef.areamask )
-			&& !R_inPVS( tr.refdef.vieworg, surf->cullinfo.bounds[1], tr.refdef.areamask )
-			&& !R_inPVS( tr.refdef.vieworg, bounds[0], tr.refdef.areamask )
-			&& !R_inPVS( tr.refdef.vieworg, bounds[1], tr.refdef.areamask ))
-			{
-			// Not in PVS? Cull the bitch!
-			NUM_WORLD_FOV_CULLS++;
-			return qtrue;
-			}*/
-#else
-		if (!R_Box_In_FOV(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]))
-			return qtrue;
-#endif
-	}
-
-	return qfalse;
-}
 
 /*
 ================
@@ -143,113 +33,7 @@ Tries to cull surfaces before they are lighted or
 added to the sorting list.
 ================
 */
-static qboolean	R_CullSurface(msurface_t *surf) {
-#if 0
-	if ( r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
-		return qfalse;
-	}
-
-	if ( *surf->data == SF_GRID && r_nocurves->integer ) {
-		return qtrue;
-	}
-
-	if ( *surf->data != SF_FACE && *surf->data != SF_TRIANGLES && *surf->data != SF_POLY && *surf->data != SF_VBO_MESH && *surf->data != SF_GRID )
-	{
-		return qtrue;
-	}
-
-	// plane cull
-	if ( *surf->data == SF_FACE && r_facePlaneCull->integer )
-	{
-		float d = DotProduct( tr.ori.viewOrigin, surf->cullinfo.plane.normal ) - surf->cullinfo.plane.dist;
-
-		// shadowmaps draw back surfaces
-		if ( tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW) )
-		{
-			if (surf->shader->cullType == CT_FRONT_SIDED)
-			{
-				surf->shader->cullType = CT_BACK_SIDED;
-			}
-			else
-			{
-				surf->shader->cullType = CT_FRONT_SIDED;
-			}
-		}
-
-		// do proper cull for orthographic projection
-		if (tr.viewParms.flags & VPF_ORTHOGRAPHIC) {
-			d = DotProduct(tr.viewParms.ori.axis[0], surf->cullinfo.plane.normal);
-			if ( surf->shader->cullType == CT_FRONT_SIDED ) {
-				if (d > 0)
-					return qtrue;
-			} else {
-				if (d < 0)
-					return qtrue;
-			}
-			return qfalse;
-		}
-
-		// don't cull exactly on the plane, because there are levels of rounding
-		// through the BSP, ICD, and hardware that may cause pixel gaps if an
-		// epsilon isn't allowed here
-		if ( surf->shader->cullType == CT_FRONT_SIDED )
-		{
-			if ( d < -8.0f )
-			{
-				return qtrue;
-			}
-		}
-		else if ( surf->shader->cullType == CT_BACK_SIDED )
-		{
-			if ( d > 8.0f )
-			{
-				return qtrue;
-			}
-		}
-		else if (surf->shader->cullType == CT_TWO_SIDED)
-		{
-			return qfalse;
-		}
-		else
-		{
-			return qfalse;
-		}
-	}
-
-	if (surf->cullinfo.type & CULLINFO_SPHERE)
-	{
-		int 	sphereCull;
-
-		if ( tr.currentEntityNum != REFENTITYNUM_WORLD ) {
-			sphereCull = R_CullLocalPointAndRadius( surf->cullinfo.localOrigin, surf->cullinfo.radius );
-		} else {
-			sphereCull = R_CullPointAndRadius( surf->cullinfo.localOrigin, surf->cullinfo.radius );
-		}
-
-		if ( sphereCull == CULL_OUT )
-		{
-			return qtrue;
-		}
-	}
-
-	if (surf->cullinfo.type & CULLINFO_BOX)
-	{
-		int boxCull;
-
-		if ( tr.currentEntityNum != REFENTITYNUM_WORLD ) {
-			boxCull = R_CullLocalBox( surf->cullinfo.bounds );
-		} else {
-			boxCull = R_CullBox( surf->cullinfo.bounds );
-		}
-
-		if ( boxCull == CULL_OUT )
-		{
-			return qtrue;
-		}
-	}
-
-	return qfalse;
-#else
+static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 	if (r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
 		return qfalse;
 	}
@@ -260,6 +44,11 @@ static qboolean	R_CullSurface(msurface_t *surf) {
 
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
+		if (tr.currentModel && tr.currentModel->type == MOD_BRUSH)
+		{// UQ1: Hack!!! Disabled... These have cull issues...
+			return qfalse;
+		}
+
 		// Only true for SF_FACE, so treat like its own function
 		float			d;
 		cullType_t ct;
@@ -314,7 +103,7 @@ static qboolean	R_CullSurface(msurface_t *surf) {
 
 		// don't cull exactly on the plane, because there are levels of rounding
 		// through the BSP, ICD, and hardware that may cause pixel gaps if an
-		// epsilon isn't allowed here
+		// epsilon isn't allowed here 
 		if (ct == CT_FRONT_SIDED) {
 			if (d < surf->cullinfo.plane.dist - 8) {
 				return qtrue;
@@ -333,7 +122,7 @@ static qboolean	R_CullSurface(msurface_t *surf) {
 	{
 		int 	sphereCull;
 
-		if (tr.currentEntityNum != REFENTITYNUM_WORLD) {
+		if (entityNum != REFENTITYNUM_WORLD) {
 			sphereCull = R_CullLocalPointAndRadius(surf->cullinfo.localOrigin, surf->cullinfo.radius);
 		}
 		else {
@@ -350,7 +139,7 @@ static qboolean	R_CullSurface(msurface_t *surf) {
 	{
 		int boxCull;
 
-		if (tr.currentEntityNum != REFENTITYNUM_WORLD) {
+		if (entityNum != REFENTITYNUM_WORLD) {
 			boxCull = R_CullLocalBox(surf->cullinfo.bounds);
 		}
 		else {
@@ -364,7 +153,6 @@ static qboolean	R_CullSurface(msurface_t *surf) {
 	}
 
 	return qfalse;
-#endif
 }
 
 /*
@@ -548,12 +336,12 @@ static int R_PshadowSurface(msurface_t *surf, int pshadowBits) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface(msurface_t *surf, int dlightBits, int pshadowBits, qboolean dontCache) {
+static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, int pshadowBits, qboolean dontCache) {
 	// FIXME: bmodel fog?
 	int cubemapIndex = 0;
 
 	// try to cull before dlighting or adding
-	if (R_CullSurface(surf) || R_FovCullSurface(surf)) {
+	if (R_CullSurface(surf, entityNum)) {
 		return;
 	}
 
@@ -572,39 +360,14 @@ static void R_AddWorldSurface(msurface_t *surf, int dlightBits, int pshadowBits,
 #endif
 	if (glState.currentFBO == tr.renderCubeFbo)
 		cubemapIndex = 0;
-	else if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)
+	else if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
 		cubemapIndex = 0;
 	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex - 1]) < r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = surf->cubemapIndex;
 	else
 		cubemapIndex = 0;
 
-#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
-#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-	{
-		R_AddDrawSurf(surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
-	}
-#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-	else
-	{
-		if (dontCache)
-		{
-			R_AddDrawSurf(surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
-		}
-		else
-		{
-			int scene = tr.viewParms.isPortal ? 1 : 0;
-
-			if (tr.world->numVisibleSurfaces == MAX_DRAWSURFS)
-			{
-				ri->Printf(PRINT_ALL, "R_AddWorldSurface(): MAX_DRAWSURFS hit\n");
-				return;
-			}
-			tr.world->visibleSurfaces[tr.world->numVisibleSurfaces++] = surf;
-		}
-	}
-#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
+	R_AddDrawSurf(surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
 }
 
 /*
@@ -644,7 +407,7 @@ void R_AddBrushModelSurfaces(trRefEntity_t *ent) {
 		if (tr.world->surfacesViewCount[surf] != tr.viewCount)
 		{
 			tr.world->surfacesViewCount[surf] = tr.viewCount;
-			R_AddWorldSurface(tr.world->surfaces + surf, tr.currentEntity->needDlights, 0, qtrue);
+			R_AddWorldSurface(tr.world->surfaces + surf, tr.currentEntityNum, tr.currentEntity->needDlights, 0, qtrue);
 		}
 	}
 }
@@ -711,6 +474,11 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 		// if the node wasn't marked as potentially visible, exit
 		// pvs is skipped for depth shadows
 		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
+			return;
+		}
+
+		if (r_occlusion->integer && node->occluded && !(tr.viewParms.flags & VPF_DEPTHSHADOW))
+		{
 			return;
 		}
 
@@ -871,19 +639,6 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 		if (node->maxs[2] > tr.viewParms.visBounds[1][2]) {
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
-
-#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-		if (r_occlusion->integer)
-		{// Occlusion culling...
-			if (node->nummarksurfaces > 0)
-			{// No point adding if its got no actual surfaces in it...
-				int scene = tr.viewParms.isPortal ? 1 : 0;
-				tr.world->visibleLeafs[tr.world->numVisibleLeafs++] = node;
-				//node->occluded[scene] = qfalse;
-			}
-			return;
-		}
-#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
 
 		// add merged and unmerged surfaces
 		if (tr.world->viewSurfaces && !r_nocurves->integer)
@@ -1458,8 +1213,6 @@ void R_AddWorldSurfaces(void) {
 		return;
 	}
 
-	NUM_WORLD_FOV_CULLS = 0;
-	NUM_WORLDMERGED_FOV_CULLS = 0;
 	/*
 	#ifdef __RENDERER_FOLIAGE__
 	FOLIAGE_NUM_SURFACES = 0;
@@ -1475,7 +1228,7 @@ void R_AddWorldSurfaces(void) {
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW))
 		R_MarkLeaves();
 
-	if (!r_occlusion->integer || !backEnd.depthFill)
+	if (!backEnd.depthFill)
 	{
 		// clear out the visible min/max
 		ClearBounds(tr.viewParms.visBounds[0], tr.viewParms.visBounds[1]);
@@ -1484,7 +1237,7 @@ void R_AddWorldSurfaces(void) {
 	// perform frustum culling and flag all the potentially visible surfaces
 	tr.refdef.num_dlights = min(tr.refdef.num_dlights, MAX_DLIGHTS);
 #ifdef __PSHADOWS__
-	tr.refdef.num_pshadows = min (tr.refdef.num_pshadows, MAX_DLIGHTS) ;
+	tr.refdef.num_pshadows = min(tr.refdef.num_pshadows, MAX_DLIGHTS);
 #endif
 
 	planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
@@ -1500,7 +1253,7 @@ void R_AddWorldSurfaces(void) {
 	{
 		//dlightBits = ( 1 << tr.refdef.num_dlights ) - 1;
 #ifdef __PSHADOWS__
-		pshadowBits = ( 1 << tr.refdef.num_pshadows ) - 1;
+		pshadowBits = (1 << tr.refdef.num_pshadows) - 1;
 #endif
 	}
 	else
@@ -1511,106 +1264,29 @@ void R_AddWorldSurfaces(void) {
 #endif
 	}
 
+	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill)
+	{
+		if (r_occlusion->integer == 1)
+		{
+			RB_CheckOcclusions();
+		}
+		else if (r_occlusion->integer == 2)
+		{
+			qglFlush();
+			RB_CheckOcclusions();
+		}
+		else if (r_occlusion->integer == 3)
+		{
+			qglFinish();
+			RB_CheckOcclusions();
+		}
+	}
+
 #ifdef __PSHADOWS__
 	R_RecursiveWorldNode(tr.world->nodes, planeBits, 0, pshadowBits);
 #else //!__PSHADOWS__
 	R_RecursiveWorldNode(tr.world->nodes, planeBits, 0, 0);
 #endif //__PSHADOWS__
-
-#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-	if (r_occlusion->integer && glState.currentFBO != tr.renderCubeFbo)
-	{
-#if defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION2__)
-		Occlusion_FinishThread();
-#endif //defined(__SOFTWARE_OCCLUSION__) && defined(__THREADED_OCCLUSION2__)
-
-		int i;
-		int occludedCount = 0;
-
-		tr.world->numVisibleSurfaces = 0;
-
-		for (i = 0; i < tr.world->numVisibleLeafs; i++)
-		{
-			mnode_t *leaf = tr.world->visibleLeafs[i];
-			int c;
-
-			if (!backEnd.depthFill && !(tr.viewParms.flags & VPF_DEPTHSHADOW) && leaf->occluded)
-			{
-				occludedCount++;
-				continue;
-			}
-
-			// add the individual surfaces
-			c = leaf->nummarksurfaces;
-			while (c--) {
-				// the surface may have already been added if it
-				// spans multiple leafs
-				int *mark = (tr.world->marksurfaces + leaf->firstmarksurface + c);
-				msurface_t *surf = tr.world->surfaces + *mark;
-				R_AddWorldSurface(surf, 0, 0, /*r_cacheVisibleSurfaces->integer ? qfalse :*/ qtrue);
-			}
-		}
-
-		if (r_occlusionDebug->integer == 4)
-			ri->Printf(PRINT_ALL, "OCCLUSION DEBUG: time %i. occludedCount was %i. totalCount %i.\n", backEnd.refdef.time, occludedCount, tr.world->numVisibleLeafs);
-	}
-	else
-	{
-		// now add all the potentially visible surfaces
-		// also mask invisible dlights for next frame
-		{
-			int i;
-
-			//tr.refdef.dlightMask = 0;
-
-			for (i = 0; i < tr.world->numWorldSurfaces; i++)
-			{
-				if (tr.world->surfacesViewCount[i] != tr.viewCount)
-					continue;
-
-#ifdef __PSHADOWS__
-				R_AddWorldSurface(tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i], qtrue);
-#else //!__PSHADOWS__
-				R_AddWorldSurface(tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/, qtrue);
-#endif //__PSHADOWS__
-				//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
-
-#ifdef __RENDERER_FOLIAGE__
-				R_AddFoliage(tr.world->surfaces + i);
-#endif //__RENDERER_FOLIAGE__
-			}
-
-			for (i = 0; i < tr.world->numMergedSurfaces; i++)
-			{
-				if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
-					continue;
-
-#ifdef __PSHADOWS__
-				R_AddWorldSurface(tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, tr.world->mergedSurfacesPshadowBits[i], qtrue);
-#else //!__PSHADOWS__
-				R_AddWorldSurface(tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/, qtrue);
-#endif //__PSHADOWS__
-				//tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
-
-#ifdef __RENDERER_FOLIAGE__
-				R_AddFoliage(tr.world->mergedSurfaces + i);
-#endif //__RENDERER_FOLIAGE__
-			}
-
-			/*
-			#ifdef __RENDERER_FOLIAGE__
-			ri->Printf(PRINT_WARNING, "%i foliage surfaces added.\n", FOLIAGE_NUM_SURFACES);
-			#endif //__RENDERER_FOLIAGE__
-			*/
-
-			//tr.refdef.dlightMask = ~tr.refdef.dlightMask;
-
-			if (r_fovCull->integer >= 2)
-				ri->Printf(PRINT_WARNING, "There are %i world and %i merged surfaces. Culled %i. %i World and %i Merged.\n", tr.world->numWorldSurfaces, tr.world->numMergedSurfaces, NUM_WORLD_FOV_CULLS + NUM_WORLDMERGED_FOV_CULLS, NUM_WORLD_FOV_CULLS, NUM_WORLDMERGED_FOV_CULLS);
-		}
-	}
-
-#else //!(defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__))
 
 	// now add all the potentially visible surfaces
 	// also mask invisible dlights for next frame
@@ -1625,9 +1301,9 @@ void R_AddWorldSurfaces(void) {
 				continue;
 
 #ifdef __PSHADOWS__
-			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i], qtrue );
+			R_AddWorldSurface( tr.world->surfaces + i, tr.currentEntityNum, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i], qtrue );
 #else //!__PSHADOWS__
-			R_AddWorldSurface(tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/, qtrue);
+			R_AddWorldSurface(tr.world->surfaces + i, tr.currentEntityNum, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/, qtrue);
 #endif //__PSHADOWS__
 			//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 
@@ -1642,9 +1318,9 @@ void R_AddWorldSurfaces(void) {
 				continue;
 
 #ifdef __PSHADOWS__
-			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, tr.world->mergedSurfacesPshadowBits[i], qtrue );
+			R_AddWorldSurface( tr.world->mergedSurfaces + i, tr.currentEntityNum, 0/*tr.world->mergedSurfacesDlightBits[i]*/, tr.world->mergedSurfacesPshadowBits[i], qtrue );
 #else //!__PSHADOWS__
-			R_AddWorldSurface(tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/, qtrue);
+			R_AddWorldSurface(tr.world->mergedSurfaces + i, tr.currentEntityNum, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/, qtrue);
 #endif //__PSHADOWS__
 			//tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 
@@ -1660,10 +1336,6 @@ void R_AddWorldSurfaces(void) {
 		*/
 
 		//tr.refdef.dlightMask = ~tr.refdef.dlightMask;
-
-		if (r_fovCull->integer >= 2)
-			ri->Printf(PRINT_WARNING, "There are %i world and %i merged surfaces. Culled %i. %i World and %i Merged.\n", tr.world->numWorldSurfaces, tr.world->numMergedSurfaces, NUM_WORLD_FOV_CULLS + NUM_WORLDMERGED_FOV_CULLS, NUM_WORLD_FOV_CULLS, NUM_WORLDMERGED_FOV_CULLS);
 	}
-#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
 
 }

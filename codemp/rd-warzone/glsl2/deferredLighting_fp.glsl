@@ -122,12 +122,6 @@ void main(void)
 		return;
 	}
 
-	/*if (position.a == 0.0 && position.xyz == vec3(0.0))
-	{// Unknown... Skip...
-		//gl_FragColor = vec4(vec3(0.0, 1.0, 0.0), 1.0);
-		return;
-	}*/
-
 #if 0 // Debugging stuff
 	/*if (u_Local3.g >= 2.0)
 	{
@@ -164,21 +158,12 @@ void main(void)
 #if defined(USE_SHADOWMAP)
 	if (u_Local2.g > 0.0)
 	{
-		float shadowValue = 0.0;
+		float shadowValue = textureLod(u_ShadowMap, texCoords, 0.0).r;
+		shadowValue = pow(shadowValue, 1.5/*u_Local3.r*/);
 
-#ifdef HIGH_QUALITY_SHADOWS
-		for (float y = -3.5 ; y <=3.5 ; y+=1.0)
-			for (float x = -3.5 ; x <=3.5 ; x+=1.0)
-				shadowValue += textureLod(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0), 0.0).r;
-
-		shadowValue /= 64.0;
-#else //!HIGH_QUALITY_SHADOWS
-		for (float y = -1.75 ; y <=1.75 ; y+=1.0)
-			for (float x = -1.75 ; x <=1.75 ; x+=1.0)
-				shadowValue += textureLod(u_ShadowMap, texCoords + (vec2(x, y) * pixel * 3.0), 0.0).r;
-
-		shadowValue /= 32.0;
-#endif //HIGH_QUALITY_SHADOWS
+#define sm_cont_1 ( 64.0 / 255.0)
+#define sm_cont_2 (255.0 / 200.0)
+		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
 
 		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
 	}

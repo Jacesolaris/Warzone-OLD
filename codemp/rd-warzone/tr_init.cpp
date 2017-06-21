@@ -116,8 +116,6 @@ cvar_t	*r_speeds;
 cvar_t	*r_fullbright;
 cvar_t	*r_novis;
 cvar_t	*r_nocull;
-cvar_t	*r_entityCull;
-cvar_t	*r_fovCull;
 cvar_t	*r_facePlaneCull;
 cvar_t	*r_showcluster;
 cvar_t	*r_nocurves;
@@ -170,6 +168,10 @@ cvar_t  *r_srgb;
 
 cvar_t  *r_depthPrepass;
 cvar_t  *r_ssao;
+
+cvar_t  *r_ssdo;
+cvar_t  *r_ssdoBaseRadius;
+cvar_t  *r_ssdoMaxOcclusionDist;
 
 cvar_t  *r_normalMapping;
 cvar_t  *r_normalMapQuality;
@@ -237,6 +239,7 @@ cvar_t	*r_picmip;
 cvar_t	*r_showtris;
 cvar_t	*r_showsky;
 cvar_t	*r_shownormals;
+cvar_t	*r_showdepth;
 cvar_t	*r_showsplat;
 cvar_t	*r_finish;
 cvar_t	*r_clear;
@@ -437,6 +440,9 @@ cvar_t	*r_dynamicGlowPasses;
 cvar_t	*r_dynamicGlowDelta;
 cvar_t	*r_dynamicGlowIntensity;
 cvar_t	*r_dynamicGlowSoft;
+
+cvar_t	*r_shadowMaxDepthError;
+cvar_t	*r_shadowSolidityValue;
 
 extern void	RB_SetGL2D (void);
 void R_Splash()
@@ -1485,6 +1491,10 @@ void R_Register( void )
 	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	r_ssao = ri->Cvar_Get( "r_ssao", "0", /*CVAR_LATCH |*/ CVAR_ARCHIVE );
 
+	r_ssdo = ri->Cvar_Get("r_ssdo", "0", CVAR_ARCHIVE);
+	r_ssdoBaseRadius = ri->Cvar_Get("r_ssdoBaseRadius", "0.0017", CVAR_ARCHIVE);
+	r_ssdoMaxOcclusionDist = ri->Cvar_Get("r_ssdoMaxOcclusionDist", "1.81", CVAR_ARCHIVE);
+
 	r_normalMapping = ri->Cvar_Get( "r_normalMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_normalMapQuality = ri->Cvar_Get( "r_normalMapQuality", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1522,7 +1532,7 @@ void R_Register( void )
 	r_sunlightSpecular = ri->Cvar_Get( "r_sunlightSpecular", "1", CVAR_ARCHIVE );
 
 	r_shadowContrast = ri->Cvar_Get("r_shadowContrast", "0.7", CVAR_ARCHIVE);
-	r_shadowBlurPasses = ri->Cvar_Get( "r_shadowBlurPasses", "0", CVAR_ARCHIVE );
+	r_shadowBlurPasses = ri->Cvar_Get( "r_shadowBlurPasses", "1", CVAR_ARCHIVE );
 	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZNear = ri->Cvar_Get( "r_shadowCascadeZNear", "4", CVAR_ARCHIVE );
@@ -1733,8 +1743,6 @@ void R_Register( void )
 	r_drawentities = ri->Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
 	r_ignore = ri->Cvar_Get( "r_ignore", "1", CVAR_CHEAT );
 	r_nocull = ri->Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
-	r_entityCull = ri->Cvar_Get ("r_entityCull", "0", CVAR_CHEAT);
-	r_fovCull = ri->Cvar_Get ("r_fovCull", "0", CVAR_CHEAT);
 	r_novis = ri->Cvar_Get ("r_novis", "0", CVAR_CHEAT);
 	r_showcluster = ri->Cvar_Get ("r_showcluster", "0", CVAR_CHEAT);
 	r_speeds = ri->Cvar_Get ("r_speeds", "0", CVAR_CHEAT);
@@ -1745,6 +1753,7 @@ void R_Register( void )
 	r_showtris = ri->Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
 	r_showsky = ri->Cvar_Get ("r_showsky", "0", CVAR_CHEAT);
 	r_shownormals = ri->Cvar_Get ("r_shownormals", "0", CVAR_CHEAT);
+	r_showdepth = ri->Cvar_Get("r_showdepth", "0", CVAR_CHEAT);
 	r_showsplat = ri->Cvar_Get("r_showsplat", "0", CVAR_CHEAT);
 	r_clear = ri->Cvar_Get ("r_clear", "0", CVAR_CHEAT);
 	r_offsetFactor = ri->Cvar_Get( "r_offsetfactor", "-1", CVAR_CHEAT );
@@ -1762,6 +1771,8 @@ void R_Register( void )
 	r_maxpolys = ri->Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri->Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
 
+	r_shadowMaxDepthError = ri->Cvar_Get("r_shadowMaxDepthError", "0.000000059604644775390625", CVAR_ARCHIVE);
+	r_shadowSolidityValue = ri->Cvar_Get("r_shadowSolidityValue", "0.5", CVAR_ARCHIVE);
 /*
 Ghoul2 Insert Start
 */
@@ -1908,13 +1919,6 @@ void R_Init( void ) {
 
 	int shadersStartTime = GLSL_BeginLoadGPUShaders();
 
-#ifdef __ORIGINAL_OCCLUSION__
-	//if (r_occlusion->integer)
-	{
-		OQ_InitOcclusionQuery();
-	}
-#endif //__ORIGINAL_OCCLUSION__
-
 	R_InitVBOs();
 
 	R_InitShaders (qfalse);
@@ -1983,13 +1987,6 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 		R_DeleteTextures();
 		R_ShutdownVBOs();
 		GLSL_ShutdownGPUShaders();
-
-#ifdef __ORIGINAL_OCCLUSION__
-		//if (r_occlusion->integer)
-		{
-			OQ_ShutdownOcclusionQuery();
-		}
-#endif //__ORIGINAL_OCCLUSION__
 
 		if ( restarting )
 		{

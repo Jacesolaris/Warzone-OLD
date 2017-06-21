@@ -1,7 +1,5 @@
 #include "tr_local.h"
 
-#if defined(__ORIGINAL_OCCLUSION__)
-
 #if defined(__SOFTWARE_OCCLUSION__)
 
 #include "MaskedOcclusionCulling/MaskedOcclusionCulling.h"
@@ -149,8 +147,6 @@ extern void RB_UpdateMatrixes(void);
 void RB_UpdateOcclusion()
 {
 }
-
-extern void R_RotateForViewer(void);
 
 //#define __SORT_AREAS__
 
@@ -676,52 +672,247 @@ qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input)
 
 #else //!defined(__SOFTWARE_OCCLUSION__)
 
-#define MAX_OCCLUSION_QUERIES 131072//262144//524288//1048576//16384
+extern int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p);
 
-static GLuint occlusionCache[MAX_OCCLUSION_QUERIES];
-#ifdef __VBO_BASED_OCCLUSION__
-static VBO_t *occlusionQueryTarget[MAX_OCCLUSION_QUERIES];
-#else //!__VBO_BASED_OCCLUSION__
-static mnode_t *occlusionQueryTarget[MAX_OCCLUSION_QUERIES];
-#endif //__VBO_BASED_OCCLUSION__
-static int occlusionQueryCount[MAX_OCCLUSION_QUERIES];
-static int occlusionCachePos = 0;
+int occlusionFrame = 0;
+int numOccluded = 0;
+int numNotOccluded = 0;
 
-void RB_UpdateOcclusion(int inOcclusions)
+qboolean RB_CheckOcclusion(mnode_t *node)
 {
-	int numOccluded = 0;
+	//if (node->occlusionCache <= 0) return qfalse;
 
-	// first, check any outstanding queries
-	for (int i = 0; i < occlusionCachePos; i++)
+	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && r_occlusion->integer)
 	{
-		GLuint result;
+		/*if (node->occluded)
+		{
+			if (r_occlusionDebug->integer == 4)
+				ri->Printf(PRINT_WARNING, "Area %i was not tested for occlusion. It was occluded by the Q3 vis system.\n", node->area);
 
-		qglGetQueryObjectuiv(occlusionCache[i], GL_QUERY_RESULT_AVAILABLE, &result);
+			return qtrue;
+		}*/
+
+		/* Occlusion culling check */
+		GLuint result;
+		qglGetQueryObjectuiv(node->occlusionCache, GL_QUERY_RESULT_AVAILABLE, &result);
 
 		if (result)
 		{
-			qglGetQueryObjectuiv(occlusionCache[i], GL_QUERY_RESULT, &result);
-			//ri->Printf(PRINT_ALL, "leaf %d count %d query %d has %d samples!\n", occlusionQueryTarget[i], occlusionQueryCount[i], occlusionCache[i], result);
-			if (!result)
-			{
-				occlusionQueryTarget[i]->occluded = qtrue;
-				occlusionQueryTarget[i]->lastOcclusionCheckResult = qtrue;
+			qglGetQueryObjectuiv(node->occlusionCache, GL_QUERY_RESULT, &result);
+
+			if (result <= 0)
+			{// Occlusion culled...
+				if (r_occlusionDebug->integer == 3)
+					ri->Printf(PRINT_WARNING, "Area %i occlusion culled. Cache pos %u. Occluded with %u samples found.\n", node->area, node->occlusionCache, result);
+
 				numOccluded++;
+				return qtrue;
 			}
 			else
 			{
-				occlusionQueryTarget[i]->lastOcclusionCheckResult = qfalse;
+				if (r_occlusionDebug->integer == 3)
+					ri->Printf(PRINT_WARNING, "Area %i. Cache pos %u. Not occluded with %u samples found.\n", node->area, node->occlusionCache, result);
 			}
 		}
+		else
+		{
+			if (r_occlusionDebug->integer == 3)
+				ri->Printf(PRINT_WARNING, "Area %i failed to get occlusion result in time. Cache pos %u.\n", node->area, node->occlusionCache);
+		}
+		/* Occlusion culling check */
 	}
-	
-	if (r_occlusion->integer > 1)
-		ri->Printf(PRINT_WARNING, "%i occluded. %i total.\n", numOccluded, occlusionCachePos);
 
-	occlusionCachePos = 0;
+	numNotOccluded++;
+	return qfalse;
 }
 
-extern void RB_InstantQuad(vec4_t quadVerts[4]);
+void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
+{
+	do {
+		node->occluded = qfalse;
+
+		// if the node wasn't marked as potentially visible, exit
+		// pvs is skipped for depth shadows
+		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
+			break;
+		}
+
+		// if the bounding volume is outside the frustum, nothing
+		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
+
+		if (!r_nocull->integer || SKIP_CULL_FRAME) {
+			int		r;
+
+			if (planeBits & 1) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[0]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~1;			// all descendants will also be in front
+				}
+			}
+
+			if (planeBits & 2) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[1]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~2;			// all descendants will also be in front
+				}
+			}
+
+			if (planeBits & 4) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[2]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~4;			// all descendants will also be in front
+				}
+			}
+
+			if (planeBits & 8) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[3]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~8;			// all descendants will also be in front
+				}
+			}
+
+			if (planeBits & 16) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[4]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~16;			// all descendants will also be in front
+				}
+			}
+
+			if (tr.refdef.vieworg[0] >= node->mins[0]
+				&& tr.refdef.vieworg[0] <= node->maxs[0]
+				&& tr.refdef.vieworg[1] >= node->mins[1]
+				&& tr.refdef.vieworg[1] <= node->maxs[1]
+				&& tr.refdef.vieworg[2] >= node->mins[2]
+				&& tr.refdef.vieworg[2] <= node->maxs[2])
+			{// Never occlude a leaf we are inside...
+				
+			}
+			else
+			{
+				node->occluded = RB_CheckOcclusion(node);
+			}
+		}
+
+		tess.numIndexes = 0;
+		tess.firstIndex = 0;
+		tess.numVertexes = 0;
+		tess.minIndex = 0;
+		tess.maxIndex = 0;
+
+		if (node->contents != -1) {
+			break;
+		}
+
+		// node is just a decision point, so go down both sides
+		// since we don't care about sort orders, just go positive to negative
+
+		// recurse down the children, front side first
+		RB_RecersiveCheckOcclusions(node->children[0], planeBits);
+
+		// tail recurse
+		node = node->children[1];
+	} while (1);
+}
+
+void RB_CheckOcclusions ( void )
+{
+	numOccluded = 0;
+	numNotOccluded = 0;
+
+	int planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
+	RB_RecersiveCheckOcclusions(tr.world->nodes, planeBits);
+
+	if (r_occlusionDebug->integer)
+	{
+		int total = numOccluded + numNotOccluded;
+		float fnumNotOccluded = numNotOccluded;
+		float fnumOccluded = numOccluded;
+		float ftotal = total;
+		float fperc = (numOccluded / ftotal) * 100.0;
+		int perc = fperc;
+		ri->Printf(PRINT_ALL, "Occlusion frame %i. visible nodes %i. occluded nodes %i. %i percent occluded.\n", occlusionFrame, numNotOccluded, numOccluded, perc);
+	}
+}
+
+void RB_OcclusionQuad(vec4_t quadVerts[4], vec2_t texCoords[4])
+{
+	//	GLimp_LogComment("--- RB_InstantQuad2 ---\n");					// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
+
+	tess.numVertexes = 0;
+	tess.numIndexes = 0;
+	tess.firstIndex = 0;
+
+	VectorCopy4(quadVerts[0], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[0], tess.texCoords[tess.numVertexes][0]);
+	tess.numVertexes++;
+
+	VectorCopy4(quadVerts[1], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[1], tess.texCoords[tess.numVertexes][0]);
+	tess.numVertexes++;
+
+	VectorCopy4(quadVerts[2], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[2], tess.texCoords[tess.numVertexes][0]);
+	tess.numVertexes++;
+
+	VectorCopy4(quadVerts[3], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[3], tess.texCoords[tess.numVertexes][0]);
+	tess.numVertexes++;
+
+	tess.indexes[tess.numIndexes++] = 0;
+	tess.indexes[tess.numIndexes++] = 1;
+	tess.indexes[tess.numIndexes++] = 2;
+	tess.indexes[tess.numIndexes++] = 0;
+	tess.indexes[tess.numIndexes++] = 2;
+	tess.indexes[tess.numIndexes++] = 3;
+	tess.minIndex = 0;
+	tess.maxIndex = 3;
+
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
+
+	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+
+	R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
+
+	tess.numIndexes = 0;
+	tess.numVertexes = 0;
+	tess.firstIndex = 0;
+	tess.minIndex = 0;
+	tess.maxIndex = 0;
+}
+
+matrix_t OCCLUSION_MVP;
+
+void RB_OcclusionInstantQuad(vec4_t quadVerts[4])
+{
+	vec2_t texCoords[4];
+
+	VectorSet2(texCoords[0], 0.0f, 0.0f);
+	VectorSet2(texCoords[1], 1.0f, 0.0f);
+	VectorSet2(texCoords[2], 1.0f, 1.0f);
+	VectorSet2(texCoords[3], 0.0f, 1.0f);
+
+	RB_OcclusionQuad(quadVerts, texCoords);
+}
 
 void AddOcclusionCube(const vec3_t mins, const vec3_t maxs)
 {
@@ -731,246 +922,144 @@ void AddOcclusionCube(const vec3_t mins, const vec3_t maxs)
 	VectorSet4(quadVerts[1], mins[0], maxs[1], mins[2], 1);
 	VectorSet4(quadVerts[2], mins[0], maxs[1], maxs[2], 1);
 	VectorSet4(quadVerts[3], mins[0], mins[1], maxs[2], 1);
-	RB_InstantQuad(quadVerts);
+	RB_OcclusionInstantQuad(quadVerts);
 
 	VectorSet4(quadVerts[0], maxs[0], mins[1], maxs[2], 1);
 	VectorSet4(quadVerts[1], maxs[0], maxs[1], maxs[2], 1);
 	VectorSet4(quadVerts[2], maxs[0], maxs[1], mins[2], 1);
 	VectorSet4(quadVerts[3], maxs[0], mins[1], mins[2], 1);
-	RB_InstantQuad(quadVerts);
+	RB_OcclusionInstantQuad(quadVerts);
 
 	VectorSet4(quadVerts[0], mins[0], mins[1], maxs[2], 1);
 	VectorSet4(quadVerts[1], mins[0], maxs[1], maxs[2], 1);
 	VectorSet4(quadVerts[2], maxs[0], maxs[1], maxs[2], 1);
 	VectorSet4(quadVerts[3], maxs[0], mins[1], maxs[2], 1);
-	RB_InstantQuad(quadVerts);
+	RB_OcclusionInstantQuad(quadVerts);
 
 	VectorSet4(quadVerts[0], maxs[0], mins[1], mins[2], 1);
 	VectorSet4(quadVerts[1], maxs[0], maxs[1], mins[2], 1);
 	VectorSet4(quadVerts[2], mins[0], maxs[1], mins[2], 1);
 	VectorSet4(quadVerts[3], mins[0], mins[1], mins[2], 1);
-	RB_InstantQuad(quadVerts);
+	RB_OcclusionInstantQuad(quadVerts);
 
 	VectorSet4(quadVerts[0], mins[0], mins[1], mins[2], 1);
 	VectorSet4(quadVerts[1], mins[0], mins[1], maxs[2], 1);
 	VectorSet4(quadVerts[2], maxs[0], mins[1], maxs[2], 1);
 	VectorSet4(quadVerts[3], maxs[0], mins[1], mins[2], 1);
-	RB_InstantQuad(quadVerts);
+	RB_OcclusionInstantQuad(quadVerts);
 
 	VectorSet4(quadVerts[0], maxs[0], maxs[1], mins[2], 1);
 	VectorSet4(quadVerts[1], maxs[0], maxs[1], maxs[2], 1);
 	VectorSet4(quadVerts[2], mins[0], maxs[1], maxs[2], 1);
 	VectorSet4(quadVerts[3], mins[0], maxs[1], mins[2], 1);
-	RB_InstantQuad(quadVerts);
+	RB_OcclusionInstantQuad(quadVerts);
 }
 
-void RB_LeafOcclusion()
+int numOcclusionQueries = 0;
+
+void RB_OcclusionQuery(mnode_t *node, int planeBits)
 {
-#ifdef __VBO_BASED_OCCLUSION__
-	if (r_occlusion->integer)
-	{
-		occlusionCachePos = 0;
+	do {
+		node->occlusionCache = -1;
+		node->occluded = qfalse;
 
-		FBO_Bind(tr.renderFbo);
-		glState.currentFBO = tr.renderFbo;
-
-		// Don't draw into color or depth
-		GL_State(0);
-		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-		GL_State(GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL);
-
-		GL_Cull(CT_TWO_SIDED);
-		//qglDepthRange(0, 0);
-
-		vec4_t color;
-		color[0] = 1.0f;
-		color[1] = 1.0f;
-		color[2] = 1.0f;
-		color[3] = 1.0f;
-
-		tess.numIndexes = 0;
-		tess.firstIndex = 0;
-		tess.numVertexes = 0;
-		tess.minIndex = 0;
-		tess.maxIndex = 0;
-
-		int preOcclusions = 0;
-
-		/* Switched from rend2 normal arrays to using the example's array formats */
-		for (int i = 0; i < tr.world->numWorldVbos; i++)
-		{
-			VBO_t *leaf = tr.world->vbos[i];
-
-			if (backEnd.refdef.vieworg[0] >= tr.world->vboMins[i][0]
-				&& backEnd.refdef.vieworg[0] <= tr.world->vboMaxs[i][0]
-				&& backEnd.refdef.vieworg[1] >= tr.world->vboMins[i][1]
-				&& backEnd.refdef.vieworg[1] <= tr.world->vboMaxs[i][1]
-				&& backEnd.refdef.vieworg[2] >= tr.world->vboMins[i][2]
-				&& backEnd.refdef.vieworg[2] <= tr.world->vboMaxs[i][2])
-			{// Never occlude a leaf we are inside...
-				leaf->occluded = qfalse;
-				continue;
-			}
-
-			if (/*leaf->lastOcclusionCheckResult &&*/ leaf->nextOcclusionCheckTime > backEnd.refdef.time - 100)
-			{// If leaf was previously occluded, re-use the value for a time... Inaccurate, but saves occlusion checks...
-				leaf->occluded = leaf->lastOcclusionCheckResult;
-
-				if (leaf->lastOcclusionCheckResult)
-					preOcclusions++;
-
-				continue;
-			}
-
-			leaf->nextOcclusionCheckTime = backEnd.refdef.time;
-
-			/* Test the occlusion for this cube */
-			qglGenQueries(1, &occlusionCache[occlusionCachePos]);
-			qglBeginQuery(GL_SAMPLES_PASSED, occlusionCache[occlusionCachePos]);
-			occlusionQueryTarget[occlusionCachePos] = leaf;
-			occlusionCachePos++;
-
-			/* Create a cube for this mins/maxs */
-			AddOcclusionCube(tr.world->vboMins[i], tr.world->vboMaxs[i]);
-
-			qglEndQuery(GL_SAMPLES_PASSED);
-
-			//ri->Printf(PRINT_ALL, "rendered leaf %d, pos %d, query %d\n", leaf, querynum, occlusionCache[querynum]);
+		// if the node wasn't marked as potentially visible, exit
+		// pvs is skipped for depth shadows
+		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
+			break;
 		}
 
-		tess.numIndexes = 0;
-		tess.firstIndex = 0;
-		tess.numVertexes = 0;
-		tess.minIndex = 0;
-		tess.maxIndex = 0;
+		if (r_occlusionDebug->integer == 2)
+			ri->Printf(PRINT_ALL, "Frame: %i. Area %i. Mins: %f %f %f. Maxs %f %f %f.\n", occlusionFrame, node->area, node->mins[0], node->mins[1], node->mins[2], node->maxs[0], node->maxs[1], node->maxs[2]);
 
-		//if (r_occlusion->integer > 1)
-		qglFinish();
-		//qglFlush();
+		// if the bounding volume is outside the frustum, nothing
+		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
-		RB_UpdateOcclusion(preOcclusions);
+		if (!r_nocull->integer || SKIP_CULL_FRAME) {
+			int		r;
 
-		//qglDepthRange( 0, 1 );
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		GL_State(GLS_DEFAULT);
-		GL_Cull(CT_FRONT_SIDED);
-		R_BindNullVBO();
-		R_BindNullIBO();
-	}
-#else //!__VBO_BASED_OCCLUSION__
-	if (r_occlusion->integer)
-	{
-		occlusionCachePos = 0;
-
-		//shaderProgram_t *shader = &tr.occlusionShader;
-		FBO_Bind(tr.renderFbo);
-		glState.currentFBO = tr.renderFbo;
-		/*RB_UpdateVBOs(ATTR_POSITION);
-		GL_Bind(tr.whiteImage);
-		GLSL_VertexAttribsState(ATTR_POSITION);
-		GLSL_BindProgram(shader);*/
-
-		// Don't draw into color or depth
-		GL_State(0);
-		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-		//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		//GL_State(GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE);
-		//GL_State(/*GLS_DEPTHMASK_TRUE|GLS_DEPTHFUNC_LESS|GLS_DEPTHFUNC_EQUAL|*/GLS_POLYMODE_LINE);
-		GL_State(GLS_DEPTHFUNC_LESS|GLS_DEPTHFUNC_EQUAL);
-
-		GL_Cull(CT_TWO_SIDED);
-		//qglDepthRange(0, 0);
-
-		vec4_t color;
-		color[0] = 1.0f;
-		color[1] = 1.0f;
-		color[2] = 1.0f;
-		color[3] = 1.0f;
-
-		//GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-		//GLSL_SetUniformVec4(shader, UNIFORM_COLOR, color);
-
-		tess.numIndexes = 0;
-		tess.firstIndex = 0;
-		tess.numVertexes = 0;
-		tess.minIndex = 0;
-		tess.maxIndex = 0;
-
-		int preOcclusions = 0;
-
-		/* Switched from rend2 normal arrays to using the example's array formats */
-		for (int i = 0; i < tr.world->numVisibleLeafs; i++)
-		{
-			mnode_t *leaf = tr.world->visibleLeafs[i];
-
-			if (!leaf->nummarksurfaces)
-			//if (leaf->nummarksurfaces < 64)
-			{// Hmm nothing in here... Testing this cube would be a little pointless... Always occluded...
-				//leaf->occluded = qtrue;
-				continue;
+			if (planeBits & 1) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[0]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~1;			// all descendants will also be in front
+				}
 			}
 
-			if (tr.refdef.vieworg[0] >= leaf->mins[0] 
-				&& tr.refdef.vieworg[0] <= leaf->maxs[0]
-				&& tr.refdef.vieworg[1] >= leaf->mins[1] 
-				&& tr.refdef.vieworg[1] <= leaf->maxs[1]
-				&& tr.refdef.vieworg[2] >= leaf->mins[2]
-				&& tr.refdef.vieworg[2] <= leaf->maxs[2])
-			{// Never occlude a leaf we are inside...
-				leaf->occluded = qfalse;
-				continue;
+			if (planeBits & 2) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[1]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~2;			// all descendants will also be in front
+				}
 			}
 
-			if (backEnd.refdef.time < leaf->nextOcclusionCheckTime)
-			{// Inaccurate, but saves occlusion checks...
-				leaf->occluded = leaf->lastOcclusionCheckResult;
-
-				if (leaf->lastOcclusionCheckResult)
-					preOcclusions++;
-
-				continue;
+			if (planeBits & 4) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[2]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~4;			// all descendants will also be in front
+				}
 			}
 
-			vec3_t center;
-			VectorSet(center, (leaf->mins[0] + leaf->maxs[0]) * 0.5f, (leaf->mins[1] + leaf->maxs[1]) * 0.5f, (leaf->mins[2] + leaf->maxs[2]) * 0.5f);
-			float dist = 16.0 / (Distance(tr.refdef.vieworg, center) / 1024.0);
-			float mult = Q_clamp(0, 1 - dist, 1);
+			if (planeBits & 8) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[3]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~8;			// all descendants will also be in front
+				}
+			}
 
-			leaf->nextOcclusionCheckTime = backEnd.refdef.time + 100;// (1000 * mult);
+			if (planeBits & 16) {
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[4]);
+				if (r == 2) {
+					node->occluded = qtrue;
+					break;						// culled
+				}
+				if (r == 1) {
+					planeBits &= ~16;			// all descendants will also be in front
+				}
+			}
 
-			if (occlusionCachePos + 1 >= MAX_OCCLUSION_QUERIES)
-			{// never over-run the max queries array...
-				leaf->occluded = qfalse;
-				//continue;
-				ri->Printf(PRINT_WARNING, "Occlusion system hit MAX_OCCLUSION_QUERIES limit. %i extra leafs will be presumed visible!\n", tr.world->numVisibleLeafs - i);
+			if (node->contents != -1) {
 				break;
 			}
 
-			if (Distance(tr.refdef.vieworg, center) <= 2048.0)
-			{// Just skip checking occlusion on close leafs...
-				/*ri->Printf(PRINT_ALL, "Distance from %i %i %i to %i %i %i is %i (< %i).\n"
-					, (int)backEnd.refdef.vieworg[0], (int)backEnd.refdef.vieworg[1], (int)backEnd.refdef.vieworg[2]
-					, (int)center[0], (int)center[1], (int)center[2]
-					, (int)Distance(center, backEnd.refdef.vieworg), (int)r_testvalue0->value
-				);*/
-				continue;
+			if (backEnd.refdef.vieworg[0] >= node->mins[0]
+				&& backEnd.refdef.vieworg[0] <= node->maxs[0]
+				&& backEnd.refdef.vieworg[1] >= node->mins[1]
+				&& backEnd.refdef.vieworg[1] <= node->maxs[1]
+				&& backEnd.refdef.vieworg[2] >= node->mins[2]
+				&& backEnd.refdef.vieworg[2] <= node->maxs[2])
+			{// Never occlude a node we are inside...
+				
 			}
+			else
+			{
+				/* Test the occlusion for this cube */
+				qglGenQueries(1, &node->occlusionCache);
+				//qglBeginQuery(GL_ANY_SAMPLES_PASSED, node->occlusionCache);
+				qglBeginQuery(GL_SAMPLES_PASSED, node->occlusionCache);
 
-			/* Test the occlusion for this cube */
-			qglGenQueries(1, &occlusionCache[occlusionCachePos]);
-			qglBeginQuery(GL_SAMPLES_PASSED, occlusionCache[occlusionCachePos]);
-			occlusionQueryTarget[occlusionCachePos] = leaf;
-			occlusionCachePos++;
+				/* Create a cube for this mins/maxs */
+				AddOcclusionCube(node->mins, node->maxs);
 
-			/* Create a cube for this mins/maxs */
-			AddOcclusionCube(leaf->mins, leaf->maxs);
+				qglEndQuery(GL_SAMPLES_PASSED);
 
-			qglEndQuery(GL_SAMPLES_PASSED);
-
-			//ri->Printf(PRINT_ALL, "rendered leaf %d, pos %d, query %d\n", leaf, querynum, occlusionCache[querynum]);
+				numOcclusionQueries++;
+			}
 		}
 
 		tess.numIndexes = 0;
@@ -979,71 +1068,87 @@ void RB_LeafOcclusion()
 		tess.minIndex = 0;
 		tess.maxIndex = 0;
 
-		//if (r_occlusion->integer > 1)
-			qglFinish();
-		//qglFlush();
+		if (node->contents != -1) {
+			break;
+		}
 
-		RB_UpdateOcclusion(preOcclusions);
+		// node is just a decision point, so go down both sides
+		// since we don't care about sort orders, just go positive to negative
 
-		//qglDepthRange( 0, 1 );
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		GL_State(GLS_DEFAULT);
-		GL_Cull(CT_FRONT_SIDED);
-		R_BindNullVBO();
-		R_BindNullIBO();
+		// recurse down the children, front side first
+		RB_OcclusionQuery(node->children[0], planeBits);
+
+		// tail recurse
+		node = node->children[1];
+	} while (1);
+
+	tess.numIndexes = 0;
+	tess.firstIndex = 0;
+	tess.numVertexes = 0;
+	tess.minIndex = 0;
+	tess.maxIndex = 0;
+}
+
+void RB_OcclusionCulling(void)
+{
+	numOcclusionQueries = 0;
+
+	if (!r_nocull->integer || SKIP_CULL_FRAME)
+	{
+		if (r_occlusion->integer)
+		{
+			occlusionFrame++;
+
+			GLSL_BindProgram(&tr.textureColorShader);
+
+			//GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+			Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, OCCLUSION_MVP);
+			GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, OCCLUSION_MVP);
+			vec4_t col = { 1, 1, 1, 0.3 };
+			GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
+
+			// Don't draw into color or depth
+			GL_State(0);
+			qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+			GL_State(GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL);
+			//qglDepthMask(GL_FALSE);
+
+			GL_Cull(CT_TWO_SIDED);
+			//qglDepthRange(0, 0);
+
+			vec4_t color;
+			color[0] = 1.0f;
+			color[1] = 1.0f;
+			color[2] = 1.0f;
+			color[3] = 1.0f;
+
+			int planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
+			RB_OcclusionQuery(tr.world->nodes, planeBits);
+
+			tess.numIndexes = 0;
+			tess.firstIndex = 0;
+			tess.numVertexes = 0;
+			tess.minIndex = 0;
+			tess.maxIndex = 0;
+
+
+			//qglDepthRange( 0, 1 );
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			qglDepthMask(GL_TRUE);
+			GL_State(GLS_DEFAULT);
+			GL_Cull(CT_FRONT_SIDED);
+			R_BindNullVBO();
+			R_BindNullIBO();
+
+			if (r_occlusionDebug->integer)
+			{
+				ri->Printf(PRINT_WARNING, "%i occlusion queries performed this frame (%i).\n", numOcclusionQueries, occlusionFrame);
+			}
+		}
 	}
-#endif //__VBO_BASED_OCCLUSION__
 }
 
-const void	*RB_DrawOcclusion(const void *data) {
-	const drawOcclusionCommand_t	*cmd;
-
-	// finish any 2D drawing if needed
-	if (tess.numIndexes) {
-		RB_EndSurface();
-	}
-
-	cmd = (const drawOcclusionCommand_t *)data;
-
-	/*backEnd.viewParms = cmd->viewParms;
-
-	RB_LeafOcclusion();*/
-
-	return (const void *)(cmd + 1);
-}
-
-void	R_AddDrawOcclusionCmd(viewParms_t *parms) 
-{
-	/*
-	drawOcclusionCommand_t	*cmd;
-
-	cmd = (drawOcclusionCommand_t *)R_GetCommandBuffer(sizeof(*cmd));
-	if (!cmd) {
-		return;
-	}
-	cmd->commandId = RC_DRAW_OCCLUSION;
-
-	cmd->viewParms = *parms;
-	*/
-}
-
-void OQ_InitOcclusionQuery()
-{
-}
-
-void OQ_ShutdownOcclusionQuery()
-{
-}
-
-void RB_InitOcclusionFrame(void)
-{
-}
-
-qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input)
-{
-	return qfalse;
-}
 
 #endif //defined(__SOFTWARE_OCCLUSION__)
-
-#endif //__ORIGINAL_OCCLUSION__

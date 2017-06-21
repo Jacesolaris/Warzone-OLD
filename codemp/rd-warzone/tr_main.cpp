@@ -473,7 +473,7 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 	vec3_t          v;
 	vec3_t          worldBounds[2];
 
-	if(r_nocull->integer || SKIP_CULL_FRAME)
+	if (r_nocull->integer || SKIP_CULL_FRAME)
 	{
 		return CULL_CLIP;
 	}
@@ -481,7 +481,7 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 	// transform into world space
 	ClearBounds(worldBounds[0], worldBounds[1]);
 
-	for(j = 0; j < 8; j++)
+	for (j = 0; j < 8; j++)
 	{
 		v[0] = localBounds[j & 1][0];
 		v[1] = localBounds[(j >> 1) & 1][1];
@@ -513,24 +513,24 @@ int R_CullBox(vec3_t worldBounds[2]) {
 
 	// check against frustum planes
 	anyClip = qfalse;
-	for(i = 0; i < numPlanes; i++)
+	for (i = 0; i < numPlanes; i++)
 	{
 		frust = &tr.viewParms.frustum[i];
 
 		r = BoxOnPlaneSide(worldBounds[0], worldBounds[1], frust);
 
-		if(r == 2)
+		if (r == 2)
 		{
 			// completely outside frustum
 			return CULL_OUT;
 		}
-		if(r == 3)
+		if (r == 3)
 		{
 			anyClip = qtrue;
 		}
 	}
 
-	if(!anyClip)
+	if (!anyClip)
 	{
 		// completely inside frustum
 		return CULL_IN;
@@ -547,9 +547,9 @@ int R_CullLocalPointAndRadius( const vec3_t pt, float radius )
 {
 	vec3_t transformed;
 
-	R_LocalPointToWorld( pt, transformed );
+	R_LocalPointToWorld(pt, transformed);
 
-	return R_CullPointAndRadius( transformed, radius );
+	return R_CullPointAndRadius(transformed, radius);
 }
 
 /*
@@ -562,27 +562,27 @@ int R_CullPointAndRadiusEx( const vec3_t pt, float radius, const cplane_t* frust
 	const cplane_t	*frust;
 	qboolean mightBeClipped = qfalse;
 
-	if ( r_nocull->integer || SKIP_CULL_FRAME) {
+	if (r_nocull->integer) {
 		return CULL_CLIP;
 	}
 
 	// check against frustum planes
-	for (i = 0 ; i < numPlanes ; i++) 
+	for (i = 0; i < numPlanes; i++)
 	{
 		frust = &frustum[i];
 
-		dist = DotProduct( pt, frust->normal) - frust->dist;
-		if ( dist < -radius )
+		dist = DotProduct(pt, frust->normal) - frust->dist;
+		if (dist < -radius)
 		{
 			return CULL_OUT;
 		}
-		else if ( dist <= radius ) 
+		else if (dist <= radius)
 		{
 			mightBeClipped = qtrue;
 		}
 	}
 
-	if ( mightBeClipped )
+	if (mightBeClipped)
 	{
 		return CULL_CLIP;
 	}
@@ -779,33 +779,33 @@ R_RotateForViewer
 Sets up the modelview matrix for a given viewParm
 =================
 */
-void R_RotateForViewer (void) 
+static void R_RotateForViewer(viewParms_t *viewParms)
 {
 	float	viewerMatrix[16];
 	vec3_t	origin;
 
-	Com_Memset (&tr.ori, 0, sizeof(tr.ori));
+	Com_Memset(&tr.ori, 0, sizeof(tr.ori));
 	tr.ori.axis[0][0] = 1;
 	tr.ori.axis[1][1] = 1;
 	tr.ori.axis[2][2] = 1;
-	VectorCopy (tr.viewParms.ori.origin, tr.ori.viewOrigin);
+	VectorCopy(viewParms->ori.origin, tr.ori.viewOrigin);
 
 	// transform by the camera placement
-	VectorCopy( tr.viewParms.ori.origin, origin );
+	VectorCopy(viewParms->ori.origin, origin);
 
-	viewerMatrix[0] = tr.viewParms.ori.axis[0][0];
-	viewerMatrix[4] = tr.viewParms.ori.axis[0][1];
-	viewerMatrix[8] = tr.viewParms.ori.axis[0][2];
+	viewerMatrix[0] = viewParms->ori.axis[0][0];
+	viewerMatrix[4] = viewParms->ori.axis[0][1];
+	viewerMatrix[8] = viewParms->ori.axis[0][2];
 	viewerMatrix[12] = -origin[0] * viewerMatrix[0] + -origin[1] * viewerMatrix[4] + -origin[2] * viewerMatrix[8];
 
-	viewerMatrix[1] = tr.viewParms.ori.axis[1][0];
-	viewerMatrix[5] = tr.viewParms.ori.axis[1][1];
-	viewerMatrix[9] = tr.viewParms.ori.axis[1][2];
+	viewerMatrix[1] = viewParms->ori.axis[1][0];
+	viewerMatrix[5] = viewParms->ori.axis[1][1];
+	viewerMatrix[9] = viewParms->ori.axis[1][2];
 	viewerMatrix[13] = -origin[0] * viewerMatrix[1] + -origin[1] * viewerMatrix[5] + -origin[2] * viewerMatrix[9];
 
-	viewerMatrix[2] = tr.viewParms.ori.axis[2][0];
-	viewerMatrix[6] = tr.viewParms.ori.axis[2][1];
-	viewerMatrix[10] = tr.viewParms.ori.axis[2][2];
+	viewerMatrix[2] = viewParms->ori.axis[2][0];
+	viewerMatrix[6] = viewParms->ori.axis[2][1];
+	viewerMatrix[10] = viewParms->ori.axis[2][2];
 	viewerMatrix[14] = -origin[0] * viewerMatrix[2] + -origin[1] * viewerMatrix[6] + -origin[2] * viewerMatrix[10];
 
 	viewerMatrix[3] = 0;
@@ -813,11 +813,13 @@ void R_RotateForViewer (void)
 	viewerMatrix[11] = 0;
 	viewerMatrix[15] = 1;
 
+
 	// convert from our coordinate system (looking down X)
 	// to OpenGL's coordinate system (looking down -Z)
-	myGlMultMatrix( viewerMatrix, s_flipMatrix, tr.ori.modelMatrix );
+	myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.ori.modelMatrix);
+	//Matrix16Identity(tr.ori.modelMatrix);
 
-	tr.viewParms.world = tr.ori;
+	viewParms->world = tr.ori;
 
 }
 
@@ -975,15 +977,15 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	float	width, height, stereoSep = r_stereoSeparation->value;
 
 	/*
-	 * offset the view origin of the viewer for stereo rendering 
-	 * by setting the projection matrix appropriately.
-	 */
+	* offset the view origin of the viewer for stereo rendering
+	* by setting the projection matrix appropriately.
+	*/
 
-	if(stereoSep != 0)
+	if (stereoSep != 0)
 	{
-		if(dest->stereoFrame == STEREO_LEFT)
+		if (dest->stereoFrame == STEREO_LEFT)
 			stereoSep = zProj / stereoSep;
-		else if(dest->stereoFrame == STEREO_RIGHT)
+		else if (dest->stereoFrame == STEREO_RIGHT)
 			stereoSep = zProj / -stereoSep;
 		else
 			stereoSep = 0;
@@ -997,7 +999,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 
 	width = xmax - xmin;
 	height = ymax - ymin;
-	
+
 	dest->projectionMatrix[0] = 2 * zProj / width;
 	dest->projectionMatrix[4] = 0;
 	dest->projectionMatrix[8] = (xmax + xmin + 2 * stereoSep) / width;
@@ -1005,7 +1007,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 
 	dest->projectionMatrix[1] = 0;
 	dest->projectionMatrix[5] = 2 * zProj / height;
-	dest->projectionMatrix[9] = ( ymax + ymin ) / height;	// normally 0
+	dest->projectionMatrix[9] = (ymax + ymin) / height;	// normally 0
 	dest->projectionMatrix[13] = 0;
 
 	dest->projectionMatrix[3] = 0;
@@ -1013,48 +1015,9 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	dest->projectionMatrix[11] = -1;
 	dest->projectionMatrix[15] = 0;
 
-#ifdef __ORIGINAL_OCCLUSION__
-	if (!r_occlusion->integer || (tr.viewParms.flags & VPF_SHADOWPASS))
-#endif //__ORIGINAL_OCCLUSION__
-	{
-		// Now that we have all the data for the projection matrix we can also setup the view frustum.
-		if(computeFrustum)
-			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
-	}
-#ifdef __ORIGINAL_OCCLUSION__
-	else
-	{
-		// Now that we have all the data for the projection matrix we can also setup the view frustum.
-		if(computeFrustum)
-		{
-			if (r_lazyFrustum->integer == 2)
-			{
-				float fovx, fovy;
-				// stretch the fov slightly, so turning doesn't exit the previous fov as quickly
-				// this slows down running framerate, but increases staying still and aiming framerate
-
-				fovx = dest->fovX * 1.25f;
-				if (fovx > 179.0f)
-					fovx = 179.0f;
-
-				fovy = dest->fovY * 1.25f;
-				if (fovy > 179.0f)
-					fovy = 179.0f;
-
-				ymax = zProj * tan(fovy * M_PI / 360.0f);
-				ymin = -ymax;
-
-				xmax = zProj * tan(fovx * M_PI / 360.0f);
-				xmin = -xmax;
-
-				width = xmax - xmin;
-				height = ymax - ymin;
-			}
-
-			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
-		}
-	}
-#endif //__ORIGINAL_OCCLUSION__
+	// Now that we have all the data for the projection matrix we can also setup the view frustum.
+	if (computeFrustum)
+		R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
 }
 
 /*
@@ -1067,15 +1030,15 @@ Sets the z-component transformation part in the projection matrix
 void R_SetupProjectionZ(viewParms_t *dest)
 {
 	float zNear, zFar, depth;
-	
-	zNear = r_znear->value;
-	zFar	= dest->zFar;
 
-	depth	= zFar - zNear;
+	zNear = r_znear->value;
+	zFar = dest->zFar;
+
+	depth = zFar - zNear;
 
 	dest->projectionMatrix[2] = 0;
 	dest->projectionMatrix[6] = 0;
-	dest->projectionMatrix[10] = -( zFar + zNear ) / depth;
+	dest->projectionMatrix[10] = -(zFar + zNear) / depth;
 	dest->projectionMatrix[14] = -2 * zFar * zNear / depth;
 
 	if (dest->isPortal)
@@ -1090,10 +1053,10 @@ void R_SetupProjectionZ(viewParms_t *dest)
 		plane[2] = dest->portalPlane.normal[2];
 		plane[3] = dest->portalPlane.dist;
 
-		plane2[0] = -DotProduct (dest->ori.axis[1], plane);
-		plane2[1] = DotProduct (dest->ori.axis[2], plane);
-		plane2[2] = -DotProduct (dest->ori.axis[0], plane);
-		plane2[3] = DotProduct (plane, dest->ori.origin) - plane[3];
+		plane2[0] = -DotProduct(dest->ori.axis[1], plane);
+		plane2[1] = DotProduct(dest->ori.axis[2], plane);
+		plane2[2] = -DotProduct(dest->ori.axis[0], plane);
+		plane2[3] = DotProduct(plane, dest->ori.origin) - plane[3];
 
 		// Lengyel, Eric. "Modifying the Projection Matrix to Perform Oblique Near-plane Clipping".
 		// Terathon Software 3D Graphics Library, 2004. http://www.terathon.com/code/oblique.html
@@ -1104,13 +1067,12 @@ void R_SetupProjectionZ(viewParms_t *dest)
 
 		VectorScale4(plane2, 2.0f / DotProduct4(plane2, q), c);
 
-		dest->projectionMatrix[2]  = c[0];
-		dest->projectionMatrix[6]  = c[1];
+		dest->projectionMatrix[2] = c[0];
+		dest->projectionMatrix[6] = c[1];
 		dest->projectionMatrix[10] = c[2] + 1.0f;
 		dest->projectionMatrix[14] = c[3];
 
 	}
-
 }
 
 /*
@@ -1132,34 +1094,34 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 	//    |/     |/
 	// Y--+      +--X
 
-	xmin  =  viewBounds[0][1];
-	xmax  =  viewBounds[1][1];
-	ymin  = -viewBounds[1][2];
-	ymax  = -viewBounds[0][2];
-	znear =  viewBounds[0][0];
-	zfar  =  viewBounds[1][0];
+	xmin = viewBounds[0][1];
+	xmax = viewBounds[1][1];
+	ymin = -viewBounds[1][2];
+	ymax = -viewBounds[0][2];
+	znear = viewBounds[0][0];
+	zfar = viewBounds[1][0];
 
-	dest->projectionMatrix[0]  = 2 / (xmax - xmin);
-	dest->projectionMatrix[4]  = 0;
-	dest->projectionMatrix[8]  = 0;
+	dest->projectionMatrix[0] = 2 / (xmax - xmin);
+	dest->projectionMatrix[4] = 0;
+	dest->projectionMatrix[8] = 0;
 	dest->projectionMatrix[12] = (xmax + xmin) / (xmax - xmin);
 
-	dest->projectionMatrix[1]  = 0;
-	dest->projectionMatrix[5]  = 2 / (ymax - ymin);
-	dest->projectionMatrix[9]  = 0;
+	dest->projectionMatrix[1] = 0;
+	dest->projectionMatrix[5] = 2 / (ymax - ymin);
+	dest->projectionMatrix[9] = 0;
 	dest->projectionMatrix[13] = (ymax + ymin) / (ymax - ymin);
 
-	dest->projectionMatrix[2]  = 0;
-	dest->projectionMatrix[6]  = 0;
+	dest->projectionMatrix[2] = 0;
+	dest->projectionMatrix[6] = 0;
 	dest->projectionMatrix[10] = -2 / (zfar - znear);
 	dest->projectionMatrix[14] = -(zfar + znear) / (zfar - znear);
 
-	dest->projectionMatrix[3]  = 0;
-	dest->projectionMatrix[7]  = 0;
+	dest->projectionMatrix[3] = 0;
+	dest->projectionMatrix[7] = 0;
 	dest->projectionMatrix[11] = 0;
 	dest->projectionMatrix[15] = 1;
 
-	VectorScale(dest->ori.axis[1],  1.0f, dest->frustum[0].normal);
+	VectorScale(dest->ori.axis[1], 1.0f, dest->frustum[0].normal);
 	VectorMA(dest->ori.origin, viewBounds[0][1], dest->frustum[0].normal, pop);
 	dest->frustum[0].dist = DotProduct(pop, dest->frustum[0].normal);
 
@@ -1167,7 +1129,7 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 	VectorMA(dest->ori.origin, -viewBounds[1][1], dest->frustum[1].normal, pop);
 	dest->frustum[1].dist = DotProduct(pop, dest->frustum[1].normal);
 
-	VectorScale(dest->ori.axis[2],  1.0f, dest->frustum[2].normal);
+	VectorScale(dest->ori.axis[2], 1.0f, dest->frustum[2].normal);
 	VectorMA(dest->ori.origin, viewBounds[0][2], dest->frustum[2].normal, pop);
 	dest->frustum[2].dist = DotProduct(pop, dest->frustum[2].normal);
 
@@ -1178,11 +1140,11 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 	VectorScale(dest->ori.axis[0], -1.0f, dest->frustum[4].normal);
 	VectorMA(dest->ori.origin, -viewBounds[1][0], dest->frustum[4].normal, pop);
 	dest->frustum[4].dist = DotProduct(pop, dest->frustum[4].normal);
-	
+
 	for (i = 0; i < 5; i++)
 	{
 		dest->frustum[i].type = PLANE_NON_AXIAL;
-		SetPlaneSignbits (&dest->frustum[i]);
+		SetPlaneSignbits(&dest->frustum[i]);
 	}
 
 	dest->flags |= VPF_FARPLANEFRUSTUM;
@@ -1459,38 +1421,44 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	int64_t entityNum;
 	int numTriangles;
 	shader_t *shader;
-	int64_t fogNum;
-	//int64_t dlighted;
+	int64_t	fogNum;
+	//int		cubemap;
 	int64_t postRender;
 	vec4_t clip, eye;
 	int i;
 	unsigned int pointOr = 0;
 	unsigned int pointAnd = (unsigned int)~0;
 
-	R_RotateForViewer();
+	R_RotateForViewer(&tr.viewParms);
 
-	R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &postRender );
-	RB_BeginSurface( shader, fogNum, drawSurf->cubemapIndex );
-	rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
+	R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &fogNum, &postRender);
+	RB_BeginSurface(shader, fogNum, drawSurf->cubemapIndex);
+	rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
 
-	assert( tess.numVertexes < 128 );
+	if (tess.numVertexes > 128)
+	{
+		// Don't bother trying, just assume it's off-screen and make it look bad. Besides, artists
+		// shouldn't be using this many vertices on a mirror surface anyway :)
+		return qtrue;
+	}
 
-	for ( i = 0; i < tess.numVertexes; i++ )
+	for (i = 0; i < tess.numVertexes; i++)
 	{
 		int j;
 		unsigned int pointFlags = 0;
 
-		R_TransformModelToClip( tess.xyz[i], tr.ori.modelMatrix, tr.viewParms.projectionMatrix, eye, clip );
+		R_TransformModelToClip(tess.xyz[i], tr.ori.modelMatrix, tr.viewParms.projectionMatrix, eye, clip);
+		VectorCopy4(clip, clipDest[i]);
 
-		for ( j = 0; j < 3; j++ )
+		for (j = 0; j < 3; j++)
 		{
-			if ( clip[j] >= clip[3] )
+			if (clip[j] >= clip[3])
 			{
-				pointFlags |= (1 << (j*2));
+				pointFlags |= (1 << (j * 2));
 			}
-			else if ( clip[j] <= -clip[3] )
+			else if (clip[j] <= -clip[3])
 			{
-				pointFlags |= ( 1 << (j*2+1));
+				pointFlags |= (1 << (j * 2 + 1));
 			}
 		}
 		pointAnd &= pointFlags;
@@ -1498,7 +1466,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	}
 
 	// trivially reject
-	if ( pointAnd )
+	if (pointAnd)
 	{
 		return qtrue;
 	}
@@ -1510,40 +1478,40 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	// we have in the game right now.
 	numTriangles = tess.numIndexes / 3;
 
-	for ( i = 0; i < tess.numIndexes; i += 3 )
+	for (i = 0; i < tess.numIndexes; i += 3)
 	{
 		vec3_t normal, tNormal;
 
 		float len;
 
-		VectorSubtract( tess.xyz[tess.indexes[i]], tr.viewParms.ori.origin, normal );
+		VectorSubtract(tess.xyz[tess.indexes[i]], tr.viewParms.ori.origin, normal);
 
-		len = VectorLengthSquared( normal );			// lose the sqrt
-		if ( len < shortest )
+		len = VectorLengthSquared(normal);			// lose the sqrt
+		if (len < shortest)
 		{
 			shortest = len;
 		}
 
 		R_VboUnpackNormal(tNormal, tess.normal[tess.indexes[i]]);
 
-		if ( DotProduct( normal, tNormal ) >= 0 )
+		if (DotProduct(normal, tNormal) >= 0)
 		{
 			numTriangles--;
 		}
 	}
-	if ( !numTriangles )
+	if (!numTriangles)
 	{
 		return qtrue;
 	}
 
 	// mirrors can early out at this point, since we don't do a fade over distance
 	// with them (although we could)
-	if ( IsMirror( drawSurf, entityNum ) )
+	if (IsMirror(drawSurf, entityNum))
 	{
 		return qfalse;
 	}
 
-	if ( shortest > (tess.shader->portalRange*tess.shader->portalRange) )
+	if (shortest > (tess.shader->portalRange*tess.shader->portalRange))
 	{
 		return qtrue;
 	}
@@ -1845,79 +1813,6 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
 
-extern qboolean R_CULL_InFOV( vec3_t spot, vec3_t from );
-
-int NUM_ENTS_CULLED = 0;
-int NUM_ENTS_FOV_CULLED = 0;
-int NUM_ENTS_PVS_CULLED = 0;
-
-qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
-	if ( r_nocull->integer || !r_entityCull->integer || SKIP_CULL_FRAME) {
-		return qfalse;
-	}
-
-	if ( backEnd.viewParms.targetFbo == tr.renderCubeFbo ) {
-		return qfalse;
-	}
-
-	//float msLength = VectorLength(ent->e.modelScale);
-
-	if (ent->e.radius <= 0.0 /*&& msLength <= 0.0*/) {
-		// Not safely cullable... Might be mover, etc...
-		return qfalse;
-	}
-
-	if (Distance(ent->e.origin, tr.refdef.vieworg) < 128) {
-		// Never cull close stuff...
-		return qfalse;
-	}
-
-#if 0
-	if (!R_CULL_InFOV(ent->e.origin, tr.refdef.vieworg)) {
-		// Not in FOV? Cull the bitch!
-		NUM_ENTS_FOV_CULLED++;
-		return qtrue;
-	}
-
-	if (!R_inPVS( tr.refdef.vieworg, ent->e.origin, tr.refdef.areamask )) {
-		// Not in PVS? Cull the bitch!
-		NUM_ENTS_PVS_CULLED++;
-		return qtrue;
-	}
-#endif
-
-	if (ent->e.radius > 0.0)
-	{
-		float radius = ent->e.radius;
-
-		int sphereCull = R_CullPointAndRadius( ent->e.origin, radius );
-
-		if ( sphereCull == CULL_OUT )
-		{
-			return qtrue;
-		}
-	}
-	
-/*
-	if (msLength > 0.0)
-	{
-		vec3_t bounds[2];
-
-		VectorAdd(ent->e.origin, ent->e.modelScale, bounds[0]);
-		VectorSubtract(ent->e.origin, ent->e.modelScale, bounds[1]);
-
-		int boxCull = R_CullBox( bounds );
-
-		if ( boxCull == CULL_OUT )
-		{
-			return qtrue;
-		}
-	}
-*/
-
-	return qfalse;
-}
-
 static void R_AddEntitySurface (int entityNum)
 {
 	trRefEntity_t	*ent;
@@ -1926,7 +1821,7 @@ static void R_AddEntitySurface (int entityNum)
 	tr.currentEntityNum = entityNum;
 
 	ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
-
+	
 	if (!ent) return;
 
 	if (backEnd.refdef.rdflags & RDF_BLUR)
@@ -1959,7 +1854,7 @@ static void R_AddEntitySurface (int entityNum)
 #endif //__MERGE_MORE__
 
 #if 1
-	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
+	if ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
 	{// Don't draw grass and plants on shadow pass for speed...
 		if (!r_foliageShadows->integer)
 		{
@@ -1981,8 +1876,8 @@ static void R_AddEntitySurface (int entityNum)
 		}
 		else 
 		{
-			if (ent && Distance(ent->e.origin, tr.refdef.vieworg) > 4096.0)
-				return; // Too far away to bother rendering to shadowmap...
+			//if (ent && Distance(ent->e.origin, tr.refdef.vieworg) > 4096.0)
+			//	return; // Too far away to bother rendering to shadowmap...
 		}
 	}
 #endif
@@ -2008,12 +1903,6 @@ static void R_AddEntitySurface (int entityNum)
 
 		//if (R_CullPointAndRadius( ent->e.origin, ent->e.radius ) != CULL_OUT)
 		{
-			/*if ( r_entityCull->integer && R_CullEntitySurface( ent ) ) {
-				// Well, that's a lot of stuff we don't need to draw...
-				if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-				return;
-			}*/
-
 			shader = R_GetShaderByHandle( ent->e.customShader );
 #ifdef __MERGE_MORE__
 			shader->entityMergable = qtrue;
@@ -2031,71 +1920,31 @@ static void R_AddEntitySurface (int entityNum)
 
 		tr.currentModel = R_GetModelByHandle( ent->e.hModel );
 
-		if (!tr.currentModel) {
-			if ( R_CullEntitySurface( ent ) ) {
-				// Well, that's a lot of stuff we don't need to draw...
-				if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-				return;
-			}
+		//ri->Printf(PRINT_ALL, "%s\n", tr.currentModel->name);
 
+		if (!tr.currentModel) {
 			R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0/* cubeMap */ );
 		} else {
 			switch ( tr.currentModel->type ) {
 			case MOD_MESH:
-				if ( R_CullEntitySurface( ent ) ) {
-					// Well, that's a lot of stuff we don't need to draw...
-					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-					return;
-				}
-
 				R_AddMD3Surfaces( ent );
 				break;
 			case MOD_MDR:
-				if ( R_CullEntitySurface( ent ) ) {
-					// Well, that's a lot of stuff we don't need to draw...
-					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-					return;
-				}
-
 				R_MDRAddAnimSurfaces( ent );
 				break;
 			case MOD_IQM:
-				if ( R_CullEntitySurface( ent ) ) {
-					// Well, that's a lot of stuff we don't need to draw...
-					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-					return;
-				}
-
 				R_AddIQMSurfaces( ent );
 				break;
 			case MOD_BRUSH:
-				if ( R_CullEntitySurface( ent ) ) {
-					// Well, that's a lot of stuff we don't need to draw...
-					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-					return;
-				}
-
 				R_AddBrushModelSurfaces( ent );
 				break;
 			case MOD_MDXM:
-				if ( R_CullEntitySurface( ent ) ) {
-					// Well, that's a lot of stuff we don't need to draw...
-					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-					return;
-				}
-
 				if (ent->e.ghoul2)
 					R_AddGhoulSurfaces(ent);
 				break;
 			case MOD_BAD:		// null model axis
 				if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
 					break;
-				}
-
-				if ( R_CullEntitySurface( ent ) ) {
-					// Well, that's a lot of stuff we don't need to draw...
-					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-					return;
 				}
 
 				if( ent->e.ghoul2 && G2API_HaveWeGhoul2Models(*((CGhoul2Info_v *)ent->e.ghoul2)) )
@@ -2114,12 +1963,6 @@ static void R_AddEntitySurface (int entityNum)
 		}
 		break;
 	case RT_ENT_CHAIN:
-		if ( R_CullEntitySurface( ent ) ) {
-			// Well, that's a lot of stuff we don't need to draw...
-			if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-			return;
-		}
-
 		shader = R_GetShaderByHandle( ent->e.customShader );
 #ifdef __MERGE_MORE__
 		shader->entityMergable = qtrue;
@@ -2147,12 +1990,6 @@ void R_AddEntitySurfaces (void) {
 		return;
 	}
 
-	if (r_entityCull->integer >= 2) {
-		NUM_ENTS_CULLED = 0;
-		NUM_ENTS_FOV_CULLED = 0;
-		NUM_ENTS_PVS_CULLED = 0;
-	}
-
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
 		R_AddEntitySurface(i);
@@ -2161,9 +1998,6 @@ void R_AddEntitySurfaces (void) {
 #ifdef __INSTANCED_MODELS__
 	R_AddInstancedModelsToScene();
 #endif //__INSTANCED_MODELS__
-
-	if (r_entityCull->integer >= 2)
-		ri->Printf(PRINT_WARNING, "Culled %i entities. %i FOV and %i PVS.\n", NUM_ENTS_CULLED, NUM_ENTS_FOV_CULLED, NUM_ENTS_PVS_CULLED);
 }
 
 /*
@@ -2275,7 +2109,7 @@ void R_RenderView (viewParms_t *parms) {
 	tr.viewCount++;
 
 	// set viewParms.world
-	R_RotateForViewer ();
+	R_RotateForViewer (&tr.viewParms);
 
 	R_SetupProjection(&tr.viewParms, r_zproj->value, tr.viewParms.zFar, qtrue);
 
@@ -3030,7 +2864,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			tr.viewParms.maxEntityRange = shadowParms.maxEntityRange;
 
 			// set viewParms.world
-			R_RotateForViewer ();
+			R_RotateForViewer(&tr.viewParms);
 
 			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
 

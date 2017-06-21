@@ -63,6 +63,8 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_ssdo_vp;
+extern const char *fallbackShader_ssdo_fp;
 extern const char *fallbackShader_instance_vp;
 extern const char *fallbackShader_instance_fp;
 extern const char *fallbackShader_occlusion_vp;
@@ -157,6 +159,8 @@ extern const char *fallbackShader_fogPost_vp;
 extern const char *fallbackShader_fogPost_fp;
 extern const char *fallbackShader_showNormals_vp;
 extern const char *fallbackShader_showNormals_fp;
+extern const char *fallbackShader_showDepth_vp;
+extern const char *fallbackShader_showDepth_fp;
 extern const char *fallbackShader_deferredLighting_vp;
 extern const char *fallbackShader_deferredLighting_fp;
 extern const char *fallbackShader_ssr_vp;
@@ -1394,6 +1398,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_vlightPositions", GLSL_VEC2, MAX_VOLUMETRIC_LIGHTS },
 	{ "u_vlightDistances", GLSL_FLOAT, MAX_VOLUMETRIC_LIGHTS },
 	{ "u_vlightColors", GLSL_VEC3, MAX_VOLUMETRIC_LIGHTS },
+
+	{ "u_Samples", GLSL_INT, 1 },
+	{ "u_SsdoKernel", GLSL_VEC3, 32 },
 };
 
 static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
@@ -3109,6 +3116,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load ssao shader!");
 	}
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssdoShader, "ssdo", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdo_vp, fallbackShader_ssdo_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdo shader!");
+	}
+
 
 	for (i = 0; i < 2; i++)
 	{
@@ -3465,6 +3480,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.showNormalsShader, "showNormals", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_showNormals_vp, fallbackShader_showNormals_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load showNormals shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.showDepthShader, "showDepth", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_showDepth_vp, fallbackShader_showDepth_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load showDepth shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -4184,6 +4207,24 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssaoShader);
+#endif
+
+	numEtcShaders++;
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssdoShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdo shader!");
+	}
+
+	GLSL_InitUniforms(&tr.ssdoShader);
+
+	qglUseProgram(tr.ssdoShader.program);
+	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssdoShader);
 #endif
 
 	numEtcShaders++;
@@ -5154,6 +5195,27 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.showNormalsShader);
+#endif
+
+	numEtcShaders++;
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.showDepthShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load showDepth shader!");
+	}
+
+	GLSL_InitUniforms(&tr.showDepthShader);
+
+	qglUseProgram(tr.showDepthShader.program);
+
+	GLSL_SetUniformInt(&tr.showDepthShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.showDepthShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.showDepthShader);
 #endif
 
 	numEtcShaders++;
@@ -6140,6 +6202,7 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.shadowmaskShader);
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
+	GLSL_DeleteGPUShader(&tr.ssdoShader);
 
 	for (i = 0; i < 2; i++)
 		GLSL_DeleteGPUShader(&tr.depthBlurShader[i]);
@@ -6201,6 +6264,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.fogPostShader);
 	GLSL_DeleteGPUShader(&tr.colorCorrectionShader);
 	GLSL_DeleteGPUShader(&tr.showNormalsShader);
+	GLSL_DeleteGPUShader(&tr.showDepthShader);
 	GLSL_DeleteGPUShader(&tr.deferredLightingShader);
 	GLSL_DeleteGPUShader(&tr.ssrShader);
 	GLSL_DeleteGPUShader(&tr.ssrCombineShader);
