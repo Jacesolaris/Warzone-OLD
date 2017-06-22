@@ -49,13 +49,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __DEFERRED_MAP_IMAGE_LOADING__	// also load map images deferred...
 
 
-//#define __ORIGINAL_OCCLUSION__
-//#define __VBO_BASED_OCCLUSION__
-
 //#define __SOFTWARE_OCCLUSION__
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
-//#define __LEAF_OCCLUSION__
 
 
 
@@ -242,8 +238,6 @@ extern cvar_t	*r_speeds;
 extern cvar_t	*r_fullbright;
 extern cvar_t	*r_novis;
 extern cvar_t	*r_nocull;
-extern cvar_t	*r_entityCull;
-extern cvar_t	*r_fovCull;
 extern cvar_t	*r_facePlaneCull;
 extern cvar_t	*r_showcluster;
 extern cvar_t	*r_nocurves;
@@ -293,6 +287,10 @@ extern cvar_t  *r_srgb;
 
 extern cvar_t  *r_depthPrepass;
 extern cvar_t  *r_ssao;
+
+extern cvar_t  *r_ssdo;
+extern cvar_t  *r_ssdoBaseRadius;
+extern cvar_t  *r_ssdoMaxOcclusionDist;
 
 extern cvar_t  *r_normalMapping;
 extern cvar_t  *r_normalMapQuality;
@@ -351,6 +349,7 @@ extern cvar_t	*r_picmip;
 extern cvar_t	*r_showtris;
 extern cvar_t	*r_showsky;
 extern cvar_t	*r_shownormals;
+extern cvar_t	*r_showdepth;
 extern cvar_t	*r_showsplat;
 extern cvar_t	*r_finish;
 extern cvar_t	*r_clear;
@@ -1540,6 +1539,9 @@ typedef enum
 	UNIFORM_VLIGHTDISTANCES,
 	UNIFORM_VLIGHTCOLORS,
 
+	UNIFORM_SAMPLES,
+	UNIFORM_SSDO_KERNEL,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -1969,6 +1971,8 @@ typedef struct mnode_s {
 	qboolean    occluded;
 	int			nextOcclusionCheckTime;
 	qboolean	lastOcclusionCheckResult;
+
+	GLuint		occlusionCache;
 } mnode_t;
 
 typedef struct {
@@ -2051,22 +2055,6 @@ typedef struct {
 
 	char		*entityString;
 	char		*entityParsePoint;
-
-#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-	// Occlusion culling...
-	int numVisibleLeafs;
-	mnode_t **visibleLeafs;
-
-	int numVisibleSurfaces;
-	msurface_t *visibleSurfaces[0x10000 /*MAX_DRAWSURFS*/];
-#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-
-#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
-	int numWorldVbos;
-	vec3_t vboMins[MAX_VBOS];
-	vec3_t vboMaxs[MAX_VBOS];
-	VBO_t *vbos[MAX_VBOS];
-#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 } world_t;
 
 
@@ -2615,6 +2603,7 @@ typedef struct trGlobals_s {
 	// UQ1: Added shaders...
 	//
 
+	shaderProgram_t ssdoShader;
 	shaderProgram_t generateNormalMapShader;
 	shaderProgram_t darkexpandShader;
 	shaderProgram_t hdrShader;
@@ -2667,6 +2656,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t fogPostShader;
 	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t showNormalsShader;
+	shaderProgram_t showDepthShader;
 	shaderProgram_t deferredLightingShader;
 	shaderProgram_t ssrShader;
 	shaderProgram_t ssrCombineShader;
@@ -2836,8 +2826,6 @@ extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
 extern	cvar_t	*r_nocull;
-extern cvar_t	*r_entityCull;
-extern cvar_t	*r_fovCull;
 extern	cvar_t	*r_facePlaneCull;		// enables culling of planar surfaces with back side test
 extern	cvar_t	*r_nocurves;
 extern	cvar_t	*r_showcluster;
@@ -2879,6 +2867,7 @@ extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
 extern	cvar_t	*r_showsky;						// forces sky in front of all surfaces
 extern	cvar_t	*r_shownormals;					// draws wireframe normals
+extern	cvar_t	*r_showdepth;					// draws linear depth
 extern cvar_t	*r_showsplat;
 extern	cvar_t	*r_clear;						// force screen clear every frame
 
@@ -2921,6 +2910,10 @@ extern  cvar_t  *r_srgb;
 
 extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;
+
+extern cvar_t  *r_ssdo;
+extern cvar_t  *r_ssdoBaseRadius;
+extern cvar_t  *r_ssdoMaxOcclusionDist;
 
 extern  cvar_t  *r_normalMapping;
 extern cvar_t  *r_normalMapQuality;
@@ -2990,6 +2983,8 @@ extern cvar_t	*r_dynamicGlowSoft;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_shadowMaxDepthError;
+extern cvar_t	*r_shadowSolidityValue;
 extern cvar_t	*r_disableGfxDirEnhancement;
 extern cvar_t	*r_cubemapCullRange;
 extern cvar_t	*r_cubemapCullFalloffMult;
@@ -3996,11 +3991,9 @@ OCCLUSION QUERY
 
 ============================================================
 */
-#ifdef __ORIGINAL_OCCLUSION__
-void OQ_InitOcclusionQuery();
-void OQ_ShutdownOcclusionQuery();
-const void *RB_DrawOcclusion( const void *data );
-void R_AddDrawOcclusionCmd( viewParms_t *parms );
-#endif //__ORIGINAL_OCCLUSION__
+
+qboolean RB_CheckOcclusion(mnode_t *node);
+void RB_OcclusionCulling(void);
+void RB_CheckOcclusions(void);
 
 #endif //TR_LOCAL_H

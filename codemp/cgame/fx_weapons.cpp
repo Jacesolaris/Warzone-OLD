@@ -165,6 +165,11 @@ void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle
 		ent.customShader = glowColorShader;
 
 		AddRefEntityToScene(&ent);
+
+		// Add light as well...
+		vec3_t lightColor; 
+		VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
+		trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
 	}
 }
 

@@ -96,6 +96,7 @@ qboolean		CLIFF_FACES_SCALE_XY = qfalse;
 float			CLIFF_FACES_CULL_MULTIPLIER = 1.0;
 qboolean		CLIFF_CHEAP = qfalse;
 char			CLIFF_SHADER[MAX_QPATH] = { 0 };
+char			CLIFF_CHECK_SHADER[MAX_QPATH] = { 0 };
 qboolean		ADD_LEDGE_FACES = qfalse;
 float			LEDGE_FACES_SCALE = 1.0;
 qboolean		LEDGE_FACES_SCALE_XY = qfalse;
@@ -104,6 +105,7 @@ float			LEDGE_MIN_SLOPE = 22.0;
 float			LEDGE_MAX_SLOPE = 28.0;
 qboolean		LEDGE_CHEAP = qfalse;
 char			LEDGE_SHADER[MAX_QPATH] = { 0 };
+char			LEDGE_CHECK_SHADER[MAX_QPATH] = { 0 };
 float			TREE_SCALE_MULTIPLIER = 2.5;
 int				TREE_PERCENTAGE = 100;
 float			TREE_CLIFF_CULL_RADIUS = 1.0;
@@ -194,6 +196,18 @@ void FOLIAGE_LoadClimateData( char *filename )
 		Sys_Printf("Using default cliff face shader: [%s].\n", CLIFF_SHADER);
 	}
 
+	strcpy(CLIFF_CHECK_SHADER, IniRead(filename, "CLIFFS", "cliffApplyToShader", ""));
+
+	if (CLIFF_CHECK_SHADER[0] != '\0')
+	{
+		Sys_Printf("Applying cliffs only to shader: [%s].\n", CLIFF_CHECK_SHADER);
+	}
+	else
+	{
+		strcpy(CLIFF_CHECK_SHADER, "");
+		Sys_Printf("Applying cliffs to any shader.\n");
+	}
+
 	CLIFF_FACES_SCALE_XY = (qboolean)atoi(IniRead(filename, "CLIFFS", "cliffScaleOnlyXY", "0"));
 	CLIFF_CHEAP = (qboolean)atoi(IniRead(filename, "CLIFFS", "cheapCliffs", "0"));
 
@@ -218,6 +232,18 @@ void FOLIAGE_LoadClimateData( char *filename )
 	{
 		strcpy(LEDGE_SHADER, "models/warzone/rocks/ledge");
 		Sys_Printf("Using default ledge face shader: [%s].\n", LEDGE_SHADER);
+	}
+
+	strcpy(LEDGE_CHECK_SHADER, IniRead(filename, "LEDGES", "ledgeApplyToShader", ""));
+
+	if (LEDGE_CHECK_SHADER[0] != '\0')
+	{
+		Sys_Printf("Applying ledges only to shader: [%s].\n", LEDGE_CHECK_SHADER);
+	}
+	else
+	{
+		strcpy(LEDGE_CHECK_SHADER, "");
+		Sys_Printf("Applying ledges to any shader.\n");
 	}
 
 	LEDGE_FACES_SCALE_XY = (qboolean)atoi(IniRead(filename, "LEDGES", "ledgeScaleOnlyXY", "0"));
@@ -598,6 +624,14 @@ void GenerateCliffFaces(void)
 		if (!(si->compileFlags & C_SOLID))
 		{
 			continue;
+		}
+
+		if (CLIFF_CHECK_SHADER[0] != '\0')
+		{
+			if (strcmp(si->shader, CLIFF_CHECK_SHADER))
+			{// Not the mapper specified shader to apply cliffs to, skip...
+				continue;
+			}
 		}
 
 		//Sys_Printf("drawsurf %i. %i indexes. %i verts.\n", s, ds->numIndexes, ds->numVerts);
@@ -998,6 +1032,14 @@ void GenerateLedgeFaces(void)
 		if (!(si->compileFlags & C_SOLID))
 		{
 			continue;
+		}
+
+		if (LEDGE_CHECK_SHADER[0] != '\0')
+		{
+			if (strcmp(si->shader, LEDGE_CHECK_SHADER))
+			{// Not the mapper specified shader to apply ledges to, skip...
+				continue;
+			}
 		}
 
 		//Sys_Printf("drawsurf %i. %i indexes. %i verts.\n", s, ds->numIndexes, ds->numVerts);

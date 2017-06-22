@@ -2280,7 +2280,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			/*if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
-				continue;
+				break;
 			}*/
 
 			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL && !pStage->glow)
@@ -2320,7 +2320,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 
-			if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
+			//if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
 			{
 				if (glState.vertexAnimation)
 				{
@@ -2378,7 +2378,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index &= ~LIGHTDEF_USE_LIGHTMAP;
 			}
 			
-			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+			//if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
 				if (glState.vertexAnimation)
 				{
@@ -2536,13 +2536,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				didNonDetail = qtrue;
 			}
-
-
-			if (index >= LIGHTDEF_COUNT)
-			{
-				ri->Printf(PRINT_WARNING, "Shader %s, stage %i, tried to use the lightall GLSL %i > %i (max).\n", input->shader->name, stage, index, LIGHTDEF_COUNT);
-				index = LIGHTDEF_COUNT - 1;
-			}
 			
 			//pStage->glslShaderGroup = tr.lightallShader;
 			sp = &tr.lightallMergedShader;
@@ -2596,7 +2589,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				forceRGBGen = CGEN_ENTITY;
 			}
 
-			if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
+			/*if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
 			{
 				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
 				if ( backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH )
@@ -2604,7 +2597,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					//we draw RF_FORCE_ENT_ALPHA stuff after everything else, including standard alpha surfs.
 					stateBits |= GLS_DEPTHMASK_TRUE;
 				}
-			}
+			}*/
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
@@ -2802,7 +2795,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			vec4_t baseColor;
 			vec4_t vertColor;
 
-			if (pStage->rgbGen || pStage->alphaGen)
+			//if (pStage->rgbGen || pStage->alphaGen)
 			{
 				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
 
@@ -2845,7 +2838,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			vec4_t baseColor;
 			vec4_t vertColor;
 
-			if (pStage->rgbGen || pStage->alphaGen)
+			//if (pStage->rgbGen || pStage->alphaGen)
 			{
 				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
 
@@ -2865,7 +2858,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
-
 
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 			{
@@ -3552,7 +3544,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 
 		if (backEnd.depthFill)
-		//if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
 			break;
 	}
 }
@@ -3722,7 +3713,33 @@ void RB_StageIteratorGeneric( void )
 	//
 	if (backEnd.depthFill)
 	{
-		RB_IterateStagesGeneric( input );
+		/*if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
+		{// UQ1: Hack!!! Disabled... These have cull issues...
+			if (backEnd.currentEntity->e.ignoreCull)
+			{
+				//model_t	*model = R_GetModelByHandle(backEnd.currentEntity->e.hModel);
+				//if (model)
+				//	ri->Printf(PRINT_WARNING, "Cull ignored on model type: %i. name: %s.\n", model->type, model->name);
+				//else
+				//	ri->Printf(PRINT_WARNING, "Cull ignored on unknown.\n");
+				if (input->shader->polygonOffset)
+				{
+					qglDisable(GL_POLYGON_OFFSET_FILL);
+				}
+
+				//if (model->type == MOD_BRUSH || model->data.bmodel || !tr.currentModel)
+				return;
+			}
+			else if (tr.currentEntity->e.reType == RT_MODEL)
+			{
+				model_t	*model = R_GetModelByHandle(backEnd.currentEntity->e.hModel);
+				
+				if (model->type == MOD_BRUSH || model->data.bmodel || !tr.currentModel)
+					return;
+			}
+		}*/
+
+		RB_IterateStagesGeneric(input);
 
 		//
 		// reset polygon offset
@@ -3848,9 +3865,7 @@ void RB_EndSurface( void ) {
 	if ( r_showtris->integer ) {
 		DrawTris (input);
 	}
-	if ( r_shownormals->integer ) {
-		DrawNormals (input);
-	}
+
 	// clear shader so we can tell we don't have any unclosed surfaces
 	tess.numIndexes = 0;
 	tess.numVertexes = 0;

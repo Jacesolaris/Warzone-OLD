@@ -773,10 +773,6 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.frameSceneNum++;
 	tr.sceneCount++;
 
-#ifdef __ORIGINAL_OCCLUSION__
-	tr.world->numVisibleLeafs = 0;
-#endif //__ORIGINAL_OCCLUSION__
-
 	// UQ1: Set refdef.viewangles... Hopefully this place is good enough to do it?!?!?!?
 	TR_AxisToAngles(tr.refdef.viewaxis, tr.refdef.viewangles);
 

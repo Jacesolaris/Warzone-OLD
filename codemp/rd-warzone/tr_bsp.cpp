@@ -1970,22 +1970,11 @@ static void R_CreateWorldVBOs(void)
 	msurface_t   *surface, **firstSurf, **lastSurf, **currSurf;
 	msurface_t  **surfacesSorted;
 
-#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
-	vec3_t mins, maxs;
-
-	tr.world->numWorldVbos = 0;
-#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
-
 	VBO_t *vbo;
 	IBO_t *ibo;
 
-#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
-	int maxVboSize = 16 * 4 * 1024;
-	int maxIboSize = 4 * 4 * 1024;
-#else //!(defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__))
 	int maxVboSize = 16 * 1024 * 1024;
 	int maxIboSize = 4 * 1024 * 1024;
-#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
 	int             startTime, endTime;
 
@@ -2151,10 +2140,6 @@ static void R_CreateWorldVBOs(void)
 				}
 
 				vert.lightDirection = R_VboPackNormal (bspSurf->verts[i].lightdir);
-
-#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
-				AddPointToBounds(vert.position, mins, maxs);
-#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 			}
 		}
 
@@ -2188,16 +2173,6 @@ static void R_CreateWorldVBOs(void)
 
 		ri->Hunk_FreeTempMemory(indexes);
 		ri->Hunk_FreeTempMemory(verts);
-
-#if defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
-		ri->Printf(PRINT_WARNING, "VBO: %i. Mins: %i %i %i. Maxs: %i %i %i.\n", tr.world->numWorldVbos, (int)mins[0], (int)mins[1], (int)mins[2], (int)maxs[0], (int)maxs[1], (int)maxs[2]);
-		tr.world->vbos[tr.world->numWorldVbos] = vbo;
-		VectorCopy(mins, tr.world->vboMins[tr.world->numWorldVbos]);
-		VectorCopy(maxs, tr.world->vboMaxs[tr.world->numWorldVbos]);
-		tr.world->numWorldVbos++;
-		VectorClear(mins);
-		VectorClear(maxs);
-#endif //defined(__ORIGINAL_OCCLUSION__) && defined(__VBO_BASED_OCCLUSION__)
 
 		k++;
 	}
@@ -2501,11 +2476,6 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 
 	// chain decendants
 	R_SetParent (s_worldData.nodes, NULL);
-
-#if defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
-	s_worldData.visibleLeafs = (mnode_t **)ri->Hunk_Alloc( numLeafs * sizeof(mnode_t *), h_low);	
-	s_worldData.numVisibleLeafs = 0;
-#endif //defined(__ORIGINAL_OCCLUSION__) && !defined(__VBO_BASED_OCCLUSION__)
 }
 
 //=============================================================================

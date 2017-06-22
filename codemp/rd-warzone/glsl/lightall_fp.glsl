@@ -725,6 +725,32 @@ void main()
 		}
 	}
 
+#if 0
+	if (USE_DEFORM == 1.0)
+	{
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4( 1.0, 1.0, 1.0, gl_FragColor.a );
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		return;
+	}
+	else if (USE_VERTEX_ANIM == 1.0)
+	{
+		gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4( 1.0, 1.0, 1.0, gl_FragColor.a );
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		return;
+	}
+	else if (USE_SKELETAL_ANIM == 1.0)
+	{
+		gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4( 1.0, 1.0, 1.0, gl_FragColor.a );
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		return;
+	}
+#endif
 
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 	vec3 viewDir = m_ViewDir;

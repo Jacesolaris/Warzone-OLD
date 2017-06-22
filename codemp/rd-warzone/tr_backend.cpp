@@ -747,18 +747,11 @@ void RB_ClearWaterPositionMap ( void )
 	}
 }
 
-#ifdef __ORIGINAL_OCCLUSION__
-extern void RB_InitOcclusionFrame(void);
-#endif //__ORIGINAL_OCCLUSION__
-
 extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
 
-#ifdef __ORIGINAL_OCCLUSION__
-	RB_InitOcclusionFrame();
-#endif //__ORIGINAL_OCCLUSION__
 	RB_ClearWaterPositionMap();
 
 	// sync with gl if needed
@@ -929,7 +922,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 
 	if (r_cubeMapping->integer >= 1) CUBEMAPPING = qtrue;
 
-	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
+	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)) CUBEMAPPING = qfalse;
 
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
@@ -1207,7 +1200,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 	if (r_cubeMapping->integer >= 1) CUBEMAPPING = qtrue;
 
-	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
+	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)) CUBEMAPPING = qfalse;
 
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
@@ -2484,10 +2477,6 @@ RB_DrawSurfs
 =============
 */
 
-#ifdef __ORIGINAL_OCCLUSION__
-extern void RB_LeafOcclusion();
-#endif //__ORIGINAL_OCCLUSION__
-
 const void	*RB_DrawSurfs( const void *data ) {
 	const drawSurfsCommand_t	*cmd;
 
@@ -2516,32 +2505,8 @@ const void	*RB_DrawSurfs( const void *data ) {
 		backEnd.depthFill = qtrue;
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
-		//qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-#ifdef __ORIGINAL_OCCLUSION__
-		if (r_occlusion->integer && backEnd.depthFill && glState.currentFBO != tr.renderCubeFbo)
-		{// After occlusion pass is done, check for occlusion before the draw pass...
-#ifdef __VBO_BASED_OCCLUSION__
-			for (int i = 0; i < tr.world->numWorldVbos; i++)
-			{
-				tr.world->vbos[i]->occluded = qfalse;
-			}
-#else //!__VBO_BASED_OCCLUSION__
-			for (int i = 0; i < tr.world->numVisibleLeafs; i++)
-			{
-				mnode_t *leaf = tr.world->visibleLeafs[i];
-				//mnode_t *leaf = &tr.world->nodes[i];
-				leaf->occluded = qfalse;
-			}
-#endif //__VBO_BASED_OCCLUSION__
-
-			RB_LeafOcclusion();
-
-			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		}
-#endif //__ORIGINAL_OCCLUSION__
-
+		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		//qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
 
@@ -2635,6 +2600,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.randomImage, TB_SPECULARMAP);
 			
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+			
+			vec4_t vec;
+			VectorSet4(vec, r_shadowMaxDepthError->value, r_shadowSolidityValue->value, r_testvalue0->value, 0.0);
+			GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
 
 			{
 				vec4_t viewInfo;
@@ -2683,198 +2652,6 @@ const void	*RB_DrawSurfs( const void *data ) {
 			}
 			//RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
 		}
-
-#ifdef __DYNAMIC_SHADOWS__
-		//if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-		{
-			if ( backEnd.refdef.num_dlights )
-			{
-				for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
-					dlight_t	*dl;
-					float radius, scale;
-					vec3_t origin;
-
-					if (l >= MAX_DYNAMIC_SHADOWS) break; // max
-
-					dl = &backEnd.refdef.dlights[l];
-					VectorCopy( dl->transformed, origin );
-					radius = dl->radius;
-					scale = 1.0f / radius;
-
-					if (!dl->activeShadows) continue;
-
-					vec4_t quadVerts[4];
-					vec2_t texCoords[4];
-					vec4_t box;
-
-					FBO_Bind(tr.screenShadowFbo);
-
-					box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-					box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-					box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-					box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-
-					qglViewport(box[0], box[1], box[2], box[3]);
-					qglScissor(box[0], box[1], box[2], box[3]);
-
-					box[0] = backEnd.viewParms.viewportX               / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-					box[1] = backEnd.viewParms.viewportY               / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-					box[2] = box[0] + backEnd.viewParms.viewportWidth  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-					box[3] = box[1] + backEnd.viewParms.viewportHeight / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-
-					texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
-					texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
-					texCoords[2][0] = box[2]; texCoords[2][1] = box[1];
-					texCoords[3][0] = box[0]; texCoords[3][1] = box[1];
-
-					box[0] = -1.0f;
-					box[1] = -1.0f;
-					box[2] =  1.0f;
-					box[3] =  1.0f;
-
-					VectorSet4(quadVerts[0], box[0], box[3], 0, 1);
-					VectorSet4(quadVerts[1], box[2], box[3], 0, 1);
-					VectorSet4(quadVerts[2], box[2], box[1], 0, 1);
-					VectorSet4(quadVerts[3], box[0], box[1], 0, 1);
-
-					GL_State( GLS_DEPTHTEST_DISABLE );
-
-					GLSL_BindProgram(&tr.shadowmaskShader);
-
-					GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
-					GL_BindToTMU(tr.dlightShadowDepthImage[l][0], TB_SHADOWMAP);
-					GL_BindToTMU(tr.dlightShadowDepthImage[l][1], TB_SHADOWMAP2);
-					GL_BindToTMU(tr.dlightShadowDepthImage[l][2], TB_SHADOWMAP3);
-
-					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.dlightShadowMvp[l][0]);
-					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.dlightShadowMvp[l][1]);
-					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.dlightShadowMvp[l][2]);
-
-					GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
-					{
-						vec4_t viewInfo;
-						vec3_t viewVector;
-
-						float zmax = backEnd.viewParms.zFar;
-						float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-						float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
-
-						float zmin = r_znear->value;
-
-						VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
-						GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);
-						VectorScale(backEnd.refdef.viewaxis[1], xmax, viewVector);
-						GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT,    viewVector);
-						VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
-						GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP,      viewVector);
-
-						VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-
-						GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
-					}
-
-
-					RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
-				}
-			}
-		}
-#endif //__DYNAMIC_SHADOWS__
-
-		/*
-		if (r_ssao->integer)
-		{
-			vec4_t quadVerts[4];
-			vec2_t texCoords[4];
-
-			FBO_Bind(tr.quarterFbo[0]);
-
-			qglViewport(0, 0, tr.quarterFbo[0]->width, tr.quarterFbo[0]->height);
-			qglScissor(0, 0, tr.quarterFbo[0]->width, tr.quarterFbo[0]->height);
-
-			VectorSet4(quadVerts[0], -1,  1, 0, 1);
-			VectorSet4(quadVerts[1],  1,  1, 0, 1);
-			VectorSet4(quadVerts[2],  1, -1, 0, 1);
-			VectorSet4(quadVerts[3], -1, -1, 0, 1);
-
-			texCoords[0][0] = 0; texCoords[0][1] = 1;
-			texCoords[1][0] = 1; texCoords[1][1] = 1;
-			texCoords[2][0] = 1; texCoords[2][1] = 0;
-			texCoords[3][0] = 0; texCoords[3][1] = 0;
-
-			GL_State( GLS_DEPTHTEST_DISABLE );
-
-			GLSL_BindProgram(&tr.ssaoShader);
-
-			GL_BindToTMU(tr.hdrDepthImage, TB_COLORMAP);
-
-			{
-				vec4_t viewInfo;
-
-				float zmax = backEnd.viewParms.zFar;
-				float zmin = r_znear->value;
-
-				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-
-				GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_VIEWINFO, viewInfo);
-			}
-
-			{
-				vec2_t screensize;
-				screensize[0] = tr.quarterFbo[0]->width;
-				screensize[1] = tr.quarterFbo[0]->height;
-
-				GLSL_SetUniformVec2(&tr.ssaoShader, UNIFORM_DIMENSIONS, screensize);
-			}
-
-			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
-
-
-			FBO_Bind(tr.quarterFbo[1]);
-
-			qglViewport(0, 0, tr.quarterFbo[1]->width, tr.quarterFbo[1]->height);
-			qglScissor(0, 0, tr.quarterFbo[1]->width, tr.quarterFbo[1]->height);
-
-			GLSL_BindProgram(&tr.depthBlurShader[0]);
-
-			GL_BindToTMU(tr.quarterImage[0],  TB_COLORMAP);
-			GL_BindToTMU(tr.hdrDepthImage, TB_LIGHTMAP);
-
-			{
-				vec4_t viewInfo;
-
-				float zmax = backEnd.viewParms.zFar;
-				float zmin = r_znear->value;
-
-				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-
-				GLSL_SetUniformVec4(&tr.depthBlurShader[0], UNIFORM_VIEWINFO, viewInfo);
-			}
-
-			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
-
-
-			FBO_Bind(tr.screenSsaoFbo);
-
-			qglViewport(0, 0, tr.screenSsaoFbo->width, tr.screenSsaoFbo->height);
-			qglScissor(0, 0, tr.screenSsaoFbo->width, tr.screenSsaoFbo->height);
-
-			GLSL_BindProgram(&tr.depthBlurShader[1]);
-
-			GL_BindToTMU(tr.quarterImage[1],  TB_COLORMAP);
-			GL_BindToTMU(tr.hdrDepthImage, TB_LIGHTMAP);
-
-			{
-				vec4_t viewInfo;
-
-				float zmax = backEnd.viewParms.zFar;
-				float zmin = r_znear->value;
-
-				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-
-				GLSL_SetUniformVec4(&tr.depthBlurShader[1], UNIFORM_VIEWINFO, viewInfo);
-			}
-		}
-		*/
 
 		// reset viewport and scissor
 		FBO_Bind(oldFbo);
@@ -3425,6 +3202,12 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && r_ssdo->integer)
+		{
+			RB_SSDO(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (!SCREEN_BLUR && r_glslWater->integer)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -3588,6 +3371,12 @@ const void *RB_PostProcess(const void *data)
 		if (!SCREEN_BLUR && r_testshader->integer)
 		{
 			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_showdepth->integer)
+		{
+			RB_ShowDepth(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
@@ -3781,6 +3570,8 @@ const void *RB_PostProcess(const void *data)
 		FBO_BlitFromTexture (tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
 	}
 
+	RB_OcclusionCulling();
+
 	backEnd.framePostProcessed = qtrue;
 
 	return (const void *)(cmd + 1);
@@ -3834,11 +3625,6 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_SWAP_BUFFERS:
 			data = RB_SwapBuffers( data );
 			break;
-#ifdef __ORIGINAL_OCCLUSION__
-		case RC_DRAW_OCCLUSION:
-			data = RB_DrawOcclusion(data);
-			break;
-#endif //__ORIGINAL_OCCLUSION__
 		case RC_SCREENSHOT:
 			data = RB_TakeScreenshotCmd( data );
 			break;

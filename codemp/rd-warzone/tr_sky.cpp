@@ -497,17 +497,6 @@ static void DrawSkyBox( shader_t *shader )
 {
 	int		i;
 
-#ifdef __ORIGINAL_OCCLUSION__
-	if (r_occlusion->integer)
-	{
-		tess.numIndexes = 0;
-		tess.numVertexes = 0;
-		tess.firstIndex = 0;
-		tess.minIndex = 0;
-		tess.maxIndex = 0;
-	}
-#endif //__ORIGINAL_OCCLUSION__
-
 	sky_min = 0;
 	sky_max = 1;
 
