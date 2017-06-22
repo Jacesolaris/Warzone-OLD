@@ -2029,6 +2029,8 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
 
+	GLSL_SetUniformVec3(&tr.ssdoShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
 	vec4_t viewInfo;
 	float zmax = backEnd.viewParms.zFar;
 	//float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
