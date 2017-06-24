@@ -123,6 +123,18 @@ void CG_RegisterDefaultBlasterShaders(void)
 	CG_MakeShaderBoltGlow(cgs.media.blueBlasterShot, trap->R_RegisterShader("laserbolt_blue_glow"), colorBlue);
 
 	cgs.media.greenBlasterShot = trap->R_RegisterShader("laserbolt_green");
+	CG_MakeShaderBoltGlow(cgs.media.greenBlasterShot, trap->R_RegisterShader("laserbolt_green_glow"));
+	
+	cgs.media.PurpleBlasterShot = trap->R_RegisterShader("laserbolt_purple");
+	CG_MakeShaderBoltGlow(cgs.media.PurpleBlasterShot, trap->R_RegisterShader("laserbolt_purple_glow"));
+
+	cgs.media.orangeBlasterShot = trap->R_RegisterShader("laserbolt_orange");
+	CG_MakeShaderBoltGlow(cgs.media.orangeBlasterShot, trap->R_RegisterShader("laserbolt_orange_glow"));
+
+	//custom gfx files for other bolts 
+
+	cgs.media.BlasterBolt_Cap_BluePurple = trap->R_RegisterShader("BlasterBolt_Line_BluePurple");
+	CG_MakeShaderBoltGlow(cgs.media.BlasterBolt_Cap_BluePurple, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"));
 	CG_MakeShaderBoltGlow(cgs.media.greenBlasterShot, trap->R_RegisterShader("laserbolt_green_glow"), colorGreen);
 }
 
@@ -458,6 +470,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_CONCUSSION:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/concussion/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound("sound/weapons/slugthrowers/w-90_1.wav");
 		weaponInfo->flashSound[1]		= trap->S_RegisterSound("sound/weapons/slugthrowers/w-90_2.wav");
@@ -505,7 +524,12 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_PISTOL:
-		//CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_PISTOL);
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
 
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol1.mp3");
@@ -526,13 +550,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_small");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 20.0, -3.0, -3.5);
+		VectorSet(weaponInfo->gunPosition, 20, -4, -3);
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
 
@@ -556,6 +580,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_OLD:
+		weaponInfo->bolt3DShader = cgs.media.orangeBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.orangeBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol2.mp3");
@@ -563,7 +594,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -575,14 +606,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 13.0, - 3.0, - 6.0);
+		VectorSet(weaponInfo->gunPosition, 18, - 3, - 2);
 
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
@@ -603,7 +634,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		trap->FX_RegisterEffect("blasters/red_deflect");
 		break;
 	case WP_BLASTER:
-	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
+	//case WP_EMPLACED_GUN:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/e11b_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/e11b_2.mp3");
@@ -611,7 +649,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/e11b_4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -624,14 +662,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/e11b_4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 12.0, - 2.5, - 6.0);
+		VectorSet(weaponInfo->gunPosition, 18, - 5, - 3);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
@@ -660,7 +698,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3]		= trap->S_RegisterSound("sound/weapons/Blasters/disruptor1.mp3");
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
-		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect("Blasters/muzzleflash_Red_small");
+		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->missileModel		= NULL_HANDLE;
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
@@ -672,7 +710,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3]	= trap->S_RegisterSound("sound/weapons/Blasters/disruptor1.mp3");
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= trap->S_RegisterSound("sound/weapons/disruptor/altcharge.mp3");
-		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect("Blasters/muzzleflash_Red_small");
+		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->altMissileModel		= NULL_HANDLE;
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
@@ -700,6 +738,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BOWCASTER:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound				= trap->S_RegisterSound("sound/weapons/select_sniper.mp3");
 		weaponInfo->firingSound				= NULL_SOUND;
 		weaponInfo->flashSound[0]			= trap->S_RegisterSound("sound/weapons/blasters/crossbow_small1.mp3");
@@ -707,7 +752,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[2]			= trap->S_RegisterSound("sound/weapons/blasters/crossbow_small3.mp3");
 		weaponInfo->flashSound[3]			= trap->S_RegisterSound("sound/weapons/blasters/crossbow_small4.mp3");
 
-		weaponInfo->muzzleEffect			= trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect			= trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel			= NULL_HANDLE;
 		weaponInfo->missileSound			= NULL_SOUND;
 		weaponInfo->missileDlight			= 0;
@@ -716,7 +761,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->powerupShotRenderfx		= NULL_FX;
 
 
-		weaponInfo->altMuzzleEffect			= trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect			= trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altFlashSound[0]		= trap->S_RegisterSound("sound/weapons/blasters/crossbow_big1.mp3");
 		weaponInfo->altFlashSound[1]		= trap->S_RegisterSound("sound/weapons/blasters/crossbow_big2.mp3");
 		weaponInfo->altFlashSound[2]		= trap->S_RegisterSound("sound/weapons/blasters/crossbow_big3.mp3");
@@ -727,8 +772,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight		= 0;
 		weaponInfo->altMissileHitSound		= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc		= FX_WeaponAltProjectileThink;
-										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 8.0, - 4.0, - 5.0);
+										//	 X,	  ,Y   ,Z	
+		VectorSet(weaponInfo->gunPosition,	 14, - 5, - 3);
 
 		weaponInfo->Chargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
 		weaponInfo->Altchargingfx = NULL_FX;
@@ -750,11 +795,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_REPEATER:
+		weaponInfo->bolt3DShader = cgs.media.yellowBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.yellowBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/select_repeater.mp3");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/imperial_repeater/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
-		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "blasters/muzzleflash_Yellow_medium" );
+		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "blasters/muzzleflash2_Yellow_medium" );
 		weaponInfo->missileModel		= NULL_HANDLE;
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
@@ -763,7 +815,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/imperial_repeater/alt_fire.wav");
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
-		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "blasters/muzzleflash_Blue_medium" );
+		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "blasters/muzzleflash2_Blue_medium" );
 		weaponInfo->altMissileModel		= NULL_HANDLE;
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
@@ -788,6 +840,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DEMP2:
+		//weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		//weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		//weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		//weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		//weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		//weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/demp2/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -828,6 +887,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_FLECHETTE:
+		//weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		//weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		//weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		//weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		//weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		//weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/flechette/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/flechette/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -869,6 +935,13 @@ void CG_RegisterWeapon( int weaponNum) {
 
 		//Add new guns here
 	case WP_A280:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_sniper.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
@@ -876,7 +949,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -888,7 +961,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -918,6 +991,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC15:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_repeater.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/generic1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/generic2.mp3");
@@ -927,7 +1007,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[5] = trap->S_RegisterSound("sound/weapons/blasters/generic6.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium"); //Is working like it should, KEEP it like that
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium"); //Is working like it should, KEEP it like that
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -964,6 +1044,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_WESTARM5:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_repeater.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/generic1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/generic2.mp3");
@@ -973,7 +1060,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[5] = trap->S_RegisterSound("sound/weapons/blasters/generic6.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium"); //Is working like it should, KEEP it like that
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium"); //Is working like it should, KEEP it like that
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -983,7 +1070,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/dc17m/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_big");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_big");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1011,6 +1098,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_T21:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_rifle.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/t-21_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/t-21_2.mp3");
@@ -1018,7 +1112,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/t-21_4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/golan_arms/projectileMain.md3");
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1031,14 +1125,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/walker4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/golan_arms/projectile.md3");
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 9.0, - 3.0, - 7.0);
+		VectorSet(weaponInfo->gunPosition, 10, - 3, - 4);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Red_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Red_big");
@@ -1057,6 +1151,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_EE3:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_rifle.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
@@ -1064,7 +1165,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1080,10 +1181,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 7.0, -3.5, -8.0);
+		VectorSet(weaponInfo->gunPosition, 14, -3, -3);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedOrange_Flare_medium");
@@ -1102,11 +1203,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC_15S_CLONE_PISTOL:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 
 		weaponInfo->missileSound = NULL_SOUND;
@@ -1117,7 +1225,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/altfire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/demp2/altCharge.wav");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_small");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 
 		weaponInfo->altMissileSound = NULL_SOUND;
@@ -1151,6 +1259,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DLT_19:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_rifle.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
@@ -1158,7 +1273,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1170,14 +1285,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/charge_bryar.mp3");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 6.0, - 2.4, - 6.6);
+									   //  X,  ,Y  ,Z	
+		VectorSet(weaponInfo->gunPosition, 12, -4, -4);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
@@ -1196,6 +1311,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC_15A_Rifle:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_rifle.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/generic1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/generic2.mp3");
@@ -1205,7 +1327,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[5] = trap->S_RegisterSound("sound/weapons/blasters/generic6.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1223,7 +1345,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 4.0, - 3.0, - 6.6);
+		VectorSet(weaponInfo->gunPosition, 12, -4, -4);
 		
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
@@ -1242,6 +1364,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_WESTER_PISTOL:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/westar1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/westar2.mp3");
@@ -1249,7 +1378,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/westar4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1261,7 +1390,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/westar3.mp3");
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/westar4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_small");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1289,6 +1418,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_ELG_3A:
+		weaponInfo->bolt3DShader = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/elg-3a_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/elg-3a_2.mp3");
@@ -1296,7 +1432,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/elg-3a_4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1305,7 +1441,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/greenblaster/fire2.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_small");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1334,11 +1470,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_S5_PISTOL:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/spy_pistol/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1349,7 +1492,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/spy_pistol/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1377,11 +1520,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_Z6_BLASTER_CANON:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_h_launcher.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/minigun/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1391,7 +1541,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1401,8 +1551,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->spindownSound = trap->S_RegisterSound("sound/weapons/z6/chaingun_spindown.wav");
 										//  X,	 ,Y	   ,Z	
 		VectorSet(weaponInfo->gunPosition, 11.0, 8.0, -5.0);
-		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
-		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("blasters/shot_Blue_Ball_medium");
+		weaponInfo->Chargingfx = NULL_FX;
+		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_medium");
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
@@ -1422,6 +1572,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_HEAVY_BOWCASTER_SCOPE:
+		weaponInfo->bolt3DShader = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_carbine.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big2.mp3");
@@ -1433,7 +1590,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[7] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_small4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1446,7 +1603,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1475,6 +1632,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_WOOKIES_PISTOL:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol2.mp3");
@@ -1482,7 +1646,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1494,7 +1658,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol3.mp3");
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_small");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1522,6 +1686,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_CLONE_BLASTER:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_carbine.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/generic1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/generic2.mp3");
@@ -1531,7 +1702,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[5] = trap->S_RegisterSound("sound/weapons/blasters/generic6.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1546,7 +1717,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[5] = trap->S_RegisterSound("sound/weapons/blasters/e11b_6.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1571,11 +1742,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC15_EXT:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_repeater.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1711,11 +1889,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_TESTGUN:
+		weaponInfo->bolt3DShader = cgs.media.PurpleBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.PurpleBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/Blasters/dl-44_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("Blasters/muzzleflash_Purple_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("Blasters/muzzleflash2_Purple_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1725,7 +1910,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/Blasters/dl-44_3.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("Blasters/muzzleflash_Purple_small");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("Blasters/muzzleflash2_Purple_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1835,11 +2020,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC_17_CLONE_PISTOL:
+		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 
 		weaponInfo->missileSound = NULL_SOUND;
@@ -1881,6 +2073,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_SPOTING_BLASTER:
+		weaponInfo->bolt3DShader = cgs.media.PurpleBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.PurpleBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.pm3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/e11b_1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/e11b_2.mp3");
@@ -1888,7 +2087,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/e11b_4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -1901,7 +2100,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/e11b_4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -2023,6 +2222,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_ACP_ARRAYGUN:
+		weaponInfo->bolt3DShader = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_array.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun2.mp3");
@@ -2167,6 +2373,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BOWCASTER_CLASSIC:
+		weaponInfo->bolt3DShader = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bowcaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_small1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_small2.mp3");
@@ -2174,7 +2387,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_small4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2187,7 +2400,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -2216,6 +2429,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_HEAVY_SCOPE_BOWCASTER:
+		weaponInfo->bolt3DShader = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.greenBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bowcaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big2.mp3");
@@ -2227,7 +2447,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[7] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_small4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2240,7 +2460,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Green_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Green_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -2266,6 +2486,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_CARBINE:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_carbine.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
@@ -2273,7 +2500,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2286,7 +2513,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -2315,6 +2542,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_RIFLE:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_carbine.mp3");
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
@@ -2323,7 +2557,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2339,7 +2573,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
 		VectorSet(weaponInfo->gunPosition, 10.0, - 3.0, - 5.4);
@@ -2361,6 +2595,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_RIFLE_SCOPE:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/sound/weapons/select_carbine.mp3");
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
@@ -2369,7 +2610,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2385,7 +2626,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
 		VectorSet(weaponInfo->gunPosition, 7.0, - 4.0, - 4.0);
@@ -2407,6 +2648,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_PULSECANON:
+		weaponInfo->bolt3DShader = cgs.media.BlasterBolt_Cap_BluePurple; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.BlasterBolt_Cap_BluePurple; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pulse.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/plasmacannon1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/plasmacannon2.mp3");
@@ -2414,7 +2662,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/plasmacannon4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2432,7 +2680,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 7.0, - 3.0, - 6.0);
+		VectorSet(weaponInfo->gunPosition, 15, -4, - 6);
 
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("blasters/shot_BluePurple_Ball_medium");
@@ -2454,6 +2702,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_PROTON_CARBINE_RIFLE:
+		weaponInfo->bolt3DShader = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
+		weaponInfo->bolt3DShaderAlt = cgs.media.redBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
+		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_carbine.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/protoncarbine1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/protoncarbine2.mp3");
@@ -2461,7 +2716,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/protoncarbine4.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Purple_small");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Purple_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2474,14 +2729,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/protoncarbine4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Purple_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Purple_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 8.0, - 2.0, - 6.2);
+		VectorSet(weaponInfo->gunPosition, 11.0, - 3.0, - 6.2);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_Ball_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_Flare_medium");
@@ -2517,7 +2772,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/dl-44_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -2530,7 +2785,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/dl-44_1.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Red_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
