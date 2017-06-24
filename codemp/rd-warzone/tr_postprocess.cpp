@@ -1919,89 +1919,48 @@ float mix(float x, float y, float a)
 	return (1 - a)*x + a*y;
 }
 
-qboolean SSDO_KERNEL_INITIALIZED = qfalse;
-
-void computeAOPreProcess( void )
+void RB_DepthToNormal(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
-	if (SSDO_KERNEL_INITIALIZED) return;
+	vec4_t		color;
 
-	SSDO_KERNEL_INITIALIZED = qtrue;
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
 
-	srand(NULL);
-	//----- Samples Kernel Generation -----//
-	float scale;
-	const unsigned int kernelSize = 32;
-	vec3_t kernel[kernelSize];
-	for (unsigned int i = 0; i < kernelSize; ++i)
+	GLSL_BindProgram(&tr.depthToNormalShader);
+
+	GLSL_SetUniformMatrix16(&tr.depthToNormalShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformVec3(&tr.depthToNormalShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+	GLSL_SetUniformInt(&tr.depthToNormalShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
 	{
-		// Generating random points in z oriented hemisphere
-		kernel[i][0]= ((-100.0f + (float)(rand() % 200)) / 100.0f);
-		kernel[i][1] = ((-100.0f + (float)(rand() % 200)) / 100.0f);
-		kernel[i][2] = ((-100.0f + (float)(rand() % 200)) / 100.0f);
-		
-		// Normalize the random vector to fall on the unit hemisphere
-		VectorNormalize(kernel[i]);
-		
-		// Scale the random unit vector to fall randomly into the unit hemisphere
-		//kernel[i] *= (((float)(rand() % 100)) / 100.0f);
-		// Scale the random unit vector to fall randomly (but closer to the origin) into the unit hemisphere
-		scale = float(i) / float(kernelSize);
-		scale = mix(0.1f, 1.0f, scale * scale);
-		VectorScale(kernel[i], scale, kernel[i]);
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.depthToNormalShader, UNIFORM_DIMENSIONS, screensize);
 	}
 
-	// Send the samples kernel to the shader
-	qglUseProgram(tr.ssdoShader.program);
-	GLSL_SetUniformVec3xX(&tr.ssdoShader, UNIFORM_SSDO_KERNEL, kernel, kernelSize);
-	qglUseProgram(0);
-	
-	/*
-	//----- Noise Texture Generation -----//
-	unsigned int noiseTexSizeX = noiseSizeXY;
-	unsigned int noiseTexSizeY = noiseSizeXY;
-	unsigned int noiseSize = noiseTexSizeX * noiseTexSizeY;
-	vec3_t noise[noiseSize];
-	float thresold = 0.125f;
-	for (unsigned int i = 0; i < noiseSize; ++i)
 	{
-		// Generating random points in z oriented hemisphere
-		noise[i].x = ((-1000.0f + (float)(rand() % 2000)) / 1000.0f);
-		noise[i].y = ((-1000.0f + (float)(rand() % 2000)) / 1000.0f);
-		noise[i].z = 0.0f;
-		// Normalize the random vector to fall on the unit hemisphere
-		noise[i] = glm::normalize(noise[i]);
-		if ((noise[i].x > -thresold && noise[i].x < thresold) || (noise[i].y > -thresold && noise[i].y < thresold))
-			i = --i;
+		vec4_t viewInfo;
+		float zmax = backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmin = r_znear->value;
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformVec4(&tr.depthToNormalShader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	// Set Up noise texture
-	qglGenTextures(1, &noiseTextureID);
-	qglBindTexture(GL_TEXTURE_2D, noiseTextureID);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, noiseTexSizeX, noiseTexSizeY, 0, GL_RGB, GL_FLOAT, (float*)noise);
-	// Set Up noise sampler
-	qglGenSamplers(1, &noiseSamplerID);
-	qglBindSampler(noiseTextureID, noiseSamplerID);
-	qglSamplerParameteri(noiseSamplerID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	qglSamplerParameteri(noiseSamplerID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	qglSamplerParameteri(noiseSamplerID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	qglSamplerParameteri(noiseSamplerID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	doHStep->Set(DO_FBO_DO->getWidth() / (float)noiseTexSizeX);
-	doVStep->Set(DO_FBO_DO->getHeight() / (float)noiseTexSizeY);
-	doHBlurSize->Set(noiseTexSizeX);
-	doVBlurSize->Set(noiseTexSizeY);
-	delete[] noise;
-	*/
+	FBO_Blit(tr.ssdoFbo2, hdrBox, NULL, tr.screenPureNormalFbo, ldrBox, &tr.depthToNormalShader, color, 0);
 }
 
 void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
-	computeAOPreProcess(); // Init the SSDO kernel...
-
 	vec4_t color;
 
 	// bloom
@@ -2009,6 +1968,10 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[1] =
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
+
+	//
+	// Generate occlusion map...
+	//
 
 	GLSL_BindProgram(&tr.ssdoShader);
 
@@ -2021,13 +1984,13 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 	
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.screenPureNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
+	GL_BindToTMU(tr.ssdoNoiseImage, TB_DELUXEMAP);
 
 	GLSL_SetUniformVec3(&tr.ssdoShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
@@ -2062,25 +2025,76 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	VectorSet4(local1, xmax, ymax, r_testvalue0->value, r_testvalue1->value);
 	GLSL_SetUniformVec4(&tr.ssdoShader, UNIFORM_LOCAL1, local1);
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssdoShader, color, 0);
-	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.genericFbo2, ldrBox, &tr.ssdoShader, color, 0);
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssdoShader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssdoFbo1, ldrBox, &tr.ssdoShader, color, 0);
 
-	/*
-	// Combine render and hbao...
-	GLSL_BindProgram(&tr.hbaoCombineShader);
 
-	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	//
+	// Blur Occlusion Map...
+	//
 
+	GLSL_BindProgram(&tr.ssdoBlurShader);
+
+	GLSL_SetUniformMatrix16(&tr.ssdoBlurShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(tr.genericFbo2->colorImage[0], TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 
-	GLSL_SetUniformVec2(&tr.hbaoCombineShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoCombineShader, color, 0);
-	*/
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.screenPureNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+	GLSL_SetUniformVec3(&tr.ssdoBlurShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+	GLSL_SetUniformVec2(&tr.ssdoBlurShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformVec4(&tr.ssdoBlurShader, UNIFORM_VIEWINFO, viewInfo);
+	GLSL_SetUniformVec4(&tr.ssdoBlurShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
+	// X
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GL_BindToTMU(tr.ssdoImage1, TB_DELUXEMAP);
+
+	VectorSet4(local0, 1.0, 0.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.ssdoBlurShader, UNIFORM_LOCAL0, local0);
+
+	FBO_Blit(tr.ssdoFbo1, hdrBox, NULL, tr.ssdoFbo2, ldrBox, &tr.ssdoBlurShader, color, 0);
+
+	// Y
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GL_BindToTMU(tr.ssdoImage2, TB_DELUXEMAP);
+
+	VectorSet4(local0, 0.0, 1.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.ssdoBlurShader, UNIFORM_LOCAL0, local0);
+
+	FBO_Blit(tr.ssdoFbo2, hdrBox, NULL, tr.ssdoFbo1, ldrBox, &tr.ssdoBlurShader, color, 0);
+
+	if (r_ssdo->integer == 2)
+	{
+		// X
+		GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+		GL_BindToTMU(tr.ssdoImage1, TB_DELUXEMAP);
+
+		VectorSet4(local0, 1.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.ssdoBlurShader, UNIFORM_LOCAL0, local0);
+
+		FBO_Blit(tr.ssdoFbo1, hdrBox, NULL, tr.ssdoFbo2, ldrBox, &tr.ssdoBlurShader, color, 0);
+
+		// Y
+		GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+		GL_BindToTMU(tr.ssdoImage2, TB_DELUXEMAP);
+
+		VectorSet4(local0, 0.0, 1.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.ssdoBlurShader, UNIFORM_LOCAL0, local0);
+
+		FBO_Blit(tr.ssdoFbo2, hdrBox, NULL, tr.ssdoFbo1, ldrBox, &tr.ssdoBlurShader, color, 0);
+	}
+
+	if (r_ssdo->integer == 3)
+		FBO_FastBlit(tr.ssdoFbo1, NULL, ldrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -3120,6 +3134,15 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
+	if (r_ssdo->integer == 1)
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
+
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GL_BindToTMU(tr.renderNormalImage, TB_DETAILMAP);
+	}
+
 	/*for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 	{
 		ri->Printf(PRINT_WARNING, "%i - %i %i %i\n", i, (int)CLOSEST_LIGHTS_POSITIONS[i][0], (int)CLOSEST_LIGHTS_POSITIONS[i][1], (int)CLOSEST_LIGHTS_POSITIONS[i][2]);
@@ -3151,7 +3174,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL1, local1);
 
 	vec4_t local2;
-	VectorSet4(local2, 0.0, SHADOWS_ENABLED ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+	VectorSet4(local2, (r_ssdo->integer > 0 && r_ssdo->integer < 3) ? 1.0 : 0.0, SHADOWS_ENABLED ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  local2);
 
 	vec4_t local3;
@@ -3324,7 +3347,10 @@ void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+	if (r_shownormals->integer == 2)
+		GL_BindToTMU(tr.screenPureNormalImage, TB_NORMALMAP);
+	else
+		GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformMatrix16(&tr.showNormalsShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

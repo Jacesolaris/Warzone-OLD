@@ -63,8 +63,12 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_depthToNormal_vp;
+extern const char *fallbackShader_depthToNormal_fp;
 extern const char *fallbackShader_ssdo_vp;
 extern const char *fallbackShader_ssdo_fp;
+extern const char *fallbackShader_ssdoBlur_vp;
+extern const char *fallbackShader_ssdoBlur_fp;
 extern const char *fallbackShader_instance_vp;
 extern const char *fallbackShader_instance_fp;
 extern const char *fallbackShader_occlusion_vp;
@@ -2000,6 +2004,7 @@ void GLSL_AttachTextures(void)
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.renderNormalImage, 2);
 	FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
+	FBO_AttachTextureImage(tr.screenPureNormalImage, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2009,6 +2014,7 @@ void GLSL_AttachGlowTextures(void)
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.dummyImage2, 2);
 	FBO_AttachTextureImage(tr.dummyImage3, 3);
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2018,6 +2024,7 @@ void GLSL_AttachGenericTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2027,6 +2034,7 @@ void GLSL_AttachPostTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2036,6 +2044,7 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
 }
@@ -2046,6 +2055,7 @@ void GLSL_AttachWaterTextures2(void)
 	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
 	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage2, 3); // water positions
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
 }
@@ -2099,6 +2109,7 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	qglBindFragDataLocation(program->program, 1, "out_Glow");
 	qglBindFragDataLocation(program->program, 2, "out_Normal");
 	qglBindFragDataLocation(program->program, 3, "out_Position");
+	qglBindFragDataLocation(program->program, 4, "out_PureNormal");
 
 	if (attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
@@ -3119,9 +3130,25 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.depthToNormalShader, "depthToNormal", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthToNormal_vp, fallbackShader_depthToNormal_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthToNormal shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.ssdoShader, "ssdo", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdo_vp, fallbackShader_ssdo_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssdo shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssdoBlurShader, "ssdoBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdoBlur_vp, fallbackShader_ssdoBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdoBlur shader!");
 	}
 
 
@@ -4212,6 +4239,25 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.depthToNormalShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthToNormal shader!");
+	}
+
+	GLSL_InitUniforms(&tr.depthToNormalShader);
+
+	qglUseProgram(tr.depthToNormalShader.program);
+	GLSL_SetUniformInt(&tr.depthToNormalShader, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.depthToNormalShader);
+#endif
+
+	numEtcShaders++;
+
+
+
 	if (!GLSL_EndLoadGPUShader(&tr.ssdoShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssdo shader!");
@@ -4228,6 +4274,28 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssdoBlurShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdoBlur shader!");
+	}
+
+	GLSL_InitUniforms(&tr.ssdoBlurShader);
+
+	qglUseProgram(tr.ssdoBlurShader.program);
+	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssdoBlurShader);
+#endif
+
+	numEtcShaders++;
+
+
+
 
 	for (i = 0; i < 2; i++)
 	{
@@ -6201,8 +6269,12 @@ void GLSL_ShutdownGPUShaders(void)
 		GLSL_DeleteGPUShader(&tr.calclevels4xShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.shadowmaskShader);
+
+	GLSL_DeleteGPUShader(&tr.depthToNormalShader);
+
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoShader);
+	GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
 
 	for (i = 0; i < 2; i++)
 		GLSL_DeleteGPUShader(&tr.depthBlurShader[i]);

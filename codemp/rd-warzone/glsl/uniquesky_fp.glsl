@@ -12,6 +12,7 @@ in vec3 var_ViewDir;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+out vec4 out_PureNormal;
 
 float tween(float t)
 {
@@ -180,4 +181,5 @@ void main()
 	out_Glow = vec4(0.0);
 	out_Position = vec4(var_Position.xyz, 1024.0);
 	out_Normal = vec4(var_Normal.xyz * 0.5 + 0.5, 0.0);
+	out_PureNormal = vec4( var_Normal.xyz * 0.5 + 0.5, 0.0 );
 }

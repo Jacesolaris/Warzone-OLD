@@ -1468,31 +1468,35 @@ void R_LoadMapInfo(void)
 	if (!R_TextureFileExists("gfx/random2K.tga"))
 	{
 		R_CreateRandom2KImage("");
-		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 
 	if (!R_TextureFileExists("gfx/random2Ka.tga"))
 	{
 		R_CreateRandom2KImage("a");
-		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
+
+
+	tr.ssdoNoiseImage = R_FindImageFile("gfx/ssdoNoise.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+
 
 	if (!R_TextureFileExists("gfx/defaultDetail.tga"))
 	{
 		R_CreateDefaultDetail();
-		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION);
+		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION);
+		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 
 	if (!R_TextureFileExists("gfx/splatControlImage.tga"))

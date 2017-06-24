@@ -21,6 +21,7 @@ varying vec4	var_Color;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+out vec4 out_PureNormal;
 
 void main()
 {
@@ -50,4 +51,5 @@ void main()
 	out_Glow = vec4(0.0);
 	out_Position = vec4(var_Position.rgb, 1024.0);
 	out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, 0.0);
+	out_PureNormal = vec4(var_Normal.rgb * 0.5 + 0.5, 0.0);
 }

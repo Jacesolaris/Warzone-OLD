@@ -436,19 +436,10 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
 
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
-			vec4_t vec;
-			float isTextureClamped = 0.0;
-
-			//if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE))
-			//{
-			//	isTextureClamped = 1.0;
-			//}
-
-			VectorSet4(vec, 0, 0, 0, isTextureClamped);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
-
-			VectorSet4(vec, 0, 0, 0, 0);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vector);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vector);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vector);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vector);
 		}
 
 		GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, vector);

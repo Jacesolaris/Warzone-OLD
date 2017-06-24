@@ -178,6 +178,7 @@ varying float				var_usingSteepMap;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+out vec4 out_PureNormal;
 
 vec2 encode (vec3 n)
 {
@@ -948,7 +949,8 @@ void main()
 		
 		if (USE_ISDETAIL <= 0.0)
 		{
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, gl_FragColor.a/*norm.a*/ );
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, gl_FragColor.a );
+			out_PureNormal = vec4( m_Normal.xyz * 0.5 + 0.5, 0.0 );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 		}
 	}

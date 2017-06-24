@@ -11,6 +11,5 @@ varying vec2   	var_TexCoords;
 void main()
 {
 	gl_Position = u_ModelViewProjectionMatrix * vec4(attr_Position, 1.0);
-	var_LightPos = (u_ModelViewProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 0.0)).xyz;
 	var_TexCoords = attr_TexCoord0.st;
 }

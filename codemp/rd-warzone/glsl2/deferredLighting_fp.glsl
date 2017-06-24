@@ -7,6 +7,8 @@ uniform sampler2D	u_DeluxeMap;
 uniform sampler2D	u_GlowMap;
 uniform sampler2D	u_ScreenDepthMap;
 uniform samplerCube	u_CubeMap;
+uniform sampler2D	u_HeightMap;
+uniform sampler2D	u_DetailMap;
 
 #if defined(USE_SHADOWMAP)
 uniform sampler2D	u_ShadowMap;
@@ -15,7 +17,7 @@ uniform sampler2D	u_ShadowMap;
 uniform vec2		u_Dimensions;
 
 uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, 0, 0
-uniform vec4		u_Local2; // 0, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
+uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 
 uniform vec3		u_ViewOrigin;
@@ -187,12 +189,37 @@ void main(void)
 
 	float normStrength = (norm.a * 0.5 + 0.5) * 0.2;//u_Local3.r;
 
+	vec4 occlusion = vec4(0.0);
+	vec3 norm2 = vec3(0.0);
+	bool useOcclusion = false;
+
+	if (u_Local2.r == 1.0)
+	{
+		useOcclusion = true;
+		occlusion = texture(u_HeightMap, texCoords);
+		norm2 = texture(u_DetailMap, texCoords).xyz * 2.0 - 1.0;
+	}
+
 	if (!noSunPhong && lambertian2 > 0.0)
 	{// this is blinn phong
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
 		spec2 = pow(specAngle, 16.0);
-		gl_FragColor.rgb += (vec3(clamp(spec2, 0.0, 1.0) * normStrength) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale;
+		vec3 lightAdd = (vec3(clamp(spec2, 0.0, 1.0) * normStrength) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale;
+
+		if (useOcclusion)
+		{
+			vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
+			float to_light_dist = length(to_light);
+			vec3 to_light_norm = (to_light / to_light_dist);
+			float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
+
+			gl_FragColor.rgb = (gl_FragColor.rgb * (light_occlusion * 0.3 + 0.66666)) + (lightAdd * light_occlusion);
+		}
+		else
+		{
+			gl_FragColor.rgb += lightAdd;
+		}
 	}
 
 	if (noSunPhong)
@@ -267,13 +294,26 @@ void main(void)
 						vec3 gamma = vec3(1.0/2.2);
 						vec3 finalColor = pow(linearColor, gamma);
 
-						addedLight += finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0;
+						vec3 lightAdd = finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0;
+
+						if (useOcclusion)
+						{
+							vec3 to_light = position.xyz - lightPos;
+							float to_light_dist = distanceToLight;
+							vec3 to_light_norm = to_light / to_light_dist;
+							float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm+E, 1.0), occlusion), 0.0, 1.0);
+							addedLight.rgb += lightAdd * (light_occlusion * 0.75 - 0.05);
+						}
+						else
+						{
+							addedLight += lightAdd;
+						}
 					}
 				}
 			}
 		}
 
-		gl_FragColor.rgb = clamp(gl_FragColor.rgb + clamp(addedLight, 0.0, 1.0) * lightScale, 0.0, 1.0);
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb + clamp(addedLight, -1.0, 1.0) * lightScale, 0.0, 1.0);
 	}
 
 #ifdef __AMBIENT_OCCLUSION__

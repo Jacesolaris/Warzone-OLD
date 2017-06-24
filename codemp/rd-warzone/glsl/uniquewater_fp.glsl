@@ -8,6 +8,7 @@ varying vec3		var_Normal;
 
 out vec4 out_Glow;
 out vec4 out_Normal;
+out vec4 out_PureNormal;
 out vec4 out_Position;
 
 // Maximum waves amplitude
@@ -59,6 +60,7 @@ void main()
 {
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(var_Normal * 0.5 + 0.5, 0.75);
+	out_PureNormal = vec4(var_Normal * 0.5 + 0.5, 0.75);
 
 	float isWater = 1.0;
 	out_Color = vec4(0.0059, 0.3096, 0.445, 0.5);

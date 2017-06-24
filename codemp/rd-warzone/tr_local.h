@@ -2512,6 +2512,8 @@ typedef struct trGlobals_s {
 
 	image_t					*awesomiumuiImage;
 
+	image_t					*ssdoNoiseImage;
+
 	FBO_t					*renderFbo;
 	//FBO_t					*previousRenderFbo;
 	FBO_t					*waterFbo;
@@ -2603,7 +2605,9 @@ typedef struct trGlobals_s {
 	// UQ1: Added shaders...
 	//
 
+	shaderProgram_t depthToNormalShader;
 	shaderProgram_t ssdoShader;
+	shaderProgram_t ssdoBlurShader;
 	shaderProgram_t generateNormalMapShader;
 	shaderProgram_t darkexpandShader;
 	shaderProgram_t hdrShader;
@@ -2674,6 +2678,7 @@ typedef struct trGlobals_s {
 	image_t        *dummyImage;
 	image_t        *dummyImage2;
 	image_t        *dummyImage3;
+	image_t        *dummyImage4;
 
 	FBO_t          *anamorphicRenderFBO;
 	FBO_t          *bloomRenderFBO[3];
@@ -2684,6 +2689,15 @@ typedef struct trGlobals_s {
 	FBO_t		   *genericFbo2;
 	FBO_t		   *genericFbo3;
 	FBO_t		   *NormalMapDestinationFBO;
+
+	FBO_t		   *screenPureNormalFbo;
+	image_t        *screenPureNormalImage;
+
+	FBO_t		   *ssdoFbo1;
+	FBO_t		   *ssdoFbo2;
+
+	image_t        *ssdoImage1;
+	image_t        *ssdoImage2;
 
 	//
 	// UQ1: End Added shaders...

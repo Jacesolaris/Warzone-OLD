@@ -480,6 +480,36 @@ void FBO_Init(void)
 		R_CheckFBO(tr.genericFbo3);
 	}
 
+	//
+	// UQ1's Depth To Normal FBO...
+	//
+	{
+		tr.screenPureNormalFbo = FBO_Create("_ssdoFbo1", tr.screenPureNormalImage->width, tr.screenPureNormalImage->height);
+		FBO_Bind(tr.screenPureNormalFbo);
+		FBO_AttachTextureImage(tr.screenPureNormalImage, 0);
+		R_CheckFBO(tr.screenPureNormalFbo);
+	}
+
+	//
+	// UQ1's SSDO FBO1...
+	//
+	{
+		tr.ssdoFbo1 = FBO_Create("_ssdoFbo1", tr.ssdoImage1->width, tr.ssdoImage1->height);
+		FBO_Bind(tr.ssdoFbo1);
+		FBO_AttachTextureImage(tr.ssdoImage1, 0);
+		R_CheckFBO(tr.ssdoFbo1);
+	}
+
+	//
+	// UQ1's SSDO FBO2...
+	//
+	{
+		tr.ssdoFbo2 = FBO_Create("_ssdoFbo2", tr.ssdoImage2->width, tr.ssdoImage2->height);
+		FBO_Bind(tr.ssdoFbo2);
+		FBO_AttachTextureImage(tr.ssdoImage2, 0);
+		R_CheckFBO(tr.ssdoFbo2);
+	}
+
 
 	//
 	// Bloom VBO's...
@@ -574,6 +604,7 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.glowImage, 1);
 		FBO_AttachTextureImage(tr.renderNormalImage, 2);
 		FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
+		FBO_AttachTextureImage(tr.screenPureNormalImage, 4);
 
 		//FBO_CreateBuffer(tr.msaaResolveFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);

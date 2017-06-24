@@ -3113,6 +3113,11 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
+		/*if (r_ssdo->integer || r_shownormals->integer == 2)
+		{// Render a screen based normal map...
+			RB_DepthToNormal(currentFbo, srcBox, currentOutFbo, dstBox);
+		}*/
+
 		if (r_cartoon->integer >= 2.0)
 		{
 			RB_CellShade(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -3123,6 +3128,14 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_Paint(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_ssdo->integer)
+		{
+			RB_SSDO(currentFbo, srcBox, currentOutFbo, dstBox);
+
+			if (r_ssdo->integer == 3)
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_deferredLighting->integer)
@@ -3200,12 +3213,6 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_HBAO(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_ssdo->integer)
-		{
-			RB_SSDO(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_glslWater->integer)
