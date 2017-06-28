@@ -142,6 +142,10 @@ float linearize(float depth)
 	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
 }
 
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
 mat3 compute_tangent_frame(in vec3 N, in vec3 P, in vec2 UV) {
     vec3 dp1 = dFdx(P);
     vec3 dp2 = dFdy(P);
@@ -661,8 +665,13 @@ void main ( void )
 		float depth2 = surfacePoint.y - position.y;
 		float depthN = depth * fadeSpeed;
 
+		float heightAboveGround = clamp(depth2 / waveHeight, 0.0, 1.0);
+
 		if (pixelIsUnderWater)
 		{
+			//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+			//return;
+
 			depth = length(surfacePoint - position);
 			depth2 = position.y - surfacePoint.y;
 			depthN = depth * fadeSpeed;
@@ -689,6 +698,9 @@ void main ( void )
 			gl_FragColor = vec4(color2, 1.0);
 			return;
 		}
+
+		//gl_FragColor = vec4(vec3(depth2 / waveHeight), 1.0);
+		//return;
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
 		//eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
@@ -825,9 +837,19 @@ void main ( void )
 
 		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
 
-		if (position2.y/*position.y*/ > level && waterMapLower.a <= 0.0)
-		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
-			color = color2;
+		//if (position2.y/*position.y*/ > level && waterMapLower.a <= 0.0)
+		//if (position2.z > level && position2.a != 1024.0/*level > waterMapLower.y*/)
+		//if (position.y > level)// && position2.a != 1024.0)
+		//{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
+		//	color = color2;
+		//}
+
+		if (!pixelIsUnderWater)
+		{
+			color.rgb = mix(color2.rgb, color.rgb, heightAboveGround);
+			
+			if (clamp(1.0 - (heightAboveGround * 0.65), 0.0, 1.0) > 0.5)
+				color.rgb = color2.rgb;
 		}
 	}
 #endif //__TEST_WATER__

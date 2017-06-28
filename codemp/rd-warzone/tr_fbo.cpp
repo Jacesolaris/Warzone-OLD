@@ -296,6 +296,14 @@ void FBO_AttachTextureImage(image_t *img, int index)
 		return;
 	}
 
+	if (glState.currentFBO)
+	{// UQ1: Can we skip this bind?
+		if (glState.currentFBO->attachedImages[index] == img->texnum)
+			return;
+
+		glState.currentFBO->attachedImages[index] = img->texnum;
+	}
+
 	R_AttachFBOTexture2D(GL_TEXTURE_2D, img->texnum, index);
 	glState.currentFBO->colorImage[index] = img;
 	glState.currentFBO->colorBuffers[index] = img->texnum;

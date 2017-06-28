@@ -12,7 +12,6 @@
 
 #define __MMO__
 //#define __AAS_AI_TESTING__
-#define __NEW_TRUEVIEW__
 //#define __USE_NAVMESH__
 //#define __USE_NAVLIB__
 //#define __NPC_DYNAMIC_THREADS__		// New version of threading AI... Experimental...

@@ -382,10 +382,6 @@ typedef struct clientInfo_s {
 	qhandle_t	bolt_lfemurYZ;	//left hip used for the holster offsetting method
 
 	holster_t	holsterData[MAX_HOLSTER];
-
-#ifdef __NEW_TRUEVIEW__
-	trueview_t	trueViewData;
-#endif
 	//[/VisualWeapons]
 
 	qboolean	npc_sounds_registered;
@@ -2352,12 +2348,6 @@ void CG_InitSiegeMode(void);
 void CG_SiegeRoundOver(centity_t *ent, int won);
 void CG_SiegeObjectiveCompleted(centity_t *ent, int won, int objectivenum);
 
-#ifndef __NEW_TRUEVIEW__
-//[TrueView]
-void CG_TrueViewInit(void);
-void CG_AdjustEyePos(const char *modelName);
-//[/TrueView]
-#endif
 
 //===============================================
 

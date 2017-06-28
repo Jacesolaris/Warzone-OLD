@@ -2004,27 +2004,30 @@ void GLSL_AttachTextures(void)
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.renderNormalImage, 2);
 	FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
-	FBO_AttachTextureImage(tr.screenPureNormalImage, 4);
+	if (r_ssdo->integer)
+		FBO_AttachTextureImage(tr.screenPureNormalImage, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachGlowTextures(void)
 {// Moved here for convenience...
-	FBO_AttachTextureImage(tr.renderImage, 0);
+	//FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.dummyImage2, 2);
 	FBO_AttachTextureImage(tr.dummyImage3, 3);
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
+	if (r_ssdo->integer)
+		FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachGenericTextures(void)
 {// Moved here for convenience...
-	FBO_AttachTextureImage(tr.renderImage, 0);
+	//FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
+	if (r_ssdo->integer)
+		FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2034,7 +2037,8 @@ void GLSL_AttachPostTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
+	if (r_ssdo->integer)
+		FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2044,7 +2048,8 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
+	if (r_ssdo->integer)
+		FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
 }
@@ -2055,7 +2060,8 @@ void GLSL_AttachWaterTextures2(void)
 	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
 	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage2, 3); // water positions
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
+	if (r_ssdo->integer)
+		FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
 }
@@ -2109,7 +2115,8 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	qglBindFragDataLocation(program->program, 1, "out_Glow");
 	qglBindFragDataLocation(program->program, 2, "out_Normal");
 	qglBindFragDataLocation(program->program, 3, "out_Position");
-	qglBindFragDataLocation(program->program, 4, "out_PureNormal");
+	if (r_ssdo->integer)
+		qglBindFragDataLocation(program->program, 4, "out_PureNormal");
 
 	if (attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
@@ -2912,6 +2919,11 @@ int GLSL_BeginLoadGPUShaders(void)
 
 			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
 				strcat(extradefines, "#define FAST_PARALLAX\n");
+		}
+
+		if (r_ssdo->integer)
+		{
+			strcat(extradefines, "#define USE_SSDO\n");
 		}
 
 		if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))

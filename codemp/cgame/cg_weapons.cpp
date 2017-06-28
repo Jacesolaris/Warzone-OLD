@@ -809,7 +809,7 @@ Ghoul2 Insert End
 	// Do special charge bits
 	//-----------------------
 	//Make the guns do their charging visual in True View.
-	if ((ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number || cg_trueguns.integer) 
+	if ((ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number) 
 		&& ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT || cent->currentState.modelindex2 == WEAPON_CHARGING ))
 	{
 		if (!thirdPerson)
@@ -869,12 +869,9 @@ Ghoul2 Insert End
 		nonPredictedCent = cent;
 	}
 
-	//[TrueView]
 	if (ps 
 		|| cg.renderingThirdPerson 
-		|| cg_trueguns.integer
 		|| cent->currentState.number != cg.predictedPlayerState.clientNum)
-		//[/TrueView] 
 	{	// Make sure we don't do the thirdperson model effects for the local player if we're in first person
 		refEntity_t	flash;
 
@@ -1175,42 +1172,12 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	float		fovOffset;
 	vec3_t		angles, gunPosition;
 	weaponInfo_t	*weapon;
-	//[TrueView]
-	float	cgFov;
-
-	if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
-		|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
-		&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
-		&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
-	{
-		cgFov = cg_trueFOV.value;
-	}
-	else
-	{
-		cgFov = cg_fov.value;
-	}
-	//float	cgFov = cg_fov.value;
-	//[/TrueView]
-
+	float	cgFov = cg_fov.value;
 
 	if (cgFov < 1)
 	{
 		cgFov = 1;
 	}
-
-	//[TrueView]
-	//Allow larger Fields of View
-	if (cgFov > 180)
-	{
-		cgFov = 180;
-	}
-	/*
-	if (cgFov > 97)
-	{
-	cgFov = 97;
-	}
-	*/
-	//[/TrueView]
 
 	if ( ps->pm_type == PM_INTERMISSION ) {
 		return;
@@ -1223,11 +1190,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	}
 
 	// allow the gun to be completely removed
-	//[TrueView]
-	if (!cg_drawGun.integer || cg.predictedPlayerState.scopeType || cg_trueguns.integer
-		|| cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) {
-		//if ( !cg_drawGun.integer || cg.predictedPlayerState.scopeType) {
-		//[/TrueView]
+	if ( !cg_drawGun.integer || cg.predictedPlayerState.scopeType) {
 		vec3_t		origin;
 
 		if ( cg.predictedPlayerState.eFlags & EF_FIRING ) {

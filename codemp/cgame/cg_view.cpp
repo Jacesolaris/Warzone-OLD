@@ -12,15 +12,9 @@
 #endif //__DISABLE_PLAYERCLIP__
 #define CAMERA_SIZE	4
 
-#ifndef __NEW_TRUEVIEW__
-//[TrueView]
-#define        MAX_TRUEVIEW_INFO_SIZE                    8192
-char        true_view_info[MAX_TRUEVIEW_INFO_SIZE];
-int            true_view_valid;
-//[/TrueView]
-#endif
 
 #define __SCOPE_DEVELOPER__
+
 
 /*
 =============================================================================
@@ -1064,7 +1058,7 @@ static void CG_OffsetFirstPersonView( void ) {
 		return;
 	}
 
-	cg.refdef.vieworg[2] += cg.predictedPlayerState.viewheight;
+	cg.refdef.vieworg[2] += cg.predictedPlayerState.viewheight * cg_entities[cg.predictedPlayerState.clientNum].modelScale[2];
 
 #endif //0
 }
@@ -1270,19 +1264,7 @@ static int CG_CalcFov( void ) {
 		cg.zoomval = 0;
 	}
 
-	if (!cg.renderingThirdPerson 
-		&& !drawingSniperScopeView
-		&& (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) 
-		&& cg_trueFOV.value
-		&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
-		&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
-	{
-		cgFov = cg_trueFOV.value;
-	}
-	else
-	{
-		cgFov = cg_fov.value;
-	}
+	cgFov = cg_fov.value;
 
 	if (cgFov < 1)
 	{
@@ -1908,20 +1890,7 @@ void CG_DrawSkyBoxPortal(const char *cstr)
 
 	if (!fov_x)
 	{
-		//[TrueView]
-		if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
-			|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
-			&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
-			&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
-		{
-			fov_x = cg_trueFOV.value;
-		}
-		else
-		{
-			fov_x = cg_fov.value;
-		}
-		//fov_x = cg_fov.value;
-		//[TrueView]
+		fov_x = cg_fov.value;
 	}
 
 	// setup fog the first time, ignore this part of the configstring after that
@@ -1934,35 +1903,12 @@ void CG_DrawSkyBoxPortal(const char *cstr)
 	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION )
 	{
 		// if in intermission, use a fixed value
-		//[TrueView]
-		if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
-			|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value)
-		{
-			fov_x = cg_trueFOV.value;
-		}
-		else
-		{
-			fov_x = cg_fov.value;
-		}
-		//fov_x = cg_fov.value;
-		//[/TrueView]
+		fov_x = cg_fov.value;
 	}
 	else
 	{
-		//[TrueView]
-		if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
-			|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
-			&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
-			&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
-		{
-			fov_x = cg_trueFOV.value;
-		}
-		else
-		{
-			fov_x = cg_fov.value;
-		}
-		//fov_x = cg_fov.value;
-		//[TrueView]
+		fov_x = cg_fov.value;
+
 		if ( fov_x < 1 )
 		{
 			fov_x = 1;
@@ -2793,24 +2739,17 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		if (cg.snap->ps.stats[STAT_HEALTH] > 0)
 		{
-			if (cg.predictedPlayerState.weapon == WP_EMPLACED_GUN && cg.predictedPlayerState.emplacedIndex /*&&
-																										   cg_entities[cg.predictedPlayerState.emplacedIndex].currentState.weapon == WP_NONE*/)
+			if (cg.predictedPlayerState.weapon == WP_EMPLACED_GUN && cg.predictedPlayerState.emplacedIndex)
 			{ //force third person for e-web and emplaced use
 				cg.renderingThirdPerson = qtrue;
 			}
-			//[TrueView]
-			else if (cg_trueInvertSaber.integer == 2 && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
-			{//force thirdperson for sabers/melee if in cg_trueinvertsaber.integer == 2
+			else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)
+			{//force thirdperson for sabers/melee
 				cg.renderingThirdPerson = qtrue;
 			}
-			else if (cg.predictedPlayerState.fallingToDeath || cg.predictedPlayerState.m_iVehicleNum
-				|| (cg_trueInvertSaber.integer == 1 && !cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)))
+			else if (cg.predictedPlayerState.fallingToDeath || cg.predictedPlayerState.m_iVehicleNum)
 			{
 				cg.renderingThirdPerson = qtrue;
-			}
-			else if (cg_trueInvertSaber.integer == 1 && cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
-			{
-				cg.renderingThirdPerson = qfalse;
 			}
 			/*
 			else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE ||
@@ -2828,7 +2767,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			}
 			}
 			*/
-			//[/TrueView]
 			else if (cg.snap->ps.scopeType)
 			{ //always force first person when zoomed
 				cg.renderingThirdPerson = qfalse;
@@ -3043,87 +2981,3 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	//InventoryWindow();
 }
-
-//[TrueView]
-//Checks to see if the current camera position is valid based on the last known safe location.  If it's not safe, place
-//the camera at the last position safe location
-void CheckCameraLocation(vec3_t OldeyeOrigin)
-{
-	trace_t			trace;
-
-	CG_Trace(&trace, OldeyeOrigin, cameramins, cameramaxs, cg.refdef.vieworg, cg.snap->ps.clientNum, MASK_CAMERACLIP);
-	if (trace.fraction <= 1.0)
-	{
-		VectorCopy(trace.endpos, cg.refdef.vieworg);
-	}
-}
-
-
-//Loads in the True View auto eye positioning data so you don't have to worry about disk access later in the 
-//game
-//Based on CG_InitSagaMode and tck's tck_InitBuffer
-#ifndef __NEW_TRUEVIEW__
-void CG_TrueViewInit(void)
-{
-	int				len = 0;
-	fileHandle_t	f;
-
-
-	len = trap->FS_Open("trueview.cfg", &f, FS_READ);
-
-	if (!f)
-	{
-		//	trap->Print("Error: File Not Found: trueview.cfg\n");
-		true_view_valid = 0;
-		return;
-	}
-
-	if (len >= MAX_TRUEVIEW_INFO_SIZE)
-	{
-		trap->Print("Error: trueview.cfg is over the filesize limit. (%i)\n", MAX_TRUEVIEW_INFO_SIZE);
-		trap->FS_Close(f);
-		true_view_valid = 0;
-		return;
-	}
-
-
-	trap->FS_Read(true_view_info, len, f);
-
-	true_view_valid = 1;
-
-	trap->FS_Close(f);
-
-	return;
-
-}
-#endif
-
-//Tries to adjust the eye position from the data in cfg file if possible.
-#ifndef __NEW_TRUEVIEW__
-void CG_AdjustEyePos(const char *modelName)
-{
-	//eye position
-	char	eyepos[MAX_QPATH];
-
-	if (true_view_valid)
-	{
-
-		if (BG_SiegeGetPairedValue(true_view_info, (char*)modelName, eyepos))
-		{
-			trap->Print("True View Eye Adjust Loaded for %s.\n", modelName);
-			trap->Cvar_Set("cg_trueeyeposition", eyepos);
-		}
-		else
-		{//Couldn't find an entry for the desired model.  Not nessicarily a bad thing.
-			trap->Cvar_Set("cg_trueeyeposition", "0");
-		}
-	}
-	else
-	{//The model eye position list is messed up.  Default to 0.0 for the eye position
-		trap->Cvar_Set("cg_trueeyeposition", "0");
-	}
-
-}
-#endif
-//[/TrueView]
-//[/TrueView]

@@ -1561,6 +1561,12 @@ void ReassignTreeModels ( void )
 					break;
 				}
 
+				if (FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= POSSIBLES_SAME_RANGES[selected])
+				{// Not within this object's same type range... OK!
+					bad = qtrue;
+					break;
+				}
+
 				dist = Distance(CITY_LOCATION, FOLIAGE_POSITIONS[i]);
 				
 				if (dist <= CITY_RADIUS)
@@ -1597,12 +1603,6 @@ void ReassignTreeModels ( void )
 
 				if (dist <= CITY5_RADIUS)
 				{// Not within this city's buffer range... OK!
-					bad = qtrue;
-					break;
-				}
-
-				if ((FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= SAME_RANGES[j]) || dist <= POSSIBLES_SAME_RANGES[selected])
-				{// Not within this object's same type range... OK!
 					bad = qtrue;
 					break;
 				}
@@ -1752,6 +1752,12 @@ void ReassignTreeModels ( void )
 					break;
 				}
 
+				if (FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= POSSIBLES_SAME_RANGES[selected])
+				{// Not within this object's same type range... OK!
+					selected = irand(0, NUM_POSSIBLES - 1);
+					tries++;
+				}
+
 				dist = Distance(CITY_LOCATION, FOLIAGE_POSITIONS[i]);
 
 				if (dist <= CITY_RADIUS)
@@ -1790,12 +1796,6 @@ void ReassignTreeModels ( void )
 				{// Not within this city's buffer range... OK!
 					bad = qtrue;
 					break;
-				}
-
-				if ((FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= SAME_RANGES[j]) || dist <= POSSIBLES_SAME_RANGES[selected])
-				{// Not within this object's same type range... OK!
-					selected = irand(0,NUM_POSSIBLES-1);
-					tries++;
 				}
 			}
 
@@ -2565,7 +2565,7 @@ void ReassignCityModels(void)
 					break;
 				}
 
-				if ((FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= BUILDING_SAME_RANGES[j]) || dist <= POSSIBLES_BUILDING_SAME_RANGES[selected])
+				if (FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= POSSIBLES_BUILDING_SAME_RANGES[selected])
 				{// Not within this object's same type range... OK!
 					bad = qtrue;
 					break;
@@ -2701,7 +2701,7 @@ void ReassignCityModels(void)
 					break;
 				}
 
-				if ((FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= BUILDING_SAME_RANGES[j]) || dist <= POSSIBLES_BUILDING_SAME_RANGES[selected])
+				if (FOLIAGE_TREE_SELECTION[j] == POSSIBLES[selected] && dist <= POSSIBLES_BUILDING_SAME_RANGES[selected])
 				{// Not within this object's same type range... OK!
 					selected = irand(0, NUM_POSSIBLES - 1);
 					tries++;

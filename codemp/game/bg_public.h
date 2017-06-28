@@ -1763,10 +1763,10 @@ void BG_G2ATSTAngles(void *ghoul2, int time, vec3_t cent_lerpAngles );
 //BG anim utility functions:
 
 int BG_AnimLength( int index, animNumber_t anim );
-//[BugFix2]//[TrueView]
+//[BugFix2]
 float BG_GetTorsoAnimPoint(playerState_t * ps, int AnimIndex);
 float BG_GetLegsAnimPoint(playerState_t * ps, int AnimIndex);
-//[/BugFix2]//[/TrueView]
+//[/BugFix2]
 
 qboolean BG_InSpecialJump( int anim );
 qboolean BG_InSaberStandAnim( int anim );

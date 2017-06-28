@@ -12,17 +12,6 @@ struct holster_s
 	vec3_t		angOffset;			//the angular offset of the weapon
 };
 
-#ifdef __NEW_TRUEVIEW__
-typedef struct trueview_s
-{
-	qboolean	dataLoaded;
-	qboolean	forceDataLoad; // For loading a model's trueview data in realtime.
-	float		eyeOffsetX;
-	qboolean	tagIsBone;
-	char		tagName[128];
-} trueview_t;
-#endif
-
 //enum for the types of holstered weapons you can have
 enum
 {

@@ -227,6 +227,7 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
 	// for the very noticable FPS boost over texture lookups.
 
+#if 1
 	vec4 color = colorIn;
 
 	vec3 N = vec3(clamp((color.r + color.b) / 2.0, 0.0, 1.0), clamp((color.g + color.b) / 2.0, 0.0, 1.0), clamp((color.r + color.g) / 2.0, 0.0, 1.0));
@@ -245,6 +246,15 @@ vec4 ConvertToNormals ( vec4 colorIn )
 	vec4 norm = vec4((N + N2) / 2.0, 0.0).rbga;
 	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
 	return vec4((vec3(1.0)-norm.rgb) * 0.5, norm.a);
+#else
+	vec3 color = colorIn.rgb;
+	AddContrast(color);
+	color *= u_Local9.r;
+	//vec3 N = normalize(cross(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0));
+	vec3 N = normalize(refract(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0, length(color.xyz / 3.0)));
+	N *= u_Local9.g;
+	return vec4(N * 0.5, 0.0);
+#endif
 }
 
 
@@ -946,12 +956,14 @@ void main()
 	else
 	{
 		out_Glow = vec4(0.0);
-		
+
 		if (USE_ISDETAIL <= 0.0)
 		{
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, gl_FragColor.a );
-			out_PureNormal = vec4( m_Normal.xyz * 0.5 + 0.5, 0.0 );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+#ifdef USE_SSDO
+			out_PureNormal = vec4( m_Normal.xyz * 0.5 + 0.5, 0.0 );
+#endif //USE_SSDO
 		}
 	}
 }

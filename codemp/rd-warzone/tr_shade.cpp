@@ -2217,6 +2217,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		float useVertexAnim = 0.0;
 		float useSkeletalAnim = 0.0;
 
+//#define __USE_DETAIL_DEPTH_SKIP__
+
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
 			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
@@ -2251,6 +2253,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{// testing - force lightall
+#ifdef __USE_DETAIL_DEPTH_SKIP__
 			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
 				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
@@ -2318,6 +2321,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				continue;
 			}
+#endif //__USE_DETAIL_DEPTH_SKIP__
 
 
 			//if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
@@ -3382,15 +3386,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{// Only attach textures when doing a render pass...
 					stateBits = GLS_DEFAULT | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
 					tess.shader->cullType = CT_TWO_SIDED; // Always...
-
-					/*if (passNum > 0)
-					{
-						GLSL_AttachWaterTextures2();
-					}
-					else*/
-					{
-						GLSL_AttachWaterTextures();
-					}
+					GLSL_AttachWaterTextures();
 				}
 				else
 				{

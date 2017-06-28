@@ -134,18 +134,7 @@ XCVAR_DEF( cg_thirdPersonVertOffset,			"16",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_timescaleFadeEnd,					"1",					NULL,					CVAR_NONE )
 XCVAR_DEF( cg_timescaleFadeSpeed,				"0",					NULL,					CVAR_NONE )
 XCVAR_DEF( cg_ttsPlayerVoice,					"1",					NULL,					CVAR_ARCHIVE )
-#ifndef __NEW_TRUEVIEW__
-XCVAR_DEF( cg_trueEyePosition,				    "0.0",					NULL,					CVAR_ARCHIVE)//[TrueView]
-#endif
 XCVAR_DEF( cg_turnondistenscalc,				"0",					NULL,					CVAR_ARCHIVE )
-XCVAR_DEF( cg_trueFlip,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueFOV,							"80",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueguns,							"1",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueInvertSaber,					"1",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueMoveRoll,						"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueRoll,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueSaberOnly,					"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF( cg_trueSpin,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_viewsize,							"100",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_weaponBob,						"1",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cl_paused,							"0",					NULL,					CVAR_ROM )
@@ -246,4 +235,8 @@ XCVAR_DEF(cg_atmosphericFrameParticleOverride,		"0",				NULL, CVAR_ARCHIVE)
 // Debug stuff...
 XCVAR_DEF(cg_debugMuzzle,							"0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF( ojp_sabermelee,							"1",				NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_testvalue0, "0", NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_testvalue1, "0", NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_testvalue2, "0", NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_testvalue3, "0", NULL, CVAR_ARCHIVE)
 #undef XCVAR_DEF

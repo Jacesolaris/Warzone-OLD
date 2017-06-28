@@ -50,6 +50,8 @@ typedef struct FBO_s
 
 	int             width;
 	int             height;
+
+	int				attachedImages[16];
 } FBO_t;
 
 void FBO_Bind(FBO_t *fbo);
