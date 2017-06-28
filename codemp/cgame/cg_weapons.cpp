@@ -464,6 +464,11 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		return;
 	}
 
+	if (cent->currentState.number == cg.snap->ps.clientNum && !cg.renderingThirdPerson && thirdPerson/*!ps*/)
+	{// Skip drawing the G2 weapon while in 1st person because we draw the feet/torso...
+		return;
+	}
+
 	CG_RegisterWeapon( weaponNum );
 	weapon = &cg_weapons[weaponNum];
 

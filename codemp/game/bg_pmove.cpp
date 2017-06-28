@@ -10518,6 +10518,55 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 		angles[0] = -30;
 	}
 
+#ifdef _CGAME
+	if (cent->number == cg.snap->ps.clientNum && !cg.renderingThirdPerson)
+	{// Drawing 3dr person feet in 1st person view... Angle the body back so it doesn't show when bending...
+		vec3_t facingAngles;
+
+		VectorCopy(cent_lerpAngles, facingAngles);
+		float emplacedDif = AngleSubtract(cent_lerpAngles[YAW], facingAngles[YAW]);
+
+		VectorSet(facingAngles, -16.0f, -emplacedDif, 0.0f);
+
+		if (cent->legsAnim == BOTH_STRAFE_LEFT1 || cent->legsAnim == BOTH_STRAFE_RIGHT1)
+		{ //try to adjust so it doesn't look wrong
+			if (crazySmoothFactor)
+			{ //want to smooth a lot during this because it chops around and looks like ass
+				*crazySmoothFactor = time + 1000;
+			}
+
+			BG_G2ClientSpineAngles(ghoul2, motionBolt, cent_lerpOrigin, cent_lerpAngles, cent, time, viewAngles, ciLegs, ciTorso, angles, thoracicAngles, ulAngles, llAngles, modelScale, tPitchAngle, tYawAngle, corrTime);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+
+			VectorAdd(facingAngles, thoracicAngles, facingAngles);
+
+			if (cent->legsAnim == BOTH_STRAFE_LEFT1)
+			{ //this one needs some further correction
+				facingAngles[YAW] -= 32.0f;
+			}
+		}
+		else
+		{
+			//	trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+			//	trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		}
+
+		VectorScale(facingAngles, 0.6f, facingAngles);	trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		VectorScale(facingAngles, 0.8f, facingAngles);	trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", facingAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		VectorScale(facingAngles, 0.8f, facingAngles);	trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", facingAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+
+		//Now we want the head angled toward where we are facing
+		VectorSet(facingAngles, 0.0f, dif, 0.0f);
+		VectorScale(facingAngles, 0.6f, facingAngles);
+		trap->G2API_SetBoneAngles(ghoul2, 0, "cervical", facingAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+
+		return; //don't have to bother with the rest then
+	}
+#endif
+
 	if (cent->weapon == WP_EMPLACED_GUN &&
 		emplaced)
 	{ //if using an emplaced gun, then we want to make sure we're angled to "hold" it right

@@ -17020,18 +17020,19 @@ void CG_Player( centity_t *cent ) {
 
 	vec3_t origViewAngles;
 
-	if (!cg.renderingThirdPerson)
+	if (cent->currentState.number == cg.snap->ps.clientNum && !cg.renderingThirdPerson)
 	{// Add our feet... offset...
-#if 0
+#if 1
 		vec3_t forward, ang;
 		VectorSet(ang, 0, cent->lerpAngles[YAW], 0);
 		AngleVectors(ang, forward, NULL, NULL);
 		VectorScale(forward, -1, forward);
-		VectorMA(legs.origin, cg_testvalue0.value * cent->modelScale[2], forward, legs.origin);
+		VectorMA(legs.origin, 16.0/*cg_testvalue0.value*/ * cent->modelScale[2], forward, legs.origin);
 		cent->playerState->pitchAngle = 0;
 		cent->playerState->yawAngle = 0;
 		VectorCopy(cent->playerState->viewangles, origViewAngles);
 		VectorCopy(ang, cent->playerState->viewangles);
+		cent->currentState.torsoAnim = BOTH_STAND4; // Force this animation on torso so hide hands...
 #else
 		return;
 #endif
@@ -18738,7 +18739,7 @@ stillDoSaber:
 	//
 	if (cent->currentState.weapon != WP_EMPLACED_GUN)
 	{
-		CG_AddPlayerWeapon( &legs, NULL, cent, ci->team, rootAngles, qtrue );
+		CG_AddPlayerWeapon(&legs, NULL, cent, ci->team, rootAngles, qtrue);
 	}
 	// add powerups floating behind the player
 	CG_PlayerPowerups( cent, &legs );
