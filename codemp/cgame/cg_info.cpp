@@ -108,6 +108,35 @@ Draw all the status / pacifier stuff during level loading
 overlays UI_DrawConnectScreen
 */
 #define UI_INFOFONT (UI_BIGFONT)
+
+int SCREENSHOT_CHOICE = 0;
+int SCREENSHOT_NEXT_UPDATE_TIME = 0;
+char SCREENSHOT_CURRENT[64] = { 0 };
+
+char *UI_GetCurrentLevelshot(const char *s)
+{
+	qhandle_t levelshot = trap->R_RegisterShaderNoMip(va("levelshots/%s", s));
+
+	if (levelshot && SCREENSHOT_NEXT_UPDATE_TIME == 0)
+	{
+		SCREENSHOT_NEXT_UPDATE_TIME = trap->Milliseconds() + 10000;
+		memset(SCREENSHOT_CURRENT, 0, sizeof(SCREENSHOT_CURRENT));
+		strcpy(SCREENSHOT_CURRENT, va("levelshots/%s", s));
+		return SCREENSHOT_CURRENT;
+	}
+
+	if (SCREENSHOT_NEXT_UPDATE_TIME < trap->Milliseconds() || SCREENSHOT_NEXT_UPDATE_TIME == 0)
+	{
+		SCREENSHOT_NEXT_UPDATE_TIME = trap->Milliseconds() + 10000;
+		
+		SCREENSHOT_CHOICE = irand_big(0, 9);
+		memset(SCREENSHOT_CURRENT, 0, sizeof(SCREENSHOT_CURRENT));
+		strcpy(SCREENSHOT_CURRENT, va("menu/art/unknownmap_mp%i", SCREENSHOT_CHOICE));
+	}
+
+	return SCREENSHOT_CURRENT;
+}
+
 void CG_DrawInformation( void ) {
 	const char	*s;
 	const char	*info;
@@ -125,12 +154,8 @@ void CG_DrawInformation( void ) {
 	
 	strcpy(cgs.currentmapname, s);
 
-	levelshot = trap->R_RegisterShaderNoMip( va( "levelshots/%s", s ) );
-	if ( !levelshot ) {
-		levelshot = trap->R_RegisterShaderNoMip( "menu/art/unknownmap_mp" );
-	}
-	trap->R_SetColor( NULL );
-	CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, levelshot );
+	trap->R_SetColor(NULL);
+	CG_DrawPic(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, trap->R_RegisterShaderNoMip(UI_GetCurrentLevelshot(s)));
 
 	CG_LoadBar();
 

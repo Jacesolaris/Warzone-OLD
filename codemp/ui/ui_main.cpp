@@ -2020,6 +2020,22 @@ static void UI_DrawTeamMember(rectDef_t *rect, float scale, vec4_t color, qboole
 	Text_Paint(rect->x, rect->y, scale, finalColor, text, 0, 0, textStyle, iMenuFont);
 }
 
+int SCREENSHOT_CHOICE = 0;
+int SCREENSHOT_NEXT_UPDATE_TIME = 0;
+
+char *UI_GetCurrentLevelshot(void)
+{
+	if (SCREENSHOT_NEXT_UPDATE_TIME < trap->Milliseconds())
+	{
+		SCREENSHOT_NEXT_UPDATE_TIME = trap->Milliseconds() + 5000;
+		SCREENSHOT_CHOICE++;
+
+		if (SCREENSHOT_CHOICE > 9) SCREENSHOT_CHOICE = 0;
+	}
+
+	return va("menu/art/unknownmap_mp%i", SCREENSHOT_CHOICE);
+}
+
 static void UI_DrawMapPreview(rectDef_t *rect, float scale, vec4_t color, qboolean net) {
 	int map = (net) ? ui_currentNetMap.integer : ui_currentMap.integer;
 	if (map < 0 || map > uiInfo.mapCount) {
@@ -2040,7 +2056,7 @@ static void UI_DrawMapPreview(rectDef_t *rect, float scale, vec4_t color, qboole
 	if (uiInfo.mapList[map].levelShot > 0) {
 		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.mapList[map].levelShot);
 	} else {
-		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap->R_RegisterShaderNoMip("menu/art/unknownmap_mp"));
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap->R_RegisterShaderNoMip(UI_GetCurrentLevelshot()));
 	}
 }
 
@@ -2311,7 +2327,7 @@ static void UI_DrawNetMapPreview(rectDef_t *rect, float scale, vec4_t color) {
 	if (uiInfo.serverStatus.currentServerPreview > 0) {
 		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, uiInfo.serverStatus.currentServerPreview);
 	} else {
-		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap->R_RegisterShaderNoMip("menu/art/unknownmap_mp"));
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap->R_RegisterShaderNoMip(UI_GetCurrentLevelshot()));
 	}
 }
 

@@ -3110,7 +3110,12 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
 	if (SHADOWS_ENABLED)
-		GL_BindToTMU(tr.screenShadowBlurImage, TB_SHADOWMAP);
+	{
+		if (r_shadowBlur->integer)
+			GL_BindToTMU(tr.screenShadowBlurImage, TB_SHADOWMAP);
+		else
+			GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+	}
 	else
 		GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
 
