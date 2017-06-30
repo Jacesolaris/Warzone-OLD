@@ -1,3 +1,4 @@
+//#define USE_ALPHA_TEST
 
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
@@ -35,7 +36,7 @@ uniform vec4				u_MapAmbient; // a basic light/color addition across the whole m
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
 uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
+uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -54,6 +55,7 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 
 #define USE_REGIONS			u_Settings3.r
 #define USE_ISDETAIL		u_Settings3.g
+#define USE_DETAIL_COORD	u_Settings3.b
 
 
 uniform vec2				u_Dimensions;
@@ -257,36 +259,33 @@ vec4 ConvertToNormals ( vec4 colorIn )
 #endif
 }
 
-
-// Used on everything...
-const float detailRepeatFine = 64.0;
-
-const float detailRepeatTerrain1 = 2.5;
-const float detailRepeatTerrain2 = 7.5;
-   
 void AddDetail(inout vec4 color, in vec2 tc)
 {
-	if (USE_TEXTURECLAMP > 0.0 /*|| USE_DEFORM > 0.0 || USE_RGBA > 0.0*/) return;
-
-	vec4 origColor = color;
+	//if (USE_TEXTURECLAMP > 0.0) return;
 
 	// Add fine detail to everything...
-    vec3 detail = texture(u_DetailMap, tc * detailRepeatFine).rgb;
+	vec2 coord = vec2(0.0);
 
-	if (length(detail.rgb) == 0.0) return;
+	if (USE_DETAIL_COORD == 1.0 || USE_TEXTURECLAMP > 0.0 || USE_IS2D > 0.0)
+	{// From TC... 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
+		coord = tc;
+	}
+	else if (USE_DETAIL_COORD == 2.0 || USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
+	{// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)
+		float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
+		coord = vec2(m_vertPos.xy / (u_Local6.b / 2.0)) * xyoffset;
+		coord *= (vec2(m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset) * 2.0 - 1.0;
+	}
+	else
+	{// Standard... -1.0 -> +1.0 (good all-round option when matching specific coordinates is not needed)
+		coord = (tc * 2.0 - 1.0);
+	}
+
+    vec3 detail = texture(u_DetailMap, coord).rgb;
+
+	if (length(detail.rgb) <= 0.0) return;
 
 	color.rgb = color.rgb * detail.rgb * 2.0;
-
-	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
-	{
-		// Add a much less fine detail over terrains to help hide texture repetition...
-		detail = texture(u_DetailMap, tc * detailRepeatTerrain1).rgb;
-		color.rgb = color.rgb * detail.rgb * 2.0;
-
-		// And a second, even less fine pass...
-		detail = texture(u_DetailMap, tc * detailRepeatTerrain2).rgb;
-		color.rgb = color.rgb * detail.rgb * 2.0;
-	}
 }
 
 vec4 GetControlMap( sampler2D tex)
@@ -496,7 +495,49 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			return GenerateTerrainMap(texCoords + ParallaxOffset);
 		}
 
-		return texture(u_DiffuseMap, texCoords + ParallaxOffset);
+		if (USE_TEXTURECLAMP > 0.0 || USE_IS2D > 0.0)
+		{// UI Bloom/Glow effect...
+			vec2 coord = texCoords + ParallaxOffset;
+			vec4 color = texture(u_DiffuseMap, coord);
+
+			//if (color.a <= 0.0) return color;
+
+			float glowScale = max(max(color.r, color.g), color.b);
+
+			vec2 pixel = vec2(1.0 / u_Dimensions);
+
+#define GLOW_RADIUS 2.0
+#define GLOW_PIXEL 1.0
+
+			// Try to Bloom/Glow the UI/2D element...
+			float pixelsAdded = 1.0;
+			
+			for (float x = -GLOW_RADIUS; x < GLOW_RADIUS; x += GLOW_PIXEL)
+			{
+				for (float y = -GLOW_RADIUS; y < GLOW_RADIUS; y += GLOW_PIXEL)
+				{
+					vec4 color2 = texture(u_DiffuseMap, coord + (vec2(x,y) * pixel));
+					float glowScale2 = max(max(color2.r, color2.g), color2.b);
+					if (color2.a > 0.0 && glowScale2 > glowScale)
+					{
+						color += color2;
+						pixelsAdded += 1.0;
+					}
+				}
+			}
+
+			color /= pixelsAdded;
+
+#define glowLower ( 16.0 / 255.0 )
+#define glowUpper (255.0 / 192.0 )
+			color.rgb = clamp((clamp(color.rgb - glowLower, 0.0, 1.0)) * glowUpper, 0.0, 1.0);
+
+			return color;
+		}
+		else
+		{
+			return texture(u_DiffuseMap, texCoords + ParallaxOffset);
+		}
 	}
 
 	if (u_Local8.a > 0.0)
@@ -763,32 +804,40 @@ void main()
 	}
 #endif
 
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-	vec3 viewDir = m_ViewDir;
-	vec3 E = normalize(viewDir);
+
+
+	bool PARALLAX_ENABLED = (USE_GLOW_BUFFER <= 0.0 && u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0) ? true : false;
+	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0) ? true : false;
+	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0) ? true : false;
+
+
+	mat3 tangentToWorld;
+	vec3 E;
+
+	if (PARALLAX_ENABLED || LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
+	{
+		tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+		E = normalize(m_ViewDir);
+	}
 
 
 	vec2 ParallaxOffset = vec2(0.0);
 
 
 #if defined(USE_PARALLAXMAP)
-	if (USE_GLOW_BUFFER <= 0.0)
-	{
-		if (u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0)
-		{
-			//vec3 offsetDir = normalize((normalize(var_Tangent.xyz) * E.x) + (normalize(var_Bitangent.xyz) * E.y) + (normalize(m_Normal.xyz) * E.z));
-			vec3 offsetDir = normalize(E * tangentToWorld);
-			vec2 tex_offset = vec2(1.0 / u_Dimensions);
-			vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
+	if (PARALLAX_ENABLED)
+	{// TODO: Move to screen space, screen space tesselation maybe???
+		vec3 offsetDir = normalize(E * tangentToWorld);
+		vec2 tex_offset = vec2(1.0 / u_Dimensions);
+		vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
-			#if defined(FAST_PARALLAX)
-				ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
-				texCoords += ParallaxOffset;
-			#else //!defined(FAST_PARALLAX)
-				ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
-				texCoords += ParallaxOffset;
-			#endif //defined(FAST_PARALLAX)
-		}
+		#if defined(FAST_PARALLAX)
+			ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
+			texCoords += ParallaxOffset;
+		#else //!defined(FAST_PARALLAX)
+			ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
+			texCoords += ParallaxOffset;
+		#endif //defined(FAST_PARALLAX)
 	}
 #endif
 
@@ -797,6 +846,9 @@ void main()
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
 
+
+
+#ifdef USE_ALPHA_TEST
 	if (u_AlphaTestValues.r > 0.0)
 	{
 		if (u_AlphaTestValues.r == ATEST_LT)
@@ -809,22 +861,19 @@ void main()
 			if (gl_FragColor.a < u_AlphaTestValues.g)
 				discard;
 	}
+#endif //USE_ALPHA_TEST
 
-	/*if (gl_FragColor.a <= 0.0)
-	{// Not adding anything to the output? Discard without doing all the extra crap...
-		discard;
-		return;
-	}*/
 
 
 	float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
 
 
-	vec4 norm = vec4(0.0);
-	vec3 N = vec3(0.0);
+	vec3 N = m_Normal.xyz;
 
-	if (USE_GLOW_BUFFER <= 0.0)
+	if (LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
 	{
+		vec4 norm = vec4(0.0);
+
 		if (u_Local4.r <= 0.0)
 		{
 			norm = ConvertToNormals(diffuse);
@@ -833,15 +882,11 @@ void main()
 		{
 			norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 		}
-
 	
 		N.xy = norm.xy * 2.0 - 1.0;
 		N.xy *= 0.25;
 		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-		//N = normalize((normalize(var_Tangent.xyz) * N.x) + (normalize(var_Bitangent.xyz) * N.y) + (normalize(m_Normal.xyz) * N.z));
 		N = tangentToWorld * N;
-
-		//N = normalize(cross(normalize(m_Normal.xyz + (norm.xyz * 2.0 - 1.0)), E));
 	}
 
 
@@ -852,8 +897,8 @@ void main()
 	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
 
 
-	if (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0)
-	{
+	if (LIGHTMAP_ENABLED)
+	{// TODO: Move to screen space?
 		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
 
 		#if defined(RGBM_LIGHTMAP)
@@ -887,8 +932,8 @@ void main()
 		gl_FragColor.rgb = clamp(gl_FragColor.rgb + u_MapAmbient.rgb, 0.0, 1.0);
 	
 
-	if (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0)
-	{
+	if (CUBEMAP_ENABLED)
+	{// TODO: Move to screen space...
 #define cubeStrength u_Local3.a
 #define cubeMaxDist u_Local3.b
 
@@ -902,18 +947,17 @@ void main()
 
 		if (u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && cubeFade > 0.0)
 		{
-			//if (u_Local1.g > 0.0)
-			//{// Real specMap...
-			//	specular = texture(u_SpecularMap, texCoords);
-			//}
-			//else
+			if (u_Local1.g > 0.0)
+			{// Real specMap...
+				specular = texture(u_SpecularMap, texCoords);
+			}
+			else
 			{// Fake it...
 				specular.rgb = gl_FragColor.rgb;
 #define specLower ( 48.0 / 255.0)
 #define specUpper (255.0 / 192.0)
 				specular.rgb = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
 				specular.a = clamp(((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6, 0.0, 1.0);
-				//specular.a = clamp((max(max(specular.r, specular.g), specular.b)), 0.0, 1.0);
 			}
 
 			specular.rgb *= u_SpecularScale.rgb;
@@ -924,11 +968,8 @@ void main()
 			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
 			vec3 R = reflect(E, normalize(m_Normal.xyz)/*N*/);
-			//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * (u_ViewOrigin.xyz - m_vertPos.xyz);//viewDir;
-			//vec3 parallax = (u_CubeMapInfo.xyz / curDist) + u_CubeMapInfo.w * vec3(-viewDir.xy, viewDir.z);
-			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * m_ViewDir;
 			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-			//vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
 
 			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
 			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0));
@@ -938,11 +979,6 @@ void main()
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
-	/*if (gl_FragColor.a <= 0.0)
-	{
-		discard;
-		return;
-	}*/
 
 	if (USE_GLOW_BUFFER > 0.0)
 	{

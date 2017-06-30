@@ -739,14 +739,17 @@ void FBO_Init(void)
 		}
 
 		tr.screenShadowFbo = FBO_Create("_screenshadow", tr.screenShadowImage->width, tr.screenShadowImage->height);
-		tr.screenShadowBlurFbo = FBO_Create("_screenshadowBlur", tr.screenShadowImage->width, tr.screenShadowImage->height);
-		FBO_Bind(tr.screenShadowFbo);
 		
+		FBO_Bind(tr.screenShadowFbo);
 		FBO_AttachTextureImage(tr.screenShadowImage, 0);
-
 		FBO_SetupDrawBuffers();
-
 		R_CheckFBO(tr.screenShadowFbo);
+
+		tr.screenShadowBlurFbo = FBO_Create("_screenshadowBlur", tr.screenShadowImage->width, tr.screenShadowImage->height);
+		FBO_Bind(tr.screenShadowBlurFbo);
+		FBO_AttachTextureImage(tr.screenShadowBlurImage, 0);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.screenShadowBlurFbo);
 	}
 
 #ifdef __DYNAMIC_SHADOWS__

@@ -316,8 +316,9 @@ extern cvar_t  *r_glowStrength;
 extern cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern cvar_t  *r_drawSunRays;
+extern cvar_t  *r_shadowQuality;
 extern cvar_t  *r_shadowContrast;
-extern cvar_t  *r_shadowBlurPasses;
+extern cvar_t  *r_shadowBlur;
 extern cvar_t  *r_shadowFilter;
 extern cvar_t  *r_shadowMapSize;
 extern cvar_t  *r_shadowCascadeZNear;
@@ -1132,6 +1133,9 @@ typedef struct shader_s {
 
 	qboolean	isWater;
 	qboolean	hasAlpha;
+
+	qboolean	detailMapFromTC;		// 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
+	qboolean	detailMapFromWorld;		// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)
 
 	qboolean	isSky;
 	skyParms_t	sky;
@@ -2499,6 +2503,7 @@ typedef struct trGlobals_s {
 	image_t					*fixedLevelsImage;
 	image_t					*sunShadowDepthImage[5];
 	image_t                 *screenShadowImage;
+	image_t                 *screenShadowBlurImage;
 #ifdef __DYNAMIC_SHADOWS__
 	image_t					*dlightShadowDepthImage[MAX_DYNAMIC_SHADOWS][3];
 //	image_t                 *screenDlightShadowImage;
@@ -2654,7 +2659,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t volumeLightShader[3];
 	shaderProgram_t volumeLightCombineShader;
 	shaderProgram_t vibrancyShader;
-	shaderProgram_t fastBlurShader;
+	shaderProgram_t fastBlurShader[3];
 	shaderProgram_t bloomRaysShader;
 	shaderProgram_t distanceBlurShader[4];
 	shaderProgram_t fogPostShader;
@@ -2963,8 +2968,9 @@ extern cvar_t  *r_glowStrength;
 extern  cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern  cvar_t  *r_drawSunRays;
+extern cvar_t  *r_shadowQuality;
 extern cvar_t  *r_shadowContrast;
-extern  cvar_t  *r_shadowBlurPasses;
+extern  cvar_t  *r_shadowBlur;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowMapSize;
 extern  cvar_t  *r_shadowCascadeZNear;

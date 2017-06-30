@@ -230,7 +230,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 {
 	vec4 color = u_VertColor * attr_Color + u_BaseColor;
 	
-	//if (USE_RGBA > 0.0)
+	if (USE_RGBA > 0.0)
 	{
 		if (u_ColorGen == CGEN_LIGHTING_DIFFUSE)
 		{

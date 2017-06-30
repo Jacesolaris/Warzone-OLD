@@ -1997,7 +1997,7 @@ extern void GLSL_AttachTextures( void );
 extern void GLSL_AttachGenericTextures( void );
 extern void GLSL_AttachGlowTextures( void );
 extern void GLSL_AttachWaterTextures( void );
-extern void GLSL_AttachWaterTextures2( void );
+//extern void GLSL_AttachWaterTextures2( void );
 
 extern world_t				s_worldData;
 extern qboolean ALLOW_GL_400;
@@ -2217,7 +2217,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		float useVertexAnim = 0.0;
 		float useSkeletalAnim = 0.0;
 
-//#define __USE_DETAIL_DEPTH_SKIP__
+//#define __USE_ALPHA_TEST__ // This interferes with the ability for the depth prepass to optimize out fragments causing FPS hit.
+#define __USE_DETAIL_DEPTH_SKIP__
+#define __LIGHTMAP_IS_DETAIL__
+#define __USE_GLOW_DETAIL_BUFFERS__
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
@@ -2502,10 +2505,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
+#ifdef __LIGHTMAP_IS_DETAIL__
 			if (pStage->bundle[0].isLightmap)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
+#endif //__LIGHTMAP_IS_DETAIL__
 
 			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL)
 			{// Don't output these to position and normal map...
@@ -2524,12 +2529,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
+#ifdef __LIGHTMAP_IS_DETAIL__
 			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
 				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
+#endif //__LIGHTMAP_IS_DETAIL__
 			
 			/*if (pStage->stateBits & GLS_ATEST_BITS)
 			{
@@ -2593,7 +2600,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				forceRGBGen = CGEN_ENTITY;
 			}
 
-			/*if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
+#ifndef __USE_ALPHA_TEST__
+			if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
 			{
 				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
 				if ( backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH )
@@ -2601,7 +2609,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					//we draw RF_FORCE_ENT_ALPHA stuff after everything else, including standard alpha surfs.
 					stateBits |= GLS_DEPTHMASK_TRUE;
 				}
-			}*/
+			}
+#endif //__USE_ALPHA_TEST__
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
@@ -2618,6 +2627,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				VectorSet4(vec, MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_MAP_AMBIENT, vec);
 
+#ifdef __USE_ALPHA_TEST__
 			vec2_t atest = { 0 };
 
 			if (stateBits & GLS_ATEST_BITS)
@@ -2655,6 +2665,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GLSL_SetUniformVec2(sp, UNIFORM_ALPHATEST, atest);
+#else //!__USE_ALPHA_TEST__
+			//vec2_t atest = { 0 };
+			//GLSL_SetUniformVec2(sp, UNIFORM_ALPHATEST, atest);
+#endif //__USE_ALPHA_TEST__
 
 #if 0
 			uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
@@ -2686,7 +2700,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
-				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 0.0, 0.0);
+				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
+				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
+				0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
 
@@ -3393,6 +3409,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					break;
 				}
 			}
+#ifdef __USE_GLOW_DETAIL_BUFFERS__
 			else if (index & LIGHTDEF_USE_GLOW_BUFFER)
 			{
 				if (glState.currentFBO == tr.renderFbo)
@@ -3407,6 +3424,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_AttachGenericTextures();
 				}
 			}
+#endif //__USE_GLOW_DETAIL_BUFFERS__
 
 			qboolean tesselation = qfalse;
 
@@ -3500,6 +3518,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_AttachTextures();
 				}
 			}
+#ifdef __USE_GLOW_DETAIL_BUFFERS__
 			else if (index & LIGHTDEF_USE_GLOW_BUFFER)
 			{
 				if (glState.currentFBO == tr.renderFbo)
@@ -3514,6 +3533,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_AttachTextures();
 				}
 			}
+#endif //__USE_GLOW_DETAIL_BUFFERS__
 
 			passNum++;
 

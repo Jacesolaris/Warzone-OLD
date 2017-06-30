@@ -37,6 +37,11 @@ static float	s_flipMatrix[16] = {
 
 void RB_SwapFBOs ( FBO_t **currentFbo, FBO_t **currentOutFbo)
 {
+	if (*currentFbo == tr.renderFbo)
+	{// Skip initial blit by starting from render FBO and changing it to generic after 1st use...
+		*currentFbo = tr.genericFbo3;
+	}
+
 	FBO_t *temp = *currentFbo;
 	*currentFbo = *currentOutFbo;
 	*currentOutFbo = temp;
@@ -2009,7 +2014,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, tr.hdrDepthFbo, NULL, NULL, NULL, 0);
 		}
 
-		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED)
+		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED && r_deferredLighting->integer)
 		{
 			vec4_t quadVerts[4];
 			vec2_t texCoords[4];
@@ -2108,27 +2113,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 
+			if (r_shadowBlur->integer)
 			{
-				FBO_t *currentFbo = tr.genericFbo3;
-				FBO_t *currentOutFbo = tr.genericFbo;
-
-				FBO_FastBlit(tr.screenShadowFbo, NULL, currentFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-				
-				// Blur some times
-				float	spread = 1.0f;
-
-				for ( int i = 0; i < r_shadowBlurPasses->integer; i++ )
-				{
-					//RB_GaussianBlur(currentFbo, tr.genericFbo2, currentOutFbo, spread);
-					//RB_BokehBlur(currentFbo, NULL, currentOutFbo, NULL, backEnd.refdef.blurFactor);
-					RB_FastBlur(currentFbo, NULL, currentOutFbo, NULL);
-					RB_SwapFBOs( &currentFbo, &currentOutFbo);
-					//spread += 0.6f * 0.25f;
-				}
-
-				FBO_FastBlit(currentFbo, NULL, tr.screenShadowFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				RB_FastBlur(tr.screenShadowFbo, NULL, tr.screenShadowBlurFbo, NULL);
 			}
-			//RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
 		}
 
 		// reset viewport and scissor
@@ -2506,8 +2494,6 @@ RB_PostProcess
 
 extern qboolean FOG_POST_ENABLED;
 
-extern void GLSL_AttachPostTextures( void );
-
 const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = (const postProcessCommand_t *)data;
@@ -2575,9 +2561,10 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
-		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		//FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		FBO_t *currentFbo = tr.genericFbo3;
+		//FBO_t *currentFbo = tr.genericFbo3;
+		FBO_t *currentFbo = tr.renderFbo; // gets switched to genericFbo3 by RB_SwapFBOs when first seen to skip the blit above...
 		FBO_t *currentOutFbo = tr.genericFbo;
 
 		//
@@ -2885,8 +2872,11 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		//FBO_Blit(currentFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, 0);
+#define __SKIP_EXTRA_BLIT__
+
+#ifndef __SKIP_EXTRA_BLIT__
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+#endif
 
 		//
 		// End UQ1 Added...
@@ -2895,11 +2885,19 @@ const void *RB_PostProcess(const void *data)
 		if (r_hdr->integer && (r_toneMap->integer || r_forceToneMap->integer))
 		{
 			autoExposure = (qboolean)(r_autoExposure->integer || r_forceAutoExposure->integer);
+#ifndef __SKIP_EXTRA_BLIT__
 			RB_ToneMap(srcFbo, srcBox, NULL, dstBox, autoExposure);
+#else
+			RB_ToneMap(currentFbo, srcBox, NULL, dstBox, autoExposure);
+#endif
 		}
 		else if (r_cameraExposure->value == 0.0f)
 		{
+#ifndef __SKIP_EXTRA_BLIT__
 			FBO_FastBlit(srcFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+#else
+			FBO_FastBlit(currentFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+#endif
 		}
 		else
 		{
@@ -2910,7 +2908,11 @@ const void *RB_PostProcess(const void *data)
 			color[2] = pow(2, r_cameraExposure->value); //exp2(r_cameraExposure->value);
 			color[3] = 1.0f;
 
+#ifndef __SKIP_EXTRA_BLIT__
 			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
+#else
+			FBO_Blit(currentFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
+#endif
 		}
 	}
 

@@ -2011,7 +2011,7 @@ void GLSL_AttachTextures(void)
 
 void GLSL_AttachGlowTextures(void)
 {// Moved here for convenience...
-	//FBO_AttachTextureImage(tr.renderImage, 0);
+	FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.dummyImage2, 2);
 	FBO_AttachTextureImage(tr.dummyImage3, 3);
@@ -2022,18 +2022,7 @@ void GLSL_AttachGlowTextures(void)
 
 void GLSL_AttachGenericTextures(void)
 {// Moved here for convenience...
-	//FBO_AttachTextureImage(tr.renderImage, 0);
-	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
-	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
-	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
-	if (r_ssdo->integer)
-		FBO_AttachTextureImage(tr.dummyImage4, 4);
-	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
-}
-
-void GLSL_AttachPostTextures(void)
-{// Moved here for convenience...
-	//FBO_AttachTextureImage(tr.renderImage, 0);
+	FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
@@ -2054,6 +2043,7 @@ void GLSL_AttachWaterTextures(void)
 	//R_CheckFBO(tr.renderFbo);
 }
 
+/*
 void GLSL_AttachWaterTextures2(void)
 {// To output dummy textures on waters in RB_IterateStagesGeneric...
 	FBO_AttachTextureImage(tr.genericFBOImage, 0); // dummy
@@ -2065,6 +2055,7 @@ void GLSL_AttachWaterTextures2(void)
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
 }
+*/
 
 static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 {
@@ -2937,6 +2928,11 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		extradefines[0] = '\0';
 
+		if (r_ssdo->integer)
+		{
+			strcat(extradefines, "#define USE_SSDO\n");
+		}
+
 		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
@@ -3447,7 +3443,27 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader, "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[0], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define SHADOW_MQ\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[1], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define SHADOW_HQ\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[2], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
 	}
@@ -3695,6 +3711,11 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR;
 	extradefines[0] = '\0';
 
+	if (r_ssdo->integer)
+	{
+		strcat(extradefines, "#define USE_SSDO\n");
+	}
+
 	if (!GLSL_BeginLoadGPUShader(&tr.uniqueskyShader, "uniquesky", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "130", fallbackShader_uniquesky_vp, fallbackShader_uniquesky_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
@@ -3708,6 +3729,11 @@ int GLSL_BeginLoadGPUShaders(void)
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+	if (r_ssdo->integer)
+	{
+		strcat(extradefines, "#define USE_SSDO\n");
+	}
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterShader, "uniquewater", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_uniquewater_vp, fallbackShader_uniquewater_fp, NULL, NULL, NULL))
 	{
@@ -5428,33 +5454,35 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.fastBlurShader))
+	for (int s = 0; s < 3; s++)
 	{
-		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
-	}
+		if (!GLSL_EndLoadGPUShader(&tr.fastBlurShader[s]))
+		{
+			ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
+		}
 
-	GLSL_InitUniforms(&tr.fastBlurShader);
+		GLSL_InitUniforms(&tr.fastBlurShader[s]);
 
-	qglUseProgram(tr.fastBlurShader.program);
+		qglUseProgram(tr.fastBlurShader[s].program);
 
-	GLSL_SetUniformInt(&tr.fastBlurShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+		GLSL_SetUniformInt(&tr.fastBlurShader[s], UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		GLSL_SetUniformVec2(&tr.fastBlurShader, UNIFORM_DIMENSIONS, screensize);
-	}
+			GLSL_SetUniformVec2(&tr.fastBlurShader[s], UNIFORM_DIMENSIONS, screensize);
+		}
 
-	qglUseProgram(0);
+		qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.fastBlurShader);
+		GLSL_FinishGPUShader(&tr.fastBlurShader[s]);
 #endif
 
-	numEtcShaders++;
-
+		numEtcShaders++;
+	}
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.bloomRaysShader))
@@ -6339,7 +6367,9 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[2]);
 	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
 	GLSL_DeleteGPUShader(&tr.vibrancyShader);
-	GLSL_DeleteGPUShader(&tr.fastBlurShader);
+	GLSL_DeleteGPUShader(&tr.fastBlurShader[0]);
+	GLSL_DeleteGPUShader(&tr.fastBlurShader[1]);
+	GLSL_DeleteGPUShader(&tr.fastBlurShader[2]);
 	GLSL_DeleteGPUShader(&tr.bloomRaysShader);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[0]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[1]);

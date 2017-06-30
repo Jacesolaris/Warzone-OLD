@@ -1,3 +1,5 @@
+//#define USE_ALPHA_TEST
+
 uniform sampler2D u_DiffuseMap;
 
 uniform vec2	u_Dimensions;
@@ -21,7 +23,9 @@ varying vec4	var_Color;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef USE_SSDO
 out vec4 out_PureNormal;
+#endif //USE_SSDO
 
 void main()
 {
@@ -35,6 +39,7 @@ void main()
 	gl_FragColor = texture(u_DiffuseMap, texCoords);
 	gl_FragColor.a *= var_Color.a;
 
+#ifdef USE_ALPHA_TEST
 	if (u_AlphaTestValues.r > 0.0)
 	{
 		if (u_AlphaTestValues.r == ATEST_LT)
@@ -47,9 +52,12 @@ void main()
 			if (gl_FragColor.a < u_AlphaTestValues.g)
 				discard;
 	}
+#endif //USE_ALPHA_TEST
 
 	out_Glow = vec4(0.0);
 	out_Position = vec4(var_Position.rgb, 1024.0);
 	out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, 0.0);
+#ifdef USE_SSDO
 	out_PureNormal = vec4(var_Normal.rgb * 0.5 + 0.5, 0.0);
+#endif //USE_SSDO
 }

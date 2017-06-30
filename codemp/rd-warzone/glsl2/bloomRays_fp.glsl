@@ -75,7 +75,7 @@ vec4 ProcessBloomRays(vec2 inTC)
 					break;
 			}
           
-			totalColor += clamp(lens * fallOffRange, 0.0, 1.0);
+			totalColor += clamp(lens * fallOffRange * (1.0 - lightLinDepth), 0.0, 1.0);
 		}
 	}
 

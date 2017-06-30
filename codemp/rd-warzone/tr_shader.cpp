@@ -3992,6 +3992,22 @@ static qboolean ParseShader( const char *name, const char **text )
 			shader.noTC = qtrue;
 			continue;
 		}
+		//
+		// Detail maps are TC specific...
+		//
+		else if (!Q_stricmp(token, "detailMapFromTC"))
+		{
+			shader.detailMapFromTC = qtrue;
+			continue;
+		}
+		//
+		// Detail maps are TC specific...
+		//
+		else if (!Q_stricmp(token, "detailMapFromWorld"))
+		{
+			shader.detailMapFromWorld = qtrue;
+			continue;
+		}
 		// entityMergable, allowing sprite surfaces from multiple entities
 		// to be merged into one batch.  This is a savings for smoke
 		// puffs and blood, but can't be used for anything where the

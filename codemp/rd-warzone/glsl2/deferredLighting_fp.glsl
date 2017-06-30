@@ -246,7 +246,9 @@ void main(void)
 
 			float lightMax = u_lightDistances[li];
 
-			if (lightDist < lightMax)
+			float lightDistMult = clamp(1.0 - (distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
+
+			if (lightDist < lightMax && lightDistMult > 0.0)
 			{
 				/*if (u_lightHeightScales[li] > 0.0)
 				{// Check height difference...
@@ -294,7 +296,7 @@ void main(void)
 						vec3 gamma = vec3(1.0/2.2);
 						vec3 finalColor = pow(linearColor, gamma);
 
-						vec3 lightAdd = finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0;
+						vec3 lightAdd = finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0 * lightDistMult;
 
 						if (useOcclusion)
 						{
