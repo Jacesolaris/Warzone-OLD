@@ -500,6 +500,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			vec2 coord = texCoords + ParallaxOffset;
 			vec4 color = texture(u_DiffuseMap, coord);
 
+#if 0
 			//if (color.a <= 0.0) return color;
 
 			float glowScale = max(max(color.r, color.g), color.b);
@@ -527,6 +528,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			}
 
 			color /= pixelsAdded;
+#endif
 
 #define glowLower ( 16.0 / 255.0 )
 #define glowUpper (255.0 / 192.0 )
