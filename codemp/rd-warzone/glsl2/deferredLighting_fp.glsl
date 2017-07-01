@@ -1,4 +1,5 @@
 ﻿//#define __AMBIENT_OCCLUSION__
+#define __ENVMAP__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -49,7 +50,7 @@ varying vec2		var_TexCoords;
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
 
-#ifdef __AMBIENT_OCCLUSION__
+#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
     return dot(p, vec3(.5));
@@ -79,7 +80,9 @@ float map(vec3 p){
     float n = (.5-cellTile(p))*1.5;
     return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
 }
+#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
+#ifdef __AMBIENT_OCCLUSION__
 float calculateAO(in vec3 pos, in vec3 nor)
 {
 	float sca = 2.0, occ = 0.0;
@@ -94,6 +97,37 @@ float calculateAO(in vec3 pos, in vec3 nor)
 }
 #endif //__AMBIENT_OCCLUSION__
 
+#ifdef __ENVMAP__
+// Very basic pseudo environment mapping... and by that, I mean it's fake. :) However, it 
+// does give the impression that the surface is reflecting the surrounds in some way.
+//
+// Anyway, the idea is very simple. Obtain the reflected ray at the surface hit point, then 
+// pass it into a 3D function. If you wanted, you could convert the 3D ray coordinates (p) 
+// to polar coordinates and index into a repeat texture. It can be pretty convincing (in an 
+// abstract way) and allows environment mapping without the need for a cube map, or a 
+// reflective pass.
+//
+// More sophisticated environment mapping:
+// UI easy to integrate - XT95    
+// https://www.shadertoy.com/view/ldKSDm
+vec3 envMap(vec3 p, float warmth){
+   
+    // Some functions work, and others don't. The surface is created with the function
+    // below, so that makes it somewhat believable.
+    float c = cellTile(p*6.);
+    c = smoothstep(0.2, 1., c); // Contract gives it more of a lit look... kind of.
+    
+	// Icy glow... for whatever reason. :)
+    vec3 coolMap = vec3(pow(c, 8.), c*c, c);
+    
+	// Alternate firey glow.
+    vec3 heatMap = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.));
+
+	// Mix Ice and Heat based on warmth setting...
+	return mix(coolMap, heatMap, warmth);
+
+}
+#endif //__ENVMAP__
 
 //
 // Full lighting... Blinn phong and basic lighting as well...
@@ -151,10 +185,12 @@ void main(void)
 	vec3 N = norm.xyz;
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
+#if 0
 	norm.a = clamp(length(gl_FragColor.rgb), 0.0, 1.0);
 #define const_1 ( 32.0 / 255.0)
 #define const_2 (255.0 / 219.0)
 	norm.a = clamp((clamp(norm.a - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
+#endif
 
 
 #if defined(USE_SHADOWMAP)
@@ -171,7 +207,7 @@ void main(void)
 	}
 #endif //defined(USE_SHADOWMAP)
 
-	float lightScale = clamp((1.0 - max(max(color.r, color.g), color.b)) - 0.2, 0.0, 1.0);
+	float lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 
 	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
 
@@ -229,6 +265,9 @@ void main(void)
 
 	if (u_lightCount > 0.0)
 	{
+		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
+		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
+
 		vec3 addedLight = vec3(0.0);
 
 		for (int li = 0; li < u_lightCount/*MAX_DEFERRED_LIGHTS*/; li++)
@@ -304,18 +343,18 @@ void main(void)
 							float to_light_dist = distanceToLight;
 							vec3 to_light_norm = to_light / to_light_dist;
 							float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm+E, 1.0), occlusion), 0.0, 1.0);
-							addedLight.rgb += lightAdd * (light_occlusion * 0.75 - 0.05);
+							addedLight.rgb += lightAdd * (light_occlusion * 0.75 - 0.05) * invLightScale;
 						}
 						else
 						{
-							addedLight += lightAdd;
+							addedLight += (lightAdd * invLightScale);
 						}
 					}
 				}
 			}
 		}
 
-		gl_FragColor.rgb = clamp(gl_FragColor.rgb + clamp(addedLight, -1.0, 1.0) * lightScale, 0.0, 1.0);
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb + (clamp(addedLight, -1.0, 1.0) * lightScale), 0.0, 1.0);
 	}
 
 #ifdef __AMBIENT_OCCLUSION__
@@ -323,6 +362,7 @@ void main(void)
 	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)
 	{
 		float ao = calculateAO((position.xyz / 524288.0) * 0.5 + 0.5, -N.xyz);
+		//float ao = calculateAO(reflect(surfaceToCamera, N), N);
 
 		/*
 		ao = clamp(ao * 0.1 + 0.9, 0.0, 1.0);
@@ -338,6 +378,18 @@ void main(void)
 			gl_FragColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
+
+#ifdef __ENVMAP__
+	//if (u_Local3.r > 0.0)
+	{
+		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
+		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
+
+		vec3 env = envMap(reflect(surfaceToCamera, N), 0.6 /* warmth */);//.5;
+		//vec3 env = envMap((position.xyz / 524288.0) * 0.5 + 0.5, 0.6 /* warmth */);//.5;
+		gl_FragColor.rgb += ((env * norm.a * invLightScale) * lightScale);
+	}
+#endif //__ENVMAP__
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }

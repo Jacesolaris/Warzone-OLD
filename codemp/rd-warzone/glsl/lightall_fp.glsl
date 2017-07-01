@@ -70,6 +70,8 @@ uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], r_showspl
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define WATER_LEVEL			u_Local6.a
+#define cubeStrength		u_Local3.a
+#define cubeMaxDist			u_Local3.b
 
 uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
@@ -810,7 +812,7 @@ void main()
 
 	bool PARALLAX_ENABLED = (USE_GLOW_BUFFER <= 0.0 && u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0) ? true : false;
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0) ? true : false;
-	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0) ? true : false;
+	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0) ? true : false;
 
 
 	mat3 tangentToWorld;
@@ -825,7 +827,7 @@ void main()
 
 	vec2 ParallaxOffset = vec2(0.0);
 
-
+#if 0
 #if defined(USE_PARALLAXMAP)
 	if (PARALLAX_ENABLED)
 	{// TODO: Move to screen space, screen space tesselation maybe???
@@ -841,6 +843,7 @@ void main()
 			texCoords += ParallaxOffset;
 		#endif //defined(FAST_PARALLAX)
 	}
+#endif
 #endif
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
@@ -936,9 +939,6 @@ void main()
 
 	if (CUBEMAP_ENABLED)
 	{// TODO: Move to screen space...
-#define cubeStrength u_Local3.a
-#define cubeMaxDist u_Local3.b
-
 		float curDist = distance(u_ViewOrigin.xyz, m_vertPos.xyz);
 		float cubeFade = 0.0;
 		
@@ -947,7 +947,7 @@ void main()
 			cubeFade = clamp(1.0 - (curDist / cubeMaxDist), 0.0, 1.0);
 		}
 
-		if (u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && cubeFade > 0.0)
+		if (cubeFade > 0.0)
 		{
 			if (u_Local1.g > 0.0)
 			{// Real specMap...
@@ -997,7 +997,7 @@ void main()
 
 		if (USE_ISDETAIL <= 0.0)
 		{
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, gl_FragColor.a );
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 #ifdef USE_SSDO
 			out_PureNormal = vec4( m_Normal.xyz * 0.5 + 0.5, 0.0 );
