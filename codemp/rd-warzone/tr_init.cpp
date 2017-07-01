@@ -286,6 +286,8 @@ cvar_t	*r_saveFontData;
 // UQ1: Added...
 //
 cvar_t	*r_parallaxScale;
+cvar_t	*r_ao;
+cvar_t	*r_env;
 cvar_t	*r_blinnPhong;
 cvar_t	*r_debugEmissiveRadiusScale;
 cvar_t	*r_debugEmissiveColorScale;
@@ -1547,6 +1549,8 @@ void R_Register( void )
 	//
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
+	r_ao = ri->Cvar_Get("r_ao", "1", CVAR_ARCHIVE);
+	r_env = ri->Cvar_Get("r_env", "1", CVAR_ARCHIVE);
 	r_debugEmissiveRadiusScale = ri->Cvar_Get("r_debugEmissiveRadiusScale", "1.0", CVAR_ARCHIVE);
 	r_debugEmissiveColorScale = ri->Cvar_Get("r_debugEmissiveColorScale", "1.0", CVAR_ARCHIVE);
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );

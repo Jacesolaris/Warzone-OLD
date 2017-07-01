@@ -81,6 +81,8 @@ extern const char *fallbackShader_magicdetail_vp;
 extern const char *fallbackShader_magicdetail_fp;
 extern const char *fallbackShader_volumelight_vp;
 extern const char *fallbackShader_volumelight_fp;
+extern const char *fallbackShader_volumelightInverted_vp;
+extern const char *fallbackShader_volumelightInverted_fp;
 extern const char *fallbackShader_volumelightCombine_vp;
 extern const char *fallbackShader_volumelightCombine_fp;
 extern const char *fallbackShader_fakeDepth_vp;
@@ -3283,6 +3285,38 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	Q_strcat(extradefines, 1024, "#define DUAL_PASS\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightInvertedShader[0], "volumelightInverted", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_volumelightInverted_vp, fallbackShader_volumelightInverted_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelightInverted shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define DUAL_PASS\n");
+	Q_strcat(extradefines, 1024, "#define MQ_VOLUMETRIC\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightInvertedShader[1], "volumelightInverted", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_volumelightInverted_vp, fallbackShader_volumelightInverted_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelightInverted shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define DUAL_PASS\n");
+	Q_strcat(extradefines, 1024, "#define HQ_VOLUMETRIC\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightInvertedShader[2], "volumelightInverted", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_volumelightInverted_vp, fallbackShader_volumelightInverted_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelightInverted shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightCombineShader, "volumelightCombine", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_volumelightCombine_vp, fallbackShader_volumelightCombine_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load volumelightCombine shader!");
@@ -4539,6 +4573,65 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		numEtcShaders++;
 	}
+
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (!GLSL_EndLoadGPUShader(&tr.volumeLightInvertedShader[i]))
+		{
+			ri->Error(ERR_FATAL, "Could not load volumelightInverted shader!");
+		}
+
+		GLSL_InitUniforms(&tr.volumeLightInvertedShader[i]);
+		qglUseProgram(tr.volumeLightInvertedShader[i].program);
+		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
+		//GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+
+#if 0
+		GLSL_SetUniformMatrix16(&tr.volumeLightInvertedShader[i], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+			GLSL_SetUniformVec2(&tr.volumeLightInvertedShader[i], UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t viewInfo;
+
+			//float zmax = backEnd.viewParms.zFar;
+			float zmax = 4096.0;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+
+			GLSL_SetUniformVec4(&tr.volumeLightInvertedShader[i], UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec4_t local0;
+			VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(&tr.volumeLightInvertedShader[i], UNIFORM_LOCAL0, local0);
+		}
+
+
+		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_LIGHTCOUNT, 16);
+		vec2_t CLOSEST_VLIGHTS_POSITIONS[16] = { 0.0 };
+		GLSL_SetUniformVec2x16(&tr.volumeLightInvertedShader[i], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, 16);
+#endif
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.volumeLightInvertedShader[i]);
+#endif
+
+		numEtcShaders++;
+	}
+
+
 
 	if (!GLSL_EndLoadGPUShader(&tr.volumeLightCombineShader))
 	{
@@ -6365,6 +6458,9 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[0]);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[1]);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[2]);
+	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[0]);
+	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[1]);
+	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[2]);
 	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
 	GLSL_DeleteGPUShader(&tr.vibrancyShader);
 	GLSL_DeleteGPUShader(&tr.fastBlurShader[0]);

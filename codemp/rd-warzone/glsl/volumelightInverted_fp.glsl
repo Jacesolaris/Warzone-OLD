@@ -85,7 +85,6 @@ void main ( void )
 			if (i == SUN_ID) 
 			{
 				fallOffRanges[numInRange] = fall;
-				//spotColor = var_LightColor[i].rgb;
 				spotColor = u_vlightColors[i].rgb;
 			}
 			else
@@ -143,7 +142,7 @@ void main ( void )
 		{
 			texCoord -= deltaTexCoord;
 
-			float linDepth = linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
+			float linDepth = 1.0 - linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
 
 			lens += linDepth * illuminationDecay * fBloomrayWeight;
 
@@ -159,7 +158,7 @@ void main ( void )
 		}
 		else
 		{
-			totalColor += clamp((lightColors[i].rgb * (lens * 0.5/*0.3*/) * (1.0 - lightDepth)) * fallOffRanges[i], 0.0, 1.0);
+			totalColor += clamp((lightColors[i].rgb * (lens * 0.5) * (1.0 - lightDepth)) * fallOffRanges[i], 0.0, 1.0);
 		}
 	}
 

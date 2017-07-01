@@ -1125,39 +1125,39 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-				specularScale = 0.05;
+				specularScale = 0.75;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SHORTGRASS;
 				parallaxScale = 1.5;
 				//phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
 				break;
 			case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-				specularScale = 0.05;
+				specularScale = 0.75;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_LONGGRASS;
 				parallaxScale = 1.5;
 				//phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
 				break;
 			case MATERIAL_SAND:				// 8			// sandy beach
-				specularScale = 0.15;
+				specularScale = 0.65;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SAND;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_CARPET:			// 27			// lush carpet
-				specularScale = 0.15;
+				specularScale = 0.25;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_CARPET;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_GRAVEL:			// 9			// lots of small stones
-				specularScale = 0.25;
+				specularScale = 0.30;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_GRAVEL;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_ROCK:				// 23			//
-				specularScale = 0.15;
+				specularScale = 0.22;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_ROCK;
 				parallaxScale = 1.5;
@@ -1169,13 +1169,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-				specularScale = 0.15;
+				specularScale = 0.40;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SOLIDWOOD;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-				specularScale = 0.15;
+				specularScale = 0.35;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_HOLLOWWOOD;
 				parallaxScale = 1.5;
@@ -1195,37 +1195,37 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-				specularScale = 0.1;
+				specularScale = 0.35;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_DRYLEAVES;
 				parallaxScale = 0.0;
 				break;
 			case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-				specularScale = 0.35;
+				specularScale = 0.85;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_GREENLEAVES;
 				parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
 				break;
 			case MATERIAL_FABRIC:			// 21			// Cotton sheets
-				specularScale = 0.25;
+				specularScale = 0.45;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_FABRIC;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_CANVAS:			// 22			// tent material
-				specularScale = 0.25;
+				specularScale = 0.35;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_CANVAS;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_MARBLE:			// 12			// marble floors
-				specularScale = 0.2;
+				specularScale = 0.65;
 				cubemapScale = 0.6;
 				materialType = (float)MATERIAL_MARBLE;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SNOW:				// 14			// freshly laid snow
-				specularScale = 0.3;
+				specularScale = 0.75;
 				cubemapScale = 0.35;
 				materialType = (float)MATERIAL_SNOW;
 				parallaxScale = 1.5;
@@ -1243,19 +1243,19 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-				specularScale = 0.25;
+				specularScale = 0.375;
 				cubemapScale = 0.1;
 				materialType = (float)MATERIAL_CONCRETE;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-				specularScale = 0.15;
+				specularScale = 0.25;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_FLESH;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-				specularScale = 0.15;
+				specularScale = 0.25;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_RUBBER;
 				parallaxScale = 1.5;
@@ -1273,20 +1273,20 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-				specularScale = 0.88;
+				specularScale = 0.93;
 				cubemapScale = 0.7;
 				materialType = (float)MATERIAL_SHATTERGLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_ARMOR:			// 30			// body armor
-				specularScale = 0.4;
+				specularScale = 0.5;
 				cubemapScale = 0.6;
 				materialType = (float)MATERIAL_ARMOR;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_ICE:				// 15			// packed snow/solid ice
-				specularScale = 0.45;
+				specularScale = 0.75;
 				cubemapScale = 0.7;
 				materialType = (float)MATERIAL_ICE;
 				parallaxScale = 2.0;
@@ -1310,7 +1310,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 1.5;
 				break;
 			default:
-				specularScale = 0.0;
+				specularScale = 0.15;
 				cubemapScale = 0.0;
 				materialType = (float)0.0;
 				parallaxScale = 1.0;

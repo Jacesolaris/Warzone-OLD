@@ -1,5 +1,6 @@
-﻿//#define __AMBIENT_OCCLUSION__
+﻿#define __AMBIENT_OCCLUSION__
 #define __ENVMAP__
+//#define __CURVE__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -17,7 +18,7 @@ uniform sampler2D	u_ShadowMap;
 
 uniform vec2		u_Dimensions;
 
-uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, 0, 0
+uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
 uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 
@@ -50,13 +51,14 @@ varying vec2		var_TexCoords;
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
 
-#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
+#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__CURVE__)
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
     return dot(p, vec3(.5));
 }
 
-float cellTile(in vec3 p){
+float cellTile(in vec3 p)
+{
     p /= 5.5;
     // Draw four overlapping objects at various positions throughout the tile.
     vec4 v, d; 
@@ -76,16 +78,17 @@ float cellTile(in vec3 p){
     return d.x*2.66; // Normalize... roughly.
 }
 
-float map(vec3 p){
+float map(vec3 p)
+{
     float n = (.5-cellTile(p))*1.5;
     return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
 }
-#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
+#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__CURVE__)
 
 #ifdef __AMBIENT_OCCLUSION__
 float calculateAO(in vec3 pos, in vec3 nor)
 {
-	float sca = 2.0, occ = 0.0;
+	float sca = 0.00013/*2.0*/, occ = 0.0;
     for( int i=0; i<5; i++ ){
     
         float hr = 0.01 + float(i)*0.5/4.0;        
@@ -98,26 +101,12 @@ float calculateAO(in vec3 pos, in vec3 nor)
 #endif //__AMBIENT_OCCLUSION__
 
 #ifdef __ENVMAP__
-// Very basic pseudo environment mapping... and by that, I mean it's fake. :) However, it 
-// does give the impression that the surface is reflecting the surrounds in some way.
-//
-// Anyway, the idea is very simple. Obtain the reflected ray at the surface hit point, then 
-// pass it into a 3D function. If you wanted, you could convert the 3D ray coordinates (p) 
-// to polar coordinates and index into a repeat texture. It can be pretty convincing (in an 
-// abstract way) and allows environment mapping without the need for a cube map, or a 
-// reflective pass.
-//
-// More sophisticated environment mapping:
-// UI easy to integrate - XT95    
-// https://www.shadertoy.com/view/ldKSDm
-vec3 envMap(vec3 p, float warmth){
-   
-    // Some functions work, and others don't. The surface is created with the function
-    // below, so that makes it somewhat believable.
+vec3 envMap(vec3 p, float warmth)
+{
     float c = cellTile(p*6.);
     c = smoothstep(0.2, 1., c); // Contract gives it more of a lit look... kind of.
     
-	// Icy glow... for whatever reason. :)
+	// Icy glow... for whatever reason.
     vec3 coolMap = vec3(pow(c, 8.), c*c, c);
     
 	// Alternate firey glow.
@@ -125,9 +114,20 @@ vec3 envMap(vec3 p, float warmth){
 
 	// Mix Ice and Heat based on warmth setting...
 	return mix(coolMap, heatMap, warmth);
-
 }
 #endif //__ENVMAP__
+
+#ifdef __CURVE__
+float curve(in vec3 p, in float w)
+{
+    vec2 e = vec2(-1., 1.)*w;
+    
+    float t1 = map(p + e.yxx), t2 = map(p + e.xxy);
+    float t3 = map(p + e.xyx), t4 = map(p + e.yyy);
+    
+    return 0.125/(w*w) *(t1 + t2 + t3 + t4 - 4.*map(p));
+}
+#endif //__CURVE__
 
 //
 // Full lighting... Blinn phong and basic lighting as well...
@@ -357,39 +357,56 @@ void main(void)
 		gl_FragColor.rgb = clamp(gl_FragColor.rgb + (clamp(addedLight, -1.0, 1.0) * lightScale), 0.0, 1.0);
 	}
 
+#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__CURVE__)
+	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
+	float to_light_dist = length(to_light);
+	vec3 to_light_norm = (to_light / to_light_dist);
+
+//#define rd (to_light_norm + surfaceToCamera)
+#define rd reflect(surfaceToCamera, N)
+#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__CURVE__)
+
 #ifdef __AMBIENT_OCCLUSION__
-	//if (u_Local2.g >= 1.0)
-	//if (position.a != 0.0 && position.a != 1024.0 && position.a != 1025.0)
+	if (u_Local1.b > 0.0)
 	{
-		float ao = calculateAO((position.xyz / 524288.0) * 0.5 + 0.5, -N.xyz);
-		//float ao = calculateAO(reflect(surfaceToCamera, N), N);
+		float ao = calculateAO(to_light_norm, N * 10000.0);
+		
+		ao = clamp(ao, 0.0, 1.0);
 
-		/*
-		ao = clamp(ao * 0.1 + 0.9, 0.0, 1.0);
-		float ao2 = clamp(ao + 0.95, 0.0, 1.0);
-		ao = (ao + ao2) / 2.0;
-		//ao *= ao;
-		ao = pow(ao, 4.0);
-		*/
-
-		if (u_Local3.r > 0.0)
-			gl_FragColor.rgb = vec3(ao);
-		else
+		//if (u_Local3.g > 0.0)
+		//	gl_FragColor.rgb = vec3(ao);
+		//else
 			gl_FragColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
 
 #ifdef __ENVMAP__
-	//if (u_Local3.r > 0.0)
+	if (u_Local1.a > 0.0)
 	{
 		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
 
-		vec3 env = envMap(reflect(surfaceToCamera, N), 0.6 /* warmth */);//.5;
-		//vec3 env = envMap((position.xyz / 524288.0) * 0.5 + 0.5, 0.6 /* warmth */);//.5;
-		gl_FragColor.rgb += ((env * norm.a * invLightScale) * lightScale);
+		vec3 env = envMap(rd, 0.6 /* warmth */);//.5;
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * norm.a * invLightScale) * lightScale), norm.a * lightScale);
 	}
 #endif //__ENVMAP__
+
+#ifdef __CURVE__
+		if (u_Local3.r > 0.0)
+		{
+			// Curvature.
+			float crv = clamp(curve((position.xyz / 512000.0)/*rd*//*to_light_norm*/ * u_Local3.b, 0.125)*0.5+0.5, .0, 1.);
+	    
+    		// Darkening the crevices. Otherse known as cheap, scientifically-incorrect shadowing.	
+			float shading =  crv*0.5+0.5; //smoothstep(-.05, .1, cellTile(to_light_norm));//
+			shading *= smoothstep(-.1, .15, cellTile(to_light_norm));
+			
+			if (u_Local3.g > 0.0)
+				gl_FragColor.rgb = vec3(shading);
+			else
+				gl_FragColor.rgb *= shading;
+		}
+#endif //__CURVE__
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
 }

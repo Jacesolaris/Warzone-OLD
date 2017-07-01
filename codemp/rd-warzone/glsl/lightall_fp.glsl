@@ -69,6 +69,7 @@ uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatM
 uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], r_showsplat
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
+#define UI_VIBRANCY			0.4
 #define WATER_LEVEL			u_Local6.a
 #define cubeStrength		u_Local3.a
 #define cubeMaxDist			u_Local3.b
@@ -532,9 +533,18 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			color /= pixelsAdded;
 #endif
 
+			// Contrast...
 #define glowLower ( 16.0 / 255.0 )
 #define glowUpper (255.0 / 192.0 )
 			color.rgb = clamp((clamp(color.rgb - glowLower, 0.0, 1.0)) * glowUpper, 0.0, 1.0);
+
+			// Vibrancy...
+			vec3	lumCoeff = vec3(0.212656, 0.715158, 0.072186);  				//Calculate luma with these values
+			float	max_color = max(color.r, max(color.g, color.b)); 	//Find the strongest color
+			float	min_color = min(color.r, min(color.g, color.b)); 	//Find the weakest color
+			float	color_saturation = max_color - min_color; 						//Saturation is the difference between min and max
+			float	luma = dot(lumCoeff, color.rgb); 							//Calculate luma (grey)
+			color.rgb = mix(vec3(luma), color.rgb, (1.0 + (UI_VIBRANCY * (1.0 - (sign(UI_VIBRANCY) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
 
 			return color;
 		}

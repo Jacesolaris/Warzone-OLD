@@ -406,6 +406,8 @@ extern int		max_polyverts;
 //
 extern cvar_t	*r_parallaxScale;
 extern cvar_t	*r_blinnPhong;
+extern cvar_t	*r_ao;
+extern cvar_t	*r_env;
 extern cvar_t	*r_debugEmissiveRadiusScale;
 extern cvar_t	*r_debugEmissiveColorScale;
 extern cvar_t	*r_skynum;
@@ -2657,6 +2659,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anamorphicBlurShader;
 	shaderProgram_t anamorphicCombineShader;
 	shaderProgram_t volumeLightShader[3];
+	shaderProgram_t volumeLightInvertedShader[3];
 	shaderProgram_t volumeLightCombineShader;
 	shaderProgram_t vibrancyShader;
 	shaderProgram_t fastBlurShader[3];
