@@ -2275,7 +2275,7 @@ void G_InitBots( void ) {
 	trap->Cvar_Register(&npc_civilians, "npc_civilians", "0", CVAR_ARCHIVE);
 	trap->Cvar_Register(&npc_vendors, "npc_vendors", "0", CVAR_ARCHIVE);
 #endif //__NPC_MINPLAYERS__
-	trap->Cvar_Register(&npc_pathing, "npc_pathing", "2", CVAR_ARCHIVE);
+	trap->Cvar_Register(&npc_pathing, "npc_pathing", "0", CVAR_ARCHIVE);
 	trap->Cvar_Register(&npc_wptonav, "npc_wptonav", "0", CVAR_ARCHIVE);
 
 	//rww - new bot route stuff
