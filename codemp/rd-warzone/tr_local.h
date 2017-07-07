@@ -130,6 +130,23 @@ extern qboolean DAY_NIGHT_CYCLE_ENABLED;
 
 extern qboolean SHADOWS_ENABLED;
 
+#define MAX_GLOW_LOCATIONS 65536
+extern int			NUM_MAP_GLOW_LOCATIONS;
+extern vec3_t		MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
+extern vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
+extern qboolean		MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
+extern float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
+extern float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
+
+#define				MAX_WORLD_GLOW_DLIGHT_RANGE 16384.0
+#define				MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
+extern int			CLOSE_TOTAL;
+extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+
 // 14 bits
 // can't be increased without changing bit packing for drawsurfs
 // see QSORT_SHADERNUM_SHIFT
@@ -3105,7 +3122,7 @@ void R_SwapBuffers( int );
 void R_RenderView( viewParms_t *parms );
 void R_RenderDlightCubemaps(const refdef_t *fd);
 void R_RenderPshadowMaps(const refdef_t *fd);
-void R_RenderSunShadowMaps(const refdef_t *fd, int level);
+void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sundir, float lightHeight);
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene );
 #ifdef __DYNAMIC_SHADOWS__
 void R_RenderDlightShadowMaps(const refdef_t *fd, int level);

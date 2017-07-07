@@ -1846,13 +1846,6 @@ static void R_AddEntitySurface (int entityNum)
 		return;
 	}
 
-#ifdef __MERGE_MORE__
-	tr.defaultShader->entityMergable = qtrue;
-
-	if (!tr.defaultShader->cullType)
-		tr.defaultShader->cullType = CT_TWO_SIDED;
-#endif //__MERGE_MORE__
-
 #if 1
 	if ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
 	{// Don't draw grass and plants on shadow pass for speed...
@@ -1904,10 +1897,6 @@ static void R_AddEntitySurface (int entityNum)
 		//if (R_CullPointAndRadius( ent->e.origin, ent->e.radius ) != CULL_OUT)
 		{
 			shader = R_GetShaderByHandle( ent->e.customShader );
-#ifdef __MERGE_MORE__
-			shader->entityMergable = qtrue;
-#endif //__MERGE_MORE__
-
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		}
 		break;
@@ -1964,10 +1953,6 @@ static void R_AddEntitySurface (int entityNum)
 		break;
 	case RT_ENT_CHAIN:
 		shader = R_GetShaderByHandle( ent->e.customShader );
-#ifdef __MERGE_MORE__
-		shader->entityMergable = qtrue;
-#endif //__MERGE_MORE__
-
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		break;
 	default:
@@ -2549,7 +2534,7 @@ static float CalcSplit(float n, float f, float i, float m)
 	return (n * pow(f / n, i / m) + (f - n) * i / m) / 2.0f;
 }
 
-void R_RenderSunShadowMaps(const refdef_t *fd, int level)
+void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float lightHeight)
 {
 	viewParms_t		shadowParms;
 	vec4_t lightDir;//, lightCol;
@@ -2562,7 +2547,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 	MATRIX_UPDATE = qtrue;
 
-	VectorCopy4(tr.refdef.sunDir, lightDir);
+	VectorCopy4(sunDir, lightDir);
 
 	viewZNear = r_shadowCascadeZNear->value;
 	viewZFar = r_shadowCascadeZFar->value;
@@ -2760,6 +2745,16 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
+#if 0
+		if (lightHeight != 999999.9)
+		{// Not the sun, use max height from the light's height...
+			if (r_testvalue1->integer < 1)
+				lightviewBounds[1][2] = lightHeight;
+			else
+				lightviewBounds[0][2] = lightHeight;
+		}
+#endif
+
 		// Moving the Light in Texel-Sized Increments
 		// from http://msdn.microsoft.com/en-us/library/windows/desktop/ee416324%28v=vs.85%29.aspx
 		//
@@ -2948,15 +2943,6 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 	if (!subscene)
 	{
 		RE_BeginScene(&refdef);
-
-		// FIXME: sun shadows aren't rendered correctly in cubemaps
-		// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
-		if(0 && SHADOWS_ENABLED) //(glRefConfig.framebufferObject && r_sunlightMode->integer && (r_forceSun->integer || tr.sunShadows))
-		{
-			R_RenderSunShadowMaps(&refdef, 0);
-			R_RenderSunShadowMaps(&refdef, 1);
-			R_RenderSunShadowMaps(&refdef, 2);
-		}
 	}
 
 	tr.refdef.colorScale = 1.0f;

@@ -256,6 +256,7 @@ Ghoul2 Insert Start
 Ghoul2 Insert End
 */
 	qboolean	ignoreCull;
+	qboolean	noMerge;
 } refEntity_t;
 
 /*

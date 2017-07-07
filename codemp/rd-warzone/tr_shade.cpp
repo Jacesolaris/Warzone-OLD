@@ -1169,13 +1169,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-				specularScale = 0.40;
+				specularScale = 0.05;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SOLIDWOOD;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-				specularScale = 0.35;
+				specularScale = 0.025;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_HOLLOWWOOD;
 				parallaxScale = 1.5;
@@ -1226,13 +1226,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_SNOW:				// 14			// freshly laid snow
 				specularScale = 0.75;
-				cubemapScale = 0.35;
+				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_SNOW;
 				parallaxScale = 1.5;
 				break;
 			case MATERIAL_MUD:				// 17			// wet soil
 				specularScale = 0.25;
-				cubemapScale = 0.1;
+				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_MUD;
 				parallaxScale = 1.5;
 				break;
@@ -1244,7 +1244,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 				specularScale = 0.375;
-				cubemapScale = 0.1;
+				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_CONCRETE;
 				parallaxScale = 1.5;
 				break;
@@ -1268,7 +1268,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_PLASTER:			// 28			// drywall style plaster
 				specularScale = 0.3;
-				cubemapScale = 0.1;
+				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_PLASTER;
 				parallaxScale = 1.5;
 				break;
@@ -2216,6 +2216,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		float useVertexAnim = 0.0;
 		float useSkeletalAnim = 0.0;
+		
+		qboolean forceDetail = qfalse;
+
+		if (backEnd.currentEntity)
+		{
+			assert(backEnd.currentEntity->e.renderfx >= 0);
+
+			if ((backEnd.currentEntity->e.renderfx & RF_NODEPTH)
+				|| (backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA)
+				|| (backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH)
+				|| (backEnd.currentEntity->e.renderfx & RF_FORCEPOST))
+				forceDetail = qtrue;
+		}
 
 //#define __USE_ALPHA_TEST__ // This interferes with the ability for the depth prepass to optimize out fragments causing FPS hit.
 #define __USE_DETAIL_DEPTH_SKIP__
@@ -2288,6 +2301,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				break;
 			}*/
+
+			if (forceDetail)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
 
 			if (pStage->type != ST_COLORMAP && pStage->type != ST_GLSL && !pStage->glow)
 			{// Don't output these to position and normal map...
@@ -2495,6 +2513,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
+			if (forceDetail)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
 			if (pStage->isDetail)
 			{// Don't output these to position and normal map...
 				index |= LIGHTDEF_IS_DETAIL;
@@ -2584,7 +2607,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		RB_SetMaterialBasedProperties(sp, pStage, stage);
 
 		stateBits = pStage->stateBits;
-
+		
 		if ( backEnd.currentEntity )
 		{
 			assert(backEnd.currentEntity->e.renderfx >= 0);
@@ -2785,16 +2808,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
-			GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
+			/*GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
 			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
 			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);*/
 		}
 		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && cubeMapNum && ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 1)
 		{
 			//ri->Printf(PRINT_ALL, "%s stage %i is using cubemap (correct lightall: %s)\n", input->shader->name, stage, (index & LIGHTDEF_USE_CUBEMAP) ? "true" : "false");
 			GL_BindToTMU(tr.cubemaps[cubeMapNum], TB_CUBEMAP);
-			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
+			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value * 2.4);
 			VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}

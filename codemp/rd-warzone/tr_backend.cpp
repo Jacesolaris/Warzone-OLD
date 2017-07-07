@@ -1003,11 +1003,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs, qboolean in
 
 		cubemapIndex = newCubemapIndex;
 
-#ifdef __MERGE_MORE__
-		if ( shader != NULL && !shader->entityMergable)
-			shader->entityMergable = qtrue;
-#endif //__MERGE_MORE__
-
 		//
 		// change the tess parameters if needed
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
@@ -1316,6 +1311,19 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		cubemapIndex = newCubemapIndex;
 
+		qboolean dontMerge = qfalse;
+		// UQ1: We can't merge movers and portals, but we can merge pretty much everything else...
+		trRefEntity_t *ent = &backEnd.refdef.entities[entityNum];
+		trRefEntity_t *oldent = &backEnd.refdef.entities[oldEntityNum];
+		if (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX))
+		{// Either a mover, or a portal... Don't allow merges...
+			dontMerge = qtrue;
+		}
+		else if (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX))
+		{// Either a mover, or a portal... Don't allow merges...
+			dontMerge = qtrue;
+		}
+
 		//
 		// change the tess parameters if needed
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
@@ -1326,7 +1334,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 				|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
 #endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
-				))
+				|| (entityNum != oldEntityNum && !shader->entityMergable && dontMerge)))
 		{
 			if (oldShader != NULL)
 			{

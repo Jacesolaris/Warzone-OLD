@@ -96,10 +96,6 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float color[4], 
 
 	ndx = tess.numVertexes;
 
-#ifdef __MERGE_MORE__
-	tess.shader->entityMergable = qtrue;
-#endif //__MERGE_MORE__
-
 	// triangle indexes for a simple quad
 	tess.indexes[ tess.numIndexes ] = ndx;
 	tess.indexes[ tess.numIndexes + 1 ] = ndx + 1;

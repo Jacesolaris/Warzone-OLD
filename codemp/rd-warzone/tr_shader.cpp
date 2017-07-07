@@ -6885,6 +6885,7 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "//surfaceparm	noimpact\n"\
 "//surfaceparm	nomarks\n"\
 "surfaceparm	nonsolid\n"\
+"entityMergable\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -6910,6 +6911,7 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"entityMergable\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
@@ -6929,6 +6931,7 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "q3map_material	solidwood\n"\
 "//surfaceparm	noimpact\n"\
 "//surfaceparm	nomarks\n"\
+"entityMergable\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
@@ -6948,6 +6951,7 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"entityMergable\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_SRC_ALPHA GL_ZERO\n"\
@@ -6983,6 +6987,7 @@ char uniqueGenericArmorShader[] = "{\n"\
 "surfaceparm trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"//entityMergable\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -7019,6 +7024,7 @@ char uniqueGenericMetalShader[] = "{\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"//entityMergable\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -7054,6 +7060,7 @@ char uniqueGenericRockShader[] = "{\n"\
 "q3map_material	rock\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"entityMergable\n"\
 "{\n"\
 "map %s\n"\
 "%s\n"\
@@ -7069,6 +7076,7 @@ char uniqueGenericRockShader[] = "{\n"\
 
 char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
+"//entityMergable\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_SRC_ALPHA GL_ZERO\n"\

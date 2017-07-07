@@ -1009,17 +1009,30 @@ void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, 
 	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 }
 
+vec3_t		VOLUMETRIC_ROOF;
+qboolean	VOLUMETRIC_HIT_SKY = qfalse;
+
 qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun)
 {
 #if 0
 	return qtrue;
 #else
 	if (isSun)
+	{
+		VOLUMETRIC_HIT_SKY = qtrue;
 		return qtrue;
+	}
 
 	trace_t trace;
 
+	VOLUMETRIC_HIT_SKY = qfalse;
+
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{
+		VOLUMETRIC_HIT_SKY = qtrue;
+	}
 
 	if (!(trace.fraction != 1.0 && Distance(trace.endpos, to) > 96))
 	{
@@ -1030,27 +1043,24 @@ qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun)
 #endif
 }
 
-vec3_t VOLUMETRIC_ROOF;
-
 void Volumetric_RoofHeight(vec3_t from)
 {
+	VOLUMETRIC_HIT_SKY = qfalse;
+
 	trace_t trace;
 	vec3_t roofh;
-	VectorSet(roofh, from[0]+192, from[1], from[2]);
+	VectorSet(roofh, from[0], from[1], from[2] + 192);
 	Volumetric_Trace( &trace, from, NULL, NULL, roofh, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
-	VectorSet(VOLUMETRIC_ROOF, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
+	VectorSet(VOLUMETRIC_ROOF, trace.endpos[0], trace.endpos[1], trace.endpos[2] - 8.0);
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{
+		VOLUMETRIC_HIT_SKY = qtrue;
+	}
 }
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
-
-#define MAX_GLOW_LOCATIONS 65536
-extern int		NUM_MAP_GLOW_LOCATIONS;
-extern vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
-extern vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
-extern qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
-extern float	MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
-extern float	MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
 
 extern vec3_t SUN_POSITION;
 extern vec2_t SUN_SCREEN_POSITION;
@@ -1058,18 +1068,20 @@ extern qboolean SUN_VISIBLE;
 
 extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale );
 
+#define		MAX_WORLD_GLOW_DLIGHT_RANGE 16384.0
+#define		MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
+int			CLOSE_TOTAL = 0;
+int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+
 void RB_AddGlowShaderLights ( void )
 {
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
 	{// Add (close) map glows as dynamic lights as well...
-		const int	MAX_WORLD_GLOW_DLIGHTS = MAX_DEFERRED_LIGHTS - 1;
-		const float MAX_WORLD_GLOW_DLIGHT_RANGE = 16384.0;
-		int			CLOSE_TOTAL = 0;
-		int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
-		float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
-		vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
-		float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
-		float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+		CLOSE_TOTAL = 0;
 
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
@@ -3298,7 +3310,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, 0.0);
 	}
 #else
-	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value);
+	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value * 2.4);
 #endif
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.deferredLightingShader, color, 0);

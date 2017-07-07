@@ -815,6 +815,27 @@ int NEXT_SHADOWMAP_UPDATE[3] = { 0 };
 vec3_t SHADOWMAP_LAST_VIEWANGLES = { 0 };
 vec3_t SHADOWMAP_LAST_VIEWORIGIN = { 0 };
 
+extern void Volumetric_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask);
+
+qboolean	TRACE_HIT_SKY;
+vec3_t		TRACE_ROOF;
+
+void RE_FindRoof(vec3_t from)
+{
+	TRACE_HIT_SKY = qfalse;
+
+	trace_t trace;
+	vec3_t roofh;
+	VectorSet(roofh, from[0], from[1], from[2] + 128000);
+	Volumetric_Trace(&trace, from, NULL, NULL, roofh, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+	VectorSet(TRACE_ROOF, trace.endpos[0], trace.endpos[1], trace.endpos[2] - 8.0);
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{
+		TRACE_HIT_SKY = qtrue;
+	}
+}
+
 void RE_RenderScene(const refdef_t *fd) {
 	viewParms_t		parms;
 	int				startTime;
@@ -857,30 +878,85 @@ void RE_RenderScene(const refdef_t *fd) {
 	}
 #endif
 
-#ifdef __DYNAMIC_SHADOWS__
-	if (!(fd->rdflags & RDF_NOWORLDMODEL))
-	{
-		R_RenderDlightShadowMaps(fd, 0);
-		R_RenderDlightShadowMaps(fd, 1);
-		R_RenderDlightShadowMaps(fd, 2);
-	}
-#endif //__DYNAMIC_SHADOWS__
-
 	// playing with even more shadows
 	if (!(fd->rdflags & RDF_NOWORLDMODEL)
 		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
 		&& !backEnd.depthFill
 		&& SHADOWS_ENABLED)
 	{
+/*
+extern int			NUM_MAP_GLOW_LOCATIONS;
+extern vec3_t		MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
+extern vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
+extern qboolean		MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
+extern float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
+extern float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
+
+#define				MAX_WORLD_GLOW_DLIGHT_RANGE 16384.0
+#define				MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
+extern int			CLOSE_TOTAL;
+extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+*/
+		vec4_t lightDir;
+#if 1
+		float lightHeight = 999999.9;
+		VectorCopy4(tr.refdef.sunDir, lightDir);
+#else
+		float lightHeight = 999999.9;
+
+		trace_t trace;
+		vec3_t pos;
+		VectorCopy(tr.refdef.vieworg, pos);
+		pos[2] += 48;
+		RE_FindRoof(pos);
+		// VOLUMETRIC_ROOF now contains the location of the roof above us... VOLUMETRIC_HIT_SKY is if it was sky or not...
+
+		if (TRACE_HIT_SKY)
+		{
+			VectorCopy4(tr.refdef.sunDir, lightDir);
+			//ri->Printf(PRINT_ALL, "Hit sky.\n");
+		}
+		else
+		{// Use the closest light to roof above us...
+			int		best = -1;
+			float	bestDist = 999999;
+
+			for (int l = 0; l < CLOSE_TOTAL; l++)
+			{
+				float dist = Distance(TRACE_ROOF, CLOSE_POS[l]) * DistanceVertical(TRACE_ROOF, CLOSE_POS[l]);
+
+				if (dist < bestDist)
+				{
+					best = l;
+					dist = bestDist;
+				}
+			}
+
+			if (best == -1)
+			{// Use sun...
+				VectorCopy4(tr.refdef.sunDir, lightDir);
+				//ri->Printf(PRINT_ALL, "No glow lights. %i total glow lights.\n", CLOSE_TOTAL);
+			}
+			else
+			{
+				if (r_testvalue0->integer < 1)
+					VectorSubtract(CLOSE_POS[best], tr.refdef.vieworg, lightDir);
+				else
+					VectorSubtract(tr.refdef.vieworg, CLOSE_POS[best], lightDir);
+				VectorNormalize(lightDir);
+				lightHeight = CLOSE_POS[best][2];
+				//ri->Printf(PRINT_ALL, "Used glow light at %f %f %f. %i total glow lights.\n", CLOSE_POS[best][0], CLOSE_POS[best][1], CLOSE_POS[best][2], CLOSE_TOTAL);
+			}
+		}
+#endif
+
 		if (r_sunlightMode->integer == 2)
 		{// Update distance shadows on timers...
-			//int nowTime = ri->Milliseconds();
-
-			//if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
-			{// Close shadows - fast updates...
-				//NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
-				R_RenderSunShadowMaps(fd, 0);
-			}
+			R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
 		}
 		else if (r_sunlightMode->integer == 3)
 		{// Update distance shadows on timers...
@@ -889,19 +965,19 @@ void RE_RenderScene(const refdef_t *fd) {
 			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
 			{// Close shadows - fast updates...
 				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
-				R_RenderSunShadowMaps(fd, 0);
+				R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
 			}
 			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
 			{// Distant shadows - slower updates...
 				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 2000;//500;
-				R_RenderSunShadowMaps(fd, 1);
+				R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
 			}
 		}
 		else if (r_sunlightMode->integer == 4)
 		{
-			R_RenderSunShadowMaps(fd, 0);
-			R_RenderSunShadowMaps(fd, 1);
-			R_RenderSunShadowMaps(fd, 2);
+			R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
+			R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
+			R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
 		}
 		else
 		{
@@ -917,25 +993,25 @@ void RE_RenderScene(const refdef_t *fd) {
 			VectorCopy(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN);
 
 			// Always update close shadows, so players/npcs moving around get shadows, even if the player's view doesn't change...
-			R_RenderSunShadowMaps(fd, 0);
-			R_RenderSunShadowMaps(fd, 1);
+			R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
+			R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
 			
 			// Timed updates for distant shadows, or forced by view change...
 			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0] || forceUpdate)
 			{
-				R_RenderSunShadowMaps(fd, 2);
+				R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
 				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 100;
 			}
 
 			if (nowTime >= NEXT_SHADOWMAP_UPDATE[1] || forceUpdate)
 			{
-				R_RenderSunShadowMaps(fd, 3);
+				R_RenderSunShadowMaps(fd, 3, lightDir, lightHeight);
 				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 500;
 			}
 
 			if (nowTime >= NEXT_SHADOWMAP_UPDATE[2] || forceUpdate)
 			{
-				R_RenderSunShadowMaps(fd, 4);
+				R_RenderSunShadowMaps(fd, 4, lightDir, lightHeight);
 				NEXT_SHADOWMAP_UPDATE[2] = nowTime + 1000;
 			}
 		}

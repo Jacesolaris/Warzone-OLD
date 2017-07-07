@@ -250,15 +250,25 @@ vec4 ConvertToNormals ( vec4 colorIn )
 
 	vec4 norm = vec4((N + N2) / 2.0, 0.0).rbga;
 	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
+	norm.a = length(norm.xyz / 3.0);
 	return vec4((vec3(1.0)-norm.rgb) * 0.5, norm.a);
-#else
+#elif 0
 	vec3 color = colorIn.rgb;
 	AddContrast(color);
 	color *= u_Local9.r;
-	//vec3 N = normalize(cross(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0));
-	vec3 N = normalize(refract(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0, length(color.xyz / 3.0)));
+	vec3 N = normalize(cross(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0));
+	//vec3 N = normalize(refract(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0, length(color.xyz / 3.0)));
+	//vec3 N = normalize(cross(normalize(m_Normal.xyz + (color.xyz * 2.0 - 1.0)), normalize(m_ViewDir)));
+	//vec3 N = normalize(color.xyz * 2.0 - 1.0);
 	N *= u_Local9.g;
-	return vec4(N * 0.5, 0.0);
+	return vec4(N * 0.5 + 0.5, length((N.xyz * 0.5 + 0.5) / 3.0));
+#else
+	vec3 color = colorIn.rgb;
+	/*color = color * 2.0 - 1.0;
+	color *= u_Local9.r;
+	color = normalize(m_Normal.xyz + color.xyz);
+	color = color * 0.5 + 0.5;*/
+	return vec4(color, length(color.rgb / 3.0));
 #endif
 }
 
@@ -828,7 +838,8 @@ void main()
 	mat3 tangentToWorld;
 	vec3 E;
 
-	if (PARALLAX_ENABLED || LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
+	//if (PARALLAX_ENABLED || LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
+	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
 	{
 		tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 		E = normalize(m_ViewDir);
@@ -885,10 +896,11 @@ void main()
 
 	vec3 N = m_Normal.xyz;
 
-	if (LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
+	//if (LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
+	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
 	{
 		vec4 norm = vec4(0.0);
-
+		
 		if (u_Local4.r <= 0.0)
 		{
 			norm = ConvertToNormals(diffuse);
@@ -902,6 +914,8 @@ void main()
 		N.xy *= 0.25;
 		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 		N = tangentToWorld * N;
+		
+		//N = normalize(m_Normal.xyz + ((diffuse.rgb * 2.0 - 1.0) * u_Local9.r));
 	}
 
 
@@ -941,6 +955,7 @@ void main()
 		gl_FragColor.rgb = vec3(mix(diffuse.rgb, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale));
 	else
 		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale));
+		//gl_FragColor.rgb = vec3(mix(diffuse.rgb, clamp((diffuse.rgb + ((diffuse.rgb * ambientColor) * lightScale)), 0.0, 1.0), lightScale));
 
 
 	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0)
@@ -1007,8 +1022,8 @@ void main()
 
 		if (USE_ISDETAIL <= 0.0)
 		{
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 #ifdef USE_SSDO
 			out_PureNormal = vec4( m_Normal.xyz * 0.5 + 0.5, 0.0 );
 #endif //USE_SSDO

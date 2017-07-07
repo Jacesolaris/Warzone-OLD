@@ -2681,7 +2681,8 @@ static void CG_Missile( centity_t *cent ) {
 	VectorCopy( cent->lerpOrigin, ent.origin);
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 	ent.ignoreCull = qtrue; // already checked...
-/*
+
+							/*
 Ghoul2 Insert Start
 */
 	CG_SetGhoul2Info(&ent, cent);
@@ -2925,6 +2926,7 @@ static void CG_Mover( centity_t *cent ) {
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	ent.ignoreCull = qtrue; // already checked...
+	ent.noMerge = qtrue;
 
 	if ( (cent->currentState.eFlags2&EF2_HYPERSPACE) )
 	{//I'm the hyperspace brush
@@ -3076,6 +3078,7 @@ static void CG_Portal( centity_t *cent ) {
 	ent.frame = s1->frame;		// rotation speed
 	ent.skinNum = s1->clientNum/256.0 * 360;	// roll offset
 	ent.ignoreCull = qtrue; // already checked...
+	ent.noMerge = qtrue;
 /*
 Ghoul2 Insert Start
 */
