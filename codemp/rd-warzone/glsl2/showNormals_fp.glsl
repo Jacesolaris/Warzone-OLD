@@ -6,6 +6,10 @@ uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
 
+//#define __NORMAL_METHOD_1__
+#define __NORMAL_METHOD_2__
+
+#ifdef __NORMAL_METHOD_1__
 const vec3 LUMA_COEFFICIENT = vec3(0.2126, 0.7152, 0.0722);
 
 float lumaAtCoord(vec2 coord) {
@@ -29,6 +33,37 @@ vec4 normalVector(vec2 coord) {
 
   return vec4(slope, 1.0, length(slope.rg / 2.0));
 }
+#endif //__NORMAL_METHOD_1__
+
+#ifdef __NORMAL_METHOD_2__
+float getHeight(vec2 uv) {
+  return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
+}
+
+vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
+  vec2 step = 1. / resolution;
+    
+  float height = getHeight(uv);
+    
+  vec2 dxy = height - vec2(
+      getHeight(uv + vec2(step.x, 0.)), 
+      getHeight(uv + vec2(0., step.y))
+  );
+
+  vec3 N = vec3(dxy * scale / step, 1.);
+
+// Contrast...
+#define normLower ( 128.0/*48.0*/ / 255.0 )
+#define normUpper (255.0 / 192.0/*128.0*/ )
+  N = clamp((clamp(N - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
+
+  return vec4(normalize(N) * 0.5 + 0.5, height);
+}
+
+vec4 normalVector(vec2 coord) {
+	return bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
+}
+#endif //__NORMAL_METHOD_2__
 
 void main(void)
 {
