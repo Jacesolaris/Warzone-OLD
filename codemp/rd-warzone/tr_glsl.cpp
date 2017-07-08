@@ -2902,11 +2902,6 @@ int GLSL_BeginLoadGPUShaders(void)
 				strcat(extradefines, "#define FAST_PARALLAX\n");
 		}
 
-		if (r_ssdo->integer)
-		{
-			strcat(extradefines, "#define USE_SSDO\n");
-		}
-
 		if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
@@ -2917,11 +2912,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
-
-		if (r_ssdo->integer)
-		{
-			strcat(extradefines, "#define USE_SSDO\n");
-		}
 
 		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
 		{
@@ -3733,11 +3723,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR;
 	extradefines[0] = '\0';
 
-	if (r_ssdo->integer)
-	{
-		strcat(extradefines, "#define USE_SSDO\n");
-	}
-
 	if (!GLSL_BeginLoadGPUShader(&tr.uniqueskyShader, "uniquesky", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "130", fallbackShader_uniquesky_vp, fallbackShader_uniquesky_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
@@ -3751,11 +3736,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
-
-	if (r_ssdo->integer)
-	{
-		strcat(extradefines, "#define USE_SSDO\n");
-	}
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterShader, "uniquewater", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_uniquewater_vp, fallbackShader_uniquewater_fp, NULL, NULL, NULL))
 	{
