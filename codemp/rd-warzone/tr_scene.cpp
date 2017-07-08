@@ -908,7 +908,6 @@ extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
 #else
 		float lightHeight = 999999.9;
 
-		trace_t trace;
 		vec3_t pos;
 		VectorCopy(tr.refdef.vieworg, pos);
 		pos[2] += 48;

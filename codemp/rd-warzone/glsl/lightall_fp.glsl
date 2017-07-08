@@ -183,7 +183,6 @@ varying float				var_usingSteepMap;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
-out vec4 out_PureNormal;
 
 vec2 encode (vec3 n)
 {
@@ -211,65 +210,41 @@ vec3 decode (vec2 enc)
 	return smoothstep ( threshold - afwidth , threshold + afwidth , value ) ;
 }*/
 
-void AddContrast ( inout vec3 color )
+void DepthContrast ( inout float depth )
 {
 	const float contrast = 3.0;
 	const float brightness = 0.03;
-	//float contrast = u_Local9.r;
-	//float brightness = u_Local9.g;
 	// Apply contrast.
-	color.rgb = ((color.rgb - 0.5f) * max(contrast, 0)) + 0.5f;
+	depth = ((depth - 0.5f) * max(contrast, 0)) + 0.5f;
 	// Apply brightness.
-	color.rgb += brightness;
-	//color.rgb = clamp(color.rgb, 0.0, 1.0);
+	depth += brightness;
+	depth = clamp(depth, 0.0, 1.0);
 }
 
-vec4 ConvertToNormals ( vec4 colorIn )
+float GetDepthForPixel(vec4 color)
 {
-	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
-	// wasting vram on real normals.
-	//
-	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
-	// for the very noticable FPS boost over texture lookups.
+	if (color.a * var_Color.a <= 0.0)
+	{
+		return 0.0;
+	}
 
-#if 1
-	vec4 color = colorIn;
+	float displacement = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
+	DepthContrast(displacement); // Enhance the dark/lights...
+	return displacement;
+}
 
-	vec3 N = vec3(clamp((color.r + color.b) / 2.0, 0.0, 1.0), clamp((color.g + color.b) / 2.0, 0.0, 1.0), clamp((color.r + color.g) / 2.0, 0.0, 1.0));
+vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom);
 
-	N.xy = 1.0 - N.xy;
-	N.xyz = N.xyz * 0.5 + 0.5;
-	N.xyz = pow(N.xyz, vec3(2.0));
-	N.xyz *= 0.8;
+float GetDepthAtCoord(vec2 coord)
+{
+	vec4 diffuse = GetDiffuse(coord, vec2(0.0), 0.0);
 
-	vec3 N2 = N;
+	if (diffuse.a * var_Color.a <= 0.0)
+	{
+		return 0.0;
+	}
 
-	// Centralize the color, then stretch, generating lots of contrast...
-	N.rgb = N.rgb * 0.5 + 0.5;
-	AddContrast(N.rgb);
-
-	vec4 norm = vec4((N + N2) / 2.0, 0.0).rbga;
-	if (length(norm.xyz) < 0.1) norm.xyz = norm.xyz * 0.5 + 0.5;
-	norm.a = length(norm.xyz / 3.0);
-	return vec4((vec3(1.0)-norm.rgb) * 0.5, norm.a);
-#elif 0
-	vec3 color = colorIn.rgb;
-	AddContrast(color);
-	color *= u_Local9.r;
-	vec3 N = normalize(cross(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0));
-	//vec3 N = normalize(refract(color.xyz * 2.0 - 1.0, color.zxy * 2.0 - 1.0, length(color.xyz / 3.0)));
-	//vec3 N = normalize(cross(normalize(m_Normal.xyz + (color.xyz * 2.0 - 1.0)), normalize(m_ViewDir)));
-	//vec3 N = normalize(color.xyz * 2.0 - 1.0);
-	N *= u_Local9.g;
-	return vec4(N * 0.5 + 0.5, length((N.xyz * 0.5 + 0.5) / 3.0));
-#else
-	vec3 color = colorIn.rgb;
-	/*color = color * 2.0 - 1.0;
-	color *= u_Local9.r;
-	color = normalize(m_Normal.xyz + color.xyz);
-	color = color * 0.5 + 0.5;*/
-	return vec4(color, length(color.rgb / 3.0));
-#endif
+	return GetDepthForPixel(GetDiffuse(coord, vec2(0.0), 0.0));
 }
 
 void AddDetail(inout vec4 color, in vec2 tc)
@@ -341,12 +316,6 @@ vec4 GetControlMap( sampler2D tex)
 	return control;
 }
 
-// For fake normal map lookups.
-#define FAKE_MAP_NONE 0
-#define FAKE_MAP_NORMALMAP 1
-#define FAKE_MAP_NORMALMAP2 2
-#define FAKE_MAP_NORMALMAP3 3
-
 vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
 {
     float depth = 0.2;
@@ -358,57 +327,22 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType)
+vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset)
 {
-	bool fakeNormal = false;
 	vec4 xaxis;
 	vec4 yaxis;
 	vec4 zaxis;
 
 	vec2 tScale = vec2(1.0);
-	//if (u_textureScale.x > 0.0) tScale.x = u_textureScale.x;
-	//if (u_textureScale.y > 0.0) tScale.y = u_textureScale.y;
 
 	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
 	{
 		tScale *= u_textureScale;
 	}
 
-	if (fakeMapType == FAKE_MAP_NORMALMAP)
-	{
-		fakeNormal = true;
-
-		xaxis = texture( u_DiffuseMap, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
-		yaxis = texture( u_DiffuseMap, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
-		zaxis = texture( u_DiffuseMap, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
-	}
-	else if (fakeMapType == FAKE_MAP_NORMALMAP2)
-	{
-		fakeNormal = true;
-
-		xaxis = texture( u_SteepMap, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
-		yaxis = texture( u_SteepMap, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
-		zaxis = texture( u_SteepMap, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
-	}
-	else if (fakeMapType == FAKE_MAP_NORMALMAP3)
-	{
-		fakeNormal = true;
-
-		xaxis = texture( u_SteepMap2, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
-		yaxis = texture( u_SteepMap2, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
-		zaxis = texture( u_SteepMap2, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
-	}
-	else
-	{
-		xaxis = texture( tex, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
-		yaxis = texture( tex, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
-		zaxis = texture( tex, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
-	}
-
-	if (fakeNormal)
-	{
-		return ConvertToNormals(xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z);
-	}
+	xaxis = texture( tex, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
+	yaxis = texture( tex, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
+	zaxis = texture( tex, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
 
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
@@ -438,25 +372,25 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 
 	if (u_Local7.r > 0.0 && control.r > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap1, 0.01, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex = GetMap(u_SplatMap1, 0.01, ParallaxOffset);
 		splatColor = mix(splatColor, tex, control.r * tex.a);
 	}
 
 	if (u_Local7.g > 0.0 && control.g > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap2, 0.01, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex = GetMap(u_SplatMap2, 0.01, ParallaxOffset);
 		splatColor = mix(splatColor, tex, control.g * tex.a);
 	}
 
 	if (u_Local7.b > 0.0 && control.b > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap3, 0.01, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex = GetMap(u_SplatMap3, 0.01, ParallaxOffset);
 		splatColor = mix(splatColor, tex, control.b * tex.a);
 	}
 	/*
 	if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap4, 0.01, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex = GetMap(u_SplatMap4, 0.01, ParallaxOffset);
 		splatColor = mix(splatColor, tex, control.a * tex.a);
 	}
 	*/
@@ -474,9 +408,9 @@ vec4 GenerateTerrainMap(vec2 coord)
 
 	// Splat mapping...
 #define SNOW_HEIGHT 0.001
-	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/, vec2(0.0), FAKE_MAP_NONE);
+	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/, vec2(0.0));
 	float a1 = 0.0;
-	a1 = ConvertToNormals(tex).a;
+	a1 = GetDepthForPixel(tex);
 	return GetSplatMap(coord, vec2(0.0), 0.0, tex, a1);
 }
 
@@ -574,21 +508,15 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 
-		vec4 tex1 = GetMap(u_SteepMap2, 0.0075, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex1 = GetMap(u_SteepMap2, 0.0075, ParallaxOffset);
 		float a1 = 0.0;
 
-		if (u_Local4.r <= 0.0) // save texture lookup
-			a1 = ConvertToNormals(tex1).a;
-		else
-			a1 = GetMap(u_NormalMap3, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP3).a;
+		a1 = GetDepthForPixel(tex1);
 
-		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, ParallaxOffset);
 		float a2 = 0.0;
 
-		if (u_Local4.r <= 0.0) // save texture lookup
-			a2 = ConvertToNormals(tex2).a;
-		else
-			a2 = GetMap(u_NormalMap, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP).a;
+		a2 = GetDepthForPixel(tex2);
 
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
@@ -602,23 +530,20 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
-		return GetMap(u_SteepMap, 0.0025, ParallaxOffset, FAKE_MAP_NONE);
+		return GetMap(u_SteepMap, 0.0025, ParallaxOffset);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
-			return GetMap(u_DiffuseMap, 0.0075, ParallaxOffset, FAKE_MAP_NONE);
+			return GetMap(u_DiffuseMap, 0.0075, ParallaxOffset);
 		}
 
 		// Splat mapping...
-		vec4 tex = GetMap(u_DiffuseMap, 0.0075, ParallaxOffset, FAKE_MAP_NONE);
+		vec4 tex = GetMap(u_DiffuseMap, 0.0075, ParallaxOffset);
 		float a1 = 0.0;
 
-		if (u_Local4.r <= 0.0) // save texture lookup
-			a1 = ConvertToNormals(tex).a;
-		else
-			a1 = GetMap(u_NormalMap, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP).a;
+		a1 = GetDepthForPixel(tex);
 
 		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
 	}
@@ -628,101 +553,12 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 }
 
-vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
-{
-	if (USE_TRIPLANAR <= 0.0)
-	{
-		if (USE_REGIONS > 0.0)
-		{
-			return ConvertToNormals(GenerateTerrainMap(texCoords + ParallaxOffset));
-		}
-		else if (u_Local4.r <= 0.0)
-		{
-			return ConvertToNormals(texture(u_DiffuseMap, texCoords + ParallaxOffset));
-		}
-
-		return textureLod(u_NormalMap, texCoords, 0.0);
-	}
-
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
-	{// Steep maps (water edges)...
-		if (u_Local4.r <= 0.0)
-		{
-			return ConvertToNormals(GetDiffuse(texCoords, ParallaxOffset, pixRandom));
-		}
-
-		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
-
-		vec4 tex1 = GetMap(u_NormalMap3, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP3);
-		float a1 = tex1.a;
-
-		vec4 tex2 = GetMap(u_NormalMap, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP);
-		float a2 = tex2.a;
-
-		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
-	}
-	else if (u_Local5.a > 0.0 && var_Slope > 0)
-	{// Steep maps (high angles)...
-		if (u_Local4.r <= 0.0)
-		{
-			return ConvertToNormals(GetDiffuse(texCoords, ParallaxOffset, pixRandom));
-		}
-
-		return GetMap(u_NormalMap2, 0.0025, ParallaxOffset, FAKE_MAP_NORMALMAP2);
-	}
-	else if (u_Local5.a > 0.0)
-	{// Steep maps (normal angles)...
-		if (u_Local4.r <= 0.0)
-		{
-			return ConvertToNormals(GetDiffuse(texCoords, ParallaxOffset, pixRandom));
-		}
-
-		return GetMap(u_NormalMap, 0.0075, ParallaxOffset, FAKE_MAP_NORMALMAP);
-	}
-	else
-	{
-		if (u_Local4.r <= 0.0)
-		{
-			return ConvertToNormals(GetNonSplatMap(u_DiffuseMap, texCoords));
-		}
-
-		return textureLod(u_NormalMap, texCoords, 0.0);
-	}
-}
-
-void DepthContrast ( inout float depth )
-{
-	const float contrast = 3.0;
-	const float brightness = 0.03;
-	// Apply contrast.
-	depth = ((depth - 0.5f) * max(contrast, 0)) + 0.5f;
-	// Apply brightness.
-	depth += brightness;
-	depth = clamp(depth, 0.0, 1.0);
-}
-
-float GetDepth(vec2 t)
-{
-	vec4 diffuse = GetDiffuse(t, vec2(0.0), 0.0);
-
-	if (diffuse.a * var_Color.a <= 0.0)
-	{
-		return 0.0;
-	}
-
-	float displacement = clamp(max(max(diffuse.r, diffuse.g), diffuse.b), 0.0, 1.0);
-	//displacement = (displacement + (length(diffuse.rgb) / 2.0)); // 50/50 mix between max color and color average...
-	//displacement = displacement * 0.5 + 0.5; // centralize the color...
-	DepthContrast(displacement); // Enhance the dark/lights...
-	return 1.0 - displacement;
-}
-
 float FastDisplacementMap(vec2 dp)
 {
 	if (u_Local1.x == 0.0)
 		return 0.0;
 
-	return (1.0 - GetDepth(dp));
+	return (1.0 - GetDepthAtCoord(dp));
 }
 
 float ReliefMapping(vec2 dp, vec2 ds)
@@ -735,14 +571,14 @@ float ReliefMapping(vec2 dp, vec2 ds)
 	float best_depth = 1.0;
 	for (int i = 0 ; i < linear_steps - 1 ; ++i) {
 		depth -= size;
-		float t = GetDepth(dp + ds * depth);
+		float t = GetDepthAtCoord(dp + ds * depth);
 		if (depth >= 1.0 - t)
 			best_depth = depth;
 	}
 	depth = best_depth - size;
 	for (int i = 0 ; i < binary_steps ; ++i) {
 		size *= 0.5;
-		float t = GetDepth(dp + ds * depth);
+		float t = GetDepthAtCoord(dp + ds * depth);
 		if (depth >= 1.0 - t) {
 			best_depth = depth;
 			depth -= 2 * size;
@@ -801,54 +637,24 @@ void main()
 		}
 	}
 
-#if 0
-	if (USE_DEFORM == 1.0)
-	{
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-		out_Glow = vec4(0.0);
-		out_Normal = vec4( 1.0, 1.0, 1.0, gl_FragColor.a );
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		return;
-	}
-	else if (USE_VERTEX_ANIM == 1.0)
-	{
-		gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-		out_Glow = vec4(0.0);
-		out_Normal = vec4( 1.0, 1.0, 1.0, gl_FragColor.a );
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		return;
-	}
-	else if (USE_SKELETAL_ANIM == 1.0)
-	{
-		gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-		out_Glow = vec4(0.0);
-		out_Normal = vec4( 1.0, 1.0, 1.0, gl_FragColor.a );
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		return;
-	}
-#endif
-
-
 
 	bool PARALLAX_ENABLED = (USE_GLOW_BUFFER <= 0.0 && u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0) ? true : false;
-	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0) ? true : false;
-	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0) ? true : false;
+	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0) ? true : false;
+	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
 
 
 	mat3 tangentToWorld;
 	vec3 E;
 
 	//if (PARALLAX_ENABLED || LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
-	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
+	if (USE_GLOW_BUFFER <= 0.0 /*&& USE_ISDETAIL <= 0.0*/)
 	{
 		tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 		E = normalize(m_ViewDir);
 	}
 
-
 	vec2 ParallaxOffset = vec2(0.0);
 
-#if 0
 #if defined(USE_PARALLAXMAP)
 	if (PARALLAX_ENABLED)
 	{// TODO: Move to screen space, screen space tesselation maybe???
@@ -865,7 +671,7 @@ void main()
 		#endif //defined(FAST_PARALLAX)
 	}
 #endif
-#endif
+
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
 
@@ -894,8 +700,9 @@ void main()
 	float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
 
 
-	vec3 N = m_Normal.xyz;
+	vec3 N = normalize(m_Normal.xyz);
 
+#if 0
 	//if (LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
 	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
 	{
@@ -917,6 +724,7 @@ void main()
 		
 		//N = normalize(m_Normal.xyz + ((diffuse.rgb * 2.0 - 1.0) * u_Local9.r));
 	}
+#endif
 
 
 	AddDetail(diffuse, texCoords);
@@ -991,10 +799,10 @@ void main()
 
 #define gloss specular.a
 
-			float NE = clamp(dot(normalize(m_Normal.xyz)/*N*/, E), 0.0, 1.0);
+			float NE = clamp(dot(N, E), 0.0, 1.0);
 			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
-			vec3 R = reflect(E, normalize(m_Normal.xyz)/*N*/);
+			vec3 R = reflect(E, N);
 			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * m_ViewDir;
 			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
@@ -1024,9 +832,6 @@ void main()
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
-#ifdef USE_SSDO
-			out_PureNormal = vec4( m_Normal.xyz * 0.5 + 0.5, 0.0 );
-#endif //USE_SSDO
 		}
 	}
 }

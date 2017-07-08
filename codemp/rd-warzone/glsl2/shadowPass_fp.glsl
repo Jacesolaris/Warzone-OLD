@@ -48,9 +48,6 @@ varying vec4	var_Color;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
-#ifdef USE_SSDO
-out vec4 out_PureNormal;
-#endif //USE_SSDO
 
 void main()
 {
@@ -85,8 +82,5 @@ void main()
 	{
 		out_Position = vec4(var_Position.rgb, (gl_FragColor.a > 0.99) ? u_Local1.a : 1024.0);
 		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, (gl_FragColor.a > 0.99) ? u_Local1.b : 0.0 /*specularScale*/);
-#ifdef USE_SSDO
-		out_PureNormal = vec4(var_Normal.rgb * 0.5 + 0.5, 0.0);
-#endif //USE_SSDO
 	}
 }

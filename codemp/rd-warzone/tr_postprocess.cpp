@@ -1989,6 +1989,7 @@ float mix(float x, float y, float a)
 
 void RB_DepthToNormal(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
+#if 0
 	vec4_t		color;
 
 	// bloom
@@ -2025,6 +2026,7 @@ void RB_DepthToNormal(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	}
 
 	FBO_Blit(tr.ssdoFbo2, hdrBox, NULL, tr.screenPureNormalFbo, ldrBox, &tr.depthToNormalShader, color, 0);
+#endif
 }
 
 void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -2052,7 +2054,7 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 	
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.screenPureNormalImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
@@ -2112,7 +2114,7 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.screenPureNormalImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
@@ -3420,12 +3422,22 @@ void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	if (r_shownormals->integer == 2)
-		GL_BindToTMU(tr.screenPureNormalImage, TB_NORMALMAP);
-	else
-		GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformMatrix16(&tr.showNormalsShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	vec4_t settings;
+	VectorSet4(settings, (r_shownormals->integer >= 2) ? 1.0 : 0.0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
+	GLSL_SetUniformVec4(&tr.showNormalsShader, UNIFORM_SETTINGS0, settings);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.showNormalsShader, UNIFORM_DIMENSIONS, screensize);
+	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.showNormalsShader, color, 0);
 }

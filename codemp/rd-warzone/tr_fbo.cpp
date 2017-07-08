@@ -489,16 +489,6 @@ void FBO_Init(void)
 	}
 
 	//
-	// UQ1's Depth To Normal FBO...
-	//
-	{
-		tr.screenPureNormalFbo = FBO_Create("_ssdoFbo1", tr.screenPureNormalImage->width, tr.screenPureNormalImage->height);
-		FBO_Bind(tr.screenPureNormalFbo);
-		FBO_AttachTextureImage(tr.screenPureNormalImage, 0);
-		R_CheckFBO(tr.screenPureNormalFbo);
-	}
-
-	//
 	// UQ1's SSDO FBO1...
 	//
 	{
@@ -612,7 +602,6 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.glowImage, 1);
 		FBO_AttachTextureImage(tr.renderNormalImage, 2);
 		FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
-		FBO_AttachTextureImage(tr.screenPureNormalImage, 4);
 
 		//FBO_CreateBuffer(tr.msaaResolveFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);

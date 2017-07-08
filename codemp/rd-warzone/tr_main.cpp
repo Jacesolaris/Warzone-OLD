@@ -2553,6 +2553,14 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	viewZFar = r_shadowCascadeZFar->value;
 	float splitBias = r_shadowCascadeZBias->value;
 
+#if 0
+	if (lightHeight != 999999.9)
+	{
+		viewZFar = lightHeight;
+		lightViewIndependentOfCameraView = qtrue;
+	}
+#endif
+
 	if (r_sunlightMode->integer == 2)
 	{
 		//lightViewIndependentOfCameraView = qtrue;

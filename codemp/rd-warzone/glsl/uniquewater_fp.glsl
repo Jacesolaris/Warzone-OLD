@@ -9,9 +9,6 @@ varying vec3		var_Normal;
 out vec4 out_Glow;
 out vec4 out_Normal;
 out vec4 out_Position;
-#ifdef USE_SSDO
-out vec4 out_PureNormal;
-#endif //USE_SSDO
 
 // Maximum waves amplitude
 #define maxAmplitude u_Local10.g
@@ -62,9 +59,6 @@ void main()
 {
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(var_Normal * 0.5 + 0.5, 0.75);
-#ifdef USE_SSDO
-	out_PureNormal = vec4(var_Normal.rgb * 0.5 + 0.5, 0.0);
-#endif //USE_SSDO
 
 	float isWater = 1.0;
 	out_Color = vec4(0.0059, 0.3096, 0.445, 0.5);

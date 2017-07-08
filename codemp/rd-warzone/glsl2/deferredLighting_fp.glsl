@@ -51,6 +51,48 @@ varying vec2		var_TexCoords;
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
+vec3 TangentFromNormal ( vec3 normal )
+{
+	vec3 tangent;
+	vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0)); 
+	vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0)); 
+
+	if( length(c1) > length(c2) )
+	{
+		tangent = c1;
+	}
+	else
+	{
+		tangent = c2;
+	}
+
+	return normalize(tangent);
+}
+
+const vec3 LUMA_COEFFICIENT = vec3(0.2126, 0.7152, 0.0722);
+
+float lumaAtCoord(vec2 coord) {
+  vec3 pixel = texture(u_DiffuseMap, coord).rgb;
+  float luma = dot(pixel, LUMA_COEFFICIENT);
+  return luma;
+}
+
+vec4 normalVector(vec2 coord) {
+  float lumaU0 = lumaAtCoord(coord + vec2(-1.0,  0.0) / u_Dimensions);
+  float lumaU1 = lumaAtCoord(coord + vec2( 1.0,  0.0) / u_Dimensions);
+  float lumaV0 = lumaAtCoord(coord + vec2( 0.0, -1.0) / u_Dimensions);
+  float lumaV1 = lumaAtCoord(coord + vec2( 0.0,  1.0) / u_Dimensions);
+
+  vec2 slope = vec2(lumaU0 - lumaU1, lumaV0 - lumaV1) * 0.5 + 0.5;
+
+// Contrast...
+#define normLower ( 128.0/*48.0*/ / 255.0 )
+#define normUpper (255.0 / 192.0/*128.0*/ )
+  slope = clamp((clamp(slope - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
+
+  return vec4(slope, 1.0, length(slope.rg / 2.0));
+}
+
 
 #if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__CURVE__)
 float drawObject(in vec3 p){
@@ -183,7 +225,17 @@ void main(void)
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 
-	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	// Because rend2 tangents are all fucked - re-calculate them.
+	//vec3 tangent = TangentFromNormal(norm);
+	//vec3 bitangent = normalize(cross(norm, tangent));
+
+	norm.rgb = norm.rgb * 2.0 - 1.0;
+	vec4 normalDetail = normalVector(texCoords);
+	normalDetail.rgb = normalDetail.rgb * 2.0 - 1.0;
+	normalDetail.rgb *= 0.25;//u_Local3.r;
+	normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
+	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+
 	vec3 N = norm.xyz;
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
@@ -200,7 +252,7 @@ void main(void)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
 
 		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
-		shadowMult = clamp(shadowValue, 0.0, 1.0);
+		shadowMult = clamp(shadowValue, 0.2, 1.0);
 	}
 #endif //defined(USE_SHADOWMAP)
 
@@ -209,8 +261,10 @@ void main(void)
 	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
+#ifdef __OLD_SPECULAR__
 	float lambertian2 = dot(PrimaryLightDir.xyz, N);
 	float spec2 = 0.0;
+#endif //__OLD_SPECULAR__
 	bool noSunPhong = false;
 	float phongFactor = u_Local1.r;
 
@@ -233,35 +287,31 @@ void main(void)
 
 	float reflectivePower = (norm.a * 0.2);
 
+#ifdef __OLD_SPECULAR__
 	if (!noSunPhong && lambertian2 > 0.0 && shadowMult > 0.0)
+#else
+	if (!noSunPhong && shadowMult > 0.0)
+#endif
 	{// this is blinn phong
 #ifdef __OLD_SPECULAR__
 		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 		float specAngle = max(dot(halfDir2, N), 0.0);
 		spec2 = pow(specAngle, 16.0);
 		vec3 lightAdd = (vec3(clamp(spec2, 0.0, 1.0) * reflectivePower) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale;
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lightAdd * shadowMult), lightScale);
 #else //!__OLD_SPECULAR__
-		float diffusePower = length(gl_FragColor.rgb) / 3.0;
 		vec3 lightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 		float diffuseCoefficient = max(0.0, dot(N, lightDir));
 
-		// Specular...
-		vec3 lightAdd = vec3(0.0);
-		float specularCoefficient = 0.0;
-
 		if (diffuseCoefficient > 0.0)
 		{
-			specularCoefficient = pow(max(0.0, dot(surfaceToCamera, reflect(-lightDir, N))), 1.0 /*materialShininess*/);
-			specularCoefficient = pow(specularCoefficient, 8.0);
-		
-			vec3 specular = specularCoefficient * u_PrimaryLightColor.rgb;
-			specular = specular * lightScale * diffusePower * reflectivePower * phongFactor * 8.0 * u_Local1.g;
+			vec3 specular = u_PrimaryLightColor.rgb * gl_FragColor.rgb * diffuseCoefficient * u_Local1.g;
 
 			//final color (after gamma correction)
 			vec3 gamma = vec3(1.0/2.2);
 			vec3 finalColor = pow(specular, gamma);
 
-			lightAdd = clamp(finalColor * lightScale * diffusePower * 4.0, 0.0, 1.0);//8.0;
+			vec3 lightAdd = clamp(finalColor * lightScale * reflectivePower * phongFactor * 4.0, 0.0, 1.0);
 
 			if (useOcclusion)
 			{
@@ -270,13 +320,46 @@ void main(void)
 				vec3 to_light_norm = (to_light / to_light_dist);
 				float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
 
-				gl_FragColor.rgb = (gl_FragColor.rgb * (light_occlusion * 0.3 + 0.66666)) + ((lightAdd * light_occlusion * shadowMult));
+				gl_FragColor.rgb = mix(gl_FragColor.rgb, (gl_FragColor.rgb * (light_occlusion * 0.3 + 0.66666)) + ((lightAdd * light_occlusion * shadowMult)), lightScale);
 			}
 			else
 			{
-				gl_FragColor.rgb += (lightAdd * shadowMult);
+				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lightAdd * shadowMult), lightScale);
 			}
 		}
+#ifdef __FOLIAGE_VIBRANCY__
+		else if (position.a == 19.0 || position.a == 20.0)
+		{// Leaves and foliages subsurface scatter...
+			lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
+
+			float diffuseCoefficient = max(0.0, dot(N, -lightDir));
+
+			if (diffuseCoefficient > 0.0)
+			{
+				vec3 specular = u_PrimaryLightColor.rgb * gl_FragColor.rgb * diffuseCoefficient * u_Local1.g;
+
+				//final color (after gamma correction)
+				vec3 gamma = vec3(1.0/2.2);
+				vec3 finalColor = pow(specular, gamma);
+
+				vec3 lightAdd = clamp(finalColor * lightScale * reflectivePower * phongFactor * 6.0, 0.0, 1.0);
+
+				if (useOcclusion)
+				{
+					vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
+					float to_light_dist = length(to_light);
+					vec3 to_light_norm = (to_light / to_light_dist);
+					float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
+
+					gl_FragColor.rgb = mix(gl_FragColor.rgb, (gl_FragColor.rgb * (light_occlusion * 0.3 + 0.66666)) + ((lightAdd * light_occlusion * shadowMult)), lightScale);
+				}
+				else
+				{
+					gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lightAdd * shadowMult), lightScale);
+				}
+			}
+		}
+#endif //__FOLIAGE_VIBRANCY__
 #endif //__OLD_SPECULAR__
 	}
 
@@ -332,45 +415,88 @@ void main(void)
 						vec3 lightDir = normalize(lightPos - position.xyz);
 
 						// Add some basic light...
-						vec3 ambientLight = lightColor * lightStrength * lightScale * 0.5;
+						vec3 ambientLight = lightColor * lightStrength * lightScale * 0.25;
 						vec3 ambient = ambientLight; // Always add some basic light...
 
-						vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 8.0;
 						float diffuseCoefficient = max(0.0, dot(N, lightDir));
-						vec3 diffuse = diffuseLight * diffuseCoefficient; // Always add some basic diffuse light...
 						
-						// Specular...
-						float specularCoefficient = 0.0;
-						if(diffuseCoefficient > 0.0)
-							specularCoefficient = pow(max(0.0, dot(surfaceToCamera, reflect(-lightDir, N))), 1.0/*materialShininess*/);
-						vec3 specular = specularCoefficient * lightColor;
-						specular = specular * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 0.5 * reflectivePower * phongFactor * 8.0;
+						if (diffuseCoefficient > 0.0)
+						{
+							vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 8.0;
+							vec3 diffuse = diffuseLight * diffuseCoefficient; // Always add some basic diffuse light...
 
-						//attenuation
-						float distanceToLight = length(lightPos - position.xyz);
-						float attenuation = 1.0 / (1.0 + reflectivePower * pow(distanceToLight, 2.0));
+							//float specularCoefficient = pow(max(0.0, dot(surfaceToCamera, reflect(-lightDir, N))), 1.0/*materialShininess*/);
 
-						//linear color (color before gamma correction)
-						vec3 linearColor = ambient + attenuation*(diffuse + specular);
+							//vec3 specular = specularCoefficient * lightColor;
+							vec3 specular = diffuseCoefficient * lightColor * gl_FragColor.rgb;
+							specular = specular * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 0.5 * reflectivePower * phongFactor * 8.0;
+
+							//attenuation
+							float distanceToLight = length(lightPos - position.xyz);
+							float attenuation = 1.0 / (1.0 + reflectivePower * pow(distanceToLight, 2.0));
+
+							//linear color (color before gamma correction)
+							vec3 linearColor = ambient + attenuation*(diffuse + specular);
     
-						//final color (after gamma correction)
-						vec3 gamma = vec3(1.0/2.2);
-						vec3 finalColor = pow(linearColor, gamma);
+							//final color (after gamma correction)
+							vec3 gamma = vec3(1.0/2.2);
+							vec3 finalColor = pow(linearColor, gamma);
 
-						vec3 lightAdd = finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0 * lightDistMult;
+							vec3 lightAdd = finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0 * lightDistMult;
 
-						if (useOcclusion)
-						{
-							vec3 to_light = position.xyz - lightPos;
-							float to_light_dist = distanceToLight;
-							vec3 to_light_norm = to_light / to_light_dist;
-							float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm+E, 1.0), occlusion), 0.0, 1.0);
-							addedLight.rgb += lightAdd * (light_occlusion * 0.75 - 0.05) * invLightScale;
+							if (useOcclusion)
+							{
+								vec3 to_light = position.xyz - lightPos;
+								float to_light_dist = distanceToLight;
+								vec3 to_light_norm = to_light / to_light_dist;
+								float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm+E, 1.0), occlusion), 0.0, 1.0);
+								addedLight.rgb += lightAdd * (light_occlusion * 0.75 - 0.05) * invLightScale;
+							}
+							else
+							{
+								addedLight += (lightAdd * invLightScale);
+							}
 						}
-						else
-						{
-							addedLight += (lightAdd * invLightScale);
+#ifdef __FOLIAGE_VIBRANCY__
+						else if (position.a == 19.0 || position.a == 20.0)
+						{// Leaves and foliages subsurface scatter...
+							diffuseCoefficient = max(0.0, dot(N, -lightDir));
+
+							if (diffuseCoefficient > 0.0)
+							{
+								vec3 diffuseLight = lightColor * lightStrength * lightScale * gl_FragColor.rgb * 8.0;
+								vec3 diffuse = diffuseLight * diffuseCoefficient; // Always add some basic diffuse light...
+
+								vec3 specular = lightColor.rgb * gl_FragColor.rgb * diffuseCoefficient * u_Local1.g;
+
+								//attenuation
+								float distanceToLight = length(lightPos - position.xyz);
+								float attenuation = 1.0 / (1.0 + reflectivePower * pow(distanceToLight, 2.0));
+
+								//linear color (color before gamma correction)
+								vec3 linearColor = ambient + attenuation*(diffuse + specular);
+    
+								//final color (after gamma correction)
+								vec3 gamma = vec3(1.0/2.2);
+								vec3 finalColor = pow(linearColor, gamma);
+
+								vec3 lightAdd = finalColor * lightStrength * lightScale * (length(gl_FragColor.rgb) / 3.0) * 48.0 * lightDistMult * 0.5;
+
+								if (useOcclusion)
+								{
+									vec3 to_light = position.xyz - lightPos;
+									float to_light_dist = distanceToLight;
+									vec3 to_light_norm = to_light / to_light_dist;
+									float light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm+E, 1.0), occlusion), 0.0, 1.0);
+									addedLight.rgb += lightAdd * (light_occlusion * 0.75 - 0.05) * invLightScale;
+								}
+								else
+								{
+									addedLight += (lightAdd * invLightScale);
+								}
+							}
 						}
+#endif //__FOLIAGE_VIBRANCY__
 					}
 				}
 			}

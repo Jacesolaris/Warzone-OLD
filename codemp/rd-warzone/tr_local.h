@@ -2715,9 +2715,6 @@ typedef struct trGlobals_s {
 	FBO_t		   *genericFbo3;
 	FBO_t		   *NormalMapDestinationFBO;
 
-	FBO_t		   *screenPureNormalFbo;
-	image_t        *screenPureNormalImage;
-
 	FBO_t		   *ssdoFbo1;
 	FBO_t		   *ssdoFbo2;
 

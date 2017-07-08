@@ -53,7 +53,6 @@ varying vec3   var_vertPos;
 
 out vec4 out_Glow;
 out vec4 out_Normal;
-out vec4 out_PureNormal;
 
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
@@ -231,5 +230,4 @@ void main()
 
 		out_Glow = vec4(0.0);
 		out_Normal = vec4(DETAILED_NORMAL.xyz, 0.75);
-		out_PureNormal = vec4(DETAILED_NORMAL.xyz, 0.75);
 }

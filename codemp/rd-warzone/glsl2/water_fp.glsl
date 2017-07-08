@@ -83,7 +83,6 @@ vec2      var_TexCoords = fragCoord;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
-out vec4 out_PureNormal;
 
 #if 0
 
@@ -309,6 +308,5 @@ void main()
 	
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(0.0);
-	out_PureNormal = vec4(0.0);
 #endif
 }

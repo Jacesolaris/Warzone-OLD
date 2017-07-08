@@ -1201,7 +1201,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				parallaxScale = 0.0;
 				break;
 			case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-				specularScale = 0.85;
+				specularScale = 0.95;
 				cubemapScale = 0.0;
 				materialType = (float)MATERIAL_GREENLEAVES;
 				parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
@@ -2209,6 +2209,41 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 #endif //__DEFERRED_IMAGE_LOADING__
 
+		stateBits = pStage->stateBits;
+
+		if (backEnd.currentEntity)
+		{
+			assert(backEnd.currentEntity->e.renderfx >= 0);
+
+			if (backEnd.currentEntity->e.renderfx & RF_DISINTEGRATE1)
+			{
+				// we want to be able to rip a hole in the thing being disintegrated, and by doing the depth-testing it avoids some kinds of artefacts, but will probably introduce others?
+				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
+			}
+
+			if (backEnd.currentEntity->e.renderfx & RF_RGB_TINT)
+			{//want to use RGBGen from ent
+				forceRGBGen = CGEN_ENTITY;
+			}
+
+#ifndef __USE_ALPHA_TEST__
+			if (backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA)
+			{
+				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				if (backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH)
+				{ //depth write, so faces through the model will be stomped over by nearer ones. this works because
+				  //we draw RF_FORCE_ENT_ALPHA stuff after everything else, including standard alpha surfs.
+					stateBits |= GLS_DEPTHMASK_TRUE;
+				}
+			}
+#endif //__USE_ALPHA_TEST__
+		}
+		else
+		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
+			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
+				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+		}
+
 		float useTC = 0.0;
 		float useDeform = 0.0;
 		float useRGBA = 0.0;
@@ -2229,6 +2264,32 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				|| (backEnd.currentEntity->e.renderfx & RF_FORCEPOST))
 				forceDetail = qtrue;
 		}
+
+		/*if (stateBits & GLS_ATEST_BITS)
+		{
+			switch (stateBits & GLS_ATEST_BITS)
+			{
+			case GLS_ATEST_LT_128:
+				forceDetail = qtrue;
+				break;
+			case GLS_ATEST_GE_128:
+				forceDetail = qtrue;
+				break;
+			case GLS_ATEST_GE_192:
+				forceDetail = qtrue;
+				break;
+			case GLS_ATEST_GT_0:
+			default:
+				break;
+			}
+		}
+
+		if (stateBits & GLS_DEPTHTEST_DISABLE)
+		{
+			forceDetail = qtrue;
+		}*/
+
+
 
 //#define __USE_ALPHA_TEST__ // This interferes with the ability for the depth prepass to optimize out fragments causing FPS hit.
 #define __USE_DETAIL_DEPTH_SKIP__
@@ -2606,40 +2667,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		RB_SetMaterialBasedProperties(sp, pStage, stage);
 
-		stateBits = pStage->stateBits;
-		
-		if ( backEnd.currentEntity )
-		{
-			assert(backEnd.currentEntity->e.renderfx >= 0);
-
-			if ( backEnd.currentEntity->e.renderfx & RF_DISINTEGRATE1 )
-			{
-				// we want to be able to rip a hole in the thing being disintegrated, and by doing the depth-testing it avoids some kinds of artefacts, but will probably introduce others?
-				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
-			}
-
-			if ( backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
-			{//want to use RGBGen from ent
-				forceRGBGen = CGEN_ENTITY;
-			}
-
-#ifndef __USE_ALPHA_TEST__
-			if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
-			{
-				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-				if ( backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH )
-				{ //depth write, so faces through the model will be stomped over by nearer ones. this works because
-					//we draw RF_FORCE_ENT_ALPHA stuff after everything else, including standard alpha surfs.
-					stateBits |= GLS_DEPTHMASK_TRUE;
-				}
-			}
-#endif //__USE_ALPHA_TEST__
-		}
-		else
-		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
-			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
-				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
-		}
 
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
 			vec4_t vec;
