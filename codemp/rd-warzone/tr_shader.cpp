@@ -2591,7 +2591,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 			
 			stage->emissiveRadiusScale = atof(token);
-			ri->Printf(PRINT_WARNING, "WARNING: emissiveRadiusScale exponent in shader '%s' is %f\n", shader.name, stage->emissiveRadiusScale);
+			//ri->Printf(PRINT_WARNING, "WARNING: emissiveRadiusScale exponent in shader '%s' is %f\n", shader.name, stage->emissiveRadiusScale);
 			continue;
 		}
 		else if (Q_stricmp(token, "emissiveColorScale") == 0)
@@ -2605,7 +2605,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->emissiveColorScale = atof(token);
-			ri->Printf(PRINT_WARNING, "WARNING: emissiveColorScale exponent in shader '%s' is %f\n", shader.name, stage->emissiveColorScale);
+			//ri->Printf(PRINT_WARNING, "WARNING: emissiveColorScale exponent in shader '%s' is %f\n", shader.name, stage->emissiveColorScale);
 			continue;
 		}
 		else if (Q_stricmp(token, "emissiveHeightScale") == 0)

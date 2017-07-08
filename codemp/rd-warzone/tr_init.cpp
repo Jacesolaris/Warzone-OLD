@@ -892,6 +892,7 @@ void R_TakeScreenshot( int x, int y, int width, int height, char *name, screensh
 	if ( !cmd ) {
 		return;
 	}
+
 	cmd->commandId = RC_SCREENSHOT;
 
 	cmd->x = x;
