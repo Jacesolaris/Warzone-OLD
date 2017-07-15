@@ -2705,59 +2705,6 @@ image_t *R_TextureDarkExpandGLSL ( const char *name, byte *pic, int width, int h
 	return dstImage;
 }
 
-image_t *R_TextureCleanGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t *srcImage )
-{
-	int			normalFlags;
-	vec4i_t		box;
-	FBO_t		*dstFbo = NULL;
-	image_t		*dstImage;
-	imgType_t	type = srcImage->type;
-	int			format = srcImage->internalFormat;
-
-	if (!tr.texturecleanShader.program || !tr.texturecleanShader.uniformBuffer) return NULL; // Will get done later after init on usage...
-
-	memset(srcImage->imgName, 0, sizeof(srcImage->imgName));
-	sprintf(srcImage->imgName, "deleted");
-
-	ri->Printf(PRINT_WARNING, "Cleaning [%ix%i] texture %s.\n", width, height, name);
-	
-	normalFlags = flags;
-
-	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
-	FBO_Bind (dstFbo);
-	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
-	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
-	FBO_AttachTextureImage(dstImage, 0);
-	FBO_SetupDrawBuffers();
-	R_CheckFBO(dstFbo);
-	
-	GLSL_BindProgram(&tr.texturecleanShader);
-	GL_BindToTMU(srcImage, TB_DIFFUSEMAP);
-
-	vec2_t screensize;
-	screensize[0] = width;
-	screensize[1] = height;
-	GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformMatrix16(&tr.texturecleanShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-	vec4_t local0;
-	VectorSet4(local0, r_textureCleanSigma->value, r_textureCleanBSigma->value, r_textureCleanMSize->value, 0);
-	GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_LOCAL0, local0);
-
-	box[0] = 0;
-	box[1] = 0;
-	box[2] = width;
-	box[3] = height;
-
-	//qglGetTexImage
-
-	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.texturecleanShader, NULL, 0);
-	
-	qglDeleteTextures( 1, &srcImage->texnum );
-
-	return dstImage;
-}
-
 void R_SaveNormalMap (const char *name, image_t *dstImage)
 {
 	char filename[128];
@@ -3514,12 +3461,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_DETAILMAP
 		&& !(flags & IMGFLAG_CUBEMAP))
 	{
-		if (image && r_textureClean->integer)
-		{
-			GL_Bind(image);
-			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
-		}
-
 		if (r_normalMapping->integer >= 2) 
 		{
 			if (image
@@ -3865,10 +3806,6 @@ void R_CreateBuiltinImages( void ) {
 	tr.bloomRenderFBOImage[1]  = R_CreateImage("_bloom1",  NULL, width/2, height/2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.bloomRenderFBOImage[2]  = R_CreateImage("_bloom2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.ssgiRenderFBOImage[0]  = R_CreateImage("_ssgi0",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.ssgiRenderFBOImage[1]  = R_CreateImage("_ssgi1",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.ssgiRenderFBOImage[2]  = R_CreateImage("_ssgi2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-
 	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, width/4.0, height/4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.volumetricPreviousFBOImage = R_CreateImage("_volumetricPrevious", NULL, width / 4.0, height / 4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
@@ -3910,12 +3847,6 @@ void R_CreateBuiltinImages( void ) {
 	for (x = 0; x < 2; x++)
 	{
 		tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
-	}
-
-	if (r_ssao->integer || r_hbao->integer)
-	{
-		tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
-		tr.hdrDepthImage = R_CreateImage("*hdrDepth", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_INTENSITY32F_ARB);
 	}
 
 	if (r_shadows->integer == 4)

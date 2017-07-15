@@ -63,8 +63,6 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
-extern const char *fallbackShader_depthToNormal_vp;
-extern const char *fallbackShader_depthToNormal_fp;
 extern const char *fallbackShader_ssdo_vp;
 extern const char *fallbackShader_ssdo_fp;
 extern const char *fallbackShader_ssdoBlur_vp;
@@ -85,18 +83,14 @@ extern const char *fallbackShader_volumelightInverted_vp;
 extern const char *fallbackShader_volumelightInverted_fp;
 extern const char *fallbackShader_volumelightCombine_vp;
 extern const char *fallbackShader_volumelightCombine_fp;
-extern const char *fallbackShader_fakeDepth_vp;
-extern const char *fallbackShader_fakeDepth_fp;
-extern const char *fallbackShader_fakeDepthSteepParallax_vp;
-extern const char *fallbackShader_fakeDepthSteepParallax_fp;
 extern const char *fallbackShader_anaglyph_vp;
 extern const char *fallbackShader_anaglyph_fp;
-extern const char *fallbackShader_uniquesky_fp;
-extern const char *fallbackShader_uniquesky_vp;
+extern const char *fallbackShader_skyDome_fp;
+extern const char *fallbackShader_skyDome_vp;
 extern const char *fallbackShader_waterPost_fp;
 extern const char *fallbackShader_waterPost_vp;
-extern const char *fallbackShader_uniquewater_fp;
-extern const char *fallbackShader_uniquewater_vp;
+extern const char *fallbackShader_waterForward_fp;
+extern const char *fallbackShader_waterForward_vp;
 extern const char *fallbackShader_grass_fp;
 extern const char *fallbackShader_grass_vp;
 extern const char *fallbackShader_grass2_fp;
@@ -110,20 +104,12 @@ extern const char *fallbackShader_pebbles_vp;
 extern const char *fallbackShader_pebbles_gs;
 extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
-extern const char *fallbackShader_sss_vp;
-extern const char *fallbackShader_sss_fp;
-extern const char *fallbackShader_sss2_vp;
-extern const char *fallbackShader_sss2_fp;
-extern const char *fallbackShader_rbm_vp;
-extern const char *fallbackShader_rbm_fp;
 extern const char *fallbackShader_hbaoCombine_vp;
 extern const char *fallbackShader_hbaoCombine_fp;
 extern const char *fallbackShader_esharpening_vp;
 extern const char *fallbackShader_esharpening_fp;
 extern const char *fallbackShader_esharpening2_vp;
 extern const char *fallbackShader_esharpening2_fp;
-extern const char *fallbackShader_textureclean_vp;
-extern const char *fallbackShader_textureclean_fp;
 extern const char *fallbackShader_depthOfField_vp;
 extern const char *fallbackShader_depthOfField_fp;
 extern const char *fallbackShader_depthOfField2_vp;
@@ -136,13 +122,6 @@ extern const char *fallbackShader_anamorphic_blur_vp;
 extern const char *fallbackShader_anamorphic_blur_fp;
 extern const char *fallbackShader_anamorphic_combine_vp;
 extern const char *fallbackShader_anamorphic_combine_fp;
-extern const char *fallbackShader_ssgi_vp;
-extern const char *fallbackShader_ssgi1_fp;
-extern const char *fallbackShader_ssgi2_fp;
-extern const char *fallbackShader_ssgi3_fp;
-extern const char *fallbackShader_ssgi4_fp;
-extern const char *fallbackShader_ssgi_blur_vp;
-extern const char *fallbackShader_ssgi_blur_fp;
 extern const char *fallbackShader_darkexpand_vp;
 extern const char *fallbackShader_darkexpand_fp;
 extern const char *fallbackShader_lensflare_vp;
@@ -3101,13 +3080,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load ssao shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.depthToNormalShader, "depthToNormal", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthToNormal_vp, fallbackShader_depthToNormal_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load depthToNormal shader!");
-	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -3369,78 +3341,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi1Shader, "ssgi1", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi1_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi1 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi2Shader, "ssgi2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi2_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi2 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi3Shader, "ssgi3", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi3_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi3 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi4Shader, "ssgi4", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi4_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi5Shader, "ssgi5", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi2_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi5 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi6Shader, "ssgi6", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi3_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi6 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgi7Shader, "ssgi7", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi4_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi7 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssgiBlurShader, "ssgi_blur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssgi_blur_vp, fallbackShader_ssgi_blur_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi_blur shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
 	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[0], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
@@ -3651,14 +3551,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.texturecleanShader, "textureclean", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_textureclean_vp, fallbackShader_textureclean_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load textureclean shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
 	if (!GLSL_BeginLoadGPUShader(&tr.esharpeningShader, "esharpening", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_esharpening_vp, fallbackShader_esharpening_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load esharpening shader!");
@@ -3699,23 +3591,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.fakedepthShader, "fakedepth", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fakeDepth_vp, fallbackShader_fakeDepth_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load fake depth shader!");
-	}
-
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.fakedepthSteepParallaxShader, "fakedepthSteepParallax", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fakeDepthSteepParallax_vp, fallbackShader_fakeDepthSteepParallax_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load fake depth steep parallax shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
 	if (!GLSL_BeginLoadGPUShader(&tr.anaglyphShader, "anaglyph", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_anaglyph_vp, fallbackShader_anaglyph_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load anaglyph shader!");
@@ -3725,9 +3600,9 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.uniqueskyShader, "uniquesky", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "130", fallbackShader_uniquesky_vp, fallbackShader_uniquesky_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.skyDomeShader, "skyDome", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "130", fallbackShader_skyDome_vp, fallbackShader_skyDome_fp, NULL, NULL, NULL))
 	{
-		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
+		ri->Error(ERR_FATAL, "Could not load skyDome shader!");
 	}
 
 
@@ -3739,9 +3614,9 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
 
-	if (!GLSL_BeginLoadGPUShader(&tr.waterShader, "uniquewater", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_uniquewater_vp, fallbackShader_uniquewater_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.waterForwardShader, "waterForward", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterForward_vp, fallbackShader_waterForward_fp, NULL, NULL, NULL))
 	{
-		ri->Error(ERR_FATAL, "Could not load water shader!");
+		ri->Error(ERR_FATAL, "Could not load waterForward shader!");
 	}
 
 
@@ -3808,32 +3683,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load grass shader!");
 	}
 
-
-
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.sssShader, "sss", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sss_vp, fallbackShader_sss_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load sss shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.sss2Shader, "sss2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sss2_vp, fallbackShader_sss2_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load sss2 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.rbmShader, "rbm", attribs, qtrue, qfalse, qfalse, extradefines, qfalse, NULL, fallbackShader_rbm_vp, fallbackShader_rbm_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load rbm shader!");
-	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -4281,24 +4130,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.depthToNormalShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load depthToNormal shader!");
-	}
-
-	GLSL_InitUniforms(&tr.depthToNormalShader);
-
-	qglUseProgram(tr.depthToNormalShader.program);
-	GLSL_SetUniformInt(&tr.depthToNormalShader, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.depthToNormalShader);
-#endif
-
-	numEtcShaders++;
-
-
 
 	if (!GLSL_EndLoadGPUShader(&tr.ssdoShader))
 	{
@@ -4708,322 +4539,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi1Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi1 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi1Shader);
-
-	qglUseProgram(tr.ssgi1Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi1Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi1Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi1Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi2Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi2 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi2Shader);
-
-	qglUseProgram(tr.ssgi2Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi2Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi2Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi2Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi3Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi3 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi3Shader);
-
-	qglUseProgram(tr.ssgi3Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi3Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi3Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi3Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi4Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi4Shader);
-
-	qglUseProgram(tr.ssgi4Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi4Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi4Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi4Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi5Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi5Shader);
-
-	qglUseProgram(tr.ssgi5Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi5Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi5Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi5Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi6Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi6Shader);
-
-	qglUseProgram(tr.ssgi6Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi6Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi6Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi6Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgi7Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgi7Shader);
-
-	qglUseProgram(tr.ssgi7Shader.program);
-
-	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.ssgi7Shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.ssgi7Shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgi7Shader);
-#endif
-
-	numEtcShaders++;
-
-	if (!GLSL_EndLoadGPUShader(&tr.ssgiBlurShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssgi_blur shader!");
-	}
-
-	GLSL_InitUniforms(&tr.ssgiBlurShader);
-	qglUseProgram(tr.ssgiBlurShader.program);
-	GLSL_SetUniformInt(&tr.ssgiBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssgiBlurShader);
-#endif
-
-	numEtcShaders++;
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.hdrShader))
@@ -5906,147 +5421,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.texturecleanShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load textureclean shader!");
-	}
-
-	GLSL_InitUniforms(&tr.texturecleanShader);
-
-	qglUseProgram(tr.texturecleanShader.program);
-
-	GLSL_SetUniformInt(&tr.texturecleanShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.texturecleanShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.texturecleanShader);
-#endif
-
-	numEtcShaders++;
-
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.fakedepthShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load fake depth shader!");
-	}
-
-	GLSL_InitUniforms(&tr.fakedepthShader);
-
-	qglUseProgram(tr.fakedepthShader.program);
-
-	GLSL_SetUniformInt(&tr.fakedepthShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.fakedepthShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.fakedepthShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.fakedepthShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	{
-		vec4_t local0;
-		VectorSet4(local0, r_depthScale->value, r_depthParallax->value, 0.0, 0.0);
-		GLSL_SetUniformVec4(&tr.fakedepthShader, UNIFORM_LOCAL0, local0);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.fakedepthShader);
-#endif
-
-	numEtcShaders++;
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.fakedepthSteepParallaxShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load fake depth steep parallax shader!");
-	}
-
-	GLSL_InitUniforms(&tr.fakedepthSteepParallaxShader);
-
-	qglUseProgram(tr.fakedepthSteepParallaxShader.program);
-
-	GLSL_SetUniformInt(&tr.fakedepthSteepParallaxShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.fakedepthSteepParallaxShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.fakedepthSteepParallaxShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	{
-		vec4_t local0;
-		VectorSet4(local0, r_depthScale->value, r_depthParallax->value, 0.0, 0.0);
-		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_LOCAL0, local0);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.fakedepthSteepParallaxShader);
-#endif
-
-	numEtcShaders++;
-
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.anaglyphShader))
@@ -6099,17 +5473,17 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.uniqueskyShader))
+	if (!GLSL_EndLoadGPUShader(&tr.skyDomeShader))
 	{
-		ri->Error(ERR_FATAL, "Could not load uniqueskyShader shader!");
+		ri->Error(ERR_FATAL, "Could not load skyDomeShader shader!");
 	}
 
-	GLSL_InitUniforms(&tr.uniqueskyShader);
+	GLSL_InitUniforms(&tr.skyDomeShader);
 
-	qglUseProgram(tr.uniqueskyShader.program);
+	qglUseProgram(tr.skyDomeShader.program);
 
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 
 	{
 		vec4_t viewInfo;
@@ -6120,36 +5494,36 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
 
-		GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_VIEWINFO, viewInfo);
+		GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
 	qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.uniqueskyShader);
+	GLSL_FinishGPUShader(&tr.skyDomeShader);
 #endif
 
 	numEtcShaders++;
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.waterShader))
+	if (!GLSL_EndLoadGPUShader(&tr.waterForwardShader))
 	{
-		ri->Error(ERR_FATAL, "Could not load water shader!");
+		ri->Error(ERR_FATAL, "Could not load waterForward shader!");
 	}
 
-	GLSL_InitUniforms(&tr.waterShader);
+	GLSL_InitUniforms(&tr.waterForwardShader);
 
-	qglUseProgram(tr.waterShader.program);
+	qglUseProgram(tr.waterForwardShader.program);
 
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.waterShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	//GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	//GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 
 	{
 		vec4_t viewInfo;
@@ -6160,7 +5534,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
 
-		GLSL_SetUniformVec4(&tr.waterShader, UNIFORM_VIEWINFO, viewInfo);
+		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
 	{
@@ -6168,7 +5542,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
 		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		GLSL_SetUniformVec2(&tr.waterShader, UNIFORM_DIMENSIONS, screensize);
+		GLSL_SetUniformVec2(&tr.waterForwardShader, UNIFORM_DIMENSIONS, screensize);
 
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
@@ -6176,7 +5550,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.waterShader);
+	GLSL_FinishGPUShader(&tr.waterForwardShader);
 #endif
 
 	numEtcShaders++;
@@ -6236,73 +5610,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.sssShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load sss shader!");
-	}
-
-	GLSL_InitUniforms(&tr.sssShader);
-
-	qglUseProgram(tr.sssShader.program);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.sssShader);
-#endif
-
-	numEtcShaders++;
-
-
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.sss2Shader))
-	{
-		ri->Error(ERR_FATAL, "Could not load sss2 shader!");
-	}
-
-	GLSL_InitUniforms(&tr.sss2Shader);
-
-	qglUseProgram(tr.sss2Shader.program);
-	GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.sss2Shader);
-#endif
-
-	numEtcShaders++;
-
-
-
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.rbmShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load rbm shader!");
-	}
-
-	GLSL_InitUniforms(&tr.rbmShader);
-
-	qglUseProgram(tr.rbmShader.program);
-	GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.rbmShader);
-#endif
-
-	numEtcShaders++;
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
@@ -6421,8 +5728,6 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.shadowmaskShader);
 
-	GLSL_DeleteGPUShader(&tr.depthToNormalShader);
-
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
@@ -6440,17 +5745,12 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.paintShader);
 	GLSL_DeleteGPUShader(&tr.esharpeningShader);
 	GLSL_DeleteGPUShader(&tr.esharpening2Shader);
-	GLSL_DeleteGPUShader(&tr.fakedepthShader);
-	GLSL_DeleteGPUShader(&tr.fakedepthSteepParallaxShader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
-	GLSL_DeleteGPUShader(&tr.waterShader);
+	GLSL_DeleteGPUShader(&tr.waterForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterPostShader);
 	GLSL_DeleteGPUShader(&tr.grassShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grass2Shader);
 	if (r_pebbles->integer)	GLSL_DeleteGPUShader(&tr.pebblesShader);
-	GLSL_DeleteGPUShader(&tr.sssShader);
-	GLSL_DeleteGPUShader(&tr.sss2Shader);
-	GLSL_DeleteGPUShader(&tr.rbmShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
 	GLSL_DeleteGPUShader(&tr.hbao2Shader);
 	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
@@ -6465,14 +5765,6 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.dofShader[2]);
 	GLSL_DeleteGPUShader(&tr.fxaaShader);
 	GLSL_DeleteGPUShader(&tr.underwaterShader);
-	GLSL_DeleteGPUShader(&tr.texturecleanShader);
-	GLSL_DeleteGPUShader(&tr.ssgi1Shader);
-	GLSL_DeleteGPUShader(&tr.ssgi2Shader);
-	GLSL_DeleteGPUShader(&tr.ssgi3Shader);
-	GLSL_DeleteGPUShader(&tr.ssgi4Shader);
-	GLSL_DeleteGPUShader(&tr.ssgi5Shader);
-	GLSL_DeleteGPUShader(&tr.ssgi6Shader);
-	GLSL_DeleteGPUShader(&tr.ssgi7Shader);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[0]);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[1]);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[2]);
@@ -6499,7 +5791,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.ssrShader);
 	GLSL_DeleteGPUShader(&tr.ssrCombineShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
-	GLSL_DeleteGPUShader(&tr.uniqueskyShader);
+	GLSL_DeleteGPUShader(&tr.skyDomeShader);
 	GLSL_DeleteGPUShader(&tr.generateNormalMapShader);
 
 

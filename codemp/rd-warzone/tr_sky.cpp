@@ -929,7 +929,7 @@ void DrawSkyDome ( shader_t *skyShader )
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	GLSL_BindProgram(&tr.uniqueskyShader);
+	GLSL_BindProgram(&tr.skyDomeShader);
 
 	matrix_t trans, model, mvp, invMvp, normalMatrix;
 
@@ -941,29 +941,29 @@ void DrawSkyDome ( shader_t *skyShader )
 	
 	//mat4 normalMatrix = transpose(inverse(modelView));
 
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWMATRIX, model);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_INVPROJECTIONMATRIX, invMvp);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_NORMALMATRIX, normalMatrix);
+	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_INVPROJECTIONMATRIX, invMvp);
+	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_NORMALMATRIX, normalMatrix);
 
-	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime);
-	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+	GLSL_SetUniformFloat(&tr.skyDomeShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+	GLSL_SetUniformVec3(&tr.skyDomeShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
-	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-	//GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+	GLSL_SetUniformVec3(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+	GLSL_SetUniformVec3(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+	//GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 	vec3_t out;
 	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
 	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
-	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+	GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
 
 	vec4_t l0;
 	VectorSet4(l0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LOCAL0, l0);
+	GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_LOCAL0, l0);
 
 	vec4_t l1;
 	VectorSet4(l1, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
-	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LOCAL1, l1);
+	GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_LOCAL1, l1);
 
 #ifdef __OLD_SKYDOME__
 	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
@@ -974,7 +974,7 @@ void DrawSkyDome ( shader_t *skyShader )
 		screensize[0] = skyShader->sky.outerbox[0]->width;
 		screensize[1] = skyShader->sky.outerbox[0]->height;
 
-		GLSL_SetUniformVec2(&tr.uniqueskyShader, UNIFORM_DIMENSIONS, screensize);
+		GLSL_SetUniformVec2(&tr.skyDomeShader, UNIFORM_DIMENSIONS, screensize);
 
 		vec4i_t		imageBox;
 		imageBox[0] = 0;
@@ -988,7 +988,7 @@ void DrawSkyDome ( shader_t *skyShader )
 		screenBox[2] = glConfig.vidWidth * r_superSampleMultiplier->value;
 		screenBox[3] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		FBO_BlitFromTexture(skyShader->sky.outerbox[0], imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+		FBO_BlitFromTexture(skyShader->sky.outerbox[0], imageBox, NULL, glState.currentFBO, screenBox, &tr.skyDomeShader, NULL, 0);
 	}
 	else
 	{
@@ -1004,7 +1004,7 @@ void DrawSkyDome ( shader_t *skyShader )
 		screenBox[2] = glConfig.vidWidth * r_superSampleMultiplier->value;
 		screenBox[3] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+		FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.skyDomeShader, NULL, 0);
 	}
 #else //!__OLD_SKYDOME__
 
@@ -1034,17 +1034,17 @@ uniform sampler2D			u_SplatMap3;
 	image_t *clouds1Image = R_FindImageFile("textures/skydomes/default_clouds1", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	image_t *clouds2Image = R_FindImageFile("textures/skydomes/default_clouds2", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(tintImage, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 	GL_BindToTMU(tint2Image, TB_STEEPMAP);
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
 	GL_BindToTMU(sunImage, TB_STEEPMAP2);
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 	GL_BindToTMU(moonImage, TB_SPLATMAP1);
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 	GL_BindToTMU(clouds1Image, TB_SPLATMAP2);
-	GLSL_SetUniformInt(&tr.uniqueskyShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
 	GL_BindToTMU(clouds2Image, TB_SPLATMAP3);
 
 	vec2_t screensize;
@@ -1053,7 +1053,7 @@ uniform sampler2D			u_SplatMap3;
 	screensize[0] = tintImage->width;
 	screensize[1] = tintImage->height;
 
-	GLSL_SetUniformVec2(&tr.uniqueskyShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformVec2(&tr.skyDomeShader, UNIFORM_DIMENSIONS, screensize);
 
 	vec4i_t		imageBox;
 	imageBox[0] = 0;
@@ -1067,7 +1067,7 @@ uniform sampler2D			u_SplatMap3;
 	screenBox[2] = backEnd.viewParms.viewportWidth;
 	screenBox[3] = backEnd.viewParms.viewportHeight;
 
-	FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+	FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.skyDomeShader, NULL, 0);
 #endif //__OLD_SKYDOME__
 }
 

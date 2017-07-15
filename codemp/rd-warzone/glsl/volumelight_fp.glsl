@@ -57,10 +57,8 @@ void main ( void )
 	int				inRangeSunID = -1;
 	int				numInRange = 0;
 
-	for (int i = 0; i < MAX_VOLUMETRIC_LIGHTS; i++)
+	for (int i = 0; i < u_lightCount; i++)
 	{
-		if (i >= u_lightCount) break;
-
 		if (var_LightColor[i].a <= 0.0)
 		{
 			continue;
@@ -125,7 +123,7 @@ void main ( void )
 
 	vec3 totalColor = vec3(0.0, 0.0, 0.0);
 
-	for (int i = 0; i < MAX_VOLUMETRIC_LIGHTS; i++) // MAX_VOLUMETRIC_LIGHTS to use constant loop size
+	for (int i = 0; i < u_lightCount; i++) // MAX_VOLUMETRIC_LIGHTS to use constant loop size
 	{
 		if (i >= numInRange) break;
 

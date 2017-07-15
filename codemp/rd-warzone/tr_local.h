@@ -446,18 +446,7 @@ extern cvar_t	*r_anamorphicStrength;
 extern cvar_t	*r_bloomRaysDecay;
 extern cvar_t	*r_bloomRaysWeight;
 extern cvar_t	*r_bloomRaysDensity;
-extern cvar_t	*r_ssgi;
-extern cvar_t	*r_ssgiWidth;
-extern cvar_t	*r_ssgiSamples;
-extern cvar_t	*r_depth;
-extern cvar_t	*r_depthParallax;
-extern cvar_t	*r_depthParallaxScale;
-extern cvar_t	*r_depthParallaxMultiplier;
-extern cvar_t	*r_depthParallaxEyeX;
-extern cvar_t	*r_depthParallaxEyeY;
-extern cvar_t	*r_depthParallaxEyeZ;
-extern cvar_t	*r_depthPasses;
-extern cvar_t	*r_depthScale;
+extern cvar_t	*r_bloomRaysStrength;
 extern cvar_t	*r_darkexpand;
 extern cvar_t	*r_truehdr;
 extern cvar_t  *r_magicdetail;
@@ -475,16 +464,7 @@ extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
-extern cvar_t  *r_textureClean;
-extern cvar_t  *r_textureCleanSigma;
-extern cvar_t  *r_textureCleanBSigma;
-extern cvar_t  *r_textureCleanMSize;
 extern cvar_t  *r_imageBasedLighting;
-extern cvar_t  *r_sss;
-extern cvar_t  *r_sssMinRange;
-extern cvar_t  *r_sssMaxRange;
-extern cvar_t  *r_rbm;
-extern cvar_t  *r_rbmStrength;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_deferredLighting;
 extern cvar_t  *r_ssdm;
@@ -2529,8 +2509,6 @@ typedef struct trGlobals_s {
 //	image_t                 *screenDlightShadowImage;
 #endif //__DYNAMIC_SHADOWS__
 
-	image_t                 *screenSsaoImage;
-	image_t					*hdrDepthImage;
 	image_t                 *renderCubeImage;
 	
 	image_t					*textureDepthImage;
@@ -2565,8 +2543,6 @@ typedef struct trGlobals_s {
 	FBO_t					*dlightShadowFbo[MAX_DYNAMIC_SHADOWS][3];
 //	FBO_t					*screenDlightShadowFbo;
 #endif //__DYNAMIC_SHADOWS__
-	FBO_t					*screenSsaoFbo;
-	FBO_t					*hdrDepthFbo;
 	FBO_t                   *renderCubeFbo;
 	FBO_t					*awesomiumuiFbo;
 
@@ -2630,7 +2606,6 @@ typedef struct trGlobals_s {
 	// UQ1: Added shaders...
 	//
 
-	shaderProgram_t depthToNormalShader;
 	shaderProgram_t ssdoShader;
 	shaderProgram_t ssdoBlurShader;
 	shaderProgram_t generateNormalMapShader;
@@ -2640,18 +2615,13 @@ typedef struct trGlobals_s {
 	shaderProgram_t cellShadeShader;
 	shaderProgram_t paintShader;
 	shaderProgram_t dofShader[3];
-	shaderProgram_t fakedepthShader;
-	shaderProgram_t fakedepthSteepParallaxShader;
 	shaderProgram_t anaglyphShader;
-	shaderProgram_t uniqueskyShader;
-	shaderProgram_t waterShader;
+	shaderProgram_t skyDomeShader;
+	shaderProgram_t waterForwardShader;
 	shaderProgram_t waterPostShader;
 	shaderProgram_t grassShader;
 	shaderProgram_t grass2Shader;
 	shaderProgram_t pebblesShader;
-	shaderProgram_t sssShader;
-	shaderProgram_t sss2Shader;
-	shaderProgram_t rbmShader;
 	shaderProgram_t hbaoShader;
 	shaderProgram_t hbao2Shader;
 	shaderProgram_t hbaoCombineShader;
@@ -2659,18 +2629,9 @@ typedef struct trGlobals_s {
 	shaderProgram_t esharpening2Shader;
 	shaderProgram_t fxaaShader;
 	shaderProgram_t underwaterShader;
-	shaderProgram_t texturecleanShader;
 	shaderProgram_t bloomDarkenShader;
 	shaderProgram_t bloomBlurShader;
 	shaderProgram_t bloomCombineShader;
-	shaderProgram_t ssgi1Shader;
-	shaderProgram_t ssgi2Shader;
-	shaderProgram_t ssgi3Shader;
-	shaderProgram_t ssgi4Shader;
-	shaderProgram_t ssgi5Shader;
-	shaderProgram_t ssgi6Shader;
-	shaderProgram_t ssgi7Shader;
-	shaderProgram_t ssgiBlurShader;
 	shaderProgram_t lensflareShader;
 	shaderProgram_t multipostShader;
 	shaderProgram_t anamorphicDarkenShader;
@@ -2696,7 +2657,6 @@ typedef struct trGlobals_s {
 
 	image_t        *anamorphicRenderFBOImage;
 	image_t        *bloomRenderFBOImage[3];
-	image_t        *ssgiRenderFBOImage[3];
 	image_t        *volumetricFBOImage;
 	image_t        *volumetricPreviousFBOImage;
 	image_t        *genericFBOImage;
@@ -2710,7 +2670,6 @@ typedef struct trGlobals_s {
 
 	FBO_t          *anamorphicRenderFBO;
 	FBO_t          *bloomRenderFBO[3];
-	FBO_t          *ssgiRenderFBO[3];
 	FBO_t		   *volumetricFbo;
 	FBO_t		   *volumetricPreviousFbo;
 	FBO_t		   *genericFbo;
@@ -3052,18 +3011,7 @@ extern cvar_t	*r_anamorphicStrength;
 extern cvar_t	*r_bloomRaysDecay;
 extern cvar_t	*r_bloomRaysWeight;
 extern cvar_t	*r_bloomRaysDensity;
-extern cvar_t	*r_ssgi;
-extern cvar_t	*r_ssgiWidth;
-extern cvar_t	*r_ssgiSamples;
-extern cvar_t	*r_depth;
-extern cvar_t	*r_depthParallax;
-extern cvar_t	*r_depthParallaxScale;
-extern cvar_t	*r_depthParallaxMultiplier;
-extern cvar_t	*r_depthParallaxEyeX;
-extern cvar_t	*r_depthParallaxEyeY;
-extern cvar_t	*r_depthParallaxEyeZ;
-extern cvar_t	*r_depthPasses;
-extern cvar_t	*r_depthScale;
+extern cvar_t	*r_bloomRaysStrength;
 extern cvar_t	*r_darkexpand;
 extern cvar_t	*r_truehdr;
 extern cvar_t  *r_magicdetail;
@@ -3087,10 +3035,6 @@ extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
-extern cvar_t  *r_textureClean;
-extern cvar_t  *r_textureCleanSigma;
-extern cvar_t  *r_textureCleanBSigma;
-extern cvar_t  *r_textureCleanMSize;
 extern cvar_t	*r_steepParallax;
 extern cvar_t  *r_trueAnaglyph;
 extern cvar_t  *r_trueAnaglyphSeparation;

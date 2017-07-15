@@ -542,28 +542,6 @@ void FBO_Init(void)
 	}
 
 	//
-	// SSGI FBO's...
-	//
-	{
-		tr.ssgiRenderFBO[0] = FBO_Create("_ssgi0", tr.ssgiRenderFBOImage[0]->width, tr.ssgiRenderFBOImage[0]->height);
-		FBO_Bind(tr.ssgiRenderFBO[0]);
-		FBO_AttachTextureImage(tr.ssgiRenderFBOImage[0], 0);
-		R_CheckFBO(tr.ssgiRenderFBO[0]);
-
-
-		tr.ssgiRenderFBO[1] = FBO_Create("_ssgi1", tr.ssgiRenderFBOImage[1]->width, tr.ssgiRenderFBOImage[1]->height);
-		FBO_Bind(tr.ssgiRenderFBO[1]);
-		FBO_AttachTextureImage(tr.ssgiRenderFBOImage[1], 0);
-		R_CheckFBO(tr.ssgiRenderFBO[1]);
-
-
-		tr.ssgiRenderFBO[2] = FBO_Create("_ssgi2", tr.ssgiRenderFBOImage[2]->width, tr.ssgiRenderFBOImage[2]->height);
-		FBO_Bind(tr.ssgiRenderFBO[2]);
-		FBO_AttachTextureImage(tr.ssgiRenderFBOImage[2], 0);
-		R_CheckFBO(tr.ssgiRenderFBO[2]);
-	}
-
-	//
 	// Anamorphic FBO's...
 	//
 	{
@@ -822,27 +800,6 @@ void FBO_Init(void)
 		FBO_SetupDrawBuffers();
 
 		R_CheckFBO(tr.quarterFbo[i]);
-	}
-
-	if (r_ssao->integer || r_hbao->integer)
-	{
-		tr.hdrDepthFbo = FBO_Create("_hdrDepth", tr.hdrDepthImage->width, tr.hdrDepthImage->height);
-		FBO_Bind(tr.hdrDepthFbo);
-
-		FBO_AttachTextureImage(tr.hdrDepthImage, 0);
-
-		FBO_SetupDrawBuffers();
-
-		R_CheckFBO(tr.hdrDepthFbo);
-
-		tr.screenSsaoFbo = FBO_Create("_screenssao", tr.screenSsaoImage->width, tr.screenSsaoImage->height);
-		FBO_Bind(tr.screenSsaoFbo);
-		
-		FBO_AttachTextureImage(tr.screenSsaoImage, 0);
-
-		FBO_SetupDrawBuffers();
-
-		R_CheckFBO(tr.screenSsaoFbo);
 	}
 
 	if (tr.renderCubeImage != NULL)

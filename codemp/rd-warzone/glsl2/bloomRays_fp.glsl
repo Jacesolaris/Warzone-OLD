@@ -10,12 +10,12 @@ uniform vec4					u_Local2;
 
 varying vec2					var_TexCoords;
 
-#define BLOOMRAYS_STEPS			32//4//u_Local1.a//32
-#define	BLOOMRAYS_DECAY			u_Local1.r//0.975
-#define	BLOOMRAYS_WEIGHT		u_Local1.g//0.1
-#define	BLOOMRAYS_DENSITY		u_Local1.b//2.0
+#define BLOOMRAYS_STEPS			32
+#define	BLOOMRAYS_DECAY			u_Local1.r
+#define	BLOOMRAYS_WEIGHT		u_Local1.g
+#define	BLOOMRAYS_DENSITY		u_Local1.b
+#define	BLOOMRAYS_STRENGTH		u_Local1.a
 #define	BLOOMRAYS_FALLOFF		1.0
-#define	BLOOMRAYS_THRESHOLD		0.0
 
 float linearize(float depth)
 {
@@ -79,11 +79,12 @@ vec4 ProcessBloomRays(vec2 inTC)
 		}
 	}
 
-	totalColor=max(totalColor, 0.0);
-	totalColor=min(totalColor, 1.0);
+	totalColor=clamp(totalColor, 0.0, 1.0);
 	totalColor.w=1.0;
 
 	AddContrast(totalColor.rgb);
+
+	totalColor.rgb *= BLOOMRAYS_STRENGTH;
 
 	return totalColor;
 }

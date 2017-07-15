@@ -2014,12 +2014,6 @@ const void	*RB_DrawSurfs( const void *data ) {
 			qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
 
-		if (r_ssao->integer || r_hbao->integer)
-		{
-			// need the depth in a texture we can do GL_LINEAR sampling on, so copy it to an HDR image
-			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, tr.hdrDepthFbo, NULL, NULL, NULL, 0);
-		}
-
 		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED && r_deferredLighting->integer)
 		{
 			vec4_t quadVerts[4];
@@ -2534,7 +2528,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		srcFbo = tr.msaaResolveFbo;
 
-		if ( r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer )
+		if ( r_dynamicGlow->integer || r_anamorphic->integer )
 		{
 			FBO_FastBlitIndexed(tr.renderFbo, tr.msaaResolveFbo, 1, 1, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		}
@@ -2550,7 +2544,7 @@ const void *RB_PostProcess(const void *data)
 		&& !(tr.viewParms.flags & VPF_SHADOWPASS)
 		&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		&& !backEnd.depthFill
-		&& (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer || r_bloom->integer))
+		&& (r_dynamicGlow->integer || r_anamorphic->integer || r_bloom->integer))
 	{
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
@@ -2583,11 +2577,6 @@ const void *RB_PostProcess(const void *data)
 		{// Skip most of the fancy stuff when doing a blured screen...
 			SCREEN_BLUR = qtrue;
 		}
-
-		/*if (r_ssdo->integer || r_shownormals->integer == 2)
-		{// Render a screen based normal map...
-			RB_DepthToNormal(currentFbo, srcBox, currentOutFbo, dstBox);
-		}*/
 
 		if (!SCREEN_BLUR && r_ssdm->integer)
 		{
@@ -2638,12 +2627,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}*/
 
-		if (!SCREEN_BLUR && r_sss->integer)
-		{
-			RB_SSS(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_magicdetail->integer)
 		{
 			RB_MagicDetail(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2672,12 +2655,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 #endif //CRAZY_SLOW_GAUSSIAN_BLUR
-
-		if (!SCREEN_BLUR && r_rbm->integer)
-		{
-			RB_RBM(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
 
 		if (!SCREEN_BLUR && r_ssao->integer)
 		{
@@ -2756,25 +2733,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_depth->integer)
-		{
-			// First run, before adding parallax and blooms, etc...
-			for (int i = 0; i < r_depthPasses->integer / 2; i++)
-			{
-				RB_FakeDepth(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			}
-		}
-
-		if (!SCREEN_BLUR && r_depthParallax->integer)
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				RB_FakeDepthParallax(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			}
-		}
-
 		if (r_truehdr->integer)
 		{
 			RB_HDR(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2811,12 +2769,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_ssgi->integer)
-		{
-			RB_SSGI(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_lensflare->integer)
 		{
 			RB_LensFlare(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2827,16 +2779,6 @@ const void *RB_PostProcess(const void *data)
 		{
 			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
 				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_depth->integer)
-		{
-			// Second run, after adding parallax and blooms, etc...
-			for (int i = 0; i < r_depthPasses->integer / 2; i++)
-			{
-				RB_FakeDepth(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			}
 		}
 
 		if (r_vibrancy->value > 0.0)
@@ -2979,17 +2921,6 @@ const void *RB_PostProcess(const void *data)
 		FBO_BlitFromTexture(tr.renderFbo->colorImage[3], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
-	/*if (1)
-	{
-		vec4i_t dstBox;
-		VectorSet4(dstBox, 0, 0, 128, 128);
-		FBO_BlitFromTexture(tr.ssgiRenderFBOImage[2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
-		VectorSet4(dstBox, 128, 0, 128, 128);
-		FBO_BlitFromTexture(tr.ssgiRenderFBOImage[1], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
-		VectorSet4(dstBox, 256, 0, 128, 128);
-		FBO_BlitFromTexture(tr.bloomRenderFBOImage[2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
-	}*/
-
 #if 0
 	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
 	{
@@ -3033,7 +2964,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 
-	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_ssgi->integer || r_anamorphic->integer || r_bloom->integer))
+	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
 	{
 		// Composite the glow/bloom texture
 		int blendFunc = 0;

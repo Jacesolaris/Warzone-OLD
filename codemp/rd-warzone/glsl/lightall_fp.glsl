@@ -1,4 +1,4 @@
-//#define __PARALLAX__
+//#define __UI_ENHANCEMENT__
 //#define USE_ALPHA_TEST
 
 uniform sampler2D			u_DiffuseMap;
@@ -203,15 +203,6 @@ vec3 decode (vec2 enc)
     return n;
 }
 
-
-// 'threshold ' is constant , 'value ' is smoothly varying
-/*float aastep ( float threshold , float value )
-{
-	float afwidth = 0.7 * length ( vec2 ( dFdx ( value ) , dFdy ( value ))) ;
-	// GLSL 's fwidth ( value ) is abs ( dFdx ( value )) + abs ( dFdy ( value ))
-	return smoothstep ( threshold - afwidth , threshold + afwidth , value ) ;
-}*/
-
 void DepthContrast ( inout float depth )
 {
 	const float contrast = 3.0;
@@ -235,25 +226,8 @@ float GetDepthForPixel(vec4 color)
 	return 1.0 - clamp(displacement, 0.0, 1.0);
 }
 
-vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom);
-
-float GetDepthAtCoord(vec2 coord)
-{
-	vec4 diffuse = GetDiffuse(coord, vec2(0.0), 0.0);
-
-	if (diffuse.a * var_Color.a <= 0.0)
-	{
-		return 0.0;
-	}
-
-	return GetDepthForPixel(diffuse);
-}
-
-
 void AddDetail(inout vec4 color, in vec2 tc)
 {
-	//if (USE_TEXTURECLAMP > 0.0) return;
-
 	// Add fine detail to everything...
 	vec2 coord = vec2(0.0);
 
@@ -330,7 +304,7 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset)
+vec4 GetMap( in sampler2D tex, float scale)
 {
 	vec4 xaxis;
 	vec4 yaxis;
@@ -343,14 +317,14 @@ vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset)
 		tScale *= u_textureScale;
 	}
 
-	xaxis = texture( tex, (m_vertPos.yz * tScale * scale) + ParallaxOffset.xy);
-	yaxis = texture( tex, (m_vertPos.xz * tScale * scale) + ParallaxOffset.xy);
-	zaxis = texture( tex, (m_vertPos.xy * tScale * scale) + ParallaxOffset.xy);
+	xaxis = texture( tex, (m_vertPos.yz * tScale * scale));
+	yaxis = texture( tex, (m_vertPos.xz * tScale * scale));
+	zaxis = texture( tex, (m_vertPos.xy * tScale * scale));
 
 	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 }
 
-vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inColor, float inA1)
+vec4 GetSplatMap(vec2 texCoords, float pixRandom, vec4 inColor, float inA1)
 {
 	if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 	{
@@ -375,25 +349,25 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 
 	if (u_Local7.r > 0.0 && control.r > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap1, 0.01, ParallaxOffset);
+		vec4 tex = GetMap(u_SplatMap1, 0.01);
 		splatColor = mix(splatColor, tex, control.r * tex.a);
 	}
 
 	if (u_Local7.g > 0.0 && control.g > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap2, 0.01, ParallaxOffset);
+		vec4 tex = GetMap(u_SplatMap2, 0.01);
 		splatColor = mix(splatColor, tex, control.g * tex.a);
 	}
 
 	if (u_Local7.b > 0.0 && control.b > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap3, 0.01, ParallaxOffset);
+		vec4 tex = GetMap(u_SplatMap3, 0.01);
 		splatColor = mix(splatColor, tex, control.b * tex.a);
 	}
 	/*
 	if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap4, 0.01, ParallaxOffset);
+		vec4 tex = GetMap(u_SplatMap4, 0.01);
 		splatColor = mix(splatColor, tex, control.a * tex.a);
 	}
 	*/
@@ -411,10 +385,10 @@ vec4 GenerateTerrainMap(vec2 coord)
 
 	// Splat mapping...
 #define SNOW_HEIGHT 0.001
-	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/, vec2(0.0));
+	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/);
 	float a1 = 0.0;
 	a1 = GetDepthForPixel(tex);
-	return GetSplatMap(coord, vec2(0.0), 0.0, tex, a1);
+	return GetSplatMap(coord, 0.0, tex, a1);
 }
 
 vec3 vLocalSeed;
@@ -436,49 +410,20 @@ vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
 	return texture( tex, coord );
 }
 
-vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
+vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 {
 	if (USE_TRIPLANAR <= 0.0)
 	{
 		if (USE_REGIONS > 0.0)
 		{
-			return GenerateTerrainMap(texCoords + ParallaxOffset);
+			return GenerateTerrainMap(texCoords);
 		}
 
+#ifdef __UI_ENHANCEMENT__
 		if (USE_TEXTURECLAMP > 0.0 || USE_IS2D > 0.0)
 		{// UI Bloom/Glow effect...
-			vec2 coord = texCoords + ParallaxOffset;
+			vec2 coord = texCoords;
 			vec4 color = texture(u_DiffuseMap, coord);
-
-#if 0
-			//if (color.a <= 0.0) return color;
-
-			float glowScale = max(max(color.r, color.g), color.b);
-
-			vec2 pixel = vec2(1.0 / u_Dimensions);
-
-#define GLOW_RADIUS 2.0
-#define GLOW_PIXEL 1.0
-
-			// Try to Bloom/Glow the UI/2D element...
-			float pixelsAdded = 1.0;
-			
-			for (float x = -GLOW_RADIUS; x < GLOW_RADIUS; x += GLOW_PIXEL)
-			{
-				for (float y = -GLOW_RADIUS; y < GLOW_RADIUS; y += GLOW_PIXEL)
-				{
-					vec4 color2 = texture(u_DiffuseMap, coord + (vec2(x,y) * pixel));
-					float glowScale2 = max(max(color2.r, color2.g), color2.b);
-					if (color2.a > 0.0 && glowScale2 > glowScale)
-					{
-						color += color2;
-						pixelsAdded += 1.0;
-					}
-				}
-			}
-
-			color /= pixelsAdded;
-#endif
 
 			// Contrast...
 #define glowLower ( 16.0 / 255.0 )
@@ -496,8 +441,9 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			return color;
 		}
 		else
+#endif //__UI_ENHANCEMENT__
 		{
-			return texture(u_DiffuseMap, texCoords + ParallaxOffset);
+			return texture(u_DiffuseMap, texCoords);
 		}
 	}
 
@@ -511,12 +457,12 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 
-		vec4 tex1 = GetMap(u_SteepMap2, 0.0075, ParallaxOffset);
+		vec4 tex1 = GetMap(u_SteepMap2, 0.0075);
 		float a1 = 0.0;
 
 		a1 = GetDepthForPixel(tex1);
 
-		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, ParallaxOffset);
+		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075);
 		float a2 = 0.0;
 
 		a2 = GetDepthForPixel(tex2);
@@ -527,71 +473,34 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 		}
 
 		// Splat mapping...
-		tex2 = GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex2, a2);
+		tex2 = GetSplatMap(texCoords, pixRandom, tex2, a2);
 
 		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
-		return GetMap(u_SteepMap, 0.0025, ParallaxOffset);
+		return GetMap(u_SteepMap, 0.0025);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
-			return GetMap(u_DiffuseMap, 0.0075, ParallaxOffset);
+			return GetMap(u_DiffuseMap, 0.0075);
 		}
 
 		// Splat mapping...
-		vec4 tex = GetMap(u_DiffuseMap, 0.0075, ParallaxOffset);
+		vec4 tex = GetMap(u_DiffuseMap, 0.0075);
 		float a1 = 0.0;
 
 		a1 = GetDepthForPixel(tex);
 
-		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
+		return GetSplatMap(texCoords, pixRandom, tex, a1);
 	}
 	else
 	{
 		return GetNonSplatMap(u_DiffuseMap, texCoords);
 	}
 }
-
-#ifdef __PARALLAX__
-float FastDisplacementMap(vec2 dp)
-{
-	if (u_Local1.x == 0.0)
-		return 0.0;
-
-	return (1.0 - GetDepthAtCoord(dp));
-}
-
-float ReliefMapping(vec2 dp, vec2 ds)
-{
-	const int linear_steps = 10;
-	const int binary_steps = 5;
-	float depth_step = 1.0 / linear_steps;
-	float size = depth_step;
-	float depth = 1.0;
-	float best_depth = 1.0;
-	for (int i = 0 ; i < linear_steps - 1 ; ++i) {
-		depth -= size;
-		float t = GetDepthAtCoord(dp + ds * depth);
-		if (depth >= 1.0 - t)
-			best_depth = depth;
-	}
-	depth = best_depth - size;
-	for (int i = 0 ; i < binary_steps ; ++i) {
-		size *= 0.5;
-		float t = GetDepthAtCoord(dp + ds * depth);
-		if (depth >= 1.0 - t) {
-			best_depth = depth;
-			depth -= 2 * size;
-		}
-		depth += size;
-	}
-	return clamp(best_depth, 0.0, 1.0);
-}
-#endif //__PARALLAX__
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
@@ -626,7 +535,7 @@ void main()
 {
 	vec4 specular = vec4(0.0);
 	vec2 texCoords = m_TexCoords.xy;
-	float pixRandom = 0.0; // Don't use it anyway...
+	float pixRandom = 0.0;
 
 	if (USE_TRIPLANAR > 0.0)
 	{
@@ -634,16 +543,12 @@ void main()
 		pixRandom = randZeroOne();
 	}
 
-	if (USE_GLOW_BUFFER <= 0.0)
-	{
-		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
-		{// Sway...
-			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
-		}
+	if (USE_GLOW_BUFFER <= 0.0 && u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
+	{// Sway...
+		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 	}
 
 
-	bool PARALLAX_ENABLED = (PARALLAX_MODE > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0) ? true : false;
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0) ? true : false;
 	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
 
@@ -651,37 +556,13 @@ void main()
 	mat3 tangentToWorld;
 	vec3 E;
 
-	//if (PARALLAX_ENABLED || LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
 	if (USE_GLOW_BUFFER <= 0.0 /*&& USE_ISDETAIL <= 0.0*/)
 	{
 		tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 		E = normalize(m_ViewDir);
 	}
 
-	vec2 ParallaxOffset = vec2(0.0);
-
-#ifdef __PARALLAX__
-	if (PARALLAX_ENABLED)
-	{// TODO: Move to screen space, screen space tesselation maybe???
-		vec3 offsetDir = normalize(E * tangentToWorld);
-		vec2 tex_offset = vec2(1.0 / u_Dimensions);
-		vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
-
-		if (PARALLAX_MODE == 1.0)
-		{
-			ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
-			texCoords += ParallaxOffset;
-		}
-		else
-		{
-			ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
-			texCoords += ParallaxOffset;
-		}
-	}
-#endif //__PARALLAX__
-
-
-	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
+	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
@@ -711,7 +592,6 @@ void main()
 	vec3 N = normalize(m_Normal.xyz);
 
 #if 0
-	//if (LIGHTMAP_ENABLED || CUBEMAP_ENABLED)
 	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
 	{
 		vec4 norm = vec4(0.0);
@@ -722,20 +602,21 @@ void main()
 		}
 		else
 		{
-			norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+			norm = GetNormal(texCoords, pixRandom);
 		}
 	
 		N.xy = norm.xy * 2.0 - 1.0;
 		N.xy *= 0.25;
 		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 		N = tangentToWorld * N;
-		
-		//N = normalize(m_Normal.xyz + ((diffuse.rgb * 2.0 - 1.0) * u_Local9.r));
 	}
 #endif
 
 
-	AddDetail(diffuse, texCoords);
+	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0 || USE_GLOW_BUFFER >= 0.0)
+	{
+		AddDetail(diffuse, texCoords);
+	}
 
 
 	vec3 ambientColor = vec3(0.0);
