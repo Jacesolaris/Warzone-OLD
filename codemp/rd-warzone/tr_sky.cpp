@@ -1015,14 +1015,14 @@ void DrawSkyDome ( shader_t *skyShader )
 /*
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
-uniform sampler2D			u_SteepMap2;
+uniform sampler2D			u_WaterEdgeMap;
 uniform sampler2D			u_SplatMap1;
 uniform sampler2D			u_SplatMap2;
 uniform sampler2D			u_SplatMap3;
 
 #define tint	u_DiffuseMap			//the color of the sky on the half-sphere where the sun is. (time x height)
 #define tint2	u_SteepMap				//the color of the sky on the opposite half-sphere. (time x height)
-#define sun		u_SteepMap2				//sun texture (radius x time)
+#define sun		u_WaterEdgeMap				//sun texture (radius x time)
 #define moon	u_SplatMap1				//moon texture (circular)
 #define clouds1 u_SplatMap2				//light clouds texture (spherical UV projection)
 #define clouds2 u_SplatMap3				//heavy clouds texture (spherical UV projection)
@@ -1038,8 +1038,8 @@ uniform sampler2D			u_SplatMap3;
 	GL_BindToTMU(tintImage, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 	GL_BindToTMU(tint2Image, TB_STEEPMAP);
-	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
-	GL_BindToTMU(sunImage, TB_STEEPMAP2);
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+	GL_BindToTMU(sunImage, TB_WATER_EDGE_MAP);
 	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 	GL_BindToTMU(moonImage, TB_SPLATMAP1);
 	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);

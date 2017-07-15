@@ -1249,7 +1249,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_CubeMap", GLSL_INT, 1 },
 	{ "u_OverlayMap", GLSL_INT, 1 },
 	{ "u_SteepMap", GLSL_INT, 1 },
-	{ "u_SteepMap2", GLSL_INT, 1 },
+	{ "u_WaterEdgeMap", GLSL_INT, 1 },
 	{ "u_SplatControlMap", GLSL_INT, 1 },
 	{ "u_SplatMap1", GLSL_INT, 1 },
 	{ "u_SplatMap2", GLSL_INT, 1 },
@@ -3816,7 +3816,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP2, TB_SPLATMAP2);
@@ -3860,7 +3860,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
@@ -3940,7 +3940,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
@@ -3975,7 +3975,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);

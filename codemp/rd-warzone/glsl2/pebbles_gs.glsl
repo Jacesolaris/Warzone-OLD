@@ -18,7 +18,7 @@ uniform mat4				u_NormalMatrix;
 
 uniform sampler2D			u_SplatControlMap;
 
-uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL // -- only MAP_SIZE is used here
+uniform vec4				u_Local6; // useSunLightSpecular, hasWaterEdgeMap, MAP_SIZE, WATER_LEVEL // -- only MAP_SIZE is used here
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4				u_Local8; // passnum, 0, 0, 0
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3

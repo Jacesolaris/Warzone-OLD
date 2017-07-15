@@ -200,8 +200,7 @@ static void DrawTris (shaderCommands_t *input) {
 		GLSL_BindProgram(sp);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		VectorSet4(color, 1, 1, 1, 1);
-		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, color);
+		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, colorWhite);
 
 		if (input->multiDrawPrimitives)
 		{
@@ -1048,7 +1047,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	float	doSway = 0.0;
 	float	phongFactor = r_blinnPhong->value;
 	float	hasSteepMap = 0;
-	float	hasSteepMap2 = 0;
+	float	hasWaterEdgeMap = 0;
 	float	hasSplatMap1 = 0;
 	float	hasSplatMap2 = 0;
 	float	hasSplatMap3 = 0;
@@ -1077,10 +1076,10 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			hasSteepMap = 1.0;
 		}
 
-		if (pStage->bundle[TB_STEEPMAP2].image[0]
-			&& pStage->bundle[TB_STEEPMAP2].image[0] != tr.whiteImage)
+		if (pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+			&& pStage->bundle[TB_WATER_EDGE_MAP].image[0] != tr.whiteImage)
 		{
-			hasSteepMap2 = 1.0;
+			hasWaterEdgeMap = 1.0;
 		}
 
 		if ((pStage->bundle[TB_SPLATMAP1].image[0]
@@ -1344,7 +1343,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
 		vec4_t local6;
-		VectorSet4(local6, r_sunlightSpecular->value, hasSteepMap2, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
+		VectorSet4(local6, r_sunlightSpecular->value, hasWaterEdgeMap, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
 
 		vec4_t local7;
@@ -1482,7 +1481,7 @@ qboolean RB_ShouldUseTesselation ( shaderCommands_t *input )
 		if (!pStage) break;
 
 		if (pStage->bundle[TB_STEEPMAP].image[0]
-			|| pStage->bundle[TB_STEEPMAP2].image[0]
+			|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 			|| pStage->bundle[TB_SPLATMAP1].image[0]
 			|| pStage->bundle[TB_SPLATMAP2].image[0]
 			|| pStage->bundle[TB_SPLATMAP3].image[0])
@@ -2107,9 +2106,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		int stateBits;
 		colorGen_t forceRGBGen = CGEN_BAD;
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
-		qboolean multiPass = qtrue;
-		qboolean isGlowStage = qfalse;
-		qboolean isUsingRegions = qfalse;
+		qboolean multiPass = qfalse;
 
 		int passNum = 0, passMax = 0;
 
@@ -2166,10 +2163,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->bundle[TB_STEEPMAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_STEEPMAP].image[0]);
 		}
 
-		if (pStage->bundle[TB_STEEPMAP2].image[0]
-			&& pStage->bundle[TB_STEEPMAP2].image[0]->deferredLoad)
+		if (pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+			&& pStage->bundle[TB_WATER_EDGE_MAP].image[0]->deferredLoad)
 		{// Load the actual image file...
-			pStage->bundle[TB_STEEPMAP2].image[0] = R_LoadDeferredImage(pStage->bundle[TB_STEEPMAP2].image[0]);
+			pStage->bundle[TB_WATER_EDGE_MAP].image[0] = R_LoadDeferredImage(pStage->bundle[TB_WATER_EDGE_MAP].image[0]);
 		}
 
 		if (pStage->bundle[TB_SPLATCONTROLMAP].image[0]
@@ -2226,7 +2223,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				forceRGBGen = CGEN_ENTITY;
 			}
 
-#ifndef __USE_ALPHA_TEST__
+//#ifndef __USE_ALPHA_TEST__
 			if (backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA)
 			{
 				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
@@ -2236,7 +2233,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					stateBits |= GLS_DEPTHMASK_TRUE;
 				}
 			}
-#endif //__USE_ALPHA_TEST__
+//#endif //__USE_ALPHA_TEST__
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
@@ -2513,26 +2510,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
-					|| pStage->bundle[TB_STEEPMAP2].image[0]
+					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
 					|| pStage->bundle[TB_SPLATMAP2].image[0]
 					|| pStage->bundle[TB_SPLATMAP3].image[0]))
 			{
-				isUsingRegions = qtrue;
 				index |= LIGHTDEF_USE_REGIONS;
 			}
 			else if ((pStage->bundle[TB_STEEPMAP].image[0]
-				|| pStage->bundle[TB_STEEPMAP2].image[0]
+				|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 				|| pStage->bundle[TB_SPLATMAP1].image[0]
 				|| pStage->bundle[TB_SPLATMAP2].image[0]
 				|| pStage->bundle[TB_SPLATMAP3].image[0]))
 			{
 				index |= LIGHTDEF_USE_TRIPLANAR;
-			}
-
-			if ((index & LIGHTDEF_USE_GLOW_BUFFER) || pStage->glow)
-			{
-				isGlowStage = qtrue;
 			}
 
 			switch (pStage->rgbGen)
@@ -2682,7 +2673,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (stateBits & GLS_ATEST_BITS)
 			{
-				useTC = 1.0;
+				//useTC = 1.0;
 
 				switch (stateBits & GLS_ATEST_BITS)
 				{
@@ -2715,9 +2706,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GLSL_SetUniformVec2(sp, UNIFORM_ALPHATEST, atest);
-#else //!__USE_ALPHA_TEST__
-			//vec2_t atest = { 0 };
-			//GLSL_SetUniformVec2(sp, UNIFORM_ALPHATEST, atest);
 #endif //__USE_ALPHA_TEST__
 
 #if 0
@@ -2982,15 +2970,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
 			}
 
-			if (pStage->bundle[TB_STEEPMAP2].image[0])
+			if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
 			{
-				//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP2].image[0]->imgName, pStage->bundle[TB_STEEPMAP2].image[0]->width, pStage->bundle[TB_STEEPMAP2].image[0]->height);
-				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP2], TB_STEEPMAP2);
-				GL_BindToTMU( pStage->bundle[TB_STEEPMAP2].image[0], TB_STEEPMAP2 );
+				//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_WATER_EDGE_MAP].image[0]->imgName, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->width, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->height);
+				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_WATER_EDGE_MAP], TB_WATER_EDGE_MAP);
+				GL_BindToTMU( pStage->bundle[TB_WATER_EDGE_MAP].image[0], TB_WATER_EDGE_MAP );
 			}
 			else
 			{
-				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
+				GL_BindToTMU( tr.whiteImage, TB_WATER_EDGE_MAP );
 			}
 
 			if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
@@ -3181,7 +3169,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_WATER_EDGE_MAP
 						// gfx dirs can be exempted I guess...
 						&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
 					{// How did this happen??? Oh well, generate a normal map now...
@@ -3482,6 +3470,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 #endif //__USE_GLOW_DETAIL_BUFFERS__
+			else
+			{
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachTextures();
+				}
+			}
 
 			qboolean tesselation = qfalse;
 

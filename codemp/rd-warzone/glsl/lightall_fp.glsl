@@ -1,9 +1,10 @@
-//#define __UI_ENHANCEMENT__
+//#define UI_ENHANCEMENT
 //#define USE_ALPHA_TEST
+#define USE_GLOW_DETAIL_BUFFERS
 
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
-uniform sampler2D			u_SteepMap2;
+uniform sampler2D			u_WaterEdgeMap;
 uniform sampler2D			u_SplatControlMap;
 uniform sampler2D			u_SplatMap1;
 uniform sampler2D			u_SplatMap2;
@@ -66,7 +67,7 @@ uniform vec4				u_Local2; // ExtinctionCoefficient
 uniform vec4				u_Local3; // 0, 0, r_cubemapCullRange->value, cubemapScale
 uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
+uniform vec4				u_Local6; // useSunLightSpecular, hasWaterEdgeMap, MAP_SIZE, WATER_LEVEL
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], r_showsplat
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
@@ -273,14 +274,6 @@ vec4 GetControlMap( sampler2D tex)
 	}
 	else
 	{
-		/*vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) * 0.5 + 0.5, 0.0);
-		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) * 0.5 + 0.5, 0.0);
-		vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) * 0.5 + 0.5, 0.0);*/
-
-		/*vec4 xaxis = textureLod( tex, (m_vertPos.yze * scale), 0.0);
-		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale), 0.0);
-		vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale), 0.0);*/
-
 		float offset = (u_Local6.b / 2.0) * scale;
 		vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) + offset, 0.0);
 		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) + offset, 0.0);
@@ -304,7 +297,7 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-vec4 GetMap( in sampler2D tex, float scale)
+vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 {
 	vec4 xaxis;
 	vec4 yaxis;
@@ -321,7 +314,14 @@ vec4 GetMap( in sampler2D tex, float scale)
 	yaxis = texture( tex, (m_vertPos.xz * tScale * scale));
 	zaxis = texture( tex, (m_vertPos.xy * tScale * scale));
 
-	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+	vec4 color = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+
+	if (depth != -1.0)
+	{// Only bother calculating if requested...
+		depth = GetDepthForPixel(color);
+	}
+
+	return color;
 }
 
 vec4 GetSplatMap(vec2 texCoords, float pixRandom, vec4 inColor, float inA1)
@@ -342,32 +342,29 @@ vec4 GetSplatMap(vec2 texCoords, float pixRandom, vec4 inColor, float inA1)
 
 	vec4 control = GetControlMap(u_SplatControlMap);
 
-	if (length(control.rgb/*a*/) <= 0.0)
-	{
-		return inColor;
-	}
+	float depth = -1.0;
 
 	if (u_Local7.r > 0.0 && control.r > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap1, 0.01);
+		vec4 tex = GetMap(u_SplatMap1, 0.01, depth);
 		splatColor = mix(splatColor, tex, control.r * tex.a);
 	}
 
 	if (u_Local7.g > 0.0 && control.g > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap2, 0.01);
+		vec4 tex = GetMap(u_SplatMap2, 0.01, depth);
 		splatColor = mix(splatColor, tex, control.g * tex.a);
 	}
 
 	if (u_Local7.b > 0.0 && control.b > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap3, 0.01);
+		vec4 tex = GetMap(u_SplatMap3, 0.01, depth);
 		splatColor = mix(splatColor, tex, control.b * tex.a);
 	}
 	/*
 	if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap4, 0.01);
+		vec4 tex = GetMap(u_SplatMap4, 0.01, depth);
 		splatColor = mix(splatColor, tex, control.a * tex.a);
 	}
 	*/
@@ -385,9 +382,8 @@ vec4 GenerateTerrainMap(vec2 coord)
 
 	// Splat mapping...
 #define SNOW_HEIGHT 0.001
-	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT/*u_Local9.g*/);
 	float a1 = 0.0;
-	a1 = GetDepthForPixel(tex);
+	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT, a1);
 	return GetSplatMap(coord, 0.0, tex, a1);
 }
 
@@ -419,32 +415,7 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 			return GenerateTerrainMap(texCoords);
 		}
 
-#ifdef __UI_ENHANCEMENT__
-		if (USE_TEXTURECLAMP > 0.0 || USE_IS2D > 0.0)
-		{// UI Bloom/Glow effect...
-			vec2 coord = texCoords;
-			vec4 color = texture(u_DiffuseMap, coord);
-
-			// Contrast...
-#define glowLower ( 16.0 / 255.0 )
-#define glowUpper (255.0 / 192.0 )
-			color.rgb = clamp((clamp(color.rgb - glowLower, 0.0, 1.0)) * glowUpper, 0.0, 1.0);
-
-			// Vibrancy...
-			vec3	lumCoeff = vec3(0.212656, 0.715158, 0.072186);  				//Calculate luma with these values
-			float	max_color = max(color.r, max(color.g, color.b)); 	//Find the strongest color
-			float	min_color = min(color.r, min(color.g, color.b)); 	//Find the weakest color
-			float	color_saturation = max_color - min_color; 						//Saturation is the difference between min and max
-			float	luma = dot(lumCoeff, color.rgb); 							//Calculate luma (grey)
-			color.rgb = mix(vec3(luma), color.rgb, (1.0 + (UI_VIBRANCY * (1.0 - (sign(UI_VIBRANCY) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
-
-			return color;
-		}
-		else
-#endif //__UI_ENHANCEMENT__
-		{
-			return texture(u_DiffuseMap, texCoords);
-		}
+		return texture(u_DiffuseMap, texCoords);
 	}
 
 	if (u_Local8.a > 0.0)
@@ -457,15 +428,10 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 
-		vec4 tex1 = GetMap(u_SteepMap2, 0.0075);
 		float a1 = 0.0;
-
-		a1 = GetDepthForPixel(tex1);
-
-		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075);
 		float a2 = 0.0;
-
-		a2 = GetDepthForPixel(tex2);
+		vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
+		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, a2);
 
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
@@ -479,21 +445,20 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
-		return GetMap(u_SteepMap, 0.0025);
+		float a1 = -1.0;
+		return GetMap(u_SteepMap, 0.0025, a1);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
-			return GetMap(u_DiffuseMap, 0.0075);
+			float a1 = -1.0;
+			return GetMap(u_DiffuseMap, 0.0075, a1);
 		}
 
 		// Splat mapping...
-		vec4 tex = GetMap(u_DiffuseMap, 0.0075);
 		float a1 = 0.0;
-
-		a1 = GetDepthForPixel(tex);
-
+		vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
 		return GetSplatMap(texCoords, pixRandom, tex, a1);
 	}
 	else
@@ -511,6 +476,7 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
 
+#if 0
 mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 {
 	// get edge vectors of the pixel triangle
@@ -529,6 +495,7 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
 	return mat3( T * invmax, B * invmax, N );
 }
+#endif
 
 
 void main()
@@ -556,9 +523,12 @@ void main()
 	mat3 tangentToWorld;
 	vec3 E;
 
-	if (USE_GLOW_BUFFER <= 0.0 /*&& USE_ISDETAIL <= 0.0*/)
+	//if (USE_GLOW_BUFFER <= 0.0 /*&& USE_ISDETAIL <= 0.0*/)
+	if (CUBEMAP_ENABLED)
 	{
+#if 0
 		tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+#endif
 		E = normalize(m_ViewDir);
 	}
 
@@ -572,15 +542,26 @@ void main()
 #ifdef USE_ALPHA_TEST
 	if (u_AlphaTestValues.r > 0.0)
 	{
+		bool discardFrag = false;
+
 		if (u_AlphaTestValues.r == ATEST_LT)
 			if (gl_FragColor.a >= u_AlphaTestValues.g)
-				discard;
+				discardFrag = true;
 		if (u_AlphaTestValues.r == ATEST_GT)
 			if (gl_FragColor.a <= u_AlphaTestValues.g)
-				discard;
+				discardFrag = true;
 		if (u_AlphaTestValues.r == ATEST_GE)
 			if (gl_FragColor.a < u_AlphaTestValues.g)
-				discard;
+				discardFrag = true;
+
+		if (discardFrag)
+		{
+			gl_FragColor.rgba = vec4(0.0);
+			out_Glow = vec4(0.0);
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
+			return;
+		}
 	}
 #endif //USE_ALPHA_TEST
 
@@ -613,7 +594,7 @@ void main()
 #endif
 
 
-	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0 || USE_GLOW_BUFFER >= 0.0)
+	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0)// || USE_GLOW_BUFFER >= 0.0)
 	{
 		AddDetail(diffuse, texCoords);
 	}
@@ -703,7 +684,6 @@ void main()
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
-
 	if (USE_GLOW_BUFFER > 0.0)
 	{
 #define glow_const_1 ( 23.0 / 255.0)
@@ -712,12 +692,26 @@ void main()
 		gl_FragColor.rgb *= u_Local8.g;
 
 		out_Glow = gl_FragColor;
+
+#ifdef USE_GLOW_DETAIL_BUFFERS
+		if (USE_ISDETAIL <= 0.0)
+#else //!USE_GLOW_DETAIL_BUFFERS
+		if (gl_FragColor.a > 0.99)
+#endif //USE_GLOW_DETAIL_BUFFERS
+		{
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+		}
 	}
 	else
 	{
 		out_Glow = vec4(0.0);
 
+#ifdef USE_GLOW_DETAIL_BUFFERS
 		if (USE_ISDETAIL <= 0.0)
+#else //!USE_GLOW_DETAIL_BUFFERS
+		if (gl_FragColor.a > 0.99)
+#endif //USE_GLOW_DETAIL_BUFFERS
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );

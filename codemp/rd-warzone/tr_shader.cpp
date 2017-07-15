@@ -1777,9 +1777,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 					stage->noScreenMap = qtrue;
 				}
-				else if (stage->type == ST_STEEPMAP2)
+				else if (stage->type == ST_WATER_EDGE_MAP)
 				{
-					type = IMGTYPE_STEEPMAP2;
+					type = IMGTYPE_WATER_EDGE_MAP;
 					//flags |= IMGFLAG_NOLIGHTSCALE;
 
 					stage->noScreenMap = qtrue;
@@ -2112,9 +2112,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				stage->type = ST_STEEPMAP;
 			}
-			else if(!Q_stricmp(token, "steepMap2"))
+			else if(!Q_stricmp(token, "waterEdgeMap"))
 			{
-				stage->type = ST_STEEPMAP2;
+				stage->type = ST_WATER_EDGE_MAP;
 			}
 			else
 			{
@@ -4354,14 +4354,14 @@ qboolean R_TextureFileExists(char *name)
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse,
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *steepmap2, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3/*, shaderStage_t *splat4*/, qboolean parallax, qboolean tcgen)
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *waterEdgeMap, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3/*, shaderStage_t *splat4*/, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
 	qboolean hasRealOverlayMap = qfalse;
 	qboolean hasRealSteepMap = qfalse;
-	qboolean hasRealSteepMap2 = qfalse;
+	qboolean hasRealWaterEdgeMap = qfalse;
 	qboolean checkNormals = qtrue;
 
 	if (shader.isPortal || shader.isSky || diffuse->glow /*|| shader.hasAlpha*/)// || shader.noTC)
@@ -4536,7 +4536,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					/*&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP
-					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_WATER_EDGE_MAP
 
 					// gfx dirs can be exempted I guess...
 					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
@@ -4844,16 +4844,16 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			hasRealSteepMap = qfalse;
 		}
 
-		if (steepmap2 && steepmap2->bundle[0].image[0] && steepmap2->bundle[0].image[0] != tr.whiteImage)
+		if (waterEdgeMap && waterEdgeMap->bundle[0].image[0] && waterEdgeMap->bundle[0].image[0] != tr.whiteImage)
 		{// Got one...
-			diffuse->bundle[TB_STEEPMAP2] = steepmap2->bundle[0];
-			hasRealSteepMap2 = qtrue;
+			diffuse->bundle[TB_WATER_EDGE_MAP] = waterEdgeMap->bundle[0];
+			hasRealWaterEdgeMap = qtrue;
 		}
-		else if (diffuse->bundle[TB_STEEPMAP2].image[0] && diffuse->bundle[TB_STEEPMAP2].image[0] != tr.whiteImage)
+		else if (diffuse->bundle[TB_WATER_EDGE_MAP].image[0] && diffuse->bundle[TB_WATER_EDGE_MAP].image[0] != tr.whiteImage)
 		{// Got one...
-			hasRealSteepMap2 = qtrue;
+			hasRealWaterEdgeMap = qtrue;
 		}
-		else if (!diffuse->bundle[TB_STEEPMAP2].steepMapLoaded2)
+		else if (!diffuse->bundle[TB_WATER_EDGE_MAP].steepMapLoaded2)
 		{// Check if we can load one...
 			char specularName[MAX_IMAGE_PATH];
 			char specularName2[MAX_IMAGE_PATH];
@@ -4867,14 +4867,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2))
 			{
-				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_STEEPMAP2, specularFlags);
+				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
 			}
 			else
 			{
 				specularImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP2, specularFlags);
+			specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
 
 			if (!specularImg)
 			{
@@ -4883,35 +4883,45 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(specularName, specularName2, sizeof(specularName2));
 				Q_strcat(specularName2, sizeof(specularName2), "_steep2");
 
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP2, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+			}
+
+			if (!specularImg)
+			{
+				memset(specularName, 0, sizeof(char)*MAX_IMAGE_PATH);
+				COM_StripExtension(diffuseImg->imgName, specularName2, sizeof(specularName2));
+				StripCrap(specularName, specularName2, sizeof(specularName2));
+				Q_strcat(specularName2, sizeof(specularName2), "_waterEdge");
+
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (specularImg)
 			{
 				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map2 %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
-				diffuse->bundle[TB_STEEPMAP2] = diffuse->bundle[0];
-				diffuse->bundle[TB_STEEPMAP2].numImageAnimations = 0;
-				diffuse->bundle[TB_STEEPMAP2].image[0] = specularImg;
-				hasRealSteepMap2 = qtrue;
+				diffuse->bundle[TB_WATER_EDGE_MAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_WATER_EDGE_MAP].numImageAnimations = 0;
+				diffuse->bundle[TB_WATER_EDGE_MAP].image[0] = specularImg;
+				hasRealWaterEdgeMap = qtrue;
 
 				if (r_normalMapping->integer >= 2)
 				{
 					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP2].image[0]->imgName);
-					diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_STEEPMAP2].image[0]->width, diffuse->bundle[TB_STEEPMAP2].image[0]->height, diffuse->bundle[TB_STEEPMAP2].image[0]->flags, diffuse->bundle[TB_STEEPMAP2].image[0] );
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->imgName);
+					diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->width, diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->height, diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->flags, diffuse->bundle[TB_WATER_EDGE_MAP].image[0] );
 				}
 			}
 			else
 			{
-				hasRealSteepMap2 = qfalse;
+				hasRealWaterEdgeMap = qfalse;
 			}
 
-			diffuse->bundle[TB_STEEPMAP2].steepMapLoaded2 = qtrue;
+			diffuse->bundle[TB_WATER_EDGE_MAP].steepMapLoaded2 = qtrue;
 		}
 		else
 		{
-			hasRealSteepMap2 = qfalse;
+			hasRealWaterEdgeMap = qfalse;
 		}
 	}
 
@@ -5301,13 +5311,13 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->hasRealSteepMap = false;
 	}
 
-	if (hasRealSteepMap2)
+	if (hasRealWaterEdgeMap)
 	{
-		diffuse->hasRealSteepMap2 = true;
+		diffuse->hasRealWaterEdgeMap = true;
 	}
 	else
 	{
-		diffuse->hasRealSteepMap2 = false;
+		diffuse->hasRealWaterEdgeMap = false;
 	}
 
 	//diffuse->glslShaderGroup = tr.lightallShader;
@@ -5323,7 +5333,7 @@ static int CollapseStagesToGLSL(void)
 	//qboolean hasRealSubsurfaceMap = qfalse;
 	qboolean hasRealOverlayMap = qfalse;
 	qboolean hasRealSteepMap = qfalse;
-	qboolean hasRealSteepMap2 = qfalse;
+	qboolean hasRealWaterEdgeMap = qfalse;
 
 	//ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
@@ -5567,10 +5577,10 @@ static int CollapseStagesToGLSL(void)
 						}
 						break;
 
-					case ST_STEEPMAP2:
+					case ST_WATER_EDGE_MAP:
 						if (!steep2)
 						{
-							hasRealSteepMap2 = qtrue;
+							hasRealWaterEdgeMap = qtrue;
 							steep2 = pStage2;
 						}
 						break;
@@ -5690,9 +5700,9 @@ static int CollapseStagesToGLSL(void)
 			pStage->active = qfalse;
 		}
 
-		if (pStage->type == ST_STEEPMAP2)
+		if (pStage->type == ST_WATER_EDGE_MAP)
 		{
-			hasRealSteepMap2 = qfalse;
+			hasRealWaterEdgeMap = qfalse;
 			pStage->active = qfalse;
 		}
 
@@ -5845,9 +5855,9 @@ static int CollapseStagesToGLSL(void)
 			stage->hasRealSteepMap = true;
 		}
 
-		if (hasRealSteepMap2)
+		if (hasRealWaterEdgeMap)
 		{
-			stage->hasRealSteepMap2 = true;
+			stage->hasRealWaterEdgeMap = true;
 		}
 
 		//if (stage->glslShaderGroup != tr.lightallShader)
@@ -5898,9 +5908,9 @@ static int CollapseStagesToGLSL(void)
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is SteepMap.\n", i);
 			}
-			else if (pStage->type == ST_STEEPMAP2)
+			else if (pStage->type == ST_WATER_EDGE_MAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SteepMap2.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is waterEdgeMap.\n", i);
 			}
 			else if (pStage->type == ST_SPLATCONTROLMAP)
 			{
@@ -6523,7 +6533,7 @@ static shader_t *FinishShader( void ) {
 				break;
 			}
 
-			case ST_STEEPMAP2:
+			case ST_WATER_EDGE_MAP:
 			{
 				if(!pStage->bundle[0].image[0])
 				{

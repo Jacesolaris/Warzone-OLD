@@ -88,7 +88,7 @@ qboolean RB_CheckOcclusion(mnode_t *node)
 {
 	//if (node->occlusionCache <= 0) return qfalse;
 
-	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && r_occlusion->integer)
+	if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) &&*/ r_occlusion->integer)
 	{
 		/*if (node->occluded)
 		{
@@ -139,9 +139,9 @@ void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
 
 		// if the node wasn't marked as potentially visible, exit
 		// pvs is skipped for depth shadows
-		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
-			break;
-		}
+		//if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
+		//	break;
+		//}
 
 		// if the bounding volume is outside the frustum, nothing
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
@@ -152,44 +152,48 @@ void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
 			if (planeBits & 1) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[0]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~1;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 2) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[1]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~2;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 4) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[2]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~4;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 8) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[3]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~8;			// all descendants will also be in front
+					break;
 				}
 			}
 
@@ -201,10 +205,15 @@ void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
 				}
 				if (r == 1) {
 					planeBits &= ~16;			// all descendants will also be in front
+					break;
 				}
 			}
 
-			if (tr.refdef.vieworg[0] >= node->mins[0]
+			if (node->contents != -1) {
+				break;
+			}
+
+			/*if (tr.refdef.vieworg[0] >= node->mins[0]
 				&& tr.refdef.vieworg[0] <= node->maxs[0]
 				&& tr.refdef.vieworg[1] >= node->mins[1]
 				&& tr.refdef.vieworg[1] <= node->maxs[1]
@@ -213,9 +222,12 @@ void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
 			{// Never occlude a leaf we are inside...
 				
 			}
-			else
+			else*/
 			{
 				node->occluded = RB_CheckOcclusion(node);
+				
+				if (node->occluded)
+					break;
 			}
 		}
 
@@ -224,10 +236,6 @@ void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
 		tess.numVertexes = 0;
 		tess.minIndex = 0;
 		tess.maxIndex = 0;
-
-		if (node->contents != -1) {
-			break;
-		}
 
 		// node is just a decision point, so go down both sides
 		// since we don't care about sort orders, just go positive to negative
@@ -246,6 +254,8 @@ void RB_CheckOcclusions ( void )
 #ifndef __SOFTWARE_OCCLUSION__
 	numOccluded = 0;
 	numNotOccluded = 0;
+
+	//qglFinish();
 
 	int planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
 	RB_RecersiveCheckOcclusions(tr.world->nodes, planeBits);
@@ -302,9 +312,9 @@ void RB_OcclusionQuad(vec4_t quadVerts[4], vec2_t texCoords[4])
 #ifdef __SOFTWARE_OCCLUSION__
 
 #else //!__SOFTWARE_OCCLUSION__
-	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
+	//RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
 
-	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+	//GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
 
 	R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 #endif //__SOFTWARE_OCCLUSION__
@@ -330,43 +340,86 @@ void RB_OcclusionInstantQuad(vec4_t quadVerts[4])
 
 void AddOcclusionCube(const vec3_t mins, const vec3_t maxs)
 {
-	vec4_t quadVerts[4];
+	vec4_t quadVerts[6][4];
+	vec3_t center[6];
+	float dist[6];
 
-	VectorSet4(quadVerts[0], mins[0], mins[1], mins[2], 1);
-	VectorSet4(quadVerts[1], mins[0], maxs[1], mins[2], 1);
-	VectorSet4(quadVerts[2], mins[0], maxs[1], maxs[2], 1);
-	VectorSet4(quadVerts[3], mins[0], mins[1], maxs[2], 1);
-	RB_OcclusionInstantQuad(quadVerts);
+	VectorSet4(quadVerts[0][0], mins[0], mins[1], mins[2], 1);
+	VectorSet4(quadVerts[0][1], mins[0], maxs[1], mins[2], 1);
+	VectorSet4(quadVerts[0][2], mins[0], maxs[1], maxs[2], 1);
+	VectorSet4(quadVerts[0][3], mins[0], mins[1], maxs[2], 1);
 
-	VectorSet4(quadVerts[0], maxs[0], mins[1], maxs[2], 1);
-	VectorSet4(quadVerts[1], maxs[0], maxs[1], maxs[2], 1);
-	VectorSet4(quadVerts[2], maxs[0], maxs[1], mins[2], 1);
-	VectorSet4(quadVerts[3], maxs[0], mins[1], mins[2], 1);
-	RB_OcclusionInstantQuad(quadVerts);
+	VectorSet4(quadVerts[1][0], maxs[0], mins[1], maxs[2], 1);
+	VectorSet4(quadVerts[1][1], maxs[0], maxs[1], maxs[2], 1);
+	VectorSet4(quadVerts[1][2], maxs[0], maxs[1], mins[2], 1);
+	VectorSet4(quadVerts[1][3], maxs[0], mins[1], mins[2], 1);
 
-	VectorSet4(quadVerts[0], mins[0], mins[1], maxs[2], 1);
-	VectorSet4(quadVerts[1], mins[0], maxs[1], maxs[2], 1);
-	VectorSet4(quadVerts[2], maxs[0], maxs[1], maxs[2], 1);
-	VectorSet4(quadVerts[3], maxs[0], mins[1], maxs[2], 1);
-	RB_OcclusionInstantQuad(quadVerts);
+	VectorSet4(quadVerts[2][0], mins[0], mins[1], maxs[2], 1);
+	VectorSet4(quadVerts[2][1], mins[0], maxs[1], maxs[2], 1);
+	VectorSet4(quadVerts[2][2], maxs[0], maxs[1], maxs[2], 1);
+	VectorSet4(quadVerts[2][3], maxs[0], mins[1], maxs[2], 1);
 
-	VectorSet4(quadVerts[0], maxs[0], mins[1], mins[2], 1);
-	VectorSet4(quadVerts[1], maxs[0], maxs[1], mins[2], 1);
-	VectorSet4(quadVerts[2], mins[0], maxs[1], mins[2], 1);
-	VectorSet4(quadVerts[3], mins[0], mins[1], mins[2], 1);
-	RB_OcclusionInstantQuad(quadVerts);
+	VectorSet4(quadVerts[3][0], maxs[0], mins[1], mins[2], 1);
+	VectorSet4(quadVerts[3][1], maxs[0], maxs[1], mins[2], 1);
+	VectorSet4(quadVerts[3][2], mins[0], maxs[1], mins[2], 1);
+	VectorSet4(quadVerts[3][3], mins[0], mins[1], mins[2], 1);
 
-	VectorSet4(quadVerts[0], mins[0], mins[1], mins[2], 1);
-	VectorSet4(quadVerts[1], mins[0], mins[1], maxs[2], 1);
-	VectorSet4(quadVerts[2], maxs[0], mins[1], maxs[2], 1);
-	VectorSet4(quadVerts[3], maxs[0], mins[1], mins[2], 1);
-	RB_OcclusionInstantQuad(quadVerts);
+	VectorSet4(quadVerts[4][0], mins[0], mins[1], mins[2], 1);
+	VectorSet4(quadVerts[4][1], mins[0], mins[1], maxs[2], 1);
+	VectorSet4(quadVerts[4][2], maxs[0], mins[1], maxs[2], 1);
+	VectorSet4(quadVerts[4][3], maxs[0], mins[1], mins[2], 1);
 
-	VectorSet4(quadVerts[0], maxs[0], maxs[1], mins[2], 1);
-	VectorSet4(quadVerts[1], maxs[0], maxs[1], maxs[2], 1);
-	VectorSet4(quadVerts[2], mins[0], maxs[1], maxs[2], 1);
-	VectorSet4(quadVerts[3], mins[0], maxs[1], mins[2], 1);
-	RB_OcclusionInstantQuad(quadVerts);
+	VectorSet4(quadVerts[5][0], maxs[0], maxs[1], mins[2], 1);
+	VectorSet4(quadVerts[5][1], maxs[0], maxs[1], maxs[2], 1);
+	VectorSet4(quadVerts[5][2], mins[0], maxs[1], maxs[2], 1);
+	VectorSet4(quadVerts[5][3], mins[0], maxs[1], mins[2], 1);
+
+	
+	/*
+	for (int i = 0; i < 6; i++)
+	{
+		RB_OcclusionInstantQuad(quadVerts[i]);
+	}
+	*/
+
+	// Find the closest 3 sides, skip the other 3...
+	for (int i = 0; i < 6; i++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			center[i][0] += quadVerts[i][x][0];
+			center[i][1] += quadVerts[i][x][1];
+			center[i][2] += quadVerts[i][x][2];
+		}
+
+		center[i][0] /= 4.0;
+		center[i][1] /= 4.0;
+		center[i][2] /= 4.0;
+		dist[i] = Distance(center[i], backEnd.refdef.vieworg);
+	}
+
+	int bestList[3] = { -1 };
+	float bestDist[3] = { 999999.9 };
+	
+	for (int t = 0; t < 3; t++)
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			if (bestList[0] == i || bestList[1] == i || bestList[2] == i)
+				continue;
+
+			if (dist[i] < bestDist[t])
+			{
+				bestDist[t] = dist[i];
+				bestList[t] = i;
+			}
+		}
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		RB_OcclusionInstantQuad(quadVerts[bestList[i]]);
+	}
 }
 
 #else //__SOFTWARE_OCCLUSION__
@@ -461,9 +514,9 @@ void RB_OcclusionQuery(mnode_t *node, int planeBits)
 
 		// if the node wasn't marked as potentially visible, exit
 		// pvs is skipped for depth shadows
-		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
-			break;
-		}
+		//if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && node->visCounts[tr.visIndex] != tr.visCounts[tr.visIndex]) {
+		//	break;
+		//}
 
 		if (r_occlusionDebug->integer == 2)
 			ri->Printf(PRINT_ALL, "Frame: %i. Area %i. Mins: %f %f %f. Maxs %f %f %f.\n", occlusionFrame, node->area, node->mins[0], node->mins[1], node->mins[2], node->maxs[0], node->maxs[1], node->maxs[2]);
@@ -477,55 +530,60 @@ void RB_OcclusionQuery(mnode_t *node, int planeBits)
 			if (planeBits & 1) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[0]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~1;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 2) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[1]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~2;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 4) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[2]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~4;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 8) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[3]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~8;			// all descendants will also be in front
+					break;
 				}
 			}
 
 			if (planeBits & 16) {
 				r = R_BoxOnPlaneSide(node->mins, node->maxs, &backEnd.viewParms.frustum[4]);
 				if (r == 2) {
-					node->occluded = qtrue;
+					//node->occluded = qtrue;
 					break;						// culled
 				}
 				if (r == 1) {
 					planeBits &= ~16;			// all descendants will also be in front
+					break;
 				}
 			}
 
@@ -700,10 +758,7 @@ void RB_OcclusionCulling(void)
 			// Clear the depth buffer
 			moc->ClearBuffer();
 #else //defined(__THREADED_OCCLUSION__)
-			//GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 			Matrix16Copy(glState.modelviewProjection, OCCLUSION_MVP);
-			//Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, OCCLUSION_MVP);
-			//GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, OCCLUSION_MVP);
 
 			ctp->ClearBuffer();
 			ctp->WakeThreads();
@@ -733,13 +788,13 @@ void RB_OcclusionCulling(void)
 			}
 #endif //__THREADED_OCCLUSION__
 #else //!__SOFTWARE_OCCLUSION__
-			GLSL_BindProgram(&tr.textureColorShader);
+			GLSL_VertexAttribsState(ATTR_POSITION);
+			GLSL_BindProgram(&tr.occlusionShader);
 
-			//GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-			Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, OCCLUSION_MVP);
-			GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, OCCLUSION_MVP);
-			vec4_t col = { 1, 1, 1, 0.3 };
-			GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
+			GLSL_SetUniformMatrix16(&tr.occlusionShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+			//Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, OCCLUSION_MVP);
+			//GLSL_SetUniformMatrix16(&tr.occlusionShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, OCCLUSION_MVP);
+			GLSL_SetUniformVec4(&tr.occlusionShader, UNIFORM_COLOR, colorWhite);
 
 			// Don't draw into color or depth
 			GL_State(0);
@@ -747,16 +802,11 @@ void RB_OcclusionCulling(void)
 			//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 			GL_State(GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL);
-			//qglDepthMask(GL_FALSE);
+			qglDepthMask(GL_FALSE);
 
 			GL_Cull(CT_TWO_SIDED);
 			//qglDepthRange(0, 0);
-
-			vec4_t color;
-			color[0] = 1.0f;
-			color[1] = 1.0f;
-			color[2] = 1.0f;
-			color[3] = 1.0f;
+			qglDepthRange(0, 1);
 #endif //__SOFTWARE_OCCLUSION__
 
 			int planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
@@ -784,6 +834,8 @@ void RB_OcclusionCulling(void)
 			GL_Cull(CT_FRONT_SIDED);
 			R_BindNullVBO();
 			R_BindNullIBO();
+
+			qglFlush();
 #endif //__SOFTWARE_OCCLUSION__
 
 			if (r_occlusionDebug->integer)

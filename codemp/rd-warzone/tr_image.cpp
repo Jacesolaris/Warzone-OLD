@@ -2996,7 +2996,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	}
 }
 
-static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int height, int flags )
+static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int height, int flags )
 {
 	char SubsurfaceName[MAX_IMAGE_PATH];
 	image_t *SubsurfaceImage;
@@ -3008,7 +3008,7 @@ static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int heig
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_riverbed");
 	
 	// find normalmap in case it's there
-	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP2, normalFlags);
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_WATER_EDGE_MAP, normalFlags);
 
 	if (!SubsurfaceImage)
 	{
@@ -3018,7 +3018,18 @@ static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int heig
 		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_steep2");
 
 		// find normalmap in case it's there
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP2, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, normalFlags);
+	}
+
+	if (!SubsurfaceImage)
+	{
+		char SubsurfaceName2[MAX_IMAGE_PATH];
+
+		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
+		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_waterEdge");
+
+		// find normalmap in case it's there
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, normalFlags);
 	}
 }
 
@@ -3244,7 +3255,7 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 		&& type != IMGTYPE_SPECULAR
 		&& type != TB_OVERLAYMAP
 		&& type != TB_STEEPMAP
-		&& type != TB_STEEPMAP2
+		&& type != TB_WATER_EDGE_MAP
 		&& type != TB_SPLATCONTROLMAP
 		&& type != TB_SPLATMAP1
 		&& type != TB_SPLATMAP2
@@ -3338,7 +3349,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_COLORALPHA 
 		&& type != IMGTYPE_DETAILMAP
 		&& type != IMGTYPE_STEEPMAP
-		&& type != IMGTYPE_STEEPMAP2
+		&& type != IMGTYPE_WATER_EDGE_MAP
 		/*&& type != IMGTYPE_SPLATMAP1 
 		&& type != IMGTYPE_SPLATMAP2 
 		&& type != IMGTYPE_SPLATMAP3*/
@@ -3452,7 +3463,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		/*&& type != IMGTYPE_SUBSURFACE*/ 
 		&& type != IMGTYPE_OVERLAY 
 		&& type != IMGTYPE_STEEPMAP 
-		&& type != IMGTYPE_STEEPMAP2 
+		&& type != IMGTYPE_WATER_EDGE_MAP 
 		&& type != IMGTYPE_SPLATMAP1 
 		&& type != IMGTYPE_SPLATMAP2 
 		&& type != IMGTYPE_SPLATMAP3 
@@ -3487,7 +3498,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 #endif
 
 		R_CreateSteepMap( name, pic, width, height, flags );
-		R_CreateSteepMap2( name, pic, width, height, flags );
+		R_CreateWaterEdgeMap( name, pic, width, height, flags );
 	}
 
 	Z_Free( pic );

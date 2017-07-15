@@ -2817,6 +2817,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
+#if 0
 		if (SCREEN_BLUR_MENU)
 		{
 			// Blur some times
@@ -2830,6 +2831,7 @@ const void *RB_PostProcess(const void *data)
 				spread += 0.6f * 0.25f;
 			}
 		}
+#endif
 
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
