@@ -4,7 +4,7 @@ attribute vec2				attr_TexCoord0;
 uniform sampler2D			u_GlowMap;
 uniform sampler2D			u_ScreenDepthMap;
 
-#define						MAX_VOLUMETRIC_LIGHTS 16
+#define						MAX_VOLUMETRIC_LIGHTS 2//16
 
 uniform mat4				u_ModelViewProjectionMatrix;
 uniform vec4				u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID

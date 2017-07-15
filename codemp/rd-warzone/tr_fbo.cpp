@@ -489,6 +489,16 @@ void FBO_Init(void)
 	}
 
 	//
+	// UQ1's SSDM FBO...
+	//
+	{
+		tr.ssdmFbo = FBO_Create("_ssdmFbo", tr.ssdmImage->width, tr.ssdmImage->height);
+		FBO_Bind(tr.ssdmFbo);
+		FBO_AttachTextureImage(tr.ssdmImage, 0);
+		R_CheckFBO(tr.ssdmFbo);
+	}
+
+	//
 	// UQ1's SSDO FBO1...
 	//
 	{
@@ -618,18 +628,9 @@ void FBO_Init(void)
 
 		//FBO_CreateBuffer(tr.renderFbo, hdrFormat, 0, 0);
 		GLSL_AttachTextures();
-
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
-
 		FBO_SetupDrawBuffers();
-
 		R_CheckFBO(tr.renderFbo);
-
-		/*tr.previousRenderFbo = FBO_Create("_previousRenderFBO", tr.renderDepthImage->width, tr.renderDepthImage->height);
-		FBO_Bind(tr.previousRenderFbo);
-		FBO_AttachTextureImage(tr.previousRenderImage, 0);
-		FBO_SetupDrawBuffers();
-		R_CheckFBO(tr.previousRenderFbo);*/
 	}
 
 	// clear render buffer

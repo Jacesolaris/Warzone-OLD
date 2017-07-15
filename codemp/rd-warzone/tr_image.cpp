@@ -3854,8 +3854,10 @@ void R_CreateBuiltinImages( void ) {
 	tr.dummyImage3  = R_CreateImage("_dummy3",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.dummyImage4 = R_CreateImage("_dummy3", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.ssdoImage1 = R_CreateImage("_ssdoImage1", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.ssdoImage2 = R_CreateImage("_ssdoImage2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.ssdoImage1 = R_CreateImage("_ssdoImage1", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.ssdoImage2 = R_CreateImage("_ssdoImage2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+
+	tr.ssdmImage = R_CreateImage("_ssdmImage", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F);
 
 	tr.anamorphicRenderFBOImage  = R_CreateImage("_anamorphic0",  NULL, width/16, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 

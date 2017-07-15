@@ -37,10 +37,10 @@ static float	s_flipMatrix[16] = {
 
 void RB_SwapFBOs ( FBO_t **currentFbo, FBO_t **currentOutFbo)
 {
-	if (*currentFbo == tr.renderFbo)
+	/*if (*currentFbo == tr.renderFbo)
 	{// Skip initial blit by starting from render FBO and changing it to generic after 1st use...
 		*currentFbo = tr.genericFbo3;
-	}
+	}*/
 
 	FBO_t *temp = *currentFbo;
 	*currentFbo = *currentOutFbo;
@@ -1997,8 +1997,6 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
-		//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		//qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
 
 #if 0
@@ -2063,6 +2061,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GLSL_BindProgram(&tr.shadowmaskShader);
 
 			GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
+			
 			GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
 			
@@ -2569,10 +2568,9 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
-		//FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		//FBO_t *currentFbo = tr.genericFbo3;
-		FBO_t *currentFbo = tr.renderFbo; // gets switched to genericFbo3 by RB_SwapFBOs when first seen to skip the blit above...
+		FBO_t *currentFbo = tr.genericFbo3;
 		FBO_t *currentOutFbo = tr.genericFbo;
 
 		//
@@ -2590,6 +2588,11 @@ const void *RB_PostProcess(const void *data)
 		{// Render a screen based normal map...
 			RB_DepthToNormal(currentFbo, srcBox, currentOutFbo, dstBox);
 		}*/
+
+		if (!SCREEN_BLUR && r_ssdm->integer)
+		{
+			RB_SSDM_Generate(currentFbo, srcBox, currentOutFbo, dstBox);
+		}
 
 		if (r_cartoon->integer >= 2.0)
 		{
@@ -2854,6 +2857,12 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && r_ssdm->integer)
+		{
+			RB_SSDM(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (!SCREEN_BLUR && r_showdepth->integer)
 		{
 			RB_ShowDepth(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2880,11 +2889,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-#define __SKIP_EXTRA_BLIT__
-
-#ifndef __SKIP_EXTRA_BLIT__
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-#endif
 
 		//
 		// End UQ1 Added...
@@ -2893,19 +2898,11 @@ const void *RB_PostProcess(const void *data)
 		if (r_hdr->integer && (r_toneMap->integer || r_forceToneMap->integer))
 		{
 			autoExposure = (qboolean)(r_autoExposure->integer || r_forceAutoExposure->integer);
-#ifndef __SKIP_EXTRA_BLIT__
 			RB_ToneMap(srcFbo, srcBox, NULL, dstBox, autoExposure);
-#else
-			RB_ToneMap(currentFbo, srcBox, NULL, dstBox, autoExposure);
-#endif
 		}
 		else if (r_cameraExposure->value == 0.0f)
 		{
-#ifndef __SKIP_EXTRA_BLIT__
 			FBO_FastBlit(srcFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-#else
-			FBO_FastBlit(currentFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-#endif
 		}
 		else
 		{
@@ -2916,11 +2913,7 @@ const void *RB_PostProcess(const void *data)
 			color[2] = pow(2, r_cameraExposure->value); //exp2(r_cameraExposure->value);
 			color[3] = 1.0f;
 
-#ifndef __SKIP_EXTRA_BLIT__
 			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
-#else
-			FBO_Blit(currentFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
-#endif
 		}
 	}
 

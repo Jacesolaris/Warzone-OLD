@@ -1,4 +1,5 @@
-﻿#define __AMBIENT_OCCLUSION__
+﻿#define __EXTRA_SPECULAR__
+#define __AMBIENT_OCCLUSION__
 #define __FOLIAGE_VIBRANCY__
 #define __ENVMAP__
 //#define __CURVE__
@@ -8,16 +9,10 @@
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
-uniform sampler2D	u_DeluxeMap;
-uniform sampler2D	u_GlowMap;
 uniform sampler2D	u_ScreenDepthMap;
-uniform samplerCube	u_CubeMap;
 uniform sampler2D	u_HeightMap;
-uniform sampler2D	u_DetailMap;
-
-#if defined(USE_SHADOWMAP)
 uniform sampler2D	u_ShadowMap;
-#endif //defined(USE_SHADOWMAP)
+//uniform samplerCube	u_CubeMap;
 
 uniform vec2		u_Dimensions;
 
@@ -25,14 +20,13 @@ uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
 uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 
+uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
 uniform vec4		u_CubeMapInfo;
 uniform float		u_CubeMapStrength;
-
-uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 
 #define MAX_DEFERRED_LIGHTS 128//64//16//24
 
@@ -70,7 +64,6 @@ vec3 TangentFromNormal ( vec3 normal )
 
 	return normalize(tangent);
 }
-
 
 #ifdef __NORMAL_METHOD_1__
 const vec3 LUMA_COEFFICIENT = vec3(0.2126, 0.7152, 0.0722);
@@ -116,8 +109,8 @@ vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
   vec3 N = vec3(dxy * scale / step, 1.);
 
 // Contrast...
-#define normLower ( 128.0/*48.0*/ / 255.0 )
-#define normUpper (255.0 / 192.0/*128.0*/ )
+#define normLower ( 128.0 / 255.0 )
+#define normUpper (255.0 / 192.0 )
   N = clamp((clamp(N - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
 
   return vec4(normalize(N) * 0.5 + 0.5, height);
@@ -228,8 +221,11 @@ void main(void)
 
 	vec2 texCoords = var_TexCoords;
 
+
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
+
+	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
 	if (position.a == 1024.0 || position.a == 1025.0)
 	{// Skybox... Skip...
@@ -258,11 +254,8 @@ void main(void)
 	//}
 #endif
 
-	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 
-	// Because rend2 tangents are all fucked - re-calculate them.
-	//vec3 tangent = TangentFromNormal(norm);
-	//vec3 bitangent = normalize(cross(norm, tangent));
+	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 
 	norm.rgb = norm.rgb * 2.0 - 1.0;
 	vec4 normalDetail = normalVector(texCoords);
@@ -272,7 +265,7 @@ void main(void)
 	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
 
 	vec3 N = norm.xyz;
-	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
+
 
 	float shadowMult = 1.0;
 
@@ -293,6 +286,16 @@ void main(void)
 
 	float lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 
+#ifdef __EXTRA_SPECULAR__
+	vec3 specAdd = gl_FragColor.rgb;
+#define specLower ( 48.0 / 255.0)
+#define specUpper (255.0 / 192.0)
+	specAdd = clamp((clamp(specAdd.rgb - specLower, 0.0, 1.0)) * specAdd, 0.0, 1.0);
+	//gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (specAdd * lightScale), lightScale);
+	gl_FragColor.rgb += (specAdd * lightScale);
+	lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
+#endif //__EXTRA_SPECULAR__
+
 	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
@@ -310,14 +313,12 @@ void main(void)
 	}
 
 	vec4 occlusion = vec4(0.0);
-	vec3 norm2 = vec3(0.0);
 	bool useOcclusion = false;
 
 	if (u_Local2.r == 1.0)
 	{
 		useOcclusion = true;
 		occlusion = texture(u_HeightMap, texCoords);
-		norm2 = texture(u_DetailMap, texCoords).xyz * 2.0 - 1.0;
 	}
 
 	float reflectivePower = (norm.a * 0.2);
@@ -328,13 +329,6 @@ void main(void)
 	if (!noSunPhong && shadowMult > 0.0)
 #endif
 	{// this is blinn phong
-#ifdef __OLD_SPECULAR__
-		vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
-		float specAngle = max(dot(halfDir2, N), 0.0);
-		spec2 = pow(specAngle, 16.0);
-		vec3 lightAdd = (vec3(clamp(spec2, 0.0, 1.0) * reflectivePower) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale;
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lightAdd * shadowMult), lightScale);
-#else //!__OLD_SPECULAR__
 		vec3 lightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 		float diffuseCoefficient = max(0.0, dot(N, lightDir));
 
@@ -395,7 +389,6 @@ void main(void)
 			}
 		}
 #endif //__FOLIAGE_VIBRANCY__
-#endif //__OLD_SPECULAR__
 	}
 
 	if (noSunPhong)
@@ -412,8 +405,6 @@ void main(void)
 
 		for (int li = 0; li < u_lightCount/*MAX_DEFERRED_LIGHTS*/; li++)
 		{
-			//if (li > u_lightCount) break;
-
 			vec3 lightPos = u_lightPositions2[li].xyz;
 
 			float lightDist = distance(lightPos, position.xyz);
@@ -429,14 +420,6 @@ void main(void)
 
 			if (lightDist < lightMax && lightDistMult > 0.0)
 			{
-				/*if (u_lightHeightScales[li] > 0.0)
-				{// Check height difference...
-					if (length(lightPos.z - position.z) > lightMax * u_lightHeightScales[li])
-					{// Out of height range...
-						continue;
-					}
-				}*/
-
 				float lightStrength = clamp(1.0 - clamp(lightDist / lightMax, 0.0, 1.0), 0.0, 1.0);;
 				lightStrength = pow(lightStrength, 4.0);
 
@@ -612,5 +595,8 @@ void main(void)
 #endif //__CURVE__
 
 	//gl_FragColor = vec4(vec3(0.0, 0.0, 1.0), 1.0);
+
+	//vec3 gamma = vec3(1.0/2.2);
+	//gl_FragColor.rgb = pow(gl_FragColor.rgb, gamma);
 }
 

@@ -365,6 +365,7 @@ cvar_t  *r_rbmStrength;
 cvar_t  *r_hbao;
 cvar_t  *r_colorCorrection;
 cvar_t  *r_deferredLighting;
+cvar_t  *r_ssdm;
 cvar_t  *r_ssr;
 cvar_t  *r_ssrStrength;
 cvar_t  *r_sse;
@@ -1503,7 +1504,7 @@ void R_Register( void )
 	r_normalMapQuality = ri->Cvar_Get( "r_normalMapQuality", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_deluxeMapping = ri->Cvar_Get( "r_deluxeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_parallaxMapping = ri->Cvar_Get( "r_parallaxMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_parallaxMapping = ri->Cvar_Get( "r_parallaxMapping", "1", CVAR_ARCHIVE );
 	r_cubeMapping = ri->Cvar_Get( "r_cubeMapping", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubeMapSize = ri->Cvar_Get( "r_cubeMapSize", "64", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubemapStrength = ri->Cvar_Get("r_cubemapStrength", "1.25", CVAR_ARCHIVE);
@@ -1631,6 +1632,7 @@ void R_Register( void )
 	r_rbmStrength = ri->Cvar_Get( "r_rbmStrength", "0.22", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
+	r_ssdm = ri->Cvar_Get("r_ssdm", "0", CVAR_ARCHIVE);
 	r_ssr = ri->Cvar_Get("r_ssr", "0", CVAR_ARCHIVE);
 	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.05", CVAR_ARCHIVE);
 	r_sse = ri->Cvar_Get("r_sse", "0", CVAR_ARCHIVE);

@@ -239,7 +239,9 @@ void S_FreeOldSamples(void)
 
 	// Run cleanup once every 5 seconds...
 	if (S_NEXT_SOUND_FREE_CHECK > Com_Milliseconds()) return;
-	S_NEXT_SOUND_FREE_CHECK = Com_Milliseconds() + 5000;
+
+	//S_NEXT_SOUND_FREE_CHECK = Com_Milliseconds() + 5000; // 5 sec between cleanups...
+	S_NEXT_SOUND_FREE_CHECK = Com_Milliseconds(); // Instant cleanups...
 
 #ifdef __SOUND_CLEANUP_DEBUG__
 	Com_Printf("Sound cleanup at time %i.\n", Com_Milliseconds() / 1000);
@@ -511,7 +513,7 @@ sfxHandle_t	S_RegisterSound( const char *name)
 
 	sfx = S_FindName( name );
 
-	SND_TouchSFX(sfx);
+	//SND_TouchSFX(sfx);
 
 	if ( sfx->bDefaultSound )
 		return 0;

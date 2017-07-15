@@ -169,6 +169,10 @@ extern const char *fallbackShader_showDepth_vp;
 extern const char *fallbackShader_showDepth_fp;
 extern const char *fallbackShader_deferredLighting_vp;
 extern const char *fallbackShader_deferredLighting_fp;
+extern const char *fallbackShader_ssdm_vp;
+extern const char *fallbackShader_ssdm_fp;
+extern const char *fallbackShader_ssdmGenerate_vp;
+extern const char *fallbackShader_ssdmGenerate_fp;
 extern const char *fallbackShader_ssr_vp;
 extern const char *fallbackShader_ssr_fp;
 extern const char *fallbackShader_ssrCombine_vp;
@@ -2034,7 +2038,6 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
-	//R_CheckFBO(tr.renderFbo);
 }
 
 /*
@@ -2045,7 +2048,6 @@ void GLSL_AttachWaterTextures2(void)
 	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage2, 3); // water positions
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
-	//R_CheckFBO(tr.renderFbo);
 }
 */
 
@@ -2816,14 +2818,6 @@ int GLSL_BeginLoadGPUShaders(void)
 			strcat(extradefines, "#define USE_CUBEMAP\n");
 		}
 
-		if (r_parallaxMapping->integer && !r_cartoon->integer) // Parallax without normal maps...
-		{
-			strcat(extradefines, "#define USE_PARALLAXMAP\n");
-
-			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
-				strcat(extradefines, "#define FAST_PARALLAX\n");
-		}
-
 		if (i & LIGHTDEF_USE_TRIPLANAR)
 		{
 			strcat(extradefines, "#define USE_TRI_PLANAR\n");
@@ -2893,14 +2887,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
-
-		if (r_parallaxMapping->integer && !r_cartoon->integer) // Parallax without normal maps...
-		{
-			strcat(extradefines, "#define USE_PARALLAXMAP\n");
-
-			if (r_parallaxMapping->integer < 2) // Fast parallax mapping...
-				strcat(extradefines, "#define FAST_PARALLAX\n");
-		}
 
 		if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
@@ -3566,6 +3552,22 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader, "deferredLighting", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load deferredLighting shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssdmShader, "ssdm", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdm_vp, fallbackShader_ssdm_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdm shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssdmGenerateShader, "ssdmGenerate", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdmGenerate_vp, fallbackShader_ssdmGenerate_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdmGenerate shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -5403,17 +5405,65 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
-	GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
 	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.deferredLightingShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssdmShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdmShader!");
+	}
+
+	GLSL_InitUniforms(&tr.ssdmShader);
+
+	qglUseProgram(tr.ssdmShader.program);
+
+	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
+	GLSL_SetUniformVec3(&tr.ssdmShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssdmShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssdmGenerateShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdmGenerateShader!");
+	}
+
+	GLSL_InitUniforms(&tr.ssdmGenerateShader);
+
+	qglUseProgram(tr.ssdmGenerateShader.program);
+
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+
+	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssdmGenerateShader);
 #endif
 
 	numEtcShaders++;
@@ -6444,6 +6494,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.showNormalsShader);
 	GLSL_DeleteGPUShader(&tr.showDepthShader);
 	GLSL_DeleteGPUShader(&tr.deferredLightingShader);
+	GLSL_DeleteGPUShader(&tr.ssdmShader);
+	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader);
 	GLSL_DeleteGPUShader(&tr.ssrShader);
 	GLSL_DeleteGPUShader(&tr.ssrCombineShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);

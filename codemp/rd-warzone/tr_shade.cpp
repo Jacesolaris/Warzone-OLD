@@ -2748,11 +2748,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
 
+			int PARALLAX_MODE = 0;
+			
+			if (!r_cartoon->integer && r_parallaxMapping->integer)
+			{
+				PARALLAX_MODE = r_parallaxMapping->integer;
+			}
+
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
 				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
 				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
-				0.0);
+				PARALLAX_MODE);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
 

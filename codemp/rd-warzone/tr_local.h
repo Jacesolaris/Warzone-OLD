@@ -62,7 +62,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define DISTANCE_BETWEEN_CUBEMAPS 384 //256
 #define	MAX_DEFERRED_LIGHTS 128//64//16//24
-#define MAX_VOLUMETRIC_LIGHTS 16//64
+#define MAX_VOLUMETRIC_LIGHTS 2//16//64
 
 #define MAX_IMAGE_PATH 256 //MAX_QPATH
 
@@ -487,6 +487,7 @@ extern cvar_t  *r_rbm;
 extern cvar_t  *r_rbmStrength;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_deferredLighting;
+extern cvar_t  *r_ssdm;
 extern cvar_t  *r_ssr;
 extern cvar_t  *r_ssrStrength;
 extern cvar_t  *r_sse;
@@ -2687,6 +2688,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t showNormalsShader;
 	shaderProgram_t showDepthShader;
 	shaderProgram_t deferredLightingShader;
+	shaderProgram_t ssdmShader;
+	shaderProgram_t ssdmGenerateShader;
 	shaderProgram_t ssrShader;
 	shaderProgram_t ssrCombineShader;
 	shaderProgram_t testshaderShader;
@@ -2717,9 +2720,11 @@ typedef struct trGlobals_s {
 
 	FBO_t		   *ssdoFbo1;
 	FBO_t		   *ssdoFbo2;
-
 	image_t        *ssdoImage1;
 	image_t        *ssdoImage2;
+
+	FBO_t		   *ssdmFbo;
+	image_t        *ssdmImage;
 
 	//
 	// UQ1: End Added shaders...

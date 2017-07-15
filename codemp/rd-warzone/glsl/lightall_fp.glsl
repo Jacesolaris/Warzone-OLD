@@ -1,3 +1,4 @@
+//#define __PARALLAX__
 //#define USE_ALPHA_TEST
 
 uniform sampler2D			u_DiffuseMap;
@@ -36,7 +37,7 @@ uniform vec4				u_MapAmbient; // a basic light/color addition across the whole m
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
 uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, PARALLAX_MODE
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -56,6 +57,7 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=Deta
 #define USE_REGIONS			u_Settings3.r
 #define USE_ISDETAIL		u_Settings3.g
 #define USE_DETAIL_COORD	u_Settings3.b
+#define PARALLAX_MODE		u_Settings3.a
 
 
 uniform vec2				u_Dimensions;
@@ -230,7 +232,7 @@ float GetDepthForPixel(vec4 color)
 
 	float displacement = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
 	DepthContrast(displacement); // Enhance the dark/lights...
-	return displacement;
+	return 1.0 - clamp(displacement, 0.0, 1.0);
 }
 
 vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom);
@@ -244,8 +246,9 @@ float GetDepthAtCoord(vec2 coord)
 		return 0.0;
 	}
 
-	return GetDepthForPixel(GetDiffuse(coord, vec2(0.0), 0.0));
+	return GetDepthForPixel(diffuse);
 }
+
 
 void AddDetail(inout vec4 color, in vec2 tc)
 {
@@ -553,6 +556,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 }
 
+#ifdef __PARALLAX__
 float FastDisplacementMap(vec2 dp)
 {
 	if (u_Local1.x == 0.0)
@@ -587,6 +591,7 @@ float ReliefMapping(vec2 dp, vec2 ds)
 	}
 	return clamp(best_depth, 0.0, 1.0);
 }
+#endif //__PARALLAX__
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
@@ -638,7 +643,7 @@ void main()
 	}
 
 
-	bool PARALLAX_ENABLED = (USE_GLOW_BUFFER <= 0.0 && u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0) ? true : false;
+	bool PARALLAX_ENABLED = (PARALLAX_MODE > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_Local1.x > 0.0 && USE_TEXTURECLAMP <= 0.0 && length(u_Dimensions.xy) > 0.0 && USE_IS2D <= 0.0) ? true : false;
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0) ? true : false;
 	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
 
@@ -655,22 +660,25 @@ void main()
 
 	vec2 ParallaxOffset = vec2(0.0);
 
-#if defined(USE_PARALLAXMAP)
+#ifdef __PARALLAX__
 	if (PARALLAX_ENABLED)
 	{// TODO: Move to screen space, screen space tesselation maybe???
 		vec3 offsetDir = normalize(E * tangentToWorld);
 		vec2 tex_offset = vec2(1.0 / u_Dimensions);
 		vec2 ParallaxXY = offsetDir.xy * tex_offset * u_Local1.x;
 
-		#if defined(FAST_PARALLAX)
+		if (PARALLAX_MODE == 1.0)
+		{
 			ParallaxOffset = ParallaxXY * FastDisplacementMap(texCoords);
 			texCoords += ParallaxOffset;
-		#else //!defined(FAST_PARALLAX)
+		}
+		else
+		{
 			ParallaxOffset = ParallaxXY * ReliefMapping(texCoords, ParallaxXY);
 			texCoords += ParallaxOffset;
-		#endif //defined(FAST_PARALLAX)
+		}
 	}
-#endif
+#endif //__PARALLAX__
 
 
 	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);

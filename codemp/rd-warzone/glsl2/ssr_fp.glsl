@@ -36,7 +36,7 @@ float startScale = 4.0;//8.0;//4.0;     //first value for variable scale calcula
 float getDepth(vec2 coord){
     float zdepth = texture(u_ScreenDepthMap, coord).x;
     return -zfar * znear / (zdepth * (zfar - znear) - zfar);
-	//return 1.0 / mix(u_ViewInfo.x, 1.0, zdepth);
+	//return 1.0 / mix(u_ViewInfo.z, 1.0, zdepth);
 }
 
 vec3 getViewPosition(vec2 coord){

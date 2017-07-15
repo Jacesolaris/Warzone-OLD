@@ -1855,6 +1855,10 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	FOLIAGE_TREE_ANGLES = (float *)malloc(fileCount * sizeof(float));
 	FOLIAGE_TREE_SCALE = (float *)malloc(fileCount * sizeof(float));
 
+	int usedRam = (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float));
+	usedRam /= (1024 * 1024);
+	trap->Print("^1*** ^3%s^5: %i MB allocated for initial foliage memory.\n", GAME_VERSION, usedRam);
+
 	for (i = 0; i < fileCount; i++)
 	{
 		trap->FS_Read(&FOLIAGE_POSITIONS[foliageCount], sizeof(vec3_t), f);
@@ -1948,6 +1952,10 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
 		FOLIAGE_TREE_ANGLES = (float *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(float));
 		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+
+		usedRam = (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float));
+		usedRam /= (1024 * 1024);
+		trap->Print("^1*** ^3%s^5: %i MB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
 	}
 	else
 	{
@@ -2022,6 +2030,10 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 
 		if (!IN_RANGE_TREE_AREAS_LIST) IN_RANGE_TREE_AREAS_LIST = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
 		if (!IN_RANGE_TREE_AREAS_DISTANCE) IN_RANGE_TREE_AREAS_DISTANCE = (float *)malloc(sizeof(float) * FOLIAGE_AREA_MAX);
+
+		usedRam = (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(qboolean) * FOLIAGE_AREA_MAX) + (sizeof(ivec256_t) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(float) * FOLIAGE_AREA_MAX);
+		usedRam /= (1024 * 1024);
+		trap->Print("^1*** ^3%s^5: %i MB allocated for final foliage areas memory.\n", GAME_VERSION, usedRam);
 	}
 
 #ifdef __NO_GRASS__

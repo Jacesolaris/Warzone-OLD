@@ -3,7 +3,7 @@ uniform sampler2D			u_GlowMap;
 uniform sampler2D			u_SpecularMap;
 uniform sampler2D			u_ScreenDepthMap;
 
-#define						MAX_VOLUMETRIC_LIGHTS 16
+#define						MAX_VOLUMETRIC_LIGHTS 2//16
 
 uniform int					u_lightCount;
 uniform vec2				u_vlightPositions[MAX_VOLUMETRIC_LIGHTS];
