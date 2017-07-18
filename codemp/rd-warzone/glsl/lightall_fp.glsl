@@ -500,6 +500,22 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 
 void main()
 {
+#if 0
+	gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	out_Glow = vec4(0.0);
+
+#ifdef USE_GLOW_DETAIL_BUFFERS
+	if (USE_ISDETAIL <= 0.0)
+#else //!USE_GLOW_DETAIL_BUFFERS
+	if (gl_FragColor.a > 0.99)
+#endif //USE_GLOW_DETAIL_BUFFERS
+	{
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		out_Normal = vec4(m_Normal.xyz, u_Local1.b /*specularScale*/ );
+	}
+	return;
+#endif
+
 	vec4 specular = vec4(0.0);
 	vec2 texCoords = m_TexCoords.xy;
 	float pixRandom = 0.0;

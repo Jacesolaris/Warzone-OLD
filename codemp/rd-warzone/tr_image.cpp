@@ -3880,18 +3880,6 @@ void R_CreateBuiltinImages( void ) {
 		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, width / 2.0, height / 2.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	}
 
-#ifdef __DYNAMIC_SHADOWS__
-	for ( int y = 0; y < MAX_DYNAMIC_SHADOWS; y++ )
-	{
-		for ( x = 0; x < 3; x++)
-		{
-			tr.dlightShadowDepthImage[y][x] = R_CreateImage(va("*dlightshadowdepth%i_%i", y, x), NULL, r_shadowMapSize->integer, r_shadowMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_DEPTH_COMPONENT24);
-		}
-	}
-
-	//tr.screenDlightShadowImage = R_CreateImage("*screenDlightShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
-#endif // __DYNAMIC_SHADOWS__
-
 	if (r_cubeMapping->integer >= 1)
 	{
 		//tr.renderCubeImage = R_CreateImage("*renderCube", NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, rgbFormat);

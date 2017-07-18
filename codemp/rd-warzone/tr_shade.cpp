@@ -1035,7 +1035,7 @@ extern float MAP_INFO_MAXSIZE;
 extern vec3_t  MAP_INFO_MINS;
 extern vec3_t  MAP_INFO_MAXS;
 
-void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum)
+void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum, qboolean IS_DEPTH_PASS)
 {
 	vec4_t	local1, local3, local4, local5;
 	float	specularScale = 1.0;
@@ -1054,7 +1054,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	float	hasSplatMap4 = 0;
 	float	hasNormalMap = 0;
 
-	if (!backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
+	if (!IS_DEPTH_PASS)
 	{
 		if (r_normalMapping->integer >= 2
 			&& pStage->bundle[TB_NORMALMAP].image[0]
@@ -1377,68 +1377,51 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 		VectorSet4(local1, 0.0, 0.0, 0.0, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-		//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
-		VectorSet4(local3, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 		VectorSet4(local4, 0.0, 0.0, 0.0, doSway);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 		VectorSet4(local5, 0.0, overlaySway, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
-
-		vec4_t local6;
-		VectorSet4(local6, 0.0, 0.0, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
-
-		vec4_t local7;
-		VectorSet4(local7, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
-
-		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, r_glowStrength->value, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 
 	vec4_t specMult;
 
-	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+	if (!IS_DEPTH_PASS)
 	{// Don't waste time on speculars...
-		VectorSet4(specMult, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
-	}
-	else if (pStage->specularScale[0] + pStage->specularScale[1] + pStage->specularScale[2] + pStage->specularScale[3] != 0.0)
-	{// Shader Specified...
-		GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
-	}
-	else // Material Defaults...
-	{
-		VectorSet4(specMult, specularScale, specularScale, specularScale, 1.0);
-
-		if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_ARMOR /* ARMOR */
-			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_PLASTIC /* PLASTIC */
-			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_MARBLE /* MARBLE */)
-		{// Armor, plastic, and marble should remain somewhat shiny...
-			specMult[0] = 0.333;
-			specMult[1] = 0.333;
-			specMult[2] = 0.333;
-			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+		if (pStage->specularScale[0] + pStage->specularScale[1] + pStage->specularScale[2] + pStage->specularScale[3] != 0.0)
+		{// Shader Specified...
+			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
 		}
-		else if ( !(isMetalic > 0.0)
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_SOLIDMETAL
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_HOLLOWMETAL
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GLASS /* GLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_SHATTERGLASS /* SHATTERGLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_BPGLASS /* BPGLASS */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_COMPUTER /* COMPUTER */
-			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_ICE /* ICE */)
-		{// Only if not metalic... Metals should remain nice and shiny...
-			specMult[0] *= 0.04;
-			specMult[1] *= 0.04;
-			specMult[2] *= 0.04;
-			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
-		}
-		else
+		else // Material Defaults...
 		{
-			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+			VectorSet4(specMult, specularScale, specularScale, specularScale, 1.0);
+
+			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ARMOR /* ARMOR */
+				|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_PLASTIC /* PLASTIC */
+				|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_MARBLE /* MARBLE */)
+			{// Armor, plastic, and marble should remain somewhat shiny...
+				specMult[0] = 0.333;
+				specMult[1] = 0.333;
+				specMult[2] = 0.333;
+				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+			}
+			else if (!(isMetalic > 0.0)
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_SOLIDMETAL
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_HOLLOWMETAL
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_GLASS /* GLASS */
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_SHATTERGLASS /* SHATTERGLASS */
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_BPGLASS /* BPGLASS */
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_COMPUTER /* COMPUTER */
+				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_ICE /* ICE */)
+			{// Only if not metalic... Metals should remain nice and shiny...
+				specMult[0] *= 0.04;
+				specMult[1] *= 0.04;
+				specMult[2] *= 0.04;
+				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+			}
+			else
+			{
+				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+			}
 		}
 	}
 
@@ -1458,165 +1441,14 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
 
-qboolean RB_ShouldUseTesselation ( shaderCommands_t *input )
-{
-	if (/*backEnd.currentEntity != &tr.worldEntity &&*/ backEnd.currentEntity != &backEnd.entity2D)
-		return qtrue;
-
-	/*
-	int materialType = tess.shader->surfaceFlags & MATERIAL_MASK);
-
-	if ( materialType == MATERIAL_SHORTGRASS
-		|| materialType == MATERIAL_LONGGRASS
-		|| materialType == MATERIAL_SAND
-		//|| materialType == MATERIAL_ROCK
-		|| materialType == MATERIAL_ICE)
-		return qtrue;
-	*/
-
-	for (int stage = 0; stage < MAX_SHADER_STAGES; stage++)
-	{
-		shaderStage_t *pStage = input->xstages[stage];
-
-		if (!pStage) break;
-
-		if (pStage->bundle[TB_STEEPMAP].image[0]
-			|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
-			|| pStage->bundle[TB_SPLATMAP1].image[0]
-			|| pStage->bundle[TB_SPLATMAP2].image[0]
-			|| pStage->bundle[TB_SPLATMAP3].image[0])
-		{
-			return qtrue;
-		}
-	}
-
-	return qfalse;
-}
-
 float RB_GetTesselationAlphaLevel ( int materialType )
 {
-	float tessAlphaLevel = r_tesselationAlpha->value;
-	/*
-	switch( materialType )
-	{
-	case MATERIAL_SHORTGRASS:
-	case MATERIAL_LONGGRASS:
-	case MATERIAL_SAND:
-	//case MATERIAL_ROCK:
-	case MATERIAL_ICE:
-		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
-		break;
-	default:
-		tessAlphaLevel = 0.001;
-		break;
-	}
-	*/
-	tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
-
-	return tessAlphaLevel;
+	return r_tesselationAlpha->value;
 }
 
 float RB_GetTesselationInnerLevel ( int materialType )
 {
-	return r_tesselationLevel->value;
-
-#if 0
-	float tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-
-	switch( materialType )
-	{
-	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_SAND:				// 8			// sandy beach
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
-		break;
-	/*case MATERIAL_CARPET:			// 27			// lush carpet
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
-		break;
-	case MATERIAL_GRAVEL:			// 9			// lots of small stones
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_ROCK:				// 23			//
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
-		break;
-	case MATERIAL_TILES:			// 26			// tiled floor
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
-		break;
-	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;
-	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;
-	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
-		break;
-	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
-		break;
-	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;
-	case MATERIAL_CANVAS:			// 22			// tent material
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_MARBLE:			// 12			// marble floors
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
-		break;
-	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
-		break;
-	case MATERIAL_MUD:				// 17			// wet soil
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
-		break;
-	case MATERIAL_DIRT:				// 7			// hard mud
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
-		break;
-	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
-		break;
-	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;
-	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-		break;
-	case MATERIAL_PLASTIC:			// 25			//
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
-		break;
-	case MATERIAL_PLASTER:			// 28			// drywall style plaster
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
-		break;
-	case MATERIAL_ARMOR:			// 30			// body armor
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
-		break;*/
-	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, r_tesselationLevel->value);
-		break;
-	case MATERIAL_WATER:			// 13			// light covering of water on a surface
-	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-	case MATERIAL_GLASS:			// 10			//
-	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-	default:
-		tessInnerLevel = 1.0;
-		break;
-	}
-#endif
-
-	float tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-
-	return tessInnerLevel;
+	return Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 }
 
 
@@ -2028,12 +1860,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	float tessOuter = 0.0;
 	float tessAlpha = 0.0;
 
+	qboolean IS_DEPTH_PASS = qfalse;
+
 	int cubeMapNum = 0;
 	vec4_t cubeMapVec;
 	float cubeMapRadius;
 
 	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
+		IS_DEPTH_PASS = qtrue;
+
 		if (r_foliage->integer
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
@@ -2063,8 +1899,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 	}
 
-	if (r_tesselation->integer 
-		&& RB_ShouldUseTesselation(input))
+	if (r_tesselation->integer)
 	{
 		useTesselation = qtrue;
 
@@ -2295,7 +2130,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
-			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+			if (IS_DEPTH_PASS)
 			{
 				break;
 			}
@@ -2325,7 +2160,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 		}
-		else if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		else if (IS_DEPTH_PASS)
 		{// testing - force lightall
 #ifdef __USE_DETAIL_DEPTH_SKIP__
 			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
@@ -2656,17 +2491,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 
 
-		RB_SetMaterialBasedProperties(sp, pStage, stage);
+		RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+
 
 
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
 			vec4_t vec;
 
-			if (r_debugMapAmbientR->value + r_debugMapAmbientG->value + r_debugMapAmbientB->value > 0.0)
-				VectorSet4(vec, r_debugMapAmbientR->value, r_debugMapAmbientG->value, r_debugMapAmbientB->value, 0.0);
-			else
-				VectorSet4(vec, MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_MAP_AMBIENT, vec);
+			if (!IS_DEPTH_PASS)
+			{
+				if (r_debugMapAmbientR->value + r_debugMapAmbientG->value + r_debugMapAmbientB->value > 0.0)
+					VectorSet4(vec, r_debugMapAmbientR->value, r_debugMapAmbientG->value, r_debugMapAmbientB->value, 0.0);
+				else
+					VectorSet4(vec, MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_MAP_AMBIENT, vec);
+			}
 
 #ifdef __USE_ALPHA_TEST__
 			vec2_t atest = { 0 };
@@ -2751,28 +2590,40 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
 
+		if (r_tesselation->integer && useTesselation)
+		{
+			if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			{
+				tessInner = 0.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
+			}
+		}
+
 		// UQ1: Used by both generic and lightall...
 		RB_SetStageImageDimensions(sp, pStage);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL); // Currently not used...
 
 		GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
 		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
-		if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+		if (!IS_DEPTH_PASS)
 		{
-			vec4_t normalScale;
-			VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-			GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
-		}
-		else
-		{
-			GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+			if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+			{
+				vec4_t normalScale;
+				VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
+			}
+			else
+			{
+				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+			}
 		}
 
 		if (glState.skeletalAnimation)
@@ -2805,7 +2656,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
 		GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
 
-		if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+		if (!IS_DEPTH_PASS)
 		{
 			//if (r_fog->integer) //useFog
 			if (useFog)
@@ -2828,7 +2679,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		// testing cube map
 		//
-		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		if (IS_DEPTH_PASS)
 		{
 			/*GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
 			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
@@ -2855,7 +2706,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		//
 
-		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		if (IS_DEPTH_PASS)
 		{
 			vec4_t baseColor;
 			vec4_t vertColor;
@@ -3181,7 +3032,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
 						{
 							pStage->hasRealNormalMap = true;
-							RB_SetMaterialBasedProperties(sp, pStage, stage);
+							RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
 							if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
 							{
@@ -3243,7 +3094,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					}
 				}
 
-				if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+				if (IS_DEPTH_PASS)
 				{
 					enableTextures[3] = 0.0f;
 				}
@@ -3271,7 +3122,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
-			if (!(backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+			if (!IS_DEPTH_PASS)
 			{
 				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
 				{
@@ -3293,7 +3144,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3345,7 +3196,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3397,7 +3248,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3455,14 +3306,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 #ifdef __USE_GLOW_DETAIL_BUFFERS__
-			else if (index & LIGHTDEF_USE_GLOW_BUFFER)
+			else if (!IS_DEPTH_PASS && index & LIGHTDEF_USE_GLOW_BUFFER)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
 					GLSL_AttachGlowTextures();
 				}
 			}
-			else if (index & LIGHTDEF_IS_DETAIL)
+			else if (!IS_DEPTH_PASS && index & LIGHTDEF_IS_DETAIL)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
@@ -3507,11 +3358,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if (r_tesselation->integer && sp->tesselation)
 			{
 				tesselation = qtrue;
-
-				//float tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
-				//float tessOuter = tessInner;
-				//float tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
-
 				vec4_t l10;
 				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
@@ -3556,11 +3402,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (input->multiDrawPrimitives)
 			{
-				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, tesselation);
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, useTesselation);
 			}
 			else
 			{
-				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
+				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, useTesselation);
 			}
 
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
@@ -3571,14 +3417,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 #ifdef __USE_GLOW_DETAIL_BUFFERS__
-			else if (index & LIGHTDEF_USE_GLOW_BUFFER)
+			else if (!IS_DEPTH_PASS && index & LIGHTDEF_USE_GLOW_BUFFER)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
 					GLSL_AttachTextures();
 				}
 			}
-			else if (index & LIGHTDEF_IS_DETAIL)
+			else if (!IS_DEPTH_PASS && index & LIGHTDEF_IS_DETAIL)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
@@ -3611,7 +3457,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			break;
 		}
 
-		if (backEnd.depthFill)
+		//if (backEnd.depthFill)
+		if (IS_DEPTH_PASS)
 			break;
 	}
 }

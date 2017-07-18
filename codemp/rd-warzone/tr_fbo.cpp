@@ -720,38 +720,6 @@ void FBO_Init(void)
 		R_CheckFBO(tr.screenShadowBlurFbo);
 	}
 
-#ifdef __DYNAMIC_SHADOWS__
-	if (tr.dlightShadowDepthImage[0][0] != NULL)
-	{
-		for ( int j = 0; j < MAX_DYNAMIC_SHADOWS; j++ )
-		{
-			for ( i = 0; i < 3; i++)
-			{
-				tr.dlightShadowFbo[j][i] = FBO_Create("_dlightshadowmap", tr.dlightShadowDepthImage[j][i]->width, tr.dlightShadowDepthImage[j][i]->height);
-				FBO_Bind(tr.dlightShadowFbo[j][i]);
-
-				qglDrawBuffer(GL_NONE);
-				qglReadBuffer(GL_NONE);
-
-				R_AttachFBOTextureDepth(tr.dlightShadowDepthImage[j][i]->texnum);
-
-				FBO_SetupDrawBuffers();
-
-				R_CheckFBO(tr.dlightShadowFbo[j][i]);
-			}
-
-			//tr.screenDlightShadowFbo = FBO_Create("_screenDlightShadow", tr.screenDlightShadowImage->width, tr.screenDlightShadowImage->height);
-			//FBO_Bind(tr.screenDlightShadowFbo);
-
-			//FBO_AttachTextureImage(tr.screenDlightShadowImage, 0);
-
-			//FBO_SetupDrawBuffers();
-
-			//R_CheckFBO(tr.screenDlightShadowFbo);
-		}
-	}
-#endif //__DYNAMIC_SHADOWS__
-
 	for (i = 0; i < 2; i++)
 	{
 		tr.textureScratchFbo[i] = FBO_Create(va("_texturescratch%d", i), tr.textureScratchImage[i]->width, tr.textureScratchImage[i]->height);

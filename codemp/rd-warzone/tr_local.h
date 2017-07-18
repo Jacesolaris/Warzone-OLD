@@ -40,7 +40,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
 //#define __VOLUME_LIGHT_DLIGHTS__ // Do volumetric lights for dlights (sun will still be a volume light though)? Now we have bloom rays, I see little point...
 
-#define __MERGE_MODEL_SURFACES__		// merge entity surfaces into less draws...
 //#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 //#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
 //#define __RENDERER_GROUND_FOLIAGE__		// in-progress port of cgame foliage system to renderer...
@@ -53,12 +52,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
 
-
-
-//#define __DYNAMIC_SHADOWS__
-#ifdef __DYNAMIC_SHADOWS__
-#define MAX_DYNAMIC_SHADOWS 4
-#endif //__DYNAMIC_SHADOWS__
 
 #define DISTANCE_BETWEEN_CUBEMAPS 384 //256
 #define	MAX_DEFERRED_LIGHTS 128//64//16//24
@@ -153,11 +146,7 @@ extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
-#ifndef __DYNAMIC_SHADOWS__
-	#define	MAX_FBOS      64
-#else //__DYNAMIC_SHADOWS__
-	#define	MAX_FBOS      ((MAX_DYNAMIC_SHADOWS*4) + 64)
-#endif //__DYNAMIC_SHADOWS__
+#define	MAX_FBOS      64
 
 #define MAX_VISCOUNTS 5
 #define MAX_VBOS      4096
@@ -617,10 +606,6 @@ typedef struct dlight_s {
 
 	vec3_t	transformed;		// origin in local coordinate system
 	int		additive;			// texture detail is lost tho when the lightmap is dark
-
-#ifdef __DYNAMIC_SHADOWS__
-	qboolean		activeShadows;
-#endif //__DYNAMIC_SHADOWS__
 
 	qboolean isGlowBased;
 	float heightScale;
@@ -1619,9 +1604,6 @@ typedef struct {
 	struct pshadow_s *pshadows;
 #endif
 
-#ifdef __DYNAMIC_SHADOWS__
-	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
-#endif //__DYNAMIC_SHADOWS__
 	float       sunShadowMvp[5][16];
 	float       sunDir[4];
 	float       sunCol[4];
@@ -2504,10 +2486,6 @@ typedef struct trGlobals_s {
 	image_t					*sunShadowDepthImage[5];
 	image_t                 *screenShadowImage;
 	image_t                 *screenShadowBlurImage;
-#ifdef __DYNAMIC_SHADOWS__
-	image_t					*dlightShadowDepthImage[MAX_DYNAMIC_SHADOWS][3];
-//	image_t                 *screenDlightShadowImage;
-#endif //__DYNAMIC_SHADOWS__
 
 	image_t                 *renderCubeImage;
 	
@@ -2539,10 +2517,6 @@ typedef struct trGlobals_s {
 	FBO_t					*sunShadowFbo[5];
 	FBO_t					*screenShadowFbo;
 	FBO_t					*screenShadowBlurFbo;
-#ifdef __DYNAMIC_SHADOWS__
-	FBO_t					*dlightShadowFbo[MAX_DYNAMIC_SHADOWS][3];
-//	FBO_t					*screenDlightShadowFbo;
-#endif //__DYNAMIC_SHADOWS__
 	FBO_t                   *renderCubeFbo;
 	FBO_t					*awesomiumuiFbo;
 
@@ -3070,10 +3044,6 @@ void R_RenderDlightCubemaps(const refdef_t *fd);
 void R_RenderPshadowMaps(const refdef_t *fd);
 void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sundir, float lightHeight);
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene );
-#ifdef __DYNAMIC_SHADOWS__
-void R_RenderDlightShadowMaps(const refdef_t *fd, int level);
-#endif //__DYNAMIC_SHADOWS__
-
 void R_AddMD3Surfaces( trRefEntity_t *e );
 void R_AddNullModelSurfaces( trRefEntity_t *e );
 void R_AddBeamSurfaces( trRefEntity_t *e );

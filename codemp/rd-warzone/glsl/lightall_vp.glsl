@@ -109,20 +109,20 @@ out float Slope_CS_in;
 out float usingSteepMap_CS_in;
 #endif
 
-varying vec2   var_TexCoords;
-varying vec2   var_TexCoords2;
+varying vec2	var_TexCoords;
+varying vec2	var_TexCoords2;
 
-varying vec4   var_Color;
+varying vec4	var_Color;
 
-varying vec3 var_N;
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-varying vec3   var_ViewDir;
+varying vec3	var_N;
+varying vec4	var_Normal;
+varying vec4	var_Tangent;
+varying vec4	var_Bitangent;
+varying vec3	var_ViewDir;
 
-varying vec4   var_PrimaryLightDir;
+varying vec4	var_PrimaryLightDir;
 
-varying vec3   var_vertPos;
+varying vec3	var_vertPos;
 
 varying vec3	var_Blending;
 varying float	var_Slope;
@@ -399,7 +399,6 @@ void main()
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
 	vec3 preMMPos = position.xyz;
-	vec3 preMMNorm = normal.xyz;
 
 	// Because rend2 tangents are all fucked - re-calculate them.
 	tangent = TangentFromNormal(normal);
@@ -455,12 +454,6 @@ void main()
 
 	var_ViewDir = u_ViewOrigin - position;
 
-	/*if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
-	{
-		position = preMMPos;
-		normal = preMMNorm;
-	}*/
-
 	// store view direction in tangent space to save on varyings
 	var_Normal = vec4(normal, var_ViewDir.x);
 	var_Tangent = vec4(tangent, var_ViewDir.y);
@@ -514,7 +507,7 @@ void main()
 	}
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-	WorldPos_CS_in = vec4(preMMPos, 1.0);
+	WorldPos_CS_in = vec4(position.xyz, 1.0);
 	TexCoord_CS_in = var_TexCoords.xy;
 	Normal_CS_in = var_Normal.xyz;
 	ViewDir_CS_in = var_ViewDir;
@@ -526,10 +519,9 @@ void main()
 	Blending_CS_in = var_Blending;
 	Slope_CS_in = var_Slope;
 	usingSteepMap_CS_in = var_usingSteepMap;
-	gl_Position = vec4(preMMPos, 1.0);
+	gl_Position = vec4(position.xyz/*preMMPos*/, 1.0);
 #endif
 
-	//var_vertPos = preMMPos.xyz;
 	var_vertPos = position.xyz;
 
 }

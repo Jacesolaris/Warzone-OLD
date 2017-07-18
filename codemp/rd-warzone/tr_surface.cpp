@@ -620,6 +620,11 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 	tess.numVertexes += numVerts;
 }
 
+/*
+shader_t *previousVBOShader = NULL;
+int previousCubemapIndex = -1;
+*/
+
 static qboolean RB_SurfaceVbo(VBO_t *vbo, IBO_t *ibo, int numVerts, int numIndexes, int firstIndex, int minIndex, int maxIndex, int dlightBits, int pshadowBits, qboolean shaderCheck)
 {
 	int i, mergeForward, mergeBack;
@@ -634,6 +639,15 @@ static qboolean RB_SurfaceVbo(VBO_t *vbo, IBO_t *ibo, int numVerts, int numIndex
 	{
 		return qfalse;
 	}
+
+	/*if (shaderCheck && previousVBOShader != tess.shader || previousCubemapIndex != tess.cubemapIndex)
+	{// Changed shader, so we need to finish this daw and start a new one...
+		RB_EndSurface();
+		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
+	}
+
+	previousVBOShader = tess.shader;
+	previousCubemapIndex = tess.cubemapIndex;*/
 
 	RB_CheckVBOandIBO(vbo, ibo);
 
@@ -2273,62 +2287,46 @@ void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 	if(!surface->vbo || !surface->ibo)
 		return;
 
-#if 0
-	if (1)//surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW && surface->mdvModel->numFrames <= 1)
+	//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
+	RB_EndSurface();
+	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
+
+	R_BindVBO(surface->vbo);
+	R_BindIBO(surface->ibo);
+
+	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
+		tess.useInternalVBO = qtrue;
+	else
+		tess.useInternalVBO = qfalse;
+
+	tess.numIndexes += surface->numIndexes;
+	tess.numVertexes += surface->numVerts;
+	tess.minIndex = surface->minIndex;
+	tess.maxIndex = surface->maxIndex;
+
+	//mdvModel = surface->mdvModel;
+	//mdvSurface = surface->mdvSurface;
+
+	refEnt = &backEnd.currentEntity->e;
+
+	if (refEnt->oldframe == refEnt->frame || surface->mdvModel->numFrames <= 1)
 	{
-		glState.vertexAnimation = qtrue;
-
-		qboolean worked = RB_SurfaceVbo(surface->vbo, surface->ibo, surface->numVerts, surface->numIndexes, 0,
-			surface->minIndex, surface->maxIndex, 0, 0, qfalse);
-		
-		glState.vertexAnimation = qfalse;
-		
-		if (worked) return;
+		glState.vertexAttribsInterpolation = 0;
 	}
-	//else
-#endif
+	else
 	{
-		//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
-		RB_EndSurface();
-		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
-
-		R_BindVBO(surface->vbo);
-		R_BindIBO(surface->ibo);
-
-		if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
-			tess.useInternalVBO = qtrue;
-		else
-			tess.useInternalVBO = qfalse;
-
-		tess.numIndexes += surface->numIndexes;
-		tess.numVertexes += surface->numVerts;
-		tess.minIndex = surface->minIndex;
-		tess.maxIndex = surface->maxIndex;
-
-		//mdvModel = surface->mdvModel;
-		//mdvSurface = surface->mdvSurface;
-
-		refEnt = &backEnd.currentEntity->e;
-
-		if (refEnt->oldframe == refEnt->frame || surface->mdvModel->numFrames <= 1)
-		{
-			glState.vertexAttribsInterpolation = 0;
-		}
-		else
-		{
-			glState.vertexAttribsInterpolation = refEnt->backlerp;
-		}
-
-		glState.vertexAttribsOldFrame = refEnt->oldframe;
-		glState.vertexAttribsNewFrame = refEnt->frame;
-
-		glState.vertexAnimation = qtrue;
-
-		RB_EndSurface();
-
-		// So we don't lerp surfaces that shouldn't be lerped
-		glState.vertexAnimation = qfalse;
+		glState.vertexAttribsInterpolation = refEnt->backlerp;
 	}
+
+	glState.vertexAttribsOldFrame = refEnt->oldframe;
+	glState.vertexAttribsNewFrame = refEnt->frame;
+
+	glState.vertexAnimation = qtrue;
+
+	RB_EndSurface();
+
+	// So we don't lerp surfaces that shouldn't be lerped
+	glState.vertexAnimation = qfalse;
 }
 
 static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {

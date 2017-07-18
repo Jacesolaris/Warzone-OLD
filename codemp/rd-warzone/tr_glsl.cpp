@@ -2353,10 +2353,11 @@ void GLSL_FinishGPUShader(shaderProgram_t *program)
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value)
 {
 	GLint *uniforms = program->uniforms;
-	GLint *compare = (GLint *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	GLint *compare = (GLint *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniformsInfo[uniformNum].type != GLSL_INT)
 	{
@@ -2377,10 +2378,11 @@ void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value)
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value)
 {
 	GLint *uniforms = program->uniforms;
-	GLfloat *compare = (GLfloat *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	GLfloat *compare = (GLfloat *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
 	{
@@ -2401,10 +2403,11 @@ void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat valu
 void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC2)
 	{
@@ -2412,7 +2415,7 @@ void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t 
 		return;
 	}
 
-	if (v[0] == compare[0] && v[1] == compare[1])
+	if (&v[0] == &compare[0] && &v[1] == &compare[1])
 	{
 		return;
 	}
@@ -2426,10 +2429,11 @@ void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t 
 void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare;
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare;
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC2)
 	{
@@ -2441,7 +2445,7 @@ void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(elements, compare, sizeof (vec2_t)* numElements) == 0)
+	if (memcmp(&elements, &compare, sizeof (vec2_t)* numElements) == 0)
 	{
 		return;
 	}
@@ -2454,10 +2458,11 @@ void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
 	{
@@ -2478,10 +2483,11 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare;
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare;
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
 	{
@@ -2493,7 +2499,7 @@ void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(elements, compare, sizeof (vec3_t)* numElements) == 0)
+	if (memcmp(&elements, &compare, sizeof (vec3_t)* numElements) == 0)
 	{
 		return;
 	}
@@ -2506,10 +2512,11 @@ void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_
 void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare;
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare;
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
 	{
@@ -2521,7 +2528,7 @@ void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(elements, compare, sizeof (vec3_t)* numElements) == 0)
+	if (memcmp(&elements, &compare, sizeof (vec3_t)* numElements) == 0)
 	{
 		return;
 	}
@@ -2534,10 +2541,11 @@ void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC4)
 	{
@@ -2558,10 +2566,11 @@ void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t 
 void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_t v)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT5)
 	{
@@ -2582,10 +2591,11 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare;
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare;
 
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
 	{
@@ -2597,7 +2607,7 @@ void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const floa
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(elements, compare, sizeof (float)* numElements) == 0)
+	if (memcmp(&elements, &compare, sizeof (float)* numElements) == 0)
 	{
 		return;
 	}
@@ -2610,10 +2620,11 @@ void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const floa
 void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare;
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare;
 
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
 	{
@@ -2625,7 +2636,7 @@ void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const flo
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(elements, compare, sizeof (float)* numElements) == 0)
+	if (memcmp(&elements, &compare, sizeof (float)* numElements) == 0)
 	{
 		return;
 	}
@@ -2638,10 +2649,11 @@ void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const flo
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements)
 {
 	GLint *uniforms = program->uniforms;
-	float *compare;
 
 	if (uniforms[uniformNum] == -1)
 		return;
+
+	float *compare;
 
 	if (uniformsInfo[uniformNum].type != GLSL_MAT16)
 	{
@@ -2653,7 +2665,7 @@ void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const flo
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(matrix, compare, sizeof (float)* 16 * numElements) == 0)
+	if (memcmp(&matrix, &compare, sizeof (float)* 16 * numElements) == 0)
 	{
 		return;
 	}
@@ -2867,7 +2879,29 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
-		if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+		if (r_tesselation->integer)
+		{
+			strcat(extradefines, "#define USE_TESSELLATION\n");
+
+#ifdef HEIGHTMAP_TESSELATION2
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
+			{
+				ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+			}
+		}
+		else if (r_instanceCloudReductionCulling->integer)
+		{
+			strcat(extradefines, "#define USE_ICR_CULLING\n");
+
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
+			{
+				ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+			}
+		}
+		else if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
 		}
