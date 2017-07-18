@@ -147,6 +147,7 @@ vec3 AddScreenSpaceReflection(vec2 coord, vec3 inColor)
     }
     
 	return mix(inColor, inColor + reflection, schlick(10.0, normal, viewVec)).rgb;
+	//return inColor + reflection;
 }
 
 void main(void)

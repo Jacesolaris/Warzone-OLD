@@ -37,6 +37,7 @@ void RB_BloomDownscale2(FBO_t *sourceFBO, FBO_t *destFBO);
 void RB_BloomUpscale(FBO_t *sourceFBO, FBO_t *destFBO);
 
 // UQ1: Added...
+void RB_CreateAnamorphicImage(void);
 void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox);
 void RB_DarkExpand(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox);
 void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox);

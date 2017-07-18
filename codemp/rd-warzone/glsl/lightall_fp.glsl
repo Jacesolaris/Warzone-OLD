@@ -653,7 +653,11 @@ void main()
 
 
 	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0)
-		gl_FragColor.rgb = clamp(gl_FragColor.rgb + u_MapAmbient.rgb, 0.0, 1.0);
+	{
+		float lightScale2 = clamp(max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b), 0.0, 1.0);
+		lightScale2 *= lightScale2;
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb + (u_MapAmbient.rgb * lightScale2), 0.0, 1.0);
+	}
 	
 
 	if (CUBEMAP_ENABLED)

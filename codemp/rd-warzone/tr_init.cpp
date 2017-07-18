@@ -1306,6 +1306,7 @@ static void GfxInfo_f( void )
 	ri->Printf( PRINT_ALL, "Dynamic Glow: %s\n", enablestrings[r_dynamicGlow->integer != 0] );
 }
 
+extern void MAPPING_LoadMapInfo(void);
 extern void R_CreateBspMapImage();
 extern void R_CreateHeightMapImage();
 
@@ -1787,6 +1788,7 @@ Ghoul2 Insert End
 extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
 	ri->Cmd_AddCommand( "r_we", R_WorldEffect_f );
 #endif //__SURFACESPRITES__
+	ri->Cmd_AddCommand("reloadMapInfo", MAPPING_LoadMapInfo);
 	ri->Cmd_AddCommand("genworldmap", R_CreateBspMapImage);
 	ri->Cmd_AddCommand("genheightmap", R_CreateHeightMapImage);
 }

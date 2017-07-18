@@ -660,8 +660,7 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_FastBlit(ldrFbo, NULL, hdrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
-
-void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+void RB_CreateAnamorphicImage( void )
 {
 	vec4_t	color;
 
@@ -671,9 +670,11 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	//
-	// Bloom X axis... (to VBO)
-	//
+	vec4i_t srcBox;
+	srcBox[0] = backEnd.viewParms.viewportX;
+	srcBox[1] = backEnd.viewParms.viewportY;
+	srcBox[2] = backEnd.viewParms.viewportWidth;
+	srcBox[3] = backEnd.viewParms.viewportHeight;
 
 	GLSL_BindProgram(&tr.anamorphicBlurShader);
 
@@ -694,8 +695,19 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
 	}
 
-	FBO_Blit(tr.glowFboScaled[0], hdrBox, NULL, tr.anamorphicRenderFBO, NULL, &tr.anamorphicBlurShader, color, 0);
-	
+	FBO_Blit(tr.glowFboScaled[0], srcBox, NULL, tr.anamorphicRenderFBO, NULL, &tr.anamorphicBlurShader, color, 0);
+}
+
+void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t	color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
 	//
 	// Combine the screen with the bloom'ed VBO...
 	//
@@ -734,61 +746,14 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	float glowDimensionsX, glowDimensionsY;
+	GLSL_BindProgram(&tr.bloomRaysShader);
 
-	// Use the most blurred version of glow...
-	if (r_anamorphic->integer)
-	{// We have a previously blurred glow map...
-		GLSL_BindProgram(&tr.bloomRaysShader);
+	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
-		GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 
-		GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-
-		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
-		glowDimensionsX = tr.anamorphicRenderFBOImage->width;
-		glowDimensionsY = tr.anamorphicRenderFBOImage->height;
-	}
-	else
-	{// We need to blur the glow map...
-		//
-		// Bloom X axis... (to VBO)
-		//
-
-		GLSL_BindProgram(&tr.anamorphicBlurShader);
-
-		GLSL_SetUniformInt(&tr.anamorphicBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_DIFFUSEMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = tr.anamorphicRenderFBOImage->width;
-			screensize[1] = tr.anamorphicRenderFBOImage->height;
-
-			GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, 1.0, 0.0, 16.0, 0.0);
-			GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
-		}
-
-		FBO_Blit(tr.glowFboScaled[0], hdrBox, NULL, tr.anamorphicRenderFBO, NULL, &tr.anamorphicBlurShader, color, 0);
-
-
-		GLSL_BindProgram(&tr.bloomRaysShader);
-
-		GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
-
-		GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-
-		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
-		glowDimensionsX = tr.anamorphicRenderFBOImage->width;
-		glowDimensionsY = tr.anamorphicRenderFBOImage->height;
-	}
+	GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
@@ -797,8 +762,8 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t dimensions;
-		dimensions[0] = glowDimensionsX;
-		dimensions[1] = glowDimensionsY;
+		dimensions[0] = tr.anamorphicRenderFBOImage->width;
+		dimensions[1] = tr.anamorphicRenderFBOImage->height;
 
 		GLSL_SetUniformVec2(&tr.bloomRaysShader, UNIFORM_DIMENSIONS, dimensions);
 	}
@@ -2703,19 +2668,7 @@ void RB_ScreenSpaceReflections(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec
 
 	GLSL_SetUniformInt(&tr.ssrShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 
-	// Use the most blurred version of glow...
-	if (r_anamorphic->integer)
-	{
-		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
-	}
-	else if (r_bloom->integer)
-	{
-		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
-	}
-	else
-	{
-		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
-	}
+	GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
 
 	GLSL_SetUniformInt(&tr.ssrShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
@@ -2733,8 +2686,8 @@ void RB_ScreenSpaceReflections(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+		screensize[0] = tr.anamorphicRenderFBOImage->width;// glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = tr.anamorphicRenderFBOImage->height;// glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssrShader, UNIFORM_DIMENSIONS, screensize);
 	}

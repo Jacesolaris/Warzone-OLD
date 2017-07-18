@@ -2486,6 +2486,11 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
+		{
+			RB_CreateAnamorphicImage();
+		}
+
 		if (!SCREEN_BLUR && r_anamorphic->integer)
 		{
 			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
