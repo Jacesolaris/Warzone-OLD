@@ -1236,214 +1236,23 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	RB_AddGlowShaderLights();
-
-//	backEnd.refdef.num_dlights = r_numdlights; // This is being disabled somewhere...
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i glow positions.\n", NUM_MAP_GLOW_LOCATIONS);
-
-	//ri->Printf(PRINT_WARNING, "VLIGHT GLOWS DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
-	/*
-	if ( !backEnd.refdef.num_dlights && !SUN_VISIBLE ) {
-		//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: 0 dlights.\n");
-		return qfalse;
-	}*/
-
-	//
-	// UQ1: Now going to allow a maximum of MAX_VOLUMETRIC_LIGHTS volumetric lights on screen for FPS...
-	//
-	int			NUM_CLOSE_VLIGHTS = 0;
-	int			CLOSEST_VLIGHTS[MAX_VOLUMETRIC_LIGHTS] = {0};
-	vec2_t		CLOSEST_VLIGHTS_POSITIONS[MAX_VOLUMETRIC_LIGHTS] = {0};
-	float		CLOSEST_VLIGHTS_DISTANCES[MAX_VOLUMETRIC_LIGHTS] = {0};
-	vec3_t		CLOSEST_VLIGHTS_COLORS[MAX_VOLUMETRIC_LIGHTS] = {0};
+	//RB_AddGlowShaderLights();
 
 	float strengthMult = 1.0;
 	if (r_dynamiclight->integer < 3 || (r_dynamiclight->integer > 3 && r_dynamiclight->integer < 6))
 		strengthMult = 2.0; // because the lower samples result in less color...
 
-#ifdef __VOLUME_LIGHT_DLIGHTS__
-	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
-	{
-		dlight_t	*dl = &backEnd.refdef.dlights[l];
-		
-		float x, y, distance;
-
-		distance = Distance(backEnd.refdef.vieworg, dl->origin);
-
-
-		WorldCoordToScreenCoord(dl->origin, &x, &y);
-		float xy[2];
-		xy[0] = x;
-		xy[1] = y;
-
-		if (x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0)
-			continue;
-
-		float depth = (distance/4096.0);
-		if (depth > 1.0) depth = 1.0;
-
-		if (NUM_CLOSE_VLIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
-		{// Have free light slots for a new light...
-			CLOSEST_VLIGHTS[NUM_CLOSE_VLIGHTS] = l;
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = x;
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = y;
-			CLOSEST_VLIGHTS_DISTANCES[NUM_CLOSE_VLIGHTS] = depth;
-
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][0] = dl->color[0] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][1] = dl->color[1] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][2] = dl->color[2] * strengthMult;
-
-			NUM_CLOSE_VLIGHTS++;
-			continue;
-		}
-		else
-		{// See if this is closer then one of our other lights...
-			int		farthest_light = 0;
-			float	farthest_distance = 0.0;
-
-			for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
-			{// Find the most distance light in our current list to replace, if this new option is closer...
-				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_VLIGHTS[i]];
-				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
-
-				if (dist > farthest_distance)
-				{// This one is further!
-					farthest_light = i;
-					farthest_distance = dist;
-					//break;
-				}
-			}
-
-			if (Distance(dl->origin, backEnd.refdef.vieworg) < farthest_distance)
-			{// This light is closer. Replace this one in our array of closest lights...
-				CLOSEST_VLIGHTS[farthest_light] = l;
-				CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = x;
-				CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = y;
-				CLOSEST_VLIGHTS_DISTANCES[farthest_light] = depth;
-
-				CLOSEST_VLIGHTS_COLORS[farthest_light][0] = dl->color[0] * strengthMult;
-				CLOSEST_VLIGHTS_COLORS[farthest_light][1] = dl->color[1] * strengthMult;
-				CLOSEST_VLIGHTS_COLORS[farthest_light][2] = dl->color[2] * strengthMult;
-			}
-		}
-	}
-#endif //__VOLUME_LIGHT_DLIGHTS__
-
-	/*GLuint sampleCount = 0;
-	qglGetQueryObjectuiv(tr.sunFlareVQuery[tr.sunFlareVQueryIndex], GL_QUERY_RESULT, &sampleCount);
-	if (sampleCount) 
-	{
-		ri->Printf(PRINT_WARNING, "SUN: %d samples.\n", sampleCount);
-		SUN_VISIBLE = qtrue;
-	}
-	else
-	{
-		ri->Printf(PRINT_WARNING, "SUN: %d samples.\n", sampleCount);
-		SUN_VISIBLE = qfalse;
-	}*/
-
 	//ri->Printf(PRINT_WARNING, "Sun screen pos is %f %f.\n", SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]);
 
 	qboolean VOLUME_LIGHT_INVERTED = qfalse;
 
-	if ( SUN_VISIBLE )
-	{// Add sun...
-		if (NUM_CLOSE_VLIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
-		{// Have free light slots for a new light...
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = SUN_SCREEN_POSITION[0];
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_VLIGHTS_DISTANCES[NUM_CLOSE_VLIGHTS] = 0.1;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][0] = backEnd.refdef.sunCol[0] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][1] = backEnd.refdef.sunCol[1] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][2] = backEnd.refdef.sunCol[2] * strengthMult;
-			SUN_ID = NUM_CLOSE_VLIGHTS;
-			NUM_CLOSE_VLIGHTS++;
-		}
-		else
-		{// See if this is closer then one of our other lights...
-			int		farthest_light = 0;
-			float	farthest_distance = 0.0;
+	vec3_t sunColor;
+	VectorSet(sunColor, backEnd.refdef.sunCol[0] * strengthMult, backEnd.refdef.sunCol[1] * strengthMult, backEnd.refdef.sunCol[2] * strengthMult);
 
-			for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
-			{// Find the most distance light in our current list to replace, if this new option is closer...
-				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_VLIGHTS[i]];
-				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
-
-				if (dist > farthest_distance)
-				{// This one is further!
-					farthest_light = i;
-					farthest_distance = dist;
-					//break;
-				}
-			}
-
-			CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = SUN_SCREEN_POSITION[0];
-			CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_VLIGHTS_DISTANCES[farthest_light] = 0.1;
-			CLOSEST_VLIGHTS_COLORS[farthest_light][0] = backEnd.refdef.sunCol[0] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[farthest_light][1] = backEnd.refdef.sunCol[1] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[farthest_light][2] = backEnd.refdef.sunCol[2] * strengthMult;
-			SUN_ID = farthest_light;
-		}
-	}
-	else
+	if ( !SUN_VISIBLE )
 	{
-		if (NUM_CLOSE_VLIGHTS < MAX_VOLUMETRIC_LIGHTS - 1)
-		{// Have free light slots for a new light...
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][0] = SUN_SCREEN_POSITION[0];
-			CLOSEST_VLIGHTS_POSITIONS[NUM_CLOSE_VLIGHTS][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_VLIGHTS_DISTANCES[NUM_CLOSE_VLIGHTS] = 0.1;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][0] = backEnd.refdef.sunCol[0] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][1] = backEnd.refdef.sunCol[1] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[NUM_CLOSE_VLIGHTS][2] = backEnd.refdef.sunCol[2] * strengthMult;
-			SUN_ID = NUM_CLOSE_VLIGHTS;
-			NUM_CLOSE_VLIGHTS++;
-		}
-		else
-		{// See if this is closer then one of our other lights...
-			int		farthest_light = 0;
-			float	farthest_distance = 0.0;
-
-			for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
-			{// Find the most distance light in our current list to replace, if this new option is closer...
-				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_VLIGHTS[i]];
-				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
-
-				if (dist > farthest_distance)
-				{// This one is further!
-					farthest_light = i;
-					farthest_distance = dist;
-					//break;
-				}
-			}
-
-			CLOSEST_VLIGHTS_POSITIONS[farthest_light][0] = SUN_SCREEN_POSITION[0];
-			CLOSEST_VLIGHTS_POSITIONS[farthest_light][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_VLIGHTS_DISTANCES[farthest_light] = 0.1;
-			CLOSEST_VLIGHTS_COLORS[farthest_light][0] = backEnd.refdef.sunCol[0] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[farthest_light][1] = backEnd.refdef.sunCol[1] * strengthMult;
-			CLOSEST_VLIGHTS_COLORS[farthest_light][2] = backEnd.refdef.sunCol[2] * strengthMult;
-			SUN_ID = farthest_light;
-		}
-
 		VOLUME_LIGHT_INVERTED = qtrue;
 	}
-
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i volume lights. Sun id is %i.\n", NUM_CLOSE_VLIGHTS, SUN_ID);
-
-	// None to draw...
-	if (NUM_CLOSE_VLIGHTS <= 0) {
-		//ri->Printf(PRINT_WARNING, "0 visible dlights. %i total dlights.\n", backEnd.refdef.num_dlights);
-		return qfalse;
-	}
-
-	
-	/*for (int i = 0; i < NUM_CLOSE_VLIGHTS; i++)
-	{
-		ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: [%i] %fx%f. Dist %f. Color %f %f %f.\n", i, CLOSEST_VLIGHTS_POSITIONS[i][0], CLOSEST_VLIGHTS_POSITIONS[i][1], CLOSEST_VLIGHTS_DISTANCES[i], CLOSEST_VLIGHTS_COLORS[i][0], CLOSEST_VLIGHTS_COLORS[i][1], CLOSEST_VLIGHTS_COLORS[i][2]);
-	}*/
-	
 
 	int dlightShader = r_dynamiclight->integer - 1;
 
@@ -1530,10 +1339,9 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	}
 	
 
-	GLSL_SetUniformInt(shader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_VLIGHTS);
-	GLSL_SetUniformVec2x16(shader, UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformVec3xX(shader, UNIFORM_VLIGHTCOLORS, CLOSEST_VLIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
-	GLSL_SetUniformFloatxX(shader, UNIFORM_VLIGHTDISTANCES, CLOSEST_VLIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformVec2(shader, UNIFORM_VLIGHTPOSITIONS, SUN_SCREEN_POSITION);
+	GLSL_SetUniformVec3(shader, UNIFORM_VLIGHTCOLORS, sunColor);
+	GLSL_SetUniformFloat(shader, UNIFORM_VLIGHTDISTANCES, 0.1);
 
 
 	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, shader, color, 0);
@@ -1551,8 +1359,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GL_BindToTMU(tr.volumetricFBOImage, TB_NORMALMAP);
 
 	vec2_t screensize;
-	screensize[0] = tr.volumetricFBOImage->width;// glConfig.vidWidth * r_superSampleMultiplier->value;
-	screensize[1] = tr.volumetricFBOImage->height;// glConfig.vidHeight * r_superSampleMultiplier->value;
+	screensize[0] = tr.volumetricFBOImage->width;
+	screensize[1] = tr.volumetricFBOImage->height;
 	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
 
 	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.volumeLightCombineShader, color, 0);

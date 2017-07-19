@@ -3,16 +3,12 @@ uniform sampler2D			u_GlowMap;
 uniform sampler2D			u_SpecularMap;
 uniform sampler2D			u_ScreenDepthMap;
 
-#define						MAX_VOLUMETRIC_LIGHTS 2//16
-
-uniform int					u_lightCount;
-uniform vec2				u_vlightPositions[MAX_VOLUMETRIC_LIGHTS];
-uniform vec3				u_vlightColors[MAX_VOLUMETRIC_LIGHTS];
+uniform vec2				u_vlightPositions;
+uniform vec3				u_vlightColors;
 
 uniform vec4				u_Local0;
 uniform vec4				u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
-flat varying vec4			var_LightColor[MAX_VOLUMETRIC_LIGHTS];
 varying vec2				var_TexCoords;
 
 // General options...
@@ -41,127 +37,34 @@ float linearize(float depth)
 
 void main ( void )
 {
-	int  SUN_ID = int(u_ViewInfo.a);
+	vec3	totalColor = vec3(0.0, 0.0, 0.0);
+	vec3	lightColor = u_vlightColors * 1.5;
 
-	if (u_lightCount <= 0)
+	float dist = length(var_TexCoords - u_vlightPositions);
+	float fall = pow(clamp((2.0 - dist) / 2.0, 0.0, 1.0), 2.0);
+
+	float	lens = 0.0;
+	vec2	texCoord = var_TexCoords;
+	vec2	deltaTexCoord = (texCoord.xy - u_vlightPositions);
+
+	deltaTexCoord *= 1.0 / float(float(iBloomraySamples) * fBloomrayDensity);
+
+	float illuminationDecay = 1.0;
+
+	for(int g = 0; g < iBloomraySamples; g++)
 	{
-		gl_FragColor = vec4(0.0);
-		return;
+		texCoord -= deltaTexCoord;
+		float linDepth = linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
+		lens += linDepth * illuminationDecay * fBloomrayWeight;
+		illuminationDecay *= fBloomrayDecay;
+
+		if (illuminationDecay <= 0.0)
+			break;
 	}
 
-	vec2			inRangePositions[MAX_VOLUMETRIC_LIGHTS];
-	vec3			lightColors[MAX_VOLUMETRIC_LIGHTS];
-	float			fallOffRanges[MAX_VOLUMETRIC_LIGHTS];
-	float			lightDepths[MAX_VOLUMETRIC_LIGHTS];
-	bool			isSun[MAX_VOLUMETRIC_LIGHTS];
-	int				inRangeSunID = -1;
-	int				numInRange = 0;
+	totalColor += clamp(lightColor * (lens * 0.05) * fall, 0.0, 1.0);
 
-	for (int i = 0; i < u_lightCount; i++)
-	{
-		if (var_LightColor[i].a <= 0.0)
-		{
-			continue;
-		}
-
-		float dist = length(var_TexCoords - u_vlightPositions[i]);
-		float invDepth = 1.0 - var_LightColor[i].a;
-		float fall = clamp((fBloomrayFalloffRange * invDepth) - dist, 0.0, 1.0) * invDepth;
-
-		if (i == SUN_ID) 
-		{
-			fall = pow(clamp((2.0 - dist) / 2.0, 0.0, 1.0), 2.0);
-		}
-
-		if (fall > 0.0)
-		{
-			vec3 spotColor = u_vlightColors[i];
-
-			inRangePositions[numInRange] = u_vlightPositions[i];
-			lightDepths[numInRange] = 1.0 - var_LightColor[i].a;
-
-			if (i == SUN_ID) 
-			{
-				fallOffRanges[numInRange] = fall;
-				//spotColor = var_LightColor[i].rgb;
-				spotColor = u_vlightColors[i].rgb;
-			}
-			else
-			{
-				fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
-			}
-
-			float lightColorLength = length(spotColor) / 3.0;
-
-			// Try to maximize light strengths...
-			//spotColor /= lightColorLength;
-
-			lightColors[numInRange] = spotColor;
-
-			if (i == SUN_ID) 
-			{
-				isSun[numInRange] = true;
-				lightColors[numInRange] *= 1.5;
-			}
-			else
-			{
-				isSun[numInRange] = false;
-				lightColors[numInRange] *= 1.5;
-			}
-
-			numInRange++;
-		}
-	}
-
-	if (numInRange <= 0)
-	{// Nothing in range...
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-		gl_FragColor.rgb += u_vlightColors[SUN_ID].rgb * 0.05;
-		gl_FragColor.rgb *= VOLUMETRIC_STRENGTH * 2.75;
-		return;
-	}
-
-	vec3 totalColor = vec3(0.0, 0.0, 0.0);
-
-	for (int i = 0; i < u_lightCount; i++) // MAX_VOLUMETRIC_LIGHTS to use constant loop size
-	{
-		if (i >= numInRange) break;
-
-		float	lens = 0.0;
-		vec2	ScreenLightPos = inRangePositions[i];
-		vec2	texCoord = var_TexCoords;
-		float	lightDepth = lightDepths[i];
-		vec2	deltaTexCoord = (texCoord.xy - ScreenLightPos.xy);
-
-		deltaTexCoord *= 1.0 / float(float(iBloomraySamples) * fBloomrayDensity);
-
-		float illuminationDecay = 1.0;
-
-		for(int g = 0; g < iBloomraySamples; g++)
-		{
-			texCoord -= deltaTexCoord;
-
-			float linDepth = linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
-
-			lens += linDepth * illuminationDecay * fBloomrayWeight;
-
-			illuminationDecay *= fBloomrayDecay;
-
-			if (illuminationDecay <= 0.0)
-				break;
-		}
-
-		if (isSun[i])
-		{
-			totalColor += clamp(lightColors[i].rgb * (lens * 0.05) * fallOffRanges[i], 0.0, 1.0);
-		}
-		else
-		{
-			totalColor += clamp((lightColors[i].rgb * (lens * 0.5/*0.3*/) * (1.0 - lightDepth)) * fallOffRanges[i], 0.0, 1.0);
-		}
-	}
-
-	totalColor.rgb += u_vlightColors[SUN_ID].rgb * 0.05;
+	totalColor.rgb += u_vlightColors * 0.05;
 	totalColor.rgb *= VOLUMETRIC_STRENGTH * 2.75;
 
 	gl_FragColor = vec4(totalColor, 1.0);

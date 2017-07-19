@@ -38,7 +38,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __EXTRA_PRETTY__
 //#define __PSHADOWS__
 #define __DAY_NIGHT__ // FIXME - or do it with GLSL...
-//#define __VOLUME_LIGHT_DLIGHTS__ // Do volumetric lights for dlights (sun will still be a volume light though)? Now we have bloom rays, I see little point...
 
 //#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 //#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
@@ -55,7 +54,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define DISTANCE_BETWEEN_CUBEMAPS 384 //256
 #define	MAX_DEFERRED_LIGHTS 128//64//16//24
-#define MAX_VOLUMETRIC_LIGHTS 2//16//64
 
 #define MAX_IMAGE_PATH 256 //MAX_QPATH
 
