@@ -1,9 +1,9 @@
-uniform sampler2D u_TextureMap;
+uniform sampler2D	u_TextureMap;
 
-uniform vec2	u_Dimensions;
+uniform vec2		u_Dimensions;
 
-varying vec2   var_TexCoords;
-varying vec2   var_Dimensions;
+varying vec2		 var_TexCoords;
+
 
 #define NbPixel     1
 #define Edge_threshold  0.2
@@ -17,8 +17,8 @@ void main()
 	vec2 tex = var_TexCoords.xy;
 
 	// size of NbPixel pixels
-	float dx = NbPixel / var_Dimensions.x;
-	float dy = NbPixel / var_Dimensions.y;
+	float dx = NbPixel / u_Dimensions.x;
+	float dy = NbPixel / u_Dimensions.y;
 	vec4 Res = vec4(0.0, 0.0, 0.0, 0.0);
 
 	// Edge detection using Prewitt operator

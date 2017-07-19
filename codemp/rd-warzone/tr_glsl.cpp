@@ -91,8 +91,6 @@ extern const char *fallbackShader_waterPost_fp;
 extern const char *fallbackShader_waterPost_vp;
 extern const char *fallbackShader_waterForward_fp;
 extern const char *fallbackShader_waterForward_vp;
-extern const char *fallbackShader_grass_fp;
-extern const char *fallbackShader_grass_vp;
 extern const char *fallbackShader_grass2_fp;
 extern const char *fallbackShader_grass2_vp;
 extern const char *fallbackShader_grass2_gs;
@@ -3654,70 +3652,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
-	extradefines[0] = '\0';
-
-	if (r_deluxeSpecular->value > 0.000001f)
-		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
-
-	/*
-	if (r_dlightMode->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-	*/
-	if (1)
-		Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
-
-	if (r_hdr->integer && !glRefConfig.floatLightmap)
-		Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
-
-	if (r_deluxeMapping->integer)
-		Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-
-	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_TANGENT;
-
-	if (r_specularMapping->integer)
-	{
-		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
-	}
-
-	if (r_cubeMapping->integer >= 1)
-		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
-
-	//Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-	if (r_sunlightMode->integer == 1)
-		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-	else if (r_sunlightMode->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-	Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-	attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-
-	if (r_normalMapping->integer)
-	{
-		attribs |= ATTR_TANGENT2;
-	}
-
-	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
-	Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.grassShader, "grass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_grass_vp, fallbackShader_grass_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load grass shader!");
-	}
-
-
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -5593,59 +5527,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.grassShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load grass shader!");
-	}
-
-	GLSL_InitUniforms(&tr.grassShader);
-
-	qglUseProgram(tr.grassShader.program);
-
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.grassShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	//GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.grassShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.grassShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.grassShader);
-#endif
-
-	numEtcShaders++;
-
-
-
-
 	if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load hbao shader!");
@@ -5782,7 +5663,6 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterPostShader);
-	GLSL_DeleteGPUShader(&tr.grassShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grass2Shader);
 	if (r_pebbles->integer)	GLSL_DeleteGPUShader(&tr.pebblesShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);

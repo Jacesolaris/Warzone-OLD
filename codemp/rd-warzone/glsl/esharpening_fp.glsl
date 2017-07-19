@@ -1,18 +1,14 @@
-uniform sampler2D u_TextureMap;
+uniform sampler2D	u_TextureMap;
 
-uniform vec2	u_Dimensions;
+uniform vec2		u_Dimensions;
 
-varying vec2   var_TexCoords;
-varying vec2   var_Dimensions;
+varying vec2		var_TexCoords;
 
 const float SamplingRange=1.0; //sharpening or blurring range
 const float SharpeningAmount=2.3;
-const float ScanLineAmount=0.0;
-const float ScanLineRepeat=0.0; //0.5, 0.3333, 0.25, 0.125, so on
-const float NoiseAmount=0.0;
 
 //global variables, already set before executing this code
-float ScreenSize = var_Dimensions.x; //width of the display resolution (1920 f.e.)
+#define ScreenSize u_Dimensions.x //width of the display resolution (1920 f.e.)
 
 void main (void)
 {
@@ -25,18 +21,6 @@ void main (void)
 	vec4 origcolor = texture2D(u_TextureMap, coord.st);
 
 	const vec2 offset[8] = vec2[8](vec2(1.0, 1.0), vec2(-1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, -1.0), vec2(1.41, 0.0), vec2(-1.41, 0.0), vec2(0.0, 1.41), vec2(0.0, -1.41));
-  
-	/*
-	offset[0] = vec2(1.0, 1.0);
-	offset[1] = vec2(-1.0, -1.0);
-	offset[2] = vec2(-1.0, 1.0);
-	offset[3] = vec2(1.0, -1.0);
-
-	offset[4] = vec2(1.41, 0.0);
-	offset[5] = vec2(-1.41, 0.0);
-	offset[6] = vec2(0.0, 1.41);
-	offset[7] = vec2(0.0, -1.41);
-	*/
 
 	int i=0;
 

@@ -3,16 +3,16 @@
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
 
-varying vec2		var_TexCoords;
-varying vec2		var_Dimensions;
-varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
+uniform vec2	u_Dimensions;
+uniform vec4	u_ViewInfo; // zfar / znear, zfar
+uniform vec4	u_Local0; // dofValue, 0, 0, 0
 
-varying vec4		var_Local0; // dofValue, 0, 0, 0
+varying vec2		var_TexCoords;
 
 #define PI  3.14159265
 
-float width = var_Dimensions.x; //texture width
-float height = var_Dimensions.y; //texture height
+float width = u_Dimensions.x; //texture width
+float height = u_Dimensions.y; //texture height
 
 vec2 texel = vec2(1.0/width,1.0/height);
 
@@ -25,8 +25,8 @@ const bool showFocus = false;
 make sure that these two values are the same for your camera, otherwise distances will be wrong.
 */
 
-float znear = var_ViewInfo.x; //camera clipping start
-float zfar = var_ViewInfo.y; //camera clipping end
+float znear = u_ViewInfo.x; //camera clipping start
+float zfar = u_ViewInfo.y; //camera clipping end
 
 //------------------------------------------
 //user variables
@@ -205,7 +205,7 @@ float vignette()
 
 void main() 
 {
-	if (var_Local0.x >= 2.0) autofocus = true;
+	if (u_Local0.x >= 2.0) autofocus = true;
 
 	//scene depth calculation
 	

@@ -1,9 +1,9 @@
 uniform sampler2D u_DiffuseMap;
 //uniform sampler2D lensDirtTex; // UQ1: FIXME - Add one with Warzone assests later...
 
+uniform vec2	u_Dimensions;
+
 varying vec2	var_TexCoords;
-varying vec3	var_Position;
-varying vec2	var_Dimensions;
 
 vec2 dist2(vec3 p)
 {
@@ -100,11 +100,11 @@ void main()
 
 	vec2 texcoord = -var_TexCoords + vec2(1.0);
 
-	vec2 imgSize = vec2(var_Dimensions);
+	vec2 imgSize = vec2(u_Dimensions);
 
 	vec2 ghostVec = (vec2(0.5) - texcoord) * GHOST_DISPERSAL;
 
-	vec2 texelSize = 1.0 / vec2(var_Dimensions);
+	vec2 texelSize = 1.0 / vec2(u_Dimensions);
 
 	vec3 distortion = vec3(
 		-texelSize.x * CHROMATIC_DISTORTION, 
@@ -146,7 +146,6 @@ void main()
 	result.b *= cos(var_TexCoords.x);
 
 	// Write
-	//fColor -= clamp(amb_occ(var_Position.xyz), 0.0, 1.0) * 0.02; // UQ1: Just testing this. Not related to lensflare at all...
 	fColor += result;
 	gl_FragColor = vec4(fColor.rgb, 1.0);
 }

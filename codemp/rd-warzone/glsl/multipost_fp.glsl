@@ -1,19 +1,21 @@
 uniform sampler2D u_DiffuseMap;
 
+uniform vec4	u_ViewInfo; // zfar / znear, zfar
+uniform vec2	u_Dimensions;
+uniform vec4	u_Local0; // num_passes, 0, 0, 0
+
+
 varying vec2	var_TexCoords;
-varying vec4	var_ViewInfo; // zfar / znear, zfar
-varying vec2	var_Dimensions;
-varying vec4	var_Local0; // num_passes, 0, 0, 0
 
 #define SHARPEN_ENABLED
 //#define HDR_ENABLED
 //#define SSAO_ENABLED
 //#define LF_ENABLED
 
-vec2 resolution = var_Dimensions;
+vec2 resolution = u_Dimensions;
 vec2 vTexCoords = var_TexCoords;
 
-vec2 TEX_OFFSET = vec2(1.0 / float(var_Dimensions.x), 1.0 / float(var_Dimensions.y));
+vec2 TEX_OFFSET = vec2(1.0 / float(u_Dimensions.x), 1.0 / float(u_Dimensions.y));
 
 vec2 KERNEL[8] = vec2[](
 	vec2(TEX_OFFSET.x, TEX_OFFSET.y),
