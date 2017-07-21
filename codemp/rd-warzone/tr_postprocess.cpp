@@ -2272,6 +2272,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
+
 	if (r_ssdo->integer)
 	{
 		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
@@ -2291,6 +2294,26 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
 		}
 	}
+
+	/*
+	int cubemap = -1;
+
+	if (tr.cubemaps)
+	{
+		cubemap = R_CubemapForPoint(backEnd.refdef.vieworg) - 1;
+	}
+
+	if (cubemap)
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GL_BindToTMU(tr.cubemaps[cubemap], TB_CUBEMAP);
+	}
+	else
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GL_BindToTMU(tr.whiteImage, TB_CUBEMAP);
+	}
+	*/
 
 	/*for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 	{
@@ -2328,6 +2351,10 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	vec4_t local3;
 	VectorSet4(local3, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL3, local3);
+
+	vec4_t local4;
+	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL4, local4);
 
 	{
 		vec2_t screensize;

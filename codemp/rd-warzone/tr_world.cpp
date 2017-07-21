@@ -477,15 +477,15 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 			return;
 		}
 
-		if (r_occlusion->integer && node->occluded && !(tr.viewParms.flags & VPF_DEPTHSHADOW))
-		{
-			return;
-		}
-
 		// if the bounding volume is outside the frustum, nothing
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
-		if (!r_nocull->integer || SKIP_CULL_FRAME) {
+		if (!r_nocull->integer) {
+			if (r_occlusion->integer && node->occluded && !(tr.viewParms.flags & VPF_DEPTHSHADOW))
+			{
+				return;
+			}
+
 			int		r;
 
 			if (planeBits & 1) {
@@ -743,10 +743,7 @@ static const byte *R_ClusterPVS(int cluster) {
 R_inPVS
 =================
 */
-#define __PVS__
 qboolean R_inPVS(const vec3_t p1, const vec3_t p2, byte *mask) {
-#ifdef __PVS__
-	int		leafnum;
 	int		cluster;
 
 	mnode_t *leaf = R_PointInLeaf(p1);
@@ -762,9 +759,6 @@ qboolean R_inPVS(const vec3_t p1, const vec3_t p2, byte *mask) {
 		return qfalse;
 
 	return qtrue;
-#else //!__PVS__
-	return qtrue;
-#endif //__PVS__
 }
 
 /*

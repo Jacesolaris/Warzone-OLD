@@ -3608,6 +3608,7 @@ static void R_LoadCubemapWaypoints( void )
 		}
 
 		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags )
+			|| surf->shader->customCubeMapScale > 0.0
 			|| (surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 		{// Ok, this surface is shiny... Make a cubemap here...
 			if (surf->cullinfo.type & CULLINFO_SPHERE)
@@ -3745,7 +3746,7 @@ static void R_AssignCubemapsToWorldSurfaces(void)
 		msurface_t *surf = &w->surfaces[i];
 		vec3_t surfOrigin;
 		
-		if (!R_MaterialUsesCubemap( surf->shader->surfaceFlags ))
+		if (!R_MaterialUsesCubemap( surf->shader->surfaceFlags ) && surf->shader->customCubeMapScale <= 0.0)
 		{
 			surf->cubemapIndex = 0;
 		}
@@ -3968,8 +3969,7 @@ void R_MergeLeafSurfaces(void)
 				cubemapIndex2 = surf2->cubemapIndex;
 
 				if (cubemapIndex1 != cubemapIndex2 
-					&& R_MaterialUsesCubemap(shader1->surfaceFlags) 
-					&& R_MaterialUsesCubemap(shader2->surfaceFlags))
+					&& ((R_MaterialUsesCubemap(shader1->surfaceFlags) && R_MaterialUsesCubemap(shader2->surfaceFlags)) || (shader1->customCubeMapScale && shader2->customCubeMapScale)))
 				{
 					if (Distance(tr.cubemapOrigins[cubemapIndex1], tr.cubemapOrigins[cubemapIndex2]) > 512.0)
 					{// Too far from original cubemap, let's not merge this one...

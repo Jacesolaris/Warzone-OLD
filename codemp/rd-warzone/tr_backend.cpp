@@ -2707,6 +2707,13 @@ const void *RB_PostProcess(const void *data)
 
 	RB_OcclusionCulling();
 
+	if (r_occlusionDebug->integer > 1)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.renderImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+	}
+
 	backEnd.framePostProcessed = qtrue;
 
 	return (const void *)(cmd + 1);

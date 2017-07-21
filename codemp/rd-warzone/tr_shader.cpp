@@ -3795,6 +3795,10 @@ static qboolean ParseShader( const char *name, const char **text )
 	const char *begin = *text;
 	int s;
 
+	// First, init custom cubemap and specular override settings... -1.0 means not specified.
+	shader.customCubeMapScale = -1.0;
+	shader.customSpecularScale = -1.0;
+
 	s = 0;
 
 	token = COM_ParseExt( text, qtrue );
@@ -4008,6 +4012,36 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if (!Q_stricmp(token, "detailMapFromWorld"))
 		{
 			shader.detailMapFromWorld = qtrue;
+			continue;
+		}
+		//
+		// Don't like the warzone material default for the reflectiveness? Use this to override material default for this whole shader...
+		//
+		else if (!Q_stricmp(token, "customCubeMapScale"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'customCubeMapScale' keyword in shader '%s'\n", shader.name);
+				shader.customCubeMapScale = -1.0;
+				continue;
+			}
+			shader.customCubeMapScale = atof(token);
+			continue;
+		}
+		//
+		// Don't like the warzone material default for the shinyness? Use this to override material default for this whole shader...
+		//
+		else if (!Q_stricmp(token, "customSpecularScale"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'customSpecularScale' keyword in shader '%s'\n", shader.name);
+				shader.customSpecularScale = -1.0;
+				continue;
+			}
+			shader.customSpecularScale = atof(token);
 			continue;
 		}
 		// entityMergable, allowing sprite surfaces from multiple entities

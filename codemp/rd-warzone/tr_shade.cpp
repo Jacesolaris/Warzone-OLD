@@ -1109,7 +1109,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 		{
 			specularScale = 1.5;
-			cubemapScale = 1.0;
+			cubemapScale = 0.7;
 			materialType = (float)MATERIAL_WATER;
 			parallaxScale = 2.0;
 		}
@@ -1119,7 +1119,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			{
 			case MATERIAL_WATER:			// 13			// light covering of water on a surface
 				specularScale = 1.0;
-				cubemapScale = 1.0;
+				cubemapScale = 0.7;
 				materialType = (float)MATERIAL_WATER;
 				parallaxScale = 1.5;
 				break;
@@ -1163,7 +1163,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_TILES:			// 26			// tiled floor
 				specularScale = 0.56;
-				cubemapScale = 0.25;
+				cubemapScale = 0.15;
 				materialType = (float)MATERIAL_TILES;
 				parallaxScale = 1.5;
 				break;
@@ -1219,7 +1219,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_MARBLE:			// 12			// marble floors
 				specularScale = 0.65;
-				cubemapScale = 0.6;
+				cubemapScale = 0.26;
 				materialType = (float)MATERIAL_MARBLE;
 				parallaxScale = 1.5;
 				break;
@@ -1261,7 +1261,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_PLASTIC:			// 25			//
 				specularScale = 0.58;
-				cubemapScale = 0.4;
+				cubemapScale = 0.24;
 				materialType = (float)MATERIAL_PLASTIC;
 				parallaxScale = 1.5;
 				break;
@@ -1273,38 +1273,38 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 				break;
 			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 				specularScale = 0.93;
-				cubemapScale = 0.7;
+				cubemapScale = 0.37;
 				materialType = (float)MATERIAL_SHATTERGLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_ARMOR:			// 30			// body armor
 				specularScale = 0.5;
-				cubemapScale = 0.6;
+				cubemapScale = 0.46;
 				materialType = (float)MATERIAL_ARMOR;
 				parallaxScale = 1.5;
 				isMetalic = 1.0;
 				break;
 			case MATERIAL_ICE:				// 15			// packed snow/solid ice
 				specularScale = 0.75;
-				cubemapScale = 0.7;
+				cubemapScale = 0.37;
 				materialType = (float)MATERIAL_ICE;
 				parallaxScale = 2.0;
 				break;
 			case MATERIAL_GLASS:			// 10			//
 				specularScale = 0.95;
-				cubemapScale = 0.7;
+				cubemapScale = 0.27;
 				materialType = (float)MATERIAL_GLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 				specularScale = 0.93;
-				cubemapScale = 0.73;
+				cubemapScale = 0.23;
 				materialType = (float)MATERIAL_BPGLASS;
 				parallaxScale = 1.0;
 				break;
 			case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 				specularScale = 0.92;
-				cubemapScale = 0.92;
+				cubemapScale = 0.42;
 				materialType = (float)MATERIAL_COMPUTER;
 				parallaxScale = 1.5;
 				break;
@@ -1322,6 +1322,16 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		{
 			cubemapScale = pStage->cubeMapScale;
 		}
+		else if (tess.shader->customCubeMapScale != -1.0)
+		{
+			cubemapScale = tess.shader->customCubeMapScale;
+		}
+
+		if (tess.shader->customSpecularScale != -1.0)
+		{
+			specularScale = tess.shader->customSpecularScale;
+		}
+		
 
 		if (pStage->isFoliage)
 		{
