@@ -2,6 +2,10 @@
 //#define USE_ALPHA_TEST
 #define USE_GLOW_DETAIL_BUFFERS
 
+
+#define SNOW_HEIGHT_STRENGTH 0.25 // Distance above water to start snow...
+
+
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
 uniform sampler2D			u_WaterEdgeMap;
@@ -73,6 +77,7 @@ uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], r_showspl
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define UI_VIBRANCY			0.4
+#define MAP_MAX_HEIGHT		u_Local8.b
 #define WATER_LEVEL			u_Local6.a
 #define cubeStrength		u_Local3.a
 #define cubeMaxDist			u_Local3.b
@@ -262,10 +267,9 @@ vec4 GetControlMap( sampler2D tex)
 	if (USE_REGIONS > 0.0)
 	{
 		// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
-#define SNOW_HEIGHT_STRENGTH 0.25
-		float maxHeightOverWater = u_Local8.b - u_Local6.a;
-		float currentheightOverWater = u_Local8.b - m_vertPos.z;
-		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH/*u_Local9.r*/);
+		float maxHeightOverWater = MAP_MAX_HEIGHT - WATER_LEVEL;
+		float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
+		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
 		float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
 		vec4 xaxis = textureLod( tex, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
 		vec4 yaxis = textureLod( tex, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
@@ -324,14 +328,14 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	return color;
 }
 
-vec4 GetSplatMap(vec2 texCoords, float pixRandom, vec4 inColor, float inA1)
+vec4 GetSplatMap(vec2 texCoords, vec4 inColor)
 {
 	if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 	{
 		return inColor;
 	}
 
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL)// + 128.0) + (64.0 * pixRandom))
+	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL)
 	{// Steep maps (water edges)... Underwater doesn't use splats for now...
 		return inColor;
 	}
@@ -344,27 +348,34 @@ vec4 GetSplatMap(vec2 texCoords, float pixRandom, vec4 inColor, float inA1)
 
 	float depth = -1.0;
 
+	float scale = 0.01;
+
+	if (USE_REGIONS > 0.0)
+	{
+		scale = 0.001;//u_Local9.g;
+	}
+
 	if (u_Local7.r > 0.0 && control.r > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap1, 0.01, depth);
+		vec4 tex = GetMap(u_SplatMap1, scale, depth);
 		splatColor = mix(splatColor, tex, control.r * tex.a);
 	}
 
 	if (u_Local7.g > 0.0 && control.g > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap2, 0.01, depth);
+		vec4 tex = GetMap(u_SplatMap2, scale, depth);
 		splatColor = mix(splatColor, tex, control.g * tex.a);
 	}
 
 	if (u_Local7.b > 0.0 && control.b > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap3, 0.01, depth);
+		vec4 tex = GetMap(u_SplatMap3, scale, depth);
 		splatColor = mix(splatColor, tex, control.b * tex.a);
 	}
 	/*
 	if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap4, 0.01, depth);
+		vec4 tex = GetMap(u_SplatMap4, scale, depth);
 		splatColor = mix(splatColor, tex, control.a * tex.a);
 	}
 	*/
@@ -381,10 +392,25 @@ vec4 GenerateTerrainMap(vec2 coord)
 	}
 
 	// Splat mapping...
-#define SNOW_HEIGHT 0.001
-	float a1 = 0.0;
+#define SNOW_HEIGHT 0.0075
+	#if 0
+	float a1 = -1.0;
 	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT, a1);
-	return GetSplatMap(coord, 0.0, tex, a1);
+	return GetSplatMap(coord, tex);
+	#else
+	float a1 = 0.0;
+	vec4 tex1 = GetMap(u_DiffuseMap, SNOW_HEIGHT, a1);
+	vec4 tex2 = GetSplatMap(coord, vec4(0.0));
+	float a2 = GetDepthForPixel(tex2);
+
+	float maxHeightOverWater = MAP_MAX_HEIGHT - WATER_LEVEL;
+	float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
+	float mixVal = 1.0 - pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
+
+	mixVal *= -32.0;//u_Local9.r;
+
+	return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+	#endif
 }
 
 vec3 vLocalSeed;
@@ -439,7 +465,7 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		}
 
 		// Splat mapping...
-		tex2 = GetSplatMap(texCoords, pixRandom, tex2, a2);
+		tex2 = GetSplatMap(texCoords, tex2);
 
 		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 	}
@@ -459,7 +485,7 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		// Splat mapping...
 		float a1 = 0.0;
 		vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
-		return GetSplatMap(texCoords, pixRandom, tex, a1);
+		return GetSplatMap(texCoords, tex);
 	}
 	else
 	{

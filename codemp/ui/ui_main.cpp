@@ -2020,6 +2020,7 @@ static void UI_DrawTeamMember(rectDef_t *rect, float scale, vec4_t color, qboole
 	Text_Paint(rect->x, rect->y, scale, finalColor, text, 0, 0, textStyle, iMenuFont);
 }
 
+int SCREENSHOT_TOTAL = -1;
 int SCREENSHOT_CHOICE = 0;
 int SCREENSHOT_NEXT_UPDATE_TIME = 0;
 
@@ -2027,10 +2028,31 @@ char *UI_GetCurrentLevelshot(void)
 {
 	if (SCREENSHOT_NEXT_UPDATE_TIME < trap->Milliseconds())
 	{
+		if (SCREENSHOT_TOTAL < 0)
+		{// Count and register them...
+			SCREENSHOT_TOTAL = 0;
+
+			while (1)
+			{
+				char screenShot[128] = { 0 };
+
+				strcpy(screenShot, va("menu/art/unknownmap_mp%i", SCREENSHOT_TOTAL));
+
+				if (!trap->R_RegisterShaderNoMip(screenShot))
+				{// Found the last one...
+					break;
+				}
+
+				SCREENSHOT_TOTAL++;
+			}
+
+			SCREENSHOT_TOTAL--;
+		}
+
 		SCREENSHOT_NEXT_UPDATE_TIME = trap->Milliseconds() + 5000;
 		SCREENSHOT_CHOICE++;
 
-		if (SCREENSHOT_CHOICE > 9) SCREENSHOT_CHOICE = 0;
+		if (SCREENSHOT_CHOICE > SCREENSHOT_TOTAL) SCREENSHOT_CHOICE = 0;
 	}
 
 	return va("menu/art/unknownmap_mp%i", SCREENSHOT_CHOICE);

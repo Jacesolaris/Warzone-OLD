@@ -109,6 +109,8 @@ overlays UI_DrawConnectScreen
 */
 #define UI_INFOFONT (UI_BIGFONT)
 
+int SCREENSHOT_TOTAL = -1;
+
 int SCREENSHOT_CHOICE = 0;
 int SCREENSHOT_NEXT_UPDATE_TIME = 0;
 char SCREENSHOT_CURRENT[64] = { 0 };
@@ -127,9 +129,30 @@ char *UI_GetCurrentLevelshot(const char *s)
 
 	if (SCREENSHOT_NEXT_UPDATE_TIME < trap->Milliseconds() || SCREENSHOT_NEXT_UPDATE_TIME == 0)
 	{
+		if (SCREENSHOT_TOTAL < 0)
+		{// Count and register them...
+			SCREENSHOT_TOTAL = 0;
+
+			while (1) 
+			{
+				char screenShot[128] = { 0 };
+
+				strcpy(screenShot, va("menu/art/unknownmap_mp%i", SCREENSHOT_TOTAL));
+
+				if (!trap->R_RegisterShaderNoMip(screenShot))
+				{// Found the last one...
+					break;
+				}
+
+				SCREENSHOT_TOTAL++;
+			}
+
+			SCREENSHOT_TOTAL--;
+		}
+
 		SCREENSHOT_NEXT_UPDATE_TIME = trap->Milliseconds() + 10000;
 		
-		SCREENSHOT_CHOICE = irand_big(0, 9);
+		SCREENSHOT_CHOICE = irand_big(0, SCREENSHOT_TOTAL);
 		memset(SCREENSHOT_CURRENT, 0, sizeof(SCREENSHOT_CURRENT));
 		strcpy(SCREENSHOT_CURRENT, va("menu/art/unknownmap_mp%i", SCREENSHOT_CHOICE));
 	}
