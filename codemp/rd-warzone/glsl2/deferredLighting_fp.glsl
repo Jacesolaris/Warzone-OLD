@@ -3,6 +3,7 @@
 #define __ENVMAP__
 //#define __NORMAL_METHOD_1__
 #define __NORMAL_METHOD_2__
+//#define __EMISSION__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -11,6 +12,7 @@ uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_HeightMap;
 uniform sampler2D	u_ShadowMap;
 uniform sampler2D	u_DeluxeMap;
+uniform sampler2D	u_GlowMap;
 uniform samplerCube	u_CubeMap;
 
 uniform vec2		u_Dimensions;
@@ -44,6 +46,9 @@ varying vec2		var_TexCoords;
 
 #define LIGHT_THRESHOLD  0.001
 
+float rand(vec2 co) {
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
@@ -276,7 +281,9 @@ void main(void)
 #if defined(USE_SHADOWMAP)
 	if (u_Local2.g > 0.0)
 	{
-		float shadowValue = textureLod(u_ShadowMap, texCoords, 0.0).r;
+		float shadowValue = texture(u_ShadowMap, texCoords).r;
+
+#if 1
 		shadowValue = pow(shadowValue, 1.5);
 
 #define sm_cont_1 ( 64.0 / 255.0)
@@ -285,6 +292,10 @@ void main(void)
 
 		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
 		shadowMult = clamp(shadowValue, 0.2, 1.0);
+#else		
+		gl_FragColor.rgb *= shadowValue;
+		shadowMult = clamp(shadowValue, 0.2, 1.0);
+#endif
 	}
 #endif //defined(USE_SHADOWMAP)
 
@@ -432,5 +443,61 @@ void main(void)
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
 	}
 #endif //__ENVMAP__
+
+#ifdef __EMISSION__
+	if (u_Local3.r > 0.0)
+	{
+		float shinyness = reflectivePower;
+		
+		if (u_Local3.g > 0.0)
+			shinyness = (norm.a * 0.5);
+
+		if (u_Local3.b > 0.0)
+			shinyness = u_Local3.b;
+
+		if (u_lightCount > 0.0)
+		{
+			vec3 addedLight = vec3(0.0);
+
+			for (int li = 0; li < u_lightCount; li++)
+			{
+				vec3 lightPos = u_lightPositions2[li].xyz;
+				float lightDist = distance(lightPos, position.xyz);
+				float lightPower = lightDist / 512.0;
+
+				if (lightPower > 1.0) continue;
+
+				float pDist = distance(lightPos.xyz, u_ViewOrigin.xyz);
+				float viewDist = distance(position.xyz, u_ViewOrigin.xyz);
+
+				if (viewDist > pDist) continue;
+
+				lightPower = 1.0 - clamp(lightPower, 0.0, 1.0);
+
+				vec3 bounceDir = reflect(surfaceToCamera, N);
+				vec3 lightColor = u_lightColors[li].rgb;
+
+				if (length(lightColor) <= 0.01)
+				{
+					lightColor = vec3(1.0);
+				}
+
+				vec3 lightDir = normalize(lightPos - position.xyz);
+
+				vec3 crs = cross(bounceDir, lightDir);
+				//float a = dot(bounceDir, lightDir);
+				//float a = distance(bounceDir, lightDir);
+				float a = length(crs);
+
+				if (a < u_Local3.a && rand(crs.yz) < 0.02)
+				{
+					addedLight += lightColor * lightPower * shinyness * a * rand(crs.xy);
+				}
+			}
+
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + clamp(addedLight * shinyness * lightScale, 0.0, 1.0), shinyness * lightScale);
+		}
+	}
+#endif //__EMISSION__
 }
 

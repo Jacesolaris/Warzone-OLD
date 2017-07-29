@@ -21,15 +21,15 @@ vec2 pixel = vec2(1.0) / u_Dimensions;
 //these MUST match your current settings
 float znear = u_ViewInfo.r;//1.0;                      //camera clipping start
 float zfar = u_ViewInfo.g;//50.0;                      //camera clipping end
-float fov = 1.0;//90.0 / u_Local3.g;//u_ViewInfo.a;//90.0;                //check your camera settings, set this to (90.0 / fov) (make sure you put a ".0" after your number)
+const float fov = 1.0;//90.0 / u_Local3.g;//u_ViewInfo.a;//90.0;                //check your camera settings, set this to (90.0 / fov) (make sure you put a ".0" after your number)
 float aspectratio = u_Dimensions.x/u_Dimensions.y;//16.0/9.0;           //width / height (make sure you put a ".0" after your number)
 vec3 skycolor = vec3(0.0,0.0,0.0);   // use the horizon color under world properties, fallback when reflections fail
 
 //tweak these to your liking
 //float reflectStrength = 0.04;    //reflectivity of surfaced that you face head-on
-float stepSize = 0.03;//0.003;//u_Local3.b;//0.03;      //reflection choppiness, the lower the better the quality, and worse the performance 
-int samples = 24;//100;          //reflection distance, the higher the better the quality, and worse the performance
-float startScale = 4.0;//8.0;//4.0;     //first value for variable scale calculations, the higher this value is, the faster the filter runs but it gets you staircase edges, make sure it is a power of 2
+const float stepSize = 0.03;//0.003;//u_Local3.b;//0.03;      //reflection choppiness, the lower the better the quality, and worse the performance 
+#define samples 24//100          //reflection distance, the higher the better the quality, and worse the performance
+const float startScale = 4.0;//8.0;//4.0;     //first value for variable scale calculations, the higher this value is, the faster the filter runs but it gets you staircase edges, make sure it is a power of 2
 
 //#######################################
 
@@ -72,6 +72,7 @@ vec3 rayTrace(vec3 startpos, vec3 dir){
     vec2 psc;               // Pixel Space Coordinate of the ray's' current viewspace position 
     vec3 ssg;               // Screen Space coordinate of the existing Geometry at that pixel coordinate
     
+#pragma unroll samples
     for(int i = 0; i < samples; i++){
         olz = pos.z; //previous z
         pos = pos + dir * stepSize * pos.z * scl;

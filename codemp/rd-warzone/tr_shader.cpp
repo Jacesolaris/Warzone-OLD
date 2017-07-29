@@ -4469,20 +4469,23 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->isFoliageChecked = qtrue;
 	}
 
-	if (lightmap)
+	if (tr.numLightmaps > 0)
 	{
-		//ri->Printf(PRINT_ALL, ", lightmap");
-		diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
-		defs |= LIGHTDEF_USE_LIGHTMAP;
-	}
-	else if (( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES // billboards
-		&& ( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES // tree leaves
-		&& !shader.isSky
-		&& !diffuse->glow)
-	{
-		diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
-		diffuse->bundle[TB_LIGHTMAP].image[0] = tr.whiteImage;
-		defs |= LIGHTDEF_USE_LIGHTMAP;
+		if (lightmap)
+		{
+			//ri->Printf(PRINT_ALL, ", lightmap");
+			diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
+			defs |= LIGHTDEF_USE_LIGHTMAP;
+		}
+		else if ((shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_DRYLEAVES // billboards
+			&& (shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_GREENLEAVES // tree leaves
+			&& !shader.isSky
+			&& !diffuse->glow)
+		{
+			diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
+			diffuse->bundle[TB_LIGHTMAP].image[0] = tr.whiteImage;
+			defs |= LIGHTDEF_USE_LIGHTMAP;
+		}
 	}
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
@@ -4853,7 +4856,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
 				diffuse->bundle[TB_STEEPMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_STEEPMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_STEEPMAP].image[0] = specularImg;
@@ -4933,7 +4936,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map2 %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map2 %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
 				diffuse->bundle[TB_WATER_EDGE_MAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_WATER_EDGE_MAP].numImageAnimations = 0;
 				diffuse->bundle[TB_WATER_EDGE_MAP].image[0] = specularImg;
@@ -5004,7 +5007,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATCONTROLMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATCONTROLMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATCONTROLMAP].image[0] = splatImg;
@@ -5054,7 +5057,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP1] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP1].image[0] = splatImg;
@@ -5110,7 +5113,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP2] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP2].image[0] = splatImg;
@@ -5166,7 +5169,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP3] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP3].image[0] = splatImg;
@@ -5402,7 +5405,8 @@ static int CollapseStagesToGLSL(void)
 	{
 		// if 2+ stages and first stage is lightmap, switch them
 		// this makes it easier for the later bits to process
-		if (stages[0].active &&
+		if (tr.numLightmaps > 0 &&
+			stages[0].active &&
 			stages[0].bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 			stages[0].bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
 			stages[1].active)
@@ -5439,6 +5443,16 @@ static int CollapseStagesToGLSL(void)
 
 			if (!pStage->active)
 				continue;
+
+			if (tr.numLightmaps <= 0)
+			{// If no world data, remove any lightmaps from the shader...
+				if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
+					pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
+				{
+					pStage->active = qfalse;
+					continue;
+				}
+			}
 
 
 			if (pStage->adjustColorsForFog 

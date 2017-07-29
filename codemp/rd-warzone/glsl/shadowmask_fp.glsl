@@ -1,187 +1,109 @@
-uniform sampler2D u_ScreenDepthMap;
+uniform sampler2D		u_ScreenDepthMap;
 
-uniform sampler2D u_ShadowMap;
+uniform sampler2D		u_ShadowMap;
+uniform sampler2D		u_ShadowMap2;
+uniform sampler2D		u_ShadowMap3;
+uniform sampler2D		u_ShadowMap4;
 
-#if defined(USE_SHADOW_CASCADE2)
-uniform sampler2D u_ShadowMap2;
-uniform sampler2D u_ShadowMap3;
-#if defined(USE_SHADOW_CASCADE3)
-uniform sampler2D u_ShadowMap4;
-uniform sampler2D u_ShadowMap5;
-#endif
-#elif defined(USE_SHADOW_CASCADE)
-uniform sampler2D u_ShadowMap2;
-#endif
+uniform mat4			u_ShadowMvp;
+uniform mat4			u_ShadowMvp2;
+uniform mat4			u_ShadowMvp3;
+uniform mat4			u_ShadowMvp4;
 
-uniform mat4      u_ShadowMvp;
-#if defined(USE_SHADOW_CASCADE2)
-uniform mat4      u_ShadowMvp2;
-uniform mat4      u_ShadowMvp3;
-#if defined(USE_SHADOW_CASCADE3)
-uniform mat4      u_ShadowMvp4;
-uniform mat4      u_ShadowMvp5;
-#endif
-#elif defined(USE_SHADOW_CASCADE)
-uniform mat4      u_ShadowMvp2;
-#endif
+uniform vec4			u_Settings0;			// shadowQuality, r_shadowMapSize, r_shadowCascadeZFar, 0.0
+uniform vec3			u_ViewOrigin;
+uniform vec4			u_ViewInfo;				// zfar / znear, zfar, depthBits
+uniform float			u_ShadowZfar[5];
 
-uniform vec4   u_Settings0; // r_shadowMaxDepthError->value, r_shadowSolidityValue->value, 0.0, 0.0
-uniform vec3   u_ViewOrigin;
-uniform vec4   u_ViewInfo; // zfar / znear, zfar
+#define					r_shadowQuality			u_Settings0.r
+#define					r_shadowMapSize			u_Settings0.g
+#define					r_shadowCascadeZFar		u_Settings0.b
 
-varying vec2   var_DepthTex;
-varying vec3   var_ViewDir;
+precise varying vec2	var_DepthTex;
+precise varying vec3	var_ViewDir;
 
-// depth is GL_DEPTH_COMPONENT24
-// so the maximum error is 1.0 / 2^24
-#define DEPTH_MAX_ERROR 0.000000059604644775390625
+precise float DEPTH_MAX_ERROR = (1.0 / pow(2.0, u_ViewInfo.b));
 
-float getLinearDepth(sampler2D depthMap, vec2 tex, float zFarDivZNear)
+precise float scale = 1.0 / r_shadowMapSize;
+
+float getLinearDepth(sampler2D depthMap, vec2 tex)
 {
-	float sampleZDivW = texture2D(depthMap, tex).r;
+	precise float sampleZDivW = texture(depthMap, tex).r;
 	sampleZDivW -= DEPTH_MAX_ERROR;
-	return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
+	return 1.0 / mix(u_ViewInfo.x, 1.0, sampleZDivW);
 }
 
-float PCF(const sampler2D shadowmap, const vec2 st, const float dist)
+float shadowPCF2(const sampler2D shadowmap, const vec2 st, const float dist)
 {
-	float depth = texture2D(shadowmap, st).r;
-	float mult = step(dist, depth/* + u_Settings0.r*/);
+	precise float mult = 0.0;
+
+	mult += step(dist, texture(shadowmap, st).r + 0.005) * 3.0;
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(-1.0, 0.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(0.0, -1.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(1.0, 0.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(0.0, 1.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(1.0, 1.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(-1.0, -1.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(1.0, -1.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(-1.0, 1.0))).r + 0.005);
+	mult /= 11.0;
+
 	return mult;
 }
 
-#if defined(USE_SHADOW_CASCADE) || defined(USE_FAST_SHADOW)
-const float blendRange1 = 1024.0;
-const float blendRange2 = 4096.0;
-const float blendRange3 = 65536.0;
-#endif
+float shadowPCF(const sampler2D shadowmap, const vec2 st, const float dist)
+{
+	precise float mult = 0.0;
 
+	mult += step(dist, texture(shadowmap, st).r + 0.005) * 2.0;
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(-1.0, 0.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(0.0, -1.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(1.0, 0.0))).r + 0.005);
+	mult += step(dist, texture(shadowmap, st + (scale * vec2(0.0, 1.0))).r + 0.005);
+	mult /= 6.0;
+
+	return mult;
+}
+
+float shadow(const sampler2D shadowmap, const vec2 st, const float dist)
+{
+	return step(dist, texture(shadowmap, st).r + 0.005);
+}
 
 void main()
 {
-	float result;
-	
-	float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex, u_ViewInfo.x);
-	float sampleZ = u_ViewInfo.y * depth;
+	precise float result = 1.0;
+	precise float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex);
+	precise float sampleZ = u_ViewInfo.y * depth;
 
-	vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
-	
-	vec4 shadowpos = u_ShadowMvp * biasPos;
-	
-#if defined(USE_SHADOW_CASCADE) || defined(USE_SHADOW_CASCADE2) || defined(USE_FAST_SHADOW)
-	const float fadeTo = 1.0;
-	//const float fadeTo = 0.0;
-	result = fadeTo;
-#else
-	result = 0.0;
-#endif
-
-	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
+	if (sampleZ <= u_ShadowZfar[0])
 	{
+		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 shadowpos = u_ShadowMvp * biasPos;
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap, shadowpos.xy, shadowpos.z);
+		result = shadow(u_ShadowMap, shadowpos.xy, shadowpos.z);
 	}
-
-#if defined(USE_FAST_SHADOW)
-	if (sampleZ / blendRange1 >= 1.0)
-	{// In blend range...
-		float fade = clamp((sampleZ-blendRange1) / blendRange2, 0.0, 1.0);
-		result = mix(result, fadeTo, fade);
-	}
-#elif defined(USE_SHADOW_CASCADE)
-	// Better looking blend... Only 2 levels to improve FPS...
-	float result2 = fadeTo;
-
-	shadowpos = u_ShadowMvp2 * biasPos;
-
-	shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-	result2 = PCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
-
-	if (sampleZ / blendRange1 >= 1.0)
-	{// In blend range...
-		if (sampleZ / blendRange2 < 1.0)
-		{
-			float fade = clamp((sampleZ-blendRange1) / blendRange2, 0.0, 1.0);
-			result = mix(result, result2, fade);
-		}
-		else
-		{
-			float fade = clamp((sampleZ-blendRange2) / blendRange3, 0.0, 1.0);
-			result = mix(result2, fadeTo, fade);
-		}
-	}
-#elif defined(USE_SHADOW_CASCADE2)
-	else
+	else if (sampleZ <= u_ShadowZfar[1])
 	{
-		shadowpos = u_ShadowMvp2 * biasPos;
-
-		if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
-		{
-			shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-			result = PCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
-		}
-	#if defined(USE_SHADOW_CASCADE3)
-		else
-		{
-			shadowpos = u_ShadowMvp3 * biasPos;
-
-			if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
-			{
-				shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-				result = PCF(u_ShadowMap3, shadowpos.xy, shadowpos.z);
-			}
-			else
-			{
-				shadowpos = u_ShadowMvp4 * biasPos;
-
-				if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
-				{
-					shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-					result = PCF(u_ShadowMap4, shadowpos.xy, shadowpos.z);
-				}
-				else
-				{
-					shadowpos = u_ShadowMvp5 * biasPos;
-
-					if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
-					{
-						shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-						result = PCF(u_ShadowMap5, shadowpos.xy, shadowpos.z);
-					}
-				}
-			}
-		}
-	#else
-		else
-		{
-			shadowpos = u_ShadowMvp3 * biasPos;
-
-			if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
-			{
-				shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-				result = PCF(u_ShadowMap3, shadowpos.xy, shadowpos.z);
-
-				float fade = clamp(sampleZ / r_shadowCascadeZFar * 10.0 - 9.0, 0.0, 1.0);
-				result = mix(result, fadeTo, fade);
-			}
-
-			float fadeStart = abs(shadowpos.w);
-
-			if (sampleZ > r_shadowCascadeZFar) 
-			{
-				result = 1.0;
-			}
-			else if (sampleZ > fadeStart)
-			{
-				result = 1.0 - result;
-				result *= (1.0 - pow(clamp(sampleZ - fadeStart, 0.0, r_shadowCascadeZFar) / r_shadowCascadeZFar, 4.0));
-				result = 1.0 - result;
-			}
-		}
-	#endif
+		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 shadowpos = u_ShadowMvp2 * biasPos;
+		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+		result = shadowPCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
 	}
-#endif
-		
-	//gl_FragColor = vec4(vec3(result), 1.0);
-	gl_FragColor = vec4(vec3(result), 0.5);
+	else if (sampleZ <= u_ShadowZfar[2])
+	{
+		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 shadowpos = u_ShadowMvp3 * biasPos;
+		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+		result = shadowPCF2(u_ShadowMap3, shadowpos.xy, shadowpos.z);
+	}
+	/*else if (sampleZ <= u_ShadowZfar[3])
+	{
+		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 shadowpos = u_ShadowMvp4 * biasPos;
+		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+		result = shadow(u_ShadowMap4, shadowpos.xy, shadowpos.z);
+	}*/
+	
+	gl_FragColor = vec4(result, depth, 0.0, 1.0);
 }

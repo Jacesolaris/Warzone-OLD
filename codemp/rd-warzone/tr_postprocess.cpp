@@ -2281,6 +2281,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
 	}
 
+	//GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	//GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+
 	if (SHADOWS_ENABLED)
 	{
 		if (r_shadowBlur->integer)
@@ -2944,6 +2947,8 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
+
+	GLSL_SetUniformFloatxX(shader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
 
 	{
 		vec4_t loc;

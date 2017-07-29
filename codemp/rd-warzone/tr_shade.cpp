@@ -1057,53 +1057,44 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	if (!IS_DEPTH_PASS)
 	{
 		if (r_normalMapping->integer >= 2
-			&& pStage->bundle[TB_NORMALMAP].image[0]
-			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage
-			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.blackImage)
+			&& pStage->bundle[TB_NORMALMAP].image[0])
 		{
 			hasNormalMap = 1.0;
 		}
 
-		if (pStage->bundle[TB_OVERLAYMAP].image[0]
-			&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.whiteImage)
+		if (pStage->bundle[TB_OVERLAYMAP].image[0])
 		{
 			hasOverlay = 1.0;
 		}
 
-		if (pStage->bundle[TB_STEEPMAP].image[0]
-			&& pStage->bundle[TB_STEEPMAP].image[0] != tr.whiteImage)
+		if (pStage->bundle[TB_STEEPMAP].image[0])
 		{
 			hasSteepMap = 1.0;
 		}
 
-		if (pStage->bundle[TB_WATER_EDGE_MAP].image[0]
-			&& pStage->bundle[TB_WATER_EDGE_MAP].image[0] != tr.whiteImage)
+		if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
 		{
 			hasWaterEdgeMap = 1.0;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP1].image[0]
-			&& pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
+		if (pStage->bundle[TB_SPLATMAP1].image[0])
 		{
-			hasSplatMap1 = 1;
+			hasSplatMap1 = 1.0;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP2].image[0]
-			&& pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
+		if (pStage->bundle[TB_SPLATMAP2].image[0])
 		{
-			hasSplatMap2 = 1;
+			hasSplatMap2 = 1.0;
 		}
 
-		if ((pStage->bundle[TB_SPLATMAP3].image[0]
-			&& pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
+		if (pStage->bundle[TB_SPLATMAP3].image[0])
 		{
-			hasSplatMap3 = 1;
+			hasSplatMap3 = 1.0;
 		}
 
-		/*if ((pStage->bundle[TB_SPLATMAP4].image[0]
-			&& pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
+		/*if (pStage->bundle[TB_SPLATMAP4].image[0])
 		{
-			hasSplatMap4 = 1;
+			hasSplatMap4 = 1.0;
 		}*/
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
@@ -1347,18 +1338,18 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 		VectorSet4(local3, 0.0, 0.0, r_cubemapCullRange->value, cubemapScale);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-		VectorSet4(local4, hasNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
+		VectorSet4(local4, hasNormalMap, isMetalic, 0.0, doSway);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 		VectorSet4(local5, hasOverlay, overlaySway, phongFactor, hasSteepMap);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
 		vec4_t local6;
 		VectorSet4(local6, r_sunlightSpecular->value, hasWaterEdgeMap, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, local6);
 
 		vec4_t local7;
 		VectorSet4(local7, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, local7);
 
 		vec4_t local8;
 		VectorSet4(local8, (float)stageNum, r_glowStrength->value, MAP_INFO_MAXS[2], r_showsplat->value);
@@ -1840,7 +1831,6 @@ extern void GLSL_AttachGlowTextures( void );
 extern void GLSL_AttachWaterTextures( void );
 //extern void GLSL_AttachWaterTextures2( void );
 
-extern world_t				s_worldData;
 extern qboolean ALLOW_GL_400;
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
@@ -2293,13 +2283,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			if ((s_worldData.lightGridArray == NULL && (index & LIGHTDEF_USE_LIGHTMAP))
-				|| (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity))
+			if (!(tr.world || tr.numLightmaps <= 0) && (index & LIGHTDEF_USE_LIGHTMAP))
 			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
-				if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
-					&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
+				if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
 					&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 				{// No point at all in doing this stage...
+					backEnd.pc.c_lightMapsSkipped++;
 					continue;
 				}
 
@@ -2353,7 +2342,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+			if (((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK /*|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_SOLIDWOOD*/)
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2820,103 +2809,50 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU(tr.defaultDetail, TB_DETAILMAP);
 			}
 
-			if (pStage->bundle[TB_STEEPMAP].image[0])
+			if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
 			{
-				//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
-				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP], TB_STEEPMAP);
-				GL_BindToTMU( pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP );
-			}
-			else
-			{
-				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
-			}
+				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0])
+				{
+					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
+					GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
+				}
+				else
+				{
+					GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
+				}
 
-			if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
-			{
-				//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_WATER_EDGE_MAP].image[0]->imgName, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->width, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->height);
-				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_WATER_EDGE_MAP], TB_WATER_EDGE_MAP);
-				GL_BindToTMU( pStage->bundle[TB_WATER_EDGE_MAP].image[0], TB_WATER_EDGE_MAP );
-			}
-			else
-			{
-				GL_BindToTMU( tr.whiteImage, TB_WATER_EDGE_MAP );
-			}
+				if (pStage->bundle[TB_STEEPMAP].image[0])
+				{
+					//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
+					GL_BindToTMU(pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP);
+				}
 
-			if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[1], TB_SPLATNORMALMAP1 );
-			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
 				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP1);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP1 );
+					//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_WATER_EDGE_MAP].image[0]->imgName, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->width, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->height);
+					GL_BindToTMU(pStage->bundle[TB_WATER_EDGE_MAP].image[0], TB_WATER_EDGE_MAP);
 				}
-				else // will never get used anyway
-				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP1 );
-				}
-			}
 
-			if (pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[1], TB_SPLATNORMALMAP2 );
-			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_SPLATMAP1].image[0])
 				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP2);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP2 );
+					GL_BindToTMU(pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1);
 				}
-				else // will never get used anyway
-				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP2 );
-				}
-			}
 
-			if (pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[1], TB_SPLATNORMALMAP3 );
-			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_SPLATMAP2].image[0])
 				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP3);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP3 );
+					GL_BindToTMU(pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2);
 				}
-				else // will never get used anyway
-				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP3 );
-				}
-			}
 
-			/*if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
+				if (pStage->bundle[TB_SPLATMAP3].image[0])
+				{
+					GL_BindToTMU(pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3);
+				}
+
+				/*if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
+				{
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
+				}*/
 			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP4);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP4 );
-				}
-				else // will never get used anyway
-				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
-				}
-			}*/
 
 			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
 			{
@@ -2931,10 +2867,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
 			}
-			else
-			{
-				GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
-			}
 
 			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
@@ -2945,9 +2877,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
 			}
 
-			GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
-			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
-			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
+			//GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
+			//GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
+			//GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
 		}
 
 		//
@@ -3013,6 +2945,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//     -> increases the number of shaders that must be compiled
 				//
 				{
+#if 0
 					if (r_normalMapping->integer >= 2
 						&& !input->shader->isPortal
 						&& !input->shader->isSky
@@ -3054,6 +2987,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						//if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
 						pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 					}
+#endif
 
 					if (pStage->bundle[TB_NORMALMAP].image[0])
 					{
@@ -3065,7 +2999,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
 					}
 
-					if (pStage->bundle[TB_NORMALMAP2].image[0])
+					/*if (pStage->bundle[TB_NORMALMAP2].image[0])
 					{
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP2], TB_NORMALMAP2);
 					}
@@ -3081,7 +3015,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					else if (r_normalMapping->integer >= 2)
 					{
 						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
-					}
+					}*/
 
 					if (pStage->bundle[TB_DELUXEMAP].image[0])
 					{
@@ -3132,19 +3066,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
-			if (!IS_DEPTH_PASS)
-			{
-				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
-				{
-					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
-					GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
-				}
-				else
-				{
-					GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
-				}
-			}
-
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -3182,20 +3103,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
 				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
-
-				/*
-				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
-				{
-					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-					{
-						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
-					}
-					else
-					{
-						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-					}
-				}
-				*/
 			}
 			else if (isGrass && passNum > r_foliagePasses->integer && sp3)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
@@ -3234,20 +3141,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
-
-				/*
-				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
-				{
-					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-					{
-						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
-					}
-					else
-					{
-						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-					}
-				}
-				*/
 			}
 			else if (isPebbles && passNum == 1 && sp2)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
@@ -3286,20 +3179,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
-
-				/*
-				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
-				{
-					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-					{
-						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
-					}
-					else
-					{
-						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-					}
-				}
-				*/
 			}
 
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)

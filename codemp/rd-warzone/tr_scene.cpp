@@ -884,23 +884,6 @@ void RE_RenderScene(const refdef_t *fd) {
 		&& !backEnd.depthFill
 		&& SHADOWS_ENABLED)
 	{
-/*
-extern int			NUM_MAP_GLOW_LOCATIONS;
-extern vec3_t		MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
-extern vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
-extern qboolean		MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
-extern float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
-extern float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
-
-#define				MAX_WORLD_GLOW_DLIGHT_RANGE 16384.0
-#define				MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
-extern int			CLOSE_TOTAL;
-extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
-extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
-extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
-extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
-extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
-*/
 		vec4_t lightDir;
 #if 1
 		float lightHeight = 999999.9;
@@ -953,66 +936,27 @@ extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
 		}
 #endif
 
-		if (r_sunlightMode->integer == 2)
-		{// Update distance shadows on timers...
-			R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
-		}
-		else if (r_sunlightMode->integer == 3)
-		{// Update distance shadows on timers...
-			int nowTime = ri->Milliseconds();
+		int nowTime = ri->Milliseconds();
 
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
-			{// Close shadows - fast updates...
-				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
-				R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
-			}
-			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
-			{// Distant shadows - slower updates...
-				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 2000;//500;
-				R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
-			}
-		}
-		else if (r_sunlightMode->integer == 4)
+		/* Check for forced shadow updates if viewer changes position/angles */
+		qboolean forceUpdate = qfalse;
+		if (Distance(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES) > 0)
+			forceUpdate = qtrue;
+		else if (Distance(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN) > 0)
+			forceUpdate = qtrue;
+		VectorCopy(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES);
+		VectorCopy(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN);
+
+		// Always update close shadows, so players/npcs moving around get shadows, even if the player's view doesn't change...
+		R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
+		R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
+
+		// Timed updates for distant shadows, or forced by view change...
+		if (nowTime >= NEXT_SHADOWMAP_UPDATE[0] || forceUpdate)
 		{
-			R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
-			R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
 			R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
-		}
-		else
-		{
-			int nowTime = ri->Milliseconds();
-
-			/* Check for forced shadow updates if viewer changes position/angles */
-			qboolean forceUpdate = qfalse;
-			if (Distance(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES) > 1) 
-				forceUpdate = qtrue;
-			else if (Distance(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN) > 1)
-				forceUpdate = qtrue;
-			VectorCopy(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES);
-			VectorCopy(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN);
-
-			// Always update close shadows, so players/npcs moving around get shadows, even if the player's view doesn't change...
-			R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
-			R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
-			
-			// Timed updates for distant shadows, or forced by view change...
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0] || forceUpdate)
-			{
-				R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
-				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 100;
-			}
-
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[1] || forceUpdate)
-			{
-				R_RenderSunShadowMaps(fd, 3, lightDir, lightHeight);
-				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 500;
-			}
-
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[2] || forceUpdate)
-			{
-				R_RenderSunShadowMaps(fd, 4, lightDir, lightHeight);
-				NEXT_SHADOWMAP_UPDATE[2] = nowTime + 1000;
-			}
+			//R_RenderSunShadowMaps(fd, 3, lightDir, lightHeight);
+			NEXT_SHADOWMAP_UPDATE[0] = nowTime + 5000;
 		}
 	}
 

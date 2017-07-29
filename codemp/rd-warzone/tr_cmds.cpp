@@ -74,6 +74,10 @@ void R_PerformanceCounters( void ) {
 		ri->Printf(PRINT_ALL, "GLSL draws: %i  shadowPass %i lightAll %i\n",
 			backEnd.pc.c_shadowPassDraws + backEnd.pc.c_lightallDraws, backEnd.pc.c_shadowPassDraws, backEnd.pc.c_lightallDraws);
 	}
+	else if (r_speeds->integer == 8)
+	{
+		ri->Printf(PRINT_ALL, "Lightmap surfaces skipped: %i\n", backEnd.pc.c_lightMapsSkipped);
+	}
 
 	Com_Memset( &tr.pc, 0, sizeof( tr.pc ) );
 	Com_Memset( &backEnd.pc, 0, sizeof( backEnd.pc ) );

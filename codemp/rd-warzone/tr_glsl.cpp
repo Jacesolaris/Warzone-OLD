@@ -1253,9 +1253,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_SplatMap2", GLSL_INT, 1 },
 	{ "u_SplatMap3", GLSL_INT, 1 },
 //	{ "u_SplatMap4", GLSL_INT, 1 },
-	{ "u_SplatNormalMap1", GLSL_INT, 1 },
-	{ "u_SplatNormalMap2", GLSL_INT, 1 },
-	{ "u_SplatNormalMap3", GLSL_INT, 1 },
+	//{ "u_SplatNormalMap1", GLSL_INT, 1 },
+	//{ "u_SplatNormalMap2", GLSL_INT, 1 },
+	//{ "u_SplatNormalMap3", GLSL_INT, 1 },
 //	{ "u_SplatNormalMap4", GLSL_INT, 1 },
 	{ "u_DetailMap", GLSL_INT, 1 },
 
@@ -1354,6 +1354,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Mins", GLSL_VEC4, 1 },
 	{ "u_Maxs", GLSL_VEC4, 1 },
 	{ "u_MapInfo", GLSL_VEC4, 1 },
+
+	{ "u_ShadowZfar", GLSL_FLOAT, 5 },
 
 	{ "u_AlphaTestValues", GLSL_VEC2, 1 },
 
@@ -3072,32 +3074,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (r_shadowFilter->integer >= 1)
-		Q_strcat(extradefines, 1024, "#define USE_SHADOW_FILTER\n");
-
-	if (r_shadowFilter->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_SHADOW_FILTER2\n");
-
-	if (r_sunlightMode->integer == 2 && SHADOWS_ENABLED)
-	{// Fast shadows... no cascade...
-		Q_strcat(extradefines, 1024, "#define USE_FAST_SHADOW\n");
-	}
-	else if (r_sunlightMode->integer == 3 && SHADOWS_ENABLED)
-	{// Regular shadows... 2 levels of cascade...
-		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
-	}
-	else
-	{// Old stupid rend2 shadows, 3 levels of wasteful, FPS killing stupidity...
-		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE2\n");
-
-		if (r_sunlightMode->integer > 4)
-			Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE3\n");
-	}
-
-	Q_strcat(extradefines, 1024, va("#define r_shadowMapSize %d\n", r_shadowMapSize->integer));
-	Q_strcat(extradefines, 1024, va("#define r_shadowCascadeZFar %f\n", r_shadowCascadeZFar->value));
-
-
 	if (!GLSL_BeginLoadGPUShader(&tr.shadowmaskShader, "shadowmask", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowmask_vp, fallbackShader_shadowmask_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load shadowmask shader!");
@@ -3761,49 +3737,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		numEtcShaders++;
 	}
 
-	/*
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
-	{
-		if (!GLSL_EndLoadGPUShader(&tr.lightallShader[i]))
-		{
-			ri->Error(ERR_FATAL, "Could not load lightall shader!");
-		}
-
-		GLSL_InitUniforms(&tr.lightallShader[i]);
-
-		qglUseProgram(tr.lightallShader[i].program);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_NORMALMAP,   TB_NORMALMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_NORMALMAP2,   TB_NORMALMAP2);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_NORMALMAP3, TB_NORMALMAP3);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_CUBEMAP, TB_CUBEMAP);
-		//GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-//		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP4, TB_SPLATMAP4);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
-//		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
-		qglUseProgram(0);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.lightallShader[i]);
-#endif
-
-		numLightShaders++;
-	}*/
-
 
 	if (!GLSL_EndLoadGPUShader(&tr.lightallMergedShader))
 	{
@@ -3811,16 +3744,13 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.lightallMergedShader);
-
 	qglUseProgram(tr.lightallMergedShader.program);
-	GLSL_InitUniforms(&tr.lightallMergedShader);
 
-	qglUseProgram(tr.lightallMergedShader.program);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
+	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
+	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
@@ -3834,9 +3764,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
 	//		GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP4, TB_SPLATMAP4);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
+	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
+	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
+	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
 	//		GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
 	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
 	qglUseProgram(0);

@@ -950,9 +950,9 @@ enum
 	TB_SPLATMAP2		= 21,
 	TB_SPLATMAP3		= 22,
 	//TB_SPLATMAP4		= 23,
-	TB_SPLATNORMALMAP1	= 24,
-	TB_SPLATNORMALMAP2	= 25,
-	TB_SPLATNORMALMAP3	= 26,
+	//TB_SPLATNORMALMAP1	= 24,
+	//TB_SPLATNORMALMAP2	= 25,
+	//TB_SPLATNORMALMAP3	= 26,
 	//TB_SPLATNORMALMAP4	= 27,
 	TB_DETAILMAP		= 28,
 	TB_SHADOWMAP4		= 29,
@@ -1395,9 +1395,9 @@ typedef enum
 	UNIFORM_SPLATMAP2,
 	UNIFORM_SPLATMAP3,
 	//UNIFORM_SPLATMAP4,
-	UNIFORM_SPLATNORMALMAP1,
-	UNIFORM_SPLATNORMALMAP2,
-	UNIFORM_SPLATNORMALMAP3,
+	//UNIFORM_SPLATNORMALMAP1,
+	//UNIFORM_SPLATNORMALMAP2,
+	//UNIFORM_SPLATNORMALMAP3,
 	//UNIFORM_SPLATNORMALMAP4,
 	UNIFORM_DETAILMAP,
 
@@ -1497,6 +1497,8 @@ typedef enum
 	UNIFORM_MINS,
 	UNIFORM_MAXS,
 	UNIFORM_MAPINFO,
+
+	UNIFORM_SHADOWZFAR,
 
 	UNIFORM_ALPHATEST,
 
@@ -1606,6 +1608,7 @@ typedef struct {
 #endif
 
 	float       sunShadowMvp[5][16];
+	float       sunShadowCascadeZfar[5];
 	float       sunDir[4];
 	float       sunCol[4];
 	float       sunAmbCol[4];
@@ -2373,6 +2376,7 @@ typedef struct {
 	int     c_shadowPassDraws;
 	int     c_lightallDraws;
 	int     c_fogDraws;
+	int     c_lightMapsSkipped;
 
 	int		msec;			// total msec for backend run
 } backEndCounters_t;

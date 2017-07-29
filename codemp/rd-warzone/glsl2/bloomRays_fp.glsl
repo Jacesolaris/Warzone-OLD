@@ -39,6 +39,7 @@ vec4 ProcessBloomRays(vec2 inTC)
 {
 	vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
 
+//#pragma unroll 9
 	for (int i = 0; i < 9; i++)
 	{
 		float dist = length(inTC.xy - lightPositions[i]);
@@ -57,7 +58,8 @@ vec4 ProcessBloomRays(vec2 inTC)
           
 			float illuminationDecay = 1.0;
           
-			for(int g = 0; g < BLOOMRAYS_STEPS && illuminationDecay > 0.0; g++) 
+//#pragma unroll BLOOMRAYS_STEPS
+			for(int g = 0; g < BLOOMRAYS_STEPS; g++) 
 			{
 				texCoord -= deltaTexCoord;
 

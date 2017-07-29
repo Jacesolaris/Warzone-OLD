@@ -23,6 +23,12 @@ varying vec2   				var_TexCoords;
 #define znear				u_ViewInfo.r			//camera clipping start
 #define zfar				u_ViewInfo.g			//camera clipping end
 
+// 'threshold' is constant , 'value' is smoothly varying
+float aastep(float threshold, float value) 
+{
+	float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
+	return smoothstep(threshold-afwidth, threshold+afwidth, value);
+}
 
 vec4 dssdo_accumulate(vec2 tex)
 {
@@ -62,7 +68,7 @@ vec4 dssdo_accumulate(vec2 tex)
 		vec3(0.534, 0.157, -0.250)
 	);
 
-	const int num_samples = 32;
+#define num_samples 32
 
 	vec2 noise_texture_size = vec2(4,4);
 	vec4 pMap  = texture(u_PositionMap, tex);
@@ -97,7 +103,7 @@ vec4 dssdo_accumulate(vec2 tex)
 
 	const vec4 sh2_weight = vec4(sh2_weight_l1, sh2_weight_l0) / num_samples;
 
-#pragma unroll 32
+#pragma unroll num_samples
 	for( int i=0; i < num_samples; ++i )
 	{
 	    vec2 textureOffset = reflect( points[ i ].xy, noise.xy ).xy * radius;
@@ -116,7 +122,7 @@ vec4 dssdo_accumulate(vec2 tex)
 		float attenuation = 1.0 - clamp(dist * max_distance_inv, 0.0, 1.0);
 		float dp = dot(center_normal, center_to_sample_normalized);
 
-		attenuation = attenuation*attenuation * step(attenuation_angle_threshold, dp);
+		attenuation = attenuation*attenuation * /*aastep*/step(attenuation_angle_threshold, dp);
 
 		occlusion_sh2 += attenuation * sh2_weight*vec4(center_to_sample_normalized,1);
 	}

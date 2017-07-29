@@ -14,10 +14,6 @@ uniform sampler2D			u_SplatMap1;
 uniform sampler2D			u_SplatMap2;
 uniform sampler2D			u_SplatMap3;
 //uniform sampler2D			u_SplatMap4;
-uniform sampler2D			u_SplatNormalMap1;
-uniform sampler2D			u_SplatNormalMap2;
-uniform sampler2D			u_SplatNormalMap3;
-//uniform sampler2D			u_SplatNormalMap4;
 uniform sampler2D			u_DetailMap;
 
 uniform sampler2D			u_LightMap;
@@ -259,7 +255,7 @@ void AddDetail(inout vec4 color, in vec2 tc)
 	color.rgb = color.rgb * detail.rgb * 2.0;
 }
 
-vec4 GetControlMap( sampler2D tex)
+vec4 GetControlMap( void )
 {
 	float scale = 1.0 / u_Local6.b; /* control scale */
 	vec4 control;
@@ -271,17 +267,17 @@ vec4 GetControlMap( sampler2D tex)
 		float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
 		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
 		float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
-		vec4 xaxis = textureLod( tex, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
-		vec4 yaxis = textureLod( tex, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
-		vec4 zaxis = textureLod( tex, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y), 0.0);
+		vec4 xaxis = texture( u_SplatControlMap, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y));
+		vec4 yaxis = texture( u_SplatControlMap, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y));
+		vec4 zaxis = texture( u_SplatControlMap, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y));
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 	}
 	else
 	{
 		float offset = (u_Local6.b / 2.0) * scale;
-		vec4 xaxis = textureLod( tex, (m_vertPos.yz * scale) + offset, 0.0);
-		vec4 yaxis = textureLod( tex, (m_vertPos.xz * scale) + offset, 0.0);
-		vec4 zaxis = textureLod( tex, (m_vertPos.xy * scale) + offset, 0.0);
+		vec4 xaxis = texture( u_SplatControlMap, (m_vertPos.yz * scale) + offset);
+		vec4 yaxis = texture( u_SplatControlMap, (m_vertPos.xz * scale) + offset);
+		vec4 zaxis = texture( u_SplatControlMap, (m_vertPos.xy * scale) + offset);
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 	}
 
@@ -328,7 +324,7 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	return color;
 }
 
-vec4 GetSplatMap(vec2 texCoords, vec4 inColor)
+vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 {
 	if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 	{
@@ -344,15 +340,13 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor)
 
 	vec4 splatColor = inColor;
 
-	vec4 control = GetControlMap(u_SplatControlMap);
-
-	float depth = -1.0;
+	vec4 control = GetControlMap();
 
 	float scale = 0.01;
 
 	if (USE_REGIONS > 0.0)
 	{
-		scale = 0.001;//u_Local9.g;
+		scale = 0.001;
 	}
 
 	if (u_Local7.r > 0.0 && control.r > 0.0)
@@ -372,36 +366,28 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor)
 		vec4 tex = GetMap(u_SplatMap3, scale, depth);
 		splatColor = mix(splatColor, tex, control.b * tex.a);
 	}
-	/*
-	if (u_Local7.a > 0.0 && control.a > 0.0)
+
+	/*if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap4, scale, depth);
 		splatColor = mix(splatColor, tex, control.a * tex.a);
+	}*/
+
+	if (depth != -1.0)
+	{// Only bother calculating if requested...
+		depth = GetDepthForPixel(splatColor);
 	}
-	*/
 
 	return splatColor;
 }
 
 vec4 GenerateTerrainMap(vec2 coord)
 {
-	if (u_Local8.a > 0.0)
-	{
-		vec4 control = GetControlMap(u_SplatControlMap);
-		return vec4(control.rgb, 1.0);
-	}
-
 	// Splat mapping...
-#define SNOW_HEIGHT 0.0075
-	#if 0
-	float a1 = -1.0;
-	vec4 tex = GetMap(u_DiffuseMap, SNOW_HEIGHT, a1);
-	return GetSplatMap(coord, tex);
-	#else
 	float a1 = 0.0;
-	vec4 tex1 = GetMap(u_DiffuseMap, SNOW_HEIGHT, a1);
-	vec4 tex2 = GetSplatMap(coord, vec4(0.0));
-	float a2 = GetDepthForPixel(tex2);
+	float a2 = 0.0;
+	vec4 tex1 = GetMap(u_DiffuseMap, 0.0075, a1);
+	vec4 tex2 = GetSplatMap(coord, tex1, a2);
 
 	float maxHeightOverWater = MAP_MAX_HEIGHT - WATER_LEVEL;
 	float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
@@ -410,86 +396,91 @@ vec4 GenerateTerrainMap(vec2 coord)
 	mixVal *= -32.0;//u_Local9.r;
 
 	return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
-	#endif
-}
-
-vec3 vLocalSeed;
-
-// This function returns random number from zero to one
-float randZeroOne()
-{
-    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
-    n = n * (n * n * 15731u + 789221u);
-    n = (n >> 9u) | 0x3F800000u;
-
-    float fRes =  2.0 - uintBitsToFloat(n);
-    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-    return fRes;
-}
-
-vec4 GetNonSplatMap( in sampler2D tex, vec2 coord )
-{
-	return texture( tex, coord );
 }
 
 vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 {
-	if (USE_TRIPLANAR <= 0.0)
+	if (USE_REGIONS > 0.0 || USE_TRIPLANAR > 0.0)
 	{
-		if (USE_REGIONS > 0.0)
+		if (u_Local8.a > 0.0)
 		{
+			vec4 control = vec4(0.0);
+
+			if (u_Local8.a > 5.0)
+			{
+				control = texture(u_WaterEdgeMap, texCoords);
+			}
+			else if (u_Local8.a > 4.0)
+			{
+				control = texture(u_SteepMap, texCoords);
+			}
+			else if (u_Local8.a > 3.0)
+			{
+				control = texture(u_SplatMap3, texCoords);
+			}
+			else if (u_Local8.a > 2.0)
+			{
+				control = texture(u_SplatMap2, texCoords);
+			}
+			else if (u_Local8.a > 1.0)
+			{
+				control = texture(u_SplatMap1, texCoords);
+			}
+			else
+			{
+				control = GetControlMap();
+			}
+		
+			return vec4(control.rgb, 1.0);
+		}
+
+		if (USE_REGIONS > 0.0)
+		{// Regions...
 			return GenerateTerrainMap(texCoords);
 		}
+		else
+		{// Tri-Planar...
+			if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
+			{// Steep maps (water edges)...
+				float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 
-		return texture(u_DiffuseMap, texCoords);
-	}
+				float a1 = 0.0;
+				float a2 = 0.0;
+				vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
+				vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, a2);
 
-	if (u_Local8.a > 0.0)
-	{
-		vec4 control = GetControlMap(u_SplatControlMap);
-		return vec4(control.rgb, 1.0);
-	}
+				if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
+				{// No splat maps...
+					return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+				}
 
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
-	{// Steep maps (water edges)...
-		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
+				// Splat mapping...
+				tex2 = GetSplatMap(texCoords, tex2, a2);
 
-		float a1 = 0.0;
-		float a2 = 0.0;
-		vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
-		vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, a2);
-
-		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
-		{// No splat maps...
-			return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+			}
+			else if (u_Local5.a > 0.0 && var_Slope > 0)
+			{// Steep maps (high angles)...
+				float a1 = -1.0;
+				return GetMap(u_SteepMap, 0.0025, a1);
+			}
+			else if (u_Local7.r > 0.0 || u_Local7.g > 0.0 || u_Local7.b > 0.0 || u_Local7.a > 0.0)
+			{// Steep maps (low angles)...
+				// Splat mapping...
+				float a1 = 0.0;
+				vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
+				return GetSplatMap(texCoords, tex, a1);
+			}
+			else
+			{
+				float a1 = -1.0;
+				return GetMap(u_DiffuseMap, 0.0075, a1);
+			}
 		}
-
-		// Splat mapping...
-		tex2 = GetSplatMap(texCoords, tex2);
-
-		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
-	}
-	else if (u_Local5.a > 0.0 && var_Slope > 0)
-	{// Steep maps (high angles)...
-		float a1 = -1.0;
-		return GetMap(u_SteepMap, 0.0025, a1);
-	}
-	else if (u_Local5.a > 0.0)
-	{// Steep maps (low angles)...
-		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
-		{// No splat maps...
-			float a1 = -1.0;
-			return GetMap(u_DiffuseMap, 0.0075, a1);
-		}
-
-		// Splat mapping...
-		float a1 = 0.0;
-		vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
-		return GetSplatMap(texCoords, tex);
 	}
 	else
 	{
-		return GetNonSplatMap(u_DiffuseMap, texCoords);
+		return texture(u_DiffuseMap, texCoords);
 	}
 }
 
@@ -522,6 +513,21 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 	return mat3( T * invmax, B * invmax, N );
 }
 #endif
+
+
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+    n = n * (n * n * 15731u + 789221u);
+    n = (n >> 9u) | 0x3F800000u;
+
+    float fRes =  2.0 - uintBitsToFloat(n);
+    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+    return fRes;
+}
 
 
 void main()

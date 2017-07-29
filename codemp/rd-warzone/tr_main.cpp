@@ -2534,6 +2534,8 @@ static float CalcSplit(float n, float f, float i, float m)
 	return (n * pow(f / n, i / m) + (f - n) * i / m) / 2.0f;
 }
 
+extern float	MAP_INFO_MAXSIZE;
+
 void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float lightHeight)
 {
 	viewParms_t		shadowParms;
@@ -2561,83 +2563,33 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	}
 #endif
 
-	if (r_sunlightMode->integer == 2)
+	switch (level)
 	{
-		//lightViewIndependentOfCameraView = qtrue;
-		lightViewIndependentOfCameraView = qfalse;
+	case 0:
+	default:
+		splitZNear = viewZNear;
+		splitZFar = 512.0;
+		break;
+	case 1:
+		splitZNear = 512.0;
+		splitZFar = 4096.0;
+		break;
+	case 2:
+		splitZNear = 4096.0;
+		//splitZFar = 16384.0;
+		splitZFar = (backEnd.viewParms.zFar < MAP_INFO_MAXSIZE) ? backEnd.viewParms.zFar : MAP_INFO_MAXSIZE;
+		break;
+	//case 3:
+	//	splitZNear = 16384.0;
+	//	splitZFar = (backEnd.viewParms.zFar < MAP_INFO_MAXSIZE) ? backEnd.viewParms.zFar : MAP_INFO_MAXSIZE;
+	//	break;
+	}
 
-		splitZNear = r_znear->value;
-		splitZFar  = 4096;
+	if (backEnd.viewParms.zFar < splitZNear)
+	{// Pointless rendering this shadow map, the view doesnt go this far...
+		return;
 	}
-	else if (r_sunlightMode->integer == 3)
-	{
-		lightViewIndependentOfCameraView = qtrue;
 
-		switch(level)
-		{
-		case 0:
-		default:
-			splitZNear = r_znear->value;
-			splitZFar  = 4096;//2048;
-			break;
-		case 1:
-			splitZNear = 4096;//2048;
-			splitZFar  = 65536;
-			break;
-		}
-	}
-	else if (r_sunlightMode->integer == 4)
-	{
-		switch(level)
-		{
-		case 0:
-		default:
-			//splitZNear = r_znear->value;
-			//splitZFar  = 256;
-			splitZNear = viewZNear;
-			splitZFar = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
-			break;
-		case 1:
-			splitZNear = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
-			splitZFar = CalcSplit(viewZNear, viewZFar, 2, 3) + splitBias;
-			//splitZNear = 256;
-			//splitZFar  = 896;
-			break;
-		case 2:
-			splitZNear = CalcSplit(viewZNear, viewZFar, 2, 3) + splitBias;
-			splitZFar = viewZFar;
-			//splitZNear = 896;
-			//splitZFar  = 3072;
-			break;
-		}
-	}
-	else
-	{
-		switch (level)
-		{
-		case 0:
-		default:
-			splitZNear = viewZNear;
-			splitZFar = CalcSplit(viewZNear, viewZFar, 1, 5) + splitBias;
-			break;
-		case 1:
-			splitZNear = CalcSplit(viewZNear, viewZFar, 1, 5) + splitBias;
-			splitZFar = CalcSplit(viewZNear, viewZFar, 2, 5) + splitBias;
-			break;
-		case 2:
-			splitZNear = CalcSplit(viewZNear, viewZFar, 2, 5) + splitBias;
-			splitZFar = viewZFar;
-			break;
-		case 3:
-			splitZNear = viewZFar;
-			splitZFar = 16384;
-			break;
-		case 4:
-			splitZNear = 16384;
-			splitZFar = 131072;
-			break;
-		}
-	}
 			
 	VectorCopy(fd->vieworg, lightOrigin);
 
@@ -2813,34 +2765,12 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL | VPF_SHADOWPASS );
 		shadowParms.zFar = lightviewBounds[1][0];
 
-		if (r_sunlightMode->integer == 2)
-		{
-			shadowParms.maxEntityRange = 8192;
-		}
-		else if (r_sunlightMode->integer == 3)
-		{
-			shadowParms.maxEntityRange = 8192;
-		}
-		else if (r_sunlightMode->integer == 4)
-		{
-			if (level <= 1)
-				shadowParms.maxEntityRange = 2048;
-			else if (level <= 2)
-				shadowParms.maxEntityRange = 3192;
-			else if (level <= 3)
-				shadowParms.maxEntityRange = 4096;
-		}
+		if (level <= 0)
+			shadowParms.maxEntityRange = 4096;// 2048;
+		else if (level <= 1)
+			shadowParms.maxEntityRange = 8192;// 3192;
 		else
-		{
-			if (level <= 1)
-				shadowParms.maxEntityRange = 2048;
-			else if (level <= 2)
-				shadowParms.maxEntityRange = 3192;
-			else if (level <= 3)
-				shadowParms.maxEntityRange = 4096;
-			else if (level <= 4)
-				shadowParms.maxEntityRange = 8192;
-		}
+			shadowParms.maxEntityRange = 16384;
 
 		VectorCopy(lightOrigin, shadowParms.ori.origin);
 		
@@ -2885,6 +2815,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 		}
 
 		Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
+		tr.refdef.sunShadowCascadeZfar[level] = splitZFar;
 	}
 }
 

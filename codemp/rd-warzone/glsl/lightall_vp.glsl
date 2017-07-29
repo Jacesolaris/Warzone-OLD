@@ -277,14 +277,11 @@ float CalcFog(vec3 position)
 
 void GetBlending(vec3 normal)
 {
-	if (u_Local5.a > 0.0)
-	{// Steep maps...
-		vec3 blend_weights = abs(normalize(normal.xyz));   // Tighten up the blending zone:
-		blend_weights = (blend_weights - 0.2) * 7.0;
-		blend_weights = max(blend_weights, 0.0);      // Force weights to sum to 1.0 (very important!)
-		blend_weights /= vec3(blend_weights.x + blend_weights.y + blend_weights.z);
-		var_Blending = blend_weights;
-	}
+	vec3 blend_weights = abs(normalize(normal.xyz));   // Tighten up the blending zone:
+	blend_weights = (blend_weights - 0.2) * 7.0;
+	blend_weights = max(blend_weights, 0.0);      // Force weights to sum to 1.0 (very important!)
+	blend_weights /= vec3(blend_weights.x + blend_weights.y + blend_weights.z);
+	var_Blending = blend_weights;
 }
 
 vec3 vectoangles(in vec3 value1) {

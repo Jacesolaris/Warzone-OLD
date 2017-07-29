@@ -1740,7 +1740,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 		{
 			// If we're rendering directly to the screen, copy the depth to a texture
 			GL_BindToTMU(tr.renderDepthImage, 0);
-			qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
+			if (r_hdr->integer)
+				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
+			else
+				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
 
 		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED && r_deferredLighting->integer)
@@ -1788,26 +1791,14 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
 			
-			if (r_sunlightMode->integer >= 3 && SHADOWS_ENABLED)
-			{
-				GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
-				GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
+			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
 				
-				if (r_sunlightMode->integer >= 4 && SHADOWS_ENABLED)
-				{
-					GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
-					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
-					
-					if (r_sunlightMode->integer >= 5 && SHADOWS_ENABLED)
-					{
-						GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
-						GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
+			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 
-						GL_BindToTMU(tr.sunShadowDepthImage[4], TB_SHADOWMAP5);
-						GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP5, backEnd.refdef.sunShadowMvp[4]);
-					}
-				}
-			}
+			//GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
+			//GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
 			
 			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 			GL_BindToTMU(tr.randomImage, TB_SPECULARMAP);
@@ -1815,8 +1806,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 			
 			vec4_t vec;
-			VectorSet4(vec, r_shadowMaxDepthError->value, r_shadowSolidityValue->value, r_testvalue0->value, 0.0);
+			VectorSet4(vec, r_shadowQuality->value, r_shadowMapSize->value, r_shadowCascadeZFar->value, 0.0);
 			GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
+
+			GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
 
 			{
 				vec4_t viewInfo;
@@ -1835,7 +1828,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 				VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
 				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP,      viewVector);
 
-				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+				VectorSet4(viewInfo, zmax / zmin, zmax, r_hdr->integer ? 32.0 : 24.0, 0.0);
 
 				GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
 			}
@@ -2332,6 +2325,11 @@ const void *RB_PostProcess(const void *data)
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer /*|| r_deferredLighting->integer*/))
+		{
+			RB_CreateAnamorphicImage();
+		}
+
 		if (!SCREEN_BLUR && r_deferredLighting->integer)
 		{
 			RB_DeferredLighting(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2486,10 +2484,10 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
+		/*if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
 		{
 			RB_CreateAnamorphicImage();
-		}
+		}*/
 
 		if (!SCREEN_BLUR && r_anamorphic->integer)
 		{

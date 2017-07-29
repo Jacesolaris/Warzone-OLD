@@ -151,6 +151,7 @@ void main ( void )
 		float numAdded = 0.0;
 		float mt = u_Local4.b;
 
+#pragma unroll 7
 		for(int i=0; i<7; i++)
 		{
 			vec3 pos = rayDir*dafuck;
