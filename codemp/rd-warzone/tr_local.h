@@ -174,6 +174,8 @@ extern cvar_t	*r_tesselationAlpha;
 
 extern cvar_t	*r_cartoon;
 
+extern cvar_t	*r_fur;
+
 extern cvar_t	*r_foliage;
 extern cvar_t	*r_foliagePasses;
 extern cvar_t	*r_foliageDistance;
@@ -2598,6 +2600,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t skyDomeShader;
 	shaderProgram_t waterForwardShader;
 	shaderProgram_t waterPostShader;
+	shaderProgram_t furShader;
 	shaderProgram_t grass2Shader;
 	shaderProgram_t pebblesShader;
 	shaderProgram_t hbaoShader;

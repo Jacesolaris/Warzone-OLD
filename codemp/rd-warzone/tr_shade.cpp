@@ -1855,6 +1855,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean isWater = qfalse;
 	qboolean isGrass = qfalse;
 	qboolean isPebbles = qfalse;
+	qboolean isFur = qfalse;
 
 	float tessInner = 0.0;
 	float tessOuter = 0.0;
@@ -1884,6 +1885,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			isPebbles = qtrue;
 		}
+		else if (r_fur->integer
+			&& r_sunlightMode->integer >= 2
+			&& r_foliageShadows->integer
+			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isGrass = qtrue;
+		}
 	}
 	else
 	{
@@ -1896,6 +1904,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
 		{
 			isPebbles = qtrue;
+		}
+		else if (r_fur->integer
+			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isFur = qtrue;
 		}
 	}
 
@@ -2486,6 +2499,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					sp2 = &tr.pebblesShader;
 					passMax = r_pebblesPasses->integer;
 				}
+			}
+			else if (r_fur->integer && isFur)
+			{
+				sp2 = &tr.furShader;
+				multiPass = qtrue;
+				passMax = 2;
 			}
 		}
 
@@ -3179,6 +3198,38 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+			}
+			else if (isFur && passNum == 1 && sp2)
+			{
+				sp = sp2;
+				sp2 = NULL;
+
+				GLSL_BindProgram(sp);
+
+				//stateBits = GLS_DEPTHMASK_TRUE;
+				stateBits = GLS_DEFAULT | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
+
+				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+
+				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+				//R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.random2KImage[0], TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.random2KImage[1], TB_SPLATCONTROLMAP);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+
+				vec4_t l10;
+				VectorSet4(l10, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				//tess.shader->cullType = CT_TWO_SIDED; // Always...
 			}
 
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)

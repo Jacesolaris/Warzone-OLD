@@ -91,6 +91,9 @@ extern const char *fallbackShader_waterPost_fp;
 extern const char *fallbackShader_waterPost_vp;
 extern const char *fallbackShader_waterForward_fp;
 extern const char *fallbackShader_waterForward_vp;
+extern const char *fallbackShader_fur_fp;
+extern const char *fallbackShader_fur_vp;
+extern const char *fallbackShader_fur_gs;
 extern const char *fallbackShader_grass2_fp;
 extern const char *fallbackShader_grass2_vp;
 extern const char *fallbackShader_grass2_gs;
@@ -2928,6 +2931,17 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.furShader, "fur", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_fur_vp, fallbackShader_fur_fp, NULL, NULL, fallbackShader_fur_gs))
+	{
+		ri->Error(ERR_FATAL, "Could not load fur shader!");
+	}
+
+
+
 	if (r_foliage->integer)
 	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
@@ -3813,6 +3827,27 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numLightShaders++;
+
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.furShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load fur shader!");
+	}
+
+	GLSL_InitUniforms(&tr.furShader);
+
+	qglUseProgram(tr.furShader.program);
+	GLSL_SetUniformInt(&tr.furShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.furShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.furShader);
+#endif
+
+	numEtcShaders++;
 
 
 
@@ -5593,6 +5628,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterPostShader);
+	GLSL_DeleteGPUShader(&tr.furShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grass2Shader);
 	if (r_pebbles->integer)	GLSL_DeleteGPUShader(&tr.pebblesShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
