@@ -258,7 +258,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 	else
 		cubemapIndex = 0;
 
-	if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+	if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value)
 		cubemapIndex = 0;
 
 	surface = (mdrSurface_t *)( (byte *)lod + lod->ofsSurfaces );
@@ -324,6 +324,8 @@ RB_MDRSurfaceAnim
 */
 void RB_MDRSurfaceAnim( mdrSurface_t *surface )
 {
+	glState.vertexAnimation = qfalse;
+
 	int				i, j, k;
 	float			frontlerp, backlerp;
 	int				*triangles;

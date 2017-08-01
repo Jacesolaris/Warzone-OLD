@@ -423,7 +423,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 
 	{
-		shaderProgram_t *sp = &tr.shadowPassShader;// &tr.lightallShader[0];
+		shaderProgram_t *sp = &tr.shadowPassShader;
 		vec4_t vector;
 
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);

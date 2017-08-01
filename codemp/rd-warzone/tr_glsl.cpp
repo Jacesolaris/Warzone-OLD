@@ -1569,6 +1569,44 @@ char *GLSL_GetHighestSupportedVersion(void)
 	return GLSL_MAX_VERSION;
 }
 
+const char glslMaterialsList[] =
+"#define MATERIAL_NONE			0\n"\
+"#define MATERIAL_SOLIDWOOD		1\n"\
+"#define MATERIAL_HOLLOWWOOD	2\n"\
+"#define MATERIAL_SOLIDMETAL	3\n"\
+"#define MATERIAL_HOLLOWMETAL	4\n"\
+"#define MATERIAL_SHORTGRASS	5\n"\
+"#define MATERIAL_LONGGRASS		6\n"\
+"#define MATERIAL_DIRT			7\n"\
+"#define MATERIAL_SAND			8\n"\
+"#define MATERIAL_GRAVEL		9\n"\
+"#define MATERIAL_GLASS			10\n"\
+"#define MATERIAL_CONCRETE		11\n"\
+"#define MATERIAL_MARBLE		12\n"\
+"#define MATERIAL_WATER			13\n"\
+"#define MATERIAL_SNOW			14\n"\
+"#define MATERIAL_ICE			15\n"\
+"#define MATERIAL_FLESH			16\n"\
+"#define MATERIAL_MUD			17\n"\
+"#define MATERIAL_BPGLASS		18\n"\
+"#define MATERIAL_DRYLEAVES		19\n"\
+"#define MATERIAL_GREENLEAVES	20\n"\
+"#define MATERIAL_FABRIC		21\n"\
+"#define MATERIAL_CANVAS		22\n"\
+"#define MATERIAL_ROCK			23\n"\
+"#define MATERIAL_RUBBER		24\n"\
+"#define MATERIAL_PLASTIC		25\n"\
+"#define MATERIAL_TILES			26\n"\
+"#define MATERIAL_CARPET		27\n"\
+"#define MATERIAL_PLASTER		28\n"\
+"#define MATERIAL_SHATTERGLASS	29\n"\
+"#define MATERIAL_ARMOR			30\n"\
+"#define MATERIAL_COMPUTER		31\n"\
+"#define MATERIAL_LAST			32\n"\
+"#define MATERIAL_SKY			1024\n"\
+"#define MATERIAL_SUN			1025\n"\
+"\n";
+
 static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest, int size, char *forceVersion)
 {
 	float fbufWidthScale, fbufHeightScale;
@@ -1588,12 +1626,12 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 	{
 		Q_strcat(dest, size, "#define attribute in\n");
 		Q_strcat(dest, size, "#define varying out\n");
-		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
+		Q_strcat(dest, size, glslMaterialsList);
 	}
 	else if (shaderType == GL_TESS_CONTROL_SHADER)
 	{
 		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
-		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
+		Q_strcat(dest, size, glslMaterialsList);
 
 		if (extra)
 		{
@@ -1608,7 +1646,7 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 	else if (shaderType == GL_TESS_EVALUATION_SHADER)
 	{
 		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
-		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
+		Q_strcat(dest, size, glslMaterialsList);
 
 		if (extra)
 		{
@@ -1623,7 +1661,7 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 	else if (shaderType == GL_GEOMETRY_SHADER)
 	{
 		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
-		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
+		Q_strcat(dest, size, glslMaterialsList);
 
 		if (extra)
 		{
@@ -1713,7 +1751,7 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 		GL_REPLACE));
 
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
-	Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
+	Q_strcat(dest, size, glslMaterialsList);
 
 	if (extra)
 	{
@@ -1992,6 +2030,7 @@ void GLSL_AttachTextures(void)
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.renderNormalImage, 2);
 	FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
+	FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2001,6 +2040,7 @@ void GLSL_AttachGlowTextures(void)
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.dummyImage2, 2);
 	FBO_AttachTextureImage(tr.dummyImage3, 3);
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2010,6 +2050,7 @@ void GLSL_AttachGenericTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2019,6 +2060,7 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 }
 
@@ -2082,6 +2124,7 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	qglBindFragDataLocation(program->program, 1, "out_Glow");
 	qglBindFragDataLocation(program->program, 2, "out_Normal");
 	qglBindFragDataLocation(program->program, 3, "out_Position");
+	qglBindFragDataLocation(program->program, 4, "out_NormalDetail");
 
 	if (attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
@@ -2693,24 +2736,6 @@ void GLSL_DeleteGPUShader(shaderProgram_t *program)
 	}
 }
 
-static bool GLSL_IsValidPermutationForFog(int shaderCaps)
-{
-	if ((shaderCaps & (FOGDEF_USE_VERTEX_ANIMATION | FOGDEF_USE_SKELETAL_ANIMATION)) == (FOGDEF_USE_VERTEX_ANIMATION | FOGDEF_USE_SKELETAL_ANIMATION))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-static bool GLSL_IsValidPermutationForLight(int lightType, int shaderCaps)
-{
-	//if (!lightType && (shaderCaps & LIGHTDEF_USE_SHADOWMAP))
-	//	return false;
-
-	return true;
-}
-
 int GLSL_BeginLoadGPUShaders(void)
 {
 	int startTime;
@@ -2748,124 +2773,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load occlusion shader!");
 	}
 
-	for (i = 0; i < FOGDEF_COUNT; i++)
-	{
-		if (!GLSL_IsValidPermutationForFog(i))
-		{
-			continue;
-		}
-
-		attribs = ATTR_POSITION | ATTR_POSITION2 | ATTR_NORMAL | ATTR_NORMAL2 | ATTR_TEXCOORD0;
-		extradefines[0] = '\0';
-
-		if (i & FOGDEF_USE_DEFORM_VERTEXES)
-			Q_strcat(extradefines, 1024, "#define USE_DEFORM_VERTEXES\n");
-
-		if (i & FOGDEF_USE_VERTEX_ANIMATION)
-			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-
-		if (i & FOGDEF_USE_SKELETAL_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-		}
-
-		char *name = (char *)malloc(sizeof(char) * 64);
-		sprintf(name, "fogpass%i", i);
-
-		if (!GLSL_BeginLoadGPUShader(&tr.fogShader[i], (const char*)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp, NULL, NULL, NULL))
-		{
-			ri->Error(ERR_FATAL, "Could not load fogpass shader!");
-		}
-	}
-
-	/*
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
-	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-
-		extradefines[0] = '\0';
-
-		if (r_deluxeSpecular->value > 0.000001f)
-			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
-
-		if (r_hdr->integer && !glRefConfig.floatLightmap)
-			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
-
-		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
-
-		if (i & LIGHTDEF_USE_LIGHTMAP)
-		{
-			strcat(extradefines, "#define USE_LIGHTMAP\n");
-
-			if (r_deluxeMapping->integer)
-				strcat(extradefines, "#define USE_DELUXEMAP\n");
-		}
-
-		if (r_specularMapping->integer)
-		{
-			strcat(extradefines, "#define USE_SPECULARMAP\n");
-		}
-
-		if (r_cubeMapping->integer && (i & LIGHTDEF_USE_CUBEMAP))
-		{
-			strcat(extradefines, "#define USE_CUBEMAP\n");
-		}
-
-		if (i & LIGHTDEF_USE_TRIPLANAR)
-		{
-			strcat(extradefines, "#define USE_TRI_PLANAR\n");
-		}
-
-		if (i & LIGHTDEF_USE_REGIONS)
-		{
-			strcat(extradefines, "#define USE_REGIONS\n");
-		}
-
-		if (i & LIGHTDEF_USE_GLOW_BUFFER)
-		{
-			strcat(extradefines, "#define USE_GLOW_BUFFER\n");
-		}
-
-		if (i & LIGHTDEF_IS_DETAIL)
-		{
-			strcat(extradefines, "#define IS_DETAIL\n");
-		}
-
-		char *name = (char *)malloc(sizeof(char) * 64);
-		sprintf(name, "lightall%i", i);
-
-		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
-		{
-			strcat(extradefines, "#define USE_TESSELLATION\n");
-
-#ifdef HEIGHTMAP_TESSELATION2
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
-#else
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
-#endif
-			{
-				ri->Error(ERR_FATAL, "Could not load lightall shader!");
-			}
-		}
-		else if (r_instanceCloudReductionCulling->integer)
-		{
-			strcat(extradefines, "#define USE_ICR_CULLING\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load lightall shader!");
-			}
-		}
-		else
-		{
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], (const char *)name, attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
-			{
-				ri->Error(ERR_FATAL, "Could not load lightall shader!");
-			}
-		}
-	}*/
-
 	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
@@ -2887,9 +2794,9 @@ int GLSL_BeginLoadGPUShaders(void)
 			strcat(extradefines, "#define USE_TESSELLATION\n");
 
 #ifdef HEIGHTMAP_TESSELATION2
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
 #else
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
 #endif
 			{
 				ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
@@ -2899,12 +2806,12 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			strcat(extradefines, "#define USE_ICR_CULLING\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightallMerged", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
 			}
 		}
-		else if (!GLSL_BeginLoadGPUShader(&tr.lightallMergedShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+		else if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
 		}
@@ -3731,62 +3638,42 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	for (i = 0; i < FOGDEF_COUNT; i++)
-	{
-		if (!GLSL_IsValidPermutationForFog(i))
-		{
-			continue;
-		}
 
-		if (!GLSL_EndLoadGPUShader(&tr.fogShader[i]))
-		{
-			ri->Error(ERR_FATAL, "Could not load fogpass shader!");
-		}
-
-		GLSL_InitUniforms(&tr.fogShader[i]);
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.fogShader[i]);
-#endif
-
-		numEtcShaders++;
-	}
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.lightallMergedShader))
+	if (!GLSL_EndLoadGPUShader(&tr.lightAllShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
 	}
 
-	GLSL_InitUniforms(&tr.lightallMergedShader);
-	qglUseProgram(tr.lightallMergedShader.program);
+	GLSL_InitUniforms(&tr.lightAllShader);
+	qglUseProgram(tr.lightAllShader.program);
 
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
-	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-	//		GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATMAP4, TB_SPLATMAP4);
-	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
-	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
-	//GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
-	//		GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
-	GLSL_SetUniformInt(&tr.lightallMergedShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
+	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	//		GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP4, TB_SPLATMAP4);
+	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
+	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
+	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
+	//		GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
 	qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.lightallMergedShader);
+	GLSL_FinishGPUShader(&tr.lightAllShader);
 #endif
 
 	numLightShaders++;
@@ -5585,13 +5472,7 @@ void GLSL_ShutdownGPUShaders(void)
 #endif //__INSTANCED_MODELS__
 	GLSL_DeleteGPUShader(&tr.occlusionShader);
 
-	for (i = 0; i < FOGDEF_COUNT; i++)
-		GLSL_DeleteGPUShader(&tr.fogShader[i]);
-
-	//for (i = 0; i < LIGHTDEF_COUNT; i++)
-	//	GLSL_DeleteGPUShader(&tr.lightallShader[i]);
-
-	GLSL_DeleteGPUShader(&tr.lightallMergedShader);
+	GLSL_DeleteGPUShader(&tr.lightAllShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowPassShader);
 
@@ -5706,7 +5587,7 @@ void GLSL_BindProgram(shaderProgram_t * program)
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;
 
-		if (program == &tr.lightallMergedShader)
+		if (program == &tr.lightAllShader)
 			backEnd.pc.c_lightallBinds++;
 		else if (program == &tr.shadowPassShader)
 			backEnd.pc.c_shadowPassBinds++;

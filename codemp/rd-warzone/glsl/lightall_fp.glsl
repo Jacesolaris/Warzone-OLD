@@ -1,6 +1,8 @@
 //#define UI_ENHANCEMENT
 //#define USE_ALPHA_TEST
 #define USE_GLOW_DETAIL_BUFFERS
+//#define USE_ALPHA_MULT
+//#define USE_DETAIL
 
 
 #define SNOW_HEIGHT_STRENGTH 0.25 // Distance above water to start snow...
@@ -187,6 +189,7 @@ varying float				var_usingSteepMap;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+out vec4 out_NormalDetail;
 
 vec2 encode (vec3 n)
 {
@@ -457,6 +460,9 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 				// Splat mapping...
 				tex2 = GetSplatMap(texCoords, tex2, a2);
 
+				a1 = 1.0 - a1;
+				a2 = 1.0 - a2;
+
 				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 			}
 			else if (u_Local5.a > 0.0 && var_Slope > 0)
@@ -586,8 +592,9 @@ void main()
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
 
 
-
 #ifdef USE_ALPHA_TEST
+	float alphaMult = 1.0;
+
 	if (u_AlphaTestValues.r > 0.0)
 	{
 		bool discardFrag = false;
@@ -611,6 +618,20 @@ void main()
 			return;
 		}
 	}
+
+#elif defined(USE_ALPHA_MULT)
+	/*
+	float alphaMult = 1.0;
+
+	if (u_AlphaTestValues.r > 0.0)
+	{
+		if (u_AlphaTestValues.r == ATEST_LT && gl_FragColor.a >= u_AlphaTestValues.g)
+			alphaMult = 0.0;
+		if (u_AlphaTestValues.r == ATEST_GT && u_AlphaTestValues.g > 0.0 && gl_FragColor.a <= u_AlphaTestValues.g)
+			alphaMult = 0.0;
+		if (u_AlphaTestValues.r == ATEST_GE && gl_FragColor.a < u_AlphaTestValues.g)
+			alphaMult = 0.0;
+	}*/
 #endif //USE_ALPHA_TEST
 
 
@@ -619,33 +640,29 @@ void main()
 
 
 	vec3 N = normalize(m_Normal.xyz);
+	vec4 norm = vec4(0.0);
 
-#if 0
 	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
 	{
-		vec4 norm = vec4(0.0);
-		
-		if (u_Local4.r <= 0.0)
+		if (!(u_Local4.r <= 0.0 || USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0))
 		{
-			norm = ConvertToNormals(diffuse);
-		}
-		else
-		{
-			norm = GetNormal(texCoords, pixRandom);
+			norm = texture(u_NormalMap, texCoords);
+			norm.a = 1.0;
 		}
 	
-		N.xy = norm.xy * 2.0 - 1.0;
-		N.xy *= 0.25;
-		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-		N = tangentToWorld * N;
+		//N.xy = norm.xy * 2.0 - 1.0;
+		//N.xy *= 0.25;
+		//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		//N = tangentToWorld * N;
 	}
-#endif
 
 
+#ifdef USE_DETAIL
 	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0)// || USE_GLOW_BUFFER >= 0.0)
 	{
 		AddDetail(diffuse, texCoords);
 	}
+#endif //USE_DETAIL
 
 
 	vec3 ambientColor = vec3(0.0);
@@ -736,6 +753,28 @@ void main()
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
+#if defined(USE_ALPHA_MULT)
+	gl_FragColor.a *= alphaMult;
+
+	if (u_Local1.a == 19.0 || u_Local1.a == 20.0)
+	{// Leaves/grass-blades are either solid, or not, never partially solid.
+		if (gl_FragColor.a >= 0.5)
+		{
+			gl_FragColor.a = 1.0;
+			alphaMult = 1.0;
+		}
+		else
+		{
+			gl_FragColor.a = 0.0;
+			alphaMult = 0.0;
+		}
+	}
+	else if (gl_FragColor.a <= 0.0)
+	{
+		alphaMult = 0.0;
+	}
+#endif
+
 	if (USE_GLOW_BUFFER > 0.0)
 	{
 #define glow_const_1 ( 23.0 / 255.0)
@@ -751,8 +790,13 @@ void main()
 		if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
+#if defined(USE_ALPHA_MULT)
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a * alphaMult);
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b * alphaMult /*specularScale*/ );
+#else
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+#endif
 		}
 	}
 	else
@@ -765,8 +809,15 @@ void main()
 		if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
+#if defined(USE_ALPHA_MULT)
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a * alphaMult);
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b * alphaMult /*specularScale*/ );
+			out_NormalDetail = norm;
+#else
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+			out_NormalDetail = norm;
+#endif
 		}
 	}
 }

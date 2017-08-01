@@ -37,6 +37,8 @@ static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
 cvar_t	*r_superSampleMultiplier;
+cvar_t	*r_surfaceShaderSorting;
+
 cvar_t	*r_instanceCloudReductionCulling;
 cvar_t	*r_tesselation;
 cvar_t	*r_tesselationLevel;
@@ -297,7 +299,6 @@ cvar_t  *r_skynum;
 cvar_t  *r_volumeLightStrength;
 cvar_t	*r_disableGfxDirEnhancement;
 cvar_t	*r_cubemapCullRange;
-cvar_t	*r_cubemapCullFalloffMult;
 cvar_t	*r_glslWater;
 cvar_t	*r_waterWaveHeight;
 cvar_t	*r_waterWaveDensity;
@@ -1379,6 +1380,8 @@ void R_Register( void )
 {
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
+	r_surfaceShaderSorting = ri->Cvar_Get("r_surfaceShaderSorting", "1", CVAR_ARCHIVE);
+
 	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1544,7 +1547,6 @@ void R_Register( void )
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.0", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubemapCullRange = ri->Cvar_Get( "r_cubemapCullRange", "2048.0", CVAR_ARCHIVE );
-	r_cubemapCullFalloffMult = ri->Cvar_Get( "r_cubemapCullFalloffMult", "1.5", CVAR_ARCHIVE );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "2", CVAR_ARCHIVE );
 	r_waterWaveHeight = ri->Cvar_Get( "r_waterWaveHeight", "8.0", CVAR_ARCHIVE );
 	r_waterWaveDensity = ri->Cvar_Get( "r_waterWaveDensity", "0.5", CVAR_ARCHIVE );

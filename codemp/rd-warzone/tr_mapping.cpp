@@ -1583,14 +1583,33 @@ void R_LoadMapInfo(void)
 		}
 		else // Default to new tropical...
 		{
+			FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+			FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		}
 
+		float TREE_SCALE_MULTIPLIER = 1.0;
 
-		// Check if we have a climate file in climates/ for this map...
-		float TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "0.0"));
+		if (ri->FS_FileExists(va("climates/%s.climate", CURRENT_CLIMATE_OPTION)))
+		{// Check if we have a climate file in climates/ for this map...
+			// Have a climate file in climates/
+			TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
 
-		if (TREE_SCALE_MULTIPLIER <= 0.0)
+			for (int i = 0; i < 3; i++)
+			{
+				tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			}
+
+			tr.seaGrassImage = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+			for (int i = 0; i < 4; i++)
+			{
+				tr.pebblesImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			}
+		}
+		else
 		{// Seems we have no climate file in climates/ for the map... Check maps/
+			TREE_SCALE_MULTIPLIER = atof(IniRead(va("maps/%s.climate", currentMapName), "TREES", "treeScaleMultiplier", "1.0"));
+
 			for (int i = 0; i < 3; i++)
 			{
 				tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -1603,18 +1622,28 @@ void R_LoadMapInfo(void)
 				tr.pebblesImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 			}
 		}
-		else
-		{// Have a climate file in climates/
-			for (int i = 0; i < 3; i++)
+
+		//
+		// Make sure we have some valid grass/pebbles images, in case climate lookup failed...
+		//
+		for (int i = 0; i < 3; i++)
+		{
+			if (!tr.grassImage[i])
 			{
-				tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/maingrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 			}
+		}
 
-			tr.seaGrassImage = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		if (!tr.seaGrassImage)
+		{
+			tr.seaGrassImage = R_FindImageFile("models/warzone/foliage/seagrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		}
 
-			for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 4; i++)
+		{
+			if (!tr.pebblesImage[i])
 			{
-				tr.pebblesImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				tr.pebblesImage[i] = R_FindImageFile(va("models/warzone/pebbles/mainpebbles%i", i), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 			}
 		}
 	}

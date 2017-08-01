@@ -362,7 +362,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		cubemapIndex = 0;
 	else if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
 		cubemapIndex = 0;
-	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex - 1]) < r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex - 1]) < r_cubemapCullRange->value)
 		cubemapIndex = surf->cubemapIndex;
 	else
 		cubemapIndex = 0;

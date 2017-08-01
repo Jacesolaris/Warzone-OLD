@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 // Merge the whole damn lot and use player's closest cubemap...
-//#define __PLAYER_BASED_CUBEMAPS__
+#define __PLAYER_BASED_CUBEMAPS__
 // Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
 #define __MERGE_MORE__
 // Merge matching shader names...
@@ -167,6 +167,8 @@ In JA, we define these in the tr_local.h, which is much more logical
 */
 
 extern cvar_t	*r_superSampleMultiplier;
+extern cvar_t	*r_surfaceShaderSorting;
+
 extern cvar_t	*r_instanceCloudReductionCulling;
 extern cvar_t	*r_tesselation;
 extern cvar_t	*r_tesselationLevel;
@@ -587,6 +589,8 @@ typedef struct image_s {
 	int			flags;
 
 	vec4_t		lightColor;
+
+	bool		hasAlpha;
 
 	bool		generatedNormalMap;
 
@@ -1326,15 +1330,6 @@ enum
 				| ATTR_INSTANCES_POS
 				/*| ATTR_INSTANCES_MVP*/
 #endif //__INSTANCED_MODELS__
-};
-
-enum
-{
-	FOGDEF_USE_DEFORM_VERTEXES  = 0x0001,
-	FOGDEF_USE_VERTEX_ANIMATION = 0x0002,
-	FOGDEF_USE_SKELETAL_ANIMATION = 0x0004,
-	FOGDEF_ALL                  = 0x0007,
-	FOGDEF_COUNT                = 0x0008,
 };
 
 enum
@@ -2473,6 +2468,7 @@ typedef struct trGlobals_s {
 	image_t					*renderImage;
 	image_t					*glowImage;
 	image_t					*renderNormalImage;
+	image_t					*renderNormalDetailedImage;
 	image_t					*renderPositionMapImage;
 	image_t					*waterPositionMapImage;
 	image_t					*waterPositionMapImage2;
@@ -2563,9 +2559,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t instanceShader;
 #endif //__INSTANCED_MODELS__
 	shaderProgram_t occlusionShader;
-	shaderProgram_t fogShader[FOGDEF_COUNT];
-	//shaderProgram_t lightallShader[LIGHTDEF_COUNT];
-	shaderProgram_t lightallMergedShader;
+	shaderProgram_t lightAllShader;
 	shaderProgram_t shadowPassShader;
 	shaderProgram_t sunPassShader;
 	shaderProgram_t shadowmapShader;
@@ -2969,7 +2963,6 @@ extern cvar_t	*r_shadowMaxDepthError;
 extern cvar_t	*r_shadowSolidityValue;
 extern cvar_t	*r_disableGfxDirEnhancement;
 extern cvar_t	*r_cubemapCullRange;
-extern cvar_t	*r_cubemapCullFalloffMult;
 extern cvar_t	*r_glslWater;
 extern cvar_t	*r_waterWaveHeight;
 extern cvar_t	*r_waterWaveDensity;

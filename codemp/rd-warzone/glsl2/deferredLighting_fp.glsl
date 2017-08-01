@@ -1,13 +1,16 @@
-﻿//#define __SSS__
-#define __AMBIENT_OCCLUSION__
+﻿#define __AMBIENT_OCCLUSION__
 #define __ENVMAP__
 //#define __NORMAL_METHOD_1__
 #define __NORMAL_METHOD_2__
-//#define __EMISSION__
+#define __EXTRA_LIGHT__
+//#define __RAIN__
+//#define __SS_SHADOW__
+#define __RANDOMIZE_LIGHT_PIXELS__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
+uniform sampler2D	u_OverlayMap; // Real normals. Alpha channel 1.0 means enabled...
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_HeightMap;
 uniform sampler2D	u_ShadowMap;
@@ -20,7 +23,7 @@ uniform vec2		u_Dimensions;
 uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
 uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
-uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, 0.0, 0.0
+uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -41,16 +44,32 @@ uniform vec3		u_lightColors[MAX_DEFERRED_LIGHTS];
 
 varying vec2		var_TexCoords;
 
-#define textureCubeLod textureLod // UQ1: > ver 140 support
+
+vec2 pixel = vec2(1.0) / u_Dimensions;
 
 
-#define LIGHT_THRESHOLD  0.001
+#ifdef __RANDOMIZE_LIGHT_PIXELS__
+float lrand(vec2 co) {
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453) * 0.25 + 0.75;
+}
+#endif //__RANDOMIZE_LIGHT_PIXELS__
 
 float rand(vec2 co) {
         return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec2 pixel = vec2(1.0) / u_Dimensions;
+float hash( float n ) {
+    return fract(sin(n)*687.3123);
+}
+
+float noise( in vec2 x ) {
+    vec2 p = floor(x);
+    vec2 f = fract(x);
+    f = f*f*(3.0-2.0*f);
+    float n = p.x + p.y*157.0;
+    return mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
+               mix( hash(n+157.0), hash(n+158.0),f.x),f.y);
+}
 
 vec3 TangentFromNormal ( vec3 normal )
 {
@@ -127,7 +146,7 @@ vec4 normalVector(vec2 coord) {
 #endif //__NORMAL_METHOD_2__
 
 
-#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__SSS__)
+#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
     return dot(p, vec3(.5));
@@ -159,23 +178,8 @@ float map(vec3 p)
     float n = (.5-cellTile(p))*1.5;
     return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
 }
-#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__SSS__)
+#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
-#ifdef __SSS__
-float calcSSS( in vec3 pos, in vec3 nor )
-{
-	float occ = 0.0;
-    for( int i=0; i<8; i++ )
-    {
-        float h = 0.002 + 0.11*float(i)/7.0;
-        vec3 dir = normalize( sin( float(i)*13.0 + vec3(0.0,2.1,4.2) ) );
-        dir *= sign(dot(dir,nor));
-        occ += (h-map(pos-h*dir));
-    }
-    occ = clamp( 1.0 - 11.0*occ/8.0, 0.0, 1.0 );    
-    return occ*occ;
-}
-#endif //__SSS__
 
 #ifdef __AMBIENT_OCCLUSION__
 float calculateAO(in vec3 pos, in vec3 nor)
@@ -210,6 +214,67 @@ vec3 envMap(vec3 p, float warmth)
 #endif //__ENVMAP__
 
 
+#ifdef __SS_SHADOW__
+// Simple 2d noise algorithm contributed by Trisomie21 (Thanks!)
+float snoise( vec2 p ) {
+	vec2 f = fract(p);
+	p = floor(p);
+	float v = p.x+p.y*1000.0;
+	vec4 r = vec4(v, v+1.0, v+1000.0, v+1001.0);
+	r = fract(100000.0*sin(r*.001));
+	f = f*f*(3.0-2.0*f);
+	return 2.0*(mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y))-1.0;
+}
+
+vec3 oneifyPosition(vec3 pos)
+{
+	vec3 opos = pos / u_Local4.r;
+	opos += vec3(0.5);
+	opos = clamp(opos, 0.0, 1.0);
+	return opos;
+}
+
+float terrain( vec2 p )
+{
+    //return snoise(p);
+	return oneifyPosition(textureLod(u_PositionMap, p, 0.0).xyz).z;
+}
+
+vec2 smap( vec3 p ) {
+	
+	float dMin = u_Local4.r;//100000.0;//dMax; // nearest intersection
+	float d; // depth
+	float mID = -1.0; // material ID
+
+	float h = terrain( p.xz*0.9 ); // height
+	float s = 0.5 * h;
+	d = p.z - s;
+    
+	if (d<dMin) { 
+		dMin = d;
+		mID = 1.0;
+	}
+
+	return vec2(dMin, 1.0);
+}
+
+float shadows( vec3 ro, vec3 rd, float tMax, float k ) {
+    float res = 1.0;
+	float t = 0.1;
+	for(int i=0; i<22; i++) {
+        if (t<tMax) {
+			//float h = smap(ro + rd*t).x;
+			float h = terrain( ro.xy + rd.xy*t );
+        	res = min( res, k*h/t );
+        	t += h;
+		}
+		else break;
+    }
+    return clamp(res, 0.2, 1.0);
+}
+#endif //__SS_SHADOW__
+
+
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
@@ -236,38 +301,21 @@ void main(void)
 
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
-	if (position.a == 1024.0 || position.a == 1025.0)
+	if (position.a == MATERIAL_SKY || position.a == MATERIAL_SUN)
 	{// Skybox... Skip...
-		//gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
 		return;
 	}
-
-#if 0 // Debugging stuff
-	/*if (u_Local3.g >= 2.0)
-	{
-		if (u_Local3.g >= 4.0)
-			gl_FragColor.rgb = vec3((position.rg / u_Local3.r), 0.0) * 0.5 + 0.5;
-		else if (u_Local3.g >= 3.0)
-			gl_FragColor.rgb = vec3(position.b / u_Local3.r) * 0.5 + 0.5;
-		else
-			gl_FragColor.rgb = vec3(position.rgb / u_Local3.r) * 0.5 + 0.5;
-		return;
-	}
-
-	if (u_Local3.g >= 1.0)
-	{*/
-		float dist = distance(position.xyz, u_ViewOrigin.xyz);
-		dist = clamp(dist / 4096.0, 0.0, 1.0);
-		gl_FragColor.rgb = vec3(dist);
-		return;
-	//}
-#endif
-
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
+	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
 	norm.rgb = norm.rgb * 2.0 - 1.0;
-	vec4 normalDetail = normalVector(texCoords);
+	
+	if (normalDetail.a < 1.0)
+	{// Don't have real normalmap, make normals for this pixel...
+		normalDetail = normalVector(texCoords);
+	}
+
 	normalDetail.rgb = normalDetail.rgb * 2.0 - 1.0;
 	normalDetail.rgb *= 0.25;
 	normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
@@ -301,7 +349,6 @@ void main(void)
 
 	float lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 
-
 	vec3 specular = gl_FragColor.rgb;
 #define specLower ( 48.0 / 255.0)
 #define specUpper (255.0 / 192.0)
@@ -332,7 +379,7 @@ void main(void)
 	float reflectivePower = (norm.a * 0.2);
 
 
-#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__SSS__)
+#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
 	float to_light_dist = length(to_light);
 	vec3 to_light_norm = (to_light / to_light_dist);
@@ -342,7 +389,7 @@ void main(void)
 	vec3 to_pos_norm = (to_pos / to_pos_dist);
 
 	#define rd reflect(surfaceToCamera, N)
-#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__) || defined(__SSS__)
+#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
 
 
@@ -356,8 +403,54 @@ void main(void)
 		}
 
 		vec3 lColor = blinn_phong(N, E, -to_light_norm, gl_FragColor.rgb, specular) * light_occlusion * reflectivePower * phongFactor * 8.0;
+
+#ifdef __RANDOMIZE_LIGHT_PIXELS__
+		float lightRand = lrand(texCoords * length(lColor.rgb) * u_Local4.b);
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lColor * norm.a * shadowMult * lightRand), norm.a * lightScale);
+#else //!__RANDOMIZE_LIGHT_PIXELS__
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lColor * norm.a * shadowMult), norm.a * lightScale);
+#endif //__RANDOMIZE_LIGHT_PIXELS__
+
 		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
+
+#ifdef __EXTRA_LIGHT__
+		if (position.a == MATERIAL_SOLIDWOOD 
+			|| position.a == MATERIAL_HOLLOWWOOD 
+			|| position.a == MATERIAL_DRYLEAVES 
+			|| position.a == MATERIAL_GREENLEAVES 
+			|| position.a == MATERIAL_SHORTGRASS 
+			|| position.a == MATERIAL_LONGGRASS)
+		{
+			float matMult = 1.0;
+
+			if (position.a == MATERIAL_SOLIDWOOD 
+				|| position.a == MATERIAL_HOLLOWWOOD)
+			{
+				matMult = 0.5;
+			}
+
+			vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
+			float specAngle = max(dot(halfDir2, N), 0.0);
+			float spec2 = pow(specAngle, 16.0);
+			vec3 lightAdd = (vec3(clamp(spec2, 0.0, 1.0) * reflectivePower) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale * shadowMult * matMult;
+
+			if (useOcclusion)
+			{
+#ifdef __RANDOMIZE_LIGHT_PIXELS__
+				lightRand = lrand(texCoords * length(lightAdd.rgb) * u_Local4.b);
+				gl_FragColor.rgb = (gl_FragColor.rgb * (light_occlusion * 0.3 + 0.66666)) + (lightAdd * light_occlusion * lightRand);
+#else //!__RANDOMIZE_LIGHT_PIXELS__
+				gl_FragColor.rgb = (gl_FragColor.rgb * (light_occlusion * 0.3 + 0.66666)) + (lightAdd * light_occlusion);
+#endif //__RANDOMIZE_LIGHT_PIXELS__
+			}
+			else
+			{
+				gl_FragColor.rgb += lightAdd;
+			}
+
+			lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
+		}
+#endif //__EXTRA_LIGHT__
 	}
 
 	if (u_lightCount > 0.0)
@@ -409,95 +502,62 @@ void main(void)
 			}
 		}
 
+#ifdef __RANDOMIZE_LIGHT_PIXELS__
+		float lightRand = lrand(texCoords * length(addedLight.rgb) * u_Local4.b);
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + clamp(addedLight * norm.a * lightScale * lightRand, 0.0, 1.0), norm.a * lightScale);
+#else //!__RANDOMIZE_LIGHT_PIXELS__
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + clamp(addedLight * norm.a * lightScale, 0.0, 1.0), norm.a * lightScale);
+#endif //__RANDOMIZE_LIGHT_PIXELS__
 	}
 
 #ifdef __AMBIENT_OCCLUSION__
 	if (u_Local1.b > 0.0)
 	{
 		float ao = calculateAO(to_light_norm, N * 10000.0);
-		
 		ao = clamp(ao, 0.3, 1.0);
-
-#ifdef __SSS__
-		if (position.a == 1.0 || position.a == 2.0 || position.a == 19.0 || position.a == 20.0 || position.a == 5.0 || position.a == 6.0)
-		{
-			float sss = calcSSS( to_light_norm, N * 10000.0 );
-			float dif1 = clamp( dot(N,to_light_norm), 0.0, 1.0 );
-			vec3 sssColor = 0.4*sss*(vec3(0.15,0.1,0.05)+vec3(u_PrimaryLightColor.rgb)*dif1)*(0.05+0.95*ao)*0.333; // sss
-			gl_FragColor.rgb += sssColor;
-		}
-#endif //__SSS__
-
 		gl_FragColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
+
+#ifdef __SS_SHADOW__
+	if (u_Local3.r > 0.0)
+	{
+		//float shadowMult = shadows(pos, lPos, 8.0, 12.0);
+		//float shadowMult = shadows(oneifyPosition(position.xyz), oneifyPosition(u_PrimaryLightOrigin.xyz), u_Local3.g/*8.0*/, u_Local3.b/*12.0*/);
+		float shadowMult = shadows(to_pos_norm, to_light_norm, u_Local3.g/*8.0*/, u_Local3.b/*12.0*/);
+
+		if (u_Local3.r > 1.0)
+			gl_FragColor.rgb = vec3(shadowMult);
+		else
+			gl_FragColor.rgb *= shadowMult;
+	}
+#endif //__SS_SHADOW__
 
 #ifdef __ENVMAP__
 	if (u_Local1.a > 0.0)
 	{
 		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
-
-		vec3 env = envMap(rd, 0.6 /* warmth */);//.5;
+		vec3 env = envMap(rd, 0.6 /* warmth */);
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
 	}
 #endif //__ENVMAP__
 
-#ifdef __EMISSION__
-	if (u_Local3.r > 0.0)
+#ifdef __RAIN__
 	{
-		float shinyness = reflectivePower;
-		
-		if (u_Local3.g > 0.0)
-			shinyness = (norm.a * 0.5);
-
-		if (u_Local3.b > 0.0)
-			shinyness = u_Local3.b;
-
-		if (u_lightCount > 0.0)
-		{
-			vec3 addedLight = vec3(0.0);
-
-			for (int li = 0; li < u_lightCount; li++)
-			{
-				vec3 lightPos = u_lightPositions2[li].xyz;
-				float lightDist = distance(lightPos, position.xyz);
-				float lightPower = lightDist / 512.0;
-
-				if (lightPower > 1.0) continue;
-
-				float pDist = distance(lightPos.xyz, u_ViewOrigin.xyz);
-				float viewDist = distance(position.xyz, u_ViewOrigin.xyz);
-
-				if (viewDist > pDist) continue;
-
-				lightPower = 1.0 - clamp(lightPower, 0.0, 1.0);
-
-				vec3 bounceDir = reflect(surfaceToCamera, N);
-				vec3 lightColor = u_lightColors[li].rgb;
-
-				if (length(lightColor) <= 0.01)
-				{
-					lightColor = vec3(1.0);
-				}
-
-				vec3 lightDir = normalize(lightPos - position.xyz);
-
-				vec3 crs = cross(bounceDir, lightDir);
-				//float a = dot(bounceDir, lightDir);
-				//float a = distance(bounceDir, lightDir);
-				float a = length(crs);
-
-				if (a < u_Local3.a && rand(crs.yz) < 0.02)
-				{
-					addedLight += lightColor * lightPower * shinyness * a * rand(crs.xy);
-				}
-			}
-
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + clamp(addedLight * shinyness * lightScale, 0.0, 1.0), shinyness * lightScale);
-		}
+		float time = u_Local4.b * 1000.0;
+		vec2 q = texCoords;
+		vec2 p = -1.0 + 2.0*q;
+		p.x *= u_Dimensions.x / u_Dimensions.y;
+        
+		// Rain (by Dave Hoskins)
+		vec2 st = 256. * ( p* vec2(.5, .01)+vec2(time*.13-q.y*.6, time*.13) );
+		float f = noise( st ) * noise( st*0.773) * 1.55;
+		f = 0.25+ clamp(pow(abs(f), 13.0) * 13.0, 0.0, q.y*.14);
+    
+		vec3 col = 0.25*f*vec3(1.2);
+		gl_FragColor.rgb += col;
 	}
-#endif //__EMISSION__
+#endif //__RAIN__
 }
 

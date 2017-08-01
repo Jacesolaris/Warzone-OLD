@@ -1,5 +1,6 @@
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_NormalMap;
+uniform sampler2D	u_OverlayMap; // Real normals. Alpha channel 1.0 means enabled...
 
 uniform vec4		u_Settings0;
 uniform vec2		u_Dimensions;
@@ -71,8 +72,15 @@ void main(void)
 
 	if (u_Settings0.r > 0.0)
 	{
+		vec4 normalDetail = textureLod(u_OverlayMap, var_TexCoords, 0.0);
+
 		norm.rgb = norm.rgb * 2.0 - 1.0;
-		vec4 normalDetail = normalVector(var_TexCoords);
+
+		if (normalDetail.a < 1.0)
+		{// Don't have real normalmap, make normals for this pixel...
+			normalDetail = normalVector(var_TexCoords);
+		}
+
 		normalDetail.rgb = normalDetail.rgb * 2.0 - 1.0;
 		normalDetail.rgb *= 0.25;//u_Settings0.g;
 		normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));

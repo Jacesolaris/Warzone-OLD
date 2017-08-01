@@ -4268,12 +4268,9 @@ static void ComputeVertexAttribs(void)
 			break;
 		}
 
-		//if (pStage->glslShaderGroup == tr.lightallShader)
-		{
-			shader.vertexAttribs |= ATTR_NORMAL;
-			shader.vertexAttribs |= ATTR_TANGENT;
-			shader.vertexAttribs |= ATTR_LIGHTDIRECTION;
-		}
+		shader.vertexAttribs |= ATTR_NORMAL;
+		shader.vertexAttribs |= ATTR_TANGENT;
+		shader.vertexAttribs |= ATTR_LIGHTDIRECTION;
 
 		for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 		{
@@ -5357,7 +5354,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->hasRealWaterEdgeMap = false;
 	}
 
-	//diffuse->glslShaderGroup = tr.lightallShader;
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -5814,16 +5810,9 @@ static int CollapseStagesToGLSL(void)
 			if (pStage->adjustColorsForFog)
 				continue;
 
-#ifdef EXPERIMENTAL_MERGE_STUFF
-			// UQ1: Added, always use lightall...
-			//pStage->glslShaderGroup = tr.lightallShader;
-#endif //EXPERIMENTAL_MERGE_STUFF
-
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen >= TCGEN_LIGHTMAP && pStage->bundle[TB_DIFFUSEMAP].tcGen <= TCGEN_LIGHTMAP3)
 			{
 				if (hasRealNormalMap) pStage->hasRealNormalMap = true;
-
-				//pStage->glslShaderGroup = tr.lightallShader;
 
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
@@ -5854,15 +5843,8 @@ static int CollapseStagesToGLSL(void)
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE ||
 				pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 			{
-				//if (pStage->glslShaderGroup != tr.lightallShader)
-				{
-					if (hasRealNormalMap) pStage->hasRealNormalMap = true;
-
-					//pStage->glslShaderGroup = tr.lightallShader;
-				}
-
-				/*if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)
-					pStage->glslShaderIndex |= LIGHTDEF_USE_TCGEN_AND_TCMOD;*/
+				if (hasRealNormalMap) 
+					pStage->hasRealNormalMap = true;
 			}
 		}
 	}
@@ -5907,11 +5889,6 @@ static int CollapseStagesToGLSL(void)
 		{
 			stage->hasRealWaterEdgeMap = true;
 		}
-
-		//if (stage->glslShaderGroup != tr.lightallShader)
-		//{
-//
-		//}
 
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
@@ -6052,7 +6029,7 @@ static void FixRenderCommandList( int newShader ) {
 						sortedIndex = (( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1));
 						if( sortedIndex >= newShader ) {
 							sortedIndex++;
-							drawSurf->sort = (sortedIndex << QSORT_SHADERNUM_SHIFT) | (entityNum << QSORT_REFENTITYNUM_SHIFT) | (fogNum << QSORT_FOGNUM_SHIFT) | (postRender << QSORT_POSTRENDER_SHIFT);// | dlightMap;
+							drawSurf->sort = (sortedIndex << QSORT_SHADERNUM_SHIFT) | (entityNum << QSORT_REFENTITYNUM_SHIFT) /*| (fogNum << QSORT_FOGNUM_SHIFT)*/ | (postRender << QSORT_POSTRENDER_SHIFT);// | dlightMap;
 						}
 					}
 					curCmd = (const void *)(ds_cmd + 1);

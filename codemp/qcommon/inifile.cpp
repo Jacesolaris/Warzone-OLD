@@ -199,11 +199,14 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 	ep++;
 
 	/* Copy up to buffer_len chars to buffer */
-#if defined(rd_warzone_x86_EXPORTS) 
-	strncpy(buffer, ep, strlen(ep)); // WTF OJK, Why does the render version strip the newlines... the others don't! lol
-#else
-	strncpy(buffer, ep, strlen(ep) - 1); // -1 to remove the trailing \n
-#endif
+//#if defined(rd_warzone_x86_EXPORTS) 
+	//if (ep[strlen(ep)] == '\0' || ep[strlen(ep)] == '\n')
+	//	strncpy(buffer, ep, strlen(ep) - 1); // -1 to remove the trailing \n
+	//else
+		strncpy(buffer, ep, strlen(ep)); // WTF OJK, Why does the render version strip the newlines... the others don't! lol
+//#else
+//	strncpy(buffer, ep, strlen(ep) - 1); // -1 to remove the trailing \n
+//#endif
 
 	FS_FCloseFile(fp);               /* Clean up and return the amount copied */
 

@@ -3458,6 +3458,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	else
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
+	image->hasAlpha = USE_ALPHA ? true : false;
+
 	VectorCopy4(avgColor, image->lightColor);
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
@@ -3758,6 +3760,7 @@ void R_CreateBuiltinImages( void ) {
 	//tr.previousRenderImage = R_CreateImage("_renderPreviousFrame", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.renderNormalImage = R_CreateImage("*normal", NULL, width, height, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, 0);
+	tr.renderNormalDetailedImage = R_CreateImage("*normalDetailed", NULL, width, height, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, 0);
 	tr.renderPositionMapImage = R_CreateImage("*positionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F);
 	tr.waterPositionMapImage = R_CreateImage("*waterPositionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F);
 	tr.waterPositionMapImage2 = R_CreateImage("*waterPositionMap2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F);
@@ -3812,7 +3815,7 @@ void R_CreateBuiltinImages( void ) {
 	tr.dummyImage  = R_CreateImage("_dummy",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.dummyImage2  = R_CreateImage("_dummy2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.dummyImage3  = R_CreateImage("_dummy3",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.dummyImage4 = R_CreateImage("_dummy3", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.dummyImage4 = R_CreateImage("_dummy4", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.ssdoImage1 = R_CreateImage("_ssdoImage1", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.ssdoImage2 = R_CreateImage("_ssdoImage2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);

@@ -72,6 +72,8 @@ void RB_CheckVBOandIBO(VBO_t *vbo, IBO_t *ibo)
 
 		R_BindVBO(vbo);
 		R_BindIBO(ibo);
+
+		glState.vertexAnimation = qfalse;
 	}
 
 	if (vbo != tess.vbo && ibo != tess.ibo)
@@ -503,6 +505,8 @@ RB_SurfacePolychain
 =============
 */
 static void RB_SurfacePolychain( srfPoly_t *p ) {
+	glState.vertexAnimation = qfalse;
+
 	int		i;
 	int		numv;
 
@@ -745,6 +749,8 @@ RB_SurfaceTriangles
 =============
 */
 static void RB_SurfaceTriangles( srfBspSurface_t *srf ) {
+	glState.vertexAnimation = qfalse;
+
 #ifdef __PSHADOWS__
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
 				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
@@ -1840,6 +1846,8 @@ RB_SurfaceMesh
 =============
 */
 static void RB_SurfaceMesh(mdvSurface_t *surface) {
+	glState.vertexAnimation = qfalse;
+
 	int				j;
 	float			backlerp;
 	mdvSt_t			*texCoords;
@@ -1885,6 +1893,8 @@ RB_SurfaceFace
 ==============
 */
 static void RB_SurfaceFace( srfBspSurface_t *srf ) {
+	glState.vertexAnimation = qfalse;
+
 #ifdef __PSHADOWS__
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
 				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
@@ -1945,6 +1955,8 @@ Just copy the grid of points and triangulate
 =============
 */
 static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
+	glState.vertexAnimation = qfalse;
+
 	int		i, j;
 	float	*xyz;
 	float	*texCoords, *lightCoords;
@@ -2191,6 +2203,8 @@ Entities that have a single procedurally generated surface
 ====================
 */
 static void RB_SurfaceEntity( surfaceType_t *surfType ) {
+	glState.vertexAnimation = qfalse;
+
 	switch( backEnd.currentEntity->e.reType ) {
 	case RT_SPRITE:
 		RB_SurfaceSprite();
@@ -2261,12 +2275,16 @@ static void RB_SurfaceBad( surfaceType_t *surfType ) {
 
 static void RB_SurfaceFlare(srfFlare_t *surf)
 {
+	glState.vertexAnimation = qfalse;
+
 	if (r_flares->integer)
 		RB_AddFlare(surf, tess.fogNum, surf->origin, surf->color, surf->normal);
 }
 
 static void RB_SurfaceVBOMesh(srfBspSurface_t * srf)
 {
+	glState.vertexAnimation = qfalse;
+
 #ifdef __PSHADOWS__
 	RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex,
 			srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qfalse );
@@ -2276,57 +2294,76 @@ static void RB_SurfaceVBOMesh(srfBspSurface_t * srf)
 #endif //__PSHADOWS__
 }
 
+shader_t *prevShader = NULL;
+
 void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)
 {
-	//mdvModel_t     *mdvModel;
-	//mdvSurface_t   *mdvSurface;
-	refEntity_t    *refEnt;
+	qboolean		contextChanged = qfalse;
+	refEntity_t    *refEnt = &backEnd.currentEntity->e;
 
 //	GLimp_LogComment("--- RB_SurfaceVBOMDVMesh ---\n");					// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
 
 	if(!surface->vbo || !surface->ibo)
 		return;
 
-	//RB_CheckVBOandIBO(surface->vbo, surface->ibo);
-	RB_EndSurface();
-	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
-
-	R_BindVBO(surface->vbo);
-	R_BindIBO(surface->ibo);
+	int			vertexAttribsInterpolation = 0;
+	qboolean	useInternalVBO = qfalse;
 
 	if (surface->vbo->vboUsage == GL_STATIC_DRAW && surface->ibo->iboUsage == GL_STATIC_DRAW)
-		tess.useInternalVBO = qtrue;
+	{
+		useInternalVBO = qtrue;
+	}
+
+	if (refEnt->oldframe == refEnt->frame || surface->mdvModel->numFrames <= 1)
+	{
+		vertexAttribsInterpolation = 0;
+	}
 	else
-		tess.useInternalVBO = qfalse;
+	{
+		vertexAttribsInterpolation = refEnt->backlerp;
+	}
+
+	/*if (tess.numIndexes + surface->numIndexes > SHADER_MAX_INDEXES
+		|| tess.numVertexes + surface->numVerts > SHADER_MAX_VERTEXES
+		|| vertexAttribsInterpolation != refEnt->backlerp
+		|| glState.vertexAttribsOldFrame != refEnt->oldframe
+		|| glState.vertexAttribsNewFrame != refEnt->frame
+		|| !glState.vertexAnimation
+		|| tess.shader != prevShader
+		|| surface->vbo != glState.currentVBO
+		|| surface->ibo != glState.currentIBO
+		|| tess.useInternalVBO != useInternalVBO)
+	{
+		contextChanged = qtrue;
+	}
+
+	if (contextChanged)*/
+	{
+		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
+
+		R_BindVBO(surface->vbo);
+		R_BindIBO(surface->ibo);
+
+		prevShader = tess.shader;
+
+		glState.vertexAttribsInterpolation = vertexAttribsInterpolation;
+		glState.vertexAttribsOldFrame = refEnt->oldframe;
+		glState.vertexAttribsNewFrame = refEnt->frame;
+
+		tess.useInternalVBO = useInternalVBO;
+
+		glState.vertexAnimation = qtrue;
+	}
 
 	tess.numIndexes += surface->numIndexes;
 	tess.numVertexes += surface->numVerts;
 	tess.minIndex = surface->minIndex;
 	tess.maxIndex = surface->maxIndex;
 
-	//mdvModel = surface->mdvModel;
-	//mdvSurface = surface->mdvSurface;
-
-	refEnt = &backEnd.currentEntity->e;
-
-	if (refEnt->oldframe == refEnt->frame || surface->mdvModel->numFrames <= 1)
-	{
-		glState.vertexAttribsInterpolation = 0;
-	}
-	else
-	{
-		glState.vertexAttribsInterpolation = refEnt->backlerp;
-	}
-
-	glState.vertexAttribsOldFrame = refEnt->oldframe;
-	glState.vertexAttribsNewFrame = refEnt->frame;
-
-	glState.vertexAnimation = qtrue;
-
 	RB_EndSurface();
 
 	// So we don't lerp surfaces that shouldn't be lerped
-	glState.vertexAnimation = qfalse;
+	//glState.vertexAnimation = qfalse;
 }
 
 static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
@@ -2352,7 +2389,7 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceGhoul,		// SF_MDX,
 	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
 	(void(*)(void*))RB_SurfaceEntity,		// SF_ENTITY
-	(void(*)(void*))RB_SurfaceDisplayList,		// SF_DISPLAY_LIST
+	(void(*)(void*))RB_SurfaceDisplayList,	// SF_DISPLAY_LIST
 	(void(*)(void*))RB_SurfaceVBOMesh,	    // SF_VBO_MESH,
 	(void(*)(void*))RB_SurfaceVBOMDVMesh,   // SF_VBO_MDVMESH
 };

@@ -3480,6 +3480,8 @@ static void MDXABoneToMatrix ( const mdxaBone_t& bone, matrix_t& matrix )
 //It provides a pretty significant performance increase over the existing one.
 void RB_SurfaceGhoul( CRenderableSurface *surf ) 
 {
+	glState.vertexAnimation = qfalse;
+
 #if 1
 	static matrix_t boneMatrices[80] = {};
 

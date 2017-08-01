@@ -1738,7 +1738,7 @@ R_DecomposeSort
 */
 void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader,
 					int64_t *fogNum, int64_t *postRender) {
-	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
+	//*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
 	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
 	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 	*postRender = (sort >> QSORT_POSTRENDER_SHIFT ) & 1;

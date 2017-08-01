@@ -3,6 +3,8 @@ uniform sampler2D	u_NormalMap;
 
 uniform vec2		u_Dimensions;
 
+uniform vec4		u_Local1;
+
 varying vec2		var_ScreenTex;
 
 // Enable output Debugging...
@@ -12,14 +14,13 @@ varying vec2		var_ScreenTex;
 #define BLUR_WIDTH 3.0
 
 // Shall we pixelize randomly the output? -- Sucks!
-//#define RANDOMIZE_PIXELS
+#define RANDOMIZE_PIXELS
 
 //#define APPLY_CONTRAST
 
 #ifdef RANDOMIZE_PIXELS
-//noise producing function to eliminate banding (got it from someone else´s shader):
-float rand(vec2 co){
-	return 0.5+(fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453))*0.5;
+float rand(vec2 co) {
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453) * 0.25 + 0.75;
 }
 #endif
 
@@ -27,10 +28,6 @@ void main()
 {
 	vec4 diffuseColor = textureLod(u_DiffuseMap, var_ScreenTex, 0.0);
 	
-#ifdef RANDOMIZE_PIXELS
-	float random = rand(var_ScreenTex);
-#endif
-
 #if defined(BLUR_WIDTH)
 	vec2 offset = vec2(1.0) / u_Dimensions;
 
@@ -65,7 +62,7 @@ void main()
 #endif
 
 #ifdef RANDOMIZE_PIXELS
-	gl_FragColor = diffuseColor + vec4(volumeLight*(random * 0.5 + 0.5), 0.0);
+	gl_FragColor = vec4(diffuseColor.rgb + (volumeLight*rand(var_ScreenTex * length(volumeLight.rgb) * u_Local1.r)), 1.0);
 #else
 	gl_FragColor = vec4(diffuseColor.rgb + volumeLight, 1.0);
 #endif	

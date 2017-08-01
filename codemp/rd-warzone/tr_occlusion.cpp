@@ -264,9 +264,12 @@ void RB_RecersiveCheckOcclusions(mnode_t *node, int planeBits)
 }
 #endif //!__SOFTWARE_OCCLUSION__
 
+int			nextOcclusionTime = 0;
+qboolean	newOcclusionCheck = qfalse;
+
 void RB_CheckOcclusions ( void )
 {
-	if (r_nocull->integer)
+	if (r_nocull->integer || !newOcclusionCheck)
 	{
 		return;
 	}
@@ -290,6 +293,8 @@ void RB_CheckOcclusions ( void )
 		int perc = fperc;
 		ri->Printf(PRINT_ALL, "Occlusion frame %i. visible nodes %i. occluded nodes %i. %i percent occluded.\n", occlusionFrame, numNotOccluded, numOccluded, perc);
 	}
+
+	newOcclusionCheck = qfalse;
 #endif //__SOFTWARE_OCCLUSION__
 }
 
@@ -709,6 +714,14 @@ void RB_OcclusionCulling(void)
 	{
 		if (r_occlusion->integer)
 		{
+			if (nextOcclusionTime > backEnd.refdef.time)
+			{
+				return;
+			}
+
+			nextOcclusionTime = backEnd.refdef.time + 100;
+			newOcclusionCheck = qtrue;
+
 			occlusionFrame++;
 
 #ifdef __SOFTWARE_OCCLUSION__

@@ -811,6 +811,12 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	screensize[1] = tr.volumetricFBOImage->height;// glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
 
+	{
+		vec4_t local1;
+		VectorSet4(local1, backEnd.refdef.floatTime, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.volumeLightCombineShader, UNIFORM_LOCAL1, local1);
+	}
+
 	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.volumeLightCombineShader, color, 0);
 }
 
@@ -1362,6 +1368,12 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	screensize[0] = tr.volumetricFBOImage->width;
 	screensize[1] = tr.volumetricFBOImage->height;
 	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
+
+	{
+		vec4_t local1;
+		VectorSet4(local1, backEnd.refdef.floatTime, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.volumeLightCombineShader, UNIFORM_LOCAL1, local1);
+	}
 
 	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.volumeLightCombineShader, color, 0);
 
@@ -2275,6 +2287,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
 
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+
 	if (r_ssdo->integer)
 	{
 		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
@@ -2356,7 +2371,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL3, local3);
 
 	vec4_t local4;
-	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, 0.0, 0.0);
+	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, backEnd.refdef.floatTime, 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL4, local4);
 
 	{
@@ -2581,8 +2596,10 @@ void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
 
 	GLSL_SetUniformMatrix16(&tr.showNormalsShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

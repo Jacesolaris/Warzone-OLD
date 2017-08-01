@@ -903,7 +903,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	else
 		cubemapIndex = 0;
 
-	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value)
 		cubemapIndex = 0;
 
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
@@ -1028,6 +1028,8 @@ Compute vertices for this model surface
 =================
 */
 void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
+	glState.vertexAnimation = qfalse;
+
 	srfIQModel_t	*surf = (srfIQModel_t *)surface;
 	iqmData_t	*data = surf->data;
 	float		jointMats[IQM_MAX_JOINTS * 12];

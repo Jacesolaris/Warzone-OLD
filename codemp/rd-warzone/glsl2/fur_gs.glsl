@@ -13,6 +13,7 @@ uniform vec4	u_Local10;
 in vec3 v_g_normal[3];
 in vec2 v_g_texCoord[3];
 in vec3 v_g_PrimaryLightDir[3];
+in vec3 v_g_ViewDir[3];
 
 out vec4 v_position;
 out vec3 v_normal;
@@ -37,7 +38,8 @@ void main(void)
 		{
 			normal = normalize(v_g_normal[i]);
 
-			v_normal = normal;//u_normalMatrix * normal; 
+			vec3 E = normalize(v_g_ViewDir[i]);
+			v_normal = normal * E;//u_normalMatrix * normal; 
 
 			v_texCoord = v_g_texCoord[i];
 			

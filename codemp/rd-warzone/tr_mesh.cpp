@@ -829,7 +829,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	else
 		cubemapIndex = 0;
 
-	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value)
 		cubemapIndex = 0;
 
 #ifdef __INSTANCED_MODELS__

@@ -3,16 +3,7 @@ uniform sampler2D	u_SplatMap1;
 uniform sampler2D	u_SplatMap2;
 uniform sampler2D	u_OverlayMap;
 
-/*
-#if defined(USE_SHADOWMAP)
-uniform sampler2D	u_ShadowMap;
-#endif
-*/
-
 uniform mat4		u_ModelViewProjectionMatrix;
-uniform mat4		u_ModelMatrix;
-//uniform mat4		u_invEyeProjectionMatrix;
-//uniform mat4		u_ModelViewMatrix;
 
 uniform vec4		u_Local9;
 
@@ -23,10 +14,12 @@ uniform vec3		u_PrimaryLightColor;
 flat in int			iGrassType;
 smooth in vec2		vTexCoord;
 in vec3				vVertPosition;
+in vec3				m_Normal;
 
 out vec4			out_Glow;
 out vec4			out_Normal;
 out vec4			out_Position;
+out vec4			out_NormalDetail;
 
 void AddContrast ( inout vec3 color )
 {
@@ -93,29 +86,18 @@ void main()
 	else
 		diffuse = texture(u_DiffuseMap, vTexCoord);
 
-	if (diffuse.a <= 0.0) discard;
-
 	diffuse.rgb *= clamp((1.0-vTexCoord.y) * 1.5, 0.3, 1.0);
-	if (diffuse.a > 0.5) diffuse.a = 1.0;
-	else diffuse.a = 0.0;
 
-	if (diffuse.a <= 0.0) discard;
+	float alpha = (diffuse.a > 0.5) ? 1.0 : 0.0;
 
-	/*
-	#if defined(USE_SHADOWMAP)
+	if (alpha == 0.0) discard;
 
-		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
-		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
-		diffuse.rgb *= clamp(shadowValue, 0.4, 1.0);
+	gl_FragColor = vec4(diffuse.rgb, 1.0);
 
-	#endif //defined(USE_SHADOWMAP)
-	*/
-
-	gl_FragColor = diffuse;
-
-	vec4 m_Normal = ConvertToNormals(diffuse);
+	//vec4 m_Normal = ConvertToNormals(diffuse);
 
 	out_Glow = vec4(0.0);
-	out_Normal = vec4(m_Normal.xyz, 0.1);
-	out_Position = vec4(vVertPosition, 6.0);//0.1875); // 6.0 / MATERIAL_LAST (0.1875) is MATERIAL_LONGGRASS
+	out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0/*0.5*/);
+	out_Position = vec4(vVertPosition.xyz, MATERIAL_GREENLEAVES);
+	out_NormalDetail = vec4(0.0);
 }

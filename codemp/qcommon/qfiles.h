@@ -8,8 +8,9 @@
 //
 
 // surface geometry should not exceed these limits
-#define	SHADER_MAX_VERTEXES	1000
+//#define	SHADER_MAX_VERTEXES	1000
 //#define	SHADER_MAX_VERTEXES	2000
+#define	SHADER_MAX_VERTEXES	8192
 //#define	SHADER_MAX_VERTEXES	64000
 #define	SHADER_MAX_INDEXES	(6*SHADER_MAX_VERTEXES)
 

@@ -56,7 +56,6 @@ float		NUM_PLANT_SHADERS = 0;
 
 float		TREE_SCALE_MULTIPLIER = 1.0;
 
-#if 1
 static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
@@ -130,8 +129,8 @@ static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/smalltree05.md3",
 	"models/warzone/plants/smalltree06.md3",
 };
-#else // Grassy climate models... TODO: Add INI option when I can be bothered...
-static const char *TropicalPlantsModelsList[] = {
+
+static const char *GrassyPlantsModelsList[] = {
 	"models/warzone/plants/gcgrass01.md3",
 	"models/warzone/plants/gcgrass01.md3",
 	"models/warzone/plants/gcgrass01.md3",
@@ -204,11 +203,8 @@ static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/gcplantmix03.md3",
 	"models/warzone/plants/gcplantmix04.md3",
 };
-#endif
 
-#define SpringPlantsModelsList TropicalPlantsModelsList
-#define EndorPlantsModelsList TropicalPlantsModelsList
-#define SnowPlantsModelsList TropicalPlantsModelsList
+
 
 static const char *TropicalPlantsList[] = {
 	"models/warzone/foliage/plant01.png",
@@ -1568,8 +1564,12 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 		if (passType == FOLIAGE_PASS_PLANT && !skipPlant && FOLIAGE_PLANT_SELECTION[num] > 0)
 		{// Add plant model as well...
+			float distMult = Q_clamp(0.0, 1.0 - Q_clamp(0.0, dist / ((float)FOLIAGE_VISIBLE_DISTANCE * 0.7), 1.0), 1.0);
+
+			if (distMult <= 0.0) return;
+
 #ifndef __NEW_PLANTS__
-			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
+			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
 
 			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
 
@@ -1579,11 +1579,11 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 			re.hModel = FOLIAGE_PLANT_MODEL[4];
 #else //__NEW_PLANTS__
-			float PLANT_SCALE = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale;
+			float PLANT_SCALE = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
 
 			re.reType = RT_PLANT;//RT_MODEL;
 
-			re.origin[2] += 8.0 + (1.0 - FOLIAGE_PLANT_SCALE[num]);
+			re.origin[2] += 8.0 + (1.0 - (FOLIAGE_PLANT_SCALE[num] * distMult));
 
 			re.hModel = FOLIAGE_PLANT_MODELS[FOLIAGE_PLANT_SELECTION[num] - 1];
 #endif //__NEW_PLANTS__
@@ -2298,11 +2298,6 @@ void FOLIAGE_DrawGrass(void)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
 			}
-#elif defined(__NEW_PLANTS__)
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(SpringPlantsModelsList[i]);
-			}
 #endif //__NO_PLANTS__
 		}
 		else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
@@ -2315,11 +2310,6 @@ void FOLIAGE_DrawGrass(void)
 			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(EndorPlantsList[i]);
-			}
-#elif defined(__NEW_PLANTS__)
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(EndorPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -2334,11 +2324,6 @@ void FOLIAGE_DrawGrass(void)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SnowPlantsList[i]);
 			}
-#elif defined(__NEW_PLANTS__)
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(SnowPlantsModelsList[i]);
-			}
 #endif //__NO_PLANTS__
 		}
 		else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
@@ -2351,11 +2336,6 @@ void FOLIAGE_DrawGrass(void)
 			for (i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
-			}
-#elif defined(__NEW_PLANTS__)
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}
 #endif //__NO_PLANTS__
 		}
@@ -2370,13 +2350,55 @@ void FOLIAGE_DrawGrass(void)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
 			}
-#elif defined(__NEW_PLANTS__)
+#endif //__NO_PLANTS__
+		}
+
+#if defined(__NEW_PLANTS__)
+		//
+		// Allow for various foliage sets based on climate or mapInfo settings...
+		//
+		char FOLIAGE_MODEL_SELECTION[128] = { 0 };
+
+		strcpy(FOLIAGE_MODEL_SELECTION, IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "FOLIAGE", "foliageSet", "default"));
+
+		if (FOLIAGE_MODEL_SELECTION[0] == '\0' || !strcmp(FOLIAGE_MODEL_SELECTION, "default"))
+		{// If it returned default value, check also in mapinfo file...
+			memset(FOLIAGE_MODEL_SELECTION, 0, sizeof(char) * 128);
+			strcpy(FOLIAGE_MODEL_SELECTION, IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLIAGE_SET", "default"));
+		}
+
+		char *foliageSet = NULL;
+
+		if (!strcmp(FOLIAGE_MODEL_SELECTION, "grass")) 
+		{
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grass^5\".\n", GAME_VERSION, cgs.currentmapname);
+
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(GrassyPlantsModelsList[i]);
+			}
+		}
+		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "tropical"))
+		{
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7tropical^5\".\n", GAME_VERSION, cgs.currentmapname);
+
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}
-#endif //__NO_PLANTS__
 		}
+		else
+		{
+			trap->Print("^1*** ^3%s^5: No map grass selection found. Using default option \"^7tropical^5\".\n", GAME_VERSION, cgs.currentmapname);
+
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
+			}
+		}
+
+		
+#endif //defined(__NEW_PLANTS__)
 
 		// Read all the tree info from the new .climate ini files...
 		TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
