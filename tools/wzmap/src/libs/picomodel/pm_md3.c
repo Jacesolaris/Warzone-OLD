@@ -191,7 +191,6 @@ static picoModel_t *_md3_load( PM_PARAMS_LOAD )
 	md3Frame_t		*frame;
 	md3Triangle_t	*triangle;
 	md3Vertex_t		*vertex;
-	double			lat, lng;
 	char            *magic;
 
 	picoModel_t		*picoModel;
@@ -428,13 +427,32 @@ static picoModel_t *_md3_load( PM_PARAMS_LOAD )
 			PicoSetSurfaceXYZ( picoSurface, j, xyz );
 			
 			/* decode lat/lng normal to 3 float normal */
-			lat = (float) ((vertex->normal >> 8) & 0xff);
-			lng = (float) (vertex->normal & 0xff);
-			lat *= PICO_PI / 128;
-			lng *= PICO_PI / 128;
-			normal[ 0 ] = (picoVec_t) cos( lat ) * (picoVec_t) sin( lng );
-			normal[ 1 ] = (picoVec_t) sin( lat ) * (picoVec_t) sin( lng );
-			normal[ 2 ] = (picoVec_t) cos( lng );
+			picoByte_t	lat, lng;
+			lat = ((vertex->normal >> 8) & 0xff);
+			lng = (vertex->normal & 0xff);
+			if (lat == 0 && lng == 0)
+			{
+				// normal = 0,0,1
+				normal[0] = 0;
+				normal[1] = 0;
+				normal[2] = 1;
+			}
+			else if (lat == 0 && lng == 128)
+			{
+				// normal = 0,0,-1
+				normal[0] = 0;
+				normal[1] = 0;
+				normal[2] = -1;
+			}
+			else
+			{
+				float fLat, fLng;
+				fLat = (float)lat * PICO_PI / 128;
+				fLng = (float)lng * PICO_PI / 128;
+				normal[0] = (picoVec_t)cos(fLat) * (picoVec_t)sin(fLng);
+				normal[1] = (picoVec_t)sin(fLat) * (picoVec_t)sin(fLng);
+				normal[2] = (picoVec_t)cos(fLng);
+			}
 			PicoSetSurfaceNormal( picoSurface, j, normal );
 			
 			/* set st coords */
