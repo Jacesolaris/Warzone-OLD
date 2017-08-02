@@ -78,28 +78,28 @@ void main()
 
 	if (sampleZ <= u_ShadowZfar[0])
 	{
-		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 		precise vec4 shadowpos = u_ShadowMvp * biasPos;
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 		result = shadow(u_ShadowMap, shadowpos.xy, shadowpos.z);
 	}
 	else if (sampleZ <= u_ShadowZfar[1])
 	{
-		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 		precise vec4 shadowpos = u_ShadowMvp2 * biasPos;
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 		result = shadowPCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
 	}
 	else if (sampleZ <= u_ShadowZfar[2])
 	{
-		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 		precise vec4 shadowpos = u_ShadowMvp3 * biasPos;
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 		result = shadowPCF2(u_ShadowMap3, shadowpos.xy, shadowpos.z);
 	}
 	/*else if (sampleZ <= u_ShadowZfar[3])
 	{
-		precise vec4 biasPos = precise vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+		precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 		precise vec4 shadowpos = u_ShadowMvp4 * biasPos;
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 		result = shadow(u_ShadowMap4, shadowpos.xy, shadowpos.z);
