@@ -447,8 +447,8 @@ static picoModel_t *_md3_load( PM_PARAMS_LOAD )
 			else
 			{
 				float fLat, fLng;
-				fLat = (float)lat * PICO_PI / 128;
-				fLng = (float)lng * PICO_PI / 128;
+				fLat = (float)((float)lat * PICO_PI / 128.0);
+				fLng = (float)((float)lng * PICO_PI / 128.0);
 				normal[0] = (picoVec_t)cos(fLat) * (picoVec_t)sin(fLng);
 				normal[1] = (picoVec_t)sin(fLat) * (picoVec_t)sin(fLng);
 				normal[2] = (picoVec_t)cos(fLng);
