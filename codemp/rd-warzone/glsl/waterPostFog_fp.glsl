@@ -86,22 +86,17 @@ void main ( void )
 	bool isWater = false;
 	bool isWaterFall = false;
 
-	float distFromWater = 0.13;
-	float distFromWaterFall = 0.13;
-	
 	if (wMap.a >= 1.0 && (dw <= dp || (pMap.x == 0.0 && pMap.y == 0.0 && pMap.z == 0.0 || pMap.a == 0.0 || pMap.a == 1024.0 || pMap.a == 1025.0)))
 	{
 		isWater = true;
-		distFromWater = 0.0;
 
 		if (wMap.a >= 2.0)
 		{
 			isWaterFall = true;
-			distFromWaterFall = 0.0;
 		}
 	}
 
-	distMult = clamp(length(dw-dp) / 32.0, 0.0, 1.0);
+	float distMult = clamp(length(dw-dp) / 32.0, 0.0, 1.0);
 	distMult = pow(distMult, 2.5);
 	distMult = clamp(distMult, 0.0, 1.0);
 
