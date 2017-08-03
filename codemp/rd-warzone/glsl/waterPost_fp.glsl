@@ -23,6 +23,7 @@ uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_OverlayMap;			// foamMap
 uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D	u_DeluxeMap;			// noise
 
 uniform sampler2D	u_WaterPositionMap;
 uniform sampler2D	u_WaterPositionMap2;
@@ -287,6 +288,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
 }
+
 
 #ifdef __TEST_WATER__
 /*
@@ -606,11 +608,41 @@ void main ( void )
 
 	if (pixelIsWaterfall)
 	{// How???
+		vec3 eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
+		vec3 pixelDir = eyeVecNorm;
+		vec3 normal = normalize(pixelDir + (color.rgb * 0.5 - 0.25));
+		vec3 specular = vec3(0.0);
+		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
+		float lambertian2 = dot(lightDir.xyz, normal);
+		float spec2 = 0.0;
+		float fresnel = clamp(1.0 - dot(normal, -eyeVecNorm), 0.0, 1.0);
+		fresnel = pow(fresnel, 3.0) * 0.65;
+
 		vec2 texCoord = var_TexCoords.xy;
 		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * refractionScale;
 
 		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
-		gl_FragColor = vec4(mix(waterColorShallow, refraction, 0.7), 1.0);
+		refraction = mix(waterColorShallow.rgb, refraction.rgb, 0.3);
+
+		float fTime = u_Time * 2.0;
+		vec3 foam = (texture(u_OverlayMap, vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + texture(u_OverlayMap, vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
+
+		color = mix(color + (foam * sunColor), refraction, fresnel * 0.8);
+
+		if(lambertian2 > 0.0)
+		{// this is blinn phong
+			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
+			vec3 halfDir2 = normalize(lightDir.xyz + mirrorEye);
+			float specAngle = max(dot(halfDir2, normal), 0.0);
+			spec2 = pow(specAngle, 16.0);
+			specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
+		}
+
+		color = clamp(color + specular, 0.0, 1.0);
+		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
+		color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color);
+
+		gl_FragColor = vec4(color, 1.0);
 		return;
 	}
 

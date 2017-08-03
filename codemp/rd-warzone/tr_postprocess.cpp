@@ -2846,11 +2846,6 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	GLSL_SetUniformVec3(&tr.fogPostShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
-	matrix_t trans, model, mvp;
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-
 	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	
 	GLSL_SetUniformFloat(&tr.fogPostShader, UNIFORM_TIME, backEnd.refdef.floatTime * 0.3/*r_testvalue3->value*/);
@@ -2923,6 +2918,78 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fogPostShader, color, 0);
+}
+
+void RB_WaterPostFogShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.waterPostFogShader);
+
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
+
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+
+	GLSL_SetUniformVec3(&tr.waterPostFogShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+
+	vec3_t out;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+	GLSL_SetUniformVec4(&tr.waterPostFogShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+	GLSL_SetUniformVec3(&tr.waterPostFogShader, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+
+	GLSL_SetUniformMatrix16(&tr.waterPostFogShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformFloat(&tr.waterPostFogShader, UNIFORM_TIME, backEnd.refdef.floatTime * 0.3);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.waterPostFogShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(&tr.waterPostFogShader, UNIFORM_LOCAL0, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
+		GLSL_SetUniformVec4(&tr.waterPostFogShader, UNIFORM_MAPINFO, loc);
+	}
+
+	{
+		vec4_t viewInfo;
+		//float zmax = 4096.0;// 2048.0;
+		float zmax = backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmin = r_znear->value;
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformVec4(&tr.waterPostFogShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.waterPostFogShader, color, 0);
 }
 
 void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

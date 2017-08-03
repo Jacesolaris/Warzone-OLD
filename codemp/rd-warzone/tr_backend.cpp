@@ -2677,6 +2677,12 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+
+			if (!(tr.refdef.rdflags & RDF_UNDERWATER))
+			{// When not underwater, also draw volumetric fog above the water...
+				RB_WaterPostFogShader(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			}
 		}
 
 		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer)

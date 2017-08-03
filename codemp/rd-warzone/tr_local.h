@@ -2620,6 +2620,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t bloomRaysShader;
 	shaderProgram_t distanceBlurShader[4];
 	shaderProgram_t fogPostShader;
+	shaderProgram_t waterPostFogShader;
 	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t showNormalsShader;
 	shaderProgram_t showDepthShader;

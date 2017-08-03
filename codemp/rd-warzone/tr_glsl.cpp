@@ -143,6 +143,8 @@ extern const char *fallbackShader_bloomRays_vp;
 extern const char *fallbackShader_bloomRays_fp;
 extern const char *fallbackShader_fogPost_vp;
 extern const char *fallbackShader_fogPost_fp;
+extern const char *fallbackShader_waterPostFog_vp;
+extern const char *fallbackShader_waterPostFog_fp;
 extern const char *fallbackShader_showNormals_vp;
 extern const char *fallbackShader_showNormals_fp;
 extern const char *fallbackShader_showDepth_vp;
@@ -3431,6 +3433,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load fogPost shader!");
 	}
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.waterPostFogShader, "waterFogPost", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "330", fallbackShader_waterPostFog_vp, fallbackShader_waterPostFog_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterFogPost shader!");
+	}
+
 #if 0
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -4900,6 +4910,28 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.waterPostFogShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterFogPost shader!");
+	}
+
+	GLSL_InitUniforms(&tr.waterPostFogShader);
+
+	qglUseProgram(tr.waterPostFogShader.program);
+
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.waterPostFogShader);
+#endif
+
+	numEtcShaders++;
+
+
 	for (int s = 0; s < 3; s++)
 	{
 		if (!GLSL_EndLoadGPUShader(&tr.fastBlurShader[s]))
@@ -5543,6 +5575,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[2]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[3]);
 	GLSL_DeleteGPUShader(&tr.fogPostShader);
+	GLSL_DeleteGPUShader(&tr.waterPostFogShader);
 	GLSL_DeleteGPUShader(&tr.colorCorrectionShader);
 	GLSL_DeleteGPUShader(&tr.showNormalsShader);
 	GLSL_DeleteGPUShader(&tr.showDepthShader);

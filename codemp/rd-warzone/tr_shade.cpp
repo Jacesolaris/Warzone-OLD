@@ -664,6 +664,8 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 
 static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, float *eyeT)
 {
+	return; // UQ1: Disabled Q3 fog...
+
 	// from RB_CalcFogTexCoords()
 	fog_t  *fog;
 	vec3_t  local;
