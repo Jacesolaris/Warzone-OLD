@@ -1177,7 +1177,9 @@ vec3_t		SUN_COLOR_MAIN = { 0 };
 vec3_t		SUN_COLOR_SECONDARY = { 0 };
 vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
-vec3_t		MAP_AMBIENT_COLOR = { 0 };
+vec3_t		MAP_AMBIENT_COLOR = { 1 };
+float		MAP_EMISSIVE_COLOR_SCALE = 0.2;
+float		MAP_EMISSIVE_RADIUS_SCALE = 0.2;
 qboolean	SHADOWS_ENABLED = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
 float		SHADOW_MAXBRIGHT = 1.0;
@@ -1246,14 +1248,20 @@ void MAPPING_LoadMapInfo(void)
 	//
 	// Palette...
 	//
-	MAP_AMBIENT_COLOR[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_R", "0.0"));
-	MAP_AMBIENT_COLOR[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_G", "0.0"));
-	MAP_AMBIENT_COLOR[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_B", "0.0"));
+	MAP_AMBIENT_COLOR[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_R", "1.0"));
+	MAP_AMBIENT_COLOR[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_G", "1.0"));
+	MAP_AMBIENT_COLOR[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_B", "1.0"));
+
+	//
+	// Emission...
+	//
+	MAP_EMISSIVE_COLOR_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_COLOR_SCALE", "0.2"));
+	MAP_EMISSIVE_RADIUS_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_RADIUS_SCALE", "0.2"));
 
 	//
 	// Fog...
 	//
-	FOG_POST_ENABLED = (atoi(IniRead(mapname, "FOG", "DISABLE_FOG", "0")) > 0) ? qfalse : qtrue;
+	FOG_POST_ENABLED = (atoi(IniRead(mapname, "FOG", "DISABLE_FOG", "1")) > 0) ? qfalse : qtrue;
 	FOG_STANDARD_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_STANDARD_ENABLE", "1")) > 0) ? qtrue : qfalse;
 	FOG_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_R", "0.5"));
 	FOG_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_G", "0.6"));
@@ -1337,7 +1345,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2]);
-
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");

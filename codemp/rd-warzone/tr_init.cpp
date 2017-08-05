@@ -1546,7 +1546,7 @@ void R_Register( void )
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.0", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_cubemapCullRange = ri->Cvar_Get( "r_cubemapCullRange", "2048.0", CVAR_ARCHIVE );
+	r_cubemapCullRange = ri->Cvar_Get( "r_cubemapCullRange", "512.0", CVAR_ARCHIVE );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "2", CVAR_ARCHIVE );
 	r_waterWaveHeight = ri->Cvar_Get( "r_waterWaveHeight", "8.0", CVAR_ARCHIVE );
 	r_waterWaveDensity = ri->Cvar_Get( "r_waterWaveDensity", "0.5", CVAR_ARCHIVE );
@@ -1576,7 +1576,7 @@ void R_Register( void )
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.9975", CVAR_ARCHIVE);
 	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.333", CVAR_ARCHIVE);
 	r_bloomRaysDensity = ri->Cvar_Get("r_bloomRaysDensity", "1.0", CVAR_ARCHIVE);
-	r_bloomRaysStrength = ri->Cvar_Get("r_bloomRaysStrength", "0.5", CVAR_ARCHIVE);
+	r_bloomRaysStrength = ri->Cvar_Get("r_bloomRaysStrength", "1.0", CVAR_ARCHIVE);
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicStrength = ri->Cvar_Get("r_anamorphicStrength", "0.5", CVAR_ARCHIVE);
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );

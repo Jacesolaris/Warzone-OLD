@@ -3147,8 +3147,29 @@ void R_GetTextureAverageColor(const byte *in, int width, int height, float *avgC
 				float currentB = ByteToFloat(*inByte++);
 				float currentA = ByteToFloat(*inByte++);
 
-				if (currentA > 0.1 && (currentR > 0.1 || currentG > 0.1 || currentB > 0.1))
+				if (currentA > 0.0 /*&& (currentR > 0.1 || currentG > 0.1 || currentB > 0.1)*/)
 				{// Ignore black and zero-alpha pixels.
+					average[0] += currentR;
+					average[1] += currentG;
+					average[2] += currentB;
+					NUM_PIXELS++;
+				}
+			}
+		}
+
+		if (NUM_PIXELS == 0)
+		{// Backups, use all pixels...
+			inByte = (byte *)&in[0];
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					float currentR = ByteToFloat(*inByte++);
+					float currentG = ByteToFloat(*inByte++);
+					float currentB = ByteToFloat(*inByte++);
+					float currentA = ByteToFloat(*inByte++);
+
 					average[0] += currentR;
 					average[1] += currentG;
 					average[2] += currentB;
@@ -3159,7 +3180,7 @@ void R_GetTextureAverageColor(const byte *in, int width, int height, float *avgC
 	}
 	else
 	{
-		for (int y = 0; y < height; y++)
+		/*for (int y = 0; y < height; y++)
 		{
 			for (int x = 0; x < width; x++)
 			{
@@ -3170,6 +3191,27 @@ void R_GetTextureAverageColor(const byte *in, int width, int height, float *avgC
 
 				if (currentR > 0.1 || currentG > 0.1 || currentB > 0.1)
 				{// Ignore black and zero-alpha pixels.
+					average[0] += currentR;
+					average[1] += currentG;
+					average[2] += currentB;
+					NUM_PIXELS++;
+				}
+			}
+		}
+
+		if (NUM_PIXELS == 0)*/
+		{// Backups, use all pixels...
+			inByte = (byte *)&in[0];
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					float currentR = ByteToFloat(*inByte++);
+					float currentG = ByteToFloat(*inByte++);
+					float currentB = ByteToFloat(*inByte++);
+					*inByte++;
+
 					average[0] += currentR;
 					average[1] += currentG;
 					average[2] += currentB;
@@ -3375,8 +3417,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 	vec4_t avgColor = { 0 };
 	R_GetTextureAverageColor(pic, width, height, avgColor);
-	//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
-
+	
+	//if (flags & IMGFLAG_GLOW)
+	//	ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
+	
 	qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
 
 	if (r_cartoon->integer 
@@ -3707,6 +3751,7 @@ void R_CreateBuiltinImages( void ) {
 
 	Com_Memset( data2, 0, sizeof( data2 ) );
 	tr.blackImage = R_CreateImage("*black", (byte *)data2, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+	VectorSet4(tr.blackImage->lightColor, 1.0, 1.0, 1.0, 1.0);
 
 	tr.randomImage = R_FindImageFile("gfx/random.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 
@@ -3750,7 +3795,7 @@ void R_CreateBuiltinImages( void ) {
 
 	if (r_hdr->integer)
 	{
-		hdrFormat = GL_RGBA16F;
+		hdrFormat = GL_RGBA32F; //GL_RGBA16F;
 		hdrDepth = GL_DEPTH_COMPONENT32;
 	}
 

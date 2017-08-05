@@ -2,7 +2,7 @@
 #define __ENVMAP__
 //#define __NORMAL_METHOD_1__
 #define __NORMAL_METHOD_2__
-#define __EXTRA_LIGHT__
+//#define __EXTRA_LIGHT__
 //#define __RAIN__
 //#define __SS_SHADOW__
 #define __RANDOMIZE_LIGHT_PIXELS__
@@ -33,7 +33,7 @@ uniform vec3		u_PrimaryLightColor;
 uniform vec4		u_CubeMapInfo;
 uniform float		u_CubeMapStrength;
 
-#define MAX_DEFERRED_LIGHTS 128//64//16//24
+#define MAX_DEFERRED_LIGHTS 64//128//64//16//24
 
 uniform int			u_lightCount;
 uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
@@ -301,7 +301,7 @@ void main(void)
 
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
-	if (position.a == MATERIAL_SKY || position.a == MATERIAL_SUN)
+	if (position.a == MATERIAL_SKY || position.a == MATERIAL_SUN || position.a == MATERIAL_NONE)
 	{// Skybox... Skip...
 		return;
 	}
@@ -309,17 +309,22 @@ void main(void)
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
-	norm.rgb = norm.rgb * 2.0 - 1.0;
+	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
 	
 	if (normalDetail.a < 1.0)
 	{// Don't have real normalmap, make normals for this pixel...
 		normalDetail = normalVector(texCoords);
 	}
 
-	normalDetail.rgb = normalDetail.rgb * 2.0 - 1.0;
+	normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
 	normalDetail.rgb *= 0.25;
-	normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
+	//normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
 	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+
+	//vec3 tangent = TangentFromNormal( norm.xyz );
+	//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
+	//mat3 tangentToWorld = mat3(tangent.xyz, bitangent.xyz, norm.xyz);
+	//norm.xyz = tangentToWorld * normalDetail.xyz;
 
 	vec3 N = norm.xyz;
 
@@ -331,7 +336,6 @@ void main(void)
 	{
 		float shadowValue = texture(u_ShadowMap, texCoords).r;
 
-#if 1
 		shadowValue = pow(shadowValue, 1.5);
 
 #define sm_cont_1 ( 64.0 / 255.0)
@@ -340,19 +344,8 @@ void main(void)
 
 		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
 		shadowMult = clamp(shadowValue, 0.2, 1.0);
-#else		
-		gl_FragColor.rgb *= shadowValue;
-		shadowMult = clamp(shadowValue, 0.2, 1.0);
-#endif
 	}
 #endif //defined(USE_SHADOWMAP)
-
-	float lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
-
-	vec3 specular = gl_FragColor.rgb;
-#define specLower ( 48.0 / 255.0)
-#define specUpper (255.0 / 192.0)
-	specular = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specular, 0.0, 1.0);
 
 
 	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
@@ -361,7 +354,7 @@ void main(void)
 	bool noSunPhong = false;
 	float phongFactor = u_Local1.r;
 
-	if (phongFactor < 0.0)
+	if (phongFactor*u_Local1.g < 0.0)
 	{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
 		noSunPhong = true;
 		phongFactor = 0.0;
@@ -376,7 +369,7 @@ void main(void)
 		occlusion = texture(u_HeightMap, texCoords);
 	}
 
-	float reflectivePower = (norm.a * 0.2);
+	float reflectivePower = ((norm.a * 0.5 + 0.5) * 0.3);
 
 
 #if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
@@ -402,16 +395,14 @@ void main(void)
 			light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
 		}
 
-		vec3 lColor = blinn_phong(N, E, -to_light_norm, gl_FragColor.rgb, specular) * light_occlusion * reflectivePower * phongFactor * 8.0;
+		vec3 lColor = blinn_phong(N, E, -to_light_norm, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb) * light_occlusion * reflectivePower * phongFactor * 0.5;
 
 #ifdef __RANDOMIZE_LIGHT_PIXELS__
 		float lightRand = lrand(texCoords * length(lColor.rgb) * u_Local4.b);
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lColor * norm.a * shadowMult * lightRand), norm.a * lightScale);
+		gl_FragColor.rgb = gl_FragColor.rgb + (lColor * norm.a * shadowMult * lightRand);
 #else //!__RANDOMIZE_LIGHT_PIXELS__
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + (lColor * norm.a * shadowMult), norm.a * lightScale);
+		gl_FragColor.rgb = gl_FragColor.rgb + (lColor * norm.a * shadowMult);
 #endif //__RANDOMIZE_LIGHT_PIXELS__
-
-		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 
 #ifdef __EXTRA_LIGHT__
 		if (position.a == MATERIAL_SOLIDWOOD 
@@ -432,7 +423,7 @@ void main(void)
 			vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
 			float specAngle = max(dot(halfDir2, N), 0.0);
 			float spec2 = pow(specAngle, 16.0);
-			vec3 lightAdd = (vec3(clamp(spec2, 0.0, 1.0) * reflectivePower) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.g) * lightScale * shadowMult * matMult;
+			vec3 lightAdd = (vec3(clamp(spec2, 0.0, 1.0) * reflectivePower) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor * 8.0 * u_Local1.b * u_Local1.g) * shadowMult * matMult;
 
 			if (useOcclusion)
 			{
@@ -447,8 +438,6 @@ void main(void)
 			{
 				gl_FragColor.rgb += lightAdd;
 			}
-
-			lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
 		}
 #endif //__EXTRA_LIGHT__
 	}
@@ -459,9 +448,6 @@ void main(void)
 		{// Invert phong value so we still have non-sun lights...
 			phongFactor = -u_Local1.r;
 		}
-
-		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
-		//float invLightScale = clamp((1.0 - lightScale), 0.2, 0.7);
 
 		vec3 addedLight = vec3(0.0);
 
@@ -491,22 +477,26 @@ void main(void)
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 
+					addedLight.rgb += lightColor * lightStrength * lightDistMult;
+
 					if (useOcclusion)
 					{
 						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
 
-					vec3 lColor = blinn_phong(N, E, lightDir, gl_FragColor.rgb * lightColor, specular * lightColor);
-					addedLight.rgb += (lColor * light_occlusion * lightStrength * lightScale * lightDistMult * reflectivePower * phongFactor * 32.0);
+					lightColor = lightStrength * lightDistMult * lightColor;
+
+					vec3 lColor = blinn_phong(N, E, lightDir, lightColor, lightColor);
+					addedLight.rgb += (lColor * light_occlusion * lightStrength * lightDistMult * reflectivePower * phongFactor * 1.5);
 				}
 			}
 		}
 
 #ifdef __RANDOMIZE_LIGHT_PIXELS__
 		float lightRand = lrand(texCoords * length(addedLight.rgb) * u_Local4.b);
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + clamp(addedLight * norm.a * lightScale * lightRand, 0.0, 1.0), norm.a * lightScale);
+		gl_FragColor.rgb = gl_FragColor.rgb + (addedLight * reflectivePower * lightRand);
 #else //!__RANDOMIZE_LIGHT_PIXELS__
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + clamp(addedLight * norm.a * lightScale, 0.0, 1.0), norm.a * lightScale);
+		gl_FragColor.rgb = gl_FragColor.rgb + (addedLight * reflectivePower);
 #endif //__RANDOMIZE_LIGHT_PIXELS__
 	}
 
@@ -536,10 +526,8 @@ void main(void)
 #ifdef __ENVMAP__
 	if (u_Local1.a > 0.0)
 	{
-		lightScale = clamp((1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b)), 0.0, 1.0);
-		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
+		gl_FragColor.rgb = gl_FragColor.rgb + (env * reflectivePower * reflectivePower);
 	}
 #endif //__ENVMAP__
 

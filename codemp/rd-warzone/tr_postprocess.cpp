@@ -1048,6 +1048,9 @@ vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
 
+extern float		MAP_EMISSIVE_COLOR_SCALE;
+extern float		MAP_EMISSIVE_RADIUS_SCALE;
+
 void RB_AddGlowShaderLights ( void )
 {
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
@@ -1133,11 +1136,11 @@ void RB_AddGlowShaderLights ( void )
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
+				VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_colored++;
 
-				//if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)
-				//	ri->Printf(PRINT_ALL, "glow location missing color. %f %f %f.\n", glowColor[0], glowColor[1], glowColor[2]);
+				//ri->Printf(PRINT_ALL, "glow location %i color: %f %f %f.\n", num_colored-1, glowColor[0], glowColor[1], glowColor[2]);
 			}
 			else
 			{
@@ -1673,10 +1676,7 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoCombineShader, color, 0);
 }
 
-float mix(float x, float y, float a)
-{
-	return (1 - a)*x + a*y;
-}
+extern float mix(float x, float y, float a);
 
 void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {

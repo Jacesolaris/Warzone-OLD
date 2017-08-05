@@ -1670,6 +1670,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
+					
+					if (stage->emissiveRadiusScale <= 0.0)
+						stage->emissiveRadiusScale = 1.0;
+
+					if (stage->emissiveColorScale <= 0.0)
+						stage->emissiveColorScale = 1.5;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
 				continue;
@@ -1691,6 +1697,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
+
+					if (stage->emissiveRadiusScale <= 0.0)
+						stage->emissiveRadiusScale = 1.0;
+
+					if (stage->emissiveColorScale <= 0.0)
+						stage->emissiveColorScale = 1.5;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
 
@@ -1718,6 +1730,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
+
+					if (stage->emissiveRadiusScale <= 0.0)
+						stage->emissiveRadiusScale = 1.0;
+
+					if (stage->emissiveColorScale <= 0.0)
+						stage->emissiveColorScale = 1.5;
 				}
 
 				stage->noScreenMap = qtrue;
@@ -1809,6 +1827,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
+
+					if (stage->emissiveRadiusScale <= 0.0)
+						stage->emissiveRadiusScale = 1.0;
+
+					if (stage->emissiveColorScale <= 0.0)
+						stage->emissiveColorScale = 1.5;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
 
@@ -1877,6 +1901,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 				stage->glow = qtrue;
+
+				if (stage->emissiveRadiusScale <= 0.0)
+					stage->emissiveRadiusScale = 1.0;
+
+				if (stage->emissiveColorScale <= 0.0)
+					stage->emissiveColorScale = 1.5;
 			}
 			//UQ1: END - Testing - Force glow to obvious glow components...
 
@@ -1936,6 +1966,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					{
 						//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[num]->imgName);
 						stage->glow = qtrue;
+
+						if (stage->emissiveRadiusScale <= 0.0)
+							stage->emissiveRadiusScale = 1.0;
+
+						if (stage->emissiveColorScale <= 0.0)
+							stage->emissiveColorScale = 1.5;
 					}
 					//UQ1: END - Testing - Force glow to obvious glow components...
 
@@ -2570,10 +2606,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		{
 			stage->glow = qtrue;
 			
-			if (!stage->emissiveRadiusScale) 
+			if (stage->emissiveRadiusScale <= 0.0) 
 				stage->emissiveRadiusScale = 1.0;
 
-			if (!stage->emissiveColorScale)
+			if (stage->emissiveColorScale <= 0.0)
 				stage->emissiveColorScale = 1.5;
 
 			stage->emissiveHeightScale = 0.0;

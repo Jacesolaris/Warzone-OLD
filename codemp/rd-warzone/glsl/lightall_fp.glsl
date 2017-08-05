@@ -636,7 +636,7 @@ void main()
 
 
 
-	float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
+	//float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
 
 
 	vec3 N = normalize(m_Normal.xyz);
@@ -695,17 +695,14 @@ void main()
 
 
 	if (USE_GLOW_BUFFER > 0.0 || USE_IS2D > 0.0)
-		gl_FragColor.rgb = vec3(mix(diffuse.rgb, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)), 0.0, 1.0), lightScale));
+		gl_FragColor.rgb = diffuse.rgb + ambientColor;
 	else
-		gl_FragColor.rgb = vec3(mix(diffuse.rgb * 0.7, clamp((diffuse.rgb + (diffuse.rgb * ambientColor)) * 0.7, 0.0, 1.0), lightScale));
-		//gl_FragColor.rgb = vec3(mix(diffuse.rgb, clamp((diffuse.rgb + ((diffuse.rgb * ambientColor) * lightScale)), 0.0, 1.0), lightScale));
+		gl_FragColor.rgb = diffuse.rgb + (ambientColor * 0.6);
 
 
-	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0)
+	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN /*&& u_Local1.a != MATERIAL_NONE*/)
 	{
-		float lightScale2 = clamp(max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b), 0.0, 1.0);
-		lightScale2 *= lightScale2;
-		gl_FragColor.rgb = clamp(gl_FragColor.rgb + (u_MapAmbient.rgb * lightScale2), 0.0, 1.0);
+		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
 	
 

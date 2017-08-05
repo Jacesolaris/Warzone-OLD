@@ -3408,6 +3408,31 @@ qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS] = { qfalse };
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 
+float mix(float x, float y, float a)
+{
+	return (1 - a)*x + a*y;
+}
+
+float sign(float x)
+{
+	if (x < 0.0) return -1.0;
+	if (x > 0.0) return 1.0;
+	return 0.0;
+}
+
+void R_AddVibrancy(float *color, float vibrancy)
+{
+	vec3_t	lumCoeff = { 0.212656, 0.715158, 0.072186 };  						//Calculate luma with these values
+	float	max_color = max(color[0], max(color[1], color[2])); 	//Find the strongest color
+	float	min_color = min(color[0], min(color[1], color[2])); 	//Find the weakest color
+	float	color_saturation = max_color - min_color; 							//Saturation is the difference between min and max
+	float	luma = DotProduct(lumCoeff, color); 							//Calculate luma (grey)
+																				//Extrapolate between luma and original by 1 + (1-saturation) - current
+	color[0] = mix(luma, color[0], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
+	color[1] = mix(luma, color[1], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
+	color[2] = mix(luma, color[2], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
+}
+
 qboolean R_CloseLightNear (vec3_t pos)
 {
 	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
@@ -3425,18 +3450,10 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 {
 	NUM_MAP_GLOW_LOCATIONS = 0;
 
-	//
-	// How about we look at the material types and select surfaces that need cubemaps and generate them there instead? :)
-	//
-
 	world_t	*w;
 
 	w = &s_worldData;
 
-	//float averageRadius = 0.0;
-	//int numAverages = 0;
-
-//#pragma omp parallel for /*ordered*/ schedule(dynamic) //if (r_multithread->integer > 0)
 	for (int i = 0; i < w->numsurfaces; i++)
 	{// Get a count of how many we need... Add them to temp list if not too close to another...
 		msurface_t *surf =	&w->surfaces[i];
@@ -3494,15 +3511,19 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		{
 			radius = Q_clamp(0.0, radius, 128.0);
 			VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+
 			VectorScale(glowColor, 0.333, glowColor);
+			VectorNormalize(glowColor);
 			VectorScale(glowColor, emissiveColorScale, glowColor);
+			R_AddVibrancy(glowColor, 0.4);
 			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+			
 			MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
 			MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
+			
 			MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
-			//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
-			//averageRadius += radius;
-			//numAverages++;
+			
+			ri->Printf(PRINT_WARNING, "Light %i radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n", NUM_MAP_GLOW_LOCATIONS, radius, emissiveColorScale, emissiveRadiusScale, glowColor[0], glowColor[1], glowColor[2]);
 			NUM_MAP_GLOW_LOCATIONS++;
 		}
 	}
@@ -3512,10 +3533,6 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		MAP_WATER_LEVEL = -131072.0;
 	}
 
-	//averageRadius /= numAverages;
-	//ri->Printf(PRINT_WARNING, "Light average radius %f.\n", averageRadius);
-
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Found %i cubemap entities.\n", "Warzone", tr.numCubemaps);
 	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (lighting) - Selected %i surfaces for glow lights.\n", "Warzone", NUM_MAP_GLOW_LOCATIONS);
 }
 
@@ -3582,30 +3599,7 @@ static void R_LoadCubemapWaypoints( void )
 		msurface_t *surf =	&w->surfaces[i];
 		vec3_t				surfOrigin;
 		qboolean			bad = qfalse;
-		float				radius = 0.0;
-		float				emissiveRadiusScale = 0.0;
-		float				emissiveColorScale = 0.0;
-		float				emissiveHeightScale = 0.0;
-
-		qboolean	hasGlow = qfalse;
-		vec4_t		glowColor = { 0 };
-
-		if (surf->shader)
-		{
-			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
-			{
-				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
-				{
-					hasGlow = qtrue;
-					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
-					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
-					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
-					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;
-					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
-					break;
-				}
-			}
-		}
+		float				radius = 0;
 
 		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags )
 			|| surf->shader->customCubeMapScale > 0.0
@@ -3628,29 +3622,6 @@ static void R_LoadCubemapWaypoints( void )
 				continue;
 			}
 
-			if ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
-			{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
-				if (surfOrigin[2] < MAP_WATER_LEVEL)
-					MAP_WATER_LEVEL = surfOrigin[2];
-			}
-
-
-			if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
-			{
-				radius = Q_clamp(0.0, radius, 128.0);
-				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
-				VectorScale(glowColor, 0.333, glowColor);
-				VectorScale(glowColor, emissiveColorScale, glowColor);
-				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
-				MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
-				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
-				//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
-				//averageRadius += radius;
-				//numAverages++;
-				NUM_MAP_GLOW_LOCATIONS++;
-			}
-
 			for (int j = 0; j < numcubeOrgs; j++)
 			{
 				if (Distance(cubeOrgs[j], surfOrigin) < DISTANCE_BETWEEN_CUBEMAPS)
@@ -3668,46 +3639,6 @@ static void R_LoadCubemapWaypoints( void )
 				numcubeOrgs++;
 			}
 		}
-		else if (hasGlow)
-		{
-			if (surf->cullinfo.type & CULLINFO_SPHERE)
-			{
-				VectorCopy(surf->cullinfo.localOrigin, surfOrigin);
-				radius = surf->cullinfo.radius;
-			}
-			else if (surf->cullinfo.type & CULLINFO_BOX)
-			{
-				surfOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
-				surfOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
-				surfOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-				radius = Distance(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]) / 2.0;
-			}
-			else
-			{
-				continue;
-			}
-
-			if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
-			{
-				radius = Q_clamp(0.0, radius, 128.0);
-				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
-				VectorScale(glowColor, 0.333, glowColor);
-				VectorScale(glowColor, emissiveColorScale, glowColor);
-				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
-				MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
-				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
-				//ri->Printf(PRINT_WARNING, "Light %i radius %f.\n", NUM_MAP_GLOW_LOCATIONS, radius);
-				//averageRadius += radius;
-				//numAverages++;
-				NUM_MAP_GLOW_LOCATIONS++;
-			}
-		}
-	}
-
-	if (MAP_WATER_LEVEL >= 131072.0)
-	{// No water plane was found, set to map mins...
-		MAP_WATER_LEVEL = -131072.0;
 	}
 
 	tr.numCubemaps = numcubeOrgs;
@@ -3730,7 +3661,6 @@ static void R_LoadCubemapWaypoints( void )
 	//ri->Printf(PRINT_WARNING, "Light average radius %f.\n", averageRadius);
 
 	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i surfaces for cubemaps.\n", "Warzone", tr.numCubemaps);
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (lighting) - Selected %i surfaces for glow lights.\n", "Warzone", NUM_MAP_GLOW_LOCATIONS);
 #endif //CUBEMAPS_AT_WAYPOINTS
 }
 
@@ -4637,20 +4567,15 @@ void RE_LoadWorldMap( const char *name ) {
 			// UQ1: Warzone can do better!
 			R_LoadCubemapWaypoints(); // NOTE: Also sets up water plane and glow postions at the same time... Can skip R_SetupMapGlowsAndWaterPlane()
 		}
-		else
-		{
-			R_SetupMapGlowsAndWaterPlane();
-		}
 
 		if (tr.numCubemaps)
 		{
 			R_AssignCubemapsToWorldSurfaces();
 		}
 	}
-	else
-	{// Cubemaps disabled, need to set up water plane and glow postions anyway...
-		R_SetupMapGlowsAndWaterPlane();
-	}
+
+	// Set up water plane and glow postions...
+	R_SetupMapGlowsAndWaterPlane();
 
 	s_worldData.dataSize = (byte *)ri->Hunk_Alloc(0, h_low) - startMarker;
 

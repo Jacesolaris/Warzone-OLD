@@ -1021,7 +1021,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 		{
-			specularScale = 1.5;
+			specularScale = 1.0;
 			cubemapScale = 0.7;
 			materialType = (float)MATERIAL_WATER;
 			parallaxScale = 2.0;

@@ -414,6 +414,7 @@ void main ( void )
 #endif //defined(HEIGHTMAP_ADD_NORMAL_BLUE)
 #endif //defined(EXPERIMENTAL_HEIGHTMAP)
 
+	normal.g = 1.0 - normal.g;
 	normal.a = 1.0 - normal.a;
 
 	gl_FragColor = normal;

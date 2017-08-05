@@ -5,7 +5,7 @@
 
 #include "../qcommon/q_shared.h"
 
-#define	MAX_DLIGHTS		128//32			// can't be increased, because bit flags are used on surfaces -- UQ1: Pfff I dont use the stupid bitflags anyway
+#define	MAX_DLIGHTS		64//128//32			// can't be increased, because bit flags are used on surfaces -- UQ1: Pfff I dont use the stupid bitflags anyway
 #define	REFENTITYNUM_BITS	16//11		// can't be increased without changing drawsurf bit packing
 #define	REFENTITYNUM_MASK	((1<<REFENTITYNUM_BITS) - 1)
 // the last N-bit number (2^REFENTITYNUM_BITS - 1) is reserved for the special world refentity,

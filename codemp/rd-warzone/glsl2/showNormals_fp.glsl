@@ -66,6 +66,24 @@ vec4 normalVector(vec2 coord) {
 }
 #endif //__NORMAL_METHOD_2__
 
+vec3 TangentFromNormal ( vec3 normal )
+{
+	vec3 tangent;
+	vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0)); 
+	vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0)); 
+
+	if( length(c1) > length(c2) )
+	{
+		tangent = c1;
+	}
+	else
+	{
+		tangent = c2;
+	}
+
+	return normalize(tangent);
+}
+
 void main(void)
 {
 	vec4 norm = texture(u_NormalMap, var_TexCoords);
@@ -74,17 +92,24 @@ void main(void)
 	{
 		vec4 normalDetail = textureLod(u_OverlayMap, var_TexCoords, 0.0);
 
-		norm.rgb = norm.rgb * 2.0 - 1.0;
+		norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
 
 		if (normalDetail.a < 1.0)
 		{// Don't have real normalmap, make normals for this pixel...
 			normalDetail = normalVector(var_TexCoords);
 		}
 
-		normalDetail.rgb = normalDetail.rgb * 2.0 - 1.0;
+		normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
 		normalDetail.rgb *= 0.25;//u_Settings0.g;
-		normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
+		//normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
 		norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+
+
+		//vec3 tangent = TangentFromNormal( norm.xyz );
+		//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
+		//mat3 tangentToWorld = mat3(tangent.xyz, bitangent.xyz, norm.xyz);
+		//norm.xyz = tangentToWorld * normalDetail.xyz;
+
 		norm.rgb = norm.rgb * 0.5 + 0.5;
 	}
 
