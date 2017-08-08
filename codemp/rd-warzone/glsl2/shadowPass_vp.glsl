@@ -235,7 +235,7 @@ void main()
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
-	if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
+	//if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
 	{
 		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 		normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;

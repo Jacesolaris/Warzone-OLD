@@ -679,9 +679,9 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	fog = tr.world->fogs + tess.fogNum;
 
 	VectorSubtract( backEnd.ori.origin, backEnd.viewParms.ori.origin, local );
-	fogDistanceVector[0] = -backEnd.ori.modelMatrix[2];
-	fogDistanceVector[1] = -backEnd.ori.modelMatrix[6];
-	fogDistanceVector[2] = -backEnd.ori.modelMatrix[10];
+	fogDistanceVector[0] = -backEnd.ori.modelViewMatrix[2];
+	fogDistanceVector[1] = -backEnd.ori.modelViewMatrix[6];
+	fogDistanceVector[2] = -backEnd.ori.modelViewMatrix[10];
 	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.ori.axis[0] );
 
 	// scale the fog vectors based on the fog's thickness
@@ -952,6 +952,184 @@ void RB_AdvanceOverlaySway ( void )
 	overlaySwayTime = ri->Milliseconds() + 50;
 }
 
+void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
+{
+	float materialType = (float)MATERIAL_TYPE;
+	float specularScale = 0.0;
+	float cubemapScale = 0.9;
+	float parallaxScale = 0.0;
+
+	switch (MATERIAL_TYPE)
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		specularScale = 1.0;
+		cubemapScale = 0.7;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		specularScale = 0.75;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		specularScale = 0.75;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		specularScale = 0.65;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		specularScale = 0.25;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		specularScale = 0.30;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		specularScale = 0.22;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		specularScale = 0.56;
+		cubemapScale = 0.15;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		specularScale = 0.05;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		specularScale = 0.025;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		specularScale = 0.98;
+		cubemapScale = 0.98;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		specularScale = 1.0;
+		cubemapScale = 1.0;
+		materialType = (float)MATERIAL_HOLLOWMETAL;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		specularScale = 0.35;
+		cubemapScale = 0.0;
+		parallaxScale = 0.0;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		specularScale = 0.95;
+		cubemapScale = 0.0;
+		parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		specularScale = 0.45;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		specularScale = 0.35;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		specularScale = 0.65;
+		cubemapScale = 0.26;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		specularScale = 0.75;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		specularScale = 0.25;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		specularScale = 0.15;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		specularScale = 0.375;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		specularScale = 0.25;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		specularScale = 0.25;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		specularScale = 0.58;
+		cubemapScale = 0.24;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		specularScale = 0.3;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		specularScale = 0.93;
+		cubemapScale = 0.37;
+		parallaxScale = 1.0;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		specularScale = 0.5;
+		cubemapScale = 0.46;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		specularScale = 0.75;
+		cubemapScale = 0.37;
+		parallaxScale = 2.0;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		specularScale = 0.95;
+		cubemapScale = 0.27;
+		parallaxScale = 1.0;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		specularScale = 0.93;
+		cubemapScale = 0.23;
+		parallaxScale = 1.0;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		specularScale = 0.92;
+		cubemapScale = 0.42;
+		parallaxScale = 1.5;
+		break;
+	default:
+		specularScale = 0.15;
+		cubemapScale = 0.0;
+		parallaxScale = 1.0;
+		break;
+	}
+
+	settings[0] = materialType;
+	settings[1] = specularScale;
+	settings[2] = cubemapScale;
+	settings[3] = parallaxScale;
+}
+
 extern float MAP_WATER_LEVEL;
 extern float MAP_INFO_MAXSIZE;
 extern vec3_t  MAP_INFO_MINS;
@@ -975,6 +1153,36 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	float	hasSplatMap3 = 0;
 	float	hasSplatMap4 = 0;
 	float	hasNormalMap = 0;
+
+	vec4_t materialSettings;
+	RB_PBR_DefaultsForMaterial(materialSettings, tess.shader->surfaceFlags & MATERIAL_MASK);
+
+	if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
+	{
+		specularScale = 1.0;
+		cubemapScale = 0.7;
+		materialType = (float)MATERIAL_WATER;
+		parallaxScale = 2.0;
+	}
+	else if (tess.shader == tr.sunShader)
+	{// SPECIAL MATERIAL TYPE FOR SUN
+		specularScale = 0.0;
+		cubemapScale = 0.0;
+		materialType = 1025.0;
+		parallaxScale = 0.0;
+	}
+	else
+	{
+		materialType = materialSettings[0];
+		specularScale = materialSettings[1];
+		cubemapScale = materialSettings[2];
+		parallaxScale = materialSettings[3];
+
+		if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_SOLIDMETAL || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_HOLLOWMETAL)
+		{
+			isMetalic = 1.0;
+		}
+	}
 
 	if (!IS_DEPTH_PASS)
 	{
@@ -1019,217 +1227,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			hasSplatMap4 = 1.0;
 		}*/
 
-		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
-		{
-			specularScale = 1.0;
-			cubemapScale = 0.7;
-			materialType = (float)MATERIAL_WATER;
-			parallaxScale = 2.0;
-		}
-		else
-		{
-			switch( tess.shader->surfaceFlags & MATERIAL_MASK )
-			{
-			case MATERIAL_WATER:			// 13			// light covering of water on a surface
-				specularScale = 1.0;
-				cubemapScale = 0.7;
-				materialType = (float)MATERIAL_WATER;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-				specularScale = 0.75;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_SHORTGRASS;
-				parallaxScale = 1.5;
-				//phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
-				break;
-			case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-				specularScale = 0.75;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_LONGGRASS;
-				parallaxScale = 1.5;
-				//phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
-				break;
-			case MATERIAL_SAND:				// 8			// sandy beach
-				specularScale = 0.65;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_SAND;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_CARPET:			// 27			// lush carpet
-				specularScale = 0.25;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_CARPET;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_GRAVEL:			// 9			// lots of small stones
-				specularScale = 0.30;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_GRAVEL;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_ROCK:				// 23			//
-				specularScale = 0.22;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_ROCK;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_TILES:			// 26			// tiled floor
-				specularScale = 0.56;
-				cubemapScale = 0.15;
-				materialType = (float)MATERIAL_TILES;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-				specularScale = 0.05;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_SOLIDWOOD;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-				specularScale = 0.025;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_HOLLOWWOOD;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-				specularScale = 0.98;
-				cubemapScale = 0.98;
-				materialType = (float)MATERIAL_SOLIDMETAL;
-				parallaxScale = 1.5;
-				isMetalic = 1.0;
-				break;
-			case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-				specularScale = 1.0;
-				cubemapScale = 1.0;
-				materialType = (float)MATERIAL_HOLLOWMETAL;
-				parallaxScale = 1.5;
-				isMetalic = 1.0;
-				break;
-			case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-				specularScale = 0.35;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_DRYLEAVES;
-				parallaxScale = 0.0;
-				break;
-			case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-				specularScale = 0.95;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_GREENLEAVES;
-				parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
-				break;
-			case MATERIAL_FABRIC:			// 21			// Cotton sheets
-				specularScale = 0.45;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_FABRIC;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_CANVAS:			// 22			// tent material
-				specularScale = 0.35;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_CANVAS;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_MARBLE:			// 12			// marble floors
-				specularScale = 0.65;
-				cubemapScale = 0.26;
-				materialType = (float)MATERIAL_MARBLE;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_SNOW:				// 14			// freshly laid snow
-				specularScale = 0.75;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_SNOW;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_MUD:				// 17			// wet soil
-				specularScale = 0.25;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_MUD;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_DIRT:				// 7			// hard mud
-				specularScale = 0.15;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_DIRT;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-				specularScale = 0.375;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_CONCRETE;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-				specularScale = 0.25;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_FLESH;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-				specularScale = 0.25;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_RUBBER;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_PLASTIC:			// 25			//
-				specularScale = 0.58;
-				cubemapScale = 0.24;
-				materialType = (float)MATERIAL_PLASTIC;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_PLASTER:			// 28			// drywall style plaster
-				specularScale = 0.3;
-				cubemapScale = 0.0;
-				materialType = (float)MATERIAL_PLASTER;
-				parallaxScale = 1.5;
-				break;
-			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-				specularScale = 0.93;
-				cubemapScale = 0.37;
-				materialType = (float)MATERIAL_SHATTERGLASS;
-				parallaxScale = 1.0;
-				break;
-			case MATERIAL_ARMOR:			// 30			// body armor
-				specularScale = 0.5;
-				cubemapScale = 0.46;
-				materialType = (float)MATERIAL_ARMOR;
-				parallaxScale = 1.5;
-				isMetalic = 1.0;
-				break;
-			case MATERIAL_ICE:				// 15			// packed snow/solid ice
-				specularScale = 0.75;
-				cubemapScale = 0.37;
-				materialType = (float)MATERIAL_ICE;
-				parallaxScale = 2.0;
-				break;
-			case MATERIAL_GLASS:			// 10			//
-				specularScale = 0.95;
-				cubemapScale = 0.27;
-				materialType = (float)MATERIAL_GLASS;
-				parallaxScale = 1.0;
-				break;
-			case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-				specularScale = 0.93;
-				cubemapScale = 0.23;
-				materialType = (float)MATERIAL_BPGLASS;
-				parallaxScale = 1.0;
-				break;
-			case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-				specularScale = 0.92;
-				cubemapScale = 0.42;
-				materialType = (float)MATERIAL_COMPUTER;
-				parallaxScale = 1.5;
-				break;
-			default:
-				specularScale = 0.15;
-				cubemapScale = 0.0;
-				materialType = (float)0.0;
-				parallaxScale = 1.0;
-				break;
-			}
-		}
-
 		// Shader overrides material...
 		if (pStage->cubeMapScale > 0.0)
 		{
@@ -1249,11 +1246,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		if (pStage->isFoliage)
 		{
 			doSway = 0.7;
-		}
-
-		if (tess.shader == tr.sunShader)
-		{// SPECIAL MATERIAL TYPE FOR SUN
-			materialType = 1025.0;
 		}
 
 		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
@@ -1279,31 +1271,31 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	}
 	else
 	{// Don't waste time on unneeded stuff... Absolute minimum shader complexity...
-		specularScale = 0.0;
-		cubemapScale = 0.0;
-		materialType = (float)0.0;
-		parallaxScale = 0.0;
-
-		if (tess.shader == tr.sunShader)
-		{// SPECIAL MATERIAL TYPE FOR SUN
-			materialType = 1025.0;
-		}
-		else
-		{
-			materialType = ( tess.shader->surfaceFlags & MATERIAL_MASK );
-		}
-
 		if (pStage->isFoliage)
 		{
 			doSway = 0.7;
 		}
 
-		VectorSet4(local1, 0.0, 0.0, 0.0, materialType);
+		VectorSet4(local1, 0.0, 0.0, specularScale, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+
+		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local4);
+
 		VectorSet4(local4, 0.0, 0.0, 0.0, doSway);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
+
 		VectorSet4(local5, 0.0, overlaySway, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
+
+		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, local4);
+
+		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, local4);
+
+		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local4);
 	}
 
 	vec4_t specMult;
@@ -1655,9 +1647,6 @@ void RB_UpdateCloseLights ( void )
 
 		if (distance > 4096.0) continue; // Don't even check at this range. Traces are costly!
 
-		float x, y;
-		WorldCoordToScreenCoord(dl->origin, &x, &y);
-
 		if (NUM_CLOSE_LIGHTS < MAX_DEFERRED_LIGHTS)
 		{// Have free light slots for a new light...
 			vec3_t from;
@@ -1667,6 +1656,9 @@ void RB_UpdateCloseLights ( void )
 			{
 				continue;
 			}
+
+			float x, y;
+			WorldCoordToScreenCoord(dl->origin, &x, &y);
 
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
@@ -1707,6 +1699,9 @@ void RB_UpdateCloseLights ( void )
 				{
 					continue;
 				}
+
+				float x, y;
+				WorldCoordToScreenCoord(dl->origin, &x, &y);
 
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
@@ -2072,6 +2067,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #define __USE_DETAIL_DEPTH_SKIP__
 #define __LIGHTMAP_IS_DETAIL__
 #define __USE_GLOW_DETAIL_BUFFERS__
+#define __USE_DETAIL__
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
@@ -2107,6 +2103,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else if (IS_DEPTH_PASS)
 		{// testing - force lightall
+#ifdef __USE_DETAIL__
 #ifdef __USE_DETAIL_DEPTH_SKIP__
 			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
@@ -2181,7 +2178,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				continue;
 			}
 #endif //__USE_DETAIL_DEPTH_SKIP__
-
+#endif /__USE_DETAIL__
 
 			//if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
 			{
@@ -2337,6 +2334,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useFog = 1.0;
 			}
 			
+#ifdef __USE_DETAIL__
 			if (stage > 0 && didNonDetail)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
@@ -2399,6 +2397,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				didNonDetail = qtrue;
 			}
+#endif //__USE_DETAIL__
 			
 			sp = &tr.lightAllShader;
 
@@ -2601,7 +2600,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		// UQ1: Used by both generic and lightall...
 		RB_SetStageImageDimensions(sp, pStage);
 
-		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelViewMatrix);
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		//GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL); // Currently not used...
 
@@ -3079,7 +3079,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
@@ -3118,7 +3118,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
 
@@ -3157,7 +3157,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
 
@@ -3415,8 +3415,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 		GLSL_BindProgram(sp);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 

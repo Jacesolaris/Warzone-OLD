@@ -99,8 +99,8 @@ out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
 out vec4 WorldPos_CS_in;
 out vec3 ViewDir_CS_in;
-out vec4 Tangent_CS_in;
-out vec4 Bitangent_CS_in;
+//out vec4 Tangent_CS_in;
+//out vec4 Bitangent_CS_in;
 out vec4 Color_CS_in;
 out vec4 PrimaryLightDir_CS_in;
 out vec2 TexCoord2_CS_in;
@@ -116,8 +116,8 @@ varying vec4	var_Color;
 
 varying vec3	var_N;
 varying vec4	var_Normal;
-varying vec4	var_Tangent;
-varying vec4	var_Bitangent;
+//varying vec4	var_Tangent;
+//varying vec4	var_Bitangent;
 varying vec3	var_ViewDir;
 
 varying vec4	var_PrimaryLightDir;
@@ -326,6 +326,7 @@ vec3 vectoangles(in vec3 value1) {
 	return angles;
 }
 
+/*
 vec3 TangentFromNormal ( vec3 normal )
 {
 	vec3 tangent;
@@ -343,12 +344,13 @@ vec3 TangentFromNormal ( vec3 normal )
 
 	return normalize(tangent);
 }
+*/
 
 void main()
 {
 	vec3 position;
 	vec3 normal;
-	vec3 tangent;
+	//vec3 tangent;
 
 	if (USE_VERTEX_ANIM == 1.0)
 	{
@@ -398,17 +400,17 @@ void main()
 	vec3 preMMPos = position.xyz;
 
 	// Because rend2 tangents are all fucked - re-calculate them.
-	tangent = TangentFromNormal(normal);
+	//tangent = TangentFromNormal(normal);
 
-	if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
+	//if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
 	{
 		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 		normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
-		tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
+		//tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
 	}
 
-	//vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
-	vec3 bitangent = normalize(cross(normal, tangent));
+	////vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
+	//vec3 bitangent = normalize(cross(normal, tangent));
 
 	var_nonTCtexCoords = attr_TexCoord0.st;
 
@@ -446,15 +448,13 @@ void main()
 	}
 
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
-	//var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - position;
-	//var_PrimaryLightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius; // unused
 
 	var_ViewDir = u_ViewOrigin - position;
 
 	// store view direction in tangent space to save on varyings
 	var_Normal = vec4(normal, var_ViewDir.x);
-	var_Tangent = vec4(tangent, var_ViewDir.y);
-	var_Bitangent = vec4(bitangent, var_ViewDir.z);
+	//var_Tangent = vec4(tangent, var_ViewDir.y);
+	//var_Bitangent = vec4(bitangent, var_ViewDir.z);
 
 	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;
@@ -508,8 +508,8 @@ void main()
 	TexCoord_CS_in = var_TexCoords.xy;
 	Normal_CS_in = var_Normal.xyz;
 	ViewDir_CS_in = var_ViewDir;
-	Tangent_CS_in = var_Tangent;
-	Bitangent_CS_in = var_Bitangent;
+	//Tangent_CS_in = var_Tangent;
+	//Bitangent_CS_in = var_Bitangent;
 	Color_CS_in = var_Color;
 	PrimaryLightDir_CS_in = var_PrimaryLightDir;
 	TexCoord2_CS_in = var_TexCoords2;

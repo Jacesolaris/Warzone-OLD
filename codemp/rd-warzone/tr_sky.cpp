@@ -387,7 +387,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 			tess.texCoords[tess.numVertexes][0][0] = s_skyTexCoords[t][s][0];
 			tess.texCoords[tess.numVertexes][0][1] = s_skyTexCoords[t][s][1];
-
+			
 			tess.numVertexes++;
 
 			if(tess.numVertexes >= SHADER_MAX_VERTEXES)
@@ -419,6 +419,16 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	tess.minIndex = firstVertex;
 	tess.maxIndex = tess.numVertexes;
 
+	GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+
+	/* UQ1: Calculate normals as well please... */
+	for (int i = 0; i < tess.numIndexes; i += 3)
+	{
+		vec3_t normal;
+		VectorSubtract(tess.xyz[tess.indexes[i]], tr.viewParms.ori.origin, normal);
+		R_VboUnpackNormal(normal, tess.normal[tess.indexes[i]]);
+	}
+
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 
@@ -431,9 +441,15 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
+
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vector);
+
 
 		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vector);
@@ -847,9 +863,13 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		// FIXME: this could be a lot cleaner
 		matrix_t translation, modelview;
 
-		Matrix16Translation( backEnd.viewParms.ori.origin, translation );
-		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, translation, modelview );
-		GL_SetModelviewMatrix( modelview );
+		//Matrix16Translation( backEnd.viewParms.ori.origin, translation );
+		//Matrix16Multiply( backEnd.viewParms.world.modelMatrix, translation, modelview );
+		//GL_SetModelviewMatrix( modelview );
+
+		Matrix16Translation(backEnd.viewParms.ori.origin, translation);
+		Matrix16Multiply(backEnd.viewParms.world.modelViewMatrix, translation, modelview);
+		GL_SetModelviewMatrix(modelview);
 	}
 
 	dist = 	backEnd.viewParms.zFar / 1.75;
@@ -931,18 +951,20 @@ void DrawSkyDome ( shader_t *skyShader )
 
 	GLSL_BindProgram(&tr.skyDomeShader);
 
-	matrix_t trans, model, mvp, invMvp, normalMatrix;
+	matrix_t /*trans, model, mvp,*/ invMvp, normalMatrix;
 
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	Matrix16SimpleInverse( mvp, invMvp);
-	Matrix16SimpleInverse( model, normalMatrix);
+	//Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	//Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	//Matrix16SimpleInverse( mvp, invMvp);
+	//Matrix16SimpleInverse( model, normalMatrix);
+	Matrix16SimpleInverse(glState.modelviewProjection, invMvp);
+	Matrix16SimpleInverse(glState.modelview, normalMatrix); // Whats a normal matrix with rend2???? I have no idea!
 	
 	//mat4 normalMatrix = transpose(inverse(modelView));
 
 	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);
 	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_INVPROJECTIONMATRIX, invMvp);
 	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_NORMALMATRIX, normalMatrix);
 

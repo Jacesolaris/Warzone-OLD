@@ -1,7 +1,6 @@
 //#define UI_ENHANCEMENT
 //#define USE_ALPHA_TEST
 #define USE_GLOW_DETAIL_BUFFERS
-//#define USE_ALPHA_MULT
 //#define USE_DETAIL
 
 
@@ -118,8 +117,6 @@ in precise vec3				Normal_FS_in;
 in precise vec2				TexCoord_FS_in;
 in precise vec3				WorldPos_FS_in;
 in precise vec3				ViewDir_FS_in;
-in precise vec4				Tangent_FS_in;
-in precise vec4				Bitangent_FS_in;
 
 in precise vec4				Color_FS_in;
 in precise vec4				PrimaryLightDir_FS_in;
@@ -137,9 +134,6 @@ flat in float				usingSteepMap_FS_in;
 #define m_ViewDir			ViewDir_FS_in
 
 #define var_Normal2			ViewDir_FS_in.x
-
-#define var_Tangent			Tangent_FS_in
-#define var_Bitangent		Bitangent_FS_in
 
 #define var_nonTCtexCoords	TexCoord_FS_in
 #define var_Color			Color_FS_in
@@ -159,8 +153,6 @@ varying vec4				var_Normal;
 
 #define var_Normal2			var_Normal.w
 
-varying vec4				var_Tangent;
-varying vec4				var_Bitangent;
 varying vec4				var_Color;
 
 varying vec4				var_PrimaryLightDir;
@@ -574,15 +566,11 @@ void main()
 	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
 
 
-	mat3 tangentToWorld;
 	vec3 E;
 
 	//if (USE_GLOW_BUFFER <= 0.0 /*&& USE_ISDETAIL <= 0.0*/)
 	if (CUBEMAP_ENABLED)
 	{
-#if 0
-		tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-#endif
 		E = normalize(m_ViewDir);
 	}
 
@@ -618,43 +606,19 @@ void main()
 			return;
 		}
 	}
-
-#elif defined(USE_ALPHA_MULT)
-	/*
-	float alphaMult = 1.0;
-
-	if (u_AlphaTestValues.r > 0.0)
-	{
-		if (u_AlphaTestValues.r == ATEST_LT && gl_FragColor.a >= u_AlphaTestValues.g)
-			alphaMult = 0.0;
-		if (u_AlphaTestValues.r == ATEST_GT && u_AlphaTestValues.g > 0.0 && gl_FragColor.a <= u_AlphaTestValues.g)
-			alphaMult = 0.0;
-		if (u_AlphaTestValues.r == ATEST_GE && gl_FragColor.a < u_AlphaTestValues.g)
-			alphaMult = 0.0;
-	}*/
 #endif //USE_ALPHA_TEST
 
-
-
-	//float lightScale = clamp((1.0 - max(max(diffuse.r, diffuse.g), diffuse.b)) - 0.5, 0.0, 1.0);
 
 
 	vec3 N = normalize(m_Normal.xyz);
 	vec4 norm = vec4(0.0);
 
-	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0)
+	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0 && USE_TRIPLANAR <= 0.0 && USE_REGIONS <= 0.0 && u_Local4.r > 0.0)
 	{
-		if (!(u_Local4.r <= 0.0 || USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0))
-		{
-			norm = texture(u_NormalMap, texCoords);
-			norm.a = 1.0;
-		}
-	
-		//N.xy = norm.xy * 2.0 - 1.0;
-		//N.xy *= 0.25;
-		//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-		//N = tangentToWorld * N;
+		norm = texture(u_NormalMap, texCoords);
+		norm.a = 1.0;
 	}
+
 
 
 #ifdef USE_DETAIL
@@ -663,6 +627,7 @@ void main()
 		AddDetail(diffuse, texCoords);
 	}
 #endif //USE_DETAIL
+
 
 
 	vec3 ambientColor = vec3(0.0);
@@ -700,7 +665,7 @@ void main()
 		gl_FragColor.rgb = diffuse.rgb + (ambientColor * 0.6);
 
 
-	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN /*&& u_Local1.a != MATERIAL_NONE*/)
+	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 /*&& u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN && u_Local1.a != MATERIAL_NONE*/)
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
@@ -750,27 +715,6 @@ void main()
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
-#if defined(USE_ALPHA_MULT)
-	gl_FragColor.a *= alphaMult;
-
-	if (u_Local1.a == 19.0 || u_Local1.a == 20.0)
-	{// Leaves/grass-blades are either solid, or not, never partially solid.
-		if (gl_FragColor.a >= 0.5)
-		{
-			gl_FragColor.a = 1.0;
-			alphaMult = 1.0;
-		}
-		else
-		{
-			gl_FragColor.a = 0.0;
-			alphaMult = 0.0;
-		}
-	}
-	else if (gl_FragColor.a <= 0.0)
-	{
-		alphaMult = 0.0;
-	}
-#endif
 
 	if (USE_GLOW_BUFFER > 0.0)
 	{
@@ -787,13 +731,9 @@ void main()
 		if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
-#if defined(USE_ALPHA_MULT)
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a * alphaMult);
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b * alphaMult /*specularScale*/ );
-#else
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+			out_Position = vec4(m_vertPos.xyz, 1.0+u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
-#endif
+			out_NormalDetail = vec4(0.0);
 		}
 	}
 	else
@@ -806,15 +746,9 @@ void main()
 		if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
-#if defined(USE_ALPHA_MULT)
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a * alphaMult);
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b * alphaMult /*specularScale*/ );
-			out_NormalDetail = norm;
-#else
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+			out_Position = vec4(m_vertPos.xyz, 1.0+u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 			out_NormalDetail = norm;
-#endif
 		}
 	}
 }

@@ -748,8 +748,8 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	glMatrix[11] = 0;
 	glMatrix[15] = 1;
 
-	Matrix16Copy(glMatrix, ori->transformMatrix);
-	myGlMultMatrix( glMatrix, viewParms->world.modelMatrix, ori->modelMatrix );
+	Matrix16Copy(glMatrix, ori->modelMatrix);
+	myGlMultMatrix(glMatrix, viewParms->world.modelViewMatrix, ori->modelViewMatrix);
 
 	// calculate the viewer origin in the model's space
 	// needed for fog, specular, and environment mapping
@@ -816,8 +816,8 @@ static void R_RotateForViewer(viewParms_t *viewParms)
 
 	// convert from our coordinate system (looking down X)
 	// to OpenGL's coordinate system (looking down -Z)
-	myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.ori.modelMatrix);
-	//Matrix16Identity(tr.ori.modelMatrix);
+	myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.ori.modelViewMatrix);
+	Matrix16Identity(tr.ori.modelMatrix);
 
 	viewParms->world = tr.ori;
 
@@ -1447,7 +1447,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 		int j;
 		unsigned int pointFlags = 0;
 
-		R_TransformModelToClip(tess.xyz[i], tr.ori.modelMatrix, tr.viewParms.projectionMatrix, eye, clip);
+		R_TransformModelToClip(tess.xyz[i], tr.ori.modelViewMatrix, tr.viewParms.projectionMatrix, eye, clip);
 		VectorCopy4(clip, clipDest[i]);
 
 		for (j = 0; j < 3; j++)
@@ -2814,7 +2814,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 			tr.viewParms.maxEntityRange = ORIG_RANGE;
 		}
 
-		Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
+		Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelViewMatrix, tr.refdef.sunShadowMvp[level]);
 		tr.refdef.sunShadowCascadeZfar[level] = splitZFar;
 	}
 }

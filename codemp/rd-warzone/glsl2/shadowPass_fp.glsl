@@ -48,6 +48,7 @@ varying vec4	var_Color;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+out vec4 out_NormalDetail;
 
 void main()
 {
@@ -80,7 +81,8 @@ void main()
 
 	if (USE_ISDETAIL <= 0.0)
 	{
-		out_Position = vec4(var_Position.rgb, (gl_FragColor.a > 0.99) ? u_Local1.a : 1024.0);
-		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, (gl_FragColor.a > 0.99) ? u_Local1.b : 0.0 /*specularScale*/);
+		out_Position = vec4(var_Position.rgb, u_Local1.a);
+		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, u_Local1.b /*specularScale*/);
+		out_NormalDetail = vec4(0.0);
 	}
 }

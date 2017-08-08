@@ -306,6 +306,17 @@ void main(void)
 		return;
 	}
 
+#if 1
+	if (u_Local3.r > 0.0)
+	{// Debug position map by showing pixel distance from view...
+		float dist = distance(u_ViewOrigin.xyz, position.xyz);
+		float d = clamp(dist / u_Local3.r, 0.0, 1.0);
+		gl_FragColor.rgb = vec3(d);
+		gl_FragColor.a = 1.0;
+		return;
+	}
+#endif
+
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
@@ -386,7 +397,7 @@ void main(void)
 
 
 
-	if (!noSunPhong && shadowMult > 0.0)
+	if (!noSunPhong && shadowMult > 0.0 && norm.a > 0.0)
 	{// this is blinn phong
 		float light_occlusion = 1.0;
 
@@ -442,7 +453,7 @@ void main(void)
 #endif //__EXTRA_LIGHT__
 	}
 
-	if (u_lightCount > 0.0)
+	if (u_lightCount > 0.0 && norm.a > 0.0)
 	{
 		if (noSunPhong)
 		{// Invert phong value so we still have non-sun lights...

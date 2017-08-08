@@ -663,31 +663,18 @@ bool RealInvertMatrix(const float m[16], float invOut[16])
 
 void GL_SetProjectionMatrix(matrix_t matrix)
 {
+	//if (memcmp(matrix, glState.projection, sizeof(float) * 16) == 0) return;
+
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
-	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
-
-	/*
-	matrix_t CameraTranslationTrans, CameraRotateTrans;
-
-    //InitTranslationTransform(&CameraTranslationTrans, -m_camera.Pos.x, -m_camera.Pos.y, -m_camera.Pos.z);
-	Matrix16Translation( backEnd.viewParms.ori.origin, CameraTranslationTrans );
-	Matrix16Translation( backEnd.refdef.viewaxis, CameraRotateTrans );
-    //Matrix16SimpleInverse( CameraTranslationTrans, CameraTranslationTrans);
-
-	Matrix16Multiply(CameraRotateTrans, CameraTranslationTrans, glState.viewTrans);
-	*/
 }
 
 void GL_SetModelviewMatrix(matrix_t matrix)
 {
-	if (memcmp(matrix, glState.modelview, sizeof(float) * 16) == 0) return;
+	//if (memcmp(matrix, glState.modelview, sizeof(float) * 16) == 0) return;
 
 	Matrix16Copy(matrix, glState.modelview);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
-	//RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
 }
 
 
@@ -1163,7 +1150,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
 				}
 
-				GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
+				GL_SetModelviewMatrix(backEnd.ori.modelViewMatrix);
 
 				//
 				// change depthrange. Also change projection matrix so first person weapon does not look like coming
@@ -1402,7 +1389,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
 				}
 
-				GL_SetModelviewMatrix(backEnd.ori.modelMatrix);
+				GL_SetModelviewMatrix(backEnd.ori.modelViewMatrix);
 
 				//
 				// change depthrange. Also change projection matrix so first person weapon does not look like coming
@@ -1489,7 +1476,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 	// go back to the world modelview matrix
 
-	GL_SetModelviewMatrix(backEnd.viewParms.world.modelMatrix);
+	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
 
 	// Restore depth range for subsequent rendering
 	qglDepthRange(0.0f, 1.0f);

@@ -325,7 +325,6 @@ void RE_AddLightToScene(const vec3_t org, float intensity, float r, float g, flo
 	vec3_t color = { r, g, b };
 	R_AddVibrancy(color, 4.0);
 	VectorNormalize(color);
-	//intensity *= 0.4;
 	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qfalse, qfalse, 0);
 }
 
@@ -340,7 +339,6 @@ void RE_AddAdditiveLightToScene(const vec3_t org, float intensity, float r, floa
 	vec3_t color = { r, g, b };
 	R_AddVibrancy(color, 4.0);
 	VectorNormalize(color);
-	//intensity *= 0.4;
 	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qtrue, qfalse, 0);
 }
 

@@ -798,7 +798,7 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -1359,7 +1359,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -1607,7 +1607,7 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.ssaoShader);
 
 	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
@@ -1661,7 +1661,7 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.hbaoCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
@@ -1842,7 +1842,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);// backEnd.viewParms.world.transformMatrix);// backEnd.ori.transformMatrix); //backEnd.ori.modelMatrix //backEnd.viewParms.ori.transformMatrix
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);//backEnd.ori.modelViewMatrix);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
 	
 	matrix_t trans, model, mvp, invMvp;
@@ -2018,8 +2018,6 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	//GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invProjection);
-	//GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -2063,7 +2061,7 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.hbaoCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);//backEnd.ori.modelViewMatrix);
 
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
@@ -2564,7 +2562,7 @@ void RB_ScreenSpaceReflections(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec
 	GLSL_BindProgram(&tr.ssrCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.ssrCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.ssrCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(&tr.ssrCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GLSL_SetUniformInt(&tr.ssrCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -2696,15 +2694,6 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
-	/*
-	matrix_t trans, model, mvp;
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
-	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-	*/
 	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	vec3_t out;
