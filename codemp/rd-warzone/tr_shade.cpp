@@ -194,7 +194,7 @@ static void DrawTris (shaderCommands_t *input) {
 
 	{
 		shaderProgram_t *sp = &tr.textureColorShader;
-		vec4_t color;
+		//vec4_t color;
 
 		GLSL_VertexAttribsState(ATTR_POSITION);
 		GLSL_BindProgram(sp);
@@ -1657,8 +1657,8 @@ void RB_UpdateCloseLights ( void )
 				continue;
 			}
 
-			float x, y;
-			WorldCoordToScreenCoord(dl->origin, &x, &y);
+			//float x, y;
+			//WorldCoordToScreenCoord(dl->origin, &x, &y);
 
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
@@ -1667,8 +1667,8 @@ void RB_UpdateCloseLights ( void )
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2];
-			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][0] = x;
-			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][1] = y;
+			//CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][0] = x;
+			//CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][1] = y;
 			NUM_CLOSE_LIGHTS++;
 			continue;
 		}
@@ -1676,6 +1676,11 @@ void RB_UpdateCloseLights ( void )
 		{// See if this is closer then one of our other lights...
 			int		farthest_light = 0;
 			float	farthest_distance = 0.0;
+
+			if (!Light_Visible(tr.refdef.vieworg, dl->origin, qfalse, dl->radius))
+			{
+				continue;
+			}
 
 			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 			{// Find the most distance light in our current list to replace, if this new option is closer...
@@ -1695,13 +1700,9 @@ void RB_UpdateCloseLights ( void )
 				vec3_t from;
 				VectorCopy(tr.refdef.vieworg, from);
 				from[2] += 64.0;
-				if (!Light_Visible(tr.refdef.vieworg, dl->origin, qfalse, dl->radius))
-				{
-					continue;
-				}
 
-				float x, y;
-				WorldCoordToScreenCoord(dl->origin, &x, &y);
+				//float x, y;
+				//WorldCoordToScreenCoord(dl->origin, &x, &y);
 
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
@@ -1710,8 +1711,8 @@ void RB_UpdateCloseLights ( void )
 				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0];
 				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1];
 				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2];
-				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][0] = x;
-				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][1] = y;
+				//CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][0] = x;
+				//CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][1] = y;
 			}
 		}
 	}
@@ -2012,8 +2013,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
-			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
-				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+			//if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
+			//	stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+
+			//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+			stateBits = GLS_DEFAULT;
 		}
 
 		float useTC = 0.0;
@@ -2064,10 +2068,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 
 //#define __USE_ALPHA_TEST__ // This interferes with the ability for the depth prepass to optimize out fragments causing FPS hit.
-#define __USE_DETAIL_DEPTH_SKIP__
-#define __LIGHTMAP_IS_DETAIL__
-#define __USE_GLOW_DETAIL_BUFFERS__
-#define __USE_DETAIL__
+#define __USE_DETAIL_CHECKING__			// Check and treat stages found to be random details (lightmap stages, 2d, etc) differently...
+#define __USE_DETAIL_DEPTH_SKIP__		// Skip drawing detail crap at all in shadow and depth prepasses - they should never be needed...
+#define __LIGHTMAP_IS_DETAIL__			// Lightmap stages are considered detail...
+#define __USE_GLOW_DETAIL_BUFFERS__		// Use different deferred output buffers for stuff that is detail and glow, so these don't overwrite solid surfaces...
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
@@ -2103,12 +2107,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else if (IS_DEPTH_PASS)
 		{// testing - force lightall
-#ifdef __USE_DETAIL__
+#ifdef __USE_DETAIL_CHECKING__
 #ifdef __USE_DETAIL_DEPTH_SKIP__
-			if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
+			/*if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
 				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
 				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 			{// No point at all in doing this stage...
+				continue;
+			}*/
+
+			if (pStage->bundle[0].isLightmap)
+			{
 				continue;
 			}
 
@@ -2178,7 +2187,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				continue;
 			}
 #endif //__USE_DETAIL_DEPTH_SKIP__
-#endif /__USE_DETAIL__
+#endif /__USE_DETAIL_CHECKING__
 
 			//if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
 			{
@@ -2225,9 +2234,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			if (!(tr.world || tr.numLightmaps <= 0) && (index & LIGHTDEF_USE_LIGHTMAP))
 			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
-				if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
+				/*if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
 					&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
 				{// No point at all in doing this stage...
+					backEnd.pc.c_lightMapsSkipped++;
+					continue;
+				}*/
+
+				if (pStage->bundle[0].isLightmap)
+				{
 					backEnd.pc.c_lightMapsSkipped++;
 					continue;
 				}
@@ -2334,7 +2349,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useFog = 1.0;
 			}
 			
-#ifdef __USE_DETAIL__
+#ifdef __USE_DETAIL_CHECKING__
 			if (stage > 0 && didNonDetail)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
@@ -2397,7 +2412,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				didNonDetail = qtrue;
 			}
-#endif //__USE_DETAIL__
+#endif //__USE_DETAIL_CHECKING__
 			
 			sp = &tr.lightAllShader;
 
@@ -2579,11 +2594,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				PARALLAX_MODE = r_parallaxMapping->integer;
 			}
 
+#ifdef __USE_DETAIL_CHECKING__
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
 				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
 				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
 				PARALLAX_MODE);
+#else //!__USE_DETAIL_CHECKING__
+			VectorSet4(vec,
+				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0,
+				0.0,
+				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
+				PARALLAX_MODE);
+#endif //__USE_DETAIL_CHECKING__
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
 
@@ -2601,13 +2624,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		RB_SetStageImageDimensions(sp, pStage);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelViewMatrix);
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, backEnd.ori.modelViewMatrix);
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		//GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL); // Currently not used...
 
 		GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
-		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
 		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
 		if (!IS_DEPTH_PASS)
@@ -2624,9 +2645,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
+		if (glState.vertexAnimation)
+		{
+			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+		}
+
 		if (glState.skeletalAnimation)
 		{
-			GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, (const float *)glState.boneMatrices, glState.numBones);
 		}
 
 		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);

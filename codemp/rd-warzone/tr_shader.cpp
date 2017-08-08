@@ -2012,6 +2012,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 			atestBits = NameToAFunc( token );
 			shader.hasAlpha = qtrue;
+			continue;
 		}
 		//
 		// depthFunc <func>
@@ -2043,6 +2044,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				ri->Printf( PRINT_WARNING, "WARNING: unknown depthfunc '%s' in shader '%s'\n", token, shader.name );
 				continue;
 			}
+
+			continue;
 		}
 		//
 		// detail
@@ -2050,6 +2053,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		else if ( !Q_stricmp( token, "detail" ) )
 		{
 			stage->isDetail = qtrue;
+			continue;
 		}
 		//
 		// Don't output this stage to position and normal maps...
@@ -2057,6 +2061,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		else if (!Q_stricmp(token, "noScreenMap"))
 		{
 			stage->noScreenMap = qtrue;
+			continue;
 		}
 		//
 		// blendfunc <srcFactor> <dstFactor>
@@ -2098,6 +2103,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				depthMaskBits = 0;
 			}
+
+			continue;
 		}
 		//
 		// stage <type>
@@ -2157,6 +2164,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				ri->Printf(PRINT_WARNING, "WARNING: unknown stage parameter '%s' in shader '%s'\n", token, shader.name);
 				continue;
 			}
+
+			continue;
 		}
 		else if (!Q_stricmp(token, "cubeMapScale"))
 		{
@@ -2167,6 +2176,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 			stage->cubeMapScale = atof( token );
+			continue;
 		}
 		/*else if (!Q_stricmp(token, "subsurfaceRimScalar"))
 		{
@@ -2177,6 +2187,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 			stage->subsurfaceRimScalar = atof( token );
+			continue;
 		}
 		else if (!Q_stricmp(token, "subsurfaceMaterialThickness"))
 		{
@@ -2187,6 +2198,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 			stage->subsurfaceMaterialThickness = atof( token );
+			continue;
 		}
 		else if (!Q_stricmp(token, "subsurfaceSpecularPower"))
 		{
@@ -2197,6 +2209,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 			stage->subsurfaceSpecularPower = atof( token );
+			continue;
 		}
 		else if (!Q_stricmp(token, "subsurfaceExtinctionCoefficient"))
 		{
@@ -2227,6 +2240,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->subsurfaceExtinctionCoefficient[2] = atof( token );
+			continue;
 		}*/
 		//
 		// specularReflectance <value>
@@ -2242,6 +2256,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			stage->specularScale[0] =
 			stage->specularScale[1] =
 			stage->specularScale[2] = Com_Clamp( 0.0f, 1.0f, atof( token ) );
+			continue;
 		}
 		//
 		// specularExponent <value>
@@ -2262,6 +2277,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			// FIXME: assumes max exponent of 8192 and min of 1, must change here if altered in lightall_fp.glsl
 			exponent = CLAMP(exponent, 1.0, 8192.0);
 			stage->specularScale[3] = log(exponent) / log(8192.0);
+			continue;
 		}
 		//
 		// gloss <value>
@@ -2276,6 +2292,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->specularScale[3] = atof( token );
+			continue;
 		}
 		//
 		// parallaxDepth <value>
@@ -2290,6 +2307,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->normalScale[3] = atof( token );
+			continue;
 		}
 		//
 		// normalScale <xy>
@@ -2325,6 +2343,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->normalScale[3] = atof( token );
+			continue;
 		}
 		//
 		// specularScale <rgb> <gloss>
@@ -2371,6 +2390,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->specularScale[3] = atof( token );
+			continue;
 		}
 		//
 		// rgbGen
@@ -2459,6 +2479,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				ri->Printf( PRINT_WARNING, "WARNING: unknown rgbGen parameter '%s' in shader '%s'\n", token, shader.name );
 				continue;
 			}
+
+			continue;
 		}
 		//
 		// alphaGen
@@ -2534,6 +2556,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				ri->Printf( PRINT_WARNING, "WARNING: unknown alphaGen parameter '%s' in shader '%s'\n", token, shader.name );
 				continue;
 			}
+
+			continue;
 		}
 		//
 		// tcGen <function>
@@ -2570,6 +2594,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				ri->Printf( PRINT_WARNING, "WARNING: unknown texgen parm in shader '%s'\n", shader.name );
 			}
+
+			continue;
 		}
 		//
 		// tcMod <type> <...>
@@ -2726,9 +2752,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	// if cgen isn't explicitly specified, use either identity or identitylighting
 	//
 	if ( stage->rgbGen == CGEN_BAD ) {
-		if ( blendSrcBits == 0 ||
-			blendSrcBits == GLS_SRCBLEND_ONE ||
-			blendSrcBits == GLS_SRCBLEND_SRC_ALPHA ) {
+		if ( blendSrcBits == 0 || blendSrcBits == GLS_SRCBLEND_ONE || blendSrcBits == GLS_SRCBLEND_SRC_ALPHA ) {
 			stage->rgbGen = CGEN_IDENTITY_LIGHTING;
 		} else {
 			stage->rgbGen = CGEN_IDENTITY;
@@ -2736,11 +2760,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	}
 
 
+	if ((blendSrcBits == GLS_SRCBLEND_SRC_ALPHA) && (blendDstBits == GLS_DSTBLEND_ZERO))
+	{// UQ1: Override... GLSL handles src alpha...
+		blendSrcBits = GLS_SRCBLEND_ONE;
+	}
+
 	//
 	// implicitly assume that a GL_ONE GL_ZERO blend mask disables blending
 	//
-	if ( ( blendSrcBits == GLS_SRCBLEND_ONE ) &&
-		 ( blendDstBits == GLS_DSTBLEND_ZERO ) )
+	if ( ( blendSrcBits == GLS_SRCBLEND_ONE ) && ( blendDstBits == GLS_DSTBLEND_ZERO ) )
 	{
 		blendDstBits = blendSrcBits = 0;
 		depthMaskBits = GLS_DEPTHMASK_TRUE;
@@ -2748,8 +2776,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 	// decide which agens we can skip
 	if ( stage->alphaGen == AGEN_IDENTITY ) {
-		if ( stage->rgbGen == CGEN_IDENTITY
-			|| stage->rgbGen == CGEN_LIGHTING_DIFFUSE ) {
+		if ( stage->rgbGen == CGEN_IDENTITY || stage->rgbGen == CGEN_LIGHTING_DIFFUSE ) {
 			stage->alphaGen = AGEN_SKIP;
 		}
 	}
@@ -2762,10 +2789,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	//
 	// compute state bits
 	//
-	stage->stateBits = depthMaskBits |
-		               blendSrcBits | blendDstBits |
-					   atestBits |
-					   depthFuncBits;
+	stage->stateBits =	depthMaskBits |
+						blendSrcBits | 
+						blendDstBits |
+						atestBits |
+						depthFuncBits;
 
 	return qtrue;
 }
@@ -4431,7 +4459,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealWaterEdgeMap = qfalse;
 	qboolean checkNormals = qtrue;
 
-	if (shader.isPortal || shader.isSky || diffuse->glow /*|| shader.hasAlpha*/)// || shader.noTC)
+	if (shader.isPortal || shader.isSky || diffuse->glow)
 		checkNormals = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
@@ -4510,15 +4538,21 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
 			defs |= LIGHTDEF_USE_LIGHTMAP;
 		}
-		else if ((shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_DRYLEAVES // billboards
+		else /*if ((shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_DRYLEAVES // billboards
 			&& (shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_GREENLEAVES // tree leaves
 			&& !shader.isSky
-			&& !diffuse->glow)
+			&& !diffuse->glow)*/
 		{
 			diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
 			diffuse->bundle[TB_LIGHTMAP].image[0] = tr.whiteImage;
 			defs |= LIGHTDEF_USE_LIGHTMAP;
+			//lightmap = diffuse;
+			//diffuse->rgbGen = CGEN_IDENTITY_LIGHTING;
 		}
+	}
+	else
+	{
+		//diffuse->rgbGen = CGEN_IDENTITY_LIGHTING;
 	}
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
@@ -7027,7 +7061,8 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "entityMergable\n"\
 "{\n"\
 "map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
 "//rgbGen lightingDiffuse\n"\
@@ -7036,7 +7071,8 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "%s"\
 "{\n"\
 "map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"blendFunc GL_ONE GL_ONE\n"\
 "rgbGen lightingDiffuse\n"\
 "alphaGen lightingSpecular\n"\
 "alphaFunc GE128\n"\
@@ -7064,7 +7100,8 @@ char uniqueGenericArmorShader[] = "{\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "//rgbGen lightingDiffuse\n"\
 "depthWrite\n"\
@@ -7073,7 +7110,8 @@ char uniqueGenericArmorShader[] = "{\n"\
 "%s"\
 "{\n"\
 "map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"blendFunc GL_ONE GL_ONE\n"\
 "rgbGen lightingDiffuse\n"\
 "alphaGen lightingSpecular\n"\
 "alphaFunc GE128\n"\
@@ -7101,7 +7139,8 @@ char uniqueGenericMetalShader[] = "{\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "//rgbGen lightingDiffuse\n"\
 "depthWrite\n"\
@@ -7110,7 +7149,8 @@ char uniqueGenericMetalShader[] = "{\n"\
 "%s"\
 "{\n"\
 "map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"blendFunc GL_ONE GL_ONE\n"\
 "rgbGen lightingDiffuse\n"\
 "alphaGen lightingSpecular\n"\
 "alphaFunc GE128\n"\
@@ -7152,7 +7192,8 @@ char uniqueGenericShader[] = "{\n"\
 "//entityMergable\n"\
 "{\n"\
 "map %s\n"\
-"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\

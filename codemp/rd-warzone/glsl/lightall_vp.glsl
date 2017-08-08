@@ -115,7 +115,7 @@ varying vec2	var_TexCoords2;
 varying vec4	var_Color;
 
 varying vec3	var_N;
-varying vec4	var_Normal;
+varying vec3	var_Normal;
 //varying vec4	var_Tangent;
 //varying vec4	var_Bitangent;
 varying vec3	var_ViewDir;
@@ -240,9 +240,12 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	
 		if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
 		{
-			vec3 viewer = u_LocalViewOrigin - position;
+			//vec3 viewer = u_LocalViewOrigin - position;
+			vec3 viewer = u_ViewOrigin - position;
 			//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
-			vec3 lightDir = normalize((u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
+			//vec3 lightDir = normalize((u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
+			//vec3 lightDir = normalize((u_ModelViewProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
+			vec3 lightDir = normalize(u_PrimaryLightOrigin.xyz - position);
 			vec3 reflected = -reflect(lightDir, normal);
 		
 			color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);
@@ -251,7 +254,8 @@ vec4 CalcColor(vec3 position, vec3 normal)
 		}
 		else if (u_AlphaGen == AGEN_PORTAL)
 		{
-			vec3 viewer = u_LocalViewOrigin - position;
+			//vec3 viewer = u_LocalViewOrigin - position;
+			vec3 viewer = u_ViewOrigin - position;
 			color.a = clamp(length(viewer) / u_PortalRange, 0.0, 1.0);
 		}
 	}
@@ -354,9 +358,11 @@ void main()
 
 	if (USE_VERTEX_ANIM == 1.0)
 	{
-		position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-		normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
+		//position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+		//normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
 		//tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
+		position  = attr_Position;
+		normal    = attr_Normal * 2.0 - 1.0;
 	}
 	else if (USE_SKELETAL_ANIM == 1.0)
 	{
@@ -364,7 +370,8 @@ void main()
 		vec4 normal4 = vec4(0.0);
 		//vec4 tangent4 = vec4(0.0);
 		vec4 originalPosition = vec4(attr_Position, 1.0);
-		vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
+		//vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
+		vec4 originalNormal = vec4(attr_Normal * 2.0 - 1.0, 0.0);
 		//vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
 		for (int i = 0; i < 4; i++)
@@ -452,7 +459,7 @@ void main()
 	var_ViewDir = u_ViewOrigin - position;
 
 	// store view direction in tangent space to save on varyings
-	var_Normal = vec4(normal, var_ViewDir.x);
+	var_Normal = normal.xyz;
 	//var_Tangent = vec4(tangent, var_ViewDir.y);
 	//var_Bitangent = vec4(bitangent, var_ViewDir.z);
 

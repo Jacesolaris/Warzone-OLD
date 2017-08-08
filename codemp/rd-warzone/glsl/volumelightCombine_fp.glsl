@@ -11,7 +11,8 @@ varying vec2		var_ScreenTex;
 //#define DEBUG
 
 // Shall we blur the result?
-#define BLUR_WIDTH 3.0
+//#define BLUR_WIDTH 3.0
+#define BLUR_WIDTH 2.0
 
 // Shall we pixelize randomly the output? -- Sucks!
 #define RANDOMIZE_PIXELS
@@ -34,7 +35,8 @@ void main()
 	vec4 pixelLight = textureLod(u_NormalMap, var_ScreenTex, 0.0);
 	vec3 volumeLight = pixelLight.rgb;
 	
-	for (float i = 1.0; i < BLUR_WIDTH+1.0; i+=1.0)
+#if 0
+	for (float i = 1.0; i <= BLUR_WIDTH; i+=1.0)
 	{
 		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(i, 0.0)), 0.0).rgb;
 		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(0.0, i)), 0.0).rgb;
@@ -42,9 +44,28 @@ void main()
 		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(-i, 0.0)), 0.0).rgb;
 		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(0.0, -i)), 0.0).rgb;
 		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(-i, -i)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(i, -i)), 0.0).rgb;
+		volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(-i, i)), 0.0).rgb;
 	}
 
-	volumeLight /= ((6.0 * (BLUR_WIDTH+1.0)) + 1.0);
+	volumeLight /= (8.0 * BLUR_WIDTH);
+#else
+	float numSamples = 1.0;
+
+#pragma unroll int((BLUR_WIDTH*2.0)+1.0)
+	for (float x = -BLUR_WIDTH; x <= BLUR_WIDTH; x += 1.0)
+	{
+#pragma unroll int((BLUR_WIDTH*2.0)+1.0)
+		for (float y = -BLUR_WIDTH; y <= BLUR_WIDTH; y += 1.0)
+		{
+			volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(x*length(x), y*length(y))), 0.0).rgb;
+			numSamples += 1.0;
+		}
+	}
+
+	volumeLight /= numSamples;
+#endif
+
 #else
 	vec3 volumeLight = textureLod(u_NormalMap, var_ScreenTex, 0.0).rgb;
 #endif

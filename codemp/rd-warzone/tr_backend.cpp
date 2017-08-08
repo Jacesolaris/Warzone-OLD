@@ -2493,6 +2493,8 @@ const void *RB_PostProcess(const void *data)
 	if(tess.numIndexes)
 		RB_EndSurface();
 
+	tess.numVertexes = tess.numVertexes = 0;
+
 	if (!r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
 	{
 		// do nothing

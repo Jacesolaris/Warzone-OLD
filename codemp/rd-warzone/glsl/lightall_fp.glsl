@@ -1,7 +1,6 @@
-//#define UI_ENHANCEMENT
 //#define USE_ALPHA_TEST
 #define USE_GLOW_DETAIL_BUFFERS
-//#define USE_DETAIL
+//#define USE_DETAIL_TEXTURES
 
 
 #define SNOW_HEIGHT_STRENGTH 0.25 // Distance above water to start snow...
@@ -133,8 +132,6 @@ flat in float				usingSteepMap_FS_in;
 #define m_vertPos			WorldPos_FS_in
 #define m_ViewDir			ViewDir_FS_in
 
-#define var_Normal2			ViewDir_FS_in.x
-
 #define var_nonTCtexCoords	TexCoord_FS_in
 #define var_Color			Color_FS_in
 #define	var_PrimaryLightDir PrimaryLightDir_FS_in
@@ -149,9 +146,7 @@ flat in float				usingSteepMap_FS_in;
 
 varying vec2				var_TexCoords;
 varying vec2				var_TexCoords2;
-varying vec4				var_Normal;
-
-#define var_Normal2			var_Normal.w
+varying vec3				var_Normal;
 
 varying vec4				var_Color;
 
@@ -531,19 +526,60 @@ float randZeroOne()
 void main()
 {
 #if 0
-	gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-	out_Glow = vec4(0.0);
+	if (u_Local9.g > 0.0)
+	{
+		vec3 debugColor = vec3(0.0);
+
+		if (u_Local9.g > 1.0)
+		{
+			if (USE_TC == 1.0)
+			{
+				debugColor.r = 1.0;
+			}
+		
+			if (USE_GLOW_BUFFER == 1.0)
+			{
+				debugColor.g = 1.0;
+			}
+		
+			if (USE_LIGHTMAP == 1.0)
+			{
+				debugColor.b = 1.0;
+			}
+		}
+		else
+		{
+			if (USE_VERTEX_ANIM == 1.0)
+			{
+				debugColor.r = 1.0;
+			}
+		
+			if (USE_SKELETAL_ANIM == 1.0)
+			{
+				debugColor.g = 1.0;
+			}
+		
+			if (USE_DEFORM == 1.0)
+			{
+				debugColor.b = 1.0;
+			}
+		}
+
+		gl_FragColor = vec4(debugColor, 1.0);
+		out_Glow = vec4(0.0);
 
 #ifdef USE_GLOW_DETAIL_BUFFERS
-	if (USE_ISDETAIL <= 0.0)
+		if (USE_ISDETAIL <= 0.0)
 #else //!USE_GLOW_DETAIL_BUFFERS
-	if (gl_FragColor.a > 0.99)
+		if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
-	{
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		out_Normal = vec4(m_Normal.xyz, u_Local1.b /*specularScale*/ );
+		{
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+			out_Normal = vec4(m_Normal.xyz, u_Local1.b /*specularScale*/ );
+			out_NormalDetail = vec4(0.0);
+		}
+		return;
 	}
-	return;
 #endif
 
 	vec4 specular = vec4(0.0);
@@ -565,14 +601,6 @@ void main()
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0) ? true : false;
 	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
 
-
-	vec3 E;
-
-	//if (USE_GLOW_BUFFER <= 0.0 /*&& USE_ISDETAIL <= 0.0*/)
-	if (CUBEMAP_ENABLED)
-	{
-		E = normalize(m_ViewDir);
-	}
 
 	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
 
@@ -621,12 +649,12 @@ void main()
 
 
 
-#ifdef USE_DETAIL
+#ifdef USE_DETAIL_TEXTURES
 	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0)// || USE_GLOW_BUFFER >= 0.0)
 	{
 		AddDetail(diffuse, texCoords);
 	}
-#endif //USE_DETAIL
+#endif //USE_DETAIL_TEXTURES
 
 
 
@@ -700,6 +728,7 @@ void main()
 
 #define gloss specular.a
 
+			vec3 E = normalize(m_ViewDir);
 			float NE = clamp(dot(N, E), 0.0, 1.0);
 			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
@@ -728,10 +757,10 @@ void main()
 #ifdef USE_GLOW_DETAIL_BUFFERS
 		if (USE_ISDETAIL <= 0.0)
 #else //!USE_GLOW_DETAIL_BUFFERS
-		if (gl_FragColor.a > 0.99)
+		//if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
-			out_Position = vec4(m_vertPos.xyz, 1.0+u_Local1.a);
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 			out_NormalDetail = vec4(0.0);
 		}
@@ -742,11 +771,9 @@ void main()
 
 #ifdef USE_GLOW_DETAIL_BUFFERS
 		if (USE_ISDETAIL <= 0.0)
-#else //!USE_GLOW_DETAIL_BUFFERS
-		if (gl_FragColor.a > 0.99)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
-			out_Position = vec4(m_vertPos.xyz, 1.0+u_Local1.a);
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 			out_NormalDetail = norm;
 		}

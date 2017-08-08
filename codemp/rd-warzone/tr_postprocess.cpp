@@ -752,7 +752,6 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-
 	GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
@@ -1278,12 +1277,12 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GLSL_BindProgram(shader);
 
 	// Flip between previous and next volumetric fbo...
-	FBO_t *tempF = tr.volumetricFbo;
+	/*FBO_t *tempF = tr.volumetricFbo;
 	image_t *tempI = tr.volumetricFBOImage;
 	tr.volumetricFbo = tr.volumetricPreviousFbo;
 	tr.volumetricPreviousFbo = tempF;
 	tr.volumetricFBOImage = tr.volumetricPreviousFBOImage;
-	tr.volumetricPreviousFBOImage = tempI;
+	tr.volumetricPreviousFBOImage = tempI;*/
 
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -2339,7 +2338,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformMatrix16(&tr.deferredLightingShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_DEFERRED_LIGHTS);
+	//GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);

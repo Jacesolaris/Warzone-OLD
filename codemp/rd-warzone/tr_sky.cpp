@@ -419,8 +419,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	tess.minIndex = firstVertex;
 	tess.maxIndex = tess.numVertexes;
 
-	GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
-
+	
 	/* UQ1: Calculate normals as well please... */
 	for (int i = 0; i < tess.numIndexes; i += 3)
 	{
@@ -437,6 +436,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		vec4_t vector;
 
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+		//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 		GLSL_BindProgram(sp);
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);

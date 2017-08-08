@@ -199,15 +199,18 @@ void main()
 
 	if (USE_VERTEX_ANIM == 1.0)
 	{
-		position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-		normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
+		//position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+		//normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
+		position  = attr_Position;
+		normal    = attr_Normal * 2.0 - 1.0;
 	}
 	else if (USE_SKELETAL_ANIM == 1.0)
 	{
 		vec4 position4 = vec4(0.0);
 		vec4 normal4 = vec4(0.0);
 		vec4 originalPosition = vec4(attr_Position, 1.0);
-		vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
+		//vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
+		vec4 originalNormal = vec4(attr_Normal * 2.0 - 1.0, 0.0);
 
 		for (int i = 0; i < 4; i++)
 		{
