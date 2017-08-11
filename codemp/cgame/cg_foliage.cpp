@@ -1569,7 +1569,8 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 			if (distMult <= 0.0) return;
 
 #ifndef __NEW_PLANTS__
-			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
+			float PLANT_SCALE_XY = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
+			float PLANT_SCALE_Z = FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
 
 			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
 
@@ -1579,7 +1580,8 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 			re.hModel = FOLIAGE_PLANT_MODEL[4];
 #else //__NEW_PLANTS__
-			float PLANT_SCALE = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
+			float PLANT_SCALE_XY = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale;
+			float PLANT_SCALE_Z = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
 
 			re.reType = RT_PLANT;//RT_MODEL;
 
@@ -1588,7 +1590,7 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 			re.hModel = FOLIAGE_PLANT_MODELS[FOLIAGE_PLANT_SELECTION[num] - 1];
 #endif //__NEW_PLANTS__
 
-			VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
+			VectorSet(re.modelScale, PLANT_SCALE_XY, PLANT_SCALE_XY, PLANT_SCALE_Z);
 
 			vectoangles(FOLIAGE_NORMALS[num], angles);
 			angles[PITCH] += 90;

@@ -2481,6 +2481,7 @@ RB_PostProcess
 */
 
 extern qboolean FOG_POST_ENABLED;
+extern qboolean WATER_FOG_ENABLED;
 
 const void *RB_PostProcess(const void *data)
 {
@@ -2667,7 +2668,7 @@ const void *RB_PostProcess(const void *data)
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 
-			if (!(tr.refdef.rdflags & RDF_UNDERWATER))
+			if (WATER_FOG_ENABLED && !(tr.refdef.rdflags & RDF_UNDERWATER))
 			{// When not underwater, also draw volumetric fog above the water...
 				RB_WaterPostFogShader(currentFbo, srcBox, currentOutFbo, dstBox);
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
