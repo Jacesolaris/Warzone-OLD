@@ -46,7 +46,7 @@ vec4 dssdo_blur(vec2 tex)
 
 	vec3 normal[9];
 
-#pragma unroll 9
+//#pragma unroll 9
 	for (i = 0; i < 9; i++)
 	{
 		normal[i] = texture(u_NormalMap, tex + indices[i]*step).xyz * 2.0 - 1.0;
@@ -55,7 +55,7 @@ vec4 dssdo_blur(vec2 tex)
 	float total_weight = 1.0;
 	float discard_threshold = 0.85;
 
-#pragma unroll 9
+//#pragma unroll 9
 	for (i = 0; i < 9; i++)
 	{
 		if( dot(normal[i], normal[4]) < discard_threshold )
@@ -69,7 +69,7 @@ vec4 dssdo_blur(vec2 tex)
 
 	vec4 res = vec4(0.0);
 
-#pragma unroll 9
+//#pragma unroll 9
 	for (i = 0; i < 9; i++)
 	{
 		res += texture(u_DeluxeMap, tex + indices[i]*step) * weights[i];

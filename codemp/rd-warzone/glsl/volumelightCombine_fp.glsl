@@ -52,10 +52,10 @@ void main()
 #else
 	float numSamples = 1.0;
 
-#pragma unroll int((BLUR_WIDTH*2.0)+1.0)
+//#pragma unroll int((BLUR_WIDTH*2.0)+1.0)
 	for (float x = -BLUR_WIDTH; x <= BLUR_WIDTH; x += 1.0)
 	{
-#pragma unroll int((BLUR_WIDTH*2.0)+1.0)
+//#pragma unroll int((BLUR_WIDTH*2.0)+1.0)
 		for (float y = -BLUR_WIDTH; y <= BLUR_WIDTH; y += 1.0)
 		{
 			volumeLight += textureLod(u_NormalMap, var_ScreenTex + (offset * vec2(x*length(x), y*length(y))), 0.0).rgb;

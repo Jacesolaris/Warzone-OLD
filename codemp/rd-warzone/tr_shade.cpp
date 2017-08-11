@@ -2013,11 +2013,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
-			//if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
-			//	stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
+				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
 
 			//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
-			stateBits = GLS_DEFAULT;
+			//stateBits = GLS_DEFAULT;
 		}
 
 		float useTC = 0.0;

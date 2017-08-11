@@ -53,7 +53,7 @@ void main ( void )
 
 	float illuminationDecay = 1.0;
 
-#pragma unroll iBloomraySamples
+//#pragma unroll iBloomraySamples
 	for(int g = 0; g < iBloomraySamples; g++)
 	{
 		texCoord -= deltaTexCoord;

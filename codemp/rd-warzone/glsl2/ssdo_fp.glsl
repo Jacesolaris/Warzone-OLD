@@ -103,7 +103,7 @@ vec4 dssdo_accumulate(vec2 tex)
 
 	const vec4 sh2_weight = vec4(sh2_weight_l1, sh2_weight_l0) / num_samples;
 
-#pragma unroll num_samples
+//#pragma unroll num_samples
 	for( int i=0; i < num_samples; ++i )
 	{
 	    vec2 textureOffset = reflect( points[ i ].xy, noise.xy ).xy * radius;

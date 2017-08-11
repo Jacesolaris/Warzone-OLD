@@ -103,7 +103,7 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 	fogAmount = clamp(fogAmount * u_Local3.a, 0.1, 1.0);
 	float sunAmount = max( clamp(dot( rayDir, sunDir ) * 1.1, 0.0, 1.0), 0.0 );
 	
-	if (!(position.a == 1024.0 || position.a == 1025.0))
+	if (!(position.a == MATERIAL_SKY || position.a == MATERIAL_SUN))
 	{// Not Skybox or Sun... No don't do sun color here...
 		sunAmount = 0.0;
 	}
@@ -130,7 +130,7 @@ void main ( void )
 	//
 	if (u_Local2.a > 0.0)
 	{
-		vec3 rayDir = normalize(viewOrg.xyz - pMap.xyz);
+		vec3 rayDir = -gl_FragCoord.xyz;//normalize(viewOrg.xyz - pMap.xyz);
 		vec3 lightDir = normalize(viewOrg.xyz - u_PrimaryLightOrigin.xyz);
 		float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
 		fogColor = applyFog2(fogColor.rgb, depth, viewOrg.xyz, rayDir, lightDir, pMap);
@@ -151,7 +151,7 @@ void main ( void )
 		float numAdded = 0.0;
 		float mt = u_Local4.b;
 
-#pragma unroll 7
+//#pragma unroll 7
 		for(int i=0; i<7; i++)
 		{
 			vec3 pos = rayDir*dafuck;

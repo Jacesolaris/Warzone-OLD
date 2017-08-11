@@ -42,7 +42,7 @@ vec4 FastBlur(void)
 
 	int NUM_BLUR_PIXELS = 1;
 
-#pragma unroll ((BLUR_RADIUS * 2.0) / BLUR_PIXELMULT)
+//#pragma unroll ((BLUR_RADIUS * 2.0) / BLUR_PIXELMULT)
 	for (float x = -RADIUS_X * invDepth; x <= RADIUS_X * invDepth; x += px * invDepth)
 	{
 		for (float y = -RADIUS_Y * invDepth; y <= RADIUS_Y * invDepth; y += py * invDepth)

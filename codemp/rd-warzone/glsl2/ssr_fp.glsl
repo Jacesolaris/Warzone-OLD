@@ -72,7 +72,7 @@ vec3 rayTrace(vec3 startpos, vec3 dir){
     vec2 psc;               // Pixel Space Coordinate of the ray's' current viewspace position 
     vec3 ssg;               // Screen Space coordinate of the existing Geometry at that pixel coordinate
     
-#pragma unroll samples
+//#pragma unroll samples
     for(int i = 0; i < samples; i++){
         olz = pos.z; //previous z
         pos = pos + dir * stepSize * pos.z * scl;

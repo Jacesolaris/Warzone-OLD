@@ -3795,8 +3795,12 @@ void R_CreateBuiltinImages( void ) {
 
 	if (r_hdr->integer)
 	{
-		hdrFormat = GL_RGBA32F; //GL_RGBA16F;
-		hdrDepth = GL_DEPTH_COMPONENT32;
+		hdrFormat = GL_RGBA16F;
+		hdrDepth = GL_DEPTH_COMPONENT24;
+		
+		// UQ: This would be much higher precision, but FPS hit is really, really bad...
+		//hdrFormat = GL_RGBA32F;
+		//hdrDepth = GL_DEPTH_COMPONENT32;
 	}
 
 	rgbFormat = GL_RGBA8;

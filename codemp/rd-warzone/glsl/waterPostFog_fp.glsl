@@ -111,7 +111,7 @@ void main ( void )
 		float numAdded = 0.0;
 		float mt = FOG_VOLUMETRIC_DENSITY;
 
-#pragma unroll 7
+//#pragma unroll 7
 		for(int i=0; i<7; i++)
 		{
 			vec3 pos = rayDir*dafuck;

@@ -677,7 +677,7 @@ void main ( void )
 		//level = 0.0;
 
 #ifdef REAL_WAVES
-#pragma unroll 10
+//#pragma unroll 10
 		for(int i = 0; i < 10; i++)
 #endif //REAL_WAVES
 		{

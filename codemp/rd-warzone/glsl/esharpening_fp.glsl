@@ -28,7 +28,7 @@ void main (void)
 	float invscreensize=1.0/ScreenSize;
 
 	//for (i=0; i<8; i++) //higher quality
-#pragma unroll 4
+//#pragma unroll 4
 	for (i=0; i<4; i++)
 	{
 		vec2 tdir=offset[i].xy;
