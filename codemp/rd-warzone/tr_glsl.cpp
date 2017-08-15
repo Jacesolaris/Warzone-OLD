@@ -91,6 +91,9 @@ extern const char *fallbackShader_waterPost_fp;
 extern const char *fallbackShader_waterPost_vp;
 extern const char *fallbackShader_waterForward_fp;
 extern const char *fallbackShader_waterForward_vp;
+extern const char *fallbackShader_foliage_fp;
+extern const char *fallbackShader_foliage_vp;
+extern const char *fallbackShader_foliage_gs;
 extern const char *fallbackShader_fur_fp;
 extern const char *fallbackShader_fur_vp;
 extern const char *fallbackShader_fur_gs;
@@ -2850,6 +2853,16 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.foliageShader, "foliage", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_foliage_vp, fallbackShader_foliage_fp, NULL, NULL, fallbackShader_foliage_gs))
+	{
+		ri->Error(ERR_FATAL, "Could not load foliage shader!");
+	}
+
+
 
 	if (r_foliage->integer)
 	{
@@ -3742,6 +3755,29 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.furShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.foliageShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load foliage shader!");
+	}
+
+	GLSL_InitUniforms(&tr.foliageShader);
+
+	qglUseProgram(tr.foliageShader.program);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.foliageShader);
 #endif
 
 	numEtcShaders++;
@@ -5542,6 +5578,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.waterForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterPostShader);
 	GLSL_DeleteGPUShader(&tr.furShader);
+	GLSL_DeleteGPUShader(&tr.foliageShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grass2Shader);
 	if (r_pebbles->integer)	GLSL_DeleteGPUShader(&tr.pebblesShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);

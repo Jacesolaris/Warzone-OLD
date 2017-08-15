@@ -1772,6 +1772,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean useTesselation = qfalse;
 	qboolean isWater = qfalse;
 	qboolean isGrass = qfalse;
+	qboolean isGroundFoliage = qfalse;
 	qboolean isPebbles = qfalse;
 	qboolean isFur = qfalse;
 
@@ -1803,6 +1804,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			isPebbles = qtrue;
 		}
+		else if (r_groundFoliage->integer
+			&& r_sunlightMode->integer >= 2
+			&& r_foliageShadows->integer
+			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isGroundFoliage = qtrue;
+		}
 		else if (r_fur->integer
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
@@ -1822,6 +1830,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
 		{
 			isPebbles = qtrue;
+		}
+		else if (r_groundFoliage->integer
+			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+		{
+			isGroundFoliage = qtrue;
 		}
 		else if (r_fur->integer
 			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
@@ -2442,6 +2455,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					sp2 = &tr.pebblesShader;
 					passMax = r_pebblesPasses->integer;
 				}
+			}
+			else if (r_groundFoliage->integer && isGroundFoliage)
+			{
+				sp2 = &tr.foliageShader;
+				multiPass = qtrue;
+				passMax = 2;
 			}
 			else if (r_fur->integer && isFur)
 			{
@@ -3207,6 +3226,42 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+			}
+			else if (isGroundFoliage && passNum == 1 && sp2)
+			{
+				sp = sp2;
+				sp2 = NULL;
+
+				GLSL_BindProgram(sp);
+
+				//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+
+				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+				
+				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+				GL_BindToTMU(tr.groundFoliageImage[0], TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.groundFoliageImage[1], TB_SPLATMAP1);
+				GL_BindToTMU(tr.groundFoliageImage[2], TB_SPLATMAP2);
+				GL_BindToTMU(tr.groundFoliageImage[3], TB_SPLATMAP3);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+
+				vec3_t out;
+				float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+				VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
+				vec4_t l10;
+				VectorSet4(l10, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 			}
 			else if (isFur && passNum == 1 && sp2)
 			{

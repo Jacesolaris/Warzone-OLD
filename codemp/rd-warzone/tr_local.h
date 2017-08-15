@@ -178,6 +178,8 @@ extern cvar_t	*r_cartoon;
 
 extern cvar_t	*r_fur;
 
+extern cvar_t	*r_groundFoliage;
+
 extern cvar_t	*r_foliage;
 extern cvar_t	*r_foliagePasses;
 extern cvar_t	*r_foliageDistance;
@@ -2462,6 +2464,8 @@ typedef struct trGlobals_s {
 	image_t					*grassMaskImage[10];
 	image_t					*paletteImage;
 
+	image_t					*groundFoliageImage[4];
+
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
 
@@ -2595,6 +2599,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterForwardShader;
 	shaderProgram_t waterPostShader;
 	shaderProgram_t furShader;
+	shaderProgram_t foliageShader;
 	shaderProgram_t grass2Shader;
 	shaderProgram_t pebblesShader;
 	shaderProgram_t hbaoShader;

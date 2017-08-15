@@ -2839,6 +2839,7 @@ const void *RB_PostProcess(const void *data)
 		}
 #endif
 
+#if 1
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		//
@@ -2865,6 +2866,10 @@ const void *RB_PostProcess(const void *data)
 
 			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
 		}
+#else
+		// This is faster but blocks postprocess on screenshots... *sigh*
+		FBO_FastBlit(currentFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+#endif
 	}
 
 	if (r_drawSunRays->integer)
