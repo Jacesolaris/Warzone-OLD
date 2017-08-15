@@ -279,12 +279,12 @@ vec4 GetControlMap( void )
 vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
 {
     float depth = 0.2;
-    float ma = max(texture1.a + a1, texture2.a + a2) - depth;
+	float ma = max(texture1.a + a1, texture2.a + a2) - depth;
 
     float b1 = max(texture1.a + a1 - ma, 0);
     float b2 = max(texture2.a + a2 - ma, 0);
 
-    return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
+    return ((texture1.rgb * b1) + (texture2.rgb * b2)) / (b1 + b2);
 }
 
 vec4 GetMap( in sampler2D tex, float scale, inout float depth)
@@ -312,6 +312,12 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	}
 
 	return color;
+}
+
+vec4 QuickMix(vec3 color1, vec3 color2, float mix)
+{
+	float mixVal = clamp(mix, 0.0, 1.0);
+	return vec4((color1 * (1.0 - mixVal)) + (color2 * mixVal), 1.0);
 }
 
 vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
@@ -342,25 +348,28 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 	if (u_Local7.r > 0.0 && control.r > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap1, scale, depth);
-		splatColor = mix(splatColor, tex, control.r * tex.a);
+		//splatColor = mix(splatColor, tex, control.r * tex.a);
+		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.r * tex.a);
 	}
 
 	if (u_Local7.g > 0.0 && control.g > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap2, scale, depth);
-		splatColor = mix(splatColor, tex, control.g * tex.a);
+		//splatColor = mix(splatColor, tex, control.g * tex.a);
+		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.g * tex.a);
 	}
 
 	if (u_Local7.b > 0.0 && control.b > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap3, scale, depth);
-		splatColor = mix(splatColor, tex, control.b * tex.a);
+		//splatColor = mix(splatColor, tex, control.b * tex.a);
+		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.b * tex.a);
 	}
 
 	/*if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap4, scale, depth);
-		splatColor = mix(splatColor, tex, control.a * tex.a);
+		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.a * tex.a);
 	}*/
 
 	if (depth != -1.0)
@@ -737,7 +746,8 @@ void main()
 			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
 			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0));
+			//gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0));
+			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0)).rgb;
 		}
 	}
 
