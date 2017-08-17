@@ -1852,7 +1852,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
 	}
 
-	if (!tr.numCubemaps)
+	if ((tr.numCubemaps <= 1) || (tr.refdef.rdflags & RDF_NOWORLDMODEL) || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		cubeMapNum = -1;
 		cubeMapVec[0] = 0;

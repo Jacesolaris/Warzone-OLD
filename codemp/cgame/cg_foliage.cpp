@@ -204,6 +204,79 @@ static const char *GrassyPlantsModelsList[] = {
 	"models/warzone/plants/gcplantmix04.md3",
 };
 
+static const char *ForestPlantsModelsList[] = {
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/buckthornshrub03.md3",
+	"models/warzone/plants/buckthornshrub03.md3",
+	"models/warzone/plants/buckthornshrub03.md3",
+	"models/warzone/plants/fern01.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern05.md3",
+	// Near trees/walls, or normal...
+	"models/warzone/plants/gcplantmix01.md3",
+	// Near trees/walls...
+	"models/warzone/plants/azaleashrub01.md3",
+	"models/warzone/plants/azaleashrub02.md3",
+	"models/warzone/plants/buckthornshrub01.md3",
+	"models/warzone/plants/buckthornshrub02.md3",
+	"models/warzone/plants/buckthornshrub03.md3",
+	"models/warzone/plants/buckthornshrub03.md3",
+	"models/warzone/plants/buckthornshrub03.md3",
+	"models/warzone/plants/buckthornshrub04.md3",
+	"models/warzone/plants/gorseshrub01.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern03.md3",
+	"models/warzone/plants/fern04.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/gcplantmix01.md3",
+	"models/warzone/plants/gcplantmix02.md3",
+	"models/warzone/plants/gcplantmix03.md3",
+	"models/warzone/plants/gcplantmix04.md3",
+	"models/warzone/plants/gcplantmix05.md3",
+	"models/warzone/plants/gcplantmix06.md3",
+};
 
 
 static const char *TropicalPlantsList[] = {
@@ -2387,6 +2460,15 @@ void FOLIAGE_DrawGrass(void)
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
+			}
+		}
+		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest"))
+		{
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest^5\".\n", GAME_VERSION, cgs.currentmapname);
+
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(ForestPlantsModelsList[i]);
 			}
 		}
 		else
