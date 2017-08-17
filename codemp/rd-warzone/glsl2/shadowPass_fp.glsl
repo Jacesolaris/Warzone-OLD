@@ -53,30 +53,37 @@ out vec4 out_NormalDetail;
 
 void main()
 {
-	vec2 texCoords = var_TexCoords;
-
-	if (u_Local4.a > 0.0)
-	{// Sway...
-		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - texCoords.y) + 1.0), 0.0);
+	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
+	{// Can skip nearly everything... These are always going to be solid color...
+		gl_FragColor = vec4(1.0);
 	}
+	else
+	{
+		vec2 texCoords = var_TexCoords;
 
-	gl_FragColor = texture(u_DiffuseMap, texCoords);
-	gl_FragColor.a *= var_Color.a;
+		if (u_Local4.a > 0.0)
+		{// Sway...
+			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - texCoords.y) + 1.0), 0.0);
+		}
+
+		gl_FragColor = texture(u_DiffuseMap, texCoords);
+		gl_FragColor.a *= var_Color.a;
 
 #ifdef USE_ALPHA_TEST
-	if (u_AlphaTestValues.r > 0.0)
-	{
-		if (u_AlphaTestValues.r == ATEST_LT)
-			if (gl_FragColor.a >= u_AlphaTestValues.g)
-				discard;
-		if (u_AlphaTestValues.r == ATEST_GT)
-			if (gl_FragColor.a <= u_AlphaTestValues.g)
-				discard;
-		if (u_AlphaTestValues.r == ATEST_GE)
-			if (gl_FragColor.a < u_AlphaTestValues.g)
-				discard;
-	}
+		if (u_AlphaTestValues.r > 0.0)
+		{
+			if (u_AlphaTestValues.r == ATEST_LT)
+				if (gl_FragColor.a >= u_AlphaTestValues.g)
+					discard;
+			if (u_AlphaTestValues.r == ATEST_GT)
+				if (gl_FragColor.a <= u_AlphaTestValues.g)
+					discard;
+			if (u_AlphaTestValues.r == ATEST_GE)
+				if (gl_FragColor.a < u_AlphaTestValues.g)
+					discard;
+		}
 #endif //USE_ALPHA_TEST
+	}
 
 	out_Glow = vec4(0.0);
 
