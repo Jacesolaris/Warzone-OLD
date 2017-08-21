@@ -361,6 +361,7 @@ extern vec3_t        mergeBlock;
 void MergeDrawSurfaces( void );
 void MergeDrawVerts( void );
 extern void CaulkifyStuff(qboolean findBounds);
+extern void FindWaterLevel(void);
 
 void ProcessWorldModel( void )
 {
@@ -509,6 +510,9 @@ void ProcessWorldModel( void )
 
 	// Remove crap...
 	CaulkifyStuff(qtrue);
+
+	/* UQ1: Find water level so that we can skip adding procedural crap underwater */
+	FindWaterLevel();
 
 	/* UQ1: Generate experimental procedural cliff faces */
 	GenerateCliffFaces();

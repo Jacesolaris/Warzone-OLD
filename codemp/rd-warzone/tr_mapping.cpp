@@ -1178,8 +1178,8 @@ vec3_t		SUN_COLOR_SECONDARY = { 0 };
 vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
 vec3_t		MAP_AMBIENT_COLOR = { 1 };
-float		MAP_EMISSIVE_COLOR_SCALE = 0.2;
-float		MAP_EMISSIVE_RADIUS_SCALE = 0.2;
+float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
+float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
 qboolean	SHADOWS_ENABLED = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
 float		SHADOW_MAXBRIGHT = 1.0;
@@ -1256,8 +1256,8 @@ void MAPPING_LoadMapInfo(void)
 	//
 	// Emission...
 	//
-	MAP_EMISSIVE_COLOR_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_COLOR_SCALE", "0.2"));
-	MAP_EMISSIVE_RADIUS_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_RADIUS_SCALE", "0.2"));
+	MAP_EMISSIVE_COLOR_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_COLOR_SCALE", "1.0"));
+	MAP_EMISSIVE_RADIUS_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_RADIUS_SCALE", "1.0"));
 
 	//
 	// Fog...

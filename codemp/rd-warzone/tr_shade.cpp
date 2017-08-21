@@ -2475,7 +2475,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 
 
-		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
+		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb shader #ifdefs...
 			vec4_t vec;
 
 			if (!IS_DEPTH_PASS)

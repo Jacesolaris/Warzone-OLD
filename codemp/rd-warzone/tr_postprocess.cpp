@@ -1135,8 +1135,8 @@ void RB_AddGlowShaderLights ( void )
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
-				VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
+				//VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_colored++;
 
 				//ri->Printf(PRINT_ALL, "glow location %i color: %f %f %f.\n", num_colored-1, glowColor[0], glowColor[1], glowColor[2]);
@@ -2368,7 +2368,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL3, local3);
 
 	vec4_t local4;
-	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, backEnd.refdef.floatTime, 0.0);
+	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, backEnd.refdef.floatTime, MAP_EMISSIVE_COLOR_SCALE);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL4, local4);
 
 	{

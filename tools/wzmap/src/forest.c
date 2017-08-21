@@ -86,6 +86,8 @@ int irand(int min, int max)
 #define			MAX_FOREST_MODELS				64
 #define			MAX_STATIC_ENTITY_MODELS		64
 
+float			MAP_WATER_LEVEL = -999999.9;
+
 qboolean		FORCED_MODEL_META = qfalse;
 qboolean		CAULKIFY_CRAP = qfalse;
 qboolean		CULLSIDES_AFTER_MODEL_ADITION = qfalse;
@@ -144,6 +146,51 @@ char			STATIC_MODEL[MAX_STATIC_ENTITY_MODELS][128] = { 0 };
 vec3_t			STATIC_ORIGIN[MAX_STATIC_ENTITY_MODELS] = { 0 };
 float			STATIC_ANGLE[MAX_STATIC_ENTITY_MODELS] = { 0 };
 float			STATIC_SCALE[MAX_STATIC_ENTITY_MODELS] = { 0 };
+
+void FindWaterLevel(void)
+{
+	float waterLevel = 999999.9;
+
+	for (int s = 0; s < numMapDrawSurfs; s++)
+	{
+		printLabelledProgress("FindWaterLevel", s, numMapDrawSurfs);
+
+		/* get drawsurf */
+		mapDrawSurface_t *ds = &mapDrawSurfs[s];
+		shaderInfo_t *si = ds->shaderInfo;
+
+		if ((si->compileFlags & C_SKIP) || (si->compileFlags & C_NODRAW))
+		{
+			continue;
+		}
+
+		if (ds->mins[2] < waterLevel)
+		{
+
+			if (si->compileFlags & C_LIQUID)
+			{
+				waterLevel = ds->mins[2];
+				continue;
+			}
+			/*
+			if (StringContainsWord(si->shader, "water"))
+			{
+			waterLevel = ds->mins[2];
+			continue;
+			}
+			*/
+		}
+	}
+
+	if (waterLevel == 999999.9)
+	{
+		waterLevel = -999999.9;// mapPlayableMins[2];
+	}
+
+	MAP_WATER_LEVEL = waterLevel;
+
+	Sys_Printf("Detected lowest map water level at %f.\n", MAP_WATER_LEVEL);
+}
 
 void CaulkifyStuff(qboolean findBounds);
 
@@ -369,6 +416,7 @@ void FOLIAGE_LoadClimateData( char *filename )
 			Sys_Printf("Static %i. Model %s. Origin %i %i %i. Angle %f. Scale %f.\n", i, STATIC_MODEL[i], (int)STATIC_ORIGIN[i][0], (int)STATIC_ORIGIN[i][1], (int)STATIC_ORIGIN[i][2], (float)STATIC_ANGLE[i], (float)STATIC_SCALE[i]);
 	}
 }
+
 
 void vectoangles(const vec3_t value1, vec3_t angles);
 extern qboolean StringContainsWord(const char *haystack, const char *needle);
@@ -1031,6 +1079,11 @@ void GenerateLedgeFaces(void)
 
 		if (!(si->compileFlags & C_SOLID))
 		{
+			continue;
+		}
+
+		if (ds->maxs[2] < MAP_WATER_LEVEL)
+		{// Don't add ledges under water to save on brushes and planes...
 			continue;
 		}
 

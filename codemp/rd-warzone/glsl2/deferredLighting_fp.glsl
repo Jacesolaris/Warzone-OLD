@@ -20,7 +20,7 @@ uniform vec2		u_Dimensions;
 uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
 uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
-uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, 0.0
+uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -30,7 +30,7 @@ uniform vec3		u_PrimaryLightColor;
 uniform vec4		u_CubeMapInfo;
 uniform float		u_CubeMapStrength;
 
-#define MAX_DEFERRED_LIGHTS 64//128//64//16//24
+#define MAX_DEFERRED_LIGHTS 128//64//16//24
 
 uniform int			u_lightCount;
 //uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
@@ -225,6 +225,258 @@ vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 spe
 	return dif*diffuseColor + spe*specularColor;
 }
 
+vec3 QuickMix(vec3 color1, vec3 color2, float mix)
+{
+	float mixVal = clamp(mix, 0.0, 1.0);
+	return vec3((color1 * (1.0 - mixVal)) + (color2 * mixVal));
+}
+
+/*
+** Desaturation
+*/
+
+vec4 Desaturate(vec3 color, float Desaturation)
+{
+	vec3 grayXfer = vec3(0.3, 0.59, 0.11);
+	vec3 gray = vec3(dot(grayXfer, color));
+	return vec4(mix(color, gray, Desaturation), 1.0);
+}
+
+
+/*
+** Hue, saturation, luminance
+*/
+
+vec3 RGBToHSL(vec3 color)
+{
+	vec3 hsl; // init to 0 to avoid warnings ? (and reverse if + remove first part)
+	
+	float fmin = min(min(color.r, color.g), color.b);    //Min. value of RGB
+	float fmax = max(max(color.r, color.g), color.b);    //Max. value of RGB
+	float delta = fmax - fmin;             //Delta RGB value
+
+	hsl.z = (fmax + fmin) / 2.0; // Luminance
+
+	if (delta == 0.0)		//This is a gray, no chroma...
+	{
+		hsl.x = 0.0;	// Hue
+		hsl.y = 0.0;	// Saturation
+	}
+	else                                    //Chromatic data...
+	{
+		if (hsl.z < 0.5)
+			hsl.y = delta / (fmax + fmin); // Saturation
+		else
+			hsl.y = delta / (2.0 - fmax - fmin); // Saturation
+		
+		float deltaR = (((fmax - color.r) / 6.0) + (delta / 2.0)) / delta;
+		float deltaG = (((fmax - color.g) / 6.0) + (delta / 2.0)) / delta;
+		float deltaB = (((fmax - color.b) / 6.0) + (delta / 2.0)) / delta;
+
+		if (color.r == fmax )
+			hsl.x = deltaB - deltaG; // Hue
+		else if (color.g == fmax)
+			hsl.x = (1.0 / 3.0) + deltaR - deltaB; // Hue
+		else if (color.b == fmax)
+			hsl.x = (2.0 / 3.0) + deltaG - deltaR; // Hue
+
+		if (hsl.x < 0.0)
+			hsl.x += 1.0; // Hue
+		else if (hsl.x > 1.0)
+			hsl.x -= 1.0; // Hue
+	}
+
+	return hsl;
+}
+
+float HueToRGB(float f1, float f2, float hue)
+{
+	if (hue < 0.0)
+		hue += 1.0;
+	else if (hue > 1.0)
+		hue -= 1.0;
+	float res;
+	if ((6.0 * hue) < 1.0)
+		res = f1 + (f2 - f1) * 6.0 * hue;
+	else if ((2.0 * hue) < 1.0)
+		res = f2;
+	else if ((3.0 * hue) < 2.0)
+		res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;
+	else
+		res = f1;
+	return res;
+}
+
+vec3 HSLToRGB(vec3 hsl)
+{
+	vec3 rgb;
+	
+	if (hsl.y == 0.0)
+		rgb = vec3(hsl.z); // Luminance
+	else
+	{
+		float f2;
+		
+		if (hsl.z < 0.5)
+			f2 = hsl.z * (1.0 + hsl.y);
+		else
+			f2 = (hsl.z + hsl.y) - (hsl.y * hsl.z);
+			
+		float f1 = 2.0 * hsl.z - f2;
+		
+		rgb.r = HueToRGB(f1, f2, hsl.x + (1.0/3.0));
+		rgb.g = HueToRGB(f1, f2, hsl.x);
+		rgb.b= HueToRGB(f1, f2, hsl.x - (1.0/3.0));
+	}
+	
+	return rgb;
+}
+
+
+/*
+** Contrast, saturation, brightness
+** Code of this function is from TGM's shader pack
+** http://irrlicht.sourceforge.net/phpBB2/viewtopic.php?t=21057
+*/
+
+// For all settings: 1.0 = 100% 0.5=50% 1.5 = 150%
+vec3 ContrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+{
+	// Increase or decrease theese values to adjust r, g and b color channels seperately
+	const float AvgLumR = 0.5;
+	const float AvgLumG = 0.5;
+	const float AvgLumB = 0.5;
+	
+	const vec3 LumCoeff = vec3(0.2125, 0.7154, 0.0721);
+	
+	vec3 AvgLumin = vec3(AvgLumR, AvgLumG, AvgLumB);
+	vec3 brtColor = color * brt;
+	vec3 intensity = vec3(dot(brtColor, LumCoeff));
+	vec3 satColor = mix(intensity, brtColor, sat);
+	vec3 conColor = mix(AvgLumin, satColor, con);
+	return conColor;
+}
+
+
+/*
+** Float blending modes
+** Adapted from here: http://www.nathanm.com/photoshop-blending-math/
+** But I modified the HardMix (wrong condition), Overlay, SoftLight, ColorDodge, ColorBurn, VividLight, PinLight (inverted layers) ones to have correct results
+*/
+
+#define BlendLinearDodgef 			BlendAddf
+#define BlendLinearBurnf 			BlendSubstractf
+#define BlendAddf(base, blend) 		min(base + blend, 1.0)
+#define BlendSubstractf(base, blend) 	max(base + blend - 1.0, 0.0)
+#define BlendLightenf(base, blend) 		max(blend, base)
+#define BlendDarkenf(base, blend) 		min(blend, base)
+#define BlendLinearLightf(base, blend) 	(blend < 0.5 ? BlendLinearBurnf(base, (2.0 * blend)) : BlendLinearDodgef(base, (2.0 * (blend - 0.5))))
+#define BlendScreenf(base, blend) 		(1.0 - ((1.0 - base) * (1.0 - blend)))
+#define BlendOverlayf(base, blend) 	(base < 0.5 ? (2.0 * base * blend) : (1.0 - 2.0 * (1.0 - base) * (1.0 - blend)))
+#define BlendSoftLightf(base, blend) 	((blend < 0.5) ? (2.0 * base * blend + base * base * (1.0 - 2.0 * blend)) : (sqrt(base) * (2.0 * blend - 1.0) + 2.0 * base * (1.0 - blend)))
+#define BlendColorDodgef(base, blend) 	((blend == 1.0) ? blend : min(base / (1.0 - blend), 1.0))
+#define BlendColorBurnf(base, blend) 	((blend == 0.0) ? blend : max((1.0 - ((1.0 - base) / blend)), 0.0))
+#define BlendVividLightf(base, blend) 	((blend < 0.5) ? BlendColorBurnf(base, (2.0 * blend)) : BlendColorDodgef(base, (2.0 * (blend - 0.5))))
+#define BlendPinLightf(base, blend) 	((blend < 0.5) ? BlendDarkenf(base, (2.0 * blend)) : BlendLightenf(base, (2.0 *(blend - 0.5))))
+#define BlendHardMixf(base, blend) 	((BlendVividLightf(base, blend) < 0.5) ? 0.0 : 1.0)
+#define BlendReflectf(base, blend) 		((blend == 1.0) ? blend : min(base * base / (1.0 - blend), 1.0))
+
+
+/*
+** Vector3 blending modes
+*/
+
+// Component wise blending
+#define Blend(base, blend, funcf) 		vec3(funcf(base.r, blend.r), funcf(base.g, blend.g), funcf(base.b, blend.b))
+
+#define BlendNormal(base, blend) 		(blend)
+#define BlendLighten				BlendLightenf
+#define BlendDarken				BlendDarkenf
+#define BlendMultiply(base, blend) 		(base * blend)
+#define BlendAverage(base, blend) 		((base + blend) / 2.0)
+#define BlendAdd(base, blend) 		min(base + blend, vec3(1.0))
+#define BlendSubstract(base, blend) 	max(base + blend - vec3(1.0), vec3(0.0))
+#define BlendDifference(base, blend) 	abs(base - blend)
+#define BlendNegation(base, blend) 	(vec3(1.0) - abs(vec3(1.0) - base - blend))
+#define BlendExclusion(base, blend) 	(base + blend - 2.0 * base * blend)
+#define BlendScreen(base, blend) 		Blend(base, blend, BlendScreenf)
+#define BlendOverlay(base, blend) 		Blend(base, blend, BlendOverlayf)
+#define BlendSoftLight(base, blend) 	Blend(base, blend, BlendSoftLightf)
+#define BlendHardLight(base, blend) 	BlendOverlay(blend, base)
+#define BlendColorDodge(base, blend) 	Blend(base, blend, BlendColorDodgef)
+#define BlendColorBurn(base, blend) 	Blend(base, blend, BlendColorBurnf)
+#define BlendLinearDodge			BlendAdd
+#define BlendLinearBurn			BlendSubstract
+// Linear Light is another contrast-increasing mode
+// If the blend color is darker than midgray, Linear Light darkens the image by decreasing the brightness. If the blend color is lighter than midgray, the result is a brighter image due to increased brightness.
+#define BlendLinearLight(base, blend) 	Blend(base, blend, BlendLinearLightf)
+#define BlendVividLight(base, blend) 	Blend(base, blend, BlendVividLightf)
+#define BlendPinLight(base, blend) 		Blend(base, blend, BlendPinLightf)
+#define BlendHardMix(base, blend) 		Blend(base, blend, BlendHardMixf)
+#define BlendReflect(base, blend) 		Blend(base, blend, BlendReflectf)
+#define BlendGlow(base, blend) 		BlendReflect(blend, base)
+#define BlendPhoenix(base, blend) 		(min(base, blend) - max(base, blend) + vec3(1.0))
+#define BlendOpacity(base, blend, F, O) 	(F(base, blend) * O + blend * (1.0 - O))
+
+
+// Hue Blend mode creates the result color by combining the luminance and saturation of the base color with the hue of the blend color.
+vec3 BlendHue(vec3 base, vec3 blend)
+{
+	vec3 baseHSL = RGBToHSL(base);
+	return HSLToRGB(vec3(RGBToHSL(blend).r, baseHSL.g, baseHSL.b));
+}
+
+// Saturation Blend mode creates the result color by combining the luminance and hue of the base color with the saturation of the blend color.
+vec3 BlendSaturation(vec3 base, vec3 blend)
+{
+	vec3 baseHSL = RGBToHSL(base);
+	return HSLToRGB(vec3(baseHSL.r, RGBToHSL(blend).g, baseHSL.b));
+}
+
+// Color Mode keeps the brightness of the base color and applies both the hue and saturation of the blend color.
+vec3 BlendColor(vec3 base, vec3 blend)
+{
+	vec3 blendHSL = RGBToHSL(blend);
+	return HSLToRGB(vec3(blendHSL.r, blendHSL.g, RGBToHSL(base).b));
+}
+
+// Luminosity Blend mode creates the result color by combining the hue and saturation of the base color with the luminance of the blend color.
+vec3 BlendLuminosity(vec3 base, vec3 blend)
+{
+	vec3 baseHSL = RGBToHSL(base);
+	return HSLToRGB(vec3(baseHSL.r, baseHSL.g, RGBToHSL(blend).b));
+}
+
+//#define DefaultBlend BlendHue
+//#define DefaultBlend BlendSaturation
+#define DefaultBlend BlendColor
+//#define DefaultBlend BlendLuminosity
+
+/*
+** Gamma correction
+** Details: http://blog.mouaif.org/2009/01/22/photoshop-gamma-correction-shader/
+*/
+
+#define GammaCorrection(color, gamma)								pow(color, 1.0 / gamma)
+
+/*
+** Levels control (input (+gamma), output)
+** Details: http://blog.mouaif.org/2009/01/28/levels-control-shader/
+*/
+
+#define LevelsControlInputRange(color, minInput, maxInput)				min(max(color - vec3(minInput), vec3(0.0)) / (vec3(maxInput) - vec3(minInput)), vec3(1.0))
+#define LevelsControlInput(color, minInput, gamma, maxInput)				GammaCorrection(LevelsControlInputRange(color, minInput, maxInput), gamma)
+#define LevelsControlOutputRange(color, minOutput, maxOutput) 			mix(vec3(minOutput), vec3(maxOutput), color)
+#define LevelsControl(color, minInput, gamma, maxInput, minOutput, maxOutput) 	LevelsControlOutputRange(LevelsControlInput(color, minInput, gamma, maxInput), minOutput, maxOutput)
+
+vec3 blendSoftLight(vec3 base, vec3 blend) {
+    return mix(
+        sqrt(base) * (2.0 * blend - 1.0) + 2.0 * base * (1.0 - blend), 
+        2.0 * base * blend + base * base * (1.0 - 2.0 * blend), 
+        step(base, vec3(0.5))
+    );
+}
+
 void main(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
@@ -240,6 +492,7 @@ void main(void)
 
 	if (position.a == MATERIAL_SKY || position.a == MATERIAL_SUN || position.a == MATERIAL_NONE)
 	{// Skybox... Skip...
+		//gl_FragColor.rgb = ContrastSaturationBrightness(gl_FragColor.rgb, 1.0, 1.0, 1.42);
 		return;
 	}
 
@@ -250,6 +503,7 @@ void main(void)
 		float d = clamp(dist / u_Local3.r, 0.0, 1.0);
 		gl_FragColor.rgb = vec3(d);
 		gl_FragColor.a = 1.0;
+		//gl_FragColor.rgb = ContrastSaturationBrightness(gl_FragColor.rgb, 1.0, 1.0, 1.42);
 		return;
 	}
 #endif
@@ -291,7 +545,8 @@ void main(void)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
 
 		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
-		shadowMult = clamp(shadowValue, 0.2, 1.0);
+		//shadowMult = clamp(shadowValue, 0.2, 1.0);
+		shadowMult = clamp(shadowValue, 0.2, 1.0) * 0.75 + 0.25;
 	}
 #endif //defined(USE_SHADOWMAP)
 
@@ -299,14 +554,6 @@ void main(void)
 	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
-	bool noSunPhong = false;
-	float phongFactor = u_Local1.r;
-
-	if (phongFactor*u_Local1.g < 0.0)
-	{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
-		noSunPhong = true;
-		phongFactor = 0.0;
-	}
 
 	vec4 occlusion = vec4(0.0);
 	bool useOcclusion = false;
@@ -317,7 +564,7 @@ void main(void)
 		occlusion = texture(u_HeightMap, texCoords);
 	}
 
-	float reflectivePower = (max(norm.a, 0.3) * 0.3);
+	float reflectivePower = max(norm.a, 0.5);
 
 
 #if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
@@ -333,9 +580,14 @@ void main(void)
 #endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
 
-	float lightPower = clamp(1.0 - clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0), 0.0, 0.8);
+	float phongFactor = u_Local1.r * u_Local1.g;
 
-	if (!noSunPhong && shadowMult > 0.0 && lightPower > 0.0)
+//#define LIGHT_COLOR_POWER			u_Local3.g
+//#define LIGHT_BLEND_STRENGTH		u_Local3.b
+#define LIGHT_COLOR_POWER			4.0
+#define LIGHT_BLEND_STRENGTH		0.25
+
+	if (phongFactor > 0.0)
 	{// this is blinn phong
 		float light_occlusion = 1.0;
 
@@ -344,26 +596,35 @@ void main(void)
 			light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
 		}
 
-		vec3 lColor = blinn_phong(N, E, -to_light_norm, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb) * light_occlusion * reflectivePower * phongFactor * 0.5;
+		float power = clamp(length(gl_FragColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+		power = pow(power, LIGHT_COLOR_POWER);
+		power = power * 0.5 + 0.5;
+		
+		vec3 lightColor = u_PrimaryLightColor.rgb;
 
-#ifdef __RANDOMIZE_LIGHT_PIXELS__
-		float lightRand = lrand(texCoords * length(lColor.rgb) * u_Local4.b);
-		gl_FragColor.rgb = gl_FragColor.rgb + (lColor * max(norm.a, 0.3) * shadowMult * lightPower * lightRand);
-#else //!__RANDOMIZE_LIGHT_PIXELS__
-		gl_FragColor.rgb = gl_FragColor.rgb + (lColor * max(norm.a, 0.3) * shadowMult * lightPower);
-#endif //__RANDOMIZE_LIGHT_PIXELS__
+		float lightMult = clamp(reflectivePower * power * light_occlusion * phongFactor * shadowMult, 0.0, 1.0);
+
+		if (lightMult > 0.0)
+		{
+			lightColor *= lightMult;
+			lightColor = blinn_phong(N, E, -to_light_norm, lightColor, lightColor);
+			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, gl_FragColor.rgb + lightColor, LIGHT_BLEND_STRENGTH);
+		}
 	}
 
-	lightPower = clamp(1.0 - clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0), 0.0, 0.8);
-
-	if (u_lightCount > 0.0 && lightPower > 0.0)
+	if (u_lightCount > 0.0)
 	{
-		if (noSunPhong)
-		{// Invert phong value so we still have non-sun lights...
-			phongFactor = -u_Local1.r;
+		phongFactor = u_Local1.r;
+
+		if (phongFactor <= 0.0)
+		{// Never allow no phong...
+			phongFactor = 1.0;
 		}
 
 		vec3 addedLight = vec3(0.0);
+		float power = clamp(length(gl_FragColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+		power = pow(power, LIGHT_COLOR_POWER);
+		power = power * 0.5 + 0.5;
 
 		for (int li = 0; li < u_lightCount; li++)
 		{
@@ -376,43 +637,43 @@ void main(void)
 				lightDist -= length(lightPos.z - position.z);
 			}
 
-			float lightMax = u_lightDistances[li];
+			float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
+			float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
+			lightStrength *= lightDistMult * reflectivePower;
 
-			float lightDistMult = clamp(1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0), 0.0, 1.0);
-
-			if (lightDist < lightMax && lightDistMult > 0.0)
+			if (lightStrength > 0.0)
 			{
-				float lightStrength = 1.0 - clamp(lightDist / lightMax, 0.0, 1.0);
-				lightStrength = pow(lightStrength, 2.0);
+				vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a; // Normalize.
+				vec3 lightDir = normalize(lightPos - position.xyz);
+				float light_occlusion = 1.0;
+				
+				lightColor = lightColor * lightStrength * power;
 
-				if (lightStrength > 0.0)
+				addedLight.rgb += lightColor;
+
+				if (useOcclusion)
 				{
-					vec3 lightColor = u_lightColors[li].rgb;
-					vec3 lightDir = normalize(lightPos - position.xyz);
-					float light_occlusion = 1.0;
+					light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
+				}
 
-					addedLight.rgb += lightColor * lightStrength * lightDistMult * lightPower;// * u_Local3.g;
+				float lightMult = clamp(light_occlusion * phongFactor, 0.0, 1.0);
 
-					if (useOcclusion)
-					{
-						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
-					}
-
-					lightColor = lightStrength * lightDistMult * lightColor;
-
-					vec3 lColor = blinn_phong(N, E, lightDir, lightColor, lightColor);
-					addedLight.rgb += (lColor * light_occlusion * lightStrength * lightDistMult * reflectivePower * phongFactor * lightPower * 8.0);//u_Local3.r/*1.5*/);
+				if (lightMult > 0.0)
+				{
+					lightColor *= lightMult;
+					addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor);
 				}
 			}
 		}
 
-#ifdef __RANDOMIZE_LIGHT_PIXELS__
-		float lightRand = lrand(texCoords * length(addedLight.rgb) * u_Local4.b);
-		gl_FragColor.rgb = gl_FragColor.rgb + (addedLight * reflectivePower * lightRand);
-#else //!__RANDOMIZE_LIGHT_PIXELS__
-		gl_FragColor.rgb = gl_FragColor.rgb + (addedLight * reflectivePower);
-#endif //__RANDOMIZE_LIGHT_PIXELS__
+		//if (u_Local3.r >= 1.0)
+		//	gl_FragColor.rgb = addedLight;
+		//else
+			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, gl_FragColor.rgb + addedLight, LIGHT_BLEND_STRENGTH);
 	}
+
+	//if (u_Local3.a >= 1.0) // Realtime lightmap-ish type coloring/lighting...
+		gl_FragColor.rgb *= ((gl_FragColor.rgb / length(gl_FragColor.rgb)) * 3.0) * 0.25 + 0.75;
 
 #ifdef __AMBIENT_OCCLUSION__
 	if (u_Local1.b > 0.0)
@@ -429,8 +690,10 @@ void main(void)
 		float lightScale = clamp(1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
+		gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
 	}
 #endif //__ENVMAP__
+
+	//gl_FragColor.rgb = ContrastSaturationBrightness(gl_FragColor.rgb, 1.0, 1.0, 1.42);
 }
 

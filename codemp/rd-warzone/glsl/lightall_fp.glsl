@@ -696,10 +696,10 @@ void main()
 	}
 
 
-	if (USE_GLOW_BUFFER > 0.0 || USE_IS2D > 0.0)
+	//if (USE_GLOW_BUFFER > 0.0 || USE_IS2D > 0.0)
 		gl_FragColor.rgb = diffuse.rgb + ambientColor;
-	else
-		gl_FragColor.rgb = diffuse.rgb + (ambientColor * 0.6);
+	//else
+	//	gl_FragColor.rgb = diffuse.rgb + (ambientColor * 0.6);
 
 
 	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN /*&& u_Local1.a != MATERIAL_NONE*/)

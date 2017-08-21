@@ -732,12 +732,12 @@ void RB_ClearWaterPositionMap ( void )
 		FBO_Bind(NULL);
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 
-		FBO_Bind(tr.waterFbo2);
+		/*FBO_Bind(tr.waterFbo2);
 		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		qglClear( GL_COLOR_BUFFER_BIT );
 		FBO_Bind(NULL);
-		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);*/
 	}
 }
 

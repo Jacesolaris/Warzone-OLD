@@ -3509,7 +3509,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
 		{
-			radius = Q_clamp(0.0, radius, 128.0);
+			radius = Q_clamp(64.0, radius, 128.0);
 			VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
 
 			VectorScale(glowColor, 0.333, glowColor);

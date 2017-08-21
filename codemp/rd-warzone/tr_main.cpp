@@ -2805,7 +2805,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 
 			R_AddPolygonSurfaces();
 
-			if (level < 3)
+			if (level < 2)
 				R_AddEntitySurfaces ();
 
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
