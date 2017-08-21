@@ -8,7 +8,16 @@ void main (void)
 {
 	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
 
+	//gl_FragColor = vec4(color.rgb, 1.0);
+	//gl_FragColor = vec4(texture2D(u_DeluxeMap, var_TexCoords).rgb, 1.0);
+	//return;
+
 	//color.rgb = clamp(color.rgb, 0.0, 1.0);
+
+
+	//float maxBright = max(color.x, max(color.y, color.z));
+	//if (maxBright > 1.0) color.rgb /= maxBright;
+
 
 	//vec3 brightness = texture2D(u_GlowMap, vec2(0.5)).rgb; //adaptation luminance
 	//brightness = (brightness/(brightness+1.0));
@@ -18,6 +27,12 @@ void main (void)
 	float	min_color = clamp(min(color.r, min(color.g, color.b)), 0.0, 1.0); 	//Find the weakest color
 	float	luma = clamp(dot(lumCoeff, color.rgb), 0.0, 1.0); 							//Calculate luma (grey)
 	vec3	brightness = vec3(luma);
+	//brightness = (brightness/(brightness+1.0));
+	//brightness = vec3(max(brightness.x, max(brightness.y, brightness.z)));
+
+	//maxBright = max(brightness.x, max(brightness.y, brightness.z));
+	//if (maxBright > 1.0) brightness /= maxBright;
+	
 
 	vec3	palette;
 	vec2	uvsrc = vec2(0.0);
@@ -31,6 +46,8 @@ void main (void)
 	uvsrc.x = clamp(color.b, 0.0, 1.0);
 	uvsrc.y = brightness.b;
 	palette.b = texture2D(u_DeluxeMap, uvsrc).b;
+	//color.rgb = (color.rgb + (palette.rgb * color.rgb)) / 2.0;
+	//color.rgb = color.rgb * palette.rgb;
 	color.rgb = (color.rgb + (palette.rgb * color.rgb)) / 2.0;
 
 	gl_FragColor = vec4(color.rgb, 1.0);

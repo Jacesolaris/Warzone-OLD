@@ -1608,7 +1608,7 @@ void R_Register( void )
 	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.05", CVAR_ARCHIVE);
 	r_sse = ri->Cvar_Get("r_sse", "0", CVAR_ARCHIVE);
 	r_sseStrength = ri->Cvar_Get("r_sseStrength", "0.05", CVAR_ARCHIVE);
-	r_colorCorrection = ri->Cvar_Get( "r_colorCorrection", "1", CVAR_ARCHIVE );
+	r_colorCorrection = ri->Cvar_Get( "r_colorCorrection", "0", CVAR_ARCHIVE );
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );
 	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "10.0", CVAR_ARCHIVE );
 	r_trueAnaglyphRed = ri->Cvar_Get( "r_trueAnaglyphRed", "0.0", CVAR_ARCHIVE );

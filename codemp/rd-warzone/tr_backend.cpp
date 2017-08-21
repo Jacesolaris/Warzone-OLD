@@ -2610,12 +2610,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
-		if (r_colorCorrection->integer)
-		{
-			RB_ColorCorrection(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		/*if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
 			RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2793,12 +2787,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (r_trueAnaglyph->integer)
-		{
-			RB_Anaglyph(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_testshader->integer)
 		{
 			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
@@ -2811,6 +2799,12 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
+		if (r_colorCorrection->integer)
+		{
+			RB_ColorCorrection(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (!SCREEN_BLUR && r_showdepth->integer)
 		{
 			RB_ShowDepth(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2820,6 +2814,12 @@ const void *RB_PostProcess(const void *data)
 		if (!SCREEN_BLUR && r_shownormals->integer)
 		{
 			RB_ShowNormals(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (r_trueAnaglyph->integer)
+		{
+			RB_Anaglyph(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 

@@ -21,6 +21,7 @@ uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
 uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
+uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -326,7 +327,7 @@ vec3 HSLToRGB(vec3 hsl)
 		
 		rgb.r = HueToRGB(f1, f2, hsl.x + (1.0/3.0));
 		rgb.g = HueToRGB(f1, f2, hsl.x);
-		rgb.b= HueToRGB(f1, f2, hsl.x - (1.0/3.0));
+		rgb.b = HueToRGB(f1, f2, hsl.x - (1.0/3.0));
 	}
 	
 	return rgb;
@@ -340,7 +341,7 @@ vec3 HSLToRGB(vec3 hsl)
 */
 
 // For all settings: 1.0 = 100% 0.5=50% 1.5 = 150%
-vec3 ContrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+vec3 ContrastSaturationBrightness(vec3 color, float con, float sat, float brt)
 {
 	// Increase or decrease theese values to adjust r, g and b color channels seperately
 	const float AvgLumR = 0.5;
@@ -447,6 +448,18 @@ vec3 BlendLuminosity(vec3 base, vec3 blend)
 	return HSLToRGB(vec3(baseHSL.r, baseHSL.g, RGBToHSL(blend).b));
 }
 
+float blendSoftLight2(float base, float blend) {
+	return (blend<0.5)?(2.0*base*blend+base*base*(1.0-2.0*blend)):(sqrt(base)*(2.0*blend-1.0)+2.0*base*(1.0-blend));
+}
+
+vec3 blendSoftLight2(vec3 base, vec3 blend) {
+	return vec3(blendSoftLight2(base.r,blend.r),blendSoftLight2(base.g,blend.g),blendSoftLight2(base.b,blend.b));
+}
+
+vec3 blendSoftLight2(vec3 base, vec3 blend, float opacity) {
+	return (blendSoftLight2(base, blend) * opacity + base * (1.0 - opacity));
+}
+
 //#define DefaultBlend BlendHue
 //#define DefaultBlend BlendSaturation
 #define DefaultBlend BlendColor
@@ -469,7 +482,7 @@ vec3 BlendLuminosity(vec3 base, vec3 blend)
 #define LevelsControlOutputRange(color, minOutput, maxOutput) 			mix(vec3(minOutput), vec3(maxOutput), color)
 #define LevelsControl(color, minInput, gamma, maxInput, minOutput, maxOutput) 	LevelsControlOutputRange(LevelsControlInput(color, minInput, gamma, maxInput), minOutput, maxOutput)
 
-vec3 blendSoftLight(vec3 base, vec3 blend) {
+vec3 blendSoftLight3(vec3 base, vec3 blend) {
     return mix(
         sqrt(base) * (2.0 * blend - 1.0) + 2.0 * base * (1.0 - blend), 
         2.0 * base * blend + base * base * (1.0 - 2.0 * blend), 
@@ -480,7 +493,7 @@ vec3 blendSoftLight(vec3 base, vec3 blend) {
 void main(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
-	gl_FragColor = vec4(color.rgb, 1.0);
+	vec4 outColor = vec4(color.rgb, 1.0);
 
 	vec2 texCoords = var_TexCoords;
 
@@ -492,7 +505,13 @@ void main(void)
 
 	if (position.a == MATERIAL_SKY || position.a == MATERIAL_SUN || position.a == MATERIAL_NONE)
 	{// Skybox... Skip...
-		//gl_FragColor.rgb = ContrastSaturationBrightness(gl_FragColor.rgb, 1.0, 1.0, 1.42);
+		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
+		{
+			outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
+		}
+
+		outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
+		gl_FragColor = outColor;
 		return;
 	}
 
@@ -501,9 +520,9 @@ void main(void)
 	{// Debug position map by showing pixel distance from view...
 		float dist = distance(u_ViewOrigin.xyz, position.xyz);
 		float d = clamp(dist / u_Local3.r, 0.0, 1.0);
-		gl_FragColor.rgb = vec3(d);
-		gl_FragColor.a = 1.0;
-		//gl_FragColor.rgb = ContrastSaturationBrightness(gl_FragColor.rgb, 1.0, 1.0, 1.42);
+		outColor.rgb = vec3(d);
+		outColor.a = 1.0;
+		gl_FragColor = outColor;
 		return;
 	}
 #endif
@@ -544,8 +563,7 @@ void main(void)
 #define sm_cont_2 (255.0 / 200.0)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
 
-		gl_FragColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
-		//shadowMult = clamp(shadowValue, 0.2, 1.0);
+		outColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
 		shadowMult = clamp(shadowValue, 0.2, 1.0) * 0.75 + 0.25;
 	}
 #endif //defined(USE_SHADOWMAP)
@@ -582,10 +600,7 @@ void main(void)
 
 	float phongFactor = u_Local1.r * u_Local1.g;
 
-//#define LIGHT_COLOR_POWER			u_Local3.g
-//#define LIGHT_BLEND_STRENGTH		u_Local3.b
 #define LIGHT_COLOR_POWER			4.0
-#define LIGHT_BLEND_STRENGTH		0.25
 
 	if (phongFactor > 0.0)
 	{// this is blinn phong
@@ -596,7 +611,7 @@ void main(void)
 			light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
 		}
 
-		float power = clamp(length(gl_FragColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+		float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
 		power = pow(power, LIGHT_COLOR_POWER);
 		power = power * 0.5 + 0.5;
 		
@@ -608,7 +623,9 @@ void main(void)
 		{
 			lightColor *= lightMult;
 			lightColor = blinn_phong(N, E, -to_light_norm, lightColor, lightColor);
-			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, gl_FragColor.rgb + lightColor, LIGHT_BLEND_STRENGTH);
+			float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
+			lightColor *= maxStr;
+			outColor.rgb = outColor.rgb + lightColor;
 		}
 	}
 
@@ -622,9 +639,11 @@ void main(void)
 		}
 
 		vec3 addedLight = vec3(0.0);
-		float power = clamp(length(gl_FragColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+		float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
 		power = pow(power, LIGHT_COLOR_POWER);
 		power = power * 0.5 + 0.5;
+
+		float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 
 		for (int li = 0; li < u_lightCount; li++)
 		{
@@ -649,7 +668,7 @@ void main(void)
 				
 				lightColor = lightColor * lightStrength * power;
 
-				addedLight.rgb += lightColor;
+				//addedLight.rgb += lightColor;
 
 				if (useOcclusion)
 				{
@@ -661,39 +680,43 @@ void main(void)
 				if (lightMult > 0.0)
 				{
 					lightColor *= lightMult;
+					lightColor *= maxStr;
 					addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor);
 				}
 			}
 		}
 
-		//if (u_Local3.r >= 1.0)
-		//	gl_FragColor.rgb = addedLight;
-		//else
-			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, gl_FragColor.rgb + addedLight, LIGHT_BLEND_STRENGTH);
+		outColor.rgb = outColor.rgb + addedLight;
 	}
 
 	//if (u_Local3.a >= 1.0) // Realtime lightmap-ish type coloring/lighting...
-		gl_FragColor.rgb *= ((gl_FragColor.rgb / length(gl_FragColor.rgb)) * 3.0) * 0.25 + 0.75;
+		outColor.rgb *= ((outColor.rgb / length(outColor.rgb)) * 3.0) * 0.25 + 0.75;
 
 #ifdef __AMBIENT_OCCLUSION__
 	if (u_Local1.b > 0.0)
 	{
 		float ao = calculateAO(to_light_norm, N * 10000.0);
 		ao = clamp(ao, 0.3, 1.0);
-		gl_FragColor.rgb *= ao;
+		outColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
 
 #ifdef __ENVMAP__
 	if (u_Local1.a > 0.0)
 	{
-		float lightScale = clamp(1.0 - max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b), 0.0, 1.0);
+		float lightScale = clamp(1.0 - max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, gl_FragColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
+		outColor.rgb = QuickMix(outColor.rgb, outColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
 	}
 #endif //__ENVMAP__
 
-	//gl_FragColor.rgb = ContrastSaturationBrightness(gl_FragColor.rgb, 1.0, 1.0, 1.42);
+	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
+	{
+		outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
+	}
+
+	outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
+	gl_FragColor = outColor;
 }
 
