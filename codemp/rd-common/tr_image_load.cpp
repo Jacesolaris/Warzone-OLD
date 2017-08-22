@@ -1,4 +1,5 @@
 #include "tr_common.h"
+#include "qgl.h"
 
 const int MAX_IMAGE_LOADERS = 10;
 struct ImageLoaderMap
@@ -55,12 +56,16 @@ qboolean R_ImageLoader_Add ( const char *extension, ImageLoaderFn imageLoader )
 	return qtrue;
 }
 
+
 /*
 =================
 Initializes the image loader, and adds the built-in
 image loaders
 =================
 */
+
+//extern void LoadDDS(const char *filename, byte **data, int *width, int *height);
+
 void R_ImageLoader_Init()
 {
 	Com_Memset (imageLoaders, 0, sizeof (imageLoaders));
@@ -69,6 +74,7 @@ void R_ImageLoader_Init()
 	R_ImageLoader_Add ("jpg", LoadJPG);
 	R_ImageLoader_Add ("png", LoadPNG);
 	R_ImageLoader_Add ("tga", LoadTGA);
+	//R_ImageLoader_Add ("dds", LoadDDS);
 }
 
 /*
@@ -81,7 +87,7 @@ void R_LoadImage( const char *shortname, byte **pic, int *width, int *height ) {
 	*pic = NULL;
 	*width = 0;
 	*height = 0;
-
+	
 	// Try loading the image with the original extension (if possible).
 	const char *extension = COM_GetExtension (shortname);
 	const ImageLoaderMap *imageLoader = FindImageLoader (extension);

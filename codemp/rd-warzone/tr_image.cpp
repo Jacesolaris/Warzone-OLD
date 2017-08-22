@@ -3124,14 +3124,13 @@ static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int heig
 }
 #endif
 
-void R_GetTextureAverageColor(const byte *in, int width, int height, float *avgColor)
+void R_GetTextureAverageColor(const byte *in, int width, int height, qboolean USE_ALPHA, float *avgColor)
 {
 	int NUM_PIXELS = 0;
 	vec3_t average = { 0 };
 
 	if (!in) return;
 
-	qboolean USE_ALPHA = RawImage_HasAlpha(in, width * height);
 	//ri->Printf(PRINT_WARNING, "USE_ALPHA: %s\n", USE_ALPHA ? "true" : "false");
 
 	byte *inByte = (byte *)&in[0];
@@ -3357,6 +3356,63 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 }
 #endif //__DEFERRED_IMAGE_LOADING__
 
+//extern void R_LoadDDS(const char *filename, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips);
+
+#define __TINY_IMAGE_LOADER__
+
+#ifdef __TINY_IMAGE_LOADER__
+#include "TinyImageLoader\TinyImageLoader.h"
+
+qboolean TIL_INITIALIZED = qfalse;
+
+char *R_TIL_TextureFileExists(const char *name)
+{
+	char texName[MAX_IMAGE_PATH] = { 0 };
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.dds", name);
+
+	//ri->Printf(PRINT_WARNING, "trying: %s.\n", name);
+
+	if (ri->FS_FileExists(texName))
+	{
+		//ri->Printf(PRINT_WARNING, "found: %s.\n", texName);
+		return "dds";
+	}
+
+	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.gif", name);
+
+	if (ri->FS_FileExists(texName))
+	{
+		//ri->Printf(PRINT_WARNING, "found: %s.\n", texName);
+		return "gif";
+	}
+
+	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.bmp", name);
+
+	if (ri->FS_FileExists(texName))
+	{
+		//ri->Printf(PRINT_WARNING, "found: %s.\n", texName);
+		return "bmp";
+	}
+
+	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.ico", name);
+
+	if (ri->FS_FileExists(texName))
+	{
+		//ri->Printf(PRINT_WARNING, "found: %s.\n", texName);
+		return "ico";
+	}
+
+	return NULL;
+}
+#endif //__TINY_IMAGE_LOADER__
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -3406,23 +3462,71 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	//
 	// load the pic from disk
 	//
-#pragma omp critical
+#if 0
+	GLenum picFormat = GL_RGBA8;
+	int picNumMips = 0;
+#endif
+
+	R_LoadImage(name, &pic, &width, &height);
+
+#ifdef __TINY_IMAGE_LOADER__
+	qboolean isTIL = qfalse;
+	til::Image *tImage = NULL;
+
+	if (pic == NULL)
 	{
-		R_LoadImage(name, &pic, &width, &height);
+		char *ext = R_TIL_TextureFileExists(name);
+
+		if (ext)
+		{
+			if (!TIL_INITIALIZED)
+			{
+				til::TIL_Init();
+				TIL_INITIALIZED = qfalse;
+			}
+
+			char fullPath[1024] = { 0 };
+			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
+			tImage = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+
+			if (tImage && tImage->GetHeight() > 0 && tImage->GetWidth() > 0)
+			{
+				width = tImage->GetWidth();
+				height = tImage->GetHeight();
+				pic = tImage->GetPixels();
+				isTIL = qtrue;
+				//ri->Printf(PRINT_WARNING, "TIL: Loaded image %s. Size %i x %i.\n", fullPath, width, height);
+			}
+		}
 	}
+#endif //__TINY_IMAGE_LOADER__
+
+/*
+	// If compressed textures are enabled, try loading a DDS first, it'll load fastest
+	if (pic == NULL)
+	{
+		if (r_ext_compressed_textures->integer)
+		{
+			char ddsName[MAX_QPATH] = { 0 };
+			COM_StripExtension(name, ddsName, MAX_QPATH);
+			Q_strcat(ddsName, MAX_QPATH, ".dds");
+			R_LoadDDS(ddsName, &pic, &width, &height, &picFormat, &picNumMips);
+		}
+	}
+*/
 
 	if ( pic == NULL ) {
 		return NULL;
 	}
 
+	qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
+
 	vec4_t avgColor = { 0 };
-	R_GetTextureAverageColor(pic, width, height, avgColor);
+	R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
 	
 	//if (flags & IMGFLAG_GLOW)
 	//	ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
 	
-	qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
-
 	if (r_cartoon->integer 
 		&& type != IMGTYPE_DETAILMAP 
 		&& type != IMGTYPE_SPLATCONTROLMAP
@@ -3435,6 +3539,15 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	{
 		if (!USE_ALPHA)
 		{
+#ifdef __TINY_IMAGE_LOADER__
+			if (isTIL)
+			{
+				til::TIL_Release(tImage);
+				pic = NULL;
+				isTIL = qfalse;
+			}
+			else
+#endif
 			Z_Free(pic);
 
 			width = height = 2;
@@ -3483,6 +3596,15 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 			flags |= IMGFLAG_MIPMAP;
 
+#ifdef __TINY_IMAGE_LOADER__
+			if (isTIL)
+			{
+				til::TIL_Release(tImage);
+				pic2 = NULL;
+				isTIL = qfalse;
+			}
+			else
+#endif
 			Z_Free(pic2);
 		}
 	}
@@ -3491,6 +3613,22 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	{// UQ: Testing mipmap all...
 		flags |= IMGFLAG_MIPMAP;
 	}
+
+/*
+	// force mipmaps off if image is compressed but doesn't have enough mips
+	if ((flags & IMGFLAG_MIPMAP) && picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT)
+	{
+		int wh = MAX(width, height);
+		int neededMips = 0;
+		while (wh)
+		{
+			neededMips++;
+			wh >>= 1;
+		}
+		if (neededMips > picNumMips)
+			flags &= ~IMGFLAG_MIPMAP;
+	}
+*/
 
 	if ((flags & IMGFLAG_NO_COMPRESSION))
 	{// UQ: Testing compress all...
@@ -3550,6 +3688,17 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		R_CreateWaterEdgeMap( name, pic, width, height, flags );
 	}
 
+#ifdef __TINY_IMAGE_LOADER__
+	if (isTIL)
+	{
+		if (tImage)
+		{
+			til::TIL_Release(tImage);
+			pic = NULL;
+		}
+	}
+	else
+#endif
 	Z_Free( pic );
 	
 	return image;

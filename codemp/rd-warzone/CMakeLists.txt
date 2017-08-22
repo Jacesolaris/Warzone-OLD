@@ -40,6 +40,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_ghoul2.cpp"
 	"${MPDir}/rd-warzone/tr_glsl.cpp"
 	"${MPDir}/rd-warzone/tr_image.cpp"
+	"${MPDir}/rd-warzone/tr_image_dds.cpp"
 	"${MPDir}/rd-warzone/tr_init.cpp"
 	"${MPDir}/rd-warzone/tr_instancing.cpp"
 	"${MPDir}/rd-warzone/tr_instancing.h"
@@ -130,6 +131,35 @@ set(MPWarzoneMaskedOcclusionCullingFiles
 	"${MPDir}/rd-warzone/MaskedOcclusionCulling/README.md")
 source_group("MaskedOcclusionCulling" FILES ${MPWarzoneMaskedOcclusionCullingFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneMaskedOcclusionCullingFiles})
+
+set(MPWarzoneTinyImageLoaderFiles
+	"${MPDir}/TinyImageLoader/TILColors.h"
+	"${MPDir}/TinyImageLoader/TILFileStream.cpp"
+	"${MPDir}/TinyImageLoader/TILFileStream.h"
+	"${MPDir}/TinyImageLoader/TILFileStreamStd.cpp"
+	"${MPDir}/TinyImageLoader/TILFileStreamStd.h"
+	"${MPDir}/TinyImageLoader/TILImage.cpp"
+	"${MPDir}/TinyImageLoader/TILImage.h"
+	"${MPDir}/TinyImageLoader/TILImageBMP.cpp"
+	"${MPDir}/TinyImageLoader/TILImageBMP.h"
+	"${MPDir}/TinyImageLoader/TILImageDDS.cpp"
+	"${MPDir}/TinyImageLoader/TILImageDDS.h"
+	"${MPDir}/TinyImageLoader/TILImageGIF.cpp"
+	"${MPDir}/TinyImageLoader/TILImageGIF.h"
+	"${MPDir}/TinyImageLoader/TILImageICO.cpp"
+	"${MPDir}/TinyImageLoader/TILImageICO.h"
+	"${MPDir}/TinyImageLoader/TILImagePNG.cpp"
+	"${MPDir}/TinyImageLoader/TILImagePNG.h"
+	"${MPDir}/TinyImageLoader/TILImageTemplate.cpp"
+	"${MPDir}/TinyImageLoader/TILImageTemplate.h"
+	"${MPDir}/TinyImageLoader/TILImageTGA.cpp"
+	"${MPDir}/TinyImageLoader/TILImageTGA.h"
+	"${MPDir}/TinyImageLoader/TILInternal.h"
+	"${MPDir}/TinyImageLoader/TILSettings.h"
+	"${MPDir}/TinyImageLoader/TinyImageLoader.cpp"
+	"${MPDir}/TinyImageLoader/TinyImageLoader.h")
+source_group("ghoul2" FILES ${MPWarzoneTinyImageLoaderFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneTinyImageLoaderFiles})
 
 set(MPWarzoneRdCommonFiles
 	"${MPDir}/rd-common/mdx_format.h"
