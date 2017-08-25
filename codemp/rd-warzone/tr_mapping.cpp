@@ -1181,6 +1181,9 @@ vec3_t		MAP_AMBIENT_CSB = { 1 };
 vec3_t		MAP_AMBIENT_COLOR = { 1 };
 float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
 float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
+qboolean	AO_ENABLED = qtrue;
+float		AO_MINBRIGHT = 0.3;
+float		AO_MULTBRIGHT = 1.0;
 qboolean	SHADOWS_ENABLED = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
 float		SHADOW_MAXBRIGHT = 1.0;
@@ -1257,6 +1260,13 @@ void MAPPING_LoadMapInfo(void)
 	MAP_AMBIENT_CSB[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_CONTRAST", "1.0"));
 	MAP_AMBIENT_CSB[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_SATURATION", "1.0"));
 	MAP_AMBIENT_CSB[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_BRIGHTNESS", "1.0"));
+
+	//
+	// Ambient Occlusion...
+	//
+	AO_ENABLED = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	AO_MINBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MINBRIGHT", "0.3"));
+	AO_MULTBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MULTBRIGHT", "1.0"));
 
 	//
 	// Emission...
@@ -1359,6 +1369,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Standard fog is ^7%s^5 on this map.\n", FOG_STANDARD_ENABLE ? "ENABLED" : "DISABLED");

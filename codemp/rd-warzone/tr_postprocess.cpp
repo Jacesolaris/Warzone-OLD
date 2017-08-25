@@ -2250,6 +2250,9 @@ extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
 extern float		SUN_PHONG_SCALE;
 extern float		SHADOW_MINBRIGHT;
 extern float		SHADOW_MAXBRIGHT;
+extern qboolean		AO_ENABLED;
+extern float		AO_MINBRIGHT;
+extern float		AO_MULTBRIGHT;
 extern vec3_t		MAP_AMBIENT_CSB;
 
 #ifdef __PLAYER_BASED_CUBEMAPS__
@@ -2357,7 +2360,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	vec4_t local1;
-	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, r_ao->integer ? 1.0 : 0.0, r_env->integer ? 1.0 : 0.0);
+	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, (r_ao->integer && AO_ENABLED) ? 1.0 : 0.0, r_env->integer ? 1.0 : 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL1, local1);
 
 	vec4_t local2;
@@ -2375,6 +2378,10 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	vec4_t local5;
 	VectorSet4(local5, MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2], 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL5, local5);
+
+	vec4_t local6;
+	VectorSet4(local6, AO_MINBRIGHT, AO_MULTBRIGHT, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL6, local6);
 
 	{
 		vec2_t screensize;

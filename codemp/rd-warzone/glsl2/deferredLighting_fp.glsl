@@ -22,6 +22,7 @@ uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBR
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, 0.0
+uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, 0.0, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -191,6 +192,11 @@ float calculateAO(in vec3 pos, in vec3 nor)
         sca *= 0.7;
     }
     return clamp( 1.0 - occ, 0.0, 1.0 );    
+}
+
+// that is really shitty AO but at least unlit fragments do not look so plain... :)
+float bad_ao(vec3 n) {
+    return abs(dot(n, vec3(0.0, 1.0, 0.0))); 
 }
 #endif //__AMBIENT_OCCLUSION__
 
@@ -696,7 +702,7 @@ void main(void)
 	if (u_Local1.b > 0.0)
 	{
 		float ao = calculateAO(to_light_norm, N * 10000.0);
-		ao = clamp(ao, 0.3, 1.0);
+		ao = clamp(ao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 		outColor.rgb *= ao;
 	}
 #endif //__AMBIENT_OCCLUSION__
