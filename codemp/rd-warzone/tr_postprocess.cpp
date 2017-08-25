@@ -1383,34 +1383,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	return qtrue;
 }
 
-void RB_HDR(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
-{
-	vec4_t color;
-
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
-
-	GLSL_BindProgram(&tr.hdrShader);
-
-	GLSL_SetUniformMatrix16(&tr.hdrShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-	GLSL_SetUniformInt(&tr.hdrShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.hdrShader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hdrShader, color, 0);
-}
-
 void RB_MagicDetail(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2202,30 +2174,6 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 }
 
-void RB_Vibrancy(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
-{
-	vec4_t color;
-
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
-
-	GLSL_BindProgram(&tr.vibrancyShader);
-
-	GLSL_SetUniformInt(&tr.vibrancyShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-
-	{
-		vec4_t info;
-		VectorSet4(info, r_vibrancy->value, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(&tr.vibrancyShader, UNIFORM_LOCAL0, info);
-	}
-
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.vibrancyShader, color, 0);
-}
-
 extern bool RealInvertMatrix(const float m[16], float invOut[16]);
 extern void RealTransposeMatrix(const float m[16], float invOut[16]);
 extern void myInverseMatrix (float m[16], float src[16]);
@@ -2376,11 +2324,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL4, local4);
 
 	vec4_t local5;
-	VectorSet4(local5, MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2], 0.0);
+	VectorSet4(local5, MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2], r_truehdr->integer ? 1.0 : 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL5, local5);
 
 	vec4_t local6;
-	VectorSet4(local6, AO_MINBRIGHT, AO_MULTBRIGHT, 0.0, 0.0);
+	VectorSet4(local6, AO_MINBRIGHT, AO_MULTBRIGHT, r_vibrancy->value, 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL6, local6);
 
 	{

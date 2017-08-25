@@ -312,7 +312,7 @@ void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float
 	dl->heightScale = heightScale;
 }
 
-extern void R_AddVibrancy(float *color, float vibrancy);
+extern void R_AddLightVibrancy(float *color, float vibrancy);
 
 /*
 =====================
@@ -323,7 +323,7 @@ RE_AddLightToScene
 void RE_AddLightToScene(const vec3_t org, float intensity, float r, float g, float b) {
 	/* UQ1: Additional vibrancy for lighting */
 	vec3_t color = { r, g, b };
-	R_AddVibrancy(color, 4.0);
+	R_AddLightVibrancy(color, 4.0);
 	VectorNormalize(color);
 	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qfalse, qfalse, 0);
 }
@@ -337,7 +337,7 @@ RE_AddAdditiveLightToScene
 void RE_AddAdditiveLightToScene(const vec3_t org, float intensity, float r, float g, float b) {
 	/* UQ1: Additional vibrancy for lighting */
 	vec3_t color = { r, g, b };
-	R_AddVibrancy(color, 4.0);
+	R_AddLightVibrancy(color, 4.0);
 	VectorNormalize(color);
 	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qtrue, qfalse, 0);
 }

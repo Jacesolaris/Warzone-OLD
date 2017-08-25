@@ -2589,7 +2589,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t ssdoBlurShader;
 	shaderProgram_t generateNormalMapShader;
 	shaderProgram_t darkexpandShader;
-	shaderProgram_t hdrShader;
 	shaderProgram_t magicdetailShader;
 	shaderProgram_t cellShadeShader;
 	shaderProgram_t paintShader;
@@ -2620,7 +2619,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t volumeLightShader[3];
 	shaderProgram_t volumeLightInvertedShader[3];
 	shaderProgram_t volumeLightCombineShader;
-	shaderProgram_t vibrancyShader;
 	shaderProgram_t fastBlurShader[3];
 	shaderProgram_t bloomRaysShader;
 	shaderProgram_t distanceBlurShader[4];

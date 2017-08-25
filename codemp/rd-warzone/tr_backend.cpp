@@ -2728,12 +2728,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (r_truehdr->integer)
-		{
-			RB_HDR(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_bloom->integer == 1 )
 		{
 			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2775,16 +2769,10 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_dynamiclight->integer)
+		if (!SCREEN_BLUR /*&& r_dynamiclight->integer*/)
 		{
 			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
 				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (r_vibrancy->value > 0.0)
-		{
-			RB_Vibrancy(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_testshader->integer)

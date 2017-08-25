@@ -73,8 +73,6 @@ extern const char *fallbackShader_occlusion_vp;
 extern const char *fallbackShader_occlusion_fp;
 extern const char *fallbackShader_generateNormalMap_vp;
 extern const char *fallbackShader_generateNormalMap_fp;
-extern const char *fallbackShader_truehdr_vp;
-extern const char *fallbackShader_truehdr_fp;
 extern const char *fallbackShader_magicdetail_vp;
 extern const char *fallbackShader_magicdetail_fp;
 extern const char *fallbackShader_volumelight_vp;
@@ -132,8 +130,6 @@ extern const char *fallbackShader_lensflare_vp;
 extern const char *fallbackShader_lensflare_fp;
 extern const char *fallbackShader_multipost_vp;
 extern const char *fallbackShader_multipost_fp;
-extern const char *fallbackShader_vibrancy_vp;
-extern const char *fallbackShader_vibrancy_fp;
 extern const char *fallbackShader_underwater_vp;
 extern const char *fallbackShader_underwater_fp;
 extern const char *fallbackShader_fxaa_vp;
@@ -3245,14 +3241,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.hdrShader, "hdr", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_truehdr_vp, fallbackShader_truehdr_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load hdr shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
 	if (!GLSL_BeginLoadGPUShader(&tr.cellShadeShader, "cellShade", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_cellShade_vp, fallbackShader_cellShade_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load cellShade shader!");
@@ -3490,14 +3478,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.dofShader[2], "depthOfField2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthOfField2_vp, fallbackShader_depthOfField2_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load depthOfField2 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.vibrancyShader, "vibrancy", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_vibrancy_vp, fallbackShader_vibrancy_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load vibrancy shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -4407,50 +4387,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.hdrShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load hdr shader!");
-	}
-
-	GLSL_InitUniforms(&tr.hdrShader);
-
-	qglUseProgram(tr.hdrShader.program);
-
-	GLSL_SetUniformInt(&tr.hdrShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.hdrShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.hdrShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.hdrShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.hdrShader);
-#endif
-
-	numEtcShaders++;
-
-
-
 
 	if (!GLSL_EndLoadGPUShader(&tr.cellShadeShader))
 	{
@@ -4644,32 +4580,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		numEtcShaders++;
 	}
 
-	if (!GLSL_EndLoadGPUShader(&tr.vibrancyShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load vibrancy shader!");
-	}
-
-	GLSL_InitUniforms(&tr.vibrancyShader);
-
-	qglUseProgram(tr.vibrancyShader.program);
-
-	GLSL_SetUniformInt(&tr.vibrancyShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(&tr.vibrancyShader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.vibrancyShader);
-#endif
-
-	numEtcShaders++;
 
 
 
@@ -5568,7 +5478,6 @@ void GLSL_ShutdownGPUShaders(void)
 
 	// UQ1: Added...
 	GLSL_DeleteGPUShader(&tr.darkexpandShader);
-	GLSL_DeleteGPUShader(&tr.hdrShader);
 	GLSL_DeleteGPUShader(&tr.magicdetailShader);
 	GLSL_DeleteGPUShader(&tr.cellShadeShader);
 	GLSL_DeleteGPUShader(&tr.paintShader);
@@ -5602,7 +5511,6 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[1]);
 	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[2]);
 	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
-	GLSL_DeleteGPUShader(&tr.vibrancyShader);
 	GLSL_DeleteGPUShader(&tr.fastBlurShader[0]);
 	GLSL_DeleteGPUShader(&tr.fastBlurShader[1]);
 	GLSL_DeleteGPUShader(&tr.fastBlurShader[2]);

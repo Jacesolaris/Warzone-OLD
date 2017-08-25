@@ -3420,7 +3420,7 @@ float sign(float x)
 	return 0.0;
 }
 
-void R_AddVibrancy(float *color, float vibrancy)
+void R_AddLightVibrancy(float *color, float vibrancy)
 {
 	vec3_t	lumCoeff = { 0.212656, 0.715158, 0.072186 };  						//Calculate luma with these values
 	float	max_color = max(color[0], max(color[1], color[2])); 	//Find the strongest color
@@ -3515,7 +3515,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			VectorScale(glowColor, 0.333, glowColor);
 			VectorNormalize(glowColor);
 			VectorScale(glowColor, emissiveColorScale, glowColor);
-			R_AddVibrancy(glowColor, 0.4);
+			R_AddLightVibrancy(glowColor, 0.4);
 			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
 			
 			MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 3.0;
