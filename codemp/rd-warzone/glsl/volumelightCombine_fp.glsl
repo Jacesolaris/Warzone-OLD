@@ -68,8 +68,8 @@ void main()
 #endif
 
 #ifdef RANDOMIZE_PIXELS
-	gl_FragColor = vec4(diffuseColor.rgb + (volumeLight*rand(var_ScreenTex * length(volumeLight.rgb) * u_Local1.r)), 1.0);
-#else
+	volumeLight *= rand(var_ScreenTex * length(volumeLight.rgb) * u_Local1.r);
+#endif
+
 	gl_FragColor = vec4(diffuseColor.rgb + volumeLight, 1.0);
-#endif	
 }
