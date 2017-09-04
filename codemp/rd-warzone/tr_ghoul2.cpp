@@ -2451,7 +2451,11 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 			shader = R_GetShaderByHandle( surfInfo->shaderIndex );
 		}
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+		int cubemapIndex = 0;
+#else
 		int cubemapIndex = R_CubemapForPoint (tr.currentEntity->e.origin);
+#endif
 
 		// don't add third_person objects if not viewing through a portal
 		if ( !RS.personalModel ) 

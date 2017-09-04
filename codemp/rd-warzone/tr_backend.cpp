@@ -982,9 +982,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	{
 		currentPlayerCubemap = R_CubemapForPoint(tr.refdef.vieworg);
 
-		currentPlayerCubemapVec[0] = tr.cubemapOrigins[currentPlayerCubemap - 1][0] - tr.refdef.vieworg/*backEnd.viewParms.ori.origin*/[0];
-		currentPlayerCubemapVec[1] = tr.cubemapOrigins[currentPlayerCubemap - 1][1] - tr.refdef.vieworg/*backEnd.viewParms.ori.origin*/[1];
-		currentPlayerCubemapVec[2] = tr.cubemapOrigins[currentPlayerCubemap - 1][2] - tr.refdef.vieworg/*backEnd.viewParms.ori.origin*/[2];
+		currentPlayerCubemapVec[0] = tr.cubemapOrigins[currentPlayerCubemap - 1][0] - tr.refdef.vieworg[0];
+		currentPlayerCubemapVec[1] = tr.cubemapOrigins[currentPlayerCubemap - 1][1] - tr.refdef.vieworg[1];
+		currentPlayerCubemapVec[2] = tr.cubemapOrigins[currentPlayerCubemap - 1][2] - tr.refdef.vieworg[2];
 		currentPlayerCubemapVec[3] = 1.0f;
 
 		currentPlayerCubemapDistance = Distance(tr.refdef.vieworg, tr.cubemapOrigins[currentPlayerCubemap - 1]);

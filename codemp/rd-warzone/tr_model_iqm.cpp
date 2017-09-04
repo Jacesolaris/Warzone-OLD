@@ -896,6 +896,9 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	//
 	fogNum = R_ComputeIQMFogNum( data, ent );
 
+#ifdef __PLAYER_BASED_CUBEMAPS__
+	cubemapIndex = 0;
+#else
 	if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
 		cubemapIndex = 0;
 	else if (r_cubeMapping->integer >= 2)
@@ -903,8 +906,9 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	else
 		cubemapIndex = 0;
 
-	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value)
+	if (cubemapIndex > 0 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value)
 		cubemapIndex = 0;
+#endif
 
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
 		if(ent->e.customShader)

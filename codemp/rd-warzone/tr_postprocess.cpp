@@ -791,7 +791,8 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.bloomRaysShader, color, 0);
 
-	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.bloomRaysShader, color, 0);
+	//FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.bloomRaysShader, color, 0);
+	FBO_BlitFromTexture(tr.anamorphicRenderFBOImage, NULL, NULL, tr.volumetricFbo, NULL, &tr.bloomRaysShader, color, 0);
 
 	// Combine render and bloomrays...
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
@@ -1352,7 +1353,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GLSL_SetUniformFloat(shader, UNIFORM_VLIGHTDISTANCES, 0.1);
 
 
-	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, shader, color, 0);
+	//FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, shader, color, 0);
+	FBO_BlitFromTexture(tr.anamorphicRenderFBOImage, NULL, NULL, tr.volumetricFbo, NULL, shader, color, 0);
 
 	// Combine render and volumetrics...
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
