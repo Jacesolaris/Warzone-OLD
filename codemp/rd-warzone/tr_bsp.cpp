@@ -727,7 +727,9 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	}
 
 	// get fog volume
+#ifdef __Q3_FOG__
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+#endif //__Q3_FOG__
 
 	// get shader value
 	surf->shader = ShaderForShaderNum( ds->shaderNum, realLightmapNum, ds->lightmapStyles, ds->vertexStyles);
@@ -890,8 +892,10 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 		realLightmapNum[j] = FatLightmap (LittleLong (ds->lightmapNum[j]));
 	}
 
+#ifdef __Q3_FOG__
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+#endif //__Q3_FOG__
 
 	// get shader value
 	surf->shader = ShaderForShaderNum( ds->shaderNum, realLightmapNum, ds->lightmapStyles, ds->vertexStyles );
@@ -996,8 +1000,10 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	int             i, j;
 	int             numVerts, numIndexes, badTriangles;
 
+#ifdef __Q3_FOG__
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+#endif //__Q3_FOG__
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, lightmapsVertex, ds->lightmapStyles, ds->vertexStyles );
@@ -1142,8 +1148,10 @@ static void ParseFlare( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int
 	srfFlare_t		*flare;
 	int				i;
 
+#ifdef __Q3_FOG__
 	// get fog volume
 	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+#endif //__Q3_FOG__
 
 	// get shader
 	surf->shader = ShaderForShaderNum( ds->shaderNum, lightmapsVertex, ds->lightmapStyles, ds->vertexStyles );
@@ -1892,19 +1900,23 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	else if(aa->shader->sortedIndex > bb->shader->sortedIndex)
 		return 1;
 
+#ifdef __Q3_FOG__
 	// by fogIndex
 	if(aa->fogIndex < bb->fogIndex)
 		return -1;
 
 	else if(aa->fogIndex > bb->fogIndex)
 		return 1;
+#endif //__Q3_FOG__
 
+#ifndef __PLAYER_BASED_CUBEMAPS__
 	// by cubemapIndex
 	if(aa->cubemapIndex < bb->cubemapIndex)
 		return -1;
 
 	else if(aa->cubemapIndex > bb->cubemapIndex)
 		return 1;
+#endif //__PLAYER_BASED_CUBEMAPS__
 
 	return 0;
 }
@@ -3771,7 +3783,9 @@ void R_MergeLeafSurfaces(void)
 #if defined(__PLAYER_BASED_CUBEMAPS__)
 			msurface_t *surf1;
 			shader_t *shader1;
+#ifdef __Q3_FOG__
 			int fogIndex1;
+#endif //__Q3_FOG__
 			int cubemapIndex1;
 			int surfNum1;
 
@@ -3793,7 +3807,9 @@ void R_MergeLeafSurfaces(void)
 			if (ShaderRequiresCPUDeforms(shader1))
 				continue;
 
+#ifdef __Q3_FOG__
 			fogIndex1 = surf1->fogIndex;
+#endif //__Q3_FOG__
 
 			cubemapIndex1 = surf1->cubemapIndex;
 
@@ -3820,7 +3836,9 @@ void R_MergeLeafSurfaces(void)
 #elif defined(__MERGE_MORE__)
 			msurface_t *surf1;
 			shader_t *shader1;
+#ifdef __Q3_FOG__
 			int fogIndex1;
+#endif //__Q3_FOG__
 			int cubemapIndex1;
 			int surfNum1;
 
@@ -3842,7 +3860,9 @@ void R_MergeLeafSurfaces(void)
 			if(ShaderRequiresCPUDeforms(shader1))
 				continue;
 
+#ifdef __Q3_FOG__
 			fogIndex1 = surf1->fogIndex;
+#endif //__Q3_FOG__
 			
 			cubemapIndex1 = surf1->cubemapIndex;
 
@@ -3912,7 +3932,9 @@ void R_MergeLeafSurfaces(void)
 #else //!__MERGE_MORE__
 			msurface_t *surf1;
 			shader_t *shader1;
+#ifdef __Q3_FOG__
 			int fogIndex1;
+#endif //__Q3_FOG__
 			int cubemapIndex1;
 			int surfNum1;
 
@@ -3937,7 +3959,9 @@ void R_MergeLeafSurfaces(void)
 			if(ShaderRequiresCPUDeforms(shader1))
 				continue;
 
+#ifdef __Q3_FOG__
 			fogIndex1 = surf1->fogIndex;
+#endif //__Q3_FOG__
 			
 			cubemapIndex1 = surf1->cubemapIndex;
 
@@ -3947,7 +3971,9 @@ void R_MergeLeafSurfaces(void)
 			{
 				msurface_t *surf2;
 				shader_t *shader2;
+#ifdef __Q3_FOG__
 				int fogIndex2;
+#endif //__Q3_FOG__
 				int cubemapIndex2;
 				int surfNum2;
 
@@ -3968,10 +3994,12 @@ void R_MergeLeafSurfaces(void)
 					continue;
 				}
 
+#ifdef __Q3_FOG__
 				fogIndex2 = surf2->fogIndex;
 
 				if (fogIndex1 != fogIndex2)
 					continue;
+#endif //__Q3_FOG__
 
 				cubemapIndex2 = surf2->cubemapIndex;
 
@@ -4164,7 +4192,9 @@ void R_MergeLeafSurfaces(void)
 
 		mergedSurf->cullinfo.type = CULLINFO_BOX;
 		mergedSurf->data          = (surfaceType_t *)vboSurf;
+#ifdef __Q3_FOG__
 		mergedSurf->fogIndex      = surf1->fogIndex;
+#endif //__Q3_FOG__
 		mergedSurf->cubemapIndex  = surf1->cubemapIndex;
 		mergedSurf->shader        = surf1->shader;
 

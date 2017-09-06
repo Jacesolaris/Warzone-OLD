@@ -1721,7 +1721,9 @@ typedef struct drawSurf_s {
 typedef struct srfPoly_s {
 	surfaceType_t	surfaceType;
 	qhandle_t		hShader;
+#ifdef __Q3_FOG__
 	int64_t			fogIndex;
+#endif //__Q3_FOG__
 	int				numVerts;
 	polyVert_t		*verts;
 } srfPoly_t;
@@ -1924,12 +1926,18 @@ typedef struct cullinfo_s {
 	vec3_t			localOrigin;
 	float			radius;
 	cplane_t        plane;
+
+	qboolean		centerOriginInitialized;
+	vec3_t			centerOrigin;
+	float			currentDistance;
 } cullinfo_t;
 
 typedef struct msurface_s {
 	//int					viewCount;		// if == tr.viewCount, already added
 	struct shader_s		*shader;
+#ifdef __Q3_FOG__
 	int64_t				fogIndex;
+#endif //__Q3_FOG__
 	int                 cubemapIndex;
 	cullinfo_t          cullinfo;
 

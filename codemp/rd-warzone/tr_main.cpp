@@ -1708,10 +1708,14 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 					int cubemap) {
 	int			index;
 
+#ifdef __Q3_FOG__
 	if (tr.refdef.rdflags & RDF_NOFOG)
 	{
 		fogIndex = 0;
 	}
+#else //!__Q3_FOG__
+	fogIndex = 0;
+#endif //__Q3_FOG__
 
 	if ( (shader->surfaceFlags & SURF_FORCESIGHT) /*&& !(tr.refdef.rdflags & RDF_ForceSightOn)*/ )
 	{	//if shader is only seen with ForceSight and we don't have ForceSight on, then don't draw

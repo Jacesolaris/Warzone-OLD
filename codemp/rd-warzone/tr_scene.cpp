@@ -110,7 +110,13 @@ void R_AddPolygonSurfaces(void) {
 		if (poly)
 		{
 			sh = R_GetShaderByHandle(poly->hShader);
-			R_AddDrawSurf((surfaceType_t *)poly, sh, poly->fogIndex & fogMask, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0 /* cubemapIndex */);
+			R_AddDrawSurf((surfaceType_t *)poly, sh, 
+#ifdef __Q3_FOG__
+				poly->fogIndex & fogMask, 
+#else //!__Q3_FOG__
+				0,
+#endif //__Q3_FOG__
+				qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0 /* cubemapIndex */);
 		}
 
 		poly++;
@@ -166,6 +172,11 @@ void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts,
 		r_numpolyverts += numVerts;
 
 		// if no world is loaded
+#ifndef __Q3_FOG__
+		if (1) {
+			fogIndex = 0;
+		} else 
+#endif //__Q3_FOG__
 		if (tr.world == NULL) {
 			fogIndex = 0;
 		}
@@ -195,7 +206,9 @@ void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts,
 				fogIndex = 0;
 			}
 		}
+#ifdef __Q3_FOG__
 		poly->fogIndex = fogIndex;
+#endif //__Q3_FOG__
 	}
 }
 

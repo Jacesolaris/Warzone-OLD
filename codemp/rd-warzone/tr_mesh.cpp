@@ -576,7 +576,9 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 
 		mergedSurf->cullinfo.type = CULLINFO_BOX;
 		mergedSurf->data          = (surfaceType_t *)vboSurf;
+#ifdef __Q3_FOG__
 		mergedSurf->fogIndex      = fogNum;
+#endif //__Q3_FOG__
 		mergedSurf->cubemapIndex  = cubemapIndex;
 		//mergedSurf->shader        = surf1->shader;
 

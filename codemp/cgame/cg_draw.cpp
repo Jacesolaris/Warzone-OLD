@@ -8959,30 +8959,29 @@ static void CG_ScanForCrosshairEntity( void ) {
 			ignore, CONTENTS_SOLID|CONTENTS_BODY );
 	}
 
-	if (trace.entityNum < MAX_CLIENTS)
-	{
-		if (CG_IsMindTricked(cg_entities[trace.entityNum].currentState.trickedentindex,
-			cg_entities[trace.entityNum].currentState.trickedentindex2,
-			cg_entities[trace.entityNum].currentState.trickedentindex3,
-			cg_entities[trace.entityNum].currentState.trickedentindex4,
-			cg.snap->ps.clientNum))
-		{
-			if (cg.crosshairClientNum == trace.entityNum)
-			{
-				cg.crosshairClientNum = ENTITYNUM_NONE;
-				cg.crosshairClientTime = 0;
-			}
-
-			CG_DrawCrosshair(trace.endpos, 0);
-
-			return; //this entity is mind-tricking the current client, so don't render it
-		}
-	}
+	centity_t *hitEnt = &cg_entities[trace.entityNum];
 
 	if (cg.snap->ps.persistant[PERS_TEAM] != FACTION_SPECTATOR)
 	{
-		if (trace.entityNum < /*MAX_CLIENTS*/ENTITYNUM_WORLD)
+		if (hitEnt && trace.entityNum < ENTITYNUM_WORLD && (hitEnt->currentState.eType == ET_PLAYER || hitEnt->currentState.eType == ET_NPC))
 		{
+			if (CG_IsMindTricked(hitEnt->currentState.trickedentindex,
+				hitEnt->currentState.trickedentindex2,
+				hitEnt->currentState.trickedentindex3,
+				hitEnt->currentState.trickedentindex4,
+				cg.snap->ps.clientNum))
+			{
+				if (cg.crosshairClientNum == trace.entityNum)
+				{
+					cg.crosshairClientNum = ENTITYNUM_NONE;
+					cg.crosshairClientTime = 0;
+				}
+
+				CG_DrawCrosshair(trace.endpos, 0);
+
+				return; //this entity is mind-tricking the current client, so don't render it
+			}
+
 			centity_t *veh = &cg_entities[trace.entityNum];
 			cg.crosshairClientNum = trace.entityNum;
 			cg.crosshairClientTime = cg.time;
@@ -9004,7 +9003,8 @@ static void CG_ScanForCrosshairEntity( void ) {
 		}
 	}
 
-	if ( trace.entityNum >= MAX_CLIENTS ) {
+	//if ( trace.entityNum >= MAX_CLIENTS ) {
+	if (!(hitEnt && trace.entityNum < ENTITYNUM_WORLD && (hitEnt->currentState.eType == ET_PLAYER || hitEnt->currentState.eType == ET_NPC))) {
 		return;
 	}
 

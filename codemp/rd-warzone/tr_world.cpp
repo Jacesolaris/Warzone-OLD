@@ -367,7 +367,13 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 	else
 		cubemapIndex = 0;
 
-	R_AddDrawSurf(surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+	R_AddDrawSurf(surf->data, surf->shader, 
+#ifdef __Q3_FOG__
+		surf->fogIndex, 
+#else //!__Q3_FOG__
+		0,
+#endif //__Q3_FOG__
+		dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
 }
 
 /*
@@ -1178,6 +1184,71 @@ void R_AddFoliage (msurface_t *surf) {
 }
 #endif //__RENDERER_FOLIAGE__
 
+//#define __DISTANCE_SORTING__
+
+#ifdef __DISTANCE_SORTING__
+static int DistanceSurfaceCompare(const void *a, const void *b)
+{
+	msurface_t   *aa, *bb;
+
+	aa = (msurface_t *)a;
+	bb = (msurface_t *)b;
+
+	if (!aa->cullinfo.centerOriginInitialized)
+	{// If this surface's center org has not been set up yet, set it up now...
+		aa->cullinfo.centerOrigin[0] = (aa->cullinfo.bounds[0][0] + aa->cullinfo.bounds[1][0]) * 0.5f;
+		aa->cullinfo.centerOrigin[1] = (aa->cullinfo.bounds[0][1] + aa->cullinfo.bounds[1][1]) * 0.5f;
+		aa->cullinfo.centerOrigin[2] = (aa->cullinfo.bounds[0][2] + aa->cullinfo.bounds[1][2]) * 0.5f;
+	}
+
+	if (!bb->cullinfo.centerOriginInitialized)
+	{// If this surface's center org has not been set up yet, set it up now...
+		bb->cullinfo.centerOrigin[0] = (bb->cullinfo.bounds[0][0] + bb->cullinfo.bounds[1][0]) * 0.5f;
+		bb->cullinfo.centerOrigin[1] = (bb->cullinfo.bounds[0][1] + bb->cullinfo.bounds[1][1]) * 0.5f;
+		bb->cullinfo.centerOrigin[2] = (bb->cullinfo.bounds[0][2] + bb->cullinfo.bounds[1][2]) * 0.5f;
+	}
+
+	aa->cullinfo.currentDistance = Distance(aa->cullinfo.centerOrigin, tr.refdef.vieworg);
+	bb->cullinfo.currentDistance = Distance(bb->cullinfo.centerOrigin, tr.refdef.vieworg);
+
+	if (aa->cullinfo.currentDistance < bb->cullinfo.currentDistance)
+		return -1;
+
+	if (aa->cullinfo.currentDistance > bb->cullinfo.currentDistance)
+		return 1;
+
+#if 0
+	// shader first
+	if (aa->shader->sortedIndex < bb->shader->sortedIndex)
+		return -1;
+
+	else if (aa->shader->sortedIndex > bb->shader->sortedIndex)
+		return 1;
+#endif
+
+#ifdef __Q3_FOG__
+	// by fogIndex
+	if (aa->fogIndex < bb->fogIndex)
+		return -1;
+
+	else if (aa->fogIndex > bb->fogIndex)
+		return 1;
+#endif //__Q3_FOG__
+
+#ifndef __PLAYER_BASED_CUBEMAPS__
+	// by cubemapIndex
+	if (aa->cubemapIndex < bb->cubemapIndex)
+		return -1;
+
+	else if (aa->cubemapIndex > bb->cubemapIndex)
+		return 1;
+#endif //__PLAYER_BASED_CUBEMAPS__
+
+	return 0;
+}
+
+#endif //__DISTANCE_SORTING__
+
 /*
 =============
 R_AddWorldSurfaces
@@ -1281,6 +1352,12 @@ void R_AddWorldSurfaces(void) {
 #else //!__PSHADOWS__
 	R_RecursiveWorldNode(tr.world->nodes, planeBits, 0, 0);
 #endif //__PSHADOWS__
+
+#ifdef __DISTANCE_SORTING__
+	// Sort by distance first, then by shader second...
+	std::qsort(tr.world->surfaces, tr.world->numWorldSurfaces, sizeof(*tr.world->surfaces), DistanceSurfaceCompare);
+	std::qsort(tr.world->mergedSurfaces, tr.world->numMergedSurfaces, sizeof(*tr.world->mergedSurfaces), DistanceSurfaceCompare);
+#endif //__DISTANCE_SORTING__
 
 	// now add all the potentially visible surfaces
 	// also mask invisible dlights for next frame
