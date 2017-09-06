@@ -495,7 +495,8 @@ void ProcessWorldModel( void )
 	
 	/* save out information for visibility processing */
 	NumberClusters( tree );
-	if( !leaked )
+	
+	//if( !leaked ) // UQ1: I'm gonna write the portal file, regardless of leaks...
 		WritePortalFile( tree );
 
 	/* note BSP phase (non-verbose-mode) */

@@ -771,6 +771,13 @@ qboolean CG_AtmosphericKludge()
 		return(kludgeResult = qtrue);
 	}
 
+	if (StringContainsWord(cgs.currentmapname, "baldemnicmushroom"))
+	{
+		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
+		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
+		return(kludgeResult = qtrue);
+	}
+
 	if( StringContainsWord( cgs.currentmapname, "baldemnic" ) && !StringContainsWord( cgs.currentmapname, "baldemnic11" ))
   	{
 		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");

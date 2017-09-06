@@ -154,7 +154,8 @@ int LeafVectorFromPortalVector( byte *portalbits, byte *leafbits ){
 void ClusterMerge(int leafnumInt){
 	uint32_t leafnum = (uint32_t)leafnumInt;
 	leaf_t      *leaf;
-	byte portalvector[MAX_PORTALS / 8];
+	//byte portalvector[MAX_PORTALS / 8];
+	byte		portalvector[MAX_PORTALS / 4];      // 4 because portal bytes is * 2
 	byte uncompressed[MAX_MAP_LEAFS / 8];
 	uint32_t i, j;
 	uint32_t numvis, mergedleafnum;
