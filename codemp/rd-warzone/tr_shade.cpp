@@ -2084,7 +2084,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #define __USE_DETAIL_CHECKING__			// Check and treat stages found to be random details (lightmap stages, 2d, etc) differently...
 #define __USE_DETAIL_DEPTH_SKIP__		// Skip drawing detail crap at all in shadow and depth prepasses - they should never be needed...
 #define __LIGHTMAP_IS_DETAIL__			// Lightmap stages are considered detail...
-#define __USE_GLOW_DETAIL_BUFFERS__		// Use different deferred output buffers for stuff that is detail and glow, so these don't overwrite solid surfaces...
+#define __USE_GLOW_DETAIL_FBOS__		// Use different deferred output buffers for stuff that is detail and glow, so these don't overwrite solid surfaces... FBO method.
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
@@ -3308,42 +3308,60 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
-					stateBits = GLS_DEFAULT;// | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
+					stateBits = /*GLS_DEPTHMASK_TRUE |*/ GLS_DEPTHFUNC_LESS;// GLS_DEFAULT;// | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
 					tess.shader->cullType = CT_TWO_SIDED; // Always...
-					GLSL_AttachWaterTextures();
+					FBO_Bind(tr.renderWaterFbo);
+
+					vec4_t passInfo;
+					VectorSet4(passInfo, /*passNum*/0.0, r_waterWaveHeight->value, 0.0, 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
 				}
 				else
 				{
+					if (glState.currentFBO == tr.renderGlowFbo || glState.currentFBO == tr.renderDetailFbo || glState.currentFBO == tr.renderWaterFbo)
+					{// Only attach textures when doing a render pass...
+						FBO_Bind(tr.renderFbo);
+					}
+
 					break;
 				}
 			}
-#ifdef __USE_GLOW_DETAIL_BUFFERS__
-			else if (!IS_DEPTH_PASS && index & LIGHTDEF_USE_GLOW_BUFFER)
+			else
+#if defined(__USE_GLOW_DETAIL_FBOS__)
+			if (!IS_DEPTH_PASS && index & LIGHTDEF_USE_GLOW_BUFFER)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
-					GLSL_AttachGlowTextures();
+					FBO_Bind(tr.renderGlowFbo);
 				}
 			}
 			else if (!IS_DEPTH_PASS && index & LIGHTDEF_IS_DETAIL)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
-					GLSL_AttachGenericTextures();
+					FBO_Bind(tr.renderDetailFbo);
 				}
 			}
-#endif //__USE_GLOW_DETAIL_BUFFERS__
 			else
+#endif //!defined(__USE_GLOW_DETAIL_FBOS__)
 			{
-				if (glState.currentFBO == tr.renderFbo)
+				if (glState.currentFBO == tr.renderGlowFbo || glState.currentFBO == tr.renderDetailFbo || glState.currentFBO == tr.renderWaterFbo)
 				{// Only attach textures when doing a render pass...
-					GLSL_AttachTextures();
+					FBO_Bind(tr.renderFbo);
 				}
 			}
+
+			vec4_t l9;
+			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
 			qboolean tesselation = qfalse;
 
-			if (isGrass && passNum > 0 && r_foliage->integer)
+			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+			{
+
+			}
+			else if (isGrass && passNum > 0 && r_foliage->integer)
 			{// Geometry grass drawing passes...
 				vec4_t l8;
 				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
@@ -3373,20 +3391,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-			}
-
-			vec4_t l9;
-			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
-
-			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
-			{// Attach dummy water output textures...
-				if (glState.currentFBO == tr.renderFbo)
-				{// Only attach textures when doing a render pass...
-					vec4_t passInfo;
-					VectorSet4(passInfo, /*passNum*/0.0, r_waterWaveHeight->value, 0.0, 0.0);
-					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
-				}
 			}
 
 			if (r_proceduralSun->integer && tess.shader == tr.sunShader)
@@ -3421,29 +3425,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, useTesselation);
 			}
 
-			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
-			{// Unattach dummy water output textures...
-				if (glState.currentFBO == tr.renderFbo)
-				{// Only attach textures when doing a render pass...
-					GLSL_AttachTextures();
-				}
+
+			if (glState.currentFBO == tr.renderGlowFbo || glState.currentFBO == tr.renderDetailFbo || glState.currentFBO == tr.renderWaterFbo)
+			{// Change back to standard render FBO...
+				FBO_Bind(tr.renderFbo);
 			}
-#ifdef __USE_GLOW_DETAIL_BUFFERS__
-			else if (!IS_DEPTH_PASS && index & LIGHTDEF_USE_GLOW_BUFFER)
-			{
-				if (glState.currentFBO == tr.renderFbo)
-				{// Only attach textures when doing a render pass...
-					GLSL_AttachTextures();
-				}
-			}
-			else if (!IS_DEPTH_PASS && index & LIGHTDEF_IS_DETAIL)
-			{
-				if (glState.currentFBO == tr.renderFbo)
-				{// Only attach textures when doing a render pass...
-					GLSL_AttachTextures();
-				}
-			}
-#endif //__USE_GLOW_DETAIL_BUFFERS__
+
 
 			passNum++;
 

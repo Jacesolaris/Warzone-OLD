@@ -84,14 +84,21 @@ void RB_CheckVBOandIBO(VBO_t *vbo, IBO_t *ibo)
 		tess.useInternalVBO = qfalse;
 }
 
+uint32_t R_TessXYZtoPackedNormals(vec3_t xyz)
+{
+	vec3_t normal;
+	VectorSubtract(backEnd.viewParms.ori.origin, xyz, normal);
+	VectorNormalize2(normal, normal);
+	return R_VboPackNormal(normal);
+}
 
 /*
 ==============
 RB_AddQuadStampExt
 ==============
 */
+
 void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float color[4], float s1, float t1, float s2, float t2 ) {
-	vec3_t		normal;
 	int			ndx;
 
 	RB_CHECKOVERFLOW( 4, 6 );
@@ -124,6 +131,9 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float color[4], 
 	tess.xyz[ndx+3][2] = origin[2] + left[2] - up[2];
 
 
+#if 0
+	vec3_t		normal;
+
 	// constant normal all the way around
 	VectorSubtract( vec3_origin, backEnd.viewParms.ori.axis[0], normal );
 
@@ -131,6 +141,12 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float color[4], 
 	tess.normal[ndx+1] =
 	tess.normal[ndx+2] =
 	tess.normal[ndx+3] = R_VboPackNormal(normal);
+#else
+	tess.normal[ndx] = R_TessXYZtoPackedNormals(tess.xyz[ndx]);
+	tess.normal[ndx+1] = R_TessXYZtoPackedNormals(tess.xyz[ndx]);
+	tess.normal[ndx+2] = R_TessXYZtoPackedNormals(tess.xyz[ndx]);
+	tess.normal[ndx+3] = R_TessXYZtoPackedNormals(tess.xyz[ndx]);
+#endif
 
 	// standard square texture coordinates
 	VectorSet2(tess.texCoords[ndx  ][0], s1, t1);
@@ -183,18 +199,22 @@ void RB_InstantQuad2(vec4_t quadVerts[4], vec2_t texCoords[4])
 
 	VectorCopy4(quadVerts[0], tess.xyz[tess.numVertexes]);
 	VectorCopy2(texCoords[0], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[0] = R_TessXYZtoPackedNormals(quadVerts[0]);
 	tess.numVertexes++;
 
 	VectorCopy4(quadVerts[1], tess.xyz[tess.numVertexes]);
 	VectorCopy2(texCoords[1], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[1] = R_TessXYZtoPackedNormals(quadVerts[1]);
 	tess.numVertexes++;
 
 	VectorCopy4(quadVerts[2], tess.xyz[tess.numVertexes]);
 	VectorCopy2(texCoords[2], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[2] = R_TessXYZtoPackedNormals(quadVerts[2]);
 	tess.numVertexes++;
 
 	VectorCopy4(quadVerts[3], tess.xyz[tess.numVertexes]);
 	VectorCopy2(texCoords[3], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[3] = R_TessXYZtoPackedNormals(quadVerts[3]);
 	tess.numVertexes++;
 
 	tess.indexes[tess.numIndexes++] = 0;
@@ -516,6 +536,9 @@ static void RB_SurfacePolychain( srfPoly_t *p ) {
 	numv = tess.numVertexes;
 	for ( i = 0; i < p->numVerts; i++ ) {
 		VectorCopy( p->verts[i].xyz, tess.xyz[numv] );
+
+		tess.normal[numv] = R_TessXYZtoPackedNormals(tess.xyz[numv]);
+
 		tess.texCoords[numv][0][0] = p->verts[i].st[0];
 		tess.texCoords[numv][0][1] = p->verts[i].st[1];
 		tess.vertexColors[numv][0] = p->verts[ i ].modulate[0] / 255.0f;
@@ -574,6 +597,14 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 		normal = &tess.normal[ tess.numVertexes ];
 		for ( i = 0 ; i < numVerts ; i++, dv++, normal++ )
 			*normal = R_VboPackNormal(dv->normal);
+	}
+	else
+	{
+		dv = verts;
+		for (i = 0; i < numVerts; i++, dv++)
+		{
+			*normal = R_TessXYZtoPackedNormals(dv->xyz);
+		}
 	}
 
 	if ( tess.shader->vertexAttribs & ATTR_TANGENT )
@@ -955,12 +986,14 @@ static void DoLine( const vec3_t start, const vec3_t end, const vec3_t up, float
 	tess.texCoords[tess.numVertexes][0][0] = 0;
 	tess.texCoords[tess.numVertexes][0][1] = 0;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( start, spanWidth2, up, tess.xyz[tess.numVertexes] );
 	tess.texCoords[tess.numVertexes][0][0] = 1;//backEnd.currentEntity->e.shaderTexCoord[0];
 	tess.texCoords[tess.numVertexes][0][1] = 0;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( end, spanWidth, up, tess.xyz[tess.numVertexes] );
@@ -968,12 +1001,14 @@ static void DoLine( const vec3_t start, const vec3_t end, const vec3_t up, float
 	tess.texCoords[tess.numVertexes][0][0] = 0;
 	tess.texCoords[tess.numVertexes][0][1] = 1;//backEnd.currentEntity->e.shaderTexCoord[1];
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( end, spanWidth2, up, tess.xyz[tess.numVertexes] );
 	tess.texCoords[tess.numVertexes][0][0] = 1;//backEnd.currentEntity->e.shaderTexCoord[0];
 	tess.texCoords[tess.numVertexes][0][1] = 1;//backEnd.currentEntity->e.shaderTexCoord[1];
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	tess.indexes[tess.numIndexes++] = vbase;
@@ -997,12 +1032,14 @@ static void DoLine2( const vec3_t start, const vec3_t end, const vec3_t up, floa
 	tess.texCoords[tess.numVertexes][0][0] = 0;
 	tess.texCoords[tess.numVertexes][0][1] = 0;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( start, -spanWidth, up, tess.xyz[tess.numVertexes] );
 	tess.texCoords[tess.numVertexes][0][0] = 1;//backEnd.currentEntity->e.shaderTexCoord[0];
 	tess.texCoords[tess.numVertexes][0][1] = 0;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( end, spanWidth2, up, tess.xyz[tess.numVertexes] );
@@ -1010,12 +1047,14 @@ static void DoLine2( const vec3_t start, const vec3_t end, const vec3_t up, floa
 	tess.texCoords[tess.numVertexes][0][0] = 0;
 	tess.texCoords[tess.numVertexes][0][1] = 1;//backEnd.currentEntity->e.shaderTexCoord[1];
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( end, -spanWidth2, up, tess.xyz[tess.numVertexes] );
 	tess.texCoords[tess.numVertexes][0][0] = 1;//backEnd.currentEntity->e.shaderTexCoord[0];
 	tess.texCoords[tess.numVertexes][0][1] = 1;//backEnd.currentEntity->e.shaderTexCoord[1];
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	tess.indexes[tess.numIndexes++] = vbase;
@@ -1041,12 +1080,14 @@ static void DoLine_Oriented( const vec3_t start, const vec3_t end, const vec3_t 
 	tess.texCoords[tess.numVertexes][0][0] = 0;
 	tess.texCoords[tess.numVertexes][0][1] = 0;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( start, spanWidth2, up, tess.xyz[tess.numVertexes] );
 	tess.texCoords[tess.numVertexes][0][0] = 1;
 	tess.texCoords[tess.numVertexes][0][1] = 0;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( end, spanWidth, up, tess.xyz[tess.numVertexes] );
@@ -1054,12 +1095,14 @@ static void DoLine_Oriented( const vec3_t start, const vec3_t end, const vec3_t 
 	tess.texCoords[tess.numVertexes][0][0] = 0;
 	tess.texCoords[tess.numVertexes][0][1] = backEnd.currentEntity->e.data.line.stscale;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	VectorMA( end, spanWidth2, up, tess.xyz[tess.numVertexes] );
 	tess.texCoords[tess.numVertexes][0][0] = 1;
 	tess.texCoords[tess.numVertexes][0][1] = backEnd.currentEntity->e.data.line.stscale;
 	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+	tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 	tess.numVertexes++;
 
 	tess.indexes[tess.numIndexes++] = vbase;
@@ -1136,6 +1179,7 @@ static void DoCylinderPart(polyVert_t *verts)
 		tess.texCoords[tess.numVertexes][0][0] = verts->st[0];
 		tess.texCoords[tess.numVertexes][0][1] = verts->st[1];
 		VectorScale4 (verts->modulate, 1.0f / 255.0f, tess.vertexColors[tess.numVertexes]);
+		tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
 		tess.numVertexes++;
 		verts++;
 	}	
@@ -2084,6 +2128,10 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 				if ( tess.shader->vertexAttribs & ATTR_NORMAL )
 				{
 					*normal++ = R_VboPackNormal(dv->normal);
+				}
+				else
+				{
+					*normal++ = R_TessXYZtoPackedNormals(dv->xyz);
 				}
 
 				if ( tess.shader->vertexAttribs & ATTR_TANGENT )

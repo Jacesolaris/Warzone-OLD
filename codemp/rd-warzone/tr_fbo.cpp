@@ -396,6 +396,9 @@ FBO_Init
 */
 
 extern void GLSL_AttachTextures( void );
+extern void GLSL_AttachGlowTextures(void);
+extern void GLSL_AttachGenericTextures(void);
+extern void GLSL_AttachWaterTextures(void);
 
 void FBO_Init(void)
 {
@@ -798,6 +801,55 @@ void FBO_Init(void)
 
 		R_CheckFBO(tr.awesomiumuiFbo);
 	}
+
+
+	{
+		tr.renderGlowFbo = FBO_Create("_renderGlow", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		FBO_Bind(tr.renderGlowFbo);
+
+		//FBO_CreateBuffer(tr.renderFbo, hdrFormat, 0, 0);
+		GLSL_AttachGlowTextures();
+		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.renderGlowFbo);
+
+		FBO_Bind(tr.renderGlowFbo);
+		qglClearColor(1, 0, 0.5, 1);
+		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		FBO_Bind(NULL);
+
+
+		tr.renderDetailFbo = FBO_Create("_renderDetail", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		FBO_Bind(tr.renderDetailFbo);
+
+		//FBO_CreateBuffer(tr.renderDetailFbo, hdrFormat, 0, 0);
+		GLSL_AttachGenericTextures();
+		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.renderDetailFbo);
+
+		FBO_Bind(tr.renderDetailFbo);
+		qglClearColor(1, 0, 0.5, 1);
+		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		FBO_Bind(NULL);
+
+
+		tr.renderWaterFbo = FBO_Create("_renderWater", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		FBO_Bind(tr.renderWaterFbo);
+
+		//FBO_CreateBuffer(tr.renderWaterFbo, hdrFormat, 0, 0);
+		GLSL_AttachWaterTextures();
+		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.renderWaterFbo);
+
+		FBO_Bind(tr.renderWaterFbo);
+		qglClearColor(1, 1, 1, 1);
+		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		FBO_Bind(NULL);
+	}
+
 
 	GL_CheckErrors();
 

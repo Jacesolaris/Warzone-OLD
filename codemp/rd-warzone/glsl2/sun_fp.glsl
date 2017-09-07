@@ -13,10 +13,15 @@ uniform vec4	u_Local9; // SUN_COLOR_TERTIARY
 
 uniform float	u_Time;
 
+varying vec3	var_Normal;
+varying vec3	var_vertPos;
 varying vec2    var_TexCoords;
 
 
 out vec4 out_Glow;
+out vec4 out_Position;
+out vec4 out_Normal;
+out vec4 out_NormalDetail;
 
 
 #define m_Normal		var_Normal
@@ -232,8 +237,7 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
     	fragColor.xyz += mix(mix(vec3(1.0,0.0,0.0),vec3(0.0,0.0,1.0),s4.y*1.9),vec3(0.9,1.0,0.1),s4.w*0.75)*s4.x*pow(s4.z*2.5,3.0)*0.2*zero;
     }
     
-    fragColor = max( vec4(0.0), fragColor );
-	fragColor = min( vec4(1.0), fragColor );
+    fragColor = clamp( fragColor, 0.0, 1.0 );
 }
 
 void main()
@@ -242,4 +246,11 @@ void main()
 	getSun( gl_FragColor, texCoords );
 	gl_FragColor.rgb *= 2.0;
 	out_Glow = gl_FragColor;
+	
+	if (length(gl_FragColor.rgb) > 0.0)
+	{
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+		out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+		out_NormalDetail = vec4(0.0);
+	}
 }

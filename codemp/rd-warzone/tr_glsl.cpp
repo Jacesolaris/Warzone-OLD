@@ -2032,27 +2032,27 @@ void GLSL_AttachTextures(void)
 	FBO_AttachTextureImage(tr.renderNormalImage, 2);
 	FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
 	FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
-	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachGlowTextures(void)
 {// Moved here for convenience...
 	FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.glowImage, 1);
-	FBO_AttachTextureImage(tr.dummyImage2, 2);
-	FBO_AttachTextureImage(tr.dummyImage3, 3);
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
-	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+	//FBO_AttachTextureImage(tr.dummyImage2, 2);
+	//FBO_AttachTextureImage(tr.dummyImage3, 3);
+	//FBO_AttachTextureImage(tr.dummyImage4, 4);
+	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachGenericTextures(void)
 {// Moved here for convenience...
 	FBO_AttachTextureImage(tr.renderImage, 0);
-	FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
-	FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
-	FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
-	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+	//FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
+	//FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
+	//FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
+	//FBO_AttachTextureImage(tr.dummyImage4, 4);
+	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachWaterTextures(void)
@@ -2061,20 +2061,9 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
-	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
+	//FBO_AttachTextureImage(tr.dummyImage4, 4);
+	////R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 }
-
-/*
-void GLSL_AttachWaterTextures2(void)
-{// To output dummy textures on waters in RB_IterateStagesGeneric...
-	FBO_AttachTextureImage(tr.genericFBOImage, 0); // dummy
-	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
-	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
-	FBO_AttachTextureImage(tr.waterPositionMapImage2, 3); // water positions
-	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
-}
-*/
 
 static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 {

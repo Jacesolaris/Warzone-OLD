@@ -1730,12 +1730,16 @@ const void *RB_StretchPic ( const void *data ) {
 	tess.xyz[ numVerts ][1] = cmd->y;
 	tess.xyz[ numVerts ][2] = 0;
 
+	tess.normal[numVerts] = R_TessXYZtoPackedNormals(tess.xyz[numVerts]);
+
 	tess.texCoords[ numVerts ][0][0] = cmd->s1;
 	tess.texCoords[ numVerts ][0][1] = cmd->t1;
 
 	tess.xyz[ numVerts + 1 ][0] = cmd->x + cmd->w;
 	tess.xyz[ numVerts + 1 ][1] = cmd->y;
 	tess.xyz[ numVerts + 1 ][2] = 0;
+
+	tess.normal[numVerts + 1] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 1]);
 
 	tess.texCoords[ numVerts + 1 ][0][0] = cmd->s2;
 	tess.texCoords[ numVerts + 1 ][0][1] = cmd->t1;
@@ -1744,12 +1748,16 @@ const void *RB_StretchPic ( const void *data ) {
 	tess.xyz[ numVerts + 2 ][1] = cmd->y + cmd->h;
 	tess.xyz[ numVerts + 2 ][2] = 0;
 
+	tess.normal[numVerts + 2] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 2]);
+
 	tess.texCoords[ numVerts + 2 ][0][0] = cmd->s2;
 	tess.texCoords[ numVerts + 2 ][0][1] = cmd->t2;
 
 	tess.xyz[ numVerts + 3 ][0] = cmd->x;
 	tess.xyz[ numVerts + 3 ][1] = cmd->y + cmd->h;
 	tess.xyz[ numVerts + 3 ][2] = 0;
+
+	tess.normal[numVerts + 3] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 3]);
 
 	tess.texCoords[ numVerts + 3 ][0][0] = cmd->s1;
 	tess.texCoords[ numVerts + 3 ][0][1] = cmd->t2;
@@ -1829,12 +1837,16 @@ const void *RB_RotatePic ( const void *data )
 	tess.xyz[numVerts][1] = m[0][1] * (-cmd->w) + m[2][1];
 	tess.xyz[numVerts][2] = 0;
 
+	tess.normal[numVerts] = R_TessXYZtoPackedNormals(tess.xyz[numVerts]);
+
 	tess.texCoords[numVerts][0][0] = cmd->s1;
 	tess.texCoords[numVerts][0][1] = cmd->t1;
 
 	tess.xyz[numVerts + 1][0] = m[2][0];
 	tess.xyz[numVerts + 1][1] = m[2][1];
 	tess.xyz[numVerts + 1][2] = 0;
+
+	tess.normal[numVerts + 1] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 1]);
 
 	tess.texCoords[numVerts + 1][0][0] = cmd->s2;
 	tess.texCoords[numVerts + 1][0][1] = cmd->t1;
@@ -1843,12 +1855,16 @@ const void *RB_RotatePic ( const void *data )
 	tess.xyz[numVerts + 2][1] = m[1][1] * (cmd->h) + m[2][1];
 	tess.xyz[numVerts + 2][2] = 0;
 
+	tess.normal[numVerts + 2] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 2]);
+
 	tess.texCoords[numVerts + 2][0][0] = cmd->s2;
 	tess.texCoords[numVerts + 2][0][1] = cmd->t2;
 
 	tess.xyz[numVerts + 3][0] = m[0][0] * (-cmd->w) + m[1][0] * (cmd->h) + m[2][0];
 	tess.xyz[numVerts + 3][1] = m[0][1] * (-cmd->w) + m[1][1] * (cmd->h) + m[2][1];
 	tess.xyz[numVerts + 3][2] = 0;
+
+	tess.normal[numVerts + 3] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 3]);
 
 	tess.texCoords[numVerts + 3][0][0] = cmd->s1;
 	tess.texCoords[numVerts + 3][0][1] = cmd->t2;
@@ -1928,12 +1944,16 @@ const void *RB_RotatePic2 ( const void *data )
 	tess.xyz[numVerts][1] = m[0][1] * (-cmd->w * 0.5f) + m[1][1] * (-cmd->h * 0.5f) + m[2][1];
 	tess.xyz[numVerts][2] = 0;
 
+	tess.normal[numVerts] = R_TessXYZtoPackedNormals(tess.xyz[numVerts]);
+
 	tess.texCoords[numVerts][0][0] = cmd->s1;
 	tess.texCoords[numVerts][0][1] = cmd->t1;
 
 	tess.xyz[numVerts + 1][0] = m[0][0] * (cmd->w * 0.5f) + m[1][0] * (-cmd->h * 0.5f) + m[2][0];
 	tess.xyz[numVerts + 1][1] = m[0][1] * (cmd->w * 0.5f) + m[1][1] * (-cmd->h * 0.5f) + m[2][1];
 	tess.xyz[numVerts + 1][2] = 0;
+
+	tess.normal[numVerts + 1] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 1]);
 
 	tess.texCoords[numVerts + 1][0][0] = cmd->s2;
 	tess.texCoords[numVerts + 1][0][1] = cmd->t1;
@@ -1942,12 +1962,16 @@ const void *RB_RotatePic2 ( const void *data )
 	tess.xyz[numVerts + 2][1] = m[0][1] * (cmd->w * 0.5f) + m[1][1] * (cmd->h * 0.5f) + m[2][1];
 	tess.xyz[numVerts + 2][2] = 0;
 
+	tess.normal[numVerts + 2] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 2]);
+
 	tess.texCoords[numVerts + 2][0][0] = cmd->s2;
 	tess.texCoords[numVerts + 2][0][1] = cmd->t2;
 
 	tess.xyz[numVerts + 3][0] = m[0][0] * (-cmd->w * 0.5f) + m[1][0] * (cmd->h * 0.5f) + m[2][0];
 	tess.xyz[numVerts + 3][1] = m[0][1] * (-cmd->w * 0.5f) + m[1][1] * (cmd->h * 0.5f) + m[2][1];
 	tess.xyz[numVerts + 3][2] = 0;
+
+	tess.normal[numVerts + 3] = R_TessXYZtoPackedNormals(tess.xyz[numVerts + 3]);
 
 	tess.texCoords[numVerts + 3][0][0] = cmd->s1;
 	tess.texCoords[numVerts + 3][0][1] = cmd->t2;

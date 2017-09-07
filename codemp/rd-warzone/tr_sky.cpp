@@ -388,6 +388,8 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 			tess.texCoords[tess.numVertexes][0][0] = s_skyTexCoords[t][s][0];
 			tess.texCoords[tess.numVertexes][0][1] = s_skyTexCoords[t][s][1];
 			
+			tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
+
 			tess.numVertexes++;
 
 			if(tess.numVertexes >= SHADER_MAX_VERTEXES)
@@ -419,27 +421,19 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	tess.minIndex = firstVertex;
 	tess.maxIndex = tess.numVertexes;
 
-	
-	/* UQ1: Calculate normals as well please... */
-	for (int i = 0; i < tess.numIndexes; i += 3)
-	{
-		vec3_t normal;
-		VectorSubtract(tess.xyz[tess.indexes[i]], tr.viewParms.ori.origin, normal);
-		R_VboUnpackNormal(normal, tess.normal[tess.indexes[i]]);
-	}
 
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
-	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL /*| ATTR_TANGENT*/);
 
 	{
 		shaderProgram_t *sp = &tr.shadowPassShader;
 		vec4_t vector;
 
-		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL /*| ATTR_TANGENT*/);
 		//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 		GLSL_BindProgram(sp);
 
-		VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
+		VectorSet4(vector, 0.0, 0.0, 1.0, 1024.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
@@ -584,6 +578,9 @@ static void FillCloudySkySide( const int mins[2], const int maxs[2], qboolean ad
 		for ( s = mins[0]+HALF_SKY_SUBDIVISIONS; s <= maxs[0]+HALF_SKY_SUBDIVISIONS; s++ )
 		{
 			VectorAdd( s_skyPoints[t][s], backEnd.viewParms.ori.origin, tess.xyz[tess.numVertexes] );
+
+			tess.normal[tess.numVertexes] = R_TessXYZtoPackedNormals(tess.xyz[tess.numVertexes]);
+
 			tess.texCoords[tess.numVertexes][0][0] = s_skyTexCoords[t][s][0];
 			tess.texCoords[tess.numVertexes][0][1] = s_skyTexCoords[t][s][1];
 
@@ -907,11 +904,11 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 		float dist;
 		vec4_t pos;
-		matrix_t trans, model, mvp;
+		//matrix_t trans, model, mvp;
 
-		Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+		//Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+		//Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+		//Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
 		dist = 4096.0;
 

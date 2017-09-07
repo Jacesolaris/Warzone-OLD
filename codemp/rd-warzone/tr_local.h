@@ -2511,6 +2511,9 @@ typedef struct trGlobals_s {
 	image_t					*ssdoNoiseImage;
 
 	FBO_t					*renderFbo;
+	FBO_t					*renderGlowFbo;
+	FBO_t					*renderDetailFbo;
+	FBO_t					*renderWaterFbo;
 	//FBO_t					*previousRenderFbo;
 	FBO_t					*waterFbo;
 	FBO_t					*waterFbo2;
@@ -3951,6 +3954,8 @@ void RB_SurfaceGhoul( CRenderableSurface *surf );
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage );
 
 qboolean R_TextureFileExists(char *name);
+
+uint32_t R_TessXYZtoPackedNormals(vec3_t xyz);
 
 /*
 ============================================================
