@@ -73,6 +73,13 @@ void GL_Bind( image_t *image ) {
 			qglBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
 		else
 			qglBindTexture( GL_TEXTURE_2D, texnum );
+
+#ifdef __VULKAN__
+		if (vk.active) {
+			VkDescriptorSet set = vk_world.images[texnum].descriptor_set;
+			vk_world.current_descriptor_sets[glState.currenttmu] = set;
+		}
+#endif //__VULKAN__
 	}
 }
 
@@ -696,6 +703,11 @@ static void RB_Hyperspace( void ) {
 	qglClearColor( c, c, c, 1 );
 	qglClear( GL_COLOR_BUFFER_BIT );
 
+#ifdef __VULKAN__
+	float color[4] = { c, c, c, 1 };
+	vk_clear_attachments(false, true, color);
+#endif //__VULKAN__
+
 	backEnd.isHyperspace = qtrue;
 }
 
@@ -841,6 +853,12 @@ void RB_BeginDrawingView (void) {
 	}
 
 	qglClear( clearBits );
+
+#ifdef __VULKAN__
+	vec4_t color;
+	VectorSet4(color, 0.0f, 0.0f, 0.0f, 1.0f );
+	vk_clear_attachments(vk_world.dirty_depth_attachment, (r_fastsky->integer && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL)), color);
+#endif //__VULKAN__
 
 	if (backEnd.viewParms.targetFbo == NULL)
 	{
@@ -998,227 +1016,6 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	int numShaderDraws = 0;
 #endif //__DEBUG_MERGE__
 
-#if 0
-	if (r_surfaceShaderSorting->integer)
-	{
-		std::qsort(drawSurfs, numDrawSurfs, sizeof(drawSurf_t), sSortFunc);
-
-		// First draw world normally...
-		for (i = 0; i < numDrawSurfs; ++i)
-		{
-			int64_t			zero = 0;
-			drawSurf_t		*drawSurf;
-			shader_t		*shader = NULL;
-			int64_t			entityNum;
-			int64_t			postRender;
-			int             cubemapIndex, newCubemapIndex;
-			int				depthRange;
-
-			if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
-
-			drawSurf = &drawSurfs[i];
-
-			if (!drawSurf->surface) continue;
-
-#ifdef __PLAYER_BASED_CUBEMAPS__
-			newCubemapIndex = currentPlayerCubemap;
-#else //!__PLAYER_BASED_CUBEMAPS__
-			if (!CUBEMAPPING)
-			{
-				newCubemapIndex = 0;
-			}
-			else
-			{
-				if (r_cubeMapping->integer >= 1)
-				{
-					newCubemapIndex = drawSurf->cubemapIndex;
-				}
-				else
-				{
-					newCubemapIndex = 0;
-				}
-
-				if (newCubemapIndex > 0)
-				{// Let's see if we can swap with a close cubemap and merge them...
-					if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex - 1]) > r_cubemapCullRange->value)
-					{// Too far away to care about cubemaps... Allow merge...
-						newCubemapIndex = 0;
-					}
-				}
-			}
-#endif //__PLAYER_BASED_CUBEMAPS__
-
-			if (drawSurf->sort == oldSort
-#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
-				&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
-#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
-				)
-			{// fast path, same as previous sort
-				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-#ifdef __DEBUG_MERGE__
-				numShaderDraws++;
-#endif //__DEBUG_MERGE__
-				continue;
-			}
-
-			oldSort = drawSurf->sort;
-			R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
-
-			cubemapIndex = newCubemapIndex;
-
-			qboolean dontMerge = qfalse;
-			// UQ1: We can't merge movers and portals, but we can merge pretty much everything else...
-			trRefEntity_t *ent = &backEnd.refdef.entities[entityNum];
-			trRefEntity_t *oldent = &backEnd.refdef.entities[oldEntityNum];
-			if (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX))
-			{// Either a mover, or a portal... Don't allow merges...
-				dontMerge = qtrue;
-			}
-			else if (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX))
-			{// Either a mover, or a portal... Don't allow merges...
-				dontMerge = qtrue;
-			}
-
-			//
-			// change the tess parameters if needed
-			// a "entityMergable" shader is a shader that can have surfaces from seperate
-			// entities merged into a single batch, like smoke and blood puff sprites
-			if (shader != NULL
-				&& (shader != oldShader
-					|| postRender != oldPostRender
-#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
-					|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
-#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
-					|| (entityNum != oldEntityNum && !shader->entityMergable && dontMerge)))
-			{
-				if (oldShader != NULL)
-				{
-					RB_EndSurface();
-				}
-
-				RB_BeginSurface(shader, 0, cubemapIndex);
-
-				backEnd.pc.c_surfBatches++;
-				oldShader = shader;
-				oldPostRender = postRender;
-				oldCubemapIndex = cubemapIndex;
-#ifdef __DEBUG_MERGE__
-				numShaderChanges++;
-#endif //__DEBUG_MERGE__
-			}
-
-			//
-			// change the modelview matrix if needed
-			//
-			if (entityNum != oldEntityNum)
-			{
-				qboolean sunflare = qfalse;
-				depthRange = 0;
-
-				// we have to reset the shaderTime as well otherwise image animations start
-				// from the wrong frame
-				tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
-
-				if (entityNum != REFENTITYNUM_WORLD)
-				{
-					backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
-					backEnd.refdef.floatTime = originalTime - backEnd.currentEntity->e.shaderTime;
-
-					// set up the transformation matrix
-					R_RotateForEntity(backEnd.currentEntity, &backEnd.viewParms, &backEnd.ori);
-
-					if (backEnd.currentEntity->needDlights)
-					{// set up the dynamic lighting if needed
-						R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
-					}
-
-					if (backEnd.currentEntity->e.renderfx & RF_NODEPTH)
-					{// No depth at all, very rare but some things for seeing through walls
-						depthRange = 2;
-					}
-					else if (backEnd.currentEntity->e.renderfx & RF_DEPTHHACK)
-					{// hack the depth range to prevent view model from poking into walls
-						depthRange = 1;
-					}
-				}
-				else {
-					backEnd.currentEntity = &tr.worldEntity;
-					backEnd.refdef.floatTime = originalTime;
-					backEnd.ori = backEnd.viewParms.world;
-					// we have to reset the shaderTime as well otherwise image animations on
-					// the world (like water) continue with the wrong frame
-					R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
-				}
-
-				GL_SetModelviewMatrix(backEnd.ori.modelViewMatrix);
-
-				//
-				// change depthrange. Also change projection matrix so first person weapon does not look like coming
-				// out of the screen.
-				//
-				if (oldDepthRange != depthRange)
-				{
-					switch (depthRange) {
-					default:
-					case 0:
-						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
-						{
-							GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
-						}
-
-						if (!sunflare)
-							qglDepthRange(0.0f, 1.0f);
-
-						depth[0] = 0;
-						depth[1] = 1;
-						break;
-
-					case 1:
-						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
-						{
-							viewParms_t temp = backEnd.viewParms;
-
-							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
-
-							GL_SetProjectionMatrix(temp.projectionMatrix);
-						}
-
-						if (!oldDepthRange)
-							qglDepthRange(0.0f, 0.3f);
-
-						break;
-
-					case 2:
-						if (backEnd.viewParms.stereoFrame != STEREO_CENTER)
-						{
-							viewParms_t temp = backEnd.viewParms;
-
-							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
-
-							GL_SetProjectionMatrix(temp.projectionMatrix);
-						}
-
-						if (!oldDepthRange)
-							qglDepthRange(0.0f, 0.0f);
-
-						break;
-					}
-
-					oldDepthRange = depthRange;
-				}
-
-				oldEntityNum = entityNum;
-			}
-
-			// add the triangles for this surface
-			rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-#ifdef __DEBUG_MERGE__
-			numShaderDraws++;
-#endif //__DEBUG_MERGE__
-		}
-	}
-	else
-#endif
 	{
 		// First draw world normally...
 		for (i = 0; i < numDrawSurfs; ++i)
@@ -1391,6 +1188,10 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 				GL_SetModelviewMatrix(backEnd.ori.modelViewMatrix);
 
+#ifdef __VULKAN__
+				Com_Memcpy(vk_world.modelview_transform, backEnd.ori.modelViewMatrix, 64);
+#endif //__VULKAN__
+
 				//
 				// change depthrange. Also change projection matrix so first person weapon does not look like coming
 				// out of the screen.
@@ -1477,6 +1278,10 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	// go back to the world modelview matrix
 
 	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
+
+#ifdef __VULKAN__
+	Com_Memcpy(vk_world.modelview_transform, backEnd.viewParms.world.modelViewMatrix, 64);
+#endif //__VULKAN__
 
 	// Restore depth range for subsequent rendering
 	qglDepthRange(0.0f, 1.0f);
@@ -1638,11 +1443,29 @@ void RE_UploadCinematic (int cols, int rows, const byte *data, int client, qbool
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );	
+
+#ifdef __VULKAN__
+		if (vk.active) {
+			Vk_Image& image = vk_world.images[tr.scratchImage[client]->texnum];
+			vkDestroyImage(vk.device, image.handle, nullptr);
+			vkDestroyImageView(vk.device, image.view, nullptr);
+			vkFreeDescriptorSets(vk.device, vk.descriptor_pool, 1, &image.descriptor_set);
+			image = vk_create_image(cols, rows, VK_FORMAT_R8G8B8A8_UNORM, 1, false);
+			vk_upload_image_data(image.handle, cols, rows, false, data, 4);
+		}
+#endif //__VULKAN__
 	} else {
 		if (dirty) {
 			// otherwise, just subimage upload it so that drivers can tell we are going to be changing
 			// it and don't try and do a texture compression
 			qglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, data );
+
+#ifdef __VULKAN__
+			if (vk.active) {
+				const Vk_Image& image = vk_world.images[tr.scratchImage[client]->texnum];
+				vk_upload_image_data(image.handle, cols, rows, false, data, 4);
+			}
+#endif //__VULKAN__
 		}
 	}
 }
@@ -2211,10 +2034,20 @@ const void	*RB_DrawBuffer( const void *data ) {
 
 	qglDrawBuffer( cmd->buffer );
 
+#ifdef __VULKAN__
+	vk_begin_frame();
+#endif //__VULKAN__
+
 	// clear screen for debugging
 	if ( r_clear->integer ) {
 		qglClearColor( 1, 0, 0.5, 1 );
 		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+#ifdef __VULKAN__
+		RB_SetGL2D(); // to ensure we have viewport that occupies entire window
+		float color[4] = { 1, 0, 0.5, 1 };
+		vk_clear_attachments(false, true, color);
+#endif //__VULKAN__
 	}
 
 	return (const void *)(cmd + 1);
@@ -2235,6 +2068,11 @@ void RB_ShowImages( void ) {
 	image_t	*image;
 	float	x, y, w, h;
 	int		start, end;
+
+#ifdef __VULKAN__
+	if (!gl_active) 
+		return;
+#endif //__VULKAN__
 
 	RB_SetGL2D();
 
@@ -2286,6 +2124,75 @@ void RB_ShowImages( void ) {
 	ri->Printf( PRINT_ALL, "%i msec to draw all images\n", end - start );
 
 }
+
+#ifdef __VULKAN__
+void RB_ShowVkImages() {
+	if (!vk.active) {
+		return;
+	}
+
+	if (!backEnd.projection2D) {
+		RB_SetGL2D();
+	}
+
+	float black[4] = { 0, 0, 0, 1 };
+	vk_clear_attachments(false, true, black);
+
+	for (int i = 0; i < tr.numImages; i++) {
+		auto image = tr.images[i];
+
+		float w = glConfig.vidWidth / 20;
+		float h = glConfig.vidHeight / 15;
+		float x = i % 20 * w;
+		float y = i / 20 * h;
+
+		// show in proportional size in mode 2
+		if (r_showImages->integer == 2) {
+			w *= image->uploadWidth / 512.0f;
+			h *= image->uploadHeight / 512.0f;
+		}
+
+		GL_Bind(image);
+
+		Com_Memset(tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4);
+
+		tess.numIndexes = 6;
+		tess.numVertexes = 4;
+
+		tess.indexes[0] = 0;
+		tess.indexes[1] = 1;
+		tess.indexes[2] = 2;
+		tess.indexes[3] = 0;
+		tess.indexes[4] = 2;
+		tess.indexes[5] = 3;
+
+		tess.xyz[0][0] = x;
+		tess.xyz[0][1] = y;
+		tess.svars.texcoords[0][0][0] = 0;
+		tess.svars.texcoords[0][0][1] = 0;
+
+		tess.xyz[1][0] = x + w;
+		tess.xyz[1][1] = y;
+		tess.svars.texcoords[0][1][0] = 1;
+		tess.svars.texcoords[0][1][1] = 0;
+
+		tess.xyz[2][0] = x + w;
+		tess.xyz[2][1] = y + h;
+		tess.svars.texcoords[0][2][0] = 1;
+		tess.svars.texcoords[0][2][1] = 1;
+
+		tess.xyz[3][0] = x;
+		tess.xyz[3][1] = y + h;
+		tess.svars.texcoords[0][3][0] = 0;
+		tess.svars.texcoords[0][3][1] = 1;
+
+		vk_bind_geometry();
+		vk_shade_geometry(vk.images_debug_pipeline, false, Vk_Depth_Range::normal);
+	}
+	tess.numIndexes = 0;
+	tess.numVertexes = 0;
+}
+#endif //__VULKAN__
 
 /*
 =============
@@ -2373,6 +2280,9 @@ const void	*RB_SwapBuffers( const void *data ) {
 	// texture swapping test
 	if ( r_showImages->integer ) {
 		RB_ShowImages();
+#ifdef __VULKAN__
+		RB_ShowVkImages();
+#endif //__VULKAN__
 	}
 
 	cmd = (const swapBuffersCommand_t *)data;
@@ -2425,6 +2335,10 @@ const void	*RB_SwapBuffers( const void *data ) {
 	GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
 	GLimp_EndFrame();
+
+#ifdef __VULKAN__
+	vk_end_frame();
+#endif //__VULKAN__
 
 	backEnd.framePostProcessed = qfalse;
 	backEnd.projection2D = qfalse;
@@ -3031,6 +2945,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 
 	t1 = ri->Milliseconds ();
 
+#ifdef __VULKAN__
+	bool vk_begin_frame_called = false;
+	bool vk_end_frame_called = false;
+#endif //__VULKAN__
+
 	while ( 1 ) {
 		data = PADP(data, sizeof(void *));
 
@@ -3091,6 +3010,12 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			// stop rendering
 			t2 = ri->Milliseconds ();
 			backEnd.pc.msec = t2 - t1;
+
+#ifdef __VULKAN__
+			if (com_errorEntered && (vk_begin_frame_called && !vk_end_frame_called))
+				vk_end_frame();
+#endif //__VULKAN__
+
 			return;
 		}
 	}

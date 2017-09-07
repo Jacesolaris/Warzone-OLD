@@ -6835,6 +6835,43 @@ static shader_t *FinishShader( void ) {
 	// determine which vertex attributes this shader needs
 	ComputeVertexAttribs();
 
+#ifdef __VULKAN__
+	// VULKAN: create pipelines for each shader stage
+	if (vk.active) {
+		Vk_Pipeline_Def def;
+		def.face_culling = shader.cullType;
+		def.polygon_offset = (shader.polygonOffset == qtrue);
+
+		for (int i = 0; i < stage; i++) {
+			shaderStage_t *pStage = &stages[i];
+			def.state_bits = pStage->stateBits;
+
+			if (pStage->bundle[1].image[0] == nullptr)
+				def.shader_type = Vk_Shader_Type::single_texture;
+#ifdef __FIXME__
+			else if (shader.multitextureEnv == GL_MODULATE)
+				def.shader_type = Vk_Shader_Type::multi_texture_mul;
+			else if (shader.multitextureEnv == GL_ADD)
+				def.shader_type = Vk_Shader_Type::multi_texture_add;
+#endif //__FIXME__
+			else
+				ri->Error(ERR_FATAL, "Vulkan: could not create pipelines for q3 shader '%s'\n", shader.name);
+
+			def.clipping_plane = false;
+			def.mirror = false;
+			pStage->vk_pipeline = vk_find_pipeline(def);
+
+			def.clipping_plane = true;
+			def.mirror = false;
+			pStage->vk_portal_pipeline = vk_find_pipeline(def);
+
+			def.clipping_plane = true;
+			def.mirror = true;
+			pStage->vk_mirror_pipeline = vk_find_pipeline(def);
+		}
+	}
+#endif //__VULKAN__
+
 	return GeneratePermanentShader();
 }
 

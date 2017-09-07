@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                   Warzone Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
+//#define __VULKAN__ // Experimental vulkan renderer testing...
+
 //#define __USE_QGL_FINISH__
 #define __USE_QGL_FLUSH__
 //#define __RENDERER_FOLIAGE__
@@ -95,6 +97,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "win32\win_local.h"
 #include "qcommon\sstring.h"
 #endif
+
+#ifdef __VULKAN__
+#include "vk.h"
+extern bool gl_active;
+#endif //__VULKAN__
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
 typedef unsigned int glIndex_t;
@@ -165,6 +172,10 @@ In JA, we define these in the tr_local.h, which is much more logical
 
 =====================================================
 */
+
+#ifdef __VULKAN__
+extern cvar_t	*r_renderAPI;
+#endif //__VULKAN__
 
 extern cvar_t	*r_superSampleMultiplier;
 extern cvar_t	*r_surfaceShaderSorting;
@@ -1073,6 +1084,12 @@ typedef struct {
 
 	bool			isFoliage;
 	bool			isFoliageChecked;
+
+#ifdef __VULKAN__
+	VkPipeline		vk_pipeline = VK_NULL_HANDLE;
+	VkPipeline		vk_portal_pipeline = VK_NULL_HANDLE;
+	VkPipeline		vk_mirror_pipeline = VK_NULL_HANDLE;
+#endif //__VULKAN__
 } shaderStage_t;
 
 struct shaderCommands_s;
@@ -2780,6 +2797,11 @@ extern trGlobals_t	tr;
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init
 extern glRefConfig_t glRefConfig;
 
+#ifdef __VULKAN__
+extern Vk_Instance	vk;				// shouldn't be cleared during ref re-init
+extern Vk_World		vk_world;		// this data is cleared during ref re-init
+#endif //__VULKAN__
+
 //
 // cvars
 //
@@ -3958,6 +3980,13 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 qboolean R_TextureFileExists(char *name);
 
 uint32_t R_TessXYZtoPackedNormals(vec3_t xyz);
+
+
+#ifdef __VULKAN__
+void vk_imp_init();
+void vk_imp_shutdown();
+void vk_imp_create_surface();
+#endif //__VULKAN__
 
 /*
 ============================================================

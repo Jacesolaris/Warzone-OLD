@@ -3253,7 +3253,8 @@ qboolean QGL_Init( const char *dllname )
 	if ( ( glw_state.hinstOpenGL = LoadLibrary( dllname ) ) == 0 )
 	{
 	    DWORD dw = GetLastError();
-		Com_Printf ("failed %u\n", dw );
+		//Com_Printf ("failed %u\n", dw );
+		Com_Error(ERR_DISCONNECT, "failed %u\n", dw);
 		return qfalse;
 	}
 	Com_Printf ("succeeded\n" );

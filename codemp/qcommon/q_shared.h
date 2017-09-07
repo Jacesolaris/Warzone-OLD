@@ -28,7 +28,7 @@
 
 #define PRODUCT_NAME			"Warzone"
 
-#define CLIENT_WINDOW_TITLE "Star Wars Warzone"
+#define CLIENT_WINDOW_TITLE "Star Wars: Warzone"
 #define CLIENT_CONSOLE_TITLE "Warzone Console"
 #define HOMEPATH_NAME_UNIX "warzone"
 #define HOMEPATH_NAME_WIN "warzone"

@@ -24,7 +24,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include "ghoul2/g2_local.h"
 
+#ifdef __VULKAN__
+Vk_Instance vk;
+Vk_World	vk_world;
+#endif //__VULKAN__
+
 bool g_bDynamicGlowSupported = false;		// Not used. Put here to keep *_glimp from whining at us. --eez
+
+bool		gl_active = false;
 
 glconfig_t  glConfig;
 glconfigExt_t glConfigExt;
@@ -35,6 +42,10 @@ glstate_t	glState;
 
 static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
+
+#ifdef __VULKAN__
+cvar_t	*r_renderAPI;
+#endif //__VULKAN__
 
 cvar_t	*r_superSampleMultiplier;
 cvar_t	*r_surfaceShaderSorting;
@@ -505,41 +516,60 @@ static void InitOpenGL( void )
 
 	if ( glConfig.vidWidth * r_superSampleMultiplier->value == 0 )
 	{
-		GLint		temp;
-
-		GLimp_Init();
-		GLimp_InitExtraExtensions();
-
-		strcpy( renderer_buffer, glConfig.renderer_string );
-		Q_strlwr( renderer_buffer );
-
-		// Determine GPU IHV
-		if ( Q_stristr( glConfig.vendor_string, "ATI Technologies Inc." ) )
+#ifdef __VULKAN__
+		if (r_renderAPI->integer == 0)
+#endif //__VULKAN__
 		{
-			glRefConfig.hardwareVendor = IHV_AMD;
-		}
-		else if ( Q_stristr( glConfig.vendor_string, "NVIDIA" ) )
-		{
-			glRefConfig.hardwareVendor = IHV_NVIDIA;
-		}
-		else if ( Q_stristr( glConfig.vendor_string, "INTEL") )
-		{
-			glRefConfig.hardwareVendor = IHV_INTEL;
-		}
-		else
-		{
-			glRefConfig.hardwareVendor = IHV_UNKNOWN;
+			GLint		temp;
+
+			GLimp_Init();
+			GLimp_InitExtraExtensions();
+
+			strcpy(renderer_buffer, glConfig.renderer_string);
+			Q_strlwr(renderer_buffer);
+
+			// Determine GPU IHV
+			if (Q_stristr(glConfig.vendor_string, "ATI Technologies Inc."))
+			{
+				glRefConfig.hardwareVendor = IHV_AMD;
+			}
+			else if (Q_stristr(glConfig.vendor_string, "NVIDIA"))
+			{
+				glRefConfig.hardwareVendor = IHV_NVIDIA;
+			}
+			else if (Q_stristr(glConfig.vendor_string, "INTEL"))
+			{
+				glRefConfig.hardwareVendor = IHV_INTEL;
+			}
+			else
+			{
+				glRefConfig.hardwareVendor = IHV_UNKNOWN;
+			}
+
+			// OpenGL driver constants
+			qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &temp);
+			glConfig.maxTextureSize = temp;
+
+			// stubbed or broken drivers may have reported 0...
+			if (glConfig.maxTextureSize <= 0)
+			{
+				glConfig.maxTextureSize = 0;
+			}
+
+#ifdef __VULKAN__
+			gl_active = true;
+#endif //__VULKAN__
 		}
 
-		// OpenGL driver constants
-		qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &temp );
-		glConfig.maxTextureSize = temp;
-
-		// stubbed or broken drivers may have reported 0...
-		if ( glConfig.maxTextureSize <= 0 )
+#ifdef __VULKAN__
+		if (r_renderAPI->integer != 0) 
 		{
-			glConfig.maxTextureSize = 0;
+			vk_imp_init();
+			vk_initialize();
+
+			//gl_active = false;
 		}
+#endif //__VULKAN__
 
 		// set default state
 		GL_SetDefaultState();
@@ -716,7 +746,31 @@ byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *pa
 	buffer = (byte *)ri->Hunk_AllocateTempMemory(padwidth * height + *offset + packAlign - 1);
 
 	bufstart = (byte*)(PADP((intptr_t) buffer + *offset, packAlign));
+
+#ifdef __VULKAN__
+	if (r_renderAPI->integer == 0) 
+	{
+		qglReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, bufstart);
+	} 
+	else 
+	{
+		byte* buffer2 = (byte*)ri->Hunk_AllocateTempMemory(glConfig.vidWidth*glConfig.vidHeight * 4);
+		vk_read_pixels(buffer2);
+
+		byte* buffer_ptr = bufstart;// buffer + 18;
+		byte* buffer2_ptr = buffer2;
+		for (int i = 0; i < glConfig.vidWidth * glConfig.vidHeight; i++) {
+			buffer_ptr[0] = buffer2_ptr[0];
+			buffer_ptr[1] = buffer2_ptr[1];
+			buffer_ptr[2] = buffer2_ptr[2];
+			buffer_ptr += 3;
+			buffer2_ptr += 4;
+		}
+		ri->Hunk_FreeTempMemory(buffer2);
+	}
+#else //!__VULKAN__
 	qglReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, bufstart);
+#endif //__VULKAN__
 
 	*offset = bufstart - buffer;
 	*padlen = padwidth - linelen;
@@ -1264,40 +1318,89 @@ static void GfxInfo_f( void )
 		"fullscreen"
 	};
 
-	ri->Printf( PRINT_ALL, "\nGL_VENDOR: %s\n", glConfig.vendor_string );
-	ri->Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
-	ri->Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
-	ri->Printf( PRINT_ALL, "GL_EXTENSIONS: " );
-	R_PrintLongString( glConfigExt.originalExtensionString );
-	ri->Printf( PRINT_ALL, "\n" );
-	ri->Printf( PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
-	ri->Printf( PRINT_ALL, "GL_MAX_TEXTURE_UNITS_ARB: %d\n", glConfig.numTextureUnits );
-	ri->Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
-	ri->Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, fsstrings[r_fullscreen->integer == 1] );
-	if ( glConfig.displayFrequency )
+#ifdef __VULKAN__
+	if (!vk.active)
+#endif //__VULKAN__
 	{
-		ri->Printf( PRINT_ALL, "%d\n", glConfig.displayFrequency );
-	}
-	else
-	{
-		ri->Printf( PRINT_ALL, "N/A\n" );
-	}
-	if ( glConfig.deviceSupportsGamma )
-	{
-		ri->Printf( PRINT_ALL, "GAMMA: hardware w/ %d overbright bits\n", tr.overbrightBits );
-	}
-	else
-	{
-		ri->Printf( PRINT_ALL, "GAMMA: software w/ %d overbright bits\n", tr.overbrightBits );
-	}
+		ri->Printf(PRINT_ALL, "\nActive 3D API: OpenGL\n");
+		ri->Printf(PRINT_ALL, "\nGL_VENDOR: %s\n", glConfig.vendor_string);
+		ri->Printf(PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string);
+		ri->Printf(PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string);
+		ri->Printf(PRINT_ALL, "GL_EXTENSIONS: ");
+		R_PrintLongString(glConfigExt.originalExtensionString);
+		ri->Printf(PRINT_ALL, "\n");
+		ri->Printf(PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize);
+		ri->Printf(PRINT_ALL, "GL_MAX_TEXTURE_UNITS_ARB: %d\n", glConfig.numTextureUnits);
+		ri->Printf(PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits);
+		ri->Printf(PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, fsstrings[r_fullscreen->integer == 1]);
+		if (glConfig.displayFrequency)
+		{
+			ri->Printf(PRINT_ALL, "%d\n", glConfig.displayFrequency);
+		}
+		else
+		{
+			ri->Printf(PRINT_ALL, "N/A\n");
+		}
+		if (glConfig.deviceSupportsGamma)
+		{
+			ri->Printf(PRINT_ALL, "GAMMA: hardware w/ %d overbright bits\n", tr.overbrightBits);
+		}
+		else
+		{
+			ri->Printf(PRINT_ALL, "GAMMA: software w/ %d overbright bits\n", tr.overbrightBits);
+		}
 
-	ri->Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
-	ri->Printf( PRINT_ALL, "picmip: %d\n", r_picmip->integer );
-	ri->Printf( PRINT_ALL, "texture bits: %d\n", r_texturebits->integer );
-	ri->Printf( PRINT_ALL, "multitexture: %s\n", enablestrings[qglActiveTextureARB != 0] );
-	ri->Printf( PRINT_ALL, "compiled vertex arrays: %s\n", enablestrings[qglLockArraysEXT != 0 ] );
-	ri->Printf( PRINT_ALL, "texenv add: %s\n", enablestrings[glConfig.textureEnvAddAvailable != 0] );
-	ri->Printf( PRINT_ALL, "compressed textures: %s\n", enablestrings[glConfig.textureCompression!=TC_NONE] );
+		ri->Printf(PRINT_ALL, "texturemode: %s\n", r_textureMode->string);
+		ri->Printf(PRINT_ALL, "picmip: %d\n", r_picmip->integer);
+		ri->Printf(PRINT_ALL, "texture bits: %d\n", r_texturebits->integer);
+		ri->Printf(PRINT_ALL, "multitexture: %s\n", enablestrings[qglActiveTextureARB != 0]);
+		ri->Printf(PRINT_ALL, "compiled vertex arrays: %s\n", enablestrings[qglLockArraysEXT != 0]);
+		ri->Printf(PRINT_ALL, "texenv add: %s\n", enablestrings[glConfig.textureEnvAddAvailable != 0]);
+		ri->Printf(PRINT_ALL, "compressed textures: %s\n", enablestrings[glConfig.textureCompression != TC_NONE]);
+	}
+#ifdef __VULKAN__
+	else
+	{
+		ri->Printf(PRINT_ALL, "\nActive 3D API: Vulkan\n");
+		VkPhysicalDeviceProperties props;
+		vkGetPhysicalDeviceProperties(vk.physical_device, &props);
+
+		uint32_t major = VK_VERSION_MAJOR(props.apiVersion);
+		uint32_t minor = VK_VERSION_MINOR(props.apiVersion);
+		uint32_t patch = VK_VERSION_PATCH(props.apiVersion);
+
+		const char* device_type;
+		if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+			device_type = "INTEGRATED_GPU";
+		else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			device_type = "DISCRETE_GPU";
+		else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
+			device_type = "VIRTUAL_GPU";
+		else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU)
+			device_type = "CPU";
+		else
+			device_type = "Unknown";
+
+		const char* vendor_name = "unknown";
+		if (props.vendorID == 0x1002) {
+			vendor_name = "Advanced Micro Devices, Inc.";
+		}
+		else if (props.vendorID == 0x10DE) {
+			vendor_name = "NVIDIA";
+		}
+		else if (props.vendorID == 0x8086) {
+			vendor_name = "Intel Corporation";
+		}
+
+		ri->Printf(PRINT_ALL, "Vk api version: %d.%d.%d\n", major, minor, patch);
+		ri->Printf(PRINT_ALL, "Vk driver version: %d\n", props.driverVersion);
+		ri->Printf(PRINT_ALL, "Vk vendor id: 0x%X (%s)\n", props.vendorID, vendor_name);
+		ri->Printf(PRINT_ALL, "Vk device id: 0x%X\n", props.deviceID);
+		ri->Printf(PRINT_ALL, "Vk device type: %s\n", device_type);
+		ri->Printf(PRINT_ALL, "Vk device name: %s\n", props.deviceName);
+	}
+#endif //__VULKAN__
+
 	if ( r_vertexLight->integer )
 	{
 		ri->Printf( PRINT_ALL, "HACK: using vertex lightmap approximation\n" );
@@ -1381,6 +1484,10 @@ R_Register
 */
 void R_Register( void )
 {
+#ifdef __VULKAN__
+	r_renderAPI = ri->Cvar_Get("r_renderAPI", "1", CVAR_ARCHIVE | CVAR_LATCH);
+#endif //__VULKAN__
+
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_surfaceShaderSorting = ri->Cvar_Get("r_surfaceShaderSorting", "1", CVAR_ARCHIVE);
@@ -1983,12 +2090,26 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 	R_ShutdownFonts();
 
 	// shut down platform specific OpenGL stuff
-	if ( destroyWindow ) {
-		GLimp_Shutdown();
-
+	if (gl_active) {
+		if (destroyWindow)
+			GLimp_Shutdown();
+	
 		Com_Memset( &glConfig, 0, sizeof( glConfig ) );
 		Com_Memset( &glState, 0, sizeof( glState ) );
 	}
+
+#ifdef __VULKAN__
+	if (vk.active) {
+		vk_release_resources();
+		if (destroyWindow) {
+			vk_shutdown();
+			vk_imp_shutdown();
+		}
+
+		Com_Memset(&glConfig, 0, sizeof(glConfig));
+		Com_Memset(&glState, 0, sizeof(glState));
+	}
+#endif //__VULKAN__
 
 	tr.registered = qfalse;
 }

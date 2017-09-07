@@ -220,10 +220,13 @@ static qboolean GLimp_HaveExtension(const char *ext)
 	return (qboolean)((*ptr == ' ') || (*ptr == '\0'));  // verify it's complete string.
 }
 
+#define DummyGLFunc {}
+
 template<typename GLFuncType>
 static qboolean GetGLFunction ( GLFuncType& glFunction, const char *glFunctionString, qboolean errorOnFailure )
 {
-	glFunction = (GLFuncType)GL_GetProcAddress (glFunctionString);
+	glFunction = (GLFuncType)GL_GetProcAddress(glFunctionString);
+
 	if ( glFunction == NULL )
 	{
 		if ( errorOnFailure )

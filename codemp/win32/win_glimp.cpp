@@ -1942,3 +1942,236 @@ void GLimp_LogComment( char *comment )
 		fprintf( glw_state.log_fp, "%s", comment );
 	}
 }
+
+#ifdef __VULKAN__
+#define	MAIN_WINDOW_CLASS_NAME	"Star Wars: Warzone"
+
+static bool s_main_window_class_registered = false;
+
+static HINSTANCE vk_library_handle; // HINSTANCE for the Vulkan library
+
+static int GetDesktopCaps(int index) {
+	HDC hdc = GetDC(GetDesktopWindow());
+	int value = GetDeviceCaps(hdc, index);
+	ReleaseDC(GetDesktopWindow(), hdc);
+	return value;
+}
+static int GetDesktopColorDepth() { return GetDesktopCaps(BITSPIXEL); }
+static int GetDesktopWidth() { return GetDesktopCaps(HORZRES); }
+static int GetDesktopHeight() { return GetDesktopCaps(VERTRES); }
+
+static void SetMode(int mode, qboolean fullscreen) {
+	if (fullscreen) {
+		ri->Printf(PRINT_ALL, "...setting fullscreen mode:");
+		glConfig.vidWidth = glw_state.desktopWidth;
+		glConfig.vidHeight = glw_state.desktopHeight;
+		//glConfig.windowAspect = 1.0f;
+	}
+	else {
+		ri->Printf(PRINT_ALL, "...setting mode %d:", mode);
+		if (!R_GetModeInfo(&glConfig.vidWidth, &glConfig.vidHeight/*, &glConfig.windowAspect*/, mode)) {
+			ri->Printf(PRINT_ALL, " invalid mode\n");
+			ri->Error(ERR_FATAL, "SetMode - could not set the given mode (%d)\n", mode);
+		}
+	}
+	glConfig.isFullscreen = fullscreen;
+	ri->Printf(PRINT_ALL, " %d %d %s\n", glConfig.vidWidth, glConfig.vidHeight, fullscreen ? "FS" : "W");
+}
+
+static HWND create_main_window(int width, int height, qboolean fullscreen)
+{
+	//
+	// register the window class if necessary
+	//
+	if (!s_main_window_class_registered)
+	{
+		cvar_t* cv = ri->Cvar_Get("win_wndproc", "", 0);
+		WNDPROC	wndproc;
+		sscanf(cv->string, "%p", (void **)&wndproc);
+
+		WNDCLASS wc;
+
+		memset(&wc, 0, sizeof(wc));
+
+		wc.style = 0;
+		wc.lpfnWndProc = wndproc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = tr.wv->hInstance;
+		wc.hIcon = LoadIcon(tr.wv->hInstance, MAKEINTRESOURCE(IDI_ICON1));
+		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.hbrBackground = (HBRUSH)(void *)COLOR_GRAYTEXT;
+		wc.lpszMenuName = 0;
+		wc.lpszClassName = MAIN_WINDOW_CLASS_NAME;
+
+		if (!RegisterClass(&wc))
+		{
+			ri->Error(ERR_FATAL, "create_main_window: could not register window class");
+		}
+		s_main_window_class_registered = true;
+		ri->Printf(PRINT_ALL, "...registered window class\n");
+	}
+
+	//
+	// compute width and height
+	//
+	RECT r;
+	r.left = 0;
+	r.top = 0;
+	r.right = width;
+	r.bottom = height;
+
+	int	stylebits;
+	if (fullscreen)
+	{
+		stylebits = WS_POPUP | WS_VISIBLE | WS_SYSMENU;
+	}
+	else
+	{
+		stylebits = WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_VISIBLE | WS_SYSMENU;
+		AdjustWindowRect(&r, stylebits, FALSE);
+	}
+
+	int w = r.right - r.left;
+	int h = r.bottom - r.top;
+
+	int x, y;
+
+	if (fullscreen)
+	{
+		x = 0;
+		y = 0;
+	}
+	else
+	{
+		cvar_t* vid_xpos = ri->Cvar_Get("vid_xpos", "", 0);
+		cvar_t* vid_ypos = ri->Cvar_Get("vid_ypos", "", 0);
+		x = vid_xpos->integer;
+		y = vid_ypos->integer;
+
+		// adjust window coordinates if necessary 
+		// so that the window is completely on screen
+		if (x < 0)
+			x = 0;
+		if (y < 0)
+			y = 0;
+
+		int desktop_width = GetDesktopWidth();
+		int desktop_height = GetDesktopHeight();
+
+		if (w < desktop_width && h < desktop_height)
+		{
+			if (x + w > desktop_width)
+				x = (desktop_width - w);
+			if (y + h > desktop_height)
+				y = (desktop_height - h);
+		}
+	}
+
+	HWND hwnd = CreateWindowEx(
+		0,
+		MAIN_WINDOW_CLASS_NAME,
+		"Star Wars: Warzone (Vulkan Experimental)",
+		stylebits,
+		x, y, w, h,
+		NULL,
+		NULL,
+		tr.wv->hInstance,
+		NULL);
+
+	if (!hwnd)
+	{
+		ri->Error(ERR_FATAL, "create_main_window() - Couldn't create window");
+	}
+
+	ShowWindow(hwnd, SW_SHOW);
+	UpdateWindow(hwnd);
+	ri->Printf(PRINT_ALL, "...created window@%d,%d (%dx%d)\n", x, y, w, h);
+	return hwnd;
+}
+
+void vk_imp_init() {
+	ri->Printf(PRINT_ALL, "Initializing Vulkan subsystem\n");
+
+	// This will set qgl pointers to no-op placeholders.
+	if (!gl_active) {
+		QGL_Init("opengl32");
+		/*
+		//glConfigExt
+		//GLW_InitExtensions();
+		GLimp_Init();
+		GLimp_InitExtraExtensions();
+		*/
+		qglActiveTextureARB = [](GLenum) {};
+		qglClientActiveTextureARB = [](GLenum) {};
+	}
+
+	// Load Vulkan DLL.
+	const char* dll_name = "vulkan-1.dll";
+
+	ri->Printf(PRINT_ALL, "...calling LoadLibrary('%s'): ", dll_name);
+	vk_library_handle = LoadLibrary(dll_name);
+
+	if (vk_library_handle == NULL) {
+		ri->Printf(PRINT_ALL, "failed\n");
+		ri->Error(ERR_FATAL, "vk_imp_init - could not load %s\n", dll_name);
+	}
+	ri->Printf(PRINT_ALL, "succeeded\n");
+
+	vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)GetProcAddress(vk_library_handle, "vkGetInstanceProcAddr");
+
+	// Create window.
+	SetMode(r_mode->integer, (qboolean)r_fullscreen->integer);
+
+	if (r_renderAPI->integer != 0) {
+		tr.wv->hWnd = create_main_window(glConfig.vidWidth, glConfig.vidHeight, (qboolean)r_fullscreen->integer);
+		SetForegroundWindow(tr.wv->hWnd);
+		SetFocus(tr.wv->hWnd);
+		WG_CheckHardwareGamma();
+	}
+	//else {
+	//	tr.wv->hWnd = create_twin_window(glConfig.vidWidth, glConfig.vidHeight);
+	//}
+}
+
+void vk_imp_shutdown() {
+	ri->Printf(PRINT_ALL, "Shutting down Vulkan subsystem\n");
+
+	if (tr.wv->hWnd) {
+		ri->Printf(PRINT_ALL, "...destroying Vulkan window\n");
+		DestroyWindow(tr.wv->hWnd);
+		tr.wv->hWnd = NULL;
+	}
+
+	if (vk_library_handle != NULL) {
+		ri->Printf(PRINT_ALL, "...unloading Vulkan DLL\n");
+		FreeLibrary(vk_library_handle);
+		vk_library_handle = NULL;
+	}
+	vkGetInstanceProcAddr = nullptr;
+
+	// For vulkan mode we still have qgl pointers initialized with placeholder values.
+	// Reset them the same way as we do in opengl mode.
+	QGL_Shutdown();
+
+	WG_RestoreGamma();
+
+	memset(&glConfig, 0, sizeof(glConfig));
+	memset(&glState, 0, sizeof(glState));
+
+	if (glw_state.log_fp) {
+		fclose(glw_state.log_fp);
+		glw_state.log_fp = 0;
+	}
+}
+
+void vk_imp_create_surface() {
+	VkWin32SurfaceCreateInfoKHR desc;
+	desc.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	desc.pNext = nullptr;
+	desc.flags = 0;
+	desc.hinstance = ::GetModuleHandle(nullptr);
+	desc.hwnd = tr.wv->hWnd;
+	VK_CHECK(vkCreateWin32SurfaceKHR(vk.instance, &desc, nullptr, &vk.surface));
+}
+#endif //__VULKAN__

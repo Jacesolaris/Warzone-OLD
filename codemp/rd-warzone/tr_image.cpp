@@ -147,6 +147,20 @@ void GL_TextureMode( const char *string ) {
 			}
 		}
 	}
+
+#ifdef __VULKAN__
+	if (vk.active) {
+		VK_CHECK(vkDeviceWaitIdle(vk.device));
+		for (i = 0; i < tr.numImages; i++) {
+			image_t* glt = tr.images[i];
+
+			if (glt->flags & IMGFLAG_MIPMAP) {
+				Vk_Image& image = vk_world.images[i/*glt->texnum-1024*/];
+				vk_update_descriptor_set(image.descriptor_set, image.view, true, /*glt->wrapClampMode == GL_REPEAT*/!(glt->flags & IMGFLAG_CLAMPTOEDGE));
+			}
+		}
+	}
+#endif //__VULKAN__
 }
 
 /*
@@ -2109,6 +2123,69 @@ static void RawImage_UploadTexture( byte *data, int x, int y, int width, int hei
 	}
 }
 
+#ifdef __VULKAN__
+struct Image_Upload_Data {
+	byte* buffer;
+	int buffer_size;
+	int mip_levels;
+	int base_level_width;
+	int base_level_height;
+};
+
+static Vk_Image upload_vk_image(const Image_Upload_Data& upload_data, bool repeat_texture) {
+	int w = upload_data.base_level_width;
+	int h = upload_data.base_level_height;
+
+	bool has_alpha = false;
+	for (int i = 0; i < w * h; i++) {
+		if (upload_data.buffer[i * 4 + 3] != 255) {
+			has_alpha = true;
+			break;
+		}
+	}
+	VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+	if (r_texturebits->integer <= 16) {
+		format = has_alpha ? VK_FORMAT_B4G4R4A4_UNORM_PACK16 : VK_FORMAT_A1R5G5B5_UNORM_PACK16;
+	}
+
+	int bytes_per_pixel = 4;
+
+	if (format == VK_FORMAT_A1R5G5B5_UNORM_PACK16) {
+		bytes_per_pixel = 2;
+		auto p = (uint16_t*)upload_data.buffer;
+		for (int i = 0; i < upload_data.buffer_size; i += 4, p++) {
+			byte r = upload_data.buffer[i + 0];
+			byte g = upload_data.buffer[i + 1];
+			byte b = upload_data.buffer[i + 2];
+
+			*p = uint32_t((b / 255.0) * 31.0 + 0.5) |
+				(uint32_t((g / 255.0) * 31.0 + 0.5) << 5) |
+				(uint32_t((r / 255.0) * 31.0 + 0.5) << 10) |
+				(1 << 15);
+		}
+	}
+	else if (format == VK_FORMAT_B4G4R4A4_UNORM_PACK16) {
+		bytes_per_pixel = 2;
+		auto p = (uint16_t*)upload_data.buffer;
+		for (int i = 0; i < upload_data.buffer_size; i += 4, p++) {
+			byte r = upload_data.buffer[i + 0];
+			byte g = upload_data.buffer[i + 1];
+			byte b = upload_data.buffer[i + 2];
+			byte a = upload_data.buffer[i + 3];
+
+			*p = uint32_t((a / 255.0) * 15.0 + 0.5) |
+				(uint32_t((r / 255.0) * 15.0 + 0.5) << 4) |
+				(uint32_t((g / 255.0) * 15.0 + 0.5) << 8) |
+				(uint32_t((b / 255.0) * 15.0 + 0.5) << 12);
+		}
+	}
+
+	Vk_Image image = vk_create_image(w, h, format, upload_data.mip_levels, repeat_texture);
+	vk_upload_image_data(image.handle, w, h, upload_data.mip_levels > 1, upload_data.buffer, bytes_per_pixel);
+	return image;
+}
+#endif //__VULKAN__
+
 static bool IsPowerOfTwo ( int i )
 {
 	return (i & (i - 1)) == 0;
@@ -2122,7 +2199,7 @@ Upload32
 */
 extern qboolean charSet;
 static void Upload32( byte *data, int width, int height, imgType_t type, int flags,
-	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight)
+	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight, int texIndex)
 {
 	byte		*scaledBuffer = NULL;
 	byte		*resampledBuffer = NULL;
@@ -2190,8 +2267,24 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 		( scaled_height == height ) ) {
 		if (!(flags & IMGFLAG_MIPMAP))
 		{
+#ifdef __VULKAN__
+			if (vk.active) {
+				Image_Upload_Data iud;
+				iud.buffer = data;
+				iud.buffer_size = scaled_width * scaled_height * 4;
+				iud.mip_levels = 1;
+				iud.base_level_width = width;
+				iud.base_level_height = height;
+				vk_world.images[texIndex-1024] = upload_vk_image(iud, /*glWrapClampMode == GL_REPEAT*/!(flags & IMGFLAG_CLAMPTOEDGE));
+			}
+			else {
+				RawImage_UploadTexture(data, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse);
+			}
+#else //!__VULKAN__
 			RawImage_UploadTexture( data, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse );
 			//qglTexImage2D (GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+#endif //__VULKAN__
+			
 			*pUploadWidth = scaled_width;
 			*pUploadHeight = scaled_height;
 
@@ -2231,7 +2324,21 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 	*pUploadWidth = scaled_width;
 	*pUploadHeight = scaled_height;
 
+#ifdef __VULKAN__
+	if (vk.active) {
+		Image_Upload_Data iud;
+		iud.buffer = scaledBuffer;
+		iud.buffer_size = scaled_width * scaled_height * 4;
+		iud.mip_levels = 1;
+		iud.base_level_width = scaled_width;
+		iud.base_level_height = scaled_height;
+		vk_world.images[texIndex-1024] = upload_vk_image(iud, /*glWrapClampMode == GL_REPEAT*/!(flags & IMGFLAG_CLAMPTOEDGE));
+	} else {
+		RawImage_UploadTexture(scaledBuffer, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse);
+	}
+#else //!__VULKAN__
 	RawImage_UploadTexture(scaledBuffer, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse);
+#endif //__VULKAN__
 
 done:
 
@@ -2424,7 +2531,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		{
 			Upload32( pic, image->width, image->height, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
-				&image->uploadHeight );
+				&image->uploadHeight, image->texnum );
 		}
 		else
 		{

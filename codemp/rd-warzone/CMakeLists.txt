@@ -72,6 +72,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_world.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.h"
+	"${MPDir}/rd-warzone/vk.cpp"
+	"${MPDir}/rd-warzone/vk.h"
 	"${MPDir}/game/ckheap.h"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})
@@ -133,33 +135,62 @@ source_group("MaskedOcclusionCulling" FILES ${MPWarzoneMaskedOcclusionCullingFil
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneMaskedOcclusionCullingFiles})
 
 set(MPWarzoneTinyImageLoaderFiles
-	"${MPDir}/TinyImageLoader/TILColors.h"
-	"${MPDir}/TinyImageLoader/TILFileStream.cpp"
-	"${MPDir}/TinyImageLoader/TILFileStream.h"
-	"${MPDir}/TinyImageLoader/TILFileStreamStd.cpp"
-	"${MPDir}/TinyImageLoader/TILFileStreamStd.h"
-	"${MPDir}/TinyImageLoader/TILImage.cpp"
-	"${MPDir}/TinyImageLoader/TILImage.h"
-	"${MPDir}/TinyImageLoader/TILImageBMP.cpp"
-	"${MPDir}/TinyImageLoader/TILImageBMP.h"
-	"${MPDir}/TinyImageLoader/TILImageDDS.cpp"
-	"${MPDir}/TinyImageLoader/TILImageDDS.h"
-	"${MPDir}/TinyImageLoader/TILImageGIF.cpp"
-	"${MPDir}/TinyImageLoader/TILImageGIF.h"
-	"${MPDir}/TinyImageLoader/TILImageICO.cpp"
-	"${MPDir}/TinyImageLoader/TILImageICO.h"
-	"${MPDir}/TinyImageLoader/TILImagePNG.cpp"
-	"${MPDir}/TinyImageLoader/TILImagePNG.h"
-	"${MPDir}/TinyImageLoader/TILImageTemplate.cpp"
-	"${MPDir}/TinyImageLoader/TILImageTemplate.h"
-	"${MPDir}/TinyImageLoader/TILImageTGA.cpp"
-	"${MPDir}/TinyImageLoader/TILImageTGA.h"
-	"${MPDir}/TinyImageLoader/TILInternal.h"
-	"${MPDir}/TinyImageLoader/TILSettings.h"
-	"${MPDir}/TinyImageLoader/TinyImageLoader.cpp"
-	"${MPDir}/TinyImageLoader/TinyImageLoader.h")
-source_group("ghoul2" FILES ${MPWarzoneTinyImageLoaderFiles})
+	"${MPDir}/rd-warzone/TinyImageLoader/TILColors.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStream.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStream.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStreamStd.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStreamStd.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImage.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImage.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageBMP.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageBMP.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageDDS.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageDDS.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageGIF.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageGIF.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageICO.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageICO.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImagePNG.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImagePNG.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTemplate.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTemplate.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTGA.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTGA.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILInternal.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILSettings.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TinyImageLoader.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TinyImageLoader.h")
+source_group("TinyImageLoader" FILES ${MPWarzoneTinyImageLoaderFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneTinyImageLoaderFiles})
+
+set(MPWarzoneVulkanFiles
+	"${MPDir}/rd-warzone/vulkan/GLSL.std.450.h"
+	"${MPDir}/rd-warzone/vulkan/spirv.h"
+	"${MPDir}/rd-warzone/vulkan/spirv.hpp"
+	"${MPDir}/rd-warzone/vulkan/spirv.hpp11"
+	"${MPDir}/rd-warzone/vulkan/spirv.json"
+	"${MPDir}/rd-warzone/vulkan/spirv.lua"
+	"${MPDir}/rd-warzone/vulkan/spirv.py"
+	"${MPDir}/rd-warzone/vulkan/vk_icd.h"
+	"${MPDir}/rd-warzone/vulkan/vk_layer.h"
+	"${MPDir}/rd-warzone/vulkan/vk_layer_dispatch_table.h"
+	"${MPDir}/rd-warzone/vulkan/vk_platform.h"
+	"${MPDir}/rd-warzone/vulkan/vk_sdk_platform.h"
+	"${MPDir}/rd-warzone/vulkan/vulkan.h"
+	"${MPDir}/rd-warzone/vulkan/vulkan.hpp")
+source_group("vulkan" FILES ${MPWarzoneVulkanFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneVulkanFiles})
+
+set(MPWarzoneSpirvFiles
+	"${MPDir}/rd-warzone/shaders/spirv/multi_texture_add_frag.cpp"
+	"${MPDir}/rd-warzone/shaders/spirv/multi_texture_clipping_plane_vert.cpp"
+	"${MPDir}/rd-warzone/shaders/spirv/multi_texture_mul_frag.cpp"
+	"${MPDir}/rd-warzone/shaders/spirv/multi_texture_vert.cpp"
+	"${MPDir}/rd-warzone/shaders/spirv/single_texture_clipping_plane_vert.cpp"
+	"${MPDir}/rd-warzone/shaders/spirv/single_texture_frag.cpp"
+	"${MPDir}/rd-warzone/shaders/spirv/single_texture_vert.cpp")
+source_group("spirv" FILES ${MPWarzoneSpirvFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneSpirvFiles})
 
 set(MPWarzoneRdCommonFiles
 	"${MPDir}/rd-common/mdx_format.h"

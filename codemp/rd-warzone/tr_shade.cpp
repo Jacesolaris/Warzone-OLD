@@ -213,6 +213,14 @@ static void DrawTris (shaderCommands_t *input) {
 	}
 
 	qglDepthRange( 0, 1 );
+
+#ifdef __VULKAN__
+	if (vk.active) {
+		Com_Memset(tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4);
+		auto pipeline = backEnd.viewParms.isMirror ? vk.tris_mirror_debug_pipeline : vk.tris_debug_pipeline;
+		vk_shade_geometry(pipeline, false, Vk_Depth_Range::force_zero);
+	}
+#endif //__VULKAN__
 }
 
 
@@ -1757,6 +1765,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	float	eyeT = 0;
 	int		deformGen;
 	vec5_t	deformParams;
+
+#ifdef __VULKAN__
+	vk_bind_geometry();
+#endif //__VULKAN__
 
 	ComputeDeformValues(&deformGen, deformParams);
 
@@ -3430,6 +3442,34 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Change back to standard render FBO...
 				FBO_Bind(tr.renderFbo);
 			}
+
+
+#ifdef __VULKAN__
+			if (vk.active) {
+				VkPipeline pipeline = pStage->vk_pipeline;
+				if (backEnd.viewParms.isMirror)
+					pipeline = pStage->vk_mirror_pipeline;
+				else if (backEnd.viewParms.isPortal)
+					pipeline = pStage->vk_portal_pipeline;
+
+				Vk_Depth_Range depth_range = Vk_Depth_Range::normal;
+				if (input->shader->isSky) {
+					depth_range = Vk_Depth_Range::force_one;
+					if (r_showsky->integer)
+						depth_range = Vk_Depth_Range::force_zero;
+				}
+				else if (backEnd.currentEntity->e.renderfx & RF_DEPTHHACK) {
+					depth_range = Vk_Depth_Range::weapon;
+				}
+
+#ifdef __FIXME__
+				if (r_lightmap->integer && /*multitexture*/r_ext_multitexture->integer)
+					GL_Bind(tr.whiteImage); // replace diffuse texture with a white one thus effectively render only lightmap
+#endif //__FIXME__
+
+				vk_shade_geometry(pipeline, false/*(r_ext_multitexture->integer > 0)*//*multitexture*/, depth_range);
+			}
+#endif //__VULKAN__
 
 
 			passNum++;
