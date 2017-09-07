@@ -329,6 +329,7 @@ cvar_t	*r_darkexpand;
 cvar_t  *r_truehdr;
 cvar_t  *r_magicdetail;
 cvar_t  *r_magicdetailStrength;
+cvar_t  *r_magicdetailMix;
 cvar_t  *r_dof;
 cvar_t  *r_fOff1X;
 cvar_t  *r_fOff1Y;
@@ -1586,7 +1587,8 @@ void R_Register( void )
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
-	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.05", CVAR_ARCHIVE );
+	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.0025", CVAR_ARCHIVE );
+	r_magicdetailMix = ri->Cvar_Get("r_magicdetailMix", "0.3", CVAR_ARCHIVE);
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
 	r_debugMapAmbientR = ri->Cvar_Get("r_debugMapAmbientR", "0.0", CVAR_NONE);
 	r_debugMapAmbientG = ri->Cvar_Get("r_debugMapAmbientG", "0.0", CVAR_NONE);

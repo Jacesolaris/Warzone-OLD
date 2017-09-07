@@ -1428,7 +1428,7 @@ void RB_MagicDetail(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 
 	{
 		vec4_t local0;
-		VectorSet4(local0, r_magicdetailStrength->value, 0.0, 0.0, 0.0); // non-flicker version
+		VectorSet4(local0, r_magicdetailStrength->value, r_magicdetailMix->value, 0.0, 0.0); // non-flicker version
 		GLSL_SetUniformVec4(&tr.magicdetailShader, UNIFORM_LOCAL0, local0);
 	}
 

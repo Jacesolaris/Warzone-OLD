@@ -12,6 +12,7 @@ uniform vec4		u_Local0;
 vec2 PixelSize = vec2(1.0f / u_Dimensions.x, 1.0f / u_Dimensions.y);
 
 #define   MAGICDETAIL_STRENGTH u_Local0.x
+#define   MAGICDETAIL_MIX u_Local0.y
 
 float GenerateDetail( vec2 fragCoord )
 {
@@ -52,6 +53,6 @@ void main()
 	vec4 color = vec4( (inColor.rgb * (strength * (1.0 - inDepth))) + (inColor.rgb * inDepth), 1.0);
 	color = clamp(color, 0.0, 1.0);
 
-	gl_FragColor.rgb = color.rgb;
+	gl_FragColor.rgb = mix(inColor.rgb, color.rgb, clamp(MAGICDETAIL_MIX, 0.0, 1.0));
 	gl_FragColor.a = 1.0;
 }
