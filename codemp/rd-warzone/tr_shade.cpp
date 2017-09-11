@@ -1266,7 +1266,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, local7);
 
 		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, r_glowStrength->value, MAP_INFO_MAXS[2], r_showsplat->value);
+		VectorSet4(local8, (float)stageNum, (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * 2.858 : r_glowStrength->value * 2.0, MAP_INFO_MAXS[2], r_showsplat->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 	else
@@ -2084,7 +2084,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #define __USE_DETAIL_CHECKING__			// Check and treat stages found to be random details (lightmap stages, 2d, etc) differently...
 #define __USE_DETAIL_DEPTH_SKIP__		// Skip drawing detail crap at all in shadow and depth prepasses - they should never be needed...
 #define __LIGHTMAP_IS_DETAIL__			// Lightmap stages are considered detail...
-#define __USE_GLOW_DETAIL_FBOS__		// Use different deferred output buffers for stuff that is detail and glow, so these don't overwrite solid surfaces... FBO method.
+//#define __USE_GLOW_DETAIL_FBOS__		// Use different deferred output buffers for stuff that is detail and glow, so these don't overwrite solid surfaces... FBO method.
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
@@ -2599,32 +2599,36 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				(backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 
+			float useGlow = 0.0;
+			if (pStage->glow || (index & LIGHTDEF_USE_GLOW_BUFFER)) useGlow = 1.0;
+			if (pStage->glowMapped) useGlow = 2.0;
+
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_LIGHTMAP) ? 1.0 : 0.0, 
-				(index & LIGHTDEF_USE_GLOW_BUFFER) ? 1.0 : 0.0, 
+				useGlow/*(index & LIGHTDEF_USE_GLOW_BUFFER) ? 1.0 : 0.0*/,
 				(!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && cubeMapNum && ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 1) ? 1.0 : 0.0,
 				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
 
 			int PARALLAX_MODE = 0;
 			
-			if (!r_cartoon->integer && r_parallaxMapping->integer)
+			/*if (!r_cartoon->integer && r_parallaxMapping->integer)
 			{
 				PARALLAX_MODE = r_parallaxMapping->integer;
-			}
+			}*/
 
 #ifdef __USE_DETAIL_CHECKING__
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
 				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
 				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
-				PARALLAX_MODE);
+				pStage->glowBlend);
 #else //!__USE_DETAIL_CHECKING__
 			VectorSet4(vec,
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0,
 				0.0,
 				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
-				PARALLAX_MODE);
+				pStage->glowBlend);
 #endif //__USE_DETAIL_CHECKING__
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 		}
@@ -2851,6 +2855,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else
 			{
 				GL_BindToTMU(tr.defaultDetail, TB_DETAILMAP);
+			}
+
+			if (pStage->glowMapped && pStage->bundle[TB_GLOWMAP].image[0])
+			{
+				GL_BindToTMU(pStage->bundle[TB_GLOWMAP].image[0], TB_GLOWMAP);
 			}
 
 			if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
@@ -3110,6 +3119,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
+#if 0
+			if (pStage->glowMapped)
+			{
+				//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+				//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS;// | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ZERO;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+			}
+#endif
+
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -3308,9 +3326,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
-					stateBits = /*GLS_DEPTHMASK_TRUE |*/ GLS_DEPTHFUNC_LESS;// GLS_DEFAULT;// | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
+					//stateBits = /*GLS_DEPTHMASK_TRUE |*/ GLS_DEPTHFUNC_LESS;// GLS_DEFAULT;// | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
+					//stateBits = /*GLS_DEPTHMASK_TRUE |*/ GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+					//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+					stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+					//stateBits &= ~GLS_DEPTHMASK_TRUE;
 					tess.shader->cullType = CT_TWO_SIDED; // Always...
 					FBO_Bind(tr.renderWaterFbo);
+					//GLSL_AttachWaterTextures();
 
 					vec4_t passInfo;
 					VectorSet4(passInfo, /*passNum*/0.0, r_waterWaveHeight->value, 0.0, 0.0);
@@ -3318,17 +3341,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 				else
 				{
-					if (glState.currentFBO == tr.renderGlowFbo || glState.currentFBO == tr.renderDetailFbo || glState.currentFBO == tr.renderWaterFbo)
+					//GLSL_AttachTextures();
+					/*if (glState.currentFBO == tr.renderGlowFbo || glState.currentFBO == tr.renderDetailFbo || glState.currentFBO == tr.renderWaterFbo)
 					{// Only attach textures when doing a render pass...
 						FBO_Bind(tr.renderFbo);
-					}
+					}*/
 
 					break;
 				}
 			}
 			else
 #if defined(__USE_GLOW_DETAIL_FBOS__)
-			if (!IS_DEPTH_PASS && index & LIGHTDEF_USE_GLOW_BUFFER)
+			if (!IS_DEPTH_PASS && !pStage->glowMapped && index & LIGHTDEF_USE_GLOW_BUFFER)
 			{
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
@@ -3430,6 +3454,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Change back to standard render FBO...
 				FBO_Bind(tr.renderFbo);
 			}
+
+			//if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+			//{// Change back to standard buffers...
+			//	GLSL_AttachTextures();
+			//}
 
 
 			passNum++;

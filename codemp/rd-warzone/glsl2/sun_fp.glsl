@@ -247,10 +247,16 @@ void main()
 	gl_FragColor.rgb *= 2.0;
 	out_Glow = gl_FragColor;
 	
-	if (length(gl_FragColor.rgb) > 0.0)
+	if (length(gl_FragColor.rgb) > 0.1)
 	{
 		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 		out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+		out_NormalDetail = vec4(0.0);
+	}
+	else
+	{
+		out_Position = vec4(0.0);
+		out_Normal = vec4(0.0);
 		out_NormalDetail = vec4(0.0);
 	}
 }

@@ -2042,6 +2042,11 @@ void GLSL_AttachGlowTextures(void)
 	//FBO_AttachTextureImage(tr.dummyImage2, 2);
 	//FBO_AttachTextureImage(tr.dummyImage3, 3);
 	//FBO_AttachTextureImage(tr.dummyImage4, 4);
+	
+	//FBO_AttachTextureImage(tr.renderNormalImage, 2);
+	//FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
+	//FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
+	
 	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
@@ -2061,7 +2066,7 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
-	//FBO_AttachTextureImage(tr.dummyImage4, 4);
+	FBO_AttachTextureImage(tr.dummyImage4, 4);
 	////R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 }
 
@@ -3662,6 +3667,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
 	//		GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	qglUseProgram(0);
 
 #if defined(_DEBUG)

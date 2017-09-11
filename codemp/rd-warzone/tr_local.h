@@ -1029,6 +1029,8 @@ typedef struct {
 	bool			hasRealSteepMap;
 	bool			hasRealWaterEdgeMap;
 	
+	qboolean		glowMapped;
+	int				glowBlend;
 	qboolean		glow;
 	bool			glowColorFound;
 	vec4_t			glowColor;

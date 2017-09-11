@@ -1,5 +1,5 @@
 //#define USE_ALPHA_TEST
-#define USE_GLOW_DETAIL_BUFFERS
+//#define USE_GLOW_DETAIL_BUFFERS
 
 uniform sampler2D u_DiffuseMap;
 
@@ -89,10 +89,18 @@ void main()
 
 #ifdef USE_GLOW_DETAIL_BUFFERS
 	if (USE_ISDETAIL <= 0.0)
+#else //!USE_GLOW_DETAIL_BUFFERS
+	if (gl_FragColor.a > 0.333)
 #endif //USE_GLOW_DETAIL_BUFFERS
 	{
 		out_Position = vec4(var_Position.rgb, u_Local1.a);
 		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, u_Local1.b /*specularScale*/);
+		out_NormalDetail = vec4(0.0);
+	}
+	else
+	{
+		out_Position = vec4(0.0);
+		out_Normal = vec4(0.0);
 		out_NormalDetail = vec4(0.0);
 	}
 }

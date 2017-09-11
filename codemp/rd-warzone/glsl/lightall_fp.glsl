@@ -1,5 +1,5 @@
 //#define USE_ALPHA_TEST
-#define USE_GLOW_DETAIL_BUFFERS
+//#define USE_GLOW_DETAIL_BUFFERS
 //#define USE_DETAIL_TEXTURES
 
 
@@ -15,6 +15,7 @@ uniform sampler2D			u_SplatMap2;
 uniform sampler2D			u_SplatMap3;
 //uniform sampler2D			u_SplatMap4;
 uniform sampler2D			u_DetailMap;
+uniform sampler2D			u_GlowMap;
 
 uniform sampler2D			u_LightMap;
 
@@ -38,7 +39,7 @@ uniform vec4				u_MapAmbient; // a basic light/color addition across the whole m
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
 uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, PARALLAX_MODE
+uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, USE_GLOW_BLEND_MODE
 
 #define USE_TC				u_Settings0.r
 #define USE_DEFORM			u_Settings0.g
@@ -58,7 +59,7 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=Deta
 #define USE_REGIONS			u_Settings3.r
 #define USE_ISDETAIL		u_Settings3.g
 #define USE_DETAIL_COORD	u_Settings3.b
-#define PARALLAX_MODE		u_Settings3.a
+#define USE_GLOW_BLEND_MODE	u_Settings3.a
 
 
 uniform vec2				u_Dimensions;
@@ -534,63 +535,6 @@ float randZeroOne()
 
 void main()
 {
-#if 0
-	if (u_Local9.g > 0.0)
-	{
-		vec3 debugColor = vec3(0.0);
-
-		if (u_Local9.g > 1.0)
-		{
-			if (USE_TC == 1.0)
-			{
-				debugColor.r = 1.0;
-			}
-		
-			if (USE_GLOW_BUFFER == 1.0)
-			{
-				debugColor.g = 1.0;
-			}
-		
-			if (USE_LIGHTMAP == 1.0)
-			{
-				debugColor.b = 1.0;
-			}
-		}
-		else
-		{
-			if (USE_VERTEX_ANIM == 1.0)
-			{
-				debugColor.r = 1.0;
-			}
-		
-			if (USE_SKELETAL_ANIM == 1.0)
-			{
-				debugColor.g = 1.0;
-			}
-		
-			if (USE_DEFORM == 1.0)
-			{
-				debugColor.b = 1.0;
-			}
-		}
-
-		gl_FragColor = vec4(debugColor, 1.0);
-		out_Glow = vec4(0.0);
-
-#ifdef USE_GLOW_DETAIL_BUFFERS
-		if (USE_ISDETAIL <= 0.0)
-#else //!USE_GLOW_DETAIL_BUFFERS
-		if (gl_FragColor.a > 0.99)
-#endif //USE_GLOW_DETAIL_BUFFERS
-		{
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-			out_Normal = vec4(m_Normal.xyz, u_Local1.b /*specularScale*/ );
-			out_NormalDetail = vec4(0.0);
-		}
-		return;
-	}
-#endif
-
 	vec4 specular = vec4(0.0);
 	vec2 texCoords = m_TexCoords.xy;
 	float pixRandom = 0.0;
@@ -601,20 +545,21 @@ void main()
 		pixRandom = randZeroOne();
 	}
 
-	if (USE_GLOW_BUFFER <= 0.0 && u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
+	if (USE_GLOW_BUFFER != 1.0 && u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 	{// Sway...
 		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 	}
 
 
-	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0) ? true : false;
-	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER <= 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
+	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
+	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
 
 
 	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
+
 
 
 #ifdef USE_ALPHA_TEST
@@ -650,7 +595,7 @@ void main()
 	vec3 N = normalize(m_Normal.xyz);
 	vec4 norm = vec4(0.0);
 
-	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0 && USE_TRIPLANAR <= 0.0 && USE_REGIONS <= 0.0 && u_Local4.r > 0.0)
+	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0 && USE_TRIPLANAR <= 0.0 && USE_REGIONS <= 0.0 && u_Local4.r > 0.0)
 	{
 		norm = texture(u_NormalMap, texCoords);
 		norm.a = 1.0;
@@ -659,7 +604,7 @@ void main()
 
 
 #ifdef USE_DETAIL_TEXTURES
-	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0)// || USE_GLOW_BUFFER >= 0.0)
+	if (USE_TRIPLANAR >= 0.0 || USE_REGIONS >= 0.0)
 	{
 		AddDetail(diffuse, texCoords);
 	}
@@ -696,13 +641,10 @@ void main()
 	}
 
 
-	//if (USE_GLOW_BUFFER > 0.0 || USE_IS2D > 0.0)
-		gl_FragColor.rgb = diffuse.rgb + ambientColor;
-	//else
-	//	gl_FragColor.rgb = diffuse.rgb + (ambientColor * 0.6);
+	gl_FragColor.rgb = diffuse.rgb + ambientColor;
 
 
-	if (USE_GLOW_BUFFER <= 0.0 && USE_IS2D <= 0.0 && u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN /*&& u_Local1.a != MATERIAL_NONE*/)
+	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN /*&& u_Local1.a != MATERIAL_NONE*/)
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
@@ -755,10 +697,93 @@ void main()
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
 
-	if (USE_GLOW_BUFFER > 0.0)
-	{
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
+
+	if (USE_GLOW_BUFFER >= 2.0)
+	{// Merged diffuse+glow stage...
+		vec4 glowColor = texture(u_GlowMap, texCoords);
+
+		if (length(glowColor.rgb) <= 0.0)
+			glowColor.a = 0.0;
+
+#define GLSL_BLEND_ALPHA			0
+#define GLSL_BLEND_INVALPHA			1
+#define GLSL_BLEND_DST_ALPHA		2
+#define GLSL_BLEND_INV_DST_ALPHA	3
+#define GLSL_BLEND_GLOWCOLOR		4
+#define GLSL_BLEND_INV_GLOWCOLOR	5
+#define GLSL_BLEND_DSTCOLOR			6
+#define GLSL_BLEND_INV_DSTCOLOR		7
+
+		if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_DSTCOLOR)
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * (vec3(1.0) - gl_FragColor.rgb);
+		}
+		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_DSTCOLOR)
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * gl_FragColor.rgb;
+		}
+		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_GLOWCOLOR)
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * (vec3(1.0) - glowColor.rgb);
+		}
+		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_GLOWCOLOR)
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * glowColor.rgb;
+		}
+		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_DST_ALPHA)
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * (1.0 - gl_FragColor.a);
+		}
+		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_DST_ALPHA)
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * gl_FragColor.a;
+		}
+		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INVALPHA)
+		{
+			glowColor.rgb = (glowColor.rgb * (1.0 - glowColor.a));
+		}
+		else
+		{
+			glowColor.rgb = (glowColor.rgb * glowColor.a);
+		}
+
+		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
+		glowColor.rgb *= u_Local8.g;
+
+		if (length(glowColor.rgb) <= 0.0)
+			glowColor.a = 0.0;
+
+		//gl_FragColor.rgb += glowColor.rgb;
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a * (length(glowColor.rgb) / 3.0));
+
+		//gl_FragColor.a = clamp(gl_FragColor.a + glowColor.a, 0.0, 1.0);
+		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
+
+		out_Glow = vec4(glowColor.rgb, glowColor.a);
+
+#ifdef USE_GLOW_DETAIL_BUFFERS
+		if (USE_ISDETAIL <= 0.0)
+#else //!USE_GLOW_DETAIL_BUFFERS
+		if (gl_FragColor.a > 0.333)
+#endif //USE_GLOW_DETAIL_BUFFERS
+		{
+			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
+			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+			out_NormalDetail = norm;//vec4(0.0);
+		}
+		else
+		{
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
+			out_NormalDetail = vec4(0.0);
+		}
+	}
+	else if (USE_GLOW_BUFFER > 0.0)
+	{
+//#define glow_const_1 ( 23.0 / 255.0)
+//#define glow_const_2 (255.0 / 229.0)
 		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		gl_FragColor.rgb *= u_Local8.g;
 
@@ -767,11 +792,17 @@ void main()
 #ifdef USE_GLOW_DETAIL_BUFFERS
 		if (USE_ISDETAIL <= 0.0)
 #else //!USE_GLOW_DETAIL_BUFFERS
-		//if (gl_FragColor.a > 0.99)
+		if (gl_FragColor.a > 0.333)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+			out_NormalDetail = vec4(0.0);
+		}
+		else
+		{
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
 			out_NormalDetail = vec4(0.0);
 		}
 	}
@@ -781,11 +812,19 @@ void main()
 
 #ifdef USE_GLOW_DETAIL_BUFFERS
 		if (USE_ISDETAIL <= 0.0)
+#else //!USE_GLOW_DETAIL_BUFFERS
+		if (gl_FragColor.a > 0.333)
 #endif //USE_GLOW_DETAIL_BUFFERS
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a);
 			out_Normal = vec4( N.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
 			out_NormalDetail = norm;
+		}
+		else
+		{
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
+			out_NormalDetail = vec4(0.0);
 		}
 	}
 }

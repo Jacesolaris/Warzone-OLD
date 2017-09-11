@@ -9,6 +9,7 @@ varying vec3		var_Normal;
 out vec4 out_Glow;
 out vec4 out_Normal;
 out vec4 out_Position;
+out vec4 out_NormalDetail;
 
 // Maximum waves amplitude
 #define maxAmplitude u_Local10.g
@@ -58,7 +59,8 @@ vec3 vectoangles( in vec3 value1 ) {
 void main()
 {
 	out_Glow = vec4(0.0);
-	out_Normal = vec4(var_Normal * 0.5 + 0.5, 0.75);
+	out_Normal = vec4(var_Normal * 0.5 + 0.5, 1.0);
+	out_NormalDetail = vec4(0.0);
 
 	float isWater = 1.0;
 	out_Color = vec4(0.0059, 0.3096, 0.445, 0.5);

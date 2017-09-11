@@ -36,6 +36,28 @@ extern float		FOG_VOLUMETRIC_CLOUDINESS;
 extern float		FOG_VOLUMETRIC_WIND;
 extern float		FOG_VOLUMETRIC_VELOCITY;
 
+extern float		SUN_PHONG_SCALE;
+extern float		SHADOW_MINBRIGHT;
+extern float		SHADOW_MAXBRIGHT;
+extern qboolean		AO_ENABLED;
+extern float		AO_MINBRIGHT;
+extern float		AO_MULTBRIGHT;
+extern vec3_t		MAP_AMBIENT_CSB;
+
+extern int			NUM_CLOSE_LIGHTS;
+extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
+extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
+extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
+extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
+
+#ifdef __PLAYER_BASED_CUBEMAPS__
+extern int			currentPlayerCubemap;
+extern vec4_t		currentPlayerCubemapVec;
+extern float		currentPlayerCubemapDistance;
+#endif //__PLAYER_BASED_CUBEMAPS__
+
 void RB_ToneMap(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int autoExposure)
 {
 	vec4i_t srcBox, dstBox;
@@ -1883,6 +1905,14 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
+
+	GLSL_SetUniformInt(shader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+	//GLSL_SetUniformVec2x16(shader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTHEIGHTSCALES, CLOSEST_LIGHTS_HEIGHTSCALES, MAX_DEFERRED_LIGHTS);
+
 	{
 		vec4_t loc;
 		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
@@ -2188,28 +2218,6 @@ void transpose(float *src, float *dst, const int N, const int M) {
         dst[n] = src[M*j + i];
     }
 }
-
-extern int			NUM_CLOSE_LIGHTS;
-extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
-extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
-extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
-extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
-extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
-extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
-
-extern float		SUN_PHONG_SCALE;
-extern float		SHADOW_MINBRIGHT;
-extern float		SHADOW_MAXBRIGHT;
-extern qboolean		AO_ENABLED;
-extern float		AO_MINBRIGHT;
-extern float		AO_MULTBRIGHT;
-extern vec3_t		MAP_AMBIENT_CSB;
-
-#ifdef __PLAYER_BASED_CUBEMAPS__
-extern int			currentPlayerCubemap;
-extern vec4_t		currentPlayerCubemapVec;
-extern float		currentPlayerCubemapDistance;
-#endif //__PLAYER_BASED_CUBEMAPS__
 
 void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {

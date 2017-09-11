@@ -1816,11 +1816,38 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					flags |= IMGFLAG_GLOW;
 				}
 
+				char imgname[64];
+				sprintf(imgname, "%s_g", token);
+
 #ifdef __DEFERRED_IMAGE_LOADING__
 				stage->bundle[0].image[0] = R_DeferImageLoad(token, type, flags);
+				stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags);
 #else //!__DEFERRED_IMAGE_LOADING__
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+				stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, flags);
 #endif //__DEFERRED_IMAGE_LOADING__
+
+				if (stage->bundle[TB_GLOWMAP].image[0]
+					&& stage->bundle[TB_GLOWMAP].image[0] != tr.defaultImage
+					/*&& stage->bundle[TB_GLOWMAP].image[0]->hasAlpha*/)
+				{// We found a mergable glow map...
+					stage->glowMapped = qtrue;
+					stage->glow = qtrue;
+					stage->glowColorFound = qtrue;
+					VectorCopy4(stage->bundle[TB_GLOWMAP].image[0]->lightColor, stage->glowColor);
+					stage->glowBlend = 0;
+					stage->glslShaderIndex |= LIGHTDEF_USE_GLOW_BUFFER;
+
+					if (stage->emissiveRadiusScale <= 0.0)
+						stage->emissiveRadiusScale = 1.0;
+
+					if (stage->emissiveColorScale <= 0.0)
+						stage->emissiveColorScale = 1.5;
+				}
+				else
+				{
+					stage->bundle[TB_GLOWMAP].image[0] = NULL;
+				}
 
 				// UQ1: Testing - Force glow to obvious glow components...
 				if (flags & IMGFLAG_GLOW)
@@ -5848,6 +5875,161 @@ static int CollapseStagesToGLSL(void)
 #endif
 	}
 
+#if 0
+	//
+	// Merge glow stages into diffuse stages if possible...
+	//
+	for (i = 0; i < MAX_SHADER_STAGES; i++)
+	{
+		shaderStage_t *pStage = &stages[i];
+
+		if (!pStage->active)
+			continue;
+
+		if (pStage->glowMapped)
+			continue; // Already merged...
+
+		if ((pStage->type != ST_COLORMAP && pStage->type != ST_GLSL) || pStage->glow)
+			continue;
+
+
+		/*if (!(pStage->stateBits & (GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA))
+			&& !(pStage->stateBits & (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO))
+			&& !(pStage->stateBits & (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE)))
+			continue;*/
+
+		for (j = 0; j < MAX_SHADER_STAGES; j++)
+		{
+			if (j == i) continue;
+
+			shaderStage_t *pStage2 = &stages[j];
+
+			if (!pStage2->active || !pStage2->glow)
+				continue;
+
+			if (pStage2->glowMapped)
+				continue; // Already merged...
+
+#define GLSL_BLEND_ALPHA			0
+#define GLSL_BLEND_INVALPHA			1
+#define GLSL_BLEND_DST_ALPHA		2
+#define GLSL_BLEND_INV_DST_ALPHA	3
+#define GLSL_BLEND_GLOWCOLOR		4
+#define GLSL_BLEND_INV_GLOWCOLOR	5
+#define GLSL_BLEND_DSTCOLOR			6
+#define GLSL_BLEND_INV_DSTCOLOR		7
+
+			/*
+			GLS_SRCBLEND_ZERO = (1 << 0),
+			GLS_SRCBLEND_ONE = (1 << 1),
+			GLS_SRCBLEND_DST_COLOR = (1 << 2),
+			GLS_SRCBLEND_ONE_MINUS_DST_COLOR = (1 << 3),
+			GLS_SRCBLEND_SRC_ALPHA = (1 << 4),
+			GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA = (1 << 5),
+			GLS_SRCBLEND_DST_ALPHA = (1 << 6),
+			GLS_SRCBLEND_ONE_MINUS_DST_ALPHA = (1 << 7),
+			GLS_SRCBLEND_ALPHA_SATURATE = (1 << 8),
+
+			GLS_DSTBLEND_ZERO = (1 << 9),
+			GLS_DSTBLEND_ONE = (1 << 10),
+			GLS_DSTBLEND_SRC_COLOR = (1 << 11),
+			GLS_DSTBLEND_ONE_MINUS_SRC_COLOR = (1 << 12),
+			GLS_DSTBLEND_SRC_ALPHA = (1 << 13),
+			GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA = (1 << 14),
+			GLS_DSTBLEND_DST_ALPHA = (1 << 15),
+			GLS_DSTBLEND_ONE_MINUS_DST_ALPHA = (1 << 16),
+			*/
+
+#if 0
+			// Try to roughly mimic original blendings... very roughly...
+			if (!(pStage2->stateBits & GLS_SRCBLEND_ZERO)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_ONE)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_DST_COLOR)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_SRC_ALPHA)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_DST_ALPHA)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_ONE_MINUS_DST_ALPHA)
+				&& !(pStage2->stateBits & GLS_SRCBLEND_ALPHA_SATURATE))
+			{
+				//pStage2->stateBits |= GLS_SRCBLEND_DST_ALPHA;
+				pStage2->stateBits |= GLS_SRCBLEND_SRC_ALPHA;
+			}
+
+			if (!(pStage2->stateBits & GLS_DSTBLEND_ZERO)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_ONE)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_SRC_COLOR)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_SRC_ALPHA)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_DST_ALPHA)
+				&& !(pStage2->stateBits & GLS_DSTBLEND_ONE_MINUS_DST_ALPHA))
+			{
+				//pStage2->stateBits |= GLS_DSTBLEND_ONE_MINUS_DST_ALPHA;
+				//pStage2->stateBits |= GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				pStage2->stateBits |= GLS_DSTBLEND_ZERO;
+			}
+#endif
+
+			if (!((pStage->stateBits & GLS_DSTBLEND_ZERO) || (pStage->stateBits & GLS_DSTBLEND_ONE))
+				&& !((pStage2->stateBits & GLS_DSTBLEND_ZERO) || (pStage2->stateBits & GLS_DSTBLEND_ONE)))
+			{// Cant merge this (for now)... We need a solid...
+				continue;
+			}
+
+			pStage->stateBits &= ~GLS_SRCBLEND_BITS;
+			pStage->stateBits &= ~GLS_DSTBLEND_BITS;
+			//pStage->stateBits |= GLS_SRCBLEND_SRC_ALPHA;
+			//pStage->stateBits |= GLS_DSTBLEND_ZERO;
+			
+			pStage->stateBits |= GLS_SRCBLEND_ONE;
+			pStage->stateBits |= GLS_DSTBLEND_ZERO;
+			
+			//pStage->stateBits |= GLS_SRCBLEND_SRC_ALPHA;
+			//pStage->stateBits |= GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+
+			pStage->glowBlend = GLSL_BLEND_ALPHA;
+
+			/*
+			if (pStage2->stateBits & GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA)
+				pStage->glowBlend = GLSL_BLEND_INVALPHA;
+			else if (pStage2->stateBits & GLS_SRCBLEND_DST_ALPHA)
+				pStage->glowBlend = GLSL_BLEND_DST_ALPHA;
+			else if (pStage2->stateBits & GLS_SRCBLEND_ONE_MINUS_DST_ALPHA)
+				pStage->glowBlend = GLSL_BLEND_INV_DST_ALPHA;
+			else if (pStage2->stateBits & GLS_DSTBLEND_SRC_COLOR)
+				pStage->glowBlend = GLSL_BLEND_GLOWCOLOR;
+			else if (pStage2->stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR)
+				pStage->glowBlend = GLSL_BLEND_INV_GLOWCOLOR;
+			else if (pStage2->stateBits & GLS_SRCBLEND_DST_COLOR)
+				pStage->glowBlend = GLSL_BLEND_DSTCOLOR;
+			else if (pStage2->stateBits & GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
+				pStage->glowBlend = GLSL_BLEND_INV_DSTCOLOR;
+			*/
+			
+
+			// Found one, merge it in and exit this loop...
+			pStage->bundle[TB_GLOWMAP] = pStage2->bundle[TB_DIFFUSEMAP];
+			pStage->glowMapped = qtrue;
+			pStage->glow = qtrue;
+			pStage->glowColorFound = pStage2->glowColorFound;
+			VectorCopy4(pStage2->glowColor, pStage->glowColor);
+			pStage->emissiveColorScale = pStage2->emissiveColorScale;
+			pStage->emissiveRadiusScale = pStage2->emissiveRadiusScale;
+			pStage->emissiveHeightScale = pStage2->emissiveHeightScale;
+			pStage->glslShaderIndex |= LIGHTDEF_USE_GLOW_BUFFER;
+
+			// Disable the old stage...
+			pStage2->active = qfalse;
+			break;
+		}
+	}
+#endif
+
+	//
+	//
+	//
+
 	// remove inactive stages
 	numStages = 0;
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
@@ -5963,8 +6145,8 @@ static int CollapseStagesToGLSL(void)
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
 
-#if 0
-	if (numStages > 1)
+#if 1
+	if (numStages >= 1 && !tr.world)
 	{
 		ri->Printf(PRINT_WARNING, "Shader %s has %i stages.\n", shader.name, numStages);
 
@@ -5975,63 +6157,101 @@ static int CollapseStagesToGLSL(void)
 			if (!pStage->active)
 				continue;
 
+			char glowMapped[256] = { 0 };
+				
+			if (pStage->stateBits & GLS_SRCBLEND_ZERO) strcat(glowMapped, " GLS_SRCBLEND_ZERO");
+			else if (pStage->stateBits & GLS_SRCBLEND_ONE) strcat(glowMapped, " GLS_SRCBLEND_ONE");
+			else if (pStage->stateBits & GLS_SRCBLEND_DST_COLOR) strcat(glowMapped, " GLS_SRCBLEND_DST_COLOR");
+			else if (pStage->stateBits & GLS_SRCBLEND_ONE_MINUS_DST_COLOR) strcat(glowMapped, " GLS_SRCBLEND_ONE_MINUS_DST_COLOR");
+			else if (pStage->stateBits & GLS_SRCBLEND_SRC_ALPHA) strcat(glowMapped, " GLS_SRCBLEND_SRC_ALPHA");
+			else if (pStage->stateBits & GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA) strcat(glowMapped, " GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA");
+			else if (pStage->stateBits & GLS_SRCBLEND_DST_ALPHA) strcat(glowMapped, " GLS_SRCBLEND_DST_ALPHA");
+			else if (pStage->stateBits & GLS_SRCBLEND_ONE_MINUS_DST_ALPHA) strcat(glowMapped, " GLS_SRCBLEND_ONE_MINUS_DST_ALPHA");
+			else if (pStage->stateBits & GLS_SRCBLEND_ALPHA_SATURATE) strcat(glowMapped, " GLS_SRCBLEND_ALPHA_SATURATE");
+			else strcat(glowMapped, " GLS_SRCBLEND_UNKNOWN");
+			
+			if (pStage->stateBits & GLS_DSTBLEND_ZERO) strcat(glowMapped, " GLS_DSTBLEND_ZERO");
+			else if (pStage->stateBits & GLS_DSTBLEND_ONE) strcat(glowMapped, " GLS_DSTBLEND_ONE");
+			else if (pStage->stateBits & GLS_DSTBLEND_SRC_COLOR) strcat(glowMapped, " GLS_DSTBLEND_SRC_COLOR");
+			else if (pStage->stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR) strcat(glowMapped, " GLS_DSTBLEND_ONE_MINUS_SRC_COLOR");
+			else if (pStage->stateBits & GLS_DSTBLEND_SRC_ALPHA) strcat(glowMapped, " GLS_DSTBLEND_SRC_ALPHA");
+			else if (pStage->stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA) strcat(glowMapped, " GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA");
+			else if (pStage->stateBits & GLS_DSTBLEND_DST_ALPHA) strcat(glowMapped, " GLS_DSTBLEND_DST_ALPHA");
+			else if (pStage->stateBits & GLS_DSTBLEND_ONE_MINUS_DST_ALPHA) strcat(glowMapped, " GLS_DSTBLEND_ONE_MINUS_DST_ALPHA");
+			else strcat(glowMapped, " GLS_DSTBLEND_UNKNOWN");
+				
+			if (pStage->glowMapped && pStage->isDetail)
+				strcat(glowMapped, " (detail - glowMap merged)");
+			else if (pStage->glow && pStage->isDetail)
+				strcat(glowMapped, " (detail - glowMap unmerged)");
+			else if (pStage->glowMapped)
+				strcat(glowMapped, " (glowMap merged)");
+			else if (pStage->glow)
+				strcat(glowMapped, " (glowMap unmerged)");
+			else if (pStage->isDetail)
+				strcat(glowMapped, " (detail)");
+
 			if (pStage->type == ST_DIFFUSEMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is DiffuseMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is DiffuseMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_NORMALMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is NormalMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is NormalMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_NORMALPARALLAXMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is NormalParallaxMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is NormalParallaxMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_SPECULARMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SpecularMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SpecularMap%s.\n", i, glowMapped);
 			}
 			/*else if (pStage->type == ST_SUBSURFACEMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SubsurfaceMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SubsurfaceMap%s.\n", i, glowMapped);
 			}*/
 			else if (pStage->type == ST_OVERLAYMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is OverlayMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is OverlayMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_STEEPMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SteepMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SteepMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_WATER_EDGE_MAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is waterEdgeMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is waterEdgeMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_SPLATCONTROLMAP)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SplatControlMap.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatControlMap%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_SPLATMAP1)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap1.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap1%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_SPLATMAP2)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap2.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap2%s.\n", i, glowMapped);
 			}
 			else if (pStage->type == ST_SPLATMAP3)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap3.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap3%s.\n", i, glowMapped);
 			}
 #if 0
 			else if (pStage->type == ST_SPLATMAP4)
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap4.\n", i);
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap4%s.\n", i, glowMapped);
 			}
 #endif
+			else if (pStage->type == ST_GLSL)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is GLSL%s.\n", i, glowMapped);
+			}
 			else
 			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is %i.\n", i, pStage->type);
+				ri->Printf(PRINT_WARNING, "     Stage %i is %i%s.\n", i, pStage->type, glowMapped);
 			}
 		}
 	}
@@ -7213,6 +7433,9 @@ char uniqueGenericShader[] = "{\n"\
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
 	if (IsNonDetectionMap()) return qfalse;
+
+	//if (StringContainsWord(name, "JH3-TE"))
+	//	return qtrue;
 
 	if (StringContainsWord(name, "gfx/water"))
 		return qfalse;

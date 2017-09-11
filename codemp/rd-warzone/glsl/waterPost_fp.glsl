@@ -49,6 +49,14 @@ varying vec2		var_TexCoords;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
+#define MAX_DEFERRED_LIGHTS 128//64//16//24
+
+uniform int			u_lightCount;
+uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
+uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
+uniform float		u_lightHeightScales[MAX_DEFERRED_LIGHTS];
+uniform vec3		u_lightColors[MAX_DEFERRED_LIGHTS];
+
 // Position of the camera
 uniform vec3		u_ViewOrigin;
 #define ViewOrigin	u_ViewOrigin.xzy
@@ -289,247 +297,6 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
 }
 
-
-#ifdef __TEST_WATER__
-/*
-"Seascape" by Alexander Alekseev aka TDM - 2014
-License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-Contact: tdmaav@gmail.com
-*/
-
-const int NUM_STEPS = 8;
-const float PI = 3.1415;
-const float EPSILON = 1e-3;
-float EPSILON_NRM = 0.1 / u_Dimensions.x;
-
-#define iGlobalTime u_Time
-
-// sea
-const int ITER_GEOMETRY = 3;
-const int ITER_FRAGMENT = 5;
-const float SEA_HEIGHT = 0.6;
-const float SEA_CHOPPY = 4.0;
-const float SEA_SPEED = 0.8;
-const float SEA_FREQ = 0.16;
-const vec3 SEA_BASE = vec3(0.1, 0.19, 0.22);
-const vec3 SEA_WATER_COLOR = vec3(0.8, 0.9, 0.6);
-float SEA_TIME = 1.0 + iGlobalTime * SEA_SPEED;
-mat2 octave_m = mat2(1.6, 1.2, -1.2, 1.6);
-
-// math
-mat3 fromEuler(vec3 ang) {
-	vec2 a1 = vec2(sin(ang.x), cos(ang.x));
-	vec2 a2 = vec2(sin(ang.y), cos(ang.y));
-	vec2 a3 = vec2(sin(ang.z), cos(ang.z));
-	mat3 m;
-	m[0] = vec3(a1.y*a3.y + a1.x*a2.x*a3.x, a1.y*a2.x*a3.x + a3.y*a1.x, -a2.y*a3.x);
-	m[1] = vec3(-a2.y*a1.x, a1.y*a2.y, a2.x);
-	m[2] = vec3(a3.y*a1.x*a2.x + a1.y*a3.x, a1.x*a3.x - a1.y*a3.y*a2.x, a2.y*a3.y);
-	return m;
-}
-float hash(vec2 p) {
-	float h = dot(p, vec2(127.1, 311.7));
-	return fract(sin(h)*43758.5453123);
-}
-float noise(in vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	vec2 u = f*f*(3.0 - 2.0*f);
-	return -1.0 + 2.0*mix(mix(hash(i + vec2(0.0, 0.0)),
-		hash(i + vec2(1.0, 0.0)), u.x),
-		mix(hash(i + vec2(0.0, 1.0)),
-		hash(i + vec2(1.0, 1.0)), u.x), u.y);
-}
-
-// lighting
-float diffuse(vec3 n, vec3 l, float p) {
-	return pow(dot(n, l) * 0.4 + 0.6, p);
-}
-float specular(vec3 n, vec3 l, vec3 e, float s) {
-	float nrm = (s + 8.0) / (3.1415 * 8.0);
-	return pow(max(dot(reflect(e, n), l), 0.0), s) * nrm;
-}
-
-// sky
-vec3 getSkyColor(vec3 e) {
-	e.y = max(e.y, 0.0);
-	vec3 ret;
-	ret.x = pow(1.0 - e.y, 2.0);
-	ret.y = 1.0 - e.y;
-	ret.z = 0.6 + (1.0 - e.y)*0.4;
-	return ret;
-}
-
-// sea
-float sea_octave(vec2 uv, float choppy) {
-	uv += noise(uv);
-	vec2 wv = 1.0 - abs(sin(uv));
-	vec2 swv = abs(cos(uv));
-	wv = mix(wv, swv, wv);
-	return pow(1.0 - pow(wv.x * wv.y, 0.65), choppy);
-}
-
-float map(vec3 p) {
-	float freq = SEA_FREQ;
-	float amp = SEA_HEIGHT;
-	float choppy = SEA_CHOPPY;
-	vec2 uv = p.xz; uv.x *= 0.75;
-
-	float d, h = 0.0;
-	for (int i = 0; i < ITER_GEOMETRY; i++) {
-		d = sea_octave((uv + SEA_TIME)*freq, choppy);
-		d += sea_octave((uv - SEA_TIME)*freq, choppy);
-		h += d * amp;
-		uv *= octave_m; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-	}
-	return p.y - h;
-}
-
-float map_detailed(vec3 p) {
-	float freq = SEA_FREQ;
-	float amp = SEA_HEIGHT;
-	float choppy = SEA_CHOPPY;
-	vec2 uv = p.xz; uv.x *= 0.75;
-
-	float d, h = 0.0;
-	for (int i = 0; i < ITER_FRAGMENT; i++) {
-		d = sea_octave((uv + SEA_TIME)*freq, choppy);
-		d += sea_octave((uv - SEA_TIME)*freq, choppy);
-		h += d * amp;
-		uv *= octave_m; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-	}
-	return p.y - h;
-}
-
-vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
-	float fresnel = clamp(1.0 - dot(n, -eye), 0.0, 1.0);
-	fresnel = pow(fresnel, 3.0) * 0.65;
-
-	vec3 reflected = getSkyColor(reflect(eye, n));
-	vec3 refracted = SEA_BASE + diffuse(n, l, 80.0) * SEA_WATER_COLOR * 0.12;
-
-	vec3 color = mix(refracted, reflected, fresnel);
-
-	float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
-	color += SEA_WATER_COLOR * (p.y - SEA_HEIGHT) * 0.18 * atten;
-
-	color += vec3(specular(n, l, eye, 60.0));
-
-	return color;
-}
-
-// tracing
-vec3 getNormal(vec3 p, float eps) {
-	vec3 n;
-	n.y = map_detailed(p);
-	n.x = map_detailed(vec3(p.x + eps, p.y, p.z)) - n.y;
-	n.z = map_detailed(vec3(p.x, p.y, p.z + eps)) - n.y;
-	n.y = eps;
-	return normalize(n);
-}
-
-float heightMapTracing(vec3 ori, vec3 dir, out vec3 p) {
-	float tm = 0.0;
-	float tx = 1000.0;
-	float hx = map(ori + dir * tx);
-	if (hx > 0.0) return tx;
-	float hm = map(ori + dir * tm);
-	float tmid = 0.0;
-	for (int i = 0; i < NUM_STEPS; i++) {
-		tmid = mix(tm, tx, hm / (hm - hx));
-		p = ori + dir * tmid;
-		float hmid = map(p);
-		if (hmid < 0.0) {
-			tx = tmid;
-			hx = hmid;
-		}
-		else {
-			tm = tmid;
-			hm = hmid;
-		}
-	}
-	return tmid;
-}
-
-uniform mat4		u_ModelMatrix;
-
-#define M_PI				3.14159265358979323846
-
-float atan2(in float y, in float x)
-{
-	bool s = (abs(x) > abs(y));
-	return mix(PI / 2.0 - atan(x, y), atan(y, x), s);
-	//return x == 0.0 ? sign(y)*M_PI / 2 : atan(y, x)
-}
-
-// main
-void mainImage(out vec4 fragColor, in vec2 fragCoord, in vec4 positionMap, in vec4 waterMapLower, in vec4 waterMapUpper, in vec3 screenCenterOrg)
-{
-	//vec2 uv = fragCoord.xy / u_Dimensions.xy;
-	//uv = uv * 2.0 - 1.0;
-	//uv.x *= u_Dimensions.x / u_Dimensions.y;
-	vec2 uv = fragCoord.xy;
-	uv = uv * 2.0 - 1.0;
-	uv.x *= u_Dimensions.x / u_Dimensions.y;
-	float time = iGlobalTime * 0.3;// +iMouse.x*0.01;
-
-	// ray
-	// bteitler: Calculated a vector that smoothly changes over time in a sinusoidal (wave) pattern.  
-	// This will be used to drive where the user is looking in world space.
-	//vec3 ang = vec3(0.0);//vec3(sin(time*3.0)*0.1,sin(time)*0.2+0.3,time);    
-	//vec3 ang = vec3(0.0, iMouse.y * 0.1, iMouse.x * 0.1); // UQ1: This moves based on mouse x,y coords...
-	//vec3 ang = vec3(0.0, (iMouse.y / iResolution.y) * PI, (iMouse.x / iResolution.x) * PI * 2.0); // UQ1: full 360 view available
-
-	// bteitler: Calculate the "origin" of the camera in world space based on time.  Camera is located
-	// at height 3.5, at x 0 (zero), and flies over the ocean in the z axis over time.
-	//vec3 ori = vec3(0.0, 3.5, time*5.0);
-	//vec3 ori = waterMapLower.xyz;
-	//vec3 ori = (u_ModelViewProjectionMatrix * vec4(waterMapLower.xyz, 1.0)).xyz;
-	
-	//vec3 ori = vec3(iMouse.x * 0.1,13.5,iMouse.y * 0.1); // UQ1: This moves left/right and forward/back based on mouse...
-	//vec3 ang = vec3(0.0, (iMouse.y / iResolution.y) * PI, (iMouse.x / iResolution.x) * PI * 2.0); // UQ1: full 360 view available
-	
-	//vec3 ori = vec3(u_ViewOrigin.x, u_ViewOrigin.y - waterMapLower.y, u_ViewOrigin.z) * u_Local0.a
-	highp vec3 vOrg = (u_ViewOrigin.xyz + 524288.0);
-	highp vec3 wOrg = (waterMapLower.xyz + 524288.0);
-	//highp vec3 ori = vec3(u_ViewOrigin.x / u_Local0.a, (u_ViewOrigin.y - waterMapLower.y) / u_Local0.b, u_ViewOrigin.z / u_Local0.a);
-	highp vec3 ori = vec3(vOrg.x / u_Local0.a, (vOrg.y - wOrg.y) / u_Local0.b, vOrg.z / u_Local0.a);
-	
-	//vec3 vOri = (u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz, 1.0)).xyz;
-	//vec3 wOri = (u_ModelViewProjectionMatrix * vec4(waterMapLower.xyz, 1.0)).xyz;
-	//vec3 ori = vec3(vOri.x, vOri.y - wOri.y, vOri.z) * u_Local0.a;
-
-	vec3 vDir = normalize(u_ViewOrigin.xyz - waterMapLower.xyz) *0.5 + 0.5;
-	vec3 ang = vec3(0.0, vDir.y * PI, vDir.x * PI * 2.0); // UQ1: full 360 view available
-	//vec3 ang = vec3(0.0);
-
-	if (u_Local0.r == 1) ang.y *= -1.0;
-	if (u_Local0.r == 2) ang.z *= -1.0;
-
-	vec3 dir = normalize(vec3(uv.xy, -2.0)); // commented version method...
-	//vec3 dir = normalize(vec3(uv.xy, -2.0)); dir.z += length(uv) * 0.15;
-	dir = normalize(dir) * fromEuler(ang);
-
-	vec3 p;
-	heightMapTracing(ori, dir, p);
-	vec3 dist = p - ori;
-
-	vec3 n = getNormal(p, dot(dist, dist) * EPSILON_NRM);
-	vec3 light = normalize(vec3(0.0, 1.0, 0.8));
-
-	// color
-	vec3 color = mix(
-		fragColor.rgb/*getSkyColor(dir)*/,
-		getSeaColor(p, n, light, dir, dist),
-		pow(smoothstep(0.0, -0.05, dir.y), 0.3));
-
-	// post
-	fragColor = vec4(pow(color, vec3(0.75)), 1.0);
-}
-#endif //__TEST_WATER__
-
 // lighting
 float getdiffuse(vec3 n, vec3 l, float p) {
 	return pow(dot(n, l) * 0.4 + 0.6, p);
@@ -537,6 +304,15 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 float getspecular(vec3 n, vec3 l, vec3 e, float s) {
 	float nrm = (s + 8.0) / (3.1415 * 8.0);
 	return pow(max(dot(reflect(e, n), l), 0.0), s) * nrm;
+}
+
+// Blinn-Phong shading model with rim lighting (diffuse light bleeding to the other side).
+// `normal`, `view` and `light` should be normalized.
+vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor) {
+	vec3 halfLV = normalize(light + view);
+	float spe = pow(max(dot(normal, halfLV), 0.0), 32.0);
+	float dif = dot(normal, light) * 0.5 + 0.75;
+	return dif*diffuseColor + spe*specularColor;
 }
 
 void main ( void )
@@ -825,12 +601,8 @@ void main ( void )
 		float lambertian2 = dot(lightDir.xyz, normal);
 		float spec2 = 0.0;
 		
-#if 1
 		float fresnel = clamp(1.0 - dot(normal, -eyeVecNorm), 0.0, 1.0);
 		fresnel = pow(fresnel, 3.0) * 0.65;
-#else
-		float fresnel = fresnelTerm(normal, eyeVecNorm);
-#endif
 
 		if(lambertian2 > 0.0)
 		{// this is blinn phong
@@ -853,6 +625,48 @@ void main ( void )
 
 		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
 		/* END - TESTING */
+
+		// Also do dlights. Includes map glows and sabers and all that good stuff...
+		if (u_lightCount > 0.0)
+		{
+#define LIGHT_COLOR_POWER			4.0
+
+			vec3 addedLight = vec3(0.0);
+			float power = clamp(length(color.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+			power = pow(power, LIGHT_COLOR_POWER);
+			power = power * 0.5 + 0.5;
+
+			float maxStr = max(color.r, max(color.g, color.b)) * 0.9 + 0.1;
+
+			for (int li = 0; li < u_lightCount; li++)
+			{
+				vec3 lightPos = u_lightPositions2[li].xyz;
+
+				float lightDist = distance(lightPos, waterMapLower3.xzy/*position.xyz*/);
+
+				if (u_lightHeightScales[li] > 0.0)
+				{// ignore height differences, check later...
+					lightDist -= length(lightPos.z - waterMapLower3.y/*position.z*/);
+				}
+
+				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
+				float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
+				lightStrength *= lightDistMult;
+
+				if (lightStrength > 0.0)
+				{
+					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * 4.0;//1.5; // Normalize.
+					vec3 lightDir2 = normalize(lightPos - waterMapLower3.xzy/*position.xyz*/);
+				
+					lightColor = lightColor * lightStrength * power;
+
+					lightColor *= maxStr;
+					addedLight.rgb += (lightColor * vec3(getspecular(-normal, -lightDir2, eyeVecNorm, 60.0)));
+				}
+			}
+
+			color.rgb = color.rgb + addedLight;
+		}
 #else
 		color = mix(refraction, waterColorDeep, fresnel);
 #endif
