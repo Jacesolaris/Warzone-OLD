@@ -2958,7 +2958,7 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	shaderProgram_t *shader = &tr.fastBlurShader[(r_shadowQuality->integer >= 0 && r_shadowQuality->integer < 3) ? r_shadowQuality->integer : 1];
+	shaderProgram_t *shader = &tr.fastBlurShader[(r_shadowBlurQuality->integer >= 0 && r_shadowBlurQuality->integer < 3) ? r_shadowBlurQuality->integer : 1];
 
 	GLSL_BindProgram(shader);
 

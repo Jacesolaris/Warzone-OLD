@@ -16262,7 +16262,8 @@ void CG_Player( centity_t *cent ) {
 		{
 			if (cent->modelScale[2] && cent->modelScale[2] != 1.0f)
 			{
-				cent->lerpOrigin[2] += 24 * (cent->modelScale[2] - 1);
+				//	cent->lerpOrigin[2] += 24 * (cent->modelScale[2] - 1);
+				cent->lerpOrigin[2] -= 28.0 * (1.0 - cent->modelScale[2]);
 			}
 		}
 	}

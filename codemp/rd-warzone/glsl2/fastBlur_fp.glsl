@@ -39,6 +39,7 @@ vec4 FastBlur(void)
 	float depth = shadowInfo.y;
 	float dist = DistFromDepth(depth);
 	float invDepth = 1.0 + (1.0 - depth);
+	invDepth *= 0.666;
 
 	int NUM_BLUR_PIXELS = 1;
 

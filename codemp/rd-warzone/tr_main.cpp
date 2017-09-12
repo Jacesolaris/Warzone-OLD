@@ -2572,14 +2572,19 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	case 0:
 	default:
 		splitZNear = viewZNear;
-		splitZFar = 512.0;
+		//splitZFar = 512.0;
+		splitZFar = 256.0;
 		break;
 	case 1:
-		splitZNear = 512.0;
-		splitZFar = 4096.0;
+		splitZNear = 192.0;
+		splitZFar = 1024.0;// 4096.0;
 		break;
 	case 2:
-		splitZNear = 4096.0;
+		splitZNear = 768.0;
+		splitZFar = 4096.0;
+		break;
+	case 3:
+		splitZNear = 3172.0;// 4096.0;
 		//splitZFar = 16384.0;
 		splitZFar = (backEnd.viewParms.zFar < MAP_INFO_MAXSIZE) ? backEnd.viewParms.zFar : MAP_INFO_MAXSIZE;
 		break;

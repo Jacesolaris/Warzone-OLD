@@ -2086,16 +2086,19 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 
-			//GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
-			//GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
+			GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
 			
+			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+			GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
+
 			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-			GL_BindToTMU(tr.randomImage, TB_SPECULARMAP);
+			GL_BindToTMU(tr.random2KImage[1], TB_SPECULARMAP);
 			
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 			
 			vec4_t vec;
-			VectorSet4(vec, r_shadowQuality->value, r_shadowMapSize->value, r_shadowCascadeZFar->value, 0.0);
+			VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
 			GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
 
 			GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
@@ -2117,7 +2120,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 				VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
 				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP,      viewVector);
 
-				VectorSet4(viewInfo, zmax / zmin, zmax, r_hdr->integer ? 32.0 : 24.0, 0.0);
+				VectorSet4(viewInfo, zmax / zmin, zmax, /*r_hdr->integer ? 32.0 :*/ 24.0, zmin);
 
 				GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
 			}

@@ -7289,23 +7289,23 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
-"{\n"\
-"map %s\n"\
-"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"blendFunc GL_ONE GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"alphaFunc GE128\n"\
-"depthFunc equal\n"\
-"detail\n"\
-"}\n"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"noScreenMap\n"\
-"}\n"\
+"//{\n"\
+"//map %s\n"\
+"////blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//blendFunc GL_ONE GL_ONE\n"\
+"//rgbGen lightingDiffuse\n"\
+"//alphaGen lightingSpecular\n"\
+"//alphaFunc GE128\n"\
+"//depthFunc equal\n"\
+"//detail\n"\
+"//}\n"\
+"//{\n"\
+"//map $lightmap\n"\
+"//blendfunc GL_DST_COLOR GL_ZERO\n"\
+"//rgbGen lightingDiffuse\n"\
+"//depthFunc equal\n"\
+"//noScreenMap\n"\
+"//}\n"\
 "}\n"\
 "";
 
@@ -7328,23 +7328,31 @@ char uniqueGenericArmorShader[] = "{\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
+"//{\n"\
+"//map %s\n"\
+"////blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//blendFunc GL_ONE GL_ONE\n"\
+"//rgbGen lightingDiffuse\n"\
+"//alphaGen lightingSpecular\n"\
+"//alphaFunc GE128\n"\
+"//depthFunc equal\n"\
+"//detail\n"\
+"//}\n"\
 "{\n"\
-"map %s\n"\
-"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"blendFunc GL_ONE GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"alphaFunc GE128\n"\
-"depthFunc equal\n"\
-"detail\n"\
+"	map models/warzone/tatooine/glass_reflect\n"\
+"		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA\n"\
+"		detail\n"\
+"		alphaGen const 0.7\n"\
+"		tcGen environment\n"\
+"		tcMod scale 1.5 1.5\n"\
 "}\n"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"noScreenMap\n"\
-"}\n"\
+"//{\n"\
+"//map $lightmap\n"\
+"//blendfunc GL_DST_COLOR GL_ZERO\n"\
+"//rgbGen lightingDiffuse\n"\
+"//depthFunc equal\n"\
+"//noScreenMap\n"\
+"//}\n"\
 "}\n"\
 "";
 
@@ -7367,16 +7375,16 @@ char uniqueGenericMetalShader[] = "{\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
-"{\n"\
-"map %s\n"\
-"//blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"blendFunc GL_ONE GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"alphaFunc GE128\n"\
-"depthFunc equal\n"\
-"detail\n"\
-"}\n"\
+"//{\n"\
+"//map %s\n"\
+"////blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"//blendFunc GL_ONE GL_ONE\n"\
+"//rgbGen lightingDiffuse\n"\
+"//alphaGen lightingSpecular\n"\
+"//alphaFunc GE128\n"\
+"//depthFunc equal\n"\
+"//detail\n"\
+"//}\n"\
 "{\n"\
 "map $lightmap\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
