@@ -70,6 +70,7 @@ float	pm_flyaccelerate = 8.0f;
 float	pm_friction = 6.0f;
 float	pm_waterfriction = 1.0f;
 float	pm_flightfriction = 3.0f;
+float   pm_ladderfriction = 14;
 float	pm_spectatorfriction = 5.0f;
 float	pm_jetpackspeed = 5.0f;
 float	pm_jetpackaccelerate = 0.3f;
@@ -1421,6 +1422,12 @@ static void PM_Friction( void ) {
 		{
 			drop += speed*pm_spectatorfriction*pml.frametime;
 		}
+	}
+
+	// apply ladder strafe friction
+	if (pml.ladder)
+	{
+		drop += speed * pm_ladderfriction * pml.frametime;
 	}
 
 	// scale the velocity
@@ -5831,7 +5838,23 @@ static void PM_Footsteps( void ) {
 	{
 		PM_ContinueLegsAnim( pm->ps->torsoAnim );
 	}
-	else if ( pm->ps->groundEntityNum == ENTITYNUM_NONE ) {
+	else if ( pm->ps->groundEntityNum == ENTITYNUM_NONE ) 
+	{
+		if (pm->ps->pm_flags & PMF_LADDER)
+		{// on ladder
+			if (pm->ps->velocity[2] == 0)
+			{
+				PM_ContinueLegsAnim(BOTH_LADDER_IDLE);
+			}
+			else if (pm->ps->velocity[2] > 0)
+			{
+				PM_ContinueLegsAnim(BOTH_LADDER_UP1);
+			}
+			else if (pm->ps->velocity[2] < 0)
+			{
+				PM_ContinueLegsAnim(BOTH_LADDER_DWN1);
+			}
+		}
 
 		// airborne leaves position in cycle intact, but doesn't advance
 		if ( pm->waterlevel > 1 )
@@ -6369,6 +6392,282 @@ static void PM_Footsteps( void ) {
 		pm->ps->torsoAnim = BOTH_STAND9IDLE1;
 	}
 	*/
+}
+
+
+/*
+================
+PM_CheckLadderMove
+
+Checks to see if we are on a ladder
+================
+*/
+qboolean        ladderforward;
+vec3_t          laddervec;
+
+void PM_CheckLadderMove(void)
+{
+	vec3_t          spot;
+	vec3_t          flatforward;
+	trace_t         trace;
+	float           tracedist;
+
+#define TRACE_LADDER_DIST   48.0
+	qboolean        wasOnLadder;
+
+	if (pm->ps->pm_time)
+	{
+		return;
+	}
+
+	//if (pm->ps->pm_flags & PM_DEAD)
+	//  return;
+
+	if (pml.walking)
+	{
+		tracedist = 1.0;
+	}
+	else
+	{
+		tracedist = TRACE_LADDER_DIST;
+	}
+
+	wasOnLadder = (qboolean)((pm->ps->pm_flags & PMF_LADDER) != 0);
+
+	pml.ladder = qfalse;
+	pm->ps->pm_flags &= ~PMF_LADDER;	// clear ladder bit
+	ladderforward = qfalse;
+
+	/*
+	if (pm->ps->eFlags & EF_DEAD) {  // dead bodies should fall down ladders
+	return;
+	}
+
+	if (pm->ps->pm_flags & PM_DEAD && pm->ps->stats[STAT_HEALTH] <= 0)
+	{
+	return;
+	}
+	*/
+	if (pm->ps->stats[STAT_HEALTH] <= 0)
+	{
+		pm->ps->groundEntityNum = ENTITYNUM_NONE;
+		pml.groundPlane = qfalse;
+		pml.walking = qfalse;
+		return;
+	}
+
+	// check for ladder
+	flatforward[0] = pml.forward[0];
+	flatforward[1] = pml.forward[1];
+	flatforward[2] = 0;
+	VectorNormalize(flatforward);
+
+	VectorMA(pm->ps->origin, tracedist, flatforward, spot);
+	pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+	if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+	{
+		pml.ladder = qtrue;
+	}
+	/*
+	if (!pml.ladder && DotProduct(pm->ps->velocity, pml.forward) < 0) {
+	// trace along the negative velocity, so we grab onto a ladder if we are trying to reverse onto it from above the ladder
+	flatforward[0] = -pm->ps->velocity[0];
+	flatforward[1] = -pm->ps->velocity[1];
+	flatforward[2] = 0;
+	VectorNormalize (flatforward);
+
+	VectorMA (pm->ps->origin, tracedist, flatforward, spot);
+	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+	if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+	{
+	pml.ladder = qtrue;
+	}
+	}
+	*/
+	if (pml.ladder)
+	{
+		VectorCopy(trace.plane.normal, laddervec);
+	}
+
+	if (pml.ladder && !pml.walking && (trace.fraction * tracedist > 1.0))
+	{
+		vec3_t          mins;
+
+		// if we are only just on the ladder, don't do this yet, or it may throw us back off the ladder
+		pml.ladder = qfalse;
+		VectorCopy(pm->mins, mins);
+		mins[2] = -1;
+		VectorMA(pm->ps->origin, -tracedist, laddervec, spot);
+		pm->trace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+		{
+			ladderforward = qtrue;
+			pml.ladder = qtrue;
+			pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
+		}
+		else
+		{
+			pml.ladder = qfalse;
+		}
+	}
+	else if (pml.ladder)
+	{
+		pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
+	}
+
+	// create some up/down velocity if touching ladder
+	if (pml.ladder)
+	{
+		if (pml.walking)
+		{
+			// we are currently on the ground, only go up and prevent X/Y if we are pushing forwards
+			if (pm->cmd.forwardmove <= 0)
+			{
+				pml.ladder = qfalse;
+			}
+		}
+	}
+
+	// if we have just dismounted the ladder, play dismount
+	if (!pml.ladder && wasOnLadder)
+	{
+		if (pm->ps->velocity[2] > 0) // UQ1: Guess - at top anim?
+		{
+			PM_SetAnim(SETANIM_BOTH, BOTH_WALK1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+		}
+		else if (pm->ps->velocity[2] < 0) // UQ1: Guess - at bottom anim too?
+		{
+			PM_SetAnim(SETANIM_BOTH, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+		}
+	}
+	
+	// if we have just mounted the ladder
+	if (pml.ladder && !wasOnLadder)
+	{// UQ1: Disabled - only play anim if going down ladder
+		if (pm->ps->velocity[2] == 0)
+		{// Idle on ladder...
+			PM_StartTorsoAnim(BOTH_LADDER_IDLE);
+			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_IDLE, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+		}
+		else if (pm->ps->velocity[2] > 0)
+		{// Going up...
+			PM_StartTorsoAnim(BOTH_LADDER_UP1);
+			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_UP1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+		}
+		else if (pm->ps->velocity[2] < 0)
+		{// Gound down...
+			PM_StartTorsoAnim(BOTH_LADDER_DWN1);
+			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_DWN1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+		}
+	}
+}
+
+/*
+============
+PM_LadderMove
+============
+*/
+void PM_LadderMove(void)
+{
+	float           wishspeed, scale;
+	vec3_t          wishdir, wishvel;
+	float           upscale;
+
+	if (ladderforward)
+	{
+		// move towards the ladder
+		VectorScale(laddervec, -200.0, wishvel);
+		pm->ps->velocity[0] = wishvel[0];
+		pm->ps->velocity[1] = wishvel[1];
+	}
+
+	upscale = (pml.forward[2] + 0.5) * 2.5;
+	if (upscale > 1.0)
+	{
+		upscale = 1.0;
+	}
+	else if (upscale < -1.0)
+	{
+		upscale = -1.0;
+	}
+
+	// forward/right should be horizontal only
+	pml.forward[2] = 0;
+	pml.right[2] = 0;
+	VectorNormalize(pml.forward);
+	VectorNormalize(pml.right);
+
+	// move depending on the view, if view is straight forward, then go up
+	// if view is down more then X degrees, start going down
+	// if they are back pedalling, then go in reverse of above
+	scale = PM_CmdScale(&pm->cmd);
+	VectorClear(wishvel);
+
+	if (pm->cmd.forwardmove)
+	{
+		wishvel[2] = 0.9 * upscale * scale * (float)pm->cmd.forwardmove;
+	}
+	//Com_Printf("wishvel[2] = %i, fwdmove = %i\n", (int)wishvel[2], (int)pm->cmd.forwardmove );
+
+	if (pm->cmd.rightmove)
+	{
+		// strafe, so we can jump off ladder
+		vec3_t          ladder_right, ang;
+
+		vectoangles(laddervec, ang);
+		AngleVectors(ang, NULL, ladder_right, NULL);
+
+		// if we are looking away from the ladder, reverse the right vector
+		if (DotProduct(laddervec, pml.forward) < 0)
+		{
+			VectorInverse(ladder_right);
+		}
+
+		//VectorMA( wishvel, 0.5 * scale * (float)pm->cmd.rightmove, pml.right, wishvel );
+		VectorMA(wishvel, 0.5 * scale * (float)pm->cmd.rightmove, ladder_right, wishvel);
+	}
+
+	// do strafe friction
+	PM_Friction();
+
+	if (pm->ps->velocity[0] < 1 && pm->ps->velocity[0] > -1)
+	{
+		pm->ps->velocity[0] = 0;
+	}
+	if (pm->ps->velocity[1] < 1 && pm->ps->velocity[1] > -1)
+	{
+		pm->ps->velocity[1] = 0;
+	}
+
+	wishspeed = VectorNormalize2(wishvel, wishdir);
+
+	PM_Accelerate(wishdir, wishspeed, pm_accelerate);
+	if (!wishvel[2])
+	{
+		if (pm->ps->velocity[2] > 0)
+		{
+			pm->ps->velocity[2] -= pm->ps->gravity * pml.frametime;
+			if (pm->ps->velocity[2] < 0)
+			{
+				pm->ps->velocity[2] = 0;
+			}
+		}
+		else
+		{
+			pm->ps->velocity[2] += pm->ps->gravity * pml.frametime;
+			if (pm->ps->velocity[2] > 0)
+			{
+				pm->ps->velocity[2] = 0;
+			}
+		}
+	}
+
+	//Com_Printf("vel[2] = %i\n", (int)pm->ps->velocity[2] );
+
+	PM_StepSlideMove(qfalse);	// no gravity while going up ladder
+
+								// always point legs forward
+	pm->ps->movementDir = 0;
 }
 
 /*
@@ -12166,6 +12465,9 @@ void PmoveSingle (pmove_t *pmove) {
 		}
 	}
 
+	// Ridah, ladders
+	PM_CheckLadderMove();
+
 	PM_DropTimers();
 
 #ifdef _TESTING_VEH_PREDICTION
@@ -12353,12 +12655,14 @@ void PmoveSingle (pmove_t *pmove) {
 		&&pm->ps->m_iVehicleNum)
 	{//don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 	}
-
+	else if (pml.ladder)
+	{
+		PM_LadderMove();
+	}
 	else if (pm->ps->pm_type == PM_JETPACK && !pml.groundPlane)// Handle jetpack movement
 	{
 		PM_JetpackMove();
 	}
-
 	else
 	{ //don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 		if (pm->ps->pm_type == PM_FLOAT
