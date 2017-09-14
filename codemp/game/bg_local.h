@@ -34,6 +34,9 @@ typedef struct
 
 	float		impactSpeed;
 
+	qboolean    ladderforward;
+	vec3_t      laddervec;
+
 	vec3_t		previous_origin;
 	vec3_t		previous_velocity;
 	int			previous_waterlevel;

@@ -6402,9 +6402,6 @@ PM_CheckLadderMove
 Checks to see if we are on a ladder
 ================
 */
-qboolean        ladderforward;
-vec3_t          laddervec;
-
 void PM_CheckLadderMove(void)
 {
 	vec3_t          spot;
@@ -6436,7 +6433,7 @@ void PM_CheckLadderMove(void)
 
 	pml.ladder = qfalse;
 	pm->ps->pm_flags &= ~PMF_LADDER;	// clear ladder bit
-	ladderforward = qfalse;
+	pml.ladderforward = qfalse;
 
 	/*
 	if (pm->ps->eFlags & EF_DEAD) {  // dead bodies should fall down ladders
@@ -6486,7 +6483,7 @@ void PM_CheckLadderMove(void)
 	*/
 	if (pml.ladder)
 	{
-		VectorCopy(trace.plane.normal, laddervec);
+		VectorCopy(trace.plane.normal, pml.laddervec);
 	}
 
 	if (pml.ladder && !pml.walking && (trace.fraction * tracedist > 1.0))
@@ -6497,11 +6494,11 @@ void PM_CheckLadderMove(void)
 		pml.ladder = qfalse;
 		VectorCopy(pm->mins, mins);
 		mins[2] = -1;
-		VectorMA(pm->ps->origin, -tracedist, laddervec, spot);
+		VectorMA(pm->ps->origin, -tracedist, pml.laddervec, spot);
 		pm->trace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
 		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
 		{
-			ladderforward = qtrue;
+			pml.ladderforward = qtrue;
 			pml.ladder = qtrue;
 			pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
 		}
@@ -6573,10 +6570,10 @@ void PM_LadderMove(void)
 	vec3_t          wishdir, wishvel;
 	float           upscale;
 
-	if (ladderforward)
+	if (pml.ladderforward)
 	{
 		// move towards the ladder
-		VectorScale(laddervec, -200.0, wishvel);
+		VectorScale(pml.laddervec, -200.0, wishvel);
 		pm->ps->velocity[0] = wishvel[0];
 		pm->ps->velocity[1] = wishvel[1];
 	}
@@ -6614,11 +6611,11 @@ void PM_LadderMove(void)
 		// strafe, so we can jump off ladder
 		vec3_t          ladder_right, ang;
 
-		vectoangles(laddervec, ang);
+		vectoangles(pml.laddervec, ang);
 		AngleVectors(ang, NULL, ladder_right, NULL);
 
 		// if we are looking away from the ladder, reverse the right vector
-		if (DotProduct(laddervec, pml.forward) < 0)
+		if (DotProduct(pml.laddervec, pml.forward) < 0)
 		{
 			VectorInverse(ladder_right);
 		}
