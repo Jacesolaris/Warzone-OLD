@@ -1130,6 +1130,7 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 	settings[3] = parallaxScale;
 }
 
+extern float MAP_GLOW_MULTIPLIER;
 extern float MAP_WATER_LEVEL;
 extern float MAP_INFO_MAXSIZE;
 extern vec3_t  MAP_INFO_MINS;
@@ -1266,7 +1267,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, local7);
 
 		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * 2.858 : r_glowStrength->value * 2.0, MAP_INFO_MAXS[2], r_showsplat->value);
+		VectorSet4(local8, (float)stageNum, (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * 2.0 * MAP_GLOW_MULTIPLIER, MAP_INFO_MAXS[2], r_showsplat->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
 	}
 	else
@@ -2026,8 +2027,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
-			if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
-				stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
+			//if (!(tr.refdef.rdflags & RDF_NOWORLDMODEL) && !(tr.viewParms.flags & VPF_SHADOWPASS))
+			//	stateBits |= GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL;
 
 			//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
 			//stateBits = GLS_DEFAULT;
@@ -2584,7 +2585,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
 			uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 #endif
-
 			VectorSet4(vec, 
 				useTC, 
 				useDeform, 
@@ -2592,10 +2592,37 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				(pStage->bundle[TB_DIFFUSEMAP].image[0] && (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CLAMPTOEDGE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vec);
 
+			float blendMethod = 0.0;
+
+			if (stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR)
+			{
+				blendMethod = 1.0;
+
+				stateBits &= ~GLS_SRCBLEND_BITS;
+				stateBits &= ~GLS_DSTBLEND_BITS;
+				stateBits |= GLS_SRCBLEND_ZERO | GLS_DSTBLEND_ONE;
+			}
+			else if (stateBits & GLS_DSTBLEND_SRC_COLOR)
+			{
+				blendMethod = 2.0;
+
+				stateBits &= ~GLS_SRCBLEND_BITS;
+				stateBits &= ~GLS_DSTBLEND_BITS;
+				stateBits |= GLS_SRCBLEND_ZERO | GLS_DSTBLEND_ONE;
+			}
+			else if (stateBits & GLS_DSTBLEND_ONE)
+			{
+				blendMethod = 3.0;
+
+				stateBits &= ~GLS_SRCBLEND_BITS;
+				stateBits &= ~GLS_DSTBLEND_BITS;
+				stateBits |= GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE;
+			}
+
 			VectorSet4(vec, 
 				useVertexAnim, 
 				useSkeletalAnim, 
-				useFog, 
+				blendMethod,//useFog,
 				(backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE)) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 

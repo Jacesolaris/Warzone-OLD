@@ -2958,7 +2958,7 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	shaderProgram_t *shader = &tr.fastBlurShader[(r_shadowBlurQuality->integer >= 0 && r_shadowBlurQuality->integer < 3) ? r_shadowBlurQuality->integer : 1];
+	shaderProgram_t *shader = &tr.fastBlurShader;
 
 	GLSL_BindProgram(shader);
 
@@ -2989,6 +2989,12 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 
 	GLSL_SetUniformFloatxX(shader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, (r_shadowBlurWidth->value > 0) ? r_shadowBlurWidth->value : 1.0, (r_shadowBlurStep->value > 0) ? r_shadowBlurStep->value : 1.0, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(shader, UNIFORM_SETTINGS0, loc);
+	}
 
 	{
 		vec4_t loc;

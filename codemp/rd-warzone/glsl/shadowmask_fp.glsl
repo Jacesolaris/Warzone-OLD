@@ -1,46 +1,31 @@
-uniform sampler2D		u_ScreenDepthMap;
-uniform sampler2D		u_GlowMap;				// noise 1
-uniform sampler2D		u_SpecularMap;			// noise 2
+uniform sampler2D			u_ScreenDepthMap;
+//uniform sampler2D			u_GlowMap;				// noise 1
+//uniform sampler2D			u_SpecularMap;			// noise 2
 
-uniform sampler2D		u_ShadowMap;
-uniform sampler2D		u_ShadowMap2;
-uniform sampler2D		u_ShadowMap3;
-uniform sampler2D		u_ShadowMap4;
+uniform sampler2DShadow		u_ShadowMap;
+uniform sampler2DShadow		u_ShadowMap2;
+uniform sampler2DShadow		u_ShadowMap3;
+uniform sampler2DShadow		u_ShadowMap4;
 
-uniform mat4			u_ShadowMvp;
-uniform mat4			u_ShadowMvp2;
-uniform mat4			u_ShadowMvp3;
-uniform mat4			u_ShadowMvp4;
+uniform mat4				u_ShadowMvp;
+uniform mat4				u_ShadowMvp2;
+uniform mat4				u_ShadowMvp3;
+uniform mat4				u_ShadowMvp4;
 
-uniform vec4			u_Settings0;			// r_shadowSamples (numBlockerSearchSamples), r_shadowMapSize, r_testshaderValue1->value, r_testshaderValue2->value
-uniform vec3			u_ViewOrigin;
-uniform vec4			u_ViewInfo;				// zfar / znear, zfar, depthBits, znear
-uniform float			u_ShadowZfar[5];
+uniform vec4				u_Settings0;			// r_shadowSamples (numBlockerSearchSamples), r_shadowMapSize, r_testshaderValue1->value, r_testshaderValue2->value
+uniform vec3				u_ViewOrigin;
+uniform vec4				u_ViewInfo;				// zfar / znear, zfar, depthBits, znear
+//uniform float				u_ShadowZfar[5];
 
-#define					r_shadowBlurQuality			u_Settings0.r
-#define					r_shadowMapSize			u_Settings0.g
+precise varying vec2		var_DepthTex;
+precise varying vec3		var_ViewDir;
 
-precise varying vec2	var_DepthTex;
-precise varying vec3	var_ViewDir;
+#define						r_shadowBlurWidth		u_Settings0.r
+#define						r_shadowMapSize			u_Settings0.g
 
 precise float DEPTH_MAX_ERROR = (1.0 / pow(2.0, u_ViewInfo.b));
 
 precise float scale = 1.0 / r_shadowMapSize;
-
-
-#define NEAR							u_ViewInfo.a//0.1
-
-//uniform float directionalLightShadowMapBias;
-#define directionalLightShadowMapBias	DEPTH_MAX_ERROR
-
-//uniform vec3 eyePosition;
-#define eyePosition						u_ViewOrigin
-
-//uniform int numBlockerSearchSamples = 1;
-//uniform int numPCFSamples = 1;
-
-#define numBlockerSearchSamples			int(r_shadowBlurQuality)
-#define numPCFSamples					int(r_shadowBlurQuality)
 
 float linearizeDepth(float depth)
 {
@@ -49,76 +34,89 @@ float linearizeDepth(float depth)
 
 float getLinearDepth(sampler2D depthMap, vec2 tex)
 {
-	precise float sampleZDivW = texture(depthMap, tex).r;
-	//sampleZDivW -= DEPTH_MAX_ERROR;
-	return linearizeDepth(sampleZDivW);
+	return linearizeDepth(texture(depthMap, tex).r - DEPTH_MAX_ERROR);
 }
 
-//////////////////////////////////////////////////////////////////////////
-vec2 RandomDirection(sampler2D distribution, float u)
+float random( const vec2 p )
 {
-   return texture(distribution, vec2(u)).xy * 2 - vec2(1);
+  // We need irrationals for pseudo randomness.
+  // Most (all?) known transcendental numbers will (generally) work.
+  const vec2 r = vec2(
+    23.1406926327792690,  // e^pi (Gelfond's constant)
+     2.6651441426902251); // 2^sqrt(2) (Gelfond-Schneider constant)
+  //return fract( cos( mod( 123456789., 1e-7 + 256. * dot(p,r) ) ) );
+  return mod( 123456789., 1e-7 + 256. * dot(p,r) );  
 }
 
-//////////////////////////////////////////////////////////////////////////
-// this search area estimation comes from the following article: 
-// http://developer.download.nvidia.com/whitepapers/2008/PCSS_DirectionalLight_Integration.pdf
-float SearchWidth(float uvLightSize, float receiverDistance, vec3 shadowCoords, float sampleZ)
+float offset_lookup(sampler2DShadow shadowmap, vec4 loc, vec2 offset, float scale)
 {
-	//return uvLightSize * (receiverDistance - NEAR) / eyePosition.z;
-	//return uvLightSize * (receiverDistance - NEAR) / distance(eyePosition, shadowCoords);
-	return uvLightSize * (receiverDistance - NEAR) / sampleZ;
+	return textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, loc.z, loc.w));
 }
 
-//////////////////////////////////////////////////////////////////////////
-float FindBlockerDistance_DirectionalLight(vec3 shadowCoords, sampler2D shadowMap, float uvLightSize, float sampleZ)
+float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist)
 {
-	int blockers = 0;
-	float avgBlockerDistance = 0;
-	float searchWidth = SearchWidth(uvLightSize, shadowCoords.z, shadowCoords, sampleZ);
+	float mult;
 
-	for (int i = 0; i < numBlockerSearchSamples; i++)
-	{
-		float z = texture(shadowMap, shadowCoords.xy + RandomDirection(u_GlowMap, i / float(numBlockerSearchSamples)) * searchWidth).r;
-		if (z < (shadowCoords.z - directionalLightShadowMapBias))
-		{
-			blockers++;
-			avgBlockerDistance += z;
-		}
-	}
+#if 1
+	float scale = 1.0 / r_shadowMapSize;
+	vec4 sCoord = vec4(st);
+	vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
+	offset.y += offset.x;  // y ^= x in floating point
+	if (offset.y > 1.1) offset.y = 0;
 
-	if (blockers > 0)
-		return 1.0 - (avgBlockerDistance / blockers);
-	else
-		return -1;
-}
+	float shadowCoeff = (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, 0.5), scale) +
+               offset_lookup(shadowmap, sCoord, offset + vec2(0.5, 0.5), scale) +
+               offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, -1.5), scale) +
+               offset_lookup(shadowmap, sCoord, offset + vec2(0.5, -1.5), scale) ) 
+			   * 0.25;
+	return shadowCoeff;
+#elif 0
+	float scale = 1.0 / r_shadowMapSize;
 
-//////////////////////////////////////////////////////////////////////////
-float PCF_DirectionalLight(vec3 shadowCoords, sampler2D shadowMap, float uvRadius)
-{
-	float sum = 0;
-	for (int i = 0; i < numPCFSamples; i++)
-	{
-		float z = texture(shadowMap, shadowCoords.xy + RandomDirection(u_SpecularMap, i / float(numPCFSamples)) * uvRadius).r;
-		sum += (z < (shadowCoords.z - directionalLightShadowMapBias)) ? 1 : 0;
-	}
-	return 1.0 - (sum / numPCFSamples);
-}
+	// from http://http.developer.nvidia.com/GPUGems/gpugems_ch11.html
+	vec2 offset = vec2(greaterThan(fract(var_DepthTex.xy * r_FBufScale * 0.5), vec2(0.25)));
+	offset.y += offset.x;
+	if (offset.y > 1.1) offset.y = 0.0;
+	
+	mult = texture(shadowmap, vec3(st.xy + (offset + vec2(-1.5,  0.5)) * scale, dist))
+	     + texture(shadowmap, vec3(st.xy + (offset + vec2( 0.5,  0.5)) * scale, dist))
+	     + texture(shadowmap, vec3(st.xy + (offset + vec2(-1.5, -1.5)) * scale, dist))
+	     + texture(shadowmap, vec3(st.xy + (offset + vec2( 0.5, -1.5)) * scale, dist));
+	 
+	mult *= 0.25;
+	return mult;
+#elif 0
+	float scale = 2.0 / r_shadowMapSize;
 
-//////////////////////////////////////////////////////////////////////////
-float PCSS_DirectionalLight(vec3 shadowCoords, sampler2D shadowMap, float uvLightSize, float sampleZ)
-{
-	// blocker search
-	float blockerDistance = FindBlockerDistance_DirectionalLight(shadowCoords, shadowMap, uvLightSize, sampleZ);
-	if (blockerDistance == -1)
-		return 1;		
+	#define USE_SHADOW_FILTER
+	#define USE_SHADOW_FILTER2
 
-	// penumbra estimation
-	float penumbraWidth = (shadowCoords.z - blockerDistance) / blockerDistance;
+	#if defined(USE_SHADOW_FILTER)
+		float r = random(var_DepthTex.xy);
+		float sinr = sin(r) * scale;
+		float cosr = cos(r) * scale;
+		mat2 rmat = mat2(cosr, sinr, -sinr, cosr);
 
-	// percentage-close filtering
-	float uvRadius = penumbraWidth * uvLightSize * NEAR / shadowCoords.z;
-	return PCF_DirectionalLight(shadowCoords, shadowMap, uvRadius);
+		mult =  texture(shadowmap, vec3(st.xy + rmat * vec2(-0.7055767, 0.196515), dist));
+		mult += texture(shadowmap, vec3(st.xy + rmat * vec2(0.3524343, -0.7791386), dist));
+		mult += texture(shadowmap, vec3(st.xy + rmat * vec2(0.2391056, 0.9189604), dist));
+		#if defined(USE_SHADOW_FILTER2)
+			mult += texture(shadowmap, vec3(st.xy + rmat * vec2(-0.07580382, -0.09224417), dist));
+			mult += texture(shadowmap, vec3(st.xy + rmat * vec2(0.5784913, -0.002528916), dist));
+			mult += texture(shadowmap, vec3(st.xy + rmat * vec2(0.192888, 0.4064181), dist));
+			mult += texture(shadowmap, vec3(st.xy + rmat * vec2(-0.6335801, -0.5247476), dist));
+			mult += texture(shadowmap, vec3(st.xy + rmat * vec2(-0.5579782, 0.7491854), dist));
+			mult += texture(shadowmap, vec3(st.xy + rmat * vec2(0.7320465, 0.6317794), dist));
+
+			mult *= 0.11111;
+		#else
+			mult *= 0.33333;
+		#endif
+	#else
+		mult = texture(shadowmap, vec3(st.xy, dist));
+	#endif
+	return mult;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,7 +124,6 @@ void main()
 {
 	precise float result = 1.0;
 	precise float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex);
-	precise float sampleZ = (u_ViewInfo.y - NEAR) * depth;
 
 	precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 	precise vec4 shadowpos = u_ShadowMvp * biasPos;
@@ -134,9 +131,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCSS_DirectionalLight(shadowpos.xyz, u_ShadowMap, scale * 0.001/*lightSource.size / frustumSize*/, sampleZ);
-		//result = PCF_DirectionalLight(shadowpos.xyz, u_ShadowMap, scale);
-		//result = FindBlockerDistance_DirectionalLight(shadowpos.xyz, u_ShadowMap, scale * 0.001);
+		result = PCF(u_ShadowMap, shadowpos, shadowpos.z);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -146,9 +141,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCSS_DirectionalLight(shadowpos.xyz, u_ShadowMap2, scale * 0.001/*lightSource.size / frustumSize*/, sampleZ);
-		//result = PCF_DirectionalLight(shadowpos.xyz, u_ShadowMap2, scale);
-		//result = FindBlockerDistance_DirectionalLight(shadowpos.xyz, u_ShadowMap2, scale * 0.001);
+		result = PCF(u_ShadowMap2, shadowpos, shadowpos.z);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -158,9 +151,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCSS_DirectionalLight(shadowpos.xyz, u_ShadowMap3, scale * 0.001/*lightSource.size / frustumSize*/, sampleZ);
-		//result = PCF_DirectionalLight(shadowpos.xyz, u_ShadowMap3, scale);
-		//result = FindBlockerDistance_DirectionalLight(shadowpos.xyz, u_ShadowMap3, scale * 0.001);
+		result = PCF(u_ShadowMap3, shadowpos, shadowpos.z);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -170,9 +161,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCSS_DirectionalLight(shadowpos.xyz, u_ShadowMap4, scale * 0.001/*lightSource.size / frustumSize*/, sampleZ);
-		//result = PCF_DirectionalLight(shadowpos.xyz, u_ShadowMap4, scale);
-		//result = FindBlockerDistance_DirectionalLight(shadowpos.xyz, u_ShadowMap4, scale * 0.001);
+		result = PCF(u_ShadowMap4, shadowpos, shadowpos.z);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}

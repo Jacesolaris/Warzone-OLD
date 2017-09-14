@@ -1,25 +1,15 @@
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D		u_DiffuseMap;
+uniform sampler2D		u_ScreenDepthMap;
 
-uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
-uniform float		u_ShadowZfar[5];
-uniform vec2		u_Dimensions;
-uniform vec4		u_Local0;
+uniform vec4			u_ViewInfo; // zmin, zmax, zmax / zmin
+uniform float			u_ShadowZfar[5];
+uniform vec2			u_Dimensions;
+uniform vec4			u_Settings0;
 
-varying vec2		var_TexCoords;
+varying vec2			var_TexCoords;
 
-#if defined(SHADOW_HQ)
-#define BLUR_RADIUS 6.0
-#define BLUR_PIXELMULT 1.0
-#elif defined(SHADOW_MQ)
-#define BLUR_RADIUS 4.0
-#define BLUR_PIXELMULT 1.0
-#else // SHADOW_LQ
-//#define BLUR_RADIUS 3.0
-//#define BLUR_PIXELMULT 1.0
-#define BLUR_RADIUS 2.0
-#define BLUR_PIXELMULT 1.0
-#endif
+#define BLUR_RADIUS		u_Settings0.r
+#define BLUR_PIXELMULT	u_Settings0.g
 
 #define px (1.0/u_Dimensions.x)*BLUR_PIXELMULT
 #define py (1.0/u_Dimensions.y)*BLUR_PIXELMULT

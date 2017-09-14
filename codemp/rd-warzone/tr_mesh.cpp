@@ -274,6 +274,8 @@ int R_ComputeFogNum( mdvModel_t *model, trRefEntity_t *ent ) {
 	return 0;
 }
 
+extern qboolean WATER_ENABLED;
+
 void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int cubemapIndex)
 {
 #define MAX_MODEL_SURFS 8192
@@ -383,7 +385,7 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 				shader2 = tr.shaders[ surf2->shaderIndexes[ ent->e.skinNum % surf2->numShaderIndexes ] ];
 			}
 
-			if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
+			if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && ( r_glslWater->integer && WATER_ENABLED && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 			{// UQ1: All water can be safely merged I believe...
 				surfacesViewCount[surfNum2] = surfNum1;
 				continue;

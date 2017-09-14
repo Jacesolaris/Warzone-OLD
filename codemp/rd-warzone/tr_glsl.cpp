@@ -3267,27 +3267,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[0], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	Q_strcat(extradefines, 1024, "#define SHADOW_MQ\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[1], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
-	{
-		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	Q_strcat(extradefines, 1024, "#define SHADOW_HQ\n");
-
-	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader[2], "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.fastBlurShader, "fastBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fastBlur_vp, fallbackShader_fastBlur_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
 	}
@@ -4874,35 +4854,32 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
-	for (int s = 0; s < 3; s++)
+	if (!GLSL_EndLoadGPUShader(&tr.fastBlurShader))
 	{
-		if (!GLSL_EndLoadGPUShader(&tr.fastBlurShader[s]))
-		{
-			ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
-		}
+		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
+	}
 
-		GLSL_InitUniforms(&tr.fastBlurShader[s]);
+	GLSL_InitUniforms(&tr.fastBlurShader);
 
-		qglUseProgram(tr.fastBlurShader[s].program);
+	qglUseProgram(tr.fastBlurShader.program);
 
-		GLSL_SetUniformInt(&tr.fastBlurShader[s], UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.fastBlurShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-			GLSL_SetUniformVec2(&tr.fastBlurShader[s], UNIFORM_DIMENSIONS, screensize);
-		}
+		GLSL_SetUniformVec2(&tr.fastBlurShader, UNIFORM_DIMENSIONS, screensize);
+	}
 
-		qglUseProgram(0);
+	qglUseProgram(0);
 
 #if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.fastBlurShader[s]);
+	GLSL_FinishGPUShader(&tr.fastBlurShader);
 #endif
 
-		numEtcShaders++;
-	}
+	numEtcShaders++;
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.bloomRaysShader))
@@ -5507,9 +5484,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[1]);
 	GLSL_DeleteGPUShader(&tr.volumeLightInvertedShader[2]);
 	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
-	GLSL_DeleteGPUShader(&tr.fastBlurShader[0]);
-	GLSL_DeleteGPUShader(&tr.fastBlurShader[1]);
-	GLSL_DeleteGPUShader(&tr.fastBlurShader[2]);
+	GLSL_DeleteGPUShader(&tr.fastBlurShader);
 	GLSL_DeleteGPUShader(&tr.bloomRaysShader);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[0]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[1]);

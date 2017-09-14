@@ -3893,7 +3893,7 @@ void R_MergeLeafSurfaces(void)
 				if (shader1 && shader2 
 					&& shader1->stages[0] 
 					&& shader2->stages[0] 
-					&& ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
+					&& ( r_glslWater->integer && WATER_ENABLED && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 				{// UQ1: All water can be safely merged I believe...
 					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 					continue;
@@ -3905,7 +3905,7 @@ void R_MergeLeafSurfaces(void)
 					continue;
 				}
 #else //!__MERGE_SAME_SHADER_NAMES__
-				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && (r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
+				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && (r_glslWater->integer && WATER_ENABLED && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 				{// UQ1: All water can be safely merged I believe...
 					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 					continue;

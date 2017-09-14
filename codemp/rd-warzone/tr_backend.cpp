@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 backEndData_t	*backEndData;
 backEndState_t	backEnd;
 
+extern qboolean WATER_ENABLED;
 
 static float	s_flipMatrix[16] = {
 	// convert from our coordinate system (looking down X)
@@ -723,7 +724,7 @@ extern float MAP_WATER_LEVEL;
 
 void RB_ClearWaterPositionMap ( void )
 {
-	if (r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+	if (r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 	{
 		FBO_Bind(tr.waterFbo);
 		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -2089,11 +2090,11 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
 			
-			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-			GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
+			//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+			//GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
 
-			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-			GL_BindToTMU(tr.random2KImage[1], TB_SPECULARMAP);
+			//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+			//GL_BindToTMU(tr.random2KImage[1], TB_SPECULARMAP);
 			
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 			
@@ -2101,7 +2102,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
 			GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
 
-			GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
+			//GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
 
 			{
 				vec4_t viewInfo;
@@ -2684,7 +2685,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_glslWater->integer)
+		if (!SCREEN_BLUR && r_glslWater->integer && WATER_ENABLED)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);

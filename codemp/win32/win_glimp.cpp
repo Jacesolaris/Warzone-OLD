@@ -1163,6 +1163,17 @@ static void GLW_InitTextureCompression( void )
 */
 static void GLW_InitExtensions( void )
 {
+	if (r_sunlightMode->integer >= 2)
+	{
+		qglTextureParameterfEXT = (PFNGLTEXTUREPARAMETERFEXTPROC)qwglGetProcAddress("glTextureParameterfEXT");
+
+		if (!qglTextureParameterfEXT)
+		{
+			Com_Error(ERR_FATAL, "glTextureParameterfEXT graphics extension not found. Set r_sunlightMode 0 or 1, or update your video card.");
+			return;
+		}
+	}
+
 	if ( !r_allowExtensions->integer )
 	{
 		Com_Printf ("*** IGNORING OPENGL EXTENSIONS ***\n" );

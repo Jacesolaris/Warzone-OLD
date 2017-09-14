@@ -394,6 +394,9 @@ void ( APIENTRY * qglPointParameterfvEXT)( GLenum, GLfloat *) = NULL;
 void ( APIENTRY * qglTexImage3DEXT) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *) = NULL;
 void ( APIENTRY * qglTexSubImage3DEXT) (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const GLvoid *) = NULL;
 
+void ( APIENTRY * qglTextureParameterfEXT) (GLuint, GLenum, GLenum, GLfloat) = NULL;
+typedef void (APIENTRYP PFNGLTEXTUREPARAMETERFEXTPROC)  (GLuint, GLenum, GLenum, GLfloat);
+
 // Declare Register Combiners function pointers.
 PFNGLCOMBINERPARAMETERFVNV				qglCombinerParameterfvNV = NULL;
 PFNGLCOMBINERPARAMETERIVNV				qglCombinerParameterivNV = NULL;

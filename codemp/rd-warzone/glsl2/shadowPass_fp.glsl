@@ -4,7 +4,7 @@
 uniform sampler2D u_DiffuseMap;
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
+uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
 uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
 uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
 
@@ -15,7 +15,7 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=Deta
 
 #define USE_VERTEX_ANIM		u_Settings1.r
 #define USE_SKELETAL_ANIM	u_Settings1.g
-#define USE_FOG				u_Settings1.b
+#define USE_BLEND			u_Settings1.b
 #define USE_IS2D			u_Settings1.a
 
 #define USE_LIGHTMAP		u_Settings2.r
@@ -85,13 +85,32 @@ void main()
 #endif //USE_ALPHA_TEST
 	}
 
+	if (USE_BLEND > 0.0)
+	{// Emulate RGB blending... Fuck I hate this crap...
+		float colStr = clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0);
+
+		if (USE_BLEND == 3.0)
+		{
+			gl_FragColor.a *= colStr * 2.0;
+			gl_FragColor.rgb *= 0.5;
+		}
+		else if (USE_BLEND == 2.0)
+		{
+			colStr = clamp(colStr + 0.1, 0.0, 1.0);
+			gl_FragColor.a = 1.0 - colStr;
+		}
+		else
+		{
+			colStr = clamp(colStr - 0.1, 0.0, 1.0);
+			gl_FragColor.a = colStr;
+		}
+	}
+
 	out_Glow = vec4(0.0);
 
-#ifdef USE_GLOW_DETAIL_BUFFERS
-	if (USE_ISDETAIL <= 0.0)
-#else //!USE_GLOW_DETAIL_BUFFERS
-	if (gl_FragColor.a > 0.333)
-#endif //USE_GLOW_DETAIL_BUFFERS
+#define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
+
+	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 	{
 		out_Position = vec4(var_Position.rgb, u_Local1.a);
 		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, u_Local1.b /*specularScale*/);
