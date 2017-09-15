@@ -1206,6 +1206,14 @@ qboolean	WATER_ENABLED = qtrue;
 qboolean	WATER_FOG_ENABLED = qfalse;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
+qboolean	GRASS_ENABLED = qtrue;
+int			GRASS_DENSITY = 2;
+int			GRASS_DISTANCE = 2048;
+qboolean	PEBBLES_ENABLED = qfalse;
+int			PEBBLES_DENSITY = 1;
+int			PEBBLES_DISTANCE = 2048;
+
+char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 
 void MAPPING_LoadMapInfo(void)
 {
@@ -1321,6 +1329,27 @@ void MAPPING_LoadMapInfo(void)
 	WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
 	WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
 
+	//
+	// Climate...
+	//
+	const char		*climateName = IniRead(mapname, "CLIMATE", "CLIMATE_TYPE", "");
+	memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
+	strncpy(CURRENT_CLIMATE_OPTION, climateName, strlen(climateName));
+
+	//
+	// Grass...
+	//
+	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
+	GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "2048"));
+
+	//
+	// Pebbles...
+	//
+	PEBBLES_ENABLED = (atoi(IniRead(mapname, "PEBBLES", "PEBBLES_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	PEBBLES_DENSITY = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DENSITY", "1"));
+	PEBBLES_DISTANCE = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DISTANCE", "2048"));
+
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
 		if (StringContainsWord(mapname, "baldemnic")
@@ -1388,40 +1417,48 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
 }
 
 extern const char *materialNames[MATERIAL_LAST];
 extern void ParseMaterial(const char **text);
 
-char		CURRENT_CLIMATE_OPTION[256] = { 0 };
-
 qboolean MAPPING_LoadMapClimateInfo(void)
 {
-	const char		*climateName = NULL;
+	if (strlen(CURRENT_CLIMATE_OPTION) <= 1)
+	{// Only look in climate file if we didn't load it from mapInfo...
+		const char		*climateName = NULL;
 
-	char mapname[256] = { 0 };
+		char mapname[256] = { 0 };
 
-	// because JKA uses mp/ dir, why??? so pointless...
-	if (IniExists(va("foliage/%s.climateInfo", currentMapName)))
-		sprintf(mapname, "foliage/%s.climateInfo", currentMapName);
-	else if (IniExists(va("foliage/mp/%s.climateInfo", currentMapName)))
-		sprintf(mapname, "foliage/mp/%s.climateInfo", currentMapName);
-	else
-		sprintf(mapname, "foliage/%s.climateInfo", currentMapName);
+		// because JKA uses mp/ dir, why??? so pointless...
+		if (IniExists(va("foliage/%s.climateInfo", currentMapName)))
+			sprintf(mapname, "foliage/%s.climateInfo", currentMapName);
+		else if (IniExists(va("foliage/mp/%s.climateInfo", currentMapName)))
+			sprintf(mapname, "foliage/mp/%s.climateInfo", currentMapName);
+		else
+			sprintf(mapname, "foliage/%s.climateInfo", currentMapName);
 
-	climateName = IniRead(mapname, "CLIMATE", "CLIMATE_TYPE", "");
+		climateName = IniRead(mapname, "CLIMATE", "CLIMATE_TYPE", "");
 
-	memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
-	strncpy(CURRENT_CLIMATE_OPTION, climateName, strlen(climateName));
+		memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
+		strncpy(CURRENT_CLIMATE_OPTION, climateName, strlen(climateName));
 
-	if (CURRENT_CLIMATE_OPTION[0] == '\0')
-	{
-		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", "Warzone", currentMapName);
-		//strncpy(CURRENT_CLIMATE_OPTION, "tropical", strlen("tropical"));
-		return qfalse;
+		if (CURRENT_CLIMATE_OPTION[0] == '\0')
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No climate setting found in climateInfo or mapInfo files.\n", "Warzone");
+			return qfalse;
+		}
+
+		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION);
 	}
-
-	ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION);
+	else
+	{
+		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climate from mapInfo file ^7maps/%s.mapInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION);
+	}
 
 	return qtrue;
 }
@@ -1655,6 +1692,56 @@ void R_LoadMapInfo(void)
 			for (int i = 0; i < 4; i++)
 			{
 				tr.pebblesImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			}
+		}
+
+		//
+		// Override climate file climate options with mapInfo ones, if found...
+		//
+		if (r_foliage->integer || r_pebbles->integer)
+		{
+			char mapname[256] = { 0 };
+
+			// because JKA uses mp/ dir, why??? so pointless...
+			if (IniExists(va("maps/%s.mapInfo", currentMapName)))
+				sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+			else if (IniExists(va("maps/mp/%s.mapInfo", currentMapName)))
+				sprintf(mapname, "maps/mp/%s.mapInfo", currentMapName);
+			else
+				sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+
+			//TREE_SCALE_MULTIPLIER = atof(IniRead(mapname, "TREES", "treeScaleMultiplier", va("%f", TREE_SCALE_MULTIPLIER)));
+
+			image_t *newImage = NULL;
+
+			for (int i = 0; i < 3; i++)
+			{
+				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+				if (newImage)
+				{// We have an override image to use from mapInfo...
+					tr.grassImage[i] = newImage;
+					newImage = NULL;
+				}
+			}
+
+			newImage = R_FindImageFile(IniRead(mapname, "GRASS", "seaGrassImage", ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+			if (newImage)
+			{// We have an override image to use from mapInfo...
+				tr.seaGrassImage = newImage;
+				newImage = NULL;
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				newImage = R_FindImageFile(IniRead(mapname, "PEBBLES", va("pebblesImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+				if (newImage)
+				{// We have an override image to use from mapInfo...
+					tr.pebblesImage[i] = newImage;
+					newImage = NULL;
+				}
 			}
 		}
 

@@ -529,7 +529,7 @@ void main(void)
 
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
-	if (position.a == MATERIAL_SKY || position.a == MATERIAL_SUN || position.a == MATERIAL_NONE)
+	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
 	{// Skybox... Skip...
 		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
 		{
@@ -585,7 +585,7 @@ void main(void)
 	//norm.xyz = tangentToWorld * normalDetail.xyz;
 
 	vec3 N = norm.xyz;
-
+	//N.y = -N.y;
 
 	float shadowMult = 1.0;
 
@@ -619,7 +619,7 @@ void main(void)
 		occlusion = texture(u_HeightMap, texCoords);
 	}
 
-	float reflectivePower = max(norm.a, 0.5);
+	float reflectivePower = 0.5;//max(norm.a, 0.5); // UQ1: Fixme - from material type...
 
 
 #if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
@@ -706,6 +706,7 @@ void main(void)
 				lightColor = lightColor * lightStrength * power;
 
 				//addedLight.rgb += lightColor;
+				addedLight.rgb += lightColor * maxStr * 0.333;
 
 				if (useOcclusion)
 				{
@@ -744,7 +745,7 @@ void main(void)
 		float lightScale = clamp(1.0 - max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		outColor.rgb = QuickMix(outColor.rgb, outColor.rgb + ((env * (norm.a * 0.5) * invLightScale) * lightScale), (norm.a * 0.5) * lightScale);
+		outColor.rgb = QuickMix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), (reflectivePower * 0.5) * lightScale);
 	}
 #endif //__ENVMAP__
 

@@ -3,6 +3,8 @@ attribute vec3		attr_Normal;
 
 flat out	int		isSlope;
 
+uniform vec4		u_Local9;
+
 #define M_PI				3.14159265358979323846
 
 vec3 vectoangles( in vec3 value1 ) {
@@ -61,7 +63,7 @@ bool SlopeTooGreat(vec3 normal)
 
 	if (pitch < 0.0) pitch = -pitch;
 
-	if (pitch > 46.0)
+	if (pitch > 1.0)//46.0)
 	{
 		return true; // This slope is too steep for grass...
 	}

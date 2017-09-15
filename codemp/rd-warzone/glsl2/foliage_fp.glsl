@@ -80,8 +80,8 @@ void main()
 		gl_FragColor.a = 0.0;
 	}
 
-	out_Position = vec4(v_position.xyz, gl_FragColor.a > 0.0 ? MATERIAL_GREENLEAVES : 0.0);
-	out_Normal = vec4(v_normal.xyz * 0.5 + 0.5, gl_FragColor.a > 0.0 ? 0.5 : 0.0);
+	out_Position = vec4(v_position.xyz, gl_FragColor.a > 0.0 ? MATERIAL_GREENLEAVES + 1.0 : 0.0);
+	out_Normal = vec4(v_normal.xyz * 0.5 + 0.5, gl_FragColor.a > 0.0 ? 1.0 : 0.0);
 	out_Glow = vec4(0.0);
 	out_NormalDetail = vec4(0.0);
 }

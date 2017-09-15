@@ -5,11 +5,10 @@
 //layout(triangles, invocations = 6) in;
 #endif
 
-#define MAX_PEBBLES				100
-#define MAX_PEBBLES_LOOP		64
+#define MAX_FOLIAGES			78
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices = MAX_PEBBLES) out;
+layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
 uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
@@ -30,8 +29,9 @@ uniform float				u_Time;
 flat in	int					isSlope[];
 
 smooth out vec2				vTexCoord;
-out vec3					vVertPosition;
+smooth out vec3				vVertPosition;
 flat out int				iGrassType;
+out vec3					vVertNormal;
 
 #define MAP_WATER_LEVEL			u_Local10.b // TODO: Use water map
 #define PASS_NUMBER				u_Local8.r
@@ -41,7 +41,7 @@ flat out int				iGrassType;
 //
 
 const float					fGrassPatchSize = 3.0;
-float						controlScale = 1.0 / u_Local6.b;
+//float					fGrassPatchSize = u_Local9.g;
 
 //
 // LOD Range Settings...
@@ -84,49 +84,6 @@ vec4 randomBarycentricCoordinate() {
 
 #define M_PI		3.14159265358979323846
 
-
-bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent)
-{
-	/* create the bounding box of the object */
-	vec4 BoundingBox[8];
-	BoundingBox[0] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(ObjectExtent.x, ObjectExtent.y, ObjectExtent.z, 1.0));
-	BoundingBox[1] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(-ObjectExtent.x, ObjectExtent.y, ObjectExtent.z, 1.0));
-	BoundingBox[2] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(ObjectExtent.x, -ObjectExtent.y, ObjectExtent.z, 1.0));
-	BoundingBox[3] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(-ObjectExtent.x, -ObjectExtent.y, ObjectExtent.z, 1.0));
-	BoundingBox[4] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(ObjectExtent.x, ObjectExtent.y, -ObjectExtent.z, 1.0));
-	BoundingBox[5] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(-ObjectExtent.x, ObjectExtent.y, -ObjectExtent.z, 1.0));
-	BoundingBox[6] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(ObjectExtent.x, -ObjectExtent.y, -ObjectExtent.z, 1.0));
-	BoundingBox[7] = u_ModelViewProjectionMatrix * (InstancePosition + vec4(-ObjectExtent.x, -ObjectExtent.y, -ObjectExtent.z, 1.0));
-
-	/* check how the bounding box resides regarding to the view frustum */
-	int outOfBound[6];
-
-	for (int i = 0; i < 6; i++) outOfBound[i] = 0;
-
-	for (int i = 0; i<8; i++)
-	{
-		if (BoundingBox[i].x >  BoundingBox[i].w) outOfBound[0]++;
-		if (BoundingBox[i].x < -BoundingBox[i].w) outOfBound[1]++;
-		if (BoundingBox[i].y >  BoundingBox[i].w) outOfBound[2]++;
-		if (BoundingBox[i].y < -BoundingBox[i].w) outOfBound[3]++;
-		if (BoundingBox[i].z >  BoundingBox[i].w) outOfBound[4]++;
-		if (BoundingBox[i].z < -BoundingBox[i].w) outOfBound[5]++;
-	}
-
-	bool inFrustum = true;
-
-	for (int i = 0; i < 6; i++)
-	{
-		if (outOfBound[i] == 8)
-		{
-			inFrustum = false;
-			break;
-		}
-	}
-
-	return !inFrustum;
-}
-
 void main()
 {
 	if (isSlope[0] > 0 || isSlope[1] > 0 || isSlope[2] > 0)
@@ -159,16 +116,6 @@ void main()
 		return;
 	}
 
-	// Do some ICR culling on the base surfaces... Save us looping through extra surfaces...
-	/*vec3 maxs;
-	maxs = max(gl_in[0].gl_Position.xyz - Pos, gl_in[1].gl_Position.xyz - Pos);
-	maxs = max(maxs, gl_in[2].gl_Position.xyz - Pos);
-
-	if (InstanceCloudReductionCulling(vec4(Pos, 0.0), maxs))
-	{
-	return;
-	}*/
-
 	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 
 	//#if !defined(USE_400)
@@ -179,26 +126,15 @@ void main()
 	//	vLocalSeed = Pos*float(gl_InvocationID);
 	//#endif
 
-	float m = 1.0 - clamp((VertDist - 1024.0) / MAX_RANGE, 0.0, 1.0);
 
-	float USE_DENSITY = pow(m, 3.0);
 
-	int numAddedVerts = 0;
-	int maxAddedVerts = int(float(MAX_PEBBLES)*USE_DENSITY);
+	const vec3 up = vec3(0.0, 0.0, 1.0);
 
-	for (int x = 0; x < MAX_PEBBLES_LOOP; x++)
+
+
+	for (int x = 0; x < MAX_FOLIAGES; x++)
 	{
-		if (float(numAddedVerts) >= maxAddedVerts)
-		{
-			break;
-		}
-
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
-
-		/*if (vGrassFieldPos.z < MAP_WATER_LEVEL && float(numAddedVerts) >= float(maxAddedVerts) * 0.025)
-		{
-			break;
-		}*/
 
 		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
 
@@ -207,18 +143,19 @@ void main()
 			continue;
 		}
 
-
 		iGrassType = randomInt(0, 3);
 
 		float fGrassPatchHeight = randZeroOne() * 0.5 + 0.5;
 
-		float size = fGrassPatchSize*fGrassPatchHeight;
+		float vertDistanceScale = 1.0 - clamp(VertDist2 / MAX_RANGE, 0.0, 1.0); // Scale down to zero size by distance...
+		vertDistanceScale *= 0.5;
+
+		float size = fGrassPatchSize*fGrassPatchHeight*vertDistanceScale;
 
 		vGrassFieldPos += u_Local10.a;
 
 		vGrassFieldPos += size * 0.05;// 0.1;
 		vec3 toCamera = normalize(u_ViewOrigin - vGrassFieldPos);
-		vec3 up = vec3(0.0, 1.0, 0.0);
 		vec3 right = cross(toCamera, up) * size;
 
 		vGrassFieldPos -= (right * 0.5);
@@ -247,7 +184,5 @@ void main()
 		EmitVertex();
 
 		EndPrimitive();
-
-		numAddedVerts += 4;
 	}
 }

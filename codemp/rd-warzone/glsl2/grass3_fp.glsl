@@ -97,7 +97,7 @@ void main()
 	//vec4 m_Normal = ConvertToNormals(diffuse);
 
 	out_Glow = vec4(0.0);
-	out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0/*0.5*/);
-	out_Position = vec4(vVertPosition.xyz, MATERIAL_GREENLEAVES);
+	out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
+	out_Position = vec4(vVertPosition.xyz, MATERIAL_GREENLEAVES + 1.0);
 	out_NormalDetail = vec4(0.0);
 }

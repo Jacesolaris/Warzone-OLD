@@ -1399,13 +1399,13 @@ void R_Register( void )
 
 	r_groundFoliage = ri->Cvar_Get("r_groundFoliage", "0", CVAR_ARCHIVE);
 
-	r_foliage = ri->Cvar_Get( "r_foliage", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "2", CVAR_ARCHIVE );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
 	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "0", CVAR_ARCHIVE );
 
-	r_pebbles = ri->Cvar_Get("r_pebbles", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_pebbles = ri->Cvar_Get("r_pebbles", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_pebblesPasses = ri->Cvar_Get("r_pebblesPasses", "2", CVAR_ARCHIVE);
 	r_pebblesDistance = ri->Cvar_Get( "r_pebblesDistance", "1536.0", CVAR_ARCHIVE );
 

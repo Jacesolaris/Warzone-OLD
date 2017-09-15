@@ -103,7 +103,7 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 	fogAmount = clamp(fogAmount * u_Local3.a, 0.1, 1.0);
 	float sunAmount = max( clamp(dot( rayDir, sunDir ) * 1.1, 0.0, 1.0), 0.0 );
 	
-	if (!(position.a == MATERIAL_SKY || position.a == MATERIAL_SUN))
+	if (!(position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN))
 	{// Not Skybox or Sun... No don't do sun color here...
 		sunAmount = 0.0;
 	}

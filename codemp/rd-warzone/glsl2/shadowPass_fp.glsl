@@ -112,8 +112,8 @@ void main()
 
 	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 	{
-		out_Position = vec4(var_Position.rgb, u_Local1.a);
-		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, u_Local1.b /*specularScale*/);
+		out_Position = vec4(var_Position.rgb, u_Local1.a+1.0);
+		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, 1.0);
 		out_NormalDetail = vec4(0.0);
 	}
 	else

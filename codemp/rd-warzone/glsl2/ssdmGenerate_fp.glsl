@@ -68,19 +68,19 @@ float plumaAtCoord(vec2 coord) {
 float GetDisplacementAtCoord(vec2 coord)
 {
 	vec4 position = texture(u_PositionMap, coord);
-	if (position.a != 5.0 
-		&& position.a != 6.0 
-		&& position.a != 8.0
-		&& position.a != 27.0
-		&& position.a != 9.0
-		&& position.a != 23.0
-		&& position.a != 1.0
-		&& position.a != 2.0
-		&& position.a != 17.0
-		&& position.a != 7.0
-		&& position.a != 11.0
-		&& position.a != 28.0
-		&& position.a != 15.0)
+	if (position.a-1.0 != 5.0 
+		&& position.a-1.0 != 6.0 
+		&& position.a-1.0 != 8.0
+		&& position.a-1.0 != 27.0
+		&& position.a-1.0 != 9.0
+		&& position.a-1.0 != 23.0
+		&& position.a-1.0 != 1.0
+		&& position.a-1.0 != 2.0
+		&& position.a-1.0 != 17.0
+		&& position.a-1.0 != 7.0
+		&& position.a-1.0 != 11.0
+		&& position.a-1.0 != 28.0
+		&& position.a-1.0 != 15.0)
 	{
 		return 0.0;
 	}
@@ -141,32 +141,7 @@ float ReliefMapping(vec2 dp, vec2 ds, float origDepth)
 
 void main(void)
 {
-	vec4 position = texture(u_PositionMap, var_TexCoords);
-
-	/*if (position.a != 5.0 
-		&& position.a != 6.0 
-		&& position.a != 8.0
-		&& position.a != 27.0
-		&& position.a != 9.0
-		&& position.a != 23.0
-		&& position.a != 1.0
-		&& position.a != 2.0
-		&& position.a != 17.0
-		&& position.a != 7.0
-		&& position.a != 11.0
-		&& position.a != 28.0
-		&& position.a != 15.0)
-	{
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
-	}*/
-	
-
-	/*if (position.a == 19.0 || position.a == 20.0 || position.a == 1024.0 || position.a == 1024.0)
-	{// Disabled on leaves, foliage, and skies....
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
-	}*/
+	//vec4 position = texture(u_PositionMap, var_TexCoords);
 
 	float depth = getDepth(var_TexCoords);
 	float invDepth = 1.0 - depth;

@@ -1741,6 +1741,13 @@ extern vec3_t		SUN_COLOR_SECONDARY;
 extern vec3_t		SUN_COLOR_TERTIARY;
 extern vec3_t		MAP_AMBIENT_COLOR;
 
+extern qboolean		GRASS_ENABLED;
+extern int			GRASS_DENSITY;
+extern int			GRASS_DISTANCE;
+extern qboolean		PEBBLES_ENABLED;
+extern int			PEBBLES_DENSITY;
+extern int			PEBBLES_DISTANCE;
+
 float waveTime = 0.5;
 float waveFreq = 0.1;
 
@@ -1792,55 +1799,67 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		IS_DEPTH_PASS = qtrue;
 
 		if (r_foliage->integer
+			&& GRASS_ENABLED
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
-			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isGrass = qtrue;
+			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_pebbles->integer
+			&& PEBBLES_ENABLED
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
-			&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& (tess.shader->isPebbles || RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isPebbles = qtrue;
+			tess.shader->isPebbles = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_groundFoliage->integer
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
-			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isGroundFoliage = qtrue;
+			tess.shader->isGroundFoliage = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_fur->integer
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
-			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& (tess.shader->isFur || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
-			isGrass = qtrue;
+			isFur = qtrue;
+			tess.shader->isFur = qtrue; // Cache to speed up future checks...
 		}
 	}
 	else
 	{
 		if (r_foliage->integer
-			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& GRASS_ENABLED
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isGrass = qtrue;
+			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_pebbles->integer
-			&& RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& PEBBLES_ENABLED
+			&& (tess.shader->isPebbles || RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isPebbles = qtrue;
+			tess.shader->isPebbles = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_groundFoliage->integer
-			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isGroundFoliage = qtrue;
+			tess.shader->isGroundFoliage = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_fur->integer
-			&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			&& (tess.shader->isFur || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
 		{
 			isFur = qtrue;
+			tess.shader->isFur = qtrue; // Cache to speed up future checks...
 		}
 	}
 
@@ -2434,27 +2453,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 
-
 			if ((r_foliage->integer || r_pebbles->integer) && (isGrass || isPebbles))
 			{// Special extra pass stuff for grass or pebbles...
 				if (isGrass && r_foliage->integer)
 				{
 					sp2 = &tr.grass2Shader;
 					multiPass = qtrue;
-					passMax = r_foliagePasses->integer;
+					//passMax = r_foliagePasses->integer;
+					passMax = GRASS_DENSITY;
 
 					//if (ALLOW_GL_400) passMax = 2; // uses hardware invocations instead
 
 					if (isPebbles && r_pebbles->integer)
 					{
 						sp3 = &tr.pebblesShader;
-						passMax = r_foliagePasses->integer + r_pebblesPasses->integer;
+						passMax = GRASS_DENSITY + PEBBLES_DENSITY;
 					}
 				}
 				else if (isPebbles && r_pebbles->integer)
 				{
 					sp2 = &tr.pebblesShader;
-					passMax = r_pebblesPasses->integer;
+					passMax = PEBBLES_DENSITY;
 				}
 			}
 			else if (r_groundFoliage->integer && isGroundFoliage)
@@ -3146,15 +3165,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
-#if 0
-			if (pStage->glowMapped)
-			{
-				//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
-				//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS;// | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ZERO;
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-			}
-#endif
-
+			/*
+			extern qboolean		GRASS_ENABLED;
+			extern int			GRASS_DENSITY;
+			extern int			GRASS_DISTANCE;
+			extern qboolean		PEBBLES_ENABLED;
+			extern int			PEBBLES_DENSITY;
+			extern int			PEBBLES_DISTANCE;
+			*/
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -3162,8 +3180,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				//stateBits = GLS_DEPTHMASK_TRUE;
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
@@ -3185,7 +3202,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU( tr.seaGrassImage, TB_OVERLAYMAP );
 
 				vec4_t l10;
-				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
+				VectorSet4(l10, GRASS_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
@@ -3194,15 +3211,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
 			}
-			else if (isGrass && passNum > r_foliagePasses->integer && sp3)
+			else if (isGrass && passNum > GRASS_DENSITY && sp3)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
 				sp = sp3;
 				sp3 = NULL;
 
 				GLSL_BindProgram(sp);
 
-				//stateBits = GLS_DEPTHMASK_TRUE;
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
@@ -3224,7 +3240,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				vec4_t l10;
 				float tessOffset = useTesselation ? 7.5 : 0.0;
-				VectorSet4(l10, r_pebblesDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
+				VectorSet4(l10, PEBBLES_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
@@ -3240,8 +3256,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				//stateBits = GLS_DEPTHMASK_TRUE;
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
@@ -3263,7 +3278,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				vec4_t l10;
 				float tessOffset = useTesselation ? 7.5 : 0.0;
-				VectorSet4(l10, r_pebblesDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
+				VectorSet4(l10, PEBBLES_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
@@ -3279,8 +3294,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				//stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
@@ -3315,11 +3329,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				//stateBits = GLS_DEPTHMASK_TRUE;
-				//stateBits = GLS_DEFAULT | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
-				//stateBits = GLS_DEFAULT | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-				//stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_EQUAL | GLS_DEPTHFUNC_LESS;
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
 
@@ -3345,8 +3355,37 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+			}
+			else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
+			{// Procedural sun...
+				//stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
-				//tess.shader->cullType = CT_TWO_SIDED; // Always...
+				vec4_t loc;
+				VectorSet4(loc, SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, loc);
+
+				VectorSet4(loc, SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, loc);
+
+				VectorSet4(loc, SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, loc);
+
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (r_tesselation->integer && sp->tesselation)
+			{
+				vec4_t l10;
+				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+			}
+
+			if ((isGrass || isPebbles || isGroundFoliage || isFur) && passNum >= 1)
+			{
+				vec4_t l8;
+				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+				
+				GL_Cull(CT_TWO_SIDED);
 			}
 
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
@@ -3406,58 +3445,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
-			qboolean tesselation = qfalse;
-
-			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
-			{
-
-			}
-			else if (isGrass && passNum > 0 && r_foliage->integer)
-			{// Geometry grass drawing passes...
-				vec4_t l8;
-				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-
-				GL_Cull( CT_TWO_SIDED );
-			}
-			else if (isGrass && passNum > r_foliagePasses->integer && r_pebbles->integer)
-			{// Geometry pebbles drawing passes...
-				vec4_t l8;
-				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-
-				GL_Cull(CT_TWO_SIDED);
-			}
-			else if (isPebbles && passNum > 0 && r_pebbles->integer)
-			{// Geometry pebbles drawing passes...
-				vec4_t l8;
-				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-
-				GL_Cull(CT_TWO_SIDED);
-			}
-			else if (r_tesselation->integer && sp->tesselation)
-			{
-				tesselation = qtrue;
-				vec4_t l10;
-				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-			}
-
-			if (r_proceduralSun->integer && tess.shader == tr.sunShader)
-			{// Procedural sun...
-				vec4_t loc;
-				VectorSet4(loc, SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, loc);
-
-				VectorSet4(loc, SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, loc);
-
-				VectorSet4(loc, SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, loc);
-
-				GL_Cull(CT_TWO_SIDED);
-			}
 
 			UpdateTexCoords (pStage);
 
@@ -3497,7 +3484,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (!multiPass)
 			{
-				if ((isGrass && r_foliage->integer) || (isPebbles && r_pebbles->integer))
+				if ((isGrass && r_foliage->integer) || (isPebbles && r_pebbles->integer) || (isGroundFoliage && r_groundFoliage->integer) || (isFur && r_fur->integer))
 				{// Set cull type back to original... Just in case...
 					GL_Cull( input->shader->cullType );
 				}

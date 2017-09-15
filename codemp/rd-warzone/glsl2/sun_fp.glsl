@@ -249,8 +249,8 @@ void main()
 	
 	if (length(gl_FragColor.rgb) > 0.1)
 	{
-		out_Position = vec4(m_vertPos.xyz, u_Local1.a);
-		out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, u_Local1.b /*specularScale*/ );
+		out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
+		out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, 1.0 );
 		out_NormalDetail = vec4(0.0);
 	}
 	else

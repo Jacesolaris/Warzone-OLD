@@ -178,6 +178,6 @@ void main()
 
 	gl_FragColor = vec4(tColor.rgb, 1.0);
 	out_Glow = vec4(0.0);
-	out_Position = vec4(var_Position.xyz, 1024.0);
-	out_Normal = vec4(var_Normal.xyz * 0.5 + 0.5, 0.0);
+	out_Position = vec4(var_Position.xyz, 1024.0+1.0);
+	out_Normal = vec4(var_Normal.xyz * 0.5 + 0.5, 1.0);
 }
