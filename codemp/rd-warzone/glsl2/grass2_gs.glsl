@@ -279,8 +279,8 @@ void main()
 		fWindPower *= fWindStrength;
 
 		float vertDistanceScale = 1.0 - clamp(VertDist2 / MAX_RANGE, 0.0, 1.0); // Scale down to zero size by distance...
-		if (vertDistanceScale <= 0.0) continue;
 		vertDistanceScale *= 0.5;
+		if (vertDistanceScale <= 0.05) continue;
 
 		vec3 doublesize = vec3(fGrassPatchSize * 2.0, fGrassPatchSize * 2.0, fGrassPatchSize * vertDistanceScale * fGrassPatchHeight);
 
