@@ -2,6 +2,9 @@
 //#define USE_GLOW_DETAIL_BUFFERS
 
 uniform sampler2D u_DiffuseMap;
+uniform sampler2D u_OverlayMap;
+uniform sampler2D u_SplatMap1;
+uniform sampler2D u_SplatMap2;
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
@@ -29,10 +32,14 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=Deta
 
 uniform vec2	u_Dimensions;
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
+uniform vec4	u_Local2; // dayNightEnabled, nightScale, skyDirection
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
+uniform vec4	u_Local9;
 
 
+uniform vec3				u_ViewOrigin;
+uniform float				u_Time;
 uniform vec2				u_AlphaTestValues;
 
 #define ATEST_NONE	0
@@ -67,6 +74,67 @@ void main()
 		}
 
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
+
+
+		if (u_Local1.a == 1024.0 && u_Local2.r > 0.0 && u_Local2.g > 0.0)
+		{// This is sky, Day/Night cycle is enabled, and some night sky contribution is required...
+			vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, u_Local2.g); // Mix in night sky with original sky from day -> night...
+
+			if (u_Local2.b != 4.0 && u_Local2.b != 5.0)
+			{// Not up/down sky textures, add a sexy aurora effect :)
+				vec2 fragCoord = texCoords;
+
+				if (u_Local2.b == 2.0 || u_Local2.b == 3.0)
+				{// Forward or back sky textures, invert the X axis to make the aura seamless...
+					fragCoord.x = 1.0 - fragCoord.x;
+				}
+
+				vec2 uv = fragCoord.xy;
+				//if (u_Local9.r != 0.0) uv *= u_Local9.r;
+				//if (u_Local9.g != 0.0) uv += u_Local9.g;
+				
+				// Move aurora up a bit above horizon...
+				uv *= 0.8;
+				uv += 0.2;
+
+				uv = clamp(uv, 0.0, 1.0);
+   
+#define TAU 6.2831853071
+#define time u_Time * 0.5
+
+
+				float o = texture(u_SplatMap1, uv * 0.25 + vec2(0.0, time * 0.025)).r;
+				float d = (texture(u_SplatMap2, uv * 0.25 - vec2(0.0, time * 0.02 + o * 0.02)).r * 2.0 - 1.0);
+    
+				float v = uv.y + d * 0.1;
+				v = 1.0 - abs(v * 2.0 - 1.0);
+				v = pow(v, 2.0 + sin((time * 0.2 + d * 0.25) * TAU) * 0.5);
+				v = clamp(v, 0.0, 1.0);
+    
+				vec3 color = vec3(0.0);
+    
+				float x = (1.0 - uv.x * 0.75);
+				float y = 1.0 - abs(uv.y * 2.0 - 1.0);
+				x = clamp(x, 0.0, 1.0);
+				y = clamp(y, 0.0, 1.0);
+				color += vec3(x * 0.5, y, x) * v;
+    
+				vec2 seed = fragCoord.xy;
+				vec2 r;
+				r.x = fract(sin((seed.x * 12.9898) + (seed.y * 78.2330)) * 43758.5453);
+				r.y = fract(sin((seed.x * 53.7842) + (seed.y * 47.5134)) * 43758.5453);
+
+				float s = mix(r.x, (sin((time * 2.5 + 60.0) * r.y) * 0.5 + 0.5) * ((r.y * r.y) * (r.y * r.y)), 0.04); 
+				color += clamp(pow(s, 70.0) * (1.0 - v), 0.0, 1.0);
+				float str = max(color.r, max(color.g, color.b));
+
+				color *= 0.7;//u_Local9.r;
+				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + color, u_Local2.g * str /** u_Local9.g*/);
+			}
+		}
+
+
 		gl_FragColor.a *= var_Color.a;
 
 #ifdef USE_ALPHA_TEST
@@ -107,6 +175,13 @@ void main()
 	}
 
 	out_Glow = vec4(0.0);
+
+	if (u_Local1.a == 1024.0 && u_Local2.r > 0.0 && u_Local2.g > 0.0)
+	{// Add night sky to glow map...
+		out_Glow = gl_FragColor;
+		out_Glow.rgb *= out_Glow.rgb;
+		out_Glow.rgb *= 0.5;
+	}
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 

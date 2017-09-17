@@ -86,7 +86,7 @@ void main ( void )
 	bool isWater = false;
 	bool isWaterFall = false;
 
-	if (wMap.a >= 1.0 && (dw <= dp || (pMap.x == 0.0 && pMap.y == 0.0 && pMap.z == 0.0 || pMap.a == 0.0 || pMap.a == 1024.0 || pMap.a == 1025.0)))
+	if (wMap.a >= 1.0 && (dw <= dp || ((pMap.x == 0.0 && pMap.y == 0.0 && pMap.z == 0.0) || pMap.a-1.0 == 0.0 || pMap.a-1.0 == 1024.0 || pMap.a-1.0 == 1025.0)))
 	{
 		isWater = true;
 

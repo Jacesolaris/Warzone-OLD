@@ -345,7 +345,7 @@ void main ( void )
 	vec3 position = positionMap.xyz;
 
 #if defined(FIX_WATER_DEPTH_ISSUES)
-	if (positionMap.a == 1024.0)
+	if (positionMap.a-1.0 == 1024.0)
 	{
 		position.xyz = waterMapLower.xyz;
 		position.y -= 1024.0;
@@ -552,7 +552,7 @@ void main ( void )
 		vec4 waterMapLower3 = waterMapLowerAtCoord(texCoord);
 
 #if defined(FIX_WATER_DEPTH_ISSUES)
-		if (position2.a == 1024.0)
+		if (position2.a-1.0 == 1024.0)
 		{
 			position2.xyz = waterMapLower3.xyz;
 			position2.y -= 1024.0;

@@ -2979,6 +2979,32 @@ static void ParseDeform( const char **text ) {
 	ri->Printf( PRINT_WARNING, "WARNING: unknown deformVertexes subtype '%s' found in shader '%s'\n", token, shader.name );
 }
 
+static void DefaultNightSkyParms(void) {
+	char				*token;
+	static const char	*suf[6] = { "rt", "lf", "bk", "ft", "up", "dn" };
+	char		pathname[MAX_IMAGE_PATH];
+	int			i;
+	int imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+
+	if (shader.noTC)
+		imgFlags |= IMGFLAG_NO_COMPRESSION;
+
+	if (r_srgb->integer)
+		imgFlags |= IMGFLAG_SRGB;
+
+	// outerbox
+	for (i = 0; i<6; i++) {
+		Com_sprintf(pathname, sizeof(pathname), "%s_%s", "textures/skies/defaultNightSky", suf[i]);
+		shader.sky.outerboxnight[i] = R_FindImageFile((char *)pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE);
+
+		if (!shader.sky.outerboxnight[i]) {
+			if (i)
+				shader.sky.outerboxnight[i] = shader.sky.outerboxnight[i - 1];	//not found, so let's use the previous image
+			else
+				shader.sky.outerboxnight[i] = tr.defaultImage;
+		}
+	}
+}
 
 /*
 ===============
@@ -3006,6 +3032,10 @@ static void ParseSkyParms( const char **text ) {
 		ri->Printf( PRINT_WARNING, "WARNING: 'skyParms' missing parameter in shader '%s'\n", shader.name );
 		return;
 	}
+
+	// UQ1: Set night sky to default... Override by shader if info exists after...
+	DefaultNightSkyParms();
+
 	if ( strcmp( token, "-" ) ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s", token, suf[i] );
@@ -3017,6 +3047,20 @@ static void ParseSkyParms( const char **text ) {
 				else
 					shader.sky.outerbox[i] = tr.defaultImage;
 			}
+
+			// Also light any <texturename>_night_up, etc if found as the night box... Will check "nightSkyParms" next, then default night sky will be used if nothing found...
+			Com_sprintf(pathname, sizeof(pathname), "%s_night_%s", token, suf[i]);
+			image_t *newImage = R_FindImageFile((char *)pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE);
+			
+			if (newImage)
+			{
+				shader.sky.outerboxnight[i] = newImage;
+			}
+
+			//if (!shader.sky.outerboxnight[i]) {
+			//	if (i)
+			//		shader.sky.outerboxnight[i] = shader.sky.outerboxnight[i - 1];	//not found, so let's use the previous image
+			//}
 		}
 	}
 
@@ -3037,6 +3081,73 @@ static void ParseSkyParms( const char **text ) {
 	if ( strcmp( token, "-" ) ) {
 		ri->Printf( PRINT_WARNING, "WARNING: in shader '%s' 'skyParms', innerbox is not supported!", shader.name );
 	}
+
+	shader.isSky = qtrue;
+}
+
+static void ParseNightSkyParms(const char **text) {
+	char				*token;
+	static const char	*suf[6] = { "rt", "lf", "bk", "ft", "up", "dn" };
+	char		pathname[MAX_IMAGE_PATH];
+	int			i;
+	int imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+
+	if (shader.noTC)
+		imgFlags |= IMGFLAG_NO_COMPRESSION;
+
+	if (r_srgb->integer)
+		imgFlags |= IMGFLAG_SRGB;
+
+	// outerbox
+	token = COM_ParseExt(text, qfalse);
+	if (token[0] == 0) {
+		ri->Printf(PRINT_WARNING, "WARNING: 'nightSkyParms' missing parameter in shader '%s'\n", shader.name);
+		return;
+	}
+	if (strcmp(token, "-")) {
+		for (i = 0; i<6; i++) {
+			Com_sprintf(pathname, sizeof(pathname), "%s_%s", token, suf[i]);
+			
+			image_t *newImage = R_FindImageFile((char *)pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE);
+
+			if (newImage)
+			{// If found, use this, otherwise use _night_ image or default sky...
+				shader.sky.outerboxnight[i] = newImage;
+
+				if (!shader.sky.outerboxnight[i]) {
+					if (i)
+						shader.sky.outerboxnight[i] = shader.sky.outerboxnight[i - 1];	//not found, so let's use the previous image
+					else
+						shader.sky.outerboxnight[i] = tr.defaultImage;
+				}
+			}
+		}
+	}
+
+	// cloudheight
+	token = COM_ParseExt(text, qfalse);
+
+#if 0 // UQ1: Use same as day for now... Globals...
+	if (token[0] == 0) {
+		ri->Printf(PRINT_WARNING, "WARNING: 'nightSkyParms' missing cloudheight in shader '%s'\n", shader.name);
+		return;
+	}
+
+	shader.sky.cloudHeight = atof(token);
+	if (!shader.sky.cloudHeight) {
+		shader.sky.cloudHeight = 512;
+	}
+	R_InitSkyTexCoords(shader.sky.cloudHeight);
+#endif
+
+	// innerbox
+	token = COM_ParseExt(text, qfalse);
+
+#if 0 // UQ1: Doesnt matter...
+	if (strcmp(token, "-")) {
+		ri->Printf(PRINT_WARNING, "WARNING: in shader '%s' 'nightSkyParms', innerbox is not supported!", shader.name);
+	}
+#endif
 
 	shader.isSky = qtrue;
 }
@@ -4174,6 +4285,11 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if ( !Q_stricmp( token, "skyparms" ) )
 		{
 			ParseSkyParms( text );
+			continue;
+		}
+		else if (!Q_stricmp(token, "nightskyparms"))
+		{
+			ParseNightSkyParms(text);
 			continue;
 		}
 		// light <value> determines flaring in q3map, not needed here
@@ -8384,7 +8500,7 @@ static void CreateExternalShaders( void ) {
 	}
 
 	tr.sunShader = R_FindShader( "sun", lightmapsNone, stylesDefault, qtrue );
-
+	tr.moonShader = R_FindShader("moon", lightmapsNone, stylesDefault, qtrue);
 	tr.sunFlareShader = R_FindShader( "gfx/2d/sunflare", lightmapsNone, stylesDefault, qtrue);
 
 	// HACK: if sunflare is missing, make one using the flare image or dlight image

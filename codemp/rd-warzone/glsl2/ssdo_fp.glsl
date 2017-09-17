@@ -73,7 +73,7 @@ vec4 dssdo_accumulate(vec2 tex)
 	vec2 noise_texture_size = vec2(4,4);
 	vec4 pMap  = texture(u_PositionMap, tex);
 
-	if (pMap.a == 1024.0 || pMap.a == 1025.0 /*|| pMap.a == 21 || pMap.a == 16 || pMap.a == 30 || pMap.a == 25*/)
+	if (pMap.a-1.0 == 1024.0 || pMap.a-1.0 == 1025.0 /*|| pMap.a-1.0 == 21 || pMap.a-1.0 == 16 || pMap.a-1.0 == 30 || pMap.a-1.0 == 25*/)
 	{// Skybox... Skip...
 		return vec4(0.0, 0.0, 0.0, 1.0);
 	}
@@ -110,7 +110,7 @@ vec4 dssdo_accumulate(vec2 tex)
 		vec2 sample_tex = tex + textureOffset;
 		vec4 pMap2 = textureLod(u_PositionMap, vec2(sample_tex), 0.0);
 		
-		if (pMap2.a == 1024.0 || pMap2.a == 1025.0 || pMap2.a == 21 || pMap2.a == 16 || pMap2.a == 30 /*|| pMap2.a == 25*/)
+		if (pMap2.a-1.0 == 1024.0 || pMap2.a-1.0 == 1025.0 || pMap2.a-1.0 == 21 || pMap2.a-1.0 == 16 || pMap2.a-1.0 == 30 /*|| pMap2.a-1.0 == 25*/)
 		{// Skip sky/sun/player hits...
 			continue;
 		}

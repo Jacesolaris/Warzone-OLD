@@ -25,6 +25,8 @@ uniform mat4	u_NormalMatrix;
 
 uniform vec2	u_textureScale;
 
+varying vec3	var_Normal;
+varying vec3	var_vertPos;
 varying vec2	var_TexCoords;
 
 void main()
@@ -39,6 +41,9 @@ void main()
 	{
 		var_TexCoords *= u_textureScale;
 	}
+
+	var_Normal = normal;
+	var_vertPos = attr_Position;
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 }

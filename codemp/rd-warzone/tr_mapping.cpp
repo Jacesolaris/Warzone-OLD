@@ -1350,6 +1350,8 @@ void MAPPING_LoadMapInfo(void)
 	PEBBLES_DENSITY = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DENSITY", "1"));
 	PEBBLES_DISTANCE = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DISTANCE", "2048"));
 
+
+
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
 		if (StringContainsWord(mapname, "baldemnic")
@@ -1389,6 +1391,10 @@ void MAPPING_LoadMapInfo(void)
 	{
 		FOG_POST_ENABLED = qfalse;
 	}
+
+	tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/misc/moontexture"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	tr.auroraImage[0] = R_FindImageFile("gfx/misc/aurora1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	tr.auroraImage[1] = R_FindImageFile("gfx/misc/aurora2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	
 	tr.groundFoliageImage[0] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE1", "models/warzone/groundFoliage/groundFoliage00.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	tr.groundFoliageImage[1] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE2", "models/warzone/groundFoliage/groundFoliage01.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);

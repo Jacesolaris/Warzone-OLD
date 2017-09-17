@@ -22,7 +22,7 @@ uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBR
 uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
-uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, 0.0
+uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -228,14 +228,14 @@ vec3 TrueHDR ( vec3 color )
 	return clamp((clamp(color.rgb - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 }
 
-vec3 Vibrancy ( vec3 origcolor )
+vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 {
 	vec3	lumCoeff = vec3(0.212656, 0.715158, 0.072186);  				//Calculate luma with these values
 	float	max_color = max(origcolor.r, max(origcolor.g,origcolor.b)); 	//Find the strongest color
 	float	min_color = min(origcolor.r, min(origcolor.g,origcolor.b)); 	//Find the weakest color
 	float	color_saturation = max_color - min_color; 						//Saturation is the difference between min and max
 	float	luma = dot(lumCoeff, origcolor.rgb); 							//Calculate luma (grey)
-	return mix(vec3(luma), origcolor.rgb, (1.0 + (u_Local6.b * (1.0 - (sign(u_Local6.b) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
+	return mix(vec3(luma), origcolor.rgb, (1.0 + (vibrancyStrength * (1.0 - (sign(vibrancyStrength) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
 }
 
 
@@ -529,6 +529,8 @@ void main(void)
 
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
+
+
 	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
 	{// Skybox... Skip...
 		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
@@ -543,13 +545,23 @@ void main(void)
 
 		if (u_Local6.b > 0.0)
 		{// Vibrancy...
-			outColor.rgb = Vibrancy( outColor.rgb );
+			outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
 		}
 
 		outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
 		gl_FragColor = outColor;
 		return;
 	}
+
+
+
+	if (u_Local6.a > 0.0)
+	{// Sunset, Sunrise, and Night times... Scale down screen color, before adding lighting...
+		vec3 nightColor = vec3(outColor.rgb * 0.35);
+		outColor.rgb = mix(outColor.rgb, nightColor, u_Local6.a);
+	}
+
+
 
 #if 0
 	if (u_Local3.r > 0.0)
@@ -590,7 +602,7 @@ void main(void)
 	float shadowMult = 1.0;
 
 #if defined(USE_SHADOWMAP)
-	if (u_Local2.g > 0.0)
+	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
 	{
 		float shadowValue = texture(u_ShadowMap, texCoords).r;
 
@@ -639,7 +651,7 @@ void main(void)
 
 #define LIGHT_COLOR_POWER			4.0
 
-	if (phongFactor > 0.0)
+	if (phongFactor > 0.0 && u_Local6.a < 1.0)
 	{// this is blinn phong
 		float light_occlusion = 1.0;
 
@@ -662,11 +674,19 @@ void main(void)
 			lightColor = blinn_phong(N, E, -to_light_norm, lightColor, lightColor);
 			float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 			lightColor *= maxStr;
+			lightColor *= 1.0 - u_Local6.a; // Day->Night scaling of sunlight...
+
+			// Add vibrancy to light color at sunset/sunrise???
+			if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+			{// Vibrancy gets greater the closer we get to night time...
+				lightColor = Vibrancy( lightColor, u_Local6.a * 32.0 );
+			}
+
 			outColor.rgb = outColor.rgb + lightColor;
 		}
 	}
 
-	if (u_lightCount > 0.0)
+	if (u_lightCount > 0.0 && reflectivePower > 0.0)
 	{
 		phongFactor = u_Local1.r;
 
@@ -694,7 +714,11 @@ void main(void)
 			}
 
 			float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
-			float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
+			//float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
+
+			// Attenuation...
+			float lightStrength = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+			lightStrength = pow(lightStrength, 2.0);
 			lightStrength *= lightDistMult * reflectivePower;
 
 			if (lightStrength > 0.0)
@@ -761,7 +785,7 @@ void main(void)
 
 	if (u_Local6.b > 0.0)
 	{// Vibrancy...
-		outColor.rgb = Vibrancy( outColor.rgb );
+		outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
 	}
 
 	outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);

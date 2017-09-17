@@ -1299,14 +1299,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_BindProgram(shader);
 
-	// Flip between previous and next volumetric fbo...
-	/*FBO_t *tempF = tr.volumetricFbo;
-	image_t *tempI = tr.volumetricFBOImage;
-	tr.volumetricFbo = tr.volumetricPreviousFbo;
-	tr.volumetricPreviousFbo = tempF;
-	tr.volumetricFBOImage = tr.volumetricPreviousFBOImage;
-	tr.volumetricPreviousFBOImage = tempI;*/
-
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
@@ -1369,6 +1361,12 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 	}
 	
+	{
+		vec4_t local1;
+		VectorSet4(local1, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, local1);
+	}
+
 
 	GLSL_SetUniformVec2(shader, UNIFORM_VLIGHTPOSITIONS, SUN_SCREEN_POSITION);
 	GLSL_SetUniformVec3(shader, UNIFORM_VLIGHTCOLORS, sunColor);
@@ -2338,7 +2336,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL5, local5);
 
 	vec4_t local6;
-	VectorSet4(local6, AO_MINBRIGHT, AO_MULTBRIGHT, r_vibrancy->value, 0.0);
+	VectorSet4(local6, AO_MINBRIGHT, AO_MULTBRIGHT, r_vibrancy->value, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL6, local6);
 
 	{
@@ -2865,6 +2863,12 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		vec4_t loc;
 		VectorSet4(loc, MAP_INFO_MAXSIZE, FOG_ACCUMULATION_MODIFIER, FOG_VOLUMETRIC_CLOUDINESS, FOG_VOLUMETRIC_WIND);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL6, loc);
+	}
+
+	{
+		vec4_t local7;
+		VectorSet4(local7, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL7, local7);
 	}
 
 	{

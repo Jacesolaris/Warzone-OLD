@@ -117,6 +117,7 @@ extern int DrawAwesomium( char *URL, FBO_t *srcFbo );
 
 #ifdef __DAY_NIGHT__
 extern qboolean DAY_NIGHT_CYCLE_ENABLED;
+extern float RB_NightScale(void);
 #endif //__DAY_NIGHT__
 
 extern qboolean SHADOWS_ENABLED;
@@ -1096,6 +1097,7 @@ typedef enum {
 typedef struct {
 	float		cloudHeight;
 	image_t		*outerbox[6];
+	image_t		*outerboxnight[6];
 } skyParms_t;
 
 typedef struct {
@@ -2481,6 +2483,8 @@ typedef struct trGlobals_s {
 	image_t					*pebblesImage[4];
 	image_t					*grassMaskImage[10];
 	image_t					*paletteImage;
+	image_t					*moonImage;
+	image_t					*auroraImage[2];
 
 	image_t					*groundFoliageImage[4];
 
@@ -2555,6 +2559,7 @@ typedef struct trGlobals_s {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
+	shader_t				*moonShader;
 	shader_t				*sunFlareShader;
 
 	int						numLightmaps;
@@ -2587,6 +2592,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t lightAllShader;
 	shaderProgram_t shadowPassShader;
 	shaderProgram_t sunPassShader;
+	shaderProgram_t moonPassShader;
+	shaderProgram_t planetPassShader;
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;
@@ -2709,6 +2716,7 @@ typedef struct trGlobals_s {
 	qboolean                sunShadows;
 	vec3_t					sunLight;			// from the sky shader for this level
 	vec3_t					sunDirection;
+	vec3_t					moonDirection;
 
 	frontEndCounters_t		pc;
 	int						frontEndMsec;		// not in pc due to clearing issue
@@ -3375,6 +3383,7 @@ void R_BuildCloudData( shaderCommands_t *shader );
 void R_InitSkyTexCoords( float cloudLayerHeight );
 void R_DrawSkyBox( shaderCommands_t *shader );
 void RB_DrawSun( float scale, shader_t *shader );
+void RB_DrawMoon(float scale, shader_t *shader);
 void RB_ClipSkyPolygons( shaderCommands_t *shader );
 
 /*

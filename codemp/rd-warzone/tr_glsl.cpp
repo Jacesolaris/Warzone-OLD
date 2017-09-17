@@ -41,6 +41,8 @@ extern const char *fallbackShader_lightall_gs;
 extern const char *fallbackShader_lightall_fp;
 extern const char *fallbackShader_sun_vp;
 extern const char *fallbackShader_sun_fp;
+extern const char *fallbackShader_planet_vp;
+extern const char *fallbackShader_planet_fp;
 extern const char *fallbackShader_shadowPass_vp;
 extern const char *fallbackShader_shadowPass_fp;
 extern const char *fallbackShader_pshadow_vp;
@@ -2833,6 +2835,24 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.moonPassShader, "moon", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_planet_vp, fallbackShader_planet_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load moon shader!");
+	}
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.planetPassShader, "planet", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_planet_vp, fallbackShader_planet_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load planet shader!");
+	}
+
+
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 	extradefines[0] = '\0';
@@ -3693,6 +3713,45 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	numLightShaders++;
 
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.moonPassShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load moon shader!");
+	}
+
+	GLSL_InitUniforms(&tr.moonPassShader);
+
+	qglUseProgram(tr.moonPassShader.program);
+	GLSL_SetUniformInt(&tr.moonPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.moonPassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.moonPassShader);
+#endif
+
+	numLightShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.planetPassShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load planet shader!");
+	}
+
+	GLSL_InitUniforms(&tr.planetPassShader);
+
+	qglUseProgram(tr.planetPassShader.program);
+	GLSL_SetUniformInt(&tr.planetPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.planetPassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.planetPassShader);
+#endif
+
+	numLightShaders++;
 
 
 
@@ -5428,6 +5487,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.shadowPassShader);
 
 	GLSL_DeleteGPUShader(&tr.sunPassShader);
+	GLSL_DeleteGPUShader(&tr.moonPassShader);
+	GLSL_DeleteGPUShader(&tr.planetPassShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);

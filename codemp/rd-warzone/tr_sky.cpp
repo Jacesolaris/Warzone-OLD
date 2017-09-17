@@ -360,7 +360,7 @@ static void MakeSkyVec( float s, float t, int axis, float outSt[2], vec3_t outXY
 static vec3_t	s_skyPoints[SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1];
 static float	s_skyTexCoords[SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1][2];
 
-static void DrawSkySide( struct image_s *image, const int mins[2], const int maxs[2] )
+static void DrawSkySide( struct image_s *image, struct image_s *nightImage, const int skyDirection, const int mins[2], const int maxs[2] )
 {
 	int s, t;
 	int firstVertex = tess.numVertexes;
@@ -436,6 +436,9 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		VectorSet4(vector, 0.0, 0.0, 1.0, 1024.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
 
+		VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // dayNightEnabled, nightScale
+
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
@@ -480,6 +483,16 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		vec2_t scale;
 		scale[0] = scale[1] = 1.0;
 		GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
+
+		GLSL_SetUniformFloat(sp, UNIFORM_TIME, tr.refdef.floatTime);
+		
+		// Night image...
+		GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GL_BindToTMU(nightImage, TB_OVERLAYMAP);
+		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GL_BindToTMU(tr.auroraImage[0], TB_SPLATMAP1);
+		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GL_BindToTMU(tr.auroraImage[1], TB_SPLATMAP2);
 	}
 
 	if (r_tesselation->integer)
@@ -558,8 +571,10 @@ static void DrawSkyBox( shader_t *shader )
 		}
 
 		DrawSkySide( shader->sky.outerbox[i],
-			         sky_mins_subd,
-					 sky_maxs_subd );
+					shader->sky.outerboxnight[i],
+					i,
+					sky_mins_subd,
+					sky_maxs_subd );
 	}
 
 }
@@ -846,9 +861,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 #ifdef __DAY_NIGHT__
 	if (DAY_NIGHT_CYCLE_ENABLED)
 	{
-		float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
-
-		if (Time24h < 6.0 || Time24h > 22.0)
+		if (RB_NightScale() >= 1.0)
 		{
 			SUN_VISIBLE = qfalse;
 			return;
@@ -859,11 +872,6 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	{
 		// FIXME: this could be a lot cleaner
 		matrix_t translation, modelview;
-
-		//Matrix16Translation( backEnd.viewParms.ori.origin, translation );
-		//Matrix16Multiply( backEnd.viewParms.world.modelMatrix, translation, modelview );
-		//GL_SetModelviewMatrix( modelview );
-
 		Matrix16Translation(backEnd.viewParms.ori.origin, translation);
 		Matrix16Multiply(backEnd.viewParms.world.modelViewMatrix, translation, modelview);
 		GL_SetModelviewMatrix(modelview);
@@ -904,11 +912,6 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 		float dist;
 		vec4_t pos;
-		//matrix_t trans, model, mvp;
-
-		//Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-		//Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-		//Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
 		dist = 4096.0;
 
@@ -935,6 +938,64 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	}
 }
 
+/*
+** RB_DrawMoon
+*/
+void RB_DrawMoon(float scale, shader_t *shader) {
+#ifdef __DAY_NIGHT__
+	float		size;
+	float		dist;
+	vec3_t		origin, vec1, vec2;
+
+	if (!backEnd.skyRenderedThisView) {
+		return;
+	}
+
+	if (DAY_NIGHT_CYCLE_ENABLED)
+	{
+		if (RB_NightScale() <= 0.0)
+		{
+			return;
+		}
+	}
+
+	{
+		// FIXME: this could be a lot cleaner
+		matrix_t translation, modelview;
+		Matrix16Translation(backEnd.viewParms.ori.origin, translation);
+		Matrix16Multiply(backEnd.viewParms.world.modelViewMatrix, translation, modelview);
+		GL_SetModelviewMatrix(modelview);
+	}
+
+	dist = backEnd.viewParms.zFar / 1.75;
+	size = dist * scale;
+
+	if (r_proceduralSun->integer)
+	{
+		size *= r_proceduralSunScale->value;
+	}
+
+	VectorScale(tr.moonDirection, dist, origin);
+
+	PerpendicularVector(vec1, tr.moonDirection);
+	CrossProduct(tr.moonDirection, vec1, vec2);
+
+	VectorScale(vec1, size, vec1);
+	VectorScale(vec2, size, vec2);
+
+	// farthest depth range
+	qglDepthRange(1.0, 1.0);
+
+	RB_BeginSurface(shader, 0, 0);
+
+	RB_AddQuadStamp(origin, vec1, vec2, colorWhite);
+
+	RB_EndSurface();
+
+	// back to normal depth range
+	qglDepthRange(0.0, 1.0);
+#endif //__DAY_NIGHT__
+}
 
 void DrawSkyDome ( shader_t *skyShader )
 {

@@ -359,10 +359,34 @@ void RE_AddAdditiveLightToScene(const vec3_t org, float intensity, float r, floa
 int DAY_NIGHT_UPDATE_TIME = 0;
 
 float DAY_NIGHT_SUN_DIRECTION = 0.0;
+float DAY_NIGHT_MOON_DIRECTION = 0.0;
 float DAY_NIGHT_CURRENT_TIME = 0.0;
 float DAY_NIGHT_AMBIENT_SCALE = 0.0;
 vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
 vec4_t DAY_NIGHT_AMBIENT_COLOR_CURRENT;
+
+float DAY_NIGHT_24H_TIME = 0.0;
+
+float RB_NightScale ( void )
+{
+	if (DAY_NIGHT_24H_TIME >= 7.5 && DAY_NIGHT_24H_TIME <= 9.5)
+	{// Sunrise...
+		return (9.5 - DAY_NIGHT_24H_TIME) / 2.0;
+	}
+
+	if (DAY_NIGHT_24H_TIME >= 19.0 && DAY_NIGHT_24H_TIME <= 21.0)
+	{// Sunset...
+		return 1.0 - ((21.0 - DAY_NIGHT_24H_TIME) / 2.0);
+	}
+
+	if (DAY_NIGHT_24H_TIME >= 8.0 && DAY_NIGHT_24H_TIME <= 19.0)
+	{// Daytime...
+		return 0.0;
+	}
+
+	// Night time...
+	return 1.0;
+}
 
 extern float DAY_NIGHT_CYCLE_SPEED;
 
@@ -402,11 +426,21 @@ void RB_UpdateDayNightCycle()
 		// We need to match up real world 24 type time to sun direction... Offset...
 		float adjustedTime24h = Time24h + 4.0;
 		if (adjustedTime24h > 24.0) adjustedTime24h = adjustedTime24h - 24.0;
+		float sTime = (adjustedTime24h / 24.0);
+		DAY_NIGHT_SUN_DIRECTION = (sTime - 0.5) * 6.283185307179586476925286766559;
+		
+		// Moon is directly opposed to sun dir...
+		adjustedTime24h = Time24h + 16.0;
+		if (adjustedTime24h > 24.0) adjustedTime24h = adjustedTime24h - 24.0;
+		sTime = (adjustedTime24h / 24.0);
+		DAY_NIGHT_MOON_DIRECTION = (sTime - 0.5) * 6.283185307179586476925286766559;
 
-		DAY_NIGHT_SUN_DIRECTION = ((adjustedTime24h / 24.0) - 0.5) * 6.283185307179586476925286766559;
 
+#if 0
+		float nightScale = RB_NightScale();
 
-		if (Time24h < 6.0 || Time24h > 22.0)
+		//if (Time24h < 6.0 || Time24h > 22.0)
+		if (nightScale >= 1.0)
 		{// Night time...
 			VectorSet4(sunColor, 0.0, 0.0, 0.0, 0.0);
 			sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
@@ -416,7 +450,8 @@ void RB_UpdateDayNightCycle()
 		}
 		else
 		{// Day time...
-			if (Time24h < 8.0)
+			//if (Time24h < 8.0)
+			if (nightScale > 0.0 && nightScale < 1.0)
 			{// Morning color... More red/yellow...
 				DAY_NIGHT_AMBIENT_SCALE = 8.0 - Time24h;
 				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
@@ -425,7 +460,7 @@ void RB_UpdateDayNightCycle()
 				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
 				sunColor[3] = 1.0;
 			}
-			else if (Time24h > 18.0)
+			/*else if (Time24h > 18.0)
 			{// Evening color... More red/yellow...
 				DAY_NIGHT_AMBIENT_SCALE = Time24h - 18.0;
 				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
@@ -433,17 +468,23 @@ void RB_UpdateDayNightCycle()
 				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
 				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
 				sunColor[3] = 1.0;
-			}
+			}*/
 			else
 			{// Full bright - day...
 				VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_ORIGINAL, sunColor);
 				sunColor[3] = 1.0;
 			}
 		}
+#else
+		VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_ORIGINAL, sunColor);
+		sunColor[3] = 1.0;
+#endif
 
 		VectorCopy4(sunColor, DAY_NIGHT_AMBIENT_COLOR_CURRENT);
 
-		//ri->Printf(PRINT_WARNING, "Day/Night timer is %f. Sun dir %f.\n", Time24h, DAY_NIGHT_SUN_DIRECTION);
+		DAY_NIGHT_24H_TIME = Time24h;
+
+		//ri->Printf(PRINT_WARNING, "Day/Night timer is %.4f. Sun dir %.4f.\n", Time24h, DAY_NIGHT_SUN_DIRECTION);
 
 		DAY_NIGHT_UPDATE_TIME = nowTime + 50;
 	}
@@ -451,11 +492,23 @@ void RB_UpdateDayNightCycle()
 	VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_CURRENT, tr.refdef.sunAmbCol);
 	VectorCopy4(tr.refdef.sunAmbCol, tr.refdef.sunCol);
 
-	float a = 0.3;
-	float b = DAY_NIGHT_SUN_DIRECTION;
-	tr.sunDirection[0] = cos(a) * cos(b);
-	tr.sunDirection[1] = sin(a) * cos(b);
-	tr.sunDirection[2] = sin(b);
+	{
+		float a = 0.3;
+		float b = DAY_NIGHT_SUN_DIRECTION;
+		tr.sunDirection[0] = cos(a) * cos(b);
+		tr.sunDirection[1] = sin(a) * cos(b);
+		tr.sunDirection[2] = sin(b);
+	}
+
+	{
+		float a = 0.3;
+		float b = DAY_NIGHT_MOON_DIRECTION;
+		tr.moonDirection[0] = cos(a) * cos(b);
+		tr.moonDirection[1] = sin(a) * cos(b);
+		tr.moonDirection[2] = sin(b);
+	}
+
+	//ri->Printf(PRINT_ALL, "sunDir %.4f moonDir %.4f\n", DAY_NIGHT_SUN_DIRECTION, DAY_NIGHT_MOON_DIRECTION);
 
 	//
 	// Update sun position info for post process stuff...

@@ -1155,6 +1155,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	float	hasSplatMap4 = 0;
 	float	hasNormalMap = 0;
 
+	qboolean isSky = tess.shader->isSky;
+
 	vec4_t materialSettings;
 	RB_PBR_DefaultsForMaterial(materialSettings, tess.shader->surfaceFlags & MATERIAL_MASK);
 
@@ -1167,6 +1169,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	}
 	else if (tess.shader == tr.sunShader)
 	{// SPECIAL MATERIAL TYPE FOR SUN
+		specularScale = 0.0;
+		cubemapScale = 0.0;
+		materialType = 1025.0;
+		parallaxScale = 0.0;
+	}
+	else if (tess.shader == tr.moonShader)
+	{// SPECIAL MATERIAL TYPE FOR MOON
 		specularScale = 0.0;
 		cubemapScale = 0.0;
 		materialType = 1025.0;
@@ -1249,7 +1258,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			doSway = 0.7;
 		}
 
-		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
+		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, isSky ? 1024.0 : materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 		VectorSet4(local3, 0.0, 0.0, r_cubemapCullRange->value, cubemapScale);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
@@ -1277,7 +1286,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			doSway = 0.7;
 		}
 
-		VectorSet4(local1, 0.0, 0.0, specularScale, materialType);
+		VectorSet4(local1, 0.0, 0.0, specularScale, isSky ? 1024.0 : materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 
 		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
@@ -2131,6 +2140,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 		{// Special case for procedural sun...
 			sp = &tr.sunPassShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			isPebbles = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
+		else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
+		{// Special case for procedural sun...
+			sp = &tr.moonPassShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
 			isPebbles = qfalse;
@@ -3165,14 +3184,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
-			/*
-			extern qboolean		GRASS_ENABLED;
-			extern int			GRASS_DENSITY;
-			extern int			GRASS_DISTANCE;
-			extern qboolean		PEBBLES_ENABLED;
-			extern int			PEBBLES_DENSITY;
-			extern int			PEBBLES_DISTANCE;
-			*/
+			vec4_t l9;
+			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
+
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -3372,6 +3387,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_Cull(CT_TWO_SIDED);
 			}
+			else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
+			{// Procedural moon...
+				GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.random2KImage[0], TB_SPECULARMAP);
+				GL_Cull(CT_TWO_SIDED);
+			}
 			else if (r_tesselation->integer && sp->tesselation)
 			{
 				vec4_t l10;
@@ -3440,10 +3461,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					FBO_Bind(tr.renderFbo);
 				}
 			}
-
-			vec4_t l9;
-			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
 
 			UpdateTexCoords (pStage);

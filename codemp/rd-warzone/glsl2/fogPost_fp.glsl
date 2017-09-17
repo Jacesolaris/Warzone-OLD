@@ -14,6 +14,7 @@ uniform vec4		u_Local3;		// FOG_COLOR_SUN_R, FOG_COLOR_SUN_G, FOG_COLOR_SUN_B, F
 uniform vec4		u_Local4;		// FOG_DENSITY, FOG_VOLUMETRICS, FOG_VOLUMETRIC_DENSITY, FOG_VOLUMETRIC_VELOCITY
 uniform vec4		u_Local5;		// FOG_VOLUMETRIC_COLOR_R, FOG_VOLUMETRIC_COLOR_G, FOG_VOLUMETRIC_COLOR_B, FOG_VOLUMETRIC_STRENGTH
 uniform vec4		u_Local6;		// MAP_INFO_MAXSIZE, FOG_ACCUMULATION_MODIFIER, FOG_VOLUMETRIC_CLOUDINESS, FOG_VOLUMETRIC_WIND
+uniform vec4		u_Local7;		// nightScale, 0.0, 0.0, 0.0
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec3		u_ViewOrigin;
@@ -25,13 +26,6 @@ varying vec2		var_TexCoords;
 vec4 positionMapAtCoord ( vec2 coord )
 {
 	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
-	/*vec4 wpos = textureLod(u_WaterMap, coord, 0.0);
-
-	if (wpos.a > 0.0 && wpos.y > pos.y)
-	{// If the watermap is higher, use it's position instead...
-		pos = wpos;
-	}*/
-
 	return pos;
 }
 
@@ -121,6 +115,13 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 void main ( void )
 {
 	vec3 col = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
+
+	if (u_Local7.r >= 1.0)
+	{// At night no point thinking about fogs... For now... Sky doesn't like it much at night transition (sun angles, etc)...
+		gl_FragColor = vec4(col, 1.0);
+		return;
+	}
+
 	vec4 pMap = positionMapAtCoord( var_TexCoords );
 	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec3 fogColor = col;
@@ -167,6 +168,9 @@ void main ( void )
 
 		fogColor += (fog / numAdded) * 5.0;
 	}
+
+	// Blend out fog as we head more to night time... For now... Sky doesn't like it much at night transition (sun angles, etc)...
+	fogColor.rgb = mix(col.rgb, fogColor.rgb, u_Local7.r);
 
 	gl_FragColor = vec4(fogColor, 1.0);
 }

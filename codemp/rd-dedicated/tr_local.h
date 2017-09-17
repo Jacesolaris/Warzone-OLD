@@ -1021,6 +1021,7 @@ typedef struct trGlobals_s {
 	shader_t				*projectionShadowShader;
 
 	shader_t				*sunShader;
+	shader_t				*moonShader;
 
 	int						numLightmaps;
 	image_t					*lightmaps[MAX_LIGHTMAPS];
