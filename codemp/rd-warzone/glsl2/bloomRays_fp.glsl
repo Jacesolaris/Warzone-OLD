@@ -88,6 +88,11 @@ vec4 ProcessBloomRays(vec2 inTC)
 
 	totalColor.rgb *= BLOOMRAYS_STRENGTH;
 
+	if (u_Local2.r > 0.0)
+	{// Sunset/Sunrise/Night... Scale down the glows to reduce flicker...
+		totalColor.rgb = mix(totalColor.rgb, totalColor.rgb / 3.0, u_Local2.r);
+	}
+
 	return totalColor;
 }
 
