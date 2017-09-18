@@ -170,7 +170,7 @@ void main ( void )
 	}
 
 	// Blend out fog as we head more to night time... For now... Sky doesn't like it much at night transition (sun angles, etc)...
-	fogColor.rgb = mix(fogColor.rgb, col.rgb, u_Local7.r);
+	fogColor.rgb = mix(clamp(fogColor.rgb, 0.0, 1.0), col.rgb, u_Local7.r);
 
 	gl_FragColor = vec4(fogColor, 1.0);
 }

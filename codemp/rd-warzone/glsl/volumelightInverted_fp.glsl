@@ -15,27 +15,6 @@ varying vec2				var_TexCoords;
 // General options...
 #define VOLUMETRIC_STRENGTH		u_Local0.b
 
-
-#if defined(HQ_VOLUMETRIC)
-const int	iBloomraySamples = 32;
-const float	fBloomrayDecay = 0.96875;
-#elif defined (MQ_VOLUMETRIC)
-const int	iBloomraySamples = 16;
-const float	fBloomrayDecay = 0.9375;
-#else //!defined(HQ_VOLUMETRIC) && !defined(MQ_VOLUMETRIC)
-const int	iBloomraySamples = 8;
-const float	fBloomrayDecay = 0.875;
-#endif //defined(HQ_VOLUMETRIC) && defined(MQ_VOLUMETRIC)
-
-const float	fBloomrayWeight = 0.5;
-const float	fBloomrayDensity = 1.0;
-const float fBloomrayFalloffRange = 0.4;
-
-float linearize(float depth)
-{
-	return (1.0 / mix(u_ViewInfo.z, 1.0, depth));
-}
-
 void main ( void )
 {
 	if (u_Local1.r >= 1.0)

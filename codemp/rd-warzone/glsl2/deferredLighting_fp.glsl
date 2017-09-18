@@ -681,7 +681,18 @@ void main(void)
 			// Add vibrancy to light color at sunset/sunrise???
 			if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
 			{// Vibrancy gets greater the closer we get to night time...
+#if 0
 				lightColor = Vibrancy( lightColor, u_Local6.a * 32.0 );
+#else
+				float vib = u_Local6.a;
+				if (vib > 0.8)
+				{// Scale back vibrancy to 0.0 before justnightfall...
+					float downScale = 1.0 - vib;
+					downScale *= 4.0;
+					vib = mix(vib, 0.0, downScale);
+				}
+				lightColor = Vibrancy( lightColor, vib * 4.0 );
+#endif
 			}
 
 			outColor.rgb = outColor.rgb + lightColor;
