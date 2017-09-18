@@ -611,9 +611,11 @@ void main(void)
 #define sm_cont_1 ( 64.0 / 255.0)
 #define sm_cont_2 (255.0 / 200.0)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
-
-		outColor.rgb *= clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
+		float finalShadow = clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
+		finalShadow = mix(finalShadow, 1.0, u_Local6.a); // Dampen out shadows at sunrise/sunset...
+		outColor.rgb *= finalShadow;
 		shadowMult = clamp(shadowValue, 0.2, 1.0) * 0.75 + 0.25;
+		shadowValue = mix(shadowValue, 1.0, u_Local6.a); // Dampen out shadows at sunrise/sunset...
 	}
 #endif //defined(USE_SHADOWMAP)
 

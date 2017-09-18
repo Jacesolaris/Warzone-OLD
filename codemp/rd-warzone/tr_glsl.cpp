@@ -167,14 +167,20 @@ extern const char *fallbackShader_cellShade_fp;
 extern const char *fallbackShader_paint_vp;
 extern const char *fallbackShader_paint_fp;
 
-
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
 //#define HEIGHTMAP_TESSELATION
-#define HEIGHTMAP_TESSELATION2 // NEW - GOOD
+//#define HEIGHTMAP_TESSELATION2 // NEW - GOOD - BEFORE EXTERNALIZATION
 //#define PN_TRIANGLES_TESSELATION
 //#define PHONG_TESSELATION
+#define NEW_TESSELATION
+
+#ifdef NEW_TESSELATION
+extern const char *fallbackShader_tessellation_cs;
+extern const char *fallbackShader_tessellation_es;
+extern const char *fallbackShader_tessellation_gs;
+#endif //NEW_TESSELATION
 
 #ifdef HEIGHTMAP_TESSELATION
 const char fallbackShader_genericTessControl_cp[] = 
@@ -2790,7 +2796,9 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			strcat(extradefines, "#define USE_TESSELLATION\n");
 
-#ifdef HEIGHTMAP_TESSELATION2
+#ifdef NEW_TESSELATION
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, fallbackShader_tessellation_gs))
+#elif defined(HEIGHTMAP_TESSELATION2)
 			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
 #else
 			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
