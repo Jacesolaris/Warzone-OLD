@@ -807,7 +807,7 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local2;
-		VectorSet4(local2, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
+		VectorSet4(local2, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, r_bloomRaysSamples->integer, r_testshaderValue1->value, r_testshaderValue2->value);
 		GLSL_SetUniformVec4(&tr.bloomRaysShader, UNIFORM_LOCAL2, local2);
 	}
 

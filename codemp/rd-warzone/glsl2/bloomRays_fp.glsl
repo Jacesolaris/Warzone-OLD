@@ -5,12 +5,12 @@ uniform sampler2D				u_ScreenDepthMap;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec2					u_Dimensions;
 
-uniform vec4					u_Local1;
-uniform vec4					u_Local2;
+uniform vec4					u_Local1; // r_bloomRaysDecay, r_bloomRaysWeight, r_bloomRaysDensity, r_bloomRaysStrength
+uniform vec4					u_Local2; // nightScale, r_bloomRaysSamples, testvalue0, testvalue1
 
 varying vec2					var_TexCoords;
 
-#define BLOOMRAYS_STEPS			32
+#define BLOOMRAYS_STEPS			u_Local2.g//32
 #define	BLOOMRAYS_DECAY			u_Local1.r
 #define	BLOOMRAYS_WEIGHT		u_Local1.g
 #define	BLOOMRAYS_DENSITY		u_Local1.b

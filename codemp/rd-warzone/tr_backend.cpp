@@ -2036,7 +2036,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
 
-		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED && r_deferredLighting->integer)
+		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED && RB_NightScale() < 1.0 && r_deferredLighting->integer)
 		{
 			vec4_t quadVerts[4];
 			vec2_t texCoords[4];
@@ -2130,7 +2130,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 
 			if (r_shadowBlur->integer)
-			{
+			{// When not at night, don't bother to blur shadows...
 				RB_FastBlur(tr.screenShadowFbo, NULL, tr.screenShadowBlurFbo, NULL);
 			}
 		}

@@ -323,6 +323,7 @@ cvar_t	*r_bloomScale;
 cvar_t	*r_lensflare;
 cvar_t	*r_anamorphic;
 cvar_t	*r_anamorphicStrength;
+cvar_t	*r_bloomRaysSamples;
 cvar_t	*r_bloomRaysDecay;
 cvar_t	*r_bloomRaysWeight;
 cvar_t	*r_bloomRaysDensity;
@@ -1582,6 +1583,7 @@ void R_Register( void )
 	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.5", CVAR_ARCHIVE );
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "0", CVAR_ARCHIVE );
 	//r_bloomRays = ri->Cvar_Get("r_bloomRays", "1", CVAR_ARCHIVE);
+	r_bloomRaysSamples = ri->Cvar_Get("r_bloomRaysSamples", "32", CVAR_ARCHIVE);
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.9975", CVAR_ARCHIVE);
 	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.333", CVAR_ARCHIVE);
 	r_bloomRaysDensity = ri->Cvar_Get("r_bloomRaysDensity", "1.0", CVAR_ARCHIVE);

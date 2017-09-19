@@ -604,6 +604,11 @@ void RB_UpdateDayNightCycle()
 
 extern void R_LocalPointToWorld(const vec3_t local, vec3_t world);
 extern void R_WorldToLocal(const vec3_t world, vec3_t local);
+#else
+float RB_NightScale(void)
+{
+	return 0.0;
+}
 #endif //__DAY_NIGHT__
 
 extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
@@ -958,14 +963,16 @@ void RE_RenderScene(const refdef_t *fd) {
 	if (!(fd->rdflags & RDF_NOWORLDMODEL)
 		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
 		&& !backEnd.depthFill
-		&& SHADOWS_ENABLED)
+		&& SHADOWS_ENABLED
+		&& RB_NightScale() < 1.0) // Can ignore rendering shadows at night...
 	{
 		vec4_t lightDir;
-#if 1
+//#define __GLOW_SHADOWS__
+
+#ifdef __GLOW_SHADOWS__
 		float lightHeight = 999999.9;
-		VectorCopy4(tr.refdef.sunDir, lightDir);
-#else
-		float lightHeight = 999999.9;
+		vec3_t origVieworg;
+		qboolean isNonSunLight = qfalse;
 
 		vec3_t pos;
 		VectorCopy(tr.refdef.vieworg, pos);
@@ -1007,10 +1014,18 @@ void RE_RenderScene(const refdef_t *fd) {
 					VectorSubtract(tr.refdef.vieworg, CLOSE_POS[best], lightDir);
 				VectorNormalize(lightDir);
 				lightHeight = CLOSE_POS[best][2];
-				//ri->Printf(PRINT_ALL, "Used glow light at %f %f %f. %i total glow lights.\n", CLOSE_POS[best][0], CLOSE_POS[best][1], CLOSE_POS[best][2], CLOSE_TOTAL);
+				
+				isNonSunLight = qtrue;
+				VectorCopy(fd->vieworg, origVieworg);
+				VectorCopy(CLOSE_POS[best], (float *)fd->vieworg); // Hack - override const :(
+
+				ri->Printf(PRINT_ALL, "Used glow light at %f %f %f. %i total glow lights.\n", CLOSE_POS[best][0], CLOSE_POS[best][1], CLOSE_POS[best][2], CLOSE_TOTAL);
 			}
 		}
-#endif
+#else //__GLOW_SHADOWS__
+		float lightHeight = 999999.9;
+		VectorCopy4(tr.refdef.sunDir, lightDir);
+#endif //__GLOW_SHADOWS__
 
 		int nowTime = ri->Milliseconds();
 
@@ -1035,6 +1050,13 @@ void RE_RenderScene(const refdef_t *fd) {
 			R_RenderSunShadowMaps(fd, 3, lightDir, lightHeight);
 			NEXT_SHADOWMAP_UPDATE[0] = nowTime + 5000;
 		}
+
+#ifdef __GLOW_SHADOWS__
+		if (isNonSunLight)
+		{
+			VectorCopy(origVieworg, (float *)fd->vieworg); // Hack - override const :(
+		}
+#endif //__GLOW_SHADOWS__
 	}
 
 	// playing with cube maps
