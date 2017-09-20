@@ -46,6 +46,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
 //#define __DEFERRED_MAP_IMAGE_LOADING__		// also load map images deferred...
 
+//#define ___WARZONE_FLASH___					// Enables flash UI addons. Experimental, code is not on git.
+//#define ___WARZONE_AWESOMIUM___				// Enables the old awesomium test code...
+
 //#define __SOFTWARE_OCCLUSION__
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
@@ -119,9 +122,6 @@ typedef unsigned int glIndex_t;
 
 extern qboolean SKIP_CULL_FRAME;
 extern qboolean SKIP_CULL_FRAME_DONE;
-
-//#define ___WARZONE_FLASH___
-#define ___WARZONE_AWESOMIUM___
 
 #ifdef ___WARZONE_FLASH___
 extern void gameswf_drawflash ( char *filename );
