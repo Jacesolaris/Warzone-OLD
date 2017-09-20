@@ -525,7 +525,7 @@ static qboolean GLW_InitDriver( int colorbits )
 	//
 	if ( !glw_state.pixelFormatSet )
 	{
-		GLW_CreatePFD( &pfd, colorbits, depthbits, stencilbits, (qboolean)r_stereo->integer );
+		GLW_CreatePFD( &pfd, colorbits, depthbits, stencilbits, qfalse );
 		if ( ( tpfd = GLW_MakeContext( &pfd ) ) != TRY_PFD_SUCCESS )
 		{
 			if ( tpfd == TRY_PFD_FAIL_HARD )
@@ -555,7 +555,7 @@ static qboolean GLW_InitDriver( int colorbits )
 			{
 				colorbits = glw_state.desktopBitsPixel;
 			}
-			GLW_CreatePFD( &pfd, colorbits, depthbits, 0, (qboolean)r_stereo->integer );
+			GLW_CreatePFD( &pfd, colorbits, depthbits, 0, qfalse );
 			if ( GLW_MakeContext( &pfd ) != TRY_PFD_SUCCESS )
 			{
 				if ( glw_state.hDC )
@@ -570,14 +570,7 @@ static qboolean GLW_InitDriver( int colorbits )
 			}
 		}
 
-		/*
-		** report if stereo is desired but unavailable
-		*/
-		if ( !( pfd.dwFlags & PFD_STEREO ) && ( r_stereo->integer != 0 ) )
-		{
-			Com_Printf ("...failed to select stereo pixel format\n" );
-			glConfig.stereoEnabled = qfalse;
-		}
+		glConfig.stereoEnabled = qfalse;
 	}
 
 	/*

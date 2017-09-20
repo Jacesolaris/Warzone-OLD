@@ -4266,6 +4266,7 @@ qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &
 	//mdxm = (mdxmHeader_t*)CModelCache->Allocate(size, buffer, mod_name, &bAlreadyFound, TAG_MODEL_GLM);
 	mod->data.glm = (mdxmData_t *)ri->Hunk_Alloc (sizeof (mdxmData_t), h_low);
 	mod->data.glm->header = NULL;//mdxm;
+	
 	//mod->data.glm->vboModels->vboMeshes->ibo->indexesVBO
 	try {
 		NiObjectRef root = ReadNifTree( mod_name );

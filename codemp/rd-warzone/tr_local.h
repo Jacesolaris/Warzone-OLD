@@ -220,12 +220,8 @@ extern cvar_t	*r_detailTextures;
 
 extern cvar_t	*r_znear;
 extern cvar_t	*r_zproj;
-extern cvar_t	*r_stereoSeparation;
 
 extern cvar_t	*r_skipBackEnd;
-
-extern cvar_t	*r_stereo;
-extern cvar_t	*r_anaglyphMode;
 
 extern cvar_t	*r_greyscale;
 
@@ -2816,7 +2812,6 @@ extern cvar_t	*r_verbose;				// used for verbose debug spew
 
 extern cvar_t	*r_znear;				// near Z clip plane
 extern cvar_t	*r_zproj;				// z distance of projection plane
-extern cvar_t	*r_stereoSeparation;			// separation of cameras for stereo rendering
 
 extern cvar_t	*r_measureOverdraw;		// enables stencil buffer overdraw measurement
 
@@ -2890,8 +2885,6 @@ extern	cvar_t	*r_portalOnly;
 extern	cvar_t	*r_subdivisions;
 extern	cvar_t	*r_lodCurveError;
 extern	cvar_t	*r_skipBackEnd;
-
-extern	cvar_t	*r_anaglyphMode;
 
 extern  cvar_t  *r_mergeMultidraws;
 extern  cvar_t  *r_mergeLeafSurfaces;

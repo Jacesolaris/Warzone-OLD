@@ -93,12 +93,8 @@ cvar_t	*r_detailTextures;
 
 cvar_t	*r_znear;
 cvar_t	*r_zproj;
-cvar_t	*r_stereoSeparation;
 
 cvar_t	*r_skipBackEnd;
-
-cvar_t	*r_stereo;
-cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
 
@@ -1460,7 +1456,6 @@ void R_Register( void )
 	r_uiFullScreen = ri->Cvar_Get( "r_uifullscreen", "0", 0);
 	r_subdivisions = ri->Cvar_Get ("r_subdivisions", "4", CVAR_ARCHIVE | CVAR_LATCH);
 	ri->Cvar_CheckRange( r_subdivisions, 4, 80, qfalse );
-	r_stereo = ri->Cvar_Get( "r_stereo", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_greyscale = ri->Cvar_Get("r_greyscale", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	ri->Cvar_CheckRange(r_greyscale, 0, 1, qfalse);
 
@@ -1661,7 +1656,6 @@ void R_Register( void )
 	ri->Cvar_CheckRange( r_znear, 0.001f, 200, qfalse );
 	r_autolodscalevalue	= ri->Cvar_Get( "r_autolodscalevalue", "0", CVAR_ROM );
 	r_zproj = ri->Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE );
-	r_stereoSeparation = ri->Cvar_Get( "r_stereoSeparation", "64", CVAR_ARCHIVE );
 	r_ignoreGLErrors = ri->Cvar_Get( "r_ignoreGLErrors", "1", CVAR_ARCHIVE );
 	r_fastsky = ri->Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE );
 	r_inGameVideo = ri->Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE );
@@ -1678,7 +1672,6 @@ void R_Register( void )
 	r_ambientScale = ri->Cvar_Get( "r_ambientScale", "0.6", CVAR_CHEAT );
 	r_directedScale = ri->Cvar_Get( "r_directedScale", "1", CVAR_CHEAT );
 
-	r_anaglyphMode = ri->Cvar_Get("r_anaglyphMode", "0", CVAR_ARCHIVE);
 	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE);
 	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE);
 
