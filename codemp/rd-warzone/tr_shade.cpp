@@ -3104,7 +3104,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		// do multitexture
 		//
-		if ((tr.viewParms.flags & VPF_SHADOWPASS))
+		if (IS_DEPTH_PASS)
+		{
+			if (!(pStage->stateBits & GLS_ATEST_BITS) /*&& !tess.shader->hasAlpha*/ )
+				GL_BindToTMU(tr.whiteImage, 0);
+			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
+		}
+		else if ((tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);

@@ -32,7 +32,7 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=Deta
 
 uniform vec2	u_Dimensions;
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // dayNightEnabled, nightScale, skyDirection
+uniform vec4	u_Local2; // dayNightEnabled, nightScale, skyDirection, auroraEnabled
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4	u_Local9;
@@ -76,13 +76,18 @@ void main()
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
 
 
-		if (u_Local1.a == 1024.0 && u_Local2.r > 0.0 && u_Local2.g > 0.0)
-		{// This is sky, Day/Night cycle is enabled, and some night sky contribution is required...
-			vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, u_Local2.g); // Mix in night sky with original sky from day -> night...
+		if (u_Local1.a == 1024.0)
+		{// This is sky, and aurora is enabled...
+			if (u_Local2.r > 0.0 && u_Local2.g > 0.0)
+			{// Day/Night cycle is enabled, and some night sky contribution is required...
+				vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
+				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, u_Local2.g); // Mix in night sky with original sky from day -> night...
+			}
 
-			if (u_Local2.b != 4.0 && u_Local2.b != 5.0)
-			{// Not up/down sky textures, add a sexy aurora effect :)
+			if (u_Local2.b != 4.0 && u_Local2.b != 5.0													/* Not up/down sky textures */
+				&& u_Local2.a > 0.0																		/* Auroras Enabled */
+				&& ((u_Local2.r > 0.0 && u_Local2.g > 0.0) /* Night Aurora */ || u_Local2.a >= 2.0		/* Forced day Aurora */))
+			{// Aurora is enabled, and this is not up/down sky textures, add a sexy aurora effect :)
 				vec2 fragCoord = texCoords;
 
 				if (u_Local2.b == 2.0 || u_Local2.b == 3.0)
@@ -90,9 +95,14 @@ void main()
 					fragCoord.x = 1.0 - fragCoord.x;
 				}
 
+				float auroraPower;
+
+				if (u_Local2.a >= 2.0)
+					auroraPower = 1.0; // Day enabled aurora - always full strength...
+				else
+					auroraPower = u_Local2.g;
+
 				vec2 uv = fragCoord.xy;
-				//if (u_Local9.r != 0.0) uv *= u_Local9.r;
-				//if (u_Local9.g != 0.0) uv += u_Local9.g;
 				
 				// Move aurora up a bit above horizon...
 				uv *= 0.8;
@@ -129,8 +139,8 @@ void main()
 				color += clamp(pow(s, 70.0) * (1.0 - v), 0.0, 1.0);
 				float str = max(color.r, max(color.g, color.b));
 
-				color *= 0.7;//u_Local9.r;
-				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + color, u_Local2.g * str /** u_Local9.g*/);
+				color *= 0.7;
+				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + color, auroraPower * str);
 			}
 		}
 
@@ -176,10 +186,18 @@ void main()
 
 	out_Glow = vec4(0.0);
 
-	if (u_Local1.a == 1024.0 && u_Local2.r > 0.0 && u_Local2.g > 0.0)
+	if (u_Local1.a == 1024.0 && u_Local2.r > 0.0 && u_Local2.g > 0.7)
 	{// Add night sky to glow map...
 		out_Glow = gl_FragColor;
+		
+		// Scale by closeness to actual night...
+		float mult = (u_Local2.g - 0.7) * 3.333;
+		out_Glow *= mult;
+
+		// And enhance contrast...
 		out_Glow.rgb *= out_Glow.rgb;
+
+		// And reduce over-all brightness because it's sky and not a close light...
 		out_Glow.rgb *= 0.5;
 	}
 

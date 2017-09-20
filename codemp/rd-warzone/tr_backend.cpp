@@ -1059,6 +1059,18 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			isWaterMerge = qtrue;
 		}
 
+		qboolean isDepthMerge = qfalse;
+
+		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		{// In depth and shadow passes, let's merge all the non-alpha draws, being a simple solid texture and all...
+			if (shader != NULL
+				&& !shader->hasAlpha
+				&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->hasAlpha)
+			{
+				isDepthMerge = qtrue;
+			}
+		}
+
 		/*if (*drawSurf->surface != SF_VBO_MDVMESH && oldDrawSurf != NULL && *oldDrawSurf->surface == SF_VBO_MDVMESH)
 		{
 			RB_EndSurface();
@@ -1066,7 +1078,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		oldDrawSurf = drawSurf;*/
 
-		if ((isWaterMerge || drawSurf->sort == oldSort)
+		if ((isWaterMerge || isDepthMerge || drawSurf->sort == oldSort)
 #if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 			&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
 #endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)

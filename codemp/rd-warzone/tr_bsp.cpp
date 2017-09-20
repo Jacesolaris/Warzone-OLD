@@ -3804,6 +3804,8 @@ void R_MergeLeafSurfaces(void)
 			if (shader1->isPortal)
 				continue;
 
+//#define __ORIGINAL_MERGE__
+#ifdef __ORIGINAL_MERGE__
 			if (ShaderRequiresCPUDeforms(shader1))
 				continue;
 
@@ -3819,7 +3821,6 @@ void R_MergeLeafSurfaces(void)
 			{
 				msurface_t *surf2;
 				shader_t *shader2;
-				//int cubemapIndex2;
 				int surfNum2;
 
 				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
@@ -3833,6 +3834,37 @@ void R_MergeLeafSurfaces(void)
 
 				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 			}
+#else //!__ORIGINAL_MERGE__
+			qboolean deforms = qfalse;
+
+			if (ShaderRequiresCPUDeforms(shader1))
+				//continue;
+				deforms = qtrue;
+
+#ifdef __Q3_FOG__
+			fogIndex1 = surf1->fogIndex;
+#endif //__Q3_FOG__
+
+			cubemapIndex1 = surf1->cubemapIndex;
+
+			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
+
+			for (k = j + 1; k < leaf->nummarksurfaces; k++)
+			{
+				int surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
+
+				if (s_worldData.surfacesViewCount[surfNum2] != -1)
+					continue;
+
+				msurface_t *surf2 = s_worldData.surfaces + surfNum2;
+				shader_t *shader2 = surf2->shader;
+
+				if (shader1 != shader2 && deforms && ShaderRequiresCPUDeforms(shader2))
+					continue;
+
+				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
+			}
+#endif //__ORIGINAL_MERGE__
 #elif defined(__MERGE_MORE__)
 			msurface_t *surf1;
 			shader_t *shader1;

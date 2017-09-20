@@ -28,6 +28,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static float s_cloudTexCoords[6][SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1][2];
 static float s_cloudTexP[6][SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1];
 
+extern qboolean AURORA_ENABLED;
+extern qboolean AURORA_ENABLED_DAY;
+
 /*
 ===================================================================================
 
@@ -436,7 +439,14 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		VectorSet4(vector, 0.0, 0.0, 1.0, 1024.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
 
-		VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, 0.0);
+		float auroraEnabled = 0.0;
+
+		if (AURORA_ENABLED && AURORA_ENABLED_DAY)
+			auroraEnabled = 2.0;
+		else if (AURORA_ENABLED)
+			auroraEnabled = 1.0;
+
+		VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, auroraEnabled);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // dayNightEnabled, nightScale
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
