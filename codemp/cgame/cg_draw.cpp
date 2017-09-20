@@ -11119,21 +11119,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
-	switch ( stereoView ) {
-	case STEREO_CENTER:
-		separation = 0;
-		break;
-	case STEREO_LEFT:
-		separation = -cg_stereoSeparation.value / 2;
-		break;
-	case STEREO_RIGHT:
-		separation = cg_stereoSeparation.value / 2;
-		break;
-	default:
-		separation = 0;
-		trap->Error( ERR_DROP, "CG_DrawActive: Undefined stereoView" );
-	}
-
+	separation = 0;
 
 	// clear around the rendered view if sized down
 	if (!drawingSniperScopeView)

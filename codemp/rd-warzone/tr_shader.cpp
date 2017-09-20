@@ -6262,7 +6262,7 @@ static int CollapseStagesToGLSL(void)
 	}
 
 #if 1
-	if (numStages >= 1 && !tr.world)
+	if (r_debugShaderStages->integer && numStages >= 1 && !tr.world)
 	{
 		ri->Printf(PRINT_WARNING, "Shader %s has %i stages.\n", shader.name, numStages);
 

@@ -2896,16 +2896,15 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	}
 
 	// make sure the lagometerSample and frame timing isn't done twice when in stereo
-	if ( stereoView != STEREO_RIGHT ) {
-		cg.frametime = cg.time - cg.oldTime;
-		if ( cg.frametime < 0 ) {
-			cg.frametime = 0;
-		}
-		cg.oldTime = cg.time;
-		
-		if (!drawingSniperScopeView)
-			CG_AddLagometerFrameInfo();
+	cg.frametime = cg.time - cg.oldTime;
+	if ( cg.frametime < 0 ) {
+		cg.frametime = 0;
 	}
+	cg.oldTime = cg.time;
+		
+	if (!drawingSniperScopeView)
+		CG_AddLagometerFrameInfo();
+
 	if (timescale.value != cg_timescaleFadeEnd.value) {
 		if (timescale.value < cg_timescaleFadeEnd.value) {
 			timescale.value += cg_timescaleFadeSpeed.value * ((float)cg.frametime) / 1000;

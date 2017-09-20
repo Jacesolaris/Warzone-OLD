@@ -33,11 +33,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __USE_QGL_FLUSH__
 //#define __RENDERER_FOLIAGE__
 #define ___SHADER_GENERATOR___
-#define ___SHADER_GENERATOR_PLAYERS_ONLY___
 //#define __SURFACESPRITES__
 #define __EXTRA_PRETTY__
 //#define __PSHADOWS__
-#define __DAY_NIGHT__ // FIXME - or do it with GLSL...
+#define __DAY_NIGHT__						// Day/Night Cycle system...
+//#define __CRC_IMAGE_HASHING__				// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
 
 //#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
 //#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
@@ -168,7 +168,6 @@ In JA, we define these in the tr_local.h, which is much more logical
 */
 
 extern cvar_t	*r_superSampleMultiplier;
-extern cvar_t	*r_surfaceShaderSorting;
 
 extern cvar_t	*r_instanceCloudReductionCulling;
 extern cvar_t	*r_tesselation;
@@ -260,8 +259,6 @@ extern cvar_t	*r_ext_multitexture;
 extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;
 extern cvar_t	*r_ext_texture_filter_anisotropic;
-
-extern cvar_t  *r_entitySurfaceMerge;
 
 extern cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionDebug;
@@ -417,6 +414,8 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_debugShaderStages;
+extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_parallaxScale;
 extern cvar_t	*r_blinnPhong;
 extern cvar_t	*r_ao;
@@ -462,7 +461,6 @@ extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
-extern cvar_t  *r_imageBasedLighting;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_deferredLighting;
 extern cvar_t  *r_ssdm;
@@ -600,6 +598,8 @@ typedef struct image_s {
 	bool		hasAlpha;
 
 	bool		generatedNormalMap;
+
+	uint32_t	crcHash;
 
 #ifdef __DEFERRED_IMAGE_LOADING__
 	bool		deferredLoad = qfalse;
@@ -2841,8 +2841,6 @@ extern	cvar_t	*r_showcluster;
 
 extern cvar_t	*r_gamma;
 
-extern cvar_t  *r_entitySurfaceMerge;
-
 extern  cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionDebug;
 extern  cvar_t  *r_ext_draw_range_elements;
@@ -2995,6 +2993,8 @@ extern cvar_t	*r_dynamicGlowSoft;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_debugShaderStages;
+extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_shadowMaxDepthError;
 extern cvar_t	*r_shadowSolidityValue;
 extern cvar_t	*r_disableGfxDirEnhancement;

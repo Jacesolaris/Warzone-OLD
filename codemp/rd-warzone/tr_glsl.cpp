@@ -2804,21 +2804,21 @@ int GLSL_BeginLoadGPUShaders(void)
 			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
 #endif
 			{
-				ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
 		}
 		else if (r_instanceCloudReductionCulling->integer)
 		{
 			strcat(extradefines, "#define USE_ICR_CULLING\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightallMerged", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
 			{
-				ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
 		}
-		else if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightallMerged", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+		else if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
-			ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+			ri->Error(ERR_FATAL, "Could not load lightall shader!");
 		}
 	}
 

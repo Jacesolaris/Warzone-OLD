@@ -3413,6 +3413,27 @@ char *R_TIL_TextureFileExists(const char *name)
 }
 #endif //__TINY_IMAGE_LOADER__
 
+#ifdef __CRC_IMAGE_HASHING__
+/* CRC-32C (iSCSI) polynomial in reversed bit order. */
+#define POLY 0x82f63b78
+
+/* CRC-32 (Ethernet, ZIP, etc.) polynomial in reversed bit order. */
+/* #define POLY 0xedb88320 */
+
+uint32_t crc32c(uint32_t crc, const unsigned char *buf, size_t len)
+{
+	int k;
+
+	crc = ~crc;
+	while (len--) {
+		crc ^= *buf++;
+		for (k = 0; k < 8; k++)
+			crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+	}
+	return ~crc;
+}
+#endif //__CRC_IMAGE_HASHING__
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -3520,6 +3541,47 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	}
 
 	qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
+
+#ifdef __CRC_IMAGE_HASHING__
+	size_t dataLen = width * height * 4 * sizeof(byte);
+	uint32_t crcHash = crc32c(0, pic, dataLen);
+
+	//
+	// see if the image is already crc hashed
+	//
+	for (image = hashTable[hash]; image; image = image->next) {
+		if (crcHash == image->crcHash) {
+			// the white image can be used with any set of parms, but other mismatches are errors
+			//if (strcmp(name, "*white")) {
+			//	if (image->flags != flags) {
+			//		ri->Printf(PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags);
+			//	}
+			//}
+
+#ifdef __TINY_IMAGE_LOADER__
+			if (isTIL)
+			{
+				til::TIL_Release(tImage);
+				pic = NULL;
+				isTIL = qfalse;
+			}
+			else
+#endif
+				Z_Free(pic);
+
+			if (r_debugImageCrcHashing->integer)
+			{
+				ri->Printf(PRINT_WARNING, "IMAGE_CRC_HASH: reused image %s with flags (%i vs %i)\n", name, image->flags, flags);
+			}
+			return image;
+		}
+	}
+
+	if (r_debugImageCrcHashing->integer > 1)
+	{
+		ri->Printf(PRINT_WARNING, "IMAGE_CRC_HASH: image %s was CRC hashed to (%u). Not already loaded.\n", name, crcHash);
+	}
+#endif //__CRC_IMAGE_HASHING__
 
 	vec4_t avgColor = { 0 };
 	R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
@@ -3641,6 +3703,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
 	image->hasAlpha = USE_ALPHA ? true : false;
+
+#ifdef __CRC_IMAGE_HASHING__
+	image->crcHash = crcHash;
+#endif //__CRC_IMAGE_HASHING__
 
 	VectorCopy4(avgColor, image->lightColor);
 

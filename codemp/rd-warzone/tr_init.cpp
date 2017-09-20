@@ -37,7 +37,6 @@ static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
 cvar_t	*r_superSampleMultiplier;
-cvar_t	*r_surfaceShaderSorting;
 
 cvar_t	*r_instanceCloudReductionCulling;
 cvar_t	*r_tesselation;
@@ -134,8 +133,6 @@ cvar_t	*r_ext_compiled_vertex_array;
 cvar_t	*r_ext_texture_env_add;
 cvar_t	*r_ext_texture_filter_anisotropic;
 cvar_t	*r_ext_preferred_tc_method;
-
-cvar_t  *r_entitySurfaceMerge;
 
 cvar_t  *r_occlusion;
 cvar_t  *r_occlusionDebug;
@@ -293,6 +290,8 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_debugShaderStages;
+cvar_t	*r_debugImageCrcHashing;
 cvar_t	*r_parallaxScale;
 cvar_t	*r_ao;
 cvar_t	*r_env;
@@ -350,7 +349,6 @@ cvar_t  *r_testvalue3;
 cvar_t  *r_esharpening;
 cvar_t  *r_esharpening2;
 cvar_t  *r_multipost;
-cvar_t  *r_imageBasedLighting;
 cvar_t  *r_hbao;
 cvar_t  *r_colorCorrection;
 cvar_t  *r_deferredLighting;
@@ -1386,8 +1384,6 @@ void R_Register( void )
 {
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_surfaceShaderSorting = ri->Cvar_Get("r_surfaceShaderSorting", "1", CVAR_ARCHIVE);
-
 	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1419,8 +1415,6 @@ void R_Register( void )
 	r_ext_compiled_vertex_array = ri->Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_env_add = ri->Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_preferred_tc_method = ri->Cvar_Get( "r_ext_preferred_tc_method", "0", CVAR_ARCHIVE | CVAR_LATCH );
-
-	r_entitySurfaceMerge = ri->Cvar_Get("r_entitySurfaceMerge", "0", CVAR_ARCHIVE);
 
 	r_occlusion = ri->Cvar_Get( "r_occlusion", "0", CVAR_ARCHIVE);
 	r_occlusionDebug = ri->Cvar_Get( "r_occlusionDebug", "0", CVAR_ARCHIVE);
@@ -1547,6 +1541,9 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_debugShaderStages = ri->Cvar_Get("r_debugShaderStages", "0", CVAR_ARCHIVE);
+	r_debugImageCrcHashing = ri->Cvar_Get("r_debugImageCrcHashing", "0", CVAR_ARCHIVE);
+
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
 	r_ao = ri->Cvar_Get("r_ao", "1", CVAR_ARCHIVE);
@@ -1608,7 +1605,6 @@ void R_Register( void )
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "1", CVAR_ARCHIVE );
 	r_underwater = ri->Cvar_Get( "r_underwater", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
-	r_imageBasedLighting = ri->Cvar_Get( "r_imageBasedLighting", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
 	r_ssdm = ri->Cvar_Get("r_ssdm", "0", CVAR_ARCHIVE);
@@ -1707,6 +1703,7 @@ void R_Register( void )
 	//
 	// temporary variables that can change at any time
 	//
+
 	r_showImages = ri->Cvar_Get( "r_showImages", "0", CVAR_TEMP );
 
 	r_debugLight = ri->Cvar_Get( "r_debuglight", "0", CVAR_TEMP );
