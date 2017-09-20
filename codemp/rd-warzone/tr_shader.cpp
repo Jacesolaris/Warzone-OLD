@@ -2980,7 +2980,6 @@ static void ParseDeform( const char **text ) {
 }
 
 static void DefaultNightSkyParms(void) {
-	char				*token;
 	static const char	*suf[6] = { "rt", "lf", "bk", "ft", "up", "dn" };
 	char		pathname[MAX_IMAGE_PATH];
 	int			i;

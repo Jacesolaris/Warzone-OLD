@@ -3434,12 +3434,12 @@ float sign(float x)
 
 void R_AddLightVibrancy(float *color, float vibrancy)
 {
-	vec3_t	lumCoeff = { 0.212656, 0.715158, 0.072186 };  						//Calculate luma with these values
-	float	max_color = max(color[0], max(color[1], color[2])); 	//Find the strongest color
-	float	min_color = min(color[0], min(color[1], color[2])); 	//Find the weakest color
-	float	color_saturation = max_color - min_color; 							//Saturation is the difference between min and max
-	float	luma = DotProduct(lumCoeff, color); 							//Calculate luma (grey)
-																				//Extrapolate between luma and original by 1 + (1-saturation) - current
+	vec3_t	lumCoeff = { 0.212656f, 0.715158f, 0.072186f };  						//Calculate luma with these values
+	float	max_color = max(color[0], max(color[1], color[2])); 					//Find the strongest color
+	float	min_color = min(color[0], min(color[1], color[2])); 					//Find the weakest color
+	float	color_saturation = max_color - min_color; 								//Saturation is the difference between min and max
+	float	luma = DotProduct(lumCoeff, color); 									//Calculate luma (grey)
+																					//Extrapolate between luma and original by 1 + (1-saturation) - current
 	color[0] = mix(luma, color[0], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
 	color[1] = mix(luma, color[1], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
 	color[2] = mix(luma, color[2], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
