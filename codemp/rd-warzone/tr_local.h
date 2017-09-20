@@ -27,52 +27,68 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 // -----------------------------------------------------------------------------------------------------------------------------
-//                                                   Warzone Renderer Defines
+//                                               Warzone Basic Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
-//#define __USE_QGL_FINISH__
-#define __USE_QGL_FLUSH__
-//#define __RENDERER_FOLIAGE__
-#define ___SHADER_GENERATOR___
-//#define __SURFACESPRITES__
-#define __EXTRA_PRETTY__
-//#define __PSHADOWS__
-#define __DAY_NIGHT__						// Day/Night Cycle system...
-//#define __CRC_IMAGE_HASHING__				// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
+//#define __USE_QGL_FINISH__					// For testing...
+#define __USE_QGL_FLUSH__						// Use this one instead...
 
-//#define __LAZY_CUBEMAP__				// allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough...
-//#define __INSTANCED_MODELS__			// experimenting with model instancing for foliage...
-//#define __RENDERER_GROUND_FOLIAGE__		// in-progress port of cgame foliage system to renderer...
+//#define __RENDERER_FOLIAGE__					// A port of the cgame foliage system in the renderer, doesn't work, only just started porting the basic code...
+#define __SHADER_GENERATOR__					// Generates warzone compatible shaders on load... Tries to convert old JKA shaders to better WZ ones... Hacky but works...
+//#define __SURFACESPRITES__					// Just for tagging some surface sprite code I was playing with...
+#define __EXTRA_PRETTY__						// Makes things look better by not disabling some stuff on shaders...
+//#define __PSHADOWS__							// Just for tagging the old rend2 pshadows code that doesn't work...
+#define __DAY_NIGHT__							// Day/Night Cycle system...
+//#define __EXPERIMENTAL_TESS_SHADER_MERGE__	// this could probably work, but I dont see much FPS improvement in testing...
+//#define __INSTANCED_MODELS__					// experimenting with model instancing for foliage...
+//#define __RENDERER_GROUND_FOLIAGE__			// in-progress port of cgame foliage system to renderer...
 
-//#define __DEFERRED_IMAGE_LOADING__		// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
-//#define __DEFERRED_MAP_IMAGE_LOADING__	// also load map images deferred...
-
+//#define __CRC_IMAGE_HASHING__					// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
+//#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
+//#define __DEFERRED_MAP_IMAGE_LOADING__		// also load map images deferred...
 
 //#define __SOFTWARE_OCCLUSION__
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
 
+// -----------------------------------------------------------------------------------------------------------------------------
+//                                                Warzone Surface Merging Defines
+// -----------------------------------------------------------------------------------------------------------------------------
 
-#define DISTANCE_BETWEEN_CUBEMAPS 384 //256
-#define	MAX_DEFERRED_LIGHTS 128//64//16//24
-
-#define MAX_IMAGE_PATH 256 //MAX_QPATH
-
-
-// Merge the whole damn lot and use player's closest cubemap...
-#define __PLAYER_BASED_CUBEMAPS__
 // Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
 #define __MERGE_MORE__
+
 // Merge matching shader names...
 // This works for us (as far as I have seen so far) because we only actually use 2 light styles (MATERIAL_ overrides), 
 // and never should they be really using 2 different shaders. Rend2 just didn't know that when assigning them at load...
 #define __MERGE_SAME_SHADER_NAMES__
+
+// Merge the whole damn lot and use player's closest cubemap...
+#define __PLAYER_BASED_CUBEMAPS__
+
+// Allow all surfaces to merge with different cubemaps... with our range based checks as well, should be good enough... Not needed with __PLAYER_BASED_CUBEMAPS__
+//#define __LAZY_CUBEMAP__
+
+// -----------------------------------------------------------------------------------------------------------------------------
+//                                               Warzone Cubemap and Lights Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 
+#define DISTANCE_BETWEEN_CUBEMAPS	384
+#define	MAX_DEFERRED_LIGHTS			128
+
+#define MAX_IMAGE_PATH				256
+
+// -----------------------------------------------------------------------------------------------------------------------------
+//                                                   Warzone Instancing Defines
+// -----------------------------------------------------------------------------------------------------------------------------
 
 #ifdef __INSTANCED_MODELS__
 #define MAX_INSTANCED_MODEL_TYPES		128
 #define MAX_INSTANCED_MODEL_INSTANCES	16384
 #endif //__INSTANCED_MODELS__
+
+// -----------------------------------------------------------------------------------------------------------------------------
+
+
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"

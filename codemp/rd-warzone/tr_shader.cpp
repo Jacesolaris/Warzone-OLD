@@ -7313,7 +7313,7 @@ This creates generic shaders for anything that has none to support rend2 stuff..
 
 */
 
-#ifdef ___SHADER_GENERATOR___
+#ifdef __SHADER_GENERATOR__
 char uniqueGenericGlow[] = "{\n"\
 "map %s_glow\n"\
 "blendFunc GL_ONE GL_ONE\n"\
@@ -7607,7 +7607,7 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 	return qfalse;
 }
 
-#endif //___SHADER_GENERATOR___
+#endif //__SHADER_GENERATOR__
 
 /*
 ===============
@@ -7649,9 +7649,9 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	const char	*shaderText;
 	image_t		*image;
 	shader_t	*sh;
-#ifdef ___SHADER_GENERATOR___
+#ifdef __SHADER_GENERATOR__
 	char		myShader[1024] = {0};
-#endif //___SHADER_GENERATOR___
+#endif //__SHADER_GENERATOR__
 
 	if ( name[0] == 0 ) {
 		return tr.defaultShader;
@@ -7699,11 +7699,11 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	//
 	// Since this texture does not have a shader, create one for it - conditionally...
 	//
-#ifdef ___SHADER_GENERATOR___
+#ifdef __SHADER_GENERATOR__
 	if ( shaderText && !R_ForceGenericShader(name, shaderText) ) {
-#else //!___SHADER_GENERATOR___
+#else //!__SHADER_GENERATOR__
 	if ( shaderText ) {
-#endif //___SHADER_GENERATOR___
+#endif //__SHADER_GENERATOR__
 		// enable this when building a pak file to get a global list
 		// of all explicit shaders
 		if ( r_printShaders->integer ) {
@@ -7716,19 +7716,19 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
 		}
-#ifdef ___SHADER_GENERATOR___
+#ifdef __SHADER_GENERATOR__
 		if (!shader.defaultShader || StringContainsWord(name, "icon") || !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
 		{
 			sh = FinishShader();
 			return sh;
 		}
-#else //!___SHADER_GENERATOR___
+#else //!__SHADER_GENERATOR__
 		sh = FinishShader();
 		return sh;
-#endif //___SHADER_GENERATOR___
+#endif //__SHADER_GENERATOR__
 	}
 
-#ifdef ___SHADER_GENERATOR___
+#ifdef __SHADER_GENERATOR__
 	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) 
 		&& !StringContainsWord(name, "icon"))
 	{
@@ -7876,7 +7876,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			return sh;
 		}
 	}
-#endif //___SHADER_GENERATOR___
+#endif //__SHADER_GENERATOR__
 
 	//
 	// if not defined in the in-memory shader descriptions,

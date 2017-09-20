@@ -227,6 +227,7 @@ static void DrawNormals (shaderCommands_t *input) {
 	//FIXME: implement this
 }
 
+
 /*
 ==============
 RB_BeginSurface
@@ -243,10 +244,41 @@ extern vec4_t		currentPlayerCubemapVec;
 extern float		currentPlayerCubemapDistance;
 #endif //__PLAYER_BASED_CUBEMAPS__
 
+#ifdef __EXPERIMENTAL_TESS_SHADER_MERGE__
+shader_t *oldTessShader = NULL;
+#endif //__EXPERIMENTAL_TESS_SHADER_MERGE__
+
+void RB_EndSurfaceReal(void);
+
 void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
+#ifdef __EXPERIMENTAL_TESS_SHADER_MERGE__
+	if (tess.numIndexes > 0 || tess.numVertexes > 0)
+	{
+		if (tess.numVertexes + 128 < SHADER_MAX_VERTEXES && tess.numIndexes + (128*6) < SHADER_MAX_INDEXES)
+		{// Leave 128 free slots for now...
+			if (oldTessShader)
+			{
+				if (shader == oldTessShader)
+				{// Merge same shaders...
+					return;
+				}
+
+				if (!(shader->hasAlpha || oldTessShader->hasAlpha) && (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS)))
+				{// In shadow and depth draws, if theres no alphas to consider, merge it all...
+					return;
+				}
+			}
+		}
+	}
+#endif //__EXPERIMENTAL_TESS_SHADER_MERGE__
+
 	if (tess.numIndexes > 0 || tess.numVertexes > 0)
 	{// End any old draws we may not have written...
+#ifdef __EXPERIMENTAL_TESS_SHADER_MERGE__
+		RB_EndSurfaceReal();
+#else //!__EXPERIMENTAL_TESS_SHADER_MERGE__
 		RB_EndSurface();
+#endif //__EXPERIMENTAL_TESS_SHADER_MERGE__
 	}
 
 	shader_t *state = (shader->remappedShader) ? shader->remappedShader : shader;
@@ -285,6 +317,75 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	}
 }
 
+/*
+** RB_EndSurface
+*/
+void RB_EndSurfaceReal(void) {
+	shaderCommands_t *input;
+
+	input = &tess;
+
+	if (input->numIndexes == 0 || input->numVertexes == 0) {
+		return;
+	}
+
+	if (input->indexes[SHADER_MAX_INDEXES - 1] != 0) {
+		ri->Error(ERR_DROP, "RB_EndSurface() - SHADER_MAX_INDEXES hit");
+	}
+	if (input->xyz[SHADER_MAX_VERTEXES - 1][0] != 0) {
+		ri->Error(ERR_DROP, "RB_EndSurface() - SHADER_MAX_VERTEXES hit");
+	}
+
+	if (tess.shader == tr.shadowShader) {
+		RB_ShadowTessEnd();
+		return;
+	}
+
+	// for debugging of sort order issues, stop rendering after a given sort value
+	if (r_debugSort->integer && r_debugSort->integer < tess.shader->sort) {
+		return;
+	}
+
+	//
+	// update performance counters
+	//
+	backEnd.pc.c_shaders++;
+	backEnd.pc.c_vertexes += tess.numVertexes;
+	backEnd.pc.c_indexes += tess.numIndexes;
+	backEnd.pc.c_totalIndexes += tess.numIndexes * tess.numPasses;
+
+	//
+	// call off to shader specific tess end function
+	//
+	tess.currentStageIteratorFunc();
+
+	//
+	// draw debugging stuff
+	//
+	if (r_showtris->integer) {
+		DrawTris(input);
+	}
+
+	// clear shader so we can tell we don't have any unclosed surfaces
+	tess.numIndexes = 0;
+	tess.numVertexes = 0;
+	tess.firstIndex = 0;
+	tess.multiDrawPrimitives = 0;
+
+	glState.vertexAnimation = qfalse;
+
+#ifdef __EXPERIMENTAL_TESS_SHADER_MERGE__
+	oldTessShader = NULL;
+#endif //__EXPERIMENTAL_TESS_SHADER_MERGE__
+
+	GLimp_LogComment("----------\n");
+}
+
+void RB_EndSurface(void) {
+#ifndef __EXPERIMENTAL_TESS_SHADER_MERGE__
+	RB_EndSurfaceReal();
+#endif //__EXPERIMENTAL_TESS_SHADER_MERGE__
+}
 
 
 extern float EvalWaveForm( const waveForm_t *wf );
@@ -3781,63 +3882,3 @@ void RB_StageIteratorGeneric( void )
 	}
 }
 
-
-/*
-** RB_EndSurface
-*/
-void RB_EndSurface( void ) {
-	shaderCommands_t *input;
-
-	input = &tess;
-
-	if (input->numIndexes == 0 || input->numVertexes == 0) {
-		return;
-	}
-
-	if (input->indexes[SHADER_MAX_INDEXES-1] != 0) {
-		ri->Error (ERR_DROP, "RB_EndSurface() - SHADER_MAX_INDEXES hit");
-	}
-	if (input->xyz[SHADER_MAX_VERTEXES-1][0] != 0) {
-		ri->Error (ERR_DROP, "RB_EndSurface() - SHADER_MAX_VERTEXES hit");
-	}
-
-	if ( tess.shader == tr.shadowShader ) {
-		RB_ShadowTessEnd();
-		return;
-	}
-
-	// for debugging of sort order issues, stop rendering after a given sort value
-	if ( r_debugSort->integer && r_debugSort->integer < tess.shader->sort ) {
-		return;
-	}
-
-	//
-	// update performance counters
-	//
-	backEnd.pc.c_shaders++;
-	backEnd.pc.c_vertexes += tess.numVertexes;
-	backEnd.pc.c_indexes += tess.numIndexes;
-	backEnd.pc.c_totalIndexes += tess.numIndexes * tess.numPasses;
-
-	//
-	// call off to shader specific tess end function
-	//
-	tess.currentStageIteratorFunc();
-
-	//
-	// draw debugging stuff
-	//
-	if ( r_showtris->integer ) {
-		DrawTris (input);
-	}
-
-	// clear shader so we can tell we don't have any unclosed surfaces
-	tess.numIndexes = 0;
-	tess.numVertexes = 0;
-	tess.firstIndex = 0;
-	tess.multiDrawPrimitives = 0;
-
-	glState.vertexAnimation = qfalse;
-
-	GLimp_LogComment( "----------\n" );
-}
