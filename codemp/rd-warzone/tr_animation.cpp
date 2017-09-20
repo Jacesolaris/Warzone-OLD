@@ -136,6 +136,7 @@ R_MDRComputeFogNum
 */
 
 int R_MDRComputeFogNum( mdrHeader_t *header, trRefEntity_t *ent ) {
+#ifdef __Q3_FOG__
 	int				i, j;
 	fog_t			*fog;
 	mdrFrame_t		*mdrFrame;
@@ -165,6 +166,7 @@ int R_MDRComputeFogNum( mdrHeader_t *header, trRefEntity_t *ent ) {
 			return i;
 		}
 	}
+#endif //__Q3_FOG__
 
 	return 0;
 }

@@ -197,7 +197,11 @@ void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, vec3_t 
 	}
 
 	f->addedFrame = backEnd.viewParms.frameCount;
+#ifdef __Q3_FOG__
 	f->fogNum = fogNum;
+#else //!__Q3_FOG__
+	f->fogNum = 0;
+#endif //__Q3_FOG__
 
 	VectorCopy(point, f->origin);
 	VectorCopy( color, f->color );
@@ -385,6 +389,10 @@ void RB_RenderFlare( flare_t *f ) {
 	intensity = flareCoeff * size * size / (factor * factor);
 
 	VectorScale(f->color, f->drawIntensity * intensity, color);
+
+#ifndef __Q3_FOG__
+	f->fogNum = 0;
+#endif //__Q3_FOG__
 
 	// Calculations for fogging
 	if(tr.world && f->fogNum > 0 && f->fogNum < tr.world->numfogs)

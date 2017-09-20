@@ -788,6 +788,7 @@ R_ComputeIQMFogNum
 =================
 */
 int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
+#ifdef __Q3_FOG__
 	int			i, j;
 	fog_t			*fog;
 	const float		*bounds;
@@ -825,6 +826,7 @@ int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
 			return i;
 		}
 	}
+#endif //__Q3_FOG__
 
 	return 0;
 }

@@ -288,7 +288,12 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.numVertexes = 0;
 	tess.multiDrawPrimitives = 0;
 	tess.shader = state;
+#ifdef __Q3_FOG__
 	tess.fogNum = fogNum;
+#else //!__Q3_FOG__
+	tess.fogNum = 0;
+#endif //__Q3_FOG__
+
 #ifdef __PLAYER_BASED_CUBEMAPS__
 	tess.cubemapIndex = currentPlayerCubemap;
 #else //!__PLAYER_BASED_CUBEMAPS__
