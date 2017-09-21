@@ -3970,7 +3970,7 @@ void R_CreateBuiltinImages( void ) {
 
 	tr.randomImage = R_FindImageFile("gfx/random.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 
-	if (r_dlightMode->integer >= 2)
+	if (r_shadows->integer == 5)
 	{
 		for( x = 0; x < MAX_DLIGHTS; x++)
 		{

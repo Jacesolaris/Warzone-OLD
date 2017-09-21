@@ -2085,7 +2085,7 @@ void R_RenderView (viewParms_t *parms) {
 
 void R_RenderDlightCubemaps(const refdef_t *fd)
 {
-#if 0
+#ifdef __DLIGHT_SHADOWS__
 	int i;
 
 	MATRIX_UPDATE = qtrue;
@@ -2433,7 +2433,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 			tr.viewCount++;
 
 			// set viewParms.world
-			R_RotateForViewer ();
+			R_RotateForViewer(&tr.viewParms);
 
 			{
 				float xmin, xmax, ymin, ymax, znear, zfar;

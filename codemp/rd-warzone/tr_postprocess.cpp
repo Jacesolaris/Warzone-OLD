@@ -2270,6 +2270,12 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		}
 	}
 
+	/*if (r_shadows->integer == 5)
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GL_BindToTMU(tr.shadowCubemaps[dlight], TB_SHADOWMAP);
+	}*/
+
 	/*
 	int cubemap = -1;
 

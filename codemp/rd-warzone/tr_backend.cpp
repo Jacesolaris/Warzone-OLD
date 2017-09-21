@@ -1943,8 +1943,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 		// darken down any stencil shadows
 		RB_ShadowFinish();		
 
+#ifdef __Q3_FLARES__
 		// add light flares on lights that aren't obscured
 		RB_RenderFlares();
+#endif //__Q3_FLARES__
 
 #ifdef ___WARZONE_FLASH___
 		gameswf_drawflash( "interface/test.swf" );
@@ -2704,11 +2706,11 @@ const void *RB_PostProcess(const void *data)
 		FBO_BlitFromTexture(tr.sunRaysImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
-	if (0)//tr.refdef.num_dlights && r_dlightMode->integer >= 2)
+	if (tr.refdef.num_dlights && r_shadows->integer == 5)
 	{
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
-		FBO_BlitFromTexture(tr.shadowCubemaps[0], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		FBO_BlitFromTexture(tr.shadowCubemaps[/* 0 */r_testvalue0->integer], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
 	if (0)
