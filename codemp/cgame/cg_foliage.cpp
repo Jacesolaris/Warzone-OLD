@@ -12,25 +12,7 @@ extern qboolean InFOV(vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int
 //
 // =======================================================================================================================================
 
-
-//#define			FOLIAGE_MAX_FOLIAGES 2097152
 #define			FOLIAGE_MAX_FOLIAGES 4194304
-
-// =======================================================================================================================================
-//
-// BEGIN - FOLIAGE OPTIONS
-//
-// =======================================================================================================================================
-
-#define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
-#define			__NO_PLANTS__	// Disable plants and only draw grass for everything... Was just for testing FPS difference...
-#define			__NEW_PLANTS__  // Use new ground cover plants (requires __NO_PLANTS__ above to disable the old ones)
-
-// =======================================================================================================================================
-//
-// END - FOLIAGE OPTIONS
-//
-// =======================================================================================================================================
 
 // =======================================================================================================================================
 //
@@ -572,419 +554,6 @@ static const char *MushroomForestModelsList[] = {
 	"models/warzone/plants/gcplantmix04.md3",
 	"models/warzone/plants/gcplantmix05.md3",
 	"models/warzone/plants/gcplantmix06.md3",
-};
-
-
-static const char *TropicalPlantsList[] = {
-	"models/warzone/foliage/plant01.png",
-	"models/warzone/foliage/plant02.png",
-	"models/warzone/foliage/plant03.png",
-	"models/warzone/foliage/plant04.png",
-	"models/warzone/foliage/plant05.png",
-	"models/warzone/foliage/plant06.png",
-	"models/warzone/foliage/plant07.png",
-	"models/warzone/foliage/plant08.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant10.png",
-	"models/warzone/foliage/plant11.png",
-	"models/warzone/foliage/plant12.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant14.png",
-	"models/warzone/foliage/plant15.png",
-	"models/warzone/foliage/plant16.png",
-	"models/warzone/foliage/plant17.png",
-	"models/warzone/foliage/plant18.png",
-	"models/warzone/foliage/plant19.png",
-	"models/warzone/foliage/plant20.png",
-	"models/warzone/foliage/plant21.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant24.png",
-	"models/warzone/foliage/plant25.png",
-	"models/warzone/foliage/plant26.png",
-	"models/warzone/foliage/plant27.png",
-	"models/warzone/foliage/plant28.png",
-	"models/warzone/foliage/plant29.png",
-	"models/warzone/foliage/plant30.png",
-	"models/warzone/foliage/plant31.png",
-	"models/warzone/foliage/plant32.png",
-	"models/warzone/foliage/plant33.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant35.png",
-	"models/warzone/foliage/plant36.png",
-	"models/warzone/foliage/plant37.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant40.png",
-	"models/warzone/foliage/plant41.png",
-	"models/warzone/foliage/plant42.png",
-	"models/warzone/foliage/plant43.png",
-	"models/warzone/foliage/plant44.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant48.png",
-	"models/warzone/foliage/plant49.png",
-	"models/warzone/foliage/plant50.png",
-	"models/warzone/foliage/plant51.png",
-	"models/warzone/foliage/plant52.png",
-	"models/warzone/foliage/plant53.png",
-	"models/warzone/foliage/plant54.png",
-	"models/warzone/foliage/plant55.png",
-	"models/warzone/foliage/plant56.png",
-	"models/warzone/foliage/plant57.png",
-	"models/warzone/foliage/plant58.png",
-	"models/warzone/foliage/plant59.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant61.png",
-	"models/warzone/foliage/plant62.png",
-	"models/warzone/foliage/plant63.png",
-	"models/warzone/foliage/plant64.png",
-	"models/warzone/foliage/plant65.png",
-	"models/warzone/foliage/plant66.png",
-	"models/warzone/foliage/plant67.png",
-	"models/warzone/foliage/plant68.png",
-	"models/warzone/foliage/plant69.png",
-	"models/warzone/foliage/plant70.png",
-	"models/warzone/foliage/plant71.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant73.png",
-	"models/warzone/foliage/plant74.png",
-	"models/warzone/foliage/plant75.png",
-	"models/warzone/foliage/plant76.png",
-	"models/warzone/foliage/plant77.png",
-	"models/warzone/foliage/plant78.png",
-	"models/warzone/foliage/plant79.png",
-	"models/warzone/foliage/plant80.png",
-	"models/warzone/foliage/plant81.png",
-	"models/warzone/foliage/plant82.png",
-	"models/warzone/foliage/plant83.png",
-	"models/warzone/foliage/plant84.png",
-	"models/warzone/foliage/plant85.png",
-	"models/warzone/foliage/plant86.png",
-	"models/warzone/foliage/plant87.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/plant89.png",
-	"models/warzone/foliage/plant90.png",
-	"models/warzone/foliage/plant91.png",
-	"models/warzone/foliage/plant92.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant94.png",
-	"models/warzone/foliage/plant95.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant97.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant99.png",
-	"models/warzone/foliage/plant100.png",
-};
-
-static const char *SpringPlantsList[] = {
-	"models/warzone/foliage/plant01.png",
-	"models/warzone/foliage/plant02.png",
-	"models/warzone/foliage/plant03.png",
-	"models/warzone/foliage/plant04.png",
-	"models/warzone/foliage/plant05.png",
-	"models/warzone/foliage/plant06.png",
-	"models/warzone/foliage/plant07.png",
-	"models/warzone/foliage/plant08.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant10.png",
-	"models/warzone/foliage/plant11.png",
-	"models/warzone/foliage/plant12.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant14.png",
-	"models/warzone/foliage/plant15.png",
-	"models/warzone/foliage/plant16.png",
-	"models/warzone/foliage/plant17.png",
-	"models/warzone/foliage/plant18.png",
-	"models/warzone/foliage/plant19.png",
-	"models/warzone/foliage/plant20.png",
-	"models/warzone/foliage/plant21.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant24.png",
-	"models/warzone/foliage/plant25.png",
-	"models/warzone/foliage/plant26.png",
-	"models/warzone/foliage/plant27.png",
-	"models/warzone/foliage/plant28.png",
-	"models/warzone/foliage/plant29.png",
-	"models/warzone/foliage/plant30.png",
-	"models/warzone/foliage/plant31.png",
-	"models/warzone/foliage/plant32.png",
-	"models/warzone/foliage/plant33.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant35.png",
-	"models/warzone/foliage/plant36.png",
-	"models/warzone/foliage/plant37.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant40.png",
-	"models/warzone/foliage/plant41.png",
-	"models/warzone/foliage/plant42.png",
-	"models/warzone/foliage/plant43.png",
-	"models/warzone/foliage/plant44.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant48.png",
-	"models/warzone/foliage/plant49.png",
-	"models/warzone/foliage/plant50.png",
-	"models/warzone/foliage/plant51.png",
-	"models/warzone/foliage/plant52.png",
-	"models/warzone/foliage/plant53.png",
-	"models/warzone/foliage/plant54.png",
-	"models/warzone/foliage/plant55.png",
-	"models/warzone/foliage/plant56.png",
-	"models/warzone/foliage/plant57.png",
-	"models/warzone/foliage/plant58.png",
-	"models/warzone/foliage/plant59.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant61.png",
-	"models/warzone/foliage/plant62.png",
-	"models/warzone/foliage/plant63.png",
-	"models/warzone/foliage/plant64.png",
-	"models/warzone/foliage/plant65.png",
-	"models/warzone/foliage/plant66.png",
-	"models/warzone/foliage/plant67.png",
-	"models/warzone/foliage/plant68.png",
-	"models/warzone/foliage/plant69.png",
-	"models/warzone/foliage/plant70.png",
-	"models/warzone/foliage/plant71.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant73.png",
-	"models/warzone/foliage/plant74.png",
-	"models/warzone/foliage/plant75.png",
-	"models/warzone/foliage/plant76.png",
-	"models/warzone/foliage/plant77.png",
-	"models/warzone/foliage/plant78.png",
-	"models/warzone/foliage/plant79.png",
-	"models/warzone/foliage/plant80.png",
-	"models/warzone/foliage/plant81.png",
-	"models/warzone/foliage/plant82.png",
-	"models/warzone/foliage/plant83.png",
-	"models/warzone/foliage/plant84.png",
-	"models/warzone/foliage/plant85.png",
-	"models/warzone/foliage/plant86.png",
-	"models/warzone/foliage/plant87.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/plant89.png",
-	"models/warzone/foliage/plant90.png",
-	"models/warzone/foliage/plant91.png",
-	"models/warzone/foliage/plant92.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant94.png",
-	"models/warzone/foliage/plant95.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant97.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant99.png",
-	"models/warzone/foliage/plant100.png",
-};
-
-static const char *EndorPlantsList[] = {
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-	"models/warzone/foliage/fern06.png",
-	"models/warzone/foliage/fern07.png",
-	"models/warzone/foliage/plant09.png",
-	"models/warzone/foliage/plant13.png",
-	"models/warzone/foliage/plant60.png",
-	"models/warzone/foliage/plant72.png",
-	"models/warzone/foliage/plant88.png",
-	"models/warzone/foliage/fern01.png",
-	"models/warzone/foliage/fern02.png",
-	"models/warzone/foliage/fern03.png",
-	"models/warzone/foliage/fern04.png",
-	"models/warzone/foliage/fern05.png",
-};
-
-static const char *SnowPlantsList[] = {
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
-	"models/warzone/foliage/plant23.png",
-	"models/warzone/foliage/plant34.png",
-	"models/warzone/foliage/plant38.png",
-	"models/warzone/foliage/plant39.png",
-	"models/warzone/foliage/plant45.png",
-	"models/warzone/foliage/plant46.png",
-	"models/warzone/foliage/plant47.png",
-	"models/warzone/foliage/plant93.png",
-	"models/warzone/foliage/plant96.png",
-	"models/warzone/foliage/plant98.png",
-	"models/warzone/foliage/plant22.png",
 };
 
 // =======================================================================================================================================
@@ -1918,15 +1487,12 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 	FOLIAGE_PLANT_VISIBLE_DISTANCE = FOLIAGE_VISIBLE_DISTANCE;//FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
 	FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
-	//#define __GRASS_ONLY__
-
 	if (dist <= FOLIAGE_PLANT_VISIBLE_DISTANCE)
 	{// Draw grass...
 		qboolean skipGrass = qfalse;
 		qboolean skipPlant = qfalse;
 		float minGrassScale = ((dist / FOLIAGE_PLANT_VISIBLE_DISTANCE) * 0.7) + 0.3;
 
-#ifndef __GRASS_ONLY__
 		if (dist > FOLIAGE_VISIBLE_DISTANCE) skipGrass = qtrue;
 		if (FOLIAGE_PLANT_SCALE[num] <= minGrassScale && dist > FOLIAGE_VISIBLE_DISTANCE) skipPlant = qtrue;
 		if (FOLIAGE_PLANT_SCALE[num] < minFoliageScale) skipPlant = qtrue;
@@ -1937,18 +1503,6 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 			if (distMult <= 0.0) return;
 
-#ifndef __NEW_PLANTS__
-			float PLANT_SCALE_XY = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
-			float PLANT_SCALE_Z = FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
-
-			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
-
-			re.reType = RT_PLANT;//RT_MODEL;
-
-			re.origin[2] += /*8.0 **/ (1.0 - FOLIAGE_PLANT_SCALE[num]);
-
-			re.hModel = FOLIAGE_PLANT_MODEL[4];
-#else //__NEW_PLANTS__
 			float PLANT_SCALE_XY = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale;
 			float PLANT_SCALE_Z = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
 
@@ -1957,90 +1511,20 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 			re.origin[2] += 8.0 + (1.0 - (FOLIAGE_PLANT_SCALE[num] * distMult));
 
 			re.hModel = FOLIAGE_PLANT_MODELS[FOLIAGE_PLANT_SELECTION[num] - 1];
-#endif //__NEW_PLANTS__
 
 			VectorSet(re.modelScale, PLANT_SCALE_XY, PLANT_SCALE_XY, PLANT_SCALE_Z);
 
 			vectoangles(FOLIAGE_NORMALS[num], angles);
 			angles[PITCH] += 90;
-			//angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
-			//angles[YAW] += 90.0 + FOLIAGE_PLANT_ANGLES[num];
 
 			VectorCopy(angles, re.angles);
 			AnglesToAxis(angles, re.axis);
 
-			//FOLIAGE_ApplyAxisRotation(re.axis, PITCH, AngOffset[PITCH]);
 			FOLIAGE_ApplyAxisRotation(re.axis, YAW, FOLIAGE_PLANT_ANGLES[num]);
-			//FOLIAGE_ApplyAxisRotation(re.axis, ROLL, AngOffset[ROLL]);
-
-			// Add extra rotation so it's different to grass angle...
-			//RotateAroundDirection( re.axis, FOLIAGE_PLANT_ANGLES[num] );
 
 			ScaleModelAxis(&re);
 
 			FOLIAGE_AddFoliageEntityToScene(&re);
-		}
-
-		if ((passType == FOLIAGE_PASS_GRASS || passType == FOLIAGE_PASS_CLOSETREE) && !skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
-#endif //__GRASS_ONLY__
-		{
-#ifndef __NO_GRASS__
-			float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.5;
-
-			re.reType = RT_GRASS;//RT_MODEL;
-
-			re.origin[2] += /*8.0 **/ (1.0 - FOLIAGE_PLANT_SCALE[num]);
-
-			re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER;
-
-			// Allow user to adjust level of foliage detail by adjusting md3 lods...
-			if (cg_foliageDetail.integer >= 3)
-			{
-				if (dist < FOLIAGE_AREA_SIZE*1.5)
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				else if (dist < FOLIAGE_AREA_SIZE*2.75)
-					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				else if (dist < FOLIAGE_AREA_SIZE*3.5)
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				else
-					re.hModel = FOLIAGE_PLANT_MODEL[3];
-			}
-			else if (cg_foliageDetail.integer >= 2)
-			{
-				if (dist < FOLIAGE_AREA_SIZE*1.5)
-					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				else if (dist < FOLIAGE_AREA_SIZE*2.75)
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				else
-					re.hModel = FOLIAGE_PLANT_MODEL[3];
-			}
-			else if (cg_foliageDetail.integer >= 1)
-			{
-				if (dist < FOLIAGE_AREA_SIZE*1.5)
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				else
-					re.hModel = FOLIAGE_PLANT_MODEL[3];
-			}
-			else
-			{
-				re.hModel = FOLIAGE_PLANT_MODEL[3];
-			}
-
-			VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
-
-			vectoangles( FOLIAGE_NORMALS[num], angles );
-			angles[PITCH] += 90;
-			//angles[YAW] += FOLIAGE_PLANT_ANGLES[num];
-
-			VectorCopy(angles, re.angles);
-			AnglesToAxis(angles, re.axis);
-
-			//RotateAroundDirection( re.axis, FOLIAGE_PLANT_ANGLES[num] );
-
-			ScaleModelAxis( &re );
-
-			FOLIAGE_AddFoliageEntityToScene( &re );
-#endif //__NO_GRASS__
 		}
 	}
 
@@ -2084,11 +1568,6 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 				re.reType = RT_MODEL;
 				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num] - 1];
-
-				/*if (FOLIAGE_TREE_G2_MODEL[FOLIAGE_TREE_SELECTION[num] - 1] != NULL)
-				{// G2 Instance of this model...
-					re.ghoul2 = FOLIAGE_TREE_G2_MODEL[FOLIAGE_TREE_SELECTION[num] - 1];
-				}*/
 
 				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER);
 
@@ -2193,10 +1672,8 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	int				numPositions = 0;
 	int				numRemovedPositions = 0;
 	float			minFoliageScale = cg_foliageMinFoliageScale.value;
-#ifdef __NO_GRASS__
 	int fileCount = 0;
 	int foliageCount = 0;
-#endif //__NO_GRASS__
 
 	if (!filename || filename[0] == '0')
 		trap->FS_Open(va("foliage/%s.foliage", cgs.currentmapname), &f, FS_READ);
@@ -2214,7 +1691,6 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 
 	FOLIAGE_FreeMemory();
 
-#ifdef __NO_GRASS__
 	trap->FS_Read(&fileCount, sizeof(int), f);
 
 	FOLIAGE_POSITIONS = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
@@ -2246,13 +1722,6 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 			MAP_HAS_TREES = qtrue;
 		}
 
-#if defined(__NO_PLANTS__) && !defined(__NEW_PLANTS__)
-		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0 )
-		{// Only keep positions with trees or plants...
-			FOLIAGE_PLANT_SELECTION[foliageCount] = 0;
-			foliageCount++;
-		}
-#elif defined(__NEW_PLANTS__)
 		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0)
 		{// Only keep positions with trees or plants...
 			FOLIAGE_PLANT_SELECTION[foliageCount] = 0;
@@ -2262,7 +1731,6 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		{// Only keep positions with trees or plants...
 			foliageCount++;
 		}
-#endif //__NO_PLANTS__
 		else
 		{
 			numRemovedPositions++;
@@ -2270,46 +1738,6 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	}
 
 	FOLIAGE_NUM_POSITIONS = foliageCount;
-#else //!__NO_GRASS__
-	trap->FS_Read( &numPositions, sizeof(int), f );
-
-	FOLIAGE_POSITIONS = (vec3_t *)malloc(numPositions * sizeof(vec3_t));
-	FOLIAGE_NORMALS = (vec3_t *)malloc(numPositions * sizeof(vec3_t));
-	FOLIAGE_PLANT_SELECTION = (int *)malloc(numPositions * sizeof(int));
-	FOLIAGE_PLANT_ANGLES = (float *)malloc(numPositions * sizeof(float));
-	FOLIAGE_PLANT_SCALE = (float *)malloc(numPositions * sizeof(float));
-	FOLIAGE_TREE_SELECTION = (int *)malloc(numPositions * sizeof(int));
-	FOLIAGE_TREE_ANGLES = (float *)malloc(numPositions * sizeof(float));
-	FOLIAGE_TREE_SCALE = (float *)malloc(numPositions * sizeof(float));
-
-	for (i = 0; i < numPositions; i++)
-	{
-		trap->FS_Read( &FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS], sizeof(vec3_t), f );
-		trap->FS_Read( &FOLIAGE_NORMALS[FOLIAGE_NUM_POSITIONS], sizeof(vec3_t), f );
-		trap->FS_Read( &FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS], sizeof(int), f );
-		trap->FS_Read( &FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
-		trap->FS_Read( &FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
-		trap->FS_Read( &FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS], sizeof(int), f );
-		trap->FS_Read( &FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
-		trap->FS_Read( &FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
-
-		if (FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] > 0)
-		{
-			MAP_HAS_TREES = qtrue;
-		}
-
-		if (FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] <= 0 && FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] < minFoliageScale)
-		{// Below our minimum size specified by cg_foliageMinFoliageScale. Remove!
-			FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			numRemovedPositions++;
-		}
-		else
-		{
-			FOLIAGE_NUM_POSITIONS++;
-		}
-	}
-#endif //__NO_GRASS__
 
 	trap->FS_Close(f);
 
@@ -2407,13 +1835,8 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
 	}
 
-#ifdef __NO_GRASS__
 	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses removed) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
 		FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname);
-#else //!__NO_GRASS__
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points (%i removed by cg_foliageMinFoliageScale) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
-		FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname );
-#endif //__NO_GRASS__
 
 	if (!filename || filename[0] == '0')
 	{// Don't need to waste time on this when doing "copy" function...
@@ -2650,81 +2073,6 @@ void FOLIAGE_DrawGrass(void)
 	{// Init/register all foliage models...
 		int i = 0;
 
-#ifndef __NO_GRASS__
-		FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass.md3" );
-		FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
-		FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
-		FOLIAGE_PLANT_MODEL[3] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod3.md3" );
-		FOLIAGE_PLANT_MODEL[4] = trap->R_RegisterModel( "models/warzone/foliage/uqplant.md3" );
-#endif //__NO_GRASS__
-
-		if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
-		{
-#ifndef __NO_GRASS__
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
-#endif //__NO_GRASS__
-
-#if !defined(__NO_PLANTS__)
-			for (i = 0; i < MAX_PLANT_SHADERS; i++)
-			{
-				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
-			}
-#endif //__NO_PLANTS__
-		}
-		else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
-		{
-#ifndef __NO_GRASS__
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/ferngrass" );
-#endif //__NO_GRASS__
-
-#if !defined(__NO_PLANTS__)
-			for (i = 0; i < MAX_PLANT_SHADERS; i++)
-			{
-				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(EndorPlantsList[i]);
-			}
-#endif //__NO_PLANTS__
-		}
-		else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
-		{
-#ifndef __NO_GRASS__
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasssnowpineforest" );
-#endif //__NO_GRASS__
-
-#if !defined(__NO_PLANTS__)
-			for (i = 0; i < MAX_PLANT_SHADERS; i++)
-			{
-				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SnowPlantsList[i]);
-			}
-#endif //__NO_PLANTS__
-		}
-		else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
-		{
-#ifndef __NO_GRASS__
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
-#endif //__NO_GRASS__
-
-#if !defined(__NO_PLANTS__)
-			for (i = 0; i < MAX_PLANT_SHADERS; i++)
-			{
-				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
-			}
-#endif //__NO_PLANTS__
-		}
-		else // Default to new tropical...
-		{
-#ifndef __NO_GRASS__
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
-#endif //__NO_GRASS__
-
-#if !defined(__NO_PLANTS__)
-			for (i = 0; i < MAX_PLANT_SHADERS; i++)
-			{
-				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
-			}
-#endif //__NO_PLANTS__
-		}
-
-#if defined(__NEW_PLANTS__)
 		//
 		// Allow for various foliage sets based on climate or mapInfo settings...
 		//
@@ -2813,25 +2161,20 @@ void FOLIAGE_DrawGrass(void)
 			}
 		}
 
-		
-#endif //defined(__NEW_PLANTS__)
-
-		// Read all the tree info from the new .climate ini files...
-		TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
-
-		for (i = 0; i < 9; i++)
+		if (MAP_HAS_TREES)
 		{
-			FOLIAGE_TREE_MODEL[i] = trap->R_RegisterModel(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""));
+			// Read all the tree info from the new .climate ini files...
+			TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
 
-			/*if (StringContainsWord(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""), ".glm"))
-			{// Init G2 instance if this is a GLM...
-				trap->G2API_InitGhoul2Model(&FOLIAGE_TREE_G2_MODEL[i], IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""), 0, 0, 0, 0, 0);
-			}*/
+			for (i = 0; i < 9; i++)
+			{
+				FOLIAGE_TREE_MODEL[i] = trap->R_RegisterModel(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""));
 
-			FOLIAGE_TREE_BILLBOARD_SHADER[i] = trap->R_RegisterShader(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardShader%i", i), ""));
-			FOLIAGE_TREE_BILLBOARD_SIZE[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardSize%i", i), "128.0"));
-			FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
-			FOLIAGE_TREE_ZOFFSET[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeZoffset%i", i), "-4.0"));
+				FOLIAGE_TREE_BILLBOARD_SHADER[i] = trap->R_RegisterShader(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardShader%i", i), ""));
+				FOLIAGE_TREE_BILLBOARD_SIZE[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardSize%i", i), "128.0"));
+				FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
+				FOLIAGE_TREE_ZOFFSET[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeZoffset%i", i), "-4.0"));
+			}
 		}
 
 		FOLIAGE_INITIALIZED = qtrue;
@@ -2869,20 +2212,6 @@ void FOLIAGE_DrawGrass(void)
 			}
 		}
 	}
-
-#ifndef __NO_GRASS__
-	for (CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
-	{// Draw grass list...
-		int spot = 0;
-		int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
-
-		for (spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
-		{
-			if (!MAP_HAS_TREES || FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0)
-				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_GRASS );
-		}
-	}
-#endif //__NO_GRASS__
 
 	for (CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
 	{// Draw plants last...
@@ -3564,9 +2893,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 						DO_PLANT = qtrue;
 					}
 
-#ifdef __NO_GRASS__
 					if (!DO_TREE && !DO_PLANT) continue;
-#endif
 
 					VectorCopy(tr.plane.normal, grassNormals[grassSpotCount]);
 
@@ -3666,11 +2993,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			}
 			else if (grassSpotType[i] == SPOT_TYPE_PLANT)
 			{// Add plant...
-#if defined(__NEW_PLANTS__)
 				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, MAX_PLANT_MODELS);
-#else
-				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
-#endif
 				FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
 			}
 			else
@@ -3838,11 +3161,7 @@ void FOLIAGE_FoliageReplant(int plantPercentage)
 		{
 			if (irand(0, 100) <= plantPercentage)
 			{// Replace...
-#if defined(__NEW_PLANTS__)
 				FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS);
-#else
-				FOLIAGE_PLANT_SELECTION[i] = irand(1,MAX_PLANT_SHADERS-1);
-#endif
 				NUM_REPLACED++;
 			}
 			else
@@ -4062,7 +3381,6 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 		{
 			NUM_PLANTS_TOTAL++;
 
-#if defined(__NEW_PLANTS__)
 			if (FOLIAGE_TreeLocationNearby(FOLIAGE_POSITIONS[i]) || FOLIAGE_NearbyWall(FOLIAGE_POSITIONS[i]))
 			{// 1 in 2 (or if no other nearby yet) are fern or tall plant...
 				//if (irand(1,2) == 1 || !FOLIAGE_AnotherBigPlantNearby(FOLIAGE_POSITIONS[i], i-1))
@@ -4092,17 +3410,6 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 					sprintf(last_node_added_string, "^3%i ^5near object plants replaced. ^3%i ^5normal replaced. ^3%i ^5total plants.", NUM_OBJECT_PLANTS, NUM_REPLACED, NUM_PLANTS_TOTAL);
 				}
 			}
-#else
-			if (irand(0, 100) <= plantPercentage)
-			{// Replace...
-				FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_SHADERS - 1);
-			}
-			else
-			{
-				FOLIAGE_PLANT_SELECTION[i] = 0;
-				NUM_REPLACED++;
-			}
-#endif
 		}
 	}
 

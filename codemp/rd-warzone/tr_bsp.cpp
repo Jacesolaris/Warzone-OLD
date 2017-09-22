@@ -3725,10 +3725,20 @@ static void R_RenderAllCubemaps(void)
 		cubemapFormat = GL_RGBA16F;
 	}
 
+	int vramScaleDiv = 1;
+
+	if (r_lowVram->integer >= 2)
+	{// 1GB vram cards...
+		vramScaleDiv = 4;
+	}
+	else if (r_lowVram->integer >= 1)
+	{// 2GB vram cards...
+		vramScaleDiv = 2;
+	}
+
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
-		//tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
-		tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, r_cubeMapSize->integer, r_cubeMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
+		tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
 	}
 
 	for (i = 0; i < tr.numCubemaps; i++)

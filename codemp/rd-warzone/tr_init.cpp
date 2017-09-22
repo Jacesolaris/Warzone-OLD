@@ -286,6 +286,7 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_lowVram;
 cvar_t	*r_debugShaderStages;
 cvar_t	*r_debugImageCrcHashing;
 cvar_t	*r_parallaxScale;
@@ -1436,8 +1437,8 @@ void R_Register( void )
 	r_roundImagesDown = ri->Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorMipLevels = ri->Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
 	r_detailTextures = ri->Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_texturebits = ri->Cvar_Get( "r_texturebits", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_colorbits = ri->Cvar_Get( "r_colorbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_texturebits = ri->Cvar_Get( "r_texturebits", "32", CVAR_ARCHIVE | CVAR_LATCH );
+	r_colorbits = ri->Cvar_Get( "r_colorbits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stencilbits = ri->Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	r_depthbits = ri->Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_multisample = ri->Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1536,6 +1537,8 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_lowVram = ri->Cvar_Get("r_lowVram", "0", CVAR_ARCHIVE | CVAR_LATCH);
+
 	r_debugShaderStages = ri->Cvar_Get("r_debugShaderStages", "0", CVAR_ARCHIVE);
 	r_debugImageCrcHashing = ri->Cvar_Get("r_debugImageCrcHashing", "0", CVAR_ARCHIVE);
 

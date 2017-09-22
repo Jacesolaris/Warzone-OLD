@@ -1788,7 +1788,7 @@ void GLimp_Init( void )
 			ri->Cvar_Set("s_khz", "11");// this will get called before S_Init
 		}
 		//reset to defaults
-		ri->Cvar_Set( "r_picmip", "1" );
+		ri->Cvar_Set( "r_picmip", "0" );
 
 		// Savage3D and Savage4 should always have trilinear enabled
 		if ( strstr( buf, "savage3d" ) || strstr( buf, "s3 savage4" ) || strstr( buf, "geforce" ) || strstr( buf, "quadro" ) )

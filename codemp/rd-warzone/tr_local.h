@@ -428,6 +428,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_lowVram;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_parallaxScale;
@@ -3004,6 +3005,7 @@ extern cvar_t	*r_dynamicGlowSoft;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_lowVram;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_shadowMaxDepthError;

@@ -1604,6 +1604,76 @@ static void RawImage_SwizzleRA( byte *data, int width, int height )
 	}
 }
 
+/*
+===============
+RawImage_LowVramScale
+
+===============
+*/
+static void RawImage_LowVramScale(byte **data, int *inout_width, int *inout_height, int *inout_scaled_width, int *inout_scaled_height, imgType_t type, int flags, byte **resampledBuffer)
+{
+	int width = *inout_width;
+	int height = *inout_height;
+	int scaled_width;
+	int scaled_height;
+	qboolean picmip = (qboolean)(flags & IMGFLAG_PICMIP);
+	qboolean mipmap = (qboolean)(flags & IMGFLAG_MIPMAP);
+	qboolean clampToEdge = (qboolean)(flags & IMGFLAG_CLAMPTOEDGE);
+
+	//
+	// convert to exact power of 2 sizes
+	//
+	scaled_width = NextPowerOfTwo(width);
+	scaled_height = NextPowerOfTwo(height);
+
+	if (scaled_width > width)
+		scaled_width >>= 1;
+	if (scaled_height > height)
+		scaled_height >>= 1;
+
+	scaled_width /= 2;
+	scaled_height /= 2;
+
+	*resampledBuffer = (byte *)ri->Hunk_AllocateTempMemory(scaled_width * scaled_height * 4);
+	ResampleTexture(*data, width, height, *resampledBuffer, scaled_width, scaled_height);
+	*data = *resampledBuffer;
+	width = scaled_width;
+	height = scaled_height;
+
+	//
+	// perform optional picmip operation
+	//
+	if (picmip) {
+		scaled_width >>= r_picmip->integer;
+		scaled_height >>= r_picmip->integer;
+	}
+
+	//
+	// clamp to minimum size
+	//
+	if (scaled_width < 1) {
+		scaled_width = 1;
+	}
+	if (scaled_height < 1) {
+		scaled_height = 1;
+	}
+
+	//
+	// clamp to the current upper OpenGL limit
+	// scale both axis down equally so we don't have to
+	// deal with a half mip resampling
+	//
+	while (scaled_width > glConfig.maxTextureSize
+		|| scaled_height > glConfig.maxTextureSize) {
+		scaled_width >>= 1;
+		scaled_height >>= 1;
+	}
+
+	*inout_width = width;
+	*inout_height = height;
+	*inout_scaled_width = scaled_width;
+	*inout_scaled_height = scaled_height;
+}
 
 /*
 ===============
@@ -2185,9 +2255,55 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 		}
 	}
 
+	int vramScaleMax = 8192; // Real video cards... :)
+	int vramScaleDiv = 1;
+
+	if (r_lowVram->integer >= 2)
+	{
+		vramScaleMax = 512; // 1GB video cards...
+		vramScaleDiv = 4;
+
+		if (scaled_width / vramScaleDiv > 512)
+			vramScaleDiv = 8;
+	}
+	else if (r_lowVram->integer >= 1)
+	{
+		vramScaleMax = 512; // 1GB video cards...
+		vramScaleDiv = 4;
+
+		if (scaled_width / vramScaleDiv > 512)
+			vramScaleDiv = 8;
+	}
+
 	// copy or resample data as appropriate for first MIP level
-	if ( ( scaled_width == width ) && 
-		( scaled_height == height ) ) {
+	if (r_lowVram->integer && (scaled_width > vramScaleMax || scaled_height > vramScaleMax) && !(flags & IMGFLAG_NO_COMPRESSION) && !(flags & IMGFLAG_MUTABLE))
+	{// UQ1: Scale down all high definition textures...
+		scaled_width = scaled_width / vramScaleDiv;
+		scaled_height = scaled_height / vramScaleDiv;
+
+		while (width > scaled_width || height > scaled_height) {
+
+			if (flags & IMGFLAG_SRGB)
+			{
+				R_MipMapsRGB((byte *)data, width, height);
+			}
+			else
+			{
+				R_MipMap((byte *)data, width, height);
+			}
+
+			width >>= 1;
+			height >>= 1;
+			if (width < 1) {
+				width = 1;
+			}
+			if (height < 1) {
+				height = 1;
+			}
+		}
+		Com_Memcpy(scaledBuffer, data, width * height * 4);
+	}
+	else if ( ( scaled_width == width ) && ( scaled_height == height ) ) {
 		if (!(flags & IMGFLAG_MIPMAP))
 		{
 			RawImage_UploadTexture( data, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse );
@@ -3957,6 +4073,17 @@ void R_CreateBuiltinImages( void ) {
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 	byte	data2[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
+	int vramScaleDiv = 1;
+
+	if (r_lowVram->integer >= 2)
+	{// 1GB vram cards...
+		vramScaleDiv = 4;
+	}
+	else if (r_lowVram->integer >= 1)
+	{// 2GB vram cards...
+		vramScaleDiv = 2;
+	}
+
 	R_CreateDefaultImage();
 
 	// we use a solid white image instead of disabling texturing
@@ -3974,7 +4101,7 @@ void R_CreateBuiltinImages( void ) {
 	{
 		for( x = 0; x < MAX_DLIGHTS; x++)
 		{
-			tr.shadowCubemaps[x] = R_CreateImage(va("*shadowcubemap%i", x), NULL, PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE | IMGFLAG_CUBEMAP, 0);
+			tr.shadowCubemaps[x] = R_CreateImage(va("*shadowcubemap%i", x), NULL, PSHADOW_MAP_SIZE / vramScaleDiv, PSHADOW_MAP_SIZE / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE | IMGFLAG_CUBEMAP, 0);
 		}
 	}
 
@@ -4005,6 +4132,7 @@ void R_CreateBuiltinImages( void ) {
 	width = glConfig.vidWidth * r_superSampleMultiplier->value;
 	height = glConfig.vidHeight * r_superSampleMultiplier->value;
 
+	rgbFormat = GL_RGBA8;
 	hdrFormat = GL_RGBA8;
 	hdrDepth = GL_DEPTH_COMPONENT24;
 
@@ -4017,8 +4145,6 @@ void R_CreateBuiltinImages( void ) {
 		//hdrFormat = GL_RGBA32F;
 		//hdrDepth = GL_DEPTH_COMPONENT32;
 	}
-
-	rgbFormat = GL_RGBA8;
 
 	tr.renderImage = R_CreateImage("_render", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	//tr.previousRenderImage = R_CreateImage("_renderPreviousFrame", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
@@ -4076,9 +4202,9 @@ void R_CreateBuiltinImages( void ) {
 	tr.genericFBO2Image  = R_CreateImage("_generic2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.genericFBO3Image  = R_CreateImage("_generic3",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.dummyImage  = R_CreateImage("_dummy",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.dummyImage2  = R_CreateImage("_dummy2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.dummyImage3  = R_CreateImage("_dummy3",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.dummyImage = R_CreateImage("_dummy",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.dummyImage2 = R_CreateImage("_dummy2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.dummyImage3 = R_CreateImage("_dummy3",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.dummyImage4 = R_CreateImage("_dummy4", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.ssdoImage1 = R_CreateImage("_ssdoImage1", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
@@ -4086,14 +4212,14 @@ void R_CreateBuiltinImages( void ) {
 
 	tr.ssdmImage = R_CreateImage("_ssdmImage", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat/*GL_RGBA32F*/);
 
-	tr.anamorphicRenderFBOImage  = R_CreateImage("_anamorphic0",  NULL, width/16, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.anamorphicRenderFBOImage  = R_CreateImage("_anamorphic0",  NULL, (width/16) / vramScaleDiv, (height/8) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.bloomRenderFBOImage[0]  = R_CreateImage("_bloom0",  NULL, width/2, height/2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.bloomRenderFBOImage[1]  = R_CreateImage("_bloom1",  NULL, width/2, height/2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.bloomRenderFBOImage[0]  = R_CreateImage("_bloom0",  NULL, (width/2) / vramScaleDiv, (height/2) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.bloomRenderFBOImage[1]  = R_CreateImage("_bloom1",  NULL, (width/2) / vramScaleDiv, (height/2) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.bloomRenderFBOImage[2]  = R_CreateImage("_bloom2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, width/4.0, height/4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.volumetricPreviousFBOImage = R_CreateImage("_volumetricPrevious", NULL, width / 4.0, height / 4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, (width/4.0) / vramScaleDiv, (height/4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.volumetricPreviousFBOImage = R_CreateImage("_volumetricPrevious", NULL, (width/4.0) / vramScaleDiv, (height/4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	//
 	// UQ1: End Added...
@@ -4139,7 +4265,7 @@ void R_CreateBuiltinImages( void ) {
 	{
 		for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)
 		{
-			tr.pshadowMaps[x] = R_CreateImage(va("*shadowmap%i", x), NULL, PSHADOW_MAP_SIZE, PSHADOW_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat/*GL_RGBA8*/);
+			tr.pshadowMaps[x] = R_CreateImage(va("*shadowmap%i", x), NULL, PSHADOW_MAP_SIZE / vramScaleDiv, PSHADOW_MAP_SIZE / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat/*GL_RGBA8*/);
 		}
 	}
 
@@ -4147,20 +4273,20 @@ void R_CreateBuiltinImages( void ) {
 	{
 		for ( x = 0; x < 5; x++)
 		{
-			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer, r_shadowMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrDepth);
+			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrDepth);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 		}
 
-		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width / 2.0, height / 2.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, width / 2.0, height / 2.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	}
 
 	if (r_cubeMapping->integer >= 1)
 	{
-		//tr.renderCubeImage = R_CreateImage("*renderCube", NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, rgbFormat);
-		tr.renderCubeImage = R_CreateImage("*renderCube", NULL, r_cubeMapSize->integer, r_cubeMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, hdrFormat/*rgbFormat*/);
+		tr.renderCubeImage = R_CreateImage("*renderCube", NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, hdrFormat/*rgbFormat*/);
 	}
+
 	tr.awesomiumuiImage = R_CreateImage("*awesomiumUi", NULL, glConfig.vidWidth, glConfig.vidHeight, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat/*GL_RGBA8*/);
 }
 
