@@ -1375,11 +1375,6 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
-	if (DAY_NIGHT_CYCLE_ENABLED)
-	{
-		SHADOWS_ENABLED = qtrue;
-	}
-
 	if (!SHADOWS_ENABLED
 		&& (StringContainsWord(mapname, "baldemnic")
 			|| StringContainsWord(mapname, "mandalore")
@@ -1387,8 +1382,7 @@ void MAPPING_LoadMapInfo(void)
 			|| StringContainsWord(mapname, "ilum")
 			|| StringContainsWord(mapname, "taanab")
 			|| StringContainsWord(mapname, "tatooine")
-			|| StringContainsWord(mapname, "scarif")
-			|| StringContainsWord(mapname, "cyt"))
+			|| StringContainsWord(mapname, "scarif"))
 		&& !StringContainsWord(mapname, "tatooine_nights"))
 	{
 		SHADOWS_ENABLED = qtrue;
