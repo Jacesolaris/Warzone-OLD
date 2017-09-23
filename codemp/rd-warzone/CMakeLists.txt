@@ -70,6 +70,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_surface.cpp"
 	"${MPDir}/rd-warzone/tr_vbo.cpp"
 	"${MPDir}/rd-warzone/tr_world.cpp"
+	"${MPDir}/rd-warzone/tr_WorldEffects.cpp"
+	"${MPDir}/rd-warzone/tr_WorldEffects.h"
 	"${MPDir}/rd-warzone/VectorUtils3.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.h"
 	"${MPDir}/game/ckheap.h"

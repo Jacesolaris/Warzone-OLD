@@ -2053,9 +2053,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if ( pStage->isSurfaceSprite )
 		{
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 			if (!r_surfaceSprites->integer)
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 			{
 				continue;
 			}

@@ -21,6 +21,8 @@
 #include "glext.h"
 #endif
 
+#ifdef __JKA_WEATHER__
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // Defines
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -1190,6 +1192,7 @@ public:
 		mPopulated = true;
 	}
 
+
 	////////////////////////////////////////////////////////////////////////////////////
 	// Render -
 	////////////////////////////////////////////////////////////////////////////////////
@@ -1197,7 +1200,6 @@ public:
 	{
 		CWeatherParticle*	part=0;
 		int			particleNum;
-
 
 		// Set The GL State And Image Binding
 		//------------------------------------
@@ -1221,11 +1223,87 @@ public:
 		qglMatrixMode(GL_MODELVIEW);
 		qglPushMatrix();
 
-
+#if defined(rd_warzone_x86_EXPORTS)
 		// Begin
 		//-------
 		qglBegin(mGLModeEnum);
-		for (particleNum=0; particleNum<mParticleCount; particleNum++)
+		for (particleNum = 0; particleNum < mParticleCount; particleNum++)
+		{
+			part = &(mParticles[particleNum]);
+			if (!part->mFlags.get_bit(CWeatherParticle::FLAG_RENDER))
+			{
+				continue;
+			}
+
+			vec4_t particleColor;
+
+			// Blend Mode Zero -> Apply Alpha Just To Alpha Channel
+			//------------------------------------------------------
+			if (mBlendMode == 0)
+			{
+				VectorSet4(particleColor, mColor[0], mColor[1], mColor[2], part->mAlpha);
+			}
+
+			// Otherwise Apply Alpha To All Channels
+			//---------------------------------------
+			else
+			{
+				VectorSet4(particleColor, mColor[0] * part->mAlpha, mColor[1] * part->mAlpha, mColor[2] * part->mAlpha, mColor[3] * part->mAlpha);
+			}
+
+			// Render A Triangle
+			//-------------------
+			if (mVertexCount == 3)
+			{
+				vec2_t texCoords[3];
+
+				VectorSet2(texCoords[0], 1.0f, 0.0f);
+				VectorSet2(texCoords[1], 0.0f, 1.0f);
+				VectorSet2(texCoords[2], 0.0f, 0.0f);
+
+				vec4_t triVerts[3];
+				VectorSet4(triVerts[0], part->mPosition[0], part->mPosition[1], part->mPosition[2], 1.0);
+				VectorSet4(triVerts[1], part->mPosition[0] + mCameraLeft[0], part->mPosition[1] + mCameraLeft[1], part->mPosition[2] + mCameraLeft[2], 1.0);
+				VectorSet4(triVerts[2], part->mPosition[0] + mCameraLeftPlusUp[0], part->mPosition[1] + mCameraLeftPlusUp[1], part->mPosition[2] + mCameraLeftPlusUp[2], 1.0);
+
+				GLSL_BindProgram(&tr.textureColorShader);
+
+				GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+				GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, particleColor);
+
+				RB_InstantTri2(triVerts, texCoords);
+			}
+
+			// Render A Quad
+			//---------------
+			else
+			{
+				vec2_t texCoords[4];
+
+				VectorSet2(texCoords[0], 0.0f, 0.0f);
+				VectorSet2(texCoords[1], 1.0f, 0.0f);
+				VectorSet2(texCoords[2], 1.0f, 1.0f);
+				VectorSet2(texCoords[3], 0.0f, 1.0f);
+
+				vec4_t quadVerts[4];
+				VectorSet4(quadVerts[0], part->mPosition[0] - mCameraLeftMinusUp[0], part->mPosition[1] - mCameraLeftMinusUp[1], part->mPosition[2] - mCameraLeftMinusUp[2], 1.0);
+				VectorSet4(quadVerts[1], part->mPosition[0] - mCameraLeftPlusUp[0], part->mPosition[1] - mCameraLeftPlusUp[1], part->mPosition[2] - mCameraLeftPlusUp[2], 1.0);
+				VectorSet4(quadVerts[2], part->mPosition[0] + mCameraLeftMinusUp[0], part->mPosition[1] + mCameraLeftMinusUp[1], part->mPosition[2] + mCameraLeftMinusUp[2], 1.0);
+				VectorSet4(quadVerts[3], part->mPosition[0] + mCameraLeftPlusUp[0], part->mPosition[1] + mCameraLeftPlusUp[1], part->mPosition[2] + mCameraLeftPlusUp[2], 1.0);
+
+				GLSL_BindProgram(&tr.textureColorShader);
+
+				GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+				GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, particleColor);
+
+				RB_InstantQuad2(quadVerts, texCoords);
+			}
+		}
+#else //!defined(rd_warzone_x86_EXPORTS)
+		// Begin
+		//-------
+		qglBegin(mGLModeEnum);
+		for (particleNum = 0; particleNum<mParticleCount; particleNum++)
 		{
 			part = &(mParticles[particleNum]);
 			if (!part->mFlags.get_bit(CWeatherParticle::FLAG_RENDER))
@@ -1249,22 +1327,22 @@ public:
 
 			// Render A Triangle
 			//-------------------
-			if (mVertexCount==3)
+			if (mVertexCount == 3)
 			{
- 				qglTexCoord2f(1.0, 0.0);
+				qglTexCoord2f(1.0, 0.0);
 				qglVertex3f(part->mPosition[0],
-							part->mPosition[1],
-							part->mPosition[2]);
+					part->mPosition[1],
+					part->mPosition[2]);
 
 				qglTexCoord2f(0.0, 1.0);
 				qglVertex3f(part->mPosition[0] + mCameraLeft[0],
-							part->mPosition[1] + mCameraLeft[1],
-							part->mPosition[2] + mCameraLeft[2]);
+					part->mPosition[1] + mCameraLeft[1],
+					part->mPosition[2] + mCameraLeft[2]);
 
 				qglTexCoord2f(0.0, 0.0);
 				qglVertex3f(part->mPosition[0] + mCameraLeftPlusUp[0],
-							part->mPosition[1] + mCameraLeftPlusUp[1],
-							part->mPosition[2] + mCameraLeftPlusUp[2]);
+					part->mPosition[1] + mCameraLeftPlusUp[1],
+					part->mPosition[2] + mCameraLeftPlusUp[2]);
 			}
 
 			// Render A Quad
@@ -1272,31 +1350,33 @@ public:
 			else
 			{
 				// Left bottom.
-				qglTexCoord2f( 0.0, 0.0 );
+				qglTexCoord2f(0.0, 0.0);
 				qglVertex3f(part->mPosition[0] - mCameraLeftMinusUp[0],
-							part->mPosition[1] - mCameraLeftMinusUp[1],
-							part->mPosition[2] - mCameraLeftMinusUp[2] );
+					part->mPosition[1] - mCameraLeftMinusUp[1],
+					part->mPosition[2] - mCameraLeftMinusUp[2]);
 
 				// Right bottom.
-				qglTexCoord2f( 1.0, 0.0 );
+				qglTexCoord2f(1.0, 0.0);
 				qglVertex3f(part->mPosition[0] - mCameraLeftPlusUp[0],
-							part->mPosition[1] - mCameraLeftPlusUp[1],
-							part->mPosition[2] - mCameraLeftPlusUp[2] );
+					part->mPosition[1] - mCameraLeftPlusUp[1],
+					part->mPosition[2] - mCameraLeftPlusUp[2]);
 
 				// Right top.
-				qglTexCoord2f( 1.0, 1.0 );
+				qglTexCoord2f(1.0, 1.0);
 				qglVertex3f(part->mPosition[0] + mCameraLeftMinusUp[0],
-							part->mPosition[1] + mCameraLeftMinusUp[1],
-							part->mPosition[2] + mCameraLeftMinusUp[2] );
+					part->mPosition[1] + mCameraLeftMinusUp[1],
+					part->mPosition[2] + mCameraLeftMinusUp[2]);
 
 				// Left top.
-				qglTexCoord2f( 0.0, 1.0 );
+				qglTexCoord2f(0.0, 1.0);
 				qglVertex3f(part->mPosition[0] + mCameraLeftPlusUp[0],
-							part->mPosition[1] + mCameraLeftPlusUp[1],
-							part->mPosition[2] + mCameraLeftPlusUp[2] );
+					part->mPosition[1] + mCameraLeftPlusUp[1],
+					part->mPosition[2] + mCameraLeftPlusUp[2]);
 			}
 		}
+
 		qglEnd();
+#endif //defined(rd_warzone_x86_EXPORTS)
 
 		//qglEnable(GL_CULL_FACE);
 		//you don't need to do this when you are properly setting cull state.
@@ -1343,6 +1423,10 @@ void RB_RenderWorldEffects(void)
 		(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL) ||
 		!mParticleClouds.size())
 	{	//  no world rendering or no world or no particle clouds
+		if (!mParticleClouds.size())
+		{
+			ri->Printf(PRINT_ALL, "Weather: mParticleClouds.size() is zero.\n", mParticlesRendered);
+		}
 		return;
 	}
 
@@ -1868,5 +1952,4 @@ bool R_IsPuffing()
 	return false;
 }
 
-
-
+#endif //__JKA_WEATHER__

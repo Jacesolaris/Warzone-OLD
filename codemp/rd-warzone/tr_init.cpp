@@ -1694,7 +1694,7 @@ void R_Register( void )
 	r_materialDebug						= ri->Cvar_Get("r_materialDebug",					"0",						CVAR_ARCHIVE);
 	r_genericShaderDebug				= ri->Cvar_Get("r_genericShaderDebug",				"0",						CVAR_ARCHIVE);
 
-	r_weather							= ri->Cvar_Get( "r_weather",						"0",						CVAR_TEMP );
+	r_weather							= ri->Cvar_Get( "r_weather",						"0",						CVAR_ARCHIVE );
 	r_surfaceSprites					= ri->Cvar_Get( "r_surfaceSprites",					"0",						CVAR_TEMP );
 	r_surfaceWeather					= ri->Cvar_Get( "r_surfaceWeather",					"0",						CVAR_TEMP );
 	r_windSpeed							= ri->Cvar_Get( "r_windSpeed",						"0",						CVAR_NONE );
@@ -1804,10 +1804,10 @@ Ghoul2 Insert End
 	ri->Cmd_AddCommand( "gfxinfo", GfxInfo_f );
 	ri->Cmd_AddCommand( "minimize", GLimp_Minimize );
 	ri->Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
 	ri->Cmd_AddCommand( "r_we", R_WorldEffect_f );
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 	ri->Cmd_AddCommand("reloadMapInfo", MAPPING_LoadMapInfo);
 	ri->Cmd_AddCommand("genworldmap", R_CreateBspMapImage);
 	ri->Cmd_AddCommand("genheightmap", R_CreateHeightMapImage);
@@ -1922,10 +1922,10 @@ void R_Init( void ) {
 
 	R_InitDecals();
 
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 extern void R_InitWorldEffects(void);
 	R_InitWorldEffects();
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 
 	R_InitQueries();
 
@@ -1947,9 +1947,9 @@ extern void R_InitWorldEffects(void);
 RE_Shutdown
 ===============
 */
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 extern void R_ShutdownWorldEffects(void);
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 
 void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 
@@ -1985,9 +1985,9 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 		}
 	}
 
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 	R_ShutdownWorldEffects();
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 	R_ShutdownFonts();
 
 	// shut down platform specific OpenGL stuff
@@ -2064,10 +2064,10 @@ void stub_RE_WorldEffectCommand ( const char *cmd ){}
 void stub_RE_AddWeatherZone ( vec3_t mins, vec3_t maxs ) {}
 static void RE_SetRefractionProperties ( float distortionAlpha, float distortionStretch, qboolean distortionPrePost, qboolean distortionNegate ) { }
 
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 extern void RE_WorldEffectCommand(const char *command);
 extern void RE_AddWeatherZone(vec3_t mins, vec3_t maxs);
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -2154,13 +2154,13 @@ Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.GetRealRes = GetRealRes;
 	// R_AutomapElevationAdjustment
 	re.InitializeWireframeAutomap = stub_InitializeWireframeAutomap;
-#ifdef __SURFACESPRITES__
-	re.AddWeatherZone = RE_AddWeatherZone;//stub_RE_AddWeatherZone;
-	re.WorldEffectCommand = RE_WorldEffectCommand;//stub_RE_WorldEffectCommand;
-#else //!__SURFACESPRITES__
+#ifdef __JKA_WEATHER__
+	re.AddWeatherZone = RE_AddWeatherZone;
+	re.WorldEffectCommand = RE_WorldEffectCommand;
+#else //!__JKA_WEATHER__
 	re.AddWeatherZone = stub_RE_AddWeatherZone;
 	re.WorldEffectCommand = stub_RE_WorldEffectCommand;
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 	re.RegisterMedia_LevelLoadBegin = C_LevelLoadBegin;
 	re.RegisterMedia_LevelLoadEnd = C_LevelLoadEnd;
 	re.RegisterMedia_GetLevel = C_GetLevel;

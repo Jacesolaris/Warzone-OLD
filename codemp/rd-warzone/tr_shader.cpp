@@ -2717,9 +2717,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		{
 			// Mark this stage as a surface sprite so we can skip it for now
 			stage->isSurfaceSprite = qtrue;
-#ifndef __SURFACESPRITES__
+#ifndef __JKA_WEATHER__
 			SkipRestOfLine( text );
-#else //__SURFACESPRITES__
+#else //__JKA_WEATHER__
 			char buffer[1024] = "";
 
 			while ( 1 )
@@ -2732,7 +2732,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			ParseSurfaceSprites( buffer, stage );
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 			continue;
 		}
 		//

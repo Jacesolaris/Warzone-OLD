@@ -964,7 +964,14 @@ void RE_RenderScene(const refdef_t *fd) {
 		return;
 	}
 
-	ALLOW_NULL_FBO_BIND = qfalse;
+	if (!tr.world || fd->rdflags & RDF_NOWORLDMODEL)
+	{
+		ALLOW_NULL_FBO_BIND = qtrue;
+	}
+	else
+	{
+		ALLOW_NULL_FBO_BIND = qfalse;
+	}
 
 #ifdef __DEBUG_BINDS__
 	RB_UpdateDebuggingInfo();
@@ -1151,13 +1158,13 @@ void RE_RenderScene(const refdef_t *fd) {
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
 		R_AddPostProcessCmd();
 
-#if 0
+#ifdef __JKA_WEATHER__
 	if (r_weather->integer)
 	{
 		extern void RE_RenderWorldEffects(void);
 		RE_RenderWorldEffects();
 	}
-#endif
+#endif //__JKA_WEATHER__
 
 	RE_EndScene();
 

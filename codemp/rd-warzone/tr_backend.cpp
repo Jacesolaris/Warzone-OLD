@@ -2236,7 +2236,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 	return (const void *)(cmd + 1);
 }
 
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 extern void RB_RenderWorldEffects(void);
 
 const void	*RB_WorldEffects( const void *data )
@@ -2260,7 +2260,7 @@ const void	*RB_WorldEffects( const void *data )
 
 	return (const void *)(cmd + 1);
 }
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 
 /*
 =============
@@ -2893,11 +2893,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_CAPSHADOWMAP:
 			data = RB_CapShadowMap(data);
 			break;
-#ifdef __SURFACESPRITES__
+#ifdef __JKA_WEATHER__
 		case RC_WORLD_EFFECTS:
 			data = RB_WorldEffects(data);
 			break;
-#endif //__SURFACESPRITES__
+#endif //__JKA_WEATHER__
 		case RC_POSTPROCESS:
 			data = RB_PostProcess(data);
 			break;

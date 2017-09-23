@@ -351,7 +351,7 @@ void FBO_Bind(FBO_t * fbo)
 	if (glState.currentFBO == fbo)
 		return;
 
-	if (fbo == NULL && !ALLOW_NULL_FBO_BIND)
+	if (fbo == NULL && !ALLOW_NULL_FBO_BIND && tr.world && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 		return;
 		
 #ifdef __DEBUG_FBO_BINDS__
@@ -387,7 +387,7 @@ void FBO_Bind(FBO_t * fbo)
 
 	if (!fbo)
 	{
-		if (ALLOW_NULL_FBO_BIND)
+		if (ALLOW_NULL_FBO_BIND || !tr.world || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 		{
 			qglBindFramebuffer(GL_FRAMEBUFFER, 0);
 			//qglBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -1082,8 +1082,7 @@ void FBO_BlitFromTexture(struct image_s *src, vec4i_t inSrcBox, vec2_t inSrcTexS
 
 	RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 
-	if (oldFbo || ALLOW_NULL_FBO_BIND) // UQ1: Testing...
-		FBO_Bind(oldFbo);
+	FBO_Bind(oldFbo);
 }
 
 void FBO_Blit(FBO_t *src, vec4i_t inSrcBox, vec2_t srcTexScale, FBO_t *dst, vec4i_t dstBox, struct shaderProgram_s *shaderProgram, vec4_t color, int blend)
@@ -1162,7 +1161,7 @@ void FBO_FastBlit(FBO_t *src, vec4i_t srcBox, FBO_t *dst, vec4i_t dstBox, int bu
 	                      dstBoxFinal[0], dstBoxFinal[1], dstBoxFinal[2], dstBoxFinal[3],
 						  buffers, filter);
 
-	if (ALLOW_NULL_FBO_BIND)
+	if (ALLOW_NULL_FBO_BIND || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 	{
 		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glState.currentFBO = NULL;
@@ -1189,7 +1188,7 @@ void FBO_FastBlitIndexed(FBO_t *src, FBO_t *dst, int srcReadBuffer, int dstDrawB
 	glState.currentFBO = dst;
 	FBO_SetupDrawBuffers();
 
-	if (ALLOW_NULL_FBO_BIND)
+	if (ALLOW_NULL_FBO_BIND || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 	{
 		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glState.currentFBO = NULL;

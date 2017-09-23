@@ -181,6 +181,47 @@ void RB_AddQuadStamp( vec3_t origin, vec3_t left, vec3_t up, float color[4] ) {
 	RB_AddQuadStampExt( origin, left, up, color, 0, 0, 1, 1 );
 }
 
+void RB_InstantTri2(vec4_t triVerts[3], vec2_t texCoords[3])
+{
+	//	GLimp_LogComment("--- RB_InstantTri2 ---\n");					// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
+
+	tess.numVertexes = 0;
+	tess.numIndexes = 0;
+	tess.firstIndex = 0;
+
+	VectorCopy4(triVerts[0], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[0], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[0] = R_TessXYZtoPackedNormals(triVerts[0]);
+	tess.numVertexes++;
+
+	VectorCopy4(triVerts[1], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[1], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[1] = R_TessXYZtoPackedNormals(triVerts[1]);
+	tess.numVertexes++;
+
+	VectorCopy4(triVerts[2], tess.xyz[tess.numVertexes]);
+	VectorCopy2(texCoords[2], tess.texCoords[tess.numVertexes][0]);
+	tess.normal[2] = R_TessXYZtoPackedNormals(triVerts[2]);
+	tess.numVertexes++;
+
+	tess.indexes[tess.numIndexes++] = 0;
+	tess.indexes[tess.numIndexes++] = 1;
+	tess.indexes[tess.numIndexes++] = 2;
+	tess.minIndex = 0;
+	tess.maxIndex = 3;
+
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
+
+	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+
+	R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
+
+	tess.numIndexes = 0;
+	tess.numVertexes = 0;
+	tess.firstIndex = 0;
+	tess.minIndex = 0;
+	tess.maxIndex = 0;
+}
 
 /*
 ==============
@@ -601,6 +642,7 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 	else
 	{
 		dv = verts;
+		normal = &tess.normal[tess.numVertexes];
 		for (i = 0; i < numVerts; i++, dv++)
 		{
 			*normal = R_TessXYZtoPackedNormals(dv->xyz);
