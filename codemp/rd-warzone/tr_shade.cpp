@@ -1881,7 +1881,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	int		deformGen;
 	vec5_t	deformParams;
 
-	if ((tess.shader->contentFlags & CONTENTS_INSIDE) && (tr.viewParms.flags & VPF_SHADOWPASS))
+	if ((tess.shader->isIndoor) && (tr.viewParms.flags & VPF_SHADOWPASS))
 	{// Don't draw stuff marked as inside to sun shadow map...
 		return;
 	}

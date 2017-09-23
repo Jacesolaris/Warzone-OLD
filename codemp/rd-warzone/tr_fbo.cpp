@@ -1161,11 +1161,7 @@ void FBO_FastBlit(FBO_t *src, vec4i_t srcBox, FBO_t *dst, vec4i_t dstBox, int bu
 	                      dstBoxFinal[0], dstBoxFinal[1], dstBoxFinal[2], dstBoxFinal[3],
 						  buffers, filter);
 
-	if (ALLOW_NULL_FBO_BIND || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
-	{
-		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glState.currentFBO = NULL;
-	}
+	FBO_Bind(NULL);
 }
 
 void FBO_FastBlitIndexed(FBO_t *src, FBO_t *dst, int srcReadBuffer, int dstDrawBuffer, int buffers, int filter)
@@ -1188,9 +1184,5 @@ void FBO_FastBlitIndexed(FBO_t *src, FBO_t *dst, int srcReadBuffer, int dstDrawB
 	glState.currentFBO = dst;
 	FBO_SetupDrawBuffers();
 
-	if (ALLOW_NULL_FBO_BIND || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
-	{
-		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glState.currentFBO = NULL;
-	}
+	FBO_Bind(NULL);
 }

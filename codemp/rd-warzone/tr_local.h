@@ -1078,6 +1078,8 @@ typedef struct {
 	qboolean		glow;
 	bool			glowColorFound;
 	vec4_t			glowColor;
+
+	qboolean		indoor;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
 
@@ -1172,6 +1174,7 @@ typedef struct shader_s {
 
 	qboolean	isWater;
 	qboolean	hasAlpha;
+	qboolean	isIndoor;
 
 	qboolean	detailMapFromTC;		// 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
 	qboolean	detailMapFromWorld;		// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)

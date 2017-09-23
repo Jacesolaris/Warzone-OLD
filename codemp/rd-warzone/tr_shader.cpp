@@ -4048,6 +4048,13 @@ static qboolean ParseShader( const char *name, const char **text )
 
 			continue;
 		}
+		// If this shader is indoors
+		else if (Q_stricmp(token, "indoor") == 0 || Q_stricmp(token, "duncan") == 0)
+		{
+			shader.isIndoor = qtrue;
+			SkipRestOfLine(text);
+			continue;
+		}
 		// skip stuff that only the QuakeEdRadient needs
 		else if ( !Q_stricmpn( token, "qer", 3 ) ) {
 			SkipRestOfLine( text );

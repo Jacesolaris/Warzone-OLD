@@ -407,6 +407,8 @@ private:
 		////////////////////////////////////////////////////////////////////////////////////
 		inline	bool	CellOutside(int x, int y, int z, int bit)
 		{
+			if (r_weather->integer >= 2) return true;
+
 			if ((x < 0 || x >= mWidth) || (y < 0 || y >= mHeight) || (z < 0 || z >= mDepth) || (bit < 0 || bit >= 32))
 			{
 				return !(mMarkedOutside);
@@ -441,6 +443,8 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////
 	inline	bool	ContentsOutside(int contents)
 	{
+		if (r_weather->integer >= 2) return true;
+
 		if (contents&CONTENTS_WATER || contents&CONTENTS_SOLID)
 		{
 			return false;
@@ -582,6 +586,9 @@ public:
 							CurPos	  += Mins;
 
 							contents = ri->CM_PointContents(CurPos.v, 0);
+
+							if (r_weather->integer >= 2) contents |= CONTENTS_OUTSIDE;
+
 							if (contents&CONTENTS_INSIDE || contents&CONTENTS_OUTSIDE)
 							{
 								curPosOutside = ((contents&CONTENTS_OUTSIDE)!=0);
@@ -626,6 +633,8 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////
 	inline	bool	PointOutside(const CVec3& pos)
 	{
+		if (r_weather->integer >= 2) return true;
+
 		if (!mCacheInit)
 		{
 			return ContentsOutside(ri->CM_PointContents(pos.v, 0));
@@ -650,6 +659,8 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////
 	inline	bool	PointOutside(const CVec3& pos, float width, float height)
 	{
+		if (r_weather->integer >= 2) return true;
+
 		for (int zone=0; zone<mWeatherZones.size(); zone++)
 		{
 			SWeatherZone	wz = mWeatherZones[zone];
@@ -1192,6 +1203,19 @@ public:
 		mPopulated = true;
 	}
 
+	void R_WorldToLocal4(const vec4_t world, vec4_t local) {
+		local[0] = DotProduct(world, tr.ori.axis[0]);
+		local[1] = DotProduct(world, tr.ori.axis[1]);
+		local[2] = DotProduct(world, tr.ori.axis[2]);
+		local[3] = world[3];
+	}
+
+	void R_LocalPointToWorld4(const vec4_t local, vec4_t world) {
+		world[0] = local[0] * tr.ori.axis[0][0] + local[1] * tr.ori.axis[1][0] + local[2] * tr.ori.axis[2][0] + tr.ori.origin[0];
+		world[1] = local[0] * tr.ori.axis[0][1] + local[1] * tr.ori.axis[1][1] + local[2] * tr.ori.axis[2][1] + tr.ori.origin[1];
+		world[2] = local[0] * tr.ori.axis[0][2] + local[1] * tr.ori.axis[1][2] + local[2] * tr.ori.axis[2][2] + tr.ori.origin[2];
+		world[3] = local[3];
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Render -
@@ -1201,35 +1225,30 @@ public:
 		CWeatherParticle*	part=0;
 		int			particleNum;
 
+#if defined(rd_warzone_x86_EXPORTS)
 		// Set The GL State And Image Binding
 		//------------------------------------
-		GL_State((mBlendMode==0)?(GLS_ALPHA):(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
+		GL_State((mBlendMode == 0) ? (GLS_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
 		GL_Bind(mImage);
 
 
 		// Enable And Disable Things
 		//---------------------------
-		qglEnable(GL_TEXTURE_2D);
-		//qglDisable(GL_CULL_FACE);
+		//qglEnable(GL_TEXTURE_2D);
+
 		//naughty, you are making the assumption that culling is on when you get here. -rww
 		GL_Cull(CT_TWO_SIDED);
 
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode==0)?(GL_LINEAR):(GL_NEAREST));
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode==0)?(GL_LINEAR):(GL_NEAREST));
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 
-
-		// Setup Matrix Mode And Translation
-		//-----------------------------------
-		qglMatrixMode(GL_MODELVIEW);
-		qglPushMatrix();
-
-#if defined(rd_warzone_x86_EXPORTS)
 		// Begin
 		//-------
-		qglBegin(mGLModeEnum);
+		//qglBegin(mGLModeEnum);
 		for (particleNum = 0; particleNum < mParticleCount; particleNum++)
 		{
 			part = &(mParticles[particleNum]);
+
 			if (!part->mFlags.get_bit(CWeatherParticle::FLAG_RENDER))
 			{
 				continue;
@@ -1251,10 +1270,15 @@ public:
 				VectorSet4(particleColor, mColor[0] * part->mAlpha, mColor[1] * part->mAlpha, mColor[2] * part->mAlpha, mColor[3] * part->mAlpha);
 			}
 
-			// Render A Triangle
-			//-------------------
+			//qglPushMatrix();
+			//qglLoadIdentity();
+
 			if (mVertexCount == 3)
 			{
+				//-------------------
+				// Render A Triangle
+				//-------------------
+
 				vec2_t texCoords[3];
 
 				VectorSet2(texCoords[0], 1.0f, 0.0f);
@@ -1273,11 +1297,12 @@ public:
 
 				RB_InstantTri2(triVerts, texCoords);
 			}
-
-			// Render A Quad
-			//---------------
 			else
 			{
+				//-------------------
+				// Render A Quad
+				//-------------------
+
 				vec2_t texCoords[4];
 
 				VectorSet2(texCoords[0], 0.0f, 0.0f);
@@ -1298,8 +1323,31 @@ public:
 
 				RB_InstantQuad2(quadVerts, texCoords);
 			}
+
+			//qglPopMatrix();
 		}
 #else //!defined(rd_warzone_x86_EXPORTS)
+		// Set The GL State And Image Binding
+		//------------------------------------
+		GL_State((mBlendMode == 0) ? (GLS_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
+		GL_Bind(mImage);
+
+
+		// Enable And Disable Things
+		//---------------------------
+		qglEnable(GL_TEXTURE_2D);
+
+		//naughty, you are making the assumption that culling is on when you get here. -rww
+		GL_Cull(CT_TWO_SIDED);
+
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
+
+		// Setup Matrix Mode And Translation
+		//-----------------------------------
+		qglMatrixMode(GL_MODELVIEW);
+		qglPushMatrix();
+
 		// Begin
 		//-------
 		qglBegin(mGLModeEnum);
@@ -1376,11 +1424,11 @@ public:
 		}
 
 		qglEnd();
-#endif //defined(rd_warzone_x86_EXPORTS)
 
 		//qglEnable(GL_CULL_FACE);
 		//you don't need to do this when you are properly setting cull state.
 		qglPopMatrix();
+#endif //defined(rd_warzone_x86_EXPORTS)
 
 		mParticlesRendered += mParticleCountRender;
 	}
@@ -1413,27 +1461,73 @@ void R_ShutdownWorldEffects(void)
 	R_InitWorldEffects();
 }
 
+extern vec3_t  MAP_INFO_MINS;
+extern vec3_t  MAP_INFO_MAXS;
+
+qboolean WEATHER_KLUDGE_DONE = qfalse;
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // RB_RenderWorldEffects - If any particle clouds exist, this will update and render them
 ////////////////////////////////////////////////////////////////////////////////////////
 void RB_RenderWorldEffects(void)
 {
+	if (r_weather->integer >= 2 && !WEATHER_KLUDGE_DONE)
+	{
+		mOutside.AddWeatherZone(MAP_INFO_MINS, MAP_INFO_MAXS);
+		WEATHER_KLUDGE_DONE = qtrue;
+	}
+
 	if (!tr.world ||
 		(tr.refdef.rdflags & RDF_NOWORLDMODEL) ||
 		(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL) ||
 		!mParticleClouds.size())
 	{	//  no world rendering or no world or no particle clouds
-		if (!mParticleClouds.size())
+		/*if (!mParticleClouds.size())
 		{
 			ri->Printf(PRINT_ALL, "Weather: mParticleClouds.size() is zero.\n", mParticlesRendered);
 		}
+		if (!tr.world || (tr.refdef.rdflags & RDF_NOWORLDMODEL))
+		{
+			ri->Printf(PRINT_ALL, "Weather: No world.\n", mParticlesRendered);
+		}*/
 		return;
 	}
 
+#if defined(rd_warzone_x86_EXPORTS)
+	if (r_testvalue0->integer <= 0)
+	{
+		SetViewportAndScissor();
+	}
+	else if (r_testvalue0->integer <= 1)
+	{
+		int width, height;
+
+		width = glConfig.vidWidth * r_superSampleMultiplier->value;
+		height = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		// set 2D virtual screen size
+		qglViewport(0, 0, width, height);
+		qglScissor(0, 0, width, height);
+	}
+	else
+	{
+		int width, height;
+
+		width = r_testvalue1->integer;
+		height = r_testvalue2->integer;
+
+		// set 2D virtual screen size
+		qglViewport(0, 0, width, height);
+		qglScissor(0, 0, width, height);
+	}
+
+	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
+#else //!defined(rd_warzone_x86_EXPORTS)
 	SetViewportAndScissor();
 	qglMatrixMode(GL_MODELVIEW);
 	qglLoadMatrixf(backEnd.viewParms.world.modelMatrix);
-
+#endif //defined(rd_warzone_x86_EXPORTS)
 
 	// Calculate Elapsed Time For Scale Purposes
 	//-------------------------------------------
@@ -1482,6 +1576,7 @@ void RB_RenderWorldEffects(void)
 			mParticleClouds[i].Update();
 			mParticleClouds[i].Render();
 		}
+		
 		if (false)
 		{
 			ri->Printf( PRINT_ALL, "Weather: %d Particles Rendered\n", mParticlesRendered);
