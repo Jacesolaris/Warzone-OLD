@@ -1306,9 +1306,6 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-
-	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GL_BindToTMU(tr.volumetricPreviousFBOImage, TB_SPECULARMAP);
 	
 	float glowDimensionsX, glowDimensionsY;
 

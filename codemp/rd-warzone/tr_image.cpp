@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include "glext.h"
 
+qboolean SKIP_IMAGE_RESIZE = qfalse;
+
 // Calculates log2 of number.  
 double log2d( double n )  
 {
@@ -2258,7 +2260,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 	int vramScaleMax = 8192; // Real video cards... :)
 	int vramScaleDiv = 1;
 
-	if (r_lowVram->integer >= 2)
+	if (!SKIP_IMAGE_RESIZE && r_lowVram->integer >= 2)
 	{
 		vramScaleMax = 512; // 1GB video cards...
 		vramScaleDiv = 4;
@@ -2266,7 +2268,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 		if (scaled_width / vramScaleDiv > 512)
 			vramScaleDiv = 8;
 	}
-	else if (r_lowVram->integer >= 1)
+	else if (!SKIP_IMAGE_RESIZE && r_lowVram->integer >= 1)
 	{
 		vramScaleMax = 512; // 1GB video cards...
 		vramScaleDiv = 4;
@@ -2276,7 +2278,10 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 	}
 
 	// copy or resample data as appropriate for first MIP level
-	if (r_lowVram->integer && (scaled_width > vramScaleMax || scaled_height > vramScaleMax) && !(flags & IMGFLAG_NO_COMPRESSION) && !(flags & IMGFLAG_MUTABLE))
+	if (!SKIP_IMAGE_RESIZE 
+		&& r_lowVram->integer 
+		&& (scaled_width > vramScaleMax || scaled_height > vramScaleMax) 
+		&& !(flags & IMGFLAG_NO_COMPRESSION) && !(flags & IMGFLAG_MUTABLE))
 	{// UQ1: Scale down all high definition textures...
 		scaled_width = scaled_width / vramScaleDiv;
 		scaled_height = scaled_height / vramScaleDiv;
@@ -3813,6 +3818,9 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		flags &= ~IMGFLAG_NO_COMPRESSION;
 	}
 
+	SKIP_IMAGE_RESIZE = qfalse;
+	if (StringContainsWord(name, "menu/")) SKIP_IMAGE_RESIZE = qtrue;
+
 	if (type != IMGTYPE_SPLATCONTROLMAP)
 		image = R_CreateImage( name, pic, width, height, type, flags, 0 );
 	else
@@ -4219,7 +4227,6 @@ void R_CreateBuiltinImages( void ) {
 	tr.bloomRenderFBOImage[2]  = R_CreateImage("_bloom2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, (width/4.0) / vramScaleDiv, (height/4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.volumetricPreviousFBOImage = R_CreateImage("_volumetricPrevious", NULL, (width/4.0) / vramScaleDiv, (height/4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	//
 	// UQ1: End Added...

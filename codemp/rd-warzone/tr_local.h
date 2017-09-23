@@ -27,6 +27,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 // -----------------------------------------------------------------------------------------------------------------------------
+//                                                Warzone Debugging Defines
+// -----------------------------------------------------------------------------------------------------------------------------
+
+#define __DEBUG_BINDS__
+
+#ifdef __DEBUG_BINDS__
+//#define __DEBUG_FBO_BINDS__
+//#define __DEBUG_GLSL_BINDS__
+#endif //__DEBUG_BINDS__
+
+// -----------------------------------------------------------------------------------------------------------------------------
 //                                               Warzone Basic Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 //#define __USE_QGL_FINISH__					// For testing...
@@ -54,6 +65,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __SOFTWARE_OCCLUSION__
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
+
 
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
@@ -93,7 +105,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // -----------------------------------------------------------------------------------------------------------------------------
 
+#ifdef __DEBUG_BINDS__
+extern int SCENE_FRAME_NUMBER;
+#endif //__DEBUG_BINDS__
 
+#ifdef __DEBUG_FBO_BINDS__
+extern int FBO_BINDS_COUNT;
+#endif //__DEBUG_FBO_BINDS__
+
+#ifdef __DEBUG_GLSL_BINDS__
+extern int GLSL_BINDS_COUNT;
+#endif //__DEBUG_GLSL_BINDS__
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
@@ -116,6 +138,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "win32\win_local.h"
 #include "qcommon\sstring.h"
 #endif
+
+extern qboolean ALLOW_NULL_FBO_BIND;
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
 typedef unsigned int glIndex_t;
@@ -429,6 +453,7 @@ extern int		max_polyverts;
 // UQ1: Added...
 //
 extern cvar_t	*r_lowVram;
+extern cvar_t	*r_debugBinds;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_parallaxScale;
@@ -2681,7 +2706,6 @@ typedef struct trGlobals_s {
 	image_t        *anamorphicRenderFBOImage;
 	image_t        *bloomRenderFBOImage[3];
 	image_t        *volumetricFBOImage;
-	image_t        *volumetricPreviousFBOImage;
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
 	image_t        *genericFBO3Image;
@@ -2694,7 +2718,6 @@ typedef struct trGlobals_s {
 	FBO_t          *anamorphicRenderFBO;
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t		   *volumetricFbo;
-	FBO_t		   *volumetricPreviousFbo;
 	FBO_t		   *genericFbo;
 	FBO_t		   *genericFbo2;
 	FBO_t		   *genericFbo3;
@@ -3006,6 +3029,7 @@ extern cvar_t	*r_dynamicGlowSoft;
 // UQ1: Added...
 //
 extern cvar_t	*r_lowVram;
+extern cvar_t	*r_debugBinds;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_shadowMaxDepthError;
@@ -3474,7 +3498,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits);
 void GLSL_UpdateTexCoordVertexAttribPointers ( uint32_t attribBits );
 void GLSL_VertexAttribPointers(uint32_t attribBits);
 void GLSL_BindProgram(shaderProgram_t * program);
-void GLSL_BindNullProgram(void);
 
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);

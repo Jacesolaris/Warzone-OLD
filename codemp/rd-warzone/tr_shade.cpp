@@ -3604,11 +3604,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				FBO_Bind(tr.renderFbo);
 			}
 
-			//if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
-			//{// Change back to standard buffers...
-			//	GLSL_AttachTextures();
-			//}
-
 
 			passNum++;
 

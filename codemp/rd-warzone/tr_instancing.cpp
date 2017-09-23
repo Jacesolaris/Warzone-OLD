@@ -40,7 +40,7 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *
 		R_BindNullVBO();
 		R_BindNullIBO();
 		qglBindVertexArray(0);
-		GLSL_BindNullProgram();
+		GLSL_BindProgram(NULL);
 		return;
 	}
 
@@ -110,7 +110,7 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *
 	R_BindNullVBO();
 	R_BindNullIBO();
 	qglBindVertexArray(0);
-	GLSL_BindNullProgram();
+	GLSL_BindProgram(NULL);
 }
 
 #endif //__INSTANCED_MODELS__

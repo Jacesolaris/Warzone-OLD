@@ -287,6 +287,7 @@ cvar_t	*r_saveFontData;
 // UQ1: Added...
 //
 cvar_t	*r_lowVram;
+cvar_t	*r_debugBinds;
 cvar_t	*r_debugShaderStages;
 cvar_t	*r_debugImageCrcHashing;
 cvar_t	*r_parallaxScale;
@@ -541,12 +542,19 @@ static void InitOpenGL( void )
 
 		// set default state
 		GL_SetDefaultState();
+
+		qglUseProgram(0);
+		glState.currentProgram = NULL;
+
 		R_Splash();	//get something on screen asap
 	}
 	else
 	{
 		// set default state
 		GL_SetDefaultState();
+		
+		qglUseProgram(0);
+		glState.currentProgram = NULL;
 	}
 }
 
@@ -1205,7 +1213,7 @@ void GL_SetDefaultState( void )
 	glState.vertexAttribsState = 0;
 	glState.vertexAttribPointersSet = 0;
 	glState.currentProgram = 0;
-	qglUseProgram(0);
+	GLSL_BindProgram(NULL);
 
 	qglBindBuffer(GL_ARRAY_BUFFER, 0);
 	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -1539,6 +1547,7 @@ void R_Register( void )
 	//
 	r_lowVram = ri->Cvar_Get("r_lowVram", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
+	r_debugBinds = ri->Cvar_Get("r_debugBinds", "0", CVAR_ARCHIVE);
 	r_debugShaderStages = ri->Cvar_Get("r_debugShaderStages", "0", CVAR_ARCHIVE);
 	r_debugImageCrcHashing = ri->Cvar_Get("r_debugImageCrcHashing", "0", CVAR_ARCHIVE);
 

@@ -917,6 +917,37 @@ void RE_FindRoof(vec3_t from)
 	}
 }
 
+
+#ifdef __DEBUG_BINDS__
+int SCENE_FRAME_NUMBER = 0;
+
+#ifdef __DEBUG_FBO_BINDS__
+int FBO_BINDS_COUNT = 0;
+#endif //__DEBUG_FBO_BINDS__
+
+#ifdef __DEBUG_GLSL_BINDS__
+int GLSL_BINDS_COUNT = 0;
+#endif //__DEBUG_GLSL_BINDS__
+
+void RB_UpdateDebuggingInfo(void)
+{
+	SCENE_FRAME_NUMBER++;
+
+	if (SCENE_FRAME_NUMBER > 32768) SCENE_FRAME_NUMBER = 0; // For sanity, just loop back to zero...
+
+	if (r_debugBinds->integer)
+	{
+#ifdef __DEBUG_FBO_BINDS__
+		FBO_BINDS_COUNT = 0;
+#endif //__DEBUG_FBO_BINDS__
+
+#ifdef __DEBUG_GLSL_BINDS__
+		GLSL_BINDS_COUNT = 0;
+#endif //__DEBUG_GLSL_BINDS__
+	}
+}
+#endif //__DEBUG_BINDS__
+
 void RE_RenderScene(const refdef_t *fd) {
 	viewParms_t		parms;
 	int				startTime;
@@ -932,6 +963,12 @@ void RE_RenderScene(const refdef_t *fd) {
 	if (r_norefresh->integer) {
 		return;
 	}
+
+	ALLOW_NULL_FBO_BIND = qfalse;
+
+#ifdef __DEBUG_BINDS__
+	RB_UpdateDebuggingInfo();
+#endif //__DEBUG_BINDS__
 
 	startTime = ri->Milliseconds();
 
@@ -1046,7 +1083,6 @@ void RE_RenderScene(const refdef_t *fd) {
 		// Timed updates for distant shadows, or forced by view change...
 		if (nowTime >= NEXT_SHADOWMAP_UPDATE[0] || forceUpdate)
 		{
-			//R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
 			R_RenderSunShadowMaps(fd, 3, lightDir, lightHeight);
 			NEXT_SHADOWMAP_UPDATE[0] = nowTime + 5000;
 		}
@@ -1101,7 +1137,7 @@ void RE_RenderScene(const refdef_t *fd) {
 
 	if (!(fd->rdflags & RDF_NOWORLDMODEL)
 		&& r_depthPrepass->value
-		&& (r_sunlightMode->integer >= 2 /*|| r_sunlightSpecular->integer*/ || r_forceSun->integer || tr.sunShadows))
+		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}

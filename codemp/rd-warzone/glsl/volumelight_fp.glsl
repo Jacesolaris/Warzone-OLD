@@ -1,6 +1,5 @@
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_GlowMap;
-uniform sampler2D			u_SpecularMap;
 uniform sampler2D			u_ScreenDepthMap;
 
 uniform vec2				u_vlightPositions;

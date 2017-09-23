@@ -46,6 +46,8 @@ void RB_SwapFBOs ( FBO_t **currentFbo, FBO_t **currentOutFbo)
 	FBO_t *temp = *currentFbo;
 	*currentFbo = *currentOutFbo;
 	*currentOutFbo = temp;
+
+	FBO_Bind(*currentFbo);
 }
 
 /*
@@ -65,7 +67,8 @@ void GL_Bind( image_t *image ) {
 		texnum = tr.dlightImage->texnum;
 	}
 
-	if ( glState.currenttextures[glState.currenttmu] != texnum ) {
+	if ( glState.currenttextures[glState.currenttmu] != texnum ) 
+	{
 		if ( image ) {
 			image->frameUsed = tr.frameCount;
 		}
@@ -724,21 +727,29 @@ extern float MAP_WATER_LEVEL;
 
 void RB_ClearWaterPositionMap ( void )
 {
-	if (r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+	//if (tr.renderFbo && backEnd.viewParms.targetFbo == tr.renderFbo)
+	if (!backEnd.depthFill 
+		&& !(backEnd.viewParms.flags & VPF_SHADOWPASS) 
+		&& !(backEnd.viewParms.flags & VPF_SHADOWMAP)
+		&& !(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
 	{
-		FBO_Bind(tr.waterFbo);
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		qglClear( GL_COLOR_BUFFER_BIT );
-		FBO_Bind(NULL);
-		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		if (r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+		{
+			FBO_t *oldFbo = glState.currentFBO;
+			FBO_Bind(tr.waterFbo);
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			qglClear(GL_COLOR_BUFFER_BIT);
 
-		/*FBO_Bind(tr.waterFbo2);
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		qglClear( GL_COLOR_BUFFER_BIT );
-		FBO_Bind(NULL);
-		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);*/
+			/*FBO_Bind(tr.waterFbo2);
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			qglClear( GL_COLOR_BUFFER_BIT );
+			*/
+
+			FBO_Bind(oldFbo);
+			qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		}
 	}
 }
 
@@ -746,8 +757,6 @@ extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
-
-	RB_ClearWaterPositionMap();
 
 	// sync with gl if needed
 #ifdef __USE_QGL_FINISH__
@@ -804,6 +813,7 @@ void RB_BeginDrawingView (void) {
 
 	// ensures that depth writes are enabled for the depth clear
 	GL_State( GLS_DEFAULT );
+	
 	// clear relevant buffers
 	clearBits = GL_DEPTH_BUFFER_BIT;
 
@@ -827,8 +837,15 @@ void RB_BeginDrawingView (void) {
 #endif
 	}
 
+	RB_ClearWaterPositionMap();
+
 	// clear to white for shadow maps
-	if (backEnd.viewParms.flags & VPF_SHADOWMAP)
+	if (backEnd.viewParms.flags & VPF_SHADOWMAP 
+		&& ((tr.sunShadowFbo[0] && backEnd.viewParms.targetFbo == tr.sunShadowFbo[0])
+			|| (tr.sunShadowFbo[1] && backEnd.viewParms.targetFbo == tr.sunShadowFbo[1])
+			|| (tr.sunShadowFbo[2] && backEnd.viewParms.targetFbo == tr.sunShadowFbo[2])
+			|| (tr.sunShadowFbo[3] && backEnd.viewParms.targetFbo == tr.sunShadowFbo[3])
+			|| (tr.sunShadowFbo[4] && backEnd.viewParms.targetFbo == tr.sunShadowFbo[4])))
 	{
 		clearBits |= GL_COLOR_BUFFER_BIT;
 		qglClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -1777,7 +1794,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && (r_depthPrepass->integer || (backEnd.viewParms.flags & VPF_DEPTHSHADOW)))
 	{
-		FBO_t *oldFbo = glState.currentFBO;
+		//FBO_t *oldFbo = glState.currentFBO;
 
 		backEnd.depthFill = qtrue;
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -1803,8 +1820,17 @@ const void	*RB_DrawSurfs( const void *data ) {
 				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
 
-		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT && SHADOWS_ENABLED && RB_NightScale() < 1.0 && r_deferredLighting->integer)
+		if (r_sunlightMode->integer >= 2 
+			&& tr.screenShadowFbo 
+			&& (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+			&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)
+			&& !(backEnd.viewParms.flags & VPF_SHADOWPASS)
+			&& SHADOWS_ENABLED 
+			&& RB_NightScale() < 1.0 
+			&& r_deferredLighting->integer)
 		{
+			FBO_t *oldFbo = glState.currentFBO;
+
 			vec4_t quadVerts[4];
 			vec2_t texCoords[4];
 			vec4_t box;
@@ -1900,11 +1926,11 @@ const void	*RB_DrawSurfs( const void *data ) {
 			{// When not at night, don't bother to blur shadows...
 				RB_FastBlur(tr.screenShadowFbo, NULL, tr.screenShadowBlurFbo, NULL);
 			}
-		}
 
-		// reset viewport and scissor
-		FBO_Bind(oldFbo);
-		SetViewportAndScissor();
+			// reset viewport and scissor
+			FBO_Bind(oldFbo);
+			SetViewportAndScissor();
+		}
 	}
 
 	if (backEnd.viewParms.flags & VPF_DEPTHCLAMP)
@@ -1912,7 +1938,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglDisable(GL_DEPTH_CLAMP);
 	}
 
-	if (!(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
+	//if (!(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
+	if (!(backEnd.viewParms.flags & VPF_SHADOWPASS)
+		&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 
@@ -1955,11 +1983,13 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 	if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 	{
+		ALLOW_NULL_FBO_BIND = qtrue;
 		FBO_Bind(NULL);
 		GL_SelectTexture(TB_CUBEMAP);
 		GL_BindToTMU(tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex], TB_CUBEMAP);
 		qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 		GL_SelectTexture(0);
+		ALLOW_NULL_FBO_BIND = qfalse;
 	}
 
 	return (const void *)(cmd + 1);
@@ -2277,6 +2307,7 @@ RB_PostProcess
 
 =============
 */
+qboolean ALLOW_NULL_FBO_BIND = qfalse;
 
 extern qboolean FOG_POST_ENABLED;
 extern qboolean WATER_FOG_ENABLED;
@@ -2295,6 +2326,15 @@ const void *RB_PostProcess(const void *data)
 	tess.numVertexes = tess.numVertexes = 0;
 
 	if (!r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
+	{
+		// do nothing
+		return (const void *)(cmd + 1);
+	}
+
+	if ((backEnd.viewParms.flags & VPF_SHADOWPASS)
+		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
+		|| backEnd.depthFill
+		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
 	{
 		// do nothing
 		return (const void *)(cmd + 1);
@@ -2329,7 +2369,7 @@ const void *RB_PostProcess(const void *data)
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
 	if (!(backEnd.refdef.rdflags & RDF_BLUR)
-		&& !(tr.viewParms.flags & VPF_SHADOWPASS)
+		&& !(backEnd.viewParms.flags & VPF_SHADOWPASS)
 		&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		&& !backEnd.depthFill
 		&& (r_dynamicGlow->integer || r_anamorphic->integer || r_bloom->integer))
@@ -2350,6 +2390,8 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
+		//ALLOW_NULL_FBO_BIND = qfalse;
+
 		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		FBO_t *currentFbo = tr.genericFbo3;
@@ -2625,8 +2667,11 @@ const void *RB_PostProcess(const void *data)
 		}
 #endif
 
+		ALLOW_NULL_FBO_BIND = qtrue;
+
 #if 1
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		//FBO_Bind(srcFbo);
 
 		//
 		// End UQ1 Added...
@@ -2654,7 +2699,10 @@ const void *RB_PostProcess(const void *data)
 		}
 #else
 		// This is faster but blocks postprocess on screenshots... *sigh*
+		//FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		//FBO_FastBlit(srcFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		FBO_FastBlit(currentFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		//FBO_Bind(srcFbo);
 #endif
 	}
 

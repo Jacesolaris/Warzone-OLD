@@ -350,7 +350,32 @@ void FBO_Bind(FBO_t * fbo)
 {
 	if (glState.currentFBO == fbo)
 		return;
+
+	if (fbo == NULL && !ALLOW_NULL_FBO_BIND)
+		return;
 		
+#ifdef __DEBUG_FBO_BINDS__
+	if (r_debugBinds->integer)
+	{
+		FBO_BINDS_COUNT++;
+
+		char from[256] = { 0 };
+		char to[256] = { 0 };
+
+		if (glState.currentFBO)
+			strcpy(from, glState.currentFBO->name);
+		else
+			strcpy(from, "NULL");
+
+		if (fbo)
+			strcpy(to, fbo->name);
+		else
+			strcpy(to, "NULL");
+
+		ri->Printf(PRINT_WARNING, "Frame: [%i] FBO_Bind: [%i] [%s] -> [%s].\n", SCENE_FRAME_NUMBER, FBO_BINDS_COUNT, from, to);
+	}
+#endif //__DEBUG_FBO_BINDS__
+
 	if (r_logFile->integer)
 	{
 		// don't just call LogComment, or we will get a call to va() every frame!
@@ -362,9 +387,12 @@ void FBO_Bind(FBO_t * fbo)
 
 	if (!fbo)
 	{
-		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//qglBindRenderbuffer(GL_RENDERBUFFER, 0);
-		glState.currentFBO = NULL;
+		if (ALLOW_NULL_FBO_BIND)
+		{
+			qglBindFramebuffer(GL_FRAMEBUFFER, 0);
+			//qglBindRenderbuffer(GL_RENDERBUFFER, 0);
+			glState.currentFBO = NULL;
+		}
 		
 		return;
 	}
@@ -455,10 +483,10 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.waterPositionMapImage, 0);
 		R_CheckFBO(tr.waterFbo);
 
-		tr.waterFbo2 = FBO_Create("_waterPosition2", tr.waterPositionMapImage2->width, tr.waterPositionMapImage2->height);
+		/*tr.waterFbo2 = FBO_Create("_waterPosition2", tr.waterPositionMapImage2->width, tr.waterPositionMapImage2->height);
 		FBO_Bind(tr.waterFbo2);
 		FBO_AttachTextureImage(tr.waterPositionMapImage2, 0);
-		R_CheckFBO(tr.waterFbo2);
+		R_CheckFBO(tr.waterFbo2);*/
 	}
 
 	//
@@ -562,11 +590,6 @@ void FBO_Init(void)
 		FBO_Bind(tr.volumetricFbo);
 		FBO_AttachTextureImage(tr.volumetricFBOImage, 0);
 		R_CheckFBO(tr.volumetricFbo);
-
-		tr.volumetricPreviousFbo = FBO_Create("_volumetricPrevious", tr.volumetricPreviousFBOImage->width, tr.volumetricPreviousFBOImage->height);
-		FBO_Bind(tr.volumetricPreviousFbo);
-		FBO_AttachTextureImage(tr.volumetricPreviousFBOImage, 0);
-		R_CheckFBO(tr.volumetricPreviousFbo);
 	}
 	
 #if 0
@@ -622,7 +645,7 @@ void FBO_Init(void)
 		FBO_Bind(tr.renderFbo);
 		qglClearColor( 1, 0, 0.5, 1 );
 		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		FBO_Bind(NULL);
+		//FBO_Bind(NULL);
 	}
 
 	if (tr.waterFbo)
@@ -630,7 +653,7 @@ void FBO_Init(void)
 		FBO_Bind(tr.waterFbo);
 		qglClearColor( 0, 0, 0, 0 );
 		qglClear( GL_COLOR_BUFFER_BIT );
-		FBO_Bind(NULL);
+		//FBO_Bind(NULL);
 	}
 
 	if (tr.waterFbo2)
@@ -638,8 +661,10 @@ void FBO_Init(void)
 		FBO_Bind(tr.waterFbo2);
 		qglClearColor( 0, 0, 0, 0 );
 		qglClear( GL_COLOR_BUFFER_BIT );
-		FBO_Bind(NULL);
+		//FBO_Bind(NULL);
 	}
+
+	//FBO_Bind(NULL);
 
 	// glow buffers
 	{
@@ -697,7 +722,7 @@ void FBO_Init(void)
 	{
 		for ( i = 0; i < 5; i++)
 		{
-			tr.sunShadowFbo[i] = FBO_Create("_sunshadowmap", tr.sunShadowDepthImage[i]->width, tr.sunShadowDepthImage[i]->height);
+			tr.sunShadowFbo[i] = FBO_Create(va("_sunshadowmap%i", i), tr.sunShadowDepthImage[i]->width, tr.sunShadowDepthImage[i]->height);
 			FBO_Bind(tr.sunShadowFbo[i]);
 
 			qglDrawBuffer(GL_NONE);
@@ -816,7 +841,7 @@ void FBO_Init(void)
 		FBO_Bind(tr.renderGlowFbo);
 		qglClearColor(1, 0, 0.5, 1);
 		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		FBO_Bind(NULL);
+		//FBO_Bind(NULL);
 
 
 		tr.renderDetailFbo = FBO_Create("_renderDetail", tr.renderDepthImage->width, tr.renderDepthImage->height);
@@ -831,7 +856,7 @@ void FBO_Init(void)
 		FBO_Bind(tr.renderDetailFbo);
 		qglClearColor(1, 0, 0.5, 1);
 		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		FBO_Bind(NULL);
+		//FBO_Bind(NULL);
 
 
 		tr.renderWaterFbo = FBO_Create("_renderWater", tr.renderDepthImage->width, tr.renderDepthImage->height);
@@ -847,7 +872,7 @@ void FBO_Init(void)
 		FBO_Bind(tr.renderWaterFbo);
 		qglClearColor(1, 1, 1, 1);
 		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		FBO_Bind(NULL);
+		//FBO_Bind(NULL);
 	}
 
 
@@ -1057,7 +1082,8 @@ void FBO_BlitFromTexture(struct image_s *src, vec4i_t inSrcBox, vec2_t inSrcTexS
 
 	RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 
-	FBO_Bind(oldFbo);
+	if (oldFbo || ALLOW_NULL_FBO_BIND) // UQ1: Testing...
+		FBO_Bind(oldFbo);
 }
 
 void FBO_Blit(FBO_t *src, vec4i_t inSrcBox, vec2_t srcTexScale, FBO_t *dst, vec4i_t dstBox, struct shaderProgram_s *shaderProgram, vec4_t color, int blend)
@@ -1136,8 +1162,11 @@ void FBO_FastBlit(FBO_t *src, vec4i_t srcBox, FBO_t *dst, vec4i_t dstBox, int bu
 	                      dstBoxFinal[0], dstBoxFinal[1], dstBoxFinal[2], dstBoxFinal[3],
 						  buffers, filter);
 
-	qglBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glState.currentFBO = NULL;
+	if (ALLOW_NULL_FBO_BIND)
+	{
+		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glState.currentFBO = NULL;
+	}
 }
 
 void FBO_FastBlitIndexed(FBO_t *src, FBO_t *dst, int srcReadBuffer, int dstDrawBuffer, int buffers, int filter)
@@ -1160,6 +1189,9 @@ void FBO_FastBlitIndexed(FBO_t *src, FBO_t *dst, int srcReadBuffer, int dstDrawB
 	glState.currentFBO = dst;
 	FBO_SetupDrawBuffers();
 
-	qglBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glState.currentFBO = NULL;
+	if (ALLOW_NULL_FBO_BIND)
+	{
+		qglBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glState.currentFBO = NULL;
+	}
 }

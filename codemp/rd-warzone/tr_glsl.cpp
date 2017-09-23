@@ -22,8 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_glsl.c
 #include "tr_local.h"
 
-void GLSL_BindNullProgram(void);
-
 extern const char *fallbackShader_bokeh_vp;
 extern const char *fallbackShader_bokeh_fp;
 extern const char *fallbackShader_calclevels4x_vp;
@@ -1887,29 +1885,29 @@ static void GLSL_ValidateProgram(GLuint program)
 	}
 }
 
-static void GLSL_ShowProgramUniforms(GLuint program)
+static void GLSL_ShowProgramUniforms(shaderProgram_t *program)
 {
 	int             i, count, size;
 	GLenum			type;
 	char            uniformName[1000];
 
 	// install the executables in the program object as part of current state.
-	qglUseProgram(program);
+	GLSL_BindProgram(program);
 
 	// check for GL Errors
 
 	// query the number of active uniforms
-	qglGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
+	qglGetProgramiv(program->program, GL_ACTIVE_UNIFORMS, &count);
 
 	// Loop over each of the active uniforms, and set their value
 	for (i = 0; i < count; i++)
 	{
-		qglGetActiveUniform(program, i, sizeof(uniformName), NULL, &size, &type, uniformName);
+		qglGetActiveUniform(program->program, i, sizeof(uniformName), NULL, &size, &type, uniformName);
 
 		ri->Printf(PRINT_DEVELOPER, "active uniform: '%s'\n", uniformName);
 	}
 
-	qglUseProgram(0);
+	GLSL_BindProgram(NULL);
 }
 
 static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name, int attribs, const char *vpCode, const char *fpCode, const char *cpCode, const char *epCode, const char *gsCode)
@@ -2395,7 +2393,7 @@ void GLSL_InitUniforms(shaderProgram_t *program)
 void GLSL_FinishGPUShader(shaderProgram_t *program)
 {
 	GLSL_ValidateProgram(program->program);
-	GLSL_ShowProgramUniforms(program->program);
+	GLSL_ShowProgramUniforms(program);
 	GL_CheckErrors();
 }
 
@@ -3088,9 +3086,8 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	GLSL_InitUniforms(&tr.testcubeShader);
 
-	qglUseProgram(tr.testcubeShader.program);
+	GLSL_BindProgram(&tr.testcubeShader);
 	GLSL_SetUniformInt(&tr.testcubeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	qglUseProgram(0);
 
 	GLSL_FinishGPUShader(&tr.testcubeShader);
 
@@ -3600,9 +3597,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.textureColorShader);
 
-	qglUseProgram(tr.textureColorShader.program);
+	GLSL_BindProgram(&tr.textureColorShader);
 	GLSL_SetUniformInt(&tr.textureColorShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 	GLSL_FinishGPUShader(&tr.textureColorShader);
 
@@ -3617,9 +3613,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.instanceShader);
 
-	qglUseProgram(tr.instanceShader.program);
+	GLSL_BindProgram(&tr.instanceShader);
 	GLSL_SetUniformInt(&tr.instanceShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 	GLSL_FinishGPUShader(&tr.instanceShader);
 
@@ -3634,9 +3629,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.occlusionShader);
 
-	qglUseProgram(tr.occlusionShader.program);
+	GLSL_BindProgram(&tr.occlusionShader);
 	GLSL_SetUniformInt(&tr.occlusionShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 	GLSL_FinishGPUShader(&tr.occlusionShader);
 
@@ -3650,7 +3644,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.lightAllShader);
-	qglUseProgram(tr.lightAllShader.program);
+	GLSL_BindProgram(&tr.lightAllShader);
 
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
@@ -3676,7 +3670,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	//		GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.lightAllShader);
@@ -3692,9 +3685,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.shadowPassShader);
 
-	qglUseProgram(tr.shadowPassShader.program);
+	GLSL_BindProgram(&tr.shadowPassShader);
 	GLSL_SetUniformInt(&tr.shadowPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.shadowPassShader);
@@ -3711,9 +3703,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.sunPassShader);
 
-	qglUseProgram(tr.sunPassShader.program);
+	GLSL_BindProgram(&tr.sunPassShader);
 	GLSL_SetUniformInt(&tr.sunPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.sunPassShader);
@@ -3730,10 +3721,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.moonPassShader);
 
-	qglUseProgram(tr.moonPassShader.program);
+	GLSL_BindProgram(&tr.moonPassShader);
 	GLSL_SetUniformInt(&tr.moonPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.moonPassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.moonPassShader);
@@ -3750,10 +3740,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.planetPassShader);
 
-	qglUseProgram(tr.planetPassShader.program);
+	GLSL_BindProgram(&tr.planetPassShader);
 	GLSL_SetUniformInt(&tr.planetPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.planetPassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.planetPassShader);
@@ -3770,10 +3759,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.furShader);
 
-	qglUseProgram(tr.furShader.program);
+	GLSL_BindProgram(&tr.furShader);
 	GLSL_SetUniformInt(&tr.furShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.furShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.furShader);
@@ -3790,13 +3778,12 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.foliageShader);
 
-	qglUseProgram(tr.foliageShader.program);
+	GLSL_BindProgram(&tr.foliageShader);
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.foliageShader);
@@ -3815,7 +3802,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.grass2Shader);
 
-		qglUseProgram(tr.grass2Shader.program);
+		GLSL_BindProgram(&tr.grass2Shader);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
@@ -3832,7 +3819,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-		qglUseProgram(0);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.grass2Shader);
@@ -3850,7 +3836,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.pebblesShader);
 
-		qglUseProgram(tr.pebblesShader.program);
+		GLSL_BindProgram(&tr.pebblesShader);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
@@ -3867,7 +3853,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-		qglUseProgram(0);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.pebblesShader);
@@ -3883,11 +3868,15 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.shadowmapShader);
+	GLSL_BindProgram(&tr.shadowmapShader);
+
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.shadowmapShader);
 #endif
 
 	numEtcShaders++;
+
+
 
 	if (!GLSL_EndLoadGPUShader(&tr.pshadowShader))
 	{
@@ -3896,15 +3885,16 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.pshadowShader);
 
-	qglUseProgram(tr.pshadowShader.program);
+	GLSL_BindProgram(&tr.pshadowShader);
 	GLSL_SetUniformInt(&tr.pshadowShader, UNIFORM_SHADOWMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.pshadowShader);
 #endif
 
 	numEtcShaders++;
+
+
 
 	if (!GLSL_EndLoadGPUShader(&tr.down4xShader))
 	{
@@ -3913,9 +3903,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.down4xShader);
 
-	qglUseProgram(tr.down4xShader.program);
+	GLSL_BindProgram(&tr.down4xShader);
 	GLSL_SetUniformInt(&tr.down4xShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.down4xShader);
@@ -3930,9 +3919,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.bokehShader);
 
-	qglUseProgram(tr.bokehShader.program);
+	GLSL_BindProgram(&tr.bokehShader);
 	GLSL_SetUniformInt(&tr.bokehShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.bokehShader);
@@ -3947,10 +3935,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.tonemapShader);
 
-	qglUseProgram(tr.tonemapShader.program);
+	GLSL_BindProgram(&tr.tonemapShader);
 	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.tonemapShader);
@@ -3967,9 +3954,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.calclevels4xShader[i]);
 
-		qglUseProgram(tr.calclevels4xShader[i].program);
+		GLSL_BindProgram(&tr.calclevels4xShader[i]);
 		GLSL_SetUniformInt(&tr.calclevels4xShader[i], UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
-		qglUseProgram(0);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.calclevels4xShader[i]);
@@ -3985,7 +3971,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.shadowmaskShader);
 
-	qglUseProgram(tr.shadowmaskShader.program);
+	GLSL_BindProgram(&tr.shadowmaskShader);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP2, TB_SHADOWMAP2);
@@ -3993,7 +3979,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP4, TB_SHADOWMAP4);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.shadowmaskShader);
@@ -4008,9 +3993,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.ssaoShader);
 
-	qglUseProgram(tr.ssaoShader.program);
+	GLSL_BindProgram(&tr.ssaoShader);
 	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssaoShader);
@@ -4027,9 +4011,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.ssdoShader);
 
-	qglUseProgram(tr.ssdoShader.program);
+	GLSL_BindProgram(&tr.ssdoShader);
 	GLSL_SetUniformInt(&tr.ssdoShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssdoShader);
@@ -4046,9 +4029,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.ssdoBlurShader);
 
-	qglUseProgram(tr.ssdoBlurShader.program);
+	GLSL_BindProgram(&tr.ssdoBlurShader);
 	GLSL_SetUniformInt(&tr.ssdoBlurShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssdoBlurShader);
@@ -4068,10 +4050,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.depthBlurShader[i]);
 
-		qglUseProgram(tr.depthBlurShader[i].program);
+		GLSL_BindProgram(&tr.depthBlurShader[i]);
 		GLSL_SetUniformInt(&tr.depthBlurShader[i], UNIFORM_SCREENIMAGEMAP, TB_COLORMAP);
 		GLSL_SetUniformInt(&tr.depthBlurShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		qglUseProgram(0);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.depthBlurShader[i]);
@@ -4133,9 +4114,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.testcubeShader);
 
-	qglUseProgram(tr.testcubeShader.program);
+	GLSL_BindProgram(&tr.testcubeShader);
 	GLSL_SetUniformInt(&tr.testcubeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	qglUseProgram(0);
 
 	GLSL_FinishGPUShader(&tr.testcubeShader);
 
@@ -4155,8 +4135,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.darkexpandShader);
 
-	qglUseProgram(tr.darkexpandShader.program);
-
+	GLSL_BindProgram(&tr.darkexpandShader);
 	GLSL_SetUniformInt(&tr.darkexpandShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.darkexpandShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
 
@@ -4182,7 +4161,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.darkexpandShader);
@@ -4198,9 +4176,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.multipostShader);
-	qglUseProgram(tr.multipostShader.program);
+	GLSL_BindProgram(&tr.multipostShader);
 	GLSL_SetUniformInt(&tr.multipostShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.multipostShader);
@@ -4216,7 +4193,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		}
 
 		GLSL_InitUniforms(&tr.volumeLightShader[i]);
-		qglUseProgram(tr.volumeLightShader[i].program);
+		GLSL_BindProgram(&tr.volumeLightShader[i]);
 		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
@@ -4255,7 +4232,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		vec2_t CLOSEST_VLIGHTS_POSITIONS[16] = { 0.0 };
 		GLSL_SetUniformVec2x16(&tr.volumeLightShader[i], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, 16);
 #endif
-		qglUseProgram(0);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.volumeLightShader[i]);
@@ -4273,7 +4249,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		}
 
 		GLSL_InitUniforms(&tr.volumeLightInvertedShader[i]);
-		qglUseProgram(tr.volumeLightInvertedShader[i].program);
+		GLSL_BindProgram(&tr.volumeLightInvertedShader[i]);
 		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
@@ -4312,7 +4288,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		vec2_t CLOSEST_VLIGHTS_POSITIONS[16] = { 0.0 };
 		GLSL_SetUniformVec2x16(&tr.volumeLightInvertedShader[i], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, 16);
 #endif
-		qglUseProgram(0);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.volumeLightInvertedShader[i]);
@@ -4329,10 +4304,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.volumeLightCombineShader);
-	qglUseProgram(tr.volumeLightCombineShader.program);
+	GLSL_BindProgram(&tr.volumeLightCombineShader);
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.volumeLightCombineShader);
@@ -4348,9 +4322,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.bloomBlurShader);
-	qglUseProgram(tr.bloomBlurShader.program);
+	GLSL_BindProgram(&tr.bloomBlurShader);
 	GLSL_SetUniformInt(&tr.bloomBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.bloomBlurShader);
@@ -4364,10 +4337,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.bloomCombineShader);
-	qglUseProgram(tr.bloomCombineShader.program);
+	GLSL_BindProgram(&tr.bloomCombineShader);
 	GLSL_SetUniformInt(&tr.bloomCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.bloomCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.bloomCombineShader);
@@ -4382,9 +4354,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.lensflareShader);
-	qglUseProgram(tr.lensflareShader.program);
+	GLSL_BindProgram(&tr.lensflareShader);
 	GLSL_SetUniformInt(&tr.lensflareShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.lensflareShader);
@@ -4400,9 +4371,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.anamorphicBlurShader);
-	qglUseProgram(tr.anamorphicBlurShader.program);
+	GLSL_BindProgram(&tr.anamorphicBlurShader);
 	GLSL_SetUniformInt(&tr.anamorphicBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.anamorphicBlurShader);
@@ -4416,10 +4386,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.anamorphicCombineShader);
-	qglUseProgram(tr.anamorphicCombineShader.program);
+	GLSL_BindProgram(&tr.anamorphicCombineShader);
 	GLSL_SetUniformInt(&tr.anamorphicCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.anamorphicCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.anamorphicCombineShader);
@@ -4438,7 +4407,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.cellShadeShader);
 
-	qglUseProgram(tr.cellShadeShader.program);
+	GLSL_BindProgram(&tr.cellShadeShader);
 
 	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.cellShadeShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -4466,8 +4435,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.cellShadeShader);
 #endif
@@ -4484,7 +4451,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.paintShader);
 
-	qglUseProgram(tr.paintShader.program);
+	GLSL_BindProgram(&tr.paintShader);
 
 	GLSL_SetUniformInt(&tr.paintShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 
@@ -4497,8 +4464,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.paintShader);
@@ -4516,7 +4481,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.magicdetailShader);
 
-	qglUseProgram(tr.magicdetailShader.program);
+	GLSL_BindProgram(&tr.magicdetailShader);
 
 	GLSL_SetUniformInt(&tr.magicdetailShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.magicdetailShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -4543,8 +4508,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.magicdetailShader);
 #endif
@@ -4560,7 +4523,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.waterPostShader);
 
-	qglUseProgram(tr.waterPostShader.program);
+	GLSL_BindProgram(&tr.waterPostShader);
 
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
@@ -4591,8 +4554,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.waterPostShader);
 #endif
@@ -4609,12 +4570,10 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.dofShader[num]);
 
-		qglUseProgram(tr.dofShader[num].program);
+		GLSL_BindProgram(&tr.dofShader[num]);
 
 		GLSL_SetUniformInt(&tr.dofShader[num], UNIFORM_TEXTUREMAP, TB_COLORMAP);
 		GLSL_SetUniformInt(&tr.dofShader[num], UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-
-		qglUseProgram(num);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.dofShader[num]);
@@ -4633,7 +4592,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.testshaderShader);
 
-	qglUseProgram(tr.testshaderShader.program);
+	GLSL_BindProgram(&tr.testshaderShader);
 
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
@@ -4672,8 +4631,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.testshaderShader);
 #endif
@@ -4689,12 +4646,10 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.showNormalsShader);
 
-	qglUseProgram(tr.showNormalsShader.program);
+	GLSL_BindProgram(&tr.showNormalsShader);
 
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.showNormalsShader);
@@ -4710,12 +4665,10 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.showDepthShader);
 
-	qglUseProgram(tr.showDepthShader.program);
+	GLSL_BindProgram(&tr.showDepthShader);
 
 	GLSL_SetUniformInt(&tr.showDepthShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.showDepthShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.showDepthShader);
@@ -4733,7 +4686,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.deferredLightingShader);
 
-	qglUseProgram(tr.deferredLightingShader.program);
+	GLSL_BindProgram(&tr.deferredLightingShader);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
@@ -4744,8 +4697,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.deferredLightingShader);
@@ -4762,14 +4713,12 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.ssdmShader);
 
-	qglUseProgram(tr.ssdmShader.program);
+	GLSL_BindProgram(&tr.ssdmShader);
 
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 
 	GLSL_SetUniformVec3(&tr.ssdmShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssdmShader);
@@ -4786,15 +4735,13 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.ssdmGenerateShader);
 
-	qglUseProgram(tr.ssdmGenerateShader.program);
+	GLSL_BindProgram(&tr.ssdmGenerateShader);
 
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 
 	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssdmGenerateShader);
@@ -4811,13 +4758,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.ssrShader);
 
-	qglUseProgram(tr.ssrShader.program);
+	GLSL_BindProgram(&tr.ssrShader);
 
 	GLSL_SetUniformInt(&tr.ssrShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssrShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	GLSL_SetUniformInt(&tr.ssrShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssrShader);
@@ -4831,10 +4776,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	}
 
 	GLSL_InitUniforms(&tr.ssrCombineShader);
-	qglUseProgram(tr.ssrCombineShader.program);
+	GLSL_BindProgram(&tr.ssrCombineShader);
 	GLSL_SetUniformInt(&tr.ssrCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssrCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssrCombineShader);
@@ -4852,13 +4796,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.colorCorrectionShader);
 
-	qglUseProgram(tr.colorCorrectionShader.program);
+	GLSL_BindProgram(&tr.colorCorrectionShader);
 
 	GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	//GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.colorCorrectionShader);
@@ -4874,7 +4816,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.fogPostShader);
 
-	qglUseProgram(tr.fogPostShader.program);
+	GLSL_BindProgram(&tr.fogPostShader);
 
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
@@ -4890,8 +4832,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformVec2(&tr.fogPostShader, UNIFORM_DIMENSIONS, screensize);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.fogPostShader);
 #endif
@@ -4906,13 +4846,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.waterPostFogShader);
 
-	qglUseProgram(tr.waterPostFogShader.program);
+	GLSL_BindProgram(&tr.waterPostFogShader);
 
 	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GLSL_SetUniformInt(&tr.waterPostFogShader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.waterPostFogShader);
@@ -4928,7 +4866,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.fastBlurShader);
 
-	qglUseProgram(tr.fastBlurShader.program);
+	GLSL_BindProgram(&tr.fastBlurShader);
 
 	GLSL_SetUniformInt(&tr.fastBlurShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 
@@ -4939,8 +4877,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_SetUniformVec2(&tr.fastBlurShader, UNIFORM_DIMENSIONS, screensize);
 	}
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.fastBlurShader);
@@ -4956,7 +4892,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.bloomRaysShader);
 
-	qglUseProgram(tr.bloomRaysShader.program);
+	GLSL_BindProgram(&tr.bloomRaysShader);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
@@ -4968,8 +4904,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_SetUniformVec2(&tr.bloomRaysShader, UNIFORM_DIMENSIONS, screensize);
 	}
-
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.bloomRaysShader);
@@ -4989,7 +4923,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.distanceBlurShader[i]);
 
-		qglUseProgram(tr.distanceBlurShader[i].program);
+		GLSL_BindProgram(&tr.distanceBlurShader[i]);
 
 		GLSL_SetUniformInt(&tr.distanceBlurShader[i], UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 		GLSL_SetUniformInt(&tr.distanceBlurShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
@@ -5032,8 +4966,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 			GLSL_SetUniformVec4(&tr.distanceBlurShader[i], UNIFORM_VIEWINFO, viewInfo);
 		}
 
-		qglUseProgram(0);
-
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.distanceBlurShader[i]);
 #endif
@@ -5050,7 +4982,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.esharpeningShader);
 
-	qglUseProgram(tr.esharpeningShader.program);
+	GLSL_BindProgram(&tr.esharpeningShader);
 
 	GLSL_SetUniformInt(&tr.esharpeningShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.esharpeningShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -5077,8 +5009,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.esharpeningShader);
 #endif
@@ -5094,7 +5024,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.esharpening2Shader);
 
-	qglUseProgram(tr.esharpening2Shader.program);
+	GLSL_BindProgram(&tr.esharpening2Shader);
 
 	GLSL_SetUniformInt(&tr.esharpening2Shader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.esharpening2Shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -5121,8 +5051,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.esharpening2Shader);
 #endif
@@ -5138,7 +5066,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.fxaaShader);
 
-	qglUseProgram(tr.fxaaShader.program);
+	GLSL_BindProgram(&tr.fxaaShader);
 
 	GLSL_SetUniformInt(&tr.fxaaShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.fxaaShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -5165,8 +5093,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.fxaaShader);
 #endif
@@ -5181,7 +5107,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.generateNormalMapShader);
 
-	qglUseProgram(tr.generateNormalMapShader.program);
+	GLSL_BindProgram(&tr.generateNormalMapShader);
 
 	GLSL_SetUniformInt(&tr.generateNormalMapShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.generateNormalMapShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -5208,8 +5134,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.generateNormalMapShader);
 #endif
@@ -5224,7 +5148,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.underwaterShader);
 
-	qglUseProgram(tr.underwaterShader.program);
+	GLSL_BindProgram(&tr.underwaterShader);
 
 	GLSL_SetUniformInt(&tr.underwaterShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 
@@ -5250,8 +5174,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.underwaterShader);
 #endif
@@ -5268,7 +5190,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.anaglyphShader);
 
-	qglUseProgram(tr.anaglyphShader.program);
+	GLSL_BindProgram(&tr.anaglyphShader);
 
 	GLSL_SetUniformInt(&tr.anaglyphShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.anaglyphShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -5301,8 +5223,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformVec4(&tr.anaglyphShader, UNIFORM_LOCAL0, local0);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.anaglyphShader);
 #endif
@@ -5318,7 +5238,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.skyDomeShader);
 
-	qglUseProgram(tr.skyDomeShader.program);
+	GLSL_BindProgram(&tr.skyDomeShader);
 
 	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
@@ -5335,8 +5255,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.skyDomeShader);
 #endif
@@ -5352,7 +5270,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.waterForwardShader);
 
-	qglUseProgram(tr.waterForwardShader.program);
+	GLSL_BindProgram(&tr.waterForwardShader);
 
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
@@ -5385,8 +5303,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	qglUseProgram(0);
-
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.waterForwardShader);
 #endif
@@ -5404,11 +5320,10 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.hbaoShader);
 
-	qglUseProgram(tr.hbaoShader.program);
+	GLSL_BindProgram(&tr.hbaoShader);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.hbaoShader);
@@ -5423,11 +5338,10 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.hbao2Shader);
 
-	qglUseProgram(tr.hbao2Shader.program);
+	GLSL_BindProgram(&tr.hbao2Shader);
 	GLSL_SetUniformInt(&tr.hbao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.hbao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.hbao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.hbao2Shader);
@@ -5442,11 +5356,10 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_InitUniforms(&tr.hbaoCombineShader);
 
-	qglUseProgram(tr.hbaoCombineShader.program);
+	GLSL_BindProgram(&tr.hbaoCombineShader);
 	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	qglUseProgram(0);
-
+	
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.hbaoCombineShader);
 #endif
@@ -5457,7 +5370,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	// UQ1: End Added...
 	//
 
-
+	GLSL_BindProgram(NULL);
 
 	ri->Printf(PRINT_ALL, "loaded %i GLSL shaders (%i gen %i light %i etc) in %5.2f seconds\n",
 		numGenShaders + numLightShaders + numEtcShaders, numGenShaders, numLightShaders,
@@ -5482,7 +5395,8 @@ void GLSL_ShutdownGPUShaders(void)
 	qglDisableVertexAttribArray(ATTR_INDEX_LIGHTDIRECTION);
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_INDEXES);
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_WEIGHTS);
-	GLSL_BindNullProgram();
+	
+	GLSL_BindProgram(NULL);
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
 #ifdef __INSTANCED_MODELS__
@@ -5573,31 +5487,57 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.skyDomeShader);
 	GLSL_DeleteGPUShader(&tr.generateNormalMapShader);
 
-
-	glState.currentProgram = 0;
-	qglUseProgram(0);
+	GLSL_BindProgram(NULL);
 }
 
 
 void GLSL_BindProgram(shaderProgram_t * program)
 {
-	if (!program)
-	{
-		//if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
-		//	ri->Printf(PRINT_WARNING, "DEBUG: Binding program NULL.\n");
-
-		GLSL_BindNullProgram();
-		return;
-	}
-
-	if (r_logFile->integer)
-	{
-		// don't just call LogComment, or we will get a call to va() every frame!
-		GLimp_LogComment(va("--- GL_BindProgram( %s ) ---\n", program->name));
-	}
-
 	if (glState.currentProgram != program)
 	{
+#ifdef __DEBUG_GLSL_BINDS__
+		if (r_debugBinds->integer)
+		{
+			GLSL_BINDS_COUNT++;
+
+			char from[256] = { 0 };
+			char to[256] = { 0 };
+
+			if (glState.currentProgram)
+				strcpy(from, glState.currentProgram->name);
+			else
+				strcpy(from, "NULL");
+
+			if (program)
+				strcpy(to, program->name);
+			else
+				strcpy(to, "NULL");
+
+			ri->Printf(PRINT_WARNING, "Frame: [%i] GLSL_BindProgram: [%i] [%s] -> [%s].\n", SCENE_FRAME_NUMBER, GLSL_BINDS_COUNT, from, to);
+		}
+#endif //__DEBUG_GLSL_BINDS__
+
+		if (!program)
+		{
+			if (r_logFile->integer)
+			{
+				GLimp_LogComment("--- GL_BindNullProgram ---\n");
+			}
+
+			if (glState.currentProgram)
+			{
+				qglUseProgram(0);
+				glState.currentProgram = NULL;
+			}
+			return;
+		}
+
+		if (r_logFile->integer)
+		{
+			// don't just call LogComment, or we will get a call to va() every frame!
+			GLimp_LogComment(va("--- GL_BindProgram( %s ) ---\n", program->name));
+		}
+
 		//if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 		//	ri->Printf(PRINT_WARNING, "DEBUG: Binding program %s. Last program was %s\n", program->name, glState.currentProgram ? glState.currentProgram->name : "NULL");
 
@@ -5611,22 +5551,6 @@ void GLSL_BindProgram(shaderProgram_t * program)
 			backEnd.pc.c_shadowPassBinds++;
 	}
 }
-
-
-void GLSL_BindNullProgram(void)
-{
-	if (r_logFile->integer)
-	{
-		GLimp_LogComment("--- GL_BindNullProgram ---\n");
-	}
-
-	if (glState.currentProgram)
-	{
-		qglUseProgram(0);
-		glState.currentProgram = NULL;
-	}
-}
-
 
 void GLSL_VertexAttribsState(uint32_t stateBits)
 {
