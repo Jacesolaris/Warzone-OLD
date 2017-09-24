@@ -607,11 +607,11 @@ void WP_FireTurboLaserMissile(gentity_t *ent, vec3_t start, vec3_t dir)
 void WP_FireEmplacedMissile(gentity_t *ent, vec3_t start, vec3_t dir, qboolean altFire, gentity_t *ignore)
 //---------------------------------------------------------
 {
-	int velocity = weaponData[ent->client->ps.weapon].boltSpeed;
-	int	damage = weaponData[ent->client->ps.weapon].dmg;
+	int velocity = weaponData[ent->s.weapon].boltSpeed;
+	int	damage = weaponData[ent->s.weapon].dmg;
 	gentity_t *missile;
 
-	missile = CreateMissile(start, dir, velocity, 10000, ent, altFire);
+	missile = CreateMissile(start, dir, velocity, 10000, /*ent*/ignore, altFire);
 
 	missile->classname = "emplaced_gun_proj";
 	missile->s.weapon = WP_TURRET;//WP_EMPLACED_GUN;

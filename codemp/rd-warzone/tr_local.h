@@ -2691,6 +2691,7 @@ typedef struct trGlobals_s {
 #ifdef __INSTANCED_MODELS__
 	shaderProgram_t instanceShader;
 #endif //__INSTANCED_MODELS__
+	shaderProgram_t weatherShader;
 	shaderProgram_t occlusionShader;
 	shaderProgram_t lightAllShader;
 	shaderProgram_t shadowPassShader;

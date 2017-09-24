@@ -1155,16 +1155,16 @@ void RE_RenderScene(const refdef_t *fd) {
 	CLOSE_LIGHTS_UPDATE = qtrue;
 	R_RenderView( &parms );
 
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
-		R_AddPostProcessCmd();
-
 #ifdef __JKA_WEATHER__
-	if (r_weather->integer)
+	if (r_weather->integer && !(fd->rdflags & RDF_NOWORLDMODEL))
 	{
 		extern void RE_RenderWorldEffects(void);
 		RE_RenderWorldEffects();
 	}
 #endif //__JKA_WEATHER__
+
+	if (!(fd->rdflags & RDF_NOWORLDMODEL))
+		R_AddPostProcessCmd();
 
 	RE_EndScene();
 

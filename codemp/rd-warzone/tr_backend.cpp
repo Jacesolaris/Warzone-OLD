@@ -2246,17 +2246,17 @@ const void	*RB_WorldEffects( const void *data )
 	cmd = (const drawBufferCommand_t *)data;
 
 	// Always flush the tess buffer
-	if ( tess.shader && tess.numIndexes )
+	if ( tess.numIndexes )
 	{
 		RB_EndSurface();
 	}
 
 	RB_RenderWorldEffects();
 
-	if(tess.shader)
+	/*if (tess.shader)
 	{
-		RB_BeginSurface( tess.shader, tess.fogNum, tess.cubemapIndex/*0*/ );
-	}
+		RB_BeginSurface( tess.shader, tess.fogNum, tess.cubemapIndex );
+	}*/
 
 	return (const void *)(cmd + 1);
 }

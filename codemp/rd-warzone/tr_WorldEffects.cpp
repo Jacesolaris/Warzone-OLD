@@ -23,6 +23,12 @@
 
 #ifdef __JKA_WEATHER__
 
+extern qboolean	JKA_WEATHER_ENABLED;
+extern qboolean	WZ_WEATHER_ENABLED;
+extern qboolean	WZ_WEATHER_SOUND_ONLY;
+
+extern qboolean CONTENTS_INSIDE_OUTSIDE_FOUND;
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // Defines
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -382,7 +388,7 @@ private:
 	struct SWeatherZone
 	{
 		static bool	mMarkedOutside;
-		uint32_t*		mPointCache;
+		uint32_t*	mPointCache;
 		SVecRange	mExtents;
 		SVecRange	mSize;
 		int			mWidth;
@@ -407,7 +413,7 @@ private:
 		////////////////////////////////////////////////////////////////////////////////////
 		inline	bool	CellOutside(int x, int y, int z, int bit)
 		{
-			if (r_weather->integer >= 2) return true;
+			if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
 
 			if ((x < 0 || x >= mWidth) || (y < 0 || y >= mHeight) || (z < 0 || z >= mDepth) || (bit < 0 || bit >= 32))
 			{
@@ -443,7 +449,7 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////
 	inline	bool	ContentsOutside(int contents)
 	{
-		if (r_weather->integer >= 2) return true;
+		if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
 
 		if (contents&CONTENTS_WATER || contents&CONTENTS_SOLID)
 		{
@@ -540,8 +546,8 @@ public:
 		CVec3		Mins;
 		int			x, y, z, q, zbase;
 		bool		curPosOutside;
-		uint32_t		contents;
-		uint32_t		bit;
+		uint32_t	contents;
+		uint32_t	bit;
 
 
 		// Record The Extents Of The World Incase No Other Weather Zones Exist
@@ -585,9 +591,10 @@ public:
 							CurPos[2] = (zbase + q)	* POINTCACHE_CELL_SIZE;
 							CurPos	  += Mins;
 
-							contents = ri->CM_PointContents(CurPos.v, 0);
-
-							if (r_weather->integer >= 2) contents |= CONTENTS_OUTSIDE;
+							if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND))
+								contents = CONTENTS_OUTSIDE;
+							else
+								contents = ri->CM_PointContents(CurPos.v, 0);
 
 							if (contents&CONTENTS_INSIDE || contents&CONTENTS_OUTSIDE)
 							{
@@ -633,7 +640,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////
 	inline	bool	PointOutside(const CVec3& pos)
 	{
-		if (r_weather->integer >= 2) return true;
+		if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
 
 		if (!mCacheInit)
 		{
@@ -659,7 +666,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////
 	inline	bool	PointOutside(const CVec3& pos, float width, float height)
 	{
-		if (r_weather->integer >= 2) return true;
+		if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
 
 		for (int zone=0; zone<mWeatherZones.size(); zone++)
 		{
@@ -956,11 +963,11 @@ public:
 		// Compute Camera
 		//----------------
 		{
-			mCameraPosition	= backEnd.viewParms.ori.origin;
-			mCameraForward	= backEnd.viewParms.ori.axis[0];
-			mCameraLeft		= backEnd.viewParms.ori.axis[1];
-			mCameraDown		= backEnd.viewParms.ori.axis[2];
-
+			mCameraPosition = backEnd.viewParms.ori.origin;
+			mCameraForward = backEnd.viewParms.ori.axis[0];
+			mCameraLeft = backEnd.viewParms.ori.axis[1];
+			mCameraDown = backEnd.viewParms.ori.axis[2];
+			
 			if (mRotationChangeNext!=-1)
 			{
 				if (mRotationChangeNext==0)
@@ -1194,28 +1201,12 @@ public:
 			{
 				mParticleCountRender ++;
 			}
-
-
-
-
-
 		}
 		mPopulated = true;
 	}
 
-	void R_WorldToLocal4(const vec4_t world, vec4_t local) {
-		local[0] = DotProduct(world, tr.ori.axis[0]);
-		local[1] = DotProduct(world, tr.ori.axis[1]);
-		local[2] = DotProduct(world, tr.ori.axis[2]);
-		local[3] = world[3];
-	}
 
-	void R_LocalPointToWorld4(const vec4_t local, vec4_t world) {
-		world[0] = local[0] * tr.ori.axis[0][0] + local[1] * tr.ori.axis[1][0] + local[2] * tr.ori.axis[2][0] + tr.ori.origin[0];
-		world[1] = local[0] * tr.ori.axis[0][1] + local[1] * tr.ori.axis[1][1] + local[2] * tr.ori.axis[2][1] + tr.ori.origin[1];
-		world[2] = local[0] * tr.ori.axis[0][2] + local[1] * tr.ori.axis[1][2] + local[2] * tr.ori.axis[2][2] + tr.ori.origin[2];
-		world[3] = local[3];
-	}
+#define __QUEUED_DRAW__
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Render -
@@ -1225,7 +1216,6 @@ public:
 		CWeatherParticle*	part=0;
 		int			particleNum;
 
-#if defined(rd_warzone_x86_EXPORTS)
 		// Set The GL State And Image Binding
 		//------------------------------------
 		GL_State((mBlendMode == 0) ? (GLS_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
@@ -1234,7 +1224,6 @@ public:
 
 		// Enable And Disable Things
 		//---------------------------
-		//qglEnable(GL_TEXTURE_2D);
 
 		//naughty, you are making the assumption that culling is on when you get here. -rww
 		GL_Cull(CT_TWO_SIDED);
@@ -1242,9 +1231,19 @@ public:
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 
+		shaderProgram_t *shader = &tr.weatherShader; // &tr.textureColorShader
+		GLSL_BindProgram(shader);
+		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformVec4(shader, UNIFORM_COLOR, colorWhite);
+
+		tess.numVertexes = 0;
+		tess.numIndexes = 0;
+		tess.firstIndex = 0;
+
+		tess.minIndex = 0;
+
 		// Begin
 		//-------
-		//qglBegin(mGLModeEnum);
 		for (particleNum = 0; particleNum < mParticleCount; particleNum++)
 		{
 			part = &(mParticles[particleNum]);
@@ -1270,14 +1269,33 @@ public:
 				VectorSet4(particleColor, mColor[0] * part->mAlpha, mColor[1] * part->mAlpha, mColor[2] * part->mAlpha, mColor[3] * part->mAlpha);
 			}
 
-			//qglPushMatrix();
-			//qglLoadIdentity();
-
 			if (mVertexCount == 3)
 			{
 				//-------------------
 				// Render A Triangle
 				//-------------------
+
+				if (tess.numVertexes + 3 >= SHADER_MAX_VERTEXES || tess.numIndexes + 3 >= SHADER_MAX_INDEXES)
+				{// Would go over the limit, render current queue and continue...
+					//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+					RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+					GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+					R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
+
+					tess.numIndexes = 0;
+					tess.numVertexes = 0;
+					tess.firstIndex = 0;
+					tess.minIndex = 0;
+					tess.maxIndex = 0;
+				}
+
+				int ndx = tess.numVertexes;
+				int idx = tess.numIndexes;
+
+				// triangle indexes for a simple quad
+				tess.indexes[idx + 0] = ndx + 0;
+				tess.indexes[idx + 1] = ndx + 1;
+				tess.indexes[idx + 2] = ndx + 2;
 
 				vec2_t texCoords[3];
 
@@ -1285,23 +1303,68 @@ public:
 				VectorSet2(texCoords[1], 0.0f, 1.0f);
 				VectorSet2(texCoords[2], 0.0f, 0.0f);
 
+				VectorCopy2(texCoords[0], tess.texCoords[ndx + 0][0]);
+				VectorCopy2(texCoords[0], tess.texCoords[ndx + 0][1]);
+
+				VectorCopy2(texCoords[1], tess.texCoords[ndx + 1][0]);
+				VectorCopy2(texCoords[1], tess.texCoords[ndx + 1][1]);
+
+				VectorCopy2(texCoords[2], tess.texCoords[ndx + 2][0]);
+				VectorCopy2(texCoords[2], tess.texCoords[ndx + 2][1]);
+
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 0]);
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 1]);
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 2]);
+
 				vec4_t triVerts[3];
 				VectorSet4(triVerts[0], part->mPosition[0], part->mPosition[1], part->mPosition[2], 1.0);
 				VectorSet4(triVerts[1], part->mPosition[0] + mCameraLeft[0], part->mPosition[1] + mCameraLeft[1], part->mPosition[2] + mCameraLeft[2], 1.0);
 				VectorSet4(triVerts[2], part->mPosition[0] + mCameraLeftPlusUp[0], part->mPosition[1] + mCameraLeftPlusUp[1], part->mPosition[2] + mCameraLeftPlusUp[2], 1.0);
 
-				GLSL_BindProgram(&tr.textureColorShader);
+				VectorCopy4(triVerts[0], tess.xyz[ndx + 0]);
+				tess.normal[ndx + 0] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 0]);
 
-				GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, particleColor);
+				VectorCopy4(triVerts[1], tess.xyz[ndx + 1]);
+				tess.normal[ndx + 1] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 1]);
 
-				RB_InstantTri2(triVerts, texCoords);
+				VectorCopy4(triVerts[2], tess.xyz[ndx + 2]);
+				tess.normal[ndx + 2] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 2]);
+
+				tess.maxIndex = ndx + 3;
+
+				tess.numVertexes += 3;
+				tess.numIndexes += 3;
 			}
 			else
 			{
 				//-------------------
 				// Render A Quad
 				//-------------------
+
+				if (tess.numVertexes + 4 >= SHADER_MAX_VERTEXES || tess.numIndexes + 6 >= SHADER_MAX_INDEXES)
+				{// Would go over the limit, render current queue and continue...
+					//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+					RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+					GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+					R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
+
+					tess.numIndexes = 0;
+					tess.numVertexes = 0;
+					tess.firstIndex = 0;
+					tess.minIndex = 0;
+					tess.maxIndex = 0;
+				}
+
+				int ndx = tess.numVertexes;
+				int idx = tess.numIndexes;
+
+				// triangle indexes for a simple quad
+				tess.indexes[idx + 0] = ndx + 0;
+				tess.indexes[idx + 1] = ndx + 1;
+				tess.indexes[idx + 2] = ndx + 2;
+				tess.indexes[idx + 3] = ndx + 0;
+				tess.indexes[idx + 4] = ndx + 2;
+				tess.indexes[idx + 5] = ndx + 3;
 
 				vec2_t texCoords[4];
 
@@ -1310,125 +1373,59 @@ public:
 				VectorSet2(texCoords[2], 1.0f, 1.0f);
 				VectorSet2(texCoords[3], 0.0f, 1.0f);
 
+				VectorCopy2(texCoords[0], tess.texCoords[ndx + 0][0]);
+				VectorCopy2(texCoords[0], tess.texCoords[ndx + 0][1]);
+
+				VectorCopy2(texCoords[1], tess.texCoords[ndx + 1][0]);
+				VectorCopy2(texCoords[1], tess.texCoords[ndx + 1][1]);
+
+				VectorCopy2(texCoords[2], tess.texCoords[ndx + 2][0]);
+				VectorCopy2(texCoords[2], tess.texCoords[ndx + 2][1]);
+
+				VectorCopy2(texCoords[3], tess.texCoords[ndx + 3][0]);
+				VectorCopy2(texCoords[3], tess.texCoords[ndx + 3][1]);
+
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 0]);
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 1]);
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 2]);
+				VectorCopy4(particleColor, tess.vertexColors[ndx + 3]);
+
 				vec4_t quadVerts[4];
 				VectorSet4(quadVerts[0], part->mPosition[0] - mCameraLeftMinusUp[0], part->mPosition[1] - mCameraLeftMinusUp[1], part->mPosition[2] - mCameraLeftMinusUp[2], 1.0);
 				VectorSet4(quadVerts[1], part->mPosition[0] - mCameraLeftPlusUp[0], part->mPosition[1] - mCameraLeftPlusUp[1], part->mPosition[2] - mCameraLeftPlusUp[2], 1.0);
 				VectorSet4(quadVerts[2], part->mPosition[0] + mCameraLeftMinusUp[0], part->mPosition[1] + mCameraLeftMinusUp[1], part->mPosition[2] + mCameraLeftMinusUp[2], 1.0);
 				VectorSet4(quadVerts[3], part->mPosition[0] + mCameraLeftPlusUp[0], part->mPosition[1] + mCameraLeftPlusUp[1], part->mPosition[2] + mCameraLeftPlusUp[2], 1.0);
 
-				GLSL_BindProgram(&tr.textureColorShader);
+				VectorCopy4(quadVerts[0], tess.xyz[ndx + 0]);
+				tess.normal[ndx + 0] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 0]);
 
-				GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, particleColor);
+				VectorCopy4(quadVerts[1], tess.xyz[ndx + 1]);
+				tess.normal[ndx + 1] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 1]);
 
-				RB_InstantQuad2(quadVerts, texCoords);
-			}
+				VectorCopy4(quadVerts[2], tess.xyz[ndx + 2]);
+				tess.normal[ndx + 2] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 2]);
 
-			//qglPopMatrix();
-		}
-#else //!defined(rd_warzone_x86_EXPORTS)
-		// Set The GL State And Image Binding
-		//------------------------------------
-		GL_State((mBlendMode == 0) ? (GLS_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
-		GL_Bind(mImage);
+				VectorCopy4(quadVerts[3], tess.xyz[ndx + 3]);
+				tess.normal[ndx + 3] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 3]);
 
+				tess.maxIndex = ndx + 3;
 
-		// Enable And Disable Things
-		//---------------------------
-		qglEnable(GL_TEXTURE_2D);
-
-		//naughty, you are making the assumption that culling is on when you get here. -rww
-		GL_Cull(CT_TWO_SIDED);
-
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
-
-		// Setup Matrix Mode And Translation
-		//-----------------------------------
-		qglMatrixMode(GL_MODELVIEW);
-		qglPushMatrix();
-
-		// Begin
-		//-------
-		qglBegin(mGLModeEnum);
-		for (particleNum = 0; particleNum<mParticleCount; particleNum++)
-		{
-			part = &(mParticles[particleNum]);
-			if (!part->mFlags.get_bit(CWeatherParticle::FLAG_RENDER))
-			{
-				continue;
-			}
-
-			// Blend Mode Zero -> Apply Alpha Just To Alpha Channel
-			//------------------------------------------------------
-			if (mBlendMode==0)
-			{
-				qglColor4f(mColor[0], mColor[1], mColor[2], part->mAlpha);
-			}
-
-			// Otherwise Apply Alpha To All Channels
-			//---------------------------------------
-			else
-			{
-				qglColor4f(mColor[0]*part->mAlpha, mColor[1]*part->mAlpha, mColor[2]*part->mAlpha, mColor[3]*part->mAlpha);
-			}
-
-			// Render A Triangle
-			//-------------------
-			if (mVertexCount == 3)
-			{
-				qglTexCoord2f(1.0, 0.0);
-				qglVertex3f(part->mPosition[0],
-					part->mPosition[1],
-					part->mPosition[2]);
-
-				qglTexCoord2f(0.0, 1.0);
-				qglVertex3f(part->mPosition[0] + mCameraLeft[0],
-					part->mPosition[1] + mCameraLeft[1],
-					part->mPosition[2] + mCameraLeft[2]);
-
-				qglTexCoord2f(0.0, 0.0);
-				qglVertex3f(part->mPosition[0] + mCameraLeftPlusUp[0],
-					part->mPosition[1] + mCameraLeftPlusUp[1],
-					part->mPosition[2] + mCameraLeftPlusUp[2]);
-			}
-
-			// Render A Quad
-			//---------------
-			else
-			{
-				// Left bottom.
-				qglTexCoord2f(0.0, 0.0);
-				qglVertex3f(part->mPosition[0] - mCameraLeftMinusUp[0],
-					part->mPosition[1] - mCameraLeftMinusUp[1],
-					part->mPosition[2] - mCameraLeftMinusUp[2]);
-
-				// Right bottom.
-				qglTexCoord2f(1.0, 0.0);
-				qglVertex3f(part->mPosition[0] - mCameraLeftPlusUp[0],
-					part->mPosition[1] - mCameraLeftPlusUp[1],
-					part->mPosition[2] - mCameraLeftPlusUp[2]);
-
-				// Right top.
-				qglTexCoord2f(1.0, 1.0);
-				qglVertex3f(part->mPosition[0] + mCameraLeftMinusUp[0],
-					part->mPosition[1] + mCameraLeftMinusUp[1],
-					part->mPosition[2] + mCameraLeftMinusUp[2]);
-
-				// Left top.
-				qglTexCoord2f(0.0, 1.0);
-				qglVertex3f(part->mPosition[0] + mCameraLeftPlusUp[0],
-					part->mPosition[1] + mCameraLeftPlusUp[1],
-					part->mPosition[2] + mCameraLeftPlusUp[2]);
+				tess.numVertexes += 4;
+				tess.numIndexes += 6;
 			}
 		}
 
-		qglEnd();
+		//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+		RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL);
+		R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
-		//qglEnable(GL_CULL_FACE);
-		//you don't need to do this when you are properly setting cull state.
-		qglPopMatrix();
-#endif //defined(rd_warzone_x86_EXPORTS)
+		//
+		tess.numIndexes = 0;
+		tess.numVertexes = 0;
+		tess.firstIndex = 0;
+		tess.minIndex = 0;
+		tess.maxIndex = 0;
 
 		mParticlesRendered += mParticleCountRender;
 	}
@@ -1466,14 +1463,24 @@ extern vec3_t  MAP_INFO_MAXS;
 
 qboolean WEATHER_KLUDGE_DONE = qfalse;
 
+void RB_SetupGlobalWeatherZone(void)
+{
+	mOutside.AddWeatherZone(MAP_INFO_MINS, MAP_INFO_MAXS);
+	WEATHER_KLUDGE_DONE = qtrue;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // RB_RenderWorldEffects - If any particle clouds exist, this will update and render them
 ////////////////////////////////////////////////////////////////////////////////////////
 void RB_RenderWorldEffects(void)
 {
-	if (r_weather->integer >= 2 && !WEATHER_KLUDGE_DONE)
+	if (!WEATHER_KLUDGE_DONE)
 	{
-		mOutside.AddWeatherZone(MAP_INFO_MINS, MAP_INFO_MAXS);
+		if (r_weather->integer >= 2 && !(JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND))
+		{// Make sure we always have a weather zone covering the whole map, if mapInfo says JKA weather is enabled or in forced mode (r_weather->integer >= 2)...
+			RB_SetupGlobalWeatherZone();
+		}
+
 		WEATHER_KLUDGE_DONE = qtrue;
 	}
 
@@ -1486,6 +1493,7 @@ void RB_RenderWorldEffects(void)
 	}
 
 #if defined(rd_warzone_x86_EXPORTS)
+	FBO_Bind(tr.renderFbo);
 	SetViewportAndScissor();
 	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
 	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
@@ -1592,7 +1600,7 @@ qboolean WE_ParseVector( const char **text, int count, float *v ) {
 	return qtrue;
 }
 
-void RE_WorldEffectCommand(const char *command)
+void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 {
 	if ( !command )
 	{
@@ -1861,7 +1869,8 @@ void RE_WorldEffectCommand(const char *command)
 		nCloud.mColor[0]	= 0.9f;
 		nCloud.mColor[1]	= 0.6f;
 		nCloud.mColor[2]	= 0.0f;
-		nCloud.mColor[3]	= 0.5f;
+		//nCloud.mColor[3]	= 0.5f;
+		nCloud.mColor[3] = 0.05f;
 		nCloud.mFade		= 5.0f;
 		nCloud.mMass.mMax	= 30.0f;
 		nCloud.mMass.mMin	= 10.0f;
@@ -1885,7 +1894,11 @@ void RE_WorldEffectCommand(const char *command)
 		nCloud.mGravity		= 0;
  		nCloud.mWidth		= 70;
 		nCloud.mHeight		= 70;
-		nCloud.mColor		= 0.2f;
+		//nCloud.mColor		= 0.2f;
+		nCloud.mColor[0] = 0.2f;
+		nCloud.mColor[1] = 0.2f;
+		nCloud.mColor[2] = 0.2f;
+		nCloud.mColor[3] = 0.05f;
 		nCloud.mFade		= 5.0f;
 		nCloud.mMass.mMax	= 30.0f;
 		nCloud.mMass.mMin	= 10.0f;
@@ -1909,7 +1922,11 @@ void RE_WorldEffectCommand(const char *command)
 		nCloud.mGravity		= 0;
  		nCloud.mWidth		= 100;
 		nCloud.mHeight		= 100;
-		nCloud.mColor		= 0.3f;
+		//nCloud.mColor		= 0.3f;
+		nCloud.mColor[0] = 0.3f;
+		nCloud.mColor[1] = 0.3f;
+		nCloud.mColor[2] = 0.3f;
+		nCloud.mColor[3] = 0.05f;
 		nCloud.mFade		= 1.0f;
 		nCloud.mMass.mMax	= 10.0f;
 		nCloud.mMass.mMin	= 5.0f;
@@ -1936,10 +1953,14 @@ void RE_WorldEffectCommand(const char *command)
 		nCloud.mGravity		= 0;
  		nCloud.mWidth		= 100;
 		nCloud.mHeight		= 100;
-		nCloud.mColor[0]	= 0.19f;
-		nCloud.mColor[1]	= 0.6f;
-		nCloud.mColor[2]	= 0.7f;
-		nCloud.mColor[3]	= 0.12f;
+		//nCloud.mColor[0]	= 0.19f;
+		//nCloud.mColor[1]	= 0.6f;
+		//nCloud.mColor[2]	= 0.7f;
+		//nCloud.mColor[3]	= 0.12f;
+		nCloud.mColor[0] = 0.3f;
+		nCloud.mColor[1] = 0.3f;
+		nCloud.mColor[2] = 0.3f;
+		nCloud.mColor[3] = 0.05f;
 		nCloud.mFade		= 0.10f;
 		nCloud.mMass.mMax	= 30.0f;
 		nCloud.mMass.mMin	= 10.0f;
@@ -1959,29 +1980,36 @@ void RE_WorldEffectCommand(const char *command)
 	}
 	else
 	{
-		ri->Printf( PRINT_ALL, "Weather Effect: Please enter a valid command.\n" );
-		ri->Printf( PRINT_ALL, "	clear\n" );
-		ri->Printf( PRINT_ALL, "	freeze\n" );
-		ri->Printf( PRINT_ALL, "	zone (mins) (maxs)\n" );
-		ri->Printf( PRINT_ALL, "	wind\n" );
-		ri->Printf( PRINT_ALL, "	constantwind (velocity)\n" );
-		ri->Printf( PRINT_ALL, "	gustingwind\n" );
-		ri->Printf( PRINT_ALL, "	windzone (mins) (maxs) (velocity)\n" );
-		ri->Printf( PRINT_ALL, "	lightrain\n" );
-		ri->Printf( PRINT_ALL, "	rain\n" );
-		ri->Printf( PRINT_ALL, "	acidrain\n" );
-		ri->Printf( PRINT_ALL, "	heavyrain\n" );
-		ri->Printf( PRINT_ALL, "	snow\n" );
-		ri->Printf( PRINT_ALL, "	spacedust\n" );
-		ri->Printf( PRINT_ALL, "	sand\n" );
-		ri->Printf( PRINT_ALL, "	fog\n" );
-		ri->Printf( PRINT_ALL, "	heavyrainfog\n" );
-		ri->Printf( PRINT_ALL, "	light_fog\n" );
-		ri->Printf( PRINT_ALL, "	outsideshake\n" );
-		ri->Printf( PRINT_ALL, "	outsidepain\n" );
+		if (!noHelp)
+		{
+			ri->Printf(PRINT_ALL, "Weather Effect: Please enter a valid command.\n");
+			ri->Printf(PRINT_ALL, "	clear\n");
+			ri->Printf(PRINT_ALL, "	freeze\n");
+			ri->Printf(PRINT_ALL, "	zone (mins) (maxs)\n");
+			ri->Printf(PRINT_ALL, "	wind\n");
+			ri->Printf(PRINT_ALL, "	constantwind (velocity)\n");
+			ri->Printf(PRINT_ALL, "	gustingwind\n");
+			ri->Printf(PRINT_ALL, "	windzone (mins) (maxs) (velocity)\n");
+			ri->Printf(PRINT_ALL, "	lightrain\n");
+			ri->Printf(PRINT_ALL, "	rain\n");
+			ri->Printf(PRINT_ALL, "	acidrain\n");
+			ri->Printf(PRINT_ALL, "	heavyrain\n");
+			ri->Printf(PRINT_ALL, "	snow\n");
+			ri->Printf(PRINT_ALL, "	spacedust\n");
+			ri->Printf(PRINT_ALL, "	sand\n");
+			ri->Printf(PRINT_ALL, "	fog\n");
+			ri->Printf(PRINT_ALL, "	heavyrainfog\n");
+			ri->Printf(PRINT_ALL, "	light_fog\n");
+			ri->Printf(PRINT_ALL, "	outsideshake\n");
+			ri->Printf(PRINT_ALL, "	outsidepain\n");
+		}
 	}
 }
 
+void RE_WorldEffectCommand(const char *command)
+{
+	RE_WorldEffectCommand_REAL(command, qfalse);
+}
 
 
 float R_GetChanceOfSaberFizz()

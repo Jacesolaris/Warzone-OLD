@@ -1215,7 +1215,14 @@ qboolean	PEBBLES_ENABLED = qfalse;
 int			PEBBLES_DENSITY = 1;
 int			PEBBLES_DISTANCE = 2048;
 
+qboolean	JKA_WEATHER_ENABLED = qfalse;
+qboolean	WZ_WEATHER_ENABLED = qfalse;
+qboolean	WZ_WEATHER_SOUND_ONLY = qfalse;
+
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
+char		CURRENT_WEATHER_OPTION[256] = { 0 };
+
+void SetupWeather(char *mapname); // below...
 
 void MAPPING_LoadMapInfo(void)
 {
@@ -1266,6 +1273,15 @@ void MAPPING_LoadMapInfo(void)
 	//
 	AURORA_ENABLED = (atoi(IniRead(mapname, "AURORA", "AURORA_ENABLED", "1")) > 0) ? qtrue : qfalse;
 	AURORA_ENABLED_DAY = (atoi(IniRead(mapname, "AURORA", "AURORA_ENABLED_DAY", "0")) > 0) ? qtrue : qfalse;
+
+	//
+	// Weather...
+	//
+	JKA_WEATHER_ENABLED = (atoi(IniRead(mapname, "ATMOSPHERICS", "JKA_WEATHER_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	WZ_WEATHER_ENABLED = (atoi(IniRead(mapname, "ATMOSPHERICS", "WZ_WEATHER_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	WZ_WEATHER_SOUND_ONLY = (atoi(IniRead(mapname, "ATMOSPHERICS", "WZ_WEATHER_SOUND_ONLY", "0")) > 0) ? qtrue : qfalse;
+
+	SetupWeather(mapname);
 
 	//
 	// Palette...
@@ -1430,6 +1446,105 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
+}
+
+extern void RB_SetupGlobalWeatherZone(void);
+extern void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp);
+
+extern qboolean CONTENTS_INSIDE_OUTSIDE_FOUND;
+
+void SetupWeather(char *mapname)
+{
+	if (JKA_WEATHER_ENABLED && WZ_WEATHER_ENABLED)
+	{
+		WZ_WEATHER_SOUND_ONLY = qtrue;
+	}
+
+	char *atmosphericString = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE", "");
+
+	if (strlen(atmosphericString) <= 1)
+	{// Check old config file for redundancy...
+		atmosphericString = (char*)IniRead(va("maps/%s.atmospherics", currentMapName), "ATMOSPHERICS", "WEATHER_TYPE", "");
+
+		if (strlen(atmosphericString) > 1)
+		{// Redundancy...
+			if (JKA_WEATHER_ENABLED)
+				WZ_WEATHER_SOUND_ONLY = qtrue;
+			else
+				WZ_WEATHER_ENABLED = qtrue;
+		}
+	}
+
+	if (WZ_WEATHER_SOUND_ONLY)
+	{// If WZ weather is in sound only mode, then JKA weather system is enabled...
+		JKA_WEATHER_ENABLED = qtrue;
+		WZ_WEATHER_ENABLED = qfalse;
+		WZ_WEATHER_SOUND_ONLY = qtrue;
+	}
+
+	if (JKA_WEATHER_ENABLED)
+	{
+		strcpy(CURRENT_WEATHER_OPTION, atmosphericString);
+
+		RE_WorldEffectCommand_REAL("clear", qtrue);
+
+		if (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)
+			RB_SetupGlobalWeatherZone();
+
+		/* Convert WZ weather names to JKA ones... */
+		if (!Q_stricmp(atmosphericString, "rain"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rain^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("lightrain", qtrue);
+			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
+		}
+		else if (!Q_stricmp(atmosphericString, "heavyrain"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavyrain^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("rain", qtrue);
+			//RE_WorldEffectCommand_REAL("fog", qtrue);
+			RE_WorldEffectCommand_REAL("wind", qtrue);
+		}
+		else if (!Q_stricmp(atmosphericString, "rainstorm") || !Q_stricmp(atmosphericString, "storm"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rainstorm^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("heavyrain", qtrue);
+			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
+			RE_WorldEffectCommand_REAL("gustingwind", qtrue);
+		}
+		else if (!Q_stricmp(atmosphericString, "snow"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snow^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("snow", qtrue);
+			//RE_WorldEffectCommand_REAL("fog", qtrue);
+		}
+		else if (!Q_stricmp(atmosphericString, "heavysnow"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavysnow^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("snow", qtrue);
+			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
+			RE_WorldEffectCommand_REAL("wind", qtrue);
+		}
+		else if (!Q_stricmp(atmosphericString, "snowstorm"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snowstorm^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("snow", qtrue);
+			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
+			RE_WorldEffectCommand_REAL("gustingwind", qtrue);
+		}
+		/* Nothing? Try to use what was set in the mapInfo setting directly... */
+		else
+		{
+			RE_WorldEffectCommand_REAL(atmosphericString, qtrue);
+		}
+	}
+	else
+	{
+		strcpy(CURRENT_WEATHER_OPTION, "none");
+	}
 }
 
 extern const char *materialNames[MATERIAL_LAST];

@@ -63,6 +63,8 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_weather_vp;
+extern const char *fallbackShader_weather_fp;
 extern const char *fallbackShader_surfaceSprite_vp;
 extern const char *fallbackShader_surfaceSprite_fp;
 extern const char *fallbackShader_ssdo_vp;
@@ -2760,6 +2762,13 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load texturecolor shader!");
 	}
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
+
+	if (!GLSL_BeginLoadGPUShader(&tr.weatherShader, "weather", attribs, qtrue, qfalse, qfalse, NULL, qfalse, NULL, fallbackShader_weather_vp, fallbackShader_weather_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load weather shader!");
+	}
+
 #ifdef __INSTANCED_MODELS__
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_INSTANCES_POS /*| ATTR_INSTANCES_MVP*/;
 
@@ -3613,6 +3622,22 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.textureColorShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
 
 	GLSL_FinishGPUShader(&tr.textureColorShader);
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.weatherShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load weather shader!");
+	}
+
+	GLSL_InitUniforms(&tr.weatherShader);
+
+	GLSL_BindProgram(&tr.weatherShader);
+	GLSL_SetUniformInt(&tr.weatherShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.weatherShader);
 
 	numEtcShaders++;
 
@@ -5429,6 +5454,9 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_BindProgram(NULL);
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
+	
+	GLSL_DeleteGPUShader(&tr.weatherShader);
+
 #ifdef __INSTANCED_MODELS__
 	GLSL_DeleteGPUShader(&tr.instanceShader);
 #endif //__INSTANCED_MODELS__

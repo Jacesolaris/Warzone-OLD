@@ -39,8 +39,13 @@ typedef enum {
 
 // Runtime values...
 qboolean	ATMOSPHERICS_INITIIALIZED = qfalse;
+qboolean	ATMOSPHERIC_SOUND_ONLY = qfalse;
 
 float		ATMOSPHERIC_MAX_MAP_HEIGHT = -MAX_ATMOSPHERIC_HEIGHT;
+
+qboolean	JKA_WEATHER_ENABLED = qfalse;
+qboolean	WZ_WEATHER_ENABLED = qfalse;
+qboolean	WZ_WEATHER_SOUND_ONLY = qfalse;
 
 int			ATMOSPHERIC_WEATHER_TYPE = WEATHER_NONE;
 int			ATMOSPHERIC_NEXT_LIGHTNING_FLASH_TIME = 0;
@@ -343,19 +348,19 @@ void CG_AddAtmosphericEffects()
 		MAX_FRAME_PARTICLES = 16;
 		break;
 	case WEATHER_HEAVY_RAIN:
-		MAX_FRAME_PARTICLES = 24;// 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;
 		break;
 	case WEATHER_RAIN_STORM:
-		MAX_FRAME_PARTICLES = 24;// 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;
 		break;
 	case WEATHER_SNOW:
-		MAX_FRAME_PARTICLES = 16; //32
+		MAX_FRAME_PARTICLES = 16;
 		break;
 	case WEATHER_HEAVY_SNOW:
-		MAX_FRAME_PARTICLES = 24;// 64;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;
 		break;
 	case WEATHER_SNOW_STORM:
-		MAX_FRAME_PARTICLES = 24;//128; // reduced for more FPS
+		MAX_FRAME_PARTICLES = 24;
 		break;
 	case WEATHER_FOREST:
 		if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
@@ -468,6 +473,9 @@ void CG_AddAtmosphericEffects()
 	if (cg_atmosphericFrameParticleOverride.integer)
 		MAX_FRAME_PARTICLES = cg_atmosphericFrameParticleOverride.integer;
 
+	if (ATMOSPHERIC_SOUND_ONLY)
+		MAX_FRAME_PARTICLES = 1; // We just want the sound to play...
+
 	for (i = 0; i < MAX_FRAME_PARTICLES; i++)
 	{
 		vec3_t spot = { ((rand()%sizeX)+cg.refdef.vieworg[0])-1024, ((rand()%sizeY)+cg.refdef.vieworg[1])-1024, cg.refdef.vieworg[2]+256 };
@@ -484,7 +492,7 @@ void CG_AddAtmosphericEffects()
 		switch (ATMOSPHERIC_WEATHER_TYPE)
 		{
 		case WEATHER_RAIN:
-			trap->FX_PlayEffectID(WEATHER_RAIN_EFX, spot, down, 0, 0, qfalse);
+			if (!ATMOSPHERIC_SOUND_ONLY) trap->FX_PlayEffectID(WEATHER_RAIN_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
@@ -493,7 +501,7 @@ void CG_AddAtmosphericEffects()
 			}
 			break;
 		case WEATHER_HEAVY_RAIN:
-			trap->FX_PlayEffectID(WEATHER_HEAVY_RAIN_EFX, spot, down, 0, 0, qfalse);
+			if (!ATMOSPHERIC_SOUND_ONLY) trap->FX_PlayEffectID(WEATHER_HEAVY_RAIN_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
@@ -502,7 +510,7 @@ void CG_AddAtmosphericEffects()
 			}
 			break;
 		case WEATHER_RAIN_STORM:
-			trap->FX_PlayEffectID(WEATHER_RAIN_STORM_EFX, spot, down, 0, 0, qfalse);
+			if (!ATMOSPHERIC_SOUND_ONLY) trap->FX_PlayEffectID(WEATHER_RAIN_STORM_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
@@ -511,7 +519,7 @@ void CG_AddAtmosphericEffects()
 			}
 			break;
 		case WEATHER_SNOW:
-			trap->FX_PlayEffectID(WEATHER_SNOW_EFX, spot, down, 0, 0, qfalse);
+			if (!ATMOSPHERIC_SOUND_ONLY) trap->FX_PlayEffectID(WEATHER_SNOW_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
@@ -520,7 +528,7 @@ void CG_AddAtmosphericEffects()
 			}
 			break;
 		case WEATHER_HEAVY_SNOW:
-			trap->FX_PlayEffectID(WEATHER_HEAVY_SNOW_EFX, spot, down, 0, 0, qfalse);
+			if (!ATMOSPHERIC_SOUND_ONLY) trap->FX_PlayEffectID(WEATHER_HEAVY_SNOW_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
@@ -529,7 +537,7 @@ void CG_AddAtmosphericEffects()
 			}
 			break;
 		case WEATHER_SNOW_STORM:
-			trap->FX_PlayEffectID(WEATHER_SNOW_STORM_EFX, spot, down, 0, 0, qfalse);
+			if (!ATMOSPHERIC_SOUND_ONLY) trap->FX_PlayEffectID(WEATHER_SNOW_STORM_EFX, spot, down, 0, 0, qfalse);
 
 			if (ATMOSPHERIC_NEXT_SOUND_TIME <= cg.time)
 			{
@@ -542,7 +550,7 @@ void CG_AddAtmosphericEffects()
 		}
 	}
 
-	if (ATMOSPHERIC_WEATHER_TYPE == WEATHER_SNOW_STORM)
+	if (!ATMOSPHERIC_SOUND_ONLY && ATMOSPHERIC_WEATHER_TYPE == WEATHER_SNOW_STORM)
 	{// Would you like some volumetric fog with that? Oh yes please! - This is, however, very FPS costly...
 		CG_AddVolumetricFog();
 	}
@@ -567,11 +575,55 @@ qboolean CG_AtmosphericKludge()
   	kludgeChecked = qtrue;
   	kludgeResult = qfalse;
 
+	ATMOSPHERIC_SOUND_ONLY = qfalse;
+
 	//
 	// Check the ini file with the map...
 	//
 
-	atmosphericString = (char*)IniRead(va("maps/%s.atmospherics", cgs.currentmapname), "ATMOSPHERICS", "WEATHER_TYPE", "");
+	char mapname[256] = { 0 };
+
+	// because JKA uses mp/ dir, why??? so pointless...
+	if (IniExists(va("maps/%s.mapInfo", cgs.currentmapname)))
+		sprintf(mapname, "maps/%s.mapInfo", cgs.currentmapname);
+	else if (IniExists(va("maps/mp/%s.mapInfo", cgs.currentmapname)))
+		sprintf(mapname, "maps/mp/%s.mapInfo", cgs.currentmapname);
+	else
+		sprintf(mapname, "maps/%s.mapInfo", cgs.currentmapname);
+
+	JKA_WEATHER_ENABLED = (atoi(IniRead(mapname, "ATMOSPHERICS", "JKA_WEATHER_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	WZ_WEATHER_ENABLED = (atoi(IniRead(mapname, "ATMOSPHERICS", "WZ_WEATHER_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	WZ_WEATHER_SOUND_ONLY = (atoi(IniRead(mapname, "ATMOSPHERICS", "WZ_WEATHER_SOUND_ONLY", "0")) > 0) ? qtrue : qfalse;
+
+	if (JKA_WEATHER_ENABLED && WZ_WEATHER_ENABLED)
+	{
+		ATMOSPHERIC_SOUND_ONLY = qtrue;
+	}
+	else if (WZ_WEATHER_SOUND_ONLY)
+	{
+		ATMOSPHERIC_SOUND_ONLY = qtrue;
+	}
+
+	atmosphericString = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE", "");
+
+	if (strlen(atmosphericString) <= 1)
+	{// Check old config file for redundancy...
+		atmosphericString = (char*)IniRead(va("maps/%s.atmospherics", cgs.currentmapname), "ATMOSPHERICS", "WEATHER_TYPE", "");
+
+		if (strlen(atmosphericString) > 1)
+		{// Redundancy...
+			if (JKA_WEATHER_ENABLED)
+				ATMOSPHERIC_SOUND_ONLY = qtrue;
+			else
+				WZ_WEATHER_ENABLED = qtrue;
+		}
+	}
+
+	if (!WZ_WEATHER_ENABLED && !ATMOSPHERIC_SOUND_ONLY)
+	{
+		return(kludgeResult = qfalse);
+	}
+
 
 	if (!Q_stricmp(atmosphericString, "rain"))
 	{

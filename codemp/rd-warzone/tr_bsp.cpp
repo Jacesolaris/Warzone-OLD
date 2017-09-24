@@ -3458,6 +3458,8 @@ qboolean R_CloseLightNear (vec3_t pos)
 	return qfalse;
 }
 
+qboolean CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
+
 static void R_SetupMapGlowsAndWaterPlane( void )
 {
 	NUM_MAP_GLOW_LOCATIONS = 0;
@@ -3465,6 +3467,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 	world_t	*w;
 
 	w = &s_worldData;
+
+	CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
 
 	for (int i = 0; i < w->numsurfaces; i++)
 	{// Get a count of how many we need... Add them to temp list if not too close to another...
@@ -3481,6 +3485,11 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 		if (surf->shader)
 		{
+			if ((surf->shader->contentFlags & CONTENTS_INSIDE) || (surf->shader->contentFlags & CONTENTS_OUTSIDE))
+			{
+				CONTENTS_INSIDE_OUTSIDE_FOUND = qtrue;
+			}
+
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
 				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
