@@ -374,6 +374,20 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		0,
 #endif //__Q3_FOG__
 		dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+
+#ifdef __XYC_SURFACE_SPRITES__
+	for (int i = 0, numSprites = surf->numSurfaceSprites; i < numSprites; ++i)
+	{
+		srfSprites_t *sprites = surf->surfaceSprites + i;
+		R_AddDrawSurf((surfaceType_t *)sprites, sprites->shader,
+#ifdef __Q3_FOG__
+			surf->fogIndex,
+#else //!__Q3_FOG__
+			0,
+#endif //__Q3_FOG__
+			dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+	}
+#endif //__XYC_SURFACE_SPRITES__
 }
 
 /*

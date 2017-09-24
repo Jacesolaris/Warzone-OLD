@@ -1,5 +1,9 @@
 #pragma once
 
+#include "tr_local.h"
+
+#ifdef __JKA_SURFACE_SPRITES__
+
 // tr_QuickSprite.h: interface for the CQuickSprite class.
 //
 //////////////////////////////////////////////////////////////////////
@@ -30,3 +34,5 @@ public:
 };
 
 extern CQuickSpriteSystem SQuickSprite;
+
+#endif //__JKA_SURFACE_SPRITES__

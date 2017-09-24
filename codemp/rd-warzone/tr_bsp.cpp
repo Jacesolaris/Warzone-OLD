@@ -3535,7 +3535,9 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			
 			MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 			
-			ri->Printf(PRINT_WARNING, "Light %i radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n", NUM_MAP_GLOW_LOCATIONS, radius, emissiveColorScale, emissiveRadiusScale, glowColor[0], glowColor[1], glowColor[2]);
+			if (r_debugEmissiveLights->integer)
+				ri->Printf(PRINT_WARNING, "Light %i radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n", NUM_MAP_GLOW_LOCATIONS, radius, emissiveColorScale, emissiveRadiusScale, glowColor[0], glowColor[1], glowColor[2]);
+
 			NUM_MAP_GLOW_LOCATIONS++;
 		}
 	}
@@ -4310,6 +4312,208 @@ static void R_CalcVertexLightDirs( void )
 	}
 }
 
+#ifdef __XYC_SURFACE_SPRITES__
+struct sprite_t
+{
+	vec3_t position;
+	vec3_t normal;
+};
+
+static uint32_t UpdateHash(const char *text, uint32_t hash)
+{
+	for (int i = 0; text[i]; ++i)
+	{
+		char letter = tolower((unsigned char)text[i]);
+		if (letter == '.') break;				// don't include extension
+		if (letter == '\\') letter = '/';		// damn path names
+		if (letter == PATH_SEP) letter = '/';		// damn path names
+
+		hash += (uint32_t)(letter)*(i + 119);
+	}
+
+	return (hash ^ (hash >> 10) ^ (hash >> 20));
+}
+
+static void R_GenerateSurfaceSprites(
+	const srfBspSurface_t *bspSurf,
+	const shader_t *shader,
+	const shaderStage_t *stage,
+	srfSprites_t *out)
+{
+	const surfaceSprite_t *surfaceSprite = stage->ss;
+	const textureBundle_t *bundle = &stage->bundle[0];
+
+	const float density = surfaceSprite->density;
+	const srfVert_t *verts = bspSurf->verts;
+	const glIndex_t *indexes = bspSurf->indexes;
+
+	std::vector<sprite_t> sprites;
+	sprites.reserve(10000);
+	for (int i = 0, numIndexes = bspSurf->numIndexes; i < numIndexes; i += 3)
+	{
+		const srfVert_t *v0 = verts + indexes[i + 0];
+		const srfVert_t *v1 = verts + indexes[i + 1];
+		const srfVert_t *v2 = verts + indexes[i + 2];
+
+		vec3_t p0, p1, p2;
+		VectorCopy(v0->xyz, p0);
+		VectorCopy(v1->xyz, p1);
+		VectorCopy(v2->xyz, p2);
+
+		vec3_t n0, n1, n2;
+		VectorCopy(v0->normal, n0);
+		VectorCopy(v1->normal, n1);
+		VectorCopy(v2->normal, n2);
+
+		const vec2_t p01 = { p1[0] - p0[0], p1[1] - p0[1] };
+		const vec2_t p02 = { p2[0] - p0[0], p2[1] - p0[1] };
+
+		const float zarea = std::fabs(p02[0] * p01[1] - p02[1] * p01[0]);
+		if (zarea <= 1.0)
+		{
+			// Triangle's area is too small to consider.
+			continue;
+		}
+
+		// Generate the positions of the surface sprites.
+		//
+		// Pick random points inside of each triangle, using barycentric
+		// coordinates.
+		const float step = density * Q_rsqrt(zarea);
+		for (float a = 0.0f; a < 1.0f; a += step)
+		{
+			for (float b = 0.0f, bend = (1.0f - a); b < bend; b += step)
+			{
+				float x = flrand(0.0f, 1.0f)*step + a;
+				float y = flrand(0.0f, 1.0f)*step + b;
+				float z = 1.0f - x - y;
+
+				// Ensure we're inside the triangle bounds.
+				if (x > 1.0f) continue;
+				if ((x + y) > 1.0f) continue;
+
+				// Calculate position inside triangle.
+				// pos = (((p0*x) + p1*y) + p2*z)
+				sprite_t sprite = {};
+				VectorMA(sprite.position, x, p0, sprite.position);
+				VectorMA(sprite.position, y, p1, sprite.position);
+				VectorMA(sprite.position, z, p2, sprite.position);
+
+				// x*x + y*y = 1.0
+				// => y*y = 1.0 - x*x
+				// => y = -/+sqrt(1.0 - x*x)
+				float nx = flrand(-1.0f, 1.0f);
+				float ny = std::sqrt(1.0f - nx*nx);
+				ny *= irand(0, 1) ? -1 : 1;
+
+				VectorSet(sprite.normal, nx, ny, 0.0f);
+
+				// We have 4 copies for each corner of the quad
+				sprites.push_back(sprite);
+			}
+		}
+	}
+
+	uint32_t hash = 0;
+	for (int i = 0; bundle->image[i]; ++i)
+	{
+		hash = UpdateHash(bundle->image[i]->imgName, hash);
+	}
+
+	uint16_t indices[] = { 0, 1, 2, 0, 2, 3 };
+
+	out->surfaceType = SF_SPRITES;
+	out->sprite = surfaceSprite;
+	out->numSprites = sprites.size();
+	out->vbo = R_CreateVBO((byte *)sprites.data(), sizeof(sprite_t) * sprites.size(), VBO_USAGE_STATIC);
+
+	out->ibo = R_CreateIBO((byte *)indices, sizeof(indices), VBO_USAGE_STATIC);
+
+	// FIXME: Need a better way to handle this.
+	out->shader = R_CreateShaderFromTextureBundle(va("*ss_%08x\n", hash), bundle, stage->stateBits);
+	out->shader->cullType = shader->cullType;
+	out->shader->stages[0]->glslShaderGroup = &tr.surfaceSpriteShader;
+	//out->shader->stages[0]->alphaTestCmp = stage->alphaTestCmp;
+
+	out->numAttributes = 2;
+	out->attributes = (vertexAttribute_t *)ri->Hunk_Alloc(sizeof(vertexAttribute_t) * out->numAttributes, h_low);
+	//out->attributes = (vertexAttribute_t *)malloc(sizeof(vertexAttribute_t) * out->numAttributes);
+	//out->attributes = (vertexAttribute_t *)ri->Z_Malloc(sizeof(vertexAttribute_t) * out->numAttributes, TAG_GENERAL, qfalse, 4);
+
+	out->attributes[0].vbo = out->vbo;
+	out->attributes[0].index = ATTR_INDEX_POSITION;
+	out->attributes[0].numComponents = 3;
+	out->attributes[0].integerAttribute = qfalse;
+	out->attributes[0].type = GL_FLOAT;
+	out->attributes[0].normalize = GL_FALSE;
+	out->attributes[0].stride = sizeof(sprite_t);
+	out->attributes[0].offset = offsetof(sprite_t, position);
+	out->attributes[0].stepRate = 1;
+
+	out->attributes[1].vbo = out->vbo;
+	out->attributes[1].index = ATTR_INDEX_NORMAL;
+	out->attributes[1].numComponents = 3;
+	out->attributes[1].integerAttribute = qfalse;
+	out->attributes[1].type = GL_FLOAT;
+	out->attributes[1].normalize = GL_FALSE;
+	out->attributes[1].stride = sizeof(sprite_t);
+	out->attributes[1].offset = offsetof(sprite_t, normal);
+	out->attributes[1].stepRate = 1;
+}
+
+static void R_GenerateSurfaceSprites(const world_t *world)
+{
+	msurface_t *surfaces = world->surfaces;
+	for (int i = 0, numSurfaces = world->numsurfaces; i < numSurfaces; ++i)
+	{
+		msurface_t *surf = surfaces + i;
+		const srfBspSurface_t *bspSurf = (srfBspSurface_t *)surf->data;
+		switch (bspSurf->surfaceType)
+		{
+		case SF_FACE:
+		case SF_GRID:
+		case SF_TRIANGLES:
+		{
+			const shader_t *shader = surf->shader;
+			if (!shader->numSurfaceSpriteStages)
+			{
+				continue;
+			}
+
+			surf->numSurfaceSprites = shader->numSurfaceSpriteStages;
+			surf->surfaceSprites = (srfSprites_t *)ri->Hunk_Alloc(sizeof(srfSprites_t) * surf->numSurfaceSprites, h_low);
+			//surf->surfaceSprites = (srfSprites_t *)malloc(sizeof(srfSprites_t) * surf->numSurfaceSprites);
+			//surf->surfaceSprites = (srfSprites_t *)ri->Z_Malloc(sizeof(srfSprites_t) * surf->numSurfaceSprites, TAG_GENERAL, qfalse, 4);
+
+			int surfaceSpriteNum = 0;
+			for (int j = 0, numStages = shader->numUnfoggedPasses; j < numStages; ++j)
+			{
+				const shaderStage_t *stage = shader->stages[j];
+				if (!stage)
+				{
+					break;
+				}
+
+				if (!stage->ss || stage->ss->type == SURFSPRITE_NONE)
+				{
+					continue;
+				}
+
+				srfSprites_t *sprite = surf->surfaceSprites + surfaceSpriteNum;
+				R_GenerateSurfaceSprites(bspSurf, shader, stage, sprite);
+				++surfaceSpriteNum;
+			}
+			break;
+		}
+
+		default:
+			break;
+		}
+	}
+}
+#endif //__XYC_SURFACE_SPRITES__
+
+
 void StripMaps( const char *in, char *out, int destsize )
 {
 	const char *dot = strrchr(in, '_'), *slash;
@@ -4434,6 +4638,10 @@ void RE_LoadWorldMap( const char *name ) {
 	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
 	R_LoadLightGridArray( &header->lumps[LUMP_LIGHTARRAY] );
 	
+#ifdef __XYC_SURFACE_SPRITES__
+	R_GenerateSurfaceSprites(&s_worldData);
+#endif //__XYC_SURFACE_SPRITES__
+
 	// determine vertex light directions
 	R_CalcVertexLightDirs();
 

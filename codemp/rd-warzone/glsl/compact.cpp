@@ -59,6 +59,7 @@ bool ends_with ( const std::string& s, const std::string& suffix )
 bool invalidChar(char c)
 {
 	return !(c >= 0 && c <128);
+	//return !isprint(static_cast<unsigned char>(c));
 }
 void stripUnicode(std::string &str)
 {

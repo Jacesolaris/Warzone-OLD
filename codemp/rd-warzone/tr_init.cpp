@@ -294,6 +294,7 @@ cvar_t	*r_parallaxScale;
 cvar_t	*r_ao;
 cvar_t	*r_env;
 cvar_t	*r_blinnPhong;
+cvar_t	*r_debugEmissiveLights;
 cvar_t	*r_debugEmissiveRadiusScale;
 cvar_t	*r_debugEmissiveColorScale;
 cvar_t  *r_skynum;
@@ -1555,8 +1556,11 @@ void R_Register( void )
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
 	r_ao = ri->Cvar_Get("r_ao", "1", CVAR_ARCHIVE);
 	r_env = ri->Cvar_Get("r_env", "1", CVAR_ARCHIVE);
+	
+	r_debugEmissiveLights = ri->Cvar_Get("r_debugEmissiveLights", "0", CVAR_ARCHIVE);
 	r_debugEmissiveRadiusScale = ri->Cvar_Get("r_debugEmissiveRadiusScale", "1.0", CVAR_ARCHIVE);
 	r_debugEmissiveColorScale = ri->Cvar_Get("r_debugEmissiveColorScale", "1.0", CVAR_ARCHIVE);
+	
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.0", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1687,23 +1691,23 @@ void R_Register( void )
 	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE);
 	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE);
 
-	r_rotatex							= ri->Cvar_Get( "r_rotatex",						"0",						CVAR_TEMP );
-	r_rotatey							= ri->Cvar_Get( "r_rotatey",						"0",						CVAR_TEMP );
-	r_rotatez							= ri->Cvar_Get( "r_rotatez",						"0",						CVAR_TEMP );
+	r_rotatex = ri->Cvar_Get("r_rotatex", "0", CVAR_TEMP);
+	r_rotatey = ri->Cvar_Get("r_rotatey", "0", CVAR_TEMP);
+	r_rotatez = ri->Cvar_Get("r_rotatez", "0", CVAR_TEMP);
 
-	r_materialDebug						= ri->Cvar_Get("r_materialDebug",					"0",						CVAR_ARCHIVE);
-	r_genericShaderDebug				= ri->Cvar_Get("r_genericShaderDebug",				"0",						CVAR_ARCHIVE);
+	r_materialDebug = ri->Cvar_Get("r_materialDebug", "0", CVAR_ARCHIVE);
+	r_genericShaderDebug = ri->Cvar_Get("r_genericShaderDebug", "0", CVAR_ARCHIVE);
 
-	r_weather							= ri->Cvar_Get( "r_weather",						"0",						CVAR_ARCHIVE );
-	r_surfaceSprites					= ri->Cvar_Get( "r_surfaceSprites",					"0",						CVAR_TEMP );
-	r_surfaceWeather					= ri->Cvar_Get( "r_surfaceWeather",					"0",						CVAR_TEMP );
-	r_windSpeed							= ri->Cvar_Get( "r_windSpeed",						"0",						CVAR_NONE );
-	r_windAngle							= ri->Cvar_Get( "r_windAngle",						"0",						CVAR_NONE );
-	r_windGust							= ri->Cvar_Get( "r_windGust",						"0",						CVAR_NONE );
-	r_windDampFactor					= ri->Cvar_Get( "r_windDampFactor",					"0.1",						CVAR_NONE );
-	r_windPointForce					= ri->Cvar_Get( "r_windPointForce",					"0",						CVAR_NONE );
-	r_windPointX						= ri->Cvar_Get( "r_windPointX",						"0",						CVAR_NONE );
-	r_windPointY						= ri->Cvar_Get( "r_windPointY",						"0",						CVAR_NONE );
+	r_weather = ri->Cvar_Get("r_weather", "1", CVAR_ARCHIVE);
+	r_surfaceSprites = ri->Cvar_Get("r_surfaceSprites", "1", CVAR_ARCHIVE);
+	r_surfaceWeather = ri->Cvar_Get("r_surfaceWeather", "1", CVAR_ARCHIVE);
+	r_windSpeed = ri->Cvar_Get("r_windSpeed", "0", CVAR_NONE);
+	r_windAngle = ri->Cvar_Get("r_windAngle", "0", CVAR_NONE);
+	r_windGust = ri->Cvar_Get("r_windGust", "0", CVAR_NONE);
+	r_windDampFactor = ri->Cvar_Get("r_windDampFactor", "0.1", CVAR_NONE);
+	r_windPointForce = ri->Cvar_Get("r_windPointForce", "0", CVAR_NONE);
+	r_windPointX = ri->Cvar_Get("r_windPointX", "0", CVAR_NONE);
+	r_windPointY = ri->Cvar_Get("r_windPointY", "0", CVAR_NONE);
 
 	//
 	// temporary variables that can change at any time

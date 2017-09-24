@@ -63,6 +63,8 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_surfaceSprite_vp;
+extern const char *fallbackShader_surfaceSprite_fp;
 extern const char *fallbackShader_ssdo_vp;
 extern const char *fallbackShader_ssdo_fp;
 extern const char *fallbackShader_ssdoBlur_vp;
@@ -3057,6 +3059,16 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load ssdoBlur shader!");
 	}
 
+#ifdef __XYC_SURFACE_SPRITES__
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.surfaceSpriteShader, "surfaceSprite", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_surfaceSprite_vp, fallbackShader_surfaceSprite_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load surfaceSprite shader!");
+	}
+#endif //__XYC_SURFACE_SPRITES__
+
 
 	for (i = 0; i < 2; i++)
 	{
@@ -4039,6 +4051,24 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
+
+#ifdef __XYC_SURFACE_SPRITES__
+	if (!GLSL_EndLoadGPUShader(&tr.surfaceSpriteShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load surfaceSprite shader!");
+	}
+
+	GLSL_InitUniforms(&tr.surfaceSpriteShader);
+
+	GLSL_BindProgram(&tr.surfaceSpriteShader);
+	GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.surfaceSpriteShader);
+#endif
+
+	numEtcShaders++;
+#endif //__XYC_SURFACE_SPRITES__
 
 
 	for (i = 0; i < 2; i++)
@@ -5426,6 +5456,10 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
+
+#ifdef __XYC_SURFACE_SPRITES__
+	GLSL_DeleteGPUShader(&tr.surfaceSpriteShader);
+#endif //__XYC_SURFACE_SPRITES__
 
 	for (i = 0; i < 2; i++)
 		GLSL_DeleteGPUShader(&tr.depthBlurShader[i]);

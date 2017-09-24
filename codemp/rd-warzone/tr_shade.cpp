@@ -2053,9 +2053,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if ( pStage->isSurfaceSprite )
 		{
-#ifdef __JKA_WEATHER__
+#if !defined(__JKA_SURFACE_SPRITES__) && !defined(__XYC_SURFACE_SPRITES__)
 			if (!r_surfaceSprites->integer)
-#endif //__JKA_WEATHER__
+#endif //__JKA_SURFACE_SPRITES__
 			{
 				continue;
 			}
@@ -3868,22 +3868,29 @@ void RB_StageIteratorGeneric( void )
 #endif
 
 	// Now check for surfacesprites.
-#if 0
+#ifdef __JKA_SURFACE_SPRITES__
+	int SSCOUNT = 0;
+	int SSDRAWNCOUNT = 0;
 	if (r_surfaceSprites->integer)
 	{
 		//for ( int stage = 1; stage < MAX_SHADER_STAGES/*tess.shader->numUnfoggedPasses*/; stage++ )
 		for ( int stage = 0; stage < MAX_SHADER_STAGES/*tess.shader->numUnfoggedPasses*/; stage++ )
 		{
-			if (tess.xstages[stage])
+			if (input->xstages[stage] && input->xstages[stage]->active)
 			{
-				if (tess.xstages[stage]->ss && tess.xstages[stage]->ss->surfaceSpriteType)
+				SSCOUNT++;
+
+				if (input->xstages[stage]->ss && input->xstages[stage]->ss->surfaceSpriteType)
 				{	// Draw the surfacesprite
-					RB_DrawSurfaceSprites( tess.xstages[stage], input);
+					RB_DrawSurfaceSprites(input->xstages[stage], input);
+					SSDRAWNCOUNT++;
 				}
 			}
 		}
 	}
-#endif
+	if (r_surfaceSprites->integer >= 5)
+		ri->Printf(PRINT_WARNING, "SSCOUNT: %i. SSDRAWNCOUNT: %i.\n", SSCOUNT, SSDRAWNCOUNT);
+#endif //__JKA_SURFACE_SPRITES__
 
 	//
 	// reset polygon offset

@@ -54,6 +54,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __INSTANCED_MODELS__					// experimenting with model instancing for foliage...
 //#define __RENDERER_GROUND_FOLIAGE__			// in-progress port of cgame foliage system to renderer...
 #define __JKA_WEATHER__							// Testing JKA weather reimplementation...
+//#define __JKA_SURFACE_SPRITES__				// Testing JKA surface sprites reimplementation...
+//#define __XYC_SURFACE_SPRITES__				// Testing port of Xycaleth's surface sprite implementation...
 
 //#define __CRC_IMAGE_HASHING__					// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
 //#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
@@ -460,6 +462,7 @@ extern cvar_t	*r_parallaxScale;
 extern cvar_t	*r_blinnPhong;
 extern cvar_t	*r_ao;
 extern cvar_t	*r_env;
+extern cvar_t	*r_debugEmissiveLights;
 extern cvar_t	*r_debugEmissiveRadiusScale;
 extern cvar_t	*r_debugEmissiveColorScale;
 extern cvar_t	*r_skynum;
@@ -1032,21 +1035,36 @@ typedef enum
 	ST_GLSL
 } stageType_t;
 
-#define SURFSPRITE_NONE			0
-#define SURFSPRITE_VERTICAL		1
-#define SURFSPRITE_ORIENTED		2
-#define SURFSPRITE_EFFECT		3
-#define SURFSPRITE_WEATHERFX	4
-#define SURFSPRITE_FLATTENED	5
-
 #define SURFSPRITE_FACING_NORMAL	0
 #define SURFSPRITE_FACING_UP		1
 #define SURFSPRITE_FACING_DOWN		2
 #define SURFSPRITE_FACING_ANY		3
 
+struct SurfaceSpriteBlock
+{
+	float width;
+	float height;
+	float fadeStartDistance;
+	float fadeEndDistance;
+	float fadeScale;
+	float widthVariance;
+	float heightVariance;
+};
+
+enum surfaceSpriteType_t
+{
+	SURFSPRITE_NONE,
+	SURFSPRITE_VERTICAL,
+	SURFSPRITE_ORIENTED,
+	SURFSPRITE_EFFECT,
+	SURFSPRITE_WEATHERFX,
+	SURFSPRITE_FLATTENED,
+};
 
 typedef struct surfaceSprite_s
 {
+	surfaceSpriteType_t type;
+
 	int				surfaceSpriteType;
 	float			width, height, density, wind, windIdle, fadeDist, fadeMax, fadeScale;
 	float			fxAlphaStart, fxAlphaEnd, fxDuration, vertSkew;
@@ -1206,6 +1224,10 @@ typedef struct shader_s {
 
 	int			numDeforms;
 	deformStage_t	deforms[MAX_SHADER_DEFORMS];
+
+#ifdef __XYC_SURFACE_SPRITES__
+	int			numSurfaceSpriteStages;
+#endif //__XYC_SURFACE_SPRITES__
 
 	int			numUnfoggedPasses;
 	shaderStage_t	*stages[MAX_SHADER_STAGES];		
@@ -1756,6 +1778,9 @@ typedef enum {
 	SF_DISPLAY_LIST,
 	SF_VBO_MESH,
 	SF_VBO_MDVMESH,
+#ifdef __XYC_SURFACE_SPRITES__
+	SF_SPRITES,
+#endif //__XYC_SURFACE_SPRITES__
 
 	SF_NUM_SURFACE_TYPES,
 	SF_MAX = 0x7fffffff			// ensures that sizeof( surfaceType_t ) == sizeof( int )
@@ -1796,6 +1821,35 @@ typedef struct srfFlare_s {
 	vec3_t			normal;
 	vec3_t			color;
 } srfFlare_t;
+
+#ifdef __XYC_SURFACE_SPRITES__
+struct vertexAttribute_t
+{
+	VBO_t *vbo;
+	int index;
+	int numComponents;
+	GLboolean integerAttribute;
+	GLenum type;
+	GLboolean normalize;
+	int stride;
+	int offset;
+	int stepRate;
+};
+
+struct srfSprites_t
+{
+	surfaceType_t surfaceType;
+
+	shader_t *shader;
+	const surfaceSprite_t *sprite;
+	int numSprites;
+	VBO_t *vbo;
+	IBO_t *ibo;
+
+	int numAttributes;
+	vertexAttribute_t *attributes;
+};
+#endif //__XYC_SURFACE_SPRITES__
 
 typedef struct
 {
@@ -1996,6 +2050,11 @@ typedef struct msurface_s {
 #endif //__Q3_FOG__
 	int                 cubemapIndex;
 	cullinfo_t          cullinfo;
+
+#ifdef __XYC_SURFACE_SPRITES__
+	int					numSurfaceSprites;
+	srfSprites_t		*surfaceSprites;
+#endif //__XYC_SURFACE_SPRITES__
 
 	surfaceType_t		*data;			// any of srf*_t
 } msurface_t;
@@ -2657,6 +2716,7 @@ typedef struct trGlobals_s {
 	// UQ1: Added shaders...
 	//
 
+	shaderProgram_t surfaceSpriteShader;
 	shaderProgram_t ssdoShader;
 	shaderProgram_t ssdoBlurShader;
 	shaderProgram_t generateNormalMapShader;
@@ -3290,6 +3350,7 @@ struct shaderCommands_s
 
 	VBO_t       *vbo;
 	IBO_t       *ibo;
+
 	qboolean    useInternalVBO;
 
 	stageVars_t	svars QALIGN(16);
@@ -4020,6 +4081,10 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 qboolean R_TextureFileExists(char *name);
 
 uint32_t R_TessXYZtoPackedNormals(vec3_t xyz);
+
+#ifdef __XYC_SURFACE_SPRITES__
+shader_t *R_CreateShaderFromTextureBundle(const char *name, const textureBundle_t *bundle, uint32_t stateBits);
+#endif //__XYC_SURFACE_SPRITES__
 
 /*
 ============================================================

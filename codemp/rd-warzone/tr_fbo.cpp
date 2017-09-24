@@ -351,8 +351,8 @@ void FBO_Bind(FBO_t * fbo)
 	if (glState.currentFBO == fbo)
 		return;
 
-	if (fbo == NULL && !ALLOW_NULL_FBO_BIND && tr.world && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
-		return;
+	//if (fbo == NULL && !ALLOW_NULL_FBO_BIND && tr.world && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
+	//	return;
 		
 #ifdef __DEBUG_FBO_BINDS__
 	if (r_debugBinds->integer)
@@ -387,7 +387,7 @@ void FBO_Bind(FBO_t * fbo)
 
 	if (!fbo)
 	{
-		if (ALLOW_NULL_FBO_BIND || !tr.world || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
+		//if (ALLOW_NULL_FBO_BIND || !tr.world || (backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 		{
 			qglBindFramebuffer(GL_FRAMEBUFFER, 0);
 			//qglBindRenderbuffer(GL_RENDERBUFFER, 0);

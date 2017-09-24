@@ -15,6 +15,9 @@
 #include <windows.h>
 #endif
 
+#include <algorithm>
+#include <string>
+
 #if defined(rd_warzone_x86_EXPORTS)
 #include "tr_local.h"
 #include "../qcommon/q_shared.h"
@@ -72,6 +75,16 @@ void DebugPrint(char *text)
 #endif
 
 #endif //defined(__INI_DEBUG_VERBOSE__) || defined(__INI_DEBUG__)
+}
+
+bool invalidChar(char c)
+{
+	//return !(c >= 0 && c <128);
+	return !isprint(static_cast<unsigned char>(c));
+}
+void stripUnicode(std::string & str)
+{
+	str.erase(remove_if(str.begin(), str.end(), invalidChar), str.end());
 }
 
 char FS_GetC(fileHandle_t fp)
@@ -199,14 +212,17 @@ int get_private_profile_string(char *section, char *entry, char *def, char *buff
 	ep++;
 
 	/* Copy up to buffer_len chars to buffer */
-//#if defined(rd_warzone_x86_EXPORTS) 
-	//if (ep[strlen(ep)] == '\0' || ep[strlen(ep)] == '\n')
+	
+	//if (/*ep[strlen(ep)] == '\0' ||*/ ep[strlen(ep)] == '\n')
 	//	strncpy(buffer, ep, strlen(ep) - 1); // -1 to remove the trailing \n
 	//else
-		strncpy(buffer, ep, strlen(ep)); // WTF OJK, Why does the render version strip the newlines... the others don't! lol
-//#else
-//	strncpy(buffer, ep, strlen(ep) - 1); // -1 to remove the trailing \n
-//#endif
+	//	strncpy(buffer, ep, strlen(ep)); // WTF OJK, Why does the render version strip the newlines... the others don't! lol
+
+	std::string str = ep;
+	str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+	str.erase(std::remove(str.begin(), str.end(), '\0'), str.end());
+	stripUnicode(str);
+	strncpy(buffer, str.c_str(), str.length());
 
 	FS_FCloseFile(fp);               /* Clean up and return the amount copied */
 

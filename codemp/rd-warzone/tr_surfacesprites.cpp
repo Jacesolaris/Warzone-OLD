@@ -1,8 +1,9 @@
 // tr_shade.c
 
-#include "tr_local.h"
-
 #include "tr_quicksprite.h"
+
+#ifdef __JKA_SURFACE_SPRITES__
+
 #include "tr_WorldEffects.h"
 
 
@@ -80,6 +81,11 @@ int		rightvectorcount;
 trRefEntity_t *ssLastEntityDrawn=NULL;
 vec3_t	ssViewOrigin, ssViewRight, ssViewUp;
 
+float UQ_fabs(float value)
+{
+	if (value < 0) return -value;
+	return value;
+}
 
 static void R_SurfaceSpriteFrameUpdate(void)
 {
@@ -510,6 +516,63 @@ static void RB_VerticalSurfaceSpriteWindPoint(vec3_t loc, float width, float hei
 	SQuickSprite.Add(points, color, fog);
 }
 
+vec3_t vLocalSeed;
+
+uint32_t floatBitsToUint(float v)
+{
+	uint32_t *u = (uint32_t*)(&v);
+	return *u;
+}
+
+float uintBitsToFloat(uint32_t v)
+{
+	float *f = (float*)(&v);
+	return *f;
+}
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+	uint32_t n = floatBitsToUint(vLocalSeed[1] * 214013.0 + vLocalSeed[0] * 2531011.0 + vLocalSeed[2] * 141251.0);
+	n = n * (n * n * 15731u + 789221u);
+	n = (n >> 9u) | 0x3F800000u;
+
+	float fRes = 2.0 - uintBitsToFloat(n);
+	float A = vLocalSeed[0] + 147158.0 * fRes;
+	float B = vLocalSeed[1]*fRes + 415161.0 * fRes;
+	float C = vLocalSeed[2] + 324154.0*fRes;
+	VectorSet(vLocalSeed, A, B, C);
+	//ri->Printf(PRINT_WARNING, "rand was %f.\n", fRes);
+	return fRes;
+}
+
+int randomInt(int min, int max)
+{
+	float fRandomFloat = randZeroOne();
+	return int(float(min) + fRandomFloat*float(max - min));
+}
+
+// Produce a psuedo random point that exists on the current triangle primitive.
+void randomBarycentricCoordinate(vec3_t v1, vec3_t v2, vec3_t v3, vec3_t *out) 
+{
+	float R = randZeroOne();
+	float S = randZeroOne();
+
+	if (R + S >= 1) {
+		R = 1 - R;
+		S = 1 - S;
+	}
+
+	vec3_t A, B, A1, B1, out1, out2;
+
+	VectorSubtract(v2, v1, A);
+	VectorSubtract(v3, v1, B);
+	VectorScale(A, R, A1);
+	VectorScale(B, S, B1);
+	VectorAdd(v1, A1, out1);
+	VectorAdd(out1, B1, *out);
+}
+
 static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input)
 {
 	int curindex, curvert;
@@ -574,11 +637,11 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 	}
 
 	// Quickly calc all the alphas and windstuff for each vertex
-	for (curvert=0; curvert<input->numIndexes/*numVertexes*/; curvert++)
+	for (curvert = 0; curvert<input->numVertexes; curvert++)
 	{
 		VectorSubtract(ssViewOrigin, input->xyz[curvert], dist);
-		SSVertAlpha[curvert] = 0.5;//1.0 - (VectorLengthSquared(dist) - fadedist2) * inv_fadediff;
-		//ri->Printf(PRINT_WARNING, "ssVieworg %f %f %f - vert %f %f %f - dist %f %f %f. Alpha %f. fadedist2 %f. inv_fadediff %f.\n", ssViewOrigin[0], ssViewOrigin[1], ssViewOrigin[2], input->xyz[curvert][0], input->xyz[curvert][1], input->xyz[curvert][2], dist[0], dist[1], dist[2], SSVertAlpha[curvert], fadedist2, inv_fadediff);
+		SSVertAlpha[curvert] = 0.5;
+		//SSVertAlpha[curvert] = 1.0 - (VectorLengthSquared(dist) - fadedist2) * inv_fadediff;
 	}
 
 	// Wind only needs initialization once per tess.
@@ -627,7 +690,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] > -0.5)
 			{
-				//continue;
+				continue;
 			}
 		}
 		else
@@ -636,7 +699,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] < 0.5)
 			{
-				//continue;
+				continue;
 			}
 		}
 		l1 = input->vertexColors[curvert][2];
@@ -655,7 +718,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] > -0.5)
 			{
-				//continue;
+				continue;
 			}
 		}
 		else
@@ -664,7 +727,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] < 0.5)
 			{
-				//continue;
+				continue;
 			}
 		}
 		l2 = input->vertexColors[curvert][2];
@@ -683,7 +746,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] > -0.5)
 			{
-				//continue;
+				continue;
 			}
 		}
 		else
@@ -692,7 +755,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] < 0.5)
 			{
-				//continue;
+				continue;
 			}
 		}
 		l3 = input->vertexColors[curvert][2];
@@ -703,6 +766,9 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 		winddiff3[1] = SSVertWindDir[curvert][1];
 		windforce3 = SSVertWindForce[curvert];
 
+		ri->Printf(PRINT_WARNING, "v1 %f %f %f. v2 %f %f %f. v3 %f %f %f.\n", v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
+
+#if 0
 		if (a1 <= 0.0 && a2 <= 0.0 && a3 <= 0.0)
 		{
 			//ri->Printf(PRINT_WARNING, "a1 <= 0.0 && a2 <= 0.0 && a3 <= 0.0\n");
@@ -717,15 +783,16 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 
 		// Now get the cross product of this sum.
 		triarea = vec1to3[0]*vec1to2[1] - vec1to3[1]*vec1to2[0];
-		triarea=fabs(triarea);
+		triarea=UQ_fabs(triarea);
 		if (triarea <= 1.0)
 		{	// Insanely small abhorrent triangle.
-			//ri->Printf(PRINT_WARNING, "triarea <= 1.0\n");
-			//continue;
+			//ri->Printf(PRINT_WARNING, "triarea <= 1.0 (%f)\n", triarea);
+			continue;
 			//triarea *= 100.0;
-			triarea = 2.0;
+			//triarea = 2.0;
 		}
 		step = stage->ss->density * Q_rsqrt(triarea);
+		ri->Printf(PRINT_WARNING, "triarea: %f. step %f. density %f. triareaSqrt: %f.\n", triarea, step, stage->ss->density, Q_rsqrt(triarea));
 
 		randomindex = (byte)(v1[0]+v1[1]+v2[0]+v2[1]+v3[0]+v3[1]);
 		randominterval = (byte)(v1[0]+v2[1]+v3[2])|0x03;	// Make sure the interval is at least 3, and always odd
@@ -781,6 +848,8 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 					VectorScale(v1, fa, curpoint);
 					VectorMA(curpoint, fb, v2, curpoint);
 					VectorMA(curpoint, fc, v3, curpoint);
+
+					ri->Printf(PRINT_WARNING, "curpoint %f %f %f.\n", curpoint[0], curpoint[1], curpoint[2]);
 
 					light = l1*fa + l2*fb + l3*fc;
 					if (SSAdditiveTransparency)
@@ -843,6 +912,50 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 				}
 			}
 		}
+#else
+		// Find the center of the tri for random seed...
+		float A = (v1[0] + v2[0] + v3[0]) / 3.0;
+		float B = (v1[1] + v2[1] + v3[1]) / 3.0;
+		float C = (v1[2] + v2[2] + v3[2]) / 3.0;
+		VectorSet(vLocalSeed, A, B, C);
+
+		ri->Printf(PRINT_WARNING, "vLocalSeed %f %f %f.\n", vLocalSeed[0], vLocalSeed[1], vLocalSeed[2]);
+
+		for (int i = 0; i < stage->ss->density; i++)
+		{
+			vec3_t curpoint;
+			randomBarycentricCoordinate(v1, v2, v3, &curpoint);
+
+			float dist = Distance(curpoint, backEnd.viewParms.ori.origin/*backEnd.refdef.vieworg*/);
+			dist /= faderange;
+			dist = Q_clamp(0.0, dist, 1.0);
+			alpha = 1.0 - dist;
+			//alpha = 1.0;
+			light = 1.0 * alpha;
+
+			width = stage->ss->width*(1.0 + (stage->ss->variance[0] * randZeroOne()));
+			height = stage->ss->height*(1.0 + (stage->ss->variance[1] * randZeroOne()));
+			/*if (randomchart[randomindex2++]>0.5)
+			{
+				width = -width;
+			}
+			if (stage->ss->fadeScale != 0 && alphapos < 1.0)
+			{
+				width *= 1.0 + (stage->ss->fadeScale*(1.0 - alphapos));
+			}*/
+
+			if (stage->ss->vertSkew != 0)
+			{	// flrand(-vertskew, vertskew)
+				skew[0] = height * ((stage->ss->vertSkew*2.0f*randZeroOne()) - stage->ss->vertSkew);
+				skew[1] = height * ((stage->ss->vertSkew*2.0f*randZeroOne()) - stage->ss->vertSkew);
+			}
+
+			//ri->Printf(PRINT_WARNING, "curpoint %f %f %f.\n", curpoint[0], curpoint[1], curpoint[2]);
+
+			RB_VerticalSurfaceSprite(curpoint, width, height, (byte)light, (byte)(alpha*255.0),
+				stage->ss->wind, stage->ss->windIdle, NULL, stage->ss->facing, skew, SURFSPRITE_FLATTENED == stage->ss->surfaceSpriteType);
+		}
+#endif
 	}
 }
 
@@ -1038,7 +1151,7 @@ static void RB_DrawOrientedSurfaceSprites( shaderStage_t *stage, shaderCommands_
 
 		// Now get the cross product of this sum.
 		triarea = vec1to3[0]*vec1to2[1] - vec1to3[1]*vec1to2[0];
-		triarea=fabs(triarea);
+		triarea= UQ_fabs(triarea);
 		if (triarea <= 1.0)
 		{	// Insanely small abhorrent triangle.
 			continue;
@@ -1342,7 +1455,7 @@ static void RB_DrawEffectSurfaceSprites( shaderStage_t *stage, shaderCommands_t 
 
 		// Now get the cross product of this sum.
 		triarea = vec1to3[0]*vec1to2[1] - vec1to3[1]*vec1to2[0];
-		triarea=fabs(triarea);
+		triarea= UQ_fabs(triarea);
 		if (triarea <= 1.0f)
 		{	// Insanely small abhorrent triangle.
 			continue;
@@ -1500,17 +1613,39 @@ void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input)
 	{
 		if (backEnd.currentEntity == &tr.worldEntity)
 		{	// Drawing the world, so our job is dead-easy, in the viewparms
-			VectorCopy(backEnd.viewParms.ori.origin, ssViewOrigin);
-			//VectorCopy(backEnd.ori.viewOrigin, ssViewOrigin);
-			VectorCopy(backEnd.viewParms.ori.axis[1], ssViewRight);
-			VectorCopy(backEnd.viewParms.ori.axis[2], ssViewUp);
+#if 1
+			//VectorCopy(backEnd.viewParms.ori.origin, ssViewOrigin);
+			////VectorCopy(backEnd.ori.viewOrigin, ssViewOrigin);
+			//VectorCopy(backEnd.viewParms.ori.axis[1], ssViewRight);
+			//VectorCopy(backEnd.viewParms.ori.axis[2], ssViewUp);
+			VectorCopy(backEnd.refdef.vieworg, ssViewOrigin);
+			VectorCopy(backEnd.refdef.viewaxis[2], ssViewRight);
+			VectorCopy(backEnd.refdef.viewaxis[1], ssViewUp);
 
 			//VectorCopy(backEnd.refdef.vieworg, ssViewOrigin);
 			//VectorCopy(backEnd.refdef.viewaxis[1], ssViewRight);
 			//VectorCopy(backEnd.refdef.viewaxis[2], ssViewUp);
+#else
+			/*VectorCopy(backEnd.viewParms.ori.origin, ssViewOrigin);
+			VectorCopy(backEnd.viewParms.ori.axis[1], ssViewRight);
+			VectorCopy(backEnd.viewParms.ori.axis[2], ssViewUp);*/
+
+			VectorCopy(backEnd.ori.origin, ssViewOrigin);
+			VectorCopy(backEnd.ori.axis[1], ssViewRight);
+			VectorCopy(backEnd.ori.axis[2], ssViewUp);
+#endif
 		}
 		else
 		{	// Drawing an entity, so we need to transform the viewparms to the model's coordinate system
+#if 1
+			/*VectorCopy(backEnd.viewParms.ori.origin, ssViewOrigin);
+			//VectorCopy(backEnd.ori.viewOrigin, ssViewOrigin);
+			VectorCopy(backEnd.viewParms.ori.axis[1], ssViewRight);
+			VectorCopy(backEnd.viewParms.ori.axis[2], ssViewUp);*/
+			VectorCopy(backEnd.refdef.vieworg, ssViewOrigin);
+			VectorCopy(backEnd.refdef.viewaxis[2], ssViewRight);
+			VectorCopy(backEnd.refdef.viewaxis[1], ssViewUp);
+#elif 0
 //			R_WorldPointToEntity (backEnd.viewParms.ori.origin, ssViewOrigin);
 
 			//R_RotateForEntity( backEnd.currentEntity, &backEnd.viewParms, &backEnd.ori );
@@ -1525,6 +1660,20 @@ void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input)
 
 			VectorCopy(backEnd.ori.viewOrigin, ssViewOrigin);
 			//VectorCopy(backEnd.viewParms.ori.origin, ssViewOrigin);
+#else
+			/*
+			//			R_WorldPointToEntity (backEnd.viewParms.ori.origin, ssViewOrigin);
+			R_WorldNormalToEntity(backEnd.viewParms.ori.axis[1], ssViewRight);
+			R_WorldNormalToEntity(backEnd.viewParms.ori.axis[2], ssViewUp);
+			VectorCopy(backEnd.ori.viewOrigin, ssViewOrigin);
+			//			R_WorldToLocal(backEnd.viewParms.ori.axis[1], ssViewRight);
+			//			R_WorldToLocal(backEnd.viewParms.ori.axis[2], ssViewUp);
+			*/
+
+			R_WorldNormalToEntity(backEnd.ori.axis[1], ssViewRight);
+			R_WorldNormalToEntity(backEnd.ori.axis[2], ssViewUp);
+			VectorCopy(backEnd.ori.viewOrigin, ssViewOrigin);
+#endif
 		}
 		ssLastEntityDrawn = backEnd.currentEntity;
 	}
@@ -1548,4 +1697,4 @@ void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input)
 
 	sssurfaces++;
 }
-
+#endif //__JKA_SURFACE_SPRITES__

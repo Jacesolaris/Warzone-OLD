@@ -1,9 +1,10 @@
 // tr_QuickSprite.cpp: implementation of the CQuickSpriteSystem class.
 //
 //////////////////////////////////////////////////////////////////////
-#include "tr_local.h"
 
 #include "tr_quicksprite.h"
+
+#ifdef __JKA_SURFACE_SPRITES__
 
 extern void R_BindAnimatedImageToTMU( textureBundle_t *bundle, int tmu );
 
@@ -47,7 +48,7 @@ CQuickSpriteSystem::~CQuickSpriteSystem()
 
 void CQuickSpriteSystem::Flush(void)
 {
-	if (mNextVert==0)
+	if (mNextVert == 0)
 	{
 		return;
 	}
@@ -72,62 +73,109 @@ void CQuickSpriteSystem::Flush(void)
 	//
 	//qglLoadIdentity ();
 
-	R_BindAnimatedImageToTMU( mTexBundle, TB_DIFFUSEMAP );
 	//GL_State(mGLStateBits);
 
-	//
-	// set arrays and lock
-	//
-	/*qglTexCoordPointer( 2, GL_FLOAT, 0, mTextureCoords );
-	qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
+	extern void SetViewportAndScissor(void);
+	SetViewportAndScissor();
+	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
 
-	qglEnableClientState( GL_COLOR_ARRAY);
-	qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, mColors );
-
-	qglVertexPointer (3, GL_FLOAT, 16, mVerts);*/
-
-	//if ( qglLockArraysEXT )
-	//{
-	//	qglLockArraysEXT(0, mNextVert);
-	//	GLimp_LogComment( "glLockArraysEXT\n" );
-	//}
-
-	//qglBegin( GL_QUADS );
-	////qglDrawArraysInstanced?
-	//qglDrawArrays(GL_QUADS, 0, mNextVert);
-	//qglEnd ();
-
-	GLSL_BindProgram(&tr.textureColorShader);
+	//GL_State((mTexBundle->image[0]->hasAlpha) ? (GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
+	GL_State(mGLStateBits);
+	GL_Cull(CT_TWO_SIDED);
 	
+	GLSL_BindProgram(&tr.textureColorShader);
+	GL_Bind(mTexBundle->image[0]);
+	//R_BindAnimatedImageToTMU(mTexBundle, TB_DIFFUSEMAP);
+
 	GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
 
-	//qglDrawRangeElements(GL_QUADS, 0, mNextVert, mNextVert, GL_INDEX_TYPE, mVerts);
-	//RB_InstantQuad(mVerts);
-	//RB_InstantQuad2(vec4_t quadVerts[4], vec2_t texCoords[4])
+	tess.numVertexes = 0;
+	tess.numIndexes = 0;
+	tess.firstIndex = 0;
 
-	for (int i = 0; i < mNextVert; i+=4)
+	tess.minIndex = 0;
+
+	for (int i = 0; i < mNextVert; i += 4)
 	{
-		vec4_t v[4];
-		vec2_t t[4];
-		VectorCopy4(mVerts[i], v[0]);
-		VectorCopy4(mVerts[i+1], v[1]);
-		VectorCopy4(mVerts[i+2], v[2]);
-		VectorCopy4(mVerts[i+3], v[3]);
-		VectorCopy2(mTextureCoords[i], t[0]);
-		VectorCopy2(mTextureCoords[i+1], t[1]);
-		VectorCopy2(mTextureCoords[i+2], t[2]);
-		VectorCopy2(mTextureCoords[i+3], t[3]);
-		RB_InstantQuad2(v, t);
-		
-		if(r_surfaceSprites->integer >= 4)
-			ri->Printf(PRINT_WARNING, "v[0] %f %f %f %f v[1] %f %f %f %f v[2] %f %f %f %f v[3] %f %f %f %f\n", v[0][0], v[0][1], v[0][2], v[0][3], v[1][0], v[1][1], v[1][2], v[1][3], v[2][0], v[2][1], v[2][2], v[2][3], v[3][0], v[3][1], v[3][2], v[3][3]);
-	}
-	//RB_InstantQuad2(mVerts, mTextureCoords);
+		if (tess.numVertexes + 4 >= SHADER_MAX_VERTEXES || tess.numIndexes + 6 >= SHADER_MAX_INDEXES)
+		{// Would go over the limit, render current queue and continue...
+			RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
+			GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+			R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
-	backEnd.pc.c_vertexes += mNextVert;
-	backEnd.pc.c_indexes += mNextVert;
-	backEnd.pc.c_totalIndexes += mNextVert;
+			tess.numIndexes = 0;
+			tess.numVertexes = 0;
+			tess.firstIndex = 0;
+			tess.minIndex = 0;
+			tess.maxIndex = 0;
+		}
+
+		int ndx = tess.numVertexes;
+		int idx = tess.numIndexes;
+
+		// triangle indexes for a simple quad
+		tess.indexes[idx + 0] = ndx + 0;
+		tess.indexes[idx + 1] = ndx + 1;
+		tess.indexes[idx + 2] = ndx + 2;
+		tess.indexes[idx + 3] = ndx + 0;
+		tess.indexes[idx + 4] = ndx + 2;
+		tess.indexes[idx + 5] = ndx + 3;
+		/*tess.indexes[idx + 0] = ndx + 0;
+		tess.indexes[idx + 1] = ndx + 1;
+		tess.indexes[idx + 2] = ndx + 3;
+		tess.indexes[idx + 3] = ndx + 3;
+		tess.indexes[idx + 4] = ndx + 1;
+		tess.indexes[idx + 5] = ndx + 2;*/
+
+		VectorCopy2(mTextureCoords[i + 0], tess.texCoords[ndx + 0][0]);
+		VectorCopy2(mTextureCoords[i + 0], tess.texCoords[ndx + 0][1]);
+
+		VectorCopy2(mTextureCoords[i + 1], tess.texCoords[ndx + 1][0]);
+		VectorCopy2(mTextureCoords[i + 1], tess.texCoords[ndx + 1][1]);
+
+		VectorCopy2(mTextureCoords[i + 2], tess.texCoords[ndx + 2][0]);
+		VectorCopy2(mTextureCoords[i + 2], tess.texCoords[ndx + 2][1]);
+
+		VectorCopy2(mTextureCoords[i + 3], tess.texCoords[ndx + 3][0]);
+		VectorCopy2(mTextureCoords[i + 3], tess.texCoords[ndx + 3][1]);
+
+		//tess.vertexColors[ndx] = mColors[i];
+
+		VectorCopy4(mVerts[i + 0], tess.xyz[ndx + 0]);
+		tess.normal[ndx + 0] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 0]);
+
+		VectorCopy4(mVerts[i + 1], tess.xyz[ndx + 1]);
+		tess.normal[ndx + 1] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 1]);
+
+		VectorCopy4(mVerts[i + 2], tess.xyz[ndx + 2]);
+		tess.normal[ndx + 2] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 2]);
+
+		VectorCopy4(mVerts[i + 3], tess.xyz[ndx + 3]);
+		tess.normal[ndx + 3] = R_TessXYZtoPackedNormals(tess.xyz[ndx + 3]);
+
+		tess.maxIndex = ndx + 3;
+
+		tess.numVertexes += 4;
+		tess.numIndexes += 6;
+	}
+
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
+	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+	R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
+
+
+	//
+	tess.numIndexes = 0;
+	tess.numVertexes = 0;
+	tess.firstIndex = 0;
+	tess.minIndex = 0;
+	tess.maxIndex = 0;
+
+	//backEnd.pc.c_vertexes += mNextVert;
+	//backEnd.pc.c_indexes += mNextVert;
+	//backEnd.pc.c_totalIndexes += mNextVert;
 
 	//only for software fog pass (global soft/volumetric) -rww
 #if 0
@@ -177,7 +225,7 @@ void CQuickSpriteSystem::StartGroup(textureBundle_t *bundle, uint32_t glbits, in
 	mNextVert = 0;
 
 	mTexBundle = bundle;
-	//mGLStateBits = glbits;
+	mGLStateBits = glbits;
 	if (fogIndex != -1)
 	{
 		mUseFog = qtrue;
@@ -249,3 +297,5 @@ void CQuickSpriteSystem::Add(float *pointdata, color4ub_t color, vec2_t fog)
 
 	mNextVert+=4;
 }
+
+#endif //__JKA_SURFACE_SPRITES__

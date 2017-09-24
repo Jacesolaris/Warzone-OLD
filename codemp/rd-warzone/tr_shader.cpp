@@ -723,22 +723,21 @@ ParseSurfaceSprites
 //
 // NOTE:  This parsing function used to be 12 pages long and very complex.  The new version of surfacesprites
 // utilizes optional parameters parsed in ParseSurfaceSpriteOptional.
-static void ParseSurfaceSprites( const char *_text, shaderStage_t *stage )
+static bool ParseSurfaceSprites(const char *buffer, shaderStage_t *stage)
 {
 	const char *token;
-	const char **text = &_text;
-	float width, height, density, fadedist;
-	int sstype=SURFSPRITE_NONE;
+	const char **text = &buffer;
+	surfaceSpriteType_t sstype = SURFSPRITE_NONE;
 
-	//
 	// spritetype
-	//
-	token = COM_ParseExt( text, qfalse );
+	token = COM_ParseExt(text, qfalse);
 
-	if (token[0]==0)
+	if (token[0] == '\0')
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfaceSprites params in shader '%s'\n", shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: missing surfaceSprites params in shader '%s'\n",
+			shader.name);
+		return false;
 	}
 
 	if (!Q_stricmp(token, "vertical"))
@@ -759,93 +758,108 @@ static void ParseSurfaceSprites( const char *_text, shaderStage_t *stage )
 	}
 	else
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: invalid type in shader '%s'\n", shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: invalid type in shader '%s'\n",
+			shader.name);
+
+		return false;
 	}
 
-	//
 	// width
-	//
-	token = COM_ParseExt( text, qfalse );
-	if (token[0]==0)
+	token = COM_ParseExt(text, qfalse);
+	if (token[0] == '\0')
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfaceSprites params in shader '%s'\n", shader.name );
-		return;
-	}
-	width=atof(token);
-	if (width <= 0)
-	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: invalid width in shader '%s'\n", shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: missing surfaceSprites params in shader '%s'\n",
+			shader.name);
+		return false;
 	}
 
-	//
+	float width = atof(token);
+	if (width <= 0.0f)
+	{
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: invalid width in shader '%s'\n",
+			shader.name);
+		return false;
+	}
+
 	// height
-	//
-	token = COM_ParseExt( text, qfalse );
-	if (token[0]==0)
+	token = COM_ParseExt(text, qfalse);
+	if (token[0] == '\0')
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfaceSprites params in shader '%s'\n", shader.name );
-		return;
-	}
-	height=atof(token);
-	if (height <= 0)
-	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: invalid height in shader '%s'\n", shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: missing surfaceSprites params in shader '%s'\n",
+			shader.name);
+		return false;
 	}
 
-	//
+	float height = atof(token);
+	if (height <= 0.0f)
+	{
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: invalid height in shader '%s'\n",
+			shader.name);
+		return false;
+	}
+
 	// density
-	//
-	token = COM_ParseExt( text, qfalse );
-	if (token[0]==0)
+	token = COM_ParseExt(text, qfalse);
+	if (token[0] == '\0')
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfaceSprites params in shader '%s'\n", shader.name );
-		return;
-	}
-	density=atof(token);
-	if (density <= 0)
-	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: invalid density in shader '%s'\n", shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: missing surfaceSprites params in shader '%s'\n",
+			shader.name);
+		return false;
 	}
 
-	//
-	// fadedist
-	//
-	token = COM_ParseExt( text, qfalse );
-	if (token[0]==0)
+	float density = atof(token);
+	if (density <= 0.0f)
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfaceSprites params in shader '%s'\n", shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: invalid density in shader '%s'\n",
+			shader.name);
+		return false;
 	}
-	fadedist=atof(token);
-	if (fadedist < 32)
+
+	// fadedist
+	token = COM_ParseExt(text, qfalse);
+	if (token[0] == '\0')
 	{
-		Com_Printf (S_COLOR_YELLOW  "WARNING: invalid fadedist (%f < 32) in shader '%s'\n", fadedist, shader.name );
-		return;
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: missing surfaceSprites params in shader '%s'\n",
+			shader.name);
+		return false;
+	}
+
+	float fadedist = atof(token);
+	if (fadedist < 32.0f)
+	{
+		ri->Printf(PRINT_ALL,
+			S_COLOR_YELLOW "WARNING: invalid fadedist (%.2f < 32) in shader '%s'\n",
+			fadedist, shader.name);
+		return false;
 	}
 
 	if (!stage->ss)
 	{
-		stage->ss = (surfaceSprite_t *)Hunk_Alloc( sizeof( surfaceSprite_t ), h_low );
+		stage->ss = (surfaceSprite_t *)ri->Hunk_Alloc(sizeof(surfaceSprite_t), h_low);
 	}
 
 	// These are all set by the command lines.
-	stage->ss->surfaceSpriteType = sstype;
+	stage->ss->type = sstype;
 	stage->ss->width = width;
 	stage->ss->height = height;
 	stage->ss->density = density;
 	stage->ss->fadeDist = fadedist;
 
 	// These are defaults that can be overwritten.
-	stage->ss->fadeMax = fadedist*1.33;
-	stage->ss->fadeScale = 0.0;
-	stage->ss->wind = 0.0;
-	stage->ss->windIdle = 0.0;
-	stage->ss->variance[0] = 0.0;
-	stage->ss->variance[1] = 0.0;
+	stage->ss->fadeMax = fadedist * 1.33f;
+	stage->ss->fadeScale = 0.0f;
+	stage->ss->wind = 0.0f;
+	stage->ss->windIdle = 0.0f;
+	stage->ss->variance[0] = 0.0f;
+	stage->ss->variance[1] = 0.0f;
 	stage->ss->facing = SURFSPRITE_FACING_NORMAL;
 
 	// A vertical parameter that needs a default regardless
@@ -853,48 +867,49 @@ static void ParseSurfaceSprites( const char *_text, shaderStage_t *stage )
 
 	// These are effect parameters that need defaults nonetheless.
 	stage->ss->fxDuration = 1000;		// 1 second
-	stage->ss->fxGrow[0] = 0.0;
-	stage->ss->fxGrow[1] = 0.0;
-	stage->ss->fxAlphaStart = 1.0;
-	stage->ss->fxAlphaEnd = 0.0;
+	stage->ss->fxGrow[0] = 0.0f;
+	stage->ss->fxGrow[1] = 0.0f;
+	stage->ss->fxAlphaStart = 1.0f;
+	stage->ss->fxAlphaEnd = 0.0f;
+
+	return true;
 }
 
 
 
 
-/*
-/////===== Part of the VERTIGON system =====/////
-===========================
-ParseSurfaceSpritesOptional
-===========================
-*/
+// Parses the following keywords in a shader stage:
 //
-// ssFademax <fademax>
-// ssFadescale <fadescale>
-// ssVariance <varwidth> <varheight>
-// ssHangdown
-// ssAnyangle
-// ssFaceup
-// ssWind <wind>
-// ssWindIdle <windidle>
-// ssVertSkew <skew>
-// ssFXDuration <duration>
-// ssFXGrow <growwidth> <growheight>
-// ssFXAlphaRange <alphastart> <startend>
-// ssFXWeather
-//
-// Optional parameters that will override the defaults set in the surfacesprites command above.
-//
-static void ParseSurfaceSpritesOptional( const char *param, const char *_text, shaderStage_t *stage )
+// 		ssFademax <fademax>
+// 		ssFadescale <fadescale>
+// 		ssVariance <varwidth> <varheight>
+// 		ssHangdown
+// 		ssAnyangle
+// 		ssFaceup
+// 		ssWind <wind>
+// 		ssWindIdle <windidle>
+// 		ssVertSkew <skew>
+// 		ssFXDuration <duration>
+// 		ssFXGrow <growwidth> <growheight>
+// 		ssFXAlphaRange <alphastart> <startend>
+// 		ssFXWeather
+static bool ParseSurfaceSpritesOptional(
+		const char *param,
+		const char *buffer,
+		shaderStage_t *stage
+)
 {
 	const char *token;
-	const char **text = &_text;
-	float	value;
+	const char **text = &buffer;
+	float value;
 
 	if (!stage->ss)
 	{
-		stage->ss = (surfaceSprite_t *)Hunk_Alloc( sizeof( surfaceSprite_t ), h_low );
+		stage->ss = (surfaceSprite_t *)ri->Hunk_Alloc(sizeof(surfaceSprite_t), h_low );
 	}
+
+	// TODO: Tidy this up some how. There's a lot of repeated code
+
 	//
 	// fademax
 	//
@@ -903,17 +918,17 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite fademax in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite fademax in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value <= stage->ss->fadeDist)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite fademax (%.2f <= fadeDist(%.2f)) in shader '%s'\n", value, stage->ss->fadeDist, shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite fademax (%.2f <= fadeDist(%.2f)) in shader '%s'\n", value, stage->ss->fadeDist, shader.name );
+			return false;
 		}
 		stage->ss->fadeMax=value;
-		return;
+		return true;
 	}
 
 	//
@@ -924,12 +939,12 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite fadescale in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite fadescale in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		stage->ss->fadeScale=value;
-		return;
+		return true;
 	}
 
 	//
@@ -940,31 +955,31 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite variance width in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite variance width in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite variance width in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite variance width in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->variance[0]=value;
 
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite variance height in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite variance height in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite variance height in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite variance height in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->variance[1]=value;
-		return;
+		return true;
 	}
 
 	//
@@ -974,11 +989,11 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 	{
 		if (stage->ss->facing != SURFSPRITE_FACING_NORMAL)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: Hangdown facing overrides previous facing in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: Hangdown facing overrides previous facing in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->facing=SURFSPRITE_FACING_DOWN;
-		return;
+		return true;
 	}
 
 	//
@@ -988,11 +1003,11 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 	{
 		if (stage->ss->facing != SURFSPRITE_FACING_NORMAL)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: Anyangle facing overrides previous facing in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: Anyangle facing overrides previous facing in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->facing=SURFSPRITE_FACING_ANY;
-		return;
+		return true;
 	}
 
 	//
@@ -1002,11 +1017,11 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 	{
 		if (stage->ss->facing != SURFSPRITE_FACING_NORMAL)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: Faceup facing overrides previous facing in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: Faceup facing overrides previous facing in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->facing=SURFSPRITE_FACING_UP;
-		return;
+		return true;
 	}
 
 	//
@@ -1017,21 +1032,21 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite wind in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite wind in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0.0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite wind in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite wind in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->wind=value;
 		if (stage->ss->windIdle <= 0)
 		{	// Also override the windidle, it usually is the same as wind
 			stage->ss->windIdle = value;
 		}
-		return;
+		return true;
 	}
 
 	//
@@ -1042,17 +1057,17 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite windidle in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite windidle in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0.0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite windidle in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite windidle in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->windIdle=value;
-		return;
+		return true;
 	}
 
 	//
@@ -1063,17 +1078,17 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite vertskew in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite vertskew in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0.0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite vertskew in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite vertskew in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->vertSkew=value;
-		return;
+		return true;
 	}
 
 	//
@@ -1084,17 +1099,17 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite duration in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite duration in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value <= 0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite duration in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite duration in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->fxDuration=value;
-		return;
+		return true;
 	}
 
 	//
@@ -1105,31 +1120,31 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite grow width in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite grow width in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite grow width in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite grow width in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->fxGrow[0]=value;
 
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite grow height in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite grow height in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite grow height in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite grow height in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->fxGrow[1]=value;
-		return;
+		return true;
 	}
 
 	//
@@ -1140,31 +1155,31 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite fxalpha start in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite fxalpha start in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0 || value > 1.0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite fxalpha start in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite fxalpha start in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->fxAlphaStart=value;
 
 		token = COM_ParseExt( text, qfalse);
 		if (token[0]==0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: missing surfacesprite fxalpha end in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: missing surfacesprite fxalpha end in shader '%s'\n", shader.name );
+			return false;
 		}
 		value = atof(token);
 		if (value < 0 || value > 1.0)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: invalid surfacesprite fxalpha end in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid surfacesprite fxalpha end in shader '%s'\n", shader.name );
+			return false;
 		}
 		stage->ss->fxAlphaEnd=value;
-		return;
+		return true;
 	}
 
 	//
@@ -1172,20 +1187,20 @@ static void ParseSurfaceSpritesOptional( const char *param, const char *_text, s
 	//
 	if (!Q_stricmp(param, "ssFXWeather"))
 	{
-		if (stage->ss->surfaceSpriteType != SURFSPRITE_EFFECT)
+		if (stage->ss->type != SURFSPRITE_EFFECT)
 		{
-			Com_Printf (S_COLOR_YELLOW  "WARNING: weather applied to non-effect surfacesprite in shader '%s'\n", shader.name );
-			return;
+			ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: weather applied to non-effect surfacesprite in shader '%s'\n", shader.name );
+			return false;
 		}
-		stage->ss->surfaceSpriteType = SURFSPRITE_WEATHERFX;
-		return;
+		stage->ss->type = SURFSPRITE_WEATHERFX;
+		return true;
 	}
 
 	//
 	// invalid ss command.
 	//
-	Com_Printf (S_COLOR_YELLOW  "WARNING: invalid optional surfacesprite param '%s' in shader '%s'\n", param, shader.name );
-	return;
+	ri->Printf( PRINT_ALL, S_COLOR_YELLOW  "WARNING: invalid optional surfacesprite param '%s' in shader '%s'\n", param, shader.name );
+	return false;
 }
 
 char *StringContains(char *str1, char *str2, int casesensitive)
@@ -2717,9 +2732,24 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		{
 			// Mark this stage as a surface sprite so we can skip it for now
 			stage->isSurfaceSprite = qtrue;
-#ifndef __JKA_WEATHER__
-			SkipRestOfLine( text );
-#else //__JKA_WEATHER__
+#if defined(__XYC_SURFACE_SPRITES__)
+			char buffer[1024] = { 0 };
+
+			while (1)
+			{
+				token = COM_ParseExt(text, qfalse);
+				if (token[0] == 0)
+					break;
+				Q_strcat(buffer, sizeof(buffer), token);
+				Q_strcat(buffer, sizeof(buffer), " ");
+			}
+
+			bool hasSS = (stage->ss != nullptr);
+			if (ParseSurfaceSprites(buffer, stage) && !hasSS)
+			{
+				++shader.numSurfaceSpriteStages;
+			}
+#elif defined(__JKA_SURFACE_SPRITES__)
 			char buffer[1024] = "";
 
 			while ( 1 )
@@ -2729,10 +2759,13 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					break;
 				Q_strcat( buffer, sizeof( buffer ), token );
 				Q_strcat( buffer, sizeof( buffer ), " " );
+				//ri->Printf(PRINT_WARNING, "SS_DEBUG: shader: 5s. buffer: %s.\n", shader.name, buffer);
 			}
 
 			ParseSurfaceSprites( buffer, stage );
-#endif //__JKA_WEATHER__
+#else //!__XYC_SURFACE_SPRITES__
+			SkipRestOfLine(text);
+#endif //__XYC_SURFACE_SPRITES__
 			continue;
 		}
 		//
@@ -2750,6 +2783,28 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		//
 		else if (!Q_stricmpn(token, "ss", 2))	// <--- NOTE ONLY COMPARING FIRST TWO LETTERS
 		{
+#ifdef __XYC_SURFACE_SPRITES__
+			stage->isSurfaceSprite = qtrue;
+
+			char buffer[1024] = {};
+			char param[128] = {};
+			Q_strncpyz(param, token, sizeof(param));
+
+			while (1)
+			{
+				token = COM_ParseExt(text, qfalse);
+				if (token[0] == '\0')
+					break;
+				Q_strcat(buffer, sizeof(buffer), token);
+				Q_strcat(buffer, sizeof(buffer), " ");
+			}
+
+			bool hasSS = (stage->ss != nullptr);
+			if (ParseSurfaceSpritesOptional(param, buffer, stage) && !hasSS)
+			{
+				++shader.numSurfaceSpriteStages;
+			}
+#else //!__XYC_SURFACE_SPRITES__
 			//SkipRestOfLine( text );
 			char buffer[1024] = "";
 			char param[128];
@@ -2762,10 +2817,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					break;
 				Q_strcat( buffer, sizeof( buffer ), token );
 				Q_strcat( buffer, sizeof( buffer ), " " );
+				//ri->Printf(PRINT_WARNING, "SS_DEBUG2: shader: 5s. buffer: %s.\n", shader.name, buffer);
 			}
 
 			ParseSurfaceSpritesOptional( param, buffer, stage );
 			stage->isSurfaceSprite = qtrue;
+#endif //__XYC_SURFACE_SPRITES__
 			continue;
 		}
 		else
@@ -8450,6 +8507,32 @@ static void ScanAndLoadShaderFiles( void )
 	return;
 
 }
+
+#ifdef __XYC_SURFACE_SPRITES__
+shader_t *R_CreateShaderFromTextureBundle(
+	const char *name,
+	const textureBundle_t *bundle,
+	uint32_t stateBits)
+{
+	shader_t *result = R_FindShaderByName(name);
+
+	if (!result) result = tr.defaultShader;
+
+	if (result == tr.defaultShader)
+	{
+		Com_Memset(&shader, 0, sizeof(shader));
+		Com_Memset(&stages, 0, sizeof(stages));
+
+		Q_strncpyz(shader.name, name, sizeof(shader.name));
+
+		stages[0].active = qtrue;
+		stages[0].bundle[0] = *bundle;
+		stages[0].stateBits = stateBits;
+		result = FinishShader();
+	}
+	return result;
+}
+#endif //__XYC_SURFACE_SPRITES__
 
 /*
 ====================

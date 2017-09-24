@@ -1482,45 +1482,11 @@ void RB_RenderWorldEffects(void)
 		(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL) ||
 		!mParticleClouds.size())
 	{	//  no world rendering or no world or no particle clouds
-		/*if (!mParticleClouds.size())
-		{
-			ri->Printf(PRINT_ALL, "Weather: mParticleClouds.size() is zero.\n", mParticlesRendered);
-		}
-		if (!tr.world || (tr.refdef.rdflags & RDF_NOWORLDMODEL))
-		{
-			ri->Printf(PRINT_ALL, "Weather: No world.\n", mParticlesRendered);
-		}*/
 		return;
 	}
 
 #if defined(rd_warzone_x86_EXPORTS)
-	if (r_testvalue0->integer <= 0)
-	{
-		SetViewportAndScissor();
-	}
-	else if (r_testvalue0->integer <= 1)
-	{
-		int width, height;
-
-		width = glConfig.vidWidth * r_superSampleMultiplier->value;
-		height = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		// set 2D virtual screen size
-		qglViewport(0, 0, width, height);
-		qglScissor(0, 0, width, height);
-	}
-	else
-	{
-		int width, height;
-
-		width = r_testvalue1->integer;
-		height = r_testvalue2->integer;
-
-		// set 2D virtual screen size
-		qglViewport(0, 0, width, height);
-		qglScissor(0, 0, width, height);
-	}
-
+	SetViewportAndScissor();
 	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
 	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
 #else //!defined(rd_warzone_x86_EXPORTS)

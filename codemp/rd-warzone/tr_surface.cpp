@@ -39,6 +39,7 @@ use the shader system.
 
 //============================================================================
 
+extern void R_BindIBO(IBO_t * ibo);
 
 /*
 ==============
@@ -2465,6 +2466,90 @@ static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
 static void RB_SurfaceSkip( void *surf ) {
 }
 
+#ifdef __XYC_SURFACE_SPRITES__
+extern void R_BindAnimatedImageToTMU(textureBundle_t *bundle, int tmu);
+
+static void RB_SurfaceSprites(srfSprites_t *surf)
+{
+#if 1
+	if (!r_surfaceSprites->integer)
+	{
+		return;
+	}
+
+	RB_EndSurface();
+
+	// TODO: Do we want a 2-level lod system where far away sprites are
+	// just flat surfaces?
+
+	// TODO: Check which pass (z-prepass/shadow/forward) we're rendering for?
+	shader_t *shader = surf->shader;
+	shaderStage_t *firstStage = shader->stages[0];
+	shaderProgram_t *programGroup = firstStage->glslShaderGroup;
+	const surfaceSprite_t *ss = surf->sprite;
+
+	uint32_t shaderFlags = 0;
+	/*if (firstStage->alphaTestCmp != ATEST_CMP_NONE)
+		shaderFlags |= SSDEF_ALPHA_TEST;
+
+	if (ss->type == SURFSPRITE_ORIENTED)
+		shaderFlags |= SSDEF_FACE_CAMERA;*/
+
+	shaderProgram_t *program = &tr.surfaceSpriteShader;
+
+	SurfaceSpriteBlock data = {};
+	data.width = ss->width;
+	data.height = (ss->facing == SURFSPRITE_FACING_DOWN) ? -ss->height : ss->height;
+	data.fadeStartDistance = ss->fadeDist;
+	data.fadeEndDistance = ss->fadeMax;
+	data.fadeScale = ss->fadeScale;
+	data.widthVariance = ss->variance[0];
+	data.heightVariance = ss->variance[1];
+
+	GLSL_BindProgram(program);
+	GL_State(firstStage->stateBits);
+	GL_Cull(CT_TWO_SIDED);
+	//GLSL_VertexAttribPointers(surf->attributes->index);
+	GLSL_VertexAttribPointers(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0);
+	//GL_VertexAttribPointers(surf->numAttributes, surf->attributes);
+	R_BindAnimatedImageToTMU(&firstStage->bundle[0], TB_DIFFUSEMAP);
+	
+	GLSL_SetUniformMatrix16(program, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformVec3(program, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+	
+	vec4_t vec;
+	VectorSet4(vec, data.width, data.height, data.fadeStartDistance, data.fadeEndDistance);
+	GLSL_SetUniformVec4(program, UNIFORM_LOCAL0, vec);
+
+	VectorSet4(vec, data.fadeScale, data.widthVariance, data.heightVariance, ss->facing);
+	GLSL_SetUniformVec4(program, UNIFORM_LOCAL1, vec);
+
+	float oriented = 0.0;
+
+	if (ss->surfaceSpriteType == SURFSPRITE_ORIENTED)
+		oriented = 1.0;
+
+	VectorSet4(vec, oriented, 0.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(program, UNIFORM_LOCAL2, vec);
+
+	tess.useInternalVBO = qtrue;
+
+	R_BindIBO(surf->ibo);
+	tess.ibo = surf->ibo;
+	
+#if 1
+	qglDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0, surf->numSprites);
+#else
+	tess.numIndexes += surf->numSprites*6*6;
+	tess.numVertexes += surf->numSprites*6;
+	tess.minIndex = 0;
+	tess.maxIndex = surf->numSprites*6*6;
+
+	RB_EndSurface();
+#endif
+#endif
+}
+#endif //__XYC_SURFACE_SPRITES__
 
 void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceBad,			// SF_BAD, 
@@ -2482,4 +2567,7 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceDisplayList,	// SF_DISPLAY_LIST
 	(void(*)(void*))RB_SurfaceVBOMesh,	    // SF_VBO_MESH,
 	(void(*)(void*))RB_SurfaceVBOMDVMesh,   // SF_VBO_MDVMESH
+#ifdef __XYC_SURFACE_SPRITES__
+	(void(*)(void*))RB_SurfaceSprites,      // SF_SPRITES
+#endif //__XYC_SURFACE_SPRITES__
 };
