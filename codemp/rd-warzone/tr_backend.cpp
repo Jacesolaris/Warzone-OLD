@@ -1023,8 +1023,8 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		drawSurf_t		*drawSurf = NULL;
 		drawSurf_t		*oldDrawSurf = NULL;
 		shader_t		*shader = NULL;
-		int64_t			entityNum;
-		int64_t			postRender;
+		int64_t			entityNum = -1;
+		int64_t			postRender = -1;
 		int             cubemapIndex, newCubemapIndex;
 		int				depthRange;
 
@@ -1115,13 +1115,17 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		qboolean dontMerge = qfalse;
 		// UQ1: We can't merge movers and portals, but we can merge pretty much everything else...
-		trRefEntity_t *ent = &backEnd.refdef.entities[entityNum];
-		trRefEntity_t *oldent = &backEnd.refdef.entities[oldEntityNum];
-		if (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX))
+		trRefEntity_t *ent = NULL;
+		trRefEntity_t *oldent = NULL;
+		
+		if (entityNum >= 0) oldent = &backEnd.refdef.entities[entityNum];
+		if (oldEntityNum >= 0) oldent = &backEnd.refdef.entities[oldEntityNum];
+
+		if (ent && (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX)))
 		{// Either a mover, or a portal... Don't allow merges...
 			dontMerge = qtrue;
 		}
-		else if (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX))
+		else if (oldent && (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX)))
 		{// Either a mover, or a portal... Don't allow merges...
 			dontMerge = qtrue;
 		}
@@ -2311,6 +2315,7 @@ qboolean ALLOW_NULL_FBO_BIND = qfalse;
 
 extern qboolean FOG_POST_ENABLED;
 extern qboolean WATER_FOG_ENABLED;
+extern int LATE_LIGHTING_ENABLED;
 
 const void *RB_PostProcess(const void *data)
 {
@@ -2438,7 +2443,7 @@ const void *RB_PostProcess(const void *data)
 			RB_CreateAnamorphicImage();
 		}
 
-		if (!SCREEN_BLUR && r_deferredLighting->integer)
+		if (!SCREEN_BLUR && r_deferredLighting->integer && !LATE_LIGHTING_ENABLED)
 		{
 			RB_DeferredLighting(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
@@ -2509,7 +2514,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer)
+		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer && !LATE_LIGHTING_ENABLED)
 		{
 			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
@@ -2574,6 +2579,24 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
+		if (!SCREEN_BLUR && r_anamorphic->integer)
+		{
+			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_dynamiclight->integer)
+		{
+			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_bloom->integer >= 2)
+		{
+			RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
 		if (!SCREEN_BLUR && r_dof->integer)
 		{
 			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
@@ -2586,33 +2609,10 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		/*if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
-		{
-			RB_CreateAnamorphicImage();
-		}*/
-
-		if (!SCREEN_BLUR && r_anamorphic->integer)
-		{
-			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_bloom->integer >= 2)
-		{
-			RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_lensflare->integer)
 		{
 			RB_LensFlare(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR /*&& r_dynamiclight->integer*/)
-		{
-			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_testshader->integer)
@@ -2630,6 +2630,24 @@ const void *RB_PostProcess(const void *data)
 		if (r_colorCorrection->integer)
 		{
 			RB_ColorCorrection(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_deferredLighting->integer && LATE_LIGHTING_ENABLED == 1)
+		{
+			RB_DeferredLighting(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+		
+		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer && LATE_LIGHTING_ENABLED)
+		{
+			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_deferredLighting->integer && LATE_LIGHTING_ENABLED >= 2)
+		{
+			RB_DeferredLighting(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 		}
 
