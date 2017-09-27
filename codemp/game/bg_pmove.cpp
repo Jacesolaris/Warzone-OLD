@@ -4642,6 +4642,33 @@ static void PM_GroundTrace(void) {
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] - 0.25;
 
+	qboolean skipTrace = qfalse;
+
+#if 0
+#ifdef _CGAME
+	centity_t *cent = &cg_entities[pm->ps->clientNum];
+	if (cent)
+	{
+		if (Distance(cent->lerpOrigin, cent->groundCheckOrigin) <= 0)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			trace = cent->groundCheckTrace;
+			skipTrace = qtrue;
+		}
+	}
+#endif //_CGAME
+#ifdef _GAME
+	gentity_t *ent = &g_entities[pm->ps->clientNum];
+	if (ent)
+	{
+		if (Distance(ent->r.currentOrigin, ent->groundCheckOrigin) <= 0)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			trace = ent->groundCheckTrace;
+			skipTrace = qtrue;
+		}
+	}
+#endif //_GAME
+#endif
+
 #if defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME)
 	if (pm->ps->clientNum >= MAX_CLIENTS)
 	{// Server can cache previous traces for a while to save CPU...
@@ -4662,13 +4689,26 @@ static void PM_GroundTrace(void) {
 		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
 	}
 #else //!(defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME))
-	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+	if (!skipTrace)
+	{
+		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+	}
 #endif //defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME)
 	pml.groundTrace = trace;
 
 	// do something corrective if the trace starts in a solid...
 	if ( trace.allsolid ) {
-		if ( !PM_CorrectAllSolid(&trace) )
+		if (skipTrace)
+		{
+			pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+			skipTrace = qfalse;
+
+			if (!PM_CorrectAllSolid(&trace))
+			{
+				return;
+			}
+		}
+		else if ( !PM_CorrectAllSolid(&trace) )
 		{
 			return;
 		}
@@ -4797,6 +4837,23 @@ static void PM_GroundTrace(void) {
 
 		PM_AddTouchEnt(trace.entityNum);
 	}
+
+#if 0
+#ifdef _CGAME
+	if (cent && !skipTrace)
+	{// Cache for next time...
+		trace = cent->groundCheckTrace;
+		VectorCopy(cent->lerpOrigin, cent->groundCheckOrigin);
+	}
+#endif //_CGAME
+#ifdef _GAME
+	if (ent && !skipTrace)
+	{// Cache for next time...
+		trace = ent->groundCheckTrace;
+		VectorCopy(ent->r.currentOrigin, ent->groundCheckOrigin);
+	}
+#endif //_GAME
+#endif
 }
 
 
@@ -6690,7 +6747,7 @@ void PM_CheckLadderMove(void)
 	}
 
 #ifdef _CGAME
-	if (cent)
+	if (cent && !skipTrace)
 	{// Cache for next time...
 		cent->ladderCheckLadder = pml.ladder;
 		cent->ladderCheckLadderForward = pml.ladderforward;
@@ -6699,7 +6756,7 @@ void PM_CheckLadderMove(void)
 	}
 #endif //_CGAME
 #ifdef _GAME
-	if (ent)
+	if (ent && !skipTrace)
 	{// Cache for next time...
 		ent->ladderCheckLadder = pml.ladder;
 		ent->ladderCheckLadderForward = pml.ladderforward;

@@ -2566,7 +2566,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	//	break;
 	}
 
-	if (backEnd.viewParms.zFar < splitZNear)
+	if (backEnd.viewParms.zFar < splitZNear || tr.distanceCull * 1.75 < splitZNear)
 	{// Pointless rendering this shadow map, the view doesnt go this far...
 		return;
 	}

@@ -590,10 +590,16 @@ int			FOLIAGE_NUM_POSITIONS = 0;
 vec3_t		*FOLIAGE_POSITIONS = NULL;
 vec3_t		*FOLIAGE_NORMALS = NULL;
 int			*FOLIAGE_PLANT_SELECTION = NULL;
-float		*FOLIAGE_PLANT_ANGLES = NULL;
+float		*FOLIAGE_PLANT_ANGLE = NULL;
+vec3_t		*FOLIAGE_PLANT_ANGLES = NULL;
+matrix3_t	*FOLIAGE_PLANT_AXIS = NULL;
 float		*FOLIAGE_PLANT_SCALE = NULL;
 int			*FOLIAGE_TREE_SELECTION = NULL;
-float		*FOLIAGE_TREE_ANGLES = NULL;
+vec3_t		*FOLIAGE_TREE_ANGLES = NULL;
+float		*FOLIAGE_TREE_ANGLE = NULL;
+matrix3_t	*FOLIAGE_TREE_AXIS = NULL;
+vec3_t		*FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+matrix3_t	*FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 float		*FOLIAGE_TREE_SCALE = NULL;
 
 
@@ -1456,7 +1462,6 @@ void FOLIAGE_ApplyAxisRotation(vec3_t axis[3], int rotType, float value)
 
 void FOLIAGE_AddToScreen(int num, int passType) {
 	refEntity_t		re;
-	vec3_t			angles;
 	float			dist = 0;
 	float			distFadeScale = 1.5;
 	float			minFoliageScale = cg_foliageMinFoliageScale.value;
@@ -1514,13 +1519,8 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 			VectorSet(re.modelScale, PLANT_SCALE_XY, PLANT_SCALE_XY, PLANT_SCALE_Z);
 
-			vectoangles(FOLIAGE_NORMALS[num], angles);
-			angles[PITCH] += 90;
-
-			VectorCopy(angles, re.angles);
-			AnglesToAxis(angles, re.axis);
-
-			FOLIAGE_ApplyAxisRotation(re.axis, YAW, FOLIAGE_PLANT_ANGLES[num]);
+			VectorCopy(FOLIAGE_PLANT_ANGLES[num], re.angles);
+			AxisCopy(FOLIAGE_PLANT_AXIS[num], re.axis);
 
 			ScaleModelAxis(&re);
 
@@ -1552,11 +1552,8 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 				re.origin[2] += re.radius;
 				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num] - 1];
 
-				angles[PITCH] = angles[ROLL] = 0.0f;
-				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
-
-				VectorCopy(angles, re.angles);
-				AnglesToAxis(angles, re.axis);
+				VectorCopy(FOLIAGE_TREE_ANGLES[num], re.angles);
+				AxisCopy(FOLIAGE_TREE_AXIS[num], re.axis);
 
 				FOLIAGE_AddFoliageEntityToScene(&re);
 			}
@@ -1573,11 +1570,8 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num] - 1];
 
-				angles[PITCH] = angles[ROLL] = 0.0f;
-				angles[YAW] = 270.0 - FOLIAGE_TREE_ANGLES[num];
-
-				VectorCopy(angles, re.angles);
-				AnglesToAxis(angles, re.axis);
+				VectorCopy(FOLIAGE_TREE_BILLBOARD_ANGLES[num], re.angles);
+				AxisCopy(FOLIAGE_TREE_BILLBOARD_AXIS[num], re.axis);
 
 				ScaleModelAxis(&re);
 
@@ -1638,19 +1632,31 @@ void FOLIAGE_FreeMemory(void)
 		free(FOLIAGE_POSITIONS);
 		free(FOLIAGE_NORMALS);
 		free(FOLIAGE_PLANT_SELECTION);
+		free(FOLIAGE_PLANT_ANGLE);
 		free(FOLIAGE_PLANT_ANGLES);
+		free(FOLIAGE_PLANT_AXIS);
 		free(FOLIAGE_PLANT_SCALE);
 		if (FOLIAGE_TREE_SELECTION) free(FOLIAGE_TREE_SELECTION);
+		if (FOLIAGE_TREE_ANGLE) free(FOLIAGE_TREE_ANGLE);
 		if (FOLIAGE_TREE_ANGLES) free(FOLIAGE_TREE_ANGLES);
+		if (FOLIAGE_TREE_AXIS) free(FOLIAGE_TREE_AXIS);
+		if (FOLIAGE_TREE_BILLBOARD_ANGLES) free(FOLIAGE_TREE_BILLBOARD_ANGLES);
+		if (FOLIAGE_TREE_BILLBOARD_AXIS) free(FOLIAGE_TREE_BILLBOARD_AXIS);
 		if (FOLIAGE_TREE_SCALE) free(FOLIAGE_TREE_SCALE);
 
 		FOLIAGE_POSITIONS = NULL;
 		FOLIAGE_NORMALS = NULL;
 		FOLIAGE_PLANT_SELECTION = NULL;
+		FOLIAGE_PLANT_ANGLE = NULL;
 		FOLIAGE_PLANT_ANGLES = NULL;
+		FOLIAGE_PLANT_AXIS = NULL;
 		FOLIAGE_PLANT_SCALE = NULL;
 		FOLIAGE_TREE_SELECTION = NULL;
+		FOLIAGE_TREE_ANGLE = NULL;
 		FOLIAGE_TREE_ANGLES = NULL;
+		FOLIAGE_TREE_AXIS = NULL;
+		FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
 		if (IN_RANGE_AREAS_LIST) free(IN_RANGE_AREAS_LIST);
@@ -1696,13 +1702,19 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	FOLIAGE_POSITIONS = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
 	FOLIAGE_NORMALS = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
 	FOLIAGE_PLANT_SELECTION = (int *)malloc(fileCount * sizeof(int));
-	FOLIAGE_PLANT_ANGLES = (float *)malloc(fileCount * sizeof(float));
+	FOLIAGE_PLANT_ANGLE = (float *)malloc(fileCount * sizeof(float));
+	FOLIAGE_PLANT_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
+	FOLIAGE_PLANT_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
 	FOLIAGE_PLANT_SCALE = (float *)malloc(fileCount * sizeof(float));
 	FOLIAGE_TREE_SELECTION = (int *)malloc(fileCount * sizeof(int));
-	FOLIAGE_TREE_ANGLES = (float *)malloc(fileCount * sizeof(float));
+	FOLIAGE_TREE_ANGLE = (float *)malloc(fileCount * sizeof(float));
+	FOLIAGE_TREE_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
+	FOLIAGE_TREE_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
+	FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
+	FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
 	FOLIAGE_TREE_SCALE = (float *)malloc(fileCount * sizeof(float));
 
-	int usedRam = (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float));
+	int usedRam = (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t));
 	usedRam /= 1024;
 	trap->Print("^1*** ^3%s^5: %i KB allocated for initial foliage memory.\n", GAME_VERSION, usedRam);
 
@@ -1711,10 +1723,10 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		trap->FS_Read(&FOLIAGE_POSITIONS[foliageCount], sizeof(vec3_t), f);
 		trap->FS_Read(&FOLIAGE_NORMALS[foliageCount], sizeof(vec3_t), f);
 		trap->FS_Read(&FOLIAGE_PLANT_SELECTION[foliageCount], sizeof(int), f);
-		trap->FS_Read(&FOLIAGE_PLANT_ANGLES[foliageCount], sizeof(float), f);
+		trap->FS_Read(&FOLIAGE_PLANT_ANGLE[foliageCount], sizeof(float), f);
 		trap->FS_Read(&FOLIAGE_PLANT_SCALE[foliageCount], sizeof(float), f);
 		trap->FS_Read(&FOLIAGE_TREE_SELECTION[foliageCount], sizeof(int), f);
-		trap->FS_Read(&FOLIAGE_TREE_ANGLES[foliageCount], sizeof(float), f);
+		trap->FS_Read(&FOLIAGE_TREE_ANGLE[foliageCount], sizeof(float), f);
 		trap->FS_Read(&FOLIAGE_TREE_SCALE[foliageCount], sizeof(float), f);
 
 		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0)
@@ -1746,13 +1758,19 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_POSITIONS = (vec3_t *)realloc(FOLIAGE_POSITIONS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
 		FOLIAGE_NORMALS = (vec3_t *)realloc(FOLIAGE_NORMALS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
 		FOLIAGE_PLANT_SELECTION = (int *)realloc(FOLIAGE_PLANT_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
-		FOLIAGE_PLANT_ANGLES = (float *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_PLANT_ANGLE = (float *)realloc(FOLIAGE_PLANT_ANGLE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_PLANT_ANGLES = (vec3_t *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_PLANT_AXIS = (matrix3_t *)realloc(FOLIAGE_PLANT_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		FOLIAGE_PLANT_SCALE = (float *)realloc(FOLIAGE_PLANT_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
 		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
-		FOLIAGE_TREE_ANGLES = (float *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_TREE_ANGLE = (float *)realloc(FOLIAGE_TREE_ANGLE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_TREE_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_TREE_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
+		FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_BILLBOARD_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_BILLBOARD_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
 
-		usedRam = (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float));
+		usedRam = (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		usedRam /= 1024;
 		trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
 	}
@@ -1781,11 +1799,19 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_AREAS_TREES_LIST = NULL;
 
 		if (FOLIAGE_TREE_SELECTION) free(FOLIAGE_TREE_SELECTION);
+		if (FOLIAGE_TREE_ANGLE) free(FOLIAGE_TREE_ANGLE);
 		if (FOLIAGE_TREE_ANGLES) free(FOLIAGE_TREE_ANGLES);
+		if (FOLIAGE_TREE_AXIS) free(FOLIAGE_TREE_AXIS);
+		if (FOLIAGE_TREE_BILLBOARD_ANGLES) free(FOLIAGE_TREE_BILLBOARD_ANGLES);
+		if (FOLIAGE_TREE_BILLBOARD_AXIS) free(FOLIAGE_TREE_BILLBOARD_AXIS);
 		if (FOLIAGE_TREE_SCALE) free(FOLIAGE_TREE_SCALE);
 
 		FOLIAGE_TREE_SELECTION = NULL;
+		FOLIAGE_TREE_ANGLE = NULL;
 		FOLIAGE_TREE_ANGLES = NULL;
+		FOLIAGE_TREE_AXIS = NULL;
+		FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
 		trap->Print("*** %s: No foliage points in foliage file foliage/%s.foliage. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
@@ -1813,11 +1839,19 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_AREAS_TREES_LIST = NULL;
 
 		if (FOLIAGE_TREE_SELECTION) free(FOLIAGE_TREE_SELECTION);
+		if (FOLIAGE_TREE_ANGLE) free(FOLIAGE_TREE_ANGLE);
 		if (FOLIAGE_TREE_ANGLES) free(FOLIAGE_TREE_ANGLES);
+		if (FOLIAGE_TREE_AXIS) free(FOLIAGE_TREE_AXIS);
+		if (FOLIAGE_TREE_BILLBOARD_ANGLES) free(FOLIAGE_TREE_BILLBOARD_ANGLES);
+		if (FOLIAGE_TREE_BILLBOARD_AXIS) free(FOLIAGE_TREE_BILLBOARD_AXIS);
 		if (FOLIAGE_TREE_SCALE) free(FOLIAGE_TREE_SCALE);
 
 		FOLIAGE_TREE_SELECTION = NULL;
+		FOLIAGE_TREE_ANGLE = NULL;
 		FOLIAGE_TREE_ANGLES = NULL;
+		FOLIAGE_TREE_AXIS = NULL;
+		FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 	}
 	else
@@ -1830,9 +1864,32 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		if (!IN_RANGE_TREE_AREAS_LIST) IN_RANGE_TREE_AREAS_LIST = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
 		if (!IN_RANGE_TREE_AREAS_DISTANCE) IN_RANGE_TREE_AREAS_DISTANCE = (float *)malloc(sizeof(float) * FOLIAGE_AREA_MAX);
 
-		usedRam = (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(qboolean) * FOLIAGE_AREA_MAX) + (sizeof(ivec256_t) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(float) * FOLIAGE_AREA_MAX);
+		usedRam = (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(qboolean) * FOLIAGE_AREA_MAX) + (sizeof(ivec256_t) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(float) * FOLIAGE_AREA_MAX) + (sizeof(matrix3_t) * FOLIAGE_AREA_MAX) + (sizeof(vec3_t) * FOLIAGE_AREA_MAX);
 		usedRam /= 1024;
 		trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
+	}
+
+	for (int i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Set up all axis...
+		if (MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[i] > 0)
+		{// Pre-set up tree and tree billboard axii...
+			FOLIAGE_TREE_ANGLES[i][PITCH] = FOLIAGE_TREE_ANGLES[i][ROLL] = 0.0f;
+			FOLIAGE_TREE_ANGLES[i][YAW] = FOLIAGE_TREE_ANGLE[i];
+			AnglesToAxis(FOLIAGE_TREE_ANGLES[i], FOLIAGE_TREE_AXIS[i]);
+
+			FOLIAGE_TREE_BILLBOARD_ANGLES[i][PITCH] = FOLIAGE_TREE_BILLBOARD_ANGLES[i][ROLL] = 0.0f;
+			FOLIAGE_TREE_BILLBOARD_ANGLES[i][YAW] = 270.0 - FOLIAGE_TREE_ANGLE[i];
+			AnglesToAxis(FOLIAGE_TREE_BILLBOARD_ANGLES[i], FOLIAGE_TREE_BILLBOARD_AXIS[i]);
+		}
+
+		if (FOLIAGE_PLANT_SELECTION[i] > 0)
+		{// Pre-set up plant axis...
+			vectoangles(FOLIAGE_NORMALS[i], FOLIAGE_PLANT_ANGLES[i]);
+			FOLIAGE_PLANT_ANGLES[i][PITCH] += 90;
+			AnglesToAxis(FOLIAGE_PLANT_ANGLES[i], FOLIAGE_PLANT_AXIS[i]);
+
+			FOLIAGE_ApplyAxisRotation(FOLIAGE_PLANT_AXIS[i], YAW, FOLIAGE_PLANT_ANGLE[i]);
+		}
 	}
 
 	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses removed) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
@@ -1906,12 +1963,12 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		trap->FS_Write(&FOLIAGE_POSITIONS[i], sizeof(vec3_t), f);
 		trap->FS_Write(&FOLIAGE_NORMALS[i], sizeof(vec3_t), f);
 		trap->FS_Write(&FOLIAGE_PLANT_SELECTION[i], sizeof(int), f);
-		trap->FS_Write(&FOLIAGE_PLANT_ANGLES[i], sizeof(float), f);
+		trap->FS_Write(&FOLIAGE_PLANT_ANGLE[i], sizeof(float), f);
 		trap->FS_Write(&FOLIAGE_PLANT_SCALE[i], sizeof(float), f);
 		if (MAP_HAS_TREES)
 		{
 			trap->FS_Write(&FOLIAGE_TREE_SELECTION[i], sizeof(int), f);
-			trap->FS_Write(&FOLIAGE_TREE_ANGLES[i], sizeof(float), f);
+			trap->FS_Write(&FOLIAGE_TREE_ANGLE[i], sizeof(float), f);
 			trap->FS_Write(&FOLIAGE_TREE_SCALE[i], sizeof(float), f);
 		}
 		else
@@ -1948,11 +2005,19 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		FOLIAGE_AREAS_TREES_LIST = NULL;
 
 		if (FOLIAGE_TREE_SELECTION) free(FOLIAGE_TREE_SELECTION);
+		if (FOLIAGE_TREE_ANGLE) free(FOLIAGE_TREE_ANGLE);
 		if (FOLIAGE_TREE_ANGLES) free(FOLIAGE_TREE_ANGLES);
+		if (FOLIAGE_TREE_AXIS) free(FOLIAGE_TREE_AXIS);
+		if (FOLIAGE_TREE_BILLBOARD_ANGLES) free(FOLIAGE_TREE_BILLBOARD_ANGLES);
+		if (FOLIAGE_TREE_BILLBOARD_AXIS) free(FOLIAGE_TREE_BILLBOARD_AXIS);
 		if (FOLIAGE_TREE_SCALE) free(FOLIAGE_TREE_SCALE);
 
 		FOLIAGE_TREE_SELECTION = NULL;
+		FOLIAGE_TREE_ANGLE = NULL;
 		FOLIAGE_TREE_ANGLES = NULL;
+		FOLIAGE_TREE_AXIS = NULL;
+		FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
 		trap->Print("*** %s: No foliage points in foliage file foliage/%s.foliage. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
@@ -1980,11 +2045,19 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		FOLIAGE_AREAS_TREES_LIST = NULL;
 
 		if (FOLIAGE_TREE_SELECTION) free(FOLIAGE_TREE_SELECTION);
+		if (FOLIAGE_TREE_ANGLE) free(FOLIAGE_TREE_ANGLE);
 		if (FOLIAGE_TREE_ANGLES) free(FOLIAGE_TREE_ANGLES);
+		if (FOLIAGE_TREE_AXIS) free(FOLIAGE_TREE_AXIS);
+		if (FOLIAGE_TREE_BILLBOARD_ANGLES) free(FOLIAGE_TREE_BILLBOARD_ANGLES);
+		if (FOLIAGE_TREE_BILLBOARD_AXIS) free(FOLIAGE_TREE_BILLBOARD_AXIS);
 		if (FOLIAGE_TREE_SCALE) free(FOLIAGE_TREE_SCALE);
 
 		FOLIAGE_TREE_SELECTION = NULL;
+		FOLIAGE_TREE_ANGLE = NULL;
 		FOLIAGE_TREE_ANGLES = NULL;
+		FOLIAGE_TREE_AXIS = NULL;
+		FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 	}
 	else
@@ -1996,6 +2069,29 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 
 		if (!IN_RANGE_TREE_AREAS_LIST) IN_RANGE_TREE_AREAS_LIST = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
 		if (!IN_RANGE_TREE_AREAS_DISTANCE) IN_RANGE_TREE_AREAS_DISTANCE = (float *)malloc(sizeof(float) * FOLIAGE_AREA_MAX);
+	}
+
+	for (int i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Set up all axis...
+		if (MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[i] > 0)
+		{// Pre-set up tree and tree billboard axii...
+			FOLIAGE_TREE_ANGLES[i][PITCH] = FOLIAGE_TREE_ANGLES[i][ROLL] = 0.0f;
+			FOLIAGE_TREE_ANGLES[i][YAW] = FOLIAGE_TREE_ANGLE[i];
+			AnglesToAxis(FOLIAGE_TREE_ANGLES[i], FOLIAGE_TREE_AXIS[i]);
+
+			FOLIAGE_TREE_BILLBOARD_ANGLES[i][PITCH] = FOLIAGE_TREE_BILLBOARD_ANGLES[i][ROLL] = 0.0f;
+			FOLIAGE_TREE_BILLBOARD_ANGLES[i][YAW] = 270.0 - FOLIAGE_TREE_ANGLE[i];
+			AnglesToAxis(FOLIAGE_TREE_BILLBOARD_ANGLES[i], FOLIAGE_TREE_BILLBOARD_AXIS[i]);
+		}
+
+		if (FOLIAGE_PLANT_SELECTION[i] > 0)
+		{// Pre-set up plant axis...
+			vectoangles(FOLIAGE_NORMALS[i], FOLIAGE_PLANT_ANGLES[i]);
+			FOLIAGE_PLANT_ANGLES[i][PITCH] += 90;
+			AnglesToAxis(FOLIAGE_PLANT_ANGLES[i], FOLIAGE_PLANT_AXIS[i]);
+
+			FOLIAGE_ApplyAxisRotation(FOLIAGE_PLANT_AXIS[i], YAW, FOLIAGE_PLANT_ANGLE[i]);
+		}
 	}
 
 	FOLIAGE_Setup_Foliage_Areas();
@@ -2602,10 +2698,16 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		FOLIAGE_POSITIONS = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
 		FOLIAGE_NORMALS = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
 		FOLIAGE_PLANT_SELECTION = (int *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(int));
-		FOLIAGE_PLANT_ANGLES = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_PLANT_ANGLE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_PLANT_ANGLES = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_PLANT_AXIS = (matrix3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
 		FOLIAGE_PLANT_SCALE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
 		FOLIAGE_TREE_SELECTION = (int *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(int));
-		FOLIAGE_TREE_ANGLES = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_TREE_ANGLE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_TREE_ANGLES = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_TREE_AXIS = (matrix3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
+		FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
 		FOLIAGE_TREE_SCALE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
 	}
 	else if (FOLIAGE_POSITIONS && ADD_MORE)
@@ -2613,10 +2715,16 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		FOLIAGE_POSITIONS = (vec3_t *)realloc(FOLIAGE_POSITIONS, FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
 		FOLIAGE_NORMALS = (vec3_t *)realloc(FOLIAGE_NORMALS, FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
 		FOLIAGE_PLANT_SELECTION = (int *)realloc(FOLIAGE_PLANT_SELECTION, FOLIAGE_MAX_FOLIAGES * sizeof(int));
-		FOLIAGE_PLANT_ANGLES = (float *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_PLANT_ANGLE = (float *)realloc(FOLIAGE_PLANT_ANGLE, FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_PLANT_ANGLES = (vec3_t *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_PLANT_AXIS = (matrix3_t *)realloc(FOLIAGE_PLANT_AXIS, FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
 		FOLIAGE_PLANT_SCALE = (float *)realloc(FOLIAGE_PLANT_SCALE, FOLIAGE_MAX_FOLIAGES * sizeof(float));
 		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_MAX_FOLIAGES * sizeof(int));
-		FOLIAGE_TREE_ANGLES = (float *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_TREE_ANGLE = (float *)realloc(FOLIAGE_TREE_ANGLE, FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_TREE_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_TREE_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_AXIS, FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
+		FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_BILLBOARD_ANGLES, FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_BILLBOARD_AXIS, FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
 		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_MAX_FOLIAGES * sizeof(float));
 	}
 	else
@@ -2624,10 +2732,16 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		FOLIAGE_POSITIONS = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
 		FOLIAGE_NORMALS = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
 		FOLIAGE_PLANT_SELECTION = (int *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(int));
-		FOLIAGE_PLANT_ANGLES = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_PLANT_ANGLE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_PLANT_ANGLES = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_PLANT_AXIS = (matrix3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
 		FOLIAGE_PLANT_SCALE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
 		FOLIAGE_TREE_SELECTION = (int *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(int));
-		FOLIAGE_TREE_ANGLES = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_TREE_ANGLE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
+		FOLIAGE_TREE_ANGLES = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_TREE_AXIS = (matrix3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
+		FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(vec3_t));
+		FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(matrix3_t));
 		FOLIAGE_TREE_SCALE = (float *)malloc(FOLIAGE_MAX_FOLIAGES * sizeof(float));
 	}
 
@@ -2974,11 +3088,11 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			qboolean DO_PLANT = qfalse;
 
 			FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
+			FOLIAGE_TREE_ANGLE[FOLIAGE_NUM_POSITIONS] = 0.0f;
 			FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
 
 			FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = irand(0, 180);
+			FOLIAGE_PLANT_ANGLE[FOLIAGE_NUM_POSITIONS] = irand(0, 180);
 
 			VectorCopy(grassSpotList[i], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]);
 			FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS][2] -= 18.0;
@@ -2988,7 +3102,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			if (grassSpotType[i] == SPOT_TYPE_TREE)
 			{// Add tree...
 				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
-				FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+				FOLIAGE_TREE_ANGLE[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 				FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65, 150) / 100.0);
 			}
 			else if (grassSpotType[i] == SPOT_TYPE_PLANT)
@@ -3010,10 +3124,16 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		FOLIAGE_POSITIONS = (vec3_t *)realloc(FOLIAGE_POSITIONS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
 		FOLIAGE_NORMALS = (vec3_t *)realloc(FOLIAGE_NORMALS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
 		FOLIAGE_PLANT_SELECTION = (int *)realloc(FOLIAGE_PLANT_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
-		FOLIAGE_PLANT_ANGLES = (float *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_PLANT_ANGLE = (float *)realloc(FOLIAGE_PLANT_ANGLE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_PLANT_ANGLES = (vec3_t *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_PLANT_AXIS = (matrix3_t *)realloc(FOLIAGE_PLANT_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		FOLIAGE_PLANT_SCALE = (float *)realloc(FOLIAGE_PLANT_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
 		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
-		FOLIAGE_TREE_ANGLES = (float *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_TREE_ANGLE = (float *)realloc(FOLIAGE_TREE_ANGLE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		FOLIAGE_TREE_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_TREE_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
+		FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_BILLBOARD_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+		FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_BILLBOARD_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
 
 		// Save the generated info to a file for next time...

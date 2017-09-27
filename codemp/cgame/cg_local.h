@@ -450,6 +450,9 @@ typedef struct centity_s {
 	vec3_t			lerpAngles;
 	
 	// UQ1: BEGIN - Trace cache stuff...
+	vec3_t			groundCheckOrigin;
+	trace_t			groundCheckTrace;
+
 	vec3_t			waterCheckOrigin;
 	int				waterCheckWaterlevel;
 	int				waterCheckWatertype;

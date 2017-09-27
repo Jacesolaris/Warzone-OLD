@@ -1290,6 +1290,7 @@ static int DistanceSurfaceCompare(const void *a, const void *b)
 		aa->cullinfo.centerOrigin[0] = (aa->cullinfo.bounds[0][0] + aa->cullinfo.bounds[1][0]) * 0.5f;
 		aa->cullinfo.centerOrigin[1] = (aa->cullinfo.bounds[0][1] + aa->cullinfo.bounds[1][1]) * 0.5f;
 		aa->cullinfo.centerOrigin[2] = (aa->cullinfo.bounds[0][2] + aa->cullinfo.bounds[1][2]) * 0.5f;
+		aa->cullinfo.centerOriginInitialized = qtrue;
 	}
 
 	if (!bb->cullinfo.centerOriginInitialized)
@@ -1297,10 +1298,11 @@ static int DistanceSurfaceCompare(const void *a, const void *b)
 		bb->cullinfo.centerOrigin[0] = (bb->cullinfo.bounds[0][0] + bb->cullinfo.bounds[1][0]) * 0.5f;
 		bb->cullinfo.centerOrigin[1] = (bb->cullinfo.bounds[0][1] + bb->cullinfo.bounds[1][1]) * 0.5f;
 		bb->cullinfo.centerOrigin[2] = (bb->cullinfo.bounds[0][2] + bb->cullinfo.bounds[1][2]) * 0.5f;
+		bb->cullinfo.centerOriginInitialized = qtrue;
 	}
 
-	aa->cullinfo.currentDistance = Distance(aa->cullinfo.centerOrigin, tr.refdef.vieworg);
-	bb->cullinfo.currentDistance = Distance(bb->cullinfo.centerOrigin, tr.refdef.vieworg);
+	aa->cullinfo.currentDistance = Distance(aa->cullinfo.centerOrigin, backEnd.refdef.vieworg);
+	bb->cullinfo.currentDistance = Distance(bb->cullinfo.centerOrigin, backEnd.refdef.vieworg);
 
 	if (aa->cullinfo.currentDistance < bb->cullinfo.currentDistance)
 		return -1;

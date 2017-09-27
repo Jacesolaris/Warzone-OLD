@@ -563,6 +563,9 @@ struct gentity_s {
 #endif //__NPC_CPU_USAGE_TWEAKS__
 
 	// UQ1: BEGIN - Trace cache stuff...
+	vec3_t			groundCheckOrigin;
+	trace_t			groundCheckTrace;
+
 	vec3_t			waterCheckOrigin;
 	int				waterCheckWaterlevel;
 	int				waterCheckWatertype;
