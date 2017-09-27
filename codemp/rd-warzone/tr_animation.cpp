@@ -47,6 +47,11 @@ static int R_MDRCullModel( mdrHeader_t *header, trRefEntity_t *ent ) {
 	mdrFrame_t	*oldFrame, *newFrame;
 	int			i, frameSize;
 
+	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
 	frameSize = (size_t)( &((mdrFrame_t *)0)->bones[ header->numBones ] );
 	
 	// compute frame pointers

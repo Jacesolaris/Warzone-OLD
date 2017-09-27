@@ -813,6 +813,11 @@ R_ACullModel
 */
 static int R_GCullModel( trRefEntity_t *ent ) {
 
+	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
 	// scale the radius if need be
 	float largestScale = ent->e.modelScale[0];
 

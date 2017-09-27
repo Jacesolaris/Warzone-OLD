@@ -562,6 +562,21 @@ struct gentity_s {
 	trace_t				CACHE_trace;
 #endif //__NPC_CPU_USAGE_TWEAKS__
 
+	// UQ1: BEGIN - Trace cache stuff...
+	vec3_t			waterCheckOrigin;
+	int				waterCheckWaterlevel;
+	int				waterCheckWatertype;
+
+	vec3_t			slopeCheckOrigin;
+	int				slopeCheckDiff;
+	int				slopeCheckInterval;
+
+	vec3_t			ladderCheckOrigin;
+	qboolean		ladderCheckLadder;
+	qboolean		ladderCheckLadderForward;
+	vec3_t			ladderCheckLadderVec;
+	// UQ1: END - Trace cache stuff...
+
 #ifdef __USE_NAVMESH__
 	CompNavMeshPath		patrol;
 	CompNavMeshPos		navMeshPos;

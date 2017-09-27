@@ -448,6 +448,21 @@ typedef struct centity_s {
 	// exact interpolated position of entity on this frame
 	vec3_t			lerpOrigin;
 	vec3_t			lerpAngles;
+	
+	// UQ1: BEGIN - Trace cache stuff...
+	vec3_t			waterCheckOrigin;
+	int				waterCheckWaterlevel;
+	int				waterCheckWatertype;
+
+	vec3_t			slopeCheckOrigin;
+	int				slopeCheckDiff;
+	int				slopeCheckInterval;
+
+	vec3_t			ladderCheckOrigin;
+	qboolean		ladderCheckLadder;
+	qboolean		ladderCheckLadderForward;
+	vec3_t			ladderCheckLadderVec;
+	// UQ1: END - Trace cache stuff...
 
 #if 0
 	//add up bone offsets until next client frame before adding them in

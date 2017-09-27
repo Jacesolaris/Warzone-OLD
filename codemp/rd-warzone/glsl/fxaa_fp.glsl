@@ -1,17 +1,19 @@
 //precision mediump float;
 
-//some stuff needed for kami-batch
-varying vec2 vTexCoord0;
- 
 //make sure to have a resolution uniform set to the screen size
-uniform vec2 u_Dimensions;
+uniform vec2		u_Dimensions;
 
-uniform sampler2D u_TextureMap;
+uniform sampler2D	u_TextureMap;
+
+uniform vec4		u_Local0;
+
+//some stuff needed for kami-batch
+varying vec2		vTexCoord0;
 
 #define FXAA_REDUCE_MIN		(1.0/ 128.0)
 #define FXAA_REDUCE_MUL		(1.0 / 8.0)
 #define FXAA_SPAN_MAX		2.0
-#define FXAA_SCAN_MOD		0.75
+#define FXAA_SCAN_MOD		u_Local0.r//0.75
 
 vec2 resolution = vec2(u_Dimensions.x * FXAA_SCAN_MOD, u_Dimensions.y * FXAA_SCAN_MOD);
 

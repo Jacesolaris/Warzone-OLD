@@ -751,6 +751,11 @@ static int R_CullIQM( iqmData_t *data, trRefEntity_t *ent ) {
 	float		*oldBounds, *newBounds;
 	int		i;
 
+	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
 	if (!data->bounds) {
 		tr.pc.c_box_cull_md3_clip++;
 		return CULL_CLIP;

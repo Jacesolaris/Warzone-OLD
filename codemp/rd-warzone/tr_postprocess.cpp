@@ -3184,6 +3184,12 @@ void RB_FXAA(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		GLSL_SetUniformVec2(&tr.fxaaShader, UNIFORM_DIMENSIONS, screensize);
 	}
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_fxaaScanMod->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.fxaaShader, UNIFORM_LOCAL0, local0);
+	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fxaaShader, color, 0);
 }

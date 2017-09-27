@@ -4820,6 +4820,31 @@ static void PM_SetWaterLevel( void ) {
 	pm->waterlevel = 0;
 	pm->watertype = 0;
 
+#ifdef _CGAME
+	centity_t *cent = &cg_entities[pm->ps->clientNum];
+	if (cent)
+	{
+		if (Distance(cent->lerpOrigin, cent->waterCheckOrigin) <= 8)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			pm->waterlevel = cent->waterCheckWaterlevel;
+			pm->watertype = cent->waterCheckWatertype;
+			return;
+		}
+	}
+#endif //_CGAME
+#ifdef _GAME
+	gentity_t *ent = &g_entities[pm->ps->clientNum];
+	if (ent)
+	{
+		if (Distance(ent->r.currentOrigin, ent->waterCheckOrigin) <= 8)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			pm->waterlevel = ent->waterCheckWaterlevel;
+			pm->watertype = ent->waterCheckWatertype;
+			return;
+		}
+	}
+#endif //_GAME
+
 #ifdef _GAME
 	if (pm->ps->clientNum >= MAX_CLIENTS)
 	{// NPCs can use current waypoint info to save CPU time on traces...
@@ -4894,6 +4919,23 @@ static void PM_SetWaterLevel( void ) {
 		pm->waterlevel = 1;
 	}
 #endif //__NPCS_IGNORE_WATER__*/
+
+#ifdef _CGAME
+	if (cent)
+	{// Cache the current water level and type, so we can skip the trace if we don't move...
+		cent->waterCheckWaterlevel = pm->waterlevel;
+		cent->waterCheckWatertype = pm->watertype;
+		VectorCopy(cent->lerpOrigin, cent->waterCheckOrigin);
+	}
+#endif //_CGAME
+#ifdef _GAME
+	if (ent)
+	{// Cache the current water level and type, so we can skip the trace if we don't move...
+		ent->waterCheckWaterlevel = pm->waterlevel;
+		ent->waterCheckWatertype = pm->watertype;
+		VectorCopy(ent->r.currentOrigin, ent->waterCheckOrigin);
+	}
+#endif //_GAME
 }
 
 qboolean PM_CheckDualForwardJumpDuck( void )
@@ -5288,6 +5330,31 @@ void PM_FootSlopeTrace( float *pDiff, float *pInterval )
 	vec3_t footMins, footMaxs;
 	vec3_t footLSlope, footRSlope;
 
+#ifdef _CGAME
+	centity_t *cent = &cg_entities[pm->ps->clientNum];
+	if (cent)
+	{
+		if (Distance(cent->lerpOrigin, cent->slopeCheckOrigin) <= 8)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			*pDiff = cent->slopeCheckDiff;
+			*pInterval = cent->slopeCheckInterval;
+			return;
+		}
+	}
+#endif //_CGAME
+#ifdef _GAME
+	gentity_t *ent = &g_entities[pm->ps->clientNum];
+	if (ent)
+	{
+		if (Distance(ent->r.currentOrigin, ent->slopeCheckOrigin) <= 8)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			*pDiff = ent->slopeCheckDiff;
+			*pInterval = ent->slopeCheckInterval;
+			return;
+		}
+	}
+#endif //_GAME
+
 	trace_t	trace;
 	float	diff, interval;
 
@@ -5340,6 +5407,23 @@ void PM_FootSlopeTrace( float *pDiff, float *pInterval )
 	{
 		*pInterval = interval;
 	}
+
+#ifdef _CGAME
+	if (cent)
+	{// Cache for next time...
+		cent->slopeCheckDiff = *pDiff;
+		cent->slopeCheckInterval = *pInterval;
+		VectorCopy(cent->lerpOrigin, cent->slopeCheckOrigin);
+	}
+#endif //_CGAME
+#ifdef _GAME
+	if (ent)
+	{// Cache for next time...
+		ent->slopeCheckDiff = *pDiff;
+		ent->slopeCheckInterval = *pInterval;
+		VectorCopy(ent->r.currentOrigin, ent->slopeCheckOrigin);
+	}
+#endif //_GAME
 }
 
 qboolean BG_InSlopeAnim(int anim)
@@ -6453,63 +6537,110 @@ void PM_CheckLadderMove(void)
 		return;
 	}
 
-	// check for ladder
-	flatforward[0] = pml.forward[0];
-	flatforward[1] = pml.forward[1];
-	flatforward[2] = 0;
-	VectorNormalize(flatforward);
+	qboolean skipTrace = qfalse;
 
-	VectorMA(pm->ps->origin, tracedist, flatforward, spot);
-	pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
-	if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+#ifdef _CGAME
+	centity_t *cent = &cg_entities[pm->ps->clientNum];
+	if (cent)
 	{
-		pml.ladder = qtrue;
+		if (Distance(cent->lerpOrigin, cent->ladderCheckOrigin) <= 1)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			pml.ladder = cent->ladderCheckLadder;
+			pml.ladderforward = cent->ladderCheckLadderForward;
+			VectorCopy(cent->ladderCheckLadderVec, pml.laddervec);
+			
+			if (pml.ladder)
+			{
+				pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
+			}
+			
+			skipTrace = qtrue;
+		}
 	}
-	/*
-	if (!pml.ladder && DotProduct(pm->ps->velocity, pml.forward) < 0) {
-	// trace along the negative velocity, so we grab onto a ladder if we are trying to reverse onto it from above the ladder
-	flatforward[0] = -pm->ps->velocity[0];
-	flatforward[1] = -pm->ps->velocity[1];
-	flatforward[2] = 0;
-	VectorNormalize (flatforward);
+#endif //_CGAME
+#ifdef _GAME
+	gentity_t *ent = &g_entities[pm->ps->clientNum];
+	if (ent)
+	{
+		if (Distance(ent->r.currentOrigin, ent->ladderCheckOrigin) <= 1)
+		{// Havn't moved, don't bother wasting CPU time on checking again...
+			pml.ladder = ent->ladderCheckLadder;
+			pml.ladderforward = ent->ladderCheckLadderForward;
+			VectorCopy(ent->ladderCheckLadderVec, pml.laddervec);
 
-	VectorMA (pm->ps->origin, tracedist, flatforward, spot);
-	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
-	if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
-	{
-	pml.ladder = qtrue;
-	}
-	}
-	*/
-	if (pml.ladder)
-	{
-		VectorCopy(trace.plane.normal, pml.laddervec);
-	}
+			if (pml.ladder)
+			{
+				pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
+			}
 
-	if (pml.ladder && !pml.walking && (trace.fraction * tracedist > 1.0))
-	{
-		vec3_t          mins;
+			skipTrace = qtrue;
+		}
+	}
+#endif //_GAME
 
-		// if we are only just on the ladder, don't do this yet, or it may throw us back off the ladder
-		pml.ladder = qfalse;
-		VectorCopy(pm->mins, mins);
-		mins[2] = -1;
-		VectorMA(pm->ps->origin, -tracedist, pml.laddervec, spot);
-		pm->trace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+	if (!skipTrace)
+	{
+		// check for ladder
+		flatforward[0] = pml.forward[0];
+		flatforward[1] = pml.forward[1];
+		flatforward[2] = 0;
+		VectorNormalize(flatforward);
+
+		VectorMA(pm->ps->origin, tracedist, flatforward, spot);
+
+		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
 		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
 		{
-			pml.ladderforward = qtrue;
 			pml.ladder = qtrue;
+		}
+		/*
+		if (!pml.ladder && DotProduct(pm->ps->velocity, pml.forward) < 0) {
+		// trace along the negative velocity, so we grab onto a ladder if we are trying to reverse onto it from above the ladder
+		flatforward[0] = -pm->ps->velocity[0];
+		flatforward[1] = -pm->ps->velocity[1];
+		flatforward[2] = 0;
+		VectorNormalize (flatforward);
+
+		VectorMA (pm->ps->origin, tracedist, flatforward, spot);
+		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+		{
+		pml.ladder = qtrue;
+		}
+		}
+		*/
+
+		if (pml.ladder)
+		{
+			VectorCopy(trace.plane.normal, pml.laddervec);
+		}
+
+
+		if (pml.ladder && !pml.walking && (trace.fraction * tracedist > 1.0))
+		{
+			vec3_t          mins;
+
+			// if we are only just on the ladder, don't do this yet, or it may throw us back off the ladder
+			pml.ladder = qfalse;
+			VectorCopy(pm->mins, mins);
+			mins[2] = -1;
+			VectorMA(pm->ps->origin, -tracedist, pml.laddervec, spot);
+			pm->trace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+			if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+			{
+				pml.ladderforward = qtrue;
+				pml.ladder = qtrue;
+				pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
+			}
+			else
+			{
+				pml.ladder = qfalse;
+			}
+		}
+		else if (pml.ladder)
+		{
 			pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
 		}
-		else
-		{
-			pml.ladder = qfalse;
-		}
-	}
-	else if (pml.ladder)
-	{
-		pm->ps->pm_flags |= PMF_LADDER;	// set ladder bit
 	}
 
 	// create some up/down velocity if touching ladder
@@ -6557,6 +6688,25 @@ void PM_CheckLadderMove(void)
 			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_DWN1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
 		}
 	}
+
+#ifdef _CGAME
+	if (cent)
+	{// Cache for next time...
+		cent->ladderCheckLadder = pml.ladder;
+		cent->ladderCheckLadderForward = pml.ladderforward;
+		VectorCopy(pml.laddervec, cent->ladderCheckLadderVec);
+		VectorCopy(cent->lerpOrigin, cent->ladderCheckOrigin);
+	}
+#endif //_CGAME
+#ifdef _GAME
+	if (ent)
+	{// Cache for next time...
+		ent->ladderCheckLadder = pml.ladder;
+		ent->ladderCheckLadderForward = pml.ladderforward;
+		VectorCopy(pml.laddervec, ent->ladderCheckLadderVec);
+		VectorCopy(ent->r.currentOrigin, ent->ladderCheckOrigin);
+	}
+#endif //_GAME
 }
 
 /*

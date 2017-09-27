@@ -252,12 +252,6 @@ vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 spe
 	return dif*diffuseColor + spe*specularColor;
 }
 
-vec3 QuickMix(vec3 color1, vec3 color2, float mix)
-{
-	float mixVal = clamp(mix, 0.0, 1.0);
-	return vec3((color1 * (1.0 - mixVal)) + (color2 * mixVal));
-}
-
 /*
 ** Desaturation
 */
@@ -519,40 +513,34 @@ vec3 blendSoftLight3(vec3 base, vec3 blend) {
 void main(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
+	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
-
-	vec2 texCoords = var_TexCoords;
-
-
-	vec3 viewOrg = u_ViewOrigin.xyz;
-	vec4 position = textureLod(u_PositionMap, texCoords, 0.0);
-
-	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
-
-
 
 	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
 	{// Skybox... Skip...
 		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
-		{
+		{// C/S/B enabled...
 			outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
 		}
 
 		if (u_Local5.a > 0.0)
-		{// TrueHDR...
+		{// TrueHDR enabled...
 			outColor.rgb = TrueHDR( outColor.rgb );
 		}
 
 		if (u_Local6.b > 0.0)
-		{// Vibrancy...
+		{// Vibrancy enabled...
 			outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
 		}
 
-		outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
+		//outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
 		gl_FragColor = outColor;
 		return;
 	}
 
+
+	vec2 texCoords = var_TexCoords;
+	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
 
 
 	if (u_Local6.a > 0.0)
@@ -620,7 +608,7 @@ void main(void)
 #endif //defined(USE_SHADOWMAP)
 
 
-	vec3 surfaceToCamera = normalize(u_ViewOrigin.xyz - position.xyz);
+	vec3 surfaceToCamera = E;
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 
@@ -648,128 +636,126 @@ void main(void)
 	#define rd reflect(surfaceToCamera, N)
 #endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
-
-	float phongFactor = u_Local1.r * u_Local1.g;
+	if (u_Local1.r > 0.0)
+	{// If r_blinnPhong is <= 0.0 then this is pointless...
+		float phongFactor = u_Local1.r * u_Local1.g;
 
 #define LIGHT_COLOR_POWER			4.0
 
-	if (phongFactor > 0.0 && u_Local6.a < 1.0)
-	{// this is blinn phong
-		float light_occlusion = 1.0;
+		if (phongFactor > 0.0 && u_Local6.a < 1.0)
+		{// this is blinn phong
+			float light_occlusion = 1.0;
 
-		if (useOcclusion)
-		{
-			light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
-		}
-
-		float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
-		power = pow(power, LIGHT_COLOR_POWER);
-		power = power * 0.5 + 0.5;
-		
-		vec3 lightColor = u_PrimaryLightColor.rgb;
-
-		float lightMult = clamp(reflectivePower * power * light_occlusion * phongFactor * shadowMult, 0.0, 1.0);
-
-		if (lightMult > 0.0)
-		{
-			lightColor *= lightMult;
-			lightColor = blinn_phong(N, E, -to_light_norm, lightColor, lightColor);
-			float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
-			lightColor *= maxStr;
-			lightColor *= 1.0 - u_Local6.a; // Day->Night scaling of sunlight...
-
-			// Add vibrancy to light color at sunset/sunrise???
-			if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
-			{// Vibrancy gets greater the closer we get to night time...
-#if 0
-				lightColor = Vibrancy( lightColor, u_Local6.a * 32.0 );
-#else
-				float vib = u_Local6.a;
-				if (vib > 0.8)
-				{// Scale back vibrancy to 0.0 before justnightfall...
-					float downScale = 1.0 - vib;
-					downScale *= 4.0;
-					vib = mix(vib, 0.0, downScale);
-				}
-				lightColor = Vibrancy( lightColor, vib * 4.0 );
-#endif
-			}
-
-			outColor.rgb = outColor.rgb + lightColor;
-		}
-	}
-
-	if (u_lightCount > 0.0 && reflectivePower > 0.0)
-	{
-		phongFactor = u_Local1.r;
-
-		if (phongFactor <= 0.0)
-		{// Never allow no phong...
-			phongFactor = 1.0;
-		}
-
-		vec3 addedLight = vec3(0.0);
-		float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
-		power = pow(power, LIGHT_COLOR_POWER);
-		power = power * 0.5 + 0.5;
-
-		float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
-
-		for (int li = 0; li < u_lightCount; li++)
-		{
-			vec3 lightPos = u_lightPositions2[li].xyz;
-
-			float lightDist = distance(lightPos, position.xyz);
-
-			if (u_lightHeightScales[li] > 0.0)
-			{// ignore height differences, check later...
-				lightDist -= length(lightPos.z - position.z);
-			}
-
-			float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
-			//float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
-
-			// Attenuation...
-			float lightStrength = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
-			lightStrength = pow(lightStrength, 2.0);
-			lightStrength *= lightDistMult * reflectivePower;
-
-			if (lightStrength > 0.0)
+			if (useOcclusion)
 			{
-				vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a; // Normalize.
-				vec3 lightDir = normalize(lightPos - position.xyz);
-				float light_occlusion = 1.0;
-				
-				lightColor = lightColor * lightStrength * power;
+				light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
+			}
 
-				//addedLight.rgb += lightColor;
-				addedLight.rgb += lightColor * maxStr * 0.333;
+			float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+			power = pow(power, LIGHT_COLOR_POWER);
+			power = power * 0.5 + 0.5;
+		
+			vec3 lightColor = u_PrimaryLightColor.rgb;
 
-				if (useOcclusion)
-				{
-					light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
+			float lightMult = clamp(reflectivePower * power * light_occlusion * phongFactor * shadowMult, 0.0, 1.0);
+
+			if (lightMult > 0.0)
+			{
+				lightColor *= lightMult;
+				lightColor = blinn_phong(N, E, -to_light_norm, lightColor, lightColor);
+				float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
+				lightColor *= maxStr;
+				lightColor *= 1.0 - u_Local6.a; // Day->Night scaling of sunlight...
+
+				// Add vibrancy to light color at sunset/sunrise???
+				if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+				{// Vibrancy gets greater the closer we get to night time...
+					float vib = u_Local6.a;
+					if (vib > 0.8)
+					{// Scale back vibrancy to 0.0 just before nightfall...
+						float downScale = 1.0 - vib;
+						downScale *= 4.0;
+						vib = mix(vib, 0.0, downScale);
+					}
+					lightColor = Vibrancy( lightColor, vib * 4.0 );
 				}
 
-				float lightMult = clamp(light_occlusion * phongFactor, 0.0, 1.0);
-
-				if (lightMult > 0.0)
-				{
-					lightColor *= lightMult;
-					lightColor *= maxStr;
-					addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor);
-				}
+				outColor.rgb = outColor.rgb + lightColor;
 			}
 		}
 
-		outColor.rgb = outColor.rgb + addedLight;
+		if (u_lightCount > 0.0 && reflectivePower > 0.0)
+		{
+			phongFactor = u_Local1.r;
+
+			if (phongFactor <= 0.0)
+			{// Never allow no phong...
+				phongFactor = 1.0;
+			}
+
+			vec3 addedLight = vec3(0.0);
+			float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+			power = pow(power, LIGHT_COLOR_POWER);
+			power = power * 0.5 + 0.5;
+
+			float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
+
+			for (int li = 0; li < u_lightCount; li++)
+			{
+				vec3 lightPos = u_lightPositions2[li].xyz;
+
+				float lightDist = distance(lightPos, position.xyz);
+
+				if (u_lightHeightScales[li] > 0.0)
+				{// ignore height differences, check later...
+					lightDist -= length(lightPos.z - position.z);
+				}
+
+				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
+				//float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
+
+				// Attenuation...
+				float lightStrength = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+				lightStrength = pow(lightStrength, 2.0);
+				lightStrength *= lightDistMult * reflectivePower;
+
+				if (lightStrength > 0.0)
+				{
+					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a; // Normalize.
+					vec3 lightDir = normalize(lightPos - position.xyz);
+					float light_occlusion = 1.0;
+				
+					lightColor = lightColor * lightStrength * power;
+
+					//addedLight.rgb += lightColor;
+					addedLight.rgb += lightColor * maxStr * 0.333;
+
+					if (useOcclusion)
+					{
+						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
+					}
+
+					float lightMult = clamp(light_occlusion * phongFactor, 0.0, 1.0);
+
+					if (lightMult > 0.0)
+					{
+						lightColor *= lightMult;
+						lightColor *= maxStr;
+						addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor);
+					}
+				}
+			}
+
+			outColor.rgb = outColor.rgb + addedLight;
+		}
 	}
 
-	//if (u_Local3.a >= 1.0) // Realtime lightmap-ish type coloring/lighting...
-		outColor.rgb *= ((outColor.rgb / length(outColor.rgb)) * 3.0) * 0.25 + 0.75;
+	// Has a sort of lightmap-ish type coloring/lighting effect on result...
+	//outColor.rgb *= ((outColor.rgb / length(outColor.rgb)) * 3.0) * 0.25 + 0.75;
 
 #ifdef __AMBIENT_OCCLUSION__
 	if (u_Local1.b > 0.0)
-	{
+	{// AO enabled...
 		float ao = calculateAO(to_light_norm, N * 10000.0);
 		ao = clamp(ao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 		outColor.rgb *= ao;
@@ -778,30 +764,30 @@ void main(void)
 
 #ifdef __ENVMAP__
 	if (u_Local1.a > 0.0)
-	{
+	{// Envmap enabled...
 		float lightScale = clamp(1.0 - max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		outColor.rgb = QuickMix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), (reflectivePower * 0.5) * lightScale);
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), (reflectivePower * 0.5) * lightScale);
 	}
 #endif //__ENVMAP__
 
 	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
-	{
+	{// C/S/B enabled...
 		outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
 	}
 
 	if (u_Local5.a > 0.0)
-	{// TrueHDR...
+	{// TrueHDR enabled...
 		outColor.rgb = TrueHDR( outColor.rgb );
 	}
 
 	if (u_Local6.b > 0.0)
-	{// Vibrancy...
+	{// Vibrancy enabled...
 		outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
 	}
 
-	outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
+	//outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
 	gl_FragColor = outColor;
 }
 

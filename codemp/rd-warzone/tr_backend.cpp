@@ -2801,14 +2801,6 @@ const void *RB_PostProcess(const void *data)
 	}
 #endif
 
-	if (r_superSampleMultiplier->value > 1.0)
-	{
-		VectorSet4(srcBox, 0, 0, glConfig.vidHeight * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
-		VectorSet4(dstBox, glConfig.vidHeight * (r_superSampleMultiplier->value - 1.0), glConfig.vidHeight * (r_superSampleMultiplier->value - 1.0), glConfig.vidHeight, glConfig.vidHeight);
-		FBO_FastBlit(srcFbo, srcBox, tr.genericFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	}
-
 	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
 	{
 		// Composite the glow/bloom texture
@@ -2832,6 +2824,14 @@ const void *RB_PostProcess(const void *data)
 		}
 
 		FBO_BlitFromTexture (tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
+	}
+
+	if (r_superSampleMultiplier->value > 1.0)
+	{
+		VectorSet4(srcBox, 0, 0, glConfig.vidHeight * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
+		VectorSet4(dstBox, glConfig.vidHeight * (r_superSampleMultiplier->value - 1.0), glConfig.vidHeight * (r_superSampleMultiplier->value - 1.0), glConfig.vidHeight, glConfig.vidHeight);
+		FBO_FastBlit(srcFbo, srcBox, tr.genericFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 
 	RB_OcclusionCulling();

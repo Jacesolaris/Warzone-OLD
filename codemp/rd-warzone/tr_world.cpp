@@ -42,6 +42,19 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}
 
+	/*if (!surf->cullinfo.centerOriginInitialized)
+	{// If this surface's center org has not been set up yet, set it up now...
+		surf->cullinfo.centerOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+		surf->cullinfo.centerOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+		surf->cullinfo.centerOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+		surf->cullinfo.centerOriginInitialized = qtrue;
+	}
+	
+	if (!surf->shader->isSky && !surf->shader->isWater && Distance(surf->cullinfo.centerOrigin, backEnd.refdef.vieworg) >= tr.distanceCull * 1.75)
+	{
+		return qtrue;
+	}*/
+
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
 		if (tr.currentModel && tr.currentModel->type == MOD_BRUSH)
@@ -481,6 +494,41 @@ int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 	return sides;
 }
 
+qboolean R_NodeInFOV(vec3_t spot, vec3_t from)
+{
+	//return qtrue;
+
+	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
+	vec3_t	fromAngles;
+	//int hFOV = backEnd.refdef.fov_x * 0.5;
+	//int vFOV = backEnd.refdef.fov_y * 0.5;
+	int hFOV = 120;
+	int vFOV = 120;
+	//int hFOV = backEnd.refdef.fov_x;
+	//int vFOV = backEnd.refdef.fov_y;
+	//int hFOV = 80;
+	//int vFOV = 80;
+	//int hFOV = tr.refdef.fov_x * 0.5;
+	//int vFOV = tr.refdef.fov_y * 0.5;
+
+	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+
+	VectorSubtract(spot, from, deltaVector);
+	vectoangles(deltaVector, angles);
+	VectorCopy(fromAngles, fromAnglesCopy);
+
+	deltaAngles[PITCH] = AngleDelta(fromAnglesCopy[PITCH], angles[PITCH]);
+	deltaAngles[YAW] = AngleDelta(fromAnglesCopy[YAW], angles[YAW]);
+
+	if (fabs(deltaAngles[PITCH]) <= vFOV && fabs(deltaAngles[YAW]) <= hFOV)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 /*
 ================
 R_RecursiveWorldNode
@@ -501,6 +549,35 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 		// inside can be visible OPTIMIZE: don't do this all the way to leafs?
 
 		if (!r_nocull->integer) {
+#if 0
+			if (node->contents == -1)
+			{// UQ1: Testing doing FOV checks on bounds using 1/4 steps...
+				float size = Distance(node->mins, node->maxs);
+				float scatter = size / 4.0;
+				qboolean visible = qfalse;
+
+				for (int x = node->mins[0]; x < node->maxs[0] && !visible; x += scatter)
+				{
+					for (int y = node->mins[1]; y < node->maxs[1] && !visible; y += scatter)
+					{
+						for (int z = node->mins[2]; z < node->maxs[2] && !visible; z += scatter)
+						{
+							vec3_t pos;
+							VectorSet(pos, x, y, z);
+							if (R_NodeInFOV(pos, tr.refdef.vieworg)) {
+								visible = qtrue;
+							}
+						}
+					}
+				}
+
+				if (!visible)
+				{// This leaf is not in fov...
+					return;
+				}
+			}
+#endif
+
 			if (r_occlusion->integer && node->occluded && !(tr.viewParms.flags & VPF_DEPTHSHADOW))
 			{
 				return;

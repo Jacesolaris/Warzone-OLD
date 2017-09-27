@@ -80,6 +80,11 @@ static int R_CullModel( mdvModel_t *model, trRefEntity_t *ent ) {
 	mdvFrame_t	*oldFrame, *newFrame;
 	int			i;
 
+	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
 	// compute frame pointers
 	newFrame = model->frames + ent->e.frame;
 	oldFrame = model->frames + ent->e.oldframe;

@@ -115,62 +115,59 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 void main ( void )
 {
 	vec3 col = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
-
-	if (u_Local7.r >= 1.0)
-	{// At night no point thinking about fogs... For now... Sky doesn't like it much at night transition (sun angles, etc)...
-		gl_FragColor = vec4(col, 1.0);
-		return;
-	}
-
-	vec4 pMap = positionMapAtCoord( var_TexCoords );
-	vec3 viewOrg = u_ViewOrigin.xyz;
 	vec3 fogColor = col;
 
-	//
-	// Normal fog...
-	//
-	if (u_Local2.a > 0.0)
-	{
-		vec3 rayDir = -gl_FragCoord.xyz;//normalize(viewOrg.xyz - pMap.xyz);
-		vec3 lightDir = normalize(viewOrg.xyz - u_PrimaryLightOrigin.xyz);
-		float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
-		fogColor = applyFog2(fogColor.rgb, depth, viewOrg.xyz, rayDir, lightDir, pMap);
-	}
+	if (u_Local7.r < 1.0 && (u_Local2.a > 0.0 || u_Local4.g > 0.0))
+	{// At night no point thinking about fogs... For now... Sky doesn't like it much at night transition (sun angles, etc)...
+		vec4 pMap = positionMapAtCoord( var_TexCoords );
+		vec3 viewOrg = u_ViewOrigin.xyz;
 
-	//
-	// Volumetric fog...
-	//
-	if (u_Local4.g > 0.0)
-	{
-		vec3 pM = pMap.xzy;
-		vec3 vO = vec3(0.0, -viewOrg.z, 0.0);
-		pM.z += 524288.0;
-		vO.z += 524288.0;
-		vec3 rayDir = normalize(vO - pM);
-		vec3 fog = vec3(0.0);
-		float dafuck = 0.5;
-		float numAdded = 0.0;
-		float mt = u_Local4.b;
-
-//#pragma unroll 7
-		for(int i=0; i<7; i++)
+		//
+		// Normal fog...
+		//
+		if (u_Local2.a > 0.0)
 		{
-			vec3 pos = rayDir*dafuck;
-			float rz = fogmap(pos, dafuck);
-
-			float grd =  clamp((rz - fogmap(pos+0.8-float(i)*0.1,dafuck))*3.0, 0.1, 1.0 );
-			vec3 col2 = clamp(u_Local5.rgb * (1.7-grd), 0.0, 1.0) * u_Local5.a;
-			fog = mix(fog,col2,clamp(rz*smoothstep(dafuck-0.4,dafuck+2.0+dafuck*0.75,mt),0.0,1.0) );
-			dafuck *= 0.45;
-			numAdded += 1.0;
-			if (dafuck>mt)break;
+			vec3 rayDir = -gl_FragCoord.xyz;//normalize(viewOrg.xyz - pMap.xyz);
+			vec3 lightDir = normalize(viewOrg.xyz - u_PrimaryLightOrigin.xyz);
+			float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
+			fogColor = applyFog2(fogColor.rgb, depth, viewOrg.xyz, rayDir, lightDir, pMap);
 		}
 
-		fogColor += (fog / numAdded) * 5.0;
-	}
+		//
+		// Volumetric fog...
+		//
+		if (u_Local4.g > 0.0)
+		{
+			vec3 pM = pMap.xzy;
+			vec3 vO = vec3(0.0, -viewOrg.z, 0.0);
+			pM.z += 524288.0;
+			vO.z += 524288.0;
+			vec3 rayDir = normalize(vO - pM);
+			vec3 fog = vec3(0.0);
+			float dafuck = 0.5;
+			float numAdded = 0.0;
+			float mt = u_Local4.b;
 
-	// Blend out fog as we head more to night time... For now... Sky doesn't like it much at night transition (sun angles, etc)...
-	fogColor.rgb = mix(clamp(fogColor.rgb, 0.0, 1.0), col.rgb, u_Local7.r);
+//#pragma unroll 7
+			for(int i=0; i<7; i++)
+			{
+				vec3 pos = rayDir*dafuck;
+				float rz = fogmap(pos, dafuck);
+
+				float grd =  clamp((rz - fogmap(pos+0.8-float(i)*0.1,dafuck))*3.0, 0.1, 1.0 );
+				vec3 col2 = clamp(u_Local5.rgb * (1.7-grd), 0.0, 1.0) * u_Local5.a;
+				fog = mix(fog,col2,clamp(rz*smoothstep(dafuck-0.4,dafuck+2.0+dafuck*0.75,mt),0.0,1.0) );
+				dafuck *= 0.45;
+				numAdded += 1.0;
+				if (dafuck>mt)break;
+			}
+
+			fogColor += (fog / numAdded) * 5.0;
+		}
+
+		// Blend out fog as we head more to night time... For now... Sky doesn't like it much at night transition (sun angles, etc)...
+		fogColor.rgb = mix(clamp(fogColor.rgb, 0.0, 1.0), col.rgb, u_Local7.r);
+	}
 
 	gl_FragColor = vec4(fogColor, 1.0);
 }
