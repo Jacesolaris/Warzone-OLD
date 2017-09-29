@@ -80,7 +80,14 @@ static int R_CullModel( mdvModel_t *model, trRefEntity_t *ent ) {
 	mdvFrame_t	*oldFrame, *newFrame;
 	int			i;
 
-	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	float dist = Distance(ent->e.origin, backEnd.refdef.vieworg);
+
+	if (!ent->e.ignoreCull && dist >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
+	if (r_occlusion->integer && !ent->e.ignoreCull && dist > tr.occlusionZfar)
 	{
 		return CULL_OUT;
 	}

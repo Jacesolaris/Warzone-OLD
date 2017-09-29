@@ -47,7 +47,14 @@ static int R_MDRCullModel( mdrHeader_t *header, trRefEntity_t *ent ) {
 	mdrFrame_t	*oldFrame, *newFrame;
 	int			i, frameSize;
 
-	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	float dist = Distance(ent->e.origin, backEnd.refdef.vieworg);
+
+	if (!ent->e.ignoreCull && dist >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
+	if (r_occlusion->integer && !ent->e.ignoreCull && dist > tr.occlusionZfar)
 	{
 		return CULL_OUT;
 	}

@@ -1,4 +1,6 @@
-uniform vec4      u_Color;
+uniform vec4		u_Color;
+
+//varying vec2		var_Tex;
 
 void main()
 {

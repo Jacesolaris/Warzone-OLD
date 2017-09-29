@@ -75,6 +75,8 @@ extern const char *fallbackShader_instance_vp;
 extern const char *fallbackShader_instance_fp;
 extern const char *fallbackShader_occlusion_vp;
 extern const char *fallbackShader_occlusion_fp;
+extern const char *fallbackShader_depthAdjust_vp;
+extern const char *fallbackShader_depthAdjust_fp;
 extern const char *fallbackShader_generateNormalMap_vp;
 extern const char *fallbackShader_generateNormalMap_fp;
 extern const char *fallbackShader_magicdetail_vp;
@@ -2778,11 +2780,18 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 #endif //__INSTANCED_MODELS__
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	attribs = ATTR_POSITION;// | ATTR_TEXCOORD0;
 
 	if (!GLSL_BeginLoadGPUShader(&tr.occlusionShader, "occlusion", attribs, qtrue, qfalse, qfalse, NULL, qfalse, NULL, fallbackShader_occlusion_vp, fallbackShader_occlusion_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load occlusion shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+
+	if (!GLSL_BeginLoadGPUShader(&tr.depthAdjustShader, "depthAdjust", attribs, qtrue, qfalse, qfalse, NULL, qtrue, NULL, fallbackShader_depthAdjust_vp, fallbackShader_depthAdjust_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthAdjust shader!");
 	}
 
 	{
@@ -3668,12 +3677,29 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_BindProgram(&tr.occlusionShader);
 	GLSL_SetUniformInt(&tr.occlusionShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.occlusionShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 
 	GLSL_FinishGPUShader(&tr.occlusionShader);
 
 	numEtcShaders++;
 
+	
+	if (!GLSL_EndLoadGPUShader(&tr.depthAdjustShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthAdjust shader!");
+	}
 
+	GLSL_InitUniforms(&tr.depthAdjustShader);
+
+	GLSL_BindProgram(&tr.depthAdjustShader);
+
+	GLSL_SetUniformInt(&tr.depthAdjustShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.depthAdjustShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+
+	GLSL_FinishGPUShader(&tr.depthAdjustShader);
+
+	numEtcShaders++;
+	
 
 	if (!GLSL_EndLoadGPUShader(&tr.lightAllShader))
 	{
@@ -5461,6 +5487,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.instanceShader);
 #endif //__INSTANCED_MODELS__
 	GLSL_DeleteGPUShader(&tr.occlusionShader);
+	GLSL_DeleteGPUShader(&tr.depthAdjustShader);
 
 	GLSL_DeleteGPUShader(&tr.lightAllShader);
 

@@ -55,6 +55,11 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}*/
 
+	/*if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill && !surf->shader->isSky && !surf->shader->isWater && r_occlusion->integer && Distance(surf->cullinfo.centerOrigin, backEnd.refdef.vieworg) > tr.occlusionZfar)
+	{
+		return qtrue;
+	}*/
+
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
 		if (tr.currentModel && tr.currentModel->type == MOD_BRUSH)
@@ -1424,18 +1429,8 @@ void R_AddWorldSurfaces(void) {
 
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill)
 	{
-		if (r_occlusion->integer == 1)
+		if (r_occlusion->integer >= 1)
 		{
-			RB_CheckOcclusions();
-		}
-		else if (r_occlusion->integer == 2)
-		{
-			qglFlush();
-			RB_CheckOcclusions();
-		}
-		else if (r_occlusion->integer == 3)
-		{
-			qglFinish();
 			RB_CheckOcclusions();
 		}
 	}

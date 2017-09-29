@@ -200,7 +200,7 @@ static void DrawTris (shaderCommands_t *input) {
 		GLSL_BindProgram(sp);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, colorWhite);
+		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, /*colorWhite*/colorYellow);
 
 		if (input->multiDrawPrimitives)
 		{

@@ -1800,11 +1800,24 @@ const void	*RB_DrawSurfs( const void *data ) {
 	{
 		//FBO_t *oldFbo = glState.currentFBO;
 
+		float origFar = 0.0;
+
+		if (r_occlusion->integer)
+		{// Override occlusion for depth prepass and shadow pass...
+			origFar = tr.viewParms.zFar;
+			tr.viewParms.zFar = tr.distanceCull;
+		}
+
 		backEnd.depthFill = qtrue;
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
+
+		if (origFar != 0.0)
+		{// Set occlusion zFar again, now that depth prepass is completed...
+			tr.viewParms.zFar = origFar;
+		}
 
 #if 0
 		if (tr.msaaResolveFbo)
@@ -1818,9 +1831,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 		{
 			// If we're rendering directly to the screen, copy the depth to a texture
 			GL_BindToTMU(tr.renderDepthImage, 0);
-			if (r_hdr->integer)
-				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
-			else
+			//if (r_hdr->integer)
+			//	qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
+			//else
 				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
 
@@ -2835,13 +2848,6 @@ const void *RB_PostProcess(const void *data)
 	}
 
 	RB_OcclusionCulling();
-
-	if (r_occlusionDebug->integer > 1)
-	{
-		vec4i_t dstBox;
-		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
-		FBO_BlitFromTexture(tr.renderImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
-	}
 
 	backEnd.framePostProcessed = qtrue;
 

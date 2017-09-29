@@ -6,6 +6,8 @@ int occlusionFrame = 0;
 int numOccluded = 0;
 int numNotOccluded = 0;
 
+#ifndef __EXPERIMENTAL_OCCLUSION__
+
 #ifdef __SOFTWARE_OCCLUSION__
 #include "MaskedOcclusionCulling/MaskedOcclusionCulling.h"
 
@@ -848,3 +850,323 @@ void RB_OcclusionCulling(void)
 		}
 	}
 }
+
+
+#else //__EXPERIMENTAL_OCCLUSION__
+
+#include "Ravl/CVec.h"
+#include "Ratl/vector_vs.h"
+#include "Ratl/bits_vs.h"
+
+#define MAX_QUERIES 2048
+
+int nextOcclusionCheck = 0;
+
+GLuint	occlusionCheck[MAX_QUERIES];
+float	occlusionZfar[MAX_QUERIES];
+
+int numOcclusionQueries = 0;
+
+void RB_CheckOcclusions(void)
+{
+	if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill &&*/ r_occlusion->integer)
+	{
+		float zfar = 0;
+		int numComplete = 0;
+		int numPassed = 0;
+
+		for (int i = 0; i < numOcclusionQueries; i++)
+		{
+			/* Occlusion culling check */
+			GLuint result;
+			qglGetQueryObjectuiv(occlusionCheck[i], GL_QUERY_RESULT_AVAILABLE, &result);
+
+			if (result)
+			{
+				numComplete++;
+
+				//ri->Printf(PRINT_WARNING, "Occlusion check %i finished in time!\n", i);
+
+				qglGetQueryObjectuiv(occlusionCheck[i], GL_QUERY_RESULT, &result);
+
+				if (result <= 0)
+				{// Occlusion culled...
+					continue;
+				}
+				else
+				{
+					if (occlusionZfar[i] > zfar)
+						zfar = occlusionZfar[i];
+
+					numPassed++;
+				}
+			}
+			else
+			{
+				return; // reuse old zfar until completion?
+			}
+			/* Occlusion culling check */
+		}
+
+		if (zfar < tr.distanceCull)
+		{// Seems we found a max zfar we can use...
+			if (zfar == 0.0 && numPassed == 0)
+			{// If none passed then we should assume minimum zfar...
+				zfar = occlusionZfar[0] * 2.0;// 1.5;
+			}
+			else if (zfar == 0.0)
+			{// If none passed then we assume max range...
+				zfar = tr.distanceCull;
+			}
+			else
+			{// We got a value to use, move it forward 1 range level...
+				zfar *= 2.0;// 1.5;
+				if (zfar > tr.distanceCull)
+					zfar = tr.distanceCull;
+			}
+		}
+
+		if (tr.occlusionZfar != zfar)
+		{// Just update when it changes...
+			tr.occlusionZfar = zfar;
+			
+			if (r_occlusionDebug->integer >= 1)
+				ri->Printf(PRINT_WARNING, "zFar found at %f.\n", tr.occlusionZfar);
+		}
+
+		nextOcclusionCheck = 1;// backEnd.refdef.time; // Since we finished a query, allow next query to begin straight away...
+	}
+}
+
+void RB_MoveSky(void)
+{
+	vec4i_t dstBox;
+
+	dstBox[0] = backEnd.viewParms.viewportX;
+	dstBox[1] = backEnd.viewParms.viewportY;
+	dstBox[2] = backEnd.viewParms.viewportWidth;
+	dstBox[3] = backEnd.viewParms.viewportHeight;
+
+	// Copy the depth map to genericFboImage...
+	//FBO_BlitFromTexture(tr.renderDepthImage, dstBox, NULL, tr.genericDepthFbo, dstBox, NULL, colorWhite, 0);
+	
+	FBO_Bind(tr.depthAdjustFbo);
+	qglEnable(GL_DEPTH_TEST);
+	qglDepthMask(GL_TRUE);
+	//qglDepthFunc(GL_ALWAYS);
+
+	shaderProgram_t *shader = &tr.depthAdjustShader;
+
+	GLSL_BindProgram(shader);
+
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
+	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+
+	//GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	//GL_BindToTMU(tr.genericDepthImage, TB_LIGHTMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	// Adjust sky pixels to be at camera depth, and write back to depth buffer...
+	//FBO_Blit(/*tr.genericDepthFbo*/tr.waterFbo, dstBox, NULL, tr.depthAdjustFbo, dstBox, shader, colorWhite, 0);
+
+	GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_LESS | GLS_DEPTHMASK_TRUE);
+	qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_Cull(CT_TWO_SIDED);
+	qglDepthRange(0, 1);
+
+	FBO_BlitFromTexture(tr.renderFbo->colorImage[0], dstBox, NULL, tr.depthAdjustFbo, dstBox, shader, NULL, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+
+	FBO_Bind(tr.renderFbo);
+}
+
+void RB_OcclusionCulling(void)
+{
+	if (!r_nocull->integer)
+	{
+		if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill &&*/ r_occlusion->integer)
+		{
+			if (nextOcclusionCheck == 0)
+			{// Initialize...
+				tr.occlusionZfar = tr.distanceCull;
+			}
+
+			if (backEnd.refdef.time < nextOcclusionCheck)
+			{
+				return;
+			}
+
+			nextOcclusionCheck = backEnd.refdef.time + 100; // Max of 100ms between occlusion checks?
+
+			numOcclusionQueries = 0;
+
+			//RB_MoveSky();
+
+			occlusionFrame++;
+
+			GL_Bind(tr.whiteImage);
+
+			FBO_Bind(tr.renderFbo);
+			RB_UpdateVBOs(ATTR_POSITION);
+			GLSL_VertexAttribsState(ATTR_POSITION);
+			GLSL_BindProgram(&tr.occlusionShader);
+
+			GLSL_SetUniformMatrix16(&tr.occlusionShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+			GLSL_SetUniformVec4(&tr.occlusionShader, UNIFORM_COLOR, colorWhite);
+
+			GLSL_SetUniformInt(&tr.occlusionShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+			GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+			GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_LESS);
+
+			// Don't draw into color or depth
+			//GL_State(0);
+			//qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			
+			//GL_State(GLS_DEFAULT);
+
+//#define __DEBUG_OCCLUSION__
+
+#ifdef __DEBUG_OCCLUSION__
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+#else //!__DEBUG_OCCLUSION__
+			qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+#endif //__DEBUG_OCCLUSION__
+
+			qglDepthMask(GL_FALSE);
+
+			GL_Cull(CT_TWO_SIDED);
+			//qglDepthRange(0, 0);
+			qglDepthRange(0, 1);
+
+
+			vec3_t mOrigin, mCameraForward, mCameraLeft, mCameraDown;
+	
+			VectorCopy(backEnd.worldOrigin, mOrigin);
+
+			extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
+			TR_AxisToAngles(backEnd.viewParms.ori.axis, backEnd.worldAngles);
+			AngleVectors(backEnd.worldAngles, mCameraForward, mCameraLeft, mCameraDown);
+
+			//ri->Printf(PRINT_WARNING, "ViewOrigin %.4f %.4f %.4f. ViewAngles %.4f %.4f %.4f.\n", mOrigin[0], mOrigin[1], mOrigin[2], viewangles[0], viewangles[1], viewangles[2]);
+
+			tess.numIndexes = 0;
+			tess.firstIndex = 0;
+			tess.numVertexes = 0;
+			tess.minIndex = 0;
+			tess.maxIndex = 0;
+
+			for (int z = 512.0; z <= tr.distanceCull; z *= 2.0)
+			{
+				occlusionZfar[numOcclusionQueries] = z;
+
+				vec2_t texCoords[4];
+
+				VectorSet2(texCoords[0], 0.0f, 0.0f);
+				VectorSet2(texCoords[1], 1.0f, 0.0f);
+				VectorSet2(texCoords[2], 1.0f, 1.0f);
+				VectorSet2(texCoords[3], 0.0f, 1.0f);
+
+				vec3_t mPosition, mLeftPositionDown, mLeftPositionUp, mRightPositionDown, mRightPositionUp;
+				
+				VectorMA(mOrigin, z, mCameraForward, mPosition);
+				
+//#define quadSize tr.distanceCull
+#define quadSize 65536.0
+
+				VectorMA(mPosition, -quadSize, mCameraLeft, mLeftPositionDown);
+				VectorMA(mLeftPositionDown, -quadSize, mCameraDown, mLeftPositionDown);
+
+				VectorMA(mPosition, quadSize, mCameraLeft, mRightPositionDown);
+				VectorMA(mRightPositionDown, -quadSize, mCameraDown, mRightPositionDown);
+
+				VectorMA(mPosition, quadSize, mCameraLeft, mRightPositionUp);
+				VectorMA(mRightPositionUp, quadSize, mCameraDown, mRightPositionUp);
+
+				VectorMA(mPosition, -quadSize, mCameraLeft, mLeftPositionUp);
+				VectorMA(mLeftPositionUp, quadSize, mCameraDown, mLeftPositionUp);
+
+				
+
+				vec4_t quadVerts[4];
+				VectorSet4(quadVerts[0], mLeftPositionDown[0], mLeftPositionDown[1], mLeftPositionDown[2], 1.0);
+				VectorSet4(quadVerts[1], mRightPositionDown[0], mRightPositionDown[1], mRightPositionDown[2], 1.0);
+				VectorSet4(quadVerts[2], mRightPositionUp[0], mRightPositionUp[1], mRightPositionUp[2], 1.0);
+				VectorSet4(quadVerts[3], mLeftPositionUp[0], mLeftPositionUp[1], mLeftPositionUp[2], 1.0);
+
+#ifdef __DEBUG_OCCLUSION__
+				vec4_t debugColor;
+				VectorSet4(debugColor, 1.0, 1.0, 1.0, (z / tr.distanceCull) + 0.1);
+				GLSL_SetUniformVec4(&tr.occlusionShader, UNIFORM_COLOR, debugColor);
+#endif //__DEBUG_OCCLUSION__
+
+				/* Test the occlusion for this quad */
+				qglGenQueries(1, &occlusionCheck[numOcclusionQueries]);
+
+				//qglBeginQuery(GL_ANY_SAMPLES_PASSED, node->occlusionCache);
+				qglBeginQuery(GL_SAMPLES_PASSED, occlusionCheck[numOcclusionQueries]);
+
+				RB_InstantQuad2(quadVerts, texCoords);
+
+				qglEndQuery(GL_SAMPLES_PASSED);
+
+				numOcclusionQueries++;
+			}
+
+
+			tess.numIndexes = 0;
+			tess.firstIndex = 0;
+			tess.numVertexes = 0;
+			tess.minIndex = 0;
+			tess.maxIndex = 0;
+
+			//qglDepthRange( 0, 1 );
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			qglDepthMask(GL_TRUE);
+			GL_State(GLS_DEFAULT);
+			GL_Cull(CT_FRONT_SIDED);
+			R_BindNullVBO();
+			R_BindNullIBO();
+
+			if (r_occlusionDebug->integer == 2)
+			{
+				ri->Printf(PRINT_WARNING, "%i occlusion queries performed this frame (%i).\n", numOcclusionQueries, occlusionFrame);
+			}
+
+			if (r_occlusion->integer == 2)
+			{
+				qglFlush();
+			}
+			else if (r_occlusion->integer == 3)
+			{
+				qglFinish();
+			}
+		}
+
+		if (r_occlusionDebug->integer >= 3)
+		{
+			vec4i_t dstBox;
+#ifdef __DEBUG_OCCLUSION__
+			VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+			FBO_BlitFromTexture(tr.renderImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+
+			VectorSet4(dstBox, 512, glConfig.vidHeight - 256, 256, 256);
+			FBO_BlitFromTexture(tr.genericDepthImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+
+			VectorSet4(dstBox, 768, glConfig.vidHeight - 256, 256, 256);
+			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+#else //!__DEBUG_OCCLUSION__
+			VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+			FBO_BlitFromTexture(tr.dummyImage/*tr.genericDepthImage*/, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+
+			VectorSet4(dstBox, 768, glConfig.vidHeight - 256, 256, 256);
+			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+#endif //__DEBUG_OCCLUSION__
+		}
+	}
+}
+
+#endif //__EXPERIMENTAL_OCCLUSION__

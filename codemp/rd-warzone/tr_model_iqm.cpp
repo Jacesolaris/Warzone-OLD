@@ -751,7 +751,14 @@ static int R_CullIQM( iqmData_t *data, trRefEntity_t *ent ) {
 	float		*oldBounds, *newBounds;
 	int		i;
 
-	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	float dist = Distance(ent->e.origin, backEnd.refdef.vieworg);
+
+	if (!ent->e.ignoreCull && dist >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
+	if (r_occlusion->integer && !ent->e.ignoreCull && dist > tr.occlusionZfar)
 	{
 		return CULL_OUT;
 	}

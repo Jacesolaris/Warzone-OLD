@@ -56,6 +56,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __JKA_WEATHER__							// Testing JKA weather reimplementation...
 //#define __JKA_SURFACE_SPRITES__				// Testing JKA surface sprites reimplementation...
 //#define __XYC_SURFACE_SPRITES__				// Testing port of Xycaleth's surface sprite implementation...
+#define __EXPERIMENTAL_OCCLUSION__
 
 //#define __CRC_IMAGE_HASHING__					// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
 //#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
@@ -2524,6 +2525,9 @@ typedef struct {
 	qboolean			colorMask[4];
 	qboolean			framePostProcessed;
 	qboolean			depthFill;
+
+	vec3_t				worldOrigin;
+	vec3_t				worldAngles;
 } backEndState_t;
 
 /*
@@ -2609,6 +2613,7 @@ typedef struct trGlobals_s {
 #endif
 	image_t					*sunRaysImage;
 	image_t					*renderDepthImage;
+	image_t					*genericDepthImage;
 	image_t					*waterDepthImage;
 	image_t					*pshadowMaps[MAX_DRAWN_PSHADOWS];
 	image_t					*textureScratchImage[2];
@@ -2694,6 +2699,7 @@ typedef struct trGlobals_s {
 #endif //__INSTANCED_MODELS__
 	shaderProgram_t weatherShader;
 	shaderProgram_t occlusionShader;
+	shaderProgram_t depthAdjustShader;
 	shaderProgram_t lightAllShader;
 	shaderProgram_t shadowPassShader;
 	shaderProgram_t sunPassShader;
@@ -2787,6 +2793,9 @@ typedef struct trGlobals_s {
 	FBO_t		   *genericFbo2;
 	FBO_t		   *genericFbo3;
 	FBO_t		   *NormalMapDestinationFBO;
+	
+	FBO_t			*depthAdjustFbo;
+	FBO_t			*genericDepthFbo;
 
 	FBO_t		   *ssdoFbo1;
 	FBO_t		   *ssdoFbo2;
@@ -2878,6 +2887,8 @@ typedef struct trGlobals_s {
 
 	float					rangedFog;
 	float					distanceCull, distanceCullSquared; //rwwRMG - added
+	float					occlusionZfar;
+	float					occlusionDepthZfar;
 
 #ifdef _WIN32
 	WinVars_t *wv;

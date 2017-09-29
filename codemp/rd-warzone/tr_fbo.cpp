@@ -875,6 +875,34 @@ void FBO_Init(void)
 		//FBO_Bind(NULL);
 	}
 
+	//
+	// UQ1's genericDepth FBO (copy depth image to genericDepthImage)...
+	//
+	{
+		tr.genericDepthFbo = FBO_Create("_genericDepth", tr.genericDepthImage->width, tr.genericDepthImage->height);
+		FBO_Bind(tr.genericDepthFbo);
+		FBO_AttachTextureImage(tr.genericDepthImage, 0);
+		//R_AttachFBOTextureDepth(tr.genericDepthImage->texnum);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.genericDepthFbo);
+	}
+
+	//
+	// UQ1's depthAdjust FBO (for depth buffer modification)...
+	//
+	{
+		tr.depthAdjustFbo = FBO_Create("_depthAdjust", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		FBO_Bind(tr.depthAdjustFbo);
+		//FBO_AttachTextureImage(tr.renderDepthImage, 0);
+		FBO_AttachTextureImage(tr.dummyImage, 0);
+		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.depthAdjustFbo);
+
+		FBO_Bind(tr.depthAdjustFbo);
+		qglClearColor(0.0, 0.0, 0.0, 1.0);
+		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 
 	GL_CheckErrors();
 

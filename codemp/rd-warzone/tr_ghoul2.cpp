@@ -812,8 +812,14 @@ R_ACullModel
 =============
 */
 static int R_GCullModel( trRefEntity_t *ent ) {
+	float dist = Distance(ent->e.origin, backEnd.refdef.vieworg);
 
-	if (!ent->e.ignoreCull && Distance(ent->e.origin, backEnd.refdef.vieworg) >= tr.distanceCull)
+	if (!ent->e.ignoreCull && dist >= tr.distanceCull)
+	{
+		return CULL_OUT;
+	}
+
+	if (r_occlusion->integer && !ent->e.ignoreCull && dist > tr.occlusionZfar)
 	{
 		return CULL_OUT;
 	}
