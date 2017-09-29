@@ -889,7 +889,7 @@ void RB_CheckOcclusions(void)
 
 				qglGetQueryObjectuiv(occlusionCheck[i], GL_QUERY_RESULT, &result);
 
-				if (result <= 0)
+				if (result <= r_occlusionTolerance->integer)
 				{// Occlusion culled...
 					continue;
 				}
@@ -940,6 +940,10 @@ void RB_CheckOcclusions(void)
 
 void RB_MoveSky(void)
 {
+	//
+	// Adjust sky pixels to be at camera depth, and write back to depth buffer... Then sky is ignored by the occlusion checks :)
+	//
+
 	vec4i_t dstBox;
 
 	dstBox[0] = backEnd.viewParms.viewportX;
@@ -948,7 +952,7 @@ void RB_MoveSky(void)
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
 	// Copy the depth map to genericFboImage...
-	//FBO_BlitFromTexture(tr.renderDepthImage, dstBox, NULL, tr.genericDepthFbo, dstBox, NULL, colorWhite, 0);
+	FBO_BlitFromTexture(tr.renderDepthImage, dstBox, NULL, tr.genericDepthFbo, dstBox, NULL, colorWhite, 0);
 	
 	FBO_Bind(tr.depthAdjustFbo);
 	qglEnable(GL_DEPTH_TEST);
@@ -959,32 +963,41 @@ void RB_MoveSky(void)
 
 	GLSL_BindProgram(shader);
 
-	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);
-	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
-
-	//GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GL_BindToTMU(tr.genericDepthImage, TB_LIGHTMAP);
-
-	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.genericDepthImage, TB_LIGHTMAP);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-	// Adjust sky pixels to be at camera depth, and write back to depth buffer...
-	//FBO_Blit(/*tr.genericDepthFbo*/tr.waterFbo, dstBox, NULL, tr.depthAdjustFbo, dstBox, shader, colorWhite, 0);
 
 	GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_LESS | GLS_DEPTHMASK_TRUE);
 	qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_Cull(CT_TWO_SIDED);
 	qglDepthRange(0, 1);
 
-	FBO_BlitFromTexture(tr.renderFbo->colorImage[0], dstBox, NULL, tr.depthAdjustFbo, dstBox, shader, NULL, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	vec2_t texCoords[4];
+
+	VectorSet2(texCoords[0], 0.0f, 0.0f);
+	VectorSet2(texCoords[1], 1.0f, 0.0f);
+	VectorSet2(texCoords[2], 1.0f, 1.0f);
+	VectorSet2(texCoords[3], 0.0f, 1.0f);
+
+	vec4_t quadVerts[4];
+
+	VectorSet4(quadVerts[0], -1, 1, 0, 1);
+	VectorSet4(quadVerts[1], 1, 1, 0, 1);
+	VectorSet4(quadVerts[2], 1, -1, 0, 1);
+	VectorSet4(quadVerts[3], -1, -1, 0, 1);
+
+	RB_InstantQuad2(quadVerts, texCoords);
 
 	FBO_Bind(tr.renderFbo);
 }
 
 void RB_OcclusionCulling(void)
 {
+	//
+	// Render a bunch of occlusion quads, starting a little in front of the viewer, into the distance, covering the whole screen. This gives us zfar to use...
+	//
+
 	if (!r_nocull->integer)
 	{
 		if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill &&*/ r_occlusion->integer)
@@ -1003,7 +1016,7 @@ void RB_OcclusionCulling(void)
 
 			numOcclusionQueries = 0;
 
-			//RB_MoveSky();
+			RB_MoveSky();
 
 			occlusionFrame++;
 

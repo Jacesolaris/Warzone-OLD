@@ -1,18 +1,23 @@
-//uniform sampler2D	u_ScreenDepthMap;
-uniform sampler2D	u_PositionMap;
+uniform sampler2D	u_ScreenDepthMap;
+//uniform sampler2D	u_PositionMap;
 
 varying vec2		var_Tex;
 
 void main()
 {
-	//float depth = texture2D(u_ScreenDepthMap, var_Tex).r;
-	vec4 pMap = textureLod(u_PositionMap, var_Tex, 0.0);
-	float material = pMap.a;
+	float depth = texture(u_ScreenDepthMap, var_Tex).r;
 	
-	//if (depth >= 0.98) depth = 0.0;
+	if (depth >= 1.0)
+	{
+		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+	}
+	else
+	{
+		discard;
+	}
 
-	gl_FragColor = vec4(pMap.xyz, 1.0);
-	return;
+	/*
+	float material = texture(u_PositionMap, var_Tex).a;
 
 	if (material-1.0 == MATERIAL_SKY || material-1.0 == MATERIAL_SUN)// || material-1.0 == MATERIAL_NONE)
 	{// Skybox... Skip...
@@ -23,4 +28,5 @@ void main()
 		//gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 		discard;
 	}
+	*/
 }

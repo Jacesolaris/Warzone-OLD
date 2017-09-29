@@ -302,6 +302,7 @@ extern cvar_t	*r_ext_texture_env_add;
 extern cvar_t	*r_ext_texture_filter_anisotropic;
 
 extern cvar_t  *r_occlusion;
+extern cvar_t  *r_occlusionTolerance;
 extern cvar_t  *r_occlusionDebug;
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
@@ -2955,6 +2956,7 @@ extern	cvar_t	*r_showcluster;
 extern cvar_t	*r_gamma;
 
 extern  cvar_t  *r_occlusion;
+extern cvar_t  *r_occlusionTolerance;
 extern cvar_t  *r_occlusionDebug;
 extern  cvar_t  *r_ext_draw_range_elements;
 extern  cvar_t  *r_ext_multi_draw_arrays;

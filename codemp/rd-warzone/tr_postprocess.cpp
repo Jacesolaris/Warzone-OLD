@@ -2319,7 +2319,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	vec4_t local1;
-	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, (r_ao->integer && AO_ENABLED) ? 1.0 : 0.0, r_env->integer ? 1.0 : 0.0);
+	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, (r_ao->integer && AO_ENABLED) ? r_ao->integer : 0.0, r_env->integer ? 1.0 : 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL1, local1);
 
 	vec4_t local2;
@@ -2352,8 +2352,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 	{
 		vec4_t viewInfo;
-		//float zmax = 2048.0;
-		float zmax = backEnd.viewParms.zFar;
+		float zmax = 4096.0;// 2048.0;
+		//float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;

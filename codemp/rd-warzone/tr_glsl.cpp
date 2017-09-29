@@ -3693,7 +3693,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_BindProgram(&tr.depthAdjustShader);
 
-	GLSL_SetUniformInt(&tr.depthAdjustShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	//GLSL_SetUniformInt(&tr.depthAdjustShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.depthAdjustShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 
 	GLSL_FinishGPUShader(&tr.depthAdjustShader);
