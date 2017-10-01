@@ -2550,33 +2550,6 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && r_fxaa->integer)
-		{
-			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_esharpening->integer)
-		{
-			RB_ESharpening(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_esharpening2->integer)
-		{
-			RB_ESharpening2(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
-		if (!SCREEN_BLUR && r_darkexpand->integer)
-		{
-			for (int pass = 0; pass < 2; pass++)
-			{
-				RB_DarkExpand(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			}
-		}
-
 		if (!SCREEN_BLUR && r_multipost->integer)
 		{
 			RB_MultiPost(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2659,6 +2632,33 @@ const void *RB_PostProcess(const void *data)
 		{
 			RB_DeferredLighting(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_esharpening->integer)
+		{
+			RB_ESharpening(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_esharpening2->integer)
+		{
+			RB_ESharpening2(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_fxaa->integer)
+		{
+			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_darkexpand->integer)
+		{
+			for (int pass = 0; pass < 2; pass++)
+			{
+				RB_DarkExpand(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_showdepth->integer)
