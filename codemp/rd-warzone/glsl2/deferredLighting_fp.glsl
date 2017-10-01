@@ -321,26 +321,51 @@ const vec3 unKernel[32] = vec3[]
 	vec3(0.534, 0.157, -0.250)
 );
 
-float ssao( in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength )
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+	uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+	n = n * (n * n * 15731u + 789221u);
+	n = (n >> 9u) | 0x3F800000u;
+
+	float fRes = 2.0 - uintBitsToFloat(n);
+	vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+	return fRes;
+}
+
+float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in int numOcclusionChecks, in float resolution, in float strength, in float minDistance, in float maxDisance )
 {
     vec2  uv  = pixel;
     float z   = linearize(texture2D( u_ScreenDepthMap, uv ).x);		// read eye linear z
-    vec3  ref = texture2D( u_DeluxeMap, uv ).xyz;					// read dithering vector
 	vec2  res = vec2(resolution) / u_Dimensions.xy;
+
+	//vec3  ref = texture2D( u_DeluxeMap, uv ).xyz;					// read dithering vector
+	
+	vLocalSeed = position;
+	vec3 ref = vec3(randZeroOne(), randZeroOne(), randZeroOne());
+	//float rnd = randZeroOne();
 
 	if (z >= 1.0) return 1.0;
 
     // accumulate occlusion
     float bl = 0.0;
-    for( int i=0; i<16; i++ )
+    for( int i=0; i<numOcclusionChecks; i++ )
     {
 		vec3  of = faceforward( reflect( unKernel[i], ref ), light, normal );
+		//vec3  of = faceforward( reflect( unKernel[i], light ), light, normal );
+		//vec3  of = reflect( unKernel[i]*-light, normal+ref );
         float sz = linearize(texture2D( u_ScreenDepthMap, uv + (res * of.xy)).x);
-        float zd = (sz-z)*strength;//0.2;
-        bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
+        float zd = (sz-z)*strength;
+
+		if (length(sz - z) < minDistance || length(sz - z) > maxDisance)
+			bl += 1.0;
+		else
+			bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
     }
 
-	float ao = 1.0*bl/16.0;
+	float ao = clamp(1.0*bl/float(numOcclusionChecks), 0.0, 1.0);
 	ao = mix(ao, 1.0, z);
     return ao;
 }
@@ -601,18 +626,19 @@ void main(void)
 #ifdef __EXPERIMENTAL_AO__
 	if (u_Local1.b >= 2.0)
 	{// HQ AO enabled...
-		//float sao = ssao( texCoords, N.xyz, to_light_norm, u_Local3.g /* 32.0 */, u_Local3.b /* 64.0 */ );
-		float hsao = 1.0;
-		float lsao = 1.0;
+		float hsao = 1.0; // High frequency occlusion...
+		float msao = 1.0; // Mid frequency occlusion...
+		float lsao = 1.0; // Low frequency occlusion...
 
-		float msao = ssao( texCoords, N.xyz, to_light_norm, 32.0, 64.0 );
+		if (u_Local1.b == 2.0 || u_Local1.b >= 5.0)
+			msao = ssao( position.xyz, texCoords, N.xyz, to_light_norm, 16, 32.0, 64.0, 0.001, 0.01 );
 
-		if (u_Local1.b >= 3.0)
-			hsao = ssao( texCoords, N.xyz, to_light_norm, 16.0, 64.0 );
-		if (u_Local1.b >= 4.0)
-			lsao = ssao( texCoords, N.xyz, to_light_norm, 192.0, 4.0 );
+		if (u_Local1.b == 3.0 || u_Local1.b >= 5.0)
+			lsao = ssao( position.xyz, texCoords, N.xyz, to_light_norm, 8, 64.0, 4.0, 0.0001, 1.0 ) * 0.25 + 0.75;
 		
-		
+		//if (u_Local1.b == 4.0 || u_Local1.b >= 5.0)
+		//	hsao = ssao( position.xyz, texCoords, N.xyz, to_light_norm, 4, 16.0, 64.0, 0.0008, 0.007 ) * 0.5 + 0.5;
+
 		float sao = clamp(msao * hsao * lsao, 0.0, 1.0);
 		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 

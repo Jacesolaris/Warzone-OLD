@@ -889,7 +889,11 @@ void RB_CheckOcclusions(void)
 
 				qglGetQueryObjectuiv(occlusionCheck[i], GL_QUERY_RESULT, &result);
 
-				if (result <= r_occlusionTolerance->integer)
+				if (r_occlusionTolerance->integer && result <= r_occlusionTolerance->integer)
+				{// Occlusion culled...
+					continue;
+				}
+				if (!r_occlusionTolerance->integer && result <= 0)
 				{// Occlusion culled...
 					continue;
 				}
@@ -1119,12 +1123,17 @@ void RB_OcclusionCulling(void)
 				/* Test the occlusion for this quad */
 				qglGenQueries(1, &occlusionCheck[numOcclusionQueries]);
 
-				//qglBeginQuery(GL_ANY_SAMPLES_PASSED, node->occlusionCache);
-				qglBeginQuery(GL_SAMPLES_PASSED, occlusionCheck[numOcclusionQueries]);
+				if (r_occlusionTolerance->integer)
+					qglBeginQuery(GL_SAMPLES_PASSED, occlusionCheck[numOcclusionQueries]);
+				else
+					qglBeginQuery(GL_ANY_SAMPLES_PASSED_CONSERVATIVE, occlusionCheck[numOcclusionQueries]); // This is supposebly a little faster??? I don't see it though...
 
 				RB_InstantQuad2(quadVerts, texCoords);
 
-				qglEndQuery(GL_SAMPLES_PASSED);
+				if (r_occlusionTolerance->integer)
+					qglEndQuery(GL_SAMPLES_PASSED);
+				else
+					qglEndQuery(GL_ANY_SAMPLES_PASSED_CONSERVATIVE); // This is supposebly a little faster??? I don't see it though...
 
 				numOcclusionQueries++;
 			}

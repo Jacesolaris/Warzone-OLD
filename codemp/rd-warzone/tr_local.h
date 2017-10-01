@@ -2889,7 +2889,7 @@ typedef struct trGlobals_s {
 	float					rangedFog;
 	float					distanceCull, distanceCullSquared; //rwwRMG - added
 	float					occlusionZfar;
-	float					occlusionDepthZfar;
+	float					occlusionOriginalZfar;
 
 #ifdef _WIN32
 	WinVars_t *wv;

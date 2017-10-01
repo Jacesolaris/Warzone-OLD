@@ -1800,12 +1800,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 	{
 		//FBO_t *oldFbo = glState.currentFBO;
 
-		float origFar = 0.0;
-
 		if (r_occlusion->integer)
 		{// Override occlusion for depth prepass and shadow pass...
-			origFar = tr.viewParms.zFar;
-			tr.viewParms.zFar = tr.distanceCull;
+			tr.viewParms.zFar = tr.occlusionOriginalZfar;
 		}
 
 		backEnd.depthFill = qtrue;
@@ -1814,9 +1811,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
 
-		if (origFar != 0.0)
+		if (r_occlusion->integer)
 		{// Set occlusion zFar again, now that depth prepass is completed...
-			tr.viewParms.zFar = origFar;
+			tr.viewParms.zFar = tr.occlusionZfar;
 		}
 
 #if 0
