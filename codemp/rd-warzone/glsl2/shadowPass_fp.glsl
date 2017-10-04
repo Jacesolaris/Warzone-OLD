@@ -60,8 +60,8 @@ out vec4 out_NormalDetail;
 
 void main()
 {
-	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
-	{// Can skip nearly everything... These are always going to be solid color...
+	if ((USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0) && USE_CUBEMAP <= 0.0)
+	{// Can skip nearly everything... These are always going to be solid color... When rendering cubes, though, we still need textures...
 		gl_FragColor = vec4(1.0);
 	}
 	else

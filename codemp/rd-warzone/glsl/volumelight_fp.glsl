@@ -6,7 +6,7 @@ uniform vec2				u_vlightPositions;
 uniform vec3				u_vlightColors;
 
 uniform vec4				u_Local0;
-uniform vec4				u_Local1; // nightScale
+uniform vec4				u_Local1; // nightScale, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value
 uniform vec4				u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
 varying vec2				var_TexCoords;
@@ -29,11 +29,6 @@ const float	fBloomrayDecay = 0.875;
 const float	fBloomrayWeight = 0.5;
 const float	fBloomrayDensity = 1.0;
 const float fBloomrayFalloffRange = 0.4;
-
-float linearize(float depth)
-{
-	return (1.0 / mix(u_ViewInfo.z, 1.0, depth));
-}
 
 void main ( void )
 {
@@ -61,7 +56,7 @@ void main ( void )
 	for(int g = 0; g < iBloomraySamples; g++)
 	{
 		texCoord -= deltaTexCoord;
-		float linDepth = linearize(textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r);
+		float linDepth = textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r;
 		lens += linDepth * illuminationDecay * fBloomrayWeight;
 		illuminationDecay *= fBloomrayDecay;
 
@@ -72,7 +67,13 @@ void main ( void )
 	totalColor += clamp(lightColor * (lens * 0.05) * fall, 0.0, 1.0);
 
 	totalColor.rgb += u_vlightColors * 0.05;
+
 	totalColor.rgb *= VOLUMETRIC_STRENGTH * 2.75;
+
+	// Amplify contrast...
+#define lightLower ( 64.0 / 255.0 )
+#define lightUpper ( 255.0 / 64.0 )
+	totalColor.rgb = clamp((totalColor.rgb - lightLower) * lightUpper, 0.0, 1.0);
 
 	if (u_Local1.r > 0.0)
 	{// Sunset, Sunrise, and Night times... Scale down screen color, before adding lighting...

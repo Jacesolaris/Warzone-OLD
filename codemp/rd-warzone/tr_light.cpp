@@ -490,6 +490,7 @@ int R_LightDirForPoint( vec3_t point, vec3_t lightDir, vec3_t normal, world_t *w
 	return qtrue;
 }
 
+#ifndef __REALTIME_CUBEMAP__
 int R_CubemapForPoint( vec3_t point )
 {
 	int cubemapIndex = -1;
@@ -522,3 +523,4 @@ int R_CubemapForPoint( vec3_t point )
 
 	return cubemapIndex + 1;
 }
+#endif //__REALTIME_CUBEMAP__

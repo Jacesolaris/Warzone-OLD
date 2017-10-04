@@ -193,7 +193,11 @@ vec3 debugFocus(vec3 col, float blur, float depth)
 
 float linearize(float depth)
 {
+#if 0
 	return -zfar * znear / (depth * (zfar - znear) - zfar);
+#else
+	return depth;
+#endif
 }
 
 float vignette()

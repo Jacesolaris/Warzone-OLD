@@ -802,7 +802,11 @@ void RB_BeginDrawingView (void) {
 		if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 		{
 			//qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, backEnd.viewParms.targetFbo->colorImage[0]->texnum, 0);
+#ifndef __REALTIME_CUBEMAP__
 			qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex]->texnum, 0);
+#else //__REALTIME_CUBEMAP__
+			qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.realtimeCubemap->texnum, 0);
+#endif //__REALTIME_CUBEMAP__
 		}
 	}
 
@@ -985,7 +989,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #ifdef __PLAYER_BASED_CUBEMAPS__
 	currentPlayerCubemap = 0;
 
+#ifndef __REALTIME_CUBEMAP__
 	if (!tr.cubemapOrigins)
+#endif //!__REALTIME_CUBEMAP__
 	{
 		currentPlayerCubemap = 0;
 
@@ -996,6 +1002,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		currentPlayerCubemapDistance = 0.0;
 	}
+#ifndef __REALTIME_CUBEMAP__
 	else if (CUBEMAPPING)
 	{
 		currentPlayerCubemap = R_CubemapForPoint(tr.refdef.vieworg);
@@ -1007,6 +1014,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		currentPlayerCubemapDistance = Distance(tr.refdef.vieworg, tr.cubemapOrigins[currentPlayerCubemap - 1]);
 	}
+#endif /__REALTIME_CUBEMAP__
 #endif //__PLAYER_BASED_CUBEMAPS__
 
 //#define __DEBUG_MERGE__
@@ -1035,7 +1043,11 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		if (!drawSurf->surface) continue;
 
 #ifdef __PLAYER_BASED_CUBEMAPS__
+#ifdef __REALTIME_CUBEMAP__
+		newCubemapIndex = 0;
+#else //!__REALTIME_CUBEMAP__
 		newCubemapIndex = currentPlayerCubemap;
+#endif //__REALTIME_CUBEMAP__
 #else //!__PLAYER_BASED_CUBEMAPS__
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
@@ -1096,7 +1108,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		oldDrawSurf = drawSurf;*/
 
 		if ((isWaterMerge || isDepthMerge || drawSurf->sort == oldSort)
-#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__) && !defined(__REALTIME_CUBEMAP__)
 			&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
 #endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 			)
@@ -1137,7 +1149,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		if (shader != NULL
 			&& (shader != oldShader
 				|| postRender != oldPostRender
-#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__) && !defined(__REALTIME_CUBEMAP__)
 				|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
 #endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
 				|| (entityNum != oldEntityNum && !shader->entityMergable && dontMerge)))
@@ -2000,7 +2012,11 @@ const void	*RB_DrawSurfs( const void *data ) {
 		ALLOW_NULL_FBO_BIND = qtrue;
 		FBO_Bind(NULL);
 		GL_SelectTexture(TB_CUBEMAP);
+#ifndef __REALTIME_CUBEMAP__
 		GL_BindToTMU(tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex], TB_CUBEMAP);
+#else //__REALTIME_CUBEMAP__
+		GL_BindToTMU(tr.realtimeCubemap, TB_CUBEMAP);
+#endif //__REALTIME_CUBEMAP__
 		qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 		GL_SelectTexture(0);
 		ALLOW_NULL_FBO_BIND = qfalse;
@@ -2407,6 +2423,9 @@ const void *RB_PostProcess(const void *data)
 	{
 		//ALLOW_NULL_FBO_BIND = qfalse;
 
+		// Pre-linearize all possibly needed depth maps, in a single pass...
+		RB_LinearizeDepth();
+
 		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		FBO_t *currentFbo = tr.genericFbo3;
@@ -2806,7 +2825,7 @@ const void *RB_PostProcess(const void *data)
 		{
 			VectorSet4(dstBox, 0, glConfig.vidHeight - 256, 256, 256);
 			//FBO_BlitFromTexture(tr.renderCubeImage, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
-			FBO_BlitFromTexture(tr.cubemaps[cubemapIndex - 1], NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
+			FBO_BlitFromTexture(tr.realtimeCubemap/*tr.cubemaps[cubemapIndex - 1]*/, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
 		}
 	}
 #endif

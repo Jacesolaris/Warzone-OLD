@@ -76,8 +76,10 @@ uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 #define UI_VIBRANCY			0.4
 #define MAP_MAX_HEIGHT		u_Local8.b
 #define WATER_LEVEL			u_Local6.a
+#if 0
 #define cubeStrength		u_Local3.a
 #define cubeMaxDist			u_Local3.b
+#endif
 
 uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
@@ -487,6 +489,7 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 	}
 }
 
+#if 0
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
 	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
@@ -495,6 +498,7 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	float a1 = t.w;
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
+#endif
 
 #if 0
 mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
@@ -552,7 +556,9 @@ void main()
 
 
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
+#if 0
 	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
+#endif
 
 
 	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
@@ -650,14 +656,16 @@ void main()
 	}
 	
 
+#if 0
 	if (CUBEMAP_ENABLED)
 	{// TODO: Move to screen space...
 		float curDist = distance(u_ViewOrigin.xyz, m_vertPos.xyz);
+		float cubeDist = distance(u_CubeMapInfo.xyz, m_vertPos.xyz);
 		float cubeFade = 0.0;
 		
-		if (curDist < cubeMaxDist)
+		if (curDist < cubeMaxDist && cubeDist < cubeMaxDist)
 		{
-			cubeFade = clamp(1.0 - (curDist / cubeMaxDist), 0.0, 1.0);
+			cubeFade = (1.0 - clamp(curDist / cubeMaxDist, 0.0, 1.0)) * (1.0 - clamp(cubeDist / cubeMaxDist, 0.0, 1.0));
 		}
 
 		if (cubeFade > 0.0)
@@ -692,6 +700,7 @@ void main()
 			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0)).rgb;
 		}
 	}
+#endif
 
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);

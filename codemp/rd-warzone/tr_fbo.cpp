@@ -904,6 +904,21 @@ void FBO_Init(void)
 		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
+	//
+	// UQ1's linearizeDepths FBO (for depth buffer pre-linearization)...
+	//
+	{
+		tr.linearizeDepthFbo = FBO_Create("_linearizeDepth", tr.linearDepthImage512->width, tr.linearDepthImage512->height);
+		FBO_Bind(tr.linearizeDepthFbo);
+		FBO_AttachTextureImage(tr.linearDepthImage512, 0);
+		FBO_AttachTextureImage(tr.linearDepthImage1024, 1);
+		FBO_AttachTextureImage(tr.linearDepthImage2048, 2);
+		FBO_AttachTextureImage(tr.linearDepthImage4096, 3);
+		FBO_AttachTextureImage(tr.linearDepthImageZfar, 4);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.linearizeDepthFbo);
+	}
+
 	GL_CheckErrors();
 
 	FBO_Bind(NULL);

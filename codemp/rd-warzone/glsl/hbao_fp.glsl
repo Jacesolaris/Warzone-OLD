@@ -49,9 +49,13 @@ varying vec2		var_ScreenTex;
 
 float hbao_linearizeDepth ( float depth )
 {
+#if 0
 	float d = depth;
 	d /= C_HBAO_ZFAR - depth * C_HBAO_ZFAR + depth;
 	return clamp(d, 0.0, 1.0);
+#else
+	return depth;
+#endif
 }
 
 vec3 generateEnhancedNormal( vec2 fragCoord )

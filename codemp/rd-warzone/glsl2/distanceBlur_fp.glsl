@@ -48,15 +48,10 @@ vec4 GetMatsoDOFCA(vec2 tex, float CoC)
 }
 #endif //DOFCA
 
-float linearize(float depth)
-{
-	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
-}
-
 vec4 DistantBlur(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords.xy, 0.0);
-	float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords.xy, 0.0).r);
+	float depth = textureLod(u_ScreenDepthMap, var_TexCoords.xy, 0.0).r;
 
 	if (depth < BLUR_DEPTH)
 	{
@@ -170,11 +165,6 @@ float ExpandDepth(float depth)
 	return depth * 255.0;
 }
 
-float linearize(float depth)
-{
-	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
-}
-
 float GetGlowStrength(vec2 coord)
 {
 	vec2 coord2 = coord;
@@ -204,7 +194,7 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 {
 	vec4 tcol = textureLod(SamplerHDRX, coord.xy, 0.0);
 	float depth = textureLod(u_ScreenDepthMap, coord.xy, 0.0).x;
-	float lDepth = linearize(depth);
+	float lDepth = depth;
 
 	if (lDepth < BLUR_DEPTH)
 	{

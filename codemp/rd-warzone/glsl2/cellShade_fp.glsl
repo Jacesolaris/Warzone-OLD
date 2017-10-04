@@ -1,5 +1,4 @@
 uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_NormalMap;
 
 uniform vec2		u_Dimensions;
@@ -10,47 +9,10 @@ varying vec2		var_TexCoords;
 
 vec2 pixelSize = vec2(1.0) / u_Dimensions;
 
-#if 0
-float linearlizeDepth(float nonlinearDepth)
-{
-/*
-	vec2 dofProj=vec2(u_ViewInfo.x, u_ViewInfo.y);
-	vec2 dofDist=vec2(0.0, u_ViewInfo.x);
-
-	vec4 depth=vec4(nonlinearDepth);
-
-	depth.y=-dofProj.x + dofProj.y;
-	depth.y=1.0/depth.y;
-	depth.z=depth.y * dofProj.y;
-	depth.z=depth.z * -dofProj.x;
-	depth.x=dofProj.y * -depth.y + depth.x;
-	depth.x=1.0/depth.x;
-
-	depth.y=depth.z * depth.x;
-
-	depth.x=depth.z * depth.x - dofDist.y;
-	depth.x+=dofDist.x * -0.5;
-
-	depth.x=max(depth.x, 0.0);
-
-	return depth.x;
-*/
-	return 1.0 / mix(u_ViewInfo.x, 1.0, nonlinearDepth);
-}
-
-
-vec3 normals(vec2 tex)//get normal vector from depthmap
-{
-	float deltax = linearlizeDepth( textureLod(u_ScreenDepthMap, vec2((tex.x + pixelSize.x), tex.y), 0.0).x) - linearlizeDepth( textureLod(u_ScreenDepthMap, vec2((tex.x - pixelSize.x), tex.y), 0.0).x);
-	float deltay = linearlizeDepth( textureLod(u_ScreenDepthMap, vec2( tex.x, (tex.y + pixelSize.y)), 0.0).x) - linearlizeDepth( textureLod(u_ScreenDepthMap, vec2( tex.x, (tex.y - pixelSize.y)), 0.0).x);	
-	return normalize(vec3( (deltax / 2.0 / pixelSize.x), (deltay / 2.0 / pixelSize.y), 1.0));
-}
-#else
 vec3 normals(vec2 tex)//get normal vector from normalmap
 {
 	return textureLod(u_NormalMap, tex, 0.0).xyz * 2.0 - 1.0;
 }
-#endif
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //cel shader

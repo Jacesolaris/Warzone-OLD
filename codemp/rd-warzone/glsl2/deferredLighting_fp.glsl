@@ -1,8 +1,6 @@
 ﻿#define __AMBIENT_OCCLUSION__
 #define __EXPERIMENTAL_AO__
 #define __ENVMAP__
-//#define __NORMAL_METHOD_1__
-#define __NORMAL_METHOD_2__
 #define __RANDOMIZE_LIGHT_PIXELS__
 
 uniform sampler2D	u_DiffuseMap;
@@ -16,6 +14,8 @@ uniform sampler2D	u_DeluxeMap;  // Random2K image...
 uniform sampler2D	u_GlowMap;
 uniform samplerCube	u_CubeMap;
 
+uniform mat4		u_ModelViewProjectionMatrix;
+
 uniform vec2		u_Dimensions;
 
 uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
@@ -24,6 +24,7 @@ uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderV
 uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
+uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -46,6 +47,186 @@ varying vec2		var_TexCoords;
 
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
+
+
+vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
+{
+	vec3 settings = vec3(0.0);
+
+	float specularScale = 0.0;
+	float cubemapScale = 0.9;
+	float parallaxScale = 0.0;
+
+	switch (int(MATERIAL_TYPE))
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		specularScale = 1.0;
+		cubemapScale = 0.7;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		specularScale = 0.75;
+		cubemapScale = 0.15;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		specularScale = 0.75;
+		cubemapScale = 0.15;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		specularScale = 0.65;
+		cubemapScale = 0.2;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		specularScale = 0.25;
+		cubemapScale = 0.05;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		specularScale = 0.30;
+		cubemapScale = 0.05;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		specularScale = 0.22;
+		cubemapScale = 0.07;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		specularScale = 0.56;
+		cubemapScale = 0.15;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		specularScale = 0.05;
+		cubemapScale = 0.07;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		specularScale = 0.025;
+		cubemapScale = 0.07;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		specularScale = 0.98;
+		cubemapScale = 0.98;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		specularScale = 1.0;
+		cubemapScale = 1.0;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		specularScale = 0.35;
+		cubemapScale = 0.1;
+		parallaxScale = 0.0;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		specularScale = 0.95;
+		cubemapScale = 0.2;
+		parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		specularScale = 0.45;
+		cubemapScale = 0.1;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		specularScale = 0.35;
+		cubemapScale = 0.1;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		specularScale = 0.65;
+		cubemapScale = 0.46;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		specularScale = 0.75;
+		cubemapScale = 0.25;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		specularScale = 0.25;
+		cubemapScale = 0.15;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		specularScale = 0.15;
+		cubemapScale = 0.07;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		specularScale = 0.375;
+		cubemapScale = 0.1;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		specularScale = 0.25;
+		cubemapScale = 0.1;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		specularScale = 0.25;
+		cubemapScale = 0.07;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		specularScale = 0.58;
+		cubemapScale = 0.28;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		specularScale = 0.3;
+		cubemapScale = 0.1;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		specularScale = 0.93;
+		cubemapScale = 0.37;
+		parallaxScale = 1.0;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		specularScale = 0.5;
+		cubemapScale = 0.56;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		specularScale = 0.75;
+		cubemapScale = 0.47;
+		parallaxScale = 2.0;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		specularScale = 0.95;
+		cubemapScale = 0.39;
+		parallaxScale = 1.0;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		specularScale = 0.93;
+		cubemapScale = 0.33;
+		parallaxScale = 1.0;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		specularScale = 0.92;
+		cubemapScale = 0.48;
+		parallaxScale = 1.5;
+		break;
+	default:
+		specularScale = 0.15;
+		cubemapScale = 0.15;
+		parallaxScale = 1.0;
+		break;
+	}
+
+	settings.x = specularScale;
+	settings.y = cubemapScale;
+	settings.z = parallaxScale;
+
+	return settings;
+}
 
 
 #ifdef __RANDOMIZE_LIGHT_PIXELS__
@@ -89,33 +270,6 @@ vec3 TangentFromNormal ( vec3 normal )
 	return normalize(tangent);
 }
 
-#ifdef __NORMAL_METHOD_1__
-const vec3 LUMA_COEFFICIENT = vec3(0.2126, 0.7152, 0.0722);
-
-float lumaAtCoord(vec2 coord) {
-  vec3 pixel = texture(u_DiffuseMap, coord).rgb;
-  float luma = dot(pixel, LUMA_COEFFICIENT);
-  return luma;
-}
-
-vec4 normalVector(vec2 coord) {
-  float lumaU0 = lumaAtCoord(coord + vec2(-1.0,  0.0) / u_Dimensions);
-  float lumaU1 = lumaAtCoord(coord + vec2( 1.0,  0.0) / u_Dimensions);
-  float lumaV0 = lumaAtCoord(coord + vec2( 0.0, -1.0) / u_Dimensions);
-  float lumaV1 = lumaAtCoord(coord + vec2( 0.0,  1.0) / u_Dimensions);
-
-  vec2 slope = vec2(lumaU0 - lumaU1, lumaV0 - lumaV1) * 0.5 + 0.5;
-
-// Contrast...
-#define normLower ( 128.0/*48.0*/ / 255.0 )
-#define normUpper (255.0 / 192.0/*128.0*/ )
-  slope = clamp((clamp(slope - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
-
-  return vec4(slope, 1.0, length(slope.rg / 2.0));
-}
-#endif //__NORMAL_METHOD_1__
-
-#ifdef __NORMAL_METHOD_2__
 float getHeight(vec2 uv) {
   return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
@@ -143,7 +297,6 @@ vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
 vec4 normalVector(vec2 coord) {
 	return bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
 }
-#endif //__NORMAL_METHOD_2__
 
 
 #if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
@@ -280,9 +433,13 @@ vec3 ContrastSaturationBrightness(vec3 color, float con, float sat, float brt)
 #ifdef __EXPERIMENTAL_AO__
 float linearize(float depth)
 {
+#if 0
 	float d = depth;
 	d /= u_ViewInfo.z - depth * u_ViewInfo.z + depth;
 	return clamp(d * u_ViewInfo.r, 0.0, 1.0);
+#else
+	return depth;
+#endif
 }
 
 const vec3 unKernel[32] = vec3[]
@@ -371,6 +528,15 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in i
 }
 #endif //__EXPERIMENTAL_AO__
 
+vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
+{
+	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
+	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
+	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
+	float a1 = t.w;
+	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
+}
+
 void main(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
@@ -402,6 +568,7 @@ void main(void)
 
 	vec2 texCoords = var_TexCoords;
 	vec3 E = normalize(u_ViewOrigin.xyz - position.xyz);
+	vec3 materialSettings = RB_PBR_DefaultsForMaterial(position.a-1.0);
 
 
 	if (u_Local6.a > 0.0)
@@ -429,6 +596,8 @@ void main(void)
 
 	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
 	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+
+	vec3 cubeNorm = norm.rgb;
 	
 	if (normalDetail.a < 1.0)
 	{// Don't have real normalmap, make normals for this pixel...
@@ -437,8 +606,10 @@ void main(void)
 
 	normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
 	normalDetail.rgb *= 0.25;
+	//normalDetail.rgb *= u_Local3.r;
 	//normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
 	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+	//norm.rgb = normalize(norm.rgb * ((normalDetail.rgb * 0.5 + 0.5) * 0.25 + 0.75));
 
 	//vec3 tangent = TangentFromNormal( norm.xyz );
 	//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
@@ -446,7 +617,125 @@ void main(void)
 	//norm.xyz = tangentToWorld * normalDetail.xyz;
 
 	vec3 N = norm.xyz;
-	//N.y = -N.y;
+
+
+	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
+	float to_light_dist = length(to_light);
+	vec3 to_light_norm = (to_light / to_light_dist);
+
+	vec3 to_pos = u_ViewOrigin.xyz - position.xyz;
+	float to_pos_dist = length(to_pos);
+	vec3 to_pos_norm = (to_pos / to_pos_dist);
+
+	#define rd reflect(surfaceToCamera, N)
+
+
+	vec3 specular = vec3(0.0);
+	vec3 reflectance = vec3(0.0);
+	float specularPower = clamp(materialSettings.x * 0.04, 0.0, 1.0);
+
+	if (specularPower > 0.0)
+	{
+#define specLower ( 48.0 / 255.0)
+#define specUpper (255.0 / 192.0)
+		specular = clamp((clamp(outColor.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
+
+		float gloss = clamp(clamp((materialSettings.x + materialSettings.y) * 0.5, 0.0, 1.0) * 1.6, 0.0, 1.0);
+
+		float NE = clamp(length(dot(N, E)), 0.0, 1.0);
+		vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
+
+		outColor.rgb = mix(outColor.rgb, reflectance.rgb, specularPower);
+
+		if (u_Local7.r > 0.0)
+		{// Cubemaps enabled...
+			if (materialSettings.x > 0.0 && materialSettings.y > 0.0)
+			{
+				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
+				float cubeDist = 0.0;//distance(u_CubeMapInfo.xyz, position.xyz);
+				float cubeFade = 0.0;
+		
+				if (curDist < u_Local7.g && cubeDist < u_Local7.g)
+				{
+					cubeFade = clamp((1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * (1.0 - clamp(cubeDist / u_Local7.g, 0.0, 1.0)) * materialSettings.y * u_CubeMapStrength, 0.0, 1.0);
+				}
+
+				if (cubeFade > 0.0)
+				{
+#if 1
+					vec3 m_ViewDir = to_pos_norm;//(u_ViewOrigin.xyz - position.xyz);
+					vec3 R = reflect(E, cubeNorm);
+					
+					// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
+					vec4 cubeInfo = u_CubeMapInfo;
+					cubeInfo.xyz -= u_ViewOrigin.xyz;
+
+					cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), 3.0/*u_Local3.r*/);
+					//cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), u_Local3.r) * -curDist;
+					//cubeInfo.w = (distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz) * u_Local3.r) * -curDist;
+					//cubeInfo.w = pow(distance(position.xyz, u_CubeMapInfo.xyz), u_Local3.r/*0.666*/) * -curDist;
+
+					cubeInfo.xyz *= 1.0 / cubeInfo.w;
+					cubeInfo.w = 1.0 / cubeInfo.w;
+					
+					vec3 parallax = cubeInfo.xyz + cubeInfo.w * m_ViewDir;
+					parallax.z *= -1.0;
+					
+					//vec3 cubeLightColor = textureLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb;
+					vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
+
+					float cPx = 1.0 / u_Local7.b;
+					float blurCount = 1.0;
+					for (float x = -1.0; x <= 1.0; x += 1.0)
+					{
+						for (float y = -1.0; y <= 1.0; y += 1.0)
+						{
+							vec3 blurColor = texture(u_CubeMap, (R + parallax) + (vec3(x,y,0.0) * cPx)).rgb;
+#define iblLower ( 128.0 / 255.0)
+#define iblUpper (255.0 / 156.0)
+							blurColor = clamp((clamp(blurColor.rgb - iblLower, 0.0, 1.0)) * iblUpper, 0.0, 1.0); // Darken dark, lighten light...
+							cubeLightColor += blurColor;
+							blurCount += 1.0;
+						}
+					}
+					cubeLightColor.rgb /= blurCount;
+#else
+					//vec3 incident = -normalize( position.xyz - u_ViewOrigin.xyz );
+					//vec3 cubeLightColor = texture( u_CubeMap, reflect( incident, normalize(cubeNorm))).rgb;
+					//vec3 cubeLightColor = texture( u_CubeMap, reflect(normalize(u_CubeMapInfo.xyz - position.xyz), cubeNorm)).rgb;
+
+#define PositionWS			position.xyz
+#define CameraWS			u_ViewOrigin.xyz
+#define CubemapPositionWS	u_CubeMapInfo.xyz
+
+					vec3 DirectionWS = normalize(PositionWS - CameraWS);
+					vec3 ReflDirectionWS = reflect(DirectionWS, normalize(cubeNorm));
+
+					// Intersection with OBB convertto unit box space
+					// Transform in local unit parallax cube space (scaled and rotated)
+					vec3 RayLS = (u_ModelViewProjectionMatrix * vec4(ReflDirectionWS.xyz, 1.0)).xyz;
+					vec3 PositionLS = (u_ModelViewProjectionMatrix * vec4(PositionWS.xyz, 1.0)).xyz;
+
+					vec3 Unitary = vec3(1.0f, 1.0f, 1.0f);
+					vec3 FirstPlaneIntersect  = (Unitary - PositionLS) / RayLS;
+					vec3 SecondPlaneIntersect = (-Unitary - PositionLS) / RayLS;
+					vec3 FurthestPlane = max(FirstPlaneIntersect, SecondPlaneIntersect);
+					float Distance = min(FurthestPlane.x, min(FurthestPlane.y, FurthestPlane.z));
+
+					// Use Distance in WS directly to recover intersection
+					vec3 IntersectPositionWS = PositionWS + ReflDirectionWS * Distance;
+					ReflDirectionWS = IntersectPositionWS - CubemapPositionWS;
+
+					vec3 cubeLightColor = texture(u_CubeMap, -ReflDirectionWS).rgb;
+#endif
+
+
+					// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
+					outColor.rgb = mix(outColor.rgb, outColor.rgb + (cubeLightColor * reflectance), clamp(cubeFade * gloss, 0.0, 1.0));
+				}
+			}
+		}
+	}
 
 	float shadowMult = 1.0;
 
@@ -482,20 +771,8 @@ void main(void)
 		occlusion = texture(u_HeightMap, texCoords);
 	}
 
-	float reflectivePower = 0.5;//max(norm.a, 0.5); // UQ1: Fixme - from material type...
+	float reflectivePower = materialSettings.x;
 
-
-#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
-	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
-	float to_light_dist = length(to_light);
-	vec3 to_light_norm = (to_light / to_light_dist);
-
-	vec3 to_pos = u_ViewOrigin.xyz - position.xyz;
-	float to_pos_dist = length(to_pos);
-	vec3 to_pos_norm = (to_pos / to_pos_dist);
-
-	#define rd reflect(surfaceToCamera, N)
-#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
 	if (u_Local1.r > 0.0)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...

@@ -57,6 +57,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __JKA_SURFACE_SPRITES__				// Testing JKA surface sprites reimplementation...
 //#define __XYC_SURFACE_SPRITES__				// Testing port of Xycaleth's surface sprite implementation...
 #define __EXPERIMENTAL_OCCLUSION__
+//#define __REALTIME_CUBEMAP__					// Render cubemap in realtime and use it...
 
 //#define __CRC_IMAGE_HASHING__					// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
 //#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
@@ -92,7 +93,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //                                               Warzone Cubemap and Lights Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 
-#define DISTANCE_BETWEEN_CUBEMAPS	384
+#define DISTANCE_BETWEEN_CUBEMAPS	1024
 #define	MAX_DEFERRED_LIGHTS			128
 
 #define MAX_IMAGE_PATH				256
@@ -1694,6 +1695,10 @@ typedef struct {
 	float       sunAmbCol[4];
 	float       colorScale;
 
+#ifdef __REALTIME_CUBEMAP__
+	vec3_t		realtimeCubemapOrigin;
+#endif //__REALTIME_CUBEMAP__
+
 	float       autoExposureMinMax[2];
 	float       toneMinAvgMaxLinear[3];
 } trRefdef_t;
@@ -1727,7 +1732,7 @@ typedef enum {
 	VPF_NOCUBEMAPS      = 0x80,
 	VPF_NOPOSTPROCESS	= 0x100,
 	VPF_SHADOWPASS		= 0x200,
-	VPF_SHADOWPASS0		= 0x400,
+	VPF_CUBEMAP			= 0x400,
 } viewParmFlags_t;
 
 typedef struct {
@@ -2068,7 +2073,7 @@ typedef struct mnode_s {
 	// common with leaf and node
 	int			contents;		// -1 for nodes, to differentiate from leafs
 	int             visCounts[MAX_VISCOUNTS];	// node needs to be traversed if current
-	vec3_t		mins, maxs;		// for bounding box culling
+	vec3_t		mins, maxs, centerOrigin;		// for bounding box culling
 	struct mnode_s	*parent;
 
 	// node specific
@@ -2529,6 +2534,8 @@ typedef struct {
 
 	vec3_t				worldOrigin;
 	vec3_t				worldAngles;
+
+	vec3_t				playerCGameOrigin;
 } backEndState_t;
 
 /*
@@ -2626,6 +2633,13 @@ typedef struct trGlobals_s {
 	image_t                 *screenShadowImage;
 	image_t                 *screenShadowBlurImage;
 
+
+	image_t                 *linearDepthImage512;
+	image_t                 *linearDepthImage1024;
+	image_t                 *linearDepthImage2048;
+	image_t                 *linearDepthImage4096;
+	image_t                 *linearDepthImageZfar;
+
 	image_t                 *renderCubeImage;
 	
 	image_t					*textureDepthImage;
@@ -2680,10 +2694,14 @@ typedef struct trGlobals_s {
 	int                     fatLightmapSize;
 	int		                fatLightmapStep;
 
+#ifndef __REALTIME_CUBEMAP__
 	int                     numCubemaps;
 	vec3_t                  *cubemapOrigins;
 	float					*cubemapRadius;
 	image_t                 **cubemaps;
+#else //__REALTIME_CUBEMAP__
+	image_t                 *realtimeCubemap;
+#endif //__REALTIME_CUBEMAP__
 
 	trRefEntity_t			*currentEntity;
 	trRefEntity_t			worldEntity;		// point currentEntity at this when rendering world
@@ -2725,6 +2743,7 @@ typedef struct trGlobals_s {
 	// UQ1: Added shaders...
 	//
 
+	shaderProgram_t linearizeDepthShader;
 	shaderProgram_t surfaceSpriteShader;
 	shaderProgram_t ssdoShader;
 	shaderProgram_t ssdoBlurShader;
@@ -2795,6 +2814,8 @@ typedef struct trGlobals_s {
 	FBO_t		   *genericFbo3;
 	FBO_t		   *NormalMapDestinationFBO;
 	
+	FBO_t		   *linearizeDepthFbo;
+	
 	FBO_t			*depthAdjustFbo;
 	FBO_t			*genericDepthFbo;
 
@@ -2821,6 +2842,8 @@ typedef struct trGlobals_s {
 	orientationr_t			ori;					// for current entity
 
 	trRefdef_t				refdef;
+
+	vec3_t					playerCGameOrigin;
 
 	int						viewCluster;
 

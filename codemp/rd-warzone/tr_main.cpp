@@ -1975,7 +1975,11 @@ R_GenerateDrawSurfs
 void R_GenerateDrawSurfs( void ) 
 {
 	R_AddWorldSurfaces();
-	R_AddPolygonSurfaces();
+
+	if (!(tr.viewParms.flags & VPF_CUBEMAP))
+	{// UQ: Don't fx on cubemaps...
+		R_AddPolygonSurfaces();
+	}
 	
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded
@@ -1992,7 +1996,10 @@ void R_GenerateDrawSurfs( void )
 	// we know the size of the clipping volume. Now set the rest of the projection matrix.
 	R_SetupProjectionZ(&tr.viewParms);
 
-	R_AddEntitySurfaces();
+	if (!(tr.viewParms.flags & VPF_CUBEMAP))
+	{// UQ: Don't render entities on cubemaps...
+		R_AddEntitySurfaces();
+	}
 }
 
 /*
@@ -2806,6 +2813,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	}
 }
 
+#ifndef __REALTIME_CUBEMAP__
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 {
 	refdef_t refdef;
@@ -2881,7 +2889,7 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 	parms.viewportHeight = tr.renderCubeFbo->height;
 	parms.isPortal = qfalse;
 	parms.isMirror = qtrue;
-	parms.flags =  VPF_NOVIEWMODEL | VPF_NOCUBEMAPS | VPF_NOPOSTPROCESS;
+	parms.flags =  VPF_NOVIEWMODEL | VPF_NOCUBEMAPS | VPF_NOPOSTPROCESS | VPF_CUBEMAP;
 
 	parms.fovX = 90;
 	parms.fovY = 90;
@@ -2917,4 +2925,121 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 		RE_EndScene();
 	}
 }
+#endif //__REALTIME_CUBEMAP__
+
+#ifdef __REALTIME_CUBEMAP__
+void R_RenderCubemapSideRealtime(vec3_t origin, int cubemapSide, qboolean subscene)
+{
+	refdef_t refdef;
+	viewParms_t	parms;
+	float oldColorScale = tr.refdef.colorScale;
+
+	memset(&refdef, 0, sizeof(refdef));
+	refdef.rdflags = 0;
+	VectorCopy(origin, refdef.vieworg);
+
+	switch (cubemapSide)
+	{
+	case 0:
+		// -X
+		VectorSet(refdef.viewaxis[0], -1, 0, 0);
+		VectorSet(refdef.viewaxis[1], 0, 0, -1);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	case 1:
+		// +X
+		VectorSet(refdef.viewaxis[0], 1, 0, 0);
+		VectorSet(refdef.viewaxis[1], 0, 0, 1);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	case 2:
+		// -Y
+		VectorSet(refdef.viewaxis[0], 0, -1, 0);
+		VectorSet(refdef.viewaxis[1], 1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 0, -1);
+		break;
+	case 3:
+		// +Y
+		VectorSet(refdef.viewaxis[0], 0, 1, 0);
+		VectorSet(refdef.viewaxis[1], 1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 0, 1);
+		break;
+	case 4:
+		// -Z
+		VectorSet(refdef.viewaxis[0], 0, 0, -1);
+		VectorSet(refdef.viewaxis[1], 1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	case 5:
+		// +Z
+		VectorSet(refdef.viewaxis[0], 0, 0, 1);
+		VectorSet(refdef.viewaxis[1], -1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	}
+
+	refdef.fov_x = 90;
+	refdef.fov_y = 90;
+
+	refdef.x = 0;
+	refdef.y = 0;
+	refdef.width = tr.renderCubeFbo->width;
+	refdef.height = tr.renderCubeFbo->height;
+
+	refdef.time = 0;
+
+	if (!subscene)
+	{
+		RE_BeginScene(&refdef);
+	}
+
+	tr.refdef.colorScale = 1.0f;
+
+	Com_Memset(&parms, 0, sizeof(parms));
+
+	parms.viewportX = 0;
+	parms.viewportY = 0;
+	parms.viewportWidth = tr.renderCubeFbo->width;
+	parms.viewportHeight = tr.renderCubeFbo->height;
+	parms.isPortal = qfalse;
+	parms.isMirror = qtrue;
+	parms.flags = VPF_NOVIEWMODEL | VPF_NOCUBEMAPS | VPF_NOPOSTPROCESS | VPF_CUBEMAP;
+
+	parms.fovX = 90;
+	parms.fovY = 90;
+
+	VectorCopy(refdef.vieworg, parms.ori.origin);
+	VectorCopy(refdef.viewaxis[0], parms.ori.axis[0]);
+	VectorCopy(refdef.viewaxis[1], parms.ori.axis[1]);
+	VectorCopy(refdef.viewaxis[2], parms.ori.axis[2]);
+
+	VectorCopy(refdef.vieworg, parms.pvsOrigin);
+
+	// FIXME: sun shadows aren't rendered correctly in cubemaps
+	// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
+	if (0) //(r_depthPrepass->value && ((r_forceSun->integer) || tr.sunShadows))
+	{
+		parms.flags = VPF_USESUNLIGHT;
+	}
+
+	parms.targetFbo = tr.renderCubeFbo;
+	parms.targetFboLayer = cubemapSide;
+	//parms.targetFboCubemapIndex = cubemapIndex;
+
+	MATRIX_UPDATE = qtrue;
+	CLOSE_LIGHTS_UPDATE = qtrue;
+	R_RenderView(&parms);
+
+	if (subscene)
+	{
+		tr.refdef.colorScale = oldColorScale;
+	}
+	else
+	{
+		RE_EndScene();
+	}
+}
+#endif //__REALTIME_CUBEMAP__
+
+
 

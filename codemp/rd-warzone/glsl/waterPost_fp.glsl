@@ -22,7 +22,7 @@ uniform sampler2D	u_DiffuseMap;			// backBufferMap
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_OverlayMap;			// foamMap
-uniform sampler2D	u_ScreenDepthMap;
+//uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_DeluxeMap;			// noise
 
 uniform sampler2D	u_WaterPositionMap;
@@ -144,12 +144,6 @@ const float refractionScale = 0.005;
 
 // Wind force in x and z axes.
 //const vec2 wind = vec2(-0.3, 0.7);
-
-
-float linearize(float depth)
-{
-	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
-}
 
 float rand(vec2 co) {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);

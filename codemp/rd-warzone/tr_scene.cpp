@@ -234,6 +234,13 @@ void RE_AddRefEntityToScene(const refEntity_t *ent) {
 		return;
 	}
 
+	if (ent->reType == RT_PLAYERDATA)
+	{// Just for transmitting actual player entity origin from cgame...
+		VectorCopy(ent->origin, backEnd.playerCGameOrigin);
+		VectorCopy(ent->origin, tr.playerCGameOrigin);
+		return;
+	}
+
 	if (Q_isnan(ent->origin[0]) || Q_isnan(ent->origin[1]) || Q_isnan(ent->origin[2])) {
 		static qboolean firstTime = qtrue;
 		if (firstTime) {
@@ -1105,6 +1112,7 @@ void RE_RenderScene(const refdef_t *fd) {
 
 	// playing with cube maps
 	// this is where dynamic cubemaps would be rendered
+#ifndef __REALTIME_CUBEMAP__
 	if (0) //(!( fd->rdflags & RDF_NOWORLDMODEL ))
 	{
 		int i, j;
@@ -1117,6 +1125,42 @@ void RE_RenderScene(const refdef_t *fd) {
 			}
 		}
 	}
+#endif //__REALTIME_CUBEMAP__
+
+#ifdef __REALTIME_CUBEMAP__
+	if (r_cubeMapping->integer && Distance(backEnd.refdef.vieworg, backEnd.refdef.realtimeCubemapOrigin) > 0.0)
+	{
+		for (int j = 0; j < 6; j++)
+		{
+			extern void R_RenderCubemapSideRealtime(vec3_t origin, int cubemapSide, qboolean subscene);
+			
+			/*trace_t trace;
+			vec3_t down, finalPos;
+			VectorCopy(backEnd.refdef.vieworg, down);
+			down[2] -= 524288;
+			Volumetric_Trace(&trace, backEnd.refdef.vieworg, NULL, NULL, down, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+			VectorCopy(trace.endpos, finalPos);
+			//VectorCopy(backEnd.refdef.vieworg, finalPos);
+			float hDiff = DistanceVertical(finalPos, backEnd.playerCGameOrigin);
+			if (r_testvalue1->integer)
+				finalPos[2] = backEnd.refdef.vieworg[2] - (hDiff * r_testvalue2->value);
+			else
+				finalPos[2] = backEnd.refdef.vieworg[2] + (hDiff * r_testvalue2->value);
+
+			//vec3_t finalPos;
+			//VectorCopy(backEnd.playerCGameOrigin, finalPos);
+			*/
+
+			vec3_t finalPos;
+			VectorCopy(backEnd.refdef.vieworg, finalPos);
+
+			VectorCopy(finalPos, tr.refdef.realtimeCubemapOrigin);
+			VectorCopy(finalPos, backEnd.refdef.realtimeCubemapOrigin);
+
+			R_RenderCubemapSideRealtime(finalPos, j, qtrue);
+		}
+	}
+#endif //__REALTIME_CUBEMAP__
 
 	// setup view parms for the initial view
 	//

@@ -99,6 +99,8 @@ typedef enum {
 	RT_GRASS,
 	RT_PLANT,
 
+	RT_PLAYERDATA,
+
 	RT_MAX_REF_ENTITY_TYPE
 } refEntityType_t;
 

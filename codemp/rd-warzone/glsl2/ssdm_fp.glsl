@@ -17,9 +17,13 @@ varying vec2		var_TexCoords;
 
 float linearize(float depth)
 {
+#if 0
 	float d = depth;
 	d /= u_ViewInfo.z - depth * u_ViewInfo.z + depth;
 	return clamp(d * znear, 0.0, 1.0);
+#else
+	return depth;
+#endif
 }
 
 float getDepth(vec2 coord) {

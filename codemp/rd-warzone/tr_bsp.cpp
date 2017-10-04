@@ -3024,6 +3024,7 @@ static qboolean R_ParseSpawnVars( char *spawnVarChars, int maxSpawnVarChars, int
 	return qtrue;
 }
 
+#ifndef __REALTIME_CUBEMAP__
 static void R_LoadCubemapEntities(const char *cubemapEntityName)
 {
 	char spawnVarChars[2048];
@@ -3088,11 +3089,12 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 			if (radiusSet)
 				tr.cubemapRadius[numCubemaps] = radius;
 			else
-				tr.cubemapRadius[numCubemaps] = 1024.0;
+				tr.cubemapRadius[numCubemaps] = 2048.0; //1024.0;
 			numCubemaps++;
 		}
 	}
 }
+#endif //__REALTIME_CUBEMAP__
 
 qboolean R_MaterialUsesCubemap ( int surfaceFlags )
 {
@@ -3198,182 +3200,6 @@ qboolean R_MaterialUsesCubemap ( int surfaceFlags )
 
 	return qfalse;
 }
-
-//#define CUBEMAPS_AT_WAYPOINTS
-
-#ifdef CUBEMAPS_AT_WAYPOINTS
-#define		MOD_DIRECTORY "Warzone"
-#define		BOT_MOD_NAME	"aimod"
-float		NOD_VERSION = 1.1f;
-
-int gWPNum = 0;
-vec3_t waypoints[32768];
-int skipzar = 0;
-
-qboolean
-AIMOD_NODES_LoadNodes ( void )
-{
-	fileHandle_t	f;
-	int				i, j;
-	char			filename[60];
-	short int		objNum[3] = { 0, 0, 0 },
-	objFlags, numLinks;
-	int				flags;
-	vec3_t			vec;
-	short int		fl2;
-	int				target;
-	char			name[] = BOT_MOD_NAME;
-	char			nm[64] = "";
-	float			version;
-	char			map[64] = "";
-	char			mp[64] = "";
-	/*short*/ int		numberNodes;
-	short int		temp, fix_aas_nodes;
-
-	gWPNum = 0;
-
-	i = 0;
-	strcpy( filename, "nodes/" );
-
-	////////////////////
-	//ri->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-
-	Q_strcat( filename, sizeof(filename), currentMapName );
-
-	///////////////////
-	//open the node file for reading, return false on error
-	ri->FS_FOpenFileRead( va( "%s.bwp", filename), &f, qfalse );
-	
-	if ( !f )
-	{
-		ri->FS_FCloseFile( f );
-		ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Failed to find waypoint file ^7%s.bwp^5.\n", "Warzone", filename );
-		return qfalse;
-	}
-
-	strcpy( mp, currentMapName );
-	ri->FS_Read( &nm, strlen( name) + 1, f );									//read in a string the size of the mod name (+1 is because all strings end in hex '00')
-	ri->FS_Read( &version, sizeof(float), f );			//read and make sure the version is the same
-
-	if ( version != NOD_VERSION && version != 1.0f )
-	{
-		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: Warzone (cube mapping) - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
-		ri->Printf( PRINT_WARNING, "^1*** ^3       ^5  Old node file detected.\n" );
-		ri->FS_FCloseFile( f );
-		return qfalse;
-	}
-
-	ri->FS_Read( &map, strlen( mp) + 1, f );			//make sure the file is for the current map
-	if ( Q_stricmp( map, mp) != 0 )
-	{
-		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: Warzone (cube mapping) - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
-		ri->Printf( PRINT_WARNING, "^1*** ^3       ^5  Node file is not for this map!\n" );
-		ri->FS_FCloseFile( f );
-		return qfalse;
-	}
-
-	if (version == NOD_VERSION)
-	{
-		ri->FS_Read( &numberNodes, sizeof(/*short*/ int), f ); //read in the number of nodes in the map
-	}
-	else
-	{
-		ri->FS_Read( &temp, sizeof(short int), f ); //read in the number of nodes in the map
-		numberNodes = temp;
-	}
-
-	for ( i = 0; i < numberNodes; i++ )					//loop through all the nodes
-	{
-		int links[32];
-		int link_flags[32];
-		int new_flags = 0;
-
-		for (j = 0; j < 32; j++)
-		{
-			links[j] = -1;
-			link_flags[j] = -1;
-		}
-
-		//read in all the node info stored in the file
-		ri->FS_Read( &vec, sizeof(vec3_t), f );
-		ri->FS_Read( &flags, sizeof(int), f );
-		ri->FS_Read( objNum, sizeof(short int) * 3, f );
-		ri->FS_Read( &objFlags, sizeof(short int), f );
-		ri->FS_Read( &numLinks, sizeof(short int), f );
-
-		//Load_AddNode( vec, flags, objNum, objFlags );	//add the node
-
-		//loop through all of the links and read the data
-		for ( j = 0; j < numLinks; j++ )
-		{
-			if (version == NOD_VERSION)
-			{
-				ri->FS_Read( &target, sizeof(/*short*/ int), f );
-			}
-			else
-			{
-				ri->FS_Read( &temp, sizeof(short int), f );
-				target = temp;
-			}
-
-			ri->FS_Read( &fl2, sizeof(short int), f );
-			//ConnectNodes( i, target, fl2 );				//add any links
-			links[j] = target;
-			link_flags[j] = fl2;
-		}
-
-		qboolean haveClose = qfalse;
-		float wpDistance = 96.0;
-
-		if (numberNodes > 49170)
-		{// Increase distance between cubemap render positions...
-			wpDistance = 768.0;
-		}
-		else if (numberNodes > 32786)
-		{// Increase distance between cubemap render positions...
-			wpDistance = 512.0;
-		}
-		else if (numberNodes > 24576)
-		{// Increase distance between cubemap render positions...
-			wpDistance = 384.0;
-		}
-		else if (numberNodes > 16384)
-		{// Increase distance between cubemap render positions...
-			wpDistance = 256.0;
-		}
-		else if (numberNodes > 8192)
-		{// Increase distance between cubemap render positions...
-			wpDistance = 192.0;
-		}
-		else if (numberNodes > 4096)
-		{// Increase distance between cubemap render positions...
-			wpDistance = 128.0;
-		}
-
-		for (int z = 0; z < gWPNum; z++)
-		{
-			if (Distance(vec, waypoints[z]) < wpDistance) {
-				haveClose = qtrue;
-				break;
-			}
-		}
-
-		if (!haveClose)
-		{
-			VectorCopy(vec, waypoints[gWPNum]);
-			waypoints[gWPNum][2]+=32.0;
-			gWPNum++;
-		}
-	}
-
-	ri->FS_Read( &fix_aas_nodes, sizeof(short int), f );
-	ri->FS_FCloseFile( f );							//close the file
-	ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Successfully loaded %i cubemap points from advanced waypoint file ^7%s.bwp^5.\n", "Warzone",
-			  numberNodes, filename );
-
-	return qtrue;
-}
-#endif //CUBEMAPS_AT_WAYPOINTS
 
 qboolean IgnoreCubemapsOnMap( void )
 {// Maps with known really bad FPS... Let's just forget rendering cubemaps here...
@@ -3559,43 +3385,17 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (lighting) - Selected %i surfaces for glow lights.\n", "Warzone", NUM_MAP_GLOW_LOCATIONS);
 }
 
-static void R_LoadCubemapWaypoints( void )
+#ifndef __REALTIME_CUBEMAP__
+static void R_SetupCubemapPoints( void )
 {
 	int numCubemaps = 0;
 
 	// count cubemaps
 	numCubemaps = 0;
 
-	NUM_MAP_GLOW_LOCATIONS = 0;
-
 	if (IgnoreCubemapsOnMap()) return;
 
-#ifdef CUBEMAPS_AT_WAYPOINTS
-	//
-	// Generate cubemaps at waypoints...
-	//
-
-	if (!AIMOD_NODES_LoadNodes()) return;
-
-	numCubemaps = gWPNum;
-
-	if (!numCubemaps)
-		return;
-
-	tr.numCubemaps = numCubemaps;
-	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
-	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
-	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
-
-	numCubemaps = 0;
-	for (int i = 0; i < gWPNum; i++)
-	{
-		VectorCopy(waypoints[i], tr.cubemapOrigins[numCubemaps]);
-		numCubemaps++;
-	}
-
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i waypoints for cubemaps.\n", "Warzone", numCubemaps);
-#else //!CUBEMAPS_AT_WAYPOINTS
+#if 0
 	//
 	// How about we look at the material types and select surfaces that need cubemaps and generate them there instead? :)
 	//
@@ -3674,7 +3474,7 @@ static void R_LoadCubemapWaypoints( void )
 	for (int i = 0; i < numcubeOrgs; i++)
 	{// Copy to real list...
 		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
-		tr.cubemapRadius[numCubemaps] = 1024.0;
+		tr.cubemapRadius[numCubemaps] = 2048.0;// 1024.0;
 		numCubemaps++;
 	}
 
@@ -3683,8 +3483,253 @@ static void R_LoadCubemapWaypoints( void )
 	//averageRadius /= numAverages;
 	//ri->Printf(PRINT_WARNING, "Light average radius %f.\n", averageRadius);
 
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i surfaces for cubemaps.\n", "Warzone", tr.numCubemaps);
-#endif //CUBEMAPS_AT_WAYPOINTS
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i positions for cubemaps.\n", "Warzone", tr.numCubemaps);
+#elif 1
+	//
+	// How about we simply generate a grid based on map bounds?
+	//
+
+	extern vec3_t	MAP_INFO_MINS;
+	extern vec3_t	MAP_INFO_MAXS;
+	extern vec3_t	MAP_INFO_SIZE;
+
+	world_t	*w;
+	vec3_t	*cubeOrgs;
+	int		numcubeOrgs = 0;
+
+	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t) * 65568);
+
+	if (!cubeOrgs)
+	{
+		ri->Error(ERR_DROP, "Failed to allocate cubeOrg memory.\n");
+	}
+
+	w = &s_worldData;
+
+	vec3_t scatter;
+	scatter[0] = (MAP_INFO_SIZE[0] / 9.0);
+	scatter[1] = (MAP_INFO_SIZE[1] / 9.0);
+	scatter[2] = (MAP_INFO_SIZE[2] / 9.0);
+
+	for (float x = MAP_INFO_MINS[0] + (scatter[0] * 2.0); x <= MAP_INFO_MAXS[0] - (scatter[0] * 2.0); x += scatter[0])
+	{
+		for (float y = MAP_INFO_MINS[1] + (scatter[1] * 2.0); y <= MAP_INFO_MAXS[1] - (scatter[1] * 2.0); y += scatter[1])
+		{
+			for (float z = MAP_INFO_MINS[2] + (scatter[2]); z <= MAP_INFO_MAXS[2] - (scatter[2]); z += scatter[2])
+			{
+				vec3_t origin;
+				VectorSet(origin, x, y, z);
+
+				ri->Printf(PRINT_WARNING, "Cube %i at %f %f %f.\n", numcubeOrgs, origin[0], origin[1], origin[2]);
+				VectorCopy(origin, cubeOrgs[numcubeOrgs]);
+				numcubeOrgs++;
+			}
+		}
+	}
+
+	tr.numCubemaps = numcubeOrgs;
+	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
+	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+
+	numCubemaps = 0;
+
+	for (int i = 0; i < numcubeOrgs; i++)
+	{// Copy to real list...
+		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
+		tr.cubemapRadius[numCubemaps] = 2048.0;
+		numCubemaps++;
+	}
+
+	free(cubeOrgs);
+
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i positions for cubemaps.\n", "Warzone", tr.numCubemaps);
+#else
+	//
+	// How about we look at the map's nodes/portals to select cubemap positions? TODO: Maybe use these as background lods?
+	// The way q3map2 cuts portals, these should be fairly central points in areas, i think???
+	//
+
+	world_t	*w;
+	vec3_t	*cubeOrgs;
+	int		numcubeOrgs = 0;
+
+	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t) * 65568);
+
+	if (!cubeOrgs)
+	{
+		ri->Error(ERR_DROP, "Failed to allocate cubeOrg memory.\n");
+	}
+
+	w = &s_worldData;
+
+	//ri->Printf(PRINT_WARNING, "There are %i nodes on the map.\n", w->numnodes);
+
+	vec3_t center;
+	ivec3_t icenter;
+
+	center[0] = 0;
+	center[1] = 0;
+	center[2] = 0;
+	
+	icenter[0] = 0;
+	icenter[1] = 0;
+	icenter[2] = 0;
+
+	int numCenters = 0;
+
+	// Find the closest one to the center (averaged) of the map...
+	for (int i = 0; i < w->numnodes; i++)
+	{// Find map's central location (averaged)...
+		mnode_t *node = w->nodes + i;
+
+		if (node->contents == -1) continue; // We only want leafs...
+		if (node->nummarksurfaces <= 0) continue; // Skip empty nodes...
+
+		vec3_t origin;
+
+		origin[0] = (node->mins[0] + node->maxs[0]) * 0.5;
+		origin[1] = (node->mins[1] + node->maxs[1]) * 0.5;
+		origin[2] = (node->mins[2] + node->maxs[2]) * 0.5;
+
+		VectorCopy(origin, node->centerOrigin); // Record this info to save calculations later...
+
+		icenter[0] += origin[0];
+		icenter[1] += origin[1];
+		icenter[2] += origin[2];
+		numCenters++;
+	}
+
+	icenter[0] /= numCenters;
+	icenter[1] /= numCenters;
+	icenter[2] /= numCenters;
+
+	center[0] = icenter[0];
+	center[1] = icenter[1];
+	center[2] = icenter[2];
+
+	ri->Printf(PRINT_WARNING, "Center of map is at %f %f %f.\n", center[0], center[1], center[2]);
+
+	float centralDistance = 9999999.9;
+	int centerNum = -1;
+
+	for (int i = 0; i < w->numnodes; i++)
+	{// Find the closest one to the central point...
+		mnode_t *node = w->nodes + i;
+
+		if (node->contents == -1) continue; // We only want leafs...
+		if (node->nummarksurfaces <= 0) continue; // Skip empty nodes...
+
+		float dist = Distance(node->centerOrigin, center);
+		
+		if (dist < centralDistance)
+		{
+			centerNum = i;
+			centralDistance = dist;
+		}
+	}
+
+	vec3_t centralOrg;
+	VectorClear(centralOrg);
+
+	{
+		mnode_t *node = w->nodes + centerNum;
+		ri->Printf(PRINT_WARNING, "Central Cube %i at %f %f %f.\n", numcubeOrgs, node->centerOrigin[0], node->centerOrigin[1], node->centerOrigin[2]);
+		VectorCopy(node->centerOrigin, cubeOrgs[numcubeOrgs]);
+		numcubeOrgs++;
+
+		VectorCopy(node->centerOrigin, centralOrg);
+	}
+
+	//
+	// We now should have the chosest actual node to the center of the map... Start here and fan out...
+	//
+
+	int lastClosest = -1;
+	float lastClosestDistance = 0;
+
+	while (1)
+	{
+		int closestNode = -1;
+		float closestDistance = 9999999.9;
+
+		for (int i = 0; i < w->numnodes; i++)
+		{// Find the next closest one to the center of the map, that is not within range of another...
+			mnode_t *node = w->nodes + i;
+
+			if (node->contents == -1) continue; // We only want leafs...
+			if (node->nummarksurfaces <= 0) continue; // Skip empty nodes...
+
+			if (i == lastClosest)
+			{
+				continue;
+			}
+
+			float dist = Distance(centralOrg, node->centerOrigin);
+
+			if (dist < lastClosestDistance)
+			{// Quick skip... The last pass was closer then this one...
+				continue;
+			}
+
+			if (dist >= closestDistance)
+			{// We already have closer then this one...
+				continue;
+			}
+
+			qboolean bad = qfalse;
+
+			// Finally, make sure theres not already a cubemap in range...
+			for (int j = 0; j < numcubeOrgs; j++)
+			{
+				if (Distance(cubeOrgs[j], node->centerOrigin) < DISTANCE_BETWEEN_CUBEMAPS)
+				{
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (!bad)
+			{// Looks good, mark it and continue looking for the best...
+				closestNode = i;
+				closestDistance = dist;
+			}
+		}
+
+		if (closestNode != -1)
+		{// We found one, add it and continue until none are left...
+			mnode_t *node = w->nodes + closestNode;
+			ri->Printf(PRINT_WARNING, "Cube %i at %f %f %f.\n", numcubeOrgs, node->centerOrigin[0], node->centerOrigin[1], node->centerOrigin[2]);
+			VectorCopy(node->centerOrigin, cubeOrgs[numcubeOrgs]);
+			numcubeOrgs++;
+
+			lastClosestDistance = closestDistance;
+			lastClosest = closestNode;
+		}
+		else
+		{// Done...
+			break;
+		}
+	}
+
+	tr.numCubemaps = numcubeOrgs;
+	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
+	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+
+	numCubemaps = 0;
+
+	for (int i = 0; i < numcubeOrgs; i++)
+	{// Copy to real list...
+		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
+		tr.cubemapRadius[numCubemaps] = 2048.0;
+		numCubemaps++;
+	}
+
+	free(cubeOrgs);
+
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i positions for cubemaps.\n", "Warzone", tr.numCubemaps);
+#endif
 }
 
 static void R_AssignCubemapsToWorldSurfaces(void)
@@ -3763,6 +3808,7 @@ static void R_RenderAllCubemaps(void)
 		}
 	}
 }
+#endif //__REALTIME_CUBEMAP__
 
 
 /*
@@ -4844,25 +4890,6 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 #endif
 
-	// load cubemaps
-	if (r_cubeMapping->integer >= 1)
-	{
-		R_LoadCubemapEntities("misc_cubemap");
-		
-		if (!tr.numCubemaps)
-		{
-			// use deathmatch spawn points as cubemaps
-			//R_LoadCubemapEntities("info_player_deathmatch");
-			// UQ1: Warzone can do better!
-			R_LoadCubemapWaypoints(); // NOTE: Also sets up water plane and glow postions at the same time... Can skip R_SetupMapGlowsAndWaterPlane()
-		}
-
-		if (tr.numCubemaps)
-		{
-			R_AssignCubemapsToWorldSurfaces();
-		}
-	}
-
 	// Set up water plane and glow postions...
 	R_SetupMapGlowsAndWaterPlane();
 
@@ -4884,11 +4911,34 @@ void RE_LoadWorldMap( const char *name ) {
 
 	R_LoadMapInfo();
 
+#ifndef __REALTIME_CUBEMAP__
+	// load cubemaps
+	if (r_cubeMapping->integer >= 1)
+	{
+		R_LoadCubemapEntities("misc_cubemap");
+
+		if (!tr.numCubemaps)
+		{
+			// use deathmatch spawn points as cubemaps
+			//R_LoadCubemapEntities("info_player_deathmatch");
+			// UQ1: Warzone can do better!
+			R_SetupCubemapPoints(); // NOTE: Also sets up water plane and glow postions at the same time... Can skip R_SetupMapGlowsAndWaterPlane()
+		}
+
+		if (tr.numCubemaps)
+		{
+			R_AssignCubemapsToWorldSurfaces();
+		}
+	}
+#endif //__REALTIME_CUBEMAP__
+
+#ifndef __REALTIME_CUBEMAP__
 	// Render all cubemaps
 	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
 	{
 		R_RenderAllCubemaps();
 	}
+#endif //__REALTIME_CUBEMAP__
 
     ri->FS_FreeFile( buffer.v );
 }

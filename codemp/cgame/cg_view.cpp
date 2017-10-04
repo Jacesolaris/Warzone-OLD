@@ -2582,6 +2582,20 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	qboolean	isFighter = qfalse;
 #endif
 
+	{
+		refEntity_t re;
+		re.reType = RT_PLAYERDATA;
+		
+		if (cg.snap && cg.snap->ps.pm_flags & PMF_FOLLOW)
+			VectorCopy(cg_entities[cg.snap->ps.clientNum].lerpOrigin, re.origin);
+		else if (cg.refdef.rdflags & RF_THIRD_PERSON)
+			VectorCopy(cg_entities[cg.clientNum].lerpOrigin, re.origin);
+		else
+			VectorCopy(cg.refdef.vieworg, re.origin);
+
+		trap->R_AddRefEntityToScene(&re);
+	}
+
 	if (!drawingSniperScopeView)
 	{
 		if (cgQueueLoad)

@@ -29,11 +29,6 @@ vec4 positionMapAtCoord ( vec2 coord )
 	return pos;
 }
 
-float linearize(float depth)
-{
-	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
-}
-
 //
 // Volumetric fog...
 //
@@ -129,7 +124,7 @@ void main ( void )
 		{
 			vec3 rayDir = -gl_FragCoord.xyz;//normalize(viewOrg.xyz - pMap.xyz);
 			vec3 lightDir = normalize(viewOrg.xyz - u_PrimaryLightOrigin.xyz);
-			float depth = linearize(textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r);
+			float depth = textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r;
 			fogColor = applyFog2(fogColor.rgb, depth, viewOrg.xyz, rayDir, lightDir, pMap);
 		}
 

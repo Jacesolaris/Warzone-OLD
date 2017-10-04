@@ -238,11 +238,13 @@ to overflow.
 ==============
 */
 
+#if 0
 #ifdef __PLAYER_BASED_CUBEMAPS__
 extern int			currentPlayerCubemap;
 extern vec4_t		currentPlayerCubemapVec;
 extern float		currentPlayerCubemapDistance;
 #endif //__PLAYER_BASED_CUBEMAPS__
+#endif
 
 #ifdef __EXPERIMENTAL_TESS_SHADER_MERGE__
 shader_t *oldTessShader = NULL;
@@ -294,11 +296,14 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.fogNum = 0;
 #endif //__Q3_FOG__
 
+#if 0
 #ifdef __PLAYER_BASED_CUBEMAPS__
 	tess.cubemapIndex = currentPlayerCubemap;
 #else //!__PLAYER_BASED_CUBEMAPS__
 	tess.cubemapIndex = cubemapIndex;
 #endif //__PLAYER_BASED_CUBEMAPS__
+#endif
+
 	//tess.dlightBits = 0;		// will be OR'd in by surface functions
 #ifdef __PSHADOWS__
 	tess.pshadowBits = 0;       // will be OR'd in by surface functions
@@ -1911,8 +1916,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean IS_DEPTH_PASS = qfalse;
 
 	int cubeMapNum = 0;
-	vec4_t cubeMapVec;
-	float cubeMapRadius;
+	//vec4_t cubeMapVec;
+	//float cubeMapRadius;
 
 	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
@@ -1992,6 +1997,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
 	}
 
+#if 0
 	if ((tr.numCubemaps <= 1) || (tr.refdef.rdflags & RDF_NOWORLDMODEL) || (tr.viewParms.flags & VPF_SHADOWPASS))
 	{
 		cubeMapNum = -1;
@@ -2022,6 +2028,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		ADD_CUBEMAP_INDEX = qtrue;
 #endif //__PLAYER_BASED_CUBEMAPS__
 	}
+#endif
 
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
 	qboolean didNonDetail = qfalse;
@@ -2268,8 +2275,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 		}
-		else if (IS_DEPTH_PASS)
-		{// testing - force lightall
+		else if (IS_DEPTH_PASS || (tr.viewParms.flags & VPF_CUBEMAP))
+		{
 #ifdef __USE_DETAIL_CHECKING__
 #ifdef __USE_DETAIL_DEPTH_SKIP__
 			/*if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
@@ -2782,7 +2789,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_LIGHTMAP) ? 1.0 : 0.0, 
 				useGlow/*(index & LIGHTDEF_USE_GLOW_BUFFER) ? 1.0 : 0.0*/,
-				(!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && cubeMapNum && ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 1) ? 1.0 : 0.0,
+				(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo) ? 1.0 : 0.0,
 				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
 
@@ -2899,6 +2906,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
 
+#if 0
 		//
 		// testing cube map
 		//
@@ -2924,6 +2932,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 		}
+#endif
 
 		//
 		//
@@ -3280,7 +3289,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 				else
 				{
-					enableTextures[3] = (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+					enableTextures[3] = 0.0;// (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
 				}
 			}
 

@@ -33,7 +33,11 @@ vec4 waterMapAtCoord ( vec2 coord )
 float getDepth(vec2 coord)
 {
 	float depth = textureLod(u_ScreenDepthMap, coord, 0.0).r;
+#if 0
 	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
+#else
+	return depth;
+#endif
 }
 
 //

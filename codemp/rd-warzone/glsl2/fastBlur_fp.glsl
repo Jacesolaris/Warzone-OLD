@@ -1,5 +1,4 @@
 uniform sampler2D		u_DiffuseMap;
-uniform sampler2D		u_ScreenDepthMap;
 
 uniform vec4			u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform float			u_ShadowZfar[5];

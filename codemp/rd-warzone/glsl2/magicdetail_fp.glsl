@@ -32,9 +32,7 @@ float GenerateDetail( vec2 fragCoord )
 
 float getLinearDepth(sampler2D depthMap, const vec2 tex, const float zFarDivZNear)
 {
-		float sampleZDivW = texture2D(depthMap, tex).r;
-		return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
-		//return -var_ViewInfo.a * var_ViewInfo.z / (sampleZDivW * (var_ViewInfo.a - var_ViewInfo.z) - var_ViewInfo.a);
+	return texture2D(depthMap, tex).r;
 }
 
 void main()

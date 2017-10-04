@@ -21,20 +21,13 @@ const float camerazoom = 1.0;
 //#define raysegments u_Local0.g
 //#define aoscatter u_Local0.b
 
-float linearize(float depth)
-{
-	//float d = clamp((1.0 / mix(u_ViewInfo.z, 1.0, depth)) + u_Local0.g * u_Local0.b, 0.0, 1.0);
-	float d = clamp(pow((1.0 / mix(u_ViewInfo.z, 1.0, depth)), 0.2), 0.0, 1.0);
-	return d;
-}
-
 float DepthToZPosition(in float depth) {
 	return u_ViewInfo.x / (u_ViewInfo.y - depth * (u_ViewInfo.y - u_ViewInfo.x)) * u_ViewInfo.y;
 }
 
 float GetDepth(in vec2 texcoord)
 {
-	return linearize(textureLod(u_ScreenDepthMap, texcoord, 0.0).x);
+	return textureLod(u_ScreenDepthMap, texcoord, 0.0).x;
 }
 
 float readZPosition(in vec2 texcoord) {

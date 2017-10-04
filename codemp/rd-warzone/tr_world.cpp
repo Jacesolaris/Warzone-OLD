@@ -376,6 +376,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		pshadowBits = ( pshadowBits != 0 );
 	}
 #endif
+#ifndef __REALTIME_CUBEMAP__
 	if (glState.currentFBO == tr.renderCubeFbo)
 		cubemapIndex = 0;
 	else if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
@@ -383,6 +384,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex - 1]) < r_cubemapCullRange->value)
 		cubemapIndex = surf->cubemapIndex;
 	else
+#endif //__REALTIME_CUBEMAP__
 		cubemapIndex = 0;
 
 	R_AddDrawSurf(surf->data, surf->shader, 

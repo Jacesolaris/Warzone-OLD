@@ -858,22 +858,50 @@ void RB_OcclusionCulling(void)
 #include "Ratl/vector_vs.h"
 #include "Ratl/bits_vs.h"
 
-#define MAX_QUERIES 2048
+typedef enum
+{
+	OCC_RANGE_TYPE_SMALL,
+	OCC_RANGE_TYPE_BIG
+} occlusionRangesTypes_t;
+
+// Number of occlusions is still limited to <= tr.distanceCull... So usually we won't use them all...
+#define NUM_OCCLUSION_RANGES_BIG 13
+const float occlusionRangesBigMap[NUM_OCCLUSION_RANGES_BIG] =
+	{ 4096.0, 8192.0, 12288.0, 16384.0, 24576.0, 32768.0, 49152.0, 65536.0, 98304.0, 131072.0, 196608.0, 262144.0, 524288.0 };
+
+// Number of occlusions is still limited to <= tr.distanceCull... So usually we won't use them all...
+#define NUM_OCCLUSION_RANGES_SMALL 10
+const float occlusionRangesSmallMap[NUM_OCCLUSION_RANGES_SMALL] =
+	{ 1024.0, 2048.0, 3072.0, 4096.0, 6144.0, 8192.0, 12288.0, 16384.0, 24576.0, 32768.0 };
+
+#define MAX_QUERIES 256
 
 int nextOcclusionCheck = 0;
+int occlusionRangesType = 0;
 
 GLuint	occlusionCheck[MAX_QUERIES];
-float	occlusionZfar[MAX_QUERIES];
+int		occlusionRangeId[MAX_QUERIES];
 
 int numOcclusionQueries = 0;
+
+int GetOcclusionRangeTypeForMap(void)
+{
+	if (tr.distanceCull <= 32768.0)
+		return OCC_RANGE_TYPE_SMALL;
+
+	return OCC_RANGE_TYPE_BIG;
+}
 
 void RB_CheckOcclusions(void)
 {
 	if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill &&*/ r_occlusion->integer)
 	{
 		float zfar = 0;
+		int rangeId = 0;
 		int numComplete = 0;
 		int numPassed = 0;
+
+		qboolean isBigMap = (GetOcclusionRangeTypeForMap() == OCC_RANGE_TYPE_BIG) ? qtrue : qfalse;
 
 		for (int i = 0; i < numOcclusionQueries; i++)
 		{
@@ -899,8 +927,14 @@ void RB_CheckOcclusions(void)
 				}
 				else
 				{
-					if (occlusionZfar[i] > zfar)
-						zfar = occlusionZfar[i];
+					int thisRangeId = occlusionRangeId[i];
+					float rangeDistance = isBigMap ? occlusionRangesBigMap[thisRangeId] : occlusionRangesSmallMap[thisRangeId];
+
+					if (rangeDistance > zfar)
+					{
+						rangeId = thisRangeId;
+						zfar = rangeDistance;
+					}
 
 					numPassed++;
 				}
@@ -916,7 +950,8 @@ void RB_CheckOcclusions(void)
 		{// Seems we found a max zfar we can use...
 			if (zfar == 0.0 && numPassed == 0)
 			{// If none passed then we should assume minimum zfar...
-				zfar = occlusionZfar[0] * 2.0;// 1.5;
+				
+				zfar = isBigMap ? occlusionRangesBigMap[1] : occlusionRangesSmallMap[1];
 			}
 			else if (zfar == 0.0)
 			{// If none passed then we assume max range...
@@ -924,9 +959,23 @@ void RB_CheckOcclusions(void)
 			}
 			else
 			{// We got a value to use, move it forward 1 range level...
-				zfar *= 2.0;// 1.5;
-				if (zfar > tr.distanceCull)
-					zfar = tr.distanceCull;
+				if (rangeId >= isBigMap ? NUM_OCCLUSION_RANGES_BIG - 1 : NUM_OCCLUSION_RANGES_SMALL - 1)
+				{// If we are at furthest range, use the max range instead...
+					zfar = isBigMap ? occlusionRangesBigMap[rangeId] : occlusionRangesSmallMap[rangeId];
+				}
+				else if (rangeId == 0)
+				{// Always push further then range 0's range...
+					zfar = isBigMap ? occlusionRangesBigMap[1] : occlusionRangesSmallMap[1];
+				}
+				else
+				{
+					zfar = isBigMap ? occlusionRangesBigMap[rangeId + 1] : occlusionRangesSmallMap[rangeId + 1];
+				}
+			}
+
+			if (zfar > tr.distanceCull)
+			{
+				zfar = tr.distanceCull;
 			}
 		}
 
@@ -1070,15 +1119,18 @@ void RB_OcclusionCulling(void)
 
 			//ri->Printf(PRINT_WARNING, "ViewOrigin %.4f %.4f %.4f. ViewAngles %.4f %.4f %.4f.\n", mOrigin[0], mOrigin[1], mOrigin[2], viewangles[0], viewangles[1], viewangles[2]);
 
+			qboolean isBigMap = (GetOcclusionRangeTypeForMap() == OCC_RANGE_TYPE_BIG) ? qtrue : qfalse;
+
 			tess.numIndexes = 0;
 			tess.firstIndex = 0;
 			tess.numVertexes = 0;
 			tess.minIndex = 0;
 			tess.maxIndex = 0;
-
-			for (int z = 512.0; z <= tr.distanceCull; z *= 2.0)
+			
+			//for (int z = 512.0; z <= tr.distanceCull; z *= 2.0)
+			for (int z = 512.0, range = 0; z <= tr.distanceCull; z = isBigMap ? occlusionRangesBigMap[range] : occlusionRangesSmallMap[range], range++)
 			{
-				occlusionZfar[numOcclusionQueries] = z;
+				occlusionRangeId[numOcclusionQueries] = range;
 
 				vec2_t texCoords[4];
 
@@ -1092,7 +1144,9 @@ void RB_OcclusionCulling(void)
 				VectorMA(mOrigin, z, mCameraForward, mPosition);
 				
 //#define quadSize tr.distanceCull
-#define quadSize 65536.0
+//#define quadSize 65536.0
+//#define quadSize z
+#define quadSize (z * 2.0)
 
 				VectorMA(mPosition, -quadSize, mCameraLeft, mLeftPositionDown);
 				VectorMA(mLeftPositionDown, -quadSize, mCameraDown, mLeftPositionDown);

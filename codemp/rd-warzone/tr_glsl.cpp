@@ -63,6 +63,8 @@ extern const char *fallbackShader_dglow_upsample_vp;
 extern const char *fallbackShader_dglow_upsample_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_linearizeDepth_vp;
+extern const char *fallbackShader_linearizeDepth_fp;
 extern const char *fallbackShader_weather_vp;
 extern const char *fallbackShader_weather_fp;
 extern const char *fallbackShader_surfaceSprite_vp;
@@ -3391,6 +3393,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.linearizeDepthShader, "linearizeDepth", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_linearizeDepth_vp, fallbackShader_linearizeDepth_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load linearizeDepth shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.showNormalsShader, "showNormals", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_showNormals_vp, fallbackShader_showNormals_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load showNormals shader!");
@@ -4759,6 +4769,25 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.linearizeDepthShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load linearizeDepth shader!");
+	}
+
+	GLSL_InitUniforms(&tr.linearizeDepthShader);
+
+	GLSL_BindProgram(&tr.linearizeDepthShader);
+
+	GLSL_SetUniformInt(&tr.linearizeDepthShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.linearizeDepthShader);
+#endif
+
+	numEtcShaders++;
+
+
+
 
 	if (!GLSL_EndLoadGPUShader(&tr.deferredLightingShader))
 	{
@@ -4776,6 +4805,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
@@ -5522,6 +5552,7 @@ void GLSL_ShutdownGPUShaders(void)
 
 
 	// UQ1: Added...
+	GLSL_DeleteGPUShader(&tr.linearizeDepthShader);
 	GLSL_DeleteGPUShader(&tr.darkexpandShader);
 	GLSL_DeleteGPUShader(&tr.magicdetailShader);
 	GLSL_DeleteGPUShader(&tr.cellShadeShader);
