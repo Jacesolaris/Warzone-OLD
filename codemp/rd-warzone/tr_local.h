@@ -2586,7 +2586,7 @@ typedef struct trGlobals_s {
 	image_t					*defaultGrassMapImage;
 	image_t					*defaultDetail;
 	
-	image_t					*waterFoamImage;
+	image_t					*waterFoamImage[4];
 	image_t					*waterHeightImage;
 	image_t					*waterNormalImage;
 	image_t					*waterCausicsImage;

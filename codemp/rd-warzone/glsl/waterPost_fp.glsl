@@ -3,7 +3,7 @@
 #define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
-//#define __TEST_WATER__				// Testing experimental water...
+#define FOAM_SPLAT_MAPS				// Use foam splat maps to vary foam looks across the map...
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -21,7 +21,15 @@ uniform sampler2D	u_WaterHeightMap;
 uniform sampler2D	u_DiffuseMap;			// backBufferMap
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
-uniform sampler2D	u_OverlayMap;			// foamMap
+
+uniform sampler2D	u_SplatControlMap;		// foamSplatControl
+uniform sampler2D	u_OverlayMap;			// foamMap 1
+uniform sampler2D	u_SplatMap1;			// foamMap 2
+uniform sampler2D	u_SplatMap2;			// foamMap 3
+uniform sampler2D	u_SplatMap3;			// foamMap 4
+
+uniform sampler2D	u_DetailMap;			// causics map
+
 //uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_DeluxeMap;			// noise
 
@@ -144,6 +152,58 @@ const float refractionScale = 0.005;
 
 // Wind force in x and z axes.
 //const vec2 wind = vec2(-0.3, 0.7);
+
+
+#ifdef FOAM_SPLAT_MAPS
+vec4 GetControlMap(vec3 m_vertPos)
+{
+	vec3 controlScale = vec3(1.0) / u_MapInfo.xyz;
+	vec4 xaxis = texture(u_SplatControlMap, m_vertPos.yz * controlScale.yz);
+	vec4 yaxis = texture(u_SplatControlMap, m_vertPos.xz * controlScale.xz);
+	vec4 zaxis = texture(u_SplatControlMap, m_vertPos.xy * controlScale.xy);
+	return clamp((xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333) * 10.0, 0.0, 1.0);
+}
+
+vec4 GetMap( in sampler2D tex, vec2 coord)
+{
+	return texture( tex, coord );
+}
+
+vec4 GetFoamMap(vec3 m_vertPos, vec2 coord)
+{
+	// Use splat mapping to variate foam textures used across the map...
+	const float textureScale = 0.3;
+	vec4 splatColor = GetMap(u_OverlayMap, coord * textureScale);
+	vec4 control = GetControlMap(m_vertPos);
+	
+	if (control.r > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap1, coord * textureScale);
+		splatColor = mix(splatColor, tex, control.r * tex.a);
+	}
+
+	if (control.g > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap2, coord * textureScale);
+		splatColor = mix(splatColor, tex, control.g * tex.a);
+	}
+
+	if (control.b > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap3, coord * textureScale);
+		splatColor = mix(splatColor, tex, control.b * tex.a);
+	}
+
+	return splatColor;
+}
+#else //!FOAM_SPLAT_MAPS
+vec4 GetFoamMap(vec2 coord)
+{
+	// Just use single foam texture...
+	return texture(u_OverlayMap, coord);
+}
+#endif //FOAM_SPLAT_MAPS
+
 
 float rand(vec2 co) {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -395,7 +455,12 @@ void main ( void )
 		refraction = mix(waterColorShallow.rgb, refraction.rgb, 0.3);
 
 		float fTime = u_Time * 2.0;
-		vec3 foam = (texture(u_OverlayMap, vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + texture(u_OverlayMap, vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
+		
+#ifdef FOAM_SPLAT_MAPS
+		vec3 foam = (GetFoamMap(vec3(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime, 0.5), vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + GetFoamMap(vec3(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime, 0.5), vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
+#else //!FOAM_SPLAT_MAPS
+		vec3 foam = (GetFoamMap(vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + GetFoamMap(vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
+#endif //FOAM_SPLAT_MAPS
 
 		color = mix(color + (foam * sunColor), refraction, fresnel * 0.8);
 
@@ -415,16 +480,6 @@ void main ( void )
 		gl_FragColor = vec4(color, 1.0);
 		return;
 	}
-
-#ifdef __TEST_WATER__
-	if (pixelIsInWaterRange || pixelIsUnderWater)
-	{
-		vec4 col2 = vec4(0.0);
-		vec3 screenCenterOrg = positionMapAtCoord(vec2(0.0)).xzy;
-		mainImage(col2, var_TexCoords, positionMap.xzyw, waterMapLower.xzyw, waterMapUpper.xzyw, screenCenterOrg);
-		color.rgb = col2.rgb;
-	}
-#else //!__TEST_WATER__
 
 	float waterLevel = waterMapLower.y;
 	float level = waterMapLower.y;
@@ -568,24 +623,46 @@ void main ( void )
 		texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00001 * wind + sin(timer * 0.001 + position.x) * 0.005;
 		vec2 texCoord2 = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00002 * wind + sin(timer * 0.001 + position.z) * 0.005;
 		
-		
+		float causicStrength = 1.0; // Scale back causics where there's foam, and over distance...
+
+		float pixDist = distance(surfacePoint.xyz, ViewOrigin.xyz);
+		causicStrength *= 1.0 - clamp(pixDist / 1024.0, 0.0, 1.0);
+
+#ifdef FOAM_SPLAT_MAPS
 		if (depth2 < foamExistence.x)
 		{
-			foam = (texture(u_OverlayMap, texCoord) + texture(u_OverlayMap, texCoord2)) * 0.5;
+			foam = (GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5;
 		}
 		else if (depth2 < foamExistence.y)
 		{
-			foam = mix((texture(u_OverlayMap, texCoord) + texture(u_OverlayMap, texCoord2)) * 0.5, vec4(0.0),
-						 vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
+			foam = mix((GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5, 
+						vec4(0.0), vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
 		}
-		
 		
 		if (waveHeight - foamExistence.z > 0.0001)
 		{
-			foam += (texture(u_OverlayMap, texCoord) + texture(u_OverlayMap, texCoord2)) * 0.5 * 
+			foam += (GetFoamMap(surfacePoint.xzy * 0.5, texCoord) + GetFoamMap(surfacePoint.xzy * 0.5, texCoord2)) * 0.5 * 
 				clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
 		}
+#else //!FOAM_SPLAT_MAPS
+		if (depth2 < foamExistence.x)
+		{
+			foam = (GetFoamMap(texCoord) + GetFoamMap(texCoord2)) * 0.5;
+		}
+		else if (depth2 < foamExistence.y)
+		{
+			foam = mix((GetFoamMap(texCoord) + GetFoamMap(texCoord2)) * 0.5, vec4(0.0),
+						vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
+		}
 		
+		if (waveHeight - foamExistence.z > 0.0001)
+		{
+			foam += (GetFoamMap(texCoord) + GetFoamMap(texCoord2)) * 0.5 * 
+				clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
+		}
+#endif //FOAM_SPLAT_MAPS
+		
+		causicStrength *= 0.15 - clamp(max(foam.r, max(foam.g, foam.b)) * foam.a * 32.0, 0.0, 0.15);
 
 		vec3 specular = vec3(0.0);
 
@@ -616,6 +693,8 @@ void main ( void )
 
 		float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
 		color += waterColorShallow.rgb * (clamp(waveHeight - waterMapLower.y, 0.0, 1.0))* 0.18 * atten;
+
+		vec3 caustic = color * (texture(u_DetailMap, vec2((texCoord.x + (texCoord2.x*2.2)) * 0.25, (texCoord.y + (texCoord2.y*1.2)) * 0.25)).rgb * 1.1);
 
 		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
 		/* END - TESTING */
@@ -663,6 +742,8 @@ void main ( void )
 		}
 #else
 		color = mix(refraction, waterColorDeep, fresnel);
+
+		vec3 caustic = color * (texture(u_DetailMap, vec2((texCoord.x + (texCoord2.x*2.2)) * 0.25, (texCoord.y + (texCoord2.y*1.2)) * 0.25)).rgb * 1.1);
 #endif
 
 #if defined(USE_REFLECTION)
@@ -672,8 +753,10 @@ void main ( void )
 		}
 #endif //defined(USE_REFLECTION)
 
+		color = clamp(color + (caustic * causicStrength), 0.0, 1.0);
+
 		color = clamp(color + max(specular, foam.rgb * sunColor), 0.0, 1.0);
-		
+
 		color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
 
 		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
@@ -693,7 +776,6 @@ void main ( void )
 				color.rgb = color2.rgb;
 		}
 	}
-#endif //__TEST_WATER__
 
 	gl_FragColor = vec4(color, 1.0);
 }

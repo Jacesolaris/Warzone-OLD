@@ -4622,6 +4622,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 
 	{
 		vec4_t viewInfo;
