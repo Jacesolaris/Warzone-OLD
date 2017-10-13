@@ -1318,7 +1318,7 @@ void Com_Init( char *commandLine ) {
 		Cvar_Set("ui_singlePlayerActive", "0");
 
 		com_fullyInitialized = qtrue;
-		Com_Printf ("--- Common Initialization Complete ---\n");
+		Com_Printf ("^5--- ^7Common Initialization Complete^5 ---\n");
 	}
 	catch ( int code )
 	{

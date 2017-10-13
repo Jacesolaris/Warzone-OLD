@@ -2868,7 +2868,7 @@ void FS_Dir_f( void ) {
 	}
 
 	Com_Printf( "Directory of %s %s\n", path, extension );
-	Com_Printf( "---------------\n" );
+	Com_Printf( "^5---------------\n" );
 
 	dirnames = FS_ListFiles( path, extension, &ndirs );
 
@@ -2978,7 +2978,7 @@ void FS_NewDir_f( void ) {
 
 	filter = Cmd_Argv( 1 );
 
-	Com_Printf( "---------------\n" );
+	Com_Printf( "^5---------------\n" );
 
 	dirnames = FS_ListFilteredFiles( "", "", filter, &ndirs );
 
@@ -3002,10 +3002,10 @@ void FS_Path_f( void ) {
 	searchpath_t	*s;
 	int				i;
 
-	Com_Printf ("Current search path:\n");
+	Com_Printf ("^7Current search path:\n");
 	for (s = fs_searchpaths; s; s = s->next) {
 		if (s->pack) {
-			Com_Printf ("%s (%i files)\n", s->pack->pakFilename, s->pack->numfiles);
+			Com_Printf ("^5%s (^7%i^5 files)\n", s->pack->pakFilename, s->pack->numfiles);
 			if ( fs_numServerPaks ) {
 				if ( !FS_PakIsPure(s->pack) ) {
 					Com_Printf( "    not on the pure list\n" );
@@ -3014,14 +3014,14 @@ void FS_Path_f( void ) {
 				}
 			}
 		} else {
-			Com_Printf ("%s%c%s\n", s->dir->path, PATH_SEP, s->dir->gamedir );
+			Com_Printf ("^5%s%c%s\n", s->dir->path, PATH_SEP, s->dir->gamedir );
 		}
 	}
 
 	Com_Printf( "\n" );
 	for ( i = 1 ; i < MAX_FILE_HANDLES ; i++ ) {
 		if ( fsh[i].handleFiles.file.o ) {
-			Com_Printf( "handle %i: %s\n", i, fsh[i].name );
+			Com_Printf( "^5handle ^7%i^5: ^3%s\n", i, fsh[i].name );
 		}
 	}
 }
@@ -3510,7 +3510,7 @@ void FS_Startup( const char *gameName ) {
 
 	//FS_WaitForThreads();
 
-	Com_Printf( "----- FS_Startup -----\n" );
+	Com_Printf( "^5----- ^7FS_Startup^5 -----\n" );
 
 	fs_packFiles = 0;
 
@@ -3593,7 +3593,7 @@ void FS_Startup( const char *gameName ) {
 
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
-	Com_Printf( "----------------------\n" );
+	Com_Printf( "^5----------------------\n" );
 
 #ifdef FS_MISSING
 	if (missingFiles == NULL) {

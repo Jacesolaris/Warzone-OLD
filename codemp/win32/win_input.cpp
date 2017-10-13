@@ -771,11 +771,11 @@ IN_Startup
 ===========
 */
 void IN_Startup( void ) {
-	Com_Printf ("\n------- Input Initialization -------\n");
+	Com_Printf ("\n^5------- ^7Input Initialization^5 -------\n");
 	IN_StartupMouse ();
 	IN_StartupJoystick ();
 	IN_StartupMIDI();
-	Com_Printf ("------------------------------------\n");
+	Com_Printf ("^5------------------------------------\n");
 
 	in_mouse->modified = qfalse;
 	in_joystick->modified = qfalse;

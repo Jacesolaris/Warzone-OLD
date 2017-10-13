@@ -349,11 +349,11 @@ qboolean FOLIAGE_LoadFoliagePositions( void )
 		FOLIAGE_AREAS_MINS = NULL;
 		FOLIAGE_AREAS_MAXS = NULL;
 
-		trap->Print("*** %s: No tree points in foliage file foliage/%s.foliage. Memory freed.\n", GAME_VERSION, mapname.string);
+		trap->Print("^1*** ^3%s^5: No tree points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", GAME_VERSION, mapname.string);
 		return qfalse;
 	}
 
-	trap->Print( "*** %s: Successfully loaded %i foliage points from foliage file foliage/%s.foliage. Found %i trees.\n", GAME_VERSION,
+	trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 foliage points from foliage file ^7foliage/%s.foliage^5. Found ^7%i^5 trees.\n", GAME_VERSION,
 		fileCount, mapname.string, FOLIAGE_NUM_POSITIONS );
 
 	FOLIAGE_Setup_Foliage_Areas();
@@ -401,13 +401,13 @@ void FOLIAGE_LoadTrees( void )
 {
 	int i = 0;
 
-	trap->Print("*** Warzone: Loading Trees.\n");
+	trap->Print("^1*** ^3Warzone^5: Loading Trees...\n");
 
 	if (FOLIAGE_IgnoreFoliageOnMap())
 	{// Ignore this map... We know we don't need grass here...
 		FOLIAGE_NUM_POSITIONS = 0;
 		FOLIAGE_LOADED = qtrue;
-		trap->Print("*** Warzone: Trees are ignored on this map.\n");
+		trap->Print("^1*** ^3Warzone^5: Trees are ignored on this map.\n");
 
 		if (FOLIAGE_AREAS_LIST_COUNT) free(FOLIAGE_AREAS_LIST_COUNT);
 		if (FOLIAGE_AREAS_LIST) free(FOLIAGE_AREAS_LIST);
@@ -430,7 +430,7 @@ void FOLIAGE_LoadTrees( void )
 
 	if (FOLIAGE_NUM_POSITIONS <= 0)
 	{
-		trap->Print("*** Warzone: No tree positions found for map.\n");
+		trap->Print("^1*** ^3Warzone^5: No tree positions found for map.\n");
 
 		if (FOLIAGE_AREAS_LIST_COUNT) free(FOLIAGE_AREAS_LIST_COUNT);
 		if (FOLIAGE_AREAS_LIST) free(FOLIAGE_AREAS_LIST);

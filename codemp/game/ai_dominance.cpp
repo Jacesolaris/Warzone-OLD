@@ -1980,7 +1980,7 @@ int BotAISetup( int restart ) {
 	}
 #endif //__AAS_AI_TESTING__
 	
-	trap->Print("-------- BotAISetup Completed ---------\n");
+	trap->Print("^5-------- ^7BotAISetup Completed^5 ---------\n");
 
 	return qtrue;
 }

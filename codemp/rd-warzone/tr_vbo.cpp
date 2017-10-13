@@ -258,7 +258,7 @@ void R_InitVBOs(void)
 	int             dataSize;
 	int             offset;
 
-	ri->Printf(PRINT_ALL, "------- R_InitVBOs -------\n");
+	ri->Printf(PRINT_ALL, "^5------- ^7R_InitVBOs^5 -------\n");
 
 	tr.numVBOs = 0;
 	tr.numIBOs = 0;
@@ -314,7 +314,7 @@ void R_ShutdownVBOs(void)
 	VBO_t          *vbo;
 	IBO_t          *ibo;
 
-	ri->Printf(PRINT_ALL, "------- R_ShutdownVBOs -------\n");
+	ri->Printf(PRINT_ALL, "^5------- ^7R_ShutdownVBOs^5 -------\n");
 
 	R_BindNullVBO();
 	R_BindNullIBO();
@@ -361,11 +361,11 @@ void R_VBOList_f(void)
 	int             vertexesSize = 0;
 	int             indexesSize = 0;
 
-	ri->Printf (PRINT_ALL, " vertex buffers\n");
-	ri->Printf (PRINT_ALL, "----------------\n\n");
+	ri->Printf (PRINT_ALL, "^7 vertex buffers\n");
+	ri->Printf (PRINT_ALL, "^5----------------\n\n");
 
-	ri->Printf(PRINT_ALL, " id   size (MB)\n");
-	ri->Printf(PRINT_ALL, "---------------\n");
+	ri->Printf(PRINT_ALL, "^7 id   size (MB)\n");
+	ri->Printf(PRINT_ALL, "^5---------------\n");
 
 	for(i = 0; i < tr.numVBOs; i++)
 	{
@@ -380,11 +380,11 @@ void R_VBOList_f(void)
 	ri->Printf(PRINT_ALL, " %.2f MB in total\n\n", vertexesSize / (1024.0f * 1024.0f));
 
 
-	ri->Printf (PRINT_ALL, " index buffers\n");
-	ri->Printf (PRINT_ALL, "---------------\n\n");
+	ri->Printf (PRINT_ALL, "^7 index buffers\n");
+	ri->Printf (PRINT_ALL, "^5---------------\n\n");
 
-	ri->Printf(PRINT_ALL, " id   size (MB)\n");
-	ri->Printf(PRINT_ALL, "---------------\n");
+	ri->Printf(PRINT_ALL, "^7 id   size (MB)\n");
+	ri->Printf(PRINT_ALL, "^5---------------\n");
 
 	for(i = 0; i < tr.numIBOs; i++)
 	{

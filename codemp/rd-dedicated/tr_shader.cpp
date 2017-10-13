@@ -3680,13 +3680,13 @@ void R_InitShaders(qboolean server)
 	{
 		time = ri->Milliseconds()*ri->Cvar_VariableValue( "timescale" ) - time;
 		mem = mem - Hunk_MemoryRemaining();
-		Com_Printf( "-------------------------\n" );
-		Com_Printf( "%d shader files read \n", fileShaderCount );
-		Com_Printf( "%d shaders found\n", shaderCount );
-		Com_Printf( "%d code lines\n", Shader_GetCurrentParseLine() );
-		Com_Printf( "%.2f MB shader data\n", mem/1024.0f/1024.0f );
-		Com_Printf( "%.3f seconds\n", time/1000.0f );
-		Com_Printf( "-------------------------\n" );
+		Com_Printf( "^5-------------------------\n" );
+		Com_Printf( "^7%d^5 shader files read \n", fileShaderCount );
+		Com_Printf( "^7%d^5 shaders found\n", shaderCount );
+		Com_Printf( "^7%d^5 code lines\n", Shader_GetCurrentParseLine() );
+		Com_Printf( "^7%.2f^5 MB shader data\n", mem/1024.0f/1024.0f );
+		Com_Printf( "^7%.3f^5 seconds\n", time/1000.0f );
+		Com_Printf( "^5-------------------------\n" );
 		Shader_BeginParseSession( "" );
 	}
 	// !drakkar

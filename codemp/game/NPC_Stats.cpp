@@ -3872,12 +3872,12 @@ qboolean NPC_LoadSpawnList( char *listname )
 	//	SPAWNGROUPS_INITIALIZED = qtrue;
 	//}
 
-	Com_Printf("Parsing spawnlist file: spawnGroups/%s.spawnGroups\n", listname);
+	Com_Printf("^4Parsing spawnlist file^5:^3 spawnGroups/%s.spawnGroups\n", listname);
 
 	handle = trap->PC_LoadSource(va("spawnGroups/%s.spawnGroups", listname));
 
 	if (!handle) {
-		Com_Printf("Failed parsing spawnlist file: spawnGroups/%s.spawnGroups - No file?\n", listname);
+		Com_Printf("^1Failed parsing spawnlist file: ^3spawnGroups/%s.spawnGroups^1 - No file?\n", listname);
 		return qfalse;
 	}
 
@@ -3907,7 +3907,7 @@ qboolean NPC_LoadSpawnList( char *listname )
 				//Com_Printf("Total boss groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_BOSS].spawnGroupTotal);
 				continue;
 			} else {
-				Com_Printf("Failed to parse spawn group boss for file %s.\n", listname);
+				Com_Printf("^1Failed to parse spawn group boss for file ^7%s^1.\n", listname);
 				break;
 			}
 		}
@@ -3918,7 +3918,7 @@ qboolean NPC_LoadSpawnList( char *listname )
 				//Com_Printf("Total elite groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_ELITE].spawnGroupTotal);
 				continue;
 			} else {
-				Com_Printf("Failed to parse spawn group elite for file %s.\n", listname);
+				Com_Printf("^1Failed to parse spawn group elite for file ^7%s^1.\n", listname);
 				break;
 			}
 		}
@@ -3929,7 +3929,7 @@ qboolean NPC_LoadSpawnList( char *listname )
 				//Com_Printf("Total officer groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_OFFICER].spawnGroupTotal);
 				continue;
 			} else {
-				Com_Printf("Failed to parse spawn group officer for file %s.\n", listname);
+				Com_Printf("^1Failed to parse spawn group officer for file ^7%s^1.\n", listname);
 				break;
 			}
 		}
@@ -3940,7 +3940,7 @@ qboolean NPC_LoadSpawnList( char *listname )
 				//Com_Printf("Total common groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_COMMON].spawnGroupTotal);
 				continue;
 			} else {
-				Com_Printf("Failed to parse spawn group common for file %s.\n", listname);
+				Com_Printf("^1Failed to parse spawn group common for file ^7%s^1.\n", listname);
 				break;
 			}
 		}
@@ -3951,7 +3951,7 @@ qboolean NPC_LoadSpawnList( char *listname )
 				//Com_Printf("Total spam groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_SPAM].spawnGroupTotal);
 				continue;
 			} else {
-				Com_Printf("Failed to parse spawn group spam for file %s.\n", listname);
+				Com_Printf("^1Failed to parse spawn group spam for file ^7%s^1.\n", listname);
 				break;
 			}
 		}
@@ -3959,7 +3959,7 @@ qboolean NPC_LoadSpawnList( char *listname )
 	trap->PC_FreeSource(handle);
 
 	spawnGroupFilesLoaded++;
-	Com_Printf("Loaded %i total NPCs from spawnGroup file spawnGroups/%s.spawnGroups.\n", spawnGroupTotalNPCS, listname);
+	Com_Printf("^5Loaded ^7%i^5 total NPCs from spawnGroup file ^3spawnGroups/%s.spawnGroups^5.\n", spawnGroupTotalNPCS, listname);
 
 	return qtrue;
 }

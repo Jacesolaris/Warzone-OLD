@@ -179,7 +179,7 @@ void Load_Model_Scales( void )
 	trap->FS_Read( buf, len, f );
 	trap->FS_Close( f );
 
-	Com_Printf("*** Warzone: Loading player model scales database from file %s.\n", "modelscale.cfg");
+	Com_Printf("^1*** ^3Warzone^5: Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
 
 	for (t = s = buf; *t; /* */ ) 
 	{
@@ -228,7 +228,7 @@ void Load_Model_Scales( void )
 
 	num_scale_models--;
 
-	Com_Printf("*** Warzone: There are %i player model scales in the current database.\n", num_scale_models);
+	Com_Printf("^1*** ^3Warzone^5: There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
 
 	free(buf);
 
@@ -439,7 +439,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 
 		trap->FS_Close(f);
 
-		Com_Printf( "*** %s: Successfully loaded %i blue and %i red spawn points from spawnpoints file spawnpoints/%s.team_spawnpoints.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 blue and ^7%i^5 red spawn points from spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, NUM_RED_POSITIONS, mapname.string );
 	}
 	else
@@ -471,7 +471,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 
 		trap->FS_Close(f);
 
-		Com_Printf( "*** %s: Successfully loaded %i spawn points from spawnpoints file spawnpoints/%s.ffa_spawnpoints.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 spawn points from spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, mapname.string );
 	}
 
@@ -492,7 +492,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		if ( !f )
 		{
-			Com_Printf( "*** %s: Failed to open spawnpoints file spawnpoints/%s.team_spawnpoints for save.\n", GAME_VERSION, mapname.string );
+			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5 for save.\n", GAME_VERSION, mapname.string );
 			return qfalse;
 		}
 
@@ -512,7 +512,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Close(f);
 
-		Com_Printf( "*** %s: Successfully saved %i blue and %i red spawn points to spawnpoints file spawnpoints/%s.team_spawnpoints.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully saved ^7%i^5 blue and ^7%i^5 red spawn points to spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, NUM_RED_POSITIONS, mapname.string );
 
 		return qtrue;
@@ -523,7 +523,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		if ( !f )
 		{
-			Com_Printf( "*** %s: Failed to open spawnpoints file spawnpoints/%s.ffa_spawnpoints for save.\n", GAME_VERSION, mapname.string );
+			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5 for save.\n", GAME_VERSION, mapname.string );
 			return qfalse;
 		}
 
@@ -536,7 +536,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Close(f);
 
-		Com_Printf( "*** %s: Successfully saved %i spawn points to spawnpoints file spawnpoints/%s.ffa_spawnpoints.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully saved ^7%i^5 spawn points to spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, mapname.string );
 
 		return qtrue;
@@ -865,10 +865,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	//Load external vehicle data
 	BG_VehicleLoadParms();
 
-	trap->Print ("------- Game Initialization -------\n");
-	trap->Print ("gamename: %s\n", GAMEVERSION);
-	trap->Print ("gamedate: %s\n", __DATE__);
-	trap->Print ("game mod: %s\n", GAME_VERSION);
+	trap->Print ("^5------- ^3Game Initialization^5 -------\n");
+	trap->Print ("^5gamename: ^7%s\n", GAMEVERSION);
+	trap->Print ("^5gamedate: ^4%s\n", __DATE__);
+	trap->Print ("^5game mod: ^4%s\n", GAME_VERSION);
 
 	srand( randomSeed );
 
@@ -905,8 +905,14 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		trap->Print( "Not logging game events to disk.\n" );
 
 	trap->GetServerinfo( serverinfo, sizeof( serverinfo ) );
-	G_LogPrintf( "------------------------------------------------------------\n" );
-	G_LogPrintf( "InitGame: %s\n", serverinfo );
+	G_LogPrintf( "^5------------------------------------------------------------\n" );
+
+#ifdef __ENABLE_DEDICATED_CONSOLE_COLORS__
+	// Just for better readability on console...
+	Q_StripColor(serverinfo);
+#endif //__ENABLE_DEDICATED_CONSOLE_COLORS__
+
+	G_LogPrintf( "^7InitGame: ^3%s^7\n", serverinfo );
 
 	if ( g_securityLog.integer )
 	{
@@ -971,13 +977,13 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	//
 	//ICARUS INIT START
 
-//	Com_Printf("------ ICARUS Initialization ------\n");
+//	Com_Printf("^5------ ^7ICARUS Initialization^5 ------\n");
 
 #ifndef __NO_ICARUS__
 	trap->ICARUS_Init();
 #endif //__NO_ICARUS__
 
-//	Com_Printf ("-----------------------------------\n");
+//	Com_Printf ("^5-----------------------------------\n");
 
 	//ICARUS INIT END
 	//
@@ -1025,7 +1031,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	SaveRegisteredItems();
 
-	//trap->Print ("-----------------------------------\n");
+	//trap->Print ("^5-----------------------------------\n");
 
 	if( level.gametype == GT_SINGLE_PLAYER || trap->Cvar_VariableIntegerValue( "com_buildScript" ) ) {
 		G_ModelIndex( SP_PODIUM_MODEL );
@@ -1041,9 +1047,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		G_LoadArenas();
 	}
 
-	Com_Printf ("------- Tree Initialization -------\n");
+	Com_Printf ("^5------- ^7Tree Initialization^5 -------\n");
 	FOLIAGE_LoadTrees();
-	Com_Printf ("-----------------------------------\n");
+	Com_Printf ("^5-----------------------------------\n");
 
 	if ( level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL )
 	{
@@ -1123,6 +1129,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	Load_Model_Scales();
 	NPC_PrecacheWarzoneNPCs();
 
+	Com_Printf("^5--------- ^7Spawn Groups^5 ---------\n");
 	NPC_LoadSpawnList( "default_rebels" );
 	NPC_LoadSpawnList( "default_empire" );
 	NPC_LoadSpawnList( "default_wildlife" );
@@ -1131,6 +1138,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	NPC_LoadSpawnList( va("%s_mandalorians", mapname.string) );
 	NPC_LoadSpawnList( va("%s_mercenaries", mapname.string) );
 	NPC_LoadSpawnList( va("%s_wildlife", mapname.string) );
+	Com_Printf("^5--------------------------------\n");
 
 	JKG_InitDamageSystem();
 
@@ -1208,7 +1216,7 @@ void G_ShutdownGame( int restart ) {
 	G_LogWeaponOutput();
 
 	if ( level.logFile ) {
-		G_LogPrintf( "ShutdownGame:\n------------------------------------------------------------\n" );
+		G_LogPrintf( "^7ShutdownGame:\n^5------------------------------------------------------------\n" );
 		trap->FS_Close( level.logFile );
 		level.logFile = 0;
 	}
@@ -4783,7 +4791,7 @@ void G_RunFrame( int levelTime ) {
 
 
 #ifdef _G_FRAME_PERFANAL
-	Com_Printf("---------------\nItemRun: %i\nROFF: %i\nClientEndframe: %i\nGameChecks: %i\nQueues: %i\n---------------\n",
+	Com_Printf("^5---------------\n^5ItemRun: ^7%i\n^5ROFF: ^7%i\n^5ClientEndframe: ^7%i\n^5GameChecks: ^7%i\n^5Queues: ^7%i\n^5---------------\n",
 		iTimer_ItemRun,
 		iTimer_ROFF,
 		iTimer_ClientEndframe,

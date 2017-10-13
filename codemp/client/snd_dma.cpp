@@ -127,7 +127,7 @@ bool		s_bInWater;				// Underwater effect currently active
 #endif
 
 void S_SoundInfo_f(void) {
-	Com_Printf("----- Sound Info -----\n" );
+	Com_Printf("^7----- ^7Sound Info^5 -----\n" );
 
 	if (!s_soundStarted) {
 		Com_Printf ("sound system not started\n");
@@ -136,7 +136,7 @@ void S_SoundInfo_f(void) {
 			Com_Printf ("sound system is muted\n");
 		}
 	}
-	Com_Printf("----------------------\n" );
+	Com_Printf("^5----------------------\n" );
 }
 
 
@@ -187,7 +187,7 @@ void S_Init( void ) {
 	if ( !cv->integer ) {
 		s_soundStarted = 0;	// needed in case you set s_initsound to 0 midgame then snd_restart (div0 err otherwise later)
 		Com_Printf ("not initializing.\n");
-		Com_Printf("------------------------------------\n");
+		Com_Printf("^5------------------------------------\n");
 		return;
 	}
 
@@ -198,9 +198,9 @@ void S_Init( void ) {
 
 	BASS_Initialize();
 
-	Com_Printf("------------------------------------\n");
+	Com_Printf("^5------------------------------------\n");
 
-	Com_Printf("\n--- ambient sound initialization ---\n");
+	Com_Printf("\n^5--- ^7ambient sound initialization^5 ---\n");
 
 	AS_Init();
 }

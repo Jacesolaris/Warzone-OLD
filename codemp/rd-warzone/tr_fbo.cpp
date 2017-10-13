@@ -434,7 +434,7 @@ void FBO_Init(void)
 	// int             width, height, hdrFormat, multisample;
 	int             hdrFormat, multisample;
 
-	ri->Printf(PRINT_ALL, "------- FBO_Init -------\n");
+	ri->Printf(PRINT_ALL, "^5------- ^7FBO_Init^5 -------\n");
 
 	tr.numFBOs = 0;
 
@@ -956,7 +956,7 @@ void FBO_Shutdown(void)
 	int             i, j;
 	FBO_t          *fbo;
 
-	ri->Printf(PRINT_ALL, "------- FBO_Shutdown -------\n");
+	ri->Printf(PRINT_ALL, "^5------- ^7FBO_Shutdown^5 -------\n");
 
 	FBO_Bind(NULL);
 
@@ -991,8 +991,8 @@ void R_FBOList_f(void)
 	int             i;
 	FBO_t          *fbo;
 
-	ri->Printf(PRINT_ALL, "             size       name\n");
-	ri->Printf(PRINT_ALL, "----------------------------------------------------------\n");
+	ri->Printf(PRINT_ALL, "^7             size       name\n");
+	ri->Printf(PRINT_ALL, "^5----------------------------------------------------------\n");
 
 	for(i = 0; i < tr.numFBOs; i++)
 	{

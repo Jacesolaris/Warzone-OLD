@@ -299,7 +299,7 @@ AIMOD_NODES_LoadNodes2 ( void )
 	fread( &fix_aas_nodes, sizeof(short int), 1, f);
 
 	fclose(f);
-	Com_Printf( "*** %s: Successfully loaded %i waypoints from advanced waypoint file nodes/%s.bwp.\n", GAME_VERSION,
+	trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 waypoints from advanced waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
 			  numberNodes, mapname.string );
 
 	//nodes_loaded = qtrue;
@@ -438,7 +438,7 @@ AIMOD_NODES_LoadNodes ( void )
 
 	trap->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 	trap->FS_Close( f );							//close the file
-	Com_Printf( "*** %s: Successfully loaded %i waypoints from advanced waypoint file nodes/%s.bwp.\n", GAME_VERSION,
+	trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 waypoints from advanced waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
 			  numberNodes, filename );
 	//nodes_loaded = qtrue;
 
@@ -523,7 +523,7 @@ int LoadPathData(const char *filename)
 
 				original_count = trap->Nav_GetNumNodes();
 
-				Com_Printf("*** Warzone: Navigation system had %i nodes. Adding warzone nodes.\n", original_count);
+				Com_Printf("^1*** ^3Warzone^5: Navigation system had ^7%i^5 nodes. Adding warzone nodes.\n", original_count);
 
 				for (i = 0; i < gWPNum; i++)
 				{
@@ -545,16 +545,16 @@ int LoadPathData(const char *filename)
 				}
 
 				trap->Nav_CalculatePaths(qtrue);
-				Com_Printf("*** Warzone: Navigation system now has %i nodes.\n", new_count);
+				Com_Printf("^1*** ^3Warzone^5: Navigation system now has ^7%i^5 nodes.\n", new_count);
 			}
 		}
 
 		Warzone_WaypointCheck();
-		Com_Printf("*** Warzone: Navigation system update completed.\n");
+		Com_Printf("^1*** ^3Warzone^5: Navigation system update completed.\n");
 		return 1; // UQ1: Load/Convert Auto-Waypoint Nodes... (Now default)
 	}
 
-	Com_Printf("*** Warzone: Navigation system update completed.\n");
+	Com_Printf("^1*** ^3Warzone^5: Navigation system update completed.\n");
 #endif //__USE_NAVMESH__
 	return 0;
 }

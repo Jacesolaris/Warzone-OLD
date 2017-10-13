@@ -441,8 +441,8 @@ void SV_SpawnServer( char *server, qboolean killBots, ForceReload_e eForceReload
 	SV_ShutdownGameProgs();
 	svs.gameStarted = qfalse;
 
-	Com_Printf ("------ Server Initialization ------\n");
-	Com_Printf ("Server: %s\n",server);
+	Com_Printf ("^5------ ^7Server Initialization^5 ------\n");
+	Com_Printf ("^7Server^5: ^3%s\n",server);
 
 /*
 Ghoul2 Insert Start
@@ -805,7 +805,7 @@ static void SV_InitRef( void ) {
 	static refimport_t ri;
 	refexport_t *ret;
 
-	Com_Printf( "----- Initializing Renderer ----\n" );
+	Com_Printf( "^5----- ^7Initializing Renderer^5 ----\n" );
 
 	memset( &ri, 0, sizeof( ri ) );
 
@@ -887,7 +887,7 @@ static void SV_InitRef( void ) {
 
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 
-//	Com_Printf( "-------------------------------\n");
+//	Com_Printf( "^5-------------------------------\n");
 
 	if ( !ret ) {
 		Com_Error (ERR_FATAL, "Couldn't initialize refresh" );
@@ -1038,7 +1038,7 @@ void SV_Shutdown( char *finalmsg )
 		return;
 	}
 
-//	Com_Printf( "----- Server Shutdown -----\n" );
+//	Com_Printf( "^5----- ^7Server Shutdown^5 -----\n" );
 
 	if ( svs.clients && !com_errorEntered ) {
 		SV_FinalMessage( finalmsg );
@@ -1071,7 +1071,7 @@ Ghoul2 Insert Start
 	Cvar_Set( "sv_running", "0" );
 	Cvar_Set("ui_singlePlayerActive", "0");
 
-//	Com_Printf( "---------------------------\n" );
+//	Com_Printf( "^5---------------------------\n" );
 
 	// disconnect any local clients
 	if( sv_killserver->integer != 2 )

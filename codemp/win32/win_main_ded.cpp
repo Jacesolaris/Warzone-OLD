@@ -25,6 +25,144 @@ void *Sys_GetBotAIAPI (void *parms ) {
 	return NULL;
 }
 
+#ifdef __ENABLE_DEDICATED_CONSOLE_COLORS__
+#if defined(WIN32) || defined(WIN64)
+enum concol
+{
+	concol_black = 0,
+	concol_dark_blue = 1,
+	concol_dark_green = 2,
+	concol_dark_aqua, concol_dark_cyan = 3,
+	concol_dark_red = 4,
+	concol_dark_purple = 5, concol_dark_pink = 5, concol_dark_magenta = 5,
+	concol_dark_yellow = 6,
+	concol_dark_white = 7,
+	concol_gray = 8, concol_grey = 8,
+	concol_blue = 9,
+	concol_green = 10,
+	concol_aqua = 11, concol_cyan = 11,
+	concol_red = 12,
+	concol_purple = 13, concol_pink = 13, concol_magenta = 13,
+	concol_yellow = 14,
+	concol_white = 15
+};
+
+bool textcolorprotect = true;
+/*doesn't let textcolor be the same as backgroung color if true*/
+
+inline void setcolor(concol textcolor, concol backcolor);
+inline void setcolor(int textcolor, int backcolor);
+int textcolor();/*returns current text color*/
+int backcolor();/*returns current background color*/
+
+#define std_con_out GetStdHandle(STD_OUTPUT_HANDLE)
+
+				//-----------------------------------------------------------------------------
+
+int textcolor()
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(std_con_out, &csbi);
+	int a = csbi.wAttributes;
+	return a % 16;
+}
+
+int backcolor()
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(std_con_out, &csbi);
+	int a = csbi.wAttributes;
+	return (a / 16) % 16;
+}
+
+inline void setcolor(concol textcol, concol backcol)
+{
+	setcolor(int(textcol), int(backcol));
+}
+
+inline void setcolor(int textcol, int backcol)
+{
+	if (textcolorprotect)
+	{
+		if ((textcol % 16) == (backcol % 16))textcol++;
+	}
+	textcol %= 16; backcol %= 16;
+	unsigned short wAttributes = ((unsigned)backcol << 4) | (unsigned)textcol;
+	SetConsoleTextAttribute(std_con_out, wAttributes);
+}
+#else //!defined(WIN32) || defined(WIN64)
+inline void setcolor(concol textcol, concol backcol)
+{
+
+}
+
+inline void setcolor(int textcol, int backcol)
+{
+
+}
+#endif //defined(WIN32) || defined(WIN64)
+
+void Q_ColorPrint(char *text)
+{
+	setcolor(concol_grey, concol_black); // init console color on each new string...
+
+	int len = strlen(text);
+
+	for (int c = 0; c < len; c++)
+	{// This could probably be optimized by dumping more than one char at a time... but this will do...
+		if (c == len-1)
+		{
+			// Final character, just print it...
+			printf("%c", text[c]);
+			break;
+		} else {
+			// Check for color changes...
+			char read[2] = { 0 };
+			sprintf(read, "%c%c", text[c], text[c + 1]);
+
+			if (Q_IsColorStringExt(read))
+			{// Color swap character...
+				// Set the new console color...
+				if (!strcmp(read, S_COLOR_BLACK))
+					setcolor(concol_dark_white, concol_black); // never allow true black...
+				else if (!strcmp(read, S_COLOR_RED))
+					setcolor(concol_dark_red, concol_black); // no equivalent console color for orange, so using red for orange, and dark_red for red
+				else if (!strcmp(read, S_COLOR_GREEN))
+					setcolor(concol_green, concol_black);
+				else if (!strcmp(read, S_COLOR_YELLOW))
+					setcolor(concol_yellow, concol_black);
+				else if (!strcmp(read, S_COLOR_BLUE))
+					setcolor(concol_blue, concol_black);
+				else if (!strcmp(read, S_COLOR_CYAN))
+					setcolor(concol_cyan, concol_black);
+				else if (!strcmp(read, S_COLOR_MAGENTA))
+					setcolor(concol_magenta, concol_black);
+				else if (!strcmp(read, S_COLOR_WHITE))
+					setcolor(concol_white, concol_black);
+				else if (!strcmp(read, S_COLOR_ORANGE))
+					setcolor(concol_red, concol_black); // no equivalent console color, so using red for orange
+				else if (!strcmp(read, S_COLOR_GREY))
+					setcolor(concol_grey, concol_black);
+				else // Should never happen...
+					setcolor(concol_grey, concol_black);
+
+				c++; // skip to after the final color macro character and continue...
+				continue;
+			} else if (!strcmp(read, "\n")) {
+				// Newline char here, just dump the 2 chars at once...
+				printf("\n");
+				c++;
+				continue;
+			}
+
+			printf("%c", text[c]);
+		}
+	}
+
+	setcolor(concol_grey, concol_black); // init console color at end of each new string too...
+}
+#endif //__ENABLE_DEDICATED_CONSOLE_COLORS__
+
 // We now expect newlines instead of always appending
 // otherwise sectioned prints get messed up.
 #define MAXPRINTMSG		4096
@@ -32,8 +170,12 @@ void Conbuf_AppendText( const char *pMsg )
 {
 	char msg[MAXPRINTMSG] = {0};
 	Q_strncpyz(msg, pMsg, sizeof(msg));
+#ifdef __ENABLE_DEDICATED_CONSOLE_COLORS__
+	Q_ColorPrint(msg);
+#else //!__ENABLE_DEDICATED_CONSOLE_COLORS__
 	Q_StripColor(msg);
 	printf("%s", msg);
+#endif //!__ENABLE_DEDICATED_CONSOLE_COLORS__
 }
 
 /*

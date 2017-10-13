@@ -1579,10 +1579,10 @@ void Svcmd_Nav_f( void )
 	}
 	else if ( Q_stricmp( cmd, "totals" ) == 0 )
 	{
-		Com_Printf("Navigation Totals:\n");
-		Com_Printf("------------------\n");
-		Com_Printf("Total Nodes:         %d\n", trap->Nav_GetNumNodes() );
-		Com_Printf("Total Combat Points: %d\n", level.numCombatPoints );
+		Com_Printf("^7Navigation Totals:\n");
+		Com_Printf("^5------------------\n");
+		Com_Printf("^5Total Nodes:         ^7%d\n", trap->Nav_GetNumNodes() );
+		Com_Printf("^5Total Combat Points: ^7%d\n", level.numCombatPoints );
 	}
 	else
 	{

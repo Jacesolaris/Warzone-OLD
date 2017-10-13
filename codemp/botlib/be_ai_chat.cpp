@@ -2482,8 +2482,8 @@ int BotNumInitialChats(int chatstate, char *type)
 		if (!Q_stricmp(t->name, type))
 		{
 			if (LibVarGetValue("bot_testichat")) {
-				botimport.Print(PRT_MESSAGE, "%s has %d chat lines\n", type, t->numchatmessages);
-				botimport.Print(PRT_MESSAGE, "-------------------\n");
+				botimport.Print(PRT_MESSAGE, "^7%s^5 has ^7%d^5 chat lines\n", type, t->numchatmessages);
+				botimport.Print(PRT_MESSAGE, "^5-------------------\n");
 			}
 			return t->numchatmessages;
 		} //end if

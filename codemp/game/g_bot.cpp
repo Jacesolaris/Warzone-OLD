@@ -1300,8 +1300,8 @@ void G_CheckMinimumNpcs(void)
 
 	if (next_npc_stats_time <= level.time)
 	{
-		trap->Print("Cvars are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife);
-		trap->Print("There are %i imperials, %i rebels, %i mandalorians, %i mercs, and %i wildlife NPCs spawned.\n", num_imperial_npcs, num_rebel_npcs, num_mandalorian_npcs, num_merc_npcs, num_wildlife_npcs);
+		trap->Print("^5Cvars are ^7%i^5 imperials, ^7%i^5 rebels, ^7%i^5 mandalorians, ^7%i^5 mercs, and ^7%i^5 wildlife NPCs spawned.\n", min_imperials, min_rebels, min_mandalorians, min_mercs, min_wildlife);
+		trap->Print("^5There are ^7%i^5 imperials, ^7%i^5 rebels, ^7%i^5 mandalorians, ^7%i^5 mercs, and ^7%i^5 wildlife NPCs spawned.\n", num_imperial_npcs, num_rebel_npcs, num_mandalorian_npcs, num_merc_npcs, num_wildlife_npcs);
 		next_npc_stats_time = level.time + 10000;
 	}
 

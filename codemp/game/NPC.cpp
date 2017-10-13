@@ -4072,7 +4072,7 @@ void NPC_PrintNumActiveNPCs(void)
 		percActive = percInactive = 0;
 	}
 
-	trap->Print("%i (%i percent) active and %i (%i percent) inactive NPCs.\n", num_active_npcs, percActive, num_inactive_npcs, percInactive);
+	trap->Print("^7%i ^5(^7%i^5 percent) active and ^7%i^5 (^7%i^5 percent) inactive NPCs.\n", num_active_npcs, percActive, num_inactive_npcs, percInactive);
 
 	next_active_npc_print = level.time + 10000;
 }

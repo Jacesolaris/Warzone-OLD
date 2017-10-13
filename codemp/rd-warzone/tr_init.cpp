@@ -1845,7 +1845,7 @@ void R_Init( void ) {
 	int i;
 	byte *ptr;
 
-	ri->Printf( PRINT_ALL, "----- R_Init -----\n" );
+	ri->Printf( PRINT_ALL, "^5----- ^7R_Init^5 -----\n" );
 
 	// clear all our internal state
 	Com_Memset( &tr, 0, sizeof( tr ) );
@@ -1947,7 +1947,7 @@ extern void R_InitWorldEffects(void);
 
 	// print info
 	GfxInfo_f();
-	ri->Printf( PRINT_ALL, "----- finished R_Init -----\n" );
+	ri->Printf( PRINT_ALL, "^5----- ^7finished R_Init^5 -----\n" );
 }
 
 /*

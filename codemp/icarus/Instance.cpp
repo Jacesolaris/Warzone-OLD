@@ -120,7 +120,7 @@ int ICARUS_Instance::Delete( void )
 
 #ifdef _DEBUG
 
-	Com_OPrintf( "\nICARUS Instance Debug Info:\n---------------------------\n" );
+	Com_OPrintf( "\n^7ICARUS Instance Debug Info:\n^5---------------------------\n" );
 
 	Com_OPrintf( "Sequencers Allocated:\t%d\n", m_DEBUG_NumSequencerAlloc );
 

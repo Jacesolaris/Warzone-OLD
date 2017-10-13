@@ -774,10 +774,10 @@ void NET_GetLocalAddress( void )
 		return;
 	}
 
-	Com_Printf( "Hostname: %s\n", hostInfo->h_name );
+	Com_Printf( "^5Hostname: ^3%s\n", hostInfo->h_name );
 	n = 0;
 	while( ( p = hostInfo->h_aliases[n++] ) != NULL ) {
-		Com_Printf( "Alias: %s\n", p );
+		Com_Printf( "^5Alias: ^3%s\n", p );
 	}
 
 	if ( hostInfo->h_addrtype != AF_INET ) {
@@ -790,7 +790,7 @@ void NET_GetLocalAddress( void )
 		localIP[ numIP ][1] = p[1];
 		localIP[ numIP ][2] = p[2];
 		localIP[ numIP ][3] = p[3];
-		Com_Printf( "IP: %i.%i.%i.%i\n", ( ip >> 24 ) & 0xff, ( ip >> 16 ) & 0xff, ( ip >> 8 ) & 0xff, ip & 0xff );
+		Com_Printf( "^5IP: %i.%i.%i.%i\n", ( ip >> 24 ) & 0xff, ( ip >> 16 ) & 0xff, ( ip >> 8 ) & 0xff, ip & 0xff );
 		numIP++;
 	}
 }
@@ -950,12 +950,12 @@ void NET_Init( void ) {
 #ifdef _WIN32
 	int r = WSAStartup( MAKEWORD( 1, 1 ), &winsockdata );
 	if( r ) {
-		Com_Printf( "WARNING: Winsock initialization failed, returned %d\n", r );
+		Com_Printf( "^1WARNING: Winsock initialization failed, returned ^3%d^1\n", r );
 		return;
 	}
 
 	winsockInitialized = qtrue;
-	Com_Printf( "Winsock Initialized\n" );
+	Com_Printf( "^7Winsock Initialized\n" );
 #endif
 
 	NET_Config( qtrue );

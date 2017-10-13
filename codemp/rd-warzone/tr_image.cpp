@@ -206,7 +206,7 @@ void R_ImageList_f( void ) {
 	int estTotalSize = 0;
 	char *sizeSuffix;
 
-	ri->Printf(PRINT_ALL, "\n      -w-- -h-- type  -size- --name-------\n");
+	ri->Printf(PRINT_ALL, "\n^7      -w-- -h-- type  -size- --name-------\n");
 
 	for ( i = 0 ; i < tr.numImages ; i++ )
 	{
@@ -323,9 +323,9 @@ void R_ImageList_f( void ) {
 
 	float printSize = GetReadableSize(estTotalSize, &sizeSuffix);
 
-	ri->Printf (PRINT_ALL, " ---------\n");
-	ri->Printf (PRINT_ALL, " approx %i bytes (%.2f%s)\n", estTotalSize, printSize, sizeSuffix);
-	ri->Printf (PRINT_ALL, " %i total images\n\n", tr.numImages );
+	ri->Printf (PRINT_ALL, "^5 ---------\n");
+	ri->Printf (PRINT_ALL, "^5 approx ^7%i^5 bytes (^7%.2f%s^5)\n", estTotalSize, printSize, sizeSuffix);
+	ri->Printf (PRINT_ALL, "^7 %i^5 total images\n\n", tr.numImages );
 }
 
 //=======================================================================

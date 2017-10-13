@@ -1922,7 +1922,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 {
 	size_t nameBufSize = strlen(name) + 1;
 
-	ri->Printf(PRINT_DEVELOPER, "------- GPU shader -------\n");
+	ri->Printf(PRINT_DEVELOPER, "^5------- ^7GPU shader^5 -------\n");
 
 	program->name = (char *)Z_Malloc(nameBufSize, TAG_GENERAL);
 	Q_strncpyz(program->name, name, nameBufSize);
@@ -2752,7 +2752,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	char extradefines[1024];
 	int attribs;
 
-	ri->Printf(PRINT_ALL, "------- GLSL_InitGPUShaders -------\n");
+	ri->Printf(PRINT_ALL, "^5------- ^7GLSL_InitGPUShaders^5 -------\n");
 
 	R_IssuePendingRenderCommands();
 
@@ -5492,7 +5492,7 @@ void GLSL_ShutdownGPUShaders(void)
 {
 	int i;
 
-	ri->Printf(PRINT_ALL, "------- GLSL_ShutdownGPUShaders -------\n");
+	ri->Printf(PRINT_ALL, "^5------- ^7GLSL_ShutdownGPUShaders^5 -------\n");
 
 	qglDisableVertexAttribArray(ATTR_INDEX_TEXCOORD0);
 	qglDisableVertexAttribArray(ATTR_INDEX_TEXCOORD1);

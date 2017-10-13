@@ -253,8 +253,8 @@ const char *String_Alloc(const char *p) {
 
 void String_Report() {
 	float f;
-	Com_Printf("Memory/String Pool Info\n");
-	Com_Printf("----------------\n");
+	Com_Printf("^7Memory/String Pool Info\n");
+	Com_Printf("^5----------------\n");
 	f = strPoolIndex;
 	f /= STRING_POOL_SIZE;
 	f *= 100;

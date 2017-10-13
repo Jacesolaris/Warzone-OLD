@@ -1814,7 +1814,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
-		trap->Print("*** %s: No foliage points in foliage file foliage/%s.foliage. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: No foliage points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
 		return qfalse;
 	}
 
@@ -2020,7 +2020,7 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
-		trap->Print("*** %s: No foliage points in foliage file foliage/%s.foliage. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: No foliage points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
 		return qfalse;
 	}
 

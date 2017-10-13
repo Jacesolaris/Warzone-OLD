@@ -611,15 +611,15 @@ static void SV_Status_f( void )
 	Q_strncpyz(hostname, sv_hostname->string, sizeof(hostname));
 	Q_StripColor(hostname);
 
-	Com_Printf ("hostname: %s^7\n", hostname );
-	Com_Printf ("version : %s %i\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION );
-	Com_Printf ("game    : %s\n", FS_GetCurrentGameDir() );
-	Com_Printf ("udp/ip  : %s:%i os(%s) type(%s)\n", Cvar_VariableString("net_ip"), Cvar_VariableIntegerValue("net_port"), STATUS_OS, ded_table[com_dedicated->integer]);
-	Com_Printf ("map     : %s gametype(%i)\n", sv_mapname->string, sv_gametype->integer );
-	Com_Printf ("players : %i humans, %i bots (%i max)\n", humans, bots, sv_maxclients->integer - sv_privateClients->integer);
+	Com_Printf ("^7hostname^5: ^3%s^7\n", hostname );
+	Com_Printf ("^7version^5 : ^3%s %i\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION );
+	Com_Printf ("^7game^5    : ^3%s^5\n", FS_GetCurrentGameDir() );
+	Com_Printf ("^7udp/ip^5  : ^3%s^5:^3%i^5 os(^3%s^5) type(^3%s^5)\n", Cvar_VariableString("net_ip"), Cvar_VariableIntegerValue("net_port"), STATUS_OS, ded_table[com_dedicated->integer]);
+	Com_Printf ("^7map^5     : ^3%s^5 gametype(%i)\n", sv_mapname->string, sv_gametype->integer );
+	Com_Printf ("^7players^5 : ^3%i^5 humans, ^3%i^5 bots (^3%i^5 max)\n", humans, bots, sv_maxclients->integer - sv_privateClients->integer);
 
-	Com_Printf ("num score ping name            lastmsg address               qport rate\n");
-	Com_Printf ("--- ----- ---- --------------- ------- --------------------- ----- -----\n");
+	Com_Printf ("^7num score ping name            lastmsg address               qport rate\n");
+	Com_Printf ("^5--- ----- ---- --------------- ------- --------------------- ----- -----\n");
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++)
 	{
 		if (!cl->state)
@@ -845,8 +845,8 @@ static void SV_DumpUser_f( void ) {
 		return;
 	}
 
-	Com_Printf( "userinfo\n" );
-	Com_Printf( "--------\n" );
+	Com_Printf( "^7userinfo\n" );
+	Com_Printf( "^5--------\n" );
 	Info_Print( cl->userinfo );
 }
 

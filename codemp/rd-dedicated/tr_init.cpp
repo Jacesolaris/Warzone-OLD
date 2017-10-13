@@ -429,7 +429,7 @@ void R_Init( void ) {
 	int i;
 	byte *ptr;
 
-//	Com_Printf ("----- R_Init -----\n" );
+//	Com_Printf ("^5----- ^7R_Init^5 -----\n" );
 	// clear all our internal state
 	memset( &tr, 0, sizeof( tr ) );
 	memset( &backEnd, 0, sizeof( backEnd ) );
@@ -483,7 +483,7 @@ void R_Init( void ) {
 
 	R_ModelInit();
 
-//	Com_Printf ("----- finished R_Init -----\n" );
+//	Com_Printf ("^5----- ^7finished R_Init^5 -----\n" );
 }
 
 /*

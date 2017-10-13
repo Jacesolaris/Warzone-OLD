@@ -424,7 +424,7 @@ void	R_SkinList_f( void ) {
 	int			i, j;
 	skin_t		*skin;
 
-	Com_Printf ( "------------------\n");
+	Com_Printf ( "^5------------------\n");
 
 	for ( i = 0 ; i < tr.numSkins ; i++ ) {
 		skin = tr.skins[i];
@@ -435,5 +435,5 @@ void	R_SkinList_f( void ) {
 				skin->surfaces[j]->name, ((shader_t* )skin->surfaces[j]->shader)->name );
 		}
 	}
-	Com_Printf ( "------------------\n");
+	Com_Printf ( "^5------------------\n");
 }

@@ -236,10 +236,10 @@ void SV_MasterHeartbeat( void ) {
 			if ( !strstr( ":", sv_master[i]->string ) ) {
 				adr[i].port = BigShort( PORT_MASTER );
 			}
-			Com_Printf( "%s resolved to %s\n", sv_master[i]->string, NET_AdrToString(adr[i]) );
+			Com_Printf( "^3%s^5 resolved to ^3%s\n", sv_master[i]->string, NET_AdrToString(adr[i]) );
 		}
 
-		Com_Printf ("Sending heartbeat to %s\n", sv_master[i]->string );
+		Com_Printf ("^5Sending heartbeat to ^3%s\n", sv_master[i]->string );
 		// this command should be changed if the server info / status format
 		// ever incompatably changes
 		NET_OutOfBandPrint( NS_SERVER, adr[i], "heartbeat %s\n", HEARTBEAT_GAME );

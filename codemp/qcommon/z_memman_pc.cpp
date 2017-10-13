@@ -528,9 +528,9 @@ static void Z_Stats_f(void)
 
 static void Z_Details_f(void)
 {
-	Com_Printf("---------------------------------------------------------------------------\n");
-	Com_Printf("%20s %9s\n","Zone Tag","Bytes");
-	Com_Printf("%20s %9s\n","--------","-----");
+	Com_Printf("^5---------------------------------------------------------------------------\n");
+	Com_Printf("%20s %9s\n","^7Zone Tag","^7Bytes");
+	Com_Printf("%20s %9s\n","^5--------","^5-----");
 	for (int i=0; i<TAG_COUNT; i++)
 	{
 		int iThisCount = TheZone.Stats.iCountsPerTag[i];
@@ -552,7 +552,7 @@ static void Z_Details_f(void)
 					   );
 		}
 	}
-	Com_Printf("---------------------------------------------------------------------------\n");
+	Com_Printf("^5---------------------------------------------------------------------------\n");
 
 	Z_Stats_f();
 }

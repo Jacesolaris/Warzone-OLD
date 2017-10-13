@@ -1683,7 +1683,7 @@ R_FontList_f
 ===============
 */
 void R_FontList_f( void ) {
-	Com_Printf ("------------------------------------\n");
+	Com_Printf ("^5------------------------------------\n");
 
 	FontIndexMap_t::iterator it;
 	for (it = g_mapFontIndexes.begin(); it != g_mapFontIndexes.end(); ++it)
@@ -1695,7 +1695,7 @@ void R_FontList_f( void ) {
 				font->mPointSize, font->mHeight, font->mAscender, font->mDescender);
 		}
 	}
-	Com_Printf ("------------------------------------\n");
+	Com_Printf ("^5------------------------------------\n");
 }
 
 void R_ShutdownFonts(void)

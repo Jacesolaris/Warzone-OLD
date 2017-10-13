@@ -782,7 +782,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 	if ( cl_shownet->integer == 1 ) {
 		Com_Printf ("%i ",msg->cursize);
 	} else if ( cl_shownet->integer >= 2 ) {
-		Com_Printf ("------------------\n");
+		Com_Printf ("^5------------------\n");
 	}
 
 	MSG_Bitstream(msg);

@@ -149,18 +149,18 @@ int Export_BotLibSetup(void)
 		Log_Open(logfilename);
 	}
 	//
-	botimport.Print(PRT_MESSAGE, "------- BotLib Initialization --------\n");
+	botimport.Print(PRT_MESSAGE, "^5------- ^7BotLib Initialization^5 --------\n");
 	//
 	botlibglobals.maxclients = (int) LibVarValue("maxclients", "128");
 	botlibglobals.maxentities = (int) LibVarValue("maxentities", "2048");
 
-	botimport.Print(PRT_MESSAGE, "* Running AAS_Setup.\n");
+	botimport.Print(PRT_MESSAGE, "^3* ^5Running AAS_Setup.\n");
 	errnum = AAS_Setup();			//be_aas_main.c
 	if (errnum != BLERR_NOERROR) {
 		botimport.Print(PRT_MESSAGE, "AAS_Setup failed.\n");
 		return errnum;
 	}
-	botimport.Print(PRT_MESSAGE, "* Running EA_Setup.\n");
+	botimport.Print(PRT_MESSAGE, "^3* ^5Running EA_Setup.\n");
 	errnum = EA_Setup();			//be_ea.c
 	if (errnum != BLERR_NOERROR) {
 		botimport.Print(PRT_MESSAGE, "EA_Setup failed.\n");
@@ -168,7 +168,7 @@ int Export_BotLibSetup(void)
 	}
 	
 	/*
-	botimport.Print(PRT_MESSAGE, "* Running BotSetupWeaponAI.\n");
+	botimport.Print(PRT_MESSAGE, "^3* ^5Running BotSetupWeaponAI.\n");
 	errnum = BotSetupWeaponAI();	//be_ai_weap.c
 	if (errnum != BLERR_NOERROR) {
 		botimport.Print(PRT_MESSAGE, "BotSetupWeaponAI failed.\n");
@@ -176,7 +176,7 @@ int Export_BotLibSetup(void)
 	}
 	*/
 	
-	botimport.Print(PRT_MESSAGE, "* Running BotSetupGoalAI.\n");
+	botimport.Print(PRT_MESSAGE, "^3* ^5Running BotSetupGoalAI.\n");
 	errnum = BotSetupGoalAI();		//be_ai_goal.c
 	if (errnum != BLERR_NOERROR) {
 		botimport.Print(PRT_MESSAGE, "BotSetupGoalAI failed.\n");
@@ -184,7 +184,7 @@ int Export_BotLibSetup(void)
 	}
 
 	/*
-	botimport.Print(PRT_MESSAGE, "* Running BotSetupChatAI.\n");
+	botimport.Print(PRT_MESSAGE, "^3* ^5Running BotSetupChatAI.\n");
 	errnum = BotSetupChatAI();		//be_ai_chat.c
 	if (errnum != BLERR_NOERROR) {
 		botimport.Print(PRT_MESSAGE, "BotSetupChatAI failed.\n");
@@ -192,7 +192,7 @@ int Export_BotLibSetup(void)
 	}
 	*/
 
-	botimport.Print(PRT_MESSAGE, "* Running BotSetupMoveAI.\n");
+	botimport.Print(PRT_MESSAGE, "^3* ^5Running BotSetupMoveAI.\n");
 	errnum = BotSetupMoveAI();		//be_ai_move.c
 	if (errnum != BLERR_NOERROR) {
 		botimport.Print(PRT_MESSAGE, "BotSetupMoveAI failed.\n");
@@ -203,7 +203,7 @@ int Export_BotLibSetup(void)
 	botlibglobals.botlibsetup = qtrue;
 
 	//
-	botimport.Print(PRT_MESSAGE, "--- BotLib Initialization Completed ---\n");
+	botimport.Print(PRT_MESSAGE, "^5--- ^7BotLib Initialization Completed^5 ---\n");
 	//
 
 	return BLERR_NOERROR;
@@ -303,7 +303,7 @@ int Export_BotLibLoadMap(const char *mapname)
 
 	if (!BotLibSetup("BotLoadMap")) return BLERR_LIBRARYNOTSETUP;
 	//
-	botimport.Print(PRT_MESSAGE, "------------ Map Loading ------------\n");
+	botimport.Print(PRT_MESSAGE, "^5------------ ^7Map Loading^5 ------------\n");
 	//startup AAS for the current map, model and sound index
 	errnum = AAS_LoadMap(mapname);
 	if (errnum != BLERR_NOERROR) return errnum;
@@ -311,7 +311,7 @@ int Export_BotLibLoadMap(const char *mapname)
 	BotInitLevelItems();		//be_ai_goal.h
 	BotSetBrushModelTypes();	//be_ai_move.h
 	//
-	botimport.Print(PRT_MESSAGE, "-------------------------------------\n");
+	botimport.Print(PRT_MESSAGE, "^5-------------------------------------\n");
 #ifdef DEBUG
 	botimport.Print(PRT_MESSAGE, "map loaded in %d msec\n", Sys_MilliSeconds() - starttime);
 #endif

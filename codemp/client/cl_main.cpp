@@ -854,13 +854,13 @@ void CL_RequestMotd( void ) {
 	if ( !cl_motd->integer ) {
 		return;
 	}
-	Com_Printf( "Resolving %s\n", UPDATE_SERVER_NAME );
+	Com_Printf( "^7Resolving ^3%s\n", UPDATE_SERVER_NAME );
 	if ( !NET_StringToAdr( UPDATE_SERVER_NAME, &cls.updateServer  ) ) {
 		Com_Printf( "Couldn't resolve address\n" );
 		return;
 	}
 	cls.updateServer.port = BigShort( PORT_UPDATE );
-	Com_Printf( "%s resolved to %s\n", UPDATE_SERVER_NAME,
+	Com_Printf( "^3%s ^5resolved to ^3%s\n", UPDATE_SERVER_NAME,
 		NET_AdrToString( cls.updateServer ) );
 
 	info[0] = 0;
@@ -988,7 +988,7 @@ void CL_Connect_f( void ) {
 	Q_strncpyz( cls.servername, server, sizeof(cls.servername) );
 
 	if (!NET_StringToAdr( cls.servername, &clc.serverAddress) ) {
-		Com_Printf ("Bad server address\n");
+		Com_Printf ("^1Bad server address\n");
 		cls.state = CA_DISCONNECTED;
 		return;
 	}
@@ -998,7 +998,7 @@ void CL_Connect_f( void ) {
 
 	serverString = NET_AdrToString(clc.serverAddress);
 
-	Com_Printf( "%s resolved to %s\n", cls.servername, serverString );
+	Com_Printf( "^3%s ^5resolved to ^3%s\n", cls.servername, serverString );
 
 	if( cl_guidServerUniq->integer )
 		CL_UpdateGUID( serverString, strlen( serverString ) );
@@ -1254,12 +1254,12 @@ CL_Clientinfo_f
 ==============
 */
 void CL_Clientinfo_f( void ) {
-	Com_Printf( "--------- Client Information ---------\n" );
+	Com_Printf( "^5--------- ^7Client Information^5 ---------\n" );
 	Com_Printf( "state: %i\n", cls.state );
 	Com_Printf( "Server: %s\n", cls.servername );
 	Com_Printf ("User info settings:\n");
 	Info_Print( Cvar_InfoString( CVAR_USERINFO ) );
-	Com_Printf( "--------------------------------------\n" );
+	Com_Printf( "^5--------------------------------------\n" );
 }
 
 
@@ -2450,7 +2450,7 @@ void CL_InitRef( void ) {
 	GetRefAPI_t	GetRefAPI;
 	char		dllName[MAX_OSPATH];
 
-	Com_Printf( "----- Initializing Renderer ----\n" );
+	Com_Printf( "^5----- ^7Initializing Renderer^5 ----\n" );
 
 	cl_renderer = Cvar_Get( "cl_renderer", DEFAULT_RENDER_LIBRARY, CVAR_ARCHIVE|CVAR_LATCH );
 
@@ -2589,7 +2589,7 @@ void CL_InitRef( void ) {
 
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 
-//	Com_Printf( "-------------------------------\n");
+//	Com_Printf( "^5-------------------------------\n");
 
 	if ( !ret ) {
 		Com_Error (ERR_FATAL, "Couldn't initialize refresh" );
@@ -2753,7 +2753,7 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
-//	Com_Printf( "----- Client Initialization -----\n" );
+//	Com_Printf( "^5----- ^7Client Initialization^5 -----\n" );
 
 	Con_Init ();
 
@@ -2925,7 +2925,7 @@ void CL_Init( void ) {
 
 	re->MenuOpenFrame(qfalse);
 
-//	Com_Printf( "----- Client Initialization Complete -----\n" );
+//	Com_Printf( "^5----- ^7Client Initialization Complete^5 -----\n" );
 }
 
 
@@ -2938,7 +2938,7 @@ CL_Shutdown
 void CL_Shutdown( void ) {
 	static qboolean recursive = qfalse;
 
-	//Com_Printf( "----- CL_Shutdown -----\n" );
+	//Com_Printf( "^5----- ^7CL_Shutdown^5 -----\n" );
 
 	if ( recursive ) {
 		printf ("recursive CL_Shutdown shutdown\n");
@@ -2997,7 +2997,7 @@ void CL_Shutdown( void ) {
 
 	CURL_Shutdown();
 
-	//Com_Printf( "-----------------------\n" );
+	//Com_Printf( "^5-----------------------\n" );
 
 }
 

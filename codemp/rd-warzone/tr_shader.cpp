@@ -8292,7 +8292,7 @@ void	R_ShaderList_f (void) {
 	int			count;
 	shader_t	*shader;
 
-	ri->Printf (PRINT_ALL, "-----------------------\n");
+	ri->Printf (PRINT_ALL, "^5-----------------------\n");
 
 	count = 0;
 	for ( i = 0 ; i < tr.numShaders ; i++ ) {
@@ -8332,7 +8332,7 @@ void	R_ShaderList_f (void) {
 		count++;
 	}
 	ri->Printf (PRINT_ALL, "%i total shaders\n", count);
-	ri->Printf (PRINT_ALL, "------------------\n");
+	ri->Printf (PRINT_ALL, "^5------------------\n");
 }
 
 /*
