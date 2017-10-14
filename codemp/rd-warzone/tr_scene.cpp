@@ -236,8 +236,11 @@ void RE_AddRefEntityToScene(const refEntity_t *ent) {
 
 	if (ent->reType == RT_PLAYERDATA)
 	{// Just for transmitting actual player entity origin from cgame...
-		VectorCopy(ent->origin, backEnd.playerCGameOrigin);
-		VectorCopy(ent->origin, tr.playerCGameOrigin);
+		VectorCopy(ent->origin, backEnd.worldOrigin);
+		VectorCopy(ent->angles, backEnd.worldAngles);
+		VectorCopy(ent->axis[0], backEnd.worldAxis[0]);
+		VectorCopy(ent->axis[1], backEnd.worldAxis[1]);
+		VectorCopy(ent->axis[2], backEnd.worldAxis[2]);
 		return;
 	}
 
@@ -1141,14 +1144,14 @@ void RE_RenderScene(const refdef_t *fd) {
 			Volumetric_Trace(&trace, backEnd.refdef.vieworg, NULL, NULL, down, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 			VectorCopy(trace.endpos, finalPos);
 			//VectorCopy(backEnd.refdef.vieworg, finalPos);
-			float hDiff = DistanceVertical(finalPos, backEnd.playerCGameOrigin);
+			float hDiff = DistanceVertical(finalPos, backEnd.worldOrigin);
 			if (r_testvalue1->integer)
 				finalPos[2] = backEnd.refdef.vieworg[2] - (hDiff * r_testvalue2->value);
 			else
 				finalPos[2] = backEnd.refdef.vieworg[2] + (hDiff * r_testvalue2->value);
 
 			//vec3_t finalPos;
-			//VectorCopy(backEnd.playerCGameOrigin, finalPos);
+			//VectorCopy(backEnd.worldOrigin, finalPos);
 			*/
 
 			vec3_t finalPos;

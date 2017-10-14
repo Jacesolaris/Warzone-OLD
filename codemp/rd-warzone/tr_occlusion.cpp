@@ -854,10 +854,6 @@ void RB_OcclusionCulling(void)
 
 #else //__EXPERIMENTAL_OCCLUSION__
 
-#include "Ravl/CVec.h"
-#include "Ratl/vector_vs.h"
-#include "Ratl/bits_vs.h"
-
 typedef enum
 {
 	OCC_RANGE_TYPE_SMALL,
@@ -865,9 +861,9 @@ typedef enum
 } occlusionRangesTypes_t;
 
 // Number of occlusions is still limited to <= tr.distanceCull... So usually we won't use them all...
-#define NUM_OCCLUSION_RANGES_BIG 13
+#define NUM_OCCLUSION_RANGES_BIG 17
 const float occlusionRangesBigMap[NUM_OCCLUSION_RANGES_BIG] =
-	{ 4096.0, 8192.0, 12288.0, 16384.0, 24576.0, 32768.0, 49152.0, 65536.0, 98304.0, 131072.0, 196608.0, 262144.0, 524288.0 };
+	{ 1024.0, 2048.0, 3072.0, 4096.0, 6144.0, 8192.0, 12288.0, 16384.0, 24576.0, 32768.0, 49152.0, 65536.0, 98304.0, 131072.0, 196608.0, 262144.0, 524288.0 };
 
 // Number of occlusions is still limited to <= tr.distanceCull... So usually we won't use them all...
 #define NUM_OCCLUSION_RANGES_SMALL 10
@@ -894,7 +890,7 @@ int GetOcclusionRangeTypeForMap(void)
 
 void RB_CheckOcclusions(void)
 {
-	if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill &&*/ r_occlusion->integer)
+	if (r_occlusion->integer)
 	{
 		float zfar = 0;
 		int rangeId = 0;
@@ -917,21 +913,26 @@ void RB_CheckOcclusions(void)
 
 				qglGetQueryObjectuiv(occlusionCheck[i], GL_QUERY_RESULT, &result);
 
-				if (r_occlusionTolerance->integer && result <= r_occlusionTolerance->integer)
+				// Total pixels of this screen...
+				float screenPixels = float(glConfig.vidWidth * glConfig.vidHeight) * r_superSampleMultiplier->value;
+				// r_occlusionTolerance should be between 0.0 and 0.001.. Lower is more accurate...
+				float pixelTolerance = Q_min(r_occlusionTolerance->value, 0.001) * screenPixels;
+
+				if (r_occlusionTolerance->value > 0.0 && result <= pixelTolerance)
 				{// Occlusion culled...
 					continue;
 				}
-				if (!r_occlusionTolerance->integer && result <= 0)
+				if (r_occlusionTolerance->value <= 0.0 && result <= 0)
 				{// Occlusion culled...
 					continue;
 				}
 				else
-				{
+				{// Enough pixels are visible on this test, if further away then the previous tests, set new zfar...
 					int thisRangeId = occlusionRangeId[i];
 					float rangeDistance = isBigMap ? occlusionRangesBigMap[thisRangeId] : occlusionRangesSmallMap[thisRangeId];
 
 					if (rangeDistance > zfar)
-					{
+					{// Seems this is further away then the previous occlusion tests zfar, use this instead...
 						rangeId = thisRangeId;
 						zfar = rangeDistance;
 					}
@@ -948,24 +949,21 @@ void RB_CheckOcclusions(void)
 
 		if (zfar < tr.distanceCull)
 		{// Seems we found a max zfar we can use...
+			int maxRangeId = isBigMap ? NUM_OCCLUSION_RANGES_BIG - 1 : NUM_OCCLUSION_RANGES_SMALL - 1;
+
 			if (zfar == 0.0 && numPassed == 0)
 			{// If none passed then we should assume minimum zfar...
-				
 				zfar = isBigMap ? occlusionRangesBigMap[1] : occlusionRangesSmallMap[1];
 			}
 			else if (zfar == 0.0)
-			{// If none passed then we assume max range...
+			{// If none passed then we assume max range... This should never be possible, but just in case...
 				zfar = tr.distanceCull;
 			}
 			else
 			{// We got a value to use, move it forward 1 range level...
-				if (rangeId >= isBigMap ? NUM_OCCLUSION_RANGES_BIG - 1 : NUM_OCCLUSION_RANGES_SMALL - 1)
+				if (rangeId >= maxRangeId)
 				{// If we are at furthest range, use the max range instead...
-					zfar = isBigMap ? occlusionRangesBigMap[rangeId] : occlusionRangesSmallMap[rangeId];
-				}
-				else if (rangeId == 0)
-				{// Always push further then range 0's range...
-					zfar = isBigMap ? occlusionRangesBigMap[1] : occlusionRangesSmallMap[1];
+					zfar = tr.distanceCull;
 				}
 				else
 				{
@@ -1053,7 +1051,7 @@ void RB_OcclusionCulling(void)
 
 	if (!r_nocull->integer)
 	{
-		if (/*!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill &&*/ r_occlusion->integer)
+		if (r_occlusion->integer)
 		{
 			if (nextOcclusionCheck == 0)
 			{// Initialize...
@@ -1111,11 +1109,19 @@ void RB_OcclusionCulling(void)
 
 			vec3_t mOrigin, mCameraForward, mCameraLeft, mCameraDown;
 	
-			VectorCopy(backEnd.worldOrigin, mOrigin);
+			VectorCopy(vec3_origin, mOrigin);
 
+//#define __USE_RENDERER_AXIS__
+
+#ifdef __USE_RENDERER_AXIS__
+			// Using renderer axis value...
 			extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
-			TR_AxisToAngles(backEnd.viewParms.ori.axis, backEnd.worldAngles);
+			TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
+			AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);
+#else //!__USE_RENDERER_AXIS__
+			// Using cgame viewangles value...
 			AngleVectors(backEnd.worldAngles, mCameraForward, mCameraLeft, mCameraDown);
+#endif //__USE_RENDERER_AXIS__
 
 			//ri->Printf(PRINT_WARNING, "ViewOrigin %.4f %.4f %.4f. ViewAngles %.4f %.4f %.4f.\n", mOrigin[0], mOrigin[1], mOrigin[2], viewangles[0], viewangles[1], viewangles[2]);
 
@@ -1127,8 +1133,7 @@ void RB_OcclusionCulling(void)
 			tess.minIndex = 0;
 			tess.maxIndex = 0;
 			
-			//for (int z = 512.0; z <= tr.distanceCull; z *= 2.0)
-			for (int z = 512.0, range = 0; z <= tr.distanceCull; z = isBigMap ? occlusionRangesBigMap[range] : occlusionRangesSmallMap[range], range++)
+			for (int z = isBigMap ? occlusionRangesBigMap[0] : occlusionRangesSmallMap[0], range = 0; z <= tr.distanceCull; z = isBigMap ? occlusionRangesBigMap[range] : occlusionRangesSmallMap[range], range++)
 			{
 				occlusionRangeId[numOcclusionQueries] = range;
 
@@ -1177,14 +1182,14 @@ void RB_OcclusionCulling(void)
 				/* Test the occlusion for this quad */
 				qglGenQueries(1, &occlusionCheck[numOcclusionQueries]);
 
-				if (r_occlusionTolerance->integer)
+				if (r_occlusionTolerance->value > 0.0)
 					qglBeginQuery(GL_SAMPLES_PASSED, occlusionCheck[numOcclusionQueries]);
 				else
 					qglBeginQuery(GL_ANY_SAMPLES_PASSED_CONSERVATIVE, occlusionCheck[numOcclusionQueries]); // This is supposebly a little faster??? I don't see it though...
 
 				RB_InstantQuad2(quadVerts, texCoords);
 
-				if (r_occlusionTolerance->integer)
+				if (r_occlusionTolerance->value > 0.0)
 					qglEndQuery(GL_SAMPLES_PASSED);
 				else
 					qglEndQuery(GL_ANY_SAMPLES_PASSED_CONSERVATIVE); // This is supposebly a little faster??? I don't see it though...

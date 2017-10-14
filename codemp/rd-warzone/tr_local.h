@@ -2534,8 +2534,7 @@ typedef struct {
 
 	vec3_t				worldOrigin;
 	vec3_t				worldAngles;
-
-	vec3_t				playerCGameOrigin;
+	vec3_t				worldAxis[3];
 } backEndState_t;
 
 /*
@@ -2842,8 +2841,6 @@ typedef struct trGlobals_s {
 	orientationr_t			ori;					// for current entity
 
 	trRefdef_t				refdef;
-
-	vec3_t					playerCGameOrigin;
 
 	int						viewCluster;
 
