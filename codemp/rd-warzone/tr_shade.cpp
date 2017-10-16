@@ -1687,11 +1687,12 @@ extern void Volumetric_Trace(trace_t *results, const vec3_t start, const vec3_t 
 
 qboolean Light_Visible(vec3_t from, vec3_t to, qboolean isSun, float radius)
 {
-
+#ifdef __GLOW_LIGHT_PVS__
 	if (!R_inPVS(tr.refdef.vieworg, to, tr.refdef.areamask))
 	{// Not in PVS, don't add it...
 		return qfalse;
 	}
+#endif //__GLOW_LIGHT_PVS__
 
 	//if (isSun)
 		return qtrue;
