@@ -2074,7 +2074,8 @@ typedef struct mnode_s {
 	// common with leaf and node
 	int			contents;		// -1 for nodes, to differentiate from leafs
 	int             visCounts[MAX_VISCOUNTS];	// node needs to be traversed if current
-	vec3_t		mins, maxs, centerOrigin;		// for bounding box culling
+	vec3_t			mins, maxs, centerOrigin;	// for bounding box culling
+	qboolean		centerOriginInitialized;
 	struct mnode_s	*parent;
 
 	// node specific

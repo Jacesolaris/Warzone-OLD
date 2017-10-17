@@ -606,6 +606,22 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 				return;
 			}
 
+			if (r_occlusion->integer)
+			{
+				if (!node->centerOrigin)
+				{// If this surface's center org has not been set up yet, set it up now...
+					node->centerOrigin[0] = (node->mins[0] + node->maxs[0]) * 0.5f;
+					node->centerOrigin[1] = (node->mins[1] + node->maxs[1]) * 0.5f;
+					node->centerOrigin[2] = (node->mins[2] + node->maxs[2]) * 0.5f;
+					node->centerOriginInitialized = qtrue;
+				}
+
+				if (Distance(node->centerOrigin, vec3_origin/*backEnd.refdef.vieworg*/) > Q_min(tr.occlusionZfar * 1.75, tr.occlusionOriginalZfar))
+				{
+					return;
+				}
+			}
+
 			int		r;
 
 			if (planeBits & 1) {

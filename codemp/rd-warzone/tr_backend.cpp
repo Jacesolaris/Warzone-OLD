@@ -1036,11 +1036,11 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		int             cubemapIndex, newCubemapIndex;
 		int				depthRange;
 
-		//if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
+		//if ((backEnd.depthFill || (tr.viewParms.flags & VPF_DEPTHSHADOW)) && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
 
 		drawSurf = &drawSurfs[i];
 
-		if (!drawSurf->surface) continue;
+		if (!drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES) continue;
 
 #ifdef __PLAYER_BASED_CUBEMAPS__
 #ifdef __REALTIME_CUBEMAP__

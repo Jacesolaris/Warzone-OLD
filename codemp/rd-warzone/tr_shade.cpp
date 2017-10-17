@@ -1769,6 +1769,14 @@ void RB_UpdateCloseLights ( void )
 
 		if (distance > 4096.0) continue; // Don't even check at this range. Traces are costly!
 
+		if (r_occlusion->integer)
+		{// Check occlusion zfar distance as well...
+			if (distance > Q_min(tr.occlusionZfar * 1.75, tr.occlusionOriginalZfar))
+			{
+				continue;
+			}
+		}
+
 		if (NUM_CLOSE_LIGHTS < MAX_DEFERRED_LIGHTS)
 		{// Have free light slots for a new light...
 			vec3_t from;
