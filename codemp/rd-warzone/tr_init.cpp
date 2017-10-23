@@ -1629,7 +1629,7 @@ void R_Register( void )
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
-	r_ssdm = ri->Cvar_Get("r_ssdm", "1", CVAR_ARCHIVE);
+	r_ssdm = ri->Cvar_Get("r_ssdm", "0", CVAR_ARCHIVE);
 	r_ssr = ri->Cvar_Get("r_ssr", "0", CVAR_ARCHIVE);
 	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.05", CVAR_ARCHIVE);
 	r_sse = ri->Cvar_Get("r_sse", "0", CVAR_ARCHIVE);
