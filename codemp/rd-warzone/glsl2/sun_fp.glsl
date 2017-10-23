@@ -1,12 +1,7 @@
 uniform sampler2D u_DiffuseMap;
 
 uniform vec2	u_Dimensions;
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // ExtinctionCoefficient
-uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, shadowPass
+
 uniform vec4	u_Local7; // SUN_COLOR_MAIN
 uniform vec4	u_Local8; // SUN_COLOR_SECONDARY
 uniform vec4	u_Local9; // SUN_COLOR_TERTIARY
@@ -29,12 +24,6 @@ out vec4 out_NormalDetail;
 #define m_vertPos		var_vertPos
 #define m_ViewDir		var_ViewDir
 
-
-/*
-const vec3 sunColor1 = vec3(1.0,0.7,0.0);
-const vec3 sunColor2 = vec3(0.3,0.2,0.0);
-const vec3 sunColor3 = vec3(0.2,0.1,1.0);
-*/
 
 vec3 sunColor1 = u_Local7.rgb;
 vec3 sunColor2 = u_Local8.rgb;
@@ -223,10 +212,6 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
     fragColor.xyz -= vec3(ring(ray,pos,1.03,11.0))*2.0;
     fragColor = max( vec4(0.0), fragColor );
     
-    //float s3=ringRayNoise(ray,pos,0.96,1.0,mr,time);
-	//s3 *= u_Local9.b;
-    //fragColor.xyz += mix(vec3(1.0,0.6,0.1),vec3(1.0,0.95,1.0),pow(s3,3.0))*s3;
-
     float zero=sphereZero(ray,pos,0.9);
 
     if (zero>0.0) 

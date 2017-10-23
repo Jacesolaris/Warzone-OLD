@@ -1251,14 +1251,9 @@ extern vec3_t  MAP_INFO_SIZE;
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum, qboolean IS_DEPTH_PASS)
 {
 	vec4_t	local1, local3, local4, local5;
-	float	specularScale = 1.0;
 	float	materialType = 0.0;
-	float   parallaxScale = 1.0;
-	float	cubemapScale = 0.0;
-	float	isMetalic = 0.0;
 	float	hasOverlay = 0.0;
 	float	doSway = 0.0;
-	float	phongFactor = r_blinnPhong->value;
 	float	hasSteepMap = 0;
 	float	hasWaterEdgeMap = 0;
 	float	hasSplatMap1 = 0;
@@ -1274,36 +1269,23 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 	if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 	{
-		specularScale = 1.0;
-		cubemapScale = 0.7;
 		materialType = (float)MATERIAL_WATER;
-		parallaxScale = 2.0;
 	}
 	else if (tess.shader == tr.sunShader)
 	{// SPECIAL MATERIAL TYPE FOR SUN
-		specularScale = 0.0;
-		cubemapScale = 0.0;
 		materialType = 1025.0;
-		parallaxScale = 0.0;
 	}
 	else if (tess.shader == tr.moonShader)
 	{// SPECIAL MATERIAL TYPE FOR MOON
-		specularScale = 0.0;
-		cubemapScale = 0.0;
 		materialType = 1025.0;
-		parallaxScale = 0.0;
+	}
+	else if (isSky)
+	{// SPECIAL MATERIAL TYPE FOR SKY
+		materialType = 1024.0;
 	}
 	else
 	{
 		materialType = materialSettings[0];
-		specularScale = materialSettings[1];
-		cubemapScale = materialSettings[2];
-		parallaxScale = materialSettings[3];
-
-		if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_SOLIDMETAL || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_HOLLOWMETAL)
-		{
-			isMetalic = 1.0;
-		}
 	}
 
 	if (!IS_DEPTH_PASS)
@@ -1349,47 +1331,30 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			hasSplatMap4 = 1.0;
 		}
 
-		// Shader overrides material...
-		if (pStage->cubeMapScale > 0.0)
-		{
-			cubemapScale = pStage->cubeMapScale;
-		}
-		else if (tess.shader->customCubeMapScale != -1.0)
-		{
-			cubemapScale = tess.shader->customCubeMapScale;
-		}
-
-		if (tess.shader->customSpecularScale != -1.0)
-		{
-			specularScale = tess.shader->customSpecularScale;
-		}
-		
-
 		if (pStage->isFoliage)
 		{
 			doSway = 0.7;
 		}
 
-		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, isSky ? 1024.0 : materialType);
+		VectorSet4(local1, MAP_INFO_MAXSIZE, doSway, overlaySway, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-		VectorSet4(local3, 0.0, 0.0, r_cubemapCullRange->value, cubemapScale);
+
+		vec4_t local2;
+		VectorSet4(local2, hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, local2);
+
+		vec4_t local3;
+		VectorSet4(local3, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-		VectorSet4(local4, hasNormalMap, isMetalic, 0.0, doSway);
+
+		vec4_t local4;
+		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * 2.0 * MAP_GLOW_MULTIPLIER;
+		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
-		VectorSet4(local5, hasOverlay, overlaySway, phongFactor, hasSteepMap);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
-		vec4_t local6;
-		VectorSet4(local6, r_sunlightSpecular->value, hasWaterEdgeMap, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, local6);
-
-		vec4_t local7;
-		VectorSet4(local7, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, local7);
-
-		vec4_t local8;
-		VectorSet4(local8, (float)stageNum, (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * 2.0 * MAP_GLOW_MULTIPLIER, MAP_INFO_MAXS[2], r_showsplat->value);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local8);
+		vec4_t local5;
+		VectorSet4(local5, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5); // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky Only...
 	}
 	else
 	{// Don't waste time on unneeded stuff... Absolute minimum shader complexity...
@@ -1398,68 +1363,15 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			doSway = 0.7;
 		}
 
-		VectorSet4(local1, 0.0, 0.0, specularScale, isSky ? 1024.0 : materialType);
+		VectorSet4(local1, 0.0, doSway, overlaySway, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 
-		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local4);
-
-		VectorSet4(local4, 0.0, 0.0, 0.0, doSway);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
-
-		VectorSet4(local5, 0.0, overlaySway, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
-
-		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, local4);
-
-		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, local4);
-
-		VectorSet4(local4, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, local4);
-	}
-
-	vec4_t specMult;
-
-	if (!IS_DEPTH_PASS)
-	{// Don't waste time on speculars...
-		if (pStage->specularScale[0] + pStage->specularScale[1] + pStage->specularScale[2] + pStage->specularScale[3] != 0.0)
-		{// Shader Specified...
-			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
-		}
-		else // Material Defaults...
-		{
-			VectorSet4(specMult, specularScale, specularScale, specularScale, 1.0);
-
-			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ARMOR /* ARMOR */
-				|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_PLASTIC /* PLASTIC */
-				|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_MARBLE /* MARBLE */)
-			{// Armor, plastic, and marble should remain somewhat shiny...
-				specMult[0] = 0.333;
-				specMult[1] = 0.333;
-				specMult[2] = 0.333;
-				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
-			}
-			else if (!(isMetalic > 0.0)
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_SOLIDMETAL
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_HOLLOWMETAL
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_GLASS /* GLASS */
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_SHATTERGLASS /* SHATTERGLASS */
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_BPGLASS /* BPGLASS */
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_COMPUTER /* COMPUTER */
-				&& (tess.shader->surfaceFlags & MATERIAL_MASK) != MATERIAL_ICE /* ICE */)
-			{// Only if not metalic... Metals should remain nice and shiny...
-				specMult[0] *= 0.04;
-				specMult[1] *= 0.04;
-				specMult[2] *= 0.04;
-				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
-			}
-			else
-			{
-				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
-			}
-		}
+		vec4_t vector;
+		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector); // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector); // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky Only...
 	}
 
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -2887,9 +2799,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if ( sp == &tr.lightAllShader || sp == &tr.shadowPassShader )
 		{
 			int i;
-			vec4_t enableTextures;
 
-			VectorSet4(enableTextures, 0, 0, 0, 0);
 			if ((r_lightmap->integer == 1 || r_lightmap->integer == 2) && pStage->bundle[TB_LIGHTMAP].image[0])
 			{
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
@@ -2932,44 +2842,30 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (pStage->bundle[TB_NORMALMAP].image[0])
 				{
 					R_BindAnimatedImageToTMU(&pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
-					enableTextures[0] = 1.0f;
 				}
 				else if (r_normalMapping->integer >= 2)
 				{
 					GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
 				}
 
-				if (pStage->bundle[TB_DELUXEMAP].image[0])
+				/*if (pStage->bundle[TB_DELUXEMAP].image[0])
 				{
 					R_BindAnimatedImageToTMU(&pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
-					enableTextures[1] = 1.0f;
 				}
 				else if (r_deluxeMapping->integer)
 				{
 					GL_BindToTMU(tr.whiteImage, TB_DELUXEMAP);
-				}
+				}*/
 
-				if (pStage->bundle[TB_SPECULARMAP].image[0])
+				/*if (pStage->bundle[TB_SPECULARMAP].image[0])
 				{
 					R_BindAnimatedImageToTMU(&pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
-					enableTextures[2] = 1.0f;
 				}
 				else if (r_specularMapping->integer)
 				{
 					GL_BindToTMU(tr.whiteImage, TB_SPECULARMAP);
-				}
-
-				if (IS_DEPTH_PASS)
-				{
-					enableTextures[3] = 0.0f;
-				}
-				else
-				{
-					enableTextures[3] = 0.0;
-				}
+				}*/
 			}
-
-			GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
 		}
 		else if ( pStage->bundle[1].image[0] != 0 )
 		{

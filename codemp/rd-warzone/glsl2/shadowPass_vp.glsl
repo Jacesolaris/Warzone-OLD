@@ -1,17 +1,17 @@
-attribute vec2 attr_TexCoord0;
-attribute vec2 attr_TexCoord1;
+attribute vec2				attr_TexCoord0;
+attribute vec2				attr_TexCoord1;
 
-attribute vec4 attr_Color;
+attribute vec4				attr_Color;
 
-attribute vec3 attr_Position;
-attribute vec3 attr_Normal;
-attribute vec4 attr_Tangent;
+attribute vec3				attr_Position;
+attribute vec3				attr_Normal;
+attribute vec4				attr_Tangent;
 
-attribute vec3 attr_Position2;
-attribute vec3 attr_Normal2;
-attribute vec4 attr_Tangent2;
-attribute vec4 attr_BoneIndexes;
-attribute vec4 attr_BoneWeights;
+attribute vec3				attr_Position2;
+attribute vec3				attr_Normal2;
+attribute vec4				attr_Tangent2;
+attribute vec4				attr_BoneIndexes;
+attribute vec4				attr_BoneWeights;
 
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
@@ -25,50 +25,41 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
 #define USE_SKELETAL_ANIM	u_Settings1.g
 #define USE_FOG				u_Settings1.b
 
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // ExtinctionCoefficient
-uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local6; // useSunLightSpecular
-uniform vec4	u_Local9;
 
-uniform float	u_Time;
+uniform float				u_Time;
 
-uniform vec3   u_ViewOrigin;
+uniform vec3				u_ViewOrigin;
 
-uniform int    u_TCGen0;
-uniform vec3   u_TCGen0Vector0;
-uniform vec3   u_TCGen0Vector1;
-uniform vec3   u_LocalViewOrigin;
+uniform int					u_TCGen0;
+uniform vec3				u_TCGen0Vector0;
+uniform vec3				u_TCGen0Vector1;
+uniform vec3				u_LocalViewOrigin;
 
-uniform int    u_DeformGen;
-uniform float  u_DeformParams[5];
+uniform int					u_DeformGen;
+uniform float				u_DeformParams[5];
 
-uniform vec4   u_DiffuseTexMatrix;
-uniform vec4   u_DiffuseTexOffTurb;
+uniform vec4				u_DiffuseTexMatrix;
+uniform vec4				u_DiffuseTexOffTurb;
 
-uniform mat4   u_ModelViewProjectionMatrix;
-uniform mat4	u_ViewProjectionMatrix;
-uniform mat4   u_ModelMatrix;
-uniform mat4	u_NormalMatrix;
+uniform mat4				u_ModelViewProjectionMatrix;
+uniform mat4				u_ModelMatrix;
 
-uniform float  u_VertexLerp;
-uniform mat4   u_BoneMatrices[20];
+//uniform float				u_VertexLerp;
+uniform mat4				u_BoneMatrices[20];
 
-uniform vec2	u_textureScale;
+uniform vec2				u_textureScale;
 
-uniform int    u_AlphaGen;
-uniform vec4   u_BaseColor;
-uniform vec4   u_VertColor;
+uniform int					u_AlphaGen;
+uniform vec4				u_BaseColor;
+uniform vec4				u_VertColor;
 
-uniform float	u_PortalRange;
-uniform vec4	u_PrimaryLightOrigin;
+uniform float				u_PortalRange;
+uniform vec4				u_PrimaryLightOrigin;
 
-varying vec2   var_TexCoords;
-varying vec3   var_Position;
-varying vec3   var_Normal;
-varying vec4   var_Color;
+varying vec2				var_TexCoords;
+varying vec3				var_Position;
+varying vec3				var_Normal;
+varying vec4				var_Color;
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {

@@ -1,66 +1,84 @@
-//#define USE_ALPHA_TEST
-//#define USE_GLOW_DETAIL_BUFFERS
+#define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
-uniform sampler2D u_DiffuseMap;
-uniform sampler2D u_OverlayMap;
-uniform sampler2D u_SplatMap1;
-uniform sampler2D u_SplatMap2;
+uniform sampler2D					u_DiffuseMap;
+uniform sampler2D					u_OverlayMap; // Night sky image... When doing sky...
+uniform sampler2D					u_SplatMap1;
+uniform sampler2D					u_SplatMap2;
 
-uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
-uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
+uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
 
-#define USE_TC				u_Settings0.r
-#define USE_DEFORM			u_Settings0.g
-#define USE_RGBA			u_Settings0.b
-#define USE_TEXTURECLAMP	u_Settings0.a
+#define USE_TC						u_Settings0.r
+#define USE_DEFORM					u_Settings0.g
+#define USE_RGBA					u_Settings0.b
+#define USE_TEXTURECLAMP			u_Settings0.a
 
-#define USE_VERTEX_ANIM		u_Settings1.r
-#define USE_SKELETAL_ANIM	u_Settings1.g
-#define USE_BLEND			u_Settings1.b
-#define USE_IS2D			u_Settings1.a
+#define USE_VERTEX_ANIM				u_Settings1.r
+#define USE_SKELETAL_ANIM			u_Settings1.g
+#define USE_BLEND					u_Settings1.b
+#define USE_IS2D					u_Settings1.a
 
-#define USE_LIGHTMAP		u_Settings2.r
-#define USE_GLOW_BUFFER		u_Settings2.g
-#define USE_CUBEMAP			u_Settings2.b
-#define USE_TRIPLANAR		u_Settings2.a
+#define USE_LIGHTMAP				u_Settings2.r
+#define USE_GLOW_BUFFER				u_Settings2.g
+#define USE_CUBEMAP					u_Settings2.b
+#define USE_TRIPLANAR				u_Settings2.a
 
-#define USE_REGIONS			u_Settings3.r
-#define USE_ISDETAIL		u_Settings3.g
-#define USE_DETAIL_COORD	u_Settings3.b
+#define USE_REGIONS					u_Settings3.r
+#define USE_ISDETAIL				u_Settings3.g
+#define USE_DETAIL_COORD			u_Settings3.b
 
-uniform vec2	u_Dimensions;
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // dayNightEnabled, nightScale, skyDirection, auroraEnabled
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local9;
+uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, WATER_LEVEL
+uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
+uniform vec4						u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
+
+#define SHADER_MAP_SIZE				u_Local1.r
+#define SHADER_SWAY					u_Local1.g
+#define SHADER_OVERLAY_SWAY			u_Local1.b
+#define SHADER_MATERIAL_TYPE		u_Local1.a
+
+#define SHADER_HAS_STEEPMAP			u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
+#define SHADER_HAS_NORMALMAP		u_Local2.b
+#define SHADER_WATER_LEVEL			u_Local2.a
+
+#define SHADER_HAS_SPLATMAP1		u_Local3.r
+#define SHADER_HAS_SPLATMAP2		u_Local3.g
+#define SHADER_HAS_SPLATMAP3		u_Local3.b
+#define SHADER_HAS_SPLATMAP4		u_Local3.a
+
+#define SHADER_STAGE_NUM			u_Local4.r
+#define SHADER_GLOW_STRENGTH		u_Local4.g
+#define SHADER_SHOW_SPLAT			u_Local4.b
+
+#define SHADER_DAY_NIGHT_ENABLED	u_Local5.r
+#define SHADER_NIGHT_SCALE			u_Local5.g
+#define SHADER_SKY_DIRECTION		u_Local5.b
+#define SHADER_AURORA_ENABLED		u_Local5.a
 
 
-uniform vec3				u_ViewOrigin;
-uniform float				u_Time;
-uniform vec2				u_AlphaTestValues;
-
-#define ATEST_NONE	0
-#define ATEST_LT	1
-#define ATEST_GT	2
-#define ATEST_GE	3
+uniform vec2						u_Dimensions;
+uniform vec3						u_ViewOrigin;
+uniform float						u_Time;
 
 
-varying vec2	var_TexCoords;
-varying vec3	var_Position;
-varying vec3	var_Normal;
-varying vec4	var_Color;
+varying vec2						var_TexCoords;
+varying vec3						var_Position;
+varying vec3						var_Normal;
+varying vec4						var_Color;
 
-out vec4 out_Glow;
-out vec4 out_Position;
-out vec4 out_Normal;
-out vec4 out_NormalDetail;
+out vec4							out_Glow;
+out vec4							out_Position;
+out vec4							out_Normal;
+out vec4							out_NormalDetail;
 
 void main()
 {
-	if ((USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0) && USE_CUBEMAP <= 0.0)
+	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color... When rendering cubes, though, we still need textures...
 		gl_FragColor = vec4(1.0);
 	}
@@ -68,39 +86,39 @@ void main()
 	{
 		vec2 texCoords = var_TexCoords;
 
-		if (u_Local4.a > 0.0)
+		if (SHADER_SWAY > 0.0)
 		{// Sway...
-			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - texCoords.y) + 1.0), 0.0);
+			texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - texCoords.y) + 1.0), 0.0);
 		}
 
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
 
 
-		if (u_Local1.a == 1024.0)
+		if (SHADER_MATERIAL_TYPE == 1024.0)
 		{// This is sky, and aurora is enabled...
-			if (u_Local2.r > 0.0 && u_Local2.g > 0.0)
+			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
 				vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
-				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, u_Local2.g); // Mix in night sky with original sky from day -> night...
+				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, SHADER_NIGHT_SCALE); // Mix in night sky with original sky from day -> night...
 			}
 
-			if (u_Local2.b != 4.0 && u_Local2.b != 5.0													/* Not up/down sky textures */
-				&& u_Local2.a > 0.0																		/* Auroras Enabled */
-				&& ((u_Local2.r > 0.0 && u_Local2.g > 0.0) /* Night Aurora */ || u_Local2.a >= 2.0		/* Forced day Aurora */))
+			if (SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0													/* Not up/down sky textures */
+				&& SHADER_AURORA_ENABLED > 0.0																		/* Auroras Enabled */
+				&& ((SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0) /* Night Aurora */ || SHADER_AURORA_ENABLED >= 2.0		/* Forced day Aurora */))
 			{// Aurora is enabled, and this is not up/down sky textures, add a sexy aurora effect :)
 				vec2 fragCoord = texCoords;
 
-				if (u_Local2.b == 2.0 || u_Local2.b == 3.0)
+				if (SHADER_SKY_DIRECTION == 2.0 || SHADER_SKY_DIRECTION == 3.0)
 				{// Forward or back sky textures, invert the X axis to make the aura seamless...
 					fragCoord.x = 1.0 - fragCoord.x;
 				}
 
 				float auroraPower;
 
-				if (u_Local2.a >= 2.0)
+				if (SHADER_AURORA_ENABLED >= 2.0)
 					auroraPower = 1.0; // Day enabled aurora - always full strength...
 				else
-					auroraPower = u_Local2.g;
+					auroraPower = SHADER_NIGHT_SCALE;
 
 				vec2 uv = fragCoord.xy;
 				
@@ -146,21 +164,6 @@ void main()
 
 
 		gl_FragColor.a *= var_Color.a;
-
-#ifdef USE_ALPHA_TEST
-		if (u_AlphaTestValues.r > 0.0)
-		{
-			if (u_AlphaTestValues.r == ATEST_LT)
-				if (gl_FragColor.a >= u_AlphaTestValues.g)
-					discard;
-			if (u_AlphaTestValues.r == ATEST_GT)
-				if (gl_FragColor.a <= u_AlphaTestValues.g)
-					discard;
-			if (u_AlphaTestValues.r == ATEST_GE)
-				if (gl_FragColor.a < u_AlphaTestValues.g)
-					discard;
-		}
-#endif //USE_ALPHA_TEST
 	}
 
 	if (USE_BLEND > 0.0)
@@ -183,34 +186,35 @@ void main()
 			gl_FragColor.a = colStr;
 		}
 	}
-
-	out_Glow = vec4(0.0);
-
-	if (u_Local1.a == 1024.0 && u_Local2.r > 0.0 && u_Local2.g > 0.7)
-	{// Add night sky to glow map...
-		out_Glow = gl_FragColor;
-		
-		// Scale by closeness to actual night...
-		float mult = (u_Local2.g - 0.7) * 3.333;
-		out_Glow *= mult;
-
-		// And enhance contrast...
-		out_Glow.rgb *= out_Glow.rgb;
-
-		// And reduce over-all brightness because it's sky and not a close light...
-		out_Glow.rgb *= 0.5;
-	}
-
-#define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
-
-	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
+	
+	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)
 	{
-		out_Position = vec4(var_Position.rgb, u_Local1.a+1.0);
+		if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7)
+		{// Add night sky to glow map...
+			out_Glow = gl_FragColor;
+		
+			// Scale by closeness to actual night...
+			float mult = (SHADER_NIGHT_SCALE - 0.7) * 3.333;
+			out_Glow *= mult;
+
+			// And enhance contrast...
+			out_Glow.rgb *= out_Glow.rgb;
+
+			// And reduce over-all brightness because it's sky and not a close light...
+			out_Glow.rgb *= 0.5;
+		}
+		else
+		{
+			out_Glow = vec4(0.0);
+		}
+
+		out_Position = vec4(var_Position.rgb, SHADER_MATERIAL_TYPE+1.0);
 		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, 1.0);
 		out_NormalDetail = vec4(0.0);
 	}
 	else
 	{
+		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
 		out_NormalDetail = vec4(0.0);

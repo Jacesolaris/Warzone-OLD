@@ -2,12 +2,7 @@ uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_SpecularMap;
 
 uniform vec2	u_Dimensions;
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // ExtinctionCoefficient
-uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, shadowPass
+
 uniform vec4	u_Local9;
 
 uniform float	u_Time;

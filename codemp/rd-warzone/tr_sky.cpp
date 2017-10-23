@@ -426,52 +426,53 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
-	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL /*| ATTR_TANGENT*/);
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
 	{
 		shaderProgram_t *sp = &tr.shadowPassShader;
 		vec4_t vector;
 
-		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL /*| ATTR_TANGENT*/);
-		//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_BindProgram(sp);
 
-		VectorSet4(vector, 0.0, 0.0, 1.0, 1024.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
-
-		float auroraEnabled = 0.0;
-
-		if (AURORA_ENABLED && AURORA_ENABLED_DAY)
-			auroraEnabled = 2.0;
-		else if (AURORA_ENABLED)
-			auroraEnabled = 1.0;
-
-		VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, auroraEnabled);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // dayNightEnabled, nightScale
-
-		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vector);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vector);
-
-
-		{// Set up basic shader settings... This way we can avoid the bind bloat of dumb vert shader #ifdefs...
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vector);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vector);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vector);
-			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vector);
+		{// used...
+			VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // MAP_SIZE, sway, overlaySway, materialType
 		}
 
-		GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, vector);
+		{// unused...
+			VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector); // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
+		}
 
-		VectorSet4(vector, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-		GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, vector);
+		{// used...
+			float auroraEnabled = 0.0;
+
+			if (AURORA_ENABLED && AURORA_ENABLED_DAY)
+				auroraEnabled = 2.0;
+			else if (AURORA_ENABLED)
+				auroraEnabled = 1.0;
+
+			VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, auroraEnabled);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector); // dayNightEnabled, nightScale, skyDirection, auroraEnabled
+		}
+
+
+		{// unused...
+			VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vector); // useTC, useDeform, useRGBA, isTextureClamped
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vector); // useVertexAnim, useSkeletalAnim, blendMode, is2D
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vector); // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vector); // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+		}
 		
+
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+
+
 		color[0] = 
 		color[1] = 
 		color[2] = backEnd.refdef.colorScale;
@@ -499,8 +500,10 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		// Night image...
 		GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GL_BindToTMU(nightImage, TB_OVERLAYMAP);
+
 		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GL_BindToTMU(tr.auroraImage[0], TB_SPLATMAP1);
+
 		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		GL_BindToTMU(tr.auroraImage[1], TB_SPLATMAP2);
 	}
@@ -1019,17 +1022,10 @@ void DrawSkyDome ( shader_t *skyShader )
 
 	GLSL_BindProgram(&tr.skyDomeShader);
 
-	matrix_t /*trans, model, mvp,*/ invMvp, normalMatrix;
+	matrix_t invMvp, normalMatrix;
 
-	//Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	//Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	//Matrix16SimpleInverse( mvp, invMvp);
-	//Matrix16SimpleInverse( model, normalMatrix);
 	Matrix16SimpleInverse(glState.modelviewProjection, invMvp);
 	Matrix16SimpleInverse(glState.modelview, normalMatrix); // Whats a normal matrix with rend2???? I have no idea!
-	
-	//mat4 normalMatrix = transpose(inverse(modelView));
 
 	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	GLSL_SetUniformMatrix16(&tr.skyDomeShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);
@@ -1041,7 +1037,7 @@ void DrawSkyDome ( shader_t *skyShader )
 
 	GLSL_SetUniformVec3(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 	GLSL_SetUniformVec3(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-	//GLSL_SetUniformVec4(&tr.skyDomeShader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+
 	vec3_t out;
 	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
 	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
@@ -1102,21 +1098,7 @@ void DrawSkyDome ( shader_t *skyShader )
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
 
-/*
-uniform sampler2D			u_DiffuseMap;
-uniform sampler2D			u_SteepMap;
-uniform sampler2D			u_WaterEdgeMap;
-uniform sampler2D			u_SplatMap1;
-uniform sampler2D			u_SplatMap2;
-uniform sampler2D			u_SplatMap3;
 
-#define tint	u_DiffuseMap			//the color of the sky on the half-sphere where the sun is. (time x height)
-#define tint2	u_SteepMap				//the color of the sky on the opposite half-sphere. (time x height)
-#define sun		u_WaterEdgeMap				//sun texture (radius x time)
-#define moon	u_SplatMap1				//moon texture (circular)
-#define clouds1 u_SplatMap2				//light clouds texture (spherical UV projection)
-#define clouds2 u_SplatMap3				//heavy clouds texture (spherical UV projection)
-*/
 	image_t *tintImage = R_FindImageFile("textures/skydomes/default_tint", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	image_t *tint2Image = R_FindImageFile("textures/skydomes/default_tint2", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	image_t *sunImage = R_FindImageFile("textures/skydomes/default_sun", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_GLOW);

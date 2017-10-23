@@ -1,4 +1,3 @@
-uniform vec4		u_Local6; // blah, blah, blah, MAP_WATER_LEVEL
 uniform vec4		u_Local9;
 uniform vec4		u_Local10;
 
@@ -64,10 +63,6 @@ void main()
 
 	float isWater = 1.0;
 	out_Color = vec4(0.0059, 0.3096, 0.445, 0.5);
-
-	//if (u_Local9.r >= 3.0 && var_Normal.r > 0.1) isWater = 2.0;
-	//else if (u_Local9.r >= 2.0 && var_Normal.g > 0.1) isWater = 2.0;
-	//else if (u_Local9.r >= 1.0 && var_Normal.b > 0.1) isWater = 2.0;
 
 	float pitch = vectoangles( var_Normal.xyz ).r;
 	

@@ -1,121 +1,89 @@
-//#define USE_ALPHA_TEST
-//#define USE_GLOW_DETAIL_BUFFERS
 //#define USE_DETAIL_TEXTURES
 
 
-#define SNOW_HEIGHT_STRENGTH 0.25 // Distance above water to start snow...
+#define SNOW_HEIGHT_STRENGTH		0.25 // Distance above water to start snow...
+#define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
 
-uniform sampler2D			u_DiffuseMap;
-uniform sampler2D			u_SteepMap;
-uniform sampler2D			u_WaterEdgeMap;
-uniform sampler2D			u_SplatControlMap;
-uniform sampler2D			u_SplatMap1;
-uniform sampler2D			u_SplatMap2;
-uniform sampler2D			u_SplatMap3;
+uniform sampler2D					u_DiffuseMap;
+uniform sampler2D					u_SteepMap;
+uniform sampler2D					u_WaterEdgeMap;
+uniform sampler2D					u_SplatControlMap;
+uniform sampler2D					u_SplatMap1;
+uniform sampler2D					u_SplatMap2;
+uniform sampler2D					u_SplatMap3;
 
-uniform sampler2D			u_RoadsControlMap;
-uniform sampler2D			u_RoadMap;
+uniform sampler2D					u_RoadsControlMap;
+uniform sampler2D					u_RoadMap;
 
-uniform sampler2D			u_DetailMap;
-uniform sampler2D			u_GlowMap;
+uniform sampler2D					u_DetailMap;
+uniform sampler2D					u_GlowMap;
 
-uniform sampler2D			u_LightMap;
+uniform sampler2D					u_LightMap;
 
-uniform sampler2D			u_NormalMap;
+uniform sampler2D					u_NormalMap;
 
-uniform sampler2D			u_DeluxeMap;
+uniform vec4						u_MapAmbient; // a basic light/color addition across the whole map...
 
-uniform sampler2D			u_SpecularMap;
+uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMethod, is2D
+uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, USE_GLOW_BLEND_MODE
 
-uniform sampler2D			u_ShadowMap;
+#define USE_TC						u_Settings0.r
+#define USE_DEFORM					u_Settings0.g
+#define USE_RGBA					u_Settings0.b
+#define USE_TEXTURECLAMP			u_Settings0.a
 
-#define textureCubeLod textureLod // UQ1: > ver 140 support
-uniform samplerCube			u_CubeMap;
+#define USE_VERTEX_ANIM				u_Settings1.r
+#define USE_SKELETAL_ANIM			u_Settings1.g
+#define USE_BLEND					u_Settings1.b
+#define USE_IS2D					u_Settings1.a
 
-uniform sampler2D			u_OverlayMap;
+#define USE_LIGHTMAP				u_Settings2.r
+#define USE_GLOW_BUFFER				u_Settings2.g
+#define USE_CUBEMAP					u_Settings2.b
+#define USE_TRIPLANAR				u_Settings2.a
 
-uniform vec4				u_MapAmbient; // a basic light/color addition across the whole map...
-
-uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, blendMethod, is2D
-uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, USE_GLOW_BLEND_MODE
-
-#define USE_TC				u_Settings0.r
-#define USE_DEFORM			u_Settings0.g
-#define USE_RGBA			u_Settings0.b
-#define USE_TEXTURECLAMP	u_Settings0.a
-
-#define USE_VERTEX_ANIM		u_Settings1.r
-#define USE_SKELETAL_ANIM	u_Settings1.g
-#define USE_BLEND			u_Settings1.b
-#define USE_IS2D			u_Settings1.a
-
-#define USE_LIGHTMAP		u_Settings2.r
-#define USE_GLOW_BUFFER		u_Settings2.g
-#define USE_CUBEMAP			u_Settings2.b
-#define USE_TRIPLANAR		u_Settings2.a
-
-#define USE_REGIONS			u_Settings3.r
-#define USE_ISDETAIL		u_Settings3.g
-#define USE_DETAIL_COORD	u_Settings3.b
-#define USE_GLOW_BLEND_MODE	u_Settings3.a
+#define USE_REGIONS					u_Settings3.r
+#define USE_ISDETAIL				u_Settings3.g
+#define USE_DETAIL_COORD			u_Settings3.b
+#define USE_GLOW_BLEND_MODE			u_Settings3.a
 
 
-uniform vec2				u_Dimensions;
-uniform vec4				u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4				u_Local2; // ExtinctionCoefficient
-uniform vec4				u_Local3; // 0, 0, r_cubemapCullRange->value, cubemapScale
-uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4				u_Local6; // useSunLightSpecular, hasWaterEdgeMap, MAP_SIZE, WATER_LEVEL
-uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4				u_Local8; // stageNum, glowStrength, MAP_INFO_MAXS[2], r_showsplat
-uniform vec4				u_Local9; // testvalue0, 1, 2, 3
+uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
+uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 
-#define UI_VIBRANCY			0.4
-#define MAP_MAX_HEIGHT		u_Local8.b
-#define WATER_LEVEL			u_Local6.a
-#if 0
-#define cubeStrength		u_Local3.a
-#define cubeMaxDist			u_Local3.b
-#endif
+uniform vec2						u_Dimensions;
+uniform vec2						u_textureScale;
 
-uniform mat4				u_ModelViewProjectionMatrix;
-uniform mat4				u_ModelMatrix;
-uniform mat4				u_invEyeProjectionMatrix;
-uniform mat4				u_ModelViewMatrix;
+uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+uniform vec4						u_Mins;
+uniform vec4						u_Maxs;
 
-uniform vec4				u_EnableTextures;
+#define MAP_MAX_HEIGHT				u_Maxs.b
 
-uniform vec4				u_PrimaryLightOrigin;
-uniform vec3				u_PrimaryLightColor;
-uniform vec3				u_PrimaryLightAmbient;
+#define SHADER_MAP_SIZE				u_Local1.r
+#define SHADER_SWAY					u_Local1.g
+#define SHADER_OVERLAY_SWAY			u_Local1.b
+#define SHADER_MATERIAL_TYPE		u_Local1.a
 
-uniform vec4				u_NormalScale;
-uniform vec4				u_SpecularScale;
+#define SHADER_HAS_STEEPMAP			u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
+#define SHADER_HAS_NORMALMAP		u_Local2.b
+#define SHADER_WATER_LEVEL			u_Local2.a
 
-uniform vec4				u_CubeMapInfo;
-uniform float				u_CubeMapStrength;
+#define SHADER_HAS_SPLATMAP1		u_Local3.r
+#define SHADER_HAS_SPLATMAP2		u_Local3.g
+#define SHADER_HAS_SPLATMAP3		u_Local3.b
+#define SHADER_HAS_SPLATMAP4		u_Local3.a
 
-uniform vec3				u_ViewOrigin;
-
-uniform vec2				u_textureScale;
-
-uniform int					u_ColorGen;
-uniform int					u_AlphaGen;
-
-uniform vec4				u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
-uniform vec4				u_Mins;
-uniform vec4				u_Maxs;
-
-uniform vec2				u_AlphaTestValues;
-
-#define ATEST_NONE	0
-#define ATEST_LT	1
-#define ATEST_GT	2
-#define ATEST_GE	3
+#define SHADER_STAGE_NUM			u_Local4.r
+#define SHADER_GLOW_STRENGTH		u_Local4.g
+#define SHADER_SHOW_SPLAT			u_Local4.b
 
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
@@ -186,22 +154,6 @@ out vec4 out_Position;
 out vec4 out_Normal;
 out vec4 out_NormalDetail;
 
-vec2 encode (vec3 n)
-{
-    float p = sqrt(n.z*8+8);
-    return vec2(n.xy/p + 0.5);
-}
-
-vec3 decode (vec2 enc)
-{
-    vec2 fenc = enc*4-2;
-    float f = dot(fenc,fenc);
-    float g = sqrt(1-f/4);
-    vec3 n;
-    n.xy = fenc*g;
-    n.z = 1-f/2;
-    return n;
-}
 
 void DepthContrast ( inout float depth )
 {
@@ -226,6 +178,7 @@ float GetDepthForPixel(vec4 color)
 	return 1.0 - clamp(displacement, 0.0, 1.0);
 }
 
+#ifdef USE_DETAIL_TEXTURES
 void AddDetail(inout vec4 color, in vec2 tc)
 {
 	// Add fine detail to everything...
@@ -237,9 +190,9 @@ void AddDetail(inout vec4 color, in vec2 tc)
 	}
 	else if (USE_DETAIL_COORD == 2.0 || USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)
-		float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
-		coord = vec2(m_vertPos.xy / (u_Local6.b / 2.0)) * xyoffset;
-		coord *= (vec2(m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset) * 2.0 - 1.0;
+		float xyoffset = (SHADER_MAP_SIZE - (SHADER_MAP_SIZE / 2.0)) / (SHADER_MAP_SIZE * 2.0);
+		coord = vec2(m_vertPos.xy / (SHADER_MAP_SIZE / 2.0)) * xyoffset;
+		coord *= (vec2(m_vertPos.z / (SHADER_MAP_SIZE / 2.0)) * xyoffset) * 2.0 - 1.0;
 	}
 	else
 	{// Standard... -1.0 -> +1.0 (good all-round option when matching specific coordinates is not needed)
@@ -252,27 +205,28 @@ void AddDetail(inout vec4 color, in vec2 tc)
 
 	color.rgb = color.rgb * detail.rgb * 2.0;
 }
+#endif //USE_DETAIL_TEXTURES
 
 vec4 GetControlMap( void )
 {
-	float scale = 1.0 / u_Local6.b; /* control scale */
+	float scale = 1.0 / SHADER_MAP_SIZE; /* control scale */
 	vec4 control;
 	
 	if (USE_REGIONS > 0.0)
 	{
 		// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
-		float maxHeightOverWater = MAP_MAX_HEIGHT - WATER_LEVEL;
+		float maxHeightOverWater = MAP_MAX_HEIGHT - SHADER_WATER_LEVEL;
 		float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
 		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
-		float xyoffset = (u_Local6.b - (u_Local6.b / 2.0)) / (u_Local6.b * 2.0);
-		vec4 xaxis = texture( u_SplatControlMap, vec2((m_vertPos.x / (u_Local6.b / 2.0)) * xyoffset, y));
-		vec4 yaxis = texture( u_SplatControlMap, vec2((m_vertPos.y / (u_Local6.b / 2.0)) * xyoffset, y));
-		vec4 zaxis = texture( u_SplatControlMap, vec2((m_vertPos.z / (u_Local6.b / 2.0)) * xyoffset, y));
+		float xyoffset = (SHADER_MAP_SIZE - (SHADER_MAP_SIZE / 2.0)) / (SHADER_MAP_SIZE * 2.0);
+		vec4 xaxis = texture( u_SplatControlMap, vec2((m_vertPos.x / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
+		vec4 yaxis = texture( u_SplatControlMap, vec2((m_vertPos.y / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
+		vec4 zaxis = texture( u_SplatControlMap, vec2((m_vertPos.z / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 	}
 	else
 	{
-		float offset = (u_Local6.b / 2.0) * scale;
+		float offset = (SHADER_MAP_SIZE / 2.0) * scale;
 		vec4 xaxis = texture( u_SplatControlMap, (m_vertPos.yz * scale) + offset);
 		vec4 yaxis = texture( u_SplatControlMap, (m_vertPos.xz * scale) + offset);
 		vec4 zaxis = texture( u_SplatControlMap, (m_vertPos.xy * scale) + offset);
@@ -281,22 +235,10 @@ vec4 GetControlMap( void )
 
 	control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 
-	if (u_Local7.a > 0.0)
+	if (SHADER_HAS_SPLATMAP4 > 0.0)
 	{// Also grab the roads map, if we have one...
-	//u_MapInfo
-	//u_Mins
-	//u_Maxs
-		//vec2 minsOffset = -u_Mins.xy;
-		//vec2 maxs = u_Maxs.xy + minsOffset;
-		//vec2 pos = m_vertPos.xy + minsOffset;
-		//vec2 pixel = (pos / maxs) * vec2(u_Local9.r, u_Local9.g);
-
 		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
-		//vec2 scatter = mapSize / vec2(2048.0);
-
-		//x = MAP_INFO_MINS + (imageX * MAP_INFO_SCATTEROFFSET);
 		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
-
 		float road = texture(u_RoadsControlMap, pixel).r;
 		road = clamp(pow(road * 1.5, 2.0), 0.0, 1.0);
 		control.a = road;
@@ -351,12 +293,12 @@ vec4 QuickMix(vec3 color1, vec3 color2, float mix)
 
 vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 {
-	if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
+	if (SHADER_HAS_SPLATMAP1 <= 0.0 && SHADER_HAS_SPLATMAP2 <= 0.0 && SHADER_HAS_SPLATMAP3 <= 0.0 && SHADER_HAS_SPLATMAP4 <= 0.0)
 	{
 		return inColor;
 	}
 
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL)
+	if (SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL)
 	{// Steep maps (water edges)... Underwater doesn't use splats for now...
 		return inColor;
 	}
@@ -374,28 +316,28 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 		scale = 0.001;
 	}
 
-	if (u_Local7.r > 0.0 && control.r > 0.0)
+	if (SHADER_HAS_SPLATMAP1 > 0.0 && control.r > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap1, scale, depth);
 		//splatColor = mix(splatColor, tex, control.r * tex.a);
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.r * tex.a);
 	}
 
-	if (u_Local7.g > 0.0 && control.g > 0.0)
+	if (SHADER_HAS_SPLATMAP2 > 0.0 && control.g > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap2, scale, depth);
 		//splatColor = mix(splatColor, tex, control.g * tex.a);
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.g * tex.a);
 	}
 
-	if (u_Local7.b > 0.0 && control.b > 0.0)
+	if (SHADER_HAS_SPLATMAP3 > 0.0 && control.b > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap3, scale, depth);
 		//splatColor = mix(splatColor, tex, control.b * tex.a);
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.b * tex.a);
 	}
 
-	if (u_Local7.a > 0.0 && control.a > 0.0)
+	if (SHADER_HAS_SPLATMAP4 > 0.0 && control.a > 0.0)
 	{
 		vec4 tex = GetMap(u_RoadMap, scale, depth);
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.a * tex.a);
@@ -417,7 +359,7 @@ vec4 GenerateTerrainMap(vec2 coord)
 	vec4 tex1 = GetMap(u_DiffuseMap, 0.0075, a1);
 	vec4 tex2 = GetSplatMap(coord, tex1, a2);
 
-	float maxHeightOverWater = MAP_MAX_HEIGHT - WATER_LEVEL;
+	float maxHeightOverWater = MAP_MAX_HEIGHT - SHADER_WATER_LEVEL;
 	float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
 	float mixVal = 1.0 - pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
 
@@ -430,35 +372,35 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 {
 	if (USE_REGIONS > 0.0 || USE_TRIPLANAR > 0.0)
 	{
-		if (u_Local8.a > 0.0)
+		if (SHADER_SHOW_SPLAT > 0.0)
 		{
 			vec4 control = vec4(0.0);
 			
-			if (u_Local8.a > 7.0)
+			if (SHADER_SHOW_SPLAT > 7.0)
 			{
 				control = texture(u_RoadMap, texCoords);
 			}
-			else if (u_Local8.a > 6.0)
+			else if (SHADER_SHOW_SPLAT > 6.0)
 			{
 				control = texture(u_WaterEdgeMap, texCoords);
 			}
-			else if (u_Local8.a > 5.0)
+			else if (SHADER_SHOW_SPLAT > 5.0)
 			{
 				control = texture(u_SteepMap, texCoords);
 			}
-			else if (u_Local8.a > 4.0)
+			else if (SHADER_SHOW_SPLAT > 4.0)
 			{
 				control = texture(u_SplatMap3, texCoords);
 			}
-			else if (u_Local8.a > 3.0)
+			else if (SHADER_SHOW_SPLAT > 3.0)
 			{
 				control = texture(u_SplatMap2, texCoords);
 			}
-			else if (u_Local8.a > 2.0)
+			else if (SHADER_SHOW_SPLAT > 2.0)
 			{
 				control = texture(u_SplatMap1, texCoords);
 			}
-			else if (u_Local8.a > 1.0)
+			else if (SHADER_SHOW_SPLAT > 1.0)
 			{
 				control = GetControlMap();
 				control.rgb = control.aaa;
@@ -477,16 +419,16 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		}
 		else
 		{// Tri-Planar...
-			if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
+			if (SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 			{// Steep maps (water edges)...
-				float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
+				float mixVal = ((SHADER_WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 
 				float a1 = 0.0;
 				float a2 = 0.0;
 				vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
 				vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, a2);
 
-				if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
+				if (SHADER_HAS_SPLATMAP1 <= 0.0 && SHADER_HAS_SPLATMAP2 <= 0.0 && SHADER_HAS_SPLATMAP3 <= 0.0 && SHADER_HAS_SPLATMAP4 <= 0.0)
 				{// No splat maps...
 					return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 				}
@@ -499,12 +441,12 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 
 				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 			}
-			else if (u_Local5.a > 0.0 && var_Slope > 0)
+			else if (SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0)
 			{// Steep maps (high angles)...
 				float a1 = -1.0;
 				return GetMap(u_SteepMap, 0.0025, a1);
 			}
-			else if (u_Local7.r > 0.0 || u_Local7.g > 0.0 || u_Local7.b > 0.0 || u_Local7.a > 0.0)
+			else if (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || SHADER_HAS_SPLATMAP4 > 0.0)
 			{// Steep maps (low angles)...
 				// Splat mapping...
 				float a1 = 0.0;
@@ -524,39 +466,6 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 	}
 }
 
-#if 0
-vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
-{
-	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
-	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
-	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
-	float a1 = t.w;
-	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
-}
-#endif
-
-#if 0
-mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
-{
-	// get edge vectors of the pixel triangle
-	vec3 dp1 = dFdx( p );
-	vec3 dp2 = dFdy( p );
-	vec2 duv1 = dFdx( uv );
-	vec2 duv2 = dFdy( uv );
-
-	// solve the linear system
-	vec3 dp2perp = cross( dp2, N );
-	vec3 dp1perp = cross( N, dp1 );
-	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
-
-	// construct a scale-invariant frame 
-	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-	return mat3( T * invmax, B * invmax, N );
-}
-#endif
-
-
 vec3 vLocalSeed;
 
 // This function returns random number from zero to one
@@ -574,23 +483,21 @@ float randZeroOne()
 
 void main()
 {
-	vec4 specular = vec4(0.0);
+	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
+
 	vec2 texCoords = m_TexCoords.xy;
 	float pixRandom = 0.0;
 
-	if (USE_TRIPLANAR > 0.0 && u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 192.0)
+	if (USE_TRIPLANAR > 0.0 && SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 192.0)
 	{// Only water edge map surfaces use this atm... Other stuff can skip calculation...
 		vLocalSeed = m_vertPos.xyz;
 		pixRandom = randZeroOne();
 	}
 
-	if (USE_GLOW_BUFFER != 1.0 && u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
+	if (USE_GLOW_BUFFER != 1.0 && SHADER_SWAY > 0.0 && !(SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0) && !(SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 	{// Sway...
-		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
+		texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 	}
-
-
-	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
 
 
 	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
@@ -602,12 +509,11 @@ void main()
 	vec3 N = normalize(m_Normal.xyz);
 	vec4 norm = vec4(0.0);
 
-	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0 && USE_TRIPLANAR <= 0.0 && USE_REGIONS <= 0.0 && u_Local4.r > 0.0)
+	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0 && USE_TRIPLANAR <= 0.0 && USE_REGIONS <= 0.0 && SHADER_HAS_NORMALMAP > 0.0)
 	{
 		norm = texture(u_NormalMap, texCoords);
 		norm.a = 1.0;
 	}
-
 
 
 #ifdef USE_DETAIL_TEXTURES
@@ -616,7 +522,6 @@ void main()
 		AddDetail(diffuse, texCoords);
 	}
 #endif //USE_DETAIL_TEXTURES
-
 
 
 	vec3 ambientColor = vec3(0.0);
@@ -651,7 +556,7 @@ void main()
 	gl_FragColor.rgb = diffuse.rgb + ambientColor;
 
 
-	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && u_Local1.a != MATERIAL_SKY && u_Local1.a != MATERIAL_SUN /*&& u_Local1.a != MATERIAL_NONE*/)
+	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && SHADER_MATERIAL_TYPE != MATERIAL_SKY && SHADER_MATERIAL_TYPE != MATERIAL_SUN /*&& SHADER_MATERIAL_TYPE != MATERIAL_NONE*/)
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
@@ -682,23 +587,21 @@ void main()
 	}
 
 
-#define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
-
 	float useDisplacementMapping = 0.0;
 
-	if (u_Local1.a == MATERIAL_SOLIDWOOD 
-		|| u_Local1.a == MATERIAL_HOLLOWWOOD 
-		|| u_Local1.a == MATERIAL_ROCK 
-		//|| u_Local1.a == MATERIAL_CARPET 
-		|| u_Local1.a == MATERIAL_SAND 
-		|| u_Local1.a == MATERIAL_GRAVEL
-		//|| u_Local1.a == MATERIAL_TILES 
-		|| u_Local1.a == MATERIAL_SNOW 
-		|| u_Local1.a == MATERIAL_MUD 
-		|| u_Local1.a == MATERIAL_DIRT 
-		//|| u_Local1.a == MATERIAL_CONCRETE 
-		//|| u_Local1.a == MATERIAL_ICE 
-		//|| u_Local1.a == MATERIAL_COMPUTER
+	if (SHADER_MATERIAL_TYPE == MATERIAL_SOLIDWOOD 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_HOLLOWWOOD 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_ROCK 
+		//|| SHADER_MATERIAL_TYPE == MATERIAL_CARPET 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_SAND 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_GRAVEL
+		//|| SHADER_MATERIAL_TYPE == MATERIAL_TILES 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_SNOW 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_MUD 
+		|| SHADER_MATERIAL_TYPE == MATERIAL_DIRT 
+		//|| SHADER_MATERIAL_TYPE == MATERIAL_CONCRETE 
+		//|| SHADER_MATERIAL_TYPE == MATERIAL_ICE 
+		//|| SHADER_MATERIAL_TYPE == MATERIAL_COMPUTER
 		|| USE_TRIPLANAR > 0.0 
 		|| USE_REGIONS > 0.0)
 		useDisplacementMapping = 1.0;
@@ -756,22 +659,20 @@ void main()
 		}
 
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
-		glowColor.rgb *= u_Local8.g;
+		glowColor.rgb *= SHADER_GLOW_STRENGTH;
 
 		if (length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
-		//gl_FragColor.rgb += glowColor.rgb;
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a * (length(glowColor.rgb) / 3.0));
 
-		//gl_FragColor.a = clamp(gl_FragColor.a + glowColor.a, 0.0, 1.0);
 		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
 
 		out_Glow = vec4(glowColor.rgb, glowColor.a);
 
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 		{
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
+			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
 			out_NormalDetail = norm;
 		}
@@ -785,13 +686,13 @@ void main()
 	else if (USE_GLOW_BUFFER > 0.0)
 	{
 		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
-		gl_FragColor.rgb *= u_Local8.g;
+		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
 
 		out_Glow = gl_FragColor;
 
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 		{
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
+			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
 			out_NormalDetail = vec4(0.0);
 		}
@@ -808,7 +709,7 @@ void main()
 
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 		{
-			out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
+			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
 			out_NormalDetail = norm;
 		}

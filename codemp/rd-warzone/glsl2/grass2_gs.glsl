@@ -5,60 +5,79 @@
 //layout(triangles, invocations = 6) in;
 #endif
 
-#define MAX_FOLIAGES			78
+#define MAX_FOLIAGES				78
+
+#define GRASSMAP_MIN_TYPE_VALUE		0.2
+#define SECONDARY_RANDOM_CHANCE		0.7
+
+//#define THREE_WAY_GRASS_CLUMPS // otherwise uses 2 way X shape... 2 way probably gives better coverage...
+
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
-uniform mat4				u_ModelViewProjectionMatrix;
-uniform mat4				u_ModelMatrix;
 
-uniform sampler2D			u_SplatControlMap;
-uniform sampler2D			u_RoadsControlMap;
+uniform mat4						u_ModelViewProjectionMatrix;
 
-uniform vec4				u_Local6; // useSunLightSpecular, hasWaterEdgeMap, MAP_SIZE, WATER_LEVEL // -- only MAP_SIZE is used here
-uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4				u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0
-uniform vec4				u_Local9; // testvalue0, 1, 2, 3
-uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, 0.0
+uniform sampler2D					u_SplatControlMap;
+uniform sampler2D					u_RoadsControlMap;
 
-uniform vec3				u_ViewOrigin;
-uniform float				u_Time;
 
-uniform vec4				u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
-uniform vec4				u_Mins;
-uniform vec4				u_Maxs;
+uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
+uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
+uniform vec4						u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, 0.0
 
-flat in	int					isSlope[];
+#define SHADER_MAP_SIZE				u_Local1.r
+#define SHADER_SWAY					u_Local1.g
+#define SHADER_OVERLAY_SWAY			u_Local1.b
+#define SHADER_MATERIAL_TYPE		u_Local1.a
 
-smooth out vec2				vTexCoord;
-smooth out vec3				vVertPosition;
-flat out int				iGrassType;
-out vec3					vVertNormal;
+#define SHADER_HAS_STEEPMAP			u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
+#define SHADER_HAS_NORMALMAP		u_Local2.b
+#define SHADER_WATER_LEVEL			u_Local2.a
 
-//#define THREE_WAY_GRASS_CLUMPS // otherwise uses 2 way X shape... 2 way probably gives better coverage...
+#define SHADER_HAS_SPLATMAP1		u_Local3.r
+#define SHADER_HAS_SPLATMAP2		u_Local3.g
+#define SHADER_HAS_SPLATMAP3		u_Local3.b
+#define SHADER_HAS_SPLATMAP4		u_Local3.a
 
-#define GRASSMAP_MIN_TYPE_VALUE 0.2
-#define SECONDARY_RANDOM_CHANCE 0.7
+uniform vec3						u_ViewOrigin;
+uniform float						u_Time;
 
-#define MAP_WATER_LEVEL			u_Local10.b // TODO: Use water map
-#define PASS_NUMBER				u_Local8.r
+uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+uniform vec4						u_Mins;
+uniform vec4						u_Maxs;
+
+flat in	int							isSlope[];
+
+smooth out vec2						vTexCoord;
+smooth out vec3						vVertPosition;
+flat out int						iGrassType;
+out vec3							vVertNormal;
+
+
+#define MAP_WATER_LEVEL				u_Local10.b // TODO: Use water map
+#define PASS_NUMBER					u_Local8.r
 
 //
 // General Settings...
 //
 
-float						fGrassPatchSize = u_Local8.b;
-const float					fWindStrength = 12.0;
-const vec3					vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
+float								fGrassPatchSize = u_Local8.b;
+const float							fWindStrength = 12.0;
+const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
 
-float						controlScale = 1.0 / u_Local6.b;
+float								controlScale = 1.0 / SHADER_MAP_SIZE;
 
 //
 // LOD Range Settings...
 //
 
-#define MAX_RANGE			u_Local10.r
+#define MAX_RANGE					u_Local10.r
 
 vec3 vLocalSeed;
 
@@ -101,7 +120,7 @@ vec4 GetControlMap(vec3 m_vertPos)
 	vec4 yaxis = texture(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
 	vec4 zaxis = texture(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
 
-	if (u_Local7.a > 0.0)
+	if (SHADER_HAS_SPLATMAP4 > 0.0)
 	{// Also grab the roads map, if we have one...
 		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
 		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;

@@ -36,23 +36,34 @@ uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 #define USE_REGIONS			u_Settings3.r
 #define USE_ISDETAIL		u_Settings3.g
 
+uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
+uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // ExtinctionCoefficient
-uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local6; // useSunLightSpecular
-uniform vec4	u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4	u_Local9;
+#define SHADER_MAP_SIZE				u_Local1.r
+#define SHADER_SWAY					u_Local1.g
+#define SHADER_OVERLAY_SWAY			u_Local1.b
+#define SHADER_MATERIAL_TYPE		u_Local1.a
 
-uniform sampler2D			u_DiffuseMap;
+#define SHADER_HAS_STEEPMAP			u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
+#define SHADER_HAS_NORMALMAP		u_Local2.b
+#define SHADER_WATER_LEVEL			u_Local2.a
+
+#define SHADER_HAS_SPLATMAP1		u_Local3.r
+#define SHADER_HAS_SPLATMAP2		u_Local3.g
+#define SHADER_HAS_SPLATMAP3		u_Local3.b
+#define SHADER_HAS_SPLATMAP4		u_Local3.a
+
+#define SHADER_STAGE_NUM			u_Local4.r
+#define SHADER_GLOW_STRENGTH		u_Local4.g
+#define SHADER_SHOW_SPLAT			u_Local4.b
 
 uniform float	u_Time;
 
 uniform vec2	u_textureScale;
-
-uniform vec4   u_EnableTextures; // x = normal, y = deluxe, z = specular, w = cube
 
 uniform vec3   u_ViewOrigin;
 
@@ -473,7 +484,7 @@ void main()
 		// Steep Maps...
 		//
 
-		if (u_Local5.a > 0.0)
+		if (SHADER_HAS_STEEPMAP > 0.0)
 		{// Steep maps...
 			float pitch = vectoangles(normalize(normal.xyz)).r;
 
