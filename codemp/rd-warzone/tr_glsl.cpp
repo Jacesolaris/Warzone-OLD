@@ -1249,13 +1249,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_DiffuseMap", GLSL_INT, 1 },
 	{ "u_LightMap", GLSL_INT, 1 },
 	{ "u_NormalMap", GLSL_INT, 1 },
-	{ "u_NormalMap2", GLSL_INT, 1 },
-	{ "u_NormalMap3", GLSL_INT, 1 },
 	{ "u_DeluxeMap", GLSL_INT, 1 },
 	{ "u_SpecularMap", GLSL_INT, 1 },
 	{ "u_PositionMap", GLSL_INT, 1 },
 	{ "u_WaterPositionMap", GLSL_INT, 1 },
-	{ "u_WaterPositionMap2", GLSL_INT, 1 },
 	{ "u_WaterHeightMap", GLSL_INT, 1 },
 	{ "u_HeightMap", GLSL_INT, 1 },
 	{ "u_GlowMap", GLSL_INT, 1 },
@@ -1270,11 +1267,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_SplatMap1", GLSL_INT, 1 },
 	{ "u_SplatMap2", GLSL_INT, 1 },
 	{ "u_SplatMap3", GLSL_INT, 1 },
-//	{ "u_SplatMap4", GLSL_INT, 1 },
-	//{ "u_SplatNormalMap1", GLSL_INT, 1 },
-	//{ "u_SplatNormalMap2", GLSL_INT, 1 },
-	//{ "u_SplatNormalMap3", GLSL_INT, 1 },
-//	{ "u_SplatNormalMap4", GLSL_INT, 1 },
+	{ "u_RoadsControlMap", GLSL_INT, 1 },
+	{ "u_RoadMap", GLSL_INT, 1 },
 	{ "u_DetailMap", GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
@@ -3722,8 +3716,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
-	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
@@ -3736,11 +3728,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-	//		GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP4, TB_SPLATMAP4);
-	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
-	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
-	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
-	//		GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_ROADMAP, TB_ROADMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
 	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 
@@ -3879,8 +3868,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP2,   TB_NORMALMAP2);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP3,   TB_NORMALMAP3);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
@@ -3892,6 +3879,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADMAP, TB_ROADMAP);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.grass2Shader);
@@ -3913,8 +3905,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_NORMALMAP2, TB_NORMALMAP2);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_NORMALMAP3, TB_NORMALMAP3);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
@@ -3926,6 +3916,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
 		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.pebblesShader);
@@ -4833,6 +4824,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 
 	GLSL_SetUniformVec3(&tr.ssdmShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
@@ -4856,6 +4848,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 
 	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 

@@ -50,6 +50,7 @@ vec4 dssdo_blur(vec2 tex)
 	for (i = 0; i < 9; i++)
 	{
 		normal[i] = texture(u_NormalMap, tex + indices[i]*step).xyz * 2.0 - 1.0;
+		normal[i].z = sqrt(1.0-dot(normal[i].xy, normal[i].xy)); // reconstruct Z from X and Y
 	}
 
 	float total_weight = 1.0;

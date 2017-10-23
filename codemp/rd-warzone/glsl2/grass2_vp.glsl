@@ -63,7 +63,8 @@ bool SlopeTooGreat(vec3 normal)
 
 	if (pitch < 0.0) pitch = -pitch;
 
-	if (pitch > 1.0)//46.0)
+	//if (pitch > 1.0)//46.0)
+	if (pitch > 46.0)
 	{
 		return true; // This slope is too steep for grass...
 	}

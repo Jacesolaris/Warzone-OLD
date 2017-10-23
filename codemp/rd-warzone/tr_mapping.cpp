@@ -25,7 +25,7 @@ extern image_t	*R_FindImageFile(const char *name, imgType_t type, int flags);
 #define	MASK_WATER				(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
 #define	MASK_ALL				(0xFFFFFFFFu)
 
-#define MAP_INFO_TRACEMAP_SIZE 4096
+#define MAP_INFO_TRACEMAP_SIZE 2048//4096
 
 vec3_t  MAP_INFO_MINS;
 vec3_t  MAP_INFO_MAXS;
@@ -249,6 +249,7 @@ void R_CreateRandom2KImage(char *variation)
 	ri->FS_FCloseFile(f);
 }
 
+#if 0
 void R_CreateGrassImages(void)
 {
 #define GRASS_TEX_SCALE 200
@@ -394,6 +395,7 @@ void R_CreateGrassImages(void)
 
 	ri->FS_FCloseFile(f);
 }
+#endif
 
 void R_CreateBspMapImage(void)
 {
@@ -852,6 +854,7 @@ void R_CreateHeightMapImage(void)
 	}
 }
 
+#if 0
 void R_CreateFoliageMapImage(void)
 {
 	// Now we have a mins/maxs for map, we can generate a map image...
@@ -963,6 +966,214 @@ void R_CreateFoliageMapImage(void)
 
 	// write tga
 	fileHandle_t f = ri->FS_FOpenFileWrite(va("foliageMapImage/%s.tga", currentMapName), qfalse);
+
+	// header
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 1
+	data = 2; ri->FS_Write(&data, sizeof(data), f);	// 2 : uncompressed type
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 3
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 4
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 5
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 6
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 7
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 8
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 9
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 10
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 11
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 12 : width
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 13 : width
+	data = MAP_INFO_TRACEMAP_SIZE & 255; ri->FS_Write(&data, sizeof(data), f);	// 14 : height
+	data = MAP_INFO_TRACEMAP_SIZE >> 8; ri->FS_Write(&data, sizeof(data), f);	// 15 : height
+	data = 32; ri->FS_Write(&data, sizeof(data), f);	// 16 : pixel size
+	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 17
+
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++) {
+		for (int j = 0; j < MAP_INFO_TRACEMAP_SIZE; j++) {
+			data = blue[i][j]; ri->FS_Write(&data, sizeof(data), f);	// b
+			data = green[i][j]; ri->FS_Write(&data, sizeof(data), f);	// g
+			data = red[i][j]; ri->FS_Write(&data, sizeof(data), f);	// r
+			data = alpha[i][j]; ri->FS_Write(&data, sizeof(data), f);	// a
+		}
+	}
+
+	int i;
+
+	// footer
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// extension area offset, 4 bytes
+	i = 0; ri->FS_Write(&i, sizeof(i), f);	// developer directory offset, 4 bytes
+	ri->FS_Write("TRUEVISION-XFILE.\0", 18, f);
+
+	ri->FS_FCloseFile(f);
+
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++)
+	{
+		free(red[i]);
+		free(green[i]);
+		free(blue[i]);
+		free(alpha[i]);
+	}
+}
+#endif
+
+qboolean ROAD_CheckSlope(vec3_t normal)
+{
+#define MAX_ROAD_SLOPE 32.0//46.0
+	float pitch;
+	vec3_t slopeangles;
+	vectoangles(normal, slopeangles);
+
+	pitch = slopeangles[0];
+
+	if (pitch > 180)
+		pitch -= 360;
+
+	if (pitch < -180)
+		pitch += 360;
+
+	pitch += 90.0f;
+
+	if (pitch > MAX_ROAD_SLOPE || pitch < -MAX_ROAD_SLOPE)
+		return qfalse;
+
+	return qtrue;
+}
+
+void R_CreateRoadMapImage(void)
+{
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Draw red on the map to add roads. Blue shows water. Green shows height map. Black is a bad area for roads.\n", "Warzone");
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: It is highly recomended to save the final picture as a JPG or PNG file and delete the original TGA.\n", "Warzone");
+
+	// Now we have a mins/maxs for map, we can generate a map image...
+	float	z;
+	UINT8	*red[MAP_INFO_TRACEMAP_SIZE];
+	UINT8	*green[MAP_INFO_TRACEMAP_SIZE];
+	UINT8	*blue[MAP_INFO_TRACEMAP_SIZE];
+	UINT8	*alpha[MAP_INFO_TRACEMAP_SIZE];
+
+	for (int i = 0; i < MAP_INFO_TRACEMAP_SIZE; i++)
+	{
+		red[i] = (UINT8*)malloc(sizeof(UINT8)*MAP_INFO_TRACEMAP_SIZE);
+		green[i] = (UINT8*)malloc(sizeof(UINT8)*MAP_INFO_TRACEMAP_SIZE);
+		blue[i] = (UINT8*)malloc(sizeof(UINT8)*MAP_INFO_TRACEMAP_SIZE);
+		alpha[i] = (UINT8*)malloc(sizeof(UINT8)*MAP_INFO_TRACEMAP_SIZE);
+	}
+
+	// Create the map...
+#pragma omp parallel for schedule(dynamic)
+	//for (int x = (int)MAP_INFO_MINS[0]; x < (int)MAP_INFO_MAXS[0]; x += MAP_INFO_SCATTEROFFSET[0])
+	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
+	{
+		int x = MAP_INFO_MINS[0] + (imageX * MAP_INFO_SCATTEROFFSET[0]);
+
+		for (int imageY = 0; imageY < MAP_INFO_TRACEMAP_SIZE; imageY++)
+		{
+			int y = MAP_INFO_MINS[1] + (imageY * MAP_INFO_SCATTEROFFSET[1]);
+
+			for (z = MAP_INFO_MAXS[2]; z > MAP_INFO_MINS[2]; z -= 48.0)
+			{
+				trace_t		tr;
+				vec3_t		pos, down;
+				qboolean	FOUND = qfalse;
+
+				VectorSet(pos, x, y, z);
+				VectorSet(down, x, y, -65536);
+
+				Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, /*MASK_ALL*/MASK_PLAYERSOLID | CONTENTS_WATER/*|CONTENTS_OPAQUE*/);
+
+				if (tr.startsolid || tr.allsolid)
+				{// Try again from below this spot...
+					red[imageX][imageY] = 0;
+					green[imageX][imageY] = 0;
+					blue[imageX][imageY] = 0;
+					alpha[imageX][imageY] = 0;
+					continue;
+				}
+
+				if (tr.endpos[2] <= MAP_INFO_MINS[2])
+				{// Went off map...
+					red[imageX][imageY] = 0;
+					green[imageX][imageY] = 0;
+					blue[imageX][imageY] = 0;
+					alpha[imageX][imageY] = 255;
+					break;
+				}
+
+				if (tr.surfaceFlags & SURF_SKY)
+				{// Sky...
+					red[imageX][imageY] = 0;
+					green[imageX][imageY] = 0;
+					blue[imageX][imageY] = 0;
+					alpha[imageX][imageY] = 0;
+					continue;
+				}
+
+				if (tr.surfaceFlags & SURF_NODRAW)
+				{// don't generate a drawsurface at all
+					red[imageX][imageY] = 0;
+					green[imageX][imageY] = 0;
+					blue[imageX][imageY] = 0;
+					alpha[imageX][imageY] = 0;
+					continue;
+				}
+
+				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
+				float HEIGHT_COLOR_MULT = (1.0 - (DIST_FROM_ROOF / MAP_INFO_SIZE[2]));
+
+				int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
+
+				//
+				// Draw red on the map to add roads. Blue shows water. Green shows height map. Black is a bad area for roads.
+				//
+				switch (MATERIAL_TYPE)
+				{
+				case MATERIAL_WATER:
+					// Water... Draw blue...
+					red[imageX][imageY] = 0;
+					green[imageX][imageY] = 0;
+					blue[imageX][imageY] = 255;
+					alpha[imageX][imageY] = 255;
+					FOUND = qtrue;
+					break;
+				case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
+				case MATERIAL_LONGGRASS:		// 6					// long jungle grass
+				case MATERIAL_MUD:				// 17					// wet soil
+				case MATERIAL_DIRT:				// 7					// hard mud
+					if (!ROAD_CheckSlope(tr.plane.normal)) 
+					{// Bad slope for road... Draw black...
+						red[imageX][imageY] = 0;
+						green[imageX][imageY] = 0;
+						blue[imageX][imageY] = 0;
+						alpha[imageX][imageY] = 255;
+					}
+					else
+					{// Valid surface for road. Draw green height map...
+						red[imageX][imageY] = 0;
+						green[imageX][imageY] = HEIGHT_COLOR_MULT * 255;
+						blue[imageX][imageY] = 0;
+						alpha[imageX][imageY] = 255;
+					}
+					FOUND = qtrue;
+					break;
+				default:
+					// Material isn't a road-able surface type...  Draw black...
+					red[imageX][imageY] = 0;
+					green[imageX][imageY] = 0;
+					blue[imageX][imageY] = 0;
+					alpha[imageX][imageY] = 255;
+					FOUND = qtrue;
+					break;
+				}
+
+				if (FOUND) break;
+			}
+		}
+	}
+
+	// Hopefully now we have a map image... Save it...
+	byte data;
+
+	// write tga
+	fileHandle_t f = ri->FS_FOpenFileWrite(va("maps/%s_roads.tga", currentMapName), qfalse);
 
 	// header
 	data = 0; ri->FS_Write(&data, sizeof(data), f);	// 0
@@ -1211,10 +1422,13 @@ vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
 qboolean	GRASS_ENABLED = qtrue;
 int			GRASS_DENSITY = 2;
+float		GRASS_HEIGHT = 48.0;
 int			GRASS_DISTANCE = 2048;
+float		GRASS_DISTANCE_FROM_ROADS = 0.25;
 qboolean	PEBBLES_ENABLED = qfalse;
 int			PEBBLES_DENSITY = 1;
 int			PEBBLES_DISTANCE = 2048;
+char		ROAD_TEXTURE[256] = { 0 };
 
 qboolean	JKA_WEATHER_ENABLED = qfalse;
 qboolean	WZ_WEATHER_ENABLED = qfalse;
@@ -1367,8 +1581,10 @@ void MAPPING_LoadMapInfo(void)
 	// Grass...
 	//
 	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "1")) > 0) ? qtrue : qfalse;
-	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
+	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "4"));
+	GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "32.0"));
 	GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "2048"));
+	GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
 
 	//
 	// Pebbles...
@@ -1422,6 +1638,57 @@ void MAPPING_LoadMapInfo(void)
 	tr.groundFoliageImage[2] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE3", "models/warzone/groundFoliage/groundFoliage02.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	tr.groundFoliageImage[3] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE4", "models/warzone/groundFoliage/groundFoliage03.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
+	{
+		// Roads maps... Try to load map based image first...
+		tr.roadsMapImage = R_FindImageFile(va("maps/%s_roads.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+
+		if (!tr.roadsMapImage)
+		{// No default image? Use black...
+			tr.roadsMapImage = tr.blackImage;
+		}
+	}
+
+	strcpy(ROAD_TEXTURE, IniRead(mapname, "ROADS", "ROADS_TEXTURE", "textures/roads/defaultRoad01.png"));
+	tr.roadImage = R_FindImageFile(ROAD_TEXTURE, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+	//
+	// Override climate file climate options with mapInfo ones, if found...
+	//
+	if (r_foliage->integer || r_pebbles->integer)
+	{
+		image_t *newImage = NULL;
+
+		for (int i = 0; i < 10; i++)
+		{
+			newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+			if (newImage)
+			{// We have an override image to use from mapInfo...
+				tr.grassImage[i] = newImage;
+				newImage = NULL;
+			}
+		}
+
+		newImage = R_FindImageFile(IniRead(mapname, "GRASS", "seaGrassImage", ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+		if (newImage)
+		{// We have an override image to use from mapInfo...
+			tr.seaGrassImage = newImage;
+			newImage = NULL;
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			newImage = R_FindImageFile(IniRead(mapname, "PEBBLES", va("pebblesImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+			if (newImage)
+			{// We have an override image to use from mapInfo...
+				tr.pebblesImage[i] = newImage;
+				newImage = NULL;
+			}
+		}
+	}
+
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
@@ -1448,8 +1715,11 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
 
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Road texture is ^7%s^5 on this map.\n", ROAD_TEXTURE);
+
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
@@ -1798,9 +2068,14 @@ void R_LoadMapInfo(void)
 			// Have a climate file in climates/
 			TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
 
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 10; i++)
 			{
-				tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				if (i <= 0)
+					tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				else
+					tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				
+				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
 			}
 
 			tr.seaGrassImage = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -1814,9 +2089,14 @@ void R_LoadMapInfo(void)
 		{// Seems we have no climate file in climates/ for the map... Check maps/
 			TREE_SCALE_MULTIPLIER = atof(IniRead(va("maps/%s.climate", currentMapName), "TREES", "treeScaleMultiplier", "1.0"));
 
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 10; i++)
 			{
-				tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				if (i <= 0)
+					tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				else
+					tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
 			}
 
 			tr.seaGrassImage = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -1846,7 +2126,7 @@ void R_LoadMapInfo(void)
 
 			image_t *newImage = NULL;
 
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 10; i++)
 			{
 				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
@@ -1880,11 +2160,16 @@ void R_LoadMapInfo(void)
 		//
 		// Make sure we have some valid grass/pebbles images, in case climate lookup failed...
 		//
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 10; i++)
 		{
 			if (!tr.grassImage[i])
 			{
-				tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/maingrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				if (i <= 0)
+					tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				else
+					tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
 			}
 		}
 

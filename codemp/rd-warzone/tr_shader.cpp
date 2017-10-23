@@ -5134,13 +5134,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_STEEPMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_STEEPMAP].image[0] = specularImg;
 				hasRealSteepMap = qtrue;
-
-				if (r_normalMapping->integer >= 2)
-				{
-					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP].image[0]->imgName);
-					diffuse->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL(imgname, NULL, diffuse->bundle[TB_STEEPMAP].image[0]->width, diffuse->bundle[TB_STEEPMAP].image[0]->height, diffuse->bundle[TB_STEEPMAP].image[0]->flags, diffuse->bundle[TB_STEEPMAP].image[0]);
-				}
 			}
 			else
 			{
@@ -5214,13 +5207,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_WATER_EDGE_MAP].numImageAnimations = 0;
 				diffuse->bundle[TB_WATER_EDGE_MAP].image[0] = specularImg;
 				hasRealWaterEdgeMap = qtrue;
-
-				if (r_normalMapping->integer >= 2)
-				{
-					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->imgName);
-					diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->width, diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->height, diffuse->bundle[TB_WATER_EDGE_MAP].image[0]->flags, diffuse->bundle[TB_WATER_EDGE_MAP].image[0] );
-				}
 			}
 			else
 			{
@@ -5284,10 +5270,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATCONTROLMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATCONTROLMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATCONTROLMAP].image[0] = splatImg;
-
-				//char imgname[64];
-				//sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->imgName);
-				//diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->width, diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->height, diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->flags, diffuse->bundle[TB_SPLATCONTROLMAP].image[0] );
 			}
 			else
 			{
@@ -5464,64 +5446,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP3].image[1] = NULL;
 			}
 		}
-
-#if 0
-		if (splat4 && splat4->bundle[0].image[0] && splat4->bundle[0].image[0] != tr.whiteImage)
-		{// Got one...
-			diffuse->bundle[TB_SPLATMAP4] = splat4->bundle[0];
-		}
-		else
-		{
-			// Splat Map #4
-			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
-
-			char splatName[MAX_IMAGE_PATH];
-			char splatName2[MAX_IMAGE_PATH];
-			image_t *splatImg;
-			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
-
-			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
-			StripCrap( splatName, splatName2, sizeof(splatName));
-			Q_strcat( splatName2, sizeof( splatName2 ), "_splat4" );
-
-#ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(splatName2))
-			{
-				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP4, specularFlags);
-			}
-			else
-			{
-				splatImg = NULL;
-			}
-#else //!__DEFERRED_IMAGE_LOADING__
-			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP4, specularFlags);
-#endif //__DEFERRED_IMAGE_LOADING__
-
-			if (splatImg)
-			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map4 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
-				diffuse->bundle[TB_SPLATMAP4] = diffuse->bundle[0];
-				diffuse->bundle[TB_SPLATMAP4].numImageAnimations = 0;
-				diffuse->bundle[TB_SPLATMAP4].image[0] = splatImg;
-
-				if (r_normalMapping->integer >= 2)
-				{
-					// Generate normal and height map for it as well...
-					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP4].image[0]->imgName);
-					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
-					diffuse->bundle[TB_SPLATMAP4].image[1] = splatNormalImg;
-				}
-			}
-			else
-			{
-				diffuse->bundle[TB_SPLATMAP4] = diffuse->bundle[0];
-				diffuse->bundle[TB_SPLATMAP4].numImageAnimations = 0;
-				diffuse->bundle[TB_SPLATMAP4].image[0] = NULL;
-				diffuse->bundle[TB_SPLATMAP4].image[1] = NULL;
-			}
-		}
-#endif
 
 		{
 			// Detail Map
@@ -5925,13 +5849,6 @@ static int CollapseStagesToGLSL(void)
 							splat3 = pStage2;
 						}
 
-#if 0
-					case ST_SPLATMAP4:
-						{
-							splat4 = pStage2;
-						}
-#endif
-
 					case ST_COLORMAP:
 						if (pStage2->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 							pStage2->bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
@@ -6045,13 +5962,6 @@ static int CollapseStagesToGLSL(void)
 		{
 			pStage->active = qfalse;
 		}
-
-#if 0
-		if (pStage->type == ST_SPLATMAP4)
-		{
-			pStage->active = qfalse;
-		}
-#endif
 	}
 
 #if 0
@@ -6418,12 +6328,6 @@ static int CollapseStagesToGLSL(void)
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap3%s.\n", i, glowMapped);
 			}
-#if 0
-			else if (pStage->type == ST_SPLATMAP4)
-			{
-				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap4%s.\n", i, glowMapped);
-			}
-#endif
 			else if (pStage->type == ST_GLSL)
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is GLSL%s.\n", i, glowMapped);
@@ -7083,19 +6987,6 @@ static shader_t *FinishShader( void ) {
 				}
 				break;
 			}
-#if 0
-			case ST_SPLATMAP4:
-			{
-				if(!pStage->bundle[0].image[0])
-				{
-					ri->Printf(PRINT_WARNING, "Shader %s has a splatmap4 stage with no image\n", shader.name);
-					pStage->active = qfalse;
-					stage++;
-					continue;
-				}
-				break;
-			}
-#endif
 		}
 
 		//

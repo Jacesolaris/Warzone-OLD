@@ -595,7 +595,7 @@ void main(void)
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
 	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 
 	vec3 cubeNorm = norm.rgb;
 	

@@ -1,6 +1,8 @@
 ﻿uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
+uniform sampler2D	u_NormalMap;
+uniform sampler2D	u_GlowMap;
 
 uniform vec2		u_Dimensions;
 
@@ -17,13 +19,7 @@ varying vec2		var_TexCoords;
 
 float linearize(float depth)
 {
-#if 0
-	float d = depth;
-	d /= u_ViewInfo.z - depth * u_ViewInfo.z + depth;
-	return clamp(d * znear, 0.0, 1.0);
-#else
 	return depth;
-#endif
 }
 
 float getDepth(vec2 coord) {
@@ -61,39 +57,27 @@ const vec3 PLUMA_COEFFICIENT = vec3(0.2126, 0.7152, 0.0722);
 
 float plumaAtCoord(vec2 coord) {
   vec3 pixel = texture(u_DiffuseMap, coord).rgb;
-  
-  //vec3 gamma = vec3(1.0/2.2);
-  //pixel = pow(pixel, gamma);
-  
   float luma = dot(pixel, PLUMA_COEFFICIENT);
   return luma;
 }
 
 float GetDisplacementAtCoord(vec2 coord)
 {
-	vec4 position = texture(u_PositionMap, coord);
-	if (position.a-1.0 != 5.0 
-		&& position.a-1.0 != 6.0 
-		&& position.a-1.0 != 8.0
-		&& position.a-1.0 != 27.0
-		&& position.a-1.0 != 9.0
-		&& position.a-1.0 != 23.0
-		&& position.a-1.0 != 1.0
-		&& position.a-1.0 != 2.0
-		&& position.a-1.0 != 17.0
-		&& position.a-1.0 != 7.0
-		&& position.a-1.0 != 11.0
-		&& position.a-1.0 != 28.0
-		&& position.a-1.0 != 15.0)
+	if (texture(u_NormalMap, coord).b < 1.0)
 	{
 		return 0.0;
 	}
 
-	float displacement = 1.0 - clamp(plumaAtCoord(coord), 0.0, 1.0);
+	vec2 coord2 = coord;
+	coord2.y = 1.0 - coord2.y;
+	vec3 gMap = texture(u_GlowMap, coord2).rgb;													// Glow map strength at this pixel
+	float invGlowStrength = 1.0 - clamp(max(gMap.r, max(gMap.g, gMap.b)), 0.0, 1.0);
+
+	float displacement = invGlowStrength * clamp(plumaAtCoord(coord), 0.0, 1.0);
 
 // Contrast...
-#define contLower ( 64.0/*96.0*/ / 255.0 )
-#define contUpper (255.0 / 192.0 )
+#define contLower ( 16.0 / 255.0 )
+#define contUpper (255.0 / 156.0 )
 	displacement = clamp((clamp(displacement - contLower, 0.0, 1.0)) * contUpper, 0.0, 1.0);
 	
 	return displacement;
@@ -103,22 +87,15 @@ float ReliefMapping(vec2 dp, vec2 ds, float origDepth)
 {
 	const int linear_steps = 10;
 	const int binary_steps = 5;
-	float depth_step = 1.0 / linear_steps;
-	float size = depth_step;
+	float size = 1.0 / linear_steps;
 	float depth = 1.0;
 	float best_depth = 1.0;
 
 	for (int i = 0 ; i < linear_steps - 1 ; ++i) 
 	{
 		depth -= size;
-
-		/*if (origDepth > getDepth(dp + ds * depth))
-		{
-			break;
-		}*/
-
 		float t = GetDisplacementAtCoord(dp + ds * depth);
-		if (depth >= 1.0 - t)
+		if (depth >= t)
 			best_depth = depth;
 	}
 
@@ -126,14 +103,9 @@ float ReliefMapping(vec2 dp, vec2 ds, float origDepth)
 
 	for (int i = 0 ; i < binary_steps ; ++i) 
 	{
-		/*if (origDepth > getDepth(dp + ds * depth))
-		{
-			break;
-		}*/
-
 		size *= 0.5;
 		float t = GetDisplacementAtCoord(dp + ds * depth);
-		if (depth >= 1.0 - t) {
+		if (depth >= t) {
 			best_depth = depth;
 			depth -= 2 * size;
 		}
@@ -145,13 +117,20 @@ float ReliefMapping(vec2 dp, vec2 ds, float origDepth)
 
 void main(void)
 {
-	//vec4 position = texture(u_PositionMap, var_TexCoords);
+	vec3 norm = getViewNormal(var_TexCoords);
+
+#if 1
+	vec2 coord2 = var_TexCoords;
+	coord2.y = 1.0 - coord2.y;
+	vec3 gMap = texture(u_GlowMap, coord2).rgb;													// Glow map strength at this pixel
+	float invGlowStrength = 1.0 - clamp(max(gMap.r, max(gMap.g, gMap.b)), 0.0, 1.0);
 
 	float depth = getDepth(var_TexCoords);
 	float invDepth = 1.0 - depth;
-	vec3 norm = getViewNormal(var_TexCoords);
-	vec3 offsetDir = norm;
-	vec2 ParallaxXY = offsetDir.xy * vec2(u_Local1.r/*-16.0*/ / u_Dimensions) * invDepth;
-	float displacement = ReliefMapping(var_TexCoords, ParallaxXY, depth);
-	gl_FragColor = vec4(displacement, displacement, displacement, 1.0);
+	vec2 ParallaxXY = norm.xy * vec2(-18.0 / u_Dimensions) * invDepth;
+	float displacement = invGlowStrength * ReliefMapping(var_TexCoords, ParallaxXY, depth);
+#else
+	float displacement = GetDisplacementAtCoord(var_TexCoords);
+#endif
+	gl_FragColor = vec4(displacement, norm.x * 0.5 + 0.5, norm.y * 0.5 + 0.5, 1.0);
 }

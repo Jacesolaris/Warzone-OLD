@@ -287,7 +287,9 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_perf;
 cvar_t	*r_lowVram;
+cvar_t	*r_volumeLightHQ;
 cvar_t	*r_debugBinds;
 cvar_t	*r_debugShaderStages;
 cvar_t	*r_debugImageCrcHashing;
@@ -1324,6 +1326,7 @@ static void GfxInfo_f( void )
 extern void MAPPING_LoadMapInfo(void);
 extern void R_CreateBspMapImage();
 extern void R_CreateHeightMapImage();
+extern void R_CreateRoadMapImage(void);
 
 /*
 ================
@@ -1550,7 +1553,11 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_perf = ri->Cvar_Get("r_perf", "0", CVAR_NONE);
+
 	r_lowVram = ri->Cvar_Get("r_lowVram", "0", CVAR_ARCHIVE | CVAR_LATCH);
+
+	r_volumeLightHQ = ri->Cvar_Get("r_volumeLightHQ", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	r_debugBinds = ri->Cvar_Get("r_debugBinds", "0", CVAR_ARCHIVE);
 	r_debugShaderStages = ri->Cvar_Get("r_debugShaderStages", "0", CVAR_ARCHIVE);
@@ -1622,7 +1629,7 @@ void R_Register( void )
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
-	r_ssdm = ri->Cvar_Get("r_ssdm", "0", CVAR_ARCHIVE);
+	r_ssdm = ri->Cvar_Get("r_ssdm", "1", CVAR_ARCHIVE);
 	r_ssr = ri->Cvar_Get("r_ssr", "0", CVAR_ARCHIVE);
 	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.05", CVAR_ARCHIVE);
 	r_sse = ri->Cvar_Get("r_sse", "0", CVAR_ARCHIVE);
@@ -1819,6 +1826,7 @@ extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
 	ri->Cmd_AddCommand("reloadMapInfo", MAPPING_LoadMapInfo);
 	ri->Cmd_AddCommand("genworldmap", R_CreateBspMapImage);
 	ri->Cmd_AddCommand("genheightmap", R_CreateHeightMapImage);
+	ri->Cmd_AddCommand("genroadmap", R_CreateRoadMapImage);
 }
 
 void R_InitQueries(void)

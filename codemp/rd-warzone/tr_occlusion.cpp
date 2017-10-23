@@ -1079,6 +1079,7 @@ void RB_OcclusionCulling(void)
 			GLSL_BindProgram(&tr.occlusionShader);
 
 			GLSL_SetUniformMatrix16(&tr.occlusionShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+			//GLSL_SetUniformMatrix16(&tr.occlusionShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.world.modelViewMatrix);
 			GLSL_SetUniformVec4(&tr.occlusionShader, UNIFORM_COLOR, colorWhite);
 
 			GLSL_SetUniformInt(&tr.occlusionShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
@@ -1089,13 +1090,20 @@ void RB_OcclusionCulling(void)
 			// Don't draw into color or depth
 			//GL_State(0);
 			//qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-			
+
 			//GL_State(GLS_DEFAULT);
 
-//#define __DEBUG_OCCLUSION__
+#define __DEBUG_OCCLUSION__
 
 #ifdef __DEBUG_OCCLUSION__
-			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			if (r_occlusionDebug->integer >= 3)
+			{
+				qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			}
+			else
+			{
+				qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			}
 #else //!__DEBUG_OCCLUSION__
 			qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 #endif //__DEBUG_OCCLUSION__
@@ -1174,9 +1182,12 @@ void RB_OcclusionCulling(void)
 				VectorSet4(quadVerts[3], mLeftPositionUp[0], mLeftPositionUp[1], mLeftPositionUp[2], 1.0);
 
 #ifdef __DEBUG_OCCLUSION__
-				vec4_t debugColor;
-				VectorSet4(debugColor, 1.0, 1.0, 1.0, (z / tr.distanceCull) + 0.1);
-				GLSL_SetUniformVec4(&tr.occlusionShader, UNIFORM_COLOR, debugColor);
+				if (r_occlusionDebug->integer >= 3)
+				{
+					vec4_t debugColor;
+					VectorSet4(debugColor, 0.0, 0.0, 1.0, (z / tr.distanceCull) + 0.1);
+					GLSL_SetUniformVec4(&tr.occlusionShader, UNIFORM_COLOR, debugColor);
+				}
 #endif //__DEBUG_OCCLUSION__
 
 				/* Test the occlusion for this quad */

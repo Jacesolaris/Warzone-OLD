@@ -458,7 +458,9 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_perf;
 extern cvar_t	*r_lowVram;
+extern cvar_t	*r_volumeLightHQ;
 extern cvar_t	*r_debugBinds;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
@@ -601,7 +603,8 @@ typedef enum
 	IMGTYPE_SPLATMAP1,
 	IMGTYPE_SPLATMAP2,
 	IMGTYPE_SPLATMAP3,
-	//IMGTYPE_SPLATMAP4,
+	IMGTYPE_ROADSCONTROLMAP,
+	IMGTYPE_ROADMAP,
 	IMGTYPE_DETAILMAP,
 } imgType_t;
 
@@ -990,31 +993,25 @@ enum
 	TB_SHADOWMAP3		= 1,
 	TB_COLORMAP2		= 1,
 	TB_NORMALMAP		= 2,
-	TB_NORMALMAP2		= 3,
-	TB_NORMALMAP3		= 4,
-	TB_DELUXEMAP		= 5,
-	TB_SHADOWMAP2		= 6,
-	TB_SPECULARMAP		= 7,
-	TB_POSITIONMAP		= 8,
-	TB_WATERPOSITIONMAP	= 9,
-	TB_WATERPOSITIONMAP2= 10,
-	TB_WATERHEIGHTMAP	= 11,
-	TB_HEIGHTMAP		= 12,
-	TB_GLOWMAP			= 13,
-	TB_SHADOWMAP		= 14,
-	TB_CUBEMAP			= 15,
-	TB_OVERLAYMAP		= 16,
-	TB_STEEPMAP			= 17,
-	TB_WATER_EDGE_MAP		= 18,
-	TB_SPLATCONTROLMAP	= 19,
-	TB_SPLATMAP1		= 20,
-	TB_SPLATMAP2		= 21,
-	TB_SPLATMAP3		= 22,
-	//TB_SPLATMAP4		= 23,
-	//TB_SPLATNORMALMAP1	= 24,
-	//TB_SPLATNORMALMAP2	= 25,
-	//TB_SPLATNORMALMAP3	= 26,
-	//TB_SPLATNORMALMAP4	= 27,
+	TB_DELUXEMAP		= 3,
+	TB_SHADOWMAP2		= 4,
+	TB_SPECULARMAP		= 5,
+	TB_POSITIONMAP		= 6,
+	TB_WATERPOSITIONMAP	= 7,
+	TB_WATERHEIGHTMAP	= 8,
+	TB_HEIGHTMAP		= 9,
+	TB_GLOWMAP			= 10,
+	TB_SHADOWMAP		= 11,
+	TB_CUBEMAP			= 12,
+	TB_OVERLAYMAP		= 13,
+	TB_STEEPMAP			= 14,
+	TB_WATER_EDGE_MAP	= 15,
+	TB_SPLATCONTROLMAP	= 16,
+	TB_SPLATMAP1		= 17,
+	TB_SPLATMAP2		= 18,
+	TB_SPLATMAP3		= 19,
+	TB_ROADSCONTROLMAP	= 26,
+	TB_ROADMAP			= 27,
 	TB_DETAILMAP		= 28,
 	TB_SHADOWMAP4		= 29,
 	TB_SHADOWMAP5		= 30,
@@ -1036,7 +1033,6 @@ typedef enum
 	ST_SPLATMAP1,
 	ST_SPLATMAP2,
 	ST_SPLATMAP3,
-	//ST_SPLATMAP4,
 	ST_GLSL
 } stageType_t;
 
@@ -1455,13 +1451,10 @@ typedef enum
 	UNIFORM_DIFFUSEMAP = 0,
 	UNIFORM_LIGHTMAP,
 	UNIFORM_NORMALMAP,
-	UNIFORM_NORMALMAP2,
-	UNIFORM_NORMALMAP3,
 	UNIFORM_DELUXEMAP,
 	UNIFORM_SPECULARMAP,
 	UNIFORM_POSITIONMAP,
 	UNIFORM_WATERPOSITIONMAP,
-	UNIFORM_WATERPOSITIONMAP2,
 	UNIFORM_WATERHEIGHTMAP,
 	UNIFORM_HEIGHTMAP,
 	UNIFORM_GLOWMAP,
@@ -1476,11 +1469,8 @@ typedef enum
 	UNIFORM_SPLATMAP1,
 	UNIFORM_SPLATMAP2,
 	UNIFORM_SPLATMAP3,
-	//UNIFORM_SPLATMAP4,
-	//UNIFORM_SPLATNORMALMAP1,
-	//UNIFORM_SPLATNORMALMAP2,
-	//UNIFORM_SPLATNORMALMAP3,
-	//UNIFORM_SPLATNORMALMAP4,
+	UNIFORM_ROADSCONTROLMAP,
+	UNIFORM_ROADMAP,
 	UNIFORM_DETAILMAP,
 
 	UNIFORM_SCREENIMAGEMAP,
@@ -2595,11 +2585,13 @@ typedef struct trGlobals_s {
 	image_t					*mapImage;
 	image_t					*heightMapImage;
 	image_t					*foliageMapImage;
-	image_t					*grassImage[3];
+	image_t					*grassImage[10];
 	image_t					*seaGrassImage;
 	image_t					*pebblesImage[4];
 	image_t					*grassMaskImage[10];
 	image_t					*paletteImage;
+	image_t					*roadsMapImage;
+	image_t					*roadImage;
 	image_t					*moonImage;
 	image_t					*auroraImage[2];
 
@@ -2653,9 +2645,7 @@ typedef struct trGlobals_s {
 	FBO_t					*renderGlowFbo;
 	FBO_t					*renderDetailFbo;
 	FBO_t					*renderWaterFbo;
-	//FBO_t					*previousRenderFbo;
 	FBO_t					*waterFbo;
-	FBO_t					*waterFbo2;
 #if 0
 	FBO_t					*glowFboScaled[4];
 #else
@@ -3128,7 +3118,9 @@ extern cvar_t	*r_dynamicGlowSoft;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_perf;
 extern cvar_t	*r_lowVram;
+extern cvar_t	*r_volumeLightHQ;
 extern cvar_t	*r_debugBinds;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;

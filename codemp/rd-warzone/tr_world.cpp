@@ -42,24 +42,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}
 
-	/*if (!surf->cullinfo.centerOriginInitialized)
-	{// If this surface's center org has not been set up yet, set it up now...
-		surf->cullinfo.centerOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
-		surf->cullinfo.centerOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
-		surf->cullinfo.centerOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-		surf->cullinfo.centerOriginInitialized = qtrue;
-	}
-	
-	if (!surf->shader->isSky && !surf->shader->isWater && Distance(surf->cullinfo.centerOrigin, backEnd.refdef.vieworg) >= tr.distanceCull * 1.75)
-	{
-		return qtrue;
-	}*/
-
-	/*if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill && !surf->shader->isSky && !surf->shader->isWater && r_occlusion->integer && Distance(surf->cullinfo.centerOrigin, backEnd.refdef.vieworg) > tr.occlusionZfar)
-	{
-		return qtrue;
-	}*/
-
+#if 0
 	if (r_occlusion->integer && /*entityNum == ENTITYNUM_WORLD &&*/ (tr.viewParms.flags & VPF_SHADOWPASS) /*&& !backEnd.depthFill*/)
 	{// When doing shadow maps, check camera max distance and skip drawing surfaces not in it's range...
 		if (!surf->cullinfo.centerOriginInitialized)
@@ -75,6 +58,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 			return qtrue;
 		}
 	}
+#endif
 
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
@@ -604,22 +588,6 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 			if (r_occlusion->integer && node->occluded && !(tr.viewParms.flags & VPF_DEPTHSHADOW))
 			{
 				return;
-			}
-
-			if (r_occlusion->integer)
-			{
-				if (!node->centerOrigin)
-				{// If this surface's center org has not been set up yet, set it up now...
-					node->centerOrigin[0] = (node->mins[0] + node->maxs[0]) * 0.5f;
-					node->centerOrigin[1] = (node->mins[1] + node->maxs[1]) * 0.5f;
-					node->centerOrigin[2] = (node->mins[2] + node->maxs[2]) * 0.5f;
-					node->centerOriginInitialized = qtrue;
-				}
-
-				if (Distance(node->centerOrigin, vec3_origin/*backEnd.refdef.vieworg*/) > Q_min(tr.occlusionZfar * 1.75, tr.occlusionOriginalZfar))
-				{
-					return;
-				}
 			}
 
 			int		r;

@@ -19,6 +19,7 @@ uniform mat4				u_ModelMatrix;
 uniform mat4				u_NormalMatrix;
 
 uniform sampler2D			u_SplatControlMap;
+uniform sampler2D			u_RoadsControlMap;
 
 uniform vec4				u_Local6; // useSunLightSpecular, hasWaterEdgeMap, MAP_SIZE, WATER_LEVEL // -- only MAP_SIZE is used here
 uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
@@ -28,6 +29,10 @@ uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVE
 
 uniform vec3				u_ViewOrigin;
 uniform float				u_Time;
+
+uniform vec4				u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+uniform vec4				u_Mins;
+uniform vec4				u_Maxs;
 
 flat in	int					isSlope[];
 
@@ -105,12 +110,29 @@ vec4 randomBarycentricCoordinate() {
 #endif
 }
 
+const vec2 roadPx = const vec2(1.0 / 2048.0);
+
 vec4 GetControlMap(vec3 m_vertPos)
 {
 #if 0
 	vec4 xaxis = texture(u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
 	vec4 yaxis = texture(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
 	vec4 zaxis = texture(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
+
+	if (u_Local7.a > 0.0)
+	{// Also grab the roads map, if we have one...
+		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
+		
+		float road = 0.0;
+		
+		for (float x = -1.0; x <= 1.0; x += 1.0)
+			for (float y = -1.0; y <= 1.0; y += 1.0)
+				road += texture(u_RoadsControlMap, pixel + (vec2(x,y)*roadPx)).r;
+
+		if (road > 0.0)
+			return vec4(0.0); // Force no grass near roads...
+	}
 
 	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
 #else

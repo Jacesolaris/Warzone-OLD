@@ -68,7 +68,7 @@ void main ( void )
 
 	totalColor.rgb += u_vlightColors * 0.05;
 
-	totalColor.rgb *= VOLUMETRIC_STRENGTH * 2.75;
+	totalColor.rgb *= VOLUMETRIC_STRENGTH * 1.5125;
 
 	// Amplify contrast...
 #define lightLower ( 64.0 / 255.0 )

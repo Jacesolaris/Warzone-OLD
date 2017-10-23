@@ -3228,23 +3228,6 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, normalFlags);
 }
 
-#if 0
-static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int height, int flags )
-{
-	char SubsurfaceName[MAX_IMAGE_PATH];
-	image_t *SubsurfaceImage;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
-
-	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
-	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat4");
-	
-	// find normalmap in case it's there
-	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP4, normalFlags);
-}
-#endif
-
 void R_GetTextureAverageColor(const byte *in, int width, int height, qboolean USE_ALPHA, float *avgColor)
 {
 	int NUM_PIXELS = 0;
@@ -3425,7 +3408,6 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 		&& type != TB_SPLATMAP1
 		&& type != TB_SPLATMAP2
 		&& type != TB_SPLATMAP3
-		//&& type != TB_SPLATMAP4
 		&& type != TB_DETAILMAP)
 	{// Only defer diffusemaps for now...
 		return R_FindImageFile(name, type, flags);
@@ -3844,7 +3826,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_SPLATMAP1 
 		&& type != IMGTYPE_SPLATMAP2 
 		&& type != IMGTYPE_SPLATMAP3 
-		//&& type != IMGTYPE_SPLATMAP4 
 		&& type != IMGTYPE_SPLATCONTROLMAP
 		&& type != IMGTYPE_DETAILMAP
 		&& !(flags & IMGFLAG_CUBEMAP))
@@ -3870,9 +3851,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		R_CreateSplatMap1( name, pic, width, height, flags );
 		R_CreateSplatMap2( name, pic, width, height, flags );
 		R_CreateSplatMap3( name, pic, width, height, flags );
-#if 0
-		R_CreateSplatMap4( name, pic, width, height, flags );
-#endif
 
 		R_CreateSteepMap( name, pic, width, height, flags );
 		R_CreateWaterEdgeMap( name, pic, width, height, flags );
@@ -4161,7 +4139,6 @@ void R_CreateBuiltinImages( void ) {
 	tr.renderNormalDetailedImage = R_CreateImage("*normalDetailed", NULL, width, height, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, 0);
 	tr.renderPositionMapImage = R_CreateImage("*positionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F); // Needs to store large values...
 	tr.waterPositionMapImage = R_CreateImage("*waterPositionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F); // Needs to store large values...
-	tr.waterPositionMapImage2 = R_CreateImage("*waterPositionMap2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F); // Needs to store large values...
 
 	{
 		if (hdrFormat == GL_RGBA8)
@@ -4229,13 +4206,26 @@ void R_CreateBuiltinImages( void ) {
 
 	tr.ssdmImage = R_CreateImage("_ssdmImage", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat/*GL_RGBA32F*/);
 
-	tr.anamorphicRenderFBOImage  = R_CreateImage("_anamorphic0",  NULL, (width/16) / vramScaleDiv, (height/8) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	if (r_volumeLightHQ->integer)
+	{
+		tr.anamorphicRenderFBOImage = R_CreateImage("_anamorphic0", NULL, (width / 16) / vramScaleDiv, (height / 8) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.bloomRenderFBOImage[0]  = R_CreateImage("_bloom0",  NULL, (width/2) / vramScaleDiv, (height/2) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.bloomRenderFBOImage[1]  = R_CreateImage("_bloom1",  NULL, (width/2) / vramScaleDiv, (height/2) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.bloomRenderFBOImage[2]  = R_CreateImage("_bloom2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.bloomRenderFBOImage[0] = R_CreateImage("_bloom0", NULL, (width / 2) / vramScaleDiv, (height / 2) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.bloomRenderFBOImage[1] = R_CreateImage("_bloom1", NULL, (width / 2) / vramScaleDiv, (height / 2) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.bloomRenderFBOImage[2] = R_CreateImage("_bloom2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, (width/4.0) / vramScaleDiv, (height/4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.volumetricFBOImage = R_CreateImage("_volumetric", NULL, (width / 4.0) / vramScaleDiv, (height / 4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	}
+	else
+	{
+		tr.anamorphicRenderFBOImage = R_CreateImage("_anamorphic0", NULL, (width / 32) / vramScaleDiv, (height / 16) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+
+		tr.bloomRenderFBOImage[0] = R_CreateImage("_bloom0", NULL, (width / 4) / vramScaleDiv, (height / 4) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.bloomRenderFBOImage[1] = R_CreateImage("_bloom1", NULL, (width / 4) / vramScaleDiv, (height / 4) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.bloomRenderFBOImage[2] = R_CreateImage("_bloom2", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+
+		tr.volumetricFBOImage = R_CreateImage("_volumetric", NULL, (width / 8.0) / vramScaleDiv, (height / 8.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	}
 
 	//
 	// UQ1: End Added...

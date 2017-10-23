@@ -1,5 +1,5 @@
 uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_NormalMap;
+//uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_ScreenDepthMap;
 
 //uniform mat4		u_invEyeProjectionMatrix;

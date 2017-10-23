@@ -1591,8 +1591,8 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	GL_BindToTMU(tr.random2KImage[0], TB_SPECULARMAP);
 
-	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+	//GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	//GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 	
 	{
 		vec4_t viewInfo;
@@ -1860,9 +1860,6 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
 	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
 
-	GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP2, TB_WATERPOSITIONMAP2);
-	GL_BindToTMU(tr.waterPositionMapImage2, TB_WATERPOSITIONMAP2);
-
 	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
 
@@ -1887,8 +1884,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	//GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
 
-	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_SPECULARMAP);
+	//GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	//GL_BindToTMU(tr.renderNormalImage, TB_SPECULARMAP);
 
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -2020,8 +2017,8 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+	//GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	//GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
 
@@ -2420,6 +2417,24 @@ void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	
+	/*if (r_anamorphic->integer)
+	{
+		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+	}
+	else if (r_bloom->integer)
+	{
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
+	}
+	else*/
+	{
+		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+	}
+
 	GLSL_SetUniformMatrix16(&tr.ssdmGenerateShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
@@ -2470,6 +2485,9 @@ void RB_SSDM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImage512, TB_LIGHTMAP);
+
+	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.ssdmImage, TB_POSITIONMAP);
@@ -2819,8 +2837,8 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
 	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
 
-	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+	//GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	//GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);

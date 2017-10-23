@@ -13,15 +13,16 @@ uniform sampler2D			u_SplatControlMap;
 uniform sampler2D			u_SplatMap1;
 uniform sampler2D			u_SplatMap2;
 uniform sampler2D			u_SplatMap3;
-//uniform sampler2D			u_SplatMap4;
+
+uniform sampler2D			u_RoadsControlMap;
+uniform sampler2D			u_RoadMap;
+
 uniform sampler2D			u_DetailMap;
 uniform sampler2D			u_GlowMap;
 
 uniform sampler2D			u_LightMap;
 
 uniform sampler2D			u_NormalMap;
-uniform sampler2D			u_NormalMap2;
-uniform sampler2D			u_NormalMap3;
 
 uniform sampler2D			u_DeluxeMap;
 
@@ -104,6 +105,10 @@ uniform vec2				u_textureScale;
 
 uniform int					u_ColorGen;
 uniform int					u_AlphaGen;
+
+uniform vec4				u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+uniform vec4				u_Mins;
+uniform vec4				u_Maxs;
 
 uniform vec2				u_AlphaTestValues;
 
@@ -274,7 +279,28 @@ vec4 GetControlMap( void )
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 	}
 
-	control = clamp(control * 10.0, 0.0, 1.0);
+	control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
+
+	if (u_Local7.a > 0.0)
+	{// Also grab the roads map, if we have one...
+	//u_MapInfo
+	//u_Mins
+	//u_Maxs
+		//vec2 minsOffset = -u_Mins.xy;
+		//vec2 maxs = u_Maxs.xy + minsOffset;
+		//vec2 pos = m_vertPos.xy + minsOffset;
+		//vec2 pixel = (pos / maxs) * vec2(u_Local9.r, u_Local9.g);
+
+		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+		//vec2 scatter = mapSize / vec2(2048.0);
+
+		//x = MAP_INFO_MINS + (imageX * MAP_INFO_SCATTEROFFSET);
+		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
+
+		float road = texture(u_RoadsControlMap, pixel).r;
+		road = clamp(pow(road * 1.5, 2.0), 0.0, 1.0);
+		control.a = road;
+	}
 	
 	return control;
 }
@@ -369,11 +395,11 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.b * tex.a);
 	}
 
-	/*if (u_Local7.a > 0.0 && control.a > 0.0)
+	if (u_Local7.a > 0.0 && control.a > 0.0)
 	{
-		vec4 tex = GetMap(u_SplatMap4, scale, depth);
+		vec4 tex = GetMap(u_RoadMap, scale, depth);
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.a * tex.a);
-	}*/
+	}
 
 	if (depth != -1.0)
 	{// Only bother calculating if requested...
@@ -407,26 +433,35 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		if (u_Local8.a > 0.0)
 		{
 			vec4 control = vec4(0.0);
-
-			if (u_Local8.a > 5.0)
+			
+			if (u_Local8.a > 7.0)
+			{
+				control = texture(u_RoadMap, texCoords);
+			}
+			else if (u_Local8.a > 6.0)
 			{
 				control = texture(u_WaterEdgeMap, texCoords);
 			}
-			else if (u_Local8.a > 4.0)
+			else if (u_Local8.a > 5.0)
 			{
 				control = texture(u_SteepMap, texCoords);
 			}
-			else if (u_Local8.a > 3.0)
+			else if (u_Local8.a > 4.0)
 			{
 				control = texture(u_SplatMap3, texCoords);
 			}
-			else if (u_Local8.a > 2.0)
+			else if (u_Local8.a > 3.0)
 			{
 				control = texture(u_SplatMap2, texCoords);
 			}
-			else if (u_Local8.a > 1.0)
+			else if (u_Local8.a > 2.0)
 			{
 				control = texture(u_SplatMap1, texCoords);
+			}
+			else if (u_Local8.a > 1.0)
+			{
+				control = GetControlMap();
+				control.rgb = control.aaa;
 			}
 			else
 			{
@@ -543,8 +578,8 @@ void main()
 	vec2 texCoords = m_TexCoords.xy;
 	float pixRandom = 0.0;
 
-	if (USE_TRIPLANAR > 0.0)
-	{
+	if (USE_TRIPLANAR > 0.0 && u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 192.0)
+	{// Only water edge map surfaces use this atm... Other stuff can skip calculation...
 		vLocalSeed = m_vertPos.xyz;
 		pixRandom = randZeroOne();
 	}
@@ -556,46 +591,12 @@ void main()
 
 
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
-#if 0
-	bool CUBEMAP_ENABLED = (USE_CUBEMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0 && cubeStrength > 0.0 && USE_IS2D <= 0.0) ? true : false;
-#endif
 
 
 	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
-
-
-
-#ifdef USE_ALPHA_TEST
-	float alphaMult = 1.0;
-
-	if (u_AlphaTestValues.r > 0.0)
-	{
-		bool discardFrag = false;
-
-		if (u_AlphaTestValues.r == ATEST_LT)
-			if (gl_FragColor.a >= u_AlphaTestValues.g)
-				discardFrag = true;
-		if (u_AlphaTestValues.r == ATEST_GT)
-			if (gl_FragColor.a <= u_AlphaTestValues.g)
-				discardFrag = true;
-		if (u_AlphaTestValues.r == ATEST_GE)
-			if (gl_FragColor.a < u_AlphaTestValues.g)
-				discardFrag = true;
-
-		if (discardFrag)
-		{
-			gl_FragColor.rgba = vec4(0.0);
-			out_Glow = vec4(0.0);
-			out_Position = vec4(0.0);
-			out_Normal = vec4(0.0);
-			return;
-		}
-	}
-#endif //USE_ALPHA_TEST
-
 
 
 	vec3 N = normalize(m_Normal.xyz);
@@ -656,53 +657,6 @@ void main()
 	}
 	
 
-#if 0
-	if (CUBEMAP_ENABLED)
-	{// TODO: Move to screen space...
-		float curDist = distance(u_ViewOrigin.xyz, m_vertPos.xyz);
-		float cubeDist = distance(u_CubeMapInfo.xyz, m_vertPos.xyz);
-		float cubeFade = 0.0;
-		
-		if (curDist < cubeMaxDist && cubeDist < cubeMaxDist)
-		{
-			cubeFade = (1.0 - clamp(curDist / cubeMaxDist, 0.0, 1.0)) * (1.0 - clamp(cubeDist / cubeMaxDist, 0.0, 1.0));
-		}
-
-		if (cubeFade > 0.0)
-		{
-			if (u_Local1.g > 0.0)
-			{// Real specMap...
-				specular = texture(u_SpecularMap, texCoords);
-			}
-			else
-			{// Fake it...
-				specular.rgb = gl_FragColor.rgb;
-#define specLower ( 48.0 / 255.0)
-#define specUpper (255.0 / 192.0)
-				specular.rgb = clamp((clamp(specular.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
-				specular.a = clamp(((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6, 0.0, 1.0);
-			}
-
-			specular.rgb *= u_SpecularScale.rgb;
-
-#define gloss specular.a
-
-			vec3 E = normalize(m_ViewDir);
-			float NE = clamp(dot(N, E), 0.0, 1.0);
-			vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
-
-			vec3 R = reflect(E, N);
-			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * m_ViewDir;
-			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-
-			// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
-			//gl_FragColor.rgb = mix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0));
-			gl_FragColor.rgb = QuickMix(gl_FragColor.rgb, cubeLightColor * reflectance, clamp(cubeFade * cubeStrength * u_CubeMapStrength * u_EnableTextures.w * 0.2, 0.0, 1.0)).rgb;
-		}
-	}
-#endif
-
-
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
 	
@@ -729,6 +683,25 @@ void main()
 
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
+
+	float useDisplacementMapping = 0.0;
+
+	if (u_Local1.a == MATERIAL_SOLIDWOOD 
+		|| u_Local1.a == MATERIAL_HOLLOWWOOD 
+		|| u_Local1.a == MATERIAL_ROCK 
+		//|| u_Local1.a == MATERIAL_CARPET 
+		|| u_Local1.a == MATERIAL_SAND 
+		|| u_Local1.a == MATERIAL_GRAVEL
+		//|| u_Local1.a == MATERIAL_TILES 
+		|| u_Local1.a == MATERIAL_SNOW 
+		|| u_Local1.a == MATERIAL_MUD 
+		|| u_Local1.a == MATERIAL_DIRT 
+		//|| u_Local1.a == MATERIAL_CONCRETE 
+		//|| u_Local1.a == MATERIAL_ICE 
+		//|| u_Local1.a == MATERIAL_COMPUTER
+		|| USE_TRIPLANAR > 0.0 
+		|| USE_REGIONS > 0.0)
+		useDisplacementMapping = 1.0;
 
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
@@ -799,7 +772,7 @@ void main()
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, 1.0 );
+			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
 			out_NormalDetail = norm;
 		}
 		else
@@ -819,7 +792,7 @@ void main()
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, 1.0 );
+			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
 			out_NormalDetail = vec4(0.0);
 		}
 		else
@@ -836,7 +809,7 @@ void main()
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, u_Local1.a+1.0);
-			out_Normal = vec4( N.xyz * 0.5 + 0.5, 1.0 );
+			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
 			out_NormalDetail = norm;
 		}
 		else

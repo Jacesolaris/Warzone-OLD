@@ -1246,6 +1246,7 @@ extern float MAP_WATER_LEVEL;
 extern float MAP_INFO_MAXSIZE;
 extern vec3_t  MAP_INFO_MINS;
 extern vec3_t  MAP_INFO_MAXS;
+extern vec3_t  MAP_INFO_SIZE;
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum, qboolean IS_DEPTH_PASS)
 {
@@ -1343,10 +1344,10 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			hasSplatMap3 = 1.0;
 		}
 
-		/*if (pStage->bundle[TB_SPLATMAP4].image[0])
-		{
+		if (tr.roadsMapImage != tr.blackImage)
+		{// Seems we have roads for this map...
 			hasSplatMap4 = 1.0;
-		}*/
+		}
 
 		// Shader overrides material...
 		if (pStage->cubeMapScale > 0.0)
@@ -1872,7 +1873,9 @@ extern vec3_t		MAP_AMBIENT_COLOR;
 
 extern qboolean		GRASS_ENABLED;
 extern int			GRASS_DENSITY;
+extern float		GRASS_HEIGHT;
 extern int			GRASS_DISTANCE;
+extern float		GRASS_DISTANCE_FROM_ROADS;
 extern qboolean		PEBBLES_ENABLED;
 extern int			PEBBLES_DENSITY;
 extern int			PEBBLES_DISTANCE;
@@ -1925,10 +1928,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean IS_DEPTH_PASS = qfalse;
 
 	int cubeMapNum = 0;
-	//vec4_t cubeMapVec;
-	//float cubeMapRadius;
 
-	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+#if 1
+	if (backEnd.depthFill)
+	{
+		IS_DEPTH_PASS = qtrue;
+
+		if (r_foliage->integer
+			&& GRASS_ENABLED
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+		{
+			isGrass = qtrue;
+			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
+		}
+	}
+	else if (tr.viewParms.flags & VPF_SHADOWPASS)
 	{
 		IS_DEPTH_PASS = qtrue;
 
@@ -1941,33 +1955,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
 		}
-		else if (r_pebbles->integer
-			&& PEBBLES_ENABLED
-			&& r_sunlightMode->integer >= 2
-			&& r_foliageShadows->integer
-			&& (tess.shader->isPebbles || RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK)))
-		{
-			isPebbles = qtrue;
-			tess.shader->isPebbles = qtrue; // Cache to speed up future checks...
-		}
-		else if (r_groundFoliage->integer
-			&& r_sunlightMode->integer >= 2
-			&& r_foliageShadows->integer
-			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
-		{
-			isGroundFoliage = qtrue;
-			tess.shader->isGroundFoliage = qtrue; // Cache to speed up future checks...
-		}
-		else if (r_fur->integer
-			&& r_sunlightMode->integer >= 2
-			&& r_foliageShadows->integer
-			&& (tess.shader->isFur || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
-		{
-			isFur = qtrue;
-			tess.shader->isFur = qtrue; // Cache to speed up future checks...
-		}
 	}
 	else
+#endif
 	{
 		if (r_foliage->integer
 			&& GRASS_ENABLED
@@ -2005,39 +1995,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		tessOuter = tessInner;
 		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
 	}
-
-#if 0
-	if ((tr.numCubemaps <= 1) || (tr.refdef.rdflags & RDF_NOWORLDMODEL) || (tr.viewParms.flags & VPF_SHADOWPASS))
-	{
-		cubeMapNum = -1;
-		cubeMapVec[0] = 0;
-		cubeMapVec[1] = 0;
-		cubeMapVec[2] = 0;
-		cubeMapVec[3] = 0;
-		cubeMapRadius = 0;
-		ADD_CUBEMAP_INDEX = qfalse;
-	}
-	else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
-	{
-#ifdef __PLAYER_BASED_CUBEMAPS__
-		cubeMapNum = currentPlayerCubemap;
-		cubeMapVec[0] = currentPlayerCubemapVec[0];// -backEnd.viewParms.ori.origin[0];
-		cubeMapVec[1] = currentPlayerCubemapVec[1];// - backEnd.viewParms.ori.origin[1];
-		cubeMapVec[2] = currentPlayerCubemapVec[2];// - backEnd.viewParms.ori.origin[2];
-		cubeMapVec[3] = 1.0f;
-		cubeMapRadius = tr.cubemapRadius[currentPlayerCubemap];
-		ADD_CUBEMAP_INDEX = qtrue;
-#else //!__PLAYER_BASED_CUBEMAPS__
-		cubeMapNum = input->cubemapIndex - 1;
-		cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
-		cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
-		cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
-		cubeMapVec[3] = 1.0f;
-		cubeMapRadius = tr.cubemapRadius[input->cubemapIndex - 1];
-		ADD_CUBEMAP_INDEX = qtrue;
-#endif //__PLAYER_BASED_CUBEMAPS__
-	}
-#endif
 
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
 	qboolean didNonDetail = qfalse;
@@ -2138,12 +2095,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->bundle[TB_SPLATMAP3].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP3].image[0]);
 		}
 
-		/*if (pStage->bundle[TB_SPLATMAP4].image[0]
-			&& pStage->bundle[TB_SPLATMAP4].image[0]->deferredLoad)
-		{// Load the actual image file...
-			pStage->bundle[TB_SPLATMAP4].image[0] = R_LoadDeferredImage(pStage->bundle[TB_SPLATMAP4].image[0]);
-		}*/
-
 		if (pStage->bundle[TB_DETAILMAP].image[0]
 			&& pStage->bundle[TB_DETAILMAP].image[0]->deferredLoad)
 		{// Load the actual image file...
@@ -2168,7 +2119,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				forceRGBGen = CGEN_ENTITY;
 			}
 
-//#ifndef __USE_ALPHA_TEST__
 			if (backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA)
 			{
 				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
@@ -2178,7 +2128,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					stateBits |= GLS_DEPTHMASK_TRUE;
 				}
 			}
-//#endif //__USE_ALPHA_TEST__
 		}
 		else
 		{// UQ: - FPS TESTING - This may cause issues, we will need to keep an eye on things...
@@ -2210,37 +2159,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				forceDetail = qtrue;
 		}
 
-		/*if (stateBits & GLS_ATEST_BITS)
-		{
-			switch (stateBits & GLS_ATEST_BITS)
-			{
-			case GLS_ATEST_LT_128:
-				forceDetail = qtrue;
-				break;
-			case GLS_ATEST_GE_128:
-				forceDetail = qtrue;
-				break;
-			case GLS_ATEST_GE_192:
-				forceDetail = qtrue;
-				break;
-			case GLS_ATEST_GT_0:
-			default:
-				break;
-			}
-		}
 
-		if (stateBits & GLS_DEPTHTEST_DISABLE)
-		{
-			forceDetail = qtrue;
-		}*/
-
-
-
-//#define __USE_ALPHA_TEST__ // This interferes with the ability for the depth prepass to optimize out fragments causing FPS hit.
 #define __USE_DETAIL_CHECKING__			// Check and treat stages found to be random details (lightmap stages, 2d, etc) differently...
 #define __USE_DETAIL_DEPTH_SKIP__		// Skip drawing detail crap at all in shadow and depth prepasses - they should never be needed...
 #define __LIGHTMAP_IS_DETAIL__			// Lightmap stages are considered detail...
-//#define __USE_GLOW_DETAIL_FBOS__		// Use different deferred output buffers for stuff that is detail and glow, so these don't overwrite solid surfaces... FBO method.
 
 		if (pStage->isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
@@ -2288,13 +2210,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 #ifdef __USE_DETAIL_CHECKING__
 #ifdef __USE_DETAIL_DEPTH_SKIP__
-			/*if (!(pStage->type == ST_COLORMAP || pStage->type == ST_GLSL)
-				&& pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP
-				&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
-			{// No point at all in doing this stage...
-				continue;
-			}*/
-
 			if (pStage->bundle[0].isLightmap)
 			{
 				continue;
@@ -2320,11 +2235,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
-			/*if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
-			{
-				break;
-			}*/
-
 			if (forceDetail)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
@@ -2335,27 +2245,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
-			/*if ((stateBits & GLS_SRCBLEND_SRC_ALPHA)
-			&& (stateBits & GLS_DSTBLEND_ONE))
-			{// Don't output these to position and normal map...
-			index |= LIGHTDEF_IS_DETAIL;
-			}*/
-
 			if ((!pStage->bundle[TB_DIFFUSEMAP].image[0] || pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_COLORALPHA) && !pStage->glow)
 			{// Don't output these to position and normal map...
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 
-			//GLS_DEPTHTEST_DISABLE
-			if (backEnd.currentEntity == &backEnd.entity2D)// || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			if (backEnd.currentEntity == &backEnd.entity2D)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
-
-			/*if (pStage->stateBits & GLS_ATEST_BITS)
-			{
-				index |= LIGHTDEF_IS_DETAIL;
-			}*/
 
 			if (!(index & LIGHTDEF_IS_DETAIL) && !pStage->glow)
 			{
@@ -2368,17 +2266,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #endif //__USE_DETAIL_DEPTH_SKIP__
 #endif /__USE_DETAIL_CHECKING__
 
-			//if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
+			if (glState.vertexAnimation)
 			{
-				if (glState.vertexAnimation)
-				{
-					useVertexAnim = 1.0;
-				}
+				useVertexAnim = 1.0;
+			}
 
-				if (glState.skeletalAnimation)
-				{
-					useSkeletalAnim = 1.0;
-				}
+			if (glState.skeletalAnimation)
+			{
+				useSkeletalAnim = 1.0;
 			}
 
 			if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods)
@@ -2402,8 +2297,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else
 			{
 				sp = &tr.shadowPassShader;
-				//pStage->glslShaderGroup = &tr.shadowPassShader;
-
 				backEnd.pc.c_shadowPassDraws++;
 			}
 
@@ -2413,13 +2306,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			if (!(tr.world || tr.numLightmaps <= 0) && (index & LIGHTDEF_USE_LIGHTMAP))
 			{// Bsp has no lightmap data, disable lightmaps in any shaders that would try to use one...
-				/*if (pStage->bundle[0].tcGen >= TCGEN_LIGHTMAP 
-					&& pStage->bundle[0].tcGen <= TCGEN_LIGHTMAP3)
-				{// No point at all in doing this stage...
-					backEnd.pc.c_lightMapsSkipped++;
-					continue;
-				}*/
-
 				if (pStage->bundle[0].isLightmap)
 				{
 					backEnd.pc.c_lightMapsSkipped++;
@@ -2429,19 +2315,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index &= ~LIGHTDEF_USE_LIGHTMAP;
 			}
 			
-			//if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
+			if (glState.vertexAnimation)
 			{
-				if (glState.vertexAnimation)
-				{
-					useVertexAnim = 1.0;
-				}
-
-				if (glState.skeletalAnimation)
-				{
-					useSkeletalAnim = 1.0;
-				}
+				useVertexAnim = 1.0;
 			}
 
+			if (glState.skeletalAnimation)
+			{
+				useSkeletalAnim = 1.0;
+			}
 
 			if (useTesselation)
 			{
@@ -2562,7 +2444,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			//GLS_DEPTHTEST_DISABLE
-			if (backEnd.currentEntity == &backEnd.entity2D)// || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+			if (backEnd.currentEntity == &backEnd.entity2D)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
@@ -2581,11 +2463,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_IS_DETAIL;
 			}
 #endif //__LIGHTMAP_IS_DETAIL__
-			
-			/*if (pStage->stateBits & GLS_ATEST_BITS)
-			{
-				index |= LIGHTDEF_IS_DETAIL;
-			}*/
 
 			if (!(index & LIGHTDEF_IS_DETAIL))
 			{
@@ -2594,18 +2471,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #endif //__USE_DETAIL_CHECKING__
 			
 			sp = &tr.lightAllShader;
-
 			backEnd.pc.c_lightallDraws++;
 
 			GLSL_BindProgram(sp);
+		}
 
-			if ((r_foliage->integer || r_pebbles->integer) && (isGrass || isPebbles))
+		//if (!IS_DEPTH_PASS)
+		{
+			// Hmm, I think drawing all these grasses to the depth prepass is gonna slow things more than the benefit of pixel culls in the final pass...
+			// the landscape itself should be good enough...
+
+			if ((r_foliage->integer && isGrass) || (r_pebbles->integer && isPebbles))
 			{// Special extra pass stuff for grass or pebbles...
 				if (isGrass && r_foliage->integer)
 				{
 					sp2 = &tr.grass2Shader;
 					multiPass = qtrue;
-					//passMax = r_foliagePasses->integer;
 					passMax = GRASS_DENSITY;
 
 					//if (ALLOW_GL_400) passMax = 2; // uses hardware invocations instead
@@ -2653,103 +2534,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_MAP_AMBIENT, vec);
 			}
 
-			if (!IS_DEPTH_PASS)
-			{
-#ifdef __USE_ALPHA_TEST__
-				vec2_t atest = { 0 };
-
-				if (stateBits & GLS_ATEST_BITS)
-				{
-					//useTC = 1.0;
-
-					switch (stateBits & GLS_ATEST_BITS)
-					{
-					case GLS_ATEST_GT_0:
-						atest[0] = ATEST_GT;
-						atest[1] = 0.0;
-						break;
-					case GLS_ATEST_LT_128:
-						atest[0] = ATEST_LT;
-						atest[1] = 0.5;
-						break;
-					case GLS_ATEST_GE_128:
-						atest[0] = ATEST_GE;
-						atest[1] = 0.5;
-						break;
-					case GLS_ATEST_GE_192:
-						atest[0] = ATEST_GE;
-						atest[1] = 0.75;
-						break;
-					default:
-						atest[0] = ATEST_GT;
-						atest[1] = 0.0;
-						break;
-					}
-				}
-				else
-				{
-					atest[0] = ATEST_GT;
-					atest[1] = 0.0;
-				}
-
-				GLSL_SetUniformVec2(sp, UNIFORM_ALPHATEST, atest);
-#else
-#if 0
-				image_t *diffuse = pStage->bundle[TB_DIFFUSEMAP].image[0];
-
-				if (diffuse && diffuse->hasAlpha)
-				{
-					if (stateBits & GLS_ATEST_BITS)
-					{
-						//useTC = 1.0;
-
-						switch (stateBits & GLS_ATEST_BITS)
-						{
-						case GLS_ATEST_GT_0:
-							qglEnable(GL_ALPHA_TEST);
-							qglAlphaFunc(GL_GREATER, 0.0);
-							break;
-						case GLS_ATEST_LT_128:
-							qglEnable(GL_ALPHA_TEST);
-							qglAlphaFunc(GL_LESS, 0.5);
-							break;
-						case GLS_ATEST_GE_128:
-							qglEnable(GL_ALPHA_TEST);
-							qglAlphaFunc(GL_GREATER, 0.5);
-							break;
-						case GLS_ATEST_GE_192:
-							qglEnable(GL_ALPHA_TEST);
-							qglAlphaFunc(GL_GEQUAL, 0.75);
-							break;
-						default:
-							qglEnable(GL_ALPHA_TEST);
-							qglAlphaFunc(GL_GREATER, 0.0);
-							break;
-						}
-					}
-					else
-					{
-						//qglDisable(GL_ALPHA_TEST);
-						qglEnable(GL_ALPHA_TEST);
-						qglAlphaFunc(GL_GREATER, 0.0);
-					}
-				}
-				else
-				{
-					qglDisable(GL_ALPHA_TEST);
-					//qglEnable(GL_ALPHA_TEST);
-					//qglAlphaFunc(GL_GREATER, 0.0);
-				}
-#endif
-#endif //__USE_ALPHA_TEST__
-			}
-
-#if 0
-			uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-			uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
-			uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-			uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
-#endif
 			VectorSet4(vec, 
 				useTC, 
 				useDeform, 
@@ -2802,13 +2586,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
 
-			int PARALLAX_MODE = 0;
-			
-			/*if (!r_cartoon->integer && r_parallaxMapping->integer)
-			{
-				PARALLAX_MODE = r_parallaxMapping->integer;
-			}*/
-
 #ifdef __USE_DETAIL_CHECKING__
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
@@ -2839,9 +2616,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		RB_SetStageImageDimensions(sp, pStage);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, backEnd.ori.modelViewMatrix);
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		//GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL); // Currently not used...
 
 		GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
@@ -2897,7 +2672,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (!IS_DEPTH_PASS)
 		{
-			//if (r_fog->integer) //useFog
 			if (useFog)
 			{
 				if (input->fogNum)
@@ -2912,36 +2686,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 		}
-
-		//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
-
-#if 0
-		//
-		// testing cube map
-		//
-		if (IS_DEPTH_PASS)
-		{
-			/*GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
-			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
-			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);*/
-		}
-		else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && tr.cubemaps && cubeMapNum && ADD_CUBEMAP_INDEX && r_cubeMapping->integer >= 1)
-		{
-			//ri->Printf(PRINT_ALL, "%s stage %i is using cubemap (correct lightall: %s)\n", input->shader->name, stage, (index & LIGHTDEF_USE_CUBEMAP) ? "true" : "false");
-			GL_BindToTMU(tr.cubemaps[cubeMapNum], TB_CUBEMAP);
-			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value * 2.4);
-			VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
-			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
-		}
-		else
-		{
-			GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
-			GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
-			VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
-		}
-#endif
 
 		//
 		//
@@ -3060,7 +2804,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0])
 				{
-					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
 					GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
 				}
 				else
@@ -3070,13 +2813,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				if (pStage->bundle[TB_STEEPMAP].image[0])
 				{
-					//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
 					GL_BindToTMU(pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP);
 				}
 
 				if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
 				{
-					//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_WATER_EDGE_MAP].image[0]->imgName, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->width, pStage->bundle[TB_WATER_EDGE_MAP].image[0]->height);
 					GL_BindToTMU(pStage->bundle[TB_WATER_EDGE_MAP].image[0], TB_WATER_EDGE_MAP);
 				}
 
@@ -3094,21 +2835,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					GL_BindToTMU(pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3);
 				}
-
-				/*if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
-				{
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
-				}*/
 			}
-
-			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
-			{
-			R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
-			}
-			else
-			{
-			GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
-			}*/
 
 			if (pStage->bundle[TB_OVERLAYMAP].image[0])
 			{
@@ -3123,30 +2850,34 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
 			}
+		}
 
-			//GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
-			//GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
-			//GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
+		{
+			GL_BindToTMU(tr.roadsMapImage, TB_ROADSCONTROLMAP);
+			GL_BindToTMU(tr.roadImage, TB_ROADMAP);
+
+			vec4_t loc;
+			VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
+
+			VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MAXS, loc);
+
+			VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
 		}
 
 		//
 		// do multitexture
 		//
-		if (IS_DEPTH_PASS)
-		{
-			if (!(pStage->stateBits & GLS_ATEST_BITS) /*&& !tess.shader->hasAlpha*/ )
-				GL_BindToTMU(tr.whiteImage, 0);
-			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
-				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
-		}
-		else if ((tr.viewParms.flags & VPF_SHADOWPASS))
+		if ((tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 			else if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
 		}
-		else if (backEnd.depthFill)
+		else if (IS_DEPTH_PASS || backEnd.depthFill)
 		{
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU( tr.whiteImage, 0 );
@@ -3198,98 +2929,34 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
+				if (pStage->bundle[TB_NORMALMAP].image[0])
 				{
-#if 0
-					if (r_normalMapping->integer >= 2
-						&& !input->shader->isPortal
-						&& !input->shader->isSky
-						&& !pStage->glow
-						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
-						&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0]
-					&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
-						&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR
-						/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_WATER_EDGE_MAP
-						// gfx dirs can be exempted I guess...
-						&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
-					{// How did this happen??? Oh well, generate a normal map now...
-						char imgname[68];
-						//ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-						pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, pStage->bundle[TB_DIFFUSEMAP].image[0]->flags, pStage->bundle[TB_DIFFUSEMAP].image[0] );
+					R_BindAnimatedImageToTMU(&pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
+					enableTextures[0] = 1.0f;
+				}
+				else if (r_normalMapping->integer >= 2)
+				{
+					GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
+				}
 
-						if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
-						{
-							pStage->hasRealNormalMap = true;
-							RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+				if (pStage->bundle[TB_DELUXEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU(&pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
+					enableTextures[1] = 1.0f;
+				}
+				else if (r_deluxeMapping->integer)
+				{
+					GL_BindToTMU(tr.whiteImage, TB_DELUXEMAP);
+				}
 
-							if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
-							{
-								VectorSet4(pStage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-								GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
-							}
-						}
-
-						//if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
-						pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
-					}
-#endif
-
-					if (pStage->bundle[TB_NORMALMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
-						enableTextures[0] = 1.0f;
-					}
-					else if (r_normalMapping->integer >= 2)
-					{
-						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
-					}
-
-					/*if (pStage->bundle[TB_NORMALMAP2].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP2], TB_NORMALMAP2);
-					}
-					else if (r_normalMapping->integer >= 2)
-					{
-						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
-					}
-
-					if (pStage->bundle[TB_NORMALMAP3].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP3], TB_NORMALMAP3);
-					}
-					else if (r_normalMapping->integer >= 2)
-					{
-						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
-					}*/
-
-					if (pStage->bundle[TB_DELUXEMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
-						enableTextures[1] = 1.0f;
-					}
-					else if (r_deluxeMapping->integer)
-					{
-						GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
-					}
-
-					if (pStage->bundle[TB_SPECULARMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
-						enableTextures[2] = 1.0f;
-					}
-					else if (r_specularMapping->integer)
-					{
-						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
-					}
+				if (pStage->bundle[TB_SPECULARMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU(&pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
+					enableTextures[2] = 1.0f;
+				}
+				else if (r_specularMapping->integer)
+				{
+					GL_BindToTMU(tr.whiteImage, TB_SPECULARMAP);
 				}
 
 				if (IS_DEPTH_PASS)
@@ -3298,7 +2965,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 				else
 				{
-					enableTextures[3] = 0.0;// (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+					enableTextures[3] = 0.0;
 				}
 			}
 
@@ -3331,26 +2998,31 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
-				GL_BindToTMU( tr.grassImage[0], TB_DIFFUSEMAP );
-				GL_BindToTMU( tr.grassImage[1], TB_SPLATMAP1 );
-				GL_BindToTMU( tr.grassImage[2], TB_SPLATMAP2 );
-				GL_BindToTMU( tr.seaGrassImage, TB_OVERLAYMAP );
+				GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
+				GL_BindToTMU(tr.grassImage[1], TB_SPLATMAP1);
+				GL_BindToTMU(tr.grassImage[2], TB_SPLATMAP2);
+				GL_BindToTMU(tr.grassImage[3], TB_SPLATMAP3);
+				GL_BindToTMU(tr.grassImage[4], TB_STEEPMAP);
+				GL_BindToTMU(tr.grassImage[5], TB_ROADMAP);
+				GL_BindToTMU(tr.grassImage[6], TB_DETAILMAP);
+				GL_BindToTMU(tr.grassImage[7], TB_SPECULARMAP);
+				GL_BindToTMU(tr.grassImage[8], TB_DELUXEMAP);
+				GL_BindToTMU(tr.grassImage[9], TB_NORMALMAP);
+				GL_BindToTMU(tr.seaGrassImage, TB_OVERLAYMAP);
 
 				vec4_t l10;
 				VectorSet4(l10, GRASS_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
@@ -3360,7 +3032,23 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
+				{
+					GL_BindToTMU(tr.roadsMapImage, TB_ROADSCONTROLMAP);
+
+					vec4_t loc;
+					VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
+
+					VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_MAXS, loc);
+
+					VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
+				}
+
 				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
+
+				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (isGrass && passNum > GRASS_DENSITY && sp3)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
@@ -3371,7 +3059,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3399,6 +3087,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+
+				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (isPebbles && passNum == 1 && sp2)
 			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
@@ -3409,7 +3099,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3437,6 +3127,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 
 				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+
+				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (isGroundFoliage && passNum == 1 && sp2)
 			{
@@ -3447,7 +3139,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3472,6 +3164,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (isFur && passNum == 1 && sp2)
 			{
@@ -3482,7 +3176,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage, IS_DEPTH_PASS);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
 				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3506,6 +3200,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 			{// Procedural sun...
@@ -3534,15 +3230,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-			}
-
-			if ((isGrass || isPebbles || isGroundFoliage || isFur) && passNum >= 1)
-			{
-				vec4_t l8;
-				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-				
-				GL_Cull(CT_TWO_SIDED);
 			}
 
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
@@ -3574,28 +3261,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 			else
-#if defined(__USE_GLOW_DETAIL_FBOS__)
-			if (!IS_DEPTH_PASS && !pStage->glowMapped && index & LIGHTDEF_USE_GLOW_BUFFER)
-			{
-				if (glState.currentFBO == tr.renderFbo)
-				{// Only attach textures when doing a render pass...
-					FBO_Bind(tr.renderGlowFbo);
-				}
-			}
-			else if (!IS_DEPTH_PASS && index & LIGHTDEF_IS_DETAIL)
-			{
-				if (glState.currentFBO == tr.renderFbo)
-				{// Only attach textures when doing a render pass...
-					FBO_Bind(tr.renderDetailFbo);
-				}
-			}
-			else
-#endif //!defined(__USE_GLOW_DETAIL_FBOS__)
 			{
 				if (glState.currentFBO == tr.renderGlowFbo || glState.currentFBO == tr.renderDetailFbo || glState.currentFBO == tr.renderWaterFbo)
 				{// Only attach textures when doing a render pass...
 					FBO_Bind(tr.renderFbo);
 				}
+			}
+
+			if (multiPass && passNum >= 1 && (isGrass || isPebbles || isGroundFoliage || isFur))
+			{// Need to send stage num to these geometry shaders...
+				vec4_t l8;
+				VectorSet4(l8, (float)passNum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+				GL_Cull(CT_TWO_SIDED);
 			}
 
 

@@ -1,5 +1,5 @@
 uniform sampler2D   u_ScreenDepthMap; //depth
-uniform sampler2D   u_NormalMap; //normal
+//uniform sampler2D   u_NormalMap; //normal
 
 uniform vec2        u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin

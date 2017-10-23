@@ -92,6 +92,7 @@ vec4 dssdo_accumulate(vec2 tex)
 	//radius = min(radius, 0.1);
 
 	vec3 center_normal = texture(u_NormalMap, tex).xyz * 2.0 - 1.0;
+	center_normal.z = sqrt(1.0-dot(center_normal.xy, center_normal.xy)); // reconstruct Z from X and Y
 
 	vec4 occlusion_sh2 = vec4(0.0);
 

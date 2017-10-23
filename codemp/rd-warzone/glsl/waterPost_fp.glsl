@@ -10,7 +10,6 @@ heightMap – height-map used for waves generation as described in the section “Mo
 backBufferMap – current contents of the back buffer
 positionMap – texture storing scene position vectors (material type is alpha)
 waterPositionMap – texture storing scene water position vectors (alpha is 1.0 when water is at this pixel. 0.0 if not).
-waterPositionMap2 – texture storing scene water position vectors (This one is at slightly increased height to include max wave height).
 normalMap – texture storing normal vectors for normal mapping as described in the section “The computation of normal vectors”
 foamMap – texture containing foam – in my case it is a photo of foam converted to greyscale
 */
@@ -34,7 +33,6 @@ uniform sampler2D	u_DetailMap;			// causics map
 uniform sampler2D	u_DeluxeMap;			// noise
 
 uniform sampler2D	u_WaterPositionMap;
-uniform sampler2D	u_WaterPositionMap2;
 
 uniform vec4		u_Mins;					// MAP_MINS[0], MAP_MINS[1], MAP_MINS[2], 0.0
 uniform vec4		u_Maxs;					// MAP_MAXS[0], MAP_MAXS[1], MAP_MAXS[2], 0.0
@@ -252,7 +250,6 @@ vec4 waterMapLowerAtCoord ( vec2 coord )
 
 vec4 waterMapUpperAtCoord ( vec2 coord )
 {
-	//return textureLod(u_WaterPositionMap2, coord, 0.0).xzyw;
 	return textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
 }
 

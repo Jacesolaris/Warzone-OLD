@@ -273,6 +273,11 @@ DWORD S_LoadMusic( char *sSoundName )
 		return 0;
 	}
 
+	if (!FS_Initialized())
+	{
+		return 0;
+	}
+
 	// player specific sounds are never directly loaded...
 	//
 	if ( sSoundName[0] == '*') {

@@ -482,11 +482,6 @@ void FBO_Init(void)
 		FBO_Bind(tr.waterFbo);
 		FBO_AttachTextureImage(tr.waterPositionMapImage, 0);
 		R_CheckFBO(tr.waterFbo);
-
-		/*tr.waterFbo2 = FBO_Create("_waterPosition2", tr.waterPositionMapImage2->width, tr.waterPositionMapImage2->height);
-		FBO_Bind(tr.waterFbo2);
-		FBO_AttachTextureImage(tr.waterPositionMapImage2, 0);
-		R_CheckFBO(tr.waterFbo2);*/
 	}
 
 	//
@@ -651,14 +646,6 @@ void FBO_Init(void)
 	if (tr.waterFbo)
 	{
 		FBO_Bind(tr.waterFbo);
-		qglClearColor( 0, 0, 0, 0 );
-		qglClear( GL_COLOR_BUFFER_BIT );
-		//FBO_Bind(NULL);
-	}
-
-	if (tr.waterFbo2)
-	{
-		FBO_Bind(tr.waterFbo2);
 		qglClearColor( 0, 0, 0, 0 );
 		qglClear( GL_COLOR_BUFFER_BIT );
 		//FBO_Bind(NULL);
