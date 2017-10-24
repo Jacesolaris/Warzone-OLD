@@ -343,7 +343,7 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 	if (SHADER_HAS_SPLATMAP4 > 0.0 && control.a > 0.0)
 	{
 		vec4 tex = GetMap(u_RoadMap, scale, depth);
-		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.a * tex.a);
+		splatColor = QuickMix(splatColor.rgb, tex.rgb, pow(control.a * 3.0, 0.5) * tex.a);
 	}
 
 	if (depth != -1.0)
