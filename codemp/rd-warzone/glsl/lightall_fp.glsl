@@ -16,7 +16,10 @@ uniform sampler2D					u_SplatMap3;
 uniform sampler2D					u_RoadsControlMap;
 uniform sampler2D					u_RoadMap;
 
+#ifdef USE_DETAIL_TEXTURES
 uniform sampler2D					u_DetailMap;
+#endif //USE_DETAIL_TEXTURES
+
 uniform sampler2D					u_GlowMap;
 
 uniform sampler2D					u_LightMap;

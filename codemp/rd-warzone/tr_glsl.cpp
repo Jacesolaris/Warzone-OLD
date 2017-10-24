@@ -3098,6 +3098,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_foliage->integer >= 2)
 		{
+#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 			if (ALLOW_GL_400)
 			{
 				Q_strcat(extradefines, 1024, "#define USE_400\n");
@@ -3108,6 +3109,7 @@ int GLSL_BeginLoadGPUShaders(void)
 				}
 			}
 			else
+#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 			{
 				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
 				{
@@ -3117,6 +3119,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 		else
 		{
+#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 			if (ALLOW_GL_400)
 			{
 				Q_strcat(extradefines, 1024, "#define USE_400\n");
@@ -3127,6 +3130,7 @@ int GLSL_BeginLoadGPUShaders(void)
 				}
 			}
 			else
+#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 			{
 				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
 				{
@@ -3147,6 +3151,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_sunlightMode->integer >= 2)
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
+#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		if (ALLOW_GL_400)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_400\n");
@@ -3157,6 +3162,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			}
 		}
 		else
+#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		{
 			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
 			{

@@ -1,5 +1,4 @@
 uniform sampler2D u_DiffuseMap;
-uniform sampler2D u_SpecularMap;
 
 uniform vec2	u_Dimensions;
 

@@ -1,10 +1,3 @@
-#if !defined(USE_400)
-#extension GL_ARB_gpu_shader5 : enable
-//layout(triangles) in;
-//#else
-//layout(triangles, invocations = 6) in;
-#endif
-
 #define MAX_FOLIAGES				78
 
 #define GRASSMAP_MIN_TYPE_VALUE		0.2
@@ -12,8 +5,12 @@
 
 //#define THREE_WAY_GRASS_CLUMPS // otherwise uses 2 way X shape... 2 way probably gives better coverage...
 
-
+#if !defined(USE_400)
+#extension GL_ARB_gpu_shader5 : enable
 layout(triangles) in;
+#else
+layout(triangles, invocations = 8) in;
+#endif
 layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
 
@@ -190,6 +187,14 @@ const vec3 vBaseDir[] = const vec3[] (
 
 void main()
 {
+	#if defined(USE_400)
+		// invocations support...
+		if (gl_InvocationID >= u_Local8.r)
+		{// Hit number of specified invocations, skip this pass...
+			return;
+		}
+	#endif
+
 	if (isSlope[0] > 0 || isSlope[1] > 0 || isSlope[2] > 0)
 	{
 		return; // This slope is too steep for grass...
@@ -240,13 +245,13 @@ void main()
 	//float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
 	//-----------------------------------
 
-	//#if !defined(USE_400)
-	// No invocations support...
-	vLocalSeed = Pos*PASS_NUMBER;
-	//#else
-	//	// invocations support...
-	//	vLocalSeed = Pos*float(gl_InvocationID);
-	//#endif
+	#if !defined(USE_400)
+		// No invocations support...
+		vLocalSeed = Pos*PASS_NUMBER;
+	#else
+		// invocations support...
+		vLocalSeed = Pos*float(gl_InvocationID);
+	#endif
 
 #ifdef THREE_WAY_GRASS_CLUMPS
 	for (int x = 0; x < MAX_FOLIAGES / 3; x++)

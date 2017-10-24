@@ -1,16 +1,14 @@
-#if !defined(USE_400)
-#extension GL_ARB_gpu_shader5 : enable
-//layout(triangles) in;
-//#else
-//layout(triangles, invocations = 6) in;
-#endif
-
 //#define ICR
 
-#define MAX_FOLIAGES			78//100
+#define MAX_FOLIAGES			78
 #define MAX_FOLIAGES_LOOP		64
 
+#if !defined(USE_400)
+#extension GL_ARB_gpu_shader5 : enable
 layout(triangles) in;
+#else
+layout(triangles, invocations = 8) in;
+#endif
 layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
 uniform mat4				u_ModelViewProjectionMatrix;
@@ -200,6 +198,14 @@ bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent)
 
 void main()
 {
+	#if defined(USE_400)
+		// invocations support...
+		if (gl_InvocationID >= u_Local8.r)
+		{// Hit number of specified invocations, skip this pass...
+			return;
+		}
+	#endif
+
 	if (isSlope[0] > 0 || isSlope[1] > 0 || isSlope[2] > 0)
 	{
 		return; // This slope is too steep for grass...
@@ -249,13 +255,13 @@ void main()
 	//int densityMax = int(VertSize / foliageDensity);
 	//-----------------------------------
 
-	//#if !defined(USE_400)
-	// No invocations support...
-	vLocalSeed = Pos*PASS_NUMBER;
-	//#else
-	//	// invocations support...
-	//	vLocalSeed = Pos*float(gl_InvocationID);
-	//#endif
+	#if !defined(USE_400)
+		// No invocations support...
+		vLocalSeed = Pos*PASS_NUMBER;
+	#else
+		// invocations support...
+		vLocalSeed = Pos*float(gl_InvocationID);
+	#endif
 
 	float m = 1.0 - clamp((VertDist - 1024.0) / MAX_RANGE, 0.0, 1.0);
 
