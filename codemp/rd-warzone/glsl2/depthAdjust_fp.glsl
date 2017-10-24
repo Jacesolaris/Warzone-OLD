@@ -15,18 +15,4 @@ void main()
 	{
 		discard;
 	}
-
-	/*
-	float material = texture(u_PositionMap, var_Tex).a;
-
-	if (material-1.0 == MATERIAL_SKY || material-1.0 == MATERIAL_SUN)// || material-1.0 == MATERIAL_NONE)
-	{// Skybox... Skip...
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-	}
-	else
-	{
-		//gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-		discard;
-	}
-	*/
 }

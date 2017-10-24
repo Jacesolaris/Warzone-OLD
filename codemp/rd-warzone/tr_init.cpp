@@ -288,6 +288,7 @@ cvar_t	*r_saveFontData;
 // UQ1: Added...
 //
 cvar_t	*r_perf;
+cvar_t	*r_glslOptimize;
 cvar_t	*r_lowVram;
 cvar_t	*r_volumeLightHQ;
 cvar_t	*r_debugBinds;
@@ -1555,8 +1556,8 @@ void R_Register( void )
 	//
 	r_perf = ri->Cvar_Get("r_perf", "0", CVAR_NONE);
 
+	r_glslOptimize = ri->Cvar_Get("r_glslOptimize", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_lowVram = ri->Cvar_Get("r_lowVram", "0", CVAR_ARCHIVE | CVAR_LATCH);
-
 	r_volumeLightHQ = ri->Cvar_Get("r_volumeLightHQ", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	r_debugBinds = ri->Cvar_Get("r_debugBinds", "0", CVAR_ARCHIVE);
@@ -1565,7 +1566,7 @@ void R_Register( void )
 
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
-	r_ao = ri->Cvar_Get("r_ao", "1", CVAR_ARCHIVE);
+	r_ao = ri->Cvar_Get("r_ao", "2", CVAR_ARCHIVE);
 	r_env = ri->Cvar_Get("r_env", "1", CVAR_ARCHIVE);
 	
 	r_debugEmissiveLights = ri->Cvar_Get("r_debugEmissiveLights", "0", CVAR_ARCHIVE);

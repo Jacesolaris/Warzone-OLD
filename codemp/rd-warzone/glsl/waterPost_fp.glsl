@@ -55,7 +55,7 @@ varying vec2		var_TexCoords;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
-#define MAX_DEFERRED_LIGHTS 128//64//16//24
+#define MAX_DEFERRED_LIGHTS 128
 
 uniform int			u_lightCount;
 uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
@@ -487,19 +487,13 @@ void main ( void )
 		vec2 wind = normalize(waterMapLower.xz); // Waves head toward center of map. Should suit current WZ maps...
 
 		// Find intersection with water surface
-		//vec3 eyeVecNorm = normalize(waterMapUpper.xyz - ViewOrigin);
-		//vec3 eyeVecNorm = normalize(waterMapLower.xyz - ViewOrigin);
 		vec3 eyeVecNorm = normalize(ViewOrigin - waterMapLower.xyz/*position*/);
 		float t = ((level - ViewOrigin.y) / eyeVecNorm.y);
 		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
-		//vec3 surfacePoint = waterMapLower.xyz;
-
 
 		vec2 texCoord;
-		//level = 0.0;
 
 #ifdef REAL_WAVES
-//#pragma unroll 10
 		for(int i = 0; i < 10; i++)
 #endif //REAL_WAVES
 		{
@@ -513,8 +507,6 @@ void main ( void )
 			t = ((level - ViewOrigin.y) / eyeVecNorm.y);
 			surfacePoint = ViewOrigin + eyeVecNorm * t;
 		}
-
-		//level = surfacePoint.y;
 
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
@@ -543,22 +535,14 @@ void main ( void )
 				return;
 			}
 		}
-		/*else if (position.y > level && waterMapUpper.a <= 0.0)
-		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
-			gl_FragColor = vec4(color2, 1.0);
-			return;
-		}*/
 		else if (depth2 < 0.0)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			gl_FragColor = vec4(color2, 1.0);
 			return;
 		}
 
-		//gl_FragColor = vec4(vec3(depth2 / waveHeight), 1.0);
-		//return;
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
-		//eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
 
 		float normal1 = textureLod(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0)), 0.0).r;
 		float normal2 = textureLod(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0)), 0.0).r;
@@ -682,8 +666,6 @@ void main ( void )
 		}
 
 
-#if 1
-		/* TESTING */
 		vec3 dist = -eyeVecNorm;
 
 		color = mix(refraction, waterColorDeep, fresnel);
@@ -737,11 +719,7 @@ void main ( void )
 
 			color.rgb = color.rgb + addedLight;
 		}
-#else
-		color = mix(refraction, waterColorDeep, fresnel);
 
-		vec3 caustic = color * (texture(u_DetailMap, vec2((texCoord.x + (texCoord2.x*2.2)) * 0.25, (texCoord.y + (texCoord2.y*1.2)) * 0.25)).rgb * 1.1);
-#endif
 
 #if defined(USE_REFLECTION)
 		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
@@ -757,13 +735,6 @@ void main ( void )
 		color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
 
 		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
-
-		//if (position2.y/*position.y*/ > level && waterMapLower.a <= 0.0)
-		//if (position2.z > level && position2.a != 1024.0/*level > waterMapLower.y*/)
-		//if (position.y > level)// && position2.a != 1024.0)
-		//{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
-		//	color = color2;
-		//}
 
 		if (!pixelIsUnderWater)
 		{

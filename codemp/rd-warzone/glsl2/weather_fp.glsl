@@ -5,5 +5,5 @@ varying vec4	  var_Color;
 
 void main()
 {
-	gl_FragColor = texture(u_DiffuseMap, var_Tex1) * var_Color;
+	gl_FragColor = texture2D(u_DiffuseMap, var_Tex1) * var_Color;
 }

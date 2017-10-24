@@ -40,6 +40,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                               Warzone Basic Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
+#define __GLSL_OPTIMIZER__						// Enable GLSL optimization...
+
 //#define __USE_QGL_FINISH__					// For testing...
 #define __USE_QGL_FLUSH__						// Use this one instead...
 
@@ -459,6 +461,7 @@ extern int		max_polyverts;
 // UQ1: Added...
 //
 extern cvar_t	*r_perf;
+extern cvar_t	*r_glslOptimize;
 extern cvar_t	*r_lowVram;
 extern cvar_t	*r_volumeLightHQ;
 extern cvar_t	*r_debugBinds;
@@ -3119,6 +3122,7 @@ extern cvar_t	*r_dynamicGlowSoft;
 // UQ1: Added...
 //
 extern cvar_t	*r_perf;
+extern cvar_t	*r_glslOptimize;
 extern cvar_t	*r_lowVram;
 extern cvar_t	*r_volumeLightHQ;
 extern cvar_t	*r_debugBinds;

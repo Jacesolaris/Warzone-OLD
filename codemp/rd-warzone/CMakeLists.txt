@@ -21,6 +21,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/G2_bones.cpp"
 	"${MPDir}/rd-warzone/G2_misc.cpp"
 	"${MPDir}/rd-warzone/G2_surfaces.cpp"
+	"${MPDir}/rd-warzone/glsl_optimizer.h"
 	"${MPDir}/rd-warzone/tr_animation.cpp"
 	"${MPDir}/rd-warzone/tr_awesomium.cpp"
 	"${MPDir}/rd-warzone/tr_backend.cpp"
@@ -312,7 +313,7 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium")
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)

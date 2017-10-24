@@ -22,6 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_glsl.c
 #include "tr_local.h"
 
+#ifdef __GLSL_OPTIMIZER__
+#include "glsl_optimizer.h"
+#endif //__GLSL_OPTIMIZER__
+
 extern const char *fallbackShader_bokeh_vp;
 extern const char *fallbackShader_bokeh_fp;
 extern const char *fallbackShader_calclevels4x_vp;
@@ -2206,15 +2210,137 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	return true;
 }
 
+#ifdef __GLSL_OPTIMIZER__
+glslopt_ctx *ctx = NULL;
+
+//#define __GLSL_OPTIMIZER_DEBUG__
+
+void GLSL_PrintShaderOptimizationStats(char *shaderName, glslopt_shader *shader)
+{
+	static const char* kGlslTypeNames[kGlslTypeCount] = {
+		"float",
+		"int",
+		"bool",
+		"2d",
+		"3d",
+		"cube",
+		"2dshadow",
+		"2darray",
+		"other",
+	};
+	static const char* kGlslPrecNames[kGlslPrecCount] = {
+		"high",
+		"medium",
+		"low",
+	};
+
+#ifdef __GLSL_OPTIMIZER_DEBUG__
+	ri->Printf(PRINT_WARNING, "\n==============================================================\n");
+	ri->Printf(PRINT_WARNING, "Optimization Report - %s\n", shaderName);
+	ri->Printf(PRINT_WARNING, "==============================================================\n");
+
+	std::string textHir = glslopt_get_raw_output(shader);
+	std::string textOpt = glslopt_get_output(shader);
+
+	// append stats
+	int statsAlu, statsTex, statsFlow;
+	glslopt_shader_get_stats(shader, &statsAlu, &statsTex, &statsFlow);
+	ri->Printf(PRINT_WARNING, "\n// stats: %i alu %i tex %i flow\n", statsAlu, statsTex, statsFlow);
+
+	// append inputs
+	const int inputCount = glslopt_shader_get_input_count(shader);
+	if (inputCount > 0)
+	{
+		ri->Printf(PRINT_WARNING, "// inputs: %i\n", inputCount);
+	}
+	for (int i = 0; i < inputCount; ++i)
+	{
+		const char* parName;
+		glslopt_basic_type parType;
+		glslopt_precision parPrec;
+		int parVecSize, parMatSize, parArrSize, location;
+		glslopt_shader_get_input_desc(shader, i, &parName, &parType, &parPrec, &parVecSize, &parMatSize, &parArrSize, &location);
+		if (location >= 0)
+			ri->Printf(PRINT_WARNING, "//  #%i: %s (%s %s) %ix%i [%i] loc %i\n", i, parName, kGlslPrecNames[parPrec], kGlslTypeNames[parType], parVecSize, parMatSize, parArrSize, location);
+		else
+			ri->Printf(PRINT_WARNING, "//  #%i: %s (%s %s) %ix%i [%i]\n", i, parName, kGlslPrecNames[parPrec], kGlslTypeNames[parType], parVecSize, parMatSize, parArrSize);
+	}
+	// append uniforms
+	const int uniformCount = glslopt_shader_get_uniform_count(shader);
+	const int uniformSize = glslopt_shader_get_uniform_total_size(shader);
+	if (uniformCount > 0)
+	{
+		ri->Printf(PRINT_WARNING, "// uniforms: %i (total size: %i)\n", uniformCount, uniformSize);
+	}
+	for (int i = 0; i < uniformCount; ++i)
+	{
+		const char* parName;
+		glslopt_basic_type parType;
+		glslopt_precision parPrec;
+		int parVecSize, parMatSize, parArrSize, location;
+		glslopt_shader_get_uniform_desc(shader, i, &parName, &parType, &parPrec, &parVecSize, &parMatSize, &parArrSize, &location);
+		if (location >= 0)
+			ri->Printf(PRINT_WARNING, "//  #%i: %s (%s %s) %ix%i [%i] loc %i\n", i, parName, kGlslPrecNames[parPrec], kGlslTypeNames[parType], parVecSize, parMatSize, parArrSize, location);
+		else
+			ri->Printf(PRINT_WARNING, "//  #%i: %s (%s %s) %ix%i [%i]\n", i, parName, kGlslPrecNames[parPrec], kGlslTypeNames[parType], parVecSize, parMatSize, parArrSize);
+	}
+	// append textures
+	const int textureCount = glslopt_shader_get_texture_count(shader);
+	if (textureCount > 0)
+	{
+		ri->Printf(PRINT_WARNING, "// textures: %i\n", textureCount);
+	}
+	for (int i = 0; i < textureCount; ++i)
+	{
+		const char* parName;
+		glslopt_basic_type parType;
+		glslopt_precision parPrec;
+		int parVecSize, parMatSize, parArrSize, location;
+		glslopt_shader_get_texture_desc(shader, i, &parName, &parType, &parPrec, &parVecSize, &parMatSize, &parArrSize, &location);
+		if (location >= 0)
+			ri->Printf(PRINT_WARNING, "//  #%i: %s (%s %s) %ix%i [%i] loc %i\n", i, parName, kGlslPrecNames[parPrec], kGlslTypeNames[parType], parVecSize, parMatSize, parArrSize, location);
+		else
+			ri->Printf(PRINT_WARNING, "//  #%i: %s (%s %s) %ix%i [%i]\n", i, parName, kGlslPrecNames[parPrec], kGlslTypeNames[parType], parVecSize, parMatSize, parArrSize);
+	}
+	ri->Printf(PRINT_WARNING, "==============================================================\n");
+#else //!__GLSL_OPTIMIZER_DEBUG__
+	std::string textHir = glslopt_get_raw_output(shader);
+	std::string textOpt = glslopt_get_output(shader);
+
+	// append stats
+	int statsAlu, statsTex, statsFlow;
+	glslopt_shader_get_stats(shader, &statsAlu, &statsTex, &statsFlow);
+
+	// append inputs
+	const int inputCount = glslopt_shader_get_input_count(shader);
+
+	// append uniforms
+	const int uniformCount = glslopt_shader_get_uniform_count(shader);
+	const int uniformSize = glslopt_shader_get_uniform_total_size(shader);
+
+	// append textures
+	const int textureCount = glslopt_shader_get_texture_count(shader);
+
+	ri->Printf(PRINT_WARNING, "^1*** ^3Warzone^5: GlslOpt ^3%s^5 - ^7%i^5 alu. ^7%i^5 tex. ^7%i^5 flw. ^7%i^5 inp. ^7%i^5 unif (tsize: ^7%i^5). ^7%i^5 texc.\n", shaderName, statsAlu, statsTex, statsFlow, inputCount, uniformCount, uniformSize, textureCount);
+#endif //__GLSL_OPTIMIZER_DEBUG__
+}
+#endif //__GLSL_OPTIMIZER__
+
 int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	int attribs, qboolean fragmentShader, qboolean tesselation, qboolean geometry, const GLcharARB *extra, qboolean addHeader,
 	char *forceVersion, const char *fallback_vp, const char *fallback_fp, const char *fallback_cp, const char *fallback_ep, const char *fallback_gs)
 {
-	char vpCode[32768];
-	char fpCode[32768];
-	char cpCode[32768];
-	char epCode[32768];
-	char gsCode[32768];
+#ifdef __GLSL_OPTIMIZER__
+#define MAX_GLSL_LENGTH 170000
+#else //!__GLSL_OPTIMIZER__
+#define MAX_GLSL_LENGTH 32768
+#endif //__GLSL_OPTIMIZER__
+
+	char vpCode[MAX_GLSL_LENGTH];
+	char fpCode[MAX_GLSL_LENGTH];
+	char cpCode[MAX_GLSL_LENGTH];
+	char epCode[MAX_GLSL_LENGTH];
+	char gsCode[MAX_GLSL_LENGTH];
 	char *postHeader;
 	int size;
 
@@ -2323,6 +2449,62 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 		}
 	}
 
+#ifdef __GLSL_OPTIMIZER__
+	//
+	// Shader optimization only supports vert and frag shaders...
+	//
+	if (r_glslOptimize->integer)
+	{
+		try {
+			if (!StringContainsWord(name, "lightAll")
+				&& !StringContainsWord(name, "shadowPass"))
+			{// The optimizer doesn't like lightAll and shadowPass vert shaders...
+				if (vpCode)
+				{
+					glslopt_shader *shader = glslopt_optimize(ctx, kGlslOptShaderVertex, vpCode, 0);
+					if (glslopt_get_status(shader)) {
+						const char *newSource = glslopt_get_output(shader);
+						memset(vpCode, 0, sizeof(char) * MAX_GLSL_LENGTH);
+						strcpy(vpCode, newSource);
+						GLSL_PrintShaderOptimizationStats(va("%s (vert)", name), shader);
+					}
+					else {
+						const char *errorLog = glslopt_get_log(shader);
+						ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
+					}
+					glslopt_shader_delete(shader);
+				}
+			}
+
+			if (!StringContainsWord(name, "deferredLighting"))
+			{
+				if (fpCode)
+				{// The optimizer doesn't like deferredLighting shader...
+					glslopt_shader *shader = glslopt_optimize(ctx, kGlslOptShaderFragment, fpCode, 0);
+					if (glslopt_get_status(shader)) {
+						const char *newSource = glslopt_get_output(shader);
+#ifdef __GLSL_OPTIMIZER_DEBUG__
+						ri->Printf(PRINT_WARNING, "strlen %i\n", strlen(newSource));
+						ri->Printf(PRINT_WARNING, "%s\n", newSource);
+#endif //__GLSL_OPTIMIZER_DEBUG__
+						memset(fpCode, 0, sizeof(char) * MAX_GLSL_LENGTH);
+						strcpy(fpCode, newSource);
+						GLSL_PrintShaderOptimizationStats(va("%s (frag)", name), shader);
+					}
+					else {
+						const char *errorLog = glslopt_get_log(shader);
+						ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
+					}
+					glslopt_shader_delete(shader);
+				}
+			}
+		}
+		catch (...) {
+
+		}
+	}
+#endif //__GLSL_OPTIMIZER__
+
 	if (tesselation && cpCode && cpCode[0] && epCode && epCode[0])
 	{
 		if (geometry && gsCode && gsCode[0])
@@ -2394,6 +2576,9 @@ void GLSL_InitUniforms(shaderProgram_t *program)
 
 void GLSL_FinishGPUShader(shaderProgram_t *program)
 {
+#if defined(__GLSL_OPTIMIZER__) && defined(__GLSL_OPTIMIZER_DEBUG__)
+	ri->Printf(PRINT_WARNING, "Finish GPU shader: %s.\n", program->name);
+#endif //defined(__GLSL_OPTIMIZER__) && defined(__GLSL_OPTIMIZER_DEBUG__)
 	GLSL_ValidateProgram(program->program);
 	GLSL_ShowProgramUniforms(program);
 	GL_CheckErrors();
@@ -2751,6 +2936,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	R_IssuePendingRenderCommands();
 
 	startTime = ri->Milliseconds();
+
+#ifdef __GLSL_OPTIMIZER__
+	ctx = glslopt_initialize(kGlslTargetOpenGL);
+#endif //__GLSL_OPTIMIZER__
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -3614,6 +3803,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	//
 	// UQ1: End Added...
 	//
+
+#ifdef __GLSL_OPTIMIZER__
+	glslopt_cleanup(ctx);
+#endif //__GLSL_OPTIMIZER__
 
 	//ri->Error(ERR_DROP, "Oh noes!\n");
 	return startTime;
