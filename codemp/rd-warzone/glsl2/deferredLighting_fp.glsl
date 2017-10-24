@@ -919,9 +919,9 @@ void main(void)
 		float sao = clamp(msao * hsao * lsao, 0.0, 1.0);
 		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 
-		if (u_Local3.a > 0.0)
-			outColor.rgb = vec3(sao);
-		else
+		//if (u_Local3.a > 0.0)
+		//	outColor.rgb = vec3(sao);
+		//else
 			outColor.rgb *= sao;
 	}
 #endif //__EXPERIMENTAL_AO__
