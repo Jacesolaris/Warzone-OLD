@@ -437,33 +437,33 @@ void R_CreateBspMapImage(void)
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.endpos[2] <= MAP_INFO_MINS[2])
 				{// Went off map...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					break;
 				}
 
 				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
@@ -472,9 +472,9 @@ void R_CreateBspMapImage(void)
 
 				if (tr.contents & CONTENTS_WATER)
 				{
-					red[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 1.0 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 1.0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				}
@@ -484,151 +484,151 @@ void R_CreateBspMapImage(void)
 				switch (MATERIAL_TYPE)
 				{
 				case MATERIAL_WATER:			// 13			// light covering of water on a surface
-					red[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 1.0 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 1.0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SAND:				// 8			// sandy beach
-					red[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_ROCK:				// 23			//
-					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.3 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.5 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 				case MATERIAL_PLASTER:			// 28			// drywall style plaster
-					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #if 0
 				case MATERIAL_CARPET:			// 27			// lush carpet
-					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_GRAVEL:			// 9			// lots of small stones
-					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.5 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.5 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.5 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_TILES:			// 26			// tiled floor
-					red[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-					red[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.2 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_FABRIC:			// 21			// Cotton sheets
 				case MATERIAL_CANVAS:			// 22			// tent material
-					red[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_MARBLE:			// 12			// marble floors
-					red[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.8 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.8 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #endif
 				case MATERIAL_SNOW:				// 14			// freshly laid snow
 				case MATERIAL_ICE:				// 15			// packed snow/solid ice
-					red[imageX][imageY] = 1 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 1 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 1 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 1 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 1 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_MUD:				// 17			// wet soil
 				case MATERIAL_DIRT:				// 7			// hard mud
-					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.2 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.2 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #if 0
 				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.3 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.3 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 				case MATERIAL_PLASTIC:			// 25			//
-					red[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_ARMOR:			// 30			// body armor
-					red[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.7 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 				case MATERIAL_GLASS:			// 10			//
 				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-					red[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.9 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.1 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.9 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 #endif
 				default:
 					/*
-					red[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0*255*HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0*255*HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0*255*HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0*255*HEIGHT_COLOR_MULT;
 					*/
-					red[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					green[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
-					blue[imageX][imageY] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.6 * 255 * HEIGHT_COLOR_MULT;
 					FOUND = qtrue;
 					break;
 				}
@@ -738,37 +738,37 @@ void R_CreateHeightMapImage(void)
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.endpos[2] < MAP_INFO_MINS[2] - 256.0)
 				{// Went off map...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					break;
 				}
 
 				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
@@ -790,10 +790,10 @@ void R_CreateHeightMapImage(void)
 					isUnderWater = 1.0;
 				}
 
-				red[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
-				green[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
-				blue[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
-				alpha[imageX][imageY] = isUnderWater * 255;			// is under water
+				red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
+				green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
+				blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
+				alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = isUnderWater * 255;			// is under water
 
 				HIT_WATER = qfalse;
 				break;
@@ -896,37 +896,37 @@ void R_CreateFoliageMapImage(void)
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.endpos[2] <= MAP_INFO_MINS[2])
 				{// Went off map...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					break;
 				}
 
 				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
@@ -941,17 +941,17 @@ void R_CreateFoliageMapImage(void)
 				case MATERIAL_LONGGRASS:		// 6					// long jungle grass
 				case MATERIAL_MUD:				// 17					// wet soil
 				case MATERIAL_DIRT:				// 7					// hard mud
-					red[imageX][imageY] = HEIGHT_COLOR_MULT * 255;		// height map
-					green[imageX][imageY] = irand(0, 255);				// foliage option 1
-					blue[imageX][imageY] = irand(0, 255);				// foliage option 2
-					alpha[imageX][imageY] = irand(0, 255);				// foliage option 3
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = irand(0, 255);				// foliage option 1
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = irand(0, 255);				// foliage option 2
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = irand(0, 255);				// foliage option 3
 					FOUND = qtrue;
 					break;
 				default:
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					FOUND = qtrue;
 					break;
 				}
@@ -1082,37 +1082,37 @@ void R_CreateRoadMapImage(void)
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.endpos[2] <= MAP_INFO_MINS[2])
 				{// Went off map...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 255;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
 					break;
 				}
 
 				if (tr.surfaceFlags & SURF_SKY)
 				{// Sky...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 0;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
 					continue;
 				}
 
@@ -1128,10 +1128,10 @@ void R_CreateRoadMapImage(void)
 				{
 				case MATERIAL_WATER:
 					// Water... Draw blue...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 255;
-					alpha[imageX][imageY] = 255;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
 					FOUND = qtrue;
 					break;
 				case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
@@ -1140,26 +1140,26 @@ void R_CreateRoadMapImage(void)
 				case MATERIAL_DIRT:				// 7					// hard mud
 					if (!ROAD_CheckSlope(tr.plane.normal)) 
 					{// Bad slope for road... Draw black...
-						red[imageX][imageY] = 0;
-						green[imageX][imageY] = 0;
-						blue[imageX][imageY] = 0;
-						alpha[imageX][imageY] = 255;
+						red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+						green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+						blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+						alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
 					}
 					else
 					{// Valid surface for road. Draw green height map...
-						red[imageX][imageY] = 0;
-						green[imageX][imageY] = HEIGHT_COLOR_MULT * 255;
-						blue[imageX][imageY] = 0;
-						alpha[imageX][imageY] = 255;
+						red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+						green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;
+						blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+						alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
 					}
 					FOUND = qtrue;
 					break;
 				default:
 					// Material isn't a road-able surface type...  Draw black...
-					red[imageX][imageY] = 0;
-					green[imageX][imageY] = 0;
-					blue[imageX][imageY] = 0;
-					alpha[imageX][imageY] = 255;
+					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
+					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
 					FOUND = qtrue;
 					break;
 				}
