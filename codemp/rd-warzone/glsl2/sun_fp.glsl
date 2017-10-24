@@ -229,17 +229,19 @@ void main()
 {
 	vec2 texCoords = m_TexCoords.xy * u_Dimensions.xy;
 	getSun( gl_FragColor, texCoords );
-	gl_FragColor.rgb *= 2.0;
-	out_Glow = gl_FragColor;
+	gl_FragColor.rgb = clamp(gl_FragColor.rgb * 2.0, 0.0, 1.0);
 	
 	if (length(gl_FragColor.rgb) > 0.1)
 	{
+		out_Glow = gl_FragColor;
 		out_Position = vec4(m_vertPos.xyz, MATERIAL_SUN+1.0);
 		out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, 1.0 );
 		out_NormalDetail = vec4(0.0);
 	}
 	else
 	{
+		gl_FragColor = vec4(0.0);
+		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
 		out_NormalDetail = vec4(0.0);

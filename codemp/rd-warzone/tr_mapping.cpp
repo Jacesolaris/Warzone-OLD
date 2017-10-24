@@ -1428,6 +1428,10 @@ float		GRASS_DISTANCE_FROM_ROADS = 0.25;
 qboolean	PEBBLES_ENABLED = qfalse;
 int			PEBBLES_DENSITY = 1;
 int			PEBBLES_DISTANCE = 2048;
+vec3_t		MOON_COLOR = { 0.2 };
+vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
+float		MOON_GLOW_STRENGTH = 0.5;
+float		MOON_ROTATION_RATE = 0.08;
 char		ROAD_TEXTURE[256] = { 0 };
 
 qboolean	JKA_WEATHER_ENABLED = qfalse;
@@ -1593,6 +1597,19 @@ void MAPPING_LoadMapInfo(void)
 	PEBBLES_DENSITY = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DENSITY", "1"));
 	PEBBLES_DISTANCE = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DISTANCE", "2048"));
 
+	//
+	// Moon...
+	//
+	tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/random"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	if (!tr.moonImage) tr.moonImage = R_FindImageFile("gfx/random", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	MOON_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_COLOR_R", "0.2"));
+	MOON_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_COLOR_G", "0.2"));
+	MOON_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_COLOR_B", "0.2"));
+	MOON_ATMOSPHERE_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_R", "1.0"));
+	MOON_ATMOSPHERE_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_G", "1.0"));
+	MOON_ATMOSPHERE_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_B", "1.0"));
+	MOON_GLOW_STRENGTH = atof(IniRead(mapname, "MOON", "MOON_GLOW_STRENGTH", "0.5"));
+	MOON_ROTATION_RATE = atof(IniRead(mapname, "MOON", "MOON_ROTATION_RATE", "0.08"));
 
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
@@ -1629,7 +1646,6 @@ void MAPPING_LoadMapInfo(void)
 		FOG_POST_ENABLED = qfalse;
 	}
 
-	tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/misc/moontexture"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	tr.auroraImage[0] = R_FindImageFile("gfx/misc/aurora1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	tr.auroraImage[1] = R_FindImageFile("gfx/misc/aurora2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	
@@ -1721,6 +1737,10 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon color is ^7%.4f %.4f %.4f^5 and moon glow strength ^7%.4f^5 on this map.\n", MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon atmosphere color is ^7%.4f %.4f %.4f^5 on this map.\n", MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");

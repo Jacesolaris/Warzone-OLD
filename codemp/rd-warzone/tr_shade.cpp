@@ -1792,6 +1792,10 @@ extern float		GRASS_DISTANCE_FROM_ROADS;
 extern qboolean		PEBBLES_ENABLED;
 extern int			PEBBLES_DENSITY;
 extern int			PEBBLES_DISTANCE;
+extern vec3_t		MOON_COLOR;
+extern vec3_t		MOON_ATMOSPHERE_COLOR;
+extern float		MOON_GLOW_STRENGTH;
+extern float		MOON_ROTATION_RATE;
 
 float waveTime = 0.5;
 float waveFreq = 0.1;
@@ -3044,7 +3048,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
 
-				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
@@ -3110,6 +3114,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 			{// Procedural sun...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*2.0);
+
 				vec4_t loc;
 				VectorSet4(loc, SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, loc);
@@ -3124,7 +3133,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
 			{// Procedural moon...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
 				GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
+
+				vec4_t vec;
+				VectorSet4(vec, MOON_ROTATION_RATE, MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
+				VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
 				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (r_tesselation->integer && sp->tesselation)

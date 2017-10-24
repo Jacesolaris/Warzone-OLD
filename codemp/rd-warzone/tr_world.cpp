@@ -60,6 +60,21 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 	}
 #endif
 
+#if 0
+	if (r_testvalue0->integer >= 1 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
+	{
+		vec3_t center;
+		center[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+		center[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+		center[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+		float cdistance = DistanceSquared(tr.viewParms.ori.origin, center);
+		if (sqrtf(cdistance) > tr.occlusionZfar * 4.0)
+		{
+			return qtrue;
+		}
+	}
+#endif
+
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
 		if (tr.currentModel && tr.currentModel->type == MOD_BRUSH)
@@ -541,6 +556,9 @@ qboolean R_NodeInFOV(vec3_t spot, vec3_t from)
 R_RecursiveWorldNode
 ================
 */
+//int numOcclusionNodesChecked = 0;
+//int numOcclusionNodesCulled = 0;
+
 static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, int pshadowBits) {
 	do {
 		int			newDlights[2];
@@ -589,6 +607,128 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 			{
 				return;
 			}
+
+#if 0
+			if (r_occlusion->integer)
+			{
+				numOcclusionNodesChecked++;
+
+				if (r_testvalue0->integer == 1)
+				{
+					float closestCornerDistance = 9999999.0;
+
+					for (int i = 0; i < 8; i++)
+					{
+						vec3_t v;
+
+						if (i & 1)
+						{
+							v[0] = node->mins[0];
+						}
+						else
+						{
+							v[0] = node->maxs[0];
+						}
+
+						if (i & 2)
+						{
+							v[1] = node->mins[1];
+						}
+						else
+						{
+							v[1] = node->maxs[1];
+						}
+
+						if (i & 4)
+						{
+							v[2] = node->mins[2];
+						}
+						else
+						{
+							v[2] = node->maxs[2];
+						}
+
+						float distance = DistanceSquared(tr.viewParms.ori.origin, v);
+
+						if (distance < closestCornerDistance)
+						{
+							closestCornerDistance = distance;
+						}
+					}
+
+					if (sqrtf(closestCornerDistance) > tr.occlusionZfar * 1.75)
+					{
+						numOcclusionNodesCulled++;
+						return;
+					}
+				}
+				else if (r_testvalue0->integer > 1)
+				{
+					vec3_t center;
+					center[0] = (node->mins[0] + node->maxs[0]) * 0.5f;
+					center[1] = (node->mins[1] + node->maxs[1]) * 0.5f;
+					center[2] = (node->mins[2] + node->maxs[2]) * 0.5f;
+					float cdistance = DistanceSquared(tr.viewParms.ori.origin, center);
+					if (sqrtf(cdistance) > tr.occlusionZfar * 1.75)
+					{
+						if (r_testvalue0->integer > 2)
+						{
+							float closestCornerDistance = 9999999.0;
+
+							for (int i = 0; i < 8; i++)
+							{
+								vec3_t v;
+
+								if (i & 1)
+								{
+									v[0] = node->mins[0];
+								}
+								else
+								{
+									v[0] = node->maxs[0];
+								}
+
+								if (i & 2)
+								{
+									v[1] = node->mins[1];
+								}
+								else
+								{
+									v[1] = node->maxs[1];
+								}
+
+								if (i & 4)
+								{
+									v[2] = node->mins[2];
+								}
+								else
+								{
+									v[2] = node->maxs[2];
+								}
+
+								float distance = DistanceSquared(tr.viewParms.ori.origin, v);
+
+								if (distance < closestCornerDistance)
+								{
+									closestCornerDistance = distance;
+								}
+							}
+
+							if (sqrtf(closestCornerDistance) > tr.occlusionZfar * 1.75)
+							{
+								numOcclusionNodesCulled++;
+								return;
+							}
+						}
+						else
+						{
+							numOcclusionNodesCulled++;
+							return;
+						}
+					}
+				}
+			}
+#endif
 
 			int		r;
 
@@ -1440,7 +1580,13 @@ void R_AddWorldSurfaces(void) {
 #ifdef __PSHADOWS__
 	R_RecursiveWorldNode(tr.world->nodes, planeBits, 0, pshadowBits);
 #else //!__PSHADOWS__
+	//numOcclusionNodesChecked = 0;
+	//numOcclusionNodesCulled = 0;
 	R_RecursiveWorldNode(tr.world->nodes, planeBits, 0, 0);
+	/*if (r_testvalue1->integer)
+	{
+		ri->Printf(PRINT_WARNING, "checked: %i. occluded: %i.\n", numOcclusionNodesChecked, numOcclusionNodesCulled);
+	}*/
 #endif //__PSHADOWS__
 
 #ifdef __DISTANCE_SORTING__
