@@ -1348,7 +1348,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 
 		vec4_t local4;
-		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * 2.0 * MAP_GLOW_MULTIPLIER;
+		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * tess.shader->glowStrength * 2.0 * MAP_GLOW_MULTIPLIER;
 		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 

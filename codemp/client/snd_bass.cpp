@@ -1369,6 +1369,8 @@ void BASS_MusicUpdateThread( void * aArg )
 			continue;
 		}
 
+		BASS_StopMusic(MUSIC_CHANNEL.channel);
+
 		// Seems we need a new track... Select a random one and play it!
 		int trackChoice = irand(0, MUSIC_LIST_COUNT-1);
 		int trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);

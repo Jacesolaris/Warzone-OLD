@@ -633,14 +633,13 @@ void main(void)
 	vec3 specular = vec3(0.0);
 	vec3 reflectance = vec3(0.0);
 	float specularPower = clamp(materialSettings.x * 0.04, 0.0, 1.0);
+	float gloss = clamp(clamp((materialSettings.x + materialSettings.y) * 0.5, 0.0, 1.0) * 1.6, 0.0, 1.0);
 
 	if (specularPower > 0.0)
 	{
 #define specLower ( 48.0 / 255.0)
 #define specUpper (255.0 / 192.0)
 		specular = clamp((clamp(outColor.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
-
-		float gloss = clamp(clamp((materialSettings.x + materialSettings.y) * 0.5, 0.0, 1.0) * 1.6, 0.0, 1.0);
 
 		float NE = clamp(length(dot(N, E)), 0.0, 1.0);
 		vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
@@ -662,8 +661,7 @@ void main(void)
 
 				if (cubeFade > 0.0)
 				{
-#if 1
-					vec3 m_ViewDir = to_pos_norm;//(u_ViewOrigin.xyz - position.xyz);
+					vec3 m_ViewDir = to_pos_norm;
 					vec3 R = reflect(E, cubeNorm);
 					
 					// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
@@ -671,9 +669,6 @@ void main(void)
 					cubeInfo.xyz -= u_ViewOrigin.xyz;
 
 					cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), 3.0/*u_Local3.r*/);
-					//cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), u_Local3.r) * -curDist;
-					//cubeInfo.w = (distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz) * u_Local3.r) * -curDist;
-					//cubeInfo.w = pow(distance(position.xyz, u_CubeMapInfo.xyz), u_Local3.r/*0.666*/) * -curDist;
 
 					cubeInfo.xyz *= 1.0 / cubeInfo.w;
 					cubeInfo.w = 1.0 / cubeInfo.w;
@@ -699,36 +694,6 @@ void main(void)
 						}
 					}
 					cubeLightColor.rgb /= blurCount;
-#else
-					//vec3 incident = -normalize( position.xyz - u_ViewOrigin.xyz );
-					//vec3 cubeLightColor = texture( u_CubeMap, reflect( incident, normalize(cubeNorm))).rgb;
-					//vec3 cubeLightColor = texture( u_CubeMap, reflect(normalize(u_CubeMapInfo.xyz - position.xyz), cubeNorm)).rgb;
-
-#define PositionWS			position.xyz
-#define CameraWS			u_ViewOrigin.xyz
-#define CubemapPositionWS	u_CubeMapInfo.xyz
-
-					vec3 DirectionWS = normalize(PositionWS - CameraWS);
-					vec3 ReflDirectionWS = reflect(DirectionWS, normalize(cubeNorm));
-
-					// Intersection with OBB convertto unit box space
-					// Transform in local unit parallax cube space (scaled and rotated)
-					vec3 RayLS = (u_ModelViewProjectionMatrix * vec4(ReflDirectionWS.xyz, 1.0)).xyz;
-					vec3 PositionLS = (u_ModelViewProjectionMatrix * vec4(PositionWS.xyz, 1.0)).xyz;
-
-					vec3 Unitary = vec3(1.0f, 1.0f, 1.0f);
-					vec3 FirstPlaneIntersect  = (Unitary - PositionLS) / RayLS;
-					vec3 SecondPlaneIntersect = (-Unitary - PositionLS) / RayLS;
-					vec3 FurthestPlane = max(FirstPlaneIntersect, SecondPlaneIntersect);
-					float Distance = min(FurthestPlane.x, min(FurthestPlane.y, FurthestPlane.z));
-
-					// Use Distance in WS directly to recover intersection
-					vec3 IntersectPositionWS = PositionWS + ReflDirectionWS * Distance;
-					ReflDirectionWS = IntersectPositionWS - CubemapPositionWS;
-
-					vec3 cubeLightColor = texture(u_CubeMap, -ReflDirectionWS).rgb;
-#endif
-
 
 					// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
 					outColor.rgb = mix(outColor.rgb, outColor.rgb + (cubeLightColor * reflectance), clamp(cubeFade * gloss, 0.0, 1.0));
@@ -929,10 +894,10 @@ void main(void)
 #ifdef __ENVMAP__
 	if (u_Local1.a > 0.0)
 	{// Envmap enabled...
-		float lightScale = clamp(1.0 - max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0);
-		float invLightScale = clamp((1.0 - lightScale), 0.2, 1.0);
+		float lightScale = clamp(1.0 - clamp(max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0), 0.0, 1.0);
+		float invLightScale = clamp((1.0 - lightScale) * 1.2, 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), (reflectivePower * 0.5) * lightScale);
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), (reflectivePower * 0.5) * lightScale * gloss);
 	}
 #endif //__ENVMAP__
 

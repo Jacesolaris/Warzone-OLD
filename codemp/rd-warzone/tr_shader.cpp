@@ -4057,6 +4057,9 @@ static qboolean ParseShader( const char *name, const char **text )
 	shader.customCubeMapScale = -1.0;
 	shader.customSpecularScale = -1.0;
 
+	// Also init base glow strength to 1.0.
+	shader.glowStrength = 1.0;
+
 	s = 0;
 
 	token = COM_ParseExt( text, qtrue );
@@ -4074,12 +4077,6 @@ static qboolean ParseShader( const char *name, const char **text )
 		{
 			ri->Printf( PRINT_WARNING, "WARNING: no concluding '}' in shader %s\n", shader.name );
 			return qfalse;
-		}
-
-		if (StringsContainWord(name, token, "reborn"))
-		{
-			//ri->Printf(PRINT_WARNING, "Reborn seen in shader %s.\n", name);
-			if (!(shader.surfaceFlags & MATERIAL_ARMOR)) shader.surfaceFlags |= MATERIAL_ARMOR;
 		}
 
 		// end of shader definition
@@ -4277,6 +4274,19 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if (!Q_stricmp(token, "detailMapFromWorld"))
 		{
 			shader.detailMapFromWorld = qtrue;
+			continue;
+		}
+		else if (!Q_stricmp(token, "glowStrength"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'glowStrength' keyword in shader '%s'\n", shader.name);
+				shader.glowStrength = 1.0;
+				continue;
+			}
+			shader.glowStrength = atof(token);
+			ri->Printf(PRINT_WARNING, "WARNING: 'glowStrength' for shader '%s' set to '%f'\n", shader.name, shader.glowStrength);
 			continue;
 		}
 		//
@@ -7278,11 +7288,9 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_alphashadow\n"\
 "q3map_material	GreenLeaves\n"\
-"//surfaceparm	trans\n"\
-"//surfaceparm	noimpact\n"\
-"//surfaceparm	nomarks\n"\
 "surfaceparm	nonsolid\n"\
 "entityMergable\n"\
+"glowStrength 0.75\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -7324,10 +7332,8 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 
 char uniqueGenericFoliageTreeShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"//q3map_alphashadow\n"\
 "q3map_material	solidwood\n"\
-"//surfaceparm	noimpact\n"\
-"//surfaceparm	nomarks\n"\
+"glowStrength 0.75\n"\
 "entityMergable\n"\
 "{\n"\
 "map %s\n"\
@@ -7343,11 +7349,10 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"//q3map_nolightmap\n"\
-"//q3map_alphashadow\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"glowStrength 0.75\n"\
 "entityMergable\n"\
 "{\n"\
 "map %s\n"\
@@ -7359,81 +7364,35 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
-"//{\n"\
-"//map %s\n"\
-"////blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"//blendFunc GL_ONE GL_ONE\n"\
-"//rgbGen lightingDiffuse\n"\
-"//alphaGen lightingSpecular\n"\
-"//alphaFunc GE128\n"\
-"//depthFunc equal\n"\
-"//detail\n"\
-"//}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//noScreenMap\n"\
-"//}\n"\
 "}\n"\
 "";
 
 char uniqueGenericArmorShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"//q3map_alphashadow\n"\
 "q3map_material	armor\n"\
 "surfaceparm trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
 "//entityMergable\n"\
+"glowStrength 8.0\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
-"//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
-"//rgbGen lightingDiffuse\n"\
 "depthWrite\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
-"//{\n"\
-"//map %s\n"\
-"////blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"//blendFunc GL_ONE GL_ONE\n"\
-"//rgbGen lightingDiffuse\n"\
-"//alphaGen lightingSpecular\n"\
-"//alphaFunc GE128\n"\
-"//depthFunc equal\n"\
-"//detail\n"\
-"//}\n"\
-"{\n"\
-"	map models/warzone/tatooine/glass_reflect\n"\
-"		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA\n"\
-"		detail\n"\
-"		alphaGen const 0.7\n"\
-"		tcGen environment\n"\
-"		tcMod scale 1.5 1.5\n"\
-"}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//noScreenMap\n"\
-"//}\n"\
 "}\n"\
 "";
 
 char uniqueGenericMetalShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_material	hollowmetal\n"\
-"//q3map_alphashadow\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
-"//entityMergable\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -7445,16 +7404,6 @@ char uniqueGenericMetalShader[] = "{\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
-"//{\n"\
-"//map %s\n"\
-"////blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"//blendFunc GL_ONE GL_ONE\n"\
-"//rgbGen lightingDiffuse\n"\
-"//alphaGen lightingSpecular\n"\
-"//alphaFunc GE128\n"\
-"//depthFunc equal\n"\
-"//detail\n"\
-"//}\n"\
 "{\n"\
 "map $lightmap\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
@@ -7467,10 +7416,10 @@ char uniqueGenericMetalShader[] = "{\n"\
 
 char uniqueGenericRockShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"//q3map_alphashadow\n"\
 "q3map_material	rock\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
+"glowStrength 0.75\n"\
 "entityMergable\n"\
 "{\n"\
 "map %s\n"\
@@ -7483,6 +7432,25 @@ char uniqueGenericRockShader[] = "{\n"\
 "}\n"\
 "";
 
+char uniqueGenericWeaponShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"q3map_material	solidmetal\n"\
+"surfaceparm	noimpact\n"\
+"surfaceparm	nomarks\n"\
+"glowStrength 8.0\n"\
+"cull	twosided\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"rgbGen lightingDiffuse\n"\
+"depthWrite\n"\
+"//rgbGen entity\n"\
+"}\n"\
+"%s"\
+"}\n"\
+"";
+
 //"sort seethrough\n"\
 
 char uniqueGenericShader[] = "{\n"\
@@ -7490,7 +7458,6 @@ char uniqueGenericShader[] = "{\n"\
 "//entityMergable\n"\
 "{\n"\
 "map %s\n"\
-"//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
@@ -7768,6 +7735,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
 			else
 				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(name, "models/weapon"))
+		{
+			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		}
 		else if (material == MATERIAL_ARMOR)
 		{
