@@ -2484,7 +2484,7 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 			newSurf->surfaceData = surface;
 			newSurf->boneCache = RS.boneCache;
 
-			R_AddDrawSurf ((surfaceType_t *)newSurf, (shader_t *)shader, RS.fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+			R_AddDrawSurf ((surfaceType_t *)newSurf, (shader_t *)shader, RS.fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex, qfalse);
 
 #ifdef _G2_GORE
 			if (RS.gore_set && drawGore)
@@ -2564,7 +2564,7 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 
 						last->goreChain=newSurf2;
 						last=newSurf2;
-						R_AddDrawSurf ((surfaceType_t *)newSurf2, gshader, RS.fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+						R_AddDrawSurf ((surfaceType_t *)newSurf2, gshader, RS.fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex, qfalse);
 					}
 				}
 			}

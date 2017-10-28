@@ -658,7 +658,7 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 
 	for (j = 0; j < numMergedSurfaces; j++)
 	{
-		R_AddDrawSurf(mergedSurfaces[i].data, mergedSurfaces[i].shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
+		R_AddDrawSurf(mergedSurfaces[i].data, mergedSurfaces[i].shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex, qfalse);
 	}
 
 	for (j = 0; j < model->numSurfaces; j++)
@@ -695,7 +695,7 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 				shader = tr.shaders[ model->surfaces[j].shaderIndexes[ ent->e.skinNum % model->surfaces[j].numShaderIndexes ] ];
 			}
 
-			R_AddDrawSurf((surfaceType_t *)vboSurface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
+			R_AddDrawSurf((surfaceType_t *)vboSurface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex, qfalse);
 		}
 	}
 }
@@ -910,7 +910,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		if(!personalModel)
 		{
 			srfVBOMDVMesh_t *vboSurface = &model->vboSurfaces[i];
-			R_AddDrawSurf((surfaceType_t *)vboSurface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
+			R_AddDrawSurf((surfaceType_t *)vboSurface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex, qfalse);
 		}
 
 		surface++;

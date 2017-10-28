@@ -63,6 +63,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __GLOW_LIGHT_PVS__					// Check if lights are in PVS. Probably not worth the FPS it costs...
 //#define __USE_DETAIL_MAPS__					// Enabled detail map system... Disabling for now for more FPS...
 //#define __GEOMETRY_SHADER_ALLOW_INVOCATIONS__ // Enable geometry shader invocations support. Slower because you cant set the invocations max in realtime...
+#define __ZFAR_CULLING__						// Experimental zfar culling separation of depth prepass and render surfaces...
 
 //#define __CRC_IMAGE_HASHING__					// Use image CRC hashing, to find and reuse already loaded identical images instead of loading more than one copy... Seems its not worth the extra time it takes to hash the images...
 //#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
@@ -1795,6 +1796,7 @@ typedef enum {
 typedef struct drawSurf_s {
 	uint64_t			sort;			// bit combination for fast compares
 	int                 cubemapIndex;
+	qboolean			depthDrawOnly;
 	surfaceType_t		*surface;		// any of surface*_t
 } drawSurf_t;
 
@@ -2056,6 +2058,8 @@ typedef struct msurface_s {
 #endif //__Q3_FOG__
 	int                 cubemapIndex;
 	cullinfo_t          cullinfo;
+	
+	qboolean			depthDrawOnly;
 
 #ifdef __XYC_SURFACE_SPRITES__
 	int					numSurfaceSprites;
@@ -3231,7 +3235,7 @@ void R_AddPolygonSurfaces( void );
 void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader, int64_t *fogNum, int64_t *postRender);
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
-				   int64_t fogIndex, int64_t dlightMap, int64_t postRender, int cubemap );
+				   int64_t fogIndex, int64_t dlightMap, int64_t postRender, int cubemap, qboolean depthDrawOnly);
 bool R_IsPostRenderEntity(int refEntityNum, const trRefEntity_t *refEntity);
 
 void R_CalcTexDirs(vec3_t sdir, vec3_t tdir, const vec3_t v1, const vec3_t v2,

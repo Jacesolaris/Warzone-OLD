@@ -60,20 +60,22 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 	}
 #endif
 
-#if 0
-	if (r_testvalue0->integer >= 1 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
+#ifdef __ZFAR_CULLING__
+	surf->depthDrawOnly = qfalse;
+
+	if (r_occlusion->integer)
 	{
 		vec3_t center;
 		center[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
 		center[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
 		center[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
 		float cdistance = DistanceSquared(tr.viewParms.ori.origin, center);
-		if (sqrtf(cdistance) > tr.occlusionZfar * 4.0)
-		{
-			return qtrue;
+		if (sqrtf(cdistance) > tr.occlusionZfar * 1.75)
+		{// Out of view range, but we still want it on depth draws...
+			surf->depthDrawOnly = qtrue;
 		}
 	}
-#endif
+#endif //__ZFAR_CULLING__
 
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
@@ -408,7 +410,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 #else //!__Q3_FOG__
 		0,
 #endif //__Q3_FOG__
-		dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+		dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex, surf->depthDrawOnly);
 
 #ifdef __XYC_SURFACE_SPRITES__
 	for (int i = 0, numSprites = surf->numSurfaceSprites; i < numSprites; ++i)
@@ -420,7 +422,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 #else //!__Q3_FOG__
 			0,
 #endif //__Q3_FOG__
-			dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex);
+			dlightBits, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex, surf->depthDrawOnly);
 	}
 #endif //__XYC_SURFACE_SPRITES__
 }

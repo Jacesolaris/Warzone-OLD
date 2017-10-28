@@ -93,7 +93,6 @@ void main()
 
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
 
-
 		if (SHADER_MATERIAL_TYPE == 1024.0)
 		{// This is sky, and aurora is enabled...
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
@@ -161,7 +160,6 @@ void main()
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + color, auroraPower * str);
 			}
 		}
-
 
 		gl_FragColor.a *= var_Color.a;
 	}

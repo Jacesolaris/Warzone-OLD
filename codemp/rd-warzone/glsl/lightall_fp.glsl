@@ -592,7 +592,7 @@ void main()
 
 	float useDisplacementMapping = 0.0;
 
-	if (SHADER_MATERIAL_TYPE == MATERIAL_SOLIDWOOD 
+	if ( SHADER_MATERIAL_TYPE == MATERIAL_SOLIDWOOD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_HOLLOWWOOD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_ROCK 
 		//|| SHADER_MATERIAL_TYPE == MATERIAL_CARPET 
@@ -612,7 +612,14 @@ void main()
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
 
-	if (USE_GLOW_BUFFER >= 2.0)
+	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
+	{
+		out_Glow = vec4(0.0);
+		out_Position = vec4(0.0);
+		out_Normal = vec4(0.0);
+		out_NormalDetail = vec4(0.0);
+	}
+	else if (USE_GLOW_BUFFER >= 2.0)
 	{// Merged diffuse+glow stage...
 		vec4 glowColor = texture(u_GlowMap, texCoords);
 
@@ -673,7 +680,7 @@ void main()
 
 		out_Glow = vec4(glowColor.rgb, glowColor.a);
 
-		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
@@ -693,7 +700,7 @@ void main()
 
 		out_Glow = gl_FragColor;
 
-		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
@@ -710,7 +717,7 @@ void main()
 	{
 		out_Glow = vec4(0.0);
 
-		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );

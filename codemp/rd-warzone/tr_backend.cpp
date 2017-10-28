@@ -1036,6 +1036,19 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		if (!drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES) continue;
 
+#ifdef __ZFAR_CULLING__
+		if (r_occlusion->integer)
+		{
+			if (!backEnd.depthFill 
+				&& drawSurf->depthDrawOnly
+				&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isSky
+				&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isWater)
+			{// Surface is marked as only for depth draws, skip it unless its sky or water...
+				continue;
+			}
+		}
+#endif //__ZFAR_CULLING__
+
 #ifdef __PLAYER_BASED_CUBEMAPS__
 #ifdef __REALTIME_CUBEMAP__
 		newCubemapIndex = 0;
@@ -1958,9 +1971,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglDisable(GL_DEPTH_CLAMP);
 	}
 
-	//if (!(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
-	if (!(backEnd.viewParms.flags & VPF_SHADOWPASS)
-		&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
+	if (!(backEnd.viewParms.flags & VPF_SHADOWPASS) && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 

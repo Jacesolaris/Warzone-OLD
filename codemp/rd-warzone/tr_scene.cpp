@@ -116,7 +116,7 @@ void R_AddPolygonSurfaces(void) {
 #else //!__Q3_FOG__
 				0,
 #endif //__Q3_FOG__
-				qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0 /* cubemapIndex */);
+				qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0 /* cubemapIndex */, qfalse);
 		}
 
 		poly++;

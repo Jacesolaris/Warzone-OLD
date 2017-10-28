@@ -1777,8 +1777,6 @@ void RB_UpdateCloseLights ( void )
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }
 
-extern image_t *skyImage;
-
 extern vec3_t		SUN_COLOR_MAIN;
 extern vec3_t		SUN_COLOR_SECONDARY;
 extern vec3_t		SUN_COLOR_TERTIARY;
@@ -3114,7 +3112,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 			{// Procedural sun...
-				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				//stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				//stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*2.0);
@@ -3133,7 +3133,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
 			{// Procedural moon...
-				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				//stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				//stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
 
 				GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);

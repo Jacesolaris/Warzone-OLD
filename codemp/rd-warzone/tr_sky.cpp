@@ -589,7 +589,6 @@ static void DrawSkyBox( shader_t *shader )
 					sky_mins_subd,
 					sky_maxs_subd );
 	}
-
 }
 
 static void FillCloudySkySide( const int mins[2], const int maxs[2], qboolean addIndexes )
@@ -1168,21 +1167,22 @@ void RB_StageIteratorSky( void ) {
 	//qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );	// FIXME: get color of sky
 	//qglClear( clearBits );
 
-	// go through all the polygons and project them onto
-	// the sky box to see which blocks on each side need
-	// to be drawn
-	if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage )
-	{
-		RB_ClipSkyPolygons( &tess );
-	}
-
 	// r_showsky will let all the sky blocks be drawn in
 	// front of everything to allow developers to see how
 	// much sky is getting sucked in
-	if ( r_showsky->integer ) {
-		qglDepthRange( 0.0, 0.0 );
-	} else {
-		qglDepthRange( 1.0, 1.0 );
+	if (r_showsky->integer) {
+		qglDepthRange(0.0, 0.0);
+	}
+	else {
+		qglDepthRange(1.0, 1.0);
+	}
+
+	// go through all the polygons and project them onto
+	// the sky box to see which blocks on each side need
+	// to be drawn
+	if (tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage)
+	{
+		RB_ClipSkyPolygons(&tess);
 	}
 
 	if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
@@ -1220,7 +1220,8 @@ void RB_StageIteratorSky( void ) {
 
 		skyImage = tess.shader->sky.outerbox[r_skynum->integer];
 		
-		GL_State( 0 );
+		GL_State(0);
+
 		//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
 
 		matrix_t trans, product;
@@ -1237,7 +1238,6 @@ void RB_StageIteratorSky( void ) {
 #else //___FORCED_SKYDOME___
 	DrawSkyDome(tess.shader);
 #endif //___FORCED_SKYDOME___
-
 
 	// generate the vertexes for all the clouds, which will be drawn
 	// by the generic shader routine
