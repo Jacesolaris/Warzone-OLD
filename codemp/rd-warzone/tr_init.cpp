@@ -1613,7 +1613,7 @@ void R_Register( void )
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.0025", CVAR_ARCHIVE );
-	r_magicdetailMix = ri->Cvar_Get("r_magicdetailMix", "0.3", CVAR_ARCHIVE);
+	r_magicdetailMix = ri->Cvar_Get("r_magicdetailMix", "0.15", CVAR_ARCHIVE);
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
 	r_debugMapAmbientR = ri->Cvar_Get("r_debugMapAmbientR", "0.0", CVAR_NONE);
 	r_debugMapAmbientG = ri->Cvar_Get("r_debugMapAmbientG", "0.0", CVAR_NONE);
