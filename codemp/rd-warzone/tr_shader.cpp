@@ -1833,23 +1833,26 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					flags |= IMGFLAG_GLOW;
 				}
 
+#ifdef __DEFERRED_IMAGE_LOADING__
+				stage->bundle[0].image[0] = R_DeferImageLoad(token, type, flags);
+#else //!__DEFERRED_IMAGE_LOADING__
+				stage->bundle[0].image[0] = R_FindImageFile(token, type, flags);
+#endif //__DEFERRED_IMAGE_LOADING__
+
 				if (!DISABLE_MERGED_GLOWS)
 				{
 					char imgname[64];
 					sprintf(imgname, "%s_g", token);
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-					stage->bundle[0].image[0] = R_DeferImageLoad(token, type, flags);
 					stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags);
 #else //!__DEFERRED_IMAGE_LOADING__
-					stage->bundle[0].image[0] = R_FindImageFile(token, type, flags);
 					stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, flags);
 #endif //__DEFERRED_IMAGE_LOADING__
 				}
 
 				if (stage->bundle[TB_GLOWMAP].image[0]
-					&& stage->bundle[TB_GLOWMAP].image[0] != tr.defaultImage
-					/*&& stage->bundle[TB_GLOWMAP].image[0]->hasAlpha*/)
+					&& stage->bundle[TB_GLOWMAP].image[0] != tr.defaultImage)
 				{// We found a mergable glow map...
 					stage->glowMapped = qtrue;
 					stage->glow = qtrue;
@@ -1863,6 +1866,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 					if (stage->emissiveColorScale <= 0.0)
 						stage->emissiveColorScale = 1.5;
+
+					ri->Printf(PRINT_WARNING, "Shader [%s] diffuseMap [%s] found a _g glow texture [%s].\n", shader.name, stage->bundle[0].image[0]->imgName, stage->bundle[TB_GLOWMAP].image[0]->imgName);
 				}
 				else
 				{
@@ -4291,7 +4296,6 @@ static qboolean ParseShader( const char *name, const char **text )
 				continue;
 			}
 			shader.glowStrength = atof(token);
-			ri->Printf(PRINT_WARNING, "WARNING: 'glowStrength' for shader '%s' set to '%f'\n", shader.name, shader.glowStrength);
 			continue;
 		}
 		//

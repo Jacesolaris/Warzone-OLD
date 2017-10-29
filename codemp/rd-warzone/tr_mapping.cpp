@@ -1711,6 +1711,8 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Glow <textname>_g support is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED");
+
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
