@@ -1842,8 +1842,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				if (!DISABLE_MERGED_GLOWS)
 				{
 					char imgname[64];
-					sprintf(imgname, "%s_g", token);
-
+					char stippedName[64];
+					COM_StripExtension(token, stippedName, sizeof(stippedName));
+					sprintf(imgname, "%s_g", stippedName);
+					
 #ifdef __DEFERRED_IMAGE_LOADING__
 					stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags);
 #else //!__DEFERRED_IMAGE_LOADING__
