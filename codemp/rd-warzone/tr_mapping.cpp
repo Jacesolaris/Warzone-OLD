@@ -1381,6 +1381,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 	return 0; //guess we never found it.
 }
 
+qboolean	DISABLE_MERGED_GLOWS = qfalse;
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
@@ -1456,6 +1457,11 @@ void MAPPING_LoadMapInfo(void)
 		sprintf(mapname, "maps/%s.mapInfo", currentMapName);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Using mapInfo file: %s.\n", mapname);
+
+	//
+	// Horrible hacks for basejka maps... Don't use them! Fix your maps for warzone!
+	//
+	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Sun + Day/Night...

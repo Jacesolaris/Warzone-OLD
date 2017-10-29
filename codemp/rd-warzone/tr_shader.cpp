@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 static char *s_shaderText;
 
+extern qboolean DISABLE_MERGED_GLOWS;
+
 // the shader is parsed into these global variables, then copied into
 // dynamically allocated memory if it is valid.
 static	shaderStage_t	stages[MAX_SHADER_STAGES];
@@ -1831,16 +1833,19 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					flags |= IMGFLAG_GLOW;
 				}
 
-				char imgname[64];
-				sprintf(imgname, "%s_g", token);
+				if (!DISABLE_MERGED_GLOWS)
+				{
+					char imgname[64];
+					sprintf(imgname, "%s_g", token);
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-				stage->bundle[0].image[0] = R_DeferImageLoad(token, type, flags);
-				stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags);
+					stage->bundle[0].image[0] = R_DeferImageLoad(token, type, flags);
+					stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags);
 #else //!__DEFERRED_IMAGE_LOADING__
-				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
-				stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, flags);
+					stage->bundle[0].image[0] = R_FindImageFile(token, type, flags);
+					stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, flags);
 #endif //__DEFERRED_IMAGE_LOADING__
+				}
 
 				if (stage->bundle[TB_GLOWMAP].image[0]
 					&& stage->bundle[TB_GLOWMAP].image[0] != tr.defaultImage
