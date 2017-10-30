@@ -1609,16 +1609,19 @@ void R_AddWorldSurfaces(void) {
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
 
+			if (!(tr.world->surfaces + i)->isMerged)
+			{
 #ifdef __PSHADOWS__
-			R_AddWorldSurface( tr.world->surfaces + i, tr.currentEntityNum, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i], qtrue );
+				R_AddWorldSurface(tr.world->surfaces + i, tr.currentEntityNum, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i], qtrue);
 #else //!__PSHADOWS__
-			R_AddWorldSurface(tr.world->surfaces + i, tr.currentEntityNum, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/, qtrue);
+				R_AddWorldSurface(tr.world->surfaces + i, tr.currentEntityNum, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/, qtrue);
 #endif //__PSHADOWS__
-			//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
+				//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 
 #ifdef __RENDERER_FOLIAGE__
-			R_AddFoliage(tr.world->surfaces + i);
+				R_AddFoliage(tr.world->surfaces + i);
 #endif //__RENDERER_FOLIAGE__
+			}
 		}
 
 		for (i = 0; i < tr.world->numMergedSurfaces; i++)

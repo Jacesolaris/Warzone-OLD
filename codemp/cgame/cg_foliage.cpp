@@ -5,6 +5,7 @@
 #include "../qcommon/inifile.h"
 
 extern qboolean InFOV(vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV);
+extern void AIMod_GetMapBounts(void);
 
 // =======================================================================================================================================
 //
@@ -646,6 +647,244 @@ qboolean	MAP_HAS_TREES = qfalse;
 
 // =======================================================================================================================================
 //
+// Roads Map System...
+//
+// =======================================================================================================================================
+#include "../rd-warzone/TinyImageLoader/TinyImageLoader.h"
+
+extern qboolean BG_FileExists(const char *fileName);
+
+char *R_TIL_TextureFileExistsFull(const char *name)
+{
+	char texName[512] = { 0 };
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.png", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "png";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.tga", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "tga";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.jpg", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "jpg";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.dds", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "dds";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.gif", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "gif";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.bmp", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "bmp";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.ico", name);
+
+	if (BG_FileExists(texName))
+	{
+		return "ico";
+	}
+
+	return NULL;
+}
+
+#define PixelCopy(a,b) ((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
+#define srgb_to_linear(c) (((c) <= 0.04045) ? (c) * (1.0 / 12.92) : pow(((c) + 0.055f)*(1.0/1.055), 2.4))
+
+qboolean RadSampleImage(uint8_t *pixels, int width, int height, float st[2], float color[4])
+{
+	qboolean texturesRGB = qfalse;
+	float	sto[2];
+	int		x, y;
+
+	/* clear color first */
+	color[0] = color[1] = color[2] = color[3] = 0;
+
+	/* dummy check */
+	if (pixels == NULL || width < 1 || height < 1)
+		return qfalse;
+
+#if 1
+	/* bias st */
+	sto[0] = st[0];
+	while (sto[0] < 0.0f)
+		sto[0] += 1.0f;
+	sto[1] = st[1];
+	while (sto[1] < 0.0f)
+		sto[1] += 1.0f;
+
+	/* get offsets */
+	x = ((float)width * sto[0]);// +0.5f;
+	x %= width;
+	y = ((float)height * sto[1]);// +0.5f;
+	y %= height;
+#else
+	x = st[0];
+	x *= width;
+	y = st[1];
+	y *= height;
+#endif
+
+	/* get pixel */
+	pixels += (y * width * 4) + (x * 4);
+	PixelCopy(pixels, color);
+	color[3] = pixels[3];
+
+	return qtrue;
+}
+
+qboolean TIL_INITIALIZED = qfalse;
+
+qboolean ROAD_MAP_INITIALIZED = qfalse;
+til::Image *ROAD_MAP = NULL;
+
+void FOLAGE_LoadRoadImage(void)
+{
+	if (!ROAD_MAP && !ROAD_MAP_INITIALIZED)
+	{
+		ROAD_MAP_INITIALIZED = qtrue;
+
+		char name[512] = { 0 };
+		strcpy(name, va("maps/%s_roads", cgs.currentmapname));
+		char *ext = R_TIL_TextureFileExistsFull(name);
+
+		if (ext)
+		{
+			trap->Print("Found maps/%s.%s\n", name, ext);
+		}
+		else
+		{
+			trap->Print("Not found maps/%s.\n", name);
+		}
+
+		if (ext)
+		{
+			if (!TIL_INITIALIZED)
+			{
+				til::TIL_Init();
+				TIL_INITIALIZED = qtrue;
+			}
+
+			char fullPath[1024] = { 0 };
+			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
+			ROAD_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+			
+			if (ROAD_MAP && ROAD_MAP->GetHeight() > 0 && ROAD_MAP->GetWidth() > 0)
+			{
+				trap->Print("TIL: Loaded image %s. Size %i x %i.\n", fullPath, ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight());
+			}
+			else
+			{
+				trap->Print("TIL: Clould not load image %s.\n", fullPath);
+				til::TIL_Release(ROAD_MAP);
+				ROAD_MAP = NULL;
+			}
+		}
+	}
+}
+
+qboolean RoadExistsAtPoint(vec3_t point)
+{
+	if (!ROAD_MAP)
+	{
+		FOLAGE_LoadRoadImage();
+		
+		if (!ROAD_MAP)
+		{
+			return qfalse;
+		}
+	}
+
+	if (!cg.mapcoordsValid)
+	{
+		AIMod_GetMapBounts();
+	}
+
+	float mapSize[2];
+	float pixel[2];
+
+	mapSize[0] = cg.mapcoordsMaxs[0] - cg.mapcoordsMins[0];
+	mapSize[1] = cg.mapcoordsMaxs[1] - cg.mapcoordsMins[1];
+	pixel[0] = (point[0] - cg.mapcoordsMins[0]) / mapSize[0];
+	pixel[1] = (point[1] - cg.mapcoordsMins[1]) / mapSize[1];
+
+	vec4_t color;
+	RadSampleImage((uint8_t *)ROAD_MAP->GetPixels(), ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight(), pixel, color);
+	
+	float road = color[2];
+
+	if (road > 0)
+	{
+		return qtrue;
+	}
+
+#if 1
+#define scanWidth 2
+	// Also scan pixels around this position...
+	for (int x = -scanWidth; x <= scanWidth; x++)
+	{
+		for (int y = -scanWidth; y <= scanWidth; y++)
+		{
+			if (x == 0 && y == 0) continue; // Already checked this one...
+
+			float pixel2[2];
+			pixel2[0] = pixel[0] + (x / (float)ROAD_MAP->GetWidth());
+			pixel2[1] = pixel[1] + (y / (float)ROAD_MAP->GetHeight());
+
+			if (pixel2[0] >= 0 && pixel2[0] <= 1.0 && pixel2[1] >= 0 && pixel2[1] <= 1.0)
+			{
+				vec4_t color;
+				RadSampleImage(ROAD_MAP->GetPixels(), ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight(), pixel2, color);
+				float road2 = color[0];
+
+				if (road2 > 0)
+				{
+					return qtrue;
+				}
+			}
+		}
+	}
+#endif
+
+	return qfalse;
+}
+
+// =======================================================================================================================================
+//
 // Area System... This allows us to manipulate in realtime which foliages we should use...
 //
 // =======================================================================================================================================
@@ -798,6 +1037,8 @@ void FOLIAGE_Setup_Foliage_Areas(void)
 	int		ZERO_SCALE_REMOVED = 0;
 	int		areaNum = 0, i = 0;
 	vec3_t	mins, maxs, mapMins, mapMaxs;
+
+	FOLAGE_LoadRoadImage();
 
 	// Try to load previous areas file...
 	if (FOLIAGE_LoadFoliageAreas()) return;
@@ -1677,6 +1918,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	int				i = 0;
 	int				numPositions = 0;
 	int				numRemovedPositions = 0;
+	int				numRemovedRoadPositions = 0;
 	float			minFoliageScale = cg_foliageMinFoliageScale.value;
 	int fileCount = 0;
 	int foliageCount = 0;
@@ -1728,6 +1970,12 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		trap->FS_Read(&FOLIAGE_TREE_SELECTION[foliageCount], sizeof(int), f);
 		trap->FS_Read(&FOLIAGE_TREE_ANGLE[foliageCount], sizeof(float), f);
 		trap->FS_Read(&FOLIAGE_TREE_SCALE[foliageCount], sizeof(float), f);
+
+		if (RoadExistsAtPoint(FOLIAGE_POSITIONS[foliageCount]))
+		{
+			numRemovedRoadPositions++;
+			continue;
+		}
 
 		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0)
 		{
@@ -1892,8 +2140,8 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		}
 	}
 
-	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses removed) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
-		FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname);
+	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses, and %i road removed) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+		FOLIAGE_NUM_POSITIONS, numRemovedPositions, numRemovedRoadPositions, cgs.currentmapname);
 
 	if (!filename || filename[0] == '0')
 	{// Don't need to waste time on this when doing "copy" function...
@@ -2327,8 +2575,6 @@ void FOLIAGE_DrawGrass(void)
 //                                                             Foliage Generation...
 //
 // =======================================================================================================================================
-
-extern void AIMod_GetMapBounts(void);
 
 extern float aw_percent_complete;
 extern char task_string1[255];
@@ -2929,6 +3175,11 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 				pos[2] += 8.0;
 				VectorCopy(pos, down);
 				down[2] = mapMins[2];
+
+				if (RoadExistsAtPoint(pos))
+				{// There's a road here...
+					continue;
+				}
 
 				CG_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER | CONTENTS_LAVA | CONTENTS_SLIME);
 

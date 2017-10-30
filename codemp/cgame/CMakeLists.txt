@@ -151,6 +151,35 @@ set(MPCGameRecastFiles
 source_group("Recast" FILES ${MPCGameRecastFiles})
 set(MPCGameFiles ${MPCGameFiles} ${MPCGameRecastFiles})
 
+set(MPWarzoneTinyImageLoaderFiles
+	"${MPDir}/rd-warzone/TinyImageLoader/TILColors.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStream.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStream.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStreamStd.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILFileStreamStd.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImage.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImage.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageBMP.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageBMP.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageDDS.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageDDS.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageGIF.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageGIF.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageICO.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageICO.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImagePNG.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImagePNG.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTemplate.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTemplate.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTGA.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILImageTGA.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILInternal.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TILSettings.h"
+	"${MPDir}/rd-warzone/TinyImageLoader/TinyImageLoader.cpp"
+	"${MPDir}/rd-warzone/TinyImageLoader/TinyImageLoader.h")
+source_group("TinyImageLoader" FILES ${MPWarzoneTinyImageLoaderFiles})
+set(MPCGameFiles ${MPCGameFiles} ${MPWarzoneTinyImageLoaderFiles})
+
 set(MPCGameRendererFiles
 	"${MPDir}/rd-common/tr_types.h"
 	)

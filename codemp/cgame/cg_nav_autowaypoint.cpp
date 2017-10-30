@@ -9330,6 +9330,8 @@ qboolean LinkCanReachMe ( int wp_from, int wp_to )
 	return qfalse;
 }
 
+extern qboolean RoadExistsAtPoint(vec3_t point);
+
 void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 {
 	refEntity_t		re;
@@ -9349,7 +9351,14 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 	}
 	else
 #endif //__COVER_SPOTS__
-	if (link_flags & NODE_WATER || nodes[wp_from].type == NODE_WATER || nodes[wp_to].type == NODE_WATER)
+	if (RoadExistsAtPoint(nodes[wp_from].origin) || RoadExistsAtPoint(nodes[wp_to].origin))
+	{// Road waypoints show as green...
+		re.shaderRGBA[0] = 0x00;
+		re.shaderRGBA[1] = 0xff;
+		re.shaderRGBA[2] = 0x00;
+		re.shaderRGBA[3] = 0xff;
+	}
+	else if (link_flags & NODE_WATER || nodes[wp_from].type == NODE_WATER || nodes[wp_to].type == NODE_WATER)
 	{// This is a water link... Display in yellow..
 		re.shaderRGBA[0] = 0xff;
 		re.shaderRGBA[1] = 0xff;

@@ -219,6 +219,8 @@ In JA, we define these in the tr_local.h, which is much more logical
 =====================================================
 */
 
+extern cvar_t	*r_drawSort;
+
 extern cvar_t	*r_superSampleMultiplier;
 
 extern cvar_t	*r_instanceCloudReductionCulling;
@@ -1248,6 +1250,8 @@ typedef struct shader_s {
 
   struct shader_s *remappedShader;                  // current shader this one is remapped too
 
+  qboolean mergeDrawn;
+
 	struct	shader_s	*next;
 } shader_t;
 
@@ -2065,6 +2069,8 @@ typedef struct msurface_s {
 	int					numSurfaceSprites;
 	srfSprites_t		*surfaceSprites;
 #endif //__XYC_SURFACE_SPRITES__
+
+	qboolean			isMerged;
 
 	surfaceType_t		*data;			// any of srf*_t
 } msurface_t;

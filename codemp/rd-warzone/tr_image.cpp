@@ -3606,7 +3606,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			if (!TIL_INITIALIZED)
 			{
 				til::TIL_Init();
-				TIL_INITIALIZED = qfalse;
+				TIL_INITIALIZED = qtrue;
 			}
 
 			char fullPath[1024] = { 0 };

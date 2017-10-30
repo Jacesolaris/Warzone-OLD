@@ -3520,7 +3520,7 @@ static void R_SetupCubemapPoints( void )
 				vec3_t origin;
 				VectorSet(origin, x, y, z);
 
-				ri->Printf(PRINT_WARNING, "Cube %i at %f %f %f.\n", numcubeOrgs, origin[0], origin[1], origin[2]);
+				//ri->Printf(PRINT_WARNING, "Cube %i at %f %f %f.\n", numcubeOrgs, origin[0], origin[1], origin[2]);
 				VectorCopy(origin, cubeOrgs[numcubeOrgs]);
 				numcubeOrgs++;
 			}
@@ -3840,6 +3840,55 @@ void R_MergeLeafSurfaces(void)
 		s_worldData.surfacesViewCount[i] = -1;
 	}
 
+//#define __FULL_WORLD_MERGE__
+
+#ifdef __FULL_WORLD_MERGE__
+	// Merge the same shaders of the whole freaking map...
+	for (i = 0; i < numWorldSurfaces; i++)
+	{
+		msurface_t *surf1 = s_worldData.surfaces + i;
+		shader_t *shader1 = surf1->shader;
+
+		if (s_worldData.surfacesViewCount[i] != -1)
+			continue;
+
+		if (shader1->isSky)
+			continue;
+
+		if (shader1->isPortal)
+			continue;
+
+		qboolean deforms = qfalse;
+
+		if (ShaderRequiresCPUDeforms(shader1))
+			deforms = qtrue;
+		
+		for (j = 0; j < numWorldSurfaces; j++)
+		{
+			if (j == i) continue;
+
+			msurface_t *surf2 = s_worldData.surfaces + j;
+			shader_t *shader2 = surf2->shader;
+
+			if (s_worldData.surfacesViewCount[j] != -1)
+				continue;
+
+			if (shader2->isSky)
+				continue;
+
+			if (shader2->isPortal)
+				continue;
+
+			if (shader1 != shader2 && deforms && ShaderRequiresCPUDeforms(shader2))
+				continue;
+
+			//if (shader1 == shader2)
+			{
+				s_worldData.surfacesViewCount[j] = i;
+			}
+		}
+	}
+#else //!__FULL_WORLD_MERGE__
 	// mark matching surfaces
 	for (i = 0; i < s_worldData.numnodes - s_worldData.numDecisionNodes; i++)
 	{
@@ -3847,23 +3896,13 @@ void R_MergeLeafSurfaces(void)
 
 		for (j = 0; j < leaf->nummarksurfaces; j++)
 		{
-#if defined(__PLAYER_BASED_CUBEMAPS__)
-			msurface_t *surf1;
-			shader_t *shader1;
-#ifdef __Q3_FOG__
-			int fogIndex1;
-#endif //__Q3_FOG__
-			int cubemapIndex1;
-			int surfNum1;
-
-			surfNum1 = *(s_worldData.marksurfaces + leaf->firstmarksurface + j);
+			int surfNum1 = *(s_worldData.marksurfaces + leaf->firstmarksurface + j);
 
 			if (s_worldData.surfacesViewCount[surfNum1] != -1)
 				continue;
 
-			surf1 = s_worldData.surfaces + surfNum1;
-
-			shader1 = surf1->shader;
+			msurface_t *surf1 = s_worldData.surfaces + surfNum1;
+			shader_t *shader1 = surf1->shader;
 
 			if (shader1->isSky)
 				continue;
@@ -3871,48 +3910,11 @@ void R_MergeLeafSurfaces(void)
 			if (shader1->isPortal)
 				continue;
 
-//#define __ORIGINAL_MERGE__
-#ifdef __ORIGINAL_MERGE__
-			if (ShaderRequiresCPUDeforms(shader1))
-				continue;
-
-#ifdef __Q3_FOG__
-			fogIndex1 = surf1->fogIndex;
-#endif //__Q3_FOG__
-
-			cubemapIndex1 = surf1->cubemapIndex;
-
-			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
-
-			for (k = j + 1; k < leaf->nummarksurfaces; k++)
-			{
-				msurface_t *surf2;
-				shader_t *shader2;
-				int surfNum2;
-
-				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
-
-				if (s_worldData.surfacesViewCount[surfNum2] != -1)
-					continue;
-
-				surf2 = s_worldData.surfaces + surfNum2;
-
-				shader2 = surf2->shader;
-
-				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
-			}
-#else //!__ORIGINAL_MERGE__
 			qboolean deforms = qfalse;
 
 			if (ShaderRequiresCPUDeforms(shader1))
 				//continue;
 				deforms = qtrue;
-
-#ifdef __Q3_FOG__
-			fogIndex1 = surf1->fogIndex;
-#endif //__Q3_FOG__
-
-			cubemapIndex1 = surf1->cubemapIndex;
 
 			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
 
@@ -3931,185 +3933,9 @@ void R_MergeLeafSurfaces(void)
 
 				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 			}
-#endif //__ORIGINAL_MERGE__
-#elif defined(__MERGE_MORE__)
-			msurface_t *surf1;
-			shader_t *shader1;
-#ifdef __Q3_FOG__
-			int fogIndex1;
-#endif //__Q3_FOG__
-			int cubemapIndex1;
-			int surfNum1;
-
-			surfNum1 = *(s_worldData.marksurfaces + leaf->firstmarksurface + j);
-
-			if (s_worldData.surfacesViewCount[surfNum1] != -1)
-				continue;
-
-			surf1 = s_worldData.surfaces + surfNum1;
-
-			shader1 = surf1->shader;
-
-			if(shader1->isSky)
-				continue;
-
-			if(shader1->isPortal)
-				continue;
-
-			if(ShaderRequiresCPUDeforms(shader1))
-				continue;
-
-#ifdef __Q3_FOG__
-			fogIndex1 = surf1->fogIndex;
-#endif //__Q3_FOG__
-			
-			cubemapIndex1 = surf1->cubemapIndex;
-
-			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
-
-			for (k = j + 1; k < leaf->nummarksurfaces; k++)
-			{
-				msurface_t *surf2;
-				shader_t *shader2;
-				int cubemapIndex2;
-				int surfNum2;
-
-				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
-
-				if (s_worldData.surfacesViewCount[surfNum2] != -1)
-					continue;
-				
-				surf2 = s_worldData.surfaces + surfNum2;
-
-				shader2 = surf2->shader;
-
-				/*if (Distance(surf1->cullinfo.bounds[0], surf2->cullinfo.bounds[0]) > 1024)
-				{
-					continue;
-				}*/
-
-#ifdef __MERGE_SAME_SHADER_NAMES__
-				if (shader1 && shader2 
-					&& shader1->stages[0] 
-					&& shader2->stages[0] 
-					&& ( r_glslWater->integer && WATER_ENABLED && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
-				{// UQ1: All water can be safely merged I believe...
-					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
-					continue;
-				}
-				else if (shader1 != shader2
-					// Merge matching shader names...
-					&& stricmp(shader1->name, shader2->name))
-				{
-					continue;
-				}
-#else //!__MERGE_SAME_SHADER_NAMES__
-				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && (r_glslWater->integer && WATER_ENABLED && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
-				{// UQ1: All water can be safely merged I believe...
-					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
-					continue;
-				}
-				else if (shader1 != shader2)
-				{
-					continue;
-				}
-#endif //__MERGE_SAME_SHADER_NAMES__
-
-				cubemapIndex2 = surf2->cubemapIndex;
-
-				if (cubemapIndex1 != cubemapIndex2 
-					&& ((R_MaterialUsesCubemap(shader1->surfaceFlags) && R_MaterialUsesCubemap(shader2->surfaceFlags)) || (shader1->customCubeMapScale && shader2->customCubeMapScale)))
-				{
-					if (Distance(tr.cubemapOrigins[cubemapIndex1], tr.cubemapOrigins[cubemapIndex2]) > 512.0)
-					{// Too far from original cubemap, let's not merge this one...
-						continue;
-					}
-				}
-
-				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
-			}
-#else //!__MERGE_MORE__
-			msurface_t *surf1;
-			shader_t *shader1;
-#ifdef __Q3_FOG__
-			int fogIndex1;
-#endif //__Q3_FOG__
-			int cubemapIndex1;
-			int surfNum1;
-
-			surfNum1 = *(s_worldData.marksurfaces + leaf->firstmarksurface + j);
-
-			if (s_worldData.surfacesViewCount[surfNum1] != -1)
-				continue;
-
-			surf1 = s_worldData.surfaces + surfNum1;
-
-			if ((*surf1->data != SF_GRID) && (*surf1->data != SF_TRIANGLES) && (*surf1->data != SF_FACE))
-				continue;
-
-			shader1 = surf1->shader;
-
-			if(shader1->isSky)
-				continue;
-
-			if(shader1->isPortal)
-				continue;
-
-			if(ShaderRequiresCPUDeforms(shader1))
-				continue;
-
-#ifdef __Q3_FOG__
-			fogIndex1 = surf1->fogIndex;
-#endif //__Q3_FOG__
-			
-			cubemapIndex1 = surf1->cubemapIndex;
-
-			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
-
-			for (k = j + 1; k < leaf->nummarksurfaces; k++)
-			{
-				msurface_t *surf2;
-				shader_t *shader2;
-#ifdef __Q3_FOG__
-				int fogIndex2;
-#endif //__Q3_FOG__
-				int cubemapIndex2;
-				int surfNum2;
-
-				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
-
-				if (s_worldData.surfacesViewCount[surfNum2] != -1)
-					continue;
-				
-				surf2 = s_worldData.surfaces + surfNum2;
-
-				if ((*surf2->data != SF_GRID) && (*surf2->data != SF_TRIANGLES) && (*surf2->data != SF_FACE))
-					continue;
-
-				shader2 = surf2->shader;
-
-				if (shader1 != shader2)
-				{
-					continue;
-				}
-
-#ifdef __Q3_FOG__
-				fogIndex2 = surf2->fogIndex;
-
-				if (fogIndex1 != fogIndex2)
-					continue;
-#endif //__Q3_FOG__
-
-				cubemapIndex2 = surf2->cubemapIndex;
-
-				if (cubemapIndex1 != cubemapIndex2)
-					continue;
-
-				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
-			}
-#endif //__MERGE_MORE__
 		}
 	}
+#endif //__FULL_WORLD_MERGE__
 
 	// don't add surfaces that don't merge to any others to the merged list
 	for (i = 0; i < numWorldSurfaces; i++)
@@ -4141,7 +3967,7 @@ void R_MergeLeafSurfaces(void)
 
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
-		if (s_worldData.surfacesViewCount[i] == i)
+		if (s_worldData.surfacesViewCount[i] != -1)//== i)
 		{
 			numMergedSurfaces++;
 		}
@@ -4150,6 +3976,8 @@ void R_MergeLeafSurfaces(void)
 			numUnmergedSurfaces++;
 		}
 	}
+
+	ri->Printf(PRINT_ALL, "Pre-processed %d surfaces into %d merged, %d unmerged\n", numWorldSurfaces, numMergedSurfaces, numUnmergedSurfaces);
 
 	// Allocate merged surfaces
 	s_worldData.mergedSurfaces = (msurface_t *)ri->Hunk_Alloc(sizeof(*s_worldData.mergedSurfaces) * numMergedSurfaces, h_low);
@@ -4254,6 +4082,10 @@ void R_MergeLeafSurfaces(void)
 
 			bspSurf = (srfBspSurface_t *) surf2->data;
 
+
+			// Mark it...
+			surf2->isMerged = qtrue;
+
 			for (k = 0; k < bspSurf->numIndexes; k++)
 			{
 				*outIboIndexes++ = bspSurf->indexes[k] + bspSurf->firstVert;
@@ -4296,7 +4128,7 @@ void R_MergeLeafSurfaces(void)
 #endif //__Q3_FOG__
 		mergedSurf->cubemapIndex  = surf1->cubemapIndex;
 		mergedSurf->shader        = surf1->shader;
-
+		
 		// finish up the ibo
 		qglGenBuffers(1, &ibo->indexesVBO);
 
