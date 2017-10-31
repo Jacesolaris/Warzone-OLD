@@ -104,7 +104,7 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 #define NODE_COVER					16
 #define NODE_WATER					32
 #define NODE_LADDER					64      // Ladder Node
-#define	NODE_MG42					128		//node is at an mg42
+#define	NODE_ROAD					128
 #define	NODE_DYNAMITE				256
 #define	NODE_BUILD					512
 #define	NODE_JUMP					1024
@@ -150,6 +150,8 @@ int Convert_AWP_Flags ( int flags )
 												#define WPFLAG_COVER				0x20000000 //cover point
 
 												#define WPFLAG_WATER				0x40000000 //water point
+
+												#define WPFLAG_ROAD					0x80000000 //road
 //[/TABBot]
 */
 
@@ -170,6 +172,9 @@ int Convert_AWP_Flags ( int flags )
 
 	if (flags & NODE_ALLY_DELIVER)
 		out_flags |= WPFLAG_SIEGE_REBELOBJ;
+
+	if (flags & NODE_ROAD)
+		out_flags |= WPFLAG_ROAD;
 
 	//if (flags & NODE_ALLY_UNREACHABLE)
 	//	out_flags |= WPFLAG_REDONLY;

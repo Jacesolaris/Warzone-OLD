@@ -49,6 +49,8 @@
 #include "../ui/ui_shared.h"
 #include "../game/surfaceflags.h"
 
+extern qboolean RoadExistsAtPoint(vec3_t point);
+
 #ifdef __AUTOWAYPOINT__
 
 //#pragma warning( disable : 4133 )	// signed/unsigned mismatch
@@ -519,13 +521,12 @@ vec3_t			botTraceMaxs = { 15, 15, 64 };
 #define NODE_MOVE					0       // Move Node
 #define NODE_OBJECTIVE				1
 #define NODE_TARGET					2
-//#define NODE_TARGETSELECT			4
 #define NODE_LAND_VEHICLE			4
 #define NODE_FASTHOP				8
 #define NODE_COVER					16
 #define NODE_WATER					32
 #define NODE_LADDER					64      // Ladder Node
-#define	NODE_MG42					128		//node is at an mg42
+#define	NODE_ROAD					128
 #define	NODE_DYNAMITE				256
 #define	NODE_BUILD					512
 #define	NODE_JUMP					1024
@@ -535,24 +536,6 @@ vec3_t			botTraceMaxs = { 15, 15, 64 };
 #define NODE_AXIS_UNREACHABLE		16384
 #define	NODE_AXIS_DELIVER			32768	//place axis should deliver stolen documents/objective
 #define	NODE_ALLY_DELIVER			65536	//place allies should deliver stolen documents/objective
-
-//===========================================================================
-// Description  : NPC Node flags + Link Flags...
-#define NPC_NODE_INVALID				-1
-#define NPC_NODE_MOVE					0       // Move Node
-#define NPC_NODE_OBJECTIVE				1		// Objective position... Do something... (Unused in 0.1 for npcs)
-#define NPC_NODE_ROUTE_BEGIN			2		// The beginning of an NPC route...
-#define NPC_NODE_ROUTE_END				4		// The end of an NPC route...
-#define NPC_NODE_JUMP					8		// Need a jump here...
-#define NPC_NODE_DUCK					16		// Need to duck here...
-#define NPC_NODE_WATER					32		// Node is in/on water...
-#define NPC_NODE_ICE					64      // Node is on ice...
-#define	NPC_NODE_LADDER					128		// Ladder Node
-#define	NPC_NODE_MG42					256		// Node is at an mg42
-#define	NPC_NODE_BUILD					512		// Need to build something here... (Unused in 0.1 for npcs)
-#define	NPC_NODE_ALLY_UNREACHABLE		1024	// Axis only...
-#define	NPC_NODE_AXIS_UNREACHABLE		2048	// Allied only...
-#define	NPC_NODE_COVER					4096	// Cover point...
 
 // Node finding flags...
 #define NODEFIND_BACKWARD			1      // For selecting nodes behind us.
@@ -2580,6 +2563,11 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 		{	// This node is on slippery ice... Mark it...
 			nodes[node].type |= NODE_WATER;
 			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an water node.\n", GAME_VERSION, node );
+		}
+
+		if (RoadExistsAtPoint(nodes[node].origin))
+		{
+			nodes[node].type |= NODE_ROAD;
 		}
 
 		VectorCopy(nodes[node].origin, uporg);
@@ -9330,8 +9318,6 @@ qboolean LinkCanReachMe ( int wp_from, int wp_to )
 	return qfalse;
 }
 
-extern qboolean RoadExistsAtPoint(vec3_t point);
-
 void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 {
 	refEntity_t		re;
@@ -9351,7 +9337,7 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 	}
 	else
 #endif //__COVER_SPOTS__
-	if (RoadExistsAtPoint(nodes[wp_from].origin) || RoadExistsAtPoint(nodes[wp_to].origin))
+	if (link_flags & NODE_ROAD || nodes[wp_from].type == NODE_ROAD || nodes[wp_to].type == NODE_ROAD)
 	{// Road waypoints show as green...
 		re.shaderRGBA[0] = 0x00;
 		re.shaderRGBA[1] = 0xff;

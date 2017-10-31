@@ -104,6 +104,9 @@ void ASTAR_InitWaypointCosts ( void )
 				if (gWPArray[i]->flags & WPFLAG_WATER)
 					gWPArray[i]->neighbors[j].cost *= 100.0; // Get out of water ASAP!
 
+				if (gWPArray[i]->flags & WPFLAG_ROAD)
+					gWPArray[i]->neighbors[j].cost *= 0.1; // Roads are awesome for travel, much lower cost. ;)
+
 				if (!LinkCanReachMe(i, gWPArray[i]->neighbors[j].num) || !LinkCanReachMe(gWPArray[i]->neighbors[j].num, i))
 				{// One way links are bad... Make them cost much more...
 					gWPArray[i]->neighbors[j].cost *= 200.0;//50.0;
