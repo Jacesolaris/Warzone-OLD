@@ -69,6 +69,50 @@ qboolean LinkCanReachMe ( int wp_from, int wp_to )
 
 qboolean ASTAR_COSTS_DONE = qfalse;
 
+float ASTAR_CostMultipler(int fromNode, int neigborNum)
+{
+	float costMult = 1.0;
+
+	// UQ1: Prefer flat...
+	float height = gWPArray[fromNode]->origin[2] - gWPArray[gWPArray[fromNode]->neighbors[neigborNum].num]->origin[2];
+	if (height < 0) height *= -1.0f;
+	height += 1.0;
+	costMult *= height;
+
+	if (gWPArray[fromNode]->neighbors[neigborNum].forceJumpTo > 0)
+	{// Don't jump unless absolutely necessary!
+		costMult *= 8.0;
+	}
+
+	if (gWPArray[fromNode]->flags & WPFLAG_WATER)
+	{// Get out of water ASAP!
+		costMult *= 16.0;
+	}
+
+	if (gWPArray[fromNode]->flags & WPFLAG_ROAD)
+	{// Roads...
+		if (gWPArray[gWPArray[fromNode]->neighbors[neigborNum].num]->flags & WPFLAG_ROAD)
+		{// All road... Roads are awesome for travel, much lower cost. ;)
+			costMult *= 0.0;
+		}
+		else
+		{// From road to non-road, lower cost, but not as good as full road...
+			costMult *= 0.2;
+		}
+	}
+	else if (gWPArray[gWPArray[fromNode]->neighbors[neigborNum].num]->flags & WPFLAG_ROAD)
+	{// From non-road to road, lower cost, but not as good as full road...
+		costMult *= 0.2;
+	}
+
+	if (!LinkCanReachMe(fromNode, gWPArray[fromNode]->neighbors[neigborNum].num) || !LinkCanReachMe(gWPArray[fromNode]->neighbors[neigborNum].num, fromNode))
+	{// One way links are bad... Make them cost much more...
+		costMult *= 16.0;
+	}
+
+	return costMult;
+}
+
 void ASTAR_InitWaypointCosts ( void )
 {
 	int i;
@@ -86,31 +130,7 @@ void ASTAR_InitWaypointCosts ( void )
 				float ht = 0, hd = 0;
 
 				gWPArray[i]->neighbors[j].cost = Distance(gWPArray[i]->origin, gWPArray[gWPArray[i]->neighbors[j].num]->origin);
-
-				// UQ1: Prefer flat...
-				ht = gWPArray[i]->origin[2] - gWPArray[gWPArray[i]->neighbors[j].num]->origin[2];
-				
-				if (ht < 0) ht *= -1.0f;
-
-				ht += 1.0;
-
-				if (ht < 1.0) ht = 1.0;
-
-				gWPArray[i]->neighbors[j].cost *= ht;
-
-				if (gWPArray[i]->neighbors[j].forceJumpTo > 0)
-					gWPArray[i]->neighbors[j].cost *= 20.0; // Don't jump unless absolutely necessary!
-
-				if (gWPArray[i]->flags & WPFLAG_WATER)
-					gWPArray[i]->neighbors[j].cost *= 100.0; // Get out of water ASAP!
-
-				if (gWPArray[i]->flags & WPFLAG_ROAD)
-					gWPArray[i]->neighbors[j].cost *= 0.1; // Roads are awesome for travel, much lower cost. ;)
-
-				if (!LinkCanReachMe(i, gWPArray[i]->neighbors[j].num) || !LinkCanReachMe(gWPArray[i]->neighbors[j].num, i))
-				{// One way links are bad... Make them cost much more...
-					gWPArray[i]->neighbors[j].cost *= 200.0;//50.0;
-				}
+				gWPArray[i]->neighbors[j].cost *= ASTAR_CostMultipler(i, j);
 			}
 		}
 	}
@@ -118,31 +138,39 @@ void ASTAR_InitWaypointCosts ( void )
 	ASTAR_COSTS_DONE = qtrue;
 }
 
-int ASTAR_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost)
+int ASTAR_GetFCost(int to, int neighborNode, int parentNum, int neighborNum, float *gcost)
 {
 	float	gc = 0;
 	float	hc = 0;
-	float	height_diff = 0;
 
-	if (gcost[num] == -1)
+#if 0
+	if (gcost[neighborNode] == -1)
 	{
 		if (parentNum != -1)
 		{
 			gc = gcost[parentNum];
-			gc += Distance(gWPArray[num]->origin, gWPArray[parentNum]->origin);
+#if 0
+			float cost = Distance(gWPArray[parentNum]->origin, gWPArray[neighborNode]->origin);
+#else
+			float cost = gWPArray[parentNum]->neighbors[neighborNum].cost;
+#endif
+
+			gc += cost;
 		}
 
-		gcost[num] = gc;
+		gcost[neighborNode] = gc;
 	}
 	else
 	{
-		gc = gcost[num];
+		gc = gcost[neighborNode];
 	}
+#else
+	gc = gcost[neighborNode];
+#endif
+	hc = Distance(gWPArray[to]->origin, gWPArray[neighborNode]->origin);
 
-	hc = Distance(gWPArray[to]->origin, gWPArray[num]->origin);
-
-	return (int)((gc*0.1) + (hc*0.1));
-	//return (int)(gc + hc);
+	//return (int)((gc*0.1) + (hc*0.1));
+	return (int)(gc + hc);
 }
 
 //#define __ALT_PATH_METHOD_1__ // This version creates a list of random avoid points...
@@ -190,7 +218,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 		AllocatePathFindingMemory();
 
 		// Init waypoint link costs if needed...
-		//ASTAR_InitWaypointCosts();
+		ASTAR_InitWaypointCosts();
 
 		memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
 		memset(gcost, 0, (sizeof(float)* gWPNum));
@@ -201,6 +229,16 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 		for (i = 0; i < gWPNum; i++)
 		{
 			gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
+
+			if (gWPArray[i]->flags & WPFLAG_WATER)
+			{// Get out of water ASAP!
+				gcost[i] *= 1.1;
+			}
+
+			if (gWPArray[i]->flags & WPFLAG_ROAD)
+			{// Roads...
+				gcost[i] *= 0.9;
+			}
 		}
 
 		openlist[gWPNum + 1] = 0;
@@ -371,20 +409,20 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 						if (altPath)
 						{// Let's try simply adding random multiplier to costs...
 							if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
-								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3, 5);	//store it's f cost value
+								fcost[newnode] = ASTAR_GetFCost(to, newnode, parent[newnode], i, gcost) * irand(3, 5);	//store it's f cost value
 							else
-								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1, 3);	//store it's f cost value
+								fcost[newnode] = ASTAR_GetFCost(to, newnode, parent[newnode], i, gcost) * irand(1, 3);	//store it's f cost value
 						}
 						else
 #endif //__ALT_PATH_METHOD_2__
-							fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);	//store it's f cost value
+							fcost[newnode] = ASTAR_GetFCost(to, newnode, parent[newnode], i, gcost);	//store it's f cost value
 
-							/*if (fcost[newnode] <= 0 && newnode != from)
-							{
-								trap->Print("ASTAR WARNING: Missing fcost for node %i. This should not happen!\n", newnode);
-							}*/
+						/*if (fcost[newnode] <= 0 && newnode != from)
+						{
+							trap->Print("ASTAR WARNING: Missing fcost for node %i. This should not happen!\n", newnode);
+						}*/
 
-							//this loop re-orders the heap so that the lowest fcost is at the top
+						//this loop re-orders the heap so that the lowest fcost is at the top
 						m = numOpen;
 
 						while (m != 1)													//while this item isn't at the top of the heap already
@@ -406,16 +444,19 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 					{
 						gc = gcost[atNode];
 
-						if (gWPArray[atNode]->neighbors[i].cost > 0)// && gWPArray[atNode]->neighbors[i].cost < 32768/*9999*/)
+#if 1
+						float linkCost = gWPArray[atNode]->neighbors[i].cost;
+#else
+						if (gWPArray[atNode]->neighbors[i].cost > 0)
 						{// UQ1: Already have a cost value, skip the calculations!
-							gc += gWPArray[atNode]->neighbors[i].cost;
+							linkCost = gWPArray[atNode]->neighbors[i].cost;
 						}
 						else
 						{
 							vec3_t	vec;
 
 							VectorSubtract(gWPArray[newnode]->origin, gWPArray[atNode]->origin, vec);
-							gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
+							linkCost = VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
 							gWPArray[atNode]->neighbors[i].cost = VectorLength(vec);
 
 							if (gWPArray[atNode]->neighbors[i].forceJumpTo > 0)
@@ -423,16 +464,19 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 
 							//trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
 						}
+#endif
 
 #ifdef __ALT_PATH_METHOD_2__
 						if (altPath)
 						{// Let's try simply adding random multiplier to costs...
 							if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
-								gc *= irand(8, 10);	//store it's f cost value
+								linkCost *= irand(4, 16);	//store it's f cost value
 							else
-								gc *= irand(1, 10);	//store it's f cost value
+								linkCost *= irand(1, 8);	//store it's f cost value
 						}
 #endif //__ALT_PATH_METHOD_2__
+
+						gc += linkCost;
 
 						if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
 						{
@@ -448,13 +492,13 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 									if (altPath)
 									{// Let's try simply adding random multiplier to costs...
 										if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
-											fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3, 5);	//store it's f cost value
+											fcost[newnode] = ASTAR_GetFCost(to, newnode, parent[newnode], i, gcost) * irand(4, 8);	//store it's f cost value
 										else
-											fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1, 3);	//store it's f cost value
+											fcost[newnode] = ASTAR_GetFCost(to, newnode, parent[newnode], i, gcost) * irand(1, 3);	//store it's f cost value
 									}
 									else
 #endif //__ALT_PATH_METHOD_2__
-										fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);
+										fcost[newnode] = ASTAR_GetFCost(to, newnode, parent[newnode], i, gcost);
 
 									//reorder the list again, with the lowest fcost item on top
 									m = j;
