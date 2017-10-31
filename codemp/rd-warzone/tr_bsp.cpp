@@ -3275,7 +3275,7 @@ qboolean R_CloseLightNear (vec3_t pos)
 {
 	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
 	{
-		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < 48)
+		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < 64)//48)
 		{
 			return qtrue;
 		}

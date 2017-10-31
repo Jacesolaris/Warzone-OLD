@@ -534,7 +534,7 @@ void main()
 	Blending_CS_in = var_Blending;
 	Slope_CS_in = var_Slope;
 	usingSteepMap_CS_in = var_usingSteepMap;
-	gl_Position = vec4(position.xyz/*preMMPos*/, 1.0);
+	gl_Position = vec4(position.xyz, 1.0);
 #endif
 
 	var_vertPos = position.xyz;

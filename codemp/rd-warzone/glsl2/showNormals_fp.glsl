@@ -87,13 +87,13 @@ vec3 TangentFromNormal ( vec3 normal )
 void main(void)
 {
 	vec4 norm = texture(u_NormalMap, var_TexCoords);
+	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
 
 	if (u_Settings0.r > 0.0)
 	{
 		vec4 normalDetail = textureLod(u_OverlayMap, var_TexCoords, 0.0);
-
-		norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-		norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 
 		if (normalDetail.a < 1.0)
 		{// Don't have real normalmap, make normals for this pixel...
@@ -102,17 +102,8 @@ void main(void)
 
 		normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
 		normalDetail.rgb *= 0.25;//u_Settings0.g;
-		//normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
 		norm.rgb = normalize(norm.rgb + normalDetail.rgb);
-
-
-		//vec3 tangent = TangentFromNormal( norm.xyz );
-		//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
-		//mat3 tangentToWorld = mat3(tangent.xyz, bitangent.xyz, norm.xyz);
-		//norm.xyz = tangentToWorld * normalDetail.xyz;
-
-		norm.rgb = norm.rgb * 0.5 + 0.5;
 	}
 
-	gl_FragColor = vec4(norm.rgb, 1.0);
+	gl_FragColor = vec4(norm.rgb * 0.5 + 0.5, 1.0);
 }

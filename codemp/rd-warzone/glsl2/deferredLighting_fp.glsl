@@ -592,10 +592,11 @@ void main(void)
 #endif
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
-	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
-
 	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
 	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
+
+	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
 	vec3 cubeNorm = norm.rgb;
 	

@@ -1869,7 +1869,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					if (stage->emissiveColorScale <= 0.0)
 						stage->emissiveColorScale = 1.5;
 
-					ri->Printf(PRINT_WARNING, "Shader [%s] diffuseMap [%s] found a _g glow texture [%s].\n", shader.name, stage->bundle[0].image[0]->imgName, stage->bundle[TB_GLOWMAP].image[0]->imgName);
+					//ri->Printf(PRINT_WARNING, "Shader [%s] diffuseMap [%s] found a _g glow texture [%s].\n", shader.name, stage->bundle[0].image[0]->imgName, stage->bundle[TB_GLOWMAP].image[0]->imgName);
 				}
 				else
 				{
@@ -4112,6 +4112,11 @@ static qboolean ParseShader( const char *name, const char **text )
 			stages[s].active = qtrue;
 			s++;
 
+			continue;
+		}
+		else if (Q_stricmp(token, "warzoneShader") == 0 || Q_stricmp(token, "warzoneEnabled") == 0 || Q_stricmp(token, "warzoneSupported") == 0)
+		{// Just skip past these markers, handled in FindShader()...
+			SkipRestOfLine(text);
 			continue;
 		}
 		// If this shader is indoors
@@ -7301,7 +7306,6 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "q3map_material	GreenLeaves\n"\
 "surfaceparm	nonsolid\n"\
 "entityMergable\n"\
-"glowStrength 0.75\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -7354,7 +7358,6 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "rgbGen identity\n"\
 "tcMod scale 2.5 2.5\n"\
 "}\n"\
-"%s\n"\
 "}\n"\
 "";
 
@@ -7628,11 +7631,20 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	//
 	shaderText = FindShaderInShaderText( strippedName );
 
+	qboolean forceShaderFileUsage = qfalse;
+
+	if (shaderText && (StringContains((char *)shaderText, "warzoneShader", qfalse) || StringContains((char *)shaderText, "warzoneEnabled", qfalse) || StringContains((char *)shaderText, "warzoneSupported", qfalse)))
+	{// This is marked as a warzone enabled shader...
+		forceShaderFileUsage = qtrue;
+	}
+
+	qboolean shaderError = qfalse;
+
 	//
 	// Since this texture does not have a shader, create one for it - conditionally...
 	//
 #ifdef __SHADER_GENERATOR__
-	if ( shaderText && !R_ForceGenericShader(name, shaderText) ) {
+	if ( shaderText && (forceShaderFileUsage || !R_ForceGenericShader(name, shaderText)) ) {
 #else //!__SHADER_GENERATOR__
 	if ( shaderText ) {
 #endif //__SHADER_GENERATOR__
@@ -7647,9 +7659,18 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		if ( !ParseShader( name, &shaderText ) ) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
+			shaderError = qtrue;
 		}
 #ifdef __SHADER_GENERATOR__
-		if (!shader.defaultShader || StringContainsWord(name, "icon") || !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
+		if (shaderError)
+		{
+			// clear the global shader
+			ClearGlobalShader();
+			Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+			Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+			Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+		}
+		else if (!shader.defaultShader || StringContainsWord(name, "icon") || !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
 		{
 			sh = FinishShader();
 			return sh;
@@ -7661,9 +7682,11 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 
 #ifdef __SHADER_GENERATOR__
-	if ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) 
-		&& !StringContainsWord(name, "icon"))
+	if (shaderError 
+		|| ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && (shaderError || !StringContainsWord(name, "icon"))))
 	{
+		shaderError = qfalse;
+
 		char glowShaderAddition[256] = { 0 };
 		int material = DetectMaterialType( name );
 
@@ -7803,10 +7826,52 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			if ( !ParseShader( name, &shaderText2 ) ) {
 				// had errors, so use default shader
 				shader.defaultShader = qtrue;
+				shaderError = qtrue;
 			} else {
 				if (!StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
 					if (r_genericShaderDebug->integer)
 						ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
+			}
+
+			if (shaderError)
+			{
+				// clear the global shader
+				ClearGlobalShader();
+				Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+				Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+				Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+			}
+			else
+			{
+				sh = FinishShader();
+				return sh;
+			}
+		}
+	}
+
+	if (shaderText 
+		&& shaderError 
+		&& (R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
+		&& (!StringContainsWord(name, "icon") || shaderError))
+	{// If we failed to make a functioning forced generic shader (wierd texture names not matching shader, etc), fall back to a real shader...
+		if (shaderText) {
+			// clear the global shader
+			ClearGlobalShader();
+			Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+			Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+			Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+
+			// enable this when building a pak file to get a global list
+			// of all explicit shaders
+			if (r_printShaders->integer) {
+				ri->Printf(PRINT_ALL, "*SHADER* %s\n", name);
+			}
+
+			//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
+
+			if (!ParseShader(name, &shaderText)) {
+				// had errors, so use default shader
+				shader.defaultShader = qtrue;
 			}
 			sh = FinishShader();
 			return sh;

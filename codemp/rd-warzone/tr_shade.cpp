@@ -1348,7 +1348,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 
 		vec4_t local4;
-		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * tess.shader->glowStrength * 2.0 * MAP_GLOW_MULTIPLIER;
+		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * tess.shader->glowStrength * 2.0;
 		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 
@@ -1925,6 +1925,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		colorGen_t forceRGBGen = CGEN_BAD;
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
 		qboolean multiPass = qfalse;
+		qboolean lightMapsDisabled = qfalse;
 
 		int passNum = 0, passMax = 0;
 
@@ -2124,6 +2125,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else if (IS_DEPTH_PASS || (tr.viewParms.flags & VPF_CUBEMAP))
 		{
+			lightMapsDisabled = qtrue;
+
 #ifdef __USE_DETAIL_CHECKING__
 #ifdef __USE_DETAIL_DEPTH_SKIP__
 			if (pStage->bundle[0].isLightmap)
@@ -2229,6 +2232,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 
 				index &= ~LIGHTDEF_USE_LIGHTMAP;
+				lightMapsDisabled = qtrue;
+			}
+
+			if (r_lightmap->integer < 0)
+			{
+				index &= ~LIGHTDEF_USE_LIGHTMAP;
+				lightMapsDisabled = qtrue;
 			}
 			
 			if (glState.vertexAnimation)
@@ -2497,7 +2507,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (pStage->glowMapped) useGlow = 2.0;
 
 			VectorSet4(vec, 
-				(index & LIGHTDEF_USE_LIGHTMAP) ? 1.0 : 0.0, 
+				((index & LIGHTDEF_USE_LIGHTMAP) && !lightMapsDisabled) ? 1.0 : 0.0,
 				useGlow,
 				(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo) ? 1.0 : 0.0,
 				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
@@ -2784,7 +2794,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if ((tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
+				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_DIFFUSEMAP].image[0], TB_DIFFUSEMAP);
 			else if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
 		}
@@ -2793,7 +2803,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU( tr.whiteImage, 0 );
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
-				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
+				GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP );
 		}
 		else if ( sp == &tr.lightAllShader || sp == &tr.shadowPassShader )
 		{
@@ -2804,7 +2814,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
 					if (i == TB_LIGHTMAP)
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], i);
+						GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_LIGHTMAP].image[0], i);
 					else
 						GL_BindToTMU( tr.whiteImage, i );
 				}
@@ -2814,7 +2824,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
 					if (i == TB_LIGHTMAP)
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
+						GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_DELUXEMAP].image[0], i);
 					else
 						GL_BindToTMU( tr.whiteImage, i );
 				}
@@ -2824,10 +2834,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 
-				if (pStage->bundle[TB_LIGHTMAP].image[0])
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], TB_LIGHTMAP);
-				else
-					GL_BindToTMU( tr.whiteImage, TB_LIGHTMAP );
+				if (!lightMapsDisabled)
+				{
+					if (pStage->bundle[TB_LIGHTMAP].image[0])
+						GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_LIGHTMAP].image[0], TB_LIGHTMAP);
+					else
+						GL_BindToTMU(tr.whiteImage, TB_LIGHTMAP);
+				}
 
 				// bind textures that are sampled and used in the glsl shader, and
 				// bind whiteImage to textures that are sampled but zeroed in the glsl shader
@@ -2840,7 +2853,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				if (pStage->bundle[TB_NORMALMAP].image[0])
 				{
-					R_BindAnimatedImageToTMU(&pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
+					GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_NORMALMAP].image[0], TB_NORMALMAP);
 				}
 				else if (r_normalMapping->integer >= 2)
 				{

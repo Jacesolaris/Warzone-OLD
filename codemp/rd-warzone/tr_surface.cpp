@@ -713,10 +713,12 @@ static qboolean RB_SurfaceVbo(VBO_t *vbo, IBO_t *ibo, int numVerts, int numIndex
 		return qfalse;
 	}
 
+#if 0 // UQ1: Don't see any difference...
 	if (shaderCheck && !(!ShaderRequiresCPUDeforms(tess.shader) && !tess.shader->isSky && !tess.shader->isPortal))
 	{
 		return qfalse;
 	}
+#endif
 
 	/*if (shaderCheck && previousVBOShader != tess.shader || previousCubemapIndex != tess.cubemapIndex)
 	{// Changed shader, so we need to finish this daw and start a new one...

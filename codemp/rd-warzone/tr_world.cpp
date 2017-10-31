@@ -69,8 +69,8 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		center[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
 		center[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
 		center[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-		float cdistance = DistanceSquared(tr.viewParms.ori.origin, center);
-		if (sqrtf(cdistance) > tr.occlusionZfar * 1.75)
+		float cdistance = Distance(tr.viewParms.ori.origin, center);
+		if (cdistance > tr.occlusionZfar * 1.75)
 		{// Out of view range, but we still want it on depth draws...
 			surf->depthDrawOnly = qtrue;
 		}

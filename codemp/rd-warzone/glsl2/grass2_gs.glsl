@@ -1,4 +1,4 @@
-#define MAX_FOLIAGES				78
+#define MAX_FOLIAGES				102
 
 //#define THREE_WAY_GRASS_CLUMPS // otherwise uses 2 way X shape... 2 way probably gives better coverage...
 
@@ -54,8 +54,9 @@ flat in	int							isSlope[];
 
 smooth out vec2						vTexCoord;
 smooth out vec3						vVertPosition;
-flat out int						iGrassType;
-out vec3							vVertNormal;
+//flat out int						iGrassType;
+//out vec2							vVertNormal;
+flat out float							vVertNormal;
 
 
 #define MAP_WATER_LEVEL				u_Local10.b // TODO: Use water map
@@ -78,6 +79,14 @@ float								controlScale = 1.0 / SHADER_MAP_SIZE;
 #define MAX_RANGE					u_Local10.r
 
 vec3 vLocalSeed;
+
+const float xdec = 1.0/255.0;
+const float ydec = 1.0/65025.0;
+const float zdec = 1.0/16581375.0;
+
+float EncodeFloatRGBA( vec4 rgba ) {
+  return dot( rgba, vec4(1.0, xdec, ydec, zdec) );
+}
 
 // This function returns random number from zero to one
 float randZeroOne()
@@ -201,7 +210,7 @@ void main()
 		return; // This slope is too steep for grass...
 	}
 
-	iGrassType = 0;
+	float iGrassType = 0;
 
 	//face center------------------------
 	vec3 Vert1 = gl_in[0].gl_Position.xyz;
@@ -438,32 +447,27 @@ void main()
 			}
 #endif
 
-			gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-			vTexCoord = vec2(0.0, 1.0);
 			vVertPosition = va.xyz;
-			//vVertNormal = normalize(u_ViewOrigin - va);
-			vVertNormal = normalize(cross(vc - va, vb - va));
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
+			vTexCoord = vec2(0.0, 1.0);
+			//vVertNormal = normalize(u_ViewOrigin - va).xy;
+			//vVertNormal = normalize(cross(vc - va, vb - va)).xy;
+			vVertNormal = EncodeFloatRGBA(vec4(normalize(cross(vc - va, vb - va)), float(iGrassType) / 16.0));
 			EmitVertex();
 
-			gl_Position = u_ModelViewProjectionMatrix * vec4(vb, 1.0);
-			vTexCoord = vec2(1.0, 1.0);
 			vVertPosition = vb.xyz;
-			//vVertNormal = normalize(u_ViewOrigin - vb);
-			//vVertNormal = normalize(cross(vc - vb, va - vb));
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
+			vTexCoord = vec2(1.0, 1.0);
 			EmitVertex();
 		
-			gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
+			vVertPosition = vc.xyz + vWindDirection*fWindPower;
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 			vTexCoord = vec2(0.0, 0.0);
-			vVertPosition = vc.xyz;
-			//vVertNormal = normalize(u_ViewOrigin - vc);
-			//vVertNormal = normalize(cross(vc - va, vb - va));
 			EmitVertex();
 
-			gl_Position = u_ModelViewProjectionMatrix * vec4(vd + vWindDirection*fWindPower, 1.0);
+			vVertPosition = vd.xyz + vWindDirection*fWindPower;
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 			vTexCoord = vec2(1.0, 0.0);
-			vVertPosition = vd.xyz;
-			//vVertNormal = normalize(u_ViewOrigin - vd);
-			//vVertNormal = normalize(cross(vd - va, vb - va));
 			EmitVertex();
 
 			EndPrimitive();

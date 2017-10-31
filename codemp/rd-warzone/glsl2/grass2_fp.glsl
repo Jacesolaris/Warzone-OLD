@@ -22,10 +22,11 @@ uniform sampler2D	u_WaterEdgeMap; // Sea grass
 
 uniform vec4		u_Local9;
 
-flat in int			iGrassType;
+//flat in int			iGrassType;
 smooth in vec2		vTexCoord;
 smooth in vec3		vVertPosition;
-in vec3				vVertNormal;
+//in vec2				vVertNormal;
+flat in float			vVertNormal;
 
 out vec4			out_Glow;
 out vec4			out_Normal;
@@ -34,14 +35,30 @@ out vec4			out_Position;
 
 //#define _DEBUG_
 
+const float xdec = 1.0/255.0;
+const float ydec = 1.0/65025.0;
+const float zdec = 1.0/16581375.0;
+  
+vec4 DecodeFloatRGBA( float v ) {
+  vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
+  enc = fract(enc);
+  enc -= enc.yzww * vec4(xdec,xdec,xdec,0.0);
+  return enc;
+}
+
 void main() 
 {
+	//vec3 normal = vec3(vVertNormal.xy, 0.0);
+	//normal.z = sqrt(1.0-dot(normal.xy, normal.xy)) * 2.0 - 1.0; // reconstruct Z from X and Y
+	vec4 normal = DecodeFloatRGBA(vVertNormal);
+	int iGrassType = int(normal.a * 16.0);
+
 #if defined(_DEBUG_)
 	if (u_Local9.g > 0.0)
 	{
 		gl_FragColor = vec4(1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(vVertNormal.xyz * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(normal.xyz * 0.5 + 0.5, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		//out_Position = vec4(0.0);
@@ -92,7 +109,7 @@ void main()
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(vVertNormal.x * 0.5 + 0.5, vVertNormal.y * 0.5 + 0.5, 0.0, 1.0);
+		out_Normal = vec4(normal.xy * 0.5 + 0.5, 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		//out_Position = vec4(0.0);

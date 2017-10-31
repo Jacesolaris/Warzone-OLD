@@ -1061,7 +1061,7 @@ extern qboolean SUN_VISIBLE;
 
 extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale );
 
-#define		MAX_WORLD_GLOW_DLIGHT_RANGE 16384.0
+#define		MAX_WORLD_GLOW_DLIGHT_RANGE 8192.0//16384.0
 #define		MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
 int			CLOSE_TOTAL = 0;
 int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -1079,13 +1079,27 @@ void RB_AddGlowShaderLights ( void )
 	{// Add (close) map glows as dynamic lights as well...
 		CLOSE_TOTAL = 0;
 
+		int		farthest_light = -1;
+		float	farthest_distance = 0.0;
+
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
 			float distance = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
-#if 1
+
+			// We need to have some sanity... Basic max light range...
 			if (distance > MAX_WORLD_GLOW_DLIGHT_RANGE) continue;
 
+			// If further then the map's distance cull setting, skip...
+			if (distance > tr.distanceCull * 1.732) continue;
+
+			// If occlusion is enabled and this light is further away, skip it, obviously...
+			if (r_occlusion->integer && distance > tr.occlusionZfar) continue;
+
+			// If the list is full and this one is as far or further then the current furthest light, skip the calculations...
+			if (farthest_light != -1 && distance >= farthest_distance && !(CLOSE_TOTAL < MAX_WORLD_GLOW_DLIGHTS)) continue;
+
+#if 0
 			for (int i = 0; i < CLOSE_TOTAL; i++)
 			{
 				if (Distance(CLOSE_POS[i], MAP_GLOW_LOCATIONS[maplight]) < 64.0)
@@ -1099,7 +1113,6 @@ void RB_AddGlowShaderLights ( void )
 			{
 				continue;
 			}
-			
 #endif
 
 #if 1
@@ -1121,18 +1134,12 @@ void RB_AddGlowShaderLights ( void )
 			}
 			else
 			{// See if this is closer then one of our other lights...
-				int		farthest_light = 0;
-				float	farthest_distance = 0.0;
-
 				for (int i = 0; i < CLOSE_TOTAL; i++)
 				{// Find the most distance light in our current list to replace, if this new option is closer...
-					float		dist = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[CLOSE_LIST[i]]);
-
-					if (dist > farthest_distance)
+					if (CLOSE_DIST[i] > farthest_distance)
 					{// This one is further!
 						farthest_light = i;
-						farthest_distance = dist;
-						//break;
+						farthest_distance = CLOSE_DIST[i];
 					}
 				}
 
