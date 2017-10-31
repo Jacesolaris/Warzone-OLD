@@ -1786,6 +1786,7 @@ extern qboolean		GRASS_ENABLED;
 extern int			GRASS_DENSITY;
 extern float		GRASS_HEIGHT;
 extern int			GRASS_DISTANCE;
+extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_DISTANCE_FROM_ROADS;
 extern qboolean		PEBBLES_ENABLED;
 extern int			PEBBLES_DENSITY;
@@ -2916,10 +2917,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU(tr.grassImage[7], TB_SPECULARMAP);
 				GL_BindToTMU(tr.grassImage[8], TB_DELUXEMAP);
 				GL_BindToTMU(tr.grassImage[9], TB_NORMALMAP);
-				GL_BindToTMU(tr.seaGrassImage, TB_OVERLAYMAP);
+
+				GL_BindToTMU(tr.grassImage[10], TB_OVERLAYMAP);
+				GL_BindToTMU(tr.grassImage[11], TB_LIGHTMAP);
+				GL_BindToTMU(tr.grassImage[12], TB_SHADOWMAP);
+				GL_BindToTMU(tr.grassImage[13], TB_CUBEMAP);
+				GL_BindToTMU(tr.grassImage[14], TB_POSITIONMAP);
+				GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);
+
+
+				GL_BindToTMU(tr.seaGrassImage, TB_WATER_EDGE_MAP);
 
 				vec4_t l10;
-				VectorSet4(l10, GRASS_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
+				VectorSet4(l10, GRASS_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);

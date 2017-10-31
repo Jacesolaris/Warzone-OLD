@@ -1425,6 +1425,7 @@ qboolean	GRASS_ENABLED = qtrue;
 int			GRASS_DENSITY = 2;
 float		GRASS_HEIGHT = 48.0;
 int			GRASS_DISTANCE = 2048;
+float		GRASS_TYPE_UNIFORMALITY = 0.97;
 float		GRASS_DISTANCE_FROM_ROADS = 0.25;
 qboolean	PEBBLES_ENABLED = qfalse;
 int			PEBBLES_DENSITY = 1;
@@ -1594,6 +1595,7 @@ void MAPPING_LoadMapInfo(void)
 	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "4"));
 	GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "32.0"));
 	GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "2048"));
+	GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
 	GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
 
 	//
@@ -1680,7 +1682,7 @@ void MAPPING_LoadMapInfo(void)
 	{
 		image_t *newImage = NULL;
 
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 16; i++)
 		{
 			newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
@@ -1744,6 +1746,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass uniformality is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
@@ -2096,7 +2099,7 @@ void R_LoadMapInfo(void)
 			// Have a climate file in climates/
 			TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
 
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 16; i++)
 			{
 				if (i <= 0)
 					tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -2117,7 +2120,7 @@ void R_LoadMapInfo(void)
 		{// Seems we have no climate file in climates/ for the map... Check maps/
 			TREE_SCALE_MULTIPLIER = atof(IniRead(va("maps/%s.climate", currentMapName), "TREES", "treeScaleMultiplier", "1.0"));
 
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 16; i++)
 			{
 				if (i <= 0)
 					tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -2154,7 +2157,7 @@ void R_LoadMapInfo(void)
 
 			image_t *newImage = NULL;
 
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 16; i++)
 			{
 				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
@@ -2188,7 +2191,7 @@ void R_LoadMapInfo(void)
 		//
 		// Make sure we have some valid grass/pebbles images, in case climate lookup failed...
 		//
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 16; i++)
 		{
 			if (!tr.grassImage[i])
 			{

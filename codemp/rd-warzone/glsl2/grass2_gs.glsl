@@ -1,9 +1,8 @@
 #define MAX_FOLIAGES				78
 
-#define GRASSMAP_MIN_TYPE_VALUE		0.2
-#define SECONDARY_RANDOM_CHANCE		0.7
-
 //#define THREE_WAY_GRASS_CLUMPS // otherwise uses 2 way X shape... 2 way probably gives better coverage...
+
+#define GRASSMAP_SCONTROL_MIN		0.2
 
 #if !defined(USE_400)
 #extension GL_ARB_gpu_shader5 : enable
@@ -25,7 +24,7 @@ uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHAD
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, 0.0
+uniform vec4						u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, GRASS_TYPE_UNIFORMALITY
 
 #define SHADER_MAP_SIZE				u_Local1.r
 #define SHADER_SWAY					u_Local1.g
@@ -41,6 +40,8 @@ uniform vec4						u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LE
 #define SHADER_HAS_SPLATMAP2		u_Local3.g
 #define SHADER_HAS_SPLATMAP3		u_Local3.b
 #define SHADER_HAS_SPLATMAP4		u_Local3.a
+
+#define GRASS_TYPE_UNIFORMALITY			u_Local10.a
 
 uniform vec3						u_ViewOrigin;
 uniform float						u_Time;
@@ -312,57 +313,51 @@ void main()
 		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
 		{
 			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)) && !isUnderwaterVert)
-				iGrassType = 10;
+				iGrassType = 16;
 			else if (isUnderwaterVert)
-				iGrassType = 11;
+				iGrassType = 16;
 			else
 				continue;
 		}
 		else
 		{
-			if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE && controlMap.g >= GRASSMAP_MIN_TYPE_VALUE && controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
-			{
+			if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.g >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
+			{// Any main grass...
 				iGrassType = randomInt(0, 2);
 			}
-			else if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE && controlMap.g >= GRASSMAP_MIN_TYPE_VALUE)
-			{
+			else if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.g >= GRASSMAP_SCONTROL_MIN)
+			{// Either r or g grass...
 				iGrassType = randomInt(0, 1);
-				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = 2; // Mix in occasional second random selection...
 			}
-			else if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE && controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
-			{
+			else if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
+			{// Either r or b grass...
 				iGrassType = randomInt(0, 1);
-				if (iGrassType == 1) iGrassType = 2;
-				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = 1; // Mix in occasional second random selection...
+				iGrassType += iGrassType; // so 0 or 2
 			}
-			else if (controlMap.g >= GRASSMAP_MIN_TYPE_VALUE && controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
-			{
+			else if (controlMap.g >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
+			{// Either g or b grass...
 				iGrassType = randomInt(1, 2);
-				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = 0; // Mix in occasional second random selection...
 			}
-			else if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE)
-			{
+			else if (controlMap.r >= GRASSMAP_SCONTROL_MIN)
+			{// Always r grass... (some randomcy applied at end)
 				iGrassType = 0;
-				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = randomInt(1, 2);
 			}
-			else if (controlMap.g >= GRASSMAP_MIN_TYPE_VALUE)
-			{
+			else if (controlMap.g >= GRASSMAP_SCONTROL_MIN)
+			{// Always g grass... (some randomcy applied at end)
 				iGrassType = 1;
-				if (randZeroOne() > SECONDARY_RANDOM_CHANCE)  // Mix in occasional second random selection...
-				{
-					iGrassType = randomInt(0, 1);
-					if (iGrassType == 1) iGrassType = 2;
-				}
 			}
-			else if (controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
-			{
-				iGrassType = 2;
-				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = randomInt(0, 1); // Mix in occasional second random selection...
+			else if (controlMap.b >= GRASSMAP_SCONTROL_MIN)
+			{// b grass map forces randomization...
+				iGrassType = randomInt(0, 15);
+			}
+			else
+			{// Any grass at all...
+				iGrassType = randomInt(0, 15);
 			}
 
-			if (iGrassType == 2)
-			{// Pick randomly a plant for this spot...
-				iGrassType = randomInt(2, 9);
+			if (randZeroOne() > GRASS_TYPE_UNIFORMALITY)
+			{// Randomize...
+				iGrassType = randomInt(2, 15);
 			}
 		}
 
@@ -404,7 +399,7 @@ void main()
 			continue;
 		}
 
-		if (iGrassType > 2 && iGrassType < 10)
+		if (iGrassType > 2 && iGrassType < 16)
 		{// Rare randomized grasses (3 -> 9 - the plants) are a bit larger then the standard grass...
 			fGrassPatchHeight *= 1.25;
 		}

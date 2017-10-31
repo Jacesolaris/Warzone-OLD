@@ -9,7 +9,15 @@ uniform sampler2D	u_SpecularMap;
 uniform sampler2D	u_DeluxeMap;
 uniform sampler2D	u_NormalMap;
 
-uniform sampler2D	u_OverlayMap; // Sea grass
+uniform sampler2D	u_OverlayMap;
+uniform sampler2D	u_LightMap;
+uniform sampler2D	u_ShadowMap;
+uniform sampler2D	u_CubeMap;
+uniform sampler2D	u_PositionMap;
+uniform sampler2D	u_HeightMap;
+
+uniform sampler2D	u_WaterEdgeMap; // Sea grass
+
 
 
 uniform vec4		u_Local9;
@@ -43,7 +51,19 @@ void main()
 
 	vec4 diffuse;
 
-	if (iGrassType >= 10)
+	if (iGrassType >= 16)
+		diffuse = texture(u_WaterEdgeMap, vTexCoord);
+	else if (iGrassType >= 15)
+		diffuse = texture(u_HeightMap, vTexCoord);
+	else if (iGrassType >= 14)
+		diffuse = texture(u_PositionMap, vTexCoord);
+	else if (iGrassType >= 13)
+		diffuse = texture(u_CubeMap, vTexCoord);
+	else if (iGrassType >= 12)
+		diffuse = texture(u_LightMap, vTexCoord);
+	else if (iGrassType >= 11)
+		diffuse = texture(u_ShadowMap, vTexCoord);
+	else if (iGrassType >= 10)
 		diffuse = texture(u_OverlayMap, vTexCoord);
 	else if (iGrassType >= 9)
 		diffuse = texture(u_NormalMap, vTexCoord);

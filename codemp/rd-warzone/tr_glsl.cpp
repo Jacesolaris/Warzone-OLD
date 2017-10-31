@@ -4065,23 +4065,34 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_InitUniforms(&tr.grass2Shader);
 
 		GLSL_BindProgram(&tr.grass2Shader);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-		//GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+		// Grass/plant textures...
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP); // 0
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1); // 1
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2); // 2
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP3, TB_SPLATMAP3); // 3
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP, TB_STEEPMAP); // 4
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADMAP, TB_ROADMAP); // 5
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DETAILMAP, TB_DETAILMAP); // 6
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP); // 7
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP); // 8
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP); // 9
+		
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP); // 10
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_LIGHTMAP, TB_LIGHTMAP); // 11
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SHADOWMAP, TB_SHADOWMAP); // 12
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_CUBEMAP, TB_CUBEMAP); // 13
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP); // 14
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP); // 15
+
+
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass...
+		
+		
+
+		// Control textures...
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADMAP, TB_ROADMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+		
 
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
 
