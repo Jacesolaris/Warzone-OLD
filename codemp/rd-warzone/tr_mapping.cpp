@@ -1592,9 +1592,9 @@ void MAPPING_LoadMapInfo(void)
 	// Grass...
 	//
 	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "1")) > 0) ? qtrue : qfalse;
-	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "4"));
-	GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "32.0"));
-	GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "2048"));
+	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
+	GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "56.0"));
+	GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "3072"));
 	GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
 	GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
 
