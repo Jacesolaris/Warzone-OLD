@@ -2436,6 +2436,7 @@ typedef struct glstate_s {
 	FBO_t          *currentFBO;
 	VBO_t          *currentVBO;
 	IBO_t          *currentIBO;
+	FBO_t          *previousFBO;
 	matrix_t        modelview;
 	matrix_t        projection;
 	matrix_t		modelviewProjection;
@@ -2511,8 +2512,10 @@ typedef struct {
 
 	int     c_glslShaderBinds;
 	int     c_shadowPassBinds;
+	int     c_skyBinds;
 	int     c_lightallBinds;
 	int     c_shadowPassDraws;
+	int     c_skyDraws;
 	int     c_lightallDraws;
 	int     c_fogDraws;
 	int     c_lightMapsSkipped;
@@ -2659,6 +2662,7 @@ typedef struct trGlobals_s {
 	image_t					*ssdoNoiseImage;
 
 	FBO_t					*renderFbo;
+	FBO_t					*renderDepthFbo;
 	FBO_t					*renderGlowFbo;
 	FBO_t					*renderDetailFbo;
 	FBO_t					*renderWaterFbo;
@@ -2728,6 +2732,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t occlusionShader;
 	shaderProgram_t depthAdjustShader;
 	shaderProgram_t lightAllShader;
+	shaderProgram_t skyShader;
 	shaderProgram_t shadowPassShader;
 	shaderProgram_t sunPassShader;
 	shaderProgram_t moonPassShader;

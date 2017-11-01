@@ -3441,32 +3441,6 @@ void RB_StageIteratorGeneric( void )
 	//
 	if (backEnd.depthFill)
 	{
-		/*if (tr.currentEntity && tr.currentEntity != &tr.worldEntity)
-		{// UQ1: Hack!!! Disabled... These have cull issues...
-			if (backEnd.currentEntity->e.ignoreCull)
-			{
-				//model_t	*model = R_GetModelByHandle(backEnd.currentEntity->e.hModel);
-				//if (model)
-				//	ri->Printf(PRINT_WARNING, "Cull ignored on model type: %i. name: %s.\n", model->type, model->name);
-				//else
-				//	ri->Printf(PRINT_WARNING, "Cull ignored on unknown.\n");
-				if (input->shader->polygonOffset)
-				{
-					qglDisable(GL_POLYGON_OFFSET_FILL);
-				}
-
-				//if (model->type == MOD_BRUSH || model->data.bmodel || !tr.currentModel)
-				return;
-			}
-			else if (tr.currentEntity->e.reType == RT_MODEL)
-			{
-				model_t	*model = R_GetModelByHandle(backEnd.currentEntity->e.hModel);
-				
-				if (model->type == MOD_BRUSH || model->data.bmodel || !tr.currentModel)
-					return;
-			}
-		}*/
-
 		RB_IterateStagesGeneric(input);
 
 		//

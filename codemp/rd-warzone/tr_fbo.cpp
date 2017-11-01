@@ -424,6 +424,7 @@ FBO_Init
 */
 
 extern void GLSL_AttachTextures( void );
+extern void GLSL_AttachRenderDepthTextures(void);
 extern void GLSL_AttachGlowTextures(void);
 extern void GLSL_AttachGenericTextures(void);
 extern void GLSL_AttachWaterTextures(void);
@@ -625,12 +626,18 @@ void FBO_Init(void)
 	{
 		tr.renderFbo = FBO_Create("_render", tr.renderDepthImage->width, tr.renderDepthImage->height);
 		FBO_Bind(tr.renderFbo);
-
 		//FBO_CreateBuffer(tr.renderFbo, hdrFormat, 0, 0);
 		GLSL_AttachTextures();
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 		FBO_SetupDrawBuffers();
 		R_CheckFBO(tr.renderFbo);
+
+		tr.renderDepthFbo = FBO_Create("_renderDepth", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		FBO_Bind(tr.renderDepthFbo);
+		qglDrawBuffer(GL_NONE);
+		qglReadBuffer(GL_NONE);
+		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		R_CheckFBO(tr.renderDepthFbo);
 	}
 
 	// clear render buffer

@@ -1022,6 +1022,15 @@ void RE_RenderScene(const refdef_t *fd) {
 		&& RB_NightScale() < 1.0) // Can ignore rendering shadows at night...
 	{
 		vec4_t lightDir;
+
+		qboolean FBO_SWITCHED = qfalse;
+		if (glState.currentFBO == tr.renderFbo)
+		{// Skip outputting to deferred textures while doing depth prepass, by using a depth prepass FBO without any attached textures.
+			glState.previousFBO = glState.currentFBO;
+			FBO_Bind(tr.renderDepthFbo);
+			FBO_SWITCHED = qtrue;
+		}
+
 //#define __GLOW_SHADOWS__
 
 #ifdef __GLOW_SHADOWS__
@@ -1111,6 +1120,11 @@ void RE_RenderScene(const refdef_t *fd) {
 			VectorCopy(origVieworg, (float *)fd->vieworg); // Hack - override const :(
 		}
 #endif //__GLOW_SHADOWS__
+
+		if (FBO_SWITCHED)
+		{// Switch back to original FBO (renderFbo).
+			FBO_Bind(glState.previousFBO);
+		}
 	}
 
 	// playing with cube maps

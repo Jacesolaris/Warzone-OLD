@@ -57,6 +57,8 @@ uniform float				u_PortalRange;
 uniform vec4				u_PrimaryLightOrigin;
 
 varying vec2				var_TexCoords;
+varying vec3				var_Position;
+varying vec3				var_Normal;
 varying vec4				var_Color;
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
@@ -245,5 +247,7 @@ void main()
 	}
 
 	var_Color = CalcColor(position, normal);
+	var_Position = position;
+	var_Normal = normal;
 	var_TexCoords = texCoords;
 }

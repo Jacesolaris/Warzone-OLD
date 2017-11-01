@@ -429,7 +429,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
 	{
-		shaderProgram_t *sp = &tr.shadowPassShader;
+		shaderProgram_t *sp = &tr.skyShader;
 		vec4_t vector;
 
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
@@ -507,6 +507,8 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		GL_BindToTMU(tr.auroraImage[1], TB_SPLATMAP2);
 	}
+
+	backEnd.pc.c_skyDraws++;
 
 	if (r_tesselation->integer)
 		R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qtrue);

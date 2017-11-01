@@ -47,6 +47,8 @@ extern const char *fallbackShader_planet_vp;
 extern const char *fallbackShader_planet_fp;
 extern const char *fallbackShader_shadowPass_vp;
 extern const char *fallbackShader_shadowPass_fp;
+extern const char *fallbackShader_sky_vp;
+extern const char *fallbackShader_sky_fp;
 extern const char *fallbackShader_pshadow_vp;
 extern const char *fallbackShader_pshadow_fp;
 extern const char *fallbackShader_shadowfill_vp;
@@ -2072,6 +2074,11 @@ void GLSL_AttachGenericTextures(void)
 	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
+void GLSL_AttachRenderDepthTextures(void)
+{// Moved here for convenience...
+	FBO_AttachTextureImage(tr.renderImage, 0);
+}
+
 void GLSL_AttachWaterTextures(void)
 {// To output dummy textures on waters in RB_IterateStagesGeneric...
 	FBO_AttachTextureImage(tr.dummyImage, 0); // dummy
@@ -2457,7 +2464,8 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	{
 		try {
 			if (!StringContainsWord(name, "lightAll")
-				&& !StringContainsWord(name, "shadowPass"))
+				&& !StringContainsWord(name, "shadowPass")
+				&& !StringContainsWord(name, "sky"))
 			{// The optimizer doesn't like lightAll and shadowPass vert shaders...
 				if (vpCode)
 				{
@@ -3026,14 +3034,26 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-		//attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
 		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+		}
+	}
+
+
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		//attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
+
+		extradefines[0] = '\0';
+
+		if (!GLSL_BeginLoadGPUShader(&tr.skyShader, "sky", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sky_vp, fallbackShader_sky_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load sky shader!");
 		}
 	}
 
@@ -3952,6 +3972,23 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.shadowPassShader);
+#endif
+
+	numLightShaders++;
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.skyShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load sky shader!");
+	}
+
+	GLSL_InitUniforms(&tr.skyShader);
+
+	GLSL_BindProgram(&tr.skyShader);
+	GLSL_SetUniformInt(&tr.skyShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.skyShader);
 #endif
 
 	numLightShaders++;
@@ -5730,7 +5767,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.depthAdjustShader);
 
 	GLSL_DeleteGPUShader(&tr.lightAllShader);
-
+	GLSL_DeleteGPUShader(&tr.skyShader);
 	GLSL_DeleteGPUShader(&tr.shadowPassShader);
 
 	GLSL_DeleteGPUShader(&tr.sunPassShader);
@@ -5879,6 +5916,8 @@ void GLSL_BindProgram(shaderProgram_t * program)
 			backEnd.pc.c_lightallBinds++;
 		else if (program == &tr.shadowPassShader)
 			backEnd.pc.c_shadowPassBinds++;
+		else if (program == &tr.skyShader)
+			backEnd.pc.c_skyBinds++;
 	}
 }
 

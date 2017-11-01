@@ -2098,9 +2098,19 @@ const void	*RB_DrawSurfs( const void *data ) {
 		}
 
 		backEnd.depthFill = qtrue;
+		qboolean FBO_SWITCHED = qfalse;
+		if (glState.currentFBO == tr.renderFbo)
+		{// Skip outputting to deferred textures while doing depth prepass, by using a depth prepass FBO without any attached textures.
+			FBO_Bind(tr.renderDepthFbo);
+			FBO_SWITCHED = qtrue;
+		}
 		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs, qfalse );
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		if (FBO_SWITCHED)
+		{// Switch back to original FBO (renderFbo).
+			FBO_Bind(tr.renderFbo);
+		}
 		backEnd.depthFill = qfalse;
 
 		if (r_occlusion->integer)
