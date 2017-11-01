@@ -2,17 +2,12 @@
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D	u_PositionMap;
 
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
-
-
-//#define DOFCA
-//#define MATSO_DOF_BOKEH
-
-
 
 #define BLUR_DEPTH 0.55//0.28
 #define BLUR_RADIUS 2.0
@@ -116,6 +111,7 @@ void main()
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_GlowMap;
 
 uniform vec2		u_Dimensions;
@@ -193,6 +189,14 @@ vec4 GetMatsoDOFCA(sampler2D col, vec2 tex, float CoC)
 vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 {
 	vec4 tcol = textureLod(SamplerHDRX, coord.xy, 0.0);
+
+	/*float material = textureLod(u_PositionMap, var_TexCoords.xy, 0.0).a;
+
+	if (material-1.0 == MATERIAL_SKY || material-1.0 == MATERIAL_SUN)
+	{// Skybox... Skip...
+		return tcol;
+	}*/
+
 	float depth = textureLod(u_ScreenDepthMap, coord.xy, 0.0).x;
 	float lDepth = depth;
 

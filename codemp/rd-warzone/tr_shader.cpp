@@ -4770,21 +4770,12 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
 			defs |= LIGHTDEF_USE_LIGHTMAP;
 		}
-		else /*if ((shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_DRYLEAVES // billboards
-			&& (shader.surfaceFlags & MATERIAL_MASK) != MATERIAL_GREENLEAVES // tree leaves
-			&& !shader.isSky
-			&& !diffuse->glow)*/
+		else
 		{
 			diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
 			diffuse->bundle[TB_LIGHTMAP].image[0] = tr.whiteImage;
 			defs |= LIGHTDEF_USE_LIGHTMAP;
-			//lightmap = diffuse;
-			//diffuse->rgbGen = CGEN_IDENTITY_LIGHTING;
 		}
-	}
-	else
-	{
-		//diffuse->rgbGen = CGEN_IDENTITY_LIGHTING;
 	}
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)

@@ -1594,14 +1594,20 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
+	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
 	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.linearDepthImage1024, TB_LIGHTMAP);
+	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
 
-	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GL_BindToTMU(tr.random2KImage[0], TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
-	//GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	//GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
 	
 	{
 		vec4_t viewInfo;
@@ -1622,43 +1628,18 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec2(&tr.ssaoShader, UNIFORM_DIMENSIONS, screensize);
 	}
 
+	vec3_t out;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+	GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
 	{
 		vec4_t local0;
 		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_LOCAL0, local0);
 	}
 
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssaoShader, color, 0);
-
-	FBO_Blit(hdrFbo, hdrBox, NULL, tr.genericFbo2, ldrBox, &tr.ssaoShader, color, 0);
-
-
-	//RB_GaussianBlur(tr.genericFbo2, tr.genericFbo, tr.genericFbo2, 8.0);
-	//RB_GaussianBlur(tr.genericFbo2, tr.genericFbo, tr.genericFbo2, 8.0);
-	//RB_GaussianBlur(tr.genericFbo2, tr.genericFbo, tr.genericFbo2, 8.0);
-	//RB_FastBlur(tr.genericFbo2, hdrBox, tr.genericFbo, ldrBox);
-	//RB_FastBlur(tr.genericFbo, hdrBox, tr.genericFbo2, ldrBox);
-	//RB_FastBlur(tr.genericFbo2, hdrBox, tr.genericFbo, ldrBox);
-	//RB_FastBlur(tr.genericFbo, hdrBox, tr.genericFbo2, ldrBox);
-
-
-	// Combine render and hbao...
-	GLSL_BindProgram(&tr.hbaoCombineShader);
-
-	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(tr.genericFbo2->colorImage[0], TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-
-	vec2_t screensize;
-	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-	GLSL_SetUniformVec2(&tr.hbaoCombineShader, UNIFORM_DIMENSIONS, screensize);
-
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoCombineShader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssaoFbo, ldrBox, &tr.ssaoShader, color, 0);
 }
 
 extern float mix(float x, float y, float a);
@@ -2256,6 +2237,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+	GL_BindToTMU(tr.ssaoImage, TB_STEEPMAP);
 
 	if (r_ssdo->integer)
 	{
@@ -3089,6 +3073,8 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 		GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
+		//GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 		GLSL_SetUniformMatrix16(&tr.distanceBlurShader[0], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
@@ -3110,6 +3096,12 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_VIEWINFO, viewInfo);
 		}
+
+		/*{
+			vec4_t loc;
+			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_LOCAL0, loc);
+		}*/
 
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.distanceBlurShader[0], color, 0);
 	}
@@ -3145,6 +3137,8 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 		{
 			GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
 		}
+		//GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

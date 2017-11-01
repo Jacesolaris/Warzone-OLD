@@ -1390,6 +1390,7 @@ vec3_t		SUN_COLOR_SECONDARY = { 0 };
 vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
 int			LATE_LIGHTING_ENABLED = 0;
+qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 vec3_t		MAP_AMBIENT_CSB = { 1 };
 vec3_t		MAP_AMBIENT_COLOR = { 1 };
 float		MAP_GLOW_MULTIPLIER = 1.0;
@@ -1513,6 +1514,7 @@ void MAPPING_LoadMapInfo(void)
 	// Palette...
 	//
 	LATE_LIGHTING_ENABLED = atoi(IniRead(mapname, "PALETTE", "LATE_LIGHTING_ENABLED", "0"));
+	MAP_LIGHTMAP_DISABLED = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_DISABLED", "0")) ? qtrue : qfalse;
 
 	MAP_AMBIENT_COLOR[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_R", "1.0"));
 	MAP_AMBIENT_COLOR[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_G", "1.0"));
@@ -1719,7 +1721,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Late lighting is ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
@@ -2050,8 +2052,6 @@ void R_LoadMapInfo(void)
 		tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
-
-	MAPPING_LoadMapInfo();
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
 

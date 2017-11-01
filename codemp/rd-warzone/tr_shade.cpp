@@ -2235,9 +2235,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				lightMapsDisabled = qtrue;
 			}
 
-			if (r_lightmap->integer < 0)
+			if (r_lightmap->integer < 0 && (pStage->bundle[0].isLightmap || pStage->bundle[TB_LIGHTMAP].isLightmap))
 			{
-				index &= ~LIGHTDEF_USE_LIGHTMAP;
+				if (pStage->bundle[0].isLightmap)
+				{
+					backEnd.pc.c_lightMapsSkipped++;
+					continue;
+				}
+
+				if (index & LIGHTDEF_USE_LIGHTMAP)
+				{
+					index &= ~LIGHTDEF_USE_LIGHTMAP;
+				}
+
 				lightMapsDisabled = qtrue;
 			}
 			
@@ -2607,7 +2617,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		//
 
-		if (IS_DEPTH_PASS)
+		if (IS_DEPTH_PASS || sp == &tr.depthPassShader)
 		{
 			vec4_t baseColor;
 			vec4_t vertColor;
@@ -2699,65 +2709,68 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
 
+			if (sp == &tr.lightAllShader)
+			{
 #ifdef __USE_DETAIL_MAPS__
-			if (pStage->bundle[TB_DETAILMAP].image[0])
-			{
-				GL_BindToTMU(pStage->bundle[TB_DETAILMAP].image[0], TB_DETAILMAP);
-			}
-			else
-			{
-				GL_BindToTMU(tr.defaultDetail, TB_DETAILMAP);
-			}
-#endif //__USE_DETAIL_MAPS__
-
-			if (pStage->glowMapped && pStage->bundle[TB_GLOWMAP].image[0])
-			{
-				GL_BindToTMU(pStage->bundle[TB_GLOWMAP].image[0], TB_GLOWMAP);
-			}
-
-			if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
-			{
-				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0])
+				if (pStage->bundle[TB_DETAILMAP].image[0])
 				{
-					GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
+					GL_BindToTMU(pStage->bundle[TB_DETAILMAP].image[0], TB_DETAILMAP);
 				}
 				else
 				{
-					GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
+					GL_BindToTMU(tr.defaultDetail, TB_DETAILMAP);
+				}
+#endif //__USE_DETAIL_MAPS__
+
+				if (pStage->glowMapped && pStage->bundle[TB_GLOWMAP].image[0])
+				{
+					GL_BindToTMU(pStage->bundle[TB_GLOWMAP].image[0], TB_GLOWMAP);
 				}
 
-				if (pStage->bundle[TB_STEEPMAP].image[0])
+				if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
 				{
-					GL_BindToTMU(pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP);
-				}
+					if (pStage->bundle[TB_SPLATCONTROLMAP].image[0])
+					{
+						GL_BindToTMU(pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP);
+					}
+					else
+					{
+						GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
+					}
 
-				if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
-				{
-					GL_BindToTMU(pStage->bundle[TB_WATER_EDGE_MAP].image[0], TB_WATER_EDGE_MAP);
-				}
+					if (pStage->bundle[TB_STEEPMAP].image[0])
+					{
+						GL_BindToTMU(pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP);
+					}
 
-				if (pStage->bundle[TB_SPLATMAP1].image[0])
-				{
-					GL_BindToTMU(pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1);
-				}
+					if (pStage->bundle[TB_WATER_EDGE_MAP].image[0])
+					{
+						GL_BindToTMU(pStage->bundle[TB_WATER_EDGE_MAP].image[0], TB_WATER_EDGE_MAP);
+					}
 
-				if (pStage->bundle[TB_SPLATMAP2].image[0])
-				{
-					GL_BindToTMU(pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2);
-				}
+					if (pStage->bundle[TB_SPLATMAP1].image[0])
+					{
+						GL_BindToTMU(pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1);
+					}
 
-				if (pStage->bundle[TB_SPLATMAP3].image[0])
-				{
-					GL_BindToTMU(pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3);
+					if (pStage->bundle[TB_SPLATMAP2].image[0])
+					{
+						GL_BindToTMU(pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2);
+					}
+
+					if (pStage->bundle[TB_SPLATMAP3].image[0])
+					{
+						GL_BindToTMU(pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3);
+					}
 				}
-			}
 
 #if 0 // Disabled for now...
-			if (pStage->bundle[TB_OVERLAYMAP].image[0])
-			{
-				R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
-			}
+				if (pStage->bundle[TB_OVERLAYMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU(&pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
+				}
 #endif
+			}
 
 			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
@@ -2765,33 +2778,40 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 			}
+
+			if (tr.roadsMapImage != tr.blackImage)
+			{
+				GL_BindToTMU(tr.roadsMapImage, TB_ROADSCONTROLMAP);
+				GL_BindToTMU(tr.roadImage, TB_ROADMAP);
+			}
+			else
+			{
+				GL_BindToTMU(tr.blackImage, TB_ROADSCONTROLMAP);
+				//GL_BindToTMU(tr.blackImage, TB_ROADMAP);
+			}
+
+			vec4_t loc;
+			VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
+
+			VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MAXS, loc);
+
+			VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
 		}
-
-		if (tr.roadsMapImage != tr.blackImage)
-		{
-			GL_BindToTMU(tr.roadsMapImage, TB_ROADSCONTROLMAP);
-			GL_BindToTMU(tr.roadImage, TB_ROADMAP);
-		}
-		else
-		{
-			GL_BindToTMU(tr.blackImage, TB_ROADSCONTROLMAP);
-			//GL_BindToTMU(tr.blackImage, TB_ROADMAP);
-		}
-
-		vec4_t loc;
-		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
-
-		VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_MAXS, loc);
-
-		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
 
 		//
 		// do multitexture
 		//
-		if ((tr.viewParms.flags & VPF_SHADOWPASS))
+		if (sp == &tr.depthPassShader)
+		{
+			if (!(pStage->stateBits & GLS_ATEST_BITS))
+				GL_BindToTMU(tr.whiteImage, 0);
+			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
+				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP);
+		}
+		else if ((tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_DIFFUSEMAP].image[0], TB_DIFFUSEMAP);
@@ -2805,7 +2825,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP );
 		}
-		else if ( sp == &tr.lightAllShader || sp == &tr.depthPassShader )
+		else if ( sp == &tr.lightAllShader )
 		{
 			int i;
 
@@ -2879,10 +2899,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}*/
 			}
 		}
-		else if ( pStage->bundle[1].image[0] != 0 )
+		else if ( pStage->bundle[TB_LIGHTMAP].image[0] != 0 )
 		{
-			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
-			R_BindAnimatedImageToTMU( &pStage->bundle[1], 1 );
+			R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], 0 );
+
+			if (!lightMapsDisabled)
+			{
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_LIGHTMAP], 1);
+			}
 		}
 		else
 		{

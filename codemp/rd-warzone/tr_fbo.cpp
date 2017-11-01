@@ -526,6 +526,16 @@ void FBO_Init(void)
 	}
 
 	//
+	// UQ1's SSAO FBO...
+	//
+	{
+		tr.ssaoFbo = FBO_Create("_ssaoFbo", tr.ssaoImage->width, tr.ssaoImage->height);
+		FBO_Bind(tr.ssaoFbo);
+		FBO_AttachTextureImage(tr.ssaoImage, 0);
+		R_CheckFBO(tr.ssaoFbo);
+	}
+
+	//
 	// UQ1's SSDO FBO1...
 	//
 	{

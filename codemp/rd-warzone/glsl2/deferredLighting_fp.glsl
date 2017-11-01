@@ -13,6 +13,7 @@ uniform sampler2D	u_ShadowMap;
 uniform sampler2D	u_DeluxeMap;  // Random2K image...
 uniform sampler2D	u_GlowMap;
 uniform samplerCube	u_CubeMap;
+uniform sampler2D	u_SteepMap;	  // ssao image
 
 uniform mat4		u_ModelViewProjectionMatrix;
 
@@ -430,104 +431,6 @@ vec3 ContrastSaturationBrightness(vec3 color, float con, float sat, float brt)
 	return conColor;
 }
 
-#ifdef __EXPERIMENTAL_AO__
-float linearize(float depth)
-{
-#if 0
-	float d = depth;
-	d /= u_ViewInfo.z - depth * u_ViewInfo.z + depth;
-	return clamp(d * u_ViewInfo.r, 0.0, 1.0);
-#else
-	return depth;
-#endif
-}
-
-const vec3 unKernel[32] = vec3[]
-(
-	vec3(-0.134, 0.044, -0.825),
-	vec3(0.045, -0.431, -0.529),
-	vec3(-0.537, 0.195, -0.371),
-	vec3(0.525, -0.397, 0.713),
-	vec3(0.895, 0.302, 0.139),
-	vec3(-0.613, -0.408, -0.141),
-	vec3(0.307, 0.822, 0.169),
-	vec3(-0.819, 0.037, -0.388),
-	vec3(0.376, 0.009, 0.193),
-	vec3(-0.006, -0.103, -0.035),
-	vec3(0.098, 0.393, 0.019),
-	vec3(0.542, -0.218, -0.593),
-	vec3(0.526, -0.183, 0.424),
-	vec3(-0.529, -0.178, 0.684),
-	vec3(0.066, -0.657, -0.570),
-	vec3(-0.214, 0.288, 0.188),
-	vec3(-0.689, -0.222, -0.192),
-	vec3(-0.008, -0.212, -0.721),
-	vec3(0.053, -0.863, 0.054),
-	vec3(0.639, -0.558, 0.289),
-	vec3(-0.255, 0.958, 0.099),
-	vec3(-0.488, 0.473, -0.381),
-	vec3(-0.592, -0.332, 0.137),
-	vec3(0.080, 0.756, -0.494),
-	vec3(-0.638, 0.319, 0.686),
-	vec3(-0.663, 0.230, -0.634),
-	vec3(0.235, -0.547, 0.664),
-	vec3(0.164, -0.710, 0.086),
-	vec3(-0.009, 0.493, -0.038),
-	vec3(-0.322, 0.147, -0.105),
-	vec3(-0.554, -0.725, 0.289),
-	vec3(0.534, 0.157, -0.250)
-);
-
-vec3 vLocalSeed;
-
-// This function returns random number from zero to one
-float randZeroOne()
-{
-	uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
-	n = n * (n * n * 15731u + 789221u);
-	n = (n >> 9u) | 0x3F800000u;
-
-	float fRes = 2.0 - uintBitsToFloat(n);
-	vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-	return fRes;
-}
-
-float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in int numOcclusionChecks, in float resolution, in float strength, in float minDistance, in float maxDisance )
-{
-    vec2  uv  = pixel;
-    float z   = linearize(texture2D( u_ScreenDepthMap, uv ).x);		// read eye linear z
-	vec2  res = vec2(resolution) / u_Dimensions.xy;
-
-	//vec3  ref = texture2D( u_DeluxeMap, uv ).xyz;					// read dithering vector
-	
-	vLocalSeed = position;
-	vec3 ref = vec3(randZeroOne(), randZeroOne(), randZeroOne());
-	//float rnd = randZeroOne();
-
-	if (z >= 1.0) return 1.0;
-
-    // accumulate occlusion
-    float bl = 0.0;
-    for( int i=0; i<numOcclusionChecks; i++ )
-    {
-		vec3  of = faceforward( reflect( unKernel[i], ref ), light, normal );
-		//vec3  of = faceforward( reflect( unKernel[i], light ), light, normal );
-		//vec3  of = reflect( unKernel[i]*-light, normal+ref );
-        float sz = linearize(texture2D( u_ScreenDepthMap, uv + (res * of.xy)).x);
-        float zd = (sz-z)*strength;
-
-		if (length(sz - z) < minDistance || length(sz - z) > maxDisance)
-			bl += 1.0;
-		else
-			bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
-    }
-
-	float ao = clamp(1.0*bl/float(numOcclusionChecks), 0.0, 1.0);
-	ao = mix(ao, 1.0, z);
-    return ao;
-}
-#endif //__EXPERIMENTAL_AO__
-
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
 	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
@@ -607,10 +510,7 @@ void main(void)
 
 	normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
 	normalDetail.rgb *= 0.25;
-	//normalDetail.rgb *= u_Local3.r;
-	//normalDetail.z = sqrt(clamp((0.25 - normalDetail.x * normalDetail.x) - normalDetail.y * normalDetail.y, 0.0, 1.0));
 	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
-	//norm.rgb = normalize(norm.rgb * ((normalDetail.rgb * 0.5 + 0.5) * 0.25 + 0.75));
 
 	//vec3 tangent = TangentFromNormal( norm.xyz );
 	//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
@@ -869,26 +769,49 @@ void main(void)
 #ifdef __EXPERIMENTAL_AO__
 	if (u_Local1.b >= 2.0)
 	{// HQ AO enabled...
-		float hsao = 1.0; // High frequency occlusion...
-		float msao = 1.0; // Mid frequency occlusion...
-		float lsao = 1.0; // Low frequency occlusion...
+		float msao = 0.0;
 
-		if (u_Local1.b == 2.0 || u_Local1.b >= 5.0)
-			msao = ssao( position.xyz, texCoords, N.xyz, to_light_norm, 16, 32.0, 64.0, 0.001, 0.01 );
-
-		if (u_Local1.b == 3.0 || u_Local1.b >= 5.0)
-			lsao = ssao( position.xyz, texCoords, N.xyz, to_light_norm, 8, 64.0, 4.0, 0.0001, 1.0 ) * 0.25 + 0.75;
+#if 1
+		if (u_Local1.b >= 3.0)
+		{
+			const float width = 2.0;//u_Local1.b - 2.0;
+			float numSamples = 0.0;
 		
-		//if (u_Local1.b == 4.0 || u_Local1.b >= 5.0)
-		//	hsao = ssao( position.xyz, texCoords, N.xyz, to_light_norm, 4, 16.0, 64.0, 0.0008, 0.007 ) * 0.5 + 0.5;
+			for (float x = -width; x <= width; x += 1.0)
+			{
+				for (float y = -width; y <= width; y += 1.0)
+				{
+					vec2 coord = texCoords + (vec2(x, y) * pixel);
+					msao += textureLod(u_SteepMap, coord, 0.0).x;
+					numSamples += 1.0;
+				}
+			}
 
-		float sao = clamp(msao * hsao * lsao, 0.0, 1.0);
+			msao /= numSamples;
+		}
+		else
+		{
+			msao = textureLod(u_SteepMap, texCoords, 0.0).x;
+		}
+#else
+		float numSamples = 0.0;
+		
+		for (float x = -2.0; x <= 2.0; x += 1.0)
+		{
+			for (float y = -2.0; y <= 2.0; y += 1.0)
+			{
+				vec2 coord = texCoords + (vec2(x, y) * pixel);
+				msao += textureLod(u_SteepMap, coord, 0.0).x;
+				numSamples += 1.0;
+			}
+		}
+
+		msao /= numSamples;
+#endif
+
+		float sao = clamp(msao, 0.0, 1.0);
 		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
-
-		//if (u_Local3.a > 0.0)
-		//	outColor.rgb = vec3(sao);
-		//else
-			outColor.rgb *= sao;
+		outColor.rgb *= sao;
 	}
 #endif //__EXPERIMENTAL_AO__
 

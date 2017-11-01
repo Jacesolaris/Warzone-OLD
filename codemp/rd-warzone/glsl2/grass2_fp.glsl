@@ -103,7 +103,7 @@ void main()
 	else
 		diffuse = texture(u_DiffuseMap, vTexCoord);
 
-	diffuse.rgb *= clamp((1.0-vTexCoord.y) * 1.5, 0.6, 1.0);
+	diffuse.rgb *= clamp((1.0-vTexCoord.y) * 1.5, 0.8, 1.0);
 
 	if (diffuse.a > 0.5)
 	{

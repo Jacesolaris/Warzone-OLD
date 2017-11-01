@@ -207,6 +207,9 @@ R_LoadLightmaps
 */
 #define	DEFAULT_LIGHTMAP_SIZE	128
 #define MAX_LIGHTMAP_PAGES 2
+
+extern qboolean MAP_LIGHTMAP_DISABLED;
+
 static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	byte		*buf, *buf_p;
 	dsurface_t  *surf;
@@ -221,6 +224,12 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		return;
 	}
 	buf = fileBase + l->fileofs;
+
+	if (MAP_LIGHTMAP_DISABLED)
+	{
+		tr.numLightmaps = 0;
+		return;
+	}
 
 	// we are about to upload textures
 	R_IssuePendingRenderCommands();
@@ -4424,6 +4433,8 @@ Called directly from cgame
 #include <algorithm>
 #include <string>
 
+extern void MAPPING_LoadMapInfo(void);
+
 void RE_LoadWorldMap( const char *name ) {
 	int			i;
 	dheader_t	*header;
@@ -4454,6 +4465,9 @@ void RE_LoadWorldMap( const char *name ) {
 
 		COM_StripExtension(str.c_str(), currentMapName, sizeof(currentMapName));
 	}
+
+	// Load mapinfo settings...
+	MAPPING_LoadMapInfo();
 
 	// set default map light scale
 	tr.mapLightScale  = 1.0f;

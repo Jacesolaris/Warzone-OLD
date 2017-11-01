@@ -2832,6 +2832,9 @@ typedef struct trGlobals_s {
 	FBO_t			*depthAdjustFbo;
 	FBO_t			*genericDepthFbo;
 
+	FBO_t		   *ssaoFbo;
+	image_t        *ssaoImage;
+
 	FBO_t		   *ssdoFbo1;
 	FBO_t		   *ssdoFbo2;
 	image_t        *ssdoImage1;

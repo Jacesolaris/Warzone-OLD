@@ -2796,6 +2796,13 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
+		if (!SCREEN_BLUR && r_ao->integer >= 2.0)
+		{
+			DEBUG_StartTimer("SSAO Generate");
+			RB_SSAO(currentFbo, srcBox, currentOutFbo, dstBox);
+			DEBUG_EndTimer();
+		}
+
 		if (r_cartoon->integer >= 2.0)
 		{
 			DEBUG_StartTimer("Cell Shade");
@@ -2824,7 +2831,7 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
-		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer /*|| r_deferredLighting->integer*/))
+		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
 		{
 			DEBUG_StartTimer("Create Anamorphic");
 			RB_CreateAnamorphicImage();
@@ -2892,14 +2899,6 @@ const void *RB_PostProcess(const void *data)
 		}
 #endif //CRAZY_SLOW_GAUSSIAN_BLUR
 
-		if (!SCREEN_BLUR && r_ssao->integer)
-		{
-			DEBUG_StartTimer("SSAO");
-			RB_SSAO(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer();
-		}
-
 		if (!SCREEN_BLUR && r_hbao->integer)
 		{
 			DEBUG_StartTimer("HBAO");
@@ -2946,38 +2945,6 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_StartTimer("Multi Post");
 			RB_MultiPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer();
-		}
-
-		if (!SCREEN_BLUR && r_bloom->integer == 1 )
-		{
-			DEBUG_StartTimer("Bloom");
-			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer();
-		}
-
-		if (!SCREEN_BLUR && r_anamorphic->integer)
-		{
-			DEBUG_StartTimer("Anamorphic");
-			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer();
-		}
-
-		if (!SCREEN_BLUR && r_dynamiclight->integer)
-		{
-			DEBUG_StartTimer("Volume Light");
-			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer();
-		}
-
-		if (!SCREEN_BLUR && r_bloom->integer >= 2)
-		{
-			DEBUG_StartTimer("Bloom Rays");
-			RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 			DEBUG_EndTimer();
 		}
 
@@ -3059,14 +3026,6 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
-		if (!SCREEN_BLUR && r_fxaa->integer)
-		{
-			DEBUG_StartTimer("FXAA");
-			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer();
-		}
-
 		if (!SCREEN_BLUR && r_darkexpand->integer)
 		{
 			DEBUG_StartTimer("Dark Expand");
@@ -3097,6 +3056,46 @@ const void *RB_PostProcess(const void *data)
 				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, -1);
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 			}
+			DEBUG_EndTimer();
+		}
+
+		if (!SCREEN_BLUR && r_bloom->integer == 1)
+		{
+			DEBUG_StartTimer("Bloom");
+			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			DEBUG_EndTimer();
+		}
+
+		if (!SCREEN_BLUR && r_anamorphic->integer)
+		{
+			DEBUG_StartTimer("Anamorphic");
+			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			DEBUG_EndTimer();
+		}
+
+		if (!SCREEN_BLUR && r_dynamiclight->integer)
+		{
+			DEBUG_StartTimer("Volume Light");
+			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			DEBUG_EndTimer();
+		}
+
+		if (!SCREEN_BLUR && r_bloom->integer >= 2)
+		{
+			DEBUG_StartTimer("Bloom Rays");
+			RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			DEBUG_EndTimer();
+		}
+
+		if (!SCREEN_BLUR && r_fxaa->integer)
+		{
+			DEBUG_StartTimer("FXAA");
+			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
 			DEBUG_EndTimer();
 		}
 
@@ -3192,6 +3191,34 @@ const void *RB_PostProcess(const void *data)
 	//if (backEnd.refdef.blurFactor > 0.0)
 	//	RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
 
+	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
+	{
+		// Composite the glow/bloom texture
+		int blendFunc = 0;
+		vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+		// UQ1: Apply original glow map over postprocessed screen again, so depth map based posts are overwritten...
+		//FBO_BlitFromTexture(tr.glowImage, NULL, NULL, NULL, NULL, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR);
+
+		if (r_dynamicGlow->integer == 2)
+		{
+			// Debug output
+			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+		}
+		else if (r_dynamicGlowSoft->integer)
+		{
+			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
+			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+		}
+		else
+		{
+			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
+			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+		}
+
+		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
+	}
+
 #ifdef ___WARZONE_AWESOMIUM___
 	if (srcFbo)
 	{
@@ -3257,31 +3284,6 @@ const void *RB_PostProcess(const void *data)
 		}
 	}
 #endif
-
-	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
-	{
-		// Composite the glow/bloom texture
-		int blendFunc = 0;
-		vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-		if ( r_dynamicGlow->integer == 2 )
-		{
-			// Debug output
-			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
-		}
-		else if ( r_dynamicGlowSoft->integer )
-		{
-			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
-			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
-		}
-		else
-		{
-			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
-			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
-		}
-
-		FBO_BlitFromTexture (tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
-	}
 
 	if (r_superSampleMultiplier->value > 1.0)
 	{

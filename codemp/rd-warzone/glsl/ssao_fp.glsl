@@ -1,233 +1,160 @@
-uniform sampler2D   u_ScreenDepthMap; //depth
-//uniform sampler2D   u_NormalMap; //normal
+uniform sampler2D   u_DiffuseMap;		// screen diffuse map
+uniform sampler2D   u_ScreenDepthMap;	// depth
+uniform sampler2D   u_PositionMap;		// position map
+uniform sampler2D   u_NormalMap;		// normal map
+uniform sampler2D   u_OverlayMap;		// detailed normal map
 
 uniform vec2        u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
-uniform mat4        u_ModelViewProjectionMatrix;
+uniform vec4		u_PrimaryLightOrigin;
 
 uniform vec4		u_Local0;
 
-const float camerazoom = 1.0;
+varying vec2	var_ScreenTex;
+varying vec3	var_Position;
 
-//#define raycasts 4			//Increase for better quality
-//#define raysegments 6			//Increase for better quality
-//#define aoscatter 1.0
-
-#define raycasts 1			//Increase for better quality
-#define raysegments 1			//Increase for better quality
-#define aoscatter 0.5
-
-//#define raycasts u_Local0.r
-//#define raysegments u_Local0.g
-//#define aoscatter u_Local0.b
-
-float DepthToZPosition(in float depth) {
-	return u_ViewInfo.x / (u_ViewInfo.y - depth * (u_ViewInfo.y - u_ViewInfo.x)) * u_ViewInfo.y;
+float getHeight(vec2 uv) {
+  return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
-float GetDepth(in vec2 texcoord)
+vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
+  vec2 step = 1. / resolution;
+    
+  float height = getHeight(uv);
+    
+  vec2 dxy = height - vec2(
+      getHeight(uv + vec2(step.x, 0.)), 
+      getHeight(uv + vec2(0., step.y))
+  );
+
+  vec3 N = vec3(dxy * scale / step, 1.);
+
+// Contrast...
+#define normLower ( 128.0 / 255.0 )
+#define normUpper (255.0 / 192.0 )
+  N = clamp((clamp(N - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
+
+  return vec4(normalize(N) * 0.5 + 0.5, height);
+}
+
+vec4 normalVector(vec2 coord) {
+	return bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
+}
+
+const vec3 unKernel[32] = vec3[]
+(
+	vec3(-0.134, 0.044, -0.825),
+	vec3(0.045, -0.431, -0.529),
+	vec3(-0.537, 0.195, -0.371),
+	vec3(0.525, -0.397, 0.713),
+	vec3(0.895, 0.302, 0.139),
+	vec3(-0.613, -0.408, -0.141),
+	vec3(0.307, 0.822, 0.169),
+	vec3(-0.819, 0.037, -0.388),
+	vec3(0.376, 0.009, 0.193),
+	vec3(-0.006, -0.103, -0.035),
+	vec3(0.098, 0.393, 0.019),
+	vec3(0.542, -0.218, -0.593),
+	vec3(0.526, -0.183, 0.424),
+	vec3(-0.529, -0.178, 0.684),
+	vec3(0.066, -0.657, -0.570),
+	vec3(-0.214, 0.288, 0.188),
+	vec3(-0.689, -0.222, -0.192),
+	vec3(-0.008, -0.212, -0.721),
+	vec3(0.053, -0.863, 0.054),
+	vec3(0.639, -0.558, 0.289),
+	vec3(-0.255, 0.958, 0.099),
+	vec3(-0.488, 0.473, -0.381),
+	vec3(-0.592, -0.332, 0.137),
+	vec3(0.080, 0.756, -0.494),
+	vec3(-0.638, 0.319, 0.686),
+	vec3(-0.663, 0.230, -0.634),
+	vec3(0.235, -0.547, 0.664),
+	vec3(0.164, -0.710, 0.086),
+	vec3(-0.009, 0.493, -0.038),
+	vec3(-0.322, 0.147, -0.105),
+	vec3(-0.554, -0.725, 0.289),
+	vec3(0.534, 0.157, -0.250)
+);
+
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
 {
-	return textureLod(u_ScreenDepthMap, texcoord, 0.0).x;
+	uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+	n = n * (n * n * 15731u + 789221u);
+	n = (n >> 9u) | 0x3F800000u;
+
+	float fRes = 2.0 - uintBitsToFloat(n);
+	vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+	return fRes;
 }
 
-float readZPosition(in vec2 texcoord) {
-    return DepthToZPosition( GetDepth( texcoord /*+ (0.25 / u_Dimensions)*/ ) );
+float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in int numOcclusionChecks, in float resolution, in float strength, in float minDistance, in float maxDisance )
+{
+    vec2  uv  = pixel;
+    float z   = texture2D( u_ScreenDepthMap, uv ).x;		// read eye linear z
+	vec2  res = vec2(resolution) / u_Dimensions.xy;
+
+	vLocalSeed = position;
+	//vec3 ref = vec3(randZeroOne(), randZeroOne(), randZeroOne());
+	vec3 ref = unKernel[int(randZeroOne() * 32.0)];
+
+	if (z >= 1.0) return 1.0;
+
+    // accumulate occlusion
+    float bl = 0.0;
+    for( int i=0; i<numOcclusionChecks; i++ )
+    {
+		vec3  of = faceforward( reflect( unKernel[i], ref ), light, normal );
+        float sz = texture2D( u_ScreenDepthMap, uv + (res * of.xy)).x;
+        float zd = (sz-z)*strength;
+
+		if (length(sz - z) < minDistance || length(sz - z) > maxDisance)
+			bl += 1.0;
+		else
+			bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
+    }
+
+	float ao = clamp(1.0*bl/float(numOcclusionChecks), 0.0, 1.0);
+	ao = mix(ao, 1.0, z);
+    return ao;
 }
 
-mat3 vec3tomat3( in vec3 z ) {
-        mat3 mat;
-        mat[2]=z;
-        vec3 v=vec3(z.z,z.x,-z.y);//make a random vector that isn't the same as vector z
-        mat[0]=cross(z,v);//cross product is the x axis
-        mat[1]=cross(mat[0],z);//cross product is the y axis
-        return mat;
-}
+void main( void ) 
+{
+	vec4 position = textureLod(u_PositionMap, var_ScreenTex, 0.0);
 
-float compareDepths( in float depth1, in float depth2, in float m ) {
-        float diff = (depth1-depth2);
-		return 1.0 - clamp(diff * 128.0, 0.0, 1.0);
-}
+	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
+	{// Skybox... Skip...
+		gl_FragColor=vec4(1.0, 0.0, 0.0, 1.0);
+		return;
+	}
 
-// Calculates the screen-space position of a pixel
-// Make sure the depth lookup is using the right texture!!!
-vec3 GetPixelPosition( in vec2 coord ) {
-        vec3 pos;
-        vec2 hu_Dimensions=u_Dimensions/2.0;
-        pos.z = DepthToZPosition(GetDepth(coord));
-        pos = vec3((((coord.x+0.5)/hu_Dimensions.x)-0.5) * 2.0,(((-coord.y+0.5)/hu_Dimensions.y)+0.5) * 2.0 / (hu_Dimensions.x/hu_Dimensions.y),pos.z);
-        pos.x *= pos.z / camerazoom;
-        pos.y *= -pos.z / camerazoom;
-        return pos;
-}
+	vec4 norm = textureLod(u_NormalMap, var_ScreenTex, 0.0);
+	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
 
-vec3 ScreenCoordToPosition( in vec2 coord, in float z ) {
-        vec3 pos;
-        vec2 hu_Dimensions=u_Dimensions/2.0;
-        pos.z = z;
-        pos.x = ((((coord.x+0.5)/hu_Dimensions.x)-0.5) * 2.0)*(pos.z / camerazoom);
-        pos.y = ((((-coord.y+0.5)/hu_Dimensions.y)+0.5) * 2.0 / (hu_Dimensions.x/hu_Dimensions.y))*(-pos.z / camerazoom);
-        return pos;
-}
+	vec4 normalDetail = textureLod(u_OverlayMap, var_ScreenTex, 0.0);
 
-//Converts a screen position to texture coordinate
-vec2 ScreenPositionToCoord( in vec3 pos ) {
-        vec2 coord;
-        vec2 hu_Dimensions=u_Dimensions/2.0;
-        pos.x /= (pos.z / camerazoom);
-        coord.x = (pos.x / 2.0 + 0.5);
-        
-        pos.y /= (-pos.z / camerazoom) / (hu_Dimensions.x/hu_Dimensions.y);
-        coord.y = -(pos.y / 2.0 - 0.5);
-        
-        return coord;// + 0.5/(u_Dimensions/2.0);
-}
+	if (normalDetail.a < 1.0)
+	{// Don't have real normalmap, make normals for this pixel...
+		normalDetail = normalVector(var_ScreenTex);
+	}
 
-vec4 PlaneFromPointNormal( in vec3 point, in vec3 normal ) {
-        vec4 plane;
-        plane.x = normal.x;
-        plane.y = normal.y;
-        plane.z = normal.z;
-        plane.w = -dot(point,normal);
-        return plane;
-}
+	normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
+	normalDetail.rgb *= 0.25;
+	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
 
-vec2 offset1 = vec2(0.0, 1.0 / u_Dimensions.y);
-vec2 offset2 = vec2(1.0 / u_Dimensions.x, 0.0);
+	vec3 N = norm.xyz;
 
-vec3 normal_from_depth(vec2 texcoords) {
-	float depth = GetDepth(texcoords);
-	float depth1 = GetDepth(texcoords + offset1);
-	float depth2 = GetDepth(texcoords + offset2);
-  
-	vec3 p1 = vec3(offset1, depth1 - depth);
-	vec3 p2 = vec3(offset2, depth2 - depth);
-  
-	vec3 normal = cross(p1, p2);
-	normal.z = -normal.z;
-  
-	return normalize(normal);
-}
+	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
+	float to_light_dist = length(to_light);
+	vec3 to_light_norm = (to_light / to_light_dist);
 
-vec3 GetPixelNormal( in vec2 coord ) {
-		return normal_from_depth(coord);
-}
-
-vec4 GetPixelPlane( in vec2 coord ) {
-        vec3 point = GetPixelPosition( coord );
-        vec3 normal = GetPixelNormal( coord );
-        return PlaneFromPointNormal( point, normal);
-}
-
-float PointPlaneDistance( in vec4 plane, in vec3 point ) {
-        return plane.x*point.x+plane.y*point.y+plane.z*point.z+plane.w;
-}
-
-float rand(vec2 co) {
-        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-void main( void ) {
-        float ao=0.0;
-        float dn;
-        float zd;
-        float newdepth;
-        float angletest;
-        float lineardepth;
-        float depth;
-        vec3 newnormal;
-        vec3 newdiffuse;
-        vec3 normal;
-        vec2 texcoord2;
-        vec2 texcoord = gl_FragCoord.xy/u_Dimensions + 0.5/(u_Dimensions*0.5);
-        vec3 screencoord;
-        vec4 outcolor;
-
-		depth=GetDepth( texcoord );
-        
-        if (depth<1.0) {
-                
-				lineardepth = DepthToZPosition(depth);
-
-                normal = GetPixelNormal( texcoord ).rgb;
-                normal=normalize(normal);
-                normal.z=-normal.z;
-                
-                vec3 p0=ScreenCoordToPosition(vec2(0.0,0.5),lineardepth);
-                vec3 p1=ScreenCoordToPosition(vec2(1.0,0.5),lineardepth);
-                float dist = abs(p1.x-p0.x);
-                
-                screencoord = vec3((((gl_FragCoord.x+0.5)/u_Dimensions.x)-0.5) * 2.0,(((-gl_FragCoord.y+0.5)/u_Dimensions.y)+0.5) * 2.0 / (u_Dimensions.x/u_Dimensions.y),lineardepth);
-                screencoord.x *= screencoord.z / camerazoom;
-                screencoord.y *= -screencoord.z / camerazoom;
-                
-                vec3 newpoint;
-                vec2 coord;
-                vec3 raynormal;
-                vec3 offsetvector;
-                float diff;             
-                vec2 randcoord;         
-                float randsum = u_ModelViewProjectionMatrix[0][0]+u_ModelViewProjectionMatrix[0][1]+u_ModelViewProjectionMatrix[0][2];
-                randsum+=u_ModelViewProjectionMatrix[1][0]+u_ModelViewProjectionMatrix[1][1]+u_ModelViewProjectionMatrix[1][2];
-                randsum+=u_ModelViewProjectionMatrix[2][0]+u_ModelViewProjectionMatrix[2][1]+u_ModelViewProjectionMatrix[2][2];
-                randsum+=u_ModelViewProjectionMatrix[3][0]+u_ModelViewProjectionMatrix[3][1]+u_ModelViewProjectionMatrix[3][2];
-                
-                float raylength = 0.5;//*dist*1.0*50.0;
-                float cdm = 1.0;// * dist * 50.0;
-                
-                ao=0.0;
-                
-                vec4 gicolor;
-                float gisamples;
-                mat3 mat=vec3tomat3(normal);
-                float a;
-                float wheredepthshouldbe;
-                
-                float mix=(1.0-(clamp(lineardepth-50.0,0.0,50.0)/50.0));
-                
-                //Get a random number
-                a=rand( randsum+texcoord);// + float(53.0*m*raysegments + i*13.0) );
-                                        
-                if (mix>0.0) {
-                        for ( int i=0;i<(raycasts);i++ ) {
-                                for ( int m=0;m<(raysegments);m++ ) {
-                                        
-
-                                        
-                                        offsetvector.x=cos(a+float(i)/float(raycasts)*3.14*4.0)*aoscatter;
-                                        offsetvector.y=sin(a+float(i)/float(raycasts)*3.14*4.0)*aoscatter;
-                                        offsetvector.z=1.0;
-                                        offsetvector=normalize(offsetvector);
-                                        
-                                        //Create the ray vector
-                                        raynormal=mat*offsetvector;
-                                        
-                                        //Add the ray vector to the screen position
-                                        newpoint = screencoord + raynormal * (raylength/raysegments) * float(m+1);
-                                        wheredepthshouldbe=newpoint.z;
-                                        
-                                        //Turn the point back into a screen coord:
-                                        coord = ScreenPositionToCoord( newpoint );
-                                        
-                                        //Look up the depth value at that rays position
-                                        newdepth = readZPosition( coord );
-                                        
-                                        //If new depth is closer to camera darken ao value
-                                        //rayao = max(rayao,compareDepths( lineardepth, newdepth ));
-                                        //ao = min(ao,compareDepths( lineardepth, newdepth ));
-                                        ao += compareDepths( wheredepthshouldbe,newdepth, cdm );
-                                        //ao+=compareDepths( lineardepth, newdepth );
-                                }
-                        }
-                }
-                
-                ao /= (raycasts*raysegments);
-                //ao = max(ao * ao,0.5);
-                ao = ao * mix + (1.0-mix);              
-                gl_FragColor=vec4(ao);
-        }
-        
-        else {
-                gl_FragColor=vec4(1.0);
-        }
-        
+	float msao = ssao( position.xyz, var_ScreenTex, N.xyz, to_light_norm, 16, 32.0, 64.0, 0.001, 0.01 );
+	float sao = clamp(msao, 0.0, 1.0);
+	gl_FragColor=vec4(sao, 0.0, 0.0, 1.0);
 }

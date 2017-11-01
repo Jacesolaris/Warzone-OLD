@@ -1,7 +1,4 @@
 uniform sampler2D					u_DiffuseMap;
-uniform sampler2D					u_OverlayMap; // Night sky image... When doing sky...
-uniform sampler2D					u_SplatMap1;
-uniform sampler2D					u_SplatMap2;
 
 uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
