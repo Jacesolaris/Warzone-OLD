@@ -2215,8 +2215,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else
 			{
-				sp = &tr.shadowPassShader;
-				backEnd.pc.c_shadowPassDraws++;
+				sp = &tr.depthPassShader;
+				backEnd.pc.c_depthPassDraws++;
 			}
 
 			GLSL_BindProgram(sp);
@@ -2805,7 +2805,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP );
 		}
-		else if ( sp == &tr.lightAllShader || sp == &tr.shadowPassShader )
+		else if ( sp == &tr.lightAllShader || sp == &tr.depthPassShader )
 		{
 			int i;
 

@@ -45,8 +45,8 @@ extern const char *fallbackShader_sun_vp;
 extern const char *fallbackShader_sun_fp;
 extern const char *fallbackShader_planet_vp;
 extern const char *fallbackShader_planet_fp;
-extern const char *fallbackShader_shadowPass_vp;
-extern const char *fallbackShader_shadowPass_fp;
+extern const char *fallbackShader_depthPass_vp;
+extern const char *fallbackShader_depthPass_fp;
 extern const char *fallbackShader_sky_vp;
 extern const char *fallbackShader_sky_fp;
 extern const char *fallbackShader_pshadow_vp;
@@ -2464,9 +2464,9 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	{
 		try {
 			if (!StringContainsWord(name, "lightAll")
-				&& !StringContainsWord(name, "shadowPass")
+				&& !StringContainsWord(name, "depthPass")
 				&& !StringContainsWord(name, "sky"))
-			{// The optimizer doesn't like lightAll and shadowPass vert shaders...
+			{// The optimizer doesn't like lightAll and depthPass vert shaders...
 				if (vpCode)
 				{
 					glslopt_shader *shader = glslopt_optimize(ctx, kGlslOptShaderVertex, vpCode, 0);
@@ -3038,9 +3038,9 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		extradefines[0] = '\0';
 
-		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
+		if (!GLSL_BeginLoadGPUShader(&tr.depthPassShader, "depthPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthPass_vp, fallbackShader_depthPass_fp, NULL, NULL, NULL))
 		{
-			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+			ri->Error(ERR_FATAL, "Could not load depthPass shader!");
 		}
 	}
 
@@ -3960,18 +3960,18 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numLightShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader))
+	if (!GLSL_EndLoadGPUShader(&tr.depthPassShader))
 	{
-		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+		ri->Error(ERR_FATAL, "Could not load depthPass shader!");
 	}
 
-	GLSL_InitUniforms(&tr.shadowPassShader);
+	GLSL_InitUniforms(&tr.depthPassShader);
 
-	GLSL_BindProgram(&tr.shadowPassShader);
-	GLSL_SetUniformInt(&tr.shadowPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_BindProgram(&tr.depthPassShader);
+	GLSL_SetUniformInt(&tr.depthPassShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.shadowPassShader);
+	GLSL_FinishGPUShader(&tr.depthPassShader);
 #endif
 
 	numLightShaders++;
@@ -5768,7 +5768,7 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.lightAllShader);
 	GLSL_DeleteGPUShader(&tr.skyShader);
-	GLSL_DeleteGPUShader(&tr.shadowPassShader);
+	GLSL_DeleteGPUShader(&tr.depthPassShader);
 
 	GLSL_DeleteGPUShader(&tr.sunPassShader);
 	GLSL_DeleteGPUShader(&tr.moonPassShader);
@@ -5914,8 +5914,8 @@ void GLSL_BindProgram(shaderProgram_t * program)
 
 		if (program == &tr.lightAllShader)
 			backEnd.pc.c_lightallBinds++;
-		else if (program == &tr.shadowPassShader)
-			backEnd.pc.c_shadowPassBinds++;
+		else if (program == &tr.depthPassShader)
+			backEnd.pc.c_depthPassBinds++;
 		else if (program == &tr.skyShader)
 			backEnd.pc.c_skyBinds++;
 	}

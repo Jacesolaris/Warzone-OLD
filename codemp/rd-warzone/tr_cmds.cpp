@@ -69,10 +69,10 @@ void R_PerformanceCounters( void ) {
 		ri->Printf( PRINT_ALL, "VBO draws: static %i dynamic %i (%.2fKB)\nMultidraws: %i merged %i\n",
 			backEnd.pc.c_staticVboDraws, backEnd.pc.c_dynamicVboDraws, backEnd.pc.c_dynamicVboTotalSize / (1024.0f),
 			backEnd.pc.c_multidraws, backEnd.pc.c_multidrawsMerged );
-		ri->Printf( PRINT_ALL, "GLSL binds: total %i. shadowPass %i. sky %i. lightAll %i. misc %i.\n",
-			backEnd.pc.c_glslShaderBinds, backEnd.pc.c_shadowPassBinds, backEnd.pc.c_skyBinds, backEnd.pc.c_lightallBinds, backEnd.pc.c_glslShaderBinds - (backEnd.pc.c_shadowPassBinds + backEnd.pc.c_skyBinds + backEnd.pc.c_lightallBinds));
-		ri->Printf(PRINT_ALL, "GLSL draws: total %i. shadowPass %i. sky %i. lightAll %i.\n",
-			backEnd.pc.c_shadowPassDraws + backEnd.pc.c_skyDraws + backEnd.pc.c_lightallDraws, backEnd.pc.c_shadowPassDraws, backEnd.pc.c_skyDraws, backEnd.pc.c_lightallDraws);
+		ri->Printf( PRINT_ALL, "GLSL binds: total %i. depthPass %i. sky %i. lightAll %i. misc %i.\n",
+			backEnd.pc.c_glslShaderBinds, backEnd.pc.c_depthPassBinds, backEnd.pc.c_skyBinds, backEnd.pc.c_lightallBinds, backEnd.pc.c_glslShaderBinds - (backEnd.pc.c_depthPassBinds + backEnd.pc.c_skyBinds + backEnd.pc.c_lightallBinds));
+		ri->Printf(PRINT_ALL, "GLSL draws: total %i. depthPass %i. sky %i. lightAll %i.\n",
+			backEnd.pc.c_depthPassDraws + backEnd.pc.c_skyDraws + backEnd.pc.c_lightallDraws, backEnd.pc.c_depthPassDraws, backEnd.pc.c_skyDraws, backEnd.pc.c_lightallDraws);
 	}
 	else if (r_speeds->integer == 8)
 	{

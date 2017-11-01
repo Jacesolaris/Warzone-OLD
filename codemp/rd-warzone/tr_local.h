@@ -2511,10 +2511,10 @@ typedef struct {
 	int		c_flareRenders;
 
 	int     c_glslShaderBinds;
-	int     c_shadowPassBinds;
+	int     c_depthPassBinds;
 	int     c_skyBinds;
 	int     c_lightallBinds;
-	int     c_shadowPassDraws;
+	int     c_depthPassDraws;
 	int     c_skyDraws;
 	int     c_lightallDraws;
 	int     c_fogDraws;
@@ -2733,7 +2733,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t depthAdjustShader;
 	shaderProgram_t lightAllShader;
 	shaderProgram_t skyShader;
-	shaderProgram_t shadowPassShader;
+	shaderProgram_t depthPassShader;
 	shaderProgram_t sunPassShader;
 	shaderProgram_t moonPassShader;
 	shaderProgram_t planetPassShader;
