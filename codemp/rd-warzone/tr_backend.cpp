@@ -2135,118 +2135,6 @@ const void	*RB_DrawSurfs( const void *data ) {
 			//else
 				qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
-
-		if (r_sunlightMode->integer >= 2 
-			&& tr.screenShadowFbo 
-			&& (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-			&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)
-			&& !(backEnd.viewParms.flags & VPF_SHADOWPASS)
-			&& SHADOWS_ENABLED 
-			&& RB_NightScale() < 1.0 
-			&& r_deferredLighting->integer)
-		{
-			FBO_t *oldFbo = glState.currentFBO;
-
-			vec4_t quadVerts[4];
-			vec2_t texCoords[4];
-			vec4_t box;
-
-			FBO_Bind(tr.screenShadowFbo);
-
-			box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-			box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-			box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-			box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-
-			qglViewport(box[0], box[1], box[2], box[3]);
-			qglScissor(box[0], box[1], box[2], box[3]);
-
-			box[0] = backEnd.viewParms.viewportX               / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-			box[1] = backEnd.viewParms.viewportY               / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-			box[2] = box[0] + backEnd.viewParms.viewportWidth  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-			box[3] = box[1] + backEnd.viewParms.viewportHeight / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-
-			texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
-			texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
-			texCoords[2][0] = box[2]; texCoords[2][1] = box[1];
-			texCoords[3][0] = box[0]; texCoords[3][1] = box[1];
-
-			box[0] = -1.0f;
-			box[1] = -1.0f;
-			box[2] =  1.0f;
-			box[3] =  1.0f;
-
-			VectorSet4(quadVerts[0], box[0], box[3], 0, 1);
-			VectorSet4(quadVerts[1], box[2], box[3], 0, 1);
-			VectorSet4(quadVerts[2], box[2], box[1], 0, 1);
-			VectorSet4(quadVerts[3], box[0], box[1], 0, 1);
-
-			GL_State( GLS_DEPTHTEST_DISABLE );
-
-			GLSL_BindProgram(&tr.shadowmaskShader);
-
-			GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
-			
-			GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
-			
-			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
-				
-			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
-
-			GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
-			
-			//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-			//GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
-
-			//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-			//GL_BindToTMU(tr.random2KImage[1], TB_SPECULARMAP);
-			
-			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
-			
-			vec4_t vec;
-			VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
-			GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
-
-			//GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
-
-			{
-				vec4_t viewInfo;
-				vec3_t viewVector;
-
-				float zmax = backEnd.viewParms.zFar;
-				float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-				float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
-
-				float zmin = r_znear->value;
-
-				VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
-				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);
-				VectorScale(backEnd.refdef.viewaxis[1], xmax, viewVector);
-				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT,    viewVector);
-				VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
-				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP,      viewVector);
-
-				VectorSet4(viewInfo, zmax / zmin, zmax, /*r_hdr->integer ? 32.0 :*/ 24.0, zmin);
-
-				GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
-			}
-
-
-			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
-
-			if (r_shadowBlur->integer)
-			{// When not at night, don't bother to blur shadows...
-				RB_FastBlur(tr.screenShadowFbo, NULL, tr.screenShadowBlurFbo, NULL);
-			}
-
-			// reset viewport and scissor
-			FBO_Bind(oldFbo);
-			SetViewportAndScissor();
-		}
 	}
 
 	if (backEnd.viewParms.flags & VPF_DEPTHCLAMP)
@@ -2627,6 +2515,7 @@ RB_PostProcess
 */
 qboolean ALLOW_NULL_FBO_BIND = qfalse;
 
+extern qboolean ENABLE_DISPLACEMENT_MAPPING;
 extern qboolean FOG_POST_ENABLED;
 extern qboolean WATER_FOG_ENABLED;
 extern int LATE_LIGHTING_ENABLED;
@@ -2738,6 +2627,125 @@ const void *RB_PostProcess(const void *data)
 	dstBox[2] = backEnd.viewParms.viewportWidth;
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
+	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL)
+		&& r_sunlightMode->integer >= 2
+		&& tr.screenShadowFbo
+		&& (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+		&& !(backEnd.viewParms.flags & VPF_DEPTHSHADOW)
+		&& !(backEnd.viewParms.flags & VPF_SHADOWPASS)
+		&& SHADOWS_ENABLED
+		&& RB_NightScale() < 1.0 // Can ignore rendering shadows at night...
+		&& r_deferredLighting->integer)
+	{
+		FBO_t *oldFbo = glState.currentFBO;
+
+		DEBUG_StartTimer("Shadow Combine");
+
+		vec4_t quadVerts[4];
+		vec2_t texCoords[4];
+		vec4_t box;
+
+		FBO_Bind(tr.screenShadowFbo);
+
+		box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+		box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+
+		qglViewport(box[0], box[1], box[2], box[3]);
+		qglScissor(box[0], box[1], box[2], box[3]);
+
+		box[0] = backEnd.viewParms.viewportX / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		box[1] = backEnd.viewParms.viewportY / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+		box[2] = box[0] + backEnd.viewParms.viewportWidth / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		box[3] = box[1] + backEnd.viewParms.viewportHeight / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+
+		texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
+		texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
+		texCoords[2][0] = box[2]; texCoords[2][1] = box[1];
+		texCoords[3][0] = box[0]; texCoords[3][1] = box[1];
+
+		box[0] = -1.0f;
+		box[1] = -1.0f;
+		box[2] = 1.0f;
+		box[3] = 1.0f;
+
+		VectorSet4(quadVerts[0], box[0], box[3], 0, 1);
+		VectorSet4(quadVerts[1], box[2], box[3], 0, 1);
+		VectorSet4(quadVerts[2], box[2], box[1], 0, 1);
+		VectorSet4(quadVerts[3], box[0], box[1], 0, 1);
+
+		GL_State(GLS_DEPTHTEST_DISABLE);
+
+		GLSL_BindProgram(&tr.shadowmaskShader);
+
+		GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
+
+		GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
+		GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP, backEnd.refdef.sunShadowMvp[0]);
+
+		GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
+		GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
+
+		GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
+		GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
+
+		GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
+		GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
+
+		//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+		//GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
+
+		//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+		//GL_BindToTMU(tr.random2KImage[1], TB_SPECULARMAP);
+
+		GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+		vec4_t vec;
+		VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
+		GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
+
+		//GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
+
+		{
+			vec4_t viewInfo;
+			vec3_t viewVector;
+
+			float zmax = backEnd.viewParms.zFar;
+			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+
+			float zmin = r_znear->value;
+
+			VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);
+			VectorScale(backEnd.refdef.viewaxis[1], xmax, viewVector);
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT, viewVector);
+			VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP, viewVector);
+
+			VectorSet4(viewInfo, zmax / zmin, zmax, /*r_hdr->integer ? 32.0 :*/ 24.0, zmin);
+
+			GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+
+		RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
+
+		DEBUG_EndTimer();
+
+		if (r_shadowBlur->integer)
+		{// When not at night, don't bother to blur shadows...
+			DEBUG_StartTimer("Shadow Blur");
+			RB_FastBlur(tr.screenShadowFbo, NULL, tr.screenShadowBlurFbo, NULL);
+			DEBUG_EndTimer();
+		}
+
+		// reset viewport and scissor
+		FBO_Bind(oldFbo);
+		SetViewportAndScissor();
+	}
+
 	DEBUG_StartTimer("Dynamic Glow");
 
 	if (!(backEnd.refdef.rdflags & RDF_BLUR)
@@ -2789,7 +2797,7 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (!SCREEN_BLUR && r_ssdm->integer)
+		if (!SCREEN_BLUR && ENABLE_DISPLACEMENT_MAPPING && r_ssdm->integer)
 		{
 			DEBUG_StartTimer("SSDM Generate");
 			RB_SSDM_Generate(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2907,7 +2915,7 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
-		if (!SCREEN_BLUR && r_ssdm->integer)
+		if (!SCREEN_BLUR && ENABLE_DISPLACEMENT_MAPPING && r_ssdm->integer)
 		{
 			DEBUG_StartTimer("SSDM");
 			RB_SSDM(currentFbo, srcBox, currentOutFbo, dstBox);

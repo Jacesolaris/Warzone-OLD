@@ -463,7 +463,7 @@ void main(void)
 			outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
 		}
 
-		//outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
+		outColor.rgb = clamp(outColor.rgb, 0.0, 1.0);
 		gl_FragColor = outColor;
 		return;
 	}
@@ -840,7 +840,7 @@ void main(void)
 		outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
 	}
 
-	//outColor.rgb = LevelsControlOutputRange(outColor.rgb, 0.0, 1.0);
+	outColor.rgb = clamp(outColor.rgb, 0.0, 1.0);
 	gl_FragColor = outColor;
 }
 

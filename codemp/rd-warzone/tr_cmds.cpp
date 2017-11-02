@@ -379,6 +379,8 @@ If running in stereo, RE_BeginFrame will be called twice
 for each RE_EndFrame
 ====================
 */
+extern void RB_AdvanceOverlaySway(void);
+
 void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	drawBufferCommand_t	*cmd = NULL;
 	colorMaskCommand_t *colcmd = NULL;
@@ -386,6 +388,9 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	if ( !tr.registered ) {
 		return;
 	}
+
+	RB_AdvanceOverlaySway();
+
 	glState.finishCalled = qfalse;
 
 	tr.frameCount++;

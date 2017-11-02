@@ -1382,6 +1382,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 }
 
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
+qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
@@ -1464,6 +1465,11 @@ void MAPPING_LoadMapInfo(void)
 	// Horrible hacks for basejka maps... Don't use them! Fix your maps for warzone!
 	//
 	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
+
+	//
+	// Misc effect enablers...
+	//
+	ENABLE_DISPLACEMENT_MAPPING = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_DISPLACEMENT_MAPPING", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Sun + Day/Night...
@@ -1624,8 +1630,8 @@ void MAPPING_LoadMapInfo(void)
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
-		if (StringContainsWord(mapname, "baldemnic")
-			|| StringContainsWord(mapname, "mandalore")
+		if (/*StringContainsWord(mapname, "baldemnic")
+			||*/ StringContainsWord(mapname, "mandalore")
 			|| StringContainsWord(mapname, "endor")
 			|| StringContainsWord(mapname, "ilum")
 			|| StringContainsWord(mapname, "taanab")
@@ -1638,8 +1644,8 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	if (!SHADOWS_ENABLED
-		&& (StringContainsWord(mapname, "baldemnic")
-			|| StringContainsWord(mapname, "mandalore")
+		&& (/*StringContainsWord(mapname, "baldemnic")
+			||*/ StringContainsWord(mapname, "mandalore")
 			|| StringContainsWord(mapname, "endor")
 			|| StringContainsWord(mapname, "ilum")
 			|| StringContainsWord(mapname, "taanab")
@@ -1716,6 +1722,8 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Glow <textname>_g support is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED");
+	
+	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Displacement mapping support is ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);

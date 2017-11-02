@@ -67,6 +67,8 @@ uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZ
 uniform vec4						u_Mins;
 uniform vec4						u_Maxs;
 
+uniform float						u_Time;
+
 #define MAP_MAX_HEIGHT				u_Maxs.b
 
 #define SHADER_MAP_SIZE				u_Local1.r
@@ -483,6 +485,26 @@ float randZeroOne()
     return fRes;
 }
 
+const float							fBranchHardiness = 0.001;
+const float							fBranchSize = 128.0;
+const float							fWindStrength = 12.0;
+const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
+
+vec2 GetSway ()
+{
+	// Wind calculation stuff...
+	float fWindPower = 0.5f + sin(m_vertPos.x / fBranchSize + m_vertPos.z / fBranchSize + u_Time*(1.2f + fWindStrength / fBranchSize/*20.0f*/));
+
+	if (fWindPower < 0.0f)
+		fWindPower = fWindPower*0.2f;
+	else
+		fWindPower = fWindPower*0.3f;
+
+	fWindPower *= fWindStrength;
+
+	return vWindDirection.xy*fWindPower*fBranchHardiness;
+}
+
 
 void main()
 {
@@ -497,9 +519,12 @@ void main()
 		pixRandom = randZeroOne();
 	}
 
-	if (USE_GLOW_BUFFER != 1.0 && SHADER_SWAY > 0.0 && !(SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0) && !(SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
+	//if (USE_GLOW_BUFFER != 1.0 && SHADER_SWAY > 0.0 && !(SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0) && !(SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
+	if (SHADER_SWAY > 0.0)
 	{// Sway...
-		texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
+		//texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
+		//texCoords += vec2(GetSway() /** ((1.0 - texCoords.y) + 1.0)*/, 0.0);
+		texCoords += vec2(GetSway());
 	}
 
 

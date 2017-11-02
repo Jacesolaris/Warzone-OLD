@@ -61,8 +61,29 @@ uniform vec3						u_ViewOrigin;
 uniform float						u_Time;
 
 
+varying vec3						var_VertPos;
 varying vec2						var_TexCoords;
 varying vec4						var_Color;
+
+const float							fBranchHardiness = 0.001;
+const float							fBranchSize = 128.0;
+const float							fWindStrength = 12.0;
+const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
+
+vec2 GetSway ()
+{
+	// Wind calculation stuff...
+	float fWindPower = 0.5f + sin(var_VertPos.x / fBranchSize + var_VertPos.z / fBranchSize + u_Time*(1.2f + fWindStrength / fBranchSize/*20.0f*/));
+
+	if (fWindPower < 0.0f)
+		fWindPower = fWindPower*0.2f;
+	else
+		fWindPower = fWindPower*0.3f;
+
+	fWindPower *= fWindStrength;
+
+	return vWindDirection.xy*fWindPower*fBranchHardiness;
+}
 
 void main()
 {
@@ -76,7 +97,9 @@ void main()
 
 		if (SHADER_SWAY > 0.0)
 		{// Sway...
-			texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - texCoords.y) + 1.0), 0.0);
+			//texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - texCoords.y) + 1.0), 0.0);
+			//texCoords += vec2(GetSway() * ((1.0 - texCoords.y) + 1.0), 0.0);
+			texCoords += vec2(GetSway());
 		}
 
 		gl_FragColor = texture(u_DiffuseMap, texCoords);

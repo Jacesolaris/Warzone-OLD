@@ -56,6 +56,7 @@ uniform vec4				u_VertColor;
 uniform float				u_PortalRange;
 uniform vec4				u_PrimaryLightOrigin;
 
+varying vec3				var_VertPos;
 varying vec2				var_TexCoords;
 varying vec4				var_Color;
 
@@ -244,6 +245,7 @@ void main()
 		texCoords *= u_textureScale;
 	}
 
+	var_VertPos = position.xyz;
 	var_Color = CalcColor(position, normal);
 	var_TexCoords = texCoords;
 }

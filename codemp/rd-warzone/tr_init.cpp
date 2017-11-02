@@ -1615,7 +1615,7 @@ void R_Register( void )
 	r_anamorphicStrength = ri->Cvar_Get("r_anamorphicStrength", "0.5", CVAR_ARCHIVE);
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
-	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
+	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "0", CVAR_ARCHIVE );
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.0025", CVAR_ARCHIVE );
 	r_magicdetailMix = ri->Cvar_Get("r_magicdetailMix", "0.15", CVAR_ARCHIVE);
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
@@ -1634,7 +1634,7 @@ void R_Register( void )
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
-	r_ssdm = ri->Cvar_Get("r_ssdm", "0", CVAR_ARCHIVE);
+	r_ssdm = ri->Cvar_Get("r_ssdm", "1", CVAR_ARCHIVE);
 	r_ssr = ri->Cvar_Get("r_ssr", "0", CVAR_ARCHIVE);
 	r_ssrStrength = ri->Cvar_Get("r_ssrStrength", "0.05", CVAR_ARCHIVE);
 	r_sse = ri->Cvar_Get("r_sse", "0", CVAR_ARCHIVE);

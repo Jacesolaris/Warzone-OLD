@@ -901,8 +901,6 @@ to handle mirrors,
 @@@@@@@@@@@@@@@@@@@@@
 */
 
-extern void RB_AdvanceOverlaySway(void);
-
 int NEXT_SHADOWMAP_UPDATE[3] = { 0 };
 vec3_t SHADOWMAP_LAST_VIEWANGLES = { 0 };
 vec3_t SHADOWMAP_LAST_VIEWORIGIN = { 0 };
@@ -963,8 +961,6 @@ void RE_RenderScene(const refdef_t *fd) {
 	viewParms_t		parms;
 	int				startTime;
 
-	RB_AdvanceOverlaySway();
-
 	if (!tr.registered) {
 		return;
 	}
@@ -1019,7 +1015,8 @@ void RE_RenderScene(const refdef_t *fd) {
 		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
 		&& !backEnd.depthFill
 		&& SHADOWS_ENABLED
-		&& RB_NightScale() < 1.0) // Can ignore rendering shadows at night...
+		&& RB_NightScale() < 1.0 // Can ignore rendering shadows at night...
+		&& r_deferredLighting->integer)
 	{
 		vec4_t lightDir;
 
@@ -1204,9 +1201,15 @@ void RE_RenderScene(const refdef_t *fd) {
 
 	VectorCopy(fd->vieworg, parms.pvsOrigin);
 
-	if (!(fd->rdflags & RDF_NOWORLDMODEL)
+	/*if (!(fd->rdflags & RDF_NOWORLDMODEL)
 		&& r_depthPrepass->value
-		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))
+		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))*/
+	if (!(fd->rdflags & RDF_NOWORLDMODEL)
+		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
+		&& !backEnd.depthFill
+		&& SHADOWS_ENABLED
+		&& RB_NightScale() < 1.0 // Can ignore rendering shadows at night...
+		&& r_deferredLighting->integer)
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}

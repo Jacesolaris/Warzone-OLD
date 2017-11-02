@@ -1036,7 +1036,8 @@ float		overlaySway = 0.0;
 
 void RB_AdvanceOverlaySway ( void )
 {
-	if (overlaySwayTime > ri->Milliseconds())
+#if 0 // now done using time
+	if (overlaySwayTime > backEnd.refdef.time)
 		return;
 
 	if (overlaySwayDown)
@@ -1060,7 +1061,8 @@ void RB_AdvanceOverlaySway ( void )
 		}
 	}
 
-	overlaySwayTime = ri->Milliseconds() + 50;
+	overlaySwayTime = backEnd.refdef.time + 50;
+#endif
 }
 
 void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
