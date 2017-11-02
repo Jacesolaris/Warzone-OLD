@@ -16,24 +16,23 @@ uniform sampler2D	u_CubeMap;
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_HeightMap;
 
-uniform sampler2D	u_WaterEdgeMap; // Sea grass
-
-
+uniform sampler2D	u_WaterEdgeMap; // Sea grass 0
+uniform sampler2D	u_WaterPositionMap; // Sea grass 1
+uniform sampler2D	u_WaterHeightMap; // Sea grass 2
+uniform sampler2D	u_GlowMap; // Sea grass 3
 
 uniform vec4		u_Local9;
 
-//flat in int			iGrassType;
 smooth in vec2		vTexCoord;
 smooth in vec3		vVertPosition;
-//in vec2				vVertNormal;
-flat in float			vVertNormal;
+//flat in float		vVertNormal;
+smooth in vec2		vVertNormal;
+flat in int			iGrassType;
 
 out vec4			out_Glow;
 out vec4			out_Normal;
 out vec4			out_NormalDetail;
 out vec4			out_Position;
-
-//#define _DEBUG_
 
 const float xdec = 1.0/255.0;
 const float ydec = 1.0/65025.0;
@@ -48,27 +47,18 @@ vec4 DecodeFloatRGBA( float v ) {
 
 void main() 
 {
-	//vec3 normal = vec3(vVertNormal.xy, 0.0);
-	//normal.z = sqrt(1.0-dot(normal.xy, normal.xy)) * 2.0 - 1.0; // reconstruct Z from X and Y
-	vec4 normal = DecodeFloatRGBA(vVertNormal);
-	int iGrassType = int(normal.a * 16.0);
-
-#if defined(_DEBUG_)
-	if (u_Local9.g > 0.0)
-	{
-		gl_FragColor = vec4(1.0);
-		out_Glow = vec4(0.0);
-		out_Normal = vec4(normal.xyz * 0.5 + 0.5, 1.0);
-		out_NormalDetail = vec4(0.0);
-		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
-		//out_Position = vec4(0.0);
-		return;
-	}
-#endif
+	//vec4 normal = DecodeFloatRGBA(vVertNormal);
+	//int iGrassType = int(normal.a * 20.0);
 
 	vec4 diffuse;
 
-	if (iGrassType >= 16)
+	if (iGrassType >= 19)
+		diffuse = texture(u_GlowMap, vTexCoord);
+	else if (iGrassType >= 18)
+		diffuse = texture(u_WaterHeightMap, vTexCoord);
+	else if (iGrassType >= 17)
+		diffuse = texture(u_WaterPositionMap, vTexCoord);
+	else if (iGrassType >= 16)
 		diffuse = texture(u_WaterEdgeMap, vTexCoord);
 	else if (iGrassType >= 15)
 		diffuse = texture(u_HeightMap, vTexCoord);
@@ -109,7 +99,7 @@ void main()
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(normal.xy * 0.5 + 0.5, 0.0, 1.0);
+		out_Normal = vec4(vVertNormal.xy * 0.5 + 0.5, 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		//out_Position = vec4(0.0);

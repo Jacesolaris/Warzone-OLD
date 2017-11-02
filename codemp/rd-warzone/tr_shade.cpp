@@ -1831,7 +1831,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	// UQ1: I think we only need to do all these once, not per stage... Waste of FPS!
 	//
 
-	qboolean ADD_CUBEMAP_INDEX = qfalse;
 	qboolean useTesselation = qfalse;
 	qboolean isWater = qfalse;
 	qboolean isGrass = qfalse;
@@ -2268,35 +2267,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			//
-			// testing cube map
-			//
-			if (ADD_CUBEMAP_INDEX)
-			{
-				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
-				{
-					if (glState.vertexAnimation)
-					{
-						if (r_cubeMapping->integer >= 2)
-						{
-							index |= LIGHTDEF_USE_CUBEMAP;
-						}
-					}
-					else if (glState.skeletalAnimation)
-					{
-						if (r_cubeMapping->integer >= 1)
-						{
-							index |= LIGHTDEF_USE_CUBEMAP;
-						}
-					}
-				}
-				else
-				{
-					index |= LIGHTDEF_USE_CUBEMAP;
-				}
-			}
-
-			if (((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK /*|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_SOLIDWOOD*/)
+			if (((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2515,13 +2486,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vec);
 
 			float useGlow = 0.0;
-			if (pStage->glow || (index & LIGHTDEF_USE_GLOW_BUFFER)) useGlow = 1.0;
-			if (pStage->glowMapped) useGlow = 2.0;
+			float useLightMap = 0.0;
+			float isRenderCube = 0.0;
+
+			if (!IS_DEPTH_PASS)
+			{
+				if (pStage->glow || (index & LIGHTDEF_USE_GLOW_BUFFER)) useGlow = 1.0;
+				if (pStage->glowMapped) useGlow = 2.0;
+				if ((index & LIGHTDEF_USE_LIGHTMAP) && !lightMapsDisabled) useLightMap = 1.0;
+				if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo) isRenderCube = 1.0;
+			}
 
 			VectorSet4(vec, 
-				((index & LIGHTDEF_USE_LIGHTMAP) && !lightMapsDisabled) ? 1.0 : 0.0,
+				useLightMap,
 				useGlow,
-				(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo) ? 1.0 : 0.0,
+				isRenderCube,
 				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
 
@@ -2529,13 +2508,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
 				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
-				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
+				0.0,//tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
 				pStage->glowBlend);
 #else //!__USE_DETAIL_CHECKING__
 			VectorSet4(vec,
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0,
 				0.0,
-				tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
+				0.0,//tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
 				pStage->glowBlend);
 #endif //__USE_DETAIL_CHECKING__
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
@@ -2921,10 +2900,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
-			vec4_t l9;
-			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
-
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -2956,7 +2931,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU(tr.grassImage[7], TB_SPECULARMAP);
 				GL_BindToTMU(tr.grassImage[8], TB_DELUXEMAP);
 				GL_BindToTMU(tr.grassImage[9], TB_NORMALMAP);
-
 				GL_BindToTMU(tr.grassImage[10], TB_OVERLAYMAP);
 				GL_BindToTMU(tr.grassImage[11], TB_LIGHTMAP);
 				GL_BindToTMU(tr.grassImage[12], TB_SHADOWMAP);
@@ -2964,16 +2938,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU(tr.grassImage[14], TB_POSITIONMAP);
 				GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);
 
-
-				GL_BindToTMU(tr.seaGrassImage, TB_WATER_EDGE_MAP);
+				GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
+				GL_BindToTMU(tr.seaGrassImage[1], TB_WATERPOSITIONMAP);
+				GL_BindToTMU(tr.seaGrassImage[2], TB_WATERHEIGHTMAP);
+				GL_BindToTMU(tr.seaGrassImage[3], TB_GLOWMAP);
 
 				vec4_t l10;
-				VectorSet4(l10, GRASS_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, GRASS_TYPE_UNIFORMALITY);
+				VectorSet4(l10, GRASS_DISTANCE, 0.0, 0.0, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
 				if (tr.roadsMapImage != tr.blackImage)
 				{
@@ -3205,6 +3177,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 			}
 
+			vec4_t l9;
+			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
+
 			if (isWater && r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
@@ -3361,6 +3337,123 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, qfalse);
 			}
 		}
+
+#if 0
+		if (r_foliage->integer
+			&& r_foliageShadows->integer
+			&& GRASS_ENABLED
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+		{// Special extra pass stuff for grass or pebbles...
+			sp = &tr.grass2Shader;
+			int passMax = GRASS_DENSITY;
+
+			GLSL_BindProgram(sp);
+
+			GL_State(GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128);
+
+			//RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+			vec4_t	local1;
+			VectorSet4(local1, MAP_INFO_MAXSIZE, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+
+
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+
+			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+			GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
+			if (deformGen != DGEN_NONE)
+			{
+				GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+			}
+
+			VectorCopy(backEnd.viewParms.ori.origin, vector);
+			vector[3] = 1.0f;
+			GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vector);
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, backEnd.viewParms.zFar);
+
+			GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+
+			GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+			GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
+			GL_BindToTMU(tr.grassImage[1], TB_SPLATMAP1);
+			GL_BindToTMU(tr.grassImage[2], TB_SPLATMAP2);
+			GL_BindToTMU(tr.grassImage[3], TB_SPLATMAP3);
+			GL_BindToTMU(tr.grassImage[4], TB_STEEPMAP);
+			GL_BindToTMU(tr.grassImage[5], TB_ROADMAP);
+			GL_BindToTMU(tr.grassImage[6], TB_DETAILMAP);
+			GL_BindToTMU(tr.grassImage[7], TB_SPECULARMAP);
+			GL_BindToTMU(tr.grassImage[8], TB_DELUXEMAP);
+			GL_BindToTMU(tr.grassImage[9], TB_NORMALMAP);
+
+			GL_BindToTMU(tr.grassImage[10], TB_OVERLAYMAP);
+			GL_BindToTMU(tr.grassImage[11], TB_LIGHTMAP);
+			GL_BindToTMU(tr.grassImage[12], TB_SHADOWMAP);
+			GL_BindToTMU(tr.grassImage[13], TB_CUBEMAP);
+			GL_BindToTMU(tr.grassImage[14], TB_POSITIONMAP);
+			GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);
+
+
+			GL_BindToTMU(tr.seaGrassImage, TB_WATER_EDGE_MAP);
+
+			vec4_t l10;
+			VectorSet4(l10, GRASS_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, GRASS_TYPE_UNIFORMALITY);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+			GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+			GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+			GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+
+			if (tr.roadsMapImage != tr.blackImage)
+			{
+				GL_BindToTMU(tr.roadsMapImage, TB_ROADSCONTROLMAP);
+			}
+			else
+			{
+				GL_BindToTMU(tr.blackImage, TB_ROADSCONTROLMAP);
+			}
+
+			{
+				vec4_t loc;
+				VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
+
+				VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_MAXS, loc);
+
+				VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
+			}
+
+			GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+
+			GL_Cull(CT_TWO_SIDED);
+
+			for (int passNum = 0; passNum < passMax; passNum++)
+			{
+				vec4_t l8;
+				VectorSet4(l8, (float)passNum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+
+				//
+				// draw
+				//
+
+				if (input->multiDrawPrimitives)
+				{
+					R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, qfalse);
+				}
+				else
+				{
+					R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, qfalse);
+				}
+			}
+		}
+#endif
 	}
 }
 
@@ -3419,7 +3512,6 @@ void RB_StageIteratorGeneric( void )
 			GL_Cull( CT_BACK_SIDED );
 		else
 			GL_Cull( CT_FRONT_SIDED );
-
 	}
 	else
 		GL_Cull( input->shader->cullType );

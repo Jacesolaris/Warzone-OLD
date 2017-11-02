@@ -1701,12 +1701,15 @@ void MAPPING_LoadMapInfo(void)
 			}
 		}
 
-		newImage = R_FindImageFile(IniRead(mapname, "GRASS", "seaGrassImage", ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		for (int i = 0; i < 4; i++)
+		{
+			newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("seaGrassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-		if (newImage)
-		{// We have an override image to use from mapInfo...
-			tr.seaGrassImage = newImage;
-			newImage = NULL;
+			if (newImage)
+			{// We have an override image to use from mapInfo...
+				tr.seaGrassImage[i] = newImage;
+				newImage = NULL;
+			}
 		}
 
 		for (int i = 0; i < 4; i++)
@@ -2117,7 +2120,10 @@ void R_LoadMapInfo(void)
 				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
 			}
 
-			tr.seaGrassImage = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			for (int i = 0; i < 4; i++)
+			{
+				tr.seaGrassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("seaGrassImage%i", i), va("models/warzone/foliage/seagrass%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			}
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -2138,7 +2144,10 @@ void R_LoadMapInfo(void)
 				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
 			}
 
-			tr.seaGrassImage = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			for (int i = 0; i < 4; i++)
+			{
+				tr.seaGrassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("seaGrassImage%i", i), va("models/warzone/foliage/seagrass%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			}
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -2176,12 +2185,15 @@ void R_LoadMapInfo(void)
 				}
 			}
 
-			newImage = R_FindImageFile(IniRead(mapname, "GRASS", "seaGrassImage", ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			for (int i = 0; i < 4; i++)
+			{
+				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("seaGrassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-			if (newImage)
-			{// We have an override image to use from mapInfo...
-				tr.seaGrassImage = newImage;
-				newImage = NULL;
+				if (newImage)
+				{// We have an override image to use from mapInfo...
+					tr.seaGrassImage[i] = newImage;
+					newImage = NULL;
+				}
 			}
 
 			for (int i = 0; i < 4; i++)
@@ -2212,9 +2224,12 @@ void R_LoadMapInfo(void)
 			}
 		}
 
-		if (!tr.seaGrassImage)
+		for (int i = 0; i < 4; i++)
 		{
-			tr.seaGrassImage = R_FindImageFile("models/warzone/foliage/seagrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			if (!tr.seaGrassImage[i])
+			{
+				tr.seaGrassImage[i] = R_FindImageFile("models/warzone/foliage/seagrass1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			}
 		}
 
 		for (int i = 0; i < 4; i++)

@@ -4115,16 +4115,13 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP); // 14
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP); // 15
 
-
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass...
-		
-		
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass 0...
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP); // 16 - Sea grass 1...
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_WATERHEIGHTMAP, TB_WATERHEIGHTMAP); // 16 - Sea grass 2...
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_GLOWMAP, TB_GLOWMAP); // 16 - Sea grass 3...
 
 		// Control textures...
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-		
-
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
 
 #if defined(_DEBUG)

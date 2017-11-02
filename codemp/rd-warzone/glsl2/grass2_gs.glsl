@@ -1,4 +1,4 @@
-#define MAX_FOLIAGES				102
+#define MAX_FOLIAGES				85
 
 //#define THREE_WAY_GRASS_CLUMPS // otherwise uses 2 way X shape... 2 way probably gives better coverage...
 
@@ -18,13 +18,12 @@ uniform mat4						u_ModelViewProjectionMatrix;
 uniform sampler2D					u_SplatControlMap;
 uniform sampler2D					u_RoadsControlMap;
 
-
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0
+uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local10; // foliageLODdistance, 0.0, 0.0, GRASS_TYPE_UNIFORMALITY
 
 #define SHADER_MAP_SIZE				u_Local1.r
 #define SHADER_SWAY					u_Local1.g
@@ -41,7 +40,15 @@ uniform vec4						u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LE
 #define SHADER_HAS_SPLATMAP3		u_Local3.b
 #define SHADER_HAS_SPLATMAP4		u_Local3.a
 
-#define GRASS_TYPE_UNIFORMALITY			u_Local10.a
+#define PASS_NUMBER					u_Local8.r
+#define GRASS_DISTANCE_FROM_ROADS	u_Local8.g
+#define GRASS_HEIGHT				u_Local8.b
+
+#define MAX_RANGE					u_Local10.r
+#define GRASS_TYPE_UNIFORMALITY		u_Local10.a
+
+#define MAP_WATER_LEVEL				SHADER_WATER_LEVEL // TODO: Use water map
+#define GRASS_TYPE_UNIFORM_WATER	0.66
 
 uniform vec3						u_ViewOrigin;
 uniform float						u_Time;
@@ -54,29 +61,18 @@ flat in	int							isSlope[];
 
 smooth out vec2						vTexCoord;
 smooth out vec3						vVertPosition;
-//flat out int						iGrassType;
-//out vec2							vVertNormal;
-flat out float							vVertNormal;
-
-
-#define MAP_WATER_LEVEL				u_Local10.b // TODO: Use water map
-#define PASS_NUMBER					u_Local8.r
+//flat out float						vVertNormal;
+smooth out vec2						vVertNormal;
+flat out int						iGrassType;
 
 //
 // General Settings...
 //
 
-float								fGrassPatchSize = u_Local8.b;
 const float							fWindStrength = 12.0;
 const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
 
 float								controlScale = 1.0 / SHADER_MAP_SIZE;
-
-//
-// LOD Range Settings...
-//
-
-#define MAX_RANGE					u_Local10.r
 
 vec3 vLocalSeed;
 
@@ -132,19 +128,15 @@ vec4 GetControlMap(vec3 m_vertPos)
 		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
 		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
 		
-		//float road = 0.0;
-		//for (float x = -1.0; x <= 1.0; x += 1.0)
-		//	for (float y = -1.0; y <= 1.0; y += 1.0)
-		//		road += texture(u_RoadsControlMap, pixel + (vec2(x,y)*roadPx)).r;
 		float road = texture(u_RoadsControlMap, pixel).r;
 
-		if (road > u_Local8.g)
+		if (road > GRASS_DISTANCE_FROM_ROADS)
 		{
 			return vec4(0.0); // Force no grass near roads, or on black parts of the road map (obstacles)...
 		}
 		else if (road > 0.0)
 		{
-			float scale = 1.0 - (road / u_Local8.g);
+			float scale = 1.0 - (road / GRASS_DISTANCE_FROM_ROADS);
 			xaxis.a = yaxis.a = zaxis.a = scale;
 		}
 		else
@@ -161,14 +153,6 @@ vec4 GetGrassMap(vec3 m_vertPos)
 	vec4 control = GetControlMap(m_vertPos);
 	control.rgb = clamp(clamp(clamp(control.rgb * 1024.0, 0.0, 1.0) - 0.05, 0.0, 1.0) * 0.5, 0.0, 1.0);
 	return control;
-}
-
-bool pointInTriangle (vec3 p, vec3 p0, vec3 p1, vec3 p2) 
-{// Rounded down to int is just fine...
-	float part1 = (p1.y - p0.y) * (p.x - p0.x) - (p1.x - p0.x) * (p.y - p0.y);
-	float part2 = (p2.y - p1.y) * (p.x - p1.x) - (p2.x - p1.x) * (p.y - p1.y);
-	float part3 = (p0.y - p2.y) * (p.x - p2.x) - (p0.x - p2.x) * (p.y - p2.y);
-	return (int(part1) | int(part2) | int(part3)) >= 0;
 }
 
 mat4 rotationMatrix(vec3 axis, float angle) 
@@ -199,7 +183,7 @@ void main()
 {
 	#if defined(USE_400)
 		// invocations support...
-		if (gl_InvocationID >= u_Local8.r)
+		if (gl_InvocationID >= PASS_NUMBER)
 		{// Hit number of specified invocations, skip this pass...
 			return;
 		}
@@ -210,7 +194,8 @@ void main()
 		return; // This slope is too steep for grass...
 	}
 
-	float iGrassType = 0;
+	//float iGrassType = 0;
+	iGrassType = 0;
 
 	//face center------------------------
 	vec3 Vert1 = gl_in[0].gl_Position.xyz;
@@ -271,13 +256,6 @@ void main()
 	{
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
 
-		bool isUnderwaterVert = false;
-
-		if (vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
-		{
-			isUnderwaterVert = true;
-		}
-
 		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
 
 		if (VertDist2 >= MAX_RANGE)
@@ -316,17 +294,37 @@ void main()
 			continue;
 		}
 
-		// Fill in the smaller size grass around edges (since we just removed the smallest ones)...
-		float fGrassPatchWaterEdgeMod = randZeroOne();
+		float heightAboveWater = vGrassFieldPos.z - MAP_WATER_LEVEL;
+		float heightAboveWaterLength = length(heightAboveWater);
+		
+		if (heightAboveWaterLength <= 128.0)
+		{// Too close to water edge...
+			continue;
+		}
 
-		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
+		float fSizeRandomness = randZeroOne() * 0.25 + 0.75;
+		float sizeMult = 1.25;
+		float fGrassPatchHeight = 1.0;
+
+		if (heightAboveWater < 0.0)
 		{
-			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)) && !isUnderwaterVert)
-				iGrassType = 16;
-			else if (isUnderwaterVert)
-				iGrassType = 16;
+			iGrassType = 16;
+			
+			if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
+			{// Randomize...
+				iGrassType = randomInt(16, 19);
+			}
+
+			if (heightAboveWaterLength <= 192.0)
+			{// When near water edge, reduce the size of the grass...
+				sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
+			}
 			else
-				continue;
+			{// Deep underwater plants draw larger...
+				sizeMult *= clamp(1.0 + (heightAboveWaterLength / 192.0), 1.0, 16.0);
+			}
+
+			fGrassPatchHeight = clamp(controlMapScale * vertDistanceScale * 5.0, 0.0, 1.5) * fSizeRandomness;
 		}
 		else
 		{
@@ -368,40 +366,21 @@ void main()
 			{// Randomize...
 				iGrassType = randomInt(2, 15);
 			}
+
+			if (heightAboveWaterLength <= 256.0)
+			{// When near water edge, reduce the size of the grass...
+				sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
+			}
+
+			fGrassPatchHeight = clamp(controlMapScale * vertDistanceScale * 3.0, 0.0, 1.0);
 		}
 
-		float heightMult = 1.0;
-
-		if (isUnderwaterVert)
-		{// Deep underwater plants draw larger but less of them...
-			float heightMultMult = 1.0 + clamp(((MAP_WATER_LEVEL - 256.0) - vGrassFieldPos.z) / 128.0, 0.0, 4.0);
-			heightMult = fGrassPatchWaterEdgeMod * heightMultMult;
-		}
-		else if (vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
-		{// When near water edge, reduce the size of the grass...
-			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
-		}
-		else
+		if (fGrassPatchHeight <= 0.05)
 		{
-			heightMult *= 1.25;
+			continue;
 		}
 
-		heightMult *= controlMapScale;
-
-		float fGrassPatchHeight = (fGrassPatchWaterEdgeMod * 0.25 + 0.75) * heightMult; // use fGrassPatchWaterEdgeMod random to save doing an extra random
-		fGrassPatchHeight = clamp(fGrassPatchHeight * 3.0, 0.0, 1.0);
-
-		// Wind calculation stuff...
-		float fWindPower = 0.5f + sin(vGrassFieldPos.x / 30 + vGrassFieldPos.z / 30 + u_Time*(1.2f + fWindStrength / 20.0f));
-
-		if (fWindPower < 0.0f)
-			fWindPower = fWindPower*0.2f;
-		else
-			fWindPower = fWindPower*0.3f;
-
-		fWindPower *= fWindStrength;
-
-		float fGrassFinalSize = fGrassPatchSize * fGrassPatchHeight * controlMap.a; // controlMap.a is road edges multiplier...
+		float fGrassFinalSize = GRASS_HEIGHT * sizeMult * fSizeRandomness * controlMap.a; // controlMap.a is road edges multiplier...
 
 		if (fGrassFinalSize <= 0.05)
 		{
@@ -413,6 +392,16 @@ void main()
 			fGrassPatchHeight *= 1.25;
 		}
 
+		// Wind calculation stuff...
+		float fWindPower = 0.5f + sin(vGrassFieldPos.x / 30 + vGrassFieldPos.z / 30 + u_Time*(1.2f + fWindStrength / 20.0f));
+
+		if (fWindPower < 0.0f)
+			fWindPower = fWindPower*0.2f;
+		else
+			fWindPower = fWindPower*0.3f;
+
+		fWindPower *= fWindStrength;
+
 		float randDir = sin(randZeroOne()*0.7f)*0.1f;
 
 #ifdef THREE_WAY_GRASS_CLUMPS
@@ -420,39 +409,22 @@ void main()
 #else //!THREE_WAY_GRASS_CLUMPS
 		for(int i = 0; i < 2; i++)
 #endif //THREE_WAY_GRASS_CLUMPS
-		{// Draw 3 copies at each position at different angles...
+		{// Draw either 2 or 3 copies at each position at different angles...
 			vec3 direction = (rotationMatrix(vec3(0, 1, 0), randDir)*vec4(vBaseDir[i], 1.0)).xyz;
 
 			vec3 P = vGrassFieldPos.xyz;
 
 			vec3 va = P - (direction * fGrassFinalSize);
 			vec3 vb = P + (direction * fGrassFinalSize);
-			vec3 vc = va + vec3(0.0, 0.0, fGrassFinalSize * vertDistanceScale * fGrassPatchHeight);
-			vec3 vd = vb + vec3(0.0, 0.0, fGrassFinalSize * vertDistanceScale * fGrassPatchHeight);
+			vec3 vc = va + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
+			vec3 vd = vb + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
 
-#if 0 // Not required any more... Was useful for the long thin grass textures I used before...
-			// Enlarge the base triangle, and check if these points are somewhat within (reduce grass going over cliff edges, without leaving lines of missing grass along edges)...
-			const float scaleTri = 1.3;
-			vec3 v1, v2, v3;
-			v1 = P + (Vert1-P)*scaleTri;
-			v2 = P + (Vert2-P)*scaleTri;
-			v3 = P + (Vert3-P)*scaleTri;
-		
-			if (!pointInTriangle(va, v1, v2, v3)
-				|| !pointInTriangle(vb, v1, v2, v3)
-				|| !pointInTriangle(vc, v1, v2, v3)
-				|| !pointInTriangle(vd, v1, v2, v3))
-			{
-				continue;
-			}
-#endif
+			//float encodedGrassData = EncodeFloatRGBA(vec4(normalize(cross(vc - va, vb - va)), float(iGrassType) / 20.0));
 
 			vVertPosition = va.xyz;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
-			//vVertNormal = normalize(u_ViewOrigin - va).xy;
-			//vVertNormal = normalize(cross(vc - va, vb - va)).xy;
-			vVertNormal = EncodeFloatRGBA(vec4(normalize(cross(vc - va, vb - va)), float(iGrassType) / 16.0));
+			vVertNormal = normalize(cross(vc - va, vb - va)).xy;//encodedGrassData;
 			EmitVertex();
 
 			vVertPosition = vb.xyz;
