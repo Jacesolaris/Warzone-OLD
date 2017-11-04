@@ -2,6 +2,7 @@
 #include "snd_local.h"
 
 //#define __BASS_PLAYER_BASED_LOCATIONS__ // UQ1: This puts player always at 0,0,0 and calculates sound positions from that...
+#define __BASS_STREAM_MUSIC__
 
 #include "snd_bass.h"
 #include "dirent.h"
@@ -1343,6 +1344,89 @@ void BASS_InitDynamicList ( void )
 	MUSIC_LIST_UPDATING = qfalse;
 }
 
+#ifdef __BASS_STREAM_MUSIC__
+bool BASS_IsMusicInPK3(char * filename)
+{
+	if (!strncmp(filename, "warzone/music", 13))
+	{
+		return false;
+	}
+
+	if (!strncmp(filename, "http", 4))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void CALLBACK BASS_StreamMusic_StatusProc(const void *buffer, DWORD length, void *user)
+{
+	//if (buffer && !length && (DWORD)user==req) // got HTTP/ICY tags, and this is still the current request
+	//	MESS(32,WM_SETTEXT,0,buffer); // display status
+}
+
+void BASS_StartStreamingMusic(char *filename)
+{
+	DWORD newchan = 0, r = 0;
+
+	if (BASS_CheckSoundDisabled()) return;
+
+	if (!strncmp(filename, "http", 4))
+	{// http request...
+	 //Com_Printf("Playing [HTTP] stream %s.\n", filename);
+		newchan = BASS_StreamCreateURL(filename, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, BASS_StreamMusic_StatusProc, (void*)r);
+	}
+	else
+	{// local file...
+	 //Com_Printf("Playing [LOCAL] stream %s.\n", filename);
+#if 1
+		char fullPath[1024] = { 0 };
+		sprintf_s(fullPath, "warzone/%s", filename);
+#else
+		char *basepath = Cvar_VariableString("fs_basepath");
+		char *homepath = Cvar_VariableString("fs_homepath");
+		char *cdpath = Cvar_VariableString("fs_cdpath");
+		char *gamedir = Cvar_VariableString("fs_game");
+		char *fullPath = FS_BuildOSPath(basepath, gamedir, filename);
+#endif
+
+		//Com_Printf("Playing stream %s.\n", fullPath);
+
+		newchan = BASS_StreamCreateFile(FALSE, fullPath, 0, -1, BASS_STREAM_AUTOFREE);
+	}
+
+	// Load a music or sample from "file"
+	if (newchan) {
+		// Set new samples...
+		MUSIC_CHANNEL.originalChannel = MUSIC_CHANNEL.channel = newchan;
+		MUSIC_CHANNEL.entityNum = -1;
+		MUSIC_CHANNEL.entityChannel = CHAN_MUSIC;
+		MUSIC_CHANNEL.volume = 1.0;
+
+		// Load a music or sample from "file" (memory)
+		BASS_SampleGetChannel(MUSIC_CHANNEL.channel, FALSE); // initialize sample channel
+		BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*BASS_GetVolumeForChannel(CHAN_MUSIC));
+
+		// Play
+		BASS_ChannelPlay(MUSIC_CHANNEL.channel, FALSE);
+
+		// Play
+		if (!s_allowDynamicMusic->integer)
+			BASS_ChannelPlay(MUSIC_CHANNEL.channel, TRUE);
+		else
+			BASS_ChannelPlay(MUSIC_CHANNEL.channel, FALSE);
+
+		// Apply the 3D settings (music is always local)...
+		BASS_ChannelSet3DAttributes(MUSIC_CHANNEL.channel, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
+		BASS_Apply3D();
+	}
+	else {
+		//Com_Printf("Can't load file (note samples must be mono)\n");
+	}
+}
+#endif //__BASS_STREAM_MUSIC__
+
 void BASS_MusicUpdateThread( void * aArg )
 {
 	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
@@ -1379,23 +1463,23 @@ void BASS_MusicUpdateThread( void * aArg )
 		if (BASS_MUSIC_UPDATE_THREAD_STOP)
 			break;
 
-		//BASS_StopMusic(MUSIC_CHANNEL.channel);
-		{// Free old samples...
-			BASS_ChannelStop(MUSIC_CHANNEL.channel);
-			BASS_SampleFree(MUSIC_CHANNEL.channel);
-			BASS_MusicFree(MUSIC_CHANNEL.channel);
-			BASS_StreamFree(MUSIC_CHANNEL.channel);
-
-			BASS_ChannelStop(MUSIC_CHANNEL.originalChannel);
-			BASS_SampleFree(MUSIC_CHANNEL.originalChannel);
-			BASS_MusicFree(MUSIC_CHANNEL.originalChannel);
-			BASS_StreamFree(MUSIC_CHANNEL.originalChannel);
-		}
-
 		if (!BASS_UPDATE_THREAD_STOP)
 		{
 			//Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
+#ifdef __BASS_STREAM_MUSIC__
+			if (!BASS_IsMusicInPK3(MUSIC_LIST[trackChoice].name))
+			{
+				BASS_StartStreamingMusic(MUSIC_LIST[trackChoice].name);
+			}
+			else
+			{
+				BASS_StopMusic(MUSIC_CHANNEL.channel);
+				S_StartBackgroundTrack_Actual(MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
+			}
+#else //!__BASS_STREAM_MUSIC__
+			BASS_StopMusic(MUSIC_CHANNEL.channel);
 			S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name );
+#endif //__BASS_STREAM_MUSIC__
 		}
 
 		if (BASS_MUSIC_UPDATE_THREAD_STOP)
@@ -1435,7 +1519,22 @@ void BASS_UpdateDynamicMusic( void )
 		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING) return; // Still playing a track...
 
 		// Seems we need a new track... Select a random one and play it!
+#ifdef __BASS_STREAM_MUSIC__
+		int selection = irand(0, MUSIC_LIST_COUNT);
+
+		if (!BASS_IsMusicInPK3(MUSIC_LIST[selection].name))
+		{
+			BASS_StartStreamingMusic(MUSIC_LIST[selection].name);
+		}
+		else
+		{
+			BASS_StopMusic(MUSIC_CHANNEL.channel);
+			S_StartBackgroundTrack_Actual(MUSIC_LIST[selection].name, "");
+		}
+#else //!__BASS_STREAM_MUSIC__
+		BASS_StopMusic(MUSIC_CHANNEL.channel);
 		S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
+#endif //__BASS_STREAM_MUSIC__
 
 		this_thread::sleep_for(chrono::milliseconds(100));
 	}
