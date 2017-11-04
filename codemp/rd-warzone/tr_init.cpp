@@ -169,7 +169,6 @@ cvar_t  *r_forceAutoExposureMax;
 cvar_t  *r_srgb;
 
 cvar_t  *r_depthPrepass;
-cvar_t  *r_ssao;
 
 cvar_t  *r_ssdo;
 cvar_t  *r_ssdoBaseRadius;
@@ -1500,8 +1499,7 @@ void R_Register( void )
 	r_srgb = ri->Cvar_Get( "r_srgb", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
-	r_ssao = ri->Cvar_Get( "r_ssao", "0", /*CVAR_LATCH |*/ CVAR_ARCHIVE );
-
+	
 	r_ssdo = ri->Cvar_Get("r_ssdo", "0", CVAR_ARCHIVE);
 	r_ssdoBaseRadius = ri->Cvar_Get("r_ssdoBaseRadius", "1.0", CVAR_ARCHIVE);
 	r_ssdoMaxOcclusionDist = ri->Cvar_Get("r_ssdoMaxOcclusionDist", "99999.0", CVAR_ARCHIVE);
@@ -1570,7 +1568,7 @@ void R_Register( void )
 
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
-	r_ao = ri->Cvar_Get("r_ao", "2", CVAR_ARCHIVE);
+	r_ao = ri->Cvar_Get("r_ao", "3", CVAR_ARCHIVE);
 	r_env = ri->Cvar_Get("r_env", "1", CVAR_ARCHIVE);
 	
 	r_debugEmissiveLights = ri->Cvar_Get("r_debugEmissiveLights", "0", CVAR_ARCHIVE);

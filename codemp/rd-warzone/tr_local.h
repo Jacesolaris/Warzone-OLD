@@ -345,7 +345,6 @@ extern cvar_t  *r_forceAutoExposureMax;
 extern cvar_t  *r_srgb;
 
 extern cvar_t  *r_depthPrepass;
-extern cvar_t  *r_ssao;
 
 extern cvar_t  *r_ssdo;
 extern cvar_t  *r_ssdoBaseRadius;
@@ -3066,7 +3065,6 @@ extern  cvar_t  *r_cameraExposure;
 extern  cvar_t  *r_srgb;
 
 extern  cvar_t  *r_depthPrepass;
-extern  cvar_t  *r_ssao;
 
 extern cvar_t  *r_ssdo;
 extern cvar_t  *r_ssdoBaseRadius;

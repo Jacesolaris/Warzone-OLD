@@ -96,12 +96,15 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in i
     vec2  uv  = pixel;
     float z   = texture2D( u_ScreenDepthMap, uv ).x;		// read eye linear z
 	vec2  res = vec2(resolution) / u_Dimensions.xy;
+	float numOcclusions = 0.0;
 
 	vLocalSeed = position;
-	//vec3 ref = vec3(randZeroOne(), randZeroOne(), randZeroOne());
 	vec3 ref = unKernel[int(randZeroOne() * 32.0)];
 
-	if (z >= 1.0) return 1.0;
+	if (z >= 1.0)
+	{// Sky...
+		return 1.0;
+	}
 
     // accumulate occlusion
     float bl = 0.0;
@@ -111,13 +114,29 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in i
         float sz = texture2D( u_ScreenDepthMap, uv + (res * of.xy)).x;
         float zd = (sz-z)*strength;
 
-		if (length(sz - z) < minDistance || length(sz - z) > maxDisance)
-			bl += 1.0;
-		else
+		if (length(sz - z) < minDistance)
+		{
+			zd = 0.5;
 			bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
+			numOcclusions += 1.0;
+			continue;
+		}
+		else if (length(sz - z) > maxDisance)
+		{
+			zd = 0.0;
+			bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
+			numOcclusions += 1.0;
+			continue;
+		}
+		else
+		{
+			bl += clamp(zd*10.0,0.1,1.0)*(1.0-clamp((zd-1.0)/5.0,0.0,1.0));
+			numOcclusions += 1.0;
+		}
     }
 
-	float ao = clamp(1.0*bl/float(numOcclusionChecks), 0.0, 1.0);
+	//float ao = clamp(bl/float(numOcclusionChecks), 0.0, 1.0);
+	float ao = clamp(bl/float(numOcclusions), 0.0, 1.0);
 	ao = mix(ao, 1.0, z);
     return ao;
 }

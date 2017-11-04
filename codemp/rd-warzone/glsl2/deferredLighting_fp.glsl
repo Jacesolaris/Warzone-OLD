@@ -702,7 +702,10 @@ void main(void)
 			power = pow(power, LIGHT_COLOR_POWER);
 			power = power * 0.5 + 0.5;
 
-			float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
+			//float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
+			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)) * 1.25, 0.0, 1.0);
+			float maxStr = ((1.0 - maxBright) * 0.7) + 0.1; // 0.0 to 0.8 with darker spots getting extra light...
+			maxStr *= 0.2; // And only use a small portion to reduce clipping and harshness...
 
 			for (int li = 0; li < u_lightCount; li++)
 			{
@@ -729,10 +732,10 @@ void main(void)
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 				
-					lightColor = lightColor * lightStrength * power;
+					lightColor = lightColor * lightStrength * power * maxStr;
 
 					//addedLight.rgb += lightColor;
-					addedLight.rgb += lightColor * maxStr * 0.333;
+					addedLight.rgb += lightColor * 0.333;
 
 					if (useOcclusion)
 					{
@@ -744,7 +747,6 @@ void main(void)
 					if (lightMult > 0.0)
 					{
 						lightColor *= lightMult;
-						lightColor *= maxStr;
 						addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor);
 					}
 				}
@@ -771,10 +773,9 @@ void main(void)
 	{// HQ AO enabled...
 		float msao = 0.0;
 
-#if 1
 		if (u_Local1.b >= 3.0)
 		{
-			const float width = 2.0;//u_Local1.b - 2.0;
+			const float width = 2.0;
 			float numSamples = 0.0;
 		
 			for (float x = -width; x <= width; x += 1.0)
@@ -793,21 +794,6 @@ void main(void)
 		{
 			msao = textureLod(u_SteepMap, texCoords, 0.0).x;
 		}
-#else
-		float numSamples = 0.0;
-		
-		for (float x = -2.0; x <= 2.0; x += 1.0)
-		{
-			for (float y = -2.0; y <= 2.0; y += 1.0)
-			{
-				vec2 coord = texCoords + (vec2(x, y) * pixel);
-				msao += textureLod(u_SteepMap, coord, 0.0).x;
-				numSamples += 1.0;
-			}
-		}
-
-		msao /= numSamples;
-#endif
 
 		float sao = clamp(msao, 0.0, 1.0);
 		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
