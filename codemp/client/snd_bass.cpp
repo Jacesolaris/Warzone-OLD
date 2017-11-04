@@ -1369,17 +1369,28 @@ void BASS_MusicUpdateThread( void * aArg )
 			continue;
 		}
 
-		BASS_StopMusic(MUSIC_CHANNEL.channel);
-
 		// Seems we need a new track... Select a random one and play it!
 		int trackChoice = irand(0, MUSIC_LIST_COUNT-1);
 		int trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
 		
-		if (trackChoice2 == trackChoice) // Try again to pick a different one if we can...
+		while (MUSIC_LIST_COUNT > 1 && trackChoice2 == trackChoice) // Try again to pick a different one if we can...
 			trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
 
 		if (BASS_MUSIC_UPDATE_THREAD_STOP)
 			break;
+
+		//BASS_StopMusic(MUSIC_CHANNEL.channel);
+		{// Free old samples...
+			BASS_ChannelStop(MUSIC_CHANNEL.channel);
+			BASS_SampleFree(MUSIC_CHANNEL.channel);
+			BASS_MusicFree(MUSIC_CHANNEL.channel);
+			BASS_StreamFree(MUSIC_CHANNEL.channel);
+
+			BASS_ChannelStop(MUSIC_CHANNEL.originalChannel);
+			BASS_SampleFree(MUSIC_CHANNEL.originalChannel);
+			BASS_MusicFree(MUSIC_CHANNEL.originalChannel);
+			BASS_StreamFree(MUSIC_CHANNEL.originalChannel);
+		}
 
 		if (!BASS_UPDATE_THREAD_STOP)
 		{
