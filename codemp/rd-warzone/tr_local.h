@@ -2442,6 +2442,8 @@ typedef struct glstate_s {
 	matrix_t		invProjection;
 	matrix_t		viewTrans;
 	matrix_t		invEyeProjection;
+	matrix_t        previousProjection;
+	matrix_t		previousModelviewProjection;
 } glstate_t;
 
 typedef enum {
@@ -2665,6 +2667,7 @@ typedef struct trGlobals_s {
 	FBO_t					*renderGlowFbo;
 	FBO_t					*renderDetailFbo;
 	FBO_t					*renderWaterFbo;
+	FBO_t					*renderNoDepthFbo;
 	FBO_t					*waterFbo;
 #if 0
 	FBO_t					*glowFboScaled[4];

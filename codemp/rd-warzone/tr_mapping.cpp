@@ -1834,6 +1834,18 @@ void SetupWeather(char *mapname)
 			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
 			RE_WorldEffectCommand_REAL("gustingwind", qtrue);
 		}
+		else if (!Q_stricmp(atmosphericString, "vividrain"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7vividrain^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("vividrain", qtrue);
+			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
+		}
+		else if (!Q_stricmp(atmosphericString, "vividrain2"))
+		{
+			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7vividrain2^5 for this map.\n");
+			RE_WorldEffectCommand_REAL("vividrain2", qtrue);
+			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
+		}
 		else if (!Q_stricmp(atmosphericString, "snow"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snow^5 for this map.\n");

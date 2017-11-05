@@ -86,11 +86,6 @@ void main()
 	{
 		vec2 texCoords = var_TexCoords;
 
-		if (SHADER_SWAY > 0.0)
-		{// Sway...
-			texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - texCoords.y) + 1.0), 0.0);
-		}
-
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
 
 		if (SHADER_MATERIAL_TYPE == 1024.0)

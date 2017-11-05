@@ -669,6 +669,9 @@ void GL_SetProjectionMatrix(matrix_t matrix)
 {
 	//if (memcmp(matrix, glState.projection, sizeof(float) * 16) == 0) return;
 
+	Matrix16Copy(glState.projection, glState.previousProjection);
+	Matrix16Copy(glState.modelviewProjection, glState.previousModelviewProjection);
+
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
 }
@@ -676,6 +679,9 @@ void GL_SetProjectionMatrix(matrix_t matrix)
 void GL_SetModelviewMatrix(matrix_t matrix)
 {
 	//if (memcmp(matrix, glState.modelview, sizeof(float) * 16) == 0) return;
+
+	Matrix16Copy(glState.projection, glState.previousProjection);
+	Matrix16Copy(glState.modelviewProjection, glState.previousModelviewProjection);
 
 	Matrix16Copy(matrix, glState.modelview);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
@@ -2571,6 +2577,10 @@ void DEBUG_EndTimer(void)
 #endif //__SHADER_PERFORMANCE_DEBUG__
 }
 
+#ifdef __JKA_WEATHER__
+extern void RB_RenderWorldEffects(void);
+#endif //__JKA_WEATHER__
+
 const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = (const postProcessCommand_t *)data;
@@ -3151,10 +3161,19 @@ const void *RB_PostProcess(const void *data)
 
 		ALLOW_NULL_FBO_BIND = qtrue;
 
-#if 1
 		DEBUG_StartTimer("Final Blit");
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		DEBUG_EndTimer();
+
+#ifdef __JKA_WEATHER__
+#if 0
+		DEBUG_StartTimer("Weather");
+		RB_RenderWorldEffects();
+		DEBUG_EndTimer();
+#endif
+#endif //__JKA_WEATHER__
+
+		RB_OcclusionCulling();
 
 		//FBO_Bind(srcFbo);
 
@@ -3183,13 +3202,7 @@ const void *RB_PostProcess(const void *data)
 
 			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
 		}
-#else
-		// This is faster but blocks postprocess on screenshots... *sigh*
-		//FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		//FBO_FastBlit(srcFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		FBO_FastBlit(currentFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		//FBO_Bind(srcFbo);
-#endif
+
 		DEBUG_EndTimer();
 	}
 
@@ -3300,8 +3313,6 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(srcFbo, srcBox, tr.genericFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
-
-	RB_OcclusionCulling();
 
 	backEnd.framePostProcessed = qtrue;
 

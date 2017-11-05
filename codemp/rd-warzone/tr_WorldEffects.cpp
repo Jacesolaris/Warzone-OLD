@@ -1218,23 +1218,23 @@ public:
 
 		// Set The GL State And Image Binding
 		//------------------------------------
-		GL_State((mBlendMode == 0) ? (GLS_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
-		GL_Bind(mImage);
-
 
 		// Enable And Disable Things
 		//---------------------------
 
-		//naughty, you are making the assumption that culling is on when you get here. -rww
-		GL_Cull(CT_TWO_SIDED);
-
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
-
-		shaderProgram_t *shader = &tr.weatherShader; // &tr.textureColorShader
+		shaderProgram_t *shader = &tr.weatherShader;
 		GLSL_BindProgram(shader);
 		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		GLSL_SetUniformVec4(shader, UNIFORM_COLOR, colorWhite);
+
+		GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GL_BindToTMU(mImage, TB_DIFFUSEMAP);
+
+		GL_Cull(CT_TWO_SIDED);
+		GL_State((mBlendMode == 0) ? (GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0));
+
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 
 		tess.numVertexes = 0;
 		tess.numIndexes = 0;
@@ -1368,10 +1368,10 @@ public:
 
 				vec2_t texCoords[4];
 
-				VectorSet2(texCoords[0], 0.0f, 0.0f);
-				VectorSet2(texCoords[1], 1.0f, 0.0f);
-				VectorSet2(texCoords[2], 1.0f, 1.0f);
-				VectorSet2(texCoords[3], 0.0f, 1.0f);
+				VectorSet2(texCoords[0], 1.0f, 0.0f);
+				VectorSet2(texCoords[1], 0.0f, 1.0f);
+				VectorSet2(texCoords[2], 0.0f, 0.0f);
+				VectorSet2(texCoords[3], 1.0f, 1.0f);
 
 				VectorCopy2(texCoords[0], tess.texCoords[ndx + 0][0]);
 				VectorCopy2(texCoords[0], tess.texCoords[ndx + 0][1]);
@@ -1428,6 +1428,9 @@ public:
 		tess.maxIndex = 0;
 
 		mParticlesRendered += mParticleCountRender;
+
+		GL_State(GLS_DEFAULT);
+		GL_Cull(CT_FRONT_SIDED);
 	}
 };
 ratl::vector_vs<CWeatherParticleCloud, MAX_PARTICLE_CLOUDS>	mParticleClouds;
@@ -1493,7 +1496,8 @@ void RB_RenderWorldEffects(void)
 	}
 
 #if defined(rd_warzone_x86_EXPORTS)
-	FBO_Bind(tr.renderFbo);
+	//FBO_Bind(tr.renderFbo);
+	FBO_Bind(tr.renderNoDepthFbo);
 	SetViewportAndScissor();
 	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
 	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
@@ -1556,6 +1560,11 @@ void RB_RenderWorldEffects(void)
 			ri->Printf( PRINT_ALL, "Weather: %d Particles Rendered\n", mParticlesRendered);
 		}
 	}
+
+	FBO_Bind(tr.renderFbo);
+
+	Matrix16Copy(glState.previousProjection, glState.projection);
+	Matrix16Copy(glState.previousModelviewProjection, glState.modelviewProjection);
 }
 
 
@@ -1712,11 +1721,179 @@ void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 		nWind.mRDeadTime.mMax				=  4000;
 	}
 
-
-
 	// Create A Rain Storm
 	//---------------------
 	else if (Q_stricmp(token, "lightrain") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(1000, "gfx/world/vividrain.png", 4);
+		nCloud.mHeight = 12.0;
+		nCloud.mWidth = 12.0;
+		nCloud.mGravity = 2800.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "rain") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(3000, "gfx/world/vividrain.png", 4);
+		nCloud.mHeight = 12.0;
+		nCloud.mWidth = 12.0;
+		nCloud.mGravity = 2800.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "heavyrain") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(6000, "gfx/world/vividrain.png", 4);
+		nCloud.mHeight = 80.0;
+		nCloud.mWidth = 16.0;
+		nCloud.mGravity = 2800.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "rainstorm") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(8000, "gfx/world/vividrain.png", 4);
+		nCloud.mHeight = 80.0;
+		nCloud.mWidth = 16.0;
+		nCloud.mGravity = 2800.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+#if 0
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "vividrain2light") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(2000, "gfx/world/vividrain2.png", 4);
+		nCloud.mHeight = 2.4;
+		nCloud.mWidth = 1.2;
+		nCloud.mGravity = 2000.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "vividrain2") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(6000, "gfx/world/vividrain2.png", 4);
+		nCloud.mHeight = 2.4;
+		nCloud.mWidth = 1.2;
+		nCloud.mGravity = 2000.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "vividrain2heavy") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(10000, "gfx/world/vividrain2.png", 4);
+		nCloud.mHeight = 16.0;
+		nCloud.mWidth = 1.2;
+		nCloud.mGravity = 2800.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "vividrain2storm") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(12000, "gfx/world/vividrain2.png", 4);
+		nCloud.mHeight = 16.0;
+		nCloud.mWidth = 1.2;
+		nCloud.mGravity = 2800.0f;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 0;
+		nCloud.mFade = 100.0f;
+		nCloud.mColor = 3.0f;
+		nCloud.mOrientWithVelocity = true;
+		nCloud.mWaterParticles = true;
+	}
+#endif
+
+	// Create A Rain Storm
+	//---------------------
+	else if (Q_stricmp(token, "oldlightrain") == 0)
 	{
 		if (mParticleClouds.full())
 		{
@@ -1737,7 +1914,7 @@ void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 
 	// Create A Rain Storm
 	//---------------------
-	else if (Q_stricmp(token, "rain") == 0)
+	else if (Q_stricmp(token, "oldrain") == 0)
 	{
 		if (mParticleClouds.full())
 		{
@@ -1786,7 +1963,7 @@ void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 
 	// Create A Rain Storm
 	//---------------------
-	else if (Q_stricmp(token, "heavyrain") == 0)
+	else if (Q_stricmp(token, "oldheavyrain") == 0)
 	{
 		if (mParticleClouds.full())
 		{
@@ -1982,26 +2159,31 @@ void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 	{
 		if (!noHelp)
 		{
-			ri->Printf(PRINT_ALL, "Weather Effect: Please enter a valid command.\n");
-			ri->Printf(PRINT_ALL, "	clear\n");
-			ri->Printf(PRINT_ALL, "	freeze\n");
-			ri->Printf(PRINT_ALL, "	zone (mins) (maxs)\n");
-			ri->Printf(PRINT_ALL, "	wind\n");
-			ri->Printf(PRINT_ALL, "	constantwind (velocity)\n");
-			ri->Printf(PRINT_ALL, "	gustingwind\n");
-			ri->Printf(PRINT_ALL, "	windzone (mins) (maxs) (velocity)\n");
-			ri->Printf(PRINT_ALL, "	lightrain\n");
-			ri->Printf(PRINT_ALL, "	rain\n");
-			ri->Printf(PRINT_ALL, "	acidrain\n");
-			ri->Printf(PRINT_ALL, "	heavyrain\n");
-			ri->Printf(PRINT_ALL, "	snow\n");
-			ri->Printf(PRINT_ALL, "	spacedust\n");
-			ri->Printf(PRINT_ALL, "	sand\n");
-			ri->Printf(PRINT_ALL, "	fog\n");
-			ri->Printf(PRINT_ALL, "	heavyrainfog\n");
-			ri->Printf(PRINT_ALL, "	light_fog\n");
-			ri->Printf(PRINT_ALL, "	outsideshake\n");
-			ri->Printf(PRINT_ALL, "	outsidepain\n");
+			char heading[64] = "Weather";
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: ^3Weather Effect^5: Please enter a valid command.\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7clear\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7freeze\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7zone (mins) (maxs)\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7wind\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7constantwind (velocity)\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7gustingwind\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7windzone (mins) (maxs) (velocity)\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7lightrain^5 - warzone light rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7rain^5 - warzone rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7heavyrain^5 - warzone heavy rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7rainstorm^5 - warzone rain storm\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7acidrain^5 - original JKA acid rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7oldlightrain^5 - original JKA light rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7oldrain^5 - original JKA rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7oldheavyrain^5 - original JKA heavy rain\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7snow^5 - original JKA snow\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7spacedust\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7sand\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7fog\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7heavyrainfog\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7light_fog\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7outsideshake\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7outsidepain\n", heading);
 		}
 	}
 }

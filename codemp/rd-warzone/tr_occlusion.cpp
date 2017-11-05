@@ -1071,6 +1071,9 @@ void RB_OcclusionCulling(void)
 
 			occlusionFrame++;
 
+			//glState.previousFBO = glState.currentFBO;
+			//FBO_Bind(tr.renderDepthFbo);
+
 			GL_Bind(tr.whiteImage);
 
 			FBO_Bind(tr.renderFbo);
@@ -1119,11 +1122,12 @@ void RB_OcclusionCulling(void)
 	
 			VectorCopy(vec3_origin, mOrigin);
 
-//#define __USE_RENDERER_AXIS__
+#define __USE_RENDERER_AXIS__
 
 #ifdef __USE_RENDERER_AXIS__
 			// Using renderer axis value...
 			extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
+			vec3_t mAngles;
 			TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
 			AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);
 #else //!__USE_RENDERER_AXIS__
@@ -1222,6 +1226,8 @@ void RB_OcclusionCulling(void)
 			GL_Cull(CT_FRONT_SIDED);
 			R_BindNullVBO();
 			R_BindNullIBO();
+
+			//FBO_Bind(glState.previousFBO);
 
 			if (r_occlusionDebug->integer == 2)
 			{
