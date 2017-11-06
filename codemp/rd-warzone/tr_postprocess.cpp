@@ -1061,8 +1061,6 @@ extern qboolean SUN_VISIBLE;
 
 extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale );
 
-#define		MAX_WORLD_GLOW_DLIGHT_RANGE 8192.0//16384.0
-#define		MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
 int			CLOSE_TOTAL = 0;
 int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];

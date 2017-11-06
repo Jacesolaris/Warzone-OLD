@@ -1122,18 +1122,11 @@ void RB_OcclusionCulling(void)
 	
 			VectorCopy(vec3_origin, mOrigin);
 
-#define __USE_RENDERER_AXIS__
-
-#ifdef __USE_RENDERER_AXIS__
 			// Using renderer axis value...
 			extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 			vec3_t mAngles;
 			TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
 			AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);
-#else //!__USE_RENDERER_AXIS__
-			// Using cgame viewangles value...
-			AngleVectors(backEnd.worldAngles, mCameraForward, mCameraLeft, mCameraDown);
-#endif //__USE_RENDERER_AXIS__
 
 			//ri->Printf(PRINT_WARNING, "ViewOrigin %.4f %.4f %.4f. ViewAngles %.4f %.4f %.4f.\n", mOrigin[0], mOrigin[1], mOrigin[2], viewangles[0], viewangles[1], viewangles[2]);
 

@@ -182,7 +182,7 @@ extern qboolean		MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
 extern float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
 extern float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
 
-#define				MAX_WORLD_GLOW_DLIGHT_RANGE 16384.0
+#define				MAX_WORLD_GLOW_DLIGHT_RANGE 8192.0//16384.0
 #define				MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
 extern int			CLOSE_TOTAL;
 extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -2544,10 +2544,6 @@ typedef struct {
 	qboolean			colorMask[4];
 	qboolean			framePostProcessed;
 	qboolean			depthFill;
-
-	vec3_t				worldOrigin;
-	vec3_t				worldAngles;
-	vec3_t				worldAxis[3];
 } backEndState_t;
 
 /*

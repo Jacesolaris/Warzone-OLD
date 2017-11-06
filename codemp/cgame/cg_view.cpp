@@ -2582,19 +2582,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	qboolean	isFighter = qfalse;
 #endif
 
-	{
-		refEntity_t re;
-		re.reType = RT_PLAYERDATA;
-		
-		VectorCopy(cg.refdef.vieworg, re.origin);
-		VectorCopy(cg.refdef.viewangles, re.angles);
-		VectorCopy(cg.refdef.viewaxis[0], re.axis[0]);
-		VectorCopy(cg.refdef.viewaxis[1], re.axis[1]);
-		VectorCopy(cg.refdef.viewaxis[2], re.axis[2]);
-
-		trap->R_AddRefEntityToScene(&re);
-	}
-
 	if (!drawingSniperScopeView)
 	{
 		if (cgQueueLoad)
