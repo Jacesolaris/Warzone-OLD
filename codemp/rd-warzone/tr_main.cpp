@@ -1569,6 +1569,7 @@ See if a sprite is inside a fog volume
 =================
 */
 int R_SpriteFogNum( trRefEntity_t *ent ) {
+#ifdef __Q3_FOG__
 	int				i, j;
 	fog_t			*fog;
 
@@ -1590,6 +1591,7 @@ int R_SpriteFogNum( trRefEntity_t *ent ) {
 			return i;
 		}
 	}
+#endif //__Q3_FOG__
 
 	return 0;
 }

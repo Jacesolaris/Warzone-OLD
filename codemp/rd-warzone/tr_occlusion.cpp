@@ -854,21 +854,10 @@ void RB_OcclusionCulling(void)
 
 #else //__EXPERIMENTAL_OCCLUSION__
 
-typedef enum
-{
-	OCC_RANGE_TYPE_SMALL,
-	OCC_RANGE_TYPE_BIG
-} occlusionRangesTypes_t;
-
 // Number of occlusions is still limited to <= tr.distanceCull... So usually we won't use them all...
-#define NUM_OCCLUSION_RANGES_BIG 17
-const float occlusionRangesBigMap[NUM_OCCLUSION_RANGES_BIG] =
-	{ 1024.0, 2048.0, 3072.0, 4096.0, 6144.0, 8192.0, 12288.0, 16384.0, 24576.0, 32768.0, 49152.0, 65536.0, 98304.0, 131072.0, 196608.0, 262144.0, 524288.0 };
-
-// Number of occlusions is still limited to <= tr.distanceCull... So usually we won't use them all...
-#define NUM_OCCLUSION_RANGES_SMALL 10
-const float occlusionRangesSmallMap[NUM_OCCLUSION_RANGES_SMALL] =
-	{ 1024.0, 2048.0, 3072.0, 4096.0, 6144.0, 8192.0, 12288.0, 16384.0, 24576.0, 32768.0 };
+#define NUM_OCCLUSION_RANGES 27
+const float occlusionRanges[] =
+	{ 1024.0, 2048.0, 3072.0, 4096.0, 6144.0, 8192.0, 10240.0, 12288.0, 14336.0, 16384.0, 18432.0, 20480.0, 24576.0, 28672.0, 32768.0, 36864.0, 40960.0, 49152.0, 53248.0, 57344.0, 61440.0, 65536.0, 98304.0, 131072.0, 196608.0, 262144.0, 524288.0 };
 
 #define MAX_QUERIES 256
 
@@ -880,14 +869,6 @@ int		occlusionRangeId[MAX_QUERIES];
 
 int numOcclusionQueries = 0;
 
-int GetOcclusionRangeTypeForMap(void)
-{
-	if (tr.distanceCull <= 32768.0)
-		return OCC_RANGE_TYPE_SMALL;
-
-	return OCC_RANGE_TYPE_BIG;
-}
-
 void RB_CheckOcclusions(void)
 {
 	if (r_occlusion->integer)
@@ -896,8 +877,6 @@ void RB_CheckOcclusions(void)
 		int rangeId = 0;
 		int numComplete = 0;
 		int numPassed = 0;
-
-		qboolean isBigMap = (GetOcclusionRangeTypeForMap() == OCC_RANGE_TYPE_BIG) ? qtrue : qfalse;
 
 		for (int i = 0; i < numOcclusionQueries; i++)
 		{
@@ -929,7 +908,7 @@ void RB_CheckOcclusions(void)
 				else
 				{// Enough pixels are visible on this test, if further away then the previous tests, set new zfar...
 					int thisRangeId = occlusionRangeId[i];
-					float rangeDistance = isBigMap ? occlusionRangesBigMap[thisRangeId] : occlusionRangesSmallMap[thisRangeId];
+					float rangeDistance = occlusionRanges[thisRangeId];
 
 					if (rangeDistance > zfar)
 					{// Seems this is further away then the previous occlusion tests zfar, use this instead...
@@ -949,11 +928,11 @@ void RB_CheckOcclusions(void)
 
 		if (zfar < tr.distanceCull)
 		{// Seems we found a max zfar we can use...
-			int maxRangeId = isBigMap ? NUM_OCCLUSION_RANGES_BIG - 1 : NUM_OCCLUSION_RANGES_SMALL - 1;
+			int maxRangeId = NUM_OCCLUSION_RANGES - 1;
 
 			if (zfar == 0.0 && numPassed == 0)
 			{// If none passed then we should assume minimum zfar...
-				zfar = isBigMap ? occlusionRangesBigMap[1] : occlusionRangesSmallMap[1];
+				zfar = occlusionRanges[1];
 			}
 			else if (zfar == 0.0)
 			{// If none passed then we assume max range... This should never be possible, but just in case...
@@ -967,7 +946,7 @@ void RB_CheckOcclusions(void)
 				}
 				else
 				{
-					zfar = isBigMap ? occlusionRangesBigMap[rangeId + 1] : occlusionRangesSmallMap[rangeId + 1];
+					zfar = occlusionRanges[rangeId + 1];
 				}
 			}
 
@@ -1130,15 +1109,13 @@ void RB_OcclusionCulling(void)
 
 			//ri->Printf(PRINT_WARNING, "ViewOrigin %.4f %.4f %.4f. ViewAngles %.4f %.4f %.4f.\n", mOrigin[0], mOrigin[1], mOrigin[2], viewangles[0], viewangles[1], viewangles[2]);
 
-			qboolean isBigMap = (GetOcclusionRangeTypeForMap() == OCC_RANGE_TYPE_BIG) ? qtrue : qfalse;
-
 			tess.numIndexes = 0;
 			tess.firstIndex = 0;
 			tess.numVertexes = 0;
 			tess.minIndex = 0;
 			tess.maxIndex = 0;
 			
-			for (int z = isBigMap ? occlusionRangesBigMap[0] : occlusionRangesSmallMap[0], range = 0; z <= tr.distanceCull; z = isBigMap ? occlusionRangesBigMap[range] : occlusionRangesSmallMap[range], range++)
+			for (int z = occlusionRanges[0], range = 0; z <= tr.distanceCull; z = occlusionRanges[range], range++)
 			{
 				occlusionRangeId[numOcclusionQueries] = range;
 
