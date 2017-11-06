@@ -42,24 +42,6 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}
 
-#if 0
-	if (r_occlusion->integer && /*entityNum == ENTITYNUM_WORLD &&*/ (tr.viewParms.flags & VPF_SHADOWPASS) /*&& !backEnd.depthFill*/)
-	{// When doing shadow maps, check camera max distance and skip drawing surfaces not in it's range...
-		if (!surf->cullinfo.centerOriginInitialized)
-		{// If this surface's center org has not been set up yet, set it up now...
-			surf->cullinfo.centerOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
-			surf->cullinfo.centerOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
-			surf->cullinfo.centerOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-			surf->cullinfo.centerOriginInitialized = qtrue;
-		}
-
-		if (Distance(surf->cullinfo.centerOrigin, backEnd.refdef.vieworg) > Q_min(tr.occlusionZfar * 1.75, tr.occlusionOriginalZfar))
-		{
-			return qtrue;
-		}
-	}
-#endif
-
 #ifdef __ZFAR_CULLING__
 	surf->depthDrawOnly = qfalse;
 
