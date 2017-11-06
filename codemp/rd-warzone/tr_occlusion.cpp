@@ -861,8 +861,7 @@ const float occlusionRanges[] =
 
 #define MAX_QUERIES 256
 
-int nextOcclusionCheck = 0;
-int occlusionRangesType = 0;
+int nextOcclusionCheck = -1;
 
 GLuint	occlusionCheck[MAX_QUERIES];
 int		occlusionRangeId[MAX_QUERIES];
