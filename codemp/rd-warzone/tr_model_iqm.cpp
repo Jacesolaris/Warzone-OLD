@@ -468,7 +468,6 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	size += header->num_vertexes * 3 * sizeof(float);	// positions
 	size += header->num_vertexes * 2 * sizeof(float);	// texcoords
 	size += header->num_vertexes * 3 * sizeof(float);	// normals
-	size += header->num_vertexes * 4 * sizeof(float);	// tangents
 	size += header->num_vertexes * 4 * sizeof(byte);	// blendIndexes
 	size += header->num_vertexes * 4 * sizeof(byte);	// colors
 	size += header->num_joints * sizeof(int);		// parents
@@ -506,8 +505,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		iqmData->positions    = iqmData->poseMats + 12 * header->num_poses * header->num_frames;
 	iqmData->texcoords    = iqmData->positions + 3 * header->num_vertexes;
 	iqmData->normals      = iqmData->texcoords + 2 * header->num_vertexes;
-	iqmData->tangents     = iqmData->normals + 3 * header->num_vertexes;
-	iqmData->blendIndexes = (byte *)(iqmData->tangents + 4 * header->num_vertexes);
+	iqmData->blendIndexes = (byte *)(iqmData->normals + 3 * header->num_vertexes);
 
 	if(blendWeightsType == IQM_FLOAT) {
 		iqmData->blendWeights.f = (float *)(iqmData->blendIndexes + 4 * header->num_vertexes);
@@ -1055,7 +1053,6 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 
 	vec4_t		*outXYZ;
 	uint32_t	*outNormal;
-	uint32_t	*outTangent;
 	vec2_t		(*outTexCoord)[2];
 	vec4_t	*outColor;
 
@@ -1071,7 +1068,6 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 
 	outXYZ = &tess.xyz[tess.numVertexes];
 	outNormal = &tess.normal[tess.numVertexes];
-	outTangent = &tess.tangent[tess.numVertexes];
 	outTexCoord = &tess.texCoords[tess.numVertexes];
 	outColor = &tess.vertexColors[tess.numVertexes];
 
@@ -1150,20 +1146,12 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 
 		{
 			vec3_t normal;
-			vec4_t tangent;
 
 			normal[0] = DotProduct(&nrmMat[0], &data->normals[3*vtx]);
 			normal[1] = DotProduct(&nrmMat[3], &data->normals[3*vtx]);
 			normal[2] = DotProduct(&nrmMat[6], &data->normals[3*vtx]);
 
 			*outNormal = R_VboPackNormal(normal);
-
-			tangent[0] = DotProduct(&nrmMat[0], &data->tangents[4*vtx]);
-			tangent[1] = DotProduct(&nrmMat[3], &data->tangents[4*vtx]);
-			tangent[2] = DotProduct(&nrmMat[6], &data->tangents[4*vtx]);
-			tangent[3] = data->tangents[4*vtx+3];
-
-			*outTangent++ = R_VboPackTangent(tangent);
 		}
 
 		(*outColor)[0] = data->colors[4*vtx+0] / 255.0f;

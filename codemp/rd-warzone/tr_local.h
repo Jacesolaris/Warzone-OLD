@@ -715,7 +715,6 @@ typedef struct VBO_s
 	uint32_t        ofs_st;
 	uint32_t        ofs_vertexcolor;
 	uint32_t        ofs_lightdir;
-	uint32_t        ofs_tangent;
 	uint32_t		ofs_boneweights;
 	uint32_t		ofs_boneindexes;
 #ifdef __INSTANCED_MODELS__
@@ -728,7 +727,6 @@ typedef struct VBO_s
 	uint32_t        stride_st;
 	uint32_t        stride_vertexcolor;
 	uint32_t        stride_lightdir;
-	uint32_t        stride_tangent;
 	uint32_t		stride_boneweights;
 	uint32_t		stride_boneindexes;
 #ifdef __INSTANCED_MODELS__
@@ -1274,7 +1272,6 @@ enum
 	ATTR_INDEX_POSITION,
 	ATTR_INDEX_TEXCOORD0,
 	ATTR_INDEX_TEXCOORD1,
-	ATTR_INDEX_TANGENT,
 	ATTR_INDEX_NORMAL,
 	ATTR_INDEX_COLOR,
 	ATTR_INDEX_PAINTCOLOR,
@@ -1284,7 +1281,6 @@ enum
 
 	// GPU vertex animations
 	ATTR_INDEX_POSITION2,
-	ATTR_INDEX_TANGENT2,
 	ATTR_INDEX_NORMAL2,
 
 #ifdef __INSTANCED_MODELS__
@@ -1378,29 +1374,26 @@ enum
 	ATTR_POSITION =       0x0001,
 	ATTR_TEXCOORD0 =      0x0002,
 	ATTR_TEXCOORD1 =      0x0004,
-	ATTR_TANGENT =        0x0008,
-	ATTR_NORMAL =         0x0010,
-	ATTR_COLOR =          0x0020,
-	ATTR_PAINTCOLOR =     0x0040,
-	ATTR_LIGHTDIRECTION = 0x0080,
-	ATTR_BONE_INDEXES =   0x0100,
-	ATTR_BONE_WEIGHTS =   0x0200,
+	ATTR_NORMAL =         0x0008,
+	ATTR_COLOR =          0x0010,
+	ATTR_PAINTCOLOR =     0x0020,
+	ATTR_LIGHTDIRECTION = 0x0040,
+	ATTR_BONE_INDEXES =   0x0080,
+	ATTR_BONE_WEIGHTS =   0x0100,
 
 	// for .md3 interpolation
-	ATTR_POSITION2 =      0x0400,
-	ATTR_TANGENT2 =       0x0800,
-	ATTR_NORMAL2 =        0x1000,
+	ATTR_POSITION2 =      0x0200,
+	ATTR_NORMAL2 =        0x0400,
 
 #ifdef __INSTANCED_MODELS__
-	ATTR_INSTANCES_POS =  0x2000,
-	//ATTR_INSTANCES_MVP =  0x4000,
+	ATTR_INSTANCES_POS =  0x0800,
+	//ATTR_INSTANCES_MVP =  0x1000,
 #endif //__INSTANCED_MODELS__
 
 	ATTR_DEFAULT = ATTR_POSITION,
 	ATTR_BITS =	ATTR_POSITION |
 				ATTR_TEXCOORD0 |
 				ATTR_TEXCOORD1 |
-				ATTR_TANGENT |
 				ATTR_NORMAL |
 				ATTR_COLOR |
 				ATTR_PAINTCOLOR |
@@ -1408,7 +1401,6 @@ enum
 				ATTR_BONE_INDEXES |
 				ATTR_BONE_WEIGHTS |
 				ATTR_POSITION2 |
-				ATTR_TANGENT2 |
 				ATTR_NORMAL2
 #ifdef __INSTANCED_MODELS__
 				| ATTR_INSTANCES_POS
@@ -3387,7 +3379,6 @@ struct shaderCommands_s
 	glIndex_t	indexes[SHADER_MAX_INDEXES] QALIGN(16);
 	vec4_t		xyz[SHADER_MAX_VERTEXES] QALIGN(16);
 	uint32_t	normal[SHADER_MAX_VERTEXES] QALIGN(16);
-	uint32_t	tangent[SHADER_MAX_VERTEXES] QALIGN(16);
 	vec2_t		texCoords[SHADER_MAX_VERTEXES][2] QALIGN(16);
 	vec4_t		vertexColors[SHADER_MAX_VERTEXES] QALIGN(16);
 	uint32_t    lightdir[SHADER_MAX_VERTEXES] QALIGN(16);

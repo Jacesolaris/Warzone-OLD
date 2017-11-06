@@ -610,7 +610,6 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 	float          *xyz, *texCoords, *lightCoords;
 	uint32_t        *lightdir;
 	uint32_t        *normal;
-	uint32_t        *tangent;
 	glIndex_t      *outIndex;
 	float          *color;
 
@@ -648,14 +647,6 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 		{
 			*normal = R_TessXYZtoPackedNormals(dv->xyz);
 		}
-	}
-
-	if ( tess.shader->vertexAttribs & ATTR_TANGENT )
-	{
-		dv = verts;
-		tangent = &tess.tangent[ tess.numVertexes ];
-		for ( i = 0 ; i < numVerts ; i++, dv++, tangent++ )
-			*tangent = R_VboPackTangent(dv->tangent);
 	}
 
 	if ( tess.shader->vertexAttribs & ATTR_TEXCOORD0 )
@@ -2050,7 +2041,6 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 	float	*xyz;
 	float	*texCoords, *lightCoords;
 	uint32_t *normal;
-	uint32_t *tangent;
 	float   *color;
 	uint32_t *lightdir;
 	srfVert_t	*dv;
@@ -2152,7 +2142,6 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 
 		xyz = tess.xyz[numVertexes];
 		normal = &tess.normal[numVertexes];
-		tangent = &tess.tangent[numVertexes];
 		texCoords = tess.texCoords[numVertexes][0];
 		lightCoords = tess.texCoords[numVertexes][1];
 		color = tess.vertexColors[numVertexes];
@@ -2179,10 +2168,6 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 					*normal++ = R_TessXYZtoPackedNormals(dv->xyz);
 				}
 
-				if ( tess.shader->vertexAttribs & ATTR_TANGENT )
-				{
-					*tangent++ = R_VboPackTangent(dv->tangent);
-				}
 				if ( tess.shader->vertexAttribs & ATTR_TEXCOORD0 )
 				{
 					VectorCopy2(dv->st, texCoords);

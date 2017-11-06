@@ -5,7 +5,6 @@ attribute vec4 attr_Color;
 
 attribute vec3 attr_Position;
 attribute vec3 attr_Normal;
-attribute vec4 attr_Tangent;
 
 
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType

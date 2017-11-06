@@ -209,8 +209,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "in vec3 Normal_CS_in[];\n"\
 "in vec2 TexCoord_CS_in[];\n"\
 "in vec3 ViewDir_CS_in[];\n"\
-"//in vec4 Tangent_CS_in[];\n"\
-"//in vec4 Bitangent_CS_in[];\n"\
 "in vec4 Color_CS_in[];\n"\
 "in vec4 PrimaryLightDir_CS_in[];\n"\
 "in vec2 TexCoord2_CS_in[];\n"\
@@ -223,8 +221,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "out vec3 Normal_ES_in[3];\n"\
 "out vec2 TexCoord_ES_in[3];\n"\
 "out vec3 ViewDir_ES_in[3];\n"\
-"//out vec4 Tangent_ES_in[3];\n"\
-"//out vec4 Bitangent_ES_in[3];\n"\
 "out vec4 Color_ES_in[3];\n"\
 "out vec4 PrimaryLightDir_ES_in[3];\n"\
 "out vec2 TexCoord2_ES_in[3];\n"\
@@ -257,8 +253,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "\n"\
 "	ViewDir_ES_in[gl_InvocationID]		= ViewDir_CS_in[gl_InvocationID];\n"\
 "	Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
-"	//Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
-"	//Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
 "	PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
 "	TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
 "	Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
@@ -297,8 +291,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "in vec2 TexCoord_ES_in[];\n"\
 "in vec3 Normal_ES_in[];\n"\
 "in vec3 ViewDir_ES_in[];\n"\
-"//in vec4 Tangent_ES_in[];\n"\
-"//in vec4 Bitangent_ES_in[];\n"\
 "in vec4 Color_ES_in[];\n"\
 "in vec4 PrimaryLightDir_ES_in[];\n"\
 "in vec2 TexCoord2_ES_in[];\n"\
@@ -310,8 +302,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec2 TexCoord_FS_in;\n"\
 "out vec3 Normal_FS_in;\n"\
 "out vec3 ViewDir_FS_in;\n"\
-"//out vec4 Tangent_FS_in;\n"\
-"//out vec4 Bitangent_FS_in;\n"\
 "out vec4 Color_FS_in;\n"\
 "out vec4 PrimaryLightDir_FS_in;\n"\
 "out vec2 TexCoord2_FS_in;\n"\
@@ -357,8 +347,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "void main()\n"\
 "{\n"\
 "   	ViewDir_FS_in = interpolate3D(ViewDir_ES_in[0], ViewDir_ES_in[1], ViewDir_ES_in[2]);\n"\
-"   	//Tangent_FS_in = interpolate4D(Tangent_ES_in[0], Tangent_ES_in[1], Tangent_ES_in[2]);\n"\
-"   	//Bitangent_FS_in = interpolate4D(Bitangent_ES_in[0], Bitangent_ES_in[1], Bitangent_ES_in[2]);\n"\
 "   	Color_FS_in = interpolate4D(Color_ES_in[0], Color_ES_in[1], Color_ES_in[2]);\n"\
 "   	PrimaryLightDir_FS_in = interpolate4D(PrimaryLightDir_ES_in[0], PrimaryLightDir_ES_in[1], PrimaryLightDir_ES_in[2]);\n"\
 "   	TexCoord2_FS_in = interpolate2D(TexCoord2_ES_in[0], TexCoord2_ES_in[1], TexCoord2_ES_in[2]);\n"\
@@ -379,11 +367,8 @@ const char fallbackShader_genericTessControl_ep[] =
 "   	float Displacement1 = 1.0 - clamp(ConvertToNormals( texture(gDisplacementMap, TexCoord_ES_in[1].xy)).a, 0.0, 1.0);\n"\
 "   	float Displacement2 = 1.0 - clamp(ConvertToNormals( texture(gDisplacementMap, TexCoord_ES_in[2].xy)).a, 0.0, 1.0);\n"\
 "		float Displacement = (Displacement0 + Displacement1 + Displacement2) / 3.0;\n"\
-"//mat3 tangentToWorld = mat3(Tangent_FS_in.xyz, Bitangent_FS_in.xyz, Normal_FS_in.xyz);\n"\
-"//   	WorldPos_FS_in += (tangentToWorld * Normal_FS_in) * Displacement * gDispFactor;\n"\
 "   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
 "   	gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
-"//		ViewDir_FS_in = u_ViewOrigin - WorldPos_FS_in;\n"\
 "}\n";
 #endif
 
@@ -407,8 +392,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "in vec3 Normal_CS_in[];\n"\
 "in vec2 TexCoord_CS_in[];\n"\
 "in vec3 ViewDir_CS_in[];\n"\
-"//in vec4 Tangent_CS_in[];\n"\
-"//in vec4 Bitangent_CS_in[];\n"\
 "in vec4 Color_CS_in[];\n"\
 "in vec4 PrimaryLightDir_CS_in[];\n"\
 "in vec2 TexCoord2_CS_in[];\n"\
@@ -421,8 +404,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "out precise vec3 Normal_ES_in[3];\n"\
 "out precise vec2 TexCoord_ES_in[3];\n"\
 "out precise vec3 ViewDir_ES_in[3];\n"\
-"//out precise vec4 Tangent_ES_in[3];\n"\
-"//out precise vec4 Bitangent_ES_in[3];\n"\
 "out precise vec4 Color_ES_in[3];\n"\
 "out precise vec4 PrimaryLightDir_ES_in[3];\n"\
 "out precise vec2 TexCoord2_ES_in[3];\n"\
@@ -491,8 +472,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "\n"\
 "	ViewDir_ES_in[gl_InvocationID]		= ViewDir_CS_in[gl_InvocationID];\n"\
 "	Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
-"	//Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
-"	//Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
 "	PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
 "	TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
 "	Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
@@ -573,8 +552,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "in precise vec2 TexCoord_ES_in[];\n"\
 "in precise vec3 Normal_ES_in[];\n"\
 "in precise vec3 ViewDir_ES_in[];\n"\
-"//in precise vec4 Tangent_ES_in[];\n"\
-"//in precise vec4 Bitangent_ES_in[];\n"\
 "in precise vec4 Color_ES_in[];\n"\
 "in precise vec4 PrimaryLightDir_ES_in[];\n"\
 "in precise vec2 TexCoord2_ES_in[];\n"\
@@ -587,8 +564,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "out precise vec2 TexCoord_GS_in;\n"\
 "out precise vec3 Normal_GS_in;\n"\
 "out precise vec3 ViewDir_GS_in;\n"\
-"//out precise vec4 Tangent_GS_in;\n"\
-"//out precise vec4 Bitangent_GS_in;\n"\
 "out precise vec4 Color_GS_in;\n"\
 "out precise vec4 PrimaryLightDir_GS_in;\n"\
 "out precise vec2 TexCoord2_GS_in;\n"\
@@ -605,8 +580,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "    TexCoord_GS_in = (gl_TessCoord.x * TexCoord_ES_in[0] + gl_TessCoord.y * TexCoord_ES_in[1] + gl_TessCoord.z * TexCoord_ES_in[2]);\n"\
 "    WorldPos_GS_in = (gl_TessCoord.x * WorldPos_ES_in[0] + gl_TessCoord.y * WorldPos_ES_in[1] + gl_TessCoord.z * WorldPos_ES_in[2]);\n"\
 "	ViewDir_GS_in = (gl_TessCoord.x * ViewDir_ES_in[0] + gl_TessCoord.y * ViewDir_ES_in[1] + gl_TessCoord.z * ViewDir_ES_in[2]);\n"\
-"	//Tangent_GS_in = (gl_TessCoord.x * Tangent_ES_in[0] + gl_TessCoord.y * Tangent_ES_in[1] + gl_TessCoord.z * Tangent_ES_in[2]);\n"\
-"	//Bitangent_GS_in = (gl_TessCoord.x * Bitangent_ES_in[0] + gl_TessCoord.y * Bitangent_ES_in[1] + gl_TessCoord.z * Bitangent_ES_in[2]);\n"\
 "	Color_GS_in = (gl_TessCoord.x * Color_ES_in[0] + gl_TessCoord.y * Color_ES_in[1] + gl_TessCoord.z * Color_ES_in[2]);\n"\
 "	PrimaryLightDir_GS_in = (gl_TessCoord.x * PrimaryLightDir_ES_in[0] + gl_TessCoord.y * PrimaryLightDir_ES_in[1] + gl_TessCoord.z * PrimaryLightDir_ES_in[2]);\n"\
 "	TexCoord2_GS_in = (gl_TessCoord.x * TexCoord2_ES_in[0] + gl_TessCoord.y * TexCoord2_ES_in[1] + gl_TessCoord.z * TexCoord2_ES_in[2]);\n"\
@@ -638,8 +611,6 @@ const char fallbackShader_genericGeometry[] =
 "in precise vec2 TexCoord_GS_in[];\n"\
 "in precise vec3 Normal_GS_in[];\n"\
 "in precise vec3 ViewDir_GS_in[];\n"\
-"//in precise vec4 Tangent_GS_in[];\n"\
-"//in precise vec4 Bitangent_GS_in[];\n"\
 "in precise vec4 Color_GS_in[];\n"\
 "in precise vec4 PrimaryLightDir_GS_in[];\n"\
 "in precise vec2 TexCoord2_GS_in[];\n"\
@@ -652,8 +623,6 @@ const char fallbackShader_genericGeometry[] =
 "out precise vec2 TexCoord_FS_in;\n"\
 "out precise vec3 Normal_FS_in;\n"\
 "out precise vec3 ViewDir_FS_in;\n"\
-"//out precise vec4 Tangent_FS_in;\n"\
-"//out precise vec4 Bitangent_FS_in;\n"\
 "out precise vec4 Color_FS_in;\n"\
 "out precise vec4 PrimaryLightDir_FS_in;\n"\
 "out precise vec2 TexCoord2_FS_in;\n"\
@@ -679,8 +648,6 @@ const char fallbackShader_genericGeometry[] =
 "{\n"\
 "    TexCoord_FS_in = TexCoord_GS_in[i];\n"\
 "    ViewDir_FS_in = ViewDir_GS_in[i];\n"\
-"    //Tangent_FS_in = Tangent_GS_in[i];\n"\
-"    //Bitangent_FS_in = Bitangent_GS_in[i];\n"\
 "    Color_FS_in = Color_GS_in[i];\n"\
 "    PrimaryLightDir_FS_in = PrimaryLightDir_GS_in[i];\n"\
 "    TexCoord2_FS_in = TexCoord2_GS_in[i];\n"\
@@ -752,8 +719,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "in vec4 WorldPos_CS_in[];\n"\
 "in vec3 Normal_CS_in[];\n"\
 "in vec2 TexCoord_CS_in[];\n"\
-"//in vec4 Tangent_CS_in[];\n"\
-"//in vec4 Bitangent_CS_in[];\n"\
 "in vec4 Color_CS_in[];\n"\
 "in vec4 PrimaryLightDir_CS_in[];\n"\
 "in vec2 TexCoord2_CS_in[];\n"\
@@ -765,8 +730,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "out vec3 iNormal[3];\n"\
 "out vec2 iTexCoord[3];\n"\
 "out PnPatch iPnPatch[3];\n"\
-"//out vec4 Tangent_ES_in[3];\n"\
-"//out vec4 Bitangent_ES_in[3];\n"\
 "out vec4 Color_ES_in[3];\n"\
 "out vec4 PrimaryLightDir_ES_in[3];\n"\
 "out vec2 TexCoord2_ES_in[3];\n"\
@@ -803,8 +766,6 @@ const char fallbackShader_genericTessControl_cp[] =
 " iNormal[gl_InvocationID]					= normal;\n"\
 " iTexCoord[gl_InvocationID]				= TexCoord_CS_in[gl_InvocationID];\n"\
 " Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
-" //Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
-" //Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
 " PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
 " TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
 " Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
@@ -900,8 +861,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "in vec3 iNormal[];\n"\
 "in vec2 iTexCoord[];\n"\
 "in PnPatch iPnPatch[];\n"\
-"//in vec4 Tangent_ES_in[];\n"\
-"//in vec4 Bitangent_ES_in[];\n"\
 "in vec4 Color_ES_in[];\n"\
 "in vec4 PrimaryLightDir_ES_in[];\n"\
 "in vec2 TexCoord2_ES_in[];\n"\
@@ -913,8 +872,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec2 TexCoord_FS_in;\n"\
 "out vec3 WorldPos_FS_in;\n"\
 "out vec3 ViewDir_FS_in;\n"\
-"//out vec4 Tangent_FS_in;\n"\
-"//out vec4 Bitangent_FS_in;\n"\
 "out vec4 Color_FS_in;\n"\
 "out vec4 PrimaryLightDir_FS_in;\n"\
 "out vec2 TexCoord2_FS_in;\n"\
@@ -962,12 +919,6 @@ const char fallbackShader_genericTessControl_ep[] =
 " TexCoord_FS_in  = gl_TessCoord[2]*iTexCoord[0]\n"\
 "            + gl_TessCoord[0]*iTexCoord[1]\n"\
 "            + gl_TessCoord[1]*iTexCoord[2];\n"\
-" //Tangent_FS_in = gl_TessCoord[2]*Tangent_ES_in[0]\n"\
-" //           + gl_TessCoord[0]*Tangent_ES_in[1]\n"\
-" //           + gl_TessCoord[1]*Tangent_ES_in[2];\n"\
-" //Bitangent_FS_in = gl_TessCoord[2]*Bitangent_ES_in[0]\n"\
-" //           + gl_TessCoord[0]*Bitangent_ES_in[1]\n"\
-" //           + gl_TessCoord[1]*Bitangent_ES_in[2];\n"\
 " Color_FS_in = gl_TessCoord[2]*Color_ES_in[0]\n"\
 "            + gl_TessCoord[0]*Color_ES_in[1]\n"\
 "            + gl_TessCoord[1]*Color_ES_in[2];\n"\
@@ -1050,8 +1001,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "in vec4 WorldPos_CS_in[];\n"\
 "in vec3 Normal_CS_in[];\n"\
 "in vec2 TexCoord_CS_in[];\n"\
-"//in vec4 Tangent_CS_in[];\n"\
-"//in vec4 Bitangent_CS_in[];\n"\
 "in vec4 Color_CS_in[];\n"\
 "in vec4 PrimaryLightDir_CS_in[];\n"\
 "in vec2 TexCoord2_CS_in[];\n"\
@@ -1063,8 +1012,6 @@ const char fallbackShader_genericTessControl_cp[] =
 "out vec3 iNormal[3];\n"\
 "out vec2 iTexCoord[3];\n"\
 "out PhongPatch iPhongPatch[3];\n"\
-"//out vec4 Tangent_ES_in[3];\n"\
-"//out vec4 Bitangent_ES_in[3];\n"\
 "out vec4 Color_ES_in[3];\n"\
 "out vec4 PrimaryLightDir_ES_in[3];\n"\
 "out vec2 TexCoord2_ES_in[3];\n"\
@@ -1096,8 +1043,6 @@ const char fallbackShader_genericTessControl_cp[] =
 " iTexCoord[gl_InvocationID]				= TexCoord_CS_in[gl_InvocationID];\n"\
 "\n"\
 " Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
-" //Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
-" //Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
 " PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
 " TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
 " Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
@@ -1143,8 +1088,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "in vec3 iNormal[];\n"\
 "in vec2 iTexCoord[];\n"\
 "in PhongPatch iPhongPatch[];\n"\
-"//in vec4 Tangent_ES_in[];\n"\
-"//in vec4 Bitangent_ES_in[];\n"\
 "in vec4 Color_ES_in[];\n"\
 "in vec4 PrimaryLightDir_ES_in[];\n"\
 "in vec2 TexCoord2_ES_in[];\n"\
@@ -1156,8 +1099,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec3 Normal_FS_in;\n"\
 "out vec2 TexCoord_FS_in;\n"\
 "out vec3 ViewDir_FS_in;\n"\
-"//out vec4 Tangent_FS_in;\n"\
-"//out vec4 Bitangent_FS_in;\n"\
 "out vec4 Color_FS_in;\n"\
 "out vec4 PrimaryLightDir_FS_in;\n"\
 "out vec2 TexCoord2_FS_in;\n"\
@@ -1183,12 +1124,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "           + gl_TessCoord[1]*iNormal[1]\n"\
 "           + gl_TessCoord[2]*iNormal[2];\n"\
 "\n"\
-"// Tangent_FS_in = gl_TessCoord[0]*Tangent_ES_in[0]\n"\
-"//            + gl_TessCoord[1]*Tangent_ES_in[1]\n"\
-"//            + gl_TessCoord[2]*Tangent_ES_in[2];\n"\
-"// Bitangent_FS_in = gl_TessCoord[0]*Bitangent_ES_in[0]\n"\
-"//            + gl_TessCoord[1]*Bitangent_ES_in[1]\n"\
-"//            + gl_TessCoord[2]*Bitangent_ES_in[2];\n"\
 " Color_FS_in = gl_TessCoord[0]*Color_ES_in[0]\n"\
 "            + gl_TessCoord[1]*Color_ES_in[1]\n"\
 "            + gl_TessCoord[2]*Color_ES_in[2];\n"\
@@ -2149,9 +2084,6 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	if (attribs & ATTR_TEXCOORD1)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1, "attr_TexCoord1");
 
-	if (attribs & ATTR_TANGENT)
-		qglBindAttribLocation(program->program, ATTR_INDEX_TANGENT, "attr_Tangent");
-
 	if (attribs & ATTR_NORMAL)
 		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL, "attr_Normal");
 
@@ -2169,9 +2101,6 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 
 	if (attribs & ATTR_NORMAL2)
 		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2, "attr_Normal2");
-
-	if (attribs & ATTR_TANGENT2)
-		qglBindAttribLocation(program->program, ATTR_INDEX_TANGENT2, "attr_Tangent2");
 
 	if (attribs & ATTR_BONE_INDEXES)
 		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES, "attr_BoneIndexes");
@@ -2988,7 +2917,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3034,7 +2963,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3046,7 +2975,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		//attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 
 		extradefines[0] = '\0';
@@ -3058,7 +2987,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.sunPassShader, "sun", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sun_vp, fallbackShader_sun_fp, NULL, NULL, NULL))
@@ -3067,7 +2996,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.moonPassShader, "moon", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_planet_vp, fallbackShader_planet_fp, NULL, NULL, NULL))
@@ -3076,7 +3005,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.planetPassShader, "planet", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_planet_vp, fallbackShader_planet_fp, NULL, NULL, NULL))
@@ -3085,7 +3014,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 	extradefines[0] = '\0';
 
@@ -3095,7 +3024,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_TANGENT2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 	extradefines[0] = '\0';
 
@@ -3517,7 +3446,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterPostShader, "waterPost", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterPost_vp, fallbackShader_waterPost_fp, NULL, NULL, NULL))
@@ -3784,7 +3713,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
@@ -5737,9 +5666,7 @@ void GLSL_ShutdownGPUShaders(void)
 	qglDisableVertexAttribArray(ATTR_INDEX_POSITION);
 	qglDisableVertexAttribArray(ATTR_INDEX_POSITION2);
 	qglDisableVertexAttribArray(ATTR_INDEX_NORMAL);
-	qglDisableVertexAttribArray(ATTR_INDEX_TANGENT);
 	qglDisableVertexAttribArray(ATTR_INDEX_NORMAL2);
-	qglDisableVertexAttribArray(ATTR_INDEX_TANGENT2);
 	qglDisableVertexAttribArray(ATTR_INDEX_COLOR);
 	qglDisableVertexAttribArray(ATTR_INDEX_LIGHTDIRECTION);
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_INDEXES);
@@ -5980,20 +5907,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-	if (diff & ATTR_TANGENT)
-	{
-		if (stateBits & ATTR_TANGENT)
-		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_TANGENT )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_TANGENT);
-		}
-		else
-		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_TANGENT )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_TANGENT);
-		}
-	}
-
 	if (diff & ATTR_COLOR)
 	{
 		if (stateBits & ATTR_COLOR)
@@ -6047,20 +5960,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		{
 			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_NORMAL2 )\n");
 			qglDisableVertexAttribArray(ATTR_INDEX_NORMAL2);
-		}
-	}
-
-	if (diff & ATTR_TANGENT2)
-	{
-		if (stateBits & ATTR_TANGENT2)
-		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_TANGENT2 )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_TANGENT2);
-		}
-		else
-		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_TANGENT2 )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_TANGENT2);
 		}
 	}
 
@@ -6162,7 +6061,7 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		GLimp_LogComment("--- GL_VertexAttribPointers() ---\n");
 	}
 
-	// position/normal/tangent are always set in case of animation
+	// position/normal are always set in case of animation
 	oldFrame = glState.vertexAttribsOldFrame;
 	newFrame = glState.vertexAttribsNewFrame;
 	animated = glState.vertexAnimation;
@@ -6199,14 +6098,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		glState.vertexAttribPointersSet |= ATTR_NORMAL;
 	}
 
-	if ((attribBits & ATTR_TANGENT) && (!(glState.vertexAttribPointersSet & ATTR_TANGENT) || animated))
-	{
-		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_TANGENT )\n");
-
-		qglVertexAttribPointer(ATTR_INDEX_TANGENT, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_tangent, BUFFER_OFFSET(vbo->ofs_tangent + newFrame * vbo->size_normal)); // FIXME
-		glState.vertexAttribPointersSet |= ATTR_TANGENT;
-	}
-
 	if ((attribBits & ATTR_COLOR) && !(glState.vertexAttribPointersSet & ATTR_COLOR))
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_COLOR )\n");
@@ -6237,14 +6128,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 
 		qglVertexAttribPointer(ATTR_INDEX_NORMAL2, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_normal, BUFFER_OFFSET(vbo->ofs_normal + oldFrame * vbo->size_normal));
 		glState.vertexAttribPointersSet |= ATTR_NORMAL2;
-	}
-
-	if ((attribBits & ATTR_TANGENT2) && (!(glState.vertexAttribPointersSet & ATTR_TANGENT2) || animated))
-	{
-		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_TANGENT2 )\n");
-
-		qglVertexAttribPointer(ATTR_INDEX_TANGENT2, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_tangent, BUFFER_OFFSET(vbo->ofs_tangent + oldFrame * vbo->size_normal)); // FIXME
-		glState.vertexAttribPointersSet |= ATTR_TANGENT2;
 	}
 
 	if ((attribBits & ATTR_BONE_INDEXES) && !(glState.vertexAttribPointersSet & ATTR_BONE_INDEXES))

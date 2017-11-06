@@ -2170,7 +2170,6 @@ static void R_CreateWorldVBOs(void)
 		// Setup the offsets and strides
 		vbo->ofs_xyz = offsetof (packedVertex_t, position);
 		vbo->ofs_normal = offsetof (packedVertex_t, normal);
-		vbo->ofs_tangent = offsetof (packedVertex_t, tangent);
 		vbo->ofs_st = offsetof (packedVertex_t, texcoords);
 		vbo->ofs_vertexcolor = offsetof (packedVertex_t, colors);
 		vbo->ofs_lightdir = offsetof (packedVertex_t, lightDirection);
@@ -2178,7 +2177,6 @@ static void R_CreateWorldVBOs(void)
 		const size_t packedVertexSize = sizeof (packedVertex_t);
 		vbo->stride_xyz = packedVertexSize;
 		vbo->stride_normal = packedVertexSize;
-		vbo->stride_tangent = packedVertexSize;
 		vbo->stride_st = packedVertexSize;
 		vbo->stride_vertexcolor = packedVertexSize;
 		vbo->stride_lightdir = packedVertexSize;

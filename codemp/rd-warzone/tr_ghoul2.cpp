@@ -4551,12 +4551,10 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		vec2_t *texcoords;
 		vec4_t *bonerefs;
 		vec4_t *weights;
-		uint32_t *tangents;
 
 		byte *data;
 		int dataSize = 0;
 		int ofsPosition, ofsNormals, ofsTexcoords, ofsBoneRefs, ofsWeights;
-		int ofs_tangent;
 		int stride = 0;
 		int numVerts = 0;
 		int numTriangles = 0;
@@ -4600,7 +4598,6 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		dataSize += numVerts * sizeof (*texcoords);
 		dataSize += numVerts * sizeof (*weights);
 		dataSize += numVerts * sizeof (*bonerefs);
-		dataSize += numVerts * sizeof (*tangents);
 
 		// Allocate and write to memory
 		data = (byte *)ri->Hunk_AllocateTempMemory (dataSize);
@@ -4624,10 +4621,6 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		weights = (vec4_t *)(data + stride);
 		ofsWeights = stride;
 		stride += sizeof (*weights);
-
-		tangents = (uint32_t *)(data + stride);
-		ofs_tangent = stride;
-		stride += sizeof (*tangents);
 
 		surf = (mdxmSurface_t *)((byte *)lod + sizeof (mdxmLOD_t) + (mdxm->numSurfaces * sizeof (mdxmLODSurfOffset_t)));
 
@@ -4754,9 +4747,6 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 				CrossProduct (v[k].normal, tangent, NxT);
 				VectorCopy (tangent, T);
 				T[3] = DotProduct (NxT, bitangent) < 0.0f ? -1.0f : 1.0f;
-
-				*tangents = R_VboPackTangent (T);
-				tangents = (uint32_t *)((byte *)tangents + stride);
 			}
 
 			surf = (mdxmSurface_t *)((byte *)surf + surf->ofsEnd);
@@ -4781,14 +4771,12 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		vbo->ofs_st = ofsTexcoords;
 		vbo->ofs_boneindexes = ofsBoneRefs;
 		vbo->ofs_boneweights = ofsWeights;
-		vbo->ofs_tangent = ofs_tangent;
 
 		vbo->stride_xyz = stride;
 		vbo->stride_normal = stride;
 		vbo->stride_st = stride;
 		vbo->stride_boneindexes = stride;
 		vbo->stride_boneweights = stride;
-		vbo->stride_tangent = stride;
 
 		// Fill in the index buffer
 		glIndex_t *indices = (glIndex_t *)ri->Hunk_AllocateTempMemory (sizeof (glIndex_t) * numTriangles * 3);

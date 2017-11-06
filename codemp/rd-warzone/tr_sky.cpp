@@ -1096,8 +1096,8 @@ void DrawSkyDome ( shader_t *skyShader )
 #else //!__OLD_SKYDOME__
 
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
-	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
-	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT);
+	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+	GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
 
 	image_t *tintImage = R_FindImageFile("textures/skydomes/default_tint", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);

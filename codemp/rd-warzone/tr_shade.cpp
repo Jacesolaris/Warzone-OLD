@@ -943,7 +943,6 @@ static unsigned int RB_CalcShaderVertexAttribs( const shader_t *shader )
 		if (vertexAttribs & ATTR_NORMAL)
 		{
 			vertexAttribs |= ATTR_NORMAL2;
-			vertexAttribs |= ATTR_TANGENT2;
 		}
 	}
 

@@ -5,11 +5,9 @@ attribute vec4				attr_Color;
 
 attribute vec3				attr_Position;
 attribute vec3				attr_Normal;
-attribute vec4				attr_Tangent;
 
 attribute vec3				attr_Position2;
 attribute vec3				attr_Normal2;
-attribute vec4				attr_Tangent2;
 attribute vec4				attr_BoneIndexes;
 attribute vec4				attr_BoneWeights;
 

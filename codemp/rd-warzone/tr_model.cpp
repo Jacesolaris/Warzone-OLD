@@ -1115,12 +1115,11 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vec3_t *verts;
 			vec2_t *texcoords;
 			uint32_t *normals;
-			uint32_t *tangents;
 
 			byte *data;
 			int dataSize;
 
-			int ofs_xyz, ofs_normal, ofs_st, ofs_tangent;
+			int ofs_xyz, ofs_normal, ofs_st;
 
 			dataSize = 0;
 
@@ -1129,9 +1128,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 			ofs_normal = dataSize;
 			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*normals);
-
-			ofs_tangent = dataSize;
-			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*tangents);
 
 			ofs_st = dataSize;
 			dataSize += surf->numVerts * sizeof(*texcoords);
@@ -1153,7 +1149,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 			verts =      (vec3_t *)(data + ofs_xyz);
 			normals =    (uint32_t *)(data + ofs_normal);
-			tangents =   (uint32_t *)(data + ofs_tangent);
 			texcoords =  (vec2_t *)(data + ofs_st);
 
 #ifdef __INSTANCED_MODELS__
@@ -1173,8 +1168,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 				CrossProduct(v->normal, v->tangent, nxt);
 				VectorCopy(v->tangent, tangent);
 				tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
-
-				tangents[j] = R_VboPackTangent(tangent);
 			}
 
 			st = surf->st;
@@ -1196,7 +1189,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 			vboSurf->vbo->ofs_xyz       = ofs_xyz;
 			vboSurf->vbo->ofs_normal    = ofs_normal;
-			vboSurf->vbo->ofs_tangent   = ofs_tangent;
 			vboSurf->vbo->ofs_st        = ofs_st;
 #ifdef __INSTANCED_MODELS__
 			//vboSurf->vbo->ofs_instancesMVP = ofs_instancesMVP;
@@ -1206,7 +1198,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 			vboSurf->vbo->stride_xyz       = sizeof(*verts);
 			vboSurf->vbo->stride_normal    = sizeof(*normals);
-			vboSurf->vbo->stride_tangent   = sizeof(*tangents);
 			vboSurf->vbo->stride_st        = sizeof(*st);
 #ifdef __INSTANCED_MODELS__
 			//vboSurf->vbo->stride_instancesMVP = sizeof(*iMVP);
