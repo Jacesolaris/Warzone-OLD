@@ -892,6 +892,11 @@ static void R_SetFarClip( void )
 
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill && r_occlusion->integer)
 	{
+		if (tr.occlusionZfar <= 0.0)
+		{// For when the map just loaded and no occlusions have been done yet...
+			tr.occlusionZfar = tr.viewParms.zFar;
+		}
+
 		tr.viewParms.zFar = tr.occlusionZfar;
 	}
 }

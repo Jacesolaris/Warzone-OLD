@@ -1070,6 +1070,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 				if (r_occlusion->integer)
 				{
 					if (!backEnd.depthFill
+						&& !backEnd.projection2D
 						&& drawSurf->depthDrawOnly
 						&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isSky
 						&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isWater)
@@ -1317,7 +1318,9 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #ifdef __ZFAR_CULLING__
 			if (r_occlusion->integer)
 			{
+
 				if (!backEnd.depthFill
+					&& !backEnd.projection2D
 					&& drawSurf->depthDrawOnly
 					&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isSky
 					&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isWater)

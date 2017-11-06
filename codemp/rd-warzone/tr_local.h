@@ -81,14 +81,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //                                                Warzone Surface Merging Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 
-// Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
-#define __MERGE_MORE__
-
-// Merge matching shader names...
-// This works for us (as far as I have seen so far) because we only actually use 2 light styles (MATERIAL_ overrides), 
-// and never should they be really using 2 different shaders. Rend2 just didn't know that when assigning them at load...
-#define __MERGE_SAME_SHADER_NAMES__
-
 // Merge the whole damn lot and use player's closest cubemap...
 #define __PLAYER_BASED_CUBEMAPS__
 
