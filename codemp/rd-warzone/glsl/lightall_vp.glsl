@@ -110,8 +110,6 @@ out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
 out vec4 WorldPos_CS_in;
 out vec3 ViewDir_CS_in;
-//out vec4 Tangent_CS_in;
-//out vec4 Bitangent_CS_in;
 out vec4 Color_CS_in;
 out vec4 PrimaryLightDir_CS_in;
 out vec2 TexCoord2_CS_in;
@@ -122,24 +120,13 @@ out float usingSteepMap_CS_in;
 
 varying vec2	var_TexCoords;
 varying vec2	var_TexCoords2;
-
 varying vec4	var_Color;
-
-varying vec3	var_N;
 varying vec3	var_Normal;
-//varying vec4	var_Tangent;
-//varying vec4	var_Bitangent;
 varying vec3	var_ViewDir;
-
 varying vec4	var_PrimaryLightDir;
-
 varying vec3	var_vertPos;
-
 varying vec3	var_Blending;
 varying float	var_Slope;
-varying float	var_usingSteepMap;
-
-varying vec2   var_nonTCtexCoords; // for steep maps
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -341,37 +328,15 @@ vec3 vectoangles(in vec3 value1) {
 	return angles;
 }
 
-/*
-vec3 TangentFromNormal ( vec3 normal )
-{
-	vec3 tangent;
-	vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0)); 
-	vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0)); 
-
-	if( length(c1) > length(c2) )
-	{
-		tangent = c1;
-	}
-	else
-	{
-		tangent = c2;
-	}
-
-	return normalize(tangent);
-}
-*/
-
 void main()
 {
 	vec3 position;
 	vec3 normal;
-	//vec3 tangent;
 
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		//position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
 		//normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp) * 2.0 - 1.0;
-		//tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp) * 2.0 - 1.0;
 		position  = attr_Position;
 		normal    = attr_Normal * 2.0 - 1.0;
 	}
@@ -379,11 +344,8 @@ void main()
 	{
 		vec4 position4 = vec4(0.0);
 		vec4 normal4 = vec4(0.0);
-		//vec4 tangent4 = vec4(0.0);
 		vec4 originalPosition = vec4(attr_Position, 1.0);
-		//vec4 originalNormal = vec4(attr_Normal - vec3(0.5), 0.0);
 		vec4 originalNormal = vec4(attr_Normal * 2.0 - 1.0, 0.0);
-		//vec4 originalTangent = vec4(attr_Tangent.xyz - vec3(0.5), 0.0);
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -391,18 +353,15 @@ void main()
 
 			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
 			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
-			//tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
 		}
 
 		position = position4.xyz;
 		normal = normalize(normal4.xyz);
-		//tangent = normalize(tangent4.xyz);
 	}
 	else
 	{
 		position  = attr_Position;
 		normal    = attr_Normal * 2.0 - 1.0;
-		//tangent   = attr_Tangent.xyz * 2.0 - 1.0;
 	}
 
 
@@ -417,20 +376,11 @@ void main()
 
 	vec3 preMMPos = position.xyz;
 
-	// Because rend2 tangents are all fucked - re-calculate them.
-	//tangent = TangentFromNormal(normal);
-
 	//if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
 	{
 		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 		normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
-		//tangent = (u_ModelMatrix * vec4(tangent, 0.0)).xyz;
 	}
-
-	////vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
-	//vec3 bitangent = normalize(cross(normal, tangent));
-
-	var_nonTCtexCoords = attr_TexCoord0.st;
 
 	if (USE_TC == 1.0)
 	{
@@ -466,15 +416,8 @@ void main()
 	}
 
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
-
 	var_ViewDir = u_ViewOrigin - position;
-
-	// store view direction in tangent space to save on varyings
 	var_Normal = normal.xyz;
-	//var_Tangent = vec4(tangent, var_ViewDir.y);
-	//var_Bitangent = vec4(bitangent, var_ViewDir.z);
-
-	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;
 
 
@@ -498,17 +441,14 @@ void main()
 
 			if (pitch > 46.0 || pitch < -46.0)
 			{
-				var_usingSteepMap = 1.0;
 				var_Slope = 1.0;
 			}
 			else if (pitch > 26.0 || pitch < -26.0)
 			{// do not add to foliage map on this slope, but still do original texture
-				var_usingSteepMap = 1.0;
 				var_Slope = 0.0;
 			}
 			else
 			{
-				var_usingSteepMap = 0.0;
 				var_Slope = 0.0;
 			}
 		}
@@ -526,14 +466,11 @@ void main()
 	TexCoord_CS_in = var_TexCoords.xy;
 	Normal_CS_in = var_Normal.xyz;
 	ViewDir_CS_in = var_ViewDir;
-	//Tangent_CS_in = var_Tangent;
-	//Bitangent_CS_in = var_Bitangent;
 	Color_CS_in = var_Color;
 	PrimaryLightDir_CS_in = var_PrimaryLightDir;
 	TexCoord2_CS_in = var_TexCoords2;
 	Blending_CS_in = var_Blending;
 	Slope_CS_in = var_Slope;
-	usingSteepMap_CS_in = var_usingSteepMap;
 	gl_Position = vec4(position.xyz, 1.0);
 #endif
 

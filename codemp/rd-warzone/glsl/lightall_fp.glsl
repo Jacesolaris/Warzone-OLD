@@ -104,7 +104,6 @@ in precise vec2				TexCoord2_FS_in;
 
 in precise vec3				Blending_FS_in;
 flat in float				Slope_FS_in;
-flat in float				usingSteepMap_FS_in;
 
 
 #define m_Normal 			normalize(Normal_FS_in.xyz)
@@ -113,14 +112,12 @@ flat in float				usingSteepMap_FS_in;
 #define m_vertPos			WorldPos_FS_in
 #define m_ViewDir			ViewDir_FS_in
 
-#define var_nonTCtexCoords	TexCoord_FS_in
 #define var_Color			Color_FS_in
 #define	var_PrimaryLightDir PrimaryLightDir_FS_in
 #define var_TexCoords2		TexCoord2_FS_in
 
 #define var_Blending		Blending_FS_in
 #define var_Slope			Slope_FS_in
-#define var_usingSteepMap	usingSteepMap_FS_in
 
 
 #else //!defined(USE_TESSELLATION) && !defined(USE_ICR_CULLING)
@@ -136,12 +133,10 @@ varying vec4				var_PrimaryLightDir;
 varying vec3				var_vertPos;
 
 varying vec3				var_ViewDir;
-varying vec2				var_nonTCtexCoords; // for steep maps
 
 
 varying vec3				var_Blending;
 varying float				var_Slope;
-varying float				var_usingSteepMap;
 
 
 #define m_Normal			var_Normal
