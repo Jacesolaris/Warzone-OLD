@@ -2418,6 +2418,11 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 			currentClosestNode = loop;
 			currentClosestDistance = dist;
 		}
+		
+		if (currentClosestNode == -1)
+		{// None found.
+			break;
+		}
 
 		// Should now have the next best option...
 		currentNode = currentClosestNode;
@@ -2493,6 +2498,8 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				fails++;
 			}
 		}
+
+		if (fails > 4) break;
 	}
 
 	nodes[node].enodenum = linknum;
@@ -2601,6 +2608,8 @@ AIMOD_MAPPING_MakeLinks ( void )
 	aw_percent_complete = 0.0f;
 	aw_stage_start_time = clock();
  	strcpy( last_node_added_string, va("") );
+
+	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Creating waypoint linkages and flags...\n") );
 	strcpy( task_string3, va("^5Creating waypoint linkages and flags...") );
@@ -2779,6 +2788,8 @@ AIMOD_NODES_LoadNodes2 ( void )
 	trap->Cvar_Register( &fs_homepath, "fs_homepath", "", CVAR_SERVERINFO | CVAR_ROM );
 	trap->Cvar_Register( &fs_game, "fs_game", "", CVAR_SERVERINFO | CVAR_ROM );
 
+	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
+
 	i = 0;
 
 	f = fopen( va("%s/%s/nodes/%s.bwp", fs_homepath.string, fs_game.string, cgs.currentmapname), "rb" );
@@ -2905,6 +2916,8 @@ AIMOD_NODES_LoadNodes ( void )
 		return;
 	}
 
+	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
+
 	strcpy( mp, cgs.currentmapname);
 	trap->FS_Read( &nm, strlen( name) + 1, f );									//read in a string the size of the mod name (+1 is because all strings end in hex '00')
 	trap->FS_Read( &version, sizeof(float), f );			//read and make sure the version is the same
@@ -2994,6 +3007,8 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 	short int		objNum[3] = { 0, 0, 0 };
 
 	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
+	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
 
 	i = 0;
 	i_cv = 0;
@@ -3250,6 +3265,8 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 
 	vmCvar_t mapname;
 	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
+	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
 
 	aw_num_nodes = number_of_nodes;
 	strcpy( filename, "nodes/" );

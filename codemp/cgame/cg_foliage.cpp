@@ -782,14 +782,14 @@ void FOLAGE_LoadRoadImage(void)
 		strcpy(name, va("maps/%s_roads", cgs.currentmapname));
 		char *ext = R_TIL_TextureFileExistsFull(name);
 
-		if (ext)
+		/*if (ext)
 		{
-			trap->Print("Found maps/%s.%s\n", name, ext);
+			trap->Print("Found %s.%s\n", name, ext);
 		}
 		else
 		{
-			trap->Print("Not found maps/%s.\n", name);
-		}
+			trap->Print("Not found %s.\n", name);
+		}*/
 
 		if (ext)
 		{
@@ -805,11 +805,11 @@ void FOLAGE_LoadRoadImage(void)
 			
 			if (ROAD_MAP && ROAD_MAP->GetHeight() > 0 && ROAD_MAP->GetWidth() > 0)
 			{
-				trap->Print("TIL: Loaded image %s. Size %i x %i.\n", fullPath, ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight());
+				//trap->Print("TIL: Loaded image %s. Size %i x %i.\n", fullPath, ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight());
 			}
 			else
 			{
-				trap->Print("TIL: Clould not load image %s.\n", fullPath);
+				//trap->Print("TIL: Clould not load image %s.\n", fullPath);
 				til::TIL_Release(ROAD_MAP);
 				ROAD_MAP = NULL;
 			}
@@ -2417,6 +2417,8 @@ void FOLIAGE_DrawGrass(void)
 	{// Init/register all foliage models...
 		int i = 0;
 
+		RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
+
 		//
 		// Allow for various foliage sets based on climate or mapInfo settings...
 		//
@@ -2921,6 +2923,8 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		FOLIAGE_LOADED = qtrue;
 		return;
 	}
+
+	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
 
 	trap->Print("^1*** ^3%s^5: Generate foliage settings...\n", GAME_VERSION);
 	trap->Print("^1*** ^3%s^5: scan_density: %f. plant_chance %i. tree_chance %i. num_clearings %i. check_density %f. ADD_MORE %s...\n", GAME_VERSION, scan_density, plant_chance, tree_chance, num_clearings, check_density, ADD_MORE ? "true" : "false");
@@ -3524,6 +3528,7 @@ void FOLIAGE_FoliageReplant(int plantPercentage)
 	int i = 0;
 	int NUM_REPLACED = 0;
 
+#pragma omp parallel for schedule(dynamic)
 	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{// Check current list...
 		FOLIAGE_PLANT_SELECTION[i] = 0;
@@ -3736,11 +3741,15 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 
 	trap->S_Shutup(qtrue);
 
+	int numCompleted = 0;
+
+#pragma omp parallel for schedule(dynamic)
 	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{// Check current list...
 		FOLIAGE_PLANT_SELECTION[i] = 0;
 
-		aw_percent_complete = (float)((float)i / (float)FOLIAGE_NUM_POSITIONS) * 100.0;
+		numCompleted++;
+		aw_percent_complete = (float)((float)numCompleted / (float)FOLIAGE_NUM_POSITIONS) * 100.0;
 
 		if (clock() - previous_time > 500) // update display every 500ms...
 		{
