@@ -867,22 +867,22 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		return qfalse;
 	}
 
-	if (self == ent->padawan)
+	if (ent->padawan && self == ent->padawan)
 	{
 		return qfalse;
 	}
 	
-	if (self == ent->parent)
+	if (ent->parent && self == ent->parent)
 	{
 		return qfalse;
 	}
 	
-	if (ent == self->padawan)
+	if (self->padawan && ent == self->padawan)
 	{
 		return qfalse;
 	}
 	
-	if (ent == self->parent)
+	if (self->parent && ent == self->parent)
 	{
 		return qfalse;
 	}

@@ -1162,7 +1162,7 @@ qboolean CanShoot ( gentity_t *ent, gentity_t *shooter )
 	gentity_t	*traceEnt;
 	qboolean	IS_BREAKABLE = NPC_EntityIsBreakable(shooter, ent);
 
-	if (ent->enemy && !NPC_ValidEnemy(shooter, ent->enemy))
+	if (ent && !NPC_ValidEnemy(shooter, ent))
 	{
 		return qfalse;
 	}
