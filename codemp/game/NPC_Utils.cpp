@@ -867,6 +867,31 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		return qfalse;
 	}
 
+	if (self == ent->padawan)
+	{
+		return qfalse;
+	}
+	
+	if (self == ent->parent)
+	{
+		return qfalse;
+	}
+	
+	if (ent == self->padawan)
+	{
+		return qfalse;
+	}
+	
+	if (ent == self->parent)
+	{
+		return qfalse;
+	}
+
+	if (OnSameTeam(ent, self))
+	{
+		return qfalse;
+	}
+
 	if ( ent->flags & FL_NOTARGET )
 	{//In case they're in notarget mode
 		return qfalse;
@@ -1217,6 +1242,14 @@ qboolean NPC_FindEnemy( gentity_t *aiEnt, qboolean checkAlerts )
 	if( aiEnt->NPC->confusionTime > level.time )
 	{
 		return qfalse;
+	}
+
+	if (aiEnt->enemy)
+	{// In case we get mixed up somewhere... the whole playerTeam thing, *sigh*
+		if (!NPC_ValidEnemy2(aiEnt, aiEnt->enemy))
+		{
+			aiEnt->enemy = NULL;
+		}
 	}
 
 	//If we've gotten here alright, then our target it still valid

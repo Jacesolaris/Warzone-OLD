@@ -776,6 +776,7 @@ void NPC_Respond( gentity_t *self, int userNum )
 		break;
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
+	case CLASS_HK51:
 		if ( !self->enemy )
 		{
 			/*

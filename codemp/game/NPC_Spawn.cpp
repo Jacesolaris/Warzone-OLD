@@ -11,7 +11,8 @@
 
 extern void NPC_PrecacheAnimationCFG( const char *NPC_type );
 void NPC_Precache ( gentity_t *spawner );
-extern qboolean NPC_NeedPadawan_Spawn ( void );
+extern qboolean NPC_NeedPadawan_Spawn (gentity_t *player);
+extern qboolean NPC_NeedFollower_Spawn(gentity_t *player);
 
 extern void G_DebugPrint( int level, const char *format, ... );
 
@@ -1064,7 +1065,8 @@ void NPC_Begin (gentity_t *ent)
 			//&& ent->client->NPC_class != CLASS_TAVION
 			//&& ent->client->NPC_class != CLASS_DESANN
 			&& ent->client->NPC_class != CLASS_JEDI
-			&& ent->client->NPC_class != CLASS_PADAWAN )
+			&& ent->client->NPC_class != CLASS_PADAWAN
+			&& ent->client->NPC_class != CLASS_HK51)
 		{// up everyone except jedi
 			ent->NPC->stats.health += ent->NPC->stats.health/4 * g_npcspskill.integer; // 100% on easy, 125% on medium, 150% on hard
 		}
@@ -2414,6 +2416,7 @@ void NPC_PrecacheWarzoneNPCs ( void )
 	NPC_PrecacheType( "alora" );
 	NPC_PrecacheType( "alora_dual" );
 	NPC_PrecacheType( "reborn" );
+	NPC_PrecacheType( "hk51" );
 
 
 	//
@@ -2590,7 +2593,7 @@ void SP_NPC_spawner( gentity_t *self)
 		self->s.origin[1] -= 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			if (NPC_NeedPadawan_Spawn()
+			if (NPC_NeedPadawan_Spawn(NULL)
 				&& (!Q_stricmpn("jedi", self->NPC_type, 4)
 				|| !Q_stricmpn("Jedi", self->NPC_type, 4)
 				|| !Q_stricmpn("Kyle", self->NPC_type, 4)
@@ -2610,6 +2613,27 @@ void SP_NPC_spawner( gentity_t *self)
 
 				SP_NPC_spawner2( self );
 			}
+			/*else if (NPC_NeedFollower_Spawn()
+				&& (!Q_stricmpn("jedi", self->NPC_type, 4)
+					|| !Q_stricmpn("Jedi", self->NPC_type, 4)
+					|| !Q_stricmpn("Kyle", self->NPC_type, 4)
+					|| !Q_stricmpn("Luke", self->NPC_type, 4)))
+			{// Spawned a jedi. Spawn a padawan for them as well...
+				int choice = irand(1, 36);
+				char name[64];
+
+				//sprintf(name, "hk51_%i", choice);
+				sprintf(name, "hk51");
+
+				if (choice > 1 && choice < 28)
+					self->NPC_type = name;
+				else
+					self->NPC_type = "hk51";
+
+				trap->Print("Spawning follower \"%s\" for Sith NPC.\n", self->NPC_type);
+
+				SP_NPC_spawner2(self);
+			}*/
 			else
 				SP_NPC_spawner2( self );
 
@@ -2684,7 +2708,7 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 			VectorCopy(origin, self->s.origin);
 		}
 
-		if (NPC_NeedPadawan_Spawn()
+		if (NPC_NeedPadawan_Spawn(NULL)
 			&& (!Q_stricmpn("jedi", group.npcNames[0], 4)
 			|| !Q_stricmpn("Jedi", group.npcNames[0], 4)
 			|| !Q_stricmpn("Kyle", group.npcNames[0], 4)
@@ -2738,6 +2762,62 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 				return;
 			}
 		}
+		/*else if (NPC_NeedFollower_Spawn()
+			&& (!Q_stricmpn("jedi", group.npcNames[0], 4)
+				|| !Q_stricmpn("Jedi", group.npcNames[0], 4)
+				|| !Q_stricmpn("Kyle", group.npcNames[0], 4)
+				|| !Q_stricmpn("Luke", group.npcNames[0], 4)))
+		{// Spawned a jedi. Spawn a padawan for them as well...
+			VectorCopy(origin, self->s.origin);
+			self->s.origin[0] -= 64;
+			self->s.origin[1] -= 64;
+
+			if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+			{
+				int choice = irand(1, 36);
+				char name[64];
+
+				//sprintf(name, "hk51_%i", choice);
+				sprintf(name, "hk51");
+
+				if (choice > 1 && choice < 28)
+					self->NPC_type = name;
+				else
+					self->NPC_type = "hk51";
+
+				trap->Print("Spawning follower \"%s\" for Sith NPC.\n", self->NPC_type);
+
+				SP_NPC_spawner2(self);
+
+				VectorCopy(origin, self->s.origin);
+				return;
+			}
+
+			VectorCopy(origin, self->s.origin);
+			self->s.origin[0] += 64;
+			self->s.origin[1] += 64;
+
+			if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+			{
+				int choice = irand(1, 36);
+				char name[64];
+
+				//sprintf(name, "hk51_%i", choice);
+				sprintf(name, "hk51");
+
+				if (choice > 1 && choice < 28)
+					self->NPC_type = name;
+				else
+					self->NPC_type = "hk51";
+
+				trap->Print("Spawning follower \"%s\" for Sith NPC.\n", self->NPC_type);
+
+				SP_NPC_spawner2(self);
+
+				VectorCopy(origin, self->s.origin);
+				return;
+			}
+		}*/
 	}
 	else
 	{

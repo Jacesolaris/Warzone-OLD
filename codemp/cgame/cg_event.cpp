@@ -1028,6 +1028,7 @@ qboolean CG_AllowBackupCombatSounds ( centity_t *self )
 	case CLASS_JAN:				
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
+	//case CLASS_HK51:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -2128,6 +2129,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_TAUNT1:
 	case EV_TAUNT2:
 	case EV_TAUNT3:
+	case EV_TAUNT4:
+	case EV_TAUNT5:
 		DEBUGNAME("EV_TAUNTx");
 		CG_TryPlayCustomSound( NULL, es->number, CHAN_VOICE, va("*taunt%i.wav", event - EV_TAUNT1 + 1) );
 		break;
@@ -2160,6 +2163,25 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		CG_TryPlayCustomSound( NULL, es->number, CHAN_VOICE, "*pushfail.wav" );
 		break;
 		//End NPC sounds
+
+	case EV_FOLLOWER_IDLE_1:
+	case EV_FOLLOWER_IDLE_2:
+	case EV_FOLLOWER_IDLE_3:
+	case EV_FOLLOWER_IDLE_4:
+	case EV_FOLLOWER_IDLE_5:
+	case EV_FOLLOWER_IDLE_6:
+	case EV_FOLLOWER_IDLE_7:
+	case EV_FOLLOWER_IDLE_8:
+	case EV_FOLLOWER_IDLE_9:
+	case EV_FOLLOWER_IDLE_10:
+	case EV_FOLLOWER_IDLE_11:
+	case EV_FOLLOWER_IDLE_12:
+	case EV_FOLLOWER_IDLE_13:
+	case EV_FOLLOWER_IDLE_14:
+	case EV_FOLLOWER_IDLE_15:
+	case EV_FOLLOWER_IDLE_16:
+		DEBUGNAME("EV_FOLLOWER_IDLE_x");
+		CG_TryPlayCustomSound(NULL, es->number, CHAN_VOICE, va("*followerIdle%i.wav", event - EV_FOLLOWER_IDLE_1 + 1));
 
 	case EV_PADAWAN_COMBAT_TALK:
 		DEBUGNAME("EV_PADAWAN_COMBAT_TALK");

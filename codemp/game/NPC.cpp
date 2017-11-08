@@ -997,6 +997,9 @@ void NPC_CheckAttackHold(gentity_t *aiEnt)
 	}
 	else*/
 	{//everyone else...?  FIXME: need to tie this into AI somehow?
+		if (aiEnt->enemy && !NPC_ValidEnemy(aiEnt, aiEnt->enemy))
+			return;
+
 		VectorSubtract(aiEnt->enemy->r.currentOrigin, aiEnt->r.currentOrigin, vec);
 		if( VectorLengthSquared(vec) > NPC_MaxDistSquaredForWeapon(aiEnt) )
 		{
@@ -1059,6 +1062,7 @@ qboolean NPC_CanUseAdvancedFighting(gentity_t *aiEnt)
 	case CLASS_JAN:				
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
+	case CLASS_HK51:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -1699,6 +1703,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 	}
 	else if ( aiEnt->client->NPC_class == CLASS_JEDI 
 		|| aiEnt->client->NPC_class == CLASS_PADAWAN 
+		|| aiEnt->client->NPC_class == CLASS_HK51
 		|| aiEnt->client->NPC_class == CLASS_REBORN
 		|| aiEnt->client->NPC_class == CLASS_TAVION
 		|| aiEnt->client->NPC_class == CLASS_ALORA
@@ -4378,7 +4383,6 @@ void NPC_Think ( gentity_t *self )//, int msec )
 			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time < level.time && NPC_IsAlive(self, self->padawan))
 			{// Do any replies to padawan comments...
 				self->padawan_reply_waiting = qfalse;
-				//G_AddEvent( self, EV_PADAWAN_IDLE_REPLY, 0 );
 				G_SpeechEvent( self, EV_PADAWAN_IDLE_REPLY );
 
 				//trap->Print("Master %s replying to padawan comment.\n", self->client->pers.netname);

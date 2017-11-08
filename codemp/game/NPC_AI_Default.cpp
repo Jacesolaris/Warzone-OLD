@@ -30,6 +30,7 @@ qboolean NPC_IsHumanoid ( gentity_t *self )
 	case CLASS_JAN:				
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
+	case CLASS_HK51:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -448,6 +449,22 @@ qboolean NPC_IsAdvancedGunner ( gentity_t *self )
 	return qfalse;
 }
 
+qboolean NPC_IsFollowerGunner(gentity_t *self)
+{
+	switch (self->client->NPC_class)
+	{
+	case CLASS_HK51:
+		// Is Gunner...
+		return qtrue;
+		break;
+	default:
+		// NOT Commando...
+		break;
+	}
+
+	return qfalse;
+}
+
 qboolean NPC_IsStormtrooper ( gentity_t *self )
 {
 	switch (self->client->NPC_class)
@@ -581,6 +598,7 @@ qboolean NPC_HasGrenades ( gentity_t *self )
 	//case CLASS_VEHICLE:
 	//case CLASS_RANCOR:
 	//case CLASS_WAMPA:
+	case CLASS_HK51:
 		// Has Grenades...
 		return qtrue;
 		break;
@@ -625,6 +643,7 @@ void NPC_CheckEvasion(gentity_t *aiEnt)
 	case CLASS_JAN:				
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
+	case CLASS_HK51:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:

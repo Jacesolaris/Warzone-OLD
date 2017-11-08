@@ -976,7 +976,15 @@ void ShootThink( gentity_t *aiEnt)
 		return;
 	}
 
-	aiEnt->client->pers.cmd.buttons |= BUTTON_ATTACK;
+	if (aiEnt->enemy && !NPC_ValidEnemy(aiEnt, aiEnt->enemy))
+	{
+		aiEnt->enemy = NULL;
+		return;
+	}
+	else
+	{
+		aiEnt->client->pers.cmd.buttons |= BUTTON_ATTACK;
+	}
 
 #ifndef __MMO__
 	aiEnt->NPC->currentAmmo = aiEnt->client->ps.ammo[weaponData[aiEnt->client->ps.weapon].ammoIndex];	// checkme
@@ -1153,6 +1161,11 @@ qboolean CanShoot ( gentity_t *ent, gentity_t *shooter )
 	vec3_t		spot, diff;
 	gentity_t	*traceEnt;
 	qboolean	IS_BREAKABLE = NPC_EntityIsBreakable(shooter, ent);
+
+	if (ent->enemy && !NPC_ValidEnemy(shooter, ent->enemy))
+	{
+		return qfalse;
+	}
 	
 	CalcEntitySpot( shooter, SPOT_WEAPON, muzzle );
 	CalcEntitySpot( ent, SPOT_ORIGIN, spot );		//FIXME preferred target locations for some weapons (feet for R/L)
@@ -1435,6 +1448,22 @@ qboolean ValidEnemy(gentity_t *aiEnt, gentity_t *ent)
 		}
 		else if ( ent->s.eType == ET_NPC && (ent->s.NPC_class == CLASS_VEHICLE || ent->client->NPC_class == CLASS_VEHICLE || ent->m_pVehicle) )
 		{// Don't go after empty vehicles :)
+			return qfalse;
+		}
+		else if (ent == aiEnt->padawan)
+		{
+			return qfalse;
+		}
+		else if (ent == aiEnt->parent)
+		{
+			return qfalse;
+		}
+		else if (aiEnt == ent->padawan)
+		{
+			return qfalse;
+		}
+		else if (aiEnt == ent->parent)
+		{
 			return qfalse;
 		}
 		else

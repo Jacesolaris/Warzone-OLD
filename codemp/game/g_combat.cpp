@@ -4637,6 +4637,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 			}
 			break;
 		case CLASS_PADAWAN:
+		case CLASS_HK51:
 			if (targ->padawan == attacker || targ->parent == attacker)
 			{
 				targ->enemy = NULL; // Make sure civilians never have an enemy... (no AI for it, no weapon for it)

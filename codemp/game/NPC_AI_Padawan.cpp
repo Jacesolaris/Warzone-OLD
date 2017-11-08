@@ -141,6 +141,11 @@ void G_AddPadawanCombatCommentEvent( gentity_t *self, int event, int speakDeboun
 		return;
 	}
 
+	/*if (self->client->NPC_class != CLASS_PADAWAN)
+	{
+		return;
+	}*/
+
 	if ( self->NPC->padawanCombatCommentDebounceTime > level.time )
 	{
 		return;
@@ -161,8 +166,18 @@ void G_AddPadawanCombatCommentEvent( gentity_t *self, int event, int speakDeboun
 	//FIXME: Also needs to check for teammates. Don't want
 	//		everyone babbling at once
 
-	//NOTE: was losing too many speech events, so we do it directly now, screw networking!
-	G_SpeechEvent( self, event );
+	if (self->client->NPC_class == CLASS_PADAWAN)
+	{
+		//NOTE: was losing too many speech events, so we do it directly now, screw networking!
+		G_SpeechEvent(self, event);
+	}
+	else
+	{
+		if (irand(0,2) == 0)
+			G_AddVoiceEvent(self, Q_irand(EV_ANGER1, EV_ANGER3), speakDebounceTime);
+		else
+			G_AddVoiceEvent(self, Q_irand(EV_COMBAT1, EV_COMBAT3), speakDebounceTime);
+	}
 	
 	//won't speak again for 5 seconds (unless otherwise specified)
 	self->NPC->padawanCombatCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 15000+irand(0,15000) : speakDebounceTime);
@@ -183,6 +198,13 @@ void G_AddPadawanIdleNoReplyCommentEvent( gentity_t *self, int event, int speakD
 		return;
 	}
 
+	
+
+	/*if (self->client->NPC_class != CLASS_PADAWAN && self->client->NPC_class != CLASS_HK51)
+	{
+		return;
+	}*/
+
 	if ( self->NPC->padawanCommentDebounceTime > level.time )
 	{
 		return;
@@ -198,8 +220,15 @@ void G_AddPadawanIdleNoReplyCommentEvent( gentity_t *self, int event, int speakD
 	//FIXME: Also needs to check for teammates. Don't want
 	//		everyone babbling at once
 
-	//NOTE: was losing too many speech events, so we do it directly now, screw networking!
-	G_SpeechEvent( self, event );
+	if (self->client->NPC_class == CLASS_PADAWAN)
+	{
+		//NOTE: was losing too many speech events, so we do it directly now, screw networking!
+		G_SpeechEvent(self, event);
+	}
+	else
+	{
+		G_AddVoiceEvent(self, Q_irand(EV_FOLLOWER_IDLE_1, EV_FOLLOWER_IDLE_16), speakDebounceTime);
+	}
 
 	//won't speak again for 5 seconds (unless otherwise specified)
 	self->NPC->padawanCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 15000+irand(0,15000) : speakDebounceTime);
@@ -213,6 +242,11 @@ void G_AddPadawanCommentEvent( gentity_t *self, int event, int speakDebounceTime
 	}
 
 	if ( !self->client || self->client->ps.pm_type >= PM_DEAD )
+	{
+		return;
+	}
+
+	if (self->client->NPC_class != CLASS_PADAWAN)
 	{
 		return;
 	}
@@ -519,12 +553,17 @@ qboolean NPC_PadawanMove(gentity_t *aiEnt)
 	gentity_t	*NPC = aiEnt;
 	usercmd_t	*ucmd = &aiEnt->client->pers.cmd;
 
+	if (!(NPC->s.NPC_class == CLASS_PADAWAN || NPC->s.NPC_class == CLASS_HK51))
+	{
+		return qfalse;
+	}
+
 	if (NPC->enemy && NPC_IsAlive(NPC, NPC->enemy) && NPC_ValidEnemy2(NPC, NPC->enemy))
 	{// Keep fighting who we are fighting...
 		return qtrue;
 	}
 
-	if (NPC->s.NPC_class == CLASS_PADAWAN)
+	if (NPC->s.NPC_class == CLASS_PADAWAN || NPC->s.NPC_class == CLASS_HK51)
 	{
 		G_ClearEnemy( aiEnt );
 
@@ -646,14 +685,17 @@ qboolean NPC_PadawanMove(gentity_t *aiEnt)
 
 				if ( UpdateGoal(aiEnt) )
 				{
-					Padawan_CheckForce(aiEnt);
+					if (aiEnt->client->NPC_class == CLASS_PADAWAN)
+					{
+						Padawan_CheckForce(aiEnt);
 
-					if (dist > 512 
-						&& TIMER_Done( aiEnt, "protect" )
-						&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
-					{// When the master is a fair way away, use force protect to get to him safer...
-						ForceProtect( aiEnt );
-						TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
+						if (dist > 512
+							&& TIMER_Done(aiEnt, "protect")
+							&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+						{// When the master is a fair way away, use force protect to get to him safer...
+							ForceProtect(aiEnt);
+							TIMER_Set(aiEnt, "protect", irand(15000, 30000));
+						}
 					}
 
 					if (NPC_CombatMoveToGoal(aiEnt, qtrue, qfalse ))
@@ -690,14 +732,17 @@ qboolean NPC_PadawanMove(gentity_t *aiEnt)
 			}
 			else if (dist >= 256 && NPC_FollowPadawanRoute(aiEnt))
 			{// Try using waypoints...
-				Padawan_CheckForce(aiEnt);
+				if (aiEnt->client->NPC_class == CLASS_PADAWAN)
+				{
+					Padawan_CheckForce(aiEnt);
 
-				if (dist > 512 
-					&& TIMER_Done( aiEnt, "protect" )
-					&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
-				{// When the master is a fair way away, use force protect to get to him safer...
-					ForceProtect( aiEnt );
-					TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
+					if (dist > 512
+						&& TIMER_Done(aiEnt, "protect")
+						&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+					{// When the master is a fair way away, use force protect to get to him safer...
+						ForceProtect(aiEnt);
+						TIMER_Set(aiEnt, "protect", irand(15000, 30000));
+					}
 				}
 
 				aiEnt->NPC->goalEntity = goalEnt;
@@ -712,14 +757,17 @@ qboolean NPC_PadawanMove(gentity_t *aiEnt)
 
 				if ( UpdateGoal(aiEnt) )
 				{
-					Padawan_CheckForce(aiEnt);
+					if (aiEnt->client->NPC_class == CLASS_PADAWAN)
+					{
+						Padawan_CheckForce(aiEnt);
 
-					if (dist > 512 
-						&& TIMER_Done( aiEnt, "protect" )
-						&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
-					{// When the master is a fair way away, use force protect to get to him safer...
-						ForceProtect( aiEnt );
-						TIMER_Set( aiEnt, "protect", irand(15000, 30000) );
+						if (dist > 512
+							&& TIMER_Done(aiEnt, "protect")
+							&& aiEnt->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+						{// When the master is a fair way away, use force protect to get to him safer...
+							ForceProtect(aiEnt);
+							TIMER_Set(aiEnt, "protect", irand(15000, 30000));
+						}
 					}
 
 					if (NPC_CombatMoveToGoal(aiEnt, qtrue, qfalse ))
@@ -845,38 +893,79 @@ qboolean NPC_PadawanMove(gentity_t *aiEnt)
 	return qfalse;
 }
 
-qboolean NPC_NeedPadawan_Spawn ( void )
+qboolean NPC_NeedPadawan_Spawn ( gentity_t *player )
 {// UQ1: Because I don't want to end up with a map full of padawans without a jedi...
 	int i;
 	int padawan_count = 0;
 	int jedi_count = 0;
 
+	//if (player) jedi_count++;
+
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Find the closest jedi to follow...
 		gentity_t *parent2 = &g_entities[i];
 
-		if ( parent2
-			&& NPC_IsAlive(parent2, parent2)
-			&& parent2->client
-			&& parent2->client->sess.sessionTeam == FACTION_REBEL
-			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
+		if (!parent2->client) continue;
+
+		qboolean parentLight = (qboolean)(parent2->client->sess.sessionTeam == FACTION_REBEL);
+		qboolean playerRebel = (qboolean)(parentLight && parent2->s.eType == ET_PLAYER);
+		qboolean npcLight = (qboolean)(NPC_IsLightJedi(parent2) && parent2->client->NPC_class != CLASS_PADAWAN);
+
+		if (playerRebel || npcLight)
 		{// This is a jedi on our team...
 			jedi_count++;
 		}
 		else if ( parent2
 			&& parent2->client
 			&& NPC_IsAlive(parent2, parent2)
-			//&& parent2->client->sess.sessionTeam == FACTION_REBEL
 			&& parent2->client->NPC_class == CLASS_PADAWAN)
 		{// This is a padawan on our team...
-			if (parent2->client->sess.sessionTeam != FACTION_REBEL)
-				parent2->client->sess.sessionTeam = FACTION_REBEL; // must have been manually spawned.. set team info...
-
+			parent2->client->sess.sessionTeam = FACTION_REBEL; // must have been manually spawned.. set team info...
 			padawan_count++;
 		}
 	}
 
-	if (jedi_count >= padawan_count)
+	if (jedi_count > padawan_count)
+	{// If we have equal to or more jedi then padawans, then we need a new padawan...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_NeedFollower_Spawn(gentity_t *player)
+{// UQ1: Because I don't want to end up with a map full of followers without a jedi...
+	int i;
+	int padawan_count = 0;
+	int jedi_count = 0;
+
+	//if (player) jedi_count++;
+
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{// Find the closest jedi to follow...
+		gentity_t *parent2 = &g_entities[i];
+
+		if (!parent2->client) continue;
+
+		qboolean parentDark = (qboolean)(parent2->client->sess.sessionTeam == FACTION_EMPIRE);
+		qboolean playerEmpire = (qboolean)(parentDark && parent2->s.eType == ET_PLAYER);
+		qboolean npcDark = (qboolean)(NPC_IsDarkJedi(parent2) && parent2->client->NPC_class != CLASS_HK51);
+
+		if (playerEmpire || npcDark)
+		{// This is a jedi on our team...
+			jedi_count++;
+		}
+		else if (parent2
+			&& parent2->client
+			&& NPC_IsAlive(parent2, parent2)
+			&& parent2->client->NPC_class == CLASS_HK51)
+		{// This is a padawan on our team...
+			parent2->client->sess.sessionTeam = FACTION_EMPIRE; // must have been manually spawned.. set team info...
+			padawan_count++;
+		}
+	}
+
+	if (jedi_count > padawan_count)
 	{// If we have equal to or more jedi then padawans, then we need a new padawan...
 		return qtrue;
 	}
@@ -1046,9 +1135,17 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 		return;
 	}
 
-	if (aiEnt->client->NPC_class != CLASS_PADAWAN)
+	if (aiEnt->client->NPC_class != CLASS_PADAWAN && aiEnt->client->NPC_class != CLASS_HK51)
 	{
 		return; // This is only for padawans...
+	}
+
+	if (me->enemy)
+	{// In case we get mixed up somewhere... the whole playerTeam thing, *sigh*
+		if (!NPC_ValidEnemy2(me, me->enemy))
+		{
+			me->enemy = NULL;
+		}
 	}
 
 	NPC_Padawan_CopyParentFlags(me, parent);
@@ -1065,15 +1162,32 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 
 	if (me->nextPadawanThink > level.time) return;
 
-	// Does he need to heal up, or use a buff???
-	Padawan_CheckForce(aiEnt);
+	if (NPC_IsJedi(me))
+	{// Does he need to heal up, or use a buff???
+		Padawan_CheckForce(aiEnt);
+	}
 
 	me->nextPadawanThink = level.time + 5000;
 
 	me->NPC->combatMove = qtrue;
 
-	if (me->client->sess.sessionTeam != FACTION_REBEL)
-		me->client->sess.sessionTeam = FACTION_REBEL; // must have been manually spawned.. set team info...
+	if (parent)
+	{
+		if (me->client->sess.sessionTeam != parent->client->sess.sessionTeam)
+			me->client->sess.sessionTeam = parent->client->sess.sessionTeam; // must have been manually spawned.. set team info...
+	}
+	else
+	{
+		if (me->client->NPC_class == CLASS_PADAWAN)
+		{
+			me->client->sess.sessionTeam = FACTION_REBEL;
+		}
+		else if (me->client->NPC_class == CLASS_HK51)
+		{
+			me->client->sess.sessionTeam = FACTION_EMPIRE;
+		}
+	}
+
 
 	if (parent && NPC_IsAlive(me, parent))
 	{
@@ -1100,20 +1214,23 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 			}
 		}
 
-		if (!(me->enemy && NPC_IsAlive(me, me->enemy)))
+		if (NPC_IsJedi(me))
 		{
-			if (parent->client->ps.saberHolstered > 0)
-			{// Copy our master's saber holster setting...
-				if (me->client->ps.saberHolstered != 2)
-				{
-					me->client->ps.saberHolstered = 2;
+			if (!(me->enemy && NPC_IsAlive(me, me->enemy)))
+			{
+				if (parent->client->ps.saberHolstered > 0)
+				{// Copy our master's saber holster setting...
+					if (me->client->ps.saberHolstered != 2)
+					{
+						me->client->ps.saberHolstered = 2;
+					}
 				}
-			}
-			else
-			{// Copy our master's saber holster setting...
-				if (me->client->ps.saberHolstered != 0)
-				{
-					me->client->ps.saberHolstered = 0;
+				else
+				{// Copy our master's saber holster setting...
+					if (me->client->ps.saberHolstered != 0)
+					{
+						me->client->ps.saberHolstered = 0;
+					}
 				}
 			}
 		}
@@ -1134,7 +1251,13 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 	//
 
 	me->isPadawan = qtrue; // Mark us as a padawan for the next check to not need to do a string compare..
-	parent = NULL;
+	me->parent = parent = NULL;
+
+	best_parent_dist = 999999;
+	best_parent = NULL;
+
+	qboolean imDark = (qboolean)(me->client->NPC_class == CLASS_HK51);
+	qboolean imLight = (qboolean)(me->client->NPC_class == CLASS_PADAWAN);
 
 	// We need to select a master...
 	for (i = 0; i < MAX_GENTITIES; i++)
@@ -1142,20 +1265,30 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 		gentity_t *parent2 = &g_entities[i];
 
 		if ( parent2
-			&& NPC_IsAlive(parent2, parent2)
+			&& parent2 != me
 			&& parent2->client
-			&& parent2->client->sess.sessionTeam == me->client->sess.sessionTeam
-			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->s.eType == ET_PLAYER)
-			&& (!parent2->padawan || !NPC_IsAlive(parent2, parent2->padawan)) )
+			&& NPC_IsAlive(me, parent2)
+			&& !NPC_ValidEnemy(me, parent2)
+			&& (!parent2->padawan || !NPC_IsAlive(me, parent2->padawan)) )
 		{// This is a jedi on our team...
-			float dist = Distance(me->r.currentOrigin, parent2->r.currentOrigin);
-			
-			if (dist < best_parent_dist)
+			qboolean parentDark = (qboolean)(parent2->client->sess.sessionTeam == FACTION_EMPIRE);
+			qboolean parentLight = (qboolean)(parent2->client->sess.sessionTeam == FACTION_REBEL);
+			qboolean playerEmpire = (qboolean)(imDark && parentDark && parent2->s.eType == ET_PLAYER);
+			qboolean playerRebel = (qboolean)(imLight && parentLight && parent2->s.eType == ET_PLAYER);
+			qboolean npcDark = (qboolean)(imDark && NPC_IsDarkJedi(parent2) && parent2->client->NPC_class != CLASS_HK51);
+			qboolean npcLight = (qboolean)(imLight && NPC_IsLightJedi(parent2) && parent2->client->NPC_class != CLASS_PADAWAN);
+
+			if (playerEmpire || playerRebel || npcDark || npcLight)
 			{
+				float dist = Distance(me->r.currentOrigin, parent2->r.currentOrigin);
+
 				if (dist < best_parent_dist)
-				{// Found a new best jedi...
-					best_parent = parent2;
-					best_parent_dist = dist;
+				{
+					if (dist < best_parent_dist)
+					{// Found a new best jedi...
+						best_parent = parent2;
+						best_parent_dist = dist;
+					}
 				}
 			}
 		}
@@ -1169,7 +1302,7 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 
 		NPC_Padawan_CopyParentFlags(me, parent);
 
-		//trap->Print("Padawan %s found a new jedi (%s).\n", me->client->pers.netname, parent->client->pers.netname);
+		//trap->Print("Follower %s found a new master (%s).\n", me->client->pers.netname, parent->client->pers.netname);
 
 		if (parent->enemy && NPC_IsAlive(me, parent->enemy))
 		{// Padawan assists jedi...
@@ -1191,27 +1324,30 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 			}
 		}
 
-		if (!(me->enemy && NPC_IsAlive(me, me->enemy)))
+		if (NPC_IsJedi(me))
 		{
-			if (parent->client->ps.saberHolstered > 0)
-			{// Copy our master's saber holster setting...
-				if (me->client->ps.saberHolstered != 2)
-				{
-					me->client->ps.saberHolstered = 2;
+			if (!(me->enemy && NPC_IsAlive(me, me->enemy)))
+			{
+				if (parent->client->ps.saberHolstered > 0)
+				{// Copy our master's saber holster setting...
+					if (me->client->ps.saberHolstered != 2)
+					{
+						me->client->ps.saberHolstered = 2;
+					}
 				}
-			}
-			else
-			{// Copy our master's saber holster setting...
-				if (me->client->ps.saberHolstered != 0)
-				{
-					me->client->ps.saberHolstered = 0;
+				else
+				{// Copy our master's saber holster setting...
+					if (me->client->ps.saberHolstered != 0)
+					{
+						me->client->ps.saberHolstered = 0;
+					}
 				}
 			}
 		}
 	}
 	else
 	{// Need to check again next time...
-		//trap->Print("Padawan %s failed to find a new jedi.\n", me->client->pers.netname);
+		//trap->Print("Follower %s failed to find a new master.\n", me->client->pers.netname);
 		me->parent = NULL;
 	}
 
@@ -1219,16 +1355,16 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 	{// Not in combat...
 		if (me->enemy && !NPC_IsAlive(me, me->enemy))
 		{// Looks like we just killed someone... Make a kill comment...
-			G_AddPadawanCombatCommentEvent( me, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
+			G_AddPadawanCombatCommentEvent(me, EV_PADAWAN_COMBAT_KILL_TALK, 10000 + irand(0, 15000));
 		}
 
 		NPC_ClearGoal(aiEnt);
 	}
 	else
 	{// In combat...
-		if (irand(0,2) > 0)
+		if (irand(0, 2) > 0)
 		{// Make random combat comments...
-			G_AddPadawanCombatCommentEvent( me, EV_PADAWAN_COMBAT_TALK, 10000+irand(0,15000) );
+			G_AddPadawanCombatCommentEvent(me, EV_PADAWAN_COMBAT_TALK, 10000 + irand(0, 15000));
 		}
 	}
 }

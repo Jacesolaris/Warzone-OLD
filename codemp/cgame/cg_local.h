@@ -193,14 +193,14 @@ typedef struct debuffVisualsData_s
 // client model and other color coded effects
 // this is regenerated each time a client's configstring changes,
 // usually as a result of a userinfo (name, model, etc) change
-#define	MAX_CUSTOM_COMBAT_SOUNDS	40
-#define	MAX_CUSTOM_EXTRA_SOUNDS	40
-#define	MAX_CUSTOM_JEDI_SOUNDS	40
+#define	MAX_CUSTOM_COMBAT_SOUNDS	64
+#define	MAX_CUSTOM_EXTRA_SOUNDS		64
+#define	MAX_CUSTOM_JEDI_SOUNDS		64
 // MAX_CUSTOM_SIEGE_SOUNDS defined in bg_public.h
-#define MAX_CUSTOM_DUEL_SOUNDS	40
+#define MAX_CUSTOM_DUEL_SOUNDS		64
 
-#define	MAX_CUSTOM_SOUNDS	40 //rww - Note that for now these must all be the same, because of the way I am
-							   //cycling through them and comparing for custom sounds.
+#define	MAX_CUSTOM_SOUNDS			64	//rww - Note that for now these must all be the same, because of the way I am
+										//cycling through them and comparing for custom sounds.
 
 typedef struct clientInfo_s {
 	qboolean		infoValid;

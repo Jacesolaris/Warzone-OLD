@@ -370,6 +370,7 @@ extern qboolean NPC_IsDarkJedi ( gentity_t *self );
 extern qboolean NPC_IsAdvancedGunner ( gentity_t *self );
 extern qboolean NPC_IsBountyHunter ( gentity_t *self );
 extern qboolean NPC_IsCommando ( gentity_t *self );
+extern qboolean NPC_IsFollowerGunner(gentity_t *self);
 extern qboolean NPC_IsStormtrooper ( gentity_t *self );
 extern qboolean NPC_HasGrenades ( gentity_t *self );
 
@@ -384,7 +385,8 @@ extern qboolean NPC_JetpackFallingEmergencyCheck (gentity_t *NPC);
 
 // NPC_AI_Padawan.c
 extern qboolean NPC_PadawanMove(gentity_t *aiEnt);
-extern qboolean NPC_NeedPadawan_Spawn ( void );
+extern qboolean NPC_NeedPadawan_Spawn (gentity_t *player);
+extern qboolean NPC_NeedFollower_Spawn(gentity_t *player);
 extern qboolean Padawan_CheckForce (gentity_t *aiEnt);
 extern void NPC_DoPadawanStuff (gentity_t *aiEnt);
 extern int NPC_FindPadawanGoal( gentity_t *NPC );

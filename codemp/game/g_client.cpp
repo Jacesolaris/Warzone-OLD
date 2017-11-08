@@ -9,7 +9,8 @@
 extern int DOM_GetNearWP(vec3_t org, int badwp);
 extern void SP_NPC_spawner2( gentity_t *self);
 extern qboolean NPC_IsAlive (gentity_t *self, gentity_t *NPC);
-extern qboolean NPC_NeedPadawan_Spawn ( void );
+extern qboolean NPC_NeedPadawan_Spawn (gentity_t *player);
+extern qboolean NPC_NeedFollower_Spawn(gentity_t *player);
 
 // g_client.c -- client functions that don't happen every frame
 
@@ -4349,33 +4350,60 @@ void ClientSpawn(gentity_t *ent) {
 	trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
 #endif //__NO_ICARUS__
 
+	if (ent->padawan)
+	{
+		ent->padawan->parent = NULL;
+	}
+
 	ent->padawan = NULL;
 
-	if ((g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) 
-		&& ent->s.primaryWeapon == WP_SABER
-		&& ent->client->sess.sessionTeam == FACTION_REBEL)
-	{// Spawn a padawan for this jedi player...
-		if (NPC_NeedPadawan_Spawn())
-		{// Only if we do not already have a padawan...
-			gentity_t *padawan = G_Spawn();
-			int waypoint = DOM_GetNearWP(ent->r.currentOrigin, ent->wpCurrent);
+	if ((g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) && ent->s.primaryWeapon == WP_SABER)
+	{
+		if (ent->client->sess.sessionTeam == FACTION_REBEL)
+		{// Spawn a padawan for this jedi player...
+			if (NPC_NeedPadawan_Spawn(ent))
+			{// Only if we do not already have a padawan...
+				gentity_t *padawan = G_Spawn();
+				int waypoint = DOM_GetNearWP(ent->r.currentOrigin, ent->wpCurrent);
 
-			if (waypoint >= 0 && waypoint < gWPNum)
-			{
-				int choice = irand(1,36);
-				char name[64];
+				if (waypoint >= 0 && waypoint < gWPNum)
+				{
+					int choice = irand(1, 36);
+					char name[64];
 
-				sprintf(name, "padawan%i", choice);
+					sprintf(name, "padawan%i", choice);
 
-				if (choice > 1 && choice < 28)
-					padawan->NPC_type = name;
-				else
-					padawan->NPC_type = "padawan";
+					if (choice > 1 && choice < 28)
+						padawan->NPC_type = name;
+					else
+						padawan->NPC_type = "padawan";
 
-				trap->Print("Spawning \"%s\" for player %s.\n", padawan->NPC_type, ent->client->pers.netname);
+					trap->Print("Spawning \"%s\" for player %s.\n", padawan->NPC_type, ent->client->pers.netname);
 
-				padawan->s.teamowner = ent->client->sess.sessionTeam;
-				SP_NPC_spawner2( padawan );
+					padawan->s.teamowner = ent->client->sess.sessionTeam;
+					VectorCopy(gWPArray[waypoint]->origin, padawan->s.origin);
+					SP_NPC_spawner2(padawan);
+				}
+			}
+		}
+		else if (ent->client->sess.sessionTeam == FACTION_EMPIRE)
+		{// Spawn a padawan for this jedi player...
+			if (NPC_NeedFollower_Spawn(ent))
+			{// Only if we do not already have a padawan...
+				gentity_t *padawan = G_Spawn();
+				int waypoint = DOM_GetNearWP(ent->r.currentOrigin, ent->wpCurrent);
+
+				if (waypoint >= 0 && waypoint < gWPNum)
+				{
+					char name[64] = "hk51";
+					padawan->NPC_type = Q_strlwr(G_NewString("hk51"));
+
+					trap->Print("Spawning \"%s\" for player %s.\n", padawan->NPC_type, ent->client->pers.netname);
+
+					padawan->s.teamowner = ent->client->sess.sessionTeam;
+					VectorCopy(gWPArray[waypoint]->origin, padawan->s.origin);
+					SP_NPC_spawner2(padawan);
+				}
 			}
 		}
 	}

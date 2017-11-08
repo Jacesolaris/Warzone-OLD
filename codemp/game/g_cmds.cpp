@@ -11,6 +11,7 @@ void WP_SetSaber( int entNum, saberInfo_t *sabers, int saberNum, const char *sab
 
 void Cmd_NPC_f( gentity_t *ent );
 void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
+extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC);
 
 //Firemode troggle
 //void Cmd_Troggle_Firemode_f(gentity_t *self;)
@@ -364,7 +365,7 @@ void Cmd_GiveOther_f( gentity_t *ent )
 		return;
 	}
 
-	if ( (otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == FACTION_SPECTATOR) )
+	if ( (!NPC_IsAlive(otherEnt, otherEnt) || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == FACTION_SPECTATOR) )
 	{
 		// Intentionally displaying for the command user
 		trap->SendServerCommand( ent-g_entities, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "MUSTBEALIVE" ) ) );
@@ -543,7 +544,7 @@ void Cmd_KillOther_f( gentity_t *ent )
 		return;
 	}
 
-	if ( (otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == FACTION_SPECTATOR) )
+	if ( (!NPC_IsAlive(otherEnt, otherEnt) || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == FACTION_SPECTATOR) )
 	{
 		// Intentionally displaying for the command user
 		trap->SendServerCommand( ent-g_entities, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "MUSTBEALIVE" ) ) );
@@ -2761,13 +2762,15 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 		return;
 	}
 
-	if (ent->health <= 0
+	/*
+	if (!NPC_IsAlive(ent, ent)
 		|| ent->client->tempSpectate >= level.time
 		|| ent->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{
 		trap->SendServerCommand(ent - g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "MUSTBEALIVE")));
 		return;
 	}
+	*/
 
 
 	if (ent->client->ps.weapon != WP_SABER)
@@ -3818,7 +3821,7 @@ void ClientCommand( int clientNum ) {
 	}
 
 	else if ( (command->flags & CMD_ALIVE)
-		&& (ent->health <= 0
+		&& (!NPC_IsAlive(ent, ent)
 			|| ent->client->tempSpectate >= level.time
 			|| ent->client->sess.sessionTeam == FACTION_SPECTATOR) )
 	{

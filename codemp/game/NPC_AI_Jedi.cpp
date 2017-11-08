@@ -1427,9 +1427,9 @@ static qboolean Jedi_BattleTaunt( gentity_t *aiEnt)
 	{
 		int event = -1;
 		if ( aiEnt->client->playerTeam == NPCTEAM_PLAYER
-			&& aiEnt->enemy && aiEnt->enemy->client && (aiEnt->enemy->client->NPC_class == CLASS_JEDI || aiEnt->enemy->client->NPC_class == CLASS_PADAWAN) )
+			&& aiEnt->enemy && aiEnt->enemy->client && (aiEnt->enemy->client->NPC_class == CLASS_JEDI || aiEnt->enemy->client->NPC_class == CLASS_PADAWAN || aiEnt->enemy->client->NPC_class == CLASS_HK51) )
 		{//a jedi fighting a jedi - training
-			if ( (aiEnt->client->NPC_class == CLASS_JEDI || aiEnt->client->NPC_class == CLASS_PADAWAN) && aiEnt->NPC->rank == RANK_COMMANDER )
+			if ( (aiEnt->client->NPC_class == CLASS_JEDI || aiEnt->client->NPC_class == CLASS_PADAWAN || aiEnt->client->NPC_class == CLASS_HK51) && aiEnt->NPC->rank == RANK_COMMANDER )
 			{//only trainer taunts
 				event = EV_TAUNT1;
 			}
@@ -2257,7 +2257,11 @@ static void Jedi_CombatDistance( gentity_t *aiEnt, int enemy_dist )
 	}
 	else if ( !TIMER_Done( aiEnt, "taunting" ) )
 	{
-		if ( enemy_dist <= 64 )
+		if (aiEnt->enemy && !NPC_ValidEnemy(aiEnt, aiEnt->enemy))
+		{
+
+		}
+		else if ( enemy_dist <= 64 )
 		{//he's getting too close
 			aiEnt->client->pers.cmd.buttons |= BUTTON_ATTACK;
 			if ( !aiEnt->client->ps.saberInFlight )
@@ -6809,7 +6813,11 @@ static void Jedi_Attack( gentity_t *aiEnt)
 		//	{
 		//		ucmd.buttons |= BUTTON_ATTACK;
 		//	}
-			if ( flrand( -4.0f, chance ) >= 0.0f )
+			if (aiEnt->enemy && !NPC_ValidEnemy(aiEnt, aiEnt->enemy))
+			{
+				
+			}
+			else if ( flrand( -4.0f, chance ) >= 0.0f )
 			{
 				aiEnt->client->pers.cmd.buttons |= BUTTON_ATTACK;
 			}
@@ -7268,6 +7276,26 @@ void Commando_SelectBestWeapon( gentity_t *aiEnt)
 	}
 }
 
+void Follower_SelectBestWeapon(gentity_t *aiEnt)
+{// Stoiss????
+	if (aiEnt->enemy
+		&& aiEnt->client->ps.weapon != WP_DLT_19
+		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 800)
+	{
+		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
+	}
+	else if (aiEnt->enemy
+		&& aiEnt->client->ps.weapon != WP_DC_15A_Rifle
+		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
+	{
+		Boba_ChangeWeapon(aiEnt, WP_DC_15A_Rifle);
+	}
+	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
+	{
+		Boba_ChangeWeapon(aiEnt, WP_WESTARM5);
+	}
+}
+
 void AdvancedGunner_SelectBestWeapon( gentity_t *aiEnt)
 {
 	if ( aiEnt->enemy
@@ -7403,6 +7431,12 @@ void NPC_SelectBestWeapon( gentity_t *aiEnt)
 	if ( NPC_IsJedi(aiEnt) )
 	{
 		Jedi_SelectBestWeapon(aiEnt);
+		return;
+	}
+
+	if (NPC_IsFollowerGunner(aiEnt))
+	{// Hmm, stoiss... What guns????
+		Follower_SelectBestWeapon(aiEnt);
 		return;
 	}
 

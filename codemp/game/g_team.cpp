@@ -205,6 +205,26 @@ qboolean OnSameTeam(gentity_t *ent1, gentity_t *ent2) {
 		return qtrue;
 	}
 
+	if (ent1 == ent2->padawan)
+	{
+		return qtrue;
+	}
+
+	if (ent1 == ent2->parent)
+	{
+		return qtrue;
+	}
+
+	if (ent2 == ent1->padawan)
+	{
+		return qtrue;
+	}
+
+	if (ent2 == ent1->parent)
+	{
+		return qtrue;
+	}
+
 	if (level.gametype == GT_POWERDUEL)
 	{
 		if (ent1->client->sess.duelTeam == ent2->client->sess.duelTeam)

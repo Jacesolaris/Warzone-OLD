@@ -1194,7 +1194,31 @@ qboolean NPC_GetOffPlayer ( gentity_t *NPC )
 qboolean NPC_HaveValidEnemy(gentity_t *aiEnt)
 {
 	gentity_t	*NPC = aiEnt;
-	return NPC_IsAlive(NPC, NPC->enemy);
+	
+	if (NPC->enemy)
+	{
+		if (NPC_IsAlive(NPC, NPC->enemy))
+		{
+			if (NPC->enemy == NPC->enemy->padawan)
+			{
+				NPC->enemy = NULL;
+				return qfalse;
+			}
+			else if (NPC->enemy == NPC->enemy->parent)
+			{
+				NPC->enemy = NULL;
+				return qfalse;
+			}
+			if (OnSameTeam(NPC, NPC->enemy))
+			{
+				return qfalse;
+			}
+
+			return qtrue;
+		}
+	}
+	
+	return qfalse;
 }
 
 void NPC_NewWaypointJump (gentity_t *aiEnt)
