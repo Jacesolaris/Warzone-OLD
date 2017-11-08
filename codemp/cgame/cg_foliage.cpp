@@ -3528,7 +3528,7 @@ void FOLIAGE_FoliageReplant(int plantPercentage)
 	int i = 0;
 	int NUM_REPLACED = 0;
 
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{// Check current list...
 		FOLIAGE_PLANT_SELECTION[i] = 0;
@@ -3743,7 +3743,7 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 
 	int numCompleted = 0;
 
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{// Check current list...
 		FOLIAGE_PLANT_SELECTION[i] = 0;
