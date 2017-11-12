@@ -1762,8 +1762,8 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// if we overflowed MAX_DRAWSURFS, the drawsurfs
 	// wrapped around in the buffer and we will be missing
 	// the first surfaces, not the last ones
-	if ( numDrawSurfs > MAX_DRAWSURFS ) {
-		numDrawSurfs = MAX_DRAWSURFS;
+	if ( numDrawSurfs >= MAX_DRAWSURFS ) {
+		numDrawSurfs = MAX_DRAWSURFS-1;
 	}
 
 	// sort the drawsurfs by sort type, then orientation, then shader
