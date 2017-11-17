@@ -179,7 +179,7 @@ void Load_Model_Scales( void )
 	trap->FS_Read( buf, len, f );
 	trap->FS_Close( f );
 
-	Com_Printf("^1*** ^3Warzone^5: Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
+	Com_Printf("^1*** ^3MODEL-SCALE^5: Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
 
 	for (t = s = buf; *t; /* */ ) 
 	{
@@ -228,7 +228,7 @@ void Load_Model_Scales( void )
 
 	num_scale_models--;
 
-	Com_Printf("^1*** ^3Warzone^5: There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
+	Com_Printf("^1*** ^3MODEL-SCALE^5: There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
 
 	free(buf);
 
@@ -439,7 +439,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 blue and ^7%i^5 red spawn points from spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 blue and ^7%i^5 red spawn points from spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", "AUTO-SPAWNPOINTS",
 			NUM_BLUE_POSITIONS, NUM_RED_POSITIONS, mapname.string );
 	}
 	else
@@ -471,7 +471,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 spawn points from spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully loaded ^7%i^5 spawn points from spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", "AUTO-SPAWNPOINTS",
 			NUM_BLUE_POSITIONS, mapname.string );
 	}
 
@@ -492,7 +492,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		if ( !f )
 		{
-			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5 for save.\n", GAME_VERSION, mapname.string );
+			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5 for save.\n", "AUTO-SPAWNPOINTS", mapname.string );
 			return qfalse;
 		}
 
@@ -512,7 +512,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully saved ^7%i^5 blue and ^7%i^5 red spawn points to spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully saved ^7%i^5 blue and ^7%i^5 red spawn points to spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", "AUTO-SPAWNPOINTS",
 			NUM_BLUE_POSITIONS, NUM_RED_POSITIONS, mapname.string );
 
 		return qtrue;
@@ -523,7 +523,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		if ( !f )
 		{
-			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5 for save.\n", GAME_VERSION, mapname.string );
+			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5 for save.\n", "AUTO-SPAWNPOINTS", mapname.string );
 			return qfalse;
 		}
 
@@ -536,7 +536,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully saved ^7%i^5 spawn points to spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", GAME_VERSION,
+		trap->Print( "^1*** ^3%s^5: Successfully saved ^7%i^5 spawn points to spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", "AUTO-SPAWNPOINTS",
 			NUM_BLUE_POSITIONS, mapname.string );
 
 		return qtrue;
@@ -745,7 +745,7 @@ void CreateSpawnpoints( void )
 			}
 		}
 
-		trap->Print("^1*** ^3%s^5: Generated %i extra blue spawnpoints and %i extra red spawnpoints.\n", GAME_VERSION, blue_count, red_count);
+		trap->Print("^1*** ^3%s^5: Generated %i extra blue spawnpoints and %i extra red spawnpoints.\n", "AUTO-SPAWNPOINTS", blue_count, red_count);
 
 		SaveSpawnpointPositions( qtrue, blue_count, BLUE_SPAWNPOINTS, red_count, RED_SPAWNPOINTS );
 	}
@@ -821,7 +821,7 @@ void CreateSpawnpoints( void )
 			if (count >= 32) break;
 		}
 
-		trap->Print("^1*** ^3%s^5: Generated %i extra ffa spawnpoints.\n", GAME_VERSION, count);
+		trap->Print("^1*** ^3%s^5: Generated %i extra ffa spawnpoints.\n", "AUTO-SPAWNPOINTS", count);
 
 		SaveSpawnpointPositions( qfalse, count, SPAWNPOINTS, 0, (vec3_t*)NULL );
 	}

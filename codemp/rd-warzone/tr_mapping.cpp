@@ -446,7 +446,7 @@ void R_CreateGrassImages(void)
 
 void R_CreateBspMapImage(void)
 {
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Generating world map. The game will appear to freeze while constructing. Please wait...\n", "Warzone");
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Generating world map. The game will appear to freeze while constructing. Please wait...\n", "WORLD-MAP");
 
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
@@ -739,7 +739,7 @@ void R_CreateBspMapImage(void)
 
 void R_CreateHeightMapImage(void)
 {
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Generating world heightmap. The game will appear to freeze while constructing. Please wait...\n", "Warzone");
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Generating world heightmap. The game will appear to freeze while constructing. Please wait...\n", "HEIGHTMAP");
 
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
@@ -1092,8 +1092,8 @@ qboolean ROAD_CheckSlope(float pitch)
 
 void R_CreateRoadMapImage(void)
 {
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Draw red on the map to add roads. Blue shows water. Green shows height map. Black is a bad area for roads.\n", "Warzone");
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: It is highly recomended to save the final picture as a JPG or PNG file and delete the original TGA.\n", "Warzone");
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Draw red on the map to add roads. Blue shows water. Green shows height map. Black is a bad area for roads.\n", "ROADS");
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: It is highly recomended to save the final picture as a JPG or PNG file and delete the original TGA.\n", "ROADS");
 
 	// Now we have a mins/maxs for map, we can generate a map image...
 	float	z;
@@ -1966,15 +1966,15 @@ qboolean MAPPING_LoadMapClimateInfo(void)
 
 		if (CURRENT_CLIMATE_OPTION[0] == '\0')
 		{
-			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No climate setting found in climateInfo or mapInfo files.\n", "Warzone");
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No climate setting found in climateInfo or mapInfo files.\n", "CLIMATE");
 			return qfalse;
 		}
 
-		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION);
+		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "CLIMATE", currentMapName, CURRENT_CLIMATE_OPTION);
 	}
 	else
 	{
-		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climate from mapInfo file ^7maps/%s.mapInfo^5. Using ^3%s^5 climate option.\n", "Warzone", currentMapName, CURRENT_CLIMATE_OPTION);
+		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climate from mapInfo file ^7maps/%s.mapInfo^5. Using ^3%s^5 climate option.\n", "CLIMATE", currentMapName, CURRENT_CLIMATE_OPTION);
 	}
 
 	return qtrue;

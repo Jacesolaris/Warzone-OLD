@@ -1845,7 +1845,7 @@ AIMOD_LoadCoverPoints2 ( void )
 
 	if ( !f )
 	{
-		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed^5!!!\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed^5!!!\n", "AUTO-WAYPOINTER", cgs.currentmapname);
 		return qfalse;
 	}
 
@@ -1853,7 +1853,7 @@ AIMOD_LoadCoverPoints2 ( void )
 
 	if (num_map_waypoints != number_of_nodes)
 	{// Is an old file! We need to make a new one!
-		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file: map wpNum %i - cpw wpNum: %i)^5!!!\n", GAME_VERSION, cgs.currentmapname, number_of_nodes, num_map_waypoints );
+		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file: map wpNum %i - cpw wpNum: %i)^5!!!\n", "AUTO-WAYPOINTER", cgs.currentmapname, number_of_nodes, num_map_waypoints );
 		fclose( f );
 		return qfalse;
 	}
@@ -1885,7 +1885,7 @@ AIMOD_LoadCoverPoints2 ( void )
 
 	fclose( f );
 
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", GAME_VERSION, num_cover_spots, cgs.currentmapname);
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", "AUTO-WAYPOINTER", num_cover_spots, cgs.currentmapname);
 
 	return qtrue;
 }
@@ -1915,7 +1915,7 @@ AIMOD_LoadCoverPoints ( void )
 
 	if (num_map_waypoints != number_of_nodes)
 	{// Is an old file! We need to make a new one!
-		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file)^5!!!\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file)^5!!!\n", "AUTO-WAYPOINTER", cgs.currentmapname);
 		trap->FS_Close( f );
 		return qfalse;
 	}
@@ -1947,7 +1947,7 @@ AIMOD_LoadCoverPoints ( void )
 
 	trap->FS_Close( f );
 
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", GAME_VERSION, num_cover_spots, cgs.currentmapname);
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", "AUTO-WAYPOINTER", num_cover_spots, cgs.currentmapname);
 
 	return qtrue;
 }
@@ -2550,13 +2550,13 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 		if ( VectorDistance( nodes[node].origin, tr.endpos) <= 72 )
 		{	// Could not see the up pos.. Need to duck to go here!
 			nodes[node].type |= NODE_DUCK;
-			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as a duck node.\n", GAME_VERSION, node );
+			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as a duck node.\n", "AUTO-WAYPOINTER", node );
 		}
 
 		if ( AI_PM_SlickTrace( nodes[node].origin, -1) )
 		{	// This node is on slippery ice... Mark it...
 			nodes[node].type |= NODE_ICE;
-			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an ice (slick) node.\n", GAME_VERSION, node );
+			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an ice (slick) node.\n", "AUTO-WAYPOINTER", node );
 		}
 
 		VectorCopy(nodes[node].origin, temp);
@@ -2569,7 +2569,7 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 		if ((tr.contents & CONTENTS_WATER) || (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 		{	// This node is on slippery ice... Mark it...
 			nodes[node].type |= NODE_WATER;
-			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an water node.\n", GAME_VERSION, node );
+			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an water node.\n", "AUTO-WAYPOINTER", node );
 		}
 
 		if (RoadExistsAtPoint(nodes[node].origin))
@@ -2872,7 +2872,7 @@ AIMOD_NODES_LoadNodes2 ( void )
 	fread( &fix_aas_nodes, sizeof(short int), 1, f);
 
 	fclose(f);
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from waypoint file ^7nodes/%s.bwp^5.\n", "AUTO-WAYPOINTER",
 			  number_of_nodes, cgs.currentmapname);
 
 	nodes_loaded = qtrue;
@@ -2985,7 +2985,7 @@ AIMOD_NODES_LoadNodes ( void )
 
 	trap->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 	trap->FS_Close( f );							//close the file
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from waypoint file ^7nodes/%s.bwp^5.\n", "AUTO-WAYPOINTER",
 			  number_of_nodes, cgs.currentmapname );
 	nodes_loaded = qtrue;
 
@@ -3242,7 +3242,7 @@ void AIMOD_NODES_LoadOldJKAPathData( void )
 
 	trap->FS_Close(f);
 
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from JKA waypoint file ^7botroutes/%s.wnt^5.\n", GAME_VERSION,
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from JKA waypoint file ^7botroutes/%s.wnt^5.\n", "AUTO-WAYPOINTER",
 			  number_of_nodes, cgs.currentmapname );
 	nodes_loaded = qtrue;
 
@@ -5299,13 +5299,13 @@ clock_t BOUNDS_CHECK_TIME = 0;
 void
 AIMod_GetMapBounts ( void )
 {
-	int		i;
+	//int		i;
 	float	startx = -MAX_MAP_SIZE, starty = -MAX_MAP_SIZE, startz = -MAX_MAP_SIZE;
 	float	highest_z_point = -MAX_MAP_SIZE;
 	float	INCRUMENT = 128.0;//192.0;//128.0; //64.0;// 256.0
-	trace_t tr;
-	vec3_t	org1;
-	vec3_t	org2;
+	//trace_t tr;
+	//vec3_t	org1;
+	//vec3_t	org2;
 	vec3_t	mapMins, mapMaxs;
 
 	if (cg.mapcoordsValid) return; // No point doing it twice...
@@ -5349,8 +5349,8 @@ AIMod_GetMapBounts ( void )
 
 	aw_percent_complete = 0;
 
-	trap->Print(va("^1*** ^3%s^5: Searching for map bounds.\n", GAME_VERSION));
-	strcpy(task_string1, va("^1*** ^3%s^5: Searching for map bounds.\n", GAME_VERSION));
+	trap->Print(va("^1*** ^3%s^5: Searching for map bounds.\n", "MAP-BOUNDS"));
+	strcpy(task_string1, va("^1*** ^3%s^5: Searching for map bounds.\n", "MAP-BOUNDS"));
 	trap->UpdateScreen();
 
 	strcpy( task_string2, va("") );
@@ -5606,8 +5606,8 @@ AIMod_GetMapBounts ( void )
 		mapMaxs[2] = temp;
 	}
 
-	//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Map mins %f %f %f.\n", mapMins[0], mapMins[1], mapMins[2]);
-	//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Map maxs %f %f %f.\n", mapMaxs[0], mapMaxs[1], mapMaxs[2]);
+	//trap->Print( "^4*** ^3MAP-BOUNDS^4: ^7Map mins %f %f %f.\n", mapMins[0], mapMins[1], mapMins[2]);
+	//trap->Print( "^4*** ^3MAP-BOUNDS^4: ^7Map maxs %f %f %f.\n", mapMaxs[0], mapMaxs[1], mapMaxs[2]);
 
 	VectorCopy(mapMins, cg.mapcoordsMins);
 	VectorCopy(mapMaxs, cg.mapcoordsMaxs);
@@ -5782,15 +5782,15 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 		map_size = Distance(mapMins, mapMaxs);
 
-		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Map bounds are ^3%.2f %.2f %.2f ^5to ^3%.2f %.2f %.2f^5.\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
+		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds are ^3%.2f %.2f %.2f ^5to ^3%.2f %.2f %.2f^5.\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
 		strcpy( task_string1, va("^5Map bounds are ^3%.2f %.2f %.2f ^7to ^3%.2f %.2f %.2f^5.", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
 		trap->UpdateScreen();
 
-		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Generating waypoints. This could take a while... (Map size ^3%.2f^5)\n", map_size) );
+		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Generating waypoints. This could take a while... (Map size ^3%.2f^5)\n", map_size) );
 		strcpy( task_string2, va("^5Generating waypoints. This could take a while... (Map size ^3%.2f^5)", map_size) );
 		trap->UpdateScreen();
 
-		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Finding waypoints...\n") );
+		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Finding waypoints...\n") );
 		strcpy( task_string3, va("^5Finding waypoints...") );
 		trap->UpdateScreen();
 
@@ -6013,7 +6013,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 		if (areas >= MAX_TEMP_AREAS)
 		{
-			trap->Print( "^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", GAME_VERSION );
+			trap->Print( "^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", "AUTO-WAYPOINTER" );
 			aw_percent_complete = 0.0f;
 			trap->S_Shutup(qfalse);
 			AIMod_AutoWaypoint_Free_Memory();
@@ -6324,7 +6324,7 @@ omp_set_nested(0);
 
 		if (areas + 1 >= MAX_TEMP_AREAS)
 		{
-			trap->Print("^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", GAME_VERSION);
+			trap->Print("^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", "AUTO-WAYPOINTER");
 			aw_percent_complete = 0.0f;
 			trap->S_Shutup(qfalse);
 			AIMod_AutoWaypoint_Free_Memory();

@@ -557,6 +557,79 @@ static const char *MushroomForestModelsList[] = {
 	"models/warzone/plants/gcplantmix06.md3",
 };
 
+static const char *MushroomForest2ModelsList[] = {
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/gcgrass01.md3",
+	"models/warzone/plants/mushroom01.md3",
+	"models/warzone/plants/mushroom02.md3",
+	"models/warzone/plants/mushroom03.md3",
+	"models/warzone/plants/mushroom01.md3",
+	"models/warzone/plants/mushroom02.md3",
+	"models/warzone/plants/mushroom03.md3",
+	"models/warzone/plants/flowergrass01.md3",
+	"models/warzone/plants/flowergrass02.md3",
+	"models/warzone/plants/flowergrass03.md3",
+	"models/warzone/plants/flowergrass04.md3",
+	"models/warzone/plants/flowergrass05.md3",
+	"models/warzone/plants/forestgrass01.md3",
+	"models/warzone/plants/forestgrass02.md3",
+	"models/warzone/plants/forestgrass03.md3",
+	"models/warzone/plants/forestgrass04.md3",
+	"models/warzone/plants/fern01.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern05.md3",
+	// Near trees/walls, or normal...
+	"models/warzone/plants/smalltree01.md3",
+	// Near trees/walls...
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern02.md3",
+	"models/warzone/plants/fern03.md3",
+	"models/warzone/plants/fern03.md3",
+	"models/warzone/plants/fern04.md3",
+	"models/warzone/plants/fern04.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fern05.md3",
+	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/fernplants01.md3",
+	"models/warzone/plants/smalltree02.md3",
+	"models/warzone/plants/smalltree03.md3",
+	"models/warzone/plants/smalltree04.md3",
+	"models/warzone/plants/smalltree05.md3",
+	"models/warzone/plants/smalltree06.md3",
+};
+
 // =======================================================================================================================================
 //
 // CVAR related defines...
@@ -985,7 +1058,7 @@ qboolean FOLIAGE_LoadFoliageAreas(void)
 
 	trap->FS_Close(f);
 
-	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliageAreas to foliageArea file ^7foliage/%s.foliageAreas^5.\n", GAME_VERSION, FOLIAGE_AREAS_COUNT, cgs.currentmapname);
+	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliageAreas to foliageArea file ^7foliage/%s.foliageAreas^5.\n", "AUTO-FOLIAGE", FOLIAGE_AREAS_COUNT, cgs.currentmapname);
 
 	return qtrue;
 }
@@ -999,7 +1072,7 @@ void FOLIAGE_SaveFoliageAreas(void)
 
 	if (!f)
 	{
-		trap->Print("^1*** ^3%s^5: Failed to save foliageAreas file ^7foliage/%s.foliageAreas^5 for save.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: Failed to save foliageAreas file ^7foliage/%s.foliageAreas^5 for save.\n", "AUTO-FOLIAGE", cgs.currentmapname);
 		return;
 	}
 
@@ -1033,7 +1106,7 @@ void FOLIAGE_SaveFoliageAreas(void)
 
 	trap->FS_Close(f);
 
-	trap->Print("^1*** ^3%s^5: Successfully saved %i foliageAreas to foliageArea file ^7foliage/%s.foliageAreas^5.\n", GAME_VERSION, FOLIAGE_AREAS_COUNT, cgs.currentmapname);
+	trap->Print("^1*** ^3%s^5: Successfully saved %i foliageAreas to foliageArea file ^7foliage/%s.foliageAreas^5.\n", "AUTO-FOLIAGE", FOLIAGE_AREAS_COUNT, cgs.currentmapname);
 }
 
 void FOLIAGE_Setup_Foliage_Areas(void)
@@ -1861,12 +1934,12 @@ qboolean FOLIAGE_LoadMapClimateInfo(void)
 
 	if (CURRENT_CLIMATE_OPTION[0] == '\0')
 	{
-		trap->Print("^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", "AUTO-FOLIAGE", cgs.currentmapname);
 		strncpy(CURRENT_CLIMATE_OPTION, "tropical", strlen("tropical"));
 		return qfalse;
 	}
 
-	trap->Print("^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", GAME_VERSION, cgs.currentmapname, CURRENT_CLIMATE_OPTION);
+	trap->Print("^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", "AUTO-FOLIAGE", cgs.currentmapname, CURRENT_CLIMATE_OPTION);
 
 	return qtrue;
 }
@@ -1964,7 +2037,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 
 	int usedRam = (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t));
 	usedRam /= 1024;
-	trap->Print("^1*** ^3%s^5: %i KB allocated for initial foliage memory.\n", GAME_VERSION, usedRam);
+	trap->Print("^1*** ^3%s^5: %i KB allocated for initial foliage memory.\n", "FOLIAGE", usedRam);
 
 	for (i = 0; i < fileCount; i++)
 	{
@@ -2050,7 +2123,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 
 		usedRam = (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		usedRam /= 1024;
-		trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
+		trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", "FOLIAGE", usedRam);
 	}
 	else
 	{
@@ -2092,7 +2165,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
-		trap->Print("^1*** ^3%s^5: No foliage points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: No foliage points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", "FOLIAGE", cgs.currentmapname);
 		return qfalse;
 	}
 
@@ -2115,7 +2188,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 
 	usedRam = (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(qboolean) * FOLIAGE_AREA_MAX) + (sizeof(ivec256_t) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(float) * FOLIAGE_AREA_MAX) + (sizeof(matrix3_t) * FOLIAGE_AREA_MAX) + (sizeof(vec3_t) * FOLIAGE_AREA_MAX);
 	usedRam /= 1024;
-	trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
+	trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", "FOLIAGE", usedRam);
 
 	for (int i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{// Set up all axis...
@@ -2140,7 +2213,7 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		}
 	}
 
-	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses, and %i road removed) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+	trap->Print("^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses, and %i road removed) from foliage file ^7foliage/%s.foliage^5.\n", "FOLIAGE",
 		FOLIAGE_NUM_POSITIONS, numRemovedPositions, numRemovedRoadPositions, cgs.currentmapname);
 
 	if (!filename || filename[0] == '0')
@@ -2163,7 +2236,7 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 
 	if (!f)
 	{
-		trap->Print("^1*** ^3%s^5: Failed to open foliage file ^7foliage/%s.foliage^5 for save.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: Failed to open foliage file ^7foliage/%s.foliage^5 for save.\n", "AUTO-FOLIAGE", cgs.currentmapname);
 		return qfalse;
 	}
 
@@ -2268,7 +2341,7 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
 		FOLIAGE_TREE_SCALE = NULL;
 
-		trap->Print("^1*** ^3%s^5: No foliage points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", GAME_VERSION, cgs.currentmapname);
+		trap->Print("^1*** ^3%s^5: No foliage points in foliage file ^7foliage/%s.foliage^5. Memory freed.\n", "AUTO-FOLIAGE", cgs.currentmapname);
 		return qfalse;
 	}
 
@@ -2344,7 +2417,7 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 
 	FOLIAGE_Setup_Foliage_Areas();
 
-	trap->Print("^1*** ^3%s^5: Successfully saved %i foliage points (%i trees, %i plants, %i grasses) to foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+	trap->Print("^1*** ^3%s^5: Successfully saved %i foliage points (%i trees, %i plants, %i grasses) to foliage file ^7foliage/%s.foliage^5.\n", "AUTO-FOLIAGE",
 		FOLIAGE_NUM_POSITIONS, numTrees, numPlants, numGrasses, cgs.currentmapname);
 
 	return qtrue;
@@ -2436,7 +2509,7 @@ void FOLIAGE_DrawGrass(void)
 
 		if (!strcmp(FOLIAGE_MODEL_SELECTION, "grass")) 
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grass^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grass^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2445,7 +2518,7 @@ void FOLIAGE_DrawGrass(void)
 		}
 		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "tropical"))
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7tropical^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7tropical^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2454,7 +2527,7 @@ void FOLIAGE_DrawGrass(void)
 		}
 		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest"))
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2463,7 +2536,7 @@ void FOLIAGE_DrawGrass(void)
 		}
 		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest2"))
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest2^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest2^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2472,7 +2545,7 @@ void FOLIAGE_DrawGrass(void)
 		}
 		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "fieldgrass"))
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrass^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrass^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2481,7 +2554,7 @@ void FOLIAGE_DrawGrass(void)
 		}
 		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "fieldgrassshrubs"))
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrassshrubs^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrassshrubs^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2490,16 +2563,25 @@ void FOLIAGE_DrawGrass(void)
 		}
 		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "mushroomforest"))
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForestModelsList[i]);
 			}
 		}
+		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "mushroomforest2"))
+		{
+			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest2^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			{
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForest2ModelsList[i]);
+			}
+		}
 		else
 		{
-			trap->Print("^1*** ^3%s^5: No map grass selection found. Using default option \"^7tropical^5\".\n", GAME_VERSION, cgs.currentmapname);
+			trap->Print("^1*** ^3%s^5: No map grass selection found. Using default option \"^7tropical^5\".\n", "FOLIAGE", cgs.currentmapname);
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
@@ -2926,11 +3008,11 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 	RoadExistsAtPoint(vec3_origin); // Just to make sure that road map is pre-loaded...
 
-	trap->Print("^1*** ^3%s^5: Generate foliage settings...\n", GAME_VERSION);
-	trap->Print("^1*** ^3%s^5: scan_density: %f. plant_chance %i. tree_chance %i. num_clearings %i. check_density %f. ADD_MORE %s...\n", GAME_VERSION, scan_density, plant_chance, tree_chance, num_clearings, check_density, ADD_MORE ? "true" : "false");
+	trap->Print("^1*** ^3%s^5: Generate foliage settings...\n", "AUTO-FOLIAGE");
+	trap->Print("^1*** ^3%s^5: scan_density: %f. plant_chance %i. tree_chance %i. num_clearings %i. check_density %f. ADD_MORE %s...\n", "AUTO-FOLIAGE", scan_density, plant_chance, tree_chance, num_clearings, check_density, ADD_MORE ? "true" : "false");
 	trap->UpdateScreen();
 
-	trap->Print("^1*** ^3%s^5: Finding map bounds...\n", GAME_VERSION);
+	trap->Print("^1*** ^3%s^5: Finding map bounds...\n", "AUTO-FOLIAGE");
 	trap->UpdateScreen();
 
 	AIMod_GetMapBounts();
@@ -3081,7 +3163,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 	yoff = scan_density * 1.25;
 
-	trap->Print("^1*** ^3%s^5: Searching for clearing positions...\n", GAME_VERSION);
+	trap->Print("^1*** ^3%s^5: Searching for clearing positions...\n", "AUTO-FOLIAGE");
 	trap->UpdateScreen();
 
 	while (CLEARING_SPOTS_NUM < num_clearings && NUM_FAILS < 50)
@@ -3116,7 +3198,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	}
 
 
-	trap->Print("^1*** ^3%s^5: Generated %i clearing positions...\n", GAME_VERSION, CLEARING_SPOTS_NUM);
+	trap->Print("^1*** ^3%s^5: Generated %i clearing positions...\n", "AUTO-FOLIAGE", CLEARING_SPOTS_NUM);
 	trap->UpdateScreen();
 
 
@@ -3310,7 +3392,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 	if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 	{
-		trap->Print("^1*** ^3%s^5: Too many foliage points detected... Try again with a higher density value...\n", GAME_VERSION);
+		trap->Print("^1*** ^3%s^5: Too many foliage points detected... Try again with a higher density value...\n", "AUTO-FOLIAGE");
 		trap->S_Shutup(qfalse);
 		aw_percent_complete = 0.0f;
 		trap->UpdateScreen();
@@ -3373,7 +3455,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			FOLIAGE_NUM_POSITIONS++;
 		}
 
-		trap->Print("^1*** ^3%s^5: Successfully generated %i foliage points...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS);
+		trap->Print("^1*** ^3%s^5: Successfully generated %i foliage points...\n", "AUTO-FOLIAGE", FOLIAGE_NUM_POSITIONS);
 
 		// Re-alloc our memory back to the actual needed amount, to save ram...
 		FOLIAGE_POSITIONS = (vec3_t *)realloc(FOLIAGE_POSITIONS, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
@@ -3396,7 +3478,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	}
 	else
 	{
-		trap->Print("^1*** ^3%s^5: Did not find any grass points on this map...\n", GAME_VERSION);
+		trap->Print("^1*** ^3%s^5: Did not find any grass points on this map...\n", "AUTO-FOLIAGE");
 	}
 
 	free(grassSpotList);
@@ -3517,7 +3599,7 @@ void FOLIAGE_FoliageRescale(void)
 
 	aw_percent_complete = 0.0f;
 
-	trap->Print("^1*** ^3%s^5: Successfully rescaled %i grass points...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS);
+	trap->Print("^1*** ^3%s^5: Successfully rescaled %i grass points...\n", "AUTO-FOLIAGE", FOLIAGE_NUM_POSITIONS);
 
 	// Save the generated info to a file for next time...
 	FOLIAGE_SaveFoliagePositions();
@@ -3548,7 +3630,7 @@ void FOLIAGE_FoliageReplant(int plantPercentage)
 		}
 	}
 
-	trap->Print("^1*** ^3%s^5: Successfully replaced %i trees...\n", GAME_VERSION, NUM_REPLACED);
+	trap->Print("^1*** ^3%s^5: Successfully replaced %i trees...\n", "AUTO-FOLIAGE", NUM_REPLACED);
 
 	// Save the generated info to a file for next time...
 	FOLIAGE_SaveFoliagePositions();
@@ -3797,7 +3879,7 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 
 	aw_percent_complete = 0.0f;
 
-	trap->Print("^1*** ^3%s^5: Successfully replaced %i plants (%i near objects)...\n", GAME_VERSION, NUM_REPLACED, NUM_OBJECT_PLANTS);
+	trap->Print("^1*** ^3%s^5: Successfully replaced %i plants (%i near objects)...\n", "AUTO-FOLIAGE", NUM_REPLACED, NUM_OBJECT_PLANTS);
 
 	// Save the generated info to a file for next time...
 	FOLIAGE_SaveFoliagePositions();
@@ -3873,7 +3955,7 @@ void FOLIAGE_FoliageClearRoads(void)
 
 	aw_percent_complete = 0.0f;
 
-	trap->Print("^1*** ^3%s^5: Successfully removed ^3%i ^5objects from a total of ^3%i ^5objects....\n", GAME_VERSION, NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+	trap->Print("^1*** ^3%s^5: Successfully removed ^3%i ^5objects from a total of ^3%i ^5objects....\n", "AUTO-FOLIAGE", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
 
 	// Save the generated info to a file for next time...
 	FOLIAGE_SaveFoliagePositions();
@@ -3895,7 +3977,7 @@ void FOLIAGE_FoliageRetree(void)
 		}
 	}
 
-	trap->Print("^1*** ^3%s^5: Successfully replaced %i trees...\n", GAME_VERSION, NUM_REPLACED);
+	trap->Print("^1*** ^3%s^5: Successfully replaced %i trees...\n", "AUTO-FOLIAGE", NUM_REPLACED);
 
 	// Save the generated info to a file for next time...
 	FOLIAGE_SaveFoliagePositions();
@@ -3907,7 +3989,7 @@ void FOLIAGE_CopyAndRescale(char *filename, float mapScale, float objectScale)
 
 	if (!FOLIAGE_LoadFoliagePositions(filename))
 	{
-		trap->Print("^1*** ^3%s^5: Error: File does not exist or can not be loaded...\n", GAME_VERSION);
+		trap->Print("^1*** ^3%s^5: Error: File does not exist or can not be loaded...\n", "AUTO-FOLIAGE");
 		return;
 	}
 
@@ -3931,7 +4013,7 @@ void FOLIAGE_CopyAndRescale(char *filename, float mapScale, float objectScale)
 		}
 	}
 
-	trap->Print("^1*** ^3%s^5: Successfully copied %i foliages...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS);
+	trap->Print("^1*** ^3%s^5: Successfully copied %i foliages...\n", "AUTO-FOLIAGE", FOLIAGE_NUM_POSITIONS);
 
 	// Save the generated info to a file for next time...
 	FOLIAGE_SaveFoliagePositions();

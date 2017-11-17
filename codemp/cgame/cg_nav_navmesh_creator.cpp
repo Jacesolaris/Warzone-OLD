@@ -34,7 +34,7 @@ void UpdatePercentBar(float percent, char *text, char *text2, char *text3)
 {
 	aw_percent_complete = percent;
 
-	if (text[0] != '\0') trap->Print("^1*** ^3%s^5: %s\n", GAME_VERSION, text);
+	if (text[0] != '\0') trap->Print("^1*** ^3%s^5: %s\n", "NAVMESH-GENERATOR", text);
 	strcpy(task_string1, va("^5%s", text));
 	strcpy(task_string2, va("^5%s", text2));
 	strcpy(task_string3, va("^5%s", text3));

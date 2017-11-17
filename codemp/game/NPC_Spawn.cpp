@@ -185,7 +185,7 @@ Load_NPC_Names ( void )
 	NUM_HUMAN_NAMES--;
 
 	free(buf);
-	trap->Print( "^4*** ^3%s^4: ^5There are ^7%i^5 NPC names in the database.\n", GAME_VERSION, NUM_HUMAN_NAMES );
+	trap->Print( "^4*** ^3%s^4: ^5There are ^7%i^5 NPC names in the database.\n", "AI-NAMES", NUM_HUMAN_NAMES );
 }
 
 void SelectNPCNameFromList( gentity_t *NPC )

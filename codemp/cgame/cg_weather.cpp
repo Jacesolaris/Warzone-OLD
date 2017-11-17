@@ -627,109 +627,109 @@ qboolean CG_AtmosphericKludge()
 
 	if (!Q_stricmp(atmosphericString, "rain"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7rain^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7rain^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN;
   	  	return( kludgeResult = qtrue );
 	}
 	else if (!Q_stricmp(atmosphericString, "heavyrain"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7heavyrain^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7heavyrain^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_HEAVY_RAIN;
   	  	return( kludgeResult = qtrue );
 	}
 	else if (!Q_stricmp(atmosphericString, "rainstorm") || !Q_stricmp(atmosphericString, "storm"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7rainstorm^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
 	}
 	else if (!Q_stricmp(atmosphericString, "snow"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7snow^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7snow^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SNOW;
   	  	return( kludgeResult = qtrue );
 	}
 	else if (!Q_stricmp(atmosphericString, "heavysnow"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7heavysnow^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7heavysnow^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_HEAVY_SNOW;
   	  	return( kludgeResult = qtrue );
 	}
 	else if (!Q_stricmp(atmosphericString, "snowstorm"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7snowstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7snowstorm^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SNOW_STORM;
   	  	return( kludgeResult = qtrue );
 	}
 	else if (!Q_stricmp(atmosphericString, "forest_island"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7forest_island^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7forest_island^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST_ISLAND;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "forest"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7forest^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7forest^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "tropical_island"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7tropical_island^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7tropical_island^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_TROPICAL_ISLAND;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "dagobah"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7dagobah^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7dagobah^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_DAGOBAH;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "desert"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7desert^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7desert^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_DESERT;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "city"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7city^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7city^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_CITY;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "cantina"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7cantina^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7cantina^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_CANTINA;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "industrial"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7industrial^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7industrial^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_INDUSTRIAL;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "spaceport"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7spaceport^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7spaceport^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SPACEPORT;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "imp_base"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7imp_base^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7imp_base^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_IMPERIAL_BASE;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "sith_tomb"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7sith_tomb^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7sith_tomb^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_SITH_TOMB;
 		return(kludgeResult = qtrue);
 	}
 	else if (!Q_stricmp(atmosphericString, "jedi_temple"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics set to ^7jedi_temple^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics set to ^7jedi_temple^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_JEDI_TEMPLE;
 		return(kludgeResult = qtrue);
 	}
@@ -741,105 +741,105 @@ qboolean CG_AtmosphericKludge()
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_coruscant" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_coruscant" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/imphoth_a" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7snow^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7snow^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_SNOW;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/imphoth_b" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7snow^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7snow^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_SNOW;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/jedicouncilgc2" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/jedicouncilgc" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/bespinaflstyle3" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_kujarforest" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rain^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rain^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/wookievillage" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rain^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rain^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/ewok_village" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rain^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rain^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if( !Q_stricmp( cgs.currentmapname, "maps/coruscant_promenade" ) )
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7heavyrain^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7heavyrain^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_HEAVY_RAIN;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if (StringContainsWord(cgs.currentmapname, "baldemnicpine"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
 		return(kludgeResult = qtrue);
 	}
 
 	if (StringContainsWord(cgs.currentmapname, "baldemnicmushroom"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
 		return(kludgeResult = qtrue);
 	}
 
 	if( StringContainsWord( cgs.currentmapname, "baldemnic" ) && !StringContainsWord( cgs.currentmapname, "baldemnic11" ))
   	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
   	}
 
 	if (!Q_stricmp(cgs.currentmapname, "maps/mp/ctf3"))
 	{
-		trap->Print("^1*** ^3Warzone^5 atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
+		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7forest^5 for this map.\n");
 		ATMOSPHERIC_WEATHER_TYPE = WEATHER_FOREST;
 		return(kludgeResult = qtrue);
 	}

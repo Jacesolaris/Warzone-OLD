@@ -2427,7 +2427,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 
 				found = qtrue;
 
-				Com_Printf("^1*** ^3Warzone^5: Scale set to ^7%fx^5 normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+				Com_Printf("^1*** ^3MODEL-SCALE^5: Scale set to ^7%fx^5 normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
 				break;
 			}
 		}
@@ -2445,7 +2445,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 			ent->client->ps.standheight = DEFAULT_MAXS_2 * ent->modelScale[2];
 			ent->client->ps.crouchheight = CROUCH_MAXS_2 * ent->modelScale[2];
 
-			Com_Printf("^1*** ^3Warzone^5: Scale set to ^7%fx^5 normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+			Com_Printf("^1*** ^3MODEL-SCALE^5: Scale set to ^7%fx^5 normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
 		}
 	}
 

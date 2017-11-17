@@ -2257,7 +2257,7 @@ void GLSL_PrintShaderOptimizationStats(char *shaderName, glslopt_shader *shader)
 	// append textures
 	const int textureCount = glslopt_shader_get_texture_count(shader);
 
-	ri->Printf(PRINT_WARNING, "^1*** ^3Warzone^5: GlslOpt ^3%s^5 - ^7%i^5 alu. ^7%i^5 tex. ^7%i^5 flw. ^7%i^5 inp. ^7%i^5 unif (tsize: ^7%i^5). ^7%i^5 texc.\n", shaderName, statsAlu, statsTex, statsFlow, inputCount, uniformCount, uniformSize, textureCount);
+	ri->Printf(PRINT_WARNING, "^1*** ^3GLSL-OPTIMIZATION^5: GlslOpt ^3%s^5 - ^7%i^5 alu. ^7%i^5 tex. ^7%i^5 flw. ^7%i^5 inp. ^7%i^5 unif (tsize: ^7%i^5). ^7%i^5 texc.\n", shaderName, statsAlu, statsTex, statsFlow, inputCount, uniformCount, uniformSize, textureCount);
 #endif //__GLSL_OPTIMIZER_DEBUG__
 }
 #endif //__GLSL_OPTIMIZER__

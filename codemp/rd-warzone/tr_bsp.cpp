@@ -3405,7 +3405,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		MAP_WATER_LEVEL = -131072.0;
 	}
 
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (lighting) - Selected %i surfaces for glow lights.\n", "Warzone", NUM_MAP_GLOW_LOCATIONS);
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i surfaces for glow lights.\n", "LIGHTING", NUM_MAP_GLOW_LOCATIONS);
 }
 
 #ifndef __REALTIME_CUBEMAP__
@@ -3506,7 +3506,7 @@ static void R_SetupCubemapPoints( void )
 	//averageRadius /= numAverages;
 	//ri->Printf(PRINT_WARNING, "Light average radius %f.\n", averageRadius);
 
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i positions for cubemaps.\n", "Warzone", tr.numCubemaps);
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i positions for cubemaps.\n", "CUBE-MAPPING", tr.numCubemaps);
 #elif 1
 	//
 	// How about we simply generate a grid based on map bounds?
@@ -3566,7 +3566,7 @@ static void R_SetupCubemapPoints( void )
 
 	free(cubeOrgs);
 
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i positions for cubemaps.\n", "Warzone", tr.numCubemaps);
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i positions for cubemaps.\n", "CUBE-MAPPING", tr.numCubemaps);
 #else
 	//
 	// How about we look at the map's nodes/portals to select cubemap positions? TODO: Maybe use these as background lods?
@@ -3751,7 +3751,7 @@ static void R_SetupCubemapPoints( void )
 
 	free(cubeOrgs);
 
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i positions for cubemaps.\n", "Warzone", tr.numCubemaps);
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i positions for cubemaps.\n", "CUBE-MAPPING", tr.numCubemaps);
 #endif
 }
 
