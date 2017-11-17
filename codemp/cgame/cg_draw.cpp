@@ -3830,6 +3830,8 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_JEDI:
 			case CLASS_PADAWAN:
 			case CLASS_HK51:
+			case CLASS_NATIVE:
+			case CLASS_NATIVE_GUNNER:
 			case CLASS_KYLE:
 			case CLASS_JAN:
 			case CLASS_MONMOTHA:			
@@ -3963,6 +3965,19 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_REBEL:
 		case CLASS_JAN:
 			sprintf(str2, "< Rebel >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_NATIVE:
+		case CLASS_NATIVE_GUNNER:
+			sprintf(str2, "< Native >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.7f;
@@ -8038,6 +8053,19 @@ void CG_DrawNPCNames( void )
 				tclr2[2] = 0.7f;
 				tclr2[3] = 1.0f;
 				break;
+			case CLASS_NATIVE:
+			case CLASS_NATIVE_GUNNER:
+				sprintf(str2, "< Native >");
+				tclr[0] = 0.125f;
+				tclr[1] = 0.125f;
+				tclr[2] = 0.7f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.125f;
+				tclr2[1] = 0.125f;
+				tclr2[2] = 0.7f;
+				tclr2[3] = 1.0f;
+				break;
 			case CLASS_JEDI:
 			case CLASS_KYLE:
 			case CLASS_LUKE:
@@ -8406,6 +8434,8 @@ void CG_DrawNPCNames( void )
 				case CLASS_JEDI:
 				case CLASS_PADAWAN:
 				case CLASS_HK51:
+				case CLASS_NATIVE:
+				case CLASS_NATIVE_GUNNER:
 				case CLASS_KYLE:
 				case CLASS_JAN:
 				case CLASS_MONMOTHA:			

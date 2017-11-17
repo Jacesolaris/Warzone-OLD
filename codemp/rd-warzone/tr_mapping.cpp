@@ -1786,50 +1786,50 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Glow <textname>_g support is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED");
 	
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Displacement mapping support is ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Standard fog is ^7%s^5 on this map.\n", FOG_STANDARD_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog density is ^7%.4f^5 Fog range multiplier is ^7%.4f^5 on this map.\n", FOG_DENSITY, FOG_RANGE_MULTIPLIER);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog accumulation modifier is ^7%.4f^5 on this map.\n", FOG_ACCUMULATION_MODIFIER);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Fog color (main) ^7%.4f %.4f %.4f^5 (sun) ^7%.4f %.4f %.4f^5 on this map.\n", FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Volumetric fog is ^7%s^5 on this map.\n", FOG_VOLUMETRIC_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Volumetric fog density is ^7%.4f^5 and Volumetric fog cloudiness is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_DENSITY, FOG_VOLUMETRIC_CLOUDINESS);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Volumetric fog wind is ^7%.4f^5 and Volumetric fog velocity is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_WIND, FOG_VOLUMETRIC_VELOCITY);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Volumetric fog strength is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_STRENGTH);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Volumetric fog color ^7%.4f %.4f %.4f^5 on this map.\n", FOG_VOLUMETRIC_COLOR[0], FOG_VOLUMETRIC_COLOR[1], FOG_VOLUMETRIC_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Standard fog is ^7%s^5 on this map.\n", FOG_STANDARD_ENABLE ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog density is ^7%.4f^5 Fog range multiplier is ^7%.4f^5 on this map.\n", FOG_DENSITY, FOG_RANGE_MULTIPLIER);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog accumulation modifier is ^7%.4f^5 on this map.\n", FOG_ACCUMULATION_MODIFIER);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog color (main) ^7%.4f %.4f %.4f^5 (sun) ^7%.4f %.4f %.4f^5 on this map.\n", FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog is ^7%s^5 on this map.\n", FOG_VOLUMETRIC_ENABLE ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog density is ^7%.4f^5 and Volumetric fog cloudiness is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_DENSITY, FOG_VOLUMETRIC_CLOUDINESS);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog wind is ^7%.4f^5 and Volumetric fog velocity is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_WIND, FOG_VOLUMETRIC_VELOCITY);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog strength is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_STRENGTH);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog color ^7%.4f %.4f %.4f^5 on this map.\n", FOG_VOLUMETRIC_COLOR[0], FOG_VOLUMETRIC_COLOR[1], FOG_VOLUMETRIC_COLOR[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Road texture is ^7%s^5 on this map.\n", ROAD_TEXTURE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Grass uniformality is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon color is ^7%.4f %.4f %.4f^5 and moon glow strength ^7%.4f^5 on this map.\n", MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Moon atmosphere color is ^7%.4f %.4f %.4f^5 on this map.\n", MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon color is ^7%.4f %.4f %.4f^5 and moon glow strength ^7%.4f^5 on this map.\n", MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon atmosphere color is ^7%.4f %.4f %.4f^5 on this map.\n", MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3Warzone^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
 }
 
 extern void RB_SetupGlobalWeatherZone(void);

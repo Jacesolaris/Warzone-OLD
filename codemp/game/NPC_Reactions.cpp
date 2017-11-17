@@ -703,6 +703,8 @@ void NPC_Respond( gentity_t *self, int userNum )
 	switch ( self->client->NPC_class )
 	{
 	case CLASS_JAN:
+	case CLASS_NATIVE:
+	case CLASS_NATIVE_GUNNER:
 		if ( self->enemy )
 		{
 			if ( !Q_irand( 0, 2 ) )

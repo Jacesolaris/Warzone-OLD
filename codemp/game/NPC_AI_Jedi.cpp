@@ -7296,6 +7296,26 @@ void Follower_SelectBestWeapon(gentity_t *aiEnt)
 	}
 }
 
+void Gunner_SelectBestWeapon(gentity_t *aiEnt)
+{// Stoiss????
+	if (aiEnt->enemy
+		&& aiEnt->client->ps.weapon != WP_DLT_19
+		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 800)
+	{
+		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
+	}
+	else if (aiEnt->enemy
+		&& aiEnt->client->ps.weapon != WP_DC_15A_Rifle
+		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
+	{
+		Boba_ChangeWeapon(aiEnt, WP_DC_15A_Rifle);
+	}
+	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
+	{
+		Boba_ChangeWeapon(aiEnt, WP_WESTARM5);
+	}
+}
+
 void AdvancedGunner_SelectBestWeapon( gentity_t *aiEnt)
 {
 	if ( aiEnt->enemy
@@ -7437,6 +7457,12 @@ void NPC_SelectBestWeapon( gentity_t *aiEnt)
 	if (NPC_IsFollowerGunner(aiEnt))
 	{// Hmm, stoiss... What guns????
 		Follower_SelectBestWeapon(aiEnt);
+		return;
+	}
+
+	if (NPC_IsGunner(aiEnt))
+	{// Hmm, stoiss... What guns????
+		Gunner_SelectBestWeapon(aiEnt);
 		return;
 	}
 

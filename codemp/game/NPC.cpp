@@ -1063,6 +1063,8 @@ qboolean NPC_CanUseAdvancedFighting(gentity_t *aiEnt)
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
 	case CLASS_HK51:
+	case CLASS_NATIVE:
+	case CLASS_NATIVE_GUNNER:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:

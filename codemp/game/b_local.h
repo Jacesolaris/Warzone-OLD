@@ -370,6 +370,8 @@ extern qboolean NPC_IsDarkJedi ( gentity_t *self );
 extern qboolean NPC_IsAdvancedGunner ( gentity_t *self );
 extern qboolean NPC_IsBountyHunter ( gentity_t *self );
 extern qboolean NPC_IsCommando ( gentity_t *self );
+extern qboolean NPC_IsGunner(gentity_t *self);
+extern qboolean NPC_IsNative(gentity_t *self);
 extern qboolean NPC_IsFollowerGunner(gentity_t *self);
 extern qboolean NPC_IsStormtrooper ( gentity_t *self );
 extern qboolean NPC_HasGrenades ( gentity_t *self );
