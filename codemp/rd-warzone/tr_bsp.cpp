@@ -3241,6 +3241,7 @@ qboolean IgnoreCubemapsOnMap( void )
 }
 
 float		MAP_WATER_LEVEL = 131072.0;
+float		MAP_WATER_LEVEL2 = 131072.0;
 
 #define		MAX_GLOW_LOCATIONS 65536
 int			NUM_MAP_GLOW_LOCATIONS = 0;
@@ -3295,6 +3296,8 @@ qboolean CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
 
 static void R_SetupMapGlowsAndWaterPlane( void )
 {
+	qboolean setupWaterLevel = qfalse;
+
 	NUM_MAP_GLOW_LOCATIONS = 0;
 
 	world_t	*w;
@@ -3302,6 +3305,11 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 	w = &s_worldData;
 
 	CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
+
+	if (MAP_WATER_LEVEL == 131072.0)
+	{
+		setupWaterLevel = qtrue;
+	}
 
 	for (int i = 0; i < w->numsurfaces; i++)
 	{// Get a count of how many we need... Add them to temp list if not too close to another...
@@ -3355,10 +3363,13 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			continue;
 		}
 
-		if ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		if (setupWaterLevel && (surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 		{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
 			if (surfOrigin[2] < MAP_WATER_LEVEL)
+			{
+				MAP_WATER_LEVEL2 = MAP_WATER_LEVEL;
 				MAP_WATER_LEVEL = surfOrigin[2];
+			}
 		}
 
 		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
@@ -3382,6 +3393,11 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 			NUM_MAP_GLOW_LOCATIONS++;
 		}
+	}
+
+	if (MAP_WATER_LEVEL2 < 131072.0)
+	{// If we have a secondary water level, use it instead, it should be the top of the water, not the bottom plane.
+		MAP_WATER_LEVEL = MAP_WATER_LEVEL2;
 	}
 
 	if (MAP_WATER_LEVEL >= 131072.0)

@@ -1652,6 +1652,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	qboolean depthMaskExplicit = qfalse;
 
 	stage->active = qtrue;
+	stage->useSkyImage = false;
 
 	while ( 1 )
 	{
@@ -1725,6 +1726,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				stage->noScreenMap = qtrue;
 
+				continue;
+			}
+			else if (!Q_stricmp(token, "$skyimage"))
+			{
+				stage->useSkyImage = true;
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$deluxemap" ) )
@@ -6685,6 +6691,32 @@ static shader_t *FinishShader( void ) {
 		shader.sort = SS_DECAL;
 	}
 
+	if (shader.glowStrength < 2.0 
+		&& (StringContainsWord(shader.name, "models/players") || StringContainsWord(shader.name, "models/weapons")))
+	{// If this shader has glows, but still has the default glow strength, amp up the brightness because these are small glow objects...
+		if (StringContainsWord(shader.name, "players/hk"))
+		{// Hacky override for follower hk droids eyes...
+			shader.glowStrength = 48.0;
+		}
+		else
+		{
+			for (stage = 0; stage < MAX_SHADER_STAGES; stage++)
+			{
+				shaderStage_t *pStage = &stages[stage];
+
+				if (!pStage->active) {
+					break;
+				}
+
+				if (pStage->glow || pStage->glowMapped)
+				{
+					shader.glowStrength = 2.0;
+					break;
+				}
+			}
+		}
+	}
+
 #if 0
 	int firstLightmapStage;
 	shaderStage_t *lmStage;
@@ -6870,11 +6902,17 @@ static shader_t *FinishShader( void ) {
 			{
 				if(!pStage->bundle[0].image[0])
 				{
-					ri->Printf(PRINT_WARNING, "Shader %s has a colormap/diffusemap stage with no image\n", shader.name);
-					//pStage->active = qfalse;
-					//stage++;
-					//continue;
+					if (!pStage->useSkyImage)
+					{
+						ri->Printf(PRINT_WARNING, "Shader %s has a colormap/diffusemap stage with no image\n", shader.name);
+					}
+
 					pStage->bundle[0].image[0] = tr.defaultImage;
+
+					/*if (!pStage->useSkyImage)
+					{
+						pStage->active = qfalse;
+					}*/
 				}
 				break;
 			}
@@ -6885,6 +6923,9 @@ static shader_t *FinishShader( void ) {
 				{
 					ri->Printf(PRINT_WARNING, "Shader %s has a normalmap stage with no image\n", shader.name);
 					pStage->bundle[0].image[0] = tr.whiteImage;
+					pStage->active = qfalse;
+					stage++;
+					continue;
 				}
 				break;
 			}
@@ -6894,7 +6935,10 @@ static shader_t *FinishShader( void ) {
 				if(!pStage->bundle[0].image[0])
 				{
 					ri->Printf(PRINT_WARNING, "Shader %s has a specularmap stage with no image\n", shader.name);
-					pStage->bundle[0].image[0] = tr.whiteImage; // should be blackImage
+					pStage->bundle[0].image[0] = tr.blackImage; // should be blackImage
+					pStage->active = qfalse;
+					stage++;
+					continue;
 				}
 				break;
 			}
@@ -7288,6 +7332,18 @@ char uniqueGenericGlow[] = "{\n"\
 "map %s_glow\n"\
 "blendFunc GL_ONE GL_ONE\n"\
 "glow\n"\
+"noScreenMap\n"\
+"}\n";
+
+char uniqueGenericSkyMap[] = "{\n"\
+"map $skyimage\n"\
+"//blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA\n"\
+"blendFunc GL_DST_COLOR GL_SRC_COLOR\n"\
+"detail\n"\
+"alphaGen const %f\n"\
+"tcGen environment\n"\
+"rgbGen Vertex\n"\
+"noScreenMap\n"\
 "}\n";
 
 char uniqueGenericFoliageShader[] = "{\n"\
@@ -7677,7 +7733,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	{
 		shaderError = qfalse;
 
-		char glowShaderAddition[256] = { 0 };
+		char shaderCustomMap[256] = { 0 };
 		int material = DetectMaterialType( name );
 
 		shader.defaultShader = qfalse;
@@ -7702,11 +7758,12 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			flags |= IMGFLAG_CLAMPTOEDGE;
 		}
 
+		// Do we have a glow?
 		sprintf(glowName, "%s_glow", strippedName);
 
 		if (R_TextureFileExists(glowName))
 		{
-			sprintf(glowShaderAddition, uniqueGenericGlow, strippedName);
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
 		}
 		else
 		{
@@ -7715,7 +7772,22 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 			if (R_TextureFileExists(glowName))
 			{
-				sprintf(glowShaderAddition, uniqueGenericGlow, strippedName);
+				sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+			}
+		}
+
+		if (shaderCustomMap[0] == 0)
+		{// No glow? Add sky reflection map...
+			vec4_t settings;
+			RB_PBR_DefaultsForMaterial(settings, material);
+			float reflectionStrength = settings[1] * settings[2];
+
+			if (reflectionStrength > 0.0)
+			{// If the reflectiveness of this material is high enough, add sky reflection...
+				char shaderCustomAdditionMap[256] = { 0 };
+				reflectionStrength = reflectionStrength * 0.25 + 0.25;
+				sprintf(shaderCustomAdditionMap, uniqueGenericSkyMap, reflectionStrength);
+				sprintf(shaderCustomMap, shaderCustomAdditionMap);
 			}
 		}
 
@@ -7762,23 +7834,27 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 		else if (StringContainsWord(name, "models/weapon"))
 		{
-			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
 		else if (material == MATERIAL_ARMOR)
 		{
-			sprintf(myShader, uniqueGenericArmorShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericArmorShader, strippedName, strippedName, shaderCustomMap, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "players/hk"))
+		{
+			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
 		else if (StringContainsWord(strippedName, "player"))
 		{
-			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
 		else if (StringContainsWord(strippedName, "weapon") || material == MATERIAL_SOLIDMETAL || material == MATERIAL_HOLLOWMETAL)
 		{
-			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
 		else if (material == MATERIAL_ROCK || StringContainsWord(name, "warzone/rocks"))
 		{
-			sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
 		else if (StringContainsWord(name, "vjun/vj4"))
 		{
@@ -7786,16 +7862,16 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			{// pff
 				char realName[128];
 				sprintf(realName, "models/map_objects/vjun/vj4");
-				sprintf(myShader, uniqueGenericRockShader, strippedName, realName, glowShaderAddition, realName);
+				sprintf(myShader, uniqueGenericRockShader, strippedName, realName, shaderCustomMap, realName);
 			}
 			else
 			{
-				sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, glowShaderAddition, strippedName);
+				sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
 			}
 		}
 		else
 		{
-			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
 
 		flags = IMGFLAG_NONE;

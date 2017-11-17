@@ -207,6 +207,16 @@ void AddDetail(inout vec4 color, in vec2 tc)
 }
 #endif //USE_DETAIL_TEXTURES
 
+bool IsRoadmapMaterial ( void )
+{
+	if (SHADER_MATERIAL_TYPE == MATERIAL_SHORTGRASS || SHADER_MATERIAL_TYPE == MATERIAL_LONGGRASS || SHADER_MATERIAL_TYPE == MATERIAL_SAND)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 vec4 GetControlMap( void )
 {
 	float scale = 1.0 / SHADER_MAP_SIZE; /* control scale */
@@ -235,7 +245,7 @@ vec4 GetControlMap( void )
 
 	control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 
-	if (SHADER_HAS_SPLATMAP4 > 0.0)
+	if (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())
 	{// Also grab the roads map, if we have one...
 		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
 		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
@@ -337,7 +347,7 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.b * tex.a);
 	}
 
-	if (SHADER_HAS_SPLATMAP4 > 0.0 && control.a > 0.0)
+	if (SHADER_HAS_SPLATMAP4 > 0.0 && control.a > 0.0 && IsRoadmapMaterial())
 	{
 		vec4 tex = GetMap(u_RoadMap, scale, depth);
 		splatColor = QuickMix(splatColor.rgb, tex.rgb, pow(control.a * 3.0, 0.5) * tex.a);
@@ -446,7 +456,7 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 				float a1 = -1.0;
 				return GetMap(u_SteepMap, 0.0025, a1);
 			}
-			else if (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || SHADER_HAS_SPLATMAP4 > 0.0)
+			else if (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial()))
 			{// Steep maps (low angles)...
 				// Splat mapping...
 				float a1 = 0.0;

@@ -305,6 +305,7 @@ cvar_t	*r_debugEmissiveColorScale;
 cvar_t  *r_skynum;
 cvar_t  *r_volumeLightStrength;
 cvar_t	*r_disableGfxDirEnhancement;
+cvar_t	*r_skyLightContribution;
 cvar_t	*r_cubemapCullRange;
 cvar_t	*r_glslWater;
 cvar_t	*r_waterWaveHeight;
@@ -1503,6 +1504,8 @@ void R_Register( void )
 	r_ssdo = ri->Cvar_Get("r_ssdo", "0", CVAR_ARCHIVE);
 	r_ssdoBaseRadius = ri->Cvar_Get("r_ssdoBaseRadius", "1.0", CVAR_ARCHIVE);
 	r_ssdoMaxOcclusionDist = ri->Cvar_Get("r_ssdoMaxOcclusionDist", "99999.0", CVAR_ARCHIVE);
+
+	r_skyLightContribution = ri->Cvar_Get("r_skyLightContribution", "0.5", CVAR_ARCHIVE);
 
 	r_normalMapping = ri->Cvar_Get( "r_normalMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_normalMapQuality = ri->Cvar_Get( "r_normalMapQuality", "1", CVAR_ARCHIVE | CVAR_LATCH );

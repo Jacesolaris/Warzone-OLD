@@ -227,7 +227,7 @@ void G_AddPadawanIdleNoReplyCommentEvent( gentity_t *self, int event, int speakD
 	}
 	else
 	{
-		G_AddVoiceEvent(self, Q_irand(EV_FOLLOWER_IDLE_1, EV_FOLLOWER_IDLE_16), speakDebounceTime);
+		G_AddVoiceEvent(self, Q_irand(EV_FOLLOWER_IDLE_1, EV_FOLLOWER_IDLE_32), speakDebounceTime);
 	}
 
 	//won't speak again for 5 seconds (unless otherwise specified)

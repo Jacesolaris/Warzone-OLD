@@ -832,6 +832,11 @@ qboolean RoadExistsAtPoint(vec3_t point)
 	if (!cg.mapcoordsValid)
 	{
 		AIMod_GetMapBounts();
+
+		if (!cg.mapcoordsValid)
+		{
+			return qfalse;
+		}
 	}
 
 	float mapSize[2];
@@ -853,7 +858,7 @@ qboolean RoadExistsAtPoint(vec3_t point)
 	}
 
 #if 1
-#define scanWidth 2
+#define scanWidth 3
 	// Also scan pixels around this position...
 	for (int x = -scanWidth; x <= scanWidth; x++)
 	{
@@ -1948,13 +1953,14 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	FOLIAGE_PLANT_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
 	FOLIAGE_PLANT_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
 	FOLIAGE_PLANT_SCALE = (float *)malloc(fileCount * sizeof(float));
-	FOLIAGE_TREE_SELECTION = (int *)malloc(fileCount * sizeof(int));
-	FOLIAGE_TREE_ANGLE = (float *)malloc(fileCount * sizeof(float));
-	FOLIAGE_TREE_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
-	FOLIAGE_TREE_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
-	FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
-	FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
-	FOLIAGE_TREE_SCALE = (float *)malloc(fileCount * sizeof(float));
+	
+	FOLIAGE_TREE_SELECTION = NULL;
+	FOLIAGE_TREE_ANGLE = NULL;
+	FOLIAGE_TREE_ANGLES = NULL;
+	FOLIAGE_TREE_AXIS = NULL;
+	FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
+	FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
+	FOLIAGE_TREE_SCALE = NULL;
 
 	int usedRam = (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(int)) + (fileCount * sizeof(float)) + (fileCount * sizeof(float)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(matrix3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t)) + (fileCount * sizeof(vec3_t));
 	usedRam /= 1024;
@@ -1962,14 +1968,39 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 
 	for (i = 0; i < fileCount; i++)
 	{
+		int TREE_SELECTION = 0;
+		float TREE_ANGLE = 0;
+		float TREE_SCALE = 0;
+
 		trap->FS_Read(&FOLIAGE_POSITIONS[foliageCount], sizeof(vec3_t), f);
 		trap->FS_Read(&FOLIAGE_NORMALS[foliageCount], sizeof(vec3_t), f);
 		trap->FS_Read(&FOLIAGE_PLANT_SELECTION[foliageCount], sizeof(int), f);
 		trap->FS_Read(&FOLIAGE_PLANT_ANGLE[foliageCount], sizeof(float), f);
 		trap->FS_Read(&FOLIAGE_PLANT_SCALE[foliageCount], sizeof(float), f);
-		trap->FS_Read(&FOLIAGE_TREE_SELECTION[foliageCount], sizeof(int), f);
-		trap->FS_Read(&FOLIAGE_TREE_ANGLE[foliageCount], sizeof(float), f);
-		trap->FS_Read(&FOLIAGE_TREE_SCALE[foliageCount], sizeof(float), f);
+		trap->FS_Read(&TREE_SELECTION, sizeof(int), f);
+		
+		trap->FS_Read(&TREE_ANGLE, sizeof(float), f);
+		trap->FS_Read(&TREE_SCALE, sizeof(float), f);
+
+		if (!MAP_HAS_TREES && TREE_SELECTION > 0)
+		{// Init the trees memory area...
+			MAP_HAS_TREES = qtrue;
+
+			FOLIAGE_TREE_SELECTION = (int *)malloc(fileCount * sizeof(int));
+			FOLIAGE_TREE_ANGLE = (float *)malloc(fileCount * sizeof(float));
+			FOLIAGE_TREE_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
+			FOLIAGE_TREE_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
+			FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)malloc(fileCount * sizeof(vec3_t));
+			FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)malloc(fileCount * sizeof(matrix3_t));
+			FOLIAGE_TREE_SCALE = (float *)malloc(fileCount * sizeof(float));
+		}
+
+		if (MAP_HAS_TREES && TREE_SELECTION > 0)
+		{
+			FOLIAGE_TREE_SELECTION[foliageCount] = TREE_SELECTION;
+			FOLIAGE_TREE_ANGLE[foliageCount] = TREE_ANGLE;
+			FOLIAGE_TREE_SCALE[foliageCount] = TREE_SCALE;
+		}
 
 		if (RoadExistsAtPoint(FOLIAGE_POSITIONS[foliageCount]))
 		{
@@ -1977,17 +2008,12 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 			continue;
 		}
 
-		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0)
-		{
-			MAP_HAS_TREES = qtrue;
-		}
-
-		if (FOLIAGE_TREE_SELECTION[foliageCount] > 0)
+		if (MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[foliageCount] > 0)
 		{// Only keep positions with trees or plants...
 			FOLIAGE_PLANT_SELECTION[foliageCount] = 0;
 			foliageCount++;
 		}
-		else if (FOLIAGE_TREE_SELECTION[foliageCount] > 0 || FOLIAGE_PLANT_SELECTION[foliageCount] > 0)
+		else if ((MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[foliageCount] > 0) || FOLIAGE_PLANT_SELECTION[foliageCount] > 0)
 		{// Only keep positions with trees or plants...
 			foliageCount++;
 		}
@@ -2010,13 +2036,17 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 		FOLIAGE_PLANT_ANGLES = (vec3_t *)realloc(FOLIAGE_PLANT_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
 		FOLIAGE_PLANT_AXIS = (matrix3_t *)realloc(FOLIAGE_PLANT_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		FOLIAGE_PLANT_SCALE = (float *)realloc(FOLIAGE_PLANT_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
-		FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
-		FOLIAGE_TREE_ANGLE = (float *)realloc(FOLIAGE_TREE_ANGLE, FOLIAGE_NUM_POSITIONS * sizeof(float));
-		FOLIAGE_TREE_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
-		FOLIAGE_TREE_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
-		FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_BILLBOARD_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
-		FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_BILLBOARD_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
-		FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		
+		if (MAP_HAS_TREES)
+		{
+			FOLIAGE_TREE_SELECTION = (int *)realloc(FOLIAGE_TREE_SELECTION, FOLIAGE_NUM_POSITIONS * sizeof(int));
+			FOLIAGE_TREE_ANGLE = (float *)realloc(FOLIAGE_TREE_ANGLE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+			FOLIAGE_TREE_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+			FOLIAGE_TREE_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
+			FOLIAGE_TREE_BILLBOARD_ANGLES = (vec3_t *)realloc(FOLIAGE_TREE_BILLBOARD_ANGLES, FOLIAGE_NUM_POSITIONS * sizeof(vec3_t));
+			FOLIAGE_TREE_BILLBOARD_AXIS = (matrix3_t *)realloc(FOLIAGE_TREE_BILLBOARD_AXIS, FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
+			FOLIAGE_TREE_SCALE = (float *)realloc(FOLIAGE_TREE_SCALE, FOLIAGE_NUM_POSITIONS * sizeof(float));
+		}
 
 		usedRam = (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(vec3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(int)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(float)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t)) + (FOLIAGE_NUM_POSITIONS * sizeof(matrix3_t));
 		usedRam /= 1024;
@@ -2074,48 +2104,18 @@ qboolean FOLIAGE_LoadFoliagePositions(char *filename)
 	if (!IN_RANGE_AREAS_LIST) IN_RANGE_AREAS_LIST = (int *)malloc(sizeof(int) * 8192);
 	if (!IN_RANGE_AREAS_DISTANCE) IN_RANGE_AREAS_DISTANCE = (float *)malloc(sizeof(float) * 8192);
 
-	if (!MAP_HAS_TREES)
-	{// Don't waste the ram...
-		if (FOLIAGE_AREAS_TREES_LIST_COUNT) free(FOLIAGE_AREAS_TREES_LIST_COUNT);
-		if (FOLIAGE_AREAS_TREES_VISCHECK_TIME) free(FOLIAGE_AREAS_TREES_VISCHECK_TIME);
-		if (FOLIAGE_AREAS_TREES_VISCHECK_RESULT) free(FOLIAGE_AREAS_TREES_VISCHECK_RESULT);
-		if (FOLIAGE_AREAS_TREES_LIST) free(FOLIAGE_AREAS_TREES_LIST);
 
-		FOLIAGE_AREAS_TREES_LIST_COUNT = NULL;
-		FOLIAGE_AREAS_TREES_VISCHECK_TIME = NULL;
-		FOLIAGE_AREAS_TREES_VISCHECK_RESULT = NULL;
-		FOLIAGE_AREAS_TREES_LIST = NULL;
+	if (!FOLIAGE_AREAS_TREES_LIST_COUNT) FOLIAGE_AREAS_TREES_LIST_COUNT = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
+	if (!FOLIAGE_AREAS_TREES_VISCHECK_TIME) FOLIAGE_AREAS_TREES_VISCHECK_TIME = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
+	if (!FOLIAGE_AREAS_TREES_VISCHECK_RESULT) FOLIAGE_AREAS_TREES_VISCHECK_RESULT = (qboolean *)malloc(sizeof(qboolean) * FOLIAGE_AREA_MAX);
+	if (!FOLIAGE_AREAS_TREES_LIST) FOLIAGE_AREAS_TREES_LIST = (ivec256_t *)malloc(sizeof(ivec256_t) * FOLIAGE_AREA_MAX);
 
-		if (FOLIAGE_TREE_SELECTION) free(FOLIAGE_TREE_SELECTION);
-		if (FOLIAGE_TREE_ANGLE) free(FOLIAGE_TREE_ANGLE);
-		if (FOLIAGE_TREE_ANGLES) free(FOLIAGE_TREE_ANGLES);
-		if (FOLIAGE_TREE_AXIS) free(FOLIAGE_TREE_AXIS);
-		if (FOLIAGE_TREE_BILLBOARD_ANGLES) free(FOLIAGE_TREE_BILLBOARD_ANGLES);
-		if (FOLIAGE_TREE_BILLBOARD_AXIS) free(FOLIAGE_TREE_BILLBOARD_AXIS);
-		if (FOLIAGE_TREE_SCALE) free(FOLIAGE_TREE_SCALE);
+	if (!IN_RANGE_TREE_AREAS_LIST) IN_RANGE_TREE_AREAS_LIST = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
+	if (!IN_RANGE_TREE_AREAS_DISTANCE) IN_RANGE_TREE_AREAS_DISTANCE = (float *)malloc(sizeof(float) * FOLIAGE_AREA_MAX);
 
-		FOLIAGE_TREE_SELECTION = NULL;
-		FOLIAGE_TREE_ANGLE = NULL;
-		FOLIAGE_TREE_ANGLES = NULL;
-		FOLIAGE_TREE_AXIS = NULL;
-		FOLIAGE_TREE_BILLBOARD_ANGLES = NULL;
-		FOLIAGE_TREE_BILLBOARD_AXIS = NULL;
-		FOLIAGE_TREE_SCALE = NULL;
-	}
-	else
-	{// We will need a tree in-range list, dynamically allocate...
-		if (!FOLIAGE_AREAS_TREES_LIST_COUNT) FOLIAGE_AREAS_TREES_LIST_COUNT = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
-		if (!FOLIAGE_AREAS_TREES_VISCHECK_TIME) FOLIAGE_AREAS_TREES_VISCHECK_TIME = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
-		if (!FOLIAGE_AREAS_TREES_VISCHECK_RESULT) FOLIAGE_AREAS_TREES_VISCHECK_RESULT = (qboolean *)malloc(sizeof(qboolean) * FOLIAGE_AREA_MAX);
-		if (!FOLIAGE_AREAS_TREES_LIST) FOLIAGE_AREAS_TREES_LIST = (ivec256_t *)malloc(sizeof(ivec256_t) * FOLIAGE_AREA_MAX);
-
-		if (!IN_RANGE_TREE_AREAS_LIST) IN_RANGE_TREE_AREAS_LIST = (int *)malloc(sizeof(int) * FOLIAGE_AREA_MAX);
-		if (!IN_RANGE_TREE_AREAS_DISTANCE) IN_RANGE_TREE_AREAS_DISTANCE = (float *)malloc(sizeof(float) * FOLIAGE_AREA_MAX);
-
-		usedRam = (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(qboolean) * FOLIAGE_AREA_MAX) + (sizeof(ivec256_t) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(float) * FOLIAGE_AREA_MAX) + (sizeof(matrix3_t) * FOLIAGE_AREA_MAX) + (sizeof(vec3_t) * FOLIAGE_AREA_MAX);
-		usedRam /= 1024;
-		trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
-	}
+	usedRam = (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(qboolean) * FOLIAGE_AREA_MAX) + (sizeof(ivec256_t) * FOLIAGE_AREA_MAX) + (sizeof(int) * FOLIAGE_AREA_MAX) + (sizeof(float) * FOLIAGE_AREA_MAX) + (sizeof(matrix3_t) * FOLIAGE_AREA_MAX) + (sizeof(vec3_t) * FOLIAGE_AREA_MAX);
+	usedRam /= 1024;
+	trap->Print("^1*** ^3%s^5: %i KB allocated for final foliage memory.\n", GAME_VERSION, usedRam);
 
 	for (int i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{// Set up all axis...
@@ -3803,6 +3803,82 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 	FOLIAGE_SaveFoliagePositions();
 }
 
+void FOLIAGE_FoliageClearRoads(void)
+{
+	int i = 0;
+	int NUM_REMOVED_OBJECTS = 0;
+	int NUM_PLANTS_TOTAL = 0;
+
+	int previous_time = clock();
+	aw_stage_start_time = clock();
+	aw_percent_complete = 0;
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Cleaning foliage points. This could take a while...\n"));
+	strcpy(task_string1, va("^5Cleaning foliage points. This could take a while..."));
+	trap->UpdateScreen();
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Cleaning foliage points...\n"));
+	strcpy(task_string2, va("^5Cleaning foliage points..."));
+	trap->UpdateScreen();
+
+	strcpy(task_string3, "");
+
+	trap->UpdateScreen();
+
+	trap->S_Shutup(qtrue);
+
+	int numCompleted = 0;
+
+	//#pragma omp parallel for schedule(dynamic)
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Check current list...
+		FOLIAGE_PLANT_SELECTION[i] = 0;
+
+		numCompleted++;
+		aw_percent_complete = (float)((float)numCompleted / (float)FOLIAGE_NUM_POSITIONS) * 100.0;
+
+		if (clock() - previous_time > 50) // update display every 50ms...
+		{
+			previous_time = clock();
+			trap->UpdateScreen();
+		}
+
+		NUM_PLANTS_TOTAL++;
+
+		qboolean roadAtPoint = RoadExistsAtPoint(FOLIAGE_POSITIONS[i]);
+
+		if (MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[i] > 0 && !roadAtPoint)
+		{// Tree here... Replace...
+			FOLIAGE_TREE_SELECTION[i] = irand(1, NUM_TREE_TYPES);
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+		else if (!roadAtPoint)
+		{
+			FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS);
+			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
+		}
+		else
+		{
+			NUM_REMOVED_OBJECTS++;
+
+			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
+
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+
+		sprintf(last_node_added_string, "^3%i ^5objects removed. ^3%i ^5total plants.", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+	}
+
+	trap->S_Shutup(qfalse);
+
+	aw_percent_complete = 0.0f;
+
+	trap->Print("^1*** ^3%s^5: Successfully removed ^3%i ^5objects from a total of ^3%i ^5objects....\n", GAME_VERSION, NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+
+	// Save the generated info to a file for next time...
+	FOLIAGE_SaveFoliagePositions();
+}
+
 void FOLIAGE_FoliageRetree(void)
 {
 	int i = 0;
@@ -3892,6 +3968,7 @@ void FOLIAGE_GenerateFoliage(void)
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replantspecial\" ^5- Reselect all grasses/plants (tree aware).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearroads\" ^5- Remove all object on roads.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"copy <original_mapname> <mapScale> <objectScale>\" ^5- Copy from another map's foliage file. Scales are optional.\n");
 		trap->UpdateScreen();
 		return;
@@ -4086,6 +4163,10 @@ void FOLIAGE_GenerateFoliage(void)
 			trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n");
 			trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage replant <plantPercent>^5. Use plantPercent 0 for default.\n");
 		}
+	}
+	else if (Q_stricmp(str, "clearroads") == 0)
+	{
+		FOLIAGE_FoliageClearRoads();
 	}
 	else if (Q_stricmp(str, "retree") == 0)
 	{

@@ -2180,6 +2180,22 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_FOLLOWER_IDLE_14:
 	case EV_FOLLOWER_IDLE_15:
 	case EV_FOLLOWER_IDLE_16:
+	case EV_FOLLOWER_IDLE_17:
+	case EV_FOLLOWER_IDLE_18:
+	case EV_FOLLOWER_IDLE_19:
+	case EV_FOLLOWER_IDLE_20:
+	case EV_FOLLOWER_IDLE_21:
+	case EV_FOLLOWER_IDLE_22:
+	case EV_FOLLOWER_IDLE_23:
+	case EV_FOLLOWER_IDLE_24:
+	case EV_FOLLOWER_IDLE_25:
+	case EV_FOLLOWER_IDLE_26:
+	case EV_FOLLOWER_IDLE_27:
+	case EV_FOLLOWER_IDLE_28:
+	case EV_FOLLOWER_IDLE_29:
+	case EV_FOLLOWER_IDLE_30:
+	case EV_FOLLOWER_IDLE_31:
+	case EV_FOLLOWER_IDLE_32:
 		DEBUGNAME("EV_FOLLOWER_IDLE_x");
 		CG_TryPlayCustomSound(NULL, es->number, CHAN_VOICE, va("*followerIdle%i.wav", event - EV_FOLLOWER_IDLE_1 + 1));
 

@@ -5294,6 +5294,8 @@ qboolean ContentsOK ( int contents )
 	return qtrue;
 }
 
+clock_t BOUNDS_CHECK_TIME = 0;
+
 void
 AIMod_GetMapBounts ( void )
 {
@@ -5308,11 +5310,22 @@ AIMod_GetMapBounts ( void )
 
 	if (cg.mapcoordsValid) return; // No point doing it twice...
 
+	if (BOUNDS_CHECK_TIME > clock())
+	{// Wait until next check time... We are waiting on the renderer to write the bounds to the mapInfo file...
+		return;
+	}
+
+	BOUNDS_CHECK_TIME = clock() + 5000;
+
 	//
 	// Try to load previously stored bounds from .mapInfo file...
 	//
 
 	mapMins[0] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS0", "999999.0"));
+	
+	if (mapMins[0] == 999999.0)
+		return; // Looks like they don't exist yet, skip until it does...
+
 	mapMins[1] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS1", "999999.0"));
 	mapMins[2] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS2", "999999.0"));
 
@@ -5329,6 +5342,7 @@ AIMod_GetMapBounts ( void )
 		return;
 	}
 
+#if 0 // Moved to renderer...
 	//
 	// No map bounds info available in the .mapInfo file? OK, calculate and save for next time...
 	//
@@ -5613,6 +5627,7 @@ AIMod_GetMapBounts ( void )
 	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS0", va("%f", mapMaxs[0]));
 	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS1", va("%f", mapMaxs[1]));
 	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS2", va("%f", mapMaxs[2]));
+#endif
 }
 
 

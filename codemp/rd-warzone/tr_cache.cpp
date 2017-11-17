@@ -378,7 +378,7 @@ void CModelCacheManager::AllocateShaders( const char *psFileName )
  * These processes occur outside of the CacheManager class. They are exported by the renderer.
  */
 
-char currentMapName[128];
+char currentMapName[128] = { 0 };
 
 void C_LevelLoadBegin(const char *psMapName, ForceReload_e eForceReload)
 {

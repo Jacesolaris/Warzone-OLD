@@ -1137,6 +1137,8 @@ typedef struct {
 
 	bool			isFoliage;
 	bool			isFoliageChecked;
+
+	bool			useSkyImage;
 } shaderStage_t;
 
 struct shaderCommands_s;
@@ -2679,6 +2681,7 @@ typedef struct trGlobals_s {
 	shader_t				*sunShader;
 	shader_t				*moonShader;
 	shader_t				*sunFlareShader;
+	shader_t				*skyImageShader;
 
 	int						numLightmaps;
 	int						lightmapSize;
@@ -3134,6 +3137,7 @@ extern cvar_t	*r_debugImageCrcHashing;
 extern cvar_t	*r_shadowMaxDepthError;
 extern cvar_t	*r_shadowSolidityValue;
 extern cvar_t	*r_disableGfxDirEnhancement;
+extern cvar_t	*r_skyLightContribution;
 extern cvar_t	*r_cubemapCullRange;
 extern cvar_t	*r_glslWater;
 extern cvar_t	*r_waterWaveHeight;
@@ -4121,6 +4125,8 @@ uint32_t R_TessXYZtoPackedNormals(vec3_t xyz);
 #ifdef __XYC_SURFACE_SPRITES__
 shader_t *R_CreateShaderFromTextureBundle(const char *name, const textureBundle_t *bundle, uint32_t stateBits);
 #endif //__XYC_SURFACE_SPRITES__
+
+void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE);
 
 /*
 ============================================================

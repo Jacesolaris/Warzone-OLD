@@ -526,6 +526,8 @@ static void DrawSkyBox( shader_t *shader )
 {
 	int		i;
 
+	tr.skyImageShader = shader; // Store sky shader for use with $skyimage - TODO: sky cubemap...
+
 	sky_min = 0;
 	sky_max = 1;
 

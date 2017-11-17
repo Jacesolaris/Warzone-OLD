@@ -2805,6 +2805,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP );
 		}
+		else if (pStage->useSkyImage && tr.skyImageShader)
+		{// This stage wants sky up image for it's diffuse... TODO: sky cubemap...
+#ifdef __DAY_NIGHT__
+			if (!DAY_NIGHT_CYCLE_ENABLED || RB_NightScale() < 1.0)
+				GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_COLORMAP); // Sky up...
+			else
+				GL_BindToTMU(tr.skyImageShader->sky.outerboxnight[4], TB_COLORMAP); // Night sky up...
+#else
+			GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_COLORMAP); // Sky up...
+#endif
+		}
 		else if ( sp == &tr.lightAllShader )
 		{
 			int i;

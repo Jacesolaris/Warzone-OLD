@@ -236,8 +236,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	
 		if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
 		{
-			//vec3 viewer = u_LocalViewOrigin - position;
-			vec3 viewer = u_ViewOrigin - position;
+			vec3 viewer = u_LocalViewOrigin - position;
 			//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
 			//vec3 lightDir = normalize((u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
 			//vec3 lightDir = normalize((u_ModelViewProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);

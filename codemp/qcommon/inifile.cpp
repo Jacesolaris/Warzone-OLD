@@ -27,8 +27,11 @@
 #include "../rd-common/tr_common.h"
 int FS_FOpenFileByMode(const char *qpath, fileHandle_t *f, fsMode_t mode)
 {
-	//return ri->FS_FOpenFileByMode(va("warzone/%s", qpath), f, mode);
-	return ri->FS_FOpenFileRead(qpath, f, qfalse);
+	if (mode == FS_WRITE)
+		//return ri->FS_FOpenFileWrite(qpath, qfalse);
+		return ri->FS_FOpenFileByMode(qpath, f, mode);
+	else
+		return ri->FS_FOpenFileRead(qpath, f, qfalse);
 }
 //#define FS_FOpenFileByMode ri->FS_FOpenFileByMode
 #define FS_Read ri->FS_Read

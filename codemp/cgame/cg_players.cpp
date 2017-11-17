@@ -169,6 +169,22 @@ const char	*cg_customJediSoundNames[MAX_CUSTOM_JEDI_SOUNDS] =
 	"*followerIdle14",
 	"*followerIdle15",
 	"*followerIdle16",
+	"*followerIdle17",
+	"*followerIdle18",
+	"*followerIdle19",
+	"*followerIdle20",
+	"*followerIdle21",
+	"*followerIdle22",
+	"*followerIdle23",
+	"*followerIdle24",
+	"*followerIdle25",
+	"*followerIdle26",
+	"*followerIdle27",
+	"*followerIdle28",
+	"*followerIdle29",
+	"*followerIdle30",
+	"*followerIdle31",
+	"*followerIdle32",
 	NULL
 };
 

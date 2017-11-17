@@ -2262,6 +2262,16 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		}
 	}
 
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+#ifdef __DAY_NIGHT__
+	GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_WATER_EDGE_MAP); // Sky up...
+	GL_BindToTMU(tr.skyImageShader->sky.outerboxnight[4], TB_ROADSCONTROLMAP); // Night sky up...
+#else //!__DAY_NIGHT__
+	GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_WATER_EDGE_MAP); // Sky up...
+	GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_ROADSCONTROLMAP); // Sky up...
+#endif //__DAY_NIGHT__
+
 	int cubeMapNum = 0;
 	vec4_t cubeMapVec;
 	float cubeMapRadius;
@@ -2372,7 +2382,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL6, local6);
 
 	vec4_t local7;
-	VectorSet4(local7, cubeMapNum >= 0 ? 1.0 : 0.0, r_cubemapCullRange->value, r_cubeMapSize->integer, 0.0);
+	VectorSet4(local7, cubeMapNum >= 0 ? 1.0 : 0.0, r_cubemapCullRange->value, r_cubeMapSize->integer, r_skyLightContribution->value);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL7, local7);
 
 	{

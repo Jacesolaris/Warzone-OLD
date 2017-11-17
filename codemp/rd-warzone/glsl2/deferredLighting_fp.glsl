@@ -1,5 +1,5 @@
 ﻿#define __AMBIENT_OCCLUSION__
-#define __EXPERIMENTAL_AO__
+#define __ENHANCED_AO__
 #define __ENVMAP__
 #define __RANDOMIZE_LIGHT_PIXELS__
 
@@ -14,6 +14,8 @@ uniform sampler2D	u_DeluxeMap;  // Random2K image...
 uniform sampler2D	u_GlowMap;
 uniform samplerCube	u_CubeMap;
 uniform sampler2D	u_SteepMap;	  // ssao image
+uniform sampler2D	u_WaterEdgeMap; // sky up image (for sky lighting contribution)
+uniform sampler2D	u_RoadsControlMap; // sky night up image (for sky lighting contribution)
 
 uniform mat4		u_ModelViewProjectionMatrix;
 
@@ -25,7 +27,7 @@ uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderV
 uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
-uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, 0.0
+uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -402,9 +404,11 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 // `normal`, `view` and `light` should be normalized.
 vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor) {
 	vec3 halfLV = normalize(light + view);
-	float spe = pow(max(dot(normal, halfLV), 0.0), 32.0);
+	float ndl = max(dot(normal, halfLV), 0.0);
+	float spe = pow(ndl, 0.3);
+	float spe2 = pow(ndl, 32.0);
 	float dif = dot(normal, light) * 0.5 + 0.75;
-	return dif*diffuseColor + spe*specularColor;
+	return (dif*diffuseColor) + (spe*specularColor*0.75) + (spe2*specularColor*0.25);
 }
 
 /*
@@ -446,7 +450,7 @@ void main(void)
 	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
 
-	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
+	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN /*|| position.a-1.0 == MATERIAL_NONE*/)
 	{// Skybox... Skip...
 		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
 		{// C/S/B enabled...
@@ -528,24 +532,24 @@ void main(void)
 	float to_pos_dist = length(to_pos);
 	vec3 to_pos_norm = (to_pos / to_pos_dist);
 
-	#define rd reflect(surfaceToCamera, N)
-
-
-	vec3 specular = vec3(0.0);
-	vec3 reflectance = vec3(0.0);
 	float specularPower = clamp(materialSettings.x * 0.04, 0.0, 1.0);
 	float gloss = clamp(clamp((materialSettings.x + materialSettings.y) * 0.5, 0.0, 1.0) * 1.6, 0.0, 1.0);
 
 	if (specularPower > 0.0)
 	{
-#define specLower ( 48.0 / 255.0)
-#define specUpper (255.0 / 192.0)
-		specular = clamp((clamp(outColor.rgb - specLower, 0.0, 1.0)) * specUpper, 0.0, 1.0);
+		vec3 specular = ContrastSaturationBrightness(outColor.rgb, 1.2, 1.2, 1.2);
+		specular = Vibrancy( specular, 0.4 );
 
 		float NE = clamp(length(dot(N, E)), 0.0, 1.0);
 		vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
-		outColor.rgb = mix(outColor.rgb, reflectance.rgb, specularPower);
+#if 1
+		if (position.a-1.0 == MATERIAL_SOLIDMETAL || position.a-1.0 == MATERIAL_MARBLE)
+		{
+			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (specular*2.0)), clamp(specularPower*NE*24.0, 0.0, 1.0));
+			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (reflectance.rgb*128.0)), specularPower*0.05);
+		}
+#endif
 
 		if (u_Local7.r > 0.0)
 		{// Cubemaps enabled...
@@ -569,7 +573,7 @@ void main(void)
 					vec4 cubeInfo = u_CubeMapInfo;
 					cubeInfo.xyz -= u_ViewOrigin.xyz;
 
-					cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), 3.0/*u_Local3.r*/);
+					cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), 3.0);
 
 					cubeInfo.xyz *= 1.0 / cubeInfo.w;
 					cubeInfo.w = 1.0 / cubeInfo.w;
@@ -587,9 +591,9 @@ void main(void)
 						for (float y = -1.0; y <= 1.0; y += 1.0)
 						{
 							vec3 blurColor = texture(u_CubeMap, (R + parallax) + (vec3(x,y,0.0) * cPx)).rgb;
-#define iblLower ( 128.0 / 255.0)
-#define iblUpper (255.0 / 156.0)
-							blurColor = clamp((clamp(blurColor.rgb - iblLower, 0.0, 1.0)) * iblUpper, 0.0, 1.0); // Darken dark, lighten light...
+//#define iblLower ( 128.0 / 255.0)
+//#define iblUpper (255.0 / 156.0)
+//							blurColor = clamp((clamp(blurColor.rgb - iblLower, 0.0, 1.0)) * iblUpper, 0.0, 1.0); // Darken dark, lighten light...
 							cubeLightColor += blurColor;
 							blurCount += 1.0;
 						}
@@ -602,6 +606,56 @@ void main(void)
 			}
 		}
 	}
+
+
+	vec3 surfaceToCamera = E;
+#define rd reflect(surfaceToCamera, N)
+
+	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
+
+	vec4 occlusion = vec4(0.0);
+	bool useOcclusion = false;
+
+	if (u_Local2.r == 1.0)
+	{
+		useOcclusion = true;
+		occlusion = texture(u_HeightMap, texCoords);
+	}
+
+	float reflectivePower = materialSettings.x;
+
+
+	if (u_Local7.a > 0.0)
+	{// Sky light contributions...
+		vec2 spot = rd.xy;
+		spot.xy *= -1.0;
+		spot.xy = spot.xy * 0.5 + 0.5;
+		vec3 skyColor = vec3(0.0);
+
+		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+		{// Mix between night and day colors...
+			vec3 skyColorDay = texture(u_WaterEdgeMap, spot).rgb;
+			vec3 skyColorNight = texture(u_RoadsControlMap, spot).rgb;
+			skyColor = mix(skyColorDay, skyColorNight, u_Local6.a);
+		}
+		else if (u_Local6.a >= 1.0)
+		{// Night only colors...
+			skyColor = texture(u_RoadsControlMap, spot).rgb;
+		}
+		else
+		{// Day only colors...
+			skyColor = texture(u_WaterEdgeMap, spot).rgb;
+		}
+
+		skyColor = ContrastSaturationBrightness(skyColor, 1.25, 2.0, 0.3);
+		skyColor = Vibrancy( skyColor, 0.4 );
+
+		//if (u_Local3.a == 1.0)
+		//	outColor.rgb = skyColor;
+		//else
+			outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(gloss * u_Local7.a, 0.0, 1.0));
+	}
+
 
 	float shadowMult = 1.0;
 
@@ -624,28 +678,55 @@ void main(void)
 #endif //defined(USE_SHADOWMAP)
 
 
-	vec3 surfaceToCamera = E;
-
-	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
-
-	vec4 occlusion = vec4(0.0);
-	bool useOcclusion = false;
-
-	if (u_Local2.r == 1.0)
-	{
-		useOcclusion = true;
-		occlusion = texture(u_HeightMap, texCoords);
-	}
-
-	float reflectivePower = materialSettings.x;
-
-
 	if (u_Local1.r > 0.0)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...
 		float phongFactor = u_Local1.r * u_Local1.g;
 
 #define LIGHT_COLOR_POWER			4.0
 
+#if 1
+		if (phongFactor > 0.0 && u_Local6.a < 1.0)
+		{// this is blinn phong
+			float light_occlusion = 1.0;
+
+			if (useOcclusion)
+			{
+				light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
+			}
+
+			float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
+			power = pow(power, LIGHT_COLOR_POWER);
+			power = power * 0.5 + 0.5;
+		
+			vec3 lightColor = u_PrimaryLightColor.rgb;
+
+			float lightMult = clamp(reflectivePower * power * light_occlusion * shadowMult, 0.0, 1.0);
+
+			if (lightMult > 0.0)
+			{
+				lightColor *= lightMult;
+				lightColor = blinn_phong(N, E, normalize(-to_light_norm), lightColor, lightColor * phongFactor);
+				float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
+				lightColor *= maxStr;
+				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
+
+				// Add vibrancy to light color at sunset/sunrise???
+				if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+				{// Vibrancy gets greater the closer we get to night time...
+					float vib = u_Local6.a;
+					if (vib > 0.8)
+					{// Scale back vibrancy to 0.0 just before nightfall...
+						float downScale = 1.0 - vib;
+						downScale *= 4.0;
+						vib = mix(vib, 0.0, downScale);
+					}
+					lightColor = Vibrancy( lightColor, vib * 4.0 );
+				}
+
+				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
+			}
+		}
+#else
 		if (phongFactor > 0.0 && u_Local6.a < 1.0)
 		{// this is blinn phong
 			float light_occlusion = 1.0;
@@ -687,6 +768,7 @@ void main(void)
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
+#endif
 
 		if (u_lightCount > 0.0 && reflectivePower > 0.0)
 		{
@@ -702,10 +784,8 @@ void main(void)
 			power = pow(power, LIGHT_COLOR_POWER);
 			power = power * 0.5 + 0.5;
 
-			//float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)) * 1.25, 0.0, 1.0);
-			float maxStr = ((1.0 - maxBright) * 0.7) + 0.1; // 0.0 to 0.8 with darker spots getting extra light...
-			maxStr *= 0.2; // And only use a small portion to reduce clipping and harshness...
+			float maxStr = ((1.0 - maxBright) * 0.1) + 0.1; // 0.1 to 0.2 with darker spots getting extra light...
 
 			for (int li = 0; li < u_lightCount; li++)
 			{
@@ -719,12 +799,11 @@ void main(void)
 				}
 
 				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
-				//float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
 
 				// Attenuation...
-				float lightStrength = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
-				lightStrength = pow(lightStrength, 2.0);
-				lightStrength *= lightDistMult * reflectivePower;
+				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+				lightFade = pow(lightFade, 2.0);
+				float lightStrength = lightDistMult * lightFade * reflectivePower * 0.5;
 
 				if (lightStrength > 0.0)
 				{
@@ -732,22 +811,20 @@ void main(void)
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 				
-					lightColor = lightColor * lightStrength * power * maxStr;
-
-					//addedLight.rgb += lightColor;
-					addedLight.rgb += lightColor * 0.333;
-
-					if (useOcclusion)
-					{
-						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
-					}
-
-					float lightMult = clamp(light_occlusion * phongFactor, 0.0, 1.0);
+					float lightMult = lightStrength;
 
 					if (lightMult > 0.0)
 					{
-						lightColor *= lightMult;
-						addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor);
+						lightColor = lightColor * power * maxStr;
+
+						addedLight.rgb += lightColor * lightMult * 0.333;
+
+						if (useOcclusion)
+						{
+							light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
+						}
+					
+						addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor) * lightMult * light_occlusion;
 					}
 				}
 			}
@@ -768,7 +845,7 @@ void main(void)
 	}
 #endif //__AMBIENT_OCCLUSION__
 
-#ifdef __EXPERIMENTAL_AO__
+#ifdef __ENHANCED_AO__
 	if (u_Local1.b >= 2.0)
 	{// HQ AO enabled...
 		float msao = 0.0;
@@ -799,7 +876,7 @@ void main(void)
 		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 		outColor.rgb *= sao;
 	}
-#endif //__EXPERIMENTAL_AO__
+#endif //__ENHANCED_AO__
 
 #ifdef __ENVMAP__
 	if (u_Local1.a > 0.0)

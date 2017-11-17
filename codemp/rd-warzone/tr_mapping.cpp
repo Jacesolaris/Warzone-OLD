@@ -149,6 +149,53 @@ void R_SetupMapInfo(void)
 		MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2],
 		MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2],
 		MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2]);
+
+	{
+		char mapname[256] = { 0 };
+
+		// because JKA uses mp/ dir, why??? so pointless...
+		if (IniExists(va("maps/%s.mapInfo", currentMapName)))
+			sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+		else if (IniExists(va("maps/mp/%s.mapInfo", currentMapName)))
+			sprintf(mapname, "maps/mp/%s.mapInfo", currentMapName);
+		else
+			sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+
+		vec3_t	mapMins, mapMaxs;
+		qboolean mapcoordsValid = qfalse;
+
+		//
+		// Try to load previously stored bounds from .mapInfo file...
+		//
+		mapMins[0] = atof(IniRead(mapname, "BOUNDS", "MINS0", "999999.0"));
+		mapMins[1] = atof(IniRead(mapname, "BOUNDS", "MINS1", "999999.0"));
+		mapMins[2] = atof(IniRead(mapname, "BOUNDS", "MINS2", "999999.0"));
+
+		mapMaxs[0] = atof(IniRead(mapname, "BOUNDS", "MAXS0", "-999999.0"));
+		mapMaxs[1] = atof(IniRead(mapname, "BOUNDS", "MAXS1", "-999999.0"));
+		mapMaxs[2] = atof(IniRead(mapname, "BOUNDS", "MAXS2", "-999999.0"));
+
+		if (mapMins[0] < 999999.0 && mapMins[1] < 999999.0 && mapMins[2] < 999999.0
+			&& mapMaxs[0] > -999999.0 && mapMaxs[1] > -999999.0 && mapMaxs[2] > -999999.0)
+		{
+			mapcoordsValid = qtrue;
+		}
+
+		if (!mapcoordsValid)
+		{// Write bounds we found to mapInfo file for this map...
+		 //
+		 // Write newly created info to our map's .mapInfo file for future usage...
+		 //
+
+			IniWrite(mapname, "BOUNDS", "MINS0", va("%f", MAP_INFO_MINS[0]));
+			IniWrite(mapname, "BOUNDS", "MINS1", va("%f", MAP_INFO_MINS[1]));
+			IniWrite(mapname, "BOUNDS", "MINS2", va("%f", MAP_INFO_MINS[2]));
+
+			IniWrite(mapname, "BOUNDS", "MAXS0", va("%f", MAP_INFO_MAXS[0]));
+			IniWrite(mapname, "BOUNDS", "MAXS1", va("%f", MAP_INFO_MAXS[1]));
+			IniWrite(mapname, "BOUNDS", "MAXS2", va("%f", MAP_INFO_MAXS[2]));
+		}
+	}
 }
 
 void R_CreateDefaultDetail(void)
@@ -1015,9 +1062,8 @@ void R_CreateFoliageMapImage(void)
 }
 #endif
 
-qboolean ROAD_CheckSlope(vec3_t normal)
+float ROAD_GetSlope(vec3_t normal)
 {
-#define MAX_ROAD_SLOPE 32.0//46.0
 	float pitch;
 	vec3_t slopeangles;
 	vectoangles(normal, slopeangles);
@@ -1032,6 +1078,12 @@ qboolean ROAD_CheckSlope(vec3_t normal)
 
 	pitch += 90.0f;
 
+	return pitch;
+}
+
+qboolean ROAD_CheckSlope(float pitch)
+{
+#define MAX_ROAD_SLOPE 32.0
 	if (pitch > MAX_ROAD_SLOPE || pitch < -MAX_ROAD_SLOPE)
 		return qfalse;
 
@@ -1126,42 +1178,49 @@ void R_CreateRoadMapImage(void)
 				//
 				switch (MATERIAL_TYPE)
 				{
-				case MATERIAL_WATER:
-					// Water... Draw blue...
-					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
-					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
-					FOUND = qtrue;
-					break;
-				case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
-				case MATERIAL_LONGGRASS:		// 6					// long jungle grass
-				case MATERIAL_MUD:				// 17					// wet soil
-				case MATERIAL_DIRT:				// 7					// hard mud
-					if (!ROAD_CheckSlope(tr.plane.normal)) 
-					{// Bad slope for road... Draw black...
-						red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-						green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-						blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-						alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
+					case MATERIAL_WATER:
+					{
+						// Water... Draw blue...
+						red[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						green[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						blue[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						alpha[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						FOUND = qtrue;
+						break;
 					}
-					else
-					{// Valid surface for road. Draw green height map...
-						red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-						green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;
-						blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-						alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
+					case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
+					case MATERIAL_LONGGRASS:		// 6					// long jungle grass
+					case MATERIAL_MUD:				// 17					// wet soil
+					case MATERIAL_DIRT:				// 7					// hard mud
+					{
+						float slope = ROAD_GetSlope(tr.plane.normal);
+						UINT8 brightness = 0;
+
+						if (slope < 0) slope *= -1.0;
+
+						if (slope < MAX_ROAD_SLOPE)
+						{// In valid range... Work out brightness...
+							float temp = 1.0 - (slope / MAX_ROAD_SLOPE);
+							brightness = UINT8(float(255.0) * float(temp));
+						}
+
+						red[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						green[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = brightness;
+						blue[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						alpha[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						FOUND = qtrue;
+						break;
 					}
-					FOUND = qtrue;
-					break;
-				default:
-					// Material isn't a road-able surface type...  Draw black...
-					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0;
-					alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 255;
-					FOUND = qtrue;
-					break;
+					default:
+					{
+						// Material isn't a road-able surface type...  Draw black...
+						red[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						green[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						blue[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+						alpha[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						FOUND = qtrue;
+						break;
+					}
 				}
 
 				if (FOUND) break;
@@ -1442,6 +1501,8 @@ qboolean	JKA_WEATHER_ENABLED = qfalse;
 qboolean	WZ_WEATHER_ENABLED = qfalse;
 qboolean	WZ_WEATHER_SOUND_ONLY = qfalse;
 
+extern float	MAP_WATER_LEVEL;
+
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 char		CURRENT_WEATHER_OPTION[256] = { 0 };
 
@@ -1588,6 +1649,7 @@ void MAPPING_LoadMapInfo(void)
 	WATER_COLOR_DEEP[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
 	WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
 	WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
+	MAP_WATER_LEVEL = atof(IniRead(mapname, "WATER", "MAP_WATER_LEVEL", "131072.0"));
 
 	//
 	// Climate...
