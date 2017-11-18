@@ -2240,6 +2240,8 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		return qfalse;
 	}
 
+	MAP_HAS_TREES = qfalse;
+
 	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 	{
 		trace_t tr;
@@ -2286,6 +2288,7 @@ qboolean FOLIAGE_SaveFoliagePositions(void)
 		trap->FS_Write(&FOLIAGE_PLANT_SELECTION[i], sizeof(int), f);
 		trap->FS_Write(&FOLIAGE_PLANT_ANGLE[i], sizeof(float), f);
 		trap->FS_Write(&FOLIAGE_PLANT_SCALE[i], sizeof(float), f);
+
 		if (MAP_HAS_TREES)
 		{
 			trap->FS_Write(&FOLIAGE_TREE_SELECTION[i], sizeof(int), f);

@@ -75,6 +75,10 @@ extern const char *fallbackShader_weather_vp;
 extern const char *fallbackShader_weather_fp;
 extern const char *fallbackShader_surfaceSprite_vp;
 extern const char *fallbackShader_surfaceSprite_fp;
+extern const char *fallbackShader_sss_vp;
+extern const char *fallbackShader_sss_fp;
+extern const char *fallbackShader_sssBlur_vp;
+extern const char *fallbackShader_sssBlur_fp;
 extern const char *fallbackShader_ssdo_vp;
 extern const char *fallbackShader_ssdo_fp;
 extern const char *fallbackShader_ssdoBlur_vp;
@@ -3212,6 +3216,22 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load ssdoBlur shader!");
 	}
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.sssShader, "sss", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sss_vp, fallbackShader_sss_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load sss shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.sssBlurShader, "sssBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sssBlur_vp, fallbackShader_sssBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load sssBlur shader!");
+	}
+
 #ifdef __XYC_SURFACE_SPRITES__
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 	extradefines[0] = '\0';
@@ -4266,6 +4286,42 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssdoBlurShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.sssShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load sss shader!");
+	}
+
+	GLSL_InitUniforms(&tr.sssShader);
+
+	GLSL_BindProgram(&tr.sssShader);
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.sssShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.sssBlurShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load sssBlur shader!");
+	}
+
+	GLSL_InitUniforms(&tr.sssBlurShader);
+
+	GLSL_BindProgram(&tr.sssBlurShader);
+	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.sssBlurShader);
 #endif
 
 	numEtcShaders++;
@@ -5704,6 +5760,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.shadowmaskShader);
 
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
+	GLSL_DeleteGPUShader(&tr.sssShader);
+	GLSL_DeleteGPUShader(&tr.sssBlurShader);
 	GLSL_DeleteGPUShader(&tr.ssdoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
 

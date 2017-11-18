@@ -1780,6 +1780,113 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		FBO_FastBlit(tr.ssdoFbo1, NULL, ldrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
+void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	//
+	// Generate occlusion map...
+	//
+
+	GLSL_BindProgram(&tr.sssShader);
+
+	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);
+	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
+
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
+
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GL_BindToTMU(tr.ssdoNoiseImage, TB_DELUXEMAP);
+
+	GLSL_SetUniformVec3(&tr.sssShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+	vec2_t screensize;
+	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+	GLSL_SetUniformVec2(&tr.sssShader, UNIFORM_DIMENSIONS, screensize);
+
+	vec4_t viewInfo;
+	float zmax = 4096.0;// backEnd.viewParms.zFar;
+	float ratio = screensize[0] / screensize[1];
+	float xmax = tan(backEnd.viewParms.fovX * ratio * 0.5);
+	float ymax = tan(backEnd.viewParms.fovY * 0.5);
+	float zmin = r_znear->value;
+	VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_VIEWINFO, viewInfo);
+
+	vec3_t out;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
+	vec4_t local0;
+	VectorSet4(local0, screensize[0] / tr.random2KImage[0]->width, screensize[1] / tr.random2KImage[0]->height, r_ssdoBaseRadius->value, r_ssdoMaxOcclusionDist->value);
+	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LOCAL0, local0);
+
+	vec4_t local1;
+	VectorSet4(local1, xmax, ymax, r_testvalue0->value, r_testvalue1->value);
+	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LOCAL1, local1);
+
+	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo1, ldrBox, &tr.sssShader, color, 0);
+	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo2, ldrBox, &tr.sssShader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
+
+#if 0
+	//
+	// Blur Occlusion Map...
+	//
+
+	GLSL_BindProgram(&tr.sssBlurShader);
+
+	GLSL_SetUniformMatrix16(&tr.sssBlurShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	//GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	//GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
+
+	GLSL_SetUniformVec3(&tr.sssBlurShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+	GLSL_SetUniformVec2(&tr.sssBlurShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformVec4(&tr.sssBlurShader, UNIFORM_VIEWINFO, viewInfo);
+	GLSL_SetUniformVec4(&tr.sssBlurShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
+	// X
+	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	//GL_BindToTMU(tr.ssdoImage1, TB_DELUXEMAP);
+	GL_BindToTMU(tr.ssdoImage2, TB_DELUXEMAP);
+
+	VectorSet4(local0, 1.0, 0.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.sssBlurShader, UNIFORM_LOCAL0, local0);
+
+	//FBO_Blit(tr.sssFbo1, hdrBox, NULL, tr.sssFbo2, ldrBox, &tr.sssBlurShader, color, 0);
+	FBO_Blit(tr.sssFbo2, hdrBox, NULL, tr.sssFbo1, ldrBox, &tr.sssBlurShader, color, 0);
+#endif
+}
+
 extern float		MAP_WATER_LEVEL;
 extern vec3_t		MAP_INFO_MINS;
 extern vec3_t		MAP_INFO_MAXS;

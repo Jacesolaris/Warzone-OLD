@@ -2577,6 +2577,18 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
+		if (!SCREEN_BLUR && r_sss->integer)
+		{
+			DEBUG_StartTimer("SSS");
+
+			RB_SSS(currentFbo, srcBox, currentOutFbo, dstBox);
+
+			//if (r_sss->integer == 3)
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+
+			DEBUG_EndTimer();
+		}
+
 		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
 		{
 			DEBUG_StartTimer("Create Anamorphic");

@@ -555,6 +555,26 @@ void FBO_Init(void)
 		R_CheckFBO(tr.ssdoFbo2);
 	}
 
+	//
+	// UQ1's SSS FBO1...
+	//
+	{
+		tr.sssFbo1 = FBO_Create("_sssFbo1", tr.sssImage1->width, tr.sssImage1->height);
+		FBO_Bind(tr.sssFbo1);
+		FBO_AttachTextureImage(tr.sssImage1, 0);
+		R_CheckFBO(tr.sssFbo1);
+	}
+
+	//
+	// UQ1's SSS FBO2...
+	//
+	{
+		tr.sssFbo2 = FBO_Create("_sssFbo2", tr.sssImage2->width, tr.sssImage2->height);
+		FBO_Bind(tr.sssFbo2);
+		FBO_AttachTextureImage(tr.sssImage2, 0);
+		R_CheckFBO(tr.sssFbo2);
+	}
+
 
 	//
 	// Bloom VBO's...

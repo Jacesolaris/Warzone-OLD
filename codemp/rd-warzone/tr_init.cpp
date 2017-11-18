@@ -170,6 +170,8 @@ cvar_t  *r_srgb;
 
 cvar_t  *r_depthPrepass;
 
+cvar_t  *r_sss;
+
 cvar_t  *r_ssdo;
 cvar_t  *r_ssdoBaseRadius;
 cvar_t  *r_ssdoMaxOcclusionDist;
@@ -1501,6 +1503,7 @@ void R_Register( void )
 
 	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	
+	r_sss = ri->Cvar_Get("r_sss", "0", CVAR_ARCHIVE);
 	r_ssdo = ri->Cvar_Get("r_ssdo", "0", CVAR_ARCHIVE);
 	r_ssdoBaseRadius = ri->Cvar_Get("r_ssdoBaseRadius", "1.0", CVAR_ARCHIVE);
 	r_ssdoMaxOcclusionDist = ri->Cvar_Get("r_ssdoMaxOcclusionDist", "99999.0", CVAR_ARCHIVE);
