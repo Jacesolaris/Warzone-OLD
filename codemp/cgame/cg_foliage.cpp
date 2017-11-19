@@ -13,7 +13,7 @@ extern void AIMod_GetMapBounts(void);
 //
 // =======================================================================================================================================
 
-#define			FOLIAGE_MAX_FOLIAGES 4194304
+#define			FOLIAGE_MAX_FOLIAGES 2097152//4194304
 
 // =======================================================================================================================================
 //
@@ -3090,13 +3090,43 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	i = 0;
 	
 
-	grassSpotList = (vec3_t *)malloc((sizeof(vec3_t)+1)*FOLIAGE_MAX_FOLIAGES);
-	grassNormals = (vec3_t *)malloc((sizeof(vec3_t)+1)*FOLIAGE_MAX_FOLIAGES);
-	grassSpotScale = (float *)malloc((sizeof(float)+1)*FOLIAGE_MAX_FOLIAGES);
-	grassSpotType = (int *)malloc((sizeof(int)+1)*FOLIAGE_MAX_FOLIAGES);
+	grassSpotList = (vec3_t *)malloc((sizeof(vec3_t))*FOLIAGE_MAX_FOLIAGES);
+	grassNormals = (vec3_t *)malloc((sizeof(vec3_t))*FOLIAGE_MAX_FOLIAGES);
+	grassSpotScale = (float *)malloc((sizeof(float))*FOLIAGE_MAX_FOLIAGES);
+	grassSpotType = (int *)malloc((sizeof(int))*FOLIAGE_MAX_FOLIAGES);
 
-	memset(grassSpotScale, 0, (sizeof(float)+1)*FOLIAGE_MAX_FOLIAGES);
-	memset(grassSpotType, 0, (sizeof(int)+1)*FOLIAGE_MAX_FOLIAGES);
+	if (!grassSpotList)
+	{
+		FOLIAGE_FreeMemory();
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Failed to allocate grassSpotList! Low memory!\n");
+		return;
+	}
+
+	if (!grassNormals)
+	{
+		FOLIAGE_FreeMemory();
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Failed to allocate grassNormals! Low memory!\n");
+		return;
+	}
+
+	if (!grassSpotScale)
+	{
+		FOLIAGE_FreeMemory();
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Failed to allocate grassSpotScale! Low memory!\n");
+		return;
+	}
+
+	if (!grassSpotType)
+	{
+		FOLIAGE_FreeMemory();
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Failed to allocate grassSpotType! Low memory!\n");
+		return;
+	}
+
+	memset(grassSpotList, 0, (sizeof(vec3_t))*FOLIAGE_MAX_FOLIAGES);
+	memset(grassNormals, 0, (sizeof(vec3_t))*FOLIAGE_MAX_FOLIAGES);
+	memset(grassSpotScale, 0, (sizeof(float))*FOLIAGE_MAX_FOLIAGES);
+	memset(grassSpotType, 0, (sizeof(int))*FOLIAGE_MAX_FOLIAGES);
 
 	VectorCopy(cg.mapcoordsMins, mapMins);
 	VectorCopy(cg.mapcoordsMaxs, mapMaxs);
