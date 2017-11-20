@@ -260,6 +260,11 @@ static qboolean S_LoadSound_DirIsAllowedToKeepMP3s(const char *psFilename)
 
 DWORD S_LoadMusic( char *sSoundName )
 {
+	if (s_volumeMusic->value <= 0)
+	{// No point...
+		return 0;
+	}
+
 	DWORD		bassSampleID;
 	int			indexSize = 0;
 	byte		*indexData = NULL;

@@ -1347,12 +1347,17 @@ void BASS_InitDynamicList ( void )
 #ifdef __BASS_STREAM_MUSIC__
 bool BASS_IsMusicInPK3(char * filename)
 {
-	if (!strncmp(filename, "warzone/music", 13))
+	if (!strncmp(filename, "music/psy", 9))
 	{
 		return false;
 	}
 
 	if (!strncmp(filename, "http", 4))
+	{
+		return false;
+	}
+
+	if (StringContainsWord(filename, "music/custom"))
 	{
 		return false;
 	}
@@ -1445,6 +1450,17 @@ void BASS_MusicUpdateThread( void * aArg )
 		BASS_InitDynamicList(); // check if we have initialized the list yet...
 
 		if (!MUSIC_LIST_INITIALIZED) return;
+
+		if (s_volumeMusic->value <= 0)
+		{// wait...
+			if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+			{// Still playing a track...
+				BASS_StopMusic(MUSIC_CHANNEL.channel);
+			}
+
+			this_thread::sleep_for(chrono::milliseconds(1000));
+			continue;
+		}
 
 		// Do we need a new track yet???
 		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)

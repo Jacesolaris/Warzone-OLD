@@ -10,6 +10,8 @@
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
+//#define __DEBUG_ZALLOC__
+
 #define __ENABLE_DEDICATED_CONSOLE_COLORS__			// Enable color on dedicated console...
 
 #define __MMO__

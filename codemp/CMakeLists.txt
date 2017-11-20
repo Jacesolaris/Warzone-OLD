@@ -320,6 +320,13 @@ if(BuildMPEngine OR BuildMPDed)
 		)
 	source_group("minizip" FILES ${MPEngineAndDedMinizipFiles})
 	set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedMinizipFiles})
+	
+	set(MPEngineAndDedStackWalkerFiles
+		"${MPDir}/StackWalker/StackWalker.cpp"
+		"${MPDir}/StackWalker/StackWalker.h"
+		)
+	source_group("StackWalker" FILES ${MPEngineAndDedStackWalkerFiles})
+	set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedStackWalkerFiles})
 
 	if(WIN32)
 		set(MPEngineAndDedWin32Files

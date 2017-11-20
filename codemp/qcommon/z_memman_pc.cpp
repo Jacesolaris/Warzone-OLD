@@ -157,8 +157,25 @@ qboolean gbMemFreeupOccured = qfalse;
 
 std::mutex zmalloc_lock;
 
+#ifdef __DEBUG_ZALLOC__
+cvar_t *com_debugMemory = NULL;
+#include "StackWalker/StackWalker.h"
+#endif //__DEBUG_ZALLOC__
+
 void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iUnusedAlign /* = 4 */)
 {
+#ifdef __DEBUG_ZALLOC__
+	if (com_debugMemory && com_debugMemory->integer)
+	{
+		if (iSize > com_debugMemory->integer)
+		{
+			Com_Printf("Z_Malloc: (size: %d. tag: %d. zero: %s. align: %d.)\n", iSize, eTag, bZeroit ? "true" : "false", iUnusedAlign);
+			StackWalker sw;
+			sw.ShowCallstack();
+		}
+	}
+#endif //__DEBUG_ZALLOC__
+
 	zmalloc_lock.lock();
 
 	gbMemFreeupOccured = qfalse;

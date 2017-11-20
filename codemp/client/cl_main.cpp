@@ -2074,11 +2074,19 @@ static unsigned int frameCount;
 static float avgFrametime=0.0;
 extern void SE_CheckForLanguageUpdates(void);
 
+#ifdef __DEBUG_ZALLOC__
+extern cvar_t *com_debugMemory;
+#endif //__DEBUG_ZALLOC__
+
 qboolean takeVideoFrame = qfalse;
 
 void CL_Frame_REAL ( int msec ) {
 	SE_CheckForLanguageUpdates();	// will take zero time to execute unless language changes, then will reload strings.
 									//	of course this still doesn't work for menus...
+
+#ifdef __DEBUG_ZALLOC__
+	com_debugMemory = Cvar_Get("com_debugMemory", "0", 0);
+#endif //__DEBUG_ZALLOC__
 
 	if (cls.state == CA_ACTIVE)
 	{
