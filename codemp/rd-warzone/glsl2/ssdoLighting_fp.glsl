@@ -1,4 +1,4 @@
-﻿int g_num_lights;
+int g_num_lights;
 float g_time;
 float g_occlusion_radius;
 float g_occlusion_max_distance;
