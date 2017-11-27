@@ -2891,8 +2891,9 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
+	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.weatherShader, "weather", attribs, qtrue, qfalse, qfalse, NULL, qfalse, NULL, fallbackShader_weather_vp, fallbackShader_weather_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.weatherShader, "weather", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_weather_vp, fallbackShader_weather_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load weather shader!");
 	}

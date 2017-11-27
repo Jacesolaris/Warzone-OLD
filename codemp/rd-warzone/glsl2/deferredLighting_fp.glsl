@@ -57,7 +57,7 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	vec3 settings = vec3(0.0);
 
 	float specularScale = 0.0;
-	float cubemapScale = 0.9;
+	float cubemapScale = 0.0;
 	float parallaxScale = 0.0;
 
 	switch (int(MATERIAL_TYPE))
@@ -450,7 +450,7 @@ void main(void)
 	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
 
-	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN /*|| position.a-1.0 == MATERIAL_NONE*/)
+	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
 	{// Skybox... Skip...
 		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
 		{// C/S/B enabled...
@@ -653,7 +653,7 @@ void main(void)
 		//if (u_Local3.a == 1.0)
 		//	outColor.rgb = skyColor;
 		//else
-			outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(gloss * u_Local7.a, 0.0, 1.0));
+			outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(materialSettings.y * u_Local7.a * 0.5, 0.0, 1.0));
 	}
 
 

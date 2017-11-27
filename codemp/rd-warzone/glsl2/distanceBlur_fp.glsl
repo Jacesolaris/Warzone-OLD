@@ -53,6 +53,17 @@ vec4 DistantBlur(void)
 		return color;
 	}
 
+	vec3 origColor = color.rgb;
+
+	float origMaterial = textureLod(u_PositionMap, var_TexCoords.xy, 0.0).a;
+
+	bool isSky = false;
+
+	if (origMaterial-1.0 == MATERIAL_SKY || origMaterial-1.0 == MATERIAL_SUN)
+	{// Skybox... 
+		isSky = true;
+	}
+
 	float BLUR_DEPTH_MULT = (1.0 - (BLUR_DEPTH / depth)) * BLUR_RADIUS;
 	//BLUR_DEPTH_MULT = BLUR_DEPTH_MULT * 0.333 + 0.666;
 	BLUR_DEPTH_MULT += 0.5;
@@ -75,11 +86,34 @@ vec4 DistantBlur(void)
 	{
 		for (float y = -RADIUS_Y * BLUR_DEPTH_MULT; y <= RADIUS_Y * BLUR_DEPTH_MULT; y += py)
 		{
+			bool pixelIsSky = false;
+
+			vec2 xy = vec2(var_TexCoords.x + x, var_TexCoords.y + y);
+
+			if (isSky)
+			{// When original pixel is sky, check if this pixel is also sky. If so, skip the blur... If the new pixel is not sky, then add it to the blur...
+				float material = textureLod(u_PositionMap, xy, 0.0).a;
+
+				if (material-1.0 == MATERIAL_SKY || material-1.0 == MATERIAL_SUN)
+				{// Skybox... Skip...
+					pixelIsSky = true;
+				}
+			}
+
+			vec3 color2;
+
+			if (!pixelIsSky)
+			{
 #ifdef DOFCA
-			vec3 color2 = GetMatsoDOFCA(vec2(var_TexCoords.x + x, var_TexCoords.y + y), x).rgb;
+				color2 = GetMatsoDOFCA(xy, x).rgb;
 #else //!DOFCA
-			vec3 color2 = textureLod(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y), 0.0).rgb;
+				color2 = textureLod(u_DiffuseMap, xy, 0.0).rgb;
 #endif //DOFCA
+			}
+			else
+			{
+				color2 = origColor;
+			}
 
 #ifndef MATSO_DOF_BOKEH
 			float w = 1.0;	// weight blur for better effect
