@@ -6007,6 +6007,92 @@ void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 
 // here is the function for the effect to be call and its shit as you can see it will be seeing in 
 
+#ifndef __OLD_SABERS__
+extern qhandle_t CG_GetSaberBoltColor(saber_colors_t color);
+
+void FX_SaberBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_t shader)
+{
+	refEntity_t ent;
+
+	// Draw the bolt core...
+	memset(&ent, 0, sizeof(refEntity_t));
+	ent.reType = RT_MODEL;
+
+	ent.customShader = shader;
+
+	ent.modelScale[0] = length;
+	ent.modelScale[1] = radius;
+	ent.modelScale[2] = radius;
+
+	ent.renderfx |= RF_RGB_TINT;
+	ent.shaderRGBA[0] = 255;
+	ent.shaderRGBA[1] = 255;
+	ent.shaderRGBA[2] = 255;
+	ent.shaderRGBA[3] = 255;
+
+	VectorCopy(org, ent.origin);
+	vectoangles(fwd, ent.angles);
+	AnglesToAxis(ent.angles, ent.axis);
+	ScaleModelAxis(&ent);
+
+	ent.hModel = trap->R_RegisterModel("models/warzone/lasers/laserbolt.md3");
+
+	AddRefEntityToScene(&ent);
+
+	// Now add glow...
+	memset(&ent, 0, sizeof(refEntity_t));
+
+	qhandle_t glowColorShader = CG_Get3DWeaponBoltGlowColor(shader);
+
+	if (glowColorShader)
+	{// Now add glow...
+		vec3_t org2, back;
+		VectorMA(org, -((length * 1.25 * 16.0) - length * 16.0) * 4.0, fwd, org2);
+		VectorCopy(org2, ent.origin);
+		VectorCopy(fwd, ent.axis[0]);
+
+		ent.saberLength = length * 1.25 * 16.0 * 1.5 * 1.05;// cg_testvalue0.value;
+		
+		float radius2 = radius * cg_saberGlowRadius.value;
+		float radiusRange = radius2 * 0.075f;
+		float radiusStart = radius2 - radiusRange;
+		float radiusmult = cg_saberGlowRadiusMult.value;
+		ent.radius = (radiusStart + crandom() * radiusRange)*radiusmult;
+
+		ent.renderfx |= RF_RGB_TINT;
+		ent.shaderRGBA[0] = 255;
+		ent.shaderRGBA[1] = 255;
+		ent.shaderRGBA[2] = 255;
+		ent.shaderRGBA[3] = cg_saberGlowAlphalevel.value;
+		ent.reType = RT_SABER_GLOW;
+		ent.customShader = glowColorShader;
+
+		AddRefEntityToScene(&ent);
+
+		// Add light as well...
+		vec3_t lightColor;
+		VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
+		trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
+	}
+}
+
+void CG_Do3DSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float radius, saber_colors_t color, int rfx, qboolean doLight, int cnum, int bnum)
+{
+	vec3_t		mid;
+
+	if (length < 0.5f)
+	{
+		// if the thing is so short, just forget even adding me.
+		return;
+	}
+
+	// Find the midpoint of the saber for lighting purposes
+	VectorMA(origin, length * 0.5f, dir, mid);
+
+	float len = length / lengthMax;
+	FX_SaberBolt3D(mid, dir, cg_saberLengthMult.value * len, cg_saberRadiusMult.value, CG_GetSaberBoltColor(color));
+}
+#else //__OLD_SABERS__
 //changed this from static so we can use it for rendering the saber blade for 
 void CG_DoSaberLight(saberInfo_t *saber, int cnum, int bnum)
 //static void CG_DoSaberLight( saberInfo_t *saber , int cnum, int bnum)
@@ -9390,6 +9476,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	}
 }
 //[/SFXSabers]
+#endif //__OLD_SABERS__
 
 //--------------------------------------------------------------
 // CG_GetTagWorldPosition
@@ -10248,6 +10335,8 @@ CheckTrail:
 	//FIXME: if trailStyle is 1, use the motion blur instead
 
 	saberTrail = &client->saber[saberNum].blade[bladeNum].trail;
+
+#ifdef __OLD_SABERS__
 	//[Movie Sabers]
 	//if(sfx_sabers.integer < 1)
 	if (cg_MovieSaberType.integer == 0)
@@ -10674,6 +10763,7 @@ CheckTrail:
 		}
 	}
 	//[/SFXSabers]
+#endif //__OLD_SABERS__
 
 JustDoIt:
 
@@ -10682,6 +10772,7 @@ JustDoIt:
 		return;
 	}
 
+#ifdef __OLD_SABERS__
 	if ((client->saber[saberNum].saberFlags2&SFL2_NO_BLADE))
 	{//don't actually draw the blade at all
 		if (client->saber[saberNum].numBlades < 3
@@ -10797,6 +10888,11 @@ JustDoIt:
 		//[/Movie Sabers]
 	}
 	//[/SFXSabers]
+#else
+	CG_Do3DSaber(org_, axis_[0], saberLen, client->saber[saberNum].blade[bladeNum].lengthMax, client->saber[saberNum].blade[bladeNum].radius,
+		(saber_colors_t)scolor, renderfx, (qboolean)(client->saber[saberNum].numBlades < 3 && !(client->saber[saberNum].saberFlags2&SFL2_NO_DLIGHT)),
+		cent->currentState.clientNum, saberNum);
+#endif
 
 	//[NewLightningEFX]
 	if (cent->currentState.emplacedOwner + 1000 > cg.time)
@@ -18185,6 +18281,7 @@ stillDoSaber:
 
 						k++;
 					}
+#ifdef __OLD_SABERS__
 					if ( ci->saber[l].numBlades > 2 )
 					{//add a single glow for the saber based on all the blade colors combined
 						//CG_DoSaberLight( &ci->saber[l] );
@@ -18192,6 +18289,7 @@ stillDoSaber:
 						CG_DoSaberLight(&ci->saber[l], cent->currentState.clientNum, l);
 						//[/RGBSabers]
 					}
+#endif //__OLD_SABERS__
 
 					l++;
 				}
@@ -18410,6 +18508,7 @@ stillDoSaber:
 
 				k++;
 			}
+#ifdef __OLD_SABERS__
 			if ( ci->saber[l].numBlades > 2 )
 			{//add a single glow for the saber based on all the blade colors combined
 				//CG_DoSaberLight( &ci->saber[l] );
@@ -18417,6 +18516,7 @@ stillDoSaber:
 				CG_DoSaberLight(&ci->saber[l], cent->currentState.clientNum, l);
 				//[/RGBSabers]
 			}
+#endif //__OLD_SABERS__
 
 			l++;
 		}

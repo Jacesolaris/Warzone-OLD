@@ -1261,6 +1261,17 @@ typedef struct cgMedia_s {
 	//custom gfx files for other bolts 
 	fxHandle_t	BlasterBolt_Cap_BluePurple;
 
+	// UQ1: And saber bolts...
+	// New 3D blaster bolt shaders //
+	fxHandle_t	whiteSaber;
+	fxHandle_t	yellowSaber;
+	fxHandle_t	redSaber;
+	fxHandle_t	blueSaber;
+	fxHandle_t	greenSaber;
+	fxHandle_t	purpleSaber;
+	fxHandle_t	orangeSaber;
+	fxHandle_t	bluePurpleSaber;
+
 	// New 3D blaster bolt shaders //
 
 	qhandle_t	bryarFrontFlash;

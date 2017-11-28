@@ -136,6 +136,71 @@ void CG_RegisterDefaultBlasterShaders(void)
 
 	cgs.media.BlasterBolt_Cap_BluePurple = trap->R_RegisterShader("BlasterBolt_Line_BluePurple");
 	CG_MakeShaderBoltGlow(cgs.media.BlasterBolt_Cap_BluePurple, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"), colorPurple);
+
+	//
+	// UQ1: Adding saber colors here... Stoiss: Add any extra colors here...
+	//
+
+	cgs.media.whiteSaber = trap->R_RegisterShader("laserbolt_white"); // the basic color of the actual bolt...
+	CG_MakeShaderBoltGlow(cgs.media.whiteSaber, trap->R_RegisterShader("laserbolt_white_glow"), colorWhite); // a glow shader matching the bolt color and glow color...
+
+	cgs.media.yellowSaber = trap->R_RegisterShader("laserbolt_yellow");
+	CG_MakeShaderBoltGlow(cgs.media.yellowSaber, trap->R_RegisterShader("laserbolt_yellow_glow"), colorYellow);
+
+	cgs.media.redSaber = trap->R_RegisterShader("laserbolt_red");
+	CG_MakeShaderBoltGlow(cgs.media.redSaber, trap->R_RegisterShader("laserbolt_red_glow"), colorRed);
+
+	cgs.media.blueSaber = trap->R_RegisterShader("laserbolt_blue");
+	CG_MakeShaderBoltGlow(cgs.media.blueSaber, trap->R_RegisterShader("laserbolt_blue_glow"), colorBlue);
+
+	cgs.media.greenSaber = trap->R_RegisterShader("laserbolt_green");
+	CG_MakeShaderBoltGlow(cgs.media.greenSaber, trap->R_RegisterShader("laserbolt_green_glow"), colorGreen);
+
+	cgs.media.purpleSaber = trap->R_RegisterShader("laserbolt_purple");
+	CG_MakeShaderBoltGlow(cgs.media.purpleSaber, trap->R_RegisterShader("laserbolt_purple_glow"), colorPurple);
+
+	cgs.media.orangeSaber = trap->R_RegisterShader("laserbolt_orange");
+	CG_MakeShaderBoltGlow(cgs.media.orangeSaber, trap->R_RegisterShader("laserbolt_orange_glow"), colorOrange);
+
+	cgs.media.bluePurpleSaber = trap->R_RegisterShader("BlasterBolt_Line_BluePurple");
+	CG_MakeShaderBoltGlow(cgs.media.bluePurpleSaber, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"), colorPurple);
+}
+
+qhandle_t CG_GetSaberBoltColor(saber_colors_t color)
+{
+	//if (!color) return cgs.media.whiteSaber; // Fallback...
+
+	switch (color)
+	{
+	case SABER_RED:
+		return cgs.media.redSaber;
+		break;
+	case SABER_ORANGE:
+		return cgs.media.orangeSaber;
+		break;
+	case SABER_YELLOW:
+		return cgs.media.yellowSaber;
+		break;
+	case SABER_GREEN:
+		return cgs.media.greenSaber;
+		break;
+	case SABER_BLUE:
+		return cgs.media.blueSaber;
+		break;
+	case SABER_PURPLE:
+		return cgs.media.purpleSaber;
+		break;
+	case SABER_WHITE:
+	case SABER_BLACK:
+	case SABER_RGB:
+	case SABER_PIMP:
+	case SABER_SCRIPTED:
+	default:
+		return cgs.media.whiteSaber;
+		break;
+	}
+
+	return cgs.media.whiteSaber; // Fallback...
 }
 
 

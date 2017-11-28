@@ -145,7 +145,7 @@ void main( void )
 {
 	vec4 position = textureLod(u_PositionMap, var_ScreenTex, 0.0);
 
-	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_NONE)
+	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_GLASS || position.a-1.0 == MATERIAL_NONE)
 	{// Skybox... Skip...
 		gl_FragColor=vec4(1.0, 0.0, 0.0, 1.0);
 		return;
