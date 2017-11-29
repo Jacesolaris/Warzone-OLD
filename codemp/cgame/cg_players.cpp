@@ -6861,7 +6861,6 @@ JustDoIt:
 		return;
 	}
 
-	
 	CG_DoSaberTrails(cent, client, org_, end, axis_, (saber_colors_t)scolor, saberTrail, saberNum, bladeNum);
 	CG_Do3DSaber(org_, axis_[0], saberLen, client->saber[saberNum].blade[bladeNum].lengthMax, client->saber[saberNum].blade[bladeNum].radius, (saber_colors_t)scolor);
 
