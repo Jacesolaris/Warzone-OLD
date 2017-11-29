@@ -406,7 +406,7 @@ void FX_SaberBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_
 	}
 }
 
-void CG_Do3DSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float radius, saber_colors_t color, int rfx, qboolean doLight, int cnum, int bnum)
+void CG_Do3DSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float radius, saber_colors_t color)
 {
 	vec3_t		mid;
 

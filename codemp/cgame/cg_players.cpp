@@ -17,7 +17,7 @@ extern void CG_AddRadarEnt(centity_t *cent);	//cg_ents.c
 extern void CG_AddBracketedEnt(centity_t *cent);	//cg_ents.c
 extern qboolean CG_InFighter( void );
 extern qboolean WP_SaberBladeUseSecondBladeStyle( saberInfo_t *saber, int bladeNum );
-extern void CG_Do3DSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float radius, saber_colors_t color, int rfx, qboolean doLight, int cnum, int bnum);
+extern void CG_Do3DSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float radius, saber_colors_t color);
 
 
 //for g2 surface routines
@@ -6864,9 +6864,7 @@ JustDoIt:
 		return;
 	}
 
-	CG_Do3DSaber(org_, axis_[0], saberLen, client->saber[saberNum].blade[bladeNum].lengthMax, client->saber[saberNum].blade[bladeNum].radius,
-		(saber_colors_t)scolor, renderfx, (qboolean)(client->saber[saberNum].numBlades < 3 && !(client->saber[saberNum].saberFlags2&SFL2_NO_DLIGHT)),
-		cent->currentState.clientNum, saberNum);
+	CG_Do3DSaber(org_, axis_[0], saberLen, client->saber[saberNum].blade[bladeNum].lengthMax, client->saber[saberNum].blade[bladeNum].radius, (saber_colors_t)scolor);
 
 	//[NewLightningEFX]
 	if (cent->currentState.emplacedOwner + 1000 > cg.time)
