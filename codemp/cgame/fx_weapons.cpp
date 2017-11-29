@@ -3,6 +3,8 @@
 #include "cg_local.h"
 #include "fx_local.h"
 
+extern void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_t shader);
+
 //
 // UniqueOne's New - GENERIC - Weapon FX Code...
 //
@@ -110,70 +112,6 @@ void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 		{
 			PlayEffectID(cgs.effects.blasterDroidImpactEffect, origin, normal, -1, -1, qfalse);
 		}
-	}
-}
-
-void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_t shader)
-{
-	refEntity_t ent;
-
-	// Draw the bolt core...
-	memset(&ent, 0, sizeof(refEntity_t));
-	ent.reType = RT_MODEL;
-
-	ent.customShader = shader;
-
-	ent.modelScale[0] = length;
-	ent.modelScale[1] = radius;
-	ent.modelScale[2] = radius;
-
-	VectorCopy(org, ent.origin);
-	vectoangles(fwd, ent.angles);
-	AnglesToAxis(ent.angles, ent.axis);
-	ScaleModelAxis(&ent);
-
-	ent.hModel = trap->R_RegisterModel("models/warzone/lasers/laserbolt.md3");
-
-	AddRefEntityToScene(&ent);
-
-#if 0
-	// Now add glow...
-	memset(&ent, 0, sizeof(refEntity_t));
-
-	qhandle_t glowColorShader = CG_Get3DWeaponBoltGlowColor(shader);
-
-	if (glowColorShader)
-#endif
-	{// Now add glow...
-#if 0
-		vec3_t org2, back;
-		VectorMA(org, -((length * 1.25 * 16.0) - length * 16.0) * 4.0, fwd, org2);
-		VectorCopy(org2, ent.origin);
-		VectorCopy(fwd, ent.axis[0]);
-
-		ent.saberLength = length * 1.25 * 16.0 * 1.5;
-
-		float radius2 = radius * 16.0;
-		float radiusRange = radius2 * 0.075f;
-		float radiusStart = radius2 - radiusRange;
-		float radiusmult = 1.0;
-		ent.radius = (radiusStart + crandom() * radiusRange)*radiusmult;
-
-		ent.renderfx |= RF_RGB_TINT;
-		ent.shaderRGBA[0] = 255;
-		ent.shaderRGBA[1] = 255;
-		ent.shaderRGBA[2] = 255;
-		ent.shaderRGBA[3] = 128.0;// cg_gunX.value;// 64;
-		ent.reType = RT_SABER_GLOW;
-		ent.customShader = glowColorShader;
-
-		AddRefEntityToScene(&ent);
-#endif
-
-		// Add light as well...
-		vec3_t lightColor; 
-		VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
-		trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
 	}
 }
 
