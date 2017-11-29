@@ -365,6 +365,7 @@ extern cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_proceduralSun;
 extern cvar_t  *r_proceduralSunScale;
 extern cvar_t  *r_glowStrength;
+extern cvar_t  *r_glowVibrancy;
 extern cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern cvar_t  *r_drawSunRays;
@@ -1215,6 +1216,7 @@ typedef struct shader_s {
 	qboolean	isFur;
 
 	float		glowStrength;
+	float		glowVibrancy;
 
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
 	qboolean	polygonOffset;			// set for decals and other items that must be offset 
@@ -3096,6 +3098,7 @@ extern  cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_proceduralSun;
 extern cvar_t  *r_proceduralSunScale;
 extern cvar_t  *r_glowStrength;
+extern cvar_t  *r_glowVibrancy;
 extern  cvar_t  *r_sunlightMode;
 extern cvar_t  *r_sunlightSpecular;
 extern  cvar_t  *r_drawSunRays;

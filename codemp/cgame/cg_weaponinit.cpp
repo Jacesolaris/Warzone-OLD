@@ -86,9 +86,10 @@ qboolean DEFAULT_BLASTER_SHADERS_INITIALIZED = qfalse;
 
 int numBoltGlowIndexes = 0;
 qhandle_t boltBoltIndexes[1024] = { 0 };
-qhandle_t boltGlowIndexes[1024] = { 0 };
+//qhandle_t boltGlowIndexes[1024] = { 0 };
 vec3_t    boltLightColors[1024] = { 0 };
 
+#if 0
 void CG_MakeShaderBoltGlow(qhandle_t boltShader, qhandle_t newBoltGlowShader, vec3_t lightColor)
 {// Make a list of all the glows matching the original bolts...
 	boltBoltIndexes[numBoltGlowIndexes] = boltShader;
@@ -96,6 +97,7 @@ void CG_MakeShaderBoltGlow(qhandle_t boltShader, qhandle_t newBoltGlowShader, ve
 	VectorCopy(lightColor, boltLightColors[numBoltGlowIndexes]);
 	numBoltGlowIndexes++;
 }
+#endif
 
 void CG_RegisterDefaultBlasterShaders(void)
 {// New blaster 3D bolt shader colors can be registered here and reused, rather then for each gun...
@@ -111,59 +113,59 @@ void CG_RegisterDefaultBlasterShaders(void)
 	//
 
 	cgs.media.whiteBlasterShot = trap->R_RegisterShader("laserbolt_white"); // the basic color of the actual bolt...
-	CG_MakeShaderBoltGlow(cgs.media.whiteBlasterShot, trap->R_RegisterShader("laserbolt_white_glow"), colorWhite); // a glow shader matching the bolt color and glow color...
+	//CG_MakeShaderBoltGlow(cgs.media.whiteBlasterShot, trap->R_RegisterShader("laserbolt_white_glow"), colorWhite); // a glow shader matching the bolt color and glow color...
 
 	cgs.media.yellowBlasterShot = trap->R_RegisterShader("laserbolt_yellow");
-	CG_MakeShaderBoltGlow(cgs.media.yellowBlasterShot, trap->R_RegisterShader("laserbolt_yellow_glow"), colorYellow);
+	//CG_MakeShaderBoltGlow(cgs.media.yellowBlasterShot, trap->R_RegisterShader("laserbolt_yellow_glow"), colorYellow);
 
 	cgs.media.redBlasterShot = trap->R_RegisterShader("laserbolt_red");
-	CG_MakeShaderBoltGlow(cgs.media.redBlasterShot, trap->R_RegisterShader("laserbolt_red_glow"), colorRed);
+	//CG_MakeShaderBoltGlow(cgs.media.redBlasterShot, trap->R_RegisterShader("laserbolt_red_glow"), colorRed);
 
 	cgs.media.blueBlasterShot = trap->R_RegisterShader("laserbolt_blue");
-	CG_MakeShaderBoltGlow(cgs.media.blueBlasterShot, trap->R_RegisterShader("laserbolt_blue_glow"), colorBlue);
+	//CG_MakeShaderBoltGlow(cgs.media.blueBlasterShot, trap->R_RegisterShader("laserbolt_blue_glow"), colorBlue);
 
 	cgs.media.greenBlasterShot = trap->R_RegisterShader("laserbolt_green");
-	CG_MakeShaderBoltGlow(cgs.media.greenBlasterShot, trap->R_RegisterShader("laserbolt_green_glow"), colorGreen);
+	//CG_MakeShaderBoltGlow(cgs.media.greenBlasterShot, trap->R_RegisterShader("laserbolt_green_glow"), colorGreen);
 	
 	cgs.media.PurpleBlasterShot = trap->R_RegisterShader("laserbolt_purple");
 	vec3_t		colorPurple = { 1.0, 0.0, 1.0 };
-	CG_MakeShaderBoltGlow(cgs.media.PurpleBlasterShot, trap->R_RegisterShader("laserbolt_purple_glow"), colorPurple);
+	//CG_MakeShaderBoltGlow(cgs.media.PurpleBlasterShot, trap->R_RegisterShader("laserbolt_purple_glow"), colorPurple);
 
 	cgs.media.orangeBlasterShot = trap->R_RegisterShader("laserbolt_orange");
-	CG_MakeShaderBoltGlow(cgs.media.orangeBlasterShot, trap->R_RegisterShader("laserbolt_orange_glow"), colorOrange);
+	//CG_MakeShaderBoltGlow(cgs.media.orangeBlasterShot, trap->R_RegisterShader("laserbolt_orange_glow"), colorOrange);
 
 	//custom gfx files for other bolts 
 
 	cgs.media.BlasterBolt_Cap_BluePurple = trap->R_RegisterShader("BlasterBolt_Line_BluePurple");
-	CG_MakeShaderBoltGlow(cgs.media.BlasterBolt_Cap_BluePurple, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"), colorPurple);
+	//CG_MakeShaderBoltGlow(cgs.media.BlasterBolt_Cap_BluePurple, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"), colorPurple);
 
 	//
 	// UQ1: Adding saber colors here... Stoiss: Add any extra colors here...
 	//
 
 	cgs.media.whiteSaber = trap->R_RegisterShader("laserbolt_white"); // the basic color of the actual bolt...
-	CG_MakeShaderBoltGlow(cgs.media.whiteSaber, trap->R_RegisterShader("laserbolt_white_glow"), colorWhite); // a glow shader matching the bolt color and glow color...
+	//CG_MakeShaderBoltGlow(cgs.media.whiteSaber, trap->R_RegisterShader("laserbolt_white_glow"), colorWhite); // a glow shader matching the bolt color and glow color...
 
 	cgs.media.yellowSaber = trap->R_RegisterShader("laserbolt_yellow");
-	CG_MakeShaderBoltGlow(cgs.media.yellowSaber, trap->R_RegisterShader("laserbolt_yellow_glow"), colorYellow);
+	//CG_MakeShaderBoltGlow(cgs.media.yellowSaber, trap->R_RegisterShader("laserbolt_yellow_glow"), colorYellow);
 
 	cgs.media.redSaber = trap->R_RegisterShader("laserbolt_red");
-	CG_MakeShaderBoltGlow(cgs.media.redSaber, trap->R_RegisterShader("laserbolt_red_glow"), colorRed);
+	//CG_MakeShaderBoltGlow(cgs.media.redSaber, trap->R_RegisterShader("laserbolt_red_glow"), colorRed);
 
 	cgs.media.blueSaber = trap->R_RegisterShader("laserbolt_blue");
-	CG_MakeShaderBoltGlow(cgs.media.blueSaber, trap->R_RegisterShader("laserbolt_blue_glow"), colorBlue);
+	//CG_MakeShaderBoltGlow(cgs.media.blueSaber, trap->R_RegisterShader("laserbolt_blue_glow"), colorBlue);
 
 	cgs.media.greenSaber = trap->R_RegisterShader("laserbolt_green");
-	CG_MakeShaderBoltGlow(cgs.media.greenSaber, trap->R_RegisterShader("laserbolt_green_glow"), colorGreen);
+	//CG_MakeShaderBoltGlow(cgs.media.greenSaber, trap->R_RegisterShader("laserbolt_green_glow"), colorGreen);
 
 	cgs.media.purpleSaber = trap->R_RegisterShader("laserbolt_purple");
-	CG_MakeShaderBoltGlow(cgs.media.purpleSaber, trap->R_RegisterShader("laserbolt_purple_glow"), colorPurple);
+	//CG_MakeShaderBoltGlow(cgs.media.purpleSaber, trap->R_RegisterShader("laserbolt_purple_glow"), colorPurple);
 
 	cgs.media.orangeSaber = trap->R_RegisterShader("laserbolt_orange");
-	CG_MakeShaderBoltGlow(cgs.media.orangeSaber, trap->R_RegisterShader("laserbolt_orange_glow"), colorOrange);
+	//CG_MakeShaderBoltGlow(cgs.media.orangeSaber, trap->R_RegisterShader("laserbolt_orange_glow"), colorOrange);
 
 	cgs.media.bluePurpleSaber = trap->R_RegisterShader("BlasterBolt_Line_BluePurple");
-	CG_MakeShaderBoltGlow(cgs.media.bluePurpleSaber, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"), colorPurple);
+	//CG_MakeShaderBoltGlow(cgs.media.bluePurpleSaber, trap->R_RegisterShader("BlasterBolt_Cap_BluePurple"), colorPurple);
 }
 
 qhandle_t CG_GetSaberBoltColor(saber_colors_t color)
@@ -217,6 +219,7 @@ float *CG_Get3DWeaponBoltLightColor(qhandle_t boltShader)
 	return colorBlack;
 }
 
+#if 0
 qhandle_t CG_Get3DWeaponBoltGlowColor(qhandle_t boltShader)
 {
 	for (int i = 0; i < numBoltGlowIndexes; i++)
@@ -229,6 +232,7 @@ qhandle_t CG_Get3DWeaponBoltGlowColor(qhandle_t boltShader)
 
 	return -1;
 }
+#endif
 
 qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolean altFire)
 {

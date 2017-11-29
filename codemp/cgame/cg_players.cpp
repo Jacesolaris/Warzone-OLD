@@ -6039,13 +6039,16 @@ void FX_SaberBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_
 
 	AddRefEntityToScene(&ent);
 
+#if 0
 	// Now add glow...
 	memset(&ent, 0, sizeof(refEntity_t));
 
 	qhandle_t glowColorShader = CG_Get3DWeaponBoltGlowColor(shader);
 
 	if (glowColorShader)
+#endif
 	{// Now add glow...
+#if 0
 		vec3_t org2, back;
 		VectorMA(org, -((length * 1.25 * 16.0) - length * 16.0) * 4.0, fwd, org2);
 		VectorCopy(org2, ent.origin);
@@ -6068,6 +6071,7 @@ void FX_SaberBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_
 		ent.customShader = glowColorShader;
 
 		AddRefEntityToScene(&ent);
+#endif
 
 		// Add light as well...
 		vec3_t lightColor;

@@ -1350,7 +1350,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 		vec4_t local4;
 		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * tess.shader->glowStrength * 2.0;
-		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, 0.0);
+		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, tess.shader->glowVibrancy * r_glowVibrancy->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 
 		vec4_t local5;
@@ -1372,7 +1372,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector); // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, glowVibrancy
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector); // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky Only...
 	}
 

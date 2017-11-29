@@ -57,7 +57,7 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
+uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, glowVibrancy
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 
 uniform vec2						u_Dimensions;
@@ -89,6 +89,7 @@ uniform float						u_Time;
 #define SHADER_STAGE_NUM			u_Local4.r
 #define SHADER_GLOW_STRENGTH		u_Local4.g
 #define SHADER_SHOW_SPLAT			u_Local4.b
+#define SHADER_GLOW_VIBRANCY		u_Local4.a
 
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
@@ -510,6 +511,15 @@ vec2 GetSway ()
 	return vWindDirection.xy*fWindPower*fBranchHardiness;
 }
 
+vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
+{
+	vec3	lumCoeff = vec3(0.212656, 0.715158, 0.072186);  				//Calculate luma with these values
+	float	max_color = max(origcolor.r, max(origcolor.g,origcolor.b)); 	//Find the strongest color
+	float	min_color = min(origcolor.r, min(origcolor.g,origcolor.b)); 	//Find the weakest color
+	float	color_saturation = max_color - min_color; 						//Saturation is the difference between min and max
+	float	luma = dot(lumCoeff, origcolor.rgb); 							//Calculate luma (grey)
+	return mix(vec3(luma), origcolor.rgb, (1.0 + (vibrancyStrength * (1.0 - (sign(vibrancyStrength) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
+}
 
 void main()
 {
@@ -698,6 +708,11 @@ void main()
 			glowColor.rgb = (glowColor.rgb * glowColor.a);
 		}
 
+		if (SHADER_GLOW_VIBRANCY != 0.0)
+		{
+			glowColor.rgb = Vibrancy( glowColor.rgb, SHADER_GLOW_VIBRANCY );
+		}
+
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
 
@@ -725,10 +740,19 @@ void main()
 	}
 	else if (USE_GLOW_BUFFER > 0.0)
 	{
+		vec4 glowColor = gl_FragColor;
+
+		if (SHADER_GLOW_VIBRANCY != 0.0)
+		{
+			glowColor.rgb = Vibrancy( glowColor.rgb, SHADER_GLOW_VIBRANCY );
+		}
+
+		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
+		glowColor.rgb *= SHADER_GLOW_STRENGTH;
+		out_Glow = glowColor;
+
 		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
-
-		out_Glow = gl_FragColor;
 
 		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{

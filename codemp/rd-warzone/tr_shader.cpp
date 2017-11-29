@@ -4077,6 +4077,7 @@ static qboolean ParseShader( const char *name, const char **text )
 
 	// Also init base glow strength to 1.0.
 	shader.glowStrength = 1.0;
+	shader.glowVibrancy = 0.0;
 
 	s = 0;
 
@@ -4309,6 +4310,18 @@ static qboolean ParseShader( const char *name, const char **text )
 				continue;
 			}
 			shader.glowStrength = atof(token);
+			continue;
+		}
+		else if (!Q_stricmp(token, "glowVibrancy"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (!token[0])
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'glowStrength' keyword in shader '%s'\n", shader.name);
+				shader.glowVibrancy = 0.0;
+				continue;
+			}
+			shader.glowVibrancy = atof(token);
 			continue;
 		}
 		//
