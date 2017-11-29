@@ -6864,15 +6864,166 @@ JustDoIt:
 		return;
 	}
 
+	effectTrailArgStruct_t fx;
+
+	if (saberTrail)
+	{// Trails...
+		//saberTrail->duration = 0;
+		saberTrail->duration = saberMoveData[cent->currentState.saberMove].trailLength;
+
+		int trailDur = int(float(saberTrail->duration) / 5.0f);
+
+		if (!trailDur)
+		{ //hmm.. ok, default
+			if (BG_SuperBreakWinAnim(cent->currentState.torsoAnim))
+			{
+				trailDur = 150;
+			}
+			else
+			{
+				trailDur = SABER_TRAIL_TIME;
+			}
+		}
+
+		trailDur = int(float(trailDur) * cg_saberTrailMult.value);
+
+		// if we happen to be timescaled or running in a high framerate situation, we don't want to flood
+		// the system with very small trail slices...but perhaps doing it by distance would yield better results?
+		if (cg.time >= saberTrail->lastTime + 2000) saberTrail->lastTime = cg.time + 2;
+
+		if (cg.time > saberTrail->lastTime + 2 && cg.time < saberTrail->lastTime + 2000) // 2ms
+		{
+			qboolean inSaberMove = (BG_SaberInAttack(cent->currentState.saberMove) || BG_SuperBreakWinAnim(cent->currentState.torsoAnim)) ? qtrue : qfalse;
+
+			if ((BG_SuperBreakWinAnim(cent->currentState.torsoAnim) || saberMoveData[cent->currentState.saberMove].trailLength > 0 || ((cent->currentState.powerups & (1 << PW_SPEED) && cg_speedTrail.integer)) || (cent->currentState.saberInFlight && saberNum == 0))) // if we have a stale segment, don't draw until we have a fresh one
+			{
+				float diff = 0;
+
+				switch (scolor)
+				{
+				case SABER_RED:
+					VectorSet(rgb1, 255.0f, 0.0f, 0.0f);
+					break;
+				case SABER_ORANGE:
+					VectorSet(rgb1, 255.0f, 64.0f, 0.0f);
+					break;
+				case SABER_YELLOW:
+					VectorSet(rgb1, 255.0f, 255.0f, 0.0f);
+					break;
+				case SABER_GREEN:
+					VectorSet(rgb1, 0.0f, 255.0f, 0.0f);
+					break;
+				case SABER_BLUE:
+					VectorSet(rgb1, 0.0f, 64.0f, 255.0f);
+					break;
+				case SABER_PURPLE:
+					VectorSet(rgb1, 220.0f, 0.0f, 255.0f);
+					break;
+				case SABER_RGB:
+				case SABER_PIMP:
+				case SABER_SCRIPTED:
+				case SABER_BLACK:
+				case SABER_WHITE:
+					VectorSet(rgb1, 1.0f, 1.0f, 1.0f);
+					break;
+				default:
+					VectorSet(rgb1, 0.0f, 64.0f, 255.0f);
+					break;
+				}
+
+				// Here we will use the happy process of filling a struct in with arguments and passing it to a trap function
+				// so that we can take the struct and fill in an actual CTrail type using the data within it once we get it
+				// into the effects area
+
+				// Go from new muzzle to new end...then to old end...back down to old muzzle...finally
+				// connect back to the new muzzle...this is our trail quad
+				VectorCopy(org_, fx.mVerts[0].origin);
+				VectorMA(end, 3.0f, axis_[0], fx.mVerts[1].origin);
+
+				VectorCopy(saberTrail->tip, fx.mVerts[2].origin);
+				VectorCopy(saberTrail->base, fx.mVerts[3].origin);
+
+				diff = cg.time - saberTrail->lastTime;
+
+				// I'm not sure that clipping this is really the best idea
+				//This prevents the trail from showing at all in low framerate situations.
+				//if ( diff <= SABER_TRAIL_TIME * 2 )
+				if ((inSaberMove && diff <= 10000) || (!inSaberMove && diff <= SABER_TRAIL_TIME * 2))
+				{ //don't draw it if the last time is way out of date
+					float oldAlpha = 1.0f - (diff / trailDur);
+
+					if ((!WP_SaberBladeUseSecondBladeStyle(&client->saber[saberNum], bladeNum) && client->saber[saberNum].trailStyle == 1)
+						|| (WP_SaberBladeUseSecondBladeStyle(&client->saber[saberNum], bladeNum) && client->saber[saberNum].trailStyle2 == 1))
+					{//motion trail
+						fx.mShader = cgs.media.swordTrailShader;
+						VectorSet(rgb1, 32.0f, 32.0f, 32.0f); // make the sith sword trail pretty faint
+						//trailDur *= 2.0f; // stay around twice as long?
+					}
+					else
+					{
+						//extern qhandle_t CG_GetSaberBoltColor(saber_colors_t color);
+						//fx.mShader = CG_GetSaberBoltColor((saber_colors_t)scolor);// cgs.media.saberBlurShader;
+						fx.mShader = cgs.media.saberBlurShader;
+					}
+
+					fx.mKillTime = int(float(trailDur) / cg_saberTrailDecay.value);
+					fx.mSetFlags = FX_USE_ALPHA;
+
+					// New muzzle
+					VectorCopy(rgb1, fx.mVerts[0].rgb);
+					fx.mVerts[0].alpha = 255.0f * cg_saberTrailAlpha.value * oldAlpha;
+
+					fx.mVerts[0].ST[0] = 0.0f;
+					fx.mVerts[0].ST[1] = 1.0f;
+					fx.mVerts[0].destST[0] = 1.0f;
+					fx.mVerts[0].destST[1] = 1.0f;
+
+					// new tip
+					VectorCopy(rgb1, fx.mVerts[1].rgb);
+					fx.mVerts[1].alpha = 255.0f * cg_saberTrailAlpha.value * oldAlpha;
+
+					fx.mVerts[1].ST[0] = 0.0f;
+					fx.mVerts[1].ST[1] = 0.0f;
+					fx.mVerts[1].destST[0] = 1.0f;
+					fx.mVerts[1].destST[1] = 0.0f;
+
+					// old tip
+					VectorCopy(rgb1, fx.mVerts[2].rgb);
+					fx.mVerts[2].alpha = 0.0;// 255.0f * cg_saberTrailAlpha.value * oldAlpha;
+
+					fx.mVerts[2].ST[0] = 1.0f - oldAlpha; // NOTE: this just happens to contain the value I want
+					fx.mVerts[2].ST[1] = 0.0f;
+					fx.mVerts[2].destST[0] = 1.0f + fx.mVerts[2].ST[0];
+					fx.mVerts[2].destST[1] = 0.0f;
+
+					// old muzzle
+					VectorCopy(rgb1, fx.mVerts[3].rgb);
+					fx.mVerts[3].alpha = 0.0;//255.0f * cg_saberTrailAlpha.value * oldAlpha;
+
+					fx.mVerts[3].ST[0] = 1.0f - oldAlpha; // NOTE: this just happens to contain the value I want
+					fx.mVerts[3].ST[1] = 1.0f;
+					fx.mVerts[3].destST[0] = 1.0f + fx.mVerts[2].ST[0];
+					fx.mVerts[3].destST[1] = 1.0f;
+
+					trap->FX_AddPrimitive(&fx);
+				}
+			}
+
+			// we must always do this, even if we aren't active..otherwise we won't know where to pick up from
+			VectorCopy(org_, saberTrail->base);
+			VectorMA(end, 3.0f, axis_[0], saberTrail->tip);
+			saberTrail->lastTime = cg.time;
+		}
+	}
+
 	CG_Do3DSaber(org_, axis_[0], saberLen, client->saber[saberNum].blade[bladeNum].lengthMax, client->saber[saberNum].blade[bladeNum].radius, (saber_colors_t)scolor);
 
 	//[NewLightningEFX]
 	if (cent->currentState.emplacedOwner + 1000 > cg.time)
 	{
-			CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
-			CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
-			CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
-		
+		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
+		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
+		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
 	}
 	//[/NewLightningEFX]
 }
