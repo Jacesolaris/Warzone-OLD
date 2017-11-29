@@ -2618,7 +2618,11 @@ int Q_clampi(int min, int value, int max);
 
 qboolean StringContainsWord(const char *haystack, const char *needle);
 qboolean HaveWeapon( playerState_t *ps, int weapon );
-qboolean WeaponSniperCharge(int weapon);
+qboolean WeaponIsPistol(int weapon);
+qboolean WeaponIsSniper(int weapon);
+qboolean WeaponIsSniperCharge(int weapon);
 qboolean WeaponIsSniperNoCharge ( int weapon );
 qboolean IsRollWithPistols(int weapon);
+qboolean WeaponIsGrenade(int weapon);
+qboolean WeaponIsRocketLauncher(int weapon);
 

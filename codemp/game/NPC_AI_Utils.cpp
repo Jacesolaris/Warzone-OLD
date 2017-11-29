@@ -381,7 +381,7 @@ qboolean AI_ValidateGroupMember( AIGroupInfo_t *group, gentity_t *member )
 
 	if ( member->client->ps.weapon == WP_SABER ||//!= self->s.weapon )
 		member->client->ps.weapon == WP_THERMAL ||
-		WeaponSniperCharge(member->client->ps.weapon) ||
+		WeaponIsSniperCharge(member->client->ps.weapon) ||
 		member->client->ps.weapon == WP_EMPLACED_GUN ||
 //		member->client->ps.weapon == WP_BOT_LASER ||		// Probe droid	- Laser blast
 		member->client->ps.weapon == WP_STUN_BATON ||

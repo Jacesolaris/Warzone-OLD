@@ -9049,7 +9049,7 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 		weaponType = WP_Z6_BLASTER_CANON;
 		break;
 	case HRL_CLONERIFLE:
-		weaponType = WP_DC_15A_Rifle;
+		weaponType = WP_DC_15A_RIFLE;
 		break;
 	case HRL_DC15_EXT:
 		weaponType = WP_DC15_EXT;
@@ -11299,10 +11299,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//Clone Rifle
 		if (backInUse //back in use already
-			|| (primaryWeapon != WP_DC_15A_Rifle && secondaryWeapon != WP_DC_15A_Rifle && temporaryWeapon != WP_DC_15A_Rifle) //don't have weapon
-			|| cent->currentState.weapon == WP_DC_15A_Rifle) //currently using weapon
+			|| (primaryWeapon != WP_DC_15A_RIFLE && secondaryWeapon != WP_DC_15A_RIFLE && temporaryWeapon != WP_DC_15A_RIFLE) //don't have weapon
+			|| cent->currentState.weapon == WP_DC_15A_RIFLE) //currently using weapon
 		{//don't render weapon on back
-			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_DC_15A_Rifle)
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_DC_15A_RIFLE)
 			{
 				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
 				{
@@ -11315,7 +11315,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		{//render weapon on back
 			if (ci->holster_launcher != -1)
 			{//have specialized bolt
-				if (ci->launcher_holstered != WP_DC_15A_Rifle)
+				if (ci->launcher_holstered != WP_DC_15A_RIFLE)
 				{//don't already have the weapon bolted.
 					if (ci->launcher_holstered != 0)
 					{//we have something else bolted there, remove it first.
@@ -11327,10 +11327,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 					}
 
 					//now bolt the weapon
-					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_DC_15A_Rifle), 0, cent->ghoul2,
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_DC_15A_RIFLE), 0, cent->ghoul2,
 						G2MODEL_LAUNCHER_HOLSTERED);
 					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
-					ci->launcher_holstered = WP_DC_15A_Rifle;
+					ci->launcher_holstered = WP_DC_15A_RIFLE;
 				}
 			}
 			else

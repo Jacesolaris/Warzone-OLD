@@ -999,7 +999,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			//FIXME: we can never go back to alt-fire this way since, after this, we don't know if we were initially supposed to use alt-fire or not...
 		}
 	}
-	else if (WeaponSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
+	else if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
 	{//sniping... should be assumed
 		if ( !(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE) )
 		{//use primary fire
@@ -1010,7 +1010,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			return;
 		}
 	}
-	else if (WeaponSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
+	else if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
 	{//sniper rifle, but too close...
 		if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
 		{//use primary fire
@@ -4282,7 +4282,7 @@ static void Jedi_FaceEnemy( gentity_t *aiEnt, qboolean doPitch )
 	if ( (NPC_IsBountyHunter(aiEnt) || aiEnt->hasJetpack)
 		&& TIMER_Done( aiEnt, "flameTime" )
 		&& aiEnt->s.weapon != WP_NONE
-		&& !(WeaponSniperCharge(aiEnt->s.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
+		&& !(WeaponIsSniperCharge(aiEnt->s.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
 		&& (aiEnt->s.weapon != WP_ROCKET_LAUNCHER||!(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))
 		&& aiEnt->s.weapon != WP_THERMAL
 		&& aiEnt->s.weapon != WP_TRIP_MINE
@@ -7285,10 +7285,10 @@ void Follower_SelectBestWeapon(gentity_t *aiEnt)
 		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
 	}
 	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DC_15A_Rifle
+		&& aiEnt->client->ps.weapon != WP_DC_15A_RIFLE
 		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_DC_15A_Rifle);
+		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
 	}
 	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
 	{
@@ -7305,10 +7305,10 @@ void Gunner_SelectBestWeapon(gentity_t *aiEnt)
 		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
 	}
 	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DC_15A_Rifle
+		&& aiEnt->client->ps.weapon != WP_DC_15A_RIFLE
 		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_DC_15A_Rifle);
+		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
 	}
 	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
 	{
@@ -7325,10 +7325,10 @@ void AdvancedGunner_SelectBestWeapon( gentity_t *aiEnt)
 		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
 	}
 	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DC_15A_Rifle
+		&& aiEnt->client->ps.weapon != WP_DC_15A_RIFLE
 		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 400 )
 	{
-		Boba_ChangeWeapon(aiEnt, WP_DC_15A_Rifle);
+		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
 	}
 	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
 	{
@@ -8019,7 +8019,7 @@ void NPC_BSJedi_Default( gentity_t *aiEnt)
 
 		NPC_SelectBestWeapon(aiEnt);
 
-		if (WeaponSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
+		if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
 		{// Using sniper rifle... Use sniper AI...
 			//aiEnt->NPC->scriptFlags |= SCF_ALT_FIRE;
 			NPC_BSSniper_Default(aiEnt);

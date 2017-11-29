@@ -74,11 +74,15 @@ static void CG_LoadViewWeapon(weaponInfo_t *weapon, const char *modelPath)
 void CG_SetWeaponHandModel(weaponInfo_t    *weaponInfo, int weaponType)
 {
 	if (weaponType == WEAPONTYPE_PISTOL)
-		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/blaster_pistol/blaster_pistol_hand.md3");
+		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/briar_pistol/briar_pistol_hand.md3");
 	else if (weaponType == WEAPONTYPE_BLASTER || weaponType == WEAPONTYPE_NONE)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/blaster_r/blaster_hand.md3");
 	else if (weaponType == WEAPONTYPE_SNIPER)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/disruptor/disruptor_hand.md3");
+	else if (weaponType == WEAPONTYPE_ROCKET_LAUNCHER)
+		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/merr_sonn/merr_sonn_hand.md3");
+	else if (weaponType == WEAPONTYPE_GRENADE)
+		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/thermal/thermal_hand.md3");
 }
 
 /*
@@ -224,7 +228,7 @@ void CG_RegisterWeapon( int weaponNum) {
 //	strcpy( path, item->view_model );
 //	COM_StripExtension( path, path );
 //	strcat( path, "_flash.md3" );
-	weaponInfo->flashModel = 0;//trap->R_RegisterModel( path );
+	weaponInfo->flashModel = NULL;
 
 	if (weaponNum == WP_DISRUPTOR ||
 		weaponNum == WP_FLECHETTE ||
@@ -263,12 +267,38 @@ void CG_RegisterWeapon( int weaponNum) {
 		Q_strcat( path, sizeof(path), "_hand.md3" );
 		weaponInfo->handsModel = trap->R_RegisterModel( path );
 
-		//if (!weaponInfo->handsModel)
-		//	CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_BLASTER);
+#if 0
+		if (!weaponInfo->handsModel)
+		{
+			if (WeaponIsGrenade(weaponNum))
+			{
+				//CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_GRENADE);
+				weaponInfo->handsModel = NULL;
+			}
+			else if (WeaponIsRocketLauncher(weaponNum))
+			{
+				//CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_ROCKET_LAUNCHER);
+				weaponInfo->handsModel = NULL;
+			}
+			else if (WeaponIsSniper(weaponNum))
+			{
+				CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_SNIPER);
+			}
+			else if (WeaponIsPistol(weaponNum))
+			{
+				//CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_PISTOL);
+				weaponInfo->handsModel = NULL;
+			}
+			else
+			{
+				CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_BLASTER);
+			}
+		}
+#endif
 	}
 	else
 	{
-		weaponInfo->handsModel = 0;
+		weaponInfo->handsModel = NULL;
 	}
 
 	/*
@@ -1145,7 +1175,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		trap->FX_RegisterEffect("blasters/red_deflect");
 		break;
 
-	case WP_DC_15A_Rifle:
+	case WP_DC_15A_RIFLE:
 		weaponInfo->bolt3DShader = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
 		weaponInfo->bolt3DShaderAlt = cgs.media.blueBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
 		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.

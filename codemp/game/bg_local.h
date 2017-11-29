@@ -11,7 +11,7 @@
 
 #define	OVERCLIP		1.001f
 qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
-qboolean WeaponSniperCharge(int weapon);
+qboolean WeaponIsSniperCharge(int weapon);
 qboolean WeaponIsSniperNoCharge ( int weapon );
 qboolean IsRollWithPistols(int weapon);
 

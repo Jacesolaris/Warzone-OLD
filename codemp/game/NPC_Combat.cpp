@@ -257,7 +257,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 
 		case WP_DC15:
 		case WP_WESTARM5:
-		case WP_DC_15A_Rifle:
+		case WP_DC_15A_RIFLE:
 		case WP_REPEATER:
 			if ( !(self->NPC->scriptFlags&SCF_ALT_FIRE) )
 			{//rapid-fire blasters

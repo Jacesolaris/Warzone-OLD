@@ -33,7 +33,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{30,	7,		-6	},	// WP_EE3,
 	{30, 	3,		-1	},	// WP_DC_15S_CLONE_PISTOL,
 	{30,	9,		-6	},	// WP_DLT_19,
-	{30,	9,	    -6	},	// WP_DC_15A_Rifle,
+	{30,	9,	    -6	},	// WP_DC_15A_RIFLE,
 	{30, 	3.5,  	-1	},	// WP_WESTER_PISTOL,
 	{30, 	3.5,  	-1	},	// WP_ELG_3A,
 	{30, 	3,  	-1	},	// WP_S5_PISTOL,
@@ -179,6 +179,58 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 
 	};
 
+qboolean WeaponIsGrenade(int weapon)
+{
+	if (weapon >= WP_THERMAL && weapon <= WP_DET_PACK)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean WeaponIsRocketLauncher(int weapon)
+{
+	switch (weapon)
+	{
+	case WP_E60_ROCKET_LAUNCHER:
+	case WP_CW_ROCKET_LAUNCHER:
+	case WP_ROCKET_LAUNCHER:
+		return qtrue;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+
+qboolean WeaponIsPistol(int weapon)
+{
+	switch (weapon)
+	{
+	case WP_BRYAR_PISTOL:
+	case WP_BRYAR_OLD:
+	case WP_DC_15S_CLONE_PISTOL:
+	case WP_WESTER_PISTOL:
+	case WP_ELG_3A:
+	case WP_S5_PISTOL:
+	case WP_WOOKIES_PISTOL:
+	case WP_TESTGUN:
+	case WP_THERMAL:
+	case WP_FRAG_GRENADE:
+	case WP_FRAG_GRENADE_OLD:
+	case WP_CYROBAN_GRENADE:
+	case WP_DC_17_CLONE_PISTOL:
+	case WP_SPOTING_BLASTER:
+	case WP_A200_ACP_PISTOL:
+		return qtrue;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+
 qboolean IsRollWithPistols(int weapon)
 {
 	switch (weapon)
@@ -205,8 +257,7 @@ qboolean IsRollWithPistols(int weapon)
 
 	return qfalse;
 }
-//theses weapons have charge option if they not are listed under the WeaponIsSniperNoCharge function.
-qboolean WeaponSniperCharge(int weapon)
+qboolean WeaponIsSniper(int weapon)
 {
 	switch (weapon)
 	{
@@ -219,6 +270,22 @@ qboolean WeaponSniperCharge(int weapon)
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_BOWCASTER_CLASSIC:
 	case WP_DH_17_PISTOL:
+		return qtrue;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+//theses weapons have charge option if they not are listed under the WeaponIsSniperNoCharge function.
+qboolean WeaponIsSniperCharge(int weapon)
+{
+	switch (weapon)
+	{
+	case WP_DISRUPTOR:
+	case WP_DLT_19:
+	case WP_HEAVY_SCOPE_BOWCASTER:
+	case WP_BRYAR_RIFLE_SCOPE:
 		return qtrue;
 	default:
 		break;
@@ -267,18 +334,18 @@ qboolean HaveWeapon ( playerState_t *ps, int weapon )
 // NOTE: "" means unused/ignore
 scopeData_t scopeData[] = {
 	// char	scopename[64],							char scopeModel[128],							char scopeModelShader[128],				char gunMaskShader[128],								char	maskShader[128],								char	insertShader[128],					char	lightShader[128],						char	tickShader[128],				char	chargeShader[128],				int scopeViewX,	int scopeViewY,	int scopeViewW,	int scopeViewH,		char	zoomStartSound[128],				char	zoomEndSound[128]					qboolean instantZoom,	float scopeZoomMin	float scopeZoomMax	float scopeZoomSpeed							
-	"No Scope",										"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"",											"",											qtrue,					1.0,				1.0,				0.0,							
-	"Binoculars",									"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"sound/interface/zoomstart.wav",			"sound/interface/zoomend.wav",				qfalse,					1.5,				3.0,				0.1,							
-	"Short Range Viewfinder",						"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"",											"",											qtrue,					1.2,				2.0,				0.0,							
-	"Mid Range Viewfinder",							"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"",											"",											qtrue,					1.5,				5.0,				0.0,							
-	"Tenloss Disruptor Scope",						"",												"",										"",  													"gfx/2d/cropCircle2",									"gfx/2d/cropCircle",						"gfx/2d/cropCircleGlow",						"gfx/2d/insertTick",					"gfx/2d/crop_charge",					128,			50,				382,			382,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					3.0,				3.0,				0.2,							
-	"Blastech Bowcaster Scope",						"",												"",										"",														"gfx/2d/bowMask",										"gfx/2d/bowInsert",							"",												"",										"",										0,				0,				0,				0,					"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.2,				1.2,				0.4,							
-	"Blastech EE3 Scope",							"",												"",										"",														"gfx/2d/fett/cropCircle2",								"gfx/2d/fett/cropCircle",					"gfx/2d/fett/cropCircleGlow",					"",										"gfx/2d/fett/crop_charge",				0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5,				1.5,				0.3,							
-	"Blastech A280 Scope",							"",												"",										"gfx/2D/arcMask",										"gfx/2d/a280cropCircle2",								"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5,				1.5,				0.2,							
-	"Blastech DLT 19 Scope",						"",												"",										"gfx/2d/DLT-19_HeavyBlaster/scope_mask_overlay",		"gfx/2d/DLT-19_HeavyBlaster/scope_mask",				"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					2.5,				2.5,				0.2,							
-	"BlastTech ACP HAMaR Scope",					"",												"",										"gfx/2d/acp_sniperrifle/scope_mask_overlay",			"gfx/2d/acp_sniperrifle/scope_mask",					"",											"",												"",										"",										162,			20,				316,			440,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5,				5.0,				0.2,							
-	"BlastTech Rifle Bowcaster Scope",				"",												"",										"",														"gfx/2d/Bowcaster/lensmask",							"gfx/2d/Bowcaster/lensmask_zoom",			"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qtrue,					1.2,				1.2,				0.0,							
-	"BlastTech Rifle Heavy Bowcaster Scope",		"",												"",										"gfx/2d/Bowcaster_Heavy/scope_mask_overlay",			"gfx/2d/Bowcaster_Heavy/scope_mask",					"",											"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qtrue,					1.2,				1.2,				0.0,							
-	"BlastTech Bryar Sniper Scope",					"",												"",										"",														"gfx/2d/Bryar_Rifle/scope_mask",						"",											"",												"",										"",										112,			36,				414,			414,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5,				1.5,				0.2,							
-	"BlastTech DH-17 Pistol Scope",					"",												"",										"gfx/2d/DH-17_Pistol/scope_mask_overlay",				"gfx/2d/DH-17_Pistol/scope_mask",						"",											"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qtrue,					1.0,				1.0,				0.0,							
+	"No Scope",										"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"",											"",											qtrue,					1.0f,				1.0f,				0.0f,							
+	"Binoculars",									"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"sound/interface/zoomstart.wav",			"sound/interface/zoomend.wav",				qfalse,					1.5f,				3.0f,				0.1f,							
+	"Short Range Viewfinder",						"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"",											"",											qtrue,					1.2f,				2.0f,				0.0f,							
+	"Mid Range Viewfinder",							"",												"",										"",														"",														"",											"",												"",										"",										0,				0,				640,			480,				"",											"",											qtrue,					1.5f,				5.0f,				0.0f,							
+	"Tenloss Disruptor Scope",						"",												"",										"",  													"gfx/2d/cropCircle2",									"gfx/2d/cropCircle",						"gfx/2d/cropCircleGlow",						"gfx/2d/insertTick",					"gfx/2d/crop_charge",					128,			50,				382,			382,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					3.0f,				3.0f,				0.2f,							
+	"Blastech Bowcaster Scope",						"",												"",										"",														"gfx/2d/bowMask",										"gfx/2d/bowInsert",							"",												"",										"",										0,				0,				0,				0,					"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.2f,				1.2f,				0.4f,							
+	"Blastech EE3 Scope",							"",												"",										"",														"gfx/2d/fett/cropCircle2",								"gfx/2d/fett/cropCircle",					"gfx/2d/fett/cropCircleGlow",					"",										"gfx/2d/fett/crop_charge",				0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5f,				1.5f,				0.3f,							
+	"Blastech A280 Scope",							"",												"",										"gfx/2D/arcMask",										"gfx/2d/a280cropCircle2",								"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5f,				1.5f,				0.2f,							
+	"Blastech DLT 19 Scope",						"",												"",										"gfx/2d/DLT-19_HeavyBlaster/scope_mask_overlay",		"gfx/2d/DLT-19_HeavyBlaster/scope_mask",				"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					2.5f,				2.5f,				0.2f,							
+	"BlastTech ACP HAMaR Scope",					"",												"",										"gfx/2d/acp_sniperrifle/scope_mask_overlay",			"gfx/2d/acp_sniperrifle/scope_mask",					"",											"",												"",										"",										162,			20,				316,			440,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5f,				5.0f,				0.2f,							
+	"BlastTech Rifle Bowcaster Scope",				"",												"",										"",														"gfx/2d/Bowcaster/lensmask",							"gfx/2d/Bowcaster/lensmask_zoom",			"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qtrue,					1.2f,				1.2f,				0.0f,							
+	"BlastTech Rifle Heavy Bowcaster Scope",		"",												"",										"gfx/2d/Bowcaster_Heavy/scope_mask_overlay",			"gfx/2d/Bowcaster_Heavy/scope_mask",					"",											"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qtrue,					1.2f,				1.2f,				0.0f,							
+	"BlastTech Bryar Sniper Scope",					"",												"",										"",														"gfx/2d/Bryar_Rifle/scope_mask",						"",											"",												"",										"",										112,			36,				414,			414,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qfalse,					1.5f,				1.5f,				0.2f,							
+	"BlastTech DH-17 Pistol Scope",					"",												"",										"gfx/2d/DH-17_Pistol/scope_mask_overlay",				"gfx/2d/DH-17_Pistol/scope_mask",						"",											"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",		qtrue,					1.0f,				1.0f,				0.0f,							
 };

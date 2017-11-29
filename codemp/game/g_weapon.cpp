@@ -5698,7 +5698,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			break;
 
 
-		case WP_DC_15A_Rifle:
+		case WP_DC_15A_RIFLE:
 			if (altFire)
 				WP_RepeaterAltFire(ent);
 			else

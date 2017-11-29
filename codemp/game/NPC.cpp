@@ -1831,7 +1831,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 			case CLASS_TUSKEN:
 				Sniper_SelectBestWeapon(aiEnt);
 
-				if (WeaponSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
+				if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper(aiEnt, bState );
 					return;
@@ -1845,7 +1845,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 			case CLASS_MERC:
 				Commando2_SelectBestWeapon(aiEnt);
 
-				if (WeaponSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
+				if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper(aiEnt, bState );
 					return;
@@ -1862,7 +1862,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 			case CLASS_COMMANDO:
 				Commando2_SelectBestWeapon(aiEnt);
 
-				if (WeaponSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
+				if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper(aiEnt, bState );
 					return;
@@ -1877,7 +1877,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 			case CLASS_IMPERIAL:
 			case CLASS_RODIAN:
 			case CLASS_TRANDOSHAN:
-				if (WeaponSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
+				if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper(aiEnt, bState );
 					return;
@@ -1929,7 +1929,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 				NPC_BehaviorSet_Default(aiEnt, bState );
 				return;
 			}*/
-			/*else*/ if (WeaponSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
+			/*else*/ if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE))
 			{//a sniper
 				NPC_BehaviorSet_Sniper(aiEnt, bState );
 				return;

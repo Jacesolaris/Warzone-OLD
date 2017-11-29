@@ -3512,7 +3512,7 @@ void Cmd_Load_Dungeon_F(gentity_t *ent){
 //			break;
 //		case WP_DLT_19:
 //			break;
-//		case WP_DC_15A_Rifle:
+//		case WP_DC_15A_RIFLE:
 //			break;
 //		case WP_Z6_BLASTER_CANON:
 //			break;

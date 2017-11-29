@@ -1382,7 +1382,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_EE3:
 	case WP_DC_15S_CLONE_PISTOL:
 	case WP_DLT_19:
-	case WP_DC_15A_Rifle:
+	case WP_DC_15A_RIFLE:
 	case WP_WESTER_PISTOL:
 	case WP_ELG_3A:
 	case WP_S5_PISTOL:
@@ -3943,7 +3943,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cg_weapons[es->eventParm].chargeSound);
 		}
-		else if (WeaponSniperCharge(es->eventParm))
+		else if (WeaponIsSniperCharge(es->eventParm))
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cgs.media.disruptorZoomLoop);
 		}
