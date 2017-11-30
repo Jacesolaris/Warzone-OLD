@@ -4,7 +4,7 @@
 
 void FX_RocketAddLight(vec3_t org, int weapon)
 {// should really do light colors too.. hmm.. i will do the other weap colors another time too slow over tv, okay
-	vec4_t color = { 0.9, 0.9, 0.2, 80.0 }; // r, g, b, intensity
+	vec4_t color = { 0.9f, 0.9f, 0.2f, 80.0f }; // r, g, b, intensity
 
 	if (cg_weapons[weapon].missileDlightColor[0] || cg_weapons[weapon].missileDlightColor[1] || cg_weapons[weapon].missileDlightColor[2])
 		VectorCopy(cg_weapons[weapon].missileDlightColor, color);

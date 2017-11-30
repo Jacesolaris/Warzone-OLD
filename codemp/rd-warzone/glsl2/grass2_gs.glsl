@@ -115,7 +115,7 @@ vec4 randomBarycentricCoordinate() {
 	return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
 }
 
-const vec2 roadPx = const vec2(1.0 / 2048.0);
+const vec2 roadPx = vec2(1.0 / 2048.0);
 
 vec4 GetControlMap(vec3 m_vertPos)
 {
@@ -169,7 +169,7 @@ mat4 rotationMatrix(vec3 axis, float angle)
 }
 
 const float PIover180 = 3.1415/180.0; 
-const vec3 vBaseDir[] = const vec3[] (
+const vec3 vBaseDir[] = vec3[] (
 	vec3(1.0, 0.0, 0.0),
 #ifdef THREE_WAY_GRASS_CLUMPS
 	vec3(float(cos(45.0*PIover180)), float(sin(45.0*PIover180)), 0.0f),

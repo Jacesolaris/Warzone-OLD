@@ -2567,7 +2567,7 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 	}
 	else if ( enemyDist > 65536 )//256 squared
 	{
-		if (WeaponSniperCharge(aiEnt->client->ps.weapon))
+		if (WeaponIsSniperCharge(aiEnt->client->ps.weapon))
 		{//sniping... should be assumed
 			if ( !(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire

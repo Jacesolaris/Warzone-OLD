@@ -206,6 +206,7 @@ cvar_t  *r_forceSunAmbientScale;
 cvar_t  *r_proceduralSun;
 cvar_t  *r_proceduralSunScale;
 cvar_t  *r_glowStrength;
+cvar_t  *r_glowVibrancy;
 cvar_t  *r_sunlightMode;
 cvar_t  *r_sunlightSpecular;
 cvar_t  *r_drawSunRays;
@@ -1450,7 +1451,7 @@ void R_Register( void )
 	r_cacheVisibleSurfaces = ri->Cvar_Get("r_cacheVisibleSurfaces", "0", CVAR_ARCHIVE);
 
 	r_dynamicGlow						= ri->Cvar_Get( "r_dynamicGlow",			"1",		CVAR_ARCHIVE );
-	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"5",		CVAR_ARCHIVE );
+	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"4"/*"5"*/,		CVAR_ARCHIVE );
 	r_dynamicGlowIntensity				= ri->Cvar_Get( "r_dynamicGlowIntensity",	"1.17",		CVAR_ARCHIVE );
 	r_dynamicGlowSoft					= ri->Cvar_Get( "r_dynamicGlowSoft",		"1",		CVAR_ARCHIVE );
 
@@ -1535,6 +1536,7 @@ void R_Register( void )
 	r_genNormalMaps = ri->Cvar_Get( "r_genNormalMaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_glowStrength = ri->Cvar_Get("r_glowStrength", "1.75", CVAR_ARCHIVE);
+	r_glowVibrancy = ri->Cvar_Get("r_glowVibrancy", "1.0", CVAR_ARCHIVE);
 
 	r_dlightShadows = ri->Cvar_Get( "r_dlightShadows", "0", CVAR_ARCHIVE );
 	r_forceSun = ri->Cvar_Get( "r_forceSun", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1633,7 +1635,7 @@ void R_Register( void )
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "0", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "0", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "1", CVAR_ARCHIVE );
-	r_fxaaScanMod = ri->Cvar_Get("r_fxaaScanMod", "1.0"/*0.75*/, CVAR_ARCHIVE);
+	r_fxaaScanMod = ri->Cvar_Get("r_fxaaScanMod", "2.0"/*0.75*/, CVAR_ARCHIVE);
 	r_underwater = ri->Cvar_Get( "r_underwater", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );

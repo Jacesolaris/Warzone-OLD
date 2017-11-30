@@ -46,6 +46,7 @@ typedef enum {
 	WP_DEMP2,
 	WP_FLECHETTE,
 	WP_CONCUSSION,
+
 	// Add new guns here...
 	WP_A280,
 	WP_DC15,
@@ -54,7 +55,7 @@ typedef enum {
 	WP_EE3,
 	WP_DC_15S_CLONE_PISTOL,
 	WP_DLT_19,
-	WP_DC_15A_Rifle,
+	WP_DC_15A_RIFLE,
 	WP_WESTER_PISTOL,
 	WP_ELG_3A,
 	WP_S5_PISTOL,
@@ -106,6 +107,7 @@ typedef enum {
 	WP_FRAG_GRENADE_OLD,
 	WP_CYROBAN_GRENADE,
 	WP_TRIP_MINE,
+
 	// START: Do not change anything between these 2 comments...
 	WP_DET_PACK,
 	WP_NUM_USEABLE = WP_DET_PACK,
@@ -164,7 +166,7 @@ typedef struct weaponData_s
 	int		dmgAlt;
 
 	int		boltSpeed;
-	int		accuracy;
+	float	accuracy;
 
 	int		splashDmg;
 	int		splashRadius;
@@ -195,6 +197,8 @@ typedef enum { // UQ1: Used for hands model selection... Could be used for other
 	WEAPONTYPE_PISTOL,
 	WEAPONTYPE_BLASTER,
 	WEAPONTYPE_SNIPER,
+	WEAPONTYPE_ROCKET_LAUNCHER,
+	WEAPONTYPE_GRENADE,
 } weaponTypes_t;
 
 typedef enum {

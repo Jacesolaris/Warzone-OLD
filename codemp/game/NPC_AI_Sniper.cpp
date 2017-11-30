@@ -687,7 +687,7 @@ void NPC_BSSniper_Attack( gentity_t *aiEnt)
 	
 	if ( enemyDist2 < 16384 )//128 squared
 	{//too close, so switch to primary fire
-		if (WeaponSniperCharge(aiEnt->client->ps.weapon))
+		if (WeaponIsSniperCharge(aiEnt->client->ps.weapon))
 		{//sniping... should be assumed
 			if ( aiEnt->NPC->scriptFlags & SCF_ALT_FIRE )
 			{//use primary fire
@@ -710,7 +710,7 @@ void NPC_BSSniper_Attack( gentity_t *aiEnt)
 	}
 	else if ( enemyDist2 > 65536 )//256 squared
 	{
-		if (WeaponSniperCharge(aiEnt->client->ps.weapon))
+		if (WeaponIsSniperCharge(aiEnt->client->ps.weapon))
 		{//sniping... should be assumed
 			if ( !(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire

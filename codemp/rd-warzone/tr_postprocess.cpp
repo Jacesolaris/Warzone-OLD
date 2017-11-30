@@ -3198,8 +3198,8 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 		GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
-		//GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-		//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+		GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 		GLSL_SetUniformMatrix16(&tr.distanceBlurShader[0], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

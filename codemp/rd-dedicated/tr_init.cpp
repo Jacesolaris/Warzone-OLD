@@ -279,7 +279,7 @@ void R_Register( void )
 	r_ext_texture_env_add				= ri->Cvar_Get( "r_ext_texture_env_add",			"1",						CVAR_ARCHIVE|CVAR_LATCH );
 	r_ext_texture_filter_anisotropic	= ri->Cvar_Get( "r_ext_texture_filter_anisotropic",	"0",						CVAR_ARCHIVE );
 	r_DynamicGlow						= ri->Cvar_Get( "r_DynamicGlow",					"0",						CVAR_ARCHIVE );
-	r_DynamicGlowPasses					= ri->Cvar_Get( "r_DynamicGlowPasses",				"5",						CVAR_ARCHIVE );
+	r_DynamicGlowPasses					= ri->Cvar_Get( "r_DynamicGlowPasses",				"4"/*"5"*/,						CVAR_ARCHIVE );
 	r_DynamicGlowIntensity				= ri->Cvar_Get( "r_DynamicGlowIntensity",			"1.13f",					CVAR_ARCHIVE );
 	r_DynamicGlowSoft					= ri->Cvar_Get( "r_DynamicGlowSoft",				"1",						CVAR_ARCHIVE );
 	r_picmip							= ri->Cvar_Get( "r_picmip",							"1",						CVAR_ARCHIVE|CVAR_LATCH );

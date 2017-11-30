@@ -1171,7 +1171,7 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 
 	me->NPC->combatMove = qtrue;
 
-	if (parent)
+	if (parent && parent->client && NPC_IsAlive(me, parent))
 	{
 		if (me->client->sess.sessionTeam != parent->client->sess.sessionTeam)
 			me->client->sess.sessionTeam = parent->client->sess.sessionTeam; // must have been manually spawned.. set team info...
@@ -1189,7 +1189,7 @@ void NPC_DoPadawanStuff (gentity_t *aiEnt)
 	}
 
 
-	if (parent && NPC_IsAlive(me, parent))
+	if (parent && parent->client && NPC_IsAlive(me, parent))
 	{
 		parent->padawan = me;
 		NPC_Padawan_CopyParentFlags(me, parent);

@@ -46,6 +46,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_event.cpp"
 	"${MPDir}/cgame/cg_foliage.cpp"
 	"${MPDir}/cgame/cg_info.cpp"
+	"${MPDir}/cgame/cg_laserbolts.cpp"
 	"${MPDir}/cgame/cg_light.cpp"
 	"${MPDir}/cgame/cg_localents.cpp"
 	"${MPDir}/cgame/cg_main.cpp"

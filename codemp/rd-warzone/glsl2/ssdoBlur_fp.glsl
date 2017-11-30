@@ -1,4 +1,4 @@
-﻿uniform sampler2D			u_DiffuseMap;			// Screen
+uniform sampler2D			u_DiffuseMap;			// Screen
 uniform sampler2D			u_PositionMap;			// Positions
 uniform sampler2D			u_NormalMap;			// Normals
 uniform sampler2D			u_DeluxeMap;			// Occlusion
