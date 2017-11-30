@@ -968,7 +968,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+		VectorSet(weaponInfo->gunPosition, 12, -4, -4);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
@@ -1023,7 +1023,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 										//  X,	 ,Y	   ,Z	
-		VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+		VectorSet(weaponInfo->gunPosition, 15, -4, -4);
 
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
