@@ -1,147 +1,71 @@
-attribute vec3	attr_Position;
-attribute vec3	attr_Normal;
-attribute vec2	attr_TexCoord0;
+attribute vec3	attr_OceanPosition;
+attribute vec2	attr_OceanTexCoord;
 
 uniform mat4	u_ModelViewProjectionMatrix;
-
-uniform vec4	u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-
-#define USE_DEFORM			u_Settings0.g
 
 uniform vec4	u_Local10;
 
 uniform float	u_Time;
 
-uniform int		u_DeformGen;
-uniform float	u_DeformParams[5];
+uniform vec3	u_ViewOrigin;
 
-varying vec2		var_TexCoords;
-varying vec3		var_vertPos;
-varying vec3		var_Normal;
-flat varying float	var_IsWater;
+out vec3	vertPosition;
+out vec3	Binormal;/* Tangent basis */
+out vec3	Tangent;
+out vec3	Normal;
+out vec3	View;	/* View vector */
 
-// Maximum waves amplitude
-#define maxAmplitude u_Local10.g
+/* Multiple bump coordinates for animated bump mapping */
+out vec2	bumpCoord0;
+out vec2	bumpCoord1;
+out vec2	bumpCoord2;
 
-vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
-{
-	float base =      u_DeformParams[0];
-	float amplitude = u_DeformParams[1];
-	float phase =     u_DeformParams[2];
-	float frequency = u_DeformParams[3];
-	float spread =    u_DeformParams[4];
-
-	if (u_DeformGen == DGEN_BULGE)
-	{
-		phase *= st.x;
-	}
-	else // if (u_DeformGen <= DGEN_WAVE_INVERSE_SAWTOOTH)
-	{
-		phase += dot(pos.xyz, vec3(spread));
-	}
-
-	float value = phase + (u_Time * frequency);
-	float func;
-
-	if (u_DeformGen == DGEN_WAVE_SIN)
-	{
-		func = sin(value * 2.0 * M_PI);
-	}
-	else if (u_DeformGen == DGEN_WAVE_SQUARE)
-	{
-		func = sign(fract(0.5 - value));
-	}
-	else if (u_DeformGen == DGEN_WAVE_TRIANGLE)
-	{
-		func = abs(fract(value + 0.75) - 0.5) * 4.0 - 1.0;
-	}
-	else if (u_DeformGen == DGEN_WAVE_SAWTOOTH)
-	{
-		func = fract(value);
-	}
-	else if (u_DeformGen == DGEN_WAVE_INVERSE_SAWTOOTH)
-	{
-		func = (1.0 - fract(value));
-	}
-	else // if (u_DeformGen == DGEN_BULGE)
-	{
-		func = sin(value);
-	}
-
-	return pos + normal * (base + func * amplitude);
-}
-
-vec3 vectoangles( in vec3 value1 ) {
-	float	forward;
-	float	yaw, pitch;
-	vec3	angles;
-
-	if ( value1.g == 0 && value1.r == 0 ) {
-		yaw = 0;
-		if ( value1.b > 0 ) {
-			pitch = 90;
-		}
-		else {
-			pitch = 270;
-		}
-	}
-	else {
-		if ( value1.r > 0 ) {
-			yaw = ( atan ( value1.g, value1.r ) * 180 / M_PI );
-		}
-		else if ( value1.g > 0 ) {
-			yaw = 90;
-		}
-		else {
-			yaw = 270;
-		}
-		if ( yaw < 0 ) {
-			yaw += 360;
-		}
-
-		forward = sqrt ( value1.r*value1.r + value1.g*value1.g );
-		pitch = ( atan(value1.b, forward) * 180 / M_PI );
-		if ( pitch < 0 ) {
-			pitch += 360;
-		}
-	}
-
-	angles.r = -pitch;
-	angles.g = yaw;
-	angles.b = 0.0;
-
-	return angles;
-}
 
 void main()
 {
-	vec3 position  = attr_Position.xyz;
-	vec3 normal    = attr_Normal * 2.0 - vec3(1.0);
-
-	if (USE_DEFORM == 1.0)
-	{
-		position = DeformPosition(position, normal, attr_TexCoord0.st);
-	}
-
-	var_vertPos = position.xyz;
-	var_TexCoords = attr_TexCoord0.st;
-	var_Normal = normal;
-
-	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
-
-	var_IsWater = 1.0;
-
-	float pitch = vectoangles( normal.xyz ).r;
+	vec4 P = vec4(attr_OceanPosition, 1.0);
 	
-	if (pitch > 180)
-		pitch -= 360;
+	/* TODO: Add waves to P, set 2 waves */
+	float A[2] = float[](1.0,0.5);		//amplitude
+	float Dx[2] = float[](-1.0,-0.7);	//(DX,DZ)direction of travel
+	float Dz[2] = float[](0.0,0.7);
+	float f[2] = float[](0.2,0.4);		//frequency
+	float p[2] = float[](0.5,1.3);		//phase
+	float k[2] = float[](2.0,2.0);		//sharpness
 
-	if (pitch < -180)
-		pitch += 360;
+    //waves:y=G(x,z,t)
 
-	pitch += 90.0f;
+    float wave1 = A[0] * pow((sin((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*0.5 + 0.5),k[0]);
+    float dGx1  = 0.5 * k[0] * f[0] * A[0] * pow((sin((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*0.5+0.5),k[0]-1) * cos((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*Dx[0];
+    float dGz1  = 0.5 * k[0] * f[0] * A[0] * pow((sin((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*0.5+0.5),k[0]-1) * cos((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*Dz[0];
 
-	if (pitch < 0.0) pitch = -pitch;
+	float wave2 = A[1] * pow((sin((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*0.5 + 0.5),k[1]);
+    float dGx2  = 0.5 * k[1] * f[1] * A[1] * pow((sin((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*0.5+0.5),k[1]-1) * cos((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*Dx[1];
+    float dGz2  = 0.5 * k[1] * f[1] * A[1] * pow((sin((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*0.5+0.5),k[1]-1) * cos((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*Dz[1];
 
-	if (pitch > 16.0) var_IsWater = 2.0;
+
+    //sum of waves
+    //P.y = wave1+wave2;
+	P.z = wave1+wave2;
+    float dHx = dGx1 + dGx2;
+    float dHz = dGz1 + dGz2;
+
+	/* TODO: Compute B, T, N */
+    Binormal = vec3(1,dHx,0);
+    Tangent = vec3(0,dHz,1);
+    Normal = vec3(-dHx,1,-dHz);
+    View = attr_OceanPosition - u_ViewOrigin;  //don't normalize it
+
+	/* TODO: Compute bumpmap coordinates */
+	vec2 texScale = vec2(8,4);
+	float bumpTime = mod(u_Time,100.0);
+	vec2 bumpSpeed = vec2(-0.05,0);
+
+	bumpCoord0.xy = attr_OceanTexCoord.xy * texScale + bumpTime * bumpSpeed;
+	bumpCoord1.xy = attr_OceanTexCoord.xy * texScale *2+bumpTime * bumpSpeed*4;
+	bumpCoord2.xy = attr_OceanTexCoord.xy * texScale *4+bumpTime * bumpSpeed*8;
+
+	gl_Position = u_ModelViewProjectionMatrix * P;
+
+	vertPosition = P.xyz;
 }

@@ -1487,6 +1487,18 @@ void RB_RenderWorldEffects(void)
 		WEATHER_KLUDGE_DONE = qtrue;
 	}
 
+#ifdef __OCEAN__
+	if (!tr.world || (tr.refdef.rdflags & RDF_NOWORLDMODEL) || (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL))
+	{
+
+	}
+	else
+	{
+		extern void OCEAN_Render(void);
+		OCEAN_Render();
+	}
+#endif //__OCEAN__
+
 	if (!tr.world ||
 		(tr.refdef.rdflags & RDF_NOWORLDMODEL) ||
 		(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL) ||

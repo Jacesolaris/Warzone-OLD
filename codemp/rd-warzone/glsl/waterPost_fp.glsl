@@ -55,6 +55,8 @@ varying vec2		var_TexCoords;
 uniform vec4		u_PrimaryLightOrigin;
 uniform vec3		u_PrimaryLightColor;
 
+#define				MAP_WATER_LEVEL u_Local1.r
+
 #define MAX_DEFERRED_LIGHTS 128
 
 uniform int			u_lightCount;

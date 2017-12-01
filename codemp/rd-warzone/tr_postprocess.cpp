@@ -2087,7 +2087,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, colorWhite, 0);
 }
 
 void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -3218,7 +3219,7 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 			float zmin = r_znear->value;
-			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, MAP_WATER_LEVEL);
 			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_VIEWINFO, viewInfo);
 		}
 

@@ -4,13 +4,15 @@ uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
 
-uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
+uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, MAP_WATER_LEVEL
 uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
 
 #define BLUR_DEPTH 0.55//0.28
 #define BLUR_RADIUS 2.0
+
+#define MAP_WATER_LEVEL u_ViewInfo.a
 
 #define px (1.0/u_Dimensions.x)
 #define py (1.0/u_Dimensions.y)
@@ -55,13 +57,16 @@ vec4 DistantBlur(void)
 
 	vec3 origColor = color.rgb;
 
-	float origMaterial = textureLod(u_PositionMap, var_TexCoords.xy, 0.0).a;
+	vec2 origMaterial = textureLod(u_PositionMap, var_TexCoords.xy, 0.0).za;
 
 	bool isSky = false;
 
-	if (origMaterial-1.0 == MATERIAL_SKY || origMaterial-1.0 == MATERIAL_SUN)
+	if (origMaterial.y-1.0 == MATERIAL_SKY || origMaterial.y-1.0 == MATERIAL_SUN || origMaterial.y-1.0 <= MATERIAL_NONE)
 	{// Skybox... 
-		isSky = true;
+		if (origMaterial.x >= MAP_WATER_LEVEL)
+		{
+			isSky = true;
+		}
 	}
 
 	float BLUR_DEPTH_MULT = (1.0 - (BLUR_DEPTH / depth)) * BLUR_RADIUS;
@@ -92,11 +97,14 @@ vec4 DistantBlur(void)
 
 			if (isSky)
 			{// When original pixel is sky, check if this pixel is also sky. If so, skip the blur... If the new pixel is not sky, then add it to the blur...
-				float material = textureLod(u_PositionMap, xy, 0.0).a;
+				vec2 material = textureLod(u_PositionMap, xy, 0.0).za;
 
-				if (material-1.0 == MATERIAL_SKY || material-1.0 == MATERIAL_SUN)
+				if (material.y-1.0 == MATERIAL_SKY || material.y-1.0 == MATERIAL_SUN || origMaterial.y-1.0 <= MATERIAL_NONE)
 				{// Skybox... Skip...
-					pixelIsSky = true;
+					if (material.x >= MAP_WATER_LEVEL)
+					{
+						pixelIsSky = true;
+					}
 				}
 			}
 

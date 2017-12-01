@@ -105,6 +105,8 @@ extern const char *fallbackShader_skyDome_fp;
 extern const char *fallbackShader_skyDome_vp;
 extern const char *fallbackShader_waterPost_fp;
 extern const char *fallbackShader_waterPost_vp;
+extern const char *fallbackShader_waterPostForward_fp;
+extern const char *fallbackShader_waterPostForward_vp;
 extern const char *fallbackShader_waterForward_fp;
 extern const char *fallbackShader_waterForward_vp;
 extern const char *fallbackShader_foliage_fp;
@@ -2120,6 +2122,13 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POS, "attr_InstancesPos");
 #endif //__INSTANCED_MODELS__
 
+#ifdef __OCEAN__
+	if (attribs & ATTR_OCEAN_POSITION)
+		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_POSITION, "attr_OceanPosition");
+	if (attribs & ATTR_OCEAN_TEXCOORD)
+		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_TEXCOORD, "attr_OceanTexCoord");
+#endif //__OCEAN__
+
 	GLSL_LinkProgram(program->program);
 
 	// Won't be needing these anymore...
@@ -3733,11 +3742,24 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 
-
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.waterPostForwardShader, "waterPostForward", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterPostForward_vp, fallbackShader_waterPostForward_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterPostForward shader!");
+	}
+
+
+
+#ifdef __OCEAN__
+	attribs = ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+#else //!__OCEAN__
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+#endif //__OCEAN__
+	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterForwardShader, "waterForward", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterForward_vp, fallbackShader_waterForward_fp, NULL, NULL, NULL))
 	{
@@ -5598,6 +5620,55 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.waterPostForwardShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterPostForward shader!");
+	}
+
+	GLSL_InitUniforms(&tr.waterPostForwardShader);
+
+	GLSL_BindProgram(&tr.waterPostForwardShader);
+
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	//GLSL_SetUniformInt(&tr.waterPostForwardShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.waterPostForwardShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.waterPostForwardShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.waterPostForwardShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+
 	if (!GLSL_EndLoadGPUShader(&tr.waterForwardShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load waterForward shader!");
@@ -5610,7 +5681,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
@@ -5643,8 +5714,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numEtcShaders++;
-
-
 
 
 
@@ -5710,6 +5779,11 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	ri->Printf(PRINT_ALL, "loaded %i GLSL shaders (%i gen %i light %i etc) in %5.2f seconds\n",
 		numGenShaders + numLightShaders + numEtcShaders, numGenShaders, numLightShaders,
 		numEtcShaders, (ri->Milliseconds() - startTime) / 1000.0);
+
+#ifdef __OCEAN__
+	extern void OCEAN_InitOcean();
+	OCEAN_InitOcean();
+#endif //__OCEAN__
 }
 
 void GLSL_ShutdownGPUShaders(void)
@@ -5785,6 +5859,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.esharpening2Shader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterForwardShader);
+	GLSL_DeleteGPUShader(&tr.waterPostForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterPostShader);
 	GLSL_DeleteGPUShader(&tr.furShader);
 	GLSL_DeleteGPUShader(&tr.foliageShader);
@@ -6080,6 +6155,36 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 	}
 #endif //__INSTANCED_MODELS__
 
+#ifdef __OCEAN__
+	if (diff & ATTR_OCEAN_POSITION)
+	{
+		if (stateBits & ATTR_OCEAN_POSITION)
+		{
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_OCEAN_POSITION )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_OCEAN_POSITION);
+		}
+		else
+		{
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_OCEAN_POSITION )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_OCEAN_POSITION);
+		}
+	}
+
+	if (diff & ATTR_OCEAN_TEXCOORD)
+	{
+		if (stateBits & ATTR_OCEAN_TEXCOORD)
+		{
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_OCEAN_TEXCOORD )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_OCEAN_TEXCOORD);
+		}
+		else
+		{
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_OCEAN_TEXCOORD )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_OCEAN_TEXCOORD);
+		}
+	}
+#endif //__OCEAN__
+
 	glState.vertexAttribsState = stateBits;
 }
 
@@ -6224,5 +6329,25 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		glState.vertexAttribPointersSet |= ATTR_INSTANCES_POS;
 	}
 #endif //__INSTANCED_MODELS__
+
+#ifdef __OCEAN__
+	/*
+	if ((attribBits & ATTR_OCEAN_POSITION) && !(glState.vertexAttribPointersSet & ATTR_OCEAN_POSITION))
+	{
+		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_OCEAN_POSITION )\n");
+
+		qglVertexAttribPointer(ATTR_INDEX_OCEAN_POSITION, 3, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_xyz + newFrame * vbo->size_xyz));
+		glState.vertexAttribPointersSet |= ATTR_OCEAN_POSITION;
+	}
+
+	if ((attribBits & ATTR_OCEAN_TEXCOORD) && !(glState.vertexAttribPointersSet & ATTR_OCEAN_TEXCOORD))
+	{
+		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_OCEAN_TEXCOORD )\n");
+
+		qglVertexAttribPointer(ATTR_INDEX_OCEAN_TEXCOORD, 2, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_st + sizeof(vec2_t)* glState.vertexAttribsTexCoordOffset[0]));
+		glState.vertexAttribPointersSet |= ATTR_OCEAN_TEXCOORD;
+	}
+	*/
+#endif //__OCEAN__
 }
 

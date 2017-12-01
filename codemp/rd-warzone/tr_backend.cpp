@@ -739,7 +739,7 @@ void RB_ClearWaterPositionMap ( void )
 		&& !(backEnd.viewParms.flags & VPF_SHADOWMAP)
 		&& !(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
 	{
-		if (r_glslWater->integer && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+		if (r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
 		{
 			FBO_t *oldFbo = glState.currentFBO;
 			FBO_Bind(tr.waterFbo);
@@ -2673,7 +2673,7 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
-		if (!SCREEN_BLUR && r_glslWater->integer && WATER_ENABLED)
+		if (!SCREEN_BLUR && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED)
 		{
 			DEBUG_StartTimer("Water Post");
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);

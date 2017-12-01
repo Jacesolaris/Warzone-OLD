@@ -1,5 +1,6 @@
+#include "tr_local.h"
 
-#if 0
+#ifdef __ORIG_OCEAN__
 
 #include "tr_ocean.h"
 
@@ -1117,3 +1118,142 @@ void cOcean::render(float t, vector3 light_pos, Matrix4 Projection, Matrix4 View
 }
 
 #endif
+
+
+#ifdef __OCEAN__
+// constants
+static const int QUAD_GRID_SIZE = 2048;// 40;
+static const int NR_VERTICES = (QUAD_GRID_SIZE + 1)*(QUAD_GRID_SIZE + 1);
+static const int NR_TRIANGLES = 2 * QUAD_GRID_SIZE*QUAD_GRID_SIZE;
+static const int NR_INDICES = 3 * NR_TRIANGLES;
+
+// Variables
+
+GLuint gDrawNumber = NR_INDICES; // How many indices to draw 
+
+GLuint gVaoID;			 // ID for vertex array object
+GLuint gVboID;			 // ID for vertex array object
+GLuint gIndexID;		 // ID for vertex array object
+
+#include "tr_matrix.h"
+
+void OCEAN_InitOcean()
+{
+	//Generate grid positions
+	const float scale = 500.0f;
+	const float delta = 2.0f / QUAD_GRID_SIZE;
+
+	vec3* vertices = new vec3[NR_VERTICES];
+	vec2* texcoords = new vec2[NR_VERTICES];
+	GLuint* indices = new GLuint[3 * NR_TRIANGLES];
+
+	for (int y = 0; y <= QUAD_GRID_SIZE; y++) {
+		for (int x = 0; x <= QUAD_GRID_SIZE; x++) {
+			int vertexPosition = y*(QUAD_GRID_SIZE + 1) + x;
+			vertices[vertexPosition].x = (x*delta - 1.0) * scale;
+			vertices[vertexPosition].y = 0;
+			vertices[vertexPosition].z = (y*delta - 1.0) * scale;
+			texcoords[vertexPosition].x = x*delta;
+			texcoords[vertexPosition].y = y*delta;
+		}
+	}
+
+	// Generate indices into vertex list
+	for (int y = 0; y<QUAD_GRID_SIZE; y++) {
+		for (int x = 0; x<QUAD_GRID_SIZE; x++) {
+			int indexPosition = y*QUAD_GRID_SIZE + x;
+			// tri 0
+			indices[6 * indexPosition] = y    *(QUAD_GRID_SIZE + 1) + x;    //bl  
+			indices[6 * indexPosition + 1] = (y + 1)*(QUAD_GRID_SIZE + 1) + x + 1;//tr
+			indices[6 * indexPosition + 2] = y    *(QUAD_GRID_SIZE + 1) + x + 1;//br
+																				// tri 1
+			indices[6 * indexPosition + 3] = y    *(QUAD_GRID_SIZE + 1) + x;    //bl
+			indices[6 * indexPosition + 4] = (y + 1)*(QUAD_GRID_SIZE + 1) + x;    //tl
+			indices[6 * indexPosition + 5] = (y + 1)*(QUAD_GRID_SIZE + 1) + x + 1;//tr
+		}
+	}
+
+	// Create a vertex array object
+	qglGenVertexArrays(1, &gVaoID);
+	qglBindVertexArray(gVaoID);
+
+	// Create and initialize a buffer object
+	qglGenBuffers(1, &gVboID);
+	qglBindBuffer(GL_ARRAY_BUFFER, gVboID);
+	qglBufferData(GL_ARRAY_BUFFER, NR_VERTICES * sizeof(vertices[0]) + NR_VERTICES * sizeof(texcoords[0]), NULL, GL_STATIC_DRAW);
+
+	// Set the buffer pointers
+	qglBufferSubData(GL_ARRAY_BUFFER, 0, NR_VERTICES * sizeof(vertices[0]), vertices);
+	qglBufferSubData(GL_ARRAY_BUFFER, NR_VERTICES * sizeof(vertices[0]), NR_VERTICES * sizeof(texcoords[0]), texcoords);
+
+	// Bind the index buffer
+	qglGenBuffers(1, &gIndexID);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexID);
+	qglBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * NR_TRIANGLES * sizeof(indices[0]), indices, GL_STATIC_DRAW);
+
+
+	// Initalize shaders
+	GLSL_BindProgram(&tr.waterForwardShader);
+
+	// Initialize the vertex position attribute from the vertex shader
+	GLuint pos = ATTR_INDEX_OCEAN_POSITION;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanPosition");
+	qglEnableVertexAttribArray(pos);
+	qglVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+
+	GLuint tex = ATTR_INDEX_OCEAN_TEXCOORD;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanTexCoord");
+	qglEnableVertexAttribArray(tex);
+	qglVertexAttribPointer(tex, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(NR_VERTICES * sizeof(vertices[0])));
+
+	delete[] vertices;
+	delete[] texcoords;
+	delete[] indices;
+
+	GLSL_BindProgram(NULL);
+}
+
+void OCEAN_Render(void)
+{
+	extern void SetViewportAndScissor(void);
+
+	GLSL_BindProgram(&tr.waterForwardShader);
+	
+	FBO_Bind(tr.renderFbo);
+	
+	SetViewportAndScissor();
+	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+	GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
+	GLSL_SetUniformMatrix16(&tr.waterForwardShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformVec3(&tr.waterForwardShader, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+	GLSL_SetUniformVec3(&tr.waterForwardShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+	GLSL_SetUniformFloat(&tr.waterForwardShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	GL_Cull(CT_TWO_SIDED);
+
+	vec4_t l9;
+	VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+	GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_LOCAL9, l9);
+
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
+
+	//GLuint pos = qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanPosition");
+	//qglEnableVertexAttribArray(pos);
+
+	//GLuint tex = qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanTexCoord");
+	//qglEnableVertexAttribArray(tex);
+
+	//qglVertexAttribPointer(ATTR_INDEX_OCEAN_POSITION, 3, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_xyz + newFrame * vbo->size_xyz));
+	//glState.vertexAttribPointersSet |= ATTR_OCEAN_POSITION;
+
+	//qglVertexAttribPointer(ATTR_INDEX_OCEAN_TEXCOORD, 2, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_st + sizeof(vec2_t)* glState.vertexAttribsTexCoordOffset[0]));
+	//glState.vertexAttribPointersSet |= ATTR_OCEAN_TEXCOORD;
+
+	GLSL_VertexAttribsState(ATTR_OCEAN_POSITION|ATTR_INDEX_OCEAN_TEXCOORD);
+
+	qglBindVertexArray(gVaoID);
+	qglBindBuffer(GL_ARRAY_BUFFER, gVboID);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexID);
+
+	qglDrawElements(GL_TRIANGLES, gDrawNumber, GL_UNSIGNED_INT, 0);
+}
+#endif //__OCEAN__

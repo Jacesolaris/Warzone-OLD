@@ -25,7 +25,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define TR_LOCAL_H
 
 
-
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Debugging Defines
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -76,6 +75,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
 
+
+//#define __OCEAN__
+//#define __ORIG_OCEAN__
 
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
@@ -725,6 +727,11 @@ typedef struct VBO_s
 	uint32_t		ofs_instances;
 #endif //__INSTANCED_MODELS__
 
+#ifdef __INSTANCED_MODELS__
+	uint32_t		ofs_oceanPosition;
+	uint32_t		ofs_oceanTexcoord;
+#endif //__INSTANCED_MODELS__
+
 	uint32_t        stride_xyz;
 	uint32_t        stride_normal;
 	uint32_t        stride_st;
@@ -1294,6 +1301,10 @@ enum
 	ATTR_INDEX_INSTANCES_POS,
 	/*ATTR_INDEX_INSTANCES_MVP,*/
 #endif //__INSTANCED_MODELS__
+#ifdef __OCEAN__
+	ATTR_INDEX_OCEAN_POSITION,
+	ATTR_INDEX_OCEAN_TEXCOORD,
+#endif //__OCEAN__
 };
 
 enum
@@ -1395,6 +1406,11 @@ enum
 	ATTR_INSTANCES_POS =  0x0800,
 	//ATTR_INSTANCES_MVP =  0x1000,
 #endif //__INSTANCED_MODELS__
+	
+#ifdef __OCEAN__
+	ATTR_OCEAN_POSITION = 0x0800,
+	ATTR_OCEAN_TEXCOORD = 0x1000,
+#endif //__OCEAN__
 
 	ATTR_DEFAULT = ATTR_POSITION,
 	ATTR_BITS =	ATTR_POSITION |
@@ -1412,6 +1428,10 @@ enum
 				| ATTR_INSTANCES_POS
 				/*| ATTR_INSTANCES_MVP*/
 #endif //__INSTANCED_MODELS__
+#ifdef __OCEAN__
+				| ATTR_OCEAN_POSITION
+				| ATTR_OCEAN_TEXCOORD
+#endif //__OCEAN__
 };
 
 enum
@@ -2760,6 +2780,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anaglyphShader;
 	shaderProgram_t skyDomeShader;
 	shaderProgram_t waterForwardShader;
+	shaderProgram_t waterPostForwardShader;
 	shaderProgram_t waterPostShader;
 	shaderProgram_t furShader;
 	shaderProgram_t foliageShader;
