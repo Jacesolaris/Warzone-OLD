@@ -1347,10 +1347,10 @@ Don't place this
 	{
 		"weapon_blaster",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons/E-11_Carbine/model.glm",
+        { "models/weapons/blstr_e11/blaster_w.glm",
 		0, 0, 0},
-/* view */		"models/weapons/E-11_Carbine/viewmodel.md3",
-/* icon */		"models/weapons/E-11_Carbine/icon_default",
+/* view */		"models/weapons/blstr_e11/viewmodel.md3",
+/* icon */		"models/weapons/E-11_Rifle/icon_default",
 /* pickup *///	"E11 Blaster Rifle",
 		100,
 		IT_WEAPON,
@@ -1475,11 +1475,11 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 	/*QUAKED weapon_a280 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 	*/
 	{
-		"weapon_a280",
+		"A280 Blaster",
 		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/a280/a280_w.glm",
+		{ "models/weapons/blstr_a280/blaster_w.glm",
 		0, 0, 0},
-		/* view */		"models/weapons2/a280/a280.md3",
+		/* view */		"models/weapons/blstr_a280/viewmodel.md3",
 		/* icon */		"gfx/hud/w_icon_a280",
 		/* pickup *///	"A280",
 		100,
