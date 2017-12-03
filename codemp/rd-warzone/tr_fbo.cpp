@@ -668,6 +668,7 @@ void FBO_Init(void)
 		//qglReadBuffer(GL_NONE);
 		GLSL_AttachRenderDepthTextures();
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		FBO_SetupDrawBuffers();
 		R_CheckFBO(tr.renderDepthFbo);
 
 		tr.renderNoDepthFbo = FBO_Create("_renderNoDepth", tr.renderDepthImage->width, tr.renderDepthImage->height);
@@ -675,7 +676,8 @@ void FBO_Init(void)
 		//qglDrawBuffer(GL_NONE);
 		//qglReadBuffer(GL_NONE);
 		GLSL_AttachRenderDepthTextures();
-		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		FBO_SetupDrawBuffers();
 		R_CheckFBO(tr.renderNoDepthFbo);
 	}
 

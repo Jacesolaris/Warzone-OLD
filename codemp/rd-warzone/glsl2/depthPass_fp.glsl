@@ -1,3 +1,6 @@
+#define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
+#define SCREEN_MAPS_LEAFS_THRESHOLD 0.0
+
 uniform sampler2D					u_DiffuseMap;
 
 uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
@@ -125,5 +128,16 @@ void main()
 			colStr = clamp(colStr - 0.1, 0.0, 1.0);
 			gl_FragColor.a = colStr;
 		}
+	}
+
+	float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
+
+	if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+	{
+		
+	}
+	else
+	{
+		gl_FragColor.a = 0.0;
 	}
 }

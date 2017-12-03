@@ -2960,7 +2960,7 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	//GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
+	GL_BindToTMU(/*tr.linearDepthImageZfar*/tr.linearDepthImage4096, TB_LIGHTMAP);
 
 
 	GLSL_SetUniformVec3(&tr.fogPostShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
@@ -2989,8 +2989,8 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	{
 		vec4_t viewInfo;
-		//float zmax = 4096.0;// 2048.0;
-		float zmax = backEnd.viewParms.zFar;
+		float zmax = 4096.0;// 2048.0;
+		//float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;

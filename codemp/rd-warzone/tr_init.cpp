@@ -2049,7 +2049,8 @@ extern qboolean gG2_GBMUseSPMethod;
 static void G2API_BoltMatrixReconstruction( qboolean reconstruct ) { gG2_GBMNoReconstruct = (qboolean)!reconstruct; }
 static void G2API_BoltMatrixSPMethod( qboolean spMethod ) { gG2_GBMUseSPMethod = spMethod; }
 
-static float GetDistanceCull( void ) { return tr.distanceCull; }
+extern int MAP_MAX_VIS_RANGE;
+static float GetDistanceCull( void ) { return MAP_MAX_VIS_RANGE ? MAP_MAX_VIS_RANGE : tr.distanceCull; }
 
 extern void R_SVModelInit( void ); //tr_model.cpp
 

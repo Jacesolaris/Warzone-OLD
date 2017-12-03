@@ -1205,9 +1205,6 @@ public:
 		mPopulated = true;
 	}
 
-
-#define __QUEUED_DRAW__
-
 	////////////////////////////////////////////////////////////////////////////////////
 	// Render -
 	////////////////////////////////////////////////////////////////////////////////////
@@ -1235,6 +1232,8 @@ public:
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
+
+		qglDepthMask(GL_FALSE);
 
 		tess.numVertexes = 0;
 		tess.numIndexes = 0;
@@ -1496,6 +1495,8 @@ void RB_RenderWorldEffects(void)
 	{
 		extern void OCEAN_Render(void);
 		OCEAN_Render();
+		Matrix16Copy(glState.previousProjection, glState.projection);
+		Matrix16Copy(glState.previousModelviewProjection, glState.modelviewProjection);
 	}
 #endif //__OCEAN__
 

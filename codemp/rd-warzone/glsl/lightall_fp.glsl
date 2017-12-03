@@ -3,6 +3,7 @@
 
 #define SNOW_HEIGHT_STRENGTH		0.25 // Distance above water to start snow...
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
+#define SCREEN_MAPS_LEAFS_THRESHOLD 0.0
 
 
 uniform sampler2D					u_DiffuseMap;
@@ -652,6 +653,8 @@ void main()
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
 
+	float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
+
 	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 	{
 		out_Glow = vec4(0.0);
@@ -725,7 +728,7 @@ void main()
 
 		out_Glow = vec4(glowColor.rgb, glowColor.a);
 
-		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
@@ -754,7 +757,7 @@ void main()
 		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
 
-		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
@@ -771,7 +774,7 @@ void main()
 	{
 		out_Glow = vec4(0.0);
 
-		if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );

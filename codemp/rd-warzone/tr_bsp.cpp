@@ -2843,6 +2843,8 @@ void R_LoadLightGridArray( lump_t *l ) {
 R_LoadEntities
 ================
 */
+extern int MAP_MAX_VIS_RANGE;
+
 void R_LoadEntities( lump_t *l ) {
 	const char *p;
 	char *token, *s;
@@ -2855,7 +2857,7 @@ void R_LoadEntities( lump_t *l ) {
 	w->lightGridSize[1] = 64;
 	w->lightGridSize[2] = 128;
 
-	tr.distanceCull = 6000;//DEFAULT_DISTANCE_CULL;
+	tr.distanceCull = MAP_MAX_VIS_RANGE ? MAP_MAX_VIS_RANGE : 6000;//DEFAULT_DISTANCE_CULL;
 
 	p = (char *)(fileBase + l->fileofs);
 
