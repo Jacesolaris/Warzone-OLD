@@ -1635,7 +1635,7 @@ void R_Register( void )
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "0", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "0", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "1", CVAR_ARCHIVE );
-	r_fxaaScanMod = ri->Cvar_Get("r_fxaaScanMod", "2.0"/*0.75*/, CVAR_ARCHIVE);
+	r_fxaaScanMod = ri->Cvar_Get("r_fxaaScanMod", "0.666"/*"2.0"*//*0.75*/, CVAR_ARCHIVE);
 	r_underwater = ri->Cvar_Get( "r_underwater", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
