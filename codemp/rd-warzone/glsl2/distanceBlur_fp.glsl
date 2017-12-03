@@ -17,9 +17,6 @@ varying vec2		var_TexCoords;
 #define px (1.0/u_Dimensions.x)
 #define py (1.0/u_Dimensions.y)
 
-#define RADIUS_X (BLUR_RADIUS * px)
-#define RADIUS_Y (BLUR_RADIUS * py)
-
 vec4 DistantBlur(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords.xy, 0.0);
@@ -48,20 +45,20 @@ vec4 DistantBlur(void)
 	BLUR_DEPTH_MULT += 0.5;
 	BLUR_DEPTH_MULT = pow(BLUR_DEPTH_MULT, 1.5);
 
-	if (BLUR_DEPTH_MULT * RADIUS_X < px && BLUR_DEPTH_MULT * RADIUS_Y < py)
+	if (BLUR_DEPTH_MULT * BLUR_RADIUS < px && BLUR_DEPTH_MULT * BLUR_RADIUS < py)
 	{// No point...
 		return color;
 	}
 
 	float NUM_BLUR_PIXELS = 1.0;
 
-	for (float x = -RADIUS_X * BLUR_DEPTH_MULT; x <= RADIUS_X * BLUR_DEPTH_MULT; x += px)
+	for (float x = -BLUR_RADIUS; x <= BLUR_RADIUS; x += 1.0)
 	{
-		for (float y = -RADIUS_Y * BLUR_DEPTH_MULT; y <= RADIUS_Y * BLUR_DEPTH_MULT; y += py)
+		for (float y = -BLUR_RADIUS; y <= BLUR_RADIUS; y += 1.0)
 		{
 			bool pixelIsSky = false;
-
-			vec2 xy = vec2(var_TexCoords.x + x, var_TexCoords.y + y);
+			vec2 xy = vec2(var_TexCoords.x + (x * px * BLUR_DEPTH_MULT), var_TexCoords.y + (y * py * BLUR_DEPTH_MULT));
+			float weight = clamp(1.0 / ((length(vec2(x, y)) + 1.0) * 0.666), 0.2, 1.0);
 
 			if (isSky)
 			{// When original pixel is sky, check if this pixel is also sky. If so, skip the blur... If the new pixel is not sky, then add it to the blur...
@@ -87,8 +84,8 @@ vec4 DistantBlur(void)
 				color2 = origColor;
 			}
 
-			color.rgb += color2.rgb;
-			NUM_BLUR_PIXELS += 1.0;
+			color.rgb += (color2.rgb * weight);
+			NUM_BLUR_PIXELS += weight;
 		}
 	}
 
