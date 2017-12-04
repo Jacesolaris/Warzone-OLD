@@ -1,12 +1,11 @@
-attribute vec3 attr_Position;
-attribute vec4 attr_TexCoord0;
+attribute vec3			attr_Position;
+attribute vec4			attr_TexCoord0;
 
-uniform mat4   u_ModelViewProjectionMatrix;
+uniform mat4			u_ModelViewProjectionMatrix;
 
-uniform vec2	u_Dimensions;
-uniform vec4	u_ViewInfo; // zfar / znear, zfar
+uniform vec2			u_Dimensions;
 
-varying vec2   var_TexCoords;
+varying vec2			var_TexCoords;
 
 void main()
 {

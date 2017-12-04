@@ -1,21 +1,21 @@
 #if defined(OLD_BLUR)
 
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_ScreenDepthMap;
-uniform sampler2D	u_PositionMap;
+uniform sampler2D		u_DiffuseMap;
+uniform sampler2D		u_ScreenDepthMap;
+uniform sampler2D		u_PositionMap;
 
-uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, MAP_WATER_LEVEL
-uniform vec2		u_Dimensions;
+uniform vec4			u_ViewInfo; // zmin, zmax, zmax / zmin, MAP_WATER_LEVEL
+uniform vec2			u_Dimensions;
 
-varying vec2		var_TexCoords;
+varying vec2			var_TexCoords;
 
-#define BLUR_DEPTH 0.55//0.28
-#define BLUR_RADIUS 2.0
+#define BLUR_DEPTH		0.55
+#define BLUR_RADIUS		2.0
 
 #define MAP_WATER_LEVEL u_ViewInfo.a
 
-#define px (1.0/u_Dimensions.x)
-#define py (1.0/u_Dimensions.y)
+#define px				(1.0 / u_Dimensions.x)
+#define py				(1.0 / u_Dimensions.y)
 
 vec4 DistantBlur(void)
 {
@@ -104,27 +104,27 @@ void main()
 #else //!OLD_BLUR
 
 
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_ScreenDepthMap;
-uniform sampler2D	u_PositionMap;
-uniform sampler2D	u_GlowMap;
+uniform sampler2D		u_DiffuseMap;
+uniform sampler2D		u_ScreenDepthMap;
+uniform sampler2D		u_PositionMap;
+uniform sampler2D		u_GlowMap;
 
-uniform vec2		u_Dimensions;
-uniform vec4		u_ViewInfo; // zfar / znear, zfar
+uniform vec2			u_Dimensions;
+uniform vec4			u_ViewInfo; // zfar / znear, zfar
 
-uniform vec4		u_Local0; // dofValue, dynamicGlowEnabled, 0, direction
-uniform vec4		u_Local1; // testvalues
-
-
-varying vec2		var_TexCoords;
+uniform vec4			u_Local0; // dofValue, dynamicGlowEnabled, 0, direction
+uniform vec4			u_Local1; // testvalues
 
 
-#define BLUR_DEPTH 0.55
+varying vec2			var_TexCoords;
 
 
-vec2 sampleOffset = vec2(1.0/u_Dimensions);
+#define BLUR_DEPTH		0.55
 
-#define PIOVER180 0.017453292
+
+#define sampleOffset	(vec2(1.0) / u_Dimensions)
+
+#define PIOVER180		0.017453292
 
 //MATSO DOF
 #define fMatsoDOFChromaPow		2.4		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
