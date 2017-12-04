@@ -2741,6 +2741,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t occlusionShader;
 	shaderProgram_t depthAdjustShader;
 	shaderProgram_t lightAllShader;
+	shaderProgram_t lightAllSplatShader;
 	shaderProgram_t skyShader;
 	shaderProgram_t depthPassShader;
 	shaderProgram_t sunPassShader;

@@ -417,6 +417,47 @@ void main()
 	var_Normal = normal.xyz;
 	var_Slope = 0.0;
 
+
+	if (USE_TRIPLANAR > 0.0)
+	{
+		//
+		// Steep Maps...
+		//
+
+		if (SHADER_HAS_STEEPMAP > 0.0)
+		{// Steep maps...
+			float pitch = vectoangles(normalize(normal.xyz)).r;
+
+			if (pitch > 180)
+				pitch -= 360;
+
+			if (pitch < -180)
+				pitch += 360;
+
+			pitch += 90.0f;
+
+			if (pitch > 46.0 || pitch < -46.0)
+			{
+				var_Slope = 1.0;
+			}
+			else if (pitch > 26.0 || pitch < -26.0)
+			{// do not add to foliage map on this slope, but still do original texture
+				var_Slope = 0.0;
+			}
+			else
+			{
+				var_Slope = 0.0;
+			}
+		}
+	}
+
+	var_Blending = vec3(0.0);
+
+	if (USE_REGIONS > 0.0 || USE_TRIPLANAR > 0.0)
+	{
+		GetBlending(normalize(attr_Normal.xyz * 2.0 - 1.0));
+	}
+
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 	WorldPos_CS_in = vec4(position.xyz, 1.0);
 	TexCoord_CS_in = var_TexCoords.xy;

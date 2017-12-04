@@ -1770,7 +1770,7 @@ void RB_UpdateCloseLights ( void )
 		}
 
 		// Double the range on all lights...
-		CLOSEST_LIGHTS_DISTANCES[i] *= 4.0;
+		//CLOSEST_LIGHTS_DISTANCES[i] *= 4.0;
 	}
 
 	//ri->Printf(PRINT_ALL, "Found %i close lights this frame.\n", NUM_CLOSE_LIGHTS);
@@ -2407,7 +2407,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif //__USE_DETAIL_CHECKING__
 			
-			sp = &tr.lightAllShader;
+			if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
+			{
+				sp = &tr.lightAllSplatShader;
+			}
+			else
+			{
+				sp = &tr.lightAllShader;
+			}
+
 			backEnd.pc.c_lightallDraws++;
 
 			GLSL_BindProgram(sp);
@@ -2718,7 +2726,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
 
-			if (sp == &tr.lightAllShader)
+			if (sp == &tr.lightAllSplatShader)
 			{
 #ifdef __USE_DETAIL_MAPS__
 				if (pStage->bundle[TB_DETAILMAP].image[0])
@@ -2731,10 +2739,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 #endif //__USE_DETAIL_MAPS__
 
-				if (pStage->glowMapped && pStage->bundle[TB_GLOWMAP].image[0])
+				/*if (pStage->glowMapped && pStage->bundle[TB_GLOWMAP].image[0])
 				{
 					GL_BindToTMU(pStage->bundle[TB_GLOWMAP].image[0], TB_GLOWMAP);
-				}
+				}*/
 
 				if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
 				{
@@ -2854,7 +2862,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_COLORMAP); // Sky up...
 #endif
 		}
-		else if ( sp == &tr.lightAllShader )
+		else if ( sp == &tr.lightAllShader || sp == &tr.lightAllSplatShader)
 		{
 			int i;
 
@@ -2900,13 +2908,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				if (pStage->bundle[TB_NORMALMAP].image[0])
+				if (sp == &tr.lightAllShader)
 				{
-					GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_NORMALMAP].image[0], TB_NORMALMAP);
-				}
-				else if (r_normalMapping->integer >= 2)
-				{
-					GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
+					if (pStage->bundle[TB_NORMALMAP].image[0])
+					{
+						GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_NORMALMAP].image[0], TB_NORMALMAP);
+					}
+					else if (r_normalMapping->integer >= 2)
+					{
+						GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
+					}
 				}
 
 				/*if (pStage->bundle[TB_DELUXEMAP].image[0])
@@ -2926,6 +2937,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					GL_BindToTMU(tr.whiteImage, TB_SPECULARMAP);
 				}*/
+
+				if (pStage->glowMapped && pStage->bundle[TB_GLOWMAP].image[0])
+				{
+					GL_BindToTMU(pStage->bundle[TB_GLOWMAP].image[0], TB_GLOWMAP);
+				}
 			}
 		}
 		else if ( pStage->bundle[TB_LIGHTMAP].image[0] != 0 )

@@ -684,7 +684,6 @@ void main(void)
 
 #define LIGHT_COLOR_POWER			4.0
 
-#if 1
 		if (phongFactor > 0.0 && u_Local6.a < 1.0)
 		{// this is blinn phong
 			float light_occlusion = 1.0;
@@ -694,9 +693,9 @@ void main(void)
 				light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
 			}
 
-			float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
-			power = pow(power, LIGHT_COLOR_POWER);
-			power = power * 0.5 + 0.5;
+			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
+			float power = maxBright * 0.75;
+			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 		
 			vec3 lightColor = u_PrimaryLightColor.rgb;
 
@@ -726,49 +725,6 @@ void main(void)
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
-#else
-		if (phongFactor > 0.0 && u_Local6.a < 1.0)
-		{// this is blinn phong
-			float light_occlusion = 1.0;
-
-			if (useOcclusion)
-			{
-				light_occlusion = 1.0 - clamp(dot(vec4(-to_light_norm*E, 1.0), occlusion), 0.0, 1.0);
-			}
-
-			float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
-			power = pow(power, LIGHT_COLOR_POWER);
-			power = power * 0.5 + 0.5;
-		
-			vec3 lightColor = u_PrimaryLightColor.rgb;
-
-			float lightMult = clamp(reflectivePower * power * light_occlusion * phongFactor * shadowMult, 0.0, 1.0);
-
-			if (lightMult > 0.0)
-			{
-				lightColor *= lightMult;
-				lightColor = blinn_phong(N, E, -to_light_norm, lightColor, lightColor);
-				float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
-				lightColor *= maxStr;
-				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
-
-				// Add vibrancy to light color at sunset/sunrise???
-				if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
-				{// Vibrancy gets greater the closer we get to night time...
-					float vib = u_Local6.a;
-					if (vib > 0.8)
-					{// Scale back vibrancy to 0.0 just before nightfall...
-						float downScale = 1.0 - vib;
-						downScale *= 4.0;
-						vib = mix(vib, 0.0, downScale);
-					}
-					lightColor = Vibrancy( lightColor, vib * 4.0 );
-				}
-
-				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
-			}
-		}
-#endif
 
 		if (u_lightCount > 0.0 && reflectivePower > 0.0)
 		{
@@ -780,12 +736,9 @@ void main(void)
 			}
 
 			vec3 addedLight = vec3(0.0);
-			float power = clamp(length(outColor.rgb) / 3.0, 0.0, 1.0) * 0.5 + 0.5;
-			power = pow(power, LIGHT_COLOR_POWER);
-			power = power * 0.5 + 0.5;
-
-			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)) * 1.25, 0.0, 1.0);
-			float maxStr = ((1.0 - maxBright) * 0.1) + 0.1; // 0.1 to 0.2 with darker spots getting extra light...
+			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
+			float power = maxBright * 0.85;
+			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 
 			for (int li = 0; li < u_lightCount; li++)
 			{
@@ -811,21 +764,16 @@ void main(void)
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 				
-					float lightMult = lightStrength;
+					lightColor = lightColor * power;// * maxStr;
 
-					if (lightMult > 0.0)
+					addedLight.rgb += lightColor * lightStrength * 0.333;
+
+					if (useOcclusion)
 					{
-						lightColor = lightColor * power * maxStr;
-
-						addedLight.rgb += lightColor * lightMult * 0.333;
-
-						if (useOcclusion)
-						{
-							light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
-						}
-					
-						addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor) * lightMult * light_occlusion;
+						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
+					
+					addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor) * lightStrength * light_occlusion;
 				}
 			}
 

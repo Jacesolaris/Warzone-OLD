@@ -41,6 +41,9 @@ extern const char *fallbackShader_generic_fp;
 extern const char *fallbackShader_lightall_vp;
 extern const char *fallbackShader_lightall_gs;
 extern const char *fallbackShader_lightall_fp;
+extern const char *fallbackShader_lightallSplat_vp;
+extern const char *fallbackShader_lightallSplat_gs;
+extern const char *fallbackShader_lightallSplat_fp;
 extern const char *fallbackShader_sun_vp;
 extern const char *fallbackShader_sun_fp;
 extern const char *fallbackShader_planet_vp;
@@ -2977,6 +2980,52 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
+
+		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_deluxeMapping->integer)
+			strcat(extradefines, "#define USE_DELUXEMAP\n");
+
+		if (r_tesselation->integer)
+		{
+			strcat(extradefines, "#define USE_TESSELLATION\n");
+
+#ifdef NEW_TESSELATION
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, fallbackShader_tessellation_gs))
+#elif defined(HEIGHTMAP_TESSELATION2)
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
+			{
+				ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+			}
+		}
+		else if (r_instanceCloudReductionCulling->integer)
+		{
+			strcat(extradefines, "#define USE_ICR_CULLING\n");
+
+			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, fallbackShader_lightallSplat_gs))
+			{
+				ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+			}
+		}
+		else if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+		}
+	}
+
+	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
@@ -3893,7 +3942,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	if (!GLSL_EndLoadGPUShader(&tr.lightAllShader))
 	{
-		ri->Error(ERR_FATAL, "Could not load lightallMerged shader!");
+		ri->Error(ERR_FATAL, "Could not load lightall shader!");
 	}
 
 	GLSL_InitUniforms(&tr.lightAllShader);
@@ -3924,6 +3973,44 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numLightShaders++;
+
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.lightAllSplatShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+	}
+
+	GLSL_InitUniforms(&tr.lightAllSplatShader);
+	GLSL_BindProgram(&tr.lightAllSplatShader);
+
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	//GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_ROADMAP, TB_ROADMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.lightAllSplatShader);
+#endif
+
+	numLightShaders++;
+
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.depthPassShader))
@@ -5816,6 +5903,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.depthAdjustShader);
 
 	GLSL_DeleteGPUShader(&tr.lightAllShader);
+	GLSL_DeleteGPUShader(&tr.lightAllSplatShader);
 	GLSL_DeleteGPUShader(&tr.skyShader);
 	GLSL_DeleteGPUShader(&tr.depthPassShader);
 
@@ -5964,7 +6052,7 @@ void GLSL_BindProgram(shaderProgram_t * program)
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;
 
-		if (program == &tr.lightAllShader)
+		if (program == &tr.lightAllShader || program == &tr.lightAllSplatShader)
 			backEnd.pc.c_lightallBinds++;
 		else if (program == &tr.depthPassShader)
 			backEnd.pc.c_depthPassBinds++;
