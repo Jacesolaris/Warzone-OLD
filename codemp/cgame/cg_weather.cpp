@@ -830,12 +830,12 @@ qboolean CG_AtmosphericKludge()
 		return(kludgeResult = qtrue);
 	}
 
-	if( StringContainsWord( cgs.currentmapname, "baldemnic" ) && !StringContainsWord( cgs.currentmapname, "baldemnic11" ))
+	/*if( StringContainsWord( cgs.currentmapname, "baldemnic" ) && !StringContainsWord( cgs.currentmapname, "baldemnic11" ))
   	{
 		trap->Print("^1*** ^3ATMOSPHERICS^5: atmospherics ^7forced^5 to ^7rainstorm^5 for this map.\n");
   	  	ATMOSPHERIC_WEATHER_TYPE = WEATHER_RAIN_STORM;
   	  	return( kludgeResult = qtrue );
-  	}
+  	}*/
 
 	if (!Q_stricmp(cgs.currentmapname, "maps/mp/ctf3"))
 	{

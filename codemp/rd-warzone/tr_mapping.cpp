@@ -1694,8 +1694,7 @@ void MAPPING_LoadMapInfo(void)
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
 	{// Leave -1 in ini file to override and force it off, just in case...
-		if (/*StringContainsWord(mapname, "baldemnic")
-			||*/ StringContainsWord(mapname, "mandalore")
+		if (StringContainsWord(mapname, "mandalore")
 			|| StringContainsWord(mapname, "endor")
 			|| StringContainsWord(mapname, "ilum")
 			|| StringContainsWord(mapname, "taanab")
@@ -1708,8 +1707,7 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	if (!SHADOWS_ENABLED
-		&& (/*StringContainsWord(mapname, "baldemnic")
-			||*/ StringContainsWord(mapname, "mandalore")
+		&& (StringContainsWord(mapname, "mandalore")
 			|| StringContainsWord(mapname, "endor")
 			|| StringContainsWord(mapname, "ilum")
 			|| StringContainsWord(mapname, "taanab")

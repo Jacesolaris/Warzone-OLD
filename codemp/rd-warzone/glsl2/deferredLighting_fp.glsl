@@ -754,7 +754,7 @@ void main(void)
 				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
 
 				// Attenuation...
-				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.25, 1.0);
 				lightFade = pow(lightFade, 2.0);
 				float lightStrength = lightDistMult * lightFade * reflectivePower * 0.5;
 
