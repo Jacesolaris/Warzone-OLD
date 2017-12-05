@@ -3380,8 +3380,6 @@ void RestoreRealTraceContent(void)
 #define REALTRACE_MISS				0 //didn't hit anything
 #define REALTRACE_HIT				1 //hit object normally
 #define REALTRACE_SABERBLOCKHIT		2 //hit a player who used a bounding box dodge saber block
-#define REALTRACE_HUMANOID			3 //hit a player
-#define REALTRACE_HUMANOID_BBOX		4 //hit a player's bbox without striking the g2 mesh
 static QINLINE int Finish_RealTrace(trace_t *results, trace_t *closestTrace, vec3_t start, vec3_t end)
 {//this function reverts the real trace content removals and finishs up the realtrace
  //restore all the entities we blanked out.
