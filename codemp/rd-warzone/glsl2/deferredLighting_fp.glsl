@@ -798,9 +798,26 @@ void main(void)
 	{// HQ AO enabled...
 		float msao = 0.0;
 
-		if (u_Local1.b >= 3.0)
+		if (u_Local1.b >= 4.0)
 		{
 			const float width = 2.0;
+			float numSamples = 0.0;
+		
+			for (float x = -width; x <= width; x += 1.0)
+			{
+				for (float y = -width; y <= width; y += 1.0)
+				{
+					vec2 coord = texCoords + (vec2(x, y) * pixel);
+					msao += textureLod(u_SteepMap, coord, 0.0).x;
+					numSamples += 1.0;
+				}
+			}
+
+			msao /= numSamples;
+		}
+		else if (u_Local1.b >= 3.0)
+		{
+			const float width = 1.0;
 			float numSamples = 0.0;
 		
 			for (float x = -width; x <= width; x += 1.0)

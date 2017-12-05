@@ -40,6 +40,7 @@ extern float		SUN_PHONG_SCALE;
 extern float		SHADOW_MINBRIGHT;
 extern float		SHADOW_MAXBRIGHT;
 extern qboolean		AO_ENABLED;
+extern qboolean		AO_BLUR;
 extern float		AO_MINBRIGHT;
 extern float		AO_MULTBRIGHT;
 extern vec3_t		MAP_AMBIENT_CSB;
@@ -2456,7 +2457,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	vec4_t local1;
-	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, (r_ao->integer && AO_ENABLED) ? r_ao->integer : 0.0, r_env->integer ? 1.0 : 0.0);
+	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, (r_ao->integer && AO_ENABLED) ? (AO_BLUR) ? r_ao->integer : 2.0 : 0.0, r_env->integer ? 1.0 : 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL1, local1);
 
 	qboolean shadowsEnabled = qfalse;
