@@ -41,6 +41,7 @@ extern float		SHADOW_MINBRIGHT;
 extern float		SHADOW_MAXBRIGHT;
 extern qboolean		AO_ENABLED;
 extern qboolean		AO_BLUR;
+extern qboolean		AO_DIRECTIONAL;
 extern float		AO_MINBRIGHT;
 extern float		AO_MULTBRIGHT;
 extern vec3_t		MAP_AMBIENT_CSB;
@@ -2348,7 +2349,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 	GL_BindToTMU(tr.ssaoImage, TB_STEEPMAP);
 
-	if (r_ssdo->integer)
+	if (r_ssdo->integer && AO_DIRECTIONAL)
 	{
 		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 		GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
@@ -2471,7 +2472,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		shadowsEnabled = qtrue;
 
 	vec4_t local2;
-	VectorSet4(local2, (r_ssdo->integer > 0 && r_ssdo->integer < 3) ? 1.0 : 0.0, shadowsEnabled ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+	VectorSet4(local2, (r_ssdo->integer > 0 && r_ssdo->integer < 3 && AO_DIRECTIONAL) ? 1.0 : 0.0, shadowsEnabled ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  local2);
 
 	vec4_t local3;

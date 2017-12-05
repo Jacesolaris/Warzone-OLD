@@ -1461,6 +1461,7 @@ qboolean	AURORA_ENABLED = qtrue;
 qboolean	AURORA_ENABLED_DAY = qfalse;
 qboolean	AO_ENABLED = qtrue;
 qboolean	AO_BLUR = qtrue;
+qboolean	AO_DIRECTIONAL = qfalse;
 float		AO_MINBRIGHT = 0.3;
 float		AO_MULTBRIGHT = 1.0;
 qboolean	SHADOWS_ENABLED = qfalse;
@@ -1601,6 +1602,7 @@ void MAPPING_LoadMapInfo(void)
 	//
 	AO_ENABLED = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_ENABLED", "1")) > 0) ? qtrue : qfalse;
 	AO_BLUR = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_BLUR", "1")) > 0) ? qtrue : qfalse;
+	AO_DIRECTIONAL = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_DIRECTIONAL", "0")) > 0) ? qtrue : qfalse;
 	AO_MINBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MINBRIGHT", "0.3"));
 	AO_MULTBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MULTBRIGHT", "1.0"));
 
@@ -1802,7 +1804,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion blur is ^7%s^5 on this map.\n", AO_BLUR ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion blur is ^7%s^5 and Directional Occlusion is ^7%s^5 on this map.\n", AO_BLUR ? "ENABLED" : "DISABLED", AO_DIRECTIONAL ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");

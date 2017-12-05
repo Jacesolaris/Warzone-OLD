@@ -2252,6 +2252,7 @@ qboolean ALLOW_NULL_FBO_BIND = qfalse;
 extern qboolean ENABLE_DISPLACEMENT_MAPPING;
 extern qboolean FOG_POST_ENABLED;
 extern qboolean WATER_FOG_ENABLED;
+extern qboolean AO_DIRECTIONAL;
 extern int LATE_LIGHTING_ENABLED;
 
 #define __SHADER_PERFORMANCE_DEBUG__
@@ -2565,7 +2566,7 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
-		if (!SCREEN_BLUR && r_ssdo->integer)
+		if (!SCREEN_BLUR && r_ssdo->integer && AO_DIRECTIONAL)
 		{
 			DEBUG_StartTimer("SSDO");
 
