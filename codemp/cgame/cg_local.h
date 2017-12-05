@@ -14,6 +14,8 @@
 #include "cg_holster.h"
 //[/VisualWeapons]
 
+#include "../game/bg_inventory.h"
+
 // The entire cgame module is unloaded and reloaded on each level change,
 // so there is NO persistant data between levels on the client side.
 // If you absolutely need something stored, it can either be kept
@@ -204,6 +206,9 @@ typedef struct debuffVisualsData_s
 
 typedef struct clientInfo_s {
 	qboolean		infoValid;
+
+	inventoryItem	*inventory[64];
+	int				inventoryCount;
 
 	float			colorOverride[3];
 

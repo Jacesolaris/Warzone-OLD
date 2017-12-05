@@ -16,7 +16,7 @@
 #include "g_public.h"
 #include "../qcommon/inifile.h"
 #include "ai_dominance_navmesh.h"
-#include "g_inventory.h"
+#include "bg_inventory.h"
 
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;
@@ -812,6 +812,9 @@ struct gclient_s {
 	// the rest of the structure is private to game
 	clientPersistant_t	pers;
 	clientSession_t		sess;
+
+	inventoryItem	*inventory[64];
+	int				inventoryCount;
 
 #ifdef __USE_NAVLIB__
 	navlibTarget_t	navigation;

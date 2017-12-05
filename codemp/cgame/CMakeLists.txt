@@ -36,6 +36,10 @@ source_group("game" FILES ${MPCGameGameFiles})
 set(MPCGameFiles ${MPCGameFiles} ${MPCGameGameFiles})
 
 set(MPCGameCgameFiles
+  "${MPDir}/game/bg_inventory.cpp"
+	"${MPDir}/game/bg_inventory.h"
+	"${MPDir}/game/bg_inventoryItem.cpp"
+	"${MPDir}/game/bg_inventoryItem.h"
 	"${MPDir}/cgame/cg_consolecmds.cpp"
 	"${MPDir}/cgame/cg_cvar.cpp"
 	"${MPDir}/cgame/cg_cull.cpp"
