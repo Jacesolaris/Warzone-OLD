@@ -32,6 +32,98 @@ float qualityPriceModifier[5] = {
 	16.0
 };
 
+const char *itemQualityTooltips[] = {
+	"Poor",
+	"Common",
+	"Uncommon",
+	"Rare",
+	"Epic",
+	"Legendary",
+	"Artifact",
+};
+
+const char *weaponCrystalTooltips[] = {
+	"",
+	"%.1f% heat damage.\n",
+	"%.1f% kinetic damage.\n",
+	"%.1f% electric damage.\n",
+	"%.1f% cold damage.\n",
+	"%.1f% heat, and %.1f% kinetic damage.\n",
+	"%.1f% electric, and %.1f% heat damage.\n",
+	"%.1f% cold, and %.1f% kinetic damage.\n",
+	"%.1f% heat, and %.1f% cold damage.\n",
+};
+
+const char *itemCrystalTooltips[] = {
+	"",
+	"%.1f% resistance to heat damage.\n",
+	"%.1f% resistance to kinetic damage.\n",
+	"%.1f% resistance to electric damage.\n",
+	"%.1f% resistance to cold damage.\n",
+	"%.1f% resistance to heat, and %.1f% kinetic damage.\n",
+	"%.1f% resistance to electric, and %.1f% heat damage.\n",
+	"%.1f% resistance to cold, and %.1f% kinetic damage.\n",
+	"%.1f% resistance to heat, and %.1f% cold damage.\n",
+};
+
+const char *weaponStat1Tooltips[] = {
+	"",
+	"%.1f% bonus to accuracy.\n",
+	"%.1f% bonus to rate of fire.\n",
+	"%.1f% bonus to damage.\n",
+	"%.1f% bonus to velocity.\n",
+};
+
+const char *weaponStat2Tooltips[] = {
+	"",
+	"%.1f% bonus to critical chance.\n",
+	"%.1f% bonus to critical power.\n",
+	"%.1f% reduction to heat accumulation.\n",
+};
+
+const char *weaponStat3Tooltips[] = {
+	"",
+	"Ricochet.\n",
+	"Explosive.\n",
+	"Beam.\n",
+	"Wide Shot.\n",
+};
+
+const char *saberStat1Tooltips[] = {
+	"",
+	"%.1f% bonus to damage.\n",
+	"%.1f% bonus shield penetration.\n",
+};
+
+const char *saberStat2Tooltips[] = {
+	"",
+	"%.1f% bonus to critical chance.\n",
+	"%.1f% bonus to critical power.\n",
+};
+
+const char *saberStat3Tooltips[] = {
+	"",
+	"%.1f% bonus to blade length.\n",
+	"%.1f% bonus to attack speed.\n",
+};
+
+const char *itemStatTooltips[] = {
+	"",
+	"%.1f% bonus to maximum health.\n",
+	"%.1f% bonus to health regeneration.\n",
+	"%.1f% bonus to maximum shields.\n",
+	"%.1f% bonus to shield regeneration.\n",
+	"%.1f% bonus to maximum force power.\n",
+	"%.1f% bonus to force power regeneration.\n",
+	"%.1f% bonus to strength.\n",
+	"%.1f% bonus to evasion.\n",
+	"%.1f% bonus to speed.\n",
+	"%.1f% bonus to speed and %.1f% bonus to evasion.\n",
+	"%.1f% bonus to blocking.\n",
+	"%.1f% damage reduction.\n",
+	"%.1f% shield penetration reduction.\n",
+};
+
 //
 // Construction/Destruction...
 //
@@ -256,7 +348,7 @@ void inventoryItem::setStat1(int statType, float statValue)
 
 void inventoryItem::setStat2(int statType, float statValue)
 {
-	if (m_quality <= QUALITY_GREEN) return; // Not available...
+	if (m_quality <= QUALITY_WHITE) return; // Not available...
 	if (isCrystal()) return; // crystals can not have stats.
 	if (isModification() && (m_basicStat1 || m_basicStat3)) return; // mods can only have 1 stat type.
 
@@ -266,7 +358,7 @@ void inventoryItem::setStat2(int statType, float statValue)
 
 void inventoryItem::setStat3(int statType, float statValue)
 {
-	if (m_quality <= QUALITY_BLUE) return; // Not available...
+	if (m_quality <= QUALITY_GREEN) return; // Not available...
 	if (isCrystal()) return; // crystals can not have stats.
 	if (isModification() && (m_basicStat1 || m_basicStat2)) return; // mods can only have 1 stat type.
 
@@ -276,7 +368,7 @@ void inventoryItem::setStat3(int statType, float statValue)
 
 void inventoryItem::setMod1(int statType, float statValue)
 {
-	if (m_quality <= QUALITY_GREY) return; // Not available...
+	if (m_quality <= QUALITY_GREEN) return; // Not available...
 	if (isCrystal()) return; // crystals can not have stats.
 	if (isModification()) return; // mods can't have mods :)
 
@@ -286,7 +378,7 @@ void inventoryItem::setMod1(int statType, float statValue)
 
 void inventoryItem::setMod2(int statType, float statValue)
 {
-	if (m_quality <= QUALITY_GREEN) return; // Not available...
+	if (m_quality <= QUALITY_BLUE) return; // Not available...
 	if (isCrystal()) return; // crystals can not have stats.
 	if (isModification()) return; // mods can't have mods :)
 
@@ -296,7 +388,7 @@ void inventoryItem::setMod2(int statType, float statValue)
 
 void inventoryItem::setMod3(int statType, float statValue)
 {
-	if (m_quality <= QUALITY_BLUE) return; // Not available...
+	if (m_quality <= QUALITY_PURPLE) return; // Not available...
 	if (isCrystal()) return; // crystals can not have stats.
 	if (isModification()) return; // mods can't have mods :)
 
@@ -320,6 +412,16 @@ gitem_t *inventoryItem::getBaseItem()
 int inventoryItem::getBaseItemID()
 {
 	return m_bgItemID;
+}
+
+char *inventoryItem::getName()
+{
+	return getBaseItem()->name;
+}
+
+char *inventoryItem::getDescription()
+{
+	return getBaseItem()->description;
 }
 
 qhandle_t inventoryItem::getIcon()
@@ -414,7 +516,7 @@ double inventoryItem::getCost()
 	return getBaseItem()->price * statCostMultiplier1 * statCostMultiplier2 * statCostMultiplier3 * modCostMultiplier1 * modCostMultiplier2 * modCostMultiplier3 * crystalCostMultiplier * qualityPriceModifier[m_quality];
 }
 
-double inventoryItem::getTotalCost()
+double inventoryItem::getStackCost()
 {// Apply multipliers based on how many extra stats this item has...
 	double crystalCostMultiplier = getCrystal() ? 1.5 : 0.0;
 	double statCostMultiplier1 = getBasicStat1() ? 1.25 : 0.0;
@@ -436,6 +538,121 @@ int inventoryItem::getDestroyTime()
 	return m_destroyTime;
 }
 
+const char *inventoryItem::getColorStringForQuality()
+{
+	switch (getQuality())
+	{// TODO: Not use Q3 strings so we can have more colors... The GUI lib we use probably allows for color and formatting stings anyway...
+	case QUALITY_GREY:
+		return "^5";
+		break;
+	case QUALITY_WHITE:
+		return "^7";
+		break;
+	case QUALITY_GREEN:
+		return "^2";
+		break;
+	case QUALITY_BLUE:
+		return "^4";
+		break;
+	case QUALITY_PURPLE:
+		return "^7";
+		break;
+	case QUALITY_ORANGE:
+		return "^6";
+		break;
+	case QUALITY_GOLD:
+		return "^3";
+		break;
+	default:
+		break;
+	}
+
+	return "^5";
+}
+
+const char *inventoryItem::getTooltip()
+{
+	int giType = getBaseItem()->giType;
+	
+	std::string tooltipText = "";
+
+	switch (giType)
+	{
+	case IT_WEARABLE:
+	case IT_ITEM_MODIFICATION:
+	case IT_ITEM_CRYSTAL:
+		tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
+		tooltipText += va("%s\n\n", getDescription());
+		tooltipText += itemCrystalTooltips[getCrystal()];
+		tooltipText += va(itemStatTooltips[getBasicStat1()], getBasicStat1Value());
+		tooltipText += va(itemStatTooltips[getBasicStat2()], getBasicStat2Value());
+		tooltipText += va(itemStatTooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += va(itemStatTooltips[getMod1Stat()], getMod1Value());
+		tooltipText += va(itemStatTooltips[getMod2Stat()], getMod2Value());
+		tooltipText += va(itemStatTooltips[getMod3Stat()], getMod3Value());
+		tooltipText += va("\nValue: %i.\n", getStackCost());
+		break;
+	case IT_WEAPON_MODIFICATION:
+	case IT_WEAPON_CRYSTAL:
+		tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
+		tooltipText += va("%s\n\n", getDescription());
+		tooltipText += weaponCrystalTooltips[getCrystal()];
+		tooltipText += va(weaponStat1Tooltips[getBasicStat1()], getBasicStat1Value());
+		tooltipText += va(weaponStat2Tooltips[getBasicStat2()], getBasicStat2Value());
+		tooltipText += va(weaponStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += va(weaponStat1Tooltips[getMod1Stat()], getMod1Value());
+		tooltipText += va(weaponStat2Tooltips[getMod2Stat()], getMod2Value());
+		tooltipText += va(weaponStat3Tooltips[getMod3Stat()], getMod3Value());
+		tooltipText += va("\nValue: %i.\n", getStackCost());
+		break;
+	case IT_SABER_MODIFICATION:
+	case IT_SABER_CRYSTAL:
+		tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
+		tooltipText += va("%s\n\n", getDescription());
+		tooltipText += weaponCrystalTooltips[getCrystal()];
+		tooltipText += va(saberStat1Tooltips[getBasicStat1()], getBasicStat1Value());
+		tooltipText += va(saberStat2Tooltips[getBasicStat2()], getBasicStat2Value());
+		tooltipText += va(saberStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += va(saberStat1Tooltips[getMod1Stat()], getMod1Value());
+		tooltipText += va(saberStat2Tooltips[getMod2Stat()], getMod2Value());
+		tooltipText += va(saberStat3Tooltips[getMod3Stat()], getMod3Value());
+		tooltipText += va("\nValue: %i.\n", getStackCost());
+		break;
+	case IT_WEAPON:
+		if (getBaseItem()->giTag == WP_SABER)
+		{
+			tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
+			tooltipText += va("%s\n\n", getDescription());
+			tooltipText += weaponCrystalTooltips[getCrystal()];
+			tooltipText += va(saberStat1Tooltips[getBasicStat1()], getBasicStat1Value());
+			tooltipText += va(saberStat2Tooltips[getBasicStat2()], getBasicStat2Value());
+			tooltipText += va(saberStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+			tooltipText += va(saberStat1Tooltips[getMod1Stat()], getMod1Value());
+			tooltipText += va(saberStat2Tooltips[getMod2Stat()], getMod2Value());
+			tooltipText += va(saberStat3Tooltips[getMod3Stat()], getMod3Value());
+			tooltipText += va("\nValue: %i.\n", getStackCost());
+		}
+		else
+		{
+			tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
+			tooltipText += va("%s\n\n", getDescription());
+			tooltipText += weaponCrystalTooltips[getCrystal()];
+			tooltipText += va(weaponStat1Tooltips[getBasicStat1()], getBasicStat1Value());
+			tooltipText += va(weaponStat2Tooltips[getBasicStat2()], getBasicStat2Value());
+			tooltipText += va(weaponStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+			tooltipText += va(weaponStat1Tooltips[getMod1Stat()], getMod1Value());
+			tooltipText += va(weaponStat2Tooltips[getMod2Stat()], getMod2Value());
+			tooltipText += va(weaponStat3Tooltips[getMod3Stat()], getMod3Value());
+			tooltipText += va("\nValue: %i.\n", getStackCost());
+		}
+		break;
+	default:
+		// hmm. shouldn't happen, hopefully...
+		break;
+	}
+
+	return tooltipText.c_str();
+}
 
 qboolean inventoryItem::isModification()
 {

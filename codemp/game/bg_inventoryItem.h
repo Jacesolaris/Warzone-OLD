@@ -8,15 +8,28 @@
 
 #include <string>
 
+extern const char *itemQualityTooltips[];
+extern const char *weaponCrystalTooltips[];
+extern const char *itemCrystalTooltips[];
+extern const char *weaponStat1Tooltips[];
+extern const char *weaponStat2Tooltips[];
+extern const char *weaponStat3Tooltips[];
+extern const char *saberStat1Tooltips[];
+extern const char *saberStat2Tooltips[];
+extern const char *saberStat3Tooltips[];
+extern const char *itemStatTooltips[];
+
 //
 // Quality levels of items...
 //
 typedef enum {
 	QUALITY_GREY,		// on weapons/sabers/items - 0 base stats and 0 mod slots.
-	QUALITY_GREEN,		// on weapons/sabers/items - 1 base stats and 1 mod slots.
-	QUALITY_BLUE,		// on weapons/sabers/items - 2 base stats and 2 mod slots.
-	QUALITY_PURPLE,		// on weapons/sabers/items - 3 base stats and 3 mod slots. 1.25x stat bonus.
-	QUALITY_GOLD		// on weapons/sabers/items - 3 base stats and 3 mod slots. 2x stat bonus.
+	QUALITY_WHITE,		// on weapons/sabers/items - 1 base stats and 0 mod slots.
+	QUALITY_GREEN,		// on weapons/sabers/items - 2 base stats and 0 mod slots.
+	QUALITY_BLUE,		// on weapons/sabers/items - 3 base stats and 1 mod slots.
+	QUALITY_PURPLE,		// on weapons/sabers/items - 3 base stats and 2 mod slots.
+	QUALITY_ORANGE,		// on weapons/sabers/items - 3 base stats and 3 mod slots.
+	QUALITY_GOLD		// on weapons/sabers/items - 3 base stats and 3 mod slots. 1.5x Stats Modifier.
 } itemQuality_t;
 
 //
@@ -31,11 +44,12 @@ typedef enum {
 	ITEM_CRYSTAL_BLUE,				// Bonus Electric Damage/Resistance
 	ITEM_CRYSTAL_WHITE,				// Bonus Cold Damage/Resistance
 	// Maybe extras below should be combos of the above? Stois? Thoughts?
-	ITEM_CRYSTAL_YELLOW,			// Bonus 1/2 Heat + 1/2 Kinetic??? Damage/Resistance
-	ITEM_CRYSTAL_PURPLE,			// Bonus 1/2 Electric + 1/2 Heat??? Damage/Resistance
-	ITEM_CRYSTAL_ORANGE,			// Bonus 2/3 Heat + 1/3 Kinetic??? Damage/Resistance
-	ITEM_CRYSTAL_PINK,				// Bonus 1/4 Heat + 1/3 Electric + 1/3 Cold Damage/Resistance
-} baseItemPowerCrystal_t;
+	ITEM_CRYSTAL_YELLOW,			// Bonus 1/2 Heat + 1/2 Kinetic Damage/Resistance
+	ITEM_CRYSTAL_PURPLE,			// Bonus 1/2 Electric + 1/2 Heat Damage/Resistance
+	ITEM_CRYSTAL_ORANGE,			// Bonus 1/2 Cold + 1/2 Kinetic Damage/Resistance
+	ITEM_CRYSTAL_PINK,				// Bonus 1/2 Electric + 1/2 Cold Damage/Resistance
+	ITEM_CRYSTAL_MAX
+} itemPowerCrystal_t;
 
 // For weapons/weapon-mods slot 1 only.
 typedef enum {
@@ -43,7 +57,7 @@ typedef enum {
 	WEAPON_STAT1_FIRE_ACCURACY_MODIFIER,
 	WEAPON_STAT1_FIRE_RATE_MODIFIER,
 	WEAPON_STAT1_FIRE_DAMAGE_MODIFIER,
-	WEAPON_STAT1_FIRE_HEAT_MODIFIER,
+	WEAPON_STAT1_VELOCITY_MODIFIER,
 	WEAPON_STAT1_MAX
 } weaponStat1_t;
 
@@ -60,9 +74,7 @@ typedef enum {
 typedef enum {
 	WEAPON_STAT3_SHOT_DEFAULT,
 	WEAPON_STAT3_SHOT_BOUNCE,
-	WEAPON_STAT3_SHOT_EXPLODE,
 	WEAPON_STAT3_SHOT_EXPLOSIVE,
-	WEAPON_STAT3_SHOT_VELOCITY,
 	WEAPON_STAT3_SHOT_BEAM,
 	WEAPON_STAT3_SHOT_WIDE,
 	WEAPON_STAT3_MAX
@@ -106,10 +118,8 @@ typedef enum {
 	ITEM_STAT1_SPEED_MODIFIER,
 	ITEM_STAT1_AGILITY_MODIFIER, // 1/2 speed + 1/2 evasion
 	ITEM_STAT1_BLOCKING_MODIFIER,
-	ITEM_STAT1_PHYSICAL_DAMAGE_REDUCTION_MODIFIER,
-	ITEM_STAT1_PHYSICAL_DAMAGE_PENETRATION_REDUCTION_MODIFIER,
-	ITEM_STAT1_RANGED_DAMAGE_REDUCTION_MODIFIER,
-	ITEM_STAT1_RANGED_DAMAGE_PENETRATION_REDUCTION_MODIFIER,
+	ITEM_STAT1_DAMAGE_REDUCTION_MODIFIER,
+	ITEM_STAT1_PENETRATION_REDUCTION_MODIFIER,
 	ITEM_STAT1_MAX
 } itemStat_t;
 
@@ -191,9 +201,11 @@ public:
 	gitem_t	*getBaseItem();
 	int getBaseItemID();
 	itemQuality_t getQuality();
+	char *getName();
+	char *getDescription();
 	int getQuantity();
 	double getCost();
-	double getTotalCost();
+	double getStackCost();
 	int getPlayerID();
 	qhandle_t getIcon();
 	int getDestroyTime();
@@ -217,6 +229,9 @@ public:
 	float getMod1Value();
 	float getMod2Value();
 	float getMod3Value();
+
+	const char *getColorStringForQuality();
+	const char *getTooltip();
 
 	//
 	// Database functions...
