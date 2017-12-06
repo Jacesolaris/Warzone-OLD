@@ -1225,6 +1225,7 @@ typedef enum {
 	IT_HOLDABLE,			// single use, holdable item
 							// EFX: rotate + bob
 	IT_PERSISTANT_POWERUP,
+	IT_MODIFICATION,		// inventory system. modification item.
 	IT_TEAM
 } itemType_t;
 
