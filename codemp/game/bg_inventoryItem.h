@@ -123,15 +123,11 @@ class inventoryItem
 private:
 	// Values...
 	int					m_itemID;
-	gitem_t				*m_baseItem;
+	int					m_bgItemID;
+	qhandle_t			m_icon;
 	itemQuality_t		m_quality;
-	std::string			m_name;
-	std::string			m_description;
 	int					m_quantity;
-	double				m_cost;
-	double				m_totalCost;
 	int					m_playerID;
-	qhandle_t			m_customIcon;
 
 	int					m_destroyTime;
 
@@ -163,20 +159,18 @@ public:
 	// Construction/Destruction...
 	//
 	inventoryItem(); // default constructor member variables are 0 or NULL.
-	inventoryItem(gitem_t*, itemQuality_t, std::string, std::string, double, int, std::string, int); // paramterized constructor
+	inventoryItem(int, itemQuality_t, int, int); // paramterized constructor
 	~inventoryItem(); // destructor
+
+	qboolean			m_transmitted;
 
 	//
 	// Item Setup Functions...
 	//
-	void setBaseItem(gitem_t*);
+	void setBaseItem(int);
 	void setQuality(itemQuality_t);
-	void setName(std::string);
-	void setDescription(std::string);
 	void setQuantity(int);
-	void setCost(double);
 	void setPlayerID(int);
-	void setCustomIcon(qhandle_t);
 	void setDestroyTime(int);
 
 	// Base item modifier stats...
@@ -194,15 +188,17 @@ public:
 	// Item Accessing Functions...
 	//
 	gitem_t	*getBaseItem();
+	int getBaseItemID();
 	itemQuality_t getQuality();
-	std::string getName();
-	std::string getDescription();
 	int getQuantity();
 	double getCost();
 	double getTotalCost();
 	int getPlayerID();
 	qhandle_t getIcon();
 	int getDestroyTime();
+
+	qboolean isModification();
+	qboolean isCrystal();
 
 	// Base item modifier stats...
 	int getBasicStat1();
@@ -256,11 +252,11 @@ extern inventoryItem	*INVENTORY_ITEM_INSTANCES[8388608];
 #endif
 
 #ifdef _CGAME
-inventoryItem *createInventoryItem(gitem_t *bgItem, itemQuality_t quality, std::string name, std::string description, double price, int amount = 1, std::string customIcon = "");
+inventoryItem *createInventoryItem(int bgItemID, itemQuality_t quality, int amount = 1);
 #endif
 
 #ifdef _GAME
-inventoryItem *createInventoryItem(gitem_t *bgItem, itemQuality_t quality, std::string name, std::string description, double price, int amount = 1, std::string customIcon = "", int clientNum = -1, int destroyTime = -1);
+inventoryItem *createInventoryItem(int bgItemID, itemQuality_t quality, int amount = 1, int clientNum = -1, int destroyTime = -1);
 void destroyOldLootItems(void);
 #endif
 

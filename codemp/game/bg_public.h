@@ -1225,7 +1225,16 @@ typedef enum {
 	IT_HOLDABLE,			// single use, holdable item
 							// EFX: rotate + bob
 	IT_PERSISTANT_POWERUP,
-	IT_MODIFICATION,		// inventory system. modification item.
+	
+	// inventory system. modification item.
+	IT_WEARABLE,
+	IT_SABER_CRYSTAL,
+	IT_WEAPON_CRYSTAL,
+	IT_ITEM_CRYSTAL,
+	IT_WEAPON_MODIFICATION,
+	IT_SABER_MODIFICATION,
+	IT_ITEM_MODIFICATION,
+
 	IT_TEAM
 } itemType_t;
 
@@ -1237,7 +1246,7 @@ typedef struct gitem_s {
 	char		*world_model[MAX_ITEM_MODELS];
 	char		*view_model;
 	char		*icon;
-//	char		*pickup_name;	// for printing on pickup
+	char		*name;			// for printing on pickup
 
 	int			quantity;		// for ammo how much, or duration of powerup
 	itemType_t  giType;			// IT_* flags
@@ -1247,6 +1256,7 @@ typedef struct gitem_s {
 	char		*precaches;		// string of all models and images this item will use
 	char		*sounds;		// string of all sounds this item will use
 	char		*description;
+	int			price;
 } gitem_t;
 
 // included in both the game dll and the client

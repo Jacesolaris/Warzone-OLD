@@ -33,17 +33,14 @@ inventoryItem::inventoryItem()
 #ifdef _GAME
 	m_itemID = INVENTORY_ITEM_INSTANCES_COUNT;
 #endif
-	m_baseItem = &bg_itemlist[0];
+	m_bgItemID = 0;
 	m_quality = QUALITY_GREY;
-	m_description = "";
 	m_quantity = 0;
-	m_cost = 0;
-	m_totalCost = 0;
 	m_playerID = -1;
 
-#ifdef _CGAME
-	m_customIcon = NULL;
-#endif
+	m_icon = NULL;
+
+	m_transmitted = qfalse;
 
 	m_destroyTime = -1;
 
@@ -67,22 +64,24 @@ inventoryItem::inventoryItem()
 #endif
 }
 
-inventoryItem::inventoryItem(gitem_t *bgItem, itemQuality_t quality, std::string name, std::string description, double price, int amount = 1, std::string customIcon = "", int destroyTime = -1)
+inventoryItem::inventoryItem(int bgItemID, itemQuality_t quality, int amount = 1, int destroyTime = -1)
 {
 #ifdef _GAME
 	m_itemID = INVENTORY_ITEM_INSTANCES_COUNT;
 #endif
-	m_baseItem = bgItem;
+
+	m_bgItemID = bgItemID;
 	m_quality = quality;
-	m_name = name;
-	m_description = description;
 	m_quantity = amount;
-	m_cost = price;
 	m_playerID = -1;
 
+	m_icon = NULL;
+
 #ifdef _CGAME
-	m_customIcon = trap->R_RegisterShader(customIcon.length() > 0 ? customIcon.c_str() : bgItem->icon);
+	m_icon = trap->R_RegisterShader(bg_itemlist[m_bgItemID].icon);
 #endif
+
+	m_transmitted = qfalse;
 
 	m_crystal = 0;
 	m_basicStat1 = 0;
@@ -98,8 +97,6 @@ inventoryItem::inventoryItem(gitem_t *bgItem, itemQuality_t quality, std::string
 	m_modStatValue2 = 0.0;
 	m_modStatValue3 = 0.0;
 
-	setTotalCost();
-
 	m_destroyTime = destroyTime;
 
 #ifdef _GAME
@@ -114,9 +111,9 @@ inventoryItem::~inventoryItem()
 }
 
 #ifdef _CGAME
-inventoryItem *createInventoryItem(gitem_t *bgItem, itemQuality_t quality, std::string name, std::string description, double price, int amount, std::string customIcon)
+inventoryItem *createInventoryItem(int bgItemID, itemQuality_t quality, int amount)
 {
-	inventoryItem *item = new inventoryItem(bgItem, quality, name, description, price, amount, customIcon);
+	inventoryItem *item = new inventoryItem(bgItemID, quality, amount);
 
 	clientInfo_t *client = &cgs.clientinfo[cg.clientNum];
 	client->inventory[client->inventoryCount] = item;
@@ -126,9 +123,9 @@ inventoryItem *createInventoryItem(gitem_t *bgItem, itemQuality_t quality, std::
 #endif
 
 #ifdef _GAME
-inventoryItem *createInventoryItem(gitem_t *bgItem, itemQuality_t quality, std::string name, std::string description, double price, int amount, std::string customIcon, int clientNum, int destroyTime)
+inventoryItem *createInventoryItem(int bgItemID, itemQuality_t quality, int amount, int clientNum, int destroyTime)
 {
-	inventoryItem *item = new inventoryItem(bgItem, quality, name, description, price, amount, customIcon, destroyTime);
+	inventoryItem *item = new inventoryItem(bgItemID, quality, amount, destroyTime);
 
 	if (clientNum >= 0)
 	{
@@ -174,52 +171,24 @@ void inventoryItem::setItemID(int itemID)
 	m_itemID = itemID;
 }
 
-void inventoryItem::setBaseItem(gitem_t *item)
+void inventoryItem::setBaseItem(int bgItemID)
 {
-	m_baseItem = item;
+	m_bgItemID = bgItemID;
 }
 
 void inventoryItem::setQuality(itemQuality_t quality)
 {
 	m_quality = quality;
-	setTotalCost();
-}
-
-void inventoryItem::setName(std::string name)
-{
-	m_name = name;
-}
-
-void inventoryItem::setDescription(std::string description)
-{
-	m_description = description;
 }
 
 void inventoryItem::setQuantity(int amount)
 {
 	m_quantity = amount;
-	setTotalCost();
-}
-
-void inventoryItem::setCost(double price)
-{
-	m_cost = price;
-	setTotalCost();
-}
-
-void inventoryItem::setTotalCost()
-{
-	m_totalCost = m_quantity * m_cost;
 }
 
 void inventoryItem::setPlayerID(int playerID)
 {
 	m_playerID = playerID;
-}
-
-void inventoryItem::setCustomIcon(qhandle_t icon)
-{
-	m_customIcon = icon;
 }
 
 void inventoryItem::setDestroyTime(int destroyTime)
@@ -230,67 +199,66 @@ void inventoryItem::setDestroyTime(int destroyTime)
 void inventoryItem::setCrystal(int crystalType)
 {
 	m_crystal = crystalType;
-	setTotalCost();
 }
 
 void inventoryItem::setStat1(int statType, float statValue)
 {
 	if (m_quality <= QUALITY_GREY) return; // Not available...
-	if (m_baseItem->giType == IT_MODIFICATION && (m_basicStat2 || m_basicStat3)) return; // mods can only have 1 stat type.
+	if (isCrystal()) return; // crystals can not have stats.
+	if (isModification() && (m_basicStat2 || m_basicStat3)) return; // mods can only have 1 stat type.
 	
 	m_basicStat1 = statType;
 	m_basicStat1value = statValue;
-	setTotalCost();
 }
 
 void inventoryItem::setStat2(int statType, float statValue)
 {
 	if (m_quality <= QUALITY_GREEN) return; // Not available...
-	if (m_baseItem->giType == IT_MODIFICATION && (m_basicStat1 || m_basicStat3)) return; // mods can only have 1 stat type.
+	if (isCrystal()) return; // crystals can not have stats.
+	if (isModification() && (m_basicStat1 || m_basicStat3)) return; // mods can only have 1 stat type.
 
 	m_basicStat2 = statType;
 	m_basicStat2value = statValue;
-	setTotalCost();
 }
 
 void inventoryItem::setStat3(int statType, float statValue)
 {
 	if (m_quality <= QUALITY_BLUE) return; // Not available...
-	if (m_baseItem->giType == IT_MODIFICATION && (m_basicStat1 || m_basicStat2)) return; // mods can only have 1 stat type.
+	if (isCrystal()) return; // crystals can not have stats.
+	if (isModification() && (m_basicStat1 || m_basicStat2)) return; // mods can only have 1 stat type.
 
 	m_basicStat3 = statType;
 	m_basicStat3value = statValue;
-	setTotalCost();
 }
 
 void inventoryItem::setMod1(int statType, float statValue)
 {
 	if (m_quality <= QUALITY_GREY) return; // Not available...
-	if (m_baseItem->giType == IT_MODIFICATION) return; // mods can't have mods :)
+	if (isCrystal()) return; // crystals can not have stats.
+	if (isModification()) return; // mods can't have mods :)
 
 	m_modStat1 = statType;
 	m_modStatValue1 = statValue;
-	setTotalCost();
 }
 
 void inventoryItem::setMod2(int statType, float statValue)
 {
 	if (m_quality <= QUALITY_GREEN) return; // Not available...
-	if (m_baseItem->giType == IT_MODIFICATION) return; // mods can't have mods :)
+	if (isCrystal()) return; // crystals can not have stats.
+	if (isModification()) return; // mods can't have mods :)
 
 	m_modStat2 = statType;
 	m_modStatValue2 = statValue;
-	setTotalCost();
 }
 
 void inventoryItem::setMod3(int statType, float statValue)
 {
 	if (m_quality <= QUALITY_BLUE) return; // Not available...
-	if (m_baseItem->giType == IT_MODIFICATION) return; // mods can't have mods :)
+	if (isCrystal()) return; // crystals can not have stats.
+	if (isModification()) return; // mods can't have mods :)
 
 	m_modStat3 = statType;
 	m_modStatValue3 = statValue;
-	setTotalCost();
 }
 
 //
@@ -298,22 +266,22 @@ void inventoryItem::setMod3(int statType, float statValue)
 //
 gitem_t *inventoryItem::getBaseItem()
 {
-	return m_baseItem;
+	return &bg_itemlist[m_bgItemID];
+}
+
+int inventoryItem::getBaseItemID()
+{
+	return m_bgItemID;
+}
+
+qhandle_t inventoryItem::getIcon()
+{
+	return m_icon;
 }
 
 itemQuality_t inventoryItem::getQuality()
 {
 	return m_quality;
-}
-
-std::string inventoryItem::getName()
-{
-	return m_name;
-}
-
-std::string inventoryItem::getDescription()
-{
-	return m_description;
 }
 
 int inventoryItem::getQuantity()
@@ -395,7 +363,7 @@ double inventoryItem::getCost()
 	double modCostMultiplier1 = getMod1Stat() ? 1.25 : 0.0;
 	double modCostMultiplier2 = getMod2Stat() ? 1.25 : 0.0;
 	double modCostMultiplier3 = getMod3Stat() ? 1.25 : 0.0;
-	return m_cost * statCostMultiplier1 * statCostMultiplier2 * statCostMultiplier3 * modCostMultiplier1 * modCostMultiplier2 * modCostMultiplier3 * crystalCostMultiplier * qualityPriceModifier[m_quality];
+	return getBaseItem()->price * statCostMultiplier1 * statCostMultiplier2 * statCostMultiplier3 * modCostMultiplier1 * modCostMultiplier2 * modCostMultiplier3 * crystalCostMultiplier * qualityPriceModifier[m_quality];
 }
 
 double inventoryItem::getTotalCost()
@@ -407,7 +375,7 @@ double inventoryItem::getTotalCost()
 	double modCostMultiplier1 = getMod1Stat() ? 1.25 : 0.0;
 	double modCostMultiplier2 = getMod2Stat() ? 1.25 : 0.0;
 	double modCostMultiplier3 = getMod3Stat() ? 1.25 : 0.0;
-	return m_totalCost * statCostMultiplier1 * statCostMultiplier2 * statCostMultiplier3 * modCostMultiplier1 * modCostMultiplier2 * modCostMultiplier3 * crystalCostMultiplier * qualityPriceModifier[m_quality];
+	return getBaseItem()->price * m_quantity * statCostMultiplier1 * statCostMultiplier2 * statCostMultiplier3 * modCostMultiplier1 * modCostMultiplier2 * modCostMultiplier3 * crystalCostMultiplier * qualityPriceModifier[m_quality];
 }
 
 int inventoryItem::getPlayerID()
@@ -415,14 +383,30 @@ int inventoryItem::getPlayerID()
 	return m_playerID;
 }
 
-qhandle_t inventoryItem::getIcon()
-{
-	return m_customIcon;
-}
-
 int inventoryItem::getDestroyTime()
 {
 	return m_destroyTime;
+}
+
+
+qboolean inventoryItem::isModification()
+{
+	int giType = getBaseItem()->giType;
+
+	if (giType == IT_ITEM_MODIFICATION || giType == IT_WEAPON_MODIFICATION || giType == IT_SABER_MODIFICATION)
+		return qtrue;
+
+	return qfalse;
+}
+
+qboolean inventoryItem::isCrystal()
+{
+	int giType = getBaseItem()->giType;
+
+	if (giType == IT_SABER_CRYSTAL || giType == IT_WEAPON_CRYSTAL || giType == IT_ITEM_CRYSTAL)
+		return qtrue;
+
+	return qfalse;
 }
 
 //
@@ -470,13 +454,27 @@ void inventoryItem::removeFromDatabase(inventoryItem *item)
 #ifdef _GAME
 void inventoryItem::uploadToClient(int clientNum, inventoryItem *item)
 {// To be called when a new item is looted, or an item is modified.
-#if 0
 	gclient_t *client = g_entities[clientNum].client;
-	// TODO: Construct a compressed char string for this item and send.
-	uncompressedItemBuffer_t *itemBuffer = addItemFieldsToBufferHere...
-	char *compressedItemBuffer = zlibCompress(itemBuffer);
-	trap->SendServerCommand(clientNum, compressedItemBuffer);
-#endif
+	std::string command = "inv ";
+	command += va("\"%i\"", item->m_transmitted ? 0 : 1);
+	command += va("\"%i\"", item->getBaseItem());
+	command += va("\"%i\"", item->getQuality());
+	command += va("\"%i\"", item->getQuantity());
+	command += va("\"%i\"", item->getCrystal());
+	command += va("\"%i\"", item->getBasicStat1());
+	command += va("\"%i\"", item->getBasicStat2());
+	command += va("\"%i\"", item->getBasicStat3());
+	command += va("\"%f\"", item->getBasicStat1Value());
+	command += va("\"%f\"", item->getBasicStat2Value());
+	command += va("\"%f\"", item->getBasicStat3Value());
+	command += va("\"%i\"", item->getMod1Stat());
+	command += va("\"%i\"", item->getMod2Stat());
+	command += va("\"%i\"", item->getMod3Stat());
+	command += va("\"%f\"", item->getMod1Value());
+	command += va("\"%f\"", item->getMod2Value());
+	command += va("\"%f\"", item->getMod3Value());
+	trap->SendServerCommand(clientNum, command.c_str());
+	item->m_transmitted = qtrue;
 }
 
 void inventoryItem::uploadFullInventoryToClient(int clientNum)
@@ -485,7 +483,10 @@ void inventoryItem::uploadFullInventoryToClient(int clientNum)
 
 	for (int i = 0; i < client->inventoryCount; i++)
 	{
-		uploadToClient(clientNum, client->inventory[i]);
+		if (client->inventory[i])
+		{
+			uploadToClient(clientNum, client->inventory[i]);
+		}
 	}
 }
 #endif
@@ -497,56 +498,74 @@ void inventoryItem::uploadFullInventoryToClient(int clientNum)
 void inventoryItem::downloadFromServer(char *packet)
 {
 	// TODO: Deconstruct compressed char string the server sent, and add the item to inventory...
-#if 0
-	uncompressedItemBuffer_t *buffer = zlibDecompress((compressedItemBuffer_t *)packet);
 	clientInfo_t *client = &cgs.clientinfo[cg.clientNum];
 
-	if (buffer->isNewItem)
+	qboolean isNewitem = (qboolean)atoi(CG_Argv(2));
+	int itemID = atoi(CG_Argv(3));
+	int baseItemID = atoi(CG_Argv(4));
+	int quality = atoi(CG_Argv(5));
+	int quantity = atoi(CG_Argv(6));
+	int crystal = atoi(CG_Argv(7));
+	int basicStat1 = atoi(CG_Argv(8));
+	int basicStat2 = atoi(CG_Argv(9));
+	int basicStat3 = atoi(CG_Argv(10));
+	int basicStat1Value = atof(CG_Argv(11));
+	int basicStat2Value = atof(CG_Argv(12));
+	int basicStat3Value = atof(CG_Argv(13));
+	int mod1Type = atoi(CG_Argv(14));
+	int mod2Type = atoi(CG_Argv(15));
+	int mod3Type = atoi(CG_Argv(16));
+	int mod1Value = atof(CG_Argv(17));
+	int mod2Value = atof(CG_Argv(18));
+	int mod3Value = atof(CG_Argv(19));
+
+	if (isNewitem)
 	{// Brand spanking new item...
-		inventoryItem *item = createInventoryItem(&bg_itemlist[buffer->baseItemID], buffer->quality, buffer->name, buffer->description, buffer->cost, buffer->quantity, buffer->cutomIcon);
+		inventoryItem *item = createInventoryItem(baseItemID, (itemQuality_t)quality, quantity);
 		
-		item->setItemID(buffer->itemID);
-		item->setStat1(buffer->stat1Type, buffer->stat1Value);
-		item->setStat2(buffer->stat1Type, buffer->stat1Value);
-		item->setStat3(buffer->stat1Type, buffer->stat1Value);
-		item->setCrytal(buffer->crystalType);
-		item->setMod1(buffer->mod1Type, buffer->mod1Value);
-		item->setMod2(buffer->mod3Type, buffer->mod2Value);
-		item->setMod3(buffer->mod2Type, buffer->mod3Value);
+		item->setItemID(itemID);
+
+		item->setCrystal(crystal);
+
+		item->setStat1(basicStat1, basicStat1Value);
+		item->setStat2(basicStat2, basicStat2Value);
+		item->setStat3(basicStat3, basicStat3Value);
+		
+		item->setMod1(mod1Type, mod1Value);
+		item->setMod2(mod3Type, mod2Value);
+		item->setMod3(mod2Type, mod3Value);
 
 		client->inventory[client->inventoryCount] = item;
 		client->inventoryCount++;
 	}
 	else
 	{// Update to old item...
-		inventoryItem item = NULL;
+		inventoryItem *item = NULL;
 		
 		for (int i = 0; i < client->inventoryCount; i++)
 		{
-			if (client->inventory[i].m_itemID == buffer->itemID)
+			if (client->inventory[i] && client->inventory[i]->m_itemID == itemID)
 			{
 				item = client->inventory[i];
 				break;
 			}
 		}
 
-		item->setItemID(buffer->itemID);
-		item->setBaseItem(&bg_itemlist[buffer->baseItemID]);
-		item->setQuality(buffer->quality);
-		item->setStat1(buffer->stat1Type, buffer->stat1Value);
-		item->setStat2(buffer->stat1Type, buffer->stat1Value);
-		item->setStat3(buffer->stat1Type, buffer->stat1Value);
-		item->setCrytal(buffer->crystalType);
-		item->setMod1(buffer->mod1Type, buffer->mod1Value);
-		item->setMod2(buffer->mod3Type, buffer->mod2Value);
-		item->setMod3(buffer->mod2Type, buffer->mod3Value);
-		item->setName(buffer->name);
-		item->setDescription(buffer->description);
-		item->setQuantity(buffer->quantity);
-		item->setCost(buffer->cost);
-		item->setCustomIcon(buffer->cutomIcon);
+		item->setItemID(itemID);
+		item->setBaseItem(baseItemID);
+		item->setQuality((itemQuality_t)quality);
+		item->setCrystal(crystal);
+		
+		item->setStat1(basicStat1, basicStat1Value);
+		item->setStat2(basicStat2, basicStat2Value);
+		item->setStat3(basicStat3, basicStat3Value);
+
+		item->setMod1(mod1Type, mod1Value);
+		item->setMod2(mod3Type, mod2Value);
+		item->setMod3(mod2Type, mod3Value);
+
+		item->setQuantity(quantity);
 		//... etc
 	}
-#endif
 }
 #endif
