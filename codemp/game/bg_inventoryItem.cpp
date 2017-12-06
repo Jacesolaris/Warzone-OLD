@@ -15,6 +15,13 @@ inventoryItem		*INVENTORY_ITEM_INSTANCES[8388608];
 #endif
 
 //
+// Configuration Defines...
+//
+
+//#define __DATABASE_ENABLED__
+
+
+//
 // A quality based price scale modifier... Used internally... Matches levels of itemQuality_t.
 //
 float qualityPriceModifier[5] = {
@@ -98,6 +105,42 @@ inventoryItem::inventoryItem(int bgItemID, itemQuality_t quality, int amount = 1
 	m_modStatValue3 = 0.0;
 
 	m_destroyTime = destroyTime;
+
+#ifdef _GAME
+	INVENTORY_ITEM_INSTANCES[INVENTORY_ITEM_INSTANCES_COUNT] = this;
+	INVENTORY_ITEM_INSTANCES_COUNT++;
+#endif
+}
+
+inventoryItem::inventoryItem(int itemID)
+{
+#ifdef _GAME
+	m_itemID = itemID;
+#endif
+	m_bgItemID = 0;
+	m_quality = QUALITY_GREY;
+	m_quantity = 0;
+	m_playerID = -1;
+
+	m_icon = NULL;
+
+	m_transmitted = qfalse;
+
+	m_destroyTime = -1;
+
+	m_crystal = 0;
+	m_basicStat1 = 0;
+	m_basicStat2 = 0;
+	m_basicStat3 = 0;
+	m_basicStat1value = 0.0;
+	m_basicStat2value = 0.0;
+	m_basicStat3value = 0.0;
+	m_modStat1 = 0;
+	m_modStat2 = 0;
+	m_modStat3 = 0;
+	m_modStatValue1 = 0.0;
+	m_modStatValue2 = 0.0;
+	m_modStatValue3 = 0.0;
 
 #ifdef _GAME
 	INVENTORY_ITEM_INSTANCES[INVENTORY_ITEM_INSTANCES_COUNT] = this;
@@ -264,6 +307,11 @@ void inventoryItem::setMod3(int statType, float statValue)
 //
 // Item Accessing Functions...
 //
+int inventoryItem::getItemID()
+{
+	return m_itemID;
+}
+
 gitem_t *inventoryItem::getBaseItem()
 {
 	return &bg_itemlist[m_bgItemID];
@@ -413,71 +461,156 @@ qboolean inventoryItem::isCrystal()
 // Database functions... TODO...
 //
 #ifdef _GAME
-void inventoryItem::storeToDatabase(inventoryItem *item)
-{// Will be called when an item has been modified or looted...
+void inventoryItem::storeInventoryItemToDatabaseInstant()
+{// Will be called when an item has been modified or looted... For server shutdown, instant transmission.
+#ifdef __DATABASE_ENABLED__
  // TODO: Write to DB here...
+#endif //__DATABASE_ENABLED__
 }
 
-void inventoryItem::storeToDatabase(int clientNum, int playerID)
-{// Will be called on server, before game shutdown/rest or when player logs out...
+void storeInventoryToDatabaseInstant(int clientNum, int playerID)
+{// Will be called on server, before game shutdown/reset...
+#ifdef __DATABASE_ENABLED__
 	gclient_t *client = g_entities[clientNum].client;
 
 	for (int i = 0; i < client->inventoryCount; i++)
 	{
-		storeToDatabase(client->inventory[i]);
+		inventoryItem *item = client->inventory[i];
+
+		if (item)
+		{
+			item->storeInventoryItemToDatabaseInstant();
+		}
 	}
+#endif //__DATABASE_ENABLED__
 }
 
-void inventoryItem::loadFromDatabase(int clientNum, int playerID)
+void inventoryItem::storeInventoryItemToDatabaseQueued()
+{// Will be called when an item has been modified or looted... Actually, the SQL should be queued, then run in another thread every X minutes.
+#ifdef __DATABASE_ENABLED__
+ // TODO: Write to DB here...
+#endif //__DATABASE_ENABLED__
+}
+
+void storeInventoryToDatabaseQueued(int clientNum, int playerID)
+{// Will be called on server, when player logs out...
+#ifdef __DATABASE_ENABLED__
+	gclient_t *client = g_entities[clientNum].client;
+
+	for (int i = 0; i < client->inventoryCount; i++)
+	{
+		inventoryItem *item = client->inventory[i];
+
+		if (item)
+		{
+			item->storeInventoryItemToDatabaseQueued();
+		}
+	}
+#endif //__DATABASE_ENABLED__
+}
+
+void loadInventoryFromDatabase(int clientNum, int playerID)
 {// Will be called on server when client logs in...
+#ifdef __DATABASE_ENABLED__
+	gclient_t *client = g_entities[clientNum].client;
+	client->inventoryCount = 0;
+
+	// Load all instances of playerID's inventory from SQL server for the online players, and dump them into their INVENTORY_ITEM_INSTANCES[x] instances.
+	int numItems = 0;
+	int itemIDs[64] = { -1 };
+	int baseItemIDs[64] = { 0 };
+	int qualities[64] = { 0 };
+	int quantites[64] = { 0 };
+	int crystals[64] = { 0 };
+	int stat1[64] = { 0 };
+	int stat2[64] = { 0 };
+	int stat3[64] = { 0 };
+	float statValue1[64] = { 0.0 };
+	float statValue2[64] = { 0.0 };
+	float statValue3[64] = { 0.0 };
+	int mod1[64] = { 0 };
+	int mod2[64] = { 0 };
+	int mod3[64] = { 0 };
+	float modValue1[64] = { 0.0 };
+	float modValue2[64] = { 0.0 };
+	float modValue3[64] = { 0.0 };
+	// ... load them here, into the above values, from SQL...
+
+	// TODO...
+
+	// Then add them to the player's inventories...
+	for (int i = 0; i < numItems; i++)
+	{// TODO: lookup DB - eg: get all item SQL entries for playerID.
+		inventoryItem *item = inventoryItem(itemIDs[i]);
+
+		item->setItemID(itemIDs[i]);
+		item->setBaseItem(baseItemIDs[i]);
+		item->setQuality((itemQuality_t)qualities[i]);
+		item->setCrystal(crystals[i]);
+
+		item->setStat1(stat1[i], statValue1[i]);
+		item->setStat2(stat2[i], statValue2[i]);
+		item->setStat3(stat3[i], statValue3[i]);
+
+		item->setMod1(mod1[i], modValue1[i]);
+		item->setMod2(mod2[i], modValue2[i]);
+		item->setMod3(mod3[i], modValue3[i]);
+
+		item->setQuantity(quantites[i]);
+
+		INVENTORY_ITEM_INSTANCES[itemID] = item;
+		client->inventory[client->inventoryCount] = item;
+		client->inventoryCount++;
+	}
+#else //!__DATABASE_ENABLED__
 	gclient_t *client = g_entities[clientNum].client;
 	client->inventoryCount = 0;
 
 	for (int i = 0; i < INVENTORY_ITEM_INSTANCES_COUNT; i++)
 	{
-		inventoryItem *item = NULL; // TODO: lookup DB instead of &bg_itemlist[0] - eg: get all item SQL entries for playerID.
-		INVENTORY_ITEM_INSTANCES[m_itemID] = item;
-		client->inventory[client->inventoryCount] = item;
-		client->inventoryCount = 0;
+		client->inventory[i] = NULL;
 	}
+#endif //__DATABASE_ENABLED__
 }
 
-void inventoryItem::removeFromDatabase(inventoryItem *item)
-{// Will be called when an item has been modified or looted...
+void inventoryItem::removeFromDatabase()
+{// Will be called when an item has been destroyed...
+#ifdef __DATABASE_ENABLED__
  // TODO: Write to DB here...
+#endif //__DATABASE_ENABLED__
 }
 #endif
 
 //
-// TODO: Upload items to clients...
+// Upload items to clients...
 //
 #ifdef _GAME
-void inventoryItem::uploadToClient(int clientNum, inventoryItem *item)
+void sendInventoryItemToClient(int clientNum, inventoryItem *item)
 {// To be called when a new item is looted, or an item is modified.
 	gclient_t *client = g_entities[clientNum].client;
-	std::string command = "inv ";
-	command += va("\"%i\"", item->m_transmitted ? 0 : 1);
-	command += va("\"%i\"", item->getBaseItem());
-	command += va("\"%i\"", item->getQuality());
-	command += va("\"%i\"", item->getQuantity());
-	command += va("\"%i\"", item->getCrystal());
-	command += va("\"%i\"", item->getBasicStat1());
-	command += va("\"%i\"", item->getBasicStat2());
-	command += va("\"%i\"", item->getBasicStat3());
-	command += va("\"%f\"", item->getBasicStat1Value());
-	command += va("\"%f\"", item->getBasicStat2Value());
-	command += va("\"%f\"", item->getBasicStat3Value());
-	command += va("\"%i\"", item->getMod1Stat());
-	command += va("\"%i\"", item->getMod2Stat());
-	command += va("\"%i\"", item->getMod3Stat());
-	command += va("\"%f\"", item->getMod1Value());
-	command += va("\"%f\"", item->getMod2Value());
-	command += va("\"%f\"", item->getMod3Value());
+	std::string command = "inv";
+	command += va(" \"%i\"", item->m_transmitted ? 0 : 1);
+	command += va(" \"%i\"", item->getBaseItem());
+	command += va(" \"%i\"", item->getQuality());
+	command += va(" \"%i\"", item->getQuantity());
+	command += va(" \"%i\"", item->getCrystal());
+	command += va(" \"%i\"", item->getBasicStat1());
+	command += va(" \"%i\"", item->getBasicStat2());
+	command += va(" \"%i\"", item->getBasicStat3());
+	command += va(" \"%f\"", item->getBasicStat1Value());
+	command += va(" \"%f\"", item->getBasicStat2Value());
+	command += va(" \"%f\"", item->getBasicStat3Value());
+	command += va(" \"%i\"", item->getMod1Stat());
+	command += va(" \"%i\"", item->getMod2Stat());
+	command += va(" \"%i\"", item->getMod3Stat());
+	command += va(" \"%f\"", item->getMod1Value());
+	command += va(" \"%f\"", item->getMod2Value());
+	command += va(" \"%f\"", item->getMod3Value());
 	trap->SendServerCommand(clientNum, command.c_str());
 	item->m_transmitted = qtrue;
 }
 
-void inventoryItem::uploadFullInventoryToClient(int clientNum)
+void sendFullInventoryToClient(int clientNum)
 {// To be called at login, or on map change...
 	gclient_t *client = g_entities[clientNum].client;
 
@@ -485,19 +618,19 @@ void inventoryItem::uploadFullInventoryToClient(int clientNum)
 	{
 		if (client->inventory[i])
 		{
-			uploadToClient(clientNum, client->inventory[i]);
+			sendInventoryItemToClient(clientNum, client->inventory[i]);
 		}
 	}
 }
 #endif
 
 //
-// TODO: Recieve new items from server...
+// Recieve new items from server...
 //
 #ifdef _CGAME
-void inventoryItem::downloadFromServer(char *packet)
+void RevieveInventoryPacket()
 {
-	// TODO: Deconstruct compressed char string the server sent, and add the item to inventory...
+	// TODO: Deconstruct char string the server sent, and add the item to inventory...
 	clientInfo_t *client = &cgs.clientinfo[cg.clientNum];
 
 	qboolean isNewitem = (qboolean)atoi(CG_Argv(2));
@@ -544,28 +677,36 @@ void inventoryItem::downloadFromServer(char *packet)
 		
 		for (int i = 0; i < client->inventoryCount; i++)
 		{
-			if (client->inventory[i] && client->inventory[i]->m_itemID == itemID)
+			inventoryItem *thisItem = client->inventory[i];
+
+			if (thisItem && thisItem->getItemID() == itemID)
 			{
-				item = client->inventory[i];
+				item = thisItem;
 				break;
 			}
 		}
 
-		item->setItemID(itemID);
-		item->setBaseItem(baseItemID);
-		item->setQuality((itemQuality_t)quality);
-		item->setCrystal(crystal);
-		
-		item->setStat1(basicStat1, basicStat1Value);
-		item->setStat2(basicStat2, basicStat2Value);
-		item->setStat3(basicStat3, basicStat3Value);
+		if (item)
+		{
+			item->setItemID(itemID);
+			item->setBaseItem(baseItemID);
+			item->setQuality((itemQuality_t)quality);
+			item->setCrystal(crystal);
 
-		item->setMod1(mod1Type, mod1Value);
-		item->setMod2(mod3Type, mod2Value);
-		item->setMod3(mod2Type, mod3Value);
+			item->setStat1(basicStat1, basicStat1Value);
+			item->setStat2(basicStat2, basicStat2Value);
+			item->setStat3(basicStat3, basicStat3Value);
 
-		item->setQuantity(quantity);
-		//... etc
+			item->setMod1(mod1Type, mod1Value);
+			item->setMod2(mod3Type, mod2Value);
+			item->setMod3(mod2Type, mod3Value);
+
+			item->setQuantity(quantity);
+		}
+		else
+		{
+			trap->Print("Failed to update inventory item. It does not exist on the client.\n");
+		}
 	}
 }
 #endif
