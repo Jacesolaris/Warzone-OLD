@@ -10,6 +10,7 @@
 #include "cl_cgameapi.h"
 #include "cl_uiapi.h"
 #include "snd_local.h"
+#include "cl_warzonegui.h"
 
 #ifndef _WIN32
 #include "sys/sys_loadlib.h"
@@ -2222,6 +2223,8 @@ void CL_Frame ( int msec )
 	CL_SetCGameTime();
 
 	//re->MenuOpenFrame(MENU_IS_OPEN);
+
+	WarzoneGUI::SendKeyboardStatusToRenderer();
 
 	SCR_UpdateScreen();
 

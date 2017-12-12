@@ -4,6 +4,7 @@
 #include "cl_cgameapi.h"
 #include "cl_uiapi.h"
 #include "cl_awesomium.h"
+#include "cl_warzonegui.h"
 #ifndef _WIN32
 #include <cmath>
 #endif
@@ -918,14 +919,17 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		UIVM_MouseEvent( dx, dy );
+		WarzoneGUI::MouseEvent(dx, dy);
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
 		CGVM_MouseEvent( dx, dy );
+		WarzoneGUI::MouseEvent(dx, dy);
 	} else {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
 	}
 	//Awesomium have right to know mouse coords at any time
 	Awesomium::MouseEvent(dx, dy);
+	//WarzoneGUI::MouseEvent(dx, dy);
 }
 
 /*
@@ -1176,6 +1180,8 @@ void CL_MouseMove( usercmd_t *cmd ) {
 	}
 	else
 		cmd->forwardmove = ClampChar( cmd->forwardmove - m_forward->value * my );
+
+	//WarzoneGUI::MouseEvent(mx, my);
 }
 
 qboolean CL_NoUseableForce(void)

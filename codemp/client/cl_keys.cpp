@@ -3,6 +3,8 @@
 #include "cl_uiapi.h"
 #include "qcommon/stringed_ingame.h"
 #include "cl_awesomium.h"
+#include "cl_warzonegui.h"
+
 /*
 
 key up events are sent even if in console mode
@@ -1307,23 +1309,26 @@ void CL_KeyDownEvent( int key, unsigned time )
 	}
 
 	// escape is always handled special
-	if ( key == A_ESCAPE ) {
-		if ( !kg.keys[A_SHIFT].down && ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
+	if ( key == A_ESCAPE || key == A_LOW_I || key == A_CAP_I ) {
+		qboolean isEsc = (qboolean)(key == A_ESCAPE); // handle "I" key like escape key. Open's menu and inventory screens, and enables mouse.
+
+		if (isEsc && !kg.keys[A_SHIFT].down && ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
 			Con_ToggleConsole_f();
 			Key_ClearStates();
 			return;
 		}
-
-		if ( Key_GetCatcher() & KEYCATCH_MESSAGE ) {
+		
+		if (isEsc && Key_GetCatcher() & KEYCATCH_MESSAGE ) {
 			// clear message mode
 			Message_Key( key );
 			return;
 		}
 
 		// escape always gets out of CGAME stuff
-		if ( Key_GetCatcher() & KEYCATCH_CGAME ) {
+		if (isEsc && Key_GetCatcher() & KEYCATCH_CGAME ) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
 			CGVM_EventHandling( CGAME_EVENT_NONE );
+			WarzoneGUI::MenuOpenEvent(qfalse);
 			return;
 		}
 
@@ -1334,8 +1339,9 @@ void CL_KeyDownEvent( int key, unsigned time )
 				}
 				else {
 					UIVM_SetActiveMenu(UIMENU_INGAME);
+					WarzoneGUI::MenuOpenEvent(qtrue);
 				}
-			else {
+			else if (isEsc) {
 				CL_Disconnect_f();
 				S_StopAllSounds();
 				if (cl_useAwesomium->integer) {
@@ -1347,14 +1353,19 @@ void CL_KeyDownEvent( int key, unsigned time )
 					}
 					else {
 						UIVM_SetActiveMenu(UIMENU_MAIN);
+						WarzoneGUI::MenuOpenEvent(qfalse);
 					}
 				}
 			}
 			return;
 		}
 
-		UIVM_KeyEvent( key, qtrue );
-		return;
+		if (isEsc)
+		{
+			UIVM_KeyEvent(key, qtrue);
+			WarzoneGUI::MenuOpenEvent(qfalse);
+			return;
+		}
 	}
 
 	// send the bound action
@@ -1431,6 +1442,7 @@ void CL_KeyEvent (int key, qboolean down, unsigned time) {
 	else
 		CL_KeyUpEvent( key, time );
 	Awesomium::KeyEvent(key, down);
+	WarzoneGUI::KeyEvent(key, down);
 }
 
 /*

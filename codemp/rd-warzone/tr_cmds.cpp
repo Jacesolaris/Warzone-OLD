@@ -389,6 +389,9 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		return;
 	}
 
+	extern void GUI_Main(void);
+	GUI_Main();
+
 	RB_AdvanceOverlaySway();
 
 	glState.finishCalled = qfalse;

@@ -2023,6 +2023,11 @@ void GLSL_AttachRenderDepthTextures(void)
 	FBO_AttachTextureImage(tr.renderImage, 0);
 }
 
+void GLSL_AttachRenderGUITextures(void)
+{// Moved here for convenience...
+	FBO_AttachTextureImage(tr.renderGUIImage, 0);
+}
+
 void GLSL_AttachWaterTextures(void)
 {// To output dummy textures on waters in RB_IterateStagesGeneric...
 	FBO_AttachTextureImage(tr.dummyImage, 0); // dummy

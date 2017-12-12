@@ -462,7 +462,7 @@ void R_CreateBspMapImage(void)
 	}
 
 	// Create the map...
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic) num_threads(8)
 	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
 	{
 		int x = MAP_INFO_MINS[0] + (imageX * MAP_INFO_SCATTEROFFSET[0]);
@@ -757,7 +757,7 @@ void R_CreateHeightMapImage(void)
 	}
 
 	// Create the map...
-	//#pragma omp parallel for schedule(dynamic)
+	//#pragma omp parallel for schedule(dynamic) num_threads(8)
 	//for (int x = (int)MAP_INFO_MINS[0]; x < (int)MAP_INFO_MAXS[0]; x += MAP_INFO_SCATTEROFFSET[0])
 	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
 	{
@@ -920,7 +920,7 @@ void R_CreateFoliageMapImage(void)
 	}
 
 	// Create the map...
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic) num_threads(8)
 	//for (int x = (int)MAP_INFO_MINS[0]; x < (int)MAP_INFO_MAXS[0]; x += MAP_INFO_SCATTEROFFSET[0])
 	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
 	{
@@ -1111,7 +1111,7 @@ void R_CreateRoadMapImage(void)
 	}
 
 	// Create the map...
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic) num_threads(8)
 	//for (int x = (int)MAP_INFO_MINS[0]; x < (int)MAP_INFO_MAXS[0]; x += MAP_INFO_SCATTEROFFSET[0])
 	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
 	{
@@ -2087,7 +2087,7 @@ void R_LoadMapInfo(void)
 
 	tr.ssdoNoiseImage = R_FindImageFile("gfx/ssdoNoise.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 
-
+#if 0
 	if (!R_TextureFileExists("gfx/defaultDetail.tga"))
 	{
 		R_CreateDefaultDetail();
@@ -2097,6 +2097,9 @@ void R_LoadMapInfo(void)
 	{
 		tr.defaultDetail = R_FindImageFile("gfx/defaultDetail.tga", IMGTYPE_DETAILMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
+#else
+	tr.defaultDetail = tr.whiteImage;
+#endif
 
 	if (!R_TextureFileExists("gfx/splatControlImage.tga"))
 	{
@@ -2108,6 +2111,7 @@ void R_LoadMapInfo(void)
 		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
 	}
 
+	if (r_colorCorrection->integer)
 	{
 		// Color Palette... Try to load map based image first...
 		tr.paletteImage = R_FindImageFile(va("maps/%s_palette.png", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
@@ -2150,7 +2154,7 @@ void R_LoadMapInfo(void)
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
 
-	if (r_foliage->integer || r_pebbles->integer)
+	if ((r_foliage->integer && GRASS_ENABLED) || (r_pebbles->integer && PEBBLES_ENABLED))
 	{
 		MAPPING_LoadMapClimateInfo();
 
@@ -2242,7 +2246,7 @@ void R_LoadMapInfo(void)
 		//
 		// Override climate file climate options with mapInfo ones, if found...
 		//
-		if (r_foliage->integer || r_pebbles->integer)
+		if ((r_foliage->integer && GRASS_ENABLED) || (r_pebbles->integer && PEBBLES_ENABLED))
 		{
 			char mapname[256] = { 0 };
 

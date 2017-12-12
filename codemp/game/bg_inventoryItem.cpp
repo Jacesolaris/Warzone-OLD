@@ -44,84 +44,84 @@ const char *itemQualityTooltips[] = {
 
 const char *weaponCrystalTooltips[] = {
 	"",
-	"%.1f% heat damage.\n",
-	"%.1f% kinetic damage.\n",
-	"%.1f% electric damage.\n",
-	"%.1f% cold damage.\n",
-	"%.1f% heat, and %.1f% kinetic damage.\n",
-	"%.1f% electric, and %.1f% heat damage.\n",
-	"%.1f% cold, and %.1f% kinetic damage.\n",
-	"%.1f% heat, and %.1f% cold damage.\n",
+	"^P+%.1f% ^Nheat damage.\n",
+	"^P+%.1f% ^2kinetic damage.\n",
+	"^P+%.1f% ^4electric damage.\n",
+	"^P+%.1f% ^7cold damage.\n",
+	"^P+%.1f% ^Nheat^3, and ^P%.1f% ^2kinetic ^3damage.\n",
+	"^P+%.1f% ^4electric^0, and ^P%.1f% ^Nheat ^0damage.\n",
+	"^P+%.1f% ^7cold^9, and ^P%.1f% ^2kinetic ^9damage.\n",
+	"^P+%.1f% ^Nheat^6, and ^P%.1f% ^7cold ^6damage.\n",
 };
 
 const char *itemCrystalTooltips[] = {
 	"",
-	"%.1f% resistance to heat damage.\n",
-	"%.1f% resistance to kinetic damage.\n",
-	"%.1f% resistance to electric damage.\n",
-	"%.1f% resistance to cold damage.\n",
-	"%.1f% resistance to heat, and %.1f% kinetic damage.\n",
-	"%.1f% resistance to electric, and %.1f% heat damage.\n",
-	"%.1f% resistance to cold, and %.1f% kinetic damage.\n",
-	"%.1f% resistance to heat, and %.1f% cold damage.\n",
+	"^P+%.1f% ^Nresistance to heat damage.\n",
+	"^P+%.1f% ^3resistance to kinetic damage.\n",
+	"^P+%.1f% ^4resistance to electric damage.\n",
+	"^P+%.1f% ^7resistance to cold damage.\n",
+	"^P+%.1f% ^3resistance to ^Nheat^3, and ^P+%.1f% ^2kinetic ^3damage.\n",
+	"^P+%.1f% ^0resistance to ^4electric^0, and ^P+%.1f% ^Nheat ^0damage.\n",
+	"^P+%.1f% ^9resistance to ^7cold^9, and ^P+%.1f% ^2kinetic ^9damage.\n",
+	"^P+%.1f% ^6resistance to ^Nheat^6, and ^P+%.1f% ^7cold ^6damage.\n",
 };
 
 const char *weaponStat1Tooltips[] = {
 	"",
-	"%.1f% bonus to accuracy.\n",
-	"%.1f% bonus to rate of fire.\n",
-	"%.1f% bonus to damage.\n",
-	"%.1f% bonus to velocity.\n",
+	"^P+%.1f% ^7bonus to accuracy.\n",
+	"^P+%.1f% ^7bonus to rate of fire.\n",
+	"^P+%.1f% ^7bonus to damage.\n",
+	"^P+%.1f% ^7bonus to velocity.\n",
 };
 
 const char *weaponStat2Tooltips[] = {
 	"",
-	"%.1f% bonus to critical chance.\n",
-	"%.1f% bonus to critical power.\n",
-	"%.1f% reduction to heat accumulation.\n",
+	"^P+%.1f% ^7bonus to critical chance.\n",
+	"^P+%.1f% ^7bonus to critical power.\n",
+	"^P+%.1f% ^7reduction to heat accumulation.\n",
 };
 
 const char *weaponStat3Tooltips[] = {
 	"",
-	"Ricochet.\n",
-	"Explosive.\n",
-	"Beam.\n",
-	"Wide Shot.\n",
+	"^PRicochet.\n",
+	"^PExplosive.\n",
+	"^PBeam.\n",
+	"^PWide Shot.\n",
 };
 
 const char *saberStat1Tooltips[] = {
 	"",
-	"%.1f% bonus to damage.\n",
-	"%.1f% bonus shield penetration.\n",
+	"^P+%.1f% ^7bonus to damage.\n",
+	"^P+%.1f% ^7bonus shield penetration.\n",
 };
 
 const char *saberStat2Tooltips[] = {
 	"",
-	"%.1f% bonus to critical chance.\n",
-	"%.1f% bonus to critical power.\n",
+	"^P+%.1f% ^7bonus to critical chance.\n",
+	"^P+%.1f% ^7bonus to critical power.\n",
 };
 
 const char *saberStat3Tooltips[] = {
 	"",
-	"%.1f% bonus to blade length.\n",
-	"%.1f% bonus to attack speed.\n",
+	"^P+%.1f% ^7bonus to blade length.\n",
+	"^P+%.1f% ^7bonus to attack speed.\n",
 };
 
 const char *itemStatTooltips[] = {
 	"",
-	"%.1f% bonus to maximum health.\n",
-	"%.1f% bonus to health regeneration.\n",
-	"%.1f% bonus to maximum shields.\n",
-	"%.1f% bonus to shield regeneration.\n",
-	"%.1f% bonus to maximum force power.\n",
-	"%.1f% bonus to force power regeneration.\n",
-	"%.1f% bonus to strength.\n",
-	"%.1f% bonus to evasion.\n",
-	"%.1f% bonus to speed.\n",
-	"%.1f% bonus to speed and %.1f% bonus to evasion.\n",
-	"%.1f% bonus to blocking.\n",
-	"%.1f% damage reduction.\n",
-	"%.1f% shield penetration reduction.\n",
+	"^P+%.1f% ^7bonus to maximum health.\n",
+	"^P+%.1f% ^7bonus to health regeneration.\n",
+	"^P+%.1f% ^7bonus to maximum shields.\n",
+	"^P+%.1f% ^7bonus to shield regeneration.\n",
+	"^P+%.1f% ^7bonus to maximum force power.\n",
+	"^P+%.1f% ^7bonus to force power regeneration.\n",
+	"^P+%.1f% ^7bonus to strength.\n",
+	"^P+%.1f% ^7bonus to evasion.\n",
+	"^P+%.1f% ^7bonus to speed.\n",
+	"^P+%.1f% ^7bonus to speed and %.1f% bonus to evasion.\n",
+	"^P+%.1f% ^7bonus to blocking.\n",
+	"^P+%.1f% ^7damage reduction.\n",
+	"^P+%.1f% ^7shield penetration reduction.\n",
 };
 
 //
@@ -543,7 +543,7 @@ const char *inventoryItem::getColorStringForQuality()
 	switch (getQuality())
 	{// TODO: Not use Q3 strings so we can have more colors... The GUI lib we use probably allows for color and formatting stings anyway...
 	case QUALITY_GREY:
-		return "^5";
+		return "^8";
 		break;
 	case QUALITY_WHITE:
 		return "^7";
@@ -555,10 +555,10 @@ const char *inventoryItem::getColorStringForQuality()
 		return "^4";
 		break;
 	case QUALITY_PURPLE:
-		return "^7";
+		return "^0";
 		break;
 	case QUALITY_ORANGE:
-		return "^6";
+		return "^9";
 		break;
 	case QUALITY_GOLD:
 		return "^3";
@@ -576,74 +576,150 @@ const char *inventoryItem::getTooltip()
 	
 	std::string tooltipText = "";
 
+	/*
+	sprintf(tooltipString, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+			, va("%s^BMy schwartz is bigger than yours (%s)^b\n", ColorStringForQuality(tooltipQuality), itemQualityNames[tooltipQuality])
+			, "^POne handed weapon, Lightsaber\n"
+			, " \n"
+			, "^7Scaling Attribute: ^PStrength\n"
+			, "^7Damage: ^P78-102 ^8(^P40.5 DPS^8).\n"
+			, "^7Attacks per Second: ^P0.45\n"
+			, "^7Crit Chance: ^P+11.5%\n"
+			, "^7Crit Power: ^P+41.0%\n"
+			, " \n"
+			, "^0Purple Crystal: ^P+12.0% ^4electric^0, and ^P+12.0% ^Nheat ^0damage.\n"
+			, "^N-42.0% ^7Dexterity.\n"
+			, "^N-97.0% ^7Intelligence.\n"
+			, "^N+33.0% ^7Weight.\n"
+			, " \n"
+			, "^P+15.0% ^2bonus to trip over your own feet.\n"
+			, "^P+50.0% ^2bonus to asking dumb questions.\n"
+			, "^P+20.0% ^2bonus to epeen trolling.\n"
+			, " \n"
+			, "^5Value: Priceless.\n");
+	*/
+
 	switch (giType)
 	{
 	case IT_WEARABLE:
-	case IT_ITEM_MODIFICATION:
-	case IT_ITEM_CRYSTAL:
-		tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
-		tooltipText += va("%s\n\n", getDescription());
+		tooltipText += va("%s^B%s (%s)^b\n", getColorStringForQuality(), getName(), itemQualityTooltips[getQuality()]);
+		tooltipText += "^PClothing\n";
+		tooltipText += " \n";
+		tooltipText += va("^5%s\n", getDescription());
+		tooltipText += " \n";
 		tooltipText += itemCrystalTooltips[getCrystal()];
 		tooltipText += va(itemStatTooltips[getBasicStat1()], getBasicStat1Value());
 		tooltipText += va(itemStatTooltips[getBasicStat2()], getBasicStat2Value());
 		tooltipText += va(itemStatTooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += " \n";
 		tooltipText += va(itemStatTooltips[getMod1Stat()], getMod1Value());
 		tooltipText += va(itemStatTooltips[getMod2Stat()], getMod2Value());
 		tooltipText += va(itemStatTooltips[getMod3Stat()], getMod3Value());
-		tooltipText += va("\nValue: %i.\n", getStackCost());
+		tooltipText += " \n";
+		tooltipText += va("^5Value: ^P%i.\n", getStackCost());
+		break;
+	case IT_ITEM_MODIFICATION:
+	case IT_ITEM_CRYSTAL:
+		tooltipText += va("%s^B%s (%s)^b\n", getColorStringForQuality(), getName(), itemQualityTooltips[getQuality()]);
+		tooltipText += va("^PItem %s\n", IT_ITEM_CRYSTAL ? "Crystal" : "Modification");
+		tooltipText += " \n";
+		tooltipText += va("^5%s\n", getDescription());
+		tooltipText += " \n";
+		tooltipText += itemCrystalTooltips[getCrystal()];
+		tooltipText += va(itemStatTooltips[getBasicStat1()], getBasicStat1Value());
+		tooltipText += va(itemStatTooltips[getBasicStat2()], getBasicStat2Value());
+		tooltipText += va(itemStatTooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += " \n";
+		tooltipText += va(itemStatTooltips[getMod1Stat()], getMod1Value());
+		tooltipText += va(itemStatTooltips[getMod2Stat()], getMod2Value());
+		tooltipText += va(itemStatTooltips[getMod3Stat()], getMod3Value());
+		tooltipText += " \n";
+		tooltipText += va("^5Value: ^P%i.\n", getStackCost());
 		break;
 	case IT_WEAPON_MODIFICATION:
 	case IT_WEAPON_CRYSTAL:
-		tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
-		tooltipText += va("%s\n\n", getDescription());
+		tooltipText += va("%s^B%s (%s)^b\n", getColorStringForQuality(), getName(), itemQualityTooltips[getQuality()]);
+		tooltipText += va("^PWeapon %s\n", IT_WEAPON_CRYSTAL ? "Crystal" : "Modification");
+		tooltipText += " \n";
+		tooltipText += va("^5%s\n", getDescription());
+		tooltipText += " \n";
 		tooltipText += weaponCrystalTooltips[getCrystal()];
 		tooltipText += va(weaponStat1Tooltips[getBasicStat1()], getBasicStat1Value());
 		tooltipText += va(weaponStat2Tooltips[getBasicStat2()], getBasicStat2Value());
 		tooltipText += va(weaponStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += " \n";
 		tooltipText += va(weaponStat1Tooltips[getMod1Stat()], getMod1Value());
 		tooltipText += va(weaponStat2Tooltips[getMod2Stat()], getMod2Value());
 		tooltipText += va(weaponStat3Tooltips[getMod3Stat()], getMod3Value());
-		tooltipText += va("\nValue: %i.\n", getStackCost());
+		tooltipText += " \n";
+		tooltipText += va("^5Value: ^P%i.\n", getStackCost());
 		break;
 	case IT_SABER_MODIFICATION:
 	case IT_SABER_CRYSTAL:
-		tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
-		tooltipText += va("%s\n\n", getDescription());
+		tooltipText += va("%s^B%s (%s)^b\n", getColorStringForQuality(), getName(), itemQualityTooltips[getQuality()]);
+		tooltipText += va("^PLightsaber %s\n", IT_SABER_CRYSTAL ? "Crystal" : "Modification");
+		tooltipText += " \n";
+		tooltipText += va("^5%s\n", getDescription());
+		tooltipText += " \n";
 		tooltipText += weaponCrystalTooltips[getCrystal()];
 		tooltipText += va(saberStat1Tooltips[getBasicStat1()], getBasicStat1Value());
 		tooltipText += va(saberStat2Tooltips[getBasicStat2()], getBasicStat2Value());
 		tooltipText += va(saberStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+		tooltipText += " \n";
 		tooltipText += va(saberStat1Tooltips[getMod1Stat()], getMod1Value());
 		tooltipText += va(saberStat2Tooltips[getMod2Stat()], getMod2Value());
 		tooltipText += va(saberStat3Tooltips[getMod3Stat()], getMod3Value());
-		tooltipText += va("\nValue: %i.\n", getStackCost());
+		tooltipText += " \n";
+		tooltipText += va("^5Value: ^P%i.\n", getStackCost());
 		break;
 	case IT_WEAPON:
 		if (getBaseItem()->giTag == WP_SABER)
 		{
-			tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
-			tooltipText += va("%s\n\n", getDescription());
+			tooltipText += va("%s^B%s (%s)^b\n", getColorStringForQuality(), getName(), itemQualityTooltips[getQuality()]);
+			tooltipText += "^POne handed weapon, Lightsaber\n";
+			tooltipText += " \n";
+			tooltipText += va("^5%s\n", getDescription());
+			tooltipText += " \n";
+			tooltipText += "^7Scaling Attribute: ^PStrength\n";
+			tooltipText += "^7Damage: ^P78-102 ^8(^P40.5 DPS^8).\n";
+			tooltipText += "^7Attacks per Second: ^P0.45\n";
+			tooltipText += "^7Crit Chance: ^P+11.5%\n";
+			tooltipText += "^7Crit Power: ^P+41.0%\n";
+			tooltipText += " \n";
 			tooltipText += weaponCrystalTooltips[getCrystal()];
 			tooltipText += va(saberStat1Tooltips[getBasicStat1()], getBasicStat1Value());
 			tooltipText += va(saberStat2Tooltips[getBasicStat2()], getBasicStat2Value());
 			tooltipText += va(saberStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+			tooltipText += " \n";
 			tooltipText += va(saberStat1Tooltips[getMod1Stat()], getMod1Value());
 			tooltipText += va(saberStat2Tooltips[getMod2Stat()], getMod2Value());
 			tooltipText += va(saberStat3Tooltips[getMod3Stat()], getMod3Value());
-			tooltipText += va("\nValue: %i.\n", getStackCost());
+			tooltipText += " \n";
+			tooltipText += va("^5Value: ^P%i.\n", getStackCost());
 		}
 		else
 		{
-			tooltipText += va("%s%s ^5(%s%s^5)\n", getColorStringForQuality(), getName(), getColorStringForQuality(), itemQualityTooltips[getQuality()]);
-			tooltipText += va("%s\n\n", getDescription());
+			tooltipText += va("%s^B%s (%s)^b\n", getColorStringForQuality(), getName(), itemQualityTooltips[getQuality()]);
+			tooltipText += "^POne handed weapon, Gun\n";
+			tooltipText += " \n";
+			tooltipText += va("^5%s\n", getDescription());
+			tooltipText += " \n";
+			tooltipText += "^7Scaling Attribute: ^PStrength\n";
+			tooltipText += "^7Damage: ^P78-102 ^8(^P40.5 DPS^8).\n";
+			tooltipText += "^7Attacks per Second: ^P0.45\n";
+			tooltipText += "^7Crit Chance: ^P+11.5%\n";
+			tooltipText += "^7Crit Power: ^P+41.0%\n";
+			tooltipText += " \n";
 			tooltipText += weaponCrystalTooltips[getCrystal()];
 			tooltipText += va(weaponStat1Tooltips[getBasicStat1()], getBasicStat1Value());
 			tooltipText += va(weaponStat2Tooltips[getBasicStat2()], getBasicStat2Value());
 			tooltipText += va(weaponStat3Tooltips[getBasicStat3()], getBasicStat3Value());
+			tooltipText += " \n";
 			tooltipText += va(weaponStat1Tooltips[getMod1Stat()], getMod1Value());
 			tooltipText += va(weaponStat2Tooltips[getMod2Stat()], getMod2Value());
 			tooltipText += va(weaponStat3Tooltips[getMod3Stat()], getMod3Value());
-			tooltipText += va("\nValue: %i.\n", getStackCost());
+			tooltipText += " \n";
+			tooltipText += va("^5Value: ^P%i.\n", getStackCost());
 		}
 		break;
 	default:

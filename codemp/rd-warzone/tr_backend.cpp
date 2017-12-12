@@ -2255,9 +2255,6 @@ extern qboolean WATER_FOG_ENABLED;
 extern qboolean AO_DIRECTIONAL;
 extern int LATE_LIGHTING_ENABLED;
 
-#define __SHADER_PERFORMANCE_DEBUG__
-
-#ifdef __SHADER_PERFORMANCE_DEBUG__
 #include <iostream>
 using namespace std;
 #include <cstdlib>
@@ -2277,18 +2274,21 @@ int getMilliSpan(int nTimeStart) {
 	return nSpan;
 }
 
+#define __SHADER_PERFORMANCE_DEBUG__
+
+#ifdef __SHADER_PERFORMANCE_DEBUG__
 int 	SHADER_PERFORMANCE_TIME = 0;
 char	SHADER_PERFORMANCE_NAME[128] = { 0 };
 #endif //__SHADER_PERFORMANCE_DEBUG__
 
-void DEBUG_StartTimer(char *shaderName)
+void DEBUG_StartTimer(char *name)
 {
 #ifdef __SHADER_PERFORMANCE_DEBUG__
 	if (r_perf->integer)
 	{
 		qglFinish();
 		memset(SHADER_PERFORMANCE_NAME, 0, sizeof(char) * 128);
-		strcpy(SHADER_PERFORMANCE_NAME, shaderName);
+		strcpy(SHADER_PERFORMANCE_NAME, name);
 		SHADER_PERFORMANCE_TIME = getMilliCount();
 	}
 #endif //__SHADER_PERFORMANCE_DEBUG__
@@ -2320,6 +2320,11 @@ const void *RB_PostProcess(const void *data)
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
 		RB_EndSurface();
+
+	GL_SetDefaultState();
+
+	//extern void GUI_Main(void);
+	//GUI_Main();
 
 	tess.numVertexes = tess.numVertexes = 0;
 
@@ -2882,6 +2887,37 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer();
 		}
 
+		if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
+		{
+			// Composite the glow/bloom texture
+			int blendFunc = 0;
+			vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+			// UQ1: Apply original glow map over postprocessed screen again, so depth map based posts are overwritten...
+			//FBO_BlitFromTexture(tr.glowImage, NULL, NULL, NULL, NULL, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR);
+
+			if (r_dynamicGlow->integer == 2)
+			{
+				// Debug output
+				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+			}
+			else if (r_dynamicGlowSoft->integer)
+			{
+				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
+				color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+			}
+			else
+			{
+				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
+				color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+			}
+
+			FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], srcBox, NULL, currentFbo, NULL, NULL, color, blendFunc);
+		}
+
+		//FBO_BlitFromTexture(tr.renderGUIImage, srcBox, NULL, currentFbo, dstBox, NULL, NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR);
+		FBO_BlitFromTexture(tr.renderGUIImage, srcBox, NULL, currentFbo, dstBox, NULL, NULL, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+
 #if 0
 		if (SCREEN_BLUR_MENU)
 		{
@@ -2952,34 +2988,6 @@ const void *RB_PostProcess(const void *data)
 
 	//if (backEnd.refdef.blurFactor > 0.0)
 	//	RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
-
-	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
-	{
-		// Composite the glow/bloom texture
-		int blendFunc = 0;
-		vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-		// UQ1: Apply original glow map over postprocessed screen again, so depth map based posts are overwritten...
-		//FBO_BlitFromTexture(tr.glowImage, NULL, NULL, NULL, NULL, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR);
-
-		if (r_dynamicGlow->integer == 2)
-		{
-			// Debug output
-			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
-		}
-		else if (r_dynamicGlowSoft->integer)
-		{
-			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
-			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
-		}
-		else
-		{
-			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
-			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
-		}
-
-		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
-	}
 
 #ifdef ___WARZONE_AWESOMIUM___
 	if (srcFbo)
@@ -3054,6 +3062,9 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(srcFbo, srcBox, tr.genericFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
+
+	//extern void GUI_Main(void);
+	//GUI_Main();
 
 	backEnd.framePostProcessed = qtrue;
 

@@ -29,7 +29,7 @@ vec4 DistantBlur(void)
 
 	vec3 origColor = color.rgb;
 
-	vec2 origMaterial = textureLod(u_PositionMap, var_TexCoords.xy, 0.0).za;
+	vec2 origMaterial = textureLod(u_PositionMap, var_TexCoords.xy, 0.0).zw;
 
 	bool isSky = false;
 
@@ -62,7 +62,7 @@ vec4 DistantBlur(void)
 
 			if (isSky)
 			{// When original pixel is sky, check if this pixel is also sky. If so, skip the blur... If the new pixel is not sky, then add it to the blur...
-				vec2 material = textureLod(u_PositionMap, xy, 0.0).za;
+				vec2 material = textureLod(u_PositionMap, xy, 0.0).zw;
 
 				if (material.y-1.0 == MATERIAL_SKY || material.y-1.0 == MATERIAL_SUN || origMaterial.y-1.0 <= MATERIAL_NONE)
 				{// Skybox... Skip...

@@ -428,6 +428,7 @@ extern void GLSL_AttachRenderDepthTextures(void);
 extern void GLSL_AttachGlowTextures(void);
 extern void GLSL_AttachGenericTextures(void);
 extern void GLSL_AttachWaterTextures(void);
+extern void GLSL_AttachRenderGUITextures(void);
 
 void FBO_Init(void)
 {
@@ -679,6 +680,12 @@ void FBO_Init(void)
 		//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 		FBO_SetupDrawBuffers();
 		R_CheckFBO(tr.renderNoDepthFbo);
+
+		tr.renderGUIFbo = FBO_Create("_renderGUI", tr.renderGUIImage->width, tr.renderGUIImage->height);
+		FBO_Bind(tr.renderGUIFbo);
+		GLSL_AttachRenderGUITextures();
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.renderGUIFbo);
 	}
 
 	// clear render buffer

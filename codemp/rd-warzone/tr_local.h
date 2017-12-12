@@ -505,6 +505,8 @@ extern cvar_t  *r_dof;
 extern cvar_t  *r_debugMapAmbientR;
 extern cvar_t  *r_debugMapAmbientG;
 extern cvar_t  *r_debugMapAmbientB;
+extern cvar_t  *gui_tooltipSize;
+extern cvar_t  *gui_tooltipCentered;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_testvalue2;
@@ -2628,6 +2630,7 @@ typedef struct trGlobals_s {
 	
 
 	image_t					*renderImage;
+	image_t					*renderGUIImage;
 	image_t					*glowImage;
 	image_t					*renderNormalImage;
 	image_t					*renderNormalDetailedImage;
@@ -2674,6 +2677,7 @@ typedef struct trGlobals_s {
 	FBO_t					*renderDetailFbo;
 	FBO_t					*renderWaterFbo;
 	FBO_t					*renderNoDepthFbo;
+	FBO_t					*renderGUIFbo;
 	FBO_t					*waterFbo;
 #if 0
 	FBO_t					*glowFboScaled[4];
@@ -3212,6 +3216,8 @@ extern cvar_t  *r_fOff3Y;
 extern cvar_t  *r_debugMapAmbientR;
 extern cvar_t  *r_debugMapAmbientG;
 extern cvar_t  *r_debugMapAmbientB;
+extern cvar_t  *gui_tooltipSize;
+extern cvar_t  *gui_tooltipCentered;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_testvalue2;
@@ -3320,6 +3326,7 @@ void	RE_SetRangedFog ( float range );
 
 void	RE_DrawAwesomiumFrame(int x, int y, int w, int h, unsigned char *buffer);
 void	RE_MenuOpenFrame(qboolean menuIsOpen);
+void	RE_SendInputEvents(qboolean clientKeyStatus[MAX_KEYS], vec2_t clientMouseStatus, qboolean menuOpen);
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );

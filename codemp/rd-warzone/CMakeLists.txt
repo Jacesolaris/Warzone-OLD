@@ -22,6 +22,9 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/G2_misc.cpp"
 	"${MPDir}/rd-warzone/G2_surfaces.cpp"
 	"${MPDir}/rd-warzone/glsl_optimizer.h"
+	"${MPDir}/rd-warzone/nuklear.h"
+	"${MPDir}/rd-warzone/stb_image.h"
+	"${MPDir}/rd-warzone/stb_truetype.h"
 	"${MPDir}/rd-warzone/tr_animation.cpp"
 	"${MPDir}/rd-warzone/tr_awesomium.cpp"
 	"${MPDir}/rd-warzone/tr_backend.cpp"
@@ -80,6 +83,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_WorldEffects.h"
 	"${MPDir}/rd-warzone/VectorUtils3.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.h"
+	"${MPDir}/rd-warzone/warzone_gui.cpp"
 	"${MPDir}/game/ckheap.h"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})

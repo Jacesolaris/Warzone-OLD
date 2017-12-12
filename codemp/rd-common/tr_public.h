@@ -5,6 +5,7 @@
 #include "../qcommon/MiniHeap.h"
 #include "../qcommon/qcommon.h"
 #include "../ghoul2/ghoul2_shared.h"
+#include "ui/keycodes.h"
 
 #define	REF_API_VERSION 5
 
@@ -219,6 +220,7 @@ typedef struct refexport_s {
 	//EpicLoyd:Added
 	void				(*DrawAwesomiumFrame)					( int x, int y, int w, int h, unsigned char *buffer);
 	void				(*MenuOpenFrame)						(qboolean menuIsOpen);
+	void				(*R_SendInputEvents)					(qboolean keyStatus[MAX_KEYS], vec2_t mouseStatus, qboolean menuOpen);
 } refexport_t;
 
 //

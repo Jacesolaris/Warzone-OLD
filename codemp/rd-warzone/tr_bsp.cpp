@@ -3313,6 +3313,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		setupWaterLevel = qtrue;
 	}
 
+//#pragma omp parallel for schedule(dynamic) ordered
 	for (int i = 0; i < w->numsurfaces; i++)
 	{// Get a count of how many we need... Add them to temp list if not too close to another...
 		msurface_t *surf =	&w->surfaces[i];
@@ -3369,31 +3370,36 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
 			if (surfOrigin[2] < MAP_WATER_LEVEL)
 			{
-				MAP_WATER_LEVEL2 = MAP_WATER_LEVEL;
-				MAP_WATER_LEVEL = surfOrigin[2];
+#pragma omp critical (__MAP_WATER_LEVEL__)
+				{
+					MAP_WATER_LEVEL2 = MAP_WATER_LEVEL;
+					MAP_WATER_LEVEL = surfOrigin[2];
+				}
 			}
 		}
 
 		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
 		{
 			radius = Q_clamp(64.0, radius, 128.0);
-			VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
-
 			VectorScale(glowColor, 0.333, glowColor);
 			VectorNormalize(glowColor);
 			VectorScale(glowColor, emissiveColorScale, glowColor);
 			R_AddLightVibrancy(glowColor, 0.4);
-			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-			
-			MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 9.0;// 3.0;
-			MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
-			
-			MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
-			
-			if (r_debugEmissiveLights->integer)
-				ri->Printf(PRINT_WARNING, "Light %i radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n", NUM_MAP_GLOW_LOCATIONS, radius, emissiveColorScale, emissiveRadiusScale, glowColor[0], glowColor[1], glowColor[2]);
 
-			NUM_MAP_GLOW_LOCATIONS++;
+#pragma omp critical (__MAP_GLOW_ADD__)
+			{
+				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 9.0;// 3.0;
+				MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
+				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
+				NUM_MAP_GLOW_LOCATIONS++;
+			}
+			
+			//if (r_debugEmissiveLights->integer)
+			//{
+			//	ri->Printf(PRINT_WARNING, "Light %i radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n", NUM_MAP_GLOW_LOCATIONS, radius, emissiveColorScale, emissiveRadiusScale, glowColor[0], glowColor[1], glowColor[2]);
+			//}
 		}
 	}
 
@@ -4451,6 +4457,39 @@ Called directly from cgame
 
 extern void MAPPING_LoadMapInfo(void);
 
+
+#define __RENDERER_STARTUP_PERFORMANCE_DEBUG__
+
+#ifdef __RENDERER_STARTUP_PERFORMANCE_DEBUG__
+#include <iostream>
+using namespace std;
+#include <cstdlib>
+#include <sys/timeb.h>
+
+extern int getMilliCount();
+extern int getMilliSpan(int nTimeStart);
+
+int 	STARTUP_PERFORMANCE_TIME = 0;
+char	STARTUP_PERFORMANCE_NAME[128] = { 0 };
+#endif //__RENDERER_STARTUP_PERFORMANCE_DEBUG__
+
+void DEBUG_STARTUP_StartTimer(char *name)
+{
+#ifdef __RENDERER_STARTUP_PERFORMANCE_DEBUG__
+	memset(STARTUP_PERFORMANCE_NAME, 0, sizeof(char) * 128);
+	strcpy(STARTUP_PERFORMANCE_NAME, name);
+	STARTUP_PERFORMANCE_TIME = getMilliCount();
+#endif //__RENDERER_STARTUP_PERFORMANCE_DEBUG__
+}
+
+void DEBUG_STARTUP_EndTimer(void)
+{
+#ifdef __RENDERER_STARTUP_PERFORMANCE_DEBUG__
+	STARTUP_PERFORMANCE_TIME = getMilliSpan(STARTUP_PERFORMANCE_TIME);
+	ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", STARTUP_PERFORMANCE_NAME, STARTUP_PERFORMANCE_TIME);
+#endif //__RENDERER_STARTUP_PERFORMANCE_DEBUG__
+}
+
 void RE_LoadWorldMap( const char *name ) {
 	int			i;
 	dheader_t	*header;
@@ -4483,7 +4522,9 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 	// Load mapinfo settings...
+	DEBUG_STARTUP_StartTimer("MAPPING_LoadMapInfo");
 	MAPPING_LoadMapInfo();
+	DEBUG_STARTUP_EndTimer();
 
 	// set default map light scale
 	tr.mapLightScale  = 1.0f;
@@ -4542,25 +4583,51 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 	// load into heap
+	DEBUG_STARTUP_StartTimer("R_LoadEntities");
 	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadShaders");
 	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadLightmaps");
 	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadPlanes");
 	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadFogs");
 	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadSurfaces");
 	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadMarksurfaces");
 	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadNodesAndLeafs");
 	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadSubmodels");
 	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadVisibility");
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadLightGrid");
 	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
+	DEBUG_STARTUP_EndTimer();
+	DEBUG_STARTUP_StartTimer("R_LoadLightGridArray");
 	R_LoadLightGridArray( &header->lumps[LUMP_LIGHTARRAY] );
+	DEBUG_STARTUP_EndTimer();
 	
 #ifdef __XYC_SURFACE_SPRITES__
 	R_GenerateSurfaceSprites(&s_worldData);
 #endif //__XYC_SURFACE_SPRITES__
 
 	// determine vertex light directions
+	DEBUG_STARTUP_StartTimer("R_CalcVertexLightDirs");
 	R_CalcVertexLightDirs();
+	DEBUG_STARTUP_EndTimer();
 
 	// determine which parts of the map are in sunlight
 #if 0
@@ -4753,7 +4820,9 @@ void RE_LoadWorldMap( const char *name ) {
 #endif
 
 	// Set up water plane and glow postions...
+	DEBUG_STARTUP_StartTimer("R_SetupMapGlowsAndWaterPlane");
 	R_SetupMapGlowsAndWaterPlane();
+	DEBUG_STARTUP_EndTimer();
 
 	s_worldData.dataSize = (byte *)ri->Hunk_Alloc(0, h_low) - startMarker;
 
@@ -4761,36 +4830,51 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.world = &s_worldData;
 
 	// create static VBOS from the world
+	DEBUG_STARTUP_StartTimer("R_CreateWorldVBOs");
 	R_CreateWorldVBOs();
+	DEBUG_STARTUP_EndTimer();
+
 	if (r_mergeLeafSurfaces->integer)
 	{
+		DEBUG_STARTUP_StartTimer("R_MergeLeafSurfaces");
 		R_MergeLeafSurfaces();
+		DEBUG_STARTUP_EndTimer();
 	}
 
 	// make sure the VBO glState entries are safe
 	R_BindNullVBO();
 	R_BindNullIBO();
 
+	DEBUG_STARTUP_StartTimer("R_LoadMapInfo");
 	R_LoadMapInfo();
+	DEBUG_STARTUP_EndTimer();
 
 #ifndef __REALTIME_CUBEMAP__
 	// load cubemaps
 	if (r_cubeMapping->integer >= 1)
 	{
+		DEBUG_STARTUP_StartTimer("R_LoadCubemapEntities");
 		R_LoadCubemapEntities("misc_cubemap");
+		DEBUG_STARTUP_EndTimer();
 
 		if (!tr.numCubemaps)
 		{
+			DEBUG_STARTUP_StartTimer("R_SetupCubemapPoints");
 			// use deathmatch spawn points as cubemaps
 			//R_LoadCubemapEntities("info_player_deathmatch");
 			// UQ1: Warzone can do better!
 			R_SetupCubemapPoints(); // NOTE: Also sets up water plane and glow postions at the same time... Can skip R_SetupMapGlowsAndWaterPlane()
+			DEBUG_STARTUP_EndTimer();
 		}
 
+#ifndef __PLAYER_BASED_CUBEMAPS__
 		if (tr.numCubemaps)
 		{
+			DEBUG_STARTUP_StartTimer("R_AssignCubemapsToWorldSurfaces");
 			R_AssignCubemapsToWorldSurfaces();
+			DEBUG_STARTUP_EndTimer();
 		}
+#endif //__PLAYER_BASED_CUBEMAPS__
 	}
 #endif //__REALTIME_CUBEMAP__
 
@@ -4798,7 +4882,9 @@ void RE_LoadWorldMap( const char *name ) {
 	// Render all cubemaps
 	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
 	{
+		DEBUG_STARTUP_StartTimer("R_RenderAllCubemaps");
 		R_RenderAllCubemaps();
+		DEBUG_STARTUP_EndTimer();
 	}
 #endif //__REALTIME_CUBEMAP__
 
