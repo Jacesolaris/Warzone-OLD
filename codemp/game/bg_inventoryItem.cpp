@@ -70,15 +70,15 @@ const char *weaponStat1Tooltips[] = {
 	"",
 	"^P+%.1f% ^7bonus to accuracy.\n",
 	"^P+%.1f% ^7bonus to rate of fire.\n",
-	"^P+%.1f% ^7bonus to damage.\n",
 	"^P+%.1f% ^7bonus to velocity.\n",
+	"^P+%.1f% ^7reduction to heat accumulation.\n",
 };
 
 const char *weaponStat2Tooltips[] = {
 	"",
+	"^P+%.1f% ^7bonus to damage.\n",
 	"^P+%.1f% ^7bonus to critical chance.\n",
 	"^P+%.1f% ^7bonus to critical power.\n",
-	"^P+%.1f% ^7reduction to heat accumulation.\n",
 };
 
 const char *weaponStat3Tooltips[] = {
@@ -91,14 +91,19 @@ const char *weaponStat3Tooltips[] = {
 
 const char *saberStat1Tooltips[] = {
 	"",
-	"^P+%.1f% ^7bonus to damage.\n",
-	"^P+%.1f% ^7bonus shield penetration.\n",
+	"^P+%.1f% ^7bonus to melee blocking chance.\n",
+	"^P+%.1f% ^7bonus to ranged blocking chance.\n",
+	"^P+%.1f% ^7bonus to stagger chance.\n",
 };
 
 const char *saberStat2Tooltips[] = {
 	"",
+	"^P+%.1f% ^7bonus to damage.\n",
 	"^P+%.1f% ^7bonus to critical chance.\n",
 	"^P+%.1f% ^7bonus to critical power.\n",
+	"^P+%.1f% ^7bonus shield penetration.\n",
+	"^P+%.1f% ^7bonus health drain.\n",
+	"^P+%.1f% ^7bonus power drain.\n",
 };
 
 const char *saberStat3Tooltips[] = {
