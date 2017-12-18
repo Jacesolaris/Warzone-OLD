@@ -577,7 +577,7 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 		if (!HaveSurfaceType(out->surfaceFlags))
 			out->surfaceFlags = LittleLong( GetMaterialType(in->shader, (in->surfaceFlags & MATERIAL_MASK)) );
 
-		if (in->shader && ( StringContainsWord(in->shader, "skies/") || StringContainsWord(in->shader, "sky")))
+		if (in->shader && ( StringContainsWord(in->shader, "skies/") || (StringContainsWord(in->shader, "sky") && !StringContainsWord(in->shader, "skyscraper"))))
 		{// LOL WTF HAX!!! :)
 			in->contentFlags |= (CONTENTS_SOLID | CONTENTS_OPAQUE);
 			in->surfaceFlags |= SURF_SKY;

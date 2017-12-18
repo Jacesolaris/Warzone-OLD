@@ -1825,6 +1825,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 					stage->noScreenMap = qtrue;
 				}
+				else if (stage->type == ST_ROOFMAP)
+				{
+					type = IMGTYPE_ROOFMAP;
+				}
 				else
 				{
 					//if (r_genNormalMaps->integer)
@@ -3902,7 +3906,7 @@ int DetectMaterialType ( const char *name )
 			&& !StringContainsWord(name, "force")
 			&& !StringContainsWord(name, "explo")
 			&& !StringContainsWord(name, "cursor")
-			&& !StringContainsWord(name, "sky")
+			&& !(StringContainsWord(name, "sky") && !StringContainsWord(name, "skyscraper"))
 			&& !StringContainsWord(name, "powerup")
 			&& !StringContainsWord(name, "slider")
 			&& !StringContainsWord(name, "mp/dark_")) // Dont bother reporting gfx/ or hud items...
@@ -4699,7 +4703,7 @@ qboolean R_TextureFileExists(char *name)
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse,
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *waterEdgeMap, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3/*, shaderStage_t *splat4*/, qboolean parallax, qboolean tcgen)
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *waterEdgeMap, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3/*, shaderStage_t *splat4*/, shaderStage_t *roofMap, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
@@ -4707,6 +4711,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealOverlayMap = qfalse;
 	qboolean hasRealSteepMap = qfalse;
 	qboolean hasRealWaterEdgeMap = qfalse;
+	qboolean hasRealRoofMap = qfalse;
 	qboolean checkNormals = qtrue;
 
 	if (shader.isPortal || shader.isSky || diffuse->glow)
@@ -5254,6 +5259,59 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{
 			hasRealWaterEdgeMap = qfalse;
 		}
+
+		{// Roof maps...
+			if (roofMap && roofMap->bundle[0].image[0] && roofMap->bundle[0].image[0] != tr.whiteImage)
+			{// Got one...
+				diffuse->bundle[TB_ROOFMAP] = roofMap->bundle[0];
+				hasRealRoofMap = qtrue;
+				diffuse->bundle[TB_ROOFMAP].roofMapLoaded = qtrue;
+			}
+			else if (!diffuse->bundle[TB_ROOFMAP].roofMapLoaded)
+			{// Check if we can load one...
+				char specularName[MAX_IMAGE_PATH];
+				char specularName2[MAX_IMAGE_PATH];
+				image_t *specularImg;
+				int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+				COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
+				StripCrap(specularName, specularName2, sizeof(specularName));
+				Q_strcat(specularName2, sizeof(specularName2), "_roof");
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+				if (R_TextureFileExists(specularName2))
+				{
+					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_ROOFMAP, specularFlags);
+				}
+				else
+				{
+					specularImg = NULL;
+				}
+#else //!__DEFERRED_IMAGE_LOADING__
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_ROOFMAP, specularFlags);
+#endif //__DEFERRED_IMAGE_LOADING__
+
+				if (specularImg)
+				{
+					ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded roof map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
+					diffuse->bundle[TB_ROOFMAP] = diffuse->bundle[0];
+					diffuse->bundle[TB_ROOFMAP].numImageAnimations = 0;
+					diffuse->bundle[TB_ROOFMAP].image[0] = specularImg;
+					hasRealRoofMap = qtrue;
+				}
+				else
+				{
+					hasRealRoofMap = qfalse;
+					//ri->Printf(PRINT_WARNING, "+++++++++++++++ FAILED TO LOAD roof map %s.\n", specularName2);
+				}
+
+				diffuse->bundle[TB_ROOFMAP].roofMapLoaded = qtrue;
+			}
+			else
+			{
+				hasRealRoofMap = qfalse;
+			}
+		}
 	}
 
 	if (1)
@@ -5589,6 +5647,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->hasRealWaterEdgeMap = false;
 	}
 
+	if (hasRealRoofMap)
+	{
+		diffuse->hasRealRoofMap = false;
+	}
+
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -5602,6 +5665,7 @@ static int CollapseStagesToGLSL(void)
 	qboolean hasRealOverlayMap = qfalse;
 	qboolean hasRealSteepMap = qfalse;
 	qboolean hasRealWaterEdgeMap = qfalse;
+	qboolean hasRealRoofMap = qfalse;
 
 	//ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
@@ -5764,7 +5828,7 @@ static int CollapseStagesToGLSL(void)
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
-			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep, *steep2, *splatControl, *splat1, *splat2, *splat3/*, *splat4*/;
+			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep, *steep2, *splatControl, *splat1, *splat2, *splat3/*, *splat4*/, *roofMap;
 			qboolean parallax, tcgen;
 
 			if (!pStage->active)
@@ -5792,6 +5856,7 @@ static int CollapseStagesToGLSL(void)
 			splat2 = NULL;
 			splat3 = NULL;
 			//splat4 = NULL;
+			roofMap = NULL;
 
 
 			// we have a diffuse map, find matching normal, specular, and lightmap
@@ -5884,6 +5949,11 @@ static int CollapseStagesToGLSL(void)
 							splat3 = pStage2;
 						}
 
+					case ST_ROOFMAP:
+						{
+							roofMap = pStage2;
+						}
+
 					case ST_COLORMAP:
 						if (pStage2->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 							pStage2->bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
@@ -5908,7 +5978,7 @@ static int CollapseStagesToGLSL(void)
 				tcgen = qtrue;
 			}
 
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, steep, steep2, splatControl, splat1, splat2, splat3/*, splat4*/, parallax, tcgen);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, steep, steep2, splatControl, splat1, splat2, splat3/*, splat4*/, roofMap, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages
@@ -5975,6 +6045,12 @@ static int CollapseStagesToGLSL(void)
 		if (pStage->type == ST_WATER_EDGE_MAP)
 		{
 			hasRealWaterEdgeMap = qfalse;
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_ROOFMAP)
+		{
+			hasRealRoofMap = qfalse;
 			pStage->active = qfalse;
 		}
 
@@ -6264,6 +6340,11 @@ static int CollapseStagesToGLSL(void)
 		if (hasRealWaterEdgeMap)
 		{
 			stage->hasRealWaterEdgeMap = true;
+		}
+
+		if (hasRealRoofMap)
+		{
+			stage->hasRealRoofMap = true;
 		}
 
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);

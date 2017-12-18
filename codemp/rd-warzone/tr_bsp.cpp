@@ -3336,10 +3336,15 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
-				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
+				qboolean isBuilding = ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_CONCRETE && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
+				
+				if (surf->shader->stages[stage] && (surf->shader->stages[stage]->glow || isBuilding))
 				{
 					hasGlow = qtrue;
-					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
+					if (isBuilding)
+						VectorCopy4(surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]->lightColor, glowColor);
+					else
+						VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
 					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
 					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
 					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;

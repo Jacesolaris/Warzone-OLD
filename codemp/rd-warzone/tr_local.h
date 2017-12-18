@@ -612,6 +612,7 @@ typedef enum
 	IMGTYPE_ROADSCONTROLMAP,
 	IMGTYPE_ROADMAP,
 	IMGTYPE_DETAILMAP,
+	IMGTYPE_ROOFMAP,
 } imgType_t;
 
 typedef enum
@@ -991,6 +992,7 @@ typedef struct {
 	qboolean		overlayLoaded;
 	qboolean		steepMapLoaded;
 	qboolean		steepMapLoaded2;
+	qboolean		roofMapLoaded;
 } textureBundle_t;
 
 enum
@@ -1024,7 +1026,8 @@ enum
 	TB_DETAILMAP		= 28,
 	TB_SHADOWMAP4		= 29,
 	TB_SHADOWMAP5		= 30,
-	NUM_TEXTURE_BUNDLES = 31
+	TB_ROOFMAP			= 31,
+	NUM_TEXTURE_BUNDLES = 32
 };
 
 typedef enum
@@ -1042,6 +1045,7 @@ typedef enum
 	ST_SPLATMAP1,
 	ST_SPLATMAP2,
 	ST_SPLATMAP3,
+	ST_ROOFMAP,
 	ST_GLSL
 } stageType_t;
 
@@ -1100,6 +1104,7 @@ typedef struct {
 	bool			hasRealOverlayMap;
 	bool			hasRealSteepMap;
 	bool			hasRealWaterEdgeMap;
+	bool			hasRealRoofMap;
 	
 	qboolean		glowMapped;
 	int				glowBlend;

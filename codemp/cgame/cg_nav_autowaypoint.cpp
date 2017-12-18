@@ -115,6 +115,7 @@ qboolean DO_NOSKY = qfalse;
 qboolean DO_OPEN_AREA_SPREAD = qfalse;
 qboolean DO_NEW_METHOD = qfalse;
 qboolean DO_EXTRA_REACH = qfalse;
+qboolean DO_SINGLE = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -4012,6 +4013,11 @@ float RoofHeightAt ( vec3_t org )
 		return -131072.f;
 	}
 
+	if (!DO_ROCK && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+	{
+		return -MAX_MAP_SIZE;
+	}
+
 	return tr.endpos[2];
 }
 
@@ -6244,7 +6250,7 @@ omp_set_nested(0);
 					// Set the point found on the floor as the test location...
 					VectorSet(org, new_org[0], new_org[1], floor);
 
-					if (floor < mapMins[2])
+					if (floor < mapMins[2] || (DO_SINGLE && floor >= MAX_MAP_SIZE))
 					{// Can skip this one!
 						// Mark current hit location to continue from...
 						current_height = mapMins[2]-2048; // so we still update final_tests
@@ -7011,6 +7017,7 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"altmethod\" ^5- For standard multi-level maps (alternative method).\n");
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3\"single\" ^5- For standard single-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nosky\" ^5- For standard multi-level maps. Don't check for sky.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"water\" ^5- For standard multi-level maps. Also add waypoints on water.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
@@ -7032,6 +7039,7 @@ AIMod_AutoWaypoint ( void )
 	DO_ROCK = qfalse;
 	DO_OPEN_AREA_SPREAD = qfalse;
 	DO_NEW_METHOD = qfalse;
+	DO_SINGLE = qfalse;
 
 	qboolean DO_CLEANER = qfalse;
 
@@ -7147,6 +7155,44 @@ AIMod_AutoWaypoint ( void )
 			if (DO_CLEANER)
 				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 		}
+	}
+	else if (Q_stricmp(str, "single") == 0)
+	{
+		DO_SINGLE = qtrue;
+
+		if (trap->Cmd_Argc() >= 2)
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv(2, str, sizeof(str));
+			dist = atoi(str);
+
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist);
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+
+			if (DO_CLEANER)
+				AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+		}
+
+		DO_SINGLE = qfalse;
 	}
 	else if ( Q_stricmp( str, "nosky") == 0 )
 	{
