@@ -2242,7 +2242,7 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	float zfar = 2048;
 
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	if (r_testvalue0->integer <= 0)
+	/*if (r_testvalue0->integer <= 0)
 	{
 		GL_BindToTMU(tr.linearDepthImage512, TB_LIGHTMAP);
 		zfar = 512;
@@ -2258,15 +2258,15 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 		zfar = 2048;
 	}
 	else if (r_testvalue0->integer <= 3)
-	{
+	{*/
 		GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
 		zfar = 4096;
-	}
+	/*}
 	else
 	{
 		GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
 		zfar = (r_testvalue1->value == 0.0) ? backEnd.viewParms.zFar : r_testvalue1->value;
-	}
+	}*/
 	
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
