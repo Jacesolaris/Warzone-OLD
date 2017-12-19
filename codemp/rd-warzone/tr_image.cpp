@@ -4313,13 +4313,13 @@ void R_CreateBuiltinImages( void ) {
 	{
 		for ( x = 0; x < 5; x++)
 		{
-			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrDepth);
+			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 		}
 
-		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
+		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
 	}
 
 	if (r_cubeMapping->integer >= 1)

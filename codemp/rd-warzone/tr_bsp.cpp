@@ -3336,7 +3336,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
-				qboolean isBuilding = ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_CONCRETE && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
+				qboolean isBuilding = ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_CONCRETE && surf->shader->stages[stage] && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
 				
 				if (surf->shader->stages[stage] && (surf->shader->stages[stage]->glow || isBuilding))
 				{

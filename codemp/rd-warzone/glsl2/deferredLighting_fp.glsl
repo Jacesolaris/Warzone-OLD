@@ -370,7 +370,7 @@ vec3 envMap(vec3 p, float warmth)
     vec3 heatMap = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.));
 
 	// Mix Ice and Heat based on warmth setting...
-	return mix(coolMap, heatMap, warmth);
+	return mix(coolMap, heatMap, clamp(warmth, 0.0, 1.0));
 }
 #endif //__ENVMAP__
 
@@ -481,7 +481,7 @@ void main(void)
 	if (u_Local6.a > 0.0)
 	{// Sunset, Sunrise, and Night times... Scale down screen color, before adding lighting...
 		vec3 nightColor = vec3(outColor.rgb * 0.35);
-		outColor.rgb = mix(outColor.rgb, nightColor, u_Local6.a);
+		outColor.rgb = mix(outColor.rgb, nightColor, clamp(u_Local6.a, 0.0, 1.0));
 	}
 
 
@@ -547,7 +547,7 @@ void main(void)
 		if (position.a-1.0 == MATERIAL_SOLIDMETAL || position.a-1.0 == MATERIAL_MARBLE)
 		{
 			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (specular*2.0)), clamp(specularPower*NE*24.0, 0.0, 1.0));
-			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (reflectance.rgb*128.0)), specularPower*0.05);
+			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (reflectance.rgb*128.0)), clamp(specularPower*0.05, 0.0, 1.0));
 		}
 #endif
 
@@ -636,7 +636,7 @@ void main(void)
 		{// Mix between night and day colors...
 			vec3 skyColorDay = texture(u_WaterEdgeMap, spot).rgb;
 			vec3 skyColorNight = texture(u_RoadsControlMap, spot).rgb;
-			skyColor = mix(skyColorDay, skyColorNight, u_Local6.a);
+			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
 		}
 		else if (u_Local6.a >= 1.0)
 		{// Night only colors...
@@ -670,10 +670,10 @@ void main(void)
 #define sm_cont_2 (255.0 / 200.0)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
 		float finalShadow = clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
-		finalShadow = mix(finalShadow, 1.0, u_Local6.a); // Dampen out shadows at sunrise/sunset...
+		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
 		outColor.rgb *= finalShadow;
 		shadowMult = clamp(shadowValue, 0.2, 1.0) * 0.75 + 0.25;
-		shadowValue = mix(shadowValue, 1.0, u_Local6.a); // Dampen out shadows at sunrise/sunset...
+		shadowValue = mix(shadowValue, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
 	}
 #endif //defined(USE_SHADOWMAP)
 
@@ -717,7 +717,7 @@ void main(void)
 					{// Scale back vibrancy to 0.0 just before nightfall...
 						float downScale = 1.0 - vib;
 						downScale *= 4.0;
-						vib = mix(vib, 0.0, downScale);
+						vib = mix(vib, 0.0, clamp(downScale, 0.0, 1.0));
 					}
 					lightColor = Vibrancy( lightColor, vib * 4.0 );
 				}
@@ -849,7 +849,7 @@ void main(void)
 		float lightScale = clamp(1.0 - clamp(max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0), 0.0, 1.0);
 		float invLightScale = clamp((1.0 - lightScale) * 1.2, 0.2, 1.0);
 		vec3 env = envMap(rd, 0.6 /* warmth */);
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), (reflectivePower * 0.5) * lightScale * gloss);
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), clamp((reflectivePower * 0.5) * lightScale * gloss, 0.0, 1.0));
 	}
 #endif //__ENVMAP__
 

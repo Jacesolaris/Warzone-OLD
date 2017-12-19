@@ -1421,7 +1421,7 @@ void R_Register( void )
 	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "2", CVAR_ARCHIVE );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
-	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "0", CVAR_ARCHIVE );
+	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "1", CVAR_ARCHIVE );
 
 	r_pebbles = ri->Cvar_Get("r_pebbles", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_pebblesPasses = ri->Cvar_Get("r_pebblesPasses", "2", CVAR_ARCHIVE);
@@ -1557,7 +1557,7 @@ void R_Register( void )
 	r_shadowContrast = ri->Cvar_Get("r_shadowContrast", "0.7", CVAR_ARCHIVE);
 	r_shadowBlur = ri->Cvar_Get( "r_shadowBlur", "1", CVAR_ARCHIVE );
 	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "2", CVAR_ARCHIVE | CVAR_LATCH );
-	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "2048", CVAR_ARCHIVE | CVAR_LATCH );
+	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "512", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZNear = ri->Cvar_Get( "r_shadowCascadeZNear", "4", CVAR_ARCHIVE );
 	r_shadowCascadeZFar = ri->Cvar_Get( "r_shadowCascadeZFar", "8192"/*"3072"*/, CVAR_ARCHIVE );
 	r_shadowCascadeZBias = ri->Cvar_Get( "r_shadowCascadeZBias", "-320", CVAR_ARCHIVE );
@@ -1586,7 +1586,7 @@ void R_Register( void )
 	r_debugEmissiveColorScale = ri->Cvar_Get("r_debugEmissiveColorScale", "1.0", CVAR_ARCHIVE);
 	
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
-	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.0", CVAR_ARCHIVE );
+	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.3", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "2", CVAR_ARCHIVE );
 	r_waterWaveHeight = ri->Cvar_Get( "r_waterWaveHeight", "8.0", CVAR_ARCHIVE );
@@ -1616,7 +1616,7 @@ void R_Register( void )
 	//r_bloomRays = ri->Cvar_Get("r_bloomRays", "1", CVAR_ARCHIVE);
 	r_bloomRaysSamples = ri->Cvar_Get("r_bloomRaysSamples", "16", CVAR_ARCHIVE);
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.9975", CVAR_ARCHIVE);
-	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.25", CVAR_ARCHIVE);
+	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.38", CVAR_ARCHIVE);
 	r_bloomRaysDensity = ri->Cvar_Get("r_bloomRaysDensity", "1.0", CVAR_ARCHIVE);
 	r_bloomRaysStrength = ri->Cvar_Get("r_bloomRaysStrength", "0.1", CVAR_ARCHIVE);
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
@@ -1626,7 +1626,7 @@ void R_Register( void )
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "0", CVAR_ARCHIVE );
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.0025", CVAR_ARCHIVE );
 	r_magicdetailMix = ri->Cvar_Get("r_magicdetailMix", "0.15", CVAR_ARCHIVE);
-	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
+	r_dof = ri->Cvar_Get( "r_dof", "1", CVAR_ARCHIVE );
 	r_debugMapAmbientR = ri->Cvar_Get("r_debugMapAmbientR", "0.0", CVAR_NONE);
 	r_debugMapAmbientG = ri->Cvar_Get("r_debugMapAmbientG", "0.0", CVAR_NONE);
 	r_debugMapAmbientB = ri->Cvar_Get("r_debugMapAmbientB", "0.0", CVAR_NONE);
@@ -1660,7 +1660,7 @@ void R_Register( void )
 	r_trueAnaglyphMaxDistance = ri->Cvar_Get( "r_trueAnaglyphMaxDistance", "1.0", CVAR_ARCHIVE );
 	r_trueAnaglyphParallax = ri->Cvar_Get( "r_trueAnaglyphParallax", "11.5", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
-	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "1", CVAR_ARCHIVE );
+	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "0", CVAR_ARCHIVE );
 	r_fogPost = ri->Cvar_Get( "r_fogPost", "1", CVAR_ARCHIVE );
 	r_dayNightCycleSpeed = ri->Cvar_Get( "r_dayNightCycleSpeed", "0.0001", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );

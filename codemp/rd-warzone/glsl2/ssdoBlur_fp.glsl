@@ -78,7 +78,7 @@ vec4 dssdo_blur(vec2 tex)
 
 	res /= total_weight;
 
-	return res;
+	return vec4(res.rgb, 1.0);
 }
 
 void main() 

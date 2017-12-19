@@ -2231,15 +2231,43 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 		color[1] =
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
-
-	shaderProgram_t *shader = &tr.dofShader[r_dof->integer-1];
+	
+	shaderProgram_t *shader = &tr.dofShader[Q_clampi(0, r_dof->integer-1, 2)];
 
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+
+	float zfar = 2048;
+
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
+	if (r_testvalue0->integer <= 0)
+	{
+		GL_BindToTMU(tr.linearDepthImage512, TB_LIGHTMAP);
+		zfar = 512;
+	}
+	else if (r_testvalue0->integer <= 1)
+	{
+		GL_BindToTMU(tr.linearDepthImage1024, TB_LIGHTMAP);
+		zfar = 1024;
+	}
+	else if (r_testvalue0->integer <= 2)
+	{
+		GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
+		zfar = 2048;
+	}
+	else if (r_testvalue0->integer <= 3)
+	{
+		GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
+		zfar = 4096;
+	}
+	else
+	{
+		GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
+		zfar = (r_testvalue1->value == 0.0) ? backEnd.viewParms.zFar : r_testvalue1->value;
+	}
+	
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
 	// Use the most blurred version of glow...
@@ -2286,7 +2314,7 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	{
 		vec4_t viewInfo;
 		//float zmax = backEnd.viewParms.zFar;
-		float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float zmax = zfar;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -3158,9 +3186,9 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = 2048.0;//3072.0;//backEnd.viewParms.zFar;
-		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmax = tr.occlusionOriginalZfar;// backEnd.viewParms.zFar; //2048.0;//3072.0;//backEnd.viewParms.zFar;
+		//float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		//float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
@@ -3225,11 +3253,11 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_VIEWINFO, viewInfo);
 		}
 
-		/*{
+		{
 			vec4_t loc;
 			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_LOCAL0, loc);
-		}*/
+		}
 
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.distanceBlurShader[0], color, 0);
 	}

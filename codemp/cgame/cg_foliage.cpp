@@ -3447,9 +3447,12 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			qboolean DO_TREE = qfalse;
 			qboolean DO_PLANT = qfalse;
 
-			FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
-			FOLIAGE_TREE_ANGLE[FOLIAGE_NUM_POSITIONS] = 0.0f;
-			FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
+			if (MAP_HAS_TREES)
+			{
+				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
+				FOLIAGE_TREE_ANGLE[FOLIAGE_NUM_POSITIONS] = 0.0f;
+				FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
+			}
 
 			FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 			FOLIAGE_PLANT_ANGLE[FOLIAGE_NUM_POSITIONS] = irand(0, 180);
@@ -3459,7 +3462,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 			VectorCopy(grassNormals[i], FOLIAGE_NORMALS[FOLIAGE_NUM_POSITIONS]);
 
-			if (grassSpotType[i] == SPOT_TYPE_TREE)
+			if (MAP_HAS_TREES && grassSpotType[i] == SPOT_TYPE_TREE)
 			{// Add tree...
 				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
 				FOLIAGE_TREE_ANGLE[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);

@@ -144,7 +144,7 @@ float bdepth(vec2 coords) //blurring depth
 	
 	for( int i=0; i<9; i++ )
 	{
-		float tmp = textureLod(u_ScreenDepthMap, coords + offset[i], 0.0).r * 255;
+		float tmp = textureLod(u_ScreenDepthMap, coords + offset[i], 0.0).r;
 		d += tmp * kernel[i];
 	}
 	
@@ -221,7 +221,7 @@ void main()
 	}
 	else
 	{
-		depth = linearize(textureLod(u_ScreenDepthMap,var_TexCoords.xy, 0.0).x * 255);
+		depth = linearize(textureLod(u_ScreenDepthMap,var_TexCoords.xy, 0.0).x);
 	}
 	
 	//focal plane calculation
@@ -230,7 +230,7 @@ void main()
 	
 	if (autofocus)
 	{
-		fDepth = linearize(textureLod(u_ScreenDepthMap,focus, 0.0).x * 255);
+		fDepth = linearize(textureLod(u_ScreenDepthMap,focus, 0.0).x);
 	}
 
 	if (!autofocus && depth <= fDepth)

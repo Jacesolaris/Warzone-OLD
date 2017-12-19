@@ -60,7 +60,8 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist)
 #if 1
 	float scale = 1.0 / r_shadowMapSize;
 	vec4 sCoord = vec4(st);
-	vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
+	//vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
+	vec2 offset = mod(sCoord.xy, 0.5);
 	offset.y += offset.x;  // y ^= x in floating point
 	if (offset.y > 1.1) offset.y = 0;
 
@@ -123,7 +124,8 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist)
 void main()
 {
 	precise float result = 1.0;
-	precise float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex);
+	//precise float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex);
+	precise float depth = texture(u_ScreenDepthMap, var_DepthTex).x;
 
 	precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 	precise vec4 shadowpos = u_ShadowMvp * biasPos;

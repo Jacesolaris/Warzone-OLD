@@ -2544,14 +2544,14 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	float splitZNear, splitZFar;
 	float viewZNear, viewZFar;
 	vec3_t lightviewBounds[2];
-	qboolean lightViewIndependentOfCameraView = qfalse;
+	qboolean lightViewIndependentOfCameraView = qtrue;// qfalse;
 
 	MATRIX_UPDATE = qtrue;
 
 	VectorCopy4(sunDir, lightDir);
 
-	viewZNear = r_shadowCascadeZNear->value;
-	viewZFar = r_shadowCascadeZFar->value;
+	viewZNear = r_znear->value;// r_shadowCascadeZNear->value;
+	viewZFar = 4096.0;// r_shadowCascadeZFar->value;
 	float splitBias = r_shadowCascadeZBias->value;
 
 #if 0
@@ -2564,23 +2564,35 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 
 	switch (level)
 	{
-	case 0:
+	/*case 0:
 	default:
 		splitZNear = viewZNear;
 		//splitZFar = 512.0;
 		splitZFar = 256.0;
 		break;
 	case 1:
-		splitZNear = 192.0;
+		splitZNear = viewZNear;// 192.0;
 		splitZFar = 1024.0;// 4096.0;
 		break;
 	case 2:
-		splitZNear = 768.0;
+		splitZNear = viewZNear;//768.0;
 		splitZFar = 4096.0;
+		break;*/
+	case 0:
+	default:
+		splitZNear = viewZNear;
+		splitZFar = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
+		break;
+	case 1:
+		splitZNear = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
+		splitZFar = CalcSplit(viewZNear, viewZFar, 2, 3) + splitBias;
+		break;
+	case 2:
+		splitZNear = CalcSplit(viewZNear, viewZFar, 2, 3) + splitBias;
+		splitZFar = viewZFar;
 		break;
 	case 3:
-		splitZNear = 3172.0;// 4096.0;
-		//splitZFar = 16384.0;
+		splitZNear = viewZFar;
 		splitZFar = (backEnd.viewParms.zFar < MAP_INFO_MAXSIZE) ? backEnd.viewParms.zFar : MAP_INFO_MAXSIZE;
 		break;
 	//case 3:
@@ -2589,6 +2601,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	//	break;
 	}
 
+#if 0
 	if (splitZNear > backEnd.viewParms.zFar || splitZNear > tr.distanceCull * 1.75)
 	{// Pointless rendering this shadow map, the view doesnt go this far...
 		return;
@@ -2611,6 +2624,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 			}*/
 		}
 	}
+#endif
 
 			
 	VectorCopy(fd->vieworg, lightOrigin);
