@@ -48,6 +48,9 @@ void SabBeh_AttackVsAttack(gentity_t *self,	gentity_t *otherOwner)
 	
 }
 
+extern void G_ForcePowerDrain(gentity_t *victim, gentity_t *attacker, int amount);
+extern int G_SaberFPDrain(gentity_t *defender, gentity_t *attacker, vec3_t hitLoc);
+extern void BG_AddForcePowerToPlayer(playerState_t * ps, int Forcepower);
 void SabBeh_AttackVsBlock( gentity_t *attacker, gentity_t *blocker, vec3_t hitLoc, qboolean hitSaberBlade)
 {//set the saber behavior for an attacking vs blocking/parrying blade impact
 	qboolean startSaberLock = qfalse;
@@ -72,6 +75,11 @@ void SabBeh_AttackVsBlock( gentity_t *attacker, gentity_t *blocker, vec3_t hitLo
 			//[/SaberSys]
 		}
 	}
+
+	G_ForcePowerDrain(blocker, attacker, G_SaberFPDrain(blocker, attacker, hitLoc));
+
+	//costs FP as well.
+	BG_AddForcePowerToPlayer(&blocker->client->ps, 1);
 }
 
 extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC); // Also valid for non-npcs.
@@ -135,6 +143,61 @@ void G_SaberBounce(gentity_t* self, gentity_t* other, qboolean hitBody)
 	}
 }
 //[/NewSaberSys]
+
+void G_Stagger(gentity_t *hitEnt, gentity_t *atk, qboolean allowAnyMove)
+{
+	if (PM_StaggerAnim(hitEnt->client->ps.torsoAnim) || PM_StaggerAnim(atk->client->ps.torsoAnim))
+	{
+		return;
+	}
+	if (PM_InGetUpAnimation(hitEnt->client->ps.legsAnim))
+	{
+		return;
+	}
+	if (hitEnt->client->ps.forceHandExtend == HANDEXTEND_KNOCKDOWN &&
+		hitEnt->client->ps.forceHandExtendTime > level.time)
+	{
+		return;
+	}
+	
+	int animChoice = irand(0, 6); // this could possibly be based on animation done when the clash happend, but this should do for now.
+	int useAnim = -1;
+
+	switch (animChoice) {
+	default:
+	case 0:
+		useAnim = BOTH_BASHED1;
+		break;
+	case 1:
+		useAnim = BOTH_H1_S1_T_;
+		break;
+	case 2:
+		useAnim = BOTH_H1_S1_TR;
+		break;
+	case 3:
+		useAnim = BOTH_H1_S1_TL;
+		break;
+	case 4:
+		useAnim = BOTH_H1_S1_BL;
+		break;
+	case 5:
+		useAnim = BOTH_H1_S1_B_;
+		break;
+	case 6:
+		useAnim = BOTH_H1_S1_BR;
+		break;
+	}
+
+	G_SetAnim(hitEnt, &(hitEnt->client->pers.cmd), SETANIM_TORSO, useAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
+
+	if (PM_StaggerAnim(hitEnt->client->ps.torsoAnim))
+	{
+		hitEnt->client->ps.saberMove = LS_NONE;
+		hitEnt->client->ps.saberBlocked = BLOCKED_NONE;
+		hitEnt->client->ps.weaponTime = hitEnt->client->ps.torsoTimer;
+		hitEnt->client->StaggerAnimTime = hitEnt->client->ps.torsoTimer + level.time;
+	}
+}
 
 //[NewSaberSys]
 qboolean WP_PlayerSaberAttack(gentity_t *self)

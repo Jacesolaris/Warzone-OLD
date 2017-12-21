@@ -3032,8 +3032,456 @@ qboolean IsMoving(gentity_t*ent)
 	return qtrue;
 }
 
+void G_ForcePowerDrain(gentity_t *victim, gentity_t *attacker, int amount)
+{//drains DP from victim.  Also awards experience points to the attacker.
+	if (!g_friendlyFire.integer && OnSameTeam(victim, attacker))
+	{//don't drain DP if we're hit by a team member
+		return;
+	}
+
+	if (victim->flags &FL_GODMODE)
+		return;
+
+	if (victim->client && victim->client->ps.fd.forcePowersActive & (1 << FP_PROTECT))
+	{
+		amount /= 2;
+		if (amount < 1)
+			amount = 1;
+	}
+
+	victim->client->ps.fd.forcePower -= amount;
+
+	if (attacker->client && attacker->client->ps.torsoAnim == saberMoveData[16].animToUse)
+	{//In DFA?
+		victim->client->ps.saberAttackChainCount += 16;
+	}
+
+	if (victim->client->ps.fd.forcePower < 0)
+	{
+		victim->client->ps.fd.forcePower = 0;
+	}
+}
+
+
+int SaberFpBlockCost(int attackerStyle)
+{//Take the basic saber block cost of blocking an attack from the given saber style.
+	switch (attackerStyle)
+	{
+	case SS_DUAL:
+		return 16;
+		break;
+	case SS_STAFF:
+		return 16;
+		break;
+	case SS_FAST:
+		return 18;
+		break;
+	case SS_MEDIUM:
+		return 20;
+		break;
+	case SS_STRONG:
+		return 25;
+		break;
+	default:
+		//Com_Printf("Unknown Style type %i in BasicSaberBlockCost()\n", attackerStyle);
+		return 0;
+		break;
+	};
+}
+
+int SaberFpBlockReturn(int DefenderStyle)
+{//Give the basic saber block cost of blocking an attack from the given saber style.
+	switch (DefenderStyle)
+	{// now just make sure these suit wz's extra fp will do when that time comes, what about the rest ? does it looks fine ? one thing missing
+	case SS_DUAL:
+		return 4; // 4 or 5, maybe 3
+		break;
+	case SS_STAFF:
+		return 6; // 6 to 8
+		break;
+	case SS_FAST:
+		return 3; // 3 or 4 ish
+		break;
+	case SS_MEDIUM:
+		return 10; // 10 ish
+		break;
+	case SS_STRONG:
+		return 15; // 15ish is ok
+		break;
+	default:
+		//Com_Printf("Unknown Style type %i in ForcePointReturnCost()\n", DefenderStyle);
+		return 0;
+		break;
+	};
+}
+
+extern void G_Stagger(gentity_t *hitEnt, gentity_t *atk, qboolean allowAnyMove);
+int G_SaberFPDrain(gentity_t *defender, gentity_t *attacker, vec3_t hitLoc)
+{//returns the FP cost to block this attack for this attacker/defender combo.
+	float saberBlockCost = 0;
+	float ForcePointReturn = 0;
+
+	if (!attacker || !attacker->client)
+	{
+		return 0;
+	}
+
+	saberBlockCost = SaberFpBlockCost(attacker->client->ps.fd.saberAnimLevel);
+
+	if (attacker->client->ps.weapon == WP_SABER)
+	{
+		switch (attacker->client->ps.fd.saberAnimLevel)
+		{
+		case SS_FAST:
+			if (attacker && attacker->client)
+			{//Fast parries cheaper
+				saberBlockCost = (saberBlockCost / 3.25);
+			}
+			else
+			{
+				saberBlockCost = (saberBlockCost / 3);
+			}
+
+			break;
+		case SS_MEDIUM:
+			if (attacker && attacker->client)
+			{//Medium parries cheaper
+				saberBlockCost = (saberBlockCost / 3.25);
+			}
+			else
+			{
+				saberBlockCost = (saberBlockCost / 3);
+			}
+			break;
+		case SS_STRONG:
+			if (attacker && attacker->client)
+			{//Strong parries cheaper
+				saberBlockCost = (saberBlockCost / 3.25);
+			}
+			else
+			{
+				saberBlockCost = (saberBlockCost / 3);
+			}
+
+			break;
+		case SS_STAFF:
+			if (attacker && attacker->client)
+			{//Staff parries cheaper
+				saberBlockCost = (saberBlockCost / 3.25);
+			}
+			else
+			{
+				saberBlockCost = (saberBlockCost / 3);
+			}
+
+			break;
+		case SS_DUAL:
+			if (attacker->client->saber[0].numBlades == 1 && attacker->client->ps.fd.saberAnimLevel == SS_DUAL)//Ataru's other perk more powerful running hits
+			{//Duel parries 
+				saberBlockCost *= 3.0;
+			}
+			else
+			{
+				saberBlockCost *= 1.5;
+			}
+
+			break;
+		default:
+			saberBlockCost = SaberFpBlockCost(attacker->client->ps.fd.saberAnimLevel);
+			break;
+		}
+	}
+
+	if (!defender || !defender->client)
+	{
+		Com_Printf("Client %s block client %s cost %f.\n", attacker->client->pers.netname, "none", saberBlockCost);
+		return saberBlockCost;
+	}
+
+	if (defender->client->ps.weapon == WP_SABER)
+	{
+		saberBlockCost = 0;
+		ForcePointReturn = SaberFpBlockReturn(defender->client->ps.fd.saberAnimLevel);
+
+		switch (defender->client->ps.fd.saberAnimLevel)
+		{
+		case SS_FAST:
+			if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+			{
+				ForcePointReturn *= 1.25;//they are the same as does above so is it thies numbers i need to ajust ?
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+			{//level 2 defense lowers back damage more
+				ForcePointReturn *= 1.50;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+			{//level 1 defense lowers back damage a bit
+				ForcePointReturn *= 1.75;
+			}
+			else
+			{
+				ForcePointReturn *= 2;
+			}
+			break;
+		case SS_MEDIUM:
+			if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+			{
+				ForcePointReturn *= 1.25;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+			{//level 2 defense lowers back damage more
+				ForcePointReturn *= 1.50;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+			{//level 1 defense lowers back damage a bit
+				ForcePointReturn *= 1.75;
+			}
+			else
+			{
+				ForcePointReturn *= 2;
+			}
+			break;
+		case SS_STRONG:
+			if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+			{
+				ForcePointReturn *= 1.25;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+			{//level 2 defense lowers back damage more
+				ForcePointReturn *= 1.50;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+			{//level 1 defense lowers back damage a bit
+				ForcePointReturn *= 1.75;
+			}
+			else
+			{
+				ForcePointReturn *= 2;
+			}
+			break;
+		case SS_STAFF:
+			if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+			{
+				ForcePointReturn *= 1.25;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+			{//level 2 defense lowers back damage more
+				ForcePointReturn *= 1.50;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+			{//level 1 defense lowers back damage a bit
+				ForcePointReturn *= 1.75;
+			}
+			else
+			{
+				ForcePointReturn *= 2;
+			}
+			break;
+		case SS_DUAL:
+			if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+			{
+				ForcePointReturn *= 1.25;// this ? or does above ?
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+			{//level 2 defense lowers back damage more
+				ForcePointReturn *= 1.50;
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+			{//level 1 defense lowers back damage a bit
+				ForcePointReturn *= 1.75;
+			}
+			else
+			{
+				ForcePointReturn *= 2;
+			}
+			break;
+		default:
+			ForcePointReturn = SaberFpBlockReturn(defender->client->ps.fd.saberAnimLevel);
+			break;
+		}
+
+		//ForcePointReturn = -ForcePointReturn;
+	}
+
+	if (attacker->client->ps.saberMove == LS_A_LUNGE
+		|| attacker->client->ps.saberMove == LS_SPINATTACK
+		|| attacker->client->ps.saberMove == LS_SPINATTACK_DUAL)
+	{//lunge attacks
+		saberBlockCost = .75*SaberFpBlockCost(attacker->client->ps.fd.saberAnimLevel);
+	}
+	else if (attacker->client->ps.saberMove == LS_ROLL_STAB)
+	{//roll stab
+		saberBlockCost = 2 * SaberFpBlockCost(attacker->client->ps.fd.saberAnimLevel);
+	}
+	else if (attacker->client->ps.saberMove == LS_A_JUMP_T__B_)
+	{//DFA moves
+		saberBlockCost = 4 * SaberFpBlockCost(attacker->client->ps.fd.saberAnimLevel);
+	}
+	else if (attacker->client->ps.saberMove == LS_A_FLIP_STAB
+		|| attacker->client->ps.saberMove == LS_A_FLIP_SLASH)
+	{//flip stabs do more DP
+		saberBlockCost = 2 * SaberFpBlockCost(attacker->client->ps.fd.saberAnimLevel);
+	}
+
+	Com_Printf("Client %s blocked client %s Cost %f. Return %f. Total change %i.\n", attacker->client->pers.netname, defender->client->pers.netname, saberBlockCost, ForcePointReturn, (int)saberBlockCost - (int)ForcePointReturn);
+	return (int)saberBlockCost - (int)ForcePointReturn;
+}
+
+//[/NewSaberSys2]
+
+#ifdef __TIMED_STAGGER__
+qboolean CheckStagger(gentity_t *defender, gentity_t *attacker)
+{
+	int attackerStanceStaggerChance = 0;
+	qboolean staggered = qfalse;
+
+	if (!attacker || !attacker->client)
+	{
+		return qfalse;
+	}
+
+	if (attacker->client->ps.weapon == WP_SABER)
+	{// This is the attacker's saber stance timer chance. So slower stances increase the chance they can get staggered in a swing. If you swing harder, being blocked hurts you more.
+		switch (attacker->client->ps.fd.saberAnimLevel)
+		{
+		case SS_FAST:
+			attackerStanceStaggerChance = 10; // 10% chance.
+			break;
+		case SS_MEDIUM:
+			attackerStanceStaggerChance = 30; // 30% chance.
+			break;
+		case SS_STRONG:
+			attackerStanceStaggerChance = 50; // 50% chance.
+			break;
+		case SS_STAFF:
+			attackerStanceStaggerChance = 40; // 40% chance.
+			break;
+		case SS_DUAL:
+			attackerStanceStaggerChance = 40; // 40% chance.
+			break;
+		default:
+			attackerStanceStaggerChance = 30; // 30% chance.
+			break;
+		}
+	}
+
+
+	if (defender->client->ps.weapon == WP_SABER)
+	{// This stuff here is more about timing, allowing levels to make timing easier.
+		float defenderStanceStaggerChanceMod = 0.666f;
+		float defenderTimingStaggerChanceMod = 0.0f;
+		int finalStaggerChance = 0;
+
+		if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+		{
+			defenderStanceStaggerChanceMod *= 1.666f;
+		}
+		else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+		{//level 2 defense lowers back damage more
+			defenderStanceStaggerChanceMod *= 1.333f;
+		}
+		else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+		{//level 1 defense lowers back damage a bit
+			defenderStanceStaggerChanceMod *= 1.0f;
+		}
+		else
+		{
+			defenderStanceStaggerChanceMod = 0.666f;
+		}
+
+#define DEFAULT_BLOCK_TIME_MAX_MILLISECONDS g_saberPerfectBlockMaxTime.integer//300 timing is very good.
+
+		// How long (max) block is valid for. So, this might be 100ms with extra time given with higher skill level.
+		int blockMaxMilliseconds = (int)((float)DEFAULT_BLOCK_TIME_MAX_MILLISECONDS * defenderStanceStaggerChanceMod);
+		// How long ago block was pressed. Up to maximum time of blockMaxMilliseconds.
+		int blockStartMilliseconds = level.time - defender->client->blockStartTime;
+
+		Com_Printf("STAGGER TIMING: >>> blockStartMilliseconds %i. blockMaxMilliseconds was %i. <<<\n", blockStartMilliseconds, blockMaxMilliseconds);
+
+		if (defender->client->blockStartTime > 0
+			&& blockStartMilliseconds >= 0 // We hit block before the clash. Probably not possible to happen
+			&& blockStartMilliseconds <= blockMaxMilliseconds)
+		{// So, if block was hit within around DEFAULT_BLOCK_TIME_MAX_MILLISECONDS (modified by skill above), set defender timing mod...
+		 // The closer the time between when the defender hit block and when the sabers clashed, the higher the chance of a stagger.
+			defenderTimingStaggerChanceMod = 1.0 - ((float)blockStartMilliseconds / (float)blockMaxMilliseconds);
+			Com_Printf("STAGGER TIMING: Block pressed at right time. Chance of stagger %f.\n", defenderTimingStaggerChanceMod);
+		}
+		else
+		{
+			Com_Printf("STAGGER TIMING: Block pressed too early, or late. blockStartMilliseconds %i. blockMaxMilliseconds was %i.\n", blockStartMilliseconds, blockMaxMilliseconds);
+		}
+
+		if (defender->client->blockStartTime > 0 && blockStartMilliseconds >= 0 && defenderTimingStaggerChanceMod > 0.0f)
+		{
+#if 0
+			int forcePercent = (int)(((float)attacker->client->ps.fd.forcePower / (float)attacker->client->ps.fd.forcePowerMax) * 100.0);
+
+			if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_3)
+			{
+				if (forcePercent < 20) defenderStanceStaggerChanceMod *= 0.25;//80 fp or above do stagger if pressed in the tight time
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_2)
+			{//level 2 defense lowers back damage more
+				if (forcePercent < 30) defenderStanceStaggerChanceMod *= 0.333;//70 fp or above do stagger if pressed in the tight time
+			}
+			else if (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] == FORCE_LEVEL_1)
+			{//level 1 defense lowers back damage a bit
+				if (forcePercent < 40) defenderStanceStaggerChanceMod *= 0.5;//60 fp or above do stagger if pressed in the tight time
+			}
+			else
+			{
+				if (forcePercent < 50) defenderStanceStaggerChanceMod *= 1.25;//50 fp or above do stagger if pressed in the tight time
+			}
+#else
+			float fpPercent = (float)attacker->client->ps.fd.forcePower / (float)attacker->client->ps.fd.forcePowerMax;
+			float skillReduction = 1.0f;
+
+			switch (defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE])
+			{// If the defender's skill is higher, reduce the chance of stagger.
+			case FORCE_LEVEL_3:
+				skillReduction *= 0.66f;
+				break;
+			case FORCE_LEVEL_2:
+				skillReduction *= 0.75f;
+				break;
+			case FORCE_LEVEL_1:
+				skillReduction *= 0.90f;
+				break;
+			default:
+				break;
+			}
+
+			skillReduction *= fpPercent; // reduce the chance of stagger as defender's force gets lower. should this maybe have a minimum?
+			defenderStanceStaggerChanceMod *= (skillReduction < 0.25) ? 0.25 : skillReduction; // but always a 25% chance.
+#endif
+
+			finalStaggerChance = (int)((float)attackerStanceStaggerChance * defenderStanceStaggerChanceMod * defenderTimingStaggerChanceMod);
+			finalStaggerChance = Q_clampi(0, finalStaggerChance, 100);
+
+			//Com_Printf("STAGGER DEBUG: finalStaggerChance %i. blockStartMilliseconds %i. blockMaxMilliseconds was %i. forcePercent %i. defenderTimingStaggerChanceMod was %f.", finalStaggerChance, blockStartMilliseconds, blockMaxMilliseconds, forcePercent, defenderTimingStaggerChanceMod);
+			Com_Printf("STAGGER DEBUG: finalStaggerChance %i. blockStartMilliseconds %i. blockMaxMilliseconds was %i. forcePercent %i. defenderTimingStaggerChanceMod was %f.", finalStaggerChance, blockStartMilliseconds, blockMaxMilliseconds, (int)(fpPercent*100.0), defenderTimingStaggerChanceMod);
+
+			int chance = Q_irand(0, 100);
+
+			if (chance <= finalStaggerChance)
+			{
+				//G_Stagger(attacker, defender, qtrue); // delayed by 1 frame now instead
+				attacker->client->blockStaggerDefender = defender;
+				Com_Printf("STAGGER DEBUG: %s was staggered by perfect block. roll %i <= %i\n", attacker->client->pers.netname, chance, finalStaggerChance);
+				staggered = qtrue;
+			}
+			else
+			{
+				Com_Printf("STAGGER DEBUG: %s was NOT staggered by bad roll. roll %i > %i\n", attacker->client->pers.netname, chance, finalStaggerChance);
+			}
+		}
+	}
+
+	return staggered;
+}
+#endif __TIMED_STAGGER__
+
 qboolean PM_RunningAnim(int anim);
-//qboolean OJP_UsingDualSaberAsPrimary(playerState_t *ps);
 extern qboolean BG_SuperBreakWinAnim(int anim);
 extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
 int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum)
@@ -3065,7 +3513,19 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 		return 0;
 	}
 
-	if (!(self->s.weapon == WP_SABER && (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK)))
+#ifdef __TIMED_STAGGER__
+	if (self->client->blockStaggerDefender || PM_StaggerAnim(self->client->ps.torsoAnim))
+	{// can't block in a stagger animation
+		return 0;
+	}
+
+	if (atk && atk->client && (atk->client->blockStaggerDefender || PM_StaggerAnim(atk->client->ps.torsoAnim)))
+	{// they can't be blocked more then they already are, when in a stagger animation
+		return 0;
+	}
+#endif //__TIMED_STAGGER__
+
+	if (!(self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK))
 	{//you can't block if you don't hold down block button.
 		return 0;
 	}
@@ -3125,6 +3585,7 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 		return 0;
 	}
 
+
 	//BIG NOTE. this is where we see if we are blocking or not when swing with our saber. 
 	// an open spot should be maked here so if you block the wrong way you should take damage and still no saber pass thue.
 	if (atk && atk->client && atk->client->ps.weapon == WP_SABER)
@@ -3134,10 +3595,56 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 			return 0;
 		}
 
+		//[NewSaberSys2]
+		//if ((atk->client->ps.torsoAnim) && self->client->ps.fd.forcePower <= 5)
+		//{//can't block super breaks when in critical FP.
+		//	return 0;
+		//}
+		//[/NewSaberSys2]
+
 		float blockFactor = cos(DEG2RAD(90)); // 0																		//-.7f
-		if (!InFront(atk->client->ps.origin, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
+											  // this is checking filed of view of 90 degrees foreward. that should be fine, most of the time. it could maybe be 120 to allow a little more to left or right. trying 120
+											  //can't do this, saber goes thrugh blocking old ways needs to be where its at, and move stagger to its own infront call.
+		qboolean inFront = (qboolean)(InFront(atk->client->ps.origin, self->client->ps.origin, self->client->ps.viewangles, blockFactor) && InFront(self->client->ps.origin, atk->client->ps.origin, atk->client->ps.viewangles, blockFactor));
+		qboolean inAttack = (qboolean)(BG_SaberInAttack(self->client->ps.saberMove) || PM_SaberInStart(self->client->ps.saberMove));
+		//if (atk->client->ps.saberMove == LS_READY || atk->client->ps.saberMove == 70) inAttack = qfalse;
+
+		if (!inFront || inAttack /*|| PM_RunningAnim(atk->client->ps.legsAnim)*/)
+		{//can't block or stagger saber swings while running and hit from behind or in swing.
+			return 0;
+		}
+
+		qboolean staggered = qfalse;
+
+#ifdef __TIMED_STAGGER__
+		if (inFront)
+		{
+			staggered = CheckStagger(self, atk);
+		}
+#endif //__TIMED_STAGGER__
+
+		if (staggered || PM_InKnockDown(&self->client->ps) || PM_SaberInParry(self->client->ps.saberMove))
+		{//can't block while knocked down or getting up from knockdown, or we are already in a parry anim.
+			return 0;
+		}
+
+		if (PM_InKnockDown(&atk->client->ps) || PM_SaberInParry(atk->client->ps.saberMove))
+		{//can't block them while they are knocked down or getting up from knockdown, or they are already in a parry anim.
+			return 0;
+		}
+
+		//trap_Print(va("inFront %s. inAttack %s.\n", inFront ? "true" : "false", inAttack ? "true" : "false"));
+
+#if 0
+		if (!inFront || !inAttack)
+			/*if (!InFront(atk->client->ps.origin, self->client->ps.origin, self->client->ps.viewangles, blockFactor)
 			|| BG_SaberInAttack(self->client->ps.saberMove)
-			|| PM_SaberInStart(self->client->ps.saberMove))
+			|| PM_SaberInStart(self->client->ps.saberMove)
+			//New Test code.
+			&& !(PM_SaberInParry(self->client->ps.saberMove)
+			|| atk->client->ps.saberMove == LS_READY
+			|| atk->client->ps.saberMove == 70
+			|| SaberAttacking(self)))*/
 		{//can't block saber swings while running and hit from behind or in swing.
 
 		 //if (self->NPC)
@@ -3151,6 +3658,7 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 
 			return 0;
 		}
+#endif
 
 #if 0
 		// Check that we are blocking in the correct direction, otherwise we're not allowed to block
@@ -3248,8 +3756,55 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 
 	}
 
+	int forceUsage = G_SaberFPDrain(self, atk, point);
+
+	if (self->client->ps.fd.forcePower < forceUsage)
+	{// Not enough power to block.
+		return 0;
+	}
+
+#ifdef __TIMED_STAGGER__
+	if (self->client->blockStaggerDefender || PM_StaggerAnim(self->client->ps.torsoAnim))
+	{
+		// if we just got staggered in the block check, don't continue here, let the anim play. 
+		// Without this we might have returned a 1 and our anim this frame would be changed by the old block code.
+		return 0;
+	}
+
+	if (atk && atk->client && (atk->client->blockStaggerDefender || PM_StaggerAnim(atk->client->ps.torsoAnim)))
+	{
+		// if they just got staggered in the block check, don't continue here, let the anim play. 
+		// Without this we might have returned a 1 and our anim this frame would be changed by the old block code.
+		return 0;
+	}
+#endif //__TIMED_STAGGER__
+
+	//[/NewSaberSys2]
+
 	if (!checkBBoxBlock)
 	{//don't do the additional checkBBoxBlock checks.  As such, we're safe to saber block.
+		if (forceUsage < 0)
+		{// We got power back. Put here because its just before saying block too. if you dint block anything, you shouldnt get power back
+			self->client->ps.fd.forcePower += -forceUsage; // makes it negative what it was, but it was negative already, so it becomes positive again.
+
+			if (self->client->ps.fd.forcePower > self->client->ps.fd.forcePowerMax)
+			{// Never go over max FP...
+				self->client->ps.fd.forcePower = self->client->ps.fd.forcePowerMax;
+			}
+
+			forceUsage = 0; // since its been given
+		}
+
+		if (forceUsage > 0)
+		{// Actually drain it :)
+			self->client->ps.fd.forcePower -= forceUsage;
+
+			if (self->client->ps.fd.forcePower < 0)
+			{
+				self->client->ps.fd.forcePower = 0;
+			}
+		}
+
 		return 1;
 	}
 
@@ -3288,6 +3843,28 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 		}
 	}
 #endif
+
+	if (forceUsage < 0)
+	{// We got power back. Put here because its just before saying yes block
+		self->client->ps.fd.forcePower += -forceUsage; // makes it negative what it was, but it was negative already, so it becomes positive again.
+
+		if (self->client->ps.fd.forcePower > self->client->ps.fd.forcePowerMax)
+		{// Never go over max FP...
+			self->client->ps.fd.forcePower = self->client->ps.fd.forcePowerMax;
+		}
+
+		forceUsage = 0; // since its been given
+	}
+
+	if (forceUsage > 0)
+	{// Actually drain it :)
+		self->client->ps.fd.forcePower -= forceUsage;
+
+		if (self->client->ps.fd.forcePower < 0)
+		{
+			self->client->ps.fd.forcePower = 0;
+		}
+	}
 
 	return 1;
 }
@@ -3341,6 +3918,13 @@ qboolean AddRealTraceContent(int entityNum)
 			g_entities[entityNum].r.contents = 0;
 			return qtrue;
 		}
+		else if (RealTraceContent[i].entNum == entityNum)
+		{
+			// entity data already stored, just make sure it is blanked
+			g_entities[entityNum].r.contents = 0;
+
+			return qtrue;
+		}
 	}
 
 	//All slots already used. 
@@ -3380,6 +3964,7 @@ void RestoreRealTraceContent(void)
 #define REALTRACE_MISS				0 //didn't hit anything
 #define REALTRACE_HIT				1 //hit object normally
 #define REALTRACE_SABERBLOCKHIT		2 //hit a player who used a bounding box dodge saber block
+#define REALTRACE_PLAYER			3 //hit a player
 static QINLINE int Finish_RealTrace(trace_t *results, trace_t *closestTrace, vec3_t start, vec3_t end)
 {//this function reverts the real trace content removals and finishs up the realtrace
  //restore all the entities we blanked out.
@@ -3478,6 +4063,13 @@ int G_RealTrace(gentity_t *attacker, trace_t *tr, vec3_t start, vec3_t mins,
 					tr->fraction = CalcTraceFraction(start, end, tr->endpos);
 				}
 
+				if (currentEnt->client->ps.stats[STAT_HEALTH] <= 0)
+				{
+					AddRealTraceContent(currentEntityNum);
+					TraceCopy(tr, &closestTrace);
+					return REALTRACE_MISS;
+				}
+
 				if (tr->fraction < closestFraction)
 				{//this is the closest known hit object for this trace, so go ahead and count the bbox block as the closest impact.
 					RestoreRealTraceContent();
@@ -3485,6 +4077,12 @@ int G_RealTrace(gentity_t *attacker, trace_t *tr, vec3_t start, vec3_t mins,
 					//act like the saber was hit instead of us.
 					tr->entityNum = currentEnt->client->saberStoredIndex;
 					return REALTRACE_SABERBLOCKHIT;
+				}
+				if (tr->fraction < closestFraction)
+				{//this is the closest known hit object for this trace, so go ahead and count the bbox block as the closest impact.
+					AddRealTraceContent(currentEntityNum);
+					TraceCopy(&closestTrace, tr);
+					return REALTRACE_PLAYER;
 				}
 				else
 				{//something else ghoul2 related was already hit and was closer, skip to end of function
@@ -5052,7 +5650,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		//	otherOwner = NULL;
 		//}
 		//else 
-		if (realTraceResult == REALTRACE_SABERBLOCKHIT)
+		if (realTraceResult == REALTRACE_SABERBLOCKHIT || realTraceResult == REALTRACE_PLAYER)
 		{//this is actually a faked lightsaber hit to make the bounding box saber blocking work.
 		 //As such, we know that the player can block, set the approprate block position for this attack.
 			CheckManualBlocking(self, otherOwner);
@@ -5061,6 +5659,10 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 			WP_SaberBlockNonRandom(otherOwner, tr.endpos, qfalse);
 #endif //__MISSILES_AUTO_PARRY__		
 			//[/SaberSys]
+		}
+		else if (realTraceResult == REALTRACE_MISS)
+		{
+			CheckManualBlocking(otherOwner, self);
 		}
 		else if (realTraceResult == REALTRACE_HIT)
 		{//successfully hit another player's saber blade directly
@@ -9193,6 +9795,18 @@ nextStep:
 			rSaberNum++;
 		}
 
+		// i don't know about this one here, hang on
+		if (self->client->blockStaggerDefender)
+		{// Delayed saber block stagger by 1 frame, and after the clash effect, above.
+			G_Stagger(self, self->client->blockStaggerDefender, qtrue);
+
+			self->client->blockStaggerDefender = NULL; // Init after we started the stagger anim...
+		}
+		else
+		{// Just in case...
+			self->client->blockStaggerDefender = NULL;
+		}
+
 		//[SaberSys]
 		//Needed to move this into the CheckSaberDamage function for bounce calculations
 		//WP_SaberApplyDamage( self );
@@ -9531,6 +10145,13 @@ qboolean WP_SaberCanBlock(gentity_t *atk, gentity_t *self, vec3_t point, vec3_t 
 		self->client->ps.saberMove = LS_NONE;
 		self->client->ps.saberBlocked = BLOCKED_NONE;
 		return qtrue;
+	}
+
+	if (self && self->client && self->client->StaggerAnimTime > level.time &&
+		(self->client->ps.torsoAnim == BOTH_H1_S1_T_) &&
+		self->client->ps.weaponTime > level.time)
+	{
+		return qfalse;
 	}
 
 	if (projectile && saberInAttack && InFront(originpoint, self->client->ps.origin, self->client->ps.viewangles, blockFactor)

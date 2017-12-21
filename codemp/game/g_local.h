@@ -1035,6 +1035,12 @@ struct gclient_s {
 	qboolean	hasShield;
 	int			FPdeflectblockdrain;
 	//[/NewSaberSys]
+#ifdef __TIMED_STAGGER__
+	int			blockStartTime;
+	int			blockLastStartTime;
+	gentity_t	*blockStaggerDefender;
+	int			StaggerAnimTime;// hm better way to call this something else
+#endif //__TIMED_STAGGER__
 
 	//fallen duelist
 	qboolean	iAmALoser;
@@ -1673,7 +1679,7 @@ extern qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent
 extern qboolean G_ClearLOS4( gentity_t *self, gentity_t *ent );
 extern qboolean G_ClearLOS5( gentity_t *self, const vec3_t end );
 
-//[Create Dungeon]
+//[Create Dungeon]// wtf is it still here xD
 void Clear_Dungeon();
 void Load_Dungeon();
 void Save_Dungeon();

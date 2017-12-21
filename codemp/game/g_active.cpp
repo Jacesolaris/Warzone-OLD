@@ -1989,6 +1989,35 @@ void ClientThink_real( gentity_t *ent ) {
 		return;
 	}
 
+#ifdef __TIMED_STAGGER__
+	if (client->pers.cmd.buttons & BUTTON_ALT_ATTACK)
+	{// This player is holding block down, if he just started holding the button, record the time, for timing.
+		if (client->blockStartTime <= 0 && level.time - client->blockLastStartTime >= g_saberPerfectBlockWaitTime.integer)
+		{// They just pressed block. Mark the time... g_saberPerfectBlockWaitTime wait between allowed presses.
+			client->blockStartTime = level.time;
+			client->blockLastStartTime = level.time;
+			//Com_Printf("Block was pressed at time %i.\n", client->blockStartTime);
+		}
+		else
+		{// Still pressed.
+		 //if (client->blockStartTime <= 0)
+		 //Com_Printf("Block was already pressed at time %i.\n", client->blockStartTime);
+		}
+	}
+	else
+	{// No longer pressed, but we still need to make sure they are not spamming.
+		if (level.time - client->blockLastStartTime >= g_saberPerfectBlockWaitTime.integer)
+		{// When block was pressed, wait g_saberPerfectBlockWaitTime before letting go of block.
+			client->blockStartTime = 0;
+			//Com_Printf("Block is not pressed.\n");
+		}
+		else
+		{// Spam... Keep holding button.
+
+		}
+	}
+#endif //__TIMED_STAGGER__
+
 	// UQ1: Why do we have 2 health stats in JKA???
 	if (ent->s.eType == ET_NPC)
 	{

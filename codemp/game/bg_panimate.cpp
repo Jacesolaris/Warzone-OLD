@@ -1479,6 +1479,24 @@ qboolean PM_InSaberAnim(int anim)
 	return qfalse;
 }
 
+#ifdef __TIMED_STAGGER__
+qboolean PM_StaggerAnim(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_BASHED1:
+	case BOTH_H1_S1_T_:
+	case BOTH_H1_S1_TR:
+	case BOTH_H1_S1_TL:
+	case BOTH_H1_S1_BL:
+	case BOTH_H1_S1_B_:
+	case BOTH_H1_S1_BR:
+		return qtrue;
+	default: return qfalse;
+	}
+}
+#endif //__TIMED_STAGGER__
+
 //[KnockdownSys]
 //[SPPortCompete]
 qboolean PM_InForceGetUp(playerState_t *ps)

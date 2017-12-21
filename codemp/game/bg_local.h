@@ -124,6 +124,7 @@ qboolean PM_InGetUpAnimation(int anim);
 qboolean BG_InKnockDown(int anim);
 qboolean BG_SuperBreakWinAnim(int anim);
 qboolean BG_InGetUpAnim(playerState_t *ps);
+qboolean PM_StaggerAnim(int anim);
 //[/NewSaberSys]
 
 //[SaberSys]
