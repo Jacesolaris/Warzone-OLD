@@ -2371,6 +2371,11 @@ const void *RB_PostProcess(const void *data)
 	dstBox[2] = backEnd.viewParms.viewportWidth;
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
+	// Pre-linearize all possibly needed depth maps, in a single pass...
+	DEBUG_StartTimer("Linearize");
+	RB_LinearizeDepth();
+	DEBUG_EndTimer();
+
 	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL)
 		&& r_sunlightMode->integer >= 2
 		&& tr.screenShadowFbo
@@ -2423,7 +2428,8 @@ const void *RB_PostProcess(const void *data)
 
 		GLSL_BindProgram(&tr.shadowmaskShader);
 
-		GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
+		//GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
+		GL_BindToTMU(tr.linearDepthImageZfar, TB_COLORMAP);
 
 		GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
 		GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP, backEnd.refdef.sunShadowMvp[0]);
@@ -2455,18 +2461,24 @@ const void *RB_PostProcess(const void *data)
 			vec4_t viewInfo;
 			vec3_t viewVector;
 
-			float zmax = backEnd.viewParms.zFar;
-			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+			float zmax = r_occlusion->integer ? tr.occlusionOriginalZfar : backEnd.viewParms.zFar;// backEnd.viewParms.zFar;
+			//float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			//float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+
+			float zmax2 = backEnd.viewParms.zFar;// backEnd.viewParms.zFar;
+			float ymax2 = zmax2 * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax2 = zmax2 * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 
 			float zmin = r_znear->value;
 
-			VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
-			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);
-			VectorScale(backEnd.refdef.viewaxis[1], xmax, viewVector);
-			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT, viewVector);
-			VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
-			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP, viewVector);
+			vec3_t viewBasis[3];
+			VectorScale(backEnd.refdef.viewaxis[0], zmax2, viewBasis[0]);
+			VectorScale(backEnd.refdef.viewaxis[1], xmax2, viewBasis[1]);
+			VectorScale(backEnd.refdef.viewaxis[2], ymax2, viewBasis[2]);
+
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewBasis[0]);
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT, viewBasis[1]);
+			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP, viewBasis[2]);
 
 			VectorSet4(viewInfo, zmax / zmin, zmax, /*r_hdr->integer ? 32.0 :*/ 24.0, zmin);
 
@@ -2517,11 +2529,6 @@ const void *RB_PostProcess(const void *data)
 	if (srcFbo)
 	{
 		//ALLOW_NULL_FBO_BIND = qfalse;
-
-		// Pre-linearize all possibly needed depth maps, in a single pass...
-		DEBUG_StartTimer("Linearize");
-		RB_LinearizeDepth();
-		DEBUG_EndTimer();
 
 		DEBUG_StartTimer("Initial blit");
 		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);

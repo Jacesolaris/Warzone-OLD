@@ -211,7 +211,7 @@ void AddDetail(inout vec4 color, in vec2 tc)
 
 bool IsRoadmapMaterial ( void )
 {
-	if (SHADER_MATERIAL_TYPE == MATERIAL_SHORTGRASS || SHADER_MATERIAL_TYPE == MATERIAL_LONGGRASS || SHADER_MATERIAL_TYPE == MATERIAL_SAND || SHADER_MATERIAL_TYPE == MATERIAL_SNOW || SHADER_MATERIAL_TYPE == MATERIAL_MUD)
+	if (SHADER_MATERIAL_TYPE == MATERIAL_SHORTGRASS || SHADER_MATERIAL_TYPE == MATERIAL_LONGGRASS || SHADER_MATERIAL_TYPE == MATERIAL_SAND || SHADER_MATERIAL_TYPE == MATERIAL_SNOW || SHADER_MATERIAL_TYPE == MATERIAL_MUD || SHADER_MATERIAL_TYPE == MATERIAL_CONCRETE)
 	{
 		return true;
 	}
@@ -425,7 +425,8 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 			return vec4(control.rgb, 1.0);
 		}
 
-		if (USE_REGIONS > 0.0)
+		if (USE_REGIONS > 0.0 
+			&& (SHADER_HAS_SPLATMAP1 > 0 || SHADER_HAS_SPLATMAP2 > 0 || SHADER_HAS_SPLATMAP3 > 0 || SHADER_HAS_SPLATMAP4 > 0))
 		{// Regions...
 			return GenerateTerrainMap(texCoords);
 		}
@@ -636,88 +637,13 @@ void main()
 #endif
 
 
-#if 0 // Shouldn't need this on splatmap draws...
+#if 1 // Hmm using for buildings...
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
 
-	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
-	{
-		out_Glow = vec4(0.0);
-		out_Position = vec4(0.0);
-		out_Normal = vec4(0.0);
-		out_NormalDetail = vec4(0.0);
-	}
-	else if (USE_GLOW_BUFFER >= 2.0)
-	{// Merged diffuse+glow stage...
-		vec4 glowColor = texture(u_GlowMap, texCoords);
+	float maxColor = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
 
-		if (length(glowColor.rgb) <= 0.0)
-			glowColor.a = 0.0;
-
-#define GLSL_BLEND_ALPHA			0
-#define GLSL_BLEND_INVALPHA			1
-#define GLSL_BLEND_DST_ALPHA		2
-#define GLSL_BLEND_INV_DST_ALPHA	3
-#define GLSL_BLEND_GLOWCOLOR		4
-#define GLSL_BLEND_INV_GLOWCOLOR	5
-#define GLSL_BLEND_DSTCOLOR			6
-#define GLSL_BLEND_INV_DSTCOLOR		7
-
-		if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_DSTCOLOR)
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * (vec3(1.0) - gl_FragColor.rgb);
-		}
-		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_DSTCOLOR)
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * gl_FragColor.rgb;
-		}
-		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_GLOWCOLOR)
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * (vec3(1.0) - glowColor.rgb);
-		}
-		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_GLOWCOLOR)
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * glowColor.rgb;
-		}
-		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_DST_ALPHA)
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * (1.0 - gl_FragColor.a);
-		}
-		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_DST_ALPHA)
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * gl_FragColor.a;
-		}
-		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INVALPHA)
-		{
-			glowColor.rgb = (glowColor.rgb * (1.0 - glowColor.a));
-		}
-		else
-		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a);
-		}
-
-		if (SHADER_GLOW_VIBRANCY != 0.0)
-		{
-			glowColor.rgb = Vibrancy( glowColor.rgb, SHADER_GLOW_VIBRANCY );
-		}
-
-		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
-		glowColor.rgb *= SHADER_GLOW_STRENGTH;
-
-		if (length(glowColor.rgb) <= 0.0)
-			glowColor.a = 0.0;
-
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a * (length(glowColor.rgb) / 3.0));
-
-		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
-
-		out_Glow = vec4(glowColor.rgb, glowColor.a);
-
-		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-		out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, 1.0), 1.0 );
-		out_NormalDetail = norm;
-	}
-	else if (USE_GLOW_BUFFER > 0.0)
+	if (SHADER_MATERIAL_TYPE == MATERIAL_ROCK && var_Slope > 0 && SHADER_HAS_SPLATMAP1 <= 0 && SHADER_HAS_SPLATMAP2 <= 0 && SHADER_HAS_SPLATMAP3 <= 0 && SHADER_HAS_SPLATMAP4 <= 0 && maxColor > 0.1)
 	{
 		vec4 glowColor = gl_FragColor;
 

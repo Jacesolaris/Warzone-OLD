@@ -3120,6 +3120,21 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	}
 }
 
+static void R_CreateRoofMap(const char *name, byte *pic, int width, int height, int flags)
+{
+	char SubsurfaceName[MAX_IMAGE_PATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
+	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_roof");
+
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_ROOFMAP, normalFlags);
+}
+
 static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int height, int flags )
 {
 	char SubsurfaceName[MAX_IMAGE_PATH];
@@ -3578,7 +3593,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		/*&& type != IMGTYPE_SPLATMAP1 
 		&& type != IMGTYPE_SPLATMAP2 
 		&& type != IMGTYPE_SPLATMAP3*/
-		&& type != IMGTYPE_SPLATCONTROLMAP)
+		&& type != IMGTYPE_SPLATCONTROLMAP
+		&& type != IMGTYPE_ROOFMAP)
 	{// Don't bother to load anything but diffuse maps in cartoon mode. Save ram/vram. We don't need any of it...
 		return NULL;
 	}
@@ -3687,7 +3703,16 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 #endif //__CRC_IMAGE_HASHING__
 
 	vec4_t avgColor = { 0 };
-	R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
+	
+	if (type == IMGTYPE_COLORALPHA
+		|| type == IMGTYPE_STEEPMAP
+		|| (r_cartoon->integer && type == IMGTYPE_WATER_EDGE_MAP)
+		|| (r_cartoon->integer && type == IMGTYPE_SPLATMAP1)
+		|| (r_cartoon->integer && type == IMGTYPE_SPLATMAP2)
+		|| (r_cartoon->integer && type == IMGTYPE_SPLATMAP3))
+	{
+		R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
+	}
 	
 	//if (flags & IMGFLAG_GLOW)
 	//	ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
@@ -3696,7 +3721,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_DETAILMAP 
 		&& type != IMGTYPE_SPLATCONTROLMAP
 		&& !(flags & IMGFLAG_GLOW)
-		&& !StringContainsWord(name, "sky")
+		&& !(!StringContainsWord(name, "skyscraper") && StringContainsWord(name, "sky"))
 		&& !StringContainsWord(name, "skies")
 		&& (StringContainsWord(name, "textures/") 
 			|| (StringContainsWord(name, "models/") && !StringContainsWord(name, "icon") && !StringContainsWord(name, "players/"))
@@ -3828,12 +3853,13 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_SPLATMAP3 
 		&& type != IMGTYPE_SPLATCONTROLMAP
 		&& type != IMGTYPE_DETAILMAP
+		&& type != IMGTYPE_ROOFMAP
 		&& !(flags & IMGFLAG_CUBEMAP))
 	{
 		if (r_normalMapping->integer >= 2) 
 		{
 			if (image
-				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
+				&& !((StringContainsWord(name, "sky") && !StringContainsWord(name, "skyscraper")) || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
 			{
 				GL_Bind(image);
 				R_CreateNormalMap( name, pic, width, height, flags, image );
@@ -3854,6 +3880,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 		R_CreateSteepMap( name, pic, width, height, flags );
 		R_CreateWaterEdgeMap( name, pic, width, height, flags );
+
+		R_CreateRoofMap(name, pic, width, height, flags);
 	}
 
 #ifdef __TINY_IMAGE_LOADER__
@@ -4285,13 +4313,13 @@ void R_CreateBuiltinImages( void ) {
 	{
 		for ( x = 0; x < 5; x++)
 		{
-			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrDepth);
+			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 		}
 
-		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
+		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
 	}
 
 	if (r_cubeMapping->integer >= 1)

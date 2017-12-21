@@ -19,7 +19,7 @@ varying float		var_FocalDepth;
 float GetLinearDepth(float depth)
 {
 	//return  1 / ((depth * ((u_ViewInfo.g - u_ViewInfo.r) / (-u_ViewInfo.g * u_ViewInfo.r)) + u_ViewInfo.g / (u_ViewInfo.g * u_ViewInfo.r)));
-	return depth * 255.0;
+	return depth;// * 255.0;
 }
 
 float GetFocalDepth(vec2 focalpoint)
@@ -36,7 +36,15 @@ float GetFocalDepth(vec2 focalpoint)
 	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(0.1, 0.1)).x) * 0.999;
 	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(-0.1, 0.1)).x) * 0.999;
 	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(0.1, -0.1)).x) * 0.999;
+#if 1 // More focus checking, to blend over time better...
+	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(-0.2, -0.2)).x) * 0.999 * 0.5;
+	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(0.2, 0.2)).x) * 0.999 * 0.5;
+	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(-0.2, 0.2)).x) * 0.999 * 0.5;
+	depthsum+=GetLinearDepth(texture(u_ScreenDepthMap,focalpoint+vec2(0.2, -0.2)).x) * 0.999 * 0.5;
+	depthsum = depthsum/7.0;
+#else
 	depthsum = depthsum/5.0;
+#endif
 #endif //BLUR_FOCUS
 
 	return depthsum; 

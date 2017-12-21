@@ -18,9 +18,9 @@ vec2 sampleOffset = vec2(1.0/u_Dimensions);
 #define PIOVER180 0.017453292
 
 //MATSO DOF
-#define fMatsoDOFChromaPow		2.4		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
-#define fMatsoDOFBokehCurve		6.0		// [0.5 to 20.0] Bokeh curve.
-#define fMatsoDOFBokehLight		4.0//0.512 	// [0.0 to 2.0] Bokeh brightening factor.
+#define fMatsoDOFChromaPow		3.0		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
+#define fMatsoDOFBokehCurve		2.4		// [0.5 to 20.0] Bokeh curve.
+#define fMatsoDOFBokehLight		0.512 	// [0.0 to 2.0] Bokeh brightening factor.
 #define fMatsoDOFBokehAngle		10		// [0 to 360] Rotation angle of bokeh shape.
 
 #if defined(FAST_DOF)
@@ -42,10 +42,6 @@ vec2 sampleOffset = vec2(1.0/u_Dimensions);
 
 const vec2 tdirs[4] = vec2[4]( vec2(-0.306, 0.739), vec2(0.306, 0.739), vec2(-0.739, 0.306), vec2(-0.739, -0.306) );
 
-float ExpandDepth(float depth)
-{
-	return depth * 255.0;
-}
 
 float GetGlowStrength(vec2 coord)
 {
@@ -76,8 +72,8 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 {
 	vec4 tcol = texture2D(SamplerHDRX, coord.xy);
 	float focalDepth = var_FocalDepth;
-	float coordDepth = ExpandDepth(texture2D(u_ScreenDepthMap, coord.xy).x);
-	float depthDiff = (coordDepth - focalDepth);
+	float coordDepth = texture2D(u_ScreenDepthMap, coord.xy).x;
+	float depthDiff = (coordDepth - focalDepth) * 3.0;
 	vec2 discRadius = (depthDiff * float(DOF_BLURRADIUS)) * sampleOffset.xy * 0.5 / float(iMatsoDOFBokehQuality);
 	float wValue = 1.0;
 	

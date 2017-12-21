@@ -125,10 +125,10 @@ vec4 dssdo_accumulate(vec2 tex)
 
 		attenuation = attenuation*attenuation * /*aastep*/step(attenuation_angle_threshold, dp);
 
-		occlusion_sh2 += attenuation * sh2_weight*vec4(center_to_sample_normalized,1);
+		occlusion_sh2 += attenuation * sh2_weight * vec4(center_to_sample_normalized, 1.0);
 	}
 
-	return occlusion_sh2;
+	return vec4(occlusion_sh2.rgb, 1.0);
 }
 
 void main() 

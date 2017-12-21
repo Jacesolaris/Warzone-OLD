@@ -1331,6 +1331,11 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 			hasSplatMap4 = 1.0;
 		}
 
+		if (pStage->bundle[TB_ROOFMAP].image[0])
+		{
+			hasSteepMap = 1.0;
+		}
+
 		if (pStage->isFoliage)
 		{
 			doSway = 0.7;
@@ -2295,7 +2300,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			if (((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+				&& pStage->bundle[TB_STEEPMAP].image[0]
+				&& !pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+				&& !pStage->bundle[TB_SPLATMAP1].image[0]
+				&& !pStage->bundle[TB_SPLATMAP2].image[0]
+				&& !pStage->bundle[TB_SPLATMAP3].image[0])
+			{// Procedural city sky scraper texture, use triplanar, not regions...
+				index |= LIGHTDEF_USE_TRIPLANAR;
+			}
+			else if (((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2309,6 +2323,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				|| pStage->bundle[TB_SPLATMAP1].image[0]
 				|| pStage->bundle[TB_SPLATMAP2].image[0]
 				|| pStage->bundle[TB_SPLATMAP3].image[0]))
+			{
+				index |= LIGHTDEF_USE_TRIPLANAR;
+			}
+			else if (pStage->bundle[TB_ROOFMAP].image[0])
 			{
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
@@ -2755,7 +2773,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP); // really need to make a blured (possibly also considering heightmap) version of this...
 					}
 
-					if (pStage->bundle[TB_STEEPMAP].image[0])
+					if (pStage->bundle[TB_ROOFMAP].image[0])
+					{// DiffuseMap becomes the steep texture...
+						GL_BindToTMU(pStage->bundle[TB_DIFFUSEMAP].image[0], TB_STEEPMAP);
+					}
+					else if (pStage->bundle[TB_STEEPMAP].image[0])
 					{
 						GL_BindToTMU(pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP);
 					}
@@ -2888,7 +2910,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else
 			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_ROOFMAP].image[0]) // Roofmap becomes the triplanar flat surface texture...
+					R_BindAnimatedImageToTMU(&pStage->bundle[TB_ROOFMAP], TB_DIFFUSEMAP);
+				else if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 
 				if (!lightMapsDisabled)
