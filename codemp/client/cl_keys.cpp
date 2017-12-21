@@ -1441,7 +1441,9 @@ void CL_KeyEvent (int key, qboolean down, unsigned time) {
 		CL_KeyDownEvent( key, time );
 	else
 		CL_KeyUpEvent( key, time );
+#ifdef __ENGINE_AWESOMIUM__
 	Awesomium::KeyEvent(key, down);
+#endif //__ENGINE_AWESOMIUM__
 	WarzoneGUI::KeyEvent(key, down);
 }
 

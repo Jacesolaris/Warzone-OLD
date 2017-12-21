@@ -928,7 +928,9 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 		cl.mouseDy[cl.mouseIndex] += dy;
 	}
 	//Awesomium have right to know mouse coords at any time
+#ifdef __ENGINE_AWESOMIUM__
 	Awesomium::MouseEvent(dx, dy);
+#endif //__ENGINE_AWESOMIUM__
 	//WarzoneGUI::MouseEvent(dx, dy);
 }
 

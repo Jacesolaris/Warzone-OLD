@@ -1,3 +1,6 @@
+#include "qcommon\q_shared.h"
+
+#ifdef __ENGINE_AWESOMIUM__
 #include "Awesomium/WebCore.h"
 #include "Awesomium/BitmapSurface.h"
 #include "Awesomium/STLHelpers.h"
@@ -71,3 +74,4 @@ namespace Awesomium {
 	void RenderUserInterface(void);
 	void ShutdownUserInterface(void);
 }
+#endif //__ENGINE_AWESOMIUM__

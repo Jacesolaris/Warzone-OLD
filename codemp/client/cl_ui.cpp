@@ -15,10 +15,14 @@ void CL_ShutdownUI( void ) {
 
 	cls.uiStarted = qfalse;
 
-	if (cl_useAwesomium->integer) {
+#ifdef __ENGINE_AWESOMIUM__
+	if (cl_useAwesomium->integer) 
+	{
 		Awesomium::ShutdownUserInterface();
 	}
-	else {
+	else 
+#endif //__ENGINE_AWESOMIUM__
+	{
 		CL_UnbindUI();
 	}
 }
@@ -30,10 +34,14 @@ CL_InitUI
 */
 
 void CL_InitUI( void ) {
-	if (cl_useAwesomium->integer) {
+#ifdef __ENGINE_AWESOMIUM__
+	if (cl_useAwesomium->integer) 
+	{
 		Awesomium::InitUserInterface();
 	}
-	else {
+	else 
+#endif //__ENGINE_AWESOMIUM__
+	{
 		// load the dll
 		CL_BindUI();
 

@@ -409,6 +409,7 @@ void SCR_DrawScreenField(stereoFrame_t stereoFrame) {
 		return;
 	}
 
+#ifdef __ENGINE_AWESOMIUM__
 	if (cl_useAwesomium->integer) {
 		if (cls.state == CA_CINEMATIC) {
 			SCR_DrawCinematic();
@@ -417,7 +418,9 @@ void SCR_DrawScreenField(stereoFrame_t stereoFrame) {
 			Awesomium::RenderUserInterface();
 		}
 	}
-	else {
+	else 
+#endif //__ENGINE_AWESOMIUM__
+	{
 		// if the menu is going to cover the entire screen, we
 		// don't need to render anything under it
 		//actually, yes you do, unless you want clients to cycle out their reliable

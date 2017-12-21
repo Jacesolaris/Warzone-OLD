@@ -1,9 +1,11 @@
+#include "tr_local.h"
+
+#ifdef ___WARZONE_AWESOMIUM___
 // Various included headers
 #include "Awesomium/WebCore.h"
 #include "Awesomium/BitmapSurface.h"
 #include "Awesomium/STLHelpers.h"
 
-#include "tr_local.h"
 #include "glext.h"
 
 #include <algorithm>
@@ -370,3 +372,4 @@ int DrawAwesomium( char *URL, FBO_t *srcFbo ) {
 	}
 	return 0;
 }
+#endif //___WARZONE_AWESOMIUM___

@@ -1,3 +1,6 @@
+#include "qcommon\q_shared.h"
+
+#ifdef __ENGINE_AWESOMIUM__
 #include "client.h"
 #include "ui/keycodes.h"
 #include "cl_awesomium.h"
@@ -172,3 +175,4 @@ namespace Awesomium {
 		Window::mainInterface = nullptr;
 	}
 }
+#endif //__ENGINE_AWESOMIUM__

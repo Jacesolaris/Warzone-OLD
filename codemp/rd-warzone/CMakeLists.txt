@@ -104,34 +104,34 @@ set(MPWarzoneGhoul2Files
 source_group("ghoul2" FILES ${MPWarzoneGhoul2Files})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneGhoul2Files})
 
-set(MPWarzoneAwesomiumFiles
-	"${MPDir}/rd-warzone/Awesomium/BitmapSurface.h"
-	"${MPDir}/rd-warzone/Awesomium/ChildProcess.h"
-	"${MPDir}/rd-warzone/Awesomium/DataPak.h"
-	"${MPDir}/rd-warzone/Awesomium/DataSource.h"
-	"${MPDir}/rd-warzone/Awesomium/JSArray.h"
-	"${MPDir}/rd-warzone/Awesomium/JSObject.h"
-	"${MPDir}/rd-warzone/Awesomium/JSValue.h"
-	"${MPDir}/rd-warzone/Awesomium/Platform.h"
-	"${MPDir}/rd-warzone/Awesomium/PrintConfig.h"
-	"${MPDir}/rd-warzone/Awesomium/ResourceInterceptor.h"
-	"${MPDir}/rd-warzone/Awesomium/STLHelpers.h"
-	"${MPDir}/rd-warzone/Awesomium/Surface.h"
-	"${MPDir}/rd-warzone/Awesomium/WebConfig.h"
-	"${MPDir}/rd-warzone/Awesomium/WebCore.h"
-	"${MPDir}/rd-warzone/Awesomium/WebKeyboardCodes.h"
-	"${MPDir}/rd-warzone/Awesomium/WebKeyboardEvent.h"
-	"${MPDir}/rd-warzone/Awesomium/WebMenuItem.h"
-	"${MPDir}/rd-warzone/Awesomium/WebPreferences.h"
-	"${MPDir}/rd-warzone/Awesomium/WebSession.h"
-	"${MPDir}/rd-warzone/Awesomium/WebString.h"
-	"${MPDir}/rd-warzone/Awesomium/WebStringArray.h"
-	"${MPDir}/rd-warzone/Awesomium/WebTouchEvent.h"
-	"${MPDir}/rd-warzone/Awesomium/WebURL.h"
-	"${MPDir}/rd-warzone/Awesomium/WebView.h"
-	"${MPDir}/rd-warzone/Awesomium/WebViewListener.h")
-source_group("Awesomium Headers" FILES ${MPWarzoneAwesomiumFiles})
-set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAwesomiumFiles})
+#set(MPWarzoneAwesomiumFiles
+#	"${MPDir}/rd-warzone/Awesomium/BitmapSurface.h"
+#	"${MPDir}/rd-warzone/Awesomium/ChildProcess.h"
+#	"${MPDir}/rd-warzone/Awesomium/DataPak.h"
+#	"${MPDir}/rd-warzone/Awesomium/DataSource.h"
+#	"${MPDir}/rd-warzone/Awesomium/JSArray.h"
+#	"${MPDir}/rd-warzone/Awesomium/JSObject.h"
+#	"${MPDir}/rd-warzone/Awesomium/JSValue.h"
+#	"${MPDir}/rd-warzone/Awesomium/Platform.h"
+#	"${MPDir}/rd-warzone/Awesomium/PrintConfig.h"
+#	"${MPDir}/rd-warzone/Awesomium/ResourceInterceptor.h"
+#	"${MPDir}/rd-warzone/Awesomium/STLHelpers.h"
+#	"${MPDir}/rd-warzone/Awesomium/Surface.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebConfig.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebCore.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebKeyboardCodes.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebKeyboardEvent.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebMenuItem.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebPreferences.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebSession.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebString.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebStringArray.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebTouchEvent.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebURL.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebView.h"
+#	"${MPDir}/rd-warzone/Awesomium/WebViewListener.h")
+#source_group("Awesomium Headers" FILES ${MPWarzoneAwesomiumFiles})
+#set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAwesomiumFiles})
 
 set(MPWarzoneMaskedOcclusionCullingFiles
 	"${MPDir}/rd-warzone/MaskedOcclusionCulling/CullingThreadpool.cpp"
@@ -319,7 +319,8 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib")
+#target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib")
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/glsl_optimizer_lib")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)
