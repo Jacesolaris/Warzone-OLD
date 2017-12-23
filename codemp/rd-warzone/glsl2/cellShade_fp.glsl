@@ -9,10 +9,20 @@ varying vec2		var_TexCoords;
 
 vec2 pixelSize = vec2(1.0) / u_Dimensions;
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 vec3 normals(vec2 tex)//get normal vector from normalmap
 {
-	vec3 norm = textureLod(u_NormalMap, tex, 0.0).xyz * 2.0 - 1.0;
-	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	vec3 norm = textureLod(u_NormalMap, tex, 0.0).xyz;// * 2.0 - 1.0;
+	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	norm.xyz = DecodeNormal(norm.xy);
 	return norm.xyz;
 }
 

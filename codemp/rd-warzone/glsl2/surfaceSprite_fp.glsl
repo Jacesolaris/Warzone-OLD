@@ -33,6 +33,12 @@ out vec4 out_Position;
 out vec4 out_Normal;
 out vec4 out_NormalDetail;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 void main()
 {
 	const float alphaTestValue = 0.5;
@@ -51,7 +57,7 @@ void main()
 	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)
 	{
 		out_Position = vec4(var_vertPos.xyz, MATERIAL_GREENLEAVES+1.0);
-		out_Normal = vec4( var_Normal.xyz * 0.5 + 0.5, 1.0 );
+		out_Normal = vec4( EncodeNormal(var_Normal.xyz), 0.0, 1.0 );
 		out_NormalDetail = vec4(0.0);
 	}
 	else

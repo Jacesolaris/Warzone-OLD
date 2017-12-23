@@ -20,6 +20,12 @@ out vec4 out_Normal;
 out vec4 out_Position;
 out vec4 out_NormalDetail;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 void main()
 {
 	/* TODO: add color, reflection, animated bump mapping, refraction and fresnel */
@@ -66,7 +72,7 @@ void main()
 	{
 		out_Color = vec4(waterColor.xyz, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 		return;
@@ -75,7 +81,7 @@ void main()
 	{
 		out_Color = vec4(shallowColor.xyz, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 		return;
@@ -84,7 +90,7 @@ void main()
 	{
 		out_Color = vec4(deepColor.xyz, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 		return;
@@ -93,7 +99,7 @@ void main()
 	{
 		out_Color = vec4(nBump.xyz * 0.5 + 0.5, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 		return;
@@ -102,7 +108,7 @@ void main()
 	{
 		out_Color = vec4(newN.xyz * 0.5 + 0.5, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 		return;
@@ -111,7 +117,7 @@ void main()
 	{
 		out_Color = vec4(n.xyz * 0.5 + 0.5, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 		return;
@@ -119,7 +125,7 @@ void main()
 	
 	out_Color = waterColor + reflecColor * fastFresnel + refraction * (1-fastFresnel);
 	out_Glow = vec4(0.0);
-	out_Normal = vec4(newN * 0.5 + 0.5, 1.0);
+	out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 	out_NormalDetail = vec4(0.0);
 	out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
 }

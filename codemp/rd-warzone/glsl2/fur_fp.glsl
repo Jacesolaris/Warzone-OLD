@@ -20,6 +20,12 @@ out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 void main()
 {
 	vec3 normal = normalize(v_normal);
@@ -34,6 +40,6 @@ void main()
 	gl_FragColor = vec4(vec3(0.0, color, 0.0) * intensity, furStrength > 0.5 ? 1.0 : 0.0);
 
 	out_Position = vec4(v_position.xyz, furStrength > 0.5 ? 1.0 : 0.0);
-	out_Normal = vec4(v_normal.xyz * 0.5 + 0.5, furStrength > 0.5 ? 1.0 : 0.0);
+	out_Normal = vec4(EncodeNormal(v_normal.xyz), 0.0, furStrength > 0.5 ? 1.0 : 0.0);
 	out_Glow = vec4(0.0);
 }

@@ -13,17 +13,30 @@ uniform vec3		u_ViewOrigin;
 
 varying vec2		var_TexCoords;
 
+
 #define znear		u_ViewInfo.r									//camera clipping start
 #define zfar		u_ViewInfo.g									//camera clipping end
 #define zfar2		u_ViewInfo.a									//camera clipping end
 
-float linearize(float depth)
+
+vec2 EncodeNormal(in vec3 N)
 {
-	return depth;
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
 }
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
+
 float getDepth(vec2 coord) {
-    return linearize(texture(u_ScreenDepthMap, coord).r);
+    return texture(u_ScreenDepthMap, coord).r;
 }
 
 float linearize2(float depth)
@@ -34,7 +47,8 @@ float linearize2(float depth)
 }
 
 float getDepth2(vec2 coord) {
-    return linearize2(texture(u_ScreenDepthMap, coord).r);
+    //return linearize2(texture(u_ScreenDepthMap, coord).r);
+	return texture(u_ScreenDepthMap, coord).r;
 }
 
 vec3 getViewPosition(vec2 coord) {
@@ -43,7 +57,6 @@ vec3 getViewPosition(vec2 coord) {
 }
 
 vec3 getViewNormal(vec2 coord) {
-    
     vec3 p0 = getViewPosition(coord);
     vec3 p1 = getViewPosition(coord + vec2(1.0 / u_Dimensions.x, 0.0));
     vec3 p2 = getViewPosition(coord + vec2(0.0, 1.0 / u_Dimensions.y));
@@ -132,5 +145,7 @@ void main(void)
 #else
 	float displacement = GetDisplacementAtCoord(var_TexCoords);
 #endif
+	
 	gl_FragColor = vec4(displacement, norm.x * 0.5 + 0.5, norm.y * 0.5 + 0.5, 1.0);
+	//gl_FragColor = vec4(displacement, EncodeNormal(norm.xyz), 1.0);
 }

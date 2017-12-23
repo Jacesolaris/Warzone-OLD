@@ -16,6 +16,15 @@ varying vec2   				var_TexCoords;
 #define znear				u_ViewInfo.r			//camera clipping start
 #define zfar				u_ViewInfo.g			//camera clipping end
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 vec4 dssdo_blur(vec2 tex)
 {
 	float weights[9] = float[]
@@ -49,8 +58,9 @@ vec4 dssdo_blur(vec2 tex)
 //#pragma unroll 9
 	for (i = 0; i < 9; i++)
 	{
-		normal[i] = texture(u_NormalMap, tex + indices[i]*step).xyz * 2.0 - 1.0;
-		normal[i].z = sqrt(1.0-dot(normal[i].xy, normal[i].xy)); // reconstruct Z from X and Y
+		normal[i] = texture(u_NormalMap, tex + indices[i]*step).xyz;// * 2.0 - 1.0;
+		//normal[i].z = sqrt(1.0-dot(normal[i].xy, normal[i].xy)); // reconstruct Z from X and Y
+		normal[i] = DecodeNormal(normal[i].xy);
 	}
 
 	float total_weight = 1.0;

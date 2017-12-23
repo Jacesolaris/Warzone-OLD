@@ -76,6 +76,12 @@ out vec4							out_Position;
 out vec4							out_Normal;
 out vec4							out_NormalDetail;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 void main()
 {
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
@@ -202,7 +208,7 @@ void main()
 		}
 
 		out_Position = vec4(var_Position.rgb, SHADER_MATERIAL_TYPE+1.0);
-		out_Normal = vec4(var_Normal.rgb * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(var_Normal.rgb), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 	}
 	else

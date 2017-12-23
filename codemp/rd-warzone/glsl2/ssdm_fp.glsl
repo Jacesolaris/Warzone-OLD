@@ -14,6 +14,15 @@ varying vec2		var_TexCoords;
 
 vec2 px = vec2(1.0) / u_Dimensions.xy;
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 void main(void)
 {
 	vec2 texCoords = var_TexCoords;
@@ -22,7 +31,8 @@ void main(void)
 	
 	vec3 dMap = texture(u_PositionMap, texCoords).rgb;
 	vec3 norm = vec3(dMap.gb, 0.0) * 2.0 - 1.0;
-	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//vec3 norm = DecodeNormal(dMap.gb);
 
 	vec2 distFromCenter = vec2(length(texCoords.x - 0.5), length(texCoords.y - 0.5));
 	float screenEdgeScale = clamp(max(distFromCenter.x, distFromCenter.y) * 2.0, 0.0, 1.0);

@@ -15,6 +15,12 @@ out vec4			out_Normal;
 out vec4			out_NormalDetail;
 out vec4			out_Position;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 void main() 
 {
 	vec4 diffuse;
@@ -34,7 +40,7 @@ void main()
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(vVertNormal.xyz * 0.5 + 0.5, 1.0);
+		out_Normal = vec4(EncodeNormal(vVertNormal.xyz), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		//out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		out_Position = vec4(0.0);

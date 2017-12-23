@@ -51,6 +51,15 @@ varying vec2		var_TexCoords;
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 
 vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 {
@@ -499,9 +508,10 @@ void main(void)
 #endif
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
-	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
+	norm.xyz = DecodeNormal(norm.xy);
 
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 

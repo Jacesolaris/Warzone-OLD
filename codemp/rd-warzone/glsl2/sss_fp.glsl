@@ -29,6 +29,15 @@ varying vec2   				var_TexCoords;
 
 vec2 texel = vec2(1.0) / u_Dimensions;
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 //convenient function.
 bool RayIntersect(float raya, float rayb, vec2 sspt, float thickness) 
 {
@@ -174,8 +183,9 @@ vec4 fragDentisyAndOccluder(vec2 coord)   //we return dentisy in R, distance in 
     
 	//vec3 csNormal = normalize(texture(u_NormalMap, coord).rgb * 2.0 - 1.0);
 	vec4 norm = textureLod(u_NormalMap, coord, 0.0);
-	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	norm.xyz = DecodeNormal(norm.xy);
 	vec3 csNormal = norm.xyz;
 	
 	vec3 csLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);

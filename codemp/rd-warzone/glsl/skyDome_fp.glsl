@@ -13,6 +13,12 @@ out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 float tween(float t)
 {
 	return clamp(t*t*t*(t*(t*6-15)+10),0,1);
@@ -179,5 +185,5 @@ void main()
 	gl_FragColor = vec4(tColor.rgb, 1.0);
 	out_Glow = vec4(0.0);
 	out_Position = vec4(var_Position.xyz, 1024.0+1.0);
-	out_Normal = vec4(var_Normal.xyz * 0.5 + 0.5, 1.0);
+	out_Normal = vec4(EncodeNormal(var_Normal.xyz), 0.0, 1.0);
 }

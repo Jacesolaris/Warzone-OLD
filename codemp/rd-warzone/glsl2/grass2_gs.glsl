@@ -80,6 +80,12 @@ const float xdec = 1.0/255.0;
 const float ydec = 1.0/65025.0;
 const float zdec = 1.0/16581375.0;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 float EncodeFloatRGBA( vec4 rgba ) {
   return dot( rgba, vec4(1.0, xdec, ydec, zdec) );
 }
@@ -424,7 +430,7 @@ void main()
 			vVertPosition = va.xyz;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
-			vVertNormal = normalize(cross(vc - va, vb - va)).xy;//encodedGrassData;
+			vVertNormal = EncodeNormal(normalize(cross(vc - va, vb - va)).xyz);//encodedGrassData;
 			EmitVertex();
 
 			vVertPosition = vb.xyz;

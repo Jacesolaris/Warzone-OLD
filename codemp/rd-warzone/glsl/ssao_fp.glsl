@@ -13,6 +13,15 @@ uniform vec4		u_Local0;
 varying vec2	var_ScreenTex;
 varying vec3	var_Position;
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 float getHeight(vec2 uv) {
   return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
@@ -152,9 +161,10 @@ void main( void )
 	}
 
 	vec4 norm = textureLod(u_NormalMap, var_ScreenTex, 0.0);
-	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
+	norm.xyz = DecodeNormal(norm.xy);
 
 	vec4 normalDetail = textureLod(u_OverlayMap, var_ScreenTex, 0.0);
 

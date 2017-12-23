@@ -150,6 +150,12 @@ const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
 
 vec2 pxSize = vec2(1.0) / u_Dimensions;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 vec2 GetSway ()
 {
 	// Wind calculation stuff...
@@ -417,7 +423,7 @@ void main()
 		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
+			out_Normal = vec4( vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
 			out_NormalDetail = norm;
 		}
 		else
@@ -446,7 +452,7 @@ void main()
 		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
+			out_Normal = vec4( vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
 			out_NormalDetail = vec4(0.0);
 		}
 		else
@@ -463,7 +469,7 @@ void main()
 		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
+			out_Normal = vec4( vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
 			out_NormalDetail = norm;
 		}
 		else

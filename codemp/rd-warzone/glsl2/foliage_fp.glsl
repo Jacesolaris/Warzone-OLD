@@ -20,6 +20,12 @@ out vec4 out_Position;
 out vec4 out_Normal;
 out vec4 out_NormalDetail;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
 vec4 GetControlMap(vec3 m_vertPos)
 {
 	float scale = 1.0 / u_Local6.b; /* control scale */
@@ -81,7 +87,7 @@ void main()
 	}
 
 	out_Position = vec4(v_position.xyz, gl_FragColor.a > 0.0 ? MATERIAL_GREENLEAVES + 1.0 : 0.0);
-	out_Normal = vec4(v_normal.xyz * 0.5 + 0.5, gl_FragColor.a > 0.0 ? 1.0 : 0.0);
+	out_Normal = vec4(EncodeNormal(v_normal.xyz), 0.0, gl_FragColor.a > 0.0 ? 1.0 : 0.0);
 	out_Glow = vec4(0.0);
 	out_NormalDetail = vec4(0.0);
 }

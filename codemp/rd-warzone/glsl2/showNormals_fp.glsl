@@ -7,6 +7,15 @@ uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 //#define __NORMAL_METHOD_1__
 #define __NORMAL_METHOD_2__
 
@@ -87,9 +96,10 @@ vec3 TangentFromNormal ( vec3 normal )
 void main(void)
 {
 	vec4 norm = texture(u_NormalMap, var_TexCoords);
-	norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
+	//norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
+	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
+	norm.xyz = DecodeNormal(norm.xy);
 
 	if (u_Settings0.r > 0.0)
 	{

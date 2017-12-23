@@ -23,6 +23,15 @@ varying vec2   				var_TexCoords;
 #define znear				u_ViewInfo.r			//camera clipping start
 #define zfar				u_ViewInfo.g			//camera clipping end
 
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 // 'threshold' is constant , 'value' is smoothly varying
 float aastep(float threshold, float value) 
 {
@@ -91,8 +100,9 @@ vec4 dssdo_accumulate(vec2 tex)
 
 	//radius = min(radius, 0.1);
 
-	vec3 center_normal = texture(u_NormalMap, tex).xyz * 2.0 - 1.0;
-	center_normal.z = sqrt(1.0-dot(center_normal.xy, center_normal.xy)); // reconstruct Z from X and Y
+	vec3 center_normal = texture(u_NormalMap, tex).xyz;// * 2.0 - 1.0;
+	//center_normal.z = sqrt(1.0-dot(center_normal.xy, center_normal.xy)); // reconstruct Z from X and Y
+	center_normal = DecodeNormal(center_normal.xy);
 
 	vec4 occlusion_sh2 = vec4(0.0);
 

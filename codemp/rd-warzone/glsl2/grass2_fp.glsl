@@ -37,7 +37,22 @@ out vec4			out_Position;
 const float xdec = 1.0/255.0;
 const float ydec = 1.0/65025.0;
 const float zdec = 1.0/16581375.0;
-  
+
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+
+vec3 DecodeNormal(in vec2 N)
+{
+	vec2 encoded = N*4.0 - 2.0;
+	float f = dot(encoded, encoded);
+	float g = sqrt(1.0 - f * 0.25);
+
+	return vec3(encoded * g, 1.0 - f * 0.5);
+}
+
 vec4 DecodeFloatRGBA( float v ) {
   vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
   enc = fract(enc);
@@ -99,7 +114,7 @@ void main()
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(vVertNormal.xy * 0.5 + 0.5, 0.0, 1.0);
+		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy)), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		//out_Position = vec4(0.0);

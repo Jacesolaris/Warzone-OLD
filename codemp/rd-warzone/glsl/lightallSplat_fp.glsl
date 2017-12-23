@@ -156,6 +156,11 @@ out vec4 out_Position;
 out vec4 out_Normal;
 out vec4 out_NormalDetail;
 
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
 
 void DepthContrast ( inout float depth )
 {
@@ -660,7 +665,7 @@ void main()
 		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
 
 		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-		out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, 1.0), 1.0 );
+		out_Normal = vec4( vec3(EncodeNormal(N.xyz), 1.0), 1.0 );
 		out_NormalDetail = vec4(0.0);
 	}
 	else
@@ -669,7 +674,7 @@ void main()
 		out_Glow = vec4(0.0);
 
 		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-		out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, 1.0), 1.0 );
+		out_Normal = vec4( vec3(EncodeNormal(N.xyz), 1.0), 1.0 );
 		out_NormalDetail = norm;
 	}
 }
