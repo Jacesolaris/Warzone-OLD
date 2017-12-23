@@ -3243,6 +3243,35 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, normalFlags);
 }
 
+void R_AdjustAlphaLevels(byte *in, int width, int height)
+{// For tree leaves, grasses, plants, etc... Alpha is either 0 or 1. No blends. For speed, and to stop bad blending around the edges.
+	if (!in) return;
+
+	byte *inByte = (byte *)&in[0];
+
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			float currentR = ByteToFloat(*inByte++);
+			float currentG = ByteToFloat(*inByte++);
+			float currentB = ByteToFloat(*inByte++);
+			float currentA = ByteToFloat(*inByte);
+
+			if (currentA >= 0.3)
+			{
+				*inByte = (byte)255.0f;
+			}
+			else
+			{
+				*inByte = (byte)0.0f;
+			}
+
+			inByte++;
+		}
+	}
+}
+
 void R_GetTextureAverageColor(const byte *in, int width, int height, qboolean USE_ALPHA, float *avgColor)
 {
 	int NUM_PIXELS = 0;
@@ -3713,6 +3742,22 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	{
 		R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
 	}
+
+#if 0
+	if (type == IMGTYPE_COLORALPHA)
+	{
+		qboolean isFoliage = (qboolean)(StringContainsWord(name, "models/warzone/trees") 
+			|| StringContainsWord(name, "models/warzone/plants") 
+			|| StringContainsWord(name, "models/warzone/foliage") 
+			|| StringContainsWord(name, "models/warzone/groundFoliage") 
+			|| StringContainsWord(name, "models/warzone/deadtrees"));
+
+		if (USE_ALPHA && isFoliage)
+		{
+			R_AdjustAlphaLevels(pic, width, height);
+		}
+	}
+#endif
 	
 	//if (flags & IMGFLAG_GLOW)
 	//	ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
@@ -4313,12 +4358,20 @@ void R_CreateBuiltinImages( void ) {
 	{
 		for ( x = 0; x < 5; x++)
 		{
-			tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
+			if (x >= 3)
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 4.0) / vramScaleDiv, (r_shadowMapSize->integer * 4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
+			else if (x >= 2)
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
+			else if (x >= 1)
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer) / vramScaleDiv, (r_shadowMapSize->integer) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
+			else
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 		}
 
 		tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
+		tr.screenShadowBlurTempImage = R_CreateImage("*screenShadowBlurTemp", NULL, (width / 2.0) / vramScaleDiv, (height / 2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
 		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
 	}
 

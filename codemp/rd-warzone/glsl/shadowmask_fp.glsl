@@ -25,8 +25,6 @@ precise varying vec3		var_ViewDir;
 
 precise float DEPTH_MAX_ERROR = (1.0 / pow(2.0, u_ViewInfo.b));
 
-precise float scale = 1.0 / r_shadowMapSize;
-
 float linearizeDepth(float depth)
 {
 	return 1.0 / mix(u_ViewInfo.x, 1.0, depth);
@@ -50,15 +48,17 @@ float random( const vec2 p )
 
 float offset_lookup(sampler2DShadow shadowmap, vec4 loc, vec2 offset, float scale)
 {
-	return textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, loc.z, loc.w));
+	float result = textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, loc.z, loc.w));
+	//result = clamp((result - 0.2) * 1.2, 0.0, 1.0);
+	//result = clamp(result - DEPTH_MAX_ERROR, 0.0, 1.0);
+	return result;
 }
 
-float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist)
+float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, float scale)
 {
 	float mult;
 
 #if 1
-	float scale = 1.0 / r_shadowMapSize;
 	vec4 sCoord = vec4(st);
 	//vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
 	vec2 offset = mod(sCoord.xy, 0.5);
@@ -72,8 +72,6 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist)
 			   * 0.25;
 	return shadowCoeff;
 #elif 0
-	float scale = 1.0 / r_shadowMapSize;
-
 	// from http://http.developer.nvidia.com/GPUGems/gpugems_ch11.html
 	vec2 offset = vec2(greaterThan(fract(var_DepthTex.xy * r_FBufScale * 0.5), vec2(0.25)));
 	offset.y += offset.x;
@@ -87,8 +85,6 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist)
 	mult *= 0.25;
 	return mult;
 #elif 0
-	float scale = 2.0 / r_shadowMapSize;
-
 	#define USE_SHADOW_FILTER
 	#define USE_SHADOW_FILTER2
 
@@ -133,7 +129,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap, shadowpos, shadowpos.z);
+		result = PCF(u_ShadowMap, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -143,7 +139,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap2, shadowpos, shadowpos.z);
+		result = PCF(u_ShadowMap2, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -153,7 +149,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap3, shadowpos, shadowpos.z);
+		result = PCF(u_ShadowMap3, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 2.0));
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -163,7 +159,8 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap4, shadowpos, shadowpos.z);
+		result = PCF(u_ShadowMap4, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 4.0));
+		//result = clamp(pow(result, 64.0), 0.0, 1.0);
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}

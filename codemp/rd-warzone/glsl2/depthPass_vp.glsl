@@ -246,4 +246,6 @@ void main()
 	var_VertPos = position.xyz;
 	var_Color = CalcColor(position, normal);
 	var_TexCoords = texCoords;
+
+	if (var_Color.a >= 0.99) var_Color.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...
 }

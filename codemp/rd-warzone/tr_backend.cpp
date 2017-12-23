@@ -1828,7 +1828,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 		if (r_occlusion->integer)
 		{// Override occlusion for depth prepass and shadow pass...
-			tr.viewParms.zFar = tr.occlusionOriginalZfar;
+			//tr.viewParms.zFar = tr.occlusionOriginalZfar;
+			extern float RB_GetNextOcclusionRange(float currentRange);
+			tr.viewParms.zFar = RB_GetNextOcclusionRange(tr.occlusionZfar);
 		}
 
 		backEnd.depthFill = qtrue;

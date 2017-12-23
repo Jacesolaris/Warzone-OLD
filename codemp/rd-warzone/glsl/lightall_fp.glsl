@@ -1,5 +1,8 @@
+//#define UI_BLOOM
+
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
-#define SCREEN_MAPS_LEAFS_THRESHOLD 0.0
+#define SCREEN_MAPS_LEAFS_THRESHOLD 0.001
+//#define SCREEN_MAPS_LEAFS_THRESHOLD 0.9
 
 
 uniform sampler2D					u_DiffuseMap;
@@ -145,6 +148,8 @@ const float							fBranchSize = 128.0;
 const float							fWindStrength = 12.0;
 const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
 
+vec2 pxSize = vec2(1.0) / u_Dimensions;
+
 vec2 GetSway ()
 {
 	// Wind calculation stuff...
@@ -183,6 +188,45 @@ void main()
 
 
 	vec4 diffuse = texture(u_DiffuseMap, texCoords);
+
+
+#ifdef UI_BLOOM
+	if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
+	{// Bloom on 2D objects...
+		vec4 origDiffuse = diffuse;
+		float numBloomPixels = 1.0;
+
+#define UI_BLOOM_WIDTH 8
+
+		for (float x = -UI_BLOOM_WIDTH; x <= UI_BLOOM_WIDTH; x += 1.0)
+		{
+			for (float y = -UI_BLOOM_WIDTH; y <= UI_BLOOM_WIDTH; y += 1.0)
+			{
+				vec2 offset = (vec2(x,y) * pxSize);
+				vec2 coord = texCoords + offset;
+
+				if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0)
+				{
+					vec4 surround = texture(u_DiffuseMap, coord).rgba;
+
+					float maxColor = max(surround.r * var_Color.r, max(surround.g * var_Color.g, surround.b * var_Color.b));
+
+					if (maxColor > 0.9 && surround.a * var_Color.a > 0.0)
+					{
+						float weight = clamp((1.0 - (length(vec2(x, y)) / (UI_BLOOM_WIDTH * 2.0))) * 0.01, 0.0, 1.0);
+						weight *= maxColor;
+
+						diffuse += surround * weight;
+						numBloomPixels += weight;
+					}
+				}
+			}
+		}
+
+		diffuse /= numBloomPixels;
+		diffuse = mix(origDiffuse, diffuse, 0.5);
+	}
+#endif
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
@@ -238,6 +282,17 @@ void main()
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
+
+	float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
+
+	if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || USE_IS2D > 0.0)
+	{
+
+	}
+	else
+	{
+		gl_FragColor.a = 0.0;
+	}
 	
 	if (USE_BLEND > 0.0)
 	{// Emulate RGB blending... Fuck I hate this crap...
@@ -259,6 +314,8 @@ void main()
 			gl_FragColor.a = colStr;
 		}
 	}
+
+	if (gl_FragColor.a >= 0.99) gl_FragColor.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...
 
 
 	float useDisplacementMapping = 0.0;
@@ -283,8 +340,6 @@ void main()
 
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
-
-	float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
 
 	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 	{
@@ -359,7 +414,7 @@ void main()
 
 		out_Glow = vec4(glowColor.rgb, glowColor.a);
 
-		if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
@@ -388,7 +443,7 @@ void main()
 		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
 
-		if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );
@@ -405,7 +460,7 @@ void main()
 	{
 		out_Glow = vec4(0.0);
 
-		if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4( vec3(N.xy * 0.5 + 0.5, useDisplacementMapping), 1.0 );

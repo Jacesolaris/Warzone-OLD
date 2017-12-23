@@ -432,4 +432,5 @@ void main()
 
 	var_vertPos = position.xyz;
 
+	if (var_Color.a >= 0.99) var_Color.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...
 }

@@ -1,5 +1,6 @@
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
-#define SCREEN_MAPS_LEAFS_THRESHOLD 0.0
+#define SCREEN_MAPS_LEAFS_THRESHOLD 0.001
+//#define SCREEN_MAPS_LEAFS_THRESHOLD 0.9
 
 uniform sampler2D					u_DiffuseMap;
 
@@ -107,6 +108,17 @@ void main()
 
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
 		gl_FragColor.a *= var_Color.a;
+
+		float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
+
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || USE_IS2D > 0.0)
+		{
+
+		}
+		else
+		{
+			gl_FragColor.a = 0.0;
+		}
 	}
 
 	if (USE_BLEND > 0.0)
@@ -130,14 +142,5 @@ void main()
 		}
 	}
 
-	float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
-
-	if (gl_FragColor.a > alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
-	{
-		
-	}
-	else
-	{
-		gl_FragColor.a = 0.0;
-	}
+	if (gl_FragColor.a >= 0.99) gl_FragColor.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...
 }

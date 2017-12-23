@@ -2659,6 +2659,7 @@ typedef struct trGlobals_s {
 	image_t					*fixedLevelsImage;
 	image_t					*sunShadowDepthImage[5];
 	image_t                 *screenShadowImage;
+	image_t                 *screenShadowBlurTempImage;
 	image_t                 *screenShadowBlurImage;
 
 
@@ -2701,6 +2702,7 @@ typedef struct trGlobals_s {
 	FBO_t					*targetLevelsFbo;
 	FBO_t					*sunShadowFbo[5];
 	FBO_t					*screenShadowFbo;
+	FBO_t					*screenShadowBlurTempFbo;
 	FBO_t					*screenShadowBlurFbo;
 	FBO_t                   *renderCubeFbo;
 	FBO_t					*awesomiumuiFbo;

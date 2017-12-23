@@ -784,6 +784,12 @@ void FBO_Init(void)
 		FBO_SetupDrawBuffers();
 		R_CheckFBO(tr.screenShadowFbo);
 
+		tr.screenShadowBlurTempFbo = FBO_Create("_screenshadowBlurTemp", tr.screenShadowImage->width, tr.screenShadowImage->height);
+		FBO_Bind(tr.screenShadowBlurTempFbo);
+		FBO_AttachTextureImage(tr.screenShadowBlurTempImage, 0);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.screenShadowBlurTempFbo);
+
 		tr.screenShadowBlurFbo = FBO_Create("_screenshadowBlur", tr.screenShadowImage->width, tr.screenShadowImage->height);
 		FBO_Bind(tr.screenShadowBlurFbo);
 		FBO_AttachTextureImage(tr.screenShadowBlurImage, 0);

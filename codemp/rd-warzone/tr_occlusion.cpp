@@ -865,6 +865,21 @@ const float occlusionRanges[] =
 
 #define MAX_QUERIES 256
 
+float RB_GetNextOcclusionRange(float currentRange)
+{
+	for (int i = 0; i < NUM_OCCLUSION_RANGES; i++)
+	{
+		float thisRange = occlusionRanges[i];
+
+		if (thisRange > currentRange)
+		{
+			return thisRange;
+		}
+	}
+
+	return currentRange;
+}
+
 int nextOcclusionCheck = -1;
 
 GLuint	occlusionCheck[MAX_QUERIES];

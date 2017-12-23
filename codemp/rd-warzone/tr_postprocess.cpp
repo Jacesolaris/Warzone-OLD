@@ -695,10 +695,16 @@ void RB_CreateAnamorphicImage( void )
 	color[3] = 1.0f;
 
 	vec4i_t srcBox;
-	srcBox[0] = backEnd.viewParms.viewportX;
-	srcBox[1] = backEnd.viewParms.viewportY;
-	srcBox[2] = backEnd.viewParms.viewportWidth;
-	srcBox[3] = backEnd.viewParms.viewportHeight;
+	srcBox[0] = 0;
+	srcBox[1] = 0;
+	srcBox[2] = tr.glowFboScaled[0]->width;
+	srcBox[3] = tr.glowFboScaled[0]->height;
+
+	/*vec4i_t dstBox;
+	dstBox[0] = 0;
+	dstBox[1] = 0;
+	dstBox[2] = tr.anamorphicRenderFBO->width;
+	dstBox[3] = tr.anamorphicRenderFBO->height;*/
 
 	GLSL_BindProgram(&tr.anamorphicBlurShader);
 
@@ -719,7 +725,7 @@ void RB_CreateAnamorphicImage( void )
 		GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
 	}
 
-	FBO_Blit(tr.glowFboScaled[0], srcBox, NULL, tr.anamorphicRenderFBO, NULL, &tr.anamorphicBlurShader, color, 0);
+	FBO_Blit(tr.glowFboScaled[0], srcBox, NULL, tr.anamorphicRenderFBO, NULL/*dstBox*/, &tr.anamorphicBlurShader, color, 0);
 }
 
 void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -2242,31 +2248,8 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	float zfar = 2048;
 
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	/*if (r_testvalue0->integer <= 0)
-	{
-		GL_BindToTMU(tr.linearDepthImage512, TB_LIGHTMAP);
-		zfar = 512;
-	}
-	else if (r_testvalue0->integer <= 1)
-	{
-		GL_BindToTMU(tr.linearDepthImage1024, TB_LIGHTMAP);
-		zfar = 1024;
-	}
-	else if (r_testvalue0->integer <= 2)
-	{
-		GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
-		zfar = 2048;
-	}
-	else if (r_testvalue0->integer <= 3)
-	{*/
-		GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
-		zfar = 4096;
-	/*}
-	else
-	{
-		GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
-		zfar = (r_testvalue1->value == 0.0) ? backEnd.viewParms.zFar : r_testvalue1->value;
-	}*/
+	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
+	zfar = 4096;
 	
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
@@ -3178,8 +3161,8 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = hdrFbo->width;
-		screensize[1] = hdrFbo->height;
+		screensize[0] = tr.screenShadowBlurTempFbo->width;
+		screensize[1] = tr.screenShadowBlurTempFbo->height;
 
 		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -3194,21 +3177,60 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	GLSL_SetUniformFloatxX(shader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, (r_shadowBlurWidth->value > 0) ? r_shadowBlurWidth->value : 1.0, (r_shadowBlurStep->value > 0) ? r_shadowBlurStep->value : 1.0, r_testvalue2->value, r_testvalue3->value);
-		GLSL_SetUniformVec4(shader, UNIFORM_SETTINGS0, loc);
-	}
+	/*vec4i_t dstBox;
+	dstBox[0] = backEnd.viewParms.viewportX;
+	dstBox[1] = backEnd.viewParms.viewportY;
+	dstBox[2] = tr.screenShadowBlurTempFbo->width;
+	dstBox[3] = tr.screenShadowBlurTempFbo->height;
+	*/
 
 	{
 		vec4_t loc;
 		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
 	}
-	
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
+
+	GLSL_SetUniformFloatxX(shader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
+
+#if 0
+	{
+		vec4_t loc;
+		VectorSet4(loc, (r_shadowBlurWidth->value > 0) ? r_shadowBlurWidth->value : 1.0, (r_shadowBlurStep->value > 0) ? r_shadowBlurStep->value : 1.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_SETTINGS0, loc);
+	}
+
+	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, shader, color, 0);
+#else
+	float direction = 0.0;
+
+	//for (int pass = 0; pass < r_testvalue0->integer; pass++)
+	int pass = 0;
+	{
+		{// Blur X...
+			direction = 0.0;
+
+			{
+				vec4_t loc;
+				VectorSet4(loc, (r_shadowBlurWidth->value > 0) ? r_shadowBlurWidth->value : 1.0, (r_shadowBlurStep->value > 0) ? r_shadowBlurStep->value : 1.0, direction, 0.0);
+				GLSL_SetUniformVec4(shader, UNIFORM_SETTINGS0, loc);
+			}
+
+			FBO_Blit(pass == 0 ? tr.screenShadowFbo : tr.screenShadowBlurFbo, NULL, NULL, tr.screenShadowBlurTempFbo, NULL, shader, color, 0);
+		}
+
+		{// Blur Y...
+			direction = 1.0;
+
+			{
+				vec4_t loc;
+				VectorSet4(loc, (r_shadowBlurWidth->value > 0) ? r_shadowBlurWidth->value : 1.0, (r_shadowBlurStep->value > 0) ? r_shadowBlurStep->value : 1.0, direction, 0.0);
+				GLSL_SetUniformVec4(shader, UNIFORM_SETTINGS0, loc);
+			}
+
+			FBO_Blit(tr.screenShadowBlurTempFbo, NULL, NULL, tr.screenShadowBlurFbo, NULL, shader, color, 0);
+		}
+	}
+#endif
 }
 
 void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int direction)
