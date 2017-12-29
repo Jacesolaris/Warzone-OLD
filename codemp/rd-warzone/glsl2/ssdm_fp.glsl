@@ -1,16 +1,18 @@
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_PositionMap;
-uniform sampler2D	u_NormalMap;
-uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D				u_DiffuseMap;
+uniform sampler2D				u_PositionMap;
+uniform sampler2D				u_NormalMap;
+uniform sampler2D				u_ScreenDepthMap;
 
-uniform vec2		u_Dimensions;
+uniform vec2					u_Dimensions;
 
-uniform vec4		u_Local1; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
+uniform vec4					u_Local1; // DISPLACEMENT_MAPPING_STRENGTH, r_testShaderValue1, r_testShaderValue2, r_testShaderValue3
 
-uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
-uniform vec3		u_ViewOrigin;
+uniform vec4					u_ViewInfo; // znear, zfar, zfar / znear, fov
+uniform vec3					u_ViewOrigin;
 
-varying vec2		var_TexCoords;
+varying vec2					var_TexCoords;
+
+#define DISPLACEMENT_STRENGTH	u_Local1.r
 
 vec2 px = vec2(1.0) / u_Dimensions.xy;
 
@@ -35,10 +37,11 @@ void main(void)
 	//vec3 norm = DecodeNormal(dMap.gb);
 
 	vec2 distFromCenter = vec2(length(texCoords.x - 0.5), length(texCoords.y - 0.5));
+	float displacementStrengthMod = (DISPLACEMENT_STRENGTH / 18.0); // Default is 18.0. If using higher displacement, need more screen edge flattening, if less, less flattening.
 	float screenEdgeScale = clamp(max(distFromCenter.x, distFromCenter.y) * 2.0, 0.0, 1.0);
-	screenEdgeScale = 1.0 - pow(screenEdgeScale, 16.0);
+	screenEdgeScale = 1.0 - pow(screenEdgeScale, 16.0/displacementStrengthMod);
 
-	texCoords += norm.xy * vec2(-18.0 * px) * invDepth * screenEdgeScale * dMap.r;
+	texCoords += norm.xy * vec2(-DISPLACEMENT_STRENGTH * px) * invDepth * screenEdgeScale * dMap.r;
 
 	gl_FragColor = vec4(texture(u_DiffuseMap, texCoords).rgb, 1.0);
 }

@@ -128,7 +128,7 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		break;
 	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
 		specularScale = 1.0;
-		cubemapScale = 1.0;
+		cubemapScale = 0.98;
 		parallaxScale = 1.5;
 		break;
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
@@ -203,22 +203,22 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		break;
 	case MATERIAL_ARMOR:			// 30			// body armor
 		specularScale = 0.5;
-		cubemapScale = 0.56;
+		cubemapScale = 0.66;
 		parallaxScale = 1.5;
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
 		specularScale = 0.75;
-		cubemapScale = 0.47;
+		cubemapScale = 0.58;
 		parallaxScale = 2.0;
 		break;
 	case MATERIAL_GLASS:			// 10			//
 		specularScale = 0.95;
-		cubemapScale = 0.39;
+		cubemapScale = 0.50;
 		parallaxScale = 1.0;
 		break;
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 		specularScale = 0.93;
-		cubemapScale = 0.33;
+		cubemapScale = 0.50;
 		parallaxScale = 1.0;
 		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
@@ -542,36 +542,105 @@ void main(void)
 	float to_pos_dist = length(to_pos);
 	vec3 to_pos_norm = (to_pos / to_pos_dist);
 
+	vec3 surfaceToCamera = E;
+#define rd reflect(surfaceToCamera, N)
+
 	float specularPower = clamp(materialSettings.x * 0.04, 0.0, 1.0);
 	float gloss = clamp(clamp((materialSettings.x + materialSettings.y) * 0.5, 0.0, 1.0) * 1.6, 0.0, 1.0);
 
+	vec3 skyColor = vec3(0.0);
+
+	if (u_Local7.a > 0.0)
+	{// Sky light contributions...
+		vec2 spot = rd.xy;
+		spot.xy *= -1.0;
+		spot.xy = spot.xy * 0.5 + 0.5;
+
+		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+		{// Mix between night and day colors...
+			vec3 skyColorDay = texture(u_WaterEdgeMap, spot).rgb;
+			vec3 skyColorNight = texture(u_RoadsControlMap, spot).rgb;
+			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
+		}
+		else if (u_Local6.a >= 1.0)
+		{// Night only colors...
+			skyColor = texture(u_RoadsControlMap, spot).rgb;
+		}
+		else
+		{// Day only colors...
+			skyColor = texture(u_WaterEdgeMap, spot).rgb;
+		}
+
+		skyColor = ContrastSaturationBrightness(skyColor, 1.25, 2.0, 0.3);
+		skyColor = Vibrancy( skyColor, 0.4 );
+	}
+
+	vec3 specular;
+	float NE = clamp(length(dot(N, E)), 0.0, 1.0);
+	float reflectPower = pow(clamp(materialSettings.x*NE, 0.0, 1.0), 16.0) * materialSettings.g;
+	
+	// This should give me roughly how close to grey this color is... We can use this for colorization factors.. Highly colored stuff should get less color added to it...
+	//float greynessFactor = 1.0 - clamp(distance(vec3(length(outColor.rgb) / 3.0), outColor.rgb) / 3.0, 0.0, 1.0);
+	float greynessFactor = 1.0 - clamp((length(outColor.r - outColor.g) + length(outColor.r - outColor.b)) / 2.0, 0.0, 1.0);
+	float brightnessFactor = 1.0 - clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
+	greynessFactor = clamp(pow(greynessFactor, 64.0/*u_Local3.r*/), 0.0, 1.0);
+	brightnessFactor = 1.0 - clamp(pow(brightnessFactor, 16.0/*u_Local3.g*/), 0.0, 1.0);
+
+	float glossinessFactor = greynessFactor * brightnessFactor;
+
+#if 0
+	if (u_Local3.b == 3.0)
+	{
+		outColor.rgb = vec3(glossinessFactor);
+		gl_FragColor = outColor;
+		return;
+	}
+	else if (u_Local3.b == 2.0)
+	{
+		outColor.rgb = vec3(brightnessFactor);
+		gl_FragColor = outColor;
+		return;
+	}
+	else if (u_Local3.b == 1.0)
+	{
+		outColor.rgb = vec3(greynessFactor);
+		gl_FragColor = outColor;
+		return;
+	}
+#endif
+
 	if (specularPower > 0.0)
 	{
-		vec3 specular = ContrastSaturationBrightness(outColor.rgb, 1.2, 1.2, 1.2);
-		specular = Vibrancy( specular, 0.4 );
+		specular = ContrastSaturationBrightness(outColor.rgb, -1.5, 0.05, 8.0);
+		specular.rgb = clamp(vec3(length(specular.rgb) / 3.0), 0.0, 1.0);
+		specular.rgb *= materialSettings.r;
 
-		float NE = clamp(length(dot(N, E)), 0.0, 1.0);
-		vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
-
-#if 1
-		if (position.a-1.0 == MATERIAL_SOLIDMETAL || position.a-1.0 == MATERIAL_MARBLE)
-		{
-			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (specular*2.0)), clamp(specularPower*NE*24.0, 0.0, 1.0));
-			outColor.rgb = mix(outColor.rgb, (outColor.rgb + (reflectance.rgb*128.0)), clamp(specularPower*0.05, 0.0, 1.0));
+		//if (materialSettings.r >= 0.5)
+		if (position.a-1.0 == MATERIAL_SOLIDMETAL || position.a-1.0 == MATERIAL_HOLLOWMETAL)
+		{// Re-add color to shiny reflections...
+			//specular.rgb = clamp(mix(specular.rgb, outColor.rgb * specular.rgb, pow(materialSettings.r, 16.0)), 0.0, 1.0);
+			specular.rgb = skyColor * specular.rgb;
 		}
-#endif
+		else
+		{
+			specular.rgb = mix(specular.rgb, skyColor * specular.rgb, materialSettings.g);
+		}
+
+		//vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
+		vec3 cubeLightColor = vec3(0.0);
+		float curDist = distance(u_ViewOrigin.xyz, position.xyz);
+		//float cubeDist = distance(u_CubeMapInfo.xyz, position.xyz);
 
 		if (u_Local7.r > 0.0)
 		{// Cubemaps enabled...
 			if (materialSettings.x > 0.0 && materialSettings.y > 0.0)
 			{
-				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
-				float cubeDist = 0.0;//distance(u_CubeMapInfo.xyz, position.xyz);
 				float cubeFade = 0.0;
 		
-				if (curDist < u_Local7.g && cubeDist < u_Local7.g)
+				if (curDist < u_Local7.g)
 				{
-					cubeFade = clamp((1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * (1.0 - clamp(cubeDist / u_Local7.g, 0.0, 1.0)) * materialSettings.y * u_CubeMapStrength, 0.0, 1.0);
+					cubeFade = clamp((1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * materialSettings.y * (u_CubeMapStrength * 20.0), 0.0, 1.0);
+					//cubeFade = 1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0);
 				}
 
 				if (cubeFade > 0.0)
@@ -591,8 +660,8 @@ void main(void)
 					vec3 parallax = cubeInfo.xyz + cubeInfo.w * m_ViewDir;
 					parallax.z *= -1.0;
 					
-					//vec3 cubeLightColor = textureLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb;
-					vec3 cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
+					//cubeLightColor = textureLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb;
+					cubeLightColor = texture(u_CubeMap, R + parallax).rgb;
 
 					float cPx = 1.0 / u_Local7.b;
 					float blurCount = 1.0;
@@ -601,9 +670,6 @@ void main(void)
 						for (float y = -1.0; y <= 1.0; y += 1.0)
 						{
 							vec3 blurColor = texture(u_CubeMap, (R + parallax) + (vec3(x,y,0.0) * cPx)).rgb;
-//#define iblLower ( 128.0 / 255.0)
-//#define iblUpper (255.0 / 156.0)
-//							blurColor = clamp((clamp(blurColor.rgb - iblLower, 0.0, 1.0)) * iblUpper, 0.0, 1.0); // Darken dark, lighten light...
 							cubeLightColor += blurColor;
 							blurCount += 1.0;
 						}
@@ -611,15 +677,16 @@ void main(void)
 					cubeLightColor.rgb /= blurCount;
 
 					// Maybe if not metal, here, we should add contrast to only show the brights as reflection...
-					outColor.rgb = mix(outColor.rgb, outColor.rgb + (cubeLightColor * reflectance), clamp(cubeFade * gloss, 0.0, 1.0));
+					//outColor.rgb = mix(outColor.rgb, outColor.rgb + (cubeLightColor * reflectance), clamp(cubeFade * gloss, 0.0, 1.0));
+
+					//cubeLightColor *= reflectance;
+
+					//float cubeFade = 1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0);
+					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, reflectPower * cubeFade * (u_CubeMapStrength * 20.0) * glossinessFactor/*greynessFactor*/);
 				}
 			}
 		}
 	}
-
-
-	vec3 surfaceToCamera = E;
-#define rd reflect(surfaceToCamera, N)
 
 	vec3 PrimaryLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
 
@@ -637,33 +704,8 @@ void main(void)
 
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
-		vec2 spot = rd.xy;
-		spot.xy *= -1.0;
-		spot.xy = spot.xy * 0.5 + 0.5;
-		vec3 skyColor = vec3(0.0);
-
-		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
-		{// Mix between night and day colors...
-			vec3 skyColorDay = texture(u_WaterEdgeMap, spot).rgb;
-			vec3 skyColorNight = texture(u_RoadsControlMap, spot).rgb;
-			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
-		}
-		else if (u_Local6.a >= 1.0)
-		{// Night only colors...
-			skyColor = texture(u_RoadsControlMap, spot).rgb;
-		}
-		else
-		{// Day only colors...
-			skyColor = texture(u_WaterEdgeMap, spot).rgb;
-		}
-
-		skyColor = ContrastSaturationBrightness(skyColor, 1.25, 2.0, 0.3);
-		skyColor = Vibrancy( skyColor, 0.4 );
-
-		//if (u_Local3.a == 1.0)
-		//	outColor.rgb = skyColor;
-		//else
-			outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(materialSettings.y * u_Local7.a * 0.5, 0.0, 1.0));
+		//outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(materialSettings.y * u_Local7.a * 0.5, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0));
 	}
 
 
@@ -787,6 +829,7 @@ void main(void)
 				}
 			}
 
+			addedLight.rgb *= glossinessFactor/*greynessFactor*/; // More grey colors get more colorization from lights...
 			outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
 		}
 	}

@@ -1,22 +1,23 @@
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_ScreenDepthMap;
-uniform sampler2D	u_PositionMap;
-uniform sampler2D	u_NormalMap;
-uniform sampler2D	u_GlowMap;
+uniform sampler2D				u_DiffuseMap;
+uniform sampler2D				u_ScreenDepthMap;
+uniform sampler2D				u_PositionMap;
+uniform sampler2D				u_NormalMap;
+uniform sampler2D				u_GlowMap;
 
-uniform vec2		u_Dimensions;
+uniform vec2					u_Dimensions;
 
-uniform vec4		u_Local1; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
+uniform vec4					u_Local1; // DISPLACEMENT_MAPPING_STRENGTH, r_testShaderValue1, r_testShaderValue2, r_testShaderValue3
 
-uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
-uniform vec3		u_ViewOrigin;
+uniform vec4					u_ViewInfo; // znear, zfar, zfar / znear, fov
+uniform vec3					u_ViewOrigin;
 
-varying vec2		var_TexCoords;
+varying vec2					var_TexCoords;
 
+#define DISPLACEMENT_STRENGTH	u_Local1.r
 
-#define znear		u_ViewInfo.r									//camera clipping start
-#define zfar		u_ViewInfo.g									//camera clipping end
-#define zfar2		u_ViewInfo.a									//camera clipping end
+#define znear					u_ViewInfo.r									//camera clipping start
+#define zfar					u_ViewInfo.g									//camera clipping end
+#define zfar2					u_ViewInfo.a									//camera clipping end
 
 
 vec2 EncodeNormal(in vec3 N)
@@ -140,7 +141,7 @@ void main(void)
 
 	float depth = getDepth(var_TexCoords);
 	float invDepth = 1.0 - depth;
-	vec2 ParallaxXY = norm.xy * vec2(-18.0 / u_Dimensions) * invDepth;
+	vec2 ParallaxXY = norm.xy * vec2(-DISPLACEMENT_STRENGTH / u_Dimensions) * invDepth;
 	float displacement = invGlowStrength * ReliefMapping(var_TexCoords, ParallaxXY, depth);
 #else
 	float displacement = GetDisplacementAtCoord(var_TexCoords);

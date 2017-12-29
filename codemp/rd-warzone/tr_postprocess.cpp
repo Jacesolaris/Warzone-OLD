@@ -2528,6 +2528,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.deferredLightingShader, color, 0);
 }
 
+extern float DISPLACEMENT_MAPPING_STRENGTH;
+
 void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2572,7 +2574,7 @@ void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 	vec4_t local1;
-	VectorSet4(local1, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+	VectorSet4(local1, DISPLACEMENT_MAPPING_STRENGTH, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	GLSL_SetUniformVec4(&tr.ssdmGenerateShader, UNIFORM_LOCAL1, local1);
 
 	{
@@ -2629,7 +2631,7 @@ void RB_SSDM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformVec3(&tr.ssdmShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 	vec4_t local1;
-	VectorSet4(local1, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+	VectorSet4(local1, DISPLACEMENT_MAPPING_STRENGTH, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	GLSL_SetUniformVec4(&tr.ssdmShader, UNIFORM_LOCAL1, local1);
 
 	{

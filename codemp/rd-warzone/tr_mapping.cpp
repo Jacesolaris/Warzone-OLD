@@ -1443,6 +1443,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
 int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
+float		DISPLACEMENT_MAPPING_STRENGTH = 18.0;
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
@@ -1535,6 +1536,7 @@ void MAPPING_LoadMapInfo(void)
 	// Misc effect enablers...
 	//
 	ENABLE_DISPLACEMENT_MAPPING = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_DISPLACEMENT_MAPPING", "0")) > 0) ? qtrue : qfalse;
+	DISPLACEMENT_MAPPING_STRENGTH = atof(IniRead(mapname, "EFFECTS", "DISPLACEMENT_MAPPING_STRENGTH", "18.0"));
 
 	//
 	// Sun + Day/Night...
