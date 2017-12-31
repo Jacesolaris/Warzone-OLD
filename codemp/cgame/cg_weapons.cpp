@@ -44,6 +44,61 @@ void CG_RegisterItemVisuals( int itemNum ) {
 
 	item = &bg_itemlist[ itemNum ];
 
+#ifndef __FULL_VERSION_WEAPONS__
+	if (item->giType == IT_WEAPON
+		&& item->giTag != WP_MELEE
+		&& item->giTag != WP_SABER
+		&& item->giTag != WP_A280
+		&& item->giTag != WP_THERMAL
+		&& item->giTag != WP_FRAG_GRENADE
+		&& item->giTag != WP_FRAG_GRENADE_OLD
+		&& item->giTag != WP_TRIP_MINE
+		&& item->giTag != WP_DET_PACK)
+	{
+		gitem_t			*reuseWeaponItem = NULL;
+
+		for (reuseWeaponItem = bg_itemlist + 1; reuseWeaponItem->classname; reuseWeaponItem++) {
+			if (reuseWeaponItem->giType == IT_WEAPON && reuseWeaponItem->giTag == WP_A280) {
+				break;
+			}
+		}
+
+		if (!Q_stricmp(&reuseWeaponItem->world_model[0][strlen(reuseWeaponItem->world_model[0]) - 4], ".glm"))
+		{
+			handle = trap->G2API_InitGhoul2Model(&itemInfo->g2Models[0], reuseWeaponItem->world_model[0], 0, 0, 0, 0, 0);
+			if (handle<0)
+			{
+				itemInfo->g2Models[0] = NULL;
+			}
+			else
+			{
+				itemInfo->radius[0] = 60;
+			}
+		}
+
+		if (item->icon)
+		{
+			if (item->giType == IT_HEALTH)
+			{ //medpack gets nomip'd by the ui or something I guess.
+				itemInfo->icon = trap->R_RegisterShaderNoMip(item->icon);
+			}
+			else
+			{
+				itemInfo->icon = trap->R_RegisterShader(item->icon);
+			}
+		}
+		else
+		{
+			itemInfo->icon = 0;
+		}
+
+		if (item->giType == IT_WEAPON)
+		{
+			CG_RegisterWeapon(reuseWeaponItem->giTag);
+		}
+	}
+#endif //__FULL_VERSION_WEAPONS__
+
 	memset( itemInfo, 0, sizeof( *itemInfo ) );
 	itemInfo->registered = qtrue;
 
@@ -101,7 +156,8 @@ Ghoul2 Insert End
 		itemInfo->icon = 0;
 	}
 
-	if ( item->giType == IT_WEAPON ) {
+	if ( item->giType == IT_WEAPON ) 
+	{
 		CG_RegisterWeapon( item->giTag );
 	}
 

@@ -2153,6 +2153,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_FS_GETFILELIST:
 		return FS_GetFileList( (const char *)VMA(1), (const char *)VMA(2), (char *)VMA(3), args[4] );
 
+	case G_FS_FILEEXISTS:
+		return FS_FileExists((const char *)VMA(1));
+
 	case G_LOCATE_GAME_DATA:
 		SV_LocateGameData( (sharedEntity_t *)VMA(1), args[2], args[3], (struct playerState_s *)VMA(4), args[5] );
 		return 0;
@@ -3269,6 +3272,7 @@ void SV_BindGame( void ) {
 		gi.FS_Open								= FS_FOpenFileByMode;
 		gi.FS_Read								= FS_Read;
 		gi.FS_Write								= FS_Write;
+		gi.FS_FileExists						= FS_FileExists;
 		gi.AdjustAreaPortalState				= SV_AdjustAreaPortalState;
 		gi.AreasConnected						= CM_AreasConnected;
 		gi.DebugPolygonCreate					= BotImport_DebugPolygonCreate;

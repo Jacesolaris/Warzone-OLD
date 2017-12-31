@@ -76,6 +76,9 @@ void trap_FS_FCloseFile( fileHandle_t f ) {
 int trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
 	return Q_syscall( CG_FS_GETFILELIST, path, extension, listbuf, bufsize );
 }
+int trap_FS_FileExists(const char *path) {
+	return Q_syscall(CG_FS_FILEEXISTS, path);
+}
 void trap_SendConsoleCommand( const char *text ) {
 	Q_syscall( CG_SENDCONSOLECOMMAND, text );
 }

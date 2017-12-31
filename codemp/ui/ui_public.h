@@ -55,6 +55,7 @@ typedef enum uiImportLegacy_e {
 	UI_FS_WRITE,
 	UI_FS_FCLOSEFILE,
 	UI_FS_GETFILELIST,
+	UI_FS_FILEEXISTS,
 	UI_R_REGISTERMODEL,
 	UI_R_REGISTERSKIN,
 	UI_R_REGISTERSHADERNOMIP,
@@ -233,6 +234,7 @@ typedef struct uiImport_s {
 	int				(*FS_Open)								( const char *qpath, fileHandle_t *f, fsMode_t mode );
 	int				(*FS_Read)								( void *buffer, int len, fileHandle_t f );
 	int				(*FS_Write)								( const void *buffer, int len, fileHandle_t f );
+	qboolean		(*FS_FileExists)						( const char *path );
 
 	void			(*GetClientState)						( uiClientState_t *state );
 	void			(*GetClipboardData)						( char *buf, int bufsize );

@@ -544,8 +544,6 @@ void main()
 #if 0 // Shouldn't need this on splatmap draws...
 	if (SHADER_SWAY > 0.0)
 	{// Sway...
-		//texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
-		//texCoords += vec2(GetSway() /** ((1.0 - texCoords.y) + 1.0)*/, 0.0);
 		texCoords += vec2(GetSway());
 	}
 #endif
@@ -609,7 +607,7 @@ void main()
 	gl_FragColor.rgb = diffuse.rgb + ambientColor;
 
 
-	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && SHADER_MATERIAL_TYPE != MATERIAL_SKY && SHADER_MATERIAL_TYPE != MATERIAL_SUN && SHADER_MATERIAL_TYPE != MATERIAL_GLASS /*&& SHADER_MATERIAL_TYPE != MATERIAL_NONE*/)
+	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && SHADER_MATERIAL_TYPE != MATERIAL_SKY && SHADER_MATERIAL_TYPE != MATERIAL_SUN && SHADER_MATERIAL_TYPE != MATERIAL_GLASS)
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
@@ -641,15 +639,19 @@ void main()
 	}
 #endif
 
-
-#if 1 // Hmm using for buildings...
-#define glow_const_1 ( 23.0 / 255.0)
-#define glow_const_2 (255.0 / 229.0)
+	gl_FragColor.a = clamp(gl_FragColor.a, 0.0, 1.0);
 
 	float maxColor = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
 
-	if (SHADER_MATERIAL_TYPE == MATERIAL_ROCK && var_Slope > 0 && SHADER_HAS_SPLATMAP1 <= 0 && SHADER_HAS_SPLATMAP2 <= 0 && SHADER_HAS_SPLATMAP3 <= 0 && SHADER_HAS_SPLATMAP4 <= 0 && maxColor > 0.1)
-	{
+	if (/*USE_GLOW_BUFFER > 1.0 
+		&&*/ SHADER_MATERIAL_TYPE == MATERIAL_ROCK 
+		&& var_Slope > 0 
+		&& SHADER_HAS_SPLATMAP1 <= 0 
+		&& SHADER_HAS_SPLATMAP2 <= 0 
+		&& SHADER_HAS_SPLATMAP3 <= 0 
+		&& SHADER_HAS_SPLATMAP4 <= 0 
+		&& maxColor > 0.1)
+	{// Hmm using for city buildings...
 		vec4 glowColor = gl_FragColor;
 
 		if (SHADER_GLOW_VIBRANCY != 0.0)
@@ -657,19 +659,26 @@ void main()
 			glowColor.rgb = Vibrancy( glowColor.rgb, SHADER_GLOW_VIBRANCY );
 		}
 
+#define glow_const_1 ( 23.0 / 255.0)
+#define glow_const_2 (255.0 / 229.0)
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
+
+		float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);//clamp(max(glowColor.r, max(glowColor.g, glowColor.b)), 0.0, 1.0);
+		glowColor.a *= glowMax;
+		glowColor.rgb *= glowColor.a;
+
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a);
+		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
+
 		out_Glow = glowColor;
 
-		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
-		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
-
 		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-		out_Normal = vec4( vec3(EncodeNormal(N.xyz), 1.0), 1.0 );
-		out_NormalDetail = vec4(0.0);
+		out_Normal = vec4(vec3(EncodeNormal(N.xyz), 1.0), 1.0 );
+		//out_NormalDetail = vec4(0.0);
+		out_NormalDetail = norm;
 	}
 	else
-#endif
 	{
 		out_Glow = vec4(0.0);
 

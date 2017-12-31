@@ -1857,9 +1857,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					sprintf(imgname, "%s_g", stippedName);
 					
 #ifdef __DEFERRED_IMAGE_LOADING__
-					stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags);
+					stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags | IMGFLAG_GLOW);
 #else //!__DEFERRED_IMAGE_LOADING__
-					stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, flags);
+					stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, (flags & IMGFLAG_GLOW) ? flags : (flags | IMGFLAG_GLOW));
 #endif //__DEFERRED_IMAGE_LOADING__
 				}
 
@@ -3117,7 +3117,7 @@ static void ParseSkyParms( const char **text ) {
 	if ( strcmp( token, "-" ) ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s", token, suf[i] );
-			shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE );
+			shader.sky.outerbox[i] = R_FindImageFile( ( char * )pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE );
 
 			if ( !shader.sky.outerbox[i] ) {
 				if ( i )
@@ -4321,7 +4321,7 @@ static qboolean ParseShader( const char *name, const char **text )
 			token = COM_ParseExt(text, qfalse);
 			if (!token[0])
 			{
-				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'glowStrength' keyword in shader '%s'\n", shader.name);
+				ri->Printf(PRINT_WARNING, "WARNING: missing parm for 'glowVibrancy' keyword in shader '%s'\n", shader.name);
 				shader.glowVibrancy = 0.0;
 				continue;
 			}
@@ -4713,9 +4713,21 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealWaterEdgeMap = qfalse;
 	qboolean hasRealRoofMap = qfalse;
 	qboolean checkNormals = qtrue;
+	qboolean checkSplats = qtrue;
 
-	if (shader.isPortal || shader.isSky || diffuse->glow)
+	if (shader.isPortal || shader.isSky || diffuse->glow || r_normalMapping->integer <= 0)
+	{
 		checkNormals = qfalse;
+	}
+
+	if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+		&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
+			|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "models/")
+			|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menu")))
+	{// Ignore splat checks on menus, models, and gfx dirs...
+		checkSplats = qfalse;
+		checkNormals = qfalse;
+	}
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
 
@@ -4809,7 +4821,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 
 	// UQ1: Can't we do all this in one stage ffs???
-	if (r_normalMapping->integer >= 2 /*&& checkNormals*/)
+	if (r_normalMapping->integer >= 2 && checkNormals)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -4835,14 +4847,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		else if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded)//if (lightmap || useLightVector || useLightVertex)
 		{
 			char normalName[MAX_IMAGE_PATH];
-			image_t *normalImg;
+			image_t *normalImg = NULL;
 			int normalFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
 
 			COM_StripExtension( diffuseImg->imgName, normalName, sizeof( normalName ) );
 			Q_strcat( normalName, sizeof( normalName ), "_n" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(normalName))
+			if (R_TextureFileExists(normalName) || R_TIL_TextureFileExists(normalName))
 			{
 				normalImg = R_DeferImageLoad(normalName, IMGTYPE_NORMAL, normalFlags);
 			}
@@ -4851,6 +4863,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				normalImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
+			if (R_TextureFileExists(normalName) || R_TIL_TextureFileExists(normalName))
 			{
 				normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 			}
@@ -4927,7 +4940,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{// Check if we can load one...
 			char specularName[MAX_IMAGE_PATH];
 			char specularName2[MAX_IMAGE_PATH];
-			image_t *specularImg;
+			image_t *specularImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
@@ -4935,7 +4948,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat( specularName2, sizeof( specularName2 ), "_s" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(specularName2))
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
 				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_SPECULAR, specularFlags);
 			}
@@ -4945,7 +4958,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(specularName, specularName2, sizeof(specularName));
 				Q_strcat(specularName2, sizeof(specularName2), "_spec");
 
-				if (R_TextureFileExists(specularName2))
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
 					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_SPECULAR, specularFlags);
 				}
@@ -4955,15 +4968,19 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				}
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
 				specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
+			}
+			
+			if (!specularImg)
+			{
+				COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
+				StripCrap(specularName, specularName2, sizeof(specularName));
+				Q_strcat(specularName2, sizeof(specularName2), "_spec");
 
-				if (!specularImg)
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
-					StripCrap(specularName, specularName2, sizeof(specularName));
-					Q_strcat(specularName2, sizeof(specularName2), "_spec");
-
 					specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
 				}
 			}
@@ -5039,7 +5056,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}*/
 
-	if (1 && checkNormals)
+#if 0
+	if (checkNormals && checkSplats)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -5052,7 +5070,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{// Check if we can load one...
 			char specularName[MAX_IMAGE_PATH];
 			char specularName2[MAX_IMAGE_PATH];
-			image_t *specularImg;
+			image_t *specularImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
@@ -5060,7 +5078,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat(specularName2, sizeof(specularName2), "_o");
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(specularName2))
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
 				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_OVERLAY, specularFlags);
 			}
@@ -5070,7 +5088,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(specularName, specularName2, sizeof(specularName));
 				Q_strcat(specularName2, sizeof(specularName2), "_overlay");
 
-				if (R_TextureFileExists(specularName2))
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
 					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_OVERLAY, specularFlags);
 				}
@@ -5080,7 +5098,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				}
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+			{
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+			}
 
 			if (!specularImg)
 			{
@@ -5088,7 +5109,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap( specularName, specularName2, sizeof(specularName));
 				Q_strcat( specularName2, sizeof( specularName2 ), "_overlay" );
 
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+				{
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+				}
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -5119,8 +5143,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			hasRealOverlayMap = qfalse;
 		}
 	}
+#endif
 
-	if (1 && checkNormals)
+	if (checkSplats)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -5137,7 +5162,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{// Check if we can load one...
 			char specularName[MAX_IMAGE_PATH];
 			char specularName2[MAX_IMAGE_PATH];
-			image_t *specularImg;
+			image_t *specularImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
@@ -5145,7 +5170,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat(specularName2, sizeof(specularName2), "_steep");
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(specularName2))
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
 				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_STEEPMAP, specularFlags);
 			}
@@ -5154,7 +5179,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				specularImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+			{
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+			}
 
 			if (!specularImg)
 			{
@@ -5163,7 +5191,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(specularName, specularName2, sizeof(specularName2));
 				Q_strcat(specularName2, sizeof(specularName2), "_steep1");
 
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+				{
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+				}
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -5200,7 +5231,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{// Check if we can load one...
 			char specularName[MAX_IMAGE_PATH];
 			char specularName2[MAX_IMAGE_PATH];
-			image_t *specularImg;
+			image_t *specularImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
@@ -5208,7 +5239,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat( specularName2, sizeof( specularName2 ), "_riverbed" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(specularName2))
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
 				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
 			}
@@ -5217,7 +5248,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				specularImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+			{
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+			}
 
 			if (!specularImg)
 			{
@@ -5226,7 +5260,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(specularName, specularName2, sizeof(specularName2));
 				Q_strcat(specularName2, sizeof(specularName2), "_steep2");
 
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+				{
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+				}
 			}
 
 			if (!specularImg)
@@ -5271,7 +5308,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			{// Check if we can load one...
 				char specularName[MAX_IMAGE_PATH];
 				char specularName2[MAX_IMAGE_PATH];
-				image_t *specularImg;
+				image_t *specularImg = NULL;
 				int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 				COM_StripExtension(diffuseImg->imgName, specularName, sizeof(specularName));
@@ -5279,7 +5316,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				Q_strcat(specularName2, sizeof(specularName2), "_roof");
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-				if (R_TextureFileExists(specularName2))
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
 					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_ROOFMAP, specularFlags);
 				}
@@ -5288,7 +5325,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					specularImg = NULL;
 				}
 #else //!__DEFERRED_IMAGE_LOADING__
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_ROOFMAP, specularFlags);
+				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
+				{
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_ROOFMAP, specularFlags);
+				}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 				if (specularImg)
@@ -5314,7 +5354,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
-	if (1)
+	if (checkSplats)
 	{
 		if (splatControlMap && splatControlMap->bundle[0].image[0] && splatControlMap->bundle[0].image[0] != tr.whiteImage)
 		{// Got one...
@@ -5327,7 +5367,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			char splatName[MAX_IMAGE_PATH];
 			char splatName2[MAX_IMAGE_PATH];
-			image_t *splatImg;
+			image_t *splatImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
@@ -5335,7 +5375,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat( splatName2, sizeof( splatName2 ), "_splat" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(splatName2))
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(specularName2))
 			{
 				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
 			}
@@ -5344,7 +5384,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				splatImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
+			{
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+			}
 
 			if (!splatImg)
 			{
@@ -5353,7 +5396,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(splatName, splatName2, sizeof(splatName));
 				Q_strcat(splatName2, sizeof(splatName2), "_splatControl");
 
-				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+				if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
+				{
+					splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+				}
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -5383,7 +5429,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			char splatName[MAX_IMAGE_PATH];
 			char splatName2[MAX_IMAGE_PATH];
-			image_t *splatImg;
+			image_t *splatImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
@@ -5391,7 +5437,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat( splatName2, sizeof( splatName2 ), "_splat1" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(splatName2))
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
 				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP1, specularFlags);
 			}
@@ -5400,7 +5446,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				splatImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP1, specularFlags);
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
+			{
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP1, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (splatImg)
@@ -5439,7 +5488,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			char splatName[MAX_IMAGE_PATH];
 			char splatName2[MAX_IMAGE_PATH];
-			image_t *splatImg;
+			image_t *splatImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
@@ -5447,7 +5496,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat( splatName2, sizeof( splatName2 ), "_splat2" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(splatName2))
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
 				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP2, specularFlags);
 			}
@@ -5456,7 +5505,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				splatImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP2, specularFlags);
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
+			{
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP2, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (splatImg)
@@ -5495,7 +5547,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			char splatName[MAX_IMAGE_PATH];
 			char splatName2[MAX_IMAGE_PATH];
-			image_t *splatImg;
+			image_t *splatImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
@@ -5503,7 +5555,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat( splatName2, sizeof( splatName2 ), "_splat3" );
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(splatName2))
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
 				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP3, specularFlags);
 			}
@@ -5512,7 +5564,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				splatImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP3, specularFlags);
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
+			{
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP3, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (splatImg)
@@ -5540,13 +5595,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 		}
 
+#if 0
 		{
 			// Detail Map
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
 			char splatName[MAX_IMAGE_PATH];
 			char splatName2[MAX_IMAGE_PATH];
-			image_t *splatImg;
+			image_t *splatImg = NULL;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
 
 			COM_StripExtension(diffuseImg->imgName, splatName, sizeof(splatName));
@@ -5554,7 +5610,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			Q_strcat(splatName2, sizeof(splatName2), "_detail");
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-			if (R_TextureFileExists(splatName2))
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
 				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_DETAILMAP, specularFlags);
 			}
@@ -5563,7 +5619,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				splatImg = NULL;
 			}
 #else //!__DEFERRED_IMAGE_LOADING__
-			splatImg = R_FindImageFile(splatName2, IMGTYPE_DETAILMAP, specularFlags);
+			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
+			{
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_DETAILMAP, specularFlags);
+			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
 			if (splatImg)
@@ -5579,6 +5638,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_DETAILMAP].image[0] = NULL;
 			}
 		}
+#endif
 	}
 
 	/*
@@ -5808,9 +5868,212 @@ static int CollapseStagesToGLSL(void)
 		}
 	}
 
+#ifdef __MERGE_GLOW_STAGES__
 	if (!skip)
 	{
-		shaderStage_t *lightmaps[MAX_SHADER_STAGES] = {};
+		int diffuseStage = -1;
+		int glowStage = -1;
+		int numActiveStages = 0;
+
+		for (i = 0; i < MAX_SHADER_STAGES; i++)
+		{// Find a standard non-blended (or one/one will do) diffuse stage that we can merge into...
+			shaderStage_t *pStage = &stages[i];
+
+			if (!pStage->active)
+				continue;
+
+			numActiveStages++;
+		}
+
+		if (numActiveStages > 1)
+		{
+			int glowBlend = 0;
+
+			for (i = 0; i < MAX_SHADER_STAGES; i++)
+			{// Find a standard non-blended (or one/one will do) diffuse stage that we can merge into...
+				shaderStage_t *pStage = &stages[i];
+
+				if (!pStage->active)
+					continue;
+				
+				if (!pStage->glow && !pStage->glowMapped && pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+#if 1
+					int blendBits = pStage->stateBits & (GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS);
+
+					glowBlend = blendBits;
+
+					if (blendBits == 0)
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					if (blendBits == (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_ONE))
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					if (blendBits == (GLS_DSTBLEND_ONE | GLS_SRCBLEND_ONE))
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					
+					if (blendBits == (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_SRC_ALPHA))
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					if (blendBits == (GLS_DSTBLEND_ONE | GLS_SRCBLEND_SRC_ALPHA))
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					if (blendBits == (GLS_DSTBLEND_DST_ALPHA | GLS_SRCBLEND_ONE))
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					if (blendBits == (GLS_DSTBLEND_DST_ALPHA | GLS_SRCBLEND_SRC_ALPHA))
+					{
+						diffuseStage = i;
+						break;
+					}
+					
+
+					/*
+					if (blendBits == (GLS_DSTBLEND_ONE_MINUS_SRC_COLOR | GLS_SRCBLEND_ONE))
+					{
+						diffuseStage = i;
+						break;
+					}
+
+					if (blendBits == (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_DST_COLOR))
+					{
+						diffuseStage = i;
+						break;
+					}
+					*/
+#else
+					diffuseStage = i;
+					break;
+#endif
+				}
+			}
+
+			//if (diffuseStage != -1)
+			{// We found a diffuse stage to merge glow into, check if there is one to merge in...
+				for (i = 0; i < MAX_SHADER_STAGES; i++)
+				{
+					shaderStage_t *pStage = &stages[i];
+
+					if (!pStage->active)
+						continue;
+
+					if (pStage->glow && pStage->bundle[TB_DIFFUSEMAP].image[0])
+					{
+						int blendBits = pStage->stateBits & (GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS);
+
+						if (blendBits == 0)
+						{
+							glowStage = i;
+							break;
+						}
+
+						if (blendBits == glowBlend)
+						{
+							glowStage = i;
+							break;
+						}
+
+						if (blendBits == (GLS_DSTBLEND_ONE | GLS_SRCBLEND_ONE))
+						{
+							glowStage = i;
+							break;
+						}
+
+						if (blendBits == (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_ONE))
+						{
+							glowStage = i;
+							break;
+						}
+						
+						if (blendBits == (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_SRC_ALPHA))
+						{
+							glowStage = i;
+							break;
+						}
+
+						if (blendBits == (GLS_DSTBLEND_ONE | GLS_SRCBLEND_SRC_ALPHA))
+						{
+							glowStage = i;
+							break;
+						}
+
+						if (blendBits == (GLS_DSTBLEND_DST_ALPHA | GLS_SRCBLEND_ONE))
+						{
+							glowStage = i;
+							break;
+						}
+
+						if (blendBits == (GLS_DSTBLEND_DST_ALPHA | GLS_SRCBLEND_SRC_ALPHA))
+						{
+							glowStage = i;
+							break;
+						}
+						
+						//glowStage = i;
+						//break;
+					}
+				}
+
+				if (diffuseStage == -1 && glowStage != -1)
+				{
+					ri->Printf(PRINT_ALL, "^1PERFORMANCE WARNING^5: Shader ^7%s^5 has depricated diffuse stage for merged glows. Update your shader for Warzone, or use a <originalTextureName>_g texture for the glow!\n", shader.name);
+				}
+				else if (glowStage != -1)
+				{// We can save a draw call here, so merge the glow stage into the diffuse stage...
+					shaderStage_t *dStage = &stages[diffuseStage];
+					shaderStage_t *gStage = &stages[glowStage];
+					dStage->bundle[TB_GLOWMAP].image[0] = gStage->bundle[TB_DIFFUSEMAP].image[0];
+					dStage->glowMapped = qtrue;
+					dStage->glow = qtrue;
+					dStage->glowColorFound = gStage->glowColorFound;
+					
+					VectorCopy4(gStage->glowColor, dStage->glowColor);
+					
+					dStage->glslShaderIndex |= LIGHTDEF_USE_GLOW_BUFFER;
+
+					if (gStage->emissiveRadiusScale <= 0.0)
+						dStage->emissiveRadiusScale = 1.0;
+					else
+						dStage->emissiveRadiusScale = gStage->emissiveRadiusScale;
+
+					if (gStage->emissiveColorScale <= 0.0)
+						dStage->emissiveColorScale = 1.5;
+					else
+						dStage->emissiveColorScale = gStage->emissiveColorScale;
+
+					dStage->glowBlend = gStage->glowBlend;
+
+					gStage->active = qfalse;
+
+					ri->Printf(PRINT_ALL, "^3PERFORMANCE ENHANCEMENT^5: Successfully merged glow stage ^7%i^5 into a diffuse stage ^7%i^5 for shader ^7%s^5.\n", glowStage, diffuseStage, shader.name);
+				}
+			}
+		}
+	}
+#endif //__MERGE_GLOW_STAGES__
+
+	if (!skip)
+	{
+		shaderStage_t *lightmaps[MAX_SHADER_STAGES] = { NULL };
 
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
@@ -7773,7 +8036,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 	qboolean forceShaderFileUsage = qfalse;
 
-	if (shaderText && (StringContains((char *)shaderText, "warzoneShader", qfalse) || StringContains((char *)shaderText, "warzoneEnabled", qfalse) || StringContains((char *)shaderText, "warzoneSupported", qfalse)))
+	if (shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneEnabled", qfalse))
 	{// This is marked as a warzone enabled shader...
 		forceShaderFileUsage = qtrue;
 	}
@@ -7855,7 +8118,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		// Do we have a glow?
 		sprintf(glowName, "%s_glow", strippedName);
 
-		if (R_TextureFileExists(glowName))
+		if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
 		{
 			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
 		}
@@ -7864,7 +8127,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			memset(glowName, 0, sizeof(char) * MAX_IMAGE_PATH);
 			sprintf(glowName, "%s_glw", strippedName);
 
-			if (R_TextureFileExists(glowName))
+			if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
 			{
 				sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
 			}

@@ -402,6 +402,7 @@ typedef enum gameImportLegacy_e {
 	G_SIEGEPERSSET,
 	G_SIEGEPERSGET,
 	G_FS_GETFILELIST,
+	G_FS_FILEEXISTS,
 	G_DEBUG_POLYGON_CREATE,
 	G_DEBUG_POLYGON_DELETE,
 	G_REAL_TIME,
@@ -768,6 +769,7 @@ typedef struct gameImport_s {
 	int			(*FS_Open)								( const char *qpath, fileHandle_t *f, fsMode_t mode );
 	int			(*FS_Read)								( void *buffer, int len, fileHandle_t f );
 	int			(*FS_Write)								( const void *buffer, int len, fileHandle_t f );
+	qboolean	(*FS_FileExists)						( const char *path );
 
 	// server
 	void		(*AdjustAreaPortalState)				( sharedEntity_t *ent, qboolean open );

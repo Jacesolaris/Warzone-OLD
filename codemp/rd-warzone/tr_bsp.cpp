@@ -2222,6 +2222,8 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	numTriSurfs = 0;
 	numFlares = 0;
 
+	DEBUG_StartTimer("R_LoadSurfacesAlloc", qfalse);
+
 	if (surfs->filelen % sizeof(*in))
 		ri->Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
 	count = surfs->filelen / sizeof(*in);
@@ -2290,12 +2292,18 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 		}
 	}
 
+	DEBUG_EndTimer(qfalse);
+
 	in = (dsurface_t *)(fileBase + surfs->fileofs);
 	out = s_worldData.surfaces;
 
-	for ( i = 0 ; i < count ; i++, in++, out++ ) {
+	DEBUG_StartTimer("R_LoadSurfacesParse", qfalse);
+
+	for ( i = 0 ; i < count ; i++, in++, out++ ) 
+	{
 		switch ( LittleLong( in->surfaceType ) ) {
 		case MST_PATCH:
+			//DEBUG_StartTimer("R_LoadSurfacesParsePatch", qfalse);
 			ParseMesh ( in, dv, hdrVertColors, out );
 			{
 				srfBspSurface_t *surface = (srfBspSurface_t *)out->data;
@@ -2307,31 +2315,36 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 				out->cullinfo.radius = surface->cullRadius;
 			}
 			numMeshes++;
+			//DEBUG_EndTimer(qfalse);
 			break;
 		case MST_FOLIAGE:
-			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
-			//ri->Printf(PRINT_WARNING, "Loaded foliage surface at %f %f %f.\n", dv->xyz[0], dv->xyz[1], dv->xyz[2]);
-			numTriSurfs++;
-			break;
 		case MST_TRIANGLE_SOUP:
+			//DEBUG_StartTimer("R_LoadSurfacesParseTriSoup", qfalse);
 			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
 			numTriSurfs++;
+			//DEBUG_EndTimer(qfalse);
 			break;
 		case MST_PLANAR:
+			//DEBUG_StartTimer("R_LoadSurfacesParsePlanar", qfalse);
 			ParseFace( in, dv, hdrVertColors, out, indexes );
 			numFaces++;
+			//DEBUG_EndTimer(qfalse);
 			break;
 		case MST_FLARE:
+			//DEBUG_StartTimer("R_LoadSurfacesParseFlare", qfalse);
 			ParseFlare( in, dv, out, indexes );
 			{
 				out->cullinfo.type = CULLINFO_NONE;
 			}
 			numFlares++;
+			//DEBUG_EndTimer(qfalse);
 			break;
 		default:
 			ri->Error( ERR_DROP, "Bad surfaceType" );
 		}
 	}
+
+	DEBUG_EndTimer(qfalse);
 
 	if (hdrVertColors)
 	{
@@ -2339,13 +2352,19 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	}
 
 #ifdef PATCH_STITCHING
+	DEBUG_StartTimer("R_LoadSurfacesStitch", qfalse);
 	R_StitchAllPatches();
+	DEBUG_EndTimer(qfalse);
 #endif
 
+	DEBUG_StartTimer("R_LoadSurfacesFixVertexLodError", qfalse);
 	R_FixSharedVertexLodError();
+	DEBUG_EndTimer(qfalse);
 
 #ifdef PATCH_STITCHING
+	DEBUG_StartTimer("R_LoadSurfacesMoveToHunk", qfalse);
 	R_MovePatchSurfacesToHunk();
+	DEBUG_EndTimer(qfalse);
 #endif
 
 	ri->Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
@@ -4462,39 +4481,6 @@ Called directly from cgame
 
 extern void MAPPING_LoadMapInfo(void);
 
-
-#define __RENDERER_STARTUP_PERFORMANCE_DEBUG__
-
-#ifdef __RENDERER_STARTUP_PERFORMANCE_DEBUG__
-#include <iostream>
-using namespace std;
-#include <cstdlib>
-#include <sys/timeb.h>
-
-extern int getMilliCount();
-extern int getMilliSpan(int nTimeStart);
-
-int 	STARTUP_PERFORMANCE_TIME = 0;
-char	STARTUP_PERFORMANCE_NAME[128] = { 0 };
-#endif //__RENDERER_STARTUP_PERFORMANCE_DEBUG__
-
-void DEBUG_STARTUP_StartTimer(char *name)
-{
-#ifdef __RENDERER_STARTUP_PERFORMANCE_DEBUG__
-	memset(STARTUP_PERFORMANCE_NAME, 0, sizeof(char) * 128);
-	strcpy(STARTUP_PERFORMANCE_NAME, name);
-	STARTUP_PERFORMANCE_TIME = getMilliCount();
-#endif //__RENDERER_STARTUP_PERFORMANCE_DEBUG__
-}
-
-void DEBUG_STARTUP_EndTimer(void)
-{
-#ifdef __RENDERER_STARTUP_PERFORMANCE_DEBUG__
-	STARTUP_PERFORMANCE_TIME = getMilliSpan(STARTUP_PERFORMANCE_TIME);
-	ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", STARTUP_PERFORMANCE_NAME, STARTUP_PERFORMANCE_TIME);
-#endif //__RENDERER_STARTUP_PERFORMANCE_DEBUG__
-}
-
 void RE_LoadWorldMap( const char *name ) {
 	int			i;
 	dheader_t	*header;
@@ -4503,6 +4489,8 @@ void RE_LoadWorldMap( const char *name ) {
 		void *v;
 	} buffer;
 	byte		*startMarker;
+
+	tr.worldLoaded = qfalse;
 
 	if ( tr.worldMapLoaded ) {
 		ri->Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
@@ -4527,9 +4515,9 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 	// Load mapinfo settings...
-	DEBUG_STARTUP_StartTimer("MAPPING_LoadMapInfo");
+	DEBUG_StartTimer("MAPPING_LoadMapInfo", qfalse);
 	MAPPING_LoadMapInfo();
-	DEBUG_STARTUP_EndTimer();
+	DEBUG_EndTimer(qfalse);
 
 	// set default map light scale
 	tr.mapLightScale  = 1.0f;
@@ -4588,51 +4576,51 @@ void RE_LoadWorldMap( const char *name ) {
 	}
 
 	// load into heap
-	DEBUG_STARTUP_StartTimer("R_LoadEntities");
+	DEBUG_StartTimer("R_LoadEntities", qfalse);
 	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadShaders");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadShaders", qfalse);
 	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadLightmaps");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadLightmaps", qfalse);
 	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadPlanes");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadPlanes", qfalse);
 	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadFogs");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadFogs", qfalse);
 	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadSurfaces");
+	DEBUG_EndTimer(qfalse);
+	//DEBUG_StartTimer("R_LoadSurfaces", qfalse);
 	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadMarksurfaces");
+	//DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadMarksurfaces", qfalse);
 	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadNodesAndLeafs");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadNodesAndLeafs", qfalse);
 	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadSubmodels");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadSubmodels", qfalse);
 	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadVisibility");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadVisibility", qfalse);
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadLightGrid");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadLightGrid", qfalse);
 	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
-	DEBUG_STARTUP_EndTimer();
-	DEBUG_STARTUP_StartTimer("R_LoadLightGridArray");
+	DEBUG_EndTimer(qfalse);
+	DEBUG_StartTimer("R_LoadLightGridArray", qfalse);
 	R_LoadLightGridArray( &header->lumps[LUMP_LIGHTARRAY] );
-	DEBUG_STARTUP_EndTimer();
+	DEBUG_EndTimer(qfalse);
 	
 #ifdef __XYC_SURFACE_SPRITES__
 	R_GenerateSurfaceSprites(&s_worldData);
 #endif //__XYC_SURFACE_SPRITES__
 
 	// determine vertex light directions
-	DEBUG_STARTUP_StartTimer("R_CalcVertexLightDirs");
+	DEBUG_StartTimer("R_CalcVertexLightDirs", qfalse);
 	R_CalcVertexLightDirs();
-	DEBUG_STARTUP_EndTimer();
+	DEBUG_EndTimer(qfalse);
 
 	// determine which parts of the map are in sunlight
 #if 0
@@ -4825,9 +4813,9 @@ void RE_LoadWorldMap( const char *name ) {
 #endif
 
 	// Set up water plane and glow postions...
-	DEBUG_STARTUP_StartTimer("R_SetupMapGlowsAndWaterPlane");
+	DEBUG_StartTimer("R_SetupMapGlowsAndWaterPlane", qfalse);
 	R_SetupMapGlowsAndWaterPlane();
-	DEBUG_STARTUP_EndTimer();
+	DEBUG_EndTimer(qfalse);
 
 	s_worldData.dataSize = (byte *)ri->Hunk_Alloc(0, h_low) - startMarker;
 
@@ -4835,49 +4823,49 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.world = &s_worldData;
 
 	// create static VBOS from the world
-	DEBUG_STARTUP_StartTimer("R_CreateWorldVBOs");
+	DEBUG_StartTimer("R_CreateWorldVBOs", qfalse);
 	R_CreateWorldVBOs();
-	DEBUG_STARTUP_EndTimer();
+	DEBUG_EndTimer(qfalse);
 
 	if (r_mergeLeafSurfaces->integer)
 	{
-		DEBUG_STARTUP_StartTimer("R_MergeLeafSurfaces");
+		DEBUG_StartTimer("R_MergeLeafSurfaces", qfalse);
 		R_MergeLeafSurfaces();
-		DEBUG_STARTUP_EndTimer();
+		DEBUG_EndTimer(qfalse);
 	}
 
 	// make sure the VBO glState entries are safe
 	R_BindNullVBO();
 	R_BindNullIBO();
 
-	DEBUG_STARTUP_StartTimer("R_LoadMapInfo");
+	DEBUG_StartTimer("R_LoadMapInfo", qfalse);
 	R_LoadMapInfo();
-	DEBUG_STARTUP_EndTimer();
+	DEBUG_EndTimer(qfalse);
 
 #ifndef __REALTIME_CUBEMAP__
 	// load cubemaps
 	if (r_cubeMapping->integer >= 1)
 	{
-		DEBUG_STARTUP_StartTimer("R_LoadCubemapEntities");
+		DEBUG_StartTimer("R_LoadCubemapEntities", qfalse);
 		R_LoadCubemapEntities("misc_cubemap");
-		DEBUG_STARTUP_EndTimer();
+		DEBUG_EndTimer(qfalse);
 
 		if (!tr.numCubemaps)
 		{
-			DEBUG_STARTUP_StartTimer("R_SetupCubemapPoints");
+			DEBUG_StartTimer("R_SetupCubemapPoints", qfalse);
 			// use deathmatch spawn points as cubemaps
 			//R_LoadCubemapEntities("info_player_deathmatch");
 			// UQ1: Warzone can do better!
 			R_SetupCubemapPoints(); // NOTE: Also sets up water plane and glow postions at the same time... Can skip R_SetupMapGlowsAndWaterPlane()
-			DEBUG_STARTUP_EndTimer();
+			DEBUG_EndTimer(qfalse);
 		}
 
 #ifndef __PLAYER_BASED_CUBEMAPS__
 		if (tr.numCubemaps)
 		{
-			DEBUG_STARTUP_StartTimer("R_AssignCubemapsToWorldSurfaces");
+			DEBUG_StartTimer("R_AssignCubemapsToWorldSurfaces", qfalse);
 			R_AssignCubemapsToWorldSurfaces();
-			DEBUG_STARTUP_EndTimer();
+			DEBUG_EndTimer(qfalse);
 		}
 #endif //__PLAYER_BASED_CUBEMAPS__
 	}
@@ -4887,11 +4875,13 @@ void RE_LoadWorldMap( const char *name ) {
 	// Render all cubemaps
 	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
 	{
-		DEBUG_STARTUP_StartTimer("R_RenderAllCubemaps");
+		DEBUG_StartTimer("R_RenderAllCubemaps", qfalse);
 		R_RenderAllCubemaps();
-		DEBUG_STARTUP_EndTimer();
+		DEBUG_EndTimer(qfalse);
 	}
 #endif //__REALTIME_CUBEMAP__
 
     ri->FS_FreeFile( buffer.v );
+
+	tr.worldLoaded = qtrue;
 }

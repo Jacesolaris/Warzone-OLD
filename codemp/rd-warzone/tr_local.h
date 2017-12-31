@@ -36,6 +36,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __DEBUG_GLSL_BINDS__
 #endif //__DEBUG_BINDS__
 
+//#define __PERFORMANCE_DEBUG__
+
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                               Warzone Basic Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -74,6 +76,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __SOFTWARE_OCCLUSION__
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
+
+//#define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
 
 //#define __OCEAN__
@@ -214,6 +218,8 @@ In JA, we define these in the tr_local.h, which is much more logical
 */
 
 extern cvar_t	*r_drawSort;
+
+extern cvar_t	*r_compressedTextures;
 
 extern cvar_t	*r_superSampleMultiplier;
 
@@ -2726,6 +2732,8 @@ typedef struct trGlobals_s {
 	int                     fatLightmapSize;
 	int		                fatLightmapStep;
 
+	qboolean				worldLoaded;
+
 #ifndef __REALTIME_CUBEMAP__
 	int                     numCubemaps;
 	vec3_t                  *cubemapOrigins;
@@ -4174,7 +4182,11 @@ uint32_t R_TessXYZtoPackedNormals(vec3_t xyz);
 shader_t *R_CreateShaderFromTextureBundle(const char *name, const textureBundle_t *bundle, uint32_t stateBits);
 #endif //__XYC_SURFACE_SPRITES__
 
+extern float mix(float x, float y, float a);
+
 void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE);
+
+char *R_TIL_TextureFileExists(const char *name);
 
 /*
 ============================================================
@@ -4187,5 +4199,15 @@ OCCLUSION QUERY
 qboolean RB_CheckOcclusion(mnode_t *node);
 void RB_OcclusionCulling(void);
 void RB_CheckOcclusions(void);
+
+
+/*
+tr_debug.cpp
+*/
+
+int getMilliCount();
+int getMilliSpan(int nTimeStart);
+void DEBUG_StartTimer(char *name, qboolean usePerfCvar);
+void DEBUG_EndTimer(qboolean usePerfCvar);
 
 #endif //TR_LOCAL_H

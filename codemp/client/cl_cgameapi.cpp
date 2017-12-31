@@ -891,6 +891,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_FS_GETFILELIST:
 		return FS_GetFileList( (const char *)VMA(1), (const char *)VMA(2), (char *)VMA(3), args[4] );
 
+	case CG_FS_FILEEXISTS:
+		return FS_FileExists((const char *)VMA(1));
+
 	case CG_SENDCONSOLECOMMAND:
 		Cbuf_AddText( (const char *)VMA(1) );
 		return 0;
@@ -1669,6 +1672,7 @@ void CL_BindCGame( void ) {
 		cgi.SendConsoleCommand					= Cbuf_AddText;
 		cgi.FS_Close							= FS_FCloseFile;
 		cgi.FS_GetFileList						= FS_GetFileList;
+		cgi.FS_FileExists						= FS_FileExists;
 		cgi.FS_Open								= FS_FOpenFileByMode;
 		cgi.FS_Read								= FS_Read;
 		cgi.FS_Write							= FS_Write;

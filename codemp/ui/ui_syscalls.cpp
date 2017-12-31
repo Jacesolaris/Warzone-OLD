@@ -83,6 +83,9 @@ void trap_FS_FCloseFile( fileHandle_t f ) {
 int trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
 	return Q_syscall( UI_FS_GETFILELIST, path, extension, listbuf, bufsize );
 }
+int trap_FS_FileExists(const char *path) {
+	return Q_syscall(UI_FS_FILEEXISTS, path);
+}
 qhandle_t trap_R_RegisterModel( const char *name ) {
 	return Q_syscall( UI_R_REGISTERMODEL, name );
 }
@@ -489,6 +492,7 @@ static void TranslateSyscalls( void ) {
 
 	trap->FS_Close							= trap_FS_FCloseFile;
 	trap->FS_GetFileList					= trap_FS_GetFileList;
+	trap->FS_FileExists						= trap_FS_FileExists;
 	trap->FS_Open							= trap_FS_FOpenFile;
 	trap->FS_Read							= UISyscall_FS_Read;
 	trap->FS_Write							= UISyscall_FS_Write;

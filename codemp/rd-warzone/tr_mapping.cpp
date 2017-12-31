@@ -1456,6 +1456,9 @@ qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 vec3_t		MAP_AMBIENT_CSB = { 1 };
 vec3_t		MAP_AMBIENT_COLOR = { 1 };
 float		MAP_GLOW_MULTIPLIER = 1.0;
+vec3_t		MAP_AMBIENT_CSB_NIGHT = { 1 };
+vec3_t		MAP_AMBIENT_COLOR_NIGHT = { 1 };
+float		MAP_GLOW_MULTIPLIER_NIGHT = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
 float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
 qboolean	AURORA_ENABLED = qtrue;
@@ -1536,7 +1539,11 @@ void MAPPING_LoadMapInfo(void)
 	// Misc effect enablers...
 	//
 	ENABLE_DISPLACEMENT_MAPPING = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_DISPLACEMENT_MAPPING", "0")) > 0) ? qtrue : qfalse;
-	DISPLACEMENT_MAPPING_STRENGTH = atof(IniRead(mapname, "EFFECTS", "DISPLACEMENT_MAPPING_STRENGTH", "18.0"));
+
+	if (ENABLE_DISPLACEMENT_MAPPING)
+	{
+		DISPLACEMENT_MAPPING_STRENGTH = atof(IniRead(mapname, "EFFECTS", "DISPLACEMENT_MAPPING_STRENGTH", "18.0"));
+	}
 
 	//
 	// Sun + Day/Night...
@@ -1551,6 +1558,20 @@ void MAPPING_LoadMapInfo(void)
 		dayNightEnableValue = atoi(IniRead(mapname, "SUN", "DAY_NIGHT_CYCLE_ENABLED", "0"));
 		DAY_NIGHT_CYCLE_SPEED = atof(IniRead(mapname, "SUN", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
 		DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
+	}
+
+	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
+	{// Leave -1 in ini file to override and force it off, just in case...
+		if (StringContainsWord(mapname, "mandalore")
+			|| StringContainsWord(mapname, "endor")
+			|| StringContainsWord(mapname, "ilum")
+			|| StringContainsWord(mapname, "taanab")
+			|| StringContainsWord(mapname, "tatooine")
+			|| StringContainsWord(mapname, "scarif")
+			&& !StringContainsWord(mapname, "tatooine_nights"))
+		{
+			DAY_NIGHT_CYCLE_ENABLED = qtrue;
+		}
 	}
 
 	SUN_PHONG_SCALE = atof(IniRead(mapname, "SUN", "SUN_PHONG_SCALE", "1.0"));
@@ -1593,20 +1614,34 @@ void MAPPING_LoadMapInfo(void)
 	MAP_AMBIENT_COLOR[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_G", "1.0"));
 	MAP_AMBIENT_COLOR[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_B", "1.0"));
 
+	MAP_AMBIENT_COLOR_NIGHT[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_NIGHT_R", va("%f", MAP_AMBIENT_COLOR[0])));
+	MAP_AMBIENT_COLOR_NIGHT[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_NIGHT_G", va("%f", MAP_AMBIENT_COLOR[1])));
+	MAP_AMBIENT_COLOR_NIGHT[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_NIGHT_B", va("%f", MAP_AMBIENT_COLOR[2])));
+
 	MAP_AMBIENT_CSB[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_CONTRAST", "1.0"));
 	MAP_AMBIENT_CSB[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_SATURATION", "1.0"));
 	MAP_AMBIENT_CSB[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_BRIGHTNESS", "1.0"));
 
+	MAP_AMBIENT_CSB_NIGHT[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_CONTRAST_NIGHT", va("%f", MAP_AMBIENT_CSB[0]*0.9)));
+	MAP_AMBIENT_CSB_NIGHT[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_SATURATION_NIGHT", va("%f", MAP_AMBIENT_CSB[1]*0.9)));
+	MAP_AMBIENT_CSB_NIGHT[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_BRIGHTNESS_NIGHT", va("%f", MAP_AMBIENT_CSB[2]*0.55)));
+
 	MAP_GLOW_MULTIPLIER = atof(IniRead(mapname, "PALETTE", "MAP_GLOW_MULTIPLIER", "1.0"));
+
+	MAP_GLOW_MULTIPLIER_NIGHT = atof(IniRead(mapname, "PALETTE", "MAP_GLOW_MULTIPLIER_NIGHT", va("%f", MAP_GLOW_MULTIPLIER)));
 
 	//
 	// Ambient Occlusion...
 	//
 	AO_ENABLED = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_ENABLED", "1")) > 0) ? qtrue : qfalse;
-	AO_BLUR = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_BLUR", "1")) > 0) ? qtrue : qfalse;
-	AO_DIRECTIONAL = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_DIRECTIONAL", "0")) > 0) ? qtrue : qfalse;
-	AO_MINBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MINBRIGHT", "0.3"));
-	AO_MULTBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MULTBRIGHT", "1.0"));
+
+	if (AO_ENABLED)
+	{
+		AO_BLUR = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_BLUR", "1")) > 0) ? qtrue : qfalse;
+		AO_DIRECTIONAL = (atoi(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_DIRECTIONAL", "0")) > 0) ? qtrue : qfalse;
+		AO_MINBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MINBRIGHT", "0.3"));
+		AO_MULTBRIGHT = atof(IniRead(mapname, "AMBIENT_OCCLUSION", "AO_MULTBRIGHT", "1.0"));
+	}
 
 	//
 	// Emission...
@@ -1618,26 +1653,38 @@ void MAPPING_LoadMapInfo(void)
 	// Fog...
 	//
 	FOG_POST_ENABLED = (atoi(IniRead(mapname, "FOG", "DISABLE_FOG", "1")) > 0) ? qfalse : qtrue;
-	FOG_STANDARD_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_STANDARD_ENABLE", "1")) > 0) ? qtrue : qfalse;
-	FOG_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_R", "0.5"));
-	FOG_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_G", "0.6"));
-	FOG_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_B", "0.7"));
-	FOG_COLOR_SUN[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_R", "1.0"));
-	FOG_COLOR_SUN[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_G", "0.9"));
-	FOG_COLOR_SUN[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_B", "0.7"));
-	FOG_DENSITY = atof(IniRead(mapname, "FOG", "FOG_DENSITY", "0.5"));
-	FOG_ACCUMULATION_MODIFIER = atof(IniRead(mapname, "FOG", "FOG_ACCUMULATION_MODIFIER", "3.0"));
-	FOG_RANGE_MULTIPLIER = atof(IniRead(mapname, "FOG", "FOG_RANGE_MULTIPLIER", "1.0"));
 
-	FOG_VOLUMETRIC_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ENABLE", "0")) > 0) ? qtrue : qfalse;
-	FOG_VOLUMETRIC_DENSITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_DENSITY", "0.01"));
-	FOG_VOLUMETRIC_STRENGTH = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_STRENGTH", "1.0"));
-	FOG_VOLUMETRIC_VELOCITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_VELOCITY", "0.1"));
-	FOG_VOLUMETRIC_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_CLOUDINESS", "1.0"));
-	FOG_VOLUMETRIC_WIND = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_WIND", "1.0"));
-	FOG_VOLUMETRIC_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_R", "1.0"));
-	FOG_VOLUMETRIC_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_G", "1.0"));
-	FOG_VOLUMETRIC_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_B", "1.0"));
+	if (FOG_POST_ENABLED)
+	{
+		FOG_STANDARD_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_STANDARD_ENABLE", "1")) > 0) ? qtrue : qfalse;
+
+		if (FOG_STANDARD_ENABLE)
+		{
+			FOG_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_R", "0.5"));
+			FOG_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_G", "0.6"));
+			FOG_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_B", "0.7"));
+			FOG_COLOR_SUN[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_R", "1.0"));
+			FOG_COLOR_SUN[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_G", "0.9"));
+			FOG_COLOR_SUN[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_B", "0.7"));
+			FOG_DENSITY = atof(IniRead(mapname, "FOG", "FOG_DENSITY", "0.5"));
+			FOG_ACCUMULATION_MODIFIER = atof(IniRead(mapname, "FOG", "FOG_ACCUMULATION_MODIFIER", "3.0"));
+			FOG_RANGE_MULTIPLIER = atof(IniRead(mapname, "FOG", "FOG_RANGE_MULTIPLIER", "1.0"));
+		}
+
+		FOG_VOLUMETRIC_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ENABLE", "0")) > 0) ? qtrue : qfalse;
+
+		if (FOG_VOLUMETRIC_ENABLE)
+		{
+			FOG_VOLUMETRIC_DENSITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_DENSITY", "0.01"));
+			FOG_VOLUMETRIC_STRENGTH = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_STRENGTH", "1.0"));
+			FOG_VOLUMETRIC_VELOCITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_VELOCITY", "0.1"));
+			FOG_VOLUMETRIC_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_CLOUDINESS", "1.0"));
+			FOG_VOLUMETRIC_WIND = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_WIND", "1.0"));
+			FOG_VOLUMETRIC_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_R", "1.0"));
+			FOG_VOLUMETRIC_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_G", "1.0"));
+			FOG_VOLUMETRIC_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_B", "1.0"));
+		}
+	}
 
 	//
 	// Shadows...
@@ -1650,14 +1697,18 @@ void MAPPING_LoadMapInfo(void)
 	// Water...
 	//
 	WATER_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_ENABLED", "1")) > 0) ? qtrue : qfalse;
-	WATER_FOG_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FOG_ENABLED", "0")) > 0) ? qtrue : qfalse;
-	WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
-	WATER_COLOR_SHALLOW[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
-	WATER_COLOR_SHALLOW[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
-	WATER_COLOR_DEEP[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
-	WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
-	WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
-	MAP_WATER_LEVEL = atof(IniRead(mapname, "WATER", "MAP_WATER_LEVEL", "131072.0"));
+
+	if (WATER_ENABLED)
+	{
+		WATER_FOG_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FOG_ENABLED", "0")) > 0) ? qtrue : qfalse;
+		WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
+		WATER_COLOR_SHALLOW[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
+		WATER_COLOR_SHALLOW[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
+		WATER_COLOR_DEEP[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
+		WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
+		WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
+		MAP_WATER_LEVEL = atof(IniRead(mapname, "WATER", "MAP_WATER_LEVEL", "131072.0"));
+	}
 
 	//
 	// Climate...
@@ -1670,47 +1721,44 @@ void MAPPING_LoadMapInfo(void)
 	// Grass...
 	//
 	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "1")) > 0) ? qtrue : qfalse;
-	GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
-	GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "42.0"));
-	GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "4096"));
-	GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
-	GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
+
+	if (GRASS_ENABLED)
+	{
+		GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
+		GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "42.0"));
+		GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "4096"));
+		GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
+		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
+	}
 
 	//
 	// Pebbles...
 	//
 	PEBBLES_ENABLED = (atoi(IniRead(mapname, "PEBBLES", "PEBBLES_ENABLED", "0")) > 0) ? qtrue : qfalse;
-	PEBBLES_DENSITY = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DENSITY", "1"));
-	PEBBLES_DISTANCE = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DISTANCE", "2048"));
+
+	if (PEBBLES_ENABLED)
+	{
+		PEBBLES_DENSITY = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DENSITY", "1"));
+		PEBBLES_DISTANCE = atoi(IniRead(mapname, "PEBBLES", "PEBBLES_DISTANCE", "2048"));
+	}
 
 	//
 	// Moon...
 	//
-	tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/random"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	if (!tr.moonImage) tr.moonImage = R_FindImageFile("gfx/random", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	MOON_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_COLOR_R", "0.2"));
-	MOON_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_COLOR_G", "0.2"));
-	MOON_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_COLOR_B", "0.2"));
-	MOON_ATMOSPHERE_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_R", "1.0"));
-	MOON_ATMOSPHERE_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_G", "1.0"));
-	MOON_ATMOSPHERE_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_B", "1.0"));
-	MOON_GLOW_STRENGTH = atof(IniRead(mapname, "MOON", "MOON_GLOW_STRENGTH", "0.5"));
-	MOON_ROTATION_RATE = atof(IniRead(mapname, "MOON", "MOON_ROTATION_RATE", "0.08"));
-
-
-	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
-	{// Leave -1 in ini file to override and force it off, just in case...
-		if (StringContainsWord(mapname, "mandalore")
-			|| StringContainsWord(mapname, "endor")
-			|| StringContainsWord(mapname, "ilum")
-			|| StringContainsWord(mapname, "taanab")
-			|| StringContainsWord(mapname, "tatooine")
-			|| StringContainsWord(mapname, "scarif")
-			&& !StringContainsWord(mapname, "tatooine_nights"))
-		{
-			DAY_NIGHT_CYCLE_ENABLED = qtrue;
-		}
+	if (DAY_NIGHT_CYCLE_ENABLED)
+	{
+		tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/random"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		if (!tr.moonImage) tr.moonImage = R_FindImageFile("gfx/random", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		MOON_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_COLOR_R", "0.2"));
+		MOON_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_COLOR_G", "0.2"));
+		MOON_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_COLOR_B", "0.2"));
+		MOON_ATMOSPHERE_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_R", "1.0"));
+		MOON_ATMOSPHERE_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_G", "1.0"));
+		MOON_ATMOSPHERE_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_B", "1.0"));
+		MOON_GLOW_STRENGTH = atof(IniRead(mapname, "MOON", "MOON_GLOW_STRENGTH", "0.5"));
+		MOON_ROTATION_RATE = atof(IniRead(mapname, "MOON", "MOON_ROTATION_RATE", "0.08"));
 	}
+
 
 	if (!SHADOWS_ENABLED
 		&& (StringContainsWord(mapname, "mandalore")
@@ -1730,13 +1778,19 @@ void MAPPING_LoadMapInfo(void)
 		FOG_POST_ENABLED = qfalse;
 	}
 
-	tr.auroraImage[0] = R_FindImageFile("gfx/misc/aurora1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	tr.auroraImage[1] = R_FindImageFile("gfx/misc/aurora2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	if (AURORA_ENABLED)
+	{
+		tr.auroraImage[0] = R_FindImageFile("gfx/misc/aurora1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.auroraImage[1] = R_FindImageFile("gfx/misc/aurora2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	}
 	
-	tr.groundFoliageImage[0] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE1", "models/warzone/groundFoliage/groundFoliage00.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	tr.groundFoliageImage[1] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE2", "models/warzone/groundFoliage/groundFoliage01.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	tr.groundFoliageImage[2] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE3", "models/warzone/groundFoliage/groundFoliage02.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	tr.groundFoliageImage[3] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE4", "models/warzone/groundFoliage/groundFoliage03.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	if (r_groundFoliage->integer)
+	{
+		tr.groundFoliageImage[0] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE1", "models/warzone/groundFoliage/groundFoliage00.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.groundFoliageImage[1] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE2", "models/warzone/groundFoliage/groundFoliage01.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.groundFoliageImage[2] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE3", "models/warzone/groundFoliage/groundFoliage02.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.groundFoliageImage[3] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE4", "models/warzone/groundFoliage/groundFoliage03.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	}
 
 	{
 		// Roads maps... Try to load map based image first...
@@ -1754,7 +1808,7 @@ void MAPPING_LoadMapInfo(void)
 	//
 	// Override climate file climate options with mapInfo ones, if found...
 	//
-	if (r_foliage->integer || r_pebbles->integer)
+	if ((GRASS_ENABLED && r_foliage->integer) || (r_pebbles->integer && PEBBLES_ENABLED))
 	{
 		image_t *newImage = NULL;
 
@@ -1792,6 +1846,33 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
+	if (GRASS_ENABLED && r_foliage->integer)
+	{
+		// Grass maps... Try to load map based image first...
+		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+
+		if (!tr.defaultGrassMapImage)
+		{// No map based image? Use default...
+			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		}
+
+		if (!tr.defaultGrassMapImage)
+		{// No default image? Use white...
+			tr.defaultGrassMapImage = tr.whiteImage;
+		}
+	}
+
+	if (WATER_ENABLED)
+	{// Water...
+		tr.waterFoamImage[0] = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterFoamImage[1] = R_FindImageFile("textures/water/waterFoamGrey02.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterFoamImage[2] = R_FindImageFile("textures/water/waterFoamGrey03.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	}
+
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
 	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED");
@@ -1801,8 +1882,9 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_RADIUS_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
@@ -2127,31 +2209,6 @@ void R_LoadMapInfo(void)
 		{// No default image? Use white...
 			tr.paletteImage = tr.whiteImage;
 		}
-	}
-
-	{
-		// Grass maps... Try to load map based image first...
-		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
-
-		if (!tr.defaultGrassMapImage)
-		{// No map based image? Use default...
-			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
-		}
-
-		if (!tr.defaultGrassMapImage)
-		{// No default image? Use white...
-			tr.defaultGrassMapImage = tr.whiteImage;
-		}
-	}
-
-	{// Water...
-		tr.waterFoamImage[0] = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterFoamImage[1] = R_FindImageFile("textures/water/waterFoamGrey02.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterFoamImage[2] = R_FindImageFile("textures/water/waterFoamGrey03.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;

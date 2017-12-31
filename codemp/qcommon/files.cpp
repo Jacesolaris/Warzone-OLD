@@ -725,6 +725,7 @@ Tests if path and file exists
 */
 qboolean FS_FileInPathExists(const char *testpath)
 {
+#if 0
 	FILE *filep;
 
 	filep = fopen(testpath, "rb");
@@ -736,6 +737,13 @@ qboolean FS_FileInPathExists(const char *testpath)
 	}
 
 	return qfalse;
+#elif 0
+	// UQ1: This is faster than fopen... Linux only?
+	return (access(testpath, F_OK) != -1);
+#else // UQ1: This is faster than fopen and access...
+	struct stat buffer;
+	return (qboolean)(stat(testpath, &buffer) == 0);
+#endif
 }
 
 /*

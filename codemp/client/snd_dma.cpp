@@ -933,6 +933,7 @@ background music functions
 //
 qboolean S_FileExists( const char *psFilename )
 {
+#if 0
 	fileHandle_t fhTemp;
 
 	FS_FOpenFileRead (psFilename, &fhTemp, qtrue);	// qtrue so I can fclose the handle without closing a PAK
@@ -941,6 +942,9 @@ qboolean S_FileExists( const char *psFilename )
 
 	FS_FCloseFile(fhTemp);
 	return qtrue;
+#else
+	return FS_FileExists(psFilename);
+#endif
 }
 
 

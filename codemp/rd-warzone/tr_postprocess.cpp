@@ -45,6 +45,7 @@ extern qboolean		AO_DIRECTIONAL;
 extern float		AO_MINBRIGHT;
 extern float		AO_MULTBRIGHT;
 extern vec3_t		MAP_AMBIENT_CSB;
+extern vec3_t		MAP_AMBIENT_CSB_NIGHT;
 
 extern int			NUM_CLOSE_LIGHTS;
 extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
@@ -2495,7 +2496,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL4, local4);
 
 	vec4_t local5;
-	VectorSet4(local5, MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2], r_truehdr->integer ? 1.0 : 0.0);
+	//VectorSet4(local5, MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2], r_truehdr->integer ? 1.0 : 0.0);
+	local5[0] = mix(MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB_NIGHT[0], RB_NightScale());
+	local5[1] = mix(MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB_NIGHT[1], RB_NightScale());
+	local5[2] = mix(MAP_AMBIENT_CSB[2], MAP_AMBIENT_CSB_NIGHT[2], RB_NightScale());
+	local5[3] = r_truehdr->integer ? 1.0 : 0.0;
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL5, local5);
 
 	vec4_t local6;

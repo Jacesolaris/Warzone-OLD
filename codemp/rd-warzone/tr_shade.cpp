@@ -1243,6 +1243,7 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 }
 
 extern float MAP_GLOW_MULTIPLIER;
+extern float MAP_GLOW_MULTIPLIER_NIGHT;
 extern float MAP_WATER_LEVEL;
 extern float MAP_INFO_MAXSIZE;
 extern vec3_t  MAP_INFO_MINS;
@@ -1354,7 +1355,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 
 		vec4_t local4;
-		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * MAP_GLOW_MULTIPLIER : r_glowStrength->value * tess.shader->glowStrength * 2.0;
+		float dayNightGlowFactor = mix(MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT, RB_NightScale());
+		float glowPower = (backEnd.currentEntity == &tr.worldEntity) ? r_glowStrength->value * tess.shader->glowStrength * 2.858 * dayNightGlowFactor : r_glowStrength->value * tess.shader->glowStrength * 2.0;
 		VectorSet4(local4, (float)stageNum, glowPower, r_showsplat->value, tess.shader->glowVibrancy * r_glowVibrancy->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 
@@ -1787,6 +1789,7 @@ extern vec3_t		SUN_COLOR_MAIN;
 extern vec3_t		SUN_COLOR_SECONDARY;
 extern vec3_t		SUN_COLOR_TERTIARY;
 extern vec3_t		MAP_AMBIENT_COLOR;
+extern vec3_t		MAP_AMBIENT_COLOR_NIGHT;
 
 extern qboolean		GRASS_ENABLED;
 extern int			GRASS_DENSITY;
@@ -2492,9 +2495,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!IS_DEPTH_PASS)
 			{
 				if (r_debugMapAmbientR->value + r_debugMapAmbientG->value + r_debugMapAmbientB->value > 0.0)
+				{
 					VectorSet4(vec, r_debugMapAmbientR->value, r_debugMapAmbientG->value, r_debugMapAmbientB->value, 0.0);
+				}
 				else
-					VectorSet4(vec, MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], 0.0);
+				{
+					vec[0] = mix(MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR_NIGHT[0], RB_NightScale());
+					vec[1] = mix(MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR_NIGHT[1], RB_NightScale());
+					vec[2] = mix(MAP_AMBIENT_COLOR[2], MAP_AMBIENT_COLOR_NIGHT[2], RB_NightScale());
+					vec[4] = 0.0;
+					//VectorSet4(vec, MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], 0.0);
+				}
+
 				GLSL_SetUniformVec4(sp, UNIFORM_MAP_AMBIENT, vec);
 			}
 

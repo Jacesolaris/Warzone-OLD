@@ -234,6 +234,7 @@ void main()
 	}
 #endif
 
+
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
 
@@ -280,12 +281,11 @@ void main()
 	gl_FragColor.rgb = diffuse.rgb + ambientColor;
 
 
-	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && SHADER_MATERIAL_TYPE != MATERIAL_SKY && SHADER_MATERIAL_TYPE != MATERIAL_SUN && SHADER_MATERIAL_TYPE != MATERIAL_GLASS /*&& SHADER_MATERIAL_TYPE != MATERIAL_NONE*/)
+	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && SHADER_MATERIAL_TYPE != MATERIAL_SKY && SHADER_MATERIAL_TYPE != MATERIAL_SUN && SHADER_MATERIAL_TYPE != MATERIAL_GLASS)
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
 	
-
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
 
@@ -321,6 +321,8 @@ void main()
 		}
 	}
 
+	gl_FragColor.a = clamp(gl_FragColor.a, 0.0, 1.0);
+
 	if (gl_FragColor.a >= 0.99) gl_FragColor.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...
 
 
@@ -329,17 +331,11 @@ void main()
 	if ( SHADER_MATERIAL_TYPE == MATERIAL_SOLIDWOOD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_HOLLOWWOOD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_ROCK 
-		//|| SHADER_MATERIAL_TYPE == MATERIAL_CARPET 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_SAND 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_GRAVEL
-		//|| SHADER_MATERIAL_TYPE == MATERIAL_TILES 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_SNOW 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_MUD 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_DIRT 
-		//|| SHADER_MATERIAL_TYPE == MATERIAL_CONCRETE 
-		//|| SHADER_MATERIAL_TYPE == MATERIAL_ICE 
-		//|| SHADER_MATERIAL_TYPE == MATERIAL_COMPUTER
-		)
+		|| SHADER_MATERIAL_TYPE == MATERIAL_DIRT )
 	{
 		useDisplacementMapping = 1.0;
 	}
@@ -358,9 +354,10 @@ void main()
 	{// Merged diffuse+glow stage...
 		vec4 glowColor = texture(u_GlowMap, texCoords);
 
-		if (length(glowColor.rgb) <= 0.0)
+		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
+#if 1 // Conversion of old stages to merged glows is disabled atm. Not happy with the results.
 #define GLSL_BLEND_ALPHA			0
 #define GLSL_BLEND_INVALPHA			1
 #define GLSL_BLEND_DST_ALPHA		2
@@ -402,6 +399,9 @@ void main()
 		{
 			glowColor.rgb = (glowColor.rgb * glowColor.a);
 		}
+#else
+		glowColor.rgb = (glowColor.rgb * glowColor.a);
+#endif
 
 		if (SHADER_GLOW_VIBRANCY != 0.0)
 		{
@@ -411,19 +411,23 @@ void main()
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
 
-		if (length(glowColor.rgb) <= 0.0)
+		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a * (length(glowColor.rgb) / 3.0));
+		float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);//clamp(max(glowColor.r, max(glowColor.g, glowColor.b)), 0.0, 1.0);
+		glowColor.a *= glowMax;
+		glowColor.rgb *= glowColor.a;
 
+		out_Glow = glowColor;
+
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a);
 		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
 
-		out_Glow = vec4(glowColor.rgb, glowColor.a);
-
-		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-			out_Normal = vec4( vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
+			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
+			//out_NormalDetail = vec4(0.0);
 			out_NormalDetail = norm;
 		}
 		else
@@ -437,6 +441,9 @@ void main()
 	{
 		vec4 glowColor = gl_FragColor;
 
+		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
+			glowColor.a = 0.0;
+
 		if (SHADER_GLOW_VIBRANCY != 0.0)
 		{
 			glowColor.rgb = Vibrancy( glowColor.rgb, SHADER_GLOW_VIBRANCY );
@@ -444,15 +451,21 @@ void main()
 
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
+		
+		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
+			glowColor.a = 0.0;
+
 		out_Glow = glowColor;
 
-		gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
-		gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
+		gl_FragColor.rgb = glowColor.rgb;
+		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
+		//gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
+		//gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
 
-		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-			out_Normal = vec4( vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
+			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
 			out_NormalDetail = vec4(0.0);
 		}
 		else
@@ -466,10 +479,10 @@ void main()
 	{
 		out_Glow = vec4(0.0);
 
-		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)// || USE_ISDETAIL <= 0.0)
+		if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-			out_Normal = vec4( vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
+			out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
 			out_NormalDetail = norm;
 		}
 		else

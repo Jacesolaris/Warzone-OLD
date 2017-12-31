@@ -585,6 +585,9 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_FS_GETFILELIST:
 		return FS_GetFileList( (const char *)VMA(1), (const char *)VMA(2), (char *)VMA(3), args[4] );
 
+	case UI_FS_FILEEXISTS:
+		return FS_FileExists((const char *)VMA(1));
+
 	case UI_R_REGISTERMODEL:
 		return re->RegisterModel( (const char *)VMA(1) );
 
@@ -1071,6 +1074,7 @@ void CL_BindUI( void ) {
 
 		uii.FS_Close							= FS_FCloseFile;
 		uii.FS_GetFileList						= FS_GetFileList;
+		uii.FS_FileExists						= FS_FileExists;
 		uii.FS_Open								= FS_FOpenFileByMode;
 		uii.FS_Read								= FS_Read;
 		uii.FS_Write							= FS_Write;

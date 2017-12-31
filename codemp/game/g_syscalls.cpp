@@ -161,6 +161,9 @@ void trap_SiegePersGet(siegePers_t *pers) {
 int trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize ) {
 	return Q_syscall( G_FS_GETFILELIST, path, extension, listbuf, bufsize );
 }
+int trap_FS_FileExists(const char *path) {
+	return Q_syscall(G_FS_FILEEXISTS, path);
+}
 int trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
 	return Q_syscall( G_DEBUG_POLYGON_CREATE, color, numPoints, points );
 }

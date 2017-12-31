@@ -199,6 +199,7 @@ typedef enum cgameImportLegacy_e {
 	CG_FS_WRITE,
 	CG_FS_FCLOSEFILE,
 	CG_FS_GETFILELIST,
+	CG_FS_FILEEXISTS,
 	CG_SENDCONSOLECOMMAND,
 	CG_ADDCOMMAND,
 	CG_REMOVECOMMAND,
@@ -492,6 +493,7 @@ typedef struct cgameImport_s {
 	int				(*FS_Open)								( const char *qpath, fileHandle_t *f, fsMode_t mode );
 	int				(*FS_Read)								( void *buffer, int len, fileHandle_t f );
 	int				(*FS_Write)								( const void *buffer, int len, fileHandle_t f );
+	qboolean		(*FS_FileExists)						(const char *path);
 
 	// screen
 	void			(*UpdateScreen)							( void );

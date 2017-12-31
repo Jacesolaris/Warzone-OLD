@@ -370,6 +370,11 @@ float DAY_NIGHT_24H_TIME = 0.0;
 
 float RB_NightScale ( void )
 {
+	if (!DAY_NIGHT_CYCLE_ENABLED || !tr.worldLoaded)
+	{
+		return 0.0;
+	}
+
 	if (DAY_NIGHT_24H_TIME >= 7.5 && DAY_NIGHT_24H_TIME <= 9.5)
 	{// Sunrise...
 		return (9.5 - DAY_NIGHT_24H_TIME) / 2.0;

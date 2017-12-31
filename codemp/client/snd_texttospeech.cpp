@@ -8,6 +8,7 @@ extern void GetHttpDownload(char *address, char *out_file);
 
 qboolean TTS_FileExists( const char *file )
 {
+#if 0
 	fileHandle_t hFile;
 	FS_FOpenFileRead(file, &hFile, qfalse);
 	
@@ -17,6 +18,9 @@ qboolean TTS_FileExists( const char *file )
 	}
 
 	return qfalse;
+#else
+	return FS_FileExists(file);
+#endif
 }
 
 extern sfx_t		s_knownSfx[MAX_SFX];

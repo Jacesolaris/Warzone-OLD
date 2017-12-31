@@ -123,23 +123,45 @@ void CG_RegisterWeapon( int weaponNum) {
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
 
+#ifndef __FULL_VERSION_WEAPONS__
+	// In non-full-version weapons mode, A280 all the guns...
+	if (weaponNum != WP_MELEE
+		&& weaponNum != WP_SABER
+		&& weaponNum != WP_A280
+		&& weaponNum != WP_THERMAL
+		&& weaponNum != WP_FRAG_GRENADE
+		&& weaponNum != WP_FRAG_GRENADE_OLD
+		&& weaponNum != WP_TRIP_MINE
+		&& weaponNum != WP_DET_PACK)
+	{
+		for (item = bg_itemlist + 1; item->classname; item++) {
+			if (item->giType == IT_WEAPON && item->giTag == WP_A280) {
+				weaponInfo->item = item;
+				break;
+			}
+		}
+	}
+	else
+	{
+		for (item = bg_itemlist + 1; item->classname; item++) {
+			if (item->giType == IT_WEAPON && item->giTag == weaponNum) {
+				weaponInfo->item = item;
+				break;
+			}
+		}
+	}
+#else //__FULL_VERSION_WEAPONS__
 	for ( item = bg_itemlist + 1 ; item->classname ; item++ ) {
 		if ( item->giType == IT_WEAPON && item->giTag == weaponNum ) {
 			weaponInfo->item = item;
 			break;
 		}
 	}
+#endif //__FULL_VERSION_WEAPONS__
 	if ( !item->classname ) {
 		trap->Error( ERR_DROP, "Couldn't find weapon %i", weaponNum );
 		return;
 	}
-
-#ifndef __FULL_VERSION_WEAPONS__
-	if (!strcmp(item->view_model, "models/weapons/E-11_Carbine/viewmodel.md3"))
-	{// If this is a disabled weapon, skip loading fx.
-		return;
-	}
-#endif
 
 	CG_RegisterItemVisuals( item - bg_itemlist );
 

@@ -36,6 +36,9 @@ glstate_t	glState;
 static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
+
+cvar_t	*r_compressedTextures;
+
 cvar_t	*r_drawSort;
 
 cvar_t	*r_superSampleMultiplier;
@@ -1401,6 +1404,8 @@ R_Register
 */
 void R_Register( void )
 {
+	r_compressedTextures = ri->Cvar_Get("r_compressedTextures", "1", CVAR_ARCHIVE);
+
 	r_drawSort = ri->Cvar_Get("r_drawSort", "1", CVAR_ARCHIVE);
 
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );

@@ -487,11 +487,11 @@ void main(void)
 	vec3 materialSettings = RB_PBR_DefaultsForMaterial(position.a-1.0);
 
 
-	if (u_Local6.a > 0.0)
+	/*if (u_Local6.a > 0.0)
 	{// Sunset, Sunrise, and Night times... Scale down screen color, before adding lighting...
 		vec3 nightColor = vec3(outColor.rgb * 0.35);
 		outColor.rgb = mix(outColor.rgb, nightColor, clamp(u_Local6.a, 0.0, 1.0));
-	}
+	}*/
 
 
 
@@ -587,6 +587,7 @@ void main(void)
 	brightnessFactor = 1.0 - clamp(pow(brightnessFactor, 16.0/*u_Local3.g*/), 0.0, 1.0);
 
 	float glossinessFactor = greynessFactor * brightnessFactor;
+	float lightGlossinessFactor = (greynessFactor * 0.5 + 0.5) * (brightnessFactor * 0.5 + 0.5);
 
 #if 0
 	if (u_Local3.b == 3.0)
@@ -705,7 +706,7 @@ void main(void)
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
 		//outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(materialSettings.y * u_Local7.a * 0.5, 0.0, 1.0));
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0) * glossinessFactor/*greynessFactor*/);
 	}
 
 
@@ -774,6 +775,7 @@ void main(void)
 					lightColor = Vibrancy( lightColor, vib * 4.0 );
 				}
 
+				lightColor.rgb *= lightGlossinessFactor;
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
@@ -829,7 +831,7 @@ void main(void)
 				}
 			}
 
-			addedLight.rgb *= glossinessFactor/*greynessFactor*/; // More grey colors get more colorization from lights...
+			addedLight.rgb *= lightGlossinessFactor; // More grey colors get more colorization from lights...
 			outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
 		}
 	}
