@@ -112,6 +112,8 @@ extern const char *fallbackShader_waterPostForward_fp;
 extern const char *fallbackShader_waterPostForward_vp;
 extern const char *fallbackShader_waterForward_fp;
 extern const char *fallbackShader_waterForward_vp;
+extern const char *fallbackShader_waterForwardFast_fp;
+extern const char *fallbackShader_waterForwardFast_vp;
 extern const char *fallbackShader_foliage_fp;
 extern const char *fallbackShader_foliage_vp;
 extern const char *fallbackShader_foliage_gs;
@@ -1210,6 +1212,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_TextureMap", GLSL_INT, 1 },
 	{ "u_LevelsMap", GLSL_INT, 1 },
 	{ "u_CubeMap", GLSL_INT, 1 },
+	{ "u_SkyCubeMap", GLSL_INT, 1 },
+	{ "u_SkyCubeMapNight", GLSL_INT, 1 },
 	{ "u_OverlayMap", GLSL_INT, 1 },
 	{ "u_SteepMap", GLSL_INT, 1 },
 	{ "u_WaterEdgeMap", GLSL_INT, 1 },
@@ -2907,7 +2911,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load texturecolor shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;// | ATTR_COLOR | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.weatherShader, "weather", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_weather_vp, fallbackShader_weather_fp, NULL, NULL, NULL))
@@ -3818,6 +3822,19 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.waterForwardShader, "waterForward", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterForward_vp, fallbackShader_waterForward_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load waterForward shader!");
+	}
+
+
+#ifdef __OCEAN__
+	attribs = ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD | ATTR_NORMAL;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+#else //!__OCEAN__
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+#endif //__OCEAN__
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.waterForwardFastShader, "waterForwardFast", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterForwardFast_vp, fallbackShader_waterForwardFast_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterForwardFast shader!");
 	}
 
 
@@ -5141,6 +5158,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
 
 	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
@@ -5777,6 +5796,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
 	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
 	//GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 
 	{
@@ -5803,6 +5824,56 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.waterForwardShader);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.waterForwardFastShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterForwardFast shader!");
+	}
+
+	GLSL_InitUniforms(&tr.waterForwardFastShader);
+
+	GLSL_BindProgram(&tr.waterForwardFastShader);
+
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+	//GLSL_SetUniformInt(&tr.waterForwardFastShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.waterForwardFastShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.waterForwardFastShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.waterForwardFastShader);
 #endif
 
 	numEtcShaders++;
@@ -5952,6 +6023,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.esharpening2Shader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterForwardShader);
+	GLSL_DeleteGPUShader(&tr.waterForwardFastShader);
 	GLSL_DeleteGPUShader(&tr.waterPostForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterPostShader);
 	GLSL_DeleteGPUShader(&tr.furShader);

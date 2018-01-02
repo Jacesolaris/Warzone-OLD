@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __DEBUG_GLSL_BINDS__
 #endif //__DEBUG_BINDS__
 
-//#define __PERFORMANCE_DEBUG__
+#define __PERFORMANCE_DEBUG__
 
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                               Warzone Basic Renderer Defines
@@ -80,7 +80,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
 
-//#define __OCEAN__
+#define __OCEAN__
 //#define __ORIG_OCEAN__
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -1020,20 +1020,22 @@ enum
 	TB_GLOWMAP			= 10,
 	TB_SHADOWMAP		= 11,
 	TB_CUBEMAP			= 12,
-	TB_OVERLAYMAP		= 13,
-	TB_STEEPMAP			= 14,
-	TB_WATER_EDGE_MAP	= 15,
-	TB_SPLATCONTROLMAP	= 16,
-	TB_SPLATMAP1		= 17,
-	TB_SPLATMAP2		= 18,
-	TB_SPLATMAP3		= 19,
-	TB_ROADSCONTROLMAP	= 26,
-	TB_ROADMAP			= 27,
-	TB_DETAILMAP		= 28,
-	TB_SHADOWMAP4		= 29,
-	TB_SHADOWMAP5		= 30,
-	TB_ROOFMAP			= 31,
-	NUM_TEXTURE_BUNDLES = 32
+	TB_SKYCUBEMAP		= 13,
+	TB_SKYCUBEMAPNIGHT	= 14,
+	TB_OVERLAYMAP		= 15,
+	TB_STEEPMAP			= 16,
+	TB_WATER_EDGE_MAP	= 17,
+	TB_SPLATCONTROLMAP	= 18,
+	TB_SPLATMAP1		= 19,
+	TB_SPLATMAP2		= 20,
+	TB_SPLATMAP3		= 21,
+	TB_ROADSCONTROLMAP	= 22,
+	TB_ROADMAP			= 23,
+	TB_DETAILMAP		= 24,
+	TB_SHADOWMAP4		= 25,
+	TB_SHADOWMAP5		= 26,
+	TB_ROOFMAP			= 27,
+	NUM_TEXTURE_BUNDLES = 28
 };
 
 typedef enum
@@ -1496,6 +1498,8 @@ typedef enum
 	UNIFORM_TEXTUREMAP,
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
+	UNIFORM_SKYCUBEMAP,
+	UNIFORM_SKYCUBEMAPNIGHT,
 	UNIFORM_OVERLAYMAP,
 	UNIFORM_STEEPMAP,
 	UNIFORM_WATER_EDGE_MAP,
@@ -2465,8 +2469,6 @@ typedef struct glstate_s {
 	matrix_t		invProjection;
 	matrix_t		viewTrans;
 	matrix_t		invEyeProjection;
-	matrix_t        previousProjection;
-	matrix_t		previousModelviewProjection;
 } glstate_t;
 
 typedef enum {
@@ -2729,6 +2731,9 @@ typedef struct trGlobals_s {
 	image_t					**lightmaps;
 	image_t					**deluxemaps;
 
+	image_t					*skyCubeMap;
+	image_t					*skyCubeMapNight;
+
 	int                     fatLightmapSize;
 	int		                fatLightmapStep;
 
@@ -2800,6 +2805,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anaglyphShader;
 	shaderProgram_t skyDomeShader;
 	shaderProgram_t waterForwardShader;
+	shaderProgram_t waterForwardFastShader;
 	shaderProgram_t waterPostForwardShader;
 	shaderProgram_t waterPostShader;
 	shaderProgram_t furShader;

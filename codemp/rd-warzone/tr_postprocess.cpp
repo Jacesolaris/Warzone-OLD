@@ -1904,6 +1904,7 @@ extern vec3_t		MAP_INFO_PIXELSIZE;
 extern vec3_t		MAP_INFO_SCATTEROFFSET;
 extern float		MAP_INFO_MAXSIZE;
 
+extern float		WATER_REFLECTIVENESS;
 extern vec3_t		WATER_COLOR_SHALLOW;
 extern vec3_t		WATER_COLOR_DEEP;
 
@@ -2033,7 +2034,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, (tr.refdef.rdflags & RDF_UNDERWATER) ? 1.0 : 0.0, 0.0);
+		VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, (tr.refdef.rdflags & RDF_UNDERWATER) ? 1.0 : 0.0, WATER_REFLECTIVENESS);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
 	}
 
@@ -2393,6 +2394,12 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_WATER_EDGE_MAP); // Sky up...
 	GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_ROADSCONTROLMAP); // Sky up...
 #endif //__DAY_NIGHT__
+
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
+
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+	GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
 
 	int cubeMapNum = 0;
 	vec4_t cubeMapVec;

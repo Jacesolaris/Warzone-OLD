@@ -2567,6 +2567,135 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	return image;
 }
 
+/*
+================
+R_CreateImage
+
+This is the only way any image_t are created
+================
+*/
+image_t *R_CreateCubemapFromImageDatas(const char *name, byte **pic, int width, int height, imgType_t type, int flags, int internalFormat) {
+	image_t		*image;
+	qboolean	isLightmap = qfalse;
+	long		hash;
+	int         glWrapClampMode;
+
+	if (strlen(name) >= MAX_IMAGE_PATH) {
+		ri->Error(ERR_DROP, "R_CreateImage: \"%s\" is too long", name);
+	}
+
+	if (tr.numImages == MAX_DRAWIMAGES) {
+		ri->Error(ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit");
+	}
+
+	image = tr.images[tr.numImages] = (image_t *)ri->Hunk_Alloc(sizeof(image_t), h_low);
+	image->texnum = 1024 + tr.numImages;
+	tr.numImages++;
+
+	image->type = type;
+	image->flags = flags;
+
+	Q_strncpyz(image->imgName, name, sizeof(image->imgName));
+
+	image->width = width;
+	image->height = height;
+	if (flags & IMGFLAG_CLAMPTOEDGE)
+		glWrapClampMode = GL_CLAMP_TO_EDGE;
+	else
+		glWrapClampMode = GL_REPEAT;
+
+	if (!internalFormat)
+	{
+		//if (image->flags & IMGFLAG_CUBEMAP)
+		//	internalFormat = GL_RGBA8;
+		//else
+			internalFormat = RawImage_GetFormat(pic[0], width * height, isLightmap, image->type, image->flags);
+	}
+
+	image->internalFormat = internalFormat;
+
+	image->TMU = 0;
+	GL_SelectTexture(image->TMU);
+
+	if (image->flags & IMGFLAG_CUBEMAP)
+	{
+		GL_Bind(image);
+		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		if (image->flags & IMGFLAG_MIPMAP)
+		{
+			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
+		else
+		{
+			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		if (ShouldUseImmutableTextures(image->flags, internalFormat))
+		{
+			int numLevels = (image->flags & IMGFLAG_MIPMAP) ? CalcNumMipmapLevels(width, height) : 1;
+
+			qglTexStorage2D(GL_TEXTURE_CUBE_MAP, numLevels, internalFormat, width, height);
+
+			if (pic != NULL)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					qglTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, width, height, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[i]);
+				}
+			}
+		}
+		else
+		{
+			qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[0]);
+			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[1]);
+			qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[2]);
+			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[3]);
+			qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[4]);
+			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[5]);
+		}
+
+		if (image->flags & IMGFLAG_MIPMAP)
+			qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+		image->uploadWidth = width;
+		image->uploadHeight = height;
+	}
+	else
+	{
+		ri->Printf(PRINT_ERROR, "R_CreateCubemapFromImageDatas: %s is not a cubemap, you moron! Using 1st image.\n", name);
+
+		GL_Bind(image);
+
+		if (pic)
+		{
+			Upload32(pic[0], image->width, image->height, image->type, image->flags,
+				isLightmap, image->internalFormat, &image->uploadWidth,
+				&image->uploadHeight);
+		}
+		else
+		{
+			EmptyTexture(image->width, image->height, image->type, image->flags,
+				isLightmap, image->internalFormat, &image->uploadWidth,
+				&image->uploadHeight);
+		}
+
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode);
+	}
+
+	GL_SelectTexture(0);
+
+	hash = generateHashValue(name);
+	image->next = hashTable[hash];
+	hashTable[hash] = image;
+
+	return image;
+}
+
 void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int height )
 {
 	byte *scaledBuffer = NULL;
@@ -3638,6 +3767,9 @@ uint32_t crc32c(uint32_t crc, const unsigned char *buf, size_t len)
 }
 #endif //__CRC_IMAGE_HASHING__
 
+extern int skyImageNum;
+extern byte *skyImagesData[6];
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -4004,6 +4136,22 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		R_CreateRoofMap(name, pic, width, height, flags);
 	}
 
+	if (skyImageNum != -1)
+	{// Copy pixels to their sky buffer numbers...
+		if (!USE_ALPHA)
+		{
+			int dataSize = width * height * 4 * sizeof(byte); // hmm i think this should actually be 3?
+			skyImagesData[skyImageNum] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
+			memcpy(skyImagesData[skyImageNum], pic, dataSize);
+		}
+		else
+		{
+			int dataSize = width * height * 4 * sizeof(byte);
+			skyImagesData[skyImageNum] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
+			memcpy(skyImagesData[skyImageNum], pic, dataSize);
+		}
+	}
+
 #ifdef __TINY_IMAGE_LOADER__
 	if (isTIL)
 	{
@@ -4015,6 +4163,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	}
 	else
 #endif
+
 	Z_Free( pic );
 	
 	return image;

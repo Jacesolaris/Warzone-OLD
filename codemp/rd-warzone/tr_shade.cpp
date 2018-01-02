@@ -2120,8 +2120,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else if (stage <= 0)
 			{*/
-				sp = &tr.waterForwardShader;
-				pStage->glslShaderGroup = &tr.waterForwardShader;
+				sp = &tr.waterPostForwardShader;
+				pStage->glslShaderGroup = &tr.waterPostForwardShader;
 				isWater = qtrue;
 				isGrass = qfalse;
 				isPebbles = qfalse;

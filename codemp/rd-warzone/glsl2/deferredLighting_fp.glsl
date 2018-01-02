@@ -13,6 +13,8 @@ uniform sampler2D	u_ShadowMap;
 uniform sampler2D	u_DeluxeMap;  // Random2K image...
 uniform sampler2D	u_GlowMap;
 uniform samplerCube	u_CubeMap;
+uniform samplerCube	u_SkyCubeMap;
+uniform samplerCube	u_SkyCubeMapNight;
 uniform sampler2D	u_SteepMap;	  // ssao image
 uniform sampler2D	u_WaterEdgeMap; // sky up image (for sky lighting contribution)
 uniform sampler2D	u_RoadsControlMap; // sky night up image (for sky lighting contribution)
@@ -552,6 +554,7 @@ void main(void)
 
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
+#if 0
 		vec2 spot = rd.xy;
 		spot.xy *= -1.0;
 		spot.xy = spot.xy * 0.5 + 0.5;
@@ -570,9 +573,64 @@ void main(void)
 		{// Day only colors...
 			skyColor = texture(u_WaterEdgeMap, spot).rgb;
 		}
+#else
+/*
+		vec3 reflected = normalize(reflect(normalize(E.xyz), normalize(cubeNorm.xyz)));
+		//vec3 reflected = normalize(reflect(normalize(vec3(E.x, -E.z, E.y)), normalize(vec3(cubeNorm.x, -cubeNorm.z, cubeNorm.y))));
+*/
+		
+		vec3 m_ViewDir = to_pos_norm;
+		vec3 R = reflect(E, cubeNorm);
+					
+		// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
+		vec4 cubeInfo = vec4(0.0, 0.0, 0.0, 1.0);//u_CubeMapInfo;
+		cubeInfo.xyz -= u_ViewOrigin.xyz;
+
+		cubeInfo.w = pow(distance(u_ViewOrigin.xyz, vec3(0.0, 0.0, 0.0)), 3.0);
+
+		cubeInfo.xyz *= 1.0 / cubeInfo.w;
+		cubeInfo.w = 1.0 / cubeInfo.w;
+					
+		vec3 parallax = cubeInfo.xyz + cubeInfo.w * m_ViewDir;
+		parallax.z *= -1.0;
+		
+		vec3 reflected = R + parallax;
+		
+
+		/*if (u_Local3.r >= 3.0) reflected = vec3(reflected.y, reflected.z, reflected.x);
+		else if (u_Local3.r >= 2.0) reflected = vec3(reflected.y, reflected.x, reflected.z);
+		else if (u_Local3.r >= 1.0) reflected = vec3(reflected.x, reflected.z, reflected.y);
+
+		if (u_Local3.a >= 1.0) reflected.z *= -1.0;
+		if (u_Local3.b >= 1.0) reflected.y *= -1.0;
+		if (u_Local3.g >= 1.0) reflected.x *= -1.0;*/
+
+		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
+		//reflected = vec3(-reflected.x, -reflected.z, -reflected.y);
+
+		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+		{// Mix between night and day colors...
+			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
+			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
+			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
+		}
+		else if (u_Local6.a >= 1.0)
+		{// Night only colors...
+			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
+		}
+		else
+		{// Day only colors...
+			skyColor = texture(u_SkyCubeMap, reflected).rgb;
+		}
+#endif
 
 		skyColor = ContrastSaturationBrightness(skyColor, 1.25, 2.0, 0.3);
 		skyColor = Vibrancy( skyColor, 0.4 );
+
+#if 0
+		gl_FragColor = vec4(skyColor.rgb, 1.0);
+		return;
+#endif
 	}
 
 	vec3 specular;
@@ -705,7 +763,7 @@ void main(void)
 
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
-		//outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(materialSettings.y * u_Local7.a * 0.5, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(materialSettings.y, 2.0) * u_Local7.a * glossinessFactor/*greynessFactor*/, 0.0, 1.0));
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0) * glossinessFactor/*greynessFactor*/);
 	}
 

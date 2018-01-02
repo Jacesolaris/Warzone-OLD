@@ -910,7 +910,6 @@ void FBO_Init(void)
 		tr.renderWaterFbo = FBO_Create("_renderWater", tr.renderDepthImage->width, tr.renderDepthImage->height);
 		FBO_Bind(tr.renderWaterFbo);
 
-		//FBO_CreateBuffer(tr.renderWaterFbo, hdrFormat, 0, 0);
 		GLSL_AttachWaterTextures();
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 		//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);

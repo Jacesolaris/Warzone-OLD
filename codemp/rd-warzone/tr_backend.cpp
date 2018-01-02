@@ -669,9 +669,6 @@ void GL_SetProjectionMatrix(matrix_t matrix)
 {
 	//if (memcmp(matrix, glState.projection, sizeof(float) * 16) == 0) return;
 
-	Matrix16Copy(glState.projection, glState.previousProjection);
-	Matrix16Copy(glState.modelviewProjection, glState.previousModelviewProjection);
-
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
 }
@@ -679,9 +676,6 @@ void GL_SetProjectionMatrix(matrix_t matrix)
 void GL_SetModelviewMatrix(matrix_t matrix)
 {
 	//if (memcmp(matrix, glState.modelview, sizeof(float) * 16) == 0) return;
-
-	Matrix16Copy(glState.projection, glState.previousProjection);
-	Matrix16Copy(glState.modelviewProjection, glState.previousModelviewProjection);
 
 	Matrix16Copy(matrix, glState.modelview);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
@@ -2193,12 +2187,46 @@ const void	*RB_WorldEffects( const void *data )
 		RB_EndSurface();
 	}
 
+	matrix_t previousModelViewMarix, previousProjectionMatrix;
+
+	Matrix16Copy(glState.modelview, previousModelViewMarix);
+	Matrix16Copy(glState.projection, previousProjectionMatrix);
+
+	float previousZfar = tr.viewParms.zFar;
+
 	RB_RenderWorldEffects();
 
-	/*if (tess.shader)
+#ifdef __OCEAN__
+	if (!(!tr.world || (tr.refdef.rdflags & RDF_NOWORLDMODEL) || (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)))
+	{
+		extern void OCEAN_Render(void);
+		OCEAN_Render();
+	}
+#endif //__OCEAN__
+
+	if (tess.shader)
 	{
 		RB_BeginSurface( tess.shader, tess.fogNum, tess.cubemapIndex );
-	}*/
+	}
+
+	FBO_Bind(tr.renderFbo);
+
+	/*
+	extern void R_SetFarClip(void);
+	extern void R_SetupProjectionZ(viewParms_t *dest);
+	R_SetFarClip();
+	R_SetupProjectionZ(&backEnd.viewParms);
+	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
+	//GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix); // ??
+	*/
+
+	GL_SetProjectionMatrix(previousProjectionMatrix);
+	GL_SetModelviewMatrix(previousModelViewMarix);
+
+	tr.viewParms.zFar = previousZfar;
+
+	GL_State(GLS_DEFAULT);
+	GL_Cull(CT_FRONT_SIDED);
 
 	return (const void *)(cmd + 1);
 }

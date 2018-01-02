@@ -3058,6 +3058,62 @@ static void ParseDeform( const char **text ) {
 	ri->Printf( PRINT_WARNING, "WARNING: unknown deformVertexes subtype '%s' found in shader '%s'\n", token, shader.name );
 }
 
+int skyImageNum = -1;
+byte *skyImagesData[6] = { NULL };
+
+extern image_t *R_CreateCubemapFromImageDatas(const char *name, byte **pic, int width, int height, imgType_t type, int flags, int internalFormat);
+
+image_t *R_UploadSkyCube(const char *name, int width, int height)
+{
+	int i = 0;
+	bool reused[6] = { false };
+
+	for (i = 0; i < 6; i++)
+	{
+		if (!skyImagesData[i])
+		{
+			/*if (i == 4 && skyImagesData[5])
+			{
+				skyImagesData[i] = skyImagesData[5];
+				reused[i] = true;
+			}
+			else if (i == 5 && skyImagesData[4])
+			{
+				skyImagesData[i] = skyImagesData[4];
+				reused[i] = true;
+			}
+			else*/ if (skyImagesData[i - 1])
+			{
+				skyImagesData[i] = skyImagesData[i - 1];
+				reused[i] = true;
+			}
+		}
+	}
+
+	byte *finalOrderImages[6];
+	finalOrderImages[0] = skyImagesData[0];
+	finalOrderImages[1] = skyImagesData[1];
+	finalOrderImages[2] = skyImagesData[4];
+	finalOrderImages[3] = skyImagesData[5];
+	finalOrderImages[4] = skyImagesData[2];
+	finalOrderImages[5] = skyImagesData[3];
+
+	image_t *cubeImage = R_CreateCubemapFromImageDatas(name, finalOrderImages, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, 0);
+
+	for (i = 0; i < 6; i++)
+	{
+		if (skyImagesData[i] && !reused[i])
+		{
+			Z_Free(skyImagesData[i]);
+			skyImagesData[i] = NULL;
+		}
+	}
+
+	skyImageNum = -1;
+
+	return cubeImage;
+}
+
 static void DefaultNightSkyParms(void) {
 	static const char	*suf[6] = { "rt", "lf", "bk", "ft", "up", "dn" };
 	char		pathname[MAX_IMAGE_PATH];
@@ -3073,6 +3129,8 @@ static void DefaultNightSkyParms(void) {
 	// outerbox
 	for (i = 0; i<6; i++) {
 		Com_sprintf(pathname, sizeof(pathname), "%s_%s", "textures/skies/defaultNightSky", suf[i]);
+
+		skyImageNum = i;
 		shader.sky.outerboxnight[i] = R_FindImageFile((char *)pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE);
 
 		if (!shader.sky.outerboxnight[i]) {
@@ -3082,6 +3140,8 @@ static void DefaultNightSkyParms(void) {
 				shader.sky.outerboxnight[i] = tr.defaultImage;
 		}
 	}
+
+	tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", shader.sky.outerboxnight[0]->width, shader.sky.outerboxnight[0]->height);
 }
 
 /*
@@ -3091,6 +3151,9 @@ ParseSkyParms
 skyParms <outerbox> <cloudheight> <innerbox>
 ===============
 */
+
+extern void R_AttachFBOTexture2D(int target, int texId, int index);
+
 static void ParseSkyParms( const char **text ) {
 	char				*token;
 	static const char	*suf[6] = {"rt", "lf", "bk", "ft", "up", "dn"};
@@ -3117,6 +3180,8 @@ static void ParseSkyParms( const char **text ) {
 	if ( strcmp( token, "-" ) ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s", token, suf[i] );
+
+			skyImageNum = i;
 			shader.sky.outerbox[i] = R_FindImageFile( ( char * )pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE );
 
 			if ( !shader.sky.outerbox[i] ) {
@@ -3125,20 +3190,42 @@ static void ParseSkyParms( const char **text ) {
 				else
 					shader.sky.outerbox[i] = tr.defaultImage;
 			}
+		}
 
+		tr.skyCubeMap = R_UploadSkyCube("*skyCubeDay", shader.sky.outerbox[0]->width, shader.sky.outerbox[0]->height);
+
+		qboolean newSky = qfalse;
+
+		for (i = 0; i<6; i++) {
 			// Also light any <texturename>_night_up, etc if found as the night box... Will check "nightSkyParms" next, then default night sky will be used if nothing found...
 			Com_sprintf(pathname, sizeof(pathname), "%s_night_%s", token, suf[i]);
+
+			skyImageNum = i;
 			image_t *newImage = R_FindImageFile((char *)pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE);
-			
+
 			if (newImage)
 			{
 				shader.sky.outerboxnight[i] = newImage;
+				newSky = qtrue;
+			}
+		}
+
+		if (newSky)
+		{
+			tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", shader.sky.outerboxnight[0]->width, shader.sky.outerboxnight[0]->height);
+		}
+		else
+		{
+			for (i = 0; i < 6; i++)
+			{
+				if (skyImagesData[i])
+				{
+					Z_Free(skyImagesData[i]);
+					skyImagesData[i] = NULL;
+				}
 			}
 
-			//if (!shader.sky.outerboxnight[i]) {
-			//	if (i)
-			//		shader.sky.outerboxnight[i] = shader.sky.outerboxnight[i - 1];	//not found, so let's use the previous image
-			//}
+			skyImageNum = -1;
 		}
 	}
 
@@ -3186,6 +3273,7 @@ static void ParseNightSkyParms(const char **text) {
 		for (i = 0; i<6; i++) {
 			Com_sprintf(pathname, sizeof(pathname), "%s_%s", token, suf[i]);
 			
+			skyImageNum = i;
 			image_t *newImage = R_FindImageFile((char *)pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE);
 
 			if (newImage)
@@ -3200,6 +3288,8 @@ static void ParseNightSkyParms(const char **text) {
 				}
 			}
 		}
+
+		tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", shader.sky.outerboxnight[0]->width, shader.sky.outerboxnight[0]->height);
 	}
 
 	// cloudheight

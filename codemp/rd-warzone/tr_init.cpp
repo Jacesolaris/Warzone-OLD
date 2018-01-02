@@ -1594,7 +1594,7 @@ void R_Register( void )
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "1.3", CVAR_ARCHIVE );
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "2", CVAR_ARCHIVE );
-	r_waterWaveHeight = ri->Cvar_Get( "r_waterWaveHeight", "8.0", CVAR_ARCHIVE );
+	r_waterWaveHeight = ri->Cvar_Get( "r_waterWaveHeight", "12.0", CVAR_ARCHIVE );
 	r_waterWaveDensity = ri->Cvar_Get( "r_waterWaveDensity", "0.5", CVAR_ARCHIVE );
 	r_grassLength = ri->Cvar_Get( "r_grassLength", "0.4", CVAR_ARCHIVE );
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );

@@ -39,7 +39,7 @@ uniform vec4		u_Maxs;					// MAP_MAXS[0], MAP_MAXS[1], MAP_MAXS[2], 0.0
 uniform vec4		u_MapInfo;				// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec4		u_Local0;				// testvalue0, testvalue1, testvalue2, testvalue3
-uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER
+uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER, WATER_REFLECTIVENESS
 uniform vec4		u_Local2;				// WATER_COLOR_SHALLOW_R, WATER_COLOR_SHALLOW_G, WATER_COLOR_SHALLOW_B
 uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLOR_DEEP_B
 uniform vec4		u_Local4;				// FOG_COLOR
@@ -139,12 +139,14 @@ vec3 waterColorDeep = u_Local3.rgb;
 
 //const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
 //const vec3 extinction = vec3(7.0, 96.0, 128.0);			// Horizontal
-const vec3 extinction = vec3(35.0, 480.0, 640.0);
+//const vec3 extinction = vec3(35.0, 480.0, 640.0);
+const vec3 extinction = vec3(35.0, 480.0, 8192.0);
 //vec3 extinction = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 // Water transparency along eye vector.
-//const float visibility = 32.0;
-const float visibility = 320.0;
+const float visibility = 32.0;
+//const float visibility = 320.0;
+//float visibility = u_Local0.r;//320.0;
 
 // Increase this value to have more smaller waves.
 const vec2 scale = vec2(0.002, 0.002);
@@ -243,6 +245,11 @@ float fresnelTerm(vec3 normal, vec3 eyeVec)
 #endif //SIMPLIFIED_FRESNEL
 }
 
+vec4 positionMapAtCoord ( vec2 coord )
+{
+	return textureLod(u_PositionMap, coord, 0.0).xzyw;
+}
+
 vec4 waterMapLowerAtCoord ( vec2 coord )
 {
 	vec4 wmap = textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
@@ -252,12 +259,8 @@ vec4 waterMapLowerAtCoord ( vec2 coord )
 
 vec4 waterMapUpperAtCoord ( vec2 coord )
 {
-	return textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
-}
-
-vec4 positionMapAtCoord ( vec2 coord )
-{
-	return textureLod(u_PositionMap, coord, 0.0).xzyw;
+	vec4 wmap = textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
+	return wmap;
 }
 
 float pw = (1.0/u_Dimensions.x);
@@ -347,7 +350,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos + ph), 0.0);
 	landColor /= 9.0;
 
-	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
+	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * /*0.28*/u_Local1.a);
 }
 
 // lighting
@@ -510,6 +513,18 @@ void main ( void )
 			surfacePoint = ViewOrigin + eyeVecNorm * t;
 		}
 
+		// level, surfacePoint
+		{// Adjust level for low view angles...
+			//float heightDiff = (waveHeight - clamp(length(ViewOrigin.y - waterMapLower.y) / waveHeight, 0.0, 1.0));
+			//float heightDiff = level - waterMapLower.y;
+			//float diff = length(heightDiff / waveHeight);
+			//level = waterMapLower.y + (heightDiff * diff * waveHeight);
+			//surfacePoint.y = level;
+
+			//t = (((level + heightDiff) - ViewOrigin.y) / eyeVecNorm.y);
+			//surfacePoint = ViewOrigin + eyeVecNorm * t;
+		}
+
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
 		float depthN = depth * fadeSpeed;
@@ -599,7 +614,7 @@ void main ( void )
 		float waterCol = clamp(length(sunColor) / sunScale, 0.0, 1.0);
 		
 		vec3 refraction1 = mix(refraction, waterColorShallow * vec3(waterCol), clamp(vec3(depthN) / vec3(visibility), 0.0, 1.0));
-		refraction = mix(refraction1, waterColorDeep * vec3(waterCol), clamp(vec3(depth2) / vec3(extinction), 0.0, 1.0));
+		refraction = mix(refraction1, waterColorDeep * vec3(waterCol), clamp((vec3(depth2) / vec3(extinction)), 0.0, 1.0));
 
 		vec4 foam = vec4(0.0);
 

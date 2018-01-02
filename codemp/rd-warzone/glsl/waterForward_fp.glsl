@@ -1,5 +1,6 @@
 /* Cube and Bumpmaps */
-//uniform samplerCube u_CubeMap;
+uniform samplerCube u_SkyCubeMap;
+uniform samplerCube u_SkyCubeMapNight;
 uniform sampler2D   u_NormalMap;
 
 uniform vec4		u_Local9;
@@ -48,14 +49,15 @@ void main()
 
 	//
 	//tangent space-> world space(nbump->newN)
-	mat3 BTN = mat3(Binormal,Tangent,Normal); 
+	mat3 BTN = mat3(normalize(Binormal),normalize(Tangent),normalize(Normal)); 
 	vec3 newN = BTN * nBump;
 	newN= normalize(newN);
 	//vec3 newN = n;
 
 	//Reflection Mapping
     vec3 reflection = reflect(-V,newN);
-    vec4 reflecColor = vec4(0.0);//texture(u_CubeMap, reflection);
+	reflection = vec3(-reflection.y, -reflection.z, -reflection.x);
+    vec4 reflecColor = texture(u_SkyCubeMap, reflection);
   	
   	//fresnel:how much light reflects at glancing angle and how much refracts
   	float fastFresnel = R0 + (1-R0) * pow( (1-dot(-V,newN)) , 5);
@@ -66,9 +68,28 @@ void main()
 	
 	float eta = 1.0/1.33;
 	vec3 refract = refract(V,newN,eta);//air to water
-	vec4 refraction = vec4(0.0);//texture(u_CubeMap, refract);
+	refract = vec3(-refract.y, -refract.z, -refract.x);
+	vec4 refraction = texture(u_SkyCubeMap, refract);
 
-	if (u_Local9.r > 5.0)
+	if (u_Local9.r > 7.0)
+	{
+		out_Color = vec4(refraction.rgb, 1.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
+		out_NormalDetail = vec4(0.0);
+		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
+		return;
+	}
+	else if (u_Local9.r > 6.0)
+	{
+		out_Color = vec4(reflecColor.rgb, 1.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
+		out_NormalDetail = vec4(0.0);
+		out_Position = vec4(vertPosition.xyz, MATERIAL_WATER+1.0);
+		return;
+	}
+	else if (u_Local9.r > 5.0)
 	{
 		out_Color = vec4(waterColor.xyz, 1.0);
 		out_Glow = vec4(0.0);
@@ -124,6 +145,7 @@ void main()
 	}
 	
 	out_Color = waterColor + reflecColor * fastFresnel + refraction * (1-fastFresnel);
+	out_Color.a = 1.0;
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(EncodeNormal(newN), 0.0, 1.0);
 	out_NormalDetail = vec4(0.0);

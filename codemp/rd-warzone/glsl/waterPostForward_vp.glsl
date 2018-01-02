@@ -116,7 +116,7 @@ vec3 vectoangles( in vec3 value1 ) {
 void main()
 {
 	vec3 position  = attr_Position.xyz;
-	vec3 normal    = attr_Normal * 2.0 - vec3(1.0);
+	vec3 normal    = attr_Normal * 2.0 - 1.0;
 
 	if (USE_DEFORM == 1.0)
 	{

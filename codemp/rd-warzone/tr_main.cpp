@@ -826,7 +826,7 @@ static void R_RotateForViewer(viewParms_t *viewParms)
 /*
 ** SetFarClip
 */
-static void R_SetFarClip( void )
+void R_SetFarClip( void )
 {
 	float	farthestCornerDistance = 0;
 	int		i;
