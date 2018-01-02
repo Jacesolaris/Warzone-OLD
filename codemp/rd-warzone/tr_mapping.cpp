@@ -1514,11 +1514,20 @@ extern float	MAP_WATER_LEVEL;
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 char		CURRENT_WEATHER_OPTION[256] = { 0 };
 
+#ifdef __OCEAN__
+extern qboolean WATER_INITIALIZED;
+extern qboolean WATER_FAST_INITIALIZED;
+#endif //__OCEAN__
+
 void SetupWeather(char *mapname); // below...
 
 void MAPPING_LoadMapInfo(void)
 {
-	MAP_WATER_LEVEL=131072.0;
+#ifdef __OCEAN__
+	MAP_WATER_LEVEL = 131072.0;
+	WATER_INITIALIZED = qfalse;
+	WATER_FAST_INITIALIZED = qfalse;
+#endif //__OCEAN__
 
 	char mapname[256] = { 0 };
 	
@@ -1970,7 +1979,7 @@ void SetupWeather(char *mapname)
 		WZ_WEATHER_SOUND_ONLY = qtrue;
 	}
 
-	if (JKA_WEATHER_ENABLED)
+	if (JKA_WEATHER_ENABLED && strlen(atmosphericString) > 1)
 	{
 		strcpy(CURRENT_WEATHER_OPTION, atmosphericString);
 
@@ -1980,52 +1989,52 @@ void SetupWeather(char *mapname)
 			RB_SetupGlobalWeatherZone();
 
 		/* Convert WZ weather names to JKA ones... */
-		if (!Q_stricmp(atmosphericString, "rain"))
+		if (!Q_stricmp(CURRENT_WEATHER_OPTION, "rain"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rain^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("lightrain", qtrue);
 			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "heavyrain"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "heavyrain"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavyrain^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("rain", qtrue);
 			//RE_WorldEffectCommand_REAL("fog", qtrue);
 			RE_WorldEffectCommand_REAL("wind", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "rainstorm") || !Q_stricmp(atmosphericString, "storm"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "rainstorm") || !Q_stricmp(CURRENT_WEATHER_OPTION, "storm"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rainstorm^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("heavyrain", qtrue);
 			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
 			RE_WorldEffectCommand_REAL("gustingwind", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "vividrain"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "vividrain"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7vividrain^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("vividrain", qtrue);
 			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "vividrain2"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "vividrain2"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7vividrain2^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("vividrain2", qtrue);
 			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "snow"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "snow"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snow^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("snow", qtrue);
 			//RE_WorldEffectCommand_REAL("fog", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "heavysnow"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "heavysnow"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavysnow^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("snow", qtrue);
 			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
 			RE_WorldEffectCommand_REAL("wind", qtrue);
 		}
-		else if (!Q_stricmp(atmosphericString, "snowstorm"))
+		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "snowstorm"))
 		{
 			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snowstorm^5 for this map.\n");
 			RE_WorldEffectCommand_REAL("snow", qtrue);
@@ -2035,7 +2044,7 @@ void SetupWeather(char *mapname)
 		/* Nothing? Try to use what was set in the mapInfo setting directly... */
 		else
 		{
-			RE_WorldEffectCommand_REAL(atmosphericString, qtrue);
+			RE_WorldEffectCommand_REAL(CURRENT_WEATHER_OPTION, qtrue);
 		}
 	}
 	else

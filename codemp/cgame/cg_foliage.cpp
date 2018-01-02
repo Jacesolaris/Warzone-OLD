@@ -729,6 +729,8 @@ extern qboolean BG_FileExists(const char *fileName);
 
 char *R_TIL_TextureFileExistsFull(const char *name)
 {
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return NULL;
+
 	char texName[512] = { 0 };
 	COM_StripExtension(name, texName, sizeof(texName));
 	sprintf(texName, "%s.png", name);

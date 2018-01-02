@@ -3141,7 +3141,7 @@ static void DefaultNightSkyParms(void) {
 		}
 	}
 
-	tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", shader.sky.outerboxnight[0]->width, shader.sky.outerboxnight[0]->height);
+	tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 }
 
 /*
@@ -3192,7 +3192,7 @@ static void ParseSkyParms( const char **text ) {
 			}
 		}
 
-		tr.skyCubeMap = R_UploadSkyCube("*skyCubeDay", shader.sky.outerbox[0]->width, shader.sky.outerbox[0]->height);
+		tr.skyCubeMap = R_UploadSkyCube("*skyCubeDay", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 
 		qboolean newSky = qfalse;
 
@@ -3212,7 +3212,7 @@ static void ParseSkyParms( const char **text ) {
 
 		if (newSky)
 		{
-			tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", shader.sky.outerboxnight[0]->width, shader.sky.outerboxnight[0]->height);
+			tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 		}
 		else
 		{
@@ -3289,7 +3289,7 @@ static void ParseNightSkyParms(const char **text) {
 			}
 		}
 
-		tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", shader.sky.outerboxnight[0]->width, shader.sky.outerboxnight[0]->height);
+		tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 	}
 
 	// cloudheight
@@ -4757,6 +4757,8 @@ void StripCrap( const char *in, char *out, int destsize )
 
 qboolean R_TextureFileExists(char *name)
 {
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return qfalse;
+
 	char texName[MAX_IMAGE_PATH] = { 0 };
 	COM_StripExtension(name, texName, sizeof(texName));
 	sprintf(texName, "%s.jpg", name);

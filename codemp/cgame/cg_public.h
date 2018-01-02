@@ -199,7 +199,6 @@ typedef enum cgameImportLegacy_e {
 	CG_FS_WRITE,
 	CG_FS_FCLOSEFILE,
 	CG_FS_GETFILELIST,
-	CG_FS_FILEEXISTS,
 	CG_SENDCONSOLECOMMAND,
 	CG_ADDCOMMAND,
 	CG_REMOVECOMMAND,
@@ -231,8 +230,6 @@ typedef enum cgameImportLegacy_e {
 	CG_S_REGISTERSOUND,
 	CG_S_STARTBACKGROUNDTRACK,
 	CG_S_UPDATEAMBIENTSET,
-	CG_S_TEXTTOSPEECH,
-	CG_S_DOWNLOADVOICE,
 	CG_AS_PARSESETS,
 	CG_AS_ADDPRECACHEENTRY,
 	CG_S_ADDLOCALSET,
@@ -418,7 +415,11 @@ typedef enum cgameImportLegacy_e {
 	CG_RE_INIT_RENDERER_TERRAIN,
 	CG_R_WEATHER_CONTENTS_OVERRIDE,
 	CG_R_WORLDEFFECTCOMMAND,
-	CG_WE_ADDWEATHERZONE
+	CG_WE_ADDWEATHERZONE,
+
+	CG_S_TEXTTOSPEECH,
+	CG_S_DOWNLOADVOICE,
+	CG_FS_FILEEXISTS,
 } cgameImportLegacy_t;
 
 typedef enum cgameExportLegacy_e {
@@ -493,7 +494,6 @@ typedef struct cgameImport_s {
 	int				(*FS_Open)								( const char *qpath, fileHandle_t *f, fsMode_t mode );
 	int				(*FS_Read)								( void *buffer, int len, fileHandle_t f );
 	int				(*FS_Write)								( const void *buffer, int len, fileHandle_t f );
-	qboolean		(*FS_FileExists)						(const char *path);
 
 	// screen
 	void			(*UpdateScreen)							( void );
@@ -526,8 +526,6 @@ typedef struct cgameImport_s {
 	void			(*S_StopLoopingSound)					( int entityNum );
 	void			(*S_UpdateEntityPosition)				( int entityNum, const vec3_t origin );
 	void			(*S_UpdateAmbientSet)					( const char *name, vec3_t origin ) ;
-	void			(*S_TextToSpeech)						( const char *text, const char *voice, int entityNum, float *origin );
-	qboolean		(*S_DownloadVoice)						( const char *text, const char *voice );
 
 	// ambient sound
 	void			(*AS_AddPrecacheEntry)					( const char *name );
@@ -699,6 +697,10 @@ typedef struct cgameImport_s {
 	void			(*G2API_CleanEntAttachments)			( void );
 	qboolean		(*G2API_OverrideServer)					( void *serverInstance );
 	void			(*G2API_GetSurfaceName)					( void *ghoul2, int surfNumber, int modelIndex, char *fillBuf );
+
+	void			(*S_TextToSpeech)						(const char *text, const char *voice, int entityNum, float *origin);
+	qboolean		(*S_DownloadVoice)						(const char *text, const char *voice);
+	qboolean		(*FS_FileExists)						(const char *path);
 } cgameImport_t;
 
 typedef struct cgameExport_s {

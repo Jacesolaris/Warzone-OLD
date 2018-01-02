@@ -48,7 +48,15 @@ void DEBUG_EndTimer(qboolean usePerfCvar)
 			qglFinish();
 
 		DEBUG_PERFORMANCE_TIME = getMilliSpan(DEBUG_PERFORMANCE_TIME);
-		ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", DEBUG_PERFORMANCE_NAME, DEBUG_PERFORMANCE_TIME);
+
+		if (DEBUG_PERFORMANCE_NAME[0] != '\0' && strlen(DEBUG_PERFORMANCE_NAME) > 0)
+		{
+			ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", DEBUG_PERFORMANCE_NAME, DEBUG_PERFORMANCE_TIME);
+		}
+		else
+		{
+			ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", "unknown", DEBUG_PERFORMANCE_TIME);
+		}
 	}
 #endif //__PERFORMANCE_DEBUG__
 }

@@ -402,7 +402,6 @@ typedef enum gameImportLegacy_e {
 	G_SIEGEPERSSET,
 	G_SIEGEPERSGET,
 	G_FS_GETFILELIST,
-	G_FS_FILEEXISTS,
 	G_DEBUG_POLYGON_CREATE,
 	G_DEBUG_POLYGON_DELETE,
 	G_REAL_TIME,
@@ -693,7 +692,9 @@ typedef enum gameImportLegacy_e {
 	G_CM_REGISTER_TERRAIN,
 	G_RMG_INIT,
 	G_BOT_UPDATEWAYPOINTS,
-	G_BOT_CALCULATEPATHS
+	G_BOT_CALCULATEPATHS,
+
+	G_FS_FILEEXISTS,
 } gameImportLegacy_t;
 
 typedef enum gameExportLegacy_e {
@@ -769,7 +770,6 @@ typedef struct gameImport_s {
 	int			(*FS_Open)								( const char *qpath, fileHandle_t *f, fsMode_t mode );
 	int			(*FS_Read)								( void *buffer, int len, fileHandle_t f );
 	int			(*FS_Write)								( const void *buffer, int len, fileHandle_t f );
-	qboolean	(*FS_FileExists)						( const char *path );
 
 	// server
 	void		(*AdjustAreaPortalState)				( sharedEntity_t *ent, qboolean open );
@@ -1076,6 +1076,8 @@ typedef struct gameImport_s {
 	void		(*G2API_CleanEntAttachments)			( void );
 	qboolean	(*G2API_OverrideServer)					( void *serverInstance );
 	void		(*G2API_GetSurfaceName)					( void *ghoul2, int surfNumber, int modelIndex, char *fillBuf );
+
+	qboolean	(*FS_FileExists)						(const char *path);
 } gameImport_t;
 
 typedef struct gameExport_s {

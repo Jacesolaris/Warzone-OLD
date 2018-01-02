@@ -55,7 +55,6 @@ typedef enum uiImportLegacy_e {
 	UI_FS_WRITE,
 	UI_FS_FCLOSEFILE,
 	UI_FS_GETFILELIST,
-	UI_FS_FILEEXISTS,
 	UI_R_REGISTERMODEL,
 	UI_R_REGISTERSKIN,
 	UI_R_REGISTERSHADERNOMIP,
@@ -72,7 +71,6 @@ typedef enum uiImportLegacy_e {
 	UI_CM_LOADMODEL,
 	UI_S_REGISTERSOUND,
 	UI_S_STARTLOCALSOUND,
-	UI_S_TEXTTOSPEECH,
 	UI_KEY_KEYNUMTOSTRINGBUF,
 	UI_KEY_GETBINDINGBUF,
 	UI_KEY_SETBINDING,
@@ -191,6 +189,9 @@ typedef enum uiImportLegacy_e {
 	UI_G2_GETSURFACENAME,
 	UI_G2_SETSKIN,
 	UI_G2_ATTACHG2MODEL,
+
+	UI_S_TEXTTOSPEECH,
+	UI_FS_FILEEXISTS,
 } uiImportLegacy_t;
 
 typedef enum uiExportLegacy_e {
@@ -234,7 +235,6 @@ typedef struct uiImport_s {
 	int				(*FS_Open)								( const char *qpath, fileHandle_t *f, fsMode_t mode );
 	int				(*FS_Read)								( void *buffer, int len, fileHandle_t f );
 	int				(*FS_Write)								( const void *buffer, int len, fileHandle_t f );
-	qboolean		(*FS_FileExists)						( const char *path );
 
 	void			(*GetClientState)						( uiClientState_t *state );
 	void			(*GetClipboardData)						( char *buf, int bufsize );
@@ -289,7 +289,6 @@ typedef struct uiImport_s {
 	void			(*S_StartLocalSound)					( sfxHandle_t sfx, int channelNum );
 	void			(*S_StopBackgroundTrack)				( void );
 	sfxHandle_t		(*S_RegisterSound)						( const char *sample );
-	void			(*S_TextToSpeech)						( const char *text, const char *voice, int entityNum, float *origin );
 
 	void			(*SE_GetLanguageName)					( const int languageIndex, char *buffer );
 	int				(*SE_GetNumLanguages)					( void );
@@ -354,6 +353,9 @@ typedef struct uiImport_s {
 	void			(*G2API_GetSurfaceName)					( void *ghoul2, int surfNumber, int modelIndex, char *fillBuf );
 	qboolean		(*G2API_SetSkin)						( void *ghoul2, int modelIndex, qhandle_t customSkin, qhandle_t renderSkin );
 	qboolean		(*G2API_AttachG2Model)					( void *ghoul2From, int modelIndexFrom, void *ghoul2To, int toBoltIndex, int toModel );
+
+	void			(*S_TextToSpeech)						(const char *text, const char *voice, int entityNum, float *origin);
+	qboolean		(*FS_FileExists)						(const char *path);
 } uiImport_t;
 
 typedef struct uiExport_s {

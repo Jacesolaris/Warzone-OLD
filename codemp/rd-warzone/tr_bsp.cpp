@@ -3327,7 +3327,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 	CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
 
-	if (MAP_WATER_LEVEL == 131072.0)
+	if (MAP_WATER_LEVEL >= 131072.0)
 	{
 		setupWaterLevel = qtrue;
 	}

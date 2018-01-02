@@ -3125,7 +3125,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 
 image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
 {
-	char normalName[MAX_IMAGE_PATH];
+	char normalName[MAX_IMAGE_PATH] = { 0 };
 	image_t *normalImage = NULL;
 	int normalFlags;
 	
@@ -3150,7 +3150,7 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 
 static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char specularName[MAX_IMAGE_PATH];
+	char specularName[MAX_IMAGE_PATH] = { 0 };
 	image_t *specularImage = NULL;
 	int normalFlags;
 	
@@ -3183,7 +3183,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 /*
 static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3216,7 +3216,7 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 */
 static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3249,7 +3249,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 
 static void R_CreateSteepMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3266,7 +3266,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 
 	if (!SubsurfaceImage)
 	{
-		char SubsurfaceName2[MAX_IMAGE_PATH];
+		char SubsurfaceName2[MAX_IMAGE_PATH] = { 0 };
 
 		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
 		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_steep1");
@@ -3281,7 +3281,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 
 static void R_CreateRoofMap(const char *name, byte *pic, int width, int height, int flags)
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 
@@ -3299,7 +3299,7 @@ static void R_CreateRoofMap(const char *name, byte *pic, int width, int height, 
 
 static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3316,7 +3316,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 
 	if (!SubsurfaceImage)
 	{
-		char SubsurfaceName2[MAX_IMAGE_PATH];
+		char SubsurfaceName2[MAX_IMAGE_PATH] = { 0 };
 
 		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
 		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_steep2");
@@ -3330,7 +3330,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 
 	if (!SubsurfaceImage)
 	{
-		char SubsurfaceName2[MAX_IMAGE_PATH];
+		char SubsurfaceName2[MAX_IMAGE_PATH] = { 0 };
 
 		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
 		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_waterEdge");
@@ -3345,7 +3345,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 
 static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3362,7 +3362,7 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 
 	if (!SubsurfaceImage)
 	{
-		char SubsurfaceName2[MAX_IMAGE_PATH];
+		char SubsurfaceName2[MAX_IMAGE_PATH] = { 0 };
 
 		COM_StripExtension(name, SubsurfaceName2, MAX_IMAGE_PATH);
 		Q_strcat(SubsurfaceName2, MAX_IMAGE_PATH, "_splatControl");
@@ -3377,7 +3377,7 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 
 static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3395,7 +3395,7 @@ static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int heig
 
 static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3413,7 +3413,7 @@ static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int heig
 
 static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int height, int flags )
 {
-	char SubsurfaceName[MAX_IMAGE_PATH];
+	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
 	int normalFlags;
 	
@@ -3700,6 +3700,8 @@ qboolean TIL_INITIALIZED = qfalse;
 
 char *R_TIL_TextureFileExists(const char *name)
 {
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return NULL;
+
 	char texName[MAX_IMAGE_PATH] = { 0 };
 	COM_StripExtension(name, texName, sizeof(texName));
 	sprintf(texName, "%s.dds", name);
@@ -4138,18 +4140,15 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 	if (skyImageNum != -1)
 	{// Copy pixels to their sky buffer numbers...
-		if (!USE_ALPHA)
-		{
-			int dataSize = width * height * 4 * sizeof(byte); // hmm i think this should actually be 3?
-			skyImagesData[skyImageNum] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
-			memcpy(skyImagesData[skyImageNum], pic, dataSize);
-		}
-		else
-		{
-			int dataSize = width * height * 4 * sizeof(byte);
-			skyImagesData[skyImageNum] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
-			memcpy(skyImagesData[skyImageNum], pic, dataSize);
-		}
+		float scaled_width = SKY_CUBE_SIZE;
+		float scaled_height = SKY_CUBE_SIZE;
+
+		//int dataSize = width * height * 4 * sizeof(byte); // hmm i think this should actually be 3?
+		//skyImagesData[skyImageNum] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
+		//memcpy(skyImagesData[skyImageNum], resampledBuffer, dataSize);
+		int dataSize = scaled_width * scaled_height * 4 * sizeof(byte);
+		skyImagesData[skyImageNum] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
+		ResampleTexture(pic, width, height, skyImagesData[skyImageNum], scaled_width, scaled_height);
 	}
 
 #ifdef __TINY_IMAGE_LOADER__
@@ -4351,10 +4350,14 @@ static void R_CreateDefaultImage( void ) {
 R_CreateBuiltinImages
 ==================
 */
+
+extern byte *skyImagesData[6];
+
 void R_CreateBuiltinImages( void ) {
 	int		x,y;
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 	byte	data2[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	byte	data3[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
 	int vramScaleDiv = 1;
 
@@ -4376,7 +4379,20 @@ void R_CreateBuiltinImages( void ) {
 
 	Com_Memset( data2, 0, sizeof( data2 ) );
 	tr.blackImage = R_CreateImage("*black", (byte *)data2, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
-	VectorSet4(tr.blackImage->lightColor, 1.0, 1.0, 1.0, 1.0);
+	VectorSet4(tr.blackImage->lightColor, 0.0, 0.0, 0.0, 1.0);
+
+	Com_Memset(data3, 128, sizeof(data3));
+	tr.greyImage = R_CreateImage("*grey", (byte *)data3, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+	VectorSet4(tr.greyImage->lightColor, 0.5, 0.5, 0.5, 1.0);
+
+	extern image_t *R_UploadSkyCube(const char *name, int width, int height);
+	for (int z = 0; z < 6; z++)
+		skyImagesData[z] = (byte *)data3;
+	tr.greyCube = R_CreateCubemapFromImageDatas("*greyCube", skyImagesData, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, 0);
+	for (int z = 0; z < 6; z++)
+		skyImagesData[z] = NULL;
+	VectorSet4(tr.greyCube->lightColor, 0.5, 0.5, 0.5, 1.0);
+	
 
 	tr.randomImage = R_FindImageFile("gfx/random.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 

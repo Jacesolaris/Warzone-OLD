@@ -113,6 +113,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // -----------------------------------------------------------------------------------------------------------------------------
 
+#define SKY_CUBE_SIZE 2048
+
 #ifdef __DEBUG_BINDS__
 extern int SCENE_FRAME_NUMBER;
 #endif //__DEBUG_BINDS__
@@ -2610,6 +2612,8 @@ typedef struct trGlobals_s {
 	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*blackImage;			// full of 0x00
+	image_t					*greyImage;				// full of 0x77
+	image_t					*greyCube;				// cubemap full of 0x77
 	image_t					*identityLightImage;	// full of tr.identityLightByte
 
 	//image_t					*previousRenderImage;
