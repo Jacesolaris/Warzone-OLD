@@ -21,6 +21,8 @@ uniform sampler2D	u_WaterPositionMap; // Sea grass 1
 uniform sampler2D	u_WaterHeightMap; // Sea grass 2
 uniform sampler2D	u_GlowMap; // Sea grass 3
 
+uniform vec3		u_ViewOrigin;
+
 uniform vec4		u_Local9;
 
 smooth in vec2		vTexCoord;
@@ -64,6 +66,8 @@ void main()
 {
 	//vec4 normal = DecodeFloatRGBA(vVertNormal);
 	//int iGrassType = int(normal.a * 20.0);
+
+	vec3 dir = normalize(u_ViewOrigin - vVertPosition);
 
 	vec4 diffuse;
 
@@ -114,7 +118,7 @@ void main()
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy)), 0.0, 1.0);
+		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy) * dir), 0.0, 1.0);
 		out_NormalDetail = vec4(0.0);
 		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		//out_Position = vec4(0.0);

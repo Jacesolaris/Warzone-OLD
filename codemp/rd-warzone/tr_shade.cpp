@@ -1851,8 +1851,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 	qboolean IS_DEPTH_PASS = qfalse;
 
-	int cubeMapNum = 0;
-
 #if 1
 	if (backEnd.depthFill)
 	{
@@ -3007,7 +3005,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
 
@@ -3085,7 +3083,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
 
@@ -3125,7 +3123,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
@@ -3165,7 +3163,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
 
@@ -3202,7 +3200,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
 
@@ -3292,7 +3290,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
-					stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+					//stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+					stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 					tess.shader->cullType = CT_TWO_SIDED; // Always...
 					FBO_Bind(tr.renderWaterFbo);
 

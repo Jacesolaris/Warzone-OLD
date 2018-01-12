@@ -7848,10 +7848,10 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
-"alphaFunc GE128\n"\
+"//alphaFunc GE128\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
-"tcMod scale 2.5 2.5\n"\
+"//tcMod scale 2.5 2.5\n"\
 "}\n"\
 "}\n"\
 "";

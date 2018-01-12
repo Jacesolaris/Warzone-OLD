@@ -1,101 +1,178 @@
+#define __PER_PIXEL_NORMAL__
+//#define __USING_GEOM_SHADER__
+
 attribute vec3	attr_OceanPosition;
 attribute vec2	attr_OceanTexCoord;
 
 uniform mat4	u_ModelViewProjectionMatrix;
 
-uniform vec4	u_Local10;
+uniform vec4	u_Local0; // MAP_WATER_LEVEL, 0, 0, 0
 uniform vec4	u_Local9;
+uniform vec4	u_Local10;
 
 uniform float	u_Time;
 
 uniform vec3	u_ViewOrigin;
 
-out vec3	vertPosition;
-out vec3	Binormal;/* Tangent basis */
-out vec3	Tangent;
-out vec3	Normal;
-out vec3	View;	/* View vector */
+#define numWaves 10
 
-/* Multiple bump coordinates for animated bump mapping */
-out vec2	bumpCoord0;
-out vec2	bumpCoord1;
-out vec2	bumpCoord2;
+#define WAVE_AMPLITUDE u_Local9.r//1.0//0.01
+#define WAVE_LENGTH u_Local9.g//1.0//0.01
+#define WAVE_SPEED u_Local9.b//1.0//0.01
+#define DAMPING 0.1
+#define STEEPNESS 1.0
 
-vec3 TangentFromNormal ( vec3 normal )
+#define TIME (u_Time * WAVE_SPEED)
+#define MAP_WATER_LEVEL u_Local0.r
+
+struct Wave {
+  float freq;  // 2*PI / wavelength
+  float amp;   // amplitude
+  float phase; // speed * 2*PI / wavelength
+  vec2 dir;
+};
+
+out vec3 FragPos;
+out vec3 Normal;
+
+// calculate the gerstner wave
+vec3 getGerstnerHeight(Wave w, vec2 pos, float time)
 {
-	vec3 tangent;
-	vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0)); 
-	vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0)); 
+	float Q = STEEPNESS/(w.freq*w.amp*numWaves);
+	//Q = 0.1f;
+	vec3 gerstner = vec3(0.0, 0.0, 0.0);
+	gerstner.x = Q*w.amp*w.dir.x*cos( dot(w.freq*w.dir, pos) + w.phase * time);
+	gerstner.z = Q*w.amp*w.dir.y*cos( dot(w.freq*w.dir, pos) + w.phase * time);
+	gerstner.y = w.amp*sin( dot( w.freq*w.dir, pos) + w.phase * time);
 
-	if( length(c1) > length(c2) )
-	{
-		tangent = c1;
-	}
-	else
-	{
-		tangent = c2;
-	}
-
-	return normalize(tangent);
+	return gerstner;
 }
+
+#ifndef __PER_PIXEL_NORMAL__
+vec3 computePartialBinormal(Wave w, vec3 P, float time)
+{
+	vec3 B = vec3(0.0, 0.0, 0.0);
+	vec2 p = vec2(P.x, P.z);
+	float inner = w.freq * dot(w.dir, p) + w.phase * time;
+	float WA = w.freq * w.amp;
+	float Q = STEEPNESS/(w.freq*w.amp*numWaves);
+	//Q = 0.1f;
+	B.x = Q * pow(w.dir.x, 2) * WA * sin(inner);
+	B.z = Q * w.dir.x * w.dir.y * WA * sin(inner);
+	B.y = w.dir.x * WA * cos(inner);
+
+	return B;
+}
+
+vec3 computePartialTangent(Wave w, vec3 P, float time)
+{
+	vec3 T = vec3(0.0, 0.0, 0.0);
+	vec2 p = vec2(P.x, P.z);
+	float inner = w.freq * dot(w.dir, p) + w.phase * time;
+	float WA = w.freq * w.amp;
+	float Q = STEEPNESS/(w.freq*w.amp*numWaves);
+	//Q = 0.1f;
+	T.x = Q * w.dir.x * w.dir.y * WA * sin(inner);
+	T.z = Q * pow(w.dir.y, 2) * WA * sin(inner);
+	T.y = w.dir.y * WA * cos(inner);
+
+	return T;
+}
+
+vec3 computePartialGerstnerNormal(Wave w, vec3 P, float time)
+{
+	vec3 N = vec3(0.0, 0.0, 0.0);
+	vec2 p = vec2(P.x, P.z);
+	float inner = w.freq*dot(w.dir, p) + w.phase * time;
+	float WA = w.freq * w.amp;
+	float Q = STEEPNESS/(w.freq*w.amp*numWaves);
+	//Q = 0.1f;
+	N.x = w.dir.x * WA * cos(inner);
+	N.z = w.dir.y * WA * cos(inner);
+	N.y = Q * WA * sin(inner);
+		
+	return N;
+}
+#endif //__PER_PIXEL_NORMAL__
 
 void main()
 {
-	vec4 P = vec4(attr_OceanPosition, 1.0);
-	
-	/* TODO: Add waves to P, set 2 waves */
-	float A[2] = float[](1.0 * u_Local9.g, 0.5 * u_Local9.g);		//amplitude
-	float Dx[2] = float[](-1.0,-0.7);	//(DX,DZ)direction of travel
-	float Dz[2] = float[](0.0,0.7);
-	float f[2] = float[](0.2 * u_Local9.b, 0.4 * u_Local9.b);		//frequency
-	float p[2] = float[](0.5 * u_Local9.a, 1.3 * u_Local9.a);		//phase
-	float k[2] = float[](2.0,2.0);		//sharpness
+	vec3 position = attr_OceanPosition.xyz;
+	position.y = MAP_WATER_LEVEL;
 
-    //waves:y=G(x,z,t)
+	vec2 p = vec2(position.x, position.z);
 
-    float wave1 = A[0] * pow((sin((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*0.5 + 0.5),k[0]);
-    float dGx1  = 0.5 * k[0] * f[0] * A[0] * pow((sin((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*0.5+0.5),k[0]-1) * cos((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*Dx[0];
-    float dGz1  = 0.5 * k[0] * f[0] * A[0] * pow((sin((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*0.5+0.5),k[0]-1) * cos((Dx[0] * P.x + Dz[0] * P.y)*f[0] + u_Time *p[0])*Dz[0];
+	float d = 0.0f;
+	vec3 gerstnerTot = vec3(0.0, 0.0, 0.0);
 
-	float wave2 = A[1] * pow((sin((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*0.5 + 0.5),k[1]);
-    float dGx2  = 0.5 * k[1] * f[1] * A[1] * pow((sin((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*0.5+0.5),k[1]-1) * cos((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*Dx[1];
-    float dGz2  = 0.5 * k[1] * f[1] * A[1] * pow((sin((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*0.5+0.5),k[1]-1) * cos((Dx[1] * P.x + Dz[1] * P.y)*f[1] + u_Time *p[1])*Dz[1];
+	Wave W[10] = Wave[]
+	(
+		Wave( 0.050, 0.20, 1.5, vec2(-5.5, 2.0) ),
+		Wave( 0.120, 0.55, 1.3, vec2(-0.7, 0.7) ),
+		Wave( 0.2020, 0.01, 0.5, vec2(-1, 0) ),
+		Wave( 0.120, 1.15, 1.60, vec2(1.0, 0.20) ),
+		Wave( 0.020, 10.25, 1.32, vec2(1.2, 0.10) ),	
+		Wave( 0.020, 0.056, 1.53, vec2(1.4, 0.50) ),	
+		Wave( 0.120, -0.35, 3.60, vec2(0.50, 2.20) ),	
+		Wave( 0.120, -0.05, 0.60, vec2(2.50, -2.20) ),	
+		Wave( 0.050, -0.42, 1.60, vec2(-4.0, -1.20) ),	
+		Wave( 0.50, 0.01, 2.330, vec2(-2.0, -1.60) )
+	);
 
+	// compute the position
+	for(int i = 0; i < numWaves; i++)
+	{
+		W[i].freq *= WAVE_LENGTH;
+		W[i].amp *= WAVE_AMPLITUDE;
+		W[i].phase *= u_Local9.a;
+		W[i].dir *= u_Local10.a;
+		gerstnerTot += getGerstnerHeight(W[i], p, TIME); 
+	}
 
-    //sum of waves
-	//P.y = wave1+wave2;
-    //P.y += wave1+wave2;
-	P.z -= u_Local9.g;
-	P.z += (wave1+wave2);
-    float dHx = dGx1 + dGx2;
-    float dHz = dGz1 + dGz2;
+	//gerstnerTot/=4;
+	position.x += gerstnerTot.x;
+	position.z += gerstnerTot.z;
+	position.y += gerstnerTot.y;
 
-	/* TODO: Compute B, T, N */
-    //Binormal = vec3(1,dHx,0);
-    //Tangent = vec3(0,dHz,1);
-    //Normal = vec3(-dHx,1,-dHz);
-	
-	Binormal = vec3(1,0,dHx);
-    Tangent = vec3(0,1,dHz);
-    Normal = vec3(-dHx,-dHz,1);
+#ifndef __PER_PIXEL_NORMAL__
+#if 0
+	vec3 T = vec3(0.0, 0.0, 0.0);
+	for(int i = 0; i < numWaves; i++)
+	{
+		T += computePartialTangent(W[i], position/*gerstnerTot*/, TIME);
+	}
+	T.x *= -1.0;
+	T.z = 1.0-T.z;
+			
+	vec3 B = vec3(0.0, 0.0, 0.0);
+	for(int i = 0; i < numWaves; i++)
+	{
+		B += computePartialBinormal(W[i], position/*gerstnerTot*/, TIME);
+	}
+	B.x = 1.0 - B.x;
+	B.z *= -1.0;
 
-	//Normal = normalize(vec3(-dHx,-dHz,1));
-	//Tangent = TangentFromNormal( Normal.xyz );
-	//Binormal = normalize( cross(Normal.xyz, Tangent) );
+	vec3 N = cross(T, B);
+#else			
+	vec3 N = vec3(0.0, 0.0, 0.0);
+	for(int i = 0; i < numWaves; i++)
+	{
+		N += computePartialGerstnerNormal(W[i], position/*gerstnerTot*/, TIME);
+	}
+	N.x *= -1.0;
+	N.z *= -1.0;
+	N.y = 1.0 - N.y;
+#endif
 
-    //View = attr_OceanPosition - u_ViewOrigin.xzy;  //don't normalize it
-	View = normalize(u_ViewOrigin - attr_OceanPosition);  //don't normalize it
+	Normal = normalize(N).xzy;
+	//Normal.y *= -1.0;
+#endif //__PER_PIXEL_NORMAL__
 
-	/* TODO: Compute bumpmap coordinates */
-	vec2 texScale = vec2(8,4);
-	float bumpTime = mod(u_Time,100.0);
-	vec2 bumpSpeed = vec2(-0.05,0);
+	FragPos = position.xzy;
 
-	bumpCoord0.xy = attr_OceanTexCoord.xy * texScale + bumpTime * bumpSpeed;
-	bumpCoord1.xy = attr_OceanTexCoord.xy * texScale *2+bumpTime * bumpSpeed*4;
-	bumpCoord2.xy = attr_OceanTexCoord.xy * texScale *4+bumpTime * bumpSpeed*8;
-
-	gl_Position = u_ModelViewProjectionMatrix * P;
-
-	vertPosition = P.xyz;
+#ifdef __USING_GEOM_SHADER__
+	gl_Position = vec4(position.xzy, 1.0);
+#else //!__USING_GEOM_SHADER__
+	gl_Position = u_ModelViewProjectionMatrix * vec4(position.xzy, 1.0);
+#endif //__USING_GEOM_SHADER__
 }

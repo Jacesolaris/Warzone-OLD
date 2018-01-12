@@ -2187,6 +2187,21 @@ const void	*RB_WorldEffects( const void *data )
 		RB_EndSurface();
 	}
 
+	if (!r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
+	{
+		// do nothing
+		return (const void *)(cmd + 1);
+	}
+
+	if ((backEnd.viewParms.flags & VPF_SHADOWPASS)
+		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
+		|| backEnd.depthFill
+		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+	{
+		// do nothing
+		return (const void *)(cmd + 1);
+	}
+
 	matrix_t previousModelViewMarix, previousProjectionMatrix;
 
 	Matrix16Copy(glState.modelview, previousModelViewMarix);

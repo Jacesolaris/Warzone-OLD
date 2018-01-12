@@ -13,21 +13,25 @@ uniform vec2				u_Dimensions;
 uniform vec3				u_ViewOrigin;
 uniform vec4				u_PrimaryLightOrigin;
 
-uniform vec4				u_Local0;
-uniform vec4				u_Local1;
+uniform vec4				u_Local0;				// xx, xx, SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]
+uniform vec4				u_Local1;				// r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
+uniform vec4				u_Local2;				// MAP_INFO_SIZE[2], MAP_INFO_MINS[2], MAP_INFO_MAXS[2]
 
-varying vec3   				var_Ray;
 varying vec2   				var_TexCoords;
 
-#define znear				u_ViewInfo.r			//camera clipping start
-#define zfar				u_ViewInfo.g			//camera clipping end
+#define znear				u_ViewInfo.r			// camera clipping start
+#define zfar				u_ViewInfo.g			// camera clipping end
 
-#define RAY_LENGTH zfar//40.0 //maximum ray length.
-#define STEP_COUNT 256  //maximum sample count.
-#define PIXEL_STRIDE 4   //sample multiplier. it's recommend 16 or 8.
-#define PIXEL_THICKNESS (0.04 * PIXEL_STRIDE)   //how thick is a pixel. correct value reduces noise.
+#define BLUR_SIZE 0.0//3.0
+#define BLUR_STEP 1.0//1.5
+    
+#define SHADOW_TOLERANCE 0.5
 
-vec2 texel = vec2(1.0) / u_Dimensions;
+#define MAP_HEIGHT	u_Local2.r
+#define MAP_MINS	u_Local2.g
+#define MAP_MAXS	u_Local2.b
+
+vec2 px = vec2(1.0) / u_Dimensions;
 
 vec3 DecodeNormal(in vec2 N)
 {
@@ -38,189 +42,174 @@ vec3 DecodeNormal(in vec2 N)
 	return vec3(encoded * g, 1.0 - f * 0.5);
 }
 
-//convenient function.
-bool RayIntersect(float raya, float rayb, vec2 sspt, float thickness) 
+vec3 rescale(vec3 values, float new_min, float new_max)
 {
-    if (raya > rayb) {
-        float t = raya;
-        raya = rayb;
-        rayb = t;
-    }
+	vec3 ret;
+    float old_min = values.x;
+	float old_max = values.y;
 
-#if 1
-	// by default we use fixed thickness.
-    float screenPCameraDepth = -texture(u_ScreenDepthMap, vec2(sspt * 0.5 + 0.5)).r;
-    return raya < screenPCameraDepth && rayb > screenPCameraDepth - thickness;
+	ret.x = (new_max - new_min) / (old_max - old_min) * (values.x - old_min) + new_min;
+	ret.y = (new_max - new_min) / (old_max - old_min) * (values.y - old_min) + new_min;
+	ret.z = (new_max - new_min) / (old_max - old_min) * (values.z - old_min) + new_min;
+
+	return ret;
+}
+
+float getHeightValue(vec2 coords)
+{
+	float n = 0.33;
+	//return max(n, texture(u_DiffuseMap, coords).x);
+	//return length(texture(u_DiffuseMap, coords).xyz) / 3.0;
+
+	if (coords.x < 0.0 || coords.x > 1.0) return 0.0;
+	if (coords.y < 0.0 || coords.y > 1.0) return 0.0;
+	//return max(n, 1.0 - textureLod(u_ScreenDepthMap, coords, 0.0).x);
+
+	//float height = textureLod(u_PositionMap, coords, 0.0).z;
+	//float mapHeight = MAP_MAXS - MAP_MINS;
+	//float addHeight = mapHeight - MAP_MAXS;
+
+	//float height = (textureLod(u_PositionMap, coords, 0.0).z / MAP_HEIGHT) * 0.5 + 0.5;
+
+	float height = textureLod(u_PositionMap, coords, 0.0).z;
+	height = rescale(vec3(MAP_MINS, MAP_MAXS, height), 0.0, 1.0).z * 0.5 + 0.5;
+	if (u_Local1.g > 0.0) height = 1.0 - height;
+	if (u_Local1.b > 0.0) height = max(n, height);
+	return height;
+}
+
+float get_shadow(vec3 n, vec3 l)
+{
+	return max(0.0, dot(n,l));
+}
+
+float shadow(vec3 wPos, vec3 lVector, float NdL)
+{
+	float bias = 0.01;
+	vec3 p;
+	float shadow = 1.0;
+
+	if (NdL > 0.0)
+	{
+		for (float i = 0.0; i <= 1.0; i += 0.01) 
+		{
+			p = wPos + lVector * i;
+			float h = getHeightValue(vec2(p.x, p.y));
+            
+			float diff = clamp(pow(p.z/h, u_Local1.a), 0.0, 1.0);
+
+			shadow *= diff;	
+                
+			/*if (p.z < h - bias)
+			{
+				shadow = 0.0;
+				break;
+			}*/
+		}
+	}
+	return shadow;
+}
+
+vec3 getNormal(vec2 coords, float intensity)
+{
+#if 0
+	vec3 a = vec3(coords.x - px.x, 0.0, getHeightValue(vec2(coords.x - px.x, coords.y)) * intensity);
+    vec3 b = vec3(coords.x + px.x, 0.0, getHeightValue(vec2(coords.x + px.x, coords.y)) * intensity);
+    vec3 c = vec3(0.0, coords.y + px.y, getHeightValue(vec2(coords.x, coords.y + px.y)) * intensity);
+    vec3 d = vec3(0.0, coords.y - px.y, getHeightValue(vec2(coords.x, coords.y - px.y)) *intensity);
+
+	return normalize(cross(b-a, c-d));
 #else
-    float backZ = textureLod(_BackfaceTex, vec3(sspt * 0.5 + 0.5, 0)).r;
-    return raya < backZ && rayb > screenPCameraDepth;
+	vec4 norm = textureLod(u_NormalMap, coords, 0.0);
+	norm.xyz = DecodeNormal(norm.xy);
+	return norm.xyz;
 #endif
 }
 
-
-bool traceRay(vec3 start
-				, vec3 direction
-				, float jitter
-				, vec4 texelSize
-				, float maxRayLength
-				, float maxStepCount
-				, float pixelStride
-				, float pixelThickness
-				, out vec2 hitPixel
-				, out float marchPercent
-				, out float hitZ
-				, out float rayLength) 
+vec4 SSS( in vec2 fragCoord )
 {
-    //clamp raylength to near clip plane.
-    //rayLength = ((start.z + direction.z * maxRayLength) > -_ProjectionParams.y) ?
-    //    (-_ProjectionParams.y - start.z) / direction.z : maxRayLength;
-	//rayLength = maxRayLength;
-	rayLength = ((start.z + direction.z * maxRayLength) > -znear) ? (-znear - start.z) / direction.z : maxRayLength;
-
-    vec3 end = start + direction * rayLength;
-
-    vec4 H0 = u_ProjectionMatrix * vec4(start, 1.0);
-    vec4 H1 = u_ProjectionMatrix * vec4(end, 1.0);
-
-    vec2 screenP0 = H0.xy / H0.w;
-    vec2 screenP1 = H1.xy / H1.w; 
-
-    float k0 = 1.0 / H0.w;
-    float k1 = 1.0 / H1.w;
-
-    float Q0 = start.z * k0;
-    float Q1 = end.z * k1;
-
-    if (abs(dot(screenP1 - screenP0, screenP1 - screenP0)) < 0.00001) {
-        screenP1 += texelSize.xy;
-    }
-
-    vec2 deltaPixels = (screenP1 - screenP0) * texelSize.zw;
-    float step; //the sample rate.
-    step = min(1.0 / abs(deltaPixels.y), 1.0 / abs(deltaPixels.x)); //make at least one pixel is sampled every time.
-
-    //make sample faster.
-    step *= pixelStride;
-    float sampleScaler = 1.0 - min(1.0, -start.z / 100.0); //sample is slower when far from the screen.
-    step *= 1.0 + sampleScaler; 
-
-    float interpolationCounter = step;  //by default we use step instead of 0. this avoids some glitch.
-
-    vec4 pqk = vec4(screenP0, Q0, k0);
-    vec4 dpqk = vec4(screenP1 - screenP0, Q1 - Q0, k1 - k0) * step;
-
-    pqk += jitter * dpqk;
-
-    float prevZMaxEstimate = start.z;
-
-    bool intersected = false;
-    
-	//the logic here is a little different from PostProcessing or (casual-effect). but it's all about raymarching.
-    for (int i = 1; i <= maxStepCount && interpolationCounter <= 1 && !intersected; i++, interpolationCounter += step) 
-	{
-        pqk += dpqk;
-        float rayZMin = prevZMaxEstimate;
-        float rayZMax = pqk.z / pqk.w;
-
-		vec2 c = (pqk.xy - dpqk.xy) * 0.5;
-
-        if (RayIntersect(rayZMin, rayZMax, c, pixelThickness))
-		{
-            hitPixel = c * 0.5 + 0.5;
-            marchPercent = float(i) / maxStepCount;
-            intersected = true;
-        }
-        else 
-		{
-            prevZMaxEstimate = rayZMax;
-        }
-    }
-
-#if 1     //binary search
-    if (intersected) 
-	{
-        pqk -= dpqk;    //one step back
-
-        for (float gapSize = pixelStride; gapSize > 1.0; gapSize *= 0.5) 
-		{
-            dpqk *= 0.5;
-            float rayZMin = prevZMaxEstimate;
-            float rayZMax = pqk.z / pqk.w;
-
-            if (RayIntersect(rayZMin, rayZMax, pqk.xy - dpqk.xy * 0.5, pixelThickness)) 
-			{// hit, stay the same.(but ray length is halfed)
-
-            }
-            else 
-			{// miss the hit. we should step forward
-                pqk += dpqk;
-                prevZMaxEstimate = rayZMax;
-            }
-        }
-
-        hitPixel = (pqk.xy - dpqk.xy * 0.5) * 0.5 + 0.5;
-    }
-#endif
-
-    hitZ = pqk.z / pqk.w;
-    rayLength *= (hitZ - start.z) / (end.z - start.z);
-    return intersected;
-}
-
-vec4 fragDentisyAndOccluder(vec2 coord)   //we return dentisy in R, distance in G
-{
-	vec4 position = textureLod(u_PositionMap, coord, 0.0).xzyw;
+	vec3 sceneColor = texture(u_DiffuseMap, fragCoord.xy).rgb;
+	vec4 position = textureLod(u_PositionMap, fragCoord, 0.0).xyzw;
 
 	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN)
 	{// Skybox... Skip...
-		return vec4(0.0);
+		if (u_Local1.r <= 0.0 && u_Local1.g <= 0.0 && u_Local1.b <= 0.0 && u_Local1.a <= 0.0)
+			return vec4(sceneColor, 1.0);
 	}
 
-    float decodedDepth = texture(u_ScreenDepthMap, coord).r;
-    //vec3 csRayOrigin = decodedDepth * var_Ray;
-	//vec3 csRayOrigin = position.xyz - u_ViewOrigin.xzy;//position.xyz;
-	vec3 csRayOrigin = decodedDepth * (u_ViewOrigin.xzy - position.xzy);
-    
-	//vec3 csNormal = normalize(texture(u_NormalMap, coord).rgb * 2.0 - 1.0);
-	vec4 norm = textureLod(u_NormalMap, coord, 0.0);
-	//norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
-	norm.xyz = DecodeNormal(norm.xy);
-	vec3 csNormal = norm.xyz;
-	
-	vec3 csLightDir = normalize(u_PrimaryLightOrigin.xyz - position.xyz);
-    
-	vec2 hitPixel;
-    float marchPercent;
-    vec3 debugCol;
+	// Normalized coords and aspect ratio correction
+	vec2 uv = fragCoord.xy;
+	//float aspect = 1.0;
+	//uv.x *= aspect;
 
-    float atten = 0;
+	float normalIntensity = u_Local1.a;
 
-    float hitZ;
-    float rayBump = max(-0.010*csRayOrigin.z, 0.001);
-    float rayLength;
+	//Light
+	vec2 daLight = u_Local0.ba;
+	daLight -= uv;
+	//vec3 lightVector = normalize(vec3(daLight.x, daLight.y, SHADOW_TOLERANCE));
+	vec3 lightVector = normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin);
+
+
+	if (u_Local1.r >= 3)
+	{
+		float h = getHeightValue(uv);
+		return vec4(h, h, h, 1.0);
+	}
+	else if (u_Local1.r >= 2)
+	{
+		return vec4(lightVector.rgb * 0.5 + 0.5, 1.0);
+	}
+	else if (u_Local1.r >= 1)
+	{
+		vec3 normal = getNormal(uv, normalIntensity/*0.2*/);
+		return vec4(normal.rgb * 0.5 + 0.5, 1.0);
+	}
+
+	float shadowValue = 0.0;
+    float shadowNum = 0.0;
     
-	bool intersectd = traceRay(
-        csRayOrigin + csNormal * rayBump,
-        csLightDir,
-        0,        //don't need jitter here.
-        vec4(1.0 / 991.0, 1.0 / 529.0, 991.0, 529.0),    //texel size. 
-		//vec4(texel, u_Dimensions),    //texel size. 
-        RAY_LENGTH,
-        STEP_COUNT,
-        PIXEL_STRIDE,
-        PIXEL_THICKNESS,
-        hitPixel,
-        marchPercent,
-        hitZ,
-        rayLength
-    );
+    for (float x = -BLUR_SIZE; x <= BLUR_SIZE; x+=BLUR_STEP)
+    {
+     	for (float y = -BLUR_SIZE; y <= BLUR_SIZE; y+=BLUR_STEP)
+    	{   
+            vec2 thisuv = uv;
+			//thisuv.x *= aspect;
+    		thisuv += px * vec2(x,y);
+            
+            float weight = 1.0 - clamp(length(vec2(x,y)) / (BLUR_SIZE*BLUR_SIZE), 0.2, 1.0);
+            
+            if (thisuv.x < 0.0 || thisuv.x > 1.0 || thisuv.y < 0.0 || thisuv.y > 1.0)
+            {
+                shadowValue += 1.0 * weight;
+            	shadowNum += weight;
+                continue;
+            }
+   
+   		 	vec3 worldPos = vec3(vec2(thisuv), getHeightValue(thisuv));
+   		 	vec3 normal = getNormal(thisuv, normalIntensity/*0.2*/);
+    
+    		float NdotL = max(dot(normal, lightVector), 0.0);
+    
+    		float thisShadowValue = get_shadow(normal, lightVector)*0.7;
+    		thisShadowValue *= shadow(worldPos, lightVector, NdotL);
+    
+    		float ambient = get_shadow(normal, vec3(0.0,0.0,1.0))*0.3;
+    		thisShadowValue += ambient;
+            
+            shadowValue += thisShadowValue * weight;
+            shadowNum += weight;
+        }
+    }
+    
+    shadowValue /= shadowNum;
 
-    return intersectd ? vec4(1.0 , rayLength, 0.0, 1.0) : vec4(0.0);
+	vec3 color = sceneColor * clamp(2.0 * shadowValue, 0.0, 1.0);
+
+	return vec4(color, 1.0);
 }
 
 void main() 
 {
-	gl_FragColor = fragDentisyAndOccluder(var_TexCoords);
+	gl_FragColor = SSS(var_TexCoords);
 }
-

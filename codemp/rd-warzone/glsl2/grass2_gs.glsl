@@ -430,21 +430,24 @@ void main()
 			vVertPosition = va.xyz;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
-			vVertNormal = EncodeNormal(normalize(cross(vc - va, vb - va)).xyz);//encodedGrassData;
+			vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)), -1.0, 1.0).xyz * -1.0);
 			EmitVertex();
 
 			vVertPosition = vb.xyz;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
+			//vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - va, vVertPosition - va)), -1.0, 1.0).xyz * -1.0);
 			vTexCoord = vec2(1.0, 1.0);
 			EmitVertex();
 		
 			vVertPosition = vc.xyz + vWindDirection*fWindPower;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
+			//vVertNormal = EncodeNormal(clamp(normalize(cross(vVertPosition - va, vb - va)), -1.0, 1.0).xyz * -1.0);
 			vTexCoord = vec2(0.0, 0.0);
 			EmitVertex();
 
 			vVertPosition = vd.xyz + vWindDirection*fWindPower;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
+			vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)), -1.0, 1.0).xyz * -1.0);
 			vTexCoord = vec2(1.0, 0.0);
 			EmitVertex();
 

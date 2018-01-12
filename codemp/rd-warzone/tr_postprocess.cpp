@@ -1078,6 +1078,7 @@ float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
 
 extern float		MAP_EMISSIVE_COLOR_SCALE;
+extern float		MAP_EMISSIVE_COLOR_SCALE_NIGHT;
 extern float		MAP_EMISSIVE_RADIUS_SCALE;
 
 void RB_AddGlowShaderLights ( void )
@@ -1789,6 +1790,18 @@ void RB_SSDO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		FBO_FastBlit(tr.ssdoFbo1, NULL, ldrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
+extern float		MAP_WATER_LEVEL;
+extern vec3_t		MAP_INFO_MINS;
+extern vec3_t		MAP_INFO_MAXS;
+extern vec3_t		MAP_INFO_SIZE;
+extern vec3_t		MAP_INFO_PIXELSIZE;
+extern vec3_t		MAP_INFO_SCATTEROFFSET;
+extern float		MAP_INFO_MAXSIZE;
+
+extern float		WATER_REFLECTIVENESS;
+extern vec3_t		WATER_COLOR_SHALLOW;
+extern vec3_t		WATER_COLOR_DEEP;
+
 void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -1819,7 +1832,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
+	GL_BindToTMU(/*tr.linearDepthImage4096*/tr.linearDepthImageZfar, TB_LIGHTMAP);
 
 	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.ssdoNoiseImage, TB_DELUXEMAP);
@@ -1830,9 +1843,9 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
 	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.sssShader, UNIFORM_DIMENSIONS, screensize);
-
+	
 	vec4_t viewInfo;
-	float zmax = 4096.0;// backEnd.viewParms.zFar;
+	float zmax = /*4096.0;*/ backEnd.viewParms.zFar;
 	float ratio = screensize[0] / screensize[1];
 	float xmax = tan(backEnd.viewParms.fovX * ratio * 0.5);
 	float ymax = tan(backEnd.viewParms.fovY * 0.5);
@@ -1846,67 +1859,21 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
 
 	vec4_t local0;
-	VectorSet4(local0, screensize[0] / tr.random2KImage[0]->width, screensize[1] / tr.random2KImage[0]->height, r_ssdoBaseRadius->value, r_ssdoMaxOcclusionDist->value);
+	VectorSet4(local0, tr.ssdoNoiseImage->width, tr.ssdoNoiseImage->height, SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]);
 	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LOCAL0, local0);
 
 	vec4_t local1;
-	VectorSet4(local1, xmax, ymax, r_testvalue0->value, r_testvalue1->value);
+	VectorSet4(local1, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LOCAL1, local1);
+
+	vec4_t local2;
+	VectorSet4(local2, MAP_INFO_SIZE[2], MAP_INFO_MINS[2], MAP_INFO_MAXS[2], 0.0);
+	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LOCAL2, local2);
 
 	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo1, ldrBox, &tr.sssShader, color, 0);
 	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo2, ldrBox, &tr.sssShader, color, 0);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
-
-#if 0
-	//
-	// Blur Occlusion Map...
-	//
-
-	GLSL_BindProgram(&tr.sssBlurShader);
-
-	GLSL_SetUniformMatrix16(&tr.sssBlurShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-
-	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
-
-	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
-
-	//GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
-
-	GLSL_SetUniformVec3(&tr.sssBlurShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
-	GLSL_SetUniformVec2(&tr.sssBlurShader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformVec4(&tr.sssBlurShader, UNIFORM_VIEWINFO, viewInfo);
-	GLSL_SetUniformVec4(&tr.sssBlurShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
-
-	// X
-	GLSL_SetUniformInt(&tr.sssBlurShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	//GL_BindToTMU(tr.ssdoImage1, TB_DELUXEMAP);
-	GL_BindToTMU(tr.ssdoImage2, TB_DELUXEMAP);
-
-	VectorSet4(local0, 1.0, 0.0, 0.0, 0.0);
-	GLSL_SetUniformVec4(&tr.sssBlurShader, UNIFORM_LOCAL0, local0);
-
-	//FBO_Blit(tr.sssFbo1, hdrBox, NULL, tr.sssFbo2, ldrBox, &tr.sssBlurShader, color, 0);
-	FBO_Blit(tr.sssFbo2, hdrBox, NULL, tr.sssFbo1, ldrBox, &tr.sssBlurShader, color, 0);
-#endif
 }
-
-extern float		MAP_WATER_LEVEL;
-extern vec3_t		MAP_INFO_MINS;
-extern vec3_t		MAP_INFO_MAXS;
-extern vec3_t		MAP_INFO_SIZE;
-extern vec3_t		MAP_INFO_PIXELSIZE;
-extern vec3_t		MAP_INFO_SCATTEROFFSET;
-extern float		MAP_INFO_MAXSIZE;
-
-extern float		WATER_REFLECTIVENESS;
-extern vec3_t		WATER_COLOR_SHALLOW;
-extern vec3_t		WATER_COLOR_DEEP;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -2329,6 +2296,9 @@ extern vec4_t		currentPlayerCubemapVec;
 extern float		currentPlayerCubemapDistance;
 #endif //__PLAYER_BASED_CUBEMAPS__
 
+extern float MAP_GLOW_MULTIPLIER;
+extern float MAP_GLOW_MULTIPLIER_NIGHT;
+
 void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2345,7 +2315,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
+	GL_BindToTMU(tr.linearDepthImageZfar, TB_LIGHTMAP);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
@@ -2503,8 +2473,10 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	VectorSet4(local3, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL3, local3);
 
+	float dayNightGlowFactor = mix(MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_COLOR_SCALE_NIGHT, RB_NightScale());
+
 	vec4_t local4;
-	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, backEnd.refdef.floatTime, MAP_EMISSIVE_COLOR_SCALE);
+	VectorSet4(local4, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, backEnd.refdef.floatTime, dayNightGlowFactor);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL4, local4);
 
 	vec4_t local5;

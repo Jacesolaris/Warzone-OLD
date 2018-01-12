@@ -3602,7 +3602,7 @@ command_t commands[] = {
 //	{ "kylesmash",			TryGrapple,					0 },
 	{ "levelshot",			Cmd_LevelShot_f,			/*CMD_CHEAT|CMD_ALIVE|*/CMD_NOINTERMISSION }, // UQ1: Why CMD_ALIVE and CMD_CHEAT???
 	{ "maplist",			Cmd_MapList_f,				CMD_NOINTERMISSION },
-	{ "noclip",				Cmd_Noclip_f,				CMD_CHEAT|CMD_ALIVE|CMD_NOINTERMISSION },
+	{ "noclip",				Cmd_Noclip_f,				CMD_CHEAT/*|CMD_ALIVE*/|CMD_NOINTERMISSION },
 	{ "notarget",			Cmd_Notarget_f,				CMD_CHEAT|CMD_ALIVE|CMD_NOINTERMISSION },
 	{ "npc",				Cmd_NPC_f,					CMD_CHEAT|CMD_ALIVE },
 	{ "say",				Cmd_Say_f,					0 },

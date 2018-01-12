@@ -112,6 +112,7 @@ extern const char *fallbackShader_waterPostForward_fp;
 extern const char *fallbackShader_waterPostForward_vp;
 extern const char *fallbackShader_waterForward_fp;
 extern const char *fallbackShader_waterForward_vp;
+extern const char *fallbackShader_waterForward_gs;
 extern const char *fallbackShader_waterForwardFast_fp;
 extern const char *fallbackShader_waterForwardFast_vp;
 extern const char *fallbackShader_foliage_fp;
@@ -3819,6 +3820,7 @@ int GLSL_BeginLoadGPUShaders(void)
 #endif //__OCEAN__
 	extradefines[0] = '\0';
 
+	//if (!GLSL_BeginLoadGPUShader(&tr.waterForwardShader, "waterForward", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_waterForward_vp, fallbackShader_waterForward_fp, NULL, NULL, fallbackShader_waterForward_gs))
 	if (!GLSL_BeginLoadGPUShader(&tr.waterForwardShader, "waterForward", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterForward_vp, fallbackShader_waterForward_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load waterForward shader!");

@@ -309,7 +309,11 @@ vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
 }
 
 vec4 normalVector(vec2 coord) {
-	return bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
+	vec4 normals = bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
+	normals.r = 1.0 - normals.r;
+	normals.g = 1.0 - normals.g;
+	normals.b = 1.0 - normals.b;
+	return normals;
 }
 
 
@@ -410,17 +414,66 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
+#define __LIGHTING_TYPE_1__
+//#define __LIGHTING_TYPE_2__
 
+#if defined(__LIGHTING_TYPE_1__)
+// lighting
+float getdiffuse(vec3 n, vec3 l, float p) {
+	float ndotl = clamp(dot(n, l), 0.5, 0.9);
+	return pow(ndotl, p);
+}
+float getspecular(vec3 n, vec3 l, vec3 e, float s) {
+	//float nrm = (s + 8.0) / (3.1415 * 8.0);
+	float ndotl = clamp(max(dot(reflect(e, n), l), 0.0), 0.1, 1.0);
+	return pow(ndotl, s);// * nrm;
+}
+vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower) {
+	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0) * 6.0;
+	vec3 specular = specularColor * getspecular(-normal, light, -view, 0.6) * 8.0 * specPower;
+	
+	vec3 lightBounce = reflect(-view, -normal) * -light;
+	vec3 specularBounce = specularColor * getspecular(-normal, lightBounce, -view, 0.6) * 16.0 * specPower;
+
+	return diffuse + specular + specularBounce;
+}
+#elif defined(__LIGHTING_TYPE_2__)
+// lighting
+float getdiffuse(vec3 n, vec3 l, float p) {
+	return pow(dot(n, l) * 0.4 + 0.6, p);
+}
+vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower) {
+	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0) * 6.0;
+	vec3 specular = vec3(0.0);
+
+	float lambertian2 = dot(light, normal);
+
+	if(lambertian2 > 0.0)
+	{// this is blinn phong
+		float fresnel = clamp(1.0 - dot(normal, -view), 0.0, 1.0);
+		fresnel = pow(fresnel, 3.0) * 0.65;
+
+		vec3 mirrorEye = (2.0 * dot(view, normal) * normal - view);
+		vec3 halfDir2 = normalize(light + mirrorEye);
+		float specAngle = max(dot(halfDir2, normal), 0.0);
+		float spec = pow(specAngle, 16.0);
+		specular = specularColor * clamp(1.0 - fresnel, 0.4, 1.0) * spec * 8.0 * specPower;
+	}
+
+	return diffuse + specular;
+}
+#else //__LIGHTING_TYPE_0__
 // Blinn-Phong shading model with rim lighting (diffuse light bleeding to the other side).
 // `normal`, `view` and `light` should be normalized.
-vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor) {
-	vec3 halfLV = normalize(light + view);
+vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower) {
+	vec3 halfLV = normalize(-light + view);
 	float ndl = max(dot(normal, halfLV), 0.0);
 	float spe = pow(ndl, 0.3);
 	float spe2 = pow(ndl, 32.0);
-	float dif = dot(normal, light) * 0.5 + 0.75;
-	return (dif*diffuseColor) + (spe*specularColor*0.75) + (spe2*specularColor*0.25);
+	float dif = dot(normal, -light) * 0.5 + 0.75;
+	return (dif*diffuseColor) + (spe*specularColor*0.75*specPower) + (spe2*specularColor*0.25*specPower);
 }
+#endif //__LIGHTING_TYPE_0__
 
 /*
 ** Contrast, saturation, brightness
@@ -524,9 +577,11 @@ void main(void)
 		normalDetail = normalVector(texCoords);
 	}
 
-	normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
-	normalDetail.rgb *= 0.25;
-	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+	//normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
+	//normalDetail.rgb *= 0.25;
+	//norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+	norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.25 * (length(norm.rgb - normalDetail.rgb) / 3.0) ));
+	//norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.25 * (1.0 - (length(norm.rgb - normalDetail.rgb) / 3.0)) ));
 
 	//vec3 tangent = TangentFromNormal( norm.xyz );
 	//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
@@ -768,27 +823,6 @@ void main(void)
 	}
 
 
-	float shadowMult = 1.0;
-
-#if defined(USE_SHADOWMAP)
-	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
-	{
-		float shadowValue = texture(u_ShadowMap, texCoords).r;
-
-		shadowValue = pow(shadowValue, 1.5);
-
-#define sm_cont_1 ( 64.0 / 255.0)
-#define sm_cont_2 (255.0 / 200.0)
-		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
-		float finalShadow = clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
-		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
-		outColor.rgb *= finalShadow;
-		shadowMult = clamp(shadowValue, 0.2, 1.0) * 0.75 + 0.25;
-		shadowValue = mix(shadowValue, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
-	}
-#endif //defined(USE_SHADOWMAP)
-
-
 	if (u_Local1.r > 0.0)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...
 		float phongFactor = u_Local1.r * u_Local1.g;
@@ -810,12 +844,12 @@ void main(void)
 		
 			vec3 lightColor = u_PrimaryLightColor.rgb;
 
-			float lightMult = clamp(reflectivePower * power * light_occlusion * shadowMult, 0.0, 1.0);
+			float lightMult = clamp(reflectivePower * power * light_occlusion, 0.0, 1.0);
 
 			if (lightMult > 0.0)
 			{
 				lightColor *= lightMult;
-				lightColor = blinn_phong(N, E, normalize(-to_light_norm), lightColor, lightColor * phongFactor);
+				lightColor = blinn_phong(N, E, normalize(-to_light_norm), outColor.rgb * lightColor, (outColor.rgb * lightColor) * phongFactor, 1.0);
 				float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 				lightColor *= maxStr;
 				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
@@ -885,7 +919,7 @@ void main(void)
 						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
 					
-					addedLight.rgb += blinn_phong(N, E, lightDir, lightColor, lightColor) * lightStrength * light_occlusion;
+					addedLight.rgb += blinn_phong(N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, lightGlossinessFactor)) * lightStrength * light_occlusion;
 				}
 			}
 
@@ -965,6 +999,27 @@ void main(void)
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (reflectivePower * 0.5) * invLightScale) * lightScale), clamp((reflectivePower * 0.5) * lightScale * gloss, 0.0, 1.0));
 	}
 #endif //__ENVMAP__
+
+	#if defined(USE_SHADOWMAP)
+	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
+	{
+		float shadowValue = texture(u_ShadowMap, texCoords).r;
+
+		shadowValue = pow(shadowValue, 1.5);
+
+#define sm_cont_1 ( 64.0 / 255.0)
+#define sm_cont_2 (255.0 / 200.0)
+		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
+		float finalShadow = clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
+		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
+		outColor.rgb *= finalShadow;
+	}
+#endif //defined(USE_SHADOWMAP)
+
+	// De-emphasize (darken) the distant map a bit...
+	//float depth = clamp(pow(1.0 - texture(u_ScreenDepthMap, texCoords).r, u_Local3.r), u_Local3.g, 1.0);
+	float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0);
+	outColor.rgb *= depth;
 
 	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
 	{// C/S/B enabled...

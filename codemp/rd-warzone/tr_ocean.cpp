@@ -1244,7 +1244,7 @@ void OCEAN_InitOcean()
 		WATER_INITIALIZED = qtrue;
 
 		// constants
-		static const int QUAD_GRID_SIZE = 2048;// 4096;// 2048;// 40;
+		static const int QUAD_GRID_SIZE = 2048;// 2048;// 40;
 		static const int NR_VERTICES = (QUAD_GRID_SIZE + 1)*(QUAD_GRID_SIZE + 1);
 		static const int NR_TRIANGLES = 2 * QUAD_GRID_SIZE*QUAD_GRID_SIZE;
 		static const int NR_INDICES = 3 * NR_TRIANGLES;
@@ -1264,10 +1264,10 @@ void OCEAN_InitOcean()
 				int vertexPosition = y*(QUAD_GRID_SIZE + 1) + x;
 				vertices[vertexPosition].x = (x*delta - 1.0) * scale;
 
-				//vertices[vertexPosition].y = 0;
-				//vertices[vertexPosition].z = (y*delta - 1.0) * scale;
-				vertices[vertexPosition].y = (y*delta - 1.0) * scale;
-				vertices[vertexPosition].z = MAP_WATER_LEVEL;// 0;
+				vertices[vertexPosition].y = MAP_WATER_LEVEL;// 0;
+				vertices[vertexPosition].z = (y*delta - 1.0) * scale;
+				//vertices[vertexPosition].y = (y*delta - 1.0) * scale;
+				//vertices[vertexPosition].z = MAP_WATER_LEVEL;// 0;
 
 				texcoords[vertexPosition].x = x*delta;
 				texcoords[vertexPosition].y = y*delta;
@@ -1340,19 +1340,64 @@ void OCEAN_Render(void)
 
 		FBO_Bind(tr.renderFbo);
 
+#if 1
 		SetViewportAndScissor();
 		GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
 		GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
+#else
+		viewParms_t parms = tr.viewParms;
+
+		parms.zFar = 524288.0;
+
+		{
+			parms.visBounds[0][0] = -parms.zFar;
+			//parms.visBounds[0][1] = -parms.zFar;
+			parms.visBounds[0][2] = -parms.zFar;
+
+			parms.visBounds[1][0] = parms.zFar;
+			//parms.visBounds[1][1] = parms.zFar;
+			parms.visBounds[1][2] = parms.zFar;
+		}
+
+
+		uint32_t origState = glState.glStateBits;
+
+		extern void R_SetupProjectionZ(viewParms_t *dest);
+
+		R_SetupProjectionZ(&parms);
+		GL_SetProjectionMatrix(parms.projectionMatrix);
+		GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
+#endif
+
 		GLSL_SetUniformMatrix16(&tr.waterForwardShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		
 		GLSL_SetUniformVec3(&tr.waterForwardShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+		
 		GLSL_SetUniformFloat(&tr.waterForwardShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+		vec3_t out;
+		float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+		GLSL_SetUniformVec3(&tr.waterForwardShader, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
 
 		GL_Cull(CT_TWO_SIDED);
 		GL_State(GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0);
 
+		//GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS);
+		//qglDepthMask(GL_FALSE);
+
+		vec4_t l0;
+		VectorSet4(l0, MAP_WATER_LEVEL, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_LOCAL0, l0);
+
 		vec4_t l9;
 		VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_LOCAL9, l9);
+
+		vec4_t l10;
+		VectorSet4(l10, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_LOCAL10, l10);
 
 		GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 		GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
