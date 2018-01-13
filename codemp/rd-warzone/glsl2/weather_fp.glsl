@@ -20,7 +20,7 @@ vec2 EncodeNormal(in vec3 N)
 
 void main()
 {
-	gl_FragColor = texture2D(u_DiffuseMap, var_Tex1) * u_Color;//var_Color;
+	gl_FragColor = texture2D(u_DiffuseMap, var_Tex1);// * u_Color;//var_Color;
 	out_Glow = vec4(0.0);
 	out_Position = vec4(0.0);//vec4(var_Position.xyz, MATERIAL_GLASS+1.0);
 	out_Normal = vec4(0.0);//vec4(EncodeNormal(u_Local0.xyz), 0.0, 1.0);

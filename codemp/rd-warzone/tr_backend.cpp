@@ -2187,7 +2187,10 @@ const void	*RB_WorldEffects( const void *data )
 		RB_EndSurface();
 	}
 
-	if ((tr.viewParms.flags & VPF_NOPOSTPROCESS)
+	if (!tr.world
+		|| (tr.viewParms.flags & VPF_NOPOSTPROCESS)
+		|| (tr.refdef.rdflags & RDF_NOWORLDMODEL)
+		|| (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)
 		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
@@ -2202,12 +2205,20 @@ const void	*RB_WorldEffects( const void *data )
 	Matrix16Copy(glState.modelview, previousModelViewMarix);
 	Matrix16Copy(glState.projection, previousProjectionMatrix);
 
-	float previousZfar = tr.viewParms.zFar;
+	//float previousZfar = tr.viewParms.zFar;
 
-	RB_RenderWorldEffects();
+	FBO_t *previousFBO = glState.currentFBO;
+	float previousZfar = tr.viewParms.zFar;
+	uint32_t previousState = glState.glStateBits;
+	int previousCull = glState.faceCulling;
+
+	if (r_weather->integer)
+	{
+		RB_RenderWorldEffects();
+	}
 
 #ifdef __OCEAN__
-	if (!(!tr.world || (tr.refdef.rdflags & RDF_NOWORLDMODEL) || (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)))
+	if (r_glslWater->integer)
 	{
 		extern void OCEAN_Render(void);
 		OCEAN_Render();
@@ -2216,10 +2227,32 @@ const void	*RB_WorldEffects( const void *data )
 
 	if (tess.shader)
 	{
-		RB_BeginSurface( tess.shader, tess.fogNum, tess.cubemapIndex );
+		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
 	}
 
-	FBO_Bind(tr.renderFbo);
+	FBO_Bind(previousFBO);
+	GL_SetProjectionMatrix(previousProjectionMatrix);
+	GL_SetModelviewMatrix(previousModelViewMarix);
+	tr.viewParms.zFar = previousZfar;
+	GL_State(previousState);
+	GL_Cull(previousCull);
+
+	/*
+	if (backEnd.viewParms.targetFbo == NULL)
+	{
+		if (!tr.renderFbo || (backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
+		{
+			FBO_Bind(NULL);
+		}
+		else
+		{
+			FBO_Bind(tr.renderFbo);
+		}
+	}
+	else
+	{
+		FBO_Bind(backEnd.viewParms.targetFbo);
+	}
 
 	GL_SetProjectionMatrix(previousProjectionMatrix);
 	GL_SetModelviewMatrix(previousModelViewMarix);
@@ -2228,6 +2261,7 @@ const void	*RB_WorldEffects( const void *data )
 
 	GL_State(GLS_DEFAULT);
 	GL_Cull(CT_FRONT_SIDED);
+	*/
 
 	return (const void *)(cmd + 1);
 }
@@ -2286,10 +2320,6 @@ extern qboolean WATER_FOG_ENABLED;
 extern qboolean AO_DIRECTIONAL;
 extern int LATE_LIGHTING_ENABLED;
 
-#ifdef __JKA_WEATHER__
-extern void RB_RenderWorldEffects(void);
-#endif //__JKA_WEATHER__
-
 const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = (const postProcessCommand_t *)data;
@@ -2308,13 +2338,9 @@ const void *RB_PostProcess(const void *data)
 
 	tess.numVertexes = tess.numVertexes = 0;
 
-	if (!r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
-	{
-		// do nothing
-		return (const void *)(cmd + 1);
-	}
-
-	if ((backEnd.viewParms.flags & VPF_SHADOWPASS)
+	if (!r_postProcess->integer 
+		|| (tr.viewParms.flags & VPF_NOPOSTPROCESS)
+		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
 		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
@@ -2439,7 +2465,6 @@ const void *RB_PostProcess(const void *data)
 
 		{
 			vec4_t viewInfo;
-			vec3_t viewVector;
 
 			float zmax = r_occlusion->integer ? tr.occlusionOriginalZfar : backEnd.viewParms.zFar;// backEnd.viewParms.zFar;
 			//float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
@@ -2928,14 +2953,6 @@ const void *RB_PostProcess(const void *data)
 		DEBUG_StartTimer("Final Blit", qtrue);
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		DEBUG_EndTimer(qtrue);
-
-#ifdef __JKA_WEATHER__
-#if 0
-		DEBUG_StartTimer("Weather", qtrue);
-		RB_RenderWorldEffects();
-		DEBUG_EndTimer(qtrue);
-#endif
-#endif //__JKA_WEATHER__
 
 		RB_OcclusionCulling();
 

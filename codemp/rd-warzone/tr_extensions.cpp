@@ -42,6 +42,7 @@ PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC qglDrawElementsInstancedBaseVertex;
 PFNGLMULTIDRAWARRAYSPROC qglMultiDrawArrays;
 PFNGLMULTIDRAWELEMENTSPROC qglMultiDrawElements;
 PFNGLMULTIDRAWELEMENTSBASEVERTEXPROC qglMultiDrawElementsBaseVertex;
+PFNGLMULTIDRAWELEMENTSINDIRECTPROC qglMultiDrawElementsIndirect;
 
 // Vertex arrays
 PFNGLVERTEXATTRIBPOINTERPROC qglVertexAttribPointer;
@@ -252,6 +253,7 @@ void GLimp_InitExtraExtensions()
 	GetGLFunction (qglMultiDrawArrays, "glMultiDrawArrays", qtrue);
 	GetGLFunction (qglMultiDrawElements, "glMultiDrawElements", qtrue);
 	GetGLFunction (qglMultiDrawElementsBaseVertex, "glMultiDrawElementsBaseVertex", qtrue);
+	GetGLFunction(qglMultiDrawElementsIndirect, "glMultiDrawElementsIndirect", qtrue);
 
 	// Vertex arrays
 	GetGLFunction (qglVertexAttribPointer, "glVertexAttribPointer", qtrue);

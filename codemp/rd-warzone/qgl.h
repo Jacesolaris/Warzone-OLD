@@ -799,6 +799,7 @@ extern PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC qglDrawElementsInstancedBaseVert
 extern PFNGLMULTIDRAWARRAYSPROC qglMultiDrawArrays;
 extern PFNGLMULTIDRAWELEMENTSPROC qglMultiDrawElements;
 extern PFNGLMULTIDRAWELEMENTSBASEVERTEXPROC qglMultiDrawElementsBaseVertex;
+extern PFNGLMULTIDRAWELEMENTSINDIRECTPROC qglMultiDrawElementsIndirect;
 
 // Vertex arrays
 extern PFNGLVERTEXATTRIBPOINTERPROC qglVertexAttribPointer;

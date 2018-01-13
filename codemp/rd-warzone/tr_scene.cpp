@@ -1207,24 +1207,29 @@ void RE_RenderScene(const refdef_t *fd) {
 	CLOSE_LIGHTS_UPDATE = qtrue;
 	R_RenderView( &parms );
 
-#ifdef __JKA_WEATHER__
-	if ((tr.viewParms.flags & VPF_NOPOSTPROCESS)
+	if (!tr.world
+		|| (tr.viewParms.flags & VPF_NOPOSTPROCESS)
+		|| (tr.refdef.rdflags & RDF_NOWORLDMODEL)
+		|| (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)
 		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
 		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
 	{
-
+		// do nothing
 	}
-	else if (r_weather->integer && !(fd->rdflags & RDF_NOWORLDMODEL))
+	else
 	{
-		extern void RE_RenderWorldEffects(void);
-		RE_RenderWorldEffects();
-	}
+#ifdef __JKA_WEATHER__
+		if (r_weather->integer && !(fd->rdflags & RDF_NOWORLDMODEL))
+		{
+			extern void RE_RenderWorldEffects(void);
+			RE_RenderWorldEffects();
+		}
 #endif //__JKA_WEATHER__
 
-	if (!(fd->rdflags & RDF_NOWORLDMODEL))
 		R_AddPostProcessCmd();
+	}
 
 	RE_EndScene();
 

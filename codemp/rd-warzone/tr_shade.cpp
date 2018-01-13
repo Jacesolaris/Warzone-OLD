@@ -103,10 +103,12 @@ void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinInd
 		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
 		qglPatchParameteri(GL_PATCH_VERTICES, 3);
 		qglMultiDrawElements(GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
+		//qglMultiDrawElementsIndirect(GL_PATCHES, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, *multiDrawNumIndexes, 0);
 	}
 	else
 	{
 		qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
+		//qglMultiDrawElementsIndirect(GL_TRIANGLES, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, *multiDrawNumIndexes, 0);
 	}
 }
 
