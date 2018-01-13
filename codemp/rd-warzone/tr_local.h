@@ -1271,6 +1271,8 @@ typedef struct shader_s {
 
   qboolean mergeDrawn;
 
+  qboolean warzoneVextexSplat;
+
 	struct	shader_s	*next;
 } shader_t;
 

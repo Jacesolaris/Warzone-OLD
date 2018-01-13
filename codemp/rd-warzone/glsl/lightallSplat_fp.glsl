@@ -175,7 +175,7 @@ void DepthContrast ( inout float depth )
 
 float GetDepthForPixel(vec4 color)
 {
-	if (color.a * var_Color.a <= 0.0)
+	if (color.a /** var_Color.a*/ <= 0.0)
 	{
 		return 0.0;
 	}
@@ -240,6 +240,11 @@ vec4 GetControlMap( void )
 		vec4 yaxis = texture( u_SplatControlMap, vec2((m_vertPos.y / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
 		vec4 zaxis = texture( u_SplatControlMap, vec2((m_vertPos.z / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
+	}
+	else if (USE_TRIPLANAR >= 2.0)
+	{
+		control = vec4(var_Color.rgb, 0.0);
 	}
 	else
 	{
@@ -248,9 +253,8 @@ vec4 GetControlMap( void )
 		vec4 yaxis = texture( u_SplatControlMap, (m_vertPos.xz * scale) + offset);
 		vec4 zaxis = texture( u_SplatControlMap, (m_vertPos.xy * scale) + offset);
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 	}
-
-	control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 
 	if (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())
 	{// Also grab the roads map, if we have one...
@@ -393,6 +397,11 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		{
 			vec4 control = vec4(0.0);
 			
+			if (USE_TRIPLANAR >= 2.0)
+			{
+				return vec4(var_Color.rgb, 1.0);
+			}
+
 			if (SHADER_SHOW_SPLAT > 7.0)
 			{
 				control = texture(u_RoadMap, texCoords);
@@ -458,6 +467,13 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 				a2 = 1.0 - a2;
 
 				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+			}
+			else if (USE_TRIPLANAR >= 2.0 && (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())))
+			{// Steep maps (using vertex colors)...
+				// Splat mapping...
+				float a1 = 0.0;
+				vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
+				return GetSplatMap(texCoords, tex, a1);
 			}
 			else if (SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0)
 			{// Steep maps (high angles)...
@@ -548,11 +564,17 @@ void main()
 	}
 #endif
 
+	vec4 colorMap = var_Color;
+
+	if (USE_TRIPLANAR >= 2.0)
+	{
+		colorMap = vec4(1.0);
+	}
 
 	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
 
 	// Set alpha early so that we can cull early...
-	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
+	gl_FragColor.a = clamp(diffuse.a * colorMap.a, 0.0, 1.0);
 
 
 	vec3 N = normalize(m_Normal.xyz);
@@ -576,7 +598,7 @@ void main()
 
 
 	vec3 ambientColor = vec3(0.0);
-	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
+	vec3 lightColor = clamp(colorMap.rgb, 0.0, 1.0);
 
 
 	if (LIGHTMAP_ENABLED)

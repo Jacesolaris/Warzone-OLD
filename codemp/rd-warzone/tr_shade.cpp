@@ -2565,9 +2565,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useLightMap,
 				useGlow,
 				isRenderCube,
-				(index & LIGHTDEF_USE_TRIPLANAR) ? 1.0 : 0.0);
+				(index & LIGHTDEF_USE_TRIPLANAR) ? (input->shader->warzoneVextexSplat) ? 2.0 : 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vec);
-
+			
 #ifdef __USE_DETAIL_CHECKING__
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 

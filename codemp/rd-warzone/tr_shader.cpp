@@ -4314,6 +4314,12 @@ static qboolean ParseShader( const char *name, const char **text )
 			SkipRestOfLine( text );
 			continue;
 		}
+		else if (!Q_stricmp(token, "warzoneVextexSplat"))
+		{
+			shader.warzoneVextexSplat = qtrue;
+			SkipRestOfLine(text);
+			continue;
+		}
 		// q3map_surfacelight deprecated as of 16 Jul 01
 		else if ( !Q_stricmp( token, "surfacelight" ) || !Q_stricmp( token, "q3map_surfacelight" ) )
 		{
