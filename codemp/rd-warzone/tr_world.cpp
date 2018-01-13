@@ -375,7 +375,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		pshadowBits = ( pshadowBits != 0 );
 	}
 #endif
-#ifndef __REALTIME_CUBEMAP__
+/*#ifndef __REALTIME_CUBEMAP__
 	if (glState.currentFBO == tr.renderCubeFbo)
 		cubemapIndex = 0;
 	else if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
@@ -384,6 +384,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		cubemapIndex = surf->cubemapIndex;
 	else
 #endif //__REALTIME_CUBEMAP__
+*/
 		cubemapIndex = 0;
 
 	R_AddDrawSurf(surf->data, surf->shader, 
@@ -1357,11 +1358,11 @@ shader_t	*FOLIAGE_SHADERS[65536];
 void R_DrawFoliage (int surfaceNum) {
 shader_t	*shader = FOLIAGE_SHADERS[surfaceNum];
 
-if ((shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS)
+if ((shader->materialType ) == MATERIAL_SHORTGRASS)
 {
 R_FoliageQuad(FOLIAGE_ORIGINS[surfaceNum], FOLIAGE_PLANES[surfaceNum], FOLIAGE_BOUNDS[surfaceNum], 1.0);
 }
-else if ((shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS)
+else if ((shader->materialType ) == MATERIAL_LONGGRASS)
 {
 R_FoliageQuad(FOLIAGE_ORIGINS[surfaceNum], FOLIAGE_PLANES[surfaceNum], FOLIAGE_BOUNDS[surfaceNum], 2.0);
 }
@@ -1380,7 +1381,7 @@ ri->Printf(PRINT_WARNING, "%i foliage surfaces drawn.\n", FOLIAGE_NUM_SURFACES);
 
 void R_AddFoliage (msurface_t *surf) {
 	//RE_RegisterShader("models/warzone/foliage/grass01.png");
-	if ((surf->shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS || (surf->shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS)
+	if ((surf->shader->materialType ) == MATERIAL_SHORTGRASS || (surf->shader->materialType ) == MATERIAL_LONGGRASS)
 	{
 		vec3_t		surfOrigin;
 

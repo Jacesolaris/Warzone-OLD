@@ -1208,7 +1208,15 @@ void RE_RenderScene(const refdef_t *fd) {
 	R_RenderView( &parms );
 
 #ifdef __JKA_WEATHER__
-	if (r_weather->integer && !(fd->rdflags & RDF_NOWORLDMODEL))
+	if ((tr.viewParms.flags & VPF_NOPOSTPROCESS)
+		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
+		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
+		|| backEnd.depthFill
+		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+	{
+
+	}
+	else if (r_weather->integer && !(fd->rdflags & RDF_NOWORLDMODEL))
 	{
 		extern void RE_RenderWorldEffects(void);
 		RE_RenderWorldEffects();

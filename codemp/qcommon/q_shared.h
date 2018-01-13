@@ -1353,6 +1353,7 @@ typedef struct trace_s {
 	cplane_t	plane;		// surface normal at impact, transformed to world space
 	int			surfaceFlags;	// surface hit
 	int			contents;	// contents on other side of surface hit
+	int			materialType;
 /*
 Ghoul2 Insert Start
 */

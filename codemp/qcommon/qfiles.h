@@ -370,6 +370,7 @@ typedef struct dshader_s {
 	char		shader[MAX_QPATH];
 	int			surfaceFlags;
 	int			contentFlags;
+	//int			materialType;
 } dshader_t;
 
 // planes x^1 is allways the opposite of plane x

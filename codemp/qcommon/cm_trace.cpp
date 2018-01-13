@@ -425,6 +425,7 @@ void CM_TraceThroughPatch( traceWork_t *tw, trace_t &trace, cPatch_t *patch ) {
 	if ( trace.fraction < oldFrac ) {
 		trace.surfaceFlags = patch->surfaceFlags;
 		trace.contents = patch->contents;
+		trace.materialType = patch->materialType;
 	}
 }
 
@@ -596,6 +597,7 @@ void CM_TraceThroughBrush( traceWork_t *tw, trace_t &trace, cbrush_t *brush, boo
 				trace.plane = *tw->clipplane;
 				trace.surfaceFlags = cmg.shaders[tw->leadside->shaderNum].surfaceFlags;
 				trace.contents = brush->contents;
+				trace.materialType = cmg.shaders[tw->leadside->shaderNum].materialType;
 			}
 		}
 	}

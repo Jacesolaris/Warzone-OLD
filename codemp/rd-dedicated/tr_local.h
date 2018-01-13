@@ -446,6 +446,8 @@ typedef struct shader_s {
 	// True if this shader has a stage with glow in it (just an optimization).
 	bool hasGlow;
 
+	int materialType;
+
 	struct shader_s *remappedShader;                  // current shader this one is remapped too
 	struct	shader_s	*next;
 } shader_t;

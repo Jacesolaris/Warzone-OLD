@@ -27,6 +27,15 @@ static char *s_shaderText;
 
 extern qboolean DISABLE_MERGED_GLOWS;
 
+#define GLSL_BLEND_ALPHA			0
+#define GLSL_BLEND_INVALPHA			1
+#define GLSL_BLEND_DST_ALPHA		2
+#define GLSL_BLEND_INV_DST_ALPHA	3
+#define GLSL_BLEND_GLOWCOLOR		4
+#define GLSL_BLEND_INV_GLOWCOLOR	5
+#define GLSL_BLEND_DSTCOLOR			6
+#define GLSL_BLEND_INV_DSTCOLOR		7
+
 // the shader is parsed into these global variables, then copied into
 // dynamically allocated memory if it is valid.
 static	shaderStage_t	stages[MAX_SHADER_STAGES];
@@ -3394,7 +3403,8 @@ void ParseMaterial( const char **text )
 	{
 		if ( !Q_stricmp( token, materialNames[i] ) )
 		{
-			shader.surfaceFlags |= i;
+			//shader.surfaceFlags |= i;
+			shader.materialType = i;
 			break;
 		}
 	}
@@ -3484,9 +3494,9 @@ TODO: At some point, add external overrides file...
 
 */
 
-qboolean HaveSurfaceType( int surfaceFlags )
+qboolean HaveSurfaceType( int materialType)
 {
-	switch( surfaceFlags & MATERIAL_MASK )
+	switch( materialType )
 	{
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
@@ -3528,7 +3538,7 @@ qboolean HaveSurfaceType( int surfaceFlags )
 	return qfalse;
 }
 
-void DebugSurfaceTypeSelection( const char *name, int surfaceFlags )
+void DebugSurfaceTypeSelection( const char *name, int materialType)
 {
 	if (!r_materialDebug->integer)	return; // disable debugging for now
 
@@ -3541,7 +3551,7 @@ void DebugSurfaceTypeSelection( const char *name, int surfaceFlags )
 	//if (StringContainsWord(name, "models/player"))
 	//	return; // Ignore all these to reduce spam for now...
 
-	switch( surfaceFlags & MATERIAL_MASK )
+	switch( materialType )
 	{
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_WATER.\n", name);
@@ -4022,104 +4032,100 @@ void AssignMaterialType ( const char *name, const char *text )
 		|| StringContainsWord(name, "gfx/jkg")
 		|| StringContainsWord(name, "gfx/menu")) return;
 
-	if (!HaveSurfaceType(shader.surfaceFlags))
+	if (!HaveSurfaceType(shader.materialType))
 	{
 		int material = DetectMaterialType( name );
 
 		if (material)
-			shader.surfaceFlags |= material;
+			shader.materialType = material;
 		//else
-		//	shader.surfaceFlags |= MATERIAL_CARPET; // Fallback to a non-shiny default...
+		//	shader.materialType = MATERIAL_CARPET; // Fallback to a non-shiny default...
 	}
 	else
 	{
 		if (StringContainsWord(name, "gfx/water"))
-			shader.surfaceFlags |= MATERIAL_NONE;
+			shader.materialType = MATERIAL_NONE;
 		else if (StringContainsWord(name, "gfx/atmospheric"))
-			shader.surfaceFlags |= MATERIAL_NONE;
+			shader.materialType = MATERIAL_NONE;
 		else if (StringContainsWord(name, "warzone/plant"))
-			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+			shader.materialType = MATERIAL_GREENLEAVES;
 		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 				&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
-			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+			shader.materialType = MATERIAL_SOLIDWOOD;
 		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
 				&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
-			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+			shader.materialType = MATERIAL_SOLIDWOOD;
 
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
 		//
 		else if (StringContainsWord(name, "vj4")) // special case for vjun rock...
-			shader.surfaceFlags |= MATERIAL_ROCK;
+			shader.materialType = MATERIAL_ROCK;
 		else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet"))
-			shader.surfaceFlags |= MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "/ships/") || StringContainsWord(name, "engine") || StringContainsWord(name, "mp/flag"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "wing") || StringContainsWord(name, "xwbody") || StringContainsWord(name, "tie_"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "ship") || StringContainsWord(name, "shuttle") || StringContainsWord(name, "falcon"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "freight") || StringContainsWord(name, "transport") || StringContainsWord(name, "crate"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "container") || StringContainsWord(name, "barrel") || StringContainsWord(name, "train"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "crane") || StringContainsWord(name, "plate") || StringContainsWord(name, "cargo"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "ship_"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+			shader.materialType = MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringContainsWord(name, "models/weapon") && StringContainsWord(name, "saber") && !StringContainsWord(name, "glow") && StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
-			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
+			shader.materialType = MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
 		else if (StringContainsWord(name, "reborn") || StringContainsWord(name, "trooper"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
+			shader.materialType = MATERIAL_ARMOR;
 		else if (StringContainsWord(name, "boba") || StringContainsWord(name, "pilot"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
+			shader.materialType = MATERIAL_ARMOR;
 		else if (StringContainsWord(name, "grass") || (StringContainsWord(name, "foliage") && !StringContainsWord(name, "billboard")) || StringContainsWord(name, "yavin/ground") || StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "yavinassault/terrain"))
-			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
+			shader.materialType = MATERIAL_SHORTGRASS;
 
 		//
 		// Player model stuff overrides
 		//
 		else if (StringContainsWord(name, "players") && StringContainsWord(name, "eye"))
-			shader.surfaceFlags |= MATERIAL_GLASS;
+			shader.materialType = MATERIAL_GLASS;
 		else if (StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
-			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL;
+			shader.materialType = MATERIAL_HOLLOWMETAL;
 		else if (!StringContainsWord(name, "players") && StringContainsWord(name, "bespin"))
-			shader.surfaceFlags |= MATERIAL_MARBLE;
+			shader.materialType = MATERIAL_MARBLE;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "sithsoldier") || StringContainsWord(name, "r2d2") || StringContainsWord(name, "protocol") || StringContainsWord(name, "r5d2") || StringContainsWord(name, "c3po")))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+			shader.materialType = MATERIAL_SOLIDMETAL;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hood") || StringContainsWord(name, "robe") || StringContainsWord(name, "cloth") || StringContainsWord(name, "pants")))
-			shader.surfaceFlags |= MATERIAL_FABRIC;
+			shader.materialType = MATERIAL_FABRIC;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hair") || StringContainsWord(name, "chewbacca"))) // use carpet
-			shader.surfaceFlags |= MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
+			shader.materialType = MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "flesh") || StringContainsWord(name, "body") || StringContainsWord(name, "leg") || StringContainsWord(name, "hand") || StringContainsWord(name, "head") || StringContainsWord(name, "hips") || StringContainsWord(name, "torso") || StringContainsWord(name, "tentacles") || StringContainsWord(name, "face") || StringContainsWord(name, "arms")))
-			shader.surfaceFlags |= MATERIAL_FLESH;
+			shader.materialType = MATERIAL_FLESH;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "arm") || StringContainsWord(name, "foot") || StringContainsWord(name, "neck")))
-			shader.surfaceFlags |= MATERIAL_FLESH;
+			shader.materialType = MATERIAL_FLESH;
 		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "skirt") || StringContainsWord(name, "boots") || StringContainsWord(name, "accesories") || StringContainsWord(name, "accessories") || StringContainsWord(name, "vest") || StringContainsWord(name, "holster") || StringContainsWord(name, "cap") || StringContainsWord(name, "collar")))
-			shader.surfaceFlags |= MATERIAL_FABRIC;
+			shader.materialType = MATERIAL_FABRIC;
 		else if (!StringContainsWord(name, "players") && StringContainsWord(name, "_cc"))
-			shader.surfaceFlags |= MATERIAL_MARBLE;
+			shader.materialType = MATERIAL_MARBLE;
 		//
 		// If player model material not found above, use defaults...
 		//
 	}
 
 	if (StringContainsWord(name, "gfx/water"))
-		shader.surfaceFlags |= MATERIAL_NONE;
+		shader.materialType = MATERIAL_NONE;
 	else if (StringContainsWord(name, "gfx/atmospheric"))
-		shader.surfaceFlags |= MATERIAL_NONE;
+		shader.materialType = MATERIAL_NONE;
 	else if (StringContainsWord(name, "common/water") && !StringContainsWord(name, "splash") && !StringContainsWord(name, "drip") && !StringContainsWord(name, "ripple") && !StringContainsWord(name, "bubble") && !StringContainsWord(name, "woosh") && !StringContainsWord(name, "underwater") && !StringContainsWord(name, "bottom"))
 	{
-		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
-		if (oldmat) shader.surfaceFlags &= ~oldmat;
-		shader.surfaceFlags |= MATERIAL_WATER;
+		shader.materialType = MATERIAL_WATER;
 		shader.isWater = qtrue;
 	}
 	else if (StringContainsWord(name, "vj4"))
 	{// special case for vjun rock...
-		int oldmat = (shader.surfaceFlags & MATERIAL_MASK);
-		if (oldmat) shader.surfaceFlags &= ~oldmat;
-		shader.surfaceFlags |= MATERIAL_ROCK;
+		shader.materialType = MATERIAL_ROCK;
 	}
 	else if (shader.hasAlpha &&
 		!StringContainsWord(name, "billboard") &&
@@ -4130,24 +4136,21 @@ void AssignMaterialType ( const char *name, const char *text )
 		|| StringContainsWord(name, "branch") || StringContainsWord(name, "flower") || StringContainsWord(name, "weed")
 		|| StringContainsWord(name, "warzone/plant")))
 	{// Always greenleaves... No parallax...
-		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
-		if (oldmat) shader.surfaceFlags &= ~oldmat;
-
 #ifdef FIXME_TREE_BARK_PARALLAX
 		if (StringContainsWord(name, "bark") || StringContainsWord(name, "trunk") || StringContainsWord(name, "giant_tree") || StringContainsWord(name, "vine01"))
-			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+			shader.materialType = MATERIAL_SOLIDWOOD;
 		else
 #endif
-			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+			shader.materialType = MATERIAL_GREENLEAVES;
 
 	}
 	else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "trooper") || StringContainsWord(name, "medpack"))
-		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
+		if (!(shader.materialType == MATERIAL_PLASTIC)) shader.materialType = MATERIAL_PLASTIC;
 	else if (StringContainsWord(name, "grass") || (StringContainsWord(name, "foliage") && !StringContainsWord(name, "billboard")) || StringContainsWord(name, "yavin/ground")
 		|| StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "yavinassault/terrain"))
-		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;
+		if (!(shader.materialType == MATERIAL_SHORTGRASS)) shader.materialType = MATERIAL_SHORTGRASS;
 
-	DebugSurfaceTypeSelection(name, shader.surfaceFlags);
+	DebugSurfaceTypeSelection(name, shader.materialType);
 }
 
 /*
@@ -4845,7 +4848,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (!diffuse->isFoliageChecked)
 	{// Skip the string checks...
-		switch( shader.surfaceFlags & MATERIAL_MASK )
+		switch( shader.materialType )
 		{// Switch to avoid doing string checks on everything else...
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
@@ -6158,7 +6161,23 @@ static int CollapseStagesToGLSL(void)
 					else
 						dStage->emissiveColorScale = gStage->emissiveColorScale;
 
-					dStage->glowBlend = gStage->glowBlend;
+					//dStage->glowBlend = glowBlend;
+					if (glowBlend & GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA)
+						dStage->glowBlend = GLSL_BLEND_INVALPHA;
+					else if (glowBlend & GLS_SRCBLEND_DST_ALPHA)
+						dStage->glowBlend = GLSL_BLEND_DST_ALPHA;
+					else if (glowBlend & GLS_SRCBLEND_ONE_MINUS_DST_ALPHA)
+						dStage->glowBlend = GLSL_BLEND_INV_DST_ALPHA;
+					else if (glowBlend & GLS_DSTBLEND_SRC_COLOR)
+						dStage->glowBlend = GLSL_BLEND_GLOWCOLOR;
+					else if (glowBlend & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR)
+						dStage->glowBlend = GLSL_BLEND_INV_GLOWCOLOR;
+					else if (glowBlend & GLS_SRCBLEND_DST_COLOR)
+						dStage->glowBlend = GLSL_BLEND_DSTCOLOR;
+					else if (glowBlend & GLS_SRCBLEND_ONE_MINUS_DST_COLOR)
+						dStage->glowBlend = GLSL_BLEND_INV_DSTCOLOR;
+					else
+						dStage->glowBlend = GLSL_BLEND_GLOWCOLOR;
 
 					gStage->active = qfalse;
 
@@ -6470,15 +6489,6 @@ static int CollapseStagesToGLSL(void)
 
 			if (pStage2->glowMapped)
 				continue; // Already merged...
-
-#define GLSL_BLEND_ALPHA			0
-#define GLSL_BLEND_INVALPHA			1
-#define GLSL_BLEND_DST_ALPHA		2
-#define GLSL_BLEND_INV_DST_ALPHA	3
-#define GLSL_BLEND_GLOWCOLOR		4
-#define GLSL_BLEND_INV_GLOWCOLOR	5
-#define GLSL_BLEND_DSTCOLOR			6
-#define GLSL_BLEND_INV_DSTCOLOR		7
 
 			/*
 			GLS_SRCBLEND_ZERO = (1 << 0),

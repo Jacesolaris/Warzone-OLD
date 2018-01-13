@@ -526,7 +526,7 @@ void R_CreateBspMapImage(void)
 					break;
 				}
 
-				int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
+				int MATERIAL_TYPE = (tr.materialType);
 
 				switch (MATERIAL_TYPE)
 				{
@@ -980,7 +980,7 @@ void R_CreateFoliageMapImage(void)
 				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
 				float HEIGHT_COLOR_MULT = (1.0 - (DIST_FROM_ROOF / MAP_INFO_SIZE[2]));
 
-				int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
+				int MATERIAL_TYPE = (tr.materialType);
 
 				switch (MATERIAL_TYPE)
 				{
@@ -1171,7 +1171,7 @@ void R_CreateRoadMapImage(void)
 				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
 				float HEIGHT_COLOR_MULT = (1.0 - (DIST_FROM_ROOF / MAP_INFO_SIZE[2]));
 
-				int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
+				int MATERIAL_TYPE = (tr.materialType);
 
 				//
 				// Draw red on the map to add roads. Blue shows water. Green shows height map. Black is a bad area for roads.

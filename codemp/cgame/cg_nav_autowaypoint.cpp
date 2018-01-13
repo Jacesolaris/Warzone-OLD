@@ -2567,7 +2567,7 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 		up[2] -= 256.0;
 		CG_Trace(&tr, nodes[node].origin, NULL, NULL, up, -1, MASK_SHOT | MASK_OPAQUE | MASK_WATER /*MASK_ALL*/);
 
-		if ((tr.contents & CONTENTS_WATER) || (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		if ((tr.contents & CONTENTS_WATER) || (tr.materialType) == MATERIAL_WATER)
 		{	// This node is on slippery ice... Mark it...
 			nodes[node].type |= NODE_WATER;
 			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an water node.\n", "AUTO-WAYPOINTER", node );
@@ -3467,10 +3467,10 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 	if (tr.fraction >= 1.0 || tr.endpos[2] >= down_org[2])//tr.surfaceFlags == 0 && tr.contents == 0)
 		return qfalse;
 
-	if (!DO_ROCK && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+	if (!DO_ROCK && (tr.materialType) == MATERIAL_ROCK)
 		return qfalse;
 
-	if (DO_WATER && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+	if (DO_WATER && (tr.materialType) == MATERIAL_WATER)
 		return qfalse;
 
 	return qtrue;
@@ -3888,12 +3888,12 @@ float FloorHeightAt ( vec3_t org )
 		return MAX_MAP_SIZE;
 	}
 
-	if ( /*(tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) &&*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_NONE)
+	if ( /*(tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) &&*/ (tr.materialType) == MATERIAL_NONE)
 	{// Invisible brush?!?!? Probably skybox above or below the map...
 		return MAX_MAP_SIZE;
 	}
 
-	if (!DO_WATER && /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
+	if (!DO_WATER && /*tr.contents & CONTENTS_WATER ||*/ (tr.materialType) == MATERIAL_WATER )
 	{// Water... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_WATER\n");
 		return MAX_MAP_SIZE;
@@ -3903,7 +3903,7 @@ float FloorHeightAt ( vec3_t org )
 	{// Invisible surface... I'm just gonna ignore these!
 		if (DO_WATER)
 		{
-			if (/*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+			if (/*tr.contents & CONTENTS_WATER ||*/ (tr.materialType) == MATERIAL_WATER)
 			{
 
 			}
@@ -3920,9 +3920,9 @@ float FloorHeightAt ( vec3_t org )
 		}
 	}
 
-	if (!MaterialIsValidForWP((tr.surfaceFlags & MATERIAL_MASK)))
+	if (!MaterialIsValidForWP((tr.materialType)))
 	{
-		if (!DO_ROCK && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+		if (!DO_ROCK && (tr.materialType) == MATERIAL_ROCK)
 			return -MAX_MAP_SIZE;
 
 		return MAX_MAP_SIZE;
@@ -4013,7 +4013,7 @@ float RoofHeightAt ( vec3_t org )
 		return -131072.f;
 	}
 
-	if (!DO_ROCK && (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+	if (!DO_ROCK && (tr.materialType) == MATERIAL_ROCK)
 	{
 		return -MAX_MAP_SIZE;
 	}
@@ -4089,9 +4089,9 @@ void CG_ShowSlope ( void ) {
 	trap->Print("Slope is %f %f %f\n", pitch, yaw, roll);
 }
 
-void DebugSurfaceType( int surfaceFlags )
+void DebugSurfaceType( int materialType)
 {
-	switch( surfaceFlags & MATERIAL_MASK )
+	switch( materialType )
 	{
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 		trap->Print("Surface material is MATERIAL_WATER.\n");
@@ -4342,7 +4342,7 @@ void CG_ShowForwardSurface ( void )
 
 	trap->Print("\n");
 
-	DebugSurfaceType( tr.surfaceFlags );
+	DebugSurfaceType( tr.materialType);
 
 	// UQ1: May as well show the slope as well...
 	CG_ShowSlope();
@@ -4502,7 +4502,7 @@ void CG_ShowSurface ( void )
 
 	trap->Print("\n");
 
-	DebugSurfaceType( tr.surfaceFlags );
+	DebugSurfaceType( tr.materialType);
 
 	// UQ1: May as well show the slope as well...
 	CG_ShowSlope();
@@ -5995,7 +5995,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						}
 					}
 
-					if (MaterialIsValidForWP((tr.surfaceFlags & MATERIAL_MASK)))
+					if (MaterialIsValidForWP((tr.materialType)))
 					{
 						if (FOLIAGE_TreeSolidBlocking_AWP(tr.endpos))
 						{// There is a tree in this position, skip it...
@@ -7694,7 +7694,7 @@ AI_PM_GroundTrace ( vec3_t point, int clientNum, trace_t *trace )
 	/* TESTING THIS */
 	if ( (trace->surfaceFlags & SURF_NODRAW)
 		&& (trace->surfaceFlags & SURF_NOMARKS)
-		&& !((trace->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		&& !((trace->materialType) == MATERIAL_WATER)
 		&& !(
 #ifndef __DISABLE_PLAYERCLIP__
 		(trace->contents & CONTENTS_PLAYERCLIP) &&
@@ -7705,7 +7705,7 @@ AI_PM_GroundTrace ( vec3_t point, int clientNum, trace_t *trace )
 	if ( (trace->surfaceFlags & SURF_SKY) )
 		bad_surface = qtrue;
 
-	if ((trace->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+	if ((trace->materialType) == MATERIAL_WATER)
 	{
 		int contents = trace->contents;
 		contents |= CONTENTS_WATER;
@@ -7742,7 +7742,7 @@ void AIMOD_AI_InitNodeContentsFlags ( void )
 				nodes[i].type |= NODE_ICE;
 		}
 
-		if (contents & CONTENTS_WATER || (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER || (tr.contents & CONTENTS_WATER))
+		if (contents & CONTENTS_WATER || (tr.materialType) == MATERIAL_WATER || (tr.contents & CONTENTS_WATER))
 		{
 			nodes[i].type |= NODE_WATER;
 		}

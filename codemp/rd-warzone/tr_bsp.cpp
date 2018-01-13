@@ -2542,6 +2542,7 @@ static	void R_LoadShaders( lump_t *l ) {
 	for ( i=0 ; i<count ; i++ ) {
 		out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );
 		out[i].contentFlags = LittleLong( out[i].contentFlags );
+		//out[i].materialType = LittleLong( out[i].materialType );
 	}
 #else
 	s_worldData.shaders = (dshader_t *)ri->CM_GetShaderData();
@@ -3124,9 +3125,9 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 }
 #endif //__REALTIME_CUBEMAP__
 
-qboolean R_MaterialUsesCubemap ( int surfaceFlags )
+qboolean R_MaterialUsesCubemap ( int materialType)
 {
-	switch( surfaceFlags & MATERIAL_MASK )
+	switch(materialType)
 	{
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 		return qtrue;
@@ -3355,7 +3356,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
-				qboolean isBuilding = ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_CONCRETE && surf->shader->stages[stage] && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
+				qboolean isBuilding = ((surf->shader->materialType) == MATERIAL_CONCRETE && surf->shader->stages[stage] && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
 				
 				if (surf->shader->stages[stage] && (surf->shader->stages[stage]->glow || isBuilding))
 				{
@@ -3390,7 +3391,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			continue;
 		}
 
-		if (setupWaterLevel && (surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		if (setupWaterLevel && (surf->shader->materialType) == MATERIAL_WATER)
 		{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
 			if (surfOrigin[2] < MAP_WATER_LEVEL)
 			{
@@ -3479,9 +3480,9 @@ static void R_SetupCubemapPoints( void )
 		qboolean			bad = qfalse;
 		float				radius = 0;
 
-		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags )
+		if (R_MaterialUsesCubemap( surf->shader->materialType)
 			|| surf->shader->customCubeMapScale > 0.0
-			|| (surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+			|| (surf->shader->materialType) == MATERIAL_WATER)
 		{// Ok, this surface is shiny... Make a cubemap here...
 			if (surf->cullinfo.type & CULLINFO_SPHERE)
 			{
@@ -3799,7 +3800,7 @@ static void R_AssignCubemapsToWorldSurfaces(void)
 		msurface_t *surf = &w->surfaces[i];
 		vec3_t surfOrigin;
 		
-		if (!R_MaterialUsesCubemap( surf->shader->surfaceFlags ) && surf->shader->customCubeMapScale <= 0.0)
+		if (!R_MaterialUsesCubemap( surf->shader->materialType) && surf->shader->customCubeMapScale <= 0.0)
 		{
 			surf->cubemapIndex = 0;
 		}

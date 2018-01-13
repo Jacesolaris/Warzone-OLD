@@ -779,9 +779,9 @@ void main(void)
 
 					float cPx = 1.0 / u_Local7.b;
 					float blurCount = 1.0;
-					for (float x = -1.0; x <= 1.0; x += 1.0)
+					for (float x = -4.0; x <= 4.0; x += 2.0)
 					{
-						for (float y = -1.0; y <= 1.0; y += 1.0)
+						for (float y = -4.0; y <= 4.0; y += 2.0)
 						{
 							vec3 blurColor = texture(u_CubeMap, (R + parallax) + (vec3(x,y,0.0) * cPx)).rgb;
 							cubeLightColor += blurColor;

@@ -4040,7 +4040,7 @@ static int PM_FootstepForSurface( void )
 	{
 		return 0;
 	}
-	return ( pml.groundTrace.surfaceFlags & MATERIAL_MASK );
+	return ( pml.groundTrace.materialType);
 }
 
 
@@ -4148,7 +4148,7 @@ static void PM_CrashLandEffect( void )
 	{
 		vec3_t bottom;
 		int	effectID = -1;
-		int material = (pml.groundTrace.surfaceFlags&MATERIAL_MASK);
+		int material = (pml.groundTrace.materialType);
 		VectorSet( bottom, pm->ps->origin[0],pm->ps->origin[1],pm->ps->origin[2]+pm->mins[2]+1 );
 		switch ( material )
 		{

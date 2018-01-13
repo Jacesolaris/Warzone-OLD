@@ -1054,7 +1054,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #ifdef __REALTIME_CUBEMAP__
 		newCubemapIndex = 0;
 #else //!__REALTIME_CUBEMAP__
-		newCubemapIndex = currentPlayerCubemap;
+		newCubemapIndex = 0;// currentPlayerCubemap;
 #endif //__REALTIME_CUBEMAP__
 #else //!__PLAYER_BASED_CUBEMAPS__
 		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
@@ -2187,13 +2187,8 @@ const void	*RB_WorldEffects( const void *data )
 		RB_EndSurface();
 	}
 
-	if (!r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
-	{
-		// do nothing
-		return (const void *)(cmd + 1);
-	}
-
-	if ((backEnd.viewParms.flags & VPF_SHADOWPASS)
+	if ((tr.viewParms.flags & VPF_NOPOSTPROCESS)
+		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
 		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
@@ -2225,15 +2220,6 @@ const void	*RB_WorldEffects( const void *data )
 	}
 
 	FBO_Bind(tr.renderFbo);
-
-	/*
-	extern void R_SetFarClip(void);
-	extern void R_SetupProjectionZ(viewParms_t *dest);
-	R_SetFarClip();
-	R_SetupProjectionZ(&backEnd.viewParms);
-	GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
-	//GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix); // ??
-	*/
 
 	GL_SetProjectionMatrix(previousProjectionMatrix);
 	GL_SetModelviewMatrix(previousModelViewMarix);

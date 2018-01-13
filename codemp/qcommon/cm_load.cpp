@@ -239,9 +239,9 @@ qboolean IsKnownShinyMap ( const char *heystack )
 	return qfalse;
 }
 
-qboolean HaveSurfaceType( int surfaceFlags )
+qboolean HaveSurfaceType( int materialType)
 {
-	switch( surfaceFlags & MATERIAL_MASK )
+	switch(materialType)
 	{
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
@@ -560,6 +560,8 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 		Q_strncpyz(out->shader, in->shader, MAX_QPATH);
 		out->contentFlags = LittleLong( in->contentFlags );
 		out->surfaceFlags = LittleLong( in->surfaceFlags );
+		//out->materialType = LittleLong( in->materialType );
+		out->materialType = LittleLong(in->surfaceFlags) & MATERIAL_MASK;
 		
 		if (in->shader && ( StringContainsWord(in->shader, "warzone/tree") || StringContainsWord(in->shader, "warzone\\tree")))
 		{// LOL WTF HAX!!! :)
@@ -574,8 +576,8 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 			}
 		}
 
-		if (!HaveSurfaceType(out->surfaceFlags))
-			out->surfaceFlags = LittleLong( GetMaterialType(in->shader, (in->surfaceFlags & MATERIAL_MASK)) );
+		if (!HaveSurfaceType(out->materialType))
+			out->materialType = LittleLong( GetMaterialType(in->shader, /*in*/out->materialType) );
 
 		if (in->shader && ( StringContainsWord(in->shader, "skies/") || (StringContainsWord(in->shader, "sky") && !StringContainsWord(in->shader, "skyscraper"))))
 		{// LOL WTF HAX!!! :)
@@ -1047,6 +1049,10 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts, clipMap_t &cm ) {
 		shaderNum = LittleLong( in->shaderNum );
 		patch->contents = cm.shaders[shaderNum].contentFlags;
 		patch->surfaceFlags = cm.shaders[shaderNum].surfaceFlags;
+		patch->materialType = cm.shaders[shaderNum].materialType;
+
+		if (!HaveSurfaceType(patch->materialType))
+			patch->surfaceFlags = LittleLong(GetMaterialType(cm.shaders[shaderNum].GetName(), patch->materialType));
 
 		// create the internal facet structure
 		patch->pc = CM_GeneratePatchCollide( width, height, points );

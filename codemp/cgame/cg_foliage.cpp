@@ -2720,7 +2720,7 @@ qboolean FOLIAGE_FloorIsGrassAt(vec3_t org)
 		return qfalse;
 	}
 
-	if (MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK)))
+	if (MaterialIsValidForGrass((int)(tr.materialType)))
 		return qtrue;
 
 	return qfalse;
@@ -2843,7 +2843,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2856,7 +2856,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2869,7 +2869,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2882,7 +2882,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2897,7 +2897,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2912,7 +2912,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2927,7 +2927,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -2942,7 +2942,7 @@ qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 
 	// Slope too different...
 	if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
-	if (!MaterialIsValidForGrass((int)(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
+	if (!MaterialIsValidForGrass((int)(tr.materialType))) return qfalse;
 	if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
 	if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
@@ -3330,7 +3330,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 					continue;
 				}
 
-				if (MaterialIsValidForGrass((tr.surfaceFlags & MATERIAL_MASK)))
+				if (MaterialIsValidForGrass((tr.materialType)))
 				{
 					qboolean DO_TREE = qfalse;
 					qboolean DO_PLANT = qfalse;
@@ -3716,7 +3716,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3727,7 +3727,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3738,7 +3738,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3749,7 +3749,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3761,7 +3761,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3773,7 +3773,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3785,7 +3785,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}
@@ -3797,7 +3797,7 @@ qboolean FOLIAGE_NearbyWall(vec3_t org)
 	CG_Trace(&tr, pos, NULL, NULL, end, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER);
 	if (tr.fraction < 1.0)
 	{
-		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.surfaceFlags & MATERIAL_MASK))
+		if (FOLIAGE_MaterialIsWallSolid(tr.plane.normal, tr.materialType))
 		{// Looks like a tree or wall here.. Yay!
 			return qtrue;
 		}

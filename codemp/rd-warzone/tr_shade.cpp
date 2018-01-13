@@ -1266,7 +1266,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	qboolean isSky = tess.shader->isSky;
 
 	vec4_t materialSettings;
-	RB_PBR_DefaultsForMaterial(materialSettings, tess.shader->surfaceFlags & MATERIAL_MASK);
+	RB_PBR_DefaultsForMaterial(materialSettings, tess.shader->materialType);
 
 	if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 	{
@@ -1858,7 +1858,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (r_foliage->integer
 			&& GRASS_ENABLED
-			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
@@ -1872,7 +1872,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& GRASS_ENABLED
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
-			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
@@ -1883,26 +1883,26 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	{
 		if (r_foliage->integer
 			&& GRASS_ENABLED
-			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_pebbles->integer
 			&& PEBBLES_ENABLED
-			&& (tess.shader->isPebbles || RB_ShouldUseGeometryPebbles(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isPebbles || RB_ShouldUseGeometryPebbles(tess.shader->materialType)))
 		{
 			isPebbles = qtrue;
 			tess.shader->isPebbles = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_groundFoliage->integer
-			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGroundFoliage = qtrue;
 			tess.shader->isGroundFoliage = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_fur->integer
-			&& (tess.shader->isFur || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isFur || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isFur = qtrue;
 			tess.shader->isFur = qtrue; // Cache to speed up future checks...
@@ -1913,9 +1913,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	{
 		useTesselation = qtrue;
 
-		tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+		tessInner = RB_GetTesselationInnerLevel(tess.shader->materialType);
 		tessOuter = tessInner;
-		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->materialType);
 	}
 
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
@@ -2301,7 +2301,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			if ((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK
+			if ((tess.shader->materialType) == MATERIAL_ROCK
 				&& pStage->bundle[TB_STEEPMAP].image[0]
 				&& !pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 				&& !pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2310,7 +2310,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Procedural city sky scraper texture, use triplanar, not regions...
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
-			else if (((tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_ROCK)
+			else if (((tess.shader->materialType) == MATERIAL_ROCK)
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2383,6 +2383,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			if (pStage->noScreenMap)
+			{
+				index |= LIGHTDEF_IS_DETAIL;
+			}
+
+			if (pStage->bundle[0].tcGen == TCGEN_ENVIRONMENT_MAPPED)
 			{
 				index |= LIGHTDEF_IS_DETAIL;
 			}
@@ -2517,6 +2522,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			float blendMethod = 0.0;
 
+#if 1
 			if (stateBits & GLS_DSTBLEND_ONE_MINUS_SRC_COLOR)
 			{
 				blendMethod = 1.0;
@@ -2541,6 +2547,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				stateBits &= ~GLS_DSTBLEND_BITS;
 				stateBits |= GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE;
 			}
+#endif
 
 			VectorSet4(vec, 
 				useVertexAnim, 
@@ -2655,6 +2662,49 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
 				}
 			}
+		}
+#endif
+		
+		if (pStage->isFoliage)
+		{// Override shader with a faster one...
+			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GE_128;
+			pStage->stateBits = stateBits;
+		}
+		else if ((r_proceduralSun->integer && tess.shader == tr.sunShader)
+			|| (r_proceduralSun->integer && tess.shader == tr.moonShader))
+		{
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		/*
+		else if (pStage->glow)
+		{
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		*/
+#if 0
+		else if (pStage->stateBits & GLS_ATEST_BITS)
+		{// Keep as is...
+
+		}
+		else if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
+		{// Keep as is...
+
+		}
+		else if (input->shader->isSky)
+		{// Keep as is...
+
+		}
+		else if (input->shader->hasAlpha)
+		{// Should be faster...
+			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		else
+		{// Should be faster...
+			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+			pStage->stateBits = stateBits;
 		}
 #endif
 
@@ -3448,7 +3498,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 		if (r_foliage->integer
 			&& r_foliageShadows->integer
 			&& GRASS_ENABLED
-			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK)))
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{// Special extra pass stuff for grass or pebbles...
 			sp = &tr.grass2Shader;
 			int passMax = GRASS_DENSITY;
@@ -3641,7 +3691,7 @@ void RB_StageIteratorGeneric( void )
 	if ((tess.shader->isWater && r_glslWater->integer && WATER_ENABLED)
 		|| (tess.shader->contentFlags & CONTENTS_WATER)
 		/*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/
-		|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		|| (tess.shader->materialType) == MATERIAL_WATER)
 	{
 		if (input && input->xstages[0] && input->xstages[0]->isWater == 0 && r_glslWater->integer && WATER_ENABLED) // In case it is already set, no need looping more then once on the same shader...
 		{

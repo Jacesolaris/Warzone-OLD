@@ -2519,7 +2519,7 @@ static void _PlayerFootStep( const vec3_t origin,
 	}
 
 	//check for foot-steppable surface flag
-	switch( trace.surfaceFlags & MATERIAL_MASK )
+	switch( trace.materialType)
 	{
 		case MATERIAL_MUD:
 			bMark = qtrue;

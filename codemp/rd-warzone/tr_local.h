@@ -77,7 +77,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __THREADED_OCCLUSION__
 //#define __THREADED_OCCLUSION2__
 
-//#define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
+#define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
 
 #define __OCEAN__
@@ -1233,6 +1233,8 @@ typedef struct shader_s {
 
 	float		portalRange;			// distance to fog out at
 	qboolean	isPortal;
+
+	int			materialType;
 
 	qboolean	isGrass;
 	qboolean	isPebbles;

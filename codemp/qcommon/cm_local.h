@@ -56,6 +56,7 @@ public:
 	class CCMShader	*mNext;
 	int			surfaceFlags;
 	int			contentFlags;
+	int			materialType;
 
 	const char	*GetName(void) const { return(shader); }
 	class CCMShader *GetNext(void) const { return(mNext); }
@@ -67,6 +68,7 @@ typedef struct cPatch_s {
 	int			checkcount;				// to avoid repeated testings
 	int			surfaceFlags;
 	int			contents;
+	int			materialType;
 	struct patchCollide_s	*pc;
 } cPatch_t;
 

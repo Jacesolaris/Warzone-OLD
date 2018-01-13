@@ -2201,7 +2201,8 @@ void ParseMaterial( const char **text )
 	{
 		if ( !Q_stricmp( token, materialNames[i] ) )
 		{
-			shader.surfaceFlags |= i;
+			//shader.surfaceFlags |= i;
+			shader.materialType = i;
 			break;
 		}
 	}
