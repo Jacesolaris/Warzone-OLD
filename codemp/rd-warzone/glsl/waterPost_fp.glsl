@@ -267,6 +267,7 @@ vec4 waterMapUpperAtCoord ( vec2 coord )
 float pw = (1.0/u_Dimensions.x);
 float ph = (1.0/u_Dimensions.y);
 
+#ifdef USE_REFLECTION
 vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor)
 {
 	if (positionMap.y > waterMapLower.y)
@@ -320,7 +321,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		}
 	}
 
-	if (QLAND_Y <= 0.0 || QLAND_Y >= 1.0)
+	if (LAND_Y <= 0.0 || LAND_Y >= 1.0)
 	{// Found no non-water surfaces...
 		return inColor;
 	}
@@ -353,6 +354,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * /*0.28*/u_Local1.a);
 }
+#endif //USE_REFLECTION
 
 // lighting
 float getdiffuse(vec3 n, vec3 l, float p) {

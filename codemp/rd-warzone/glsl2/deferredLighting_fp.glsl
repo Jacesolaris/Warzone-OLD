@@ -2,6 +2,7 @@
 #define __ENHANCED_AO__
 #define __ENVMAP__
 #define __RANDOMIZE_LIGHT_PIXELS__
+#define __SCREEN_SPACE_REFLECTIONS__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -288,6 +289,76 @@ float getHeight(vec2 uv) {
   return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
+#ifdef __SCREEN_SPACE_REFLECTIONS__
+#define pw pixel.x
+#define ph pixel.y
+vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectiveness)
+{
+	if (reflectiveness <= u_Local3.a)
+	{// Top of screen pixel is water, don't check...
+		return inColor;
+	}
+
+	// Quick scan for pixel that is not water...
+	float QLAND_Y = 0.0;
+
+	for (float y = coord.y; y <= 1.0; y += ph * 5.0)
+	{
+		float material = textureLod(u_PositionMap, vec2(coord.x, y), 0.0).a;
+
+		if (positionMap.a != material)
+		{
+			QLAND_Y = y;
+			break;
+		}
+	}
+
+	if (QLAND_Y <= 0.0 || QLAND_Y >= 1.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+	
+	QLAND_Y -= ph * 5.0;
+	
+	// Full scan from within 5 px for the real 1st pixel...
+	float upPos = coord.y;
+	float LAND_Y = 0.0;
+
+	for (float y = QLAND_Y; y <= 1.0; y += ph)
+	{
+		float material = textureLod(u_PositionMap, vec2(coord.x, y), 0.0).a;
+
+		if (positionMap.a != material)
+		{
+			LAND_Y = y;
+			break;
+		}
+	}
+
+	if (LAND_Y <= 0.0 || LAND_Y >= 1.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+
+	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0), 0.0, 1.0);
+
+	if (upPos > 1.0 || upPos < 0.0)
+	{// Not on screen...
+		return inColor;
+	}
+
+	float heightDiff = clamp(distance(upPos, coord.y) * 3.0, 0.0, 1.0);
+	float heightStrength = 1.0 - pow(heightDiff, 0.05);
+
+	float strength = 1.0 - pow(upPos, 4.0);
+	strength *= heightStrength;
+
+	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
+
+	return mix(inColor.rgb, inColor.rgb + landColor.rgb, strength * reflectiveness * 4.0);
+}
+#endif //__SCREEN_SPACE_REFLECTIONS__
+
 vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
   vec2 step = 1. / resolution;
     
@@ -567,6 +638,22 @@ void main(void)
 	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
 	norm.xyz = DecodeNormal(norm.xy);
+
+#ifdef __SCREEN_SPACE_REFLECTIONS__
+	float ssReflection = norm.z * 0.5 + 0.5;
+
+	// Allow only fairly flat surfaces for reflections (floors), and not roofs (for now)...
+	if (ssReflection < 0.8)
+	{
+		ssReflection = 0.0;
+	}
+	else
+	{
+		float bounds = 0.2;
+		ssReflection -= 0.8;
+		ssReflection = (bounds / ssReflection);
+	}
+#endif //__SCREEN_SPACE_REFLECTIONS__
 
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
@@ -930,6 +1017,10 @@ void main(void)
 
 	// Has a sort of lightmap-ish type coloring/lighting effect on result...
 	//outColor.rgb *= ((outColor.rgb / length(outColor.rgb)) * 3.0) * 0.25 + 0.75;
+
+#ifdef __SCREEN_SPACE_REFLECTIONS__
+	outColor.rgb = AddReflection(texCoords, position, outColor.rgb, reflectivePower * ssReflection);
+#endif //__SCREEN_SPACE_REFLECTIONS__
 
 #ifdef __AMBIENT_OCCLUSION__
 	if (u_Local1.b == 1.0)
