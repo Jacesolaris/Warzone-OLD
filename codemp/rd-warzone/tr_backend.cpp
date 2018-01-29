@@ -949,6 +949,8 @@ int sSortFunc (const void * a, const void * b)
 }
 #endif
 
+extern qboolean DISABLE_LIFTS_AND_PORTALS_MERGE;
+
 void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery) {
 	int				i, max_threads_used = 0;
 	int				j = 0;
@@ -1134,20 +1136,24 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		cubemapIndex = newCubemapIndex;
 
 		qboolean dontMerge = qfalse;
-		// UQ1: We can't merge movers and portals, but we can merge pretty much everything else...
-		trRefEntity_t *ent = NULL;
-		trRefEntity_t *oldent = NULL;
 
-		if (entityNum >= 0) oldent = &backEnd.refdef.entities[entityNum];
-		if (oldEntityNum >= 0) oldent = &backEnd.refdef.entities[oldEntityNum];
+		if (DISABLE_LIFTS_AND_PORTALS_MERGE)
+		{
+			// UQ1: We can't merge movers and portals, but we can merge pretty much everything else...
+			trRefEntity_t *ent = NULL;
+			trRefEntity_t *oldent = NULL;
 
-		if (ent && (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX)))
-		{// Either a mover, or a portal... Don't allow merges...
-			dontMerge = qtrue;
-		}
-		else if (oldent && (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX)))
-		{// Either a mover, or a portal... Don't allow merges...
-			dontMerge = qtrue;
+			if (entityNum >= 0) oldent = &backEnd.refdef.entities[entityNum];
+			if (oldEntityNum >= 0) oldent = &backEnd.refdef.entities[oldEntityNum];
+
+			if (ent && (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX)))
+			{// Either a mover, or a portal... Don't allow merges...
+				dontMerge = qtrue;
+			}
+			else if (oldent && (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX)))
+			{// Either a mover, or a portal... Don't allow merges...
+				dontMerge = qtrue;
+			}
 		}
 
 		//

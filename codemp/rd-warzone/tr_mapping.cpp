@@ -1441,6 +1441,7 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 }
 
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
+qboolean	DISABLE_LIFTS_AND_PORTALS_MERGE = qtrue;
 int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
 float		DISPLACEMENT_MAPPING_STRENGTH = 18.0;
@@ -1546,8 +1547,9 @@ void MAPPING_LoadMapInfo(void)
 	//
 	// Horrible hacks for basejka maps... Don't use them! Fix your maps for warzone!
 	//
-	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
 	MAP_MAX_VIS_RANGE = atoi(IniRead(mapname, "FIXES", "MAP_MAX_VIS_RANGE", "0"));
+	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
+	DISABLE_LIFTS_AND_PORTALS_MERGE = (atoi(IniRead(mapname, "FIXES", "DISABLE_LIFTS_AND_PORTALS_MERGE", "1")) > 0) ? qtrue : qfalse;
 
 	//
 	// Misc effect enablers...
@@ -1896,7 +1898,9 @@ void MAPPING_LoadMapInfo(void)
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Max vis range is ^7%s^5 on this map.\n", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
+
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and lifts and portals merging is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", DISABLE_LIFTS_AND_PORTALS_MERGE ? "ENABLED" : "DISABLED");
 	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 and screen space reflections are ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED", MAP_REFLECTION_ENABLED ? "ENABLED" : "DISABLED");
 
