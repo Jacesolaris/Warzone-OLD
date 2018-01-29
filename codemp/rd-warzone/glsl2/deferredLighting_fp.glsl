@@ -641,21 +641,18 @@ void main(void)
 	norm.xyz = DecodeNormal(norm.xy);
 
 #ifdef __SCREEN_SPACE_REFLECTIONS__
-	if (u_Local8.r > 0.0)
-	{
-		float ssReflection = norm.z * 0.5 + 0.5;
+	float ssReflection = norm.z * 0.5 + 0.5;
 
-		// Allow only fairly flat surfaces for reflections (floors), and not roofs (for now)...
-		if (ssReflection < 0.8)
-		{
-			ssReflection = 0.0;
-		}
-		else
-		{
-			float bounds = 0.2;
-			ssReflection -= 0.8;
-			ssReflection = (bounds / ssReflection);
-		}
+	// Allow only fairly flat surfaces for reflections (floors), and not roofs (for now)...
+	if (ssReflection < 0.8)
+	{
+		ssReflection = 0.0;
+	}
+	else
+	{
+		float bounds = 0.2;
+		ssReflection -= 0.8;
+		ssReflection = (bounds / ssReflection);
 	}
 #endif //__SCREEN_SPACE_REFLECTIONS__
 
@@ -1023,7 +1020,10 @@ void main(void)
 	//outColor.rgb *= ((outColor.rgb / length(outColor.rgb)) * 3.0) * 0.25 + 0.75;
 
 #ifdef __SCREEN_SPACE_REFLECTIONS__
-	outColor.rgb = AddReflection(texCoords, position, outColor.rgb, reflectivePower * ssReflection);
+	if (u_Local8.r > 0.0)
+	{
+		outColor.rgb = AddReflection(texCoords, position, outColor.rgb, reflectivePower * ssReflection);
+	}
 #endif //__SCREEN_SPACE_REFLECTIONS__
 
 #ifdef __AMBIENT_OCCLUSION__
