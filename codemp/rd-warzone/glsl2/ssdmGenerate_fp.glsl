@@ -77,10 +77,12 @@ float plumaAtCoord(vec2 coord) {
 
 float GetDisplacementAtCoord(vec2 coord)
 {
+#if 1
 	if (texture(u_NormalMap, coord).b < 1.0)
 	{
 		return 0.0;
 	}
+#endif
 
 	vec2 coord2 = coord;
 	coord2.y = 1.0 - coord2.y;

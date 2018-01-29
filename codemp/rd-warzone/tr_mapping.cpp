@@ -1444,6 +1444,7 @@ qboolean	DISABLE_MERGED_GLOWS = qfalse;
 int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
 float		DISPLACEMENT_MAPPING_STRENGTH = 18.0;
+qboolean	MAP_REFLECTION_ENABLED = qfalse;
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
@@ -1557,6 +1558,8 @@ void MAPPING_LoadMapInfo(void)
 	{
 		DISPLACEMENT_MAPPING_STRENGTH = atof(IniRead(mapname, "EFFECTS", "DISPLACEMENT_MAPPING_STRENGTH", "18.0"));
 	}
+
+	MAP_REFLECTION_ENABLED = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_SCREEN_SPACE_REFLECTIONS", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Sun + Day/Night...
@@ -1895,7 +1898,7 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
 	
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 and screen space reflections are ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED", MAP_REFLECTION_ENABLED ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);

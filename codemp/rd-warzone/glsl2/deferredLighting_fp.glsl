@@ -31,6 +31,7 @@ uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMI
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
+uniform vec4		u_Local8; // enableReflections, 0.0, 0.0, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -640,18 +641,21 @@ void main(void)
 	norm.xyz = DecodeNormal(norm.xy);
 
 #ifdef __SCREEN_SPACE_REFLECTIONS__
-	float ssReflection = norm.z * 0.5 + 0.5;
+	if (u_Local8.r > 0.0)
+	{
+		float ssReflection = norm.z * 0.5 + 0.5;
 
-	// Allow only fairly flat surfaces for reflections (floors), and not roofs (for now)...
-	if (ssReflection < 0.8)
-	{
-		ssReflection = 0.0;
-	}
-	else
-	{
-		float bounds = 0.2;
-		ssReflection -= 0.8;
-		ssReflection = (bounds / ssReflection);
+		// Allow only fairly flat surfaces for reflections (floors), and not roofs (for now)...
+		if (ssReflection < 0.8)
+		{
+			ssReflection = 0.0;
+		}
+		else
+		{
+			float bounds = 0.2;
+			ssReflection -= 0.8;
+			ssReflection = (bounds / ssReflection);
+		}
 	}
 #endif //__SCREEN_SPACE_REFLECTIONS__
 
