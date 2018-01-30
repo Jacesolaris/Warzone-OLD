@@ -438,6 +438,9 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		{// used...
 			VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // MAP_SIZE, sway, overlaySway, materialType
+
+			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
 		}
 
 		{// unused...
@@ -506,6 +509,11 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		GL_BindToTMU(tr.auroraImage[1], TB_SPLATMAP2);
+
+		vec2_t screensize;
+		screensize[0] = nightImage->width;
+		screensize[1] = nightImage->height;
+		GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, screensize);
 	}
 
 	backEnd.pc.c_skyDraws++;

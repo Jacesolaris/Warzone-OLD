@@ -2339,8 +2339,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
 	}
 
-	//GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	//GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
 
 	if (SHADOWS_ENABLED)
 	{

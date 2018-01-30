@@ -293,21 +293,36 @@ float getHeight(vec2 uv) {
 #ifdef __SCREEN_SPACE_REFLECTIONS__
 #define pw pixel.x
 #define ph pixel.y
-vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectiveness)
+vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 origNorm, vec3 inColor, float reflectiveness)
 {
 	if (reflectiveness <= u_Local3.a)
 	{// Top of screen pixel is water, don't check...
 		return inColor;
 	}
 
+	float pixelDistance = distance(positionMap.xyz, u_ViewOrigin.xyz);
+
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
 
 	for (float y = coord.y; y <= 1.0; y += ph * 5.0)
 	{
-		float material = textureLod(u_PositionMap, vec2(coord.x, y), 0.0).a;
+		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
+		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
 
-		if (positionMap.a != material)
+		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
+
+		if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
+		{
+			continue;
+		}
+
+		if (norm.z * 0.5 + 0.5 < 0.75 && distance(norm.xyz, origNorm.xyz) > 0.0)
+		{
+			QLAND_Y = y;
+			break;
+		}
+		else if (positionMap.a != pMap.a && pMap.a == 0.0)
 		{
 			QLAND_Y = y;
 			break;
@@ -327,9 +342,22 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectiven
 
 	for (float y = QLAND_Y; y <= 1.0; y += ph)
 	{
-		float material = textureLod(u_PositionMap, vec2(coord.x, y), 0.0).a;
+		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
+		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
+		
+		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
-		if (positionMap.a != material)
+		if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
+		{
+			continue;
+		}
+
+		if (norm.z * 0.5 + 0.5 < 0.75 && distance(norm.xyz, origNorm.xyz) > 0.0)
+		{
+			LAND_Y = y;
+			break;
+		}
+		else if (positionMap.a != pMap.a && pMap.a == 0.0)
 		{
 			LAND_Y = y;
 			break;
@@ -341,22 +369,45 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 inColor, float reflectiven
 		return inColor;
 	}
 
-	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0), 0.0, 1.0);
+	//float finalMaterial = textureLod(u_PositionMap, vec2(coord.x, LAND_Y), 0.0).a;
+	//float finalNormal = textureLod(u_NormalMap, vec2(coord.x, LAND_Y), 0.0).a;
+
+	float d = 1.0 / ((1.0 - (LAND_Y - coord.y)) * 1.75);
+
+	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0 * d), 0.0, 1.0);
 
 	if (upPos > 1.0 || upPos < 0.0)
 	{// Not on screen...
 		return inColor;
 	}
 
+	vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, upPos), 0.0);
+
+	/*if (pMap.a != finalMaterial && pMap.a > 1.0)
+	{// After moving upwards, we ended up hitting a second mateiral type (surface), this may not be valid, so skip this pixel...
+		return inColor;
+	}*/
+
+	if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
+	{// The reflected pixel is closer then the original, this would be a bad reflection.
+		return inColor;
+	}
+
 	float heightDiff = clamp(distance(upPos, coord.y) * 3.0, 0.0, 1.0);
-	float heightStrength = 1.0 - pow(heightDiff, 0.05);
+	float heightStrength = 1.0 - clamp(pow(heightDiff, 0.025), 0.0, 1.0);
 
-	float strength = 1.0 - pow(upPos, 4.0);
+	float strength = 1.0 - clamp(pow(upPos, 4.0), 0.0, 1.0);
 	strength *= heightStrength;
+	strength = clamp(strength, 0.0, 1.0);
 
+	if (strength <= 0.0)
+	{
+		return inColor;
+	}
+
+	vec4 glowColor = textureLod(u_GlowMap, vec2(coord.x, upPos), 0.0);
 	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
-
-	return mix(inColor.rgb, inColor.rgb + landColor.rgb, strength * reflectiveness * 4.0);
+	return mix(inColor.rgb, inColor.rgb + landColor.rgb + (glowColor.rgb * 3.5), clamp(strength * reflectiveness * 4.0, 0.0, 1.0));
 }
 #endif //__SCREEN_SPACE_REFLECTIONS__
 
@@ -635,9 +686,6 @@ void main(void)
 #endif
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
-	//norm.rgb = normalize(norm.rgb * 2.0 - 1.0);
-	//norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
-	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
 	norm.xyz = DecodeNormal(norm.xy);
 
 #ifdef __SCREEN_SPACE_REFLECTIONS__
@@ -650,10 +698,10 @@ void main(void)
 	}
 	else
 	{
-		float bounds = 0.2;
-		ssReflection -= 0.8;
-		ssReflection = (bounds / ssReflection);
+		ssReflection = clamp(ssReflection - 0.8, 0.0, 0.2) * 5.0;
 	}
+
+	vec3 origNorm = norm.xyz;
 #endif //__SCREEN_SPACE_REFLECTIONS__
 
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
@@ -675,6 +723,7 @@ void main(void)
 	//vec3 bitangent = normalize( cross(norm.xyz, tangent) );
 	//mat3 tangentToWorld = mat3(tangent.xyz, bitangent.xyz, norm.xyz);
 	//norm.xyz = tangentToWorld * normalDetail.xyz;
+
 
 	vec3 N = norm.xyz;
 
@@ -1022,7 +1071,7 @@ void main(void)
 #ifdef __SCREEN_SPACE_REFLECTIONS__
 	if (u_Local8.r > 0.0)
 	{
-		outColor.rgb = AddReflection(texCoords, position, outColor.rgb, reflectivePower * ssReflection);
+		outColor.rgb = AddReflection(texCoords, position, origNorm, outColor.rgb, reflectivePower * ssReflection);
 	}
 #endif //__SCREEN_SPACE_REFLECTIONS__
 

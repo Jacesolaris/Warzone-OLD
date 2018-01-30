@@ -82,8 +82,30 @@ vec2 EncodeNormal(in vec3 N)
 	return N.xy / f + 0.5;
 }
 
+float rand(vec2 co)
+{
+    return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec3 GetStars( vec2 coord )
+{
+	float prob = 0.998;
+	float color = 0.0;
+	float r = rand(coord.xy);
+
+	if (r > prob)
+	{
+		color = r * (0.25 * rand(coord.xy * u_Time) + 0.75);
+	}
+	
+	return vec3(color);
+}
+
 void main()
 {
+#if 0
+	gl_FragColor = vec4(GetStars( var_TexCoords ) * u_Local9.g, 1.0);
+#else
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
 		gl_FragColor = vec4(1.0);
@@ -99,6 +121,7 @@ void main()
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
 				vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
+				//nightDiffuse += GetStars( texCoords ) * u_Local9.g;
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, SHADER_NIGHT_SCALE); // Mix in night sky with original sky from day -> night...
 			}
 
@@ -164,6 +187,7 @@ void main()
 
 		gl_FragColor.a *= var_Color.a;
 	}
+#endif
 
 	if (USE_BLEND > 0.0)
 	{// Emulate RGB blending... Fuck I hate this crap...
