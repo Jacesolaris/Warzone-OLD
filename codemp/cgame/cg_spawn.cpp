@@ -283,8 +283,8 @@ void SP_misc_lodmodel(void) { // UQ1: Todo - move into the foliage areas system,
 		staticmodel->radius = 0;
 	}
 
-	if (staticmodel->overrideShader)
-		trap->Print("LODMODEL: Lod model %i, model %s was set up. Override shader is %s.\n", cgs.numMiscStaticModels - 1, model, staticmodel->overrideShader ? overrideShader : "none");
+	//if (staticmodel->overrideShader)
+	//	trap->Print("LODMODEL: Lod model %i, model %s was set up. Override shader is %s.\n", cgs.numMiscStaticModels - 1, model, staticmodel->overrideShader ? overrideShader : "none");
 }
 qboolean cg_noFogOutsidePortal = qfalse;
 void SP_misc_skyportal( void ) {
