@@ -298,6 +298,7 @@ void SP_path_corner (gentity_t *self);
 void SP_misc_teleporter_dest (gentity_t *self);
 void SP_misc_model(gentity_t *ent);
 void SP_misc_model_static(gentity_t *ent);
+void SP_misc_lodmodel(gentity_t *ent);
 void SP_misc_model_breakable( gentity_t *ent ) ;
 void SP_misc_G2model(gentity_t *ent);
 void SP_misc_portal_camera(gentity_t *ent);
@@ -556,6 +557,7 @@ spawn_t	spawns[] = {
 	{ "misc_faller",						SP_misc_faller },
 	{ "misc_G2model",						SP_misc_G2model },
 	{ "misc_holocron",						SP_misc_holocron },
+	{ "misc_lodmodel",						SP_misc_lodmodel },
 	{ "misc_maglock",						SP_misc_maglock },
 	{ "misc_model",							SP_misc_model },
 	{ "misc_model_ammo_power_converter",	SP_misc_model_ammo_power_converter },

@@ -1894,10 +1894,12 @@ typedef struct cgEffects_s {
 	fxHandle_t	rain;
 } cgEffects_t;
 
-#define MAX_STATIC_MODELS 4000
+//#define MAX_STATIC_MODELS 4000
+#define MAX_STATIC_MODELS 65536
 
 typedef struct cg_staticmodel_s {
 	qhandle_t		model;
+	qhandle_t		overrideShader;
 	vec3_t			org;
 	matrix3_t		axes;
 	float			radius;

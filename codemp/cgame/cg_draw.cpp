@@ -11139,10 +11139,11 @@ void CG_DrawMiscStaticModels( void ) {
 			VectorCopy( cgs.miscStaticModels[i].axes[j], ent.axis[j] );
 		}
 		ent.hModel = cgs.miscStaticModels[i].model;
+		ent.customShader = cgs.miscStaticModels[i].overrideShader;
 
 		VectorSubtract(ent.origin, cg.refdef.vieworg, diff);
 		if (VectorLength(diff)-(cgs.miscStaticModels[i].radius) <= cg.distanceCull) {
-			AddRefEntityToScene( &ent );
+			AddRefEntityToScene(&ent);
 		}
 	}
 }

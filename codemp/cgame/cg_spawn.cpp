@@ -207,6 +207,85 @@ void SP_misc_model_static( void ) {
 		staticmodel->radius = 0;
 	}
 }
+void SP_misc_lodmodel(void) { // UQ1: Todo - move into the foliage areas system, and actually do billboard lods??? For now just testing render speed using models instead of bsp data.
+	char* model = NULL;
+	char* overrideShader = NULL;
+	float angle;
+	vec3_t angles;
+	float scale;
+	vec3_t vScale;
+	vec3_t org;
+	float zoffset;
+	int i;
+	int modelIndex;
+	cg_staticmodel_t *staticmodel;
+
+	if (cgs.numMiscStaticModels >= MAX_STATIC_MODELS) {
+		trap->Error(ERR_DROP, "MAX_STATIC_MODELS(%i) hit", MAX_STATIC_MODELS);
+	}
+
+	CG_SpawnString("model", "", &model);
+
+	if (!model || !model[0]) {
+		trap->Error(ERR_DROP, "misc_lodmodel with no model.");
+	}
+
+	CG_SpawnVector("origin", "0 0 0", org);
+	CG_SpawnFloat("zoffset", "0", &zoffset);
+
+	if (!CG_SpawnVector("angles", "0 0 0", angles)) {
+		if (CG_SpawnFloat("angle", "0", &angle)) {
+			angles[YAW] = angle;
+		}
+	}
+
+	if (!CG_SpawnVector("modelscale_vec", "1 1 1", vScale)) {
+		if (CG_SpawnFloat("modelscale", "1", &scale)) {
+			VectorSet(vScale, scale, scale, scale);
+		}
+	}
+
+	modelIndex = trap->R_RegisterModel(model);
+	if (modelIndex == 0) {
+		trap->Error(ERR_DROP, "misc_lodmodel failed to load model '%s'", model);
+		return;
+	}
+
+	staticmodel = &cgs.miscStaticModels[cgs.numMiscStaticModels++];
+	staticmodel->model = modelIndex;
+
+	staticmodel->overrideShader = 0;
+	CG_SpawnString("_overrideShader", "", &overrideShader);
+	if (overrideShader && overrideShader[0] && strlen(overrideShader) > 4)
+	{
+		staticmodel->overrideShader = trap->R_RegisterShader(overrideShader);
+	}
+	
+	AnglesToAxis(angles, staticmodel->axes);
+	for (i = 0; i < 3; i++) {
+		VectorScale(staticmodel->axes[i], vScale[i], staticmodel->axes[i]);
+	}
+
+	VectorCopy(org, staticmodel->org);
+	staticmodel->zoffset = zoffset;
+
+	if (staticmodel->model) {
+		vec3_t mins, maxs;
+
+		trap->R_ModelBounds(staticmodel->model, mins, maxs);
+
+		VectorScaleVector(mins, vScale, mins);
+		VectorScaleVector(maxs, vScale, maxs);
+
+		staticmodel->radius = RadiusFromBounds(mins, maxs);
+	}
+	else {
+		staticmodel->radius = 0;
+	}
+
+	if (staticmodel->overrideShader)
+		trap->Print("LODMODEL: Lod model %i, model %s was set up. Override shader is %s.\n", cgs.numMiscStaticModels - 1, model, staticmodel->overrideShader ? overrideShader : "none");
+}
 qboolean cg_noFogOutsidePortal = qfalse;
 void SP_misc_skyportal( void ) {
 	qboolean onlyfoghere;
@@ -257,6 +336,7 @@ typedef struct spawn_s {
 /* This array MUST be sorted correctly by alphabetical name field */
 /* for conformity, use lower-case names too */
 spawn_t spawns [] = {
+	{ "misc_lodmodel",			SP_misc_lodmodel },
 	{ "misc_model_static",		SP_misc_model_static		  },
 	{ "misc_skyportal",			SP_misc_skyportal		  },
 	{ "misc_skyportal_orient",	SP_misc_skyportal_orient	  },

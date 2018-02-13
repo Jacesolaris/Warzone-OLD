@@ -330,6 +330,11 @@ void SP_misc_model_static(gentity_t *ent)
 	G_FreeEntity( ent );
 }
 
+void SP_misc_lodmodel(gentity_t *ent)
+{
+	G_FreeEntity( ent );
+}
+
 /*QUAKED misc_model_breakable (1 0 0) (-16 -16 -16) (16 16 16) SOLID AUTOANIMATE DEADSOLID NO_DMODEL NO_SMOKE USE_MODEL USE_NOT_BREAK PLAYER_USE NO_EXPLOSION
 SOLID - Movement is blocked by it, if not set, can still be broken by explosions and shots if it has health
 AUTOANIMATE - Will cycle it's anim
