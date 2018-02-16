@@ -1440,6 +1440,8 @@ int R_GetPairedValue(char *buf, char *key, char *outbuf)
 	return 0; //guess we never found it.
 }
 
+qboolean	DISABLE_DEPTH_PREPASS = qfalse;
+qboolean	LODMODEL_MAP = qfalse;
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
 qboolean	DISABLE_LIFTS_AND_PORTALS_MERGE = qtrue;
 int			MAP_MAX_VIS_RANGE = 0;
@@ -1464,6 +1466,8 @@ float		MAP_GLOW_MULTIPLIER_NIGHT = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE_NIGHT = 1.0;
 float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
+float		MAP_HDR_MIN = 26.0;
+float		MAP_HDR_MAX = 209.0;
 qboolean	AURORA_ENABLED = qtrue;
 qboolean	AURORA_ENABLED_DAY = qfalse;
 qboolean	AO_ENABLED = qtrue;
@@ -1547,6 +1551,8 @@ void MAPPING_LoadMapInfo(void)
 	//
 	// Horrible hacks for basejka maps... Don't use them! Fix your maps for warzone!
 	//
+	LODMODEL_MAP = (atoi(IniRead(mapname, "FIXES", "LODMODEL_MAP", "0")) > 0) ? qtrue : qfalse;
+	DISABLE_DEPTH_PREPASS = (atoi(IniRead(mapname, "FIXES", "DISABLE_DEPTH_PREPASS", "0")) > 0) ? qtrue : qfalse;
 	MAP_MAX_VIS_RANGE = atoi(IniRead(mapname, "FIXES", "MAP_MAX_VIS_RANGE", "0"));
 	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
 	DISABLE_LIFTS_AND_PORTALS_MERGE = (atoi(IniRead(mapname, "FIXES", "DISABLE_LIFTS_AND_PORTALS_MERGE", "1")) > 0) ? qtrue : qfalse;
@@ -1643,6 +1649,9 @@ void MAPPING_LoadMapInfo(void)
 	MAP_AMBIENT_CSB_NIGHT[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_CONTRAST_NIGHT", va("%f", MAP_AMBIENT_CSB[0]*0.9)));
 	MAP_AMBIENT_CSB_NIGHT[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_SATURATION_NIGHT", va("%f", MAP_AMBIENT_CSB[1]*0.9)));
 	MAP_AMBIENT_CSB_NIGHT[2] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_BRIGHTNESS_NIGHT", va("%f", MAP_AMBIENT_CSB[2]*0.55)));
+
+	MAP_HDR_MIN = atof(IniRead(mapname, "PALETTE", "MAP_HDR_MIN", "26.0"));
+	MAP_HDR_MAX = atof(IniRead(mapname, "PALETTE", "MAP_HDR_MAX", "209.0"));
 
 	MAP_GLOW_MULTIPLIER = atof(IniRead(mapname, "PALETTE", "MAP_GLOW_MULTIPLIER", "1.0"));
 
@@ -1822,8 +1831,12 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
-	strcpy(ROAD_TEXTURE, IniRead(mapname, "ROADS", "ROADS_TEXTURE", "textures/roads/defaultRoad01.png"));
-	tr.roadImage = R_FindImageFile(ROAD_TEXTURE, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	memset(ROAD_TEXTURE, 0, sizeof(ROAD_TEXTURE));
+	if (tr.roadsMapImage != tr.blackImage)
+	{
+		strcpy(ROAD_TEXTURE, IniRead(mapname, "ROADS", "ROADS_TEXTURE", "textures/roads/defaultRoad01.png"));
+		tr.roadImage = R_FindImageFile(ROAD_TEXTURE, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	}
 
 	//
 	// Override climate file climate options with mapInfo ones, if found...
@@ -1898,7 +1911,8 @@ void MAPPING_LoadMapInfo(void)
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Max vis range is ^7%s^5 on this map.\n", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lodmodels are ^7%s^5 on this map.\n", LODMODEL_MAP ? "USED" : "UNUSED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Depth prepass is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_DEPTH_PREPASS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and lifts and portals merging is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", DISABLE_LIFTS_AND_PORTALS_MERGE ? "ENABLED" : "DISABLED");
 	
@@ -1909,6 +1923,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);

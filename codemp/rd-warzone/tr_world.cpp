@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
 extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 
+extern qboolean LODMODEL_MAP;
+
 /*
 ================
 R_CullSurface
@@ -55,6 +57,8 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		if (cdistance > tr.occlusionZfar * 1.75)
 		{// Out of view range, but we still want it on depth draws...
 			surf->depthDrawOnly = qtrue;
+
+			//if (LODMODEL_MAP) return qtrue;
 		}
 	}
 #endif //__ZFAR_CULLING__

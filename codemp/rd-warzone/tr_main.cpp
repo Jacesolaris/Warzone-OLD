@@ -1805,6 +1805,8 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
 
+extern qboolean LODMODEL_MAP;
+
 static void R_AddEntitySurface (int entityNum)
 {
 	trRefEntity_t	*ent;
@@ -1854,15 +1856,10 @@ static void R_AddEntitySurface (int entityNum)
 		}
 
 		
-		if (tr.viewParms.flags & VPF_SHADOWPASS)
-		{
+		if (!LODMODEL_MAP && (tr.viewParms.flags & VPF_SHADOWPASS))
+		{// Only allow models at range to be drawn on LODMODEL_MAP maps...
 			if (ent && Distance(ent->e.origin, tr.refdef.vieworg) > tr.viewParms.maxEntityRange)
 				return; // Too far away to bother rendering to shadowmap...
-		}
-		else 
-		{
-			//if (ent && Distance(ent->e.origin, tr.refdef.vieworg) > 4096.0)
-			//	return; // Too far away to bother rendering to shadowmap...
 		}
 	}
 #endif
@@ -2841,7 +2838,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 
 			R_AddPolygonSurfaces();
 
-			if (level < 2)
+			if (level < 2 || LODMODEL_MAP)
 				R_AddEntitySurfaces ();
 
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );

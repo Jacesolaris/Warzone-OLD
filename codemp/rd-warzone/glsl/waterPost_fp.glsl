@@ -58,7 +58,7 @@ uniform vec3		u_PrimaryLightColor;
 
 #define				MAP_WATER_LEVEL u_Local1.r
 
-#define MAX_DEFERRED_LIGHTS 128
+#define MAX_DEFERRED_LIGHTS 64//128
 
 uniform int			u_lightCount;
 uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];

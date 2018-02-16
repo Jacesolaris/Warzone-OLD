@@ -1801,6 +1801,8 @@ RB_DrawSurfs
 =============
 */
 
+extern qboolean DISABLE_DEPTH_PREPASS;
+
 const void	*RB_DrawSurfs( const void *data ) {
 	const drawSurfsCommand_t	*cmd;
 
@@ -1822,7 +1824,8 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglEnable(GL_DEPTH_CLAMP);
 	}
 
-	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && (r_depthPrepass->integer || (backEnd.viewParms.flags & VPF_DEPTHSHADOW)))
+	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) 
+		&& ((r_depthPrepass->integer && !DISABLE_DEPTH_PREPASS) || backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
 		//FBO_t *oldFbo = glState.currentFBO;
 
@@ -1876,6 +1879,11 @@ const void	*RB_DrawSurfs( const void *data ) {
 	if (backEnd.viewParms.flags & VPF_DEPTHCLAMP)
 	{
 		qglDisable(GL_DEPTH_CLAMP);
+	}
+
+	if (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
+	{
+		return (const void *)(cmd + 1);
 	}
 
 	if (!(backEnd.viewParms.flags & VPF_SHADOWPASS) && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW))

@@ -7,6 +7,7 @@ uniform vec4		u_Local9;
 
 #define M_PI				3.14159265358979323846
 
+#if 0
 vec3 vectoangles( in vec3 value1 ) {
 	float	forward;
 	float	yaw, pitch;
@@ -48,9 +49,11 @@ vec3 vectoangles( in vec3 value1 ) {
 
 	return angles;
 }
+#endif
 
 bool SlopeTooGreat(vec3 normal)
 {
+#if 0
 	float pitch = vectoangles( normal.xyz ).r;
 	
 	if (pitch > 180)
@@ -68,6 +71,12 @@ bool SlopeTooGreat(vec3 normal)
 	{
 		return true; // This slope is too steep for grass...
 	}
+#else
+	if (normal.z <= 0.73 && normal.z >= -0.73)
+	{
+		return true;
+	}
+#endif
 
 	return false;
 }

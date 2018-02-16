@@ -283,6 +283,7 @@ void GetBlending(vec3 normal)
 	var_Blending = blend_weights;
 }
 
+#if 0
 vec3 vectoangles(in vec3 value1) {
 	float	forward;
 	float	yaw, pitch;
@@ -324,6 +325,7 @@ vec3 vectoangles(in vec3 value1) {
 
 	return angles;
 }
+#endif
 
 void main()
 {
@@ -426,6 +428,7 @@ void main()
 
 		if (SHADER_HAS_STEEPMAP > 0.0)
 		{// Steep maps...
+#if 0
 			float pitch = vectoangles(normalize(normal.xyz)).r;
 
 			if (pitch > 180)
@@ -448,6 +451,16 @@ void main()
 			{
 				var_Slope = 0.0;
 			}
+#else
+			if (normal.z <= 0.73 && normal.z >= -0.73)
+			{
+				var_Slope = 1.0;
+			}
+			else
+			{
+				var_Slope = 0.0;
+			}
+#endif
 		}
 	}
 

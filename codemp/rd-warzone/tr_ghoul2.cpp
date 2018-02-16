@@ -218,6 +218,7 @@ class CBoneCache
 		{
 			// need to evaluate the bone
 			assert((mFinalBones[index].parent>=0&&mFinalBones[index].parent<(int)mFinalBones.size())||(index==0&&mFinalBones[index].parent==-1));
+			
 			if (mFinalBones[index].parent>=0)
 			{
 				EvalLow(mFinalBones[index].parent); // make sure parent is evaluated

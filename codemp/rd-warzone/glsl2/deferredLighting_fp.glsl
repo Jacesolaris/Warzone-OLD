@@ -3,6 +3,7 @@
 #define __ENVMAP__
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
+//#define __HEIGHTMAP_SHADOWS__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -31,7 +32,7 @@ uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMI
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
-uniform vec4		u_Local8; // enableReflections, 0.0, 0.0, 0.0
+uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_SIZE[2]
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -41,7 +42,7 @@ uniform vec3		u_PrimaryLightColor;
 uniform vec4		u_CubeMapInfo;
 uniform float		u_CubeMapStrength;
 
-#define MAX_DEFERRED_LIGHTS 128//64//16//24
+#define MAX_DEFERRED_LIGHTS 64//128
 
 uniform int			u_lightCount;
 //uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
@@ -54,6 +55,9 @@ varying vec2		var_TexCoords;
 
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
+
+#define hdr_const_1 (u_Local8.g / 255.0)
+#define hdr_const_2 (255.0 / u_Local8.b)
 
 vec3 DecodeNormal(in vec2 N)
 {
@@ -237,6 +241,9 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		break;
 	}
 
+	specularScale = specularScale * 0.5 + 0.5;
+	cubemapScale = cubemapScale * 0.75 + 0.25;
+
 	settings.x = specularScale;
 	settings.y = cubemapScale;
 	settings.z = parallaxScale;
@@ -295,7 +302,7 @@ float getHeight(vec2 uv) {
 #define ph pixel.y
 vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 origNorm, vec3 inColor, float reflectiveness)
 {
-	if (reflectiveness <= u_Local3.a)
+	if (reflectiveness <= 0.5)
 	{// Top of screen pixel is water, don't check...
 		return inColor;
 	}
@@ -513,14 +520,51 @@ vec3 envMap(vec3 p, float warmth)
 #endif //__ENVMAP__
 
 
+#ifdef __HEIGHTMAP_SHADOWS__
+vec3 getTexture(vec2 uv) {
+	return texture(u_PositionMap, uv).rgb;
+}
+
+float getHeightmap(vec2 uv) {
+	//const float inv3 = 1.0 / 3.0;
+	//return dot(getTexture(uv), vec3(inv3));
+	return (getTexture(uv).z / u_Local8.a) * 2.0 - 1.0;
+}
+
+float getShadow(vec2 uv, vec3 lp) {
+	const int steps = 64;
+	const float invSteps = 1.0 / float(steps);
+
+	vec3 inc = lp.xzy * invSteps;
+	float heightmap = getHeightmap(uv);
+	vec3 position = vec3(uv, heightmap);
+
+	float shadow = 1.0;
+
+	for (int i = 0; i < steps && position.z < 1.0; i++) {
+		position += inc;
+		float offsetHightmap = getHeightmap(position.xy);
+
+		if (offsetHightmap > position.z)
+		{
+			return 0.0;
+		}
+
+	}
+	return 1.0;
+}
+
+float GetShadow(vec2 texCoords, vec3 lightPos)
+{
+	//vec3 lightPos = normalize(vec3(u_Local3.rg, 1.0));
+	return getShadow(texCoords, lightPos);
+}
+#endif //__HEIGHTMAP_SHADOWS__
+
 
 vec3 TrueHDR ( vec3 color )
 {
-//#define const_1 ( 12.0 / 255.0)
-//#define const_2 (255.0 / 229.0)
-#define const_1 ( 26.0 / 255.0)
-#define const_2 (255.0 / 209.0)
-	return clamp((clamp(color.rgb - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
+	return clamp((clamp(color.rgb - hdr_const_1, 0.0, 1.0)) * hdr_const_2, 0.0, 1.0);
 }
 
 vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
@@ -549,7 +593,7 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 float getspecular(vec3 n, vec3 l, vec3 e, float s) {
 	//float nrm = (s + 8.0) / (3.1415 * 8.0);
 	float ndotl = clamp(max(dot(reflect(e, n), l), 0.0), 0.1, 1.0);
-	return pow(ndotl, s);// * nrm;
+	return clamp(pow(ndotl, s), 0.1, 1.0);// * nrm;
 }
 vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower) {
 	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0) * 6.0;
@@ -860,6 +904,34 @@ void main(void)
 	}
 #endif
 
+//#define __DEBUG_LIGHT__
+
+#ifdef __DEBUG_LIGHT__
+	if (u_Local3.r == 1.0)
+	{// Debug position map by showing pixel distance from view...
+		outColor.rgb = vec3(clamp(materialSettings.x, 0.0, 1.0));
+		outColor.a = 1.0;
+		gl_FragColor = outColor;
+		return;
+	}
+
+	if (u_Local3.r == 2.0)
+	{// Debug position map by showing pixel distance from view...
+		outColor.rgb = vec3(clamp(materialSettings.y, 0.0, 1.0));
+		outColor.a = 1.0;
+		gl_FragColor = outColor;
+		return;
+	}
+
+	if (u_Local3.r == 3.0)
+	{// Debug position map by showing pixel distance from view...
+		outColor.rgb = vec3(clamp(lightGlossinessFactor, 0.0, 1.0));
+		outColor.a = 1.0;
+		gl_FragColor = outColor;
+		return;
+	}
+#endif
+
 	if (specularPower > 0.0)
 	{
 		specular = ContrastSaturationBrightness(outColor.rgb, -1.5, 0.05, 8.0);
@@ -955,8 +1027,8 @@ void main(void)
 
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(materialSettings.y, 2.0) * u_Local7.a * glossinessFactor/*greynessFactor*/, 0.0, 1.0));
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0) * glossinessFactor/*greynessFactor*/);
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(materialSettings.y, 2.0) * u_Local7.a * glossinessFactor, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0) * glossinessFactor);
 	}
 
 
@@ -976,8 +1048,7 @@ void main(void)
 			}
 
 			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
-			float power = maxBright * 0.75;
-			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
+			float power = clamp(pow(maxBright * 0.75, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 		
 			vec3 lightColor = u_PrimaryLightColor.rgb;
 
@@ -986,10 +1057,10 @@ void main(void)
 			if (lightMult > 0.0)
 			{
 				lightColor *= lightMult;
-				lightColor = blinn_phong(N, E, normalize(-to_light_norm), outColor.rgb * lightColor, (outColor.rgb * lightColor) * phongFactor, 1.0);
-				float maxStr = max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
-				lightColor *= maxStr;
+				lightColor = blinn_phong(N, E, normalize(-to_light_norm), outColor.rgb * lightColor, (outColor.rgb * lightColor), 1.0);
+				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
+				lightColor = clamp(lightColor, 0.0, 0.7);
 
 				// Add vibrancy to light color at sunset/sunrise???
 				if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
@@ -1001,10 +1072,10 @@ void main(void)
 						downScale *= 4.0;
 						vib = mix(vib, 0.0, clamp(downScale, 0.0, 1.0));
 					}
-					lightColor = Vibrancy( lightColor, vib * 4.0 );
+					lightColor = Vibrancy( lightColor, clamp(vib * 4.0, 0.0, 1.0) );
 				}
 
-				lightColor.rgb *= lightGlossinessFactor;
+				lightColor.rgb *= lightGlossinessFactor * phongFactor;
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
@@ -1056,7 +1127,7 @@ void main(void)
 						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
 					
-					addedLight.rgb += blinn_phong(N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, lightGlossinessFactor)) * lightStrength * light_occlusion;
+					addedLight.rgb += blinn_phong(N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, lightGlossinessFactor)) * lightStrength * light_occlusion * phongFactor;
 				}
 			}
 
@@ -1144,7 +1215,17 @@ void main(void)
 	}
 #endif //__ENVMAP__
 
-	#if defined(USE_SHADOWMAP)
+#ifdef __HEIGHTMAP_SHADOWS__
+	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
+	{
+		float hshadow = GetShadow(texCoords, -to_light_norm);
+		float finalShadow = clamp(hshadow + u_Local3.b, u_Local3.b, u_Local3.a);
+		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
+		outColor.rgb *= finalShadow;
+	}
+#endif //__HEIGHTMAP_SHADOWS__
+
+#if defined(USE_SHADOWMAP)
 	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
 	{
 		float shadowValue = texture(u_ShadowMap, texCoords).r;
@@ -1161,8 +1242,8 @@ void main(void)
 #endif //defined(USE_SHADOWMAP)
 
 	// De-emphasize (darken) the distant map a bit...
-	//float depth = clamp(pow(1.0 - texture(u_ScreenDepthMap, texCoords).r, u_Local3.r), u_Local3.g, 1.0);
-	float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0);
+	float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0); // darken distant
+	//float depth = clamp(pow(clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5) * 100000.0 + 1.0, 1.0, 2.0); // brighten distant
 	outColor.rgb *= depth;
 
 	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))

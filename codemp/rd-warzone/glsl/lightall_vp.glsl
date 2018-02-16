@@ -274,57 +274,6 @@ float CalcFog(vec3 position)
 }
 #endif
 
-void GetBlending(vec3 normal)
-{
-	vec3 blend_weights = abs(normalize(normal.xyz));   // Tighten up the blending zone:
-	blend_weights = (blend_weights - 0.2) * 7.0;
-	blend_weights = max(blend_weights, 0.0);      // Force weights to sum to 1.0 (very important!)
-	blend_weights /= vec3(blend_weights.x + blend_weights.y + blend_weights.z);
-	var_Blending = blend_weights;
-}
-
-vec3 vectoangles(in vec3 value1) {
-	float	forward;
-	float	yaw, pitch;
-	vec3	angles;
-
-	if (value1.g == 0 && value1.r == 0) {
-		yaw = 0;
-		if (value1.b > 0) {
-			pitch = 90;
-		}
-		else {
-			pitch = 270;
-		}
-	}
-	else {
-		if (value1.r > 0) {
-			yaw = (atan(value1.g, value1.r) * 180 / M_PI);
-		}
-		else if (value1.g > 0) {
-			yaw = 90;
-		}
-		else {
-			yaw = 270;
-		}
-		if (yaw < 0) {
-			yaw += 360;
-		}
-
-		forward = sqrt(value1.r*value1.r + value1.g*value1.g);
-		pitch = (atan(value1.b, forward) * 180 / M_PI);
-		if (pitch < 0) {
-			pitch += 360;
-		}
-	}
-
-	angles.r = -pitch;
-	angles.g = yaw;
-	angles.b = 0.0;
-
-	return angles;
-}
-
 void main()
 {
 	vec3 position;
@@ -348,8 +297,8 @@ void main()
 		{
 			int boneIndex = int(attr_BoneIndexes[i]);
 
-			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
-			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
+			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
+			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
 		}
 
 		position = position4.xyz;

@@ -204,8 +204,8 @@ void main()
 		{
 			int boneIndex = int(attr_BoneIndexes[i]);
 
-			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
-			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
+			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
+			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
 		}
 
 		position = position4.xyz;

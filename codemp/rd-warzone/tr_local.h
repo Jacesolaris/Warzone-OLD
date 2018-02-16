@@ -79,6 +79,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
+//#define __DEPTH_PREPASS_STUFF__
 
 #define __OCEAN__
 //#define __ORIG_OCEAN__
@@ -98,7 +99,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 
 #define DISTANCE_BETWEEN_CUBEMAPS	1024
-#define	MAX_DEFERRED_LIGHTS			128
+#define	MAX_DEFERRED_LIGHTS			64//128
 
 #define MAX_IMAGE_PATH				256
 

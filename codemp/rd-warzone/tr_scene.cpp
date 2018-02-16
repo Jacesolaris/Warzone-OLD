@@ -680,32 +680,46 @@ void RE_BeginScene(const refdef_t *fd)
 
 	VectorCopy(tr.sunDirection, tr.refdef.sunDir);
 
-	if ((tr.refdef.rdflags & RDF_NOWORLDMODEL) || !(r_depthPrepass->value)){
-		tr.refdef.colorScale = 1.0f;
-		VectorSet(tr.refdef.sunCol, 0, 0, 0);
-		VectorSet(tr.refdef.sunAmbCol, 0, 0, 0);
-	}
-	else
+	float colorScale = 1.0;
+
+	if (r_forceSun->integer)
+		colorScale = (r_forceSun->integer) ? r_forceSunMapLightScale->value : tr.mapLightScale;
+	else if (r_sunlightMode->integer >= 2)
+		colorScale = 0.75;
+
+	tr.refdef.colorScale = colorScale;
+
+	if (r_sunlightMode->integer >= 1)
 	{
-		float colorScale = 1.0;
+		float ambCol = 1.0;
 
-		if (r_forceSun->integer)
-			colorScale = (r_forceSun->integer) ? r_forceSunMapLightScale->value : tr.mapLightScale;
+		if (r_forceSun->integer || r_dlightShadows->integer)
+			ambCol = (r_forceSun->integer) ? r_forceSunAmbientScale->value : tr.sunShadowScale;
 		else if (r_sunlightMode->integer >= 2)
-			colorScale = 0.75;
-
-		tr.refdef.colorScale = colorScale;
-
-		if (r_sunlightMode->integer >= 1)
-		{
-			float ambCol = 1.0;
-
-			if (r_forceSun->integer || r_dlightShadows->integer)
-				ambCol = (r_forceSun->integer) ? r_forceSunAmbientScale->value : tr.sunShadowScale;
-			else if (r_sunlightMode->integer >= 2)
-				ambCol = 0.75;
+			ambCol = 0.75;
 
 #ifndef __DAY_NIGHT__
+		tr.refdef.sunCol[0] =
+			tr.refdef.sunCol[1] =
+			tr.refdef.sunCol[2] = 1.0f;
+
+		tr.refdef.sunAmbCol[0] =
+			tr.refdef.sunAmbCol[1] =
+			tr.refdef.sunAmbCol[2] = ambCol;
+#else //__DAY_NIGHT__
+		if (DAY_NIGHT_CYCLE_ENABLED)
+		{
+			/*
+			tr.refdef.sunAmbCol[0] *= ambCol;
+			tr.refdef.sunAmbCol[1] *= ambCol;
+			tr.refdef.sunAmbCol[2] *= ambCol;
+			*/
+
+			RB_UpdateDayNightCycle();
+			VectorNormalize(tr.sunDirection);
+			VectorCopy(tr.sunDirection, tr.refdef.sunDir);
+
+			/*
 			tr.refdef.sunCol[0] =
 				tr.refdef.sunCol[1] =
 				tr.refdef.sunCol[2] = 1.0f;
@@ -713,62 +727,40 @@ void RE_BeginScene(const refdef_t *fd)
 			tr.refdef.sunAmbCol[0] =
 				tr.refdef.sunAmbCol[1] =
 				tr.refdef.sunAmbCol[2] = ambCol;
-#else //__DAY_NIGHT__
-			if (DAY_NIGHT_CYCLE_ENABLED)
-			{
-				/*
-				tr.refdef.sunAmbCol[0] *= ambCol;
-				tr.refdef.sunAmbCol[1] *= ambCol;
-				tr.refdef.sunAmbCol[2] *= ambCol;
-				*/
+			*/
 
-				RB_UpdateDayNightCycle();
-				VectorNormalize(tr.sunDirection);
-				VectorCopy(tr.sunDirection, tr.refdef.sunDir);
-
-				/*
-				tr.refdef.sunCol[0] =
-					tr.refdef.sunCol[1] =
-					tr.refdef.sunCol[2] = 1.0f;
-
-				tr.refdef.sunAmbCol[0] =
-					tr.refdef.sunAmbCol[1] =
-					tr.refdef.sunAmbCol[2] = ambCol;
-				*/
-
-				VectorCopy(SUN_COLOR_MAIN, tr.refdef.sunCol);
-				VectorCopy(SUN_COLOR_AMBIENT, tr.refdef.sunAmbCol);
-			}
-			else
-			{
-				/*
-				tr.refdef.sunCol[0] =
-					tr.refdef.sunCol[1] =
-					tr.refdef.sunCol[2] = 1.0f;
-
-				tr.refdef.sunAmbCol[0] =
-					tr.refdef.sunAmbCol[1] =
-					tr.refdef.sunAmbCol[2] = ambCol;
-				*/
-
-				VectorCopy(SUN_COLOR_MAIN, tr.refdef.sunCol);
-				VectorCopy(SUN_COLOR_AMBIENT, tr.refdef.sunAmbCol);
-			}
-#endif //__DAY_NIGHT__
+			VectorCopy(SUN_COLOR_MAIN, tr.refdef.sunCol);
+			VectorCopy(SUN_COLOR_AMBIENT, tr.refdef.sunAmbCol);
 		}
 		else
 		{
-			float scale = pow(2.0f, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
-			if (r_sunlightMode->integer/*r_forceSun->integer || r_dlightShadows->integer*/)
-			{
-				VectorScale(tr.sunLight, scale * r_forceSunLightScale->value, tr.refdef.sunCol);
-				VectorScale(tr.sunLight, scale * r_forceSunAmbientScale->value, tr.refdef.sunAmbCol);
-			}
-			else
-			{
-				VectorScale(tr.sunLight, scale, tr.refdef.sunCol);
-				VectorScale(tr.sunLight, scale * tr.sunShadowScale, tr.refdef.sunAmbCol);
-			}
+			/*
+			tr.refdef.sunCol[0] =
+				tr.refdef.sunCol[1] =
+				tr.refdef.sunCol[2] = 1.0f;
+
+			tr.refdef.sunAmbCol[0] =
+				tr.refdef.sunAmbCol[1] =
+				tr.refdef.sunAmbCol[2] = ambCol;
+			*/
+
+			VectorCopy(SUN_COLOR_MAIN, tr.refdef.sunCol);
+			VectorCopy(SUN_COLOR_AMBIENT, tr.refdef.sunAmbCol);
+		}
+#endif //__DAY_NIGHT__
+	}
+	else
+	{
+		float scale = pow(2.0f, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
+		if (r_sunlightMode->integer/*r_forceSun->integer || r_dlightShadows->integer*/)
+		{
+			VectorScale(tr.sunLight, scale * r_forceSunLightScale->value, tr.refdef.sunCol);
+			VectorScale(tr.sunLight, scale * r_forceSunAmbientScale->value, tr.refdef.sunAmbCol);
+		}
+		else
+		{
+			VectorScale(tr.sunLight, scale, tr.refdef.sunCol);
+			VectorScale(tr.sunLight, scale * tr.sunShadowScale, tr.refdef.sunAmbCol);
 		}
 	}
 
@@ -1188,9 +1180,6 @@ void RE_RenderScene(const refdef_t *fd) {
 
 	VectorCopy(fd->vieworg, parms.pvsOrigin);
 
-	/*if (!(fd->rdflags & RDF_NOWORLDMODEL)
-		&& r_depthPrepass->value
-		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))*/
 	if (!(fd->rdflags & RDF_NOWORLDMODEL)
 		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
 		&& !backEnd.depthFill
