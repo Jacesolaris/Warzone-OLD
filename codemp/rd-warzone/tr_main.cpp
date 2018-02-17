@@ -1717,9 +1717,9 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 		| (postRender << QSORT_POSTRENDER_SHIFT) | (int64_t)dlightMap;
 	tr.refdef.drawSurfs[index].cubemapIndex = cubemap;
 	tr.refdef.drawSurfs[index].surface = surface;
-#ifdef __ZFAR_CULLING__
+#ifdef __ZFAR_CULLING_ON_SURFACES__
 	tr.refdef.drawSurfs[index].depthDrawOnly = depthDrawOnly;
-#endif //__ZFAR_CULLING__
+#endif //__ZFAR_CULLING_ON_SURFACES__
 	tr.refdef.numDrawSurfs++;
 }
 

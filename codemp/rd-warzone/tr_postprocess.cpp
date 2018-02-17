@@ -2296,6 +2296,7 @@ extern vec4_t		currentPlayerCubemapVec;
 extern float		currentPlayerCubemapDistance;
 #endif //__PLAYER_BASED_CUBEMAPS__
 
+extern float		SKY_LIGHTING_SCALE;
 extern float		MAP_GLOW_MULTIPLIER;
 extern float		MAP_GLOW_MULTIPLIER_NIGHT;
 extern qboolean		MAP_REFLECTION_ENABLED;
@@ -2495,7 +2496,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL6, local6);
 
 	vec4_t local7;
-	VectorSet4(local7, cubeMapNum >= 0 ? 1.0 : 0.0, r_cubemapCullRange->value, r_cubeMapSize->integer, r_skyLightContribution->value);
+	VectorSet4(local7, cubeMapNum >= 0 ? 1.0 : 0.0, r_cubemapCullRange->value, r_cubeMapSize->integer, r_skyLightContribution->value*SKY_LIGHTING_SCALE);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL7, local7);
 
 	vec4_t local8;

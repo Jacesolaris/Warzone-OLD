@@ -1463,6 +1463,7 @@ float		MAP_GLOW_MULTIPLIER = 1.0;
 vec3_t		MAP_AMBIENT_CSB_NIGHT = { 1 };
 vec3_t		MAP_AMBIENT_COLOR_NIGHT = { 1 };
 float		MAP_GLOW_MULTIPLIER_NIGHT = 1.0;
+float		SKY_LIGHTING_SCALE = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE_NIGHT = 1.0;
 float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
@@ -1656,6 +1657,8 @@ void MAPPING_LoadMapInfo(void)
 	MAP_GLOW_MULTIPLIER = atof(IniRead(mapname, "PALETTE", "MAP_GLOW_MULTIPLIER", "1.0"));
 
 	MAP_GLOW_MULTIPLIER_NIGHT = atof(IniRead(mapname, "PALETTE", "MAP_GLOW_MULTIPLIER_NIGHT", va("%f", MAP_GLOW_MULTIPLIER)));
+
+	SKY_LIGHTING_SCALE = atof(IniRead(mapname, "PALETTE", "SKY_LIGHTING_SCALE", "1.0"));
 
 	//
 	// Ambient Occlusion...
@@ -1924,14 +1927,17 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sky lighting scale is ^7%.4f^5 on this map.\n", SKY_LIGHTING_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and night emissive color scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_COLOR_SCALE_NIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_RADIUS_SCALE);
+	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion blur is ^7%s^5 and Directional Occlusion is ^7%s^5 on this map.\n", AO_BLUR ? "ENABLED" : "DISABLED", AO_DIRECTIONAL ? "ENABLED" : "DISABLED");
+	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");

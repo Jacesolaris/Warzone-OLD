@@ -82,162 +82,130 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 		specularScale = 1.0;
 		cubemapScale = 0.7;
-		parallaxScale = 1.5;
 		break;
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 		specularScale = 0.75;
-		cubemapScale = 0.15;
-		parallaxScale = 1.5;
+		cubemapScale = 0.35;
 		break;
 	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		specularScale = 0.75;
-		cubemapScale = 0.15;
-		parallaxScale = 1.5;
+		cubemapScale = 0.35;
 		break;
 	case MATERIAL_SAND:				// 8			// sandy beach
-		specularScale = 0.65;
-		cubemapScale = 0.2;
-		parallaxScale = 1.5;
+		specularScale = 0.35;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_CARPET:			// 27			// lush carpet
 		specularScale = 0.25;
-		cubemapScale = 0.05;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_GRAVEL:			// 9			// lots of small stones
 		specularScale = 0.30;
-		cubemapScale = 0.05;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_ROCK:				// 23			//
 		specularScale = 0.22;
-		cubemapScale = 0.07;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
 		specularScale = 0.56;
 		cubemapScale = 0.15;
-		parallaxScale = 1.5;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 		specularScale = 0.05;
-		cubemapScale = 0.07;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 		specularScale = 0.025;
-		cubemapScale = 0.07;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		specularScale = 0.98;
 		cubemapScale = 0.98;
-		parallaxScale = 1.5;
 		break;
 	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
 		specularScale = 1.0;
 		cubemapScale = 0.98;
-		parallaxScale = 1.5;
 		break;
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		specularScale = 0.35;
-		cubemapScale = 0.1;
-		parallaxScale = 0.0;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 		specularScale = 0.95;
-		cubemapScale = 0.2;
-		parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
+		cubemapScale = 0.35;
 		break;
 	case MATERIAL_FABRIC:			// 21			// Cotton sheets
 		specularScale = 0.45;
-		cubemapScale = 0.1;
-		parallaxScale = 1.5;
+		cubemapScale = 0.35;
 		break;
 	case MATERIAL_CANVAS:			// 22			// tent material
 		specularScale = 0.35;
-		cubemapScale = 0.1;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_MARBLE:			// 12			// marble floors
 		specularScale = 0.65;
 		cubemapScale = 0.46;
-		parallaxScale = 1.5;
 		break;
 	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		specularScale = 0.75;
-		cubemapScale = 0.25;
-		parallaxScale = 1.5;
+		specularScale = 0.35;
+		cubemapScale = 0.65;
 		break;
 	case MATERIAL_MUD:				// 17			// wet soil
 		specularScale = 0.25;
-		cubemapScale = 0.15;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_DIRT:				// 7			// hard mud
 		specularScale = 0.15;
-		cubemapScale = 0.07;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 		specularScale = 0.375;
-		cubemapScale = 0.1;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 		specularScale = 0.25;
-		cubemapScale = 0.1;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 		specularScale = 0.25;
-		cubemapScale = 0.07;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_PLASTIC:			// 25			//
 		specularScale = 0.58;
-		cubemapScale = 0.28;
-		parallaxScale = 1.5;
+		cubemapScale = 0.48;
 		break;
 	case MATERIAL_PLASTER:			// 28			// drywall style plaster
 		specularScale = 0.3;
-		cubemapScale = 0.1;
-		parallaxScale = 1.5;
+		cubemapScale = 0.0;
 		break;
 	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		specularScale = 0.93;
-		cubemapScale = 0.37;
-		parallaxScale = 1.0;
+		specularScale = 0.35;
+		cubemapScale = 0.67;
 		break;
 	case MATERIAL_ARMOR:			// 30			// body armor
-		specularScale = 0.5;
+		specularScale = 0.65;
 		cubemapScale = 0.66;
-		parallaxScale = 1.5;
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		specularScale = 0.75;
-		cubemapScale = 0.58;
-		parallaxScale = 2.0;
+		specularScale = 0.35;
+		cubemapScale = 0.78;
 		break;
 	case MATERIAL_GLASS:			// 10			//
-		specularScale = 0.95;
-		cubemapScale = 0.50;
-		parallaxScale = 1.0;
+		specularScale = 0.35;
+		cubemapScale = 0.70;
 		break;
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		specularScale = 0.93;
-		cubemapScale = 0.50;
-		parallaxScale = 1.0;
+		specularScale = 0.33;
+		cubemapScale = 0.70;
 		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		specularScale = 0.92;
-		cubemapScale = 0.48;
-		parallaxScale = 1.5;
+		specularScale = 0.52;
+		cubemapScale = 0.68;
 		break;
 	default:
-		specularScale = 0.15;
-		cubemapScale = 0.15;
-		parallaxScale = 1.0;
+		specularScale = 0.4;
+		cubemapScale = 0.2;
 		break;
 	}
 
@@ -581,8 +549,9 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
-#define __LIGHTING_TYPE_1__
+//#define __LIGHTING_TYPE_1__
 //#define __LIGHTING_TYPE_2__
+#define __LIGHTING_TYPE_3__
 
 #if defined(__LIGHTING_TYPE_1__)
 // lighting
@@ -628,6 +597,143 @@ vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 spe
 	}
 
 	return diffuse + specular;
+}
+#elif defined(__LIGHTING_TYPE_3__)
+float specTrowbridgeReitz(float HoN, float a, float aP)
+{
+	float a2 = a * a;
+	float aP2 = aP * aP;
+	return (a2 * aP2) / pow(HoN * HoN * (a2 - 1.0) + 1.0, 2.0);
+}
+
+float visSchlickSmithMod(float NoL, float NoV, float r)
+{
+	float k = pow(r * 0.5 + 0.5, 2.0) * 0.5;
+	float l = NoL * (1.0 - k) + k;
+	float v = NoV * (1.0 - k) + k;
+	return 1.0 / (4.0 * l * v);
+}
+
+float fresSchlickSmith(float HoV, float f0)
+{
+	return f0 + (1.0 - f0) * pow(1.0 - HoV, 5.0);
+}
+
+float sphereLight(vec3 pos, vec3 N, vec3 V, vec3 r, float f0, float roughness, float NoV, out float NoL, vec3 lightPos)
+{
+#define sphereRad 0.2//0.3
+
+	//vec3 L = lightPos - pos;
+	//vec3 l = normalize(L);
+	//vec3 h = normalize(V + l);
+
+	vec3 L = normalize(lightPos - pos);
+	vec3 centerToRay = dot(L, r) * r - L;
+	vec3 closestPoint = L + centerToRay * clamp(sphereRad / length(centerToRay), 0.0, 1.0);
+	vec3 l = normalize(closestPoint);
+	vec3 h = normalize(V + l);
+
+
+	NoL = clamp(dot(N, l), 0.0, 1.0);
+	float HoN = clamp(dot(h, N), 0.0, 1.0);
+	float HoV = dot(h, V);
+
+	float distL = length(L);
+	float alpha = roughness * roughness;
+	float alphaPrime = clamp(sphereRad / (distL * 2.0) + alpha, 0.0, 1.0);
+
+	float specD = specTrowbridgeReitz(HoN, alpha, alphaPrime);
+	float specF = fresSchlickSmith(HoV, f0);
+	float specV = visSchlickSmithMod(NoL, NoV, roughness);
+
+	return specD * specF * specV * NoL;
+}
+
+float tubeLight(vec3 pos, vec3 N, vec3 V, vec3 r, float f0, float roughness, float NoV, out float NoL, vec3 tubeStart, vec3 tubeEnd)
+{
+	vec3 L0 = tubeStart - pos;
+	vec3 L1 = tubeEnd - pos;
+	float distL0 = length(L0);
+	float distL1 = length(L1);
+
+	float NoL0 = dot(L0, N) / (2.0 * distL0);
+	float NoL1 = dot(L1, N) / (2.0 * distL1);
+	NoL = (2.0 * clamp(NoL0 + NoL1, 0.0, 1.0))
+		/ (distL0 * distL1 + dot(L0, L1) + 2.0);
+
+	vec3 Ld = L1 - L0;
+	float RoL0 = dot(r, L0);
+	float RoLd = dot(r, Ld);
+	float L0oLd = dot(L0, Ld);
+	float distLd = length(Ld);
+	float t = (RoL0 * RoLd - L0oLd)
+		/ (distLd * distLd - RoLd * RoLd);
+
+	float tubeRad = distLd;// 0.2
+
+	vec3 closestPoint = L0 + Ld * clamp(t, 0.0, 1.0);
+	vec3 centerToRay = dot(closestPoint, r) * r - closestPoint;
+	closestPoint = closestPoint + centerToRay * clamp(tubeRad / length(centerToRay), 0.0, 1.0);
+	vec3 l = normalize(closestPoint);
+	vec3 h = normalize(V + l);
+
+	float HoN = clamp(dot(h, N), 0.0, 1.0);
+	float HoV = dot(h, V);
+
+	float distLight = length(closestPoint);
+	float alpha = roughness * roughness;
+	float alphaPrime = clamp(tubeRad / (distLight * 2.0) + alpha, 0.0, 1.0);
+
+	float specD = specTrowbridgeReitz(HoN, alpha, alphaPrime);
+	float specF = fresSchlickSmith(HoV, f0);
+	float specV = visSchlickSmithMod(NoL, NoV, roughness);
+
+	return specD * specF * specV * NoL;
+}
+
+float getdiffuse(vec3 n, vec3 l, float p) {
+	float ndotl = clamp(dot(n, l), 0.5, 0.9);
+	return pow(ndotl, p);
+}
+
+vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
+	float noise = texture(u_DeluxeMap, pos.xy).x * 0.5;
+	noise += texture(u_DeluxeMap, pos.xy * 0.5).y;
+	noise += texture(u_DeluxeMap, pos.xy * 0.25).z * 2.0;
+	noise += texture(u_DeluxeMap, pos.xy * 0.125).w * 4.0;
+
+	vec3 albedo = pow(color, vec3(2.2));
+	albedo = mix(albedo, albedo * 1.3, noise * 0.35 - 1.0);
+	float roughness = 0.7 - clamp(0.5 - dot(albedo, albedo), 0.05, 0.95);
+	float f0 = 0.3;
+
+#ifdef DISABLE_ALBEDO
+	albedo = vec3(0.1);
+#endif
+
+#ifdef DISABLE_ROUGHNESS
+	roughness = 0.05;
+#endif
+
+	vec3 v = view;
+	float NoV = clamp(dot(normal, v), 0.0, 1.0);
+	vec3 r = reflect(-v, normal);
+
+#if 1
+	float NdotLSphere;
+	float specSph = clamp(sphereLight(pos, normal, v, r, f0, roughness, NoV, NdotLSphere, lightPos), 0.0, 0.2);
+	vec3 spec = albedo * clamp(0.3183 * NdotLSphere+specSph, 0.0, 0.2);
+#else
+	float NdotLTube;
+	float specTube = clamp(tubeLight(pos, normal, v, r, f0, roughness, NoV, NdotLTube, lightPosStart, lightPosEnd), 0.0, 0.2);
+	vec3 spec = albedo * clamp(0.3183 * NdotLTube+specTube, 0.0, 0.2);
+#endif
+
+	spec = specularColor * (pow(spec, vec3(1.0 / 2.2))) * specPower * 64.0;
+
+	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
+
+	return diffuse + spec;
 }
 #else //__LIGHTING_TYPE_0__
 // Blinn-Phong shading model with rim lighting (diffuse light bleeding to the other side).
@@ -757,10 +863,10 @@ void main(void)
 		normalDetail = normalVector(texCoords);
 	}
 
-	//normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
+	normalDetail.rgb = normalize(clamp(normalDetail.rgb, 0.0, 1.0) * 2.0 - 1.0);
 	//normalDetail.rgb *= 0.25;
 	//norm.rgb = normalize(norm.rgb + normalDetail.rgb);
-	norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.25 * (length(norm.rgb - normalDetail.rgb) / 3.0) ));
+	norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.5 * (length(norm.rgb - normalDetail.rgb) / 3.0)));
 	//norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.25 * (1.0 - (length(norm.rgb - normalDetail.rgb) / 3.0)) ));
 
 	//vec3 tangent = TangentFromNormal( norm.xyz );
@@ -790,31 +896,6 @@ void main(void)
 
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
-#if 0
-		vec2 spot = rd.xy;
-		spot.xy *= -1.0;
-		spot.xy = spot.xy * 0.5 + 0.5;
-
-		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
-		{// Mix between night and day colors...
-			vec3 skyColorDay = texture(u_WaterEdgeMap, spot).rgb;
-			vec3 skyColorNight = texture(u_RoadsControlMap, spot).rgb;
-			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
-		}
-		else if (u_Local6.a >= 1.0)
-		{// Night only colors...
-			skyColor = texture(u_RoadsControlMap, spot).rgb;
-		}
-		else
-		{// Day only colors...
-			skyColor = texture(u_WaterEdgeMap, spot).rgb;
-		}
-#else
-/*
-		vec3 reflected = normalize(reflect(normalize(E.xyz), normalize(cubeNorm.xyz)));
-		//vec3 reflected = normalize(reflect(normalize(vec3(E.x, -E.z, E.y)), normalize(vec3(cubeNorm.x, -cubeNorm.z, cubeNorm.y))));
-*/
-		
 		vec3 m_ViewDir = to_pos_norm;
 		vec3 R = reflect(E, cubeNorm);
 					
@@ -831,18 +912,8 @@ void main(void)
 		parallax.z *= -1.0;
 		
 		vec3 reflected = R + parallax;
-		
-
-		/*if (u_Local3.r >= 3.0) reflected = vec3(reflected.y, reflected.z, reflected.x);
-		else if (u_Local3.r >= 2.0) reflected = vec3(reflected.y, reflected.x, reflected.z);
-		else if (u_Local3.r >= 1.0) reflected = vec3(reflected.x, reflected.z, reflected.y);
-
-		if (u_Local3.a >= 1.0) reflected.z *= -1.0;
-		if (u_Local3.b >= 1.0) reflected.y *= -1.0;
-		if (u_Local3.g >= 1.0) reflected.x *= -1.0;*/
 
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
-		//reflected = vec3(-reflected.x, -reflected.z, -reflected.y);
 
 		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
 		{// Mix between night and day colors...
@@ -858,14 +929,16 @@ void main(void)
 		{// Day only colors...
 			skyColor = texture(u_SkyCubeMap, reflected).rgb;
 		}
-#endif
 
-		skyColor = ContrastSaturationBrightness(skyColor, 1.25, 2.0, 0.3);
+		skyColor = ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.7);
 		skyColor = Vibrancy( skyColor, 0.4 );
 
 #if 0
-		gl_FragColor = vec4(skyColor.rgb, 1.0);
-		return;
+		if (u_Local3.a > 0.0)
+		{
+			gl_FragColor = vec4(skyColor.rgb, 1.0);
+			return;
+		}
 #endif
 	}
 
@@ -934,19 +1007,17 @@ void main(void)
 
 	if (specularPower > 0.0)
 	{
-		specular = ContrastSaturationBrightness(outColor.rgb, -1.5, 0.05, 8.0);
+		specular = ContrastSaturationBrightness(outColor.rgb, 1.25, 0.05, 1.0);
 		specular.rgb = clamp(vec3(length(specular.rgb) / 3.0), 0.0, 1.0);
-		specular.rgb *= materialSettings.r;
+		specular.rgb *= clamp(materialSettings.r, 0.0, 1.0);
 
-		//if (materialSettings.r >= 0.5)
 		if (position.a-1.0 == MATERIAL_SOLIDMETAL || position.a-1.0 == MATERIAL_HOLLOWMETAL)
 		{// Re-add color to shiny reflections...
-			//specular.rgb = clamp(mix(specular.rgb, outColor.rgb * specular.rgb, pow(materialSettings.r, 16.0)), 0.0, 1.0);
 			specular.rgb = skyColor * specular.rgb;
 		}
 		else
 		{
-			specular.rgb = mix(specular.rgb, skyColor * specular.rgb, materialSettings.g);
+			specular.rgb = mix(specular.rgb, skyColor * specular.rgb, clamp(materialSettings.g, 0.0, 1.0));
 		}
 
 		//vec3 reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
@@ -1028,7 +1099,7 @@ void main(void)
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(materialSettings.y, 2.0) * u_Local7.a * glossinessFactor, 0.0, 1.0));
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0), 0.0, 1.0) * glossinessFactor);
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + specular, clamp(pow(reflectPower, 2.0) * glossinessFactor, 0.0, 1.0));
 	}
 
 
@@ -1057,7 +1128,11 @@ void main(void)
 			if (lightMult > 0.0)
 			{
 				lightColor *= lightMult;
+#ifdef __LIGHTING_TYPE_3__
+				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-to_light_norm), outColor.rgb * lightColor, outColor.rgb * lightColor, 1.0, u_PrimaryLightOrigin.xyz);
+#else //!__LIGHTING_TYPE_3__
 				lightColor = blinn_phong(N, E, normalize(-to_light_norm), outColor.rgb * lightColor, (outColor.rgb * lightColor), 1.0);
+#endif //__LIGHTING_TYPE_3__
 				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
 				lightColor = clamp(lightColor, 0.0, 0.7);
@@ -1108,7 +1183,7 @@ void main(void)
 				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
 
 				// Attenuation...
-				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.25, 1.0);
+				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
 				lightFade = pow(lightFade, 2.0);
 				float lightStrength = lightDistMult * lightFade * reflectivePower * 0.5;
 
@@ -1127,7 +1202,11 @@ void main(void)
 						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
 					
+#ifdef __LIGHTING_TYPE_3__
+					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, clamp(lightGlossinessFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade;
+#else //!__LIGHTING_TYPE_3__
 					addedLight.rgb += blinn_phong(N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, lightGlossinessFactor)) * lightStrength * light_occlusion * phongFactor;
+#endif //__LIGHTING_TYPE_3__
 				}
 			}
 
@@ -1242,9 +1321,9 @@ void main(void)
 #endif //defined(USE_SHADOWMAP)
 
 	// De-emphasize (darken) the distant map a bit...
-	float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0); // darken distant
+	//float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0); // darken distant
 	//float depth = clamp(pow(clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5) * 100000.0 + 1.0, 1.0, 2.0); // brighten distant
-	outColor.rgb *= depth;
+	//outColor.rgb *= depth;
 
 	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
 	{// C/S/B enabled...

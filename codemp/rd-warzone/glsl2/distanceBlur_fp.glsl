@@ -12,12 +12,8 @@ varying vec2			var_TexCoords;
 
 //#define __SKY_CHECK__ // This slows the checks a lot... Has to look up double the number of pixels...
 
-#define BLUR_DEPTH		0.55
-//#if 0
-#define BLUR_RADIUS		2.0
-//#else
-//#define BLUR_RADIUS		6.0
-//#endif
+#define BLUR_DEPTH		0.8//0.55
+#define BLUR_RADIUS		4.0//2.0
 
 #define MAP_WATER_LEVEL u_ViewInfo.a
 
@@ -50,57 +46,6 @@ vec4 DistantBlur(void)
 	}
 #endif //__SKY_CHECK__
 
-#if 0
-	float BLUR_DEPTH_MULT = (1.0 - clamp(BLUR_DEPTH / depth, 0.0, 1.0));// * BLUR_RADIUS;
-	BLUR_DEPTH_MULT = clamp(pow(BLUR_DEPTH_MULT, u_Local0.r), 0.0, u_Local0.g);
-
-	if (BLUR_RADIUS * BLUR_DEPTH_MULT < 1.0)
-	{// No point... This would be less then 1 pixel...
-		return color;
-	}
-
-	float NUM_BLUR_PIXELS = 1.0;
-
-	for (float x = -BLUR_RADIUS; x <= BLUR_RADIUS; x += 1.0)
-	{
-		for (float y = -BLUR_RADIUS; y <= BLUR_RADIUS; y += 1.0)
-		{
-			vec2 offset = vec2(x * px * BLUR_DEPTH_MULT, y * py * BLUR_DEPTH_MULT);
-			bool pixelIsSky = false;
-			vec2 xy = vec2(var_TexCoords + offset);
-			float weight = clamp(1.0 / ((length(vec2(x, y)) + 1.0) * 0.666), 0.2, 1.0);
-
-			if (isSky)
-			{// When original pixel is sky, check if this pixel is also sky. If so, skip the blur... If the new pixel is not sky, then add it to the blur...
-				vec2 material = textureLod(u_PositionMap, xy, 0.0).zw;
-
-				if (material.y-1.0 == MATERIAL_SKY || material.y-1.0 == MATERIAL_SUN || origMaterial.y-1.0 <= MATERIAL_NONE)
-				{// Skybox... Skip...
-					if (material.x >= MAP_WATER_LEVEL)
-					{
-						pixelIsSky = true;
-					}
-				}
-			}
-
-			vec3 color2;
-
-			if (!pixelIsSky)
-			{
-				color2 = textureLod(u_DiffuseMap, xy, 0.0).rgb;
-			}
-			else
-			{
-				color2 = origColor;
-			}
-
-			color.rgb += (color2.rgb * weight);
-			NUM_BLUR_PIXELS += weight;
-		}
-	}
-
-	color.rgb /= NUM_BLUR_PIXELS;
-#else
 	float BLUR_DEPTH_MULT = (1.0 - clamp(BLUR_DEPTH / depth, 0.0, 1.0));// * BLUR_RADIUS;
 	BLUR_DEPTH_MULT = clamp(pow(BLUR_DEPTH_MULT, 0.5), 0.0, 1.0);
 
@@ -156,7 +101,6 @@ vec4 DistantBlur(void)
 
 	color.rgb /= NUM_BLUR_PIXELS;
 	color.rgb = mix(origColor.rgb, color.rgb, clamp(BLUR_DEPTH_MULT * 2.0, 0.0, 1.0));
-#endif
 
 	return color;
 }
@@ -187,7 +131,7 @@ uniform vec4			u_Local1; // testvalues
 varying vec2			var_TexCoords;
 
 
-#define BLUR_DEPTH		0.55
+#define BLUR_DEPTH		0.8//0.55
 
 
 #define sampleOffset	(vec2(1.0) / u_Dimensions)
@@ -268,7 +212,7 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 		return tcol;
 	}
 
-	float depthDiff = (lDepth - BLUR_DEPTH) * 4.0;//u_Local1.r;
+	float depthDiff = (lDepth - BLUR_DEPTH) * 7.0;// 4.0;//u_Local1.r;
 	vec2 discRadius = (depthDiff * float(DOF_BLURRADIUS)) * sampleOffset.xy * 0.5 / float(iMatsoDOFBokehQuality);
 	float wValue = 1.0;
 	

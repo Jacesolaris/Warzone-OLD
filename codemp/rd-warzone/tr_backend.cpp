@@ -1038,7 +1038,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 		if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES) continue;
 
-#ifdef __ZFAR_CULLING__
+#ifdef __ZFAR_CULLING_ON_SURFACES__
 		if (r_occlusion->integer)
 		{
 			if (!backEnd.depthFill
@@ -1050,7 +1050,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 				continue;
 			}
 		}
-#endif //__ZFAR_CULLING__
+#endif //__ZFAR_CULLING_ON_SURFACES__
 
 #ifdef __PLAYER_BASED_CUBEMAPS__
 #ifdef __REALTIME_CUBEMAP__

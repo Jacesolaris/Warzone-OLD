@@ -44,7 +44,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}
 
-#ifdef __ZFAR_CULLING__
+#ifdef __ZFAR_CULLING_ON_SURFACES__
 	surf->depthDrawOnly = qfalse;
 
 	if (r_occlusion->integer)
@@ -61,7 +61,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 			//if (LODMODEL_MAP) return qtrue;
 		}
 	}
-#endif //__ZFAR_CULLING__
+#endif //__ZFAR_CULLING_ON_SURFACES__
 
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
@@ -597,127 +597,57 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 				return;
 			}
 
-#if 0
-			if (r_occlusion->integer)
+#ifdef __ZFAR_CULLING_ON_LEAFS__
+			if (r_occlusion->integer && node->contents != -1)
 			{
-				numOcclusionNodesChecked++;
+				float closestCornerDistance = 9999999.0;
 
-				if (r_testvalue0->integer == 1)
+				for (int i = 0; i < 8; i++)
 				{
-					float closestCornerDistance = 9999999.0;
+					vec3_t v;
 
-					for (int i = 0; i < 8; i++)
+					if (i & 1)
 					{
-						vec3_t v;
-
-						if (i & 1)
-						{
-							v[0] = node->mins[0];
-						}
-						else
-						{
-							v[0] = node->maxs[0];
-						}
-
-						if (i & 2)
-						{
-							v[1] = node->mins[1];
-						}
-						else
-						{
-							v[1] = node->maxs[1];
-						}
-
-						if (i & 4)
-						{
-							v[2] = node->mins[2];
-						}
-						else
-						{
-							v[2] = node->maxs[2];
-						}
-
-						float distance = DistanceSquared(tr.viewParms.ori.origin, v);
-
-						if (distance < closestCornerDistance)
-						{
-							closestCornerDistance = distance;
-						}
+						v[0] = node->mins[0];
+					}
+					else
+					{
+						v[0] = node->maxs[0];
 					}
 
-					if (sqrtf(closestCornerDistance) > tr.occlusionZfar * 1.75)
+					if (i & 2)
 					{
-						numOcclusionNodesCulled++;
-						return;
+						v[1] = node->mins[1];
+					}
+					else
+					{
+						v[1] = node->maxs[1];
+					}
+
+					if (i & 4)
+					{
+						v[2] = node->mins[2];
+					}
+					else
+					{
+						v[2] = node->maxs[2];
+					}
+
+					float distance = Distance(tr.viewParms.ori.origin, v);
+
+					if (distance < closestCornerDistance)
+					{
+						closestCornerDistance = distance;
 					}
 				}
-				else if (r_testvalue0->integer > 1)
+
+				if (closestCornerDistance > tr.occlusionZfar * 2.0)// * 1.75)
 				{
-					vec3_t center;
-					center[0] = (node->mins[0] + node->maxs[0]) * 0.5f;
-					center[1] = (node->mins[1] + node->maxs[1]) * 0.5f;
-					center[2] = (node->mins[2] + node->maxs[2]) * 0.5f;
-					float cdistance = DistanceSquared(tr.viewParms.ori.origin, center);
-					if (sqrtf(cdistance) > tr.occlusionZfar * 1.75)
-					{
-						if (r_testvalue0->integer > 2)
-						{
-							float closestCornerDistance = 9999999.0;
-
-							for (int i = 0; i < 8; i++)
-							{
-								vec3_t v;
-
-								if (i & 1)
-								{
-									v[0] = node->mins[0];
-								}
-								else
-								{
-									v[0] = node->maxs[0];
-								}
-
-								if (i & 2)
-								{
-									v[1] = node->mins[1];
-								}
-								else
-								{
-									v[1] = node->maxs[1];
-								}
-
-								if (i & 4)
-								{
-									v[2] = node->mins[2];
-								}
-								else
-								{
-									v[2] = node->maxs[2];
-								}
-
-								float distance = DistanceSquared(tr.viewParms.ori.origin, v);
-
-								if (distance < closestCornerDistance)
-								{
-									closestCornerDistance = distance;
-								}
-							}
-
-							if (sqrtf(closestCornerDistance) > tr.occlusionZfar * 1.75)
-							{
-								numOcclusionNodesCulled++;
-								return;
-							}
-						}
-						else
-						{
-							numOcclusionNodesCulled++;
-							return;
-						}
-					}
+					return;
 				}
 			}
-#endif
+#endif //__ZFAR_CULLING_ON_LEAFS__
+
 
 			int		r;
 

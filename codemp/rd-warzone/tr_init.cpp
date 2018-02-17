@@ -1628,10 +1628,10 @@ void R_Register( void )
 	r_anamorphicStrength = ri->Cvar_Get("r_anamorphicStrength", "0.5", CVAR_ARCHIVE);
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
-	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "0", CVAR_ARCHIVE );
+	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.0025", CVAR_ARCHIVE );
 	r_magicdetailMix = ri->Cvar_Get("r_magicdetailMix", "0.15", CVAR_ARCHIVE);
-	r_dof = ri->Cvar_Get( "r_dof", "1", CVAR_ARCHIVE );
+	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
 	r_debugMapAmbientR = ri->Cvar_Get("r_debugMapAmbientR", "0.0", CVAR_NONE);
 	r_debugMapAmbientG = ri->Cvar_Get("r_debugMapAmbientG", "0.0", CVAR_NONE);
 	r_debugMapAmbientB = ri->Cvar_Get("r_debugMapAmbientB", "0.0", CVAR_NONE);
@@ -1665,7 +1665,7 @@ void R_Register( void )
 	r_trueAnaglyphMaxDistance = ri->Cvar_Get( "r_trueAnaglyphMaxDistance", "1.0", CVAR_ARCHIVE );
 	r_trueAnaglyphParallax = ri->Cvar_Get( "r_trueAnaglyphParallax", "11.5", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
-	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "0", CVAR_ARCHIVE );
+	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "2", CVAR_ARCHIVE );
 	r_fogPost = ri->Cvar_Get( "r_fogPost", "1", CVAR_ARCHIVE );
 	r_dayNightCycleSpeed = ri->Cvar_Get( "r_dayNightCycleSpeed", "0.0001", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );

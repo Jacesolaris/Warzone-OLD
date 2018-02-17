@@ -110,9 +110,10 @@ void main(void)
 			normalDetail = normalVector(var_TexCoords);
 		}
 
-		normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
-		normalDetail.rgb *= 0.25;//u_Settings0.g;
-		norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+		normalDetail.rgb = normalize(clamp(normalDetail.rgb, 0.0, 1.0) * 2.0 - 1.0);
+		//normalDetail.rgb *= 0.25;//u_Settings0.g;
+		//norm.rgb = normalize(norm.rgb + normalDetail.rgb);
+		norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.5 * (length(norm.rgb - normalDetail.rgb) / 3.0)));
 	}
 
 	gl_FragColor = vec4(norm.rgb * 0.5 + 0.5, 1.0);
