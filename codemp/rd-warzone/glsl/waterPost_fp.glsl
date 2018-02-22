@@ -4,6 +4,7 @@
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 #define FOAM_SPLAT_MAPS				// Use foam splat maps to vary foam looks across the map...
+//#define __OLD_LIGHTING__
 //#define EXPERIMENTAL
 
 /*
@@ -356,6 +357,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 }
 #endif //USE_REFLECTION
 
+#ifdef __OLD_LIGHTING__
 // lighting
 float getdiffuse(vec3 n, vec3 l, float p) {
 	return pow(dot(n, l) * 0.4 + 0.6, p);
@@ -364,15 +366,93 @@ float getspecular(vec3 n, vec3 l, vec3 e, float s) {
 	float nrm = (s + 8.0) / (3.1415 * 8.0);
 	return pow(max(dot(reflect(e, n), l), 0.0), s) * nrm;
 }
-
-// Blinn-Phong shading model with rim lighting (diffuse light bleeding to the other side).
-// `normal`, `view` and `light` should be normalized.
-vec3 blinn_phong(vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor) {
-	vec3 halfLV = normalize(light + view);
-	float spe = pow(max(dot(normal, halfLV), 0.0), 32.0);
-	float dif = dot(normal, light) * 0.5 + 0.75;
-	return dif*diffuseColor + spe*specularColor;
+#else //!__OLD_LIGHTING__
+float specTrowbridgeReitz(float HoN, float a, float aP)
+{
+	float a2 = a * a;
+	float aP2 = aP * aP;
+	return (a2 * aP2) / pow(HoN * HoN * (a2 - 1.0) + 1.0, 2.0);
 }
+
+float visSchlickSmithMod(float NoL, float NoV, float r)
+{
+	float k = pow(r * 0.5 + 0.5, 2.0) * 0.5;
+	float l = NoL * (1.0 - k) + k;
+	float v = NoV * (1.0 - k) + k;
+	return 1.0 / (4.0 * l * v);
+}
+
+float fresSchlickSmith(float HoV, float f0)
+{
+	return f0 + (1.0 - f0) * pow(1.0 - HoV, 5.0);
+}
+
+float sphereLight(vec3 pos, vec3 N, vec3 V, vec3 r, float f0, float roughness, float NoV, out float NoL, vec3 lightPos)
+{
+#define sphereRad 0.2
+
+	vec3 L = normalize(lightPos - pos);
+	vec3 centerToRay = dot(L, r) * r - L;
+	vec3 closestPoint = L + centerToRay * clamp(sphereRad / length(centerToRay), 0.0, 1.0);
+	vec3 l = normalize(closestPoint);
+	vec3 h = normalize(V + l);
+
+
+	NoL = clamp(dot(N, l), 0.0, 1.0);
+	float HoN = clamp(dot(h, N), 0.0, 1.0);
+	float HoV = dot(h, V);
+
+	float distL = length(L);
+	float alpha = roughness * roughness;
+	float alphaPrime = clamp(sphereRad / (distL * 2.0) + alpha, 0.0, 1.0);
+
+	float specD = specTrowbridgeReitz(HoN, alpha, alphaPrime);
+	float specF = fresSchlickSmith(HoV, f0);
+	float specV = visSchlickSmithMod(NoL, NoV, roughness);
+
+	return specD * specF * specV * NoL;
+}
+
+float getdiffuse(vec3 n, vec3 l, float p) {
+	float ndotl = clamp(dot(n, l), 0.5, 0.9);
+	return pow(ndotl, p);
+}
+
+vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
+	float noise = texture(u_DeluxeMap, pos.xy).x * 0.5;
+	noise += texture(u_DeluxeMap, pos.xy * 0.5).y;
+	noise += texture(u_DeluxeMap, pos.xy * 0.25).z * 2.0;
+	noise += texture(u_DeluxeMap, pos.xy * 0.125).w * 4.0;
+
+	vec3 albedo = pow(color, vec3(2.2));
+	albedo = mix(albedo, albedo * 1.3, noise * 0.35 - 1.0);
+	float roughness = 0.7 - clamp(0.5 - dot(albedo, albedo), 0.05, 0.95);
+	float f0 = 0.3;
+
+#ifdef DISABLE_ALBEDO
+	albedo = vec3(0.1);
+#endif
+
+#ifdef DISABLE_ROUGHNESS
+	roughness = 0.05;
+#endif
+
+	vec3 v = view;
+	float NoV = clamp(dot(normal, v), 0.0, 1.0);
+	vec3 r = reflect(-v, normal);
+
+	float NdotLSphere;
+	float specSph = clamp(sphereLight(pos, normal, v, r, f0, roughness, NoV, NdotLSphere, lightPos), 0.0, 0.2);
+	vec3 spec = albedo * clamp(0.3183 * NdotLSphere + specSph, 0.0, 0.2);
+
+	spec = specularColor * (pow(spec, vec3(1.0 / 2.2))) * specPower * 64.0;
+
+	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
+
+	return diffuse + spec;
+}
+#endif //__OLD_LIGHTING__
+
 
 #ifdef EXPERIMENTAL
 const float PI	 	= 3.14159265358;
@@ -993,7 +1073,13 @@ void main ( void )
 		}
 
 		color = clamp(color + specular, 0.0, 1.0);
+		
+#ifdef __OLD_LIGHTING__
 		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
+#else //!__OLD_LIGHTING__
+		color += blinn_phong(waterMapUpper.xyz, color.rgb, normal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz);
+#endif //__OLD_LIGHTING__
+		
 		color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color);
 
 		gl_FragColor = vec4(color, 1.0);
@@ -1107,8 +1193,7 @@ void main ( void )
 		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
 		vec3 normal3a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
 		
-		vec3 normal = normalize(((normal0a * normalModifier.x) + (normal1a * normalModifier.y) +
-						(normal2a * normalModifier.z) + (normal3a * normalModifier.w)));
+		vec3 normal = normalize(((normal0a * normalModifier.x) + (normal1a * normalModifier.y) + (normal2a * normalModifier.z) + (normal3a * normalModifier.w)));
 
 		texCoord = var_TexCoords.xy;
 
@@ -1186,19 +1271,26 @@ void main ( void )
 		vec3 specular = vec3(0.0);
 
 		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
-		//normal *= -myNormal.xyz;
+		
 
-		float lambertian2 = dot(lightDir.xyz, normal);
+
+
+		//vec3 lightingNormal = normal;
+		vec3 lightingNormal = normalize(((normal0a * normalModifier.x * -0.75) + (normal1a * normalModifier.y * -0.25) + (normal2a * normalModifier.z * 0.25) + (normal3a * normalModifier.w * 0.75)));;
+
+
+
+		float lambertian2 = dot(lightDir.xyz, lightingNormal);
 		float spec2 = 0.0;
 		
-		float fresnel = clamp(1.0 - dot(normal, -eyeVecNorm), 0.0, 1.0);
+		float fresnel = clamp(1.0 - dot(lightingNormal, -eyeVecNorm), 0.0, 1.0);
 		fresnel = pow(fresnel, 3.0) * 0.65;
 
 		if(lambertian2 > 0.0)
 		{// this is blinn phong
-			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
+			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, lightingNormal) * lightingNormal - eyeVecNorm);
 			vec3 halfDir2 = normalize(lightDir.xyz + mirrorEye);
-			float specAngle = max(dot(halfDir2, normal), 0.0);
+			float specAngle = max(dot(halfDir2, lightingNormal), 0.0);
 			spec2 = pow(specAngle, 16.0);
 			specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
 		}
@@ -1213,8 +1305,11 @@ void main ( void )
 
 		vec3 caustic = color * (texture(u_DetailMap, vec2((texCoord.x + (texCoord2.x*2.2)) * 0.25, (texCoord.y + (texCoord2.y*1.2)) * 0.25)).rgb * 1.1);
 
-		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
-		/* END - TESTING */
+#ifdef __OLD_LIGHTING__
+		color += vec3(getspecular(lightingNormal, lightDir, eyeVecNorm, 60.0));
+#else //!__OLD_LIGHTING__
+		color += blinn_phong(waterMapLower3.xyz, color.rgb, lightingNormal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz) * 0.005;
+#endif //__OLD_LIGHTING__
 
 		// Also do dlights. Includes map glows and sabers and all that good stuff...
 		if (u_lightCount > 0.0)
@@ -1240,7 +1335,7 @@ void main ( void )
 				}
 
 				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
-				float lightStrength = pow(1.0 - clamp(lightDist / u_lightDistances[li], 0.0, 1.0), 2.0);
+				float lightStrength = pow(1.0 - clamp(lightDist / (u_lightDistances[li] * 2.0), 0.0, 1.0), 2.0);
 				lightStrength *= lightDistMult;
 
 				if (lightStrength > 0.0)
@@ -1251,7 +1346,12 @@ void main ( void )
 					lightColor = lightColor * lightStrength * power;
 
 					lightColor *= maxStr;
-					addedLight.rgb += (lightColor * vec3(getspecular(-normal, -lightDir2, eyeVecNorm, 60.0)));
+
+#ifdef __OLD_LIGHTING__
+					addedLight.rgb += (lightColor * vec3(getspecular(-lightingNormal, -lightDir2, eyeVecNorm, 60.0)));
+#else //!__OLD_LIGHTING__
+					addedLight.rgb += blinn_phong(waterMapLower3.xyz, color.rgb, -lightingNormal * 0.3, eyeVecNorm, -lightDir * 0.3, lightColor, lightColor, 1.0, lightPos) * lightStrength * 0.05;
+#endif //__OLD_LIGHTING__
 				}
 			}
 
@@ -1281,6 +1381,11 @@ void main ( void )
 			if (clamp(1.0 - (heightAboveGround * 0.65), 0.0, 1.0) > 0.5)
 				color.rgb = color2.rgb;
 		}
+
+		/*if (u_Local0.r == 1.0)
+		{
+			color.rgb = lightingNormal.rgb * 0.5 + 0.5;
+		}*/
 	}
 
 	gl_FragColor = vec4(color, 1.0);

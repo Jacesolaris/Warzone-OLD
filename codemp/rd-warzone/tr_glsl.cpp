@@ -2127,20 +2127,21 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	if (attribs & ATTR_BONE_WEIGHTS)
 		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS, "attr_BoneWeights");
 
+#ifdef __OCEAN__
+	if (attribs & ATTR_OCEAN_POSITION)
+		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_POSITION, "attr_OceanPosition");
+
+	if (attribs & ATTR_OCEAN_TEXCOORD)
+		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_TEXCOORD, "attr_OceanTexCoord");
+#endif //__OCEAN__
+
 #ifdef __INSTANCED_MODELS__
-	//if (attribs & ATTR_INSTANCES_MVP)
-	//	qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
+	if (attribs & ATTR_INSTANCES_MVP)
+		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
 
 	if (attribs & ATTR_INSTANCES_POS)
 		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POS, "attr_InstancesPos");
 #endif //__INSTANCED_MODELS__
-
-#ifdef __OCEAN__
-	if (attribs & ATTR_OCEAN_POSITION)
-		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_POSITION, "attr_OceanPosition");
-	if (attribs & ATTR_OCEAN_TEXCOORD)
-		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_TEXCOORD, "attr_OceanTexCoord");
-#endif //__OCEAN__
 
 	GLSL_LinkProgram(program->program);
 
@@ -2921,7 +2922,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 #ifdef __INSTANCED_MODELS__
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_INSTANCES_POS /*| ATTR_INSTANCES_MVP*/;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_INSTANCES_POS | ATTR_INSTANCES_MVP;
 
 	if (!GLSL_BeginLoadGPUShader(&tr.instanceShader, "instance", attribs, qtrue, qfalse, qfalse, NULL, qfalse, "330", fallbackShader_instance_vp, fallbackShader_instance_fp, NULL, NULL, NULL))
 	{
@@ -3350,7 +3351,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	attribs = 0;
 	extradefines[0] = '\0';
-	Q_strcat (extradefines, sizeof (extradefines), "#define BLUR_X");
+	Q_strcat(extradefines, 1024, "#define BLUR_X\n");
 
 	if (!GLSL_BeginLoadGPUShader(&tr.gaussianBlurShader[0], "gaussian_blur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_gaussian_blur_vp, fallbackShader_gaussian_blur_fp, NULL, NULL, NULL))
 	{
@@ -6292,36 +6293,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-#ifdef __INSTANCED_MODELS__
-	/*if (diff & ATTR_INSTANCES_MVP)
-	{
-		if (stateBits & ATTR_INSTANCES_MVP)
-		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_MVP )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
-		}
-		else
-		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_MVP )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
-		}
-	}*/
-
-	if (diff & ATTR_INSTANCES_POS)
-	{
-		if (stateBits & ATTR_INSTANCES_POS)
-		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
-		}
-		else
-		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
-		}
-	}
-#endif //__INSTANCED_MODELS__
-
 #ifdef __OCEAN__
 	if (diff & ATTR_OCEAN_POSITION)
 	{
@@ -6351,6 +6322,36 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 #endif //__OCEAN__
+
+#ifdef __INSTANCED_MODELS__
+	if (diff & ATTR_INSTANCES_MVP)
+	{
+		if (stateBits & ATTR_INSTANCES_MVP)
+		{
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_MVP )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+		}
+		else
+		{
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_MVP )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+		}
+	}
+
+	if (diff & ATTR_INSTANCES_POS)
+	{
+		if (stateBits & ATTR_INSTANCES_POS)
+		{
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
+		}
+		else
+		{
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
+		}
+	}
+#endif //__INSTANCED_MODELS__
 
 	glState.vertexAttribsState = stateBits;
 }
@@ -6478,14 +6479,14 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 	}
 
 #ifdef __INSTANCED_MODELS__
-	/*if ((attribBits & ATTR_INSTANCES_MVP) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_MVP))
+	if ((attribBits & ATTR_INSTANCES_MVP) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_MVP))
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_MVP )\n");
 
-		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 4, GL_FLOAT, 0, vbo->stride_instancesMVP, BUFFER_OFFSET(vbo->ofs_instancesMVP));
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, 0, vbo->stride_instancesMVP, BUFFER_OFFSET(vbo->ofs_instancesMVP));
 		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
 		glState.vertexAttribPointersSet |= ATTR_INSTANCES_MVP;
-	}*/
+	}
 
 	if ((attribBits & ATTR_INSTANCES_POS) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_POS))
 	{
@@ -6498,12 +6499,11 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 #endif //__INSTANCED_MODELS__
 
 #ifdef __OCEAN__
-	/*
 	if ((attribBits & ATTR_OCEAN_POSITION) && !(glState.vertexAttribPointersSet & ATTR_OCEAN_POSITION))
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_OCEAN_POSITION )\n");
 
-		qglVertexAttribPointer(ATTR_INDEX_OCEAN_POSITION, 3, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_xyz + newFrame * vbo->size_xyz));
+		qglVertexAttribPointer(ATTR_INDEX_OCEAN_POSITION, 3, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_oceanPosition));
 		glState.vertexAttribPointersSet |= ATTR_OCEAN_POSITION;
 	}
 
@@ -6511,10 +6511,9 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_OCEAN_TEXCOORD )\n");
 
-		qglVertexAttribPointer(ATTR_INDEX_OCEAN_TEXCOORD, 2, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_st + sizeof(vec2_t)* glState.vertexAttribsTexCoordOffset[0]));
+		qglVertexAttribPointer(ATTR_INDEX_OCEAN_TEXCOORD, 2, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_oceanTexcoord));
 		glState.vertexAttribPointersSet |= ATTR_OCEAN_TEXCOORD;
 	}
-	*/
 #endif //__OCEAN__
 }
 

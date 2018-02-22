@@ -175,6 +175,8 @@ extern qboolean DAY_NIGHT_CYCLE_ENABLED;
 extern float RB_NightScale(void);
 #endif //__DAY_NIGHT__
 
+#define ForceCrash() { refdef_t *blah = NULL; blah->time = 1; }
+
 extern qboolean SHADOWS_ENABLED;
 
 #define MAX_GLOW_LOCATIONS 65536
@@ -737,14 +739,14 @@ typedef struct VBO_s
 	uint32_t		ofs_boneweights;
 	uint32_t		ofs_boneindexes;
 #ifdef __INSTANCED_MODELS__
-	uint32_t		ofs_instancesMVP;
 	uint32_t		ofs_instances;
+	uint32_t		ofs_instancesMVP;
 #endif //__INSTANCED_MODELS__
 
-#ifdef __INSTANCED_MODELS__
+#ifdef __OCEAN__
 	uint32_t		ofs_oceanPosition;
 	uint32_t		ofs_oceanTexcoord;
-#endif //__INSTANCED_MODELS__
+#endif //__OCEAN__
 
 	uint32_t        stride_xyz;
 	uint32_t        stride_normal;
@@ -757,6 +759,11 @@ typedef struct VBO_s
 	uint32_t		stride_instancesMVP;
 	uint32_t		stride_instances;
 #endif //__INSTANCED_MODELS__
+
+#ifdef __OCEAN__
+	uint32_t		stride_oceanPosition;
+	uint32_t		stride_oceanTexcoord;
+#endif //__OCEAN__
 
 	uint32_t        size_xyz;
 	uint32_t        size_normal;
@@ -1320,15 +1327,15 @@ enum
 	ATTR_INDEX_POSITION2,
 	ATTR_INDEX_NORMAL2,
 
-#ifdef __INSTANCED_MODELS__
-	// Instancing
-	ATTR_INDEX_INSTANCES_POS,
-	/*ATTR_INDEX_INSTANCES_MVP,*/
-#endif //__INSTANCED_MODELS__
 #ifdef __OCEAN__
 	ATTR_INDEX_OCEAN_POSITION,
 	ATTR_INDEX_OCEAN_TEXCOORD,
 #endif //__OCEAN__
+#ifdef __INSTANCED_MODELS__
+	// Instancing
+	ATTR_INDEX_INSTANCES_POS,
+	ATTR_INDEX_INSTANCES_MVP,
+#endif //__INSTANCED_MODELS__
 };
 
 enum
@@ -1426,14 +1433,18 @@ enum
 	ATTR_POSITION2 =      0x0200,
 	ATTR_NORMAL2 =        0x0400,
 
-#ifdef __INSTANCED_MODELS__
-	ATTR_INSTANCES_POS =  0x0800,
-	//ATTR_INSTANCES_MVP =  0x1000,
-#endif //__INSTANCED_MODELS__
-	
 #ifdef __OCEAN__
 	ATTR_OCEAN_POSITION = 0x0800,
 	ATTR_OCEAN_TEXCOORD = 0x1000,
+#ifdef __INSTANCED_MODELS__
+	ATTR_INSTANCES_POS = 0x2000,
+	ATTR_INSTANCES_MVP = 0x4000,
+#endif //__INSTANCED_MODELS__
+#else //!__OCEAN__
+#ifdef __INSTANCED_MODELS__
+	ATTR_INSTANCES_POS = 0x0800,
+	ATTR_INSTANCES_MVP = 0x1000,
+#endif //__INSTANCED_MODELS__
 #endif //__OCEAN__
 
 	ATTR_DEFAULT = ATTR_POSITION,
@@ -1448,14 +1459,14 @@ enum
 				ATTR_BONE_WEIGHTS |
 				ATTR_POSITION2 |
 				ATTR_NORMAL2
-#ifdef __INSTANCED_MODELS__
-				| ATTR_INSTANCES_POS
-				/*| ATTR_INSTANCES_MVP*/
-#endif //__INSTANCED_MODELS__
 #ifdef __OCEAN__
 				| ATTR_OCEAN_POSITION
 				| ATTR_OCEAN_TEXCOORD
 #endif //__OCEAN__
+#ifdef __INSTANCED_MODELS__
+				| ATTR_INSTANCES_POS
+				| ATTR_INSTANCES_MVP
+#endif //__INSTANCED_MODELS__
 };
 
 enum
@@ -1679,7 +1690,7 @@ typedef struct shaderProgram_s
 	qboolean tesselation;
 	qboolean geometry;
 
-	//GLuint instances_mvp = 0;
+	GLuint instances_mvp = 0;
 	GLuint instances_buffer = 0;
 } shaderProgram_t;
 

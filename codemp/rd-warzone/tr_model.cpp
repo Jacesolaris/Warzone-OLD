@@ -799,7 +799,6 @@ R_LoadMD3
 */
 
 #ifdef __INSTANCED_MODELS__
-#include "VectorUtils3.h"
 #include "tr_instancing.h"
 #endif //__INSTANCED_MODELS__
 
@@ -1139,10 +1138,10 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			ofs_instances = dataSize;
 			dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iPos);
 
-			//mat4 *iMVP;
+			matrix_t *iMVP;
 			int ofs_instancesMVP;
-			//ofs_instancesMVP = dataSize;
-			//dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iMVP);
+			ofs_instancesMVP = dataSize;
+			dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iMVP);
 #endif //__INSTANCED_MODELS__
 
 			data = (byte *)Z_Malloc(dataSize, TAG_MODEL_MD3, qtrue);
@@ -1152,8 +1151,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			texcoords =  (vec2_t *)(data + ofs_st);
 
 #ifdef __INSTANCED_MODELS__
-			//iMVP = (mat4 *)(data + ofs_instancesMVP);
 			iPos = (vec3_t *)(data + ofs_instances);
+			iMVP = (matrix_t *)(data + ofs_instancesMVP);
 #endif //__INSTANCED_MODELS__
 		
 			v = surf->verts;
@@ -1191,8 +1190,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->vbo->ofs_normal    = ofs_normal;
 			vboSurf->vbo->ofs_st        = ofs_st;
 #ifdef __INSTANCED_MODELS__
-			//vboSurf->vbo->ofs_instancesMVP = ofs_instancesMVP;
 			vboSurf->vbo->ofs_instances = ofs_instances;
+			vboSurf->vbo->ofs_instancesMVP = ofs_instancesMVP;
 #endif //__INSTANCED_MODELS__
 			
 
@@ -1200,8 +1199,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->vbo->stride_normal    = sizeof(*normals);
 			vboSurf->vbo->stride_st        = sizeof(*st);
 #ifdef __INSTANCED_MODELS__
-			//vboSurf->vbo->stride_instancesMVP = sizeof(*iMVP);
 			vboSurf->vbo->stride_instances = sizeof(*iPos);
+			vboSurf->vbo->stride_instancesMVP = sizeof(*iMVP);
 #endif //__INSTANCED_MODELS__
 
 			vboSurf->vbo->size_xyz    = sizeof(*verts) * surf->numVerts;

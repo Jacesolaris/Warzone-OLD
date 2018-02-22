@@ -1416,6 +1416,8 @@ void OCEAN_Render(void)
 
 		qglDrawElements(GL_TRIANGLES, gDrawNumber, GL_UNSIGNED_INT, 0);
 
+		//qglBindVertexArray(0);
+
 		GLSL_BindProgram(NULL);
 	}
 	else if (WATER_ENABLED && r_glslWater->integer >= 1 && MAP_WATER_LEVEL < 131072.0 && MAP_WATER_LEVEL > -131072.0)
@@ -1482,6 +1484,8 @@ void OCEAN_Render(void)
 		qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gFastIndexID);
 
 		qglDrawElements(GL_TRIANGLES, gFastDrawNumber, GL_UNSIGNED_INT, 0);
+
+		//qglBindVertexArray(0);
 	}
 }
 #endif //__OCEAN__

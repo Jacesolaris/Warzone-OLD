@@ -569,6 +569,11 @@ void TossClientItems( gentity_t *self ) {
 		return;
 	}
 
+	if (!self || !self->client)
+	{
+		return;
+	}
+
 	if ( self->client->NPC_class == CLASS_SEEKER 
 		|| self->client->NPC_class == CLASS_REMOTE
 		|| self->client->NPC_class == CLASS_SABER_DROID
@@ -619,7 +624,7 @@ void TossClientItems( gentity_t *self ) {
 	}
 
 	// drop all the powerups if not in teamplay
-	if ( level.gametype != GT_TEAM && level.gametype != GT_SIEGE ) {
+	if ( level.gametype != GT_TEAM && level.gametype != GT_SIEGE && level.gametype != GT_WARZONE) {
 		angle = 45;
 		for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
 			if ( self->client->ps.powerups[ i ] > level.time ) {
@@ -2718,8 +2723,8 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 	}
 
 	if (!self->client->ps.fallingToDeath) {
-		if (self->s.eType != ET_NPC)
-		{
+		if (self->s.eType != ET_NPC || level.gametype == GT_WARZONE)
+		{// UQ1: I'm going to allow NPCs to drop their items in warzone gametype for now, until we have an event script and boss chests...
 			TossClientItems( self );
 		}
 	}

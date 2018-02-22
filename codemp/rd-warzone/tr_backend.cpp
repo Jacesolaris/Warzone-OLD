@@ -2189,6 +2189,10 @@ const void	*RB_SwapBuffers( const void *data ) {
 #ifdef __JKA_WEATHER__
 extern void RB_RenderWorldEffects(void);
 
+#ifdef __INSTANCED_MODELS__
+void R_AddInstancedModelsToScene(void);
+#endif //__INSTANCED_MODELS__
+
 const void	*RB_WorldEffects( const void *data )
 {
 	const drawBufferCommand_t	*cmd;
@@ -2200,6 +2204,10 @@ const void	*RB_WorldEffects( const void *data )
 	{
 		RB_EndSurface();
 	}
+
+#ifdef __INSTANCED_MODELS__
+	R_AddInstancedModelsToScene();
+#endif //__INSTANCED_MODELS__
 
 	if (!tr.world
 		|| (tr.viewParms.flags & VPF_NOPOSTPROCESS)
@@ -2218,8 +2226,6 @@ const void	*RB_WorldEffects( const void *data )
 
 	Matrix16Copy(glState.modelview, previousModelViewMarix);
 	Matrix16Copy(glState.projection, previousProjectionMatrix);
-
-	//float previousZfar = tr.viewParms.zFar;
 
 	FBO_t *previousFBO = glState.currentFBO;
 	float previousZfar = tr.viewParms.zFar;
@@ -2250,32 +2256,6 @@ const void	*RB_WorldEffects( const void *data )
 	tr.viewParms.zFar = previousZfar;
 	GL_State(previousState);
 	GL_Cull(previousCull);
-
-	/*
-	if (backEnd.viewParms.targetFbo == NULL)
-	{
-		if (!tr.renderFbo || (backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
-	}
-	else
-	{
-		FBO_Bind(backEnd.viewParms.targetFbo);
-	}
-
-	GL_SetProjectionMatrix(previousProjectionMatrix);
-	GL_SetModelviewMatrix(previousModelViewMarix);
-
-	tr.viewParms.zFar = previousZfar;
-
-	GL_State(GLS_DEFAULT);
-	GL_Cull(CT_FRONT_SIDED);
-	*/
 
 	return (const void *)(cmd + 1);
 }

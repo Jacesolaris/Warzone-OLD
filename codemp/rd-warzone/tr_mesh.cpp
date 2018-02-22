@@ -701,16 +701,17 @@ void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int c
 }
 
 #ifdef __INSTANCED_MODELS__
-extern void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *angles, matrix_t MVP);
+extern void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t *model_matrixes, vec3_t *angles, matrix_t MVP);
 
 int			INSTANCED_MODEL_TYPES = 0;
 
 int			INSTANCED_MODEL_COUNT[MAX_INSTANCED_MODEL_TYPES] = { 0 };
 mdvModel_t	*INSTANCED_MODEL_MODEL[MAX_INSTANCED_MODEL_TYPES] = { NULL };
 vec3_t		INSTANCED_MODEL_ORIGINS[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+matrix_t	INSTANCED_MODEL_MATRIXES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
 vec3_t		INSTANCED_MODEL_ANGLES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
 
-void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles)
+void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles, matrix_t model_matrix, trRefEntity_t *ent)
 {
 	qboolean	FOUND = qfalse;
 	int			modelID = 0;
@@ -741,18 +742,33 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles)
 	{
 		VectorCopy(origin, INSTANCED_MODEL_ORIGINS[modelID][INSTANCED_MODEL_COUNT[modelID]]);
 		VectorCopy(angles, INSTANCED_MODEL_ANGLES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		//Matrix16Copy(model_matrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		//Matrix16Multiply(glState.modelviewProjection, glState.modelview/*model_matrix*/, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		// set up the transformation matrix
+		R_RotateForEntity(ent, &backEnd.viewParms, &backEnd.ori);
+		
+		Matrix16Multiply(glState.projection, backEnd.ori.modelViewMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		
 		INSTANCED_MODEL_COUNT[modelID]++;
 	}
 }
 
 void R_AddInstancedModelsToScene(void)
 {
+	/*if (INSTANCED_MODEL_TYPES > 0)
+	{
+		ForceCrash();
+	}*/
+
 	// Draw them for this scene...
 	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
 		if (INSTANCED_MODEL_COUNT[modelID] > 0)
 		{
-			drawModelInstanced(INSTANCED_MODEL_MODEL[modelID], INSTANCED_MODEL_COUNT[modelID], INSTANCED_MODEL_ORIGINS[modelID], INSTANCED_MODEL_ANGLES[modelID], glState.modelviewProjection);
+			drawModelInstanced(INSTANCED_MODEL_MODEL[modelID], INSTANCED_MODEL_COUNT[modelID], INSTANCED_MODEL_ORIGINS[modelID], INSTANCED_MODEL_MATRIXES[modelID], INSTANCED_MODEL_ANGLES[modelID], glState.modelviewProjection);
 		}
 	}
 
@@ -857,7 +873,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 #ifdef __INSTANCED_MODELS__
 	if (ent->e.frame == 0 && ent->e.oldframe == 0 && !ent->e.customShader && !ent->e.customSkin /*&& model->numSurfaces == 1*/)
 	{// Only if not animated for now...
-		R_AddInstancedModelToList(model, ent->e.origin, ent->e.angles);
+		R_AddInstancedModelToList(model, ent->e.origin, ent->e.angles, backEnd.ori.modelMatrix, ent);
 		return;
 	}
 #endif //__INSTANCED_MODELS__
@@ -905,7 +921,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			//shader = tr.shaders[ md3Shader->shaderIndex ];
 			shader = tr.shaders[ surface->shaderIndexes[ ent->e.skinNum % surface->numShaderIndexes ] ];
 		}
-
+		
 		// don't add third_person objects if not viewing through a portal
 		if(!personalModel)
 		{

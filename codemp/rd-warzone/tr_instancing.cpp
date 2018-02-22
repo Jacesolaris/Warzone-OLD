@@ -10,14 +10,15 @@
 
 void setupInstancedVertexAttributes(mdvModel_t *m)
 {
-	qglUseProgram(tr.instanceShader.program);
-	//qglGenBuffers(1, &tr.instanceShader.instances_mvp);
+	GLSL_BindProgram(&tr.instanceShader);
 	qglGenBuffers(1, &tr.instanceShader.instances_buffer);
+	qglGenBuffers(1, &tr.instanceShader.instances_mvp);
 }
 
-void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *angles, matrix_t MVP) 
+void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t *model_matrixes, vec3_t *angles, matrix_t MVP)
 {
-	qglUseProgram(tr.instanceShader.program);
+	//qglUseProgram(tr.instanceShader.program);
+	GLSL_BindProgram(&tr.instanceShader);
 
 	//GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, MVP);
 	GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
@@ -33,6 +34,7 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *
 	if (m && m->vao) 
 	{
 		qglBindVertexArray(m->vao);	// Select VAO
+		qglEnableVertexAttribArray(m->vao);
 	} 
 	else 
 	{
@@ -44,72 +46,32 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, vec3_t *
 		return;
 	}
 
-	//tess.vbo = m->vboSurfaces->vbo;
-	//tess.ibo = m->vboSurfaces->ibo;
-
 	R_BindVBO(m->vboSurfaces->vbo);
 	R_BindIBO(m->vboSurfaces->ibo);
 
-	GLSL_VertexAttribPointers(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 /*| ATTR_INDEX_INSTANCES_MVP*/ | ATTR_INDEX_INSTANCES_POS);
-	GLSL_VertexAttribsState(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 /*| ATTR_INDEX_INSTANCES_MVP*/ | ATTR_INDEX_INSTANCES_POS);
+	GLSL_VertexAttribPointers(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 | ATTR_INDEX_INSTANCES_MVP | ATTR_INDEX_INSTANCES_POS);
+	GLSL_VertexAttribsState(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 | ATTR_INDEX_INSTANCES_MVP | ATTR_INDEX_INSTANCES_POS);
 
 	//RB_UpdateVBOs(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 /*| ATTR_INDEX_INSTANCES_MVP*/ | ATTR_INDEX_INSTANCES_POS);
-
-#if 0
-	qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
-	qglBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * count, model_matrixes, GL_STATIC_DRAW);
-#endif
 
 	qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
 	qglBufferData(GL_ARRAY_BUFFER, sizeof(vec3_t) * count, positions, GL_STATIC_DRAW);
 
-	//qglBufferSubData(GL_ARRAY_BUFFER, m->vboSurfaces->vbo->ofs_instances, m->vboSurfaces->numVerts * sizeof(vec3_t), positions);
+	qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
+	qglBufferData(GL_ARRAY_BUFFER, sizeof(matrix_t) * count, model_matrixes, GL_STATIC_DRAW);
 
+	qglBindBuffer(GL_ARRAY_BUFFER, m->vboSurfaces->vbo->vertexesVBO);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->vboSurfaces->ibo->indexesVBO);
 
-#if 0
-	mat4 transEverything;
-	//memcpy(transEverything.m, MVP, sizeof(MVP));
-	transEverything.m[0] = glState.modelviewProjection[0];
-	transEverything.m[1] = glState.modelviewProjection[1];
-	transEverything.m[2] = glState.modelviewProjection[2];
-	transEverything.m[3] = glState.modelviewProjection[3];
-	transEverything.m[4] = glState.modelviewProjection[4];
-	transEverything.m[5] = glState.modelviewProjection[5];
-	transEverything.m[6] = glState.modelviewProjection[6];
-	transEverything.m[7] = glState.modelviewProjection[7];
-	transEverything.m[8] = glState.modelviewProjection[8];
-	transEverything.m[9] = glState.modelviewProjection[9];
-	transEverything.m[10] = glState.modelviewProjection[10];
-	transEverything.m[11] = glState.modelviewProjection[11];
-	transEverything.m[12] = glState.modelviewProjection[12];
-	transEverything.m[13] = glState.modelviewProjection[13];
-	transEverything.m[14] = glState.modelviewProjection[14];
-	transEverything.m[15] = glState.modelviewProjection[15];
+	//ForceCrash();
 	
-	mat4 model_matrixes[MAX_INSTANCED_MODEL_INSTANCES];// = { 0 };
-
-	for (int pos = 0; pos < count; pos++) 
-	{
-		
-		model_matrixes[pos] = 
-			Mult(
-				Mult(
-					Mult(transEverything, Ry(angles[pos][0]))	, T(positions[pos][0], positions[pos][1], positions[pos][2])) 	, Rz(angles[pos][1]));
-		
-		model_matrixes[pos] = Transpose(model_matrixes[pos]);
-		
-		/*Matrix16Multiply(transEverything, Ry(time + (float)pos / randoms[pos]), model_matrixes[pos]);
-		Matrix16Multiply(model_matrixes[pos], T((float)pos / 300 + randoms[pos] * (float)pos / 3000, (float)pos / 75, 1), model_matrixes[pos]);
-		Matrix16Multiply(model_matrixes[pos], Rz(time * (pos % 12) + randoms[pos]), model_matrixes[pos]);*/
-	}
-#endif
-
+	//qglDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
+	//qglDrawArraysInstanced(GL_TRIANGLES, 0, m->vboSurfaces->numIndexes, count);
 	qglDrawElementsInstanced(GL_TRIANGLES, m->vboSurfaces->numIndexes, GL_UNSIGNED_INT, 0, count);
-	//qglFlushMappedBufferRange();
 
 	R_BindNullVBO();
 	R_BindNullIBO();
-	qglBindVertexArray(0);
+	//qglBindVertexArray(0);
 	GLSL_BindProgram(NULL);
 }
 

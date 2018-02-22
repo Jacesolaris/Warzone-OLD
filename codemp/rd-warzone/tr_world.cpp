@@ -361,6 +361,11 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 	// FIXME: bmodel fog?
 	int cubemapIndex = 0;
 
+	if (!surf->shader || (surf->shader->surfaceFlags & SURF_NODRAW))
+	{// How did we even get here?
+		return;
+	}
+
 	// try to cull before dlighting or adding
 	if (R_CullSurface(surf, entityNum)) {
 		return;

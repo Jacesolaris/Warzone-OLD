@@ -1693,6 +1693,11 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 					int cubemap, qboolean depthDrawOnly) {
 	int			index;
 
+	if (!shader || (shader->surfaceFlags & SURF_NODRAW))
+	{// How did we even get here?
+		return;
+	}
+
 #ifdef __Q3_FOG__
 	if (tr.refdef.rdflags & RDF_NOFOG)
 	{
@@ -1954,9 +1959,9 @@ static void R_AddEntitySurface (int entityNum)
 R_AddEntitySurfaces
 =============
 */
-#ifdef __INSTANCED_MODELS__
-extern void R_AddInstancedModelsToScene(void);
-#endif //__INSTANCED_MODELS__
+//#ifdef __INSTANCED_MODELS__
+//extern void R_AddInstancedModelsToScene(void);
+//#endif //__INSTANCED_MODELS__
 void R_AddEntitySurfaces (void) {
 	int i;
 
@@ -1969,9 +1974,9 @@ void R_AddEntitySurfaces (void) {
 		R_AddEntitySurface(i);
 	}
 
-#ifdef __INSTANCED_MODELS__
-	R_AddInstancedModelsToScene();
-#endif //__INSTANCED_MODELS__
+//#ifdef __INSTANCED_MODELS__
+//	R_AddInstancedModelsToScene();
+//#endif //__INSTANCED_MODELS__
 }
 
 /*
