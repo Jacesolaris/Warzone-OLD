@@ -253,7 +253,11 @@ vec4 SSS(in vec2 fragCoord)
 
 			if (diff <= maxAllow && diff >= minAllow)
 			{
-				float thisOcclusion = 1.0 - pow(diff, occPower);
+				//float dist = (diff - minAllow) / maxAllow;
+				//float dist2 = 1.0 - (diff / minAllow);
+				float center = ((minAllow + maxAllow) / 2.0);
+				float dist = 1.0 - (length(diff - center) / center);
+				float thisOcclusion = 1.0 - (pow(diff, occPower) * dist);
 				occlusion = min(occlusion, thisOcclusion);
 			}
 		}

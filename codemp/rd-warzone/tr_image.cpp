@@ -2375,7 +2375,7 @@ done:
 			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
 			*/
 
-			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
+			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -2398,7 +2398,7 @@ done:
 				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
 			*/
 
-			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
+			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -2443,7 +2443,7 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
 			*/
 
-			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
+			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -2466,7 +2466,7 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
 			*/
 
-			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
+			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
