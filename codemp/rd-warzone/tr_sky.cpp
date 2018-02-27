@@ -1130,6 +1130,9 @@ void DrawSkyDome ( shader_t *skyShader )
 	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
 	GL_BindToTMU(clouds2Image, TB_SPLATMAP3);
 
+	GLSL_SetUniformInt(&tr.skyDomeShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
+
 	vec2_t screensize;
 	//screensize[0] = backEnd.viewParms.viewportWidth;
 	//screensize[1] = backEnd.viewParms.viewportHeight;

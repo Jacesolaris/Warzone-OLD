@@ -2194,7 +2194,7 @@ Upload32
 */
 extern qboolean charSet;
 static void Upload32( byte *data, int width, int height, imgType_t type, int flags,
-	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight)
+	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight, int texnum)
 {
 	byte		*scaledBuffer = NULL;
 	byte		*resampledBuffer = NULL;
@@ -2227,6 +2227,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 			scan[i*4 + 2] = luma;
 		}
 	}
+#if 0 // ummm, wierd...
 	else if( r_greyscale->value )
 	{
 		for ( i = 0; i < c; i++ )
@@ -2237,6 +2238,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 			scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, r_greyscale->value);
 		}
 	}
+#endif
 
 	// normals are always swizzled
 	if (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT)
@@ -2360,8 +2362,20 @@ done:
 	{
 		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
 		{
-			qglTexParameterf ( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-							  Com_Clamp( 1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value ) );
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+
+			/*
+			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+			*/
+
+			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -2369,6 +2383,24 @@ done:
 	}
 	else
 	{
+		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
+		{
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			qglTexParameterf ( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+							  Com_Clamp( 1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value ) );
+
+			/*
+			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+			*/
+
+			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
+		}
+
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	}
@@ -2383,7 +2415,7 @@ done:
 
 
 static void EmptyTexture( int width, int height, imgType_t type, int flags,
-	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight )
+	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight, int texnum )
 {
 	int			scaled_width, scaled_height;
 
@@ -2396,10 +2428,22 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 
 	if (flags & IMGFLAG_MIPMAP)
 	{
-		if (r_ext_texture_filter_anisotropic->integer > 1 && glConfig.maxTextureFilterAnisotropy > 0.0f)
+		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
 		{
-			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-					(GLint)Com_Clamp( 1, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->integer ) );
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+
+			/*
+			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+			*/
+
+			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -2407,6 +2451,24 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 	}
 	else
 	{
+		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
+		{
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+
+			/*
+			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
+			*/
+
+			ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
+		}
+
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	}
@@ -2545,13 +2607,13 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		{
 			Upload32( pic, image->width, image->height, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
-				&image->uploadHeight );
+				&image->uploadHeight, image->texnum);
 		}
 		else
 		{
 			EmptyTexture(image->width, image->height, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
-				&image->uploadHeight );
+				&image->uploadHeight, image->texnum);
 		}
 
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
@@ -2674,13 +2736,13 @@ image_t *R_CreateCubemapFromImageDatas(const char *name, byte **pic, int width, 
 		{
 			Upload32(pic[0], image->width, image->height, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
-				&image->uploadHeight);
+				&image->uploadHeight, image->texnum);
 		}
 		else
 		{
 			EmptyTexture(image->width, image->height, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
-				&image->uploadHeight);
+				&image->uploadHeight, image->texnum);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode);
@@ -4127,15 +4189,18 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 		R_CreateOverlayMap( name, pic, width, height, flags );
 
-		R_CreateSplatControlMap( name, pic, width, height, flags );
-		R_CreateSplatMap1( name, pic, width, height, flags );
-		R_CreateSplatMap2( name, pic, width, height, flags );
-		R_CreateSplatMap3( name, pic, width, height, flags );
+		if (r_splatMapping->integer)
+		{
+			R_CreateSplatControlMap(name, pic, width, height, flags);
+			R_CreateSplatMap1(name, pic, width, height, flags);
+			R_CreateSplatMap2(name, pic, width, height, flags);
+			R_CreateSplatMap3(name, pic, width, height, flags);
 
-		R_CreateSteepMap( name, pic, width, height, flags );
-		R_CreateWaterEdgeMap( name, pic, width, height, flags );
+			R_CreateSteepMap(name, pic, width, height, flags);
+			R_CreateWaterEdgeMap(name, pic, width, height, flags);
 
-		R_CreateRoofMap(name, pic, width, height, flags);
+			R_CreateRoofMap(name, pic, width, height, flags);
+		}
 	}
 
 	if (skyImageNum != -1)

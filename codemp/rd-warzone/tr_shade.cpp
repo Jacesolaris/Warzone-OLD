@@ -2089,7 +2089,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #define __USE_DETAIL_DEPTH_SKIP__		// Skip drawing detail crap at all in shadow and depth prepasses - they should never be needed...
 #define __LIGHTMAP_IS_DETAIL__			// Lightmap stages are considered detail...
 
-		if (pStage->isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+		if (pStage->isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 		{
 			if (IS_DEPTH_PASS)
 			{
@@ -2303,7 +2303,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
-			if ((tess.shader->materialType) == MATERIAL_ROCK
+			if (r_splatMapping->integer
+				&& tess.shader->materialType == MATERIAL_ROCK
 				&& pStage->bundle[TB_STEEPMAP].image[0]
 				&& !pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 				&& !pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2312,7 +2313,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Procedural city sky scraper texture, use triplanar, not regions...
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
-			else if (((tess.shader->materialType) == MATERIAL_ROCK)
+			else if (r_splatMapping->integer
+				&& tess.shader->materialType == MATERIAL_ROCK
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2321,11 +2323,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				index |= LIGHTDEF_USE_REGIONS;
 			}
-			else if ((pStage->bundle[TB_STEEPMAP].image[0]
-				|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
-				|| pStage->bundle[TB_SPLATMAP1].image[0]
-				|| pStage->bundle[TB_SPLATMAP2].image[0]
-				|| pStage->bundle[TB_SPLATMAP3].image[0]))
+			else if (r_splatMapping->integer
+				&& (pStage->bundle[TB_STEEPMAP].image[0]
+					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+					|| pStage->bundle[TB_SPLATMAP1].image[0]
+					|| pStage->bundle[TB_SPLATMAP2].image[0]
+					|| pStage->bundle[TB_SPLATMAP3].image[0]))
 			{
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
@@ -2433,7 +2436,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif //__USE_DETAIL_CHECKING__
 			
-			if ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR))
+			if (r_splatMapping->integer && ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR)))
 			{
 				sp = &tr.lightAllSplatShader;
 			}
@@ -2806,7 +2809,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
 
-			if (sp == &tr.lightAllSplatShader)
+			if (r_splatMapping->integer && sp == &tr.lightAllSplatShader)
 			{
 #ifdef __USE_DETAIL_MAPS__
 				if (pStage->bundle[TB_DETAILMAP].image[0])
@@ -3338,7 +3341,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
-			if (isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL > -131072.0)
+			if (isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...

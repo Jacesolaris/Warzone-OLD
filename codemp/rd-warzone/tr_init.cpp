@@ -301,6 +301,7 @@ cvar_t	*r_volumeLightHQ;
 cvar_t	*r_debugBinds;
 cvar_t	*r_debugShaderStages;
 cvar_t	*r_debugImageCrcHashing;
+cvar_t	*r_splatMapping;
 cvar_t	*r_parallaxScale;
 cvar_t	*r_ao;
 cvar_t	*r_env;
@@ -321,7 +322,6 @@ cvar_t  *r_grassWaveSpeed;
 cvar_t  *r_grassWaveSize;
 cvar_t	*r_fog;
 cvar_t	*r_multithread;
-cvar_t	*r_multithread2;
 cvar_t	*r_testvar;
 cvar_t	*r_steepParallaxEyeX;
 cvar_t	*r_steepParallaxEyeY;
@@ -1581,6 +1581,8 @@ void R_Register( void )
 	r_debugShaderStages = ri->Cvar_Get("r_debugShaderStages", "0", CVAR_ARCHIVE);
 	r_debugImageCrcHashing = ri->Cvar_Get("r_debugImageCrcHashing", "0", CVAR_ARCHIVE);
 
+	r_splatMapping = ri->Cvar_Get("r_splatMapping", "1", CVAR_ARCHIVE | CVAR_LATCH);
+
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
 	r_ao = ri->Cvar_Get("r_ao", "3", CVAR_ARCHIVE);
@@ -1602,7 +1604,6 @@ void R_Register( void )
 
 	r_fog = ri->Cvar_Get( "r_fog", "0", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
 	r_multithread = ri->Cvar_Get( "r_multithread", "0", CVAR_ARCHIVE );
-	r_multithread2 = ri->Cvar_Get( "r_multithread2", "0", CVAR_ARCHIVE );
 	r_fOff1X = ri->Cvar_Get( "r_fOff1X", "-24.0", CVAR_ARCHIVE );
 	r_fOff1Y = ri->Cvar_Get( "r_fOff1Y", "-52.0", CVAR_ARCHIVE );
 	r_fOff2X = ri->Cvar_Get( "r_fOff2X", "28.0", CVAR_ARCHIVE );

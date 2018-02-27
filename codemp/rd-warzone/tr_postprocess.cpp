@@ -1832,7 +1832,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
 	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(/*tr.linearDepthImage4096*/tr.linearDepthImageZfar, TB_LIGHTMAP);
+	GL_BindToTMU(tr.linearDepthImage4096/*tr.linearDepthImageZfar*/, TB_LIGHTMAP);
 
 	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.ssdoNoiseImage, TB_DELUXEMAP);
@@ -1870,10 +1870,15 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	VectorSet4(local2, MAP_INFO_SIZE[2], MAP_INFO_MINS[2], MAP_INFO_MAXS[2], 0.0);
 	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LOCAL2, local2);
 
+	// Light positions (just sun for testing)
+	GLSL_SetUniformVec2(&tr.sssShader, UNIFORM_VLIGHTPOSITIONS, SUN_SCREEN_POSITION);
+
 	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo1, ldrBox, &tr.sssShader, color, 0);
 	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo2, ldrBox, &tr.sssShader, color, 0);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
 }
+
+extern qboolean USE_OCEAN;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -2036,8 +2041,20 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 
 	{
+		vec4_t local7;
+		VectorSet4(local7, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL7, local7);
+	}
+
+	{
+		vec4_t local8;
+		VectorSet4(local8, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL8, local8);
+	}
+
+	{
 		vec4_t loc;
-		VectorSet4(loc, r_waterWaveHeight->value, r_waterWaveDensity->value, 0.0, 0.0);
+		VectorSet4(loc, r_waterWaveHeight->value, r_waterWaveDensity->value, USE_OCEAN, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
 
@@ -2282,7 +2299,7 @@ extern void RealTransposeMatrix(const float m[16], float invOut[16]);
 extern void myInverseMatrix (float m[16], float src[16]);
 
 void transpose(float *src, float *dst, const int N, const int M) {
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int n = 0; n<N*M; n++) {
         int i = n/N;
         int j = n%N;

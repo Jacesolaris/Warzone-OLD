@@ -1,11 +1,9 @@
-//#define SIMPLIFIED_FRESNEL		// Seems no faster... not as good?
 #define REAL_WAVES					// You probably always want this turned on.
 #define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
-#define FOAM_SPLAT_MAPS				// Use foam splat maps to vary foam looks across the map...
+#define REAL_WAVES
 //#define __OLD_LIGHTING__
-//#define EXPERIMENTAL
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -47,7 +45,9 @@ uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLO
 uniform vec4		u_Local4;				// FOG_COLOR
 uniform vec4		u_Local5;				// FOG_COLOR_SUN
 uniform vec4		u_Local6;				// FOG_DENSITY
-uniform vec4		u_Local10;				// waveHeight, waveDensity
+uniform vec4		u_Local7;				// testshadervalue1, etc
+uniform vec4		u_Local8;				// testshadervalue5, etc
+uniform vec4		u_Local10;				// waveHeight, waveDensity, USE_OCEAN
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo;				// zmin, zmax, zmax / zmin
@@ -79,7 +79,6 @@ uniform float		u_Time;
 // Over-all water clearness...
 //const float waterClarity = 0.001;
 const float waterClarity = 0.03;
-//float waterClarity = u_Local0.r;
 
 // How fast will colours fade out. You can also think about this
 // values as how clear water is. Therefore use smaller values (eg. 0.05f)
@@ -123,7 +122,6 @@ const vec4 normalModifier = vec4(1.0, 2.0, 4.0, 8.0);
 //const vec3 foamExistence = vec3(1.5, 5.35, 2.3); //vec3(0.65, 1.35, 0.5);
 //const vec3 foamExistence = vec3(1.5, 50.0, waveHeight * 0.85/*5.0*/);
 #define foamExistence vec3(1.5, 50.0, waveHeight * 0.85/*5.0*/)
-//vec3 foamExistence = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 const float sunScale = 3.0;
 
@@ -139,26 +137,27 @@ vec3 waterColorShallow = u_Local2.rgb;
 //const vec3 waterColorDeep = vec3(0.0059, 0.1276, 0.18);
 vec3 waterColorDeep = u_Local3.rgb;
 
-//const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
-//const vec3 extinction = vec3(7.0, 96.0, 128.0);			// Horizontal
-//const vec3 extinction = vec3(35.0, 480.0, 640.0);
 const vec3 extinction = vec3(35.0, 480.0, 8192.0);
-//vec3 extinction = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 // Water transparency along eye vector.
-const float visibility = 32.0;
 //const float visibility = 320.0;
-//float visibility = u_Local0.r;//320.0;
+const float visibility = 32.0;
 
 // Increase this value to have more smaller waves.
 const vec2 scale = vec2(0.002, 0.002);
 const float refractionScale = 0.005;
 
-// Wind force in x and z axes.
-//const vec2 wind = vec2(-0.3, 0.7);
+#define USE_OCEAN u_Local10.b
 
 
-#ifdef FOAM_SPLAT_MAPS
+float saturate(in float val) {
+	return clamp(val, 0.0, 1.0);
+}
+
+vec3 saturate(in vec3 val) {
+	return clamp(val, vec3(0.0), vec3(1.0));
+}
+
 vec4 GetControlMap(vec3 m_vertPos)
 {
 	vec3 controlScale = vec3(1.0) / u_MapInfo.xyz;
@@ -200,13 +199,6 @@ vec4 GetFoamMap(vec3 m_vertPos, vec2 coord)
 
 	return splatColor;
 }
-#else //!FOAM_SPLAT_MAPS
-vec4 GetFoamMap(vec2 coord)
-{
-	// Just use single foam texture...
-	return texture(u_OverlayMap, coord);
-}
-#endif //FOAM_SPLAT_MAPS
 
 
 float rand(vec2 co) {
@@ -235,33 +227,47 @@ mat3 compute_tangent_frame(in vec3 N, in vec3 P, in vec2 UV) {
 // - eyeVec - normalized eye vector
 float fresnelTerm(vec3 normal, vec3 eyeVec)
 {
-#ifdef SIMPLIFIED_FRESNEL
-		// Simplified
-		return R0 + (1.0f - R0) * pow(1.0f - dot(eyeVec, normal), 5.0f);
-#else //!SIMPLIFIED_FRESNEL
 		float angle = 1.0f - clamp(dot(normal, eyeVec), 0.0, 1.0);
 		float fresnel = angle * angle;
 		fresnel = fresnel * fresnel;
 		fresnel = fresnel * angle;
 		return clamp(fresnel * (1.0 - clamp(R0, 0.0, 1.0)) + R0 - refractionStrength, 0.0, 1.0);
-#endif //SIMPLIFIED_FRESNEL
+}
+
+// Indices of refraction
+#define Air 1.0
+#define Bubble 1.06
+
+// Air to glass ratio of the indices of refraction (Eta)
+#define Eta (Air / Bubble)
+
+// see http://en.wikipedia.org/wiki/Refractive_index Reflectivity
+#define R0 (((Air - Bubble) * (Air - Bubble)) / ((Air + Bubble) * (Air + Bubble)))
+
+vec3 GetFresnel( vec3 vView, vec3 vNormal, vec3 vR0, float fGloss )
+{
+	float NdotV = max( 0.0, dot( vView, vNormal ) );
+	return vR0 + (vec3(1.0) - vR0) * pow( 1.0 - NdotV, 5.0 ) * pow( fGloss, 20.0 );
 }
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
-	return textureLod(u_PositionMap, coord, 0.0).xzyw;
+	return texture(u_PositionMap, coord).xzyw;
 }
 
 vec4 waterMapLowerAtCoord ( vec2 coord )
 {
-	vec4 wmap = textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
+	vec4 wmap = texture(u_WaterPositionMap, coord).xzyw;
+	wmap.y = max(wmap.y, MAP_WATER_LEVEL);
 	wmap.y -= waveHeight;
 	return wmap;
 }
 
 vec4 waterMapUpperAtCoord ( vec2 coord )
 {
-	vec4 wmap = textureLod(u_WaterPositionMap, coord, 0.0).xzyw;
+	vec4 wmap = texture(u_WaterPositionMap, coord).xzyw;
+	wmap.y = max(wmap.y, MAP_WATER_LEVEL);
+	//wmap.y += waveHeight;
 	return wmap;
 }
 
@@ -357,11 +363,17 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 }
 #endif //USE_REFLECTION
 
-#ifdef __OLD_LIGHTING__
-// lighting
+
 float getdiffuse(vec3 n, vec3 l, float p) {
 	return pow(dot(n, l) * 0.4 + 0.6, p);
 }
+
+float sun(vec3 ray, vec3 lightDir) {
+	vec3 sd = lightDir;
+	return pow(max(0.0, dot(ray, sd)), 528.0);
+}
+
+#ifdef __OLD_LIGHTING__
 float getspecular(vec3 n, vec3 l, vec3 e, float s) {
 	float nrm = (s + 8.0) / (3.1415 * 8.0);
 	return pow(max(dot(reflect(e, n), l), 0.0), s) * nrm;
@@ -413,11 +425,6 @@ float sphereLight(vec3 pos, vec3 N, vec3 V, vec3 r, float f0, float roughness, f
 	return specD * specF * specV * NoL;
 }
 
-float getdiffuse(vec3 n, vec3 l, float p) {
-	float ndotl = clamp(dot(n, l), 0.5, 0.9);
-	return pow(ndotl, p);
-}
-
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
 	float noise = texture(u_DeluxeMap, pos.xy).x * 0.5;
 	noise += texture(u_DeluxeMap, pos.xy * 0.5).y;
@@ -453,526 +460,172 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 }
 #endif //__OLD_LIGHTING__
 
+#define iTime (1.0-u_Time)
+#define EULER 2.7182818284590452353602874
 
-#ifdef EXPERIMENTAL
-const float PI	 	= 3.14159265358;
+// its from here https://github.com/achlubek/venginenative/blob/master/shaders/include/WaterHeight.glsl 
+float wave(vec2 uv, vec2 emitter, float speed, float phase, float timeshift) {
+	float dst = distance(uv, emitter);
+	return pow(EULER, sin(dst * phase - (iTime + timeshift) * speed)) / EULER;
+}
+vec2 wavedrag(vec2 uv, vec2 emitter) {
+	return normalize(uv - emitter);
+}
 
-// Can you explain these epsilons to a wide graphics audience?  YOUR comment could go here.
-const float EPSILON	= 1e-3;
-#define EPSILON_NRM	(0.1 / u_Dimensions.x)
+#define DRAG_MULT 4.0
 
-// Constant indicaing the number of steps taken while marching the light ray.  
-const int NUM_STEPS = 4;
+float getwaves(vec2 position) {
+	position *= 0.1;
+	float iter = 0.0;
+	float phase = 1.5;// 6.0;
+	float speed = 1.0;// 1.5;// 2.0;
+	float weight = 1.0;// 1.0;
+	float w = 0.0;
+	float ws = 0.0;
+	for (int i = 0; i<3; i++)
+	{
+		vec2 p = vec2(sin(iter), cos(iter)) * 30.0;
+		float res = wave(position, p, speed, phase, 0.0);
+		float res2 = wave(position, p, speed, phase, 0.006);
+		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT;
+		w += res * weight;
+		iter += 12.0;
+		ws += weight;
+		weight = mix(weight, 0.0, 0.2);
+		phase *= 1.2;
+		speed *= 1.02;
+	}
+	return pow(w / ws, 0.2);
+}
 
-//Constants relating to the iteration of the heightmap for the wave, another part of the rendering
-//process.
-const int ITER_GEOMETRY = 2;
-const int ITER_FRAGMENT =5;
+float getwavesDetail(vec2 position) {
+	position *= 0.1;
+	float iter = 0.0;
+	float phase = 1.5;
+	float speed = 1.5;
+	float weight = 1.0;
+	float w = 0.0;
+	float ws = 0.0;
+	for (int i = 0; i<12; i++)
+	{
+		vec2 p = vec2(sin(iter), cos(iter)) * 30.0;
+		float res = wave(position, p, speed, phase, 0.0);
+		float res2 = wave(position, p, speed, phase, 0.006);
+		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT;
+		w += res * weight;
+		iter += 36.0;// 12.0;
+		ws += weight;
+		weight = mix(weight, 0.0, 0.1);
+		phase *= 1.67;//1.2;
+		speed *= 1.07;//1.02;
+	}
+	return pow(w / ws, -0.333);
+}
 
-// Constants that represent physical characteristics of the sea, can and should be changed and 
-//  played with
-const float SEA_HEIGHT = 1.1;
-const float SEA_CHOPPY = 5.0;
-const float SEA_SPEED = 0.9;
-const float SEA_FREQ = 0.14;
-const vec3 SEA_BASE = vec3(0.11,0.19,0.22);
-const vec3 SEA_WATER_COLOR = vec3(0.55,0.9,0.7);
-#define SEA_TIME (u_Time * SEA_SPEED)
+void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
+	if (USE_OCEAN > 0.0)
+	{
+		height = getwaves(pos.xy) * depth;
 
-//Matrix to permute the water surface into a complex, realistic form
-mat2 octave_m = mat2(1.7,1.1,-1.1,1.4);
+		// Create a basic "big waves" normal vector...
+		vec2 ex = vec2(e, 0) * 16.0;
 
-//Space bar key constant
-const float KEY_SP    = 32.5/256.0;
+		float height2 = getwaves(pos.xy + ex.xy) * depth;
+		float height3 = getwaves(pos.xy + ex.yx) * depth;
 
-//CaliCoastReplay :  These HSV/RGB translation functions are
-//from http://gamedev.stackexchange.com/questions/59797/glsl-shader-change-hue-saturation-brightness
-//This one converts red-green-blue color to hue-saturation-value color
-vec3 rgb2hsv(vec3 c)
+		vec3 a = vec3(pos.x, height, pos.y);
+		waveNormal = cross(normalize(a - vec3(pos.x - e, height2, pos.y)), normalize(a - vec3(pos.x, height3, pos.y + e)));
+
+		// Now make a lighting normal vector, with some "small waves" bumpiness...
+		float dheight = getwavesDetail(pos.xy) * depth;
+		float dheight2 = getwavesDetail(pos.xy + ex.xy) * depth;
+		float dheight3 = getwavesDetail(pos.xy + ex.yx) * depth;
+
+		vec3 da = vec3(pos.x, dheight, pos.y);
+		vec3 dnormal = cross(normalize(da - vec3(pos.x - e, dheight2, pos.y)), normalize(da - vec3(pos.x, dheight3, pos.y + e)));
+
+		lightingNormal = normalize(waveNormal + (dnormal * 0.8));
+
+		//normal = normalize(vec3(height - height2, u_Local0.b, height - height3));
+
+		//normal = normalize(normal * 2.0 - 1.0);
+	}
+	else
+	{
+		vec2 ex = vec2(e, 0) * 16.0;
+
+		height = getwavesDetail(pos.xy) * depth;
+		float height2 = getwavesDetail(pos.xy + ex.xy) * depth;
+		float height3 = getwavesDetail(pos.xy + ex.yx) * depth;
+
+		vec3 da = vec3(pos.x, height, pos.y);
+		waveNormal = cross(normalize(da - vec3(pos.x - e, height2, pos.y)), normalize(da - vec3(pos.x, height3, pos.y + e)));
+		lightingNormal = waveNormal;
+	}
+}
+
+void ScanHeightMap(inout vec3 surfacePoint, inout vec3 eyeVecNorm, inout float level, inout vec2 texCoord, inout float t, out vec3 waveNormal, inout vec3 lightingNormal, in float timer, inout float height)
 {
-    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+	GetHeightAndNormal(surfacePoint.xz*0.03, 0.004, 1.0, height, waveNormal, lightingNormal, eyeVecNorm, timer, level);
+	level = level + (height * waveHeight);
+	//surfacePoint.y = level;
 
-    float d = q.x - min(q.w, q.y);
-    float e = 1.0e-10;
-    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+	t = (level - ViewOrigin.y) / eyeVecNorm.y;
+	surfacePoint = ViewOrigin + eyeVecNorm * t;
 }
 
-//CaliCoastReplay :  These HSV/RGB translation functions are
-//from http://gamedev.stackexchange.com/questions/59797/glsl-shader-change-hue-saturation-brightness
-//This one converts hue-saturation-value color to red-green-blue color
-vec3 hsv2rgb(vec3 c)
+vec3 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float timer)
 {
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+	vec3 eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
+	vec3 pixelDir = eyeVecNorm;
+	vec3 normal = normalize(pixelDir + (color.rgb * 0.5 - 0.25));
+	vec3 specular = vec3(0.0);
+	vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
+	float lambertian2 = dot(lightDir.xyz, normal);
+	float spec2 = 0.0;
+	float fresnel = clamp(1.0 - dot(normal, -eyeVecNorm), 0.0, 1.0);
+	fresnel = pow(fresnel, 3.0) * 0.65;
+
+	vec2 texCoord = var_TexCoords.xy;
+	texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * refractionScale;
+
+	vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
+	refraction = mix(waterColorShallow.rgb, refraction.rgb, 0.3);
+
+	float fTime = u_Time * 2.0;
+
+	vec3 foam = (GetFoamMap(vec3(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime, 0.5), vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + GetFoamMap(vec3(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime, 0.5), vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
+
+	color = mix(color + (foam * sunColor), refraction, fresnel * 0.8);
+
+	if (lambertian2 > 0.0)
+	{// this is blinn phong
+		vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
+		vec3 halfDir2 = normalize(lightDir.xyz + mirrorEye);
+		float specAngle = max(dot(halfDir2, normal), 0.0);
+		spec2 = pow(specAngle, 16.0);
+		specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
+	}
+
+	color = clamp(color + specular, 0.0, 1.0);
+
+#ifdef __OLD_LIGHTING__
+	color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
+#else //!__OLD_LIGHTING__
+	color += blinn_phong(waterMapUpper.xyz, color.rgb, normal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz);
+#endif //__OLD_LIGHTING__
+
+	color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color);
+
+	return color;
 }
-
-// math
-// bteitler: Turn a vector of Euler angles into a rotation matrix
-mat3 fromEuler(vec3 ang) {
-	vec2 a1 = vec2(sin(ang.x),cos(ang.x));
-    vec2 a2 = vec2(sin(ang.y),cos(ang.y));
-    vec2 a3 = vec2(sin(ang.z),cos(ang.z));
-    mat3 m;
-    m[0] = vec3(a1.y*a3.y+a1.x*a2.x*a3.x,a1.y*a2.x*a3.x+a3.y*a1.x,-a2.y*a3.x);
-	m[1] = vec3(-a2.y*a1.x,a1.y*a2.y,a2.x);
-	m[2] = vec3(a3.y*a1.x*a2.x+a1.y*a3.x,a1.x*a3.x-a1.y*a3.y*a2.x,a2.y*a3.y);
-	return m;
-}
-
-// bteitler: A 2D hash function for use in noise generation that returns range [0 .. 1].  You could
-// use any hash function of choice, just needs to deterministic and return
-// between 0 and 1, and also behave randomly.  Googling "GLSL hash function" returns almost exactly 
-// this function: http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-// Performance is a real consideration of hash functions since ray-marching is already so heavy.
-float hash( vec2 p ) {
-    float h = dot(p,vec2(127.1,311.7));	
-    return fract(sin(h)*43758.5453123);
-}
-
-// bteitler: A 2D psuedo-random wave / terrain function.  This is actually a poor name in my opinion,
-// since its the "hash" function that is really the noise, and this function is smoothly interpolating
-// between noisy points to create a continuous surface.
-float noise( in vec2 p ) {
-    vec2 i = floor( p );
-    vec2 f = fract( p );	
-
-    // bteitler: This is equivalent to the "smoothstep" interpolation function.
-    // This is a smooth wave function with input between 0 and 1
-    // (since it is taking the fractional part of <p>) and gives an output
-    // between 0 and 1 that behaves and looks like a wave.  This is far from obvious, but we can graph it to see
-    // Wolfram link: http://www.wolframalpha.com/input/?i=plot+x*x*%283.0-2.0*x%29+from+x%3D0+to+1
-    // This is used to interpolate between random points.  Any smooth wave function that ramps up from 0 and
-    // and hit 1.0 over the domain 0 to 1 would work.  For instance, sin(f * PI / 2.0) gives similar visuals.
-    // This function is nice however because it does not require an expensive sine calculation.
-    vec2 u = f*f*(3.0-2.0*f);
-
-    // bteitler: This very confusing looking mish-mash is simply pulling deterministic random values (between 0 and 1)
-    // for 4 corners of the grid square that <p> is inside, and doing 2D interpolation using the <u> function
-    // (remember it looks like a nice wave!) 
-    // The grid square has points defined at integer boundaries.  For example, if <p> is (4.3, 2.1), we will 
-    // evaluate at points (4, 2), (5, 2), (4, 3), (5, 3), and then interpolate x using u(.3) and y using u(.1).
-    return -1.0+2.0*mix( 
-                mix( hash( i + vec2(0.0,0.0) ), 
-                     hash( i + vec2(1.0,0.0) ), 
-                        u.x),
-                mix( hash( i + vec2(0.0,1.0) ), 
-                     hash( i + vec2(1.0,1.0) ), 
-                        u.x), 
-                u.y);
-}
-
-// bteitler: diffuse lighting calculation - could be tweaked to taste
-// lighting
-float diffuse(vec3 n,vec3 l,float p) {
-    return pow(dot(n,l) * 0.4 + 0.6,p);
-}
-
-// bteitler: specular lighting calculation - could be tweaked taste
-float specular(vec3 n,vec3 l,vec3 e,float s) {    
-    float nrm = (s + 8.0) / (3.1415 * 8.0);
-    return pow(max(dot(reflect(e,n),l),0.0),s) * nrm;
-}
-
-// bteitler: Generate a smooth sky gradient color based on ray direction's Y value
-// sky
-vec3 getSkyColor(vec3 e) {
-    e.y = max(e.y,0.0);
-    vec3 ret;
-    ret.x = pow(1.0-e.y,2.0);
-    ret.y = 1.0-e.y;
-    ret.z = 0.6+(1.0-e.y)*0.4;
-    return ret;
-}
-
-// sea
-// bteitler: TLDR is that this passes a low frequency random terrain through a 2D symmetric wave function that looks like this:
-// http://www.wolframalpha.com/input/?i=%7B1-%7B%7B%7BAbs%5BCos%5B0.16x%5D%5D+%2B+Abs%5BCos%5B0.16x%5D%5D+%28%281.+-+Abs%5BSin%5B0.16x%5D%5D%29+-+Abs%5BCos%5B0.16x%5D%5D%29%7D+*+%7BAbs%5BCos%5B0.16y%5D%5D+%2B+Abs%5BCos%5B0.16y%5D%5D+%28%281.+-+Abs%5BSin%5B0.16y%5D%5D%29+-+Abs%5BCos%5B0.16y%5D%5D%29%7D%7D%5E0.65%7D%7D%5E4+from+-20+to+20
-// The <choppy> parameter affects the wave shape.
-float sea_octave(vec2 uv, float choppy) {
-    // bteitler: Add the smoothed 2D terrain / wave function to the input coordinates
-    // which are going to be our X and Z world coordinates.  It may be unclear why we are doing this.
-    // This value is about to be passed through a wave function.  So we have a smoothed psuedo random height
-    // field being added to our (X, Z) coordinates, and then fed through yet another wav function below.
-    uv += noise(uv);
-    // Note that you could simply return noise(uv) here and it would take on the characteristics of our 
-    // noise interpolation function u and would be a reasonable heightmap for terrain.  
-    // However, that isn't the shape we want in the end for an ocean with waves, so it will be fed through
-    // a more wave like function.  Note that although both x and y channels of <uv> have the same value added, there is a 
-    // symmetry break because <uv>.x and <uv>.y will typically be different values.
-
-    // bteitler: This is a wave function with pointy peaks and curved troughs:
-    // http://www.wolframalpha.com/input/?i=1-abs%28cos%28x%29%29%3B
-    vec2 wv = 1.0-abs(sin(uv)); 
-
-    // bteitler: This is a wave function with curved peaks and pointy troughs:
-    // http://www.wolframalpha.com/input/?i=abs%28cos%28x%29%29%3B
-    vec2 swv = abs(cos(uv));  
-  
-    // bteitler: Blending both wave functions gets us a new, cooler wave function (output between 0 and 1):
-    // http://www.wolframalpha.com/input/?i=abs%28cos%28x%29%29+%2B+abs%28cos%28x%29%29+*+%28%281.0-abs%28sin%28x%29%29%29+-+abs%28cos%28x%29%29%29
-    wv = mix(wv,swv,wv);
-
-    // bteitler: Finally, compose both of the wave functions for X and Y channels into a final 
-    // 1D height value, shaping it a bit along the way.  First, there is the composition (multiplication) of
-    // the wave functions: wv.x * wv.y.  Wolfram will give us a cute 2D height graph for this!:
-    // http://www.wolframalpha.com/input/?i=%7BAbs%5BCos%5Bx%5D%5D+%2B+Abs%5BCos%5Bx%5D%5D+%28%281.+-+Abs%5BSin%5Bx%5D%5D%29+-+Abs%5BCos%5Bx%5D%5D%29%7D+*+%7BAbs%5BCos%5By%5D%5D+%2B+Abs%5BCos%5By%5D%5D+%28%281.+-+Abs%5BSin%5By%5D%5D%29+-+Abs%5BCos%5By%5D%5D%29%7D
-    // Next, we reshape the 2D wave function by exponentiation: (wv.x * wv.y)^0.65.  This slightly rounds the base of the wave:
-    // http://www.wolframalpha.com/input/?i=%7B%7BAbs%5BCos%5Bx%5D%5D+%2B+Abs%5BCos%5Bx%5D%5D+%28%281.+-+Abs%5BSin%5Bx%5D%5D%29+-+Abs%5BCos%5Bx%5D%5D%29%7D+*+%7BAbs%5BCos%5By%5D%5D+%2B+Abs%5BCos%5By%5D%5D+%28%281.+-+Abs%5BSin%5By%5D%5D%29+-+Abs%5BCos%5By%5D%5D%29%7D%7D%5E0.65
-    // one last final transform (with choppy = 4) results in this which resembles a recognizable ocean wave shape in 2D:
-    // http://www.wolframalpha.com/input/?i=%7B1-%7B%7B%7BAbs%5BCos%5Bx%5D%5D+%2B+Abs%5BCos%5Bx%5D%5D+%28%281.+-+Abs%5BSin%5Bx%5D%5D%29+-+Abs%5BCos%5Bx%5D%5D%29%7D+*+%7BAbs%5BCos%5By%5D%5D+%2B+Abs%5BCos%5By%5D%5D+%28%281.+-+Abs%5BSin%5By%5D%5D%29+-+Abs%5BCos%5By%5D%5D%29%7D%7D%5E0.65%7D%7D%5E4
-    // Note that this function is called with a specific frequency multiplier which will stretch out the wave.  Here is the graph
-    // with the base frequency used by map and map_detailed (0.16):
-    // http://www.wolframalpha.com/input/?i=%7B1-%7B%7B%7BAbs%5BCos%5B0.16x%5D%5D+%2B+Abs%5BCos%5B0.16x%5D%5D+%28%281.+-+Abs%5BSin%5B0.16x%5D%5D%29+-+Abs%5BCos%5B0.16x%5D%5D%29%7D+*+%7BAbs%5BCos%5B0.16y%5D%5D+%2B+Abs%5BCos%5B0.16y%5D%5D+%28%281.+-+Abs%5BSin%5B0.16y%5D%5D%29+-+Abs%5BCos%5B0.16y%5D%5D%29%7D%7D%5E0.65%7D%7D%5E4+from+-20+to+20
-    return pow(1.0-pow(wv.x * wv.y,0.65),choppy);
-}
-
-// bteitler: Compute the distance along Y axis of a point to the surface of the ocean
-// using a low(er) resolution ocean height composition function (less iterations).
-float map(vec3 p) {
-    float freq = SEA_FREQ;
-    float amp = SEA_HEIGHT;
-    float choppy = SEA_CHOPPY;
-    vec2 uv = p.xz; uv.x *= 0.75;
-    
-    // bteitler: Compose our wave noise generation ("sea_octave") with different frequencies
-    // and offsets to achieve a final height map that looks like an ocean.  Likely lots
-    // of black magic / trial and error here to get it to look right.  Each sea_octave has this shape:
-    // http://www.wolframalpha.com/input/?i=%7B1-%7B%7B%7BAbs%5BCos%5B0.16x%5D%5D+%2B+Abs%5BCos%5B0.16x%5D%5D+%28%281.+-+Abs%5BSin%5B0.16x%5D%5D%29+-+Abs%5BCos%5B0.16x%5D%5D%29%7D+*+%7BAbs%5BCos%5B0.16y%5D%5D+%2B+Abs%5BCos%5B0.16y%5D%5D+%28%281.+-+Abs%5BSin%5B0.16y%5D%5D%29+-+Abs%5BCos%5B0.16y%5D%5D%29%7D%7D%5E0.65%7D%7D%5E4+from+-20+to+20
-    // which should give you an idea of what is going.  You don't need to graph this function because it
-    // appears to your left :)
-    float d, h = 0.0;    
-    for(int i = 0; i < ITER_GEOMETRY; i++) {
-        // bteitler: start out with our 2D symmetric wave at the current frequency
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-        // bteitler: stack wave ontop of itself at an offset that varies over time for more height and wave pattern variance
-    	//d += sea_octave((uv-SEA_TIME)*freq,choppy);
-
-        h += d * amp; // bteitler: Bump our height by the current wave function
-        
-        // bteitler: "Twist" our domain input into a different space based on a permutation matrix
-        // The scales of the matrix values affect the frequency of the wave at this iteration, but more importantly
-        // it is responsible for the realistic assymetry since the domain is shiftly differently.
-        // This is likely the most important parameter for wave topology.
-    	uv *=  octave_m;
-        
-        freq *= 1.9; // bteitler: Exponentially increase frequency every iteration (on top of our permutation)
-        amp *= 0.22; // bteitler: Lower the amplitude every frequency, since we are adding finer and finer detail
-        // bteitler: finally, adjust the choppy parameter which will effect our base 2D sea_octave shape a bit.  This makes
-        // the "waves within waves" have different looking shapes, not just frequency and offset
-        choppy = mix(choppy,1.0,0.2);
-    }
-    return p.y - h;
-}
-
-// bteitler: Compute the distance along Y axis of a point to the surface of the ocean
-// using a high(er) resolution ocean height composition function (more iterations).
-float map_detailed(vec3 p) {
-    float freq = SEA_FREQ;
-    float amp = SEA_HEIGHT;
-    float choppy = SEA_CHOPPY;
-    vec2 uv = p.xz; uv.x *= 0.75;
-    
-    // bteitler: Compose our wave noise generation ("sea_octave") with different frequencies
-    // and offsets to achieve a final height map that looks like an ocean.  Likely lots
-    // of black magic / trial and error here to get it to look right.  Each sea_octave has this shape:
-    // http://www.wolframalpha.com/input/?i=%7B1-%7B%7B%7BAbs%5BCos%5B0.16x%5D%5D+%2B+Abs%5BCos%5B0.16x%5D%5D+%28%281.+-+Abs%5BSin%5B0.16x%5D%5D%29+-+Abs%5BCos%5B0.16x%5D%5D%29%7D+*+%7BAbs%5BCos%5B0.16y%5D%5D+%2B+Abs%5BCos%5B0.16y%5D%5D+%28%281.+-+Abs%5BSin%5B0.16y%5D%5D%29+-+Abs%5BCos%5B0.16y%5D%5D%29%7D%7D%5E0.65%7D%7D%5E4+from+-20+to+20
-    // which should give you an idea of what is going.  You don't need to graph this function because it
-    // appears to your left :)
-    float d, h = 0.0;    
-    for(int i = 0; i < ITER_FRAGMENT; i++) {
-        // bteitler: start out with our 2D symmetric wave at the current frequency
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-        // bteitler: stack wave ontop of itself at an offset that varies over time for more height and wave pattern variance
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
-        
-        h += d * amp; // bteitler: Bump our height by the current wave function
-        
-        // bteitler: "Twist" our domain input into a different space based on a permutation matrix
-        // The scales of the matrix values affect the frequency of the wave at this iteration, but more importantly
-        // it is responsible for the realistic assymetry since the domain is shiftly differently.
-        // This is likely the most important parameter for wave topology.
-    	uv *= octave_m/1.2;
-        
-        freq *= 1.9; // bteitler: Exponentially increase frequency every iteration (on top of our permutation)
-        amp *= 0.22; // bteitler: Lower the amplitude every frequency, since we are adding finer and finer detail
-        // bteitler: finally, adjust the choppy parameter which will effect our base 2D sea_octave shape a bit.  This makes
-        // the "waves within waves" have different looking shapes, not just frequency and offset
-        choppy = mix(choppy,1.0,0.2);
-    }
-    return p.y - h;
-}
-
-// bteitler:
-// p: point on ocean surface to get color for
-// n: normal on ocean surface at <p>
-// l: light (sun) direction
-// eye: ray direction from camera position for this pixel
-// dist: distance from camera to point <p> on ocean surface
-vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {  
-    // bteitler: Fresnel is an exponential that gets bigger when the angle between ocean
-    // surface normal and eye ray is smaller
-    float fresnel = 1.0 - max(dot(n,-eye),0.0);
-    fresnel = pow(fresnel,3.0) * 0.45;
-        
-    // bteitler: Bounce eye ray off ocean towards sky, and get the color of the sky
-    vec3 reflected = getSkyColor(reflect(eye,n))*0.89;    
-    
-    // bteitler: refraction effect based on angle between light surface normal
-    vec3 refracted = SEA_BASE + diffuse(n,l,80.0) * SEA_WATER_COLOR * 0.27; 
-    
-    // bteitler: blend the refracted color with the reflected color based on our fresnel term
-    vec3 color = mix(refracted,reflected,fresnel);
-    
-    // bteitler: Apply a distance based attenuation factor which is stronger
-    // at peaks
-    float atten = max(1.0 - dot(dist,dist) * 0.001, 0.0);
-    color += SEA_WATER_COLOR * (p.y - SEA_HEIGHT) * 0.18 * atten;
-    
-    // bteitler: Apply specular highlight
-    color += vec3(specular(n,l,eye,60.0));
-    
-    return color;
-}
-
-// bteitler: Estimate the normal at a point <p> on the ocean surface using a slight more detailed
-// ocean mapping function (using more noise octaves).
-// Takes an argument <eps> (stands for epsilon) which is the resolution to use
-// for the gradient.  See here for more info on gradients: https://en.wikipedia.org/wiki/Gradient
-// tracing
-vec3 getNormal(vec3 p, float eps) {
-    // bteitler: Approximate gradient.  An exact gradient would need the "map" / "map_detailed" functions
-    // to return x, y, and z, but it only computes height relative to surface along Y axis.  I'm assuming
-    // for simplicity and / or optimization reasons we approximate the gradient by the change in ocean
-    // height for all axis.
-    vec3 n;
-    n.y = map_detailed(p); // bteitler: Detailed height relative to surface, temporarily here to save a variable?
-    n.x = map_detailed(vec3(p.x+eps,p.y,p.z)) - n.y; // bteitler approximate X gradient as change in height along X axis delta
-    n.z = map_detailed(vec3(p.x,p.y,p.z+eps)) - n.y; // bteitler approximate Z gradient as change in height along Z axis delta
-    // bteitler: Taking advantage of the fact that we know we won't have really steep waves, we expect
-    // the Y normal component to be fairly large always.  Sacrifices yet more accurately to avoid some calculation.
-    n.y = eps; 
-    return normalize(n);
-
-    // bteitler: A more naive and easy to understand version could look like this and
-    // produces almost the same visuals and is a little more expensive.
-    // vec3 n;
-    // float h = map_detailed(p);
-    // n.y = map_detailed(vec3(p.x,p.y+eps,p.z)) - h;
-    // n.x = map_detailed(vec3(p.x+eps,p.y,p.z)) - h;
-    // n.z = map_detailed(vec3(p.x,p.y,p.z+eps)) - h;
-    // return normalize(n);
-}
-
-// bteitler: Find out where a ray intersects the current ocean
-float heightMapTracing(vec3 ori, vec3 dir, out vec3 p) {  
-    float tm = 0.0;
-    float tx = 500.0; // bteitler: a really far distance, this could likely be tweaked a bit as desired
-
-    // bteitler: At a really far away distance along the ray, what is it's height relative
-    // to the ocean in ONLY the Y direction?
-    float hx = map(ori + dir * tx);
-    
-    // bteitler: A positive height relative to the ocean surface (in Y direction) at a really far distance means
-    // this pixel is pure sky.  Quit early and return the far distance constant.
-    if(hx > 0.0) return tx;   
-
-    // bteitler: hm starts out as the height of the camera position relative to ocean.
-    float hm = map(ori + dir * tm); 
-   
-    // bteitler: This is the main ray marching logic.  This is probably the single most confusing part of the shader
-    // since height mapping is not an exact distance field (tells you distance to surface if you drop a line down to ocean
-    // surface in the Y direction, but there could have been a peak at a very close point along the x and z 
-    // directions that is closer).  Therefore, it would be possible/easy to overshoot the surface using the raw height field
-    // as the march distance.  The author uses a trick to compensate for this.
-    float tmid = 0.0;
-    for(int i = 0; i < NUM_STEPS; i++) { // bteitler: Constant number of ray marches per ray that hits the water
-        // bteitler: Move forward along ray in such a way that has the following properties:
-        // 1. If our current height relative to ocean is higher, move forward more
-        // 2. If the height relative to ocean floor very far along the ray is much lower
-        //    below the ocean surface, move forward less
-        // Idea behind 1. is that if we are far above the ocean floor we can risk jumping
-        // forward more without shooting under ocean, because the ocean is mostly level.
-        // The idea behind 2. is that if extruding the ray goes farther under the ocean, then 
-        // you are looking more orthgonal to ocean surface (as opposed to looking towards horizon), and therefore
-        // movement along the ray gets closer to ocean faster, so we need to move forward less to reduce risk
-        // of overshooting.
-        tmid = mix(tm,tx, hm/(hm-hx));
-        p = ori + dir * tmid; 
-                  
-    	float hmid = map(p); // bteitler: Re-evaluate height relative to ocean surface in Y axis
-
-        if(hmid < 0.0) { // bteitler: We went through the ocean surface if we are negative relative to surface now
-            // bteitler: So instead of actually marching forward to cross the surface, we instead
-            // assign our really far distance and height to be where we just evaluated that crossed the surface.
-            // Next iteration will attempt to go forward more and is less likely to cross the boundary.
-            // A naive implementation might have returned <tmid> immediately here, which
-            // results in a much poorer / somewhat indeterministic quality rendering.
-            tx = tmid;
-            hx = hmid;
-        } else {
-            // Haven't hit surface yet, easy case, just march forward
-            tm = tmid;
-            hm = hmid;
-        }
-    }
-
-    // bteitler: Return the distance, which should be really close to the height map without going under the ocean
-    return tmid;
-}
-
-vec3 ExperimentalWater(vec2 coord, vec3 waterMapLower)
-{
-	 // bteitler: 2D Pixel location passed in as raw pixel, let's divide by resolution
-    // to convert to coordinates between 0 and 1
-    vec2 uv = coord;
-
-    uv = uv * 2.0 - 1.0; //  bteitler: Shift pixel coordinates from 0 to 1 to between -1 and 1
-    //uv -= 0.75;
-    uv.x *= u_Dimensions.x / u_Dimensions.y; // bteitler: Aspect ratio correction - if you don't do this your rays will be distorted
-    float time = u_Time*0.3;
-        
-    // ray
-
-	vec3 ori = (ViewOrigin.xyz / u_MapInfo.xyz) * 0.5 + 0.5;//(ViewOrigin.xyz + u_MapInfo.xyz) / (u_MapInfo.xyz * 2.0); // Make everything positive numbers...
-	ori.y *= u_Local0.g;
-	ori.x *= u_Local0.b;
-	ori.z *= u_Local0.a;
-
-	vec3 wori = (waterMapLower.xyz / u_MapInfo.xyz) * 0.5 + 0.5;//(waterMapLower.xyz + u_MapInfo.xyz) / (u_MapInfo.xyz * 2.0); // Make everything positive numbers...
-
-    // bteitler: Calculated a vector that smoothly changes over time in a sinusoidal (wave) pattern.  
-    // This will be used to drive where the user is looking in world space.
-    //vec3 ang = vec3(0.0, 1.25, 0.0);
-    vec3 ang = (normalize(ViewOrigin.xyz - waterMapLower.xyz) * 0.5 + 0.5) * u_Local0.r;// * 1.25;//vec3(0.0, 0.0, 0.0); // 0.0 - flat, 3.14 upside down flat // 1.57??
-    
-    // bteitler: Calculate the "origin" of the camera in world space based on time.  Camera is located
-    // at height 3.5, at x 0 (zero), and flies over the ocean in the z axis over time.
-    //vec3 ori = vec3(length(ViewOrigin.x - waterMapLower.x), length(ViewOrigin.y - waterMapLower.y), length(ViewOrigin.z - waterMapLower.z));//vec3(0.0,5.5,0.0);
-   
-    // bteitler: This is the ray direction we are shooting from the camera location ("ori") that we need to light
-    // for this pixel.  The -2.0 indicates we are using a focal length of 2.0 - this is just an artistic choice and
-    // results in about a 90 degree field of view.
-    vec3 dir = normalize(vec3(uv.xy,-2.0)); 
-
-    // bteitler: Distort the ray a bit for a fish eye effect (if you remove this line, it will remove
-    // the fish eye effect and look like a realistic perspective).
-    // dir.z += length(uv) * 0.15;
-
-    // bteitler: Renormalize the ray direction, and then rotate it based on the previously calculated
-    // animation angle "ang".  "fromEuler" just calculates a rotation matrix from a vector of angles.
-    // if you remove the " * fromEuler(ang)" part, you will disable the camera rotation animation.
-    dir = normalize(dir) * fromEuler(ang);
-    
-    // tracing
-
-    // bteitler: ray-march to the ocean surface (which can be thought of as a randomly generated height map)
-    // and store in p
-    vec3 p;
-    heightMapTracing(ori,dir,p);
-
-    vec3 dist = p - ori; // bteitler: distance vector to ocean surface for this pixel's ray
-
-    // bteitler: Calculate the normal on the ocean surface where we intersected (p), using
-    // different "resolution" (in a sense) based on how far away the ray traveled.  Normals close to
-    // the camera should be calculated with high resolution, and normals far from the camera should be calculated with low resolution
-    // The reason to do this is that specular effects (or non linear normal based lighting effects) become fairly random at
-    // far distances and low resolutions and can cause unpleasant shimmering during motion.
-    vec3 n = getNormal(p, 
-             dot(dist,dist)   // bteitler: Think of this as inverse resolution, so far distances get bigger at an expnential rate
-                * EPSILON_NRM // bteitler: Just a resolution constant.. could easily be tweaked to artistic content
-           );
-
-    // bteitler: direction of the infinitely far away directional light.  Changing this will change
-    // the sunlight direction.
-    vec3 light = normalize(vec3(0.0,1.0,0.8)); 
-             
-    // CaliCoastReplay:  Get the sky and sea colors
-    vec3 seaColor = getSeaColor(p,n,light,dir,dist);
-    
-    //Sea/sky preprocessing
-    
-    //CaliCoastReplay:  A distance falloff for the sea color.   Drastically darkens the sea, 
-    //this will be reversed later based on day/night.
-    seaColor /= sqrt(sqrt(length(dist))) * 1.2;
-    
-    
-    //CaliCoastReplay:  Day/night mode
-    bool night; 	 
-    /*if( isKeyPressed(KEY_SP) > 0.0 )    //night mode!
-    {
-        //Brighten the sea up again
-    	seaColor *= seaColor * 8.5;
-        night = true;
-    }
-    else*/  //day mode!
-    {
-        //Brighten the sea up again
-    	seaColor *= sqrt(sqrt(seaColor)) * 5.0;
-        night = false;
-    }
-    
-    //CaliCoastReplay:  A simple but pretty beautiful hack that actually darkens
-    //the highest-value spots somewhat to add even more contrast
-    vec3 seaHsv = rgb2hsv(seaColor);
-    if (seaHsv.z > .78 && length(dist) < 50.0)
-        seaHsv.z -= (0.85 - seaHsv.z) * 1.8;
-    seaColor = hsv2rgb(seaHsv);
-    
-	//    
-    // Postprocessing
-    //
-
-    // bteitler: Apply an overall image brightness factor as the final color for this pixel.  Can be
-    // tweaked artistically.
-    vec3 color = pow(seaColor,vec3(0.75));
-    
-    // CaliCoastReplay:  Adjust hue, saturation, and value adjustment for an even more processed look
-    // hsv.x is hue, hsv.y is saturation, and hsv.z is value
-    vec3 hsv = rgb2hsv(color.xyz);    
-    //CaliCoastReplay: Increase saturation slightly
-    hsv.y += 0.091;
-    //CaliCoastReplay:
-    //A pseudo-multiplicative adjustment of value, increasing intensity near 1 and decreasing it near
-    //0 to achieve a more contrasted, real-world look
-    hsv.z *= sqrt(hsv.z) * 1.2; 
-    
-    if (night)    
-    {
-    ///CaliCoastReplay:
-    //Slight value adjustment at daynight to turn down global intensity
-        hsv.z -= 0.045;
-        hsv*=0.7;
-    }
-    else
-    {
-      //CaliCoastReplay:
-        //Add green tinge to the high range
-      //Turn down intensity in day in a different way     
-        
-        hsv.z *= 0.9;
-        
-        //CaliCoastReplay:  Hue alteration 
-        hsv.x -= hsv.z/10.0;
-        //Final brightening
-        hsv.z *= 1.2;
-    }
-    
-    //CaliCoastReplay:    
-    //Replace the final color with the adjusted, translated HSV values
-    color.xyz = hsv2rgb(hsv);
-
-	return color.rgb;
-}
-#endif //EXPERIMENTAL
 
 void main ( void )
 {
 	vec3 color2 = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
 	vec4 waterMapUpper = waterMapUpperAtCoord(var_TexCoords);
-	waterMapUpper.y += waveHeight;
+	vec4 waterMapLower = waterMapUpper;
+	waterMapLower.y -= waveHeight;
 	bool IS_UNDERWATER = false;
 
 	if (u_Local1.b > 0.0) 
@@ -988,14 +641,12 @@ void main ( void )
 
 	bool pixelIsInWaterRange = false;
 	bool pixelIsUnderWater = false;
-	bool pixelIsWaterfall = false;
 	vec3 color = color2;
-
-	vec4 waterMapLower = waterMapUpper;//waterMapLowerAtCoord(var_TexCoords);
-	waterMapLower.y -= waveHeight;
 
 	vec4 positionMap = positionMapAtCoord(var_TexCoords);
 	vec3 position = positionMap.xyz;
+
+	position.xz = waterMapLower.xz; // test
 
 #if defined(FIX_WATER_DEPTH_ISSUES)
 	if (positionMap.a-1.0 == 1024.0)
@@ -1005,9 +656,13 @@ void main ( void )
 	}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
-	if (waterMapLower.a >= 2.0 || waterMapUpper.a >= 2.0)
+	float timer = systemtimer * (waveHeight / 16.0);
+
+	if (waterMapLower.a >= 2.0 && positionMap.a-1.0 < 1024.0)
 	{// Low horizontal normal, this is a waterfall...
-		pixelIsWaterfall = true;
+		vec3 color = WaterFall(color.rgb, color2.rgb, waterMapUpper.xyz, position.xyz, timer);
+		gl_FragColor = vec4(color, 1.0);
+		return;
 	}
 	else if (IS_UNDERWATER || waterMapLower.y > ViewOrigin.y)
 	{
@@ -1015,137 +670,62 @@ void main ( void )
 	}
 	else if (waterMapUpper.y >= position.y)
 	{
-		if (waterMapLower.y < position.y)
-		{
-			waterMapLower.y = position.y;
-			waterMapLower.a = 0.0;
-		}
-
-		if (waterMapUpper.y >= position.y)
-		{
-			pixelIsInWaterRange = true;
-		}
-	}
-
-	if (!pixelIsInWaterRange && !pixelIsWaterfall && !pixelIsUnderWater)
-	{// No water here. Skip calculations.
-		gl_FragColor = vec4(color2, 1.0);
-		return;
-	}
-
-	float timer = systemtimer * (waveHeight / 16.0);
-
-	if (pixelIsWaterfall)
-	{// How???
-		vec3 eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
-		vec3 pixelDir = eyeVecNorm;
-		vec3 normal = normalize(pixelDir + (color.rgb * 0.5 - 0.25));
-		vec3 specular = vec3(0.0);
-		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
-		float lambertian2 = dot(lightDir.xyz, normal);
-		float spec2 = 0.0;
-		float fresnel = clamp(1.0 - dot(normal, -eyeVecNorm), 0.0, 1.0);
-		fresnel = pow(fresnel, 3.0) * 0.65;
-
-		vec2 texCoord = var_TexCoords.xy;
-		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * refractionScale;
-
-		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
-		refraction = mix(waterColorShallow.rgb, refraction.rgb, 0.3);
-
-		float fTime = u_Time * 2.0;
-		
-#ifdef FOAM_SPLAT_MAPS
-		vec3 foam = (GetFoamMap(vec3(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime, 0.5), vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + GetFoamMap(vec3(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime, 0.5), vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
-#else //!FOAM_SPLAT_MAPS
-		vec3 foam = (GetFoamMap(vec2(waterMapUpper.x * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb + GetFoamMap(vec2(waterMapUpper.z * 0.03, (waterMapUpper.y * 0.03) + fTime)).rgb) * 0.5;
-#endif //FOAM_SPLAT_MAPS
-
-		color = mix(color + (foam * sunColor), refraction, fresnel * 0.8);
-
-		if(lambertian2 > 0.0)
-		{// this is blinn phong
-			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
-			vec3 halfDir2 = normalize(lightDir.xyz + mirrorEye);
-			float specAngle = max(dot(halfDir2, normal), 0.0);
-			spec2 = pow(specAngle, 16.0);
-			specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
-		}
-
-		color = clamp(color + specular, 0.0, 1.0);
-		
-#ifdef __OLD_LIGHTING__
-		color += vec3(getspecular(normal, lightDir, eyeVecNorm, 60.0));
-#else //!__OLD_LIGHTING__
-		color += blinn_phong(waterMapUpper.xyz, color.rgb, normal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz);
-#endif //__OLD_LIGHTING__
-		
-		color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color);
-
-		gl_FragColor = vec4(color, 1.0);
-		return;
+		pixelIsInWaterRange = true;
 	}
 
 	float waterLevel = waterMapLower.y;
 	float level = waterMapLower.y;
 	float depth = 0.0;
 
-	if (pixelIsInWaterRange || pixelIsUnderWater)
+	if (pixelIsInWaterRange || pixelIsUnderWater || position.y <= level + waveHeight)
 	{
-#ifdef EXPERIMENTAL
-		gl_FragColor = vec4(ExperimentalWater(var_TexCoords, waterMapLower.xyz), 1.0);
-		return;
-#endif //EXPERIMENTAL
-		vec2 wind = normalize(waterMapLower.xz); // Waves head toward center of map. Should suit current WZ maps...
+		vec2 wind = normalize(waterMapLower.xzy).xy; // Waves head toward center of map. Should suit current WZ maps...
 
 		// Find intersection with water surface
-		vec3 eyeVecNorm = normalize(ViewOrigin - waterMapLower.xyz/*position*/);
-		float t = ((level - ViewOrigin.y) / eyeVecNorm.y);
-		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
+		vec3 eyeVecNorm = normalize(waterMapLower.xyz - ViewOrigin);
+		float t = 0.0;
+		vec3 surfacePoint = waterMapLower.xyz;
 
-		vec2 texCoord;
+		vec2 texCoord = vec2(0.0);
 
-#ifdef REAL_WAVES
-		for(int i = 0; i < 10; i++)
-#endif //REAL_WAVES
-		{
-			texCoord = ((surfacePoint.xz + eyeVecNorm.xz * 0.1) * scale + timer * 0.000005 * wind) * waveDensity;
-			
-			float bias = textureLod(u_WaterHeightMap, texCoord, 0.0).r;
-	
-			bias *= 0.1;
-			level += bias * waveHeight;
-
-			t = ((level - ViewOrigin.y) / eyeVecNorm.y);
-			surfacePoint = ViewOrigin + eyeVecNorm * t;
-		}
-
-		// level, surfacePoint
-		{// Adjust level for low view angles...
-			//float heightDiff = (waveHeight - clamp(length(ViewOrigin.y - waterMapLower.y) / waveHeight, 0.0, 1.0));
-			//float heightDiff = level - waterMapLower.y;
-			//float diff = length(heightDiff / waveHeight);
-			//level = waterMapLower.y + (heightDiff * diff * waveHeight);
-			//surfacePoint.y = level;
-
-			//t = (((level + heightDiff) - ViewOrigin.y) / eyeVecNorm.y);
-			//surfacePoint = ViewOrigin + eyeVecNorm * t;
-		}
+		float height = 0.0;
+		vec3 normal;
+		vec3 lightingNormal;
+		ScanHeightMap(surfacePoint, eyeVecNorm, level, texCoord, t, normal, lightingNormal, timer, height);
 
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
 		float depthN = depth * fadeSpeed;
 
-		float heightAboveGround = clamp(depth2 / waveHeight, 0.0, 1.0);
+#ifdef REAL_WAVES
+		if (USE_OCEAN > 0.0)
+		{
+#if 1
+			//float vDist = distance(surfacePoint, ViewOrigin);
+			//vec3 vDir = normalize(ViewOrigin - surfacePoint);
+			float vDist = distance(vec3(surfacePoint.x, ViewOrigin.y + waveHeight, surfacePoint.z), ViewOrigin);
+			vec3 vDir = normalize(ViewOrigin - vec3(surfacePoint.x, ViewOrigin.y + waveHeight, surfacePoint.z));
+			surfacePoint += vDir * vDist * height;
+			//surfacePoint += u_Local0.rgb * height;
+#else
+
+			vec3 fakeView = vec3(ViewOrigin.x, waterMapLower.y + 1024.0, ViewOrigin.z);
+			vec3 vDist = (fakeView - surfacePoint) * u_Local0.rgb;
+			vec3 vDir = normalize(fakeView/*ViewOrigin*/ - surfacePoint);
+			surfacePoint += vDir * (vec3(0.75, 0.0, 0.75)) * vDist * height;
+			//level = surfacePoint.y;
+#endif
+		}
+#endif //REAL_WAVES
+
+
+		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
 
 		if (pixelIsUnderWater)
 		{
-			//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-			//return;
-
 			depth = length(surfacePoint - position);
-			depth2 = position.y - surfacePoint.y;
-			depthN = depth * fadeSpeed;
+			float depth2 = position.y - surfacePoint.y;
+			float depthN = depth * fadeSpeed;
 
 			if (position.y <= level)
 			{// This pixel is below the water line... Fast path...
@@ -1159,41 +739,16 @@ void main ( void )
 				return;
 			}
 		}
-		else if (depth2 < 0.0)
+		else if (depth2 < 0.0 && waterMapLower.y < surfacePoint.y)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			gl_FragColor = vec4(color2, 1.0);
 			return;
 		}
 
+		//depth = length(position - surfacePoint);
+		//depth2 = surfacePoint.y - position.y;
+		//depthN = depth * fadeSpeed;
 
-		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
-
-		float normal1 = textureLod(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0)), 0.0).r;
-		float normal2 = textureLod(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0)), 0.0).r;
-		float normal3 = textureLod(u_WaterHeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0)), 0.0).r;
-		float normal4 = textureLod(u_WaterHeightMap, (texCoord + (vec2(0.0, 1.0) / 256.0)), 0.0).r;
-		
-		vec3 myNormal = normalize(vec3((normal1 - normal2) * waveHeight,
-										   normalScale,
-										   (normal3 - normal4) * waveHeight));
-
-		texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
-		mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal0a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
-
-		texCoord = surfacePoint.xz * 0.8 + wind * timer * 0.00008;
-		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal1a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
-		
-		texCoord = surfacePoint.xz * 0.4 + wind * timer * 0.00004;
-		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal2a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
-		
-		texCoord = surfacePoint.xz * 0.1 + wind * timer * 0.00002;
-		tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
-		vec3 normal3a = normalize(tangentFrame * (2.0 * textureLod(u_NormalMap, texCoord, 0.0).xyz - 1.0));
-		
-		vec3 normal = normalize(((normal0a * normalModifier.x) + (normal1a * normalModifier.y) + (normal2a * normalModifier.z) + (normal3a * normalModifier.w)));
 
 		texCoord = var_TexCoords.xy;
 
@@ -1201,6 +756,7 @@ void main ( void )
 
 		vec3 refraction = textureLod(u_DiffuseMap, texCoord, 0.0).rgb;
 
+		//texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00001 * wind + sin(timer * 0.001 + position.x) * 0.005;
 		vec4 position2 = positionMapAtCoord(texCoord);
 		vec4 waterMapLower3 = waterMapLowerAtCoord(texCoord);
 
@@ -1223,6 +779,7 @@ void main ( void )
 		refraction = mix(refraction1, waterColorDeep * vec3(waterCol), clamp((vec3(depth2) / vec3(extinction)), 0.0, 1.0));
 
 		vec4 foam = vec4(0.0);
+		vec4 waveFoam = vec4(0.0);
 
 		texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00001 * wind + sin(timer * 0.001 + position.x) * 0.005;
 		vec2 texCoord2 = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00002 * wind + sin(timer * 0.001 + position.z) * 0.005;
@@ -1232,39 +789,28 @@ void main ( void )
 		float pixDist = distance(surfacePoint.xyz, ViewOrigin.xyz);
 		causicStrength *= 1.0 - clamp(pixDist / 1024.0, 0.0, 1.0);
 
-#ifdef FOAM_SPLAT_MAPS
-		if (depth2 < foamExistence.x)
+#if 1
+		if (USE_OCEAN > 0.0)
 		{
-			foam = (GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5;
+			if (depth2 < foamExistence.x)
+			{
+				waveFoam = (GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5;
+				foam = waveFoam;
+			}
+			else if (depth2 < foamExistence.y)
+			{
+				waveFoam = mix((GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5,
+					vec4(0.0), vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
+				foam = waveFoam;
+			}
+
+			if (waveHeight - foamExistence.z > 0.0001)
+			{
+				foam += (GetFoamMap(surfacePoint.xzy * 0.5, texCoord) + GetFoamMap(surfacePoint.xzy * 0.5, texCoord2)) * 0.5 *
+					clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
+			}
 		}
-		else if (depth2 < foamExistence.y)
-		{
-			foam = mix((GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5, 
-						vec4(0.0), vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
-		}
-		
-		if (waveHeight - foamExistence.z > 0.0001)
-		{
-			foam += (GetFoamMap(surfacePoint.xzy * 0.5, texCoord) + GetFoamMap(surfacePoint.xzy * 0.5, texCoord2)) * 0.5 * 
-				clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
-		}
-#else //!FOAM_SPLAT_MAPS
-		if (depth2 < foamExistence.x)
-		{
-			foam = (GetFoamMap(texCoord) + GetFoamMap(texCoord2)) * 0.5;
-		}
-		else if (depth2 < foamExistence.y)
-		{
-			foam = mix((GetFoamMap(texCoord) + GetFoamMap(texCoord2)) * 0.5, vec4(0.0),
-						vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
-		}
-		
-		if (waveHeight - foamExistence.z > 0.0001)
-		{
-			foam += (GetFoamMap(texCoord) + GetFoamMap(texCoord2)) * 0.5 * 
-				clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
-		}
-#endif //FOAM_SPLAT_MAPS
+#endif
 		
 		causicStrength *= 0.15 - clamp(max(foam.r, max(foam.g, foam.b)) * foam.a * 32.0, 0.0, 0.15);
 
@@ -1275,42 +821,83 @@ void main ( void )
 
 
 
-		//vec3 lightingNormal = normal;
-		vec3 lightingNormal = normalize(((normal0a * normalModifier.x * -0.75) + (normal1a * normalModifier.y * -0.25) + (normal2a * normalModifier.z * 0.25) + (normal3a * normalModifier.w * 0.75)));;
-
-
-
-		float lambertian2 = dot(lightDir.xyz, lightingNormal);
-		float spec2 = 0.0;
-		
-		float fresnel = clamp(1.0 - dot(lightingNormal, -eyeVecNorm), 0.0, 1.0);
-		fresnel = pow(fresnel, 3.0) * 0.65;
-
-		if(lambertian2 > 0.0)
-		{// this is blinn phong
-			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, lightingNormal) * lightingNormal - eyeVecNorm);
-			vec3 halfDir2 = normalize(lightDir.xyz + mirrorEye);
-			float specAngle = max(dot(halfDir2, lightingNormal), 0.0);
-			spec2 = pow(specAngle, 16.0);
-			specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
-		}
+#if 0
+		float fresnel = fresnelTerm(lightingNormal, eyeVecNorm);
+		fresnel = pow(fresnel, 4.0);
+#else
+		vec3 fresnel2 = GetFresnel(eyeVecNorm, lightingNormal, vec3(R0), 1.0);
+		float fresnel = length(fresnel2.rgb) / 3.0;
+#endif
 
 
 		vec3 dist = -eyeVecNorm;
 
 		color = mix(refraction, waterColorDeep, fresnel);
 
+
 		float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
-		color += waterColorShallow.rgb * (clamp(waveHeight - waterMapLower.y, 0.0, 1.0))* 0.18 * atten;
+		color += waterColorShallow.rgb * height * 0.18 * atten;
+
+		color.rgb *= height;
+
+
+#if defined(USE_REFLECTION)
+		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
+		{
+			color = AddReflection(var_TexCoords, position, vec3(waterMapLower3.x, level, waterMapLower3.z), color.rgb);
+		}
+#endif //defined(USE_REFLECTION)
+
+		//
+		// Crytek style lighting... Done before final wave colors...
+		//
+
+#if 1
+		// CryTek's way
+		vec3 mirrorEye = (2.0f * dot(eyeVecNorm, lightingNormal) * lightingNormal - eyeVecNorm);
+		float dotSpec = saturate(dot(mirrorEye.xyz, -lightDir) * 0.5f + 0.5f);
+		specular = (1.0f - fresnel) * saturate(-lightDir.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f))* sunColor;
+		specular += specular * 25.0 * saturate(shininess - 0.05f) * sunColor * 0.1;
+#endif
 
 		vec3 caustic = color * (texture(u_DetailMap, vec2((texCoord.x + (texCoord2.x*2.2)) * 0.25, (texCoord.y + (texCoord2.y*1.2)) * 0.25)).rgb * 1.1);
+		color = clamp(color + (caustic * causicStrength), 0.0, 1.0);
 
-#ifdef __OLD_LIGHTING__
-		color += vec3(getspecular(lightingNormal, lightDir, eyeVecNorm, 60.0));
-#else //!__OLD_LIGHTING__
-		color += blinn_phong(waterMapLower3.xyz, color.rgb, lightingNormal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz) * 0.005;
-#endif //__OLD_LIGHTING__
+		if (USE_OCEAN > 0.0)
+			color = clamp(color + max(specular, foam.rgb * sunColor), 0.0, 1.0);
+		else
+			color = clamp(color + specular, 0.0, 1.0);
 
+		color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
+		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
+
+
+		//
+		// Final Lighting...
+		//
+
+
+#if 1
+		float diffuse = getdiffuse(lightingNormal, -lightDir, 16.0);
+		color += diffuse * 0.01;
+#endif
+
+#if 1
+		// Special sauce...
+		vec3 N = lightingNormal;
+		float dist2 = distance(surfacePoint, ViewOrigin) * 0.0001;
+		vec2 velocity = N.xz * (1.0 - N.y);
+		N = mix(vec3(0.0, 1.0, 0.0), N, 1.0 / (dist2 * dist2 * 0.01 + 1.0));
+		vec3 R = reflect(eyeVecNorm, N);
+		float windSpray = smoothstep(.01, .12, length(velocity)) * 0.1;
+		float sunReflect = fresnel * sun(R, lightDir);
+		color = (color + (sunReflect * sunColor) + windSpray);
+#else
+		vec3 R = reflect(eyeVecNorm, lightingNormal);
+#endif
+
+
+#if 1
 		// Also do dlights. Includes map glows and sabers and all that good stuff...
 		if (u_lightCount > 0.0)
 		{
@@ -1327,11 +914,11 @@ void main ( void )
 			{
 				vec3 lightPos = u_lightPositions2[li].xyz;
 
-				float lightDist = distance(lightPos, waterMapLower3.xzy/*position.xyz*/);
+				float lightDist = distance(lightPos, waterMapLower3.xzy);
 
 				if (u_lightHeightScales[li] > 0.0)
 				{// ignore height differences, check later...
-					lightDist -= length(lightPos.z - waterMapLower3.y/*position.z*/);
+					lightDist -= length(lightPos.z - waterMapLower3.y);
 				}
 
 				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
@@ -1340,52 +927,67 @@ void main ( void )
 
 				if (lightStrength > 0.0)
 				{
-					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * 4.0;//1.5; // Normalize.
-					vec3 lightDir2 = normalize(lightPos - waterMapLower3.xzy/*position.xyz*/);
+					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * 4.0; // Normalize.
+					vec3 lightDir2 = normalize(lightPos - waterMapLower3.xzy);
 				
-					lightColor = lightColor * lightStrength * power;
-
-					lightColor *= maxStr;
-
-#ifdef __OLD_LIGHTING__
-					addedLight.rgb += (lightColor * vec3(getspecular(-lightingNormal, -lightDir2, eyeVecNorm, 60.0)));
-#else //!__OLD_LIGHTING__
-					addedLight.rgb += blinn_phong(waterMapLower3.xyz, color.rgb, -lightingNormal * 0.3, eyeVecNorm, -lightDir * 0.3, lightColor, lightColor, 1.0, lightPos) * lightStrength * 0.05;
-#endif //__OLD_LIGHTING__
+					float lightReflect = fresnel * sun(R, lightDir2);
+					float lightDiffuse = getdiffuse(lightingNormal, lightDir, 6.0);
+					addedLight.rgb += ((lightReflect * lightColor) + (lightDiffuse * lightColor)) * lightStrength * lightStrength;
 				}
 			}
 
 			color.rgb = color.rgb + addedLight;
 		}
+#endif
 
 
-#if defined(USE_REFLECTION)
-		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
+		if (pixelIsUnderWater)
 		{
-			color = AddReflection(var_TexCoords, position, vec3(waterMapLower3.x, level, waterMapLower3.z), color.rgb);
+			if (position.y < level)
+				color = color2;
 		}
-#endif //defined(USE_REFLECTION)
-
-		color = clamp(color + (caustic * causicStrength), 0.0, 1.0);
-
-		color = clamp(color + max(specular, foam.rgb * sunColor), 0.0, 1.0);
-
-		color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
-
-		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
-
-		if (!pixelIsUnderWater)
+#if 1
+		else
 		{
-			color.rgb = mix(color2.rgb, color.rgb, heightAboveGround);
-			
-			if (clamp(1.0 - (heightAboveGround * 0.65), 0.0, 1.0) > 0.5)
-				color.rgb = color2.rgb;
+			if (position.y > level)
+				color = color2;
 		}
+#endif
 
-		/*if (u_Local0.r == 1.0)
+
+		if (u_Local0.a == 1.0)
+		{
+			color.rgb = normal.rgb * 0.5 + 0.5;
+		}
+		else if (u_Local0.a == 2.0)
+		{
+			gl_FragColor = vec4(normal.rgb, 1.0);
+			return;
+		}
+		else if (u_Local0.a == 3.0)
 		{
 			color.rgb = lightingNormal.rgb * 0.5 + 0.5;
-		}*/
+		}
+		else if (u_Local0.a == 4.0)
+		{
+			gl_FragColor = vec4(lightingNormal.rgb, 1.0);
+			return;
+		}
+		else if (u_Local0.a == 5.0)
+		{
+			gl_FragColor = vec4(fresnel, fresnel, fresnel, 1.0);
+			return;
+		}
+		else if (u_Local0.a == 6.0)
+		{
+			gl_FragColor = vec4(fresnel2.xyz, 1.0);
+			return;
+		}
+		else if (u_Local0.a == 7.0)
+		{
+			gl_FragColor = vec4(height, height, height, 1.0);
+			return;
+		}
 	}
 
 	gl_FragColor = vec4(color, 1.0);

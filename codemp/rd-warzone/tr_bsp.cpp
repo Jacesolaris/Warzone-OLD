@@ -3328,8 +3328,9 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 	CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
 
-	if (MAP_WATER_LEVEL >= 131072.0)
+	if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0))
 	{
+		MAP_WATER_LEVEL = 131072.0;
 		setupWaterLevel = qtrue;
 	}
 
@@ -3395,7 +3396,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
 			if (surfOrigin[2] < MAP_WATER_LEVEL)
 			{
-#pragma omp critical (__MAP_WATER_LEVEL__)
+//#pragma omp critical (__MAP_WATER_LEVEL__)
 				{
 					MAP_WATER_LEVEL2 = MAP_WATER_LEVEL;
 					MAP_WATER_LEVEL = surfOrigin[2];
@@ -3411,7 +3412,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			VectorScale(glowColor, emissiveColorScale, glowColor);
 			R_AddLightVibrancy(glowColor, 0.4);
 
-#pragma omp critical (__MAP_GLOW_ADD__)
+//#pragma omp critical (__MAP_GLOW_ADD__)
 			{
 				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
 				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
@@ -3428,12 +3429,12 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		}
 	}
 
-	if (MAP_WATER_LEVEL2 < 131072.0)
+	if (MAP_WATER_LEVEL2 < 131000.0 && MAP_WATER_LEVEL2 > -131000.0)
 	{// If we have a secondary water level, use it instead, it should be the top of the water, not the bottom plane.
 		MAP_WATER_LEVEL = MAP_WATER_LEVEL2;
 	}
 
-	if (MAP_WATER_LEVEL >= 131072.0)
+	if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0))
 	{// No water plane was found, set to map mins...
 		MAP_WATER_LEVEL = -131072.0;
 	}
@@ -3512,7 +3513,6 @@ static void R_SetupCubemapPoints( void )
 
 			if (bad) continue;
 
-//#pragma omp critical
 			{
 				VectorCopy(surfOrigin, cubeOrgs[numcubeOrgs]);
 				numcubeOrgs++;

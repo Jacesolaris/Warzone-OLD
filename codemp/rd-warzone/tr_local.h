@@ -86,6 +86,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __OCEAN__
 //#define __ORIG_OCEAN__
 
+#define __RENDERER_THREADING__				// Just testing...
+
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -481,6 +483,7 @@ extern cvar_t	*r_volumeLightHQ;
 extern cvar_t	*r_debugBinds;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
+extern cvar_t	*r_splatMapping;
 extern cvar_t	*r_parallaxScale;
 extern cvar_t	*r_blinnPhong;
 extern cvar_t	*r_ao;
@@ -492,7 +495,6 @@ extern cvar_t	*r_skynum;
 extern cvar_t	*r_volumeLightStrength;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
-extern cvar_t	*r_multithread2;
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
@@ -3215,6 +3217,7 @@ extern cvar_t	*r_volumeLightHQ;
 extern cvar_t	*r_debugBinds;
 extern cvar_t	*r_debugShaderStages;
 extern cvar_t	*r_debugImageCrcHashing;
+extern cvar_t	*r_splatMapping;
 extern cvar_t	*r_shadowMaxDepthError;
 extern cvar_t	*r_shadowSolidityValue;
 extern cvar_t	*r_disableGfxDirEnhancement;
@@ -3227,7 +3230,6 @@ extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;
 extern cvar_t	*r_grassWaveSize;
 extern cvar_t	*r_multithread;
-extern cvar_t	*r_multithread2;
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;

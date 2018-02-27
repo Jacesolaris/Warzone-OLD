@@ -1851,7 +1851,7 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 	if (MAP_HAS_TREES)
 	{
-		if ((passType == FOLIAGE_PASS_CLOSETREE || passType == FOLIAGE_PASS_TREE) && FOLIAGE_TREE_SELECTION[num] > 0)
+		if ((passType == FOLIAGE_PASS_CLOSETREE || passType == FOLIAGE_PASS_TREE) && FOLIAGE_TREE_SELECTION[num] > 0 && FOLIAGE_TREE_SELECTION[num] <= NUM_TREE_TYPES)
 		{// Add the tree model...
 			VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
 			re.customShader = 0;

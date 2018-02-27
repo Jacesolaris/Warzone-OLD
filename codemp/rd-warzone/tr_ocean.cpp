@@ -1148,7 +1148,7 @@ GLuint gFastIndexID = 0;		 // ID for vertex array object
 
 void OCEAN_InitOceanFast()
 {
-	if (!WATER_FAST_INITIALIZED && WATER_ENABLED && r_glslWater->integer >= 1 && MAP_WATER_LEVEL < 131072.0 && MAP_WATER_LEVEL > -131072.0)
+	if (!WATER_FAST_INITIALIZED && WATER_ENABLED && r_glslWater->integer >= 1 && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 	{// Water is ready to be set up for this map...
 		WATER_FAST_INITIALIZED = qtrue;
 
@@ -1239,7 +1239,7 @@ void OCEAN_InitOceanFast()
 
 void OCEAN_InitOcean()
 {
-	if (!WATER_INITIALIZED && WATER_ENABLED && r_glslWater->integer >= 3 && MAP_WATER_LEVEL < 131072.0 && MAP_WATER_LEVEL > -131072.0)
+	if (!WATER_INITIALIZED && WATER_ENABLED && r_glslWater->integer >= 3 && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 	{// Water is ready to be set up for this map...
 		WATER_INITIALIZED = qtrue;
 
@@ -1330,7 +1330,7 @@ void OCEAN_InitOcean()
 
 void OCEAN_Render(void)
 {
-	if (WATER_ENABLED && r_glslWater->integer >= 3 && MAP_WATER_LEVEL < 131072.0 && MAP_WATER_LEVEL > -131072.0)
+	if (WATER_ENABLED && r_glslWater->integer >= 3 && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 	{
 		extern void SetViewportAndScissor(void);
 
@@ -1420,7 +1420,7 @@ void OCEAN_Render(void)
 
 		GLSL_BindProgram(NULL);
 	}
-	else if (WATER_ENABLED && r_glslWater->integer >= 1 && MAP_WATER_LEVEL < 131072.0 && MAP_WATER_LEVEL > -131072.0)
+	else if (WATER_ENABLED && r_glslWater->integer >= 1 && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 	{
 		extern void SetViewportAndScissor(void);
 

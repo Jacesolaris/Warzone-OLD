@@ -4814,7 +4814,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealWaterEdgeMap = qfalse;
 	qboolean hasRealRoofMap = qfalse;
 	qboolean checkNormals = qtrue;
-	qboolean checkSplats = qtrue;
+	qboolean checkSplats = r_splatMapping->integer ? qtrue : qfalse;
 
 	if (shader.isPortal || shader.isSky || diffuse->glow || r_normalMapping->integer <= 0)
 	{

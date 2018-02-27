@@ -13,6 +13,8 @@ uniform vec2				u_Dimensions;
 uniform vec3				u_ViewOrigin;
 uniform vec4				u_PrimaryLightOrigin;
 
+uniform vec2				u_vlightPositions;
+
 uniform vec4				u_Local0;				// xx, xx, SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]
 uniform vec4				u_Local1;				// r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
 uniform vec4				u_Local2;				// MAP_INFO_SIZE[2], MAP_INFO_MINS[2], MAP_INFO_MAXS[2]
@@ -21,15 +23,6 @@ varying vec2   				var_TexCoords;
 
 #define znear				u_ViewInfo.r			// camera clipping start
 #define zfar				u_ViewInfo.g			// camera clipping end
-
-#define BLUR_SIZE 0.0//3.0
-#define BLUR_STEP 1.0//1.5
-    
-#define SHADOW_TOLERANCE 0.5
-
-#define MAP_HEIGHT	u_Local2.r
-#define MAP_MINS	u_Local2.g
-#define MAP_MAXS	u_Local2.b
 
 vec2 px = vec2(1.0) / u_Dimensions;
 
@@ -41,6 +34,18 @@ vec3 DecodeNormal(in vec2 N)
 
 	return vec3(encoded * g, 1.0 - f * 0.5);
 }
+
+#if 0
+
+#define BLUR_SIZE 0.0//3.0
+#define BLUR_STEP 1.0//1.5
+
+#define SHADOW_TOLERANCE 0.5
+
+#define MAP_HEIGHT	u_Local2.r
+#define MAP_MINS	u_Local2.g
+#define MAP_MAXS	u_Local2.b
+
 
 vec3 rescale(vec3 values, float new_min, float new_max)
 {
@@ -208,6 +213,57 @@ vec4 SSS( in vec2 fragCoord )
 
 	return vec4(color, 1.0);
 }
+
+#else
+vec4 SSS(in vec2 fragCoord)
+{
+	vec3 sceneColor = texture(u_DiffuseMap, fragCoord.xy).rgb;
+	float originalDepth = texture(u_ScreenDepthMap, fragCoord.xy).r;
+
+	if (originalDepth == 1.0)
+	{// Ignore sky...
+		return vec4(sceneColor, 1.0);
+	}
+
+	//const int samples = 20;
+	float occPower = 0.1;// u_Local1.r;
+	float maxAllow = 0.0015;// u_Local1.g; // 0.00007
+	float minAllow = 0.000015;// u_Local1.b;
+	int samples = 200;// int(u_Local1.a);
+
+	//vec2 dir = -(fragCoord.xy - u_vlightPositions.xy) / float(samples);
+	vec2 dir = (fragCoord.xy - vec2(fragCoord.x, 0.0)) / float(samples);
+	
+	float occlusion = 1.0;
+
+	for (int samp = 1; samp <= samples; samp++)
+	{
+		vec2 coord = fragCoord.xy + (dir * samp);
+
+		if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0)
+		{
+			continue;
+		}
+
+		float depth = texture(u_ScreenDepthMap, coord).r;
+
+		if (depth <= originalDepth)
+		{// This is between us and the light...
+			float diff = length(depth - originalDepth) + 0.00001;
+
+			if (diff <= maxAllow && diff >= minAllow)
+			{
+				float thisOcclusion = 1.0 - pow(diff, occPower);
+				occlusion = min(occlusion, thisOcclusion);
+			}
+		}
+	}
+
+	sceneColor *= occlusion;
+
+	return vec4(sceneColor, 1.0);
+}
+#endif
 
 void main() 
 {

@@ -449,6 +449,14 @@ extern void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei 
 
 extern void ( APIENTRY * qglPatchParameteri )(GLenum pname​, GLint value​);
 extern void ( APIENTRY * qglPatchParameterfv )(GLenum pname​, const GLfloat *values​);
+
+extern void (APIENTRY * qglSamplerParameterf )(GLuint sampler, GLenum pname, GLfloat param);
+extern void (APIENTRY * qglSamplerParameteri )(GLuint sampler, GLenum pname, GLint param);
+extern void (APIENTRY * qglSamplerParameterfv )(GLuint sampler, GLenum pname, const GLfloat * params);
+extern void (APIENTRY * qglSamplerParameteriv )(GLuint sampler, GLenum pname, const GLint * params);
+extern void (APIENTRY * qglSamplerParameterIiv )(GLuint sampler, GLenum pname, const GLint *params);
+extern void (APIENTRY * qglSamplerParameterIuiv )(GLuint sampler, GLenum pname, const GLuint *params);
+
 #else
 #define qglAccum glAccum
 #define qglAlphaFunc glAlphaFunc
@@ -787,6 +795,14 @@ extern void ( APIENTRY * qglPatchParameterfv )(GLenum pname​, const GLfloat *v
 
 #define qglPatchParameteri glPatchParameteri
 #define qglPatchParameterfv glPatchParameterfv
+
+#define qglSamplerParameterf glSamplerParameterf
+#define qglSamplerParameteri glSamplerParameteri
+#define qglSamplerParameterfv glSamplerParameterfv
+#define qglSamplerParameteriv glSamplerParameteriv
+#define qglSamplerParameteriv glSamplerParameteriv
+#define qglSamplerParameterIiv glSamplerParameterIiv
+#define qglSamplerParameterIuiv glSamplerParameterIuiv
 #endif //_WIN32
 
 // Drawing commands

@@ -450,6 +450,9 @@ void R_AddBrushModelSurfaces(trRefEntity_t *ent) {
 	R_SetupEntityLighting(&tr.refdef, ent);
 	R_DlightBmodel(bmodel);
 
+#ifdef __RENDERER_THREADING__
+#pragma omp parallel for if (r_multithread->integer && bmodel->numSurfaces > 64) num_threads(r_multithread->integer)
+#endif
 	for (i = 0; i < bmodel->numSurfaces; i++) {
 		int surf = bmodel->firstSurface + i;
 
@@ -1526,6 +1529,9 @@ void R_AddWorldSurfaces(void) {
 
 		//tr.refdef.dlightMask = 0;
 
+#ifdef __RENDERER_THREADING__
+#pragma omp parallel for if (r_multithread->integer && tr.world->numWorldSurfaces > 128) num_threads(r_multithread->integer)
+#endif
 		for (i = 0; i < tr.world->numWorldSurfaces; i++)
 		{
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
@@ -1546,6 +1552,9 @@ void R_AddWorldSurfaces(void) {
 			}
 		}
 
+#ifdef __RENDERER_THREADING__
+#pragma omp parallel for if (r_multithread->integer && tr.world->numMergedSurfaces > 128) num_threads(r_multithread->integer)
+#endif
 		for (i = 0; i < tr.world->numMergedSurfaces; i++)
 		{
 			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)

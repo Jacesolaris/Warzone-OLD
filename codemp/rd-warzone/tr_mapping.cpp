@@ -1494,6 +1494,7 @@ float		FOG_VOLUMETRIC_WIND = 1.0;
 float		FOG_VOLUMETRIC_VELOCITY = 0.001;
 vec3_t		FOG_VOLUMETRIC_COLOR = { 0 };
 qboolean	WATER_ENABLED = qtrue;
+qboolean	USE_OCEAN = qtrue;
 float		WATER_REFLECTIVENESS = 0.28;
 qboolean	WATER_FOG_ENABLED = qfalse;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
@@ -1731,6 +1732,7 @@ void MAPPING_LoadMapInfo(void)
 
 	if (WATER_ENABLED)
 	{
+		USE_OCEAN = (atoi(IniRead(mapname, "WATER", "WATER_OCEAN_ENABLED", "1")) > 0) ? qtrue : qfalse;
 		WATER_FOG_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FOG_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_REFLECTIVENESS = Q_clamp(0.0, atof(IniRead(mapname, "WATER", "WATER_REFLECTIVENESS", "0.28")), 1.0);
 		WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
@@ -1739,7 +1741,24 @@ void MAPPING_LoadMapInfo(void)
 		WATER_COLOR_DEEP[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
 		WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
 		WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
-		MAP_WATER_LEVEL = atof(IniRead(mapname, "WATER", "MAP_WATER_LEVEL", "131072.0"));
+		float NEW_MAP_WATER_LEVEL = atof(IniRead(mapname, "WATER", "MAP_WATER_LEVEL", "131072.0"));
+
+		if (NEW_MAP_WATER_LEVEL < 131000.0 && NEW_MAP_WATER_LEVEL > -131000.0)
+		{
+			MAP_WATER_LEVEL = NEW_MAP_WATER_LEVEL;
+		}
+		else
+		{
+			if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0))
+			{
+				MAP_WATER_LEVEL = 131072.0;
+			}
+		}
+
+		if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0))
+		{
+			MAP_WATER_LEVEL = 131072.0;
+		}
 	}
 
 	//
@@ -1904,11 +1923,11 @@ void MAPPING_LoadMapInfo(void)
 		tr.waterFoamImage[1] = R_FindImageFile("textures/water/waterFoamGrey02.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 		tr.waterFoamImage[2] = R_FindImageFile("textures/water/waterFoamGrey03.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		//tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 
-		if (r_glslWater->integer < 2)
-			tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		else
+		//if (r_glslWater->integer < 2)
+		//	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		//else
 			tr.waterNormalImage = R_FindImageFile("textures/water/waves.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1953,7 +1972,7 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 on this map.\n", WATER_REFLECTIVENESS);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, USE_OCEAN ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 

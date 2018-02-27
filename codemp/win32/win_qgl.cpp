@@ -397,6 +397,13 @@ void ( APIENTRY * qglTexSubImage3DEXT) (GLenum, GLint, GLint, GLint, GLint, GLsi
 void ( APIENTRY * qglTextureParameterfEXT) (GLuint, GLenum, GLenum, GLfloat) = NULL;
 typedef void (APIENTRYP PFNGLTEXTUREPARAMETERFEXTPROC)  (GLuint, GLenum, GLenum, GLfloat);
 
+void (APIENTRY * qglSamplerParameterf)(GLuint sampler, GLenum pname, GLfloat param);
+void (APIENTRY * qglSamplerParameteri)(GLuint sampler, GLenum pname, GLint param);
+void (APIENTRY * qglSamplerParameterfv)(GLuint sampler, GLenum pname, const GLfloat * params);
+void (APIENTRY * qglSamplerParameteriv)(GLuint sampler, GLenum pname, const GLint * params);
+void (APIENTRY * qglSamplerParameterIiv)(GLuint sampler, GLenum pname, const GLint *params);
+void (APIENTRY * qglSamplerParameterIuiv)(GLuint sampler, GLenum pname, const GLuint *params);
+
 // Declare Register Combiners function pointers.
 PFNGLCOMBINERPARAMETERFVNV				qglCombinerParameterfvNV = NULL;
 PFNGLCOMBINERPARAMETERIVNV				qglCombinerParameterivNV = NULL;
@@ -790,6 +797,13 @@ static void ( APIENTRY * dllViewport )(GLint x, GLint y, GLsizei width, GLsizei 
 
 static void ( APIENTRY * dllPatchParameteri )(GLenum pname​, GLint value​);
 static void ( APIENTRY * dllPatchParameterfv )(GLenum pname​, const GLfloat *values​);
+
+static void (APIENTRY * dllSamplerParameterf)(GLuint sampler, GLenum pname, GLfloat param);
+static void (APIENTRY * dllSamplerParameteri)(GLuint sampler, GLenum pname, GLint param);
+static void (APIENTRY * dllSamplerParameterfv)(GLuint sampler, GLenum pname, const GLfloat * params);
+static void (APIENTRY * dllSamplerParameteriv)(GLuint sampler, GLenum pname, const GLint * params);
+static void (APIENTRY * dllSamplerParameterIiv)(GLuint sampler, GLenum pname, const GLint *params);
+static void (APIENTRY * dllSamplerParameterIuiv)(GLuint sampler, GLenum pname, const GLuint *params);
 
 static const char * BooleanToString( GLboolean b )
 {
@@ -3215,6 +3229,13 @@ void QGL_Shutdown( void )
 	qglPatchParameteri             = NULL;
 	qglPatchParameterfv            = NULL;
 
+	qglSamplerParameterf = NULL;
+	qglSamplerParameteri = NULL;
+	qglSamplerParameterfv = NULL;
+	qglSamplerParameteriv = NULL;
+	qglSamplerParameterIiv = NULL;
+	qglSamplerParameterIuiv = NULL;
+
 	qwglCopyContext              = NULL;
 	qwglCreateContext            = NULL;
 	qwglCreateLayerContext       = NULL;
@@ -3598,6 +3619,13 @@ qboolean QGL_Init( const char *dllname )
 
 	qglPatchParameteri             = 	dllPatchParameteri             = (void (APIENTRY *)(unsigned int,int))GPA( "glPatchParameteri" );
 	qglPatchParameterfv            = 	dllPatchParameterfv            = (void (APIENTRY *)(unsigned int,const float *))GPA( "glPatchParameterfv" );
+
+	qglSamplerParameterf = dllSamplerParameterf = (void (APIENTRY *)(unsigned int, unsigned int, float))GPA("glSamplerParameterf");
+	qglSamplerParameteri = dllSamplerParameteri = (void (APIENTRY *)(unsigned int, unsigned int, int))GPA("glSamplerParameteri");
+	qglSamplerParameterfv = dllSamplerParameterfv = (void (APIENTRY *)(unsigned int, unsigned int, const float*))GPA("glSamplerParameterfv");
+	qglSamplerParameteriv = dllSamplerParameteriv = (void (APIENTRY *)(unsigned int, unsigned int, const int *))GPA("glSamplerParameteriv");
+	qglSamplerParameterIiv = dllSamplerParameterIiv = (void (APIENTRY *)(unsigned int, unsigned int, const int *))GPA("glSamplerParameterIiv");
+	qglSamplerParameterIuiv = dllSamplerParameterIuiv = (void (APIENTRY *)(unsigned int, unsigned int, const unsigned int *))GPA("glSamplerParameterIuiv");
 
 	qwglCopyContext              = (BOOL (WINAPI *)(HGLRC, HGLRC, UINT))GPA( "wglCopyContext" );
 	qwglCreateContext            = (HGLRC (WINAPI *)(HDC))GPA( "wglCreateContext" );
@@ -4007,6 +4035,13 @@ void QGL_EnableLogging( qboolean enable )
 
 		qglPatchParameteri             = 	logPatchParameteri             ;
 		qglPatchParameterfv            = 	logPatchParameterfv            ;
+
+		qglSamplerParameterf = dllSamplerParameterf;
+		qglSamplerParameteri = dllSamplerParameteri;
+		qglSamplerParameterfv = dllSamplerParameterfv;
+		qglSamplerParameteriv = dllSamplerParameteriv;
+		qglSamplerParameterIiv = dllSamplerParameterIiv;
+		qglSamplerParameterIuiv = dllSamplerParameterIuiv;
 	}
 	else
 	{
@@ -4354,6 +4389,13 @@ void QGL_EnableLogging( qboolean enable )
 
 		qglPatchParameteri             = 	dllPatchParameteri             ;
 		qglPatchParameterfv            = 	dllPatchParameterfv            ;
+
+		qglSamplerParameterf = dllSamplerParameterf;
+		qglSamplerParameteri = dllSamplerParameteri;
+		qglSamplerParameterfv = dllSamplerParameterfv;
+		qglSamplerParameteriv = dllSamplerParameteriv;
+		qglSamplerParameterIiv = dllSamplerParameterIiv;
+		qglSamplerParameterIuiv = dllSamplerParameterIuiv;
 	}
 }
 
