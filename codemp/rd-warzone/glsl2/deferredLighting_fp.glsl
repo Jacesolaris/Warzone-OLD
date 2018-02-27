@@ -17,6 +17,7 @@ uniform sampler2D	u_GlowMap;
 uniform samplerCube	u_CubeMap;
 uniform samplerCube	u_SkyCubeMap;
 uniform samplerCube	u_SkyCubeMapNight;
+uniform samplerCube	u_EmissiveCubeMap;
 uniform sampler2D	u_SteepMap;	  // ssao image
 uniform sampler2D	u_WaterEdgeMap; // sky up image (for sky lighting contribution)
 uniform sampler2D	u_RoadsControlMap; // sky night up image (for sky lighting contribution)
@@ -33,6 +34,7 @@ uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
 uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_SIZE[2]
+uniform vec4		u_Local9; // haveEmissiveCube, 0.0, 0.0, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -219,6 +221,13 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	return settings;
 }
 
+float saturate(in float val) {
+	return clamp(val, 0.0, 1.0);
+}
+
+vec3 saturate(in vec3 val) {
+	return clamp(val, vec3(0.0), vec3(1.0));
+}
 
 #ifdef __RANDOMIZE_LIGHT_PIXELS__
 float lrand(vec2 co) {
@@ -1005,6 +1014,9 @@ void main(void)
 	}
 #endif
 
+	vec3 emissiveCubeLightColor = vec3(0.0);
+	vec3 emissiveCubeLightDirection = vec3(0.0);
+
 	if (specularPower > 0.0)
 	{
 		specular = ContrastSaturationBrightness(outColor.rgb, 1.25, 0.05, 1.0);
@@ -1077,6 +1089,12 @@ void main(void)
 
 					//float cubeFade = 1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0);
 					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, reflectPower * cubeFade * (u_CubeMapStrength * 20.0) * glossinessFactor/*greynessFactor*/);
+
+					if (u_Local9.r > 0.0)
+					{// Also grab emissive cube lighting color...
+						emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
+						emissiveCubeLightDirection = R + parallax;
+					}
 				}
 			}
 		}
@@ -1213,6 +1231,58 @@ void main(void)
 			addedLight.rgb *= lightGlossinessFactor; // More grey colors get more colorization from lights...
 			outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
 		}
+
+		if (u_Local9.r > 0.0 && specularPower > 0.0)
+		{// Also do emissive cube lighting (Emissive IBL)...
+			//emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
+			//emissiveCubeLightDirection = R + parallax;
+
+			phongFactor = u_Local1.r;
+
+			if (phongFactor <= 0.0)
+			{// Never allow no phong...
+				phongFactor = 1.0;
+			}
+
+			vec3 addedLight = vec3(0.0);
+
+// Indices of refraction
+#define Air 1.0
+#define Bubble 1.06
+
+// Air to glass ratio of the indices of refraction (Eta)
+#define Eta (Air / Bubble)
+
+// see http://en.wikipedia.org/wiki/Refractive_index Reflectivity
+#define R0 (((Air - Bubble) * (Air - Bubble)) / ((Air + Bubble) * (Air + Bubble)))
+
+#define shininess 1.0
+
+			float NdotV = max(0.0, dot(E, N));
+			float f = R0 + (1.0 - R0) * pow(1.0 - NdotV, 5.0) * pow(shininess/*gloss*/, 20.0);
+			//f = length(f.rgb) / 3.0;
+
+			// Diffuse...
+			float diffuse = getdiffuse(N, -emissiveCubeLightDirection, 16.0);
+			addedLight += diffuse * emissiveCubeLightColor * specularPower * u_Local3.r;// 0.01;
+
+			// CryTek's way
+			vec3 mirrorEye = (2.0f * dot(E, N) * N - E);
+			float dotSpec = saturate(dot(mirrorEye.xyz, -emissiveCubeLightDirection) * 0.5f + 0.5f);
+			vec3 spec = (1.0f - f) * saturate(-emissiveCubeLightDirection.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f)) * emissiveCubeLightColor;
+			addedLight += spec * 25.0 * saturate(shininess - 0.05f) * emissiveCubeLightColor * specularPower * u_Local3.g;// 0.1;
+			outColor.rgb = max(outColor.rgb, addedLight.rgb);
+
+			if (u_Local3.b == 1.0)
+			{
+				outColor.rgb = emissiveCubeLightColor;
+			}
+		}
+	}
+
+	if (u_Local3.b == 2.0)
+	{
+		outColor.rgb = emissiveCubeLightColor;
 	}
 
 	// Has a sort of lightmap-ish type coloring/lighting effect on result...

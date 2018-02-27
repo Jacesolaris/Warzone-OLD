@@ -4457,6 +4457,13 @@ void R_CreateBuiltinImages( void ) {
 	for (int z = 0; z < 6; z++)
 		skyImagesData[z] = NULL;
 	VectorSet4(tr.greyCube->lightColor, 0.5, 0.5, 0.5, 1.0);
+
+	for (int z = 0; z < 6; z++)
+		skyImagesData[z] = (byte *)data2;
+	tr.blackCube = R_CreateCubemapFromImageDatas("*blackCube", skyImagesData, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, 0);
+	for (int z = 0; z < 6; z++)
+		skyImagesData[z] = NULL;
+	VectorSet4(tr.greyCube->lightColor, 0.0, 0.0, 0.0, 1.0);
 	
 
 	tr.randomImage = R_FindImageFile("gfx/random.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);

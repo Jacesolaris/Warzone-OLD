@@ -3081,6 +3081,8 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+	if (r_emissiveCubes->integer)
+		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
 	
 	numCubemaps = 0;
 	while(R_ParseSpawnVars(spawnVarChars, sizeof(spawnVarChars), &numSpawnVars, spawnVars))
@@ -3524,6 +3526,8 @@ static void R_SetupCubemapPoints( void )
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+	if (r_emissiveCubes->integer)
+		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
 
 	numCubemaps = 0;
 
@@ -3587,6 +3591,8 @@ static void R_SetupCubemapPoints( void )
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+	if (r_emissiveCubes->integer)
+		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
 
 	numCubemaps = 0;
 
@@ -3772,6 +3778,8 @@ static void R_SetupCubemapPoints( void )
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+	if (r_emissiveCubes->integer)
+		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
 
 	numCubemaps = 0;
 
@@ -3848,9 +3856,30 @@ static void R_RenderAllCubemaps(void)
 		vramScaleDiv = 2;
 	}
 
+	byte	*gData = NULL;
+
+	if (r_emissiveCubes->integer)
+	{
+		if (cubemapFormat == GL_RGBA8)
+		{
+			gData = (byte *)malloc((r_cubeMapSize->integer / vramScaleDiv) * (r_cubeMapSize->integer / vramScaleDiv) * 4 * sizeof(byte));
+			memset(gData, 0, (r_cubeMapSize->integer / vramScaleDiv) * (r_cubeMapSize->integer / vramScaleDiv) * 4 * sizeof(byte));
+		}
+		else
+		{
+			gData = (byte *)malloc((r_cubeMapSize->integer / vramScaleDiv) * (r_cubeMapSize->integer / vramScaleDiv) * 8 * sizeof(byte));
+			memset(gData, 0, (r_cubeMapSize->integer / vramScaleDiv) * (r_cubeMapSize->integer / vramScaleDiv) * 8 * sizeof(byte));
+		}
+	}
+
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
 		tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
+		
+		if (r_emissiveCubes->integer)
+		{// Create black emissive cube, ready to be rendered over...
+			tr.emissivemaps[i] = R_CreateImage(va("*emissiveMap%d", i), gData, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
+		}
 	}
 
 	for (i = 0; i < tr.numCubemaps; i++)
@@ -3861,7 +3890,20 @@ static void R_RenderAllCubemaps(void)
 			R_RenderCubemapSide(i, j, qfalse);
 			R_IssuePendingRenderCommands();
 			R_InitNextFrame();
+
+			if (r_emissiveCubes->integer)
+			{
+				RE_ClearScene();
+				R_RenderEmissiveMapSide(i, j, qfalse);
+				R_IssuePendingRenderCommands();
+				R_InitNextFrame();
+			}
 		}
+	}
+
+	if (r_emissiveCubes->integer)
+	{
+		free(gData);
 	}
 }
 #endif //__REALTIME_CUBEMAP__

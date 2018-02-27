@@ -1215,6 +1215,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_CubeMap", GLSL_INT, 1 },
 	{ "u_SkyCubeMap", GLSL_INT, 1 },
 	{ "u_SkyCubeMapNight", GLSL_INT, 1 },
+	{ "u_EmissiveCubeMap", GLSL_INT, 1 },
 	{ "u_OverlayMap", GLSL_INT, 1 },
 	{ "u_SteepMap", GLSL_INT, 1 },
 	{ "u_WaterEdgeMap", GLSL_INT, 1 },

@@ -495,6 +495,7 @@ extern cvar_t	*r_skynum;
 extern cvar_t	*r_volumeLightStrength;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
+extern cvar_t	*r_emissiveCubes;
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
@@ -1036,20 +1037,21 @@ enum
 	TB_CUBEMAP			= 12,
 	TB_SKYCUBEMAP		= 13,
 	TB_SKYCUBEMAPNIGHT	= 14,
-	TB_OVERLAYMAP		= 15,
-	TB_STEEPMAP			= 16,
-	TB_WATER_EDGE_MAP	= 17,
-	TB_SPLATCONTROLMAP	= 18,
-	TB_SPLATMAP1		= 19,
-	TB_SPLATMAP2		= 20,
-	TB_SPLATMAP3		= 21,
-	TB_ROADSCONTROLMAP	= 22,
-	TB_ROADMAP			= 23,
-	TB_DETAILMAP		= 24,
-	TB_SHADOWMAP4		= 25,
-	TB_SHADOWMAP5		= 26,
-	TB_ROOFMAP			= 27,
-	NUM_TEXTURE_BUNDLES = 28
+	TB_EMISSIVECUBE		= 15,
+	TB_OVERLAYMAP		= 16,
+	TB_STEEPMAP			= 17,
+	TB_WATER_EDGE_MAP	= 18,
+	TB_SPLATCONTROLMAP	= 19,
+	TB_SPLATMAP1		= 20,
+	TB_SPLATMAP2		= 21,
+	TB_SPLATMAP3		= 22,
+	TB_ROADSCONTROLMAP	= 23,
+	TB_ROADMAP			= 24,
+	TB_DETAILMAP		= 25,
+	TB_SHADOWMAP4		= 26,
+	TB_SHADOWMAP5		= 27,
+	TB_ROOFMAP			= 28,
+	NUM_TEXTURE_BUNDLES = 29
 };
 
 typedef enum
@@ -1231,6 +1233,7 @@ typedef struct shader_s {
 
 	qboolean	isWater;
 	qboolean	hasAlpha;
+	qboolean	hasGlow;
 	qboolean	isIndoor;
 
 	qboolean	detailMapFromTC;		// 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
@@ -1286,6 +1289,8 @@ typedef struct shader_s {
   qboolean mergeDrawn;
 
   qboolean warzoneVextexSplat;
+
+  int maxStage;
 
 	struct	shader_s	*next;
 } shader_t;
@@ -1522,6 +1527,7 @@ typedef enum
 	UNIFORM_CUBEMAP,
 	UNIFORM_SKYCUBEMAP,
 	UNIFORM_SKYCUBEMAPNIGHT,
+	UNIFORM_EMISSIVECUBE,
 	UNIFORM_OVERLAYMAP,
 	UNIFORM_STEEPMAP,
 	UNIFORM_WATER_EDGE_MAP,
@@ -1784,6 +1790,7 @@ typedef enum {
 	VPF_NOPOSTPROCESS	= 0x100,
 	VPF_SHADOWPASS		= 0x200,
 	VPF_CUBEMAP			= 0x400,
+	VPF_EMISSIVEMAP		= 0x800,
 } viewParmFlags_t;
 
 typedef struct {
@@ -2632,6 +2639,7 @@ typedef struct trGlobals_s {
 	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*blackImage;			// full of 0x00
+	image_t					*blackCube;				// cubemap full of 0x00
 	image_t					*greyImage;				// full of 0x77
 	image_t					*greyCube;				// cubemap full of 0x77
 	image_t					*identityLightImage;	// full of tr.identityLightByte
@@ -2768,6 +2776,7 @@ typedef struct trGlobals_s {
 	vec3_t                  *cubemapOrigins;
 	float					*cubemapRadius;
 	image_t                 **cubemaps;
+	image_t                 **emissivemaps;
 #else //__REALTIME_CUBEMAP__
 	image_t                 *realtimeCubemap;
 #endif //__REALTIME_CUBEMAP__
@@ -3230,6 +3239,7 @@ extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;
 extern cvar_t	*r_grassWaveSize;
 extern cvar_t	*r_multithread;
+extern cvar_t	*r_emissiveCubes;
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
@@ -3308,6 +3318,7 @@ void R_RenderDlightCubemaps(const refdef_t *fd);
 void R_RenderPshadowMaps(const refdef_t *fd);
 void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sundir, float lightHeight);
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene );
+void R_RenderEmissiveMapSide(int cubemapIndex, int cubemapSide, qboolean subscene);
 void R_AddMD3Surfaces( trRefEntity_t *e );
 void R_AddNullModelSurfaces( trRefEntity_t *e );
 void R_AddBeamSurfaces( trRefEntity_t *e );

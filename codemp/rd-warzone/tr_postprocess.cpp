@@ -2397,6 +2397,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
 	GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
 
+	qboolean haveEmissiveCube = qfalse;
 	int cubeMapNum = 0;
 	vec4_t cubeMapVec;
 	float cubeMapRadius;
@@ -2411,6 +2412,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		cubeMapVec[3] = 0;
 		cubeMapRadius = 0;
 		
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 		GL_BindToTMU(tr.blackImage, TB_CUBEMAP);
 		GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, 0.0);
 		VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
@@ -2438,13 +2440,25 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		cubeMapVec[3] = cubeMapRadius;
 	
 #ifdef __REALTIME_CUBEMAP__
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 		GL_BindToTMU(tr.realtimeCubemap, TB_CUBEMAP);
 #else //!__REALTIME_CUBEMAP__
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
 		GL_BindToTMU(tr.cubemaps[cubeMapNum], TB_CUBEMAP);
 #endif //__REALTIME_CUBEMAP__
 		GLSL_SetUniformFloat(&tr.deferredLightingShader, UNIFORM_CUBEMAPSTRENGTH, r_cubemapStrength->value * 0.1);
 		//VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
 		GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_CUBEMAPINFO, cubeMapVec);
+
+		
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_EMISSIVECUBE, TB_EMISSIVECUBE);
+		if (r_emissiveCubes->integer && tr.emissivemaps[cubeMapNum])
+		{
+			haveEmissiveCube = qtrue;
+			GL_BindToTMU(tr.emissivemaps[cubeMapNum], TB_EMISSIVECUBE);
+		}
+		else
+			GL_BindToTMU(tr.blackCube, TB_EMISSIVECUBE);
 	}
 
 	/*for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
@@ -2519,6 +2533,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	vec4_t local8;
 	VectorSet4(local8, MAP_REFLECTION_ENABLED ? 1.0 : 0.0, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_SIZE[2]);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL8, local8);
+
+	vec4_t local9;
+	VectorSet4(local9, haveEmissiveCube ? 1.0 : 0.0, 0.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL9, local9);
+	
 
 	{
 		vec2_t screensize;

@@ -366,6 +366,13 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		return;
 	}
 
+	if (tr.viewParms.flags & VPF_EMISSIVEMAP) {
+		if (!surf->shader->hasGlow) {
+			// Can skip all thinking on this one...
+			return;
+		}
+	}
+
 	// try to cull before dlighting or adding
 	if (R_CullSurface(surf, entityNum)) {
 		return;

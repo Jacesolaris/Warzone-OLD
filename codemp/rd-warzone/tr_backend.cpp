@@ -797,7 +797,10 @@ void RB_BeginDrawingView (void) {
 		{
 			//qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, backEnd.viewParms.targetFbo->colorImage[0]->texnum, 0);
 #ifndef __REALTIME_CUBEMAP__
-			qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex]->texnum, 0);
+			if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+				qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.emissivemaps[backEnd.viewParms.targetFboCubemapIndex]->texnum, 0);
+			else
+				qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex]->texnum, 0);
 #else //__REALTIME_CUBEMAP__
 			qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.realtimeCubemap->texnum, 0);
 #endif //__REALTIME_CUBEMAP__
@@ -1933,7 +1936,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 		FBO_Bind(NULL);
 		GL_SelectTexture(TB_CUBEMAP);
 #ifndef __REALTIME_CUBEMAP__
-		GL_BindToTMU(tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex], TB_CUBEMAP);
+		if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+			GL_BindToTMU(tr.emissivemaps[backEnd.viewParms.targetFboCubemapIndex], TB_CUBEMAP);
+		else
+			GL_BindToTMU(tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex], TB_CUBEMAP);
 #else //__REALTIME_CUBEMAP__
 		GL_BindToTMU(tr.realtimeCubemap, TB_CUBEMAP);
 #endif //__REALTIME_CUBEMAP__

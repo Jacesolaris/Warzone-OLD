@@ -365,6 +365,11 @@ static float	s_skyTexCoords[SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1][2];
 
 static void DrawSkySide( struct image_s *image, struct image_s *nightImage, const int skyDirection, const int mins[2], const int maxs[2] )
 {
+	if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+	{
+		return;
+	}
+
 	int s, t;
 	int firstVertex = tess.numVertexes;
 	//int firstIndex = tess.numIndexes;
@@ -1174,6 +1179,11 @@ image_t *skyImage = NULL;
 void RB_StageIteratorSky( void ) {
 #ifndef ___FORCED_SKYDOME___
 	if ( r_fastsky->integer ) {
+		return;
+	}
+
+	if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+	{
 		return;
 	}
 

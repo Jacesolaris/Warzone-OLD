@@ -1830,6 +1830,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		return;
 	}
 
+	if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+	{
+		if (!tess.shader->hasGlow) {
+			// Skip...
+			return;
+		}
+	}
+
 	ComputeDeformValues(&deformGen, deformParams);
 
 	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
@@ -1923,7 +1931,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
 	qboolean didNonDetail = qfalse;
 
-	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
+	for ( int stage = 0; stage <= input->shader->maxStage && stage < MAX_SHADER_STAGES; stage++ )
 	{
 		shaderStage_t *pStage = input->xstages[stage];
 		shaderProgram_t *sp = NULL, *sp2 = NULL, *sp3 = NULL;
@@ -1945,6 +1953,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if ( !pStage->active )
 		{// Shouldn't this be here, just in case???
 			continue;
+		}
+
+		if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+		{
+			if (!pStage->glow) {
+				// Skip...
+				continue;
+			}
 		}
 
 		int index = pStage->glslShaderIndex;

@@ -6378,6 +6378,22 @@ static int CollapseStagesToGLSL(void)
 		}
 	}
 
+	shader.hasGlow = qfalse;
+
+	for (i = 0; i < MAX_SHADER_STAGES; i++)
+	{// Find a standard non-blended (or one/one will do) diffuse stage that we can merge into...
+		shaderStage_t *pStage = &stages[i];
+
+		if (!pStage->active)
+			continue;
+
+		if (pStage->glow)
+		{
+			shader.hasGlow = qtrue;
+			break;
+		}
+	}
+
 	// deactivate normal and specular stages
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
@@ -6826,6 +6842,15 @@ static int CollapseStagesToGLSL(void)
 		}
 	}
 #endif
+
+	shader.maxStage = 0;
+	for (i = 0; i < MAX_SHADER_STAGES; i++)
+	{
+		if (!stages[i].active)
+			continue;
+
+		shader.maxStage = i;
+	}
 
 	return numStages;
 }
