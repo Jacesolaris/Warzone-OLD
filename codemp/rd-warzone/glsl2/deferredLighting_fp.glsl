@@ -33,8 +33,8 @@ uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMI
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
-uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_SIZE[2]
-uniform vec4		u_Local9; // haveEmissiveCube, 0.0, 0.0, 0.0
+uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_SIZE[2]
+uniform vec4		u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, 0.0, 0.0
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -498,43 +498,81 @@ vec3 envMap(vec3 p, float warmth)
 
 
 #ifdef __HEIGHTMAP_SHADOWS__
-vec3 getTexture(vec2 uv) {
-	return texture(u_PositionMap, uv).rgb;
+float adjustHeightZeroOne(float height)
+{
+	return (height / u_Local8.a) * 0.5 + 0.5;
 }
 
-float getHeightmap(vec2 uv) {
-	//const float inv3 = 1.0 / 3.0;
-	//return dot(getTexture(uv), vec3(inv3));
-	return (getTexture(uv).z / u_Local8.a) * 2.0 - 1.0;
+float getHeightmap(vec2 uv)
+{
+	vec2 p = texture(u_PositionMap, uv).zw;
+
+	float material = p.y - 1.0;
+
+	if (material == MATERIAL_SKY || material == MATERIAL_SUN)
+	{
+		return -1.0;
+	}
+
+	float height = p.x;
+	return adjustHeightZeroOne(height);
 }
 
-float getShadow(vec2 uv, vec3 lp) {
-	const int steps = 64;
+float GetShadow(vec2 uv, vec3 lp, vec3 lDir) {
+	const int steps = 8;// int(u_Local3.g);// 64;
 	const float invSteps = 1.0 / float(steps);
+	//float bias = 0.01;
 
-	vec3 inc = lp.xzy * invSteps;
+	//vec3 lightOrg = u_ViewOrigin.xzy - lp.xzy;
+	//lightOrg.x = adjustHeightZeroOne(lightOrg.x);
+	//lightOrg.y = adjustHeightZeroOne(lightOrg.y);
+	//lightOrg.z = adjustHeightZeroOne(lightOrg.z);
+	//lightOrg = normalize(lightOrg);
+	
+	//vec3 lightOrg = normalize(vec3(0.0, 1.0, 0.0));
+
+	vec3 lightOrg = vec3(0.0, -lDir.b, 0.0);
+	if (lDir.g > 0.0)
+		lightOrg.r = lDir.g;
+	else if (lDir.b > 0.0)
+		lightOrg.r = -lDir.r;
+
+	//if (u_Local3.r == 6.0)
+	//	return lightOrg.r;
+
+	vec3 inc = lightOrg * invSteps;
+
 	float heightmap = getHeightmap(uv);
+	
 	vec3 position = vec3(uv, heightmap);
 
 	float shadow = 1.0;
+	float k = 0.0;// u_Local3.b;
+	float tmax = 8.0;// u_Local3.a;
 
-	for (int i = 0; i < steps && position.z < 1.0; i++) {
+	for (int i = 0; i < steps && position.z < 1.0 && position.y > 0.0 && position.y < 1.0 && position.x > 0.0 && position.x < 1.0; i++) {
 		position += inc;
-		float offsetHightmap = getHeightmap(position.xy);
 
-		if (offsetHightmap > position.z)
+		float offsetHightmap = getHeightmap(position.xy);// -bias;
+
+		//if (offsetHightmap > position.z)
+		//{
+		//	return 0.0;
+		//}
+
+		if (offsetHightmap != -1.0)
 		{
-			return 0.0;
+			shadow = min(shadow, offsetHightmap*1.5);
+
+			k += offsetHightmap;
+
+			if (k > tmax)
+			{
+				break;
+			}
 		}
-
 	}
-	return 1.0;
-}
-
-float GetShadow(vec2 texCoords, vec3 lightPos)
-{
-	//vec3 lightPos = normalize(vec3(u_Local3.rg, 1.0));
-	return getShadow(texCoords, lightPos);
+	return shadow;
 }
 #endif //__HEIGHTMAP_SHADOWS__
 
@@ -798,19 +836,22 @@ void main(void)
 
 	if (position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN || position.a-1.0 == MATERIAL_GLASS /*|| position.a-1.0 == MATERIAL_NONE*/)
 	{// Skybox... Skip...
-		if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
-		{// C/S/B enabled...
-			outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
+		if (u_Local9.g > 0.0)
+		{
+			if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
+			{// C/S/B enabled...
+				outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
+			}
 		}
 
 		if (u_Local5.a > 0.0)
 		{// TrueHDR enabled...
-			outColor.rgb = TrueHDR( outColor.rgb );
+			outColor.rgb = TrueHDR(outColor.rgb);
 		}
 
 		if (u_Local6.b > 0.0)
 		{// Vibrancy enabled...
-			outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
+			outColor.rgb = Vibrancy(outColor.rgb, u_Local6.b);
 		}
 
 		outColor.rgb = clamp(outColor.rgb, 0.0, 1.0);
@@ -1365,13 +1406,8 @@ void main(void)
 #endif //__ENVMAP__
 
 #ifdef __HEIGHTMAP_SHADOWS__
-	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
-	{
-		float hshadow = GetShadow(texCoords, -to_light_norm);
-		float finalShadow = clamp(hshadow + u_Local3.b, u_Local3.b, u_Local3.a);
-		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
-		outColor.rgb *= finalShadow;
-	}
+	float hshadow = GetShadow(texCoords, u_PrimaryLightOrigin.xyz, to_light_norm.xyz);
+	outColor.rgb *= hshadow;
 #endif //__HEIGHTMAP_SHADOWS__
 
 #if defined(USE_SHADOWMAP)

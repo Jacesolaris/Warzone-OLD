@@ -33,6 +33,7 @@ uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMethod, is2D
 uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
 uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, USE_GLOW_BLEND_MODE
+uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEMENT, 0.0, 0.0
 
 #define USE_TC						u_Settings0.r
 #define USE_DEFORM					u_Settings0.g
@@ -53,6 +54,9 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 #define USE_ISDETAIL				u_Settings3.g
 #define USE_DETAIL_COORD			u_Settings3.b
 #define USE_GLOW_BLEND_MODE			u_Settings3.a
+
+#define MAP_LIGHTMAP_MULTIPLIER		u_Settings4.r
+#define MAP_LIGHTMAP_ENHANCEMENT		u_Settings4.g
 
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
@@ -544,6 +548,17 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 	return mix(vec3(luma), origcolor.rgb, (1.0 + (vibrancyStrength * (1.0 - (sign(vibrancyStrength) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
 }
 
+float getspecularLight(vec3 n, vec3 l, vec3 e, float s) {
+	//float nrm = (s + 8.0) / (3.1415 * 8.0);
+	float ndotl = clamp(max(dot(reflect(e, n), l), 0.0), 0.1, 1.0);
+	return clamp(pow(ndotl, s), 0.1, 1.0);// * nrm;
+}
+
+float getdiffuseLight(vec3 n, vec3 l, float p) {
+	float ndotl = clamp(dot(n, l), 0.5, 0.9);
+	return pow(ndotl, p);
+}
+
 void main()
 {
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
@@ -605,24 +620,82 @@ void main()
 	{// TODO: Move to screen space?
 		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
 
-		#if defined(RGBM_LIGHTMAP)
-			lightmapColor.rgb *= lightmapColor.a;
-		#endif //defined(RGBM_LIGHTMAP)
+#if defined(RGBM_LIGHTMAP)
+		lightmapColor.rgb *= lightmapColor.a;
+#endif //defined(RGBM_LIGHTMAP)
 
-		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
-		
+		if (MAP_LIGHTMAP_ENHANCEMENT <= 0.0)
+		{
+			float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
+
 #define lm_const_1 ( 56.0 / 255.0)
 #define lm_const_2 (255.0 / 200.0)
-		lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
-		lmBrightMult = lmBrightMult * 0.7;
+			lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
+			lmBrightMult = lmBrightMult * 0.7;
 
-		lightColor	= lightmapColor.rgb * lmBrightMult;
+			lmBrightMult *= MAP_LIGHTMAP_MULTIPLIER;
 
-		ambientColor = lightColor;
-		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
-		lightColor /= clamp(max(surfNL, /*0.35*/0.25), 0.0, 1.0);
-		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
-		lightColor *= lightmapColor.rgb;
+			lightColor = lightmapColor.rgb * lmBrightMult;
+
+			ambientColor = lightColor;
+			float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
+			lightColor /= clamp(max(surfNL, 0.25), 0.0, 1.0);
+			ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
+			lightColor *= lightmapColor.rgb;
+		}
+		else if (MAP_LIGHTMAP_ENHANCEMENT == 1.0)
+		{
+			// Old style...
+			float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
+
+#define lm_const_1 ( 56.0 / 255.0)
+#define lm_const_2 (255.0 / 200.0)
+			lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
+			lmBrightMult = lmBrightMult * 0.7;
+
+			lmBrightMult *= MAP_LIGHTMAP_MULTIPLIER;
+
+			lightColor = lightmapColor.rgb * lmBrightMult;
+
+			ambientColor = lightColor;
+			float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz), 0.0, 1.0);
+			lightColor /= clamp(max(surfNL, 0.25), 0.0, 1.0);
+			ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
+			lightColor *= lightmapColor.rgb;
+
+
+			// New style...
+			vec3 lightColor2 = lightmapColor.rgb * MAP_LIGHTMAP_MULTIPLIER;
+
+			vec3 E = normalize(m_ViewDir);
+
+			vec3 bNorm = normalize(N.xyz + ((diffuse.rgb * 2.0 - 1.0) * -0.25)); // just add some fake bumpiness to it, fast as possible...
+
+			float dif = getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 20.0);
+			vec3 ambientColor2 = clamp(dif * lightColor2, 0.0, 1.0);
+
+			float spec = getspecularLight(bNorm, var_PrimaryLightDir.xyz, E, 20.0);
+			lightColor2 = clamp(spec * lightColor2, 0.0, 1.0);
+
+
+			// Mix them 50/50
+			lightColor = (lightColor + lightColor2) * 0.5;
+			ambientColor = (ambientColor + ambientColor2) * 0.5;
+		}
+		else
+		{
+			lightColor = lightmapColor.rgb * MAP_LIGHTMAP_MULTIPLIER;
+
+			vec3 E = normalize(m_ViewDir);
+
+			vec3 bNorm = normalize(N.xyz + ((diffuse.rgb * 2.0 - 1.0) * -0.25)); // just add some fake bumpiness to it, fast as possible...
+
+			float dif = getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 20.0);
+			ambientColor = clamp(dif * lightColor, 0.0, 1.0);
+
+			float spec = getspecularLight(bNorm, var_PrimaryLightDir.xyz, E, 20.0);
+			lightColor = clamp(spec * lightColor, 0.0, 1.0);
+		}
 	}
 
 

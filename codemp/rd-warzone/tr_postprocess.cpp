@@ -2317,8 +2317,10 @@ extern float		SKY_LIGHTING_SCALE;
 extern float		MAP_GLOW_MULTIPLIER;
 extern float		MAP_GLOW_MULTIPLIER_NIGHT;
 extern qboolean		MAP_REFLECTION_ENABLED;
+extern qboolean		MAP_USE_PALETTE_ON_SKY;
 extern float		MAP_HDR_MIN;
 extern float		MAP_HDR_MAX;
+extern vec3_t		MAP_INFO_PLAYABLE_SIZE;
 
 void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -2531,11 +2533,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL7, local7);
 
 	vec4_t local8;
-	VectorSet4(local8, MAP_REFLECTION_ENABLED ? 1.0 : 0.0, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_SIZE[2]);
+	VectorSet4(local8, MAP_REFLECTION_ENABLED ? 1.0 : 0.0, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_SIZE[2]);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL8, local8);
 
 	vec4_t local9;
-	VectorSet4(local9, haveEmissiveCube ? 1.0 : 0.0, 0.0, 0.0, 0.0);
+	VectorSet4(local9, haveEmissiveCube ? 1.0 : 0.0, MAP_USE_PALETTE_ON_SKY ? 1.0 : 0.0, 0.0, 0.0);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL9, local9);
 	
 

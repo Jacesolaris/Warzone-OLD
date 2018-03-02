@@ -515,6 +515,18 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		GL_BindToTMU(tr.auroraImage[1], TB_SPLATMAP2);
 
+		//if (r_testvalue0->integer)
+			GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+		//else
+		//	GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+		vec3_t out;
+		float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+		GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, out);
+		GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+		GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+
 		vec2_t screensize;
 		screensize[0] = nightImage->width;
 		screensize[1] = nightImage->height;

@@ -89,13 +89,13 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 	float fogAmount = 1.0 - fogExp;
 #endif //defined(HEIGHT_BASED_FOG)
 
-	fogAmount = clamp(fogAmount * u_Local3.a, 0.1, 1.0);
-	float sunAmount = max( clamp(dot( rayDir, sunDir ) * 1.1, 0.0, 1.0), 0.0 );
+	fogAmount = clamp(fogAmount * u_Local3.a, 0.0, 1.0);
+	float sunAmount = clamp(max( dot( rayDir, sunDir ), 0.0 ), 0.0, 1.0);
 	
-	if (!(position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN))
+	/*if (!(position.a-1.0 == MATERIAL_SKY || position.a-1.0 == MATERIAL_SUN))
 	{// Not Skybox or Sun... No don't do sun color here...
 		sunAmount = 0.0;
-	}
+	}*/
 
 	vec3  fogColor  = mix( u_Local2.rgb, // bluish
                            u_Local3.rgb, // yellowish
@@ -122,7 +122,7 @@ void main ( void )
 		//
 		if (u_Local2.a > 0.0)
 		{
-			vec3 rayDir = -gl_FragCoord.xyz;//normalize(viewOrg.xyz - pMap.xyz);
+			vec3 rayDir = normalize(viewOrg.xyz - pMap.xyz);
 			vec3 lightDir = normalize(viewOrg.xyz - u_PrimaryLightOrigin.xyz);
 			float depth = textureLod(u_ScreenDepthMap, var_TexCoords, 0.0).r;
 			fogColor = applyFog2(fogColor.rgb, depth, viewOrg.xyz, rayDir, lightDir, pMap);

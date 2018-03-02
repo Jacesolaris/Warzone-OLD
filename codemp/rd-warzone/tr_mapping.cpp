@@ -33,6 +33,9 @@ vec3_t	MAP_INFO_SIZE;
 vec3_t	MAP_INFO_PIXELSIZE;
 vec3_t	MAP_INFO_SCATTEROFFSET;
 float	MAP_INFO_MAXSIZE;
+vec3_t  MAP_INFO_PLAYABLE_MINS;
+vec3_t  MAP_INFO_PLAYABLE_MAXS;
+vec3_t  MAP_INFO_PLAYABLE_SIZE;
 
 void Mapping_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask)
 {
@@ -48,6 +51,8 @@ void R_SetupMapInfo(void)
 
 	VectorSet(MAP_INFO_MINS, 128000, 128000, 128000);
 	VectorSet(MAP_INFO_MAXS, -128000, -128000, -128000);
+	VectorSet(MAP_INFO_PLAYABLE_MINS, 128000, 128000, 128000);
+	VectorSet(MAP_INFO_PLAYABLE_MAXS, -128000, -128000, -128000);
 
 	w = &s_worldData;
 
@@ -62,20 +67,12 @@ void R_SetupMapInfo(void)
 
 			VectorCopy(surf->cullinfo.localOrigin, surfOrigin);
 
-			if (surfOrigin[0] < MAP_INFO_MINS[0])
-				MAP_INFO_MINS[0] = surfOrigin[0];
-			if (surfOrigin[0] > MAP_INFO_MAXS[0])
-				MAP_INFO_MAXS[0] = surfOrigin[0];
+			AddPointToBounds(surfOrigin, MAP_INFO_MINS, MAP_INFO_MAXS);
 
-			if (surfOrigin[1] < MAP_INFO_MINS[1])
-				MAP_INFO_MINS[1] = surfOrigin[1];
-			if (surfOrigin[1] > MAP_INFO_MAXS[1])
-				MAP_INFO_MAXS[1] = surfOrigin[1];
-
-			if (surfOrigin[2] < MAP_INFO_MINS[2])
-				MAP_INFO_MINS[2] = surfOrigin[2];
-			if (surfOrigin[2] > MAP_INFO_MAXS[2])
-				MAP_INFO_MAXS[2] = surfOrigin[2];
+			if (!surf->shader->isSky)
+			{
+				AddPointToBounds(surfOrigin, MAP_INFO_PLAYABLE_MINS, MAP_INFO_PLAYABLE_MAXS);
+			}
 		}
 		else if (surf->cullinfo.type & CULLINFO_BOX)
 		{
@@ -108,6 +105,39 @@ void R_SetupMapInfo(void)
 				MAP_INFO_MINS[2] = surf->cullinfo.bounds[1][2];
 			if (surf->cullinfo.bounds[1][2] > MAP_INFO_MAXS[2])
 				MAP_INFO_MAXS[2] = surf->cullinfo.bounds[1][2];
+
+			if (!surf->shader->isSky)
+			{
+				if (surf->cullinfo.bounds[0][0] < MAP_INFO_PLAYABLE_MINS[0])
+					MAP_INFO_PLAYABLE_MINS[0] = surf->cullinfo.bounds[0][0];
+				if (surf->cullinfo.bounds[0][0] > MAP_INFO_PLAYABLE_MAXS[0])
+					MAP_INFO_PLAYABLE_MAXS[0] = surf->cullinfo.bounds[0][0];
+
+				if (surf->cullinfo.bounds[1][0] < MAP_INFO_PLAYABLE_MINS[0])
+					MAP_INFO_PLAYABLE_MINS[0] = surf->cullinfo.bounds[1][0];
+				if (surf->cullinfo.bounds[1][0] > MAP_INFO_PLAYABLE_MAXS[0])
+					MAP_INFO_PLAYABLE_MAXS[0] = surf->cullinfo.bounds[1][0];
+
+				if (surf->cullinfo.bounds[0][1] < MAP_INFO_PLAYABLE_MINS[1])
+					MAP_INFO_PLAYABLE_MINS[1] = surf->cullinfo.bounds[0][1];
+				if (surf->cullinfo.bounds[0][1] > MAP_INFO_PLAYABLE_MAXS[1])
+					MAP_INFO_PLAYABLE_MAXS[1] = surf->cullinfo.bounds[0][1];
+
+				if (surf->cullinfo.bounds[1][1] < MAP_INFO_PLAYABLE_MINS[1])
+					MAP_INFO_PLAYABLE_MINS[1] = surf->cullinfo.bounds[1][1];
+				if (surf->cullinfo.bounds[1][1] > MAP_INFO_PLAYABLE_MAXS[1])
+					MAP_INFO_PLAYABLE_MAXS[1] = surf->cullinfo.bounds[1][1];
+
+				if (surf->cullinfo.bounds[0][2] < MAP_INFO_PLAYABLE_MINS[2])
+					MAP_INFO_PLAYABLE_MINS[2] = surf->cullinfo.bounds[0][2];
+				if (surf->cullinfo.bounds[0][2] > MAP_INFO_PLAYABLE_MAXS[2])
+					MAP_INFO_PLAYABLE_MAXS[2] = surf->cullinfo.bounds[0][2];
+
+				if (surf->cullinfo.bounds[1][2] < MAP_INFO_PLAYABLE_MINS[2])
+					MAP_INFO_PLAYABLE_MINS[2] = surf->cullinfo.bounds[1][2];
+				if (surf->cullinfo.bounds[1][2] > MAP_INFO_PLAYABLE_MAXS[2])
+					MAP_INFO_PLAYABLE_MAXS[2] = surf->cullinfo.bounds[1][2];
+			}
 		}
 	}
 
@@ -140,6 +170,10 @@ void R_SetupMapInfo(void)
 	MAP_INFO_PIXELSIZE[1] = MAP_INFO_TRACEMAP_SIZE / MAP_INFO_SIZE[1];
 	MAP_INFO_SCATTEROFFSET[0] = MAP_INFO_SIZE[0] / MAP_INFO_TRACEMAP_SIZE;
 	MAP_INFO_SCATTEROFFSET[1] = MAP_INFO_SIZE[1] / MAP_INFO_TRACEMAP_SIZE;
+
+	MAP_INFO_PLAYABLE_SIZE[0] = MAP_INFO_PLAYABLE_MAXS[0] - MAP_INFO_PLAYABLE_MINS[0];
+	MAP_INFO_PLAYABLE_SIZE[1] = MAP_INFO_PLAYABLE_MAXS[1] - MAP_INFO_PLAYABLE_MINS[1];
+	MAP_INFO_PLAYABLE_SIZE[2] = MAP_INFO_PLAYABLE_MAXS[2] - MAP_INFO_PLAYABLE_MINS[2];
 
 	MAP_INFO_MAXSIZE = MAP_INFO_SIZE[0];
 	if (MAP_INFO_SIZE[1] > MAP_INFO_MAXSIZE) MAP_INFO_MAXSIZE = MAP_INFO_SIZE[1];
@@ -175,8 +209,25 @@ void R_SetupMapInfo(void)
 		mapMaxs[1] = atof(IniRead(mapname, "BOUNDS", "MAXS1", "-999999.0"));
 		mapMaxs[2] = atof(IniRead(mapname, "BOUNDS", "MAXS2", "-999999.0"));
 
+		vec3_t mapPlayableMins, mapPlayableMaxs, mapPlayableSize;
+
+		mapPlayableMins[0] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_MINS0", "999999.0"));
+		mapPlayableMins[1] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_MINS1", "999999.0"));
+		mapPlayableMins[2] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_MINS2", "999999.0"));
+
+		mapPlayableMaxs[0] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_MAXS0", "-999999.0"));
+		mapPlayableMaxs[1] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_MAXS1", "-999999.0"));
+		mapPlayableMaxs[2] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_MAXS2", "-999999.0"));
+
+		mapPlayableSize[0] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_SIZE0", "-999999.0"));
+		mapPlayableSize[1] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_SIZE1", "-999999.0"));
+		mapPlayableSize[2] = atof(IniRead(mapname, "BOUNDS", "PLAYABLE_SIZE2", "-999999.0"));
+
 		if (mapMins[0] < 999999.0 && mapMins[1] < 999999.0 && mapMins[2] < 999999.0
-			&& mapMaxs[0] > -999999.0 && mapMaxs[1] > -999999.0 && mapMaxs[2] > -999999.0)
+			&& mapMaxs[0] > -999999.0 && mapMaxs[1] > -999999.0 && mapMaxs[2] > -999999.0
+			&& mapPlayableMins[0] < 999999.0 && mapPlayableMins[1] < 999999.0 && mapPlayableMins[2] < 999999.0
+			&& mapPlayableMaxs[0] > -999999.0 && mapPlayableMaxs[1] > -999999.0 && mapPlayableMaxs[2] > -999999.0
+			&& mapPlayableSize[0] > -999999.0 && mapPlayableSize[1] > -999999.0 && mapPlayableSize[2] > -999999.0)
 		{
 			mapcoordsValid = qtrue;
 		}
@@ -194,6 +245,18 @@ void R_SetupMapInfo(void)
 			IniWrite(mapname, "BOUNDS", "MAXS0", va("%f", MAP_INFO_MAXS[0]));
 			IniWrite(mapname, "BOUNDS", "MAXS1", va("%f", MAP_INFO_MAXS[1]));
 			IniWrite(mapname, "BOUNDS", "MAXS2", va("%f", MAP_INFO_MAXS[2]));
+
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_MINS0", va("%f", MAP_INFO_PLAYABLE_MINS[0]));
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_MINS1", va("%f", MAP_INFO_PLAYABLE_MINS[1]));
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_MINS2", va("%f", MAP_INFO_PLAYABLE_MINS[2]));
+
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_MAXS0", va("%f", MAP_INFO_PLAYABLE_MAXS[0]));
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_MAXS1", va("%f", MAP_INFO_PLAYABLE_MAXS[1]));
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_MAXS2", va("%f", MAP_INFO_PLAYABLE_MAXS[2]));
+
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_SIZE0", va("%f", MAP_INFO_PLAYABLE_SIZE[0]));
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_SIZE1", va("%f", MAP_INFO_PLAYABLE_SIZE[1]));
+			IniWrite(mapname, "BOUNDS", "PLAYABLE_SIZE2", va("%f", MAP_INFO_PLAYABLE_SIZE[2]));
 		}
 	}
 }
@@ -1457,6 +1520,9 @@ vec3_t		SUN_COLOR_TERTIARY = { 0 };
 vec3_t		SUN_COLOR_AMBIENT = { 0 };
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
+int			MAP_LIGHTMAP_ENHANCEMENT = 1;
+qboolean	MAP_USE_PALETTE_ON_SKY = qfalse;
+float		MAP_LIGHTMAP_MULTIPLIER = 1.0;
 vec3_t		MAP_AMBIENT_CSB = { 1 };
 vec3_t		MAP_AMBIENT_COLOR = { 1 };
 float		MAP_GLOW_MULTIPLIER = 1.0;
@@ -1635,6 +1701,10 @@ void MAPPING_LoadMapInfo(void)
 	//
 	LATE_LIGHTING_ENABLED = atoi(IniRead(mapname, "PALETTE", "LATE_LIGHTING_ENABLED", "0"));
 	MAP_LIGHTMAP_DISABLED = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_DISABLED", "0")) ? qtrue : qfalse;
+	MAP_LIGHTMAP_ENHANCEMENT = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_ENHANCEMENT", "1"));
+	MAP_USE_PALETTE_ON_SKY = atoi(IniRead(mapname, "PALETTE", "MAP_USE_PALETTE_ON_SKY", "0")) ? qtrue : qfalse;
+
+	MAP_LIGHTMAP_MULTIPLIER = atof(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_MULTIPLIER", "1.0"));
 
 	MAP_AMBIENT_COLOR[0] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_R", "1.0"));
 	MAP_AMBIENT_COLOR[1] = atof(IniRead(mapname, "PALETTE", "MAP_AMBIENT_COLOR_G", "1.0"));
@@ -1945,6 +2015,8 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of palette on sky is ^7%s^5 and lightmap cap is ^7%.4f^5 on this map.\n", MAP_USE_PALETTE_ON_SKY ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_MULTIPLIER);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of alt lightmap method is ^7%s^5 on this map.\n", (MAP_LIGHTMAP_ENHANCEMENT == 2) ? "FULL" : (MAP_LIGHTMAP_ENHANCEMENT == 1) ? "HYBRID" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sky lighting scale is ^7%.4f^5 on this map.\n", SKY_LIGHTING_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);

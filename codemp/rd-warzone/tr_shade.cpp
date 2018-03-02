@@ -1792,6 +1792,8 @@ extern vec3_t		SUN_COLOR_SECONDARY;
 extern vec3_t		SUN_COLOR_TERTIARY;
 extern vec3_t		MAP_AMBIENT_COLOR;
 extern vec3_t		MAP_AMBIENT_COLOR_NIGHT;
+extern int			MAP_LIGHTMAP_ENHANCEMENT;
+extern float		MAP_LIGHTMAP_MULTIPLIER;
 
 extern qboolean		GRASS_ENABLED;
 extern int			GRASS_DENSITY;
@@ -2610,6 +2612,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glowBlend);
 #endif //__USE_DETAIL_CHECKING__
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
+
+			VectorSet4(vec,
+				MAP_LIGHTMAP_MULTIPLIER,
+				MAP_LIGHTMAP_ENHANCEMENT,
+				0.0,
+				0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS4, vec);
 		}
 
 		if (r_tesselation->integer && useTesselation)

@@ -1333,6 +1333,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Settings1", GLSL_VEC4, 1 },
 	{ "u_Settings2", GLSL_VEC4, 1 },
 	{ "u_Settings3", GLSL_VEC4, 1 },
+	{ "u_Settings4", GLSL_VEC4, 1 },
 	{ "u_Local0", GLSL_VEC4, 1 },
 	{ "u_Local1", GLSL_VEC4, 1 },
 	{ "u_Local2", GLSL_VEC4, 1 },
