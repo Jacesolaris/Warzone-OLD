@@ -4,6 +4,7 @@
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __HEIGHTMAP_SHADOWS__
+//#define __EMISSIVE_IBL__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -221,6 +222,7 @@ vec3 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	return settings;
 }
 
+#ifdef __EMISSIVE_IBL__
 float saturate(in float val) {
 	return clamp(val, 0.0, 1.0);
 }
@@ -228,6 +230,7 @@ float saturate(in float val) {
 vec3 saturate(in vec3 val) {
 	return clamp(val, vec3(0.0), vec3(1.0));
 }
+#endif //__EMISSIVE_IBL__
 
 #ifdef __RANDOMIZE_LIGHT_PIXELS__
 float lrand(vec2 co) {
@@ -1131,11 +1134,13 @@ void main(void)
 					//float cubeFade = 1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0);
 					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, reflectPower * cubeFade * (u_CubeMapStrength * 20.0) * glossinessFactor/*greynessFactor*/);
 
+#ifdef __EMISSIVE_IBL__
 					if (u_Local9.r > 0.0)
 					{// Also grab emissive cube lighting color...
 						emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
 						emissiveCubeLightDirection = R + parallax;
 					}
+#endif //__EMISSIVE_IBL__
 				}
 			}
 		}
@@ -1273,6 +1278,7 @@ void main(void)
 			outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
 		}
 
+#ifdef __EMISSIVE_IBL__
 		if (u_Local9.r > 0.0 && specularPower > 0.0)
 		{// Also do emissive cube lighting (Emissive IBL)...
 			//emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
@@ -1319,12 +1325,15 @@ void main(void)
 				outColor.rgb = emissiveCubeLightColor;
 			}
 		}
+#endif //__EMISSIVE_IBL__
 	}
 
+#ifdef __EMISSIVE_IBL__
 	if (u_Local3.b == 2.0)
 	{
 		outColor.rgb = emissiveCubeLightColor;
 	}
+#endif //__EMISSIVE_IBL__
 
 	// Has a sort of lightmap-ish type coloring/lighting effect on result...
 	//outColor.rgb *= ((outColor.rgb / length(outColor.rgb)) * 3.0) * 0.25 + 0.75;

@@ -4886,6 +4886,9 @@ static const char *g_bindCommands[] = {
 	"generatefoliagepositions",
 	"genfoliage",
 	"navgen",
+	"cubemap_add",
+	"cubemap_disable",
+	"cubemap_enable",
 };
 
 #define g_bindCount ARRAY_LEN(g_bindCommands)

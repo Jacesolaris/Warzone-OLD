@@ -3447,107 +3447,14 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 #ifndef __REALTIME_CUBEMAP__
 static void R_SetupCubemapPoints( void )
 {
-	int numCubemaps = 0;
-
-	// count cubemaps
-	numCubemaps = 0;
-
 	if (IgnoreCubemapsOnMap()) return;
 
 #if 0
 	//
-	// How about we look at the material types and select surfaces that need cubemaps and generate them there instead? :)
-	//
-
-	world_t	*w;
-	vec3_t	*cubeOrgs;
-	int		numcubeOrgs = 0;
-
-	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t)*65568/*1048576*/);
-
-	if (!cubeOrgs)
-	{
-		ri->Error(ERR_DROP, "Failed to allocate cubeOrg memory.\n");
-	}
-
-	w = &s_worldData;
-
-	//float averageRadius = 0.0;
-	//int numAverages = 0;
-
-//#pragma omp parallel for /*ordered*/ schedule(dynamic) //if (r_multithread->integer > 0)
-	for (int i = 0; i < w->numsurfaces; i++)
-	{// Get a count of how many we need... Add them to temp list if not too close to another...
-		msurface_t *surf =	&w->surfaces[i];
-		vec3_t				surfOrigin;
-		qboolean			bad = qfalse;
-		float				radius = 0;
-
-		if (R_MaterialUsesCubemap( surf->shader->materialType)
-			|| surf->shader->customCubeMapScale > 0.0
-			|| (surf->shader->materialType) == MATERIAL_WATER)
-		{// Ok, this surface is shiny... Make a cubemap here...
-			if (surf->cullinfo.type & CULLINFO_SPHERE)
-			{
-				VectorCopy(surf->cullinfo.localOrigin, surfOrigin);
-				radius = surf->cullinfo.radius;
-			}
-			else if (surf->cullinfo.type & CULLINFO_BOX)
-			{
-				surfOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
-				surfOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
-				surfOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-				radius = Distance(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]) / 2.0;
-			}
-			else
-			{
-				continue;
-			}
-
-			for (int j = 0; j < numcubeOrgs; j++)
-			{
-				if (Distance(cubeOrgs[j], surfOrigin) < DISTANCE_BETWEEN_CUBEMAPS)
-				{
-					bad = qtrue;
-					break;
-				}
-			}
-
-			if (bad) continue;
-
-			{
-				VectorCopy(surfOrigin, cubeOrgs[numcubeOrgs]);
-				numcubeOrgs++;
-			}
-		}
-	}
-
-	tr.numCubemaps = numcubeOrgs;
-	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
-	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
-	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
-	if (r_emissiveCubes->integer)
-		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
-
-	numCubemaps = 0;
-
-	for (int i = 0; i < numcubeOrgs; i++)
-	{// Copy to real list...
-		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
-		tr.cubemapRadius[numCubemaps] = 2048.0;// 1024.0;
-		numCubemaps++;
-	}
-
-	free(cubeOrgs);
-
-	//averageRadius /= numAverages;
-	//ri->Printf(PRINT_WARNING, "Light average radius %f.\n", averageRadius);
-
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i positions for cubemaps.\n", "CUBE-MAPPING", tr.numCubemaps);
-#elif 1
-	//
 	// How about we simply generate a grid based on map bounds?
 	//
+
+	int numCubemaps = 0;
 
 	extern vec3_t	MAP_INFO_MINS;
 	extern vec3_t	MAP_INFO_MAXS;
@@ -3588,6 +3495,7 @@ static void R_SetupCubemapPoints( void )
 	}
 
 	tr.numCubemaps = numcubeOrgs;
+	tr.cubemapEnabled = (bool *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapEnabled), h_low);
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
@@ -3600,200 +3508,102 @@ static void R_SetupCubemapPoints( void )
 	{// Copy to real list...
 		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
 		tr.cubemapRadius[numCubemaps] = 2048.0;
+		tr.cubemapEnabled[numCubemaps] = true;
 		numCubemaps++;
 	}
 
 	free(cubeOrgs);
-
-	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i positions for cubemaps.\n", "CUBE-MAPPING", tr.numCubemaps);
 #else
-	//
-	// How about we look at the map's nodes/portals to select cubemap positions? TODO: Maybe use these as background lods?
-	// The way q3map2 cuts portals, these should be fairly central points in areas, i think???
-	//
+#define MAX_CUBEMAPS 1024
 
-	world_t	*w;
-	vec3_t	*cubeOrgs;
-	int		numcubeOrgs = 0;
+	fileHandle_t	f;
 
-	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t) * 65568);
+	tr.numCubemaps = 0;
 
-	if (!cubeOrgs)
-	{
-		ri->Error(ERR_DROP, "Failed to allocate cubeOrg memory.\n");
+	if (!tr.cubemapsAllocated)
+	{// Only allocate once... Allow for reloading the cubemap locations to edit in realtime...
+		tr.cubemapEnabled = (bool *)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemapEnabled), h_low);
+		tr.cubemapRendered = (bool *)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemapRendered), h_low);
+		tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemapOrigins), h_low);
+		tr.cubemapRadius = (float *)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemapRadius), h_low);
+		tr.cubemaps = (image_t **)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemaps), h_low);
+
+		if (r_emissiveCubes->integer)
+			tr.emissivemaps = (image_t **)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.emissivemaps), h_low);
+
+		tr.cubemapsAllocated = true;
 	}
 
-	w = &s_worldData;
-
-	//ri->Printf(PRINT_WARNING, "There are %i nodes on the map.\n", w->numnodes);
-
-	vec3_t center;
-	ivec3_t icenter;
-
-	center[0] = 0;
-	center[1] = 0;
-	center[2] = 0;
+	ri->FS_FOpenFileRead(va("maps/%s.cubemaps", currentMapName), &f, qfalse);
 	
-	icenter[0] = 0;
-	icenter[1] = 0;
-	icenter[2] = 0;
+	if (!f)
+		ri->FS_FOpenFileRead(va("maps/mp/%s.cubemaps", currentMapName), &f, qfalse);
 
-	int numCenters = 0;
+	if (!f)
+		ri->FS_FOpenFileRead(va("warzone/maps/%s.cubemaps", currentMapName), &f, qfalse);
 
-	// Find the closest one to the center (averaged) of the map...
-	for (int i = 0; i < w->numnodes; i++)
-	{// Find map's central location (averaged)...
-		mnode_t *node = w->nodes + i;
+	if (!f)
+		ri->FS_FOpenFileRead(va("warzone/maps/mp/%s.cubemaps", currentMapName), &f, qfalse);
 
-		if (node->contents == -1) continue; // We only want leafs...
-		if (node->nummarksurfaces <= 0) continue; // Skip empty nodes...
+	if (f)
+	{// We have an actual cubemap list... Use it's locations...
+		ri->FS_Read(&tr.numCubemaps, sizeof(int), f);
 
-		vec3_t origin;
+		// Check hard limit...
+		if (tr.numCubemaps > MAX_CUBEMAPS) tr.numCubemaps = MAX_CUBEMAPS;
 
-		origin[0] = (node->mins[0] + node->maxs[0]) * 0.5;
-		origin[1] = (node->mins[1] + node->maxs[1]) * 0.5;
-		origin[2] = (node->mins[2] + node->maxs[2]) * 0.5;
-
-		VectorCopy(origin, node->centerOrigin); // Record this info to save calculations later...
-
-		icenter[0] += origin[0];
-		icenter[1] += origin[1];
-		icenter[2] += origin[2];
-		numCenters++;
-	}
-
-	icenter[0] /= numCenters;
-	icenter[1] /= numCenters;
-	icenter[2] /= numCenters;
-
-	center[0] = icenter[0];
-	center[1] = icenter[1];
-	center[2] = icenter[2];
-
-	ri->Printf(PRINT_WARNING, "Center of map is at %f %f %f.\n", center[0], center[1], center[2]);
-
-	float centralDistance = 9999999.9;
-	int centerNum = -1;
-
-	for (int i = 0; i < w->numnodes; i++)
-	{// Find the closest one to the central point...
-		mnode_t *node = w->nodes + i;
-
-		if (node->contents == -1) continue; // We only want leafs...
-		if (node->nummarksurfaces <= 0) continue; // Skip empty nodes...
-
-		float dist = Distance(node->centerOrigin, center);
-		
-		if (dist < centralDistance)
+		for (int i = 0; i < tr.numCubemaps; i++)
 		{
-			centerNum = i;
-			centralDistance = dist;
+			ri->FS_Read(&tr.cubemapEnabled[i], sizeof(bool), f);
+			ri->FS_Read(&tr.cubemapOrigins[i], sizeof(vec3_t), f);
+			tr.cubemapRadius[i] = 2048.0;
 		}
+
+		ri->FS_FCloseFile(f);
+	}
+	else
+	{
+		ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: There is no maps/mapname.cubemaps file. Reverting to old method.\n", "CUBE-MAPPING");
 	}
 
-	vec3_t centralOrg;
-	VectorClear(centralOrg);
+	if (tr.numCubemaps <= 0)
+	{// Didn't find anything? Fall back to old system...
+	 //
+	 // How about we simply generate a grid based on map bounds?
+	 //
 
-	{
-		mnode_t *node = w->nodes + centerNum;
-		ri->Printf(PRINT_WARNING, "Central Cube %i at %f %f %f.\n", numcubeOrgs, node->centerOrigin[0], node->centerOrigin[1], node->centerOrigin[2]);
-		VectorCopy(node->centerOrigin, cubeOrgs[numcubeOrgs]);
-		numcubeOrgs++;
+		int numCubemaps = 0;
 
-		VectorCopy(node->centerOrigin, centralOrg);
-	}
+		extern vec3_t	MAP_INFO_MINS;
+		extern vec3_t	MAP_INFO_MAXS;
+		extern vec3_t	MAP_INFO_SIZE;
 
-	//
-	// We now should have the chosest actual node to the center of the map... Start here and fan out...
-	//
+		world_t	*w;
 
-	int lastClosest = -1;
-	float lastClosestDistance = 0;
+		w = &s_worldData;
 
-	while (1)
-	{
-		int closestNode = -1;
-		float closestDistance = 9999999.9;
+		vec3_t scatter;
+		scatter[0] = (MAP_INFO_SIZE[0] / 9.0);
+		scatter[1] = (MAP_INFO_SIZE[1] / 9.0);
+		scatter[2] = (MAP_INFO_SIZE[2] / 9.0);
 
-		for (int i = 0; i < w->numnodes; i++)
-		{// Find the next closest one to the center of the map, that is not within range of another...
-			mnode_t *node = w->nodes + i;
-
-			if (node->contents == -1) continue; // We only want leafs...
-			if (node->nummarksurfaces <= 0) continue; // Skip empty nodes...
-
-			if (i == lastClosest)
+		for (float x = MAP_INFO_MINS[0] + (scatter[0] * 2.0); x <= MAP_INFO_MAXS[0] - (scatter[0] * 2.0); x += scatter[0])
+		{
+			for (float y = MAP_INFO_MINS[1] + (scatter[1] * 2.0); y <= MAP_INFO_MAXS[1] - (scatter[1] * 2.0); y += scatter[1])
 			{
-				continue;
-			}
-
-			float dist = Distance(centralOrg, node->centerOrigin);
-
-			if (dist < lastClosestDistance)
-			{// Quick skip... The last pass was closer then this one...
-				continue;
-			}
-
-			if (dist >= closestDistance)
-			{// We already have closer then this one...
-				continue;
-			}
-
-			qboolean bad = qfalse;
-
-			// Finally, make sure theres not already a cubemap in range...
-			for (int j = 0; j < numcubeOrgs; j++)
-			{
-				if (Distance(cubeOrgs[j], node->centerOrigin) < DISTANCE_BETWEEN_CUBEMAPS)
+				for (float z = MAP_INFO_MINS[2] + (scatter[2]); z <= MAP_INFO_MAXS[2] - (scatter[2]); z += scatter[2])
 				{
-					bad = qtrue;
-					break;
+					VectorSet(tr.cubemapOrigins[tr.numCubemaps], x, y, z);
+					tr.cubemapRadius[tr.numCubemaps] = 2048.0;
+					tr.cubemapEnabled[tr.numCubemaps] = true;
+					tr.numCubemaps++;
 				}
 			}
-
-			if (!bad)
-			{// Looks good, mark it and continue looking for the best...
-				closestNode = i;
-				closestDistance = dist;
-			}
-		}
-
-		if (closestNode != -1)
-		{// We found one, add it and continue until none are left...
-			mnode_t *node = w->nodes + closestNode;
-			ri->Printf(PRINT_WARNING, "Cube %i at %f %f %f.\n", numcubeOrgs, node->centerOrigin[0], node->centerOrigin[1], node->centerOrigin[2]);
-			VectorCopy(node->centerOrigin, cubeOrgs[numcubeOrgs]);
-			numcubeOrgs++;
-
-			lastClosestDistance = closestDistance;
-			lastClosest = closestNode;
-		}
-		else
-		{// Done...
-			break;
 		}
 	}
-
-	tr.numCubemaps = numcubeOrgs;
-	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
-	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
-	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
-	if (r_emissiveCubes->integer)
-		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
-
-	numCubemaps = 0;
-
-	for (int i = 0; i < numcubeOrgs; i++)
-	{// Copy to real list...
-		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
-		tr.cubemapRadius[numCubemaps] = 2048.0;
-		numCubemaps++;
-	}
-
-	free(cubeOrgs);
+#endif
 
 	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i positions for cubemaps.\n", "CUBE-MAPPING", tr.numCubemaps);
-#endif
 }
 
 static void R_AssignCubemapsToWorldSurfaces(void)
@@ -3874,6 +3684,9 @@ static void R_RenderAllCubemaps(void)
 
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
+		if (!tr.cubemapEnabled[i]) continue;
+		if (tr.cubemapRendered[i]) continue;
+
 		tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
 		
 		if (r_emissiveCubes->integer)
@@ -3886,6 +3699,9 @@ static void R_RenderAllCubemaps(void)
 	{
 		for (j = 0; j < 6; j++)
 		{
+			if (!tr.cubemapEnabled[i]) continue;
+			if (tr.cubemapRendered[i]) continue;
+
 			RE_ClearScene();
 			R_RenderCubemapSide(i, j, qfalse);
 			R_IssuePendingRenderCommands();
@@ -3898,6 +3714,8 @@ static void R_RenderAllCubemaps(void)
 				R_IssuePendingRenderCommands();
 				R_InitNextFrame();
 			}
+
+			tr.cubemapRendered[i] = true;
 		}
 	}
 

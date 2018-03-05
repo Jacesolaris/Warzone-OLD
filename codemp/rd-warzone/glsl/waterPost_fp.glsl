@@ -4,6 +4,7 @@
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 #define REAL_WAVES
 //#define __OLD_LIGHTING__
+//#define __DEBUG__
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -954,7 +955,7 @@ void main ( void )
 		}
 #endif
 
-
+#ifdef __DEBUG__
 		if (u_Local0.a == 1.0)
 		{
 			color.rgb = normal.rgb * 0.5 + 0.5;
@@ -988,6 +989,7 @@ void main ( void )
 			gl_FragColor = vec4(height, height, height, 1.0);
 			return;
 		}
+#endif //__DEBUG__
 	}
 
 	gl_FragColor = vec4(color, 1.0);

@@ -2773,9 +2773,12 @@ typedef struct trGlobals_s {
 	qboolean				worldLoaded;
 
 #ifndef __REALTIME_CUBEMAP__
+	bool					cubemapsAllocated;
 	int                     numCubemaps;
+	bool					*cubemapEnabled;
 	vec3_t                  *cubemapOrigins;
 	float					*cubemapRadius;
+	bool					*cubemapRendered;
 	image_t                 **cubemaps;
 	image_t                 **emissivemaps;
 #else //__REALTIME_CUBEMAP__

@@ -42,6 +42,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/game/bg_inventoryItem.h"
 	"${MPDir}/cgame/cg_consolecmds.cpp"
 	"${MPDir}/cgame/cg_cvar.cpp"
+	"${MPDir}/cgame/cg_cubemaps.cpp"
 	"${MPDir}/cgame/cg_cull.cpp"
 	"${MPDir}/cgame/cg_draw.cpp"
 	"${MPDir}/cgame/cg_drawtools.cpp"

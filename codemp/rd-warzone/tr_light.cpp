@@ -504,6 +504,9 @@ int R_CubemapForPoint( vec3_t point )
 			//vec3_t diff;
 			float length;
 
+			if (!tr.cubemapEnabled[i]) continue;
+			if (!tr.cubemapRendered[i]) continue;
+
 #ifdef __PLAYER_BASED_CUBEMAPS__
 			length = Distance(point, tr.cubemapOrigins[i]);
 			length += DistanceVertical(point, tr.cubemapOrigins[i]) * 3.0; // We *MUCH* prefer a cubemap ar our own height!
