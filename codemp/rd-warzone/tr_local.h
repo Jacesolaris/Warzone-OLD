@@ -44,7 +44,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __GLSL_OPTIMIZER__						// Enable GLSL optimization...
 
 //#define __USE_QGL_FINISH__					// For testing...
-#define __USE_QGL_FLUSH__						// Use this one instead...
+#define __USE_QGL_FLUSH__						// Use this one...
 
 //#define __RENDERER_FOLIAGE__					// A port of the cgame foliage system in the renderer, doesn't work, only just started porting the basic code...
 #define __SHADER_GENERATOR__					// Generates warzone compatible shaders on load... Tries to convert old JKA shaders to better WZ ones... Hacky but works...
@@ -103,7 +103,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 
 #define DISTANCE_BETWEEN_CUBEMAPS	1024
-#define	MAX_DEFERRED_LIGHTS			64//128
+#define	MAX_DEFERRED_LIGHTS			16//64//128
 
 #define MAX_IMAGE_PATH				256
 
@@ -295,6 +295,7 @@ extern cvar_t	*r_inGameVideo;
 extern cvar_t	*r_fastsky;
 extern cvar_t	*r_drawSun;
 extern cvar_t	*r_dynamiclight;
+extern cvar_t	*r_volumeLight;
 
 extern cvar_t	*r_lodbias;
 extern cvar_t	*r_lodscale;
@@ -3058,6 +3059,7 @@ extern cvar_t	*r_inGameVideo;				// controls whether in game video should be dra
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
 extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
+extern cvar_t	*r_volumeLight;
 
 extern	cvar_t	*r_norefresh;			// bypasses the ref rendering
 extern	cvar_t	*r_drawentities;		// disable/enable entity rendering

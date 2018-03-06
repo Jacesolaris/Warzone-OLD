@@ -1963,6 +1963,7 @@ void GUI_Main(void)
 		
 #endif
 
+#if 0 // Disabled until I finish it...
 		/* GUI */
 		if (menuOpen)
 		{
@@ -1975,6 +1976,7 @@ void GUI_Main(void)
 			GUI_inventory(&GUI_ctx, &GUI_media);
 		}
 		else
+#endif
 		{// Just clear the buffer...
 			FBO_Bind(tr.renderGUIFbo);
 

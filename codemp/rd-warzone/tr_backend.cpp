@@ -968,9 +968,18 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	qboolean		CUBEMAPPING = qfalse;
 	float			depth[2];
 
-	if (r_cubeMapping->integer >= 1) CUBEMAPPING = qtrue;
+	if (r_cubeMapping->integer >= 1)
+	{
+		CUBEMAPPING = qtrue;
+	}
 
-	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)) CUBEMAPPING = qfalse;
+	if (((backEnd.refdef.rdflags & RDF_BLUR)
+		|| (tr.viewParms.flags & VPF_SHADOWPASS)
+		|| backEnd.depthFill
+		|| (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)))
+	{
+		CUBEMAPPING = qfalse;
+	}
 
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
@@ -1062,11 +1071,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		newCubemapIndex = 0;// currentPlayerCubemap;
 #endif //__REALTIME_CUBEMAP__
 #else //!__PLAYER_BASED_CUBEMAPS__
-		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-		{
-			newCubemapIndex = 0;
-		}
-		else if (!CUBEMAPPING)
+		if (!CUBEMAPPING)
 		{
 			newCubemapIndex = 0;
 		}
@@ -2851,7 +2856,7 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer(qtrue);
 		}
 
-		if (!SCREEN_BLUR && r_dynamiclight->integer)
+		if (!SCREEN_BLUR && r_dynamiclight->integer && r_volumeLight->integer)
 		{
 			DEBUG_StartTimer("Volume Light", qtrue);
 			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))

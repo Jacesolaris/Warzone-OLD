@@ -110,6 +110,7 @@ cvar_t	*r_inGameVideo;
 cvar_t	*r_fastsky;
 cvar_t	*r_drawSun;
 cvar_t	*r_dynamiclight;
+cvar_t	*r_volumeLight;
 
 cvar_t	*r_lodbias;
 cvar_t	*r_lodscale;
@@ -1712,6 +1713,7 @@ void R_Register( void )
 	r_inGameVideo = ri->Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE );
 	r_drawSun = ri->Cvar_Get( "r_drawSun", "1", CVAR_ARCHIVE );
 	r_dynamiclight = ri->Cvar_Get( "r_dynamiclight", "6", CVAR_ARCHIVE );
+	r_volumeLight = ri->Cvar_Get("r_volumeLight", "1", CVAR_ARCHIVE);
 	r_finish = ri->Cvar_Get ("r_finish", "0", CVAR_ARCHIVE);
 	r_textureMode = ri->Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
 	r_swapInterval = ri->Cvar_Get( "r_swapInterval", "0",

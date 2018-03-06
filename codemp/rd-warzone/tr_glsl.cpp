@@ -1568,7 +1568,9 @@ const char glslMaterialsList[] =
 "#define MATERIAL_SHATTERGLASS	29\n"\
 "#define MATERIAL_ARMOR			30\n"\
 "#define MATERIAL_COMPUTER		31\n"\
-"#define MATERIAL_LAST			32\n"\
+"#define MATERIAL_PUDDLE		32\n"\
+"#define MATERIAL_EFX			33\n"\
+"#define MATERIAL_BLASTERBOLT	34\n"\
 "#define MATERIAL_SKY			1024\n"\
 "#define MATERIAL_SUN			1025\n"\
 "\n";

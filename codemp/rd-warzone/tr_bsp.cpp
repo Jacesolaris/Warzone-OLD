@@ -3224,6 +3224,15 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 		return qtrue;
 		break;
+	case MATERIAL_PUDDLE:
+		return qtrue;
+		break;
+	case MATERIAL_EFX:
+		return qfalse;
+		break;
+	case MATERIAL_BLASTERBOLT:
+		return qfalse;
+		break;
 	default:
 		return qfalse;
 		break;

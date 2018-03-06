@@ -364,7 +364,11 @@ void main()
 
 	float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
 
-	if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || USE_IS2D > 0.0)
+	if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE || USE_IS2D > 0.0)
+	{
+
+	}
+	else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 	{
 
 	}
@@ -484,7 +488,7 @@ void main()
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
 
-		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
+		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
 		float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);//clamp(max(glowColor.r, max(glowColor.g, glowColor.b)), 0.0, 1.0);
@@ -502,7 +506,13 @@ void main()
 			out_Normal = vec4(0.0);
 			out_NormalDetail = vec4(0.0);
 		}
-		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
+		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
+		{
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
+			out_NormalDetail = vec4(0.0);
+		}
+		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
@@ -531,7 +541,7 @@ void main()
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
 		
-		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
+		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
 		out_Glow = glowColor;
@@ -547,7 +557,13 @@ void main()
 			out_Normal = vec4(0.0);
 			out_NormalDetail = vec4(0.0);
 		}
-		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
+		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
+		{
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
+			out_NormalDetail = vec4(0.0);
+		}
+		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
@@ -570,7 +586,13 @@ void main()
 			out_Normal = vec4(0.0);
 			out_NormalDetail = vec4(0.0);
 		}
-		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
+		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
+		{
+			out_Position = vec4(0.0);
+			out_Normal = vec4(0.0);
+			out_NormalDetail = vec4(0.0);
+		}
+		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );

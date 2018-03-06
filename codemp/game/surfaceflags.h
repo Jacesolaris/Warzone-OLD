@@ -113,7 +113,10 @@
 #define MATERIAL_SHATTERGLASS	29			// glass with the Crisis Zone style shattering
 #define MATERIAL_ARMOR			30			// body armor
 #define MATERIAL_COMPUTER		31			// computers/electronic equipment
-#define MATERIAL_LAST			32			// number of materials
+#define MATERIAL_PUDDLE			32			// shallow puddle on floor surface
+#define MATERIAL_EFX			33			// any efx surfaces
+#define MATERIAL_BLASTERBOLT	34			// blaster bolts, sabers, etc
+#define MATERIAL_LAST			35			// number of materials
 
 // Defined as a macro here so one change will affect all the relevant files
 
@@ -149,4 +152,7 @@
 	"plaster",		\
 	"shatterglass",	\
 	"armor",		\
-	"computer"/* this was missing, see enums above, plus ShaderEd2 pulldown options */
+	"computer",		\
+	"puddle",		\
+	"efx",			\
+	"blasterbolt"

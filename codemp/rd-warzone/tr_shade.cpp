@@ -1231,6 +1231,22 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 		cubemapScale = 0.42;
 		parallaxScale = 1.5;
 		break;
+		break;
+	case MATERIAL_PUDDLE:
+		specularScale = 1.0;
+		cubemapScale = 0.7;
+		parallaxScale = 1.5;
+		break;
+	case MATERIAL_EFX:
+		specularScale = 0.0;
+		cubemapScale = 0.0;
+		parallaxScale = 0.0;
+		break;
+	case MATERIAL_BLASTERBOLT:
+		specularScale = 0.0;
+		cubemapScale = 0.0;
+		parallaxScale = 0.0;
+		break;
 	default:
 		specularScale = 0.15;
 		cubemapScale = 0.0;

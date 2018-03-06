@@ -341,6 +341,7 @@ qboolean RB_UpdateSunFlareVis(void)
 
 void RB_SunRays(FBO_t *srcFbo, vec4i_t srcBox, FBO_t *dstFbo, vec4i_t dstBox)
 {
+#if 0 // Warzone does this better and faster...
 	vec4_t color;
 	float dot;
 	const float cutoff = 0.25f;
@@ -449,6 +450,7 @@ void RB_SunRays(FBO_t *srcFbo, vec4i_t srcBox, FBO_t *dstFbo, vec4i_t dstBox)
 
 		FBO_Blit(tr.quarterFbo[0], NULL, texScale, dstFbo, dstBox, &tr.textureColorShader, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
 	}
+#endif
 }
 
 static void RB_BlurAxis(FBO_t *srcFbo, FBO_t *dstFbo, float strength, qboolean horizontal)

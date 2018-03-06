@@ -3529,6 +3529,9 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_GLASS:			// 10			//
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+	case MATERIAL_PUDDLE:
+	case MATERIAL_EFX:
+	case MATERIAL_BLASTERBOLT:
 		return qtrue;
 		break;
 	default:
@@ -3645,6 +3648,15 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_COMPUTER.\n", name);
+		break;
+	case MATERIAL_PUDDLE:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_PUDDLE.\n", name);
+		break;
+	case MATERIAL_EFX:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_EFX.\n", name);
+		break;
+	case MATERIAL_BLASTERBOLT:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_BLASTERBOLT.\n", name);
 		break;
 	default:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_NONE.\n", name);
@@ -8168,8 +8180,14 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	shaderText = FindShaderInShaderText( strippedName );
 
 	qboolean forceShaderFileUsage = qfalse;
+	qboolean isEfxShader = qfalse;
 
-	if (shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneEnabled", qfalse))
+	if (StringContains((char *)shader.name, "gfx/", qfalse) || StringContains((char *)shader.name, "gfx_base/", qfalse))
+	{
+		isEfxShader = qtrue;
+	}
+
+	if (shaderText && shaderText[0] && (StringContains((char *)shaderText, "warzoneEnabled", qfalse) || isEfxShader))
 	{// This is marked as a warzone enabled shader...
 		forceShaderFileUsage = qtrue;
 	}
@@ -8209,6 +8227,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		else if (!shader.defaultShader || StringContainsWord(name, "icon") || !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
 		{
 			sh = FinishShader();
+			if (isEfxShader) sh->materialType = MATERIAL_EFX;
 			return sh;
 		}
 #else //!__SHADER_GENERATOR__
