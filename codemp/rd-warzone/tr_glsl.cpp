@@ -1718,6 +1718,12 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 		GL_ADD,
 		GL_REPLACE));
 
+	if (!r_lowVram->integer)
+		Q_strcat(dest, size, "#define __HIGH_MTU_AVAILABLE__\n");
+
+	if (r_lowVram->integer)
+		Q_strcat(dest, size, "#define __LQ_MODE__\n");
+
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 	Q_strcat(dest, size, glslMaterialsList);
 
@@ -3121,6 +3127,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
 
+#if 0
 		if (r_foliage->integer >= 2)
 		{
 #ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
@@ -3143,6 +3150,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			}
 		}
 		else
+#endif
 		{
 #ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 			if (ALLOW_GL_400)

@@ -2359,8 +2359,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 	if (r_ssdo->integer && AO_DIRECTIONAL)
 	{
-		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
-		GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
+		if (!r_lowVram->integer)
+		{
+			GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+			GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
+		}
 	}
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
@@ -2424,7 +2427,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	}
 	else
 #endif //!__REALTIME_CUBEMAP__
-	if (r_cubeMapping->integer >= 1)
+	if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
 	{
 		cubeMapNum = currentPlayerCubemap-1;
 #ifdef __REALTIME_CUBEMAP__
@@ -2505,7 +2508,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		shadowsEnabled = qtrue;
 
 	vec4_t local2;
-	VectorSet4(local2, (r_ssdo->integer > 0 && r_ssdo->integer < 3 && AO_DIRECTIONAL) ? 1.0 : 0.0, shadowsEnabled ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+	VectorSet4(local2, (r_ssdo->integer > 0 && r_ssdo->integer < 3 && AO_DIRECTIONAL && !r_lowVram->integer) ? 1.0 : 0.0, shadowsEnabled ? 1.0 : 0.0, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_LOCAL2,  local2);
 
 	vec4_t local3;

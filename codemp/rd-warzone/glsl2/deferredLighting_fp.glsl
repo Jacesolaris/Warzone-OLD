@@ -1,10 +1,14 @@
-﻿#define __AMBIENT_OCCLUSION__
+﻿#ifndef __LQ_MODE__
+
+#define __AMBIENT_OCCLUSION__
 #define __ENHANCED_AO__
 //#define __ENVMAP__
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __HEIGHTMAP_SHADOWS__
 //#define __EMISSIVE_IBL__
+
+#endif //__LQ_MODE__
 
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_PositionMap;
@@ -288,7 +292,7 @@ float getHeight(vec2 uv) {
   return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
-#ifdef __SCREEN_SPACE_REFLECTIONS__
+#if defined(__SCREEN_SPACE_REFLECTIONS__)
 #define pw pixel.x
 #define ph pixel.y
 vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, float reflectiveness)
@@ -407,7 +411,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
 	return mix(inColor.rgb, inColor.rgb + landColor.rgb + (glowColor.rgb * 3.5), clamp(strength * reflectiveness * 4.0, 0.0, 1.0));
 }
-#endif //__SCREEN_SPACE_REFLECTIONS__
+#endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
 vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
   vec2 step = 1. / resolution;
@@ -473,7 +477,7 @@ float map(vec3 p)
 #endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 
 
-#ifdef __AMBIENT_OCCLUSION__
+#if defined(__AMBIENT_OCCLUSION__)
 float calculateAO(in vec3 pos, in vec3 nor)
 {
 	float sca = 0.00013/*2.0*/, occ = 0.0;
@@ -491,9 +495,9 @@ float calculateAO(in vec3 pos, in vec3 nor)
 float bad_ao(vec3 n) {
     return abs(dot(n, vec3(0.0, 1.0, 0.0))); 
 }
-#endif //__AMBIENT_OCCLUSION__
+#endif //defined(__AMBIENT_OCCLUSION__)
 
-#ifdef __ENVMAP__
+#if defined(__ENVMAP__)
 vec3 envMap(vec3 p, float warmth)
 {
     float c = cellTile(p*6.);
@@ -508,10 +512,10 @@ vec3 envMap(vec3 p, float warmth)
 	// Mix Ice and Heat based on warmth setting...
 	return mix(coolMap, heatMap, clamp(warmth, 0.0, 1.0));
 }
-#endif //__ENVMAP__
+#endif //defined(__ENVMAP__)
 
 
-#ifdef __HEIGHTMAP_SHADOWS__
+#if defined(__HEIGHTMAP_SHADOWS__)
 float adjustHeightZeroOne(float height)
 {
 	return (height / u_Local8.a) * 0.5 + 0.5;
@@ -588,7 +592,7 @@ float GetShadow(vec2 uv, vec3 lp, vec3 lDir) {
 	}
 	return shadow;
 }
-#endif //__HEIGHTMAP_SHADOWS__
+#endif //defined(__HEIGHTMAP_SHADOWS__)
 
 
 vec3 TrueHDR ( vec3 color )
@@ -610,6 +614,17 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
+#if defined(__LQ_MODE__)
+float getdiffuse(vec3 n, vec3 l, float p) {
+	float ndotl = clamp(dot(n, l), 0.5, 0.9);
+	return pow(ndotl, p);
+}
+
+vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
+	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
+	return diffuse;
+}
+#else //!defined(__LQ_MODE__)
 float specTrowbridgeReitz(float HoN, float a, float aP)
 {
 	float a2 = a * a;
@@ -742,6 +757,7 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 
 	return diffuse + spec;
 }
+#endif //defined(__LQ_MODE__)
 
 /*
 ** Contrast, saturation, brightness
@@ -825,7 +841,7 @@ void main(void)
 
 	vec3 flatNorm = norm.xyz;
 
-#ifdef __SCREEN_SPACE_REFLECTIONS__
+#if defined(__SCREEN_SPACE_REFLECTIONS__)
 	// If doing screen space reflections on floors, we need to know what are floor pixels...
 	float ssReflection = norm.z * 0.5 + 0.5;
 
@@ -838,7 +854,7 @@ void main(void)
 	{
 		ssReflection = clamp(ssReflection - 0.8, 0.0, 0.2) * 5.0;
 	}
-#endif //__SCREEN_SPACE_REFLECTIONS__
+#endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
 	// Now add detail offsets to the normal value...
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
@@ -882,9 +898,9 @@ void main(void)
 	// It looks better to use slightly different cube and light reflection multipliers... Lights should always add some light, cubes should allow none on some pixels..
 	float cubeReflectionFactor = clamp(greynessFactor * brightnessFactor, 0.25, 1.0) * reflectionPower;
 	float lightsReflectionFactor = (greynessFactor * brightnessFactor * specularReflectivePower) * 0.5 + 0.5;
-#ifdef __SCREEN_SPACE_REFLECTIONS__
+#if defined(__SCREEN_SPACE_REFLECTIONS__)
 	float ssrReflectivePower = lightsReflectionFactor * reflectionPower * ssReflection;
-#endif //__SCREEN_SPACE_REFLECTIONS__
+#endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
 
 	//
@@ -936,6 +952,7 @@ void main(void)
 	vec3 emissiveCubeLightColor = vec3(0.0);
 	vec3 emissiveCubeLightDirection = vec3(0.0);
 
+#ifndef __LQ_MODE__
 	if (u_Local7.a > 0.0)
 	{// Sky cube light contributions... If enabled...
 		// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
@@ -972,6 +989,7 @@ void main(void)
 		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.7), 0.0, 1.0);
 		skyColor = clamp(Vibrancy( skyColor, 0.4 ), 0.0, 1.0);
 	}
+#endif //__LQ_MODE__
 
 	if (specularReflectivePower > 0.0)
 	{// If this pixel is ging to get any specular reflection, generate (PBR would instead look up image buffer) specular color, and grab any cubeMap lighting as well...
@@ -989,6 +1007,7 @@ void main(void)
 			specularColor.rgb = mix(specularColor.rgb, skyColor * specularColor.rgb, reflectionPower);
 		}
 
+#ifndef __LQ_MODE__
 		//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
 		vec3 cubeLightColor = vec3(0.0);
 		float curDist = distance(u_ViewOrigin.xyz, position.xyz);
@@ -1049,6 +1068,7 @@ void main(void)
 				}
 			}
 		}
+#endif //!__LQ_MODE__
 	}
 
 	//
@@ -1057,15 +1077,19 @@ void main(void)
 	vec4 occlusion = vec4(0.0);
 	bool useOcclusion = false;
 
+#ifndef __LQ_MODE__
 	if (u_Local2.r == 1.0)
 	{
 		useOcclusion = true;
 		occlusion = texture(u_HeightMap, texCoords);
 	}
+#endif //!__LQ_MODE__
 
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
+#ifndef __LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(reflectionPower, 2.0) * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
+#endif //__LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor, 0.0, 1.0));
 	}
 
@@ -1080,10 +1104,12 @@ void main(void)
 		{// this is blinn phong
 			float light_occlusion = 1.0;
 
+#ifndef __LQ_MODE__
 			if (useOcclusion)
 			{
 				light_occlusion = 1.0 - clamp(dot(vec4(-sunDir*E, 1.0), occlusion), 0.0, 1.0);
 			}
+#endif //__LQ_MODE__
 
 			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
 			float power = clamp(pow(maxBright * 0.75, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
@@ -1132,7 +1158,11 @@ void main(void)
 			float power = maxBright * 0.85;
 			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 
+#ifdef __LQ_MODE__
+			for (int li = 0; li < min(u_lightCount, 4); li++)
+#else //!__LQ_MODE__
 			for (int li = 0; li < u_lightCount; li++)
+#endif //__LQ_MODE__
 			{
 				vec3 lightPos = u_lightPositions2[li].xyz;
 
@@ -1160,10 +1190,12 @@ void main(void)
 
 					addedLight.rgb += lightColor * lightStrength * 0.333;
 
+#ifndef __LQ_MODE__
 					if (useOcclusion)
 					{
 						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
+#endif //__LQ_MODE__
 					
 					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade;
 				}
@@ -1223,23 +1255,23 @@ void main(void)
 #endif //__EMISSIVE_IBL__
 	}
 
-#ifdef __SCREEN_SPACE_REFLECTIONS__
+#if defined(__SCREEN_SPACE_REFLECTIONS__)
 	if (u_Local8.r > 0.0 && ssrReflectivePower > 0.0)
 	{
 		outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower);
 	}
-#endif //__SCREEN_SPACE_REFLECTIONS__
+#endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
-#ifdef __AMBIENT_OCCLUSION__
+#if defined(__AMBIENT_OCCLUSION__)
 	if (u_Local1.b == 1.0)
 	{// Fast AO enabled...
 		float ao = calculateAO(sunDir, N * 10000.0);
 		ao = clamp(ao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 		outColor.rgb *= ao;
 	}
-#endif //__AMBIENT_OCCLUSION__
+#endif //defined(__AMBIENT_OCCLUSION__)
 
-#ifdef __ENHANCED_AO__
+#if defined(__ENHANCED_AO__)
 	if (u_Local1.b >= 2.0)
 	{// Better, HQ AO enabled...
 		float msao = 0.0;
@@ -1287,9 +1319,9 @@ void main(void)
 		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 		outColor.rgb *= sao;
 	}
-#endif //__ENHANCED_AO__
+#endif //defined(__ENHANCED_AO__)
 
-#ifdef __ENVMAP__
+#if defined(__ENVMAP__)
 	if (u_Local1.a > 0.0)
 	{// Envmap enabled...
 		float lightScale = clamp(1.0 - clamp(max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0), 0.0, 1.0);
@@ -1297,14 +1329,14 @@ void main(void)
 		vec3 env = envMap(rayDir, 0.6 /* warmth */);
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (specularReflectivePower * 0.5) * invLightScale) * lightScale), clamp((specularReflectivePower * 0.5) * lightScale * cubeReflectionFactor, 0.0, 1.0));
 	}
-#endif //__ENVMAP__
+#endif //defined(__ENVMAP__)
 
-#ifdef __HEIGHTMAP_SHADOWS__
+#if defined(__HEIGHTMAP_SHADOWS__)
 	float hshadow = GetShadow(texCoords, u_PrimaryLightOrigin.xyz, sunDir.xyz);
 	outColor.rgb *= hshadow;
-#endif //__HEIGHTMAP_SHADOWS__
+#endif //defined(__HEIGHTMAP_SHADOWS__)
 
-#if defined(USE_SHADOWMAP)
+#if defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
 	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
 	{
 		float shadowValue = texture(u_ShadowMap, texCoords).r;
@@ -1318,7 +1350,7 @@ void main(void)
 		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
 		outColor.rgb *= finalShadow;
 	}
-#endif //defined(USE_SHADOWMAP)
+#endif //defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
 
 	// De-emphasize (darken) the distant map a bit...
 	//float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0); // darken distant

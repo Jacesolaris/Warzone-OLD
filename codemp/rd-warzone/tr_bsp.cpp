@@ -4714,7 +4714,7 @@ void RE_LoadWorldMap( const char *name ) {
 
 #ifndef __REALTIME_CUBEMAP__
 	// load cubemaps
-	if (r_cubeMapping->integer >= 1)
+	if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
 	{
 		DEBUG_StartTimer("R_LoadCubemapEntities", qfalse);
 		R_LoadCubemapEntities("misc_cubemap");
@@ -4743,7 +4743,7 @@ void RE_LoadWorldMap( const char *name ) {
 
 #ifndef __REALTIME_CUBEMAP__
 	// Render all cubemaps
-	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
+	if (r_cubeMapping->integer >= 1 && tr.numCubemaps && !r_lowVram->integer)
 	{
 		DEBUG_StartTimer("R_RenderAllCubemaps", qfalse);
 		R_RenderAllCubemaps();

@@ -16,10 +16,12 @@ uniform sampler2D	u_CubeMap;
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_HeightMap;
 
+#ifdef __HIGH_MTU_AVAILABLE__
 uniform sampler2D	u_WaterEdgeMap; // Sea grass 0
 uniform sampler2D	u_WaterPositionMap; // Sea grass 1
 uniform sampler2D	u_WaterHeightMap; // Sea grass 2
 uniform sampler2D	u_GlowMap; // Sea grass 3
+#endif //__HIGH_MTU_AVAILABLE__
 
 uniform vec3		u_ViewOrigin;
 
@@ -71,6 +73,7 @@ void main()
 
 	vec4 diffuse;
 
+#ifdef __HIGH_MTU_AVAILABLE__
 	if (iGrassType >= 19)
 		diffuse = texture(u_GlowMap, vTexCoord);
 	else if (iGrassType >= 18)
@@ -80,6 +83,9 @@ void main()
 	else if (iGrassType >= 16)
 		diffuse = texture(u_WaterEdgeMap, vTexCoord);
 	else if (iGrassType >= 15)
+#else //!__HIGH_MTU_AVAILABLE__
+	if (iGrassType >= 15)
+#endif //__HIGH_MTU_AVAILABLE__
 		diffuse = texture(u_HeightMap, vTexCoord);
 	else if (iGrassType >= 14)
 		diffuse = texture(u_PositionMap, vTexCoord);

@@ -1139,7 +1139,7 @@ void RE_RenderScene(const refdef_t *fd) {
 #endif //__REALTIME_CUBEMAP__
 
 #ifdef __REALTIME_CUBEMAP__
-	if (r_cubeMapping->integer && Distance(backEnd.refdef.vieworg, backEnd.refdef.realtimeCubemapOrigin) > 0.0)
+	if (r_cubeMapping->integer && !r_lowVram->integer && Distance(backEnd.refdef.vieworg, backEnd.refdef.realtimeCubemapOrigin) > 0.0)
 	{
 		for (int j = 0; j < 6; j++)
 		{

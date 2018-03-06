@@ -968,7 +968,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	qboolean		CUBEMAPPING = qfalse;
 	float			depth[2];
 
-	if (r_cubeMapping->integer >= 1)
+	if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
 	{
 		CUBEMAPPING = qtrue;
 	}
@@ -1077,7 +1077,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		}
 		else
 		{
-			if (r_cubeMapping->integer >= 1)
+			if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
 			{
 				newCubemapIndex = drawSurf->cubemapIndex;
 			}
@@ -2383,9 +2383,12 @@ const void *RB_PostProcess(const void *data)
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
 	// Pre-linearize all possibly needed depth maps, in a single pass...
-	DEBUG_StartTimer("Linearize", qtrue);
-	RB_LinearizeDepth();
-	DEBUG_EndTimer(qtrue);
+	if (!r_lowVram->integer)
+	{
+		DEBUG_StartTimer("Linearize", qtrue);
+		RB_LinearizeDepth();
+		DEBUG_EndTimer(qtrue);
+	}
 
 	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL)
 		&& r_sunlightMode->integer >= 2
@@ -2560,16 +2563,22 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && ENABLE_DISPLACEMENT_MAPPING && r_ssdm->integer)
 		{
-			DEBUG_StartTimer("SSDM Generate", qtrue);
-			RB_SSDM_Generate(currentFbo, srcBox, currentOutFbo, dstBox);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("SSDM Generate", qtrue);
+				RB_SSDM_Generate(currentFbo, srcBox, currentOutFbo, dstBox);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_ao->integer >= 2.0)
 		{
-			DEBUG_StartTimer("SSAO Generate", qtrue);
-			RB_SSAO(currentFbo, srcBox, currentOutFbo, dstBox);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("SSAO Generate", qtrue);
+				RB_SSAO(currentFbo, srcBox, currentOutFbo, dstBox);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (r_cartoon->integer >= 2.0)
@@ -2582,41 +2591,53 @@ const void *RB_PostProcess(const void *data)
 
 		if (r_cartoon->integer >= 3.0)
 		{
-			DEBUG_StartTimer("Paint", qtrue);
-			RB_Paint(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Paint", qtrue);
+				RB_Paint(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_ssdo->integer && AO_DIRECTIONAL)
 		{
-			DEBUG_StartTimer("SSDO", qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("SSDO", qtrue);
 
-			RB_SSDO(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SSDO(currentFbo, srcBox, currentOutFbo, dstBox);
 
-			if (r_ssdo->integer == 3)
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				if (r_ssdo->integer == 3)
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
 
-			DEBUG_EndTimer(qtrue);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_sss->integer)
 		{
-			DEBUG_StartTimer("SSS", qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("SSS", qtrue);
 
-			RB_SSS(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SSS(currentFbo, srcBox, currentOutFbo, dstBox);
 
-			//if (r_sss->integer == 3)
+				//if (r_sss->integer == 3)
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 
-			DEBUG_EndTimer(qtrue);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
 		{
-			DEBUG_StartTimer("Create Anamorphic", qtrue);
-			RB_CreateAnamorphicImage();
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Create Anamorphic", qtrue);
+				RB_CreateAnamorphicImage();
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_deferredLighting->integer && !LATE_LIGHTING_ENABLED)
@@ -2629,71 +2650,92 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && (r_ssr->value > 0.0 || r_sse->value > 0.0))
 		{
-			DEBUG_StartTimer("SSR", qtrue);
-			RB_ScreenSpaceReflections(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("SSR", qtrue);
+				RB_ScreenSpaceReflections(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		/*if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
-			DEBUG_StartTimer("Underwater", qtrue);
-			RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Underwater", qtrue);
+				RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}*/
 
 		if (!SCREEN_BLUR && r_magicdetail->integer)
 		{
-			DEBUG_StartTimer("Magic Detail", qtrue);
-			RB_MagicDetail(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Magic Detail", qtrue);
+				RB_MagicDetail(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 #define CRAZY_SLOW_GAUSSIAN_BLUR //  UQ1: Let's do scope background blur with a fast blur instead...
 #ifdef CRAZY_SLOW_GAUSSIAN_BLUR
 		if (SCREEN_BLUR)
 		{
-			DEBUG_StartTimer("Screen Blur", qtrue);
-
-			// Blur some times
-			float	spread = 1.0f;
-			int		numPasses = 8;
-
-			for ( int i = 0; i < numPasses; i++ )
+			if (!r_lowVram->integer)
 			{
-				RB_GaussianBlur(currentFbo, tr.genericFbo2, currentOutFbo, spread);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				spread += 0.6f * 0.25f;
-			}
+				DEBUG_StartTimer("Screen Blur", qtrue);
 
-			DEBUG_EndTimer(qtrue);
+				// Blur some times
+				float	spread = 1.0f;
+				int		numPasses = 8;
+
+				for (int i = 0; i < numPasses; i++)
+				{
+					RB_GaussianBlur(currentFbo, tr.genericFbo2, currentOutFbo, spread);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+					spread += 0.6f * 0.25f;
+				}
+
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 #else //!CRAZY_SLOW_GAUSSIAN_BLUR
 		if (SCREEN_BLUR)
 		{
-			DEBUG_StartTimer("Screen Blur", qtrue);
-			RB_FastBlur(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Screen Blur", qtrue);
+				RB_FastBlur(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 #endif //CRAZY_SLOW_GAUSSIAN_BLUR
 
 		if (!SCREEN_BLUR && r_hbao->integer)
 		{
-			DEBUG_StartTimer("HBAO", qtrue);
-			RB_HBAO(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("HBAO", qtrue);
+				RB_HBAO(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && ENABLE_DISPLACEMENT_MAPPING && r_ssdm->integer)
 		{
-			DEBUG_StartTimer("SSDM", qtrue);
-			RB_SSDM(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("SSDM", qtrue);
+				RB_SSDM(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED)
@@ -2706,10 +2748,13 @@ const void *RB_PostProcess(const void *data)
 
 			if (WATER_FOG_ENABLED && !(tr.refdef.rdflags & RDF_UNDERWATER))
 			{// When not underwater, also draw volumetric fog above the water...
-				DEBUG_StartTimer("Water Post Fog", qtrue);
-				RB_WaterPostFogShader(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-				DEBUG_EndTimer(qtrue);
+				if (!r_lowVram->integer)
+				{
+					DEBUG_StartTimer("Water Post Fog", qtrue);
+					RB_WaterPostFogShader(currentFbo, srcBox, currentOutFbo, dstBox);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+					DEBUG_EndTimer(qtrue);
+				}
 			}
 		}
 
@@ -2731,24 +2776,30 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && r_dof->integer)
 		{
-			DEBUG_StartTimer("DOF", qtrue);
-			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("DOF", qtrue);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_lensflare->integer)
 		{
-			DEBUG_StartTimer("Lens Flare", qtrue);
-			RB_LensFlare(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Lens Flare", qtrue);
+				RB_LensFlare(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_testshader->integer)
@@ -2793,54 +2844,66 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && r_esharpening->integer)
 		{
-			DEBUG_StartTimer("eSharpen", qtrue);
-			RB_ESharpening(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("eSharpen", qtrue);
+				RB_ESharpening(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_esharpening2->integer)
 		{
-			DEBUG_StartTimer("eSharpen2", qtrue);
-			RB_ESharpening2(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("eSharpen2", qtrue);
+				RB_ESharpening2(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_darkexpand->integer)
 		{
-			DEBUG_StartTimer("Dark Expand", qtrue);
-			for (int pass = 0; pass < 2; pass++)
+			if (!r_lowVram->integer)
 			{
-				RB_DarkExpand(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_StartTimer("Dark Expand", qtrue);
+				for (int pass = 0; pass < 2; pass++)
+				{
+					RB_DarkExpand(currentFbo, srcBox, currentOutFbo, dstBox);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				}
+				DEBUG_EndTimer(qtrue);
 			}
-			DEBUG_EndTimer(qtrue);
 		}
 
 		if (!SCREEN_BLUR && r_distanceBlur->integer)
 		{
-			DEBUG_StartTimer("Distance Blur", qtrue);
-			if (r_distanceBlur->integer >= 2)
-			{// New HQ matso blur versions...
-				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 2);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 3);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 1);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			}
-			else
+			if (!r_lowVram->integer)
 			{
-				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, -1);
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_StartTimer("Distance Blur", qtrue);
+				if (r_distanceBlur->integer >= 2)
+				{// New HQ matso blur versions...
+					RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+					RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+					RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+					RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				}
+				else
+				{
+					RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, -1);
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				}
+				DEBUG_EndTimer(qtrue);
 			}
-			DEBUG_EndTimer(qtrue);
 		}
 
-		if (!SCREEN_BLUR && r_bloom->integer == 1)
+		if (!SCREEN_BLUR && (r_bloom->integer == 1 && !r_lowVram->integer))
 		{
 			DEBUG_StartTimer("Bloom", qtrue);
 			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2850,26 +2913,35 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && r_anamorphic->integer)
 		{
-			DEBUG_StartTimer("Anamorphic", qtrue);
-			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Anamorphic", qtrue);
+				RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_dynamiclight->integer && r_volumeLight->integer)
 		{
-			DEBUG_StartTimer("Volume Light", qtrue);
-			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
-				RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Volume Light", qtrue);
+				if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
+					RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_bloom->integer >= 2)
 		{
-			DEBUG_StartTimer("Bloom Rays", qtrue);
-			RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			if (!r_lowVram->integer)
+			{
+				DEBUG_StartTimer("Bloom Rays", qtrue);
+				RB_BloomRays(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_fxaa->integer)
@@ -3050,7 +3122,7 @@ const void *RB_PostProcess(const void *data)
 	}
 
 #if 0
-	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
+	if (r_cubeMapping->integer >= 1 && tr.numCubemaps && !r_lowVram->integer)
 	{
 		vec4i_t dstBox;
 		int cubemapIndex = R_CubemapForPoint( backEnd.viewParms.ori.origin );

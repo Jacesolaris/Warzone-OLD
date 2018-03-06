@@ -4128,7 +4128,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			flags &= ~IMGFLAG_MIPMAP;
 	}
 */
-	if (r_compressedTextures->integer <= 0)
+	if (r_lowVram->integer)
+	{// Low vram modes, compress everything...
+		flags &= ~IMGFLAG_NO_COMPRESSION;
+	}
+	else if (r_compressedTextures->integer <= 0)
 	{// r_compressedTextures <= 0 means compress nothing...
 		flags |= IMGFLAG_NO_COMPRESSION;
 	}
@@ -4170,7 +4174,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& type != IMGTYPE_SPLATCONTROLMAP
 		&& type != IMGTYPE_DETAILMAP
 		&& type != IMGTYPE_ROOFMAP
-		&& !(flags & IMGFLAG_CUBEMAP))
+		&& !(flags & IMGFLAG_CUBEMAP)
+		&& !r_lowVram->integer)
 	{
 		if (r_normalMapping->integer >= 2) 
 		{
@@ -4687,7 +4692,7 @@ void R_CreateBuiltinImages( void ) {
 		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
 	}
 
-	if (r_cubeMapping->integer >= 1)
+	if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
 	{
 		tr.renderCubeImage = R_CreateImage("*renderCube", NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, hdrFormat/*rgbFormat*/);
 

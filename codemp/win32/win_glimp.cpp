@@ -1830,6 +1830,9 @@ void GLimp_Init( void )
 	ri->Cvar_Set( "r_lastValidRenderer", glConfig.renderer_string );
 	GLW_InitExtensions();
 
+	// UQ1: Why wasn't this set?
+	qglGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &glConfig.numTextureUnits);
+
 	WG_CheckHardwareGamma();
 }
 

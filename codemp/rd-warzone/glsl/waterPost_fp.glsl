@@ -1,8 +1,7 @@
-#define REAL_WAVES					// You probably always want this turned on.
+//#define REAL_WAVES					// You probably always want this turned on.
 #define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
-#define REAL_WAVES
 //#define __OLD_LIGHTING__
 //#define __DEBUG__
 
@@ -120,9 +119,7 @@ const vec4 normalModifier = vec4(1.0, 2.0, 4.0, 8.0);
 // Describes at what depth foam starts to fade out and
 // at what it is completely invisible. The third value is at
 // what height foam for waves appear (+ waterLevel).
-//const vec3 foamExistence = vec3(1.5, 5.35, 2.3); //vec3(0.65, 1.35, 0.5);
-//const vec3 foamExistence = vec3(1.5, 50.0, waveHeight * 0.85/*5.0*/);
-#define foamExistence vec3(1.5, 50.0, waveHeight * 0.85/*5.0*/)
+#define foamExistence vec3(8.0, 50.0, waveHeight)
 
 const float sunScale = 3.0;
 
@@ -275,7 +272,7 @@ vec4 waterMapUpperAtCoord ( vec2 coord )
 float pw = (1.0/u_Dimensions.x);
 float ph = (1.0/u_Dimensions.y);
 
-#ifdef USE_REFLECTION
+#if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor)
 {
 	if (positionMap.y > waterMapLower.y)
@@ -362,7 +359,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * /*0.28*/u_Local1.a);
 }
-#endif //USE_REFLECTION
+#endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
 
 float getdiffuse(vec3 n, vec3 l, float p) {
@@ -370,8 +367,7 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 }
 
 float sun(vec3 ray, vec3 lightDir) {
-	vec3 sd = lightDir;
-	return pow(max(0.0, dot(ray, sd)), 528.0);
+	return pow(max(0.0, dot(ray, lightDir)), 528.0);
 }
 
 #ifdef __OLD_LIGHTING__
@@ -509,10 +505,10 @@ float getwavesDetail(vec2 position) {
 	float ws = 0.0;
 	for (int i = 0; i<12; i++)
 	{
-		vec2 p = vec2(sin(iter), cos(iter)) * 30.0;
+		vec2 p = vec2(sin(iter), cos(iter)) * 8.0;
 		float res = wave(position, p, speed, phase, 0.0);
 		float res2 = wave(position, p, speed, phase, 0.006);
-		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT;
+		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT * 1.3;
 		w += res * weight;
 		iter += 36.0;// 12.0;
 		ws += weight;
@@ -524,6 +520,7 @@ float getwavesDetail(vec2 position) {
 }
 
 void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
+#if !defined(__LQ_MODE__) && defined(REAL_WAVES)
 	if (USE_OCEAN > 0.0)
 	{
 		height = getwaves(pos.xy) * depth;
@@ -552,15 +549,16 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 		//normal = normalize(normal * 2.0 - 1.0);
 	}
 	else
+#endif //!defined(__LQ_MODE__) && defined(REAL_WAVES)
 	{
 		vec2 ex = vec2(e, 0) * 16.0;
 
-		height = getwavesDetail(pos.xy) * depth;
-		float height2 = getwavesDetail(pos.xy + ex.xy) * depth;
-		float height3 = getwavesDetail(pos.xy + ex.yx) * depth;
+		height = getwavesDetail(pos.xy * 0.5) * depth;
+		float height2 = getwavesDetail((pos.xy * 0.5) + ex.xy) * depth;
+		float height3 = getwavesDetail((pos.xy * 0.5) + ex.yx) * depth;
 
 		vec3 da = vec3(pos.x, height, pos.y);
-		waveNormal = cross(normalize(da - vec3(pos.x - e, height2, pos.y)), normalize(da - vec3(pos.x, height3, pos.y + e)));
+		waveNormal = normalize(cross(normalize(da - vec3(pos.x - e, height2, pos.y)), normalize(da - vec3(pos.x, height3, pos.y + e))));
 		lightingNormal = waveNormal;
 	}
 }
@@ -616,7 +614,9 @@ vec3 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float
 	color += blinn_phong(waterMapUpper.xyz, color.rgb, normal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz);
 #endif //__OLD_LIGHTING__
 
+#if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 	color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color);
+#endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
 	return color;
 }
@@ -698,7 +698,7 @@ void main ( void )
 		float depth2 = surfacePoint.y - position.y;
 		float depthN = depth * fadeSpeed;
 
-#ifdef REAL_WAVES
+#if defined(REAL_WAVES) && !defined(__LQ_MODE__)
 		if (USE_OCEAN > 0.0)
 		{
 #if 1
@@ -717,7 +717,7 @@ void main ( void )
 			//level = surfacePoint.y;
 #endif
 		}
-#endif //REAL_WAVES
+#endif //defined(REAL_WAVES) && !defined(__LQ_MODE__)
 
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
@@ -780,7 +780,6 @@ void main ( void )
 		refraction = mix(refraction1, waterColorDeep * vec3(waterCol), clamp((vec3(depth2) / vec3(extinction)), 0.0, 1.0));
 
 		vec4 foam = vec4(0.0);
-		vec4 waveFoam = vec4(0.0);
 
 		texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00001 * wind + sin(timer * 0.001 + position.x) * 0.005;
 		vec2 texCoord2 = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00002 * wind + sin(timer * 0.001 + position.z) * 0.005;
@@ -790,19 +789,17 @@ void main ( void )
 		float pixDist = distance(surfacePoint.xyz, ViewOrigin.xyz);
 		causicStrength *= 1.0 - clamp(pixDist / 1024.0, 0.0, 1.0);
 
-#if 1
+#if !defined(__LQ_MODE__)
 		if (USE_OCEAN > 0.0)
 		{
 			if (depth2 < foamExistence.x)
 			{
-				waveFoam = (GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5;
-				foam = waveFoam;
+				foam = (GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5;
 			}
 			else if (depth2 < foamExistence.y)
 			{
-				waveFoam = mix((GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5,
+				foam = mix((GetFoamMap(surfacePoint.xzy, texCoord) + GetFoamMap(surfacePoint.xzy, texCoord2)) * 0.5,
 					vec4(0.0), vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
-				foam = waveFoam;
 			}
 
 			if (waveHeight - foamExistence.z > 0.0001)
@@ -811,20 +808,19 @@ void main ( void )
 					clamp((level - (waterLevel + foamExistence.z)) / (waveHeight - foamExistence.z), 0.0, 1.0);
 			}
 		}
-#endif
+#endif //!defined(__LQ_MODE__)
 		
 		causicStrength *= 0.15 - clamp(max(foam.r, max(foam.g, foam.b)) * foam.a * 32.0, 0.0, 0.15);
 
 		vec3 specular = vec3(0.0);
 
-		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
-		
+		vec3 lightDir = normalize(surfacePoint.xyz - u_PrimaryLightOrigin.xzy);
+		//vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);*/
 
 
-
-#if 0
+#if 1
 		float fresnel = fresnelTerm(lightingNormal, eyeVecNorm);
-		fresnel = pow(fresnel, 4.0);
+		fresnel = pow(fresnel, 0.3);
 #else
 		vec3 fresnel2 = GetFresnel(eyeVecNorm, lightingNormal, vec3(R0), 1.0);
 		float fresnel = length(fresnel2.rgb) / 3.0;
@@ -839,15 +835,15 @@ void main ( void )
 		float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
 		color += waterColorShallow.rgb * height * 0.18 * atten;
 
-		color.rgb *= height;
+		//color.rgb *= height;
 
 
-#if defined(USE_REFLECTION)
+#if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
 		{
 			color = AddReflection(var_TexCoords, position, vec3(waterMapLower3.x, level, waterMapLower3.z), color.rgb);
 		}
-#endif //defined(USE_REFLECTION)
+#endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
 		//
 		// Crytek style lighting... Done before final wave colors...
@@ -857,16 +853,18 @@ void main ( void )
 		// CryTek's way
 		vec3 mirrorEye = (2.0f * dot(eyeVecNorm, lightingNormal) * lightingNormal - eyeVecNorm);
 		float dotSpec = saturate(dot(mirrorEye.xyz, -lightDir) * 0.5f + 0.5f);
-		specular = (1.0f - fresnel) * saturate(-lightDir.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f))* sunColor;
-		specular += specular * 25.0 * saturate(shininess - 0.05f) * sunColor * 0.1;
+		specular = (1.0f - fresnel) * saturate(-lightDir.y) * ((pow(dotSpec, 8.0f/*512.0f*/)) * (shininess * 1.8f + 0.2f)) * sunColor;
+		specular += specular * 25.0 * saturate(shininess - 0.05f) * sunColor;
 #endif
 
 		vec3 caustic = color * (texture(u_DetailMap, vec2((texCoord.x + (texCoord2.x*2.2)) * 0.25, (texCoord.y + (texCoord2.y*1.2)) * 0.25)).rgb * 1.1);
 		color = clamp(color + (caustic * causicStrength), 0.0, 1.0);
 
+#if !defined(__LQ_MODE__)
 		if (USE_OCEAN > 0.0)
 			color = clamp(color + max(specular, foam.rgb * sunColor), 0.0, 1.0);
 		else
+#endif //!defined(__LQ_MODE__)
 			color = clamp(color + specular, 0.0, 1.0);
 
 		color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
@@ -878,20 +876,20 @@ void main ( void )
 		//
 
 
-#if 1
-		float diffuse = getdiffuse(lightingNormal, -lightDir, 16.0);
-		color += diffuse * 0.01;
+#if 0
+		float diffuse = getdiffuse(lightingNormal, -lightDir, u_Local0.r/*16.0*/);
+		color += diffuse * u_Local0.g;// 0.01;
 #endif
 
-#if 1
+#if 0
 		// Special sauce...
 		vec3 N = lightingNormal;
-		float dist2 = distance(surfacePoint, ViewOrigin) * 0.0001;
 		vec2 velocity = N.xz * (1.0 - N.y);
+		float dist2 = distance(surfacePoint, ViewOrigin) * 0.0001;
 		N = mix(vec3(0.0, 1.0, 0.0), N, 1.0 / (dist2 * dist2 * 0.01 + 1.0));
 		vec3 R = reflect(eyeVecNorm, N);
-		float windSpray = smoothstep(.01, .12, length(velocity)) * 0.1;
-		float sunReflect = fresnel * sun(R, lightDir);
+		float windSpray = smoothstep(.01, .12, length(velocity)) * u_Local0.b;// 0.1;
+		float sunReflect = (fresnel * 0.75 + 0.25) * sun(R, lightDir) * u_Local0.a;
 		color = (color + (sunReflect * sunColor) + windSpray);
 #else
 		vec3 R = reflect(eyeVecNorm, lightingNormal);

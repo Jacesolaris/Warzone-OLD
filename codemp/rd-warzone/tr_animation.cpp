@@ -270,7 +270,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 #else
 	if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
 		cubemapIndex = 0;
-	else if (r_cubeMapping->integer >= 2)
+	else if (r_cubeMapping->integer >= 2 && !r_lowVram->integer)
 		cubemapIndex = R_CubemapForPoint(ent->e.origin);
 	else
 		cubemapIndex = 0;

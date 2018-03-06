@@ -1795,6 +1795,11 @@ void MAPPING_LoadMapInfo(void)
 	SHADOW_MINBRIGHT = atof(IniRead(mapname, "SHADOWS", "SHADOW_MINBRIGHT", "0.7"));
 	SHADOW_MAXBRIGHT = atof(IniRead(mapname, "SHADOWS", "SHADOW_MAXBRIGHT", "1.0"));
 
+	if (r_lowVram->integer)
+	{
+		SHADOWS_ENABLED = qfalse;
+	}
+
 	//
 	// Water...
 	//
@@ -1890,7 +1895,10 @@ void MAPPING_LoadMapInfo(void)
 			|| StringContainsWord(mapname, "scarif"))
 		&& !StringContainsWord(mapname, "tatooine_nights"))
 	{
-		SHADOWS_ENABLED = qtrue;
+		if (!r_lowVram->integer)
+		{
+			SHADOWS_ENABLED = qtrue;
+		}
 	}
 
 	if (StringContainsWord(mapname, "tatooine")

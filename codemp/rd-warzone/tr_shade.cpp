@@ -1900,6 +1900,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& GRASS_ENABLED
 			&& r_sunlightMode->integer >= 2
 			&& r_foliageShadows->integer
+			&& !r_lowVram->integer
 			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGrass = qtrue;
@@ -2338,6 +2339,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			if (r_splatMapping->integer
+				//&& !r_lowVram->integer
 				&& tess.shader->materialType == MATERIAL_ROCK
 				&& pStage->bundle[TB_STEEPMAP].image[0]
 				&& !pStage->bundle[TB_WATER_EDGE_MAP].image[0]
@@ -2348,6 +2350,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
 			else if (r_splatMapping->integer
+				//&& !r_lowVram->integer
 				&& tess.shader->materialType == MATERIAL_ROCK
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
@@ -2358,6 +2361,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_REGIONS;
 			}
 			else if (r_splatMapping->integer
+				//&& !r_lowVram->integer
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2470,7 +2474,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif //__USE_DETAIL_CHECKING__
 			
-			if (r_splatMapping->integer && ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR)))
+			if (r_splatMapping->integer 
+				//&& !r_lowVram->integer
+				&& ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR)))
 			{
 				sp = &tr.lightAllSplatShader;
 			}
@@ -2850,7 +2856,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
 
-			if (r_splatMapping->integer && sp == &tr.lightAllSplatShader)
+			if (r_splatMapping->integer 
+				//&& !r_lowVram->integer
+				&& sp == &tr.lightAllSplatShader)
 			{
 #ifdef __USE_DETAIL_MAPS__
 				if (pStage->bundle[TB_DETAILMAP].image[0])
@@ -3543,6 +3551,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 #if 0
 		if (r_foliage->integer
 			&& r_foliageShadows->integer
+			&& !r_lowVram->integer
 			&& GRASS_ENABLED
 			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{// Special extra pass stuff for grass or pebbles...
