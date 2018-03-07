@@ -76,7 +76,7 @@ void G_ReflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	{//you are mine, now!
 		missile->r.ownerNum = ent->s.number;
 	}
-	if (missile->s.weapon == WP_ROCKET_LAUNCHER || missile->s.weapon == WP_E60_ROCKET_LAUNCHER || missile->s.weapon == WP_CW_ROCKET_LAUNCHER)
+	if (missile->s.weapon == WP_ROCKET_LAUNCHER)
 	{//stop homing
 		missile->think = 0;
 		missile->nextthink = 0;
@@ -121,7 +121,7 @@ void G_DeflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	{//you are mine, now!
 		missile->r.ownerNum = ent->s.number;
 	}
-	if (missile->s.weapon == WP_ROCKET_LAUNCHER || missile->s.weapon == WP_E60_ROCKET_LAUNCHER || missile->s.weapon == WP_CW_ROCKET_LAUNCHER)
+	if (missile->s.weapon == WP_ROCKET_LAUNCHER)
 	{//stop homing
 		missile->think = 0;
 		missile->nextthink = 0;
@@ -336,20 +336,21 @@ gentity_t *CreateMissile( vec3_t org, vec3_t dir, float vel, int life,
 	return missile;
 }
 
+//EFX Bounce impact code
+//keeping this part of the code to add bounce impact efx later on for skills
 void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 {
 	//FIXME: have an EV_BOUNCE_MISSILE event that checks the s.weapon and does the appropriate effect
 	switch( ent->s.weapon )
 	{
-	case WP_HEAVY_BOWCASTER_SCOPE:
 	case WP_BOWCASTER:
 		G_PlayEffectID( G_EffectIndex("bowcaster/deflect"), ent->r.currentOrigin, dir );
 		break;
 
-	case WP_DC_17_CLONE_PISTOL:
-	case WP_DC_15S_CLONE_PISTOL:
+	//EFX Bounce impact code
+	/*case WP_DC_17_CLONE_PISTOL:
 		G_PlayEffectID(G_EffectIndex("clone_pistol_1/wall_bounce_enhanced2"), ent->r.currentOrigin, dir);
-		break;
+		break;*/
 	case WP_BLASTER:
 	case WP_BRYAR_PISTOL:
 		G_PlayEffectID( G_EffectIndex("blaster/deflect"), ent->r.currentOrigin, dir );
@@ -386,14 +387,14 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 
 	if (HIT_TREE)
 	{
+		//EFX Bounce impact code
+		//keeping this part of the code to add bounce impact efx later on for skills
 		// check for bounce
 		if ((ent->bounceCount > 0 || ent->bounceCount == -5) &&
 			(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
 		{
-			if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
-				|| ent->s.weapon == WP_BOWCASTER 
-				|| ent->s.weapon == WP_HEAVY_BOWCASTER_SCOPE
-				|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
+			if (ent->s.weapon == WP_BOWCASTER 
+				/*|| ent->s.weapon == WP_DC_17_CLONE_PISTOL*/)
 			{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 				G_BounceMissile(ent, trace, HIT_TREE);
 				return;
@@ -435,15 +436,15 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 
 	other = &g_entities[trace->entityNum];
 
+	//EFX Bounce impact code
+	//keeping this part of the code to add bounce impact efx later on for skills
 	// check for bounce
 	if (!other->takedamage &&
 		(ent->bounceCount > 0 || ent->bounceCount == -5) &&
 		(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
 	{
-		if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
-			|| ent->s.weapon == WP_BOWCASTER 
-			|| ent->s.weapon == WP_HEAVY_BOWCASTER_SCOPE
-			|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
+		if (ent->s.weapon == WP_BOWCASTER 
+			/*|| ent->s.weapon == WP_DC_17_CLONE_PISTOL*/)
 		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 			if (!(trace->surfaceFlags & SURF_FORCEFIELD))
 			{
@@ -548,8 +549,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 
 	if ((other->flags & FL_SHIELDED) &&
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
 		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 		ent->s.weapon != WP_CYROBAN_GRENADE &&
@@ -584,8 +583,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 
 	if (other->takedamage && other->client &&
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
 		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 		ent->s.weapon != WP_CYROBAN_GRENADE &&
@@ -661,8 +658,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 
 		if (otherOwner->takedamage && otherOwner->client &&
 			ent->s.weapon != WP_ROCKET_LAUNCHER &&
-			ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-			ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_FRAG_GRENADE &&
 			ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 			ent->s.weapon != WP_CYROBAN_GRENADE &&
@@ -789,8 +784,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 				G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity, ent->r.currentOrigin, ent->damage, 0, ent->methodOfDeath);
 			}
 		
-			if (ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_FLECHETTE || ent->s.weapon == WP_ROCKET_LAUNCHER 
-				|| ent->s.weapon == WP_E60_ROCKET_LAUNCHER || ent->s.weapon == WP_CW_ROCKET_LAUNCHER)
+			if (ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_FLECHETTE || ent->s.weapon == WP_ROCKET_LAUNCHER)
 
 			{
 				if (ent->s.weapon == WP_FLECHETTE && (ent->s.eFlags & EF_ALT_FIRING))

@@ -7291,10 +7291,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			// If you want your weapon to be a charging weapon, just set this bit up
 			switch( pm->ps->weapon )
 			{
-				//------------------
-			case WP_S5_PISTOL:
-			case WP_ELG_3A:
-			case WP_WOOKIES_PISTOL:
 			case WP_BRYAR_PISTOL:
 
 				// alt-fire charges the weapon
@@ -7316,8 +7312,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 				break;
 
-			
-			case WP_WESTER_PISTOL:
 			case WP_BRYAR_OLD:
 
 				// alt-fire charges the weapon
@@ -7329,7 +7323,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				break;
 
 				//------------------
-			case WP_ARC_CASTER_IMPERIAL:
 			case WP_BOWCASTER:
 
 				// primary fire charges the weapon
@@ -7338,10 +7331,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 					charging = qtrue;
 				}
 				break;
-
-				//------------------
-			//case WP_E60_ROCKET_LAUNCHER:
-			//case WP_CW_ROCKET_LAUNCHER:
 			case WP_ROCKET_LAUNCHER:
 				if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK))
 				{
@@ -7376,11 +7365,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 				break;
 
-			case WP_DC_17_CLONE_PISTOL:
 			case WP_Z6_BLASTER_CANON:
-			case WP_DC15_EXT:
-			case WP_HEAVY_BOWCASTER_SCOPE:
-			case WP_DC_15S_CLONE_PISTOL:
 			case WP_PULSECANON:
 				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 				{
@@ -7983,8 +7968,6 @@ static void PM_Weapon( void )
 
 	if (!WeaponIsSniperCharge(pm->ps->weapon) //not using snipers
 		&& pm->ps->weapon != WP_ROCKET_LAUNCHER//not using rocket launcher
-		&& pm->ps->weapon != WP_E60_ROCKET_LAUNCHER//not using rocket launcher
-		&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& pm->ps->weapon != WP_FRAG_GRENADE
 		&& pm->ps->weapon != WP_FRAG_GRENADE_OLD
@@ -8695,8 +8678,7 @@ static void PM_Weapon( void )
 
 	if ( !vehicleRocketLock )
 	{
-		if (pm->ps->weapon != WP_ROCKET_LAUNCHER /*|| pm->ps->weapon != WP_E60_ROCKET_LAUNCHER ||
-		pm->ps->weapon != WP_CW_ROCKET_LAUNCHER*/ )
+		if (pm->ps->weapon != WP_ROCKET_LAUNCHER )
 		{
 			if (pm_entSelf->s.NPC_class!=CLASS_VEHICLE
 				&&pm->ps->m_iVehicleNum)
@@ -9488,18 +9470,6 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					break;
 				case WP_EE3:// etc
 					pmove->ps->scopeType = SCOPE_EE3_BLASTTECH_SHORT;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_ACP_SNIPER_RIFLE:
-					pmove->ps->scopeType = SCOPE_ACP_SNIPER;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_BOWCASTER_CLASSIC:
-					pmove->ps->scopeType = SCOPE_BOWCASTER_CLASSIC;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_HEAVY_SCOPE_BOWCASTER:
-					pmove->ps->scopeType = SCOPE_BOWCASTER_CLASSIC;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_BRYAR_RIFLE_SCOPE:// etc

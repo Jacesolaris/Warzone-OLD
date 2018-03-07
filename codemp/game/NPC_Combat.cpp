@@ -223,22 +223,10 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			
 			
 			WP_EE3:
-			WP_DC_15S_CLONE_PISTOL:
 			WP_DLT_19:
-			
-			WP_WESTER_PISTOL:
-			WP_ELG_3A:
-			WP_S5_PISTOL:
-			WP_Z6_BLASTER_CANON:
-			
-			WP_WOOKIES_PISTOL:
-			WP_CLONE_BLASTER:
-			WP_DC15_EXT:
-			
-			WP_TESTGUN:
+			WP_Z6_BLASTER_CANON:			
 			WP_FRAG_GRENADE:
 			WP_FRAG_GRENADE_OLD:
-			WP_DC_17_CLONE_PISTOL:
 		case WP_BLASTER:
 			if ( self->NPC->scriptFlags & SCF_ALT_FIRE )
 			{//rapid-fire blasters
@@ -250,13 +238,10 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			}
 			break;
 
-		case WP_HEAVY_BOWCASTER_SCOPE:
 		case WP_BOWCASTER:
 			attDelay += Q_irand( 0, 500 );
 			break;
 
-		case WP_DC15:
-		case WP_WESTARM5:
 		case WP_DC_15A_RIFLE:
 		case WP_REPEATER:
 			if ( !(self->NPC->scriptFlags&SCF_ALT_FIRE) )
@@ -270,8 +255,6 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			attDelay += Q_irand( 500, 1500 );
 			break;
 
-		case WP_E60_ROCKET_LAUNCHER:
-		case WP_CW_ROCKET_LAUNCHER:
 		case WP_ROCKET_LAUNCHER:
 			attDelay += Q_irand( 500, 1500 );
 			break;

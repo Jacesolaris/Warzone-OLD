@@ -833,9 +833,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			return;
 		}
 	}
-	else if (aiEnt->client->ps.weapon == WP_BRYAR_PISTOL || aiEnt->client->ps.weapon == WP_BRYAR_OLD 
-		|| aiEnt->client->ps.weapon == WP_WESTER_PISTOL || aiEnt->client->ps.weapon == WP_ELG_3A 
-		|| aiEnt->client->ps.weapon == WP_S5_PISTOL)
+	else if (aiEnt->client->ps.weapon == WP_BRYAR_PISTOL || aiEnt->client->ps.weapon == WP_BRYAR_OLD)
 	{
 		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f || ENEMY_IS_BREAKABLE )
 		{
@@ -7250,10 +7248,10 @@ void BountyHunter_SelectBestWeapon( gentity_t *aiEnt)
 	{
 		Boba_ChangeWeapon(aiEnt, WP_EE3);
 	}
-	else if (aiEnt->client->ps.weapon != WP_WESTER_PISTOL)
+	/*else if (aiEnt->client->ps.weapon != WP_WESTER_PISTOL)
 	{
 		Boba_ChangeWeapon(aiEnt, WP_WESTER_PISTOL);
-	}
+	}*/
 }
 
 void Commando_SelectBestWeapon( gentity_t *aiEnt)
@@ -7270,10 +7268,10 @@ void Commando_SelectBestWeapon( gentity_t *aiEnt)
 	{
 		Boba_ChangeWeapon(aiEnt, WP_T21);
 	}
-	else if (aiEnt->client->ps.weapon != WP_S5_PISTOL)
+	/*else if (aiEnt->client->ps.weapon != WP_S5_PISTOL)
 	{
 		Boba_ChangeWeapon(aiEnt, WP_S5_PISTOL);
-	}
+	}*/
 }
 
 void Follower_SelectBestWeapon(gentity_t *aiEnt)
@@ -7289,10 +7287,6 @@ void Follower_SelectBestWeapon(gentity_t *aiEnt)
 		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
 	{
 		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
-	}
-	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_WESTARM5);
 	}
 }
 
@@ -7310,10 +7304,6 @@ void Gunner_SelectBestWeapon(gentity_t *aiEnt)
 	{
 		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
 	}
-	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_WESTARM5);
-	}
 }
 
 void AdvancedGunner_SelectBestWeapon( gentity_t *aiEnt)
@@ -7329,10 +7319,6 @@ void AdvancedGunner_SelectBestWeapon( gentity_t *aiEnt)
 		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 400 )
 	{
 		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
-	}
-	else if (aiEnt->client->ps.weapon != WP_WESTARM5)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_WESTARM5);
 	}
 }
 
@@ -7378,10 +7364,10 @@ void Jedi_SelectBestWeapon( gentity_t *aiEnt)
 void BOT_SelectBestWeapon( gentity_t *aiEnt)
 {
 	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_WESTARM5 
+		&& aiEnt->client->ps.weapon != WP_DH_17_PISTOL
 		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 512 )
 	{
-		Fast_ChangeWeapon(aiEnt, WP_WESTARM5 );
+		Fast_ChangeWeapon(aiEnt, WP_DH_17_PISTOL);
 		return;
 	}
 	/*if ( aiEnt->client->ps.weapon != WP_REPEATER 

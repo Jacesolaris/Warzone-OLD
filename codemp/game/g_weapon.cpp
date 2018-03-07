@@ -727,7 +727,7 @@ void WP_AltLightningBeam(gentity_t *ent, int MAX_BEAMS) {
 		tent = G_TempEntity(tr.endpos, EV_MISSILE_HIT);
 		tent->s.otherEntityNum = traceEnt->s.number;
 		tent->s.eventParm = DirToByte(tr.plane.normal);
-		tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
+		//tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
 		tent->s.primaryWeapon = ent->s.number;
 		if (LogAccuracyHit(traceEnt, ent)) {
 			ent->client->accuracy_hits++;
@@ -737,7 +737,7 @@ void WP_AltLightningBeam(gentity_t *ent, int MAX_BEAMS) {
 	else if (!(tr.surfaceFlags & SURF_NOIMPACT)) { // Hit no players. Draw straight toward hit end point.
 		tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
 		tent->s.eventParm = DirToByte(tr.plane.normal);
-		tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
+		//tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
 		tent->s.primaryWeapon = ent->s.number;
 		//trap->Print("ARC miss wall!\n");
 	}
@@ -745,7 +745,7 @@ void WP_AltLightningBeam(gentity_t *ent, int MAX_BEAMS) {
 	{
 		tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
 		tent->s.eventParm = DirToByte(tr.plane.normal);
-		tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
+		//tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
 		tent->s.primaryWeapon = ent->s.number;
 		//trap->Print("ARC miss!\n");
 	}
@@ -1239,10 +1239,10 @@ static void WP_BowcasterAltFire(gentity_t *ent)
 	missile->flags |= FL_BOUNCE;
 	missile->bounceCount = 3;
 
+	//EFX Bounce impact code
+	//keeping this part of the code to add bounce impact efx later on for skills
 	// charge up the pistol to make more bounce on walls.
-	if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL
-		|| ent->s.weapon == WP_HEAVY_BOWCASTER_SCOPE
-		|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
+	if (0/*ent->s.weapon == WP_DC_17_CLONE_PISTOL*/)
 	{
 		int count = (level.time - ent->client->ps.weaponChargeTime) / DEMP2_CHARGE_UNIT;
 
@@ -4066,11 +4066,7 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	VectorCopy(muzzle, start);
 	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
 
-	if (ent->s.weapon == WP_DC15_EXT)
-	{// Since we want alt fx on client, we need to send this as alt fire.
-		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
-	}
-	else if (ent->s.weapon == WP_Z6_BLASTER_CANON)
+	if (ent->s.weapon == WP_Z6_BLASTER_CANON)
 	{// Since we want alt fx on client, we need to send this as alt fire.
 		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
 	}
@@ -4096,10 +4092,7 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
 	missile->genericValue1 = ChargeGrenadeBlobs;
 
-	if (/*ChargeGrenadeBlobs == ????
-		||*/ ent->s.weapon == WP_DC15_EXT
-		|| ent->s.weapon == WP_Z6_BLASTER_CANON
-		|| ent->s.weapon == WP_PULSECANON)
+	if (ent->s.weapon == WP_Z6_BLASTER_CANON || ent->s.weapon == WP_PULSECANON)
 	{
 		int time = (level.time - ent->client->ps.weaponChargeTime / BLOB_GRENADE_CHARGE_UNIT);
 		float ratio;
@@ -4743,8 +4736,6 @@ gentity_t *WP_FireVehicleWeapon(gentity_t *ent, vec3_t start, vec3_t dir, vehWea
 		if (vehWeapon->fWidth || vehWeapon->fHeight)
 		{//we assume it's a rocket-like thing
 			missile->s.weapon = WP_ROCKET_LAUNCHER;//does this really matter?
-			missile->s.weapon = WP_E60_ROCKET_LAUNCHER;
-			missile->s.weapon = WP_CW_ROCKET_LAUNCHER;
 			missile->methodOfDeath = MOD_VEHICLE;//MOD_ROCKET;
 			missile->splashMethodOfDeath = MOD_VEHICLE;//MOD_ROCKET;// ?SPLASH;
 
@@ -5584,12 +5575,6 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_SABER:
 			break;
 
-
-		case WP_TESTGUN:
-		case WP_WOOKIES_PISTOL:
-		case WP_S5_PISTOL:
-		case WP_ELG_3A:
-		case WP_WESTER_PISTOL:
 		case WP_BRYAR_OLD:
 		case WP_BRYAR_PISTOL:
 			WP_FireBryarPistol(ent, altFire);
@@ -5604,31 +5589,9 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 				WP_FireConcussion(ent);
 			break;
 
-		case WP_A200_ACP_PISTOL:
-		case WP_SPOTING_BLASTER:
-			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed * 3, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			CalcFirstMuzzlePoint(ent, forward, vright, up, muzzle);
-			CalcSecondMuzzlePoint(ent, forward, vright, up, secondmuzzle);
-			break;
-
-		case WP_ACP_ARRAYGUN:
-
-			if (altFire)
-			{
-				WP_DoubleBarrel_Guns_MainFire(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmgAlt, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			}
-			else
-				WP_DoubleBarrel_Guns_MainFire(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
 		case WP_DH_17_PISTOL:
 		case WP_PROTON_CARBINE_RIFLE:
 		case WP_BRYAR_CARBINE:
-		case WP_A200_ACP_BATTLERIFLE:
-		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
@@ -5641,20 +5604,6 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed * 3, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_DC15:
-			if (altFire)
-				WP_RepeaterAltFire(ent);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			break;
-
-		case WP_WESTARM5:
-			if (altFire)
-				WP_RepeaterAltFire(ent);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
 			break;
 
 		case WP_T21:
@@ -5671,19 +5620,9 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
 
-
-		case WP_ACP_SNIPER_RIFLE:
 		case WP_EE3:
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_DC_17_CLONE_PISTOL:
-		case WP_DC_15S_CLONE_PISTOL:
-			if (altFire)
-				WP_FireBowcaster(ent, altFire);
 			else
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
@@ -5718,32 +5657,6 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			else
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			break;
-
-		case WP_HEAVY_BOWCASTER_SCOPE:
-			if (altFire)
-				WP_FireBowcaster(ent, altFire);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_DC15_EXT:
-			if (altFire)
-				WP_FireBlobGrenade(ent);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			break;
-
-		case WP_HEAVY_SCOPE_BOWCASTER:
-		case WP_BOWCASTER_CLASSIC:
-			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_ARC_CASTER_IMPERIAL://NOTE needs it own function to handle the lightning stuff to charge up with
-			WP_FireLightningbeam(ent, altFire);
-			break;
 		case WP_DISRUPTOR:
 			WP_FireDisruptor(ent, altFire);
 			break;
@@ -5762,15 +5675,6 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_FLECHETTE:
 			WP_FireFlechette(ent, altFire);
 			break;
-
-		case WP_E60_ROCKET_LAUNCHER:
-			WP_FireRocket(ent, altFire);
-			break;
-
-		case WP_CW_ROCKET_LAUNCHER:
-			WP_FireRocket(ent, altFire);
-			break;
-
 		case WP_ROCKET_LAUNCHER:
 			WP_FireRocket(ent, altFire);
 			break;

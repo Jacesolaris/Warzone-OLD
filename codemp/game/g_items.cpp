@@ -2621,6 +2621,8 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	dropped->s.pos.trTime = level.time;
 	VectorCopy( velocity, dropped->s.pos.trDelta );
 
+	//EFX Bounce impact code
+	//keeping this part of the code to add bounce impact efx later on for skills
 	dropped->flags |= FL_BOUNCE_HALF;
 	if ((level.gametype == GT_CTF || level.gametype == GT_CTY) && item->giType == IT_TEAM) { // Special case for CTF flags
 		dropped->think = Team_DroppedFlagThink;
@@ -2658,9 +2660,6 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	}
 
 	if (item->giTag != WP_BOWCASTER &&
-		item->giTag != WP_DC_15S_CLONE_PISTOL &&
-		item->giTag != WP_HEAVY_BOWCASTER_SCOPE &&
-		item->giTag != WP_DC_17_CLONE_PISTOL &&
 		item->giTag != WP_DET_PACK &&
 		item->giTag != WP_FRAG_GRENADE &&
 		item->giTag != WP_FRAG_GRENADE_OLD &&

@@ -333,7 +333,6 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	//Must be a durational weapon that continuously generates an effect.
 	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
 	if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_HEAVY_BOWCASTER_SCOPE && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_PULSECANON && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
@@ -2175,8 +2174,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER
-				&& i != WP_FRAG_GRENADE && i != WP_FRAG_GRENADE_OLD))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_FRAG_GRENADE && i != WP_FRAG_GRENADE_OLD))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -2254,16 +2252,8 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 	{
 		if ((ent->weapon == WP_BRYAR_PISTOL && altFire) ||
 			(ent->weapon == WP_BRYAR_OLD && altFire) ||
-			(ent->weapon == WP_WESTER_PISTOL && altFire) ||
 			(ent->weapon == WP_BOWCASTER && !altFire) ||
-			(ent->weapon == WP_DEMP2 && altFire) ||
-			(ent->weapon == WP_DC_15S_CLONE_PISTOL && altFire) ||
-			(ent->weapon == WP_ELG_3A && altFire) ||
-			//(ent->weapon == WP_HEAVY_BOWCASTER_SCOPE && !altFire) ||
-			//(ent->weapon == WP_WOOKIES_PISTOL && !altFire) ||
-			(ent->weapon == WP_ARC_CASTER_IMPERIAL && !altFire) ||
-			(ent->weapon == WP_S5_PISTOL && altFire ||
-			(ent->weapon == WP_DC_17_CLONE_PISTOL && altFire)))
+			(ent->weapon == WP_DEMP2 && altFire))
 			
 		{
 			float val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
@@ -2282,14 +2272,11 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			CGCam_Shake( val, 250 );
 		}
 		else if (ent->weapon == WP_ROCKET_LAUNCHER ||
-			(ent->weapon == WP_E60_ROCKET_LAUNCHER ||
-			(ent->weapon == WP_CW_ROCKET_LAUNCHER ||
 			(ent->weapon == WP_REPEATER && altFire) ||
 			ent->weapon == WP_FLECHETTE ||
-			(ent->weapon == WP_DC15_EXT && altFire) ||
 			(ent->weapon == WP_Z6_BLASTER_CANON && altFire) ||
 			(ent->weapon == WP_PULSECANON && altFire) ||
-			(ent->weapon == WP_CONCUSSION && !altFire))))
+			(ent->weapon == WP_CONCUSSION && !altFire))
 		{
 			if (ent->weapon == WP_CONCUSSION)
 			{
@@ -2308,31 +2295,11 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
-			else if (ent->weapon == WP_DC15)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_WESTARM5)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
 			else if (ent->weapon == WP_Z6_BLASTER_CANON)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
 			else if (ent->weapon == WP_PULSECANON)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_HEAVY_BOWCASTER_SCOPE)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_E60_ROCKET_LAUNCHER)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_CW_ROCKET_LAUNCHER)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
@@ -2437,9 +2404,6 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 
 	switch( weapon )
 	{
-	case WP_S5_PISTOL:
-	case WP_ELG_3A:
-	case WP_WOOKIES_PISTOL:
 	case WP_BRYAR_PISTOL:
 		if ( altFire )
 		{
@@ -2454,7 +2418,6 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 
 	case WP_BRYAR_RIFLE_SCOPE:
 	case WP_DLT_19:
-	case WP_WESTER_PISTOL:
 	case WP_BRYAR_OLD:
 		if ( altFire )
 		{
@@ -2471,8 +2434,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_DisruptorAltMiss(origin, dir, weapon, altFire);
 		break;
 
-	case WP_DC_17_CLONE_PISTOL:
-	case WP_DC_15S_CLONE_PISTOL:
+	/*case WP_DC_17_CLONE_PISTOL:
 		if (altFire)
 		{
 			FX_Clonepistol_BounceWall(origin, dir, weapon, altFire);
@@ -2481,7 +2443,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		{
 			FX_Clonepistol_HitWall(origin, dir, weapon, altFire);
 		}
-		break;
+		break;*/
 
 	case WP_DEMP2:
 		if (altFire)
@@ -2499,13 +2461,6 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		{
 			FX_WeaponHitWall(origin, dir, weapon, altFire);
 		}
-		break;
-	
-	case WP_E60_ROCKET_LAUNCHER:
-		FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
-		break;
-	case WP_CW_ROCKET_LAUNCHER:
-		FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
 		break;
 
 	case WP_ROCKET_LAUNCHER:
@@ -2556,9 +2511,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_DisruptorAltHit(origin, dir, weapon, altFire);
 		break;
 
-	case WP_DC_17_CLONE_PISTOL:
-	case WP_HEAVY_BOWCASTER_SCOPE:
-	case WP_DC_15S_CLONE_PISTOL:
+	/*case WP_DC_17_CLONE_PISTOL:
 		if (altFire)
 		{
 			PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
@@ -2567,7 +2520,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		{
 			FX_WeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		}
-		break;
+		break;*/
 
 	case WP_DEMP2:
 		if (altFire)
@@ -2579,14 +2532,6 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		{
 			FX_DEMP2_HitPlayer( origin, dir, humanoid, weapon, altFire );
 		}
-		break;
-
-	case WP_E60_ROCKET_LAUNCHER:
-		FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
-		break;
-
-	case WP_CW_ROCKET_LAUNCHER:
-		FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
 		break;
 
 	case WP_ROCKET_LAUNCHER:

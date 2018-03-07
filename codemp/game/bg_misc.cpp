@@ -259,33 +259,11 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_CONCUSSION
 	//add new guns here
 	TORSO_WEAPONREADY3,//WP_A280,
-	DC15_READY,//WP_DC15,
-	DC15_READY,//WP_WESTARM5,
 	TORSO_WEAPONREADY3,//WP_T21,
 	DC15_READY,//WP_EE3,
-	TORSO_CLONEPISTOL,//WP_DC_15S_CLONE_PISTOL,
 	TORSO_WEAPONREADY3,//WP_DLT_19,
 	DC15_READY,//WP_DC_15A_RIFLE,
-	TORSO_CLONEPISTOL,//WP_WESTER_PISTOL,
-	TORSO_CLONEPISTOL, //WP_ELG_3A,
-	TORSO_CLONEPISTOL, //WP_S5_PISTOL,
 	MINIGUN_READY,		//WP_Z6_BLASTER_CANON,
-	TORSO_WEAPONREADY3,//WP_HEAVY_BOWCASTER_SCOPE,
-	TORSO_CLONEPISTOL,//WP_WOOKIES_PISTOL,
-	TORSO_WEAPONREADY3,//WP_CLONE_BLASTER,
-	DC15_READY,//WP_DC15_EXT,
-	PLX1_WEAPONREADY, //WP_E60_ROCKET_LAUNCHER,
-	PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER,
-	TORSO_WEAPONREADY2,// WP_TESTGUN,
-	TORSO_CLONEPISTOL,//WP_DC_17_CLONE_PISTOL,
-	TORSO_WEAPONREADY2,//WP_SPOTING_BLASTER,
-	TORSO_WEAPONREADY3,//WP_A200_ACP_BATTLERIFLE,
-	TORSO_CLONEPISTOL,// WP_A200_ACP_PISTOL,
-	TORSO_WEAPONREADY3,//WP_ACP_ARRAYGUN,
-	DC15_READY,//WP_ACP_SNIPER_RIFLE,
-	TORSO_WEAPONREADY3,//WP_ARC_CASTER_IMPERIAL,
-	TORSO_WEAPONREADY3,//WP_BOWCASTER_CLASSIC,
-	TORSO_WEAPONREADY3,//WP_HEAVY_SCOPE_BOWCASTER,
 	TORSO_WEAPONREADY3,//WP_BRYAR_CARBINE,
 	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE,
 	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE_SCOPE,
@@ -340,33 +318,12 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_CONCUSSION
 	//add new guns here
 	BOTH_STAND1,//WP_A280,
-	BOTH_STAND1,//WP_DC15,
-	BOTH_STAND1,//WP_WESTARM5,
 	BOTH_STAND1,//WP_T21,
 	BOTH_STAND1,//WP_EE3,
-	BOTH_STAND1,//WP_DC_15S_CLONE_PISTOL,
 	BOTH_STAND1,//WP_DLT_19,
 	BOTH_STAND1,//WP_DC_15A_RIFLE,
-	BOTH_STAND1,//WP_WESTER_PISTOL,
-	BOTH_STAND1,//WP_ELG_3A,
-	BOTH_STAND1,//WP_S5_PISTOL,
 	BOTH_STAND1,//WP_Z6_BLASTER_CANON,
-	BOTH_STAND1,//WP_HEAVY_BOWCASTER_SCOPE,
-	BOTH_STAND1,//WP_WOOKIES_PISTOL,
-	BOTH_STAND1,//WP_CLONE_BLASTER,
-	BOTH_STAND1,//WP_DC15_EXT,
-	PLX1_IDLE,//WP_E60_ROCKET_LAUNCHER,
-	PLX1_IDLE,//WP_CW_ROCKET_LAUNCHER,
-	BOTH_STAND1,// WP_TESTGUN,
-	BOTH_STAND1,//WP_DC_17_CLONE_PISTOL,
-	BOTH_STAND1,//WP_SPOTING_BLASTER,
 	BOTH_STAND1,//WP_A200_ACP_BATTLERIFLE,
-	BOTH_STAND1,// WP_A200_ACP_PISTOL,
-	BOTH_STAND1,//WP_ACP_ARRAYGUN,
-	BOTH_STAND1,//WP_ACP_SNIPER_RIFLE,
-	BOTH_STAND1,//WP_ARC_CASTER_IMPERIAL,
-	BOTH_STAND1,//WP_BOWCASTER_CLASSIC,
-	BOTH_STAND1,//WP_HEAVY_SCOPE_BOWCASTER,
 	BOTH_STAND1,//WP_BRYAR_CARBINE,
 	BOTH_STAND1,//WP_BRYAR_RIFLE,
 	BOTH_STAND1,//WP_BRYAR_RIFLE_SCOPE,
@@ -418,33 +375,11 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK3,//WP_CONCUSSION,
 	//add new guns here
 	DC15_FIRE,//WP_A280,
-	DC15_FIRE,//WP_DC15,
-	DC15_FIRE,//WP_WESTARM5,
 	BOTH_ATTACK3,//WP_T21,
 	DC15_FIRE,//WP_EE3,
-	BOTH_ATTACK2,//WP_DC_15S_CLONE_PISTOL,
 	DC15_FIRE, //WP_DLT_19,
 	DC15_FIRE,//WP_DC_15A_RIFLE,
-	BOTH_ATTACK2,//WP_WESTER_PISTOL,
-	BOTH_ATTACK2,//WP_ELG_3A,
-	BOTH_ATTACK2,//WP_S5_PISTOL,
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON,
-	DC15_FIRE,//WP_HEAVY_BOWCASTER_SCOPE,
-	BOTH_ATTACK2,//WP_WOOKIES_PISTOL
-	DC15_FIRE,//WP_CLONE_BLASTER,
-	DC15_FIRE, //WP_DC15_EXT,
-	PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER,
-	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER,
-	BOTH_ATTACK2,// WP_TESTGUN,
-	BOTH_ATTACK2,//WP_DC_17_CLONE_PISTOL,
-	BOTH_ATTACK2,//WP_SPOTING_BLASTER,
-	DC15_FIRE,//WP_A200_ACP_BATTLERIFLE,
-	BOTH_ATTACK2,// WP_A200_ACP_PISTOL,
-	DC15_FIRE,//WP_ACP_ARRAYGUN,
-	DC15_FIRE,//WP_ACP_SNIPER_RIFLE,
-	DC15_FIRE,//WP_ARC_CASTER_IMPERIAL,
-	DC15_FIRE,// WP_BOWCASTER_CLASSIC,
-	DC15_FIRE,// WP_HEAVY_SCOPE_BOWCASTER,
 	DC15_FIRE,// WP_BRYAR_CARBINE,
 	DC15_FIRE,//WP_BRYAR_RIFLE,
 	DC15_FIRE,//WP_BRYAR_RIFLE_SCOPE,
@@ -1526,47 +1461,6 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 		460,
 	},
 
-
-
-	/*QUAKED weapon_dc_15_ext(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-	*/
-	{
-		"weapon_dc_15_ext",
-		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
-		0, 0, 0 },
-		/* view */		"models/weapons3/cw-w5/dc-15_ext.md3",
-		/* icon */		"gfx/hud/w_icon_cw-w5g",
-		/* pickup */	"DC-15 ?? pistol? blaster? what?",
-		100,
-		IT_WEAPON,
-		WP_DC15,
-		/* precache */ "",
-		/* sounds */ "",
-		"< Stoiss: insert a nice description here >",				// description
-		360,
-	},
-
-	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-	*/
-	{
-		"weapon_westarm5",
-		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/westarm5/heavy_repeater_w.glm",
-		0, 0, 0 },
-		/* view */		"models/weapons3/westarm5/heavy_repeater.md3",
-		/* icon */		"gfx/hud/w_icon_cw-w5",
-		/* pickup */	"Westarm 5 Heavy Repeater",
-		100,
-		IT_WEAPON,
-		WP_WESTARM5,
-		/* precache */ "",
-		/* sounds */ "",
-		"< Stoiss: insert a nice description here >",				// description
-		560,
-},
-
-
 /*QUAKED weapon_t_21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
@@ -1652,86 +1546,6 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 	610,
 },
 
-/*QUAKED weapon_dc_17_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_dc_17_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/dc-17/dc-17_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/dc-17/dc-17.md3",
-	/* icon */		"gfx/hud/w_icon_clonepistol_1",
-	/* pickup */	"DC-17 Pistol",
-	100,
-	IT_WEAPON,
-	WP_DC_15S_CLONE_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"Used by by clones during the clone wars, this weapon is used commonly as a secondary weapon.",				// description
-	190,
-},
-
-/*QUAKED weapon_wester_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-{
-	"weapon_wester_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/briar_pistol/briar_pistol_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/briar_pistol/briar_pistol.md3",
-	/* icon */		"gfx/hud/w_icon_westar",
-	/* pickup */	"Bryar Pistol",
-	100,
-	IT_WEAPON,
-	WP_WESTER_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"@SP_INGAME_BLASTER_PISTOL",					// description
-	150,
-},
-
-//
-/*QUAKED weapon_egl_3e_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-{
-	"weapon_egl-3e_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/ELG-3A_Pistol/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/ELG-3A_Pistol/viewmodel.md3",
-	/* icon */		"models/weapons/ELG-3A_Pistol/icon_default",
-	/* pickup */	"ELG-3A Pistol",
-	100,
-	IT_WEAPON,
-	WP_ELG_3A,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",					// description
-	170,
-},
-
-//
-/*QUAKED weapon_s5_heavy_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-{
-	"weapon_s5_heavy_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/s5_heavy_pistol/s5_pistol_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/s5_heavy_pistol/s5_pistol.md3",
-	/* icon */		"gfx/hud/w_icon_s5",
-	/* pickup */	"S-5 Heavy Pistol",
-	100,
-	IT_WEAPON,
-	WP_S5_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"This pistol is very powerful for it's small size. Common among XXX???",					// description
-	165,
-},
 
 /*QUAKED weapon_Z-6_rotary_blaster_cannon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 Don't place this
@@ -1751,321 +1565,6 @@ Don't place this
 	/* sounds */ "",
 	"A very powerful blaster cannon. Able to knock down large groups of enemies in a short time.",					// description
 	980,
-},
-
-
-
-/*QUAKED weapon_Wookie_Bowcaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Wookie_Bowcaster",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/Bowcaster_Heavy/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bowcaster_Heavy/viewmodel_scope.md3",
-	/* icon */		"models/weapons/Bowcaster_Heavy/icon_default",
-	/* pickup */	"Wookie Bowcaster",
-	100,
-	IT_WEAPON,
-	WP_HEAVY_BOWCASTER_SCOPE,
-	/* precache */ "",
-	/* sounds */ "",
-	"This weapon is widely used by the Wookie defence forces. Packs a large punch!",				// description
-	460,
-},
-
-
-
-
-//
-/*QUAKED weapon_Wookie_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-{
-	"weapon_Wookie_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/wsidearm/wsidearm.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/wsidearm/wsidearm.md3",
-	/* icon */		"gfx/hud/w_icon_wsidearm",
-	/* pickup */	"Stoiss: NAME ME!!! Pistol",
-	100,
-	IT_WEAPON,
-	WP_WOOKIES_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",					// description
-	160,
-},
-
-
-
-
-/*QUAKED weapon_dc-15s_blaster 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_dc-15s_blaster",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/cloneblaster_r/blaster_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/cloneblaster_r/blaster_2.md3",
-	/* icon */		"gfx/hud/w_icon_dc-15s",
-	/* pickup */	"DC-15s Blaster",
-	100,
-	IT_WEAPON,
-	WP_CLONE_BLASTER,
-	/* precache */ "",
-	/* sounds */ "",
-	"Used by the clones, late in the clone wars, this updated DC-15 Blaster is still common today.",				// description
-	490,
-},
-
-
-/*QUAKED weapon_dc-15_ext (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_dc-15_ext",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/dc-15_ext/dc-15_ext_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/dc-15_ext/dc-15_ext.md3",
-	/* icon */		"gfx/hud/w_icon_clonerifle_blobs",
-	/* pickup */	"DC-15 Rifle",
-	100,
-	IT_WEAPON,
-	WP_DC15_EXT,
-	/* precache */ "",
-	/* sounds */ "",
-	"A modification of the DC-15 Rifle that was used by the clones, in the clone wars. This updated DC-15 Blaster is still common today.",				// description
-	520,
-},
-
-/*QUAKED weapon_e60r_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_e60r_launcher",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/e60r_launcher/e60r_launcher_w.glm", 0, 0, 0 },
-	/* view */        "models/weapons3/e60r_launcher/e60r_launcher.md3",
-	/* icon */        "gfx/hud/w_icon_e60r_launcher",
-	/* pickup */	"E60-R Missile System",
-	3,
-	IT_WEAPON,
-	WP_E60_ROCKET_LAUNCHER,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",					// description
-	950,
-},
-
-/*QUAKED weapon_cw_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_cw_launcher",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/cw_launcher/cw_launcher_w.glm", 0, 0, 0 },
-	/* view */        "models/weapons3/cw_launcher/cw_launcher.md3",
-	/* icon */        "gfx/hud/w_icon_cw_launcher",
-	/* pickup */	"CW??? Missile System",
-	3,
-	IT_WEAPON,
-	WP_CW_ROCKET_LAUNCHER,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",					// description
-	970,
-},
-
-//Put any weapon models in this box here and edit you stuff in WP_TEST_GUN in cg_weaponinit.c and find the right stuff you want when testing
-//it's a good way to test stuff out so you don't mess with they other guns.
-/*QUAKED TEST GUN (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Test_Gun",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/leias_pistol/blaster_pistol_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/leias_pistol/blaster_pistol.md3",
-	/* icon */		"models/weapons3/leias_pistol/w_icon_leias_pistol",
-	/* pickup */	"Test Gun",
-	100,
-	IT_WEAPON,
-	WP_TESTGUN,
-	/* precache */ "",
-	/* sounds */ "",
-	"A test gun. Why is this here? :)",				// description
-	0,
-},
-
-/*QUAKED weapon_clone_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_clone_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/demp2/demp2_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/demp2/demp2_2.md3",
-	/* icon */		"gfx/hud/w_icon_dc-17s",
-	/* pickup */	"DC-17S Pistol",
-	100,
-	IT_WEAPON,
-	WP_DC_17_CLONE_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"Widely used by clones around the end of the clone wars, this updated DC-17 pistol is still quite popular.",				// description
-	230,
-},
-
-/*QUAKED WP_SPOTING_BLASTER (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Spoting_Blaster",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/leias_pistol/blaster_pistol_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/leias_pistol/blaster_pistol.md3",
-	/* icon */		"models/weapons3/leias_pistol/w_icon_leias_pistol",
-	/* pickup */	"Leia's Pistol (Stoiss: Real name???)",
-	100,
-	IT_WEAPON,
-	WP_SPOTING_BLASTER,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	215,
-},
-
-/*QUAKED weapon_A200_ACP_BattleRifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_A200_ACP_BattleRifle",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/A200_ACP_BattleRifle/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/A200_ACP_BattleRifle/viewmodel.md3",
-	/* icon */		"models/weapons/A200_ACP_BattleRifle/icon_default",
-	/* pickup */	"A-200 ACP Battle Rifle",
-	100,
-	IT_WEAPON,
-	WP_A200_ACP_BATTLERIFLE,
-	/* precache */ "",
-	/* sounds */ "",
-	"A very powerful rifle, very popular among XXXXXXXXXX???",				// description
-	530,
-},
-
-/*QUAKED weapon_A200_ACP_Pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_A200_ACP_Pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/A200_ACP_Pistol/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/A200_ACP_Pistol/viewmodel.md3",
-	/* icon */		"models/weapons/A200_ACP_Pistol/icon_default",
-	/* pickup */	"A-200 ACP Pistol",
-	100,
-	IT_WEAPON,
-	WP_A200_ACP_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"A handy secondary weapon, very popular among XXXXXXXXXX???",				// description
-	270,
-},
-
-/*QUAKED weapon_ACP_ArrayGun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_ACP_ArrayGun",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/ACP_ArrayGun/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/ACP_ArrayGun/viewmodel.md3",
-	/* icon */		"models/weapons/ACP_ArrayGun/icon_default",
-	/* pickup */	"ACP Array Gun",
-	100,
-	IT_WEAPON,
-	WP_ACP_ARRAYGUN,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	530,
-},
-
-/*QUAKED weapon_Double_ACP_ArrayGun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Double_ACP_ArrayGun",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/ACP_SniperRifle/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/ACP_SniperRifle/viewmodel.md3",
-	/* icon */		"models/weapons/ACP_SniperRifle/icon_default",
-	/* pickup */	"ACP Sniper Rifle",
-	100,
-	IT_WEAPON,
-	WP_ACP_SNIPER_RIFLE,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	660,
-},
-
-/*QUAKED weapon_ARC_CasterImperial (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_ARC_CasterImperial",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/ARC_CasterImperial/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/ARC_CasterImperial/viewmodel.md3",
-	/* icon */		"models/weapons/ARC_CasterImperial/icon_default",
-	/* pickup */	"Imperial ARC Caster",
-	100,
-	IT_WEAPON,
-	WP_ARC_CASTER_IMPERIAL,
-	/* precache */ "",
-	/* sounds */ "",
-	"Dealing massive electrical damage, this rifle is used by only the most trusted soldiers of the Imperial Empire.",				// description
-	780,
-},
-
-/*QUAKED weapon_Rifle_Bowcaster_Classic (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Rifle_Bowcaster_Classic",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/Bowcaster_Classic/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bowcaster_Classic/bowcaster.md3",
-	/* icon */		"models/weapons/Bowcaster_Classic/icon_default",
-	/* pickup */	"Old Wookie Bowcaster",
-	100,
-	IT_WEAPON,
-	WP_BOWCASTER_CLASSIC,
-	/* precache */ "",
-	/* sounds */ "",
-	"Looking a bit aged, but you have to hand it to the Wookies, this weapon still packs a nice punch!",				// description
-	390,
-},
-
-/*QUAKED weapon_Rifle_Bowcaster_Heavy (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Rifle_Bowcaster_Heavy",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/Bowcaster_Heavy/model_scope.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bowcaster_Heavy/viewmodel_scope.md3",
-	/* icon */		"models/weapons/Bowcaster_Heavy/icon_scope",
-	/* pickup */	"Scoped Wookie Bowcaster",
-	100,
-	IT_WEAPON,
-	WP_HEAVY_SCOPE_BOWCASTER,
-	/* precache */ "",
-	/* sounds */ "",
-	"This version of the Wookie Bowcaster was pre-manufactured with a scope.",				// description
-	695,
 },
 
 /*QUAKED weapon_bryar_carbine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended

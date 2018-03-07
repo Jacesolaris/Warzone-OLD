@@ -596,8 +596,6 @@ static void CG_ItemPickup( int itemNum ) {
 				bg_itemlist[itemNum].giTag != WP_DET_PACK &&
 				bg_itemlist[itemNum].giTag != WP_THERMAL &&
 				bg_itemlist[itemNum].giTag != WP_ROCKET_LAUNCHER &&
-				bg_itemlist[itemNum].giTag != WP_E60_ROCKET_LAUNCHER &&
-				bg_itemlist[itemNum].giTag != WP_CW_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE_OLD &&
 				bg_itemlist[itemNum].giTag != WP_CYROBAN_GRENADE &&
@@ -1376,31 +1374,11 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_TURRET:
 	//new guns
 	case WP_A280:
-	case WP_DC15:
-	case WP_WESTARM5:
 	case WP_T21:
 	case WP_EE3:
-	case WP_DC_15S_CLONE_PISTOL:
 	case WP_DLT_19:
 	case WP_DC_15A_RIFLE:
-	case WP_WESTER_PISTOL:
-	case WP_ELG_3A:
-	case WP_S5_PISTOL:
-	case WP_WOOKIES_PISTOL:
 	case WP_Z6_BLASTER_CANON:
-	case WP_HEAVY_BOWCASTER_SCOPE:
-	case WP_CLONE_BLASTER:
-	case WP_DC15_EXT:
-	case WP_TESTGUN:
-	case WP_DC_17_CLONE_PISTOL:
-	case WP_SPOTING_BLASTER:
-	case WP_A200_ACP_BATTLERIFLE:
-	case WP_A200_ACP_PISTOL:
-	case WP_ACP_ARRAYGUN:
-	case WP_ACP_SNIPER_RIFLE:
-	case WP_ARC_CASTER_IMPERIAL:
-	case WP_BOWCASTER_CLASSIC:
-	case WP_HEAVY_SCOPE_BOWCASTER:
 	case WP_BRYAR_CARBINE:
 	case WP_BRYAR_RIFLE:
 	case WP_BRYAR_RIFLE_SCOPE:
@@ -1424,8 +1402,6 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_CYROBAN_GRENADE:
 	case WP_FRAG_GRENADE:
 	case WP_FRAG_GRENADE_OLD:
-	case WP_CW_ROCKET_LAUNCHER:
-	case WP_E60_ROCKET_LAUNCHER:
 	case WP_ROCKET_LAUNCHER:
 	case WP_THERMAL:
 		{
@@ -3328,7 +3304,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		//if (es->primaryWeapon == cg.clientNum)
 		//	trap->Print("HIT! alt: %i. weap: %i (%i). pos: %f %f %f.\n", (int)(cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING), es->weapon, cg_entities[es->primaryWeapon].currentState.weapon, position[0], position[1], position[2]);
 
-		if (es->weapon == WP_ARC_CASTER_IMPERIAL && (cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING))
+		if (0/*es->weapon == WP_ARC_CASTER_IMPERIAL*/ && (cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING))
 			FX_Lightning_AltBeam(&cg_entities[es->primaryWeapon] /* Player location */, position /* Hit location*/, qtrue);
 		
 		break;
@@ -3343,14 +3319,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		else if ( CG_VehicleWeaponImpact( cent ) )
 		{//a vehicle missile that used an overridden impact effect...
 		}
-		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_15S_CLONE_PISTOL)
+		//EFX Bounce impact code
+		//keeping this part of the code to add bounce impact efx later on for skills
+		/*else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_15S_CLONE_PISTOL)
 		{
 			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_METAL, qtrue, es->generic1);
 		}
 		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_17_CLONE_PISTOL)
 		{
 			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_METAL, qtrue, es->generic1);
-		}
+		}*/
 		else if (cent->currentState.eFlags & EF_ALT_FIRING)
 		{
 			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
@@ -3370,7 +3348,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		//	trap->Print("MISS! alt: %i. weap: %i (%i). pos: %f %f %f.\n", (int)(cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING), es->weapon, cg_entities[es->primaryWeapon].currentState.weapon, position[0], position[1], position[2]);
 
 		// Secondary effect - the beam between the 2 points. 
-		if (es->weapon == WP_ARC_CASTER_IMPERIAL && (cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING))
+		if (0/*es->weapon == WP_ARC_CASTER_IMPERIAL*/ && (cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING))
 			FX_Lightning_AltBeam(&cg_entities[es->otherEntityNum2] /* Player location */, position /* Hit location*/, qfalse);
 
 		break;
@@ -3382,14 +3360,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{//hack: this is an index to a custom effect to use
 			PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
 		}
-		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_15S_CLONE_PISTOL)
+		//EFX Bounce impact code
+		//keeping this part of the code to add bounce impact efx later on for skills
+		/*else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_15S_CLONE_PISTOL)
 		{
 			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
 		}
 		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_17_CLONE_PISTOL)
 		{
 			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
-		}
+		}*/
 		else if ( CG_VehicleWeaponImpact( cent ) )
 		{//a vehicle missile that used an overridden impact effect...
 		}

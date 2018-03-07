@@ -2561,7 +2561,7 @@ static void CG_Missile( centity_t *cent ) {
 	// calculate the axis
 	VectorCopy( s1->angles, cent->lerpAngles);
 
-	if (s1->weapon == WP_ARC_CASTER_IMPERIAL)
+	if (0/*s1->weapon == WP_ARC_CASTER_IMPERIAL*/)
 	{// Special projectile for arc caster...
 		vec3_t forward;
 

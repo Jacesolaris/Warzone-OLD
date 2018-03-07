@@ -1583,11 +1583,8 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->botWeaponWeights[WP_A280] = 14;
 	bs->botWeaponWeights[WP_BOWCASTER] = 15;
 	bs->botWeaponWeights[WP_REPEATER] = 16;
-	bs->botWeaponWeights[WP_DC15] = 16;
-	bs->botWeaponWeights[WP_WESTARM5] = 16;
 	bs->botWeaponWeights[WP_T21] = 12;
 	bs->botWeaponWeights[WP_EE3] = 12;
-	bs->botWeaponWeights[WP_DC_15S_CLONE_PISTOL] = 17;
 	bs->botWeaponWeights[WP_DLT_19] = 12;
 	bs->botWeaponWeights[WP_DC_15A_RIFLE] = 16;
 	bs->botWeaponWeights[WP_DEMP2] = 17; 
