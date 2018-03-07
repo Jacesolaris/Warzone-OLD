@@ -304,10 +304,13 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 
 	float pixelDistance = distance(positionMap.xyz, u_ViewOrigin.xyz);
 
+	//const float scanSpeed = 48.0;// 16.0;// 5.0; // How many pixels to scan by on the 1st rough pass...
+	float scanSpeed = u_Local3.r;
+
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
 
-	for (float y = coord.y; y <= 1.0; y += ph * 5.0)
+	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
 		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
@@ -336,13 +339,13 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 	
-	QLAND_Y -= ph * 5.0;
+	QLAND_Y -= ph * scanSpeed;
 	
 	// Full scan from within 5 px for the real 1st pixel...
 	float upPos = coord.y;
 	float LAND_Y = 0.0;
 
-	for (float y = QLAND_Y; y <= 1.0; y += ph)
+	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
 		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
@@ -385,11 +388,6 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 
 	vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, upPos), 0.0);
 
-	/*if (pMap.a != finalMaterial && pMap.a > 1.0)
-	{// After moving upwards, we ended up hitting a second mateiral type (surface), this may not be valid, so skip this pixel...
-		return inColor;
-	}*/
-
 	if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
 	{// The reflected pixel is closer then the original, this would be a bad reflection.
 		return inColor;
@@ -407,8 +405,8 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 
-	vec4 glowColor = textureLod(u_GlowMap, vec2(coord.x, upPos), 0.0);
-	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
+	vec3 glowColor = textureLod(u_GlowMap, vec2(coord.x, upPos), 0.0).rgb;
+	vec3 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0).rgb;
 	return mix(inColor.rgb, inColor.rgb + landColor.rgb + (glowColor.rgb * 3.5), clamp(strength * reflectiveness * 4.0, 0.0, 1.0));
 }
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)

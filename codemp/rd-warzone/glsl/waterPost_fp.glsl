@@ -326,6 +326,8 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		return mix(inColor, skyColor, skyContribution);
 	}
 
+	float pixelDistance = distance(waterMapLower.xyz, ViewOrigin.xyz);
+
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
 
@@ -337,7 +339,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 
-		if (isWater <= 0.0 && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0 && distance(pMap.xyz, ViewOrigin.xyz) > pixelDistance && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
 		{
 			QLAND_Y = y;
 			break;
@@ -360,7 +362,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 
-		if (isWater <= 0.0 && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0 && distance(pMap.xyz, ViewOrigin.xyz) > pixelDistance && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
 		{
 			LAND_Y = y;
 			break;
@@ -396,7 +398,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	{
 		vec4 pMap = positionMapAtCoord(finalPosition);
 		
-		if (distance(pMap.xyz, ViewOrigin) < distance(waterMapLower.xyz, ViewOrigin))
+		if (distance(pMap.xyz, ViewOrigin) <= pixelDistance)
 		{// This position is sky or closer than the original pixel...
 			return mix(inColor, skyColor, skyContribution);
 		}

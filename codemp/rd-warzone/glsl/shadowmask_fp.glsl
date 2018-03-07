@@ -60,6 +60,8 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, floa
 
 #if 1
 	vec4 sCoord = vec4(st);
+
+#if 1
 	//vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
 	vec2 offset = mod(sCoord.xy, 0.5);
 	offset.y += offset.x;  // y ^= x in floating point
@@ -70,6 +72,21 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, floa
                offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, -1.5), scale) +
                offset_lookup(shadowmap, sCoord, offset + vec2(0.5, -1.5), scale) ) 
 			   * 0.25;
+#else
+	float shadowCoeff = 0.0;
+	float weight = 0.0;
+
+	for (float x = -1.0; x <= 1.0; x += 0.25)
+	{
+		for (float y = -1.0; y <= 1.0; y += 0.25)
+		{
+			float w = 1.0 - (distance(vec2(x, y), vec2(0.0)) / 4.0);
+			shadowCoeff += offset_lookup(shadowmap, sCoord, vec2(x, y), scale) * w;
+			weight += w;
+		}
+	}
+	shadowCoeff /= weight;
+#endif
 	return shadowCoeff;
 #elif 0
 	// from http://http.developer.nvidia.com/GPUGems/gpugems_ch11.html

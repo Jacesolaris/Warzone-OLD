@@ -1797,8 +1797,8 @@ void CG_NextWeapon_f( void ) {
 		//*SIGH*... Hack to put concussion rifle before rocketlauncher
 		cg.weaponSelect++;
 
-		if ( cg.weaponSelect == WP_NUM_USEABLE ) {
-			cg.weaponSelect = 0;
+		if ( cg.weaponSelect > WP_NUM_USEABLE ) {
+			cg.weaponSelect = WP_FIRST_USEABLE;
 		}
 		if ( CG_WeaponSelectable( cg.weaponSelect ) ) {
 			break;
@@ -1852,8 +1852,8 @@ void CG_PrevWeapon_f( void ) {
 	for ( i = 0 ; i < WP_NUM_WEAPONS ; i++ ) {
 		cg.weaponSelect--;
 		
-		if ( cg.weaponSelect == -1 ) {
-			cg.weaponSelect = WP_NUM_WEAPONS-1;
+		if ( cg.weaponSelect < WP_FIRST_USEABLE) {
+			cg.weaponSelect = WP_NUM_USEABLE;
 		}
 
 		if ( CG_WeaponSelectable( cg.weaponSelect ) ) {
