@@ -1966,6 +1966,12 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	//GL_BindToTMU(tr.renderNormalImage, TB_SPECULARMAP);
 
+	GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+	GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
+
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
@@ -2026,20 +2032,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], 0.0);
+		VectorSet4(loc, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL4, loc);
-	}
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2], 0.0);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL5, loc);
-	}
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, FOG_DENSITY, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL6, loc);
 	}
 
 	{

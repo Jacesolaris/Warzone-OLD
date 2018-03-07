@@ -34,6 +34,9 @@ uniform sampler2D	u_DeluxeMap;			// noise
 
 uniform sampler2D	u_WaterPositionMap;
 
+uniform samplerCube	u_SkyCubeMap;
+uniform samplerCube	u_SkyCubeMapNight;
+
 uniform vec4		u_Mins;					// MAP_MINS[0], MAP_MINS[1], MAP_MINS[2], 0.0
 uniform vec4		u_Maxs;					// MAP_MAXS[0], MAP_MAXS[1], MAP_MAXS[2], 0.0
 uniform vec4		u_MapInfo;				// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
@@ -42,9 +45,7 @@ uniform vec4		u_Local0;				// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER, WATER_REFLECTIVENESS
 uniform vec4		u_Local2;				// WATER_COLOR_SHALLOW_R, WATER_COLOR_SHALLOW_G, WATER_COLOR_SHALLOW_B
 uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLOR_DEEP_B
-uniform vec4		u_Local4;				// FOG_COLOR
-uniform vec4		u_Local5;				// FOG_COLOR_SUN
-uniform vec4		u_Local6;				// FOG_DENSITY
+uniform vec4		u_Local4;				// DayNightFactor, 0, 0, 0
 uniform vec4		u_Local7;				// testshadervalue1, etc
 uniform vec4		u_Local8;				// testshadervalue5, etc
 uniform vec4		u_Local10;				// waveHeight, waveDensity, USE_OCEAN
@@ -273,29 +274,70 @@ float pw = (1.0/u_Dimensions.x);
 float ph = (1.0/u_Dimensions.y);
 
 #if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
-vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor)
+vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor, float height)
 {
-	if (positionMap.y > waterMapLower.y)
-	{
-		return inColor;
+	vec3 skyColor = vec3(0.0);
+	float skyContribution = 0.06;
+
+	//if (u_Local7.a > 0.0)
+	{// Sky cube light contributions... If enabled...
+		vec4 cubeInfo = vec4(0.0, 0.0, 0.0, 1.0);
+		cubeInfo.xyz -= u_ViewOrigin.xyz;
+
+		cubeInfo.w = pow(distance(u_ViewOrigin.xyz, vec3(0.0, 0.0, 0.0)), 3.0);
+
+		cubeInfo.xyz *= 1.0 / cubeInfo.w;
+		cubeInfo.w = 1.0 / cubeInfo.w;
+
+		vec3 E = normalize(ViewOrigin.xzy - positionMap.xzy);
+		vec3 cubeRayDir = reflect(E, vec3(0.0, 0.0, 1.0));
+
+		vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
+		parallax.z *= -1.0;
+
+		vec3 reflected = cubeRayDir + parallax;
+
+		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
+
+		if (u_Local4.r > 0.0 && u_Local4.r < 1.0)
+		{// Mix between night and day colors...
+			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
+			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
+			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local4.r, 0.0, 1.0));
+		}
+		else if (u_Local4.r >= 1.0)
+		{// Night only colors...
+			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
+		}
+		else
+		{// Day only colors...
+			skyColor = texture(u_SkyCubeMap, reflected).rgb;
+		}
 	}
 
-	vec4 wMapCheck = waterMapLowerAtCoord(vec2(coord.x, 1.0));
-	if (wMapCheck.a > 0.0)
+	if (positionMap.y > waterMapLower.y)
+	{
+		return mix(inColor, skyColor, skyContribution);
+	}
+
+	float wMapCheck = texture(u_WaterPositionMap, vec2(coord.x, 1.0)).a;
+	if (wMapCheck > 0.0)
 	{// Top of screen pixel is water, don't check...
-		return inColor;
+		return mix(inColor, skyColor, skyContribution);
 	}
 
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
 
-	for (float y = coord.y; y <= 1.0; y += ph * 5.0)
+	const float scanSpeed = 48.0;// 16.0;// 5.0; // How many pixels to scan by on the 1st rough pass...
+	//float scanSpeed = u_Local0.r;
+	
+	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
 	{
-		vec4 wMap = waterMapLowerAtCoord(vec2(coord.x, y));
+		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
-		float isWater = wMap.a;
 
-		if (isWater <= 0.0 && (pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0 && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
 		{
 			QLAND_Y = y;
 			break;
@@ -304,22 +346,21 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	if (QLAND_Y <= 0.0 || QLAND_Y >= 1.0)
 	{// Found no non-water surfaces...
-		return inColor;
+		return mix(inColor, skyColor, skyContribution);
 	}
 	
-	QLAND_Y -= ph * 5.0;
+	QLAND_Y -= ph * scanSpeed;
 	
-	// Full scan from within 5 px for the real 1st pixel...
+	// Full scan from within scanSpeed px for the real 1st pixel...
 	float upPos = coord.y;
 	float LAND_Y = 0.0;
 
-	for (float y = QLAND_Y; y <= 1.0; y += ph)
+	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
 	{
-		vec4 wMap = waterMapLowerAtCoord(vec2(coord.x, y));
+		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
-		float isWater = wMap.a;
 
-		if (isWater <= 0.0 && (pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0 && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
 		{
 			LAND_Y = y;
 			break;
@@ -328,36 +369,72 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	if (LAND_Y <= 0.0 || LAND_Y >= 1.0)
 	{// Found no non-water surfaces...
-		return inColor;
+		//return mix(inColor, skyColor, skyContribution);
+		LAND_Y = QLAND_Y;
 	}
 
 	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0), 0.0, 1.0);
 
 	if (upPos > 1.0 || upPos < 0.0)
 	{// Not on screen...
-		return inColor;
+		return mix(inColor, skyColor, skyContribution);
 	}
 
+	// Offset the final pixel based on the height of the wave at that point, to create randomization...
+	float hoff = height * 2.0 - 1.0;
+	float offset = hoff * distance(coord.y, upPos) * (-8.0 * waveHeight * pw);
 
-	vec4 wMap = waterMapLowerAtCoord(vec2(coord.x, upPos));
+	vec2 finalPosition = clamp(vec2(coord.x + offset, upPos), 0.0, 1.0);
 
-	if (wMap.a > 0.0)
-	{// This position is water, or it is closer then the reflection pixel...
-		return inColor;
+	float isWater = texture(u_WaterPositionMap, finalPosition).a;
+
+	if (isWater > 0.0)
+	{// This position is water...
+		return mix(inColor, skyColor, skyContribution);
+	}
+	else
+	{
+		vec4 pMap = positionMapAtCoord(finalPosition);
+		
+		if (distance(pMap.xyz, ViewOrigin) < distance(waterMapLower.xyz, ViewOrigin))
+		{// This position is sky or closer than the original pixel...
+			return mix(inColor, skyColor, skyContribution);
+		}
+
+		inColor = mix(inColor, skyColor, skyContribution);
 	}
 
-	vec4 landColor = textureLod(u_DiffuseMap, vec2(coord.x, upPos), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x, upPos + ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x, upPos - ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos + ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos - ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + pw, upPos - ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x - pw, upPos + ph), 0.0);
+	vec4 landColor = textureLod(u_DiffuseMap, finalPosition, 0.0);
+#if 0
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset + pw, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset - pw, upPos), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset, upPos + ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset, upPos - ph), 0.0);
+	//landColor /= 5.0;
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset + pw, upPos + ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset - pw, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset + pw, upPos - ph), 0.0);
+	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset - pw, upPos + ph), 0.0);
 	landColor /= 9.0;
+#else
+	/*float weight = 1.0;
+	vec2 origOffset = vec2(coord.x + offset, upPos);
 
-	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * /*0.28*/u_Local1.a);
+	for (float x = -3.0; x <= 3.0; x += 2.0)
+	{
+		for (float y = -3.0; y <= 3.0; y += 2.0)
+		{
+			vec2 tc = vec2(origOffset.x + (x * pw), origOffset.y + (y * ph));
+			float w = 1.0 - clamp(distance(tc, origOffset) / 20.0, 0.0, 1.0);
+			landColor += textureLod(u_DiffuseMap, tc, 0.0) * w;
+			weight += w;
+		}
+	}
+
+	landColor /= weight;*/
+#endif
+
+	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * u_Local1.a);
 }
 #endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
@@ -507,16 +584,17 @@ float getwavesDetail(vec2 position) {
 	{
 		vec2 p = vec2(sin(iter), cos(iter)) * 8.0;
 		float res = wave(position, p, speed, phase, 0.0);
-		float res2 = wave(position, p, speed, phase, 0.006);
-		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT * 1.3;
+		float res2 = wave(position, p, speed, phase, 0.003/*0.006*/);
+		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT * 8.0/*u_Local0.b*/;// 1.3;
 		w += res * weight;
 		iter += 36.0;// 12.0;
 		ws += weight;
-		weight = mix(weight, 0.0, 0.1);
+		weight = mix(weight, 0.0, float(i+1) / 14.0/*0.1*/);
 		phase *= 1.67;//1.2;
 		speed *= 1.07;//1.02;
 	}
-	return pow(w / ws, -0.333);
+	//return pow(w / ws, u_Local0.r/*-0.333*/);
+	return clamp(w / ws, 0.0, 1.0);
 }
 
 void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
@@ -551,7 +629,7 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 	else
 #endif //!defined(__LQ_MODE__) && defined(REAL_WAVES)
 	{
-		vec2 ex = vec2(e, 0) * 16.0;
+		vec2 ex = vec2(e, 0) * 64.0;// 16.0;
 
 		height = getwavesDetail(pos.xy * 0.5) * depth;
 		float height2 = getwavesDetail((pos.xy * 0.5) + ex.xy) * depth;
@@ -559,6 +637,8 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 
 		vec3 da = vec3(pos.x, height, pos.y);
 		waveNormal = normalize(cross(normalize(da - vec3(pos.x - e, height2, pos.y)), normalize(da - vec3(pos.x, height3, pos.y + e))));
+		waveNormal.xz *= 256.0;
+		waveNormal = normalize(waveNormal);
 		lightingNormal = waveNormal;
 	}
 }
@@ -615,7 +695,7 @@ vec3 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float
 #endif //__OLD_LIGHTING__
 
 #if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
-	color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color);
+	color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color, 0.0);
 #endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
 	return color;
@@ -814,8 +894,8 @@ void main ( void )
 
 		vec3 specular = vec3(0.0);
 
-		vec3 lightDir = normalize(surfacePoint.xyz - u_PrimaryLightOrigin.xzy);
-		//vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);*/
+		//vec3 lightDir = normalize(surfacePoint.xyz - u_PrimaryLightOrigin.xzy);
+		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
 
 
 #if 1
@@ -841,7 +921,7 @@ void main ( void )
 #if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
 		{
-			color = AddReflection(var_TexCoords, position, vec3(waterMapLower3.x, level, waterMapLower3.z), color.rgb);
+			color = AddReflection(var_TexCoords, position, vec3(waterMapLower3.x, level, waterMapLower3.z), color.rgb, height);
 		}
 #endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
@@ -909,7 +989,11 @@ void main ( void )
 
 			float maxStr = max(color.r, max(color.g, color.b)) * 0.9 + 0.1;
 
+#ifdef __LQ_MODE__
+			for (int li = 0; li < min(u_lightCount, 4); li++)
+#else //!__LQ_MODE__
 			for (int li = 0; li < u_lightCount; li++)
+#endif //__LQ_MODE__
 			{
 				vec3 lightPos = u_lightPositions2[li].xyz;
 
@@ -977,12 +1061,12 @@ void main ( void )
 			gl_FragColor = vec4(fresnel, fresnel, fresnel, 1.0);
 			return;
 		}
-		else if (u_Local0.a == 6.0)
+		/*else if (u_Local0.a == 6.0)
 		{
 			gl_FragColor = vec4(fresnel2.xyz, 1.0);
 			return;
-		}
-		else if (u_Local0.a == 7.0)
+		}*/
+		else if (u_Local0.a == 6.0)
 		{
 			gl_FragColor = vec4(height, height, height, 1.0);
 			return;
