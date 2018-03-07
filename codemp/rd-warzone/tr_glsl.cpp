@@ -4989,6 +4989,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
 
 	{
 		vec4_t viewInfo;
