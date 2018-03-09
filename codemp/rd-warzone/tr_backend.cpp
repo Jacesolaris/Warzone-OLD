@@ -2177,6 +2177,9 @@ const void	*RB_SwapBuffers( const void *data ) {
 		}
 	}
 
+	void RE_RenderImGui();
+	RE_RenderImGui();
+
 #ifdef __USE_QGL_FINISH__
 	if ( !glState.finishCalled ) {
 		qglFinish();

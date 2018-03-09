@@ -2248,7 +2248,7 @@ void CL_Frame ( int msec )
 	}
 #else //!___SOUND_MULTITHREAD___
 	CL_Frame_REAL3(msec); // sound
-	CL_Frame_REAL4(msec);
+	CL_Frame_REAL4(msec); // SCR_RunCinematic, Con_RunConsole
 #endif //___SOUND_MULTITHREAD___
 
 	cls.framecount++;
@@ -2597,7 +2597,7 @@ void CL_InitRef( void ) {
 	ri.CM_GetVisibilityDataClusterBytesCount = CM_GetVisibilityDataClusterBytesCount;
 	ri.CM_GetPatchesData = CM_GetPatchesData;
 	ri.CM_GetPatchesDataCount = CM_GetPatchesDataCount;
-
+	ri.Key_GetCatcher = Key_GetCatcher;
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 
 //	Com_Printf( "^5-------------------------------\n");

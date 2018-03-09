@@ -345,6 +345,7 @@ typedef struct refimport_s {
 	uint32_t(*CM_GetVisibilityDataClusterBytesCount)	(void);
 	void *(*CM_GetPatchesData)						(void);
 	uint32_t(*CM_GetPatchesDataCount)					(void);
+	int (*Key_GetCatcher)();
 } refimport_t;
 
 // this is the only function actually exported at the linker level
