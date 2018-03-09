@@ -1,5 +1,5 @@
 #include "dock.h"
-#include "../include_imgui.h"
+#include "../imgui/include_imgui.h"
 
 // creating a new dock: add it to imgui_api.cpp line 457, like: docks.push_back(new DockExplorer());
 

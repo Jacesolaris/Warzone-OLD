@@ -1,5 +1,5 @@
 #include "dock_skeleton.h"
-#include "../include_imgui.h"
+#include "../imgui/include_imgui.h"
 
 DockSkeleton::DockSkeleton() {
 }

@@ -3,22 +3,11 @@
 #include <stdio.h>
 #include "ccall/ccall.h"
 
-#include "docks/dock.h"
-#include "docks/dock_console.h"
-#include "docks/dock_repl.h"
-//#include "docks/dock_explorer.h"
-//#include "docks/dock_shadereditor.h"
-//#include "docks/dock_opsys.h"
-//#include "docks/dock_models.h"
-//#include "docks/dock_anims.h"
-//#include "docks/dock_sound.h"
-//#include "docks/dock_vars.h"
-//#include "docks/dock_quakeshaders.h"
-//#include "docks/dock_huds.h"
-#include "docks/dock_node.h"
-//#include "docks/dock_duktape.h"
-#include "docks/dock_julia.h"
-//#include "docks/dock_images.h"
+#include "../imgui_docks/dock.h"
+#include "../imgui_docks/dock_console.h"
+#include "../imgui_docks/dock_repl.h"
+#include "../imgui_docks/dock_node.h"
+#include "../imgui_docks/dock_julia.h"
 
 #include <list>
 std::list<Dock *> docks;
@@ -145,21 +134,8 @@ CCALL int imgui_default_docks() {
 		first = 0;
 		docks.push_back(new DockREPL("testone"));
 		docks.push_back(new DockConsole());
-		//docks.push_back(new DockShaders());
-		//docks.push_back(new DockExplorer());
-		//docks.push_back(new DockModels());
-		//docks.push_back(new DockAnims());
-		//docks.push_back(new DockSound());
-		//docks.push_back(new DockVars());
-		//docks.push_back(new DockQuakeShaders());
-		//docks.push_back(new DockHuds());
-		//docks.push_back(new DockImages());
 		docks.push_back(new DockNode());
-#ifndef EMSCRIPTEN
-		//docks.push_back(new DockDuktape());
 		docks.push_back(new DockJulia());
-		//docks.push_back(new DockOpsys( "opsystems/matmulpoint.opsys" ));
-#endif
 	}
 
 	for (Dock *dock : docks) {

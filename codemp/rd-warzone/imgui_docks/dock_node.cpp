@@ -1,10 +1,10 @@
 #include "dock_node.h"
-#include "../include_imgui.h"
+#include "../imgui/include_imgui.h"
 //#include <client/client.h>
 #include "dock_console.h"
 //#include <kung/include_duktape.h>
 #include <string>
-#include "../MagicFile.cpp/magicfile.h"
+#include "../imgui/MagicFile.cpp/magicfile.h"
 
 bool IsKeyPressedMap(ImGuiKey key, bool repeat);
 void SaveIniSettingsToDisk(const char* ini_filename); // was a static function in ImGui

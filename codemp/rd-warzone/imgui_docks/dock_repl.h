@@ -1,7 +1,7 @@
 #include "dock.h"
 #include <string>
 
-#include "../imgui_dock.h"
+#include "../imgui/imgui_dock.h"
 
 class DockREPL : public Dock {
 public:

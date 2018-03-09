@@ -1,5 +1,5 @@
 #include "dock_repl.h"
-#include "../include_imgui.h"
+#include "../imgui/include_imgui.h"
 
 DockREPL::DockREPL(std::string filename_) {
 	filename = filename_;

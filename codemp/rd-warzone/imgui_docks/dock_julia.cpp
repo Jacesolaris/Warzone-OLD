@@ -1,5 +1,5 @@
 #include "dock_julia.h"
-#include "../include_imgui.h"
+#include "../imgui/include_imgui.h"
 //#include <client/client.h>
 
 DockJulia::DockJulia() {

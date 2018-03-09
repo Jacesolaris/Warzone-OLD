@@ -10,7 +10,7 @@
 #include <time.h>
 #include <limits.h>
 
-#include "../imgui/imgui_api.h"
+#include "imgui/imgui_api.h"
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
