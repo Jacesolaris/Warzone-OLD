@@ -174,6 +174,55 @@ set(MPWarzoneTinyImageLoaderFiles
 source_group("TinyImageLoader" FILES ${MPWarzoneTinyImageLoaderFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneTinyImageLoaderFiles})
 
+set(MPWarzoneImGuiFiles
+	"${MPDir}/rd-warzone/imgui/ccall/ccall.h"
+	"${MPDir}/rd-warzone/imgui/MagicFile.cpp/magicfile.cpp"
+	"${MPDir}/rd-warzone/imgui/MagicFile.cpp/magicfile.h"
+	"${MPDir}/rd-warzone/imgui/ffi.cpp"
+	"${MPDir}/rd-warzone/imgui/imconfig.h"
+	"${MPDir}/rd-warzone/imgui/imgui.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui.h"
+	"${MPDir}/rd-warzone/imgui/imgui_api.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_api.h"
+	"${MPDir}/rd-warzone/imgui/imgui_c_utils.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_c_utils.h"
+	"${MPDir}/rd-warzone/imgui/imgui_default_docks.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_default_docks.h"
+	"${MPDir}/rd-warzone/imgui/imgui_demo.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_dock.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_dock.h"
+	"${MPDir}/rd-warzone/imgui/imgui_draw.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_fixedarea.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_fixedarea.h"
+	"${MPDir}/rd-warzone/imgui/imgui_impl_idtech3_gles.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_impl_idtech3_gles.h"
+	"${MPDir}/rd-warzone/imgui/imgui_internal.h"
+	"${MPDir}/rd-warzone/imgui/imgui_utils.cpp"
+	"${MPDir}/rd-warzone/imgui/imgui_utils.h"
+	"${MPDir}/rd-warzone/imgui/include_imgui.h"
+	"${MPDir}/rd-warzone/imgui/include_quakegl.h"
+	"${MPDir}/rd-warzone/imgui/stb_rect_pack.h"
+	"${MPDir}/rd-warzone/imgui/stb_textedit.h"
+	"${MPDir}/rd-warzone/imgui/stb_truetype.h")
+source_group("imgui" FILES ${MPWarzoneImGuiFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiFiles})
+
+set(MPWarzoneImGuiDockFiles
+	"${MPDir}/rd-warzone/imgui_docks/dock.cpp"
+	"${MPDir}/rd-warzone/imgui_docks/dock.h"
+	"${MPDir}/rd-warzone/imgui_docks/dock_console.cpp"
+	"${MPDir}/rd-warzone/imgui_docks/dock_console.h"
+	"${MPDir}/rd-warzone/imgui_docks/dock_julia.cpp"
+	"${MPDir}/rd-warzone/imgui_docks/dock_julia.h"
+	"${MPDir}/rd-warzone/imgui_docks/dock_node.cpp"
+	"${MPDir}/rd-warzone/imgui_docks/dock_node.h"
+	"${MPDir}/rd-warzone/imgui_docks/dock_repl.cpp"
+	"${MPDir}/rd-warzone/imgui_docks/dock_repl.h"
+	"${MPDir}/rd-warzone/imgui_docks/dock_skeleton.cpp"
+	"${MPDir}/rd-warzone/imgui_docks/dock_skeleton.h")
+source_group("imgui_docks" FILES ${MPWarzoneImGuiDockFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockFiles})
+
 set(MPWarzoneRdCommonFiles
 	"${MPDir}/rd-common/mdx_format.h"
 	"${MPDir}/rd-common/tr_common.h"

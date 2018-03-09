@@ -1300,6 +1300,10 @@ void CL_KeyDownEvent( int key, unsigned time )
 		return;
 	}
 
+	// depending on keycatch the client can now disable mouse, keyboard and other stuff
+	if ( key == A_F2)
+		Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_IMGUI );
+
 	// keys can still be used for bound actions
 	if ( cls.state == CA_CINEMATIC && !Key_GetCatcher() ) {
 		if ( !com_cameraMode->integer ) {

@@ -10,6 +10,8 @@
 #include <time.h>
 #include <limits.h>
 
+#include "imgui/imgui_api.h"
+
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
@@ -1262,6 +1264,165 @@ device_shutdown(struct device *dev)
 	nk_buffer_free(&dev->cmds);
 }
 
+
+qboolean keyStatus[MAX_KEYS] = { qfalse };
+vec2_t mouseStatus = { 0.5, 0.5 };
+qboolean menuOpen = qfalse;
+
+void RE_SendInputEvents(qboolean clientKeyStatus[MAX_KEYS], vec2_t clientMouseStatus, qboolean open)
+{
+	memcpy(keyStatus, clientKeyStatus, sizeof(keyStatus));
+	mouseStatus[0] = clientMouseStatus[0];
+	mouseStatus[1] = clientMouseStatus[1];
+
+	if (mouseStatus[0] > SCREEN_WIDTH) mouseStatus[0] = SCREEN_WIDTH;
+	if (mouseStatus[1] > SCREEN_HEIGHT) mouseStatus[1] = SCREEN_HEIGHT;
+	if (mouseStatus[0] < 0) mouseStatus[0] = 0;
+	if (mouseStatus[1] < 0) mouseStatus[1] = 0;
+
+	menuOpen = open;
+}
+
+void RE_RenderImGui() {
+	float width = FBO_WIDTH;
+	float height = FBO_HEIGHT;
+		
+	if ( ! (ri->Key_GetCatcher() & KEYCATCH_IMGUI))
+		return;
+
+	/* High DPI displays */
+	struct nk_vec2 scale;
+
+	scale.x = 1.0;// (float)display_width / (float)width;
+	scale.y = 1.0;// (float)display_height / (float)height;
+	
+	float x, y;
+#if 0
+	nk_input_begin(&GUI_ctx);
+
+	nk_input_key(&GUI_ctx, NK_KEY_DEL, keyStatus[A_DELETE]);
+	nk_input_key(&GUI_ctx, NK_KEY_ENTER, keyStatus[A_ENTER]);
+	nk_input_key(&GUI_ctx, NK_KEY_TAB, keyStatus[A_TAB]);
+	nk_input_key(&GUI_ctx, NK_KEY_BACKSPACE, keyStatus[A_BACKSPACE]);
+	nk_input_key(&GUI_ctx, NK_KEY_LEFT, keyStatus[A_CURSOR_LEFT]);
+	nk_input_key(&GUI_ctx, NK_KEY_RIGHT, keyStatus[A_CURSOR_RIGHT]);
+	nk_input_key(&GUI_ctx, NK_KEY_UP, keyStatus[A_CURSOR_UP]);
+	nk_input_key(&GUI_ctx, NK_KEY_DOWN, keyStatus[A_CURSOR_DOWN]);
+	nk_input_key(&GUI_ctx, NK_KEY_SHIFT, keyStatus[A_SHIFT]);
+
+	if (keyStatus[A_CTRL] || keyStatus[A_CTRL2])
+	{
+	nk_input_key(&GUI_ctx, NK_KEY_COPY, keyStatus[A_CAP_C] || keyStatus[A_LOW_C]);
+	nk_input_key(&GUI_ctx, NK_KEY_PASTE, keyStatus[A_CAP_P] || keyStatus[A_LOW_P]);
+	nk_input_key(&GUI_ctx, NK_KEY_CUT, keyStatus[A_CAP_X] || keyStatus[A_LOW_X]);
+	nk_input_key(&GUI_ctx, NK_KEY_CUT, keyStatus[A_CAP_E] || keyStatus[A_LOW_E]);
+	nk_input_key(&GUI_ctx, NK_KEY_SHIFT, 1);
+	}
+	else
+	{
+	nk_input_key(&GUI_ctx, NK_KEY_COPY, 0);
+	nk_input_key(&GUI_ctx, NK_KEY_PASTE, 0);
+	nk_input_key(&GUI_ctx, NK_KEY_CUT, 0);
+	nk_input_key(&GUI_ctx, NK_KEY_SHIFT, 0);
+
+	if (keyStatus[A_CTRL] || keyStatus[A_CTRL2])
+	{
+	nk_input_key(&GUI_ctx, NK_KEY_CTRL, 0);
+	}
+	}
+#endif
+
+#if 0//defined(__GNUC__) || defined(MACOS_X)
+	vec2_t ratio;
+	ratio[0] = (float)glConfig.vidWidth / (float)SCREEN_WIDTH;
+	ratio[1] = (float)glConfig.vidHeight / (float)SCREEN_HEIGHT;
+	x = mouseStatus[0] * ratio[0];
+	y = mouseStatus[1] * ratio[1];
+#else
+	POINT p;
+	if (GetCursorPos(&p))
+	{//cursor position now in p.x and p.y
+		//HANDLE hwnd = GetCurrentProcess();
+		HWND hwnd = GetActiveWindow();
+		if (ScreenToClient(hwnd, &p))
+		{
+			//p.x and p.y are now relative to hwnd's client area
+			x = p.x;
+			y = p.y;
+		}
+	}
+#endif
+
+	imgui_set_mousepos((int)x, (int)y);
+	imgui_set_widthheight(width, height);
+	imgui_mouse_set_button(0, keyStatus[A_MOUSE1]);
+	imgui_mouse_set_button(1, keyStatus[A_MOUSE2]);
+	imgui_mouse_set_button(2, keyStatus[A_MOUSE3]);
+
+	if (keyStatus[A_MWHEELDOWN])
+		imgui_mouse_wheel(-1.0);
+	else if (keyStatus[A_MWHEELUP])
+		imgui_mouse_wheel(1.0);
+
+/*
+ * VK_0 - VK_9 are the same as ASCII '0' - '9' (0x30 - 0x39)
+ * 0x40 : unassigned
+ * VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A)
+ */
+#if 0
+	for (int i = A_CAP_A; i <= A_CAP_Z; i++)
+	{
+		if (keyStatus[i])
+		{
+			int vkNum = (i - A_CAP_A) + 0x30;
+			nk_input_char(&GUI_ctx, vkNum);
+		}
+		else if (keyStatus[i-32])
+		{
+			int vkNum = (i - A_LOW_A) + 0x30;
+			nk_input_char(&GUI_ctx, vkNum);
+		}
+	}
+
+	for (int i = A_0; i <= A_9; i++)
+	{
+		if (keyStatus[i])
+		{
+			int vkNum = (i - A_0) + 0x41;
+			nk_input_char(&GUI_ctx, vkNum);
+		}
+	}
+#endif
+
+	//FBO_Bind(tr.renderGUIFbo);
+	FBO_Bind(NULL);
+	GL_SetDefaultState();
+	GL_State(GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);;
+	GL_Cull(CT_TWO_SIDED);
+	qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//qglClear(GL_COLOR_BUFFER_BIT);
+
+	static int first = 1;
+	if (first) {
+		imgui_init();
+		first = 0;
+	}
+
+	imgui_new_frame();
+	imgui_render();
+	imgui_end_frame();
+
+	/* default OpenGL state */
+	qglUseProgram(0);
+	qglBindBuffer(GL_ARRAY_BUFFER, 0);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	qglBindVertexArray(0);
+	FBO_Bind(glState.previousFBO);
+	GL_SetDefaultState();
+}
+
+
 static void
 device_draw(struct device *dev, struct nk_context *ctx, int width, int height,
 	struct nk_vec2 scale, enum nk_anti_aliasing AA)
@@ -1812,24 +1973,6 @@ void GUI_Shutdown(void)
 	nk_free(&GUI_ctx);
 
 	device_shutdown(&GUI_device);
-}
-
-qboolean keyStatus[MAX_KEYS] = { qfalse };
-vec2_t mouseStatus = { 0.5, 0.5 };
-qboolean menuOpen = qfalse;
-
-void RE_SendInputEvents(qboolean clientKeyStatus[MAX_KEYS], vec2_t clientMouseStatus, qboolean open)
-{
-	memcpy(keyStatus, clientKeyStatus, sizeof(keyStatus));
-	mouseStatus[0] = clientMouseStatus[0];
-	mouseStatus[1] = clientMouseStatus[1];
-
-	if (mouseStatus[0] > SCREEN_WIDTH) mouseStatus[0] = SCREEN_WIDTH;
-	if (mouseStatus[1] > SCREEN_HEIGHT) mouseStatus[1] = SCREEN_HEIGHT;
-	if (mouseStatus[0] < 0) mouseStatus[0] = 0;
-	if (mouseStatus[1] < 0) mouseStatus[1] = 0;
-
-	menuOpen = open;
 }
 
 void GUI_Main(void)
