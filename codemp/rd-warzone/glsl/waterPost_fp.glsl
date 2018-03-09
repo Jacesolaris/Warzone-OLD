@@ -1,9 +1,9 @@
-//#define REAL_WAVES					// You probably always want this turned on.
+#define REAL_WAVES					// You probably always want this turned on.
 #define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 //#define __OLD_LIGHTING__
-//#define __DEBUG__
+#define __DEBUG__
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -567,11 +567,12 @@ float getwaves(vec2 position) {
 		w += res * weight;
 		iter += 12.0;
 		ws += weight;
-		weight = mix(weight, 0.0, 0.2);
+		weight = mix(weight, 0.0, float(i + 1) / 4.0/*0.2*/);
 		phase *= 1.2;
 		speed *= 1.02;
 	}
-	return pow(w / ws, 0.2);
+	//return pow(w / ws, 0.2);
+	return clamp(w / ws, 0.0, 1.0);
 }
 
 float getwavesDetail(vec2 position) {
@@ -612,26 +613,30 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 		float height3 = getwaves(pos.xy + ex.yx) * depth;
 
 		vec3 a = vec3(pos.x, height, pos.y);
-		waveNormal = cross(normalize(a - vec3(pos.x - e, height2, pos.y)), normalize(a - vec3(pos.x, height3, pos.y + e)));
+		waveNormal = normalize(cross(normalize(a - vec3(pos.x - e, height2, pos.y)), normalize(a - vec3(pos.x, height3, pos.y + e))));
 
 		// Now make a lighting normal vector, with some "small waves" bumpiness...
-		float dheight = getwavesDetail(pos.xy) * depth;
-		float dheight2 = getwavesDetail(pos.xy + ex.xy) * depth;
-		float dheight3 = getwavesDetail(pos.xy + ex.yx) * depth;
+		waveNormal.xz *= 256.0;
+		waveNormal = normalize(waveNormal);
+
+		ex = vec2(e, 0) * 64.0;
+
+		float dheight = getwavesDetail(pos.xy * 0.5) * depth;
+		float dheight2 = getwavesDetail((pos.xy * 0.5) + ex.xy) * depth;
+		float dheight3 = getwavesDetail((pos.xy * 0.5) + ex.yx) * depth;
 
 		vec3 da = vec3(pos.x, dheight, pos.y);
-		vec3 dnormal = cross(normalize(da - vec3(pos.x - e, dheight2, pos.y)), normalize(da - vec3(pos.x, dheight3, pos.y + e)));
+		vec3 dnormal = normalize(cross(normalize(da - vec3(pos.x - e, dheight2, pos.y)), normalize(da - vec3(pos.x, dheight3, pos.y + e))));
+		dnormal.xz *= 256.0;
+		dnormal = normalize(dnormal);
 
-		lightingNormal = normalize(waveNormal + (dnormal * 0.8));
-
-		//normal = normalize(vec3(height - height2, u_Local0.b, height - height3));
-
-		//normal = normalize(normal * 2.0 - 1.0);
+		//lightingNormal = normalize(waveNormal + (dnormal * 0.8));
+		lightingNormal = normalize(mix(-waveNormal, dnormal, vec3(0.75)));
 	}
 	else
 #endif //!defined(__LQ_MODE__) && defined(REAL_WAVES)
 	{
-		vec2 ex = vec2(e, 0) * 64.0;// 16.0;
+		vec2 ex = vec2(e, 0) * 64.0;
 
 		height = getwavesDetail(pos.xy * 0.5) * depth;
 		float height2 = getwavesDetail((pos.xy * 0.5) + ex.xy) * depth;
