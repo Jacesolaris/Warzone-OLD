@@ -3,7 +3,7 @@
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 //#define __OLD_LIGHTING__
-#define __DEBUG__
+//#define __DEBUG__
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
