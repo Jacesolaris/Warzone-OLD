@@ -9,7 +9,7 @@
 class DockShaders : public Dock {
 public:
 	shaderProgram_t *shader = NULL;
-	int currentItem = 36; // select shader for mrfixit
+	int currentItem = 4; // select lightall shader for start menu
 
 	//std::string filename;
 	/*ImGui::*/Dock *imguidock;

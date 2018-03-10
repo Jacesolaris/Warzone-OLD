@@ -2116,7 +2116,7 @@ extern void RE_AddWeatherZone(vec3_t mins, vec3_t maxs);
 #endif //__JKA_WEATHER__
 
 void RE_CharEvent(int key);
-
+void RE_MouseWheelEvent(float dir);
 /*
 @@@@@@@@@@@@@@@@@@@@@
 GetRefAPI
@@ -2319,6 +2319,7 @@ Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.MenuOpenFrame						= RE_MenuOpenFrame;
 	re.R_SendInputEvents					= RE_SendInputEvents;
 	re.CharEvent							= RE_CharEvent;
+	re.MouseWheelEvent						= RE_MouseWheelEvent;
 
 	/*
 	Ghoul2 Insert End

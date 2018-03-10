@@ -1277,8 +1277,9 @@ CL_KeyDownEvent
 Called by CL_KeyEvent to handle a keypress
 ===================
 */
-void CL_KeyDownEvent( int key, unsigned time )
-{
+void CL_KeyDownEvent( int key, unsigned time ) {
+	//Com_Printf("CL_KeyDownEvent(key=%d, time=?)\n", key);
+
 	// depending on keycatch the client can now disable mouse, keyboard and other stuff
 	if ( key == A_F2) {
 		Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_IMGUI );
@@ -1287,7 +1288,14 @@ void CL_KeyDownEvent( int key, unsigned time )
 
 	// ignore input for everything else when ImGui is active
 	if ( Key_GetCatcher( ) & KEYCATCH_IMGUI ) {
-		//Com_Printf("CL_KeyDownEvent(key=%d, time=?)\n", key);
+		switch (key) {
+			case A_MWHEELUP:
+				re->MouseWheelEvent(1.0);
+				break;
+			case A_MWHEELDOWN:
+				re->MouseWheelEvent(-1.0);
+				break;
+		}
 		return;
 	}
 
