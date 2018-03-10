@@ -1279,6 +1279,18 @@ Called by CL_KeyEvent to handle a keypress
 */
 void CL_KeyDownEvent( int key, unsigned time )
 {
+	// depending on keycatch the client can now disable mouse, keyboard and other stuff
+	if ( key == A_F2) {
+		Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_IMGUI );
+		return;
+	}
+
+	// ignore input for everything else when ImGui is active
+	if ( Key_GetCatcher( ) & KEYCATCH_IMGUI ) {
+		//Com_Printf("CL_KeyDownEvent(key=%d, time=?)\n", key);
+		return;
+	}
+
 	kg.keys[keynames[key].upper].down = qtrue;
 	kg.keys[keynames[key].upper].repeats++;
 	if( kg.keys[keynames[key].upper].repeats == 1 ) {
@@ -1299,10 +1311,6 @@ void CL_KeyDownEvent( int key, unsigned time )
 		Key_ClearStates ();
 		return;
 	}
-
-	// depending on keycatch the client can now disable mouse, keyboard and other stuff
-	if ( key == A_F2)
-		Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_IMGUI );
 
 	// keys can still be used for bound actions
 	if ( cls.state == CA_CINEMATIC && !Key_GetCatcher() ) {
@@ -1406,6 +1414,12 @@ Called by CL_KeyEvent to handle a keyrelease
 */
 void CL_KeyUpEvent( int key, unsigned time )
 {
+	// ignore input for everything else when ImGui is active
+	if ( Key_GetCatcher( ) & KEYCATCH_IMGUI ) {
+		//Com_Printf("CL_KeyUpEvent(key=%d, time=?)\n", key);
+		return;
+	}
+
 	kg.keys[keynames[key].upper].repeats = 0;
 	kg.keys[keynames[key].upper].down = qfalse;
 	kg.keyDownCount--;
@@ -1441,6 +1455,7 @@ Called by the system for both key up and key down events
 ===================
 */
 void CL_KeyEvent (int key, qboolean down, unsigned time) {
+	//Com_Printf("void CL_KeyEvent (int key=%d, qboolean down=%d, unsigned time=%d)\n", key, down, time);
 	if( down )
 		CL_KeyDownEvent( key, time );
 	else
@@ -1468,7 +1483,8 @@ void CL_CharEvent( int key ) {
 		return;
 
 	// distribute the key down event to the appropriate handler
-		 if ( Key_GetCatcher() & KEYCATCH_CONSOLE )		Field_CharEvent( &g_consoleField, key );
+		 if ( Key_GetCatcher() & KEYCATCH_IMGUI )		re->CharEvent( key );
+	else if ( Key_GetCatcher() & KEYCATCH_CONSOLE )		Field_CharEvent( &g_consoleField, key );
 	else if ( Key_GetCatcher() & KEYCATCH_UI )			UIVM_KeyEvent( key|K_CHAR_FLAG, qtrue );
 	else if ( Key_GetCatcher() & KEYCATCH_CGAME )		CGVM_KeyEvent( key|K_CHAR_FLAG, qtrue );
 	else if ( Key_GetCatcher() & KEYCATCH_MESSAGE )		Field_CharEvent( &chatField, key );

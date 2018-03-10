@@ -2115,6 +2115,8 @@ extern void RE_WorldEffectCommand(const char *command);
 extern void RE_AddWeatherZone(vec3_t mins, vec3_t maxs);
 #endif //__JKA_WEATHER__
 
+void RE_CharEvent(int key);
+
 /*
 @@@@@@@@@@@@@@@@@@@@@
 GetRefAPI
@@ -2316,6 +2318,7 @@ Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.DrawAwesomiumFrame					= RE_DrawAwesomiumFrame;
 	re.MenuOpenFrame						= RE_MenuOpenFrame;
 	re.R_SendInputEvents					= RE_SendInputEvents;
+	re.CharEvent							= RE_CharEvent;
 
 	/*
 	Ghoul2 Insert End

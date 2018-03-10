@@ -221,6 +221,7 @@ typedef struct refexport_s {
 	void				(*DrawAwesomiumFrame)					( int x, int y, int w, int h, unsigned char *buffer);
 	void				(*MenuOpenFrame)						(qboolean menuIsOpen);
 	void				(*R_SendInputEvents)					(qboolean keyStatus[MAX_KEYS], vec2_t mouseStatus, qboolean menuOpen);
+	void				(*CharEvent)							(int key);
 } refexport_t;
 
 //

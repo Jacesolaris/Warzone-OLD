@@ -1283,12 +1283,35 @@ void RE_SendInputEvents(qboolean clientKeyStatus[MAX_KEYS], vec2_t clientMouseSt
 	menuOpen = open;
 }
 
+#include "imgui/include_imgui.h"
+
+void RE_CharEvent(int key) {
+	// basically just this: https://github.com/ocornut/imgui/blob/69e700f8694f89707b7aec91551f4a9546684040/examples/directx9_example/imgui_impl_dx9.cpp#L273
+	// with a round trip from client.exe to renderer.dll
+	// You can also use ToAscii()+GetKeyboardState() to retrieve characters.
+	if (key > 0 && key < 0x10000) {
+		ImGuiIO& io = ImGui::GetIO();
+		io.AddInputCharacter((unsigned short)key);
+	}
+}
+
 void RE_RenderImGui() {
 	float width = FBO_WIDTH;
 	float height = FBO_HEIGHT;
 		
 	if ( ! (ri->Key_GetCatcher() & KEYCATCH_IMGUI))
 		return;
+
+	// copy over all keys to imgui
+	ImGuiIO& io = ImGui::GetIO();
+	for (int i=0; i<MAX_KEYS; i++)
+		io.KeysDown[i] = keyStatus[i];
+
+	// Read keyboard modifiers inputs
+	io.KeyCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+	io.KeyShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+	io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+	io.KeySuper = false;
 
 	/* High DPI displays */
 	struct nk_vec2 scale;
