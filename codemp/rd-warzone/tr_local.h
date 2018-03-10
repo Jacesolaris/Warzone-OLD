@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
-
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Debugging Defines
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -152,6 +151,12 @@ extern int GLSL_BINDS_COUNT;
 #ifdef _WIN32
 #include "win32\win_local.h"
 #include "qcommon\sstring.h"
+#endif
+
+#ifdef __GLSL_OPTIMIZER__
+	#define MAX_GLSL_LENGTH 170000
+#else
+	#define MAX_GLSL_LENGTH 32768
 #endif
 
 extern qboolean ALLOW_NULL_FBO_BIND;
@@ -1702,6 +1707,11 @@ typedef struct shaderProgram_s
 
 	GLuint instances_mvp = 0;
 	GLuint instances_buffer = 0;
+
+	// keep the glsl source code around so we can live edit it
+	char vertexText[MAX_GLSL_LENGTH];
+	char fragText[MAX_GLSL_LENGTH];
+	int usageCount;
 } shaderProgram_t;
 
 // trRefdef_t holds everything that comes in refdef_t,
@@ -4256,5 +4266,8 @@ int getMilliCount();
 int getMilliSpan(int nTimeStart);
 void DEBUG_StartTimer(char *name, qboolean usePerfCvar);
 void DEBUG_EndTimer(qboolean usePerfCvar);
+
+
+#include "tr_glsl.h"
 
 #endif //TR_LOCAL_H

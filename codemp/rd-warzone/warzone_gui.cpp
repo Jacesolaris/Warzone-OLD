@@ -1295,6 +1295,8 @@ void RE_CharEvent(int key) {
 	}
 }
 
+#include "imgui_openjk/imgui_openjk_default_docks.h"
+
 void RE_RenderImGui() {
 	float width = FBO_WIDTH;
 	float height = FBO_HEIGHT;
@@ -1434,6 +1436,7 @@ void RE_RenderImGui() {
 
 	imgui_new_frame();
 	imgui_render();
+	imgui_openjk_default_docks();
 	imgui_end_frame();
 
 	/* default OpenGL state */

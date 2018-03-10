@@ -223,6 +223,12 @@ set(MPWarzoneImGuiDockFiles
 source_group("imgui_docks" FILES ${MPWarzoneImGuiDockFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockFiles})
 
+set(MPWarzoneImGuiDockOpenJKFiles
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_shadereditor.cpp"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_shadereditor.h")
+source_group("imgui_docks_openjk" FILES ${MPWarzoneImGuiDockOpenJKFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockOpenJKFiles})
+
 set(MPWarzoneRdCommonFiles
 	"${MPDir}/rd-common/mdx_format.h"
 	"${MPDir}/rd-common/tr_common.h"

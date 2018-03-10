@@ -22,9 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_glsl.c
 #include "tr_local.h"
 
-#ifdef __GLSL_OPTIMIZER__
-#include "glsl_optimizer.h"
-#endif //__GLSL_OPTIMIZER__
+#include "tr_glsl.h"
 
 extern const char *fallbackShader_bokeh_vp;
 extern const char *fallbackShader_bokeh_fp;
@@ -1187,15 +1185,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "}\n";
 #endif
 
-
-typedef struct uniformInfo_s
-{
-	char *name;
-	int type;
-	int size;
-}
-uniformInfo_t;
-
 // These must be in the same order as in uniform_t in tr_local.h.
 static uniformInfo_t uniformsInfo[] =
 {
@@ -1361,7 +1350,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_SsdoKernel", GLSL_VEC3, 32 },
 };
 
-static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
+void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
 {
 	char           *msg;
 	static char     msgPart[1024];
@@ -1404,7 +1393,7 @@ static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
 	}
 }
 
-static void GLSL_PrintShaderInfoLog(GLuint object, qboolean developerOnly)
+void GLSL_PrintShaderInfoLog(GLuint object, qboolean developerOnly)
 {
 	char           *msg;
 	static char     msgPart[1024];
@@ -1447,7 +1436,7 @@ static void GLSL_PrintShaderInfoLog(GLuint object, qboolean developerOnly)
 	}
 }
 
-static void GLSL_PrintShaderSource(GLuint shader)
+void GLSL_PrintShaderSource(GLuint shader)
 {
 	char           *msg;
 	static char     msgPart[1024];
@@ -1575,7 +1564,7 @@ const char glslMaterialsList[] =
 "#define MATERIAL_SUN			1025\n"\
 "\n";
 
-static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest, int size, char *forceVersion)
+void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest, int size, char *forceVersion)
 {
 	float fbufWidthScale, fbufHeightScale;
 
@@ -1737,7 +1726,7 @@ static void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char
 	Q_strcat(dest, size, "#line 0\n");
 }
 
-static int GLSL_EnqueueCompileGPUShader(GLuint program, GLuint *prevShader, const GLchar *buffer, int size, GLenum shaderType)
+int GLSL_EnqueueCompileGPUShader(GLuint program, GLuint *prevShader, const GLchar *buffer, int size, GLenum shaderType)
 {
 	GLuint     shader;
 
@@ -1753,7 +1742,7 @@ static int GLSL_EnqueueCompileGPUShader(GLuint program, GLuint *prevShader, cons
 	return 1;
 }
 
-static int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
+int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	GLenum shaderType, char *dest, int destSize)
 {
 	char            filename[128/*MAX_QPATH*/];
@@ -1822,7 +1811,7 @@ static int GLSL_LoadGPUShaderText(const char *name, const char *fallback,
 	return result;
 }
 
-static void GLSL_LinkProgram(GLuint program)
+void GLSL_LinkProgram(GLuint program)
 {
 	GLint           linked;
 
@@ -1837,7 +1826,18 @@ static void GLSL_LinkProgram(GLuint program)
 	}
 }
 
-static void GLSL_ValidateProgram(GLuint program)
+GLint GLSL_LinkProgramSafe(GLuint program) {
+	GLint           linked;
+	qglLinkProgram(program);
+	qglGetProgramiv(program, GL_LINK_STATUS, &linked);
+	if (!linked) {
+		GLSL_PrintProgramInfoLog(program, qfalse);
+		Com_Printf("shaders failed to link\n");
+	}
+	return linked;
+}
+
+void GLSL_ValidateProgram(GLuint program)
 {
 	GLint           validated;
 
@@ -1852,7 +1852,7 @@ static void GLSL_ValidateProgram(GLuint program)
 	}
 }
 
-static void GLSL_ShowProgramUniforms(shaderProgram_t *program)
+void GLSL_ShowProgramUniforms(shaderProgram_t *program)
 {
 	int             i, count, size;
 	GLenum			type;
@@ -1877,7 +1877,7 @@ static void GLSL_ShowProgramUniforms(shaderProgram_t *program)
 	GLSL_BindProgram(NULL);
 }
 
-static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name, int attribs, const char *vpCode, const char *fpCode, const char *cpCode, const char *epCode, const char *gsCode)
+int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name, int attribs, const char *vpCode, const char *fpCode, const char *cpCode, const char *epCode, const char *gsCode)
 {
 	size_t nameBufSize = strlen(name) + 1;
 
@@ -1896,6 +1896,8 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 	program->geometry = qfalse;
 	program->geometryShader = NULL;
 
+	
+	strncpy(program->vertexText, vpCode, sizeof(program->vertexText));
 	if (!(GLSL_EnqueueCompileGPUShader(program->program, &program->vertexShader, vpCode, strlen(vpCode), GL_VERTEX_SHADER)))
 	{
 		ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Unable to load \"%s\" as GL_VERTEX_SHADER\n", name);
@@ -1963,6 +1965,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 		program->geometryShader = 0;
 	}
 
+	strncpy(program->fragText, fpCode, sizeof(program->fragText));
 	if (fpCode)
 	{
 		if (!(GLSL_EnqueueCompileGPUShader(program->program, &program->fragmentShader, fpCode, strlen(fpCode), GL_FRAGMENT_SHADER)))
@@ -1976,7 +1979,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 	return 1;
 }
 
-static bool GLSL_IsGPUShaderCompiled(GLuint shader)
+bool GLSL_IsGPUShaderCompiled(GLuint shader)
 {
 	GLint compiled;
 
@@ -2053,7 +2056,31 @@ void GLSL_AttachWaterTextures(void)
 	////R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 }
 
-static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
+void GLSL_BindAttributeLocations(shaderProgram_t *program, int attribs) {
+	if (attribs & ATTR_POSITION      ) qglBindAttribLocation(program->program, ATTR_INDEX_POSITION      , "attr_Position"      );
+	if (attribs & ATTR_TEXCOORD0     ) qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD0     , "attr_TexCoord0"     );
+	if (attribs & ATTR_TEXCOORD1     ) qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1     , "attr_TexCoord1"     );
+	if (attribs & ATTR_NORMAL        ) qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL        , "attr_Normal"        );
+	if (attribs & ATTR_COLOR         ) qglBindAttribLocation(program->program, ATTR_INDEX_COLOR         , "attr_Color"         );
+	if (attribs & ATTR_PAINTCOLOR    ) qglBindAttribLocation(program->program, ATTR_INDEX_PAINTCOLOR    , "attr_PaintColor"    );
+	if (attribs & ATTR_LIGHTDIRECTION) qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
+	if (attribs & ATTR_POSITION2     ) qglBindAttribLocation(program->program, ATTR_INDEX_POSITION2     , "attr_Position2"     );
+	if (attribs & ATTR_NORMAL2       ) qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2       , "attr_Normal2"       );
+	if (attribs & ATTR_BONE_INDEXES  ) qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES  , "attr_BoneIndexes"   );
+	if (attribs & ATTR_BONE_WEIGHTS  ) qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS  , "attr_BoneWeights"   );
+
+#ifdef __OCEAN__
+	if (attribs & ATTR_OCEAN_POSITION) qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_POSITION, "attr_OceanPosition");
+	if (attribs & ATTR_OCEAN_TEXCOORD) qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_TEXCOORD, "attr_OceanTexCoord");
+#endif //__OCEAN__
+
+#ifdef __INSTANCED_MODELS__
+	if (attribs & ATTR_INSTANCES_MVP) qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
+	if (attribs & ATTR_INSTANCES_POS) qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POS, "attr_InstancesPos");
+#endif //__INSTANCED_MODELS__
+}
+
+bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 {
 	uint32_t attribs = program->attribs;
 
@@ -2104,54 +2131,7 @@ static bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	qglBindFragDataLocation(program->program, 3, "out_Position");
 	qglBindFragDataLocation(program->program, 4, "out_NormalDetail");
 
-	if (attribs & ATTR_POSITION)
-		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
-
-	if (attribs & ATTR_TEXCOORD0)
-		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD0, "attr_TexCoord0");
-
-	if (attribs & ATTR_TEXCOORD1)
-		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1, "attr_TexCoord1");
-
-	if (attribs & ATTR_NORMAL)
-		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL, "attr_Normal");
-
-	if (attribs & ATTR_COLOR)
-		qglBindAttribLocation(program->program, ATTR_INDEX_COLOR, "attr_Color");
-
-	if (attribs & ATTR_PAINTCOLOR)
-		qglBindAttribLocation(program->program, ATTR_INDEX_PAINTCOLOR, "attr_PaintColor");
-
-	if (attribs & ATTR_LIGHTDIRECTION)
-		qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
-
-	if (attribs & ATTR_POSITION2)
-		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION2, "attr_Position2");
-
-	if (attribs & ATTR_NORMAL2)
-		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2, "attr_Normal2");
-
-	if (attribs & ATTR_BONE_INDEXES)
-		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES, "attr_BoneIndexes");
-
-	if (attribs & ATTR_BONE_WEIGHTS)
-		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS, "attr_BoneWeights");
-
-#ifdef __OCEAN__
-	if (attribs & ATTR_OCEAN_POSITION)
-		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_POSITION, "attr_OceanPosition");
-
-	if (attribs & ATTR_OCEAN_TEXCOORD)
-		qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_TEXCOORD, "attr_OceanTexCoord");
-#endif //__OCEAN__
-
-#ifdef __INSTANCED_MODELS__
-	if (attribs & ATTR_INSTANCES_MVP)
-		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
-
-	if (attribs & ATTR_INSTANCES_POS)
-		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POS, "attr_InstancesPos");
-#endif //__INSTANCED_MODELS__
+	GLSL_BindAttributeLocations(program, attribs);
 
 	GLSL_LinkProgram(program->program);
 
@@ -2299,15 +2279,14 @@ void GLSL_PrintShaderOptimizationStats(char *shaderName, glslopt_shader *shader)
 }
 #endif //__GLSL_OPTIMIZER__
 
+int shaders_next_id;
+shaderProgram_t *shaders[256];
+
 int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	int attribs, qboolean fragmentShader, qboolean tesselation, qboolean geometry, const GLcharARB *extra, qboolean addHeader,
 	char *forceVersion, const char *fallback_vp, const char *fallback_fp, const char *fallback_cp, const char *fallback_ep, const char *fallback_gs)
 {
-#ifdef __GLSL_OPTIMIZER__
-#define MAX_GLSL_LENGTH 170000
-#else //!__GLSL_OPTIMIZER__
-#define MAX_GLSL_LENGTH 32768
-#endif //__GLSL_OPTIMIZER__
+	shaders[shaders_next_id++] = program; // register the shader, so we can access them all later
 
 	char vpCode[MAX_GLSL_LENGTH];
 	char fpCode[MAX_GLSL_LENGTH];
@@ -6094,6 +6073,8 @@ void GLSL_ShutdownGPUShaders(void)
 
 void GLSL_BindProgram(shaderProgram_t * program)
 {
+	if (program)
+		program->usageCount++;
 	if (glState.currentProgram != program)
 	{
 #ifdef __DEBUG_GLSL_BINDS__
