@@ -231,7 +231,9 @@ set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockFiles})
 
 set(MPWarzoneImGuiDockOpenJKFiles
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_shadereditor.cpp"
-	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_shadereditor.h")
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_shadereditor.h"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mapinfo.cpp"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mapinfo.h")
 source_group("imgui_docks_openjk" FILES ${MPWarzoneImGuiDockOpenJKFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockOpenJKFiles})
 

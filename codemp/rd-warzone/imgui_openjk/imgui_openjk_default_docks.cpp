@@ -1,15 +1,19 @@
+#include <stdio.h>
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_dock.h"
-#include <stdio.h>
 #include "../imgui_docks/dock.h"
-#include "../imgui_openjk/imgui_openjk_default_docks.h"
+#include "imgui_openjk_default_docks.h"
+
+// custom docks
 #include "../imgui_docks_openjk/dock_shadereditor.h"
+#include "../imgui_docks_openjk/dock_mapinfo.h"
 
 #include <list>
 std::list<Dock *> imgui_quake_docks;
 CCALL int imgui_openjk_default_docks() {
 	if (imgui_quake_docks.size() == 0) {
 		imgui_quake_docks.push_back(new DockShaders());
+		imgui_quake_docks.push_back(new DockMapInfo());
 		//imgui_quake_docks.push_back(new DockExplorer());
 		//imgui_quake_docks.push_back(new DockModels());
 		//imgui_quake_docks.push_back(new DockAnims());
