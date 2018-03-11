@@ -3080,7 +3080,10 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 	tr.numCubemaps = numCubemaps;
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
+	tr.cubemapEnabled = (bool *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapEnabled), h_low);
+	tr.cubemapRendered = (bool *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRendered), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+
 	if (r_emissiveCubes->integer)
 		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
 	
@@ -3121,6 +3124,9 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 				tr.cubemapRadius[numCubemaps] = radius;
 			else
 				tr.cubemapRadius[numCubemaps] = 2048.0; //1024.0;
+
+			tr.cubemapEnabled[numCubemaps] = true;
+			tr.cubemapRendered[numCubemaps] = false;
 			numCubemaps++;
 		}
 	}

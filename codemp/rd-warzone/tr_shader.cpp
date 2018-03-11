@@ -5572,14 +5572,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP1].image[0] = splatImg;
 
-				if (r_normalMapping->integer >= 2)
+				/*if (r_normalMapping->integer >= 2)
 				{
 					// Generate normal and height map for it as well...
 					char imgname[64];
 					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP1].image[0]->imgName);
 					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
 					diffuse->bundle[TB_SPLATMAP1].image[1] = splatNormalImg;
-				}
+				}*/
 			}
 			else
 			{
@@ -5631,14 +5631,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP2].image[0] = splatImg;
 
-				if (r_normalMapping->integer >= 2)
+				/*if (r_normalMapping->integer >= 2)
 				{
 					// Generate normal and height map for it as well...
 					char imgname[64];
 					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP2].image[0]->imgName);
 					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
 					diffuse->bundle[TB_SPLATMAP2].image[1] = splatNormalImg;
-				}
+				}*/
 			}
 			else
 			{
@@ -5690,14 +5690,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP3].image[0] = splatImg;
 
-				if (r_normalMapping->integer >= 2)
+				/*if (r_normalMapping->integer >= 2)
 				{
 					// Generate normal and height map for it as well...
 					char imgname[64];
 					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP3].image[0]->imgName);
 					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
 					diffuse->bundle[TB_SPLATMAP3].image[1] = splatNormalImg;
-				}
+				}*/
 			}
 			else
 			{
