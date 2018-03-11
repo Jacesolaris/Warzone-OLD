@@ -96,6 +96,24 @@ extern qboolean WATER_INITIALIZED;
 extern qboolean WATER_FAST_INITIALIZED;
 #endif //__OCEAN__
 
+
+extern float DAY_NIGHT_CYCLE_SPEED;
+extern qboolean SUN_VISIBLE;
+extern vec3_t SUN_POSITION;
+extern vec2_t SUN_SCREEN_POSITION;
+
+
+//#ifdef __DAY_NIGHT__
+extern int DAY_NIGHT_UPDATE_TIME;
+extern float DAY_NIGHT_SUN_DIRECTION;
+extern float DAY_NIGHT_MOON_DIRECTION;
+extern float DAY_NIGHT_CURRENT_TIME;
+extern float DAY_NIGHT_AMBIENT_SCALE;
+extern vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
+extern vec4_t DAY_NIGHT_AMBIENT_COLOR_CURRENT;
+extern float DAY_NIGHT_24H_TIME;
+//#endif
+
 namespace ImGui {
 	// roses are red, qboolean is no bool
 	bool Checkbox(char *label, qboolean *var) {
@@ -123,6 +141,18 @@ void DockMapInfo::imgui() {
 	if (ImGui::CollapsingHeader("Day/Night Cycle")) {
 		ImGui::Checkbox("DAY_NIGHT_CYCLE_ENABLED", &DAY_NIGHT_CYCLE_ENABLED);
 		ImGui::DragFloat("DAY_NIGHT_CYCLE_SPEED", &DAY_NIGHT_CYCLE_SPEED);
+		ImGui::DragInt("DAY_NIGHT_UPDATE_TIME", &DAY_NIGHT_UPDATE_TIME);
+		ImGui::DragFloat("DAY_NIGHT_SUN_DIRECTION", &DAY_NIGHT_SUN_DIRECTION);
+		ImGui::DragFloat("DAY_NIGHT_MOON_DIRECTION", &DAY_NIGHT_MOON_DIRECTION);
+		ImGui::DragFloat("DAY_NIGHT_CURRENT_TIME", &DAY_NIGHT_CURRENT_TIME);
+		ImGui::DragFloat("DAY_NIGHT_AMBIENT_SCALE", &DAY_NIGHT_AMBIENT_SCALE);
+		ImGui::DragFloat4("DAY_NIGHT_AMBIENT_COLOR_ORIGINAL", DAY_NIGHT_AMBIENT_COLOR_ORIGINAL);
+		ImGui::DragFloat4("DAY_NIGHT_AMBIENT_COLOR_CURRENT", DAY_NIGHT_AMBIENT_COLOR_CURRENT);
+		ImGui::DragFloat("DAY_NIGHT_24H_TIME", &DAY_NIGHT_24H_TIME);
+		ImGui::DragFloat("DAY_NIGHT_CYCLE_SPEED", &DAY_NIGHT_CYCLE_SPEED);
+		ImGui::Checkbox("SUN_VISIBLE", &SUN_VISIBLE);
+		ImGui::DragFloat3("SUN_POSITION", SUN_POSITION);
+		ImGui::DragFloat2("SUN_SCREEN_POSITION", SUN_SCREEN_POSITION);
 	}
 
 	if (ImGui::CollapsingHeader("Sun")) {
