@@ -305,7 +305,8 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	float pixelDistance = distance(positionMap.xyz, u_ViewOrigin.xyz);
 
 	//const float scanSpeed = 48.0;// 16.0;// 5.0; // How many pixels to scan by on the 1st rough pass...
-	float scanSpeed = u_Local3.r;
+	//float scanSpeed = u_Local3.r;
+	const float scanSpeed = 16.0;
 
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
