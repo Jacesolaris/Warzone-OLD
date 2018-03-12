@@ -1450,11 +1450,11 @@ std::mutex G2API_lock;
 
 static void SV_G2API_ListModelSurfaces(void *ghlInfo) {
 	if (!re) return; // UQ1: Fix for Warzone not registerring re functions...
-//G2API_lock.lock();
+G2API_lock.lock();
 	{
 		re->G2API_ListSurfaces((CGhoul2Info *)ghlInfo);
 	}
-//G2API_lock.unlock();
+G2API_lock.unlock();
 }
 
 static void SV_G2API_ListModelBones(void *ghlInfo, int frame) {
