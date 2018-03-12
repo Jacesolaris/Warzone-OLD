@@ -212,37 +212,6 @@ void RB_OcclusionCulling(void)
 				return;
 			}
 
-#if 0
-			//tr.viewParms.zFar = 524288.0;
-			tr.viewParms.zFar = RB_GetNextOcclusionRange(tr.occlusionZfar);
-			if (tr.viewParms.zFar <= 0.0)
-			{
-				extern void R_SetFarClip(void);
-				R_SetFarClip();
-			}
-
-			/*vec3_t origBounds[2];
-			VectorCopy(tr.viewParms.visBounds[0], origBounds[0]);
-			VectorCopy(tr.viewParms.visBounds[1], origBounds[1]);
-
-			{
-				tr.viewParms.visBounds[0][0] = -tr.viewParms.zFar;
-				tr.viewParms.visBounds[0][1] = -tr.viewParms.zFar;
-				tr.viewParms.visBounds[0][2] = -tr.viewParms.zFar;
-
-				tr.viewParms.visBounds[1][0] = tr.viewParms.zFar;
-				tr.viewParms.visBounds[1][1] = tr.viewParms.zFar;
-				tr.viewParms.visBounds[1][2] = tr.viewParms.zFar;
-			}*/
-
-			extern void R_SetupProjectionZ(viewParms_t *dest);
-
-			R_SetupProjection(&tr.viewParms, r_zproj->value, tr.viewParms.zFar, qtrue);
-			R_SetupProjectionZ(&tr.viewParms);
-			GL_SetProjectionMatrix(tr.viewParms.projectionMatrix);
-			GL_SetModelviewMatrix(tr.viewParms.world.modelViewMatrix);
-#endif
-
 			nextOcclusionCheck = backEnd.refdef.time + 100; // Max of 100ms between occlusion checks?
 
 			numOcclusionQueries = 0;
