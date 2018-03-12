@@ -8,6 +8,7 @@
 #include "../imgui_docks_openjk/dock_shadereditor.h"
 #include "../imgui_docks_openjk/dock_mapinfo.h"
 #include "../imgui_docks_openjk/dock_postprocess.h"
+#include "../imgui_docks_openjk/dock_perf.h"
 
 #include <list>
 std::list<Dock *> imgui_quake_docks;
@@ -16,6 +17,7 @@ CCALL int imgui_openjk_default_docks() {
 		imgui_quake_docks.push_back(new DockShaders());
 		imgui_quake_docks.push_back(new DockMapInfo());
 		imgui_quake_docks.push_back(new DockPostProcess());
+		imgui_quake_docks.push_back(new DockPerf());
 		//imgui_quake_docks.push_back(new DockExplorer());
 		//imgui_quake_docks.push_back(new DockModels());
 		//imgui_quake_docks.push_back(new DockAnims());

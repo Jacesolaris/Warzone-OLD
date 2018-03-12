@@ -539,6 +539,8 @@ extern cvar_t  *r_fxaa;
 extern cvar_t  *r_fxaaScanMod;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
+extern cvar_t  *r_screenBlurSlow;
+extern cvar_t  *r_screenBlurFast;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_deferredLighting;
 extern cvar_t  *r_ssdm;
