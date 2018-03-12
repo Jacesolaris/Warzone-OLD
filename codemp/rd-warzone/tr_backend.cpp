@@ -2341,9 +2341,6 @@ const void *RB_PostProcess(const void *data)
 
 	GL_SetDefaultState();
 
-	//extern void GUI_Main(void);
-	//GUI_Main();
-
 	tess.numVertexes = tess.numVertexes = 0;
 
 	if (!r_postProcess->integer 
@@ -3146,9 +3143,6 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(srcFbo, srcBox, tr.genericFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
-
-	//extern void GUI_Main(void);
-	//GUI_Main();
 
 	backEnd.framePostProcessed = qtrue;
 

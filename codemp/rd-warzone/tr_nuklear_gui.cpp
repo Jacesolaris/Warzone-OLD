@@ -2000,7 +2000,7 @@ void GUI_Shutdown(void)
 	device_shutdown(&GUI_device);
 }
 
-void GUI_Main(void)
+void NuklearUI_Main(void)
 {
 	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
 	{

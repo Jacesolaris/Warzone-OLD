@@ -61,6 +61,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_mesh.cpp"
 	"${MPDir}/rd-warzone/tr_model.cpp"
 	"${MPDir}/rd-warzone/tr_model_iqm.cpp"
+	"${MPDir}/rd-warzone/tr_nuklear_gui.cpp"
 	"${MPDir}/rd-warzone/tr_occlusion.cpp"
 	"${MPDir}/rd-warzone/tr_ocean.cpp"
 	"${MPDir}/rd-warzone/tr_ocean.h"
@@ -84,7 +85,6 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_WorldEffects.h"
 	"${MPDir}/rd-warzone/VectorUtils3.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.h"
-	"${MPDir}/rd-warzone/warzone_gui.cpp"
 	"${MPDir}/game/ckheap.h"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})
