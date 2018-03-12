@@ -2231,12 +2231,23 @@ PrintCvarMatches
 
 ===============
 */
-static void PrintCvarMatches( const char *s ) {
+static void PrintCvarMatches( const char *s) {
 	char value[TRUNCATE_LENGTH] = {0};
 
 	if ( !Q_stricmpn( s, shortestMatch, (int)strlen( shortestMatch ) ) ) {
 		Com_TruncateLongString( value, Cvar_VariableString( s ) );
-		Com_Printf( S_COLOR_GREY "Cvar " S_COLOR_WHITE "%s = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE "\n", s, value );
+
+		extern cvar_t *Cvar_FindVarExtern(const char *var_name);
+		cvar_t *v = Cvar_FindVarExtern(s);
+		
+		if (v->displayInfoSet && v->description && v->description[0])
+		{// UQ1: Add description, if it exists for this cvar...
+			Com_Printf(S_COLOR_GREY "Cvar " S_COLOR_WHITE "%s = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE " - ^3%s^7\n", s, value, v->description);
+		}
+		else
+		{
+			Com_Printf(S_COLOR_GREY "Cvar " S_COLOR_WHITE "%s = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE "\n", s, value);
+		}
 	}
 }
 

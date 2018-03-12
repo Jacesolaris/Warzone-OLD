@@ -1,4 +1,4 @@
-#if defined(rd_warzone_x86_EXPORTS) || defined(DEDICATED) || defined(jampgamex86_EXPORTS) || defined(cgamex86_EXPORTS) || defined(uix86_EXPORTS)
+//#if defined(rd_warzone_x86_EXPORTS) || defined(DEDICATED) || defined(jampgamex86_EXPORTS) || defined(cgamex86_EXPORTS) || defined(uix86_EXPORTS)
 
 
 //#define __INI_DEBUG__
@@ -469,4 +469,4 @@ void IniWrite(char *aFilespec, char *aSection, char *aKey, char *aValue)
 {
 	IniWriteCPP(aFilespec, aSection, aKey, aValue);
 }
-#endif //defined(rd_warzone_x86_EXPORTS) || defined(DEDICATED) || defined(jampgamex86_EXPORTS) || defined(cgamex86_EXPORTS) || defined(uix86_EXPORTS)
+//#endif //defined(rd_warzone_x86_EXPORTS) || defined(DEDICATED) || defined(jampgamex86_EXPORTS) || defined(cgamex86_EXPORTS) || defined(uix86_EXPORTS)

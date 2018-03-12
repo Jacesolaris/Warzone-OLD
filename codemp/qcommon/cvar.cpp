@@ -92,6 +92,11 @@ static cvar_t *Cvar_FindVar( const char *var_name ) {
 	return NULL;
 }
 
+cvar_t *Cvar_FindVarExtern(const char *var_name)
+{
+	return Cvar_FindVar(var_name);
+}
+
 /*
 ============
 Cvar_VariableValue
@@ -290,6 +295,26 @@ static const char *Cvar_Validate( cvar_t *var, const char *value, qboolean warn 
 		return value;
 }
 
+void Cvar_Check_DisplayameAndDescription(cvar_t *cvar)
+{// Load cvar displayName and Descriptions from an cvarInfo.ini file, for display on UI and in cvar prints...
+	if (FS_Initialized() && !cvar->displayInfoSet)
+	{// Wait until the FS is initialized, and we use the cvar, before grabbing the info for it...
+		// Default this one to the cvar name. We can then see them in the UI when missing and fix...
+		strcpy(cvar->displayName, IniRead("cvarInfo.ini", "DISPLAY_NAME", cvar->name, cvar->name));
+
+		// Defaults to nothing, if no description (tooltip) is found...
+		strcpy(cvar->description, IniRead("cvarInfo.ini", "DESCRIPTION", cvar->name, ""));
+
+		cvar->displayInfoSet = qtrue;
+
+		/*if (cvar->displayName[0] != 0 || cvar->description[0] != 0)
+		{
+			Com_Printf("Display Name: %s.\n", cvar->displayName);
+			Com_Printf("Description: %s.\n", cvar->description);
+		}*/
+	}
+}
+
 /*
 ============
 Cvar_Get
@@ -392,6 +417,8 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, uint32_t flags ) 
 		// SERVERINFO get sent to clients
 		cvar_modifiedFlags |= flags;
 
+		Cvar_Check_DisplayameAndDescription(var);
+
 		return var;
 	}
 
@@ -450,6 +477,8 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, uint32_t flags ) 
 	var->hashPrev = NULL;
 	hashTable[hash] = var;
 
+	Cvar_Check_DisplayameAndDescription(var);
+
 	return var;
 }
 
@@ -461,6 +490,8 @@ Prints the value, default, and latched string of the given variable
 ============
 */
 void Cvar_Print( cvar_t *v ) {
+	Cvar_Check_DisplayameAndDescription(v);
+
 	Com_Printf( S_COLOR_GREY "Cvar " S_COLOR_WHITE "%s = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE, v->name, v->string );
 
 	if ( !(v->flags & CVAR_ROM) ) {
@@ -468,6 +499,11 @@ void Cvar_Print( cvar_t *v ) {
 			Com_Printf( ", " S_COLOR_WHITE "the default" );
 		else
 			Com_Printf( ", " S_COLOR_WHITE "default = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE, v->resetString );
+	}
+
+	if (v->displayInfoSet && v->description && v->description[0])
+	{// UQ1: Add description, if it exists for this cvar...
+		Com_Printf(S_COLOR_GREY " - ^3%s^7", v->description);
 	}
 
 	Com_Printf( "\n" );
@@ -504,6 +540,8 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, uint32_t defaultFlag
 		// create it
 		return Cvar_Get( var_name, value, defaultFlags );
 	}
+
+	Cvar_Check_DisplayameAndDescription(var);
 
 	if (!value ) {
 		value = var->resetString;
@@ -1105,8 +1143,15 @@ void Cvar_ListModified_f( void ) {
 
 		Com_Printf( S_COLOR_GREY "Cvar "
 			S_COLOR_WHITE "%s = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE ", "
-			S_COLOR_WHITE "default = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE "\n",
+			S_COLOR_WHITE "default = " S_COLOR_GREY "\"" S_COLOR_WHITE "%s" S_COLOR_GREY "\"" S_COLOR_WHITE,
 			(*itr)->name, value, (*itr)->resetString );
+
+		if ((*itr)->displayInfoSet && (*itr)->description && (*itr)->description[0])
+		{// UQ1: Add description, if it exists for this cvar...
+			Com_Printf(S_COLOR_GREY " - ^3%s^7", (*itr)->description);
+		}
+
+		Com_Printf("\n");
 	}
 }
 

@@ -43,11 +43,45 @@ void DockPostProcess::UpdateCvars() {
 }
 
 void DockPostProcess::AddCheckBox(int ID) {
-	ImGui::Checkbox(ImGuiCvars[ID]->name, (qboolean *)&ImGuiValue[ID]);
+	if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->displayName && ImGuiCvars[ID]->displayName[0])
+	{
+		ImGui::Checkbox(ImGuiCvars[ID]->displayName, (qboolean *)&ImGuiValue[ID]);
+
+		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+		{
+			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+		}
+	}
+	else
+	{
+		ImGui::Checkbox(ImGuiCvars[ID]->name, (qboolean *)&ImGuiValue[ID]);
+
+		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+		{
+			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+		}
+	}
 }
 
 void DockPostProcess::AddInt(int ID) {
-	ImGui::DragInt(ImGuiCvars[ID]->name, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
+	if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->displayName && ImGuiCvars[ID]->displayName[0])
+	{
+		ImGui::DragInt(ImGuiCvars[ID]->displayName, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
+
+		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+		{
+			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+		}
+	}
+	else
+	{
+		ImGui::DragInt(ImGuiCvars[ID]->name, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
+
+		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+		{
+			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+		}
+	}
 }
 
 void DockPostProcess::UpdateUI() {
