@@ -304,7 +304,6 @@ void Cvar_Check_DisplayameAndDescription(cvar_t *cvar)
 			cvar->displayInfoSet = qtrue;
 			return;
 		}
-
 		// Default this one to the cvar name. We can then see them in the UI when missing and fix...
 		strcpy(cvar->displayName, IniRead("cvarInfo.ini", "DISPLAY_NAME", cvar->name, cvar->name));
 
@@ -320,6 +319,75 @@ void Cvar_Check_DisplayameAndDescription(cvar_t *cvar)
 		}*/
 	}
 }
+
+CvarType CvarTypeFromString(const char *var_value) {
+	// lets deduce the type here... convention so far:
+	// 123 = Int
+	// 123.321 = Float
+	// true/false = Bool
+	// everything else: either String or Any, kinda the same? ATM ignoring Any type
+	if (strcmp(var_value, "true") == 0)
+		return CvarType_Bool;
+	if (strcmp(var_value, "false") == 0)
+		return CvarType_Bool;
+	int n = strlen(var_value);
+	// empty values are just a String
+	if (n == 0)
+		return CvarType_String;
+	// to test if we have a float, we need to check if we have more than one number and exactly one '.'
+	int numberCount = 0;
+	int pointCount = 0;
+	int otherCount = 0; // neither number nor points
+	for (int i=0; i<n; i++) {
+		char c = var_value[i];
+		if (c >= '0' && c <= '9') {
+			numberCount++;
+			continue;
+		}
+		if (c == '.') {
+			pointCount++;
+			continue;
+		}
+		otherCount++;
+	}
+	// cant be float nor int, so just leave it as String
+	if (otherCount || numberCount == 0)
+		return CvarType_String;
+	if (pointCount == 0 && numberCount >= 1)
+		return CvarType_Int;
+	if (pointCount == 1 && numberCount >= 1)
+		return CvarType_Float;
+	// floats got not more than 1 point, so leave it as string...
+	return CvarType_String;
+}
+
+void Cvar_UpdateTypeDataFromString(cvar_t *var, const char *var_value) {
+	CvarType newType = CvarTypeFromString(var_value);
+	CvarType oldType = var->typeinfo;
+	// e.g. when a user enters "set r_sss 1" for convenience/habit, the cvar does not turn into Int, but keeps being a Bool
+	if (oldType == CvarType_Bool && newType == CvarType_Int) {
+		newType = CvarType_Bool;
+	}
+	var->typeinfo = newType;
+	// apply special meaning for true/false strings:
+	if (strcmp(var_value, "true") == 0) {
+		var->value = 1.0;
+		var->integer = 1;
+	}
+	if (strcmp(var_value, "false") == 0) {
+		var->value = 0.0;
+		var->integer = 0;
+	}
+	// var->string might have been overwritten to "0" by "set r_sss 0"
+	if (var->typeinfo == CvarType_Bool) {
+		Cvar_FreeString(var->string);
+		if (var->integer)
+			var->string = CopyString("true");
+		else
+			var->string = CopyString("false");	
+	}
+}
+
 
 /*
 ============
@@ -424,6 +492,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, uint32_t flags ) 
 		cvar_modifiedFlags |= flags;
 
 		Cvar_Check_DisplayameAndDescription(var);
+		Cvar_UpdateTypeDataFromString(var, var_value);
 
 		return var;
 	}
@@ -460,6 +529,8 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, uint32_t flags ) 
 	var->integer = atoi(var->string);
 	var->resetString = CopyString( var_value );
 	var->validate = qfalse;
+	var->dragspeed = 1.0;
+	Cvar_UpdateTypeDataFromString(var, var_value);
 
 	// link the variable in
 	var->next = cvar_vars;
@@ -624,7 +695,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, uint32_t defaultFlag
 	{
 		if (var->latchedString)
 		{
-			Cvar_FreeString (var->latchedString);
+			Cvar_FreeString(var->latchedString);
 			var->latchedString = NULL;
 		}
 	}
@@ -635,12 +706,16 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, uint32_t defaultFlag
 	var->modified = qtrue;
 	var->modificationCount++;
 
-	Cvar_FreeString (var->string);	// free the old value string
+	Cvar_FreeString(var->string);	// free the old value string
+
+	//if (var->typeinfo == CvarType_Bool)
+	//	DebugBreak();
 
 	var->string = CopyString(value);
 	var->value = atof (var->string);
 	var->integer = atoi (var->string);
 
+	Cvar_UpdateTypeDataFromString(var, value);
 	return var;
 }
 
