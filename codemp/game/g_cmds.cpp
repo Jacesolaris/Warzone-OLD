@@ -3448,6 +3448,81 @@ void Cmd_AddBot_f( gentity_t *ent ) {
 	trap->SendServerCommand( ent-g_entities, va( "print \"%s.\n\"", G_GetStringEdString( "MP_SVGAME", "ONLY_ADD_BOTS_AS_SERVER" ) ) );
 }
 
+extern int gWPNum;
+extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
+
+extern void G_VehicleSpawn(gentity_t *self);
+extern int DOM_GetNearestWP(vec3_t org, int badwp);
+
+void Cmd_Vehicle_f(gentity_t *ent) 
+{
+#ifdef __PLAYER_VEHICLES__
+	if (!ent || !ent->client)
+	{
+		return;
+	}
+
+	if (ent->vehicleOwner)
+	{
+		if (Distance(ent->vehicleOwner->r.currentOrigin, ent->r.currentOrigin) > 512)
+		{// Destroy the old vehicle... Spawn another...
+			//extern void NPC_DeadThink(gentity_t *NPC);
+			//ent->vehicleOwner->think = NPC_DeadThink;
+			ent->vehicleOwner->vehicleDie = qtrue;
+			ent->vehicleOwner = NULL;
+			trap->Print("Destroying old vehicle before spawning new one.\n");
+		}
+		else
+		{// Already have a vehicle nearby...
+			trap->Print("You already have a nearby vehicle.\n");
+			return;
+		}
+	}
+
+	gentity_t *self = G_Spawn();
+
+	if (!self) return;
+
+	self->NPC_type = "swoop_mp";
+	self->classname = "NPC_Vehicle";
+	self->wait = 500;
+	self->delay *= 1000;//1 = 1 msec, 1000 = 1 sec
+
+	vec3_t fwd, right, up, origin, angles;
+	AngleVectors(ent->r.currentAngles, fwd, right, up);
+	fwd[ROLL] = 0;
+	VectorMA(ent->r.currentOrigin, 256, fwd, origin);
+	origin[2] += 48;
+
+	int wp = DOM_GetNearestWP(origin, -1);
+
+	if (wp >= 0 && wp < gWPNum)
+	{// Found a waypoint nearby, use that instead of untested origin that we originally got...
+		VectorCopy(gWPArray[wp]->origin, origin);
+		origin[2] += 48;
+	}
+
+	vectoangles(fwd, angles);
+
+	G_SetOrigin(self, origin);
+	G_SetAngles(self, angles);
+
+	/*if (t)
+	{
+		self->s.shouldtarget = qtrue;
+	}*/
+	//FIXME: PRECACHE!!!
+
+	// Set the player vehicle stuff (to unspawn it after a short time of being unused)
+	self->isPlayerVehicle = qtrue;
+	self->vehicleOwner = ent;
+	self->vehicleUsedTime = level.time;
+	ent->vehicleOwner = self;
+
+	G_VehicleSpawn(self);
+#endif //__PLAYER_VEHICLES__
+}
+
 #if 0
 //[Create Dungeon]
 void Cmd_Clear_Dungeon_F(gentity_t *ent){
@@ -3528,10 +3603,10 @@ command_t commands[] = {
 	{ "tell",				Cmd_Tell_f,					0 },
 	{ "thedestroyer",		Cmd_TheDestroyer_f,			CMD_CHEAT|CMD_ALIVE|CMD_NOINTERMISSION },
 	{ "t_use",				Cmd_TargetUse_f,			CMD_CHEAT|CMD_ALIVE },
+	{ "vehicle",			Cmd_Vehicle_f,				CMD_NOINTERMISSION },
 	{ "voice_cmd",			Cmd_VoiceCommand_f,			CMD_NOINTERMISSION },
 	{ "vote",				Cmd_Vote_f,					CMD_NOINTERMISSION },
 	{ "where",				Cmd_Where_f,				CMD_NOINTERMISSION },
-
 };
 
 #if 0

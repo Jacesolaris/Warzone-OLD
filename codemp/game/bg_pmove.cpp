@@ -12718,6 +12718,20 @@ void PmoveSingle (pmove_t *pmove) {
 			veh->m_pVehicle->m_vOrientation[PITCH] = pm->ps->viewangles[PITCH];
 		}
 
+#ifdef _GAME
+		gentity_t *gveh = (gentity_t *)pm_entSelf;
+
+		if (gveh->vehicleDie)
+		{// Grrrr! Why wont these fucking things die???
+			gveh->vehicleOwner->vehicleOwner = NULL;
+			veh->m_pVehicle->m_pVehicleInfo->Update(veh->m_pVehicle, &veh->m_pVehicle->m_ucmd);
+			veh->m_pVehicle->m_pVehicleInfo->Animate(veh->m_pVehicle);
+			veh->m_pVehicle->m_pVehicleInfo->StartDeathDelay(veh->m_pVehicle, -1/* -1 causes instant death */);
+			veh->m_pVehicle->m_pVehicleInfo->DeathUpdate(veh->m_pVehicle);
+			return;
+		}
+		else 
+#endif
 		if (!pm->ps->m_iVehicleNum)
 		{ //no one is driving, just update and get out
 #ifdef _GAME

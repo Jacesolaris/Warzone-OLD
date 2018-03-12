@@ -1020,7 +1020,7 @@ static void DeathUpdate( Vehicle_t *pVeh )
 			}
 
 			parent->takedamage = qfalse;//so we don't recursively damage ourselves
-			if ( pVeh->m_pVehicleInfo->explosionRadius > 0 && pVeh->m_pVehicleInfo->explosionDamage > 0 )
+			if ( pVeh->m_pVehicleInfo->explosionRadius > 0 && pVeh->m_pVehicleInfo->explosionDamage > 0 && !parent->isPlayerVehicle )
 			{
 				VectorCopy( parent->r.mins, lMins );
 				lMins[2] = -4;//to keep it off the ground a *little*
@@ -1172,6 +1172,42 @@ static qboolean Update( Vehicle_t *pVeh, const usercmd_t *pUmcd )
 	//FIXME: pass in ucmd?  Not sure if this is reliable...
 	curTime = pm->cmd.serverTime;
 #endif
+
+#ifdef __PLAYER_VEHICLES__
+	gentity_t  *self = parent;
+
+	if (self->isPlayerVehicle)
+	{
+		extern Vehicle_t *G_IsRidingVehicle(gentity_t *pEnt);
+		if (G_IsRidingVehicle(self->vehicleOwner))
+		{// Update player ride time...
+			self->vehicleUsedTime = level.time;
+
+			if (Distance(self->vehicleOwner->r.currentOrigin, self->r.currentOrigin) > 512)
+			{// Destroy the old vehicle... Spawn another...
+				self->vehicleDie = qtrue;
+				trap->Print("Removing your idle vehicle by distance.\n");
+			}
+		}
+
+		if (!self->vehicleOwner || !self->vehicleOwner->client)
+		{
+			extern qboolean NPC_IsAlive(gentity_t *self, gentity_t *NPC);
+
+			if (!NPC_IsAlive(self->vehicleOwner, self->vehicleOwner))
+			{
+				self->vehicleDie = qtrue;
+				trap->Print("Removing vehicle. You died.\n");
+			}
+
+			if (self->vehicleUsedTime < level.time + 30000)
+			{
+				self->vehicleDie = qtrue;
+				trap->Print("Removing your idle vehicle.\n");
+			}
+		}
+	}
+#endif //__PLAYER_VEHICLES__
 
 	//increment the ammo for all rechargeable weapons
 	for ( i = 0; i < MAX_VEHICLE_WEAPONS; i++ )

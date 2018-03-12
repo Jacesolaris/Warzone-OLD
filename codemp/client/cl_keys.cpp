@@ -1171,6 +1171,16 @@ void CL_InitKeyCommands( void ) {
 	Cmd_SetCommandCompletionFunc( "unbind", Key_CompleteUnbind );
 	Cmd_AddCommand( "unbindall", Key_Unbindall_f );
 	Cmd_AddCommand( "bindlist", Key_Bindlist_f );
+
+	// UQ1: Bind v to vehicle and g to grenade... TODO: Move bindings to menus for customization...
+	int b = Key_StringToKeynum("v");
+	Key_SetBinding(b, "");
+	b = Key_StringToKeynum("v");
+	Key_SetBinding(b, "vehicle");
+	b = Key_StringToKeynum("g");
+	Key_SetBinding(b, "grenade");
+	b = Key_StringToKeynum("b");
+	Key_SetBinding(b, "voice_cmd");
 }
 
 /*

@@ -521,6 +521,7 @@ static const char *gcmds[] = {
 	"teamtask",
 	"teamvote",
 	"tell",
+	"vehicle",
 	"voice_cmd",
 	"vote",
 	"where",

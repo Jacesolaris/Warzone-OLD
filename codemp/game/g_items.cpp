@@ -1115,7 +1115,7 @@ void ItemUse_Sentry( gentity_t *ent )
 	SP_PAS( sentry );
 }
 
-extern gentity_t *NPC_SpawnType( gentity_t *ent, char *npc_type, char *targetname, qboolean isVehicle );
+extern gentity_t *NPC_SpawnType( gentity_t *ent, char *npc_type, char *targetname, qboolean isVehicle);
 void ItemUse_Seeker(gentity_t *ent)
 {
 	if ( level.gametype == GT_SIEGE && d_siegeSeekerNPC.integer )

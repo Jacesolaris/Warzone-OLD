@@ -585,6 +585,13 @@ struct gentity_s {
 	CompNavMeshPath		patrol;
 	CompNavMeshPos		navMeshPos;
 #endif //__USE_NAVMESH__
+
+#ifdef __PLAYER_VEHICLES__
+	qboolean		isPlayerVehicle = qfalse;
+	gentity_t		*vehicleOwner = NULL;
+	qboolean		vehicleDie = qfalse;
+	int				vehicleUsedTime = 0;
+#endif //__PLAYER_VEHICLES__
 };
 
 #define DAMAGEREDIRECT_HEAD		1

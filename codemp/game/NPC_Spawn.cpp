@@ -51,7 +51,7 @@ extern void NPC_GalakMech_Init( gentity_t *ent );
 extern void NPC_Protocol_Precache( void );
 extern void Boba_Precache( void );
 extern void NPC_Wampa_Precache( void );
-gentity_t *NPC_SpawnType( gentity_t *ent, char *npc_type, char *targetname, qboolean isVehicle );
+gentity_t *NPC_SpawnType( gentity_t *ent, char *npc_type, char *targetname, qboolean isVehicle);
 
 extern void Rancor_SetBolts( gentity_t *self );
 extern void Wampa_SetBolts( gentity_t *self );
@@ -1670,6 +1670,11 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 		Com_Printf ( S_COLOR_RED"ERROR: NPC G_Spawn failed\n" );
 		return NULL;
 	}
+
+	newent->isPlayerVehicle = ent->isPlayerVehicle;
+	newent->vehicleOwner = ent->vehicleOwner;
+	newent->vehicleUsedTime = ent->vehicleUsedTime;
+	if (ent->vehicleOwner) ent->vehicleOwner->vehicleOwner = newent;
 
 	newent->fullName = ent->fullName;
 

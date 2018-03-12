@@ -610,10 +610,10 @@ void pitch_roll_for_slope( gentity_t *forwhom, vec3_t pass_slope )
 
 /*
 ----------------------------------------
-DeadThink
+NPC_DeadThink
 ----------------------------------------
 */
-static void DeadThink ( gentity_t *NPC )
+void NPC_DeadThink ( gentity_t *NPC )
 {
 	trace_t	trace;
 
@@ -4199,7 +4199,7 @@ void NPC_Think ( gentity_t *self )//, int msec )
 
 		self->health = self->s.health = self->client->ps.stats[STAT_HEALTH] = 0;
 
-		DeadThink(self);
+		NPC_DeadThink(self);
 
 #ifndef __NO_ICARUS__
 		if ( aiEnt->NPC->nextBStateThink <= level.time )
