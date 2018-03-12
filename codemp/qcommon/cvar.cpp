@@ -492,8 +492,6 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, uint32_t flags ) 
 		cvar_modifiedFlags |= flags;
 
 		Cvar_Check_DisplayameAndDescription(var);
-		Cvar_UpdateTypeDataFromString(var, var_value);
-
 		return var;
 	}
 
