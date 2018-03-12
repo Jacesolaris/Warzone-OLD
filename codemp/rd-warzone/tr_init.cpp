@@ -364,6 +364,8 @@ cvar_t  *r_testvalue3;
 cvar_t  *r_esharpening;
 cvar_t  *r_esharpening2;
 cvar_t  *r_multipost;
+cvar_t  *r_screenBlurSlow;
+cvar_t  *r_screenBlurFast;
 cvar_t  *r_hbao;
 cvar_t  *r_colorCorrection;
 cvar_t  *r_deferredLighting;
@@ -1652,6 +1654,8 @@ void R_Register( void )
 	r_fxaaScanMod = ri->Cvar_Get("r_fxaaScanMod", "0.666"/*"2.0"*//*0.75*/, CVAR_ARCHIVE);
 	r_underwater = ri->Cvar_Get( "r_underwater", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
+	r_screenBlurSlow = ri->Cvar_Get( "r_screenBlurSlow", "1", CVAR_ARCHIVE );
+	r_screenBlurFast = ri->Cvar_Get( "r_screenBlurFast", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "0", CVAR_ARCHIVE );
 	r_deferredLighting = ri->Cvar_Get( "r_deferredLighting", "1", CVAR_ARCHIVE );
 	r_ssdm = ri->Cvar_Get("r_ssdm", "1", CVAR_ARCHIVE);

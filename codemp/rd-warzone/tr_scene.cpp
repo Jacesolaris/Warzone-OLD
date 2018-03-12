@@ -633,6 +633,8 @@ extern vec3_t		SUN_COLOR_AMBIENT;
 
 void RE_BeginScene(const refdef_t *fd)
 {
+	DEBUG_StartTimer("RE_BeginScene", qtrue);
+
 	Com_Memcpy(tr.refdef.text, fd->text, sizeof(tr.refdef.text));
 
 	//ri->Printf(PRINT_WARNING, "New scene.\n");
@@ -861,6 +863,8 @@ void RE_BeginScene(const refdef_t *fd)
 		FOLIAGE_DrawGrass();
 	}
 #endif //__RENDERER_GROUND_FOLIAGE__
+
+	DEBUG_EndTimer(qtrue);
 }
 
 void RE_EndScene()
@@ -951,6 +955,8 @@ void RE_RenderScene(const refdef_t *fd) {
 	if (!tr.registered) {
 		return;
 	}
+
+	DEBUG_StartTimer("RE_RenderScene", qtrue);
 
 	GLimp_LogComment("====== RE_RenderScene =====\n");
 
@@ -1225,4 +1231,6 @@ void RE_RenderScene(const refdef_t *fd) {
 	SKIP_CULL_FRAME = qfalse;
 
 	tr.frontEndMsec += ri->Milliseconds() - startTime;
+
+	DEBUG_EndTimer(qtrue);
 }

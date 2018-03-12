@@ -33,6 +33,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_cmds.cpp"
 	"${MPDir}/rd-warzone/tr_curve.cpp"
 	"${MPDir}/rd-warzone/tr_debug.cpp"
+	"${MPDir}/rd-warzone/tr_debug.h"
 	"${MPDir}/rd-warzone/tr_decals.cpp"
 	"${MPDir}/rd-warzone/tr_extensions.cpp"
 	"${MPDir}/rd-warzone/tr_extramath.cpp"
@@ -235,7 +236,10 @@ set(MPWarzoneImGuiDockOpenJKFiles
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mapinfo.cpp"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mapinfo.h"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_postprocess.cpp"
-	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_postprocess.h")
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_postprocess.h"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_perf.cpp"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_perf.h"
+)
 source_group("imgui_docks_openjk" FILES ${MPWarzoneImGuiDockOpenJKFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockOpenJKFiles})
 

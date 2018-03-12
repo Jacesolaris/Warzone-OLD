@@ -2681,13 +2681,11 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-#define CRAZY_SLOW_GAUSSIAN_BLUR //  UQ1: Let's do scope background blur with a fast blur instead...
-#ifdef CRAZY_SLOW_GAUSSIAN_BLUR
-		if (SCREEN_BLUR)
+		if (SCREEN_BLUR && r_screenBlurSlow->integer)
 		{
 			if (!r_lowVram->integer)
 			{
-				DEBUG_StartTimer("Screen Blur", qtrue);
+				DEBUG_StartTimer("Screen Blur Slow", qtrue);
 
 				// Blur some times
 				float	spread = 1.0f;
@@ -2703,18 +2701,17 @@ const void *RB_PostProcess(const void *data)
 				DEBUG_EndTimer(qtrue);
 			}
 		}
-#else //!CRAZY_SLOW_GAUSSIAN_BLUR
-		if (SCREEN_BLUR)
+
+		if (SCREEN_BLUR && r_screenBlurFast->integer)
 		{
 			if (!r_lowVram->integer)
 			{
-				DEBUG_StartTimer("Screen Blur", qtrue);
+				DEBUG_StartTimer("Screen Blur Fast", qtrue);
 				RB_FastBlur(currentFbo, srcBox, currentOutFbo, dstBox);
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 				DEBUG_EndTimer(qtrue);
 			}
 		}
-#endif //CRAZY_SLOW_GAUSSIAN_BLUR
 
 		if (!SCREEN_BLUR && r_hbao->integer)
 		{
@@ -3031,7 +3028,9 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		DEBUG_EndTimer(qtrue);
 
+		DEBUG_StartTimer("RB_OcclusionCulling", qtrue);
 		RB_OcclusionCulling();
+		DEBUG_EndTimer(qtrue);
 
 		//FBO_Bind(srcFbo);
 
@@ -3177,57 +3176,90 @@ void RB_ExecuteRenderCommands( const void *data ) {
 
 		switch ( *(const int *)data ) {
 		case RC_SET_COLOR:
+			DEBUG_StartTimer("RB_SetColor", qtrue);
 			data = RB_SetColor( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_STRETCH_PIC:
+			DEBUG_StartTimer("RB_StretchPic", qtrue);
 			data = RB_StretchPic( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_ROTATE_PIC:
+			DEBUG_StartTimer("RB_RotatePic", qtrue);
 			data = RB_RotatePic( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_ROTATE_PIC2:
+			DEBUG_StartTimer("RB_RotatePic2", qtrue);
 			data = RB_RotatePic2( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_DRAW_SURFS:
+			DEBUG_StartTimer("RB_DrawSurfs", qtrue);
 			data = RB_DrawSurfs( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_DRAW_BUFFER:
+			DEBUG_StartTimer("RB_DrawBuffer", qtrue);
 			data = RB_DrawBuffer( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_SWAP_BUFFERS:
+			DEBUG_StartTimer("RB_SwapBuffers", qtrue);
 			data = RB_SwapBuffers( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_SCREENSHOT:
+			DEBUG_StartTimer("RB_TakeScreenshotCmd", qtrue);
 			data = RB_TakeScreenshotCmd( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_VIDEOFRAME:
+			DEBUG_StartTimer("RB_TakeVideoFrameCmd", qtrue);
 			data = RB_TakeVideoFrameCmd( data );
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_COLORMASK:
+			DEBUG_StartTimer("RB_ColorMask", qtrue);
 			data = RB_ColorMask(data);
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_CLEARDEPTH:
+			DEBUG_StartTimer("RB_ClearDepth", qtrue);
 			data = RB_ClearDepth(data);
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_CAPSHADOWMAP:
+			DEBUG_StartTimer("RB_CapShadowMap", qtrue);
 			data = RB_CapShadowMap(data);
+			DEBUG_EndTimer(qtrue);
 			break;
 #ifdef __JKA_WEATHER__
 		case RC_WORLD_EFFECTS:
+			DEBUG_StartTimer("RB_WorldEffects", qtrue);
 			data = RB_WorldEffects(data);
+			DEBUG_EndTimer(qtrue);
 			break;
 #endif //__JKA_WEATHER__
 		case RC_POSTPROCESS:
+		
+			DEBUG_StartTimer("RB_PostProcess", qtrue);
 			data = RB_PostProcess(data);
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_DRAWAWESOMIUMFRAME:
+			DEBUG_StartTimer("RB_AwesomiumFrame", qtrue);
 			data = RB_AwesomiumFrame(data);
 			break;
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed
-			if(tess.numIndexes)
+			if(tess.numIndexes) {
+				DEBUG_StartTimer("RB_EndSurface", qtrue);
 				RB_EndSurface();
+				DEBUG_EndTimer(qtrue);
+			}
 
 			// stop rendering
 			t2 = ri->Milliseconds ();
