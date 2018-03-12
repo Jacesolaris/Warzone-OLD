@@ -210,7 +210,10 @@ set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiFiles})
 
 set(MPWarzoneImGuiOpenJKFiles
 	"${MPDir}/rd-warzone/imgui_openjk/imgui_openjk_default_docks.h"
-	"${MPDir}/rd-warzone/imgui_openjk/imgui_openjk_default_docks.cpp")
+	"${MPDir}/rd-warzone/imgui_openjk/imgui_openjk_default_docks.cpp"
+	"${MPDir}/rd-warzone/imgui_openjk/gluecode.h"
+	"${MPDir}/rd-warzone/imgui_openjk/gluecode.cpp"
+)
 source_group("imgui_openjk" FILES ${MPWarzoneImGuiOpenJKFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiOpenJKFiles})
 
@@ -239,6 +242,8 @@ set(MPWarzoneImGuiDockOpenJKFiles
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_postprocess.h"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_perf.cpp"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_perf.h"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_controlflow.cpp"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_controlflow.h"
 )
 source_group("imgui_docks_openjk" FILES ${MPWarzoneImGuiDockOpenJKFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockOpenJKFiles})

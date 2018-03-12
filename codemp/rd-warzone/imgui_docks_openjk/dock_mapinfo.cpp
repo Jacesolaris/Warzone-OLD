@@ -1,5 +1,6 @@
 #include "dock_mapinfo.h"
 #include "../imgui_docks/dock_console.h"
+#include "../imgui_openjk/gluecode.h"
 
 DockMapInfo::DockMapInfo() {}
 
@@ -113,16 +114,6 @@ extern vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
 extern vec4_t DAY_NIGHT_AMBIENT_COLOR_CURRENT;
 extern float DAY_NIGHT_24H_TIME;
 //#endif
-
-namespace ImGui {
-	// roses are red, qboolean is no bool
-	bool Checkbox(char *label, qboolean *var) {
-		bool tmp = *var;
-		bool ret = ImGui::Checkbox(label, &tmp);
-		*var = (qboolean) tmp;
-		return ret;
-	}
-}
 
 void DockMapInfo::imgui() {
 	ImGui::Checkbox("DISABLE_DEPTH_PREPASS", &DISABLE_DEPTH_PREPASS);
