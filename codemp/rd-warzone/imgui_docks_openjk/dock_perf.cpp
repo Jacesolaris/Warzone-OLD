@@ -14,16 +14,105 @@ void Cvar_SetInt(cvar_t *cvar, int value) {
 	ri->Cvar_Set(cvar->name, va("%i", value));
 }
 
-void showCvar(char *description, cvar_t *cvar) {
-	bool changed = ImGui::DragInt(description, &cvar->integer);
-	if (changed)
-		Cvar_SetInt(cvar, cvar->integer);
+namespace ImGui {
+	// roses are red, qboolean is no bool
+	extern bool Checkbox(char *label, qboolean *var);
+}
+
+namespace ImGui {
+	bool CvarBool(cvar_t *cvar) {
+		bool changed = false;
+		if (cvar->displayInfoSet && cvar->displayName && cvar->displayName[0]) {
+			changed = ImGui::Checkbox(cvar->displayName, (qboolean *)&cvar->integer);
+			if (cvar->displayInfoSet && cvar->description && cvar->description[0]) {
+				ImGui::SetTooltip(cvar->description);
+			}
+		} else {
+			changed = ImGui::Checkbox(cvar->name, (qboolean *)&cvar->integer);
+			if (cvar->displayInfoSet && cvar->description && cvar->description[0]) {
+				ImGui::SetTooltip(cvar->description);
+			}
+		}
+		if (changed)
+			Cvar_SetInt(cvar, cvar->integer);
+		return changed;
+	}
+	bool CvarInt(cvar_t *cvar) {
+		bool changed = false;
+		if (cvar->displayInfoSet && cvar->displayName && cvar->displayName[0]) {
+			
+			changed = ImGui::DragInt(cvar->name, &cvar->integer, cvar->dragspeed, cvar->min, cvar->max);
+			if (cvar->displayInfoSet && cvar->description && cvar->description[0]) {
+				ImGui::SetTooltip(cvar->description);
+			}
+		} else {
+			changed = ImGui::DragInt(cvar->name, &cvar->integer, cvar->dragspeed, cvar->min, cvar->max);
+			if (cvar->displayInfoSet && cvar->description && cvar->description[0]) {
+				ImGui::SetTooltip(cvar->description);
+			}
+		}
+		if (changed)
+			Cvar_SetInt(cvar, cvar->integer);
+		return changed;
+	}
+
+	bool Cvar(cvar_t *cvar) {
+		bool changed = false;
+		switch (cvar->typeinfo) {
+			case CvarType_Bool:
+				changed = ImGui::CvarBool(cvar);
+				break;
+
+			case CvarType_Int:
+				changed = ImGui::CvarInt(cvar);
+				break;
+
+			default:
+				ImGui::Text("Don't know how to show cvar->typeinfo=%d, please implement it for ImGui::Cvar()", cvar->typeinfo);
+		}
+		return changed;
+	}
+}
+
+void showCvar(char *info, cvar_t *cvar) {
+	ImGui::Text(info);
+	//ImGui::SameLine();
+	ImGui::Cvar(cvar);
 }
 
 void DockPerf::imgui() {
 
-
-
+	//r_shadowBlur->typeinfo = CvarType_Bool;
+	//r_dynamicGlow->typeinfo = CvarType_Bool;
+	////r_bloom, 2);
+	//r_anamorphic->typeinfo = CvarType_Bool;
+	//r_ssdm->typeinfo = CvarType_Bool;
+	////r_ao, 3);
+	////r_cartoon, 3);
+	//r_ssdo->typeinfo = CvarType_Bool;
+	//r_sss->typeinfo = CvarType_Bool;
+	//r_deferredLighting->typeinfo = CvarType_Bool;
+	//r_ssr->typeinfo = CvarType_Bool;
+	//r_sse->typeinfo = CvarType_Bool;
+	//r_magicdetail->typeinfo = CvarType_Bool;
+	//r_hbao->typeinfo = CvarType_Bool;
+	////r_glslWater, 3);
+	//r_fogPost->typeinfo = CvarType_Bool;
+	//r_multipost->typeinfo = CvarType_Bool;
+	////r_dof, 3);
+	//r_lensflare->typeinfo = CvarType_Bool;
+	//r_testshader->typeinfo = CvarType_Bool;
+	//r_colorCorrection->typeinfo = CvarType_Bool;
+	//r_esharpening->typeinfo = CvarType_Bool;
+	//r_esharpening2->typeinfo = CvarType_Bool;
+	//r_darkexpand->typeinfo = CvarType_Bool;
+	////r_distanceBlur, 5);
+	//r_volumeLight->typeinfo = CvarType_Bool;
+	//r_fxaa->typeinfo = CvarType_Bool;
+	//r_showdepth->typeinfo = CvarType_Bool;
+	////r_shownormals, 2);
+	////r_trueAnaglyph, 2);
+	//r_occlusion->typeinfo = CvarType_Bool;
 
 	if (ImGui::CollapsingHeader("void RB_PostProcess() { ... }")) {
 		ImGui::PushItemWidth(100);

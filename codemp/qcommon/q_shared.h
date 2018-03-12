@@ -1249,6 +1249,14 @@ Many variables can be used for cheating purposes, so when cheats is zero,
 #define CVAR_MODIFIED		(0x40000000u)	// Cvar was modified
 #define CVAR_NONEXISTENT	(0x80000000u)	// Cvar doesn't exist.
 
+enum CvarType {
+	CvarType_Any,
+	CvarType_Int,
+	CvarType_Float,
+	CvarType_Bool,
+	CvarType_String
+};
+
 // nothing outside the Cvar_*() functions should modify these fields!
 typedef struct cvar_s {
 	char			*name;
@@ -1268,7 +1276,8 @@ typedef struct cvar_s {
 	qboolean		validate;
 	qboolean		integral;
 	float			min, max;
-
+	CvarType		typeinfo;
+	float			dragspeed;			// used by imgui
 	struct cvar_s	*next, *prev;
 	struct cvar_s	*hashNext, *hashPrev;
 	int				hashIndex;

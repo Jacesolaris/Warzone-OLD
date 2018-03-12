@@ -566,7 +566,9 @@ Ghoul2 Insert End
 	sv.checksumFeed = ( ((int) rand() << 16) ^ rand() ) ^ Com_Milliseconds();
 	FS_Restart( sv.checksumFeed );
 
-	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
+	char tmpMapName[128];
+	snprintf(tmpMapName, sizeof(tmpMapName), "maps/%s.bsp", server);
+	CM_LoadMap( tmpMapName, qfalse, &checksum );
 
 	SV_SendMapChange();
 
