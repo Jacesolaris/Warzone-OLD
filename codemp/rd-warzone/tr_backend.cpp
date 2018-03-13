@@ -3206,9 +3206,10 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_SWAP_BUFFERS:
-			DEBUG_StartTimer("RB_SwapBuffers", qtrue);
+			// dont time this, since imgui itself is rendered in here, which confuses DEBUG_EndTimer a bit too much currently
+			//DEBUG_StartTimer("RB_SwapBuffers", qtrue);
 			data = RB_SwapBuffers( data );
-			DEBUG_EndTimer(qtrue);
+			//DEBUG_EndTimer(qtrue);
 			break;
 		case RC_SCREENSHOT:
 			DEBUG_StartTimer("RB_TakeScreenshotCmd", qtrue);
