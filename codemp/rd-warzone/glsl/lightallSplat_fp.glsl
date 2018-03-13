@@ -1,4 +1,5 @@
 //#define USE_DETAIL_TEXTURES
+#define __HIGH_PASS_SHARPEN__
 
 
 #define SNOW_HEIGHT_STRENGTH		0.25 // Distance above water to start snow...
@@ -283,6 +284,17 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
     return ((texture1.rgb * b1) + (texture2.rgb * b2)) / (b1 + b2);
 }
 
+#if defined(__HIGH_PASS_SHARPEN__)
+vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
+{
+	vec3 blur = textureLod(tex, uv, level).xyz;
+	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
+	col *= ((color - blur)*0.25 + 0.25) * 8.0;
+	col = mix(color, col * color, 1.0);
+	return col;
+}
+#endif //defined(__HIGH_PASS_SHARPEN__)
+
 vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 {
 	vec4 xaxis;
@@ -296,9 +308,15 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 		tScale *= u_textureScale;
 	}
 
-	xaxis = texture( tex, (m_vertPos.yz * tScale * scale));
-	yaxis = texture( tex, (m_vertPos.xz * tScale * scale));
-	zaxis = texture( tex, (m_vertPos.xy * tScale * scale));
+	xaxis = texture(tex, (m_vertPos.yz * tScale * scale));
+	yaxis = texture(tex, (m_vertPos.xz * tScale * scale));
+	zaxis = texture(tex, (m_vertPos.xy * tScale * scale));
+
+#if defined(__HIGH_PASS_SHARPEN__)
+	xaxis.rgb = Enhance(tex, (m_vertPos.yz * tScale * scale), xaxis.rgb, 8.0);
+	yaxis.rgb = Enhance(tex, (m_vertPos.xz * tScale * scale), yaxis.rgb, 8.0);
+	zaxis.rgb = Enhance(tex, (m_vertPos.xy * tScale * scale), zaxis.rgb, 8.0);
+#endif //defined(__HIGH_PASS_SHARPEN__)
 
 	vec4 color = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 

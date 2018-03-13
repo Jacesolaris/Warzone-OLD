@@ -36,7 +36,7 @@ vec4 normalVector(vec3 color) {
 #define normUpper (255.0 / 212.0 )
 	vec3 N = clamp((clamp(normals.rgb - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
 
-	return vec4(vec3(1.0) - (normalize(N) * 0.5 + 0.5), normals.a);
+	return vec4(vec3(1.0) - (normalize(pow(N, vec3(4.0))) * 0.5 + 0.5), 1.0 - normals.a);
 }
 #else //!__FAST_NORMAL_DETAIL__
 vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {

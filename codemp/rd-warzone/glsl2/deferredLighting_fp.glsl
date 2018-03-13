@@ -7,10 +7,15 @@
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __HEIGHTMAP_SHADOWS__
+#define __FAST_LIGHTING__
 
-#ifdef USE_EMISSIVECUBES
-#define __EMISSIVE_IBL__
-#endif //USE_EMISSIVECUBES
+#ifdef USE_CUBEMAPS
+	#define __CUBEMAPS__
+
+	#ifdef USE_EMISSIVECUBES
+		#define __EMISSIVE_IBL__
+	#endif //USE_EMISSIVECUBES
+#endif //USE_CUBEMAPS
 
 #endif //__LQ_MODE__
 
@@ -428,7 +433,7 @@ vec4 normalVector(vec3 color) {
 #define normUpper (255.0 / 212.0 )
 	vec3 N = clamp((clamp(normals.rgb - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
 
-	return vec4(vec3(1.0) - (normalize(N) * 0.5 + 0.5), normals.a);
+	return vec4(vec3(1.0) - (normalize(pow(N, vec3(4.0))) * 0.5 + 0.5), 1.0 - normals.a);
 }
 #else //!__FAST_NORMAL_DETAIL__
 vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
@@ -632,7 +637,7 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
-#if defined(__LQ_MODE__)
+#if defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float getdiffuse(vec3 n, vec3 l, float p) {
 	float ndotl = clamp(dot(n, l), 0.5, 0.9);
 	return pow(ndotl, p);
@@ -642,7 +647,7 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
 	return diffuse;
 }
-#else //!defined(__LQ_MODE__)
+#else //!defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float specTrowbridgeReitz(float HoN, float a, float aP)
 {
 	float a2 = a * a;
@@ -775,7 +780,8 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 
 	return diffuse + spec;
 }
-#endif //defined(__LQ_MODE__)
+#endif //defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
+
 
 /*
 ** Contrast, saturation, brightness
@@ -813,8 +819,8 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 void main(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
-	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
+	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 
 	if (position.a-1.0 == MATERIAL_SKY 
 		|| position.a-1.0 == MATERIAL_SUN 
@@ -857,7 +863,7 @@ void main(void)
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	norm.xyz = DecodeNormal(norm.xy);
 
-	vec3 flatNorm = norm.xyz;
+	vec3 flatNorm = normalize(norm.xyz);
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
 	// If doing screen space reflections on floors, we need to know what are floor pixels...
@@ -990,22 +996,32 @@ void main(void)
 		parallax.z *= -1.0;
 		
 		vec3 reflected = cubeRayDir + parallax;
-
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
+
+		vec3 reflected2 = rayDir + parallax;
+		reflected2 = vec3(-reflected2.y, -reflected2.z, -reflected2.x);
 
 		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
 		{// Mix between night and day colors...
 			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
+			skyColorDay += texture(u_SkyCubeMap, reflected2).rgb;
+			skyColorDay /= 2.0;
 			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
+			skyColorNight += texture(u_SkyCubeMapNight, reflected2).rgb;
+			skyColorNight /= 2.0;
 			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
 		}
 		else if (u_Local6.a >= 1.0)
 		{// Night only colors...
 			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
+			skyColor += texture(u_SkyCubeMapNight, reflected2).rgb;
+			skyColor /= 2.0;
 		}
 		else
 		{// Day only colors...
 			skyColor = texture(u_SkyCubeMap, reflected).rgb;
+			skyColor += texture(u_SkyCubeMap, reflected2).rgb;
+			skyColor /= 2.0;
 		}
 
 		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.7), 0.0, 1.0);
@@ -1030,11 +1046,11 @@ void main(void)
 		}
 
 #ifndef __LQ_MODE__
-		//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
-		vec3 cubeLightColor = vec3(0.0);
-
 		if (u_Local7.r > 0.0)
 		{// Cubemaps enabled...
+#if defined(__CUBEMAPS__) || defined(__EMISSIVE_IBL__)
+			//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
+			vec3 cubeLightColor = vec3(0.0);
 			float cubeFade = 0.0;
 			
 			// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
@@ -1053,10 +1069,13 @@ void main(void)
 			if (u_Local9.r > 0.0)
 			{// Also grab emissive cube lighting color...
 				emissiveCubeLightColor = texture(u_EmissiveCubeMap, cubeRayDir/*rayDir*/ + parallax).rgb;
+				emissiveCubeLightColor += texture(u_EmissiveCubeMap, rayDir + parallax).rgb;
+				emissiveCubeLightColor /= 2.0;
 				emissiveCubeLightDirection = rayDir + parallax;
 			}
 #endif //__EMISSIVE_IBL__
 		
+#ifdef __CUBEMAPS__
 			if (reflectionPower > 0.0)
 			{
 				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
@@ -1068,10 +1087,19 @@ void main(void)
 
 				if (cubeFade > 0.0)
 				{
-					cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+					//cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+					cubeLightColor = texture(u_CubeMap, cubeRayDir/*rayDir*/ + parallax).rgb;
+					cubeLightColor += texture(u_CubeMap, rayDir + parallax).rgb;
+					cubeLightColor /= 2.0;
+
+					cubeLightColor = clamp(ContrastSaturationBrightness(cubeLightColor, 3.0, 4.0, 0.3), 0.0, 1.0);
+					cubeLightColor = clamp(Vibrancy(cubeLightColor, 0.4), 0.0, 1.0);
+
 					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, reflectVectorPower * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor);
 				}
 			}
+#endif //__CUBEMAPS__
+#endif //defined(__CUBEMAPS__) || defined(__EMISSIVE_IBL__)
 		}
 #endif //!__LQ_MODE__
 	}
@@ -1096,12 +1124,13 @@ void main(void)
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(reflectionPower, 2.0) * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
 #endif //__LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor, 0.0, 1.0));
+		//outColor.rgb = skyColor;
 	}
 
 
 	if (u_Local1.r > 0.0)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...
-		float phongFactor = u_Local1.r * u_Local1.g;
+		float phongFactor = (u_Local1.r * 12.0) * u_Local1.g;
 
 #define LIGHT_COLOR_POWER			4.0
 
@@ -1151,7 +1180,7 @@ void main(void)
 
 		if (u_lightCount > 0.0 && specularReflectivePower > 0.0)
 		{
-			phongFactor = u_Local1.r;
+			phongFactor = u_Local1.r * 12.0;
 
 			if (phongFactor <= 0.0)
 			{// Never allow no phong...
@@ -1220,7 +1249,7 @@ void main(void)
 			//emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
 			//emissiveCubeLightDirection = R + parallax;
 
-			phongFactor = u_Local1.r;
+			phongFactor = u_Local1.r * 12.0;
 
 			if (phongFactor <= 0.0)
 			{// Never allow no phong...

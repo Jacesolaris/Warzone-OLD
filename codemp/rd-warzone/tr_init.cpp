@@ -1529,7 +1529,7 @@ void R_Register( void )
 	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_deluxeMapping = ri->Cvar_Get( "r_deluxeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_parallaxMapping = ri->Cvar_Get( "r_parallaxMapping", "1", CVAR_ARCHIVE );
-	r_cubeMapping = ri->Cvar_Get( "r_cubeMapping", "2", CVAR_ARCHIVE | CVAR_LATCH );
+	r_cubeMapping = ri->Cvar_Get( "r_cubeMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubeMapSize = ri->Cvar_Get( "r_cubeMapSize", "64", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubemapCullRange = ri->Cvar_Get("r_cubemapCullRange", "384.0", CVAR_ARCHIVE);
 	r_cubemapStrength = ri->Cvar_Get("r_cubemapStrength", "1.25", CVAR_ARCHIVE);

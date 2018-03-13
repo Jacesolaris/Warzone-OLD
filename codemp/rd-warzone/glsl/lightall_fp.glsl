@@ -1,4 +1,5 @@
-//#define UI_BLOOM
+//#define __UI_BLOOM__
+#define __HIGH_PASS_SHARPEN__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 #define SCREEN_MAPS_LEAFS_THRESHOLD 0.001
@@ -196,6 +197,17 @@ float getdiffuseLight(vec3 n, vec3 l, float p) {
 	return pow(ndotl, p);
 }
 
+#if defined(__HIGH_PASS_SHARPEN__)
+vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
+{
+	vec3 blur = textureLod(tex, uv, level).xyz;
+	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
+	col *= ((color - blur)*0.25 + 0.25) * 8.0;
+	col = mix(color, col * color, 1.0);
+	return col;
+}
+#endif //defined(__HIGH_PASS_SHARPEN__)
+
 void main()
 {
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
@@ -210,8 +222,18 @@ void main()
 
 	vec4 diffuse = texture(u_DiffuseMap, texCoords);
 
+#if defined(__HIGH_PASS_SHARPEN__)
+	if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
+	{
+		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 16.0);
+	}
+	else
+	{
+		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0);
+	}
+#endif //defined(__HIGH_PASS_SHARPEN__)
 
-#ifdef UI_BLOOM
+#ifdef __UI_BLOOM__
 	if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
 	{// Bloom on 2D objects...
 		vec4 origDiffuse = diffuse;
@@ -247,7 +269,7 @@ void main()
 		diffuse /= numBloomPixels;
 		diffuse = mix(origDiffuse, diffuse, 0.5);
 	}
-#endif
+#endif //__UI_BLOOM__
 
 
 	// Set alpha early so that we can cull early...
