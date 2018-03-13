@@ -24,6 +24,103 @@ char *modeltype2string(modtype_t type) {
 	return "Unknown modtype_t";
 }
 
+void imgui_mdxm_list_surfhierarchy(mdxmHeader_t *header) {
+	mdxmSurfHierarchy_t *mdxmSurfHierarchy = (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy);
+	mdxmSurfHierarchy_t *iterator = mdxmSurfHierarchy;
+ 	for (int i=0 ; i<header->numSurfaces; i++) {
+		/*
+			char		name[MAX_QPATH];
+			unsigned int flags;
+			char		shader[MAX_QPATH];
+			int			shaderIndex;		// for in-game use (carcass defaults to 0)
+			int			parentIndex;		// this points to the index in the file of the parent surface. -1 if null/root
+			int			numChildren;		// number of surfaces which are children of this one
+			int			childIndexes[1];	// [mdxmSurfHierarch_t->numChildren] (variable sized)		
+		*/
+		char tmp[512];
+		snprintf(tmp, sizeof(tmp), "mdxmSurfHierarchy[%d] name=%s flags=%d shader=%s shaderIndex=%d parentIndex=%d numChildren=%d childIndexes[0]=%d",
+			i,
+			iterator->name,
+			iterator->flags,
+			iterator->shader,
+			iterator->shaderIndex,
+			iterator->parentIndex,
+			iterator->numChildren,
+			iterator->childIndexes[0]
+		);
+		if (ImGui::CollapsingHeader(tmp)) {
+		}
+		iterator = (mdxmSurfHierarchy_t *)( (byte *)iterator + (intptr_t)( &((mdxmSurfHierarchy_t *)0)->childIndexes[ iterator->numChildren ] ));
+	}
+}
+
+
+const char *surfacetypeToString(surfaceType_t t) {
+	switch (t) {
+		case SF_BAD:			return "SF_BAD";
+		case SF_SKIP:			return "SF_SKIP";
+		case SF_FACE:			return "SF_FACE";
+		case SF_GRID:			return "SF_GRID";
+		case SF_TRIANGLES:		return "SF_TRIANGLES";
+		case SF_POLY:			return "SF_POLY";
+		case SF_MDV:			return "SF_MDV";
+		case SF_MDR:			return "SF_MDR";
+		case SF_IQM:			return "SF_IQM";
+		case SF_MDX:			return "SF_MDX";
+		case SF_FLARE:			return "SF_FLARE";
+		case SF_ENTITY:			return "SF_ENTITY";
+		case SF_DISPLAY_LIST:	return "SF_DISPLAY_LIST";
+		case SF_VBO_MESH:		return "SF_VBO_MESH";
+		case SF_VBO_MDVMESH:	return "SF_VBO_MDVMESH";
+	}
+	return "missing surfacetype";
+}
+
+void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
+
+	ImGui::Text("surf=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
+		surf,
+		surfacetypeToString((surfaceType_t)surf->ident),
+		surf->numVerts,
+		surf->numTriangles,
+		surf->numBoneReferences
+	);
+
+	ImGui::PushID(surf);
+	if (ImGui::CollapsingHeader("numBoneReferences")) {
+		
+		int *boneRef = (int *) ( (byte *)surf + surf->ofsBoneReferences);
+		for (int j=0 ; j<surf->numBoneReferences; j++) {
+			char tmpName[128];
+			snprintf(tmpName, sizeof(tmpName), "boneReference[%d]", j);
+			ImGui::DragInt(tmpName, boneRef + j); // todo: max bone limit
+			if (boneRef[j] < 0)
+				boneRef[j] = 0;
+			if (boneRef[j] >= header->numBones)
+				boneRef[j] = header->numBones - 1;
+		}
+	}
+	ImGui::PopID();
+}
+
+void imgui_mdxm_list_lods(mdxmHeader_t *header) {
+	mdxmSurfHierarchy_t *mdxmSurfHierarchy = (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy);
+	mdxmSurfHierarchy_t *iterator = mdxmSurfHierarchy;
+	mdxmLOD_t *lod = (mdxmLOD_t *) ( (byte *)header + header->ofsLODs );
+	for (int l=0; l<header->numLODs; l++) {
+		char tmp[512];
+		snprintf(tmp, sizeof(tmp), "mdxmLOD_t[%d] ofsEnd=%d", l, lod->ofsEnd );
+		if (ImGui::CollapsingHeader(tmp)) {
+			mdxmSurface_t *surf = (mdxmSurface_t *) ( (byte *)lod + sizeof (mdxmLOD_t) + (header->numSurfaces * sizeof(mdxmLODSurfOffset_t)) );
+			for (int i=0; i<header->numSurfaces; i++) {
+				imgui_mdxm_surface(header, surf);
+				surf = (mdxmSurface_t *)( (byte *)surf + surf->ofsEnd ); // find the next surface
+			}
+		}
+		lod = (mdxmLOD_t *)( (byte *)lod + lod->ofsEnd ); // find the next LOD
+	}
+}
+
 void imgui_mdxm(model_t *mod) {
 	mdxmData_t *glm = mod->data.glm;
 	mdxmHeader_t *header = glm->header;
@@ -39,35 +136,15 @@ void imgui_mdxm(model_t *mod) {
 	ImGui::Text("ofsSurfHierarchy=%d", header->ofsSurfHierarchy);
 	ImGui::Text("ofsEnd=%d", header->ofsEnd);
 
-	mdxmSurfHierarchy_t *surfInfo = (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy);
-	mdxmSurfHierarchy_t *iterator = surfInfo;
- 	for (int i=0 ; i<header->numSurfaces; i++) {
-		/*
-			char		name[MAX_QPATH];
-			unsigned int flags;
-			char		shader[MAX_QPATH];
-			int			shaderIndex;		// for in-game use (carcass defaults to 0)
-			int			parentIndex;		// this points to the index in the file of the parent surface. -1 if null/root
-			int			numChildren;		// number of surfaces which are children of this one
-			int			childIndexes[1];	// [mdxmSurfHierarch_t->numChildren] (variable sized)		
-		*/
-		char tmp[512];
-		snprintf(tmp, sizeof(tmp), "name=%s flags=%d shader=%s shaderIndex=%d parentIndex=%d numChildren=%d childIndexes[0]=%d",
-			iterator->name,
-			iterator->flags,
-			iterator->shader,
-			iterator->shaderIndex,
-			iterator->parentIndex,
-			iterator->numChildren,
-			iterator->childIndexes[0]
-		);
-		if (ImGui::CollapsingHeader(tmp)) {
-
-		}
-
-		break; // fix getting next surface pointer, seen somewhere example code, too tired now lol
-		iterator++; 
+	
+	if (ImGui::CollapsingHeader("mdxmSurfHierarchy_t")) {
+		imgui_mdxm_list_surfhierarchy(header);
 	}
+	if (ImGui::CollapsingHeader("lods")) {
+		imgui_mdxm_list_lods(header);
+	}
+
+
 }
 
 void DockModels::imgui() {
