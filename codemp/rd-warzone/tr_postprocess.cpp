@@ -2451,7 +2451,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		//VectorScale4(cubeMapVec, 1.0f / cubeMapRadius/*1000.0f*/, cubeMapVec);
 		GLSL_SetUniformVec4(&tr.deferredLightingShader, UNIFORM_CUBEMAPINFO, cubeMapVec);
 
-		
+#ifdef __EMISSIVE_CUBE_IBL__
 		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_EMISSIVECUBE, TB_EMISSIVECUBE);
 		if (r_emissiveCubes->integer && tr.emissivemaps[cubeMapNum])
 		{
@@ -2459,7 +2459,10 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			GL_BindToTMU(tr.emissivemaps[cubeMapNum], TB_EMISSIVECUBE);
 		}
 		else
+		{
 			GL_BindToTMU(tr.blackCube, TB_EMISSIVECUBE);
+		}
+#endif //__EMISSIVE_CUBE_IBL__
 	}
 
 	/*for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)

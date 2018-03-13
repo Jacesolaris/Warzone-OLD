@@ -26,7 +26,7 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 
 #define USE_REGIONS					u_Settings3.r
 #define USE_ISDETAIL				u_Settings3.g
-#define USE_DETAIL_COORD			u_Settings3.b
+#define USE_EMISSIVE_BLACK			u_Settings3.b
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, WATER_LEVEL
@@ -140,6 +140,11 @@ void main()
 			colStr = clamp(colStr - 0.1, 0.0, 1.0);
 			gl_FragColor.a = colStr;
 		}
+	}
+
+	if (USE_EMISSIVE_BLACK > 0.0)
+	{
+		gl_FragColor.rgb = vec3(0.0);
 	}
 
 	if (gl_FragColor.a >= 0.99) gl_FragColor.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...

@@ -3084,8 +3084,10 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 	tr.cubemapRendered = (bool *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRendered), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
 
+#ifdef __EMISSIVE_CUBE_IBL__
 	if (r_emissiveCubes->integer)
 		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
+#endif //__EMISSIVE_CUBE_IBL__
 	
 	numCubemaps = 0;
 	while(R_ParseSpawnVars(spawnVarChars, sizeof(spawnVarChars), &numSpawnVars, spawnVars))
@@ -3514,8 +3516,11 @@ static void R_SetupCubemapPoints( void )
 	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
 	tr.cubemapRadius = (float *)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemapRadius), h_low);
 	tr.cubemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+
+#ifdef __EMISSIVE_CUBE_IBL__
 	if (r_emissiveCubes->integer)
 		tr.emissivemaps = (image_t **)ri->Hunk_Alloc(tr.numCubemaps * sizeof(*tr.emissivemaps), h_low);
+#endif //__EMISSIVE_CUBE_IBL__
 
 	numCubemaps = 0;
 
@@ -3543,8 +3548,10 @@ static void R_SetupCubemapPoints( void )
 		tr.cubemapRadius = (float *)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemapRadius), h_low);
 		tr.cubemaps = (image_t **)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.cubemaps), h_low);
 
+#ifdef __EMISSIVE_CUBE_IBL__
 		if (r_emissiveCubes->integer)
 			tr.emissivemaps = (image_t **)ri->Hunk_Alloc(MAX_CUBEMAPS * sizeof(*tr.emissivemaps), h_low);
+#endif //__EMISSIVE_CUBE_IBL__
 
 		tr.cubemapsAllocated = true;
 	}
@@ -3683,6 +3690,7 @@ static void R_RenderAllCubemaps(void)
 
 	byte	*gData = NULL;
 
+#ifdef __EMISSIVE_CUBE_IBL__
 	if (r_emissiveCubes->integer)
 	{
 		if (cubemapFormat == GL_RGBA8)
@@ -3696,6 +3704,7 @@ static void R_RenderAllCubemaps(void)
 			memset(gData, 0, (r_cubeMapSize->integer / vramScaleDiv) * (r_cubeMapSize->integer / vramScaleDiv) * 8 * sizeof(byte));
 		}
 	}
+#endif //__EMISSIVE_CUBE_IBL__
 
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
@@ -3704,10 +3713,12 @@ static void R_RenderAllCubemaps(void)
 
 		tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
 		
+#ifdef __EMISSIVE_CUBE_IBL__
 		if (r_emissiveCubes->integer)
 		{// Create black emissive cube, ready to be rendered over...
 			tr.emissivemaps[i] = R_CreateImage(va("*emissiveMap%d", i), gData, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
 		}
+#endif //__EMISSIVE_CUBE_IBL__
 	}
 
 	for (i = 0; i < tr.numCubemaps; i++)
@@ -3722,6 +3733,7 @@ static void R_RenderAllCubemaps(void)
 			R_IssuePendingRenderCommands();
 			R_InitNextFrame();
 
+#ifdef __EMISSIVE_CUBE_IBL__
 			if (r_emissiveCubes->integer)
 			{
 				RE_ClearScene();
@@ -3729,15 +3741,18 @@ static void R_RenderAllCubemaps(void)
 				R_IssuePendingRenderCommands();
 				R_InitNextFrame();
 			}
+#endif //__EMISSIVE_CUBE_IBL__
 
 			tr.cubemapRendered[i] = true;
 		}
 	}
 
+#ifdef __EMISSIVE_CUBE_IBL__
 	if (r_emissiveCubes->integer)
 	{
 		free(gData);
 	}
+#endif //__EMISSIVE_CUBE_IBL__
 }
 #endif //__REALTIME_CUBEMAP__
 

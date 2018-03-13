@@ -63,6 +63,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __GLOW_LIGHT_PVS__					// Check if lights are in PVS. Probably not worth the FPS it costs...
 //#define __USE_DETAIL_MAPS__					// Enabled detail map system... Disabling for now for more FPS...
 //#define __GEOMETRY_SHADER_ALLOW_INVOCATIONS__ // Enable geometry shader invocations support. Slower because you cant set the invocations max in realtime...
+#define __EMISSIVE_CUBE_IBL__					// Experimental IBL using glowmap cubes...
 
 #define __ZFAR_CULLING_ON_SURFACES__			// Experimental zfar culling separation of depth prepass and render surfaces...
 //#define __ZFAR_CULLING_ON_LEAFS__				// Do zfar culling on leaf bounds, not on per surface origins...
@@ -501,7 +502,9 @@ extern cvar_t	*r_skynum;
 extern cvar_t	*r_volumeLightStrength;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
+#ifdef __EMISSIVE_CUBE_IBL__
 extern cvar_t	*r_emissiveCubes;
+#endif //__EMISSIVE_CUBE_IBL__
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
@@ -3257,7 +3260,9 @@ extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;
 extern cvar_t	*r_grassWaveSize;
 extern cvar_t	*r_multithread;
+#ifdef __EMISSIVE_CUBE_IBL__
 extern cvar_t	*r_emissiveCubes;
+#endif //__EMISSIVE_CUBE_IBL__
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;

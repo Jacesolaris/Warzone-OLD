@@ -3634,6 +3634,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_sunlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
+#ifdef __EMISSIVE_CUBE_IBL__
+	Q_strcat(extradefines, 1024, "#define USE_EMISSIVECUBES\n");
+#endif //__EMISSIVE_CUBE_IBL__
+
 	if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader, "deferredLighting", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load deferredLighting shader!");

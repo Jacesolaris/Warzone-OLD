@@ -7,6 +7,10 @@ uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
 
+
+#define __FAST_NORMAL_DETAIL__
+
+
 vec3 DecodeNormal(in vec2 N)
 {
 	vec2 encoded = N*4.0 - 2.0;
@@ -16,40 +20,25 @@ vec3 DecodeNormal(in vec2 N)
 	return vec3(encoded * g, 1.0 - f * 0.5);
 }
 
-//#define __NORMAL_METHOD_1__
-#define __NORMAL_METHOD_2__
-
-#ifdef __NORMAL_METHOD_1__
-const vec3 LUMA_COEFFICIENT = vec3(0.2126, 0.7152, 0.0722);
-
-float lumaAtCoord(vec2 coord) {
-  vec3 pixel = texture(u_DiffuseMap, coord).rgb;
-  float luma = dot(pixel, LUMA_COEFFICIENT);
-  return luma;
-}
-
-vec4 normalVector(vec2 coord) {
-  float lumaU0 = lumaAtCoord(coord + vec2(-1.0,  0.0) / u_Dimensions);
-  float lumaU1 = lumaAtCoord(coord + vec2( 1.0,  0.0) / u_Dimensions);
-  float lumaV0 = lumaAtCoord(coord + vec2( 0.0, -1.0) / u_Dimensions);
-  float lumaV1 = lumaAtCoord(coord + vec2( 0.0,  1.0) / u_Dimensions);
-
-  vec2 slope = vec2(lumaU0 - lumaU1, lumaV0 - lumaV1) * 0.5 + 0.5;
-
-// Contrast...
-#define normLower ( 128.0/*48.0*/ / 255.0 )
-#define normUpper (255.0 / 192.0/*128.0*/ )
-  slope = clamp((clamp(slope - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
-
-  return vec4(slope, 1.0, length(slope.rg / 2.0));
-}
-#endif //__NORMAL_METHOD_1__
-
-#ifdef __NORMAL_METHOD_2__
 float getHeight(vec2 uv) {
   return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
+#ifdef __FAST_NORMAL_DETAIL__
+vec4 normalVector(vec3 color) {
+	vec4 normals = vec4(color.rgb, length(color.rgb) / 3.0);
+	normals.rgb = vec3(length(normals.r - normals.a), length(normals.g - normals.a), length(normals.b - normals.a));
+
+	// Contrast...
+//#define normLower ( 128.0 / 255.0 )
+//#define normUpper (255.0 / 192.0 )
+#define normLower ( 32.0 / 255.0 )
+#define normUpper (255.0 / 212.0 )
+	vec3 N = clamp((clamp(normals.rgb - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
+
+	return vec4(vec3(1.0) - (normalize(N) * 0.5 + 0.5), normals.a);
+}
+#else //!__FAST_NORMAL_DETAIL__
 vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
   vec2 step = 1. / resolution;
     
@@ -73,7 +62,8 @@ vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
 vec4 normalVector(vec2 coord) {
 	return bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
 }
-#endif //__NORMAL_METHOD_2__
+#endif //__FAST_NORMAL_DETAIL__
+
 
 vec3 TangentFromNormal ( vec3 normal )
 {
@@ -107,7 +97,12 @@ void main(void)
 
 		if (normalDetail.a < 1.0)
 		{// Don't have real normalmap, make normals for this pixel...
+#ifdef __FAST_NORMAL_DETAIL__
+			vec3 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
+			normalDetail = normalVector(color);
+#else //!__FAST_NORMAL_DETAIL__
 			normalDetail = normalVector(var_TexCoords);
+#endif //__FAST_NORMAL_DETAIL__
 		}
 
 		normalDetail.rgb = normalize(clamp(normalDetail.rgb, 0.0, 1.0) * 2.0 - 1.0);

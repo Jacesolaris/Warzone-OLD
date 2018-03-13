@@ -2982,6 +2982,7 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 	}
 }
 
+#ifdef __EMISSIVE_CUBE_IBL__
 void R_RenderEmissiveMapSide(int cubemapIndex, int cubemapSide, qboolean subscene)
 {
 	refdef_t refdef;
@@ -3093,6 +3094,7 @@ void R_RenderEmissiveMapSide(int cubemapIndex, int cubemapSide, qboolean subscen
 		RE_EndScene();
 	}
 }
+#endif //__EMISSIVE_CUBE_IBL__
 #endif //__REALTIME_CUBEMAP__
 
 #ifdef __REALTIME_CUBEMAP__

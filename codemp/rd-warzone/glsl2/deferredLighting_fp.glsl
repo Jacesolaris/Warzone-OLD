@@ -1,12 +1,16 @@
 ﻿#ifndef __LQ_MODE__
 
+#define __FAST_NORMAL_DETAIL__
 #define __AMBIENT_OCCLUSION__
 #define __ENHANCED_AO__
 //#define __ENVMAP__
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __HEIGHTMAP_SHADOWS__
-//#define __EMISSIVE_IBL__
+
+#ifdef USE_EMISSIVECUBES
+#define __EMISSIVE_IBL__
+#endif //USE_EMISSIVECUBES
 
 #endif //__LQ_MODE__
 
@@ -412,6 +416,21 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 }
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
+#ifdef __FAST_NORMAL_DETAIL__
+vec4 normalVector(vec3 color) {
+	vec4 normals = vec4(color.rgb, length(color.rgb) / 3.0);
+	normals.rgb = vec3(length(normals.r - normals.a), length(normals.g - normals.a), length(normals.b - normals.a));
+
+	// Contrast...
+//#define normLower ( 128.0 / 255.0 )
+//#define normUpper (255.0 / 192.0 )
+#define normLower ( 32.0 / 255.0 )
+#define normUpper (255.0 / 212.0 )
+	vec3 N = clamp((clamp(normals.rgb - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
+
+	return vec4(vec3(1.0) - (normalize(N) * 0.5 + 0.5), normals.a);
+}
+#else //!__FAST_NORMAL_DETAIL__
 vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
   vec2 step = 1. / resolution;
     
@@ -439,7 +458,7 @@ vec4 normalVector(vec2 coord) {
 	normals.b = 1.0 - normals.b;
 	return normals;
 }
-
+#endif //__FAST_NORMAL_DETAIL__
 
 #if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
 float drawObject(in vec3 p){
@@ -860,7 +879,11 @@ void main(void)
 
 	if (normalDetail.a < 1.0)
 	{// If we don't have real normalmap, generate fallback normal offsets for this pixel from luminances...
+#ifdef __FAST_NORMAL_DETAIL__
+		normalDetail = normalVector(outColor.rgb);
+#else //!__FAST_NORMAL_DETAIL__
 		normalDetail = normalVector(texCoords);
+#endif //__FAST_NORMAL_DETAIL__
 	}
 
 	// Simply offset the normal value based on the detail value... It looks good enough, but true PBR would probably want to use the tangent/bitangent below instead...
@@ -1009,14 +1032,35 @@ void main(void)
 #ifndef __LQ_MODE__
 		//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
 		vec3 cubeLightColor = vec3(0.0);
-		float curDist = distance(u_ViewOrigin.xyz, position.xyz);
 
 		if (u_Local7.r > 0.0)
 		{// Cubemaps enabled...
+			float cubeFade = 0.0;
+			
+			// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
+			vec4 cubeInfo = u_CubeMapInfo;
+			cubeInfo.xyz -= u_ViewOrigin.xyz;
+
+			cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), 3.0);
+
+			cubeInfo.xyz *= 1.0 / cubeInfo.w;
+			cubeInfo.w = 1.0 / cubeInfo.w;
+
+			vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
+			parallax.z *= -1.0;
+
+#ifdef __EMISSIVE_IBL__
+			if (u_Local9.r > 0.0)
+			{// Also grab emissive cube lighting color...
+				emissiveCubeLightColor = texture(u_EmissiveCubeMap, cubeRayDir/*rayDir*/ + parallax).rgb;
+				emissiveCubeLightDirection = rayDir + parallax;
+			}
+#endif //__EMISSIVE_IBL__
+		
 			if (reflectionPower > 0.0)
 			{
-				float cubeFade = 0.0;
-		
+				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
+
 				if (curDist < u_Local7.g)
 				{
 					cubeFade = clamp((1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * reflectionPower * (u_CubeMapStrength * 20.0), 0.0, 1.0);
@@ -1024,46 +1068,8 @@ void main(void)
 
 				if (cubeFade > 0.0)
 				{
-					// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
-					vec4 cubeInfo = u_CubeMapInfo;
-					cubeInfo.xyz -= u_ViewOrigin.xyz;
-
-					cubeInfo.w = pow(distance(u_ViewOrigin.xyz, u_CubeMapInfo.xyz), 3.0);
-
-					cubeInfo.xyz *= 1.0 / cubeInfo.w;
-					cubeInfo.w = 1.0 / cubeInfo.w;
-					
-					vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
-					parallax.z *= -1.0;
-				
-#if 1
 					cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
-#else
-					cubeLightColor = texture(u_CubeMap, cubeRayDir + parallax).rgb;
-
-					float cPx = 1.0 / u_Local7.b;
-					float blurWeight = 1.0;
-					for (float x = -3.0; x <= 3.0; x += 3.0)
-					{
-						for (float y = -3.0; y <= 3.0; y += 3.0)
-						{
-							float weight = clamp(1.0 - (length(vec2(x,y)) / 6.0), 0.25, 1.0);
-							vec3 blurColor = texture(u_CubeMap, (cubeRayDir + parallax) + (vec3(x,y,0.0) * cPx)).rgb;
-							cubeLightColor += blurColor * weight;
-							blurWeight += weight;
-						}
-					}
-					cubeLightColor.rgb /= blurWeight;
-#endif
 					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, reflectVectorPower * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor);
-
-#ifdef __EMISSIVE_IBL__
-					if (u_Local9.r > 0.0)
-					{// Also grab emissive cube lighting color...
-						emissiveCubeLightColor = texture(u_EmissiveCubeMap, rayDir + parallax).rgb;
-						emissiveCubeLightDirection = rayDir + parallax;
-					}
-#endif //__EMISSIVE_IBL__
 				}
 			}
 		}
@@ -1205,7 +1211,11 @@ void main(void)
 		}
 
 #ifdef __EMISSIVE_IBL__
-		if (u_Local9.r > 0.0 && specularReflectivePower > 0.0)
+		if (u_Local9.r > 0.0 && u_Local3.a == 1.0)
+		{// Debugging...
+			outColor.rgb = emissiveCubeLightColor;
+		}
+		else if (u_Local9.r > 0.0 && specularReflectivePower > 0.0 && length(emissiveCubeLightColor.rgb) > 0.0)
 		{// Also do emissive cube lighting (Emissive IBL)... Experimental crap...
 			//emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
 			//emissiveCubeLightDirection = R + parallax;
@@ -1236,7 +1246,7 @@ void main(void)
 			//f = length(f.rgb) / 3.0;
 
 			// Diffuse...
-			float diffuse = getdiffuse(N, -emissiveCubeLightDirection, 16.0);
+			float diffuse = getdiffuse(N, emissiveCubeLightDirection, u_Local3.b);
 			addedLight += diffuse * emissiveCubeLightColor * specularReflectivePower * u_Local3.r;// 0.01;
 
 			// CryTek's way
@@ -1245,11 +1255,6 @@ void main(void)
 			vec3 spec = (1.0f - f) * saturate(-emissiveCubeLightDirection.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f)) * emissiveCubeLightColor;
 			addedLight += spec * 25.0 * saturate(shininess - 0.05f) * emissiveCubeLightColor * specularReflectivePower * u_Local3.g;// 0.1;
 			outColor.rgb = max(outColor.rgb, addedLight.rgb);
-
-			if (u_Local3.b == 1.0)
-			{
-				outColor.rgb = emissiveCubeLightColor;
-			}
 		}
 #endif //__EMISSIVE_IBL__
 	}

@@ -1843,18 +1843,35 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	int		deformGen;
 	vec5_t	deformParams;
 
+	qboolean useTesselation = qfalse;
+	qboolean isWater = qfalse;
+	qboolean isGrass = qfalse;
+	qboolean isGroundFoliage = qfalse;
+	qboolean isPebbles = qfalse;
+	qboolean isFur = qfalse;
+	qboolean isEmissiveBlack = qfalse;
+
+	float tessInner = 0.0;
+	float tessOuter = 0.0;
+	float tessAlpha = 0.0;
+
+	qboolean IS_DEPTH_PASS = qfalse;
+
 	if ((tess.shader->isIndoor) && (tr.viewParms.flags & VPF_SHADOWPASS))
 	{// Don't draw stuff marked as inside to sun shadow map...
 		return;
 	}
 
+	/*
 	if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
 	{
 		if (!tess.shader->hasGlow) {
 			// Skip...
-			return;
+			//return;
+			isEmissiveBlack = qtrue;
 		}
 	}
+	*/
 
 	ComputeDeformValues(&deformGen, deformParams);
 
@@ -1865,19 +1882,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	//
 	// UQ1: I think we only need to do all these once, not per stage... Waste of FPS!
 	//
-
-	qboolean useTesselation = qfalse;
-	qboolean isWater = qfalse;
-	qboolean isGrass = qfalse;
-	qboolean isGroundFoliage = qfalse;
-	qboolean isPebbles = qfalse;
-	qboolean isFur = qfalse;
-
-	float tessInner = 0.0;
-	float tessOuter = 0.0;
-	float tessAlpha = 0.0;
-
-	qboolean IS_DEPTH_PASS = qfalse;
 
 #if 1
 	if (backEnd.depthFill)
@@ -1961,6 +1965,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
 		qboolean multiPass = qfalse;
 		qboolean lightMapsDisabled = qfalse;
+		qboolean isEmissiveBlackStage = qfalse;
 
 		int passNum = 0, passMax = 0;
 
@@ -1976,9 +1981,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
 		{
-			if (!pStage->glow) {
+			if (!pStage->glow) 
+			{
 				// Skip...
-				continue;
+				//continue;
+				isEmissiveBlackStage = qtrue;
 			}
 		}
 
@@ -2195,7 +2202,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 		}
-		else if (IS_DEPTH_PASS || (tr.viewParms.flags & VPF_CUBEMAP))
+		else if ((IS_DEPTH_PASS || (tr.viewParms.flags & VPF_CUBEMAP))
+			&& !((tr.viewParms.flags & VPF_EMISSIVEMAP) && (pStage->glow || pStage->glowMapped)))
 		{
 			lightMapsDisabled = qtrue;
 
@@ -2624,13 +2632,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
 				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
-				0.0,//tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
+				/*(isEmissiveBlack || isEmissiveBlackStage)*/(backEnd.viewParms.flags & VPF_EMISSIVEMAP) ? 1.0 : 0.0,
 				pStage->glowBlend);
 #else //!__USE_DETAIL_CHECKING__
 			VectorSet4(vec,
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0,
 				0.0,
-				0.0,//tess.shader->detailMapFromTC ? 1.0 : tess.shader->detailMapFromWorld ? 2.0 : 0.0,
+				/*(isEmissiveBlack || isEmissiveBlackStage)*/(backEnd.viewParms.flags & VPF_EMISSIVEMAP) ? 1.0 : 0.0,
 				pStage->glowBlend);
 #endif //__USE_DETAIL_CHECKING__
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
@@ -2766,10 +2774,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (IS_DEPTH_PASS || sp == &tr.depthPassShader)
 		{
-			vec4_t baseColor;
-			vec4_t vertColor;
+			vec4_t baseColor = { 1.0 };
+			vec4_t vertColor = { 1.0 };
 
-			//if (pStage->rgbGen || pStage->alphaGen)
+			if (pStage->rgbGen || pStage->alphaGen)
 			{
 				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
 
@@ -2786,6 +2794,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
 				}
 			}
+
+			/*if (isEmissiveBlack || isEmissiveBlackStage)
+			{// Force black when drawing emissive cubes, and this is not a glow...
+				VectorSet4(baseColor, 0.0, 0.0, 0.0, 1.0);
+				//VectorSet4(vertColor, 0.0, 0.0, 0.0, 1.0);
+
+				pStage->rgbGen = CGEN_CONST;
+			}*/
 
 			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
@@ -2807,10 +2823,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			vec4_t baseColor;
-			vec4_t vertColor;
+			vec4_t baseColor = { 1.0 };
+			vec4_t vertColor = { 1.0 };
 
-			//if (pStage->rgbGen || pStage->alphaGen)
+			if (pStage->rgbGen || pStage->alphaGen)
 			{
 				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
 
@@ -2827,6 +2843,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
 				}
 			}
+
+			/*if (isEmissiveBlack || isEmissiveBlackStage)
+			{// Force black when drawing emissive cubes, and this is not a glow...
+				VectorSet4(baseColor, 0.0, 0.0, 0.0, 1.0);
+				//VectorSet4(vertColor, 0.0, 0.0, 0.0, 1.0);
+
+				pStage->rgbGen = CGEN_CONST;
+			}*/
 
 			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
 			GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);

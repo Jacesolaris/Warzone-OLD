@@ -323,7 +323,9 @@ cvar_t  *r_grassWaveSpeed;
 cvar_t  *r_grassWaveSize;
 cvar_t	*r_fog;
 cvar_t	*r_multithread;
+#ifdef __EMISSIVE_CUBE_IBL__
 cvar_t	*r_emissiveCubes;
+#endif //__EMISSIVE_CUBE_IBL__
 cvar_t	*r_testvar;
 cvar_t	*r_steepParallaxEyeX;
 cvar_t	*r_steepParallaxEyeY;
@@ -1606,7 +1608,9 @@ void R_Register( void )
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
 	r_grassWaveSize = ri->Cvar_Get( "r_grassWaveSize", "0.5", CVAR_ARCHIVE );
 
-	r_emissiveCubes = ri->Cvar_Get("r_emissiveCubes", "0", CVAR_ARCHIVE | CVAR_LATCH); // TODO: FIXME!!!
+#ifdef __EMISSIVE_CUBE_IBL__
+	r_emissiveCubes = ri->Cvar_Get("r_emissiveCubes", "1", CVAR_ARCHIVE | CVAR_LATCH); // TODO: FIXME!!!
+#endif //__EMISSIVE_CUBE_IBL__
 
 	r_fog = ri->Cvar_Get( "r_fog", "0", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
 	r_multithread = ri->Cvar_Get( "r_multithread", "0", CVAR_ARCHIVE );

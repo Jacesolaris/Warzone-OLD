@@ -481,11 +481,22 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 
-		color[0] = 
-		color[1] = 
-		color[2] = backEnd.refdef.colorScale;
-		color[3] = 1.0f;
-		GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, color);
+		if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+		{
+			color[0] =
+			color[1] =
+			color[2] = 0.0;
+			color[3] = 1.0f;
+			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, color);
+		}
+		else
+		{
+			color[0] =
+			color[1] =
+			color[2] = backEnd.refdef.colorScale;
+			color[3] = 1.0f;
+			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, color);
+		}
 
 		color[0] = 
 		color[1] = 
@@ -1194,10 +1205,10 @@ void RB_StageIteratorSky( void ) {
 		return;
 	}
 
-	if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+	/*if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
 	{
 		return;
-	}
+	}*/
 
 	// VOID REMOVE HACK
 	//int clearBits = GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used

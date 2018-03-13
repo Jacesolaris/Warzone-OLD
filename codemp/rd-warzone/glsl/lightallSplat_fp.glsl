@@ -52,7 +52,7 @@ uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEM
 
 #define USE_REGIONS					u_Settings3.r
 #define USE_ISDETAIL				u_Settings3.g
-#define USE_DETAIL_COORD			u_Settings3.b
+#define USE_EMISSIVE_BLACK			u_Settings3.b
 #define USE_GLOW_BLEND_MODE			u_Settings3.a
 
 #define MAP_LIGHTMAP_MULTIPLIER		u_Settings4.r
@@ -710,7 +710,7 @@ void main()
 
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
-	
+
 #if 0 // Shouldn't need this on splatmap draws...
 	if (USE_BLEND > 0.0)
 	{// Emulate RGB blending... Fuck I hate this crap...
@@ -735,6 +735,11 @@ void main()
 #endif
 
 	gl_FragColor.a = clamp(gl_FragColor.a, 0.0, 1.0);
+
+	if (USE_EMISSIVE_BLACK > 0.0 && USE_GLOW_BUFFER <= 0.0)
+	{
+		gl_FragColor.rgb = vec3(0.0);
+	}
 
 	float maxColor = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
 

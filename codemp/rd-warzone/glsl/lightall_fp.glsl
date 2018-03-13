@@ -38,7 +38,7 @@ uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEM
 
 #define USE_REGIONS					u_Settings3.r
 #define USE_ISDETAIL				u_Settings3.g
-#define USE_DETAIL_COORD			u_Settings3.b
+#define USE_EMISSIVE_BLACK			u_Settings3.b
 #define USE_GLOW_BLEND_MODE			u_Settings3.a
 
 #define MAP_LIGHTMAP_MULTIPLIER		u_Settings4.r
@@ -402,6 +402,10 @@ void main()
 
 	if (gl_FragColor.a >= 0.99) gl_FragColor.a = 1.0; // Allow for rounding errors... Don't let them stop pixel culling...
 
+	if (USE_EMISSIVE_BLACK > 0.0 && USE_GLOW_BUFFER <= 0.0)
+	{
+		gl_FragColor.rgb = vec3(0.0);
+	}
 
 	float useDisplacementMapping = 0.0;
 
