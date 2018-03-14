@@ -4307,6 +4307,8 @@ qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &
 }
 #endif //__NIF_IMPORT_TEST__
 
+qboolean model_upload_mdxm_to_gpu(model_t *mod);
+
 qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached ) {
 	int					i,l, j;
 	mdxmHeader_t		*pinmodel, *mdxm;
@@ -4538,11 +4540,22 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		lod = (mdxmLOD_t *)( (byte *)lod + lod->ofsEnd );
 	}
 
-	// Make a copy on the GPU
-	lod = (mdxmLOD_t *)((byte *)mdxm + mdxm->ofsLODs);
+	return model_upload_mdxm_to_gpu(mod);
+}
 
+mdxmHeader_t *model_get_mdxmHeader(model_t *mod) {
+	mdxmData_t *glm = mod->data.glm;
+	return glm->header;
+}
+
+qboolean model_upload_mdxm_to_gpu(model_t *mod) {
+
+	mdxmHeader_t *mdxm = model_get_mdxmHeader(mod);
+
+	// Make a copy on the GPU
+	mdxmLOD_t *lod = (mdxmLOD_t *)((byte *)mdxm + mdxm->ofsLODs);
 	mod->data.glm->vboModels = (mdxmVBOModel_t *)ri->Hunk_Alloc (sizeof (mdxmVBOModel_t) * mdxm->numLODs, h_low);
-	for ( l = 0; l < mdxm->numLODs; l++ )
+	for (int l = 0; l < mdxm->numLODs; l++ )
 	{
 		mdxmVBOModel_t *vboModel = &mod->data.glm->vboModels[l];
 		mdxmVBOMesh_t *vboMeshes;
@@ -4573,7 +4586,7 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		vboModel->vboMeshes = (mdxmVBOMesh_t *)ri->Hunk_Alloc (sizeof (mdxmVBOMesh_t) * mdxm->numSurfaces, h_low);
 		vboMeshes = vboModel->vboMeshes;
 
-		surf = (mdxmSurface_t *)((byte *)lod + sizeof (mdxmLOD_t) + (mdxm->numSurfaces * sizeof (mdxmLODSurfOffset_t)));
+		mdxmSurface_t *surf = (mdxmSurface_t *)((byte *)lod + sizeof (mdxmLOD_t) + (mdxm->numSurfaces * sizeof (mdxmLODSurfOffset_t)));
 
 		// Calculate the required size of the vertex buffer.
 		for ( int n = 0; n < mdxm->numSurfaces; n++ )

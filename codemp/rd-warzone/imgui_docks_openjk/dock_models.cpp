@@ -76,6 +76,37 @@ const char *surfacetypeToString(surfaceType_t t) {
 	return "missing surfacetype";
 }
 
+mdxmVertex_t *mdxm_get_vertices(mdxmSurface_t *surf) {
+	return (mdxmVertex_t *) ((byte *)surf + surf->ofsVerts);
+}
+
+void imgui_mdxm_surface_vertices(mdxmHeader_t *header, mdxmSurface_t *surf) {
+	mdxmVertex_t *vert = mdxm_get_vertices(surf);
+
+	//ImGui::Text("verts=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
+	//	vert->,
+	//	surfacetypeToString((surfaceType_t)surf->ident),
+	//	surf->numVerts,
+	//	surf->numTriangles,
+	//	surf->numBoneReferences
+	//);
+
+	for (int vert_id=0; vert_id<surf->numVerts; vert_id++) {
+		char dragString[128];
+
+		snprintf(dragString, sizeof(dragString), "verts[%i]", vert_id);
+		ImGui::DragFloat3(dragString, vert->vertCoords);
+		vert++;
+	}
+
+
+
+}
+
+qboolean model_upload_mdxm_to_gpu(model_t *mod);
+
+model_t *currentModel = NULL;
+
 void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
 
 	ImGui::Text("surf=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
@@ -87,21 +118,58 @@ void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
 	);
 
 	ImGui::PushID(surf);
-	if (ImGui::CollapsingHeader("numBoneReferences")) {
+
+	
+	char strBoneReferences[128];
+	snprintf(strBoneReferences, sizeof(strBoneReferences), "%d bone references", surf->numBoneReferences);
+	if (ImGui::CollapsingHeader(strBoneReferences)) {
 		
 		int *boneRef = (int *) ( (byte *)surf + surf->ofsBoneReferences);
 		for (int j=0 ; j<surf->numBoneReferences; j++) {
 			char tmpName[128];
 			snprintf(tmpName, sizeof(tmpName), "boneReference[%d]", j);
-			ImGui::DragInt(tmpName, boneRef + j); // todo: max bone limit
+			ImGui::DragInt(tmpName, boneRef + j);
 			if (boneRef[j] < 0)
 				boneRef[j] = 0;
 			if (boneRef[j] >= header->numBones)
 				boneRef[j] = header->numBones - 1;
 		}
 	}
+	
+	if (ImGui::Button("verts *= 2")) {
+		
+		mdxmVertex_t *vert = mdxm_get_vertices(surf);
+		for (int vertex_id=0; vertex_id<surf->numVerts; vertex_id++) {
+			vert->vertCoords[0] *= 2.0;
+			vert->vertCoords[1] *= 2.0;
+			vert->vertCoords[2] *= 2.0;
+			vert++;
+		}
+
+		model_upload_mdxm_to_gpu(currentModel);
+	}
+	if (ImGui::Button("verts /= 2")) {
+		mdxmVertex_t *vert = mdxm_get_vertices(surf);
+		for (int vertex_id=0; vertex_id<surf->numVerts; vertex_id++) {
+			vert->vertCoords[0] /= 2.0;
+			vert->vertCoords[1] /= 2.0;
+			vert->vertCoords[2] /= 2.0;
+			vert++;
+		}
+		model_upload_mdxm_to_gpu(currentModel);
+	
+	}
+
+	char strVerts[128];
+	snprintf(strVerts, sizeof(strVerts), "%d vertices", surf->numVerts);
+	if (ImGui::CollapsingHeader(strVerts)) {
+		imgui_mdxm_surface_vertices(header, surf);
+	}
+
 	ImGui::PopID();
 }
+
+
 
 void imgui_mdxm_list_lods(mdxmHeader_t *header) {
 	mdxmSurfHierarchy_t *mdxmSurfHierarchy = (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy);
@@ -154,7 +222,7 @@ void DockModels::imgui() {
 		char buf[512];
 		sprintf(buf, "model[%d] name=%s type=%s", i, model->name, modeltype2string(model->type));
 		if (ImGui::CollapsingHeader(buf)) {
-			
+			currentModel = model;
 			switch (model->type) {
 				case MOD_MDXM: imgui_mdxm(model); break;
 			}
