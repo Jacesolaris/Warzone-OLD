@@ -8,10 +8,21 @@ uniform vec2        u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec4		u_PrimaryLightOrigin;
 
-uniform vec4		u_Local0;
+uniform vec4		u_Local0; // r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
+uniform vec4		u_Local1;
 
 varying vec2	var_ScreenTex;
 varying vec3	var_Position;
+
+
+#define __USE_DETAIL_NORMALS__ // Not needed. Waste of time...
+
+#ifdef __USE_DETAIL_NORMALS__
+#define __FAST_NORMAL_DETAIL__
+#endif //__USE_DETAIL_NORMALS__
+
+#define NUM_OCCLUSION_CHECKS 16
+
 
 vec3 DecodeNormal(in vec2 N)
 {
@@ -22,6 +33,21 @@ vec3 DecodeNormal(in vec2 N)
 	return vec3(encoded * g, 1.0 - f * 0.5);
 }
 
+#ifdef __FAST_NORMAL_DETAIL__
+vec4 normalVector(vec3 color) {
+	vec4 normals = vec4(color.rgb, length(color.rgb) / 3.0);
+	normals.rgb = vec3(length(normals.r - normals.a), length(normals.g - normals.a), length(normals.b - normals.a));
+
+	// Contrast...
+	//#define normLower ( 128.0 / 255.0 )
+	//#define normUpper (255.0 / 192.0 )
+#define normLower ( 32.0 / 255.0 )
+#define normUpper (255.0 / 212.0 )
+	vec3 N = clamp((clamp(normals.rgb - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
+
+	return vec4(vec3(1.0) - (normalize(pow(N, vec3(4.0))) * 0.5 + 0.5), 1.0 - normals.a);
+}
+#else //!__FAST_NORMAL_DETAIL__
 float getHeight(vec2 uv) {
   return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
@@ -49,6 +75,7 @@ vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
 vec4 normalVector(vec2 coord) {
 	return bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
 }
+#endif //__FAST_NORMAL_DETAIL__
 
 const vec3 unKernel[32] = vec3[]
 (
@@ -100,7 +127,8 @@ float randZeroOne()
 	return fRes;
 }
 
-float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in int numOcclusionChecks, in float resolution, in float strength, in float minDistance, in float maxDisance )
+#if 1
+float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance )
 {
     vec2  uv  = pixel;
     float z   = texture2D( u_ScreenDepthMap, uv ).x;		// read eye linear z
@@ -117,7 +145,7 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in i
 
     // accumulate occlusion
     float bl = 0.0;
-    for( int i=0; i<numOcclusionChecks; i++ )
+    for( int i=0; i<NUM_OCCLUSION_CHECKS; i++ )
     {
 		vec3  of = faceforward( reflect( unKernel[i], ref ), light, normal );
         float sz = texture2D( u_ScreenDepthMap, uv + (res * of.xy)).x;
@@ -144,11 +172,144 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in i
 		}
     }
 
-	//float ao = clamp(bl/float(numOcclusionChecks), 0.0, 1.0);
+	//float ao = clamp(bl/float(NUM_OCCLUSION_CHECKS), 0.0, 1.0);
 	float ao = clamp(bl/float(numOcclusions), 0.0, 1.0);
 	ao = mix(ao, 1.0, z);
     return ao;
 }
+#elif 0
+float ssao(in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance)
+{
+	vec2  uv = pixel;
+	float z = texture2D(u_ScreenDepthMap, uv).x;		// read eye linear z
+
+	if (z >= 1.0)
+	{// Sky...
+		return 1.0;
+	}
+
+	vec2  res = vec2(1.0) / u_Dimensions.xy;
+
+	float bl = 0.0;
+	float numOcclusions = 0.0;
+
+	//for (int x = 1; x <= 64; x += x)
+	int x = 0;
+	{
+		for (int y = 1; y <= u_Dimensions.y; y += y)
+		{
+			vec2 offset = vec2(float(x), float(y));
+			vec2 poff = offset * res;
+			vec2 pweight = vec2(1.0) - (offset / (u_Dimensions.xy*1.2));
+			float weight = 1.0 - (length(pweight) / 2.0);
+
+			float sz = texture2D(u_ScreenDepthMap, uv + poff).x;
+			float zd = (sz - z)*strength*weight;
+			
+			if (length(sz - z) < minDistance)
+			{
+				zd = 0.5*weight;
+				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+				numOcclusions += weight;
+				continue;
+			}
+			else if (length(sz - z) > maxDisance)
+			{
+				zd = 0.0;
+				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+				numOcclusions += weight;
+				continue;
+			}
+			else
+			{
+				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+				numOcclusions += weight;
+			}
+
+			sz = texture2D(u_ScreenDepthMap, uv - poff).x;
+			zd = (sz - z)*strength*weight;
+
+			if (length(sz - z) < minDistance)
+			{
+				zd = 0.5*weight;
+				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+				numOcclusions += weight;
+				continue;
+			}
+			else if (length(sz - z) > maxDisance)
+			{
+				zd = 0.0;
+				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+				numOcclusions += weight;
+				continue;
+			}
+			else
+			{
+				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+				numOcclusions += weight;
+			}
+		}
+	}
+
+	float ao = clamp(bl / float(numOcclusions), 0.0, 1.0);
+	ao = mix(ao, 1.0, z);
+	return ao;
+}
+#else
+float ssao(in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance)
+{
+	vec2  fragCoord = pixel;
+	float originalDepth = texture2D(u_ScreenDepthMap, fragCoord).x;		// read eye linear z
+
+	if (originalDepth >= 1.0)
+	{// Sky...
+		return 1.0;
+	}
+
+	float roll = clamp(pow(length(u_Local1.r), 0.2/*u_Local0.g*/), 0.0, 1.0);
+
+	float scanMult = (1.0 - originalDepth);// *u_Local0.r;
+	scanMult *= 1.0 - roll;
+
+	//const int samples = 20;
+	float occPower = 0.1;// u_Local0.r;
+	float maxAllow = 0.0015;// u_Local0.g; // 0.00007
+	float minAllow = 0.000015;// u_Local0.b;
+	int samples = int(u_Local0.a); //200
+
+	//vec2 dir = -(fragCoord.xy - u_vlightPositions.xy) / float(samples);
+	vec2 dir = (fragCoord.xy - vec2(fragCoord.x, 0.0)) / float(samples);
+
+	float occlusion = 1.0;
+
+	for (int samp = 1; samp <= samples; samp++)
+	{
+		vec2 coord = fragCoord.xy + (dir * samp * scanMult);
+
+		if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0)
+		{
+			continue;
+		}
+
+		float depth = texture(u_ScreenDepthMap, coord).r;
+
+		if (depth <= originalDepth)
+		{// This is between us and the light...
+			float diff = length(depth - originalDepth) + 0.00001;
+
+			if (diff <= maxAllow && diff >= minAllow)
+			{
+				float center = ((minAllow + maxAllow) / 2.0);
+				float dist = 1.0 - (length(diff - center) / center);
+				float thisOcclusion = 1.0 - (pow(diff, occPower) * dist);
+				occlusion = min(occlusion, thisOcclusion);
+			}
+		}
+	}
+
+	return occlusion;
+}
+#endif
 
 void main( void ) 
 {
@@ -166,24 +327,36 @@ void main( void )
 	//norm.z = sqrt(clamp((0.25 - norm.x * norm.x) - norm.y * norm.y, 0.0, 1.0));
 	norm.xyz = DecodeNormal(norm.xy);
 
-	vec4 normalDetail = textureLod(u_OverlayMap, var_ScreenTex, 0.0);
+#ifdef __USE_DETAIL_NORMALS__
+	if (u_Local0.r > 0.0)
+	{// Use detail normals...
+		vec4 normalDetail = textureLod(u_OverlayMap, var_ScreenTex, 0.0);
 
-	if (normalDetail.a < 1.0)
-	{// Don't have real normalmap, make normals for this pixel...
-		normalDetail = normalVector(var_ScreenTex);
+		if (normalDetail.a < 1.0)
+		{// Don't have real normalmap, make normals for this pixel...
+#ifdef __FAST_NORMAL_DETAIL__
+			normalDetail = normalVector(texture(u_DiffuseMap, var_ScreenTex).rgb);
+#else //!__FAST_NORMAL_DETAIL__
+			normalDetail = normalVector(var_ScreenTex);
+#endif //__FAST_NORMAL_DETAIL__
+		}
+
+		//normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
+		//normalDetail.rgb *= 0.25;
+		//norm.rgb = norm.rgb + normalDetail.rgb;
+
+		normalDetail.rgb = normalize(clamp(normalDetail.xyz, 0.0, 1.0) * 2.0 - 1.0);
+		norm.rgb = normalize(mix(norm.xyz, normalDetail.xyz, 0.25 * (length(norm.xyz - normalDetail.xyz) / 3.0)));
 	}
+#endif //__USE_DETAIL_NORMALS__
 
-	normalDetail.rgb = normalize(normalDetail.rgb * 2.0 - 1.0);
-	normalDetail.rgb *= 0.25;
-	norm.rgb = normalize(norm.rgb + normalDetail.rgb);
-
-	vec3 N = norm.xyz;
+	vec3 N = normalize(norm.xyz);
 
 	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
 	float to_light_dist = length(to_light);
 	vec3 to_light_norm = (to_light / to_light_dist);
 
-	float msao = ssao( position.xyz, var_ScreenTex, N.xyz, to_light_norm, 16, 32.0, 64.0, 0.001, 0.01 );
+	float msao = ssao( position.xyz, var_ScreenTex, N.xyz, to_light_norm, 32.0, 64.0, 0.001, 0.01 );
 	float sao = clamp(msao, 0.0, 1.0);
 	gl_FragColor=vec4(sao, 0.0, 0.0, 1.0);
 }

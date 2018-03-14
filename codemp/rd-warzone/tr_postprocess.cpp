@@ -1648,6 +1648,21 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_LOCAL0, local0);
 	}
+	//tr.viewParms.ori.axis
+	//TR_AxisToAngles(backEnd.refdef.viewaxis, backEnd.refdef.viewangles);
+	//TR_AxisToAngles(tr.refdef.viewaxis, tr.refdef.viewangles);
+	//ri->Printf(PRINT_ALL, "be %f. tr %f.\n", backEnd.refdef.viewangles[ROLL], tr.refdef.viewangles[ROLL]);
+	
+	vec3_t mAngles, mCameraForward, mCameraLeft, mCameraDown;
+	TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
+	AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);
+	//ri->Printf(PRINT_ALL, "mCameraForward %f. mCameraDown %f. mAngles %f.\n", mCameraForward[ROLL], mCameraDown[ROLL], mAngles[ROLL]);
+
+	{
+		vec4_t local1;
+		VectorSet4(local1, mCameraForward[ROLL], 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_LOCAL1, local1);
+	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssaoFbo, ldrBox, &tr.ssaoShader, color, 0);
 }

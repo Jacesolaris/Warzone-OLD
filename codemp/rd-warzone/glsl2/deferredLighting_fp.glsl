@@ -1358,7 +1358,7 @@ void main(void)
 	{// Better, HQ AO enabled...
 		float msao = 0.0;
 
-		if (u_Local1.b >= 4.0)
+		/*if (u_Local1.b >= 4.0)
 		{
 			const float width = 2.0;
 			float numSamples = 0.0;
@@ -1392,7 +1392,7 @@ void main(void)
 
 			msao /= numSamples;
 		}
-		else
+		else*/
 		{
 			msao = textureLod(u_SteepMap, texCoords, 0.0).x;
 		}

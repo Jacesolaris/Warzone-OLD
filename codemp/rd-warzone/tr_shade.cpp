@@ -62,6 +62,11 @@ void TesselatedGlDrawElements( int numIndexes, glIndex_t firstIndex, glIndex_t m
 
 void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex, glIndex_t numVerts, qboolean tesselation )
 {
+	if (minIndex == 0 && maxIndex == 0 /*&& numIndexes == 6*/)
+	{// Fix... Something did not set the corrext maxIndex...
+		maxIndex = numIndexes / 2;
+	}
+
 	if (r_tesselation->integer && tesselation)
 	{
 		GLint MaxPatchVertices = 0;
