@@ -8,6 +8,7 @@
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __HEIGHTMAP_SHADOWS__
 #define __FAST_LIGHTING__
+//#define __IRRADIANCE__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -782,6 +783,38 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 }
 #endif //defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 
+#if !defined(__LQ_MODE__) && defined(__IRRADIANCE__)
+vec3 computeIrradiance(vec3 n)
+{
+	// Coefficients for SH 03
+	vec3 l_0_p0 = vec3(0.379727, 0.427857, 0.452654);
+	vec3 l_1_n1 = vec3(0.288207, 0.358230, 0.414330);
+	vec3 l_1_p0 = vec3(0.039812, 0.031627, 0.012003);
+	vec3 l_1_p1 = vec3(-0.103013, -0.102729, -0.087898);
+	vec3 l_2_n2 = vec3(-0.060510, -0.053534, -0.037656);
+	vec3 l_2_n1 = vec3(0.008683, -0.013685, -0.045723);
+	vec3 l_2_p0 = vec3(-0.092757, -0.124872, -0.152495);
+	vec3 l_2_p1 = vec3(-0.059096, -0.052316, -0.038539);
+	vec3 l_2_p2 = vec3(0.022220, -0.002188, -0.042826);
+
+	vec3 irr = vec3(0.0);
+
+	float c1 = 0.429043;
+	float c2 = 0.511664;
+	float c3 = 0.743125;
+	float c4 = 0.886227;
+	float c5 = 0.247708;
+
+	irr += c1 * l_2_p2 * (n.x*n.x - n.y*n.y);
+	irr += c3 * l_2_p0 * (n.z*n.z);
+	irr += c4 * l_0_p0;
+	irr -= c5 * l_2_p0;
+	irr += 2.0 * c1 * (l_2_n2*n.x*n.y + l_2_p1*n.x*n.z + l_2_n1*n.y*n.z);
+	irr += 2.0 * c2 * (l_1_p1*n.x + l_1_n1*n.y + l_1_p0*n.z);
+
+	return vec3(irr);
+}
+#endif //!defined(__LQ_MODE__) && defined(__IRRADIANCE__)
 
 /*
 ** Contrast, saturation, brightness
@@ -979,6 +1012,22 @@ void main(void)
 	vec3 skyColor = vec3(0.0);
 	vec3 emissiveCubeLightColor = vec3(0.0);
 	vec3 emissiveCubeLightDirection = vec3(0.0);
+	vec3 irradiance = vec3(1.0);
+
+#if !defined(__LQ_MODE__) && defined(__IRRADIANCE__)
+	if (u_Local3.r > 0.0)
+	{
+		irradiance = computeIrradiance(N);
+
+		if (u_Local3.r >= 2.0)
+		{
+			outColor.rgb = vec3(irradiance);
+			outColor.a = 1.0;
+			gl_FragColor = outColor;
+			return;
+		}
+	}
+#endif //!defined(__LQ_MODE__) && defined(__IRRADIANCE__)
 
 #ifndef __LQ_MODE__
 	if (u_Local7.a > 0.0)
@@ -1173,7 +1222,7 @@ void main(void)
 					lightColor = Vibrancy( lightColor, clamp(vib * 4.0, 0.0, 1.0) );
 				}
 
-				lightColor.rgb *= lightsReflectionFactor * phongFactor;
+				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance;
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
@@ -1220,7 +1269,7 @@ void main(void)
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 				
-					lightColor = lightColor * power;// * maxStr;
+					lightColor = lightColor * power * irradiance;// * maxStr;
 
 					addedLight.rgb += lightColor * lightStrength * 0.333;
 
