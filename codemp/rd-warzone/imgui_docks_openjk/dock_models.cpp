@@ -24,10 +24,37 @@ char *modeltype2string(modtype_t type) {
 	return "Unknown modtype_t";
 }
 
+inline mdxmVertex_t *firstVertex(mdxmSurface_t *surf) {
+	return (mdxmVertex_t *) ((byte *)surf + surf->ofsVerts);
+}
+
+inline mdxmSurface_t *firstSurface(mdxmHeader_t *header, mdxmLOD_t *lod) {
+	return (mdxmSurface_t *) ( (byte *)lod + sizeof (mdxmLOD_t) + (header->numSurfaces * sizeof(mdxmLODSurfOffset_t)) );
+}
+
+inline mdxmLOD_t *firstLod(mdxmHeader_t *header) {
+	return (mdxmLOD_t *) ( (byte *)header + header->ofsLODs );
+}
+
+inline mdxmSurfHierarchy_t *firstSurfHierarchy(mdxmHeader_t *header) {
+	return (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy );
+}
+
+inline mdxmLOD_t *next(mdxmLOD_t *lod) {
+	return (mdxmLOD_t *)( (byte *)lod + lod->ofsEnd );
+}
+
+inline mdxmSurface_t *next(mdxmSurface_t *surf) {
+	return (mdxmSurface_t *)( (byte *)surf + surf->ofsEnd );
+}
+
+inline mdxmSurfHierarchy_t *next(mdxmSurfHierarchy_t *surfHierarchy) {
+	return (mdxmSurfHierarchy_t *)( (byte *)surfHierarchy + (intptr_t)( &((mdxmSurfHierarchy_t *)0)->childIndexes[ surfHierarchy->numChildren ] ));
+}
+
 void imgui_mdxm_list_surfhierarchy(mdxmHeader_t *header) {
-	mdxmSurfHierarchy_t *mdxmSurfHierarchy = (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy);
-	mdxmSurfHierarchy_t *iterator = mdxmSurfHierarchy;
- 	for (int i=0 ; i<header->numSurfaces; i++) {
+	mdxmSurfHierarchy_t *surfHierarchy = firstSurfHierarchy(header);
+ 	for (int surface_id=0 ; surface_id<header->numSurfaces; surface_id++) {
 		/*
 			char		name[MAX_QPATH];
 			unsigned int flags;
@@ -39,18 +66,19 @@ void imgui_mdxm_list_surfhierarchy(mdxmHeader_t *header) {
 		*/
 		char tmp[512];
 		snprintf(tmp, sizeof(tmp), "mdxmSurfHierarchy[%d] name=%s flags=%d shader=%s shaderIndex=%d parentIndex=%d numChildren=%d childIndexes[0]=%d",
-			i,
-			iterator->name,
-			iterator->flags,
-			iterator->shader,
-			iterator->shaderIndex,
-			iterator->parentIndex,
-			iterator->numChildren,
-			iterator->childIndexes[0]
+			surface_id,
+			surfHierarchy->name,
+			surfHierarchy->flags,
+			surfHierarchy->shader,
+			surfHierarchy->shaderIndex,
+			surfHierarchy->parentIndex,
+			surfHierarchy->numChildren,
+			surfHierarchy->childIndexes[0]
 		);
 		if (ImGui::CollapsingHeader(tmp)) {
 		}
-		iterator = (mdxmSurfHierarchy_t *)( (byte *)iterator + (intptr_t)( &((mdxmSurfHierarchy_t *)0)->childIndexes[ iterator->numChildren ] ));
+		
+		surfHierarchy = next(surfHierarchy);
 	}
 }
 
@@ -76,12 +104,10 @@ const char *surfacetypeToString(surfaceType_t t) {
 	return "missing surfacetype";
 }
 
-mdxmVertex_t *mdxm_get_vertices(mdxmSurface_t *surf) {
-	return (mdxmVertex_t *) ((byte *)surf + surf->ofsVerts);
-}
+
 
 void imgui_mdxm_surface_vertices(mdxmHeader_t *header, mdxmSurface_t *surf) {
-	mdxmVertex_t *vert = mdxm_get_vertices(surf);
+	mdxmVertex_t *vert = firstVertex(surf);
 
 	//ImGui::Text("verts=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
 	//	vert->,
@@ -108,7 +134,7 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod);
 model_t *currentModel = NULL;
 
 void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
-
+	//header->ofsSurfHierarchy
 	ImGui::Text("surf=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
 		surf,
 		surfacetypeToString((surfaceType_t)surf->ident),
@@ -138,7 +164,7 @@ void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
 	
 	if (ImGui::Button("verts *= 2")) {
 		
-		mdxmVertex_t *vert = mdxm_get_vertices(surf);
+		mdxmVertex_t *vert = firstVertex(surf);
 		for (int vertex_id=0; vertex_id<surf->numVerts; vertex_id++) {
 			vert->vertCoords[0] *= 2.0;
 			vert->vertCoords[1] *= 2.0;
@@ -149,7 +175,7 @@ void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
 		model_upload_mdxm_to_gpu(currentModel);
 	}
 	if (ImGui::Button("verts /= 2")) {
-		mdxmVertex_t *vert = mdxm_get_vertices(surf);
+		mdxmVertex_t *vert = firstVertex(surf);
 		for (int vertex_id=0; vertex_id<surf->numVerts; vertex_id++) {
 			vert->vertCoords[0] /= 2.0;
 			vert->vertCoords[1] /= 2.0;
@@ -169,23 +195,19 @@ void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
 	ImGui::PopID();
 }
 
-
-
 void imgui_mdxm_list_lods(mdxmHeader_t *header) {
-	mdxmSurfHierarchy_t *mdxmSurfHierarchy = (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy);
-	mdxmSurfHierarchy_t *iterator = mdxmSurfHierarchy;
-	mdxmLOD_t *lod = (mdxmLOD_t *) ( (byte *)header + header->ofsLODs );
-	for (int l=0; l<header->numLODs; l++) {
+	mdxmLOD_t *lod = firstLod(header);
+	for (int lod_id=0; lod_id<header->numLODs; lod_id++) {
 		char tmp[512];
-		snprintf(tmp, sizeof(tmp), "mdxmLOD_t[%d] ofsEnd=%d", l, lod->ofsEnd );
+		snprintf(tmp, sizeof(tmp), "mdxmLOD_t[%d] ofsEnd=%d", lod_id, lod->ofsEnd );
 		if (ImGui::CollapsingHeader(tmp)) {
-			mdxmSurface_t *surf = (mdxmSurface_t *) ( (byte *)lod + sizeof (mdxmLOD_t) + (header->numSurfaces * sizeof(mdxmLODSurfOffset_t)) );
+			mdxmSurface_t *surf = firstSurface(header, lod);
 			for (int i=0; i<header->numSurfaces; i++) {
 				imgui_mdxm_surface(header, surf);
-				surf = (mdxmSurface_t *)( (byte *)surf + surf->ofsEnd ); // find the next surface
+				surf = next(surf);
 			}
 		}
-		lod = (mdxmLOD_t *)( (byte *)lod + lod->ofsEnd ); // find the next LOD
+		lod = next(lod);
 	}
 }
 
