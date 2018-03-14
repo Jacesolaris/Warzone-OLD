@@ -1,9 +1,11 @@
 #include "dock_models.h"
 
 #include "../imgui_docks/dock_console.h"
+#include "../imgui_docks_openjk/dock_mdxm.h"
 //#include <renderergl2/tr_model_kung.h>
 #include "rd-warzone/tr_glsl.h"
 #include "../tr_local.h"
+#include "../compose_models.h"
 
 DockModels::DockModels() {}
 
@@ -24,33 +26,7 @@ char *modeltype2string(modtype_t type) {
 	return "Unknown modtype_t";
 }
 
-inline mdxmVertex_t *firstVertex(mdxmSurface_t *surf) {
-	return (mdxmVertex_t *) ((byte *)surf + surf->ofsVerts);
-}
 
-inline mdxmSurface_t *firstSurface(mdxmHeader_t *header, mdxmLOD_t *lod) {
-	return (mdxmSurface_t *) ( (byte *)lod + sizeof (mdxmLOD_t) + (header->numSurfaces * sizeof(mdxmLODSurfOffset_t)) );
-}
-
-inline mdxmLOD_t *firstLod(mdxmHeader_t *header) {
-	return (mdxmLOD_t *) ( (byte *)header + header->ofsLODs );
-}
-
-inline mdxmSurfHierarchy_t *firstSurfHierarchy(mdxmHeader_t *header) {
-	return (mdxmSurfHierarchy_t *)( (byte *)header + header->ofsSurfHierarchy );
-}
-
-inline mdxmLOD_t *next(mdxmLOD_t *lod) {
-	return (mdxmLOD_t *)( (byte *)lod + lod->ofsEnd );
-}
-
-inline mdxmSurface_t *next(mdxmSurface_t *surf) {
-	return (mdxmSurface_t *)( (byte *)surf + surf->ofsEnd );
-}
-
-inline mdxmSurfHierarchy_t *next(mdxmSurfHierarchy_t *surfHierarchy) {
-	return (mdxmSurfHierarchy_t *)( (byte *)surfHierarchy + (intptr_t)( &((mdxmSurfHierarchy_t *)0)->childIndexes[ surfHierarchy->numChildren ] ));
-}
 
 void imgui_mdxm_list_surfhierarchy(mdxmHeader_t *header) {
 	mdxmSurfHierarchy_t *surfHierarchy = firstSurfHierarchy(header);
@@ -134,18 +110,8 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod);
 model_t *currentModel = NULL;
 
 void imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
-	//header->ofsSurfHierarchy
-	ImGui::Text("surf=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
-		surf,
-		surfacetypeToString((surfaceType_t)surf->ident),
-		surf->numVerts,
-		surf->numTriangles,
-		surf->numBoneReferences
-	);
-
 	ImGui::PushID(surf);
 
-	
 	char strBoneReferences[128];
 	snprintf(strBoneReferences, sizeof(strBoneReferences), "%d bone references", surf->numBoneReferences);
 	if (ImGui::CollapsingHeader(strBoneReferences)) {
@@ -203,7 +169,20 @@ void imgui_mdxm_list_lods(mdxmHeader_t *header) {
 		if (ImGui::CollapsingHeader(tmp)) {
 			mdxmSurface_t *surf = firstSurface(header, lod);
 			for (int i=0; i<header->numSurfaces; i++) {
-				imgui_mdxm_surface(header, surf);
+
+
+				char tmp[512];
+				snprintf(tmp, sizeof(tmp), "surf id=%d ptr=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
+					i,
+					surf,
+					surfacetypeToString((surfaceType_t)surf->ident),
+					surf->numVerts,
+					surf->numTriangles,
+					surf->numBoneReferences
+				);
+				if (ImGui::CollapsingHeader(tmp)) {
+					imgui_mdxm_surface(header, surf);
+				}
 				surf = next(surf);
 			}
 		}
@@ -227,6 +206,10 @@ void imgui_mdxm(model_t *mod) {
 	ImGui::Text("ofsEnd=%d", header->ofsEnd);
 
 	
+	if (ImGui::Button("Open")) {
+		new DockMDXM(mod);
+	}
+
 	if (ImGui::CollapsingHeader("mdxmSurfHierarchy_t")) {
 		imgui_mdxm_list_surfhierarchy(header);
 	}
@@ -243,11 +226,17 @@ void DockModels::imgui() {
 		
 		char buf[512];
 		sprintf(buf, "model[%d] name=%s type=%s", i, model->name, modeltype2string(model->type));
+
+
 		if (ImGui::CollapsingHeader(buf)) {
+			ImGui::PushID(model);
+
+
 			currentModel = model;
 			switch (model->type) {
 				case MOD_MDXM: imgui_mdxm(model); break;
 			}
+			ImGui::PopID();
 		}
 
 

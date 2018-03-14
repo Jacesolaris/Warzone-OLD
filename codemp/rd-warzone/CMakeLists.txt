@@ -86,6 +86,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_WorldEffects.h"
 	"${MPDir}/rd-warzone/VectorUtils3.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.h"
+	"${MPDir}/rd-warzone/compose_models.cpp.cpp"
+	"${MPDir}/rd-warzone/compose_models.cpp.h"
 	"${MPDir}/game/ckheap.h"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})
@@ -248,6 +250,8 @@ set(MPWarzoneImGuiDockOpenJKFiles
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_models.h"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_all.cpp"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_all.h"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mdxm.cpp"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mdxm.h"
 )
 source_group("imgui_docks_openjk" FILES ${MPWarzoneImGuiDockOpenJKFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockOpenJKFiles})

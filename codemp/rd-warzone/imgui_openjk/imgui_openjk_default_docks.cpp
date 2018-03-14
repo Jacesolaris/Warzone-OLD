@@ -12,11 +12,18 @@
 #include "../imgui_docks_openjk/dock_controlflow.h"
 #include "../imgui_docks_openjk/dock_models.h"
 #include "../imgui_docks_openjk/dock_all.h"
+#include "imgui/imgui_api.h"
 
 #include <list>
 std::list<Dock *> imgui_quake_docks;
 
 void alignTabsDefault();
+
+CCALL int add_dock(Dock *dock) {
+	imgui_quake_docks.push_back( dock );
+}
+
+CCALL void *imgui_get_current_dock();
 
 CCALL int imgui_openjk_default_docks() {
 	if (imgui_quake_docks.size() == 0) {
@@ -45,7 +52,9 @@ CCALL int imgui_openjk_default_docks() {
 
 	for (Dock *dock : imgui_quake_docks) {
 		bool closed = true;
-		if (BeginDock(dock->label(), &closed)) {
+		if (BeginDock(dock->label(), &closed, 0, dock->cdock)) {
+			if (dock->cdock == NULL)
+				dock->cdock = (CDock *)imgui_get_current_dock();
 			dock->imgui();
 		}
 		EndDock();
