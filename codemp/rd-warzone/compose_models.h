@@ -28,3 +28,7 @@ inline mdxmSurfHierarchy_t *next(mdxmSurfHierarchy_t *surfHierarchy) {
 	return (mdxmSurfHierarchy_t *)( (byte *)surfHierarchy + (intptr_t)( &((mdxmSurfHierarchy_t *)0)->childIndexes[ surfHierarchy->numChildren ] ));
 }
 
+inline mdxmHeader_t *mdxmHeader(model_t *mod) {
+	mdxmData_t *glm = mod->data.glm;
+	return glm->header;
+}

@@ -79,8 +79,9 @@ void G2Time_ReportTimers(void)
 #else
 #include <float.h>
 #endif
-
 //rww - RAGDOLL_END
+
+#include "compose_models.h"
 
 //static const int MAX_RENDERABLE_SURFACES = 2048;
 //static const int MAX_RENDERABLE_SURFACES = 4096;
@@ -4543,14 +4544,9 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 	return model_upload_mdxm_to_gpu(mod);
 }
 
-mdxmHeader_t *model_get_mdxmHeader(model_t *mod) {
-	mdxmData_t *glm = mod->data.glm;
-	return glm->header;
-}
-
 qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 
-	mdxmHeader_t *mdxm = model_get_mdxmHeader(mod);
+	mdxmHeader_t *mdxm = mdxmHeader(mod);
 
 	// Make a copy on the GPU
 	mdxmLOD_t *lod = (mdxmLOD_t *)((byte *)mdxm + mdxm->ofsLODs);
