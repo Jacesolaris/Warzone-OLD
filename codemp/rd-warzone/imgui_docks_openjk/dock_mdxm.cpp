@@ -1,15 +1,13 @@
 #include "dock_mdxm.h"
 #include "../imgui_docks/dock_console.h"
 #include "../imgui_openjk/gluecode.h"
-
 #include "../imgui_openjk/imgui_openjk_default_docks.h"
 #include "../compose_models.h"
+#include "../tr_debug.h"
 
 qboolean model_upload_mdxm_to_gpu(model_t *mod);
 
-
-
-void DockMDXM::imgui_mdxm_list_surfhierarchy(mdxmHeader_t *header) {
+void DockMDXM::imgui_mdxm_list_surfhierarchy() {
 	mdxmSurfHierarchy_t *surfHierarchy = firstSurfHierarchy(header);
  	for (int surface_id=0 ; surface_id<header->numSurfaces; surface_id++) {
 		/*
@@ -39,7 +37,7 @@ void DockMDXM::imgui_mdxm_list_surfhierarchy(mdxmHeader_t *header) {
 	}
 }
 
-void DockMDXM::imgui_mdxm_surface_vertices(mdxmHeader_t *header, mdxmSurface_t *surf) {
+void DockMDXM::imgui_mdxm_surface_vertices(mdxmSurface_t *surf) {
 	mdxmVertex_t *vert = firstVertex(surf);
 
 	//ImGui::Text("verts=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
@@ -57,12 +55,9 @@ void DockMDXM::imgui_mdxm_surface_vertices(mdxmHeader_t *header, mdxmSurface_t *
 		ImGui::DragFloat3(dragString, vert->vertCoords);
 		vert++;
 	}
-
-
-
 }
 
-void DockMDXM::imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
+void DockMDXM::imgui_mdxm_surface(mdxmSurface_t *surf) {
 	ImGui::PushID(surf);
 
 	char strBoneReferences[128];
@@ -80,44 +75,28 @@ void DockMDXM::imgui_mdxm_surface(mdxmHeader_t *header, mdxmSurface_t *surf) {
 				boneRef[j] = header->numBones - 1;
 		}
 	}
-	
-	if (ImGui::Button("verts *= 2")) {
-		
-		mdxmVertex_t *vert = firstVertex(surf);
-		for (int vertex_id=0; vertex_id<surf->numVerts; vertex_id++) {
-			vert->vertCoords[0] *= 2.0;
-			vert->vertCoords[1] *= 2.0;
-			vert->vertCoords[2] *= 2.0;
-			vert++;
-		}
-
-		model_upload_mdxm_to_gpu(mod);
-	}
-	if (ImGui::Button("verts /= 2")) {
-		mdxmVertex_t *vert = firstVertex(surf);
-		for (int vertex_id=0; vertex_id<surf->numVerts; vertex_id++) {
-			vert->vertCoords[0] /= 2.0;
-			vert->vertCoords[1] /= 2.0;
-			vert->vertCoords[2] /= 2.0;
-			vert++;
-		}
-		model_upload_mdxm_to_gpu(mod);
-	
-	}
 
 	char strVerts[128];
 	snprintf(strVerts, sizeof(strVerts), "%d vertices", surf->numVerts);
 	if (ImGui::CollapsingHeader(strVerts)) {
-		imgui_mdxm_surface_vertices(header, surf);
+
+		if (ImGui::Button("verts *= 2")) {
+			scaleVertices(surf, 2.0);
+			model_upload_mdxm_to_gpu(mod);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("verts /= 2")) {
+			scaleVertices(surf, 2.0);
+			model_upload_mdxm_to_gpu(mod);
+		}
+
+		imgui_mdxm_surface_vertices(surf);
 	}
 
 	ImGui::PopID();
 }
 
-const char *toString(surfaceType_t t);
-const char *toString(modtype_t type);
-
-void DockMDXM::imgui_mdxm_list_lods(mdxmHeader_t *header) {
+void DockMDXM::imgui_mdxm_list_lods() {
 	mdxmLOD_t *lod = firstLod(header);
 	for (int lod_id=0; lod_id<header->numLODs; lod_id++) {
 		char tmp[512];
@@ -127,17 +106,9 @@ void DockMDXM::imgui_mdxm_list_lods(mdxmHeader_t *header) {
 			for (int i=0; i<header->numSurfaces; i++) {
 
 
-				char tmp[512];
-				snprintf(tmp, sizeof(tmp), "surf id=%d ptr=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d", 
-					i,
-					surf,
-					toString((surfaceType_t)surf->ident),
-					surf->numVerts,
-					surf->numTriangles,
-					surf->numBoneReferences
-				);
-				if (ImGui::CollapsingHeader(tmp)) {
-					imgui_mdxm_surface(header, surf);
+
+				if (ImGui::CollapsingHeader(toString(surf))) {
+					imgui_mdxm_surface(surf);
 				}
 				surf = next(surf);
 			}
@@ -145,8 +116,6 @@ void DockMDXM::imgui_mdxm_list_lods(mdxmHeader_t *header) {
 		lod = next(lod);
 	}
 }
-
-
 
 DockMDXM::DockMDXM(model_t *mod_) {
 	mod = mod_;
@@ -159,20 +128,16 @@ DockMDXM::DockMDXM(model_t *mod_) {
 	}
 }
 
-#include "../tr_debug.h"
-
 const char *DockMDXM::label() {
 	return "MDXM";
 }
 
 void DockMDXM::imgui() {
 	ImGui::Text("%s", mod->name);
-
 	if (ImGui::CollapsingHeader("mdxmSurfHierarchy_t")) {
-		imgui_mdxm_list_surfhierarchy(header);
+		imgui_mdxm_list_surfhierarchy();
 	}
 	if (ImGui::CollapsingHeader("lods")) {
-		imgui_mdxm_list_lods(header);
+		imgui_mdxm_list_lods();
 	}
-
 }

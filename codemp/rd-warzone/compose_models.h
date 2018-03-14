@@ -32,3 +32,11 @@ inline mdxmHeader_t *mdxmHeader(model_t *mod) {
 	mdxmData_t *glm = mod->data.glm;
 	return glm->header;
 }
+
+
+
+void scaleVertices(mdxmSurface_t *surf, float scalar);
+
+const char *toString(surfaceType_t t);
+const char *toString(modtype_t type);
+const char *toString(mdxmSurface_t *surf);
