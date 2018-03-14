@@ -49,7 +49,8 @@ void DockPostProcess::AddCheckBox(int ID) {
 
 		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
 		{
-			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			if (ImGui::IsItemHovered(0))
+				ImGui::SetTooltip(ImGuiCvars[ID]->description);
 		}
 	}
 	else
@@ -58,7 +59,8 @@ void DockPostProcess::AddCheckBox(int ID) {
 
 		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
 		{
-			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			if (ImGui::IsItemHovered(0))
+				ImGui::SetTooltip(ImGuiCvars[ID]->description);
 		}
 	}
 }
@@ -70,7 +72,8 @@ void DockPostProcess::AddInt(int ID) {
 
 		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
 		{
-			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			if (ImGui::IsItemHovered(0))
+				ImGui::SetTooltip(ImGuiCvars[ID]->description);
 		}
 	}
 	else
@@ -79,7 +82,8 @@ void DockPostProcess::AddInt(int ID) {
 
 		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
 		{
-			ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			if (ImGui::IsItemHovered(0))
+				ImGui::SetTooltip(ImGuiCvars[ID]->description);
 		}
 	}
 }
