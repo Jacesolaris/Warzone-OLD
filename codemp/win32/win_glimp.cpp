@@ -432,28 +432,30 @@ static int GLW_MakeContext( PIXELFORMATDESCRIPTOR *pPFD )
 			0
 		};*/
 		
-		/*
+#if 0
 		int attribs[] =
 		{
 			0
-		};*/
+		};
+#else
 
 		int attribs[] =
 		{// UQ1: Create highest possible context, with compatibility...
 			WGL_CONTEXT_MAJOR_VERSION_ARB, major,
 			WGL_CONTEXT_MINOR_VERSION_ARB, minor,
 			WGL_CONTEXT_FLAGS_ARB,
-			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
+			/*WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | */WGL_CONTEXT_DEBUG_BIT_ARB,
 			WGL_CONTEXT_PROFILE_MASK_ARB,
 			WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,//WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 			0
 		};
-
+#endif
 		PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)qwglGetProcAddress("wglCreateContextAttribsARB");
 		
 		if (wglCreateContextAttribsARB != NULL)
 		{
 			glw_state.hGLRC = wglCreateContextAttribsARB(glw_state.hDC, 0, attribs);
+			//DebugBreak();
 		}
 
 		Com_Printf ("...making context current: " );
