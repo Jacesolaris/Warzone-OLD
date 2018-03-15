@@ -56,3 +56,18 @@ const char *toString(mdxmSurface_t *surf) {
 	);
 	return tmp;
 }
+
+// the surface has no idea about its name as much ive seen, we only know it in the context of DockMDXM so far
+const char *toString(mdxmSurface_t *surf, char *lookupTableName) {
+
+	static char tmp[512];
+	snprintf(tmp, sizeof(tmp), "surf name=%s ptr=%p type=%s numVerts=%d numTriangles=%d numBoneReferences=%d",
+		lookupTableName,
+		surf,
+		toString((surfaceType_t)surf->ident),
+		surf->numVerts,
+		surf->numTriangles,
+		surf->numBoneReferences
+	);
+	return tmp;
+}

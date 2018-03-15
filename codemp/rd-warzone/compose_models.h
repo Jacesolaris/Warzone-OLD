@@ -28,6 +28,12 @@ inline mdxmSurfHierarchy_t *next(mdxmSurfHierarchy_t *surfHierarchy) {
 	return (mdxmSurfHierarchy_t *)( (byte *)surfHierarchy + (intptr_t)( &((mdxmSurfHierarchy_t *)0)->childIndexes[ surfHierarchy->numChildren ] ));
 }
 
+inline mdxmSurfHierarchy_t *surfHierarchyByID(mdxmHeader_t *header, int id) {
+	mdxmHierarchyOffsets_t	*surfIndexes = (mdxmHierarchyOffsets_t *)((byte *)header + sizeof(mdxmHeader_t));
+	return (mdxmSurfHierarchy_t *)((byte *)surfIndexes + surfIndexes->offsets[id]);
+}
+
+
 inline mdxmHeader_t *mdxmHeader(model_t *mod) {
 	mdxmData_t *glm = mod->data.glm;
 	return glm->header;
@@ -40,3 +46,4 @@ void scaleVertices(mdxmSurface_t *surf, float scalar);
 const char *toString(surfaceType_t t);
 const char *toString(modtype_t type);
 const char *toString(mdxmSurface_t *surf);
+const char *toString(mdxmSurface_t *surf, char *lookupTableName);

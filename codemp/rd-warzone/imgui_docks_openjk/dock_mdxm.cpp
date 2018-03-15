@@ -86,7 +86,7 @@ void DockMDXM::imgui_mdxm_surface(mdxmSurface_t *surf) {
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("verts /= 2")) {
-			scaleVertices(surf, 2.0);
+			scaleVertices(surf, 0.5);
 			model_upload_mdxm_to_gpu(mod);
 		}
 
@@ -107,7 +107,7 @@ void DockMDXM::imgui_mdxm_list_lods() {
 
 
 
-				if (ImGui::CollapsingHeader(toString(surf))) {
+				if (ImGui::CollapsingHeader(toString(surf, lookupSurfNames[i]))) {
 					imgui_mdxm_surface(surf);
 				}
 				surf = next(surf);
