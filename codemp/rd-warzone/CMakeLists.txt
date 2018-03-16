@@ -86,8 +86,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_WorldEffects.h"
 	"${MPDir}/rd-warzone/VectorUtils3.cpp"
 	"${MPDir}/rd-warzone/VectorUtils3.h"
-	"${MPDir}/rd-warzone/compose_models.cpp.cpp"
-	"${MPDir}/rd-warzone/compose_models.cpp.h"
+	"${MPDir}/rd-warzone/compose_models.cpp"
+	"${MPDir}/rd-warzone/compose_models.h"
 	"${MPDir}/game/ckheap.h"
 	)
 source_group("renderer" FILES ${MPWarzoneFiles})
