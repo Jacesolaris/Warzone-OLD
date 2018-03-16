@@ -322,8 +322,8 @@ void Cvar_Check_DisplayameAndDescription(cvar_t *cvar)
 
 CvarType CvarTypeFromString(const char *var_value) {
 	// lets deduce the type here... convention so far:
-	// 123 = Int
-	// 123.321 = Float
+	// -123 or 123 = Int
+	// -123.321 or 123.321 = Float
 	// true/false = Bool
 	// everything else: either String or Any, kinda the same? ATM ignoring Any type
 	if (strcmp(var_value, "true") == 0)
@@ -348,6 +348,9 @@ CvarType CvarTypeFromString(const char *var_value) {
 			pointCount++;
 			continue;
 		}
+		// if the first char is a minus, simply do nothing, so we can follow the default path for plus values
+		if (i == 0 && c == '-')
+			continue;
 		otherCount++;
 	}
 	// cant be float nor int, so just leave it as String
