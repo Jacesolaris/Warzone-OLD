@@ -800,8 +800,16 @@ void main ( void )
 			vec3 fakeView = vec3(ViewOrigin.x, waterMapLower.y + 1024.0, ViewOrigin.z);
 			vec3 vDist = (fakeView - surfacePoint) * u_Local0.rgb;
 			vec3 vDir = normalize(fakeView/*ViewOrigin*/ - surfacePoint);
-			surfacePoint += vDir * (vec3(0.75, 0.0, 0.75)) * vDist * height;
-			//level = surfacePoint.y;
+			if (u_Local0.a >= 1.0)
+				surfacePoint += vDir * (vec3(1.0, 1.0, 1.0)) * vDist * height;
+			else
+				surfacePoint += vDir * (vec3(0.75, 0.0, 0.75)) * vDist * height;
+			
+			level = surfacePoint.y;
+
+			depth = length(position - surfacePoint);
+			depth2 = surfacePoint.y - position.y;
+			depthN = depth * fadeSpeed;
 #endif
 		}
 #endif //defined(REAL_WAVES) && !defined(__LQ_MODE__)

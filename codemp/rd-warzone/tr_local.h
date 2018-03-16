@@ -3254,8 +3254,6 @@ extern cvar_t	*r_disableGfxDirEnhancement;
 extern cvar_t	*r_skyLightContribution;
 extern cvar_t	*r_cubemapCullRange;
 extern cvar_t	*r_glslWater;
-extern cvar_t	*r_waterWaveHeight;
-extern cvar_t	*r_waterWaveDensity;
 extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;
 extern cvar_t	*r_grassWaveSize;

@@ -1830,6 +1830,8 @@ extern vec3_t		MOON_ATMOSPHERE_COLOR;
 extern float		MOON_GLOW_STRENGTH;
 extern float		MOON_ROTATION_RATE;
 
+extern float		WATER_WAVE_HEIGHT;
+
 float waveTime = 0.5;
 float waveFreq = 0.1;
 
@@ -3429,7 +3431,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					FBO_Bind(tr.renderWaterFbo);
 
 					vec4_t passInfo;
-					VectorSet4(passInfo, /*passNum*/0.0, r_waterWaveHeight->value, 0.0, 0.0);
+					VectorSet4(passInfo, /*passNum*/0.0, WATER_WAVE_HEIGHT, 0.0, 0.0);
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
 				}
 				else
