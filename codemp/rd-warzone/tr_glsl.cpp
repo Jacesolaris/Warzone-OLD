@@ -46,6 +46,10 @@ extern const char *fallbackShader_sun_vp;
 extern const char *fallbackShader_sun_fp;
 extern const char *fallbackShader_planet_vp;
 extern const char *fallbackShader_planet_fp;
+extern const char *fallbackShader_fire_vp;
+extern const char *fallbackShader_fire_fp;
+extern const char *fallbackShader_smoke_vp;
+extern const char *fallbackShader_smoke_fp;
 extern const char *fallbackShader_depthPass_vp;
 extern const char *fallbackShader_depthPass_fp;
 extern const char *fallbackShader_sky_vp;
@@ -1560,6 +1564,8 @@ const char glslMaterialsList[] =
 "#define MATERIAL_PUDDLE		32\n"\
 "#define MATERIAL_EFX			33\n"\
 "#define MATERIAL_BLASTERBOLT	34\n"\
+"#define MATERIAL_FIRE			35\n"\
+"#define MATERIAL_SMOKE			36\n"\
 "#define MATERIAL_SKY			1024\n"\
 "#define MATERIAL_SUN			1025\n"\
 "\n";
@@ -1712,6 +1718,9 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 
 	if (r_lowVram->integer)
 		Q_strcat(dest, size, "#define __LQ_MODE__\n");
+
+	Q_strcat(dest, size, va("#define MAX_DEFERRED_LIGHTS %i\n", MAX_DEFERRED_LIGHTS));
+	Q_strcat(dest, size, va("#define MAX_DEFERRED_LIGHT_RANGE %f\n", MAX_DEFERRED_LIGHT_RANGE));
 
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 	Q_strcat(dest, size, glslMaterialsList);
@@ -3077,6 +3086,24 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.fireShader, "fire", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fire_vp, fallbackShader_fire_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load fire shader!");
+	}
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.smokeShader, "smoke", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_smoke_vp, fallbackShader_smoke_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load smoke shader!");
+	}
+
+
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 	extradefines[0] = '\0';
@@ -3643,6 +3670,10 @@ int GLSL_BeginLoadGPUShaders(void)
 #endif //__EMISSIVE_CUBE_IBL__
 	}
 
+#ifdef __LIGHT_OCCLUSION__
+	Q_strcat(extradefines, 1024, "#define __LIGHT_OCCLUSION__\n");
+#endif //__LIGHT_OCCLUSION__
+
 	if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader, "deferredLighting", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load deferredLighting shader!");
@@ -4123,6 +4154,42 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.planetPassShader);
+#endif
+
+	numLightShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.fireShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load fire shader!");
+	}
+
+	GLSL_InitUniforms(&tr.fireShader);
+
+	GLSL_BindProgram(&tr.fireShader);
+	GLSL_SetUniformInt(&tr.fireShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.fireShader);
+#endif
+
+	numLightShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.smokeShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load smoke shader!");
+	}
+
+	GLSL_InitUniforms(&tr.smokeShader);
+
+	GLSL_BindProgram(&tr.smokeShader);
+	GLSL_SetUniformInt(&tr.smokeShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.smokeShader);
 #endif
 
 	numLightShaders++;
@@ -5991,6 +6058,9 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.sunPassShader);
 	GLSL_DeleteGPUShader(&tr.moonPassShader);
 	GLSL_DeleteGPUShader(&tr.planetPassShader);
+
+	GLSL_DeleteGPUShader(&tr.fireShader);
+	GLSL_DeleteGPUShader(&tr.smokeShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);

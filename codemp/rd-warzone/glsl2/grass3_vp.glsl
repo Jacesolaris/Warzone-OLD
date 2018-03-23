@@ -5,15 +5,12 @@ flat out	int		isSlope;
 
 #define M_PI				3.14159265358979323846
 
-#if 0
-vec3 vectoangles(in vec3 value1) {
+float normalToSlope(in vec3 normal) {
 	float	forward;
-	float	yaw, pitch;
-	vec3	angles;
+	float	pitch;
 
-	if (value1.g == 0 && value1.r == 0) {
-		yaw = 0;
-		if (value1.b > 0) {
+	if (normal.g == 0.0 && normal.r == 0.0) {
+		if (normal.b > 0.0) {
 			pitch = 90;
 		}
 		else {
@@ -21,38 +18,14 @@ vec3 vectoangles(in vec3 value1) {
 		}
 	}
 	else {
-		if (value1.r > 0) {
-			yaw = (atan(value1.g, value1.r) * 180 / M_PI);
-		}
-		else if (value1.g > 0) {
-			yaw = 90;
-		}
-		else {
-			yaw = 270;
-		}
-		if (yaw < 0) {
-			yaw += 360;
-		}
-
-		forward = sqrt(value1.r*value1.r + value1.g*value1.g);
-		pitch = (atan(value1.b, forward) * 180 / M_PI);
-		if (pitch < 0) {
+		forward = sqrt(normal.r*normal.r + normal.g*normal.g);
+		pitch = (atan(normal.b, forward) * 180 / M_PI);
+		if (pitch < 0.0) {
 			pitch += 360;
 		}
 	}
 
-	angles.r = -pitch;
-	angles.g = yaw;
-	angles.b = 0.0;
-
-	return angles;
-}
-#endif
-
-bool SlopeTooGreat(vec3 normal)
-{
-#if 0
-	float pitch = vectoangles(normal.xyz).r;
+	pitch = -pitch;
 
 	if (pitch > 180)
 		pitch -= 360;
@@ -62,9 +35,16 @@ bool SlopeTooGreat(vec3 normal)
 
 	pitch += 90.0f;
 
+	return pitch;
+}
+
+bool SlopeTooGreat(vec3 normal)
+{
+#if 1
+	float pitch = normalToSlope(normal.xyz);
+
 	if (pitch < 0.0) pitch = -pitch;
 
-	//if (pitch > 1.0)//46.0)
 	if (pitch > 46.0)
 	{
 		return true; // This slope is too steep for grass...

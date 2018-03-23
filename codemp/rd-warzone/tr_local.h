@@ -75,9 +75,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define ___WARZONE_FLASH___					// Enables flash UI addons. Experimental, code is not on git.
 //#define ___WARZONE_AWESOMIUM___				// Enables the old awesomium test code...
 
-//#define __SOFTWARE_OCCLUSION__
-//#define __THREADED_OCCLUSION__
-//#define __THREADED_OCCLUSION2__
+//#define __LIGHT_OCCLUSION__						// Check occlusion on lights...
 
 #define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
@@ -103,7 +101,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 
 #define DISTANCE_BETWEEN_CUBEMAPS	1024
-#define	MAX_DEFERRED_LIGHTS			16//64//128
+
+#define	MAX_DEFERRED_LIGHTS			64//128
+#define MAX_DEFERRED_LIGHT_RANGE	8192.0
 
 #define MAX_IMAGE_PATH				256
 
@@ -195,7 +195,7 @@ extern qboolean		MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
 extern float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
 extern float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
 
-#define				MAX_WORLD_GLOW_DLIGHT_RANGE 8192.0//16384.0
+#define				MAX_WORLD_GLOW_DLIGHT_RANGE MAX_DEFERRED_LIGHT_RANGE
 #define				MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
 extern int			CLOSE_TOTAL;
 extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -2824,6 +2824,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t sunPassShader;
 	shaderProgram_t moonPassShader;
 	shaderProgram_t planetPassShader;
+	shaderProgram_t fireShader;
+	shaderProgram_t smokeShader;
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;

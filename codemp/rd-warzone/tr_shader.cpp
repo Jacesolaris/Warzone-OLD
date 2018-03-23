@@ -1466,7 +1466,7 @@ qboolean ForceGlow ( char *shader )
 	{
 		return qtrue;
 	}
-	else if (StringContains(shader, "fire", 0)) // GFX
+	else if (StringContains(shader, "fire", 0) && !StringContains(shader, "campfire", 0)) // GFX
 	{
 		return qtrue;
 	}
@@ -1693,7 +1693,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				stage->bundle[0].image[0] = tr.whiteImage;
 
 				// UQ1: Testing - Force glow to obvious glow components...
-				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				if (ForceGlow(stage->bundle[0].image[0]->imgName) || stage->glow)
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
@@ -3532,6 +3532,8 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_PUDDLE:
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
+	case MATERIAL_FIRE:
+	case MATERIAL_SMOKE:
 		return qtrue;
 		break;
 	default:
@@ -3657,6 +3659,12 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_BLASTERBOLT:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_BLASTERBOLT.\n", name);
+		break;
+	case MATERIAL_FIRE:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_FIRE.\n", name);
+		break;
+	case MATERIAL_SMOKE:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SMOKE.\n", name);
 		break;
 	default:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_NONE.\n", name);

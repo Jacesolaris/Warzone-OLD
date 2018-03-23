@@ -60,8 +60,6 @@ uniform vec3		u_PrimaryLightColor;
 
 #define				MAP_WATER_LEVEL u_Local1.r
 
-#define MAX_DEFERRED_LIGHTS 16//64//128
-
 uniform int			u_lightCount;
 uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
@@ -1019,7 +1017,7 @@ void main ( void )
 					lightDist -= length(lightPos.z - waterMapLower3.y);
 				}
 
-				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
+				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
 				float lightStrength = pow(1.0 - clamp(lightDist / (u_lightDistances[li] * 2.0), 0.0, 1.0), 2.0);
 				lightStrength *= lightDistMult;
 

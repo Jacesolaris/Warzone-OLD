@@ -59,10 +59,10 @@ uniform vec3		u_PrimaryLightColor;
 uniform vec4		u_CubeMapInfo;
 uniform float		u_CubeMapStrength;
 
-#define MAX_DEFERRED_LIGHTS 16//64//128
-
 uniform int			u_lightCount;
-//uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
+#if !defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
+uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
+#endif
 uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
 uniform float		u_lightHeightScales[MAX_DEFERRED_LIGHTS];
@@ -100,39 +100,39 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.7;
 		break;
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		specularReflectionScale = 0.75;
+		specularReflectionScale = 0.0055;
 		cubeReflectionScale = 0.35;
 		break;
 	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		specularReflectionScale = 0.75;
+		specularReflectionScale = 0.0065;
 		cubeReflectionScale = 0.35;
 		break;
 	case MATERIAL_SAND:				// 8			// sandy beach
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.0055;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_CARPET:			// 27			// lush carpet
-		specularReflectionScale = 0.25;
+		specularReflectionScale = 0.0015;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_GRAVEL:			// 9			// lots of small stones
-		specularReflectionScale = 0.30;
+		specularReflectionScale = 0.0015;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_ROCK:				// 23			//
-		specularReflectionScale = 0.22;
+		specularReflectionScale = 0.002;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
-		specularReflectionScale = 0.56;
+		specularReflectionScale = 0.026;
 		cubeReflectionScale = 0.15;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		specularReflectionScale = 0.05;
+		specularReflectionScale = 0.0015;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		specularReflectionScale = 0.025;
+		specularReflectionScale = 0.00075;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
@@ -144,79 +144,79 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.98;
 		break;
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.0026;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		specularReflectionScale = 0.95;
+		specularReflectionScale = 0.0055;
 		cubeReflectionScale = 0.35;
 		break;
 	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		specularReflectionScale = 0.45;
+		specularReflectionScale = 0.0055;
 		cubeReflectionScale = 0.35;
 		break;
 	case MATERIAL_CANVAS:			// 22			// tent material
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.0045;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_MARBLE:			// 12			// marble floors
-		specularReflectionScale = 0.65;
+		specularReflectionScale = 0.025;
 		cubeReflectionScale = 0.46;
 		break;
 	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.025;
 		cubeReflectionScale = 0.65;
 		break;
 	case MATERIAL_MUD:				// 17			// wet soil
-		specularReflectionScale = 0.25;
+		specularReflectionScale = 0.003;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_DIRT:				// 7			// hard mud
-		specularReflectionScale = 0.15;
+		specularReflectionScale = 0.002;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		specularReflectionScale = 0.375;
+		specularReflectionScale = 0.00175;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		specularReflectionScale = 0.25;
+		specularReflectionScale = 0.0045;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		specularReflectionScale = 0.25;
+		specularReflectionScale = 0.0015;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_PLASTIC:			// 25			//
-		specularReflectionScale = 0.58;
+		specularReflectionScale = 0.028;
 		cubeReflectionScale = 0.48;
 		break;
 	case MATERIAL_PLASTER:			// 28			// drywall style plaster
-		specularReflectionScale = 0.3;
+		specularReflectionScale = 0.0025;
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.025;
 		cubeReflectionScale = 0.67;
 		break;
 	case MATERIAL_ARMOR:			// 30			// body armor
-		specularReflectionScale = 0.65;
+		specularReflectionScale = 0.055;
 		cubeReflectionScale = 0.66;
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.045;
 		cubeReflectionScale = 0.78;
 		break;
 	case MATERIAL_GLASS:			// 10			//
-		specularReflectionScale = 0.35;
+		specularReflectionScale = 0.035;
 		cubeReflectionScale = 0.70;
 		break;
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		specularReflectionScale = 0.33;
+		specularReflectionScale = 0.033;
 		cubeReflectionScale = 0.70;
 		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		specularReflectionScale = 0.52;
+		specularReflectionScale = 0.042;
 		cubeReflectionScale = 0.68;
 		break;
 	case MATERIAL_PUDDLE:
@@ -224,21 +224,20 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.7;
 		break;
 	case MATERIAL_EFX:
-		specularReflectionScale = 0.0;
-		cubeReflectionScale = 0.0;
-		break;
 	case MATERIAL_BLASTERBOLT:
+	case MATERIAL_FIRE:
+	case MATERIAL_SMOKE:
 		specularReflectionScale = 0.0;
 		cubeReflectionScale = 0.0;
 		break;
 	default:
-		specularReflectionScale = 0.4;
+		specularReflectionScale = 0.0075;
 		cubeReflectionScale = 0.2;
 		break;
 	}
 
 	// TODO: Update original values with these modifications that I added after... Save time on the math, even though it's minor...
-	specularReflectionScale = specularReflectionScale * 0.5 + 0.5;
+	//specularReflectionScale = specularReflectionScale * 0.5 + 0.5;
 	cubeReflectionScale = cubeReflectionScale * 0.75 + 0.25;
 
 	settings.x = specularReflectionScale;
@@ -639,14 +638,35 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 // Full lighting... Blinn phong and basic lighting as well...
 //
 #if defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
+float getspecularLight(vec3 n, vec3 l, vec3 e, float s) {
+	//float nrm = (s + 8.0) / (3.1415 * 8.0);
+	float ndotl = clamp(max(dot(reflect(e, n), l), 0.0), 0.1, 1.0);
+	return clamp(pow(ndotl, s), 0.1, 1.0);// * nrm;
+}
+
 float getdiffuse(vec3 n, vec3 l, float p) {
 	float ndotl = clamp(dot(n, l), 0.5, 0.9);
 	return pow(ndotl, p);
 }
 
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
+	/*float fre = clamp(dot(normal, -view) + 1.0, 0.0, 1.0);
 	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
-	return diffuse;
+	vec3 specular = specularColor * clamp(getspecularLight(normal, -light, view, 0.2) * fre * u_Local3.r, u_Local3.g, u_Local3.b);
+	return diffuse + specular;*/
+
+	// Ambient light.
+	float ambience = 0.25;
+
+	// Diffuse lighting.
+	//float diff = max(dot(normal, light), 0.0);
+	float diff = getdiffuse(normal, light, 2.0) * 16.0;
+
+	// Specular lighting.
+	float fre = clamp(pow(clamp(dot(normal, -view) + 1.0, 0.0, 1.0), -2.0), 2.0, 48.0);
+	float spec = pow(max(dot(reflect(-light, normal), view), 0.0), 1.2);
+
+	return (ambience * diffuseColor) + (diffuseColor * diff) + (specularColor * spec * fre);
 }
 #else //!defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float specTrowbridgeReitz(float HoN, float a, float aP)
@@ -816,6 +836,22 @@ vec3 computeIrradiance(vec3 n)
 }
 #endif //!defined(__LQ_MODE__) && defined(__IRRADIANCE__)
 
+#if !defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
+float checkVisibility(vec2 p1, vec2 p2) {
+	float percent = 1.0;
+	float iter = 0.1;
+	float d1 = texture(u_ScreenDepthMap, p1).r;
+	float d2 = texture(u_ScreenDepthMap, p2).r;
+	for (int i = 1; i < 9; i++) {
+		vec2 mx = mix(p1, p2, iter);
+		float d = texture(u_ScreenDepthMap, mx).r;
+		percent -= smoothstep(0.0, 0.9, max(0.0, mix(d1, d2, iter) - d));
+		iter += 0.1;
+	}
+	return max(0.0, percent);
+}
+#endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
+
 /*
 ** Contrast, saturation, brightness
 ** Code of this function is from TGM's shader pack
@@ -859,7 +895,9 @@ void main(void)
 		|| position.a-1.0 == MATERIAL_SUN 
 		|| position.a-1.0 == MATERIAL_GLASS
 		|| position.a-1.0 == MATERIAL_EFX
-		|| position.a-1.0 == MATERIAL_BLASTERBOLT)
+		|| position.a-1.0 == MATERIAL_BLASTERBOLT
+		|| position.a - 1.0 == MATERIAL_FIRE
+		|| position.a - 1.0 == MATERIAL_SMOKE)
 	{// Skybox... Skip...
 		if (u_Local9.g > 0.0)
 		{
@@ -887,7 +925,7 @@ void main(void)
 
 	vec2 texCoords = var_TexCoords;
 	vec2 materialSettings = RB_PBR_DefaultsForMaterial(position.a-1.0);
-
+	bool isMetalic = (position.a - 1.0 == MATERIAL_SOLIDMETAL || position.a - 1.0 == MATERIAL_HOLLOWMETAL) ? true : false;
 
 	//
 	// Grab and set up our normal value, from lightall buffers, or fallback to offseting the flat normal buffer by pixel luminances, etc...
@@ -927,6 +965,8 @@ void main(void)
 
 	// Simply offset the normal value based on the detail value... It looks good enough, but true PBR would probably want to use the tangent/bitangent below instead...
 	normalDetail.rgb = normalize(clamp(normalDetail.xyz, 0.0, 1.0) * 2.0 - 1.0);
+	//vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, u_Local3.a * (length(norm.xyz - normalDetail.xyz) / 3.0)));
+	vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, 0.4));
 	norm.rgb = normalize(mix(norm.xyz, normalDetail.xyz, 0.25 * (length(norm.xyz - normalDetail.xyz) / 3.0)));
 
 	// If we ever need a tangent/bitangent, we can get one like this... But I'm just working in world directions, so it's not required...
@@ -976,6 +1016,9 @@ void main(void)
 	float NE = clamp(length(dot(N, E)), 0.0, 1.0);
 	float reflectVectorPower = pow(specularReflectivePower*NE, 16.0) * reflectionPower;
 
+
+	float diffuse = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
+	color.rgb = outColor.rgb = outColor.rgb * diffuse;
 
 //#define __DEBUG_LIGHT__
 #ifdef __DEBUG_LIGHT__
@@ -1073,7 +1116,7 @@ void main(void)
 			skyColor /= 2.0;
 		}
 
-		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.7), 0.0, 1.0);
+		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.333), 0.0, 1.0);
 		skyColor = clamp(Vibrancy( skyColor, 0.4 ), 0.0, 1.0);
 	}
 #endif //__LQ_MODE__
@@ -1081,18 +1124,19 @@ void main(void)
 	if (specularReflectivePower > 0.0)
 	{// If this pixel is ging to get any specular reflection, generate (PBR would instead look up image buffer) specular color, and grab any cubeMap lighting as well...
 		// Construct generic specular map by creating a greyscale, contrasted, saturation removed, color from the screen color... Then multiply by the material's default specular modifier...
-		specularColor = ContrastSaturationBrightness(outColor.rgb, 1.25, 0.05, 1.0);
-		specularColor.rgb = clamp(vec3(length(specularColor.rgb) / 3.0), 0.0, 1.0);
-		specularColor.rgb *= specularReflectivePower;
-
-		if (position.a-1.0 == MATERIAL_SOLIDMETAL || position.a-1.0 == MATERIAL_HOLLOWMETAL)
-		{// Metals are special, add the color from the sky cube to the shiny reflections...
-			specularColor.rgb = skyColor * specularColor.rgb;
+		if (isMetalic)
+		{
+			specularColor = ContrastSaturationBrightness(outColor.rgb, 1.25, 1.25, 0.7);
 		}
 		else
-		{// Add a small component of the sky color to the reflections, based on material reflectionPower setting...
-			specularColor.rgb = mix(specularColor.rgb, skyColor * specularColor.rgb, reflectionPower);
+		{
+			specularColor = ContrastSaturationBrightness(outColor.rgb, 1.25, 0.05, 1.0);
+			specularColor.rgb = clamp(vec3(length(specularColor.rgb) / 3.0), 0.0, 1.0);
 		}
+
+		specularColor.rgb *= specularReflectivePower;
+
+		specularColor.rgb = mix(specularColor.rgb, skyColor * specularColor.rgb, reflectionPower);
 
 #ifndef __LQ_MODE__
 		if (u_Local7.r > 0.0)
@@ -1205,6 +1249,15 @@ void main(void)
 			{
 				lightColor *= lightMult;
 				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), outColor.rgb * lightColor, outColor.rgb * lightColor, 1.0, u_PrimaryLightOrigin.xyz);
+
+#ifndef __LQ_MODE__
+				if (isMetalic)
+				{// Metals do an extra randomish light query to make them really shine... Mixed in at a lower level then the real direction...
+					vec3 query = normalize(reflect(normalize(-sunDir), E));
+					lightColor = mix(lightColor, blinn_phong(position.xyz, outColor.rgb, N, E, query, outColor.rgb * lightColor, outColor.rgb * lightColor * 2.0, 1.0, u_PrimaryLightOrigin.xyz), 0.25);
+				}
+#endif //__LQ_MODE__
+
 				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
 				lightColor = clamp(lightColor, 0.0, 0.7);
@@ -1242,7 +1295,7 @@ void main(void)
 			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 
 #ifdef __LQ_MODE__
-			for (int li = 0; li < min(u_lightCount, 4); li++)
+			for (int li = 0; li < min(u_lightCount, 16); li++)
 #else //!__LQ_MODE__
 			for (int li = 0; li < u_lightCount; li++)
 #endif //__LQ_MODE__
@@ -1256,7 +1309,8 @@ void main(void)
 					lightDist -= length(lightPos.z - position.z);
 				}
 
-				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / 4096.0), 0.0, 1.0);
+				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
+				lightDistMult = pow(lightDistMult, 2.0);
 
 				// Attenuation...
 				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
@@ -1268,10 +1322,11 @@ void main(void)
 					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a; // Normalize.
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
+					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 				
 					lightColor = lightColor * power * irradiance;// * maxStr;
 
-					addedLight.rgb += lightColor * lightStrength * 0.333;
+					addedLight.rgb += lightColor * lightStrength * 0.333 * selfShadow;
 
 #ifndef __LQ_MODE__
 					if (useOcclusion)
@@ -1279,8 +1334,22 @@ void main(void)
 						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
 					}
 #endif //__LQ_MODE__
+
+#if !defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
+					if (u_lightPositions[li].x >= 0.0 && u_lightPositions[li].x <= 1.0 && u_lightPositions[li].y >= 0.0 && u_lightPositions[li].y <= 1.0)
+					{
+						light_occlusion *= checkVisibility(texCoords, u_lightPositions[li]);
+
+						if (u_Local3.r >= 0.0 && li == int(u_Local3.r))
+						{
+							outColor.rgb = vec3(light_occlusion);
+							gl_FragColor = outColor;
+							return;
+						}
+					}
+#endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
 					
-					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade;
+					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor * 0.1, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
 				}
 			}
 

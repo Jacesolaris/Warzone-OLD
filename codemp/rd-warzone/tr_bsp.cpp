@@ -3236,9 +3236,9 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 		return qtrue;
 		break;
 	case MATERIAL_EFX:
-		return qfalse;
-		break;
 	case MATERIAL_BLASTERBOLT:
+	case MATERIAL_FIRE:
+	case MATERIAL_SMOKE:
 		return qfalse;
 		break;
 	default:
@@ -3324,7 +3324,7 @@ qboolean R_CloseLightNear (vec3_t pos)
 {
 	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
 	{
-		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < 64)//48)
+		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < 32)//64)//48)
 		{
 			return qtrue;
 		}
@@ -3378,13 +3378,17 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			{
 				qboolean isBuilding = ((surf->shader->materialType) == MATERIAL_CONCRETE && surf->shader->stages[stage] && surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]) ? qtrue : qfalse;
 				
-				if (surf->shader->stages[stage] && (surf->shader->stages[stage]->glow || isBuilding))
+				if (surf->shader->stages[stage] && (surf->shader->stages[stage]->glow || surf->shader->stages[stage]->glowMapped || isBuilding))
 				{
 					hasGlow = qtrue;
+
 					if (isBuilding)
 						VectorCopy4(surf->shader->stages[stage]->bundle[TB_STEEPMAP].image[0]->lightColor, glowColor);
+					else if (surf->shader->stages[stage]->glowMapped)
+						VectorCopy4(surf->shader->stages[stage]->bundle[TB_GLOWMAP].image[0]->lightColor, glowColor);
 					else
 						VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
+
 					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
 					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
 					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;
@@ -3426,8 +3430,8 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
 		{
 			radius = Q_clamp(64.0, radius, 128.0);
-			VectorScale(glowColor, 0.333, glowColor);
-			VectorNormalize(glowColor);
+			//VectorScale(glowColor, 0.333, glowColor);
+			//VectorNormalize(glowColor);
 			VectorScale(glowColor, emissiveColorScale, glowColor);
 			R_AddLightVibrancy(glowColor, 0.4);
 

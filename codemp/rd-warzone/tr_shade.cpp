@@ -1243,11 +1243,9 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 		parallaxScale = 1.5;
 		break;
 	case MATERIAL_EFX:
-		specularScale = 0.0;
-		cubemapScale = 0.0;
-		parallaxScale = 0.0;
-		break;
 	case MATERIAL_BLASTERBOLT:
+	case MATERIAL_FIRE:
+	case MATERIAL_SMOKE:
 		specularScale = 0.0;
 		cubemapScale = 0.0;
 		parallaxScale = 0.0;
@@ -1710,9 +1708,9 @@ void RB_UpdateCloseLights ( void )
 			continue;
 		}
 
-		float distance = Distance(tr.refdef.vieworg, dl->origin);
+		float distance = Distance(backEnd.refdef.vieworg, dl->origin);
 
-		if (distance > 4096.0) continue; // Don't even check at this range. Traces are costly!
+		if (distance > MAX_DEFERRED_LIGHT_RANGE) continue; // Don't even check at this range. Traces are costly!
 
 		if (r_occlusion->integer)
 		{// Check occlusion zfar distance as well...
@@ -1724,16 +1722,18 @@ void RB_UpdateCloseLights ( void )
 
 		if (NUM_CLOSE_LIGHTS < MAX_DEFERRED_LIGHTS)
 		{// Have free light slots for a new light...
-			vec3_t from;
-			VectorCopy(tr.refdef.vieworg, from);
+			/*vec3_t from;
+			VectorCopy(backEnd.refdef.vieworg, from);
 			from[2] += 64.0;
-			if (!Light_Visible(tr.refdef.vieworg, dl->origin, qfalse, dl->radius))
+			if (!Light_Visible(backEnd.refdef.vieworg, dl->origin, qfalse, dl->radius))
 			{
 				continue;
-			}
+			}*/
 
-			//float x, y;
-			//WorldCoordToScreenCoord(dl->origin, &x, &y);
+#ifdef __LIGHT_OCCLUSION__
+			float x, y;
+			WorldCoordToScreenCoord(dl->origin, &x, &y);
+#endif //__LIGHT_OCCLUSION__
 
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
@@ -1742,8 +1742,10 @@ void RB_UpdateCloseLights ( void )
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1];
 			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2];
-			//CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][0] = x;
-			//CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][1] = y;
+#ifdef __LIGHT_OCCLUSION__
+			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][0] = x;
+			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][1] = y;
+#endif //__LIGHT_OCCLUSION__
 			NUM_CLOSE_LIGHTS++;
 			continue;
 		}
@@ -1752,7 +1754,7 @@ void RB_UpdateCloseLights ( void )
 			int		farthest_light = 0;
 			float	farthest_distance = 0.0;
 
-			if (!Light_Visible(tr.refdef.vieworg, dl->origin, qfalse, dl->radius))
+			if (!Light_Visible(backEnd.refdef.vieworg, dl->origin, qfalse, dl->radius))
 			{
 				continue;
 			}
@@ -1760,7 +1762,7 @@ void RB_UpdateCloseLights ( void )
 			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 			{// Find the most distance light in our current list to replace, if this new option is closer...
 				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
-				float		dist = Distance(thisLight->origin, tr.refdef.vieworg);
+				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
 
 				if (dist > farthest_distance)
 				{// This one is further!
@@ -1772,12 +1774,14 @@ void RB_UpdateCloseLights ( void )
 
 			if (distance < farthest_distance)
 			{// This light is closer. Replace this one in our array of closest lights...
-				vec3_t from;
-				VectorCopy(tr.refdef.vieworg, from);
-				from[2] += 64.0;
+				//vec3_t from;
+				//VectorCopy(backEnd.refdef.vieworg, from);
+				//from[2] += 64.0;
 
-				//float x, y;
-				//WorldCoordToScreenCoord(dl->origin, &x, &y);
+#ifdef __LIGHT_OCCLUSION__
+				float x, y;
+				WorldCoordToScreenCoord(dl->origin, &x, &y);
+#endif //__LIGHT_OCCLUSION__
 
 				CLOSEST_LIGHTS[farthest_light] = l;
 				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
@@ -1786,8 +1790,10 @@ void RB_UpdateCloseLights ( void )
 				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0];
 				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1];
 				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2];
-				//CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][0] = x;
-				//CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][1] = y;
+#ifdef __LIGHT_OCCLUSION__
+				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][0] = x;
+				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][1] = y;
+#endif //__LIGHT_OCCLUSION__
 			}
 		}
 	}
@@ -2191,6 +2197,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #endif //__WATER_STUFF__
 		else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 		{// Special case for procedural sun...
+			if (IS_DEPTH_PASS) return;
+
 			sp = &tr.sunPassShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
@@ -2200,8 +2208,34 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 		}
 		else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
-		{// Special case for procedural sun...
+		{// Special case for procedural moon...
+			if (IS_DEPTH_PASS) return;
+
 			sp = &tr.moonPassShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			isPebbles = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
+		else if (tess.shader->materialType == MATERIAL_FIRE)
+		{// Special case for procedural fire...
+			if (IS_DEPTH_PASS) return;
+
+			sp = &tr.fireShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			isPebbles = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
+		else if (tess.shader->materialType == MATERIAL_SMOKE)
+		{// Special case for procedural smoke...
+			if (IS_DEPTH_PASS) return;
+
+			sp = &tr.smokeShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
 			isPebbles = qfalse;
@@ -2741,6 +2775,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			|| (r_proceduralSun->integer && tess.shader == tr.moonShader))
 		{
 			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		else if (tess.shader->materialType == MATERIAL_FIRE)
+		{// Special case for procedural fire...
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		else if (tess.shader->materialType == MATERIAL_SMOKE)
+		{// Special case for procedural smoke...
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 			pStage->stateBits = stateBits;
 		}
 		/*
@@ -3401,6 +3445,38 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
 				VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (tess.shader->materialType == MATERIAL_FIRE)
+			{// Special case for procedural fire...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				//GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
+
+				//vec4_t vec;
+				//VectorSet4(vec, MOON_ROTATION_RATE, MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
+				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
+				//VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
+				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (tess.shader->materialType == MATERIAL_SMOKE)
+			{// Special case for procedural smoke...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				//GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
+
+				//vec4_t vec;
+				//VectorSet4(vec, MOON_ROTATION_RATE, MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
+				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
+				//VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
+				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
 				GL_Cull(CT_TWO_SIDED);
 			}
 #ifdef __WATER_STUFF__

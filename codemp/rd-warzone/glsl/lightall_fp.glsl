@@ -345,10 +345,16 @@ void main()
 
 			vec3 bNorm = normalize(N.xyz + ((diffuse.rgb * 2.0 - 1.0) * -0.25)); // just add some fake bumpiness to it, fast as possible...
 
-			float dif = getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 20.0);
+			float dif = min(getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 0.3), 0.15);
 			vec3 ambientColor2 = clamp(dif * lightColor2, 0.0, 1.0);
 
-			float spec = getspecularLight(bNorm, var_PrimaryLightDir.xyz, E, 20.0);
+			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
+			//lightColor2 = clamp(spec * lightColor2, 0.0, 1.0);
+
+			float fre = pow(clamp(dot(bNorm, -E) + 1.0, 0.0, 1.0), 0.3);
+			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
+			float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0) * fre, 0.05, 1.0);
+			spec = clamp(spec, 0.25, 0.325);
 			lightColor2 = clamp(spec * lightColor2, 0.0, 1.0);
 
 
@@ -364,10 +370,16 @@ void main()
 
 			vec3 bNorm = normalize(N.xyz + ((diffuse.rgb * 2.0 - 1.0) * -0.25)); // just add some fake bumpiness to it, fast as possible...
 
-			float dif = getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 20.0);
+			float dif = min(getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 0.3), 0.15);
 			ambientColor = clamp(dif * lightColor, 0.0, 1.0);
 
-			float spec = getspecularLight(bNorm, var_PrimaryLightDir.xyz, E, 20.0);
+			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
+			//lightColor = clamp(spec * lightColor, 0.0, 1.0);
+
+			float fre = pow(clamp(dot(bNorm, -E) + 1.0, 0.0, 1.0), 0.3);
+			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
+			float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0) * fre, 0.05, 1.0);
+			spec = clamp(spec, 0.25, 0.325);
 			lightColor = clamp(spec * lightColor, 0.0, 1.0);
 		}
 	}

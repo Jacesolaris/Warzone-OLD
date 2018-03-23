@@ -116,7 +116,9 @@
 #define MATERIAL_PUDDLE			32			// shallow puddle on floor surface
 #define MATERIAL_EFX			33			// any efx surfaces
 #define MATERIAL_BLASTERBOLT	34			// blaster bolts, sabers, etc
-#define MATERIAL_LAST			35			// number of materials
+#define MATERIAL_FIRE			35			// fire
+#define MATERIAL_SMOKE			36			// smoke
+#define MATERIAL_LAST			37			// number of materials
 
 // Defined as a macro here so one change will affect all the relevant files
 
@@ -155,4 +157,6 @@
 	"computer",		\
 	"puddle",		\
 	"efx",			\
-	"blasterbolt"
+	"blasterbolt",	\
+	"fire",			\
+	"smoke"

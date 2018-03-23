@@ -2962,7 +2962,6 @@ float RoofHeightAbove(vec3_t org)
 	org2[2] = 131072.0f;
 
 	CG_Trace(&tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
-	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 
 	if (tr.startsolid || tr.allsolid)
 	{
@@ -2970,7 +2969,45 @@ float RoofHeightAbove(vec3_t org)
 		return -131072.0f;
 	}
 
+	if (tr.materialType == MATERIAL_SOLIDWOOD
+		|| MaterialIsValidForGrass(tr.materialType)
+		|| tr.materialType == MATERIAL_SAND
+		|| tr.materialType == MATERIAL_ROCK)
+	{// Exception for hitting trees...
+		return org[2] + 257.0;
+	}
+
 	return tr.endpos[2];
+}
+
+qboolean FOLIAGE_IsIndoorLocation(vec3_t origin)
+{
+	if (RoofHeightAbove(origin) - origin[2] <= 256.0)
+	{// This must be indoors...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean FOLIAGE_FxExistsNearPoint(vec3_t origin)
+{
+	for (int i = 0; i < MAX_GENTITIES; i++)
+	{
+		centity_t *cent = &cg_entities[i];
+
+		if (!cent) continue;
+
+		if (cent->currentState.eType == ET_FX)
+		{
+			if (Distance(origin, cent->lerpOrigin) < 128.0)
+			{
+				return qtrue;
+			}
+		}
+	}
+
+	return qfalse;
 }
 
 #define SPOT_TYPE_TREE 1
@@ -3268,6 +3305,8 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 				//continue;
 			}
 
+			qboolean hitInvalid = qfalse;
+
 			for (z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
 			{
 				trace_t		tr;
@@ -3322,16 +3361,62 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
+					hitInvalid = qtrue;
 					continue;
 				}
 
 				if (ADD_MORE && check_density > 0 && FOLIAGE_CheckFoliageAlready(tr.endpos, check_density))
 				{// Already a foliage here...
+					hitInvalid = qtrue;
 					continue;
 				}
 
 				if (MaterialIsValidForGrass((tr.materialType)))
 				{
+					if (hitInvalid)
+					{// Scan above us for a roof... So we don't add grass inside of buildings...
+						if (FOLIAGE_IsIndoorLocation(tr.endpos))
+						{// This must be indoors...
+							break;
+						}
+
+						{
+							vec3_t o;
+							VectorSet(o, tr.endpos[0] + 64.0, tr.endpos[1], tr.endpos[2] + 16.0);
+
+							if (FOLIAGE_IsIndoorLocation(o))
+							{
+								break;
+							}
+
+							VectorSet(o, tr.endpos[0] - 64.0, tr.endpos[1], tr.endpos[2] + 16.0);
+
+							if (FOLIAGE_IsIndoorLocation(o))
+							{
+								break;
+							}
+
+							VectorSet(o, tr.endpos[0], tr.endpos[1] + 64.0, tr.endpos[2] + 16.0);
+
+							if (FOLIAGE_IsIndoorLocation(o))
+							{
+								break;
+							}
+
+							VectorSet(o, tr.endpos[0], tr.endpos[1] - 64.0, tr.endpos[2] + 16.0);
+
+							if (FOLIAGE_IsIndoorLocation(o))
+							{
+								break;
+							}
+						}
+					}
+
+					if (FOLIAGE_FxExistsNearPoint(tr.endpos))
+					{
+						break;
+					}
+
 					qboolean DO_TREE = qfalse;
 					qboolean DO_PLANT = qfalse;
 					qboolean IS_CLEARING = qfalse;
@@ -3416,6 +3501,10 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 					}
 
 					if (FOUND) break;
+				}
+				else
+				{
+					hitInvalid = qtrue;
 				}
 			}
 		}
@@ -3929,6 +4018,82 @@ void FOLIAGE_FoliageReplantSpecial(int plantPercentage)
 	FOLIAGE_SaveFoliagePositions();
 }
 
+void FOLIAGE_FoliageClearFxRunners(void)
+{
+	int i = 0;
+	int NUM_REMOVED_OBJECTS = 0;
+	int NUM_PLANTS_TOTAL = 0;
+
+	int previous_time = clock();
+	aw_stage_start_time = clock();
+	aw_percent_complete = 0;
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Cleaning foliage points. This could take a while...\n"));
+	strcpy(task_string1, va("^5Cleaning foliage points. This could take a while..."));
+	trap->UpdateScreen();
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Cleaning foliage points...\n"));
+	strcpy(task_string2, va("^5Cleaning foliage points..."));
+	trap->UpdateScreen();
+
+	strcpy(task_string3, "");
+
+	trap->UpdateScreen();
+
+	trap->S_Shutup(qtrue);
+
+	int numCompleted = 0;
+
+	//#pragma omp parallel for schedule(dynamic)
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Check current list...
+		FOLIAGE_PLANT_SELECTION[i] = 0;
+
+		numCompleted++;
+		aw_percent_complete = (float)((float)numCompleted / (float)FOLIAGE_NUM_POSITIONS) * 100.0;
+
+		if (clock() - previous_time > 50) // update display every 50ms...
+		{
+			previous_time = clock();
+			trap->UpdateScreen();
+		}
+
+		NUM_PLANTS_TOTAL++;
+
+		qboolean FxAtPoint = FOLIAGE_FxExistsNearPoint(FOLIAGE_POSITIONS[i]);
+
+		if (FxAtPoint)
+		{
+			NUM_REMOVED_OBJECTS++;
+
+			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
+
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+		else if (MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[i] > 0)
+		{// Tree here... Replace...
+			FOLIAGE_TREE_SELECTION[i] = irand(1, NUM_TREE_TYPES);
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+		else
+		{
+			FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS);
+			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
+		}
+
+		sprintf(last_node_added_string, "^3%i ^5objects removed. ^3%i ^5total plants.", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+	}
+
+	trap->S_Shutup(qfalse);
+
+	aw_percent_complete = 0.0f;
+
+	trap->Print("^1*** ^3%s^5: Successfully removed ^3%i ^5objects from a total of ^3%i ^5objects....\n", "AUTO-FOLIAGE", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+
+	// Save the generated info to a file for next time...
+	FOLIAGE_SaveFoliagePositions();
+}
+
 void FOLIAGE_FoliageClearRoads(void)
 {
 	int i = 0;
@@ -3990,6 +4155,114 @@ void FOLIAGE_FoliageClearRoads(void)
 			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
 
 			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+
+		sprintf(last_node_added_string, "^3%i ^5objects removed. ^3%i ^5total plants.", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+	}
+
+	trap->S_Shutup(qfalse);
+
+	aw_percent_complete = 0.0f;
+
+	trap->Print("^1*** ^3%s^5: Successfully removed ^3%i ^5objects from a total of ^3%i ^5objects....\n", "AUTO-FOLIAGE", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
+
+	// Save the generated info to a file for next time...
+	FOLIAGE_SaveFoliagePositions();
+}
+
+void FOLIAGE_FoliageClearBuildings(void)
+{
+	int i = 0;
+	int NUM_REMOVED_OBJECTS = 0;
+	int NUM_PLANTS_TOTAL = 0;
+
+	int previous_time = clock();
+	aw_stage_start_time = clock();
+	aw_percent_complete = 0;
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Cleaning foliage points. This could take a while...\n"));
+	strcpy(task_string1, va("^5Cleaning foliage points. This could take a while..."));
+	trap->UpdateScreen();
+
+	trap->Print(va("^4*** ^3AUTO-FOLIAGE^4: ^5Cleaning foliage points...\n"));
+	strcpy(task_string2, va("^5Cleaning foliage points..."));
+	trap->UpdateScreen();
+
+	strcpy(task_string3, "");
+
+	trap->UpdateScreen();
+
+	trap->S_Shutup(qtrue);
+
+	int numCompleted = 0;
+
+	//#pragma omp parallel for schedule(dynamic)
+	for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+	{// Check current list...
+		FOLIAGE_PLANT_SELECTION[i] = 0;
+
+		numCompleted++;
+		aw_percent_complete = (float)((float)numCompleted / (float)FOLIAGE_NUM_POSITIONS) * 100.0;
+
+		if (clock() - previous_time > 50) // update display every 50ms...
+		{
+			previous_time = clock();
+			trap->UpdateScreen();
+		}
+
+		NUM_PLANTS_TOTAL++;
+
+		qboolean roofAtPoint = FOLIAGE_IsIndoorLocation(FOLIAGE_POSITIONS[i]);
+
+		if (!roofAtPoint)
+		{
+			vec3_t o;
+			VectorSet(o, FOLIAGE_POSITIONS[i][0] + 64.0, FOLIAGE_POSITIONS[i][1], FOLIAGE_POSITIONS[i][2] + 16.0);
+
+			if (FOLIAGE_IsIndoorLocation(o))
+			{
+				roofAtPoint = qtrue;
+			}
+
+			VectorSet(o, FOLIAGE_POSITIONS[i][0] - 64.0, FOLIAGE_POSITIONS[i][1], FOLIAGE_POSITIONS[i][2] + 16.0);
+
+			if (!roofAtPoint && FOLIAGE_IsIndoorLocation(o))
+			{
+				roofAtPoint = qtrue;
+			}
+
+			VectorSet(o, FOLIAGE_POSITIONS[i][0], FOLIAGE_POSITIONS[i][1] + 64.0, FOLIAGE_POSITIONS[i][2] + 16.0);
+
+			if (!roofAtPoint && FOLIAGE_IsIndoorLocation(o))
+			{
+				roofAtPoint = qtrue;
+			}
+
+			VectorSet(o, FOLIAGE_POSITIONS[i][0], FOLIAGE_POSITIONS[i][1] - 64.0, FOLIAGE_POSITIONS[i][2] + 16.0);
+
+			if (!roofAtPoint && FOLIAGE_IsIndoorLocation(o))
+			{
+				roofAtPoint = qtrue;
+			}
+		}
+
+		if (roofAtPoint)
+		{
+			NUM_REMOVED_OBJECTS++;
+
+			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
+
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+		else if (MAP_HAS_TREES && FOLIAGE_TREE_SELECTION[i] > 0)
+		{// Tree here... Replace...
+			FOLIAGE_TREE_SELECTION[i] = irand(1, NUM_TREE_TYPES);
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+		}
+		else
+		{
+			FOLIAGE_PLANT_SELECTION[i] = irand(1, MAX_PLANT_MODELS);
+			if (MAP_HAS_TREES) FOLIAGE_TREE_SELECTION[i] = 0;
 		}
 
 		sprintf(last_node_added_string, "^3%i ^5objects removed. ^3%i ^5total plants.", NUM_REMOVED_OBJECTS, NUM_PLANTS_TOTAL);
@@ -4094,7 +4367,9 @@ void FOLIAGE_GenerateFoliage(void)
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replantspecial\" ^5- Reselect all grasses/plants (tree aware).\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearroads\" ^5- Remove all object on roads.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearfxrunners\" ^5- Remove all objects near fx_runner entities.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearbuildings\" ^5- Remove all objects inside buildings.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearroads\" ^5- Remove all objects on roads.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"copy <original_mapname> <mapScale> <objectScale>\" ^5- Copy from another map's foliage file. Scales are optional.\n");
 		trap->UpdateScreen();
 		return;
@@ -4292,9 +4567,17 @@ void FOLIAGE_GenerateFoliage(void)
 			trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage replant <plantPercent>^5. Use plantPercent 0 for default.\n");
 		}
 	}
+	else if (!strcmp(str, "clearfxrunners"))
+	{
+		FOLIAGE_FoliageClearFxRunners();
+	}
 	else if (!strcmp(str, "clearroads"))
 	{
 		FOLIAGE_FoliageClearRoads();
+	}
+	else if (!strcmp(str, "clearbuildings"))
+	{
+		FOLIAGE_FoliageClearBuildings();
 	}
 	else if (!strcmp(str, "retree"))
 	{

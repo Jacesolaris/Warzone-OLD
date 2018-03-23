@@ -1089,12 +1089,12 @@ void RB_AddGlowShaderLights ( void )
 	{// Add (close) map glows as dynamic lights as well...
 		CLOSE_TOTAL = 0;
 
-		int		farthest_light = -1;
-		float	farthest_distance = 0.0;
+		//int		farthest_light = -1;
+		//float	farthest_distance = 0.0;
 
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
-			float distance = Distance(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
+			float distance = Distance(backEnd.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
 
 			// We need to have some sanity... Basic max light range...
@@ -1107,7 +1107,7 @@ void RB_AddGlowShaderLights ( void )
 			if (r_occlusion->integer && distance > tr.occlusionZfar) continue;
 
 			// If the list is full and this one is as far or further then the current furthest light, skip the calculations...
-			if (farthest_light != -1 && distance >= farthest_distance && !(CLOSE_TOTAL < MAX_WORLD_GLOW_DLIGHTS)) continue;
+			//if (farthest_light != -1 && distance >= farthest_distance && !(CLOSE_TOTAL < MAX_WORLD_GLOW_DLIGHTS)) continue;
 
 #if 0
 			for (int i = 0; i < CLOSE_TOTAL; i++)
@@ -1125,7 +1125,7 @@ void RB_AddGlowShaderLights ( void )
 			}
 #endif
 
-#if 1
+#if 0
 			if (!R_inPVS(tr.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight], tr.refdef.areamask))
 			{// Not in PVS, don't add it...
 				continue;
@@ -1144,7 +1144,10 @@ void RB_AddGlowShaderLights ( void )
 			}
 			else
 			{// See if this is closer then one of our other lights...
-				for (int i = 0; i < CLOSE_TOTAL; i++)
+				int		farthest_light = 0;
+				float	farthest_distance = CLOSE_DIST[0];
+
+				for (int i = 1; i < CLOSE_TOTAL; i++)
 				{// Find the most distance light in our current list to replace, if this new option is closer...
 					if (CLOSE_DIST[i] > farthest_distance)
 					{// This one is further!
@@ -1169,12 +1172,12 @@ void RB_AddGlowShaderLights ( void )
 		int num_colored = 0;
 		int num_uncolored = 0;
 
-		for (int i = 0; i < CLOSE_TOTAL && tr.refdef.num_dlights < MAX_DLIGHTS; i++)
+		for (int i = 0; i < CLOSE_TOTAL && backEnd.refdef.num_dlights < MAX_DLIGHTS; i++)
 		{
 			if (MAP_GLOW_COLORS_AVILABLE[CLOSE_LIST[i]])
 			{
 				vec4_t glowColor = { 0 };
-				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
 				//VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
@@ -1185,7 +1188,7 @@ void RB_AddGlowShaderLights ( void )
 			}
 			else
 			{
-				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], tr.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_uncolored++;
 			}
@@ -2489,7 +2492,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformMatrix16(&tr.deferredLightingShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	//GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_DEFERRED_LIGHTS);
+
+#define __LIGHT_OCCLUSION__
+#ifdef __LIGHT_OCCLUSION__
+	GLSL_SetUniformVec2x16(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, MAX_DEFERRED_LIGHTS);
+#endif
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformVec3xX(&tr.deferredLightingShader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformFloatxX(&tr.deferredLightingShader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);

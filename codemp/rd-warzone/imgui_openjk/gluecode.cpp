@@ -10,7 +10,7 @@ namespace ImGui {
 
 	// roses are red, qboolean is no bool
 	bool Checkbox(char *label, qboolean *var) {
-		bool tmp = *var;
+		bool tmp = (*var) ? true : false;
 		bool ret = ImGui::Checkbox(label, &tmp);
 		*var = (qboolean) tmp;
 		return ret;

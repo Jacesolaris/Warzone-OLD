@@ -277,6 +277,8 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_PUDDLE:
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
+	case MATERIAL_FIRE:
+	case MATERIAL_SMOKE:
 		return qtrue;
 		break;
 	default:
