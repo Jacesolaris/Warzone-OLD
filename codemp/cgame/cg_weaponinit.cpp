@@ -330,6 +330,14 @@ void CG_RegisterWeapon( int weaponNum) {
 	weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
 	*/
 
+	// Init this weapon's bolt 3d... So it falls back to old efx if not set below...
+	weaponInfo->bolt3DShader = -1; // Setting this enables 3D bolts for this gun, using this color shader...
+	weaponInfo->bolt3DShaderAlt = -1; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
+	weaponInfo->bolt3DLength = 0; // If not set, 1.0 is the default length.
+	weaponInfo->bolt3DLengthAlt = 0; // If not set, 1.0 is the default length.
+	weaponInfo->bolt3DWidth = 0; // If not set, 1.0 is the default length.
+	weaponInfo->bolt3DWidthAlt = 0; // If not set, 1.0 is the default length.
+
 	switch ( weaponNum ) {
 	case WP_STUN_BATON:
 	case WP_MELEE:
@@ -679,13 +687,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_REPEATER:
+		/*
 		weaponInfo->bolt3DShader = cgs.media.yellowBlasterShot; // Setting this enables 3D bolts for this gun, using this color shader...
 		weaponInfo->bolt3DShaderAlt = cgs.media.yellowBlasterShot; // Setting this enables 3D bolts for this gun's alt fire, using this color shader...
 		weaponInfo->bolt3DLength = 1.0; // If not set, 1.0 is the default length.
 		weaponInfo->bolt3DLengthAlt = 1.25; // If not set, 1.0 is the default length.
 		weaponInfo->bolt3DWidth = 1.0; // If not set, 1.0 is the default length.
 		weaponInfo->bolt3DWidthAlt = 1.25; // If not set, 1.0 is the default length.
-
+		*/
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/select_repeater.mp3");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/imperial_repeater/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;

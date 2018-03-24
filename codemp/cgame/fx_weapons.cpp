@@ -131,11 +131,13 @@ void FX_WeaponProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 
 	qhandle_t bolt3D = CG_Get3DWeaponBoltColor(weapon, qfalse);
 
-	if (bolt3D)
+	//trap->Print("bolt id is %i.\n", bolt3D);
+	
+	if (bolt3D > 0)
 	{// New 3D bolt enabled...
 		FX_WeaponBolt3D(cent->lerpOrigin, forward, CG_Get3DWeaponBoltLength(weapon, qfalse), CG_Get3DWeaponBoltWidth(weapon, qfalse), bolt3D);
 	}
-	else if (weapon->missileRenderfx)
+	else if (weapon->missileRenderfx > 0)
 	{// Old 2D system...
 		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
@@ -163,11 +165,11 @@ void FX_WeaponAltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 	
 	qhandle_t bolt3D = CG_Get3DWeaponBoltColor(weapon, qtrue);
 
-	if (bolt3D)
+	if (bolt3D > 0)
 	{// New 3D bolt enabled...
 		FX_WeaponBolt3D(cent->lerpOrigin, forward, CG_Get3DWeaponBoltLength(weapon, qtrue), CG_Get3DWeaponBoltWidth(weapon, qtrue), bolt3D);
 	}
-	else if (weapon->altMissileRenderfx)
+	else if (weapon->altMissileRenderfx > 0)
 	{// Old 2D system...
 		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}

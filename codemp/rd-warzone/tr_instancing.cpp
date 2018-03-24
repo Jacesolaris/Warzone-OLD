@@ -22,6 +22,7 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t
 
 	//GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, MVP);
 	GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 	GLSL_SetUniformVec4(&tr.instanceShader, UNIFORM_COLOR, colorWhite);
 
 	GLSL_SetUniformInt(&tr.instanceShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);

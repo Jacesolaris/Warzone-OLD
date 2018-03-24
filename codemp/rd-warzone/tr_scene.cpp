@@ -123,6 +123,37 @@ void R_AddPolygonSurfaces(void) {
 	}
 }
 
+//#define __MERGE_POLYS__
+
+#ifdef __MERGE_POLYS__
+srfPoly_t *RE_FindPolyForShader(qhandle_t shader)
+{// So, let's try to merge all these efx polys together...
+	for (int i = 0; i < r_numpolys; i++)
+	{
+		srfPoly_t *poly = &backEndData->polys[i];
+		
+		if (poly && poly->hShader == shader)
+		{
+			//ri->Printf(PRINT_WARNING, "Reused old poly cache for shader %s.\n", tr.shaders[shader]->name);
+			return poly;
+		}
+	}
+
+	//ri->Printf(PRINT_WARNING, "Created new poly cache for shader %s.\n", tr.shaders[shader]->name);
+
+	srfPoly_t *poly = &backEndData->polys[r_numpolys];
+	poly->surfaceType = SF_POLY;
+	poly->hShader = shader;
+	poly->numVerts = 0;
+	poly->verts = &backEndData->polyVerts[r_numpolyverts];
+
+	// done.
+	r_numpolys++;
+
+	return poly;
+}
+#endif //__MERGE_POLYS__
+
 /*
 =====================
 RE_AddPolyToScene
@@ -155,10 +186,25 @@ void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts,
 			since we don't plan on changing the const and making for room for those effects
 			simply cut this message to developer only
 			*/
-			ri->Printf(PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polys or r_max_polyverts reached\n");
+			ri->Printf(PRINT_WARNING, "WARNING: RE_AddPolyToScene: r_max_polys or r_max_polyverts reached\n");
 			return;
 		}
 
+#ifdef __MERGE_POLYS__
+		poly = RE_FindPolyForShader(hShader);
+
+		/*for (int z = 0; z < numVerts; z++)
+		{
+			//poly->verts[poly->numVerts + z] = verts[(numVerts*j)+z];
+			Com_Memcpy(&poly->verts[poly->numVerts + z], &verts[(numVerts*j)+z], sizeof(*verts));
+		}*/
+		Com_Memcpy(&poly->verts[poly->numVerts], &verts[numVerts*j], numVerts * sizeof(*verts));
+
+		poly->numVerts += numVerts;
+		
+		// done.
+		r_numpolyverts += numVerts;
+#else //!__MERGE_POLYS__
 		poly = &backEndData->polys[r_numpolys];
 		poly->surfaceType = SF_POLY;
 		poly->hShader = hShader;
@@ -170,13 +216,23 @@ void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts,
 		// done.
 		r_numpolys++;
 		r_numpolyverts += numVerts;
+#endif //__MERGE_POLYS__
 
-		// if no world is loaded
 #ifndef __Q3_FOG__
+		/*
+		// find which fog volume the poly is in
+		VectorCopy(poly->verts[0].xyz, bounds[0]);
+		VectorCopy(poly->verts[0].xyz, bounds[1]);
+		for (i = 1; i < poly->numVerts; i++) {
+			AddPointToBounds(poly->verts[i].xyz, bounds[0], bounds[1]);
+		}
+		*/
+		fogIndex = 0;
+#else //!__Q3_FOG__
+		// if no world is loaded
 		if (1) {
 			fogIndex = 0;
 		} else 
-#endif //__Q3_FOG__
 		if (tr.world == NULL) {
 			fogIndex = 0;
 		}
@@ -206,7 +262,6 @@ void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts,
 				fogIndex = 0;
 			}
 		}
-#ifdef __Q3_FOG__
 		poly->fogIndex = fogIndex;
 #endif //__Q3_FOG__
 	}

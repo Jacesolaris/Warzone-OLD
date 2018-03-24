@@ -127,6 +127,11 @@ qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolea
 {
 	if (!weaponInfo) return cgs.media.whiteBlasterShot; // Fallback...
 
+	if (!altFire && !weaponInfo->bolt3DShader) return -1;
+	if (!altFire && !weaponInfo->bolt3DLength) return -1;
+	if (altFire && !weaponInfo->bolt3DShaderAlt) return -1;
+	if (altFire && !weaponInfo->bolt3DLength) return -1;
+
 	if (altFire)
 	{
 		if (weaponInfo->bolt3DShaderAlt)
@@ -152,6 +157,11 @@ qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolea
 float CG_Get3DWeaponBoltLength(const struct weaponInfo_s *weaponInfo, qboolean altFire)
 {
 	if (!weaponInfo) return 1.0; // Default size...
+
+	if (!altFire && !weaponInfo->bolt3DShader) return 0;
+	if (!altFire && !weaponInfo->bolt3DLength) return 0;
+	if (altFire && !weaponInfo->bolt3DShaderAlt) return 0;
+	if (altFire && !weaponInfo->bolt3DLength) return 0;
 
 	if (altFire)
 	{
@@ -179,6 +189,11 @@ float CG_Get3DWeaponBoltWidth(const struct weaponInfo_s *weaponInfo, qboolean al
 {
 	if (!weaponInfo) return 1.0; // Default size...
 
+	if (!altFire && !weaponInfo->bolt3DShader) return 0;
+	if (!altFire && !weaponInfo->bolt3DLength) return 0;
+	if (altFire && !weaponInfo->bolt3DShaderAlt) return 0;
+	if (altFire && !weaponInfo->bolt3DLength) return 0;
+
 	if (altFire)
 	{
 		if (weaponInfo->bolt3DWidthAlt)
@@ -204,6 +219,10 @@ float CG_Get3DWeaponBoltWidth(const struct weaponInfo_s *weaponInfo, qboolean al
 void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_t shader)
 {
 	refEntity_t ent;
+
+	if (!shader) return;
+	if (!length) return;
+	if (!radius) return;
 
 	// Draw the bolt core...
 	memset(&ent, 0, sizeof(refEntity_t));
