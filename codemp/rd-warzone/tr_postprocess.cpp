@@ -1898,7 +1898,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
 }
 
-extern qboolean USE_OCEAN;
+extern qboolean WATER_USE_OCEAN;
 extern float WATER_WAVE_HEIGHT;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -2069,7 +2069,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, USE_OCEAN, 0.0);
+		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
 

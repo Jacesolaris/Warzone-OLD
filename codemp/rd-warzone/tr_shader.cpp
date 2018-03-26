@@ -3150,6 +3150,7 @@ static void DefaultNightSkyParms(void) {
 		}
 	}
 
+	//ri->Printf(PRINT_WARNING, "DEBUG: DefaultSkyCubeNight.\n");
 	tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 }
 
@@ -3183,9 +3184,6 @@ static void ParseSkyParms( const char **text ) {
 		return;
 	}
 
-	// UQ1: Set night sky to default... Override by shader if info exists after...
-	DefaultNightSkyParms();
-
 	if ( strcmp( token, "-" ) ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s", token, suf[i] );
@@ -3201,6 +3199,7 @@ static void ParseSkyParms( const char **text ) {
 			}
 		}
 
+		//ri->Printf(PRINT_WARNING, "DEBUG: SkyCubeDay.\n");
 		tr.skyCubeMap = R_UploadSkyCube("*skyCubeDay", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 
 		qboolean newSky = qfalse;
@@ -3221,6 +3220,7 @@ static void ParseSkyParms( const char **text ) {
 
 		if (newSky)
 		{
+			//ri->Printf(PRINT_WARNING, "DEBUG: SkyCubeNight.\n");
 			tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 		}
 		else
@@ -3235,6 +3235,9 @@ static void ParseSkyParms( const char **text ) {
 			}
 
 			skyImageNum = -1;
+
+			// UQ1: Set night sky to default...
+			DefaultNightSkyParms();
 		}
 	}
 
@@ -3298,6 +3301,7 @@ static void ParseNightSkyParms(const char **text) {
 			}
 		}
 
+		//ri->Printf(PRINT_WARNING, "DEBUG: SkyCubeNightParse.\n");
 		tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
 	}
 

@@ -29,6 +29,9 @@ out vec4 out_NormalDetail;
 #define shaderTime (u_Time * 0.4)
 
 
+#define ORIGINAL
+
+
 #ifndef __LQ_MODE__
 // When not in LQ mode, also add sparks...
 #define USE_SPARKS
@@ -259,6 +262,7 @@ void getFlames(out vec4 fragColor, in vec2 uv, out vec4 fragGlow)
 	float fadeLR = 1.0;
 #endif //CYLINDERS
 
+#ifdef ORIGINAL
 	//
 	// Smoke...
 	//
@@ -291,11 +295,56 @@ void getFlames(out vec4 fragColor, in vec2 uv, out vec4 fragGlow)
 	n += pow((fadeLR * fadeTB) * dist, 2.) * triNoise3D(pos  * .2, .4);
 	vec3 col = hsv(n * 1.4 + .9, .6, .9);
 	vec4 fire = vec4(col * pow(n * dist, 2.) * 300., pow((fadeLR * fadeTB) * dist, 2.));
+#else //!ORIGINAL
+	vec2 fragCoord = uv;
+	vec2 offset = vec2(0.5);
+	float time = shaderTime;
+	float timeSpeed = 0.5;
+	float realTime = timeSpeed*time;
+	float sparkGridSize = 30.0;
+
+	float xpart = uv.x;
+	float ypart = uv.y;
+	float xfuel = 1.0 - abs(2.0*xpart - 1.0);
+
+
+
+
+
+	vec2 drag = vec2(0.5);//iMouse.xy;
+						  //
+						  //
+	float ypartClip = fragCoord.y;
+	float ypartClippedFalloff = clamp(2.0 - ypartClip, 0.0, 1.0);
+	float ypartClipped = min(ypartClip, 1.0);
+	float ypartClippedn = 1.0 - ypartClipped;
+	//
+	//
+	//
+	vec2 coordScaled = 0.02*fragCoord - 0.2*vec2(offset.x, 0.0);
+	vec3 position = vec3(coordScaled, 0.0) + vec3(1223.0, 6434.0, 8425.0);
+	vec3 flow = vec3(4.1*(0.5 - xpart)*pow(ypartClippedn, 4.0), -2.0*xfuel*pow(ypartClippedn, 64.0), 0.0);
+	vec3 timing = realTime*vec3(0.0, -1.7, 1.1) + flow;
+	//
+	vec3 displacePos = vec3(1.0, 0.5, 1.0)*3.4*position + realTime*vec3(0.01, -0.7, 1.3);
+	vec3 displace3 = vec3(noiseStackUV(displacePos, 2, 0.4, 0.1), 0.0);
+	//
+	vec3 noiseCoord = (vec3(2.0, 1.0, 1.0)*position + timing + 0.4*displace3) / 1.0;
+	float noise = noiseStack(noiseCoord, 3, 0.4);
+	//
+	float flames = pow(ypartClipped, 0.5*xfuel)*pow(noise, 0.25*xfuel);
+	//
+	float f = ypartClippedFalloff*pow(1.0 - flames*flames*flames, 7.0);
+	float fff = f*f*f;
+	vec3 fire = 1.5*vec3(f, fff, fff*fff);
+	fire *= 1.0 - (pow(ypart, 0.2));
+#endif //ORIGINAL
 
 #ifdef USE_SPARKS
 	//
 	// sparks
 	//
+#ifdef ORIGINAL
 	vec2 offset = vec2(0.5);
 	float time = shaderTime;
 	float timeSpeed = 0.5;
@@ -306,6 +355,7 @@ void getFlames(out vec4 fragColor, in vec2 uv, out vec4 fragGlow)
 	float ypart = uv.y;
 	float xfuel = 1.0 - abs(2.0*xpart - 1.0);
 	vec3 flow = vec3(4.1*(0.5 - xpart)*pow(n, 4.0), -2.0*xfuel*pow(n, 64.0), 0.0);
+#endif //ORIGINAL
 
 	vec2 sparkCoord = uv * 850.0 - vec2(2.0*offset.x, 190.0*realTime);
 	sparkCoord -= 30.0*noiseStackUV(0.01*vec3(sparkCoord, 30.0*time), 1, 0.4, 0.1);
@@ -332,15 +382,32 @@ void getFlames(out vec4 fragColor, in vec2 uv, out vec4 fragGlow)
 	//
 	// Combine...
 	//
+#ifdef ORIGINAL
+
 	fire.rgb *= vec3(12.0, 4.0, 4.0);
-	fragColor = max(fire * u_Local9.r, smoke);
+	fragColor = max(fire, smoke);
+
 #ifdef USE_SPARKS
 	fragColor.rgb = max(fragColor.rgb, sparks);
 #endif //USE_SPARKS
 	fragColor.a = clamp(length(fragColor.rgb / 3.0), 0.0, 1.0);
 	fragColor.a = clamp(fragColor.a * 0.03, 0.0, 1.0);
 
-	fragGlow = fire;
+#else //ORIGINAL
+
+	fragColor.rgb = fire.rgb * u_Local9.r;
+
+#ifdef USE_SPARKS
+	fragColor.rgb = max(fragColor.rgb, sparks);
+#endif //USE_SPARKS
+	fragColor.a = clamp(length(fragColor.rgb / 3.0), 0.0, 1.0);
+	fragColor.a = clamp(fragColor.a * u_Local9.g/*0.03*/, 0.0, 1.0);
+
+#endif //ORIGINAL
+
+
+
+	fragGlow.rgb = fire.rgb;
 	fragGlow.rgb *= 0.2;// 0.3;
 #ifdef SPARKS
 	fragGlow.rgb = max(fragGlow.rgb, sparks);

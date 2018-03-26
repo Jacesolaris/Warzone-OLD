@@ -257,7 +257,9 @@ void main()
 		vec2 texCoords = var_TexCoords;
 
 		gl_FragColor = texture(u_DiffuseMap, texCoords);
-		gl_FragColor.rgb = Enhance(u_DiffuseMap, texCoords, gl_FragColor.rgb, 8.0);
+#ifdef __HIGH_PASS_SHARPEN__
+		gl_FragColor.rgb = Enhance(u_DiffuseMap, texCoords, gl_FragColor.rgb, 1.0/*8.0*/);
+#endif //__HIGH_PASS_SHARPEN__
 
 #if 0
 		// Experimenting with atmospheric scatter...
@@ -298,7 +300,9 @@ void main()
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
 				vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
-				nightDiffuse.rgb = Enhance(u_OverlayMap, texCoords, nightDiffuse.rgb, 8.0);
+#ifdef __HIGH_PASS_SHARPEN__
+				nightDiffuse.rgb = Enhance(u_OverlayMap, texCoords, nightDiffuse.rgb, 1.0);
+#endif //__HIGH_PASS_SHARPEN__
 				//nightDiffuse += GetStars( texCoords ) * u_Local9.g;
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, SHADER_NIGHT_SCALE); // Mix in night sky with original sky from day -> night...
 			}

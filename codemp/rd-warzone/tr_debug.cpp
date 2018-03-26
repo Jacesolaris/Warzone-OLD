@@ -45,6 +45,13 @@ void DEBUG_StartTimer(char *name, qboolean usePerfCvar)
 		memset(DEBUG_PERFORMANCE_NAME, 0, sizeof(char) * 128);
 		strcpy(DEBUG_PERFORMANCE_NAME, name);
 		DEBUG_PERFORMANCE_TIME = getMilliCount();
+
+		/*
+		if (DEBUG_PERFORMANCE_NAME[0] != '\0' && strlen(DEBUG_PERFORMANCE_NAME) > 0)
+		{
+			ri->Printf(PRINT_WARNING, "%s begins.\n", DEBUG_PERFORMANCE_NAME);
+		}
+		*/
 	}
 #endif //__PERFORMANCE_DEBUG__
 }
@@ -64,15 +71,15 @@ void DEBUG_EndTimer(qboolean usePerfCvar)
 
 		DEBUG_PERFORMANCE_TIME = getMilliSpan(DEBUG_PERFORMANCE_TIME);
 
-		// you can see the results in Perf dock now
-		//if (DEBUG_PERFORMANCE_NAME[0] != '\0' && strlen(DEBUG_PERFORMANCE_NAME) > 0)
-		//{
-		//	ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", DEBUG_PERFORMANCE_NAME, DEBUG_PERFORMANCE_TIME);
-		//}
-		//else
-		//{
-		//	ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", "unknown", DEBUG_PERFORMANCE_TIME);
-		//}
+		// you can see the results in Perf dock now --  UQ1: Gonna keep the messages for now so I can track down startup errors easier...
+		if (DEBUG_PERFORMANCE_NAME[0] != '\0' && strlen(DEBUG_PERFORMANCE_NAME) > 0)
+		{
+			ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", DEBUG_PERFORMANCE_NAME, DEBUG_PERFORMANCE_TIME);
+		}
+		else
+		{
+			ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", "unknown", DEBUG_PERFORMANCE_TIME);
+		}
 	}
 #endif //__PERFORMANCE_DEBUG__
 }

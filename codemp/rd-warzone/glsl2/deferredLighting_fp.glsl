@@ -1090,30 +1090,30 @@ void main(void)
 		vec3 reflected = cubeRayDir + parallax;
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
 
-		vec3 reflected2 = rayDir + parallax;
-		reflected2 = vec3(-reflected2.y, -reflected2.z, -reflected2.x);
+		//vec3 reflected2 = rayDir + parallax;
+		//reflected2 = vec3(-reflected2.y, -reflected2.z, -reflected2.x);
 
 		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
 		{// Mix between night and day colors...
 			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
-			skyColorDay += texture(u_SkyCubeMap, reflected2).rgb;
-			skyColorDay /= 2.0;
+			//skyColorDay += texture(u_SkyCubeMap, reflected2).rgb;
+			//skyColorDay /= 2.0;
 			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
-			skyColorNight += texture(u_SkyCubeMapNight, reflected2).rgb;
-			skyColorNight /= 2.0;
+			//skyColorNight += texture(u_SkyCubeMapNight, reflected2).rgb;
+			//skyColorNight /= 2.0;
 			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
 		}
 		else if (u_Local6.a >= 1.0)
 		{// Night only colors...
 			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
-			skyColor += texture(u_SkyCubeMapNight, reflected2).rgb;
-			skyColor /= 2.0;
+			//skyColor += texture(u_SkyCubeMapNight, reflected2).rgb;
+			//skyColor /= 2.0;
 		}
 		else
 		{// Day only colors...
 			skyColor = texture(u_SkyCubeMap, reflected).rgb;
-			skyColor += texture(u_SkyCubeMap, reflected2).rgb;
-			skyColor /= 2.0;
+			//skyColor += texture(u_SkyCubeMap, reflected2).rgb;
+			//skyColor /= 2.0;
 		}
 
 		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.333), 0.0, 1.0);
@@ -1251,11 +1251,13 @@ void main(void)
 				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), outColor.rgb * lightColor, outColor.rgb * lightColor, 1.0, u_PrimaryLightOrigin.xyz);
 
 #ifndef __LQ_MODE__
+				/*
 				if (isMetalic)
 				{// Metals do an extra randomish light query to make them really shine... Mixed in at a lower level then the real direction...
 					vec3 query = normalize(reflect(normalize(-sunDir), E));
 					lightColor = mix(lightColor, blinn_phong(position.xyz, outColor.rgb, N, E, query, outColor.rgb * lightColor, outColor.rgb * lightColor * 2.0, 1.0, u_PrimaryLightOrigin.xyz), 0.25);
 				}
+				*/
 #endif //__LQ_MODE__
 
 				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;

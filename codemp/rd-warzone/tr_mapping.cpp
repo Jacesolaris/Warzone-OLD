@@ -1560,7 +1560,8 @@ float		FOG_VOLUMETRIC_WIND = 1.0;
 float		FOG_VOLUMETRIC_VELOCITY = 0.001;
 vec3_t		FOG_VOLUMETRIC_COLOR = { 0 };
 qboolean	WATER_ENABLED = qtrue;
-qboolean	USE_OCEAN = qtrue;
+qboolean	WATER_USE_OCEAN = qtrue;
+qboolean	WATER_FARPLANE_ENABLED = qtrue;
 float		WATER_REFLECTIVENESS = 0.28;
 float		WATER_WAVE_HEIGHT = 64.0;
 qboolean	WATER_FOG_ENABLED = qfalse;
@@ -1806,9 +1807,10 @@ void MAPPING_LoadMapInfo(void)
 	//
 	WATER_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_ENABLED", "0")) > 0) ? qtrue : qfalse;
 
-	if (WATER_ENABLED)
+	if (WATER_ENABLED /*&& !WATER_INITIALIZED*/)
 	{
-		USE_OCEAN = (atoi(IniRead(mapname, "WATER", "WATER_OCEAN_ENABLED", "1")) > 0) ? qtrue : qfalse;
+		WATER_USE_OCEAN = (atoi(IniRead(mapname, "WATER", "WATER_OCEAN_ENABLED", "1")) > 0) ? qtrue : qfalse;
+		WATER_FARPLANE_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FARPLANE_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_FOG_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FOG_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_REFLECTIVENESS = Q_clamp(0.0, atof(IniRead(mapname, "WATER", "WATER_REFLECTIVENESS", "0.28")), 1.0);
 		WATER_WAVE_HEIGHT = atof(IniRead(mapname, "WATER", "WATER_WAVE_HEIGHT", "64.0"));
@@ -2054,8 +2056,8 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, USE_OCEAN ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water wave height is ^7%.4f^5 on this map.\n", WATER_WAVE_HEIGHT);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, WATER_USE_OCEAN ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water far plane is ^7%s^5 and wave height is ^7%.4f^5 on this map.\n", WATER_FARPLANE_ENABLED ? "ENABLED" : "DISABLED", WATER_WAVE_HEIGHT);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 

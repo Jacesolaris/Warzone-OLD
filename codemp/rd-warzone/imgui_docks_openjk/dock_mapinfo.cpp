@@ -65,7 +65,8 @@ extern float		FOG_VOLUMETRIC_WIND;
 extern float		FOG_VOLUMETRIC_VELOCITY;
 extern vec3_t		FOG_VOLUMETRIC_COLOR;
 extern qboolean	WATER_ENABLED;
-extern qboolean	USE_OCEAN;
+extern qboolean	WATER_USE_OCEAN;
+extern qboolean	WATER_FARPLANE_ENABLED;
 extern float		WATER_REFLECTIVENESS;
 extern qboolean	WATER_FOG_ENABLED;
 extern vec3_t		WATER_COLOR_SHALLOW;
@@ -209,7 +210,8 @@ void DockMapInfo::imgui() {
 
 	if (ImGui::CollapsingHeader("Water stuff")) {
 		ImGui::Checkbox("WATER_ENABLED", &WATER_ENABLED);
-		ImGui::Checkbox("USE_OCEAN", &USE_OCEAN);
+		ImGui::Checkbox("WATER_USE_OCEAN", &WATER_USE_OCEAN);
+		ImGui::Checkbox("WATER_FARPLANE_ENABLED", &WATER_FARPLANE_ENABLED);
 		ImGui::DragFloat("WATER_REFLECTIVENESS", &WATER_REFLECTIVENESS);
 		ImGui::Checkbox("WATER_FOG_ENABLED", &WATER_FOG_ENABLED);
 		ImGui::DragFloat3("WATER_COLOR_SHALLOW", WATER_COLOR_SHALLOW);

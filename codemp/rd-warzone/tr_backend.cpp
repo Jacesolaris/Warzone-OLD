@@ -2252,7 +2252,8 @@ const void	*RB_WorldEffects( const void *data )
 	}
 
 #ifdef __OCEAN__
-	if (r_glslWater->integer)
+	extern qboolean WATER_FARPLANE_ENABLED;
+	if (r_glslWater->integer && WATER_ENABLED && WATER_FARPLANE_ENABLED)
 	{
 		extern void OCEAN_Render(void);
 		OCEAN_Render();
