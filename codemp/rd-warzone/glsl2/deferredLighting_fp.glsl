@@ -96,7 +96,7 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	switch (int(MATERIAL_TYPE))
 	{
 	case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		specularReflectionScale = 1.0;
+		specularReflectionScale = 0.1;
 		cubeReflectionScale = 0.7;
 		break;
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
@@ -136,11 +136,11 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		specularReflectionScale = 0.98;
+		specularReflectionScale = 0.098;
 		cubeReflectionScale = 0.98;
 		break;
 	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-		specularReflectionScale = 1.0;
+		specularReflectionScale = 0.098;
 		cubeReflectionScale = 0.98;
 		break;
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
@@ -220,7 +220,7 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.68;
 		break;
 	case MATERIAL_PUDDLE:
-		specularReflectionScale = 1.0;
+		specularReflectionScale = 0.1;
 		cubeReflectionScale = 0.7;
 		break;
 	case MATERIAL_EFX:
