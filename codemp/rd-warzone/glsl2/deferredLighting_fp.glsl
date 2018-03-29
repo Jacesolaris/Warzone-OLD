@@ -1248,7 +1248,7 @@ void main(void)
 			if (lightMult > 0.0)
 			{
 				lightColor *= lightMult;
-				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), outColor.rgb * lightColor, outColor.rgb * lightColor, 1.0, u_PrimaryLightOrigin.xyz);
+				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), outColor.rgb * lightColor * 6.0, outColor.rgb * lightColor * 3.0, 1.0, u_PrimaryLightOrigin.xyz);
 
 #ifndef __LQ_MODE__
 				/*

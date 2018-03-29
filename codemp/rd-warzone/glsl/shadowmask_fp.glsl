@@ -48,7 +48,7 @@ float random( const vec2 p )
 
 float offset_lookup(sampler2DShadow shadowmap, vec4 loc, vec2 offset, float scale)
 {
-	float result = textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, loc.z, loc.w));
+	float result = textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, loc.z, loc.w)) > 0.1 ? 1.0 : 0.0;
 	//result = clamp((result - 0.2) * 1.2, 0.0, 1.0);
 	//result = clamp(result - DEPTH_MAX_ERROR, 0.0, 1.0);
 	return result;

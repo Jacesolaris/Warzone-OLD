@@ -4781,9 +4781,9 @@ void R_CreateBuiltinImages( void ) {
 			if (x >= 3)
 				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 4.0) / vramScaleDiv, (r_shadowMapSize->integer * 4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			else if (x >= 2)
-				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 3.0) / vramScaleDiv, (r_shadowMapSize->integer * 3.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			else if (x >= 1)
-				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer) / vramScaleDiv, (r_shadowMapSize->integer) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
+				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			else
 				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, r_shadowMapSize->integer / vramScaleDiv, r_shadowMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
