@@ -1408,7 +1408,7 @@ R_Register
 */
 void R_Register( void )
 {
-	r_compressedTextures = ri->Cvar_Get("r_compressedTextures", "1", CVAR_ARCHIVE);
+	r_compressedTextures = ri->Cvar_Get("r_compressedTextures", "2", CVAR_ARCHIVE);
 
 	r_drawSort = ri->Cvar_Get("r_drawSort", "1", CVAR_ARCHIVE);
 
@@ -1838,6 +1838,7 @@ Ghoul2 Insert End
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
 	ri->Cmd_AddCommand( "imagelist", R_ImageList_f );
+	ri->Cmd_AddCommand("imagehoglist", R_ImageHogList_f);
 	ri->Cmd_AddCommand( "shaderlist", R_ShaderList_f );
 	ri->Cmd_AddCommand( "skinlist", R_SkinList_f );
 	ri->Cmd_AddCommand( "fontlist", R_FontList_f );
@@ -2009,6 +2010,7 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 	ri->Cmd_RemoveCommand ("screenshot_png");
 	ri->Cmd_RemoveCommand ("screenshot_tga");
 	ri->Cmd_RemoveCommand ("imagelist");
+	ri->Cmd_RemoveCommand("imagehoglist");
 	ri->Cmd_RemoveCommand ("shaderlist");
 	ri->Cmd_RemoveCommand ("skinlist");
 	ri->Cmd_RemoveCommand ("fontlist");

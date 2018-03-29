@@ -12,87 +12,39 @@ typedef enum {
 
 	// =================================================================
 	//
-	// Melee weapons...
-	//
-	// =================================================================
-
-	// START: Do not change anything between these 2 comments...
-	WP_STUN_BATON,
-	WP_FIRST_USEABLE = WP_STUN_BATON,
-	// END: ^^^ Do not change...
-
-	WP_MELEE,
-	// Add new melee weapons here...
-
-
-
-	// START: Do not change anything between these 2 comments...
-	WP_SABER,
-	WP_NUM_MELEE_WEAPONS = WP_SABER,
-	// END: ^^^ Do not change...
-
-	// =================================================================
-	//
-	// Guns...
-	//
-	// =================================================================
-
-	WP_BRYAR_PISTOL,
-	WP_BRYAR_OLD,
-	WP_BLASTER,
-	WP_DISRUPTOR,
-	WP_BOWCASTER,
-	WP_REPEATER,
-	WP_DEMP2,
-	WP_FLECHETTE,
-	WP_CONCUSSION,
-
-	// Add new guns here...
-	WP_A280,
-	WP_T21,
-	WP_EE3,
-	WP_DLT_19,
-	WP_DC_15A_RIFLE,
-	WP_Z6_BLASTER_CANON,
-	//WP_DC_17_CLONE_PISTOL keep this weapon name to find the  //EFX Bounce impact code, for later use
-	WP_BRYAR_CARBINE,
-	WP_BRYAR_RIFLE,
-	WP_BRYAR_RIFLE_SCOPE,
-	WP_PULSECANON,
-	WP_PROTON_CARBINE_RIFLE,
-	WP_DH_17_PISTOL,
-
-	// START: Do not change anything between these 2 comments...
-	WP_ROCKET_LAUNCHER,
-	WP_NUM_GUNS = WP_ROCKET_LAUNCHER,
-	// END: ^^^ Do not change...
-
-	// =================================================================
-	//
-	// Grenades and explosives here...
-	//
-	// =================================================================
-
-	WP_THERMAL,
-	// Add new grenades/explosives here...
-	WP_FRAG_GRENADE,
-	WP_FRAG_GRENADE_OLD,
-	WP_CYROBAN_GRENADE,
-	WP_TRIP_MINE,
-
-	// START: Do not change anything between these 2 comments...
-	WP_DET_PACK,
-	WP_NUM_USEABLE = WP_DET_PACK,
-	// END: ^^^ Do not change...
-
-	// =================================================================
-	//
 	// Special weapons - do not add normal guns or melee weapons here...
 	//
 	// =================================================================
 
 	WP_EMPLACED_GUN,
 	WP_TURRET,
+
+	// =================================================================
+	//
+	// Grenades... Unavailable for now - later on G key...
+	//
+	// =================================================================
+
+	WP_THERMAL,
+	WP_FRAG_GRENADE,
+	WP_CYROBAN_GRENADE,
+	WP_TRIP_MINE,
+	WP_DET_PACK,
+
+	// =================================================================
+	//
+	// Usable weapons...
+	//
+	// =================================================================
+
+	WP_MELEE,
+	WP_FIRST_USEABLE = WP_MELEE,
+
+	WP_SABER,
+	WP_NUM_MELEE_WEAPONS = WP_SABER,
+
+	WP_MODULIZED_WEAPON,
+	WP_NUM_USEABLE = WP_MODULIZED_WEAPON,
 
 	WP_ALL_WEAPONS,
 	WP_NUM_WEAPONS = WP_ALL_WEAPONS
@@ -154,11 +106,6 @@ extern weaponData_t weaponData[WP_NUM_WEAPONS];
 
 
 // Specific weapon information
-
-#define FIRST_WEAPON		WP_BRYAR_PISTOL		// this is the first weapon for next and prev weapon switching
-#define MAX_PLAYER_WEAPONS	WP_NUM_WEAPONS-1	// this is the max you can switch to and get with the give all.
-
-
 #define DEFAULT_SHOTGUN_SPREAD	700
 #define DEFAULT_SHOTGUN_COUNT	11
 

@@ -1742,18 +1742,6 @@ qboolean Jedi_DodgeEvasion( gentity_t *self, gentity_t *shooter, trace_t *tr, in
 void Update_Saberblocking(gentity_t *self, gentity_t *otherOwner, vec3_t hitLoc, qboolean *didHit, qboolean otherHitSaberBlade);
 //[/SaberSys]
 // g_log.c
-void QDECL G_LogWeaponPickup(int client, int weaponid);
-void QDECL G_LogWeaponFire(int client, int weaponid);
-void QDECL G_LogWeaponDamage(int client, int mod, int amount);
-void QDECL G_LogWeaponKill(int client, int mod);
-void QDECL G_LogWeaponDeath(int client, int weaponid);
-void QDECL G_LogWeaponFrag(int attacker, int deadguy);
-void QDECL G_LogWeaponPowerup(int client, int powerupid);
-void QDECL G_LogWeaponItem(int client, int itemid);
-void QDECL G_LogWeaponInit(void);
-void QDECL G_LogWeaponOutput(void);
-void QDECL G_LogExit( const char *string );
-void QDECL G_ClearClientLog(int client);
 
 // g_siege.c
 void InitSiegeMode(void);

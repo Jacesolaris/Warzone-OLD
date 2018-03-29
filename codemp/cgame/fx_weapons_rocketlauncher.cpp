@@ -30,10 +30,6 @@ void FX_RocketProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 	{
 		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
-	else
-	{
-		PlayEffectID(cgs.effects.rocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-	}
 
 	FX_RocketAddLight(cent->lerpOrigin, cent->currentState.weapon);
 }
@@ -44,17 +40,6 @@ FX_RocketHitWall
 ---------------------------
 */
 
-//void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
-//{
-//	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-//	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
-//
-//	if (fx)
-//		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-//	else
-//		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect, cgs.effects.rocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
-//}
-
 void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
 	// Set fx to primary weapon fx.
@@ -62,11 +47,7 @@ void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.rocketExplosionEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -93,22 +74,7 @@ void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	{// This should never be possible, but just in case, fall back to concussion here.
-		PlayEffectID(cgs.effects.rocketExplosionEffect, origin, normal, -1, -1, qfalse);
-	}
 }
-
-//void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
-//{
-//	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-//	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
-//
-//	if (fx)
-//		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-//	else
-//		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.pulserocketExplosionEffect, cgs.effects.pulserocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
-//}
 
 void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
@@ -117,11 +83,7 @@ void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean al
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.pulserocketExplosionEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -147,10 +109,6 @@ void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean al
 	if (fx)
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-	}
-	else
-	{// This should never be possible, but just in case, fall back to concussion here.
-		PlayEffectID(cgs.effects.pulserocketExplosionEffect, origin, normal, -1, -1, qfalse);
 	}
 }
 
@@ -168,8 +126,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	//trap->Print("Hit player - weapon %i\n", weapon);
 	//trap->Print("FX: %i. FX2: %i.\n", (int)fx, (int)fx2);
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.rocketExplosionEffect;
+		return;
 	}
 
 	if (!fx2) {
@@ -179,7 +136,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 		}
 		else {
 			// If there is no primary (missileWallImpactfx) fx. Use original fx.
-			fx2 = cgs.effects.rocketExplosionEffect;
+			return;
 		}
 	}
 
@@ -192,7 +149,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 
 		if (!fx) {
 			// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-			fx = cgs.effects.rocketExplosionEffect;
+			return;
 		}
 
 		if (!fx2) {
@@ -202,7 +159,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 			}
 			else {
 				// If there is no primary (missileWallImpactfx) fx. Use original fx.
-				fx2 = cgs.effects.rocketExplosionEffect;
+				return;
 			}
 		}
 
@@ -226,41 +183,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 		//trap->Print("We have fx\n");
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	{
-		//trap->Print("We have NO fx\n");
-		if (humanoid)
-		{
-			PlayEffectID(cgs.effects.rocketExplosionEffect, origin, normal, -1, -1, qfalse);
-		}
-		else
-		{
-			PlayEffectID(cgs.effects.rocketExplosionEffect, origin, normal, -1, -1, qfalse);
-		}
-	}
 }
-
-//void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
-//{
-//	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-//	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
-//
-//	if (fx)
-//		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-//	else
-//		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect, cgs.effects.rocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
-//}
-
-//void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
-//{
-//	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-//	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
-//
-//	if (fx)
-//		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-//	else
-//	PlayEffectID(CG_EnableEnhancedFX(cgs.effects.pulserocketExplosionEffect, cgs.effects.pulserocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
-//}
 
 void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
@@ -269,11 +192,7 @@ void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, in
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.pulserocketExplosionEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -300,17 +219,6 @@ void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, in
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	{
-		if (humanoid)
-		{
-			PlayEffectID(cgs.effects.pulserocketExplosionEffect, origin, normal, -1, -1, qfalse);
-		}
-		else
-		{
-			PlayEffectID(cgs.effects.pulserocketExplosionEffect, origin, normal, -1, -1, qfalse);
-		}
-	}
 }
 
 /*
@@ -331,8 +239,6 @@ void FX_RocketAltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 
 	if (fx)
 		PlayEffectID(fx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	else
-		PlayEffectID(cgs.effects.rocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 
 	FX_RocketAddLight(cent->lerpOrigin, cent->currentState.weapon);
 }
@@ -349,9 +255,5 @@ void FX_PulseRocketAltProjectileThink(centity_t *cent, const struct weaponInfo_s
 	if (weapon->altMissileRenderfx)
 	{
 		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	}
-	else
-	{
-		PlayEffectID(cgs.effects.pulserocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 }

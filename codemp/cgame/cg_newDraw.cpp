@@ -12,6 +12,7 @@ int CG_GetSelectedPlayer() {
 }
 
 qhandle_t CG_StatusHandle(int task) {
+#if 0
 	qhandle_t h = cgs.media.assaultShader;
 	switch (task) {
 	case TEAMTASK_OFFENSE :
@@ -40,6 +41,9 @@ qhandle_t CG_StatusHandle(int task) {
 		break;
 	}
 	return h;
+#else
+	return -1;
+#endif
 }
 
 
@@ -308,6 +312,7 @@ static void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, vec4
 
 extern const char *CG_GetLocationString(const char *loc); //cg_main.c
 void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale, vec4_t color, qhandle_t shader) {
+#if 0
 	int xx;
 	float y;
 	int i, j, len, count;
@@ -414,6 +419,7 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 
 		}
 	}
+#endif
 }
 
 

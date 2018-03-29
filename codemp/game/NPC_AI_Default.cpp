@@ -1327,8 +1327,6 @@ void NPC_BSPointShoot (gentity_t *aiEnt, qboolean shoot)
 	switch( aiEnt->client->ps.weapon )
 	{
 	case WP_NONE:
-//	case WP_TRICORDER:
-	case WP_STUN_BATON:
 	case WP_SABER:
 		//don't do any pitch change if not holding a firing weapon
 		break;

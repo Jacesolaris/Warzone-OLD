@@ -1294,7 +1294,7 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 #ifdef _DEBUG
 //		Com_Printf("WARNING: Bot tried to use WP_NONE!\n");
 #endif
-		bi->weapon = WP_BRYAR_PISTOL;
+		bi->weapon = WP_MODULIZED_WEAPON;
 	}
 
 	//
@@ -1575,21 +1575,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 
 	//initialize weapon weight defaults..
 	bs->botWeaponWeights[WP_NONE] = 0;
-	bs->botWeaponWeights[WP_STUN_BATON] = 1;
 	bs->botWeaponWeights[WP_SABER] = 10;
-	bs->botWeaponWeights[WP_BRYAR_PISTOL] = 11;
-	bs->botWeaponWeights[WP_BLASTER] = 12;
-	bs->botWeaponWeights[WP_DISRUPTOR] = 13;
-	bs->botWeaponWeights[WP_A280] = 14;
-	bs->botWeaponWeights[WP_BOWCASTER] = 15;
-	bs->botWeaponWeights[WP_REPEATER] = 16;
-	bs->botWeaponWeights[WP_T21] = 12;
-	bs->botWeaponWeights[WP_EE3] = 12;
-	bs->botWeaponWeights[WP_DLT_19] = 12;
-	bs->botWeaponWeights[WP_DC_15A_RIFLE] = 16;
-	bs->botWeaponWeights[WP_DEMP2] = 17; 
-	bs->botWeaponWeights[WP_FLECHETTE] = 18;
-	bs->botWeaponWeights[WP_ROCKET_LAUNCHER] = 19;
 	bs->botWeaponWeights[WP_THERMAL] = 15;
 	bs->botWeaponWeights[WP_TRIP_MINE] = 0;
 	bs->botWeaponWeights[WP_DET_PACK] = 0;

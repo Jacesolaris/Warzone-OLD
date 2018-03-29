@@ -679,6 +679,7 @@ typedef struct image_s {
 	int			flags;
 
 	vec4_t		lightColor;
+	vec4_t		averageColor;
 
 	bool		hasAlpha;
 
@@ -3428,6 +3429,7 @@ void		R_SetColorMappings( void );
 void		R_GammaCorrect( byte *buffer, int bufSize );
 
 void	R_ImageList_f( void );
+void	R_ImageHogList_f(void);
 void	R_SkinList_f( void );
 void	R_FontList_f( void );
 // https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=516

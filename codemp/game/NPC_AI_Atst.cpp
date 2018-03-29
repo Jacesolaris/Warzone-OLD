@@ -24,8 +24,8 @@ void NPC_ATST_Precache(void)
 
 //	RegisterItem( BG_FindItemForWeapon( WP_ATST_MAIN ));	//precache the weapon
 	//rwwFIXMEFIXME: add this weapon
-	RegisterItem( BG_FindItemForWeapon( WP_BOWCASTER ));	//precache the weapon
-	RegisterItem( BG_FindItemForWeapon( WP_ROCKET_LAUNCHER ));	//precache the weapon
+	RegisterItem( BG_FindItemForWeapon( WP_MODULIZED_WEAPON ));	//precache the weapon
+	//RegisterItem( BG_FindItemForWeapon( WP_ROCKET_LAUNCHER ));	//precache the weapon
 
 	G_EffectIndex( "env/med_explode2" );
 //	G_EffectIndex( "smaller_chunks" );

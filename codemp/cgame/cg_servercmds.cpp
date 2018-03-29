@@ -1341,7 +1341,7 @@ static void CG_BodyQueueCopy(centity_t *cent, int clientNum, int knownWeapon)
 	}
 
 	//either force the weapon from when we died or remove it if it was a dropped weapon
-	if (knownWeapon > WP_BRYAR_PISTOL && trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 1))
+	if (knownWeapon >= WP_MODULIZED_WEAPON && trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 1))
 	{
 		trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), 1);
 	}

@@ -124,8 +124,6 @@ void FX_DisruptorAltHit( vec3_t origin, vec3_t normal, int weapon, qboolean altF
 
 	if (fx)
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-	else
-		PlayEffectID( cgs.effects.disruptorAltHitEffect, origin, normal, -1, -1, qfalse );
 }
 
 
@@ -143,8 +141,6 @@ void FX_DisruptorHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altF
 
 	if (fx)
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-	else
-		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.disruptorWallImpactEffect, cgs.effects.disruptorEnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
 }
 
 /*
@@ -160,6 +156,4 @@ void FX_DisruptorHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int 
 
 	if (fx)
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-	else
-	PlayEffectID( cgs.effects.disruptorFleshImpactEffect, origin, normal, -1, -1, qfalse );
 }

@@ -302,7 +302,7 @@ void Seeker_Fire(gentity_t *aiEnt)
 	G_PlayEffectID( G_EffectIndex("blaster/muzzle_flash"), aiEnt->r.currentOrigin, dir );
 
 	missile->classname = "blaster";
-	missile->s.weapon = WP_BLASTER;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	missile->damage = 5;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;

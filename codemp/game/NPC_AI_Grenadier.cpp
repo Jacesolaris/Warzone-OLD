@@ -506,7 +506,7 @@ void NPC_BSGrenadier_Attack(gentity_t *aiEnt)
 			if ( !trace.allsolid && !trace.startsolid && (trace.fraction == 1.0 || trace.entityNum == aiEnt->enemy->s.number ) )
 			{//I can get right to him
 				//reset fire-timing variables
-				NPC_ChangeWeapon(aiEnt, WP_STUN_BATON );
+				NPC_ChangeWeapon(aiEnt, WP_MELEE );
 				if ( !(aiEnt->NPC->scriptFlags&SCF_CHASE_ENEMIES) )//NPCInfo->behaviorState == BS_STAND_AND_SHOOT )
 				{//FIXME: should we be overriding scriptFlags?
 					aiEnt->NPC->scriptFlags |= SCF_CHASE_ENEMIES;//NPCInfo->behaviorState = BS_HUNT_AND_KILL;
@@ -516,7 +516,7 @@ void NPC_BSGrenadier_Attack(gentity_t *aiEnt)
 	}
 	else if ( enemyDist3 > 65536 || (aiEnt->enemy->client && aiEnt->enemy->client->ps.weapon == WP_SABER && !aiEnt->enemy->client->ps.saberHolstered) )//256
 	{//enemy is far or using saber
-		if ( aiEnt->client->ps.weapon == WP_STUN_BATON && HaveWeapon(&aiEnt->client->ps, WP_THERMAL) )
+		if ( aiEnt->client->ps.weapon == WP_MELEE && HaveWeapon(&aiEnt->client->ps, WP_THERMAL) )
 		{//fisticuffs, make switch to thermal if have it
 			//reset fire-timing variables
 			NPC_ChangeWeapon(aiEnt, WP_THERMAL );
@@ -529,7 +529,7 @@ void NPC_BSGrenadier_Attack(gentity_t *aiEnt)
 		aiEnt->NPC->enemyLastSeenTime = level.time;
 		enemyLOS3 = qtrue;
 
-		if ( aiEnt->client->ps.weapon == WP_STUN_BATON )
+		if ( aiEnt->client->ps.weapon == WP_MELEE )
 		{
 			if ( enemyDist3 <= 4096 && InFOV3( aiEnt->enemy->r.currentOrigin, aiEnt->r.currentOrigin, aiEnt->client->ps.viewangles, 90, 45 ) )//within 64 & infront
 			{
@@ -586,7 +586,7 @@ void NPC_BSGrenadier_Attack(gentity_t *aiEnt)
 		{//don't chase and throw
 			move3 = qfalse;
 		}
-		else if ( aiEnt->client->ps.weapon == WP_STUN_BATON && enemyDist3 < (aiEnt->r.maxs[0]+aiEnt->enemy->r.maxs[0]+16)*(aiEnt->r.maxs[0]+aiEnt->enemy->r.maxs[0]+16) )
+		else if ( aiEnt->client->ps.weapon == WP_MELEE && enemyDist3 < (aiEnt->r.maxs[0]+aiEnt->enemy->r.maxs[0]+16)*(aiEnt->r.maxs[0]+aiEnt->enemy->r.maxs[0]+16) )
 		{//close enough
 			move3 = qfalse;
 		}

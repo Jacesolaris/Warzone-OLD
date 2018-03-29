@@ -1379,9 +1379,7 @@ void NPC_Surrender(gentity_t *aiEnt)
 	{
 		return;
 	}
-	if ( aiEnt->s.weapon != WP_NONE &&
-		aiEnt->s.weapon != WP_STUN_BATON &&
-		aiEnt->s.weapon != WP_SABER )
+	if ( aiEnt->s.weapon != WP_NONE && aiEnt->s.weapon != WP_SABER )
 	{
 		//WP_DropWeapon( NPC, NULL ); //rwwFIXMEFIXME: Do this (gonna need a system for notifying client of removal)
 	}
@@ -1405,14 +1403,11 @@ qboolean NPC_CheckSurrender(gentity_t *aiEnt)
 #endif //__NO_ICARUS__
 		aiEnt->client->ps.groundEntityNum != ENTITYNUM_NONE
 		&& !aiEnt->client->ps.weaponTime && !PM_InKnockDown( &aiEnt->client->ps )
-		&& aiEnt->enemy && aiEnt->enemy->client && aiEnt->enemy->enemy == aiEnt && aiEnt->enemy->s.weapon != WP_NONE && aiEnt->enemy->s.weapon != WP_STUN_BATON
+		&& aiEnt->enemy && aiEnt->enemy->client && aiEnt->enemy->enemy == aiEnt && aiEnt->enemy->s.weapon != WP_NONE
 		&& aiEnt->enemy->health > 20 && aiEnt->enemy->painDebounceTime < level.time - 3000 && aiEnt->enemy->client->ps.fd.forcePowerDebounce[FP_SABER_DEFENSE] < level.time - 1000 )
 	{//don't surrender if scripted to run somewhere or if we're in the air or if we're busy or if we don't have an enemy or if the enemy is not mad at me or is hurt or not a threat or busy being attacked
 		//FIXME: even if not in a group, don't surrender if there are other enemies in the PVS and within a certain range?
-		if ( aiEnt->s.weapon != WP_ROCKET_LAUNCHER
-			&& aiEnt->s.weapon != WP_REPEATER
-			&& aiEnt->s.weapon != WP_FLECHETTE
-			&& aiEnt->s.weapon != WP_SABER )
+		if ( aiEnt->s.weapon != WP_SABER )
 		{//jedi and heavy weapons guys never surrender
 			//FIXME: rework all this logic into some orderly fashion!!!
 			if ( aiEnt->s.weapon != WP_NONE )

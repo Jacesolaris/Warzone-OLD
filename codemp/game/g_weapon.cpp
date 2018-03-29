@@ -376,7 +376,7 @@ static void WP_FireBryarPistol(gentity_t *ent, qboolean altFire)
 	gentity_t	*missile = CreateMissile(muzzle, forward, weaponData[ent->client->ps.weapon].boltSpeed, 10000, ent, altFire);
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = ent->s.weapon;//WP_BRYAR_PISTOL;
+	missile->s.weapon = ent->s.weapon;
 
 	if (altFire)
 	{
@@ -523,7 +523,7 @@ void WP_FireGenericBlasterMissile(gentity_t *ent, vec3_t start, vec3_t dir, qboo
 	missile = CreateMissile(start, dir, velocity, 10000, ent, altFire);
 
 	missile->classname = "generic_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL; // dunno about this one. see if it needs ent->s.weapon
+	missile->s.weapon = WP_MODULIZED_WEAPON; // dunno about this one. see if it needs ent->s.weapon
 
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
@@ -3050,10 +3050,7 @@ void laserTrapExplode(gentity_t *self)
 		G_RadiusDamage(self->r.currentOrigin, self->activator, self->splashDamage, self->splashRadius, self, self, MOD_TRIP_MINE_SPLASH/*MOD_LT_SPLASH*/);
 	}
 
-	if (self->s.weapon != WP_FLECHETTE)
-	{
-		G_AddEvent(self, EV_MISSILE_MISS, 0);
-	}
+	G_AddEvent(self, EV_MISSILE_MISS, 0);
 
 	VectorCopy(self->s.pos.trDelta, v);
 	//Explode outward from the surface
@@ -3065,14 +3062,7 @@ void laserTrapExplode(gentity_t *self)
 		v[2] = 0;
 	}
 
-	if (self->s.weapon == WP_FLECHETTE)
-	{
-		G_PlayEffect(EFFECT_EXPLOSION_FLECHETTE, self->r.currentOrigin, v);
-	}
-	else
-	{
-		G_PlayEffect(EFFECT_EXPLOSION_TRIPMINE, self->r.currentOrigin, v);
-	}
+	G_PlayEffect(EFFECT_EXPLOSION_TRIPMINE, self->r.currentOrigin, v);
 
 	self->think = G_FreeEntity;
 	self->nextthink = level.time;
@@ -4066,16 +4056,7 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	VectorCopy(muzzle, start);
 	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
 
-	if (ent->s.weapon == WP_Z6_BLASTER_CANON)
-	{// Since we want alt fx on client, we need to send this as alt fire.
-		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
-	}
-	else if (ent->s.weapon == WP_PULSECANON)
-	{// Since we want alt fx on client, we need to send this as alt fire.
-		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
-	}
-	else
-		missile = CreateMissile(start, forward, vel, 10000, ent, qfalse);
+	missile = CreateMissile(start, forward, vel, 10000, ent, qfalse);
 
 	missile->classname = "conc_proj";
 	missile->s.weapon = ent->s.weapon;
@@ -4092,38 +4073,11 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
 	missile->genericValue1 = ChargeGrenadeBlobs;
 
-	if (ent->s.weapon == WP_Z6_BLASTER_CANON || ent->s.weapon == WP_PULSECANON)
-	{
-		int time = (level.time - ent->client->ps.weaponChargeTime / BLOB_GRENADE_CHARGE_UNIT);
-		float ratio;
+	//low splash damage for blobs
+	missile->splashDamage = 3;
+	missile->splashRadius = 150;
+	missile->damage = damage;
 
-		if (time > GRENADE_MAX_CHARGE_TIME)
-		{
-			time = GRENADE_MAX_CHARGE_TIME;
-		}
-		else if (time <= 150)
-		{
-			time = 150;
-		}
-
-		ratio = (float)time / (float)GRENADE_MAX_CHARGE_TIME;
-		missile->splashDamage = 20.0f * ratio;
-		missile->damage = missile->splashDamage * 1.25f; //bonus for direct hit
-		missile->s.userFloat2 = time / 2000.0f + 0.75f;
-		//Close enough.
-		missile->splashRadius = (GRENADE_MAX_CHARGE_TIME / 2000.0f + 0.75f) * 50.0f;
-		missile->s.pos.trType = TR_GRAVITY;
-		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
-		//radius
-		missile->mass = 5;
-	}
-	else
-	{
-		//low splash damage for blobs
-		missile->splashDamage = 3;
-		missile->splashRadius = 150;
-		missile->damage = damage;
-	}
 	// we don't want it to ever bounce
 	missile->bounceCount = 0;
 }
@@ -4735,7 +4689,7 @@ gentity_t *WP_FireVehicleWeapon(gentity_t *ent, vec3_t start, vec3_t dir, vehWea
 		//some slightly different stuff for things with bboxes
 		if (vehWeapon->fWidth || vehWeapon->fHeight)
 		{//we assume it's a rocket-like thing
-			missile->s.weapon = WP_ROCKET_LAUNCHER;//does this really matter?
+			missile->s.weapon = WP_MODULIZED_WEAPON;//WP_ROCKET_LAUNCHER;//does this really matter?
 			missile->methodOfDeath = MOD_VEHICLE;//MOD_ROCKET;
 			missile->splashMethodOfDeath = MOD_VEHICLE;//MOD_ROCKET;// ?SPLASH;
 
@@ -4746,7 +4700,7 @@ gentity_t *WP_FireVehicleWeapon(gentity_t *ent, vec3_t start, vec3_t dir, vehWea
 		}
 		else
 		{//a blaster-laser-like thing
-			missile->s.weapon = WP_BLASTER;//does this really matter?
+			missile->s.weapon = WP_MODULIZED_WEAPON;//does this really matter?
 			missile->methodOfDeath = MOD_VEHICLE; //count as a heavy weap
 			missile->splashMethodOfDeath = MOD_VEHICLE;// ?SPLASH;
 			// we don't want it to bounce forever
@@ -4760,10 +4714,12 @@ gentity_t *WP_FireVehicleWeapon(gentity_t *ent, vec3_t start, vec3_t dir, vehWea
 			missile->s.pos.trType = TR_GRAVITY;
 		}
 
+		/*
 		if (vehWeapon->bIonWeapon)
 		{//so it disables ship shields and sends them out of control
-			missile->s.weapon = WP_DEMP2;
+			missile->s.weapon = WP_ELECTRICAL_WEAPON;
 		}
+		*/
 
 		if (vehWeapon->iHealth)
 		{//the missile can take damage
@@ -5451,14 +5407,9 @@ extern void NPC_CivilianCowerPoint(gentity_t *enemy, vec3_t position);
 
 void FireWeapon(gentity_t *ent, qboolean altFire) {
 	// track shots taken for accuracy tracking. melee weapons are not tracked.
-	if (ent->s.weapon != WP_SABER && ent->s.weapon != WP_STUN_BATON && ent->s.weapon != WP_MELEE)
+	if (ent->s.weapon != WP_SABER && ent->s.weapon != WP_MELEE)
 	{
-		if (ent->s.weapon == WP_FLECHETTE) {
-			ent->client->accuracy_shots += FLECHETTE_SHOTS;
-		}
-		else {
-			ent->client->accuracy_shots++;
-		}
+		ent->client->accuracy_shots++;
 	}
 
 	if (ent && ent->client && ent->client->NPC_class == CLASS_VEHICLE)
@@ -5502,7 +5453,7 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			}
 		}
 		else if (ent->s.number < MAX_CLIENTS &&
-			ent->client->ps.m_iVehicleNum && ent->s.weapon == WP_BLASTER)
+			ent->client->ps.m_iVehicleNum && ent->s.weapon == WP_MODULIZED_WEAPON)
 		{ //riding a vehicle...with blaster selected
 			vec3_t vehTurnAngles;
 			gentity_t *vehEnt = &g_entities[ent->client->ps.m_iVehicleNum];
@@ -5564,10 +5515,6 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 
 		// fire the specific weapon
 		switch (ent->s.weapon) {
-		case WP_STUN_BATON:
-			WP_FireStunBaton(ent, altFire);
-			break;
-
 		case WP_MELEE:
 			WP_FireMelee(ent, altFire);
 			break;
@@ -5575,111 +5522,13 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_SABER:
 			break;
 
-		case WP_BRYAR_OLD:
-		case WP_BRYAR_PISTOL:
-			WP_FireBryarPistol(ent, altFire);
-			CalcFirstMuzzlePoint(ent, forward, vright, up, muzzle);
-			CalcSecondMuzzlePoint(ent, forward, vright, up, secondmuzzle);
-			break;
-
-		case WP_CONCUSSION:
-			if (altFire)
-				WP_FireConcussionAlt(ent);
-			else
-				WP_FireConcussion(ent);
-			break;
-
-		case WP_DH_17_PISTOL:
-		case WP_PROTON_CARBINE_RIFLE:
-		case WP_BRYAR_CARBINE:
-		case WP_BLASTER:
+		case WP_MODULIZED_WEAPON:
 			if (altFire)
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.5, ent->s.weapon);
 			break;
 
-		case WP_A280: // UQ1: Example. Should have it's own code...
-			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed * 3, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_T21:
-			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			break;
-
-		case WP_BRYAR_RIFLE:
-			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_EE3:
-			if (altFire)
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, weaponData[ent->client->ps.weapon].dmgAlt, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-		case WP_BRYAR_RIFLE_SCOPE:
-		case WP_DLT_19:
-			if (altFire)
-				WP_FireChargedShot(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed*2.5, 0.0);
-			//WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-
-
-		case WP_DC_15A_RIFLE:
-			if (altFire)
-				WP_RepeaterAltFire(ent);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			break;
-
-		case WP_PULSECANON:
-			if (altFire)
-				WP_RepeaterAltFire(ent);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, 0.0, ent->s.weapon);
-			break;
-
-		case WP_Z6_BLASTER_CANON:
-			if (altFire)
-				WP_FireBlobGrenade(ent);
-			else
-				WP_FireBlaster(ent, altFire, weaponData[ent->client->ps.weapon].boltSpeed, weaponData[ent->client->ps.weapon].dmg, weaponData[ent->client->ps.weapon].accuracy, ent->s.weapon);
-			break;
-		case WP_DISRUPTOR:
-			WP_FireDisruptor(ent, altFire);
-			break;
-
-		case WP_BOWCASTER:
-			WP_FireBowcaster(ent, altFire);
-			break;
-
-		case WP_REPEATER:
-			WP_FireRepeater(ent, altFire);
-			break;
-
-		case WP_DEMP2:
-			WP_FireDEMP2(ent, altFire);
-			break;
-		case WP_FLECHETTE:
-			WP_FireFlechette(ent, altFire);
-			break;
-		case WP_ROCKET_LAUNCHER:
-			WP_FireRocket(ent, altFire);
-			break;
-
-		case WP_FRAG_GRENADE_OLD:
 		case WP_FRAG_GRENADE:
 			WP_FireFragGrenade(ent, altFire);
 			break;
@@ -5711,8 +5560,6 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			break;
 		}
 	}
-
-	G_LogWeaponFire(ent->s.number, ent->s.weapon);
 }
 
 //---------------------------------------------------------

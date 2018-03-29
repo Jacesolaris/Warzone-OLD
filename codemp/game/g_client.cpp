@@ -1144,7 +1144,7 @@ static qboolean CopyToBodyQue( gentity_t *ent ) {
 
 	if (body->s.weapon == WP_SABER && ent->client->ps.saberInFlight)
 	{
-		body->s.weapon = WP_BLASTER; //lie to keep from putting a saber on the corpse, because it was thrown at death
+		body->s.weapon = WP_MODULIZED_WEAPON; //lie to keep from putting a saber on the corpse, because it was thrown at death
 	}
 
 	//G_AddEvent(body, EV_BODY_QUEUE_COPY, ent->s.clientNum);
@@ -3221,8 +3221,6 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 
 	// count current clients and rank for scoreboard
 	CalculateRanks();
-
-	G_ClearClientLog(clientNum);
 }
 
 static qboolean AllForceDisabled(int force)
@@ -3498,7 +3496,7 @@ tryTorso:
 
 				if (self->client->ps.weapon == WP_MELEE ||
 					self->client->ps.weapon == WP_SABER ||
-					self->client->ps.weapon == WP_BRYAR_PISTOL)
+					self->client->ps.weapon == WP_MODULIZED_WEAPON)
 				{ //don't affect this arm if holding a gun, just make the other arm support it
 					armAnim = &bgAllAnims[self->localAnimIndex].anims[ BOTH_ATTACK2 ];
 
@@ -3517,7 +3515,7 @@ tryTorso:
 
 				if (self->client->ps.torsoAnim != BOTH_MELEE1 &&
 					self->client->ps.torsoAnim != BOTH_MELEE2 &&
-					(self->client->ps.torsoAnim == TORSO_WEAPONREADY2 || self->client->ps.torsoAnim == BOTH_ATTACK2 || self->client->ps.weapon < WP_BRYAR_PISTOL))
+					(self->client->ps.torsoAnim == TORSO_WEAPONREADY2 || self->client->ps.torsoAnim == BOTH_ATTACK2 || self->client->ps.weapon < WP_MODULIZED_WEAPON))
 				{
 					//Now set the left arm to "support" the right one
 					armAnim = &bgAllAnims[self->localAnimIndex].anims[ BOTH_STAND2 ];
@@ -3994,14 +3992,14 @@ void ClientSpawn(gentity_t *ent) {
 			//make sure they only use the saber
 			client->ps.weapon = WP_SABER;
 			client->ps.primaryWeapon = WP_SABER;
-			client->ps.secondaryWeapon = WP_DH_17_PISTOL;
+			client->ps.secondaryWeapon = WP_MODULIZED_WEAPON;
 		}
 		else
 		{//no force powers set
 			client->ps.trueNonJedi = qtrue;
 			client->ps.trueJedi = qfalse;
 			client->ps.primaryWeapon = WP_MELEE;
-			client->ps.secondaryWeapon = WP_DH_17_PISTOL;
+			client->ps.secondaryWeapon = WP_MODULIZED_WEAPON;
 		}
 	}
 	else
@@ -4026,7 +4024,7 @@ void ClientSpawn(gentity_t *ent) {
 
 		if (level.gametype != GT_SIEGE)
 		{
-			client->ps.secondaryWeapon = WP_DH_17_PISTOL;
+			client->ps.secondaryWeapon = WP_MODULIZED_WEAPON;
 		}
 
 		if (level.gametype == GT_JEDIMASTER)
@@ -4038,9 +4036,9 @@ void ClientSpawn(gentity_t *ent) {
 		{
 			client->ps.weapon = WP_SABER;
 		}
-		else if (HaveWeapon(&client->ps, WP_DH_17_PISTOL))
+		else if (HaveWeapon(&client->ps, WP_MODULIZED_WEAPON))
 		{
-			client->ps.weapon = WP_DH_17_PISTOL;
+			client->ps.weapon = WP_MODULIZED_WEAPON;
 		}
 		else
 		{
@@ -4076,15 +4074,15 @@ void ClientSpawn(gentity_t *ent) {
 
 		// UQ1: TODO: Fix class weapons... --- bgSiegeClasses[client->siegeClass].weapons;
 		client->ps.primaryWeapon = WP_SABER; // temporary
-		client->ps.secondaryWeapon = WP_DH_17_PISTOL; // temporary
+		client->ps.secondaryWeapon = WP_MODULIZED_WEAPON; // temporary
 
 		if (HaveWeapon(&client->ps, WP_SABER))
 		{
 			client->ps.weapon = WP_SABER;
 		}
-		else if (HaveWeapon(&client->ps, WP_DH_17_PISTOL))
+		else if (HaveWeapon(&client->ps, WP_MODULIZED_WEAPON))
 		{
-			client->ps.weapon = WP_DH_17_PISTOL;
+			client->ps.weapon = WP_MODULIZED_WEAPON;
 		}
 		else
 		{
@@ -4251,11 +4249,9 @@ void ClientSpawn(gentity_t *ent) {
 		if (ent->client->sess.sessionTeam != FACTION_SPECTATOR) {
 			G_KillBox(ent);
 			// force the base weapon up
-			//client->ps.weapon = WP_BRYAR_PISTOL;
-			//client->ps.weaponstate = FIRST_WEAPON;
 			if (client->ps.weapon <= WP_NONE)
 			{
-				client->ps.weapon = WP_DH_17_PISTOL;
+				client->ps.weapon = WP_MODULIZED_WEAPON;
 			}
 
 			client->ps.torsoTimer = client->ps.legsTimer = 0;
@@ -4603,8 +4599,6 @@ void ClientDisconnect( int clientNum ) {
 	if ( ent->r.svFlags & SVF_BOT ) {
 		BotAIShutdownClient( clientNum, qfalse );
 	}
-
-	G_ClearClientLog(clientNum);
 }
 
 

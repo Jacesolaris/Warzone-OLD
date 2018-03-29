@@ -489,7 +489,7 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 		return;
 	}
 
-	if (weapon <= WP_BRYAR_PISTOL)
+	if (weapon <= WP_MODULIZED_WEAPON)
 	{ //can't have this
 		return;
 	}
@@ -517,7 +517,6 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 
 	if (weapon != WP_THERMAL 
 		&& weapon != WP_FRAG_GRENADE 
-		&& weapon != WP_FRAG_GRENADE_OLD 
 		&& weapon != WP_CYROBAN_GRENADE 
 		&& weapon != WP_DET_PACK 
 		&& weapon != WP_TRIP_MINE)
@@ -591,7 +590,7 @@ void TossClientItems( gentity_t *self ) {
 	// weapon that isn't the mg or gauntlet.  Without this, a client
 	// can pick up a weapon, be killed, and not drop the weapon because
 	// their weapon change hasn't completed yet and they are still holding the MG.
-	if ( weapon == WP_BRYAR_PISTOL) {
+	if ( weapon == WP_MODULIZED_WEAPON) {
 		if ( self->client->ps.weaponstate == WEAPON_DROPPING ) {
 			weapon = self->client->pers.cmd.weapon;
 		}
@@ -602,7 +601,7 @@ void TossClientItems( gentity_t *self ) {
 
 	self->s.bolt2 = weapon;
 
-	if ( weapon > WP_BRYAR_PISTOL &&
+	if ( weapon > WP_MODULIZED_WEAPON &&
 		weapon != WP_EMPLACED_GUN &&
 		weapon != WP_TURRET
 #ifndef __MMO__
@@ -2541,13 +2540,6 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 				G_LogPrintf("killer saber style: %d, killer saber anim %s\n", attacker->client->ps.fd.saberAnimLevel, animTable[(attacker->client->ps.torsoAnim)].name );
 			}
 		}
-	}
-
-	G_LogWeaponKill(killer, meansOfDeath);
-	G_LogWeaponDeath(self->s.number, self->s.weapon);
-	if (attacker && attacker->client && attacker->inuse)
-	{
-		G_LogWeaponFrag(killer, self->s.number);
 	}
 
 #ifndef __MMO__ // UQ1: Don't need death spam about everyone that dies in a MMO... lol...
@@ -5868,8 +5860,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 				}
 			}
 		}
-
-		G_LogWeaponDamage(attacker->s.number, mod, take);
 	}
 
 	// UQ1: Added - parsing damage values to client...
@@ -6011,8 +6001,6 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 	{ //sounds like it's a valid weapon projectile.. is it a valid explosive to create marks from?
 		switch(missile->s.weapon)
 		{
-		case WP_FLECHETTE: //flechette issuing this will be alt-fire
-		case WP_ROCKET_LAUNCHER:
 		case WP_THERMAL:
 		case WP_CYROBAN_GRENADE:
 		case WP_TRIP_MINE:

@@ -52,7 +52,6 @@ int adjustRespawnTime(float preRespawnTime, int itemType, int itemTag)
 	{
 		if (itemTag == WP_THERMAL ||
 			itemTag == WP_FRAG_GRENADE ||
-			itemTag == WP_FRAG_GRENADE_OLD ||
 			itemTag == WP_CYROBAN_GRENADE ||
 			itemTag == WP_TRIP_MINE ||
 			itemTag == WP_DET_PACK)
@@ -2057,8 +2056,6 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		// count in sync
 		other->client->ps.powerups[ent->item->giTag] =
 			level.time - ( level.time % 1000 );
-
-		G_LogWeaponPowerup(other->s.number, ent->item->giTag);
 	}
 
 	if ( ent->count ) {
@@ -2133,8 +2130,6 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 
 	other->client->ps.stats[STAT_HOLDABLE_ITEMS] |= (1 << ent->item->giTag);
 
-	G_LogWeaponItem(other->s.number, ent->item->giTag);
-
 	return adjustRespawnTime(RESPAWN_HOLDABLE, ent->item->giType, ent->item->giTag);
 }
 
@@ -2172,8 +2167,6 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	}
 
 	other->client->ps.temporaryWeapon = ent->item->giTag;
-
-	G_LogWeaponPickup(other->s.number, ent->item->giTag);
 
 	// team deathmatch has slow weapon respawns
 	if ( level.gametype == GT_TEAM )
@@ -2659,10 +2652,8 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 		dropped->s.angles[PITCH] = -90;
 	}
 
-	if (item->giTag != WP_BOWCASTER &&
-		item->giTag != WP_DET_PACK &&
+	if (item->giTag != WP_DET_PACK &&
 		item->giTag != WP_FRAG_GRENADE &&
-		item->giTag != WP_FRAG_GRENADE_OLD &&
 		item->giTag != WP_CYROBAN_GRENADE &&
 		item->giTag != WP_THERMAL)
 	{
@@ -2951,8 +2942,6 @@ void ClearRegisteredItems( void ) {
 	memset( itemRegistered, 0, sizeof( itemRegistered ) );
 
 	// players always start with the base weapon
-	RegisterItem( BG_FindItemForWeapon( WP_BRYAR_PISTOL ) );
-	RegisterItem( BG_FindItemForWeapon( WP_STUN_BATON ) );
 	RegisterItem( BG_FindItemForWeapon( WP_MELEE ) );
 	RegisterItem( BG_FindItemForWeapon( WP_SABER ) );
 

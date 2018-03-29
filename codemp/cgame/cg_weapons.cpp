@@ -48,20 +48,12 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	if (item->giType == IT_WEAPON
 		&& item->giTag != WP_MELEE
 		&& item->giTag != WP_SABER
-		&& item->giTag != WP_A280
 		&& item->giTag != WP_THERMAL
 		&& item->giTag != WP_FRAG_GRENADE
-		&& item->giTag != WP_FRAG_GRENADE_OLD
 		&& item->giTag != WP_TRIP_MINE
 		&& item->giTag != WP_DET_PACK)
 	{
 		gitem_t			*reuseWeaponItem = NULL;
-
-		for (reuseWeaponItem = bg_itemlist + 1; reuseWeaponItem->classname; reuseWeaponItem++) {
-			if (reuseWeaponItem->giType == IT_WEAPON && reuseWeaponItem->giTag == WP_A280) {
-				break;
-			}
-		}
 
 		if (!Q_stricmp(&reuseWeaponItem->world_model[0][strlen(reuseWeaponItem->world_model[0]) - 4], ".glm"))
 		{
@@ -111,7 +103,6 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	else if (item->giType == IT_WEAPON &&
 		(item->giTag == WP_THERMAL 
 		|| item->giTag == WP_FRAG_GRENADE
-		|| item->giTag == WP_FRAG_GRENADE_OLD
 		|| item->giTag == WP_TRIP_MINE 
 		|| item->giTag == WP_DET_PACK))
 	{
@@ -324,110 +315,7 @@ angle)
 ===============
 */
 static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
-#if 0
-//	trace_t  trace;
-	refEntity_t  beam;
-//	vec3_t   forward;
-//	vec3_t   muzzlePoint, endPoint;
 
-	//Must be a durational weapon that continuously generates an effect.
-	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
-	if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_PULSECANON && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_PULSECANON && cent->currentState.eFlags & EF_ALT_FIRING)
-	{ /*nothing*/ }
-	else
-	{
-		return;
-	}
-
-	memset( &beam, 0, sizeof( beam ) );
-
-	// NOTENOTE No lightning gun-ish stuff yet.
-/*
-	// CPMA  "true" lightning
-	if ((cent->currentState.number == cg.predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
-		vec3_t angle;
-		int i;
-
-		for (i = 0; i < 3; i++) {
-			float a = cent->lerpAngles[i] - cg.refdef.viewangles[i];
-			if (a > 180) {
-				a -= 360;
-			}
-			if (a < -180) {
-				a += 360;
-			}
-
-			angle[i] = cg.refdef.viewangles[i] + a * (1.0 - cg_trueLightning.value);
-			if (angle[i] < 0) {
-				angle[i] += 360;
-			}
-			if (angle[i] > 360) {
-				angle[i] -= 360;
-			}
-		}
-
-		AngleVectors(angle, forward, NULL, NULL );
-		VectorCopy(cent->lerpOrigin, muzzlePoint );
-//		VectorCopy(cg.refdef.vieworg, muzzlePoint );
-	} else {
-		// !CPMA
-		AngleVectors( cent->lerpAngles, forward, NULL, NULL );
-		VectorCopy(cent->lerpOrigin, muzzlePoint );
-	}
-
-	// FIXME: crouch
-	muzzlePoint[2] += DEFAULT_VIEWHEIGHT;
-
-	VectorMA( muzzlePoint, 14, forward, muzzlePoint );
-
-	// project forward by the lightning range
-	VectorMA( muzzlePoint, LIGHTNING_RANGE, forward, endPoint );
-
-	// see if it hit a wall
-	CG_Trace( &trace, muzzlePoint, vec3_origin, vec3_origin, endPoint,
-		cent->currentState.number, MASK_SHOT );
-
-	// this is the endpoint
-	VectorCopy( trace.endpos, beam.oldorigin );
-
-	// use the provided origin, even though it may be slightly
-	// different than the muzzle origin
-	VectorCopy( origin, beam.origin );
-
-	beam.reType = RT_LIGHTNING;
-	beam.customShader = cgs.media.lightningShader;
-	AddRefEntityToScene( &beam );
-*/
-
-	// NOTENOTE No lightning gun-ish stuff yet.
-/*
-	// add the impact flare if it hit something
-	if ( trace.fraction < 1.0 ) {
-		vec3_t	angles;
-		vec3_t	dir;
-
-		VectorSubtract( beam.oldorigin, beam.origin, dir );
-		VectorNormalize( dir );
-
-		memset( &beam, 0, sizeof( beam ) );
-		beam.hModel = cgs.media.lightningExplosionModel;
-
-		VectorMA( trace.endpos, -16, dir, beam.origin );
-
-		// make a random orientation
-		angles[0] = rand() % 360;
-		angles[1] = rand() % 360;
-		angles[2] = rand() % 360;
-		AnglesToAxis( angles, beam.axis );
-		AddRefEntityToScene( &beam );
-	}
-*/
-#endif
 }
 
 
@@ -482,6 +370,72 @@ void CG_AddDebugMuzzleLine( vec3_t from, vec3_t to )
 	AddRefEntityToScene( &re );
 }
 
+void CG_PositionRotatedEntityOnG2Bolt(refEntity_t *entity, void *g2parent, vec3_t parentOrigin, vec3_t parentAngles, char *boltName)
+{
+	int bolt = trap->G2API_AddBolt(g2parent, 0, boltName);
+
+	assert(bolt != -1);
+
+	if (bolt != -1)
+	{
+		//vec3_t boltOrg, boltAng;
+		mdxaBone_t boltMatrix;
+		vec3_t modelScale;
+
+		VectorSet(modelScale, 1.0, 1.0, 1.0); // pass this through???? Needed??? Probably not...
+
+		trap->G2API_GetBoltMatrix(g2parent, 0, bolt, &boltMatrix, parentAngles, parentOrigin, cg.time, /*cgs.gameModels*/NULL, modelScale);
+
+#if 1
+		BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, entity->origin);
+		BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_Z/*NEGATIVE_Y*/, entity->angles);
+		//VectorCopy(parentAngles, entity->angles);
+		AnglesToAxis(entity->angles, entity->axis);
+#else
+		// set up the axis and origin we need for the actual effect spawning
+		entity->origin[0] = boltMatrix.matrix[0][3];
+		entity->origin[1] = boltMatrix.matrix[1][3];
+		entity->origin[2] = boltMatrix.matrix[2][3];
+
+		entity->axis[0][0] = boltMatrix.matrix[0][0];
+		entity->axis[0][1] = boltMatrix.matrix[1][0];
+		entity->axis[0][2] = boltMatrix.matrix[2][0];
+
+		entity->axis[1][0] = boltMatrix.matrix[0][1];
+		entity->axis[1][1] = boltMatrix.matrix[1][1];
+		entity->axis[1][2] = boltMatrix.matrix[2][1];
+
+		entity->axis[2][0] = boltMatrix.matrix[0][2];
+		entity->axis[2][1] = boltMatrix.matrix[1][2];
+		entity->axis[2][2] = boltMatrix.matrix[2][2];
+
+		AxisToAngles(entity->axis, entity->angles);
+#endif
+		/*
+		// FIXME: allow origin offsets along tag?
+		VectorCopy(parentOrigin, entity->origin);
+		for (int i = 0; i < 3; i++) {
+			VectorMA(entity->origin, lerped.origin[i], parent->axis[i], entity->origin);
+		}
+
+		// had to cast away the const to avoid compiler problems...
+		MatrixMultiply(entity->axis, lerped.axis, tempAxis);
+		MatrixMultiply(tempAxis, ((refEntity_t *)parent)->axis, entity->axis);
+		*/
+
+		trap->Print("CG_PositionRotatedEntityOnG2Bolt: boltname: %s. attached at %f %f %f. parent at %f %f %f.\n", boltName, entity->origin[0], entity->origin[1], entity->origin[2], parentOrigin[0], parentOrigin[1], parentOrigin[2]);
+	}
+	else
+	{// Failed, return parent's data...
+		VectorCopy(parentOrigin, entity->origin);
+		VectorSet(entity->axis[0], 0.0, 0.0, 0.0);
+		VectorSet(entity->axis[1], 0.0, 0.0, 0.0);
+		VectorSet(entity->axis[2], 0.0, 0.0, 0.0);
+
+		trap->Print("CG_PositionRotatedEntityOnG2Bolt: Failed to find bolt %s.\n", boltName);
+	}
+}
+
 /*
 =============
 CG_AddPlayerWeapon
@@ -529,288 +483,291 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	fxSArgs.shader = 0;
 
-/*
-Ghoul2 Insert Start
-*/
-
-	if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) 
+	if (weaponNum == WP_MODULIZED_WEAPON)
 	{
-		if (weapon->isBlasterCanon)
-		{
-			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
-		}
-		else
-		{
-			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
-		}
-		cent->pe.lightningFiring = qtrue;
-	}
-	else
-	{
-		if (weapon->isBlasterCanon)
-		{
-			if (cent->pe.lightningFiring)
-			{
-				if (cent->currentState.clientNum == cg.clientNum)
-					trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
-				else
-					trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
-			}
-		}
-		else if (weapon->readySound > 0) 
-		{
-			if (cent->currentState.clientNum == cg.clientNum)
-				trap->S_AddLoopingSound(cent->currentState.number, vec3_origin, vec3_origin, weapon->readySound);
-			else
-				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
-		}
-		cent->pe.lightningFiring = qfalse;
-	}
-
-	/*
-	Ghoul2 Insert Start
-	*/
-
-	//need this for third and first person...
-	if (weapon->isBlasterCanon)
-	{
-		dif = cg.time - cent->blastercannonBarrelRotationTime;
-
-		if ((cent->currentState.eFlags & EF_FIRING) || (ps && ps->weaponstate == WEAPON_FIRING)) 
-		{
-			cent->blastercannonBarrelRotationTime = cg.time;
-		}
-	}
-
-	memset( &gun, 0, sizeof( gun ) );
-
-	
-	// only do this if we are in first person, since world weapons are now handled on the server by Ghoul2
-	if (!thirdPerson)
-	{
+		//
+		// The new modular weapons system, add module models to a base model...
+		//
+	 
 		// add the weapon
-		VectorCopy( parent->lightingOrigin, gun.lightingOrigin );
+		memset(&gun, 0, sizeof(gun));
+
+		VectorCopy(parent->lightingOrigin, gun.lightingOrigin);
 		gun.shadowPlane = parent->shadowPlane;
 		gun.renderfx = parent->renderfx;
+		gun.hModel = trap->R_RegisterModel("models/wzweapons/pistol_1.md3");
 
-		if (ps)
-		{	// this player, in first person view
-			if (weapon->g2ViewModel)
+		AnglesToAxis(vec3_origin, gun.axis);
+
+		extern clientInfo_t *CG_GetClientInfoForEnt(centity_t *ent);
+		clientInfo_t	*ci = CG_GetClientInfoForEnt(cent);
+
+
+		mdxaBone_t 		boltMatrix;
+
+
+		if (!trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 0))
+		{ //it's quite possible that we may have have no weapon model and be in a valid state, so return here if this is the case
+			return;
+		}
+
+		// go away and get me the bolt position for this frame please
+		if (!(trap->G2API_GetBoltMatrix(cent->ghoul2, 0, ci->bolt_rhand, &boltMatrix, newAngles, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale)))
+		{	// Couldn't find bolt point.
+			return;
+		}
+
+		BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, gun.origin);
+
+		matrix3_t axis;
+
+		//find bolt rotation unit vectors
+		BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_X, axis[0]);  //left/right	
+		BG_GiveMeVectorFromMatrix(&boltMatrix, NEGATIVE_Z, axis[1]);  //fwd/back
+		BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_Y, axis[2]);  //up/down?!
+
+																	  //rotational transitions
+																	  //configure the initial rotational axis
+		VectorCopy(axis[1], gun.axis[0]);
+		VectorScale(axis[0], -1, gun.axis[1]); //reversed since this is a right hand rule system.
+		VectorCopy(axis[2], gun.axis[2]);
+
+		//debug/config rotation statement.
+		extern void ApplyAxisRotation(vec3_t axis[3], int rotType, float value);
+		ApplyAxisRotation(gun.axis, PITCH, 90.0);
+
+		AxisToAngles(gun.axis, gun.angles);
+
+		CG_AddWeaponWithPowerups(&gun, cent->currentState.powerups);
+
+		//
+		// Add the attachments...
+		//
+
+		{// Barrel...
+			memset(&barrel, 0, sizeof(barrel));
+			VectorCopy(parent->lightingOrigin, gun.lightingOrigin);
+			barrel.shadowPlane = parent->shadowPlane;
+			barrel.renderfx = parent->renderfx;
+			barrel.hModel = trap->R_RegisterModel("models/wzweapons/barrel_1.md3");
+			AnglesToAxis(vec3_origin, barrel.axis);
+			CG_PositionRotatedEntityOnTag(&barrel, &gun, gun.hModel, "tag_barrel");
+			CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
+		}
+		{// Clip...
+			memset(&barrel, 0, sizeof(barrel));
+			VectorCopy(parent->lightingOrigin, gun.lightingOrigin);
+			barrel.shadowPlane = parent->shadowPlane;
+			barrel.renderfx = parent->renderfx;
+			barrel.hModel = trap->R_RegisterModel("models/wzweapons/clip_1.md3");
+			AnglesToAxis(vec3_origin, barrel.axis);
+			CG_PositionRotatedEntityOnTag(&barrel, &gun, gun.hModel, "tag_clip");
+			CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
+		}
+		{// Scope...
+			memset(&barrel, 0, sizeof(barrel));
+			VectorCopy(parent->lightingOrigin, gun.lightingOrigin);
+			barrel.shadowPlane = parent->shadowPlane;
+			barrel.renderfx = parent->renderfx;
+			barrel.hModel = trap->R_RegisterModel("models/wzweapons/scope_1.md3");
+			AnglesToAxis(vec3_origin, barrel.axis);
+			CG_PositionRotatedEntityOnTag(&barrel, &gun, gun.hModel, "tag_scope");
+			CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
+		}
+		{// Stock...
+			memset(&barrel, 0, sizeof(barrel));
+			VectorCopy(parent->lightingOrigin, gun.lightingOrigin);
+			barrel.shadowPlane = parent->shadowPlane;
+			barrel.renderfx = parent->renderfx;
+			barrel.hModel = trap->R_RegisterModel("models/wzweapons/stock_1.md3");
+			AnglesToAxis(vec3_origin, barrel.axis);
+			CG_PositionRotatedEntityOnTag(&barrel, &gun, gun.hModel, "tag_stock");
+			CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
+		}
+
+		if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING)))
+		{
+			if (weapon->isBlasterCanon)
 			{
-				gun.ghoul2 = weapon->g2ViewModel;
-				gun.radius = 32.0f;
-				if (!gun.ghoul2)
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
+			}
+			else
+			{
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+			}
+			cent->pe.lightningFiring = qtrue;
+		}
+		else
+		{
+			if (weapon->isBlasterCanon)
+			{
+				if (cent->pe.lightningFiring)
 				{
-					return;
+					if (cent->currentState.clientNum == cg.clientNum)
+						trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
+					else
+						trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+				}
+			}
+			else if (weapon->readySound > 0)
+			{
+				if (cent->currentState.clientNum == cg.clientNum)
+					trap->S_AddLoopingSound(cent->currentState.number, vec3_origin, vec3_origin, weapon->readySound);
+				else
+					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+			}
+			cent->pe.lightningFiring = qfalse;
+		}
+	}
+#if 0
+	else
+	{
+		/*
+		Ghoul2 Insert Start
+		*/
+
+		if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING)))
+		{
+			if (weapon->isBlasterCanon)
+			{
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
+			}
+			else
+			{
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+			}
+			cent->pe.lightningFiring = qtrue;
+		}
+		else
+		{
+			if (weapon->isBlasterCanon)
+			{
+				if (cent->pe.lightningFiring)
+				{
+					if (cent->currentState.clientNum == cg.clientNum)
+						trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
+					else
+						trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+				}
+			}
+			else if (weapon->readySound > 0)
+			{
+				if (cent->currentState.clientNum == cg.clientNum)
+					trap->S_AddLoopingSound(cent->currentState.number, vec3_origin, vec3_origin, weapon->readySound);
+				else
+					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+			}
+			cent->pe.lightningFiring = qfalse;
+		}
+
+		/*
+		Ghoul2 Insert Start
+		*/
+
+		//need this for third and first person...
+		if (weapon->isBlasterCanon)
+		{
+			dif = cg.time - cent->blastercannonBarrelRotationTime;
+
+			if ((cent->currentState.eFlags & EF_FIRING) || (ps && ps->weaponstate == WEAPON_FIRING))
+			{
+				cent->blastercannonBarrelRotationTime = cg.time;
+			}
+		}
+
+		memset(&gun, 0, sizeof(gun));
+
+
+		// only do this if we are in first person, since world weapons are now handled on the server by Ghoul2
+		if (!thirdPerson)
+		{
+			// add the weapon
+			VectorCopy(parent->lightingOrigin, gun.lightingOrigin);
+			gun.shadowPlane = parent->shadowPlane;
+			gun.renderfx = parent->renderfx;
+
+			if (ps)
+			{	// this player, in first person view
+				if (weapon->g2ViewModel)
+				{
+					gun.ghoul2 = weapon->g2ViewModel;
+					gun.radius = 32.0f;
+					if (!gun.ghoul2)
+					{
+						return;
+					}
+				}
+				else
+				{
+					gun.hModel = weapon->viewModel;
+					if (!gun.hModel)
+					{
+						return;
+					}
 				}
 			}
 			else
 			{
-				gun.hModel = weapon->viewModel;
-				if (!gun.hModel)
-				{
+				gun.hModel = weapon->weaponModel;
+
+				if (!gun.hModel) {
 					return;
 				}
 			}
-		}
-		else
-		{
-			gun.hModel = weapon->weaponModel;
 
 			if (!gun.hModel) {
 				return;
 			}
-		}
 
-		if (!gun.hModel) {
-			return;
-		}
-
-		if ( !ps ) {
-			// add weapon ready sound
-			cent->pe.lightningFiring = qfalse;
-			if ( ( cent->currentState.eFlags & EF_FIRING ) && weapon->firingSound ) {
-				// lightning gun and gauntlet make a different sound when fire is held down
-				trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound );
-				cent->pe.lightningFiring = qtrue;
-			} else if ( weapon->readySound ) {
-				trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound );
-			}
-			else if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
-				//If we have a clone rifle, only play this sound if it is a minigun
-				if (weapon->isBlasterCanon)
-				{
-					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
-				}
-				else
-				{
+			if (!ps) {
+				// add weapon ready sound
+				cent->pe.lightningFiring = qfalse;
+				if ((cent->currentState.eFlags & EF_FIRING) && weapon->firingSound) {
+					// lightning gun and gauntlet make a different sound when fire is held down
 					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+					cent->pe.lightningFiring = qtrue;
 				}
-				cent->pe.lightningFiring = qtrue;
-			}
-			else
-			{
-				if (weapon->isBlasterCanon)
-				{
-					if (cent->pe.lightningFiring)
-					{
-						if (cent->currentState.clientNum == cg.clientNum)
-							trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
-						else
-							trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
-					}
-				}
-				else if (weapon->readySound > 0) { // Getting initalized to -1 sometimes... readySound isn't even referenced anywere else in code
-
+				else if (weapon->readySound) {
 					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
 				}
-				cent->pe.lightningFiring = qfalse;
-			}
-		}
-
-		CG_PositionEntityOnTag( &gun, parent, parent->hModel, "tag_weapon");
-
-		//this stuff under here
-		// add the spinning barrel
-		if (weapon->barrelModel) 
-		{
-			memset(&barrel, 0, sizeof(barrel));
-			VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
-			barrel.shadowPlane = parent->shadowPlane;
-			barrel.renderfx = parent->renderfx;
-
-			barrel.hModel = weapon->barrelModel;
-			angles[YAW] = 0;
-			angles[PITCH] = 0;
-			angles[ROLL] = 0;
-
-			if( weaponNum == WP_Z6_BLASTER_CANON ) 
-			{
-				if(cent->currentState.eFlags & EF_FIRING || ( (ps) && ps->weaponstate == WEAPON_FIRING) ) 
-				{
-					cent->blastercannonBarrelRotationAngle+=15;
+				else if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
+					//If we have a clone rifle, only play this sound if it is a minigun
+					if (weapon->isBlasterCanon)
+					{
+						trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
+					}
+					else
+					{
+						trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+					}
+					cent->pe.lightningFiring = qtrue;
 				}
 				else
 				{
-					cent->blastercannonBarrelRotationAngle++;
-				}
+					if (weapon->isBlasterCanon)
+					{
+						if (cent->pe.lightningFiring)
+						{
+							if (cent->currentState.clientNum == cg.clientNum)
+								trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPONLOCAL, weapon->spindownSound);
+							else
+								trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+						}
+					}
+					else if (weapon->readySound > 0) { // Getting initalized to -1 sometimes... readySound isn't even referenced anywere else in code
 
-				if (cent->blastercannonBarrelRotationAngle >= 360)
-				{
-					cent->blastercannonBarrelRotationAngle = cent->blastercannonBarrelRotationAngle - 360;
-				}
-
-				angles[ROLL] = cent->blastercannonBarrelRotationAngle;
-			}
-			AnglesToAxis(angles, barrel.axis);
-
-			//Z6 stuff.
-			if (weapon->isBlasterCanon) {
-				if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))
-				{
-					RotateAroundDirection(barrel.axis, cg.time);
-				}
-				else if (dif > 0) {
-					RotateAroundDirection(barrel.axis, (cg.time / (-dif / 5.0)));
+						trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+					}
+					cent->pe.lightningFiring = qfalse;
 				}
 			}
-			if (weapon->handsModel)
-				CG_PositionRotatedEntityOnTag(&barrel, parent, /*gun*/
-				weapon->handsModel, "tag_barrel");
-			else
-				CG_PositionRotatedEntityOnTag(&barrel, parent,/* gun*/
-				weapon->weaponModel, "tag_barrel");
-		}
 
-		// Render hands with gun
-		parent->hModel = weapon->handsModel;
-		parent->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+			CG_PositionEntityOnTag(&gun, parent, parent->hModel, "tag_weapon");
 
-		//if (!parent->hModel) trap->Print("Current weapon has no hands model\n");
-		gun.renderfx = parent->renderfx;
-		gun.hModel = weapon->viewModel;
-
-		CG_PositionEntityOnTag(&gun, parent, parent->hModel, "tag_weapon");
-		if (!CG_IsMindTricked(cent->currentState.trickedentindex,
-			cent->currentState.trickedentindex2,
-			cent->currentState.trickedentindex3,
-			cent->currentState.trickedentindex4,
-			cg.snap->ps.clientNum))
-		{
-			CG_AddWeaponWithPowerups( &gun, cent->currentState.powerups ); //don't draw the weapon if the player is invisible
-		}
-
-		if (weaponNum == WP_STUN_BATON)
-		{
-			int i = 0;
-
-			while (i < 3)
-			{
-				memset( &barrel, 0, sizeof( barrel ) );
-				VectorCopy( parent->lightingOrigin, barrel.lightingOrigin );
-				barrel.shadowPlane = parent->shadowPlane;
-				barrel.renderfx = parent->renderfx;
-
-				if (i == 0)
-				{
-					barrel.hModel = trap->R_RegisterModel("models/weapons2/stun_baton/baton_barrel.md3");
-				}
-				else if (i == 1)
-				{
-					barrel.hModel = trap->R_RegisterModel("models/weapons2/stun_baton/baton_barrel2.md3");
-				}
-				else
-				{
-					barrel.hModel = trap->R_RegisterModel("models/weapons2/stun_baton/baton_barrel3.md3");
-				}
-				angles[YAW] = 0;
-				angles[PITCH] = 0;
-				angles[ROLL] = 0;
-
-				AnglesToAxis( angles, barrel.axis );
-
-				if (i == 0)
-				{
-					CG_PositionRotatedEntityOnTag( &barrel, parent/*&gun*/, /*weapon->weaponModel*/weapon->handsModel, "tag_barrel" );
-				}
-				else if (i == 1)
-				{
-					CG_PositionRotatedEntityOnTag( &barrel, parent/*&gun*/, /*weapon->weaponModel*/weapon->handsModel, "tag_barrel2" );
-				}
-				else
-				{
-					CG_PositionRotatedEntityOnTag( &barrel, parent/*&gun*/, /*weapon->weaponModel*/weapon->handsModel, "tag_barrel3" );
-				}
-				CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups );
-
-				i++;
-			}
-		}
-		else
-		{
-			if ( weapon->barrelCount > 0/*weapon->barrelModels[0]*/ )
-			{// Draw barrel models if any... Includes hand models if JKG weapon model...
-				int i;
-
-				for ( i = 0; i < weapon->barrelCount/*4*/; i++ )
-				{
-					if ( weapon->barrelModels[i] == NULL_HANDLE ) break;
-
-					memset (&barrel, 0, sizeof (barrel));
-					barrel.renderfx = parent->renderfx;
-					barrel.hModel = weapon->barrelModels[i];
-
-					AnglesToAxis (vec3_origin, barrel.axis);
-					CG_PositionRotatedEntityOnTag (&barrel, parent, parent->hModel, barrelTags[i]);
-
-					CG_AddWeaponWithPowerups (&barrel, cent->currentState.powerups);
-				}
-			} 
-			else if ( weapon->barrelModel ) 
-			{// add the spinning barrel
-			
-				memset( &barrel, 0, sizeof( barrel ) );
-				VectorCopy( parent->lightingOrigin, barrel.lightingOrigin );
+			if (weaponNum == WP_MODULIZED_WEAPON)
+			{// Test adding new module model to a base model... 1st person - TODO: Remove this crap...
+				memset(&barrel, 0, sizeof(barrel));
+				VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
 				barrel.shadowPlane = parent->shadowPlane;
 				barrel.renderfx = parent->renderfx;
 
@@ -819,43 +776,103 @@ Ghoul2 Insert Start
 				angles[PITCH] = 0;
 				angles[ROLL] = 0;
 
-				AnglesToAxis( angles, barrel.axis );
+				AnglesToAxis(angles, barrel.axis);
 
-				CG_PositionRotatedEntityOnTag( &barrel, parent/*&gun*/, /*weapon->weaponModel*/weapon->handsModel, "tag_barrel" );
+				CG_PositionRotatedEntityOnTag(&barrel, &gun, trap->R_RegisterModel("models/wzweapons/barrel_1.md3"), "tag_barrel"); // barrel??
+			}
 
-				CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups );
+			//this stuff under here
+			// add the spinning barrel
+			if (weapon->barrelModel)
+			{
+				memset(&barrel, 0, sizeof(barrel));
+				VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
+				barrel.shadowPlane = parent->shadowPlane;
+				barrel.renderfx = parent->renderfx;
+
+				barrel.hModel = weapon->barrelModel;
+				angles[YAW] = 0;
+				angles[PITCH] = 0;
+				angles[ROLL] = 0;
+
+				AnglesToAxis(angles, barrel.axis);
+
+				//Z6 stuff.
+				if (weapon->isBlasterCanon) {
+					if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))
+					{
+						RotateAroundDirection(barrel.axis, cg.time);
+					}
+					else if (dif > 0) {
+						RotateAroundDirection(barrel.axis, (cg.time / (-dif / 5.0)));
+					}
+				}
+				if (weapon->handsModel)
+					CG_PositionRotatedEntityOnTag(&barrel, parent, /*gun*/
+						weapon->handsModel, "tag_barrel");
+				else
+					CG_PositionRotatedEntityOnTag(&barrel, parent,/* gun*/
+						weapon->weaponModel, "tag_barrel");
+			}
+
+			// Render hands with gun
+			parent->hModel = weapon->handsModel;
+			parent->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+
+			//if (!parent->hModel) trap->Print("Current weapon has no hands model\n");
+			gun.renderfx = parent->renderfx;
+			gun.hModel = weapon->viewModel;
+
+			CG_PositionEntityOnTag(&gun, parent, parent->hModel, "tag_weapon");
+			if (!CG_IsMindTricked(cent->currentState.trickedentindex,
+				cent->currentState.trickedentindex2,
+				cent->currentState.trickedentindex3,
+				cent->currentState.trickedentindex4,
+				cg.snap->ps.clientNum))
+			{
+				CG_AddWeaponWithPowerups(&gun, cent->currentState.powerups); //don't draw the weapon if the player is invisible
+			}
+
+			if (weapon->barrelCount > 0/*weapon->barrelModels[0]*/)
+			{// Draw barrel models if any... Includes hand models if JKG weapon model...
+				int i;
+
+				for (i = 0; i < weapon->barrelCount/*4*/; i++)
+				{
+					if (weapon->barrelModels[i] == NULL_HANDLE) break;
+
+					memset(&barrel, 0, sizeof(barrel));
+					barrel.renderfx = parent->renderfx;
+					barrel.hModel = weapon->barrelModels[i];
+
+					AnglesToAxis(vec3_origin, barrel.axis);
+					CG_PositionRotatedEntityOnTag(&barrel, parent, parent->hModel, barrelTags[i]);
+
+					CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
+				}
+			}
+			else if (weapon->barrelModel)
+			{// add the spinning barrel
+
+				memset(&barrel, 0, sizeof(barrel));
+				VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
+				barrel.shadowPlane = parent->shadowPlane;
+				barrel.renderfx = parent->renderfx;
+
+				barrel.hModel = weapon->barrelModel;
+				angles[YAW] = 0;
+				angles[PITCH] = 0;
+				angles[ROLL] = 0;
+
+				AnglesToAxis(angles, barrel.axis);
+
+				CG_PositionRotatedEntityOnTag(&barrel, parent/*&gun*/, /*weapon->weaponModel*/weapon->handsModel, "tag_barrel");
+
+				CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
 			}
 		}
 	}
-	else if (cent->ghoul2weapon) 
-	{
-		if( weaponNum == WP_Z6_BLASTER_CANON ) 
-		{
-			vec3_t angles;
-			VectorSet(angles, 0, 0, 0);		
-
-			if(cent->currentState.eFlags & EF_FIRING || ( (ps) && ps->weaponstate == WEAPON_FIRING) ) 
-			{
-				cent->blastercannonBarrelRotationAngle+=15;
-			}
-			else
-			{
-				cent->blastercannonBarrelRotationAngle++;
-			}
-
-			if (cent->blastercannonBarrelRotationAngle >= 360)
-			{
-				cent->blastercannonBarrelRotationAngle = cent->blastercannonBarrelRotationAngle - 360;
-			}
-
-			angles[YAW] = cent->blastercannonBarrelRotationAngle;
-
-			trap->G2API_SetBoneAngles(cent->ghoul2weapon, 0, "bone_barrel", angles,
-                                        BONE_ANGLES_PREMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, cg.time);
-
-			cent->ghoul2weapon = NULL;
-		}
-	}
+#endif
 
 /*
 Ghoul2 Insert End
@@ -1933,10 +1950,9 @@ void CG_Weapon_f( void ) {
 	}
 
 	//rww - hack to make weapon numbers same as single player
-	if (num > WP_STUN_BATON)
+	if (num > WP_FIRST_USEABLE)
 	{
-		//num++;
-		num += 2; //I suppose this is getting kind of crazy, what with the wp_melee in there too now.
+		num++;
 	}
 	else
 	{
@@ -1960,7 +1976,6 @@ void CG_Weapon_f( void ) {
 		int weap, i = 0;
 
 		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE 
-			&& cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD
 			&& cg.snap->ps.weapon >= WP_CYROBAN_GRENADE
 			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
@@ -2029,7 +2044,7 @@ void CG_Weapon_f( void ) {
 
 
 //Version of the above which doesn't add +2 to a weapon.  The above can't
-//triger WP_MELEE or WP_STUN_BATON.  Derogatory comments go here.
+//triger WP_MELEE.  Derogatory comments go here.
 void CG_WeaponClean_f( void ) {
 	int		num;
 
@@ -2060,7 +2075,7 @@ void CG_WeaponClean_f( void ) {
 		return;
 	}
 
-	if(num == WP_STUN_BATON) 
+	if (num == WP_FIRST_USEABLE)
 	{
 		if (HaveWeapon(&cg.snap->ps, WP_SABER))
 		{
@@ -2082,7 +2097,6 @@ void CG_WeaponClean_f( void ) {
 		int weap, i = 0;
 
 		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE 
-			&& cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD
 			&& cg.snap->ps.weapon >= WP_CYROBAN_GRENADE
 			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
@@ -2169,12 +2183,8 @@ void CG_OutOfAmmoChange( int oldWeapon )
 	{
 		if ( CG_WeaponSelectable( i ) )
 		{
-			/*
-			if ( 1 == cg_autoswitch.integer &&
-				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
-			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_FRAG_GRENADE && i != WP_FRAG_GRENADE_OLD))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET && i != WP_FRAG_GRENADE))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -2247,81 +2257,6 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 	// mark the entity as muzzle flashing, so when it is added it will
 	// append the flash to the weapon model
 	cent->muzzleFlashTime = cg.time;
-
-	if (cg.predictedPlayerState.clientNum == cent->currentState.number)
-	{
-		if ((ent->weapon == WP_BRYAR_PISTOL && altFire) ||
-			(ent->weapon == WP_BRYAR_OLD && altFire) ||
-			(ent->weapon == WP_BOWCASTER && !altFire) ||
-			(ent->weapon == WP_DEMP2 && altFire))
-			
-		{
-			float val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-
-			if (val > 3.0f)
-			{
-				val = 3.0f;
-			}
-			if (val < 0.2f)
-			{
-				val = 0.2f;
-			}
-
-			val *= 2;
-
-			CGCam_Shake( val, 250 );
-		}
-		else if (ent->weapon == WP_ROCKET_LAUNCHER ||
-			(ent->weapon == WP_REPEATER && altFire) ||
-			ent->weapon == WP_FLECHETTE ||
-			(ent->weapon == WP_Z6_BLASTER_CANON && altFire) ||
-			(ent->weapon == WP_PULSECANON && altFire) ||
-			(ent->weapon == WP_CONCUSSION && !altFire))
-		{
-			if (ent->weapon == WP_CONCUSSION)
-			{
-				if (!cg.renderingThirdPerson )//gives an advantage to being in 3rd person, but would look silly otherwise
-				{//kick the view back
-					cg.kick_angles[PITCH] = flrand( -10, -15 );
-					cg.kick_time = cg.time;
-				}
-			}
-			else if (ent->weapon == WP_ROCKET_LAUNCHER)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			
-			else if (ent->weapon == WP_REPEATER)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_Z6_BLASTER_CANON)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_PULSECANON)
-			{
-				CGCam_Shake(flrand(2, 3), 350);
-			}
-			else if (ent->weapon == WP_FLECHETTE)
-			{
-				if (altFire)
-				{
-					CGCam_Shake(flrand(2, 3), 350);
-				}
-				else
-				{
-					CGCam_Shake(1.5, 250);
-				}
-			}
-		}
-	}
-	// lightning gun only does this this on initial press
-	if ( ent->weapon == WP_DEMP2 ) {
-		if ( cent->pe.lightningFiring ) {
-			return;
-		}
-	}
 
 	#ifdef BASE_COMPAT
 		// play quad sound if needed
@@ -2404,71 +2339,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 
 	switch( weapon )
 	{
-	case WP_BRYAR_PISTOL:
-		if ( altFire )
-		{
-			parm = charge;
-			FX_BryarAltHitWall( origin, dir, parm, weapon, altFire );
-		}
-		else
-		{
-			FX_WeaponHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_BRYAR_RIFLE_SCOPE:
-	case WP_DLT_19:
-	case WP_BRYAR_OLD:
-		if ( altFire )
-		{
-			parm = charge;
-			FX_BryarAltHitWall(origin, dir, parm, weapon, altFire);
-		}
-		else
-		{
-			FX_WeaponHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_DISRUPTOR:
-		FX_DisruptorAltMiss(origin, dir, weapon, altFire);
-		break;
-
-	/*case WP_DC_17_CLONE_PISTOL:
-		if (altFire)
-		{
-			FX_Clonepistol_BounceWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_Clonepistol_HitWall(origin, dir, weapon, altFire);
-		}
-		break;*/
-
-	case WP_DEMP2:
-		if (altFire)
-		{
-			PlayEffectID(cgs.effects.mAltDetonate, origin, dir, -1, -1, qfalse);
-		}
-		else
-		{
-			FX_DEMP2_HitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_FLECHETTE:
-		if (!altFire)
-		{
-			FX_WeaponHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_ROCKET_LAUNCHER:
-		FX_RocketHitWall(origin, dir, weapon, altFire);
-		break;
-
 	case WP_CYROBAN_GRENADE:
-	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
 	case WP_THERMAL:
 		FX_WeaponHitWall(origin, dir, weapon, altFire);
@@ -2491,55 +2362,10 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	qboolean	humanoid = qtrue;
 	vec3_t up={0,0,1};
 
-	/*
-	// NOTENOTE Non-portable code from single player
-	if ( cent->gent )
-	{
-		other = &g_entities[cent->gent->s.otherEntityNum];
-
-		if ( other->client && other->client->playerTeam == TEAM_BOTS )
-		{
-			humanoid = qfalse;
-		}
-	}
-	*/
-
 	// some weapons will make an explosion with the blood, while
 	// others will just make the blood
 	switch ( weapon ) {
-	case WP_DISRUPTOR:
-		FX_DisruptorAltHit(origin, dir, weapon, altFire);
-		break;
-
-	/*case WP_DC_17_CLONE_PISTOL:
-		if (altFire)
-		{
-			PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
-		}
-		else
-		{
-			FX_WeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		break;*/
-
-	case WP_DEMP2:
-		if (altFire)
-		{
-			PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
-		}
-		else
-		{
-			FX_DEMP2_HitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		break;
-
-	case WP_ROCKET_LAUNCHER:
-		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-
 	case WP_CYROBAN_GRENADE:
-	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
 	case WP_THERMAL:
 		FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);

@@ -512,7 +512,7 @@ static void GM_CheckFireState(gentity_t *aiEnt)
 
 				//see if impact would be too close to me
 				distThreshold = 16384/*128*128*/;//default
-				if ( aiEnt->s.weapon == WP_REPEATER )
+				if ( aiEnt->s.weapon == WP_MODULIZED_WEAPON)
 				{
 					if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
 					{
@@ -530,7 +530,7 @@ static void GM_CheckFireState(gentity_t *aiEnt)
 				{//we've haven't seen them in the last 5 seconds
 					//see if it's too far from where he is
 					distThreshold = 65536/*256*256*/;//default
-					if ( aiEnt->s.weapon == WP_REPEATER )
+					if ( aiEnt->s.weapon == WP_MODULIZED_WEAPON)
 					{
 						if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
 						{
@@ -818,7 +818,7 @@ void NPC_BSGM_Attack(gentity_t *aiEnt)
 	else
 	{//Okay, we're not in a special attack, see if we should switch weapons or start a special attack
 		/*
-		if ( NPC->s.weapon == WP_REPEATER
+		if ( NPC->s.weapon == WP_MODULIZED_WEAPON
 			&& !(NPCInfo->scriptFlags & SCF_ALT_FIRE)//using rapid-fire
 			&& NPC->enemy->s.weapon == WP_SABER //enemy using saber
 			&& NPC->client && (NPC->client->ps.saberEventFlags&SEF_DEFLECTED)
@@ -876,23 +876,23 @@ void NPC_BSGM_Attack(gentity_t *aiEnt)
 			&& (aiEnt->enemy->s.weapon != WP_TURRET || Q_stricmp( "PAS", aiEnt->enemy->classname ))
 			&& TIMER_Done( aiEnt, "noRapid" ) )//256
 		{//enemy within 256
-			if ( (aiEnt->client->ps.weapon == WP_REPEATER) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE) )
+			if ( (aiEnt->client->ps.weapon == WP_MODULIZED_WEAPON) && (aiEnt->NPC->scriptFlags & SCF_ALT_FIRE) )
 			{//shooting an explosive, but enemy too close, switch to primary fire
 				aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
 				aiEnt->alt_fire = qfalse;
 				//FIXME: use weap raise & lower anims
-				NPC_ChangeWeapon(aiEnt, WP_REPEATER );
+				NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON);
 			}
 		}
 		else if ( (enemyDist4 > MAX_LOB_DIST_SQUARED || (aiEnt->enemy->s.weapon == WP_TURRET && !Q_stricmp( "PAS", aiEnt->enemy->classname )))
 			&& TIMER_Done( aiEnt, "noLob" ) )//448
 		{//enemy more than 448 away and we are ready to try lob fire again
-			if ( (aiEnt->client->ps.weapon == WP_REPEATER) && !(aiEnt->NPC->scriptFlags & SCF_ALT_FIRE) )
+			if ( (aiEnt->client->ps.weapon == WP_MODULIZED_WEAPON) && !(aiEnt->NPC->scriptFlags & SCF_ALT_FIRE) )
 			{//enemy far enough away to use lobby explosives
 				aiEnt->NPC->scriptFlags |= SCF_ALT_FIRE;
 				aiEnt->alt_fire = qtrue;
 				//FIXME: use weap raise & lower anims
-				NPC_ChangeWeapon(aiEnt, WP_REPEATER );
+				NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON);
 			}
 		}
 	}
@@ -910,7 +910,7 @@ void NPC_BSGM_Attack(gentity_t *aiEnt)
 		}
 		else
 		{//can we shoot our target?
-			if ( ((aiEnt->client->ps.weapon == WP_REPEATER && (aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))) && enemyDist4 < MIN_LOB_DIST_SQUARED )//256
+			if ( ((aiEnt->client->ps.weapon == WP_MODULIZED_WEAPON && (aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))) && enemyDist4 < MIN_LOB_DIST_SQUARED )//256
 			{
 				enemyCS4 = qfalse;//not true, but should stop us from firing
 				hitAlly4 = qtrue;//us!
@@ -1033,7 +1033,7 @@ void NPC_BSGM_Attack(gentity_t *aiEnt)
 	//See if we should override shooting decision with any special considerations
 	GM_CheckFireState(aiEnt);
 
-	if ( aiEnt->client->ps.weapon == WP_REPEATER && (aiEnt->NPC->scriptFlags&SCF_ALT_FIRE) && shoot4 && TIMER_Done( aiEnt, "attackDelay" ) )
+	if ( aiEnt->client->ps.weapon == WP_MODULIZED_WEAPON && (aiEnt->NPC->scriptFlags&SCF_ALT_FIRE) && shoot4 && TIMER_Done( aiEnt, "attackDelay" ) )
 	{
 		vec3_t	muzzle;
 		vec3_t	angles;
@@ -1060,7 +1060,7 @@ void NPC_BSGM_Attack(gentity_t *aiEnt)
 			{//have a clear straight shot, so switch to primary
 				aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
 				aiEnt->alt_fire = qfalse;
-				NPC_ChangeWeapon(aiEnt, WP_REPEATER );
+				NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON);
 				//keep this weap for a bit
 				TIMER_Set( aiEnt, "noLob", Q_irand( 500, 1000 ) );
 			}

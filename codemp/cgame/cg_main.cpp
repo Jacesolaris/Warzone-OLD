@@ -661,8 +661,6 @@ static void CG_RegisterSounds( void ) {
 
 	CG_AS_Register();
 
-//	CG_LoadingString( "sounds" );
-
 	trap->S_RegisterSound( "sound/weapons/melee/punch1.mp3" );
 	trap->S_RegisterSound( "sound/weapons/melee/punch2.mp3" );
 	trap->S_RegisterSound( "sound/weapons/melee/punch3.mp3" );
@@ -673,10 +671,7 @@ static void CG_RegisterSounds( void ) {
 	trap->S_RegisterSound("sound/player/bodyfall_human2.wav");
 	trap->S_RegisterSound("sound/player/bodyfall_human3.wav");
 
-	//test effects
-	trap->FX_RegisterEffect("effects/mp/test_sparks.efx");
-	trap->FX_RegisterEffect("effects/mp/test_wall_impact.efx");
-
+#if 0
 	cgs.media.oneMinuteSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM004" );
 	cgs.media.fiveMinuteSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM005" );
 	cgs.media.oneFragSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM001" );
@@ -686,105 +681,7 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.count2Sound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM036" );
 	cgs.media.count1Sound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM037" );
 	cgs.media.countFightSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM038" );
-
-	cgs.media.hackerIconShader			= trap->R_RegisterShaderNoMip("gfx/mp/c_icon_tech");
-
-	cgs.media.redSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/red_glow" );
-	cgs.media.redSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/red_line" );
-	cgs.media.orangeSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/orange_glow" );
-	cgs.media.orangeSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/orange_line" );
-	cgs.media.yellowSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/yellow_glow" );
-	cgs.media.yellowSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/yellow_line" );
-	cgs.media.greenSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/green_glow" );
-	cgs.media.greenSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/green_line" );
-	cgs.media.blueSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/blue_glow" );
-	cgs.media.blueSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/blue_line" );
-	cgs.media.purpleSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/purple_glow" );
-	cgs.media.purpleSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/purple_line" );
-	//[RGBSabers]
-	cgs.media.rgbSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/rgb_glow");
-	cgs.media.rgbSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/rgb_line");
-	cgs.media.rgbSaberCore2Shader = trap->R_RegisterShader("gfx/effects/sabers/rgb_core");
-	cgs.media.blackSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/black_glow");
-	cgs.media.blackSaberTrail = trap->R_RegisterShader("gfx/effects/sabers/blacksaberBlur");
-	//[/RGBSabers]
-
-	//[SFXSabers]
-	cgs.media.sfxSaberTrailShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_trail");
-	cgs.media.sfxSaberBladeShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_blade");
-	cgs.media.sfxSaberBlade2Shader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_blade_rgb");
-	cgs.media.sfxSaberEndShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end");
-	cgs.media.sfxSabewarzoneShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end_rgb");
-	//[/SFXSabers]
-
-	//[Movie Sabers]
-	//Original Trilogy Sabers
-	cgs.media.otSaberCoreShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_saberCore");
-	cgs.media.redOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_redGlow");
-	cgs.media.orangeOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_orangeGlow");
-	cgs.media.yellowOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_yellowGlow");
-	cgs.media.greenOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_greenGlow");
-	cgs.media.blueOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_blueGlow");
-	cgs.media.purpleOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_purpleGlow");
-
-	//Episode I Sabers
-	cgs.media.ep1SaberCoreShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/saber_core");
-	cgs.media.redEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/red_glowa");
-	cgs.media.orangeEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/orange_glowa");
-	cgs.media.yellowEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/yellow_glowa");
-	cgs.media.greenEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/green_glowa");
-	cgs.media.blueEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/blue_glowa");
-	cgs.media.purpleEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/purple_glowa");
-
-	//Episode II Sabers
-	cgs.media.ep2SaberCoreShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/saber_core");
-	cgs.media.whiteIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep2Sabers/white_ignite_flare");
-	cgs.media.blackIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/black_ignite_flare");
-	cgs.media.redEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/red_glowa");
-	cgs.media.orangeEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/orange_glowa");
-	cgs.media.yellowEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/yellow_glowa");
-	cgs.media.greenEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/green_glowa");
-	cgs.media.blueEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/blue_glowa");
-	cgs.media.purpleEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/purple_glowa");
-
-	//Episode III Sabers
-	cgs.media.ep3SaberCoreShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/saber_core");
-	cgs.media.whiteIgniteFlare02 = trap->R_RegisterShader("gfx/effects/Ep3Sabers/white_ignite_flare");
-	cgs.media.blackIgniteFlare02 = trap->R_RegisterShader("gfx/effects/Ep3Sabers/black_ignite_flare");
-	cgs.media.redIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/red_ignite_flare");
-	cgs.media.greenIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/green_ignite_flare");
-	cgs.media.purpleIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/purple_ignite_flare");
-	cgs.media.blueIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/blue_ignite_flare");
-	cgs.media.orangeIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/orange_ignite_flare");
-	cgs.media.yellowIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/yellow_ignite_flare");
-	cgs.media.redEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/red_glowa");
-	cgs.media.orangeEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/orange_glowa");
-	cgs.media.yellowEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/yellow_glowa");
-	cgs.media.greenEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/green_glowa");
-	cgs.media.blueEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/blue_glowa");
-	cgs.media.purpleEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/purple_glowa");
-	//[Movie Sabers]
-	cgs.media.saberBlurShader			= trap->R_RegisterShader( "gfx/effects/sabers/saberBlur" );
-	cgs.media.swordTrailShader			= trap->R_RegisterShader( "gfx/effects/sabers/swordTrail" );
-
-	cgs.media.forceCoronaShader			= trap->R_RegisterShaderNoMip( "gfx/hud/force_swirl" );
-
-	cgs.media.yellowDroppedSaberShader	= trap->R_RegisterShader("gfx/effects/yellow_glow");
-
-	cgs.media.rivetMarkShader			= trap->R_RegisterShader( "gfx/damage/rivetmark" );
-
-	trap->R_RegisterShader( "gfx/effects/saberFlare" );
-
-	trap->R_RegisterShader( "powerups/ysalimarishell" );
-
-	trap->R_RegisterShader( "gfx/effects/forcePush" );
-
-	trap->R_RegisterShader( "gfx/misc/red_dmgshield" );
-	trap->R_RegisterShader( "gfx/misc/red_portashield" );
-	trap->R_RegisterShader( "gfx/misc/blue_dmgshield" );
-	trap->R_RegisterShader( "gfx/misc/blue_portashield" );
-
-	trap->R_RegisterShader( "models/map_objects/imp_mine/turret_chair_dmg.tga" );
+#endif
 
 	for (i=1 ; i<9 ; i++)
 	{
@@ -800,6 +697,17 @@ static void CG_RegisterSounds( void ) {
 	{
 		trap->S_RegisterSound(va("sound/weapons/saber/bounce%i.wav", i));
 	}
+
+	cgs.media.chunkSound = trap->S_RegisterSound("sound/weapons/explosions/glasslcar");
+	cgs.media.grateSound = trap->S_RegisterSound("sound/effects/grate_destroy");
+	cgs.media.rockBreakSound = trap->S_RegisterSound("sound/effects/wall_smash");
+	cgs.media.rockBounceSound[0] = trap->S_RegisterSound("sound/effects/stone_bounce");
+	cgs.media.rockBounceSound[1] = trap->S_RegisterSound("sound/effects/stone_bounce2");
+	cgs.media.metalBounceSound[0] = trap->S_RegisterSound("sound/effects/metal_bounce");
+	cgs.media.metalBounceSound[1] = trap->S_RegisterSound("sound/effects/metal_bounce2");
+	cgs.media.glassChunkSound = trap->S_RegisterSound("sound/weapons/explosions/glassbreak1");
+	cgs.media.crateBreakSound[0] = trap->S_RegisterSound("sound/weapons/explosions/crateBust1");
+	cgs.media.crateBreakSound[1] = trap->S_RegisterSound("sound/weapons/explosions/crateBust2");
 
 	trap->S_RegisterSound( "sound/weapons/saber/enemy_saber_on.wav" );
 	trap->S_RegisterSound( "sound/weapons/saber/enemy_saber_off.wav" );
@@ -864,6 +772,7 @@ static void CG_RegisterSounds( void ) {
 	trap->S_RegisterSound("sound/weapons/force/jump.mp3"); //PDSOUND_FORCEJUMP
 	trap->S_RegisterSound("sound/weapons/force/grip.mp3"); //PDSOUND_FORCEGRIP
 
+#if 0
 	if ( cgs.gametype >= GT_TEAM || com_buildScript.integer ) {
 
 #ifdef JK2AWARDS
@@ -889,9 +798,11 @@ static void CG_RegisterSounds( void ) {
 			cgs.media.blueTookYsalSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM047" );
 		}
 	}
+#endif
 
 	cgs.media.drainSound = trap->S_RegisterSound("sound/weapons/force/drained.mp3");
 
+#if 0
 	cgs.media.happyMusic = trap->S_RegisterSound("music/goodsmall.mp3");
 	cgs.media.dramaticFailure = trap->S_RegisterSound("music/badsmall.mp3");
 
@@ -900,6 +811,7 @@ static void CG_RegisterSounds( void ) {
 	{
 		trap->S_StartBackgroundTrack( "music/mp/duel.mp3", "music/mp/duel.mp3", qfalse );
 	}
+#endif
 
 	//cg.loadLCARSStage = 1;
 
@@ -937,24 +849,6 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.watrInSound				= trap->S_RegisterSound( "sound/player/watr_in.wav");
 	cgs.media.watrOutSound				= trap->S_RegisterSound( "sound/player/watr_out.wav");
 	cgs.media.watrUnSound				= trap->S_RegisterSound( "sound/player/watr_un.wav");
-
-	cgs.media.explosionModel			= trap->R_RegisterModel ( "models/map_objects/mp/sphere.md3" );
-	cgs.media.surfaceExplosionShader	= trap->R_RegisterShader( "surfaceExplosion" );
-
-	cgs.media.disruptorShader			= trap->R_RegisterShader( "gfx/effects/burn");
-
-	if (com_buildScript.integer)
-	{
-		trap->R_RegisterShader( "gfx/effects/turretflashdie" );
-	}
-
-	cgs.media.solidWhite = trap->R_RegisterShader( "gfx/effects/solidWhite_cull" );
-
-	trap->R_RegisterShader("gfx/misc/mp_light_enlight_disable");
-	trap->R_RegisterShader("gfx/misc/mp_dark_enlight_disable");
-
-	trap->R_RegisterModel ( "models/map_objects/mp/sphere.md3" );
-	trap->R_RegisterModel("models/items/remote.md3");
 
 	cgs.media.holocronPickup = trap->S_RegisterSound( "sound/player/holocron.wav" );
 
@@ -1054,37 +948,6 @@ static void CG_RegisterSounds( void ) {
 		cgs.gameSounds[i] = trap->S_RegisterSound( soundName );
 	}
 
-	for ( i = 1 ; i < MAX_FX ; i++ ) {
-		soundName = CG_ConfigString( CS_EFFECTS+i );
-		if ( !soundName[0] ) {
-			break;
-		}
-
-		if (soundName[0] == '*')
-		{ //it's a special global weather effect
-			CG_ParseWeatherEffect(soundName);
-			cgs.gameEffects[i] = 0;
-		}
-		else
-		{
-			cgs.gameEffects[i] = trap->FX_RegisterEffect( soundName );
-		}
-	}
-
-	// register all the server specified icons
-	for ( i = 1; i < MAX_ICONS; i ++ )
-	{
-		const char* iconName;
-
-		iconName = CG_ConfigString ( CS_ICONS + i );
-		if ( !iconName[0] )
-		{
-			break;
-		}
-
-		cgs.gameIcons[i] = trap->R_RegisterShaderNoMip ( iconName );
-	}
-
 	soundName = CG_ConfigString(CS_SIEGE_STATE);
 
 	if (soundName[0])
@@ -1109,14 +972,33 @@ static void CG_RegisterSounds( void ) {
 		}
 	}
 
+	for (i = 1; i < MAX_FX; i++) {
+		soundName = CG_ConfigString(CS_EFFECTS + i);
+		if (!soundName[0]) {
+			break;
+		}
+
+		if (soundName[0] == '*')
+		{ //it's a special global weather effect
+			CG_ParseWeatherEffect(soundName);
+			cgs.gameEffects[i] = 0;
+		}
+		else
+		{
+			cgs.gameEffects[i] = trap->FX_RegisterEffect(soundName);
+		}
+	}
+
 	//cg.loadLCARSStage = 2;
 
 	// FIXME: only needed with item
 	cgs.media.deploySeeker = trap->S_RegisterSound ("sound/chars/seeker/misc/hiss");
 	cgs.media.medkitSound = trap->S_RegisterSound ("sound/items/use_bacta.wav");
 
+#if 0
 	cgs.media.winnerSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM006" );
 	cgs.media.loserSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM010" );
+#endif
 }
 
 
@@ -1129,26 +1011,31 @@ static void CG_RegisterSounds( void ) {
 //-------------------------------------
 static void CG_RegisterEffects( void )
 {
-	/*
-	const char	*effectName;
-	int			i;
-
-	for ( i = 1 ; i < MAX_FX ; i++ )
+	// register all the server specified icons
+	for (int i = 1; i < MAX_ICONS; i++)
 	{
-		effectName = CG_ConfigString( CS_EFFECTS + i );
+		const char* iconName;
 
-		if ( !effectName[0] )
+		iconName = CG_ConfigString(CS_ICONS + i);
+		if (!iconName[0])
 		{
 			break;
 		}
 
-		trap->FX_RegisterEffect( effectName );
+		cgs.gameIcons[i] = trap->R_RegisterShaderNoMip(iconName);
 	}
-	*/
-	//the above was redundant as it's being done in CG_RegisterSounds
 
 	// Set up the glass effects mini-system.
 	CG_InitGlass();
+
+	// Damage types
+	cgs.media.playerFireEffect = trap->FX_RegisterEffect("effects/player/fire");
+
+	trap->FX_RegisterEffect("force/force_touch");
+
+	//Weather
+	cgs.effects.saberFizz = trap->FX_RegisterEffect("saber/fizz.efx");
+	cgs.effects.rain = trap->FX_RegisterEffect("effects/rain");
 
 	//footstep effects
 	cgs.effects.footstepMud = trap->FX_RegisterEffect( "materials/mud" );
@@ -1165,6 +1052,431 @@ static void CG_RegisterEffects( void )
 	cgs.effects.waterSplash = trap->FX_RegisterEffect( "env/water_impact" );
 	cgs.effects.lavaSplash = trap->FX_RegisterEffect( "env/lava_splash" );
 	cgs.effects.acidSplash = trap->FX_RegisterEffect( "env/acid_splash" );
+
+	//New EFX calls
+	cgs.effects.mEmplacedExplodeEnhancedFX = trap->FX_RegisterEffect("emplaced/explode_enhanced2.efx");
+	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
+	cgs.effects.mSparkExplosionEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx");
+
+	cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx"); //("demp2/altDetonate_enhanced2.efx");
+
+	cgs.effects.mSparksEnhancedFX = trap->FX_RegisterEffect("sparks/spark_nosnd_enhanced2.efx");
+
+	cgs.effects.mEmplacedDeadSmoke = trap->FX_RegisterEffect("effects/emplaced/dead_smoke.efx");
+	cgs.effects.mEmplacedExplode = trap->FX_RegisterEffect("effects/emplaced/explode.efx");
+	cgs.effects.mTurretExplode = trap->FX_RegisterEffect("effects/turret/explode.efx");
+	cgs.effects.mSparkExplosion = trap->FX_RegisterEffect("effects/sparks/spark_explosion.efx");
+	cgs.effects.mTripmineExplosion = trap->FX_RegisterEffect("effects/tripMine/explosion.efx");
+	cgs.effects.mDetpackExplosion = trap->FX_RegisterEffect("effects/detpack/explosion.efx");
+	cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("effects/flechette/alt_blow.efx");
+	cgs.effects.mEnhancedFlechetteAltBlow = trap->FX_RegisterEffect("effects/explosives/flechettemedium.efx");
+	cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("effects/stunBaton/flesh_impact.efx");
+	cgs.effects.mAltDetonate = trap->FX_RegisterEffect("effects/demp2/altDetonate.efx");
+	cgs.effects.mAltDempDetonateEnhancedFX = trap->FX_RegisterEffect("Blasters/electric_impactbig.efx");
+
+	cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("effects/sparks/spark_exp_nosnd");
+	cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("effects/tripMine/laser.efx");
+	cgs.effects.mEmplacedMuzzleFlash = trap->FX_RegisterEffect("effects/emplaced/muzzle_flash");
+	cgs.effects.mConcussionAltRing = trap->FX_RegisterEffect("effects/concussion/alt_ring");
+
+	cgs.effects.mHyperspaceStars = trap->FX_RegisterEffect("effects/ships/hyperspace_stars");
+	cgs.effects.mBlackSmoke = trap->FX_RegisterEffect("effects/volumetric/black_smoke");
+	cgs.effects.mShipDestDestroyed = trap->FX_RegisterEffect("effects/ships/dest_destroyed.efx");
+	cgs.effects.mShipDestBurning = trap->FX_RegisterEffect("effects/ships/dest_burning.efx");
+	cgs.effects.mBobaJet = trap->FX_RegisterEffect("effects/boba/jet.efx");
+	cgs.effects.mBobaJetAfterburner = trap->FX_RegisterEffect("effects/boba/jetsp.efx");
+	cgs.effects.mBobaJetHover = trap->FX_RegisterEffect("effects/boba/jethover.efx");
+	cgs.effects.mJetpack = trap->FX_RegisterEffect("effects/player/jetpack.efx");
+
+	cgs.effects.itemCone = trap->FX_RegisterEffect("effects/mp/itemcone.efx");
+	cgs.effects.mTurretMuzzleFlash = trap->FX_RegisterEffect("effects/turret/muzzle_flash.efx");
+	cgs.effects.mSparks = trap->FX_RegisterEffect("effects/sparks/spark_nosnd.efx"); //sparks/spark.efx
+	cgs.effects.mSaberCut = trap->FX_RegisterEffect("effects/saber/saber_cut.efx");
+	cgs.effects.mSaberBlock = trap->FX_RegisterEffect("effects/saber/saber_block.efx");
+	cgs.effects.mSaberBodyHit = trap->FX_RegisterEffect("saber/saber_bodyhit.efx");
+	cgs.effects.mSaberBloodSparks = trap->FX_RegisterEffect("effects/saber/blood_sparks_mp.efx");
+	cgs.effects.mSaberBloodSparksSmall = trap->FX_RegisterEffect("effects/saber/blood_sparks_25_mp.efx");
+	cgs.effects.mSaberBloodSparksMid = trap->FX_RegisterEffect("effects/saber/blood_sparks_50_mp.efx");
+	cgs.effects.mSpawn = trap->FX_RegisterEffect("effects/mp/spawn.efx");
+	cgs.effects.mJediSpawn = trap->FX_RegisterEffect("effects/mp/jedispawn.efx");
+	cgs.effects.mBlasterDeflect = trap->FX_RegisterEffect("effects/blaster/deflect.efx");
+	cgs.effects.mBlasterSmoke = trap->FX_RegisterEffect("effects/blaster/smoke_bolton");
+	cgs.effects.mForceConfustionOld = trap->FX_RegisterEffect("effects/force/confusion_old.efx");
+	cgs.effects.forceLightning = trap->FX_RegisterEffect("effects/force/lightning.efx");
+	cgs.effects.forceLightningWide = trap->FX_RegisterEffect("effects/force/lightningwide.efx");
+
+	//[NewLightningEFX]
+	cgs.effects.forcelightningAbsorb = trap->FX_RegisterEffect("effects/force/lightning_absorb.efx");
+	cgs.effects.lightningarc = trap->FX_RegisterEffect("effects/force/lightning_arc.efx");
+	cgs.effects.forcelightningFlare = trap->FX_RegisterEffect("effects/force/lightning_flare.efx");
+	//[/NewLightningEFX]
+
+	cgs.effects.forceDrain = trap->FX_RegisterEffect("effects/mp/drain.efx");
+	cgs.effects.forceDrainWide = trap->FX_RegisterEffect("effects/mp/drainwide.efx");
+	cgs.effects.forceDrained = trap->FX_RegisterEffect("effects/mp/drainhit.efx");
+
+	cgs.effects.mDisruptorDeathSmoke = trap->FX_RegisterEffect("effects/disruptor/death_smoke");
+
+	//test effects
+	trap->FX_RegisterEffect("effects/mp/test_sparks.efx");
+	trap->FX_RegisterEffect("effects/mp/test_wall_impact.efx");
+
+	cgs.media.explosionModel = trap->R_RegisterModel("models/map_objects/mp/sphere.md3");
+	trap->R_RegisterModel("models/map_objects/mp/sphere.md3");
+	trap->R_RegisterModel("models/items/remote.md3");
+}
+
+void CG_RegisterShaders(void)
+{
+	static char		*sb_nums[11] = {
+		"gfx/2d/numbers/zero",
+		"gfx/2d/numbers/one",
+		"gfx/2d/numbers/two",
+		"gfx/2d/numbers/three",
+		"gfx/2d/numbers/four",
+		"gfx/2d/numbers/five",
+		"gfx/2d/numbers/six",
+		"gfx/2d/numbers/seven",
+		"gfx/2d/numbers/eight",
+		"gfx/2d/numbers/nine",
+		"gfx/2d/numbers/minus",
+	};
+
+	static char		*sb_t_nums[11] = {
+		"gfx/2d/numbers/t_zero",
+		"gfx/2d/numbers/t_one",
+		"gfx/2d/numbers/t_two",
+		"gfx/2d/numbers/t_three",
+		"gfx/2d/numbers/t_four",
+		"gfx/2d/numbers/t_five",
+		"gfx/2d/numbers/t_six",
+		"gfx/2d/numbers/t_seven",
+		"gfx/2d/numbers/t_eight",
+		"gfx/2d/numbers/t_nine",
+		"gfx/2d/numbers/t_minus",
+	};
+
+	static char		*sb_c_nums[11] = {
+		"gfx/2d/numbers/c_zero",
+		"gfx/2d/numbers/c_one",
+		"gfx/2d/numbers/c_two",
+		"gfx/2d/numbers/c_three",
+		"gfx/2d/numbers/c_four",
+		"gfx/2d/numbers/c_five",
+		"gfx/2d/numbers/c_six",
+		"gfx/2d/numbers/c_seven",
+		"gfx/2d/numbers/c_eight",
+		"gfx/2d/numbers/c_nine",
+		"gfx/2d/numbers/t_minus", //?????
+	};
+
+	for (int i = 0; i < 11; i++) {
+		cgs.media.numberShaders[i] = trap->R_RegisterShader(sb_nums[i]);
+	}
+
+	//cg.loadLCARSStage = 3;
+
+	for (int i = 0; i < 11; i++)
+	{
+		cgs.media.numberShaders[i] = trap->R_RegisterShaderNoMip(sb_nums[i]);
+		cgs.media.smallnumberShaders[i] = trap->R_RegisterShaderNoMip(sb_t_nums[i]);
+		cgs.media.chunkyNumberShaders[i] = trap->R_RegisterShaderNoMip(sb_c_nums[i]);
+	}
+
+	trap->R_RegisterShaderNoMip("gfx/mp/pduel_icon_lone");
+	trap->R_RegisterShaderNoMip("gfx/mp/pduel_icon_double");
+
+	cgs.media.balloonShader = trap->R_RegisterShader("gfx/mp/chat_icon");
+	cgs.media.vchatShader = trap->R_RegisterShader("gfx/mp/vchat_icon");
+
+	cgs.media.deferShader = trap->R_RegisterShaderNoMip("gfx/2d/defer.tga");
+
+	//warzone radar
+	cgs.media.warzone_radarShader = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar.png");
+	cgs.media.warzone_radar_midtpoint_glow_0 = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_midtpoint_glow_0.png");
+	cgs.media.warzone_radar_midtpoint_glow_elevation = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_midtpoint_glow_elevation.png");
+
+	cgs.media.warzone_radar_tic_far[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_down.png");
+	cgs.media.warzone_radar_tic_far[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_low_right.png");
+	cgs.media.warzone_radar_tic_far[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_right.png");
+	cgs.media.warzone_radar_tic_far[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top_right.png");
+	cgs.media.warzone_radar_tic_far[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top.png");
+	cgs.media.warzone_radar_tic_far[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top_left.png");
+	cgs.media.warzone_radar_tic_far[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_left.png");
+	cgs.media.warzone_radar_tic_far[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_low_left.png");
+
+	cgs.media.warzone_radar_tic_close[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_2.png");
+	cgs.media.warzone_radar_tic_close[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_2.png");
+	cgs.media.warzone_radar_tic_close[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_2.png");
+	cgs.media.warzone_radar_tic_close[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_2.png");
+	cgs.media.warzone_radar_tic_close[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_2.png");
+	cgs.media.warzone_radar_tic_close[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_2.png");
+	cgs.media.warzone_radar_tic_close[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_2.png");
+	cgs.media.warzone_radar_tic_close[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_2.png");
+
+	cgs.media.warzone_radar_tic_reallyclose[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_0.png");
+
+	cgs.media.warzone_radar_tic_close_elevation[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_1.png");
+
+	cgs.media.siegeItemShader = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/goalitem");
+	cgs.media.mAutomapPlayerIcon = trap->R_RegisterShader("gfx/menus/warzone_radar/arrow_w");
+	cgs.media.mAutomapRocketIcon = trap->R_RegisterShader("gfx/menus/warzone_radar/rocket");
+
+	cgs.media.wireframeAutomapFrame_left = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_left");
+	cgs.media.wireframeAutomapFrame_right = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_right");
+	cgs.media.wireframeAutomapFrame_top = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_top");
+	cgs.media.wireframeAutomapFrame_bottom = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_bottom");
+
+	cgs.media.lagometerShader = trap->R_RegisterShaderNoMip("gfx/2d/lag");
+	cgs.media.connectionShader = trap->R_RegisterShaderNoMip("gfx/2d/net");
+
+	cgs.media.boltShader = trap->R_RegisterShader("gfx/misc/blueLine");
+
+	for (int i = 0; i < NUM_CROSSHAIRS; i++) {
+		cgs.media.crosshairShader[i] = trap->R_RegisterShaderNoMip(va("gfx/2d/crosshair%c", 'a' + i));
+	}
+
+	cgs.media.backTileShader = trap->R_RegisterShader("gfx/2d/backtile");
+
+	//precache the fpls skin
+	//trap->R_RegisterSkin("models/players/kyle/model_fpls2.skin");
+
+	cgs.media.itemRespawningPlaceholder = trap->R_RegisterShader("powerups/placeholder");
+	cgs.media.itemRespawningRezOut = trap->R_RegisterShader("powerups/rezout");
+
+	cgs.media.playerShieldDamage = trap->R_RegisterShader("gfx/misc/personalshield");
+	cgs.media.protectShader = trap->R_RegisterShader("gfx/misc/forceprotect");
+	cgs.media.forceSightBubble = trap->R_RegisterShader("gfx/misc/sightbubble");
+	cgs.media.forceShell = trap->R_RegisterShader("powerups/forceshell");
+	cgs.media.sightShell = trap->R_RegisterShader("powerups/sightshell");
+
+	trap->R_RegisterShaderNoMip("gfx/hud/mpi_rflag_x");
+	trap->R_RegisterShaderNoMip("gfx/hud/mpi_bflag_x");
+
+	trap->R_RegisterShaderNoMip("gfx/hud/mpi_rflag_ys");
+	trap->R_RegisterShaderNoMip("gfx/hud/mpi_bflag_ys");
+
+	trap->R_RegisterShaderNoMip("gfx/hud/mpi_rflag");
+	trap->R_RegisterShaderNoMip("gfx/hud/mpi_bflag");
+
+	trap->R_RegisterShaderNoMip("gfx/2d/net.tga");
+
+	if (cgs.gametype >= GT_TEAM || com_buildScript.integer) {
+		cgs.media.teamRedShader = trap->R_RegisterShader("sprites/FACTION_EMPIRE");
+		cgs.media.teamBlueShader = trap->R_RegisterShader("sprites/FACTION_REBEL");
+		//cgs.media.redQuadShader = trap->R_RegisterShader("powerups/blueflag" );
+		cgs.media.teamStatusBar = trap->R_RegisterShader("gfx/2d/colorbar.tga");
+	}
+	else if (cgs.gametype == GT_JEDIMASTER)
+	{
+		cgs.media.teamRedShader = trap->R_RegisterShader("sprites/FACTION_EMPIRE");
+	}
+
+	if (cgs.gametype == GT_POWERDUEL || com_buildScript.integer)
+	{
+		cgs.media.powerDuelAllyShader = trap->R_RegisterShader("gfx/mp/pduel_icon_double");//trap->R_RegisterShader("gfx/mp/pduel_gameicon_ally");
+	}
+
+	cgs.media.heartShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/selectedhealth.tga");
+
+	cgs.media.ysaliredShader = trap->R_RegisterShader("powerups/ysaliredshell");
+	cgs.media.ysaliblueShader = trap->R_RegisterShader("powerups/ysaliblueshell");
+	cgs.media.ysalimariShader = trap->R_RegisterShader("powerups/ysalimarishell");
+	cgs.media.boonShader = trap->R_RegisterShader("powerups/boonshell");
+	cgs.media.endarkenmentShader = trap->R_RegisterShader("powerups/endarkenmentshell");
+	cgs.media.enlightenmentShader = trap->R_RegisterShader("powerups/enlightenmentshell");
+	cgs.media.invulnerabilityShader = trap->R_RegisterShader("powerups/invulnerabilityshell");
+
+#ifdef JK2AWARDS
+	cgs.media.medalImpressive = trap->R_RegisterShaderNoMip("medal_impressive");
+	cgs.media.medalExcellent = trap->R_RegisterShaderNoMip("medal_excellent");
+	cgs.media.medalGauntlet = trap->R_RegisterShaderNoMip("medal_gauntlet");
+	cgs.media.medalDefend = trap->R_RegisterShaderNoMip("medal_defend");
+	cgs.media.medalAssist = trap->R_RegisterShaderNoMip("medal_assist");
+	cgs.media.medalCapture = trap->R_RegisterShaderNoMip("medal_capture");
+#endif
+
+	// Binocular interface
+	cgs.media.binocularCircle = trap->R_RegisterShader("gfx/2d/binCircle");
+	cgs.media.binocularMask = trap->R_RegisterShader("gfx/2d/binMask");
+	cgs.media.binocularArrow = trap->R_RegisterShader("gfx/2d/binSideArrow");
+	cgs.media.binocularTri = trap->R_RegisterShader("gfx/2d/binTopTri");
+	cgs.media.binocularStatic = trap->R_RegisterShader("gfx/2d/binocularWindow");
+	cgs.media.binocularOverlay = trap->R_RegisterShader("gfx/2d/binocularNumOverlay");
+
+	// Damage types
+	cgs.media.stunOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/stun");
+	cgs.media.iceOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/ice");
+	cgs.media.carboniteOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/carbonite");
+
+	cgs.media.glassShardShader = trap->R_RegisterShader("gfx/misc/test_crackle");
+
+	// doing one shader just makes it look like a shell.  By using two shaders with different bulge offsets and different texture scales, it has a much more chaotic look
+	cgs.media.electricBodyShader = trap->R_RegisterShader("gfx/misc/electric");
+	cgs.media.electricBody2Shader = trap->R_RegisterShader("gfx/misc/fullbodyelectric2");
+
+	cgs.media.fsrMarkShader = trap->R_RegisterShader("footstep_r");
+	cgs.media.fslMarkShader = trap->R_RegisterShader("footstep_l");
+	cgs.media.fshrMarkShader = trap->R_RegisterShader("footstep_heavy_r");
+	cgs.media.fshlMarkShader = trap->R_RegisterShader("footstep_heavy_l");
+
+	cgs.media.refractionShader = trap->R_RegisterShader("effects/refraction");
+
+	cgs.media.cloakedShader = trap->R_RegisterShader("gfx/effects/cloakedShader");
+
+	// wall marks
+	cgs.media.shadowMarkShader = trap->R_RegisterShader("markShadow");
+	cgs.media.wakeMarkShader = trap->R_RegisterShader("wake");
+
+	cgs.media.viewPainShader = trap->R_RegisterShader("gfx/misc/borgeyeflare");
+	cgs.media.viewPainShader_Shields = trap->R_RegisterShader("gfx/mp/dmgshader_shields");
+	cgs.media.viewPainShader_ShieldsAndHealth = trap->R_RegisterShader("gfx/mp/dmgshader_shieldsandhealth");
+
+#if 0
+	// new stuff
+	cgs.media.patrolShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/patrol.tga");
+	cgs.media.assaultShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/assault.tga");
+	cgs.media.campShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/camp.tga");
+	cgs.media.followShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/follow.tga");
+	cgs.media.defendShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/defend.tga");
+	cgs.media.retrieveShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/retrieve.tga");
+	cgs.media.escortShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/escort.tga");
+#endif
+
+	cgs.media.cursor = trap->R_RegisterShaderNoMip("menu/art/3_cursor2");
+	cgs.media.sizeCursor = trap->R_RegisterShaderNoMip("ui/assets/sizecursor.tga");
+	cgs.media.selectCursor = trap->R_RegisterShaderNoMip("ui/assets/selectcursor.tga");
+
+	cgs.media.halfShieldShader = trap->R_RegisterShader("halfShieldShell");
+
+	cgs.media.hackerIconShader = trap->R_RegisterShaderNoMip("gfx/mp/c_icon_tech");
+
+#if 0
+	cgs.media.redSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/red_glow");
+	cgs.media.redSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/red_line");
+	cgs.media.orangeSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/orange_glow");
+	cgs.media.orangeSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/orange_line");
+	cgs.media.yellowSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/yellow_glow");
+	cgs.media.yellowSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/yellow_line");
+	cgs.media.greenSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/green_glow");
+	cgs.media.greenSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/green_line");
+	cgs.media.blueSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/blue_glow");
+	cgs.media.blueSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/blue_line");
+	cgs.media.purpleSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/purple_glow");
+	cgs.media.purpleSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/purple_line");
+	//[RGBSabers]
+	cgs.media.rgbSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/rgb_glow");
+	cgs.media.rgbSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/rgb_line");
+	cgs.media.rgbSaberCore2Shader = trap->R_RegisterShader("gfx/effects/sabers/rgb_core");
+	cgs.media.blackSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/black_glow");
+	cgs.media.blackSaberTrail = trap->R_RegisterShader("gfx/effects/sabers/blacksaberBlur");
+	//[/RGBSabers]
+
+	//[SFXSabers]
+	cgs.media.sfxSaberTrailShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_trail");
+	cgs.media.sfxSaberBladeShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_blade");
+	cgs.media.sfxSaberBlade2Shader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_blade_rgb");
+	cgs.media.sfxSaberEndShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end");
+	cgs.media.sfxSabewarzoneShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end_rgb");
+	//[/SFXSabers]
+
+	//[Movie Sabers]
+	//Original Trilogy Sabers
+	cgs.media.otSaberCoreShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_saberCore");
+	cgs.media.redOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_redGlow");
+	cgs.media.orangeOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_orangeGlow");
+	cgs.media.yellowOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_yellowGlow");
+	cgs.media.greenOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_greenGlow");
+	cgs.media.blueOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_blueGlow");
+	cgs.media.purpleOTGlowShader = trap->R_RegisterShader("gfx/effects/OTsabers/ot_purpleGlow");
+
+	//Episode I Sabers
+	cgs.media.ep1SaberCoreShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/saber_core");
+	cgs.media.redEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/red_glowa");
+	cgs.media.orangeEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/orange_glowa");
+	cgs.media.yellowEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/yellow_glowa");
+	cgs.media.greenEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/green_glowa");
+	cgs.media.blueEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/blue_glowa");
+	cgs.media.purpleEp1GlowShader = trap->R_RegisterShader("gfx/effects/Ep1Sabers/purple_glowa");
+
+	//Episode II Sabers
+	cgs.media.ep2SaberCoreShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/saber_core");
+	cgs.media.whiteIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep2Sabers/white_ignite_flare");
+	cgs.media.blackIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/black_ignite_flare");
+	cgs.media.redEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/red_glowa");
+	cgs.media.orangeEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/orange_glowa");
+	cgs.media.yellowEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/yellow_glowa");
+	cgs.media.greenEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/green_glowa");
+	cgs.media.blueEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/blue_glowa");
+	cgs.media.purpleEp2GlowShader = trap->R_RegisterShader("gfx/effects/Ep2Sabers/purple_glowa");
+
+	//Episode III Sabers
+	cgs.media.ep3SaberCoreShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/saber_core");
+	cgs.media.whiteIgniteFlare02 = trap->R_RegisterShader("gfx/effects/Ep3Sabers/white_ignite_flare");
+	cgs.media.blackIgniteFlare02 = trap->R_RegisterShader("gfx/effects/Ep3Sabers/black_ignite_flare");
+	cgs.media.redIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/red_ignite_flare");
+	cgs.media.greenIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/green_ignite_flare");
+	cgs.media.purpleIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/purple_ignite_flare");
+	cgs.media.blueIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/blue_ignite_flare");
+	cgs.media.orangeIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/orange_ignite_flare");
+	cgs.media.yellowIgniteFlare = trap->R_RegisterShader("gfx/effects/Ep3Sabers/yellow_ignite_flare");
+	cgs.media.redEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/red_glowa");
+	cgs.media.orangeEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/orange_glowa");
+	cgs.media.yellowEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/yellow_glowa");
+	cgs.media.greenEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/green_glowa");
+	cgs.media.blueEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/blue_glowa");
+	cgs.media.purpleEp3GlowShader = trap->R_RegisterShader("gfx/effects/Ep3Sabers/purple_glowa");
+	//[Movie Sabers]
+#endif
+	cgs.media.saberBlurShader = trap->R_RegisterShader("gfx/effects/sabers/saberBlur");
+	cgs.media.swordTrailShader = trap->R_RegisterShader("gfx/effects/sabers/swordTrail");
+
+	cgs.media.forceCoronaShader = trap->R_RegisterShaderNoMip("gfx/hud/force_swirl");
+
+	cgs.media.yellowDroppedSaberShader = trap->R_RegisterShader("gfx/effects/yellow_glow");
+
+	cgs.media.rivetMarkShader = trap->R_RegisterShader("gfx/damage/rivetmark");
+
+	trap->R_RegisterShader("gfx/effects/saberFlare");
+
+	trap->R_RegisterShader("powerups/ysalimarishell");
+
+	trap->R_RegisterShader("gfx/effects/forcePush");
+
+	trap->R_RegisterShader("gfx/misc/red_dmgshield");
+	trap->R_RegisterShader("gfx/misc/red_portashield");
+	trap->R_RegisterShader("gfx/misc/blue_dmgshield");
+	trap->R_RegisterShader("gfx/misc/blue_portashield");
+
+	trap->R_RegisterShader("models/map_objects/imp_mine/turret_chair_dmg.tga");
+
+	cgs.media.surfaceExplosionShader = trap->R_RegisterShader("surfaceExplosion");
+
+	cgs.media.disruptorShader = trap->R_RegisterShader("gfx/effects/burn");
+
+	if (com_buildScript.integer)
+	{
+		trap->R_RegisterShader("gfx/effects/turretflashdie");
+	}
+
+	cgs.media.solidWhite = trap->R_RegisterShader("gfx/effects/solidWhite_cull");
+
+	trap->R_RegisterShader("gfx/misc/mp_light_enlight_disable");
+	trap->R_RegisterShader("gfx/misc/mp_dark_enlight_disable");
 }
 
 //===================================================================================
@@ -1400,50 +1712,8 @@ This function may execute for a couple of minutes with a slow disk.
 */
 static void CG_RegisterGameAssets( void ) {
 	int			i;
-	int			breakPoint;
+	int			breakPoint = 0;
 	char		items[MAX_ITEMS+1];
-
-	static char		*sb_nums[11] = {
-		"gfx/2d/numbers/zero",
-		"gfx/2d/numbers/one",
-		"gfx/2d/numbers/two",
-		"gfx/2d/numbers/three",
-		"gfx/2d/numbers/four",
-		"gfx/2d/numbers/five",
-		"gfx/2d/numbers/six",
-		"gfx/2d/numbers/seven",
-		"gfx/2d/numbers/eight",
-		"gfx/2d/numbers/nine",
-		"gfx/2d/numbers/minus",
-	};
-
-	static char		*sb_t_nums[11] = {
-		"gfx/2d/numbers/t_zero",
-		"gfx/2d/numbers/t_one",
-		"gfx/2d/numbers/t_two",
-		"gfx/2d/numbers/t_three",
-		"gfx/2d/numbers/t_four",
-		"gfx/2d/numbers/t_five",
-		"gfx/2d/numbers/t_six",
-		"gfx/2d/numbers/t_seven",
-		"gfx/2d/numbers/t_eight",
-		"gfx/2d/numbers/t_nine",
-		"gfx/2d/numbers/t_minus",
-	};
-
-	static char		*sb_c_nums[11] = {
-		"gfx/2d/numbers/c_zero",
-		"gfx/2d/numbers/c_one",
-		"gfx/2d/numbers/c_two",
-		"gfx/2d/numbers/c_three",
-		"gfx/2d/numbers/c_four",
-		"gfx/2d/numbers/c_five",
-		"gfx/2d/numbers/c_six",
-		"gfx/2d/numbers/c_seven",
-		"gfx/2d/numbers/c_eight",
-		"gfx/2d/numbers/c_nine",
-		"gfx/2d/numbers/t_minus", //?????
-	};
 
 	// clear any references to old media
 	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
@@ -1454,532 +1724,232 @@ static void CG_RegisterGameAssets( void ) {
 	CG_LoadHudMenu();      // load new hud stuff
 	CG_AssetCache();
 
-#pragma omp /*parallel*/ sections
+	CG_LoadingString("World data");
+
+	trap->R_LoadWorld(cgs.mapname);
+
+#if 0
+	for (i = 1; i < MAX_SUB_BSP; i++)
 	{
-#pragma omp section
+		const char		*bspName = 0;
+		vec3_t			mins, maxs;
+		int				j;
+		int				sub = 0;
+		char			temp[MAX_QPATH];
+
+		bspName = CG_ConfigString(CS_BSP_MODELS + i);
+		if (!bspName[0])
 		{
-			CG_LoadingString("World data");
-
-			trap->R_LoadWorld(cgs.mapname);
-
-			for (i = 1; i < MAX_SUB_BSP; i++)
-			{
-				const char		*bspName = 0;
-				vec3_t			mins, maxs;
-				int				j;
-				int				sub = 0;
-				char			temp[MAX_QPATH];
-
-				bspName = CG_ConfigString(CS_BSP_MODELS + i);
-				if (!bspName[0])
-				{
-					break;
-				}
-
-				trap->CM_LoadMap(bspName, qtrue);
-				cgs.inlineDrawModel[breakPoint] = trap->R_RegisterModel(bspName);
-				trap->R_ModelBounds(cgs.inlineDrawModel[breakPoint], mins, maxs);
-				for (j = 0; j < 3; j++)
-				{
-					cgs.inlineModelMidpoints[breakPoint][j] = mins[j] + 0.5 * (maxs[j] - mins[j]);
-				}
-				breakPoint++;
-				for (sub = 1; sub<MAX_MODELS; sub++)
-				{
-					Com_sprintf(temp, MAX_QPATH, "*%d-%d", i, sub);
-					cgs.inlineDrawModel[breakPoint] = trap->R_RegisterModel(temp);
-					if (!cgs.inlineDrawModel[breakPoint])
-					{
-						break;
-					}
-					trap->R_ModelBounds(cgs.inlineDrawModel[breakPoint], mins, maxs);
-					for (j = 0; j < 3; j++)
-					{
-						cgs.inlineModelMidpoints[breakPoint][j] = mins[j] + 0.5 * (maxs[j] - mins[j]);
-					}
-					breakPoint++;
-				}
-			}
+			break;
 		}
-#pragma omp section
-		{// UQ1: This is the slowest section, so I will do percentage complete bar here (cg.loadLCARSStage)...
-			cg.loadLCARSStage = 1;
 
-			CG_LoadingString("Game models");
-
-			for (i = 1; i < MAX_MODELS; i++)
-			{
-				const char		*cModelName;
-				char			modelName[MAX_QPATH];
-
-				cModelName = CG_ConfigString(CS_MODELS + i);
-				if (!cModelName[0]) {
-					break;
-				}
-
-				CG_LoadingString(va("%s (server model)", cModelName));
-
-				strcpy(modelName, cModelName);
-				if (strstr(modelName, ".glm") || modelName[0] == '$')
-				{ //Check to see if it has a custom skin attached.
-					CG_HandleAppendedSkin(modelName);
-					CG_CacheG2AnimInfo(modelName);
-				}
-
-				if (modelName[0] != '$' && modelName[0] != '@')
-				{ //don't register vehicle names and saber names as models.
-					cgs.gameModels[i] = trap->R_RegisterModel(modelName);
-				}
-				else
-				{//FIXME: register here so that stuff gets precached!!!
-					cgs.gameModels[i] = 0;
-				}
-			}
-
-			cg.loadLCARSStage = 2;
-
-			CG_LoadingString("Holocrons");
-
-			cgs.media.itemHoloModel = trap->R_RegisterModel("models/map_objects/mp/holo.md3");
-
-			if (cgs.gametype == GT_HOLOCRON || com_buildScript.integer)
-			{
-				for (i = 0; i < NUM_FORCE_POWERS; i++)
-				{
-					if (forceHolocronModels[i] &&
-						forceHolocronModels[i][0])
-					{
-						trap->R_RegisterModel(forceHolocronModels[i]);
-					}
-				}
-			}
-
-			cg.loadLCARSStage = 3;
-
-			CG_LoadingString("CTF Assets");
-
-			if (cgs.gametype == GT_CTF || cgs.gametype == GT_CTY || com_buildScript.integer) {
-				if (com_buildScript.integer)
-				{
-					trap->R_RegisterModel("models/flags/r_flag.md3");
-					trap->R_RegisterModel("models/flags/b_flag.md3");
-					trap->R_RegisterModel("models/flags/r_flag_ysal.md3");
-					trap->R_RegisterModel("models/flags/b_flag_ysal.md3");
-				}
-
-				if (cgs.gametype == GT_CTF)
-				{
-					cgs.media.redFlagModel = trap->R_RegisterModel("models/flags/r_flag.md3");
-					cgs.media.blueFlagModel = trap->R_RegisterModel("models/flags/b_flag.md3");
-				}
-				else if (cgs.gametype == GT_CTY)
-				{
-					cgs.media.redFlagModel = trap->R_RegisterModel("models/flags/r_flag_ysal.md3");
-					cgs.media.blueFlagModel = trap->R_RegisterModel("models/flags/b_flag_ysal.md3");
-				}
-			}
-
-			cg.loadLCARSStage = 4;
-
-			CG_LoadingString("Chunk models");
-
-			// Chunk models
-			//FIXME: jfm:? bother to conditionally load these if an ent has this material type?
-			for (i = 0; i < NUM_CHUNK_MODELS; i++)
-			{
-				cgs.media.chunkModels[CHUNK_METAL2][i] = trap->R_RegisterModel(va("models/chunks/metal/metal1_%i.md3", i + 1)); //_ /switched\ _
-				cgs.media.chunkModels[CHUNK_METAL1][i] = trap->R_RegisterModel(va("models/chunks/metal/metal2_%i.md3", i + 1)); //  \switched/
-				cgs.media.chunkModels[CHUNK_ROCK1][i] = trap->R_RegisterModel(va("models/chunks/rock/rock1_%i.md3", i + 1));
-				cgs.media.chunkModels[CHUNK_ROCK2][i] = trap->R_RegisterModel(va("models/chunks/rock/rock2_%i.md3", i + 1));
-				cgs.media.chunkModels[CHUNK_ROCK3][i] = trap->R_RegisterModel(va("models/chunks/rock/rock3_%i.md3", i + 1));
-				cgs.media.chunkModels[CHUNK_CRATE1][i] = trap->R_RegisterModel(va("models/chunks/crate/crate1_%i.md3", i + 1));
-				cgs.media.chunkModels[CHUNK_CRATE2][i] = trap->R_RegisterModel(va("models/chunks/crate/crate2_%i.md3", i + 1));
-				cgs.media.chunkModels[CHUNK_WHITE_METAL][i] = trap->R_RegisterModel(va("models/chunks/metal/wmetal1_%i.md3", i + 1));
-			}
-
-
-			cg.loadLCARSStage = 5;
-
-			CG_LoadingString("Items");
-
-			/*
-			Ghoul2 Insert Start
-			*/
-			CG_InitItems();
-
-			cg.loadLCARSStage = 6;
-
-			/*
-			Ghoul2 Insert End
-			*/
-			memset(cg_weapons, 0, sizeof(cg_weapons));
-
-			// only register the items that the server says we need
-			Q_strncpyz(items, CG_ConfigString(CS_ITEMS), sizeof(items));
-
-			for (i = 1; i < bg_numItems; i++) {
-				if (items[i] == '1' || com_buildScript.integer) {
-					CG_LoadingItem(i);
-					CG_RegisterItemVisuals(i);
-				}
-			}
-
-			cg.loadLCARSStage = 7;
-
-			// register the inline models
-			breakPoint = cgs.numInlineModels = trap->CM_NumInlineModels();
-			for (i = 1; i < cgs.numInlineModels; i++) {
-				char	name[10];
-				vec3_t			mins, maxs;
-				int				j;
-
-				CG_LoadingString(va("%s (inline model)", name));
-
-				Com_sprintf(name, sizeof(name), "*%i", i);
-				cgs.inlineDrawModel[i] = trap->R_RegisterModel(name);
-				if (!cgs.inlineDrawModel[i])
-				{
-					breakPoint = i;
-					break;
-				}
-
-				trap->R_ModelBounds(cgs.inlineDrawModel[i], mins, maxs);
-				for (j = 0; j < 3; j++) {
-					cgs.inlineModelMidpoints[i][j] = mins[j] + 0.5 * (maxs[j] - mins[j]);
-				}
-			}
-
-			cg.loadLCARSStage = 8;
-
-			//rww - removed and replaced with CS_G2BONES. For custom skins
-			//the new method is to append a * after an indexed model name and
-			//then append the skin name after that (note that this is only
-			//used for NPCs)
-
-			CG_InitG2Weapons();
-
-			CG_LoadingString(va("%s (md3)", "testboom"));
-			cgs.media.halfShieldModel = trap->R_RegisterModel("models/weaphits/testboom.md3");
-		}
-#pragma omp section
+		trap->CM_LoadMap(bspName, qtrue);
+		cgs.inlineDrawModel[breakPoint] = trap->R_RegisterModel(bspName);
+		trap->R_ModelBounds(cgs.inlineDrawModel[breakPoint], mins, maxs);
+		for (j = 0; j < 3; j++)
 		{
-			CG_LoadingString("Shaders");
-
-			for (i = 0; i < 11; i++) {
-				cgs.media.numberShaders[i] = trap->R_RegisterShader(sb_nums[i]);
-			}
-
-			//cg.loadLCARSStage = 3;
-
-			for (i = 0; i < 11; i++)
-			{
-				cgs.media.numberShaders[i] = trap->R_RegisterShaderNoMip(sb_nums[i]);
-				cgs.media.smallnumberShaders[i] = trap->R_RegisterShaderNoMip(sb_t_nums[i]);
-				cgs.media.chunkyNumberShaders[i] = trap->R_RegisterShaderNoMip(sb_c_nums[i]);
-			}
-
-			trap->R_RegisterShaderNoMip("gfx/mp/pduel_icon_lone");
-			trap->R_RegisterShaderNoMip("gfx/mp/pduel_icon_double");
-
-			cgs.media.balloonShader = trap->R_RegisterShader("gfx/mp/chat_icon");
-			cgs.media.vchatShader = trap->R_RegisterShader("gfx/mp/vchat_icon");
-
-			cgs.media.deferShader = trap->R_RegisterShaderNoMip("gfx/2d/defer.tga");
-
-			//warzone radar
-			cgs.media.warzone_radarShader = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar.png");
-			cgs.media.warzone_radar_midtpoint_glow_0 = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_midtpoint_glow_0.png");
-			cgs.media.warzone_radar_midtpoint_glow_elevation = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_midtpoint_glow_elevation.png");
-
-			cgs.media.warzone_radar_tic_far[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_down.png");
-			cgs.media.warzone_radar_tic_far[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_low_right.png");
-			cgs.media.warzone_radar_tic_far[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_right.png");
-			cgs.media.warzone_radar_tic_far[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top_right.png");
-			cgs.media.warzone_radar_tic_far[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top.png");
-			cgs.media.warzone_radar_tic_far[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top_left.png");
-			cgs.media.warzone_radar_tic_far[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_left.png");
-			cgs.media.warzone_radar_tic_far[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_low_left.png");
-
-			cgs.media.warzone_radar_tic_close[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_2.png");
-			cgs.media.warzone_radar_tic_close[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_2.png");
-			cgs.media.warzone_radar_tic_close[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_2.png");
-			cgs.media.warzone_radar_tic_close[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_2.png");
-			cgs.media.warzone_radar_tic_close[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_2.png");
-			cgs.media.warzone_radar_tic_close[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_2.png");
-			cgs.media.warzone_radar_tic_close[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_2.png");
-			cgs.media.warzone_radar_tic_close[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_2.png");
-
-			cgs.media.warzone_radar_tic_reallyclose[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_0.png");
-			cgs.media.warzone_radar_tic_reallyclose[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_0.png");
-
-			cgs.media.warzone_radar_tic_close_elevation[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_1.png");
-			cgs.media.warzone_radar_tic_close_elevation[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_1.png");
-
-			cgs.media.siegeItemShader = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/goalitem");
-			cgs.media.mAutomapPlayerIcon = trap->R_RegisterShader("gfx/menus/warzone_radar/arrow_w");
-			cgs.media.mAutomapRocketIcon = trap->R_RegisterShader("gfx/menus/warzone_radar/rocket");
-
-			cgs.media.wireframeAutomapFrame_left = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_left");
-			cgs.media.wireframeAutomapFrame_right = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_right");
-			cgs.media.wireframeAutomapFrame_top = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_top");
-			cgs.media.wireframeAutomapFrame_bottom = trap->R_RegisterShader("gfx/mp_automap/mpauto_frame_bottom");
-
-			cgs.media.lagometerShader = trap->R_RegisterShaderNoMip("gfx/2d/lag");
-			cgs.media.connectionShader = trap->R_RegisterShaderNoMip("gfx/2d/net");
-
-			cgs.media.boltShader = trap->R_RegisterShader("gfx/misc/blueLine");
-
-			for (i = 0; i < NUM_CROSSHAIRS; i++) {
-				cgs.media.crosshairShader[i] = trap->R_RegisterShaderNoMip(va("gfx/2d/crosshair%c", 'a' + i));
-			}
-
-			cgs.media.backTileShader = trap->R_RegisterShader("gfx/2d/backtile");
-
-			//precache the fpls skin
-			//trap->R_RegisterSkin("models/players/kyle/model_fpls2.skin");
-
-			cgs.media.itemRespawningPlaceholder = trap->R_RegisterShader("powerups/placeholder");
-			cgs.media.itemRespawningRezOut = trap->R_RegisterShader("powerups/rezout");
-
-			cgs.media.playerShieldDamage = trap->R_RegisterShader("gfx/misc/personalshield");
-			cgs.media.protectShader = trap->R_RegisterShader("gfx/misc/forceprotect");
-			cgs.media.forceSightBubble = trap->R_RegisterShader("gfx/misc/sightbubble");
-			cgs.media.forceShell = trap->R_RegisterShader("powerups/forceshell");
-			cgs.media.sightShell = trap->R_RegisterShader("powerups/sightshell");
-
-			trap->R_RegisterShaderNoMip("gfx/hud/mpi_rflag_x");
-			trap->R_RegisterShaderNoMip("gfx/hud/mpi_bflag_x");
-
-			trap->R_RegisterShaderNoMip("gfx/hud/mpi_rflag_ys");
-			trap->R_RegisterShaderNoMip("gfx/hud/mpi_bflag_ys");
-
-			trap->R_RegisterShaderNoMip("gfx/hud/mpi_rflag");
-			trap->R_RegisterShaderNoMip("gfx/hud/mpi_bflag");
-
-			trap->R_RegisterShaderNoMip("gfx/2d/net.tga");
-
-			if (cgs.gametype >= GT_TEAM || com_buildScript.integer) {
-				cgs.media.teamRedShader = trap->R_RegisterShader("sprites/FACTION_EMPIRE");
-				cgs.media.teamBlueShader = trap->R_RegisterShader("sprites/FACTION_REBEL");
-				//cgs.media.redQuadShader = trap->R_RegisterShader("powerups/blueflag" );
-				cgs.media.teamStatusBar = trap->R_RegisterShader("gfx/2d/colorbar.tga");
-			}
-			else if (cgs.gametype == GT_JEDIMASTER)
-			{
-				cgs.media.teamRedShader = trap->R_RegisterShader("sprites/FACTION_EMPIRE");
-			}
-
-			if (cgs.gametype == GT_POWERDUEL || com_buildScript.integer)
-			{
-				cgs.media.powerDuelAllyShader = trap->R_RegisterShader("gfx/mp/pduel_icon_double");//trap->R_RegisterShader("gfx/mp/pduel_gameicon_ally");
-			}
-
-			cgs.media.heartShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/selectedhealth.tga");
-
-			cgs.media.ysaliredShader = trap->R_RegisterShader("powerups/ysaliredshell");
-			cgs.media.ysaliblueShader = trap->R_RegisterShader("powerups/ysaliblueshell");
-			cgs.media.ysalimariShader = trap->R_RegisterShader("powerups/ysalimarishell");
-			cgs.media.boonShader = trap->R_RegisterShader("powerups/boonshell");
-			cgs.media.endarkenmentShader = trap->R_RegisterShader("powerups/endarkenmentshell");
-			cgs.media.enlightenmentShader = trap->R_RegisterShader("powerups/enlightenmentshell");
-			cgs.media.invulnerabilityShader = trap->R_RegisterShader("powerups/invulnerabilityshell");
-
-#ifdef JK2AWARDS
-			cgs.media.medalImpressive = trap->R_RegisterShaderNoMip("medal_impressive");
-			cgs.media.medalExcellent = trap->R_RegisterShaderNoMip("medal_excellent");
-			cgs.media.medalGauntlet = trap->R_RegisterShaderNoMip("medal_gauntlet");
-			cgs.media.medalDefend = trap->R_RegisterShaderNoMip("medal_defend");
-			cgs.media.medalAssist = trap->R_RegisterShaderNoMip("medal_assist");
-			cgs.media.medalCapture = trap->R_RegisterShaderNoMip("medal_capture");
-#endif
-
-			// Binocular interface
-			cgs.media.binocularCircle = trap->R_RegisterShader("gfx/2d/binCircle");
-			cgs.media.binocularMask = trap->R_RegisterShader("gfx/2d/binMask");
-			cgs.media.binocularArrow = trap->R_RegisterShader("gfx/2d/binSideArrow");
-			cgs.media.binocularTri = trap->R_RegisterShader("gfx/2d/binTopTri");
-			cgs.media.binocularStatic = trap->R_RegisterShader("gfx/2d/binocularWindow");
-			cgs.media.binocularOverlay = trap->R_RegisterShader("gfx/2d/binocularNumOverlay");
-
-			// Damage types
-			cgs.media.stunOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/stun");
-			cgs.media.iceOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/ice");
-			cgs.media.carboniteOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/carbonite");
-
-			cgs.media.glassShardShader = trap->R_RegisterShader("gfx/misc/test_crackle");
-
-			// doing one shader just makes it look like a shell.  By using two shaders with different bulge offsets and different texture scales, it has a much more chaotic look
-			cgs.media.electricBodyShader = trap->R_RegisterShader("gfx/misc/electric");
-			cgs.media.electricBody2Shader = trap->R_RegisterShader("gfx/misc/fullbodyelectric2");
-
-			cgs.media.fsrMarkShader = trap->R_RegisterShader("footstep_r");
-			cgs.media.fslMarkShader = trap->R_RegisterShader("footstep_l");
-			cgs.media.fshrMarkShader = trap->R_RegisterShader("footstep_heavy_r");
-			cgs.media.fshlMarkShader = trap->R_RegisterShader("footstep_heavy_l");
-
-			cgs.media.refractionShader = trap->R_RegisterShader("effects/refraction");
-
-			cgs.media.cloakedShader = trap->R_RegisterShader("gfx/effects/cloakedShader");
-
-			// wall marks
-			cgs.media.shadowMarkShader = trap->R_RegisterShader("markShadow");
-			cgs.media.wakeMarkShader = trap->R_RegisterShader("wake");
-
-			cgs.media.viewPainShader = trap->R_RegisterShader("gfx/misc/borgeyeflare");
-			cgs.media.viewPainShader_Shields = trap->R_RegisterShader("gfx/mp/dmgshader_shields");
-			cgs.media.viewPainShader_ShieldsAndHealth = trap->R_RegisterShader("gfx/mp/dmgshader_shieldsandhealth");
-
-			// new stuff
-			cgs.media.patrolShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/patrol.tga");
-			cgs.media.assaultShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/assault.tga");
-			cgs.media.campShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/camp.tga");
-			cgs.media.followShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/follow.tga");
-			cgs.media.defendShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/defend.tga");
-			cgs.media.retrieveShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/retrieve.tga");
-			cgs.media.escortShader = trap->R_RegisterShaderNoMip("ui/assets/statusbar/escort.tga");
-			cgs.media.cursor = trap->R_RegisterShaderNoMip("menu/art/3_cursor2");
-			cgs.media.sizeCursor = trap->R_RegisterShaderNoMip("ui/assets/sizecursor.tga");
-			cgs.media.selectCursor = trap->R_RegisterShaderNoMip("ui/assets/selectcursor.tga");
-
-			cgs.media.halfShieldShader = trap->R_RegisterShader("halfShieldShell");
+			cgs.inlineModelMidpoints[breakPoint][j] = mins[j] + 0.5 * (maxs[j] - mins[j]);
 		}
-#pragma omp section
+		breakPoint++;
+		for (sub = 1; sub < MAX_MODELS; sub++)
 		{
-			CG_LoadingString("Effects");
-
-			trap->FX_InitSystem(&cg.refdef);
-			CG_RegisterEffects();
-
-			//New EFX calls
-			//cgs.effects.mFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn.efx");
-			//cgs.effects.mFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn_enhanced2.efx");
-			//cgs.effects.mPlasmaFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn.efx");
-			//cgs.effects.mPlasmaFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn_enhanced2.efx");
-			cgs.effects.mEmplacedExplodeEnhancedFX = trap->FX_RegisterEffect("emplaced/explode_enhanced2.efx");
-			cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
-			cgs.effects.mSparkExplosionEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx");
-
-
-			cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx"); //("demp2/altDetonate_enhanced2.efx");
-
-			cgs.effects.mSparksEnhancedFX = trap->FX_RegisterEffect("sparks/spark_nosnd_enhanced2.efx");
-			//cgs.effects.flamedFX = trap->FX_RegisterEffect("effects/flamethrower/flamed.efx");
-			//cgs.effects.flameThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide.efx");
-			//cgs.effects.flameThrowerEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide_enhanced2.efx");
-			//cgs.effects.flameThrowerPlasmaFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma.efx");
-			//cgs.effects.flameThrowerPlasmaEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma_enhanced2.efx");
-			//cgs.effects.iceThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/ice.efx");
-
-			//cgs.effects.turretShotEffect = trap->FX_RegisterEffect( "effects/turret/shot" );
-			cgs.effects.mEmplacedDeadSmoke = trap->FX_RegisterEffect("effects/emplaced/dead_smoke.efx");
-			cgs.effects.mEmplacedExplode = trap->FX_RegisterEffect("effects/emplaced/explode.efx");
-			cgs.effects.mTurretExplode = trap->FX_RegisterEffect("effects/turret/explode.efx");
-			cgs.effects.mSparkExplosion = trap->FX_RegisterEffect("effects/sparks/spark_explosion.efx");
-			cgs.effects.mTripmineExplosion = trap->FX_RegisterEffect("effects/tripMine/explosion.efx");
-			cgs.effects.mDetpackExplosion = trap->FX_RegisterEffect("effects/detpack/explosion.efx");
-			cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("effects/flechette/alt_blow.efx");
-			cgs.effects.mEnhancedFlechetteAltBlow = trap->FX_RegisterEffect("effects/explosives/flechettemedium.efx");
-			cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("effects/stunBaton/flesh_impact.efx");
-			cgs.effects.mAltDetonate = trap->FX_RegisterEffect("effects/demp2/altDetonate.efx");
-			cgs.effects.mAltDempDetonateEnhancedFX = trap->FX_RegisterEffect("Blasters/electric_impactbig.efx");
-
-			cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("effects/sparks/spark_exp_nosnd");
-			cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("effects/tripMine/laser.efx");
-			cgs.effects.mEmplacedMuzzleFlash = trap->FX_RegisterEffect("effects/emplaced/muzzle_flash");
-			cgs.effects.mConcussionAltRing = trap->FX_RegisterEffect("effects/concussion/alt_ring");
-
-			cgs.effects.mHyperspaceStars = trap->FX_RegisterEffect("effects/ships/hyperspace_stars");
-			cgs.effects.mBlackSmoke = trap->FX_RegisterEffect("effects/volumetric/black_smoke");
-			cgs.effects.mShipDestDestroyed = trap->FX_RegisterEffect("effects/ships/dest_destroyed.efx");
-			cgs.effects.mShipDestBurning = trap->FX_RegisterEffect("effects/ships/dest_burning.efx");
-			cgs.effects.mBobaJet = trap->FX_RegisterEffect("effects/boba/jet.efx");
-			cgs.effects.mBobaJetAfterburner = trap->FX_RegisterEffect("effects/boba/jetsp.efx");
-			cgs.effects.mBobaJetHover = trap->FX_RegisterEffect("effects/boba/jethover.efx");
-			cgs.effects.mJetpack = trap->FX_RegisterEffect("effects/player/jetpack.efx");
-
-			cgs.effects.itemCone = trap->FX_RegisterEffect("effects/mp/itemcone.efx");
-			cgs.effects.mTurretMuzzleFlash = trap->FX_RegisterEffect("effects/turret/muzzle_flash.efx");
-			cgs.effects.mSparks = trap->FX_RegisterEffect("effects/sparks/spark_nosnd.efx"); //sparks/spark.efx
-			cgs.effects.mSaberCut = trap->FX_RegisterEffect("effects/saber/saber_cut.efx");
-			cgs.effects.mSaberBlock = trap->FX_RegisterEffect("effects/saber/saber_block.efx");
-			cgs.effects.mSaberBodyHit = trap->FX_RegisterEffect("saber/saber_bodyhit.efx");
-			cgs.effects.mSaberBloodSparks = trap->FX_RegisterEffect("effects/saber/blood_sparks_mp.efx");
-			cgs.effects.mSaberBloodSparksSmall = trap->FX_RegisterEffect("effects/saber/blood_sparks_25_mp.efx");
-			cgs.effects.mSaberBloodSparksMid = trap->FX_RegisterEffect("effects/saber/blood_sparks_50_mp.efx");
-			cgs.effects.mSpawn = trap->FX_RegisterEffect("effects/mp/spawn.efx");
-			cgs.effects.mJediSpawn = trap->FX_RegisterEffect("effects/mp/jedispawn.efx");
-			cgs.effects.mBlasterDeflect = trap->FX_RegisterEffect("effects/blaster/deflect.efx");
-			cgs.effects.mBlasterSmoke = trap->FX_RegisterEffect("effects/blaster/smoke_bolton");
-			cgs.effects.mForceConfustionOld = trap->FX_RegisterEffect("effects/force/confusion_old.efx");
-			cgs.effects.forceLightning = trap->FX_RegisterEffect("effects/force/lightning.efx");
-			cgs.effects.forceLightningWide = trap->FX_RegisterEffect("effects/force/lightningwide.efx");
-			//[NewLightningEFX]
-			cgs.effects.forcelightningAbsorb = trap->FX_RegisterEffect("effects/force/lightning_absorb.efx");
-			cgs.effects.lightningarc = trap->FX_RegisterEffect("effects/force/lightning_arc.efx");
-			//cgs.effects.saber_lightninghit = trap->FX_RegisterEffect("effects/saber/saber_lightninghit.efx");
-			cgs.effects.forcelightningFlare = trap->FX_RegisterEffect("effects/force/lightning_flare.efx");
-			//cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect("effects/force/lightning_impact.efx");
-			//cgs.effects.Lightning_body_smoke = trap->FX_RegisterEffect("effects/force/Lightning_body_smoke.efx");
-			//[/NewLightningEFX]
-			cgs.effects.forceDrain = trap->FX_RegisterEffect("effects/mp/drain.efx");
-			cgs.effects.forceDrainWide = trap->FX_RegisterEffect("effects/mp/drainwide.efx");
-			cgs.effects.forceDrained = trap->FX_RegisterEffect("effects/mp/drainhit.efx");
-
-			cgs.effects.mDisruptorDeathSmoke = trap->FX_RegisterEffect("effects/disruptor/death_smoke");
-		}
-#pragma omp section
-		{
-			CG_LoadingString("Sounds");
-
-			CG_RegisterSounds();
-
-			cgs.media.chunkSound = trap->S_RegisterSound("sound/weapons/explosions/glasslcar");
-			cgs.media.grateSound = trap->S_RegisterSound("sound/effects/grate_destroy");
-			cgs.media.rockBreakSound = trap->S_RegisterSound("sound/effects/wall_smash");
-			cgs.media.rockBounceSound[0] = trap->S_RegisterSound("sound/effects/stone_bounce");
-			cgs.media.rockBounceSound[1] = trap->S_RegisterSound("sound/effects/stone_bounce2");
-			cgs.media.metalBounceSound[0] = trap->S_RegisterSound("sound/effects/metal_bounce");
-			cgs.media.metalBounceSound[1] = trap->S_RegisterSound("sound/effects/metal_bounce2");
-			cgs.media.glassChunkSound = trap->S_RegisterSound("sound/weapons/explosions/glassbreak1");
-			cgs.media.crateBreakSound[0] = trap->S_RegisterSound("sound/weapons/explosions/crateBust1");
-			cgs.media.crateBreakSound[1] = trap->S_RegisterSound("sound/weapons/explosions/crateBust2");
-
-			// Damage types
-			cgs.media.playerFireEffect = trap->FX_RegisterEffect("effects/player/fire");
-
-			trap->FX_RegisterEffect("force/force_touch");
-
-			//Weather
-			cgs.effects.saberFizz = trap->FX_RegisterEffect("saber/fizz.efx");
-			cgs.effects.rain = trap->FX_RegisterEffect("effects/rain");
-		}
-#pragma omp section
-		{
-			CG_LoadingString("Clients");
-			CG_RegisterClients();		// if low on memory, some clients will be deferred
-
-			CG_LoadingString("Local Entities");
-			CG_InitLocalEntities();
-
-			CG_LoadingString("Mark Polys");
-			CG_InitMarkPolys();
-
-			CG_LoadingString("Atmospherics");
-			CG_AtmosphericKludge();
+			Com_sprintf(temp, MAX_QPATH, "*%d-%d", i, sub);
+			cgs.inlineDrawModel[breakPoint] = trap->R_RegisterModel(temp);
+			if (!cgs.inlineDrawModel[breakPoint])
+			{
+				break;
+			}
+			trap->R_ModelBounds(cgs.inlineDrawModel[breakPoint], mins, maxs);
+			for (j = 0; j < 3; j++)
+			{
+				cgs.inlineModelMidpoints[breakPoint][j] = mins[j] + 0.5 * (maxs[j] - mins[j]);
+			}
+			breakPoint++;
 		}
 	}
+#endif
+
+	{// UQ1: This is the slowest section, so I will do percentage complete bar here (cg.loadLCARSStage)...
+		cg.loadLCARSStage = 1;
+
+		CG_LoadingString("Game models");
+
+		for (i = 1; i < MAX_MODELS; i++)
+		{
+			const char		*cModelName;
+			char			modelName[MAX_QPATH];
+
+			cModelName = CG_ConfigString(CS_MODELS + i);
+			if (!cModelName[0]) {
+				break;
+			}
+
+			CG_LoadingString(va("%s (server model)", cModelName));
+
+			strcpy(modelName, cModelName);
+			if (strstr(modelName, ".glm") || modelName[0] == '$')
+			{ //Check to see if it has a custom skin attached.
+				CG_HandleAppendedSkin(modelName);
+				CG_CacheG2AnimInfo(modelName);
+			}
+
+			if (modelName[0] != '$' && modelName[0] != '@')
+			{ //don't register vehicle names and saber names as models.
+				cgs.gameModels[i] = trap->R_RegisterModel(modelName);
+			}
+			else
+			{//FIXME: register here so that stuff gets precached!!!
+				cgs.gameModels[i] = 0;
+			}
+		}
+
+		cg.loadLCARSStage = 2;
+
+		CG_LoadingString("Holocrons");
+
+		cgs.media.itemHoloModel = trap->R_RegisterModel("models/map_objects/mp/holo.md3");
+
+		if (cgs.gametype == GT_HOLOCRON || com_buildScript.integer)
+		{
+			for (i = 0; i < NUM_FORCE_POWERS; i++)
+			{
+				if (forceHolocronModels[i] &&
+					forceHolocronModels[i][0])
+				{
+					trap->R_RegisterModel(forceHolocronModels[i]);
+				}
+			}
+		}
+
+		cg.loadLCARSStage = 3;
+
+		CG_LoadingString("CTF Assets");
+
+		if (cgs.gametype == GT_CTF || cgs.gametype == GT_CTY || com_buildScript.integer) {
+			if (com_buildScript.integer)
+			{
+				trap->R_RegisterModel("models/flags/r_flag.md3");
+				trap->R_RegisterModel("models/flags/b_flag.md3");
+				trap->R_RegisterModel("models/flags/r_flag_ysal.md3");
+				trap->R_RegisterModel("models/flags/b_flag_ysal.md3");
+			}
+
+			if (cgs.gametype == GT_CTF)
+			{
+				cgs.media.redFlagModel = trap->R_RegisterModel("models/flags/r_flag.md3");
+				cgs.media.blueFlagModel = trap->R_RegisterModel("models/flags/b_flag.md3");
+			}
+			else if (cgs.gametype == GT_CTY)
+			{
+				cgs.media.redFlagModel = trap->R_RegisterModel("models/flags/r_flag_ysal.md3");
+				cgs.media.blueFlagModel = trap->R_RegisterModel("models/flags/b_flag_ysal.md3");
+			}
+		}
+
+		cg.loadLCARSStage = 4;
+
+		CG_LoadingString("Chunk models");
+
+		// Chunk models
+		//FIXME: jfm:? bother to conditionally load these if an ent has this material type?
+		for (i = 0; i < NUM_CHUNK_MODELS; i++)
+		{
+			cgs.media.chunkModels[CHUNK_METAL2][i] = trap->R_RegisterModel(va("models/chunks/metal/metal1_%i.md3", i + 1)); //_ /switched\ _
+			cgs.media.chunkModels[CHUNK_METAL1][i] = trap->R_RegisterModel(va("models/chunks/metal/metal2_%i.md3", i + 1)); //  \switched/
+			cgs.media.chunkModels[CHUNK_ROCK1][i] = trap->R_RegisterModel(va("models/chunks/rock/rock1_%i.md3", i + 1));
+			cgs.media.chunkModels[CHUNK_ROCK2][i] = trap->R_RegisterModel(va("models/chunks/rock/rock2_%i.md3", i + 1));
+			cgs.media.chunkModels[CHUNK_ROCK3][i] = trap->R_RegisterModel(va("models/chunks/rock/rock3_%i.md3", i + 1));
+			cgs.media.chunkModels[CHUNK_CRATE1][i] = trap->R_RegisterModel(va("models/chunks/crate/crate1_%i.md3", i + 1));
+			cgs.media.chunkModels[CHUNK_CRATE2][i] = trap->R_RegisterModel(va("models/chunks/crate/crate2_%i.md3", i + 1));
+			cgs.media.chunkModels[CHUNK_WHITE_METAL][i] = trap->R_RegisterModel(va("models/chunks/metal/wmetal1_%i.md3", i + 1));
+		}
+
+
+		cg.loadLCARSStage = 5;
+
+		CG_LoadingString("Items");
+
+		/*
+		Ghoul2 Insert Start
+		*/
+		CG_InitItems();
+
+		cg.loadLCARSStage = 6;
+
+		/*
+		Ghoul2 Insert End
+		*/
+		memset(cg_weapons, 0, sizeof(cg_weapons));
+
+		// only register the items that the server says we need
+		Q_strncpyz(items, CG_ConfigString(CS_ITEMS), sizeof(items));
+
+		for (i = 1; i < bg_numItems; i++) {
+			if (items[i] == '1' || com_buildScript.integer) {
+				CG_LoadingItem(i);
+				CG_RegisterItemVisuals(i);
+			}
+		}
+
+		cg.loadLCARSStage = 7;
+
+		// register the inline models
+		breakPoint = cgs.numInlineModels = trap->CM_NumInlineModels();
+		for (i = 1; i < cgs.numInlineModels; i++) {
+			char	name[10];
+			vec3_t			mins, maxs;
+			int				j;
+
+			CG_LoadingString(va("%s (inline model)", name));
+
+			Com_sprintf(name, sizeof(name), "*%i", i);
+			cgs.inlineDrawModel[i] = trap->R_RegisterModel(name);
+			if (!cgs.inlineDrawModel[i])
+			{
+				breakPoint = i;
+				break;
+			}
+
+			trap->R_ModelBounds(cgs.inlineDrawModel[i], mins, maxs);
+			for (j = 0; j < 3; j++) {
+				cgs.inlineModelMidpoints[i][j] = mins[j] + 0.5 * (maxs[j] - mins[j]);
+			}
+		}
+
+		cg.loadLCARSStage = 8;
+
+		//rww - removed and replaced with CS_G2BONES. For custom skins
+		//the new method is to append a * after an indexed model name and
+		//then append the skin name after that (note that this is only
+		//used for NPCs)
+
+		CG_InitG2Weapons();
+
+		CG_LoadingString(va("%s (md3)", "testboom"));
+		cgs.media.halfShieldModel = trap->R_RegisterModel("models/weaphits/testboom.md3");
+	}
+
+	CG_LoadingString("Shaders");
+	CG_RegisterShaders();
+
+	CG_LoadingString("Effects");
+	trap->FX_InitSystem(&cg.refdef);
+	CG_RegisterEffects();
+
+	CG_LoadingString("Sounds");
+	CG_RegisterSounds();
+
+	CG_LoadingString("Clients");
+	CG_RegisterClients();		// if low on memory, some clients will be deferred
+
+	CG_LoadingString("Local Entities");
+	CG_InitLocalEntities();
+
+	CG_LoadingString("Mark Polys");
+	CG_InitMarkPolys();
+
+	CG_LoadingString("Atmospherics");
+	CG_AtmosphericKludge();
 
 	cg.loadLCARSStage = 9;
 }
@@ -3012,7 +2982,7 @@ Ghoul2 Insert End
 
 	cg.renderingThirdPerson = (qboolean)cg_thirdPerson.integer;
 
-	cg.weaponSelect = WP_BRYAR_PISTOL;
+	cg.weaponSelect = WP_MODULIZED_WEAPON;
 
 	cgs.redflag = cgs.blueflag = -1; // For compatibily, default to unset for
 	cgs.flagStatus = -1;

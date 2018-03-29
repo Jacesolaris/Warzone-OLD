@@ -79,18 +79,9 @@ stringID_table_t WPTable[] =
 	//
 	// =================================================================
 
-	// START: Do not change anything between these 2 comments...
-	ENUM2STRING(WP_STUN_BATON),
-	// END: ^^^ Do not change...
-
 	ENUM2STRING(WP_MELEE),
-	// Add new melee weapons here...
 
-
-
-	// START: Do not change anything between these 2 comments...
 	ENUM2STRING(WP_SABER),
-	// END: ^^^ Do not change...
 
 	// =================================================================
 	//
@@ -98,18 +89,7 @@ stringID_table_t WPTable[] =
 	//
 	// =================================================================
 
-	ENUM2STRING(WP_BRYAR_PISTOL),
-	ENUM2STRING(WP_BRYAR_OLD),
-	ENUM2STRING(WP_BLASTER),
-	ENUM2STRING(WP_DISRUPTOR),
-	ENUM2STRING(WP_BOWCASTER),
-	ENUM2STRING(WP_REPEATER),
-	ENUM2STRING(WP_DEMP2),
-	ENUM2STRING(WP_FLECHETTE),
-	ENUM2STRING(WP_CONCUSSION),
-	// START: Do not change anything between these 2 comments...
-	ENUM2STRING(WP_ROCKET_LAUNCHER),
-	// END: ^^^ Do not change...
+	ENUM2STRING(WP_MODULIZED_WEAPON),
 
 	// =================================================================
 	//
@@ -988,9 +968,6 @@ void BG_SiegeParseClassFile(const char *filename, siegeClassDesc_t *descBuffer)
 	if (!(bgSiegeClasses[bgNumSiegeClasses].weapons & (1 << WP_SABER)))
 	{ //make sure it has melee if there's no saber
 		bgSiegeClasses[bgNumSiegeClasses].weapons |= (1 << WP_MELEE);
-
-		//always give them this too if they are not a saber user
-		//bgSiegeClasses[bgNumSiegeClasses].weapons |= (1 << WP_BRYAR_PISTOL);
 	}
 
 	//Parse forcepowers

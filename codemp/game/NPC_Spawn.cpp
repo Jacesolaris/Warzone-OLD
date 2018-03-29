@@ -426,7 +426,7 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 	else if ( ent->client->NPC_class == CLASS_ASSASSIN_DROID )
 	{
 		ent->client->ps.stats[STAT_ARMOR] = 250;	// start with full armor
-		if (ent->s.weapon==WP_BLASTER)
+		if (ent->s.weapon==WP_MODULIZED_WEAPON)
 		{
 			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
 		}
@@ -457,19 +457,8 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 			*/
 			switch ( ent->client->ps.weapon )
 			{
-			case WP_BRYAR_PISTOL://FIXME: new weapon: imp blaster pistol
-	//		case WP_BLASTER_PISTOL:
-			case WP_A280:
-			case WP_DISRUPTOR:
-			case WP_BOWCASTER:
-			case WP_REPEATER:
-			case WP_DEMP2:
-			case WP_FLECHETTE:
-			case WP_ROCKET_LAUNCHER:
-			default:
-				break;
 			case WP_THERMAL:
-			case WP_BLASTER:
+			case WP_MODULIZED_WEAPON:
 				//FIXME: health in NPCs.cfg, and not all blaster users are stormtroopers
 				//ent->health = 25;
 				//FIXME: not necc. a ST
@@ -553,39 +542,12 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 		//		G_CreateG2AttachedWeaponModel( ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0 );
 				switch ( ent->client->ps.weapon )
 				{
-				case WP_BRYAR_PISTOL:
-					break;
-		//		case WP_BLASTER_PISTOL:
-		//			break;
-				case WP_A280:
-				case WP_DISRUPTOR:
-					//Sniper
-					//ent->NPC->scriptFlags |= SCF_ALT_FIRE;//FIXME: use primary fire sometimes?  Up close?  Different class of NPC?
-					break;
-				case WP_BOWCASTER:
-					break;
-				case WP_REPEATER:
-					//machine-gunner
-					break;
-				case WP_DEMP2:
-					break;
-				case WP_FLECHETTE:
-					//shotgunner
-					if ( !Q_stricmp( "stofficeralt", ent->NPC_type ) )
-					{
-						//ent->NPC->scriptFlags |= SCF_ALT_FIRE;
-					}
-					break;
-				case WP_ROCKET_LAUNCHER:
-					break;
 				case WP_THERMAL:
 					//Gran, use main, bouncy fire
 //					ent->NPC->scriptFlags |= SCF_ALT_FIRE;
 					break;
-				case WP_STUN_BATON:
-					break;
 				default:
-				case WP_BLASTER:
+				case WP_MODULIZED_WEAPON:
 					//FIXME: health in NPCs.cfg, and not all blaster users are stormtroopers
 					//FIXME: not necc. a ST
 					ST_ClearTimers( ent );
@@ -663,23 +625,23 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 		//FIXME: default weapon in npc config?
 		if ( Q_strncmp( "stofficer", NPC_type, 9 ) == 0 )
 		{
-			return WP_FLECHETTE;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "stcommander", NPC_type ) == 0 )
 		{
-			return WP_REPEATER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "swamptrooper", NPC_type ) == 0 )
 		{
-			return WP_FLECHETTE;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "swamptrooper2", NPC_type ) == 0 )
 		{
-			return WP_REPEATER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "rockettrooper", NPC_type ) == 0 )
 		{
-			return WP_ROCKET_LAUNCHER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_strncmp( "shadowtrooper", NPC_type, 13 ) == 0 )
 		{
@@ -687,23 +649,23 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 		}
 		if ( Q_stricmp( "imperial", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_strncmp( "impworker", NPC_type, 9 ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "stormpilot", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "galak", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "galak_mech", NPC_type ) == 0 )
 		{
-			return WP_REPEATER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_strncmp( "ugnaught", NPC_type, 8 ) == 0 )
 		{
@@ -711,11 +673,11 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 		}
 		if ( Q_stricmp( "granshooter", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "granboxer", NPC_type ) == 0 )
 		{
-			return WP_STUN_BATON;
+			return WP_MELEE;
 		}
 		if ( Q_strncmp( "gran", NPC_type, 4 ) == 0 )
 		{
@@ -723,11 +685,11 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 		}
 		if ( Q_stricmp( "rodian", NPC_type ) == 0 )
 		{
-			return WP_DISRUPTOR;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "rodian2", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 
 		if (( Q_stricmp( "interrogator",NPC_type) == 0) || ( Q_stricmp( "sentry",NPC_type) == 0) || (Q_strncmp( "protocol",NPC_type,8) == 0) )
@@ -737,58 +699,58 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 
 		if ( Q_strncmp( "weequay", NPC_type, 7 ) == 0 )
 		{
-			return WP_BOWCASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "impofficer", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "impcommander", NPC_type ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if (( Q_stricmp( "probe", NPC_type ) == 0 ) || ( Q_stricmp( "seeker", NPC_type ) == 0 ))
 		{
-			return 0;
+			return WP_NONE;
 		}
 		if ( Q_stricmp( "remote", NPC_type ) == 0 )
 		{
-			return 0;
+			return WP_NONE;
 		}
 		if ( Q_stricmp( "trandoshan", NPC_type ) == 0 )
 		{
-			return WP_REPEATER;
+			return WP_MODULIZED_WEAPON;
 		}
 		if ( Q_stricmp( "atst", NPC_type ) == 0 )
 		{
-			return 0;
+			return WP_NONE;
 		}
 		if ( Q_stricmp( "mark1", NPC_type ) == 0 )
 		{
-			return 0;
+			return WP_NONE;
 		}
 		if ( Q_stricmp( "mark2", NPC_type ) == 0 )
 		{
-			return 0;
+			return WP_NONE;
 		}
 		if ( Q_stricmp( "minemonster", NPC_type ) == 0 )
 		{
-			return WP_STUN_BATON;
+			return WP_MELEE;
 		}
 		if ( Q_stricmp( "howler", NPC_type ) == 0 )
 		{
-			return WP_STUN_BATON;
+			return WP_MELEE;
 		}
 		//Stormtroopers, etc.
-		return WP_BLASTER;
+		return WP_MODULIZED_WEAPON;
 		break;
 
 	case NPCTEAM_PLAYER:
 		if(spawnflags & SFB_RIFLEMAN)
-			return WP_REPEATER;
+			return WP_MODULIZED_WEAPON;
 
 		if(spawnflags & SFB_PHASER)
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 
 		if ( Q_strncmp( "jedi", NPC_type, 4 ) == 0 || Q_stricmp( "luke", NPC_type ) == 0 )
 			return WP_SABER;
@@ -799,7 +761,7 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 		}
 		if ( Q_strncmp( "bespincop", NPC_type, 9 ) == 0 )
 		{
-			return WP_BLASTER;
+			return WP_MODULIZED_WEAPON;
 		}
 
 		if ( Q_stricmp( "MonMothma", NPC_type ) == 0 )
@@ -808,7 +770,7 @@ int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type 
 		}
 
 		//rebel
-		return WP_BLASTER;
+		return WP_MODULIZED_WEAPON;
 		break;
 
 	case NPCTEAM_NEUTRAL:
@@ -850,7 +812,7 @@ int NPC_SecondaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_typ
 	case NPCTEAM_ENEMY:
 		if ( Q_strncmp( "gran", NPC_type, 4 ) == 0 )
 		{
-			return WP_STUN_BATON;
+			return WP_MELEE;
 		}
 		break;
 	case NPCTEAM_PLAYER:
@@ -889,16 +851,16 @@ void NPC_SetWeapons( gentity_t *ent )
 				continue;
 			}
 
-			if ( curWeap == WP_STUN_BATON )
+			if ( curWeap == WP_MELEE)
 			{
 				if ( bestWeap == WP_NONE )
 				{// We'll only consider giving Melee since we haven't found anything better yet.
 					bestWeap = curWeap;
 				}
 			}
-			else if ( curWeap > bestWeap || bestWeap == WP_STUN_BATON )
+			else if ( curWeap > bestWeap || bestWeap == WP_MELEE)
 			{
-				// This will never override saber as best weap.  Also will override WP_STUN_BATON if something better comes later in the list
+				// This will never override saber as best weap.  Also will override WP_MELEE if something better comes later in the list
 				bestWeap = curWeap;
 			}
 		}

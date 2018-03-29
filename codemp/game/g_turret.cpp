@@ -20,11 +20,6 @@ void TurretPain( gentity_t *self, gentity_t *attacker, int damage )
 		}
 	}
 
-	if ( attacker->client && attacker->client->ps.weapon == WP_DEMP2 )
-	{
-		self->attackDebounceTime = level.time + 800 + random() * 500;
-		self->painDebounceTime = self->attackDebounceTime;
-	}
 	if ( !self->enemy )
 	{//react to being hit
 		G_SetEnemy( self, attacker );

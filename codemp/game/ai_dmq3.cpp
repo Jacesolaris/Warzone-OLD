@@ -4457,7 +4457,7 @@ BotCheckEvents
 */
 void BotCheckForGrenades(bot_state_t *bs, entityState_t *state) {
 	// if this is not a grenade
-	if (state->eType != ET_MISSILE || (state->weapon != WP_FRAG_GRENADE && state->weapon != WP_FRAG_GRENADE_OLD && state->weapon != WP_CYROBAN_GRENADE && state->weapon != WP_THERMAL))
+	if (state->eType != ET_MISSILE || (state->weapon != WP_FRAG_GRENADE && state->weapon != WP_CYROBAN_GRENADE && state->weapon != WP_THERMAL))
 		return;
 	// try to avoid the grenade
 	trap->BotAddAvoidSpot(bs->ms, state->pos.trBase, 160, AVOID_ALWAYS);

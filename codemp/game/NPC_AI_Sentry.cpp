@@ -178,7 +178,7 @@ void Sentry_Fire (gentity_t *aiEnt)
 	missile = CreateMissile( muzzle, forward, 1600, 10000, aiEnt, qfalse );
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
 	missile->methodOfDeath = MOD_BRYAR_PISTOL;

@@ -595,9 +595,7 @@ static void CG_ItemPickup( int itemNum ) {
 			if (bg_itemlist[itemNum].giTag != WP_TRIP_MINE &&
 				bg_itemlist[itemNum].giTag != WP_DET_PACK &&
 				bg_itemlist[itemNum].giTag != WP_THERMAL &&
-				bg_itemlist[itemNum].giTag != WP_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE &&
-				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE_OLD &&
 				bg_itemlist[itemNum].giTag != WP_CYROBAN_GRENADE &&
 				bg_itemlist[itemNum].giTag > cg.snap->ps.weapon &&
 				cg.snap->ps.weapon != WP_SABER)
@@ -1364,27 +1362,9 @@ void CG_G2MarkEvent(entityState_t *es)
 	}
 	switch(es->weapon)
 	{
-	case WP_BRYAR_PISTOL:
-	case WP_CONCUSSION:
-	case WP_BRYAR_OLD:
-	case WP_BLASTER:
-	case WP_DISRUPTOR:
-	case WP_BOWCASTER:
-	case WP_REPEATER:
 	case WP_TURRET:
 	//new guns
-	case WP_A280:
-	case WP_T21:
-	case WP_EE3:
-	case WP_DLT_19:
-	case WP_DC_15A_RIFLE:
-	case WP_Z6_BLASTER_CANON:
-	case WP_BRYAR_CARBINE:
-	case WP_BRYAR_RIFLE:
-	case WP_BRYAR_RIFLE_SCOPE:
-	case WP_PULSECANON:
-	case WP_PROTON_CARBINE_RIFLE:
-	case WP_DH_17_PISTOL:
+	case WP_MODULIZED_WEAPON:
 		if ( !size )
 		{
 			size = 4.0f;
@@ -1401,8 +1381,6 @@ void CG_G2MarkEvent(entityState_t *es)
 
 	case WP_CYROBAN_GRENADE:
 	case WP_FRAG_GRENADE:
-	case WP_FRAG_GRENADE_OLD:
-	case WP_ROCKET_LAUNCHER:
 	case WP_THERMAL:
 		{
 			int e;
@@ -1437,15 +1415,6 @@ void CG_G2MarkEvent(entityState_t *es)
 			}
 		}
 		break;
-		/*
-	case WP_FLECHETTE:
-		CG_AddGhoul2Mark(cgs.media.bdecal_bodyburn1, flrand(0.5f, 1.0f),
-			startPoint, es->origin2, es->owner, pOwner->lerpOrigin,
-			pOwner->lerpAngles[YAW], pOwner->ghoul2,
-			pOwner->modelScale);
-		break;
-		*/
-		//Issues with small scale?
 	default:
 		break;
 	}
@@ -3251,7 +3220,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			{ //one effect would be.. a whole lot better
 				VectorMA( es->origin2, dist, es->angles, spot );
 
-				if (es->weapon != WP_CONCUSSION && cg_weapons[es->weapon].altMissileRenderfx)
+				if (cg_weapons[es->weapon].altMissileRenderfx)
 				{
 					PlayEffectID(cg_weapons[es->weapon].altMissileRenderfx, spot, es->angles2, -1, -1, qfalse);
 				}
@@ -3511,18 +3480,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		case EFFECT_LANDING_GRAVEL:
 			eID = cgs.effects.landingGravel;
 			break;
-
-		/*case EFFECT_JETPACK_EXPLOSION:
-			eID = CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect,
-				cgs.effects.rocketExplosionEffectEnhancedFX);
-			break;
-		case EFFECT_CRYOBAN_FREEZE:
-			eID = CG_EnableEnhancedFX(cgs.effects.iceTargetFreeze,
-				cgs.effects.iceTargetFreezeEnhancedFX);
-			break;
-		case EFFECT_SONIC_WAVE:
-			eID = cgs.effects.sonicGrenadeWave;
-			break;*/
 		default:
 			eID = -1;
 			break;

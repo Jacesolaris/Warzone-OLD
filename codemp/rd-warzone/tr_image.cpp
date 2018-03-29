@@ -328,6 +328,136 @@ void R_ImageList_f( void ) {
 	ri->Printf (PRINT_ALL, "^7 %i^5 total images\n\n", tr.numImages );
 }
 
+void R_ImageHogList_f(void) {
+	int i;
+	int estTotalSize = 0;
+	char *sizeSuffix;
+
+	ri->Printf(PRINT_ALL, "\n^7      -w-- -h-- type  -size- --name-------\n");
+
+	for (i = 0; i < tr.numImages; i++)
+	{
+		image_t *image = tr.images[i];
+		char *format = "???? ";
+		int estSize;
+
+		estSize = image->uploadHeight * image->uploadWidth;
+
+		switch (image->internalFormat)
+		{
+		case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
+			format = "sDXT1";
+			// 64 bits per 16 pixels, so 4 bits per pixel
+			estSize /= 2;
+			break;
+		case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
+			format = "sDXT5";
+			// 128 bits per 16 pixels, so 1 byte per pixel
+			break;
+		case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB:
+			format = "sBPTC";
+			// 128 bits per 16 pixels, so 1 byte per pixel
+			break;
+		case GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT:
+			format = "LATC ";
+			// 128 bits per 16 pixels, so 1 byte per pixel
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+			format = "DXT1 ";
+			// 64 bits per 16 pixels, so 4 bits per pixel
+			estSize /= 2;
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+			format = "DXT5 ";
+			// 128 bits per 16 pixels, so 1 byte per pixel
+			break;
+		case GL_COMPRESSED_RGBA_BPTC_UNORM_ARB:
+			format = "BPTC ";
+			// 128 bits per 16 pixels, so 1 byte per pixel
+			break;
+		case GL_RGB4_S3TC:
+			format = "S3TC ";
+			// same as DXT1?
+			estSize /= 2;
+			break;
+		case GL_RGBA4:
+		case GL_RGBA8:
+		case GL_RGBA:
+			format = "RGBA ";
+			// 4 bytes per pixel
+			estSize *= 4;
+			break;
+		case GL_LUMINANCE8:
+		case GL_LUMINANCE16:
+		case GL_LUMINANCE:
+			format = "L    ";
+			// 1 byte per pixel?
+			break;
+		case GL_RGB5:
+		case GL_RGB8:
+		case GL_RGB:
+			format = "RGB  ";
+			// 3 bytes per pixel?
+			estSize *= 3;
+			break;
+		case GL_LUMINANCE8_ALPHA8:
+		case GL_LUMINANCE16_ALPHA16:
+		case GL_LUMINANCE_ALPHA:
+			format = "LA   ";
+			// 2 bytes per pixel?
+			estSize *= 2;
+			break;
+		case GL_SRGB:
+		case GL_SRGB8:
+			format = "sRGB ";
+			// 3 bytes per pixel?
+			estSize *= 3;
+			break;
+		case GL_SRGB_ALPHA:
+		case GL_SRGB8_ALPHA8:
+			format = "sRGBA";
+			// 4 bytes per pixel?
+			estSize *= 4;
+			break;
+		case GL_SLUMINANCE:
+		case GL_SLUMINANCE8:
+			format = "sL   ";
+			// 1 byte per pixel?
+			break;
+		case GL_SLUMINANCE_ALPHA:
+		case GL_SLUMINANCE8_ALPHA8:
+			format = "sLA  ";
+			// 2 byte per pixel?
+			estSize *= 2;
+			break;
+		case GL_DEPTH_COMPONENT24:
+			format = "D24  ";
+			break;
+		case GL_DEPTH_COMPONENT32:
+			format = "D32  ";
+			break;
+		}
+
+		// mipmap adds about 50%
+		if (image->flags & IMGFLAG_MIPMAP)
+			estSize += estSize / 2;
+
+		if (estSize > 1024 * 1024)
+		{
+			float printSize = GetReadableSize(estSize, &sizeSuffix);
+
+			ri->Printf(PRINT_ALL, "%4i: %4ix%4i %s %7.2f%s %s\n", i, image->uploadWidth, image->uploadHeight, format, printSize, sizeSuffix, image->imgName);
+			estTotalSize += estSize;
+		}
+	}
+
+	float printSize = GetReadableSize(estTotalSize, &sizeSuffix);
+
+	ri->Printf(PRINT_ALL, "^5 ---------\n");
+	ri->Printf(PRINT_ALL, "^5 approx ^7%i^5 bytes (^7%.2f%s^5)\n", estTotalSize, printSize, sizeSuffix);
+	ri->Printf(PRINT_ALL, "^7 %i^5 total images\n\n", tr.numImages);
+}
+
 //=======================================================================
 
 /*
@@ -3199,7 +3329,7 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 	// find normalmap in case it's there
 	if (R_TextureFileExists(normalName) || R_TIL_TextureFileExists(normalName))
 	{
-		normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
+		normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE);
 	}
 
 	if (!normalImage && R_ShouldMipMap( normalName ))
@@ -3214,17 +3344,14 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 {
 	char specularName[MAX_IMAGE_PATH] = { 0 };
 	image_t *specularImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
-	
+
 	COM_StripExtension(name, specularName, MAX_IMAGE_PATH);
 	Q_strcat(specularName, MAX_IMAGE_PATH, "_s");
 	
 	// find normalmap in case it's there
 	if (R_TextureFileExists(specularName) || R_TIL_TextureFileExists(specularName))
 	{
-		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, normalFlags);
+		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, IMGFLAG_NONE);
 	}
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
@@ -3238,7 +3365,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 
 		if (R_TextureFileExists(specularName) || R_TIL_TextureFileExists(specularName))
 		{
-			specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, normalFlags);
+			specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, IMGFLAG_NONE);
 		}
 	}
 }
@@ -3247,17 +3374,14 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
-	
+
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_sub");
 	
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, IMGFLAG_NONE);
 	}
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
@@ -3271,18 +3395,17 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 
 		if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, IMGFLAG_NONE);
 		}
 	}
 }
 */
+
+#if 0
 static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int height, int flags )
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_o");
@@ -3290,7 +3413,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, IMGFLAG_NONE);
 	}
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
@@ -3304,18 +3427,16 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 
 		if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, IMGFLAG_NONE);
 		}
 	}
 }
+#endif
 
 static void R_CreateSteepMap ( const char *name, byte *pic, int width, int height, int flags )
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_steep");
@@ -3323,7 +3444,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, IMGFLAG_NONE);
 	}
 
 	if (!SubsurfaceImage)
@@ -3336,7 +3457,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP, normalFlags);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP, IMGFLAG_NONE);
 		}
 	}
 }
@@ -3345,9 +3466,6 @@ static void R_CreateRoofMap(const char *name, byte *pic, int width, int height, 
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_roof");
@@ -3355,7 +3473,7 @@ static void R_CreateRoofMap(const char *name, byte *pic, int width, int height, 
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_ROOFMAP, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_ROOFMAP, IMGFLAG_NONE);
 	}
 }
 
@@ -3363,9 +3481,6 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_riverbed");
@@ -3373,7 +3488,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_WATER_EDGE_MAP, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_NONE);
 	}
 
 	if (!SubsurfaceImage)
@@ -3386,7 +3501,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, normalFlags);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_NONE);
 		}
 	}
 
@@ -3400,7 +3515,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, normalFlags);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_NONE);
 		}
 	}
 }
@@ -3409,9 +3524,6 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat");
@@ -3419,7 +3531,7 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATCONTROLMAP, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 	}
 
 	if (!SubsurfaceImage)
@@ -3432,7 +3544,7 @@ static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, in
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_SPLATCONTROLMAP, normalFlags);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 		}
 	}
 }
@@ -3441,9 +3553,6 @@ static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int heig
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat1");
@@ -3451,7 +3560,7 @@ static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP1, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP1, IMGFLAG_NONE);
 	}
 }
 
@@ -3459,9 +3568,6 @@ static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int heig
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat2");
@@ -3469,7 +3575,7 @@ static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP2, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP2, IMGFLAG_NONE);
 	}
 }
 
@@ -3477,9 +3583,6 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 {
 	char SubsurfaceName[MAX_IMAGE_PATH] = { 0 };
 	image_t *SubsurfaceImage = NULL;
-	int normalFlags;
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_IMAGE_PATH);
 	Q_strcat(SubsurfaceName, MAX_IMAGE_PATH, "_splat3");
@@ -3487,7 +3590,7 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, normalFlags);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, IMGFLAG_NONE);
 	}
 }
 
@@ -4032,9 +4135,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& !(flags & IMGFLAG_GLOW)
 		&& !(!StringContainsWord(name, "skyscraper") && StringContainsWord(name, "sky"))
 		&& !StringContainsWord(name, "skies")
-		&& (StringContainsWord(name, "textures/") 
-			|| (StringContainsWord(name, "models/") && !StringContainsWord(name, "icon") && !StringContainsWord(name, "players/"))
-			/*|| (StringContainsWord(name, "gfx/") && USE_ALPHA)*/))
+		&& (StringContainsWord(name, "textures/") || (StringContainsWord(name, "models/") && !StringContainsWord(name, "icon") && !StringContainsWord(name, "players/"))))
 	{
 		if (!USE_ALPHA)
 		{
@@ -4151,7 +4252,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	if (type != IMGTYPE_SPLATCONTROLMAP)
 		image = R_CreateImage( name, pic, width, height, type, flags, 0 );
 	else
-		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
+		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_NO_COMPRESSION*/, 0/*GL_RGBA8*/ );
 
 	image->hasAlpha = USE_ALPHA ? true : false;
 
@@ -4160,8 +4261,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 #endif //__CRC_IMAGE_HASHING__
 
 	VectorCopy4(avgColor, image->lightColor);
+	VectorCopy4(avgColor, image->averageColor); // just in case i do something with lightColor in the future...
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
+		&& !r_cartoon->integer
 		&& type != IMGTYPE_NORMAL 
 		&& type != IMGTYPE_SPECULAR 
 		/*&& type != IMGTYPE_SUBSURFACE*/ 
@@ -4192,7 +4295,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 		//R_CreateSubsurfaceMap( name, pic, width, height, flags );
 
-		R_CreateOverlayMap( name, pic, width, height, flags );
+		//R_CreateOverlayMap( name, pic, width, height, flags );
 
 		if (r_splatMapping->integer)
 		{

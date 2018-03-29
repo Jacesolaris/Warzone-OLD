@@ -68,8 +68,7 @@ void NPC_Mark1_Precache(void)
 #ifndef __MMO__
 	RegisterItem( BG_FindItemForAmmo( 	AMMO_METAL_BOLTS));
 	RegisterItem( BG_FindItemForAmmo( AMMO_BLASTER ));
-	RegisterItem( BG_FindItemForWeapon( WP_BOWCASTER ));
-	RegisterItem( BG_FindItemForWeapon( WP_BRYAR_PISTOL ));
+	RegisterItem( BG_FindItemForWeapon(WP_MODULIZED_WEAPON));
 #endif //__MMO__
 }
 
@@ -142,7 +141,7 @@ void Mark1Dead_FireRocket (gentity_t *aiEnt)
 	missile = CreateMissile( muzzle1, muzzle_dir, BOWCASTER_SHOOT_SPEED, 10000, aiEnt, qfalse );
 
 	missile->classname = "bowcaster_proj";
-	missile->s.weapon = WP_BOWCASTER;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	VectorSet( missile->r.maxs, BOWCASTER_SIZE, BOWCASTER_SIZE, BOWCASTER_SIZE );
 	VectorScale( missile->r.maxs, -1, missile->r.mins );
@@ -190,7 +189,7 @@ void Mark1Dead_FireBlaster (gentity_t *aiEnt)
 	G_Sound( aiEnt, CHAN_AUTO, G_SoundIndex("sound/chars/mark1/misc/mark1_fire"));
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	missile->damage = 1;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
@@ -470,7 +469,7 @@ void Mark1_FireBlaster(gentity_t *aiEnt)
 	missile = CreateMissile( muzzle1, forward, 1600, 10000, aiEnt, qfalse );
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	missile->damage = 1;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
@@ -573,7 +572,7 @@ void Mark1_FireRocket(gentity_t *aiEnt)
 	missile = CreateMissile( muzzle1, forward, BOWCASTER_SHOOT_SPEED, 10000, aiEnt, qfalse );
 
 	missile->classname = "bowcaster_proj";
-	missile->s.weapon = WP_BOWCASTER;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	VectorSet( missile->r.maxs, BOWCASTER_SIZE, BOWCASTER_SIZE, BOWCASTER_SIZE );
 	VectorScale( missile->r.maxs, -1, missile->r.mins );

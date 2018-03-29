@@ -384,7 +384,6 @@ qboolean AI_ValidateGroupMember( AIGroupInfo_t *group, gentity_t *member )
 		WeaponIsSniperCharge(member->client->ps.weapon) ||
 		member->client->ps.weapon == WP_EMPLACED_GUN ||
 //		member->client->ps.weapon == WP_BOT_LASER ||		// Probe droid	- Laser blast
-		member->client->ps.weapon == WP_STUN_BATON ||
 		member->client->ps.weapon == WP_TURRET /*||			// turret guns
 		member->client->ps.weapon == WP_ATST_MAIN ||
 		member->client->ps.weapon == WP_ATST_SIDE ||
@@ -903,22 +902,6 @@ qboolean AI_RefreshGroup( AIGroupInfo_t *group )
 		case WP_SABER:
 			group->morale -= 5;
 			break;
-		case WP_BRYAR_PISTOL:
-			group->morale += 3;
-			break;
-		case WP_A280:
-		case WP_DISRUPTOR:
-			group->morale += 2;
-			break;
-		case WP_REPEATER:
-			group->morale -= 1;
-			break;
-		case WP_FLECHETTE:
-			group->morale -= 2;
-			break;
-		case WP_ROCKET_LAUNCHER:
-			group->morale -= 10;
-			break;
 		case WP_THERMAL:
 			group->morale -= 5;
 			break;
@@ -931,9 +914,6 @@ qboolean AI_RefreshGroup( AIGroupInfo_t *group )
 //		case WP_MELEE:			// Any ol' melee attack
 //			group->morale += 20;
 //			break;
-		case WP_STUN_BATON:
-			group->morale += 10;
-			break;
 		case WP_EMPLACED_GUN:
 			group->morale -= 8;
 			break;

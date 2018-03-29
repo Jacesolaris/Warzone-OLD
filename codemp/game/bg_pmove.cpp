@@ -7291,58 +7291,8 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			// If you want your weapon to be a charging weapon, just set this bit up
 			switch( pm->ps->weapon )
 			{
-			case WP_BRYAR_PISTOL:
-
-				// alt-fire charges the weapon
-				//if ( pm->gametype == GT_SIEGE )
-				if (1)
-				{
-					if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-					{
-						charging = qtrue;
-						altFire = qtrue;
-					}
-				}
-				break;
-
-			case WP_CONCUSSION:
-				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-				{
-					altFire = qtrue;
-				}
-				break;
-
-			case WP_BRYAR_OLD:
-
-				// alt-fire charges the weapon
-				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-				{
-					charging = qtrue;
-					altFire = qtrue;
-				}
-				break;
-
-				//------------------
-			case WP_BOWCASTER:
-
-				// primary fire charges the weapon
-				if ( pm->cmd.buttons & BUTTON_ATTACK )
-				{
-					charging = qtrue;
-				}
-				break;
-			case WP_ROCKET_LAUNCHER:
-				if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK))
-				{
-					PM_RocketLock(2048,qfalse);
-					charging = qtrue;
-					altFire = qtrue;
-				}
-				break;
-
-				//------------------
+			//------------------
 			case WP_CYROBAN_GRENADE:
-			case WP_FRAG_GRENADE_OLD:
 			case WP_FRAG_GRENADE:
 			case WP_THERMAL:
 
@@ -7357,22 +7307,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 				break;
 
-			case WP_DEMP2:
-				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-				{
-					altFire = qtrue; // override default of not being an alt-fire
-					charging = qtrue;
-				}
-				break;
-
-			case WP_Z6_BLASTER_CANON:
-			case WP_PULSECANON:
-				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
-				{
-					altFire = qtrue; // override default of not being an alt-fire
-					charging = qtrue;
-				}
-				break;
 			} // end switch
 		}
 	}
@@ -7689,25 +7623,6 @@ backAgain:
 				}
 				break;
 
-			case WP_BLASTER:
-				// Override the shoot anim.
-				if ( pm->ps->torsoAnim == BOTH_ATTACK3 )
-				{
-					if ( pm->cmd.rightmove > 0 )			//right side attack
-					{
-						Anim = BOTH_VS_ATR_G;
-					}
-					else if ( pm->cmd.rightmove < 0 )	//left side
-					{
-						Anim = BOTH_VS_ATL_G;
-					}
-					else	//frontal
-					{
-						Anim = BOTH_VS_ATF_G;
-					}
-				}
-				break;
-
 			default:
 				Anim = BOTH_VS_IDLE;
 				break;
@@ -7753,28 +7668,6 @@ backAgain:
 				else
 				{
 					Anim = BOTH_VS_IDLE_SR;
-				}
-				break;
-
-			case WP_BLASTER:
-				// In the Air.
-				//if ( pVeh->m_ulFlags & VEH_FLYING )
-				if (0)
-				{
-					Anim = BOTH_VS_AIR_G;
-					iFlags = SETANIM_FLAG_OVERRIDE;
-				}
-				// Crashing.
-				//else if ( pVeh->m_ulFlags & VEH_CRASHING )
-				else if (0)
-				{
-					pVeh->m_ulFlags &= ~VEH_CRASHING;	// Remove the flag, we are doing the animation.
-					Anim = BOTH_VS_LAND_G;
-					iFlags = SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD;
-				}
-				else
-				{
-					Anim = BOTH_VS_IDLE_G;
 				}
 				break;
 
@@ -7967,10 +7860,8 @@ static void PM_Weapon( void )
 	}
 
 	if (!WeaponIsSniperCharge(pm->ps->weapon) //not using snipers
-		&& pm->ps->weapon != WP_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& pm->ps->weapon != WP_FRAG_GRENADE
-		&& pm->ps->weapon != WP_FRAG_GRENADE_OLD
 		&& pm->ps->weapon != WP_CYROBAN_GRENADE
 		&& !pm->ps->m_iVehicleNum )//not a vehicle or in a vehicle
 	{ //check for exceeding max charge time if not using disruptor or rocket launcher or thermals
@@ -8343,7 +8234,6 @@ static void PM_Weapon( void )
 	{
 		if (pm->ps->weapon == WP_THERMAL ||
 			pm->ps->weapon == WP_FRAG_GRENADE ||
-			pm->ps->weapon == WP_FRAG_GRENADE_OLD ||
 			pm->ps->weapon == WP_CYROBAN_GRENADE ||
 			pm->ps->weapon == WP_TRIP_MINE ||
 			pm->ps->weapon == WP_DET_PACK)
@@ -8357,14 +8247,6 @@ static void PM_Weapon( void )
 				}
 			}
 			else if (pm->ps->weapon == WP_FRAG_GRENADE)
-			{
-				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
-					(pm->ps->weaponTime - 200) <= 0)
-				{
-					PM_StartTorsoAnim(WeaponReadyAnim[pm->ps->weapon]);
-				}
-			}
-			else if (pm->ps->weapon == WP_FRAG_GRENADE_OLD)
 			{
 				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
 					(pm->ps->weaponTime - 200) <= 0)
@@ -8595,7 +8477,7 @@ static void PM_Weapon( void )
 	if (PM_CanSetWeaponAnims() &&
 		!PM_IsRocketTrooper() &&
 		pm->ps->weaponstate == WEAPON_READY && pm->ps->weaponTime <= 0 &&
-		(pm->ps->weapon >= WP_BRYAR_PISTOL || pm->ps->weapon == WP_STUN_BATON) &&
+		pm->ps->weapon >= WP_MODULIZED_WEAPON &&
 		pm->ps->torsoTimer <= 0 &&
 		(pm->ps->torsoAnim) != WeaponReadyAnim[pm->ps->weapon] &&
 		pm->ps->torsoAnim != TORSO_WEAPONIDLE3 &&
@@ -8678,18 +8560,15 @@ static void PM_Weapon( void )
 
 	if ( !vehicleRocketLock )
 	{
-		if (pm->ps->weapon != WP_ROCKET_LAUNCHER )
+		if (pm_entSelf->s.NPC_class!=CLASS_VEHICLE
+			&&pm->ps->m_iVehicleNum)
+		{//riding a vehicle, the vehicle will tell me my rocketlock stuff...
+		}
+		else
 		{
-			if (pm_entSelf->s.NPC_class!=CLASS_VEHICLE
-				&&pm->ps->m_iVehicleNum)
-			{//riding a vehicle, the vehicle will tell me my rocketlock stuff...
-			}
-			else
-			{
-				pm->ps->rocketLockIndex = ENTITYNUM_NONE;
-				pm->ps->rocketLockTime = 0;
-				pm->ps->rocketTargetTime = 0;
-			}
+			pm->ps->rocketLockIndex = ENTITYNUM_NONE;
+			pm->ps->rocketLockTime = 0;
+			pm->ps->rocketTargetTime = 0;
 		}
 	}
 
@@ -8973,7 +8852,7 @@ static void PM_Weapon( void )
 	pm->ps->weaponstate = WEAPON_FIRING;
 
 	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK ) 	{
-		//if ( pm->ps->weapon == WP_BRYAR_PISTOL && pm->gametype != GT_SIEGE )
+		//if ( pm->ps->weapon == WP_MODULIZED_WEAPON && pm->gametype != GT_SIEGE )
 		if (0)
 		{ //kind of a hack for now
 			PM_AddEvent( EV_FIRE_WEAPON );
@@ -9454,37 +9333,8 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			if ( !pmove->ps->scopeType && pmove->ps->pm_type != PM_DEAD )
 			{
 				// not already zooming, so do it now
-				switch (pmove->ps->weapon)
-				{
-				case WP_DISRUPTOR:
-					pmove->ps->scopeType = SCOPE_DISRUPTOR;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_A280:// etc
-					pmove->ps->scopeType = SCOPE_A280_BLASTTECH_LONG_SHORT;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_DLT_19:// etc
-					pmove->ps->scopeType = SCOPE_DLT20A_BLASTTECH_LONG_SHORT;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_EE3:// etc
-					pmove->ps->scopeType = SCOPE_EE3_BLASTTECH_SHORT;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_BRYAR_RIFLE_SCOPE:// etc
-					pmove->ps->scopeType = SCOPE_BRYAR_RIFLE_SCOPE;
-					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
-					break;
-				case WP_DH_17_PISTOL:// etc
-					pmove->ps->scopeType = SCOPE_DH_17_PISTOL;
-					pmove->ps->zoomFov = 20.0f;//cg_fov.value;
-					break;
-				default:
-					pmove->ps->scopeType = SCOPE_DISRUPTOR;
-					pmove->ps->zoomFov = 80.0f;
-					break;
-				}
+				pmove->ps->scopeType = SCOPE_DISRUPTOR;
+				pmove->ps->zoomFov = 80.0f;
 
 				pmove->ps->zoomLocked = qfalse;
 				
@@ -11488,8 +11338,6 @@ qboolean PM_WeaponOkOnVehicle( int weapon )
 	//case WP_NONE:
 	case WP_MELEE:
 	case WP_SABER:
-	case WP_BLASTER:
-	case WP_A280:
 		return qtrue;
 		break;
 	}

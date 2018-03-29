@@ -4734,13 +4734,13 @@ void RE_LoadWorldMap( const char *name ) {
 		DEBUG_EndTimer(qfalse);
 	}
 
-	// make sure the VBO glState entries are safe
-	R_BindNullVBO();
-	R_BindNullIBO();
-
 	DEBUG_StartTimer("R_LoadMapInfo", qfalse);
 	R_LoadMapInfo();
 	DEBUG_EndTimer(qfalse);
+
+	// make sure the VBO glState entries are safe
+	R_BindNullVBO();
+	R_BindNullIBO();
 
 #ifndef __REALTIME_CUBEMAP__
 	// load cubemaps

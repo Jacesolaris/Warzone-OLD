@@ -214,11 +214,6 @@ void TurretG2Pain( gentity_t *self, gentity_t *attacker, int damage )
 		}
 	}
 
-	if ( attacker->client && attacker->client->ps.weapon == WP_DEMP2 )
-	{
-		self->attackDebounceTime = level.time + 2000 + random() * 500;
-		self->painDebounceTime = self->attackDebounceTime;
-	}
 	if ( !self->enemy )
 	{//react to being hit
 		G_SetEnemy( self, attacker );
@@ -374,7 +369,7 @@ static void turretG2_fire ( gentity_t *ent, vec3_t start, vec3_t dir )
 		bolt->nextthink = level.time + 10000;
 		bolt->think = G_FreeEntity;
 		bolt->s.eType = ET_MISSILE;
-		bolt->s.weapon = WP_BLASTER;
+		bolt->s.weapon = WP_MODULIZED_WEAPON;
 		bolt->r.ownerNum = ent->s.number;
 		bolt->damage = ent->damage;
 		bolt->alliedTeam = ent->alliedTeam;
@@ -1287,7 +1282,7 @@ void finish_spawning_turretG2( gentity_t *base )
 	//base->r.svFlags |= SVF_NO_TELEPORT|SVF_NONNPC_ENEMY|SVF_SELF_ANIMATING;
 
 	// Register this so that we can use it for the missile effect
-	RegisterItem( BG_FindItemForWeapon( WP_BLASTER ));
+	RegisterItem( BG_FindItemForWeapon(WP_MODULIZED_WEAPON));
 
 	// But set us as a turret so that we can be identified as a turret
 	base->s.weapon = WP_TURRET;

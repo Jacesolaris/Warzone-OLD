@@ -3496,8 +3496,7 @@ int OJP_SaberCanBlock(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, 
 	}
 
 	if (atk && atk->s.eType == ET_MISSILE //is a missile
-		&& (atk->s.weapon == WP_ROCKET_LAUNCHER ||
-			atk->s.weapon == WP_THERMAL ||
+		&& (atk->s.weapon == WP_THERMAL ||
 			atk->s.weapon == WP_DET_PACK ||
 			atk->methodOfDeath == MOD_REPEATER_ALT ||
 			atk->methodOfDeath == MOD_FLECHETTE_ALT_SPLASH ||

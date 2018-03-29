@@ -238,173 +238,56 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 {
 	TORSO_DROPWEAP1,//WP_NONE,
 
-	//
-	// Melee...
-	//
-	TORSO_WEAPONREADY3,//WP_STUN_BATON,
-	TORSO_WEAPONREADY3,//WP_MELEE,
-	BOTH_STAND2,//WP_SABER,
+	BOTH_STAND1,//WP_EMPLACED_GUN,
+	TORSO_WEAPONREADY1,//WP_TURRET,
 
-	//
-	// Guns...
-	//
-	TORSO_CLONEPISTOL,//WP_BRYAR_PISTOL,
-	TORSO_CLONEPISTOL,//WP_BRYAR_OLD,
-	TORSO_WEAPONREADY3,//WP_BLASTER,
-	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY4,//WP_DISRUPTOR,
-	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
-	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
-	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
-	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY8,//WP_FLECHETTE,
-	TORSO_WEAPONREADY3,//WP_CONCUSSION
-	//add new guns here
-	TORSO_WEAPONREADY3,//WP_A280,
-	TORSO_WEAPONREADY3,//WP_T21,
-	DC15_READY,//WP_EE3,
-	TORSO_WEAPONREADY3,//WP_DLT_19,
-	DC15_READY,//WP_DC_15A_RIFLE,
-	MINIGUN_READY,		//WP_Z6_BLASTER_CANON,
-	TORSO_WEAPONREADY3,//WP_BRYAR_CARBINE,
-	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE,
-	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE_SCOPE,
-	DC15_READY,//WP_PULSECANON,
-	DC15_READY,//WP_PROTON_CARBINE_RIFLE,
-	TORSO_CLONEPISTOL,//WP_DH_17_PISTOL,
-
-
-	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
-
-	//
-	// Grenades + Explosives...
-	//
 	TORSO_WEAPONREADY10,//WP_THERMAL,
 	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE,
-	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD,
 	TORSO_WEAPONREADY10,//WP_CYROBAN_GRENADE,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY12,//WP_DET_PACK,
 
+	TORSO_WEAPONREADY3,//WP_MELEE,
 
-	//
-	// Specials (vehicle weapons, emplaced, turret etc) ONLY!
-	//
-	//NOT VALID (e.g. should never really be used):
-	BOTH_STAND1,//WP_EMPLACED_GUN,
-	TORSO_WEAPONREADY1//WP_TURRET,
+	BOTH_STAND2,//WP_SABER,
+	TORSO_WEAPONREADY3,//WP_MODULIZED_WEAPON,
 };
 
 int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 {
 	BOTH_STAND1,//WP_NONE,
 
-	//
-	// Melee...
-	//
-	BOTH_STAND1,//WP_STUN_BATON,
-	BOTH_STAND1,//WP_MELEE,
-	BOTH_STAND2,//WP_SABER,
+	BOTH_STAND1,//WP_EMPLACED_GUN,
+	BOTH_STAND1,//WP_TURRET,
 
-	//
-	// Guns...
-	//
-	BOTH_STAND1,//WP_BRYAR_PISTOL,
-	BOTH_STAND1,//WP_BRYAR_OLD,
-	BOTH_STAND1,//WP_BLASTER,
-	BOTH_STAND1,//TORSO_WEAPONREADY4,//WP_DISRUPTOR,
-	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
-	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
-	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
-	BOTH_STAND1,//TORSO_WEAPONREADY8,//WP_FLECHETTE,
-	BOTH_STAND1,//WP_CONCUSSION
-	//add new guns here
-	BOTH_STAND1,//WP_A280,
-	BOTH_STAND1,//WP_T21,
-	BOTH_STAND1,//WP_EE3,
-	BOTH_STAND1,//WP_DLT_19,
-	BOTH_STAND1,//WP_DC_15A_RIFLE,
-	BOTH_STAND1,//WP_Z6_BLASTER_CANON,
-	BOTH_STAND1,//WP_A200_ACP_BATTLERIFLE,
-	BOTH_STAND1,//WP_BRYAR_CARBINE,
-	BOTH_STAND1,//WP_BRYAR_RIFLE,
-	BOTH_STAND1,//WP_BRYAR_RIFLE_SCOPE,
-	BOTH_STAND1,//WP_PULSECANON,
-	BOTH_STAND1,//WP_PROTON_CARBINE_RIFLE,
-	BOTH_STAND1,//WP_DH_17_PISTOL,
-
-	BOTH_STAND1,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
-
-	//
-	// Grenades + Explosives...
-	//
 	BOTH_STAND1,//WP_THERMAL,
 	BOTH_STAND1,//WP_FRAG_GRENADE,
-	BOTH_STAND1,//WP_FRAG_GRENADE_OLD,
 	BOTH_STAND1,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	BOTH_STAND1,//TORSO_WEAPONREADY12,//WP_DET_PACK,
 
-	//
-	// Specials (vehicle weapons, emplaced, turret etc) ONLY!
-	//
-	//NOT VALID (e.g. should never really be used):
-	BOTH_STAND1,//WP_EMPLACED_GUN,
-	BOTH_STAND1//WP_TURRET,
+	BOTH_STAND1,//WP_MELEE,
+
+	BOTH_STAND2,//WP_SABER,
+	BOTH_STAND1,//WP_MODULIZED_WEAPON,
 };
 
 int WeaponAttackAnim[WP_NUM_WEAPONS] =
 {
 	BOTH_ATTACK1,//WP_NONE, //(shouldn't happen)
 
-	//
-	// Melee...
-	//
-	BOTH_ATTACK3,//WP_STUN_BATON,
-	BOTH_ATTACK3,//WP_MELEE,
-	BOTH_STAND2,//WP_SABER, //(has its own handling)
+	BOTH_STAND1,//WP_EMPLACED_GUN,
+	BOTH_ATTACK1,//WP_TURRET,
 
-	//
-	// Guns...
-	//
-	BOTH_ATTACK2,//WP_BRYAR_PISTOL,
-	BOTH_ATTACK2,//WP_BRYAR_OLD,
-	DC15_FIRE,//WP_BLASTER,
-	BOTH_ATTACK3,//BOTH_ATTACK4,//WP_DISRUPTOR,
-	DC15_FIRE,//BOTH_ATTACK5,//WP_BOWCASTER,
-	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
-	BOTH_ATTACK3,//BOTH_ATTACK7,//WP_DEMP2,
-	BOTH_ATTACK3,//BOTH_ATTACK8,//WP_FLECHETTE,
-	BOTH_ATTACK3,//WP_CONCUSSION,
-	//add new guns here
-	DC15_FIRE,//WP_A280,
-	BOTH_ATTACK3,//WP_T21,
-	DC15_FIRE,//WP_EE3,
-	DC15_FIRE, //WP_DLT_19,
-	DC15_FIRE,//WP_DC_15A_RIFLE,
-	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON,
-	DC15_FIRE,// WP_BRYAR_CARBINE,
-	DC15_FIRE,//WP_BRYAR_RIFLE,
-	DC15_FIRE,//WP_BRYAR_RIFLE_SCOPE,
-	DC15_FIRE,//WP_PULSECANON,
-	DC15_FIRE,//WP_PROTON_CARBINE_RIFLE,
-	BOTH_ATTACK2,//WP_DH_17_PISTOL,
-	
-	BOTH_ATTACK3,//BOTH_ATTACK9,//WP_ROCKET_LAUNCHER,
-
-	//
-	// Grenades + Explosives...
-	//
 	BOTH_THERMAL_THROW,//WP_THERMAL,
 	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE,
-	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD,
 	BOTH_THERMAL_THROW,//WP_CYROBAN_GRENADE,
 	BOTH_ATTACK3,//BOTH_ATTACK11,//WP_TRIP_MINE,
 	BOTH_ATTACK3,//BOTH_ATTACK12,//WP_DET_PACK,
 
-	//
-	// Specials (vehicle weapons, emplaced, turret etc) ONLY!
-	//
-	//NOT VALID (e.g. should never really be used):
-	BOTH_STAND1,//WP_EMPLACED_GUN,
-	BOTH_ATTACK1//WP_TURRET,
+	BOTH_ATTACK3,//WP_MELEE,
+
+	BOTH_STAND2,//WP_SABER, //(has its own handling)
+	DC15_FIRE,// WP_MODULIZED_WEAPON,
 };
 
 qboolean BG_FileExists(const char *fileName)
@@ -1180,508 +1063,6 @@ A small lizard carried on the player, which prevents the possessor from using an
 		0,
 	},
 
-	//
-	// WEAPONS
-	//
-
-/*QUAKED weapon_stun_baton (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-	{
-		"weapon_stun_baton",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/stun_baton/baton_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/stun_baton/baton.md3",
-/* icon */		"gfx/hud/w_icon_stunbaton",
-/* pickup */	"Stun Baton",
-		100,
-		IT_WEAPON,
-		WP_STUN_BATON,
-/* precache */ "",
-/* sounds */ "",
-		"A stun device, used to non-lethally take down an enemy.",					// description
-		120,
-	},
-
-/*QUAKED weapon_melee (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-	{
-		"weapon_melee",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/stun_baton/baton_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/stun_baton/baton.md3",
-/* icon */		"gfx/hud/w_icon_melee",
-/* pickup */	"Melee",
-		100,
-		IT_WEAPON,
-		WP_MELEE,
-/* precache */ "",
-/* sounds */ "",
-		"",					// description
-		0,
-	},
-
-/*QUAKED weapon_saber (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-	{
-		"weapon_saber",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/saber/saber_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/saber/saber_w.md3",
-/* icon */		"gfx/hud/w_icon_lightsaber",
-/* pickup */	"Lightsaber",
-		100,
-		IT_WEAPON,
-		WP_SABER,
-/* precache */ "",
-/* sounds */ "",
-		"An elegant weapon from a more civilized age.",				// description
-		1420,
-	},
-
-/*QUAKED weapon_bryar_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-	{
-		//"weapon_bryar_pistol",
-		"weapon_blaster_pistol",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/blaster_pistol/blaster_pistol_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/blaster_pistol/blaster_pistol.md3",
-/* icon */		"gfx/hud/w_icon_blaster_pistol",
-/* pickup */	"Bryar Pistol",
-		100,
-		IT_WEAPON,
-		WP_BRYAR_PISTOL,
-/* precache */ "",
-/* sounds */ "",
-		"A light pistol.",					// description
-		160,
-	},
-
-/*QUAKED weapon_concussion_rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_concussion_rifle",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons3/base_concussion/c_rifle_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons3/base_concussion/c_rifle.md3",
-/* icon */		"gfx/hud/w_icon_darkconc",//"gfx/hud/w_icon_rifle",
-/* pickup */	"Concussion Rifle",
-		50,
-		IT_WEAPON,
-		WP_CONCUSSION,
-/* precache */ "",
-/* sounds */ "",
-		"A heavy concussion rifle.",					// description
-		860,
-	},
-
-
-/*QUAKED weapon_bryar_pistol_old (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-	{
-		"weapon_bryar_pistol",
-		"sound/weapons/w_pkup.wav",
-		{ "models/weapons/Bryar_Pistol/model.glm",
-		0, 0, 0 },
-		/* view */		"models/weapons/Bryar_Pistol/viewmodel.md3",
-		/* icon */		"models/weapons/Bryar_Pistol/icon_default",
-/* pickup */	"Bryar Pistol",
-		100,
-		IT_WEAPON,
-		WP_BRYAR_OLD,
-/* precache */ "",
-/* sounds */ "",
-		"A light pistol.",					// description
-		160,
-	},
-
-/*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_blaster",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons/blstr_e11/blaster_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons/blstr_e11/viewmodel.md3",
-/* icon */		"models/weapons/E-11_Rifle/icon_default",
-/* pickup */	"E-11 Blaster Rifle",
-		100,
-		IT_WEAPON,
-		WP_BLASTER,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_THE_PRIMARY_WEAPON_OF",				// description
-		280,
-	},
-
-/*QUAKED weapon_disruptor (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_disruptor",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/disruptor/disruptor_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/disruptor/disruptor.md3",
-/* icon */		"gfx/hud/w_icon_disruptor",
-/* pickup */	"Tenloss Disruptor Rifle",
-		100,
-		IT_WEAPON,
-		WP_DISRUPTOR,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_THIS_NEFARIOUS_WEAPON",					// description
-		560,
-	},
-
-/*QUAKED weapon_bowcaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_bowcaster",
-		"sound/weapons/w_pkup.wav",
-		{ "models/weapons/Bowcaster/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bowcaster/bowcaster.md3",
-	/* icon */		"models/weapons/Bowcaster/icon_default",
-	/* pickup */	"Wookiee Bowcaster",
-		100,
-		IT_WEAPON,
-		WP_BOWCASTER,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_THIS_ARCHAIC_LOOKING",					// description
-		460,
-	},
-
-/*QUAKED weapon_repeater (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_repeater",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/heavy_repeater/heavy_repeater_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/heavy_repeater/heavy_repeater_1.md3",
-/* icon */		"gfx/hud/w_icon_imperial_repeater",
-/* pickup */	"Imperial Heavy Repeater",
-		100,
-		IT_WEAPON,
-		WP_REPEATER,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_THIS_DESTRUCTIVE_PROJECTILE",					// description
-		660,
-	},
-
-/*QUAKED weapon_demp2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-NOTENOTE This weapon is not yet complete.  Don't place it.
-*/
-	{
-		"weapon_demp2",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/demp2/demp2_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/demp2/demp2.md3",
-/* icon */		"gfx/hud/w_icon_demp2",
-/* pickup */	"DEMP-2",
-		100,
-		IT_WEAPON,
-		WP_DEMP2,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_COMMONLY_REFERRED_TO",					// description
-		370,
-	},
-
-/*QUAKED weapon_flechette (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_flechette",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/golan_arms/golan_arms_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/golan_arms/golan_arms.md3",
-/* icon */		"gfx/hud/w_icon_golancr1",
-/* pickup */	"Golan Arms Flechette",
-		100,
-		IT_WEAPON,
-		WP_FLECHETTE,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_WIDELY_USED_BY_THE_CORPORATE",					// description
-		690,
-	},
-
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_rocket_launcher",
-		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/merr_sonn/merr_sonn_w.glm",
-		0, 0, 0},
-/* view */		"models/weapons2/merr_sonn/merr_sonn.md3",
-/* icon */		"gfx/hud/w_icon_merrsonn",
-/* pickup */	"Merr-Sonn Missile System",
-		3,
-		IT_WEAPON,
-		WP_ROCKET_LAUNCHER,
-/* precache */ "",
-/* sounds */ "",
-		"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY",					// description
-		960,
-	},
-
-
-	//New Guns add here.
-
-	/*QUAKED weapon_a280 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-	*/
-	{
-		"A280 Blaster",
-		"sound/weapons/w_pkup.wav",
-		{ "models/weapons/blstr_a280/blaster_w.glm",
-		0, 0, 0},
-		/* view */		"models/weapons/blstr_a280/viewmodel.md3",
-		/* icon */		"gfx/hud/w_icon_a280",
-		/* pickup */	"A-280 Blaster Rifle",
-		100,
-		IT_WEAPON,
-		WP_A280,
-		/* precache */ "",
-		/* sounds */ "",
-		"< Stoiss: insert a nice description here >",				// description
-		460,
-	},
-
-/*QUAKED weapon_t_21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_t_21",
-	"sound/weapons/w_pkup.wav",
-	{ "models/Weapons/T-21_Repeater/model.glm",
-	0, 0, 0 },
-	/* view */		"models/Weapons/T-21_Repeater/viewmodel.md3",
-	/* icon */		"gfx/hud/w_icon_t-21",
-
-
-	//{ "models/weapons3/t-21/t-21_w.glm",
-	//0, 0, 0 },
-	///* view */		"models/weapons3/t-21/t-21.md3",
-	///* icon */		"gfx/hud/w_icon_t-21",
-
-	/* pickup */	"T-21 Repeater",
-	100,
-	IT_WEAPON,
-	WP_T21,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	560,
-},
-
-/*QUAKED weapon_ee3_Blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_ee3_Blaster",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/ee-3_rifle/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/ee-3_rifle/viewmodel.md3",
-	/* icon */		"gfx/hud/w_icon_ee-3",
-	/* pickup */	"EE-3 Rifle",
-	100,
-	IT_WEAPON,
-	WP_EE3,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	560,
-},
-
-
-/*QUAKED weapon_DLT_19_Blaster(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_DLT_19_Blaster",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/DLT-19_HeavyBlaster/model_scope.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/DLT-19_HeavyBlaster/viewmodel_scope.md3",
-	/* icon */		"models/weapons/DLT-19_HeavyBlaster/icon_scope",
-	/* pickup */	"DLT-19 Heavy Blaster",
-	100,
-	IT_WEAPON,
-	WP_DLT_19,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	760,
-},
-
-
-/*QUAKED weapon_DC_15A_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_DC_15A_Rifle",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/DC-15A_Rifle/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/DC-15A_Rifle/viewmodel.md3",
-	/* icon */		"models/weapons/DC-15A_Rifle/icon_default.tga",
-	/* pickup */	"DC-15A Rifle",
-	100,
-	IT_WEAPON,
-	WP_DC_15A_RIFLE,
-	/* precache */ "",
-	/* sounds */ "",
-	"Used by by clones during the clone wars, this weapon combines efficiency and power. It is still widely in use today.",				// description
-	610,
-},
-
-
-/*QUAKED weapon_Z-6_rotary_blaster_cannon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-{
-	"weapon_Z6_rotary_blaster_cannon",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/z6_rotary/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/z6_rotary/rotary_cannon.MD3",
-	/* icon */		"gfx/hud/w_icon_rotary_cannon",
-	/* pickup */	"Z-6 Rotary Cannon",
-	100,
-	IT_WEAPON,
-	WP_Z6_BLASTER_CANON,
-	/* precache */ "",
-	/* sounds */ "",
-	"A very powerful blaster cannon. Able to knock down large groups of enemies in a short time.",					// description
-	980,
-},
-
-/*QUAKED weapon_bryar_carbine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_bryar_carbine",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/Bryar_Carbine/model.glm",
-	//{ "models/wzweapons/base_prop/blaster_pistol_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bryar_Carbine/viewmodel.md3",
-	///* view */		"models/wzweapons/base_prop/blaster_pistol_w.md3",
-	/* icon */		"models/weapons/Bryar_Carbine/icon_default",
-	/* pickup */	"E-11 Bryar Carbine Rifle",
-	100,
-	IT_WEAPON,
-	WP_BRYAR_CARBINE,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	530,
-},
-
-/*QUAKED weapon_sniper_bryar_rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_sniper_bryar_rifle",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/Bryar_Rifle/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bryar_Rifle/viewmodel.md3",
-	/* icon */		"models/weapons/Bryar_Rifle/icon_default",
-	/* pickup */	"Bryar Rifle",
-	100,
-	IT_WEAPON,
-	WP_BRYAR_RIFLE,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	490,
-},
-
-/*QUAKED weapon_sniper_bryar_rifle_scope (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_sniper_bryar_rifle_scope",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/Bryar_Rifle/model_scope.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/Bryar_Rifle/viewmodel_scope.md3",
-	/* icon */		"models/weapons/Bryar_Rifle/icon_scope",
-	/* pickup */	"Bryar Rifle",
-	100,
-	IT_WEAPON,
-	WP_BRYAR_RIFLE_SCOPE,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	590,
-},
-
-/*QUAKED weapon_Pulse_Canon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_Pulse_Canon",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/PulseCannon/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/PulseCannon/viewmodel.md3",
-	/* icon */		"models/weapons/PulseCannon/icon_default.tga",
-	/* pickup */	"Pulse Cannon",
-	100,
-	IT_WEAPON,
-	WP_PULSECANON,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	745,
-},
-
-/*QUAKED weapon_proton_carbine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_proton_carbine",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/ProtonCarbine/model.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons/ProtonCarbine/viewmodel.md3",
-	/* icon */		"models/weapons/ProtonCarbine/icon_default",
-	/* pickup */	"Proton Carbine",
-	100,
-	IT_WEAPON,
-	WP_PROTON_CARBINE_RIFLE,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	560,
-},
-
-/*QUAKED weapon_DH_17_Pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_DH_17_Pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/DH-17_Pistol/model.glm",
-	0, 0, 0},
-	/* view */		"models/weapons/DH-17_Pistol/viewmodel.md3",
-	/* icon */		"models/weapons/DH-17_Pistol/icon_default",
-	/* pickup */	"DH-17 Pistol",
-	100,
-	IT_WEAPON,
-	WP_DH_17_PISTOL,
-	/* precache */ "",
-	/* sounds */ "",
-	"< Stoiss: insert a nice description here >",				// description
-	210,
-},
 #ifndef __MMO__
 /*QUAKED ammo_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
@@ -1776,25 +1157,6 @@ Don't place this
 	/* sounds */ "",
 	"This grenade is designed to break into fragments during it's explosion, causing massive injuries over a large area.",					// description
 	830,
-},
-
-/*QUAKED weapon_old_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_old_fraggrenade",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/oldfraggrenade/thermal_w.glm", "models/weapons3/oldfraggrenade/thermal_pu.md3",
-	0, 0 },
-	/* view */		"models/weapons3/oldfraggrenade/thermal.md3",
-	/* icon */		"gfx/hud/w_icon_oldfraggrenade",
-	/* pickup */	"Old Thermal Detonator",
-	4,
-	IT_WEAPON,
-	WP_FRAG_GRENADE_OLD,
-	/* precache */ "",
-	/* sounds */ "",
-	"This old thermal detonator is still in working condition.",					// description
-	760,
 },
 
 /*QUAKED weapon_grenade_cryoban (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
@@ -2223,6 +1585,69 @@ Only in One Flag CTF games
 		/* sounds */ "",
 		"A Wearable Modification. Used in the crafting of wearable items. Augments the item to suit it's owner.",					// description
 		300,
+	},
+
+	//
+	// WEAPONS
+	//
+
+	/*QUAKED weapon_melee (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_melee",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/stun_baton/baton_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons2/stun_baton/baton.md3",
+		/* icon */		"gfx/hud/w_icon_melee",
+		/* pickup */	"Melee",
+		100,
+		IT_WEAPON,
+		WP_MELEE,
+		/* precache */ "",
+		/* sounds */ "",
+		"",					// description
+		0,
+	},
+
+	/*QUAKED weapon_saber (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	Don't place this
+	*/
+	{
+		"weapon_saber",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons2/saber/saber_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons2/saber/saber_w.md3",
+		/* icon */		"gfx/hud/w_icon_lightsaber",
+		/* pickup */	"Lightsaber",
+		100,
+		IT_WEAPON,
+		WP_SABER,
+		/* precache */ "",
+		/* sounds */ "",
+		"An elegant weapon from a more civilized age.",				// description
+		1420,
+	},
+
+	/*QUAKED weapon_modular (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_modular",
+		"sound/weapons/w_pkup.wav",
+		{ "models/wzweapons/pistol_1.md3",
+		0, 0, 0 },
+		/* view */		"models/wzweapons/pistol_1.md3",
+		/* icon */		"models/weapons/Bryar_Carbine/icon_default",
+		/* pickup */	"Modular Weapon",
+		100,
+		IT_WEAPON,
+		WP_MODULIZED_WEAPON,
+		/* precache */ "",
+		/* sounds */ "",
+		"This weapons looks like it was designed to be upgradable.",				// description
+		530,
 	},
 
 	// end of list marker
@@ -2669,7 +2094,6 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		if (!(ent->eFlags & EF_DROPPEDWEAPON) && BG_HaveWeapon(ps, item->giTag) &&
 			item->giTag != WP_THERMAL 
 			&& item->giTag != WP_FRAG_GRENADE 
-			&& item->giTag != WP_FRAG_GRENADE_OLD 
 			&& item->giTag != WP_CYROBAN_GRENADE
 			&& item->giTag != WP_TRIP_MINE 
 			&& item->giTag != WP_DET_PACK)

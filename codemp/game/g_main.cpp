@@ -930,9 +930,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		trap->Print( "Not logging security events to disk.\n" );
 
 
-	G_LogWeaponInit();
-
-
 	//WP_Grenade_CryoBanDamage();
 
 	//WP_Thermal_FireDamage();
@@ -1212,8 +1209,6 @@ void G_ShutdownGame( int restart ) {
 
 //	Com_Printf ("... Reference Tags Cleared\n");
 	TAG_Init();	//Clear the reference tags
-
-	G_LogWeaponOutput();
 
 	if ( level.logFile ) {
 		G_LogPrintf( "^7ShutdownGame:\n^5------------------------------------------------------------\n" );

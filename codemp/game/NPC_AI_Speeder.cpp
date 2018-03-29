@@ -426,11 +426,7 @@ void AnimateRiders( Vehicle_t *pVeh )
 
 		// Compute The Weapon Pose
 		//--------------------------
-		if (pilotPS->weapon==WP_BLASTER)
-		{
-			WeaponPose = WPOSE_BLASTER;
-		}
-		else if (pilotPS->weapon==WP_SABER)
+		if (pilotPS->weapon==WP_SABER)
 		{
 			if ( (pVeh->m_ulFlags&VEH_SABERINLEFTHAND) && pilotPS->torsoAnim==BOTH_VS_ATL_TO_R_S)
 			{
@@ -442,7 +438,10 @@ void AnimateRiders( Vehicle_t *pVeh )
 			}
 			WeaponPose = (pVeh->m_ulFlags&VEH_SABERINLEFTHAND)?(WPOSE_SABERLEFT):(WPOSE_SABERRIGHT);
 		}
-
+		else
+		{
+			WeaponPose = WPOSE_BLASTER;
+		}
 
  		if (Attacking && WeaponPose)
 		{// Attack!

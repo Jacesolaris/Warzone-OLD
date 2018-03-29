@@ -1039,16 +1039,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 	if ( NPC->NPC )
 	{
 		stats = &NPC->NPC->stats;
-/*
-	NPC->NPC->allWeaponOrder[0]	= WP_BRYAR_PISTOL;
-	NPC->NPC->allWeaponOrder[1]	= WP_SABER;
-	NPC->NPC->allWeaponOrder[2]	= WP_IMOD;
-	NPC->NPC->allWeaponOrder[3]	= WP_SCAVENGER_RIFLE;
-	NPC->NPC->allWeaponOrder[4]	= WP_TRICORDER;
-	NPC->NPC->allWeaponOrder[6]	= WP_NONE;
-	NPC->NPC->allWeaponOrder[6]	= WP_NONE;
-	NPC->NPC->allWeaponOrder[7]	= WP_NONE;
-*/
+
 		// fill in defaults
 		stats->aggression	= 3;
 		stats->aim			= 3;

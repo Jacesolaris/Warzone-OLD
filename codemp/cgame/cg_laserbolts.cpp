@@ -1,8 +1,6 @@
 #include "cg_local.h"
 #include "fx_local.h"
 
-//#define __OLD_BOLT_GLOWS__
-
 //
 // 3D Blaster bolts...
 //
@@ -11,17 +9,11 @@ qboolean DEFAULT_BLASTER_SHADERS_INITIALIZED = qfalse;
 
 int numBoltGlowIndexes = 0;
 qhandle_t boltBoltIndexes[1024] = { 0 };
-#ifdef __OLD_BOLT_GLOWS__
-qhandle_t boltGlowIndexes[1024] = { 0 };
-#endif //__OLD_BOLT_GLOWS__
 vec3_t    boltLightColors[1024] = { 0 };
 
 void CG_MakeShaderBoltGlow(qhandle_t boltShader, qhandle_t newBoltGlowShader, vec3_t lightColor)
 {// Make a list of all the glows matching the original bolts...
 	boltBoltIndexes[numBoltGlowIndexes] = boltShader;
-#ifdef __OLD_BOLT_GLOWS__
-	boltGlowIndexes[numBoltGlowIndexes] = newBoltGlowShader;
-#endif //__OLD_BOLT_GLOWS__
 	VectorCopy(lightColor, boltLightColors[numBoltGlowIndexes]);
 	numBoltGlowIndexes++;
 }
@@ -107,21 +99,6 @@ float *CG_Get3DWeaponBoltLightColor(qhandle_t boltShader)
 
 	return colorBlack;
 }
-
-#ifdef __OLD_BOLT_GLOWS__
-qhandle_t CG_Get3DWeaponBoltGlowColor(qhandle_t boltShader)
-{
-	for (int i = 0; i < numBoltGlowIndexes; i++)
-	{
-		if (boltBoltIndexes[i] == boltShader)
-		{
-			return boltGlowIndexes[i];
-		}
-	}
-
-	return -1;
-}
-#endif //__OLD_BOLT_GLOWS__
 
 qhandle_t CG_Get3DWeaponBoltColor(const struct weaponInfo_s *weaponInfo, qboolean altFire)
 {
@@ -243,45 +220,10 @@ void FX_WeaponBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle
 
 	AddRefEntityToScene(&ent);
 
-#ifdef __OLD_BOLT_GLOWS__
-	// Now add glow...
-	memset(&ent, 0, sizeof(refEntity_t));
-
-	qhandle_t glowColorShader = CG_Get3DWeaponBoltGlowColor(shader);
-
-	if (glowColorShader)
-#endif //__OLD_BOLT_GLOWS__
-	{// Now add glow...
-#ifdef __OLD_BOLT_GLOWS__
-		vec3_t org2, back;
-		VectorMA(org, -((length * 1.25 * 16.0) - length * 16.0) * 4.0, fwd, org2);
-		VectorCopy(org2, ent.origin);
-		VectorCopy(fwd, ent.axis[0]);
-
-		ent.saberLength = length * 1.25 * 16.0 * 1.5;
-
-		float radius2 = radius * 16.0;
-		float radiusRange = radius2 * 0.075f;
-		float radiusStart = radius2 - radiusRange;
-		float radiusmult = 1.0;
-		ent.radius = (radiusStart + crandom() * radiusRange)*radiusmult;
-
-		ent.renderfx |= RF_RGB_TINT;
-		ent.shaderRGBA[0] = 255;
-		ent.shaderRGBA[1] = 255;
-		ent.shaderRGBA[2] = 255;
-		ent.shaderRGBA[3] = 128.0;// cg_gunX.value;// 64;
-		ent.reType = RT_SABER_GLOW;
-		ent.customShader = glowColorShader;
-
-		AddRefEntityToScene(&ent);
-#endif //__OLD_BOLT_GLOWS__
-
-		// Add light as well...
-		vec3_t lightColor;
-		VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
-		trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
-	}
+	// Add light as well...
+	vec3_t lightColor;
+	VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
+	trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
 }
 
 //
@@ -352,45 +294,10 @@ void FX_SaberBolt3D(vec3_t org, vec3_t fwd, float length, float radius, qhandle_
 
 	AddRefEntityToScene(&ent);
 
-#ifdef __OLD_BOLT_GLOWS__
-	// Now add glow...
-	memset(&ent, 0, sizeof(refEntity_t));
-
-	qhandle_t glowColorShader = CG_Get3DWeaponBoltGlowColor(shader);
-
-	if (glowColorShader)
-#endif //__OLD_BOLT_GLOWS__
-	{// Now add glow...
-#ifdef __OLD_BOLT_GLOWS__
-		vec3_t org2, back;
-		VectorMA(org, -((length * 1.25 * 16.0) - length * 16.0) * 4.0, fwd, org2);
-		VectorCopy(org2, ent.origin);
-		VectorCopy(fwd, ent.axis[0]);
-
-		ent.saberLength = length * 1.25 * 16.0 * 1.5 * 1.05;// cg_testvalue0.value;
-		
-		float radius2 = radius * cg_saberGlowRadius.value;
-		float radiusRange = radius2 * 0.075f;
-		float radiusStart = radius2 - radiusRange;
-		float radiusmult = cg_saberGlowRadiusMult.value;
-		ent.radius = (radiusStart + crandom() * radiusRange)*radiusmult;
-
-		ent.renderfx |= RF_RGB_TINT;
-		ent.shaderRGBA[0] = 255;
-		ent.shaderRGBA[1] = 255;
-		ent.shaderRGBA[2] = 255;
-		ent.shaderRGBA[3] = cg_saberGlowAlphalevel.value;
-		ent.reType = RT_SABER_GLOW;
-		ent.customShader = glowColorShader;
-
-		AddRefEntityToScene(&ent);
-#endif //__OLD_BOLT_GLOWS__
-
-		// Add light as well...
-		vec3_t lightColor;
-		VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
-		trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
-	}
+	// Add light as well...
+	vec3_t lightColor;
+	VectorCopy(CG_Get3DWeaponBoltLightColor(shader), lightColor);
+	trap->R_AddLightToScene(org, 200 + (rand() & 31), lightColor[0] * 0.15, lightColor[1] * 0.15, lightColor[2] * 0.15);
 }
 
 void CG_Do3DSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float radius, saber_colors_t color)

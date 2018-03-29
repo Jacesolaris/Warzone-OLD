@@ -35,7 +35,7 @@ void NPC_Probe_Precache(void)
 
 #ifndef __MMO__
 	RegisterItem( BG_FindItemForAmmo( AMMO_BLASTER ));
-	RegisterItem( BG_FindItemForWeapon( WP_BRYAR_PISTOL ) );
+	RegisterItem( BG_FindItemForWeapon(WP_MODULIZED_WEAPON) );
 #endif //__MMO__
 }
 /*
@@ -294,7 +294,7 @@ void ImperialProbe_FireBlaster(gentity_t *aiEnt)
 	missile = CreateMissile( muzzle1, forward, 1600, 10000, aiEnt, qfalse );
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	if ( g_npcspskill.integer <= 1 )
 	{

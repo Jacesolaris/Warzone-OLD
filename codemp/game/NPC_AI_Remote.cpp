@@ -244,7 +244,7 @@ void Remote_Fire (gentity_t *aiEnt)
 	G_PlayEffectID( G_EffectIndex("bryar/muzzle_flash"), aiEnt->r.currentOrigin, forward );
 
 	missile->classname = "briar";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	missile->damage = 10;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;

@@ -1850,7 +1850,7 @@ void MAPPING_LoadMapInfo(void)
 	//
 	// Grass...
 	//
-	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "0")) > 0) ? qtrue : qfalse;
 
 	if (GRASS_ENABLED)
 	{
@@ -1925,9 +1925,14 @@ void MAPPING_LoadMapInfo(void)
 		tr.groundFoliageImage[3] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE4", "models/warzone/groundFoliage/groundFoliage03.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
 
+	if (MAP_MAX_VIS_RANGE && tr.distanceCull != MAP_MAX_VIS_RANGE)
+	{
+		tr.distanceCull = MAP_MAX_VIS_RANGE;
+	}
+
 	{
 		// Roads maps... Try to load map based image first...
-		tr.roadsMapImage = R_FindImageFile(va("maps/%s_roads.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.roadsMapImage = R_FindImageFile(va("maps/%s_roads.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.roadsMapImage)
 		{// No default image? Use black...
@@ -1949,36 +1954,42 @@ void MAPPING_LoadMapInfo(void)
 	{
 		image_t *newImage = NULL;
 
-		for (int i = 0; i < 16; i++)
+		if (GRASS_ENABLED && r_foliage->integer)
 		{
-			newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			for (int i = 0; i < 16; i++)
+			{
+				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-			if (newImage)
-			{// We have an override image to use from mapInfo...
-				tr.grassImage[i] = newImage;
-				newImage = NULL;
+				if (newImage)
+				{// We have an override image to use from mapInfo...
+					tr.grassImage[i] = newImage;
+					newImage = NULL;
+				}
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("seaGrassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+				if (newImage)
+				{// We have an override image to use from mapInfo...
+					tr.seaGrassImage[i] = newImage;
+					newImage = NULL;
+				}
 			}
 		}
 
-		for (int i = 0; i < 4; i++)
+		if (r_pebbles->integer && PEBBLES_ENABLED)
 		{
-			newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("seaGrassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			for (int i = 0; i < 4; i++)
+			{
+				newImage = R_FindImageFile(IniRead(mapname, "PEBBLES", va("pebblesImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-			if (newImage)
-			{// We have an override image to use from mapInfo...
-				tr.seaGrassImage[i] = newImage;
-				newImage = NULL;
-			}
-		}
-
-		for (int i = 0; i < 4; i++)
-		{
-			newImage = R_FindImageFile(IniRead(mapname, "PEBBLES", va("pebblesImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-
-			if (newImage)
-			{// We have an override image to use from mapInfo...
-				tr.pebblesImage[i] = newImage;
-				newImage = NULL;
+				if (newImage)
+				{// We have an override image to use from mapInfo...
+					tr.pebblesImage[i] = newImage;
+					newImage = NULL;
+				}
 			}
 		}
 	}
@@ -1986,11 +1997,11 @@ void MAPPING_LoadMapInfo(void)
 	if (GRASS_ENABLED && r_foliage->integer)
 	{
 		// Grass maps... Try to load map based image first...
-		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.defaultGrassMapImage)
 		{// No map based image? Use default...
-			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 		}
 
 		if (!tr.defaultGrassMapImage)
@@ -2001,18 +2012,18 @@ void MAPPING_LoadMapInfo(void)
 
 	if (WATER_ENABLED)
 	{// Water...
-		tr.waterFoamImage[0] = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterFoamImage[1] = R_FindImageFile("textures/water/waterFoamGrey02.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterFoamImage[2] = R_FindImageFile("textures/water/waterFoamGrey03.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		//tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterFoamImage[0] = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.waterFoamImage[1] = R_FindImageFile("textures/water/waterFoamGrey02.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.waterFoamImage[2] = R_FindImageFile("textures/water/waterFoamGrey03.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		//tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
 		//if (r_glslWater->integer < 2)
-		//	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		//	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		//else
-			tr.waterNormalImage = R_FindImageFile("textures/water/waves.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterNormalImage = R_FindImageFile("textures/water/waves.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
-		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lodmodels are ^7%s^5 on this map.\n", LODMODEL_MAP ? "USED" : "UNUSED");
@@ -2073,11 +2084,6 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
-
-	if (MAP_MAX_VIS_RANGE && tr.distanceCull != MAP_MAX_VIS_RANGE)
-	{
-		tr.distanceCull = MAP_MAX_VIS_RANGE;
-	}
 }
 
 extern void RB_SetupGlobalWeatherZone(void);
@@ -2305,25 +2311,25 @@ void R_LoadMapInfo(void)
 	if (!R_TextureFileExists("gfx/random2K.tga"))
 	{
 		R_CreateRandom2KImage("");
-		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 
 	if (!R_TextureFileExists("gfx/random2Ka.tga"))
 	{
 		R_CreateRandom2KImage("a");
-		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 
 
-	tr.ssdoNoiseImage = R_FindImageFile("gfx/ssdoNoise.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+	tr.ssdoNoiseImage = R_FindImageFile("gfx/ssdoNoise.png", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
 #if 0
 	if (!R_TextureFileExists("gfx/defaultDetail.tga"))
@@ -2342,21 +2348,21 @@ void R_LoadMapInfo(void)
 	if (!R_TextureFileExists("gfx/splatControlImage.tga"))
 	{
 		R_CreateRandom2KImage("splatControl");
-		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 	}
 
 	if (r_colorCorrection->integer)
 	{
 		// Color Palette... Try to load map based image first...
-		tr.paletteImage = R_FindImageFile(va("maps/%s_palette.png", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+		tr.paletteImage = R_FindImageFile(va("maps/%s_palette.png", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.paletteImage)
 		{// No map based image? Use default...
-			tr.paletteImage = R_FindImageFile("gfx/palette.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_NOLIGHTSCALE);
+			tr.paletteImage = R_FindImageFile("gfx/palette.png", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 		}
 
 		if (!tr.paletteImage)
@@ -2411,70 +2417,83 @@ void R_LoadMapInfo(void)
 			// Have a climate file in climates/
 			TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
 
-			for (int i = 0; i < 16; i++)
+			if (r_foliage->integer && GRASS_ENABLED)
 			{
-				if (i <= 0)
-					tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-				else
-					tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-				
-				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
-			}
+				for (int i = 0; i < 16; i++)
+				{
+					if (i <= 0)
+						tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+					else
+						tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-			for (int i = 0; i < 4; i++)
-			{
-				tr.seaGrassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("seaGrassImage%i", i), va("models/warzone/foliage/seagrass%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-			}
+					if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+				}
 
-			for (int i = 0; i < 4; i++)
+				for (int i = 0; i < 4; i++)
+				{
+					tr.seaGrassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("seaGrassImage%i", i), va("models/warzone/foliage/seagrass%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				}
+			}
+			if (r_foliage->integer && PEBBLES_ENABLED)
 			{
-				tr.pebblesImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				for (int i = 0; i < 4; i++)
+				{
+					tr.pebblesImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				}
 			}
 		}
 		else
 		{// Seems we have no climate file in climates/ for the map... Check maps/
 			TREE_SCALE_MULTIPLIER = atof(IniRead(va("maps/%s.climate", currentMapName), "TREES", "treeScaleMultiplier", "1.0"));
 
-			for (int i = 0; i < 16; i++)
+			if (r_foliage->integer && GRASS_ENABLED)
 			{
-				if (i <= 0)
-					tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-				else
-					tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				for (int i = 0; i < 16; i++)
+				{
+					if (i <= 0)
+						tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+					else
+						tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+					if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+				}
+
+				for (int i = 0; i < 4; i++)
+				{
+					tr.seaGrassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("seaGrassImage%i", i), va("models/warzone/foliage/seagrass%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				}
 			}
 
-			for (int i = 0; i < 4; i++)
+			if (r_pebbles->integer && PEBBLES_ENABLED)
 			{
-				tr.seaGrassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("seaGrassImage%i", i), va("models/warzone/foliage/seagrass%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-			}
-
-			for (int i = 0; i < 4; i++)
-			{
-				tr.pebblesImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				for (int i = 0; i < 4; i++)
+				{
+					tr.pebblesImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "PEBBLES", va("pebblesImage%i", i), va("models/warzone/pebbles/mainpebbles%i", i)), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				}
 			}
 		}
+
 
 		//
 		// Override climate file climate options with mapInfo ones, if found...
 		//
-		if ((r_foliage->integer && GRASS_ENABLED) || (r_pebbles->integer && PEBBLES_ENABLED))
+
+		char mapname[256] = { 0 };
+
+		// because JKA uses mp/ dir, why??? so pointless...
+		if (IniExists(va("maps/%s.mapInfo", currentMapName)))
+			sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+		else if (IniExists(va("maps/mp/%s.mapInfo", currentMapName)))
+			sprintf(mapname, "maps/mp/%s.mapInfo", currentMapName);
+		else
+			sprintf(mapname, "maps/%s.mapInfo", currentMapName);
+
+		//TREE_SCALE_MULTIPLIER = atof(IniRead(mapname, "TREES", "treeScaleMultiplier", va("%f", TREE_SCALE_MULTIPLIER)));
+
+		image_t *newImage = NULL;
+
+		if (r_foliage->integer && GRASS_ENABLED)
 		{
-			char mapname[256] = { 0 };
-
-			// because JKA uses mp/ dir, why??? so pointless...
-			if (IniExists(va("maps/%s.mapInfo", currentMapName)))
-				sprintf(mapname, "maps/%s.mapInfo", currentMapName);
-			else if (IniExists(va("maps/mp/%s.mapInfo", currentMapName)))
-				sprintf(mapname, "maps/mp/%s.mapInfo", currentMapName);
-			else
-				sprintf(mapname, "maps/%s.mapInfo", currentMapName);
-
-			//TREE_SCALE_MULTIPLIER = atof(IniRead(mapname, "TREES", "treeScaleMultiplier", va("%f", TREE_SCALE_MULTIPLIER)));
-
-			image_t *newImage = NULL;
-
 			for (int i = 0; i < 16; i++)
 			{
 				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -2496,7 +2515,10 @@ void R_LoadMapInfo(void)
 					newImage = NULL;
 				}
 			}
+		}
 
+		if (r_pebbles->integer && PEBBLES_ENABLED)
+		{
 			for (int i = 0; i < 4; i++)
 			{
 				newImage = R_FindImageFile(IniRead(mapname, "PEBBLES", va("pebblesImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -2509,35 +2531,42 @@ void R_LoadMapInfo(void)
 			}
 		}
 
-		//
-		// Make sure we have some valid grass/pebbles images, in case climate lookup failed...
-		//
-		for (int i = 0; i < 16; i++)
-		{
-			if (!tr.grassImage[i])
-			{
-				if (i <= 0)
-					tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-				else
-					tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-				if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+		if (r_foliage->integer && GRASS_ENABLED)
+		{
+			//
+			// Make sure we have some valid grass/pebbles images, in case climate lookup failed...
+			//
+			for (int i = 0; i < 16; i++)
+			{
+				if (!tr.grassImage[i])
+				{
+					if (i <= 0)
+						tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+					else
+						tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+					if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+				}
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				if (!tr.seaGrassImage[i])
+				{
+					tr.seaGrassImage[i] = R_FindImageFile("models/warzone/foliage/seagrass1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				}
 			}
 		}
 
-		for (int i = 0; i < 4; i++)
+		if (r_pebbles->integer && PEBBLES_ENABLED)
 		{
-			if (!tr.seaGrassImage[i])
+			for (int i = 0; i < 4; i++)
 			{
-				tr.seaGrassImage[i] = R_FindImageFile("models/warzone/foliage/seagrass1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-			}
-		}
-
-		for (int i = 0; i < 4; i++)
-		{
-			if (!tr.pebblesImage[i])
-			{
-				tr.pebblesImage[i] = R_FindImageFile(va("models/warzone/pebbles/mainpebbles%i", i), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				if (!tr.pebblesImage[i])
+				{
+					tr.pebblesImage[i] = R_FindImageFile(va("models/warzone/pebbles/mainpebbles%i", i), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				}
 			}
 		}
 	}
@@ -2546,11 +2575,11 @@ void R_LoadMapInfo(void)
 	if (!R_TextureFileExists(va("mapImage/%s.tga", currentMapName)))
 	{
 		R_CreateBspMapImage();
-		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.mapImage = R_FindImageFile(va("mapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 #endif
 
@@ -2558,11 +2587,11 @@ void R_LoadMapInfo(void)
 	if (!R_TextureFileExists(va("heightMapImage/%s.tga", currentMapName)))
 	{
 		R_CreateHeightMapImage();
-		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 #endif
 
@@ -2570,11 +2599,11 @@ void R_LoadMapInfo(void)
 	if (!R_TextureFileExists(va("foliageMapImage/%s.tga", currentMapName)))
 	{
 		R_CreateFoliageMapImage();
-		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 	else
 	{
-		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.foliageMapImage = R_FindImageFile(va("foliageMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 #endif
 }

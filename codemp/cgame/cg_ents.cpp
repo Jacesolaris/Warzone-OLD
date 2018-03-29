@@ -2161,27 +2161,6 @@ Ghoul2 Insert End
 
 		switch(item->giTag)
 		{
-		case WP_BLASTER:
-			cent->lerpOrigin[2] -= 12;
-			break;
-		case WP_DISRUPTOR:
-			cent->lerpOrigin[2] -= 13;
-			break;
-		case WP_BOWCASTER:
-			cent->lerpOrigin[2] -= 16;
-			break;
-		case WP_REPEATER:
-			cent->lerpOrigin[2] -= 12;
-			break;
-		case WP_DEMP2:
-			cent->lerpOrigin[2] -= 10;
-			break;
-		case WP_FLECHETTE:
-			cent->lerpOrigin[2] -= 6;
-			break;
-		case WP_ROCKET_LAUNCHER:
-			cent->lerpOrigin[2] -= 11;
-			break;
 		case WP_THERMAL:
 			cent->lerpOrigin[2] -= 12;
 			break;

@@ -82,11 +82,7 @@ qboolean NPC_EntityIsBreakable ( gentity_t *self, gentity_t *ent )
 
 		if ( (ent->flags & FL_DMG_BY_HEAVY_WEAP_ONLY) 
 			&& self->s.weapon != WP_SABER
-			&& self->s.weapon != WP_REPEATER
-			&& self->s.weapon != WP_ROCKET_LAUNCHER
-			&& self->s.weapon != WP_FLECHETTE
-			&& self->s.weapon != WP_THERMAL
-			&& self->s.weapon != WP_CONCUSSION )
+			&& self->s.weapon != WP_THERMAL )
 		{// Heavy weapons only... FIXME: Add new weapons???
 			return qfalse;
 		}
@@ -1597,7 +1593,7 @@ void ST_SelectBestWeapon( gentity_t *aiEnt )
 
 	if (!aiEnt->enemy) return;
 
-	NPC_ChangeWeapon(aiEnt, WP_BLASTER );
+	NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON );
 }
 
 void Commando2_SelectBestWeapon( gentity_t *aiEnt)
@@ -1608,24 +1604,19 @@ void Commando2_SelectBestWeapon( gentity_t *aiEnt)
 
 	if (!(aiEnt->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
 
-	if (aiEnt->client->ps.weapon != WP_DISRUPTOR 
+	/*if (aiEnt->client->ps.weapon != WP_DISRUPTOR 
 		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(700*700) )
 	{
-		NPC_ChangeWeapon(aiEnt, WP_DISRUPTOR );
+		NPC_ChangeWeapon(aiEnt, WP_SOME_SNIPER_WEAPON );
 	}
-	else if ( aiEnt->client->ps.weapon != WP_DEMP2 
-		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(500*500) )
-	{
-		NPC_ChangeWeapon(aiEnt, WP_DEMP2 );
-	}
-	else if (aiEnt->client->ps.weapon != WP_BLASTER 
+	else*/ if (aiEnt->client->ps.weapon != WP_MODULIZED_WEAPON 
 		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(300*300) )
 	{
 		NPC_ChangeWeapon(aiEnt, WP_THERMAL );
 	}
 	else
 	{
-		NPC_ChangeWeapon(aiEnt, WP_BLASTER );
+		NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON );
 	}
 }
 
@@ -1637,15 +1628,10 @@ void Sniper_SelectBestWeapon( gentity_t *aiEnt)
 
 	if (!aiEnt->enemy) return;
 
-	if (aiEnt->client->ps.weapon != WP_A280 
-		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(700*700) )
-	{
-		NPC_ChangeWeapon(aiEnt, WP_A280 );
-	}
-	else if ( aiEnt->client->ps.weapon != WP_BLASTER 
+	if ( aiEnt->client->ps.weapon != WP_MODULIZED_WEAPON 
 		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(300*300) )
 	{
-		NPC_ChangeWeapon(aiEnt, WP_BLASTER );
+		NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON );
 	}
 }
 
@@ -1657,15 +1643,15 @@ void Rocketer_SelectBestWeapon( gentity_t *aiEnt)
 
 	if (!aiEnt->enemy) return;
 
-	if ( aiEnt->client->ps.weapon != WP_ROCKET_LAUNCHER 
+	/*if ( aiEnt->client->ps.weapon != WP_ROCKET_LAUNCHER 
 		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(600*600) )
 	{
 		NPC_ChangeWeapon(aiEnt, WP_ROCKET_LAUNCHER );
 	}
-	else if ( aiEnt->client->ps.weapon != WP_BLASTER 
+	else*/ if ( aiEnt->client->ps.weapon != WP_MODULIZED_WEAPON 
 		&& DistanceSquared( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin )>(300*300) )
 	{
-		NPC_ChangeWeapon(aiEnt, WP_BLASTER );
+		NPC_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON );
 	}
 }
 
@@ -1934,7 +1920,7 @@ void NPC_RunBehavior( gentity_t *aiEnt, int team, int bState )
 				NPC_BehaviorSet_Sniper(aiEnt, bState );
 				return;
 			}
-			else if ( aiEnt->client->ps.weapon == WP_THERMAL || aiEnt->client->ps.weapon == WP_STUN_BATON )//FIXME: separate AI for melee fighters
+			else if ( aiEnt->client->ps.weapon == WP_THERMAL )//FIXME: separate AI for melee fighters
 			{//a grenadier
 				NPC_BehaviorSet_Grenadier(aiEnt, bState );
 				return;
@@ -2105,118 +2091,6 @@ void NPC_ExecuteBState ( gentity_t *self )//, int msec )
 			aiEnt->client->ps.weaponstate = WEAPON_IDLE;
 		}
 	}
-
-#ifndef __NPCS_USE_BG_ANIMS__
-	if (NPC_IsHumanoid(aiEnt))
-	{
-		if (!(aiEnt->client->pers.cmd.buttons & BUTTON_ATTACK) && aiEnt->attackDebounceTime > level.time)
-		{//We just shot but aren't still shooting, so hold the gun up for a while
-			if (aiEnt->client->ps.weapon == WP_SABER)
-			{//One-handed
-				NPC_SetAnim(aiEnt, SETANIM_TORSO, TORSO_WEAPONREADY1, SETANIM_FLAG_NORMAL);
-			}
-			else if (aiEnt->client->ps.weapon == WP_BRYAR_PISTOL)
-			{//Sniper pose
-				//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
-				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);
-			}
-			/*//FIXME: What's the proper solution here?
-			else
-			{//heavy weapon
-				NPC_SetAnim(NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
-			}
-			*/
-			else
-			{//we just shot at someone. Hold weapon in attack anim for now
-				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
-			}
-		}
-		else if (!TIMER_Done(aiEnt, "attackDelay"))
-		{
-			if (aiEnt->client->ps.weapon == WP_SABER)
-			{//One-handed
-				NPC_SetAnim(aiEnt, SETANIM_TORSO, TORSO_WEAPONREADY1, SETANIM_FLAG_NORMAL);
-			}
-			else
-			{//we just shot at someone. Hold weapon in attack anim for now
-				NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponAttackAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
-			}
-		}
-		else if (!aiEnt->enemy)//HACK!
-		{
-			//		if(client->ps.weapon != WP_TRICORDER)
-			{
-				if (aiEnt->s.torsoAnim == TORSO_WEAPONREADY1 || aiEnt->s.torsoAnim == TORSO_WEAPONREADY3)
-				{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-					//NPC_SetAnim(aiEnt,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
-					NPC_SetAnim(aiEnt, SETANIM_TORSO, WeaponReadyAnim[aiEnt->s.weapon], 0);//Stoiss not sure about this one here.. testing
-				}
-			}
-		}
-	}
-#endif //__NPCS_USE_BG_ANIMS__
-
-#if 0 // UQ1: This is run in npc_think instead...
-	NPC_CheckAttackHold();
-	NPC_ApplyScriptFlags();
-
-	//cliff and wall avoidance
-	NPC_AvoidWallsAndCliffs();
-
-	// run the bot through the server like it was a real client
-//=== Save the ucmd for the second no-think Pmove ============================
-	aiEnt->client->pers.cmd.serverTime = level.time - 50;
-	memcpy( &aiEnt->NPC->last_ucmd, &aiEnt->client->pers.cmd, sizeof( usercmd_t ) );
-	if ( !aiEnt->NPC->attackHoldTime )
-	{
-		aiEnt->NPC->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
-	}
-//============================================================================
-	NPC_CheckAttackScript();
-	NPC_KeepCurrentFacing();
-
-	if ( !aiEnt->next_roff_time || aiEnt->next_roff_time < level.time )
-	{//If we were following a roff, we don't do normal pmoves.
-		ClientThink( aiEnt->s.number, &aiEnt->client->pers.cmd );
-	}
-	else
-	{
-		NPC_ApplyRoff();
-	}
-
-	// end of thinking cleanup
-	aiEnt->NPC->touchedByPlayer = NULL;
-
-	NPC_CheckPlayerAim();
-	NPC_CheckAllClear();
-#endif //0
-	/*if( ucmd.forwardmove || ucmd.rightmove )
-	{
-		int	i, la = -1, ta = -1;
-
-		for(i = 0; i < MAX_ANIMATIONS; i++)
-		{
-			if( NPC->client->ps.legsAnim == i )
-			{
-				la = i;
-			}
-
-			if( NPC->client->ps.torsoAnim == i )
-			{
-				ta = i;
-			}
-
-			if(la != -1 && ta != -1)
-			{
-				break;
-			}
-		}
-
-		if(la != -1 && ta != -1)
-		{//FIXME: should never play same frame twice or restart an anim before finishing it
-			Com_Printf("LegsAnim: %s(%d) TorsoAnim: %s(%d)\n", animTable[la].name, NPC->renderInfo.legsFrame, animTable[ta].name, NPC->client->renderInfo.torsoFrame);
-		}
-	}*/
 }
 
 void NPC_CheckInSolid( gentity_t *aiEnt )

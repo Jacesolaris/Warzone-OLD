@@ -2835,7 +2835,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_AddAtmosphericEffects();  	// Add rain/snow etc.
 	}
 
-	if (!drawingSniperScopeView)
+	if (!drawingSniperScopeView && cg.predictedPlayerState.weapon != WP_MODULIZED_WEAPON)
 	{
 		CG_AddViewWeapon( &cg.predictedPlayerState );
 		//RenderGenericWeaponView();

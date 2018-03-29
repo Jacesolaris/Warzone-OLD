@@ -3107,7 +3107,7 @@ image_t *R_UploadSkyCube(const char *name, int width, int height)
 	finalOrderImages[4] = skyImagesData[2];
 	finalOrderImages[5] = skyImagesData[3];
 
-	image_t *cubeImage = R_CreateCubemapFromImageDatas(name, finalOrderImages, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, 0);
+	image_t *cubeImage = R_CreateCubemapFromImageDatas(name, finalOrderImages, width, height, IMGTYPE_COLORALPHA, /*IMGFLAG_NO_COMPRESSION |*/ IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, 0);
 
 	for (i = 0; i < 6; i++)
 	{
@@ -5493,7 +5493,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			char splatName[MAX_IMAGE_PATH];
 			char splatName2[MAX_IMAGE_PATH];
 			image_t *splatImg = NULL;
-			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
 
 			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
 			StripCrap( splatName, splatName2, sizeof(splatName));

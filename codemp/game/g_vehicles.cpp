@@ -1131,9 +1131,9 @@ qboolean Initialize( Vehicle_t *pVeh )
 	pVeh->m_iDroidUnitTag = -1;
 
 	//initialize to blaster, just since it's a basic weapon and there's no lightsaber crap...?
-	parent->client->ps.weapon = WP_BLASTER;
+	parent->client->ps.weapon = WP_MODULIZED_WEAPON;
 	parent->client->ps.weaponstate = WEAPON_READY;
-	parent->client->ps.temporaryWeapon = WP_BLASTER;
+	parent->client->ps.temporaryWeapon = WP_MODULIZED_WEAPON;
 
 	//Initialize to landed (wings closed, gears down) animation
 	{

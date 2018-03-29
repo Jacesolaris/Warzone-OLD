@@ -76,11 +76,11 @@ void G_ReflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	{//you are mine, now!
 		missile->r.ownerNum = ent->s.number;
 	}
-	if (missile->s.weapon == WP_ROCKET_LAUNCHER)
+	/*if (missile->s.weapon == WP_ROCKET_LAUNCHER)
 	{//stop homing
 		missile->think = 0;
 		missile->nextthink = 0;
-	}
+	}*/
 }
 
 void G_DeflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
@@ -121,11 +121,11 @@ void G_DeflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	{//you are mine, now!
 		missile->r.ownerNum = ent->s.number;
 	}
-	if (missile->s.weapon == WP_ROCKET_LAUNCHER)
+	/*if (missile->s.weapon == WP_ROCKET_LAUNCHER)
 	{//stop homing
 		missile->think = 0;
 		missile->nextthink = 0;
-	}
+	}*/
 }
 
 /*
@@ -188,10 +188,6 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace, qboolean HIT_TREE ) {
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
 	}
 	else if (ent->s.weapon == WP_FRAG_GRENADE)
-	{ //slight hack for hit sound
-		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
-	}
-	else if (ent->s.weapon == WP_FRAG_GRENADE_OLD)
 	{ //slight hack for hit sound
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
 	}
@@ -343,16 +339,7 @@ void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 	//FIXME: have an EV_BOUNCE_MISSILE event that checks the s.weapon and does the appropriate effect
 	switch( ent->s.weapon )
 	{
-	case WP_BOWCASTER:
-		G_PlayEffectID( G_EffectIndex("bowcaster/deflect"), ent->r.currentOrigin, dir );
-		break;
-
-	//EFX Bounce impact code
-	/*case WP_DC_17_CLONE_PISTOL:
-		G_PlayEffectID(G_EffectIndex("clone_pistol_1/wall_bounce_enhanced2"), ent->r.currentOrigin, dir);
-		break;*/
-	case WP_BLASTER:
-	case WP_BRYAR_PISTOL:
+	case WP_MODULIZED_WEAPON:
 		G_PlayEffectID( G_EffectIndex("blaster/deflect"), ent->r.currentOrigin, dir );
 		break;
 	default:
@@ -393,18 +380,10 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		if ((ent->bounceCount > 0 || ent->bounceCount == -5) &&
 			(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
 		{
-			if (ent->s.weapon == WP_BOWCASTER 
-				/*|| ent->s.weapon == WP_DC_17_CLONE_PISTOL*/)
-			{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
-				G_BounceMissile(ent, trace, HIT_TREE);
-				return;
-			}
-			else
-			{ // grenades would be handled by this.
-				G_BounceMissile(ent, trace, HIT_TREE);
-				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
-				return;
-			}
+			// grenades would be handled by this.
+			G_BounceMissile(ent, trace, HIT_TREE);
+			G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+			return;
 		}
 		else if (ent->neverFree && ent->s.weapon == WP_SABER && (ent->flags & FL_BOUNCE_HALF))
 		{ //this is a knocked-away saber
@@ -443,32 +422,10 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		(ent->bounceCount > 0 || ent->bounceCount == -5) &&
 		(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
 	{
-		if (ent->s.weapon == WP_BOWCASTER 
-			/*|| ent->s.weapon == WP_DC_17_CLONE_PISTOL*/)
-		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
-			if (!(trace->surfaceFlags & SURF_FORCEFIELD))
-			{
-				G_BounceMissile(ent, trace, HIT_TREE);
-
-				if (trace->surfaceFlags & SURF_METALSTEPS)
-					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE_METAL, DirToByte(trace->plane.normal));
-				else if (ent->s.weapon != G2_MODEL_PART) //dismemberment
-					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE, DirToByte(trace->plane.normal));
-				return;
-			}
-			else
-			{ //hit effects on forcefields.
-				G_BounceMissile(ent, trace, HIT_TREE);
-				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
-				return;
-			}
-		}
-		else
-		{ // grenades would be handled by this.
-			G_BounceMissile(ent, trace, HIT_TREE);
-			G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
-			return;
-		}
+		// grenades would be handled by this.
+		G_BounceMissile(ent, trace, HIT_TREE);
+		G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+		return;
 	}
 	else if (ent->neverFree && ent->s.weapon == WP_SABER && (ent->flags & FL_BOUNCE_HALF))
 	{ //this is a knocked-away saber
@@ -548,14 +505,11 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	}
 
 	if ((other->flags & FL_SHIELDED) &&
-		ent->s.weapon != WP_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
-		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 		ent->s.weapon != WP_CYROBAN_GRENADE &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
-		ent->s.weapon != WP_DEMP2 &&
 		ent->s.weapon != WP_EMPLACED_GUN &&
 		ent->methodOfDeath != MOD_REPEATER_ALT &&
 		ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH &&
@@ -582,14 +536,11 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	}
 
 	if (other->takedamage && other->client &&
-		ent->s.weapon != WP_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
-		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 		ent->s.weapon != WP_CYROBAN_GRENADE &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
-		ent->s.weapon != WP_DEMP2 &&
 		ent->methodOfDeath != MOD_REPEATER_ALT &&
 		ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH &&
 		ent->methodOfDeath != MOD_CONC &&
@@ -657,14 +608,11 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		gentity_t *otherOwner = &g_entities[other->r.ownerNum];
 
 		if (otherOwner->takedamage && otherOwner->client &&
-			ent->s.weapon != WP_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_FRAG_GRENADE &&
-			ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 			ent->s.weapon != WP_CYROBAN_GRENADE &&
 			ent->s.weapon != WP_THERMAL &&
 			ent->s.weapon != WP_TRIP_MINE &&
 			ent->s.weapon != WP_DET_PACK &&
-			ent->s.weapon != WP_DEMP2 &&
 			ent->methodOfDeath != MOD_REPEATER_ALT &&
 			ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH &&
 			ent->methodOfDeath != MOD_CONC &&
@@ -768,62 +716,23 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 			{
 				JKG_DoDamage(thermalDetDamageSettings, other, ent, g_entities + ent->r.ownerNum,
 					velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
+				didDmg = qtrue;
 			}
 			else
 			{
 				G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity, ent->r.currentOrigin, ent->damage, 0, ent->methodOfDeath);
+				didDmg = qtrue;
 			}
 			
 			if (ent->s.weapon == WP_CYROBAN_GRENADE && (ent->s.eFlags & EF_FIRING))
 			{
 				JKG_DoDamage(GrenadeCryoBanDamageSettings, other, ent, g_entities + ent->r.ownerNum,
 					velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
+				didDmg = qtrue;
 			}
 			else
 			{
 				G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity, ent->r.currentOrigin, ent->damage, 0, ent->methodOfDeath);
-			}
-		
-			if (ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_FLECHETTE || ent->s.weapon == WP_ROCKET_LAUNCHER)
-
-			{
-				if (ent->s.weapon == WP_FLECHETTE && (ent->s.eFlags & EF_ALT_FIRING))
-				{
-					/* fix: there are rare situations where flechette did
-					explode by timeout AND by impact in the very same frame, then here
-					ent->think was set to G_FreeEntity, so the folowing think
-					did invalidate this entity, BUT it would be reused later in this
-					function for explosion event. This, then, would set ent->freeAfterEvent
-					to qtrue, so event later, when reusing this entity by using G_InitEntity(),
-					it would have this freeAfterEvent set AND this would in case of dropped
-					item erase it from game immeadiately. THIS for example caused
-					very rare flag dissappearing bug.	 */
-					if (ent->think == WP_flechette_alt_blow)
-						ent->think(ent);
-				}
-				/*else if (ent->s.weapon == WP_THERMAL && (ent->s.eFlags & EF_FIRING))
-				{
-					JKG_DoDamage(thermalDetDamageSettings, other, ent, g_entities + ent->r.ownerNum,
-						velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
-				}
-				else if (ent->s.weapon == WP_CYROBAN_GRENADE && (ent->s.eFlags & EF_FIRING))
-				{
-					JKG_DoDamage(GrenadeCryoBanDamageSettings, other, ent, g_entities + ent->r.ownerNum,
-						velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
-				}*/
-				else
-				{
-					G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity,
-						/*ent->s.origin*/ent->r.currentOrigin, ent->damage,
-						DAMAGE_HALF_ABSORB, ent->methodOfDeath);
-					didDmg = qtrue;
-				}
-			}
-			else
-			{
-				G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity,
-					/*ent->s.origin*/ent->r.currentOrigin, ent->damage,
-					0, ent->methodOfDeath);
 				didDmg = qtrue;
 			}
 
@@ -848,7 +757,8 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 			}
 		}
 
-		if (ent->s.weapon == WP_DEMP2)
+#if 0
+		if (ent->s.weapon == WP_UNCLOAKER)
 		{//a hit with demp2 decloaks people, disables ships
 			if (other && other->client && other->client->NPC_class == CLASS_VEHICLE)
 			{//hit a vehicle
@@ -889,6 +799,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 				}
 			}
 		}
+#endif
 	}
 killProj:
 	// is it cheaper in bandwidth to just remove this ent and create a new

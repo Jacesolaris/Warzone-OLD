@@ -34,7 +34,7 @@ void NPC_Mark2_Precache( void )
 	G_EffectIndex( "bryar/muzzle_flash" );
 
 #ifndef __MMO__
-	RegisterItem( BG_FindItemForWeapon( WP_BRYAR_PISTOL ));
+	RegisterItem( BG_FindItemForWeapon(WP_MODULIZED_WEAPON));
 	RegisterItem( BG_FindItemForAmmo( 	AMMO_METAL_BOLTS));
 	RegisterItem( BG_FindItemForAmmo( AMMO_POWERCELL ));
 	RegisterItem( BG_FindItemForAmmo( AMMO_BLASTER ));
@@ -168,7 +168,7 @@ void Mark2_FireBlaster(gentity_t *aiEnt, qboolean advance)
 	missile = CreateMissile( muzzle1, forward, 1600, 10000, aiEnt, qfalse );
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_MODULIZED_WEAPON;
 
 	missile->damage = 1;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;

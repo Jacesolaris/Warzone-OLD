@@ -31,10 +31,6 @@ void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *
 		{
 			PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
-		else
-		{
-			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-		}
 	}
 
 	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
@@ -54,11 +50,7 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.demp2WallImpactEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -85,10 +77,6 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	{// This should never be possible, but just in case, fall back to concussion here.
-		PlayEffectID(cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse);
-	}
 }
 
 /*
@@ -104,11 +92,7 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_WallBouncefx;
 
 	if (!fx) {
-		// If there is no primary (WallBounceEffectFX) fx. Use original blaster fx.
-		fx = cgs.effects.demp2WallBounceEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -135,10 +119,6 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	{// This should never be possible, but just in case, fall back to concussion here.
-		PlayEffectID(cgs.effects.demp2WallBounceEffect, origin, normal, -1, -1, qfalse);
-	}
 }
 
 
@@ -156,11 +136,7 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.blasterFleshImpactEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -187,9 +163,6 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-		PlayEffectID(cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse);
-
 }
 
 /*
@@ -221,10 +194,6 @@ void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 		{
 			PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
-		else
-		{
-			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-		}
 	}
 
 	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
@@ -253,10 +222,6 @@ void FX_DEMP2_AltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 		{
 			PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
-		else
-		{
-			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-		}
 	}
 
 	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
@@ -275,11 +240,7 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.demp2WallImpactEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -306,24 +267,7 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	{// This should never be possible, but just in case, fall back to concussion here.
-		PlayEffectID(
-			CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2EnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
-	}
 }
-
-//void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
-//{
-//	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-//	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
-//
-//	if (fx)
-//		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-//	else
-//		PlayEffectID(
-//		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2EnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
-//}
 
 /*
 ---------------------------
@@ -338,11 +282,7 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
-		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.demp2WallImpactEffect;
-
-		// If falling back to normal concussion fx, we have no enhanced.
-		fx2 = fx; // Force normal fx.
+		return;
 	}
 
 	if (altFire) {
@@ -369,8 +309,6 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
-	else
-	PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
 /*
 ---------------------------

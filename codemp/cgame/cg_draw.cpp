@@ -5369,8 +5369,7 @@ float CG_DrawRadar(float y)
 				break;
 
 			case ET_MISSILE:
-				if ( //cent->currentState.weapon == WP_ROCKET_LAUNCHER &&//a rocket
-					cent->currentState.owner > MAX_CLIENTS //belongs to an NPC
+				if ( cent->currentState.owner > MAX_CLIENTS //belongs to an NPC
 					&& cg_entities[cent->currentState.owner].currentState.NPC_class == CLASS_VEHICLE )
 				{//a rocket belonging to an NPC, FIXME: only tracking rockets!
 					float  x;
@@ -8875,16 +8874,6 @@ static void CG_ScanForCrosshairEntity( void ) {
 	if ( cg_dynamicCrosshair.integer )
 	{
 		vec3_t d_f, d_rt, d_up;
-		/*
-		if ( cg.snap->ps.weapon == WP_NONE ||
-			cg.snap->ps.weapon == WP_SABER ||
-			cg.snap->ps.weapon == WP_STUN_BATON)
-		{
-			VectorCopy( cg.refdef.vieworg, start );
-			AngleVectors( cg.refdef.viewangles, d_f, d_rt, d_up );
-		}
-		else
-		*/
 		//For now we still want to draw the crosshair in relation to the player's world coordinates
 		//even if we have a melee weapon/no weapon.
 		if ( cg.predictedPlayerState.m_iVehicleNum && (cg.predictedPlayerState.eFlags&EF_NODRAW) )

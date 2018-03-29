@@ -1,7 +1,7 @@
-uniform sampler2D	u_DiffuseMap;
+uniform sampler2D	u_DiffuseMap; // screen/texture map
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
-uniform sampler2D	u_SpecularMap;
+uniform sampler2D	u_SpecularMap; // color random image
 
 uniform vec4		u_ViewInfo;
 uniform vec2		u_Dimensions;
@@ -18,191 +18,113 @@ uniform float		u_Time;
 
 varying vec2		var_TexCoords;
 
+//
+// Drawing effect...
+//
 
+#define Res0 u_Dimensions//textureSize(iChannel0,0)
+#define Res1 vec2(2048.0)//textureSize(iChannel1,0)
 
+#define Time u_Time
 
-//vec3				offset = vec3(0.0001, 0.0001, 0.0001);
-const vec3			offset = vec3(0.0, 0.0, 0.0);
-//#define				offset u_Local0.gba
-
-
-
-#define eyePos		(u_ViewOrigin.xzy / 64.0)
-#define sundir		normalize((u_PrimaryLightOrigin.xzy / 64.0) - eyePos)
-#define suncolor	u_PrimaryLightColor
-
-
-const float noiseScale = 1. / float(2.0);
-//float noiseScale = 1. / float(u_Local0.r);
-/*const*/ float fogBottom = float(u_Local1.g) / 64.0;
-/*const*/ float fogHeight = float(fogBottom) + float(u_Local1.b / 64.0);
-/*const*/ float fadeAltitude = float(fogBottom) + float(u_Local1.a / 64.0);
-/*const*/ float fogThicknessInv = 1. / (fogHeight - fogBottom);
-const vec3 fogColor   = vec3(1.0, 1.0, 1.0);
-/*const*/ float opacity = float(u_Local1.r/*0.5*/);
-
-const float sunPenetrationDepth = float(0.5); 
-const float sunDiffuseStrength = float(6.0);
-const float noiseTexSizeInv = 1.0 / 2048.0;
-const float noiseCloudness = float(0.35); // TODO: configurable
-
-
-vec2 fvTexelSize = vec2(1.0) / u_Dimensions.xy;
-
-// 'threshold ' is constant , 'value ' is smoothly varying
-float aastep ( float threshold , float value )
+vec4 getRand(vec2 pos)
 {
-	float afwidth = 0.7 * length ( vec2 ( dFdx ( value ) , dFdy ( value ))) ;
-	// GLSL 's fwidth ( value ) is abs ( dFdx ( value )) + abs ( dFdy ( value ))
-	return smoothstep ( threshold - afwidth , threshold + afwidth , value ) ;
+	return textureLod(u_SpecularMap, pos / Res1 / Res0.y*1080., 0.0);
 }
 
-	/*const*/ vec3 vAA = vec3(-300000.0, fogBottom, -300000.0);
-	/*const*/ vec3 vBB = vec3( 300000.0, fogHeight,  300000.0);
-
-
-const float sunSpecularExponent = float(100.0);
-
-float noise(in vec3 x)
+vec4 getCol(vec2 pos)
 {
-	vec3 p = floor(x);
-	vec3 f = fract(x);
-	f = f*f*(3.0-2.0*f);
-	vec2 uv = (p.xz + vec2(37.0,17.0)*p.y) + f.xz;
-	vec2 rg = texture2D( u_SpecularMap, (uv + 0.5) * noiseTexSizeInv).yx;
-	return smoothstep(0.5 - noiseCloudness, 0.5 + noiseCloudness, mix( rg.x, rg.y, f.y ));
+	// take aspect ratio into account
+	vec2 uv = ((pos - Res0.xy*.5) / Res0.y*Res0.y) / Res0.xy + .5;
+	vec4 c1 = texture(u_DiffuseMap, uv);
+	vec4 e = smoothstep(vec4(-0.05), vec4(-0.0), vec4(uv, vec2(1) - uv));
+	c1 = mix(vec4(1, 1, 1, 0), c1, e.x*e.y*e.z*e.w);
+	float d = clamp(dot(c1.xyz, vec3(-.5, 1., -.5)), 0.0, 1.0);
+	vec4 c2 = vec4(.7);
+	return min(mix(c1, c2, 1.8*d), .7);
 }
 
-
-struct Ray {
-	vec3 Origin;
-	vec3 Dir;
-};
-
-struct AABB {
-	vec3 Min;
-	vec3 Max;
-};
-
-bool IntersectBox(in Ray r, in AABB aabb, out float t0, out float t1)
+vec4 getColHT(vec2 pos)
 {
-	vec3 invR = 1.0 / r.Dir;
-	vec3 tbot = invR * (aabb.Min - r.Origin);
-	vec3 ttop = invR * (aabb.Max - r.Origin);
-	vec3 tmin = min(ttop, tbot);
-	vec3 tmax = max(ttop, tbot);
-	vec2 t = max(tmin.xx, tmin.yz);
-	t0 = max(0.,max(t.x, t.y));
-	t  = min(tmax.xx, tmax.yz);
-	t1 = min(t.x, t.y);
-	//return (t0 <= t1) && (t1 >= 0.);
-	return (abs(t0) <= t1);
+	return smoothstep(.95, 1.05, getCol(pos)*.8 + .2 + getRand(pos*.7));
 }
 
-
-const mat3 m = mat3( 0.00,  0.80,  0.60,
-                    -0.80,  0.36, -0.48,
-                    -0.60, -0.48,  0.64 ) * 2.02;
-
-float MapClouds(in vec3 p)
+float getVal(vec2 pos)
 {
-	float factor = 1.0-smoothstep(fadeAltitude,fogHeight,p.y);
-
-	p += offset;
-	p *= noiseScale;
-	p += u_Time * 0.07;
-
-	float f = noise( p );
-	p = m*p - u_Time * 0.3;
-	f += 0.25 * noise( p );
-	p = m*p - u_Time * 0.07;
-	f += 0.1250 * noise( p );
-	p = m*p + u_Time * 0.8;
-	f += 0.0625 * noise( p );
-
-    f = mix(0.0,f,factor);
-
-	return f;
+	vec4 c = getCol(pos);
+	return pow(dot(c.xyz, vec3(.333)), 1.)*1.;
 }
 
-
-vec4 RaymarchClouds(in vec3 start, in vec3 end)
+vec2 getGrad(vec2 pos, float eps)
 {
-	float l = length(end - start);
-	const float numsteps = 5.0;//20.0;
-	//float numsteps = u_Local0.r;
-	const float tstep = 1. / numsteps;
-	float depth = min(l * fogThicknessInv, 1.5);
+	vec2 d = vec2(eps, 0);
+	return vec2(
+		getVal(pos + d.xy) - getVal(pos - d.xy),
+		getVal(pos + d.yx) - getVal(pos - d.yx)
+	) / eps / 2.;
+}
 
-	float fogContrib = 0.;
-	float sunContrib = 0.;
-	float alpha = 0.;
+#define AngleNum 3
 
-	for (float t=0.0; t<=1.0; t+=tstep) {
-		vec3  pos = mix(start, end, t);
-		float fog = MapClouds(pos);
-		fogContrib += fog;
+#define SampNum 6//int(u_Local0.r)//16
+#define PI2 6.28318530717959
 
-		vec3  lightPos = sundir * sunPenetrationDepth + pos;
-		float lightFog = MapClouds(lightPos);
-		float sunVisibility = clamp((fog - lightFog), 0.0, 1.0 ) * sunDiffuseStrength;
-		sunContrib += sunVisibility;
+void Drawing(out vec4 fragColor, in vec2 fragCoord)
+{
+	vec2 pos = fragCoord + 4.0*sin(Time*1.*vec2(1, 1.7))*Res0.y / 400.;
+	vec3 col = vec3(0);
+	vec3 col2 = vec3(0);
+	float sum = 0.;
+	for (int i = 0; i<AngleNum; i++)
+	{
+		float ang = PI2 / float(AngleNum)*(float(i) + .8);
+		vec2 v = vec2(cos(ang), sin(ang));
+		for (int j = 0; j<SampNum; j++)
+		{
+			vec2 dpos = v.yx*vec2(1, -1)*float(j)*Res0.y / 400.;
+			vec2 dpos2 = v.xy*float(j*j) / float(SampNum)*.5*Res0.y / 400.;
+			vec2 g;
+			float fact;
+			float fact2;
 
-		float b = smoothstep(1.0, 0.7, abs((t - 0.5) * 2.0));
-		alpha += b;
+			for (float s = -1.; s <= 1.; s += 2.)
+			{
+				vec2 pos2 = pos + s*dpos + dpos2;
+				vec2 pos3 = pos + (s*dpos + dpos2).yx*vec2(1, -1)*2.;
+				g = getGrad(pos2, .4);
+				fact = dot(g, v) - .5*abs(dot(g, v.yx*vec2(1, -1)))/**(1.-getVal(pos2))*/;
+				fact2 = dot(normalize(g + vec2(.0001)), v.yx*vec2(1, -1));
+
+				fact = clamp(fact, 0., .05);
+				fact2 = abs(fact2);
+
+				fact *= 1. - float(j) / float(SampNum);
+				col += fact;
+				col2 += fact2*getColHT(pos3).xyz;
+				sum += fact2;
+			}
+		}
 	}
+	col /= float(SampNum*AngleNum)*.75 / sqrt(Res0.y);
+	col2 /= sum;
+	col.x *= (.6 + .8*getRand(pos*.7).x);
+	col.x = 1. - col.x;
+	col.x *= col.x*col.x;
 
-	fogContrib *= tstep;
-	sunContrib *= tstep;
-	alpha      *= tstep * opacity * depth;
+	float r = length(pos - Res0.xy*.5) / Res0.x;
+	float vign = 1. - r*r*r;
 
-	vec3 ndir = (end - start) / l;
-	float sun = pow( clamp( dot(sundir, ndir), 0.0, 1.0 ), sunSpecularExponent );
-	sunContrib += sun * clamp(1. - fogContrib * alpha, 0.2, 1.) * 1.0;
+	fragColor = vec4(vec3(col.x*col2*vign), 1.0);
 
-	vec4 col;
-	col.rgb = sunContrib * suncolor + fogColor;
-	col.a   = fogContrib * alpha;
-	return col;
+	//vec2 s=sin(pos.xy*.1/sqrt(Res0.y/400.));
+	//vec3 karo=vec3(1);
+	//karo-=.5*vec3(.25,.1,.1)*dot(exp(-s*s*80.),vec2(1));
+	//fragColor = vec4(vec3(col.x*col2*karo*vign),1);
 }
 
-vec3 GetWorldPos ( vec2 screenpos )
-{
-	return textureLod(u_PositionMap, screenpos, 0.0).xzy / 64.0;
-}
 
 void main()
 {
-	vec4 color = texture(u_DiffuseMap, var_TexCoords);
-
-	// reconstruct worldpos from depthbuffer
-	vec3 worldPos = GetWorldPos(var_TexCoords);
-
-	// clamp ray in boundary box
-	Ray r;
-	r.Origin = eyePos;
-	r.Dir = worldPos - eyePos;
-	AABB box;
-	box.Min = vAA;
-	box.Max = vBB;
-	float t1, t2;
-	
-	// TODO: find a way to do this when eye is inside volume
-	if (!IntersectBox(r, box, t1, t2)) {
-		gl_FragColor = color;
-		return;
-	}
-	t1 = clamp(t1, 0.0, 1.0);
-	t2 = clamp(t2, 0.0, 1.0);
-	vec3 startPos = r.Dir * t1 + r.Origin;
-	vec3 endPos   = r.Dir * t2 + r.Origin;
-
-	// finally raymarch the volume
-	vec4 fogColor = RaymarchClouds(startPos, endPos);
-	gl_FragColor.rgb = mix(color.rgb, fogColor.rgb, pow(fogColor.a, 3.0));
-	gl_FragColor.a = 1.0;
-
-	// blend with distance to make endless fog have smooth horizon
-	//gl_FragColor.a *= smoothstep(gl_Fog.end * 10.0, gl_Fog.start, length(worldPos - eyePos));
+	Drawing(gl_FragColor, var_TexCoords * Res0);
 }
 

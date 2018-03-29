@@ -1511,14 +1511,12 @@ static void ST_CheckFireState(gentity_t *aiEnt)
 				distThreshold = 16384/*128*128*/;//default
 				switch ( aiEnt->s.weapon )
 				{
-				case WP_ROCKET_LAUNCHER:
-				case WP_FLECHETTE:
 				case WP_THERMAL:
 				case WP_TRIP_MINE:
 				case WP_DET_PACK:
 					distThreshold = 65536/*256*256*/;
 					break;
-				case WP_REPEATER:
+				case WP_MODULIZED_WEAPON:
 					if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
 					{
 						distThreshold = 65536/*256*256*/;
@@ -1541,14 +1539,11 @@ static void ST_CheckFireState(gentity_t *aiEnt)
 					distThreshold = 65536/*256*256*/;//default
 					switch ( aiEnt->s.weapon )
 					{
-					case WP_ROCKET_LAUNCHER:
-					case WP_FLECHETTE:
-					case WP_THERMAL:
 					case WP_TRIP_MINE:
 					case WP_DET_PACK:
 						distThreshold = 262144/*512*512*/;
 						break;
-					case WP_REPEATER:
+					case WP_MODULIZED_WEAPON:
 						if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
 						{
 							distThreshold = 262144/*512*512*/;
@@ -2002,7 +1997,7 @@ void ST_Commander(gentity_t *aiEnt)
 					}
 					break;
 				default:
-				case WP_BLASTER:
+				case WP_MODULIZED_WEAPON:
 					cpFlags |= (CP_COVER);
 					break;
 				}
@@ -2019,14 +2014,14 @@ void ST_Commander(gentity_t *aiEnt)
 			{//not hit, see if there are other reasons we should run
 				if ( trap->InPVS( aiEnt->r.currentOrigin, group->enemy->r.currentOrigin ) )
 				{//in the same room as enemy
-					if ( aiEnt->client->ps.weapon == WP_ROCKET_LAUNCHER &&
+					/*if ( aiEnt->client->ps.weapon == WP_ROCKET_LAUNCHER &&
 						DistanceSquared( group->enemy->r.currentOrigin, aiEnt->r.currentOrigin ) < MIN_ROCKET_DIST_SQUARED &&
 						aiEnt->NPC->squadState != SQUAD_TRANSITION )
 					{//too close for me to fire my weapon and I'm not already on the move
 						cpFlags |= (CP_AVOID_ENEMY|CP_CLEAR|CP_AVOID);
 						avoidDist = 256;
 					}
-					else
+					else*/
 					{
 						switch( group->enemy->client->ps.weapon )
 						{
@@ -2556,16 +2551,16 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 		enemyInFOV = qtrue;
 	}
 
-	if ( enemyDist < MIN_ROCKET_DIST_SQUARED )//128
+	/*if ( enemyDist < MIN_ROCKET_DIST_SQUARED )//128
 	{//enemy within 128
-		if ( (aiEnt->client->ps.weapon == WP_FLECHETTE || aiEnt->client->ps.weapon == WP_REPEATER) &&
+		if ( (aiEnt->client->ps.weapon == WP_CLOSE_RANGE_WEAPONS) &&
 			(aiEnt->NPC->scriptFlags & SCF_ALT_FIRE) )
 		{//shooting an explosive, but enemy too close, switch to primary fire
 			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
 			//FIXME: we can never go back to alt-fire this way since, after this, we don't know if we were initially supposed to use alt-fire or not...
 		}
 	}
-	else if ( enemyDist > 65536 )//256 squared
+	else*/ if ( enemyDist > 65536 )//256 squared
 	{
 		if (WeaponIsSniperCharge(aiEnt->client->ps.weapon))
 		{//sniping... should be assumed
@@ -2594,13 +2589,7 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 		}
 		else
 		{//can we shoot our target?
-			if ( (aiEnt->client->ps.weapon == WP_ROCKET_LAUNCHER || (aiEnt->client->ps.weapon == WP_FLECHETTE && (aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))) && enemyDist < MIN_ROCKET_DIST_SQUARED )//128*128
-			{
-				enemyCS = qfalse;//not true, but should stop us from firing
-				hitAlly = qtrue;//us!
-				//FIXME: if too close, run away!
-			}
-			else if ( enemyInFOV )
+			if ( enemyInFOV )
 			{//if enemy is FOV, go ahead and check for shooting
 				int hit = NPC_ShotEntity(aiEnt, aiEnt->enemy, impactPos );
 				gentity_t *hitEnt = &g_entities[hit];
@@ -2676,10 +2665,10 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 		}
 	}
 
-	if ( aiEnt->client->ps.weaponTime > 0 && aiEnt->s.weapon == WP_ROCKET_LAUNCHER )
+	/*if ( aiEnt->client->ps.weaponTime > 0 && aiEnt->s.weapon == WP_ROCKET_LAUNCHER )
 	{
 		move = qfalse;
-	}
+	}*/
 
 	if ( move )
 	{//move toward goal
@@ -2743,7 +2732,7 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 	//FIXME: don't shoot right away!
 	if ( aiEnt->client->ps.weaponTime > 0 )
 	{
-		if ( aiEnt->s.weapon == WP_ROCKET_LAUNCHER )
+		/*if ( aiEnt->s.weapon == WP_ROCKET_LAUNCHER )
 		{
 			if ( !enemyLOS || !enemyCS )
 			{//cancel it
@@ -2753,7 +2742,7 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 			{//delay our next attempt
 				TIMER_Set( aiEnt, "attackDelay", Q_irand( 3000, 5000 ) );
 			}
-		}
+		}*/
 	}
 	else if ( shoot )
 	{//try to shoot if it's time
@@ -2763,8 +2752,7 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 			{
 				WeaponThink(aiEnt, qtrue );
 			}
-			//NASTY
-			if ( aiEnt->s.weapon == WP_ROCKET_LAUNCHER
+			/*if ( aiEnt->s.weapon == WP_ROCKET_LAUNCHER
 				&& (aiEnt->client->pers.cmd.buttons&BUTTON_ATTACK)
 				&& !move
 				&& g_npcspskill.integer > 1
@@ -2773,7 +2761,7 @@ void NPC_BSST_Attack(gentity_t *aiEnt)
 				aiEnt->client->pers.cmd.buttons &= ~BUTTON_ATTACK;
 				aiEnt->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 				aiEnt->client->ps.weaponTime = Q_irand( 1000, 2500 );
-			}
+			}*/
 		}
 	}
 }

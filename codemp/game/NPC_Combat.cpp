@@ -126,207 +126,6 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 		AngleVectors( self->client->renderInfo.eyeAngles, fwd, NULL, NULL );
 		//dir[2] = fwd[2] = 0;//ignore z diff?
 
-#ifdef __OLD_WEAPON_TIMING__
-		attDelay = (4-g_npcspskill.integer)*500;//initial: from 1000ms delay on hard to 2000ms delay on easy
-		if ( self->client->playerTeam == NPCTEAM_PLAYER )
-		{//invert
-			attDelay = 2000-attDelay;
-		}
-		attDelay += floor( (DotProduct( fwd, dir )+1.0f) * 2000.0f );//add up to 4000ms delay if they're facing away
-
-
-		//FIXME: should distance matter, too?
-
-		//Now modify the delay based on NPC_class, weapon, and team
-		//NOTE: attDelay should be somewhere between 1000 to 6000 milliseconds
-		switch ( self->client->NPC_class )
-		{
-		case CLASS_IMPERIAL://they give orders and hang back
-			attDelay += Q_irand( 500, 1500 );
-			break;
-		case CLASS_STORMTROOPER://stormtroopers shoot sooner
-			if ( self->NPC->rank >= RANK_LT )
-			{//officers shoot even sooner
-				attDelay -= Q_irand( 500, 1500 );
-			}
-			else
-			{//normal stormtroopers don't have as fast reflexes as officers
-				attDelay -= Q_irand( 0, 1000 );
-			}
-			break;
-		case CLASS_SWAMPTROOPER://shoot very quickly?  What about guys in water?
-			attDelay -= Q_irand( 1000, 2000 );
-			break;
-		case CLASS_IMPWORKER://they panic, don't fire right away
-			attDelay += Q_irand( 1000, 2500 );
-			break;
-		case CLASS_TRANDOSHAN:
-			attDelay -= Q_irand( 500, 1500 );
-			break;
-		case CLASS_JAN:
-		case CLASS_STORMTROOPER_ADVANCED:
-		case CLASS_LANDO:
-		case CLASS_PRISONER:
-		case CLASS_REBEL:
-			attDelay -= Q_irand( 500, 1500 );
-			break;
-		case CLASS_GALAKMECH:
-		case CLASS_ATST:
-			attDelay -= Q_irand( 1000, 2000 );
-			break;
-		case CLASS_REELO:
-		case CLASS_UGNAUGHT:
-		case CLASS_JAWA:
-			return;
-			break;
-		case CLASS_MINEMONSTER:
-		case CLASS_MURJJ:
-			return;
-			break;
-		case CLASS_INTERROGATOR:
-		case CLASS_PROBE:
-		case CLASS_MARK1:
-		case CLASS_MARK2:
-		case CLASS_SENTRY:
-			return;
-			break;
-		case CLASS_REMOTE:
-		case CLASS_SEEKER:
-			return;
-			break;
-		/*
-		case CLASS_GRAN:
-		case CLASS_RODIAN:
-		case CLASS_WEEQUAY:
-			break;
-		case CLASS_JEDI:
-		case CLASS_PADAWAN:
-		case CLASS_SHADOWTROOPER:
-		case CLASS_TAVION:
-		case CLASS_REBORN:
-		case CLASS_LUKE:
-		case CLASS_DESANN:
-			break;
-		*/
-		default:
-			break;
-		}
-
-		switch ( self->s.weapon )
-		{
-		case WP_NONE:
-		case WP_SABER:
-			return;
-			break;
-		case WP_BRYAR_PISTOL:
-			break;
-			
-			
-			WP_EE3:
-			WP_DLT_19:
-			WP_Z6_BLASTER_CANON:			
-			WP_FRAG_GRENADE:
-			WP_FRAG_GRENADE_OLD:
-		case WP_BLASTER:
-			if ( self->NPC->scriptFlags & SCF_ALT_FIRE )
-			{//rapid-fire blasters
-				attDelay += Q_irand( 0, 500 );
-			}
-			else
-			{//regular blaster
-				attDelay -= Q_irand( 0, 500 );
-			}
-			break;
-
-		case WP_BOWCASTER:
-			attDelay += Q_irand( 0, 500 );
-			break;
-
-		case WP_DC_15A_RIFLE:
-		case WP_REPEATER:
-			if ( !(self->NPC->scriptFlags&SCF_ALT_FIRE) )
-			{//rapid-fire blasters
-				attDelay += Q_irand( 0, 500 );
-			}
-			break;
-
-		case WP_T21:
-		case WP_FLECHETTE:
-			attDelay += Q_irand( 500, 1500 );
-			break;
-
-		case WP_ROCKET_LAUNCHER:
-			attDelay += Q_irand( 500, 1500 );
-			break;
-//		case WP_BLASTER_PISTOL:	// apparently some enemy only version of the blaster
-//			attDelay -= Q_irand( 500, 1500 );
-//			break;
-			//rwwFIXMEFIXME: Have this weapon for NPCs?
-		case WP_A280:
-		case WP_DISRUPTOR://sniper's don't delay?
-			return;
-			break;
-		case WP_THERMAL://grenade-throwing has a built-in delay
-			return;
-			break;
-		case WP_STUN_BATON:			// Any ol' melee attack
-			return;
-			break;
-		case WP_EMPLACED_GUN:
-			return;
-			break;
-		case WP_TURRET:			// turret guns
-			return;
-			break;
-//		case WP_BOT_LASER:		// Probe droid	- Laser blast
-//			return; //rwwFIXMEFIXME: Have this weapon for NPCs?
-			break;
-		/*
-		case WP_DEMP2:
-			break;
-		case WP_TRIP_MINE:
-			break;
-		case WP_DET_PACK:
-			break;
-		case WP_STUN_BATON:
-			break;
-		case WP_ATST_MAIN:
-			break;
-		case WP_ATST_SIDE:
-			break;
-		case WP_TIE_FIGHTER:
-			break;
-		case WP_RAPID_FIRE_CONC:
-			break;
-		*/
-		}
-
-		if ( self->client->playerTeam == NPCTEAM_PLAYER )
-		{//clamp it
-			if ( attDelay > 2000 )
-			{
-				attDelay = 2000;
-			}
-		}
-
-		//don't shoot right away
-		if ( attDelay > 4000+((2-g_npcspskill.integer)*3000) )
-		{
-			attDelay = 4000+((2-g_npcspskill.integer)*3000);
-		}
-		TIMER_Set( self, "attackDelay", attDelay );//Q_irand( 1500, 4500 ) );
-		//don't move right away either
-		if ( attDelay > 4000 )
-		{
-			attDelay = 4000 - Q_irand(500, 1500);
-		}
-		else
-		{
-			attDelay -= Q_irand(500, 1500);
-		}
-
-		TIMER_Set( self, "roamTime", attDelay );//was Q_irand( 1000, 3500 );
-#else //!__OLD_WEAPON_TIMING__
 		switch (self->s.weapon)
 		{
 		case WP_NONE:
@@ -360,7 +159,6 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 
 			TIMER_Set(self, "roamTime", attDelay);//was Q_irand( 1000, 3500 );
 		}
-#endif //__OLD_WEAPON_TIMING__
 	}
 }
 
@@ -500,9 +298,8 @@ void G_SetEnemy( gentity_t *self, gentity_t *enemy )
 			}
 		}
 
-		if ( self->s.weapon == WP_BLASTER || self->s.weapon == WP_REPEATER ||
-			self->s.weapon == WP_THERMAL /*|| self->s.weapon == WP_BLASTER_PISTOL */ //rwwFIXMEFIXME: Blaster pistol useable by npcs?
-			|| self->s.weapon == WP_BOWCASTER )
+		if ( self->s.weapon == WP_MODULIZED_WEAPON
+			|| self->s.weapon == WP_THERMAL) //rwwFIXMEFIXME: Blaster pistol useable by npcs?
 		{//Hmm, how about sniper and bowcaster?
 			//When first get mad, aim is bad
 			//Hmm, base on game difficulty, too?  Rank?
@@ -579,38 +376,6 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 
 	switch ( newWeapon )
 	{
-	case WP_BRYAR_PISTOL://prifle
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-		ent->NPC->burstSpacing = 1000;//attackdebounce
-		break;
-
-		/*
-	case WP_BLASTER_PISTOL:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-	//	ent->NPC->burstSpacing = 1000;//attackdebounce
-		if ( g_npcspskill.integer == 0 )
-			ent->NPC->burstSpacing = 1000;//attack debounce
-		else if ( g_npcspskill.integer == 1 )
-			ent->NPC->burstSpacing = 750;//attack debounce
-		else
-			ent->NPC->burstSpacing = 500;//attack debounce
-		break;
-		*/
-		//rwwFIXMEFIXME: support WP_BLASTER_PISTOL and WP_BOT_LASER
-
-		/*
-	case WP_BOT_LASER://probe attack
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-	//	ent->NPC->burstSpacing = 600;//attackdebounce
-		if ( g_npcspskill.integer == 0 )
-			ent->NPC->burstSpacing = 600;//attack debounce
-		else if ( g_npcspskill.integer == 1 )
-			ent->NPC->burstSpacing = 400;//attack debounce
-		else
-			ent->NPC->burstSpacing = 200;//attack debounce
-		break;
-		*/
-
 	case WP_SABER:
 		/*
 		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
@@ -624,90 +389,6 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 		ent->NPC->attackHold = 1000;//Hold attack button for a 1-second burst
 		break;
 
-	case WP_A280:
-	case WP_DISRUPTOR:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-		if ( ent->NPC->scriptFlags & SCF_ALT_FIRE )
-		{
-			switch( g_npcspskill.integer )
-			{
-			case 0:
-				ent->NPC->burstSpacing = 2500;//attackdebounce
-				break;
-			case 1:
-				ent->NPC->burstSpacing = 2000;//attackdebounce
-				break;
-			case 2:
-				ent->NPC->burstSpacing = 1500;//attackdebounce
-				break;
-			}
-		}
-		else
-		{
-			ent->NPC->burstSpacing = 1000;//attackdebounce
-		}
-		break;
-
-	case WP_BOWCASTER:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-	//	ent->NPC->burstSpacing = 1000;//attackdebounce
-		if ( g_npcspskill.integer == 0 )
-			ent->NPC->burstSpacing = 1000;//attack debounce
-		else if ( g_npcspskill.integer == 1 )
-			ent->NPC->burstSpacing = 750;//attack debounce
-		else
-			ent->NPC->burstSpacing = 500;//attack debounce
-		break;
-
-	case WP_REPEATER:
-		if ( ent->NPC->scriptFlags & SCF_ALT_FIRE )
-		{
-			ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-			ent->NPC->burstSpacing = 2000;//attackdebounce
-		}
-		else
-		{
-			ent->NPC->aiFlags |= NPCAI_BURST_WEAPON;
-			ent->NPC->burstMin = 3;
-			ent->NPC->burstMean = 6;
-			ent->NPC->burstMax = 10;
-			if ( g_npcspskill.integer == 0 )
-				ent->NPC->burstSpacing = 1500;//attack debounce
-			else if ( g_npcspskill.integer == 1 )
-				ent->NPC->burstSpacing = 1000;//attack debounce
-			else
-				ent->NPC->burstSpacing = 500;//attack debounce
-		}
-		break;
-
-	case WP_DEMP2:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-		ent->NPC->burstSpacing = 1000;//attackdebounce
-		break;
-
-	case WP_FLECHETTE:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-		if ( ent->NPC->scriptFlags & SCF_ALT_FIRE )
-		{
-			ent->NPC->burstSpacing = 2000;//attackdebounce
-		}
-		else
-		{
-			ent->NPC->burstSpacing = 1000;//attackdebounce
-		}
-		break;
-
-	case WP_ROCKET_LAUNCHER:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-	//	ent->NPC->burstSpacing = 2500;//attackdebounce
-		if ( g_npcspskill.integer == 0 )
-			ent->NPC->burstSpacing = 2500;//attack debounce
-		else if ( g_npcspskill.integer == 1 )
-			ent->NPC->burstSpacing = 2000;//attack debounce
-		else
-			ent->NPC->burstSpacing = 1500;//attack debounce
-		break;
-
 	case WP_THERMAL:
 		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
 	//	ent->NPC->burstSpacing = 3000;//attackdebounce
@@ -719,26 +400,7 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 			ent->NPC->burstSpacing = 2000;//attack debounce
 		break;
 
-	/*
-	case WP_SABER:
-		ent->NPC->aiFlags |= NPCAI_BURST_WEAPON;
-		ent->NPC->burstMin = 5;//0.5 sec
-		ent->NPC->burstMean = 10;//1 second
-		ent->NPC->burstMax = 20;//3 seconds
-		ent->NPC->burstSpacing = 2000;//2 seconds
-		ent->NPC->attackHold = 1000;//Hold attack button for a 1-second burst
-		break;
-
-	case WP_TRICORDER:
-		ent->NPC->aiFlags |= NPCAI_BURST_WEAPON;
-		ent->NPC->burstMin = 5;
-		ent->NPC->burstMean = 10;
-		ent->NPC->burstMax = 30;
-		ent->NPC->burstSpacing = 1000;
-		break;
-	*/
-
-	case WP_BLASTER:
+	case WP_MODULIZED_WEAPON:
 		if ( ent->NPC->scriptFlags & SCF_ALT_FIRE )
 		{
 			ent->NPC->aiFlags |= NPCAI_BURST_WEAPON;
@@ -763,11 +425,6 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 				ent->NPC->burstSpacing = 500;//attack debounce
 		//	ent->NPC->burstSpacing = 1000;//attackdebounce
 		}
-		break;
-
-	case WP_STUN_BATON:
-		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
-		ent->NPC->burstSpacing = 1000;//attackdebounce
 		break;
 
 		/*
@@ -916,14 +573,6 @@ void NPC_ApplyWeaponFireDelay(gentity_t *aiEnt)
 			//			for player as he holds down the fire button to throw, then play
 			//			the actual throw when he lets go...
 			aiEnt->client->ps.weaponTime = 700;
-		}
-		break;
-
-	case WP_STUN_BATON:
-		//if ( !PM_DroidMelee( client->NPC_class ) )
-		if (1) //rwwFIXMEFIXME: ...
-		{//FIXME: should be unique per melee anim
-			aiEnt->client->ps.weaponTime = 300;
 		}
 		break;
 
@@ -1291,41 +940,10 @@ int NPC_AttackDebounceForWeapon (gentity_t *aiEnt)
 {
 	switch ( aiEnt->client->ps.weapon )
 	{
-/*
-	case WP_BLASTER://scav rifle
-		return 1000;
-		break;
-
-	case WP_BRYAR_PISTOL://prifle
-		return 3000;
-		break;
-
-	case WP_SABER:
-		return 100;
-		break;
-
-
-	case WP_TRICORDER:
-		return 0;//tricorder
-		break;
-*/
 	case WP_SABER:
 		return 0;
 		break;
 
-		/*
-	case WP_BOT_LASER:
-
-		if ( g_npcspskill.integer == 0 )
-			return 2000;
-
-		if ( g_npcspskill.integer == 1 )
-			return 1500;
-
-		return 1000;
-		break;
-		*/
-		//rwwFIXMEFIXME: support
 	default:
 		return aiEnt->NPC->burstSpacing;//was 100 by default
 		break;
@@ -1342,41 +960,6 @@ float NPC_MaxDistSquaredForWeapon (gentity_t *aiEnt)
 
 	switch ( aiEnt->s.weapon )
 	{
-	case WP_BLASTER://scav rifle
-		return 1024 * 1024;//should be shorter?
-		break;
-
-	case WP_BRYAR_PISTOL://prifle
-		return 1024 * 1024;
-		break;
-
-		/*
-	case WP_BLASTER_PISTOL://prifle
-		return 1024 * 1024;
-		break;
-		*/
-
-	case WP_A280:
-	case WP_DISRUPTOR://disruptor
-		if ( aiEnt->NPC->scriptFlags & SCF_ALT_FIRE )
-		{
-			return ( 1024 * 1024 );
-		}
-		else
-		{
-			return 1024 * 1024;
-		}
-		break;
-/*
-	case WP_SABER:
-		return 1024 * 1024;
-		break;
-
-
-	case WP_TRICORDER:
-		return 0;//tricorder
-		break;
-*/
 	case WP_SABER:
 		if ( aiEnt->client && aiEnt->client->saber[0].blade[0].lengthMax )
 		{//FIXME: account for whether enemy and I are heading towards each other!
@@ -2131,8 +1714,7 @@ qboolean NPC_ClearShot( gentity_t *aiEnt, gentity_t *ent )
 
 	// add aim error
 	// use weapon instead of specific npc types, although you could add certain npc classes if you wanted
-//	if ( NPC->client->playerTeam == TEAM_SCAVENGERS )
-	if( aiEnt->s.weapon == WP_BLASTER /*|| NPC->s.weapon == WP_BLASTER_PISTOL*/ ) // any other guns to check for?
+	if( aiEnt->s.weapon == WP_MODULIZED_WEAPON ) // any other guns to check for?
 	{
 		vec3_t	mins = { -2, -2, -2 };
 		vec3_t	maxs = {  2,  2,  2 };
@@ -2192,8 +1774,7 @@ int NPC_ShotEntity( gentity_t *aiEnt, gentity_t *ent, vec3_t impactPos )
 
 	// add aim error
 	// use weapon instead of specific npc types, although you could add certain npc classes if you wanted
-//	if ( NPC->client->playerTeam == TEAM_SCAVENGERS )
-	if( aiEnt->s.weapon == WP_BLASTER /*|| NPC->s.weapon == WP_BLASTER_PISTOL*/ ) // any other guns to check for?
+	if( aiEnt->s.weapon == WP_MODULIZED_WEAPON ) // any other guns to check for?
 	{
 		vec3_t	mins = { -2, -2, -2 };
 		vec3_t	maxs = {  2,  2,  2 };
@@ -2493,22 +2074,10 @@ float IdealDistance ( gentity_t *self )
 	ideal = 225 - 20 * self->NPC->stats.aggression;
 	switch ( self->s.weapon )
 	{
-	case WP_ROCKET_LAUNCHER:
-		ideal += 200;
-		break;
-
 	case WP_THERMAL:
 		ideal += 50;
 		break;
 
-/*	case WP_TRICORDER:
-		ideal = 0;
-		break;
-*/
-	case WP_SABER:
-	case WP_BRYAR_PISTOL:
-//	case WP_BLASTER_PISTOL:
-	case WP_BLASTER:
 	default:
 		break;
 	}

@@ -1190,7 +1190,8 @@ void Use_Shooter( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	VectorNormalize( dir );
 
 	switch ( ent->s.weapon ) {
-	case WP_BLASTER:
+	//case WP_BLASTER:
+	default:
 		WP_FireBlasterMissile( ent, ent->s.origin, dir, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, qfalse, ent->s.weapon );
 		break;
 	}
@@ -1230,7 +1231,7 @@ Fires at either the target or the current direction.
 "random" is the number of degrees of deviance from the taget. (1.0 default)
 */
 void SP_shooter_blaster( gentity_t *ent ) {
-	InitShooter( ent, WP_BLASTER);
+	InitShooter( ent, WP_MODULIZED_WEAPON);
 }
 
 void check_recharge(gentity_t *ent)
@@ -3230,27 +3231,7 @@ TOGGLE - keep firing until used again (fires at intervals of "wait")
 
 "target" - what to aim at (will update aim every frame if it's a moving target)
 
-"weapon" - specify the weapon to use (default is WP_BLASTER)
-	WP_BRYAR_PISTOL
-	WP_BLASTER
-	WP_DISRUPTOR
-	WP_BOWCASTER
-	WP_REPEATER
-	WP_DEMP2
-	WP_FLECHETTE
-	WP_ROCKET_LAUNCHER
-	WP_THERMAL
-	WP_TRIP_MINE
-	WP_DET_PACK
-	WP_STUN_BATON
-	WP_EMPLACED_GUN
-	WP_BOT_LASER
-	WP_TURRET
-	WP_ATST_MAIN
-	WP_ATST_SIDE
-	WP_TIE_FIGHTER
-	WP_RAPID_FIRE_CONC
-	WP_BLASTER_PISTOL
+"weapon" - specify the weapon to use
 */
 //kind of hacky, but we have to do this with no dynamic allocation
 #define MAX_SHOOTERS		16
@@ -3360,7 +3341,7 @@ void SP_misc_weapon_shooter( gentity_t *self )
 	G_SpawnString("weapon", "", &s);
 
 	//set weapon
-	self->s.weapon = self->client->ps.weapon = WP_BLASTER;
+	self->s.weapon = self->client->ps.weapon = WP_MODULIZED_WEAPON;
 	if ( s && s[0] )
 	{//use a different weapon
 		self->s.weapon = self->client->ps.weapon = GetIDForString( WPTable, s );

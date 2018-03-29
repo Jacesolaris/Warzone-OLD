@@ -833,7 +833,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			return;
 		}
 	}
-	else if (aiEnt->client->ps.weapon == WP_BRYAR_PISTOL || aiEnt->client->ps.weapon == WP_BRYAR_OLD)
+	else if (aiEnt->client->ps.weapon == WP_MODULIZED_WEAPON)
 	{
 		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f || ENEMY_IS_BREAKABLE )
 		{
@@ -849,7 +849,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
 		}
 	}
-	else if (aiEnt->client->ps.weapon == WP_BLASTER)
+	else if (aiEnt->client->ps.weapon == WP_MODULIZED_WEAPON)
 	{
 		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f || NPC_IsJedi(aiEnt) || aiEnt->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE )
 		{
@@ -858,70 +858,6 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			aiEnt->NPC->burstMin = 3;
 			aiEnt->NPC->burstMean = 12;
 			aiEnt->NPC->burstMax = 20;
-			aiEnt->NPC->burstSpacing = Q_irand( 300, 750 );//attack debounce
-		}
-		else
-		{
-			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
-		}
-	}
-	else if (aiEnt->client->ps.weapon == WP_BOWCASTER)
-	{
-		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f )
-		{
-			aiEnt->NPC->scriptFlags |= SCF_ALT_FIRE;
-
-			aiEnt->NPC->burstMin = 1;
-			aiEnt->NPC->burstMean = 3;
-			aiEnt->NPC->burstMax = 5;
-			aiEnt->NPC->burstSpacing = Q_irand( 300, 750 );//attack debounce
-		}
-		else
-		{
-			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
-		}
-	}
-	else if (aiEnt->client->ps.weapon == WP_REPEATER)
-	{
-		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f || NPC_IsJedi(aiEnt) || aiEnt->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE)
-		{
-			aiEnt->NPC->scriptFlags |= SCF_ALT_FIRE;
-
-			aiEnt->NPC->burstMin = 8;
-			aiEnt->NPC->burstMean = 15;
-			aiEnt->NPC->burstMax = 28;
-			aiEnt->NPC->burstSpacing = Q_irand( 300, 750 );//attack debounce
-		}
-		else
-		{
-			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
-		}
-	}
-	else if (aiEnt->client->ps.weapon == WP_DEMP2 || aiEnt->client->ps.weapon == WP_FLECHETTE)
-	{
-		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f || ENEMY_IS_BREAKABLE )
-		{
-			aiEnt->NPC->scriptFlags |= SCF_ALT_FIRE;
-
-			aiEnt->NPC->burstMin = 1;
-			aiEnt->NPC->burstMean = 3;
-			aiEnt->NPC->burstMax = 5;
-			aiEnt->NPC->burstSpacing = Q_irand( 300, 750 );//attack debounce
-		}
-		else
-		{
-			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
-		}
-	}
-	else if (aiEnt->client->ps.weapon == WP_CONCUSSION)
-	{
-		if ( aiEnt->health < aiEnt->client->pers.maxHealth*0.5f || NPC_IsJedi(aiEnt) || aiEnt->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE )
-		{
-			aiEnt->NPC->scriptFlags |= SCF_ALT_FIRE;
-
-			aiEnt->NPC->burstMin = 1;
-			aiEnt->NPC->burstMean = 3;
-			aiEnt->NPC->burstMax = 5;
 			aiEnt->NPC->burstSpacing = Q_irand( 300, 750 );//attack debounce
 		}
 		else
@@ -988,15 +924,6 @@ void Boba_FireDecide( gentity_t *aiEnt)
 		aiEnt->NPC->enemyLastSeenTime = level.time;
 		aiEnt->client->pers.cmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);
 	}
-	else if ( enemyDist < MIN_ROCKET_DIST_SQUARED )//128
-	{//enemy within 128
-		if ( (aiEnt->client->ps.weapon == WP_FLECHETTE || aiEnt->client->ps.weapon == WP_REPEATER) &&
-			(aiEnt->NPC->scriptFlags & SCF_ALT_FIRE) )
-		{//shooting an explosive, but enemy too close, switch to primary fire
-			aiEnt->NPC->scriptFlags &= ~SCF_ALT_FIRE;
-			//FIXME: we can never go back to alt-fire this way since, after this, we don't know if we were initially supposed to use alt-fire or not...
-		}
-	}
 	else if (WeaponIsSniperCharge(aiEnt->client->ps.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
 	{//sniping... should be assumed
 		if ( !(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE) )
@@ -1034,13 +961,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 			}
 			else
 			{//can we shoot our target?
-				if ( (aiEnt->client->ps.weapon == WP_ROCKET_LAUNCHER || (aiEnt->client->ps.weapon == WP_FLECHETTE && (aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))) && enemyDist < MIN_ROCKET_DIST_SQUARED )//128*128
-				{
-					enemyCS = qfalse;//not true, but should stop us from firing
-					hitAlly = qtrue;//us!
-					//FIXME: if too close, run away!
-				}
-				else if ( enemyInFOV )
+				if ( enemyInFOV )
 				{//if enemy is FOV, go ahead and check for shooting
 					int hit = NPC_ShotEntity(aiEnt, aiEnt->enemy, impactPos );
 					gentity_t *hitEnt = &g_entities[hit];
@@ -1129,18 +1050,10 @@ void Boba_FireDecide( gentity_t *aiEnt)
 						distThreshold = 16384/*128*128*/;//default
 						switch ( aiEnt->s.weapon )
 						{
-						case WP_ROCKET_LAUNCHER:
-						case WP_FLECHETTE:
 						case WP_THERMAL:
 						case WP_TRIP_MINE:
 						case WP_DET_PACK:
 							distThreshold = 65536/*256*256*/;
-							break;
-						case WP_REPEATER:
-							if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
-							{
-								distThreshold = 65536/*256*256*/;
-							}
 							break;
 						default:
 							break;
@@ -1159,18 +1072,10 @@ void Boba_FireDecide( gentity_t *aiEnt)
 							distThreshold = 65536/*256*256*/;//default
 							switch ( aiEnt->s.weapon )
 							{
-							case WP_ROCKET_LAUNCHER:
-							case WP_FLECHETTE:
 							case WP_THERMAL:
 							case WP_TRIP_MINE:
 							case WP_DET_PACK:
 								distThreshold = 262144/*512*512*/;
-								break;
-							case WP_REPEATER:
-								if ( aiEnt->NPC->scriptFlags&SCF_ALT_FIRE )
-								{
-									distThreshold = 262144/*512*512*/;
-								}
 								break;
 							default:
 								break;
@@ -1199,7 +1104,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 		}
 
 		//FIXME: don't shoot right away!
-		if ( aiEnt->client->ps.weaponTime > 0 )
+		/*if ( aiEnt->client->ps.weaponTime > 0 )
 		{
 			if ( aiEnt->s.weapon == WP_ROCKET_LAUNCHER )
 			{
@@ -1213,7 +1118,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 				}
 			}
 		}
-		else if ( shoot )
+		else*/ if ( shoot )
 		{//try to shoot if it's time
 			if ( TIMER_Done( aiEnt, "nextAttackDelay" ) )
 			{
@@ -1221,7 +1126,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 				{
 					WeaponThink(aiEnt, qtrue );
 				}
-				//NASTY
+				/*
 				if ( aiEnt->s.weapon == WP_ROCKET_LAUNCHER
 					&& (aiEnt->client->pers.cmd.buttons&BUTTON_ATTACK)
 					&& !Q_irand( 0, 3 ) )
@@ -1230,6 +1135,7 @@ void Boba_FireDecide( gentity_t *aiEnt)
 					aiEnt->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 					aiEnt->client->ps.weaponTime = Q_irand( 500, 1500 );
 				}
+				*/
 			}
 		}
 	}
@@ -1362,7 +1268,7 @@ void NPC_Jedi_RateNewEnemy( gentity_t *self, gentity_t *enemy )
 		healthAggression = (float)self->health/200.0f*6.0f;
 		weaponAggression = 7;//go after him
 		break;
-	case WP_BLASTER:
+	case WP_MODULIZED_WEAPON:
 		if ( DistanceSquared( self->r.currentOrigin, enemy->r.currentOrigin ) < 65536 )//256 squared
 		{
 			healthAggression = (float)self->health/200.0f*8.0f;
@@ -4281,12 +4187,10 @@ static void Jedi_FaceEnemy( gentity_t *aiEnt, qboolean doPitch )
 		&& TIMER_Done( aiEnt, "flameTime" )
 		&& aiEnt->s.weapon != WP_NONE
 		&& !(WeaponIsSniperCharge(aiEnt->s.weapon) && Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) >= 512.0)
-		&& (aiEnt->s.weapon != WP_ROCKET_LAUNCHER||!(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))
+		//&& (aiEnt->s.weapon != WP_ROCKET_LAUNCHER||!(aiEnt->NPC->scriptFlags&SCF_ALT_FIRE))
 		&& aiEnt->s.weapon != WP_THERMAL
 		&& aiEnt->s.weapon != WP_TRIP_MINE
-		&& aiEnt->s.weapon != WP_DET_PACK
-		&& aiEnt->s.weapon != WP_STUN_BATON
-		/*&& NPC->s.weapon != WP_MELEE*/ )
+		&& aiEnt->s.weapon != WP_DET_PACK )
 	{//boba leads his enemy
 		if ( aiEnt->enemy && aiEnt->enemy->client && aiEnt->health < aiEnt->client->pers.maxHealth*0.5f )
 		{//lead
@@ -4581,29 +4485,6 @@ static void Jedi_CombatTimersUpdate( gentity_t *aiEnt, int enemy_dist )
 				else
 				{
 					//Com_Printf( "(%d) raise agg - enemy saber\n", level.time );
-					Jedi_Aggression( aiEnt, 1 );
-				}
-				break;
-			case WP_BLASTER:
-			case WP_BRYAR_PISTOL:
-			case WP_DISRUPTOR:
-			case WP_A280:
-			case WP_BOWCASTER:
-			case WP_REPEATER:
-			case WP_DEMP2:
-			case WP_FLECHETTE:
-			case WP_ROCKET_LAUNCHER:
-				//if he has a blaster, move in when:
-				//They're not shooting at me
-				if ( aiEnt->enemy->attackDebounceTime < level.time )
-				{//does this apply to players?
-					//Com_Printf( "(%d) raise agg - enemy not shooting ranged weap\n", level.time );
-					Jedi_Aggression( aiEnt, 1 );
-				}
-				//He's closer than a dist that gives us time to deflect
-				if ( enemy_dist < 256 )
-				{
-					//Com_Printf( "(%d) raise agg - enemy ranged weap- too close\n", level.time );
 					Jedi_Aggression( aiEnt, 1 );
 				}
 				break;
@@ -7236,114 +7117,59 @@ qboolean Jedi_InSpecialMove( gentity_t *aiEnt)
 
 void BountyHunter_SelectBestWeapon( gentity_t *aiEnt)
 {
-	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_ROCKET_LAUNCHER 
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 800 )
+	if (aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_ROCKET_LAUNCHER );
+		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon);
 	}
-	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_EE3
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 400 )
-	{
-		Boba_ChangeWeapon(aiEnt, WP_EE3);
-	}
-	/*else if (aiEnt->client->ps.weapon != WP_WESTER_PISTOL)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_WESTER_PISTOL);
-	}*/
 }
 
 void Commando_SelectBestWeapon( gentity_t *aiEnt)
 {
-	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_Z6_BLASTER_CANON 
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 800 )
+	if (aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_Z6_BLASTER_CANON );
+		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon);
 	}
-	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_T21
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 400 )
-	{
-		Boba_ChangeWeapon(aiEnt, WP_T21);
-	}
-	/*else if (aiEnt->client->ps.weapon != WP_S5_PISTOL)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_S5_PISTOL);
-	}*/
 }
 
 void Follower_SelectBestWeapon(gentity_t *aiEnt)
 {// Stoiss????
-	if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DLT_19
-		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 800)
+	if (aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
-	}
-	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DC_15A_RIFLE
-		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
+		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon);
 	}
 }
 
 void Gunner_SelectBestWeapon(gentity_t *aiEnt)
 {// Stoiss????
-	if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DLT_19
-		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 800)
+	if (aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
-	}
-	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DC_15A_RIFLE
-		&& Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) > 400)
-	{
-		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
+		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon);
 	}
 }
 
 void AdvancedGunner_SelectBestWeapon( gentity_t *aiEnt)
 {
-	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DLT_19
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 800 )
+	if (aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
 	{
-		Boba_ChangeWeapon(aiEnt, WP_DLT_19);
-	}
-	else if (aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DC_15A_RIFLE
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 400 )
-	{
-		Boba_ChangeWeapon(aiEnt, WP_DC_15A_RIFLE);
+		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon);
 	}
 }
 
 void Grenader_SelectBestWeapon( gentity_t *aiEnt)
 {
-	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_THERMAL
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 256 
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 512 )
-	{// They are close (but not too close)... Switch to thermal... TODO: Maybe add a num_enemies_in_box_check???
-		Boba_ChangeWeapon(aiEnt, WP_THERMAL );
-	}
-	else if ( aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
+	if (aiEnt->client->ps.weapon != aiEnt->NPC->originalWeapon)
 	{
-		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon );
+		Boba_ChangeWeapon(aiEnt, aiEnt->NPC->originalWeapon);
 	}
 }
 
 void Jedi_SelectBestWeapon( gentity_t *aiEnt)
 {
 	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_BRYAR_PISTOL
+		&& aiEnt->client->ps.weapon != WP_MODULIZED_WEAPON
 		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 768 )
 	{
-		Boba_ChangeWeapon(aiEnt, WP_BRYAR_PISTOL);
+		Boba_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON);
 		return;
 	}
 	else if ( aiEnt->client->ps.weapon != WP_SABER )
@@ -7364,30 +7190,17 @@ void Jedi_SelectBestWeapon( gentity_t *aiEnt)
 void BOT_SelectBestWeapon( gentity_t *aiEnt)
 {
 	if ( aiEnt->enemy
-		&& aiEnt->client->ps.weapon != WP_DH_17_PISTOL
+		&& aiEnt->client->ps.weapon != WP_MODULIZED_WEAPON
 		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 512 )
 	{
-		Fast_ChangeWeapon(aiEnt, WP_DH_17_PISTOL);
+		Fast_ChangeWeapon(aiEnt, WP_MODULIZED_WEAPON);
 		return;
 	}
-	/*if ( aiEnt->client->ps.weapon != WP_REPEATER 
-		&& Distance( aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin ) > 600 )
-	{
-		Boba_ChangeWeapon( aiEnt, WP_REPEATER );
-	}
-	else*/ if ( aiEnt->client->ps.weapon != WP_SABER )
+	else if ( aiEnt->client->ps.weapon != WP_SABER )
 	{
 		Boba_ChangeWeapon(aiEnt, WP_SABER );
 		return;
 	}
-
-	/*
-	if ( NPC_HasGrenades(aiEnt) )
-	{
-		Grenader_SelectBestWeapon(aiEnt);
-		return;
-	}
-	*/
 }
 
 void Default_SelectBestWeapon( gentity_t *aiEnt)
