@@ -48,7 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __RENDERER_FOLIAGE__					// A port of the cgame foliage system in the renderer, doesn't work, only just started porting the basic code...
 #define __SHADER_GENERATOR__					// Generates warzone compatible shaders on load... Tries to convert old JKA shaders to better WZ ones... Hacky but works...
 #define __EXTRA_PRETTY__						// Makes things look better by not disabling some stuff on shaders...
-//#define __PSHADOWS__							// Just for tagging the old rend2 pshadows code that doesn't work...
+#define __PSHADOWS__							// Just for tagging the old rend2 pshadows code that doesn't work...
 #define __DAY_NIGHT__							// Day/Night Cycle system...
 //#define __DLIGHT_SHADOWS__
 //#define __Q3_FLARES__							// Gonna just let the volumetrics handle flaring lights/glows....
@@ -880,6 +880,7 @@ typedef enum
 	DGEN_WAVE_SAWTOOTH,
 	DGEN_WAVE_INVERSE_SAWTOOTH,
 	DGEN_WAVE_NOISE,
+	DGEN_PROJECTION_SHADOW,
 
 	// do not edit until this line
 
@@ -1515,6 +1516,7 @@ enum
 	GLSL_INT,
 	GLSL_FLOAT,
 	GLSL_FLOAT5,
+	GLSL_FLOAT7,
 	GLSL_VEC2,
 	GLSL_VEC3,
 	GLSL_VEC4,
@@ -3729,6 +3731,7 @@ void GLSL_BindProgram(shaderProgram_t * program);
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);
 void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_t v);
+void GLSL_SetUniformFloat7(shaderProgram_t *program, int uniformNum, const float *v);
 void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v);
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v);
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);

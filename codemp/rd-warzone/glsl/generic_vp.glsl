@@ -42,7 +42,7 @@ uniform vec4   u_FogColorMask;
 
 #if defined(USE_DEFORM_VERTEXES)
 uniform int    u_DeformGen;
-uniform float  u_DeformParams[5];
+uniform float  u_DeformParams[7];
 uniform float  u_Time;
 #endif
 

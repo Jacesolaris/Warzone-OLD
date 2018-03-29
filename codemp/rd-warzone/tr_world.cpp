@@ -391,17 +391,29 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		pshadowBits = ( pshadowBits != 0 );
 	}
 #endif
-/*#ifndef __REALTIME_CUBEMAP__
-	if (glState.currentFBO == tr.renderCubeFbo)
-		cubemapIndex = 0;
-	else if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
-		cubemapIndex = 0;
-	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex - 1]) < r_cubemapCullRange->value)
-		cubemapIndex = surf->cubemapIndex;
-	else
-#endif //__REALTIME_CUBEMAP__
-*/
-		cubemapIndex = 0;
+
+	cubemapIndex = 0;
+
+#if 0 // Maybe do this for trees???...
+	if (1)
+	{// Testing...
+		// stencil shadows can't do personal models unless I polyhedron clip
+		if (r_shadows->integer == 2
+			&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+			&& surf->shader->sort == SS_OPAQUE)
+		{
+			R_AddDrawSurf((surfaceType_t *)surf->data, tr.shadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, surf->depthDrawOnly);
+		}
+
+		// projection shadows work fine with personal models
+		if (r_shadows->integer == 3
+			&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+			&& surf->shader->sort == SS_OPAQUE)
+		{
+			R_AddDrawSurf((surfaceType_t *)surf->data, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, surf->depthDrawOnly);
+		}
+	}
+#endif
 
 	R_AddDrawSurf(surf->data, surf->shader, 
 #ifdef __Q3_FOG__

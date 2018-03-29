@@ -512,7 +512,7 @@ static void ComputeTexMods( shaderStage_t *pStage, int bundleNum, float *outMatr
 }
 
 
-static void ComputeDeformValues(int *deformGen, vec5_t deformParams)
+static void ComputeDeformValues(int *deformGen, float *deformParams)
 {
 	// u_DeformGen
 	*deformGen = DGEN_NONE;
@@ -533,6 +533,8 @@ static void ComputeDeformValues(int *deformGen, vec5_t deformParams)
 				deformParams[2] = ds->deformationWave.phase;
 				deformParams[3] = ds->deformationWave.frequency;
 				deformParams[4] = ds->deformationSpread;
+				deformParams[5] = 0;
+				deformParams[6] = 0;
 				break;
 
 			case DEFORM_BULGE:
@@ -543,6 +545,34 @@ static void ComputeDeformValues(int *deformGen, vec5_t deformParams)
 				deformParams[2] = ds->bulgeWidth;  // phase
 				deformParams[3] = ds->bulgeSpeed;  // frequency
 				deformParams[4] = 0;
+				deformParams[5] = 0;
+				deformParams[6] = 0;
+				break;
+
+			/*case DEFORM_MOVE:
+				*deformGen = DGEN_MOVE;
+				*waveFunc = ds->deformationWave.func;
+
+				deformParams[0] = ds->deformationWave.base;
+				deformParams[1] = ds->deformationWave.amplitude;
+				deformParams[2] = ds->deformationWave.phase;
+				deformParams[3] = ds->deformationWave.frequency;
+				deformParams[4] = ds->moveVector[0];
+				deformParams[5] = ds->moveVector[1];
+				deformParams[6] = ds->moveVector[2];
+
+				break;*/
+
+			case DEFORM_PROJECTION_SHADOW:
+				*deformGen = DGEN_PROJECTION_SHADOW;
+
+				deformParams[0] = backEnd.ori.axis[0][2];
+				deformParams[1] = backEnd.ori.axis[1][2];
+				deformParams[2] = backEnd.ori.axis[2][2];
+				deformParams[3] = backEnd.ori.origin[2] - backEnd.currentEntity->e.shadowPlane;
+				deformParams[4] = backEnd.currentEntity->modelLightDir[0];
+				deformParams[5] = backEnd.currentEntity->modelLightDir[1];
+				deformParams[6] = backEnd.currentEntity->modelLightDir[2];
 				break;
 
 			default:
@@ -865,12 +895,16 @@ static void ComputeFogColorMask( shaderStage_t *pStage, vec4_t fogColorMask )
 
 static void ProjectPshadowVBOGLSL( void ) {
 #ifdef __PSHADOWS__
+	//
+	// TODO: Move into deferredlight glsl...
+	//
+
 	int		l;
 	vec3_t	origin;
 	float	radius;
 
-	int deformGen;
-	vec5_t deformParams;
+	//int deformGen;
+	//float deformParams[7];
 
 	shaderCommands_t *input = &tess;
 
@@ -878,9 +912,10 @@ static void ProjectPshadowVBOGLSL( void ) {
 		return;
 	}
 
-	ComputeDeformValues(&deformGen, deformParams);
+	//ComputeDeformValues(&deformGen, deformParams);
 
-	for ( l = 0 ; l < backEnd.refdef.num_pshadows ; l++ ) {
+	for ( l = 0 ; l < backEnd.refdef.num_pshadows ; l++ ) 
+	{
 		pshadow_t	*ps;
 		shaderProgram_t *sp;
 		vec4_t vector;
@@ -899,6 +934,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
+
 		VectorCopy(origin, vector);
 		vector[3] = 1.0f;
 		GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vector);
@@ -913,6 +949,13 @@ static void ProjectPshadowVBOGLSL( void ) {
 		GLSL_SetUniformVec3(sp, UNIFORM_LIGHTUP, vector);
 
 		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);
+
+		vec4_t l0;
+		VectorSet4(l0, tr.pshadowMaps[l]->width, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, l0);
+
+
+		GL_Cull(CT_TWO_SIDED);
 
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 		// where they aren't rendered
@@ -1854,7 +1897,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float	eyeT = 0;
 	int		deformGen;
-	vec5_t	deformParams;
+	float	deformParams[7];
 
 	qboolean useTesselation = qfalse;
 	qboolean isWater = qfalse;
@@ -2725,7 +2768,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
 		if (deformGen != DGEN_NONE)
 		{
-			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+			GLSL_SetUniformFloat7(sp, UNIFORM_DEFORMPARAMS, deformParams);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 		}
 
@@ -3606,7 +3649,7 @@ void RB_ExternalIterateStagesGeneric( shaderCommands_t *input )
 static void RB_RenderShadowmap( shaderCommands_t *input )
 {
 	int deformGen;
-	vec5_t deformParams;
+	float deformParams[7];
 
 	ComputeDeformValues(&deformGen, deformParams);
 
@@ -3625,7 +3668,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
 		if (deformGen != DGEN_NONE)
 		{
-			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+			GLSL_SetUniformFloat7(sp, UNIFORM_DEFORMPARAMS, deformParams);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 		}
 
@@ -3685,7 +3728,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 			GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
 			if (deformGen != DGEN_NONE)
 			{
-				GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+				GLSL_SetUniformFloat7(sp, UNIFORM_DEFORMPARAMS, deformParams);
 			}
 
 			VectorCopy(backEnd.viewParms.ori.origin, vector);

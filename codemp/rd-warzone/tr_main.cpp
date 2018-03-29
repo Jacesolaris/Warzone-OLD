@@ -1903,6 +1903,25 @@ static void R_AddEntitySurface (int entityNum)
 		//if (R_CullPointAndRadius( ent->e.origin, ent->e.radius ) != CULL_OUT)
 		{
 			shader = R_GetShaderByHandle( ent->e.customShader );
+
+			// stencil shadows can't do personal models unless I polyhedron clip
+			if (r_shadows->integer == 2
+				&& ent->e.reType != RT_SABER_GLOW
+				&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& shader->sort == SS_OPAQUE)
+			{
+				R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.shadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+
+			// projection shadows work fine with personal models
+			if (r_shadows->integer == 3
+				&& ent->e.reType != RT_SABER_GLOW
+				&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& shader->sort == SS_OPAQUE)
+			{
+				R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */, qfalse);
 		}
 		break;
@@ -1918,6 +1937,24 @@ static void R_AddEntitySurface (int entityNum)
 		//ri->Printf(PRINT_ALL, "%s\n", tr.currentModel->name);
 
 		if (!tr.currentModel) {
+			/*
+			// stencil shadows can't do personal models unless I polyhedron clip
+			if (r_shadows->integer == 2
+				&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& shader->sort == SS_OPAQUE)
+			{
+				R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.shadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+
+			// projection shadows work fine with personal models
+			if (r_shadows->integer == 3
+				&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& shader->sort == SS_OPAQUE)
+			{
+				R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+			*/
+
 			R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0/* cubeMap */, qfalse);
 		} else {
 			switch ( tr.currentModel->type ) {
@@ -1948,6 +1985,24 @@ static void R_AddEntitySurface (int entityNum)
 					break;
 				}
 
+				/*
+				// stencil shadows can't do personal models unless I polyhedron clip
+				if (r_shadows->integer == 2
+					&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+					&& shader->sort == SS_OPAQUE)
+				{
+					R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.shadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+				}
+
+				// projection shadows work fine with personal models
+				if (r_shadows->integer == 3
+					&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+					&& shader->sort == SS_OPAQUE)
+				{
+					R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+				}
+				*/
+
 				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */, qfalse);
 				break;
 			default:
@@ -1959,6 +2014,23 @@ static void R_AddEntitySurface (int entityNum)
 		break;
 	case RT_ENT_CHAIN:
 		shader = R_GetShaderByHandle( ent->e.customShader );
+
+		// stencil shadows can't do personal models unless I polyhedron clip
+		if (r_shadows->integer == 2
+			&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+			&& shader->sort == SS_OPAQUE)
+		{
+			R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.shadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+		}
+
+		// projection shadows work fine with personal models
+		if (r_shadows->integer == 3
+			&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+			&& shader->sort == SS_OPAQUE)
+		{
+			R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+		}
+
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */, qfalse);
 		break;
 	default:
@@ -2210,22 +2282,83 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	viewParms_t		shadowParms;
 	int i;
 
-	MATRIX_UPDATE = qtrue;
-
 	// first, make a list of shadows
-	for ( i = 0; i < tr.refdef.num_entities; i++)
+	for (i = 0; i < tr.refdef.num_entities; i++)
 	{
 		trRefEntity_t *ent = &tr.refdef.entities[i];
 
-		if((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
+		if ((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
 			continue;
 
 		//if((ent->e.renderfx & RF_THIRD_PERSON))
-			//continue;
+		//continue;
 
-		if (ent->e.reType == RT_MODEL || ent->e.reType == RT_GRASS || ent->e.reType == RT_PLANT)
+		if (Distance(backEnd.refdef.vieworg, ent->e.origin) > 512.0)
 		{
-			model_t *model = R_GetModelByHandle( ent->e.hModel );
+			continue;
+		}
+
+		if (ent->e.reType == RT_SPRITE
+			|| ent->e.reType == RT_BEAM
+			|| ent->e.reType == RT_ORIENTED_QUAD
+			|| ent->e.reType == RT_ELECTRICITY
+			|| ent->e.reType == RT_LINE
+			|| ent->e.reType == RT_ORIENTEDLINE
+			|| ent->e.reType == RT_CYLINDER
+			|| ent->e.reType == RT_SABER_GLOW
+			|| ent->e.reType == RT_ENT_CHAIN)
+		{
+			pshadow_t shadow;
+			float radius = 0.0f;
+			float scale = 1.0f;
+			vec3_t diff;
+			int j;
+
+			radius = ent->e.radius * scale;
+
+			if (!radius)
+				continue;
+
+			// Cull entities that are behind the viewer by more than lightRadius
+			VectorSubtract(ent->e.origin, fd->vieworg, diff);
+			if (DotProduct(diff, fd->viewaxis[0]) < -r_pshadowDist->value)
+				continue;
+
+			memset(&shadow, 0, sizeof(shadow));
+
+			shadow.numEntities = 1;
+			shadow.entityNums[0] = i;
+			shadow.viewRadius = radius;
+			shadow.lightRadius = r_pshadowDist->value;
+			VectorCopy(ent->e.origin, shadow.viewOrigin);
+			shadow.sort = DotProduct(diff, diff) / (radius * radius);
+			VectorCopy(ent->e.origin, shadow.entityOrigins[0]);
+			shadow.entityRadiuses[0] = radius;
+
+			for (j = 0; j < MAX_CALC_PSHADOWS; j++)
+			{
+				pshadow_t swap;
+
+				if (j + 1 > tr.refdef.num_pshadows)
+				{
+					tr.refdef.num_pshadows = j + 1;
+					tr.refdef.pshadows[j] = shadow;
+					break;
+				}
+
+				// sort shadows by distance from camera divided by radius
+				// FIXME: sort better
+				if (tr.refdef.pshadows[j].sort <= shadow.sort)
+					continue;
+
+				swap = tr.refdef.pshadows[j];
+				tr.refdef.pshadows[j] = shadow;
+				shadow = swap;
+			}
+		}
+		else if (ent->e.reType == RT_MODEL || ent->e.reType == RT_PLANT || ent->e.reType == RT_GRASS)
+		{
+			model_t *model = R_GetModelByHandle(ent->e.hModel);
 			pshadow_t shadow;
 			float radius = 0.0f;
 			float scale = 1.0f;
@@ -2237,55 +2370,86 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 			if (ent->e.nonNormalizedAxes)
 			{
-				scale = VectorLength( ent->e.axis[0] );
+				scale = VectorLength(ent->e.axis[0]);
 			}
 
 			switch (model->type)
 			{
-				case MOD_MESH:
+			case MOD_MESH:
+			{
+				mdvFrame_t *frame = &model->data.mdv[0]->frames[ent->e.frame];
+
+				radius = frame->radius * scale;
+			}
+			break;
+
+			case MOD_MDR:
+			{
+				// FIXME: never actually tested this
+				mdrHeader_t *header = model->data.mdr;
+				int frameSize = (size_t)(&((mdrFrame_t *)0)->bones[header->numBones]);
+				mdrFrame_t *frame = (mdrFrame_t *)((byte *)header + header->ofsFrames + frameSize * ent->e.frame);
+
+				radius = frame->radius;
+			}
+			break;
+			case MOD_IQM:
+			{
+				// FIXME: never actually tested this
+				iqmData_t *data = model->data.iqm;
+				vec3_t diag;
+				float *framebounds;
+
+				framebounds = data->bounds + 6 * ent->e.frame;
+				VectorSubtract(framebounds + 3, framebounds, diag);
+				radius = 0.5f * VectorLength(diag);
+			}
+			break;
+			case MOD_MDXM:
+			{
+				if (ent->e.ghoul2)
 				{
-					mdvFrame_t *frame = &model->data.mdv[0]->frames[ent->e.frame];
+					// scale the radius if needed
+					float largestScale = ent->e.modelScale[0];
+					if (ent->e.modelScale[1] > largestScale)
+						largestScale = ent->e.modelScale[1];
+					if (ent->e.modelScale[2] > largestScale)
+						largestScale = ent->e.modelScale[2];
+					if (!largestScale)
+						largestScale = 1;
+					
+					largestScale *= 1.2;
 
-					radius = frame->radius * scale;
+					radius = ent->e.radius * largestScale;
 				}
-				break;
-
-				case MOD_MDR:
+			}
+			break;
+			case MOD_BAD:
+			{
+				if (ent->e.ghoul2 && G2API_HaveWeGhoul2Models(*((CGhoul2Info_v *)ent->e.ghoul2)))
 				{
-					// FIXME: never actually tested this
-					mdrHeader_t *header = model->data.mdr;
-					int frameSize = (size_t)( &((mdrFrame_t *)0)->bones[ header->numBones ] );
-					mdrFrame_t *frame = ( mdrFrame_t * ) ( ( byte * ) header + header->ofsFrames + frameSize * ent->e.frame);
+					// scale the radius if needed
+					float largestScale = ent->e.modelScale[0];
+					if (ent->e.modelScale[1] > largestScale)
+						largestScale = ent->e.modelScale[1];
+					if (ent->e.modelScale[2] > largestScale)
+						largestScale = ent->e.modelScale[2];
+					if (!largestScale)
+						largestScale = 1;
+					
+					largestScale *= 1.2;
 
-					radius = frame->radius;
+					radius = ent->e.radius * largestScale;
 				}
+			}
+			break;
+			default:
 				break;
-				case MOD_IQM:
-				{
-					// FIXME: never actually tested this
-					iqmData_t *data = model->data.iqm;
-					vec3_t diag;
-					float *framebounds;
-
-					framebounds = data->bounds + 6*ent->e.frame;
-					VectorSubtract( framebounds+3, framebounds, diag );
-					radius = 0.5f * VectorLength( diag );
-				}
-				break;
-				case MOD_MDXM:
-				{
-					//mdxmData_t *data = model->data.glm;
-					radius = ent->e.radius; // how???
-				}
-				break;
-
-				default:
-					break;
 			}
 
 			if (!radius)
 				continue;
-			
+
 			// Cull entities that are behind the viewer by more than lightRadius
 			VectorSubtract(ent->e.origin, fd->vieworg, diff);
 			if (DotProduct(diff, fd->viewaxis[0]) < -r_pshadowDist->value)
@@ -2326,8 +2490,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	}
 
 	// next, merge touching pshadows
-
-	for ( i = 0; i < tr.refdef.num_pshadows; i++)
+	if (0) //for ( i = 0; i < tr.refdef.num_pshadows; i++)
 	{
 		pshadow_t *ps1 = &tr.refdef.pshadows[i];
 		int j;
@@ -2387,20 +2550,20 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	}
 
 	// next, fill up the rest of the shadow info
-	for ( i = 0; i < tr.refdef.num_pshadows; i++)
+	for (i = 0; i < tr.refdef.num_pshadows; i++)
 	{
 		pshadow_t *shadow = &tr.refdef.pshadows[i];
 		vec3_t up;
-		vec3_t ambientLight, directedLight, lightDir;
+		vec3_t lightDir;
 
 		VectorSet(lightDir, 0.57735f, 0.57735f, 0.57735f);
-#if 1
+#if 0
+		vec3_t ambientLight, directedLight;
 		R_LightForPoint(shadow->viewOrigin, ambientLight, directedLight, lightDir);
 
 		// sometimes there's no light
 		if (DotProduct(lightDir, lightDir) < 0.9f)
 			VectorSet(lightDir, 0.0f, 0.0f, 1.0f);
-#endif
 
 		if (shadow->viewRadius * 3.0f > shadow->lightRadius)
 		{
@@ -2412,10 +2575,76 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		// make up a projection, up doesn't matter
 		VectorScale(lightDir, -1.0f, shadow->lightViewAxis[0]);
 		VectorSet(up, 0, 0, -1);
+#else
+		// Let's try to find a real light source...
+		extern int			NUM_CLOSE_LIGHTS;
+		extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
+		extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
+		extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
+		extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
+		extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
+		extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
 
-		if ( abs(DotProduct(up, shadow->lightViewAxis[0])) > 0.9f )
+		if (NUM_CLOSE_LIGHTS > 0)
+		{
+			int best = 0;
+			float bestDist = Distance(CLOSEST_LIGHTS_POSITIONS[0], shadow->viewOrigin);
+
+			for (int l = 1; l < NUM_CLOSE_LIGHTS; l++)
+			{// Find the closest dlight...
+				float lDist = Distance(CLOSEST_LIGHTS_POSITIONS[l], shadow->viewOrigin);
+				if (lDist < bestDist)
+				{
+					best = l;
+					bestDist = lDist;
+				}
+			}
+
+			if (bestDist <= CLOSEST_LIGHTS_DISTANCES[best])
+			{
+				shadow->lightRadius = CLOSEST_LIGHTS_DISTANCES[best];
+				//VectorCopy(CLOSEST_LIGHTS_POSITIONS[best], shadow->lightOrigin);
+				VectorSubtract(shadow->viewOrigin, CLOSEST_LIGHTS_POSITIONS[best], lightDir);
+				VectorNormalize(lightDir);
+				VectorMA(shadow->viewOrigin, shadow->viewRadius, lightDir, shadow->lightOrigin);
+			}
+			else
+			{
+				// sometimes there's no light
+				VectorSet(lightDir, 0.0f, 0.0f, 1.0f);
+				shadow->lightRadius = 0.0;
+				VectorMA(shadow->viewOrigin, shadow->viewRadius, lightDir, shadow->lightOrigin);
+			}
+		}
+		else
+		{
+			// sometimes there's no light
+			VectorSet(lightDir, 0.0f, 0.0f, 1.0f);
+			shadow->lightRadius = 0.0;
+			VectorMA(shadow->viewOrigin, shadow->viewRadius, lightDir, shadow->lightOrigin);
+		}
+
+		// sometimes there's no light
+		/*if (DotProduct(lightDir, lightDir) < 0.9f)
+		{
+			VectorSet(lightDir, 0.0f, 0.0f, 1.0f);
+			shadow->lightRadius = 0.0;
+			VectorMA(shadow->viewOrigin, shadow->viewRadius, lightDir, shadow->lightOrigin);
+		}*/
+
+		// make up a projection, up doesn't matter
+		VectorScale(lightDir, -1.0f, shadow->lightViewAxis[0]);
+		VectorSet(up, 0, 0, -1);
+#endif
+
+		if (fabs(DotProduct(up, shadow->lightViewAxis[0])) > 0.9f)
 		{
 			VectorSet(up, -1, 0, 0);
+		}
+
+		if (shadow->lightRadius > 256.0)
+		{
+			shadow->lightRadius = 256.0;
 		}
 
 		CrossProduct(shadow->lightViewAxis[0], up, shadow->lightViewAxis[1]);
@@ -2429,18 +2658,18 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	}
 
 	// next, render shadowmaps
-	for ( i = 0; i < tr.refdef.num_pshadows; i++)
+	for (i = 0; i < tr.refdef.num_pshadows; i++)
 	{
 		int firstDrawSurf;
 		pshadow_t *shadow = &tr.refdef.pshadows[i];
 		int j;
 
-		Com_Memset( &shadowParms, 0, sizeof( shadowParms ) );
+		Com_Memset(&shadowParms, 0, sizeof(shadowParms));
 
 		shadowParms.viewportX = 0;
 		shadowParms.viewportY = 0;
-		shadowParms.viewportWidth = PSHADOW_MAP_SIZE;
-		shadowParms.viewportHeight = PSHADOW_MAP_SIZE;
+		shadowParms.viewportWidth = tr.pshadowMaps[0]->width;
+		shadowParms.viewportHeight = tr.pshadowMaps[0]->height;
 		shadowParms.isPortal = qfalse;
 		shadowParms.isMirror = qfalse;
 
@@ -2449,11 +2678,11 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 		shadowParms.targetFbo = tr.pshadowFbos[i];
 
-		shadowParms.flags = (viewParmFlags_t)( VPF_SHADOWMAP | VPF_DEPTHSHADOW | VPF_NOVIEWMODEL | VPF_SHADOWPASS );
+		shadowParms.flags = (viewParmFlags_t)(VPF_DEPTHSHADOW | VPF_NOVIEWMODEL);
 		shadowParms.zFar = shadow->lightRadius;
 
 		VectorCopy(shadow->lightOrigin, shadowParms.ori.origin);
-		
+
 		VectorCopy(shadow->lightViewAxis[0], shadowParms.ori.axis[0]);
 		VectorCopy(shadow->lightViewAxis[1], shadowParms.ori.axis[1]);
 		VectorCopy(shadow->lightViewAxis[2], shadowParms.ori.axis[2]);
@@ -2485,11 +2714,11 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				dest->projectionMatrix[0] = 2 / (xmax - xmin);
 				dest->projectionMatrix[4] = 0;
 				dest->projectionMatrix[8] = (xmax + xmin) / (xmax - xmin);
-				dest->projectionMatrix[12] =0;
+				dest->projectionMatrix[12] = 0;
 
 				dest->projectionMatrix[1] = 0;
 				dest->projectionMatrix[5] = 2 / (ymax - ymin);
-				dest->projectionMatrix[9] = ( ymax + ymin ) / (ymax - ymin);	// normally 0
+				dest->projectionMatrix[9] = (ymax + ymin) / (ymax - ymin);	// normally 0
 				dest->projectionMatrix[13] = 0;
 
 				dest->projectionMatrix[2] = 0;
@@ -2502,7 +2731,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				dest->projectionMatrix[11] = 0;
 				dest->projectionMatrix[15] = 1;
 
-				VectorScale(dest->ori.axis[1],  1.0f, dest->frustum[0].normal);
+				VectorScale(dest->ori.axis[1], 1.0f, dest->frustum[0].normal);
 				VectorMA(dest->ori.origin, -shadow->viewRadius, dest->frustum[0].normal, pop);
 				dest->frustum[0].dist = DotProduct(pop, dest->frustum[0].normal);
 
@@ -2510,7 +2739,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				VectorMA(dest->ori.origin, -shadow->viewRadius, dest->frustum[1].normal, pop);
 				dest->frustum[1].dist = DotProduct(pop, dest->frustum[1].normal);
 
-				VectorScale(dest->ori.axis[2],  1.0f, dest->frustum[2].normal);
+				VectorScale(dest->ori.axis[2], 1.0f, dest->frustum[2].normal);
 				VectorMA(dest->ori.origin, -shadow->viewRadius, dest->frustum[2].normal, pop);
 				dest->frustum[2].dist = DotProduct(pop, dest->frustum[2].normal);
 
@@ -2525,7 +2754,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				for (j = 0; j < 5; j++)
 				{
 					dest->frustum[j].type = PLANE_NON_AXIAL;
-					SetPlaneSignbits (&dest->frustum[j]);
+					SetPlaneSignbits(&dest->frustum[j]);
 				}
 
 				dest->flags |= VPF_FARPLANEFRUSTUM;
@@ -2536,7 +2765,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				R_AddEntitySurface(shadow->entityNums[j]);
 			}
 
-			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
+			R_SortDrawSurfs(tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf);
 		}
 	}
 #endif

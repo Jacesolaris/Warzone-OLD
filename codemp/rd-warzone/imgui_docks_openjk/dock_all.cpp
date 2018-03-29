@@ -28,6 +28,7 @@ bool undock(CDock *dock) {
 	//	return false;
 	g_dock.doUndock(*dock);
 	dock->status = Status_Float;
+	return true;
 }
 
 bool dockLeft(CDock *from, CDock *to) {

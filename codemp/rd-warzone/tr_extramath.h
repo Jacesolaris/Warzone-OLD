@@ -50,6 +50,7 @@ void Matrix16SimpleInverse( const matrix_t in, matrix_t out);
 #define VectorScale4(a,b,c)     ((c)[0]=(a)[0]*(b),(c)[1]=(a)[1]*(b),(c)[2]=(a)[2]*(b),(c)[3]=(a)[3]*(b))
 
 #define VectorCopy5(a,b)		((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3],(b)[4]=(a)[4])
+#define VectorCopy7(a,b)		((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3],(b)[4]=(a)[4],(b)[5]=(a)[5],(b)[6]=(a)[6])
 
 #define OffsetByteToFloat(a)    ((float)(a) * 1.0f/127.5f - 1.0f)
 #define FloatToOffsetByte(a)    (byte)(((a) + 1.0f) * 127.5f)
@@ -71,6 +72,15 @@ static QINLINE int VectorCompare4(const vec4_t v1, const vec4_t v2)
 static QINLINE int VectorCompare5(const vec5_t v1, const vec5_t v2)
 {
 	if(v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2] || v1[3] != v2[3] || v1[4] != v2[4])
+	{
+		return 0;
+	}
+	return 1;
+}
+
+static QINLINE int VectorCompare7(const float *v1, const float *v2)
+{
+	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2] || v1[3] != v2[3] || v1[4] != v2[4] || v1[5] != v2[5] || v1[6] != v2[6])
 	{
 		return 0;
 	}

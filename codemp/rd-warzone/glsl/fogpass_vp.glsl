@@ -17,7 +17,7 @@ uniform float   u_FogEyeT;
 
 #if defined(USE_DEFORM_VERTEXES)
 uniform int     u_DeformGen;
-uniform float   u_DeformParams[5];
+uniform float   u_DeformParams[7];
 #endif
 
 uniform float   u_Time;

@@ -2566,9 +2566,37 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 
 						last->goreChain=newSurf2;
 						last=newSurf2;
+
 						R_AddDrawSurf ((surfaceType_t *)newSurf2, gshader, RS.fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex, qfalse);
 					}
 				}
+			}
+
+			// stencil shadows can't do personal models unless I polyhedron clip
+			if (!RS.personalModel
+				&& r_shadows->integer == 2
+				&& !(RS.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& shader->sort == SS_OPAQUE) {
+
+				CRenderableSurface *newSurf = AllocGhoul2RenderableSurface();
+				newSurf->vboMesh = &RS.currentModel->data.glm->vboModels[RS.lod].vboMeshes[RS.surfaceNum];
+				assert(newSurf->vboMesh != NULL && RS.surfaceNum == surface->thisSurfaceIndex);
+				newSurf->surfaceData = surface;
+				newSurf->boneCache = RS.boneCache;
+				R_AddDrawSurf((surfaceType_t *)newSurf, tr.shadowShader, RS.fogNum, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex, qfalse);
+			}
+
+			// projection shadows work fine with personal models
+			if (r_shadows->integer == 3
+				&& !(RS.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& shader->sort == SS_OPAQUE) {
+
+				CRenderableSurface *newSurf = AllocGhoul2RenderableSurface();
+				newSurf->vboMesh = &RS.currentModel->data.glm->vboModels[RS.lod].vboMeshes[RS.surfaceNum];
+				assert(newSurf->vboMesh != NULL && RS.surfaceNum == surface->thisSurfaceIndex);
+				newSurf->surfaceData = surface;
+				newSurf->boneCache = RS.boneCache;
+				R_AddDrawSurf((surfaceType_t *)newSurf, tr.projectionShadowShader, RS.fogNum, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex, qfalse);
 			}
 #endif
 		}

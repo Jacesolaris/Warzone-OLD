@@ -24,18 +24,12 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 #include "tr_local.h"
 
 /*
-
 for a projection shadow:
-
 point[x] += light vector * ( z - shadow plane )
 point[y] +=
 point[z] = shadow plane
-
 1 0 light[x] / light[z]
-
 */
-
-#define _STENCIL_REVERSE
 
 typedef struct {
 	int		i2;
@@ -48,7 +42,6 @@ static	edgeDef_t	edgeDefs[SHADER_MAX_VERTEXES][MAX_EDGE_DEFS];
 static	int			numEdgeDefs[SHADER_MAX_VERTEXES];
 static	int			facing[SHADER_MAX_INDEXES / 3];
 static	vec3_t		shadowXyz[SHADER_MAX_VERTEXES];
-
 
 void R_AddEdgeDef(int i1, int i2, int facing) {
 	int		c;
@@ -64,48 +57,57 @@ void R_AddEdgeDef(int i1, int i2, int facing) {
 }
 
 void R_RenderShadowEdges(void) {
-	int		i;
-	int		c;
-	int		j;
-	int		i2;
-	//int		c_edges, c_rejected;
 #if 0
-	int		c2, k;
-	int		hit[2];
-#endif
-#ifdef _STENCIL_REVERSE
+	int		i;
 	int		numTris;
-	int		o1, o2, o3;
-#endif
+
+	// dumb way -- render every triangle's edges
+	numTris = tess.numIndexes / 3;
+
+	for (i = 0; i < numTris; i++) {
+		int		i1, i2, i3;
+
+		if (!facing[i]) {
+			continue;
+		}
+
+		i1 = tess.indexes[i * 3 + 0];
+		i2 = tess.indexes[i * 3 + 1];
+		i3 = tess.indexes[i * 3 + 2];
+
+		qglBegin(GL_TRIANGLE_STRIP);
+		qglVertex3fv(tess.xyz[i1]);
+		qglVertex3fv(tess.xyz[i1 + tess.numVertexes]);
+		qglVertex3fv(tess.xyz[i2]);
+		qglVertex3fv(tess.xyz[i2 + tess.numVertexes]);
+		qglVertex3fv(tess.xyz[i3]);
+		qglVertex3fv(tess.xyz[i3 + tess.numVertexes]);
+		qglVertex3fv(tess.xyz[i1]);
+		qglVertex3fv(tess.xyz[i1 + tess.numVertexes]);
+		qglEnd();
+	}
+#else
+
+	int		c, c2;
+	int		j, k;
+	int		i2;
+	int		c_edges, c_rejected;
+	int		hit[2];
 
 	// an edge is NOT a silhouette edge if its face doesn't face the light,
 	// or if it has a reverse paired edge that also faces the light.
 	// A well behaved polyhedron would have exactly two faces for each edge,
 	// but lots of models have dangling edges or overfanned edges
-#if 0
 	c_edges = 0;
 	c_rejected = 0;
-#endif
 
-	for (i = 0; i < tess.numVertexes; i++) {
+	for (int i = 0; i < tess.numVertexes; i++) {
 		c = numEdgeDefs[i];
 		for (j = 0; j < c; j++) {
 			if (!edgeDefs[i][j].facing) {
 				continue;
 			}
 
-			//with this system we can still get edges shared by more than 2 tris which
-			//produces artifacts including seeing the shadow through walls. So for now
-			//we are going to render all edges even though it is a tiny bit slower. -rww
-#if 1
-			i2 = edgeDefs[i][j].i2;
-			qglBegin(GL_TRIANGLE_STRIP);
-			qglVertex3fv(tess.xyz[i]);
-			qglVertex3fv(shadowXyz[i]);
-			qglVertex3fv(tess.xyz[i2]);
-			qglVertex3fv(shadowXyz[i2]);
-			qglEnd();
-#else
 			hit[0] = 0;
 			hit[1] = 0;
 
@@ -131,152 +133,39 @@ void R_RenderShadowEdges(void) {
 			else {
 				c_rejected++;
 			}
-#endif
 		}
-	}
-
-#ifdef _STENCIL_REVERSE
-	//Carmack Reverse<tm> method requires that volumes
-	//be capped properly -rww
-	numTris = tess.numIndexes / 3;
-
-	for (i = 0; i < numTris; i++)
-	{
-		if (!facing[i])
-		{
-			continue;
-		}
-
-		o1 = tess.indexes[i * 3 + 0];
-		o2 = tess.indexes[i * 3 + 1];
-		o3 = tess.indexes[i * 3 + 2];
-
-		qglBegin(GL_TRIANGLES);
-		qglVertex3fv(tess.xyz[o1]);
-		qglVertex3fv(tess.xyz[o2]);
-		qglVertex3fv(tess.xyz[o3]);
-		qglEnd();
-		qglBegin(GL_TRIANGLES);
-		qglVertex3fv(shadowXyz[o3]);
-		qglVertex3fv(shadowXyz[o2]);
-		qglVertex3fv(shadowXyz[o1]);
-		qglEnd();
 	}
 #endif
 }
 
-//#define _DEBUG_STENCIL_SHADOWS
-
 /*
 =================
 RB_ShadowTessEnd
-
 triangleFromEdge[ v1 ][ v2 ]
-
-
 set triangle from edge( v1, v2, tri )
 if ( facing[ triangleFromEdge[ v1 ][ v2 ] ] && !facing[ triangleFromEdge[ v2 ][ v1 ] ) {
 }
 =================
 */
-void RB_DoShadowTessEnd(vec3_t lightPos);
-void RB_ShadowTessEnd(void)
-{
-#if 0
-	if (backEnd.currentEntity &&
-		(backEnd.currentEntity->directedLight[0] ||
-			backEnd.currentEntity->directedLight[1] ||
-			backEnd.currentEntity->directedLight[2]))
-	{ //an ent that has its light set for it
-		RB_DoShadowTessEnd(NULL);
-		return;
-	}
-
-	//	if (!tess.dlightBits)
-	//	{
-	//		return;
-	//	}
-
-	int i = 0;
-	dlight_t *dl;
-
-	R_TransformDlights(backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori);
-	/*	while (i < tr.refdef.num_dlights)
-	{
-	if (tess.dlightBits & (1 << i))
-	{
-	dl = &tr.refdef.dlights[i];
-
-	RB_DoShadowTessEnd(dl->transformed);
-	}
-
-	i++;
-	}
-	*/
-	dl = &tr.refdef.dlights[0];
-
-	RB_DoShadowTessEnd(dl->transformed);
-
-#else //old ents-only way
-	RB_DoShadowTessEnd(NULL);
-#endif
-}
-
-void RB_DoShadowTessEnd(vec3_t lightPos)
-{
+void RB_ShadowTessEnd(void) {
 	int		i;
 	int		numTris;
 	vec3_t	lightDir;
+	GLboolean rgba[4];
 
 	if (glConfig.stencilBits < 4) {
 		return;
 	}
 
-#if 1 //controlled method - try to keep shadows in range so they don't show through so much -rww
-	vec3_t	worldxyz;
-	vec3_t	entLight;
-	float	groundDist;
+	VectorCopy(backEnd.currentEntity->modelLightDir, lightDir);
 
-	VectorCopy(backEnd.currentEntity->lightDir, entLight);
-	entLight[2] = 0.0f;
-	VectorNormalize(entLight);
-
-	//Oh well, just cast them straight down no matter what onto the ground plane.
-	//This presets no chance of screwups and still looks better than a stupid
-	//shader blob.
-	VectorSet(lightDir, entLight[0] * 0.3f, entLight[1] * 0.3f, 1.0f);
 	// project vertexes away from light direction
 	for (i = 0; i < tess.numVertexes; i++) {
-		//add or.origin to vert xyz to end up with world oriented coord, then figure
-		//out the ground pos for the vert to project the shadow volume to
-		VectorAdd(tess.xyz[i], backEnd.ori.origin, worldxyz);
-		groundDist = worldxyz[2] - backEnd.currentEntity->e.shadowPlane;
-		//DT EDIT: DF2 - Allow any model to project shadows
-		groundDist += 100.0f; //fudge factor
-		VectorMA(tess.xyz[i], -groundDist, lightDir, shadowXyz[i]);
+		VectorMA(tess.xyz[i], -512, lightDir, shadowXyz[i]);
 	}
-#else
-	if (lightPos)
-	{
-		for (i = 0; i < tess.numVertexes; i++)
-		{
-			shadowXyz[i][0] = tess.xyz[i][0] + ((tess.xyz[i][0] - lightPos[0])*128.0f);
-			shadowXyz[i][1] = tess.xyz[i][1] + ((tess.xyz[i][1] - lightPos[1])*128.0f);
-			shadowXyz[i][2] = tess.xyz[i][2] + ((tess.xyz[i][2] - lightPos[2])*128.0f);
-		}
-	}
-	else
-	{
-		VectorCopy(backEnd.currentEntity->lightDir, lightDir);
 
-		// project vertexes away from light direction
-		for (i = 0; i < tess.numVertexes; i++) {
-			VectorMA(tess.xyz[i], -512, lightDir, shadowXyz[i]);
-		}
-	}
-#endif
 	// decide which triangles face the light
-	memset(numEdgeDefs, 0, 4 * tess.numVertexes);
+	Com_Memset(numEdgeDefs, 0, 4 * tess.numVertexes);
 
 	numTris = tess.numIndexes / 3;
 	for (i = 0; i < numTris; i++) {
@@ -293,30 +182,11 @@ void RB_DoShadowTessEnd(vec3_t lightPos)
 		v2 = tess.xyz[i2];
 		v3 = tess.xyz[i3];
 
-		if (!lightPos)
-		{
-			VectorSubtract(v2, v1, d1);
-			VectorSubtract(v3, v1, d2);
-			CrossProduct(d1, d2, normal);
+		VectorSubtract(v2, v1, d1);
+		VectorSubtract(v3, v1, d2);
+		CrossProduct(d1, d2, normal);
 
-			d = DotProduct(normal, lightDir);
-		}
-		else
-		{
-			float planeEq[4];
-			planeEq[0] = v1[1] * (v2[2] - v3[2]) + v2[1] * (v3[2] - v1[2]) + v3[1] * (v1[2] - v2[2]);
-			planeEq[1] = v1[2] * (v2[0] - v3[0]) + v2[2] * (v3[0] - v1[0]) + v3[2] * (v1[0] - v2[0]);
-			planeEq[2] = v1[0] * (v2[1] - v3[1]) + v2[0] * (v3[1] - v1[1]) + v3[0] * (v1[1] - v2[1]);
-			planeEq[3] = -(v1[0] * (v2[1] * v3[2] - v3[1] * v2[2]) +
-				v2[0] * (v3[1] * v1[2] - v1[1] * v3[2]) +
-				v3[0] * (v1[1] * v2[2] - v2[1] * v1[2]));
-
-			d = planeEq[0] * lightPos[0] +
-				planeEq[1] * lightPos[1] +
-				planeEq[2] * lightPos[2] +
-				planeEq[3];
-		}
-
+		d = DotProduct(normal, lightDir);
 		if (d > 0) {
 			facing[i] = 1;
 		}
@@ -330,101 +200,38 @@ void RB_DoShadowTessEnd(vec3_t lightPos)
 		R_AddEdgeDef(i3, i1, facing[i]);
 	}
 
-	GL_Bind(tr.whiteImage);
-	//qglEnable( GL_CULL_FACE );
-	GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+	// draw the silhouette edges
 
-#ifndef _DEBUG_STENCIL_SHADOWS
+	GL_BindToTMU(tr.whiteImage, TB_COLORMAP);
+	GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
 	qglColor3f(0.2f, 0.2f, 0.2f);
 
-	// set models to be flat-shaded for speed
-	qglShadeModel(GL_FLAT);
-
 	// don't write to the color buffer
+	qglGetBooleanv(GL_COLOR_WRITEMASK, rgba);
 	qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
 	qglEnable(GL_STENCIL_TEST);
 	qglStencilFunc(GL_ALWAYS, 1, 255);
-#else
-	qglColor3f(1.0f, 0.0f, 0.0f);
-	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//qglDisable(GL_DEPTH_TEST);
-#endif
 
-#ifdef _STENCIL_REVERSE
-	qglDepthFunc(GL_LESS);
+	GL_Cull(CT_BACK_SIDED);
+	qglStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
 
-	//now using the Carmack Reverse<tm> -rww
-	if (backEnd.viewParms.isMirror) {
-		//qglCullFace( GL_BACK );
-		GL_Cull(CT_BACK_SIDED);
-		qglStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
+	R_RenderShadowEdges();
 
-		R_RenderShadowEdges();
+	GL_Cull(CT_FRONT_SIDED);
+	qglStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
 
-		//qglCullFace( GL_FRONT );
-		GL_Cull(CT_FRONT_SIDED);
-		qglStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
+	R_RenderShadowEdges();
 
-		R_RenderShadowEdges();
-	}
-	else {
-		//qglCullFace( GL_FRONT );
-		GL_Cull(CT_FRONT_SIDED);
-		qglStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
 
-		R_RenderShadowEdges();
-
-		//qglCullFace( GL_BACK );
-		GL_Cull(CT_BACK_SIDED);
-		qglStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
-
-		R_RenderShadowEdges();
-	}
-
-	qglDepthFunc(GL_LEQUAL);
-#else
-	// mirrors have the culling order reversed
-	if (backEnd.viewParms.isMirror) {
-		qglCullFace(GL_FRONT);
-		qglStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-
-		R_RenderShadowEdges();
-
-		qglCullFace(GL_BACK);
-		qglStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
-
-		R_RenderShadowEdges();
-	}
-	else {
-		qglCullFace(GL_BACK);
-		qglStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-
-		R_RenderShadowEdges();
-
-		qglCullFace(GL_FRONT);
-		qglStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
-
-		R_RenderShadowEdges();
-	}
-#endif
-
-	// re-enable GL_SMOOTH
-	qglShadeModel(GL_SMOOTH);
-
-	// re-enable writing to the color buffer
-	qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-#ifdef _DEBUG_STENCIL_SHADOWS
-	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-#endif
+	// reenable writing to the color buffer
+	qglColorMask(rgba[0], rgba[1], rgba[2], rgba[3]);
 }
 
 
 /*
 =================
 RB_ShadowFinish
-
 Darken everything that is is a shadow volume.
 We have to delay this until everything has been shadowed,
 because otherwise shadows from different body parts would
@@ -438,39 +245,21 @@ void RB_ShadowFinish(void) {
 	if (glConfig.stencilBits < 4) {
 		return;
 	}
-
-#ifdef _DEBUG_STENCIL_SHADOWS
-	return;
-#endif
-
 	qglEnable(GL_STENCIL_TEST);
 	qglStencilFunc(GL_NOTEQUAL, 0, 255);
 
-	qglStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-	bool planeZeroBack = false;
-	if (qglIsEnabled(GL_CLIP_PLANE0))
-	{
-		planeZeroBack = true;
-		qglDisable(GL_CLIP_PLANE0);
-	}
+	qglDisable(GL_CLIP_PLANE0);
 	GL_Cull(CT_TWO_SIDED);
-	//qglDisable (GL_CULL_FACE);
 
-	GL_Bind(tr.whiteImage);
+	GL_BindToTMU(tr.whiteImage, TB_COLORMAP);
 
-	qglPushMatrix();
 	qglLoadIdentity();
 
-	//	qglColor3f( 0.6f, 0.6f, 0.6f );
-	//	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO );
+	qglColor3f(0.6f, 0.6f, 0.6f);
+	GL_State(GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
 
 	//	qglColor3f( 1, 0, 0 );
 	//	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
-
-	qglColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-	//GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
-	GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 
 	qglBegin(GL_QUADS);
 	qglVertex3f(-100, 100, -10);
@@ -481,18 +270,12 @@ void RB_ShadowFinish(void) {
 
 	qglColor4f(1, 1, 1, 1);
 	qglDisable(GL_STENCIL_TEST);
-	if (planeZeroBack)
-	{
-		qglEnable(GL_CLIP_PLANE0);
-	}
-	qglPopMatrix();
 }
 
 
 /*
 =================
 RB_ProjectionShadowDeform
-
 =================
 */
 void RB_ProjectionShadowDeform(void) {
@@ -513,7 +296,7 @@ void RB_ProjectionShadowDeform(void) {
 
 	groundDist = backEnd.ori.origin[2] - backEnd.currentEntity->e.shadowPlane;
 
-	VectorCopy(backEnd.currentEntity->lightDir, lightDir);
+	VectorCopy(backEnd.currentEntity->modelLightDir, lightDir);
 	d = DotProduct(lightDir, ground);
 	// don't let the shadows get too long or go negative
 	if (d < 0.5) {

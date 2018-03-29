@@ -109,6 +109,22 @@ void R_AddPolygonSurfaces(void) {
 	{
 		if (poly)
 		{
+			// stencil shadows can't do personal models unless I polyhedron clip
+			if (r_shadows->integer == 2
+				&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& sh->sort == SS_OPAQUE)
+			{
+				R_AddDrawSurf((surfaceType_t *)poly, tr.shadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+
+			// projection shadows work fine with personal models
+			if (r_shadows->integer == 3
+				&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
+				&& sh->sort == SS_OPAQUE)
+			{
+				R_AddDrawSurf((surfaceType_t *)poly, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
+			}
+
 			sh = R_GetShaderByHandle(poly->hShader);
 			R_AddDrawSurf((surfaceType_t *)poly, sh, 
 #ifdef __Q3_FOG__
@@ -162,10 +178,10 @@ RE_AddPolyToScene
 */
 void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys) {
 	srfPoly_t	*poly;
-	int			i, j;
+	int			/*i,*/ j;
 	int			fogIndex;
-	fog_t		*fog;
-	vec3_t		bounds[2];
+	//fog_t		*fog;
+	//vec3_t		bounds[2];
 
 	if (!tr.registered) {
 		return;

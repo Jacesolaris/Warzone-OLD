@@ -744,14 +744,11 @@ void FBO_Init(void)
 	{
 		for( i = 0; i < MAX_DRAWN_PSHADOWS; i++)
 		{
-			tr.pshadowFbos[i] = FBO_Create(va("_shadowmap%d", i), tr.pshadowMaps[i]->width, tr.pshadowMaps[i]->height);
+			tr.pshadowFbos[i] = FBO_Create(va("_shadowmap%i", i), tr.pshadowMaps[i]->width, tr.pshadowMaps[i]->height);
 			FBO_Bind(tr.pshadowFbos[i]);
 
-			//FBO_CreateBuffer(tr.pshadowFbos[i], GL_RGBA8, 0, 0);
-			FBO_AttachTextureImage(tr.pshadowMaps[i], 0);
-
 			FBO_CreateBuffer(tr.pshadowFbos[i], GL_DEPTH_COMPONENT24, 0, 0);
-			//R_AttachFBOTextureDepth(tr.textureDepthImage->texnum);
+			R_AttachFBOTextureDepth(tr.pshadowMaps[i]->texnum);
 
 			FBO_SetupDrawBuffers();
 
@@ -864,6 +861,7 @@ void FBO_Init(void)
 		R_CheckFBO(tr.renderCubeFbo);
 	}
 
+	/*
 	{
 		tr.awesomiumuiFbo = FBO_Create("_awesomiumui", tr.awesomiumuiImage->width, tr.awesomiumuiImage->height);
 		FBO_Bind(tr.awesomiumuiFbo);
@@ -874,6 +872,7 @@ void FBO_Init(void)
 
 		R_CheckFBO(tr.awesomiumuiFbo);
 	}
+	*/
 
 
 	{

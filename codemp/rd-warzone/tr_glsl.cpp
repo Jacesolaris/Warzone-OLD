@@ -1246,7 +1246,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_textureScale", GLSL_VEC2, 1 },
 
 	{ "u_DeformGen", GLSL_INT, 1 },
-	{ "u_DeformParams", GLSL_FLOAT5, 1 },
+	{ "u_DeformParams", GLSL_FLOAT7, 1 },
 
 	{ "u_ColorGen", GLSL_INT, 1 },
 	{ "u_AlphaGen", GLSL_INT, 1 },
@@ -1656,6 +1656,7 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 		"#define DGEN_WAVE_INVERSE_SAWTOOTH %i\n"
 		"#define DGEN_BULGE %i\n"
 		"#define DGEN_MOVE %i\n"
+		"#define DGEN_PROJECTION_SHADOW %i\n"
 		"#endif\n",
 		DGEN_WAVE_SIN,
 		DGEN_WAVE_SQUARE,
@@ -1663,7 +1664,8 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 		DGEN_WAVE_SAWTOOTH,
 		DGEN_WAVE_INVERSE_SAWTOOTH,
 		DGEN_BULGE,
-		DGEN_MOVE));
+		DGEN_MOVE,
+		DGEN_PROJECTION_SHADOW));
 
 	Q_strcat(dest, size,
 		va("#ifndef tcGen_t\n"
@@ -2516,6 +2518,9 @@ void GLSL_InitUniforms(shaderProgram_t *program)
 		case GLSL_FLOAT5:
 			size += sizeof(float)* 5 * uniformsInfo[i].size;
 			break;
+		case GLSL_FLOAT7:
+			size += sizeof(float) * 7 * uniformsInfo[i].size;
+			break;
 		case GLSL_VEC2:
 			size += sizeof(float)* 2 * uniformsInfo[i].size;
 			break;
@@ -2782,6 +2787,31 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 	VectorCopy5(v, compare);
 
 	qglUniform1fv(uniforms[uniformNum], 5, v);
+}
+
+void GLSL_SetUniformFloat7(shaderProgram_t *program, int uniformNum, const float *v)
+{
+	GLint *uniforms = program->uniforms;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (uniformsInfo[uniformNum].type != GLSL_FLOAT7)
+	{
+		ri->Printf(PRINT_WARNING, "GLSL_SetUniformFloat7: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (VectorCompare7(v, compare))
+	{
+		return;
+	}
+
+	VectorCopy7(v, compare);
+
+	qglUniform1fv(uniforms[uniformNum], 7, v);
 }
 
 void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
@@ -3209,7 +3239,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 	attribs = ATTR_POSITION | ATTR_POSITION2 | ATTR_NORMAL | ATTR_NORMAL2 | ATTR_TEXCOORD0;
-
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.shadowmapShader, "shadowfill", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowfill_vp, fallbackShader_shadowfill_fp, NULL, NULL, NULL))

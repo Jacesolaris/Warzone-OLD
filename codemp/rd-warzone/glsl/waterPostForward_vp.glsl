@@ -13,7 +13,7 @@ uniform vec4	u_Local10;
 uniform float	u_Time;
 
 uniform int		u_DeformGen;
-uniform float	u_DeformParams[5];
+uniform float	u_DeformParams[7];
 
 varying vec2		var_TexCoords;
 varying vec3		var_vertPos;
@@ -31,7 +31,28 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 	float frequency = u_DeformParams[3];
 	float spread =    u_DeformParams[4];
 
-	if (u_DeformGen == DGEN_BULGE)
+	if (u_DeformGen == DGEN_PROJECTION_SHADOW)
+	{
+		vec3 ground = vec3(
+			u_DeformParams[0],
+			u_DeformParams[1],
+			u_DeformParams[2]);
+		float groundDist = u_DeformParams[3];
+		vec3 lightDir = vec3(
+			u_DeformParams[4],
+			u_DeformParams[5],
+			u_DeformParams[6]);
+
+		float d = dot(lightDir, ground);
+
+		lightDir = lightDir * max(0.5 - d, 0.0) + ground;
+		d = 1.0 / dot(lightDir, ground);
+
+		vec3 lightPos = lightDir * d;
+
+		return pos - lightPos * dot(pos, ground) + groundDist;
+	}
+	else if (u_DeformGen == DGEN_BULGE)
 	{
 		phase *= st.x;
 	}

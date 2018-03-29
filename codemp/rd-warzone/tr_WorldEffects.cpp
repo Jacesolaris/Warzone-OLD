@@ -1260,7 +1260,7 @@ public:
 				continue;
 			}
 
-			vec4_t particleColor;
+			//vec4_t particleColor;
 
 			// Blend Mode Zero -> Apply Alpha Just To Alpha Channel
 			//------------------------------------------------------

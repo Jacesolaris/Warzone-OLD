@@ -207,8 +207,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	header = (mdrHeader_t *)tr.currentModel->data.mdr;
 	
-	personalModel = (qboolean)((ent->e.renderfx & RF_THIRD_PERSON) && !(tr.viewParms.isPortal 
-	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW))));
+	personalModel = (qboolean)((ent->e.renderfx & RF_THIRD_PERSON) && !(tr.viewParms.isPortal || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW))));
 	
 	if ( ent->e.renderfx & RF_WRAP_FRAMES )
 	{
@@ -309,8 +308,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 
 		// stencil shadows can't do personal models unless I polyhedron clip
 		if ( !personalModel
-		        && r_shadows->integer == 2
-			&& fogNum == 0
+			&& r_shadows->integer == 2
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) )
 			&& shader->sort == SS_OPAQUE )
 		{
@@ -319,8 +317,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 
 		// projection shadows work fine with personal models
 		if ( r_shadows->integer == 3
-			&& fogNum == 0
-			&& (ent->e.renderfx & RF_SHADOW_PLANE )
+			&& !(ent->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
 			&& shader->sort == SS_OPAQUE )
 		{
 			R_AddDrawSurf( (surfaceType_t *)surface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0, qfalse);

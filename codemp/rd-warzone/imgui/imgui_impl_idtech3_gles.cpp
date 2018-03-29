@@ -330,7 +330,7 @@ CCALL void imgui_create_font() {
 bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 {
     // Backup GL state
-    GLint last_texture, last_array_buffer, last_vertex_array;
+	GLint last_texture, last_array_buffer;// , last_vertex_array;
     qglGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     qglGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);

@@ -21,6 +21,7 @@ void alignTabsDefault();
 
 CCALL int add_dock(Dock *dock) {
 	imgui_quake_docks.push_back( dock );
+	return 1; // UQ1: Was missing - return 1???
 }
 
 CCALL void *imgui_get_current_dock();
