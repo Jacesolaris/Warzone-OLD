@@ -63,6 +63,8 @@ void R_InitNextFrame(void) {
 	r_firstScenePoly = 0;
 
 	r_numpolyverts = 0;
+
+	backEnd.localPlayerOriginValid = qfalse;
 }
 
 
@@ -326,6 +328,13 @@ void RE_AddRefEntityToScene(const refEntity_t *ent) {
 		}
 	}
 #endif //__PVS_CULL__
+
+	if (ent->isLocalPlayer)
+	{
+		VectorCopy(ent->origin, backEnd.localPlayerOrigin);
+		backEnd.localPlayerEntityNum = ent->localPlayerEntityNum;
+		backEnd.localPlayerOriginValid = qtrue;
+	}
 
 	backEndData->entities[r_numentities].e = *ent;
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;

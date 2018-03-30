@@ -2275,6 +2275,12 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 #endif
 }
 
+void Light_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask)
+{
+	results->entityNum = ENTITYNUM_NONE;
+	ri->CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, 0);
+	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
+}
 
 void R_RenderPshadowMaps(const refdef_t *fd)
 {
@@ -2282,7 +2288,177 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	viewParms_t		shadowParms;
 	int i;
 
-	// first, make a list of shadows
+	vec3_t playerOrigin;
+
+	if (backEnd.localPlayerOriginValid)
+	{
+		VectorCopy(backEnd.localPlayerOrigin, playerOrigin);
+		//ri->Printf(PRINT_WARNING, "Local player is at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+	}
+	else
+	{
+		VectorCopy(backEnd.refdef.vieworg, playerOrigin);
+		//ri->Printf(PRINT_WARNING, "No Local player! Using vieworg at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+	}
+
+#define MAX_PSHADOW_RADIUS 512.0//r_testvalue0->value//1024.0
+
+//#define __PSHADOW_USE_BEST_LIGHT__
+#define __PSHADOW_USE_Q3_LIGHT__
+#define __PSHADOWS_GLM_ONLY__
+//#define __PSHADOWS_MISC_ENTS__
+
+#ifdef __PSHADOW_USE_BEST_LIGHT__
+	// Let's try to find a real light source...
+#if 0 // Use full close list...
+	extern int			NUM_CLOSE_LIGHTS;
+	extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
+	extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
+	extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
+	extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
+	extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
+	extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
+#else // Only use map glow lights... May be better, as moving lights like sabers are not great...
+	extern int			CLOSE_TOTAL;
+	extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+	extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+
+	extern float		MAP_EMISSIVE_RADIUS_SCALE;
+
+#define NUM_CLOSE_LIGHTS					CLOSE_TOTAL
+#define CLOSEST_LIGHTS_POSITIONS			CLOSE_POS
+#define CLOSEST_LIGHTS_DISTANCES			CLOSE_RADIUS
+#endif
+
+	vec3_t	bestLightPosition;
+	float	bestLightRadius;
+
+	vec3_t from, to;
+	VectorSet(from, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 64.0);
+	VectorSet(to, playerOrigin[0], playerOrigin[1], playerOrigin[2] + MAX_PSHADOW_RADIUS);
+	trace_t trace;
+	trace.entityNum = ENTITYNUM_NONE;
+	Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	vec3_t lightCheckOrigin;
+
+	if (trace.fraction == 1.0)
+	{// Just use up 256.0 form player position...
+		VectorSet(from, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 256.0);
+		VectorCopy(from, lightCheckOrigin);
+	}
+	else
+	{// Use the trace end point...
+		VectorCopy(trace.endpos, lightCheckOrigin);
+	}
+
+	if (NUM_CLOSE_LIGHTS > 0)
+	{// TODO: Also factor in the radiuses???
+		int best = -1;
+		float bestDist = 99999.0;
+		float bestDist2 = 99999.0;
+
+		for (int l = 0; l < NUM_CLOSE_LIGHTS; l++)
+		{// Find the closest dlight...
+			float lDist = Distance(CLOSEST_LIGHTS_POSITIONS[l], lightCheckOrigin);
+			float lRadius = CLOSEST_LIGHTS_DISTANCES[l] * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+
+			if (lDist <= MAX_PSHADOW_RADIUS && lDist <= lRadius && CLOSEST_LIGHTS_POSITIONS[l][2] > playerOrigin[2])
+			{// Within the max light range, and above us...
+				float lDist2 = lDist / pow(lRadius, r_testvalue2->value);
+
+				//float vDist = DistanceVertical(CLOSEST_LIGHTS_POSITIONS[l], lightCheckOrigin);
+				//float hDist = DistanceHorizontal(CLOSEST_LIGHTS_POSITIONS[l], lightCheckOrigin);
+
+				//if ((hDist / vDist) > r_testvalue1->value)
+				//{// Prioritize light sources that are above us, but not too far above...
+				//	lDist2 /= (hDist / vDist);
+				//}
+
+				if (lDist2 < bestDist2)
+				//if (lDist < bestDist)
+				{
+					best = l;
+					bestDist = lDist;
+					bestDist2 = lDist2;
+				}
+			}
+		}
+
+		if (best == -1)
+		{
+			return;
+		}
+
+		bestLightRadius = CLOSEST_LIGHTS_DISTANCES[best] * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+
+		if (bestDist <= bestLightRadius && bestDist <= MAX_PSHADOW_RADIUS)
+		{// Find one...
+			VectorCopy(CLOSEST_LIGHTS_POSITIONS[best], bestLightPosition);
+			ri->Printf(PRINT_WARNING, "Light selected at %f %f %f. Radius %f.\n", bestLightPosition[0], bestLightPosition[1], bestLightPosition[2], bestLightRadius);
+		}
+		else
+		{
+			return;
+		}
+	}
+	else
+	{
+		return;
+	}
+#endif //__PSHADOW_USE_BEST_LIGHT__
+
+#ifdef __PSHADOW_USE_Q3_LIGHT__
+	vec3_t	bestLightPosition;
+	float	bestLightRadius = MAX_PSHADOW_RADIUS;
+
+	vec3_t from, to;
+	trace_t trace, trace2, trace3, trace4, trace5;
+
+	if (RB_NightScale() != 1.0)
+	{
+		VectorSet(from, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 999999.9);
+		Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0] + 128.0, playerOrigin[1], playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0] + 128.0, playerOrigin[1], playerOrigin[2] + 999999.9);
+		Light_Trace(&trace2, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0] - 128.0, playerOrigin[1], playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0] - 128.0, playerOrigin[1], playerOrigin[2] + 999999.9);
+		Light_Trace(&trace3, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0], playerOrigin[1] + 128.0, playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0], playerOrigin[1] + 128.0, playerOrigin[2] + 999999.9);
+		Light_Trace(&trace4, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0], playerOrigin[1] - 128.0, playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0], playerOrigin[1] - 128.0, playerOrigin[2] + 999999.9);
+		Light_Trace(&trace5, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+	}
+
+	if (RB_NightScale() == 1.0
+		|| (!(trace.surfaceFlags & SURF_SKY) && !(trace2.surfaceFlags & SURF_SKY) && !(trace3.surfaceFlags & SURF_SKY) && !(trace4.surfaceFlags & SURF_SKY) && !(trace5.surfaceFlags & SURF_SKY)))
+	{// Only use pshadows inside or at night...
+		vec3_t ambientLight, directedLight, lightDir;
+		R_LightForPoint(playerOrigin, ambientLight, directedLight, lightDir);
+
+		// sometimes there's no light
+		if (DotProduct(lightDir, lightDir) < 0.9f)
+		{
+			VectorSet(lightDir, 0.0f, 0.0f, 1.0f);
+			//return;
+		}
+
+		VectorMA(playerOrigin, bestLightRadius, lightDir, bestLightPosition);
+	}
+	else
+	{
+		return;
+	}
+#endif //__PSHADOW_USE_Q3_LIGHT__
+
+	// first, make a list of GLM shadows
 	for (i = 0; i < tr.refdef.num_entities; i++)
 	{
 		trRefEntity_t *ent = &tr.refdef.entities[i];
@@ -2293,70 +2469,19 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		//if((ent->e.renderfx & RF_THIRD_PERSON))
 		//continue;
 
-		if (Distance(backEnd.refdef.vieworg, ent->e.origin) > 512.0)
+#if !defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
+		if (Distance(playerOrigin, ent->e.origin) > MAX_PSHADOW_RADIUS/*512.0*/)
 		{
 			continue;
 		}
-
-		if (ent->e.reType == RT_SPRITE
-			|| ent->e.reType == RT_BEAM
-			|| ent->e.reType == RT_ORIENTED_QUAD
-			|| ent->e.reType == RT_ELECTRICITY
-			|| ent->e.reType == RT_LINE
-			|| ent->e.reType == RT_ORIENTEDLINE
-			|| ent->e.reType == RT_CYLINDER
-			|| ent->e.reType == RT_SABER_GLOW
-			|| ent->e.reType == RT_ENT_CHAIN)
+#else //defined(__PSHADOW_USE_BEST_LIGHT__) || defined(__PSHADOW_USE_Q3_LIGHT__)
+		if (Distance(playerOrigin, ent->e.origin) > bestLightRadius)
 		{
-			pshadow_t shadow;
-			float radius = 0.0f;
-			float scale = 1.0f;
-			vec3_t diff;
-			int j;
-
-			radius = ent->e.radius * scale;
-
-			if (!radius)
-				continue;
-
-			// Cull entities that are behind the viewer by more than lightRadius
-			VectorSubtract(ent->e.origin, fd->vieworg, diff);
-			if (DotProduct(diff, fd->viewaxis[0]) < -r_pshadowDist->value)
-				continue;
-
-			memset(&shadow, 0, sizeof(shadow));
-
-			shadow.numEntities = 1;
-			shadow.entityNums[0] = i;
-			shadow.viewRadius = radius;
-			shadow.lightRadius = r_pshadowDist->value;
-			VectorCopy(ent->e.origin, shadow.viewOrigin);
-			shadow.sort = DotProduct(diff, diff) / (radius * radius);
-			VectorCopy(ent->e.origin, shadow.entityOrigins[0]);
-			shadow.entityRadiuses[0] = radius;
-
-			for (j = 0; j < MAX_CALC_PSHADOWS; j++)
-			{
-				pshadow_t swap;
-
-				if (j + 1 > tr.refdef.num_pshadows)
-				{
-					tr.refdef.num_pshadows = j + 1;
-					tr.refdef.pshadows[j] = shadow;
-					break;
-				}
-
-				// sort shadows by distance from camera divided by radius
-				// FIXME: sort better
-				if (tr.refdef.pshadows[j].sort <= shadow.sort)
-					continue;
-
-				swap = tr.refdef.pshadows[j];
-				tr.refdef.pshadows[j] = shadow;
-				shadow = swap;
-			}
+			continue;
 		}
-		else if (ent->e.reType == RT_MODEL || ent->e.reType == RT_PLANT || ent->e.reType == RT_GRASS)
+#endif //!defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
+
+		if (ent->e.reType == RT_MODEL)
 		{
 			model_t *model = R_GetModelByHandle(ent->e.hModel);
 			pshadow_t shadow;
@@ -2375,36 +2500,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 			switch (model->type)
 			{
-			case MOD_MESH:
-			{
-				mdvFrame_t *frame = &model->data.mdv[0]->frames[ent->e.frame];
-
-				radius = frame->radius * scale;
-			}
-			break;
-
-			case MOD_MDR:
-			{
-				// FIXME: never actually tested this
-				mdrHeader_t *header = model->data.mdr;
-				int frameSize = (size_t)(&((mdrFrame_t *)0)->bones[header->numBones]);
-				mdrFrame_t *frame = (mdrFrame_t *)((byte *)header + header->ofsFrames + frameSize * ent->e.frame);
-
-				radius = frame->radius;
-			}
-			break;
-			case MOD_IQM:
-			{
-				// FIXME: never actually tested this
-				iqmData_t *data = model->data.iqm;
-				vec3_t diag;
-				float *framebounds;
-
-				framebounds = data->bounds + 6 * ent->e.frame;
-				VectorSubtract(framebounds + 3, framebounds, diag);
-				radius = 0.5f * VectorLength(diag);
-			}
-			break;
 			case MOD_MDXM:
 			{
 				if (ent->e.ghoul2)
@@ -2489,6 +2584,208 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		}
 	}
 
+#ifndef __PSHADOWS_GLM_ONLY__
+	// now, if there's room, make a list of MD3, etc, shadows
+	for (i = 0; i < tr.refdef.num_entities; i++)
+	{
+		trRefEntity_t *ent = &tr.refdef.entities[i];
+
+		if ((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
+			continue;
+
+		//if((ent->e.renderfx & RF_THIRD_PERSON))
+		//continue;
+
+#ifndef !defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
+		if (Distance(playerOrigin, ent->e.origin) > 512.0)
+		{
+			continue;
+		}
+#else //defined(__PSHADOW_USE_BEST_LIGHT__) || defined(__PSHADOW_USE_Q3_LIGHT__)
+		if (Distance(playerOrigin, ent->e.origin) > bestLightRadius)
+		{
+			continue;
+		}
+#endif //!defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
+
+		if (ent->e.reType == RT_MODEL || ent->e.reType == RT_PLANT || ent->e.reType == RT_GRASS)
+		{
+			model_t *model = R_GetModelByHandle(ent->e.hModel);
+			pshadow_t shadow;
+			float radius = 0.0f;
+			float scale = 1.0f;
+			vec3_t diff;
+			int j;
+
+			if (!model)
+				continue;
+
+			if (ent->e.nonNormalizedAxes)
+			{
+				scale = VectorLength(ent->e.axis[0]);
+			}
+
+			switch (model->type)
+			{
+			case MOD_MESH:
+			{
+				mdvFrame_t *frame = &model->data.mdv[0]->frames[ent->e.frame];
+				radius = frame->radius * scale;
+			}
+			break;
+			case MOD_MDR:
+			{
+				// FIXME: never actually tested this
+				mdrHeader_t *header = model->data.mdr;
+				int frameSize = (size_t)(&((mdrFrame_t *)0)->bones[header->numBones]);
+				mdrFrame_t *frame = (mdrFrame_t *)((byte *)header + header->ofsFrames + frameSize * ent->e.frame);
+				radius = frame->radius;
+			}
+			break;
+			case MOD_IQM:
+			{
+				// FIXME: never actually tested this
+				iqmData_t *data = model->data.iqm;
+				vec3_t diag;
+				float *framebounds;
+
+				framebounds = data->bounds + 6 * ent->e.frame;
+				VectorSubtract(framebounds + 3, framebounds, diag);
+				radius = 0.5f * VectorLength(diag);
+			}
+			break;
+			default:
+				break;
+			}
+
+			if (!radius)
+				continue;
+
+			// Cull entities that are behind the viewer by more than lightRadius
+			VectorSubtract(ent->e.origin, fd->vieworg, diff);
+			if (DotProduct(diff, fd->viewaxis[0]) < -r_pshadowDist->value)
+				continue;
+
+			memset(&shadow, 0, sizeof(shadow));
+
+			shadow.numEntities = 1;
+			shadow.entityNums[0] = i;
+			shadow.viewRadius = radius;
+			shadow.lightRadius = r_pshadowDist->value;
+			VectorCopy(ent->e.origin, shadow.viewOrigin);
+			shadow.sort = DotProduct(diff, diff) / (radius * radius);
+			VectorCopy(ent->e.origin, shadow.entityOrigins[0]);
+			shadow.entityRadiuses[0] = radius;
+
+			for (j = 0; j < MAX_CALC_PSHADOWS; j++)
+			{
+				pshadow_t swap;
+
+				if (j + 1 > tr.refdef.num_pshadows)
+				{
+					tr.refdef.num_pshadows = j + 1;
+					tr.refdef.pshadows[j] = shadow;
+					break;
+				}
+
+				// sort shadows by distance from camera divided by radius
+				// FIXME: sort better
+				if (tr.refdef.pshadows[j].sort <= shadow.sort)
+					continue;
+
+				swap = tr.refdef.pshadows[j];
+				tr.refdef.pshadows[j] = shadow;
+				shadow = swap;
+			}
+		}
+	}
+
+#ifdef __PSHADOWS_MISC_ENTS__
+	// now, if there's room, make a list of misc entity, shadows
+	for (i = 0; i < tr.refdef.num_entities; i++)
+	{
+		trRefEntity_t *ent = &tr.refdef.entities[i];
+
+		if ((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
+			continue;
+
+		//if((ent->e.renderfx & RF_THIRD_PERSON))
+		//continue;
+
+#ifndef !defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
+		if (Distance(playerOrigin, ent->e.origin) > 512.0)
+		{
+			continue;
+		}
+#else //defined(__PSHADOW_USE_BEST_LIGHT__) || defined(__PSHADOW_USE_Q3_LIGHT__)
+		if (Distance(playerOrigin, ent->e.origin) > bestLightRadius)
+		{
+			continue;
+		}
+#endif //!defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
+
+		if (ent->e.reType == RT_SPRITE
+			|| ent->e.reType == RT_BEAM
+			|| ent->e.reType == RT_ORIENTED_QUAD
+			|| ent->e.reType == RT_ELECTRICITY
+			|| ent->e.reType == RT_LINE
+			|| ent->e.reType == RT_ORIENTEDLINE
+			|| ent->e.reType == RT_CYLINDER
+			|| ent->e.reType == RT_SABER_GLOW
+			|| ent->e.reType == RT_ENT_CHAIN)
+		{
+			pshadow_t shadow;
+			float radius = 0.0f;
+			float scale = 1.0f;
+			vec3_t diff;
+			int j;
+
+			radius = ent->e.radius * scale;
+
+			if (!radius)
+				continue;
+
+			// Cull entities that are behind the viewer by more than lightRadius
+			VectorSubtract(ent->e.origin, fd->vieworg, diff);
+			if (DotProduct(diff, fd->viewaxis[0]) < -r_pshadowDist->value)
+				continue;
+
+			memset(&shadow, 0, sizeof(shadow));
+
+			shadow.numEntities = 1;
+			shadow.entityNums[0] = i;
+			shadow.viewRadius = radius;
+			shadow.lightRadius = r_pshadowDist->value;
+			VectorCopy(ent->e.origin, shadow.viewOrigin);
+			shadow.sort = DotProduct(diff, diff) / (radius * radius);
+			VectorCopy(ent->e.origin, shadow.entityOrigins[0]);
+			shadow.entityRadiuses[0] = radius;
+
+			for (j = 0; j < MAX_CALC_PSHADOWS; j++)
+			{
+				pshadow_t swap;
+
+				if (j + 1 > tr.refdef.num_pshadows)
+				{
+					tr.refdef.num_pshadows = j + 1;
+					tr.refdef.pshadows[j] = shadow;
+					break;
+				}
+
+				// sort shadows by distance from camera divided by radius
+				// FIXME: sort better
+				if (tr.refdef.pshadows[j].sort <= shadow.sort)
+					continue;
+
+				swap = tr.refdef.pshadows[j];
+				tr.refdef.pshadows[j] = shadow;
+				shadow = swap;
+			}
+		}
+	}
+#endif //__PSHADOWS_MISC_ENTS__
+#endif //__PSHADOWS_GLM_ONLY__
+
 	// next, merge touching pshadows
 	if (0) //for ( i = 0; i < tr.refdef.num_pshadows; i++)
 	{
@@ -2557,6 +2854,8 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		vec3_t lightDir;
 
 		VectorSet(lightDir, 0.57735f, 0.57735f, 0.57735f);
+
+#if !defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
 #if 0
 		vec3_t ambientLight, directedLight;
 		R_LightForPoint(shadow->viewOrigin, ambientLight, directedLight, lightDir);
@@ -2577,6 +2876,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		VectorSet(up, 0, 0, -1);
 #else
 		// Let's try to find a real light source...
+#if 0 // Use full close list...
 		extern int			NUM_CLOSE_LIGHTS;
 		extern int			CLOSEST_LIGHTS[MAX_DEFERRED_LIGHTS];
 		extern vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
@@ -2584,6 +2884,20 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
 		extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
 		extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
+#else // Only use map glow lights... May be better, as moving lights like sabers are not great...
+		extern int			CLOSE_TOTAL;
+		extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+		extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+		extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+		extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+		extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+
+		extern float		MAP_EMISSIVE_RADIUS_SCALE;
+
+#define NUM_CLOSE_LIGHTS					CLOSE_TOTAL
+#define CLOSEST_LIGHTS_POSITIONS			CLOSE_POS
+#define CLOSEST_LIGHTS_DISTANCES			CLOSE_RADIUS
+#endif
 
 		if (NUM_CLOSE_LIGHTS > 0)
 		{
@@ -2593,16 +2907,19 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 			for (int l = 1; l < NUM_CLOSE_LIGHTS; l++)
 			{// Find the closest dlight...
 				float lDist = Distance(CLOSEST_LIGHTS_POSITIONS[l], shadow->viewOrigin);
-				if (lDist < bestDist)
+				
+				if (lDist < bestDist && lDist <= 512.0)
 				{
 					best = l;
 					bestDist = lDist;
 				}
 			}
 
-			if (bestDist <= CLOSEST_LIGHTS_DISTANCES[best])
+			if (bestDist <= CLOSEST_LIGHTS_DISTANCES[best] && bestDist <= 512.0)
 			{
-				shadow->lightRadius = CLOSEST_LIGHTS_DISTANCES[best];
+				//float strength = 1.0 - Q_clamp(0.0, Distance(CLOSEST_LIGHTS_POSITIONS[CLOSE_LIST[i]], playerOrigin) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				shadow->lightRadius = CLOSEST_LIGHTS_DISTANCES[best] /** strength*/ * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+
 				//VectorCopy(CLOSEST_LIGHTS_POSITIONS[best], shadow->lightOrigin);
 				VectorSubtract(shadow->viewOrigin, CLOSEST_LIGHTS_POSITIONS[best], lightDir);
 				VectorNormalize(lightDir);
@@ -2636,16 +2953,30 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		VectorScale(lightDir, -1.0f, shadow->lightViewAxis[0]);
 		VectorSet(up, 0, 0, -1);
 #endif
+#else //defined(__PSHADOW_USE_BEST_LIGHT__) || defined(__PSHADOW_USE_Q3_LIGHT__)
+		//shadow->lightRadius = min(bestLightRadius, MAX_PSHADOW_RADIUS);
+		shadow->lightRadius = bestLightRadius;
+
+		VectorSubtract(shadow->viewOrigin, bestLightPosition, lightDir);
+		VectorNormalize(lightDir);
+		VectorMA(shadow->viewOrigin, shadow->viewRadius, lightDir, shadow->lightOrigin);
+
+		// make up a projection, up doesn't matter
+		VectorScale(lightDir, -1.0f, shadow->lightViewAxis[0]);
+		VectorSet(up, 0, 0, -1);
+
+		shadow->lightRadius = min(bestLightRadius, MAX_PSHADOW_RADIUS*0.5);
+#endif //!defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
 
 		if (fabs(DotProduct(up, shadow->lightViewAxis[0])) > 0.9f)
 		{
 			VectorSet(up, -1, 0, 0);
 		}
 
-		if (shadow->lightRadius > 256.0)
-		{
-			shadow->lightRadius = 256.0;
-		}
+		//if (shadow->lightRadius > 512.0)//256.0)
+		//{
+		//	shadow->lightRadius = 512.0;// 256.0;
+		//}
 
 		CrossProduct(shadow->lightViewAxis[0], up, shadow->lightViewAxis[1]);
 		VectorNormalize(shadow->lightViewAxis[1]);
@@ -2663,6 +2994,8 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		int firstDrawSurf;
 		pshadow_t *shadow = &tr.refdef.pshadows[i];
 		int j;
+
+		if (!shadow->numEntities) continue;
 
 		Com_Memset(&shadowParms, 0, sizeof(shadowParms));
 
@@ -2760,7 +3093,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				dest->flags |= VPF_FARPLANEFRUSTUM;
 			}
 
-			for (j = 0; j < shadow->numEntities; j++)
+			for (j = 0; j < shadow->numEntities && j < 8; j++)
 			{
 				R_AddEntitySurface(shadow->entityNums[j]);
 			}

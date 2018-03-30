@@ -9516,6 +9516,7 @@ void CG_Player( centity_t *cent ) {
 		legs.shaderRGBA[3] = cent->currentState.customRGBA[3];
 	}
 
+
 // minimal_add:
 
 	team = ci->team;
@@ -11314,7 +11315,20 @@ stillDoSaber:
 	if (!(cent->currentState.powerups & (1 << PW_CLOAKED)))
 	{ //don't add the normal model if cloaked
 		CG_CheckThirdPersonAlpha( cent, &legs );
+		
+		if (cent->currentState.number == cg.clientNum)
+		{// Mark this refent as being the player, so that we can use it's position in renderer...
+			legs.isLocalPlayer = qtrue;
+			legs.localPlayerEntityNum = cg.clientNum;
+		}
+		else
+		{
+			legs.isLocalPlayer = qfalse;
+		}
+
 		AddRefEntityToScene(&legs);
+
+		legs.isLocalPlayer = qfalse;
 	}
 
 	//cent->frame_minus2 = cent->frame_minus1;

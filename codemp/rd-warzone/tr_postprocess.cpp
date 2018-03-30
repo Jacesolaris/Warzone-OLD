@@ -1089,12 +1089,25 @@ void RB_AddGlowShaderLights ( void )
 	{// Add (close) map glows as dynamic lights as well...
 		CLOSE_TOTAL = 0;
 
+		vec3_t playerOrigin;
+
+		if (backEnd.localPlayerOriginValid)
+		{
+			VectorCopy(backEnd.localPlayerOrigin, playerOrigin);
+			//ri->Printf(PRINT_WARNING, "Local player is at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+		}
+		else
+		{
+			VectorCopy(backEnd.refdef.vieworg, playerOrigin);
+			//ri->Printf(PRINT_WARNING, "No Local player! Using vieworg at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+		}
+
 		//int		farthest_light = -1;
 		//float	farthest_distance = 0.0;
 
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
-			float distance = Distance(backEnd.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
+			float distance = Distance(playerOrigin, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
 
 			// We need to have some sanity... Basic max light range...
@@ -1177,7 +1190,7 @@ void RB_AddGlowShaderLights ( void )
 			if (MAP_GLOW_COLORS_AVILABLE[CLOSE_LIST[i]])
 			{
 				vec4_t glowColor = { 0 };
-				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], playerOrigin) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
 				//VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
@@ -1188,7 +1201,7 @@ void RB_AddGlowShaderLights ( void )
 			}
 			else
 			{
-				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], playerOrigin) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_uncolored++;
 			}

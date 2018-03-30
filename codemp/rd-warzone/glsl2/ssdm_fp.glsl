@@ -27,11 +27,18 @@ vec3 DecodeNormal(in vec2 N)
 
 void main(void)
 {
+	vec3 dMap = texture(u_PositionMap, var_TexCoords).rgb;
+
+	if (dMap.r <= 0.0)
+	{
+		gl_FragColor = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
+		return;
+	}
+
 	vec2 texCoords = var_TexCoords;
 	float invDepth = 1.0 - texture(u_ScreenDepthMap, texCoords).r;
 	invDepth = clamp(length(invDepth * 1.75 - 0.75), 0.0, 1.0);
 	
-	vec3 dMap = texture(u_PositionMap, texCoords).rgb;
 	vec3 norm = vec3(dMap.gb, 0.0) * 2.0 - 1.0;
 	norm.z = sqrt(1.0-dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 	//vec3 norm = DecodeNormal(dMap.gb);

@@ -19,7 +19,7 @@ varying vec2					var_TexCoords;
 #define zfar					u_ViewInfo.g									//camera clipping end
 #define zfar2					u_ViewInfo.a									//camera clipping end
 
-
+/*
 vec2 EncodeNormal(in vec3 N)
 {
 	float f = sqrt(8.0 * N.z + 8.0);
@@ -34,7 +34,7 @@ vec3 DecodeNormal(in vec2 N)
 
 	return vec3(encoded * g, 1.0 - f * 0.5);
 }
-
+*/
 
 float getDepth(vec2 coord) {
     return texture(u_ScreenDepthMap, coord).r;
@@ -133,6 +133,12 @@ float ReliefMapping(vec2 dp, vec2 ds, float origDepth)
 
 void main(void)
 {
+	if (texture(u_NormalMap, var_TexCoords).b < 1.0)
+	{// An if based on output from a texture, but seems to increase FPS a little anyway...
+		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+		return;
+	}
+
 	vec3 norm = getViewNormal(var_TexCoords);
 
 #if 1

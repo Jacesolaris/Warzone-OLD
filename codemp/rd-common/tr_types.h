@@ -255,6 +255,9 @@ Ghoul2 Insert Start
 /*
 Ghoul2 Insert End
 */
+	qboolean	isLocalPlayer;
+	int			localPlayerEntityNum;
+
 	qboolean	ignoreCull;
 	qboolean	noMerge;
 } refEntity_t;

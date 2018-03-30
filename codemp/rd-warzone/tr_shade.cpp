@@ -950,6 +950,8 @@ static void ProjectPshadowVBOGLSL( void ) {
 
 		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, radius);
 
+		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
 		vec4_t l0;
 		VectorSet4(l0, tr.pshadowMaps[l]->width, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, l0);
