@@ -872,6 +872,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			}
 		}
 	}
+#else
+	else
+		return;
 #endif
 
 /*

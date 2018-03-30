@@ -2422,19 +2422,19 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	{
 		VectorSet(from, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0] + 128.0, playerOrigin[1], playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0] + 128.0, playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace2, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0] - 128.0, playerOrigin[1], playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0] - 128.0, playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace3, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0], playerOrigin[1] + 128.0, playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0], playerOrigin[1] + 128.0, playerOrigin[2] + 999999.9);
-		Light_Trace(&trace4, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0], playerOrigin[1] - 128.0, playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0], playerOrigin[1] - 128.0, playerOrigin[2] + 999999.9);
-		Light_Trace(&trace5, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
+		Light_Trace(&trace2, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
+		Light_Trace(&trace3, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 999999.9);
+		Light_Trace(&trace4, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		VectorSet(from, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 64.0);
+		VectorSet(to, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 999999.9);
+		Light_Trace(&trace5, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 	}
 
 	if (RB_NightScale() == 1.0
@@ -2463,8 +2463,8 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	{
 		trRefEntity_t *ent = &tr.refdef.entities[i];
 
-		if ((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
-			continue;
+		//if ((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
+		//	continue;
 
 		//if((ent->e.renderfx & RF_THIRD_PERSON))
 		//continue;
@@ -2586,7 +2586,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 #ifndef __PSHADOWS_GLM_ONLY__
 	// now, if there's room, make a list of MD3, etc, shadows
-	for (i = 0; i < tr.refdef.num_entities; i++)
+	for (i = tr.refdef.num_pshadows; i < tr.refdef.num_entities; i++)
 	{
 		trRefEntity_t *ent = &tr.refdef.entities[i];
 
@@ -2761,7 +2761,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 			VectorCopy(ent->e.origin, shadow.entityOrigins[0]);
 			shadow.entityRadiuses[0] = radius;
 
-			for (j = 0; j < MAX_CALC_PSHADOWS; j++)
+			for (j = tr.refdef.num_pshadows; j < MAX_CALC_PSHADOWS; j++)
 			{
 				pshadow_t swap;
 

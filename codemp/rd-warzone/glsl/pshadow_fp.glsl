@@ -42,7 +42,7 @@ void main()
 
 		intensity *= pcf;
 		//intensity = pcf * (1.0 - length(st));
-		intensity = clamp(pow(intensity, 1.0), 0.0, 0.4);
+		intensity = clamp(intensity, 0.0, 0.4);
 	}
 
 	out_Color.rgb = vec3(.0, .0, .0);
