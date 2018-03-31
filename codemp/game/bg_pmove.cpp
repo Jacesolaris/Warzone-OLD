@@ -4053,7 +4053,6 @@ static int PM_TryRoll( void )
 	vec3_t fwd, right, traceto, mins, maxs, fwdAngles;
 
 	qboolean nRollWtihPistols = (IsRollWithPistols(pm->ps->weapon));
-
 	
 	if ( BG_SaberInAttack( pm->ps->saberMove ) || BG_SaberInSpecialAttack( pm->ps->torsoAnim )
 		|| BG_SpinningSaberAnim( pm->ps->legsAnim )
@@ -4098,6 +4097,34 @@ static int PM_TryRoll( void )
 	VectorSet(fwdAngles, 0, pm->ps->viewangles[YAW], 0);
 
 	AngleVectors( fwdAngles, fwd, right, NULL );
+
+#ifdef _GAME
+	// Override for NPC evasion rolls...
+	gentity_t *npc = &g_entities[pm->ps->clientNum];
+
+	if (npc->npc_roll_start)
+	{
+		if (npc->npc_roll_direction == EVASION_ROLL_DIR_BACK)
+		{ // backward roll
+			anim = BOTH_ROLL_B;
+			VectorMA(pm->ps->origin, -64, fwd, traceto);
+		}
+		else if (npc->npc_roll_direction == EVASION_ROLL_DIR_RIGHT)
+		{ //right
+			anim = BOTH_ROLL_R;
+			VectorMA(pm->ps->origin, 64, right, traceto);
+		}
+		else if (npc->npc_roll_direction == EVASION_ROLL_DIR_LEFT)
+		{ //left
+			anim = BOTH_ROLL_L;
+			VectorMA(pm->ps->origin, -64, right, traceto);
+		}
+
+		// No matter what, re-initialize the roll flag, so we dont end up with npcs rolling all around the map :)
+		npc->npc_roll_start = qfalse;
+	}
+	else
+#endif //_GAME
 
 	if ( pm->cmd.forwardmove )
 	{ //check forward/backward rolls
@@ -6096,19 +6123,24 @@ static void PM_Footsteps( void ) {
 		return;
 	}
 
+#ifdef _GAME
+#define OVERRIDE_ROLL_CHECK g_entities[pm->ps->clientNum].npc_roll_start
+#else
+#define OVERRIDE_ROLL_CHECK 0
+#endif //_GAME
+
 	if (pm->ps->saberMove == LS_SPINATTACK)
 	{
 		bobmove = 0.2f;
 		PM_ContinueLegsAnim( pm->ps->torsoAnim );
 	}
-	else if ( pm->ps->pm_flags & PMF_DUCKED )
+	else if ( (pm->ps->pm_flags & PMF_DUCKED) || OVERRIDE_ROLL_CHECK )
 	{
 		int rolled = 0;
 
 		bobmove = 0.5;	// ducked characters bob much faster
 
-		if (((PM_RunningAnim(pm->ps->legsAnim) && VectorLengthSquared(pm->ps->velocity) >= 40000/*200*200*/) || PM_CanRollFromSoulCal(pm->ps)) &&
-			!BG_InRoll(pm->ps, pm->ps->legsAnim))
+		if ((((PM_RunningAnim(pm->ps->legsAnim) && VectorLengthSquared(pm->ps->velocity) >= 40000/*200*200*/) || PM_CanRollFromSoulCal(pm->ps)) && !BG_InRoll(pm->ps, pm->ps->legsAnim)) || OVERRIDE_ROLL_CHECK)
 		{//roll!
 			rolled = PM_TryRoll();
 		}
@@ -6151,7 +6183,6 @@ static void PM_Footsteps( void ) {
 				JKG_RemoveDamageType((gentity_t *)pm_entSelf, DT_FIRE);
 			}
 #endif
-
 		}
 	}
 	else if ((pm->ps->pm_flags & PMF_ROLLING) && !BG_InRoll(pm->ps, pm->ps->legsAnim) &&

@@ -3993,12 +3993,6 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 			}
 		}
 	}
-
-	if ( ent->client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
-		ent->client->ps.pm_flags |= PMF_SCOREBOARD;
-	} else {
-		ent->client->ps.pm_flags &= ~PMF_SCOREBOARD;
-	}
 }
 
 /*

@@ -11157,14 +11157,6 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
-	// optionally draw the tournament scoreboard instead
-	if ( !drawingSniperScopeView &&
-		cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR &&
-		( cg.snap->ps.pm_flags & PMF_SCOREBOARD ) ) {
-		CG_DrawTourneyScoreboard();
-		return;
-	}
-
 	separation = 0;
 
 	// clear around the rendered view if sized down

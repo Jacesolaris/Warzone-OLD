@@ -549,7 +549,11 @@ struct gentity_s {
 	vec3_t				CLOSE_AREA_PREVIOUS_ORG;
 
 	int					npc_attack_time;
-	int					npc_counter_time;
+	int					npc_counter_avoid_time;
+
+	int					npc_roll_time;
+	qboolean			npc_roll_start;
+	int					npc_roll_direction;
 
 	int					npc_activate_check_time;
 	int					npc_activate_time;

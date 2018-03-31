@@ -274,6 +274,15 @@ typedef enum direction_e
 	DIR_BACK
 } direction_t;
 
+
+typedef enum npc_roll_direction_e
+{
+	EVASION_ROLL_DIR_NONE,
+	EVASION_ROLL_DIR_BACK,
+	EVASION_ROLL_DIR_LEFT,
+	EVASION_ROLL_DIR_RIGHT
+} npc_roll_direction_t;
+
 /*
 ===================================================================================
 
@@ -462,7 +471,7 @@ extern int bgForcePowerCost[NUM_FORCE_POWERS][NUM_FORCE_POWER_LEVELS];
 #define	PMF_USE_ITEM_HELD	1024
 #define PMF_UPDATE_ANIM		2048	// The server updated the animation, the pmove should set the ghoul2 anim to match.
 #define PMF_FOLLOW			4096	// spectate following another player
-#define PMF_SCOREBOARD		8192	// spectate as a scoreboard
+#define PMF_UNUSED			8192	// unused
 #define PMF_STUCK_TO_WALL	16384	// grabbing a wall
 #define PMF_LADDER			32768	// on ladder
 

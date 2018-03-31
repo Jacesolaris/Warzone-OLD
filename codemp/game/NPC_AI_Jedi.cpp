@@ -134,49 +134,45 @@ qboolean NPC_EnemyAttackingMeWithSaber( gentity_t *NPC )
 
 void Jedi_CopyAttackCounterInfo(gentity_t *NPC)
 {
-	// Copy info to our padawan/master...
+	// Share attack/counter info with our follower or master...
 	if (NPC->parent && NPC_IsAlive(NPC, NPC->parent) && NPC->parent->enemy == NPC->enemy)
 	{
 		NPC->parent->npc_attack_time = NPC->npc_attack_time;
-		NPC->parent->npc_counter_time = NPC->npc_counter_time;
 
-		if (NPC->parent->npc_counter_time > level.time)
-			NPC->parent->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-		else
+		if (NPC->parent->npc_attack_time > level.time)
 			NPC->parent->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+		else
+			NPC->parent->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 	}
 
 	if (NPC->padawan && NPC_IsAlive(NPC, NPC->padawan) && NPC->padawan->enemy == NPC->enemy)
 	{
 		NPC->padawan->npc_attack_time = NPC->npc_attack_time;
-		NPC->padawan->npc_counter_time = NPC->npc_counter_time;
 
-		if (NPC->padawan->npc_counter_time > level.time)
-			NPC->padawan->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-		else
+		if (NPC->padawan->npc_attack_time > level.time)
 			NPC->padawan->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+		else
+			NPC->padawan->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 	}
 
 	if (NPC->enemy->parent && NPC_IsAlive(NPC, NPC->enemy->parent) && NPC->enemy->parent->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->parent->npc_attack_time = NPC->enemy->npc_attack_time;
-		NPC->enemy->parent->npc_counter_time = NPC->enemy->npc_counter_time;
 
-		if (NPC->enemy->parent->npc_counter_time > level.time)
-			NPC->enemy->parent->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-		else
+		if (NPC->enemy->parent->npc_attack_time > level.time)
 			NPC->enemy->parent->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+		else
+			NPC->enemy->parent->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 	}
 
 	if (NPC->enemy->padawan && NPC_IsAlive(NPC, NPC->enemy->padawan) && NPC->enemy->padawan->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->padawan->npc_attack_time = NPC->enemy->npc_attack_time;
-		NPC->enemy->padawan->npc_counter_time = NPC->enemy->npc_counter_time;
 
-		if (NPC->enemy->padawan->npc_counter_time > level.time)
-			NPC->enemy->padawan->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-		else
+		if (NPC->enemy->padawan->npc_attack_time > level.time)
 			NPC->enemy->padawan->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+		else
+			NPC->enemy->padawan->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
 	}
 }
 
@@ -189,7 +185,6 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 	
 	if (!NPC->enemy || !NPC_IsAlive(NPC, NPC->enemy))
 	{
-		NPC->npc_counter_time = 0;
 		NPC->npc_attack_time = 0;
 		return qfalse;
 	}
@@ -202,73 +197,62 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 	//
 	// Current attacker always controls all the timers/counters...
 	//
-
-	if ((NPC->npc_attack_time < level.time && NPC->enemy->npc_attack_time < level.time)
-		|| (NPC->npc_counter_time < level.time && NPC->enemy->npc_counter_time < level.time))
-	{// Initialize...
-		NPC->npc_counter_time = 0;
-		NPC->npc_attack_time = 0;
-
-		NPC->enemy->npc_counter_time = 0;
-		NPC->enemy->npc_attack_time = 0;
-	}
-
-	if (NPC->npc_counter_time <= level.time && NPC->npc_attack_time <= level.time)
-	{// Pick if we should initally attack or defend...
-		if (NPC->enemy->s.eType == ET_PLAYER && irand(0, 5) < 5)
-		{// When enemy is a player, only pick defend once in every 6 checks...
-			NPC->npc_attack_time = level.time + 5000;
-			NPC->npc_counter_time = 0;
-
-			NPC->enemy->npc_counter_time = level.time + 5000;
-			NPC->enemy->npc_attack_time = 0;
-
-			NPC->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
-			NPC->enemy->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-			Jedi_CopyAttackCounterInfo(NPC);
-			return qtrue;
-		}
-
-		if (NPC->enemy->npc_attack_time >= level.time || NPC_EnemyAttackingMeWithSaber(NPC->enemy))
-		{// Enemy is already attacking, start by defending...
-			NPC->npc_attack_time = level.time + 5000;
-			NPC->npc_counter_time = 0;
-			
-			NPC->enemy->npc_attack_time = level.time + 5000; // also init our enemy's setting...
-			NPC->enemy->npc_counter_time = 0;
-
-			NPC->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-			NPC->enemy->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
-			Jedi_CopyAttackCounterInfo(NPC);
-			return qfalse;
+	if (NPC->npc_attack_time <= level.time - 1000)
+	{// Timer has run out, pick if we should initally attack or defend...
+		if (NPC->enemy->s.eType == ET_PLAYER)
+		{// When enemy is a player...
+			if (irand(0, 1) < 1)
+			{
+				NPC->npc_attack_time = level.time + 1000;
+			}
+			else
+			{
+				NPC->npc_attack_time = level.time;
+			}
 		}
 		else
-		{// Enemy is not attacking, start by attacking...
-			NPC->npc_attack_time = level.time + 5000;
-			NPC->npc_counter_time = 0;
-
-			NPC->enemy->npc_counter_time = level.time + 5000;
-			NPC->enemy->npc_attack_time = 0;
-
-			NPC->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
-			NPC->enemy->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-			Jedi_CopyAttackCounterInfo(NPC);
-			return qtrue;
+		{
+			if (NPC->enemy->npc_attack_time >= level.time || NPC_EnemyAttackingMeWithSaber(NPC->enemy))
+			{// Enemy is already attacking, start by defending...
+				NPC->npc_attack_time = level.time;
+			}
+			else
+			{// Enemy is not attacking, start by attacking...
+				NPC->npc_attack_time = level.time + 1000;
+			}
 		}
-	}
-	else if (NPC->npc_counter_time >= level.time)
-	{// Continue counterring...
-		NPC->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-		NPC->enemy->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+
 		Jedi_CopyAttackCounterInfo(NPC);
-		return qfalse;
 	}
-	else
-	{// Continue attacking...
+
+	//
+	// Make sure that we are looking at our enemy, and that they are looking at us (if they are not a player)...
+	//
+
+	//NPC_SetLookTarget(NPC, NPC->enemy->s.number, level.time + 100);
+	NPC_FaceEntity(NPC, NPC->enemy, qtrue);
+
+	if (NPC->enemy->s.eType != ET_PLAYER)
+	{
+		//NPC_SetLookTarget(NPC->enemy, NPC->s.number, level.time + 100);
+		NPC_FaceEntity(NPC->enemy, NPC, qtrue);
+	}
+
+	//
+	// Either do attack, or counter action...
+	//
+
+	if (NPC->npc_attack_time > level.time)
+	{// Attack mode...
 		NPC->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
 		NPC->enemy->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
-		Jedi_CopyAttackCounterInfo(NPC);
 		return qtrue;
+	}
+	else
+	{// Counter mode...
+		NPC->client->pers.cmd.buttons |= BUTTON_ALT_ATTACK;
+		if (NPC->enemy->s.eType != ET_PLAYER) NPC->enemy->client->pers.cmd.buttons &= ~BUTTON_ALT_ATTACK;
+		return qfalse;
 	}
 }
 
@@ -3722,6 +3706,195 @@ static qboolean Jedi_SaberBlock( gentity_t *aiEnt, int saberNum, int bladeNum ) 
 	}
 	return qtrue;
 }
+
+qboolean Jedi_EvasionRoll(gentity_t *aiEnt)
+{
+	if (!aiEnt->enemy->client)
+	{
+		aiEnt->npc_roll_start = qfalse;
+		return qfalse;
+	}
+	else if (aiEnt->enemy->client
+		&& aiEnt->enemy->s.weapon == WP_SABER
+		&& aiEnt->enemy->client->ps.saberLockTime > level.time)
+	{//don't try to block/evade an enemy who is in a saberLock
+		aiEnt->npc_roll_start = qfalse;
+		return qfalse;
+	}
+	else if (aiEnt->client->ps.saberEventFlags&SEF_LOCK_WON && aiEnt->enemy->painDebounceTime > level.time)
+	{//pressing the advantage of winning a saber lock
+		aiEnt->npc_roll_start = qfalse;
+		return qfalse;
+	}
+
+	if (aiEnt->npc_roll_time >= level.time)
+	{// Already in a roll...
+		aiEnt->npc_roll_start = qfalse;
+		return qfalse;
+	}
+
+	// Init...
+	aiEnt->npc_roll_direction = EVASION_ROLL_DIR_NONE;
+	aiEnt->npc_roll_start = qfalse;
+
+#ifdef __ROLL_EVASION_TRACES__
+	qboolean canRollBack = qfalse;
+	qboolean canRollLeft = qfalse;
+	qboolean canRollRight = qfalse;
+
+	trace_t tr;
+	vec3_t fwd, right, up, start, end;
+	AngleVectors(aiEnt->r.currentAngles, fwd, right, up);
+
+	VectorSet(start, aiEnt->r.currentOrigin[0], aiEnt->r.currentOrigin[1], aiEnt->r.currentOrigin[2] + 24.0);
+	VectorMA(start, -128, fwd, end);
+	trap->Trace(&tr, start, NULL, NULL, end, aiEnt->s.number, MASK_NPCSOLID, qfalse, 0, 0);
+
+	if (tr.fraction == 1.0 && !NPC_CheckFallPositionOK(aiEnt, end))
+	{// We can roll back...
+		canRollBack = qtrue;
+	}
+
+	VectorMA(start, -128, right, end);
+	trap->Trace(&tr, start, NULL, NULL, end, aiEnt->s.number, MASK_NPCSOLID, qfalse, 0, 0);
+
+	if (tr.fraction == 1.0 && !NPC_CheckFallPositionOK(aiEnt, end))
+	{// We can roll back...
+		canRollLeft = qtrue;
+	}
+
+	VectorMA(start, 128, right, end);
+	trap->Trace(&tr, start, NULL, NULL, end, aiEnt->s.number, MASK_NPCSOLID, qfalse, 0, 0);
+
+	if (tr.fraction == 1.0 && !NPC_CheckFallPositionOK(aiEnt, end))
+	{// We can roll back...
+		canRollRight = qtrue;
+	}
+#else //!__ROLL_EVASION_TRACES__
+	qboolean canRollBack = qtrue;
+	qboolean canRollLeft = qtrue;
+	qboolean canRollRight = qtrue;
+#endif //__ROLL_EVASION_TRACES__
+
+	if (canRollBack && canRollLeft && canRollRight)
+	{
+		int choice = irand(0, 2);
+
+		switch (choice) {
+		case 2:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_RIGHT;
+			//trap->Print("%s chose to roll right. had 3 options.\n", aiEnt->client->pers.netname);
+			break;
+		case 1:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_LEFT;
+			//trap->Print("%s chose to roll left. had 3 options.\n", aiEnt->client->pers.netname);
+			break;
+		default:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_BACK;
+			//trap->Print("%s chose to roll back. had 3 options.\n", aiEnt->client->pers.netname);
+			break;
+		}
+
+		return qtrue;
+	}
+	else if (canRollBack && canRollLeft)
+	{
+		int choice = irand(0, 1);
+
+		switch (choice) {
+		case 1:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_LEFT;
+			//trap->Print("%s chose to roll left. had 2 options. back or left.\n", aiEnt->client->pers.netname);
+			break;
+		default:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_BACK;
+			//trap->Print("%s chose to roll back. had 2 options. back or left.\n", aiEnt->client->pers.netname);
+			break;
+		}
+
+		return qtrue;
+	}
+	else if (canRollBack && canRollRight)
+	{
+		int choice = irand(0, 1);
+
+		switch (choice) {
+		case 1:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_RIGHT;
+			//trap->Print("%s chose to roll right. had 2 options. back or right.\n", aiEnt->client->pers.netname);
+			break;
+		default:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_BACK;
+			//trap->Print("%s chose to roll back. had 2 options. back or right.\n", aiEnt->client->pers.netname);
+			break;
+		}
+
+		return qtrue;
+	}
+	else if (canRollLeft && canRollRight)
+	{
+		int choice = irand(0, 1);
+
+		switch (choice) {
+		case 1:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_RIGHT;
+			//trap->Print("%s chose to roll right. had 2 options. left or right.\n", aiEnt->client->pers.netname);
+			break;
+		default:
+			aiEnt->npc_roll_time = level.time + 5000;
+			aiEnt->npc_roll_start = qtrue;
+			aiEnt->npc_roll_direction = EVASION_ROLL_DIR_LEFT;
+			//trap->Print("%s chose to roll left. had 2 options. left or right.\n", aiEnt->client->pers.netname);
+			break;
+		}
+
+		return qtrue;
+	}
+	else if (canRollLeft)
+	{
+		aiEnt->npc_roll_time = level.time + 5000;
+		aiEnt->npc_roll_start = qtrue;
+		aiEnt->npc_roll_direction = EVASION_ROLL_DIR_LEFT;
+		//trap->Print("%s chose to roll left. his only option.\n", aiEnt->client->pers.netname);
+		return qtrue;
+	}
+	else if (canRollRight)
+	{
+		aiEnt->npc_roll_time = level.time + 5000;
+		aiEnt->npc_roll_start = qtrue;
+		aiEnt->npc_roll_direction = EVASION_ROLL_DIR_RIGHT;
+		//trap->Print("%s chose to roll right. his only option.\n", aiEnt->client->pers.netname);
+		return qtrue;
+	}
+	else if (canRollBack)
+	{
+		aiEnt->npc_roll_time = level.time + 5000;
+		aiEnt->npc_roll_start = qtrue;
+		aiEnt->npc_roll_direction = EVASION_ROLL_DIR_BACK;
+		//trap->Print("%s chose to roll back. his only option.\n", aiEnt->client->pers.netname);
+		return qtrue;
+	}
+
+	//trap->Print("%s had no roll options.\n", aiEnt->client->pers.netname);
+	return qfalse;
+}
+
 /*
 -------------------------
 Jedi_EvasionSaber
@@ -3818,7 +3991,7 @@ void Jedi_EvasionSaber( gentity_t *aiEnt, vec3_t enemy_movedir, float enemy_dist
 		if ( flrand( 0.25, 1 ) < facingAmt )
 		{//coming at/facing me!
 			int whichDefense = 0;
-			if ( aiEnt->client->ps.weaponTime || aiEnt->client->ps.saberInFlight || aiEnt->client->ps.weapon != WP_SABER/*!NPC_IsJedi(aiEnt)*/ )
+			if ( aiEnt->client->ps.weaponTime || aiEnt->client->ps.saberInFlight || aiEnt->client->ps.weapon != WP_SABER )
 			{//I'm attacking or recovering from a parry, can only try to strafe/jump right now
 				if ( Q_irand( 0, 10 ) < aiEnt->NPC->stats.aggression )
 				{
@@ -3915,6 +4088,10 @@ void Jedi_EvasionSaber( gentity_t *aiEnt, vec3_t enemy_movedir, float enemy_dist
 				{//FIXME: check forcePushRadius[NPC->client->ps.fd.forcePowerLevel[FP_PUSH]]
 					ForceThrow( aiEnt, qfalse );
 				}
+				else if (!Jedi_SaberBlock(aiEnt, 0, 0))
+				{
+					Jedi_EvasionRoll(aiEnt);
+				}
 				break;
 			case 4:
 			case 5:
@@ -3927,7 +4104,10 @@ void Jedi_EvasionSaber( gentity_t *aiEnt, vec3_t enemy_movedir, float enemy_dist
 			case 12:
 				//try to parry the blow
 				//Com_Printf( "blocking\n" );
-				Jedi_SaberBlock(aiEnt, 0, 0);
+				if (!Jedi_SaberBlock(aiEnt, 0, 0))
+				{
+					Jedi_EvasionRoll(aiEnt);
+				}
 				break;
 			default:
 				//Evade!
@@ -3935,9 +4115,9 @@ void Jedi_EvasionSaber( gentity_t *aiEnt, vec3_t enemy_movedir, float enemy_dist
 				if ( !Q_irand( 0, 5 ) || !Jedi_Strafe(aiEnt, 300, 1000, 0, 1000, qfalse ) )
 				{//certain chance they will pick an alternative evasion
 					//if couldn't strafe, try a different kind of evasion...
+#ifdef __EVASION_JUMPING__
 					if ( shooting_lightning || throwing_saber || enemy_dist < 80 )
 					{
-#ifdef __EVASION_JUMPING__
 						//FIXME: force-jump+forward - jump over the guy!
 						if ( shooting_lightning || (!Q_irand( 0, 2 ) && aiEnt->NPC->stats.aggression < 4 && TIMER_Done( aiEnt, "parryTime" ) ) )
 						{
@@ -3983,11 +4163,19 @@ void Jedi_EvasionSaber( gentity_t *aiEnt, vec3_t enemy_movedir, float enemy_dist
 							}
 						}
 						else if ( enemy_attacking )
-#endif //__EVASION_JUMPING__
 						{
-							Jedi_SaberBlock(aiEnt, 0, 0);
+							if (!Jedi_SaberBlock(aiEnt, 0, 0))
+							{
+								Jedi_EvasionRoll(aiEnt);
+							}
 						}
 					}
+#else //!__EVASION_JUMPING__
+					if (!Jedi_SaberBlock(aiEnt, 0, 0))
+					{
+						Jedi_EvasionRoll(aiEnt);
+					}
+#endif //__EVASION_JUMPING__
 				}
 				else
 				{//strafed
@@ -4014,6 +4202,11 @@ void Jedi_EvasionSaber( gentity_t *aiEnt, vec3_t enemy_movedir, float enemy_dist
 						}
 						//Don't jump again for another 2 to 5 seconds
 						TIMER_Set( aiEnt, "jumpChaseDebounce", Q_irand( 2000, 5000 ) );
+					}
+#else //!__EVASION_JUMPING__
+					if (!Jedi_SaberBlock(aiEnt, 0, 0))
+					{
+						Jedi_EvasionRoll(aiEnt);
 					}
 #endif //__EVASION_JUMPING__
 				}
@@ -4833,32 +5026,42 @@ static qboolean Jedi_AttackDecide( gentity_t *aiEnt, int enemy_dist )
 
 						//JEDI_Debug(aiEnt, "heal");
 
-						Jedi_Retreat(aiEnt);
+						if (!NPC_IsJedi(aiEnt) && aiEnt->client->ps.weapon != WP_SABER)
+						{// Jedi handle their own attack/retreats...
+							Jedi_Retreat(aiEnt);
+						}
 
 						if (rand < 20) 
 							aiEnt->client->pers.cmd.rightmove = 64;
 						else if (rand < 40) 
 							aiEnt->client->pers.cmd.rightmove = -64;
 
-						if ( TIMER_Done( aiEnt, "heal" )
-							&& aiEnt->client->ps.fd.forcePowerLevel[FP_HEAL] > 0
-							&& Q_irand( 0, 20 ) < 5)
-						{
-							//trap->Print("%s is using heal.\n", aiEnt->NPC_type);
-							ForceHeal( aiEnt );
-							TIMER_Set( aiEnt, "heal", irand(5000, 15000) );
-							return qtrue;
-						}
-						else if ( TIMER_Done( aiEnt, "drain" )
-							&& aiEnt->client->ps.fd.forcePowerLevel[FP_DRAIN] > 0
-							&& NPC_Jedi_EnemyInForceRange(aiEnt)
-							&& Q_irand( 0, 20 ) < 5)
-						{
-							//trap->Print("%s is using drain.\n", aiEnt->NPC_type);
-							NPC_FaceEnemy(aiEnt, qtrue);
-							ForceDrain( aiEnt );
-							TIMER_Set( aiEnt, "drain", irand(5000, 15000) );
-							return qtrue;
+						if (!NPC_IsJedi(aiEnt))
+						{// Jedi handle this their own way...
+							if (TIMER_Done(aiEnt, "heal")
+								&& aiEnt->client->ps.fd.forcePowerLevel[FP_HEAL] > 0
+								&& Q_irand(0, 20) < 5)
+							{
+								//trap->Print("%s is using heal.\n", aiEnt->NPC_type);
+								ForceHeal(aiEnt);
+								TIMER_Set(aiEnt, "heal", irand(5000, 15000));
+								return qtrue;
+							}
+							else if (TIMER_Done(aiEnt, "drain")
+								&& aiEnt->client->ps.fd.forcePowerLevel[FP_DRAIN] > 0
+								&& NPC_Jedi_EnemyInForceRange(aiEnt)
+								&& Q_irand(0, 20) < 5)
+							{
+								//trap->Print("%s is using drain.\n", aiEnt->NPC_type);
+								NPC_FaceEnemy(aiEnt, qtrue);
+								ForceDrain(aiEnt);
+								TIMER_Set(aiEnt, "drain", irand(5000, 15000));
+								return qtrue;
+							}
+							else
+							{
+								WeaponThink(aiEnt, qtrue);
+							}
 						}
 						else
 						{
@@ -7644,6 +7847,10 @@ qboolean NPC_MoveIntoOptimalAttackPosition ( gentity_t *aiEnt)
 			return qfalse;
 		}
 	}
+	else if (NPC_IsJedi(aiEnt) || aiEnt->client->ps.weapon == WP_SABER)
+	{// Jedi can skip the min optimal check, they handle their own attack/counters...
+		return qfalse;
+	}
 	else if (dist < OPTIMAL_MIN_RANGE)
 	{// If clear then move back a bit...
 		NPC_FacePosition(aiEnt, NPC->enemy->r.currentOrigin, qfalse );
@@ -7847,6 +8054,41 @@ void NPC_BSJedi_Default( gentity_t *aiEnt)
 			{// Jedi/Sith. Use attack/counter system...
 				if (Jedi_AttackOrCounter( aiEnt ))
 				{// Attack...
+					if (NPC_IsDarkJedi(aiEnt))
+					{// Do taunt/anger...
+						int TorA = Q_irand(0, 3);
+
+						switch (TorA) {
+						case 3:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_JCHASE1, EV_JCHASE3), 5000 + irand(0, 15000));
+							break;
+						case 2:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_COMBAT1, EV_COMBAT3), 5000 + irand(0, 15000));
+							break;
+						case 1:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_ANGER1, EV_ANGER1), 5000 + irand(0, 15000));
+							break;
+						default:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_TAUNT1, EV_TAUNT5), 5000 + irand(0, 15000));
+							break;
+						}
+					}
+					else if (NPC_IsJedi(aiEnt))
+					{// Do taunt...
+						int TorA = Q_irand(0, 2);
+
+						switch (TorA) {
+						case 2:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_JCHASE1, EV_JCHASE3), 5000 + irand(0, 15000));
+							break;
+						case 1:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_COMBAT1, EV_COMBAT3), 5000 + irand(0, 15000));
+							break;
+						default:
+							G_AddVoiceEvent(aiEnt, Q_irand(EV_TAUNT1, EV_TAUNT5), 5000 + irand(0, 15000));
+						}
+					}
+
 					if (NPC_MoveIntoOptimalAttackPosition(aiEnt))
 					{// Just move into optimal range...
 						return;
@@ -7866,9 +8108,24 @@ void NPC_BSJedi_Default( gentity_t *aiEnt)
 						dualSabers = qtrue;
 					}
 
-					if (Distance(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin) < 128)
-					{// Only move back when not too far away...
-						Jedi_Retreat(aiEnt);
+					float dist = DistanceHorizontal(aiEnt->r.currentOrigin, aiEnt->enemy->r.currentOrigin);
+
+					if (dist < 96)
+					{
+						if (aiEnt->npc_counter_avoid_time < level.time + 2000)
+						{
+							if (irand(0, 25) == 25) // randomize moving away...
+								aiEnt->npc_counter_avoid_time = level.time + 200;
+							else if (dist < 36.0) // too close, always back off...
+								aiEnt->npc_counter_avoid_time = level.time + 200;
+							else // hold ground...
+								aiEnt->npc_counter_avoid_time = level.time;
+						}
+
+						if (aiEnt->npc_counter_avoid_time > level.time)
+						{// Only move back when not too far away...
+							Jedi_Retreat(aiEnt);
+						}
 					}
 
 					for (saberNum = 0; saberNum < (dualSabers ? MAX_SABERS : 1); saberNum++) 
@@ -7892,24 +8149,52 @@ void NPC_BSJedi_Default( gentity_t *aiEnt)
 						if ( TIMER_Done( aiEnt, "heal" )
 							&& !Jedi_SaberBusy( aiEnt )
 							&& aiEnt->client->ps.fd.forcePowerLevel[FP_HEAL] > 0
-							&& Q_irand( 0, 20 ) < 8)
+							&& aiEnt->health > 0
+							&& aiEnt->client->ps.weaponTime <= 0
+							&& aiEnt->client->ps.fd.forcePower >= 25
+							&& aiEnt->client->ps.fd.forcePowerDebounce[FP_HEAL] <= level.time
+							&& WP_ForcePowerUsable(aiEnt, FP_HEAL)
+							&& aiEnt->health <= aiEnt->client->ps.stats[STAT_MAX_HEALTH] / 3
+							&& Q_irand( 0, 2 ) == 2)
 						{// Try to heal...
 							ForceHeal( aiEnt );
 							TIMER_Set( aiEnt, "heal", irand(5000, 10000) );
+
+							if (NPC_IsJedi(aiEnt))
+							{// Do deflect taunt...
+								G_AddVoiceEvent(aiEnt, Q_irand(EV_GLOAT1, EV_GLOAT3), 5000 + irand(0, 15000));
+							}
 						}
 						else if ( TIMER_Done( aiEnt, "drain" )
 							&& !Jedi_SaberBusy( aiEnt )
 							&& aiEnt->client->ps.fd.forcePowerLevel[FP_DRAIN] > 0
+							&& aiEnt->health > 0
+							&& aiEnt->client->ps.forceHandExtend == HANDEXTEND_NONE
+							&& WP_ForcePowerUsable(aiEnt, FP_DRAIN)
+							&& aiEnt->client->ps.weaponTime <= 0
+							&& aiEnt->client->ps.fd.forcePower >= 25
+							&& aiEnt->client->ps.fd.forcePowerDebounce[FP_DRAIN] <= level.time
+							&& aiEnt->health <= aiEnt->client->ps.stats[STAT_MAX_HEALTH] / 3
 							&& NPC_Jedi_EnemyInForceRange(aiEnt)
-							&& Q_irand( 0, 20 ) < 8)
+							&& Q_irand(0, 2) == 2)
 						{// Try to drain them...
 							NPC_FaceEnemy(aiEnt, qtrue);
 							ForceDrain( aiEnt );
 							TIMER_Set( aiEnt, "drain", irand(5000, 10000) );
+
+							if (NPC_IsJedi(aiEnt))
+							{// Do deflect taunt...
+								G_AddVoiceEvent(aiEnt, Q_irand(EV_GLOAT1, EV_GLOAT3), 5000 + irand(0, 15000));
+							}
 						}
 						else
 						{// Check for an evasion method...
 							NPC_CheckEvasion(aiEnt);
+
+							if (NPC_IsJedi(aiEnt))
+							{// Do deflect taunt...
+								G_AddVoiceEvent(aiEnt, Q_irand(EV_DEFLECT1, EV_DEFLECT3), 5000 + irand(0, 15000));
+							}
 						}
 					}
 				}
