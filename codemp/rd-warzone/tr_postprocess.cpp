@@ -1078,6 +1078,7 @@ float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
 vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+vec4_t		CLOSE_COLORS[MAX_WORLD_GLOW_DLIGHTS];
 
 extern float		MAP_EMISSIVE_COLOR_SCALE;
 extern float		MAP_EMISSIVE_COLOR_SCALE_NIGHT;
@@ -1194,6 +1195,7 @@ void RB_AddGlowShaderLights ( void )
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
 				//VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
+				VectorCopy(glowColor, CLOSE_COLORS[i]);
 				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_colored++;
 
@@ -1289,6 +1291,8 @@ float RB_PixelDistance(float from[2], float to[2])
 
 	return x + y;
 }
+
+extern float SUN_VOLUMETRIC_SCALE;
 
 qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -1389,7 +1393,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	
 	{
 		vec4_t local0;
-		VectorSet4(local0, glowDimensionsX, glowDimensionsY, r_volumeLightStrength->value * 0.4, r_testvalue0->value); // * 0.4 to compensate for old setting.
+		VectorSet4(local0, glowDimensionsX, glowDimensionsY, r_volumeLightStrength->value * 0.4 * SUN_VOLUMETRIC_SCALE, r_testvalue0->value); // * 0.4 to compensate for old setting.
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 	}
 	

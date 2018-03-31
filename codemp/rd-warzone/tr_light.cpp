@@ -398,6 +398,7 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		}
 	}
 
+#ifdef __ENTITY_LIGHTING_DLIGHT_GLOW__
 	//
 	// modify the light by dynamic lights
 	//
@@ -418,6 +419,57 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		VectorMA( ent->directedLight, d, dl->color, ent->directedLight );
 		VectorMA( lightDir, d, dir, lightDir );
 	}
+#endif //__ENTITY_LIGHTING_DLIGHT_GLOW__
+
+#ifdef __ENTITY_LIGHTING_MAP_GLOW__
+	//
+	// modify the light by close glow lights
+	//
+
+	vec3_t playerOrigin;
+
+	if (backEnd.localPlayerOriginValid)
+	{
+		VectorCopy(backEnd.localPlayerOrigin, playerOrigin);
+		//ri->Printf(PRINT_WARNING, "Local player is at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+	}
+	else
+	{
+		VectorCopy(backEnd.refdef.vieworg, playerOrigin);
+		//ri->Printf(PRINT_WARNING, "No Local player! Using vieworg at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+	}
+
+	extern int			CLOSE_TOTAL;
+	extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+	extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+	extern vec4_t		CLOSE_COLORS[MAX_WORLD_GLOW_DLIGHTS];
+
+	extern float		MAP_EMISSIVE_RADIUS_SCALE;
+
+	d = VectorLength(ent->directedLight);
+	VectorScale(ent->lightDir, d, lightDir);
+
+	for (i = 0; i < CLOSE_TOTAL; i++) {
+		VectorSubtract(CLOSE_POS[i], lightOrigin, dir);
+		d = VectorNormalize(dir);
+
+		float lightRadius = CLOSE_RADIUS[i] * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+		power = DLIGHT_AT_RADIUS * (lightRadius * lightRadius);
+
+		power *= (MAX_WORLD_GLOW_DLIGHT_RANGE / CLOSE_DIST[i]);
+
+		if (d < DLIGHT_MINIMUM_RADIUS) {
+			d = DLIGHT_MINIMUM_RADIUS;
+		}
+		d = power / (d * d);
+
+		VectorMA(ent->directedLight, d, CLOSE_COLORS[i], ent->directedLight);
+		VectorMA(lightDir, d, dir, lightDir);
+	}
+#endif //__ENTITY_LIGHTING_MAP_GLOW__
 
 	// clamp ambient
 	//if ( !r_hdr->integer )

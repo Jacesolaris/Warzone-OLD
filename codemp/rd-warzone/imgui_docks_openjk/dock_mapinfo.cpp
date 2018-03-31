@@ -19,6 +19,7 @@ extern qboolean	MAP_REFLECTION_ENABLED;
 extern qboolean	DAY_NIGHT_CYCLE_ENABLED;
 extern float		DAY_NIGHT_CYCLE_SPEED;
 extern float		SUN_PHONG_SCALE;
+extern float		SUN_VOLUMETRIC_SCALE;
 extern vec3_t		SUN_COLOR_MAIN;
 extern vec3_t		SUN_COLOR_SECONDARY;
 extern vec3_t		SUN_COLOR_TERTIARY;
@@ -149,6 +150,7 @@ void DockMapInfo::imgui() {
 
 	if (ImGui::CollapsingHeader("Sun")) {
 		ImGui::DragFloat("SUN_PHONG_SCALE", &SUN_PHONG_SCALE);
+		ImGui::DragFloat("SUN_VOLUMETRIC_SCALE", &SUN_VOLUMETRIC_SCALE);
 		ImGui::DragFloat3("SUN_COLOR_MAIN", SUN_COLOR_MAIN);
 		ImGui::DragFloat3("SUN_COLOR_SECONDARY", SUN_COLOR_SECONDARY);
 		ImGui::DragFloat3("SUN_COLOR_TERTIARY", SUN_COLOR_TERTIARY);

@@ -1929,10 +1929,6 @@ const void	*RB_DrawSurfs( const void *data ) {
 		// add light flares on lights that aren't obscured
 		RB_RenderFlares();
 #endif //__Q3_FLARES__
-
-#ifdef ___WARZONE_FLASH___
-		gameswf_drawflash( "interface/test.swf" );
-#endif //___WARZONE_FLASH___
 	}
 
 	if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)

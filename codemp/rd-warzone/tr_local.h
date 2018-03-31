@@ -50,7 +50,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __EXTRA_PRETTY__						// Makes things look better by not disabling some stuff on shaders...
 #define __PSHADOWS__							// Just for tagging the old rend2 pshadows code that doesn't work...
 #define __DAY_NIGHT__							// Day/Night Cycle system...
-//#define __DLIGHT_SHADOWS__
 //#define __Q3_FLARES__							// Gonna just let the volumetrics handle flaring lights/glows....
 //#define __EXPERIMENTAL_TESS_SHADER_MERGE__	// this could probably work, but I dont see much FPS improvement in testing...
 //#define __INSTANCED_MODELS__					// experimenting with model instancing for foliage...
@@ -72,17 +71,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __DEFERRED_IMAGE_LOADING__			// deferred loading of shader images... save vram and speed up map load - at the expense of some ingame stutter?!?!?
 //#define __DEFERRED_MAP_IMAGE_LOADING__		// also load map images deferred...
 
-//#define ___WARZONE_FLASH___					// Enables flash UI addons. Experimental, code is not on git.
 //#define ___WARZONE_AWESOMIUM___				// Enables the old awesomium test code...
 
 //#define __LIGHT_OCCLUSION__						// Check occlusion on lights...
 
 #define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
+#define __ENTITY_LIGHTING_DLIGHT_GLOW__			// Add some dlight glow to entity lighting...
+#define __ENTITY_LIGHTING_MAP_GLOW__			// Add some emissive glow to entity lighting...
+
 //#define __DEPTH_PREPASS_STUFF__
 
 #define __OCEAN__
-//#define __ORIG_OCEAN__
 
 #define __RENDERER_THREADING__				// Just testing...
 
@@ -169,10 +169,6 @@ typedef unsigned int glIndex_t;
 
 extern qboolean SKIP_CULL_FRAME;
 extern qboolean SKIP_CULL_FRAME_DONE;
-
-#ifdef ___WARZONE_FLASH___
-extern void gameswf_drawflash ( char *filename );
-#endif //___WARZONE_FLASH___
 
 #ifdef ___WARZONE_AWESOMIUM___
 extern int DrawAwesomium( char *URL, FBO_t *srcFbo );
@@ -3344,7 +3340,6 @@ extern cvar_t  *r_testshaderValue9;
 void R_SwapBuffers( int );
 
 void R_RenderView( viewParms_t *parms );
-void R_RenderDlightCubemaps(const refdef_t *fd);
 void R_RenderPshadowMaps(const refdef_t *fd);
 void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sundir, float lightHeight);
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene );
