@@ -14,13 +14,15 @@ qboolean WATER_FAST_INITIALIZED = qfalse;
 GLuint gDrawNumber = 0; // How many indices to draw 
 
 GLuint gVaoID = 0;			 // ID for vertex array object
-GLuint gVboID = 0;			 // ID for vertex array object
+//GLuint gVboID = 0;			 // ID for vertex array object
+VBO_t *gVboID = NULL;			 // ID for vertex array object
 GLuint gIndexID = 0;		 // ID for vertex array object
 
 GLuint gFastDrawNumber = 0; // How many indices to draw 
 
 GLuint gFastVaoID = 0;			 // ID for vertex array object
-GLuint gFastVboID = 0;			 // ID for vertex array object
+//GLuint gFastVboID = 0;			 // ID for vertex array object
+VBO_t *gFastVboID = NULL;			 // ID for vertex array object
 GLuint gFastIndexID = 0;		 // ID for vertex array object
 
 #include "tr_matrix.h"
@@ -85,10 +87,8 @@ void OCEAN_InitOceanFast()
 		qglGenVertexArrays(1, &gFastVaoID);
 		qglBindVertexArray(gFastVaoID);
 
-		// Create and initialize a buffer object
-		qglGenBuffers(1, &gFastVboID);
-		qglBindBuffer(GL_ARRAY_BUFFER, gFastVboID);
-		qglBufferData(GL_ARRAY_BUFFER, NR_VERTICES * sizeof(vertices[0]) + NR_VERTICES * sizeof(texcoords[0]), NULL, GL_STATIC_DRAW);
+		gFastVboID = R_CreateVBO((byte *)vertices, NR_VERTICES * sizeof(vertices[0]) + NR_VERTICES * sizeof(texcoords[0]), VBO_USAGE_STATIC);
+		R_BindVBO(gFastVboID);
 
 		// Set the buffer pointers
 		qglBufferSubData(GL_ARRAY_BUFFER, 0, NR_VERTICES * sizeof(vertices[0]), vertices);
@@ -116,6 +116,7 @@ void OCEAN_InitOceanFast()
 		delete[] texcoords;
 		delete[] indices;
 
+		R_BindNullVBO();
 		GLSL_BindProgram(NULL);
 	}
 }
@@ -151,8 +152,6 @@ void OCEAN_InitOcean()
 
 				vertices[vertexPosition].y = MAP_WATER_LEVEL;// 0;
 				vertices[vertexPosition].z = (y*delta - 1.0) * scale;
-				//vertices[vertexPosition].y = (y*delta - 1.0) * scale;
-				//vertices[vertexPosition].z = MAP_WATER_LEVEL;// 0;
 
 				texcoords[vertexPosition].x = x*delta;
 				texcoords[vertexPosition].y = y*delta;
@@ -177,15 +176,9 @@ void OCEAN_InitOcean()
 		// Create a vertex array object
 		qglGenVertexArrays(1, &gVaoID);
 		qglBindVertexArray(gVaoID);
-
-		// Create and initialize a buffer object
-		qglGenBuffers(1, &gVboID);
-		qglBindBuffer(GL_ARRAY_BUFFER, gVboID);
-		qglBufferData(GL_ARRAY_BUFFER, NR_VERTICES * sizeof(vertices[0]) + NR_VERTICES * sizeof(texcoords[0]), NULL, GL_STATIC_DRAW);
-
-		// Set the buffer pointers
-		qglBufferSubData(GL_ARRAY_BUFFER, 0, NR_VERTICES * sizeof(vertices[0]), vertices);
-		qglBufferSubData(GL_ARRAY_BUFFER, NR_VERTICES * sizeof(vertices[0]), NR_VERTICES * sizeof(texcoords[0]), texcoords);
+		
+		gVboID = R_CreateVBO((byte *)vertices, NR_VERTICES * sizeof(vertices[0]) + NR_VERTICES * sizeof(texcoords[0]), VBO_USAGE_STATIC);
+		R_BindVBO(gVboID);
 
 		// Bind the index buffer
 		qglGenBuffers(1, &gIndexID);
@@ -210,6 +203,8 @@ void OCEAN_InitOcean()
 		delete[] indices;
 
 		GLSL_BindProgram(NULL);
+
+		R_BindNullVBO();
 	}
 }
 
@@ -227,34 +222,9 @@ void OCEAN_Render(void)
 
 		FBO_Bind(tr.renderFbo);
 
-#if 1
 		SetViewportAndScissor();
 		GL_SetProjectionMatrix(backEnd.viewParms.projectionMatrix);
 		GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
-#else
-		viewParms_t parms = tr.viewParms;
-
-		parms.zFar = 524288.0;
-
-		{
-			parms.visBounds[0][0] = -parms.zFar;
-			//parms.visBounds[0][1] = -parms.zFar;
-			parms.visBounds[0][2] = -parms.zFar;
-
-			parms.visBounds[1][0] = parms.zFar;
-			//parms.visBounds[1][1] = parms.zFar;
-			parms.visBounds[1][2] = parms.zFar;
-		}
-
-
-		uint32_t origState = glState.glStateBits;
-
-		extern void R_SetupProjectionZ(viewParms_t *dest);
-
-		R_SetupProjectionZ(&parms);
-		GL_SetProjectionMatrix(parms.projectionMatrix);
-		GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
-#endif
 
 		GLSL_SetUniformMatrix16(&tr.waterForwardShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		
@@ -263,16 +233,13 @@ void OCEAN_Render(void)
 		GLSL_SetUniformFloat(&tr.waterForwardShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
 		vec3_t out;
-		float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+		float dist = 4096.0;
 		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
 		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
 		GLSL_SetUniformVec3(&tr.waterForwardShader, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
 
 		GL_Cull(CT_TWO_SIDED);
 		GL_State(GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0);
-
-		//GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS);
-		//qglDepthMask(GL_FALSE);
 
 		vec4_t l0;
 		VectorSet4(l0, MAP_WATER_LEVEL, 0.0, 0.0, 0.0);
@@ -295,16 +262,17 @@ void OCEAN_Render(void)
 		GLSL_SetUniformInt(&tr.waterForwardShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
 		GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
 		
+		R_BindVBO(gVboID);
+
 		GLSL_VertexAttribsState(ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD);
 
 		qglBindVertexArray(gVaoID);
-		qglBindBuffer(GL_ARRAY_BUFFER, gVboID);
+		
 		qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexID);
 
 		qglDrawElements(GL_TRIANGLES, gDrawNumber, GL_UNSIGNED_INT, 0);
 
-		//qglBindVertexArray(0);
-
+		R_BindNullVBO();
 		GLSL_BindProgram(NULL);
 	}
 	else if (WATER_ENABLED && r_glslWater->integer >= 1 && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
@@ -324,11 +292,9 @@ void OCEAN_Render(void)
 		{
 			parms.visBounds[0][0] = -parms.zFar;
 			parms.visBounds[0][1] = -parms.zFar;
-			//parms.visBounds[0][2] = -parms.zFar;
 
 			parms.visBounds[1][0] = parms.zFar;
 			parms.visBounds[1][1] = parms.zFar;
-			//parms.visBounds[1][2] = parms.zFar;
 		}
 
 
@@ -346,17 +312,11 @@ void OCEAN_Render(void)
 		GLSL_SetUniformFloat(&tr.waterForwardFastShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
 		GL_Cull(CT_TWO_SIDED);
-		//GL_State(GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0);
-		//GL_State(GLS_ALPHA | GLS_DEPTHTEST_DISABLE);
-		//GL_State(/*GLS_DEPTHTEST_DISABLE |*/ GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0);
-		GL_State(/*GLS_DEPTHTEST_DISABLE |*/ GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS);
+		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS);
 
 		qglDepthMask(GL_FALSE);
 
-		//qglDepthRange(0, 1);
-
 		vec4_t l9;
-		//VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 		VectorSet4(l9, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, MAP_WATER_LEVEL);
 		GLSL_SetUniformVec4(&tr.waterForwardFastShader, UNIFORM_LOCAL9, l9);
 
@@ -364,15 +324,17 @@ void OCEAN_Render(void)
 		VectorSet4(l10, 0.0, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(&tr.waterForwardFastShader, UNIFORM_LOCAL10, l10);
 
+		R_BindVBO(gFastVboID);
+
 		GLSL_VertexAttribsState(ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD);
 
 		qglBindVertexArray(gFastVaoID);
-		qglBindBuffer(GL_ARRAY_BUFFER, gFastVboID);
+		
 		qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gFastIndexID);
 
 		qglDrawElements(GL_TRIANGLES, gFastDrawNumber, GL_UNSIGNED_INT, 0);
 
-		//qglBindVertexArray(0);
+		R_BindNullVBO();
 	}
 }
 #endif //__OCEAN__

@@ -1105,6 +1105,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 		surf = mdvModel->surfaces;
 
 #ifdef __INSTANCED_MODELS__
+		mdvModel->vao = NULL;
 		qglGenVertexArrays(1, &mdvModel->vao);
 		qglBindVertexArray(mdvModel->vao);
 #endif //__INSTANCED_MODELS__
