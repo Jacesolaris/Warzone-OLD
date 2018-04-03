@@ -3604,6 +3604,11 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 		}
 	}
 
+	if (StringContainsWord(NPC->client->modelname, "youngling"))
+	{// Override for youngling model that is not part of wz assets, but should be classed as a padawan when seen...
+		NPC->s.NPC_class = NPC->client->NPC_class = CLASS_PADAWAN;
+	}
+
 	if (scale_models_loaded && NPC->modelScale[0] <= 1)
 	{
 		int loop;
