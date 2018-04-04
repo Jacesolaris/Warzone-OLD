@@ -34,8 +34,8 @@ uniform samplerCube	u_SkyCubeMap;
 uniform samplerCube	u_SkyCubeMapNight;
 uniform samplerCube	u_EmissiveCubeMap;
 uniform sampler2D	u_SteepMap;	  // ssao image
-uniform sampler2D	u_WaterEdgeMap; // sky up image (for sky lighting contribution)
-uniform sampler2D	u_RoadsControlMap; // sky night up image (for sky lighting contribution)
+uniform sampler2D	u_WaterEdgeMap; // tr.shinyImage
+//uniform sampler2D	u_RoadsControlMap; // unused
 
 uniform mat4		u_ModelViewProjectionMatrix;
 
@@ -989,7 +989,7 @@ void main(void)
 	//
 
 	// This should give me roughly how close to grey this color is... For light colorization.. Highly colored stuff should get less color added to it...
-	float greynessFactor = 1.0 - clamp((length(outColor.r - outColor.g) + length(outColor.r - outColor.b)) / 2.0, 0.0, 1.0);
+	float greynessFactor = 1.0 - clamp((length(outColor.r - outColor.g) + length(outColor.r - outColor.b) + length(outColor.g - outColor.b)) / 3.0, 0.0, 1.0);
 	greynessFactor = pow(greynessFactor, 64.0);
 
 	// Also check how bright it is, so we can scale the lighting up/down...
@@ -997,7 +997,7 @@ void main(void)
 	brightnessFactor = 1.0 - pow(brightnessFactor, 16.0);
 
 	// It looks better to use slightly different cube and light reflection multipliers... Lights should always add some light, cubes should allow none on some pixels..
-	float cubeReflectionFactor = clamp(greynessFactor * brightnessFactor, 0.25, 1.0) * reflectionPower;
+	float cubeReflectionFactor = clamp(greynessFactor * brightnessFactor, 0.5, 1.0) * reflectionPower;
 	float lightsReflectionFactor = (greynessFactor * brightnessFactor * specularReflectivePower) * 0.5 + 0.5;
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
 	float ssrReflectivePower = lightsReflectionFactor * reflectionPower * ssReflection;
@@ -1144,7 +1144,6 @@ void main(void)
 #if defined(__CUBEMAPS__) || defined(__EMISSIVE_IBL__)
 			//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
 			vec3 cubeLightColor = vec3(0.0);
-			float cubeFade = 0.0;
 			
 			// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
 			vec4 cubeInfo = u_CubeMapInfo;
@@ -1161,38 +1160,49 @@ void main(void)
 #ifdef __EMISSIVE_IBL__
 			if (u_Local9.r > 0.0)
 			{// Also grab emissive cube lighting color...
-				emissiveCubeLightColor = texture(u_EmissiveCubeMap, cubeRayDir/*rayDir*/ + parallax).rgb;
-				emissiveCubeLightColor += texture(u_EmissiveCubeMap, rayDir + parallax).rgb;
-				emissiveCubeLightColor /= 2.0;
-				emissiveCubeLightDirection = rayDir + parallax;
+				emissiveCubeLightColor = textureLod(u_EmissiveCubeMap, cubeRayDir + parallax, 4.0).rgb;
+				//emissiveCubeLightColor += texture(u_EmissiveCubeMap, rayDir + parallax).rgb;
+				//emissiveCubeLightColor /= 2.0;
+				emissiveCubeLightDirection = cubeRayDir + parallax;
 			}
 #endif //__EMISSIVE_IBL__
 		
 #ifdef __CUBEMAPS__
-			if (reflectionPower > 0.0)
+			if (cubeReflectionFactor > 0.0 && NE > 0.0 && u_CubeMapStrength > 0.0)
 			{
 				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
-
-				if (curDist < u_Local7.g)
-				{
-					cubeFade = clamp((1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * reflectionPower * (u_CubeMapStrength * 20.0), 0.0, 1.0);
-				}
+				float cubeDist = distance(u_CubeMapInfo.xyz, position.xyz);
+				float cubeFade = (1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * (1.0 - clamp(cubeDist / u_Local7.g, 0.0, 1.0));
 
 				if (cubeFade > 0.0)
 				{
-					//cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
-					cubeLightColor = texture(u_CubeMap, cubeRayDir/*rayDir*/ + parallax).rgb;
-					cubeLightColor += texture(u_CubeMap, rayDir + parallax).rgb;
+					cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+					cubeLightColor += texture(u_CubeMap, cubeRayDir + parallax).rgb;
+					//cubeLightColor += texture(u_CubeMap, rayDir + parallax).rgb;
 					cubeLightColor /= 2.0;
 
-					cubeLightColor = clamp(ContrastSaturationBrightness(cubeLightColor, 3.0, 4.0, 0.3), 0.0, 1.0);
-					cubeLightColor = clamp(Vibrancy(cubeLightColor, 0.4), 0.0, 1.0);
+					//cubeLightColor = clamp(ContrastSaturationBrightness(cubeLightColor, 3.0, 4.0, 0.3), 0.0, 1.0);
+					//cubeLightColor = clamp(Vibrancy(cubeLightColor, 0.4), 0.0, 1.0);
 
-					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, reflectVectorPower * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor);
+					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, clamp(NE * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor, 0.0, 1.0));
 				}
 			}
 #endif //__CUBEMAPS__
 #endif //defined(__CUBEMAPS__) || defined(__EMISSIVE_IBL__)
+		}
+		else
+		{
+			vec3 shiny = textureLod(u_WaterEdgeMap, ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+			shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
+			
+			/*if (u_Local3.r == 1.0)
+			{
+				outColor.rgb = shiny;
+				gl_FragColor = vec4(outColor.rgb, 1.0);
+				return;
+			}*/
+
+			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor, 0.0, 1.0));
 		}
 #endif //!__LQ_MODE__
 	}
@@ -1214,7 +1224,7 @@ void main(void)
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
 #ifndef __LQ_MODE__
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(pow(reflectionPower, 2.0) * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(/*pow(reflectionPower, 2.0)*/NE * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
 #endif //__LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor, 0.0, 1.0));
 		//outColor.rgb = skyColor;
@@ -1395,14 +1405,14 @@ void main(void)
 			//f = length(f.rgb) / 3.0;
 
 			// Diffuse...
-			float diffuse = getdiffuse(N, emissiveCubeLightDirection, u_Local3.b);
-			addedLight += diffuse * emissiveCubeLightColor * specularReflectivePower * u_Local3.r;// 0.01;
+			float diffuse = getdiffuse(N, emissiveCubeLightDirection, u_Local3.r);
+			addedLight += diffuse * emissiveCubeLightColor * specularReflectivePower * u_Local3.g;// 0.01;
 
 			// CryTek's way
 			vec3 mirrorEye = (2.0f * dot(E, N) * N - E);
 			float dotSpec = saturate(dot(mirrorEye.xyz, -emissiveCubeLightDirection) * 0.5f + 0.5f);
 			vec3 spec = (1.0f - f) * saturate(-emissiveCubeLightDirection.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f)) * emissiveCubeLightColor;
-			addedLight += spec * 25.0 * saturate(shininess - 0.05f) * emissiveCubeLightColor * specularReflectivePower * u_Local3.g;// 0.1;
+			addedLight += spec * 25.0 * saturate(shininess - 0.05f) * emissiveCubeLightColor * specularReflectivePower * u_Local3.b;// 0.1;
 			outColor.rgb = max(outColor.rgb, addedLight.rgb);
 		}
 #endif //__EMISSIVE_IBL__

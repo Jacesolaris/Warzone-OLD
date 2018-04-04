@@ -2357,7 +2357,6 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 			scan[i*4 + 2] = luma;
 		}
 	}
-#if 0 // ummm, wierd...
 	else if( r_greyscale->value )
 	{
 		for ( i = 0; i < c; i++ )
@@ -2368,7 +2367,6 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 			scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, r_greyscale->value);
 		}
 	}
-#endif
 
 	// normals are always swizzled
 	if (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT)

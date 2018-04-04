@@ -1920,17 +1920,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		return;
 	}
 
-	/*
-	if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
-	{
-		if (!tess.shader->hasGlow) {
-			// Skip...
-			//return;
-			isEmissiveBlack = qtrue;
-		}
-	}
-	*/
-
 	ComputeDeformValues(&deformGen, deformParams);
 
 	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
@@ -2718,13 +2707,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec, 
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0, 
 				(index & LIGHTDEF_IS_DETAIL) ? 1.0 : 0.0, 
-				/*(isEmissiveBlack || isEmissiveBlackStage)*/(backEnd.viewParms.flags & VPF_EMISSIVEMAP) ? 1.0 : 0.0,
+				(backEnd.viewParms.flags & VPF_EMISSIVEMAP) ? 1.0 : 0.0,
 				pStage->glowBlend);
 #else //!__USE_DETAIL_CHECKING__
 			VectorSet4(vec,
 				(index & LIGHTDEF_USE_REGIONS) ? 1.0 : 0.0,
 				0.0,
-				/*(isEmissiveBlack || isEmissiveBlackStage)*/(backEnd.viewParms.flags & VPF_EMISSIVEMAP) ? 1.0 : 0.0,
+				(backEnd.viewParms.flags & VPF_EMISSIVEMAP) ? 1.0 : 0.0,
 				pStage->glowBlend);
 #endif //__USE_DETAIL_CHECKING__
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);

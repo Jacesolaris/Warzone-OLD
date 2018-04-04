@@ -3732,11 +3732,11 @@ static void R_RenderAllCubemaps(void)
 
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
+		if (!tr.cubemapEnabled[i]) continue;
+		if (tr.cubemapRendered[i]) continue;
+
 		for (j = 0; j < 6; j++)
 		{
-			if (!tr.cubemapEnabled[i]) continue;
-			if (tr.cubemapRendered[i]) continue;
-
 			RE_ClearScene();
 			R_RenderCubemapSide(i, j, qfalse);
 			R_IssuePendingRenderCommands();
@@ -3751,9 +3751,9 @@ static void R_RenderAllCubemaps(void)
 				R_InitNextFrame();
 			}
 #endif //__EMISSIVE_CUBE_IBL__
-
-			tr.cubemapRendered[i] = true;
 		}
+
+		tr.cubemapRendered[i] = true;
 	}
 
 #ifdef __EMISSIVE_CUBE_IBL__

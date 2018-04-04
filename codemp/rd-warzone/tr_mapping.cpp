@@ -2573,6 +2573,9 @@ void R_LoadMapInfo(void)
 		}
 	}
 
+	tr.shinyImage = R_FindImageFile("textures/common/env_chrome.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	//tr.shinyImage = R_FindImageFile("textures/common/env_shiny.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
 #if 0
 	if (!R_TextureFileExists(va("mapImage/%s.tga", currentMapName)))
 	{
