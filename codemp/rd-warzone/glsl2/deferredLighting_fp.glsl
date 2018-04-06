@@ -14,28 +14,28 @@
 	#define __CUBEMAPS__
 
 	#ifdef USE_EMISSIVECUBES
-		#define __EMISSIVE_IBL__
+		//#define __EMISSIVE_IBL__
 	#endif //USE_EMISSIVECUBES
 #endif //USE_CUBEMAPS
 
 #endif //__LQ_MODE__
 
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_PositionMap;
-uniform sampler2D	u_NormalMap;
-uniform sampler2D	u_OverlayMap; // Real normals. Alpha channel 1.0 means enabled...
-uniform sampler2D	u_ScreenDepthMap;
-uniform sampler2D	u_HeightMap;
-uniform sampler2D	u_ShadowMap;
-uniform sampler2D	u_DeluxeMap;  // Random2K image...
-uniform sampler2D	u_GlowMap;
-uniform samplerCube	u_CubeMap;
-uniform samplerCube	u_SkyCubeMap;
-uniform samplerCube	u_SkyCubeMapNight;
-uniform samplerCube	u_EmissiveCubeMap;
-uniform sampler2D	u_SteepMap;	  // ssao image
-uniform sampler2D	u_WaterEdgeMap; // tr.shinyImage
-//uniform sampler2D	u_RoadsControlMap; // unused
+uniform sampler2D	u_DiffuseMap;		// Screen image
+uniform sampler2D	u_ScreenDepthMap;	// Depth map
+uniform sampler2D	u_NormalMap;		// Flat normals
+uniform sampler2D	u_PositionMap;		// positionMap
+uniform sampler2D	u_DeluxeMap;		// Random2K image...
+uniform sampler2D	u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
+uniform sampler2D	u_SteepMap;			// ssao image
+uniform sampler2D	u_HeightMap;		// ssdoImage
+uniform sampler2D	u_GlowMap;			// anamorphic
+uniform sampler2D	u_ShadowMap;		// Screen Shadow Map
+uniform sampler2D	u_WaterEdgeMap;		// tr.shinyImage
+uniform sampler2D	u_RoadsControlMap;	// unused
+uniform samplerCube	u_SkyCubeMap;		// Day sky cubemap
+uniform samplerCube	u_SkyCubeMapNight;	// Night sky cubemap
+uniform samplerCube	u_CubeMap;			// Closest cubemap
+uniform samplerCube	u_EmissiveCubeMap;	// Closest emissive cubemap
 
 uniform mat4		u_ModelViewProjectionMatrix;
 
@@ -638,6 +638,8 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 // Full lighting... Blinn phong and basic lighting as well...
 //
 #if defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
+
+#if 0
 float getspecularLight(vec3 n, vec3 l, vec3 e, float s) {
 	//float nrm = (s + 8.0) / (3.1415 * 8.0);
 	float ndotl = clamp(max(dot(reflect(e, n), l), 0.0), 0.1, 1.0);
@@ -648,6 +650,20 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 	float ndotl = clamp(dot(n, l), 0.5, 0.9);
 	return pow(ndotl, p);
 }
+#else
+float getspecularLight(vec3 surfaceNormal, vec3 lightDirection, vec3 viewDirection, float shininess)
+{
+	//Calculate Blinn-Phong power
+	vec3 H = normalize(viewDirection + lightDirection);
+	return clamp(pow(max(0.0, dot(surfaceNormal, H)), shininess), 0.1, 1.0);
+}
+
+float getdiffuse(vec3 n, vec3 l, float p) {
+	float ndotl = clamp(dot(n, l), 0.5, 0.9);
+	return pow(ndotl, p);
+	//return pow(dot(n, l) * 0.4 + 0.6, p);
+}
+#endif
 
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
 	/*float fre = clamp(dot(normal, -view) + 1.0, 0.0, 1.0);
@@ -666,7 +682,7 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 	float fre = clamp(pow(clamp(dot(normal, -view) + 1.0, 0.0, 1.0), -2.0), 2.0, 48.0);
 	float spec = pow(max(dot(reflect(-light, normal), view), 0.0), 1.2);
 
-	return (ambience * diffuseColor) + (diffuseColor * diff) + (specularColor * spec * fre);
+	return (ambience * clamp(diffuseColor, 0.0, 1.0)) + (clamp(diffuseColor, 0.0, 1.0) * diff) + (clamp(specularColor, 0.0, 1.0) * spec * fre);
 }
 #else //!defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float specTrowbridgeReitz(float HoN, float a, float aP)
@@ -1194,14 +1210,6 @@ void main(void)
 		{
 			vec3 shiny = textureLod(u_WaterEdgeMap, ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
 			shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
-			
-			/*if (u_Local3.r == 1.0)
-			{
-				outColor.rgb = shiny;
-				gl_FragColor = vec4(outColor.rgb, 1.0);
-				return;
-			}*/
-
 			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor, 0.0, 1.0));
 		}
 #endif //!__LQ_MODE__
@@ -1306,11 +1314,7 @@ void main(void)
 			float power = maxBright * 0.85;
 			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 
-#ifdef __LQ_MODE__
-			for (int li = 0; li < min(u_lightCount, 16); li++)
-#else //!__LQ_MODE__
 			for (int li = 0; li < u_lightCount; li++)
-#endif //__LQ_MODE__
 			{
 				vec3 lightPos = u_lightPositions2[li].xyz;
 

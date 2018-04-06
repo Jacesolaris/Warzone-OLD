@@ -2421,7 +2421,8 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 		try {
 			if (!StringContainsWord(name, "lightAll")
 				&& !StringContainsWord(name, "depthPass")
-				&& !StringContainsWord(name, "sky"))
+				&& !StringContainsWord(name, "sky")
+				&& !StringContainsWord(name, "fxaa"))
 			{// The optimizer doesn't like lightAll and depthPass vert shaders...
 				if (vpCode)
 				{
@@ -2440,7 +2441,8 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 				}
 			}
 
-			if (!StringContainsWord(name, "deferredLighting"))
+			if (!StringContainsWord(name, "deferredLighting")
+				&& !StringContainsWord(name, "fxaa")) // NV fxaa is not a fan of optimization
 			{
 				if (fpCode)
 				{// The optimizer doesn't like deferredLighting shader...

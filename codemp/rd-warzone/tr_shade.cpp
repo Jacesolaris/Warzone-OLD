@@ -1744,6 +1744,9 @@ void RB_UpdateCloseLights ( void )
 
 	NUM_CLOSE_LIGHTS = 0;
 
+	//int MAX_CLOSE_LIGHTS = MAX_DEFERRED_LIGHTS;
+	int MAX_CLOSE_LIGHTS = r_lowVram->integer ? min(r_maxDeferredLights->integer, 8.0) : min(r_maxDeferredLights->integer, MAX_DEFERRED_LIGHTS);
+
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ )
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
@@ -1765,7 +1768,7 @@ void RB_UpdateCloseLights ( void )
 			}
 		}
 
-		if (NUM_CLOSE_LIGHTS < MAX_DEFERRED_LIGHTS)
+		if (NUM_CLOSE_LIGHTS < MAX_CLOSE_LIGHTS)
 		{// Have free light slots for a new light...
 			/*vec3_t from;
 			VectorCopy(backEnd.refdef.vieworg, from);
@@ -1799,10 +1802,10 @@ void RB_UpdateCloseLights ( void )
 			int		farthest_light = 0;
 			float	farthest_distance = 0.0;
 
-			if (!Light_Visible(backEnd.refdef.vieworg, dl->origin, qfalse, dl->radius))
+			/*if (!Light_Visible(backEnd.refdef.vieworg, dl->origin, qfalse, dl->radius))
 			{
 				continue;
-			}
+			}*/
 
 			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
 			{// Find the most distance light in our current list to replace, if this new option is closer...
@@ -1854,7 +1857,7 @@ void RB_UpdateCloseLights ( void )
 		//CLOSEST_LIGHTS_DISTANCES[i] *= 4.0;
 	}
 
-	//ri->Printf(PRINT_ALL, "Found %i close lights this frame.\n", NUM_CLOSE_LIGHTS);
+	//ri->Printf(PRINT_ALL, "Found %i close lights this frame from %i dlights. Max allowed %i.\n", NUM_CLOSE_LIGHTS, backEnd.refdef.num_dlights, MAX_CLOSE_LIGHTS);
 
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }

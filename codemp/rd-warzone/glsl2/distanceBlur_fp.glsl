@@ -7,25 +7,26 @@ uniform sampler2D		u_PositionMap;
 uniform vec4			u_ViewInfo; // zmin, zmax, zmax / zmin, MAP_WATER_LEVEL
 uniform vec2			u_Dimensions;
 uniform vec4			u_Local0;
+uniform vec4			u_Local1; // r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
 
 varying vec2			var_TexCoords;
 
-//#define __SKY_CHECK__ // This slows the checks a lot... Has to look up double the number of pixels...
+#define __SKY_CHECK__			// This slows the checks a lot... Has to look up double the number of pixels...
 
-#define BLUR_DEPTH		0.8//0.55
-#define BLUR_RADIUS		4.0//2.0
+#define BLUR_DEPTH_MIN			0.01//0.8//0.55
+#define BLUR_RADIUS_BASE		5.0//2.0
 
 #define MAP_WATER_LEVEL u_ViewInfo.a
 
-#define px				(1.0 / u_Dimensions.x)
-#define py				(1.0 / u_Dimensions.y)
+#define px				(1.5 / u_Dimensions.x)
+#define py				(1.5 / u_Dimensions.y)
 
 vec4 DistantBlur(void)
 {
 	vec4 color = textureLod(u_DiffuseMap, var_TexCoords.xy, 0.0);
 	float depth = textureLod(u_ScreenDepthMap, var_TexCoords.xy, 0.0).r;
 
-	if (depth < BLUR_DEPTH)
+	if (depth < BLUR_DEPTH_MIN)
 	{
 		return color;
 	}
@@ -46,10 +47,29 @@ vec4 DistantBlur(void)
 	}
 #endif //__SKY_CHECK__
 
-	float BLUR_DEPTH_MULT = (1.0 - clamp(BLUR_DEPTH / depth, 0.0, 1.0));// * BLUR_RADIUS;
-	BLUR_DEPTH_MULT = clamp(pow(BLUR_DEPTH_MULT, 0.5), 0.0, 1.0);
+	float d = depth - BLUR_DEPTH_MIN;
+
+	if (d <= 0.0)
+	{// No point... This would be less then 1 pixel...
+		return color;
+	}
+
+	float dMax = 1.0 - BLUR_DEPTH_MIN;
+	float BLUR_DEPTH_MULT = pow(d / dMax, 4.0);
 
 	if (BLUR_DEPTH_MULT <= 0.0)
+	{// No point... This would be less then 1 pixel...
+		return color;
+	}
+
+	float BLUR_RADIUS = BLUR_RADIUS_BASE * BLUR_DEPTH_MULT;
+
+	if (isSky)
+	{
+		BLUR_RADIUS = 2.0;
+	}
+
+	if (BLUR_RADIUS <= 0.0)
 	{// No point... This would be less then 1 pixel...
 		return color;
 	}
@@ -62,7 +82,8 @@ vec4 DistantBlur(void)
 		{
 			vec2 offset = vec2(x * px, y * py);
 			vec2 xy = vec2(var_TexCoords + offset);
-			float weight = clamp(1.0 / ((length(vec2(x, y)) + 1.0) * 0.666), 0.2, 1.0);
+			//float weight = clamp(1.0 / ((length(vec2(x, y)) + 1.0) * 0.666), 0.2, 1.0);
+			float weight = 1.0 - ((length(x) + length(y)) / (BLUR_RADIUS * 2.0));
 
 #ifdef __SKY_CHECK__
 			bool pixelIsSky = false;
@@ -100,14 +121,14 @@ vec4 DistantBlur(void)
 	}
 
 	color.rgb /= NUM_BLUR_PIXELS;
-	color.rgb = mix(origColor.rgb, color.rgb, clamp(BLUR_DEPTH_MULT * 2.0, 0.0, 1.0));
+	//color.rgb = mix(origColor.rgb, color.rgb, clamp(BLUR_DEPTH_MULT * 2.0, 0.0, 1.0));
 
 	return color;
 }
 
 void main()
 {
-	gl_FragColor = DistantBlur();
+	gl_FragColor = vec4(DistantBlur().rgb, 1.0);
 }
 
 
@@ -131,7 +152,7 @@ uniform vec4			u_Local1; // testvalues
 varying vec2			var_TexCoords;
 
 
-#define BLUR_DEPTH		0.8//0.55
+#define BLUR_DEPTH_MIN		0.8//0.55
 
 
 #define sampleOffset	(vec2(1.0) / u_Dimensions)
@@ -207,12 +228,12 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 	float depth = textureLod(u_ScreenDepthMap, coord.xy, 0.0).x;
 	float lDepth = depth;
 
-	if (lDepth < BLUR_DEPTH)
+	if (lDepth < BLUR_DEPTH_MIN)
 	{
 		return tcol;
 	}
 
-	float depthDiff = (lDepth - BLUR_DEPTH) * 7.0;// 4.0;//u_Local1.r;
+	float depthDiff = (lDepth - BLUR_DEPTH_MIN) * 7.0;// 4.0;//u_Local1.r;
 	vec2 discRadius = (depthDiff * float(DOF_BLURRADIUS)) * sampleOffset.xy * 0.5 / float(iMatsoDOFBokehQuality);
 	float wValue = 1.0;
 	

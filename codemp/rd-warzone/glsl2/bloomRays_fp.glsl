@@ -30,6 +30,7 @@ void AddContrast ( inout vec3 color )
 // 9 quads on screen for positions...
 const vec2    lightPositions[9] = vec2[] ( vec2(0.25, 0.25), vec2(0.25, 0.5), vec2(0.25, 0.75), vec2(0.5, 0.25), vec2(0.5, 0.5), vec2(0.5, 0.75), vec2(0.75, 0.25), vec2(0.75, 0.5), vec2(0.75, 0.75) );
 
+#if 0
 vec4 ProcessBloomRays(vec2 inTC)
 {
 	vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
@@ -61,7 +62,7 @@ vec4 ProcessBloomRays(vec2 inTC)
 				float linDepth = textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r;
 				linDepth = clamp(linDepth / lightLinDepth, 0.0, 1.0) * 0.75;
 
-				vec4 sample2 = texture(u_GlowMap, texCoord.xy);
+				vec4 sample2 = texture(u_GlowMap, vec2(texCoord.x, 1.0 - texCoord.y));
 				sample2.w = 1.0;
 				sample2 *= linDepth * illuminationDecay * BLOOMRAYS_WEIGHT;
           
@@ -95,8 +96,75 @@ vec4 ProcessBloomRays(vec2 inTC)
 
 	return totalColor;
 }
+#else
+void AddContrast(inout float value, float contrast, float brightness)
+{
+	// Apply contrast.
+	value = ((value - 0.5f) * max(contrast, 0)) + 0.5f;
+	// Apply brightness.
+	value += brightness;
+}
+
+vec3 ProcessBloomRays(vec2 inTC)
+{
+	vec3 totalColor = vec3(0.0, 0.0, 0.0);
+
+	for (int i = 0; i < 9; i++)
+	{
+		float dist = length(inTC.xy - lightPositions[i]);
+		float fall = clamp(BLOOMRAYS_FALLOFF - dist, 0.0, 1.0);
+
+		if (fall > 0.0)
+		{// Within range...
+			float   fallOffRange = 0.25;// (fall + (fall*fall)) / 2.0;
+			vec3	lens = vec3(0.0, 0.0, 0.0);
+			vec2	ScreenLightPos = lightPositions[i];
+			vec2	texCoord = inTC.xy;
+			vec2	deltaTexCoord = (texCoord.xy - ScreenLightPos.xy);
+
+			deltaTexCoord *= 1.0 / float(float(BLOOMRAYS_STEPS) * BLOOMRAYS_DENSITY);
+
+			float illuminationDecay = 1.0;
+
+			for (int g = 0; g < BLOOMRAYS_STEPS; g++)
+			{
+				texCoord -= deltaTexCoord;
+
+				vec4 sample2 = texture(u_GlowMap, vec2(texCoord.x, 1.0 - texCoord.y));
+
+				float grey = (length(sample2.rgb * sample2.a) / 3.0) * 0.01;
+				AddContrast(grey, 1.175, 0.1);
+
+				lens.xyz += sample2.xyz * grey * illuminationDecay * BLOOMRAYS_WEIGHT;
+				illuminationDecay *= BLOOMRAYS_DECAY;
+
+				if (illuminationDecay <= 0.0)
+					break;
+			}
+
+			totalColor += clamp(lens * fallOffRange * fall * fall, 0.0, 1.0);
+		}
+	}
+
+	totalColor = clamp(totalColor, 0.0, 1.0);
+
+	totalColor *= BLOOMRAYS_STRENGTH;
+
+	// Amplify contrast...
+#define lightLower ( 0.0 / 255.0 )
+#define lightUpper ( 255.0 / 24.0 )
+	totalColor.rgb = clamp((totalColor - lightLower) * lightUpper, 0.0, 1.0);
+
+	if (u_Local2.r > 0.0)
+	{// Sunset/Sunrise/Night... Scale down the glows to reduce flicker...
+		totalColor.rgb = mix(totalColor, totalColor / 3.0, u_Local2.r);
+	}
+
+	return totalColor;
+}
+#endif
 
 void main()
 {
-	gl_FragColor = vec4(ProcessBloomRays(var_TexCoords).rgb, 1.0);
+	gl_FragColor = vec4(ProcessBloomRays(var_TexCoords), 1.0);
 }

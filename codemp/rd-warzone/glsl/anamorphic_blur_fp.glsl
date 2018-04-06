@@ -19,10 +19,11 @@ void main(void)
 
 	for (float width = 1.0; width <= scale.z; width += 1.0)
 	{
-		float dist_mult = clamp(1.0 - (width / scale.z), 0.0, 1.0);
+		float dist_mult = clamp(1.0 - clamp(width / scale.z, 0.0, 1.0), 0.1, 1.0);
 		vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((scale.xy * width) * PIXEL_OFFSET)).rgb;
 		vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((scale.xy * width) * PIXEL_OFFSET)).rgb;
-		vec3 add_color = ((col0 / 2.0) + ((col1 + col2) * (dist_mult * 2.0))) / 4.0;
+		//vec3 add_color = ((col0 / 2.0) + ((col1 + col2) * (dist_mult * 2.0))) / 4.0;
+		vec3 add_color = clamp((col1 + col2) / 2.0, 0.0, 1.0) * dist_mult;
 
 		//vec3 BLUE_SHIFT_MOD = vec3(0.333, 0.333, 3.0);
 		//vec3 add_color_blue = clamp(add_color * (BLUE_SHIFT_MOD * (1.0 - clamp(dist_mult*3.5, 0.0, 1.0))), 0.0, 1.0);

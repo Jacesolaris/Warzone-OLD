@@ -673,18 +673,12 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local0;
-		VectorSet4(local0, r_bloomScale->value, 0.0, 0.0, 0.0);
+		//VectorSet4(local0, r_bloomScale->value, 0.0, 0.0, 0.0);
 		VectorSet4(local0, 0.5 * r_bloomScale->value, 0.0, 0.0, 0.0); // Account for already added glow...
 		GLSL_SetUniformVec4(&tr.bloomCombineShader, UNIFORM_LOCAL0, local0);
 	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.bloomCombineShader, color, 0);
-
-	//
-	// Render the results now...
-	//
-
-	FBO_FastBlit(ldrFbo, NULL, hdrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
 void RB_CreateAnamorphicImage( void )
@@ -702,12 +696,6 @@ void RB_CreateAnamorphicImage( void )
 	srcBox[1] = 0;
 	srcBox[2] = tr.glowFboScaled[0]->width;
 	srcBox[3] = tr.glowFboScaled[0]->height;
-
-	/*vec4i_t dstBox;
-	dstBox[0] = 0;
-	dstBox[1] = 0;
-	dstBox[2] = tr.anamorphicRenderFBO->width;
-	dstBox[3] = tr.anamorphicRenderFBO->height;*/
 
 	GLSL_BindProgram(&tr.anamorphicBlurShader);
 
@@ -761,12 +749,6 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.anamorphicCombineShader, color, 0);
-
-	//
-	// Render the results now...
-	//
-
-	FBO_FastBlit(ldrFbo, NULL, hdrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
 void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -779,13 +761,15 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
+	image_t *glowImage = tr.glowFboScaled[0]->colorImage[0];
+
 	GLSL_BindProgram(&tr.bloomRaysShader);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
+	GL_BindToTMU(glowImage, TB_GLOWMAP);
 
 	GLSL_SetUniformInt(&tr.bloomRaysShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
@@ -794,8 +778,8 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t dimensions;
-		dimensions[0] = tr.anamorphicRenderFBOImage->width;
-		dimensions[1] = tr.anamorphicRenderFBOImage->height;
+		dimensions[0] = glowImage->width;
+		dimensions[1] = glowImage->height;
 
 		GLSL_SetUniformVec2(&tr.bloomRaysShader, UNIFORM_DIMENSIONS, dimensions);
 	}
@@ -822,10 +806,7 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec4(&tr.bloomRaysShader, UNIFORM_LOCAL2, local2);
 	}
 
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.bloomRaysShader, color, 0);
-
-	//FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.bloomRaysShader, color, 0);
-	FBO_BlitFromTexture(tr.anamorphicRenderFBOImage, NULL, NULL, tr.volumetricFbo, NULL, &tr.bloomRaysShader, color, 0);
+	FBO_BlitFromTexture(glowImage, NULL, NULL, tr.volumetricFbo, NULL, &tr.bloomRaysShader, color, 0);
 
 	// Combine render and bloomrays...
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
@@ -840,8 +821,8 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.volumetricFBOImage, TB_NORMALMAP);
 
 	vec2_t screensize;
-	screensize[0] = tr.volumetricFBOImage->width;// glConfig.vidWidth * r_superSampleMultiplier->value;
-	screensize[1] = tr.volumetricFBOImage->height;// glConfig.vidHeight * r_superSampleMultiplier->value;
+	screensize[0] = tr.volumetricFBOImage->width;
+	screensize[1] = tr.volumetricFBOImage->height;
 	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
 
 	{
@@ -1109,6 +1090,7 @@ void RB_AddGlowShaderLights ( void )
 		for (int maplight = 0; maplight < NUM_MAP_GLOW_LOCATIONS; maplight++)
 		{
 			float distance = Distance(playerOrigin, MAP_GLOW_LOCATIONS[maplight]);
+			//float distance = Distance(backEnd.refdef.vieworg, MAP_GLOW_LOCATIONS[maplight]);
 			qboolean bad = qfalse;
 
 			// We need to have some sanity... Basic max light range...
@@ -1192,21 +1174,34 @@ void RB_AddGlowShaderLights ( void )
 			{
 				vec4_t glowColor = { 0 };
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], playerOrigin) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				//float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
 				VectorScale(glowColor, r_debugEmissiveColorScale->value, glowColor);
 				//VectorScale(glowColor, MAP_EMISSIVE_COLOR_SCALE, glowColor);
-				VectorCopy(glowColor, CLOSE_COLORS[i]);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
+
+				//float gMax = max(glowColor[0], max(glowColor[1], glowColor[2]));
+				//glowColor[0] /= gMax;
+				//glowColor[1] /= gMax;
+				//glowColor[2] /= gMax;
+				//glowColor[3] = 1.0;
+
+				VectorCopy4(glowColor, CLOSE_COLORS[i]);
+				float radius = CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], radius, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_colored++;
 
-				//ri->Printf(PRINT_ALL, "glow location %i color: %f %f %f.\n", num_colored-1, glowColor[0], glowColor[1], glowColor[2]);
+				//if (radius <= 0 || glowColor[0] < 0.0 || glowColor[1] < 0.0 || glowColor[2] < 0.0 || glowColor[0] > 1.0 || glowColor[1] > 1.0 || glowColor[2] > 1.0)
+				//	ri->Printf(PRINT_ALL, "glow location %i color: %f %f %f. Radius %f.\n", num_colored-1, glowColor[0], glowColor[1], glowColor[2], radius);
 			}
+#if 0
 			else
 			{
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], playerOrigin) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
+				//float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_uncolored++;
 			}
+#endif
 
 			backEnd.refdef.num_dlights++;
 		}
@@ -2387,13 +2382,15 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 	GL_BindToTMU(tr.ssaoImage, TB_STEEPMAP);
 
-	if (r_ssdo->integer && AO_DIRECTIONAL)
+	if (r_ssdo->integer && AO_DIRECTIONAL && !r_lowVram->integer)
 	{
-		if (!r_lowVram->integer)
-		{
-			GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
-			GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
-		}
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GL_BindToTMU(tr.ssdoImage1, TB_HEIGHTMAP);
+	}
+	else
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GL_BindToTMU(tr.whiteImage, TB_HEIGHTMAP);
 	}
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
@@ -2412,18 +2409,17 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
 		}
 	}
+	else
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
+	}
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-
 	GL_BindToTMU(tr.shinyImage, TB_WATER_EDGE_MAP);
 
-	//if (tr.skyImageShader && tr.skyImageShader->sky.outerboxnight[4])
-	//	GL_BindToTMU(tr.skyImageShader->sky.outerboxnight[4], TB_ROADSCONTROLMAP); // Night sky up...
-	//else if (tr.skyImageShader && tr.skyImageShader->sky.outerbox[4])
-	//	GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_ROADSCONTROLMAP); // Sky up...
-	//else
-	//	GL_BindToTMU(tr.greyCube, TB_ROADSCONTROLMAP); // Sky up...
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+	GL_BindToTMU(tr.blackCube, TB_ROADSCONTROLMAP); // Unused...
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
 	GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
@@ -2498,14 +2494,16 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 #endif //__EMISSIVE_CUBE_IBL__
 	}
 
-	/*for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+	int NUM_LIGHTS = r_lowVram->integer ? min(NUM_CLOSE_LIGHTS, min(r_maxDeferredLights->integer, 8.0)) : min(NUM_CLOSE_LIGHTS, min(r_maxDeferredLights->integer, MAX_DEFERRED_LIGHTS));
+
+	/*for (int i = 0; i < NUM_LIGHTS; i++)
 	{
-		ri->Printf(PRINT_WARNING, "%i - %i %i %i\n", i, (int)CLOSEST_LIGHTS_POSITIONS[i][0], (int)CLOSEST_LIGHTS_POSITIONS[i][1], (int)CLOSEST_LIGHTS_POSITIONS[i][2]);
+		ri->Printf(PRINT_WARNING, "%i - %i %i %i. Range %f. Color %f %f %f.\n", i, (int)CLOSEST_LIGHTS_POSITIONS[i][0], (int)CLOSEST_LIGHTS_POSITIONS[i][1], (int)CLOSEST_LIGHTS_POSITIONS[i][2], CLOSEST_LIGHTS_DISTANCES[i], CLOSEST_LIGHTS_COLORS[i][0], CLOSEST_LIGHTS_COLORS[i][1], CLOSEST_LIGHTS_COLORS[i][2]);
 	}*/
 
 	GLSL_SetUniformMatrix16(&tr.deferredLightingShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+	
+	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_LIGHTCOUNT, NUM_LIGHTS);
 
 #define __LIGHT_OCCLUSION__
 #ifdef __LIGHT_OCCLUSION__
@@ -3352,9 +3350,22 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 		}
 
 		{
+			vec4_t info;
+
+			info[0] = r_distanceBlur->value;
+			info[1] = r_dynamicGlow->value;
+			info[2] = 0.0;
+			info[3] = direction;
+
+			VectorSet4(info, info[0], info[1], info[2], info[3]);
+
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_LOCAL0, info);
+		}
+
+		{
 			vec4_t loc;
 			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
-			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_LOCAL0, loc);
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_LOCAL1, loc);
 		}
 
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.distanceBlurShader[0], color, 0);
@@ -3429,7 +3440,7 @@ void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 			float zmin = r_znear->value;
-			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, MAP_WATER_LEVEL);
 			GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 		}
 

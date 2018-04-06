@@ -1904,7 +1904,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			RB_DrawMoon(0.05, tr.moonShader);
 		}
 
-		if (r_drawSunRays->integer)
+		//if (r_drawSunRays->integer)
 		{
 			FBO_t *oldFbo = glState.currentFBO;
 			FBO_Bind(tr.sunRaysFbo);
@@ -2627,7 +2627,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && (r_bloom->integer >= 2 || r_anamorphic->integer))
+		if (!SCREEN_BLUR && r_anamorphic->integer)
 		{
 			if (!r_lowVram->integer)
 			{
@@ -2897,6 +2897,35 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
+		if (!SCREEN_BLUR && r_dynamicGlow->integer)
+		{
+			DEBUG_StartTimer("Dynamic Glow Draw", qtrue);
+
+			// Composite the glow/bloom texture
+			int blendFunc = 0;
+			vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+			if (r_dynamicGlow->integer == 2)
+			{
+				// Debug output
+				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+			}
+			else if (r_dynamicGlowSoft->integer)
+			{
+				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
+				color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+			}
+			else
+			{
+				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
+				color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+			}
+
+			FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], srcBox, NULL, currentFbo, NULL, NULL, color, blendFunc);
+
+			DEBUG_EndTimer(qtrue);
+		}
+
 		if (!SCREEN_BLUR && (r_bloom->integer == 1 && !r_lowVram->integer))
 		{
 			DEBUG_StartTimer("Bloom", qtrue);
@@ -2970,35 +2999,6 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer(qtrue);
 		}
 
-		if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_anamorphic->integer || r_bloom->integer))
-		{
-			// Composite the glow/bloom texture
-			int blendFunc = 0;
-			vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-			// UQ1: Apply original glow map over postprocessed screen again, so depth map based posts are overwritten...
-			//FBO_BlitFromTexture(tr.glowImage, NULL, NULL, NULL, NULL, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR);
-
-			if (r_dynamicGlow->integer == 2)
-			{
-				// Debug output
-				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
-			}
-			else if (r_dynamicGlowSoft->integer)
-			{
-				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
-				color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
-			}
-			else
-			{
-				blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
-				color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
-			}
-
-			FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], srcBox, NULL, currentFbo, NULL, NULL, color, blendFunc);
-		}
-
-		//FBO_BlitFromTexture(tr.renderGUIImage, srcBox, NULL, currentFbo, dstBox, NULL, NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR);
 		FBO_BlitFromTexture(tr.renderGUIImage, srcBox, NULL, currentFbo, dstBox, NULL, NULL, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 
 #if 0

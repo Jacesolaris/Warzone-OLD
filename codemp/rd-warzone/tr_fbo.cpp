@@ -456,7 +456,12 @@ void FBO_Init(void)
 	} */
 
 	hdrFormat = GL_RGBA8;
-	if (r_hdr->integer)
+
+	if (r_hdr->integer >= 2)
+	{
+		hdrFormat = GL_RGB32F;
+	}
+	else if (r_hdr->integer)
 	{
 		hdrFormat = GL_RGB16F;
 	}
@@ -721,10 +726,18 @@ void FBO_Init(void)
 			FBO_SetupDrawBuffers();
 
 			R_CheckFBO (tr.glowFboScaled[i]);
+
+			if (tr.glowFboScaled[i])
+			{
+				FBO_Bind(tr.glowFboScaled[i]);
+				qglClearColor(0, 0, 0, 0);
+				qglClear(GL_COLOR_BUFFER_BIT);
+				//FBO_Bind(NULL);
+			}
 		}
 	}
 
-	if (r_drawSunRays->integer)
+	//if (r_drawSunRays->integer)
 	{
 		tr.sunRaysFbo = FBO_Create("_sunRays", tr.renderDepthImage->width, tr.renderDepthImage->height);
 		FBO_Bind(tr.sunRaysFbo);

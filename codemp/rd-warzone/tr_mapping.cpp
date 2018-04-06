@@ -1515,10 +1515,10 @@ qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
 float		SUN_VOLUMETRIC_SCALE = 1.0;
-vec3_t		SUN_COLOR_MAIN = { 0 };
-vec3_t		SUN_COLOR_SECONDARY = { 0 };
-vec3_t		SUN_COLOR_TERTIARY = { 0 };
-vec3_t		SUN_COLOR_AMBIENT = { 0 };
+vec3_t		SUN_COLOR_MAIN = { 0.85 };
+vec3_t		SUN_COLOR_SECONDARY = { 0.4 };
+vec3_t		SUN_COLOR_TERTIARY = { 0.2 };
+vec3_t		SUN_COLOR_AMBIENT = { 0.85 };
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 int			MAP_LIGHTMAP_ENHANCEMENT = 1;
@@ -1601,6 +1601,8 @@ void SetupWeather(char *mapname); // below...
 
 void MAPPING_LoadMapInfo(void)
 {
+	qglFinish();
+
 #ifdef __OCEAN__
 	MAP_WATER_LEVEL = 131072.0;
 	WATER_INITIALIZED = qfalse;
@@ -1681,9 +1683,9 @@ void MAPPING_LoadMapInfo(void)
 	SUN_COLOR_TERTIARY[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_R", "0.2"));
 	SUN_COLOR_TERTIARY[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_G", "0.2"));
 	SUN_COLOR_TERTIARY[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_B", "0.2"));
-	SUN_COLOR_AMBIENT[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_R", "0.2"));
-	SUN_COLOR_AMBIENT[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_G", "0.2"));
-	SUN_COLOR_AMBIENT[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_B", "0.2"));
+	SUN_COLOR_AMBIENT[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_R", "0.85"));
+	SUN_COLOR_AMBIENT[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_G", "0.85"));
+	SUN_COLOR_AMBIENT[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_B", "0.85"));
 
 	//
 	// Aurora....
@@ -2086,6 +2088,8 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
+
+	qglFinish();
 }
 
 extern void RB_SetupGlobalWeatherZone(void);

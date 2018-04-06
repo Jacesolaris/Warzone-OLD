@@ -96,6 +96,8 @@ cvar_t	*r_ignore;
 
 cvar_t	*r_detailTextures;
 
+cvar_t	*r_maxDeferredLights;
+
 cvar_t	*r_znear;
 cvar_t	*r_zproj;
 
@@ -1471,6 +1473,7 @@ void R_Register( void )
 	r_roundImagesDown = ri->Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorMipLevels = ri->Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
 	r_detailTextures = ri->Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_maxDeferredLights = ri->Cvar_Get("r_maxDeferredLights", "16", CVAR_ARCHIVE);
 	r_texturebits = ri->Cvar_Get( "r_texturebits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorbits = ri->Cvar_Get( "r_colorbits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stencilbits = ri->Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1626,11 +1629,11 @@ void R_Register( void )
 	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.5", CVAR_ARCHIVE );
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "false", CVAR_ARCHIVE );
 	//r_bloomRays = ri->Cvar_Get("r_bloomRays", "1", CVAR_ARCHIVE);
-	r_bloomRaysSamples = ri->Cvar_Get("r_bloomRaysSamples", "16", CVAR_ARCHIVE);
+	r_bloomRaysSamples = ri->Cvar_Get("r_bloomRaysSamples", "24", CVAR_ARCHIVE);
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.9975", CVAR_ARCHIVE);
-	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.38", CVAR_ARCHIVE);
+	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.15", CVAR_ARCHIVE);
 	r_bloomRaysDensity = ri->Cvar_Get("r_bloomRaysDensity", "1.0", CVAR_ARCHIVE);
-	r_bloomRaysStrength = ri->Cvar_Get("r_bloomRaysStrength", "0.1", CVAR_ARCHIVE);
+	r_bloomRaysStrength = ri->Cvar_Get("r_bloomRaysStrength", "1.0", CVAR_ARCHIVE);
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "true", CVAR_ARCHIVE );
 	r_anamorphicStrength = ri->Cvar_Get("r_anamorphicStrength", "0.5", CVAR_ARCHIVE);
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "false", CVAR_ARCHIVE );
@@ -1648,7 +1651,7 @@ void R_Register( void )
 	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0.005", CVAR_ARCHIVE );
 	r_testvalue2 = ri->Cvar_Get( "r_testvalue2", "4.0", CVAR_ARCHIVE );
 	r_testvalue3 = ri->Cvar_Get( "r_testvalue3", "4.0", CVAR_ARCHIVE );
-	r_esharpening = ri->Cvar_Get( "r_esharpening", "false", CVAR_ARCHIVE );
+	r_esharpening = ri->Cvar_Get( "r_esharpening", "true", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "false", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "true", CVAR_ARCHIVE );
 	r_fxaaScanMod = ri->Cvar_Get("r_fxaaScanMod", "1.0"/*"0.666"*//*"2.0"*//*0.75*/, CVAR_ARCHIVE);
@@ -1674,7 +1677,7 @@ void R_Register( void )
 	r_trueAnaglyphMaxDistance = ri->Cvar_Get( "r_trueAnaglyphMaxDistance", "1.0", CVAR_ARCHIVE );
 	r_trueAnaglyphParallax = ri->Cvar_Get( "r_trueAnaglyphParallax", "11.5", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
-	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "2", CVAR_ARCHIVE );
+	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "1", CVAR_ARCHIVE );
 	r_fogPost = ri->Cvar_Get( "r_fogPost", "true", CVAR_ARCHIVE );
 	r_dayNightCycleSpeed = ri->Cvar_Get( "r_dayNightCycleSpeed", "0.0001", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "false", CVAR_ARCHIVE );
@@ -1862,13 +1865,13 @@ extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
 
 void R_InitQueries(void)
 {
-	if (r_drawSunRays->integer)
+	//if (r_drawSunRays->integer)
 		qglGenQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
 }
 
 void R_ShutDownQueries(void)
 {
-	if (r_drawSunRays->integer)
+	//if (r_drawSunRays->integer)
 		qglDeleteQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
 }
 

@@ -417,8 +417,15 @@ RE_AddLightToScene
 void RE_AddLightToScene(const vec3_t org, float intensity, float r, float g, float b) {
 	/* UQ1: Additional vibrancy for lighting */
 	vec3_t color = { r, g, b };
+	
 	//R_AddLightVibrancy(color, 0.5);
-	VectorNormalize(color);
+	//VectorNormalize(color);
+	
+	//float gMax = max(color[0], max(color[1], color[2]));
+	//color[0] /= gMax;
+	//color[1] /= gMax;
+	//color[2] /= gMax;
+	
 	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qfalse, qfalse, 0);
 }
 
@@ -431,8 +438,15 @@ RE_AddAdditiveLightToScene
 void RE_AddAdditiveLightToScene(const vec3_t org, float intensity, float r, float g, float b) {
 	/* UQ1: Additional vibrancy for lighting */
 	vec3_t color = { r, g, b };
+	
 	//R_AddLightVibrancy(color, 0.5);
-	VectorNormalize(color);
+	//VectorNormalize(color);
+	
+	//float gMax = max(color[0], max(color[1], color[2]));
+	//color[0] /= gMax;
+	//color[1] /= gMax;
+	//color[2] /= gMax;
+
 	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qtrue, qfalse, 0);
 }
 

@@ -1254,10 +1254,30 @@ qboolean ForceGlow ( char *shader )
 	{
 		return qtrue;
 	}
-	//else if (StringContains(shader, "light", 0))
-	//{
-	//	return qtrue;
-	//}
+	/*else if (StringContains(shader, "light", 0) && !StringContains(shader, "lightmap", 0))
+	{
+		return qtrue;
+	}*/
+	/*else if (StringContains(shader, "lightglow", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "light_glw", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "light_glow", 0))
+	{
+		return qtrue;
+	}*/
+	else if (StringContains(shader, "street_light", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "sconce", 0))
+	{
+		return qtrue;
+	}
 	else if (StringContains(shader, "pulse", 0) && !StringContains(shader, "/pulsecannon", 0))
 	{
 		return qtrue;
@@ -1860,8 +1880,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				if (!DISABLE_MERGED_GLOWS)
 				{
-					char imgname[64];
-					char stippedName[64];
+					char imgname[256] = { 0 };
+					char stippedName[256] = { 0 };
 					COM_StripExtension(token, stippedName, sizeof(stippedName));
 					sprintf(imgname, "%s_g", stippedName);
 					
@@ -1908,6 +1928,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						stage->emissiveColorScale = 1.5;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
+
+				if (StringContains(token, "street_light", 0))
+				{// bespin light hack...
+					shader.glowStrength = 0.275;
+				}
+				else if (StringContains(token, "sconce", 0))
+				{// bespin light hack...
+					shader.glowStrength = 0.575;
+				}
 
 				if ( !stage->bundle[0].image[0] )
 				{
@@ -1968,6 +1997,43 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 #else //!__DEFERRED_IMAGE_LOADING__
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 #endif //__DEFERRED_IMAGE_LOADING__
+
+			if (!DISABLE_MERGED_GLOWS)
+			{
+				char imgname[256] = { 0 };
+				char stippedName[256] = { 0 };
+				COM_StripExtension(token, stippedName, sizeof(stippedName));
+				sprintf(imgname, "%s_g", stippedName);
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+				stage->bundle[TB_GLOWMAP].image[0] = R_DeferImageLoad(imgname, type, flags | IMGFLAG_GLOW);
+#else //!__DEFERRED_IMAGE_LOADING__
+				stage->bundle[TB_GLOWMAP].image[0] = R_FindImageFile(imgname, type, (flags & IMGFLAG_GLOW) ? flags : (flags | IMGFLAG_GLOW));
+#endif //__DEFERRED_IMAGE_LOADING__
+			}
+
+			if (stage->bundle[TB_GLOWMAP].image[0]
+				&& stage->bundle[TB_GLOWMAP].image[0] != tr.defaultImage)
+			{// We found a mergable glow map...
+				stage->glowMapped = qtrue;
+				stage->glow = qtrue;
+				stage->glowColorFound = qtrue;
+				VectorCopy4(stage->bundle[TB_GLOWMAP].image[0]->lightColor, stage->glowColor);
+				stage->glowBlend = 0;
+				stage->glslShaderIndex |= LIGHTDEF_USE_GLOW_BUFFER;
+
+				if (stage->emissiveRadiusScale <= 0.0)
+					stage->emissiveRadiusScale = 1.0;
+
+				if (stage->emissiveColorScale <= 0.0)
+					stage->emissiveColorScale = 1.5;
+
+				//ri->Printf(PRINT_WARNING, "Shader [%s] diffuseMap [%s] found a _g glow texture [%s].\n", shader.name, stage->bundle[0].image[0]->imgName, stage->bundle[TB_GLOWMAP].image[0]->imgName);
+			}
+			else
+			{
+				stage->bundle[TB_GLOWMAP].image[0] = NULL;
+			}
 
 			// UQ1: Testing - Force glow to obvious glow components...
 			if (flags & IMGFLAG_GLOW)
@@ -6411,7 +6477,7 @@ static int CollapseStagesToGLSL(void)
 		if (!pStage->active)
 			continue;
 
-		if (pStage->glow)
+		if (pStage->glow || pStage->glowMapped)
 		{
 			shader.hasGlow = qtrue;
 			break;
@@ -8261,6 +8327,9 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 		// Check if this texture has a _glow component...
 		char glowName[MAX_IMAGE_PATH] = { 0 };
+		char glowName2[MAX_IMAGE_PATH] = { 0 };
+		char glowName3[MAX_IMAGE_PATH] = { 0 };
+		char glowName4[MAX_IMAGE_PATH] = { 0 };
 
 		flags = IMGFLAG_NONE;
 
@@ -8281,20 +8350,25 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 		// Do we have a glow?
 		sprintf(glowName, "%s_glow", strippedName);
+		sprintf(glowName2, "%s_glw", strippedName);
+		sprintf(glowName3, "%sglow", strippedName);
+		sprintf(glowName4, "%sglw", strippedName);
 
 		if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
 		{
 			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
 		}
-		else
+		else if (R_TextureFileExists(glowName2) || R_TIL_TextureFileExists(glowName))
 		{
-			memset(glowName, 0, sizeof(char) * MAX_IMAGE_PATH);
-			sprintf(glowName, "%s_glw", strippedName);
-
-			if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
-			{
-				sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
-			}
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+		}
+		else if (R_TextureFileExists(glowName3) || R_TIL_TextureFileExists(glowName))
+		{
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+		}
+		else if (R_TextureFileExists(glowName4) || R_TIL_TextureFileExists(glowName))
+		{
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
 		}
 
 		if (shaderCustomMap[0] == 0)

@@ -782,14 +782,22 @@ void main()
 		glowColor.rgb = clamp((clamp(glowColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
 		glowColor.rgb *= SHADER_GLOW_STRENGTH;
 
-		float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);//clamp(max(glowColor.r, max(glowColor.g, glowColor.b)), 0.0, 1.0);
-		glowColor.a *= glowMax;
-		glowColor.rgb *= glowColor.a;
+		//float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);//clamp(max(glowColor.r, max(glowColor.g, glowColor.b)), 0.0, 1.0);
+		//glowColor.a *= glowMax;
+		//glowColor.rgb *= glowColor.a;
+
+		//gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a);
+		//gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
+
+		//float gMax = max(glowColor.r, max(glowColor.g, glowColor.b));
+		//if (gMax > 1.0)
+		//	glowColor.rgb = glowColor.rgb / gMax;
+
+		glowColor.a = clamp(glowColor.a, 0.0, 1.0);
+		out_Glow = glowColor;
 
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a);
 		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
-
-		out_Glow = glowColor;
 
 		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 		out_Normal = vec4(vec3(EncodeNormal(N.xyz), 1.0), 1.0 );

@@ -259,9 +259,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 		{
 			vec3 viewer = u_LocalViewOrigin - position;
 			//vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
-			//vec3 lightDir = normalize((u_ModelMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
-			//vec3 lightDir = normalize((u_ModelViewProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz - position);
-			vec3 lightDir = normalize(u_PrimaryLightOrigin.xyz - position);
+			vec3 lightDir = normalize(u_PrimaryLightOrigin.xyz);// normalize(u_PrimaryLightOrigin.xyz - position);
 			vec3 reflected = -reflect(lightDir, normal);
 		
 			color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);

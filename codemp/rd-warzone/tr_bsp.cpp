@@ -3438,7 +3438,14 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			//VectorScale(glowColor, 0.333, glowColor);
 			//VectorNormalize(glowColor);
 			VectorScale(glowColor, emissiveColorScale, glowColor);
-			R_AddLightVibrancy(glowColor, 0.4);
+			
+			//R_AddLightVibrancy(glowColor, 0.1);
+			//VectorNormalize(glowColor);
+			
+			//float gMax = max(glowColor[0], max(glowColor[1], glowColor[2]));
+			//glowColor[0] /= gMax;
+			//glowColor[1] /= gMax;
+			//glowColor[2] /= gMax;
 
 //#pragma omp critical (__MAP_GLOW_ADD__)
 			{

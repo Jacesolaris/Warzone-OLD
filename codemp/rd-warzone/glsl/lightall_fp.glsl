@@ -467,7 +467,7 @@ void main()
 	}
 	else if (USE_GLOW_BUFFER >= 2.0)
 	{// Merged diffuse+glow stage...
-		vec4 glowColor = texture(u_GlowMap, texCoords);
+		vec4 glowColor = max(texture(u_GlowMap, texCoords), 0.0);
 
 		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
@@ -484,11 +484,11 @@ void main()
 
 		if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_DSTCOLOR)
 		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * (vec3(1.0) - gl_FragColor.rgb);
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * (vec3(1.0) - clamp(gl_FragColor.rgb, 0.0, 1.0));
 		}
 		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_DSTCOLOR)
 		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * gl_FragColor.rgb;
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * clamp(gl_FragColor.rgb, 0.0, 1.0);
 		}
 		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_GLOWCOLOR)
 		{
@@ -500,15 +500,15 @@ void main()
 		}
 		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INV_DST_ALPHA)
 		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * (1.0 - gl_FragColor.a);
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * (1.0 - clamp(gl_FragColor.a, 0.0, 1.0));
 		}
 		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_DST_ALPHA)
 		{
-			glowColor.rgb = (glowColor.rgb * glowColor.a) * gl_FragColor.a;
+			glowColor.rgb = (glowColor.rgb * glowColor.a) * clamp(gl_FragColor.a, 0.0, 1.0);
 		}
 		else if (USE_GLOW_BLEND_MODE == GLSL_BLEND_INVALPHA)
 		{
-			glowColor.rgb = (glowColor.rgb * (1.0 - glowColor.a));
+			glowColor.rgb = (glowColor.rgb * (1.0 - clamp(glowColor.a, 0.0, 1.0)));
 		}
 		else
 		{
@@ -533,6 +533,11 @@ void main()
 		glowColor.a *= glowMax;
 		glowColor.rgb *= glowColor.a;
 
+		//float gMax = max(glowColor.r, max(glowColor.g, glowColor.b));
+		//if (gMax > 1.0)
+		//	glowColor.rgb = glowColor.rgb / gMax;
+
+		glowColor.a = clamp(glowColor.a, 0.0, 1.0);
 		out_Glow = glowColor;
 
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, glowColor.rgb, glowColor.a);
@@ -566,7 +571,7 @@ void main()
 	}
 	else if (USE_GLOW_BUFFER > 0.0)
 	{
-		vec4 glowColor = gl_FragColor;
+		vec4 glowColor = max(gl_FragColor, 0.0);
 
 		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
@@ -582,12 +587,15 @@ void main()
 		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
+		//float gMax = max(glowColor.r, max(glowColor.g, glowColor.b));
+		//if (gMax > 1.0)
+		//	glowColor.rgb = glowColor.rgb / gMax;
+
+		glowColor.a = clamp(glowColor.a, 0.0, 1.0);
 		out_Glow = glowColor;
 
 		gl_FragColor.rgb = glowColor.rgb;
 		gl_FragColor.a = max(gl_FragColor.a, glowColor.a);
-		//gl_FragColor.rgb = clamp((clamp(gl_FragColor.rgb - glow_const_1, 0.0, 1.0)) * glow_const_2, 0.0, 1.0);
-		//gl_FragColor.rgb *= SHADER_GLOW_STRENGTH;
 
 		if (USE_ISDETAIL >= 1.0)
 		{
