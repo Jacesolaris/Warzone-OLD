@@ -111,10 +111,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //                                                   Warzone Instancing Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 
-#ifdef __INSTANCED_MODELS__
 #define MAX_INSTANCED_MODEL_TYPES		128
 #define MAX_INSTANCED_MODEL_INSTANCES	16384
-#endif //__INSTANCED_MODELS__
 
 // -----------------------------------------------------------------------------------------------------------------------------
 
@@ -751,16 +749,10 @@ typedef struct VBO_s
 	uint32_t        ofs_lightdir;
 	uint32_t		ofs_boneweights;
 	uint32_t		ofs_boneindexes;
-#ifdef __INSTANCED_MODELS__
-	uint32_t		ofs_instances;
+	uint32_t		ofs_instancesPosition;
 	uint32_t		ofs_instancesMVP;
-#endif //__INSTANCED_MODELS__
-
-#ifdef __OCEAN__
-	uint32_t		ofs_oceanPosition;
-	uint32_t		ofs_oceanTexcoord;
-#endif //__OCEAN__
-
+	uint32_t		ofs_instancesTC;
+	
 	uint32_t        stride_xyz;
 	uint32_t        stride_normal;
 	uint32_t        stride_st;
@@ -768,15 +760,9 @@ typedef struct VBO_s
 	uint32_t        stride_lightdir;
 	uint32_t		stride_boneweights;
 	uint32_t		stride_boneindexes;
-#ifdef __INSTANCED_MODELS__
 	uint32_t		stride_instancesMVP;
-	uint32_t		stride_instances;
-#endif //__INSTANCED_MODELS__
-
-#ifdef __OCEAN__
-	uint32_t		stride_oceanPosition;
-	uint32_t		stride_oceanTexcoord;
-#endif //__OCEAN__
+	uint32_t		stride_instancesPosition;
+	uint32_t		stride_instancesTC;
 
 	uint32_t        size_xyz;
 	uint32_t        size_normal;
@@ -1336,7 +1322,6 @@ enum
 	ATTR_INDEX_TEXCOORD1,
 	ATTR_INDEX_NORMAL,
 	ATTR_INDEX_COLOR,
-	ATTR_INDEX_PAINTCOLOR,
 	ATTR_INDEX_LIGHTDIRECTION,
 	ATTR_INDEX_BONE_INDEXES,
 	ATTR_INDEX_BONE_WEIGHTS,
@@ -1345,15 +1330,45 @@ enum
 	ATTR_INDEX_POSITION2,
 	ATTR_INDEX_NORMAL2,
 
-#ifdef __OCEAN__
-	ATTR_INDEX_OCEAN_POSITION,
-	ATTR_INDEX_OCEAN_TEXCOORD,
-#endif //__OCEAN__
-#ifdef __INSTANCED_MODELS__
 	// Instancing
-	ATTR_INDEX_INSTANCES_POS,
+	ATTR_INDEX_INSTANCES_TEXCOORD,
+	ATTR_INDEX_INSTANCES_POSITION,
 	ATTR_INDEX_INSTANCES_MVP,
-#endif //__INSTANCED_MODELS__
+};
+
+enum
+{
+	ATTR_POSITION = 0x0001,
+	ATTR_TEXCOORD0 = 0x0002,
+	ATTR_TEXCOORD1 = 0x0004,
+	ATTR_NORMAL = 0x0008,
+	ATTR_COLOR = 0x0010,
+	ATTR_LIGHTDIRECTION = 0x0020,
+	ATTR_BONE_INDEXES = 0x0040,
+	ATTR_BONE_WEIGHTS = 0x0080,
+
+	// for .md3 interpolation
+	ATTR_POSITION2 = 0x0100,
+	ATTR_NORMAL2 = 0x0200,
+
+	ATTR_INSTANCES_TEXCOORD = 0x0400,
+	ATTR_INSTANCES_POSITION = 0x0800,
+	ATTR_INSTANCES_MVP = 0x1000,
+
+	ATTR_DEFAULT = ATTR_POSITION,
+	ATTR_BITS = ATTR_POSITION |
+	ATTR_TEXCOORD0 |
+	ATTR_TEXCOORD1 |
+	ATTR_NORMAL |
+	ATTR_COLOR |
+	ATTR_LIGHTDIRECTION |
+	ATTR_BONE_INDEXES |
+	ATTR_BONE_WEIGHTS |
+	ATTR_POSITION2 |
+	ATTR_NORMAL2 |
+	ATTR_INSTANCES_TEXCOORD |
+	ATTR_INSTANCES_POSITION |
+	ATTR_INSTANCES_MVP
 };
 
 enum
@@ -1433,58 +1448,6 @@ enum
 	GLS_STENCILTEST_ENABLE				= (1 << 31),
 
 	GLS_DEFAULT							= GLS_DEPTHMASK_TRUE
-};
-
-enum
-{
-	ATTR_POSITION =       0x0001,
-	ATTR_TEXCOORD0 =      0x0002,
-	ATTR_TEXCOORD1 =      0x0004,
-	ATTR_NORMAL =         0x0008,
-	ATTR_COLOR =          0x0010,
-	ATTR_PAINTCOLOR =     0x0020,
-	ATTR_LIGHTDIRECTION = 0x0040,
-	ATTR_BONE_INDEXES =   0x0080,
-	ATTR_BONE_WEIGHTS =   0x0100,
-
-	// for .md3 interpolation
-	ATTR_POSITION2 =      0x0200,
-	ATTR_NORMAL2 =        0x0400,
-
-#ifdef __OCEAN__
-	ATTR_OCEAN_POSITION = 0x0800,
-	ATTR_OCEAN_TEXCOORD = 0x1000,
-#ifdef __INSTANCED_MODELS__
-	ATTR_INSTANCES_POS = 0x2000,
-	ATTR_INSTANCES_MVP = 0x4000,
-#endif //__INSTANCED_MODELS__
-#else //!__OCEAN__
-#ifdef __INSTANCED_MODELS__
-	ATTR_INSTANCES_POS = 0x0800,
-	ATTR_INSTANCES_MVP = 0x1000,
-#endif //__INSTANCED_MODELS__
-#endif //__OCEAN__
-
-	ATTR_DEFAULT = ATTR_POSITION,
-	ATTR_BITS =	ATTR_POSITION |
-				ATTR_TEXCOORD0 |
-				ATTR_TEXCOORD1 |
-				ATTR_NORMAL |
-				ATTR_COLOR |
-				ATTR_PAINTCOLOR |
-				ATTR_LIGHTDIRECTION |
-				ATTR_BONE_INDEXES |
-				ATTR_BONE_WEIGHTS |
-				ATTR_POSITION2 |
-				ATTR_NORMAL2
-#ifdef __OCEAN__
-				| ATTR_OCEAN_POSITION
-				| ATTR_OCEAN_TEXCOORD
-#endif //__OCEAN__
-#ifdef __INSTANCED_MODELS__
-				| ATTR_INSTANCES_POS
-				| ATTR_INSTANCES_MVP
-#endif //__INSTANCED_MODELS__
 };
 
 enum
@@ -2817,9 +2780,7 @@ typedef struct trGlobals_s {
 	// GPU shader programs
 	//
 	shaderProgram_t textureColorShader;
-#ifdef __INSTANCED_MODELS__
 	shaderProgram_t instanceShader;
-#endif //__INSTANCED_MODELS__
 	shaderProgram_t weatherShader;
 	shaderProgram_t occlusionShader;
 	shaderProgram_t depthAdjustShader;

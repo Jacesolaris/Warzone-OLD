@@ -56,18 +56,18 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t
 	R_BindIBO(m->vboSurfaces->ibo);
 	//tess.ibo = m->vboSurfaces->ibo;
 
-	GLSL_VertexAttribsState(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 | ATTR_INDEX_INSTANCES_MVP | ATTR_INDEX_INSTANCES_POS);
-	GLSL_VertexAttribPointers(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0 | ATTR_INDEX_INSTANCES_MVP | ATTR_INDEX_INSTANCES_POS);
+	GLSL_VertexAttribsState(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION);
+	GLSL_VertexAttribPointers(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION);
 
 	//qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
 	//qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
-	//qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
-	//qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POS, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(NR_VERTICES * sizeof(vertices[0])));
+	//qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
+	//qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(NR_VERTICES * sizeof(vertices[0])));
 
 	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
 	//qglBufferData(GL_ARRAY_BUFFER, sizeof(vec3_t) * count, positions, /*GL_STATIC_DRAW*/GL_DYNAMIC_DRAW);
-	qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_instances, count * sizeof(vec3_t), (const GLvoid *)positions);
+	qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_instancesPosition, count * sizeof(vec3_t), (const GLvoid *)positions);
 
 	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
 	//qglBufferData(GL_ARRAY_BUFFER, sizeof(matrix_t) * count, model_matrixes, /*GL_STATIC_DRAW*/GL_DYNAMIC_DRAW);

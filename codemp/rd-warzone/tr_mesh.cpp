@@ -744,14 +744,19 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles, 
 		VectorCopy(angles, INSTANCED_MODEL_ANGLES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
 
 		//Matrix16Copy(model_matrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-
 		//Matrix16Multiply(glState.modelviewProjection, glState.modelview/*model_matrix*/, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
 
 		// set up the transformation matrix
+		/*
 		R_RotateForEntity(ent, &backEnd.viewParms, &backEnd.ori);
 		
 		Matrix16Multiply(glState.projection, backEnd.ori.modelViewMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-		
+		*/
+
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		Matrix16Multiply(glState.modelviewProjection, backEnd.ori.modelMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
 		INSTANCED_MODEL_COUNT[modelID]++;
 	}
 }

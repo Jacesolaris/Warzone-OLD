@@ -1,8 +1,8 @@
 #define __PER_PIXEL_NORMAL__
 //#define __USING_GEOM_SHADER__
 
-attribute vec3	attr_OceanPosition;
-attribute vec2	attr_OceanTexCoord;
+attribute vec3	attr_InstancesPosition;
+attribute vec2	attr_InstancesTexCoord;
 
 uniform mat4	u_ModelViewProjectionMatrix;
 
@@ -97,7 +97,7 @@ vec3 computePartialGerstnerNormal(Wave w, vec3 P, float time)
 
 void main()
 {
-	vec3 position = attr_OceanPosition.xyz;
+	vec3 position = attr_InstancesPosition.xyz;
 	position.y = MAP_WATER_LEVEL;
 
 	vec2 p = vec2(position.x, position.z);

@@ -1518,7 +1518,7 @@ void R_Register( void )
 
 	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	
-	r_sss = ri->Cvar_Get("r_sss", "true", CVAR_ARCHIVE);
+	r_sss = ri->Cvar_Get("r_sss", "false", CVAR_ARCHIVE);
 	r_ssdo = ri->Cvar_Get("r_ssdo", "true", CVAR_ARCHIVE);
 	r_ssdoBaseRadius = ri->Cvar_Get("r_ssdoBaseRadius", "2.0", CVAR_ARCHIVE);
 	r_ssdoMaxOcclusionDist = ri->Cvar_Get("r_ssdoMaxOcclusionDist", "99999.0", CVAR_ARCHIVE);
@@ -1677,7 +1677,7 @@ void R_Register( void )
 	r_trueAnaglyphMaxDistance = ri->Cvar_Get( "r_trueAnaglyphMaxDistance", "1.0", CVAR_ARCHIVE );
 	r_trueAnaglyphParallax = ri->Cvar_Get( "r_trueAnaglyphParallax", "11.5", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
-	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "1", CVAR_ARCHIVE );
+	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "2", CVAR_ARCHIVE );
 	r_fogPost = ri->Cvar_Get( "r_fogPost", "true", CVAR_ARCHIVE );
 	r_dayNightCycleSpeed = ri->Cvar_Get( "r_dayNightCycleSpeed", "0.0001", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "false", CVAR_ARCHIVE );

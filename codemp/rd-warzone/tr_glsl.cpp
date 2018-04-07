@@ -2068,27 +2068,20 @@ void GLSL_AttachWaterTextures(void)
 }
 
 void GLSL_BindAttributeLocations(shaderProgram_t *program, int attribs) {
-	if (attribs & ATTR_POSITION      ) qglBindAttribLocation(program->program, ATTR_INDEX_POSITION      , "attr_Position"      );
-	if (attribs & ATTR_TEXCOORD0     ) qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD0     , "attr_TexCoord0"     );
-	if (attribs & ATTR_TEXCOORD1     ) qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1     , "attr_TexCoord1"     );
-	if (attribs & ATTR_NORMAL        ) qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL        , "attr_Normal"        );
-	if (attribs & ATTR_COLOR         ) qglBindAttribLocation(program->program, ATTR_INDEX_COLOR         , "attr_Color"         );
-	if (attribs & ATTR_PAINTCOLOR    ) qglBindAttribLocation(program->program, ATTR_INDEX_PAINTCOLOR    , "attr_PaintColor"    );
-	if (attribs & ATTR_LIGHTDIRECTION) qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
-	if (attribs & ATTR_POSITION2     ) qglBindAttribLocation(program->program, ATTR_INDEX_POSITION2     , "attr_Position2"     );
-	if (attribs & ATTR_NORMAL2       ) qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2       , "attr_Normal2"       );
-	if (attribs & ATTR_BONE_INDEXES  ) qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES  , "attr_BoneIndexes"   );
-	if (attribs & ATTR_BONE_WEIGHTS  ) qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS  , "attr_BoneWeights"   );
+	if (attribs & ATTR_POSITION      )		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION      , "attr_Position"      );
+	if (attribs & ATTR_TEXCOORD0     )		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD0     , "attr_TexCoord0"     );
+	if (attribs & ATTR_TEXCOORD1     )		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1     , "attr_TexCoord1"     );
+	if (attribs & ATTR_NORMAL        )		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL        , "attr_Normal"        );
+	if (attribs & ATTR_COLOR         )		qglBindAttribLocation(program->program, ATTR_INDEX_COLOR         , "attr_Color"         );
+	if (attribs & ATTR_LIGHTDIRECTION)		qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
+	if (attribs & ATTR_POSITION2     )		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION2     , "attr_Position2"     );
+	if (attribs & ATTR_NORMAL2       )		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2       , "attr_Normal2"       );
+	if (attribs & ATTR_BONE_INDEXES  )		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES  , "attr_BoneIndexes"   );
+	if (attribs & ATTR_BONE_WEIGHTS  )		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS  , "attr_BoneWeights"   );
 
-#ifdef __OCEAN__
-	if (attribs & ATTR_OCEAN_POSITION) qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_POSITION, "attr_OceanPosition");
-	if (attribs & ATTR_OCEAN_TEXCOORD) qglBindAttribLocation(program->program, ATTR_INDEX_OCEAN_TEXCOORD, "attr_OceanTexCoord");
-#endif //__OCEAN__
-
-#ifdef __INSTANCED_MODELS__
-	if (attribs & ATTR_INSTANCES_MVP) qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
-	if (attribs & ATTR_INSTANCES_POS) qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POS, "attr_InstancesPos");
-#endif //__INSTANCED_MODELS__
+	if (attribs & ATTR_INSTANCES_TEXCOORD)	qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_TEXCOORD, "attr_InstancesTexCoord");
+	if (attribs & ATTR_INSTANCES_POSITION)	qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_POSITION, "attr_InstancesPosition");
+	if (attribs & ATTR_INSTANCES_MVP)		qglBindAttribLocation(program->program, ATTR_INDEX_INSTANCES_MVP, "attr_InstancesMVP");
 }
 
 bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
@@ -2422,7 +2415,8 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 			if (!StringContainsWord(name, "lightAll")
 				&& !StringContainsWord(name, "depthPass")
 				&& !StringContainsWord(name, "sky")
-				&& !StringContainsWord(name, "fxaa"))
+				&& !StringContainsWord(name, "fxaa")
+				&& !StringContainsWord(name, "instances"))
 			{// The optimizer doesn't like lightAll and depthPass vert shaders...
 				if (vpCode)
 				{
@@ -2442,7 +2436,8 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 			}
 
 			if (!StringContainsWord(name, "deferredLighting")
-				&& !StringContainsWord(name, "fxaa")) // NV fxaa is not a fan of optimization
+				&& !StringContainsWord(name, "fxaa")
+				&& !StringContainsWord(name, "instances")) // NV fxaa is not a fan of optimization
 			{
 				if (fpCode)
 				{// The optimizer doesn't like deferredLighting shader...
@@ -2952,7 +2947,8 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 #ifdef __INSTANCED_MODELS__
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_INSTANCES_POS | ATTR_INSTANCES_MVP;
+	attribs = /*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION;
+	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.instanceShader, "instance", attribs, qtrue, qfalse, qfalse, NULL, qfalse, "330", fallbackShader_instance_vp, fallbackShader_instance_fp, NULL, NULL, NULL))
 	{
@@ -2961,6 +2957,7 @@ int GLSL_BeginLoadGPUShaders(void)
 #endif //__INSTANCED_MODELS__
 
 	attribs = ATTR_POSITION;// | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.occlusionShader, "occlusion", attribs, qtrue, qfalse, qfalse, NULL, qfalse, NULL, fallbackShader_occlusion_vp, fallbackShader_occlusion_fp, NULL, NULL, NULL))
 	{
@@ -2968,6 +2965,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.depthAdjustShader, "depthAdjust", attribs, qtrue, qfalse, qfalse, NULL, qtrue, NULL, fallbackShader_depthAdjust_vp, fallbackShader_depthAdjust_fp, NULL, NULL, NULL))
 	{
@@ -3877,7 +3875,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 #ifdef __OCEAN__
-	attribs = ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 #else //!__OCEAN__
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 #endif //__OCEAN__
@@ -3891,7 +3889,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 #ifdef __OCEAN__
-	attribs = ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD | ATTR_NORMAL;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD | ATTR_NORMAL;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 #else //!__OCEAN__
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 #endif //__OCEAN__
@@ -6398,37 +6396,20 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-#ifdef __OCEAN__
-	if (diff & ATTR_OCEAN_POSITION)
+	if (diff & ATTR_INSTANCES_TEXCOORD)
 	{
-		if (stateBits & ATTR_OCEAN_POSITION)
+		if (stateBits & ATTR_INSTANCES_TEXCOORD)
 		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_OCEAN_POSITION )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_OCEAN_POSITION);
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_TEXCOORD )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_TEXCOORD);
 		}
 		else
 		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_OCEAN_POSITION )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_OCEAN_POSITION);
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_TEXCOORD )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_TEXCOORD);
 		}
 	}
 
-	if (diff & ATTR_OCEAN_TEXCOORD)
-	{
-		if (stateBits & ATTR_OCEAN_TEXCOORD)
-		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_OCEAN_TEXCOORD )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_OCEAN_TEXCOORD);
-		}
-		else
-		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_OCEAN_TEXCOORD )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_OCEAN_TEXCOORD);
-		}
-	}
-#endif //__OCEAN__
-
-#ifdef __INSTANCED_MODELS__
 	if (diff & ATTR_INSTANCES_MVP)
 	{
 		if (stateBits & ATTR_INSTANCES_MVP)
@@ -6443,20 +6424,19 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-	if (diff & ATTR_INSTANCES_POS)
+	if (diff & ATTR_INSTANCES_POSITION)
 	{
-		if (stateBits & ATTR_INSTANCES_POS)
+		if (stateBits & ATTR_INSTANCES_POSITION)
 		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
+			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_INSTANCES_POSITION )\n");
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
 		}
 		else
 		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_POS )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_POS);
+			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_INSTANCES_POSITION )\n");
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
 		}
 	}
-#endif //__INSTANCED_MODELS__
 
 	glState.vertexAttribsState = stateBits;
 }
@@ -6583,42 +6563,30 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		glState.vertexAttribPointersSet |= ATTR_BONE_WEIGHTS;
 	}
 
-#ifdef __INSTANCED_MODELS__
 	if ((attribBits & ATTR_INSTANCES_MVP) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_MVP))
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_MVP )\n");
 
-		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, 0, vbo->stride_instancesMVP, BUFFER_OFFSET(vbo->ofs_instancesMVP));
-		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_instancesMVP));
+		//qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
 		glState.vertexAttribPointersSet |= ATTR_INSTANCES_MVP;
 	}
 
-	if ((attribBits & ATTR_INSTANCES_POS) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_POS))
+	if ((attribBits & ATTR_INSTANCES_POSITION) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_POSITION))
 	{
-		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_POS )\n");
+		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_POSITION )\n");
 
-		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POS, 3, GL_FLOAT, 0, vbo->stride_instances, BUFFER_OFFSET(vbo->ofs_instances));
-		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POS, 1);
-		glState.vertexAttribPointersSet |= ATTR_INSTANCES_POS;
-	}
-#endif //__INSTANCED_MODELS__
-
-#ifdef __OCEAN__
-	if ((attribBits & ATTR_OCEAN_POSITION) && !(glState.vertexAttribPointersSet & ATTR_OCEAN_POSITION))
-	{
-		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_OCEAN_POSITION )\n");
-
-		qglVertexAttribPointer(ATTR_INDEX_OCEAN_POSITION, 3, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_oceanPosition));
-		glState.vertexAttribPointersSet |= ATTR_OCEAN_POSITION;
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 3, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_instancesPosition));
+		//qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POSITION, 1);
+		glState.vertexAttribPointersSet |= ATTR_INSTANCES_POSITION;
 	}
 
-	if ((attribBits & ATTR_OCEAN_TEXCOORD) && !(glState.vertexAttribPointersSet & ATTR_OCEAN_TEXCOORD))
+	if ((attribBits & ATTR_INSTANCES_TEXCOORD) && !(glState.vertexAttribPointersSet & ATTR_INSTANCES_TEXCOORD))
 	{
-		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_OCEAN_TEXCOORD )\n");
+		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_INSTANCES_TEXCOORD )\n");
 
-		qglVertexAttribPointer(ATTR_INDEX_OCEAN_TEXCOORD, 2, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_oceanTexcoord));
-		glState.vertexAttribPointersSet |= ATTR_OCEAN_TEXCOORD;
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_TEXCOORD, 2, GL_FLOAT, 0, 0, BUFFER_OFFSET(vbo->ofs_instancesTC));
+		glState.vertexAttribPointersSet |= ATTR_INSTANCES_TEXCOORD;
 	}
-#endif //__OCEAN__
 }
 

@@ -104,11 +104,11 @@ void OCEAN_InitOceanFast()
 		GLSL_BindProgram(&tr.waterForwardFastShader);
 
 		// Initialize the vertex position attribute from the vertex shader
-		GLuint pos = ATTR_INDEX_OCEAN_POSITION;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanPosition");
+		GLuint pos = ATTR_INDEX_INSTANCES_POSITION;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_InstancesPosition");
 		qglEnableVertexAttribArray(pos);
 		qglVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
-		GLuint tex = ATTR_INDEX_OCEAN_TEXCOORD;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanTexCoord");
+		GLuint tex = ATTR_INDEX_INSTANCES_TEXCOORD;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_InstancesTexCoord");
 		qglEnableVertexAttribArray(tex);
 		qglVertexAttribPointer(tex, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(NR_VERTICES * sizeof(vertices[0])));
 
@@ -190,11 +190,11 @@ void OCEAN_InitOcean()
 		GLSL_BindProgram(&tr.waterForwardShader);
 
 		// Initialize the vertex position attribute from the vertex shader
-		GLuint pos = ATTR_INDEX_OCEAN_POSITION;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanPosition");
+		GLuint pos = ATTR_INDEX_INSTANCES_POSITION;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_InstancesPosition");
 		qglEnableVertexAttribArray(pos);
 		qglVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
-		GLuint tex = ATTR_INDEX_OCEAN_TEXCOORD;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_OceanTexCoord");
+		GLuint tex = ATTR_INDEX_INSTANCES_TEXCOORD;// qglGetAttribLocation(tr.waterForwardShader.program, "attr_InstancesTexCoord");
 		qglEnableVertexAttribArray(tex);
 		qglVertexAttribPointer(tex, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(NR_VERTICES * sizeof(vertices[0])));
 
@@ -264,7 +264,7 @@ void OCEAN_Render(void)
 		
 		R_BindVBO(gVboID);
 
-		GLSL_VertexAttribsState(ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD);
+		GLSL_VertexAttribsState(ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD);
 
 		qglBindVertexArray(gVaoID);
 		
@@ -326,7 +326,7 @@ void OCEAN_Render(void)
 
 		R_BindVBO(gFastVboID);
 
-		GLSL_VertexAttribsState(ATTR_OCEAN_POSITION | ATTR_INDEX_OCEAN_TEXCOORD);
+		GLSL_VertexAttribsState(ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD);
 
 		qglBindVertexArray(gFastVaoID);
 		

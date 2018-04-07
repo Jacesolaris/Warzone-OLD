@@ -1,5 +1,6 @@
-attribute vec3		attr_OceanPosition;
-attribute vec2		attr_OceanTexCoord;
+attribute vec3		attr_InstancesPosition;
+attribute vec2		attr_InstancesTexCoord;
+
 attribute vec3		attr_Normal;
 
 uniform mat4		u_ModelViewProjectionMatrix;
@@ -14,7 +15,7 @@ varying vec3		var_Normal;
 
 void main()
 {
-	vec3 position = attr_OceanPosition.xyz;
+	vec3 position = attr_InstancesPosition;
 	position.z = MAP_WATER_LEVEL;
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 	var_vertPos = position;
