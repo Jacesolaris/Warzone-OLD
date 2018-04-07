@@ -112,7 +112,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // -----------------------------------------------------------------------------------------------------------------------------
 
 #define MAX_INSTANCED_MODEL_TYPES		128
-#define MAX_INSTANCED_MODEL_INSTANCES	16384
+#define MAX_INSTANCED_MODEL_INSTANCES	4096
 
 // -----------------------------------------------------------------------------------------------------------------------------
 
@@ -2300,6 +2300,10 @@ typedef struct mdvModel_s
 	int             numSkins;
 
 	GLuint			vao; // VAO
+
+	uint32_t		ofs_instancesPosition;
+	uint32_t		ofs_instancesMVP;
+	uint32_t		ofs_instancesTC;
 } mdvModel_t;
 
 

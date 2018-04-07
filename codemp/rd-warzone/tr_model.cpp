@@ -1186,8 +1186,31 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 		}
 
 #ifdef __INSTANCED_MODELS__
-		setupInstancedVertexAttributes(mdvModel);
-		qglBindVertexArray(0);
+		mdvModel->ofs_instancesPosition = (uint32_t)BUFFER_OFFSET(0);
+		qglGenBuffers(1, &tr.instanceShader.instances_buffer);
+		qglBindVertexArray(tr.instanceShader.instances_buffer);
+		vec3_t vecz[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+		qglBufferSubData(GL_ARRAY_BUFFER, 0, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), vecz);
+
+		mdvModel->ofs_instancesPosition = (uint32_t)BUFFER_OFFSET(MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t));
+		qglGenBuffers(1, &tr.instanceShader.instances_mvp);
+		qglBindVertexArray(tr.instanceShader.instances_mvp);
+		matrix_t matr[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+		qglBufferSubData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), MAX_INSTANCED_MODEL_INSTANCES * sizeof(matrix_t), matr);
+		
+
+		GLSL_BindProgram(&tr.instanceShader);
+
+		qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POSITION, 1);
+
+		qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t)));
+		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
+
+		//qglBindVertexArray(0);
+		GLSL_BindProgram(NULL);
 #endif //__INSTANCED_MODELS__
 	}
 
