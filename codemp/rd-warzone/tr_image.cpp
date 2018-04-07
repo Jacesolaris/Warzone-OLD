@@ -129,22 +129,44 @@ void GL_TextureMode( const char *string ) {
 	}
 
 	// change all the existing mipmap texture objects
-	for ( i = 0 ; i < tr.numImages ; i++ ) {
+	for ( i = 0 ; i < tr.numImages ; i++ ) 
+	{// UQ1: Really? Every frame?!?!?!?!??!?!??!?!?!????!?!?!!??!?!?!?!?!?? This was doing a fucking rediculous amount of binds and glTexParameters each frame...
 		glt = tr.images[ i ];
-		if ( glt->flags & IMGFLAG_MIPMAP ) {
+
+		if (glt->current_filter_min == gl_filter_min
+			&& glt->current_filter_max == gl_filter_max
+			&& (glConfig.maxTextureFilterAnisotropy > 1.0f && glt->current_filter_anisotropic == r_ext_texture_filter_anisotropic->value))
+		{// Don't burden the driver with this redundant spam...
+			continue;
+		}
+
+		if ( glt->flags & IMGFLAG_MIPMAP ) 
+		{
 			GL_Bind (glt);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+			
+			if (glt->current_filter_min != gl_filter_min)
+			{
+				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+				glt->current_filter_min = gl_filter_min;
+			}
+
+			if (glt->current_filter_max != gl_filter_max)
+			{
+				qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+				glt->current_filter_max = gl_filter_max;
+			}
 			
 			if ( r_ext_texture_filter_anisotropic->value > 0.0f )
 			{
 				if ( glConfig.maxTextureFilterAnisotropy > 1.0f )
 				{
 					qglTexParameterf (GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, r_ext_texture_filter_anisotropic->value);
+					glt->current_filter_anisotropic = r_ext_texture_filter_anisotropic->value;
 				}
 				else
 				{
 					qglTexParameterf (GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
+					glt->current_filter_anisotropic = 1.0;
 				}
 			}
 		}

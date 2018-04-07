@@ -1132,32 +1132,11 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			ofs_st = dataSize;
 			dataSize += surf->numVerts * sizeof(*texcoords);
 
-			/*vec3_t *iPos;
-			int ofs_instancesPosition;
-
-			ofs_instancesPosition = dataSize;
-			dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iPos);
-
-			matrix_t *iMVP;
-			int ofs_instancesMVP;
-			ofs_instancesMVP = dataSize;
-			dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iMVP);
-
-			vec2_t *iTC;
-			int ofs_instancesTC;
-
-			ofs_instancesTC = dataSize;
-			dataSize += MAX_INSTANCED_MODEL_INSTANCES * sizeof(*iTC);*/
-
 			data = (byte *)Z_Malloc(dataSize, TAG_MODEL_MD3, qtrue);
 
 			verts =      (vec3_t *)(data + ofs_xyz);
 			normals =    (uint32_t *)(data + ofs_normal);
 			texcoords =  (vec2_t *)(data + ofs_st);
-
-			/*iPos = (vec3_t *)(data + ofs_instancesPosition);
-			iMVP = (matrix_t *)(data + ofs_instancesMVP);
-			iTC = (vec2_t *)(data + ofs_instancesTC);*/
 		
 			v = surf->verts;
 			for ( j = 0; j < surf->numVerts * mdvModel->numFrames ; j++, v++ )
@@ -1194,18 +1173,9 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->vbo->ofs_normal    = ofs_normal;
 			vboSurf->vbo->ofs_st        = ofs_st;
 
-			/*vboSurf->vbo->ofs_instancesPosition = ofs_instancesPosition;
-			vboSurf->vbo->ofs_instancesMVP = ofs_instancesMVP;
-			vboSurf->vbo->ofs_instancesTC = ofs_instancesTC;*/
-
 			vboSurf->vbo->stride_xyz       = sizeof(*verts);
 			vboSurf->vbo->stride_normal    = sizeof(*normals);
 			vboSurf->vbo->stride_st        = sizeof(*st);
-
-			/*vboSurf->vbo->stride_instancesPosition = sizeof(*iPos);
-			vboSurf->vbo->stride_instancesMVP = sizeof(*iMVP);
-			vboSurf->vbo->stride_instancesTC = sizeof(*iTC);*/
-
 
 			vboSurf->vbo->size_xyz    = sizeof(*verts) * surf->numVerts;
 			vboSurf->vbo->size_normal = sizeof(*normals) * surf->numVerts;

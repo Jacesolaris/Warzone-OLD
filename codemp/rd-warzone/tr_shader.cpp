@@ -1932,10 +1932,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				if (StringContains(token, "street_light", 0))
 				{// bespin light hack...
 					shader.glowStrength = 0.275;
+					stage->emissiveRadiusScale = 16.0;
 				}
 				else if (StringContains(token, "sconce", 0))
 				{// bespin light hack...
 					shader.glowStrength = 0.575;
+					stage->emissiveRadiusScale = 3.0;
 				}
 
 				if ( !stage->bundle[0].image[0] )

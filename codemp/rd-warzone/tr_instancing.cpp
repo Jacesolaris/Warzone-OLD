@@ -19,13 +19,11 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t
 {
 	RB_EndSurface();
 
-	//qglUseProgram(tr.instanceShader.program);
 	GLSL_BindProgram(&tr.instanceShader);
 
-	//GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, MVP);
-	GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-	GLSL_SetUniformVec4(&tr.instanceShader, UNIFORM_COLOR, colorWhite);
+	//LSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+	//GLSL_SetUniformVec4(&tr.instanceShader, UNIFORM_COLOR, colorWhite);
 
 	GLSL_SetUniformInt(&tr.instanceShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 
@@ -47,8 +45,8 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t
 	qglBindVertexArray(m->vao);	// Select VAO
 	qglEnableVertexAttribArray(m->vao);
 
-	qglBindBuffer(GL_ARRAY_BUFFER, m->vboSurfaces->vbo->vertexesVBO);
-	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->vboSurfaces->ibo->indexesVBO);
+	//qglBindBuffer(GL_ARRAY_BUFFER, m->vboSurfaces->vbo->vertexesVBO);
+	//qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->vboSurfaces->ibo->indexesVBO);
 
 	//tess.useInternalVBO = qtrue;
 
@@ -59,34 +57,30 @@ void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t
 	GLSL_VertexAttribsState(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION);
 	GLSL_VertexAttribPointers(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION);
 
-	//qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
-	//qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	
+	qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
+	qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
-	//qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
-	//qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(NR_VERTICES * sizeof(vertices[0])));
+	qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+	qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(count * sizeof(positions[0])));
 
-	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
-	//qglBufferData(GL_ARRAY_BUFFER, sizeof(vec3_t) * count, positions, /*GL_STATIC_DRAW*/GL_DYNAMIC_DRAW);
-	qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_instancesPosition, count * sizeof(vec3_t), (const GLvoid *)positions);
+	//tess.vbo->ofs_instancesPosition = 0;
+	qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
+	qglBufferData(GL_ARRAY_BUFFER, sizeof(positions[0]) * count, positions, GL_STATIC_DRAW);
+	//qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_instancesPosition, count * sizeof(positions[0]), (const GLvoid *)positions);
 
-	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
-	//qglBufferData(GL_ARRAY_BUFFER, sizeof(matrix_t) * count, model_matrixes, /*GL_STATIC_DRAW*/GL_DYNAMIC_DRAW);
-	qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_instancesMVP, count * sizeof(matrix_t), (const GLvoid *)model_matrixes);
+	//tess.vbo->ofs_instancesMVP = (uint32_t)BUFFER_OFFSET(count * sizeof(positions[0]));
+	qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
+	qglBufferData(GL_ARRAY_BUFFER, sizeof(model_matrixes[0]) * count, model_matrixes, GL_STATIC_DRAW);
+	//qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_instancesMVP, count * sizeof(model_matrixes[0]), (const GLvoid *)model_matrixes);
 
 	//ForceCrash();
 	
-#if 1
 	//qglDrawElements(GL_TRIANGLES, count, GL_INDEX_TYPE, 0);
 	//qglDrawArraysInstanced(GL_TRIANGLES, 0, m->vboSurfaces->numIndexes, count);
+	
 	qglDrawElementsInstanced(GL_TRIANGLES, m->vboSurfaces->numIndexes, GL_INDEX_TYPE, 0, count);
-#else
-	tess.numIndexes += count * m->vboSurfaces->numIndexes * m->vboSurfaces->numIndexes;
-	tess.numVertexes += count * m->vboSurfaces->numIndexes;
-	tess.minIndex = 0;
-	tess.maxIndex = count * m->vboSurfaces->numIndexes * m->vboSurfaces->numIndexes;
-
-	RB_EndSurface();
-#endif
+	//qglDrawElementsInstanced(GL_TRIANGLES, m->vboSurfaces->mdvModel->surfaces->numIndexes, GL_INDEX_TYPE, 0, count);
 
 	R_BindNullVBO();
 	R_BindNullIBO();

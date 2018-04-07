@@ -689,6 +689,10 @@ typedef struct image_s {
 	int			deferredLoadFlags;
 #endif //__DEFERRED_IMAGE_LOADING__
 
+	int			current_filter_min;
+	int			current_filter_max;
+	float		current_filter_anisotropic;
+
 	struct image_s*	next;
 } image_t;
 

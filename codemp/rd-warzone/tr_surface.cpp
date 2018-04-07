@@ -2497,7 +2497,7 @@ static void RB_SurfaceSprites(srfSprites_t *surf)
 	GL_State(firstStage->stateBits);
 	GL_Cull(CT_TWO_SIDED);
 	//GLSL_VertexAttribPointers(surf->attributes->index);
-	GLSL_VertexAttribPointers(ATTR_INDEX_POSITION | ATTR_INDEX_NORMAL | ATTR_INDEX_TEXCOORD0);
+	GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0);
 	//GL_VertexAttribPointers(surf->numAttributes, surf->attributes);
 	R_BindAnimatedImageToTMU(&firstStage->bundle[0], TB_DIFFUSEMAP);
 	

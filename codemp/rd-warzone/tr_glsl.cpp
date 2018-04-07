@@ -2592,10 +2592,23 @@ void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat valu
 	{
 		return;
 	}
-
+	
 	*compare = value;
 
 	qglUniform1f(uniforms[uniformNum], value);
+}
+
+qboolean GLSL_CompareFloatBuffers(const float *buffer1, float *buffer2, int numElements)
+{
+	for (int i = 0; i < numElements; i++)
+	{
+		if (buffer1[i] != buffer2[i])
+		{
+			return qfalse;
+		}
+	}
+
+	return qtrue;
 }
 
 void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v)
@@ -2613,10 +2626,7 @@ void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t 
 		return;
 	}
 
-	if (&v[0] == &compare[0] && &v[1] == &compare[1])
-	{
-		return;
-	}
+	if (GLSL_CompareFloatBuffers(v, compare, 2)) return;
 
 	compare[0] = v[0];
 	compare[1] = v[1];
@@ -2643,10 +2653,8 @@ void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(&elements, &compare, sizeof (vec2_t)* numElements) == 0)
-	{
-		return;
-	}
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements*2)) return;
 
 	Com_Memcpy(compare, elements, sizeof (vec2_t)* numElements);
 
@@ -2660,18 +2668,15 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 	if (uniforms[uniformNum] == -1)
 		return;
 
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-
 	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
 	{
 		ri->Printf(PRINT_WARNING, "GLSL_SetUniformVec3: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
-	if (VectorCompare(v, compare))
-	{
-		return;
-	}
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareFloatBuffers((const float *)v, compare, 3)) return;
 
 	VectorCopy(v, compare);
 
@@ -2697,10 +2702,8 @@ void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(&elements, &compare, sizeof (vec3_t)* numElements) == 0)
-	{
-		return;
-	}
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements * 3)) return;
 
 	Com_Memcpy(compare, elements, sizeof (vec3_t)* numElements);
 
@@ -2726,10 +2729,8 @@ void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(&elements, &compare, sizeof (vec3_t)* numElements) == 0)
-	{
-		return;
-	}
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements * 3)) return;
 
 	Com_Memcpy(compare, elements, sizeof (vec3_t)* numElements);
 
@@ -2743,18 +2744,15 @@ void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t 
 	if (uniforms[uniformNum] == -1)
 		return;
 
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-
 	if (uniformsInfo[uniformNum].type != GLSL_VEC4)
 	{
 		ri->Printf(PRINT_WARNING, "GLSL_SetUniformVec4: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
-	if (VectorCompare4(v, compare))
-	{
-		return;
-	}
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareFloatBuffers((const float *)v, compare, 4)) return;
 
 	VectorCopy4(v, compare);
 
@@ -2768,18 +2766,15 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 	if (uniforms[uniformNum] == -1)
 		return;
 
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT5)
 	{
 		ri->Printf(PRINT_WARNING, "GLSL_SetUniformFloat5: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
-	if (VectorCompare5(v, compare))
-	{
-		return;
-	}
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareFloatBuffers((const float *)v, compare, 5)) return;
 
 	VectorCopy5(v, compare);
 
@@ -2793,18 +2788,15 @@ void GLSL_SetUniformFloat7(shaderProgram_t *program, int uniformNum, const float
 	if (uniforms[uniformNum] == -1)
 		return;
 
-	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT7)
 	{
 		ri->Printf(PRINT_WARNING, "GLSL_SetUniformFloat7: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
-	if (VectorCompare7(v, compare))
-	{
-		return;
-	}
+	float *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareFloatBuffers((const float *)v, compare, 7)) return;
 
 	VectorCopy7(v, compare);
 
@@ -2830,10 +2822,8 @@ void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const floa
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(&elements, &compare, sizeof (float)* numElements) == 0)
-	{
-		return;
-	}
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements)) return;
 
 	Com_Memcpy(compare, elements, sizeof (float)* numElements);
 
@@ -2859,10 +2849,8 @@ void GLSL_SetUniformFloatx64(shaderProgram_t *program, int uniformNum, const flo
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(&elements, &compare, sizeof (float)* numElements) == 0)
-	{
-		return;
-	}
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements)) return;
 
 	Com_Memcpy(compare, elements, sizeof (float)* numElements);
 
@@ -2888,10 +2876,11 @@ void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const flo
 		return;
 
 	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
-	if (memcmp(&matrix, &compare, sizeof (float)* 16 * numElements) == 0)
-	{
-		return;
-	}
+
+	if (GLSL_CompareFloatBuffers((const float *)matrix, compare, numElements * 16)) return;
+
+	matrix_t currentShaderUniform;
+	qglGetUniformfv(program->program, uniforms[uniformNum], currentShaderUniform);
 
 	Com_Memcpy(compare, matrix, sizeof (float)* 16 * numElements);
 
