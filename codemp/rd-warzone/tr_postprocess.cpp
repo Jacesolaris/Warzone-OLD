@@ -2695,8 +2695,11 @@ void RB_SSDM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
+	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_ROADMAP, TB_ROADMAP);
+	GL_BindToTMU(tr.ssdmImage, TB_ROADMAP);
+
 	GLSL_SetUniformInt(&tr.ssdmShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GL_BindToTMU(tr.ssdmImage, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 	GLSL_SetUniformMatrix16(&tr.ssdmShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

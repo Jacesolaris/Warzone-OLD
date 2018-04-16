@@ -11,15 +11,15 @@ uniform vec4			u_Local1; // r_testvalue0->value, r_testvalue1->value, r_testvalu
 
 varying vec2			var_TexCoords;
 
-#define __SKY_CHECK__			// This slows the checks a lot... Has to look up double the number of pixels...
+//#define __SKY_CHECK__			// This slows the checks a lot... Has to look up double the number of pixels...
 
 #define BLUR_DEPTH_MIN			0.01//0.8//0.55
-#define BLUR_RADIUS_BASE		5.0//2.0
+#define BLUR_RADIUS_BASE		4.0//3.0//2.0
 
 #define MAP_WATER_LEVEL u_ViewInfo.a
 
-#define px				(1.5 / u_Dimensions.x)
-#define py				(1.5 / u_Dimensions.y)
+#define px				(1.0 / u_Dimensions.x)
+#define py				(1.0 / u_Dimensions.y)
 
 vec4 DistantBlur(void)
 {
@@ -62,12 +62,16 @@ vec4 DistantBlur(void)
 		return color;
 	}
 
+	BLUR_DEPTH_MULT = clamp(pow(BLUR_DEPTH_MULT, 0.75), 0.0, 1.0);
+
 	float BLUR_RADIUS = BLUR_RADIUS_BASE * BLUR_DEPTH_MULT;
 
+#ifdef __SKY_CHECK__
 	if (isSky)
 	{
 		BLUR_RADIUS = 2.0;
 	}
+#endif //__SKY_CHECK__
 
 	if (BLUR_RADIUS <= 0.0)
 	{// No point... This would be less then 1 pixel...

@@ -682,7 +682,7 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 	float fre = clamp(pow(clamp(dot(normal, -view) + 1.0, 0.0, 1.0), -2.0), 2.0, 48.0);
 	float spec = pow(max(dot(reflect(-light, normal), view), 0.0), 1.2);
 
-	return (ambience * clamp(diffuseColor, 0.0, 1.0)) + (clamp(diffuseColor, 0.0, 1.0) * diff) + (clamp(specularColor, 0.0, 1.0) * spec * fre);
+	return (clamp(diffuseColor, 0.0, 1.0) * ambience) + (clamp(diffuseColor, 0.0, 1.0) * diff) + (clamp(specularColor, 0.0, 1.0) * spec * fre);
 }
 #else //!defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float specTrowbridgeReitz(float HoN, float a, float aP)
@@ -797,25 +797,30 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 	roughness = 0.05;
 #endif
 
+	// Ambient light.
+	float ambience = 0.25;
+
+	// Diffuse light.
+	float diff = getdiffuse(normal, light, 2.0) * 16.0;
+
+	// Specular light.
 	vec3 v = view;
 	float NoV = clamp(dot(normal, v), 0.0, 1.0);
 	vec3 r = reflect(-v, normal);
 
 #if 1
 	float NdotLSphere;
-	float specSph = clamp(sphereLight(pos, normal, v, r, f0, roughness, NoV, NdotLSphere, lightPos), 0.0, 0.2);
-	vec3 spec = albedo * clamp(0.3183 * NdotLSphere+specSph, 0.0, 0.2);
+	float specSph = clamp(sphereLight(pos, normal, v, r, f0, roughness, NoV, NdotLSphere, lightPos), 0.0, 1.0/*0.2*/);
+	float spec = clamp(/*0.3183 **/ NdotLSphere+specSph, 0.0, 1.0/*0.2*/);
 #else
 	float NdotLTube;
-	float specTube = clamp(tubeLight(pos, normal, v, r, f0, roughness, NoV, NdotLTube, lightPosStart, lightPosEnd), 0.0, 0.2);
-	vec3 spec = albedo * clamp(0.3183 * NdotLTube+specTube, 0.0, 0.2);
+	float specTube = clamp(tubeLight(pos, normal, v, r, f0, roughness, NoV, NdotLTube, lightPosStart, lightPosEnd), 0.0, 1.0/*0.2*/);
+	float spec = clamp(/*0.3183 **/ NdotLTube+specTube, 0.0, 1.0/*0.2*/);
 #endif
+	
+	spec = pow(spec, 1.0 / 2.2) * specPower * 256.0;
 
-	spec = specularColor * (pow(spec, vec3(1.0 / 2.2))) * specPower * 64.0;
-
-	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
-
-	return diffuse + spec;
+	return (clamp(diffuseColor, 0.0, 1.0) * ambience) + (clamp(diffuseColor, 0.0, 1.0) * diff) + (clamp(specularColor, 0.0, 1.0) * clamp(albedo, 0.0, 1.0) * spec);
 }
 #endif //defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 
@@ -982,8 +987,8 @@ void main(void)
 	// Simply offset the normal value based on the detail value... It looks good enough, but true PBR would probably want to use the tangent/bitangent below instead...
 	normalDetail.rgb = normalize(clamp(normalDetail.xyz, 0.0, 1.0) * 2.0 - 1.0);
 	//vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, u_Local3.a * (length(norm.xyz - normalDetail.xyz) / 3.0)));
-	vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, 0.4));
-	norm.rgb = normalize(mix(norm.xyz, normalDetail.xyz, 0.25 * (length(norm.xyz - normalDetail.xyz) / 3.0)));
+	vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, 0.5 * (length((norm.xyz * 0.5 + 0.5) - (normalDetail.xyz * 0.5 + 0.5)) / 3.0)));
+	norm.rgb = normalize(mix(norm.xyz, normalDetail.xyz, 0.25 * (length((norm.xyz * 0.5 + 0.5) - (normalDetail.xyz * 0.5 + 0.5)) / 3.0)));
 
 	// If we ever need a tangent/bitangent, we can get one like this... But I'm just working in world directions, so it's not required...
 	//vec3 tangent = TangentFromNormal( norm.xyz );
@@ -1232,7 +1237,7 @@ void main(void)
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
 #ifndef __LQ_MODE__
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(/*pow(reflectionPower, 2.0)*/NE * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
 #endif //__LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor, 0.0, 1.0));
 		//outColor.rgb = skyColor;

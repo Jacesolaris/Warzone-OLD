@@ -140,6 +140,17 @@ void main(void)
 	}
 
 	vec3 norm = getViewNormal(var_TexCoords);
+	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
+	float materialMultiplier = 1.0;
+
+	if (material == MATERIAL_ROCK)
+	{// Rock gets more displacement...
+		materialMultiplier = 6.0;
+	}
+	else if (material == MATERIAL_SOLIDWOOD)
+	{// Rock gets more displacement...
+		materialMultiplier = 3.0;
+	}
 
 #if 1
 	vec2 coord2 = var_TexCoords;
@@ -149,7 +160,7 @@ void main(void)
 
 	float depth = getDepth(var_TexCoords);
 	float invDepth = 1.0 - depth;
-	vec2 ParallaxXY = norm.xy * vec2(-DISPLACEMENT_STRENGTH / u_Dimensions) * invDepth;
+	vec2 ParallaxXY = norm.xy * vec2((-DISPLACEMENT_STRENGTH * materialMultiplier) / u_Dimensions) * invDepth;
 	float displacement = invGlowStrength * ReliefMapping(var_TexCoords, ParallaxXY, depth);
 #else
 	float displacement = GetDisplacementAtCoord(var_TexCoords);

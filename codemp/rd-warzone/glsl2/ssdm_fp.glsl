@@ -1,4 +1,5 @@
 uniform sampler2D				u_DiffuseMap;
+uniform sampler2D				u_RoadMap;
 uniform sampler2D				u_PositionMap;
 uniform sampler2D				u_NormalMap;
 uniform sampler2D				u_ScreenDepthMap;
@@ -27,12 +28,24 @@ vec3 DecodeNormal(in vec2 N)
 
 void main(void)
 {
-	vec3 dMap = texture(u_PositionMap, var_TexCoords).rgb;
+	vec3 dMap = texture(u_RoadMap, var_TexCoords).rgb;
 
 	if (dMap.r <= 0.0)
 	{
 		gl_FragColor = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
 		return;
+	}
+
+	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
+	float materialMultiplier = 1.0;
+
+	if (material == MATERIAL_ROCK)
+	{// Rock gets more displacement...
+		materialMultiplier = 6.0;
+	}
+	else if (material == MATERIAL_SOLIDWOOD)
+	{// Rock gets more displacement...
+		materialMultiplier = 3.0;
 	}
 
 	vec2 texCoords = var_TexCoords;
@@ -44,11 +57,11 @@ void main(void)
 	//vec3 norm = DecodeNormal(dMap.gb);
 
 	vec2 distFromCenter = vec2(length(texCoords.x - 0.5), length(texCoords.y - 0.5));
-	float displacementStrengthMod = (DISPLACEMENT_STRENGTH / 18.0); // Default is 18.0. If using higher displacement, need more screen edge flattening, if less, less flattening.
+	float displacementStrengthMod = ((DISPLACEMENT_STRENGTH * materialMultiplier) / 18.0); // Default is 18.0. If using higher displacement, need more screen edge flattening, if less, less flattening.
 	float screenEdgeScale = clamp(max(distFromCenter.x, distFromCenter.y) * 2.0, 0.0, 1.0);
 	screenEdgeScale = 1.0 - pow(screenEdgeScale, 16.0/displacementStrengthMod);
 
-	texCoords += norm.xy * vec2(-DISPLACEMENT_STRENGTH * px) * invDepth * screenEdgeScale * dMap.r;
+	texCoords += norm.xy * vec2((-DISPLACEMENT_STRENGTH * materialMultiplier) * px) * invDepth * screenEdgeScale * dMap.r;
 
 	gl_FragColor = vec4(texture(u_DiffuseMap, texCoords).rgb, 1.0);
 }

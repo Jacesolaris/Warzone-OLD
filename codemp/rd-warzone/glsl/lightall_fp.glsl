@@ -1,4 +1,3 @@
-//#define __UI_BLOOM__
 #define __HIGH_PASS_SHARPEN__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
@@ -232,45 +231,6 @@ void main()
 		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0);
 	}
 #endif //defined(__HIGH_PASS_SHARPEN__)
-
-#ifdef __UI_BLOOM__
-	if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
-	{// Bloom on 2D objects...
-		vec4 origDiffuse = diffuse;
-		float numBloomPixels = 1.0;
-
-#define UI_BLOOM_WIDTH 8
-
-		for (float x = -UI_BLOOM_WIDTH; x <= UI_BLOOM_WIDTH; x += 1.0)
-		{
-			for (float y = -UI_BLOOM_WIDTH; y <= UI_BLOOM_WIDTH; y += 1.0)
-			{
-				vec2 offset = (vec2(x,y) * pxSize);
-				vec2 coord = texCoords + offset;
-
-				if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0)
-				{
-					vec4 surround = texture(u_DiffuseMap, coord).rgba;
-
-					float maxColor = max(surround.r * var_Color.r, max(surround.g * var_Color.g, surround.b * var_Color.b));
-
-					if (maxColor > 0.9 && surround.a * var_Color.a > 0.0)
-					{
-						float weight = clamp((1.0 - (length(vec2(x, y)) / (UI_BLOOM_WIDTH * 2.0))) * 0.01, 0.0, 1.0);
-						weight *= maxColor;
-
-						diffuse += surround * weight;
-						numBloomPixels += weight;
-					}
-				}
-			}
-		}
-
-		diffuse /= numBloomPixels;
-		diffuse = mix(origDiffuse, diffuse, 0.5);
-	}
-#endif //__UI_BLOOM__
-
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);

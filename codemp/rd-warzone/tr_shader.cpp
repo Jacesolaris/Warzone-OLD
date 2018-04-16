@@ -4017,6 +4017,8 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_GREENLEAVES;
 	else if (StringContainsWord(name, "wood") && !StringContainsWord(name, "street"))
 		return MATERIAL_SOLIDWOOD;
+	else if (StringContainsWord(name, "bamboo"))
+		return MATERIAL_SOLIDWOOD;
 	else if (StringContainsWord(name, "mud"))
 		return MATERIAL_MUD;
 	else if (StringContainsWord(name, "ice"))
