@@ -8152,6 +8152,11 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 		if (text && !StringContainsWord(text, "q3map_material"))
 			return qtrue;
 	}
+	else if (StringContainsWord(name, "warzone/test_trees") || StringContainsWord(name, "warzone\\test_trees"))
+	{
+		if (text && !StringContainsWord(text, "q3map_material"))
+			return qtrue;
+	}
 	else if ( StringContainsWord(name, "warzone/billboard") || StringContainsWord(name, "warzone\\billboard"))
 		return qtrue;
 	else if (text && (StringsContainWord(name, text, "gfx")))
@@ -8427,6 +8432,13 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				|| StringContainsWord(strippedName, "trunk") 
 				|| StringContainsWord(strippedName, "giant_tree") 
 				|| StringContainsWord(strippedName, "vine01"))
+				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
+			else
+				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/test_trees") || StringContainsWord(strippedName, "warzone\\test_trees"))
+		{
+			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk"))
 				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
 			else
 				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);

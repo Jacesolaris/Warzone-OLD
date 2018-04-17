@@ -119,6 +119,585 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 	return 0;
 }
 
+// assimp include files. These three are usually needed.
+#include "assimp/Importer.hpp"	//OO version Header!
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "assimp/DefaultLogger.hpp"
+#include "assimp/LogStream.hpp"
+
+std::string AssImp_getBasePath(const std::string& path)
+{
+	size_t pos = path.find_last_of("\\/");
+	return (std::string::npos == pos) ? "" : path.substr(0, pos + 1);
+}
+
+std::string AssImp_getTextureName(const std::string& path)
+{
+	size_t pos = path.find_last_of("\\/");
+	return (std::string::npos == pos) ? "" : path.substr(pos + 1, std::string::npos);
+}
+
+static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *modName, int size, const char *ext)
+{
+	int					f, i, j, version;
+
+	assImpHeader_t    *md3Model;
+
+	mdvModel_t			*mdvModel;
+	mdvFrame_t			*frame;
+	mdvSurface_t		*surf;
+	int					*shaderIndex;
+	glIndex_t			*tri;
+	mdvVertex_t			*v;
+	mdvSt_t				*st;
+
+	// Create an instance of the Importer class
+	Assimp::Importer importer;
+
+	std::string basePath = AssImp_getBasePath(modName);
+
+#define ASSIMP_MODEL_SCALE 16.0
+
+#define aiProcessPreset_TargetRealtime_MaxQuality_Fix ( \
+	aiProcessPreset_TargetRealtime_Quality	|  \
+	aiProcess_FlipWindingOrder			|  \
+    aiProcess_FixInfacingNormals			|  \
+    aiProcess_FindInstances                  |  \
+    aiProcess_ValidateDataStructure          |  \
+	aiProcess_OptimizeMeshes                 |  \
+    0 )
+
+	//aiProcess_OptimizeGraph                  |  \
+
+	const aiScene* scene = importer.ReadFileFromMemory(buffer, size, aiProcessPreset_TargetRealtime_MaxQuality_Fix, ext);
+
+	if (!scene)
+	{
+		ri->Printf(PRINT_WARNING, "R_LoadAssImp: %s has no frames\n", modName);
+		return qfalse;
+	}
+
+	// Generate an emulated MD3 model header... Actually a slightly modified version, but reusing the basic format and version info, etc...
+	md3Model = (assImpHeader_t *)ri->Hunk_Alloc(sizeof(assImpHeader_t), h_low);
+
+	// Record this scene pointer...
+	md3Model->scene = (void *)scene;
+
+	// Record buffer pointer...
+	md3Model->buffer = buffer;
+
+	// Copy the name...
+	strcpy(md3Model->name, modName);
+
+	// Set the MD3 version...
+	version = md3Model->version = LittleLong(MD3_VERSION);
+
+	// Set the ident...
+	md3Model->ident = LittleLong(MD3_IDENT);
+
+	md3Model->numFrames = 1;
+	md3Model->numTags = 0;
+	md3Model->numSkins = 0;
+
+	mod->type = MOD_MESH;
+	mod->dataSize += size;
+
+	qboolean bAlreadyFound = qfalse;
+	mdvModel = mod->data.mdv[lod] = (mdvModel_t *)CModelCache->Allocate(size, buffer, modName, &bAlreadyFound, TAG_MODEL_MD3);
+
+	strcpy(mod->name, modName);
+
+	//  Com_Memcpy(mod->md3[lod], buffer, LittleLong(md3Model->ofsEnd));
+	if (!bAlreadyFound)
+	{	// HACK
+		LL(md3Model->ident);
+		LL(md3Model->version);
+		LL(md3Model->numFrames);
+		LL(md3Model->numTags);
+		LL(md3Model->numSurfaces);
+	}
+	else
+	{
+		CModelCache->AllocateShaders(modName);
+	}
+
+	// Calculate the bounds/radius info...
+	vec3_t bounds[2];
+	ClearBounds(bounds[0], bounds[1]);
+
+	for (i = 0; i < scene->mNumMeshes; i++)
+	{
+		for (j = 0; j < scene->mMeshes[i]->mNumVertices; j++)
+		{
+			vec3_t origin;
+			VectorSet(origin, scene->mMeshes[i]->mVertices[j].x * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE, scene->mMeshes[i]->mVertices[j].y * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE, scene->mMeshes[i]->mVertices[j].z * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE);
+			AddPointToBounds(origin, bounds[0], bounds[1]);
+		}
+	}
+
+	ri->Printf(PRINT_WARNING, "Model %s. Bounds %f %f %f x %f %f %f.\n", modName, bounds[0][0], bounds[0][1], bounds[0][2], bounds[1][0], bounds[1][1], bounds[1][2]);
+
+	// swap all the frames - Not supported for now, just using a single empty frame with basic data...
+	mdvModel->numFrames = 1;
+	mdvModel->frames = frame = (mdvFrame_t *)ri->Hunk_Alloc(sizeof(*frame) * md3Model->numFrames, h_low);
+
+	vec3_t localOrigin;
+	VectorSet(localOrigin, 0.0, 0.0, 0.0);
+	float radius = Distance(bounds[0], bounds[1]) / 2.0;
+
+	for (i = 0; i < md3Model->numFrames; i++, frame++)
+	{
+		frame->radius = LittleFloat(radius);
+		for (j = 0; j < 3; j++)
+		{
+			frame->bounds[0][j] = LittleFloat(bounds[0][j]);
+			frame->bounds[1][j] = LittleFloat(bounds[1][j]);
+			frame->localOrigin[j] = LittleFloat(localOrigin[j]);
+		}
+	}
+
+	// swap all the tags - Disabled for now... Not sure if I need tags on non-md3 models...
+	mdvModel->numTags = md3Model->numTags = 0;
+	/*mdvModel->tags = tag = (mdvTag_t *)ri->Hunk_Alloc(sizeof(*tag), h_low);
+
+	md3Tag = (md3Tag_t *)ri->Hunk_Alloc(sizeof(md3Tag_t), h_low);
+
+	for (i = 0; i < md3Model->numTags * md3Model->numFrames; i++, tag++, md3Tag++)
+	{
+		for (j = 0; j < 3; j++)
+		{
+			tag->origin[j] = LittleFloat(md3Tag->origin[j]);
+			tag->axis[0][j] = LittleFloat(md3Tag->axis[0][j]);
+			tag->axis[1][j] = LittleFloat(md3Tag->axis[1][j]);
+			tag->axis[2][j] = LittleFloat(md3Tag->axis[2][j]);
+		}
+	}
+
+
+	mdvModel->tagNames = tagName = (mdvTagName_t *)ri->Hunk_Alloc(sizeof(*tagName) * (md3Model->numTags), h_low);
+
+	md3Tag = (md3Tag_t *)((byte *)md3Model + md3Model->ofsTags);
+	for (i = 0; i < md3Model->numTags; i++, tagName++, md3Tag++)
+	{
+		Q_strncpyz(tagName->name, md3Tag->name, sizeof(tagName->name));
+	}*/
+
+	// swap all the surfaces
+	mdvModel->numSurfaces = md3Model->numSurfaces = scene->mNumMeshes;
+	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf) * md3Model->numSurfaces, h_low);
+	
+	/*for (i = 0; i < scene->mNumMaterials; i++)
+	{
+		ri->Printf(PRINT_WARNING, "Material %i.\n", i);
+
+		for (j = 0; j < aiTextureType_REFLECTION + 1; j++)
+		{
+			aiString shaderPath;
+			scene->mMaterials[i]->GetTexture((aiTextureType)j, 0, &shaderPath);
+			ri->Printf(PRINT_WARNING, "%i - %s.\n", j, shaderPath.length ? shaderPath.C_Str() : "NULL");
+		}
+	}*/
+
+	int numRemoved = 0;
+
+	for (i = 0; i < scene->mNumMeshes; i++)
+	{
+		shader_t		*sh = NULL;
+		aiString		shaderPath;	// filename
+		aiMesh			*aiSurf = scene->mMeshes[i];
+
+		// change to surface identifier
+		surf->surfaceType = SF_MDV;
+
+		scene->mMaterials[aiSurf->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &shaderPath);
+
+		std::string textureName = AssImp_getTextureName(shaderPath.C_Str());
+
+		if (textureName.length() > 0)
+		{// Rebuild path, the original path name had silly dev path... Convert to basePath/filename
+			char out[256] = { 0 };
+			COM_StripExtension(textureName.c_str(), out, sizeof(out));
+			textureName = out;
+
+			char shaderRealPath[256] = { 0 };
+			sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
+			sh = R_FindShader(shaderRealPath, lightmapsNone, stylesDefault, qtrue);
+			ri->Printf(PRINT_WARNING, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
+		}
+		else if (StringContainsWord(shaderPath.C_Str(), "/") || StringContainsWord(shaderPath.C_Str(), "\\"))
+		{// We seem to have a full, valid?, path...
+			char out[256] = { 0 };
+			COM_StripExtension(shaderPath.C_Str(), out, sizeof(out));
+			shaderPath = out;
+
+			sh = R_FindShader(shaderPath.C_Str(), lightmapsNone, stylesDefault, qtrue);
+			ri->Printf(PRINT_WARNING, "Model: %s. Texture: %s.\n", modName, shaderPath.C_Str());
+		}
+		else if (shaderPath.length > 0)
+		{// No full path? Append the base dir (the model's directory)...
+			char out[256] = { 0 };
+			COM_StripExtension(shaderPath.C_Str(), out, sizeof(out));
+			shaderPath = out;
+
+			char shaderRealPath[256] = { 0 };
+			sprintf(shaderRealPath, "%s%s", basePath.c_str(), shaderPath.C_Str());
+			sh = R_FindShader(shaderRealPath, lightmapsNone, stylesDefault, qtrue);
+			ri->Printf(PRINT_WARNING, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
+		}
+		else
+		{
+			sh = tr.defaultShader;
+		}
+
+		if (!sh || sh == tr.defaultShader)
+		{
+			//if (aiSurf->mName.data && aiSurf->mName.data[0] && aiSurf->mName.length && StringContainsWord(aiSurf->mName.C_Str(), "collision"))
+			{// A collision surface, set it to nodraw... TODO: Generate planes?!?!?!?
+				//sh = R_FindShader("textures/system/nodraw", lightmapsNone, stylesDefault, qtrue);
+				numRemoved++;
+				continue;
+			}
+		}
+
+		// give pointer to model for Tess_SurfaceMDX
+		surf->model = mdvModel;
+
+		// copy surface name
+		//Q_strncpyz(surf->name, md3Surf->name, sizeof(surf->name));
+		Q_strncpyz(surf->name, aiSurf->mName.C_Str(), sizeof(surf->name));
+
+		// lowercase the surface name so skin compares are faster
+		Q_strlwr(surf->name);
+
+		// strip off a trailing _1 or _2
+		// this is a crutch for q3data being a mess
+		j = strlen(surf->name);
+		if (j > 2 && surf->name[j - 2] == '_')
+		{
+			surf->name[j - 2] = 0;
+		}
+
+		// register the shaders
+		surf->numShaderIndexes = 1;
+		surf->shaderIndexes = shaderIndex = (int *)ri->Hunk_Alloc(sizeof(*shaderIndex), h_low);
+
+		if (sh->defaultShader)
+		{
+			*shaderIndex = 0;
+		}
+		else
+		{
+			*shaderIndex = sh->index;
+		}
+
+		// swap all the triangles
+		surf->numIndexes = aiSurf->mNumFaces * 3;
+		surf->indexes = tri = (glIndex_t *)ri->Hunk_Alloc(sizeof(*tri) * aiSurf->mNumFaces * 3, h_low);
+
+		for (j = 0; j < aiSurf->mNumFaces; j++, tri += 3)
+		{// Assuming triangles for now... AssImp is currently set to convert everything to triangles anyway...
+			tri[0] = LittleLong(aiSurf->mFaces[j].mIndices[0]);
+			tri[1] = LittleLong(aiSurf->mFaces[j].mIndices[1]);
+			tri[2] = LittleLong(aiSurf->mFaces[j].mIndices[2]);
+		}
+
+		// swap all the XyzNormals
+		surf->numVerts = aiSurf->mNumVertices;
+		surf->verts = v = (mdvVertex_t *)ri->Hunk_Alloc(sizeof(*v) * aiSurf->mNumVertices, h_low);
+
+		for (j = 0; j < aiSurf->mNumVertices; j++, v++)
+		{
+			aiVector3D xyz = aiSurf->mVertices[j];
+
+			v->xyz[0] = LittleShort(xyz.x) * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE;
+			v->xyz[1] = LittleShort(xyz.y) * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE;
+			v->xyz[2] = LittleShort(xyz.z) * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE;
+
+			aiVector3D norm = aiSurf->mNormals[j];
+
+			v->normal[0] = norm.x;
+			v->normal[1] = norm.y;
+			v->normal[2] = norm.z;
+		}
+
+		// swap all the ST
+		surf->st = st = (mdvSt_t *)ri->Hunk_Alloc(sizeof(*st) * aiSurf->mNumVertices, h_low);
+		
+		for (j = 0; j < aiSurf->mNumVertices; j++, st++)
+		{
+			if (aiSurf->mNormals != NULL && aiSurf->HasTextureCoords(0))		//HasTextureCoords(texture_coordinates_set)
+			{
+				//glTexCoord2f(aiSurf->mTextureCoords[0][vertexIndex].x, 1 - aiSurf->mTextureCoords[0][vertexIndex].y); //mTextureCoords[channel][vertex]
+				st->st[0] = LittleFloat(aiSurf->mTextureCoords[0][j].x);
+				st->st[1] = LittleFloat(1 - aiSurf->mTextureCoords[0][j].y);
+			}
+			else
+			{
+				st->st[0] = 0.0;
+				st->st[1] = 1.0;
+			}
+		}
+
+		// calc tangent spaces
+		{
+			for (j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
+			{
+				VectorClear(v->tangent);
+				VectorClear(v->bitangent);
+			}
+
+			for (f = 0; f < mdvModel->numFrames; f++)
+			{
+				for (j = 0, tri = surf->indexes; j < surf->numIndexes; j += 3, tri += 3)
+				{
+					vec3_t sdir, tdir;
+					const float *v0, *v1, *v2, *t0, *t1, *t2;
+					glIndex_t index0, index1, index2;
+
+					index0 = surf->numVerts * f + tri[0];
+					index1 = surf->numVerts * f + tri[1];
+					index2 = surf->numVerts * f + tri[2];
+
+					v0 = surf->verts[index0].xyz;
+					v1 = surf->verts[index1].xyz;
+					v2 = surf->verts[index2].xyz;
+
+					t0 = surf->st[tri[0]].st;
+					t1 = surf->st[tri[1]].st;
+					t2 = surf->st[tri[2]].st;
+
+					R_CalcTexDirs(sdir, tdir, v0, v1, v2, t0, t1, t2);
+
+					VectorAdd(sdir, surf->verts[index0].tangent, surf->verts[index0].tangent);
+					VectorAdd(sdir, surf->verts[index1].tangent, surf->verts[index1].tangent);
+					VectorAdd(sdir, surf->verts[index2].tangent, surf->verts[index2].tangent);
+					VectorAdd(tdir, surf->verts[index0].bitangent, surf->verts[index0].bitangent);
+					VectorAdd(tdir, surf->verts[index1].bitangent, surf->verts[index1].bitangent);
+					VectorAdd(tdir, surf->verts[index2].bitangent, surf->verts[index2].bitangent);
+				}
+			}
+
+			for (j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
+			{
+				vec3_t sdir, tdir;
+
+				VectorCopy(v->tangent, sdir);
+				VectorCopy(v->bitangent, tdir);
+
+				VectorNormalize(sdir);
+				VectorNormalize(tdir);
+
+				R_CalcTbnFromNormalAndTexDirs(v->tangent, v->bitangent, v->normal, sdir, tdir);
+			}
+		}
+
+		// find the next surface
+		surf++;
+	}
+
+	// Removed some (most likely collision) surfaces... Makse sure when drawing, that we ignore them...
+	mdvModel->numSurfaces = md3Model->numSurfaces = scene->mNumMeshes - numRemoved;
+
+	{
+		srfVBOMDVMesh_t *vboSurf;
+
+		mdvModel->numVBOSurfaces = mdvModel->numSurfaces;
+		mdvModel->vboSurfaces = (srfVBOMDVMesh_t *)ri->Hunk_Alloc(sizeof(*mdvModel->vboSurfaces) * mdvModel->numSurfaces, h_low);
+
+		vboSurf = mdvModel->vboSurfaces;
+		surf = mdvModel->surfaces;
+
+#ifdef __INSTANCED_MODELS__
+		mdvModel->vao = NULL;
+		qglGenVertexArrays(1, &mdvModel->vao);
+		qglBindVertexArray(mdvModel->vao);
+#endif //__INSTANCED_MODELS__
+
+		for (i = 0; i < mdvModel->numSurfaces; i++, vboSurf++, surf++)
+		{
+			vec3_t *verts;
+			vec2_t *texcoords;
+			uint32_t *normals;
+
+			byte *data;
+			int dataSize;
+
+			int ofs_xyz, ofs_normal, ofs_st;
+
+			dataSize = 0;
+
+			ofs_xyz = dataSize;
+			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*verts);
+
+			ofs_normal = dataSize;
+			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*normals);
+
+			ofs_st = dataSize;
+			dataSize += surf->numVerts * sizeof(*texcoords);
+
+			data = (byte *)Z_Malloc(dataSize, TAG_MODEL_MD3, qtrue);
+
+			verts = (vec3_t *)(data + ofs_xyz);
+			normals = (uint32_t *)(data + ofs_normal);
+			texcoords = (vec2_t *)(data + ofs_st);
+
+			v = surf->verts;
+			for (j = 0; j < surf->numVerts * mdvModel->numFrames; j++, v++)
+			{
+				vec3_t nxt;
+				vec4_t tangent;
+
+				VectorCopy(v->xyz, verts[j]);
+
+				normals[j] = R_VboPackNormal(v->normal);
+				CrossProduct(v->normal, v->tangent, nxt);
+				VectorCopy(v->tangent, tangent);
+				tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+			}
+
+			st = surf->st;
+			for (j = 0; j < surf->numVerts; j++, st++) {
+				texcoords[j][0] = st->st[0];
+				texcoords[j][1] = st->st[1];
+			}
+
+			vboSurf->surfaceType = SF_VBO_MDVMESH;
+			vboSurf->mdvModel = mdvModel;
+			vboSurf->mdvSurface = surf;
+			vboSurf->numIndexes = surf->numIndexes;
+			vboSurf->numVerts = surf->numVerts;
+
+			vboSurf->minIndex = 0;
+			vboSurf->maxIndex = surf->numVerts;
+
+			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
+
+			vboSurf->vbo->ofs_xyz = ofs_xyz;
+			vboSurf->vbo->ofs_normal = ofs_normal;
+			vboSurf->vbo->ofs_st = ofs_st;
+
+			vboSurf->vbo->stride_xyz = sizeof(*verts);
+			vboSurf->vbo->stride_normal = sizeof(*normals);
+			vboSurf->vbo->stride_st = sizeof(*st);
+
+			vboSurf->vbo->size_xyz = sizeof(*verts) * surf->numVerts;
+			vboSurf->vbo->size_normal = sizeof(*normals) * surf->numVerts;
+
+			Z_Free(data);
+
+			vboSurf->ibo = R_CreateIBO((byte *)surf->indexes, sizeof(glIndex_t) * surf->numIndexes, VBO_USAGE_STATIC);
+		}
+
+#ifdef __INSTANCED_MODELS__
+		mdvModel->ofs_instancesPosition = (uint32_t)BUFFER_OFFSET(0);
+		qglGenBuffers(1, &tr.instanceShader.instances_buffer);
+		qglBindVertexArray(tr.instanceShader.instances_buffer);
+		vec3_t vecz[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+		qglBufferSubData(GL_ARRAY_BUFFER, 0, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), vecz);
+
+		mdvModel->ofs_instancesPosition = (uint32_t)BUFFER_OFFSET(MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t));
+		qglGenBuffers(1, &tr.instanceShader.instances_mvp);
+		qglBindVertexArray(tr.instanceShader.instances_mvp);
+		matrix_t matr[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+		qglBufferSubData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), MAX_INSTANCED_MODEL_INSTANCES * sizeof(matrix_t), matr);
+
+
+		GLSL_BindProgram(&tr.instanceShader);
+
+		qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POSITION, 1);
+
+		qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+		qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t)));
+		qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
+
+		//qglBindVertexArray(0);
+		GLSL_BindProgram(NULL);
+#endif //__INSTANCED_MODELS__
+	}
+
+	return qtrue;
+}
+
+qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
+{
+	unsigned	*buf;
+	int			lod;
+	int			ident;
+	qboolean	loaded = qfalse;
+	int			numLoaded;
+	char filename[MAX_QPATH], namebuf[MAX_QPATH + 20];
+	char *fext, defex[] = "obj";
+
+	numLoaded = 0;
+
+	strcpy(filename, name);
+
+	fext = strchr(filename, '.');
+
+	if (!fext)
+	{
+		fext = defex;
+	}
+	else
+	{
+		*fext = '\0';
+		fext++;
+	}
+
+	for (lod = MD3_MAX_LODS - 1; lod >= 0; lod--)
+	{
+		if (lod)
+			Com_sprintf(namebuf, sizeof(namebuf), "%s_%d.%s", filename, lod, fext);
+		else
+			Com_sprintf(namebuf, sizeof(namebuf), "%s.%s", filename, fext);
+
+		qboolean bAlreadyCached = qfalse;
+
+		int size = CModelCache->LoadFile(namebuf, (void**)&buf, &bAlreadyCached);
+		
+		if (!size)
+		{
+			continue;
+		}
+
+		ident = LittleLong(MD3_IDENT);
+
+		loaded = R_LoadAssImp(mod, lod, buf, namebuf, size, fext);
+
+		if (loaded)
+		{
+			mod->numLods++;
+			numLoaded++;
+		}
+		else
+			break;
+	}
+
+	if (numLoaded)
+	{
+		// duplicate into higher lod spots that weren't
+		// loaded, in case the user changes r_lodbias on the fly
+		for (lod--; lod >= 0; lod--)
+		{
+			mod->numLods++;
+			mod->data.mdv[lod] = mod->data.mdv[lod + 1];
+		}
+		
+		ri->Printf(PRINT_WARNING, "R_RegisterAssImp: loaded assimp model %s. modIndex %i. numLods %i. numLoaded %i. numSurfaces %i.\n", name, mod->index, mod->numLods, numLoaded, mod->data.mdv[0]->numSurfaces);
+		return mod->index;
+	}
+
+#ifdef _DEBUG
+	ri->Printf(PRINT_WARNING, "R_RegisterAssImp: couldn't load %s\n", name);
+#endif
+
+	mod->type = MOD_BAD;
+	return 0;
+}
+
 /*
 ====================
 R_RegisterMDR
@@ -214,6 +793,65 @@ static modelExtToLoaderMap_t modelLoaders[ ] =
 	/*
 	Ghoul 2 Insert End
 	*/
+	{ "3d", R_RegisterAssImp },
+	{ "3ds", R_RegisterAssImp },
+	{ "3mf", R_RegisterAssImp },
+	{ "ac", R_RegisterAssImp },
+	{ "ac3d", R_RegisterAssImp },
+	{ "acc", R_RegisterAssImp },
+	{ "amj", R_RegisterAssImp },
+	{ "ase", R_RegisterAssImp },
+	{ "ask", R_RegisterAssImp },
+	{ "b3d", R_RegisterAssImp },
+	{ "blend", R_RegisterAssImp },
+	{ "bvh", R_RegisterAssImp },
+	{ "cms", R_RegisterAssImp },
+	{ "cob", R_RegisterAssImp },
+	{ "collada", R_RegisterAssImp },
+	{ "dae", R_RegisterAssImp },
+	{ "dxf", R_RegisterAssImp },
+	{ "enff", R_RegisterAssImp },
+	{ "fbx", R_RegisterAssImp },
+	{ "gltf", R_RegisterAssImp },
+	{ "hmb", R_RegisterAssImp },
+	{ "ifc-step", R_RegisterAssImp },
+	{ "irr", R_RegisterAssImp },
+	{ "irrmesh", R_RegisterAssImp },
+	{ "lwo", R_RegisterAssImp },
+	{ "lws", R_RegisterAssImp },
+	{ "lxo", R_RegisterAssImp },
+	{ "md2", R_RegisterAssImp },
+	{ "md3", R_RegisterAssImp },
+	{ "md5", R_RegisterAssImp },
+	{ "mdc", R_RegisterAssImp },
+	{ "mdl", R_RegisterAssImp },
+	{ "mesh", R_RegisterAssImp },
+	{ "mot", R_RegisterAssImp },
+	{ "ms3d", R_RegisterAssImp },
+	{ "ndo", R_RegisterAssImp },
+	{ "nff", R_RegisterAssImp },
+	{ "obj", R_RegisterAssImp },
+	{ "off", R_RegisterAssImp },
+	{ "ogex", R_RegisterAssImp },
+	{ "ply", R_RegisterAssImp },
+	{ "pmx", R_RegisterAssImp },
+	{ "prj", R_RegisterAssImp },
+	{ "q3o", R_RegisterAssImp },
+	{ "q3s", R_RegisterAssImp },
+	{ "raw", R_RegisterAssImp },
+	{ "scn", R_RegisterAssImp },
+	{ "sib", R_RegisterAssImp },
+	{ "smd", R_RegisterAssImp },
+	{ "stp", R_RegisterAssImp },
+	{ "stl", R_RegisterAssImp },
+	{ "ter", R_RegisterAssImp },
+	{ "uc", R_RegisterAssImp },
+	{ "vta", R_RegisterAssImp },
+	{ "x", R_RegisterAssImp },
+	{ "x3d", R_RegisterAssImp },
+	{ "xgl", R_RegisterAssImp },
+	{ "xml", R_RegisterAssImp },
+	{ "zgl", R_RegisterAssImp },
 };
 
 static int numModelLoaders = ARRAY_LEN(modelLoaders);

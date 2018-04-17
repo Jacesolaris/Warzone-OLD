@@ -177,6 +177,91 @@ set(MPWarzoneTinyImageLoaderFiles
 source_group("TinyImageLoader" FILES ${MPWarzoneTinyImageLoaderFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneTinyImageLoaderFiles})
 
+set(MPWarzoneAssimpFiles
+  "${MPDir}/rd-warzone/assimp/ai_assert.h"
+	"${MPDir}/rd-warzone/assimp/anim.h"
+	"${MPDir}/rd-warzone/assimp/BaseImporter.h"
+	"${MPDir}/rd-warzone/assimp/Bitmap.h"
+	"${MPDir}/rd-warzone/assimp/BlobIOSystem.h"
+	"${MPDir}/rd-warzone/assimp/ByteSwapper.h"
+	"${MPDir}/rd-warzone/assimp/camera.h"
+	"${MPDir}/rd-warzone/assimp/cexport.h"
+	"${MPDir}/rd-warzone/assimp/cfileio.h"
+	"${MPDir}/rd-warzone/assimp/cimport.h"
+	"${MPDir}/rd-warzone/assimp/color4.h"
+	"${MPDir}/rd-warzone/assimp/color4.inl"
+	"${MPDir}/rd-warzone/assimp/Compiler"
+	"${MPDir}/rd-warzone/assimp/config.h"
+	"${MPDir}/rd-warzone/assimp/CreateAnimMesh.h"
+	"${MPDir}/rd-warzone/assimp/DefaultIOStream.h"
+	"${MPDir}/rd-warzone/assimp/DefaultIOSystem.h"
+	"${MPDir}/rd-warzone/assimp/DefaultLogger.hpp"
+	"${MPDir}/rd-warzone/assimp/Defines.h"
+	"${MPDir}/rd-warzone/assimp/defs.h"
+	"${MPDir}/rd-warzone/assimp/Exceptional.h"
+	"${MPDir}/rd-warzone/assimp/Exporter.hpp"
+	"${MPDir}/rd-warzone/assimp/fast_atof.h"
+	"${MPDir}/rd-warzone/assimp/GenericProperty.h"
+	"${MPDir}/rd-warzone/assimp/Hash.h"
+	"${MPDir}/rd-warzone/assimp/Importer.hpp"
+	"${MPDir}/rd-warzone/assimp/importerdesc.h"
+	"${MPDir}/rd-warzone/assimp/IOStream.hpp"
+	"${MPDir}/rd-warzone/assimp/IOStreamBuffer.h"
+	"${MPDir}/rd-warzone/assimp/IOSystem.hpp"
+	"${MPDir}/rd-warzone/assimp/irrXMLWrapper.h"
+	"${MPDir}/rd-warzone/assimp/light.h"
+	"${MPDir}/rd-warzone/assimp/LineSplitter.h"
+	"${MPDir}/rd-warzone/assimp/LogAux.h"
+	"${MPDir}/rd-warzone/assimp/Logger.hpp"
+	"${MPDir}/rd-warzone/assimp/LogStream.hpp"
+	"${MPDir}/rd-warzone/assimp/Macros.h"
+	"${MPDir}/rd-warzone/assimp/material.h"
+	"${MPDir}/rd-warzone/assimp/material.inl"
+	"${MPDir}/rd-warzone/assimp/MathFunctions.h"
+	"${MPDir}/rd-warzone/assimp/matrix3x3.h"
+	"${MPDir}/rd-warzone/assimp/matrix3x3.inl"
+	"${MPDir}/rd-warzone/assimp/matrix4x4.h"
+	"${MPDir}/rd-warzone/assimp/matrix4x4.inl"
+	"${MPDir}/rd-warzone/assimp/MemoryIOWrapper.h"
+	"${MPDir}/rd-warzone/assimp/mesh.h"
+	"${MPDir}/rd-warzone/assimp/metadata.h"
+	"${MPDir}/rd-warzone/assimp/NullLogger.hpp"
+	"${MPDir}/rd-warzone/assimp/ParsingUtils.h"
+	"${MPDir}/rd-warzone/assimp/pbrmaterial.h"
+	"${MPDir}/rd-warzone/assimp/port"
+	"${MPDir}/rd-warzone/assimp/postprocess.h"
+	"${MPDir}/rd-warzone/assimp/Profiler.h"
+	"${MPDir}/rd-warzone/assimp/ProgressHandler.hpp"
+	"${MPDir}/rd-warzone/assimp/qnan.h"
+	"${MPDir}/rd-warzone/assimp/quaternion.h"
+	"${MPDir}/rd-warzone/assimp/quaternion.inl"
+	"${MPDir}/rd-warzone/assimp/RemoveComments.h"
+	"${MPDir}/rd-warzone/assimp/scene.h"
+	"${MPDir}/rd-warzone/assimp/SceneCombiner.h"
+	"${MPDir}/rd-warzone/assimp/SGSpatialSort.h"
+	"${MPDir}/rd-warzone/assimp/SkeletonMeshBuilder.h"
+	"${MPDir}/rd-warzone/assimp/SmoothingGroups.h"
+	"${MPDir}/rd-warzone/assimp/SmoothingGroups.inl"
+	"${MPDir}/rd-warzone/assimp/SpatialSort.h"
+	"${MPDir}/rd-warzone/assimp/StandardShapes.h"
+	"${MPDir}/rd-warzone/assimp/StreamReader.h"
+	"${MPDir}/rd-warzone/assimp/StreamWriter.h"
+	"${MPDir}/rd-warzone/assimp/StringComparison.h"
+	"${MPDir}/rd-warzone/assimp/StringUtils.h"
+	"${MPDir}/rd-warzone/assimp/Subdivision.h"
+	"${MPDir}/rd-warzone/assimp/texture.h"
+	"${MPDir}/rd-warzone/assimp/TinyFormatter.h"
+	"${MPDir}/rd-warzone/assimp/types.h"
+	"${MPDir}/rd-warzone/assimp/vector2.h"
+	"${MPDir}/rd-warzone/assimp/vector2.inl"
+	"${MPDir}/rd-warzone/assimp/vector3.h"
+	"${MPDir}/rd-warzone/assimp/vector3.inl"
+	"${MPDir}/rd-warzone/assimp/version.h"
+	"${MPDir}/rd-warzone/assimp/Vertex.h"
+	"${MPDir}/rd-warzone/assimp/XMLTools.h")
+source_group("Assimp" FILES ${MPWarzoneAssimpFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAssimpFiles})
+
 set(MPWarzoneImGuiFiles
 	"${MPDir}/rd-warzone/imgui/ccall/ccall.h"
 	"${MPDir}/rd-warzone/imgui/MagicFile.cpp/magicfile.cpp"
@@ -404,8 +489,8 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-#target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/glsl_optimizer_lib")
+#target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib;../../../lib/assimp-vc140-mt")
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/glsl_optimizer_lib;../../../lib/assimp-vc140-mt")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)

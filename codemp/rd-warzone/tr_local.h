@@ -4173,7 +4173,7 @@ public:
 	qhandle_t			SearchLoaded( const char *fileName );
 	void				InsertLoaded( const char *fileName, qhandle_t handle );
 
-	qboolean			LoadFile( const char *pFileName, void **ppFileBuffer, qboolean *pbAlreadyCached );
+	int					LoadFile( const char *pFileName, void **ppFileBuffer, qboolean *pbAlreadyCached );
 	void				*Allocate( int iSize, void *pvDiskBuffer, const char *psModelFileName, qboolean *bAlreadyFound, memtag_t eTag );
 	void				DeleteAll( void );
 	void				DumpNonPure( void );

@@ -62,7 +62,7 @@ static const byte FakeGLAFile[] =
  * if we're cached already, chuck cached contents into ppFileBuffer
  * and set *pbAlreadyCached to qtrue (otherwise, *pbAlreadyCached = false)
  */
-qboolean CCacheManager::LoadFile( const char *pFileName, void **ppFileBuffer, qboolean *pbAlreadyCached )
+int CCacheManager::LoadFile( const char *pFileName, void **ppFileBuffer, qboolean *pbAlreadyCached )
 {
 	char sFileName[MAX_QPATH];
 
@@ -100,7 +100,7 @@ qboolean CCacheManager::LoadFile( const char *pFileName, void **ppFileBuffer, qb
 
 	ri->Printf( PRINT_DEVELOPER, "C_LoadFile(): Loaded %s from disk\n", pFileName );
 
-	return qtrue;
+	return len;
 }
 
 /*

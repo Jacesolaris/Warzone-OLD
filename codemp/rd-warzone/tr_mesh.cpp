@@ -885,6 +885,8 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 //#define __MERGE_MD3_TEST__
 
+	//ri->Printf(PRINT_WARNING, "Drawing model %s.\n", tr.currentModel->name);
+
 #ifdef __MERGE_MD3_TEST__
 	// This should be done at load, but, I have no idea what i'm doing... *sigh*
 	R_MergeMD3Surfaces(ent, model, fogNum, cubemapIndex);
