@@ -163,9 +163,9 @@ typedef struct assImpHeader_s {
 
 	int				numSkins;
 
-	void			*buffer;
+	//void			*buffer;
 
-	void			*scene;
+	//void			*scene;
 } assImpHeader_t;
 
 /*

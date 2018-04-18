@@ -247,7 +247,7 @@ void SP_misc_lodmodel(void) { // UQ1: Todo - move into the foliage areas system,
 
 	modelIndex = trap->R_RegisterModel(model);
 	if (modelIndex == 0) {
-		trap->Error(ERR_DROP, "misc_lodmodel failed to load model '%s'", model);
+		trap->Print("misc_lodmodel failed to load model '%s'", model);
 		return;
 	}
 

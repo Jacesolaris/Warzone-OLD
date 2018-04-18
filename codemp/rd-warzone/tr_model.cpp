@@ -126,6 +126,9 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 #include "assimp/DefaultLogger.hpp"
 #include "assimp/LogStream.hpp"
 
+// Create an instance of the Importer class
+Assimp::Importer assImpImporter;
+
 std::string AssImp_getBasePath(const std::string& path)
 {
 	size_t pos = path.find_last_of("\\/");
@@ -142,7 +145,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 {
 	int					f, i, j, version;
 
-	assImpHeader_t    *md3Model;
+	//assImpHeader_t		*md3Model;
 
 	mdvModel_t			*mdvModel;
 	mdvFrame_t			*frame;
@@ -151,9 +154,6 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	glIndex_t			*tri;
 	mdvVertex_t			*v;
 	mdvSt_t				*st;
-
-	// Create an instance of the Importer class
-	Assimp::Importer importer;
 
 	std::string basePath = AssImp_getBasePath(modName);
 
@@ -170,35 +170,35 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 
 	//aiProcess_OptimizeGraph                  |  \
 
-	const aiScene* scene = importer.ReadFileFromMemory(buffer, size, aiProcessPreset_TargetRealtime_MaxQuality_Fix, ext);
-
+	const aiScene* scene = assImpImporter.ReadFileFromMemory(buffer, size, aiProcessPreset_TargetRealtime_MaxQuality_Fix, ext);
+	
 	if (!scene)
 	{
-		ri->Printf(PRINT_WARNING, "R_LoadAssImp: %s has no frames\n", modName);
+		ri->Printf(PRINT_WARNING, "R_LoadAssImp: %s could not load.\n", modName);
 		return qfalse;
 	}
 
 	// Generate an emulated MD3 model header... Actually a slightly modified version, but reusing the basic format and version info, etc...
-	md3Model = (assImpHeader_t *)ri->Hunk_Alloc(sizeof(assImpHeader_t), h_low);
+	//md3Model = (assImpHeader_t *)ri->Hunk_Alloc(sizeof(assImpHeader_t), h_low);
 
 	// Record this scene pointer...
-	md3Model->scene = (void *)scene;
+	//md3Model->scene = (void *)scene;
 
 	// Record buffer pointer...
-	md3Model->buffer = buffer;
+	//md3Model->buffer = buffer;
 
 	// Copy the name...
-	strcpy(md3Model->name, modName);
+	//strcpy(md3Model->name, modName);
 
 	// Set the MD3 version...
-	version = md3Model->version = LittleLong(MD3_VERSION);
+	//version = md3Model->version = LittleLong(MD3_VERSION);
 
 	// Set the ident...
-	md3Model->ident = LittleLong(MD3_IDENT);
+	//md3Model->ident = LittleLong(MD3_IDENT);
 
-	md3Model->numFrames = 1;
-	md3Model->numTags = 0;
-	md3Model->numSkins = 0;
+	//md3Model->numFrames = 1;
+	//md3Model->numTags = 0;
+	//md3Model->numSkins = 0;
 
 	mod->type = MOD_MESH;
 	mod->dataSize += size;
@@ -206,16 +206,13 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	qboolean bAlreadyFound = qfalse;
 	mdvModel = mod->data.mdv[lod] = (mdvModel_t *)CModelCache->Allocate(size, buffer, modName, &bAlreadyFound, TAG_MODEL_MD3);
 
-	strcpy(mod->name, modName);
-
-	//  Com_Memcpy(mod->md3[lod], buffer, LittleLong(md3Model->ofsEnd));
 	if (!bAlreadyFound)
 	{	// HACK
-		LL(md3Model->ident);
-		LL(md3Model->version);
-		LL(md3Model->numFrames);
-		LL(md3Model->numTags);
-		LL(md3Model->numSurfaces);
+		//LL(md3Model->ident);
+		//LL(md3Model->version);
+		//LL(md3Model->numFrames);
+		//LL(md3Model->numTags);
+		//LL(md3Model->numSurfaces);
 	}
 	else
 	{
@@ -240,13 +237,13 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 
 	// swap all the frames - Not supported for now, just using a single empty frame with basic data...
 	mdvModel->numFrames = 1;
-	mdvModel->frames = frame = (mdvFrame_t *)ri->Hunk_Alloc(sizeof(*frame) * md3Model->numFrames, h_low);
+	mdvModel->frames = frame = (mdvFrame_t *)ri->Hunk_Alloc(sizeof(*frame) * mdvModel->numFrames, h_low);
 
 	vec3_t localOrigin;
 	VectorSet(localOrigin, 0.0, 0.0, 0.0);
 	float radius = Distance(bounds[0], bounds[1]) / 2.0;
 
-	for (i = 0; i < md3Model->numFrames; i++, frame++)
+	for (i = 0; i < mdvModel->numFrames; i++, frame++)
 	{
 		frame->radius = LittleFloat(radius);
 		for (j = 0; j < 3; j++)
@@ -258,7 +255,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	}
 
 	// swap all the tags - Disabled for now... Not sure if I need tags on non-md3 models...
-	mdvModel->numTags = md3Model->numTags = 0;
+	mdvModel->numTags = /*md3Model->numTags =*/ 0;
 	/*mdvModel->tags = tag = (mdvTag_t *)ri->Hunk_Alloc(sizeof(*tag), h_low);
 
 	md3Tag = (md3Tag_t *)ri->Hunk_Alloc(sizeof(md3Tag_t), h_low);
@@ -284,8 +281,8 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	}*/
 
 	// swap all the surfaces
-	mdvModel->numSurfaces = md3Model->numSurfaces = scene->mNumMeshes;
-	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf) * md3Model->numSurfaces, h_low);
+	mdvModel->numSurfaces = /*md3Model->numSurfaces =*/ scene->mNumMeshes;
+	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf) * mdvModel->numSurfaces, h_low);
 	
 	/*for (i = 0; i < scene->mNumMaterials; i++)
 	{
@@ -428,7 +425,6 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		{
 			if (aiSurf->mNormals != NULL && aiSurf->HasTextureCoords(0))		//HasTextureCoords(texture_coordinates_set)
 			{
-				//glTexCoord2f(aiSurf->mTextureCoords[0][vertexIndex].x, 1 - aiSurf->mTextureCoords[0][vertexIndex].y); //mTextureCoords[channel][vertex]
 				st->st[0] = LittleFloat(aiSurf->mTextureCoords[0][j].x);
 				st->st[1] = LittleFloat(1 - aiSurf->mTextureCoords[0][j].y);
 			}
@@ -497,7 +493,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	}
 
 	// Removed some (most likely collision) surfaces... Makse sure when drawing, that we ignore them...
-	mdvModel->numSurfaces = md3Model->numSurfaces = scene->mNumMeshes - numRemoved;
+	mdvModel->numSurfaces = /*md3Model->numSurfaces =*/ scene->mNumMeshes - numRemoved;
 
 	{
 		srfVBOMDVMesh_t *vboSurf;
@@ -618,6 +614,9 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 #endif //__INSTANCED_MODELS__
 	}
 
+	// No longer need the scene data...
+	assImpImporter.FreeScene();
+
 	return qtrue;
 }
 
@@ -663,17 +662,20 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 			continue;
 		}
 
-		ident = LittleLong(MD3_IDENT);
-
-		loaded = R_LoadAssImp(mod, lod, buf, namebuf, size, fext);
-
-		if (loaded)
+		if (!bAlreadyCached)
 		{
-			mod->numLods++;
-			numLoaded++;
+			ident = LittleLong(MD3_IDENT);
+
+			loaded = R_LoadAssImp(mod, lod, buf, namebuf, size, fext);
+
+			if (loaded)
+			{
+				mod->numLods++;
+				numLoaded++;
+			}
+			else
+				break;
 		}
-		else
-			break;
 	}
 
 	if (numLoaded)
