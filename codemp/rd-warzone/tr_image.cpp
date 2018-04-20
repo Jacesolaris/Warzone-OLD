@@ -500,11 +500,20 @@ static void ResampleTexture( byte *in, int inwidth, int inheight, byte *out,
 	int		i, j;
 	byte	*inrow, *inrow2;
 	int		frac, fracstep;
-	int		p1[2048], p2[2048];
+	int		p1[16384], p2[16384];
 	byte	*pix1, *pix2, *pix3, *pix4;
 
-	if (outwidth>2048)
-		ri->Error(ERR_DROP, "ResampleTexture: max width");
+	if (outwidth > 2048)
+	{
+		if (outwidth > 16384)
+		{
+			ri->Error(ERR_DROP, "ResampleTexture: max width");
+		}
+		else
+		{
+			ri->Printf(PRINT_WARNING, "ResampleTexture: Texture size %i is very large!\n");
+		}
+	}
 								
 	fracstep = inwidth*0x10000/outwidth;
 
@@ -1936,7 +1945,14 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 		width = scaled_width;
 		height = scaled_height;
 	}
-	else if ( scaled_width != width || scaled_height != height ) {
+	else if ( scaled_width != width || scaled_height != height ) 
+	{
+		while (scaled_width > r_imageDownsampleMaxSize->integer || scaled_height > r_imageDownsampleMaxSize->integer)
+		{// Some sanity checking...
+			scaled_width /= 2;
+			scaled_height /= 2;
+		}
+
 		if (data && resampledBuffer)
 		{
 			*resampledBuffer = (byte *)ri->Hunk_AllocateTempMemory( scaled_width * scaled_height * 4 );

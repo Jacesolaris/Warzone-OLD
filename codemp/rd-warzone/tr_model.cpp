@@ -126,6 +126,8 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 #include "assimp/DefaultLogger.hpp"
 #include "assimp/LogStream.hpp"
 
+#define __DEBUG_ASSIMP__
+
 // Create an instance of the Importer class
 Assimp::Importer assImpImporter;
 
@@ -143,7 +145,7 @@ std::string AssImp_getTextureName(const std::string& path)
 
 static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *modName, int size, const char *ext)
 {
-	int					f, i, j, version;
+	int					f, i, j;// , version;
 
 	//assImpHeader_t		*md3Model;
 
@@ -157,7 +159,11 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 
 	std::string basePath = AssImp_getBasePath(modName);
 
-#define ASSIMP_MODEL_SCALE 16.0
+#ifdef __DEBUG_ASSIMP__
+	ri->Printf(PRINT_ERROR, "R_LoadAssImp: Loading model %s. Extension: %s. bufferSize: %i. basePath: %s.\n", modName, ext, size, basePath.c_str());
+#endif //__DEBUG_ASSIMP__
+
+#define ASSIMP_MODEL_SCALE 64.0
 
 #define aiProcessPreset_TargetRealtime_MaxQuality_Fix ( \
 	aiProcessPreset_TargetRealtime_Quality	|  \
@@ -174,7 +180,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	
 	if (!scene)
 	{
-		ri->Printf(PRINT_WARNING, "R_LoadAssImp: %s could not load.\n", modName);
+		ri->Printf(PRINT_ERROR, "R_LoadAssImp: %s could not load. Error: %s\n", modName, assImpImporter.GetErrorString());
 		return qfalse;
 	}
 
@@ -233,7 +239,9 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		}
 	}
 
-	ri->Printf(PRINT_WARNING, "Model %s. Bounds %f %f %f x %f %f %f.\n", modName, bounds[0][0], bounds[0][1], bounds[0][2], bounds[1][0], bounds[1][1], bounds[1][2]);
+#ifdef __DEBUG_ASSIMP__
+	ri->Printf(PRINT_ALL, "Model %s. Bounds %f %f %f x %f %f %f.\n", modName, bounds[0][0], bounds[0][1], bounds[0][2], bounds[1][0], bounds[1][1], bounds[1][2]);
+#endif //__DEBUG_ASSIMP__
 
 	// swap all the frames - Not supported for now, just using a single empty frame with basic data...
 	mdvModel->numFrames = 1;
@@ -284,7 +292,9 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	mdvModel->numSurfaces = /*md3Model->numSurfaces =*/ scene->mNumMeshes;
 	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf) * mdvModel->numSurfaces, h_low);
 	
-	/*for (i = 0; i < scene->mNumMaterials; i++)
+/*
+#ifdef __DEBUG_ASSIMP__
+	for (i = 0; i < scene->mNumMaterials; i++)
 	{
 		ri->Printf(PRINT_WARNING, "Material %i.\n", i);
 
@@ -292,9 +302,11 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		{
 			aiString shaderPath;
 			scene->mMaterials[i]->GetTexture((aiTextureType)j, 0, &shaderPath);
-			ri->Printf(PRINT_WARNING, "%i - %s.\n", j, shaderPath.length ? shaderPath.C_Str() : "NULL");
+			ri->Printf(PRINT_ALL, "%i - %s.\n", j, shaderPath.length ? shaderPath.C_Str() : "NULL");
 		}
-	}*/
+	}
+#endif //__DEBUG_ASSIMP__
+*/
 
 	int numRemoved = 0;
 
@@ -320,7 +332,9 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			char shaderRealPath[256] = { 0 };
 			sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
 			sh = R_FindShader(shaderRealPath, lightmapsNone, stylesDefault, qtrue);
-			ri->Printf(PRINT_WARNING, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_ALL, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
+#endif //__DEBUG_ASSIMP__
 		}
 		else if (StringContainsWord(shaderPath.C_Str(), "/") || StringContainsWord(shaderPath.C_Str(), "\\"))
 		{// We seem to have a full, valid?, path...
@@ -329,7 +343,9 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			shaderPath = out;
 
 			sh = R_FindShader(shaderPath.C_Str(), lightmapsNone, stylesDefault, qtrue);
-			ri->Printf(PRINT_WARNING, "Model: %s. Texture: %s.\n", modName, shaderPath.C_Str());
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_ALL, "Model: %s. Texture: %s.\n", modName, shaderPath.C_Str());
+#endif //__DEBUG_ASSIMP__
 		}
 		else if (shaderPath.length > 0)
 		{// No full path? Append the base dir (the model's directory)...
@@ -340,10 +356,15 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			char shaderRealPath[256] = { 0 };
 			sprintf(shaderRealPath, "%s%s", basePath.c_str(), shaderPath.C_Str());
 			sh = R_FindShader(shaderRealPath, lightmapsNone, stylesDefault, qtrue);
-			ri->Printf(PRINT_WARNING, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_ALL, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
+#endif //__DEBUG_ASSIMP__
 		}
 		else
 		{
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, aiSurf->mName.length ? aiSurf->mName.C_Str() : "NULL", i, shaderPath.length ? shaderPath.C_Str() : "NULL");
+#endif //__DEBUG_ASSIMP__
 			sh = tr.defaultShader;
 		}
 
@@ -646,6 +667,12 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 		fext++;
 	}
 
+/*
+#ifdef __DEBUG_ASSIMP__
+	ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Trying to load model %s. Extenstion %s.\n", name, fext);
+#endif //__DEBUG_ASSIMP__
+*/
+
 	for (lod = MD3_MAX_LODS - 1; lod >= 0; lod--)
 	{
 		if (lod)
@@ -656,25 +683,59 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 		qboolean bAlreadyCached = qfalse;
 
 		int size = CModelCache->LoadFile(namebuf, (void**)&buf, &bAlreadyCached);
-		
+
+/*
+#ifdef __DEBUG_ASSIMP__
+		if (!lod)
+			ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Tried to load model %s. Extenstion %s. bufferSize %i. bAlreadyCached %s.\n", namebuf, fext, size, bAlreadyCached ? "true" : "false");
+#endif //__DEBUG_ASSIMP__
+*/
+
 		if (!size)
 		{
+#ifdef __DEBUG_ASSIMP__
+			if (!lod)
+			{// Only output debug info when missing non-lod versions...
+				ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Model %s has zero size. Doesn't exist???\n", namebuf);
+			}
+#endif //__DEBUG_ASSIMP__
+
 			continue;
 		}
 
-		if (!bAlreadyCached)
+		ident = LittleLong(MD3_IDENT);
+
+		loaded = R_LoadAssImp(mod, lod, buf, namebuf, size, fext);
+
+/*
+#ifdef __DEBUG_ASSIMP__
+		if (!lod)
+			ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Tried to load model %s. Extenstion %s. bufferSize %i. bAlreadyCached %s. loaded %s.\n", namebuf, fext, size, bAlreadyCached ? "true" : "false", loaded ? "true" : "false");
+#endif //__DEBUG_ASSIMP__
+*/
+
+		if (loaded)
 		{
-			ident = LittleLong(MD3_IDENT);
+/*
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_ALL, "R_RegisterAssImp: Loaded model %s.\n", namebuf);
+#endif //__DEBUG_ASSIMP__
+*/
+			mod->numLods++;
+			numLoaded++;
+		}
+		else
+		{
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Model %s does not exist?\n", namebuf);
+#endif //__DEBUG_ASSIMP__
 
-			loaded = R_LoadAssImp(mod, lod, buf, namebuf, size, fext);
-
-			if (loaded)
+			if (!strcmp(fext, "fbx"))
 			{
-				mod->numLods++;
-				numLoaded++;
+				ri->Printf(PRINT_WARNING, "R_RegisterAssImp: FBX model %s failed to load. Probably an unsupported FBX format.\n", namebuf);
 			}
-			else
-				break;
+
+			break;
 		}
 	}
 
@@ -688,7 +749,10 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 			mod->data.mdv[lod] = mod->data.mdv[lod + 1];
 		}
 		
+#ifdef __DEBUG_ASSIMP__
 		ri->Printf(PRINT_WARNING, "R_RegisterAssImp: loaded assimp model %s. modIndex %i. numLods %i. numLoaded %i. numSurfaces %i.\n", name, mod->index, mod->numLods, numLoaded, mod->data.mdv[0]->numSurfaces);
+#endif //__DEBUG_ASSIMP__
+
 		return mod->index;
 	}
 
@@ -972,6 +1036,12 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		{
 			if( !Q_stricmp( ext, modelLoaders[ i ].ext ) )
 			{
+/*
+#ifdef __DEBUG_ASSIMP__
+				ri->Printf(PRINT_ALL, "Found supporting model loader for extenstion %s (%s).\n", ext, modelLoaders[i].ext);
+#endif //__DEBUG_ASSIMP__
+*/
+
 				// Load
 				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
 				break;
@@ -983,6 +1053,12 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		{
 			if( !hModel )
 			{
+/*
+#ifdef __DEBUG_ASSIMP__
+				ri->Printf(PRINT_WARNING, "RE_RegisterModel: Failed to load model filename %s (extension %s). File does not exist? Trying all possible extensions.\n", name, ext[0] ? ext : "NULL");
+#endif //__DEBUG_ASSIMP__
+*/
+
 				// Loader failed, most likely because the file isn't there;
 				// try again without the extension
 				orgNameFailed = qtrue;
@@ -997,6 +1073,14 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			}
 		}
 	}
+/*
+#ifdef __DEBUG_ASSIMP__
+	else
+	{
+		ri->Printf(PRINT_WARNING, "RE_RegisterModel: Extension not found in model filename %s. Trying all possible extensions.\n", name);
+	}
+#endif //__DEBUG_ASSIMP__
+*/
 
 	// Try and find a suitable match using all
 	// the model formats supported
@@ -1020,6 +1104,11 @@ qhandle_t RE_RegisterModel( const char *name ) {
 
 			break;
 		}
+	}
+
+	if (!hModel)
+	{// Try one more time on the original filename, this time using assimp's built-in format detecion...
+		hModel = R_RegisterAssImp(name, mod);
 	}
 
 	CModelCache->InsertLoaded( name, hModel );

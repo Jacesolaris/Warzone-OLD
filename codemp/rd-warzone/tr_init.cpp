@@ -202,6 +202,7 @@ cvar_t  *r_dlightMode;
 cvar_t  *r_pshadowDist;
 cvar_t  *r_imageUpsample;
 cvar_t  *r_imageUpsampleMaxSize;
+cvar_t	*r_imageDownsampleMaxSize;
 cvar_t  *r_imageUpsampleType;
 cvar_t  *r_genNormalMaps;
 cvar_t  *r_dlightShadows;
@@ -1545,7 +1546,8 @@ void R_Register( void )
 	r_pshadowDist = ri->Cvar_Get( "r_pshadowDist", "65536.0", CVAR_ARCHIVE );
 	r_mergeLightmaps = ri->Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsample = ri->Cvar_Get( "r_imageUpsample", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_imageUpsampleMaxSize = ri->Cvar_Get( "r_imageUpsampleMaxSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
+	r_imageUpsampleMaxSize = ri->Cvar_Get( "r_imageUpsampleMaxSize", "2048", CVAR_ARCHIVE | CVAR_LATCH );
+	r_imageDownsampleMaxSize = ri->Cvar_Get("r_imageUpsampleMaxSize", "2048", CVAR_ARCHIVE | CVAR_LATCH);
 	r_imageUpsampleType = ri->Cvar_Get( "r_imageUpsampleType", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_genNormalMaps = ri->Cvar_Get( "r_genNormalMaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 

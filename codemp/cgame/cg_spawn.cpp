@@ -140,6 +140,29 @@ char    *vtos( const vec3_t v ) {
 
 	return s;
 }
+
+char	FAILED_MODELS[1024][MAX_QPATH] = { 0 };
+int		FAILED_MODELS_TOTAL = 0;
+
+void CG_ModelFailReport(char *name)
+{// Just to stop spamming console with the same model being reported often after fail. Report once, then ignore.
+	for (int i = 0; i < FAILED_MODELS_TOTAL; i++)
+	{
+		if (!strcmp(name, FAILED_MODELS[i]))
+		{// Already reported this one... Don't spam...
+			return;
+		}
+	}
+
+	trap->Print("^2Failed to load model '%s'\n", name);
+
+	if (FAILED_MODELS_TOTAL < 1024)
+	{// But never go over the sane 1024 limit...
+		strncpy(FAILED_MODELS[FAILED_MODELS_TOTAL], name, MAX_QPATH);
+		FAILED_MODELS_TOTAL++;
+	}
+}
+
 void SP_misc_model_static( void ) {
 	char* model;
 	float angle;
@@ -159,7 +182,9 @@ void SP_misc_model_static( void ) {
 	CG_SpawnString( "model", "", &model );
 
 	if( !model || !model[0] ) {
-		trap->Error( ERR_DROP, "misc_model_static with no model." );
+		//trap->Error( ERR_DROP, "misc_model_static with no model." );
+		CG_ModelFailReport(model);
+		return;
 	}
 
 	CG_SpawnVector( "origin", "0 0 0", org );
@@ -207,6 +232,7 @@ void SP_misc_model_static( void ) {
 		staticmodel->radius = 0;
 	}
 }
+
 void SP_misc_lodmodel(void) { // UQ1: Todo - move into the foliage areas system, and actually do billboard lods??? For now just testing render speed using models instead of bsp data.
 	char* model = NULL;
 	char* overrideShader = NULL;
@@ -247,7 +273,7 @@ void SP_misc_lodmodel(void) { // UQ1: Todo - move into the foliage areas system,
 
 	modelIndex = trap->R_RegisterModel(model);
 	if (modelIndex == 0) {
-		trap->Print("misc_lodmodel failed to load model '%s'", model);
+		CG_ModelFailReport(model);
 		return;
 	}
 
