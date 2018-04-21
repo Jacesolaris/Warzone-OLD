@@ -143,6 +143,159 @@ std::string AssImp_getTextureName(const std::string& path)
 	return (std::string::npos == pos) ? "" : path.substr(pos + 1, std::string::npos);
 }
 
+char modelTexName[512] = { 0 }; // not thread safe, but we are not threading anywhere here...
+
+char *FS_TextureFileExists(const char *name)
+{
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return NULL;
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.png", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.tga", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.jpg", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.dds", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.gif", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.bmp", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	memset(&modelTexName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
+	sprintf(modelTexName, "%s.ico", name);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	return NULL;
+}
+
+std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfaceName, std::string shaderPath)
+{// See if we can find any missing textures, by also looking for them in the model's directory, when they are not found... Return original path if nothing is found...
+	qboolean	foundName = qfalse;
+
+	if (shaderPath.length() > 0 && ri->FS_FileExists(shaderPath.c_str()))
+	{// Original file+path exists... Use it...
+		foundName = qtrue;
+	}
+
+	if (!foundName && shaderPath.length() > 0 && FS_TextureFileExists(shaderPath.c_str()))
+	{// Original file+path exists... Use it...
+		char *nExt = FS_TextureFileExists(shaderPath.c_str());
+
+		if (nExt && nExt[0])
+		{
+			shaderPath = shaderPath;
+			foundName = qtrue;
+		}
+		foundName = qtrue;
+	}
+
+	// Try to find the file in the original model's directory...
+	if (!foundName && shaderPath.length() > 0)
+	{
+		std::string basePath = AssImp_getBasePath(modelName);
+
+		char out[256] = { 0 };
+		COM_StripExtension(shaderPath.c_str(), out, sizeof(out));
+		std::string textureName = out;
+
+		char shaderRealPath[256] = { 0 };
+		sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
+
+		char *nExt = FS_TextureFileExists(shaderRealPath);
+
+		if (nExt && nExt[0])
+		{
+			shaderPath = shaderRealPath;
+			foundName = qtrue;
+		}
+	}
+
+	// Try looking for the surface name as a texture, if we were provided a name...
+	if (!foundName && surfaceName.length() > 0)
+	{
+		if (!foundName && surfaceName.length() > 0 && FS_TextureFileExists(surfaceName.c_str()))
+		{// See if we can see a file at the surfaceName location (trying all possible extensions)...
+			char *nExt = FS_TextureFileExists(surfaceName.c_str());
+
+			if (nExt && nExt[0])
+			{
+				shaderPath = surfaceName; // we don't actually need/want the extension.
+				foundName = qtrue;
+			}
+			foundName = qtrue;
+		}
+
+		if (!foundName && surfaceName.length() > 0)
+		{// Try to find the file in the original model path...
+			std::string basePath = AssImp_getBasePath(modelName);
+
+			char out[256] = { 0 };
+			COM_StripExtension(surfaceName.c_str(), out, sizeof(out));
+			std::string textureName = out;
+
+			char shaderRealPath[256] = { 0 };
+			sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
+
+			char *nExt = FS_TextureFileExists(shaderRealPath);
+
+			if (nExt && nExt[0])
+			{
+				shaderPath = shaderRealPath; // we don't actually need/want the extension.
+				foundName = qtrue;
+			}
+		}
+	}
+
+	return shaderPath;
+}
+
 static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *modName, int size, const char *ext)
 {
 	int					f, i, j;// , version;
@@ -323,44 +476,10 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 
 		std::string textureName = AssImp_getTextureName(shaderPath.C_Str());
 
-		if (textureName.length() > 0)
-		{// Rebuild path, the original path name had silly dev path... Convert to basePath/filename
-			char out[256] = { 0 };
-			COM_StripExtension(textureName.c_str(), out, sizeof(out));
-			textureName = out;
+		std::string finalPath = R_FindAndAdjustShaderNames(modName, shaderPath.C_Str(), textureName);
+		sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
 
-			char shaderRealPath[256] = { 0 };
-			sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
-			sh = R_FindShader(shaderRealPath, lightmapsNone, stylesDefault, qtrue);
-#ifdef __DEBUG_ASSIMP__
-			ri->Printf(PRINT_ALL, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
-#endif //__DEBUG_ASSIMP__
-		}
-		else if (StringContainsWord(shaderPath.C_Str(), "/") || StringContainsWord(shaderPath.C_Str(), "\\"))
-		{// We seem to have a full, valid?, path...
-			char out[256] = { 0 };
-			COM_StripExtension(shaderPath.C_Str(), out, sizeof(out));
-			shaderPath = out;
-
-			sh = R_FindShader(shaderPath.C_Str(), lightmapsNone, stylesDefault, qtrue);
-#ifdef __DEBUG_ASSIMP__
-			ri->Printf(PRINT_ALL, "Model: %s. Texture: %s.\n", modName, shaderPath.C_Str());
-#endif //__DEBUG_ASSIMP__
-		}
-		else if (shaderPath.length > 0)
-		{// No full path? Append the base dir (the model's directory)...
-			char out[256] = { 0 };
-			COM_StripExtension(shaderPath.C_Str(), out, sizeof(out));
-			shaderPath = out;
-
-			char shaderRealPath[256] = { 0 };
-			sprintf(shaderRealPath, "%s%s", basePath.c_str(), shaderPath.C_Str());
-			sh = R_FindShader(shaderRealPath, lightmapsNone, stylesDefault, qtrue);
-#ifdef __DEBUG_ASSIMP__
-			ri->Printf(PRINT_ALL, "Model: %s. Texture: %s.\n", modName, shaderRealPath);
-#endif //__DEBUG_ASSIMP__
-		}
-		else
+		if (sh == NULL || sh == tr.defaultShader)
 		{
 #ifdef __DEBUG_ASSIMP__
 			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, aiSurf->mName.length ? aiSurf->mName.C_Str() : "NULL", i, shaderPath.length ? shaderPath.C_Str() : "NULL");
@@ -1557,6 +1676,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 	int             version;
 	int             size;
 
+	std::string basePath = AssImp_getBasePath(modName);
+
 	md3Model = (md3Header_t *) buffer;
 
 	version = LittleLong(md3Model->version);
@@ -1703,7 +1824,23 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 		{
 			shader_t       *sh;
 
+#if 1 // Search for missing textures...
+			std::string textureName = md3Shader->name;
+			
+			std::string finalPath = R_FindAndAdjustShaderNames(modName, md3Surf->name, textureName);
+			sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+			if (sh == NULL || sh == tr.defaultShader)
+			{
+#ifdef __DEBUG_ASSIMP__
+				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, (md3Surf->name && md3Surf->name[0]) ? md3Surf->name : "NULL", i, textureName.length() ? textureName.c_str() : "NULL");
+#endif //__DEBUG_ASSIMP__
+				sh = tr.defaultShader;
+			}
+#else
 			sh = R_FindShader(md3Shader->name, lightmapsNone, stylesDefault, qtrue);
+#endif
+
 			if(sh->defaultShader)
 			{
 				*shaderIndex = 0;
@@ -2172,7 +2309,23 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			Q_strlwr( surf->name );
 
 			// register the shaders
+#if 1 // Search for missing textures...
+			std::string textureName = surf->shader;
+
+			std::string finalPath = R_FindAndAdjustShaderNames(mod_name, surf->name, textureName);
+			sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+			if (sh == NULL || sh == tr.defaultShader)
+			{
+#ifdef __DEBUG_ASSIMP__
+				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", mod_name, (surf->name && surf->name[0]) ? surf->name : "NULL", i, textureName.length() ? textureName.c_str() : "NULL");
+#endif //__DEBUG_ASSIMP__
+				sh = tr.defaultShader;
+			}
+#else
 			sh = R_FindShader(surf->shader, lightmapsNone, stylesDefault, qtrue);
+#endif
+
 			if ( sh->defaultShader ) {
 				surf->shaderIndex = 0;
 			} else {
