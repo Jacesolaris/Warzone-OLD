@@ -1344,165 +1344,6 @@ void R_CreateRoadMapImage(void)
 	}
 }
 
-#define SIEGECHAR_TAB 9 //perhaps a bit hacky, but I don't think there's any define existing for "tab"
-
-int R_GetPairedValue(char *buf, char *key, char *outbuf)
-{
-	int i = 0;
-	int j;
-	int k;
-	char checkKey[4096];
-
-	while (buf[i])
-	{
-		if (buf[i] != ' ' && buf[i] != '{' && buf[i] != '}' && buf[i] != '\n' && buf[i] != '\r')
-		{ //we're on a valid character
-			if (buf[i] == '/' &&
-				buf[i + 1] == '/')
-			{ //this is a comment, so skip over it
-				while (buf[i] && buf[i] != '\n' && buf[i] != '\r')
-				{
-					i++;
-				}
-			}
-			else
-			{ //parse to the next space/endline/eos and check this value against our key value.
-				j = 0;
-
-				while (buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r' && buf[i] != SIEGECHAR_TAB && buf[i])
-				{
-					if (buf[i] == '/' && buf[i + 1] == '/')
-					{ //hit a comment, break out.
-						break;
-					}
-
-					checkKey[j] = buf[i];
-					j++;
-					i++;
-				}
-				checkKey[j] = 0;
-
-				k = i;
-
-				while (buf[k] && (buf[k] == ' ' || buf[k] == '\n' || buf[k] == '\r'))
-				{
-					k++;
-				}
-
-				if (buf[k] == '{')
-				{ //this is not the start of a value but rather of a group. We don't want to look in subgroups so skip over the whole thing.
-					int openB = 0;
-
-					while (buf[i] && (buf[i] != '}' || openB))
-					{
-						if (buf[i] == '{')
-						{
-							openB++;
-						}
-						else if (buf[i] == '}')
-						{
-							openB--;
-						}
-
-						if (openB < 0)
-						{
-							Com_Error(ERR_DROP, "Unexpected closing bracket (too many) while parsing to end of group '%s'", checkKey);
-						}
-
-						if (buf[i] == '}' && !openB)
-						{ //this is the end of the group
-							break;
-						}
-						i++;
-					}
-
-					if (buf[i] == '}')
-					{
-						i++;
-					}
-				}
-				else
-				{
-					//Is this the one we want?
-					if (buf[i] != '/' || buf[i + 1] != '/')
-					{ //make sure we didn't stop on a comment, if we did then this is considered an error in the file.
-						if (!Q_stricmp(checkKey, key))
-						{ //guess so. Parse along to the next valid character, then put that into the output buffer and return 1.
-							while ((buf[i] == ' ' || buf[i] == '\n' || buf[i] == '\r' || buf[i] == SIEGECHAR_TAB) && buf[i])
-							{
-								i++;
-							}
-
-							if (buf[i])
-							{ //We're at the start of the value now.
-								qboolean parseToQuote = qfalse;
-
-								if (buf[i] == '\"')
-								{ //if the value is in quotes, then stop at the next quote instead of ' '
-									i++;
-									parseToQuote = qtrue;
-								}
-
-								j = 0;
-								while (((!parseToQuote && buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r') || (parseToQuote && buf[i] != '\"')))
-								{
-									if (buf[i] == '/' &&
-										buf[i + 1] == '/')
-									{ //hit a comment after the value? This isn't an ideal way to be writing things, but we'll support it anyway.
-										break;
-									}
-									outbuf[j] = buf[i];
-									j++;
-									i++;
-
-									if (!buf[i])
-									{
-										if (parseToQuote)
-										{
-											Com_Error(ERR_DROP, "Unexpected EOF while looking for endquote, error finding paired value for '%s'", key);
-										}
-										else
-										{
-											Com_Error(ERR_DROP, "Unexpected EOF while looking for space or endline, error finding paired value for '%s'", key);
-										}
-									}
-								}
-								outbuf[j] = 0;
-
-								return 1; //we got it, so return 1.
-							}
-							else
-							{
-								Com_Error(ERR_DROP, "Error parsing file, unexpected EOF while looking for valud '%s'", key);
-							}
-						}
-						else
-						{ //if that wasn't the desired key, then make sure we parse to the end of the line, so we don't mistake a value for a key
-							while (buf[i] && buf[i] != '\n')
-							{
-								i++;
-							}
-						}
-					}
-					else
-					{
-						Com_Error(ERR_DROP, "Error parsing file, found comment, expected value for '%s'", key);
-					}
-				}
-			}
-		}
-
-		if (!buf[i])
-		{
-			break;
-		}
-
-		i++;
-	}
-
-	return 0; //guess we never found it.
-}
-
 qboolean	DISABLE_DEPTH_PREPASS = qfalse;
 qboolean	LODMODEL_MAP = qfalse;
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
@@ -2351,6 +2192,7 @@ void R_LoadMapInfo(void)
 	tr.defaultDetail = tr.whiteImage;
 #endif
 
+#if 0 // Gonna reuse random2k[1] to save some vram...
 	if (!R_TextureFileExists("gfx/splatControlImage.tga"))
 	{
 		R_CreateRandom2KImage("splatControl");
@@ -2360,6 +2202,9 @@ void R_LoadMapInfo(void)
 	{
 		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 	}
+#else
+	tr.defaultSplatControlImage = tr.random2KImage[1];
+#endif
 
 	if (r_colorCorrection->integer)
 	{

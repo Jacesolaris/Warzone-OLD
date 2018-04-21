@@ -126,8 +126,6 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 #include "assimp/DefaultLogger.hpp"
 #include "assimp/LogStream.hpp"
 
-#define __DEBUG_ASSIMP__
-
 // Create an instance of the Importer class
 Assimp::Importer assImpImporter;
 
@@ -298,9 +296,7 @@ std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfac
 
 static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *modName, int size, const char *ext)
 {
-	int					f, i, j;// , version;
-
-	//assImpHeader_t		*md3Model;
+	int					f, i, j;
 
 	mdvModel_t			*mdvModel;
 	mdvFrame_t			*frame;
@@ -337,43 +333,13 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		return qfalse;
 	}
 
-	// Generate an emulated MD3 model header... Actually a slightly modified version, but reusing the basic format and version info, etc...
-	//md3Model = (assImpHeader_t *)ri->Hunk_Alloc(sizeof(assImpHeader_t), h_low);
-
-	// Record this scene pointer...
-	//md3Model->scene = (void *)scene;
-
-	// Record buffer pointer...
-	//md3Model->buffer = buffer;
-
-	// Copy the name...
-	//strcpy(md3Model->name, modName);
-
-	// Set the MD3 version...
-	//version = md3Model->version = LittleLong(MD3_VERSION);
-
-	// Set the ident...
-	//md3Model->ident = LittleLong(MD3_IDENT);
-
-	//md3Model->numFrames = 1;
-	//md3Model->numTags = 0;
-	//md3Model->numSkins = 0;
-
 	mod->type = MOD_MESH;
 	mod->dataSize += size;
 
 	qboolean bAlreadyFound = qfalse;
 	mdvModel = mod->data.mdv[lod] = (mdvModel_t *)CModelCache->Allocate(size, buffer, modName, &bAlreadyFound, TAG_MODEL_MD3);
 
-	if (!bAlreadyFound)
-	{	// HACK
-		//LL(md3Model->ident);
-		//LL(md3Model->version);
-		//LL(md3Model->numFrames);
-		//LL(md3Model->numTags);
-		//LL(md3Model->numSurfaces);
-	}
-	else
+	if (bAlreadyFound)
 	{
 		CModelCache->AllocateShaders(modName);
 	}
@@ -416,7 +382,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	}
 
 	// swap all the tags - Disabled for now... Not sure if I need tags on non-md3 models...
-	mdvModel->numTags = /*md3Model->numTags =*/ 0;
+	mdvModel->numTags = 0;
 	/*mdvModel->tags = tag = (mdvTag_t *)ri->Hunk_Alloc(sizeof(*tag), h_low);
 
 	md3Tag = (md3Tag_t *)ri->Hunk_Alloc(sizeof(md3Tag_t), h_low);
@@ -442,24 +408,8 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	}*/
 
 	// swap all the surfaces
-	mdvModel->numSurfaces = /*md3Model->numSurfaces =*/ scene->mNumMeshes;
+	mdvModel->numSurfaces = scene->mNumMeshes;
 	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf) * mdvModel->numSurfaces, h_low);
-	
-/*
-#ifdef __DEBUG_ASSIMP__
-	for (i = 0; i < scene->mNumMaterials; i++)
-	{
-		ri->Printf(PRINT_WARNING, "Material %i.\n", i);
-
-		for (j = 0; j < aiTextureType_REFLECTION + 1; j++)
-		{
-			aiString shaderPath;
-			scene->mMaterials[i]->GetTexture((aiTextureType)j, 0, &shaderPath);
-			ri->Printf(PRINT_ALL, "%i - %s.\n", j, shaderPath.length ? shaderPath.C_Str() : "NULL");
-		}
-	}
-#endif //__DEBUG_ASSIMP__
-*/
 
 	int numRemoved = 0;
 
@@ -501,7 +451,6 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		surf->model = mdvModel;
 
 		// copy surface name
-		//Q_strncpyz(surf->name, md3Surf->name, sizeof(surf->name));
 		Q_strncpyz(surf->name, aiSurf->mName.C_Str(), sizeof(surf->name));
 
 		// lowercase the surface name so skin compares are faster
@@ -633,7 +582,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 	}
 
 	// Removed some (most likely collision) surfaces... Makse sure when drawing, that we ignore them...
-	mdvModel->numSurfaces = /*md3Model->numSurfaces =*/ scene->mNumMeshes - numRemoved;
+	mdvModel->numSurfaces = scene->mNumMeshes - numRemoved;
 
 	{
 		srfVBOMDVMesh_t *vboSurf;

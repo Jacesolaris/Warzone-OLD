@@ -86,6 +86,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define __RENDERER_THREADING__				// Just testing...
 
+
+//#define __DEBUG_ASSIMP__						// Show debug info for loading models through assimp library...
+
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
 // -----------------------------------------------------------------------------------------------------------------------------

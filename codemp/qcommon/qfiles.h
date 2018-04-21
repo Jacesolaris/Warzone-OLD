@@ -149,25 +149,6 @@ typedef struct md3Header_s {
 	int			ofsEnd;				// end of file
 } md3Header_t;
 
-typedef struct assImpHeader_s {
-	int				ident;
-	int				version;
-
-	char			name[MAX_QPATH];	// model name
-
-	int				flags;
-
-	int				numFrames;
-	int				numTags;
-	int				numSurfaces;
-
-	int				numSkins;
-
-	//void			*buffer;
-
-	//void			*scene;
-} assImpHeader_t;
-
 /*
 ==============================================================================
 
