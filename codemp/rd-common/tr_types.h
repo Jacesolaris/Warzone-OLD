@@ -98,6 +98,7 @@ typedef enum {
 	RT_ENT_CHAIN,
 	RT_GRASS,
 	RT_PLANT,
+	RT_MODEL_INSTANCED,
 
 	RT_MAX_REF_ENTITY_TYPE
 } refEntityType_t;

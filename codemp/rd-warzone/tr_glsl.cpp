@@ -1297,6 +1297,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ViewLeft", GLSL_VEC3, 1 },
 	{ "u_ViewUp", GLSL_VEC3, 1 },
 
+	{ "u_InstancePositions", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
+	{ "u_InstanceScales", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
+	{ "u_InstanceMatrixes", GLSL_MAT16, MAX_INSTANCED_MODEL_INSTANCES },
+
 	{ "u_InvTexRes", GLSL_VEC2, 1 },
 	{ "u_AutoExposureMinMax", GLSL_VEC2, 1 },
 	{ "u_ToneMinAvgMaxLinear", GLSL_VEC3, 1 },
@@ -1720,6 +1724,8 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 
 	if (r_lowVram->integer)
 		Q_strcat(dest, size, "#define __LQ_MODE__\n");
+
+	Q_strcat(dest, size, va("#define MAX_INSTANCED_MODEL_INSTANCES %i\n", MAX_INSTANCED_MODEL_INSTANCES));
 
 	Q_strcat(dest, size, va("#define MAX_DEFERRED_LIGHTS %i\n", MAX_DEFERRED_LIGHTS));
 	Q_strcat(dest, size, va("#define MAX_DEFERRED_LIGHT_RANGE %f\n", MAX_DEFERRED_LIGHT_RANGE));
@@ -2936,10 +2942,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 #ifdef __INSTANCED_MODELS__
-	attribs = /*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION;
+	attribs = ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 /*| ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION*/;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.instanceShader, "instance", attribs, qtrue, qfalse, qfalse, NULL, qfalse, "330", fallbackShader_instance_vp, fallbackShader_instance_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.instanceShader, "instance", attribs, qtrue, qfalse, qfalse, NULL, qtrue, "330", fallbackShader_instance_vp, fallbackShader_instance_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load instance shader!");
 	}

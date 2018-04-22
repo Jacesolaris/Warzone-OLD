@@ -238,6 +238,8 @@ cvar_t	*r_colorbits;
 cvar_t	*r_texturebits;
 cvar_t  *r_ext_multisample;
 
+cvar_t	*r_instancing;
+
 cvar_t	*r_drawBuffer;
 cvar_t	*r_lightmap;
 cvar_t	*r_vertexLight;
@@ -1481,6 +1483,7 @@ void R_Register( void )
 	r_depthbits = ri->Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_multisample = ri->Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri->Cvar_CheckRange( r_ext_multisample, 0, 4, qtrue );
+	r_instancing = ri->Cvar_Get("r_instancing", "0", CVAR_ARCHIVE);
 	r_overBrightBits = ri->Cvar_Get ("r_overBrightBits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri->Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_mode = ri->Cvar_Get( "r_mode", "4", CVAR_ARCHIVE | CVAR_LATCH );

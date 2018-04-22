@@ -2216,7 +2216,36 @@ const void	*RB_WorldEffects( const void *data )
 	}
 
 #ifdef __INSTANCED_MODELS__
-	R_AddInstancedModelsToScene();
+	if (tr.world
+		&& !(tr.viewParms.flags & VPF_NOPOSTPROCESS)
+		&& !(tr.refdef.rdflags & RDF_NOWORLDMODEL)
+		&& !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)
+		&& !(tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+	{
+		matrix_t previousModelViewMarix, previousProjectionMatrix;
+
+		Matrix16Copy(glState.modelview, previousModelViewMarix);
+		Matrix16Copy(glState.projection, previousProjectionMatrix);
+
+		FBO_t *previousFBO = glState.currentFBO;
+		float previousZfar = tr.viewParms.zFar;
+		uint32_t previousState = glState.glStateBits;
+		int previousCull = glState.faceCulling;
+
+		R_AddInstancedModelsToScene();
+
+		if (tess.shader)
+		{
+			RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
+		}
+
+		FBO_Bind(previousFBO);
+		GL_SetProjectionMatrix(previousProjectionMatrix);
+		GL_SetModelviewMatrix(previousModelViewMarix);
+		tr.viewParms.zFar = previousZfar;
+		GL_State(previousState);
+		GL_Cull(previousCull);
+	}
 #endif //__INSTANCED_MODELS__
 
 	if (!tr.world

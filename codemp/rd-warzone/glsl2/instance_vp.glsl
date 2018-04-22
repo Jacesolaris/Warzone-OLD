@@ -1,19 +1,22 @@
 #extension GL_EXT_draw_instanced : enable
-//#extension GL_ARB_draw_instanced : enable
 
-//attribute vec3 attr_Position;
-//attribute vec4 attr_TexCoord0;
+attribute vec3		attr_Position;
+attribute vec3		attr_Normal;
+attribute vec4		attr_TexCoord0;
 
-attribute vec3		attr_InstancesPosition;
-attribute mat4		attr_InstancesMVP;
+uniform mat4		u_ModelViewProjectionMatrix;
 
-//uniform mat4   u_ModelViewProjectionMatrix;
-//uniform mat4   u_ModelMatrix;
+uniform vec3		u_InstancePositions[MAX_INSTANCED_MODEL_INSTANCES];
+uniform vec3		u_InstanceScales[MAX_INSTANCED_MODEL_INSTANCES];
 
-varying vec2   var_Tex1;
+varying vec2		var_Tex1;
+varying vec3		var_VertPos;
+varying vec3		var_Normal;
 
 void main()
 {
-	gl_Position = attr_InstancesMVP * vec4(attr_InstancesPosition, 1.0);
-	//var_Tex1 = attr_TexCoord0.st;
+	var_VertPos = (attr_Position * u_InstanceScales[gl_InstanceID]) + u_InstancePositions[gl_InstanceID];
+	gl_Position = u_ModelViewProjectionMatrix * vec4(var_VertPos, 1.0);
+	var_Tex1 = attr_TexCoord0.st;
+	var_Normal = attr_Normal * 2.0 - 1.0;
 }

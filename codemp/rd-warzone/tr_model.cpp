@@ -496,9 +496,9 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		{
 			aiVector3D xyz = aiSurf->mVertices[j];
 
-			v->xyz[0] = LittleShort(xyz.x) * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE;
-			v->xyz[1] = LittleShort(xyz.y) * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE;
-			v->xyz[2] = LittleShort(xyz.z) * MD3_XYZ_SCALE * ASSIMP_MODEL_SCALE;
+			v->xyz[0] = LittleShort(xyz.x);
+			v->xyz[1] = LittleShort(xyz.y);
+			v->xyz[2] = LittleShort(xyz.z);
 
 			aiVector3D norm = aiSurf->mNormals[j];
 
@@ -593,12 +593,14 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		vboSurf = mdvModel->vboSurfaces;
 		surf = mdvModel->surfaces;
 
+		/*
 #ifdef __INSTANCED_MODELS__
 		GLSL_BindProgram(&tr.instanceShader);
 		mdvModel->vao = NULL;
 		qglGenVertexArrays(1, &mdvModel->vao);
 		qglBindVertexArray(mdvModel->vao);
 #endif //__INSTANCED_MODELS__
+		*/
 
 		for (i = 0; i < mdvModel->numSurfaces; i++, vboSurf++, surf++)
 		{
@@ -657,6 +659,11 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			vboSurf->minIndex = 0;
 			vboSurf->maxIndex = surf->numVerts;
 
+/*#ifdef __INSTANCED_MODELS__
+			if (mdvModel->numFrames <= 1)
+				vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_STATIC);
+			else
+#endif //__INSTANCED_MODELS__*/
 			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
 
 			vboSurf->vbo->ofs_xyz = ofs_xyz;
@@ -675,17 +682,17 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			vboSurf->ibo = R_CreateIBO((byte *)surf->indexes, sizeof(glIndex_t) * surf->numIndexes, VBO_USAGE_STATIC);
 		}
 
+		/*
 #ifdef __INSTANCED_MODELS__
-		matrix_t matr[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-		vec3_t vecz[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-
 		qglGenBuffers(1, &tr.instanceShader.instances_buffer);
 		qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
-		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), vecz, GL_STREAM_DRAW);
+		qglBindBufferBase(GL_ARRAY_BUFFER, ATTR_INDEX_INSTANCES_POSITION, tr.instanceShader.instances_buffer);
+		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), NULL, GL_STREAM_DRAW);
 
 		qglGenBuffers(1, &tr.instanceShader.instances_mvp);
 		qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
-		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(matrix_t), matr, GL_STREAM_DRAW);
+		qglBindBufferBase(GL_ARRAY_BUFFER, ATTR_INDEX_INSTANCES_MVP, tr.instanceShader.instances_mvp);
+		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(matrix_t), NULL, GL_STREAM_DRAW);
 
 		mdvModel->ofs_instancesPosition = 0;
 		mdvModel->ofs_instancesMVP = MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t);
@@ -693,6 +700,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		qglBindVertexArray(0);
 		GLSL_BindProgram(NULL);
 #endif //__INSTANCED_MODELS__
+		*/
 	}
 
 	// No longer need the scene data...
@@ -1911,12 +1919,14 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 		vboSurf = mdvModel->vboSurfaces;
 		surf = mdvModel->surfaces;
 
+		/*
 #ifdef __INSTANCED_MODELS__
 		GLSL_BindProgram(&tr.instanceShader);
 		mdvModel->vao = NULL;
 		qglGenVertexArrays(1, &mdvModel->vao);
 		qglBindVertexArray(mdvModel->vao);
 #endif //__INSTANCED_MODELS__
+		*/
 
 		for (i = 0; i < mdvModel->numSurfaces; i++, vboSurf++, surf++)
 		{
@@ -1975,6 +1985,11 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->minIndex = 0;
 			vboSurf->maxIndex = surf->numVerts;
 
+/*#ifdef __INSTANCED_MODELS__
+			if (mdvModel->numFrames <= 1)
+				vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_STATIC);
+			else
+#endif //__INSTANCED_MODELS__*/
 			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
 
 			vboSurf->vbo->ofs_xyz       = ofs_xyz;
@@ -1993,17 +2008,17 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			vboSurf->ibo = R_CreateIBO ((byte *)surf->indexes, sizeof (glIndex_t) * surf->numIndexes, VBO_USAGE_STATIC);
 		}
 
+		/*
 #ifdef __INSTANCED_MODELS__
-		matrix_t matr[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-		vec3_t vecz[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-
 		qglGenBuffers(1, &tr.instanceShader.instances_buffer);
 		qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
-		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), vecz, GL_STREAM_DRAW);
+		qglBindBufferBase(GL_ARRAY_BUFFER, ATTR_INDEX_INSTANCES_POSITION, tr.instanceShader.instances_buffer);
+		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t), NULL, GL_STREAM_DRAW);
 
 		qglGenBuffers(1, &tr.instanceShader.instances_mvp);
 		qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
-		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(matrix_t), matr, GL_STREAM_DRAW);
+		qglBindBufferBase(GL_ARRAY_BUFFER, ATTR_INDEX_INSTANCES_MVP, tr.instanceShader.instances_mvp);
+		qglBufferData(GL_ARRAY_BUFFER, MAX_INSTANCED_MODEL_INSTANCES * sizeof(matrix_t), NULL, GL_STREAM_DRAW);
 
 		mdvModel->ofs_instancesPosition = 0;
 		mdvModel->ofs_instancesMVP = MAX_INSTANCED_MODEL_INSTANCES * sizeof(vec3_t);
@@ -2011,6 +2026,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 		qglBindVertexArray(0);
 		GLSL_BindProgram(NULL);
 #endif //__INSTANCED_MODELS__
+		*/
 	}
 
 	return qtrue;

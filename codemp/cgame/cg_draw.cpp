@@ -11097,13 +11097,26 @@ void CG_DrawMiscStaticModels( void ) {
 	memset( &ent, 0, sizeof( ent ) );
 
 	ent.reType = RT_MODEL;
+
 	ent.frame = 0;
 	ent.nonNormalizedAxes = qtrue;
+	VectorSet(ent.modelScale, 1.0, 1.0, 1.0);
 
 	// static models don't project shadows
 	ent.renderfx = RF_NOSHADOW;
 
 	for( i = 0; i < cgs.numMiscStaticModels; i++ ) {
+		if (cgs.miscStaticModels[i].useInstancing)
+		{
+			ent.reType = RT_MODEL_INSTANCED;
+			VectorCopy(cgs.miscStaticModels[i].modelScale, ent.modelScale);
+		}
+		else
+		{
+			ent.reType = RT_MODEL;
+			VectorSet(ent.modelScale, 1.0, 1.0, 1.0);
+		}
+
 		VectorCopy(cgs.miscStaticModels[i].org, cullorg);
 		cullorg[2] += 1.0f;
 

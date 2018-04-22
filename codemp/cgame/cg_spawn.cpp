@@ -285,6 +285,12 @@ void SP_misc_lodmodel(void) { // UQ1: Todo - move into the foliage areas system,
 	if (overrideShader && overrideShader[0] && strlen(overrideShader) > 4)
 	{
 		staticmodel->overrideShader = trap->R_RegisterShader(overrideShader);
+		staticmodel->useInstancing = qfalse;
+	}
+	else
+	{
+		staticmodel->useInstancing = qtrue;
+		VectorCopy(vScale, staticmodel->modelScale);
 	}
 	
 	AnglesToAxis(angles, staticmodel->axes);

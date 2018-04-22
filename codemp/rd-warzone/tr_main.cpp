@@ -717,7 +717,7 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	vec3_t	delta;
 	float	axisLength;
 	
-	if ( ent->e.reType != RT_MODEL && ent->e.reType != RT_GRASS && ent->e.reType != RT_PLANT ) {
+	if ( ent->e.reType != RT_MODEL && ent->e.reType != RT_GRASS && ent->e.reType != RT_PLANT && ent->e.reType != RT_MODEL_INSTANCED) {
 		*ori = viewParms->world;
 		return;
 	}
@@ -1865,6 +1865,7 @@ static void R_AddEntitySurface (int entityNum)
 			switch ( ent->e.reType ) {
 			case RT_GRASS:
 			case RT_PLANT:
+			//case RT_MODEL_INSTANCED:
 				return;
 				break;
 			default:
@@ -1929,6 +1930,7 @@ static void R_AddEntitySurface (int entityNum)
 	case RT_MODEL:
 	case RT_GRASS:
 	case RT_PLANT:
+	case RT_MODEL_INSTANCED:
 		// we must set up parts of tr.ori for model culling
 		R_RotateForEntity( ent, &tr.viewParms, &tr.ori );
 
@@ -2524,7 +2526,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		}
 #endif //!defined(__PSHADOW_USE_BEST_LIGHT__) && !defined(__PSHADOW_USE_Q3_LIGHT__)
 
-		if (ent->e.reType == RT_MODEL || ent->e.reType == RT_PLANT || ent->e.reType == RT_GRASS)
+		if (ent->e.reType == RT_MODEL || ent->e.reType == RT_PLANT || ent->e.reType == RT_GRASS || ent->e.reType == RT_MODEL_INSTANCED)
 		{
 			model_t *model = R_GetModelByHandle(ent->e.hModel);
 			pshadow_t shadow;

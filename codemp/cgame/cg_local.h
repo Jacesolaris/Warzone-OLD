@@ -1831,6 +1831,8 @@ typedef struct cgEffects_s {
 typedef struct cg_staticmodel_s {
 	qhandle_t		model;
 	qhandle_t		overrideShader;
+	qboolean		useInstancing;
+	vec3_t			modelScale;
 	vec3_t			org;
 	matrix3_t		axes;
 	float			radius;

@@ -52,7 +52,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __DAY_NIGHT__							// Day/Night Cycle system...
 //#define __Q3_FLARES__							// Gonna just let the volumetrics handle flaring lights/glows....
 //#define __EXPERIMENTAL_TESS_SHADER_MERGE__	// this could probably work, but I dont see much FPS improvement in testing...
-//#define __INSTANCED_MODELS__					// experimenting with model instancing for foliage...
+#define __INSTANCED_MODELS__					// experimenting with model instancing for foliage...
 //#define __RENDERER_GROUND_FOLIAGE__			// in-progress port of cgame foliage system to renderer...
 #define __JKA_WEATHER__							// Testing JKA weather reimplementation...
 //#define __JKA_SURFACE_SPRITES__				// Testing JKA surface sprites reimplementation...
@@ -114,8 +114,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //                                                   Warzone Instancing Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 
-#define MAX_INSTANCED_MODEL_TYPES		128
-#define MAX_INSTANCED_MODEL_INSTANCES	4096
+#define MAX_INSTANCED_MODEL_TYPES		512
+#define MAX_INSTANCED_MODEL_INSTANCES	384//4096
 
 // -----------------------------------------------------------------------------------------------------------------------------
 
@@ -412,7 +412,9 @@ extern cvar_t	*r_stencilbits;
 extern cvar_t	*r_depthbits;
 extern cvar_t	*r_colorbits;
 extern cvar_t	*r_texturebits;
-extern cvar_t  *r_ext_multisample;
+extern cvar_t	*r_ext_multisample;
+
+extern cvar_t	*r_instancing;
 
 extern cvar_t	*r_drawBuffer;
 extern cvar_t	*r_lightmap;
@@ -1599,6 +1601,10 @@ typedef enum
 	UNIFORM_VIEWFORWARD,
 	UNIFORM_VIEWLEFT,
 	UNIFORM_VIEWUP,
+
+	UNIFORM_INSTANCE_POSITIONS,
+	UNIFORM_INSTANCE_SCALES,
+	UNIFORM_INSTANCE_MATRIXES,
 
 	UNIFORM_INVTEXRES,
 	UNIFORM_AUTOEXPOSUREMINMAX,
