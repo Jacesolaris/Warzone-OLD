@@ -8,66 +8,153 @@
 
 #include "VectorUtils3.h"
 
-void drawModelInstanced(mdvModel_t *m, GLuint count, vec3_t *positions, matrix_t *model_matrixes, vec3_t *angles, matrix_t MVP)
-{
-	RB_EndSurface();
+int			INSTANCED_MODEL_TYPES = 0;
 
-	if (m->vao == NULL)
+int			INSTANCED_MODEL_COUNT[MAX_INSTANCED_MODEL_TYPES] = { 0 };
+mdvModel_t	*INSTANCED_MODEL_MODEL[MAX_INSTANCED_MODEL_TYPES] = { NULL };
+vec3_t		INSTANCED_MODEL_ORIGINS[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+matrix_t	INSTANCED_MODEL_MATRIXES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+vec3_t		INSTANCED_MODEL_ANGLES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+
+void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles, matrix_t model_matrix, trRefEntity_t *ent)
+{
+	qboolean	FOUND = qfalse;
+	int			modelID = 0;
+
+	for (modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
-		ri->Printf(PRINT_WARNING, "Warning warning, fuckup in drawmodelinstanced - Model has no VAO!\n");
-		R_BindNullVBO();
-		R_BindNullIBO();
-		qglBindVertexArray(0);
-		GLSL_BindProgram(NULL);
+		if (INSTANCED_MODEL_MODEL[modelID] == NULL)
+		{
+			break;
+		}
+
+		if (INSTANCED_MODEL_MODEL[modelID] == model)
+		{
+			FOUND = qtrue;
+			break;
+		}
+	}
+
+	if (!FOUND)
+	{
+		if (INSTANCED_MODEL_TYPES + 1 >= MAX_INSTANCED_MODEL_TYPES) return; // Uh oh...
+
+		INSTANCED_MODEL_TYPES++;
+		INSTANCED_MODEL_MODEL[modelID] = model;
+	}
+
+	if (INSTANCED_MODEL_COUNT[modelID] + 1 < MAX_INSTANCED_MODEL_INSTANCES)
+	{
+		VectorCopy(origin, INSTANCED_MODEL_ORIGINS[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		VectorCopy(angles, INSTANCED_MODEL_ANGLES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		//Matrix16Copy(model_matrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		//Matrix16Multiply(glState.modelviewProjection, glState.modelview/*model_matrix*/, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		// set up the transformation matrix
+
+		R_RotateForEntity(ent, &tr.viewParms, &tr.ori);
+		//GL_SetModelviewMatrix(backEnd.ori.modelViewMatrix);
+		Matrix16Multiply(tr.viewParms.projectionMatrix/*glState.projection*/, tr.ori.modelViewMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		//ForceCrash();
+
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		//Matrix16Multiply(glState.modelviewProjection, backEnd.ori.modelMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+
+		INSTANCED_MODEL_COUNT[modelID]++;
+	}
+}
+
+void R_AddInstancedModelsToScene(void)
+{
+	if (INSTANCED_MODEL_TYPES <= 0)
+	{
 		return;
 	}
 
-	R_BindVBO(m->vboSurfaces->vbo);
-	R_BindIBO(m->vboSurfaces->ibo);
-
-	qglBindVertexArray(m->vao);	// Select VAO
-	qglEnableVertexAttribArray(m->vao);
-
-	GLSL_VertexAttribsState(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION);
-	GLSL_VertexAttribPointers(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_MVP | ATTR_INSTANCES_POSITION);
-
-	qglBufferSubData(GL_ARRAY_BUFFER, m->ofs_instancesPosition, count * sizeof(positions[0]), positions);
-	qglBufferSubData(GL_ARRAY_BUFFER, m->ofs_instancesMVP, count * sizeof(model_matrixes[0]), model_matrixes);
-
-	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
-	//qglBufferData(GL_ARRAY_BUFFER, sizeof(positions[0]) * count, positions, GL_STREAM_DRAW);
-
-	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
-	//qglBufferData(GL_ARRAY_BUFFER, sizeof(model_matrixes[0]) * count, model_matrixes, GL_STREAM_DRAW);
-
-
 	//ForceCrash();
+
+	// First finish any drawing...
+	RB_EndSurface();
 
 	GLSL_BindProgram(&tr.instanceShader);
 
-	GLSL_SetUniformInt(&tr.instanceShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	// Draw them for this scene...
+	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
+	{
+		if (INSTANCED_MODEL_COUNT[modelID] > 0)
+		{
+			mdvModel_t *m = INSTANCED_MODEL_MODEL[modelID];
+			GLuint count = INSTANCED_MODEL_COUNT[modelID];
 
-	GL_BindToTMU(tr.whiteImage, TB_DIFFUSEMAP);
+			if (m->vao == NULL)
+			{
+				ri->Printf(PRINT_WARNING, "Warning warning, fuckup in drawmodelinstanced - Model has no VAO!\n");
+				continue;
+			}
 
-	//qglBindVertexArray(m->vao);	// Select VAO
+			GLSL_SetUniformInt(&tr.instanceShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+			GL_BindToTMU(tr.whiteImage, TB_DIFFUSEMAP);
 
-	//qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->vboSurfaces->ibo->indexesVBO);
-	//qglBindBuffer(GL_ARRAY_BUFFER, m->vboSurfaces->vbo->vertexesVBO);
-	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
-	//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
+			R_BindVBO(m->vboSurfaces->vbo);
+			R_BindIBO(m->vboSurfaces->ibo);
 
-	//qglBufferSubData(GL_ARRAY_BUFFER, glState.currentVBO->ofs_instancesPosition, count * sizeof(origins[0]), origins);
-	//qglBufferSubData(GL_ARRAY_BUFFER, glState.currentVBO->ofs_instancesMVP, count * sizeof(mvps[0]), mvps);
+			qglBindVertexArray(m->vao);	// Select VAO
+			qglEnableVertexAttribArray(m->vao);
 
-	qglDrawElementsInstanced(GL_TRIANGLES, m->vboSurfaces->numIndexes, GL_INDEX_TYPE, 0, count);
-	//qglDrawArraysInstanced(GL_TRIANGLES, 0, m->vboSurfaces->numIndexes, count);
-	//qglDrawElements(GL_TRIANGLES, m->vboSurfaces->numIndexes, GL_UNSIGNED_INT, 0);
+#define __INSTANCING_USE_REND2_ATTRIB_CODE__
 
-	qglBindVertexArray(0);
+#ifndef __INSTANCING_USE_REND2_ATTRIB_CODE__
+			GLSL_VertexAttribsState(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_POSITION | ATTR_INSTANCES_MVP);
+			GLSL_VertexAttribPointers(/*ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0 |*/ ATTR_INSTANCES_POSITION | ATTR_INSTANCES_MVP);
+
+			qglBufferSubData(GL_ARRAY_BUFFER, m->ofs_instancesPosition, count * sizeof(vec3_t), INSTANCED_MODEL_ORIGINS[modelID);
+			qglBufferSubData(GL_ARRAY_BUFFER, m->ofs_instancesMVP, count * sizeof(matrix_t), INSTANCED_MODEL_MATRIXES[modelID]);
+
+			//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
+			//qglBufferData(GL_ARRAY_BUFFER, count * sizeof(vec3_t), INSTANCED_MODEL_ORIGINS[modelID], GL_STREAM_DRAW);
+
+			//qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
+			//qglBufferData(GL_ARRAY_BUFFER, count * sizeof(matrix_t), INSTANCED_MODEL_MATRIXES[modelID], GL_STREAM_DRAW);
+#else //!__INSTANCING_USE_REND2_ATTRIB_CODE__
+			qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
+			qglBufferData(GL_ARRAY_BUFFER, count * sizeof(vec3_t), INSTANCED_MODEL_ORIGINS[modelID], GL_STREAM_DRAW);
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
+			qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 3 * MAX_INSTANCED_MODEL_INSTANCES, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+			qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POSITION, 1);
+
+			qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
+			qglBufferData(GL_ARRAY_BUFFER, count * sizeof(matrix_t), INSTANCED_MODEL_MATRIXES[modelID], GL_STREAM_DRAW);
+			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+			qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16 * MAX_INSTANCED_MODEL_INSTANCES, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0)/*BUFFER_OFFSET(m->ofs_instancesMVP)*/);
+			qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
+#endif //__INSTANCING_USE_REND2_ATTRIB_CODE__
+
+			//ForceCrash();
+
+			qglDrawElementsInstanced(GL_TRIANGLES, m->vboSurfaces->numIndexes, GL_INDEX_TYPE, 0, count);
+			//qglDrawArraysInstanced(GL_TRIANGLES, 0, m->vboSurfaces->numIndexes, count);
+			//qglDrawElements(GL_TRIANGLES, m->vboSurfaces->numIndexes, GL_UNSIGNED_INT, 0);
+
+#ifdef __INSTANCING_USE_REND2_ATTRIB_CODE__
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
+			qglDisableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
+#endif //__INSTANCING_USE_REND2_ATTRIB_CODE__
+			qglDisableVertexAttribArray(m->vao);
+		}
+	}
+
+	// Clear the buffer ready for next scene...
+	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
+	{
+		INSTANCED_MODEL_COUNT[modelID] = 0;
+		INSTANCED_MODEL_MODEL[modelID] = NULL;
+	}
+
+	INSTANCED_MODEL_TYPES = 0;
+
 	R_BindNullVBO();
-	R_BindNullIBO();
-	
-	GLSL_BindProgram(NULL);
 }
-
 #endif //__INSTANCED_MODELS__
