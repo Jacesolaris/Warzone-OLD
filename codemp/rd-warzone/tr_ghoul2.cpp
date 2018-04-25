@@ -4338,6 +4338,8 @@ qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &
 
 qboolean model_upload_mdxm_to_gpu(model_t *mod);
 
+extern std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfaceName, std::string shaderPath);
+
 qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached ) {
 	int					i,l, j;
 	mdxmHeader_t		*pinmodel, *mdxm;
@@ -4447,8 +4449,25 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		}
 
 		shader_t	*sh;
+
 		// get the shader name
-		sh = R_FindShader( surfInfo->shader, lightmapsNone, stylesDefault, qtrue );
+#if 1 // Search for missing textures...
+		std::string textureName = surfInfo->shader;
+
+		std::string finalPath = R_FindAndAdjustShaderNames(mod_name, surfInfo->name, textureName);
+		sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+		if (sh == NULL || sh == tr.defaultShader)
+		{
+#ifdef __DEBUG_ASSIMP__
+			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, (md3Surf->name && md3Surf->name[0]) ? md3Surf->name : "NULL", i, textureName.length() ? textureName.c_str() : "NULL");
+#endif //__DEBUG_ASSIMP__
+			sh = tr.defaultShader;
+		}
+#else
+		sh = R_FindShader(surfInfo->shader, lightmapsNone, stylesDefault, qtrue);
+#endif
+
 		// insert it in the surface list
 		if ( sh->defaultShader ) 
 		{
