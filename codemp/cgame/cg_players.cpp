@@ -578,6 +578,18 @@ retryModel:
 		ci->torsoSkin = trap->R_RegisterSkin(va("models/players/%s/model_default.skin", modelName, skinName));
 	}
 	Com_sprintf( afilename, sizeof( afilename ), "models/players/%s/model.glm", modelName );
+
+	if (!trap->FS_FileExists(afilename))
+	{
+		char modelName2[64] = { 0 };
+		Com_sprintf(modelName2, sizeof(modelName2), "models/players/%s/model.fbx", afilename);
+
+		if (trap->FS_FileExists(modelName2))
+		{
+			strcpy(afilename, modelName2);
+		}
+	}
+
 	handle = trap->G2API_InitGhoul2Model(&ci->ghoul2Model, afilename, 0, ci->torsoSkin, 0, 0, 0);
 
 	if (handle<0)
@@ -597,9 +609,11 @@ retryModel:
 		if (!strstr(GLAName, "players/_humanoid/") /*&&
 			(!strstr(GLAName, "players/rockettrooper/") || cgs.gametype != GT_SIEGE)*/)  //only allow rockettrooper in siege
 		{ //Bad!
-			badModel = qtrue;
-			trap->Print("Animation %s is invalid in MP.\n", GLAName);
-			goto retryModel;
+			//badModel = qtrue;
+			//trap->Print("Animation %s is invalid in MP.\n", GLAName);
+			//goto retryModel;
+			// UQ1: Why not actually set it???
+			strcpy(GLAName, "models/players/_humanoid/_humanoid");
 		}
 	}
 
@@ -3277,6 +3291,11 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 	int oldAnim = -1;
 	int blendTime = 100;
 	float oldSpeed = lf->animationSpeed;
+
+	if (cent->localAnimIndex < 0)
+	{
+		cent->localAnimIndex = 0;
+	}
 
 	if (cent->localAnimIndex > 0)
 	{ //rockettroopers can't have broken arms, nor can anything else but humanoids
@@ -7124,8 +7143,23 @@ void CG_CacheG2AnimInfo(char *modelName)
 		{
 			trap->R_RegisterSkin(va("models/players/%s/model_default.skin", useModel));
 		}
+
+		char origModelName[64] = { 0 };
+		strcpy(origModelName, useModel);
+
 		//Q_strncpyz(useModel, va("models/players/%s/model.glm", useModel), sizeof( useModel ) );
 		strcpy(useModel, va("models/players/%s/model.glm", useModel));
+
+		if (!trap->FS_FileExists(useModel))
+		{
+			char modelName2[64] = { 0 };
+			Com_sprintf(modelName2, sizeof(modelName2), "models/players/%s/model.fbx", origModelName);
+
+			if (trap->FS_FileExists(modelName2))
+			{
+				strcpy(useModel, modelName2);
+			}
+		}
 	}
 
 	trap->G2API_InitGhoul2Model(&g2, useModel, 0, 0, 0, 0, 0);
@@ -7289,7 +7323,21 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 			{
 				skinID = trap->R_RegisterSkin(va("models/players/%s/model_default.skin", modelName));
 			}
+
+			char origModelName[64] = { 0 };
+			strcpy(origModelName, modelName);
 			strcpy(modelName, va("models/players/%s/model.glm", modelName));
+
+			if (!trap->FS_FileExists(modelName))
+			{
+				char modelName2[64] = { 0 };
+				Com_sprintf(modelName2, sizeof(modelName2), "models/players/%s/model.fbx", origModelName);
+
+				if (trap->FS_FileExists(modelName2))
+				{
+					strcpy(modelName, modelName2);
+				}
+			}
 
 			//this sound is *only* used for vehicles now
 			cgs.media.noAmmoSound = trap->S_RegisterSound( "sound/weapons/noammo.wav" );

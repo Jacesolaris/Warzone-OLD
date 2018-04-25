@@ -3903,10 +3903,10 @@ qboolean TIL_INITIALIZED = qfalse;
 
 char *R_TIL_TextureFileExists(const char *name)
 {
-	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return NULL;
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) <= 1) return NULL;
 
 	char texName[MAX_IMAGE_PATH] = { 0 };
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.dds", name);
 
 	//ri->Printf(PRINT_WARNING, "trying: %s.\n", name);
@@ -3918,7 +3918,7 @@ char *R_TIL_TextureFileExists(const char *name)
 	}
 
 	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.gif", name);
 
 	if (ri->FS_FileExists(texName))
@@ -3928,7 +3928,7 @@ char *R_TIL_TextureFileExists(const char *name)
 	}
 
 	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.bmp", name);
 
 	if (ri->FS_FileExists(texName))
@@ -3938,7 +3938,7 @@ char *R_TIL_TextureFileExists(const char *name)
 	}
 
 	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.ico", name);
 
 	if (ri->FS_FileExists(texName))

@@ -4413,8 +4413,15 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 
 	if (!mdxm->animIndex) 
 	{
-		Com_Printf (S_COLOR_YELLOW  "R_LoadMDXM: missing animation file %s for mesh %s\n", mdxm->animName, mdxm->name);
-		return qfalse;
+		// Fallback to default...
+		strcpy(mdxm->animName, "models/players/_humanoid/_humanoid");
+		mdxm->animIndex = RE_RegisterModel(va("%s.gla", mdxm->animName));
+
+		if (!mdxm->animIndex)
+		{
+			Com_Printf(S_COLOR_YELLOW  "R_LoadMDXM: missing animation file %s for mesh %s\n", mdxm->animName, mdxm->name);
+			return qfalse;
+		}
 	}
 
 	mod->numLods = mdxm->numLODs -1 ;	//copy this up to the model for ease of use - it wil get inced after this.
@@ -4459,9 +4466,9 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 
 		if (sh == NULL || sh == tr.defaultShader)
 		{
-#ifdef __DEBUG_ASSIMP__
-			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, (md3Surf->name && md3Surf->name[0]) ? md3Surf->name : "NULL", i, textureName.length() ? textureName.c_str() : "NULL");
-#endif //__DEBUG_ASSIMP__
+//#ifdef __DEBUG_ASSIMP__
+//			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", mod_name, (surfInfo->name && surfInfo->name[0]) ? surfInfo->name : "NULL", i, finalPath.length() ? finalPath.c_str() : "NULL");
+//#endif //__DEBUG_ASSIMP__
 			sh = tr.defaultShader;
 		}
 #else
@@ -4699,13 +4706,6 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 			for ( int k = 0; k < surf->numVerts; k++ )
 			{
 				int numWeights = G2_GetVertWeights (&v[k]);
-#ifdef __BROKEN_LUKE_BONES__
-				for ( int w = 0; w < numWeights; w++ )
-				{
-					(*weights)[w] = G2_GetVertBoneWeightNotSlow (&v[k], w);
-					(*bonerefs)[w] = (float)G2_GetVertBoneIndex (&v[k], w);
-				}
-#else //!__BROKEN_LUKE_BONES__
 				float lastWeight = 1.0f;
 				int lastInfluence = numWeights - 1;
 				for ( int w = 0; w < lastInfluence; w++ )
@@ -4720,7 +4720,6 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 				// Ensure that all the weights add up to 1.0
 				(*weights)[lastInfluence] = lastWeight;
 				(*bonerefs)[lastInfluence] = (float)G2_GetVertBoneIndex (&v[k], lastInfluence);
-#endif //__BROKEN_LUKE_BONES__
 
 				// Fill in the rest of the info with zeroes.
 				for ( int w = numWeights; w < 4; w++ )
@@ -4875,11 +4874,7 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 
 			vboMeshes[n].indexOffset = indexOffsets[n];
 			vboMeshes[n].minIndex = baseVertexes[n];
-#ifdef __BROKEN_LUKE_BONES__
-			vboMeshes[n].maxIndex = baseVertexes[n + 1];
-#else //!__BROKEN_LUKE_BONES__
 			vboMeshes[n].maxIndex = baseVertexes[n + 1] - 1;
-#endif //__BROKEN_LUKE_BONES__
 			vboMeshes[n].numVertexes = surf->numVerts;
 			vboMeshes[n].numIndexes = surf->numTriangles * 3;
 
@@ -4897,6 +4892,512 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 
 	return qtrue;
 }
+
+#ifdef __EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
+// assimp include files. These three are usually needed.
+#include "assimp/Importer.hpp"	//OO version Header!
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "assimp/DefaultLogger.hpp"
+#include "assimp/LogStream.hpp"
+
+// Create an instance of the Importer class
+extern Assimp::Importer assImpImporter;
+
+extern std::string AssImp_getTextureName(const std::string& path);
+
+qboolean R_LoadMDXM_Assimp(model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached, const aiScene* scene, int size) {
+	mdxmHeader_t		*mdxm;
+
+	mod->type = MOD_MDXM;
+	mod->dataSize += size;
+
+	int hOffset = size + (sizeof(mdxmSurfHierarchy_t) * scene->mNumMeshes);
+	void *buffer2 = ri->Hunk_Alloc(hOffset, h_low);
+	mdxmSurfHierarchy_t *hierarchys = (mdxmSurfHierarchy_t *)buffer2 + size;
+	size = size + hOffset;
+	
+	qboolean bAlreadyFound = qfalse;
+	mdxm = (mdxmHeader_t*)CModelCache->Allocate(size, buffer2, mod_name, &bAlreadyFound, TAG_MODEL_GLM);
+	mod->data.glm = (mdxmData_t *)ri->Hunk_Alloc(sizeof(mdxmData_t), h_low);
+	mod->data.glm->header = mdxm;
+
+	bAlreadyCached = bAlreadyFound;
+
+	assert(bAlreadyCached == bAlreadyFound);
+
+	if (!bAlreadyFound)
+	{
+		// horrible new hackery, if !bAlreadyFound then we've just done a tag-morph, so we need to set the 
+		//	bool reference passed into this function to true, to tell the caller NOT to do an ri->FS_Freefile since
+		//	we've hijacked that memory block...
+		//
+		// Aaaargh. Kill me now...
+		//
+		bAlreadyCached = qtrue;
+		assert(mdxm == buffer);
+		//		memcpy( mdxm, buffer, size );	// and don't do this now, since it's the same thing
+
+		LL(mdxm->ident);
+		LL(mdxm->version);
+		LL(mdxm->numLODs);
+		LL(mdxm->ofsLODs);
+		LL(mdxm->numSurfaces);
+		LL(mdxm->ofsSurfHierarchy);
+		LL(mdxm->ofsEnd);
+	}
+
+	mod->numLods = mdxm->numLODs - 1;	//copy this up to the model for ease of use - it wil get inced after this.
+
+	if (bAlreadyFound)
+	{
+		return qtrue;	// All done. Stop, go no further, do not LittleLong(), do not pass Go...
+	}
+
+	mdxm->ident = MDXM_IDENT;
+	mdxm->version = MDXM_VERSION;
+	mdxm->numLODs = 1;
+	mdxm->numSurfaces = scene->mNumMeshes;
+	mdxm->ofsSurfHierarchy = hOffset;// size;
+	mdxm->ofsLODs = 0;
+	mdxm->ofsEnd = size;
+	mdxm->numBones = 0;
+
+	strcpy(mdxm->name, mod_name);
+
+	mod->dataSize = mdxm->ofsEnd;
+
+	// Count total bones...
+	int		numBones = 0;
+	char	boneNames[128][64] = { 0 };
+
+	for (int j = 0; j < scene->mNumMeshes; j++)
+	{
+		aiMesh					*aiSurf = scene->mMeshes[j];
+
+		if (aiSurf->HasBones())
+		{
+			for (int k = 0; k < aiSurf->mNumBones; k++)
+			{
+				aiBone *bone = aiSurf->mBones[k];
+
+				if (bone)
+				{
+					char bName[64] = { 0 };
+					strcpy(bName, bone->mName.C_Str());
+					strcpy(bName, Q_strlwr(bName));
+
+					qboolean alreadyAddedBone = qfalse;
+
+					for (int z = 0; z < numBones; z++)
+					{
+						if (!strcmp(bName, boneNames[z]))
+						{
+							alreadyAddedBone = qtrue;
+							break;
+						}
+					}
+
+					if (!alreadyAddedBone)
+					{
+						strcpy(boneNames[numBones], bName);
+						numBones++;
+					}
+				}
+			}
+		}
+	}
+
+	mdxm->numBones = numBones;
+
+	ri->Printf(PRINT_WARNING, "Model %s has %i bones.\n", mod_name, numBones);
+	for (int z = 0; z < numBones; z++)
+	{
+		ri->Printf(PRINT_WARNING, "   %i - %s.\n", z, boneNames[z]);
+	}
+
+	// first up, go load in the animation file we need that has the skeletal animation info for this model
+	strcpy(mdxm->animName, "models/players/_humanoid/_humanoid"); // Always use _humanoid.gla
+	mdxm->animIndex = RE_RegisterModel(va("%s.gla", mdxm->animName));
+
+	/*bool isAnOldModelFile = false;
+	if (mdxm->numBones == 72 && strstr(mdxm->animName, "_humanoid"))
+	{
+		isAnOldModelFile = true;
+	}*/
+
+	// Make a copy on the GPU
+	mod->data.glm->vboModels = (mdxmVBOModel_t *)ri->Hunk_Alloc(sizeof(mdxmVBOModel_t) * mdxm->numLODs, h_low);
+	
+	{
+		mdxmVBOModel_t *vboModel = &mod->data.glm->vboModels[0];
+		mdxmVBOMesh_t *vboMeshes;
+
+		vec3_t *verts;
+		uint32_t *normals;
+		vec2_t *texcoords;
+		vec4_t *bonerefs;
+		vec4_t *weights;
+
+		byte *data;
+		int dataSize = 0;
+		int ofsPosition, ofsNormals, ofsTexcoords, ofsBoneRefs, ofsWeights;
+		int stride = 0;
+		int numVerts = 0;
+		int numTriangles = 0;
+
+		vec3_t *tangentsf;
+		vec3_t *bitangentsf;
+
+		// +1 to add total vertex count
+		int *baseVertexes = (int *)ri->Hunk_AllocateTempMemory(sizeof(int) * (mdxm->numSurfaces + 1));
+		int *indexOffsets = (int *)ri->Hunk_AllocateTempMemory(sizeof(int) * mdxm->numSurfaces);
+		memset(baseVertexes, 0, sizeof(int) * (mdxm->numSurfaces + 1));
+		memset(indexOffsets, 0, sizeof(int) * mdxm->numSurfaces);
+
+		vboModel->numVBOMeshes = mdxm->numSurfaces;
+		vboModel->vboMeshes = (mdxmVBOMesh_t *)ri->Hunk_Alloc(sizeof(mdxmVBOMesh_t) * mdxm->numSurfaces, h_low);
+		vboMeshes = vboModel->vboMeshes;
+
+		mdxmSurface_t *surfs = (mdxmSurface_t *)ri->Hunk_Alloc(sizeof(mdxmSurface_t) * mdxm->numSurfaces, h_low);
+		memset(surfs, 0, sizeof(mdxmSurfHierarchy_t) * mdxm->numSurfaces);
+
+		for (int n = 0; n < mdxm->numSurfaces; n++)
+		{
+			mdxmSurfHierarchy_t		*hierarchy = hierarchys + n;
+			aiMesh					*aiSurf = scene->mMeshes[n];
+			mdxmSurface_t			*surf = &surfs[n];
+			shader_t				*sh = NULL;
+			aiString				shaderPath;	// filename
+			
+
+			// change to surface identifier
+			surf->ident = SF_MDX;
+			surf->thisSurfaceIndex = n;
+
+			scene->mMaterials[aiSurf->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &shaderPath);
+
+			std::string textureName = AssImp_getTextureName(shaderPath.C_Str());
+
+			//std::string finalPath = R_FindAndAdjustShaderNames(mod_name, shaderPath.C_Str(), textureName);
+			//sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+			std::string finalPath = textureName;
+			sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+			if (sh == NULL || sh == tr.defaultShader)
+			{
+#ifdef __DEBUG_ASSIMP__
+				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", mod_name, aiSurf->mName.length ? aiSurf->mName.C_Str() : "NULL", n, finalPath.length() ? finalPath.c_str() : "NULL");
+#endif //__DEBUG_ASSIMP__
+				sh = tr.defaultShader;
+			}
+			
+			strcpy(hierarchy->shader, finalPath.c_str());
+
+			// register the shaders
+			if (sh->defaultShader)
+			{
+				hierarchy->shaderIndex = 0;
+			}
+			else
+			{
+				hierarchy->shaderIndex = sh->index;
+			}
+
+			// swap all the triangles
+			surf->numTriangles = aiSurf->mNumFaces;
+			surf->numVerts = aiSurf->mNumVertices;
+
+			baseVertexes[n] = numVerts;
+			indexOffsets[n] = numTriangles * 3;
+
+			numVerts += surf->numVerts;
+			numTriangles += surf->numTriangles;
+		}
+
+		baseVertexes[mdxm->numSurfaces] = numVerts;
+
+		tangentsf = (vec3_t *)ri->Hunk_AllocateTempMemory(sizeof(vec3_t) * numVerts);
+		bitangentsf = (vec3_t *)ri->Hunk_AllocateTempMemory(sizeof(vec3_t) * numVerts);
+		memset(tangentsf, 0, sizeof(vec3_t) * numVerts);
+		memset(bitangentsf, 0, sizeof(vec3_t) * numVerts);
+
+		dataSize += numVerts * sizeof(*verts);
+		dataSize += numVerts * sizeof(*normals);
+		dataSize += numVerts * sizeof(*texcoords);
+		dataSize += numVerts * sizeof(*weights);
+		dataSize += numVerts * sizeof(*bonerefs);
+
+		// Allocate and write to memory
+		data = (byte *)ri->Hunk_AllocateTempMemory(dataSize);
+
+		verts = (vec3_t *)(data + stride);
+		ofsPosition = stride;
+		stride += sizeof(*verts);
+
+		normals = (uint32_t *)(data + stride);
+		ofsNormals = stride;
+		stride += sizeof(*normals);
+
+		texcoords = (vec2_t *)(data + stride);
+		ofsTexcoords = stride;
+		stride += sizeof(*texcoords);
+
+		bonerefs = (vec4_t *)(data + stride);
+		ofsBoneRefs = stride;
+		stride += sizeof(*bonerefs);
+
+		weights = (vec4_t *)(data + stride);
+		ofsWeights = stride;
+		stride += sizeof(*weights);
+
+		//mdxmTriangle_t *triIndexes = (mdxmTriangle_t *)ri->Hunk_AllocateTempMemory(sizeof(mdxmTriangle_t) * numTriangles);
+
+		for (int n = 0; n < mdxm->numSurfaces; n++)
+		{
+			aiMesh					*aiSurf = scene->mMeshes[n];
+			mdxmSurface_t			*surf = &surfs[n];
+			mdxmVertex_t			*v = (mdxmVertex_t *)ri->Hunk_AllocateTempMemory(sizeof(mdxmVertex_t) * surf->numVerts);
+			mdxmVertexTexCoord_t	*tc = (mdxmVertexTexCoord_t *)ri->Hunk_AllocateTempMemory(sizeof(mdxmVertexTexCoord_t) * surf->numVerts);
+
+			//
+			// Positions and normals
+			//
+			for (int k = 0; k < surf->numVerts; k++)
+			{
+				mdxmVertex_t		*vert = &v[k];
+
+				VectorSet(vert->vertCoords, aiSurf->mVertices[k].x, aiSurf->mVertices[k].y, aiSurf->mVertices[k].z);
+				VectorSet(*verts, aiSurf->mVertices[k].x, aiSurf->mVertices[k].y, aiSurf->mVertices[k].z);
+				
+				VectorSet(v->normal, aiSurf->mNormals[k].x, aiSurf->mNormals[k].y, aiSurf->mNormals[k].z);
+				*normals = R_VboPackNormal(v->normal);
+
+				verts = (vec3_t *)((byte *)verts + stride);
+				normals = (uint32_t *)((byte *)normals + stride);
+
+				//
+				// Weights
+				//
+				int					numWeights = 0;
+
+				if (aiSurf->HasBones())
+				{
+					for (int b = 0; b < aiSurf->mNumBones; b++)
+					{
+						aiBone *bone = aiSurf->mBones[b];
+
+						for (int l = 0; l < bone->mNumWeights && l < 4; l++)
+						{
+							aiVertexWeight *w = &bone->mWeights[l];
+							vert->BoneWeightings[l] = w->mWeight;
+							numWeights++;
+						}
+					}
+
+					//v.uiNmWeightsAndBoneIndexes = 0; // ????
+					vert->uiNmWeightsAndBoneIndexes |= ((numWeights - 1) & 0x3) << 30;
+				}
+
+				//int numWeights = G2_GetVertWeights(vert);
+				float lastWeight = 1.0f;
+				int lastInfluence = numWeights - 1;
+				for (int w = 0; w < lastInfluence; w++)
+				{
+					float weight = G2_GetVertBoneWeightNotSlow(vert, w);
+					(*weights)[w] = weight;
+					(*bonerefs)[w] = (float)G2_GetVertBoneIndex(vert, w);
+
+					lastWeight -= weight;
+				}
+
+				// Ensure that all the weights add up to 1.0
+				(*weights)[lastInfluence] = lastWeight;
+				(*bonerefs)[lastInfluence] = (float)G2_GetVertBoneIndex(vert, lastInfluence);
+
+				// Fill in the rest of the info with zeroes.
+				for (int w = numWeights; w < 4; w++)
+				{
+					(*weights)[w] = 0.0f;
+					(*bonerefs)[w] = 0.0f;
+				}
+
+				weights = (vec4_t *)((byte *)weights + stride);
+				bonerefs = (vec4_t *)((byte *)bonerefs + stride);
+
+				//
+				// Texture coordinates
+				//
+				if (aiSurf->mNormals != NULL && aiSurf->HasTextureCoords(0))		//HasTextureCoords(texture_coordinates_set)
+				{
+					tc[k].texCoords[0] = LittleFloat(aiSurf->mTextureCoords[0][k].x);
+					tc[k].texCoords[1] = LittleFloat(1 - aiSurf->mTextureCoords[0][k].y);
+				}
+				else
+				{
+					tc[k].texCoords[0] = 0.0;
+					tc[k].texCoords[1] = 1.0;
+				}
+
+				(*texcoords)[0] = tc[k].texCoords[0];
+				(*texcoords)[1] = tc[k].texCoords[1];
+
+				texcoords = (vec2_t *)((byte *)texcoords + stride);
+			}
+
+#if 0
+			//mdxmVertex_t		*vert = &v[0];
+
+			//mdxmTriangle_t *t = (mdxmTriangle_t *)((byte *)surf + surf->ofsTriangles);
+			//mdxmTriangle_t *t = (mdxmTriangle_t *)ri->Hunk_AllocateTempMemory(sizeof(mdxmTriangle_t) * surf->numTriangles);
+			for (int k = 0; k < surf->numTriangles; k++)
+			{
+				mdxmTriangle_t *t = &triIndexes[k];
+				
+				int index[3];
+				vec3_t sdir, tdir;
+				float *v0, *v1, *v2;
+				float *uv0, *uv1, *uv2;
+				vec3_t normal = { 0.0f, 0.0f, 0.0f };
+
+				index[0] = t->indexes[0];
+				index[1] = t->indexes[1];
+				index[2] = t->indexes[2];
+
+				v0 = v[index[0]].vertCoords;
+				v1 = v[index[1]].vertCoords;
+				v2 = v[index[2]].vertCoords;
+
+				uv0 = tc[index[0]].texCoords;
+				uv1 = tc[index[1]].texCoords;
+				uv2 = tc[index[2]].texCoords;
+
+				VectorAdd(normal, v[index[0]].normal, normal);
+				VectorAdd(normal, v[index[1]].normal, normal);
+				VectorAdd(normal, v[index[2]].normal, normal);
+				VectorNormalize(normal);
+
+				R_CalcTexDirs(sdir, tdir, v0, v1, v2, uv0, uv1, uv2);
+
+				for (int i = 0; i < 3; i++)
+				{
+					VectorAdd(tangentsf[baseVertexes[n] + index[i]],
+						sdir,
+						tangentsf[baseVertexes[n] + index[i]]);
+
+					VectorAdd(bitangentsf[baseVertexes[n] + index[i]],
+						tdir,
+						bitangentsf[baseVertexes[n] + index[i]]);
+				}
+			}
+
+			// Finally add it to the vertex buffer data
+			for (int k = 0; k < surf->numVerts; k++)
+			{
+				vec3_t sdir, tdir;
+
+				vec3_t& tangent = tangentsf[baseVertexes[n] + k];
+				vec3_t& bitangent = bitangentsf[baseVertexes[n] + k];
+				vec3_t NxT;
+				vec4_t T;
+
+				VectorCopy(tangent, sdir);
+				VectorCopy(bitangent, tdir);
+
+				VectorNormalize(sdir);
+				VectorNormalize(tdir);
+
+				R_CalcTbnFromNormalAndTexDirs(tangent, bitangent, v[k].normal, sdir, tdir);
+
+				CrossProduct(v[k].normal, tangent, NxT);
+				VectorCopy(tangent, T);
+				T[3] = DotProduct(NxT, bitangent) < 0.0f ? -1.0f : 1.0f;
+			}
+#endif
+
+			ri->Hunk_FreeTempMemory(tc);
+			ri->Hunk_FreeTempMemory(v);
+			//ri->Hunk_FreeTempMemory(t); // freed below as we still need these...
+		}
+
+		assert((byte *)verts == (data + dataSize));
+
+		const char *modelName = strrchr(mdxm->name, '/');
+		if (modelName == NULL)
+		{
+			modelName = mdxm->name;
+		}
+
+		VBO_t *vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
+
+		ri->Hunk_FreeTempMemory(data);
+		ri->Hunk_FreeTempMemory(tangentsf);
+		ri->Hunk_FreeTempMemory(bitangentsf);
+
+		vbo->ofs_xyz = ofsPosition;
+		vbo->ofs_normal = ofsNormals;
+		vbo->ofs_st = ofsTexcoords;
+		vbo->ofs_boneindexes = ofsBoneRefs;
+		vbo->ofs_boneweights = ofsWeights;
+
+		vbo->stride_xyz = stride;
+		vbo->stride_normal = stride;
+		vbo->stride_st = stride;
+		vbo->stride_boneindexes = stride;
+		vbo->stride_boneweights = stride;
+
+		// Fill in the index buffer
+		glIndex_t *indices = (glIndex_t *)ri->Hunk_AllocateTempMemory(sizeof(glIndex_t) * numTriangles * 3);
+		glIndex_t *index = indices;
+
+		for (int n = 0; n < scene->mNumMeshes; n++)
+		{
+			aiMesh	 *aiSurf = scene->mMeshes[n];
+
+			for (int k = 0; k < aiSurf->mNumFaces; k++, index += 3)
+			{
+				index[0] = aiSurf->mFaces[k].mIndices[0] + baseVertexes[n];
+				index[1] = aiSurf->mFaces[k].mIndices[1] + baseVertexes[n];
+				index[2] = aiSurf->mFaces[k].mIndices[2] + baseVertexes[n];
+			}
+		}
+
+		assert(index == (indices + numTriangles * 3));
+
+		IBO_t *ibo = R_CreateIBO((byte *)indices, sizeof(glIndex_t) * numTriangles * 3, VBO_USAGE_STATIC);
+
+		ri->Hunk_FreeTempMemory(indices);
+
+		for (int n = 0; n < mdxm->numSurfaces; n++)
+		{
+			aiMesh *aiSurf = scene->mMeshes[n];
+
+			vboMeshes[n].vbo = vbo;
+			vboMeshes[n].ibo = ibo;
+
+			vboMeshes[n].indexOffset = indexOffsets[n];
+			vboMeshes[n].minIndex = baseVertexes[n];
+			vboMeshes[n].maxIndex = baseVertexes[n + 1] - 1;
+			vboMeshes[n].numVertexes = aiSurf->mNumVertices;
+			vboMeshes[n].numIndexes = aiSurf->mNumFaces * 3;
+		}
+
+		vboModel->vbo = vbo;
+		vboModel->ibo = ibo;
+
+		//ri->Hunk_FreeTempMemory(triIndexes);
+		ri->Hunk_FreeTempMemory(indexOffsets);
+		ri->Hunk_FreeTempMemory(baseVertexes);
+	}
+
+	// No longer need the scene data...
+	assImpImporter.FreeScene();
+
+	mod->numLods = 1;
+	return qtrue;
+}
+#endif //__EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
 
 //#define CREATE_LIMB_HIERARCHY
 

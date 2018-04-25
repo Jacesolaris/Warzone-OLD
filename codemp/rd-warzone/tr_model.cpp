@@ -141,69 +141,59 @@ std::string AssImp_getTextureName(const std::string& path)
 	return (std::string::npos == pos) ? "" : path.substr(pos + 1, std::string::npos);
 }
 
-char modelTexName[512] = { 0 }; // not thread safe, but we are not threading anywhere here...
+char modelTexName[MAX_IMAGE_PATH] = { 0 }; // not thread safe, but we are not threading anywhere here...
 
 char *FS_TextureFileExists(const char *name)
 {
-	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return NULL;
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) <= 1) return NULL;
 
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.png", name);
+	char strippedTexName[MAX_IMAGE_PATH] = { 0 };
+	memset(&strippedTexName, 0, sizeof(char) * MAX_IMAGE_PATH);
+	COM_StripExtension(name, strippedTexName, MAX_IMAGE_PATH);
 
-	if (ri->FS_FileExists(modelTexName))
-	{
-		return modelTexName;
-	}
-
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.tga", name);
+	sprintf(modelTexName, "%s.png", strippedTexName);
 
 	if (ri->FS_FileExists(modelTexName))
 	{
 		return modelTexName;
 	}
 
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.jpg", name);
+	sprintf(modelTexName, "%s.tga", strippedTexName);
 
 	if (ri->FS_FileExists(modelTexName))
 	{
 		return modelTexName;
 	}
 
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.dds", name);
+	sprintf(modelTexName, "%s.jpg", strippedTexName);
 
 	if (ri->FS_FileExists(modelTexName))
 	{
 		return modelTexName;
 	}
 
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.gif", name);
+	sprintf(modelTexName, "%s.dds", strippedTexName);
 
 	if (ri->FS_FileExists(modelTexName))
 	{
 		return modelTexName;
 	}
 
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.bmp", name);
+	sprintf(modelTexName, "%s.gif", strippedTexName);
 
 	if (ri->FS_FileExists(modelTexName))
 	{
 		return modelTexName;
 	}
 
-	memset(&modelTexName, 0, sizeof(char) * 512);
-	COM_StripExtension(name, modelTexName, sizeof(modelTexName));
-	sprintf(modelTexName, "%s.ico", name);
+	sprintf(modelTexName, "%s.bmp", strippedTexName);
+
+	if (ri->FS_FileExists(modelTexName))
+	{
+		return modelTexName;
+	}
+
+	sprintf(modelTexName, "%s.ico", strippedTexName);
 
 	if (ri->FS_FileExists(modelTexName))
 	{
@@ -239,11 +229,11 @@ std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfac
 	{
 		std::string basePath = AssImp_getBasePath(modelName);
 
-		char out[256] = { 0 };
+		char out[MAX_IMAGE_PATH] = { 0 };
 		COM_StripExtension(shaderPath.c_str(), out, sizeof(out));
 		std::string textureName = out;
 
-		char shaderRealPath[256] = { 0 };
+		char shaderRealPath[MAX_IMAGE_PATH] = { 0 };
 		sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
 
 		char *nExt = FS_TextureFileExists(shaderRealPath);
@@ -274,11 +264,11 @@ std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfac
 		{// Try to find the file in the original model path...
 			std::string basePath = AssImp_getBasePath(modelName);
 
-			char out[256] = { 0 };
+			char out[MAX_IMAGE_PATH] = { 0 };
 			COM_StripExtension(surfaceName.c_str(), out, sizeof(out));
 			std::string textureName = out;
 
-			char shaderRealPath[256] = { 0 };
+			char shaderRealPath[MAX_IMAGE_PATH] = { 0 };
 			sprintf(shaderRealPath, "%s%s", basePath.c_str(), textureName.c_str());
 
 			char *nExt = FS_TextureFileExists(shaderRealPath);
@@ -332,6 +322,37 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		ri->Printf(PRINT_ERROR, "R_LoadAssImp: %s could not load. Error: %s\n", modName, assImpImporter.GetErrorString());
 		return qfalse;
 	}
+
+#ifdef __EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
+	if (scene->HasAnimations() || StringContainsWord(modName, "players/"))
+	{// If it has bones or is in players/ dir, dump it into the GLM converter...
+		/*if (StringContainsWord(modName, "players/"))
+		{
+			extern qboolean R_LoadMDXM_Assimp(model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached, const aiScene* scene, int size);
+			qboolean AlreadyCached = qfalse;
+			return R_LoadMDXM_Assimp(mod, buffer, modName, AlreadyCached, scene, size);
+		}*/
+
+		// Check for bones...
+		qboolean hasBones = qfalse;
+
+		for (int j = 0; j < scene->mNumMeshes; j++)
+		{
+			if (scene->mMeshes[j]->HasBones())
+			{
+				hasBones = qtrue;
+				break;
+			}
+		}
+
+		if (hasBones)
+		{
+			extern qboolean R_LoadMDXM_Assimp(model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached, const aiScene* scene, int size);
+			qboolean AlreadyCached = qfalse;
+			return R_LoadMDXM_Assimp(mod, buffer, modName, AlreadyCached, scene, size);
+		}
+	}
+#endif //__EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
 
 	mod->type = MOD_MESH;
 	mod->dataSize += size;
@@ -432,7 +453,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		if (sh == NULL || sh == tr.defaultShader)
 		{
 #ifdef __DEBUG_ASSIMP__
-			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, aiSurf->mName.length ? aiSurf->mName.C_Str() : "NULL", i, shaderPath.length ? shaderPath.C_Str() : "NULL");
+			ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, aiSurf->mName.length ? aiSurf->mName.C_Str() : "NULL", i, finalPath.length() ? finalPath.c_str() : "NULL");
 #endif //__DEBUG_ASSIMP__
 			sh = tr.defaultShader;
 		}
@@ -735,12 +756,6 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 		fext++;
 	}
 
-/*
-#ifdef __DEBUG_ASSIMP__
-	ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Trying to load model %s. Extenstion %s.\n", name, fext);
-#endif //__DEBUG_ASSIMP__
-*/
-
 	for (lod = MD3_MAX_LODS - 1; lod >= 0; lod--)
 	{
 		if (lod)
@@ -751,13 +766,6 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 		qboolean bAlreadyCached = qfalse;
 
 		int size = CModelCache->LoadFile(namebuf, (void**)&buf, &bAlreadyCached);
-
-/*
-#ifdef __DEBUG_ASSIMP__
-		if (!lod)
-			ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Tried to load model %s. Extenstion %s. bufferSize %i. bAlreadyCached %s.\n", namebuf, fext, size, bAlreadyCached ? "true" : "false");
-#endif //__DEBUG_ASSIMP__
-*/
 
 		if (!size)
 		{
@@ -775,20 +783,21 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 
 		loaded = R_LoadAssImp(mod, lod, buf, namebuf, size, fext);
 
-/*
+#ifdef __EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
+		if (loaded && mod->type == MOD_MDXM)
+		{// If we loaded a bone model, skip the lod crap...
+			numLoaded++;
+
 #ifdef __DEBUG_ASSIMP__
-		if (!lod)
-			ri->Printf(PRINT_WARNING, "R_RegisterAssImp: Tried to load model %s. Extenstion %s. bufferSize %i. bAlreadyCached %s. loaded %s.\n", namebuf, fext, size, bAlreadyCached ? "true" : "false", loaded ? "true" : "false");
+			ri->Printf(PRINT_WARNING, "R_RegisterAssImp: loaded assimp boned model %s. modIndex %i. numLods %i. numLoaded %i. numSurfaces %i.\n", name, mod->index, mod->numLods, numLoaded, mod->data.glm->vboModels[0].numVBOMeshes);
 #endif //__DEBUG_ASSIMP__
-*/
+
+			return mod->index;
+		}
+#endif //__EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
 
 		if (loaded)
 		{
-/*
-#ifdef __DEBUG_ASSIMP__
-			ri->Printf(PRINT_ALL, "R_RegisterAssImp: Loaded model %s.\n", namebuf);
-#endif //__DEBUG_ASSIMP__
-*/
 			mod->numLods++;
 			numLoaded++;
 		}
@@ -818,7 +827,7 @@ qhandle_t R_RegisterAssImp(const char *name, model_t *mod)
 		}
 		
 #ifdef __DEBUG_ASSIMP__
-		ri->Printf(PRINT_WARNING, "R_RegisterAssImp: loaded assimp model %s. modIndex %i. numLods %i. numLoaded %i. numSurfaces %i.\n", name, mod->index, mod->numLods, numLoaded, mod->data.mdv[0]->numSurfaces);
+		ri->Printf(PRINT_WARNING, "R_RegisterAssImp: loaded assimp model %s. modIndex %i. numLods %i. numLoaded %i. numSurfaces %i.\n", name, mod->index, mod->numLods, numLoaded, (mod->data.mdv && mod->data.mdv[0]) ? mod->data.mdv[0]->numSurfaces : mod->data.glm->vboModels[0].numVBOMeshes);
 #endif //__DEBUG_ASSIMP__
 
 		return mod->index;
@@ -1782,7 +1791,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			if (sh == NULL || sh == tr.defaultShader)
 			{
 #ifdef __DEBUG_ASSIMP__
-				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, (md3Surf->name && md3Surf->name[0]) ? md3Surf->name : "NULL", i, textureName.length() ? textureName.c_str() : "NULL");
+				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", modName, (md3Surf->name && md3Surf->name[0]) ? md3Surf->name : "NULL", i, finalPath.length() ? finalPath.c_str() : "NULL");
 #endif //__DEBUG_ASSIMP__
 				sh = tr.defaultShader;
 			}
@@ -2267,7 +2276,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			if (sh == NULL || sh == tr.defaultShader)
 			{
 #ifdef __DEBUG_ASSIMP__
-				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", mod_name, (surf->name && surf->name[0]) ? surf->name : "NULL", i, textureName.length() ? textureName.c_str() : "NULL");
+				ri->Printf(PRINT_ALL, "Model: %s. Mesh: %s (%i). Missing texture: %s.\n", mod_name, (surf->name && surf->name[0]) ? surf->name : "NULL", i, finalPath.length() ? finalPath.c_str() : "NULL");
 #endif //__DEBUG_ASSIMP__
 				sh = tr.defaultShader;
 			}

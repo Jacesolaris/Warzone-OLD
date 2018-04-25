@@ -4860,10 +4860,10 @@ void StripCrap( const char *in, char *out, int destsize )
 
 qboolean R_TextureFileExists(char *name)
 {
-	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return qfalse;
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) <= 1) return qfalse;
 
 	char texName[MAX_IMAGE_PATH] = { 0 };
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.jpg", name);
 
 	//ri->Printf(PRINT_WARNING, "trying: %s.\n", name);
@@ -4875,7 +4875,7 @@ qboolean R_TextureFileExists(char *name)
 	}
 
 	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.tga", name);
 
 	if (ri->FS_FileExists(texName))
@@ -4885,7 +4885,7 @@ qboolean R_TextureFileExists(char *name)
 	}
 
 	memset(&texName, 0, sizeof(char) * MAX_IMAGE_PATH);
-	COM_StripExtension(name, texName, sizeof(texName));
+	COM_StripExtension(name, texName, MAX_IMAGE_PATH);
 	sprintf(texName, "%s.png", name);
 
 	if (ri->FS_FileExists(texName))
