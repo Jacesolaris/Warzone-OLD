@@ -755,7 +755,7 @@ void RB_BeginDrawingView (void) {
 	// sync with gl if needed
 #ifdef __USE_QGL_FINISH__
 	if ( r_finish->integer == 1 && !glState.finishCalled ) {
-		qglFinish ();
+		qglFinish();
 		glState.finishCalled = qtrue;
 	}
 	if ( r_finish->integer == 0 ) {
@@ -763,7 +763,7 @@ void RB_BeginDrawingView (void) {
 	}
 #else if __USE_QGL_FLUSH__
 	if ( r_finish->integer == 1 && !glState.finishCalled ) {
-		qglFlush ();
+		qglFlush();
 		glState.finishCalled = qtrue;
 	}
 	if ( r_finish->integer == 0 ) {
@@ -1394,7 +1394,7 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 #ifdef __USE_QGL_FINISH__
 	qglFinish();
 #else if __USE_QGL_FLUSH__
-	qglFlush();
+	if (r_finish->integer) qglFlush();
 #endif //__USE_QGL_FINISH__
 
 	start = 0;
@@ -2004,7 +2004,7 @@ void RB_ShowImages( void ) {
 #ifdef __USE_QGL_FINISH__
 	qglFinish();
 #else if __USE_QGL_FLUSH__
-	qglFlush();
+	if (r_finish->integer) qglFlush();
 #endif //__USE_QGL_FINISH__
 
 	start = ri->Milliseconds();
@@ -2181,7 +2181,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 		qglFinish();
 	}
 #else if __USE_QGL_FLUSH__
-	if ( !glState.finishCalled ) {
+	if ( r_finish->integer && !glState.finishCalled ) {
 		qglFlush();
 	}
 #endif //__USE_QGL_FINISH__
