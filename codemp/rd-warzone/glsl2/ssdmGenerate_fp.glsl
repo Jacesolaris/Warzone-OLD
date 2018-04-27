@@ -99,10 +99,15 @@ float GetDisplacementAtCoord(vec2 coord)
 	return displacement;
 }
 
-float ReliefMapping(vec2 dp, vec2 ds, float origDepth)
+float ReliefMapping(vec2 dp, vec2 ds, float origDepth, float materialMultiplier)
 {
+#ifdef __HQ_PARALLAX__
+	int linear_steps = 10 * int(materialMultiplier);
+	int binary_steps = 5 * int(materialMultiplier);
+#else //!__HQ_PARALLAX__
 	const int linear_steps = 10;
 	const int binary_steps = 5;
+#endif //__HQ_PARALLAX__
 	float size = 1.0 / linear_steps;
 	float depth = 1.0;
 	float best_depth = 1.0;
@@ -161,7 +166,7 @@ void main(void)
 	float depth = getDepth(var_TexCoords);
 	float invDepth = 1.0 - depth;
 	vec2 ParallaxXY = norm.xy * vec2((-DISPLACEMENT_STRENGTH * materialMultiplier) / u_Dimensions) * invDepth;
-	float displacement = invGlowStrength * ReliefMapping(var_TexCoords, ParallaxXY, depth);
+	float displacement = invGlowStrength * ReliefMapping(var_TexCoords, ParallaxXY, depth, materialMultiplier);
 #else
 	float displacement = GetDisplacementAtCoord(var_TexCoords);
 #endif

@@ -2612,21 +2612,23 @@ void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	GLSL_BindProgram(&tr.ssdmGenerateShader);
+	shaderProgram_t *shader = &tr.ssdmGenerateShader[r_ssdm->integer >= 2 ? 1 : 0]; // r_ssdm 1 = fast. r_ssdm 2 = quality.
 
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_BindProgram(shader);
+
+	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImage512, TB_LIGHTMAP);
 
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	
 	/*if (r_anamorphic->integer)
 	{
@@ -2641,20 +2643,20 @@ void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
 	}
 
-	GLSL_SetUniformMatrix16(&tr.ssdmGenerateShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 	vec4_t local1;
 	VectorSet4(local1, DISPLACEMENT_MAPPING_STRENGTH, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
-	GLSL_SetUniformVec4(&tr.ssdmGenerateShader, UNIFORM_LOCAL1, local1);
+	GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, local1);
 
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
 		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		GLSL_SetUniformVec2(&tr.ssdmGenerateShader, UNIFORM_DIMENSIONS, screensize);
+		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 	}
 
 	{
@@ -2668,10 +2670,10 @@ void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 512.0/*r_testvalue2->value > 0.0 ? r_testvalue2->value : backEnd.viewParms.zFar*/);
-		GLSL_SetUniformVec4(&tr.ssdmGenerateShader, UNIFORM_VIEWINFO, viewInfo);
+		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssdmFbo, ldrBox, &tr.ssdmGenerateShader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssdmFbo, ldrBox, shader, color, 0);
 }
 
 void RB_SSDM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

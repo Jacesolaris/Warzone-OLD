@@ -87,7 +87,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __RENDERER_THREADING__				// Just testing...
 
 //#define __EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
-#define __DEBUG_ASSIMP__						// Show debug info for loading models through assimp library...
+//#define __DEBUG_ASSIMP__						// Show debug info for loading models through assimp library...
 
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
@@ -2880,7 +2880,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t showDepthShader;
 	shaderProgram_t deferredLightingShader;
 	shaderProgram_t ssdmShader;
-	shaderProgram_t ssdmGenerateShader;
+	shaderProgram_t ssdmGenerateShader[2];
 	shaderProgram_t ssrShader;
 	shaderProgram_t ssrCombineShader;
 	shaderProgram_t testshaderShader;

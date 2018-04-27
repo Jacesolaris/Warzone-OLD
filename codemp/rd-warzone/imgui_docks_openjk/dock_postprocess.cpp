@@ -103,7 +103,7 @@ void DockPostProcess::MakeCvarList() {
 	AddCvar(r_dynamicGlow, 1);
 	AddCvar(r_bloom, 2);
 	AddCvar(r_anamorphic, 1);
-	AddCvar(r_ssdm, 1);
+	AddCvar(r_ssdm, 2);
 	AddCvar(r_ao, 3);
 	AddCvar(r_cartoon, 3);
 	AddCvar(r_ssdo, 1);

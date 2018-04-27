@@ -3713,10 +3713,20 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.ssdmGenerateShader, "ssdmGenerate", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdmGenerate_vp, fallbackShader_ssdmGenerate_fp, NULL, NULL, NULL))
+	
+	if (!GLSL_BeginLoadGPUShader(&tr.ssdmGenerateShader[0], "ssdmGenerate1", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdmGenerate_vp, fallbackShader_ssdmGenerate_fp, NULL, NULL, NULL))
 	{
-		ri->Error(ERR_FATAL, "Could not load ssdmGenerate shader!");
+		ri->Error(ERR_FATAL, "Could not load ssdmGenerate1 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define __HQ_PARALLAX__\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssdmGenerateShader[1], "ssdmGenerate2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_ssdmGenerate_vp, fallbackShader_ssdmGenerate_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdmGenerate2 shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -5290,25 +5300,50 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.ssdmGenerateShader))
+	if (!GLSL_EndLoadGPUShader(&tr.ssdmGenerateShader[0]))
 	{
-		ri->Error(ERR_FATAL, "Could not load ssdmGenerateShader!");
+		ri->Error(ERR_FATAL, "Could not load ssdmGenerateShader1!");
 	}
 
-	GLSL_InitUniforms(&tr.ssdmGenerateShader);
+	GLSL_InitUniforms(&tr.ssdmGenerateShader[0]);
 
-	GLSL_BindProgram(&tr.ssdmGenerateShader);
+	GLSL_BindProgram(&tr.ssdmGenerateShader[0]);
 
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.ssdmGenerateShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[0], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[0], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[0], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[0], UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[0], UNIFORM_GLOWMAP, TB_GLOWMAP);
 
-	GLSL_SetUniformVec3(&tr.ssdmGenerateShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+	GLSL_SetUniformVec3(&tr.ssdmGenerateShader[0], UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.ssdmGenerateShader);
+	GLSL_FinishGPUShader(&tr.ssdmGenerateShader[0]);
+#endif
+
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssdmGenerateShader[1]))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssdmGenerateShader2!");
+	}
+
+	GLSL_InitUniforms(&tr.ssdmGenerateShader[1]);
+
+	GLSL_BindProgram(&tr.ssdmGenerateShader[1]);
+
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[1], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[1], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[1], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[1], UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssdmGenerateShader[1], UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	GLSL_SetUniformVec3(&tr.ssdmGenerateShader[1], UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssdmGenerateShader[1]);
 #endif
 
 	numEtcShaders++;
@@ -6163,7 +6198,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.showDepthShader);
 	GLSL_DeleteGPUShader(&tr.deferredLightingShader);
 	GLSL_DeleteGPUShader(&tr.ssdmShader);
-	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader);
+	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader[0]);
+	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader[1]);
 	GLSL_DeleteGPUShader(&tr.ssrShader);
 	GLSL_DeleteGPUShader(&tr.ssrCombineShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
