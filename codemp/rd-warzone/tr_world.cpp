@@ -27,26 +27,9 @@ extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 
 extern qboolean LODMODEL_MAP;
 
-/*
-================
-R_CullSurface
-
-Tries to cull surfaces before they are lighted or
-added to the sorting list.
-================
-*/
-static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
-	if (r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
-		return qfalse;
-	}
-
-	if (*surf->data == SF_GRID && r_nocurves->integer) {
-		return qtrue;
-	}
-
+void RB_CullSurfaceOcclusion(msurface_t *surf)
+{
 #ifdef __ZFAR_CULLING_ON_SURFACES__
-	surf->depthDrawOnly = qfalse;
-
 	if (r_occlusion->integer)
 	{
 		vec3_t center;
@@ -57,16 +40,37 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		if (cdistance > tr.occlusionZfar * 1.75)
 		{// Out of view range, but we still want it on depth draws...
 			surf->depthDrawOnly = qtrue;
-
-			//if (LODMODEL_MAP) return qtrue;
 		}
 	}
 #endif //__ZFAR_CULLING_ON_SURFACES__
+}
+
+/*
+================
+R_CullSurface
+
+Tries to cull surfaces before they are lighted or
+added to the sorting list.
+================
+*/
+static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
+#ifdef __ZFAR_CULLING_ON_SURFACES__
+	surf->depthDrawOnly = qfalse;
+#endif //__ZFAR_CULLING_ON_SURFACES__
+
+	if (r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
+		return qfalse;
+	}
+
+	if (*surf->data == SF_GRID && r_nocurves->integer) {
+		return qtrue;
+	}
 
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
 		if (tr.currentModel && tr.currentModel->type == MOD_BRUSH)
 		{// UQ1: Hack!!! Disabled... These have cull issues...
+			RB_CullSurfaceOcclusion(surf);
 			return qfalse;
 		}
 
@@ -75,6 +79,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		cullType_t ct;
 
 		if (!r_facePlaneCull->integer) {
+			RB_CullSurfaceOcclusion(surf);
 			return qfalse;
 		}
 
@@ -82,6 +87,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 
 		if (ct == CT_TWO_SIDED)
 		{
+			RB_CullSurfaceOcclusion(surf);
 			return qfalse;
 		}
 
@@ -117,6 +123,8 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 				if (d < 0)
 					return qtrue;
 			}
+
+			RB_CullSurfaceOcclusion(surf);
 			return qfalse;
 		}
 
@@ -136,6 +144,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 			}
 		}
 
+		RB_CullSurfaceOcclusion(surf);
 		return qfalse;
 	}
 
@@ -173,6 +182,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		}
 	}
 
+	RB_CullSurfaceOcclusion(surf);
 	return qfalse;
 }
 
