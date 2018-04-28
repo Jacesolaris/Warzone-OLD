@@ -35,7 +35,9 @@ flat in int			iGrassType;
 
 out vec4			out_Glow;
 out vec4			out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4			out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 out vec4			out_Position;
 
 const float xdec = 1.0/255.0;
@@ -125,7 +127,9 @@ void main()
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
 		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy) * dir), 0.0, 1.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 		//out_Position = vec4(0.0);
 	}
@@ -134,7 +138,9 @@ void main()
 		gl_FragColor = vec4(0.0);
 		out_Glow = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		out_Position = vec4(0.0);
 	}
 }

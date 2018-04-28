@@ -1631,8 +1631,11 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
-	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+	if (r_normalMappingReal->integer)
+	{
+		GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+	}
 	
 	{
 		vec4_t viewInfo;
@@ -2376,8 +2379,11 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
 
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+	if (r_normalMappingReal->integer)
+	{
+		GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+	}
 
 	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 	GL_BindToTMU(tr.ssaoImage, TB_STEEPMAP);
@@ -2831,8 +2837,11 @@ void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 
-	GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+	if (r_normalMappingReal->integer)
+	{
+		GLSL_SetUniformInt(&tr.showNormalsShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GL_BindToTMU(tr.renderNormalDetailedImage, TB_OVERLAYMAP);
+	}
 
 	GLSL_SetUniformMatrix16(&tr.showNormalsShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

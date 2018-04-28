@@ -15,7 +15,9 @@ varying vec3      var_Normal;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 void main()
 {
@@ -50,5 +52,7 @@ void main()
 	out_Glow = vec4(0.0);
 	out_Position = vec4(0.0);
 	out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 	out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 }

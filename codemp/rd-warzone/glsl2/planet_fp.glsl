@@ -16,7 +16,9 @@ varying vec2		var_TexCoords;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 #define m_Normal		var_Normal
 #define m_TexCoords		var_TexCoords
@@ -46,15 +48,12 @@ void main()
 	if (d <= 0.9999)
 	{// Moon...
 		gl_FragColor.a = 1.0;
-		//out_Glow = clamp(gl_FragColor, 0.0, 1.0);
-		//out_Glow.rgb *= u_Local8.a;
-		//out_Position = vec4(m_vertPos.xyz, MATERIAL_SUN+1.0);
-		//out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, 1.0 );
-		//out_NormalDetail = vec4(0.0);
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 	}
 	else if (d > 0.9)
     {// Atmosphere...
@@ -63,14 +62,12 @@ void main()
         d *= 7.0;
         d += 0.3;
      	gl_FragColor = mix(vec4(vec3(atmos)*u_Local7.bga, 1.0), vec4(0.0), d);
-		//out_Glow = vec4(0.0);
-		//out_Position = vec4(m_vertPos.xyz, MATERIAL_SUN+1.0);
-		//out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, 1.0 );
-		//out_NormalDetail = vec4(0.0);
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
     }
 	else
 	{// Space (zero alpha)...
@@ -78,6 +75,8 @@ void main()
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 	}
 }

@@ -648,7 +648,10 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.glowImage, 1);
 		FBO_AttachTextureImage(tr.renderNormalImage, 2);
 		FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
-		FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
+		if (r_normalMappingReal->integer)
+		{
+			FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
+		}
 
 		//FBO_CreateBuffer(tr.msaaResolveFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);

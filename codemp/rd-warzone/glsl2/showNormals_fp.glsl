@@ -93,6 +93,7 @@ void main(void)
 
 	if (u_Settings0.r > 0.0)
 	{
+#ifdef __USE_REAL_NORMALMAPS__
 		vec4 normalDetail = textureLod(u_OverlayMap, var_TexCoords, 0.0);
 
 		if (normalDetail.a < 1.0)
@@ -104,6 +105,14 @@ void main(void)
 			normalDetail = normalVector(var_TexCoords);
 #endif //__FAST_NORMAL_DETAIL__
 		}
+#else //!__USE_REAL_NORMALMAPS__
+#ifdef __FAST_NORMAL_DETAIL__
+		vec3 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0).rgb;
+		vec4 normalDetail = normalVector(color);
+#else //!__FAST_NORMAL_DETAIL__
+		vec4 normalDetail = normalVector(var_TexCoords);
+#endif //__FAST_NORMAL_DETAIL__
+#endif //__USE_REAL_NORMALMAPS__
 
 		normalDetail.rgb = normalize(clamp(normalDetail.rgb, 0.0, 1.0) * 2.0 - 1.0);
 		//normalDetail.rgb *= 0.25;//u_Settings0.g;

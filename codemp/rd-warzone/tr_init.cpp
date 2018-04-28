@@ -183,10 +183,10 @@ cvar_t  *r_ssdoBaseRadius;
 cvar_t  *r_ssdoMaxOcclusionDist;
 
 cvar_t  *r_normalMapping;
+cvar_t  *r_normalMappingReal;
 cvar_t  *r_normalMapQuality;
 cvar_t  *r_specularMapping;
 cvar_t  *r_deluxeMapping;
-cvar_t  *r_parallaxMapping;
 cvar_t  *r_cubeMapping;
 cvar_t  *r_cubeMapSize;
 cvar_t  *r_cubemapStrength;
@@ -1530,10 +1530,10 @@ void R_Register( void )
 	r_skyLightContribution = ri->Cvar_Get("r_skyLightContribution", "0.5", CVAR_ARCHIVE);
 
 	r_normalMapping = ri->Cvar_Get( "r_normalMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_normalMappingReal = ri->Cvar_Get("r_normalMappingReal", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_normalMapQuality = ri->Cvar_Get( "r_normalMapQuality", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_deluxeMapping = ri->Cvar_Get( "r_deluxeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_parallaxMapping = ri->Cvar_Get( "r_parallaxMapping", "1", CVAR_ARCHIVE );
+	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_deluxeMapping = ri->Cvar_Get( "r_deluxeMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubeMapping = ri->Cvar_Get( "r_cubeMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubeMapSize = ri->Cvar_Get( "r_cubeMapSize", "64", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubemapCullRange = ri->Cvar_Get("r_cubemapCullRange", "384.0", CVAR_ARCHIVE);

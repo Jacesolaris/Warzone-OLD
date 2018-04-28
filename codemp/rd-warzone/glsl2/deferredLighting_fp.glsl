@@ -972,6 +972,7 @@ void main(void)
 	}
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
+#ifdef __USE_REAL_NORMALMAPS__
 	// Now add detail offsets to the normal value...
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
@@ -983,6 +984,13 @@ void main(void)
 		normalDetail = normalVector(texCoords);
 #endif //__FAST_NORMAL_DETAIL__
 	}
+#else
+#ifdef __FAST_NORMAL_DETAIL__
+	vec4 normalDetail = normalVector(outColor.rgb);
+#else //!__FAST_NORMAL_DETAIL__
+	vec4 normalDetail = normalVector(texCoords);
+#endif //__FAST_NORMAL_DETAIL__
+#endif //__USE_REAL_NORMALMAPS__
 
 	// Simply offset the normal value based on the detail value... It looks good enough, but true PBR would probably want to use the tangent/bitangent below instead...
 	normalDetail.rgb = normalize(clamp(normalDetail.xyz, 0.0, 1.0) * 2.0 - 1.0);

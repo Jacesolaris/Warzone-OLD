@@ -16,7 +16,9 @@ varying vec2    var_TexCoords;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 
 #define m_Normal		var_Normal
@@ -233,14 +235,12 @@ void main()
 	
 	if (length(gl_FragColor.rgb) > 0.1)
 	{
-		//out_Glow = gl_FragColor;
-		//out_Position = vec4(m_vertPos.xyz, MATERIAL_SUN+1.0);
-		//out_Normal = vec4( m_Normal.xyz * 0.5 + 0.5, 1.0 );
-		//out_NormalDetail = vec4(0.0);
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 	}
 	else
 	{
@@ -248,6 +248,8 @@ void main()
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 	}
 }

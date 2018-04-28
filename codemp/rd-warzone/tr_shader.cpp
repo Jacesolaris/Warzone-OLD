@@ -2270,10 +2270,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 			else if(!Q_stricmp(token, "normalParallaxMap") || !Q_stricmp(token, "bumpParallaxMap"))
 			{
-				if (r_parallaxMapping->integer)
-					stage->type = ST_NORMALPARALLAXMAP;
-				else
-					stage->type = ST_NORMALMAP;
+				stage->type = ST_NORMALMAP;
 				VectorSet4(stage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 			}
 			else if(!Q_stricmp(token, "specularMap"))
@@ -5016,7 +5013,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 
 	// UQ1: Can't we do all this in one stage ffs???
-	if (r_normalMapping->integer >= 2 && checkNormals)
+	if (r_normalMapping->integer >= 2 && checkNormals && r_normalMappingReal->integer)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -5039,7 +5036,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 			hasRealNormalMap = qtrue;
 		}
-		else if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded)//if (lightmap || useLightVector || useLightVertex)
+		else if (r_normalMappingReal->integer && !diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded)
 		{
 			char normalName[MAX_IMAGE_PATH];
 			image_t *normalImg = NULL;
@@ -5653,15 +5650,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP1] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP1].image[0] = splatImg;
-
-				/*if (r_normalMapping->integer >= 2)
-				{
-					// Generate normal and height map for it as well...
-					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP1].image[0]->imgName);
-					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
-					diffuse->bundle[TB_SPLATMAP1].image[1] = splatNormalImg;
-				}*/
 			}
 			else
 			{
@@ -5712,15 +5700,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP2] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP2].image[0] = splatImg;
-
-				/*if (r_normalMapping->integer >= 2)
-				{
-					// Generate normal and height map for it as well...
-					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP2].image[0]->imgName);
-					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
-					diffuse->bundle[TB_SPLATMAP2].image[1] = splatNormalImg;
-				}*/
 			}
 			else
 			{
@@ -5771,15 +5750,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPLATMAP3] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP3].image[0] = splatImg;
-
-				/*if (r_normalMapping->integer >= 2)
-				{
-					// Generate normal and height map for it as well...
-					char imgname[64];
-					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP3].image[0]->imgName);
-					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
-					diffuse->bundle[TB_SPLATMAP3].image[1] = splatNormalImg;
-				}*/
 			}
 			else
 			{

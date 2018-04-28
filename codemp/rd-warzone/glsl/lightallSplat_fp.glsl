@@ -159,7 +159,9 @@ varying float				var_Slope;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 vec2 EncodeNormal(in vec3 N)
 {
@@ -611,6 +613,8 @@ void main()
 
 
 	vec3 N = normalize(m_Normal.xyz);
+
+#ifdef __USE_REAL_NORMALMAPS__
 	vec4 norm = vec4(0.0);
 
 #if 0 // Shouldn't need this on splatmap draws...
@@ -620,6 +624,7 @@ void main()
 		norm.a = 1.0;
 	}
 #endif
+#endif //__USE_REAL_NORMALMAPS__
 
 
 #ifdef USE_DETAIL_TEXTURES
@@ -801,8 +806,9 @@ void main()
 
 		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 		out_Normal = vec4(vec3(EncodeNormal(N.xyz), 1.0), 1.0 );
-		//out_NormalDetail = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = norm;
+#endif //__USE_REAL_NORMALMAPS__
 	}
 	else
 	{
@@ -810,6 +816,8 @@ void main()
 
 		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 		out_Normal = vec4( vec3(EncodeNormal(N.xyz), 1.0), 1.0 );
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = norm;
+#endif //__USE_REAL_NORMALMAPS__
 	}
 }

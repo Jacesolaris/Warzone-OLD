@@ -18,7 +18,9 @@ flat in int			v_foliageLayer;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 vec2 EncodeNormal(in vec3 N)
 {
@@ -89,5 +91,7 @@ void main()
 	out_Position = vec4(v_position.xyz, gl_FragColor.a > 0.0 ? MATERIAL_GREENLEAVES + 1.0 : 0.0);
 	out_Normal = vec4(EncodeNormal(v_normal.xyz), 0.0, gl_FragColor.a > 0.0 ? 1.0 : 0.0);
 	out_Glow = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 	out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 }

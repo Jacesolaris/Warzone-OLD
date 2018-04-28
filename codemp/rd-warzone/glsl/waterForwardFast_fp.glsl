@@ -7,7 +7,9 @@ varying vec3		var_Normal;
 out vec4 out_Glow;
 out vec4 out_Normal;
 out vec4 out_Position;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 #define MAP_WATER_LEVEL u_Local9.a
 
@@ -24,5 +26,7 @@ void main()
 	//out_Position = vec4(0.0, 0.0, MAP_WATER_LEVEL, 1.0);
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(EncodeNormal(var_Normal), 0.0, 1.0);
+#ifdef __USE_REAL_NORMALMAPS__
 	out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 }

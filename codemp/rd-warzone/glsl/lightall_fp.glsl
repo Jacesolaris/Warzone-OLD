@@ -144,7 +144,9 @@ varying float				var_Slope;
 out vec4 out_Glow;
 out vec4 out_Position;
 out vec4 out_Normal;
+#ifdef __USE_REAL_NORMALMAPS__
 out vec4 out_NormalDetail;
+#endif //__USE_REAL_NORMALMAPS__
 
 
 const float							fBranchHardiness = 0.001;
@@ -237,6 +239,8 @@ void main()
 
 
 	vec3 N = normalize(m_Normal.xyz);
+
+#ifdef __USE_REAL_NORMALMAPS__
 	vec4 norm = vec4(0.0);
 
 	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && USE_ISDETAIL <= 0.0 && SHADER_HAS_NORMALMAP > 0.0)
@@ -244,6 +248,7 @@ void main()
 		norm = texture(u_NormalMap, texCoords);
 		norm.a = 1.0;
 	}
+#endif //__USE_REAL_NORMALMAPS__
 
 
 	vec3 ambientColor = vec3(0.0);
@@ -423,7 +428,9 @@ void main()
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 	}
 	else if (USE_GLOW_BUFFER >= 2.0)
 	{// Merged diffuse+glow stage...
@@ -507,26 +514,33 @@ void main()
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
-			//out_NormalDetail = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = norm;
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 	}
 	else if (USE_GLOW_BUFFER > 0.0)
@@ -561,25 +575,33 @@ void main()
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 	}
 	else
@@ -590,25 +612,33 @@ void main()
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = norm;
+#endif //__USE_REAL_NORMALMAPS__
 		}
 		else
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
 			out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
 		}
 	}
 }

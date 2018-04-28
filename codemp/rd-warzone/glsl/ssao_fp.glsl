@@ -15,13 +15,15 @@ varying vec2	var_ScreenTex;
 varying vec3	var_Position;
 
 
-#define __USE_DETAIL_NORMALS__ // Not needed. Waste of time...
+#ifdef __USE_REAL_NORMALMAPS__
+//#define __USE_DETAIL_NORMALS__ // Not needed. Waste of time...
+#endif //__USE_REAL_NORMALMAPS__
 
 #ifdef __USE_DETAIL_NORMALS__
 #define __FAST_NORMAL_DETAIL__
 #endif //__USE_DETAIL_NORMALS__
 
-#define NUM_OCCLUSION_CHECKS 16
+#define NUM_OCCLUSION_CHECKS 8//16
 
 
 vec3 DecodeNormal(in vec2 N)
@@ -127,28 +129,35 @@ float randZeroOne()
 	return fRes;
 }
 
-#if 1
 float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance )
 {
     vec2  uv  = pixel;
     float z   = texture2D( u_ScreenDepthMap, uv ).x;		// read eye linear z
-	vec2  res = vec2(resolution) / u_Dimensions.xy;
-	float numOcclusions = 0.0;
-
-	vLocalSeed = position;
-	vec3 ref = unKernel[int(randZeroOne() * 32.0)];
 
 	if (z >= 1.0)
 	{// Sky...
 		return 1.0;
 	}
 
+	vec2  res = vec2(resolution) / u_Dimensions.xy;
+	float numOcclusions = 0.0;
+
+	vLocalSeed = position;
+	vec3 ref = unKernel[int(randZeroOne() * 32.0)];
+
     // accumulate occlusion
     float bl = 0.0;
     for( int i=0; i<NUM_OCCLUSION_CHECKS; i++ )
     {
-		vec3  of = faceforward( reflect( unKernel[i], ref ), light, normal );
-        float sz = texture2D( u_ScreenDepthMap, uv + (res * of.xy)).x;
+		vec3 of = faceforward( reflect( unKernel[i], ref ), light, normal );
+		vec2 thisUV = uv + (res * of.xy);
+
+		if (thisUV.x > 1.0 || thisUV.y > 1.0 || thisUV.x < 0.0 || thisUV.y < 0.0)
+		{// Don't sample outside of screen bounds...
+			continue;
+		}
+
+        float sz = texture2D( u_ScreenDepthMap, thisUV).x;
         float zd = (sz-z)*strength;
 
 		if (length(sz - z) < minDistance)
@@ -177,139 +186,6 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in f
 	ao = mix(ao, 1.0, z);
     return ao;
 }
-#elif 0
-float ssao(in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance)
-{
-	vec2  uv = pixel;
-	float z = texture2D(u_ScreenDepthMap, uv).x;		// read eye linear z
-
-	if (z >= 1.0)
-	{// Sky...
-		return 1.0;
-	}
-
-	vec2  res = vec2(1.0) / u_Dimensions.xy;
-
-	float bl = 0.0;
-	float numOcclusions = 0.0;
-
-	//for (int x = 1; x <= 64; x += x)
-	int x = 0;
-	{
-		for (int y = 1; y <= u_Dimensions.y; y += y)
-		{
-			vec2 offset = vec2(float(x), float(y));
-			vec2 poff = offset * res;
-			vec2 pweight = vec2(1.0) - (offset / (u_Dimensions.xy*1.2));
-			float weight = 1.0 - (length(pweight) / 2.0);
-
-			float sz = texture2D(u_ScreenDepthMap, uv + poff).x;
-			float zd = (sz - z)*strength*weight;
-			
-			if (length(sz - z) < minDistance)
-			{
-				zd = 0.5*weight;
-				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
-				numOcclusions += weight;
-				continue;
-			}
-			else if (length(sz - z) > maxDisance)
-			{
-				zd = 0.0;
-				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
-				numOcclusions += weight;
-				continue;
-			}
-			else
-			{
-				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
-				numOcclusions += weight;
-			}
-
-			sz = texture2D(u_ScreenDepthMap, uv - poff).x;
-			zd = (sz - z)*strength*weight;
-
-			if (length(sz - z) < minDistance)
-			{
-				zd = 0.5*weight;
-				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
-				numOcclusions += weight;
-				continue;
-			}
-			else if (length(sz - z) > maxDisance)
-			{
-				zd = 0.0;
-				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
-				numOcclusions += weight;
-				continue;
-			}
-			else
-			{
-				bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
-				numOcclusions += weight;
-			}
-		}
-	}
-
-	float ao = clamp(bl / float(numOcclusions), 0.0, 1.0);
-	ao = mix(ao, 1.0, z);
-	return ao;
-}
-#else
-float ssao(in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance)
-{
-	vec2  fragCoord = pixel;
-	float originalDepth = texture2D(u_ScreenDepthMap, fragCoord).x;		// read eye linear z
-
-	if (originalDepth >= 1.0)
-	{// Sky...
-		return 1.0;
-	}
-
-	float roll = clamp(pow(length(u_Local1.r), 0.2/*u_Local0.g*/), 0.0, 1.0);
-
-	float scanMult = (1.0 - originalDepth);// *u_Local0.r;
-	scanMult *= 1.0 - roll;
-
-	//const int samples = 20;
-	float occPower = 0.1;// u_Local0.r;
-	float maxAllow = 0.0015;// u_Local0.g; // 0.00007
-	float minAllow = 0.000015;// u_Local0.b;
-	int samples = int(u_Local0.a); //200
-
-	//vec2 dir = -(fragCoord.xy - u_vlightPositions.xy) / float(samples);
-	vec2 dir = (fragCoord.xy - vec2(fragCoord.x, 0.0)) / float(samples);
-
-	float occlusion = 1.0;
-
-	for (int samp = 1; samp <= samples; samp++)
-	{
-		vec2 coord = fragCoord.xy + (dir * samp * scanMult);
-
-		if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0)
-		{
-			continue;
-		}
-
-		float depth = texture(u_ScreenDepthMap, coord).r;
-
-		if (depth <= originalDepth)
-		{// This is between us and the light...
-			float diff = length(depth - originalDepth) + 0.00001;
-
-			if (diff <= maxAllow && diff >= minAllow)
-			{
-				float center = ((minAllow + maxAllow) / 2.0);
-				float dist = 1.0 - (length(diff - center) / center);
-				float thisOcclusion = 1.0 - (pow(diff, occPower) * dist);
-				occlusion = min(occlusion, thisOcclusion);
-			}
-		}
-	}
-
-	return occlusion;
-}
-#endif
 
 void main( void ) 
 {

@@ -101,12 +101,14 @@ float GetDisplacementAtCoord(vec2 coord)
 
 float ReliefMapping(vec2 dp, vec2 ds, float origDepth, float materialMultiplier)
 {
+	//return clamp(GetDisplacementAtCoord(dp + ds), 0.0, 1.0);
+
 #ifdef __HQ_PARALLAX__
 	int linear_steps = 10 * int(materialMultiplier);
 	int binary_steps = 5 * int(materialMultiplier);
 #else //!__HQ_PARALLAX__
-	const int linear_steps = 10;
-	const int binary_steps = 5;
+	const int linear_steps = 4;// 5;// 10;
+	const int binary_steps = 2;// 5;
 #endif //__HQ_PARALLAX__
 	float size = 1.0 / linear_steps;
 	float depth = 1.0;

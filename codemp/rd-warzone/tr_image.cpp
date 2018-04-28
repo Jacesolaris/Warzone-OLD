@@ -3290,6 +3290,11 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 	int			width = inwidth;
 	int			height = inheight;
 
+	if (r_normalMappingReal->integer)
+	{
+		return NULL;
+	}
+
 	if (r_normalMapping->integer == 0)
 	{
 		return NULL;
@@ -3355,6 +3360,8 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 
 image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
 {
+	if (!r_normalMappingReal->integer) return NULL;
+
 	char normalName[MAX_IMAGE_PATH] = { 0 };
 	image_t *normalImage = NULL;
 	int normalFlags;
@@ -3380,6 +3387,8 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 
 static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int height, int flags )
 {
+	if (!r_specularMapping->integer) return;
+
 	char specularName[MAX_IMAGE_PATH] = { 0 };
 	image_t *specularImage = NULL;
 
@@ -4324,13 +4333,16 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& !(flags & IMGFLAG_CUBEMAP)
 		&& !r_lowVram->integer)
 	{
-		if (r_normalMapping->integer >= 2) 
+		if (r_normalMappingReal->integer)
 		{
-			if (image
-				&& !((StringContainsWord(name, "sky") && !StringContainsWord(name, "skyscraper")) || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
+			if (r_normalMapping->integer >= 2)
 			{
-				GL_Bind(image);
-				R_CreateNormalMap( name, pic, width, height, flags, image );
+				if (image
+					&& !((StringContainsWord(name, "sky") && !StringContainsWord(name, "skyscraper")) || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
+				{
+					GL_Bind(image);
+					R_CreateNormalMap(name, pic, width, height, flags, image);
+				}
 			}
 		}
 
@@ -4677,7 +4689,10 @@ void R_CreateBuiltinImages( void ) {
 	//tr.previousRenderImage = R_CreateImage("_renderPreviousFrame", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.renderNormalImage = R_CreateImage("*normal", NULL, width, height, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, 0);
-	tr.renderNormalDetailedImage = R_CreateImage("*normalDetailed", NULL, width, height, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, 0);
+	if (r_normalMappingReal->integer)
+	{
+		tr.renderNormalDetailedImage = R_CreateImage("*normalDetailed", NULL, width, height, IMGTYPE_NORMAL, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, 0);
+	}
 	tr.renderPositionMapImage = R_CreateImage("*positionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F); // Needs to store large values...
 	tr.waterPositionMapImage = R_CreateImage("*waterPositionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA32F); // Needs to store large values...
 

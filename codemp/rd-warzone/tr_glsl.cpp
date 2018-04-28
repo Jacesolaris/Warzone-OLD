@@ -1733,6 +1733,11 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 	Q_strcat(dest, size, glslMaterialsList);
 
+	if (r_normalMappingReal->integer)
+	{
+		Q_strcat(dest, size, "#define __USE_REAL_NORMALMAPS__\n");
+	}
+
 	if (extra)
 	{
 		Q_strcat(dest, size, extra);
@@ -2024,33 +2029,21 @@ void GLSL_AttachTextures(void)
 	FBO_AttachTextureImage(tr.glowImage, 1);
 	FBO_AttachTextureImage(tr.renderNormalImage, 2);
 	FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
-	FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
-	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+	if (r_normalMappingReal->integer)
+	{
+		FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
+	}
 }
 
 void GLSL_AttachGlowTextures(void)
 {// Moved here for convenience...
 	FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.glowImage, 1);
-	//FBO_AttachTextureImage(tr.dummyImage2, 2);
-	//FBO_AttachTextureImage(tr.dummyImage3, 3);
-	//FBO_AttachTextureImage(tr.dummyImage4, 4);
-	
-	//FBO_AttachTextureImage(tr.renderNormalImage, 2);
-	//FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
-	//FBO_AttachTextureImage(tr.renderNormalDetailedImage, 4);
-	
-	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachGenericTextures(void)
 {// Moved here for convenience...
 	FBO_AttachTextureImage(tr.renderImage, 0);
-	//FBO_AttachTextureImage(tr.dummyImage, 1); // dummy
-	//FBO_AttachTextureImage(tr.dummyImage2, 2); // dummy
-	//FBO_AttachTextureImage(tr.dummyImage3, 3); // dummy
-	//FBO_AttachTextureImage(tr.dummyImage4, 4);
-	////R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 }
 
 void GLSL_AttachRenderDepthTextures(void)
@@ -2069,8 +2062,10 @@ void GLSL_AttachWaterTextures(void)
 	FBO_AttachTextureImage(tr.dummyImage2, 1); // dummy
 	FBO_AttachTextureImage(tr.dummyImage3, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
-	FBO_AttachTextureImage(tr.dummyImage4, 4);
-	////R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
+	if (r_normalMappingReal->integer)
+	{
+		FBO_AttachTextureImage(tr.dummyImage4, 4);
+	}
 }
 
 void GLSL_BindAttributeLocations(shaderProgram_t *program, int attribs) {
@@ -2139,7 +2134,11 @@ bool GLSL_EndLoadGPUShader(shaderProgram_t *program)
 	qglBindFragDataLocation(program->program, 1, "out_Glow");
 	qglBindFragDataLocation(program->program, 2, "out_Normal");
 	qglBindFragDataLocation(program->program, 3, "out_Position");
-	qglBindFragDataLocation(program->program, 4, "out_NormalDetail");
+
+	if (r_normalMappingReal->integer || program == &tr.linearizeDepthShader)
+	{
+		qglBindFragDataLocation(program->program, 4, "out_NormalDetail");
+	}
 
 	GLSL_BindAttributeLocations(program, attribs);
 
