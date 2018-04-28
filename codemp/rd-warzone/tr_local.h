@@ -2878,7 +2878,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t showNormalsShader;
 	shaderProgram_t showDepthShader;
-	shaderProgram_t deferredLightingShader;
+	shaderProgram_t deferredLightingShader[2];
 	shaderProgram_t ssdmShader;
 	shaderProgram_t ssdmGenerateShader[2];
 	shaderProgram_t ssrShader;

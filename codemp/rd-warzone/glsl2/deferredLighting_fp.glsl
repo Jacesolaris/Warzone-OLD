@@ -7,7 +7,7 @@
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __HEIGHTMAP_SHADOWS__
-#define __FAST_LIGHTING__
+//#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 //#define __IRRADIANCE__
 
 #ifdef USE_CUBEMAPS
@@ -672,14 +672,14 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 	return diffuse + specular;*/
 
 	// Ambient light.
-	float ambience = 0.25;
+	float ambience = 4.0;// 0.25;
 
 	// Diffuse lighting.
 	//float diff = max(dot(normal, light), 0.0);
 	float diff = getdiffuse(normal, light, 2.0) * 16.0;
 
 	// Specular lighting.
-	float fre = clamp(pow(clamp(dot(normal, -view) + 1.0, 0.0, 1.0), -2.0), 2.0, 48.0);
+	float fre = clamp(pow(clamp(dot(normal, -view) + 1.0, 0.0, 1.0), -2.0), 0.0, 1.0);
 	float spec = pow(max(dot(reflect(-light, normal), view), 0.0), 1.2);
 
 	return (clamp(diffuseColor, 0.0, 1.0) * ambience) + (clamp(diffuseColor, 0.0, 1.0) * diff) + (clamp(specularColor, 0.0, 1.0) * spec * fre);
@@ -798,7 +798,7 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 #endif
 
 	// Ambient light.
-	float ambience = 0.25;
+	float ambience = 4.0;// 0.25;
 
 	// Diffuse light.
 	float diff = getdiffuse(normal, light, 2.0) * 16.0;
@@ -1279,17 +1279,7 @@ void main(void)
 			if (lightMult > 0.0)
 			{
 				lightColor *= lightMult;
-				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), outColor.rgb * lightColor * 6.0, outColor.rgb * lightColor * 3.0, 1.0, u_PrimaryLightOrigin.xyz);
-
-#ifndef __LQ_MODE__
-				/*
-				if (isMetalic)
-				{// Metals do an extra randomish light query to make them really shine... Mixed in at a lower level then the real direction...
-					vec3 query = normalize(reflect(normalize(-sunDir), E));
-					lightColor = mix(lightColor, blinn_phong(position.xyz, outColor.rgb, N, E, query, outColor.rgb * lightColor, outColor.rgb * lightColor * 2.0, 1.0, u_PrimaryLightOrigin.xyz), 0.25);
-				}
-				*/
-#endif //__LQ_MODE__
+				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.5, lightColor * 0.5, 1.0, u_PrimaryLightOrigin.xyz);
 
 				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
@@ -1378,7 +1368,7 @@ void main(void)
 					}
 #endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
 					
-					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, outColor.rgb * lightColor, outColor.rgb * lightColor * 0.1, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
+					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.03, lightColor * 0.5, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
 				}
 			}
 

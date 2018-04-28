@@ -1363,6 +1363,7 @@ vec3_t		SUN_COLOR_AMBIENT = { 0.85 };
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 int			MAP_LIGHTMAP_ENHANCEMENT = 1;
+int			MAP_LIGHTING_METHOD = 1;
 qboolean	MAP_USE_PALETTE_ON_SKY = qfalse;
 float		MAP_LIGHTMAP_MULTIPLIER = 1.0;
 vec3_t		MAP_AMBIENT_CSB = { 1 };
@@ -1549,6 +1550,7 @@ void MAPPING_LoadMapInfo(void)
 	LATE_LIGHTING_ENABLED = atoi(IniRead(mapname, "PALETTE", "LATE_LIGHTING_ENABLED", "0"));
 	MAP_LIGHTMAP_DISABLED = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_DISABLED", "0")) ? qtrue : qfalse;
 	MAP_LIGHTMAP_ENHANCEMENT = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_ENHANCEMENT", "1"));
+	MAP_LIGHTING_METHOD = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTING_METHOD", "1"));
 	MAP_USE_PALETTE_ON_SKY = atoi(IniRead(mapname, "PALETTE", "MAP_USE_PALETTE_ON_SKY", "0")) ? qtrue : qfalse;
 
 	MAP_LIGHTMAP_MULTIPLIER = atof(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_MULTIPLIER", "1.0"));
@@ -1883,6 +1885,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lighting method is ^7%s^5 on this map.\n", MAP_LIGHTING_METHOD ? "Fast" : "Enhanced");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of palette on sky is ^7%s^5 and lightmap cap is ^7%.4f^5 on this map.\n", MAP_USE_PALETTE_ON_SKY ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_MULTIPLIER);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of alt lightmap method is ^7%s^5 on this map.\n", (MAP_LIGHTMAP_ENHANCEMENT == 2) ? "FULL" : (MAP_LIGHTMAP_ENHANCEMENT == 1) ? "HYBRID" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);

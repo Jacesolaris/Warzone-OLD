@@ -70,7 +70,16 @@ vec3 ProcessBloomRays(vec2 inTC)
 		totalColor = clamp(totalColor, 0.0, 1.0);
 	}
 
-	totalColor *= BLOOMRAYS_STRENGTH;
+	if (u_Local2.r > 0.5)
+	{// Sunset/Sunrise/Night... Scale up the glow strengths at night...
+		float nightNess = (u_Local2.r - 0.5) / 0.5;
+		float nightMult = nightNess * 4.0;
+		totalColor *= BLOOMRAYS_STRENGTH * nightMult;
+	}
+	else
+	{
+		totalColor *= BLOOMRAYS_STRENGTH;
+	}
 
 	// Amplify contrast...
 #define lightLower ( 0.0 / 255.0 )

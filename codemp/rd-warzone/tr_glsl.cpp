@@ -3678,28 +3678,58 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load showDepth shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
-	if (r_sunlightMode->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-	if (r_cubeMapping->integer)
 	{
-		Q_strcat(extradefines, 1024, "#define USE_CUBEMAPS\n");
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+		extradefines[0] = '\0';
+
+		if (r_sunlightMode->integer >= 2)
+			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+		if (r_cubeMapping->integer)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_CUBEMAPS\n");
 
 #ifdef __EMISSIVE_CUBE_IBL__
-		Q_strcat(extradefines, 1024, "#define USE_EMISSIVECUBES\n");
+			Q_strcat(extradefines, 1024, "#define USE_EMISSIVECUBES\n");
 #endif //__EMISSIVE_CUBE_IBL__
-	}
+		}
 
 #ifdef __LIGHT_OCCLUSION__
-	Q_strcat(extradefines, 1024, "#define __LIGHT_OCCLUSION__\n");
+		Q_strcat(extradefines, 1024, "#define __LIGHT_OCCLUSION__\n");
 #endif //__LIGHT_OCCLUSION__
 
-	if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader, "deferredLighting", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
+		Q_strcat(extradefines, 1024, "#define __FAST_LIGHTING__\n");
+
+		if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader[0], "deferredLighting1", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load deferredLighting1 shader!");
+		}
+	}
+
 	{
-		ri->Error(ERR_FATAL, "Could not load deferredLighting shader!");
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+		extradefines[0] = '\0';
+
+		if (r_sunlightMode->integer >= 2)
+			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+		if (r_cubeMapping->integer)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_CUBEMAPS\n");
+
+#ifdef __EMISSIVE_CUBE_IBL__
+			Q_strcat(extradefines, 1024, "#define USE_EMISSIVECUBES\n");
+#endif //__EMISSIVE_CUBE_IBL__
+		}
+
+#ifdef __LIGHT_OCCLUSION__
+		Q_strcat(extradefines, 1024, "#define __LIGHT_OCCLUSION__\n");
+#endif //__LIGHT_OCCLUSION__
+
+		if (!GLSL_BeginLoadGPUShader(&tr.deferredLightingShader[1], "deferredLighting2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_deferredLighting_vp, fallbackShader_deferredLighting_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load deferredLighting2 shader!");
+		}
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -5245,34 +5275,65 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-
-	if (!GLSL_EndLoadGPUShader(&tr.deferredLightingShader))
 	{
-		ri->Error(ERR_FATAL, "Could not load deferredLightingshader!");
-	}
+		if (!GLSL_EndLoadGPUShader(&tr.deferredLightingShader[0]))
+		{
+			ri->Error(ERR_FATAL, "Could not load deferredLightingshader1!");
+		}
 
-	GLSL_InitUniforms(&tr.deferredLightingShader);
+		GLSL_InitUniforms(&tr.deferredLightingShader[0]);
 
-	GLSL_BindProgram(&tr.deferredLightingShader);
+		GLSL_BindProgram(&tr.deferredLightingShader[0]);
 
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
-	GLSL_SetUniformInt(&tr.deferredLightingShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_NORMALMAP, TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[0], UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
 
-	GLSL_SetUniformVec3(&tr.deferredLightingShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+		GLSL_SetUniformVec3(&tr.deferredLightingShader[0], UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.deferredLightingShader);
+		GLSL_FinishGPUShader(&tr.deferredLightingShader[0]);
 #endif
 
-	numEtcShaders++;
+		numEtcShaders++;
+	}
+
+	{
+		if (!GLSL_EndLoadGPUShader(&tr.deferredLightingShader[1]))
+		{
+			ri->Error(ERR_FATAL, "Could not load deferredLightingshader2!");
+		}
+
+		GLSL_InitUniforms(&tr.deferredLightingShader[1]);
+
+		GLSL_BindProgram(&tr.deferredLightingShader[1]);
+
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_NORMALMAP, TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_CUBEMAP, TB_CUBEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+		GLSL_SetUniformInt(&tr.deferredLightingShader[1], UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+
+		GLSL_SetUniformVec3(&tr.deferredLightingShader[1], UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.deferredLightingShader[1]);
+#endif
+
+		numEtcShaders++;
+	}
 
 
 
@@ -6195,7 +6256,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.colorCorrectionShader);
 	GLSL_DeleteGPUShader(&tr.showNormalsShader);
 	GLSL_DeleteGPUShader(&tr.showDepthShader);
-	GLSL_DeleteGPUShader(&tr.deferredLightingShader);
+	GLSL_DeleteGPUShader(&tr.deferredLightingShader[0]);
+	GLSL_DeleteGPUShader(&tr.deferredLightingShader[1]);
 	GLSL_DeleteGPUShader(&tr.ssdmShader);
 	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader[0]);
 	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader[1]);
