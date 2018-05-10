@@ -45,8 +45,6 @@ cvar_t	*r_superSampleMultiplier;
 
 cvar_t	*r_instanceCloudReductionCulling;
 cvar_t	*r_tesselation;
-cvar_t	*r_tesselationLevel;
-cvar_t	*r_tesselationAlpha;
 
 cvar_t	*r_cartoon;
 
@@ -1421,9 +1419,7 @@ void R_Register( void )
 
 	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "7.0", CVAR_ARCHIVE );
-	r_tesselationAlpha = ri->Cvar_Get( "r_tesselationAlpha", "1.0", CVAR_ARCHIVE );
+	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE );
 
 	r_cartoon = ri->Cvar_Get("r_cartoon", "0", CVAR_ARCHIVE);
 
@@ -1597,7 +1593,7 @@ void R_Register( void )
 
 	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "1.0", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.0", CVAR_ARCHIVE );
-	r_ao = ri->Cvar_Get("r_ao", "3", CVAR_ARCHIVE);
+	r_ao = ri->Cvar_Get("r_ao", "1", CVAR_ARCHIVE);
 	r_env = ri->Cvar_Get("r_env", "1", CVAR_ARCHIVE);
 	
 	r_debugEmissiveLights = ri->Cvar_Get("r_debugEmissiveLights", "0", CVAR_ARCHIVE);

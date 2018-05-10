@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+extern char currentMapName[128];
+
 extern qboolean		FOG_STANDARD_ENABLE;
 extern vec3_t		FOG_COLOR;
 extern vec3_t		FOG_COLOR_SUN;
@@ -1650,8 +1652,8 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+		screensize[0] = tr.ssaoImage->width;//glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = tr.ssaoImage->height;//glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssaoShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1660,6 +1662,8 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
 	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
 	GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
+	GLSL_SetUniformVec3(&tr.ssaoShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 	{
 		vec4_t local0;
@@ -1678,11 +1682,11 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local1;
-		VectorSet4(local1, mCameraForward[ROLL], 0.0, 0.0, 0.0);
+		VectorSet4(local1, mCameraForward[PITCH], mCameraForward[YAW], mCameraForward[ROLL], 0.0);
 		GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_LOCAL1, local1);
 	}
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssaoFbo, ldrBox, &tr.ssaoShader, color, 0);
+	FBO_Blit(hdrFbo, NULL, NULL, tr.ssaoFbo, NULL, &tr.ssaoShader, color, 0);
 }
 
 extern float mix(float x, float y, float a);
@@ -2534,8 +2538,20 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	//GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
 	GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
+	float useAO = 0.0;
+	if (r_ao->integer >= 3 && AO_ENABLED && AO_BLUR)
+		useAO = 6.0;// r_ao->integer;
+	else if (r_ao->integer >= 3 && AO_ENABLED && StringContainsWord(currentMapName, "mp/")) // Allow mp/ maps to always use blurred AO, if the cvar is set high...
+		useAO = 6.0;// r_ao->integer;
+	else if (r_ao->integer >= 2 && AO_ENABLED) 
+		useAO = 2.0;
+	else if (r_ao->integer && AO_ENABLED) 
+		useAO = 1.0;
+	else 
+		useAO = 0.0;
+
 	vec4_t local1;
-	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, (r_ao->integer && AO_ENABLED) ? (AO_BLUR) ? r_ao->integer : 2.0 : 0.0, r_env->integer ? 1.0 : 0.0);
+	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, useAO, r_env->integer ? 1.0 : 0.0);
 	GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, local1);
 
 	qboolean shadowsEnabled = qfalse;

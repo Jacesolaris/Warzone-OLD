@@ -57,10 +57,14 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 
 	if (r_tesselation->integer && tesselation)
 	{
-		GLint MaxPatchVertices = 0;
-		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		//GLint MaxPatchVertices = 0;
+		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
 		//printf("Max supported patch vertices %d\n", MaxPatchVertices);
-		qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		//if (r_testvalue0->integer)
+			//qglPatchParameteri(GL_PATCH_VERTICES, MaxPatchVertices >= 16 ? 16 : 3);
+		//else
+			qglPatchParameteri(GL_PATCH_VERTICES, 3);
+
 		qglDrawRangeElements(GL_PATCHES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 	}
 	else
@@ -74,9 +78,13 @@ void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinInd
 {
 	if (r_tesselation->integer && tesselation)
 	{
-		GLint MaxPatchVertices = 0;
-		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
-		qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		//GLint MaxPatchVertices = 0;
+		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		//if (r_testvalue0->integer)
+		//	qglPatchParameteri(GL_PATCH_VERTICES, MaxPatchVertices >= 16 ? 16 : 3);
+		//else
+			qglPatchParameteri(GL_PATCH_VERTICES, 3);
+
 		qglMultiDrawElements(GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
 	}
 	else
@@ -1433,18 +1441,6 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
-
-float RB_GetTesselationAlphaLevel ( int materialType )
-{
-	return r_tesselationAlpha->value;
-}
-
-float RB_GetTesselationInnerLevel ( int materialType )
-{
-	return Q_clamp(1.0, r_tesselationLevel->value, 2.25);
-}
-
-
 extern qboolean R_SurfaceIsAllowedFoliage( int materialType );
 
 qboolean RB_ShouldUseGeometryGrass (int materialType )
@@ -1963,11 +1959,54 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 	if (r_tesselation->integer)
 	{
-		useTesselation = qtrue;
+		/*if (tess.shader->hasSplatMaps && !tess.shader->tesselation)
+		{
+			tess.shader->tesselation = qtrue;
+			tess.shader->tesselationLevel = 3.0;
+			tess.shader->tesselationAlpha = 1.0;
+		}*/
 
-		tessInner = RB_GetTesselationInnerLevel(tess.shader->materialType);
-		tessOuter = tessInner;
-		tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->materialType);
+		if (!(tr.viewParms.flags & VPF_CUBEMAP)
+			//&& !(tr.viewParms.flags & VPF_SHADOWMAP)
+			&& !(tr.viewParms.flags & VPF_DEPTHSHADOW)
+			//&& !(tr.viewParms.flags & VPF_NOPOSTPROCESS)
+			&& !(tr.viewParms.flags & VPF_SHADOWPASS)
+			&& !(tr.viewParms.flags & VPF_EMISSIVEMAP)
+			&& tess.shader->tesselation 
+			&& tess.shader->tesselationLevel > 1.0 
+			&& tess.shader->tesselationAlpha != 0.0)
+		{
+			useTesselation = qtrue;
+			tessInner = tess.shader->tesselationLevel;
+			tessOuter = tessInner;
+			tessAlpha = tess.shader->tesselationAlpha;
+		}
+		/*else if (r_testvalue0->integer)
+		{
+			if (r_testvalue1->integer && tess.shader->materialType == MATERIAL_SOLIDWOOD)
+			{// Always add tesselation to wood...
+				useTesselation = qtrue;
+				tessInner = 3.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
+			}
+
+			if (r_testvalue2->integer && tess.shader->materialType == MATERIAL_GREENLEAVES)
+			{// Always add tesselation to wood...
+				useTesselation = qtrue;
+				tessInner = 3.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
+			}
+
+			if (r_testvalue3->integer && tess.shader->materialType == MATERIAL_SOLIDMETAL)
+			{// Always add tesselation to wood...
+				useTesselation = qtrue;
+				tessInner = 3.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
+			}
+		}*/
 	}
 
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
@@ -2335,9 +2374,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (useTesselation)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
-
-				sp = &tr.lightAllShader;
-
+				sp = &tr.lightAllShader[1];
 				backEnd.pc.c_lightallDraws++;
 			}
 			else
@@ -2533,11 +2570,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//&& !r_lowVram->integer
 				&& ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR)))
 			{
-				sp = &tr.lightAllSplatShader;
+				if (useTesselation)
+					sp = &tr.lightAllSplatShader[1];
+				else
+					sp = &tr.lightAllSplatShader[0];
 			}
 			else
 			{
-				sp = &tr.lightAllShader;
+				if (useTesselation)
+					sp = &tr.lightAllShader[1];
+				else
+					sp = &tr.lightAllShader[0];
 			}
 
 			backEnd.pc.c_lightallDraws++;
@@ -2696,16 +2739,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				0.0,
 				0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS4, vec);
-		}
-
-		if (r_tesselation->integer && useTesselation)
-		{
-			if (backEnd.currentEntity == &backEnd.entity2D || (pStage->stateBits & GLS_DEPTHTEST_DISABLE))
-			{
-				tessInner = 0.0;
-				tessOuter = tessInner;
-				tessAlpha = 1.0;
-			}
 		}
 
 		// UQ1: Used by both generic and lightall...
@@ -2939,7 +2972,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (r_splatMapping->integer 
 				//&& !r_lowVram->integer
-				&& sp == &tr.lightAllSplatShader)
+				&& (sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllSplatShader[1]))
 			{
 #ifdef __USE_DETAIL_MAPS__
 				if (pStage->bundle[TB_DETAILMAP].image[0])
@@ -3079,7 +3112,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_COLORMAP); // Sky up...
 #endif
 		}
-		else if ( sp == &tr.lightAllShader || sp == &tr.lightAllSplatShader)
+		else if ( sp == &tr.lightAllShader[0] || sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllShader[1] || sp == &tr.lightAllSplatShader[1] )
 		{
 			int i;
 
@@ -3127,15 +3160,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				if (sp == &tr.lightAllShader)
+				if (r_normalMappingReal->integer)
 				{
-					if (pStage->bundle[TB_NORMALMAP].image[0])
+					if (sp == &tr.lightAllShader[0] || sp == &tr.lightAllShader[1])
 					{
-						GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_NORMALMAP].image[0], TB_NORMALMAP);
-					}
-					else if (r_normalMapping->integer >= 2)
-					{
-						GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
+						if (pStage->bundle[TB_NORMALMAP].image[0])
+						{
+							GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_NORMALMAP].image[0], TB_NORMALMAP);
+						}
+						else if (r_normalMapping->integer >= 2)
+						{
+							GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
+						}
 					}
 				}
 
@@ -3183,6 +3219,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		while (1)
 		{
+			if (!tess.shader->hasAlpha && !tess.shader->hasGlow && !pStage->rgbGen && !pStage->alphaGen && tess.shader->cullType != CT_BACK_SIDED)
+			{
+				GL_Cull(CT_FRONT_SIDED);
+			}
+
 			if (isGrass && passNum == 1 && sp2)
 			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
@@ -3492,11 +3533,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
 			}
 #endif //__WATER_STUFF__
-			else if (r_tesselation->integer && sp->tesselation)
+			
+			
+			if (useTesselation)
 			{
 				vec4_t l10;
 				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+				GLSL_SetUniformVec4(sp, UNIFORM_TESSELATION_INFO, l10);
 			}
 
 			vec4_t l9;

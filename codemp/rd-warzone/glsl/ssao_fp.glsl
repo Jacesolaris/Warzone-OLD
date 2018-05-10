@@ -6,10 +6,11 @@ uniform sampler2D   u_OverlayMap;		// detailed normal map
 
 uniform vec2        u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
+uniform vec3		u_ViewOrigin;
 uniform vec4		u_PrimaryLightOrigin;
 
 uniform vec4		u_Local0; // r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
-uniform vec4		u_Local1;
+uniform vec4		u_Local1; // mCameraForward.x, y, z
 
 varying vec2	var_ScreenTex;
 varying vec3	var_Position;
@@ -23,7 +24,8 @@ varying vec3	var_Position;
 #define __FAST_NORMAL_DETAIL__
 #endif //__USE_DETAIL_NORMALS__
 
-#define NUM_OCCLUSION_CHECKS 8//16
+#define NUM_OCCLUSION_CHECKS 8
+//#define NUM_OCCLUSION_CHECKS 16
 
 
 vec3 DecodeNormal(in vec2 N)
@@ -129,7 +131,9 @@ float randZeroOne()
 	return fRes;
 }
 
-float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in float resolution, in float strength, in float minDistance, in float maxDisance )
+//#define __SHADOWS__
+
+float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in float resolution, in float strength, in float minDistance, in float maxDisance )
 {
     vec2  uv  = pixel;
     float z   = texture2D( u_ScreenDepthMap, uv ).x;		// read eye linear z
@@ -139,26 +143,109 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in f
 		return 1.0;
 	}
 
+	vec3 light = normalize(position.xyz - u_PrimaryLightOrigin.xyz);
+
 	vec2  res = vec2(resolution) / u_Dimensions.xy;
 	float numOcclusions = 0.0;
 
 	vLocalSeed = position;
+
+#ifndef __SHADOWS__
 	vec3 ref = unKernel[int(randZeroOne() * 32.0)];
+	//vec3 ref = vec3(u_Local0.r);
+#else //__SHADOWS__
+	vec3 viewDir = normalize(u_Local1.xyz);// normalize(position.xyz - u_ViewOrigin.xyz);
+	vec3 viewDir2 = normalize(position.xyz - u_ViewOrigin.xyz);
+#endif //__SHADOWS__
 
     // accumulate occlusion
     float bl = 0.0;
-    for( int i=0; i<NUM_OCCLUSION_CHECKS; i++ )
+    for( int i = 0; i < NUM_OCCLUSION_CHECKS; i++ )
     {
-		vec3 of = faceforward( reflect( unKernel[i], ref ), light, normal );
+#ifndef __SHADOWS__
+		vec3 of = faceforward( reflect( unKernel[/*i*/int(randZeroOne() * 32.0)], ref ), light, normal );
+		//vec3 of = faceforward( reflect( ref, vec3(float(i / NUM_OCCLUSION_CHECKS) + 1.0) ), light, normal );
+		//vec3 of = reflect(ref * float(i / NUM_OCCLUSION_CHECKS) + 1.0, light);
 		vec2 thisUV = uv + (res * of.xy);
+#else //__SHADOWS__
+		float dir = float(i / NUM_OCCLUSION_CHECKS) + 1.0;
+		
+		vec3 ref = normalize(vec3(dir) * viewDir);
+		vec3 of = ref;// faceforward(ref, light, normal);
+		/*if (u_Local0.g == 1.0)
+			of = faceforward(ref, -light, normal);
+		if (u_Local0.g == 2.0)
+			of = faceforward(ref, light, viewDir);
+		if (u_Local0.g == 3.0)
+			of = faceforward(ref, -light, viewDir);
+		if (u_Local0.g == 4.0)
+			of = faceforward(ref, light, -viewDir);
+		if (u_Local0.g == 5.0)
+			of = faceforward(ref, -light, -viewDir);
+		if (u_Local0.g == 6.0)
+			of = ref * viewDir;
+		if (u_Local0.g == 7.0)
+			of = ref * -viewDir;*/
 
-		if (thisUV.x > 1.0 || thisUV.y > 1.0 || thisUV.x < 0.0 || thisUV.y < 0.0)
-		{// Don't sample outside of screen bounds...
+		if (u_Local0.g == 1.0)
+			of.y *= -1.0;
+
+		//of *= (u_Local0.r == 1.0) ? dot(viewDir, -light) : dot(viewDir, light);
+		//of = normalize(of);
+
+		vec2 thisUV = uv + (res * of.xy * u_Local0.b);
+
+		vec4 pos2 = textureLod(u_PositionMap, uv, 0.0);
+		vec3 viewDir3 = normalize(pos2.xyz - u_ViewOrigin.xyz);
+		//float E2 = dot(viewDir2, light);
+
+		if (distance(viewDir2, viewDir3) > u_Local0.r)
+		{
+			float zd = 1.0;
+			bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+			numOcclusions += 1.0;
 			continue;
 		}
 
-        float sz = texture2D( u_ScreenDepthMap, thisUV).x;
-        float zd = (sz-z)*strength;
+		/*if (thisUV.y < uv.y)
+		{
+			float zd = 0.5;
+			bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+			numOcclusions += 1.0;
+			continue;
+		}*/
+#endif //__SHADOWS__
+
+		if (thisUV.x > 1.0 || thisUV.y > 1.0 || thisUV.x < 0.0 || thisUV.y < 0.0)
+		{// Don't sample outside of screen bounds...
+			float zd = 0.5;
+			bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+			numOcclusions += 1.0;
+			continue;
+		}
+
+#if 0
+		vec3 uvPos = textureLod(u_PositionMap, thisUV, 0.0).xyz;
+		float uvDist = distance(uvPos, u_PrimaryLightOrigin.xyz);
+
+		if (u_Local0.r == 1.0 && uvDist >= pDist)
+		{// This pixel is further from the light than the original pixel, skip...
+			float zd = 0.5;
+			bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+			numOcclusions += 1.0;
+			continue;
+		}
+		else if (u_Local0.r == 2.0 && uvDist <= pDist)
+		{// This pixel is closer to the light then the original pixel, skip...
+			float zd = 0.5;
+			bl += clamp(zd*10.0, 0.1, 1.0)*(1.0 - clamp((zd - 1.0) / 5.0, 0.0, 1.0));
+			numOcclusions += 1.0;
+			continue;
+		}
+#endif
+
+		float sz = texture2D( u_ScreenDepthMap, thisUV).x;
+		float zd = (sz-z)*strength;
 
 		if (length(sz - z) < minDistance)
 		{
@@ -181,9 +268,9 @@ float ssao( in vec3 position, in vec2 pixel, in vec3 normal, in vec3 light, in f
 		}
     }
 
-	//float ao = clamp(bl/float(NUM_OCCLUSION_CHECKS), 0.0, 1.0);
 	float ao = clamp(bl/float(numOcclusions), 0.0, 1.0);
 	ao = mix(ao, 1.0, z);
+
     return ao;
 }
 
@@ -228,11 +315,7 @@ void main( void )
 
 	vec3 N = normalize(norm.xyz);
 
-	vec3 to_light = position.xyz - u_PrimaryLightOrigin.xyz;
-	float to_light_dist = length(to_light);
-	vec3 to_light_norm = (to_light / to_light_dist);
-
-	float msao = ssao( position.xyz, var_ScreenTex, N.xyz, to_light_norm, 32.0, 64.0, 0.001, 0.01 );
+	float msao = ssao( position.xyz, var_ScreenTex, N.xyz, 32.0, 64.0, 0.001, 0.01 );
 	float sao = clamp(msao, 0.0, 1.0);
 	gl_FragColor=vec4(sao, 0.0, 0.0, 1.0);
 }

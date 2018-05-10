@@ -4267,6 +4267,11 @@ static qboolean ParseShader( const char *name, const char **text )
 	shader.glowStrength = 1.0;
 	shader.glowVibrancy = 0.0;
 
+	// Also init tesselation stuff...
+	shader.tesselation = qfalse;
+	shader.tesselationLevel = 0.0;
+	shader.tesselationAlpha = 0.0;
+
 	s = 0;
 
 	token = COM_ParseExt( text, qtrue );
@@ -4431,6 +4436,37 @@ static qboolean ParseShader( const char *name, const char **text )
 		}
 		else if ( !Q_stricmp( token, "tesssize" ) ) {
 			SkipRestOfLine( text );
+			continue;
+		}
+		else if (Q_stricmp(token, "tesselation") == 0 || Q_stricmp(token, "tesselate") == 0)
+		{
+			shader.tesselation = qtrue;
+			continue;
+		}
+		else if (Q_stricmp(token, "tesselationLevel") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for tesselationLevel exponent in shader '%s'\n", shader.name);
+				shader.tesselationLevel = 1.0;
+				continue;
+			}
+
+			shader.tesselationLevel = atof(token);
+			continue;
+		}
+		else if (Q_stricmp(token, "tesselationAlpha") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for tesselationLevel exponent in shader '%s'\n", shader.name);
+				shader.tesselationAlpha = 1.0;
+				continue;
+			}
+
+			shader.tesselationAlpha = atof(token);
 			continue;
 		}
 		else if ( !Q_stricmp( token, "clampTime" ) ) {
@@ -6916,6 +6952,9 @@ static int CollapseStagesToGLSL(void)
 		shader.maxStage = i;
 	}
 
+	// Record number of active stages for sorting...
+	shader.numStages = numStages;
+
 	return numStages;
 }
 
@@ -7891,7 +7930,6 @@ char uniqueGenericGlow[] = "{\n"\
 
 char uniqueGenericSkyMap[] = "{\n"\
 "map $skyimage\n"\
-"//blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA\n"\
 "blendFunc GL_DST_COLOR GL_SRC_COLOR\n"\
 "detail\n"\
 "alphaGen const %f\n"\
@@ -7917,13 +7955,6 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "}\n"\
 "";
 
-//"sort seethrough\n"\
-//"cull	twosided\n"\
-// "rgbGen identity\n"\   ^^^
-// "rgbGen entity\n"\
-// "rgbGen vertex\n"\
-// "rgbGen lightingDiffuse\n"\
-
 char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_alphashadow\n"\
@@ -7942,21 +7973,40 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "}\n"\
 "";
 
-//"sort seethrough\n"\
-//"cull	twosided\n"\
-
-char uniqueGenericFoliageTreeShader[] = "{\n"\
+char uniqueGenericFoliageTreeBarkShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_material	solidwood\n"\
 "glowStrength 0.75\n"\
 "entityMergable\n"\
+"tesselation\n"\
+"tesselationLevel 3.0\n"\
+"tesselationAlpha 1.0\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
-"//alphaFunc GE128\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
 "//tcMod scale 2.5 2.5\n"\
+"}\n"\
+"}\n"\
+"";
+
+char uniqueGenericFoliageLeafsShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"q3map_alphashadow\n"\
+"q3map_material	GreenLeaves\n"\
+"surfaceparm	nonsolid\n"\
+"entityMergable\n"\
+"cull	twosided\n"\
+"//tesselation\n"\
+"//tesselationLevel 3.0\n"\
+"//tesselationAlpha 1.0\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
 "}\n"\
 "}\n"\
 "";
@@ -7968,14 +8018,19 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "surfaceparm	nomarks\n"\
 "glowStrength 0.75\n"\
 "entityMergable\n"\
+"tesselation\n"\
+"tesselationLevel 7.0\n"\
+"tesselationAlpha 1.0\n"\
 "{\n"\
 "map %s\n"\
 "//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"//rgbGen lightingDiffuse\n"\
-"rgbGen entity\n"\
+"rgbGen lightingDiffuse\n"\
+"//rgbGen entity\n"\
+"//rgbGen identity\n"\
+"//rgbGen Vertex\n"\
 "}\n"\
 "%s"\
 "}\n"\
@@ -7990,12 +8045,18 @@ char uniqueGenericArmorShader[] = "{\n"\
 "//entityMergable\n"\
 "glowStrength 8.0\n"\
 "cull	twosided\n"\
+"tesselation\n"\
+"tesselationLevel 7.0\n"\
+"tesselationAlpha 1.0\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen entity\n"\
+"rgbGen lightingDiffuse\n"\
+"//rgbGen entity\n"\
+"//rgbGen identity\n"\
+"//rgbGen Vertex\n"\
 "}\n"\
 "%s"\
 "}\n"\
@@ -8064,8 +8125,6 @@ char uniqueGenericWeaponShader[] = "{\n"\
 "%s"\
 "}\n"\
 "";
-
-//"sort seethrough\n"\
 
 char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
@@ -8398,20 +8457,30 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree")
 			|| StringContainsWord(strippedName, "warzone/deadtree") || StringContainsWord(strippedName, "warzone\\deadtree"))
 		{
-			if (StringContainsWord(strippedName, "bark") 
-				|| StringContainsWord(strippedName, "trunk") 
-				|| StringContainsWord(strippedName, "giant_tree") 
+			if (StringContainsWord(strippedName, "bark")
+				|| StringContainsWord(strippedName, "trunk")
+				|| StringContainsWord(strippedName, "giant_tree")
 				|| StringContainsWord(strippedName, "vine01"))
-				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
+			{
+				sprintf(myShader, uniqueGenericFoliageTreeBarkShader, strippedName, strippedName, "");
+			}
 			else
-				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+			{
+				//sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+				sprintf(myShader, uniqueGenericFoliageLeafsShader, strippedName, strippedName, "");
+			}
 		}
 		else if (StringContainsWord(strippedName, "warzone/test_trees") || StringContainsWord(strippedName, "warzone\\test_trees"))
 		{
 			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk"))
-				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
+			{
+				sprintf(myShader, uniqueGenericFoliageTreeBarkShader, strippedName, strippedName, "");
+			}
 			else
-				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+			{
+				//sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+				sprintf(myShader, uniqueGenericFoliageLeafsShader, strippedName, strippedName, "");
+			}
 		}
 		else if (StringContainsWord(name, "models/weapon"))
 		{

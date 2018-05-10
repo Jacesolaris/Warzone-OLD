@@ -954,6 +954,347 @@ int sSortFunc (const void * a, const void * b)
 
 extern qboolean DISABLE_LIFTS_AND_PORTALS_MERGE;
 
+#ifdef __REALTIME_SURFACE_SORTING__
+/*
+=================
+RealtimeSurfaceCompare
+compare function for qsort()
+=================
+*/
+static int RealtimeSurfaceCompare(const void *a, const void *b)
+{
+	drawSurf_t	 *dsa, *dsb;
+
+	dsa = (drawSurf_t *)a;
+	dsb = (drawSurf_t *)b;
+	
+	shader_t *shadera = tr.sortedShaders[(dsa->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
+	shader_t *shaderb = tr.sortedShaders[(dsb->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
+	
+#ifdef __REALTIME_DISTANCE_SORTING__
+	switch (*dsa->surface)
+	{
+	case SF_FACE:
+	case SF_GRID:
+	case SF_VBO_MESH:
+	case SF_TRIANGLES:
+	//case SF_POLY:
+		{
+			srfBspSurface_t   *aa, *bb;
+
+			aa = (srfBspSurface_t *)dsa->surface;
+			bb = (srfBspSurface_t *)dsa->surface;
+
+			float dista = Distance(aa->cullOrigin, tr.refdef.vieworg);
+			float distb = Distance(bb->cullOrigin, tr.refdef.vieworg);
+
+			if (r_testvalue2->integer)
+			{
+				dista = Distance(aa->cullOrigin, backEnd.refdef.vieworg);
+				distb = Distance(bb->cullOrigin, backEnd.refdef.vieworg);
+			}
+
+			// Sort closest to furthest... Hopefully allow for faster pixel depth culling...
+			if (dista < distb)
+				return -1;
+
+			else if (dista > distb)
+				return 1;
+		}
+		break;
+	default:
+		{
+			int64_t entityNumA = (dsa->sort >> QSORT_REFENTITYNUM_SHIFT) & REFENTITYNUM_MASK;
+			int64_t entityNumB = (dsb->sort >> QSORT_REFENTITYNUM_SHIFT) & REFENTITYNUM_MASK;
+
+			if (entityNumA < entityNumB)
+				return -1;
+
+			else if (entityNumA > entityNumB)
+				return 1;
+
+			trRefEntity_t *entA = &backEnd.refdef.entities[entityNumA];
+			trRefEntity_t *entB = &backEnd.refdef.entities[entityNumB];
+
+			float dista = Distance(entA->e.origin, tr.refdef.vieworg);
+			float distb = Distance(entB->e.origin, tr.refdef.vieworg);
+
+			if (r_testvalue2->integer)
+			{
+				dista = Distance(entA->e.origin, backEnd.refdef.vieworg);
+				distb = Distance(entB->e.origin, backEnd.refdef.vieworg);
+			}
+
+			// Sort closest to furthest... Hopefully allow for faster pixel depth culling...
+			if (dista < distb)
+				return -1;
+
+			else if (dista > distb)
+				return 1;
+		}
+		break;
+	}
+#endif //__REALTIME_DISTANCE_SORTING__
+
+
+#ifdef __REALTIME_FX_SORTING__
+	if (qboolean(shadera == tr.sunShader) < qboolean(shaderb == tr.sunShader))
+		return -1;
+	else if (qboolean(shadera == tr.sunShader) > qboolean(shaderb == tr.sunShader))
+		return 1;
+
+	if (qboolean(shadera == tr.moonShader) < qboolean(shaderb == tr.moonShader))
+		return -1;
+	else if (qboolean(shadera == tr.moonShader) > qboolean(shaderb == tr.moonShader))
+		return 1;
+
+	if (qboolean(shadera->materialType == MATERIAL_FIRE) < qboolean(shaderb->materialType == MATERIAL_FIRE))
+		return -1;
+	else if (qboolean(shadera->materialType == MATERIAL_FIRE) > qboolean(shaderb->materialType == MATERIAL_FIRE))
+		return 1;
+
+	if (qboolean(shadera->materialType == MATERIAL_SMOKE) < qboolean(shaderb->materialType == MATERIAL_SMOKE))
+		return -1;
+	else if (qboolean(shadera->materialType == MATERIAL_SMOKE) > qboolean(shaderb->materialType == MATERIAL_SMOKE))
+		return 1;
+#endif //__REALTIME_FX_SORTING__
+
+
+#ifdef __REALTIME_WATER_SORTING__
+	// Set up a value to skip stage checks later... does this even run per frame? i shoud actually check probably...
+	if (shadera->isWater < shaderb->isWater)
+		return -1;
+
+	else if (shadera->isWater > shaderb->isWater)
+		return 1;
+#endif //__REALTIME_WATER_SORTING__
+
+
+#ifdef __REALTIME_ALPHA_SORTING__
+	// Set up a value to skip stage checks later... does this even run per frame? i shoud actually check probably...
+	if (shadera->hasAlphaTestBits == 0)
+	{
+		for (int stage = 0; stage <= shadera->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = shadera->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				shadera->hasAlphaTestBits = max(shadera->hasAlphaTestBits, 1);
+			}
+
+			if (pStage->alphaGen)
+			{
+				shadera->hasAlphaTestBits = max(shadera->hasAlphaTestBits, 2);
+			}
+
+			if (shadera->hasAlpha)
+			{
+				shadera->hasAlphaTestBits = max(shadera->hasAlphaTestBits, 3);
+			}
+		}
+
+		if (shadera->hasAlphaTestBits == 0)
+		{
+			shadera->hasAlphaTestBits = -1;
+		}
+	}
+
+	if (shaderb->hasAlphaTestBits == 0)
+	{
+		for (int stage = 0; stage <= shaderb->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = shaderb->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				shaderb->hasAlphaTestBits = max(shaderb->hasAlphaTestBits, 1);
+				break;
+			}
+
+			if (pStage->alphaGen)
+			{
+				shaderb->hasAlphaTestBits = max(shaderb->hasAlphaTestBits, 2);
+			}
+
+			if (shaderb->hasAlpha)
+			{
+				shaderb->hasAlphaTestBits = max(shaderb->hasAlphaTestBits, 3);
+			}
+		}
+
+		if (shaderb->hasAlphaTestBits == 0)
+		{
+			shaderb->hasAlphaTestBits = -1;
+		}
+	}
+
+	// Non-alpha stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+	if (shadera->hasAlphaTestBits < shaderb->hasAlphaTestBits)
+		return -1;
+
+	else if (shadera->hasAlphaTestBits > shaderb->hasAlphaTestBits)
+		return 1;
+#endif //__REALTIME_ALPHA_SORTING__
+
+#ifdef __REALTIME_SPLATMAP_SORTING__
+	// Set up a value to skip stage checks later... does this even run per frame? i shoud actually check probably...
+	if (shadera->hasSplatMaps == 0)
+	{
+		for (int stage = 0; stage <= shadera->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = shadera->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->bundle[TB_STEEPMAP].image[0]
+				|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]
+				|| pStage->bundle[TB_ROOFMAP].image[0])
+			{
+				shadera->hasSplatMaps = 1;
+			}
+			else
+			{
+				shadera->hasSplatMaps = -1;
+			}
+		}
+	}
+
+	if (shaderb->hasSplatMaps == 0)
+	{
+		for (int stage = 0; stage <= shaderb->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = shaderb->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->bundle[TB_STEEPMAP].image[0]
+				|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]
+				|| pStage->bundle[TB_ROOFMAP].image[0])
+			{
+				shaderb->hasSplatMaps = 1;
+			}
+			else
+			{
+				shaderb->hasSplatMaps = -1;
+			}
+		}
+
+		// Non-alpha stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+		if (shadera->hasSplatMaps < shaderb->hasSplatMaps)
+			return -1;
+
+		else if (shadera->hasSplatMaps > shaderb->hasSplatMaps)
+			return 1;
+	}
+#endif //__REALTIME_SPLATMAP_SORTING__
+
+#ifdef __REALTIME_SORTINDEX_SORTING__
+	if (r_testvalue1->integer)
+	{
+		// sort by shader
+		if (shadera->sortedIndex < shaderb->sortedIndex)
+			return -1;
+
+		else if (shadera->sortedIndex > shaderb->sortedIndex)
+			return 1;
+	}
+#endif //__REALTIME_SORTINDEX_SORTING__
+
+#ifdef __REALTIME_NUMSTAGES_SORTING__
+	// Fewer stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+	if (shadera->numStages < shaderb->numStages)
+		return -1;
+
+	else if (shadera->numStages > shaderb->numStages)
+		return 1;
+#endif //__REALTIME_NUMSTAGES_SORTING__
+
+
+
+#ifdef __REALTIME_GLOW_SORTING__
+	// Non-glow stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+	if (shadera->hasGlow < shaderb->hasGlow)
+		return -1;
+
+	else if (shadera->hasGlow > shaderb->hasGlow)
+		return 1;
+#endif //__REALTIME_GLOW_SORTING__
+
+
+#ifdef __REALTIME_TESS_SORTING__
+	if (shadera->tesselation)
+	{// Check tesselation settings... Draw faster tesselation surfs first...
+		if (shadera->tesselationLevel < shaderb->tesselationLevel)
+			return -1;
+
+		else if (shadera->tesselationLevel > shaderb->tesselationLevel)
+			return 1;
+
+		if (shadera->tesselationAlpha < shaderb->tesselationAlpha)
+			return -1;
+
+		else if (shadera->tesselationAlpha > shaderb->tesselationAlpha)
+			return 1;
+	}
+#endif //__REALTIME_TESS_SORTING__
+
+#ifdef __REALTIME_MATERIAL_SORTING__
+	{// Material types.. To minimize changing between geom (grass) versions and non-grass shaders...
+		if (shadera->materialType < shaderb->materialType)
+			return -1;
+
+		else if (shadera->materialType > shaderb->materialType)
+			return 1;
+	}
+#endif //__REALTIME_MATERIAL_SORTING__
+
+	return 0;
+}
+#endif //__REALTIME_SURFACE_SORTING__
+
 void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery) {
 	int				i, max_threads_used = 0;
 	int				j = 0;
@@ -1031,6 +1372,13 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	int numShaderChanges = 0;
 	int numShaderDraws = 0;
 #endif //__DEBUG_MERGE__
+
+#ifdef __REALTIME_SURFACE_SORTING__
+	if (r_testvalue0->integer)
+	{
+		qsort(drawSurfs, numDrawSurfs, sizeof(*drawSurfs), RealtimeSurfaceCompare);
+	}
+#endif //__REALTIME_SURFACE_SORTING__
 
 	// First draw world normally...
 	for (i = 0; i < numDrawSurfs; ++i)

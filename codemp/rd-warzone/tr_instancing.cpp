@@ -8,31 +8,41 @@
 
 #include "VectorUtils3.h"
 
-int			INSTANCED_MODEL_TYPES = 0;
+typedef struct modelInstanceData_s
+{
+	mdvModel_t		*mModel = { NULL };
+	vec3_t			mOrigin = { 0 };
+	//matrix_t		mMatrix = { 0 };
+	vec3_t			mAngles = { 0 };
+	vec3_t			mScale = { 1 };
+	//trRefEntity_t	*mEntity = { NULL };
+} modelInstanceData_t;
 
-int				INSTANCED_MODEL_COUNT[MAX_INSTANCED_MODEL_TYPES] = { 0 };
-mdvModel_t		*INSTANCED_MODEL_MODEL[MAX_INSTANCED_MODEL_TYPES] = { NULL };
-vec3_t			INSTANCED_MODEL_ORIGINS[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-//matrix_t		INSTANCED_MODEL_MATRIXES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-vec3_t			INSTANCED_MODEL_ANGLES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
-vec3_t			INSTANCED_MODEL_SCALES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { 1 };
-//trRefEntity_t	*INSTANCED_MODEL_ENTITIES[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES] = { NULL };
+typedef struct modelInstances_s
+{
+	int					instanceModelTypes = 0;
+	mdvModel_t			*mModels[MAX_INSTANCED_MODEL_TYPES] = { NULL };
+	int					instanceModelCounts[MAX_INSTANCED_MODEL_TYPES];
+	modelInstanceData_t	instanceModelInfos[MAX_INSTANCED_MODEL_TYPES][MAX_INSTANCED_MODEL_INSTANCES];
+} modelInstances_t;
+
+modelInstances_t		mInstances;
 
 void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles, matrix_t model_matrix, trRefEntity_t *ent)
 {
 	qboolean	FOUND = qfalse;
 	int			modelID = 0;
 
-	for (modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
+	for (modelID = 0; modelID < mInstances.instanceModelTypes && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
-		if (INSTANCED_MODEL_MODEL[modelID] == NULL)
+		if (mInstances.mModels[modelID] == NULL)
 		{
 			break;
 		}
 
-		if (INSTANCED_MODEL_MODEL[modelID] == model)
+		if (mInstances.mModels[modelID] == model)
 		{
-			if (INSTANCED_MODEL_COUNT[modelID] + 1 < MAX_INSTANCED_MODEL_INSTANCES)
+			if (mInstances.instanceModelCounts[modelID] + 1 < MAX_INSTANCED_MODEL_INSTANCES)
 			{
 				FOUND = qtrue;
 				break;
@@ -42,29 +52,31 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles, 
 
 	if (!FOUND)
 	{
-		if (INSTANCED_MODEL_TYPES + 1 >= MAX_INSTANCED_MODEL_TYPES) return; // Uh oh...
+		if (mInstances.instanceModelTypes + 1 >= MAX_INSTANCED_MODEL_TYPES) return; // Uh oh...
 
-		INSTANCED_MODEL_TYPES++;
-		INSTANCED_MODEL_MODEL[modelID] = model;
+		mInstances.instanceModelTypes++;
+		mInstances.mModels[modelID] = model;
 	}
 
-	if (INSTANCED_MODEL_COUNT[modelID] + 1 < MAX_INSTANCED_MODEL_INSTANCES)
+	if (mInstances.instanceModelCounts[modelID] + 1 < MAX_INSTANCED_MODEL_INSTANCES)
 	{
-		VectorCopy(origin, INSTANCED_MODEL_ORIGINS[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-		VectorCopy(ent->e.modelScale, INSTANCED_MODEL_SCALES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-		//INSTANCED_MODEL_ENTITIES[modelID][INSTANCED_MODEL_COUNT[modelID]] = ent;
-#if 0
-		VectorCopy(angles, INSTANCED_MODEL_ANGLES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		mInstances.instanceModelInfos[modelID][mInstances.instanceModelCounts[modelID]].mModel = model; // pointer to the original model, so we can look up it's info in sorts...
 
-		//Matrix16Copy(model_matrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-		//Matrix16Copy(glState.modelviewProjection, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-		//Matrix16Multiply(glState.modelviewProjection, glState.modelview/*model_matrix*/, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		VectorCopy(origin, mInstances.instanceModelInfos[modelID][mInstances.instanceModelCounts[modelID]].mOrigin);
+		VectorCopy(ent->e.modelScale, mInstances.instanceModelInfos[modelID][mInstances.instanceModelCounts[modelID]].mScale);
+		//mEntities[modelID][mInstances.instanceModelCounts[modelID]] = ent;
+#if 0
+		VectorCopy(angles, mAngles[modelID][mInstances.instanceModelCounts[modelID]]);
+
+		//Matrix16Copy(model_matrix, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
+		//Matrix16Copy(glState.modelviewProjection, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
+		//Matrix16Multiply(glState.modelviewProjection, glState.modelview/*model_matrix*/, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
 
 		// set up the transformation matrix
 
 		//R_RotateForEntity(ent, &tr.viewParms, &tr.ori);
-		//Matrix16Multiply(tr.viewParms.projectionMatrix/*glState.projection*/, tr.ori.modelViewMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
-		//Matrix16Copy(glState.modelviewProjection, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		//Matrix16Multiply(tr.viewParms.projectionMatrix/*glState.projection*/, tr.ori.modelViewMatrix, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
+		//Matrix16Copy(glState.modelviewProjection, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
 
 		backEnd.currentEntity = ent;
 		backEnd.refdef.floatTime = backEnd.currentEntity->e.shaderTime;
@@ -72,22 +84,100 @@ void R_AddInstancedModelToList(mdvModel_t *model, vec3_t origin, vec3_t angles, 
 		// set up the transformation matrix
 		R_RotateForEntity(backEnd.currentEntity, &backEnd.viewParms, &backEnd.ori);
 		Matrix16Copy(backEnd.ori.modelViewMatrix, glState.modelview);
-		Matrix16Multiply(glState.projection, glState.modelview, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		Matrix16Multiply(glState.projection, glState.modelview, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
 
 		//ForceCrash();
 
 		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 		//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		//Matrix16Multiply(glState.modelviewProjection, backEnd.ori.modelMatrix, INSTANCED_MODEL_MATRIXES[modelID][INSTANCED_MODEL_COUNT[modelID]]);
+		//Matrix16Multiply(glState.modelviewProjection, backEnd.ori.modelMatrix, mMatrixes[modelID][mInstances.instanceModelCounts[modelID]]);
 #endif
 
-		INSTANCED_MODEL_COUNT[modelID]++;
+		mInstances.instanceModelCounts[modelID]++;
 	}
+}
+
+static int R_DistanceSortinstances(const void *a, const void *b)
+{
+	modelInstanceData_t	 *m1, *m2;
+
+	m1 = (modelInstanceData_t *)a;
+	m2 = (modelInstanceData_t *)b;
+
+
+	// Distance sort...
+	float dist1 = Distance(m1->mOrigin, tr.refdef.vieworg);
+	float dist2 = Distance(m2->mOrigin, tr.refdef.vieworg);
+
+	if (r_testvalue1->integer)
+	{
+		if (dist1 > dist2)
+			return -1;
+
+		else if (dist1 < dist2)
+			return 1;
+	}
+	else
+	{
+		if (dist1 < dist2)
+			return -1;
+
+		else if (dist1 > dist2)
+			return 1;
+	}
+
+
+
+	// Tree sort... Do trees first, because they have most chance of occluding...
+	if (m1->mModel->isTree == 0)
+	{
+		shader_t *shader = tr.shaders[m1->mModel->vboSurfaces[0].mdvSurface->shaderIndexes[0]];
+
+		if (StringContainsWord(shader->name, "tree"))
+		{
+			m1->mModel->isTree = 1;
+		}
+		else
+		{
+			m1->mModel->isTree = -1;
+		}
+	}
+
+	if (m2->mModel->isTree == 0)
+	{
+		shader_t *shader = tr.shaders[m2->mModel->vboSurfaces[0].mdvSurface->shaderIndexes[0]];
+
+		if (StringContainsWord(shader->name, "tree"))
+		{
+			m2->mModel->isTree = 1;
+		}
+		else
+		{
+			m2->mModel->isTree = -1;
+		}
+	}
+
+	if (m1->mModel->isTree > m2->mModel->isTree)
+		return -1;
+
+	else if (m1->mModel->isTree < m2->mModel->isTree)
+		return 1;
+	
+
+
+	// Num surfaces sort... Less surfaces first, hopefully occlude some extra pixels on lower state change models...
+	if (m1->mModel->numSurfaces < m2->mModel->numSurfaces)
+		return -1;
+
+	else if (m1->mModel->numSurfaces > m2->mModel->numSurfaces)
+		return 1;
+
+	return 0;
 }
 
 void R_AddInstancedModelsToScene(void)
 {
-	if (INSTANCED_MODEL_TYPES <= 0)
+	if (mInstances.instanceModelTypes <= 0)
 	{
 		return;
 	}
@@ -115,13 +205,24 @@ void R_AddInstancedModelsToScene(void)
 
 #define __INSTANCING_USE_UNIFORMS__
 
-	// Draw them for this scene...
-	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
-	{
-		if (INSTANCED_MODEL_COUNT[modelID] > 0)
+	/*if (r_testvalue0->integer)
+	{// Sort by distances first...
+		for (int modelID = 0; modelID < mInstances.instanceModelTypes && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 		{
-			mdvModel_t *m = INSTANCED_MODEL_MODEL[modelID];
-			GLuint count = INSTANCED_MODEL_COUNT[modelID];
+			if (mInstances.instanceModelCounts[modelID] > 0)
+			{
+				qsort(&mInstances.instanceModelInfos[modelID], mInstances.instanceModelCounts[modelID], sizeof(modelInstanceData_t), R_DistanceSortinstances);
+			}
+		}
+	}*/
+
+	// Draw them for this scene...
+	for (int modelID = 0; modelID < mInstances.instanceModelTypes && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
+	{
+		if (mInstances.instanceModelCounts[modelID] > 0)
+		{
+			mdvModel_t *m = mInstances.mModels[modelID];
+			GLuint count = mInstances.instanceModelCounts[modelID];
 
 			if (r_instancing->integer >= 2)
 			{
@@ -142,13 +243,13 @@ void R_AddInstancedModelsToScene(void)
 			R_BindIBO(m->vboSurfaces->ibo);
 
 			qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
-			qglBufferData(GL_ARRAY_BUFFER, count * sizeof(vec3_t), INSTANCED_MODEL_ORIGINS[modelID], GL_STREAM_DRAW);
+			qglBufferData(GL_ARRAY_BUFFER, count * sizeof(vec3_t), mOrigins[modelID], GL_STREAM_DRAW);
 			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_POSITION);
 			qglVertexAttribPointer(ATTR_INDEX_INSTANCES_POSITION, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 			qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_POSITION, 1);
 
 			qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_mvp);
-			qglBufferData(GL_ARRAY_BUFFER, count * sizeof(matrix_t), INSTANCED_MODEL_MATRIXES[modelID], GL_STREAM_DRAW);
+			qglBufferData(GL_ARRAY_BUFFER, count * sizeof(matrix_t), mMatrixes[modelID], GL_STREAM_DRAW);
 			qglEnableVertexAttribArray(ATTR_INDEX_INSTANCES_MVP);
 			qglVertexAttribPointer(ATTR_INDEX_INSTANCES_MVP, 16, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0)/*BUFFER_OFFSET(m->ofs_instancesMVP)*/);
 			qglVertexAttribDivisor(ATTR_INDEX_INSTANCES_MVP, 1);
@@ -168,7 +269,7 @@ void R_AddInstancedModelsToScene(void)
 				R_BindIBO(m->vboSurfaces[j].ibo);
 
 				shader_t *shader = tr.shaders[m->vboSurfaces[j].mdvSurface->shaderIndexes[0]];
-				
+
 				for (int stage = 0; stage <= shader->maxStage && stage < MAX_SHADER_STAGES; stage++)
 				{
 					shaderStage_t *pStage = shader->stages[stage];
@@ -190,10 +291,18 @@ void R_AddInstancedModelsToScene(void)
 						stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GE_128;
 						pStage->stateBits = stateBits;
 
-						if (!(backEnd.depthFill || (backEnd.viewParms.flags & VPF_SHADOWPASS)) && (stateBits & GLS_ATEST_BITS))
+						if (!shader->hasAlpha && !shader->hasGlow && !pStage->rgbGen && !pStage->alphaGen && shader->cullType != CT_BACK_SIDED)
+						{
+							GL_Cull(CT_FRONT_SIDED);
+						}
+						else if (!(backEnd.depthFill || (backEnd.viewParms.flags & VPF_SHADOWPASS)) && (stateBits & GLS_ATEST_BITS))
 						{
 							GL_Cull(CT_TWO_SIDED);
 						}
+					}
+					else if (!shader->hasAlpha && !shader->hasGlow && !pStage->rgbGen && !pStage->alphaGen && shader->cullType != CT_BACK_SIDED)
+					{
+						GL_Cull(CT_FRONT_SIDED);
 					}
 
 					GLSL_VertexAttribsState(ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0);
@@ -210,9 +319,18 @@ void R_AddInstancedModelsToScene(void)
 						GL_BindToTMU(pStage->bundle[TB_DIFFUSEMAP].image[0], TB_DIFFUSEMAP);
 					}
 
-					GLSL_SetUniformVec3xX(&tr.instanceShader, UNIFORM_INSTANCE_POSITIONS, INSTANCED_MODEL_ORIGINS[modelID], count);
-					GLSL_SetUniformVec3xX(&tr.instanceShader, UNIFORM_INSTANCE_SCALES, INSTANCED_MODEL_SCALES[modelID], count);
-					//GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_INSTANCE_MATRIXES, (const float *)INSTANCED_MODEL_MATRIXES[modelID], count);
+					vec3_t	mOrigins[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+					vec3_t	mScales[MAX_INSTANCED_MODEL_INSTANCES] = { 0 };
+
+					for (int c = 0; c < mInstances.instanceModelCounts[modelID]; c++)
+					{
+						VectorCopy(mInstances.instanceModelInfos[modelID][c].mOrigin, mOrigins[c]);
+						VectorCopy(mInstances.instanceModelInfos[modelID][c].mScale, mScales[c]);
+					}
+
+					GLSL_SetUniformVec3xX(&tr.instanceShader, UNIFORM_INSTANCE_POSITIONS, mOrigins, count);
+					GLSL_SetUniformVec3xX(&tr.instanceShader, UNIFORM_INSTANCE_SCALES, mScales, count);
+					//GLSL_SetUniformMatrix16(&tr.instanceShader, UNIFORM_INSTANCE_MATRIXES, (const float *)mInstances.instanceModelInfos[modelID].mMatrixes, count);
 
 					vec4_t l0;
 					VectorSet4(l0, shader->materialType, 0.0, 0.0, 0.0);
@@ -231,13 +349,13 @@ void R_AddInstancedModelsToScene(void)
 	}
 
 	// Clear the buffer ready for next scene...
-	for (int modelID = 0; modelID < INSTANCED_MODEL_TYPES && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
+	for (int modelID = 0; modelID < mInstances.instanceModelTypes && modelID < MAX_INSTANCED_MODEL_TYPES; modelID++)
 	{
-		INSTANCED_MODEL_COUNT[modelID] = 0;
-		INSTANCED_MODEL_MODEL[modelID] = NULL;
+		mInstances.instanceModelCounts[modelID] = 0;
+		mInstances.mModels[modelID] = NULL;
 	}
 
-	INSTANCED_MODEL_TYPES = 0;
+	mInstances.instanceModelTypes = 0;
 
 	R_BindNullVBO();
 }

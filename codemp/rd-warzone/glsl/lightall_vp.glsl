@@ -332,6 +332,8 @@ void main()
 
 	vec2 texCoords = attr_TexCoord0.st;
 
+
+#if !defined(USE_TESSELLATION) && !defined(USE_ICR_CULLING)
 	if (USE_DEFORM == 1.0)
 	{
 		position = DeformPosition(position, normal, attr_TexCoord0.st);
@@ -341,11 +343,9 @@ void main()
 
 	vec3 preMMPos = position.xyz;
 
-	//if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
-	{
-		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
-		normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
-	}
+	position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
+	normal = (u_ModelMatrix * vec4(normal, 0.0)).xyz;
+#endif
 
 	if (USE_TC == 1.0)
 	{

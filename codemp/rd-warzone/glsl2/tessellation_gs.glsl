@@ -1,7 +1,12 @@
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-uniform mat4 u_ModelViewProjectionMatrix;
+uniform mat4			u_ModelViewProjectionMatrix;
+
+uniform vec4			u_TesselationInfo;
+
+#define TessLevelInner	u_TesselationInfo.g
+#define TessLevelOuter	u_TesselationInfo.b
 
 in precise vec3 WorldPos_GS_in[];
 in precise vec2 TexCoord_GS_in[];
@@ -27,9 +32,9 @@ flat out float usingSteepMap_FS_in;
  
 void main()
 {
-    vec3 A = WorldPos_GS_in[2] - WorldPos_GS_in[0];
-    vec3 B = WorldPos_GS_in[1] - WorldPos_GS_in[0];
-    Normal_FS_in = normalize(cross(A, B));
+    //vec3 A = WorldPos_GS_in[2] - WorldPos_GS_in[0];
+    //vec3 B = WorldPos_GS_in[1] - WorldPos_GS_in[0];
+    //Normal_FS_in = normalize(cross(A, B));
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -42,6 +47,7 @@ void main()
 		Blending_FS_in = Blending_GS_in[i];
 		Slope_FS_in = Slope_GS_in[i];
 		usingSteepMap_FS_in = usingSteepMap_GS_in[i];
+		Normal_FS_in = Normal_GS_in[i];
 
 		//gl_Position = gl_in[i].gl_Position;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(gl_in[i].gl_Position.xyz, 1);

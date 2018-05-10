@@ -89,6 +89,30 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
 //#define __DEBUG_ASSIMP__						// Show debug info for loading models through assimp library...
 
+#define __FX_SORTING__
+#define __WATER_SORTING__
+#define __ALPHA_SORTING__
+#define __SPLATMAP_SORTING__
+#define __NUMSTAGES_SORTING__
+#define __GLOW_SORTING__
+#define __TESS_SORTING__
+#define __MATERIAL_SORTING__
+
+//#define __REALTIME_SURFACE_SORTING__			// Meh, on big maps with lots of models, sorting is much slower then not sorting...
+
+#ifdef __REALTIME_SURFACE_SORTING__
+	#define __REALTIME_DISTANCE_SORTING__
+	//#define __REALTIME_FX_SORTING__
+	//#define __REALTIME_WATER_SORTING__
+	//#define __REALTIME_ALPHA_SORTING__
+	#define __REALTIME_SPLATMAP_SORTING__
+	#define __REALTIME_SORTINDEX_SORTING__
+	//#define __REALTIME_NUMSTAGES_SORTING__
+	//#define __REALTIME_GLOW_SORTING__
+	//#define __REALTIME_TESS_SORTING__
+	//#define __REALTIME_MATERIAL_SORTING__
+#endif /__REALTIME_SURFACE_SORTING__
+
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -236,9 +260,8 @@ extern cvar_t	*r_compressedTextures;
 extern cvar_t	*r_superSampleMultiplier;
 
 extern cvar_t	*r_instanceCloudReductionCulling;
+
 extern cvar_t	*r_tesselation;
-extern cvar_t	*r_tesselationLevel;
-extern cvar_t	*r_tesselationAlpha;
 
 extern cvar_t	*r_cartoon;
 
@@ -1243,6 +1266,9 @@ typedef struct shader_s {
 	qboolean	hasGlow;
 	qboolean	isIndoor;
 
+	int			hasAlphaTestBits;		// 0 - uninitialized. -1 no atest bits. 1 has atest bits... 2 has alphaGen... 3 has alpha in texture...
+	int			hasSplatMaps;			// 0 - uninitialized. -1 no splatmaps. 1 has splatmaps...
+
 	qboolean	detailMapFromTC;		// 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
 	qboolean	detailMapFromWorld;		// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)
 
@@ -1279,6 +1305,10 @@ typedef struct shader_s {
 	int			numDeforms;
 	deformStage_t	deforms[MAX_SHADER_DEFORMS];
 
+	qboolean		tesselation;
+	float			tesselationLevel;
+	float			tesselationAlpha;
+
 #ifdef __XYC_SURFACE_SPRITES__
 	int			numSurfaceSpriteStages;
 #endif //__XYC_SURFACE_SPRITES__
@@ -1298,6 +1328,8 @@ typedef struct shader_s {
   qboolean warzoneVextexSplat;
 
   int maxStage;
+
+  int numStages;
 
 	struct	shader_s	*next;
 } shader_t;
@@ -1647,6 +1679,8 @@ typedef enum
 	UNIFORM_LOCAL8,
 	UNIFORM_LOCAL9,
 	UNIFORM_LOCAL10,
+
+	UNIFORM_TESSELATION_INFO,
 
 	UNIFORM_LIGHTCOUNT,
 	UNIFORM_LIGHTPOSITIONS2,
@@ -2314,6 +2348,8 @@ typedef struct mdvModel_s
 	uint32_t		ofs_instancesPosition;
 	uint32_t		ofs_instancesMVP;
 	uint32_t		ofs_instancesTC;
+
+	int				isTree;					// 0 is unchecked. -1 is not tree. 1 is tree.
 } mdvModel_t;
 
 
@@ -2802,8 +2838,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t weatherShader;
 	shaderProgram_t occlusionShader;
 	shaderProgram_t depthAdjustShader;
-	shaderProgram_t lightAllShader;
-	shaderProgram_t lightAllSplatShader;
+	shaderProgram_t lightAllShader[2];
+	shaderProgram_t lightAllSplatShader[2];
 	shaderProgram_t skyShader;
 	shaderProgram_t depthPassShader;
 	shaderProgram_t sunPassShader;

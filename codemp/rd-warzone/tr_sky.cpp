@@ -546,10 +546,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 	backEnd.pc.c_skyDraws++;
 
-	if (r_tesselation->integer)
-		R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qtrue);
-	else
-		R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
+	R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
 	tess.numIndexes = tess.firstIndex;
 	tess.numVertexes = firstVertex;

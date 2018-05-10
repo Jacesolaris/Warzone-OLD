@@ -1343,6 +1343,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local9", GLSL_VEC4, 1 },
 	{ "u_Local10", GLSL_VEC4, 1 },
 
+	{ "u_TesselationInfo", GLSL_VEC4, 1 },
+
 	{ "u_lightCount", GLSL_INT, 1 },
 	{ "u_lightPositions2", GLSL_VEC3, MAX_DEFERRED_LIGHTS },
 	{ "u_lightPositions", GLSL_VEC2, MAX_DEFERRED_LIGHTS },
@@ -1476,7 +1478,7 @@ char *GLSL_GetHighestSupportedVersion(void)
 
 	ALLOW_GL_400 = qfalse;
 
-	if (r_tesselation->integer)
+	if (glRefConfig.glslMajorVersion >= 4/*r_tesselation->integer*/)
 	{
 		if (glRefConfig.glslMajorVersion >= 5)
 			sprintf(GLSL_MAX_VERSION, "#version 500 core\n");
@@ -1605,6 +1607,10 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 			Q_strcat(dest, size, extra);
 		}
 
+		//GLint MaxPatchVertices = 0;
+		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		Q_strcat(dest, size, va("#define MAX_PATCH_VERTICES %i\n", 3/*MaxPatchVertices >= 16 ? 16 : 3*/));
+
 		// OK we added a lot of stuff but if we do something bad in the GLSL shaders then we want the proper line
 		// so we have to reset the line counting
 		Q_strcat(dest, size, "#line 0\n");
@@ -1619,6 +1625,54 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 		{
 			Q_strcat(dest, size, extra);
 		}
+
+		Q_strcat(dest, size, "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
+
+		//GLint MaxPatchVertices = 0;
+		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		Q_strcat(dest, size, va("#define MAX_PATCH_VERTICES %i\n", 3/*MaxPatchVertices >= 16 ? 16 : 3*/));
+
+		Q_strcat(dest, size,
+			va("#ifndef deformGen_t\n"
+				"#define deformGen_t\n"
+				"#define DGEN_WAVE_SIN %i\n"
+				"#define DGEN_WAVE_SQUARE %i\n"
+				"#define DGEN_WAVE_TRIANGLE %i\n"
+				"#define DGEN_WAVE_SAWTOOTH %i\n"
+				"#define DGEN_WAVE_INVERSE_SAWTOOTH %i\n"
+				"#define DGEN_BULGE %i\n"
+				"#define DGEN_MOVE %i\n"
+				"#define DGEN_PROJECTION_SHADOW %i\n"
+				"#endif\n",
+				DGEN_WAVE_SIN,
+				DGEN_WAVE_SQUARE,
+				DGEN_WAVE_TRIANGLE,
+				DGEN_WAVE_SAWTOOTH,
+				DGEN_WAVE_INVERSE_SAWTOOTH,
+				DGEN_BULGE,
+				DGEN_MOVE,
+				DGEN_PROJECTION_SHADOW));
+
+		Q_strcat(dest, size,
+			va("#ifndef tcGen_t\n"
+				"#define tcGen_t\n"
+				"#define TCGEN_LIGHTMAP %i\n"
+				"#define TCGEN_LIGHTMAP1 %i\n"
+				"#define TCGEN_LIGHTMAP2 %i\n"
+				"#define TCGEN_LIGHTMAP3 %i\n"
+				"#define TCGEN_TEXTURE %i\n"
+				"#define TCGEN_ENVIRONMENT_MAPPED %i\n"
+				"#define TCGEN_FOG %i\n"
+				"#define TCGEN_VECTOR %i\n"
+				"#endif\n",
+				TCGEN_LIGHTMAP,
+				TCGEN_LIGHTMAP1,
+				TCGEN_LIGHTMAP2,
+				TCGEN_LIGHTMAP3,
+				TCGEN_TEXTURE,
+				TCGEN_ENVIRONMENT_MAPPED,
+				TCGEN_FOG,
+				TCGEN_VECTOR));
 
 		// OK we added a lot of stuff but if we do something bad in the GLSL shaders then we want the proper line
 		// so we have to reset the line counting
@@ -2982,31 +3036,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
-		if (r_tesselation->integer)
-		{
-			strcat(extradefines, "#define USE_TESSELLATION\n");
-
-#ifdef NEW_TESSELATION
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, fallbackShader_tessellation_gs))
-#elif defined(HEIGHTMAP_TESSELATION2)
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
-#else
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
-#endif
-			{
-				ri->Error(ERR_FATAL, "Could not load lightall shader!");
-			}
-		}
-		else if (r_instanceCloudReductionCulling->integer)
-		{
-			strcat(extradefines, "#define USE_ICR_CULLING\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load lightall shader!");
-			}
-		}
-		else if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader, "lightall", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[0], "lightall", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightall shader!");
 		}
@@ -3028,33 +3058,69 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
-		if (r_tesselation->integer)
-		{
-			strcat(extradefines, "#define USE_TESSELLATION\n");
+		strcat(extradefines, "#define USE_TESSELLATION\n");
 
 #ifdef NEW_TESSELATION
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, fallbackShader_tessellation_gs))
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[1], "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, NULL/*fallbackShader_tessellation_gs*/))
 #elif defined(HEIGHTMAP_TESSELATION2)
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[1], "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
 #else
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[1], "lightall", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 #endif
-			{
-				ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
-			}
-		}
-		else if (r_instanceCloudReductionCulling->integer)
 		{
-			strcat(extradefines, "#define USE_ICR_CULLING\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, fallbackShader_lightallSplat_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
-			}
+			ri->Error(ERR_FATAL, "Could not load lightall_tess shader!");
 		}
-		else if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader, "lightallSplat", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, NULL))
+	}
+
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
+
+		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_deluxeMapping->integer)
+			strcat(extradefines, "#define USE_DELUXEMAP\n");
+
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[0], "lightallSplat", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+		}
+	}
+
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
+
+		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_deluxeMapping->integer)
+			strcat(extradefines, "#define USE_DELUXEMAP\n");
+
+		strcat(extradefines, "#define USE_TESSELLATION\n");
+
+#ifdef NEW_TESSELATION
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[1], "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, NULL/*fallbackShader_tessellation_gs*/))
+#elif defined(HEIGHTMAP_TESSELATION2)
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[1], "lightallSplat", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[1], "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
+		{
+			ri->Error(ERR_FATAL, "Could not load lightallSplat_tess shader!");
 		}
 	}
 
@@ -4059,76 +4125,81 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 	
 
-	if (!GLSL_EndLoadGPUShader(&tr.lightAllShader))
+	for (int i = 0; i < 2; i++)
 	{
-		ri->Error(ERR_FATAL, "Could not load lightall shader!");
-	}
+		if (!GLSL_EndLoadGPUShader(&tr.lightAllShader[i]))
+		{
+			ri->Error(ERR_FATAL, "Could not load lightall shader!");
+		}
 
-	GLSL_InitUniforms(&tr.lightAllShader);
-	GLSL_BindProgram(&tr.lightAllShader);
+		GLSL_InitUniforms(&tr.lightAllShader[i]);
+		GLSL_BindProgram(&tr.lightAllShader[i]);
 
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	//GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_ROADMAP, TB_ROADMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
-	GLSL_SetUniformInt(&tr.lightAllShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_NORMALMAP, TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_CUBEMAP, TB_CUBEMAP);
+		//GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_ROADMAP, TB_ROADMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.lightAllShader);
+		GLSL_FinishGPUShader(&tr.lightAllShader[i]);
 #endif
 
-	numLightShaders++;
-
-
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.lightAllSplatShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+		numLightShaders++;
 	}
 
-	GLSL_InitUniforms(&tr.lightAllSplatShader);
-	GLSL_BindProgram(&tr.lightAllSplatShader);
 
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-	//GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_ROADMAP, TB_ROADMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_DETAILMAP, TB_DETAILMAP);
-	GLSL_SetUniformInt(&tr.lightAllSplatShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (!GLSL_EndLoadGPUShader(&tr.lightAllSplatShader[i]))
+		{
+			ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
+		}
+
+		GLSL_InitUniforms(&tr.lightAllSplatShader[i]);
+		GLSL_BindProgram(&tr.lightAllSplatShader[i]);
+
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_LIGHTMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_NORMALMAP, TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_CUBEMAP, TB_CUBEMAP);
+		//GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_ROADMAP, TB_ROADMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GLSL_SetUniformInt(&tr.lightAllSplatShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.lightAllSplatShader);
+		GLSL_FinishGPUShader(&tr.lightAllSplatShader[i]);
 #endif
 
-	numLightShaders++;
+		numLightShaders++;
+	}
 
 
 
@@ -6169,8 +6240,10 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.occlusionShader);
 	GLSL_DeleteGPUShader(&tr.depthAdjustShader);
 
-	GLSL_DeleteGPUShader(&tr.lightAllShader);
-	GLSL_DeleteGPUShader(&tr.lightAllSplatShader);
+	GLSL_DeleteGPUShader(&tr.lightAllShader[0]);
+	GLSL_DeleteGPUShader(&tr.lightAllShader[1]);
+	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[0]);
+	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[1]);
 	GLSL_DeleteGPUShader(&tr.skyShader);
 	GLSL_DeleteGPUShader(&tr.depthPassShader);
 
@@ -6327,7 +6400,7 @@ void GLSL_BindProgram(shaderProgram_t * program)
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;
 
-		if (program == &tr.lightAllShader || program == &tr.lightAllSplatShader)
+		if (program == &tr.lightAllShader[0] || program == &tr.lightAllSplatShader[0] || program == &tr.lightAllShader[1] || program == &tr.lightAllSplatShader[1])
 			backEnd.pc.c_lightallBinds++;
 		else if (program == &tr.depthPassShader)
 			backEnd.pc.c_depthPassBinds++;

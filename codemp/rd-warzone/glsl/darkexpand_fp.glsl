@@ -33,14 +33,10 @@ void main()
 	// This version uses the blured color, which can also blur distant objects... Looks a little like dof in some ways...
 	//
 
-    vec4 out_color = sum*scale;
-
     // use the blurred colour if it's darker
     if ((sum.r + sum.g + sum.b) * 0.333 < ((s.r + s.g + s.b) * 0.333) * thresh)
     {
-        //gl_FragColor = (out_color + s) / 2.0;
-		//gl_FragColor = (out_color + out_color + out_color + s) / 4.0;
-		gl_FragColor = out_color;
+		gl_FragColor = sum*scale;
     }
 #else //!BLUR_METHOD
 	//

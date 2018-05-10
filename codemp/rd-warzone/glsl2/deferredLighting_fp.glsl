@@ -504,14 +504,13 @@ float map(vec3 p)
 float calculateAO(in vec3 pos, in vec3 nor)
 {
 	float sca = 0.00013/*2.0*/, occ = 0.0;
-    for( int i=0; i<5; i++ ){
-    
-        float hr = 0.01 + float(i)*0.5/4.0;        
-        float dd = map(nor * hr + pos);
-        occ += (hr - dd)*sca;
-        sca *= 0.7;
-    }
-    return clamp( 1.0 - occ, 0.0, 1.0 );    
+	for( int i=0; i<5; i++ ){
+		float hr = 0.01 + float(i)*0.5/4.0;        
+		float dd = map(nor * hr + pos);
+		occ += (hr - dd)*sca;
+		sca *= 0.7;
+	}
+	return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
 
 // that is really shitty AO but at least unlit fragments do not look so plain... :)
@@ -1436,7 +1435,12 @@ void main(void)
 	if (u_Local1.b == 1.0)
 	{// Fast AO enabled...
 		float ao = calculateAO(sunDir, N * 10000.0);
-		ao = clamp(ao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
+		//float selfShadow = bad_ao(bump.xyz);
+		//float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
+		float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0), 0.0, 1.0);
+		//ao = clamp(ao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
+		ao = clamp(((ao + selfShadow) / 2.0) * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
+		//ao = clamp((ao * selfShadow) * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
 		outColor.rgb *= ao;
 	}
 #endif //defined(__AMBIENT_OCCLUSION__)
@@ -1446,16 +1450,16 @@ void main(void)
 	{// Better, HQ AO enabled...
 		float msao = 0.0;
 
-		/*if (u_Local1.b >= 4.0)
+		if (u_Local1.b >= 3.0)
 		{
-			const float width = 2.0;
+			int width = int(u_Local1.b-2.0);
 			float numSamples = 0.0;
 		
-			for (float x = -width; x <= width; x += 1.0)
+			for (int x = -width; x <= width; x+=2)
 			{
-				for (float y = -width; y <= width; y += 1.0)
+				for (int y = -width; y <= width; y+=2)
 				{
-					vec2 coord = texCoords + (vec2(x, y) * pixel);
+					vec2 coord = texCoords + (vec2(float(x), float(y)) * pixel);
 					msao += textureLod(u_SteepMap, coord, 0.0).x;
 					numSamples += 1.0;
 				}
@@ -1463,24 +1467,7 @@ void main(void)
 
 			msao /= numSamples;
 		}
-		else if (u_Local1.b >= 3.0)
-		{
-			const float width = 1.0;
-			float numSamples = 0.0;
-		
-			for (float x = -width; x <= width; x += 1.0)
-			{
-				for (float y = -width; y <= width; y += 1.0)
-				{
-					vec2 coord = texCoords + (vec2(x, y) * pixel);
-					msao += textureLod(u_SteepMap, coord, 0.0).x;
-					numSamples += 1.0;
-				}
-			}
-
-			msao /= numSamples;
-		}
-		else*/
+		else
 		{
 			msao = textureLod(u_SteepMap, texCoords, 0.0).x;
 		}

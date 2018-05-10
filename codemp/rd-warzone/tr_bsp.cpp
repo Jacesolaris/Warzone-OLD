@@ -1907,12 +1907,259 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	aa = *(msurface_t **) a;
 	bb = *(msurface_t **) b;
 
-	// shader first
-	if(aa->shader->sortedIndex < bb->shader->sortedIndex)
+#ifdef __FX_SORTING__
+	if (qboolean(aa->shader == tr.sunShader) < qboolean(bb->shader == tr.sunShader))
+		return -1;
+	else if (qboolean(aa->shader == tr.sunShader) > qboolean(bb->shader == tr.sunShader))
+		return 1;
+
+	if (qboolean(aa->shader == tr.moonShader) < qboolean(bb->shader == tr.moonShader))
+		return -1;
+	else if (qboolean(aa->shader == tr.moonShader) > qboolean(bb->shader == tr.moonShader))
+		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_FIRE) < qboolean(bb->shader->materialType == MATERIAL_FIRE))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_FIRE) > qboolean(bb->shader->materialType == MATERIAL_FIRE))
+		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_SMOKE) < qboolean(bb->shader->materialType == MATERIAL_SMOKE))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_SMOKE) > qboolean(bb->shader->materialType == MATERIAL_SMOKE))
+		return 1;
+#endif //__FX_SORTING__
+
+#ifdef __WATER_SORTING__
+	// Set up a value to skip stage checks later... does this even run per frame? i shoud actually check probably...
+	if (aa->shader->isWater < bb->shader->isWater)
 		return -1;
 
-	else if(aa->shader->sortedIndex > bb->shader->sortedIndex)
+	else if (aa->shader->isWater > bb->shader->isWater)
 		return 1;
+#endif //__WATER_SORTING__
+
+#ifdef __ALPHA_SORTING__
+	// Set up a value to skip stage checks later... does this even run per frame? i shoud actually check probably...
+	if (aa->shader->hasAlphaTestBits == 0)
+	{
+		for (int stage = 0; stage <= aa->shader->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = aa->shader->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				aa->shader->hasAlphaTestBits = max(aa->shader->hasAlphaTestBits, 1);
+			}
+			
+			if (pStage->alphaGen)
+			{
+				aa->shader->hasAlphaTestBits = max(aa->shader->hasAlphaTestBits, 2);
+			}
+			
+			if (aa->shader->hasAlpha)
+			{
+				aa->shader->hasAlphaTestBits = max(aa->shader->hasAlphaTestBits, 3);
+			}
+		}
+
+		if (aa->shader->hasAlphaTestBits == 0)
+		{
+			aa->shader->hasAlphaTestBits = -1;
+		}
+	}
+
+	if (bb->shader->hasAlphaTestBits == 0)
+	{
+		for (int stage = 0; stage <= bb->shader->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = bb->shader->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->stateBits & GLS_ATEST_BITS)
+			{
+				bb->shader->hasAlphaTestBits = max(bb->shader->hasAlphaTestBits, 1);
+				break;
+			}
+			
+			if (pStage->alphaGen)
+			{
+				bb->shader->hasAlphaTestBits = max(bb->shader->hasAlphaTestBits, 2);
+			}
+			
+			if (bb->shader->hasAlpha)
+			{
+				bb->shader->hasAlphaTestBits = max(bb->shader->hasAlphaTestBits, 3);
+			}
+		}
+
+		if (bb->shader->hasAlphaTestBits == 0)
+		{
+			bb->shader->hasAlphaTestBits = -1;
+		}
+	}
+
+	// Non-alpha stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+	if (aa->shader->hasAlphaTestBits < bb->shader->hasAlphaTestBits)
+		return -1;
+
+	else if (aa->shader->hasAlphaTestBits > bb->shader->hasAlphaTestBits)
+		return 1;
+#endif //__ALPHA_SORTING__
+
+
+#ifdef __SPLATMAP_SORTING__
+	// Splat maps are always solid with no alpha, and nearly always terrain or large objects, so do them first, they should block a lot of pixels...
+	if (aa->shader->hasSplatMaps == 0)
+	{
+		for (int stage = 0; stage <= aa->shader->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = aa->shader->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->bundle[TB_STEEPMAP].image[0]
+				|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]
+				|| pStage->bundle[TB_ROOFMAP].image[0])
+			{
+				aa->shader->hasSplatMaps = 1;
+				break;
+			}
+		}
+
+		if (aa->shader->hasSplatMaps == 0)
+		{
+			aa->shader->hasSplatMaps = -1;
+		}
+	}
+
+	if (bb->shader->hasSplatMaps == 0)
+	{
+		for (int stage = 0; stage <= bb->shader->maxStage && stage < MAX_SHADER_STAGES; stage++)
+		{
+			shaderStage_t *pStage = bb->shader->stages[stage];
+
+			if (!pStage)
+			{// How does this happen???
+				continue;
+			}
+
+			if (!pStage->active)
+			{// Shouldn't this be here, just in case???
+				continue;
+			}
+
+			if (pStage->bundle[TB_STEEPMAP].image[0]
+				|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]
+				|| pStage->bundle[TB_ROOFMAP].image[0])
+			{
+				bb->shader->hasSplatMaps = 1;
+				break;
+			}
+		}
+
+		if (bb->shader->hasSplatMaps == 0)
+		{
+			bb->shader->hasSplatMaps = -1;
+		}
+
+		// Non-alpha stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+		if (aa->shader->hasSplatMaps < bb->shader->hasSplatMaps)
+			return -1;
+
+		else if (aa->shader->hasSplatMaps > bb->shader->hasSplatMaps)
+			return 1;
+	}
+#endif //__SPLATMAP_SORTING__
+
+
+	// sort by shader
+	if (aa->shader->sortedIndex < bb->shader->sortedIndex)
+		return -1;
+
+	else if (aa->shader->sortedIndex > bb->shader->sortedIndex)
+		return 1;
+
+#ifdef __NUMSTAGES_SORTING__
+	// Fewer stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+	if (aa->shader->numStages < bb->shader->numStages)
+		return -1;
+
+	else if (aa->shader->numStages > bb->shader->numStages)
+		return 1;
+#endif //__NUMSTAGES_SORTING__
+
+
+
+#ifdef __GLOW_SORTING__
+	// Non-glow stage shaders should draw first... Hopefully allow for faster pixel depth culling...
+	if (aa->shader->hasGlow < bb->shader->hasGlow)
+		return -1;
+
+	else if (aa->shader->hasGlow > bb->shader->hasGlow)
+		return 1;
+#endif //__GLOW_SORTING__
+
+
+#ifdef __TESS_SORTING__
+	if (aa->shader->tesselation)
+	{// Check tesselation settings... Draw faster tesselation surfs first...
+		if (aa->shader->tesselationLevel < bb->shader->tesselationLevel)
+			return -1;
+
+		else if (aa->shader->tesselationLevel > bb->shader->tesselationLevel)
+			return 1;
+
+		if (aa->shader->tesselationAlpha < bb->shader->tesselationAlpha)
+			return -1;
+
+		else if (aa->shader->tesselationAlpha > bb->shader->tesselationAlpha)
+			return 1;
+	}
+#endif //__TESS_SORTING__
+
+#ifdef __MATERIAL_SORTING__
+	{// Material types.. To minimize changing between geom (grass) versions and non-grass shaders...
+		if (aa->shader->materialType < bb->shader->materialType)
+			return -1;
+
+		else if (aa->shader->materialType > bb->shader->materialType)
+			return 1;
+	}
+#endif //__MATERIAL_SORTING__
+
 
 #ifdef __Q3_FOG__
 	// by fogIndex
@@ -1923,6 +2170,7 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 		return 1;
 #endif //__Q3_FOG__
 
+
 #ifndef __PLAYER_BASED_CUBEMAPS__
 	// by cubemapIndex
 	if(aa->cubemapIndex < bb->cubemapIndex)
@@ -1931,6 +2179,7 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	else if(aa->cubemapIndex > bb->cubemapIndex)
 		return 1;
 #endif //__PLAYER_BASED_CUBEMAPS__
+
 
 	return 0;
 }
