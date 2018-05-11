@@ -2759,6 +2759,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if (glState.skeletalAnimation)
 		{
 			GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, (const float *)glState.boneMatrices, glState.numBones);
+			
+			// Init character editor scale infos, if needed...
+			extern void CharacterEditor_InitializeBoneScaleValues(void);
+			CharacterEditor_InitializeBoneScaleValues();
+
+			if (backEnd.currentEntity != &tr.worldEntity && backEnd.currentEntity->e.isLocalPlayer)
+			{// Local player? Send character editor bone scales to the shader...
+				extern float boneScaleValues[20];
+				GLSL_SetUniformFloatxX(sp, UNIFORM_BONE_SCALES, (const float *)boneScaleValues, 20);
+			}
+			else
+			{// Just send 1.0's for any others...
+				extern float genericBoneScaleValues[20];
+				GLSL_SetUniformFloatxX(sp, UNIFORM_BONE_SCALES, (const float *)genericBoneScaleValues, 20);
+			}
 		}
 
 		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);

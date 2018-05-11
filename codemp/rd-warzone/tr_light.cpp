@@ -428,7 +428,7 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 
 	vec3_t playerOrigin;
 
-	if (backEnd.localPlayerOriginValid)
+	if (backEnd.localPlayerValid)
 	{
 		VectorCopy(backEnd.localPlayerOrigin, playerOrigin);
 		//ri->Printf(PRINT_WARNING, "Local player is at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);

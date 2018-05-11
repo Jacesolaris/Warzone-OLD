@@ -257,7 +257,7 @@ Ghoul2 Insert Start
 Ghoul2 Insert End
 */
 	qboolean	isLocalPlayer;
-	int			localPlayerEntityNum;
+	int			localPlayerGameEntityNum;
 
 	qboolean	ignoreCull;
 	qboolean	noMerge;

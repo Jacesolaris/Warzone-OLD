@@ -12,8 +12,11 @@
 #include <list>
 std::list<Dock *> docks;
 
+bool show_all_window = false;
 bool show_another_window = true;
+bool show_node_and_console_windows = false;
 bool show_demo_window = false;
+
 ImVec4 clear_color_2 = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 int main_menu_GUIasd() {
@@ -127,13 +130,16 @@ CCALL int imgui_default_docks() {
 	
 	g_dock.checkNonexistent();
 
-	static int first = 1;
-	if (first) {
-		first = 0;
-		//docks.push_back(new DockREPL("testone"));
-		docks.push_back(new DockConsole());
-		docks.push_back(new DockNode());
-		//docks.push_back(new DockJulia());
+	if (show_node_and_console_windows)
+	{
+		static int first = 1;
+		if (first) {
+			first = 0;
+			//docks.push_back(new DockREPL("testone"));
+			docks.push_back(new DockConsole());
+			docks.push_back(new DockNode());
+			//docks.push_back(new DockJulia());
+		}
 	}
 
 	for (Dock *dock : docks) {
@@ -144,11 +150,14 @@ CCALL int imgui_default_docks() {
 		EndDock();
 	}
 
-	static bool closed = true;
-	if (BeginDock("Demo Stuff", &closed)) {
-		ImGui::ShowDemoWindow(&show_demo_window);
+	if (show_demo_window)
+	{
+		static bool closed = true;
+		if (BeginDock("Demo Stuff", &closed)) {
+			ImGui::ShowDemoWindow(&show_demo_window);
+		}
+		EndDock();
 	}
-	EndDock();
 
 
 	return 1;

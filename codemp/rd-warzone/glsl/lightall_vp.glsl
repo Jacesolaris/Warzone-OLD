@@ -99,6 +99,7 @@ uniform vec4   u_VertColor;
 
 uniform float  u_VertexLerp;
 uniform mat4   u_BoneMatrices[20];
+uniform float  u_BoneScales[20];
 
 uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
@@ -316,8 +317,10 @@ void main()
 		{
 			int boneIndex = int(attr_BoneIndexes[i]);
 
-			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
-			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
+			vec4 boneScale = vec4(u_BoneScales[boneIndex], u_BoneScales[boneIndex], u_BoneScales[boneIndex], 1.0);
+
+			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] * boneScale; // Could do X,Y,Z model scaling here...
+			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] * boneScale; // Could do X,Y,Z model scaling here...
 		}
 
 		position = position4.xyz;

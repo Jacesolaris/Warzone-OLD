@@ -627,6 +627,25 @@ char *G2_GetBoneNameFromSkel(CGhoul2Info &ghoul2, int boneNum)
 	return skel->name;
 }
 
+char *R_GetGhoul2ModelBoneName(trRefEntity_t *ent, int boneNum) {
+	CGhoul2Info_v	&ghoul2 = *((CGhoul2Info_v *)ent->e.ghoul2);
+
+	if (!ent->e.ghoul2)
+	{
+		return "";
+	}
+	if (!ghoul2.IsValid())
+	{
+		return "";
+	}
+	if (!G2_SetupModelPointers(ghoul2))
+	{
+		return "";
+	}
+	
+	return G2_GetBoneNameFromSkel(ghoul2[0], boneNum);
+}
+
 void G2_RagGetBoneBasePoseMatrixLow(CGhoul2Info &ghoul2, int boneNum, mdxaBone_t &boneMatrix, mdxaBone_t &retMatrix, vec3_t scale)
 {
 	assert(ghoul2.mBoneCache);

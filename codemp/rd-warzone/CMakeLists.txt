@@ -339,6 +339,8 @@ set(MPWarzoneImGuiDockOpenJKFiles
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mdxm.h"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mdxa.cpp"
 	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_mdxa.h"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_characterEditor.cpp"
+	"${MPDir}/rd-warzone/imgui_docks_openjk/dock_characterEditor.h"
 )
 source_group("imgui_docks_openjk" FILES ${MPWarzoneImGuiDockOpenJKFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneImGuiDockOpenJKFiles})

@@ -1314,6 +1314,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_CubeMapStrength", GLSL_FLOAT, 1 },
 
 	{ "u_BoneMatrices", GLSL_MAT16, 20 },
+	{ "u_BoneScales", GLSL_FLOAT, 20 },
 
 	// UQ1: Added...
 	{ "u_Mins", GLSL_VEC4, 1 },

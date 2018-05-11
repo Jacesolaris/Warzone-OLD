@@ -37,6 +37,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define __PERFORMANCE_DEBUG__
 
+#ifdef __PERFORMANCE_DEBUG__
+//#define __PERFORMANCE_DEBUG_TEXT__
+//#define __PERFORMANCE_DEBUG_STARTUP__
+#endif //__PERFORMANCE_DEBUG__
+
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                               Warzone Basic Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -88,6 +93,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __EXPERIMENTAL_ASSIMP_GLM_CONVERSIONS__
 //#define __DEBUG_ASSIMP__						// Show debug info for loading models through assimp library...
+
+//#define __EXPERIMETNAL_CHARACTER_EDITOR__		// Testing stuff...
+
 
 #define __FX_SORTING__
 #define __WATER_SORTING__
@@ -1651,6 +1659,8 @@ typedef enum
 	UNIFORM_CUBEMAPSTRENGTH,
 
 	UNIFORM_BONE_MATRICES,
+	UNIFORM_BONE_SCALES,
+		
 
 	// UQ1: Added...
 	UNIFORM_MINS,
@@ -2634,8 +2644,10 @@ typedef struct {
 	qboolean			framePostProcessed;
 	qboolean			depthFill;
 
-	qboolean				localPlayerOriginValid;
+	qboolean				localPlayerValid;
 	vec3_t					localPlayerOrigin;
+	int						localPlayerGameEntityNum;
+	trRefEntity_t			*localPlayerEntity;
 	int						localPlayerEntityNum;
 } backEndState_t;
 

@@ -64,7 +64,7 @@ void R_InitNextFrame(void) {
 
 	r_numpolyverts = 0;
 
-	backEnd.localPlayerOriginValid = qfalse;
+	backEnd.localPlayerValid = qfalse;
 }
 
 
@@ -329,18 +329,20 @@ void RE_AddRefEntityToScene(const refEntity_t *ent) {
 	}
 #endif //__PVS_CULL__
 
-	if (ent->isLocalPlayer)
-	{
-		VectorCopy(ent->origin, backEnd.localPlayerOrigin);
-		backEnd.localPlayerEntityNum = ent->localPlayerEntityNum;
-		backEnd.localPlayerOriginValid = qtrue;
-	}
-
 	backEndData->entities[r_numentities].e = *ent;
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;
 
 	CrossProduct(ent->axis[0], ent->axis[1], cross);
 	backEndData->entities[r_numentities].mirrored = (qboolean)(DotProduct(ent->axis[2], cross) < 0.f);
+
+	if (ent->isLocalPlayer)
+	{
+		VectorCopy(ent->origin, backEnd.localPlayerOrigin);
+		backEnd.localPlayerGameEntityNum = ent->localPlayerGameEntityNum;
+		backEnd.localPlayerEntityNum = r_numentities;
+		backEnd.localPlayerEntity = &backEndData->entities[r_numentities];
+		backEnd.localPlayerValid = qtrue;
+	}
 
 	r_numentities++;
 }
@@ -727,7 +729,9 @@ extern vec3_t		SUN_COLOR_AMBIENT;
 
 void RE_BeginScene(const refdef_t *fd)
 {
+#ifdef __PERFORMANCE_DEBUG_STARTUP__
 	DEBUG_StartTimer("RE_BeginScene", qtrue);
+#endif //__PERFORMANCE_DEBUG_STARTUP__
 
 	Com_Memcpy(tr.refdef.text, fd->text, sizeof(tr.refdef.text));
 
@@ -958,7 +962,9 @@ void RE_BeginScene(const refdef_t *fd)
 	}
 #endif //__RENDERER_GROUND_FOLIAGE__
 
+#ifdef __PERFORMANCE_DEBUG_STARTUP__
 	DEBUG_EndTimer(qtrue);
+#endif //__PERFORMANCE_DEBUG_STARTUP__
 }
 
 void RE_EndScene()
@@ -1050,7 +1056,9 @@ void RE_RenderScene(const refdef_t *fd) {
 		return;
 	}
 
+#ifdef __PERFORMANCE_DEBUG_STARTUP__
 	DEBUG_StartTimer("RE_RenderScene", qtrue);
+#endif //__PERFORMANCE_DEBUG_STARTUP__
 
 	GLimp_LogComment("====== RE_RenderScene =====\n");
 
@@ -1318,5 +1326,7 @@ void RE_RenderScene(const refdef_t *fd) {
 
 	tr.frontEndMsec += ri->Milliseconds() - startTime;
 
+#ifdef __PERFORMANCE_DEBUG_STARTUP__
 	DEBUG_EndTimer(qtrue);
+#endif //__PERFORMANCE_DEBUG_STARTUP__
 }

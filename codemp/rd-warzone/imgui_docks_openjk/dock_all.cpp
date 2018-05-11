@@ -6,6 +6,9 @@ DockAll::DockAll() {}
 
 #include "../tr_debug.h"
 
+extern bool show_all_window;
+extern bool show_node_and_console_windows;
+
 const char *DockAll::label() {
 	return "All";
 }
@@ -121,12 +124,28 @@ void alignTabsDefault() {
 		undock(dock);
 	}
 
-	CDock *all = findDock("All");
-	CDock *console = findDock("Console");
-	CDock *node = findDock("Node");
+	CDock *all = NULL;
+	
+	if (show_all_window)
+	{
+		all = findDock("All");
+	}
+	else
+	{// Use PostProcess as default dock...
+		all = findDock("PostProcess");
+	}
+
+	CDock *console = NULL;
+
+	if (show_node_and_console_windows)
+	{
+		console = findDock("Console");
+		CDock *node = findDock("Node");
+		dockBottom(console, all);
+		dockRight(node, console);
+	}
+
 	dockTop(all, NULL);
-	dockBottom(console, all);
-	dockRight(node, console);
 
 	// dock all the rest to top
 	for (CDock *dock : g_dock.m_docks) {
@@ -139,14 +158,17 @@ void alignTabsDefault() {
 		dockTab(dock, all);
 	}
 
-	// until i figure out how the dock code exactly works this must be good enough...
-	// basically every step gets more successive to the aimed value (todo: rewrite dock system...)
-	g_dock.getRootDock()->setPosSize(g_dock.getRootDock()->pos, g_dock.getRootDock()->size);
-	console->parent->size.y = 180;
-	g_dock.getRootDock()->setPosSize(g_dock.getRootDock()->pos, g_dock.getRootDock()->size);
-	console->parent->size.y = 180;
-	g_dock.getRootDock()->setPosSize(g_dock.getRootDock()->pos, g_dock.getRootDock()->size);
-	console->parent->size.y = 180;
+	if (show_node_and_console_windows)
+	{
+		// until i figure out how the dock code exactly works this must be good enough...
+		// basically every step gets more successive to the aimed value (todo: rewrite dock system...)
+		g_dock.getRootDock()->setPosSize(g_dock.getRootDock()->pos, g_dock.getRootDock()->size);
+		console->parent->size.y = 180;
+		g_dock.getRootDock()->setPosSize(g_dock.getRootDock()->pos, g_dock.getRootDock()->size);
+		console->parent->size.y = 180;
+		g_dock.getRootDock()->setPosSize(g_dock.getRootDock()->pos, g_dock.getRootDock()->size);
+		console->parent->size.y = 180;
+	}
 }
 
 extern int setConsoleHeight;

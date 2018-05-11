@@ -11,11 +11,16 @@
 #include "../imgui_docks_openjk/dock_perf.h"
 #include "../imgui_docks_openjk/dock_controlflow.h"
 #include "../imgui_docks_openjk/dock_models.h"
+#include "../imgui_docks_openjk/dock_charactereditor.h"
 #include "../imgui_docks_openjk/dock_all.h"
 #include "imgui/imgui_api.h"
+#include "../tr_local.h"
 
 #include <list>
+
 std::list<Dock *> imgui_quake_docks;
+
+extern bool show_all_window;
 
 void alignTabsDefault();
 
@@ -29,12 +34,14 @@ CCALL void *imgui_get_current_dock();
 CCALL int imgui_openjk_default_docks() {
 	if (imgui_quake_docks.size() == 0) {
 		// the last dock is seen first when pressing F2, so lets make it an useful one
-		imgui_quake_docks.push_back(new DockMapInfo());
+#ifdef __EXPERIMETNAL_CHARACTER_EDITOR__
+		imgui_quake_docks.push_back(new DockCharacterEditor());
+#endif //__EXPERIMETNAL_CHARACTER_EDITOR__
 		imgui_quake_docks.push_back(new DockPostProcess());
+		imgui_quake_docks.push_back(new DockMapInfo());
 		imgui_quake_docks.push_back(new DockPerf());
-		imgui_quake_docks.push_back(new DockControlFlow());
-		imgui_quake_docks.push_back(new DockModels());
-		imgui_quake_docks.push_back(new DockAll());
+		//imgui_quake_docks.push_back(new DockControlFlow());		// postprocess handles this, but with tooltips
+		//imgui_quake_docks.push_back(new DockModels());			// Don't need this for now...
 		imgui_quake_docks.push_back(new DockShaders());
 		//imgui_quake_docks.push_back(new DockExplorer());
 		//imgui_quake_docks.push_back(new DockAnims());
@@ -49,6 +56,11 @@ CCALL int imgui_openjk_default_docks() {
 		//imgui_quake_docks.push_back(new DockDuktape());
 		//imgui_quake_docks.push_back(new DockOpsys( "opsystems/matmulpoint.opsys" ));
 		#endif
+
+		if (show_all_window)
+		{
+			imgui_quake_docks.push_back(new DockAll());
+		}
 	}
 
 	for (Dock *dock : imgui_quake_docks) {

@@ -2557,7 +2557,6 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	{
 		switch ( LittleLong( in->surfaceType ) ) {
 		case MST_PATCH:
-			//DEBUG_StartTimer("R_LoadSurfacesParsePatch", qfalse);
 			ParseMesh ( in, dv, hdrVertColors, out );
 			{
 				srfBspSurface_t *surface = (srfBspSurface_t *)out->data;
@@ -2569,29 +2568,22 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 				out->cullinfo.radius = surface->cullRadius;
 			}
 			numMeshes++;
-			//DEBUG_EndTimer(qfalse);
 			break;
 		case MST_FOLIAGE:
 		case MST_TRIANGLE_SOUP:
-			//DEBUG_StartTimer("R_LoadSurfacesParseTriSoup", qfalse);
 			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
 			numTriSurfs++;
-			//DEBUG_EndTimer(qfalse);
 			break;
 		case MST_PLANAR:
-			//DEBUG_StartTimer("R_LoadSurfacesParsePlanar", qfalse);
 			ParseFace( in, dv, hdrVertColors, out, indexes );
 			numFaces++;
-			//DEBUG_EndTimer(qfalse);
 			break;
 		case MST_FLARE:
-			//DEBUG_StartTimer("R_LoadSurfacesParseFlare", qfalse);
 			ParseFlare( in, dv, out, indexes );
 			{
 				out->cullinfo.type = CULLINFO_NONE;
 			}
 			numFlares++;
-			//DEBUG_EndTimer(qfalse);
 			break;
 		default:
 			ri->Error( ERR_DROP, "Bad surfaceType" );

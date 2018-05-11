@@ -2208,7 +2208,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 	vec3_t playerOrigin;
 
-	if (backEnd.localPlayerOriginValid)
+	if (backEnd.localPlayerValid)
 	{
 		VectorCopy(backEnd.localPlayerOrigin, playerOrigin);
 		//ri->Printf(PRINT_WARNING, "Local player is at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
@@ -2259,7 +2259,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	VectorSet(to, playerOrigin[0], playerOrigin[1], playerOrigin[2] + MAX_PSHADOW_RADIUS);
 	trace_t trace;
 	trace.entityNum = ENTITYNUM_NONE;
-	Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+	Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerGameEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
 	vec3_t lightCheckOrigin;
 
@@ -2340,19 +2340,19 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	{
 		VectorSet(from, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 		VectorSet(from, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace2, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		Light_Trace(&trace2, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 		VectorSet(from, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace3, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		Light_Trace(&trace3, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 		VectorSet(from, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 999999.9);
-		Light_Trace(&trace4, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		Light_Trace(&trace4, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 		VectorSet(from, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 999999.9);
-		Light_Trace(&trace5, from, NULL, NULL, to, backEnd.localPlayerOriginValid ? backEnd.localPlayerEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+		Light_Trace(&trace5, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 	}
 
 	if (RB_NightScale() == 1.0

@@ -46,6 +46,10 @@ void DockPostProcess::AddCheckBox(int ID) {
 	if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->displayName && ImGuiCvars[ID]->displayName[0])
 	{
 		ImGui::Checkbox(ImGuiCvars[ID]->displayName, (qboolean *)&ImGuiValue[ID]);
+		
+		//ImGui::Text(ImGuiCvars[ID]->displayName); ImGui::SameLine();
+		//ImGui::Text(":"); ImGui::SameLine();
+		//ImGui::Checkbox("", (qboolean *)&ImGuiValue[ID]);
 
 		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
 		{
@@ -57,6 +61,10 @@ void DockPostProcess::AddCheckBox(int ID) {
 	{
 		ImGui::Checkbox(ImGuiCvars[ID]->name, (qboolean *)&ImGuiValue[ID]);
 
+		//ImGui::Text(ImGuiCvars[ID]->name); ImGui::SameLine();
+		//ImGui::Text(":"); ImGui::SameLine();
+		//ImGui::Checkbox("", (qboolean *)&ImGuiValue[ID]);
+
 		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
 		{
 			if (ImGui::IsItemHovered(0))
@@ -66,24 +74,73 @@ void DockPostProcess::AddCheckBox(int ID) {
 }
 
 void DockPostProcess::AddInt(int ID) {
-	if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->displayName && ImGuiCvars[ID]->displayName[0])
-	{
-		ImGui::DragInt(ImGuiCvars[ID]->displayName, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
-
-		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+	if (ImGuiMax[ID] < 2)
+	{// Single on/off option, use checkbox instead...
+		AddCheckBox(ID);
+	}
+	else if (ImGuiMax[ID] < 8)
+	{// Use Radio Buttons for low max options...
+		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->displayName && ImGuiCvars[ID]->displayName[0])
 		{
-			if (ImGui::IsItemHovered(0))
-				ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			// Sigh... It bases everything on the name??? Can't reuse anything like "1" "2" "3" "Off"... That sucks...
+			//ImGui::Text(ImGuiCvars[ID]->displayName); ImGui::SameLine();
+			//ImGui::Text(":"); ImGui::SameLine();
+
+			for (int i = 0; i <= ImGuiMax[ID]; i++)
+			{
+				//ImGui::RadioButton(i == 0 ? "Off" : va("%i", i), &ImGuiValue[ID], i); ImGui::SameLine();
+				ImGui::RadioButton(i == 0 ? va("%s Off", ImGuiCvars[ID]->displayName) : va("%s %i", ImGuiCvars[ID]->displayName, i), &ImGuiValue[ID], i); ImGui::SameLine();
+
+				if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+				{
+					if (ImGui::IsItemHovered(0))
+						ImGui::SetTooltip(ImGuiCvars[ID]->description);
+				}
+			}
+
+			ImGui::NewLine();
+		}
+		else
+		{
+			//ImGui::Text(ImGuiCvars[ID]->name); ImGui::SameLine();
+			//ImGui::Text(":"); ImGui::SameLine();
+
+			for (int i = 0; i <= ImGuiMax[ID]; i++)
+			{
+				//ImGui::RadioButton(i == 0 ? "Off" : va("%i", i), &ImGuiValue[ID], i); ImGui::SameLine();
+				ImGui::RadioButton(i == 0 ? va("%s Off", ImGuiCvars[ID]->name) : va("%s %i", ImGuiCvars[ID]->name, i), &ImGuiValue[ID], i); ImGui::SameLine();
+
+				if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+				{
+					if (ImGui::IsItemHovered(0))
+						ImGui::SetTooltip(ImGuiCvars[ID]->description);
+				}
+			}
+
+			ImGui::NewLine();
 		}
 	}
 	else
-	{
-		ImGui::DragInt(ImGuiCvars[ID]->name, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
-
-		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+	{// Lots of possibilities, use a slider...
+		if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->displayName && ImGuiCvars[ID]->displayName[0])
 		{
-			if (ImGui::IsItemHovered(0))
-				ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			ImGui::DragInt(ImGuiCvars[ID]->displayName, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
+
+			if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+			{
+				if (ImGui::IsItemHovered(0))
+					ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			}
+		}
+		else
+		{
+			ImGui::DragInt(ImGuiCvars[ID]->name, &ImGuiValue[ID], 1.0, 0, ImGuiMax[ID]);
+
+			if (ImGuiCvars[ID]->displayInfoSet && ImGuiCvars[ID]->description && ImGuiCvars[ID]->description[0])
+			{
+				if (ImGui::IsItemHovered(0))
+					ImGui::SetTooltip(ImGuiCvars[ID]->description);
+			}
 		}
 	}
 }

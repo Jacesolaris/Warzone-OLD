@@ -11367,7 +11367,7 @@ stillDoSaber:
 		if (cent->currentState.number == cg.clientNum)
 		{// Mark this refent as being the player, so that we can use it's position in renderer...
 			legs.isLocalPlayer = qtrue;
-			legs.localPlayerEntityNum = cg.clientNum;
+			legs.localPlayerGameEntityNum = cg.clientNum;
 		}
 		else
 		{

@@ -3402,7 +3402,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		DEBUG_EndTimer(qtrue);
 
-		DEBUG_StartTimer("RB_OcclusionCulling", qtrue);
+		DEBUG_StartTimer("OcclusionCulling", qtrue);
 		RB_OcclusionCulling();
 		DEBUG_EndTimer(qtrue);
 
@@ -3558,10 +3558,13 @@ void RB_ExecuteRenderCommands( const void *data ) {
 
 	t1 = ri->Milliseconds ();
 
-	while ( 1 ) {
+#ifdef __PERFORMANCE_DEBUG_STARTUP__
+	while ( 1 ) 
+	{
 		data = PADP(data, sizeof(void *));
 
-		switch ( *(const int *)data ) {
+		switch ( *(const int *)data ) 
+		{
 		case RC_SET_COLOR:
 			DEBUG_StartTimer("RB_SetColor", qtrue);
 			data = RB_SetColor( data );
@@ -3631,14 +3634,14 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 #endif //__JKA_WEATHER__
 		case RC_POSTPROCESS:
-		
-			DEBUG_StartTimer("RB_PostProcess", qtrue);
+			//DEBUG_StartTimer("RB_PostProcess", qtrue); // this won't work. we time stuff inside here...
 			data = RB_PostProcess(data);
-			DEBUG_EndTimer(qtrue);
+			//DEBUG_EndTimer(qtrue);
 			break;
 		case RC_DRAWAWESOMIUMFRAME:
 			DEBUG_StartTimer("RB_AwesomiumFrame", qtrue);
 			data = RB_AwesomiumFrame(data);
+			DEBUG_EndTimer(qtrue);
 			break;
 		case RC_END_OF_LIST:
 		default:
@@ -3655,5 +3658,72 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			return;
 		}
 	}
+#else //!__PERFORMANCE_DEBUG_STARTUP__
+	while (1) 
+	{
+		data = PADP(data, sizeof(void *));
 
+		switch (*(const int *)data) 
+		{
+		case RC_SET_COLOR:
+			data = RB_SetColor(data);
+			break;
+		case RC_STRETCH_PIC:
+			data = RB_StretchPic(data);
+			break;
+		case RC_ROTATE_PIC:
+			data = RB_RotatePic(data);
+			break;
+		case RC_ROTATE_PIC2:
+			data = RB_RotatePic2(data);
+			break;
+		case RC_DRAW_SURFS:
+			data = RB_DrawSurfs(data);
+			break;
+		case RC_DRAW_BUFFER:
+			data = RB_DrawBuffer(data);
+			break;
+		case RC_SWAP_BUFFERS:
+			data = RB_SwapBuffers(data);
+			break;
+		case RC_SCREENSHOT:
+			data = RB_TakeScreenshotCmd(data);
+			break;
+		case RC_VIDEOFRAME:
+			data = RB_TakeVideoFrameCmd(data);
+			break;
+		case RC_COLORMASK:
+			data = RB_ColorMask(data);
+			break;
+		case RC_CLEARDEPTH:
+			data = RB_ClearDepth(data);
+			break;
+		case RC_CAPSHADOWMAP:
+			data = RB_CapShadowMap(data);
+			break;
+	#ifdef __JKA_WEATHER__
+		case RC_WORLD_EFFECTS:
+			data = RB_WorldEffects(data);
+			break;
+	#endif //__JKA_WEATHER__
+		case RC_POSTPROCESS:
+			data = RB_PostProcess(data);
+			break;
+		case RC_DRAWAWESOMIUMFRAME:
+			data = RB_AwesomiumFrame(data);
+			break;
+		case RC_END_OF_LIST:
+		default:
+			// finish any 2D drawing if needed
+			if (tess.numIndexes) {
+				RB_EndSurface();
+			}
+
+			// stop rendering
+			t2 = ri->Milliseconds();
+			backEnd.pc.msec = t2 - t1;
+			return;
+		}
+	}
+#endif //__PERFORMANCE_DEBUG_STARTUP__
 }

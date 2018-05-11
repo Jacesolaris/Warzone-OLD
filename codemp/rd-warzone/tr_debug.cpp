@@ -32,6 +32,10 @@ std::list<std::string> perfNameStack;
 
 void DEBUG_StartTimer(char *name, qboolean usePerfCvar)
 {
+#ifndef __PERFORMANCE_DEBUG_STARTUP__
+	if (!usePerfCvar) return;
+#endif //__PERFORMANCE_DEBUG_STARTUP__
+
 #ifdef __PERFORMANCE_DEBUG__
 	if (!usePerfCvar || r_perf->integer)
 	{
@@ -58,6 +62,10 @@ void DEBUG_StartTimer(char *name, qboolean usePerfCvar)
 
 void DEBUG_EndTimer(qboolean usePerfCvar)
 {
+#ifndef __PERFORMANCE_DEBUG_STARTUP__
+	if (!usePerfCvar) return;
+#endif //__PERFORMANCE_DEBUG_STARTUP__
+
 #ifdef __PERFORMANCE_DEBUG__
 	if (!usePerfCvar || r_perf->integer)
 	{
@@ -71,6 +79,7 @@ void DEBUG_EndTimer(qboolean usePerfCvar)
 
 		DEBUG_PERFORMANCE_TIME = getMilliSpan(DEBUG_PERFORMANCE_TIME);
 
+#ifdef __PERFORMANCE_DEBUG_TEXT__
 		// you can see the results in Perf dock now --  UQ1: Gonna keep the messages for now so I can track down startup errors easier...
 		if (DEBUG_PERFORMANCE_NAME[0] != '\0' && strlen(DEBUG_PERFORMANCE_NAME) > 0)
 		{
@@ -80,6 +89,7 @@ void DEBUG_EndTimer(qboolean usePerfCvar)
 		{
 			ri->Printf(PRINT_WARNING, "%s took %i ms to complete.\n", "unknown", DEBUG_PERFORMANCE_TIME);
 		}
+#endif //__PERFORMANCE_DEBUG_TEXT__
 	}
 #endif //__PERFORMANCE_DEBUG__
 }
