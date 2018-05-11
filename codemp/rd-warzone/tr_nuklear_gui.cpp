@@ -893,9 +893,9 @@ uq_tooltip(struct nk_context *ctx, const char *text, struct media *media, nk_col
 		fontSize = 14.0;
 		nk_style_set_font(ctx, &media->font_14->handle);
 	}
-	
+
 	text_height = 3.0f + (2.0f * padding.y);
-	
+
 	if (gui_tooltipCentered->integer)
 	{
 		text_width = style->font->width(style->font->userdata, fontSize * 0.77, convertedStrings[longest], longestCount);
@@ -962,12 +962,217 @@ uq_tooltip(struct nk_context *ctx, const char *text, struct media *media, nk_col
 	}
 }
 
+static void
+uq_header(struct nk_context *ctx, struct media *media, const char *title)
+{
+	nk_style_set_font(ctx, &media->font_18->handle);
+	nk_layout_row_dynamic(ctx, 20, 1);
+	nk_label(ctx, title, NK_TEXT_LEFT);
+}
+
+static void
+uq_widget(struct nk_context *ctx, struct media *media, float height, int columns)
+{
+	static const float ratio[] = { 0.15f, 0.85f };
+	nk_style_set_font(ctx, &media->font_22->handle);
+	nk_layout_row(ctx, NK_DYNAMIC, height, 2 + columns, ratio);
+	nk_spacing(ctx, 1 + columns);
+}
+
+static void
+uq_widget_centered(struct nk_context *ctx, struct media *media, float height)
+{
+	static const float ratio[] = { 0.15f, 0.50f, 0.35f };
+	nk_style_set_font(ctx, &media->font_22->handle);
+	nk_layout_row(ctx, NK_DYNAMIC, height, 3, ratio);
+	nk_spacing(ctx, 1);
+}
+
+qboolean uq_checkbox(struct nk_context *ctx, struct media *media, char *label, qboolean currentSetting)
+{
+	bool checked = (bool)currentSetting;
+
+	/*------------------------------------------------
+	*                  TOGGLE
+	*------------------------------------------------*/
+
+	nk_style_set_font(ctx, &media->font_14->handle);
+
+	uq_widget(ctx, media, 35, 0);
+	//uq_header(ctx, media, label);
+
+	if (nk_button_image_label(ctx, (checked) ? media->checked : media->unchecked, label, NK_TEXT_LEFT))
+		checked = !checked;
+
+	return (qboolean)checked;
+}
+
+int uq_radio(struct nk_context *ctx, struct media *media, char *label, int currentSetting, int maxSetting)
+{
+	int setting = (bool)currentSetting;
+
+	/*------------------------------------------------
+	*                  RADIO
+	*------------------------------------------------*/
+
+	nk_style_set_font(ctx, &media->font_14->handle);
+
+	uq_widget(ctx, media, 35, maxSetting);
+
+	uq_header(ctx, media, label);
+
+	for (int i = 0; i <= maxSetting; i++)
+	{
+		int selected = nk_button_symbol_label(ctx, (setting == i) ? NK_SYMBOL_CIRCLE_OUTLINE : NK_SYMBOL_CIRCLE_SOLID, va("%i", i), NK_TEXT_LEFT);
+		
+		if (setting != selected)
+			setting = selected;
+	}
+
+	return setting;
+}
+
+//
+//
+//
+//
+//
+
+int			GUI_PostProcessNumCvars = 0;
+cvar_t		*GUI_PostProcessCvars[128] = { 0 };
+int			GUI_PostProcessMax[128] = { 1 };
+int			GUI_PostProcessValue[128] = { 1 };
+
+void GUI_PostProcessClearFrame() {
+	GUI_PostProcessNumCvars = 0;
+}
+
+void GUI_PostProcessAddCvar(cvar_t *cvar, int max) {
+	GUI_PostProcessCvars[GUI_PostProcessNumCvars] = cvar;
+	GUI_PostProcessMax[GUI_PostProcessNumCvars] = max;
+	GUI_PostProcessValue[GUI_PostProcessNumCvars] = cvar->integer;
+	GUI_PostProcessNumCvars++;
+}
+
+void GUI_PostProcessUpdateCvars() {
+	for (int i = 0; i < GUI_PostProcessNumCvars; i++)
+	{
+		if (GUI_PostProcessValue[i] > GUI_PostProcessMax[i])
+			GUI_PostProcessValue[i] = GUI_PostProcessMax[i];
+
+		if (GUI_PostProcessValue[i] != GUI_PostProcessCvars[i]->integer)
+		{
+			ri->Cvar_Set(GUI_PostProcessCvars[i]->name, va("%i", GUI_PostProcessValue[i]));
+		}
+	}
+}
+
+int GUI_PostProcessUpdateUI(struct nk_context *ctx, struct media *media) {
+	int hovered = -1;
+
+	for (int i = 0; i < GUI_PostProcessNumCvars; i++)
+	{
+		if (GUI_PostProcessMax[i] == 1)
+		{
+			if (GUI_PostProcessCvars[i]->displayInfoSet && GUI_PostProcessCvars[i]->displayName && GUI_PostProcessCvars[i]->displayName[0])
+			{
+				GUI_PostProcessValue[i] = uq_checkbox(ctx, media, GUI_PostProcessCvars[i]->displayName, (qboolean)GUI_PostProcessValue[i]);
+			}
+			else
+			{
+				GUI_PostProcessValue[i] = uq_checkbox(ctx, media, GUI_PostProcessCvars[i]->name, (qboolean)GUI_PostProcessValue[i]);
+			}
+		}
+		else
+		{
+			if (GUI_PostProcessCvars[i]->displayInfoSet && GUI_PostProcessCvars[i]->displayName && GUI_PostProcessCvars[i]->displayName[0])
+			{
+				GUI_PostProcessValue[i] = uq_radio(ctx, media, GUI_PostProcessCvars[i]->displayName, (qboolean)GUI_PostProcessValue[i], GUI_PostProcessMax[i]);
+			}
+			else
+			{
+				GUI_PostProcessValue[i] = uq_radio(ctx, media, GUI_PostProcessCvars[i]->name, (qboolean)GUI_PostProcessValue[i], GUI_PostProcessMax[i]);
+			}
+		}
+
+		if ((ctx->last_widget_state & NK_WIDGET_STATE_HOVER))
+		{// Hoverred...
+			hovered = i;
+		}
+	}
+
+	return hovered;
+}
+
+void GUI_PostProcessMakeCvarList() {
+	GUI_PostProcessAddCvar(r_shadowBlur, 1);
+	GUI_PostProcessAddCvar(r_dynamicGlow, 1);
+	GUI_PostProcessAddCvar(r_bloom, 2);
+	GUI_PostProcessAddCvar(r_anamorphic, 1);
+	GUI_PostProcessAddCvar(r_ssdm, 2);
+	GUI_PostProcessAddCvar(r_ao, 3);
+	GUI_PostProcessAddCvar(r_cartoon, 3);
+	GUI_PostProcessAddCvar(r_ssdo, 1);
+	GUI_PostProcessAddCvar(r_sss, 1);
+	GUI_PostProcessAddCvar(r_deferredLighting, 1);
+	GUI_PostProcessAddCvar(r_ssr, 1);
+	GUI_PostProcessAddCvar(r_sse, 1);
+	GUI_PostProcessAddCvar(r_magicdetail, 1);
+	GUI_PostProcessAddCvar(r_hbao, 1);
+	GUI_PostProcessAddCvar(r_glslWater, 3);
+	GUI_PostProcessAddCvar(r_fogPost, 1);
+	GUI_PostProcessAddCvar(r_multipost, 1);
+	GUI_PostProcessAddCvar(r_dof, 3);
+	GUI_PostProcessAddCvar(r_lensflare, 1);
+	GUI_PostProcessAddCvar(r_testshader, 1);
+	GUI_PostProcessAddCvar(r_colorCorrection, 1);
+	GUI_PostProcessAddCvar(r_esharpening, 1);
+	GUI_PostProcessAddCvar(r_esharpening2, 1);
+	GUI_PostProcessAddCvar(r_darkexpand, 1);
+	GUI_PostProcessAddCvar(r_distanceBlur, 5);
+	GUI_PostProcessAddCvar(r_volumeLight, 1);
+	GUI_PostProcessAddCvar(r_fxaa, 1);
+	GUI_PostProcessAddCvar(r_showdepth, 1);
+	GUI_PostProcessAddCvar(r_shownormals, 2);
+	GUI_PostProcessAddCvar(r_trueAnaglyph, 2);
+	GUI_PostProcessAddCvar(r_occlusion, 1);
+}
+
+static void
+GUI_Settings(struct nk_context *ctx, struct media *media)
+{
+	float size[2] = { 640.0, 480.0 };
+
+	int i = 0;
+	nk_style_set_font(ctx, &media->font_20->handle);
+	nk_begin(ctx, "Settings - Post Processing", nk_rect(128.0, 128.0, size[0], size[1]), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_NO_SCROLLBAR);
+
+	/*------------------------------------------------
+	*           POSTPROCESS SETTINGS DISPLAY
+	*------------------------------------------------*/
+	GUI_PostProcessClearFrame();
+	GUI_PostProcessMakeCvarList();
+	int hovered = GUI_PostProcessUpdateUI(ctx, media);
+	if (hovered >= 0)
+	{// Something is hovered, do the tooltip...
+		if (GUI_PostProcessCvars[hovered]->displayInfoSet && GUI_PostProcessCvars[hovered]->description && GUI_PostProcessCvars[hovered]->description[0])
+		{
+			uq_tooltip(ctx, GUI_PostProcessCvars[hovered]->description, media, ColorForQuality(QUALITY_WHITE));
+		}
+	}
+
+	GUI_PostProcessUpdateCvars();
+
+	nk_style_set_font(ctx, &media->font_14->handle);
+	nk_end(ctx);
+}
+
 int PREVIOUS_INVENTORY_TOOLTIP = -1;
 int PREVIOUS_INVENTORY_TOOLTIP_QUALITY = 0;
 int PREVIOUS_INVENTORY_TOOLTIP_TIME = 0;
 
 static void
-GUI_inventory(struct nk_context *ctx, struct media *media)
+GUI_Inventory(struct nk_context *ctx, struct media *media)
 {
 	static int image_active;
 	static int selected_item = 0;
@@ -2131,7 +2336,7 @@ void NuklearUI_Main(void)
 		
 #endif
 
-#if 0 // Disabled until I finish it...
+#if 1 // Disabled until I finish it...
 		/* GUI */
 		if (menuOpen)
 		{
@@ -2141,7 +2346,8 @@ void NuklearUI_Main(void)
 			grid_demo(&GUI_ctx, &GUI_media);
 #endif
 
-			GUI_inventory(&GUI_ctx, &GUI_media);
+			GUI_Inventory(&GUI_ctx, &GUI_media);
+			//GUI_Settings(&GUI_ctx, &GUI_media);
 		}
 		else
 #endif

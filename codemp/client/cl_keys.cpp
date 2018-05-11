@@ -1339,7 +1339,7 @@ void CL_KeyDownEvent( int key, unsigned time ) {
 	}
 
 	// escape is always handled special
-	if ( key == A_ESCAPE || key == A_LOW_I || key == A_CAP_I ) {
+	if ( key == A_ESCAPE /*|| key == A_LOW_I || key == A_CAP_I*/ ) {
 		qboolean isEsc = (qboolean)(key == A_ESCAPE); // handle "I" key like escape key. Open's menu and inventory screens, and enables mouse.
 
 		if (isEsc && !kg.keys[A_SHIFT].down && ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {

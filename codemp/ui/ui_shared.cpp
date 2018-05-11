@@ -1386,6 +1386,11 @@ void Menus_CloseByName ( const char *p )
 {
 	menuDef_t *menu = Menus_FindByName(p);
 
+	if (openMenuCount <= 0)
+	{
+		trap->Cvar_Set("ui_warzonegui", "0");
+	}
+
 	// If the menu wasnt found just exit
 	if (menu == NULL)
 	{
@@ -1416,6 +1421,11 @@ void Menus_CloseByName ( const char *p )
 
 	// Window is now invisible and doenst have focus
 	menu->window.flags &= ~(WINDOW_VISIBLE | WINDOW_HASFOCUS);
+
+	if (openMenuCount <= 0)
+	{
+		trap->Cvar_Set("ui_warzonegui", "0");
+	}
 }
 
 int FPMessageTime = 0;
@@ -1436,6 +1446,8 @@ void Menus_CloseAll()
 	openMenuCount = 0;
 
 	FPMessageTime = 0;
+
+	trap->Cvar_Set("ui_warzonegui", "0");
 }
 
 qboolean Script_Show(itemDef_t *item, char **args)

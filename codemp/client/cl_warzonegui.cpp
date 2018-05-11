@@ -5,11 +5,16 @@ namespace WarzoneGUI
 {
 	qboolean keyStatus[MAX_KEYS] = { qfalse };
 	vec2_t mouseStatus = { 0.5, 0.5 };
-	qboolean menuOpen = qfalse;
+	//qboolean menuOpen = qfalse;
 
 	void MenuOpenEvent(qboolean open)
 	{
-		menuOpen = open;
+		//menuOpen = open;
+
+		if (open)
+			Cvar_Set("ui_warzonegui", "1");
+		else
+			Cvar_Set("ui_warzonegui", "0");
 	}
 
 	void KeyEvent(int key, qboolean down)
@@ -49,6 +54,6 @@ namespace WarzoneGUI
 	void SendKeyboardStatusToRenderer(void)
 	{
 		//Com_Printf("CLIENT: Mouse is at %f %f.\n", mouseStatus[0], mouseStatus[1]);
-		re->R_SendInputEvents(keyStatus, mouseStatus, menuOpen);
+		re->R_SendInputEvents(keyStatus, mouseStatus, (qboolean)Cvar_VariableIntegerValue("ui_warzonegui"));
 	}
 }
