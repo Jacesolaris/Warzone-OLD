@@ -5050,7 +5050,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
 	}
 	// send a trace down from the player to the ground
 	VectorCopy( cent->lerpOrigin, end );
-	if (cg_shadows.integer == 2)
+	/*if (cg_shadows.integer == 2)
 	{ //stencil
 		end[2] -= 4096.0f;
 
@@ -5061,7 +5061,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
 			trace.endpos[2] = cent->lerpOrigin[2]-25.0f;
 		}
 	}
-	else
+	else*/
 	{
 		end[2] -= SHADOW_DISTANCE;
 
@@ -5073,11 +5073,11 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
 		}
 	}
 
-	if (cg_shadows.integer == 2)
+	/*if (cg_shadows.integer == 2)
 	{ //stencil shadows need plane to be on ground
 		*shadowPlane = trace.endpos[2];
 	}
-	else
+	else*/
 	{
 		*shadowPlane = trace.endpos[2] + 1;
 	}
@@ -9732,9 +9732,9 @@ void CG_Player( centity_t *cent ) {
 	// add a water splash if partially in and out of water
 	CG_PlayerSplash( cent );
 
-	if ( (cg_shadows.integer == 3 || cg_shadows.integer == 2) && shadow ) {
+	/*if ( (cg_shadows.integer == 3 || cg_shadows.integer == 2) && shadow ) {
 		renderfx |= RF_SHADOW_PLANE;
-	}
+	}*/
 	renderfx |= RF_LIGHTING_ORIGIN;			// use the same origin for all
 
 	// if we've been hit, display proper fullscreen fx
@@ -9765,10 +9765,10 @@ void CG_Player( centity_t *cent ) {
 	VectorCopy( cent->lerpOrigin, legs.lightingOrigin );
 	legs.shadowPlane = shadowPlane;
 	legs.renderfx = renderfx;
-	if (cg_shadows.integer == 2 && (renderfx & RF_THIRD_PERSON))
+	/*if (cg_shadows.integer == 2 && (renderfx & RF_THIRD_PERSON))
 	{ //can see own shadow
 		legs.renderfx |= RF_SHADOW_ONLY;
-	}
+	}*/
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
 	CG_G2PlayerAngles( cent, legs.axis, rootAngles );
@@ -11341,14 +11341,14 @@ stillDoSaber:
 				ScaleModelAxis(&legs);
 				*/
 
-				if (cg_shadows.integer != 2 && cgs.glconfig.stencilBits >= 4 && cg_renderToTextureFX.integer)
+				/*if (cg_shadows.integer != 2 && cgs.glconfig.stencilBits >= 4 && cg_renderToTextureFX.integer)
 				{
 					trap->R_SetRefractionProperties(1.0f, 0.0f, qfalse, qfalse); //don't need to do this every frame.. but..
 					legs.customShader = 2; //crazy "refractive" shader
 					AddRefEntityToScene( &legs );
 					legs.customShader = 0;
 				}
-				else
+				else*/
 				{ //stencil buffer's in use, sorry
 					legs.renderfx = 0;//&= ~(RF_RGB_TINT|RF_ALPHA_FADE);
 					legs.shaderRGBA[0] = legs.shaderRGBA[1] = legs.shaderRGBA[2] = legs.shaderRGBA[3] = 255;

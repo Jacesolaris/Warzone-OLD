@@ -106,7 +106,12 @@ void main()
 			texCoords += vec2(GetSway());
 		}
 
-		gl_FragColor = texture(u_DiffuseMap, texCoords);
+		// Wait, we don't even need the colors, just the alphas...
+		//gl_FragColor = texture(u_DiffuseMap, texCoords);
+		
+		gl_FragColor.a = texture(u_DiffuseMap, texCoords).a;
+		gl_FragColor.rgb = vec3(1.0);
+
 		gl_FragColor.a *= var_Color.a;
 
 		float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
@@ -123,7 +128,7 @@ void main()
 
 	if (USE_BLEND > 0.0)
 	{// Emulate RGB blending... Fuck I hate this crap...
-		float colStr = clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0);
+		float colStr = 1.0;// clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0);
 
 		if (USE_BLEND == 3.0)
 		{

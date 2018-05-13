@@ -239,6 +239,7 @@ overlap and double darken.
 =================
 */
 void RB_ShadowFinish(void) {
+	/*
 	if (r_shadows->integer != 2) {
 		return;
 	}
@@ -270,6 +271,7 @@ void RB_ShadowFinish(void) {
 
 	qglColor4f(1, 1, 1, 1);
 	qglDisable(GL_STENCIL_TEST);
+	*/
 }
 
 

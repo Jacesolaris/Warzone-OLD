@@ -1472,7 +1472,7 @@ void R_Register( void )
 	r_roundImagesDown = ri->Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorMipLevels = ri->Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
 	r_detailTextures = ri->Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_maxDeferredLights = ri->Cvar_Get("r_maxDeferredLights", "16", CVAR_ARCHIVE);
+	r_maxDeferredLights = ri->Cvar_Get("r_maxDeferredLights", "24", CVAR_ARCHIVE);
 	r_texturebits = ri->Cvar_Get( "r_texturebits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorbits = ri->Cvar_Get( "r_colorbits", "32", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stencilbits = ri->Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1519,7 +1519,7 @@ void R_Register( void )
 	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	
 	r_sss = ri->Cvar_Get("r_sss", "false", CVAR_ARCHIVE);
-	r_ssdo = ri->Cvar_Get("r_ssdo", "true", CVAR_ARCHIVE);
+	r_ssdo = ri->Cvar_Get("r_ssdo", "false", CVAR_ARCHIVE);
 	r_ssdoBaseRadius = ri->Cvar_Get("r_ssdoBaseRadius", "2.0", CVAR_ARCHIVE);
 	r_ssdoMaxOcclusionDist = ri->Cvar_Get("r_ssdoMaxOcclusionDist", "99999.0", CVAR_ARCHIVE);
 
@@ -1564,13 +1564,13 @@ void R_Register( void )
 	r_sunlightMode = ri->Cvar_Get( "r_sunlightMode", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_sunlightSpecular = ri->Cvar_Get( "r_sunlightSpecular", "1", CVAR_ARCHIVE );
 
-	r_shadowBlurWidth = ri->Cvar_Get("r_shadowBlurWidth", "12.0", CVAR_ARCHIVE);
-	r_shadowBlurStep = ri->Cvar_Get("r_shadowBlurStep", "4.0", CVAR_ARCHIVE);
+	r_shadowBlurWidth = ri->Cvar_Get("r_shadowBlurWidth", "5.0", CVAR_ARCHIVE);
+	r_shadowBlurStep = ri->Cvar_Get("r_shadowBlurStep", "1.0", CVAR_ARCHIVE);
 	r_shadowSamples = ri->Cvar_Get("r_shadowSamples", "2", CVAR_ARCHIVE);
 	r_shadowContrast = ri->Cvar_Get("r_shadowContrast", "0.7", CVAR_ARCHIVE);
 	r_shadowBlur = ri->Cvar_Get( "r_shadowBlur", "true", CVAR_ARCHIVE );
 	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "2", CVAR_ARCHIVE | CVAR_LATCH );
-	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "512", CVAR_ARCHIVE | CVAR_LATCH );
+	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZNear = ri->Cvar_Get( "r_shadowCascadeZNear", "4", CVAR_ARCHIVE );
 	r_shadowCascadeZFar = ri->Cvar_Get( "r_shadowCascadeZFar", "8192"/*"3072"*/, CVAR_ARCHIVE );
 	r_shadowCascadeZBias = ri->Cvar_Get( "r_shadowCascadeZBias", "-320", CVAR_ARCHIVE );
@@ -1632,7 +1632,7 @@ void R_Register( void )
 	//r_bloomRays = ri->Cvar_Get("r_bloomRays", "1", CVAR_ARCHIVE);
 	r_bloomRaysSamples = ri->Cvar_Get("r_bloomRaysSamples", "24", CVAR_ARCHIVE);
 	r_bloomRaysDecay = ri->Cvar_Get("r_bloomRaysDecay", "0.9975", CVAR_ARCHIVE);
-	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", "0.15", CVAR_ARCHIVE);
+	r_bloomRaysWeight = ri->Cvar_Get("r_bloomRaysWeight", /*"0.15"*/"0.2", CVAR_ARCHIVE);
 	r_bloomRaysDensity = ri->Cvar_Get("r_bloomRaysDensity", "1.0", CVAR_ARCHIVE);
 	r_bloomRaysStrength = ri->Cvar_Get("r_bloomRaysStrength", "1.0", CVAR_ARCHIVE);
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "true", CVAR_ARCHIVE );

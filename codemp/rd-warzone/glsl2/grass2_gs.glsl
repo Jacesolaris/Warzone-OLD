@@ -23,7 +23,7 @@ uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHAD
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, 0.0, 0.0, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local10; // foliageLODdistance, GRASS_UNDERWATER_ONLY, 0.0, GRASS_TYPE_UNIFORMALITY
 
 #define SHADER_MAP_SIZE				u_Local1.r
 #define SHADER_SWAY					u_Local1.g
@@ -45,6 +45,7 @@ uniform vec4						u_Local10; // foliageLODdistance, 0.0, 0.0, GRASS_TYPE_UNIFORM
 #define GRASS_HEIGHT				u_Local8.b
 
 #define MAX_RANGE					u_Local10.r
+#define GRASS_UNDERWATER_ONLY		u_Local10.g
 #define GRASS_TYPE_UNIFORMALITY		u_Local10.a
 
 #define MAP_WATER_LEVEL				SHADER_WATER_LEVEL // TODO: Use water map
@@ -208,6 +209,15 @@ void main()
 	vec3 Vert2 = gl_in[1].gl_Position.xyz;
 	vec3 Vert3 = gl_in[2].gl_Position.xyz;
 
+#ifdef UNDERWATER_ONLY
+	float waterCheckLevel = MAP_WATER_LEVEL - 128.0;
+
+	if (Vert1.z >= waterCheckLevel && Vert2.z >= waterCheckLevel && Vert3.z >= waterCheckLevel)
+	{// Can skip this triangle completely...
+		return;
+	}
+#endif //UNDERWATER_ONLY
+
 	vec3 Pos = (Vert1 + Vert2 + Vert3) / 3.0;   //Center of the triangle - copy for later
 	//-----------------------------------
 
@@ -254,18 +264,79 @@ void main()
 		vLocalSeed = Pos*float(gl_InvocationID);
 	#endif
 
+	float vSize = (distance(Vert1, Vert2) + distance(Vert1, Vert3) + distance(Vert2, Vert3)) / 3.0;
+
+	if (vSize < 64.0)
+	{// Don't even bother...
+		return;
+	}
+
+
+	/*
+	vec4 controlMap = GetGrassMap(Pos);
+
+	if (controlMap.a <= 0.0)
+	{// Check if this area is on the grass map. If not, there is no grass here...
+		return;
+	}
+
+	float controlMapScale = length(controlMap.rgb) / 3.0;
+	//controlMapScale *= controlMapScale;
+	//controlMapScale += 0.1;
+
+	if (controlMapScale * controlMap.a < 0.2)
+	{// Check if this area is on the grass map. If not, there is no grass here...
+		return;
+	}*/
+
+
+#ifndef __USE_CONTROL_MAP__
+	vec3 control;
+	control.r = randZeroOne();
+	control.g = randZeroOne();
+	control.b = randZeroOne();
+#endif //__USE_CONTROL_MAP__
+
+
 #ifdef THREE_WAY_GRASS_CLUMPS
-	for (int x = 0; x < MAX_FOLIAGES / 3; x++)
+	int mf = MAX_FOLIAGES / 3;
+	int maxFoliagesForSize = int(min(clamp(float(vSize) / 16384.0, 0.0, 1.0) * float(mf), 3));
 #else //!THREE_WAY_GRASS_CLUMPS
-	for (int x = 0; x < MAX_FOLIAGES / 2; x++)
+	int mf = MAX_FOLIAGES / 2;
+	int maxFoliagesForSize = int (min(clamp(float(vSize) / 16384.0, 0.0, 1.0) * float(mf), 2));
 #endif //THREE_WAY_GRASS_CLUMPS
+
+	for (int x = 0; x < maxFoliagesForSize; x++)
 	{
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
+
+#if !defined(USE_400)
+		// No invocations support...
+		vLocalSeed = vGrassFieldPos*PASS_NUMBER;
+#else
+		// invocations support...
+		vLocalSeed = vGrassFieldPos*float(gl_InvocationID);
+#endif
+
+#ifdef UNDERWATER_ONLY
+		if (vGrassFieldPos.z >= MAP_WATER_LEVEL - 128.0)
+		{
+			continue;
+		}
+#endif //UNDERWATER_ONLY
 
 		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
 
 		if (VertDist2 >= MAX_RANGE)
 		{// Too far from viewer... Cull...
+			continue;
+		}
+
+		float heightAboveWater = vGrassFieldPos.z - MAP_WATER_LEVEL;
+		float heightAboveWaterLength = length(heightAboveWater);
+
+		if (heightAboveWaterLength <= 128.0)
+		{// Too close to water edge...
 			continue;
 		}
 
@@ -284,35 +355,74 @@ void main()
 			}
 		}
 
+#ifdef __USE_CONTROL_MAP__
 		vec4 controlMap = GetGrassMap(vGrassFieldPos);
 
 		if (controlMap.a <= 0.0)
-		{
-			continue;
-		}
-
-		float controlMapScale = length(controlMap.rgb);
-		controlMapScale *= controlMapScale;
-		controlMapScale += 0.1;
-
-		if (controlMapScale * controlMap.a < 0.2)
 		{// Check if this area is on the grass map. If not, there is no grass here...
 			continue;
 		}
+#else //!__USE_CONTROL_MAP__
+		vec4 controlMap;
 
-		float heightAboveWater = vGrassFieldPos.z - MAP_WATER_LEVEL;
-		float heightAboveWaterLength = length(heightAboveWater);
+		controlMap.rgb = control.rgb;
 		
-		if (heightAboveWaterLength <= 128.0)
-		{// Too close to water edge...
-			continue;
+		if (SHADER_HAS_SPLATMAP4 > 0.0)
+		{// Also grab the roads map, if we have one...
+			vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+			vec2 pixel = (vGrassFieldPos.xy - u_Mins.xy) / mapSize;
+
+			float road = texture(u_RoadsControlMap, pixel).r;
+
+			if (road > GRASS_DISTANCE_FROM_ROADS)
+			{
+				//controlMap.a = 0.0; // Force no grass near roads, or on black parts of the road map (obstacles)...
+				continue;
+			}
+			else if (road > 0.0)
+			{
+				float scale = 1.0 - (road / GRASS_DISTANCE_FROM_ROADS);
+				controlMap.a = scale;
+			}
+			else
+			{
+				controlMap.a = 1.0;
+			}
 		}
+		else
+		{
+			controlMap.a = 1.0;
+		}
+#endif //__USE_CONTROL_MAP__
+
+		float controlMapScale = length(controlMap.rgb) / 3.0;
+		controlMapScale *= controlMapScale;
+		controlMapScale += 0.1;
 
 		float fSizeRandomness = randZeroOne() * 0.25 + 0.75;
 		float sizeMult = 1.25;
 		float fGrassPatchHeight = 1.0;
 
-		if (heightAboveWater < 0.0)
+#ifdef UNDERWATER_ONLY
+		iGrassType = 16;
+
+		if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
+		{// Randomize...
+			iGrassType = randomInt(16, 19);
+		}
+
+		if (heightAboveWaterLength <= 192.0)
+		{// When near water edge, reduce the size of the grass...
+			sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
+		}
+		else
+		{// Deep underwater plants draw larger...
+			sizeMult *= clamp(1.0 + (heightAboveWaterLength / 192.0), 1.0, 16.0);
+		}
+
+		fGrassPatchHeight = clamp(controlMapScale * vertDistanceScale * 5.0, 0.0, 1.5) * fSizeRandomness;
+#else //!UNDERWATER_ONLY
+		if (GRASS_UNDERWATER_ONLY == 1.0 || heightAboveWater < 0.0)
 		{
 			iGrassType = 16;
 			
@@ -334,6 +444,7 @@ void main()
 		}
 		else
 		{
+#ifdef __USE_CONTROL_MAP__
 			if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.g >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
 			{// Any main grass...
 				iGrassType = randomInt(0, 2);
@@ -368,9 +479,13 @@ void main()
 				iGrassType = randomInt(0, 15);
 			}
 
+#else //!__USE_CONTROL_MAP__
+			iGrassType = randomInt(0, 2);
+#endif //__USE_CONTROL_MAP__
+
 			if (randZeroOne() > GRASS_TYPE_UNIFORMALITY)
 			{// Randomize...
-				iGrassType = randomInt(2, 15);
+				iGrassType = randomInt(3, 15);
 			}
 
 			if (heightAboveWaterLength <= 256.0)
@@ -380,15 +495,18 @@ void main()
 
 			fGrassPatchHeight = clamp(controlMapScale * vertDistanceScale * 3.0, 0.0, 1.0);
 		}
+#endif //UNDERWATER_ONLY
 
 		if (fGrassPatchHeight <= 0.05)
 		{
 			continue;
 		}
 
+		fGrassPatchHeight = max(fGrassPatchHeight, 0.5);
+
 		float fGrassFinalSize = GRASS_HEIGHT * sizeMult * fSizeRandomness * controlMap.a; // controlMap.a is road edges multiplier...
 
-		if (fGrassFinalSize <= 0.05)
+		if (fGrassFinalSize <= GRASS_HEIGHT * 0.05)
 		{
 			continue;
 		}
@@ -430,7 +548,8 @@ void main()
 			vVertPosition = va.xyz;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
-			vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)), -1.0, 1.0).xyz * -1.0);
+			//vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)), -1.0, 1.0).xyz * -1.0);
+			vVertNormal = normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)).xy;
 			EmitVertex();
 
 			vVertPosition = vb.xyz;
@@ -447,7 +566,8 @@ void main()
 
 			vVertPosition = vd.xyz + vWindDirection*fWindPower;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
-			vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)), -1.0, 1.0).xyz * -1.0);
+			//vVertNormal = EncodeNormal(clamp(normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)), -1.0, 1.0).xyz * -1.0);
+			vVertNormal = normalize(cross((vc + vWindDirection*fWindPower) - vVertPosition, vb - vVertPosition)).xy;
 			vTexCoord = vec2(1.0, 0.0);
 			EmitVertex();
 

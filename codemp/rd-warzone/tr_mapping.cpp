@@ -1363,7 +1363,7 @@ vec3_t		SUN_COLOR_AMBIENT = { 0.85 };
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 int			MAP_LIGHTMAP_ENHANCEMENT = 1;
-int			MAP_LIGHTING_METHOD = 1;
+int			MAP_LIGHTING_METHOD = 0;
 qboolean	MAP_USE_PALETTE_ON_SKY = qfalse;
 float		MAP_LIGHTMAP_MULTIPLIER = 1.0;
 vec3_t		MAP_AMBIENT_CSB = { 1 };
@@ -1376,6 +1376,7 @@ float		SKY_LIGHTING_SCALE = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE_NIGHT = 1.0;
 float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
+float		MAP_EMISSIVE_RADIUS_SCALE_NIGHT = 1.0;
 float		MAP_HDR_MIN = 26.0;
 float		MAP_HDR_MAX = 209.0;
 qboolean	AURORA_ENABLED = qtrue;
@@ -1411,6 +1412,7 @@ qboolean	WATER_FOG_ENABLED = qfalse;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
 qboolean	GRASS_ENABLED = qtrue;
+qboolean	GRASS_UNDERWATER_ONLY = qfalse;
 int			GRASS_DENSITY = 2;
 float		GRASS_HEIGHT = 48.0;
 int			GRASS_DISTANCE = 2048;
@@ -1433,6 +1435,21 @@ extern float	MAP_WATER_LEVEL;
 
 char		CURRENT_CLIMATE_OPTION[256] = { 0 };
 char		CURRENT_WEATHER_OPTION[256] = { 0 };
+
+#define MAX_FOLIAGE_ALLOWED_MATERIALS 64
+
+int FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
+int FOLIAGE_ALLOWED_MATERIALS[MAX_FOLIAGE_ALLOWED_MATERIALS] = { 0 };
+
+qboolean R_SurfaceIsAllowedFoliage(int materialType)
+{
+	for (int i = 0; i < FOLIAGE_ALLOWED_MATERIALS_NUM; i++)
+	{
+		if (materialType == FOLIAGE_ALLOWED_MATERIALS[i]) return qtrue;
+	}
+
+	return qfalse;
+}
 
 #ifdef __OCEAN__
 extern qboolean WATER_INITIALIZED;
@@ -1550,7 +1567,7 @@ void MAPPING_LoadMapInfo(void)
 	LATE_LIGHTING_ENABLED = atoi(IniRead(mapname, "PALETTE", "LATE_LIGHTING_ENABLED", "0"));
 	MAP_LIGHTMAP_DISABLED = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_DISABLED", "0")) ? qtrue : qfalse;
 	MAP_LIGHTMAP_ENHANCEMENT = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_ENHANCEMENT", "1"));
-	MAP_LIGHTING_METHOD = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTING_METHOD", "1"));
+	MAP_LIGHTING_METHOD = atoi(IniRead(mapname, "PALETTE", "MAP_LIGHTING_METHOD", "0"));
 	MAP_USE_PALETTE_ON_SKY = atoi(IniRead(mapname, "PALETTE", "MAP_USE_PALETTE_ON_SKY", "0")) ? qtrue : qfalse;
 
 	MAP_LIGHTMAP_MULTIPLIER = atof(IniRead(mapname, "PALETTE", "MAP_LIGHTMAP_MULTIPLIER", "1.0"));
@@ -1599,6 +1616,7 @@ void MAPPING_LoadMapInfo(void)
 	MAP_EMISSIVE_COLOR_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_COLOR_SCALE", "1.0"));
 	MAP_EMISSIVE_COLOR_SCALE_NIGHT = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_COLOR_SCALE_NIGHT", "1.0"));
 	MAP_EMISSIVE_RADIUS_SCALE = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_RADIUS_SCALE", "1.0"));
+	MAP_EMISSIVE_RADIUS_SCALE_NIGHT = atof(IniRead(mapname, "EMISSION", "MAP_EMISSIVE_RADIUS_SCALE_NIGHT", "1.0"));
 
 	//
 	// Fog...
@@ -1699,13 +1717,37 @@ void MAPPING_LoadMapInfo(void)
 	//
 	GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "0")) > 0) ? qtrue : qfalse;
 
+	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
+
 	if (GRASS_ENABLED)
 	{
+		GRASS_UNDERWATER_ONLY = (atoi(IniRead(mapname, "GRASS", "GRASS_UNDERWATER_ONLY", "0")) > 0) ? qtrue : qfalse;
 		GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
 		GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "42.0"));
 		GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "4096"));
 		GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
 		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
+		
+		// Parse any specified extra surface material types to add grasses to...
+		extern const char *materialNames[MATERIAL_LAST];
+
+		for (int m = 0; m < 8; m++)
+		{
+			char grassMaterial[64] = { 0 };
+			strcpy(grassMaterial, IniRead(mapname, "GRASS", va("GRASS_ALLOW_MATERIAL%i", m), ""));
+
+			if (!grassMaterial || !grassMaterial[0] || grassMaterial[0] == '\0' || strlen(grassMaterial) <= 1) continue;
+
+			for (int i = 0; i < MATERIAL_LAST; i++)
+			{
+				if (!Q_stricmp(grassMaterial, materialNames[i]))
+				{// Got one, add it to the allowed list...
+					FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = i;
+					FOLIAGE_ALLOWED_MATERIALS_NUM++;
+					break;
+				}
+			}
+		}
 	}
 
 	//
@@ -1803,14 +1845,17 @@ void MAPPING_LoadMapInfo(void)
 
 		if (GRASS_ENABLED && r_foliage->integer)
 		{
-			for (int i = 0; i < 16; i++)
+			if (!GRASS_UNDERWATER_ONLY)
 			{
-				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				for (int i = 0; i < 16; i++)
+				{
+					newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-				if (newImage)
-				{// We have an override image to use from mapInfo...
-					tr.grassImage[i] = newImage;
-					newImage = NULL;
+					if (newImage)
+					{// We have an override image to use from mapInfo...
+						tr.grassImage[i] = newImage;
+						newImage = NULL;
+					}
 				}
 			}
 
@@ -1885,7 +1930,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lighting method is ^7%s^5 on this map.\n", MAP_LIGHTING_METHOD ? "Fast" : "Enhanced");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lighting method is ^7%s^5 on this map.\n", MAP_LIGHTING_METHOD ? "Standard" : "PBR");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of palette on sky is ^7%s^5 and lightmap cap is ^7%.4f^5 on this map.\n", MAP_USE_PALETTE_ON_SKY ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_MULTIPLIER);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of alt lightmap method is ^7%s^5 on this map.\n", (MAP_LIGHTMAP_ENHANCEMENT == 2) ? "FULL" : (MAP_LIGHTMAP_ENHANCEMENT == 1) ? "HYBRID" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);
@@ -1894,7 +1939,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and night emissive color scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_COLOR_SCALE_NIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive radius scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_RADIUS_SCALE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive radius scale is ^7%.4f^5 and night emissive radius scale is ^7%.4f^5on this map.\n", MAP_EMISSIVE_RADIUS_SCALE, MAP_EMISSIVE_RADIUS_SCALE_NIGHT);
 	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
@@ -1920,10 +1965,11 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", GRASS_UNDERWATER_ONLY ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Pebbles are ^7%s^5 on this map.\n", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Pebbles density is ^7%i^5 and pebbles distance is ^7%i^5 on this map.\n", PEBBLES_DENSITY, PEBBLES_DISTANCE);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
@@ -2084,21 +2130,6 @@ qboolean MAPPING_LoadMapClimateInfo(void)
 	return qtrue;
 }
 
-#define MAX_FOLIAGE_ALLOWED_MATERIALS 64
-
-int FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
-int FOLIAGE_ALLOWED_MATERIALS[MAX_FOLIAGE_ALLOWED_MATERIALS] = { 0 };
-
-qboolean R_SurfaceIsAllowedFoliage(int materialType)
-{
-	for (int i = 0; i < FOLIAGE_ALLOWED_MATERIALS_NUM; i++)
-	{
-		if (materialType == FOLIAGE_ALLOWED_MATERIALS[i]) return qtrue;
-	}
-
-	return qfalse;
-}
-
 void R_GenerateNavMesh(void)
 {
 #if 0
@@ -2225,8 +2256,6 @@ void R_LoadMapInfo(void)
 		}
 	}
 
-	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
-
 	if ((r_foliage->integer && GRASS_ENABLED) || (r_pebbles->integer && PEBBLES_ENABLED))
 	{
 		MAPPING_LoadMapClimateInfo();
@@ -2273,14 +2302,17 @@ void R_LoadMapInfo(void)
 
 			if (r_foliage->integer && GRASS_ENABLED)
 			{
-				for (int i = 0; i < 16; i++)
+				if (!GRASS_UNDERWATER_ONLY)
 				{
-					if (i <= 0)
-						tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-					else
-						tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+					for (int i = 0; i < 16; i++)
+					{
+						if (i <= 0)
+							tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+						else
+							tr.grassImage[i] = R_FindImageFile(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-					if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+						if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+					}
 				}
 
 				for (int i = 0; i < 4; i++)
@@ -2302,14 +2334,17 @@ void R_LoadMapInfo(void)
 
 			if (r_foliage->integer && GRASS_ENABLED)
 			{
-				for (int i = 0; i < 16; i++)
+				if (!GRASS_UNDERWATER_ONLY)
 				{
-					if (i <= 0)
-						tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-					else
-						tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+					for (int i = 0; i < 16; i++)
+					{
+						if (i <= 0)
+							tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass2"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+						else
+							tr.grassImage[i] = R_FindImageFile(IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/newgrass3"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-					if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+						if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+					}
 				}
 
 				for (int i = 0; i < 4; i++)
@@ -2348,14 +2383,17 @@ void R_LoadMapInfo(void)
 
 		if (r_foliage->integer && GRASS_ENABLED)
 		{
-			for (int i = 0; i < 16; i++)
+			if (!GRASS_UNDERWATER_ONLY)
 			{
-				newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				for (int i = 0; i < 16; i++)
+				{
+					newImage = R_FindImageFile(IniRead(mapname, "GRASS", va("grassImage%i", i), ""), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-				if (newImage)
-				{// We have an override image to use from mapInfo...
-					tr.grassImage[i] = newImage;
-					newImage = NULL;
+					if (newImage)
+					{// We have an override image to use from mapInfo...
+						tr.grassImage[i] = newImage;
+						newImage = NULL;
+					}
 				}
 			}
 
@@ -2391,16 +2429,19 @@ void R_LoadMapInfo(void)
 			//
 			// Make sure we have some valid grass/pebbles images, in case climate lookup failed...
 			//
-			for (int i = 0; i < 16; i++)
+			if (!GRASS_UNDERWATER_ONLY)
 			{
-				if (!tr.grassImage[i])
+				for (int i = 0; i < 16; i++)
 				{
-					if (i <= 0)
-						tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-					else
-						tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+					if (!tr.grassImage[i])
+					{
+						if (i <= 0)
+							tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+						else
+							tr.grassImage[i] = R_FindImageFile("models/warzone/foliage/newgrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-					if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+						if (!tr.grassImage[i]) tr.grassImage[i] = tr.grassImage[0];
+					}
 				}
 			}
 

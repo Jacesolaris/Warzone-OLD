@@ -3566,17 +3566,33 @@ void R_AddLightVibrancy(float *color, float vibrancy)
 	color[2] = mix(luma, color[2], (1.0 + (vibrancy * (1.0 - (sign(vibrancy) * color_saturation)))));
 }
 
-qboolean R_CloseLightNear (vec3_t pos)
+int R_CloseLightNear(vec3_t pos, float distance)
 {
 	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
 	{
-		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < 32)//64)//48)
+		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < distance)
 		{
-			return qtrue;
+			return i;
 		}
 	}
 
-	return qfalse;
+	return -1;
+}
+
+int R_CloseLightOfColorNear(vec3_t pos, float distance, vec4_t color, float colorTolerance)
+{
+	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
+	{
+		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < distance)
+		{
+			if (Distance(MAP_GLOW_COLORS[i], color) < colorTolerance) // forget alpha...
+			{
+				return i;
+			}
+		}
+	}
+
+	return -1;
 }
 
 qboolean CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
@@ -3673,35 +3689,94 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			}
 		}
 
-		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS && !R_CloseLightNear(surfOrigin))
+		if (hasGlow)
 		{
-			radius = Q_clamp(64.0, radius, 128.0);
+#define EMISSIVE_MERGE_RADIUS 128.0//64.0
+			VectorScale(glowColor, emissiveColorScale, glowColor);
 			//VectorScale(glowColor, 0.333, glowColor);
 			//VectorNormalize(glowColor);
-			VectorScale(glowColor, emissiveColorScale, glowColor);
-			
+
 			//R_AddLightVibrancy(glowColor, 0.1);
 			//VectorNormalize(glowColor);
-			
-			//float gMax = max(glowColor[0], max(glowColor[1], glowColor[2]));
-			//glowColor[0] /= gMax;
-			//glowColor[1] /= gMax;
-			//glowColor[2] /= gMax;
 
-//#pragma omp critical (__MAP_GLOW_ADD__)
-			{
-				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
-				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
-				MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 9.0;// 3.0;
-				MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
-				MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
-				NUM_MAP_GLOW_LOCATIONS++;
+			int sameColorTooCloseID = R_CloseLightOfColorNear(surfOrigin, 16.0, glowColor, 99999.0);
+			int sameColorGlowNearID = R_CloseLightOfColorNear(surfOrigin, EMISSIVE_MERGE_RADIUS, glowColor, 1.0);
+
+			if (sameColorTooCloseID >= 0)
+			{// Don't add this duplicate light at all... Just mix the colors... In case theres 2 overlayed textures of diff colors, etc...
+				MAP_GLOW_COLORS[sameColorTooCloseID][0] = (MAP_GLOW_COLORS[sameColorTooCloseID][0] + glowColor[0]) / 2.0;
+				MAP_GLOW_COLORS[sameColorTooCloseID][1] = (MAP_GLOW_COLORS[sameColorTooCloseID][1] + glowColor[1]) / 2.0;
+				MAP_GLOW_COLORS[sameColorTooCloseID][2] = (MAP_GLOW_COLORS[sameColorTooCloseID][2] + glowColor[2]) / 2.0;
+
+				if (r_debugEmissiveLights->integer)
+				{
+					ri->Printf(PRINT_WARNING, "Light %i (at %i %i %i) was mixed colors with another really close light (at %i %i %i). new color: %f %f %f.\n"
+						, sameColorTooCloseID
+						, (int)MAP_GLOW_LOCATIONS[sameColorTooCloseID][0], (int)MAP_GLOW_LOCATIONS[sameColorTooCloseID][1], (int)MAP_GLOW_LOCATIONS[sameColorTooCloseID][2]
+						, (int)surfOrigin[0], (int)surfOrigin[1], (int)surfOrigin[2]
+						, MAP_GLOW_COLORS[sameColorTooCloseID][0], MAP_GLOW_COLORS[sameColorTooCloseID][1], MAP_GLOW_COLORS[sameColorTooCloseID][2]);
+				}
 			}
-			
-			//if (r_debugEmissiveLights->integer)
-			//{
-			//	ri->Printf(PRINT_WARNING, "Light %i radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n", NUM_MAP_GLOW_LOCATIONS, radius, emissiveColorScale, emissiveRadiusScale, glowColor[0], glowColor[1], glowColor[2]);
-			//}
+			else if (sameColorGlowNearID >= 0)
+			{// Already the same color light nearby... Merge...
+				// Add extra radius to the original one, instead of adding a new light...
+				float distFromOther = Distance(MAP_GLOW_LOCATIONS[sameColorGlowNearID], surfOrigin);
+				float radiusMult = Q_clamp(0.0, distFromOther / EMISSIVE_MERGE_RADIUS, 1.0);
+				MAP_GLOW_RADIUSES[sameColorGlowNearID] += MAP_GLOW_RADIUSES[sameColorGlowNearID] * radiusMult * 0.5;
+				
+				// Also move the light's position to the center of the 2 positions...
+				vec3_t originalOrigin;
+
+				if (r_debugEmissiveLights->integer)
+				{
+					VectorCopy(MAP_GLOW_LOCATIONS[sameColorGlowNearID], originalOrigin);
+				}
+
+				MAP_GLOW_LOCATIONS[sameColorGlowNearID][0] = surfOrigin[0] + MAP_GLOW_LOCATIONS[sameColorGlowNearID][0] / 2.0;
+				MAP_GLOW_LOCATIONS[sameColorGlowNearID][1] = surfOrigin[1] + MAP_GLOW_LOCATIONS[sameColorGlowNearID][1] / 2.0;
+				MAP_GLOW_LOCATIONS[sameColorGlowNearID][2] = surfOrigin[2] + MAP_GLOW_LOCATIONS[sameColorGlowNearID][2] / 2.0;
+
+				MAP_GLOW_COLORS[sameColorGlowNearID][0] = (MAP_GLOW_COLORS[sameColorGlowNearID][0] + glowColor[0]) / 2.0;
+				MAP_GLOW_COLORS[sameColorGlowNearID][1] = (MAP_GLOW_COLORS[sameColorGlowNearID][1] + glowColor[1]) / 2.0;
+				MAP_GLOW_COLORS[sameColorGlowNearID][2] = (MAP_GLOW_COLORS[sameColorGlowNearID][2] + glowColor[2]) / 2.0;
+
+				if (r_debugEmissiveLights->integer)
+				{
+					ri->Printf(PRINT_WARNING, "Light %i (at %i %i %i) was merged with another close light (at %i %i %i). new origin: %i %i %i. new radius %f. light color: %f %f %f.\n"
+						, sameColorGlowNearID
+						, (int)originalOrigin[0], (int)originalOrigin[1], (int)originalOrigin[2]
+						, (int)surfOrigin[0], (int)surfOrigin[1], (int)surfOrigin[2]
+						, (int)MAP_GLOW_LOCATIONS[sameColorGlowNearID][0], (int)MAP_GLOW_LOCATIONS[sameColorGlowNearID][1], (int)MAP_GLOW_LOCATIONS[sameColorGlowNearID][2]
+						, MAP_GLOW_RADIUSES[sameColorGlowNearID]
+						, MAP_GLOW_COLORS[sameColorGlowNearID][0], MAP_GLOW_COLORS[sameColorGlowNearID][1], MAP_GLOW_COLORS[sameColorGlowNearID][2]);
+				}
+			}
+			else if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+			{
+				radius = Q_clamp(64.0, radius, 128.0);
+				
+	//#pragma omp critical (__MAP_GLOW_ADD__)
+				{
+					VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+					VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+					MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 2.25;
+					MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
+					MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
+
+					if (r_debugEmissiveLights->integer)
+					{
+						ri->Printf(PRINT_WARNING, "Light %i (at %i %i %i) radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n"
+							, NUM_MAP_GLOW_LOCATIONS
+							, (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][0], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][1], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][2]
+							, MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS]
+							, emissiveColorScale
+							, emissiveRadiusScale
+							, glowColor[0], glowColor[1], glowColor[2]);
+					}
+
+					NUM_MAP_GLOW_LOCATIONS++;
+				}
+			}
 		}
 	}
 

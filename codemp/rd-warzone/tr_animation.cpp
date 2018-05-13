@@ -307,7 +307,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 		// we will add shadows even if the main object isn't visible in the view
 
 		// stencil shadows can't do personal models unless I polyhedron clip
-		if ( !personalModel
+		/*if ( !personalModel
 			&& r_shadows->integer == 2
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) )
 			&& shader->sort == SS_OPAQUE )
@@ -321,7 +321,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 			&& shader->sort == SS_OPAQUE )
 		{
 			R_AddDrawSurf( (surfaceType_t *)surface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0, qfalse);
-		}
+		}*/
 
 		if (!personalModel)
 		{

@@ -2591,6 +2591,7 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 				}
 			}
 
+			/*
 			// stencil shadows can't do personal models unless I polyhedron clip
 			if (!RS.personalModel
 				&& r_shadows->integer == 2
@@ -2617,6 +2618,7 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 				newSurf->boneCache = RS.boneCache;
 				R_AddDrawSurf((surfaceType_t *)newSurf, tr.projectionShadowShader, RS.fogNum, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), cubemapIndex, qfalse);
 			}
+			*/
 #endif
 		}
 	}

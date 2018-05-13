@@ -1066,6 +1066,7 @@ vec4_t		CLOSE_COLORS[MAX_WORLD_GLOW_DLIGHTS];
 extern float		MAP_EMISSIVE_COLOR_SCALE;
 extern float		MAP_EMISSIVE_COLOR_SCALE_NIGHT;
 extern float		MAP_EMISSIVE_RADIUS_SCALE;
+extern float		MAP_EMISSIVE_RADIUS_SCALE_NIGHT;
 
 void RB_AddGlowShaderLights ( void )
 {
@@ -1188,7 +1189,9 @@ void RB_AddGlowShaderLights ( void )
 				//glowColor[3] = 1.0;
 
 				VectorCopy4(glowColor, CLOSE_COLORS[i]);
-				float radius = CLOSE_RADIUS[i] * strength * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+				
+				float dayNightFactor = mix(MAP_EMISSIVE_RADIUS_SCALE, MAP_EMISSIVE_RADIUS_SCALE_NIGHT, RB_NightScale());
+				float radius = CLOSE_RADIUS[i] * strength * dayNightFactor * 0.2 * r_debugEmissiveRadiusScale->value;
 				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], radius, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
 				num_colored++;
 
@@ -3263,6 +3266,9 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+	
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 

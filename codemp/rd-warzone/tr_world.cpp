@@ -407,6 +407,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 #if 0 // Maybe do this for trees???...
 	if (1)
 	{// Testing...
+		/*
 		// stencil shadows can't do personal models unless I polyhedron clip
 		if (r_shadows->integer == 2
 			&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
@@ -422,6 +423,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 		{
 			R_AddDrawSurf((surfaceType_t *)surf->data, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, surf->depthDrawOnly);
 		}
+		*/
 	}
 #endif
 

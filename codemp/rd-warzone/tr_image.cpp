@@ -4632,7 +4632,7 @@ void R_CreateBuiltinImages( void ) {
 
 	tr.randomImage = R_FindImageFile("gfx/random.png", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP /*| IMGFLAG_NO_COMPRESSION*/);
 
-	/*if (r_shadows->integer == 5)
+	/*if (r_shadows->integer == 3)
 	{
 		for( x = 0; x < MAX_DLIGHTS; x++)
 		{
@@ -4832,12 +4832,9 @@ void R_CreateBuiltinImages( void ) {
 		tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	}
 
-	//if (r_shadows->integer == 4)
+	for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)
 	{
-		for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)
-		{
-			tr.pshadowMaps[x] = R_CreateImage(va("*shadowmap%i", x), NULL, PSHADOW_MAP_SIZE / vramScaleDiv, PSHADOW_MAP_SIZE / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_DEPTH_COMPONENT24);
-		}
+		tr.pshadowMaps[x] = R_CreateImage(va("*shadowmap%i", x), NULL, PSHADOW_MAP_SIZE / vramScaleDiv, PSHADOW_MAP_SIZE / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_DEPTH_COMPONENT24);
 	}
 
 	if (r_sunlightMode->integer >= 2)

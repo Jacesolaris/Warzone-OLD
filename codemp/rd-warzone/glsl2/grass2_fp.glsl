@@ -75,7 +75,34 @@ void main()
 
 	vec4 diffuse;
 
-#ifdef __HIGH_MTU_AVAILABLE__
+#if defined(UNDERWATER_ONLY)
+	if (iGrassType >= 19)
+		diffuse = texture(u_GlowMap, vTexCoord);
+	else if (iGrassType >= 18)
+		diffuse = texture(u_WaterHeightMap, vTexCoord);
+	else if (iGrassType >= 17)
+		diffuse = texture(u_WaterPositionMap, vTexCoord);
+	else
+		diffuse = texture(u_WaterEdgeMap, vTexCoord);
+#elif defined(FAST_ONLY)
+	if (iGrassType >= 19)
+		diffuse = texture(u_GlowMap, vTexCoord);
+	else if (iGrassType >= 18)
+		diffuse = texture(u_WaterHeightMap, vTexCoord);
+	else if (iGrassType >= 17)
+		diffuse = texture(u_WaterPositionMap, vTexCoord);
+	else if (iGrassType >= 16)
+		diffuse = texture(u_WaterEdgeMap, vTexCoord);
+	else if (iGrassType >= 3)
+		diffuse = texture(u_SplatMap3, vTexCoord);
+	else if (iGrassType >= 2)
+		diffuse = texture(u_SplatMap2, vTexCoord);
+	else if (iGrassType >= 1)
+		diffuse = texture(u_SplatMap1, vTexCoord);
+	else
+		diffuse = texture(u_DiffuseMap, vTexCoord);
+#else
+	#if defined(__HIGH_MTU_AVAILABLE__)
 	if (iGrassType >= 19)
 		diffuse = texture(u_GlowMap, vTexCoord);
 	else if (iGrassType >= 18)
@@ -85,9 +112,9 @@ void main()
 	else if (iGrassType >= 16)
 		diffuse = texture(u_WaterEdgeMap, vTexCoord);
 	else if (iGrassType >= 15)
-#else //!__HIGH_MTU_AVAILABLE__
+	#else //!defined(__HIGH_MTU_AVAILABLE__)
 	if (iGrassType >= 15)
-#endif //__HIGH_MTU_AVAILABLE__
+	#endif //defined(__HIGH_MTU_AVAILABLE__)
 		diffuse = texture(u_HeightMap, vTexCoord);
 	else if (iGrassType >= 14)
 		diffuse = texture(u_PositionMap, vTexCoord);
@@ -120,13 +147,20 @@ void main()
 	else
 		diffuse = texture(u_DiffuseMap, vTexCoord);
 
-	diffuse.rgb *= clamp((1.0-vTexCoord.y) * 1.5, 0.8, 1.0);
+	diffuse.rgb *= clamp((1.0 - vTexCoord.y) * 1.5, 0.8, 1.0);
+#endif
 
 	if (diffuse.a > 0.5)
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy) * dir), 0.0, 1.0);
+		
+		//out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy) * dir), 0.0, 1.0);
+		
+		out_Normal.xy = vVertNormal.xy;
+		out_Normal.z = sqrt(1.0 - dot(out_Normal.xy, out_Normal.xy)); // reconstruct Z from X and Y
+		out_Normal.xyz *= dir;
+
 #ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
 #endif //__USE_REAL_NORMALMAPS__

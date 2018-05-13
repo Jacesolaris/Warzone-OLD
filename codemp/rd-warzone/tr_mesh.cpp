@@ -434,6 +434,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			shader = tr.shaders[ surface->shaderIndexes[ ent->e.skinNum % surface->numShaderIndexes ] ];
 		}
 
+		/*
 		// stencil shadows can't do personal models unless I polyhedron clip
 		if (!personalModel
 			&& r_shadows->integer == 2
@@ -449,6 +450,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 		{
 			R_AddDrawSurf((surfaceType_t *)surface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, ent), 0, qfalse);
 		}
+		*/
 
 		// don't add third_person objects if not viewing through a portal
 		if(!personalModel)

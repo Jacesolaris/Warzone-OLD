@@ -171,6 +171,7 @@ void main()
 		return;
 	}
 
+	/*
 	shadowpos = u_ShadowMvp4 * biasPos;
 
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
@@ -181,6 +182,7 @@ void main()
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
+	*/
 	
 	gl_FragColor = vec4(result, depth, 0.0, 1.0);
 }

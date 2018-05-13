@@ -1905,6 +1905,7 @@ static void R_AddEntitySurface (int entityNum)
 		{
 			shader = R_GetShaderByHandle( ent->e.customShader );
 
+			/*
 			// stencil shadows can't do personal models unless I polyhedron clip
 			if (r_shadows->integer == 2
 				&& ent->e.reType != RT_SABER_GLOW
@@ -1922,6 +1923,7 @@ static void R_AddEntitySurface (int entityNum)
 			{
 				R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
 			}
+			*/
 
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */, qfalse);
 		}
@@ -2017,6 +2019,7 @@ static void R_AddEntitySurface (int entityNum)
 	case RT_ENT_CHAIN:
 		shader = R_GetShaderByHandle( ent->e.customShader );
 
+		/*
 		// stencil shadows can't do personal models unless I polyhedron clip
 		if (r_shadows->integer == 2
 			&& !(tr.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))
@@ -2032,6 +2035,7 @@ static void R_AddEntitySurface (int entityNum)
 		{
 			R_AddDrawSurf((surfaceType_t *)&entitySurface, tr.projectionShadowShader, 0, qfalse, R_IsPostRenderEntity(tr.currentEntityNum, tr.currentEntity), 0, qfalse);
 		}
+		*/
 
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */, qfalse);
 		break;
@@ -2048,6 +2052,91 @@ R_AddEntitySurfaces
 //#ifdef __INSTANCED_MODELS__
 //extern void R_AddInstancedModelsToScene(void);
 //#endif //__INSTANCED_MODELS__
+
+/*
+static int R_DistanceSortEntities(const void *a, const void *b)
+{
+	trRefEntity_t	 *e1, *e2;
+
+	e1 = (trRefEntity_t *)a;
+	e2 = (trRefEntity_t *)b;
+
+	if (e1 == &tr.worldEntity || e2 == &tr.worldEntity)
+		return 0;
+
+	if (e1->e.hModel && e2->e.hModel)
+	{// Group same models together, save some VBO binds...
+		//model_t *model1 = R_GetModelByHandle(e1->e.hModel);
+		//model_t *model2 = R_GetModelByHandle(e2->e.hModel);
+
+		if (e1->e.hModel > e2->e.hModel)
+			return -1;
+
+		else if (e1->e.hModel < e2->e.hModel)
+			return 1;
+	}
+
+	if (e1->e.ghoul2 && e2->e.ghoul2)
+	{// Group same models together, save some VBO binds...
+		if (e1->e.ghoul2 > e2->e.ghoul2)
+			return -1;
+
+		else if (e1->e.ghoul2 < e2->e.ghoul2)
+			return 1;
+	}
+
+	if (e1->e.customShader && e2->e.customShader)
+	{// Group same skins together, save binds...
+		if (e1->e.customShader > e2->e.customShader)
+			return -1;
+
+		else if (e1->e.customShader < e2->e.customShader)
+			return 1;
+	}
+
+	if (e1->e.customSkin && e2->e.customSkin)
+	{// Group same skins together, save binds...
+		if (e1->e.customSkin > e2->e.customSkin)
+			return -1;
+
+		else if (e1->e.customSkin < e2->e.customSkin)
+			return 1;
+	}
+
+	// Distance sort...
+	float dist1 = Distance(e1->e.origin, backEnd.refdef.vieworg);
+	float dist2 = Distance(e2->e.origin, backEnd.refdef.vieworg);
+
+	if (r_testvalue1->integer)
+	{
+		if (dist1 > dist2)
+			return -1;
+
+		else if (dist1 < dist2)
+			return 1;
+	}
+	else
+	{
+		if (dist1 < dist2)
+			return -1;
+
+		else if (dist1 > dist2)
+			return 1;
+	}
+
+	if (e1->e.reType && e2->e.reType)
+	{// Group same skins together, save binds...
+		if (e1->e.reType > e2->e.reType)
+			return -1;
+
+		else if (e1->e.reType < e2->e.reType)
+			return 1;
+	}
+
+	return 0;
+}
+*/
+
 void R_AddEntitySurfaces (void) {
 	int i;
 
@@ -2055,9 +2144,22 @@ void R_AddEntitySurfaces (void) {
 		return;
 	}
 
-	for ( i = 0; i < tr.refdef.num_entities; i++)
+	/*
+	if (r_testvalue0->integer)
 	{
-		R_AddEntitySurface(i);
+		qsort(tr.refdef.entities, tr.refdef.num_entities, sizeof(trRefEntity_t), R_DistanceSortEntities);
+		
+		for (i = 0; i < tr.refdef.num_entities; i++)
+		{
+			R_AddEntitySurface(i);
+		}
+	}
+	else*/
+	{
+		for (i = 0; i < tr.refdef.num_entities; i++)
+		{
+			R_AddEntitySurface(i);
+		}
 	}
 
 //#ifdef __INSTANCED_MODELS__
@@ -2333,30 +2435,72 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	vec3_t	bestLightPosition;
 	float	bestLightRadius = MAX_PSHADOW_RADIUS;
 
-	vec3_t from, to;
-	trace_t trace, trace2, trace3, trace4, trace5;
+	qboolean hitSky = qfalse;
 
 	if (RB_NightScale() != 1.0)
 	{
+		vec3_t from, to;
+		trace_t trace;
+
 		VectorSet(from, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 64.0);
 		VectorSet(to, playerOrigin[0], playerOrigin[1], playerOrigin[2] + 999999.9);
 		Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace2, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
-		Light_Trace(&trace3, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 999999.9);
-		Light_Trace(&trace4, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
-		VectorSet(from, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 64.0);
-		VectorSet(to, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 999999.9);
-		Light_Trace(&trace5, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+		if (trace.surfaceFlags & SURF_SKY)
+		{
+			hitSky = qtrue;
+		}
+
+		if (!hitSky)
+		{
+			VectorSet(from, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
+			VectorSet(to, playerOrigin[0] + 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
+			Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+			if (trace.surfaceFlags & SURF_SKY)
+			{
+				hitSky = qtrue;
+			}
+		}
+
+		if (!hitSky)
+		{
+			VectorSet(from, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 64.0);
+			VectorSet(to, playerOrigin[0] - 64.0, playerOrigin[1], playerOrigin[2] + 999999.9);
+			Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+			if (trace.surfaceFlags & SURF_SKY)
+			{
+				hitSky = qtrue;
+			}
+		}
+
+		if (!hitSky)
+		{
+			VectorSet(from, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 64.0);
+			VectorSet(to, playerOrigin[0], playerOrigin[1] + 64.0, playerOrigin[2] + 999999.9);
+			Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+			if (trace.surfaceFlags & SURF_SKY)
+			{
+				hitSky = qtrue;
+			}
+		}
+
+		if (!hitSky)
+		{
+			VectorSet(from, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 64.0);
+			VectorSet(to, playerOrigin[0], playerOrigin[1] - 64.0, playerOrigin[2] + 999999.9);
+			Light_Trace(&trace, from, NULL, NULL, to, backEnd.localPlayerValid ? backEnd.localPlayerGameEntityNum : 0, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+			if (trace.surfaceFlags & SURF_SKY)
+			{
+				hitSky = qtrue;
+			}
+		}
 	}
 
-	if (RB_NightScale() == 1.0
-		|| (!(trace.surfaceFlags & SURF_SKY) && !(trace2.surfaceFlags & SURF_SKY) && !(trace3.surfaceFlags & SURF_SKY) && !(trace4.surfaceFlags & SURF_SKY) && !(trace5.surfaceFlags & SURF_SKY)))
+	if (RB_NightScale() == 1.0 || !hitSky)
 	{// Only use pshadows inside or at night...
 		vec3_t ambientLight, directedLight, lightDir;
 		R_LightForPoint(playerOrigin, ambientLight, directedLight, lightDir);
@@ -3056,22 +3200,9 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	}
 #endif
 
+#if 0
 	switch (level)
 	{
-	/*case 0:
-	default:
-		splitZNear = viewZNear;
-		//splitZFar = 512.0;
-		splitZFar = 256.0;
-		break;
-	case 1:
-		splitZNear = viewZNear;// 192.0;
-		splitZFar = 1024.0;// 4096.0;
-		break;
-	case 2:
-		splitZNear = viewZNear;//768.0;
-		splitZFar = 4096.0;
-		break;*/
 	case 0:
 	default:
 		splitZNear = viewZNear;
@@ -3094,6 +3225,24 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 	//	splitZFar = (backEnd.viewParms.zFar < MAP_INFO_MAXSIZE) ? backEnd.viewParms.zFar : MAP_INFO_MAXSIZE;
 	//	break;
 	}
+#else
+	switch (level)
+	{
+	case 0:
+	default:
+		splitZNear = viewZNear;
+		splitZFar = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
+		break;
+	case 1:
+		splitZNear = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
+		splitZFar = viewZFar;
+		break;
+	case 2:
+		splitZNear = viewZFar;
+		splitZFar = (backEnd.viewParms.zFar < MAP_INFO_MAXSIZE) ? backEnd.viewParms.zFar : MAP_INFO_MAXSIZE;
+		break;
+	}
+#endif
 
 #if 0
 	if (splitZNear > backEnd.viewParms.zFar || splitZNear > tr.distanceCull * 1.75)

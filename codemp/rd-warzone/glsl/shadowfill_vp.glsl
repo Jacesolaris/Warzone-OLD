@@ -21,7 +21,7 @@ uniform mat4   u_ModelMatrix;
 uniform float   u_VertexLerp;
 //#endif
 
-varying vec3    var_Position;
+//varying vec3    var_Position;
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -100,12 +100,12 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 void main()
 {
 	vec3 position  = mix(attr_Position, attr_Position2, u_VertexLerp);
-	vec3 normal    = mix(attr_Normal,   attr_Normal2,   u_VertexLerp);
-	normal = normalize(normal - vec3(0.5));
+	vec3 normal    = mix(attr_Normal,   attr_Normal2,   u_VertexLerp) * 2.0 - 1.0;
+	//normal = normalize(normal - vec3(0.5));
 
 	position = DeformPosition(position, normal, attr_TexCoord0.st);
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 	
-	var_Position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
+	//var_Position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 }

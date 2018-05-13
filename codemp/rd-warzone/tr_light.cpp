@@ -289,6 +289,89 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t *world ) {
 		VectorScale( ent->directedLight, totalFactor, ent->directedLight );
 	}
 
+
+
+#if 0
+#if defined(__ENTITY_LIGHTING_DLIGHT_GLOW__) || defined(__ENTITY_LIGHTING_MAP_GLOW__)
+	vec3_t lightDir, dir;
+#endif //defined(__ENTITY_LIGHTING_DLIGHT_GLOW__) || defined(__ENTITY_LIGHTING_MAP_GLOW__)
+
+#ifdef __ENTITY_LIGHTING_DLIGHT_GLOW__
+	//
+	// modify the light by dynamic lights
+	//
+
+	float d = VectorLength(ent->directedLight);
+	VectorScale(direction/*ent->lightDir*/, d, lightDir);
+
+	for (i = 0; i < backEnd.refdef.num_dlights; i++) {
+		dlight_t *dl = &backEnd.refdef.dlights[i];
+		VectorSubtract(dl->origin, lightOrigin, dir);
+		d = VectorNormalize(dir);
+
+		float power = DLIGHT_AT_RADIUS * (dl->radius * dl->radius);
+		if (d < DLIGHT_MINIMUM_RADIUS) {
+			d = DLIGHT_MINIMUM_RADIUS;
+		}
+		d = power / (d * d);
+
+		VectorMA(ent->directedLight, d, dl->color, ent->directedLight);
+		VectorMA(lightDir, d, dir, direction/*lightDir*/);
+	}
+#endif //__ENTITY_LIGHTING_DLIGHT_GLOW__
+
+#ifdef __ENTITY_LIGHTING_MAP_GLOW__
+	//
+	// modify the light by close glow lights
+	//
+
+	vec3_t playerOrigin;
+
+	if (backEnd.localPlayerValid)
+	{
+		VectorCopy(backEnd.localPlayerOrigin, playerOrigin);
+		//ri->Printf(PRINT_WARNING, "Local player is at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+	}
+	else
+	{
+		VectorCopy(backEnd.refdef.vieworg, playerOrigin);
+		//ri->Printf(PRINT_WARNING, "No Local player! Using vieworg at %f %f %f.\n", backEnd.localPlayerOrigin[0], backEnd.localPlayerOrigin[1], backEnd.localPlayerOrigin[2]);
+	}
+
+	extern int			CLOSE_TOTAL;
+	extern int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
+	extern vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
+	extern float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+	extern vec4_t		CLOSE_COLORS[MAX_WORLD_GLOW_DLIGHTS];
+
+	extern float		MAP_EMISSIVE_RADIUS_SCALE;
+
+	d = VectorLength(ent->directedLight);
+	VectorScale(direction/*ent->lightDir*/, d, lightDir);
+
+	for (i = 0; i < CLOSE_TOTAL; i++) {
+		VectorSubtract(CLOSE_POS[i], lightOrigin, dir);
+		d = VectorNormalize(dir);
+
+		float lightRadius = CLOSE_RADIUS[i] * MAP_EMISSIVE_RADIUS_SCALE * 0.2 * r_debugEmissiveRadiusScale->value;
+		float power = DLIGHT_AT_RADIUS * (lightRadius * lightRadius);
+
+		power *= (MAX_WORLD_GLOW_DLIGHT_RANGE / CLOSE_DIST[i]);
+
+		if (d < DLIGHT_MINIMUM_RADIUS) {
+			d = DLIGHT_MINIMUM_RADIUS;
+		}
+		d = power / (d * d);
+
+		VectorMA(ent->directedLight, d, CLOSE_COLORS[i], ent->directedLight);
+		VectorMA(lightDir, d, dir, direction/*lightDir*/);
+	}
+#endif //__ENTITY_LIGHTING_MAP_GLOW__
+#endif
+
+
 	VectorScale( ent->ambientLight, r_ambientScale->value, ent->ambientLight );
 	VectorScale( ent->directedLight, r_directedScale->value, ent->directedLight );
 

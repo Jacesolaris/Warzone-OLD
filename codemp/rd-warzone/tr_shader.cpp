@@ -1239,9 +1239,14 @@ char *StringContains(char *str1, char *str2, int casesensitive)
 	return NULL;
 } //end of the function StringContains
 
-qboolean ForceGlow ( char *shader )
+qboolean ForceGlow2 ( char *shader )
 {
 	if (!shader) return qfalse;
+
+	if (StringContains(shader, "bespin/bench", 0) || StringContains(shader, "bespin/chair", 0))
+	{
+		return qfalse;
+	}
 
 	// UQ1: Testing - Force glow to obvious glow components...
 	// Note that this is absolutely a complete HACK... But the only other option is to remake every other map ever made for JKA...
@@ -1622,6 +1627,20 @@ qboolean ForceGlow ( char *shader )
 	return qfalse;
 }
 
+qboolean ForceGlow(char *shader)
+{
+	if (!shader) return qfalse;
+
+	qboolean glow = ForceGlow2(shader);
+
+	if (glow && StringContains(shader, "lightmap", 0))
+	{
+		return qfalse;
+	}
+
+	return glow;
+}
+
 static void ComputeShaderGlowColors( shaderStage_t *pStage )
 {
 	colorGen_t rgbGen = pStage->rgbGen;
@@ -1931,7 +1950,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 				if (StringContains(token, "street_light", 0))
 				{// bespin light hack...
-					shader.glowStrength = 0.275;
+					shader.glowStrength = 0.35357;// 0.275;
 					stage->emissiveRadiusScale = 16.0;
 				}
 				else if (StringContains(token, "sconce", 0))

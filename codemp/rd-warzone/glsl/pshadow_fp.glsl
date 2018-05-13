@@ -1,16 +1,16 @@
 uniform sampler2D u_ShadowMap;
 
-uniform vec3      u_LightForward;
+//uniform vec3      u_LightForward;
 uniform vec3      u_LightUp;
 uniform vec3      u_LightRight;
 uniform vec4      u_LightOrigin;
-uniform float     u_LightRadius;
-uniform vec3      u_ViewOrigin;
+//uniform float     u_LightRadius;
+//uniform vec3      u_ViewOrigin;
 
 uniform vec4      u_Local0;			// PSHADOWMAP_SIZE, testvalue0, testvalue1, testvalue2
 
 varying vec3      var_Position;
-varying vec3      var_Normal;
+//varying vec3      var_Normal;
 
 out vec4 out_Glow;
 out vec4 out_Position;
@@ -22,7 +22,7 @@ out vec4 out_NormalDetail;
 void main()
 {
 	vec3 lightToPos = var_Position - u_LightOrigin.xyz;
-	float lightDist = length(lightToPos);
+	//float lightDist = length(lightToPos);
 
 	float intensity = 1.0;// 1.0 - clamp(lightDist / u_LightRadius/*min(u_LightRadius, 1024.0)*/, 0.0, 1.0);
 
