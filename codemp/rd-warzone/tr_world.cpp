@@ -32,12 +32,20 @@ void RB_CullSurfaceOcclusion(msurface_t *surf)
 #ifdef __ZFAR_CULLING_ON_SURFACES__
 	if (r_occlusion->integer)
 	{
-		vec3_t center;
-		center[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
-		center[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
-		center[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-		float cdistance = Distance(tr.viewParms.ori.origin, center);
-		if (cdistance > tr.occlusionZfar * 1.75)
+		if (surf->cullinfo.centerDistanceTime + 1000 < backEnd.refdef.time)
+		{
+			if (!surf->cullinfo.centerOriginInitialized)
+			{
+				surf->cullinfo.centerOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+				surf->cullinfo.centerOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+				surf->cullinfo.centerOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+				surf->cullinfo.centerOriginInitialized = qtrue;
+			}
+
+			surf->cullinfo.currentDistance = Distance(tr.viewParms.ori.origin, surf->cullinfo.centerOrigin);
+		}
+
+		if (surf->cullinfo.currentDistance > tr.occlusionZfar * 1.75)
 		{// Out of view range, but we still want it on depth draws...
 			surf->depthDrawOnly = qtrue;
 		}
@@ -66,11 +74,18 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}
 
+	if (r_testvalue0->integer)
+	{
+		RB_CullSurfaceOcclusion(surf);
+		if (surf->depthDrawOnly) return qtrue;
+	}
+
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
 		if (tr.currentModel && tr.currentModel->type == MOD_BRUSH)
 		{// UQ1: Hack!!! Disabled... These have cull issues...
 			RB_CullSurfaceOcclusion(surf);
+			if (surf->depthDrawOnly) return qtrue;
 			return qfalse;
 		}
 

@@ -437,16 +437,12 @@ void main()
 
 		if (SHADER_HAS_STEEPMAP > 0.0)
 		{// Steep maps...
-#if 1
+#if 0
 			float pitch = normalToSlope(normalize(normal.xyz));
 
 			if (pitch > 46.0 || pitch < -46.0)
 			{
 				var_Slope = 1.0;
-			}
-			else if (pitch > 26.0 || pitch < -26.0)
-			{// do not add to foliage map on this slope, but still do original texture
-				var_Slope = 0.0;
 			}
 			else
 			{

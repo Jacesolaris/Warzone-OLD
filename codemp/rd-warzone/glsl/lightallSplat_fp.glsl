@@ -1,4 +1,6 @@
 //#define USE_DETAIL_TEXTURES
+//#define __SPLATS_LOOKUP_ALPHA__			// Meh, waste of lookups... If we do need them at some point, then we can still enable them or add a mapinfo i guess...
+//#define __USE_FULL_SPLAT_BLENDFUNC__		// Meh... fast should be nearly as good...
 #define __HIGH_PASS_SHARPEN__
 
 
@@ -189,7 +191,7 @@ float GetDepthForPixel(vec4 color)
 
 	float displacement = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
 	DepthContrast(displacement); // Enhance the dark/lights...
-	return 1.0 - clamp(displacement, 0.0, 1.0);
+	return (1.0 - displacement) * 0.9 + 0.1;
 }
 
 #ifdef USE_DETAIL_TEXTURES
@@ -275,6 +277,7 @@ vec4 GetControlMap( void )
 	return control;
 }
 
+#ifdef __USE_FULL_SPLAT_BLENDFUNC__
 vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
 {
     float depth = 0.2;
@@ -285,11 +288,12 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
 
     return ((texture1.rgb * b1) + (texture2.rgb * b2)) / (b1 + b2);
 }
+#endif //__USE_FULL_SPLAT_BLENDFUNC__
 
 #if defined(__HIGH_PASS_SHARPEN__)
 vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 {
-	vec3 blur = textureLod(tex, uv, level).xyz;
+	vec3 blur = textureLod(tex, uv, level).rgb;
 	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
 	col *= ((color - blur)*0.25 + 0.25) * 8.0;
 	col = mix(color, col * color, 1.0);
@@ -302,22 +306,31 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	vec4 xaxis;
 	vec4 yaxis;
 	vec4 zaxis;
+	xaxis.a = 1.0;
+	yaxis.a = 1.0;
+	zaxis.a = 1.0;
 
-	vec2 tScale = vec2(1.0);
+	vec2 tScale = vec2(1.0) * scale;
 
 	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
 	{
 		tScale *= u_textureScale;
 	}
 
-	xaxis = texture(tex, (m_vertPos.yz * tScale * scale));
-	yaxis = texture(tex, (m_vertPos.xz * tScale * scale));
-	zaxis = texture(tex, (m_vertPos.xy * tScale * scale));
+#ifdef __SPLATS_LOOKUP_ALPHA__
+	xaxis = texture(tex, (m_vertPos.yz * tScale));
+	yaxis = texture(tex, (m_vertPos.xz * tScale));
+	zaxis = texture(tex, (m_vertPos.xy * tScale));
+#else //!__SPLATS_LOOKUP_ALPHA__
+	xaxis.rgb = texture(tex, (m_vertPos.yz * tScale)).rgb;
+	yaxis.rgb = texture(tex, (m_vertPos.xz * tScale)).rgb;
+	zaxis.rgb = texture(tex, (m_vertPos.xy * tScale)).rgb;
+#endif //__SPLATS_LOOKUP_ALPHA__
 
 #if defined(__HIGH_PASS_SHARPEN__)
-	xaxis.rgb = Enhance(tex, (m_vertPos.yz * tScale * scale), xaxis.rgb, 8.0);
-	yaxis.rgb = Enhance(tex, (m_vertPos.xz * tScale * scale), yaxis.rgb, 8.0);
-	zaxis.rgb = Enhance(tex, (m_vertPos.xy * tScale * scale), zaxis.rgb, 8.0);
+	xaxis.rgb = Enhance(tex, (m_vertPos.yz * tScale), xaxis.rgb, 8.0);
+	yaxis.rgb = Enhance(tex, (m_vertPos.xz * tScale), yaxis.rgb, 8.0);
+	zaxis.rgb = Enhance(tex, (m_vertPos.xy * tScale), zaxis.rgb, 8.0);
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
 	vec4 color = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
@@ -406,11 +419,15 @@ vec4 GenerateTerrainMap(vec2 coord)
 
 	float maxHeightOverWater = MAP_MAX_HEIGHT - SHADER_WATER_LEVEL;
 	float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
-	float mixVal = 1.0 - pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
+	float mixVal = 1.0 - clamp(pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH), 0.0, 1.0);
 
 	mixVal *= -32.0;//u_Local9.r;
 
+#ifdef __USE_FULL_SPLAT_BLENDFUNC__
 	return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+#else //!__USE_FULL_SPLAT_BLENDFUNC__
+	return QuickMix(tex1.rgb, tex2.rgb, 1.0 - (mixVal * a1));
+#endif //__USE_FULL_SPLAT_BLENDFUNC__
 }
 
 vec4 GetDiffuse(vec2 texCoords, float pixRandom)
@@ -472,7 +489,8 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		{// Tri-Planar...
 			if (SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 			{// Steep maps (water edges)...
-				float mixVal = ((SHADER_WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
+				float maxAbove = 128.0 + (64.0 * pixRandom);
+				float mixVal = clamp(((SHADER_WATER_LEVEL + maxAbove) - m_vertPos.z) / maxAbove, 0.0, 1.0);
 
 				float a1 = 0.0;
 				float a2 = 0.0;
@@ -481,16 +499,25 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 
 				if (SHADER_HAS_SPLATMAP1 <= 0.0 && SHADER_HAS_SPLATMAP2 <= 0.0 && SHADER_HAS_SPLATMAP3 <= 0.0 && SHADER_HAS_SPLATMAP4 <= 0.0)
 				{// No splat maps...
+#ifdef __USE_FULL_SPLAT_BLENDFUNC__
 					return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+#else //!__USE_FULL_SPLAT_BLENDFUNC__
+					return QuickMix(tex1.rgb, tex2.rgb, 1.0 - (mixVal * a1));
+#endif //__USE_FULL_SPLAT_BLENDFUNC__
 				}
 
 				// Splat mapping...
-				tex2 = GetSplatMap(texCoords, tex2, a2);
+				float a3 = 0.0;
+				vec4 tex3 = GetSplatMap(texCoords, tex2, a3);
 
 				a1 = 1.0 - a1;
-				a2 = 1.0 - a2;
+				a3 = 1.0 - a3;
 
-				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+#ifdef __USE_FULL_SPLAT_BLENDFUNC__
+				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex3, a3 * (1.0 - (a3 * mixVal))), 1.0);
+#else //!__USE_FULL_SPLAT_BLENDFUNC__
+				return QuickMix(tex1.rgb, tex3.rgb, 1.0 - (mixVal * a1));
+#endif //__USE_FULL_SPLAT_BLENDFUNC__
 			}
 			else if (USE_TRIPLANAR >= 2.0 && (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())))
 			{// Steep maps (using vertex colors)...

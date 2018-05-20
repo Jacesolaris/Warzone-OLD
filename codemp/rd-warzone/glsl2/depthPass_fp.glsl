@@ -101,16 +101,15 @@ void main()
 
 		if (SHADER_SWAY > 0.0)
 		{// Sway...
-			//texCoords += vec2(SHADER_OVERLAY_SWAY * SHADER_SWAY * ((1.0 - texCoords.y) + 1.0), 0.0);
-			//texCoords += vec2(GetSway() * ((1.0 - texCoords.y) + 1.0), 0.0);
 			texCoords += vec2(GetSway());
 		}
 
-		// Wait, we don't even need the colors, just the alphas...
+		// Wait, we don't even need the colors, just the alphas... *sigh* causes some zfighting...
 		//gl_FragColor = texture(u_DiffuseMap, texCoords);
 		
 		gl_FragColor.a = texture(u_DiffuseMap, texCoords).a;
 		gl_FragColor.rgb = vec3(1.0);
+		
 
 		gl_FragColor.a *= var_Color.a;
 

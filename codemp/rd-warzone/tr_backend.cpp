@@ -1293,13 +1293,13 @@ static int RealtimeSurfaceCompare(const void *a, const void *b)
 
 	return 0;
 }
-#endif //__REALTIME_SURFACE_SORTING__
 
 #define MAX_LIST_SHADERS 1048576
 int					listShadersNum = 0;
 shader_t			*listShaders[MAX_LIST_SHADERS] = { NULL };
 int64_t				listEntityNums[MAX_LIST_SHADERS] = { 0 };
 int64_t				listPostProcesses[MAX_LIST_SHADERS] = { 0 };
+#endif //__REALTIME_SURFACE_SORTING__
 
 void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQuery) {
 	int				i, max_threads_used = 0;

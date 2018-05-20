@@ -1516,7 +1516,7 @@ void R_Register( void )
 
 	r_srgb = ri->Cvar_Get( "r_srgb", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
+	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "0", CVAR_ARCHIVE ); // UQ: Disabled, with deferred lighting, it's faster on WZ maps without it...
 	
 	r_sss = ri->Cvar_Get("r_sss", "false", CVAR_ARCHIVE);
 	r_ssdo = ri->Cvar_Get("r_ssdo", "false", CVAR_ARCHIVE);

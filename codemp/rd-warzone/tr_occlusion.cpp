@@ -202,9 +202,15 @@ void RB_OcclusionCulling(void)
 	{
 		if (r_occlusion->integer)
 		{
+			qboolean first = qtrue;
+
 			if (nextOcclusionCheck == 0)
 			{// Initialize...
 				tr.occlusionZfar = tr.distanceCull;
+			}
+			else
+			{
+				first = qfalse;
 			}
 
 			if (backEnd.refdef.time < nextOcclusionCheck)
@@ -284,7 +290,7 @@ void RB_OcclusionCulling(void)
 			tess.minIndex = 0;
 			tess.maxIndex = 0;
 			
-			for (int z = occlusionRanges[0], range = 0; z <= tr.distanceCull; z = occlusionRanges[range], range++)
+			for (int z = occlusionRanges[0], range = 0; z <= tr.distanceCull * 1.75; z = occlusionRanges[range], range++)
 			{
 				occlusionRangeId[numOcclusionQueries] = range;
 
@@ -297,7 +303,7 @@ void RB_OcclusionCulling(void)
 
 				vec3_t mPosition, mLeftPositionDown, mLeftPositionUp, mRightPositionDown, mRightPositionUp;
 				
-				VectorMA(mOrigin, z, mCameraForward, mPosition);
+				VectorMA(mOrigin, first ? z : z - (occlusionRanges[0] / 2.0), mCameraForward, mPosition);
 				
 //#define quadSize tr.distanceCull
 //#define quadSize 65536.0

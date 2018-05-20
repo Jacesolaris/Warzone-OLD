@@ -3790,6 +3790,24 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		MAP_WATER_LEVEL = -131072.0;
 	}
 
+	// Add vibrancy to all the emissive lighting, and normalize to 0-1 values...
+	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
+	{
+		// Add vibrancy...
+		//R_AddLightVibrancy(MAP_GLOW_COLORS[i], 0.1);
+		R_AddLightVibrancy(MAP_GLOW_COLORS[i], 0.5);
+
+		VectorNormalize(MAP_GLOW_COLORS[i]);
+		MAP_GLOW_COLORS[i][0] = Q_clamp(0.0, MAP_GLOW_COLORS[i][0], 1.0);
+		MAP_GLOW_COLORS[i][1] = Q_clamp(0.0, MAP_GLOW_COLORS[i][1], 1.0);
+		MAP_GLOW_COLORS[i][2] = Q_clamp(0.0, MAP_GLOW_COLORS[i][2], 1.0);
+
+		VectorNormalize(MAP_GLOW_COLORS[i]);
+		MAP_GLOW_COLORS[i][0] = Q_clamp(0.0, MAP_GLOW_COLORS[i][0], 1.0);
+		MAP_GLOW_COLORS[i][1] = Q_clamp(0.0, MAP_GLOW_COLORS[i][1], 1.0);
+		MAP_GLOW_COLORS[i][2] = Q_clamp(0.0, MAP_GLOW_COLORS[i][2], 1.0);
+	}
+
 	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Selected %i surfaces for glow lights.\n", "LIGHTING", NUM_MAP_GLOW_LOCATIONS);
 }
 

@@ -2146,6 +2146,7 @@ typedef struct cullinfo_s {
 	qboolean		centerOriginInitialized;
 	vec3_t			centerOrigin;
 	float			currentDistance;
+	int				centerDistanceTime;
 } cullinfo_t;
 
 typedef struct msurface_s {
