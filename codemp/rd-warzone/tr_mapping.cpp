@@ -1413,9 +1413,11 @@ vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
 qboolean	GRASS_ENABLED = qtrue;
 qboolean	GRASS_UNDERWATER_ONLY = qfalse;
+int			GRASS_WIDTH_REPEATS = 0;
 int			GRASS_DENSITY = 2;
 float		GRASS_HEIGHT = 48.0;
 int			GRASS_DISTANCE = 2048;
+float		GRASS_MAX_SLOPE = 10.0;
 float		GRASS_TYPE_UNIFORMALITY = 0.97;
 float		GRASS_DISTANCE_FROM_ROADS = 0.25;
 qboolean	PEBBLES_ENABLED = qfalse;
@@ -1723,8 +1725,10 @@ void MAPPING_LoadMapInfo(void)
 	{
 		GRASS_UNDERWATER_ONLY = (atoi(IniRead(mapname, "GRASS", "GRASS_UNDERWATER_ONLY", "0")) > 0) ? qtrue : qfalse;
 		GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
+		GRASS_WIDTH_REPEATS = atoi(IniRead(mapname, "GRASS", "GRASS_WIDTH_REPEATS", "0"));
 		GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "42.0"));
 		GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "4096"));
+		GRASS_MAX_SLOPE = atof(IniRead(mapname, "GRASS", "GRASS_MAX_SLOPE", "10.0"));
 		GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
 		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
 		
@@ -1967,6 +1971,7 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and Pebbles are ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", GRASS_UNDERWATER_ONLY ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass width repeats is ^7%i^5 and grass max slope is ^7%.4f^5 on this map.\n", GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Pebbles are ^7%s^5 on this map.\n", PEBBLES_ENABLED ? "ENABLED" : "DISABLED");

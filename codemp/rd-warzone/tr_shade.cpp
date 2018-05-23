@@ -1824,9 +1824,11 @@ extern float		MAP_LIGHTMAP_MULTIPLIER;
 
 extern qboolean		GRASS_ENABLED;
 extern qboolean		GRASS_UNDERWATER_ONLY;
+extern int			GRASS_WIDTH_REPEATS;
 extern int			GRASS_DENSITY;
 extern float		GRASS_HEIGHT;
 extern int			GRASS_DISTANCE;
+extern float		GRASS_MAX_SLOPE;
 extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_DISTANCE_FROM_ROADS;
 extern qboolean		PEBBLES_ENABLED;
@@ -3312,6 +3314,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, GRASS_DISTANCE, GRASS_UNDERWATER_ONLY, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				vec4_t l11;
+				VectorSet4(l11, GRASS_WIDTH_REPEATS+1, GRASS_MAX_SLOPE, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL11, l11);
 
 				if (tr.roadsMapImage != tr.blackImage)
 				{

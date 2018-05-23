@@ -29,6 +29,7 @@ uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSpla
 uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 uniform vec4						u_Local10; // foliageLODdistance, GRASS_UNDERWATER_ONLY, 0.0, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 
 #define SHADER_MAP_SIZE				u_Local1.r
 #define SHADER_SWAY					u_Local1.g
@@ -52,6 +53,9 @@ uniform vec4						u_Local10; // foliageLODdistance, GRASS_UNDERWATER_ONLY, 0.0, 
 #define MAX_RANGE					u_Local10.r
 #define GRASS_UNDERWATER_ONLY		u_Local10.g
 #define GRASS_TYPE_UNIFORMALITY		u_Local10.a
+
+#define GRASS_WIDTH_REPEATS			u_Local11.r
+#define GRASS_MAX_SLOPE				u_Local11.g
 
 #define MAP_WATER_LEVEL				SHADER_WATER_LEVEL // TODO: Use water map
 #define GRASS_TYPE_UNIFORM_WATER	0.66
@@ -505,7 +509,7 @@ void main()
 	#endif //THREE_WAY_GRASS_CLUMPS
 	{// Draw either 2 or 3 copies at each position at different angles...
 		vec3 direction = (rotationMatrix(vec3(0, 1, 0), randDir)*vec4(vBaseDir[i], 1.0)).xyz;
-		//direction.xy *= 2.0;
+		direction.xy *= GRASS_WIDTH_REPEATS;
 
 		vec3 P = vGrassFieldPos.xyz;
 
