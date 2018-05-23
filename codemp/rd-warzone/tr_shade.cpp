@@ -55,7 +55,7 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 		maxIndex = numIndexes / 2;
 	}
 
-	if (r_tesselation->integer && tesselation)
+	if (/*r_tesselation->integer &&*/ tesselation)
 	{
 		//GLint MaxPatchVertices = 0;
 		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
@@ -76,7 +76,7 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex,
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation)
 {
-	if (r_tesselation->integer && tesselation)
+	if (/*r_tesselation->integer &&*/ tesselation)
 	{
 		//GLint MaxPatchVertices = 0;
 		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
@@ -1891,13 +1891,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	{
 		IS_DEPTH_PASS = qtrue;
 
-		if (r_foliage->integer
+		/*if (r_foliage->integer
 			&& GRASS_ENABLED
 			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
-		}
+		}*/
+	}
+	else if ((tr.viewParms.flags & VPF_CUBEMAP)
+		|| (tr.viewParms.flags & VPF_DEPTHSHADOW)
+		|| (tr.viewParms.flags & VPF_SHADOWPASS)
+		|| (tr.viewParms.flags & VPF_EMISSIVEMAP))
+	{
+
 	}
 	/*else if (tr.viewParms.flags & VPF_SHADOWPASS)
 	{
@@ -2593,14 +2600,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						sp2 = &tr.grassShader[2];
 
 					multiPass = qtrue;
-					passMax = GRASS_DENSITY;
-
-#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-					if (ALLOW_GL_400)
-					{
-						passMax = 2; // uses hardware invocations instead
-					}
-#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
+					passMax = 1;// GRASS_DENSITY;
 
 					if (isPebbles && r_pebbles->integer)
 					{
@@ -3254,7 +3254,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
-				if (GRASS_UNDERWATER_ONLY)
+				if (sp == &tr.grassShader[1])
+				{// Fast grass... Only use grassImage[0]...
+					GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
+				}
+				else if (GRASS_UNDERWATER_ONLY)
 				{
 					/*GL_BindToTMU(tr.whiteImage, TB_DIFFUSEMAP);
 					GL_BindToTMU(tr.whiteImage, TB_SPLATMAP1);
@@ -3293,13 +3297,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);
 				}
 
-				GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
-				GL_BindToTMU(tr.seaGrassImage[1], TB_WATERPOSITIONMAP);
-				GL_BindToTMU(tr.seaGrassImage[2], TB_WATERHEIGHTMAP);
-				GL_BindToTMU(tr.seaGrassImage[3], TB_GLOWMAP);
+				if (sp == &tr.grassShader[1])
+				{// Fast grass... Only use seaGrassImage[0]...
+					GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
+				}
+				else
+				{
+					GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
+					GL_BindToTMU(tr.seaGrassImage[1], TB_WATERPOSITIONMAP);
+					GL_BindToTMU(tr.seaGrassImage[2], TB_WATERHEIGHTMAP);
+					GL_BindToTMU(tr.seaGrassImage[3], TB_GLOWMAP);
+				}
 
 				vec4_t l10;
-				VectorSet4(l10, GRASS_DISTANCE, GRASS_UNDERWATER_ONLY, 0.0, GRASS_TYPE_UNIFORMALITY);
+				VectorSet4(l10, GRASS_DISTANCE, GRASS_UNDERWATER_ONLY, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				if (tr.roadsMapImage != tr.blackImage)
@@ -3633,11 +3644,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (input->multiDrawPrimitives)
 			{
-				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, useTesselation);
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, (useTesselation || sp->tesselation) ? qtrue : qfalse);
 			}
 			else
 			{
-				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, useTesselation);
+				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, (useTesselation || sp->tesselation) ? qtrue : qfalse);
 			}
 
 

@@ -125,6 +125,8 @@ extern const char *fallbackShader_fur_vp;
 extern const char *fallbackShader_fur_gs;
 extern const char *fallbackShader_grass2_fp;
 extern const char *fallbackShader_grass2_vp;
+extern const char *fallbackShader_grass2_cs;
+extern const char *fallbackShader_grass2_es;
 extern const char *fallbackShader_grass2_gs;
 extern const char *fallbackShader_grass3_fp;
 extern const char *fallbackShader_grass3_vp;
@@ -3222,14 +3224,14 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		extradefines[0] = '\0';
 
-		Q_strcat(extradefines, 1024, "#define UNDERWATER_ONLY\n");
+		Q_strcat(extradefines, 1024, "#define __USE_UNDERWATER_ONLY__\n");
 
 #ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		if (ALLOW_GL_400)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_400\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 			}
@@ -3237,7 +3239,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		else
 #endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass shader!");
 			}
@@ -3248,14 +3250,14 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		extradefines[0] = '\0';
 
-		Q_strcat(extradefines, 1024, "#define FAST_ONLY\n");
+		Q_strcat(extradefines, 1024, "#define __USE_FAST_GRASS__\n");
 
 #ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		if (ALLOW_GL_400)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_400\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass2 shader!");
 			}
@@ -3263,7 +3265,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		else
 #endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass2 shader!");
 			}
@@ -3279,7 +3281,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_400\n");
 
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[2], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[2], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 			}
@@ -3287,7 +3289,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		else
 #endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[2], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[2], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 			}

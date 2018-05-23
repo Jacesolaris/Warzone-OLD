@@ -1,7 +1,7 @@
 attribute vec3		attr_Position;
 attribute vec3		attr_Normal;
 
-flat out	int		isSlope;
+flat out int		vertIsSlope;
 
 uniform vec4		u_Local9;
 
@@ -63,10 +63,10 @@ bool SlopeTooGreat(vec3 normal)
 
 void main()
 {
-	isSlope = 0;
+	vertIsSlope = 0;
 
 	if (SlopeTooGreat(attr_Normal.xyz * 2.0 - 1.0))
-		isSlope = 1;
+		vertIsSlope = 1;
 
 	gl_Position = vec4(attr_Position.xyz, 1.0);
 }

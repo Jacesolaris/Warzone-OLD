@@ -76,14 +76,72 @@ vec2 pixel = vec2(1.0) / u_Dimensions;
 #define hdr_const_1 (u_Local8.g / 255.0)
 #define hdr_const_2 (255.0 / u_Local8.b)
 
+//#define __ENCODE_NORMALS_RECONSTRUCT_Z__
+#define __ENCODE_NORMALS_STEREOGRAPHIC_PROJECTION__
+//#define __ENCODE_NORMALS_CRY_ENGINE__
+//#define __ENCODE_NORMALS_EQUAL_AREA_PROJECTION__
+
+#ifdef __ENCODE_NORMALS_STEREOGRAPHIC_PROJECTION__
+vec2 EncodeNormal(vec3 n)
+{
+	float scale = 1.7777;
+	vec2 enc = n.xy / (n.z + 1.0);
+	enc /= scale;
+	enc = enc * 0.5 + 0.5;
+	return enc;
+}
+vec3 DecodeNormal(vec2 enc)
+{
+	vec3 enc2 = vec3(enc.xy, 0.0);
+	float scale = 1.7777;
+	vec3 nn =
+		enc2.xyz*vec3(2.0 * scale, 2.0 * scale, 0.0) +
+		vec3(-scale, -scale, 1.0);
+	float g = 2.0 / dot(nn.xyz, nn.xyz);
+	return vec3(g * nn.xy, g - 1.0);
+}
+#elif defined(__ENCODE_NORMALS_CRY_ENGINE__)
 vec3 DecodeNormal(in vec2 N)
 {
-	vec2 encoded = N*4.0 - 2.0;
+	vec2 encoded = N * 4.0 - 2.0;
 	float f = dot(encoded, encoded);
 	float g = sqrt(1.0 - f * 0.25);
-
 	return vec3(encoded * g, 1.0 - f * 0.5);
 }
+vec2 EncodeNormal(in vec3 N)
+{
+	float f = sqrt(8.0 * N.z + 8.0);
+	return N.xy / f + 0.5;
+}
+#elif defined(__ENCODE_NORMALS_EQUAL_AREA_PROJECTION__)
+vec2 EncodeNormal(vec3 n)
+{
+	float f = sqrt(8.0 * n.z + 8.0);
+	return n.xy / f + 0.5;
+}
+vec3 DecodeNormal(vec2 enc)
+{
+	vec2 fenc = enc * 4.0 - 2.0;
+	float f = dot(fenc, fenc);
+	float g = sqrt(1.0 - f / 4.0);
+	vec3 n;
+	n.xy = fenc*g;
+	n.z = 1.0 - f / 2.0;
+	return n;
+}
+#else //__ENCODE_NORMALS_RECONSTRUCT_Z__
+vec3 DecodeNormal(in vec2 N)
+{
+	vec3 norm;
+	norm.xy = N * 2.0 - 1.0;
+	norm.z = sqrt(1.0 - dot(norm.xy, norm.xy));
+	return norm;
+}
+vec2 EncodeNormal(vec3 n)
+{
+	return vec2(n.xy * 0.5 + 0.5);
+}
+#endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
 
 vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
@@ -954,7 +1012,7 @@ void main(void)
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	norm.xyz = DecodeNormal(norm.xy);
 
-	vec3 flatNorm = normalize(norm.xyz);
+	vec3 flatNorm = norm.xyz = normalize(norm.xyz);
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
 	// If doing screen space reflections on floors, we need to know what are floor pixels...
@@ -993,6 +1051,7 @@ void main(void)
 
 	// Simply offset the normal value based on the detail value... It looks good enough, but true PBR would probably want to use the tangent/bitangent below instead...
 	normalDetail.rgb = normalize(clamp(normalDetail.xyz, 0.0, 1.0) * 2.0 - 1.0);
+
 	//vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, u_Local3.a * (length(norm.xyz - normalDetail.xyz) / 3.0)));
 	vec3 bump = normalize(mix(norm.xyz, normalDetail.xyz, 0.5 * (length((norm.xyz * 0.5 + 0.5) - (normalDetail.xyz * 0.5 + 0.5)) / 3.0)));
 	norm.rgb = normalize(mix(norm.xyz, normalDetail.xyz, 0.25 * (length((norm.xyz * 0.5 + 0.5) - (normalDetail.xyz * 0.5 + 0.5)) / 3.0)));
@@ -1330,9 +1389,15 @@ void main(void)
 				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
 				lightDistMult = pow(lightDistMult, 2.0);
 
+				if (lightDistMult <= 0.0) continue;
+
 				// Attenuation...
 				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+				
+				if (lightFade <= 0.0) continue;
+
 				lightFade = pow(lightFade, 2.0);
+
 				float lightStrength = lightDistMult * lightFade * specularReflectivePower * 0.5;
 
 				if (lightStrength > 0.0)

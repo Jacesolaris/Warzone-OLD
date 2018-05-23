@@ -18,9 +18,13 @@ vec2 sampleOffset = vec2(1.0/u_Dimensions);
 #define PIOVER180 0.017453292
 
 //MATSO DOF
-#define fMatsoDOFChromaPow		3.0		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
-#define fMatsoDOFBokehCurve		2.4		// [0.5 to 20.0] Bokeh curve.
-#define fMatsoDOFBokehLight		0.512 	// [0.0 to 2.0] Bokeh brightening factor.
+//#define fMatsoDOFChromaPow		3.0		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
+//#define fMatsoDOFBokehCurve		2.4		// [0.5 to 20.0] Bokeh curve.
+//#define fMatsoDOFBokehLight		0.512 	// [0.0 to 2.0] Bokeh brightening factor.
+//#define fMatsoDOFBokehAngle		10		// [0 to 360] Rotation angle of bokeh shape.
+#define fMatsoDOFChromaPow		3.0//2.4		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
+#define fMatsoDOFBokehCurve		6.0		// [0.5 to 20.0] Bokeh curve.
+#define fMatsoDOFBokehLight		4.0//0.512 	// [0.0 to 2.0] Bokeh brightening factor.
 #define fMatsoDOFBokehAngle		10		// [0 to 360] Rotation angle of bokeh shape.
 
 #if defined(FAST_DOF)
@@ -48,7 +52,7 @@ float GetGlowStrength(vec2 coord)
 	vec2 coord2 = coord;
 	coord2.y = 1.0 - coord2.y;
 	vec4 glow = texture2D(u_GlowMap, coord2.xy);
-	float glowStrength = clamp(length(glow.rgb), 0.0, 1.0);
+	float glowStrength = clamp(length(glow.rgb) * fMatsoDOFBokehLight, 0.0, 1.0);
 	return glowStrength;
 }
 
