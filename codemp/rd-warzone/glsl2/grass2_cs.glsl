@@ -43,13 +43,10 @@ uniform vec3						u_ViewOrigin;
 //const float uTessLevel = 7.0;
 //float uTessLevel = (u_Local9.r > 1.0) ? u_Local9.r : 1.0;
 
-out vec3 esPos[];
-
 void main() 
 {
 	// (2)
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-	esPos[gl_InvocationID] = gl_in[gl_InvocationID].gl_Position.xyz;
 
 	if (vertIsSlope[0] > 0 || vertIsSlope[1] > 0 || vertIsSlope[2] > 0)
 	{
