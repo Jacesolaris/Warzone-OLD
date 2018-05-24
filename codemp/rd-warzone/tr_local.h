@@ -96,6 +96,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __EXPERIMETNAL_CHARACTER_EDITOR__		// Testing stuff...
 
+//#define __HEIGHTMAP_TERRAIN_TEST__			// Testing stuff...
+
 
 #define __FX_SORTING__
 #define __WATER_SORTING__

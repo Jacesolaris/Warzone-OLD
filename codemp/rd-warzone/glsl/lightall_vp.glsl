@@ -11,6 +11,8 @@ attribute vec3 attr_Normal2;
 attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
 
+uniform sampler2D					u_HeightMap;
+
 uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
 uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
@@ -299,6 +301,17 @@ void main()
 	vec3 position;
 	vec3 normal;
 
+	/*
+	vec3 heightMap = vec3(0.0);
+
+	if (USE_IS2D <= 0.0)
+	{
+		vec2 coord;
+		coord = vec2(attr_Position.xy / u_Local9.r);
+		heightMap = (texture(u_HeightMap, coord).xyz * 2.0 - 1.0) * u_Local9.g;
+	}
+	*/
+
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		//position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
@@ -332,6 +345,7 @@ void main()
 		normal    = attr_Normal * 2.0 - 1.0;
 	}
 
+	//position.xyz += heightMap;
 
 	vec2 texCoords = attr_TexCoord0.st;
 

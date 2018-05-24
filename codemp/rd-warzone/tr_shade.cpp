@@ -3208,6 +3208,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					GL_BindToTMU(pStage->bundle[TB_GLOWMAP].image[0], TB_GLOWMAP);
 				}
+
+#ifdef __HEIGHTMAP_TERRAIN_TEST__
+				{// Testing
+					GL_BindToTMU(tr.defaultGrassMapImage/*tr.random2KImage[0]*/, TB_HEIGHTMAP);
+				}
+#endif //__HEIGHTMAP_TERRAIN_TEST__
 			}
 		}
 		else if ( pStage->bundle[TB_LIGHTMAP].image[0] != 0 )

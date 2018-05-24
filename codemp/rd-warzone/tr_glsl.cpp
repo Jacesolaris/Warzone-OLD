@@ -3092,6 +3092,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
+#ifdef __HEIGHTMAP_TERRAIN_TEST__
+		strcat(extradefines, "#define __HEIGHTMAP_TERRAIN_TEST__\n");
+#endif //__HEIGHTMAP_TERRAIN_TEST__
+
 		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[0], "lightallSplat", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
