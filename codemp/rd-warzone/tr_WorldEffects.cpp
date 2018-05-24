@@ -29,6 +29,8 @@ extern qboolean	WZ_WEATHER_SOUND_ONLY;
 
 extern qboolean CONTENTS_INSIDE_OUTSIDE_FOUND;
 
+extern void Volumetric_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask);
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // Defines
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -413,7 +415,7 @@ private:
 		////////////////////////////////////////////////////////////////////////////////////
 		inline	bool	CellOutside(int x, int y, int z, int bit)
 		{
-			if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
+			//if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
 
 			if ((x < 0 || x >= mWidth) || (y < 0 || y >= mHeight) || (z < 0 || z >= mDepth) || (bit < 0 || bit >= 32))
 			{
@@ -447,7 +449,7 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////
 	// Contents Outside
 	////////////////////////////////////////////////////////////////////////////////////
-	inline	bool	ContentsOutside(int contents)
+	/*inline	bool	ContentsOutside(int contents)
 	{
 		if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)) return true;
 
@@ -464,7 +466,7 @@ private:
 			return (!(contents&CONTENTS_INSIDE));
 		}
 		return !!(contents&CONTENTS_OUTSIDE);
-	}
+	}*/
 
 
 
@@ -527,6 +529,10 @@ public:
 			int arraySize	= (Wz.mWidth * Wz.mHeight * Wz.mDepth);
 			Wz.mPointCache  = (uint32_t *)Z_Malloc(arraySize*sizeof(uint32_t), TAG_POINTCACHE, qtrue);
 		}
+		else
+		{
+			ri->Printf(PRINT_ERROR, "Weather zones full trying to add zone %i.\n", mWeatherZones.size());
+		}
 	}
 
 
@@ -534,6 +540,295 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////
 	// Cache - Will Scan the World, Creating The Cache
 	////////////////////////////////////////////////////////////////////////////////////
+#if 0
+	////////////////////////////////////////////////////////////////////////////////////
+	// Cache - Will Scan the World, Creating The Cache
+	////////////////////////////////////////////////////////////////////////////////////
+	void			Cache()
+	{
+		if (!tr.world || mCacheInit)
+		{
+			return;
+		}
+
+		CVec3		CurPos;
+		CVec3		Size;
+		CVec3		Mins;
+		int			x, y, z, q, zbase;
+		//bool		curPosOutside;
+		uint32_t	contents;
+		uint32_t	bit;
+
+		// Record The Extents Of The World Incase No Other Weather Zones Exist
+		//---------------------------------------------------------------------
+		if (!mWeatherZones.size())
+		{
+			ri->Printf(PRINT_ALL, "No Weather Zones Encountered... Generating...\n");
+			//AddWeatherZone(tr.world->bmodels[0].bounds[0], tr.world->bmodels[0].bounds[1]);
+
+			// Let's make multiple zones by default, so we can do proper indoor/outdoor testing...
+#define ZONE_DEFAULT_SIZE 384.0
+
+			for (float zx = tr.world->bmodels[0].bounds[0][0]; zx < tr.world->bmodels[0].bounds[1][0]; zx += ZONE_DEFAULT_SIZE)
+			{
+				for (float zy = tr.world->bmodels[0].bounds[0][1]; zy < tr.world->bmodels[0].bounds[1][1]; zy += ZONE_DEFAULT_SIZE)
+				{
+					for (float zz = tr.world->bmodels[0].bounds[0][2]; zz < tr.world->bmodels[0].bounds[1][2]; zz += ZONE_DEFAULT_SIZE)
+					{
+						vec3_t thisMins, thisMaxs;
+						VectorSet(thisMins, zx, zy, zz);
+						VectorSet(thisMaxs, zx + ZONE_DEFAULT_SIZE, zy + ZONE_DEFAULT_SIZE, zz + ZONE_DEFAULT_SIZE);
+						AddWeatherZone(thisMins, thisMaxs);
+					}
+				}
+			}
+
+			ri->Printf(PRINT_ALL, "Generated %i weather zones for this map...\n", mWeatherZones.size());
+		}
+
+		mCacheInit = true;
+		SWeatherZone::mMarkedInside = false;		// Assume All Is Outside, Except Solid
+
+													//
+													// Load the weather zone info from a cache file, if one exists
+													//------------------------------------------------------------
+		extern char currentMapName[128];
+
+		fileHandle_t f;
+		long fSize = ri->FS_FOpenFileRead(va("weatherZones/%s.wzones", currentMapName), &f, qtrue);
+
+		if (f && fSize)
+		{
+			int numInside = 0;
+			int numOutside = 0;
+
+			ri->Printf(PRINT_ALL, "Loading weather zones cache from file \"%s\".\n", va("weatherZones/%s.wzones", currentMapName));
+
+			ri->FS_Read(&mCacheInit, sizeof(mCacheInit), f);
+			ri->FS_Read(&SWeatherZone::mMarkedInside, sizeof(SWeatherZone::mMarkedInside), f);
+
+			// Iterate Over All Weather Zones
+			//--------------------------------
+			for (int zone = 0; zone < mWeatherZones.size(); zone++)
+			{
+				SWeatherZone	wz = mWeatherZones[zone];
+
+				ri->FS_Read(&wz.mDepth, sizeof(wz.mDepth), f);
+				ri->FS_Read(&wz.mExtents, sizeof(wz.mExtents), f);
+				ri->FS_Read(&wz.mHeight, sizeof(wz.mHeight), f);
+				ri->FS_Read(&wz.mMarkedInside, sizeof(wz.mMarkedInside), f);
+				ri->FS_Read(&wz.mSize, sizeof(wz.mSize), f);
+				ri->FS_Read(&wz.mWidth, sizeof(wz.mWidth), f);
+
+				uint32_t pointCahceSize = sizeof(uint32_t) * (wz.mWidth * wz.mHeight * wz.mDepth);
+				//ri->FS_Read(&pointCahceSize, sizeof(uint32_t), f);
+				ri->FS_Read(wz.mPointCache, pointCahceSize, f);
+
+				if (wz.mMarkedInside)
+					numOutside++;
+				else
+					numInside++;
+			}
+
+			ri->FS_FCloseFile(f);
+
+			ri->Printf(PRINT_ALL, "Loaded %i weather zones from cache. %i are inside and %i are outside.\n", mWeatherZones.size(), numInside, numOutside);
+			return;
+		}
+
+		f = NULL;
+
+		ri->Printf(PRINT_ALL, "Weather zones cache file does not exist, generating...\n");
+
+		// Iterate Over All Weather Zones
+		//--------------------------------
+		for (int zone = 0; zone<mWeatherZones.size(); zone++)
+		{
+			SWeatherZone	wz = mWeatherZones[zone];
+			uint32_t		thisPointCahceSize = sizeof(uint32_t) * (wz.mWidth * wz.mHeight * wz.mDepth);
+
+			//bool curPosOutside = false;
+
+			// Make Sure Point Contents Checks Occur At The CENTER Of The Cell
+			//-----------------------------------------------------------------
+			Mins = wz.mExtents.mMins;
+			for (x = 0; x<3; x++)
+			{
+				Mins[x] += (POINTCACHE_CELL_SIZE / 2);
+			}
+
+			int numInside = 0;
+			int numOutside = 0;
+
+			// Start Scanning
+			//----------------
+			for (z = 0; z < wz.mDepth; z++)
+			{
+				for (q = 0; q < 32; q++)
+				{
+					bit = (1 << q);
+					zbase = (z << 5);
+
+					for (x = 0; x < wz.mWidth; x++)
+					{
+						for (y = 0; y < wz.mHeight; y++)
+						{
+							CurPos[0] = x			* POINTCACHE_CELL_SIZE;
+							CurPos[1] = y			* POINTCACHE_CELL_SIZE;
+							CurPos[2] = (zbase + q)	* POINTCACHE_CELL_SIZE;
+							CurPos += Mins;
+
+							// How about we scan for sky???
+							qboolean hit = qfalse;
+
+							vec3_t from, to;
+							VectorCopy(CurPos.v, from);
+							from[2] += 16.0;
+							VectorCopy(CurPos.v, to);
+							to[2] += 524288.0;
+
+							while (!hit)
+							{
+								trace_t trace;
+
+								Volumetric_Trace(&trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+								if (trace.surfaceFlags & SURF_SKY)
+								{// Found the sky... We know this is outside...
+									numOutside++;
+									hit = qtrue;
+									ri->Printf(PRINT_ALL, "Zone %i Hit sky!\n", zone);
+									break;
+								}
+
+								if (trace.endpos[2] > tr.world->bmodels[0].bounds[1][2])
+								{// Outside of the map...
+								 //ri->Printf(PRINT_ALL, "Zone %i Hit outside of map, assuming sky!\n", zone);
+								 //numOutside++;
+									hit = qtrue;
+									break;
+								}
+
+								if (trace.endpos[2] >= wz.mExtents.mMaxs[2] && !(trace.surfaceFlags & SURF_NODRAW))
+								{// Hit something, and it's above our cell, but not sky... Inside...
+									numInside++;
+									hit = qtrue;
+									ri->Printf(PRINT_ALL, "Zone %i Hit something, not sky!\n", zone);
+									break;
+								}
+
+								if ((trace.surfaceFlags & SURF_NODRAW))
+								{// Hit something, and it's above our cell, but not sky... Inside...
+								 // The trace did not leave our own cell, probably hit the ground, scan again from end pos...
+									from[2] = trace.endpos[2] + 32.0;
+
+									ri->Printf(PRINT_ALL, "Zone %i Trying from higher up...\n", zone);
+									continue;
+								}
+
+								// Attempt fallback to JKA method...
+								contents = ri->CM_PointContents(CurPos.v, 0);
+
+								if (contents&CONTENTS_INSIDE)
+								{
+									ri->Printf(PRINT_ALL, "Zone %i Point contents INSIDE!\n", zone);
+									numInside++;
+									hit = qtrue;
+									break;
+								}
+								else if (contents&CONTENTS_OUTSIDE)
+								{
+									ri->Printf(PRINT_ALL, "Zone %i Point contents OUTSIDE!\n", zone);
+									numOutside++;
+									hit = qtrue;
+									break;
+								}
+
+								// The trace did not leave our own cell, probably hit the ground, scan again from end pos...
+								//from[2] = trace.endpos[2] + POINTCACHE_CELL_SIZE;
+
+								//ri->Printf(PRINT_ALL, "Zone %i Trying from higher up...\n", zone);
+
+								numInside++;
+								hit = qtrue;
+								break;
+							}
+
+							// Mark The Point
+							//----------------
+							wz.mPointCache[((z * wz.mWidth * wz.mHeight) + (y * wz.mWidth) + x)] |= bit;
+						}// for (y)
+					}// for (x)
+				}// for (q)
+			}// for (z)
+
+			ri->Printf(PRINT_WARNING, "zone %i: %i outside and %i inside.\n", zone, numOutside, numInside);
+
+			if (numOutside >= numInside)
+			{
+				wz.mMarkedInside = false;
+			}
+			else
+			{
+				wz.mMarkedInside = true;
+			}
+		}
+
+		// If no indoor or outdoor brushes were found
+		//--------------------------------------------
+		/*if (!mCacheInit)
+		{
+		mCacheInit = true;
+		SWeatherZone::mMarkedInside = false;		// Assume All Is Outside, Except Solid
+		}*/
+
+
+		//
+		// Save the weather zone info to a cache file for later use
+		//---------------------------------------------------------
+		extern char currentMapName[128];
+
+		f = ri->FS_FOpenFileWrite(va("weatherZones/%s.wzones", currentMapName), qfalse);
+
+		if (f)
+		{
+			ri->Printf(PRINT_ALL, "Saving weather zones cache to file \"%s\".\n", va("weatherZones/%s.wzones", currentMapName));
+
+			int numInside = 0;
+			int numOutside = 0;
+
+			ri->FS_Write(&mCacheInit, sizeof(mCacheInit), f);
+			ri->FS_Write(&SWeatherZone::mMarkedInside, sizeof(SWeatherZone::mMarkedInside), f);
+
+			// Iterate Over All Weather Zones
+			//--------------------------------
+			for (int zone = 0; zone < mWeatherZones.size(); zone++)
+			{
+				SWeatherZone	wz = mWeatherZones[zone];
+
+				ri->FS_Write(&wz.mDepth, sizeof(wz.mDepth), f);
+				ri->FS_Write(&wz.mExtents, sizeof(wz.mExtents), f);
+				ri->FS_Write(&wz.mHeight, sizeof(wz.mHeight), f);
+				ri->FS_Write(&wz.mMarkedInside, sizeof(wz.mMarkedInside), f);
+				ri->FS_Write(&wz.mSize, sizeof(wz.mSize), f);
+				ri->FS_Write(&wz.mWidth, sizeof(wz.mWidth), f);
+
+				uint32_t pointCahceSize = sizeof(uint32_t) * (wz.mWidth * wz.mHeight * wz.mDepth);
+				//ri->FS_Write(&pointCahceSize, sizeof(uint32_t), f);
+				ri->FS_Write(wz.mPointCache, pointCahceSize, f);
+
+				if (wz.mMarkedInside)
+					numOutside++;
+				else
+					numInside++;
+			}
+
+			ri->FS_FCloseFile(f);
+
+			ri->Printf(PRINT_ALL, "Saved %i weather zones to cache. %i are inside and %i are outside.\n", mWeatherZones.size(), numInside, numOutside);
+		}
+	}
+#else
 	void			Cache()
 	{
 		if (!tr.world || mCacheInit)
@@ -554,15 +849,86 @@ public:
 		//---------------------------------------------------------------------
 		if (!mWeatherZones.size())
 		{
-			ri->Printf( PRINT_ALL, "WARNING: No Weather Zones Encountered\n");
-			AddWeatherZone(tr.world->bmodels[0].bounds[0], tr.world->bmodels[0].bounds[1]);
+			ri->Printf(PRINT_ALL, "No Weather Zones Encountered... Generating...\n");
+			//AddWeatherZone(tr.world->bmodels[0].bounds[0], tr.world->bmodels[0].bounds[1]);
+
+			// Let's make multiple zones by default, so we can do proper indoor/outdoor testing...
+#define ZONE_DEFAULT_SIZE 192.0 // 384.0
+
+			for (float zx = tr.world->bmodels[0].bounds[0][0]; zx < tr.world->bmodels[0].bounds[1][0]; zx += ZONE_DEFAULT_SIZE)
+			{
+				for (float zy = tr.world->bmodels[0].bounds[0][1]; zy < tr.world->bmodels[0].bounds[1][1]; zy += ZONE_DEFAULT_SIZE)
+				{
+					for (float zz = tr.world->bmodels[0].bounds[0][2]; zz < tr.world->bmodels[0].bounds[1][2]; zz += ZONE_DEFAULT_SIZE)
+					{
+						vec3_t thisMins, thisMaxs;
+						VectorSet(thisMins, zx, zy, zz);
+						VectorSet(thisMaxs, zx + ZONE_DEFAULT_SIZE, zy + ZONE_DEFAULT_SIZE, zz + ZONE_DEFAULT_SIZE);
+						AddWeatherZone(thisMins, thisMaxs);
+					}
+				}
+			}
+
+			ri->Printf(PRINT_ALL, "Generated %i weather zones for this map...\n", mWeatherZones.size());
 		}
+
+		//
+		// Load the weather zone info from a cache file, if one exists
+		//------------------------------------------------------------
+		extern char currentMapName[128];
+
+		fileHandle_t f;
+		long fSize = ri->FS_FOpenFileRead(va("weatherZones/%s.wzones", currentMapName), &f, qtrue);
+
+		if (f && fSize)
+		{
+			int numInside = 0;
+			int numOutside = 0;
+
+			ri->Printf(PRINT_ALL, "Loading weather zones cache from file \"%s\".\n", va("weatherZones/%s.wzones", currentMapName));
+
+			ri->FS_Read(&mCacheInit, sizeof(mCacheInit), f);
+			ri->FS_Read(&SWeatherZone::mMarkedOutside, sizeof(SWeatherZone::mMarkedOutside), f);
+
+			// Iterate Over All Weather Zones
+			//--------------------------------
+			for (int zone = 0; zone < mWeatherZones.size(); zone++)
+			{
+				SWeatherZone	wz = mWeatherZones[zone];
+
+				ri->FS_Read(&wz.mDepth, sizeof(wz.mDepth), f);
+				ri->FS_Read(&wz.mExtents, sizeof(wz.mExtents), f);
+				ri->FS_Read(&wz.mHeight, sizeof(wz.mHeight), f);
+				ri->FS_Read(&wz.mMarkedOutside, sizeof(wz.mMarkedOutside), f);
+				ri->FS_Read(&wz.mSize, sizeof(wz.mSize), f);
+				ri->FS_Read(&wz.mWidth, sizeof(wz.mWidth), f);
+
+				uint32_t pointCahceSize = sizeof(uint32_t) * (wz.mWidth * wz.mHeight * wz.mDepth);
+				//ri->FS_Read(&pointCahceSize, sizeof(uint32_t), f);
+				ri->FS_Read(wz.mPointCache, pointCahceSize, f);
+
+				if (wz.mMarkedOutside)
+					numOutside++;
+				else
+					numInside++;
+			}
+
+			ri->FS_FCloseFile(f);
+
+			ri->Printf(PRINT_ALL, "Loaded %i weather zones from cache. %i are inside and %i are outside.\n", mWeatherZones.size(), numInside, numOutside);
+			return;
+		}
+
+		f = NULL;
+
+		ri->Printf(PRINT_ALL, "Weather zones cache file does not exist, generating...\n");
 
 		// Iterate Over All Weather Zones
 		//--------------------------------
 		for (int zone=0; zone<mWeatherZones.size(); zone++)
 		{
 			SWeatherZone	wz = mWeatherZones[zone];
+			uint32_t		thisPointCahceSize = sizeof(uint32_t) * (wz.mWidth * wz.mHeight * wz.mDepth);
 
 			// Make Sure Point Contents Checks Occur At The CENTER Of The Cell
 			//-----------------------------------------------------------------
@@ -571,7 +937,6 @@ public:
 			{
 				Mins[x] += (POINTCACHE_CELL_SIZE/2);
 			}
-
 
 			// Start Scanning
 			//----------------
@@ -591,25 +956,22 @@ public:
 							CurPos[2] = (zbase + q)	* POINTCACHE_CELL_SIZE;
 							CurPos	  += Mins;
 
-							if (r_weather->integer >= 2 || (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND))
-								contents = CONTENTS_OUTSIDE;
-							else
-								contents = ri->CM_PointContents(CurPos.v, 0);
+							contents = ri->CM_PointContents(CurPos.v, 0);
 
-							if (contents&CONTENTS_INSIDE || contents&CONTENTS_OUTSIDE)
+							if (/*contents&CONTENTS_INSIDE ||*/ contents&CONTENTS_OUTSIDE)
 							{
-								curPosOutside = ((contents&CONTENTS_OUTSIDE)!=0);
+								curPosOutside = ((contents&CONTENTS_OUTSIDE) != 0);
 								if (!mCacheInit)
 								{
 									mCacheInit = true;
 									SWeatherZone::mMarkedOutside = curPosOutside;
 								}
-								else if (SWeatherZone::mMarkedOutside!=curPosOutside)
+								/*else if (SWeatherZone::mMarkedOutside!=curPosOutside)
 								{
 									assert(0);
 									Com_Error (ERR_DROP, "Weather Effect: Both Indoor and Outdoor brushs encountered in map.\n" );
 									return;
-								}
+								}*/ // Why?!?!?!?!?!?!? FFS...
 
 								// Mark The Point
 								//----------------
@@ -621,7 +983,6 @@ public:
 			}// for (z)
 		}
 
-
 		// If no indoor or outdoor brushes were found
 		//--------------------------------------------
 		if (!mCacheInit)
@@ -629,7 +990,53 @@ public:
 			mCacheInit = true;
 			SWeatherZone::mMarkedOutside = false;		// Assume All Is Outside, Except Solid
 		}
+
+		//
+		// Save the weather zone info to a cache file for later use
+		//---------------------------------------------------------
+		extern char currentMapName[128];
+
+		f = ri->FS_FOpenFileWrite(va("weatherZones/%s.wzones", currentMapName), qfalse);
+
+		if (f)
+		{
+			ri->Printf(PRINT_ALL, "Saving weather zones cache to file \"%s\".\n", va("weatherZones/%s.wzones", currentMapName));
+
+			int numInside = 0;
+			int numOutside = 0;
+
+			ri->FS_Write(&mCacheInit, sizeof(mCacheInit), f);
+			ri->FS_Write(&SWeatherZone::mMarkedOutside, sizeof(SWeatherZone::mMarkedOutside), f);
+
+			// Iterate Over All Weather Zones
+			//--------------------------------
+			for (int zone = 0; zone < mWeatherZones.size(); zone++)
+			{
+				SWeatherZone	wz = mWeatherZones[zone];
+
+				ri->FS_Write(&wz.mDepth, sizeof(wz.mDepth), f);
+				ri->FS_Write(&wz.mExtents, sizeof(wz.mExtents), f);
+				ri->FS_Write(&wz.mHeight, sizeof(wz.mHeight), f);
+				ri->FS_Write(&wz.mMarkedOutside, sizeof(wz.mMarkedOutside), f);
+				ri->FS_Write(&wz.mSize, sizeof(wz.mSize), f);
+				ri->FS_Write(&wz.mWidth, sizeof(wz.mWidth), f);
+
+				uint32_t pointCahceSize = sizeof(uint32_t) * (wz.mWidth * wz.mHeight * wz.mDepth);
+				//ri->FS_Write(&pointCahceSize, sizeof(uint32_t), f);
+				ri->FS_Write(wz.mPointCache, pointCahceSize, f);
+
+				if (wz.mMarkedOutside)
+					numOutside++;
+				else
+					numInside++;
+			}
+
+			ri->FS_FCloseFile(f);
+
+			ri->Printf(PRINT_ALL, "Saved %i weather zones to cache. %i are inside and %i are outside.\n", mWeatherZones.size(), numInside, numOutside);
+		}
 	}
+#endif
 
 
 
@@ -644,7 +1051,7 @@ public:
 
 		if (!mCacheInit)
 		{
-			return ContentsOutside(ri->CM_PointContents(pos.v, 0));
+			return true;// ContentsOutside(ri->CM_PointContents(pos.v, 0));
 		}
 		for (int zone=0; zone<mWeatherZones.size(); zone++)
 		{
