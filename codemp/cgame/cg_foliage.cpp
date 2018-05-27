@@ -3119,7 +3119,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	vec3_t			CLEARING_SPOTS[FOLIAGE_AREA_MAX / 8] = { 0 };
 	int				CLEARING_SPOTS_SIZES[FOLIAGE_AREA_MAX / 8] = { 0 };
 	int				CLEARING_SPOTS_NUM = 0;
-	int x;
+	//int x;
 	int				numTrees = 0;
 	int				numPlants = 0;
 	int				numGrass = 0;
@@ -3354,15 +3354,15 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 
 //#pragma omp parallel for schedule(dynamic)
-	for (x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += scan_density)
+	for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += scan_density)
 	{
 		float current;
 		float complete;
-		/*float*/int y;
 
 		if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 		{
-			break;// continue;
+			//break;
+			continue;
 		}
 
 		current = MAP_INFO_SIZE[0] - (mapMaxs[0] - (float)x);
@@ -3378,19 +3378,16 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 			yoff = scan_density * 0.75;
 
 //#pragma omp parallel for schedule(dynamic)
-		for (y = (int)mapMins[1]; y <= (int)mapMaxs[1]; y += yoff)
+		for (int y = (int)mapMins[1]; y <= (int)mapMaxs[1]; y += yoff)
 		{
-			float z;
-
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 			{
 				break;
-				//continue;
 			}
 
 			qboolean hitInvalid = qfalse;
 
-			for (z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
+			for (float z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
 			{
 				trace_t		tr;
 				vec3_t		pos, down;
@@ -3401,7 +3398,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 					break;
 				}
 
-				//if(omp_get_thread_num() == 0)
+				if(omp_get_thread_num() == 0)
 				{// Draw a nice little progress bar ;)
 					if (clock() - previous_time > 500) // update display every 500ms...
 					{
@@ -3456,6 +3453,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 				if (MaterialIsValidForGrass((tr.materialType)))
 				{
+#if 0
 					if (hitInvalid)
 					{// Scan above us for a roof... So we don't add grass inside of buildings...
 						if (FOLIAGE_IsIndoorLocation(tr.endpos))
@@ -3494,6 +3492,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 							}
 						}
 					}
+#endif
 
 					if (FOLIAGE_FxExistsNearPoint(tr.endpos))
 					{
@@ -3545,8 +3544,6 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 					if (!DO_TREE && !DO_PLANT) continue;
 
-					VectorCopy(tr.plane.normal, grassNormals[grassSpotCount]);
-
 					// Look around here for a different slope angle... Cull if found...
 					for (scale = 1.00; scale >= 0.05 && scale >= cg_foliageMinFoliageScale.value; scale -= 0.05)
 					{
@@ -3554,6 +3551,8 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 						{
 							//#pragma omp critical (__ADD_TEMP_NODE__)
 							{
+								VectorCopy(tr.plane.normal, grassNormals[grassSpotCount]);
+
 								if (DO_TREE)
 								{
 									grassSpotType[grassSpotCount] = SPOT_TYPE_TREE;
