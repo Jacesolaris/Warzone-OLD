@@ -360,6 +360,7 @@ extern cvar_t	*r_ext_texture_filter_anisotropic;
 
 extern cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionTolerance;
+extern cvar_t  *r_occlusionToleranceFoliage;
 extern cvar_t  *r_occlusionDebug;
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
@@ -2162,6 +2163,7 @@ typedef struct msurface_s {
 	cullinfo_t          cullinfo;
 	
 	qboolean			depthDrawOnly;
+	qboolean			depthDrawOnlyFoliage;
 
 #ifdef __XYC_SURFACE_SPRITES__
 	int					numSurfaceSprites;
@@ -3061,6 +3063,7 @@ typedef struct trGlobals_s {
 	float					rangedFog;
 	float					distanceCull, distanceCullSquared; //rwwRMG - added
 	float					occlusionZfar;
+	float					occlusionZfarFoliage;
 	float					occlusionOriginalZfar;
 
 #ifdef _WIN32
@@ -3130,6 +3133,7 @@ extern cvar_t	*r_gamma;
 
 extern  cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionTolerance;
+extern cvar_t  *r_occlusionToleranceFoliage;
 extern cvar_t  *r_occlusionDebug;
 extern  cvar_t  *r_ext_draw_range_elements;
 extern  cvar_t  *r_ext_multi_draw_arrays;

@@ -80,12 +80,12 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "Star Wars Warzone Contributors"
-            VALUE "FileDescription", "Star Wars Warzone"
+            VALUE "Comments", "Star Wars: Warzone - Contributors"
+            VALUE "FileDescription", "Star Wars: Warzone"
             VALUE "FileVersion", VERSION_STRING
             VALUE "InternalName", "JK MP"
             VALUE "OriginalFilename", "Warzone.exe"
-            VALUE "ProductName", "Star Wars Warzone"
+            VALUE "ProductName", "Star Wars: Warzone"
             VALUE "ProductVersion", VERSION_STRING
         END
     END

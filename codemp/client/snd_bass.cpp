@@ -1561,8 +1561,16 @@ void BASS_UpdateDynamicMusic( void )
 // Sounds...
 //
 
+void BASS_AddMemoryLoopChannel(DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume);
+
 void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume )
 {
+	if (entityChannel == CHAN_AMBIENT)
+	{// Do it as a looping sound instead...
+		BASS_AddMemoryLoopChannel(samplechan, entityNum, entityChannel, origin, volume);
+		return;
+	}
+
 	int chan = BASS_FindFreeChannel();
 
 	if (BASS_CheckSoundDisabled()) return;
@@ -1616,10 +1624,10 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 			{// This is active and looping...
 				if (SOUND_CHANNELS[ch].entityChannel == entityChannel 
 					&& (SOUND_CHANNELS[ch].entityNum == entityNum || entityNum == -1)
-					/*&& SOUND_CHANNELS[ch].originalChannel == samplechan*/)
+					&& SOUND_CHANNELS[ch].originalChannel == samplechan)
 				{// This is our sound! Just update it (and then return)...
 					Channel *c = &SOUND_CHANNELS[ch];
-					VectorCopy(origin, c->origin);
+					if (origin) VectorCopy(origin, c->origin);
 					c->volume = volume;
 					//Com_Printf("BASS DEBUG: Sound position (%f %f %f) and volume (%f) updated.\n", origin[0], origin[1], origin[2], volume);
 					return;

@@ -93,6 +93,17 @@ void main(void)
 		gl_FragColor = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
 		return;
 	}
+	
+	vec2 texCoords = var_TexCoords;
+	float invDepth = clamp((1.0 - texture(u_ScreenDepthMap, texCoords).r) * 2.0 - 1.0, 0.0, 1.0);
+
+	if (invDepth <= 0.0)
+	{
+		gl_FragColor = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
+		return;
+	}
+
+	//invDepth = clamp(length(invDepth * 1.75 - 0.75), 0.0, 1.0);
 
 	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
 	float materialMultiplier = 1.0;
@@ -106,10 +117,6 @@ void main(void)
 		materialMultiplier = 3.0;
 	}
 
-	vec2 texCoords = var_TexCoords;
-	float invDepth = 1.0 - texture(u_ScreenDepthMap, texCoords).r;
-	invDepth = clamp(length(invDepth * 1.75 - 0.75), 0.0, 1.0);
-	
 	vec3 norm = vec3(dMap.gb, 0.0) * 2.0 - 1.0;
 	norm.z = sqrt(1.0 - dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
 

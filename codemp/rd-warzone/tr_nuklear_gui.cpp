@@ -1133,7 +1133,7 @@ void GUI_PostProcessMakeCvarList() {
 	GUI_PostProcessAddCvar(r_volumeLight, 1);
 	GUI_PostProcessAddCvar(r_fxaa, 1);
 	GUI_PostProcessAddCvar(r_showdepth, 1);
-	GUI_PostProcessAddCvar(r_shownormals, 2);
+	GUI_PostProcessAddCvar(r_shownormals, 4);
 	GUI_PostProcessAddCvar(r_trueAnaglyph, 2);
 	GUI_PostProcessAddCvar(r_occlusion, 1);
 }

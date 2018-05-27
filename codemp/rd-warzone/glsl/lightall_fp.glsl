@@ -263,9 +263,9 @@ float getdiffuseLight(vec3 n, vec3 l, float p) {
 vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 {
 	vec3 blur = textureLod(tex, uv, level).xyz;
-	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
+	vec3 col = ((color - blur)*0.5 + 0.5);
 	col *= ((color - blur)*0.25 + 0.25) * 8.0;
-	col = mix(color, col * color, 1.0);
+	col = col * color;
 	return col;
 }
 #endif //defined(__HIGH_PASS_SHARPEN__)
@@ -291,7 +291,7 @@ void main()
 	}
 	else
 	{
-		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0);
+		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0 + (gl_FragCoord.z * 8.0));
 	}
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
@@ -414,7 +414,17 @@ void main()
 	gl_FragColor.rgb = diffuse.rgb + ambientColor;
 
 
-	if (USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0 && SHADER_MATERIAL_TYPE != MATERIAL_SKY && SHADER_MATERIAL_TYPE != MATERIAL_SUN && SHADER_MATERIAL_TYPE != MATERIAL_GLASS)
+	if (USE_GLOW_BUFFER != 1.0 
+		&& USE_IS2D <= 0.0 
+		&& USE_VERTEX_ANIM <= 0.0
+		&& USE_SKELETAL_ANIM <= 0.0
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SKY 
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SUN 
+		&& SHADER_MATERIAL_TYPE != MATERIAL_EFX
+		&& SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT
+		&& SHADER_MATERIAL_TYPE != MATERIAL_FIRE
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SMOKE
+		&& SHADER_MATERIAL_TYPE != MATERIAL_GLASS)
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
@@ -469,6 +479,7 @@ void main()
 
 	float useDisplacementMapping = 0.0;
 
+	/*
 	if ( SHADER_MATERIAL_TYPE == MATERIAL_SOLIDWOOD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_HOLLOWWOOD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_ROCK 
@@ -478,6 +489,25 @@ void main()
 		|| SHADER_MATERIAL_TYPE == MATERIAL_MUD 
 		|| SHADER_MATERIAL_TYPE == MATERIAL_DIRT )
 	{
+		useDisplacementMapping = 1.0;
+	}
+	*/
+
+	if (SHADER_MATERIAL_TYPE != MATERIAL_GREENLEAVES
+		&& SHADER_MATERIAL_TYPE != MATERIAL_DRYLEAVES
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SHATTERGLASS
+		&& SHADER_MATERIAL_TYPE != MATERIAL_BPGLASS
+		&& SHADER_MATERIAL_TYPE != MATERIAL_ICE
+		&& SHADER_MATERIAL_TYPE != MATERIAL_GLASS
+		&& SHADER_MATERIAL_TYPE != MATERIAL_EFX
+		&& SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT
+		&& SHADER_MATERIAL_TYPE != MATERIAL_FIRE
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SMOKE
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SKY
+		&& SHADER_MATERIAL_TYPE != MATERIAL_SUN
+		&& USE_VERTEX_ANIM <= 0.0
+		&& USE_SKELETAL_ANIM <= 0.0)
+	{// TODO: Shader setting...
 		useDisplacementMapping = 1.0;
 	}
 

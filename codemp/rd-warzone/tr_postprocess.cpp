@@ -2868,7 +2868,7 @@ void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	GLSL_SetUniformMatrix16(&tr.showNormalsShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	vec4_t settings;
-	VectorSet4(settings, (r_shownormals->integer >= 2) ? 1.0 : 0.0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
+	VectorSet4(settings, r_shownormals->integer, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	GLSL_SetUniformVec4(&tr.showNormalsShader, UNIFORM_SETTINGS0, settings);
 
 	{

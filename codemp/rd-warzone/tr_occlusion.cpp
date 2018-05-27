@@ -43,10 +43,18 @@ void RB_CheckOcclusions(void)
 {
 	if (r_occlusion->integer)
 	{
+		int numComplete = 0;
+
 		float zfar = 0;
 		int rangeId = 0;
-		int numComplete = 0;
 		int numPassed = 0;
+
+		float zfarFoliage = 0;
+		int rangeIdFoliage = 0;
+		int numPassedFoliage = 0;
+
+		// Total pixels of this screen...
+		float screenPixels = float(glConfig.vidWidth * glConfig.vidHeight) * r_superSampleMultiplier->value;
 
 		for (int i = 0; i < numOcclusionQueries; i++)
 		{
@@ -62,31 +70,49 @@ void RB_CheckOcclusions(void)
 
 				qglGetQueryObjectuiv(occlusionCheck[i], GL_QUERY_RESULT, &result);
 
-				// Total pixels of this screen...
-				float screenPixels = float(glConfig.vidWidth * glConfig.vidHeight) * r_superSampleMultiplier->value;
 				// r_occlusionTolerance should be between 0.0 and 0.001.. Lower is more accurate...
 				float pixelTolerance = Q_min(r_occlusionTolerance->value, 0.1) * screenPixels;
 
+				if (result <= 0)
+				{// Absolutely occlusion culled... Also handles non-tolerance setting...
+					continue;
+				}
+				
 				if (r_occlusionTolerance->value > 0.0 && result <= pixelTolerance)
 				{// Occlusion culled...
 					continue;
 				}
-				if (r_occlusionTolerance->value <= 0.0 && result <= 0)
-				{// Occlusion culled...
-					continue;
-				}
-				else
-				{// Enough pixels are visible on this test, if further away then the previous tests, set new zfar...
-					int thisRangeId = occlusionRangeId[i];
-					float rangeDistance = occlusionRanges[thisRangeId];
 
-					if (rangeDistance > zfar)
+				// Enough pixels are visible on this test, if further away then the previous tests, set new zfar...
+				int thisRangeId = occlusionRangeId[i];
+				float rangeDistance = occlusionRanges[thisRangeId];
+
+				if (rangeDistance > zfar)
+				{// Seems this is further away then the previous occlusion tests zfar, use this instead...
+					rangeId = thisRangeId;
+					zfar = rangeDistance;
+				}
+
+				numPassed++;
+
+				if (r_occlusionToleranceFoliage->value > 0.0)
+				{
+					// Also do a check specific to foliages, maybe we can skip some heavy alpha draws...
+					float pixelToleranceFoliage = Q_min(r_occlusionToleranceFoliage->value, 0.3) * screenPixels;
+
+					if (result <= pixelToleranceFoliage)
+					{// Occlusion culled...
+						continue;
+					}
+					
+					// Enough pixels are visible on this test, if further away then the previous tests, set new zfar...
+					if (rangeDistance > zfarFoliage)
 					{// Seems this is further away then the previous occlusion tests zfar, use this instead...
-						rangeId = thisRangeId;
-						zfar = rangeDistance;
+						rangeIdFoliage = thisRangeId;
+						zfarFoliage = rangeDistance;
 					}
 
-					numPassed++;
+					numPassedFoliage++;
 				}
 			}
 			else
@@ -126,15 +152,61 @@ void RB_CheckOcclusions(void)
 			}
 		}
 
+		if (r_occlusionToleranceFoliage->value > 0.0)
+		{
+			// And check the foliage one as well...
+			if (zfarFoliage < tr.distanceCull)
+			{// Seems we found a max zfar we can use...
+				int maxRangeId = NUM_OCCLUSION_RANGES - 1;
+
+				if (zfarFoliage == 0.0 && numPassedFoliage == 0)
+				{// If none passed then we should assume minimum zfar...
+					zfarFoliage = occlusionRanges[1];
+				}
+				else if (zfarFoliage == 0.0)
+				{// If none passed then we assume max range... This should never be possible, but just in case...
+					zfarFoliage = tr.distanceCull;
+				}
+				else
+				{// We got a value to use, move it forward 1 range level...
+					if (rangeIdFoliage >= maxRangeId)
+					{// If we are at furthest range, use the max range instead...
+						zfarFoliage = tr.distanceCull;
+					}
+					else
+					{
+						zfarFoliage = occlusionRanges[rangeIdFoliage + 1];
+					}
+				}
+
+				if (zfarFoliage > tr.distanceCull)
+				{
+					zfarFoliage = tr.distanceCull;
+				}
+			}
+		}
+		else
+		{
+			tr.occlusionZfarFoliage = tr.occlusionZfar;
+		}
+
 		if (tr.occlusionZfar != zfar)
 		{// Just update when it changes...
 			tr.occlusionZfar = zfar;
-			
+
 			if (r_occlusionDebug->integer >= 1)
 				ri->Printf(PRINT_WARNING, "zFar found at %f.\n", tr.occlusionZfar);
 		}
 
-		nextOcclusionCheck = 1;// backEnd.refdef.time; // Since we finished a query, allow next query to begin straight away...
+		if (tr.occlusionZfarFoliage != zfarFoliage)
+		{// Just update when it changes...
+			tr.occlusionZfarFoliage = zfarFoliage;
+
+			if (r_occlusionDebug->integer >= 1)
+				ri->Printf(PRINT_WARNING, "zFar (foliage) found at %f.\n", tr.occlusionZfarFoliage);
+		}
+
+		nextOcclusionCheck = 1; // Since we finished a query, allow next query to begin straight away...
 	}
 }
 

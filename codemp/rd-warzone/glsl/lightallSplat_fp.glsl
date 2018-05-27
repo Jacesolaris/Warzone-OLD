@@ -357,7 +357,7 @@ vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 	vec3 blur = textureLod(tex, uv, level).rgb;
 	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
 	col *= ((color - blur)*0.25 + 0.25) * 8.0;
-	col = mix(color, col * color, 1.0);
+	col = col * color;
 	return col;
 }
 #endif //defined(__HIGH_PASS_SHARPEN__)
@@ -389,9 +389,9 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 #endif //__SPLATS_LOOKUP_ALPHA__
 
 #if defined(__HIGH_PASS_SHARPEN__)
-	xaxis.rgb = Enhance(tex, (m_vertPos.yz * tScale), xaxis.rgb, 8.0);
-	yaxis.rgb = Enhance(tex, (m_vertPos.xz * tScale), yaxis.rgb, 8.0);
-	zaxis.rgb = Enhance(tex, (m_vertPos.xy * tScale), zaxis.rgb, 8.0);
+	xaxis.rgb = Enhance(tex, (m_vertPos.yz * tScale), xaxis.rgb, 8.0 + (gl_FragCoord.z * 8.0));
+	yaxis.rgb = Enhance(tex, (m_vertPos.xz * tScale), yaxis.rgb, 8.0 + (gl_FragCoord.z * 8.0));
+	zaxis.rgb = Enhance(tex, (m_vertPos.xy * tScale), zaxis.rgb, 8.0 + (gl_FragCoord.z * 8.0));
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
 	vec4 color = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;

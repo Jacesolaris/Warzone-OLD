@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 
 //#define __REGEN_NORMALS__
+//#define __REGEN_NORMALS_2__
 
 extern char currentMapName[128];
 
@@ -718,6 +719,143 @@ void GenerateNormalsForXZY(vec3_t *xyz, vec3_t *normals)
 }
 #endif //__REGEN_NORMALS__
 
+#ifdef __REGEN_NORMALS_2__
+// assimp include files. These three are usually needed.
+#include "assimp/Importer.hpp"	//OO version Header!
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "assimp/DefaultLogger.hpp"
+#include "assimp/LogStream.hpp"
+
+void GenerateNormalsForMesh(srfBspSurface_t *cv)
+{
+	//aiVector3D *mNormals = new aiVector3D[ds->numVerts];
+
+	// Set flat normals...
+	for (int i = 0; i < cv->numIndexes; i += 3)
+	{
+		int tri[3];
+		tri[0] = cv->indexes[i];
+		tri[1] = cv->indexes[i+1];
+		tri[2] = cv->indexes[i+2];
+
+		if (tri[0] >= cv->numVerts)
+		{
+			ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[0], cv->numVerts);
+			return;
+		}
+		if (tri[1] >= cv->numVerts)
+		{
+			ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[1], cv->numVerts);
+			return;
+		}
+		if (tri[2] >= cv->numVerts)
+		{
+			ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[2], cv->numVerts);
+			return;
+		}
+
+		aiVector3D pV1;
+		pV1.Set(cv->verts[tri[0]].xyz[0], cv->verts[tri[0]].xyz[1], cv->verts[tri[0]].xyz[2]);
+		aiVector3D pV2;
+		pV2.Set(cv->verts[tri[1]].xyz[0], cv->verts[tri[1]].xyz[1], cv->verts[tri[1]].xyz[2]);
+		aiVector3D pV3;
+		pV2.Set(cv->verts[tri[2]].xyz[0], cv->verts[tri[2]].xyz[1], cv->verts[tri[2]].xyz[2]);
+
+		aiVector3D vNor = ((pV2 - pV1) ^ (pV3 - pV1));
+
+		vNor.NormalizeSafe();
+
+		//vNor.Set(vNor.x * 0.5 + 0.5, vNor.y * 0.5 + 0.5, vNor.z * 0.5 + 0.5);
+
+		//mNormals[tri[0]] = vNor;
+		//mNormals[tri[1]] = vNor;
+		//mNormals[tri[2]] = vNor;
+
+		VectorSet(cv->verts[tri[0]].normal, vNor.x, vNor.y, vNor.z);
+		VectorSet(cv->verts[tri[1]].normal, vNor.x, vNor.y, vNor.z);
+		VectorSet(cv->verts[tri[2]].normal, vNor.x, vNor.y, vNor.z);
+
+		//ForceCrash();
+	}
+
+#if 0
+	// Now the hard part, make smooth normals...
+	//std::vector<bool> abHad(ds->numVerts, false);
+	//aiVector3D* pcNew = new aiVector3D[ds->numVerts];
+	
+	for (unsigned int i = 0; i < cv->numVerts; ++i) {
+		/*if (abHad[i]) {
+			continue;
+		}*/
+
+		int verticesFound[65536];
+		int numVerticesFound = 0;
+
+		// Get all vertices that share this one ...
+		for (int v = 0; v < cv->numIndexes; v += 3)
+		{
+			int tri[3];
+			tri[0] = cv->indexes[v];
+			tri[1] = cv->indexes[v + 1];
+			tri[2] = cv->indexes[v + 2];
+
+			if (tri[0] == i)
+			{
+				verticesFound[numVerticesFound] = tri[1];
+				numVerticesFound++;
+				verticesFound[numVerticesFound] = tri[2];
+				numVerticesFound++;
+			}
+
+			if (tri[1] == i)
+			{
+				verticesFound[numVerticesFound] = tri[0];
+				numVerticesFound++;
+				verticesFound[numVerticesFound] = tri[2];
+				numVerticesFound++;
+			}
+
+			if (tri[2] == i)
+			{
+				verticesFound[numVerticesFound] = tri[0];
+				numVerticesFound++;
+				verticesFound[numVerticesFound] = tri[1];
+				numVerticesFound++;
+			}
+		}
+
+		aiVector3D pcNor;
+		for (unsigned int a = 0; a < numVerticesFound; ++a) {
+			//pcNor += mNormals[verticesFound[a]];
+			aiVector3D thisNor;
+			thisNor.Set(cv->verts[verticesFound[a]].normal[0], cv->verts[verticesFound[a]].normal[1], cv->verts[verticesFound[a]].normal[2]);
+			pcNor += thisNor;
+		}
+		pcNor.NormalizeSafe();
+
+		// Write the smoothed normal back to all affected normals
+		/*for (unsigned int a = 0; a < numVerticesFound; ++a)
+		{
+			unsigned int vidx = verticesFound[a];
+			pcNew[vidx] = pcNor;
+			abHad[vidx] = true;
+		}*/
+		VectorSet(cv->verts[i].normal, pcNor.x, pcNor.y, pcNor.z);
+	}
+
+	// Write the new normals back to the verts array data...
+	/*for (int i = 0; i < ds->numVerts; i++)
+	{
+		VectorSet(verts[i].normal, pcNew[i].x, pcNew[i].y, pcNew[i].z);
+	}*/
+
+	//delete[] mNormals;
+	//delete[] pcNew;
+#endif
+}
+#endif //__REGEN_NORMALS_2__
+
 /*
 ===============
 ParseFace
@@ -868,6 +1006,10 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	cv->cullPlane.type = PlaneTypeForNormal( cv->cullPlane.normal );
 	surf->cullinfo.plane = cv->cullPlane;
 
+#ifdef __REGEN_NORMALS_2__
+	GenerateNormalsForMesh(cv);
+#endif //__REGEN_NORMALS_2__
+
 	surf->data = (surfaceType_t *)cv;
 
 	// Calculate tangent spaces
@@ -932,7 +1074,6 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 
 	verts += LittleLong( ds->firstVert );
 	numPoints = width * height;
-
 
 	for(i = 0; i < numPoints; i++)
 	{
@@ -1001,6 +1142,10 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	VectorScale( bounds[1], 0.5f, grid->lodOrigin );
 	VectorSubtract( bounds[0], grid->lodOrigin, tmpVec );
 	grid->lodRadius = VectorLength( tmpVec );
+
+#ifdef __REGEN_NORMALS_2__
+	GenerateNormalsForMesh(grid);
+#endif //__REGEN_NORMALS_2__
 }
 
 /*
@@ -1135,6 +1280,10 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		ri->Printf(PRINT_WARNING, "Trisurf has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", surf->shader->name, numIndexes / 3, numVerts, numIndexes / 3 - badTriangles);
 		cv->numIndexes -= badTriangles * 3;
 	}
+
+#ifdef __REGEN_NORMALS_2__
+	GenerateNormalsForMesh(cv);
+#endif //__REGEN_NORMALS_2__
 
 	// Calculate tangent spaces
 	{
@@ -2389,6 +2538,7 @@ static void R_CreateWorldVBOs(void)
 			}
 
 			bspSurf->firstVert = numVerts;
+
 
 			for(i = 0; i < bspSurf->numVerts; i++)
 			{

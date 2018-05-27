@@ -895,6 +895,7 @@ void R_SetFarClip( void )
 		if (tr.occlusionZfar <= 0.0)
 		{// For when the map just loaded and no occlusions have been done yet...
 			tr.occlusionZfar = tr.viewParms.zFar;
+			tr.occlusionZfarFoliage = tr.viewParms.zFar;
 		}
 
 		tr.viewParms.zFar = tr.occlusionZfar;

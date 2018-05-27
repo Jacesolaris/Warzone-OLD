@@ -1107,6 +1107,8 @@ void main(void)
 	float diffuse = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 	color.rgb = outColor.rgb = outColor.rgb * diffuse;
 
+	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
+
 //#define __DEBUG_LIGHT__
 #ifdef __DEBUG_LIGHT__
 	if (u_Local3.r == 1.0)
@@ -1281,7 +1283,7 @@ void main(void)
 		{
 			vec3 shiny = textureLod(u_WaterEdgeMap, ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
 			shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
-			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor, 0.0, 1.0));
+			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		}
 #endif //!__LQ_MODE__
 	}
@@ -1303,9 +1305,9 @@ void main(void)
 	if (u_Local7.a > 0.0)
 	{// Sky light contributions...
 #ifndef __LQ_MODE__
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * u_Local7.a * cubeReflectionFactor, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * u_Local7.a * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 #endif //__LQ_MODE__
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor, 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		//outColor.rgb = skyColor;
 	}
 
@@ -1337,8 +1339,6 @@ void main(void)
 			if (lightMult > 0.0)
 			{
 				lightColor *= lightMult;
-				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.5, lightColor * 0.5, 1.0, u_PrimaryLightOrigin.xyz);
-
 				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
 				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
 				lightColor = clamp(lightColor, 0.0, 0.7);
@@ -1353,10 +1353,13 @@ void main(void)
 						downScale *= 4.0;
 						vib = mix(vib, 0.0, clamp(downScale, 0.0, 1.0));
 					}
-					lightColor = Vibrancy( lightColor, clamp(vib * 4.0, 0.0, 1.0) );
+					lightColor = Vibrancy(lightColor, clamp(vib * 4.0, 0.0, 1.0));
 				}
 
-				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance;
+				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance * origColorStrength * 8.0;
+
+				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
+
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
@@ -1407,7 +1410,7 @@ void main(void)
 					float light_occlusion = 1.0;
 					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 				
-					lightColor = lightColor * power * irradiance;// * maxStr;
+					lightColor = lightColor * power * irradiance * origColorStrength * 2.0;// * maxStr;
 
 					addedLight.rgb += lightColor * lightStrength * 0.333 * selfShadow;
 
@@ -1432,7 +1435,7 @@ void main(void)
 					}
 #endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
 					
-					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.03, lightColor * 0.5, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
+					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
 				}
 			}
 

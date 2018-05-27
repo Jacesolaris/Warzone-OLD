@@ -184,7 +184,7 @@ void DockPostProcess::MakeCvarList() {
 	AddCvar(r_volumeLight, 1);
 	AddCvar(r_fxaa, 1);
 	AddCvar(r_showdepth, 1);
-	AddCvar(r_shownormals, 2);
+	AddCvar(r_shownormals, 4);
 	AddCvar(r_trueAnaglyph, 2);
 	AddCvar(r_occlusion, 1);
 }

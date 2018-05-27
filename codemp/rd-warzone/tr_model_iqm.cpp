@@ -756,7 +756,7 @@ static int R_CullIQM( iqmData_t *data, trRefEntity_t *ent ) {
 		return CULL_OUT;
 	}
 
-	if (r_occlusion->integer && !ent->e.ignoreCull && dist > tr.occlusionZfar)
+	if (r_occlusion->integer && !ent->e.ignoreCull && (dist > tr.occlusionZfar || dist > tr.occlusionZfarFoliage * 1.75))
 	{
 		return CULL_OUT;
 	}

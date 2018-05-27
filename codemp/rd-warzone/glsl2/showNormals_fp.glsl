@@ -145,7 +145,7 @@ void main(void)
 	vec3 norm = texture(u_NormalMap, var_TexCoords).xyz;
 	norm.xyz = DecodeNormal(norm.xy);
 
-	if (u_Settings0.r > 0.0)
+	if (u_Settings0.r == 2.0 || u_Settings0.r >= 4.0)
 	{
 #ifdef __USE_REAL_NORMALMAPS__
 		vec4 normalDetail = textureLod(u_OverlayMap, var_TexCoords, 0.0);
@@ -174,5 +174,14 @@ void main(void)
 		norm.rgb = normalize(mix(norm.rgb, normalDetail.rgb, 0.25 * (length((norm.rgb * 0.5 + 0.5) - (normalDetail.rgb * 0.5 + 0.5)) / 3.0)));
 	}
 
-	gl_FragColor = vec4(norm.rgb * 0.5 + 0.5, 1.0);
+	if (u_Settings0.r >= 3.0)
+	{
+		// Gives a better overview of the seamlessness of the smooth normals, at the cost of not being able to see the difference between negative and positive directions...
+		gl_FragColor = vec4(length(norm.r), length(norm.g), length(norm.b), 1.0);
+	}
+	else
+	{
+		// The standard way to show normals...
+		gl_FragColor = vec4(norm.rgb * 0.5 + 0.5, 1.0);
+	}
 }
