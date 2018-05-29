@@ -79,9 +79,6 @@ extern float		GRASS_HEIGHT;
 extern int			GRASS_DISTANCE;
 extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_DISTANCE_FROM_ROADS;
-extern qboolean	PEBBLES_ENABLED;
-extern int			PEBBLES_DENSITY;
-extern int			PEBBLES_DISTANCE;
 extern vec3_t		MOON_COLOR;
 extern vec3_t		MOON_ATMOSPHERE_COLOR;
 extern float		MOON_GLOW_STRENGTH;
@@ -230,12 +227,6 @@ void DockMapInfo::imgui() {
 		ImGui::DragInt("GRASS_DISTANCE", &GRASS_DISTANCE);
 		ImGui::DragFloat("GRASS_TYPE_UNIFORMALITY", &GRASS_TYPE_UNIFORMALITY);
 		ImGui::DragFloat("GRASS_DISTANCE_FROM_ROADS", &GRASS_DISTANCE_FROM_ROADS);
-	}
-
-	if (ImGui::CollapsingHeader("Pebbles")) {
-		ImGui::Checkbox("PEBBLES_ENABLED", &PEBBLES_ENABLED);
-		ImGui::DragInt("PEBBLES_DENSITY", &PEBBLES_DENSITY);
-		ImGui::DragInt("PEBBLES_DISTANCE", &PEBBLES_DISTANCE);
 	}
 
 	if (ImGui::CollapsingHeader("Moon")) {

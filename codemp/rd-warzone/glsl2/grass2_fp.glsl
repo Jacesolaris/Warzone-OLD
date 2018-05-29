@@ -162,6 +162,7 @@ void main()
 
 	if (GRASS_WIDTH_REPEATS > 0.0) tc.x *= (GRASS_WIDTH_REPEATS * 2.0);
 
+	/*
 #if defined(__USE_UNDERWATER_ONLY__)
 	if (iGrassType >= 19)
 		diffuse = texture(u_GlowMap, tc);
@@ -172,22 +173,6 @@ void main()
 	else
 		diffuse = texture(u_WaterEdgeMap, tc);
 #elif defined(__USE_FAST_GRASS__)
-	/*if (iGrassType >= 19)
-		diffuse = texture(u_GlowMap, tc);
-	else if (iGrassType >= 18)
-		diffuse = texture(u_WaterHeightMap, tc);
-	else if (iGrassType >= 17)
-		diffuse = texture(u_WaterPositionMap, tc);
-	else if (iGrassType >= 16)
-		diffuse = texture(u_WaterEdgeMap, tc);
-	else if (iGrassType >= 3)
-		diffuse = texture(u_SplatMap3, tc);
-	else if (iGrassType >= 2)
-		diffuse = texture(u_SplatMap2, tc);
-	else if (iGrassType >= 1)
-		diffuse = texture(u_SplatMap1, tc);
-	else
-		diffuse = texture(u_DiffuseMap, tc);*/
 	if (iGrassType >= 1)
 		diffuse = texture(u_WaterEdgeMap, tc);
 	else
@@ -238,8 +223,16 @@ void main()
 	else
 		diffuse = texture(u_DiffuseMap, tc);
 #endif //defined(__USE_UNDERWATER_ONLY__)
+	*/
 
-	//diffuse.rgb *= clamp((1.0 - vTexCoord.y) * 1.5, 0.8, 1.0);
+	if (iGrassType >= 1)
+	{
+		diffuse = texture(u_WaterEdgeMap, tc);
+	}
+	else
+	{
+		diffuse = texture(u_DiffuseMap, tc);
+	}
 
 	if (diffuse.a > 0.5)
 	{

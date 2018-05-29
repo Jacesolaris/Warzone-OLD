@@ -58,10 +58,6 @@ cvar_t	*r_foliageDistance;
 cvar_t	*r_foliageDensity;
 cvar_t	*r_foliageShadows;
 
-cvar_t	*r_pebbles;
-cvar_t	*r_pebblesPasses;
-cvar_t	*r_pebblesDistance;
-
 cvar_t	*r_rotatex;
 cvar_t	*r_rotatey;
 cvar_t	*r_rotatez;
@@ -1433,10 +1429,6 @@ void R_Register( void )
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
 	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "1", CVAR_ARCHIVE );
-
-	r_pebbles = ri->Cvar_Get("r_pebbles", "1", CVAR_ARCHIVE | CVAR_LATCH);
-	r_pebblesPasses = ri->Cvar_Get("r_pebblesPasses", "2", CVAR_ARCHIVE);
-	r_pebblesDistance = ri->Cvar_Get( "r_pebblesDistance", "1536.0", CVAR_ARCHIVE );
 
 	//
 	// latched and archived variables

@@ -1451,21 +1451,6 @@ qboolean RB_ShouldUseGeometryGrass (int materialType )
 	return qfalse;
 }
 
-qboolean RB_ShouldUseGeometryPebbles(int materialType)
-{
-	if (materialType <= MATERIAL_NONE)
-	{
-		return qfalse;
-	}
-
-	if (materialType == MATERIAL_SAND || materialType == MATERIAL_DIRT || materialType == MATERIAL_GRAVEL || materialType == MATERIAL_MUD)
-	{
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
 bool theOriginalGluInvertMatrix(const float m[16], float invOut[16])
 {
 	double inv[16], det;
@@ -1831,9 +1816,6 @@ extern int			GRASS_DISTANCE;
 extern float		GRASS_MAX_SLOPE;
 extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_DISTANCE_FROM_ROADS;
-extern qboolean		PEBBLES_ENABLED;
-extern int			PEBBLES_DENSITY;
-extern int			PEBBLES_DISTANCE;
 extern vec3_t		MOON_COLOR;
 extern vec3_t		MOON_ATMOSPHERE_COLOR;
 extern float		MOON_GLOW_STRENGTH;
@@ -1863,7 +1845,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean isWater = qfalse;
 	qboolean isGrass = qfalse;
 	qboolean isGroundFoliage = qfalse;
-	qboolean isPebbles = qfalse;
 	qboolean isFur = qfalse;
 	qboolean isEmissiveBlack = qfalse;
 
@@ -1932,13 +1913,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
-		}
-		else if (r_pebbles->integer
-			&& PEBBLES_ENABLED
-			&& (tess.shader->isPebbles || RB_ShouldUseGeometryPebbles(tess.shader->materialType)))
-		{
-			isPebbles = qtrue;
-			tess.shader->isPebbles = qtrue; // Cache to speed up future checks...
 		}
 		else if (r_groundFoliage->integer
 			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
@@ -2198,7 +2172,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glslShaderGroup = &tr.waterPostForwardShader;
 				isWater = qtrue;
 				isGrass = qfalse;
-				isPebbles = qfalse;
 				multiPass = qfalse;
 			}
 			else
@@ -2221,7 +2194,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glslShaderGroup = &tr.waterPostForwardShader;
 				isWater = qtrue;
 				isGrass = qfalse;
-				isPebbles = qfalse;
 				multiPass = qfalse;
 			/*}
 			else
@@ -2244,7 +2216,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			sp = &tr.sunPassShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
-			isPebbles = qfalse;
 			multiPass = qfalse;
 
 			GLSL_BindProgram(sp);
@@ -2256,7 +2227,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			sp = &tr.moonPassShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
-			isPebbles = qfalse;
 			multiPass = qfalse;
 
 			GLSL_BindProgram(sp);
@@ -2268,7 +2238,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			sp = &tr.fireShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
-			isPebbles = qfalse;
 			multiPass = qfalse;
 
 			GLSL_BindProgram(sp);
@@ -2280,7 +2249,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			sp = &tr.smokeShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			isGrass = qfalse;
-			isPebbles = qfalse;
 			multiPass = qfalse;
 
 			GLSL_BindProgram(sp);
@@ -2590,8 +2558,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			// Hmm, I think drawing all these grasses to the depth prepass is gonna slow things more than the benefit of pixel culls in the final pass...
 			// the landscape itself should be good enough... *sigh* this makes things partially trans...
 
-			if ((r_foliage->integer && isGrass) || (r_pebbles->integer && isPebbles))
-			{// Special extra pass stuff for grass or pebbles...
+			if ((r_foliage->integer && isGrass))
+			{// Special extra pass stuff for grass...
 				if (isGrass && r_foliage->integer)
 				{
 					if (GRASS_UNDERWATER_ONLY)
@@ -2603,17 +2571,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 					multiPass = qtrue;
 					passMax = 1;// GRASS_DENSITY;
-
-					if (isPebbles && r_pebbles->integer)
-					{
-						sp3 = &tr.pebblesShader;
-						passMax = passMax + PEBBLES_DENSITY;
-					}
-				}
-				else if (isPebbles && r_pebbles->integer)
-				{
-					sp2 = &tr.pebblesShader;
-					passMax = PEBBLES_DENSITY;
 				}
 			}
 			else if (r_groundFoliage->integer && isGroundFoliage)
@@ -3264,30 +3221,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				if (sp == &tr.grassShader[1])
 				{// Fast grass... Only use grassImage[0]...
-					GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
+					//GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
+					GL_BindToTMU(tr.grassAliasImage, TB_DIFFUSEMAP);
 				}
 				else if (GRASS_UNDERWATER_ONLY)
 				{
-					/*GL_BindToTMU(tr.whiteImage, TB_DIFFUSEMAP);
-					GL_BindToTMU(tr.whiteImage, TB_SPLATMAP1);
-					GL_BindToTMU(tr.whiteImage, TB_SPLATMAP2);
-					GL_BindToTMU(tr.whiteImage, TB_SPLATMAP3);
-					GL_BindToTMU(tr.whiteImage, TB_STEEPMAP);
-					GL_BindToTMU(tr.whiteImage, TB_ROADMAP);
-					GL_BindToTMU(tr.whiteImage, TB_DETAILMAP);
-					GL_BindToTMU(tr.whiteImage, TB_SPECULARMAP);
-					GL_BindToTMU(tr.whiteImage, TB_DELUXEMAP);
-					GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
-					GL_BindToTMU(tr.whiteImage, TB_OVERLAYMAP);
-					GL_BindToTMU(tr.whiteImage, TB_LIGHTMAP);
-					GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-					GL_BindToTMU(tr.whiteImage, TB_CUBEMAP);
-					GL_BindToTMU(tr.whiteImage, TB_POSITIONMAP);
-					GL_BindToTMU(tr.whiteImage, TB_HEIGHTMAP);*/
+					
 				}
 				else
 				{
-					GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
+					/*GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
 					GL_BindToTMU(tr.grassImage[1], TB_SPLATMAP1);
 					GL_BindToTMU(tr.grassImage[2], TB_SPLATMAP2);
 					GL_BindToTMU(tr.grassImage[3], TB_SPLATMAP3);
@@ -3302,19 +3245,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU(tr.grassImage[12], TB_SHADOWMAP);
 					GL_BindToTMU(tr.grassImage[13], TB_CUBEMAP);
 					GL_BindToTMU(tr.grassImage[14], TB_POSITIONMAP);
-					GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);
+					GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);*/
+					GL_BindToTMU(tr.grassAliasImage, TB_DIFFUSEMAP);
 				}
 
 				if (sp == &tr.grassShader[1])
 				{// Fast grass... Only use seaGrassImage[0]...
-					GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
+					//GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
+					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 				else
 				{
-					GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
+					/*GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
 					GL_BindToTMU(tr.seaGrassImage[1], TB_WATERPOSITIONMAP);
 					GL_BindToTMU(tr.seaGrassImage[2], TB_WATERHEIGHTMAP);
-					GL_BindToTMU(tr.seaGrassImage[3], TB_GLOWMAP);
+					GL_BindToTMU(tr.seaGrassImage[3], TB_GLOWMAP);*/
+					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 
 				vec4_t l10;
@@ -3347,92 +3293,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 
 				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
-
-				GL_Cull(CT_TWO_SIDED);
-			}
-			else if (isGrass && isPebbles 
-#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-				&& passNum >= (ALLOW_GL_400) ? 2 : GRASS_DENSITY 
-#else //!__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-				&& passNum >= GRASS_DENSITY
-#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-				&& sp3)
-			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
-				sp = sp3;
-				sp3 = NULL;
-
-				GLSL_BindProgram(sp);
-
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
-
-				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
-
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
-				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
-
-				GL_BindToTMU(tr.pebblesImage[0], TB_DIFFUSEMAP);
-				GL_BindToTMU(tr.pebblesImage[1], TB_SPLATMAP1);
-				GL_BindToTMU(tr.pebblesImage[2], TB_SPLATMAP2);
-				GL_BindToTMU(tr.pebblesImage[3], TB_OVERLAYMAP );
-
-				vec4_t l10;
-				float tessOffset = useTesselation ? 7.5 : 0.0;
-				VectorSet4(l10, PEBBLES_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
-
-				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
-
-				GL_Cull(CT_TWO_SIDED);
-			}
-			else if (isPebbles && passNum == 1 && sp2)
-			{// Switch to pebbles geometry shader, once... Repeats will reuse it...
-				sp = sp2;
-				sp2 = NULL;
-
-				GLSL_BindProgram(sp);
-
-				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
-
-				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse/*IS_DEPTH_PASS*/);
-
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
-				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
-
-				GL_BindToTMU(tr.pebblesImage[0], TB_DIFFUSEMAP);
-				GL_BindToTMU(tr.pebblesImage[1], TB_SPLATMAP1);
-				GL_BindToTMU(tr.pebblesImage[2], TB_SPLATMAP2);
-				GL_BindToTMU(tr.pebblesImage[3], TB_OVERLAYMAP);
-
-				vec4_t l10;
-				float tessOffset = useTesselation ? 7.5 : 0.0;
-				VectorSet4(l10, PEBBLES_DISTANCE, r_foliageDensity->value, MAP_WATER_LEVEL, tessOffset);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
-
-				GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
 
 				GL_Cull(CT_TWO_SIDED);
 			}
@@ -3626,7 +3486,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			if (multiPass && passNum >= 1 && (isGrass || isPebbles || isGroundFoliage || isFur))
+			if (multiPass && passNum >= 1 && (isGrass || isGroundFoliage || isFur))
 			{// Need to send stage num to these geometry shaders...
 #ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 				if (ALLOW_GL_400 && isGrass && passNum < 2)
@@ -3679,7 +3539,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (!multiPass)
 			{
-				if ((isGrass && r_foliage->integer) || (isPebbles && r_pebbles->integer) || (isGroundFoliage && r_groundFoliage->integer) || (isFur && r_fur->integer))
+				if ((isGrass && r_foliage->integer) || (isGroundFoliage && r_groundFoliage->integer) || (isFur && r_fur->integer))
 				{// Set cull type back to original... Just in case...
 					GL_Cull( input->shader->cullType );
 				}
@@ -3764,7 +3624,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 			&& !r_lowVram->integer
 			&& GRASS_ENABLED
 			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
-		{// Special extra pass stuff for grass or pebbles...
+		{// Special extra pass stuff for grass...
 			sp = &tr.grassShader[0];
 			int passMax = GRASS_DENSITY;
 

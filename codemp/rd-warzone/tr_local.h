@@ -285,10 +285,6 @@ extern cvar_t	*r_foliageDistance;
 extern cvar_t	*r_foliageDensity;
 extern cvar_t	*r_foliageShadows;
 
-extern cvar_t	*r_pebbles;
-extern cvar_t	*r_pebblesPasses;
-extern cvar_t	*r_pebblesDistance;
-
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
 extern cvar_t	*r_rotatez;
@@ -1296,7 +1292,6 @@ typedef struct shader_s {
 	int			materialType;
 
 	qboolean	isGrass;
-	qboolean	isPebbles;
 	qboolean	isGroundFoliage;
 	qboolean	isFur;
 
@@ -2717,8 +2712,9 @@ typedef struct trGlobals_s {
 	image_t					*heightMapImage;
 	image_t					*foliageMapImage;
 	image_t					*grassImage[16];
+	image_t					*grassAliasImage;
 	image_t					*seaGrassImage[4];
-	image_t					*pebblesImage[4];
+	image_t					*seaGrassAliasImage;
 	image_t					*grassMaskImage[10];
 	image_t					*paletteImage;
 	image_t					*roadsMapImage;
@@ -2905,7 +2901,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t furShader;
 	shaderProgram_t foliageShader;
 	shaderProgram_t grassShader[3];
-	shaderProgram_t pebblesShader;
 	shaderProgram_t hbaoShader;
 	shaderProgram_t hbao2Shader;
 	shaderProgram_t hbaoCombineShader;
@@ -4157,6 +4152,7 @@ void RE_AddDecalToScene ( qhandle_t shader, const vec3_t origin, const vec3_t di
 void R_AddDecals( void );
 
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags );
+image_t	*R_BakeTextures(char names[16][512], int numNames, imgType_t type, int flags);
 
 #ifdef __DEFERRED_IMAGE_LOADING__
 image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags);

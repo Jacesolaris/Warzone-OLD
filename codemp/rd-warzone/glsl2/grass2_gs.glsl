@@ -253,6 +253,26 @@ const vec3 vBaseDir[] = vec3[] (
 #endif //THREE_WAY_GRASS_CLUMPS
 );
 
+vec2 BakedOffsetsBegin[16] = vec2[]
+(
+	vec2( 0.0, 0.0 ),
+	vec2( 0.25, 0.0 ),
+	vec2( 0.5, 0.0 ),
+	vec2( 0.75, 0.0 ),
+	vec2( 0.0, 0.25 ),
+	vec2( 0.25, 0.25 ),
+	vec2( 0.5, 0.25 ),
+	vec2( 0.75, 0.25 ),
+	vec2( 0.0, 0.5 ),
+	vec2( 0.25, 0.5 ),
+	vec2( 0.5, 0.5 ),
+	vec2( 0.75, 0.5 ),
+	vec2( 0.0, 0.75 ),
+	vec2( 0.25, 0.75 ),
+	vec2( 0.5, 0.75 ),
+	vec2( 0.75, 0.75 )
+);
+
 void main()
 {
 	iGrassType = 0;
@@ -358,12 +378,16 @@ void main()
 	float sizeMult = 1.25;
 	float fGrassPatchHeight = 1.0;
 
+	vec2 tcOffsetBegin;
+	vec2 tcOffsetEnd;
+
 #if defined(__USE_UNDERWATER_ONLY__)
-	iGrassType = 16;
+	iGrassType = 0;
 
 	if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 	{// Randomize...
-		iGrassType = randomInt(16, 19);
+		//iGrassType = randomInt(16, 19);
+		iGrassType = randomInt(0, 3);
 	}
 
 	if (heightAboveWaterLength <= 192.0)
@@ -374,6 +398,12 @@ void main()
 	{// Deep underwater plants draw larger...
 		sizeMult *= clamp(1.0 + (heightAboveWaterLength / 192.0), 1.0, 16.0);
 	}
+
+	tcOffsetBegin = BakedOffsetsBegin[iGrassType];
+	tcOffsetEnd = tcOffsetBegin + 0.25;
+
+	iGrassType = 1;
+
 #elif defined(__USE_FAST_GRASS__)
 	if (GRASS_UNDERWATER_ONLY == 1.0 || heightAboveWater < 0.0)
 	{
@@ -387,6 +417,9 @@ void main()
 		{// Deep underwater plants draw larger...
 			sizeMult *= clamp(1.0 + (heightAboveWaterLength / 192.0), 1.0, 16.0);
 		}
+
+		tcOffsetBegin = BakedOffsetsBegin[0];
+		tcOffsetEnd = tcOffsetBegin + 0.25;
 	}
 	else
 	{
@@ -396,15 +429,19 @@ void main()
 		{// When near water edge, reduce the size of the grass...
 			sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
 		}
+
+		tcOffsetBegin = BakedOffsetsBegin[0];
+		tcOffsetEnd = tcOffsetBegin + 0.25;
 	}
 #else //!defined(__USE_UNDERWATER_ONLY__)
 	if (GRASS_UNDERWATER_ONLY == 1.0 || heightAboveWater < 0.0)
 	{
-		iGrassType = 16;
+		//iGrassType = 16;
+		iGrassType = 0;
 
 		if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 		{// Randomize...
-			iGrassType = randomInt(16, 19);
+			iGrassType = randomInt(0, 3);
 		}
 
 		if (heightAboveWaterLength <= 192.0)
@@ -415,6 +452,11 @@ void main()
 		{// Deep underwater plants draw larger...
 			sizeMult *= clamp(1.0 + (heightAboveWaterLength / 192.0), 1.0, 16.0);
 		}
+
+		tcOffsetBegin = BakedOffsetsBegin[iGrassType];
+		tcOffsetEnd = tcOffsetBegin + 0.25;
+
+		iGrassType = 1;
 	}
 	else
 	{
@@ -466,6 +508,11 @@ void main()
 		{// When near water edge, reduce the size of the grass...
 			sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
 		}
+
+		tcOffsetBegin = BakedOffsetsBegin[iGrassType];
+		tcOffsetEnd = tcOffsetBegin + 0.25;
+
+		iGrassType = 0;
 	}
 #endif //defined(__USE_UNDERWATER_ONLY__)
 
@@ -531,22 +578,22 @@ void main()
 
 		vVertPosition = va.xyz;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
-		vTexCoord = vec2(0.0, 1.0);
+		vTexCoord = vec2(tcOffsetBegin[0], tcOffsetEnd[1]);
 		EmitVertex();
 
 		vVertPosition = vb.xyz;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
-		vTexCoord = vec2(1.0, 1.0);
+		vTexCoord = vec2(tcOffsetEnd[0], tcOffsetEnd[1]);
 		EmitVertex();
 
 		vVertPosition = vc.xyz + vWindDirection*fWindPower;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
-		vTexCoord = vec2(0.0, 0.0);
+		vTexCoord = vec2(tcOffsetBegin[0], tcOffsetBegin[1]);
 		EmitVertex();
 
 		vVertPosition = vd.xyz + vWindDirection*fWindPower;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
-		vTexCoord = vec2(1.0, 0.0);
+		vTexCoord = vec2(tcOffsetEnd[0], tcOffsetBegin[1]);
 		EmitVertex();
 
 		EndPrimitive();

@@ -4397,6 +4397,335 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	return image;
 }
 
+const vec2_t BakedOffsetsBegin[] =
+{
+	{0.0, 0.0},
+	{0.25, 0.0},
+	{0.5, 0.0},
+	{0.75, 0.0},
+	{0.0, 0.25},
+	{0.25, 0.25},
+	{0.5, 0.25},
+	{0.75, 0.25},
+	{0.0, 0.5},
+	{0.25, 0.5},
+	{0.5, 0.5},
+	{0.75, 0.5},
+	{0.0, 0.75},
+	{0.25, 0.75},
+	{0.5, 0.75},
+	{0.75, 0.75}
+};
+
+
+void R_GetBakedOffset(int textureNum, int numTextures, vec2_t *finalOffsetStart, vec2_t *finalOffsetEnd)
+{
+	VectorSet2(*finalOffsetStart, BakedOffsetsBegin[textureNum][0], BakedOffsetsBegin[textureNum][1]);
+	VectorSet2(*finalOffsetEnd, BakedOffsetsBegin[textureNum][0] + 0.25, BakedOffsetsBegin[textureNum][1] + 0.25 );
+}
+
+int R_GetBakedTextureForOffset(vec2_t offset, int numTextures)
+{
+	for (int i = 0; i < numTextures; i++)
+	{
+		vec2_t finalOffsetStart, finalOffsetEnd;
+
+		R_GetBakedOffset(i, numTextures, &finalOffsetStart, &finalOffsetEnd);
+
+		if (offset[0] >= finalOffsetStart[0] && offset[0] < finalOffsetEnd[0]
+			&& offset[1] >= finalOffsetStart[1] && offset[1] < finalOffsetEnd[1])
+		{
+			return i;
+		}
+	}
+
+	return 0;
+}
+
+image_t	*R_BakeTextures(char names[16][512], int numNames, imgType_t type, int flags)
+{
+	image_t		*image;
+	
+	byte		*pics[16] = { NULL };
+	til::Image	*tImages[16] = { NULL };
+	bool		isTilImage[16] = { false };
+	bool		hasAlpha[16] = { false };
+	vec4_t		avgColors[16] = { 0 };
+
+	for (int i = 0; i < numNames; i++)
+	{
+		if (!names[i] || names[i][0] == 0 || strlen(names[i]) <= 0)
+		{// Empty field...
+			continue;
+		}
+
+		int			width, height;
+		byte		*pic;
+
+		//
+		// load the pic from disk
+		//
+
+		R_LoadImage(names[i], &pic, &width, &height);
+
+#ifdef __TINY_IMAGE_LOADER__
+		qboolean isTIL = qfalse;
+		til::Image *tImage = NULL;
+
+		if (pic == NULL)
+		{
+			char *ext = R_TIL_TextureFileExists(names[i]);
+
+			if (ext)
+			{
+				if (!TIL_INITIALIZED)
+				{
+					til::TIL_Init();
+					TIL_INITIALIZED = qtrue;
+				}
+
+				char fullPath[1024] = { 0 };
+				sprintf_s(fullPath, "warzone/%s.%s", names[i], ext);
+				tImage = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+
+				if (tImage && tImage->GetHeight() > 0 && tImage->GetWidth() > 0)
+				{
+					width = tImage->GetWidth();
+					height = tImage->GetHeight();
+					pic = tImage->GetPixels();
+					isTIL = qtrue;
+					//ri->Printf(PRINT_WARNING, "TIL: Loaded image %s. Size %i x %i.\n", fullPath, width, height);
+				}
+			}
+		}
+#endif //__TINY_IMAGE_LOADER__
+
+		qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
+
+		vec4_t avgColor = { 0 };
+
+		R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
+
+		if (r_cartoon->integer)
+		{
+			if (!USE_ALPHA)
+			{
+#ifdef __TINY_IMAGE_LOADER__
+				if (isTIL)
+				{
+					til::TIL_Release(tImage);
+					pic = NULL;
+					isTIL = qfalse;
+				}
+				else
+#endif
+					Z_Free(pic);
+
+				width = height = 2;
+
+				pic = (byte *)Z_Malloc(width * height * 4 * sizeof(byte), TAG_IMAGE_T, qfalse, 0);
+
+				byte *inByte = (byte *)&pic[0];
+
+				for (int y = 0; y < height; y++)
+				{
+					for (int x = 0; x < width; x++)
+					{
+						*inByte++ = FloatToByte(avgColor[0]);
+						*inByte++ = FloatToByte(avgColor[1]);
+						*inByte++ = FloatToByte(avgColor[2]);
+						*inByte++ = FloatToByte(avgColor[3]);
+					}
+				}
+
+				flags |= IMGFLAG_MIPMAP;
+				flags &= ~IMGFLAG_CLAMPTOEDGE;
+			}
+			else
+			{
+				byte *pic2 = pic;
+				pic = NULL;
+
+				pic = (byte *)Z_Malloc(width * height * 4 * sizeof(byte), TAG_IMAGE_T, qfalse, 0);
+
+				byte *inByte = (byte *)&pic2[0];
+				byte *outByte = (byte *)&pic[0];
+
+				for (int y = 0; y < height; y++)
+				{
+					for (int x = 0; x < width; x++)
+					{
+						inByte += 3;
+						float currentA = ByteToFloat(*inByte++);
+
+						*outByte++ = FloatToByte(avgColor[0]);
+						*outByte++ = FloatToByte(avgColor[1]);
+						*outByte++ = FloatToByte(avgColor[2]);
+						*outByte++ = FloatToByte(currentA);
+					}
+				}
+
+				flags |= IMGFLAG_MIPMAP;
+
+#ifdef __TINY_IMAGE_LOADER__
+				if (isTIL)
+				{
+					til::TIL_Release(tImage);
+					pic2 = NULL;
+					isTIL = qfalse;
+				}
+				else
+#endif
+					Z_Free(pic2);
+			}
+		}
+
+		const float scaled_resolution = 1024.0;
+
+		if (width != scaled_resolution || height != scaled_resolution)
+		{
+			int dataSize = scaled_resolution * scaled_resolution * 4 * sizeof(byte);
+			pics[i] = (byte *)Z_Malloc(dataSize, TAG_IMAGE_T, qfalse, 0);
+			ResampleTexture(pic, width, height, pics[i], scaled_resolution, scaled_resolution);
+
+#ifdef __TINY_IMAGE_LOADER__
+			if (isTIL)
+			{
+				if (tImage)
+				{
+					til::TIL_Release(tImage);
+					pic = NULL;
+				}
+			}
+			else
+#endif
+				Z_Free(pic);
+
+			tImages[i] = NULL;
+			hasAlpha[i] = USE_ALPHA ? true : false;
+			isTilImage[i] = false;
+		}
+		else
+		{
+			pics[i] = pic;
+			tImages[i] = tImage;
+			hasAlpha[i] = USE_ALPHA ? true : false;
+			isTilImage[i] = isTIL;
+		}
+
+		VectorCopy4(avgColor, avgColors[i]);
+	}
+
+
+	// Merge the final byte arrays into a single atlas texture...
+	byte		*finalPic;
+	vec4_t		finalAvgColor = { 0 };
+
+	int finalDataSize = 4096 * 4096 * 4 * sizeof(byte);
+	finalPic = (byte *)Z_Malloc(finalDataSize, TAG_IMAGE_T, qfalse, 0);
+
+	// Add images to the texture alias...
+	byte *outByte = (byte *)&finalPic[0];
+
+	for (int y = 0; y < 4096; ++y) 
+	{
+		for (int x = 0; x < 4096; ++x)
+		{
+			vec2_t offset;
+			offset[0] = float(x) / 4096.0;
+			offset[1] = float(y) / 4096.0;
+
+			int thisTexNum = R_GetBakedTextureForOffset(offset, 16);
+
+			vec2_t finalOffsetStart, finalOffsetEnd;
+			R_GetBakedOffset(thisTexNum, 16, &finalOffsetStart, &finalOffsetEnd);
+
+			if (numNames < thisTexNum || !names[thisTexNum] || names[thisTexNum][0] == 0 || strlen(names[thisTexNum]) <= 0)
+			{// Empty field... Fill this area of alias with zeros...
+				//byte *outPx = outByte + (4096 * (4095 - y) + (4095 - x)) * 4; // For debugging, turns alias image upside down...
+				byte *outPx = outByte + (4096 * y + x) * 4;
+
+				*outPx++ = 0;
+				*outPx++ = 0;
+				*outPx++ = 0;
+				*outPx++ = 0;
+			}
+			else
+			{// Active texture, add to alias...
+				byte *inPx = (byte *)&pics[thisTexNum][0] + (1024 * (y - int(finalOffsetStart[1] * 4096.0)) + (x - int(finalOffsetStart[0] * 4096.0))) * 4;
+
+				//byte *outPx = outByte + (4096 * (4095 - y) + (4095 - x)) * 4; // For debugging, turns alias image upside down...
+				byte *outPx = outByte + (4096 * y + x) * 4;
+
+				*outPx++ = *inPx++;
+				*outPx++ = *inPx++;
+				*outPx++ = *inPx++;
+				*outPx++ = *inPx++;
+			}
+		}
+	}
+
+	for (int i = 0; i < numNames; i++)
+	{
+		// Add up the average colors, so we can get the final average...
+		finalAvgColor[0] += avgColors[i][0];
+		finalAvgColor[1] += avgColors[i][1];
+		finalAvgColor[2] += avgColors[i][2];
+
+		// Free memory from original images...
+#ifdef __TINY_IMAGE_LOADER__
+		if (isTilImage[i])
+		{
+			if (tImages[i])
+			{
+				til::TIL_Release(tImages[i]);
+				pics[i] = NULL;
+			}
+		}
+		else
+#endif
+			Z_Free(pics[i]);
+	}
+
+	finalAvgColor[0] /= numNames;
+	finalAvgColor[1] /= numNames;
+	finalAvgColor[2] /= numNames;
+
+	flags |= IMGFLAG_MIPMAP;
+
+	if (r_lowVram->integer)
+	{// Low vram modes, compress everything...
+		flags &= ~IMGFLAG_NO_COMPRESSION;
+	}
+	else if (r_compressedTextures->integer <= 0)
+	{// r_compressedTextures <= 0 means compress nothing...
+		flags |= IMGFLAG_NO_COMPRESSION;
+	}
+	else if (r_compressedTextures->integer >= 2 && (flags & IMGFLAG_NO_COMPRESSION))
+	{// r_compressedTextures >= 2 means compress everything...
+		flags &= ~IMGFLAG_NO_COMPRESSION;
+	}
+	else if (r_compressedTextures->integer >= 1)
+	{// Default based on what rend2/JKA would normally do...
+
+	}
+
+	SKIP_IMAGE_RESIZE = qtrue;
+
+	image = R_CreateImage(names[0], finalPic, 4096, 4096, type, flags, 0);
+
+	image->hasAlpha = true;
+
+	VectorCopy4(finalAvgColor, image->lightColor);
+	VectorCopy4(finalAvgColor, image->averageColor); // just in case i do something with lightColor in the future...
+
+	//RE_SavePNG("outAlias.png", finalPic, 4096, 4096, 4);
+
+	Z_Free(finalPic);
+
+	return image;
+}
+
 
 /*
 ================

@@ -131,9 +131,6 @@ extern const char *fallbackShader_grass2_gs;
 extern const char *fallbackShader_grass3_fp;
 extern const char *fallbackShader_grass3_vp;
 extern const char *fallbackShader_grass3_gs;
-extern const char *fallbackShader_pebbles_fp;
-extern const char *fallbackShader_pebbles_vp;
-extern const char *fallbackShader_pebbles_gs;
 extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
 extern const char *fallbackShader_hbaoCombine_vp;
@@ -3301,35 +3298,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 	}
 
-	if (r_pebbles->integer)
-	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
-
-		extradefines[0] = '\0';
-
-		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
-
-#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		if (ALLOW_GL_400)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_400\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load pebbles shader!");
-			}
-		}
-		else
-#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		{
-			if (!GLSL_BeginLoadGPUShader(&tr.pebblesShader, "pebbles", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_pebbles_vp, fallbackShader_pebbles_fp, NULL, NULL, fallbackShader_pebbles_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load pebbles shader!");
-			}
-		}
-	}
-
-
 	attribs = ATTR_POSITION | ATTR_POSITION2 | ATTR_NORMAL | ATTR_NORMAL2 | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -4506,40 +4474,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		numEtcShaders++;
 	}
-
-	if (r_pebbles->integer)
-	{
-		if (!GLSL_EndLoadGPUShader(&tr.pebblesShader))
-		{
-			ri->Error(ERR_FATAL, "Could not load pebbles shader!");
-		}
-
-		GLSL_InitUniforms(&tr.pebblesShader);
-
-		GLSL_BindProgram(&tr.pebblesShader);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_LIGHTMAP, TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_CUBEMAP, TB_CUBEMAP);
-		//GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_STEEPMAP, TB_STEEPMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-		GLSL_SetUniformInt(&tr.pebblesShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.pebblesShader);
-#endif
-
-		numEtcShaders++;
-	}
-
 
 	if (!GLSL_EndLoadGPUShader(&tr.shadowmapShader))
 	{
@@ -6389,7 +6323,6 @@ void GLSL_ShutdownGPUShaders(void)
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[0]);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[1]);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[2]);
-	if (r_pebbles->integer)	GLSL_DeleteGPUShader(&tr.pebblesShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
 	GLSL_DeleteGPUShader(&tr.hbao2Shader);
 	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
