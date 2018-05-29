@@ -18,6 +18,7 @@ varying vec3		var_Position;
 void main()
 {
 	gl_FragColor = texture2D(u_DiffuseMap, var_Tex1);
+	gl_FragColor.a = clamp(gl_FragColor.a * 3.0, 0.0, 1.0);
 	out_Glow = vec4(0.0);
 	out_Position = vec4(0.0);
 	out_Normal = vec4(0.0);

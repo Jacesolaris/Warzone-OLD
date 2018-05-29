@@ -509,7 +509,8 @@ void main()
 	#endif //THREE_WAY_GRASS_CLUMPS
 	{// Draw either 2 or 3 copies at each position at different angles...
 		vec3 direction = (rotationMatrix(vec3(0, 1, 0), randDir)*vec4(vBaseDir[i], 1.0)).xyz;
-		direction.xy *= GRASS_WIDTH_REPEATS;
+		
+		if (GRASS_WIDTH_REPEATS > 0.0) direction.xy *= GRASS_WIDTH_REPEATS;
 
 		vec3 P = vGrassFieldPos.xyz;
 

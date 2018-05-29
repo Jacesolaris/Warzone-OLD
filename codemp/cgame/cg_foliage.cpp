@@ -3055,7 +3055,8 @@ float RoofHeightAbove(vec3_t org)
 	if (tr.materialType == MATERIAL_SOLIDWOOD
 		|| MaterialIsValidForGrass(tr.materialType)
 		|| tr.materialType == MATERIAL_SAND
-		|| tr.materialType == MATERIAL_ROCK)
+		|| tr.materialType == MATERIAL_ROCK
+		|| (tr.contents & CONTENTS_TRANSLUCENT))
 	{// Exception for hitting trees...
 		return org[2] + 257.0;
 	}
@@ -3097,7 +3098,7 @@ qboolean FOLIAGE_FxExistsNearPoint(vec3_t origin)
 #define SPOT_TYPE_PLANT 2
 #define SPOT_TYPE_GRASS 3
 
-void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree_chance, int num_clearings, float check_density, qboolean ADD_MORE)
+void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree_chance, int num_clearings, float check_density, qboolean ADD_MORE, qboolean MULTILEVEL)
 {
 	int				i;
 	float			startx = -131072, starty = -131072, startz = -131072;
@@ -3353,7 +3354,6 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 	trap->UpdateScreen();
 
 
-//#pragma omp parallel for schedule(dynamic)
 	for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += scan_density)
 	{
 		float current;
@@ -3361,8 +3361,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 		if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 		{
-			//break;
-			continue;
+			break;
 		}
 
 		current = MAP_INFO_SIZE[0] - (mapMaxs[0] - (float)x);
@@ -3377,7 +3376,7 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 		else
 			yoff = scan_density * 0.75;
 
-//#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
 		for (int y = (int)mapMins[1]; y <= (int)mapMaxs[1]; y += yoff)
 		{
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
@@ -3414,7 +3413,14 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 				if (RoadExistsAtPoint(pos))
 				{// There's a road here...
-					continue;
+					if (MULTILEVEL)
+					{
+						continue;
+					}
+					else
+					{
+						break;
+					}
 				}
 
 				CG_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER | CONTENTS_LAVA | CONTENTS_SLIME);
@@ -3441,19 +3447,46 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 				if (tr.surfaceFlags & SURF_NODRAW)
 				{// don't generate a drawsurface at all
-					hitInvalid = qtrue;
-					continue;
+					if (MULTILEVEL)
+					{
+						hitInvalid = qtrue;
+						continue;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				if (tr.contents & CONTENTS_TRANSLUCENT)
+				{// don't generate a drawsurface at all
+					//if (MULTILEVEL)
+					{
+						hitInvalid = qtrue;
+						continue;
+					}
+					/*else
+					{
+						break;
+					}*/
 				}
 
 				if (ADD_MORE && check_density > 0 && FOLIAGE_CheckFoliageAlready(tr.endpos, check_density))
 				{// Already a foliage here...
-					hitInvalid = qtrue;
-					continue;
+					if (MULTILEVEL)
+					{
+						hitInvalid = qtrue;
+						continue;
+					}
+					else
+					{
+						break;
+					}
 				}
 
 				if (MaterialIsValidForGrass((tr.materialType)))
 				{
-#if 0
+#if 1
 					if (hitInvalid)
 					{// Scan above us for a roof... So we don't add grass inside of buildings...
 						if (FOLIAGE_IsIndoorLocation(tr.endpos))
@@ -3496,13 +3529,20 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 
 					if (FOLIAGE_FxExistsNearPoint(tr.endpos))
 					{
-						break;
+						if (MULTILEVEL)
+						{
+							hitInvalid = qtrue;
+							continue;
+						}
+						else
+						{
+							break;
+						}
 					}
 
 					qboolean DO_TREE = qfalse;
 					qboolean DO_PLANT = qfalse;
 					qboolean IS_CLEARING = qfalse;
-					float scale = 1.00;
 
 					if (tree_chance > 0 && num_clearings > 0 && CLEARING_SPOTS_NUM > 0)
 					{
@@ -3527,7 +3567,8 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 						{
 							DO_TREE = qtrue;
 						}
-						else if (plant_chance > 0 && irand_big(0, plant_chance) >= plant_chance)
+						else if (plant_chance > 0 
+							&& irand_big(0, plant_chance) >= plant_chance)
 						{
 							DO_PLANT = qtrue;
 							//trap->Print("Failed tree because of roof height. Adding plant instead.\n");
@@ -3537,7 +3578,12 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 							//trap->Print("Failed tree because of roof height.\n");
 						}
 					}
-					else if (plant_chance > 0 && irand_big(0, plant_chance) >= plant_chance)
+					else if (plant_chance > 0 
+						&& irand_big(0, plant_chance) >= plant_chance)
+					{
+						DO_PLANT = qtrue;
+					}
+					else if (plant_chance == 1)
 					{
 						DO_PLANT = qtrue;
 					}
@@ -3545,11 +3591,11 @@ void FOLIAGE_GenerateFoliage_Real(float scan_density, int plant_chance, int tree
 					if (!DO_TREE && !DO_PLANT) continue;
 
 					// Look around here for a different slope angle... Cull if found...
-					for (scale = 1.00; scale >= 0.05 && scale >= cg_foliageMinFoliageScale.value; scale -= 0.05)
+					for (float scale = 1.00; scale >= 0.05 && scale >= cg_foliageMinFoliageScale.value; scale -= 0.05)
 					{
 						if (scale >= cg_foliageMinFoliageScale.value && FOLIAGE_CheckSlopesAround(tr.endpos, tr.plane.normal, scale))
 						{
-							//#pragma omp critical (__ADD_TEMP_NODE__)
+							#pragma omp critical (__ADD_TEMP_NODE__)
 							{
 								VectorCopy(tr.plane.normal, grassNormals[grassSpotCount]);
 
@@ -4430,47 +4476,76 @@ void FOLIAGE_GenerateFoliage(void)
 
 	if (trap->Cmd_Argc() < 2)
 	{
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <plant_chance> <tree_chance> <num_clearings> <check_density>^5.\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^5Available methods are:\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Creation sub-commands:\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage: ^3/genfoliage <method> <density> <plant_chance> <tree_chance> <num_clearings> <check_density>^5.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"standard\" ^5- Create new foliage map.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"concrete\" ^5- Create new foliage map. Allow concrete material.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"sand\" ^5- Create new foliage map. Allow sand material.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"gravel\" ^5- Create new foliage map. Allow gravel material.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"rock\" ^5- Create new foliage map. Allow rock material.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"snow\" ^5- Create new foliage map. Allow snow material.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"multilevel\" ^5- Create new foliage map. For multi-level maps.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"multilevelconcrete\" ^5- Create new foliage map. For multi-level maps. Allow concrete material.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"multilevelsand\" ^5- Create new foliage map. For multi-level maps. Allow sand material.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"multilevelgravel\" ^5- Create new foliage map. For multi-level maps. Allow gravel material.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"multilevelrock\" ^5- Create new foliage map. For multi-level maps. Allow rock material.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"multilevelsnow\" ^5- Create new foliage map. For multi-level maps. Allow snow material.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"copy <original_mapname> <mapScale> <objectScale>\" ^5- Copy from another map's foliage file. Scales are optional.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: \n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Addition sub-commands:\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage: ^3/genfoliage <method> <density> <plant_chance> <tree_chance> <num_clearings> <check_density>^5.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"addconcrete\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"addsand\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"addrock\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"addgravel\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"addsnow\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: \n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Plant selection sub-commands:\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage: ^3/genfoliage <method> <percentage_to_keep>^5.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants. Keeps percentage specified and removes the extras.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replantspecial\" ^5- Keeps plants around objects (prefers the larger plants) and removes a percentage of plants in open areas.\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Adjustment and cleaning sub-commands:\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^4=================================================================================================================================\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^7Usage: ^3/genfoliage <method>^5.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"replantspecial\" ^5- Reselect all grasses/plants (tree aware).\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
+		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearfxrunners\" ^5- Remove all objects near fx_runner entities.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearbuildings\" ^5- Remove all objects inside buildings.\n");
 		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"clearroads\" ^5- Remove all objects on roads.\n");
-		trap->Print("^4*** ^3AUTO-FOLIAGE^4: ^3\"copy <original_mapname> <mapScale> <objectScale>\" ^5- Copy from another map's foliage file. Scales are optional.\n");
 		trap->UpdateScreen();
 		return;
 	}
 
 	trap->Cmd_Argv(1, str, sizeof(str));
 
-	if (!strcmp(str, "standard")
-		|| !strcmp(str, "concrete")
-		|| !strcmp(str, "sand")
-		|| !strcmp(str, "rock")
-		|| !strcmp(str, "gravel")
-		|| !strcmp(str, "snow"))
+	if (StringContainsWord(str, "standard")
+		|| StringContainsWord(str, "concrete")
+		|| StringContainsWord(str, "sand")
+		|| StringContainsWord(str, "rock")
+		|| StringContainsWord(str, "gravel")
+		|| StringContainsWord(str, "snow")
+		|| StringContainsWord(str, "multilevel"))
 	{
-		if (!strcmp(str, "concrete")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_CONCRETE;
-		if (!strcmp(str, "sand")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SAND;
-		if (!strcmp(str, "rock")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_ROCK;
-		if (!strcmp(str, "gravel")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_GRAVEL;
-		if (!strcmp(str, "snow")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SNOW;
+		qboolean multiLevel = qfalse;
+
+		if (StringContainsWord(str, "concrete")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_CONCRETE;
+		if (StringContainsWord(str, "sand")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SAND;
+		if (StringContainsWord(str, "rock")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_ROCK;
+		if (StringContainsWord(str, "gravel")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_GRAVEL;
+		if (StringContainsWord(str, "snow")) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SNOW;
+
+		if (StringContainsWord(str, "multilevel"))
+		{
+			multiLevel = qtrue;
+		}
 
 		if (trap->Cmd_Argc() >= 2)
 		{// Override normal density...
@@ -4504,12 +4579,12 @@ void FOLIAGE_GenerateFoliage(void)
 			}
 
 			FOLIAGE_FreeMemory();
-			FOLIAGE_GenerateFoliage_Real((float)dist, plant_chance, tree_chance, num_clearings, 0.0, qfalse);
+			FOLIAGE_GenerateFoliage_Real((float)dist, plant_chance, tree_chance, num_clearings, 0.0, qfalse, multiLevel);
 		}
 		else
 		{
 			FOLIAGE_FreeMemory();
-			FOLIAGE_GenerateFoliage_Real(64.0, 1, 0, 0, 0, qfalse);
+			FOLIAGE_GenerateFoliage_Real(64.0, 1, 0, 0, 0, qfalse, multiLevel);
 		}
 	}
 	else if (!strcmp(str, "add")
@@ -4562,11 +4637,11 @@ void FOLIAGE_GenerateFoliage(void)
 				return;
 			}
 
-			FOLIAGE_GenerateFoliage_Real((float)dist, plant_chance, tree_chance, num_clearings, check_density, qtrue);
+			FOLIAGE_GenerateFoliage_Real((float)dist, plant_chance, tree_chance, num_clearings, check_density, qtrue, qfalse);
 		}
 		else
 		{
-			FOLIAGE_GenerateFoliage_Real(64.0, 1, 0, 0, 0, qtrue);
+			FOLIAGE_GenerateFoliage_Real(64.0, 1, 0, 0, 0, qtrue, qfalse);
 		}
 	}
 	else if (!strcmp(str, "rescale"))

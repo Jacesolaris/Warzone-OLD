@@ -159,7 +159,8 @@ void main()
 	vec4 diffuse;
 
 	vec2 tc = vTexCoord;
-	tc.x *= (GRASS_WIDTH_REPEATS * 2.0);
+
+	if (GRASS_WIDTH_REPEATS > 0.0) tc.x *= (GRASS_WIDTH_REPEATS * 2.0);
 
 #if defined(__USE_UNDERWATER_ONLY__)
 	if (iGrassType >= 19)

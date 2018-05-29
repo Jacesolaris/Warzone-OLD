@@ -3322,7 +3322,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				vec4_t l11;
-				VectorSet4(l11, GRASS_WIDTH_REPEATS+1, GRASS_MAX_SLOPE, 0.0, 0.0);
+				VectorSet4(l11, GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL11, l11);
 
 				if (tr.roadsMapImage != tr.blackImage)
