@@ -284,6 +284,8 @@ std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfac
 	return shaderPath;
 }
 
+//#define __MODEL_MESH_MERGE__
+
 static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *modName, int size, const char *ext)
 {
 	int					f, i, j;
@@ -428,6 +430,290 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		Q_strncpyz(tagName->name, md3Tag->name, sizeof(tagName->name));
 	}*/
 
+#ifdef __MODEL_MESH_MERGE__
+	int numTextureNames = scene->mNumMeshes;
+	char textureNames[16][512];
+	int totalIndexes = 0;
+	int totalVerts = 0;
+	int indexesStart[16];
+
+	memset(textureNames, 0, sizeof(textureNames));
+	memset(indexesStart, 0, sizeof(indexesStart));
+
+	/*if (numTextureNames > 16)
+	{
+		ri->Printf(PRINT_WARNING, "**************************************** model %s has too many textures (%i) to make an alias.\n", modName, numTextureNames);
+		return qfalse;
+	}
+	else
+	{
+		ri->Printf(PRINT_WARNING, "**************************************** model %s adding %i textures to alias.\n", modName, numTextureNames);
+	}*/
+
+	// Find all the texture names, so we can generate a texture alias map.
+	for (i = 0; i < scene->mNumMeshes; i++)
+	{
+		shader_t		*sh = NULL;
+		aiString		shaderPath;	// filename
+		aiMesh			*aiSurf = scene->mMeshes[i];
+
+		scene->mMaterials[aiSurf->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &shaderPath);
+
+		std::string textureName = AssImp_getTextureName(shaderPath.C_Str());
+
+		std::string finalPath = R_FindAndAdjustShaderNames(modName, shaderPath.C_Str(), textureName);
+
+		sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+		if (sh == NULL || sh == tr.defaultShader)
+		{
+			//ri->Printf(PRINT_ALL, "mesh %i. shader %s. numFaces %i. numVerts %i. totalIndexes %i. totalVerts %i. No name.\n", i, textureNames[i], aiSurf->mNumFaces, aiSurf->mNumVertices, totalIndexes, totalVerts);
+		}
+		else
+		{
+			strcpy(textureNames[i], finalPath.c_str());
+
+			indexesStart[i] = totalIndexes;
+			totalIndexes += aiSurf->mNumFaces;
+			totalVerts += aiSurf->mNumVertices;
+			//ri->Printf(PRINT_ALL, "mesh %i. shader %s. numFaces %i. numVerts %i. totalIndexes %i. totalVerts %i.\n", i, textureNames[i], aiSurf->mNumFaces, aiSurf->mNumVertices, totalIndexes, totalVerts);
+		}
+	}
+
+	image_t		*textureAliasMap = R_BakeTextures(textureNames, numTextureNames, modName, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	shader_t	*textureAliasMapShader = R_FindShader(modName, lightmapsNone, stylesDefault, qtrue);
+
+	// swap all the surfaces
+	mdvModel->numSurfaces = 1;
+	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf), h_low);
+
+	// change to surface identifier
+	surf->surfaceType = SF_MDV;
+
+	// give pointer to model for Tess_SurfaceMDX
+	surf->model = mdvModel;
+
+	// copy surface name
+	Q_strncpyz(surf->name, modName, sizeof(surf->name) < 64 ? sizeof(surf->name) : 64);
+
+	// lowercase the surface name so skin compares are faster
+	Q_strlwr(surf->name);
+
+	// strip off a trailing _1 or _2
+	// this is a crutch for q3data being a mess
+	j = strlen(surf->name);
+	if (j > 2 && surf->name[j - 2] == '_')
+	{
+		surf->name[j - 2] = 0;
+	}
+
+	// register the shaders
+	surf->numShaderIndexes = 1;
+	surf->shaderIndexes = shaderIndex = (int *)ri->Hunk_Alloc(sizeof(*shaderIndex), h_low);
+
+	*shaderIndex = textureAliasMapShader->index;
+	
+	surf->numIndexes = totalIndexes * 3;
+	surf->indexes = tri = (glIndex_t *)ri->Hunk_Alloc(sizeof(*tri) * totalIndexes * 3, h_low);
+
+	surf->numVerts = totalVerts;
+	surf->verts = v = (mdvVertex_t *)ri->Hunk_Alloc(sizeof(*v) * totalVerts * mdvModel->numFrames, h_low);
+
+	surf->st = st = (mdvSt_t *)ri->Hunk_Alloc(sizeof(*st) * totalVerts * mdvModel->numFrames, h_low);
+
+	for (i = 0; i < scene->mNumMeshes; i++)
+	{
+		aiMesh			*aiSurf = scene->mMeshes[i];
+
+		if (!textureNames[i] || textureNames[i][0] == 0 || strlen(textureNames[i]) <= 0)
+		{
+			continue;
+		}
+
+		// swap all the Xyz, Normals, st
+		for (j = 0; j < aiSurf->mNumVertices; j++)
+		{
+			aiVector3D xyz = aiSurf->mVertices[j];
+
+			v->xyz[0] = LittleShort(xyz.x);
+			v->xyz[1] = LittleShort(xyz.y);
+			v->xyz[2] = LittleShort(xyz.z);
+
+			aiVector3D norm = aiSurf->mNormals[j];
+
+			v->normal[0] = norm.x;
+			v->normal[1] = norm.y;
+			v->normal[2] = norm.z;
+
+			extern void R_GetBakedOffset(int textureNum, int numTextures, vec2_t *finalOffsetStart, vec2_t *finalOffsetEnd);
+
+			if (aiSurf->mNormals != NULL && aiSurf->HasTextureCoords(0))
+			{
+				st->st[0] = LittleFloat(aiSurf->mTextureCoords[0][j].x);
+				st->st[1] = LittleFloat(1 - aiSurf->mTextureCoords[0][j].y);
+			}
+			else
+			{
+				st->st[0] = 0.0;
+				st->st[1] = 1.0;
+			}
+
+			vec2_t finalOffsetStart, finalOffsetEnd;
+			R_GetBakedOffset(i, scene->mNumMeshes, &finalOffsetStart, &finalOffsetEnd);
+			st->st[0] = (st->st[0] * 0.25) + finalOffsetStart[0];
+			st->st[1] = (st->st[1] * 0.25) + finalOffsetStart[1];
+
+			v++;
+			st++;
+		}
+
+		// swap all the triangles
+		for (j = 0; j < aiSurf->mNumFaces; j++)
+		{// Assuming triangles for now... AssImp is currently set to convert everything to triangles anyway...
+			tri[0] = LittleLong(aiSurf->mFaces[j].mIndices[0]) + indexesStart[i];
+			tri[1] = LittleLong(aiSurf->mFaces[j].mIndices[1]) + indexesStart[i];
+			tri[2] = LittleLong(aiSurf->mFaces[j].mIndices[2]) + indexesStart[i];
+			tri += 3;
+		}
+
+		// find the next surface
+		surf++;
+	}
+
+	{
+		srfVBOMDVMesh_t *vboSurf;
+
+		mdvModel->numVBOSurfaces = mdvModel->numSurfaces;
+		vboSurf = mdvModel->vboSurfaces = (srfVBOMDVMesh_t *)ri->Hunk_Alloc(sizeof(*mdvModel->vboSurfaces) * mdvModel->numSurfaces, h_low);
+
+		surf = mdvModel->surfaces;
+
+		// calc tangent spaces
+		{
+			for (j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
+			{
+				VectorClear(v->tangent);
+				VectorClear(v->bitangent);
+			}
+
+			for (f = 0; f < mdvModel->numFrames; f++)
+			{
+				for (j = 0, tri = surf->indexes; j < surf->numIndexes; j += 3, tri += 3)
+				{
+					vec3_t sdir, tdir;
+					const float *v0, *v1, *v2, *t0, *t1, *t2;
+					glIndex_t index0, index1, index2;
+
+					index0 = surf->numVerts * f + tri[0];
+					index1 = surf->numVerts * f + tri[1];
+					index2 = surf->numVerts * f + tri[2];
+
+					v0 = surf->verts[index0].xyz;
+					v1 = surf->verts[index1].xyz;
+					v2 = surf->verts[index2].xyz;
+
+					t0 = surf->st[tri[0]].st;
+					t1 = surf->st[tri[1]].st;
+					t2 = surf->st[tri[2]].st;
+
+					R_CalcTexDirs(sdir, tdir, v0, v1, v2, t0, t1, t2);
+
+					VectorAdd(sdir, surf->verts[index0].tangent, surf->verts[index0].tangent);
+					VectorAdd(sdir, surf->verts[index1].tangent, surf->verts[index1].tangent);
+					VectorAdd(sdir, surf->verts[index2].tangent, surf->verts[index2].tangent);
+					VectorAdd(tdir, surf->verts[index0].bitangent, surf->verts[index0].bitangent);
+					VectorAdd(tdir, surf->verts[index1].bitangent, surf->verts[index1].bitangent);
+					VectorAdd(tdir, surf->verts[index2].bitangent, surf->verts[index2].bitangent);
+				}
+			}
+
+			for (j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
+			{
+				vec3_t sdir, tdir;
+
+				VectorCopy(v->tangent, sdir);
+				VectorCopy(v->bitangent, tdir);
+
+				VectorNormalize(sdir);
+				VectorNormalize(tdir);
+
+				R_CalcTbnFromNormalAndTexDirs(v->tangent, v->bitangent, v->normal, sdir, tdir);
+			}
+		}
+		
+		vec3_t *verts;
+		vec2_t *texcoords;
+		uint32_t *normals;
+
+		byte *data;
+		int dataSize;
+
+		int ofs_xyz, ofs_normal, ofs_st;
+
+		dataSize = 0;
+
+		ofs_xyz = dataSize;
+		dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*verts);
+
+		ofs_normal = dataSize;
+		dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*normals);
+
+		ofs_st = dataSize;
+		dataSize += surf->numVerts * sizeof(*texcoords);
+
+		data = (byte *)Z_Malloc(dataSize, TAG_MODEL_MD3, qtrue);
+
+		verts = (vec3_t *)(data + ofs_xyz);
+		normals = (uint32_t *)(data + ofs_normal);
+		texcoords = (vec2_t *)(data + ofs_st);
+
+		v = surf->verts;
+		for (j = 0; j < surf->numVerts * mdvModel->numFrames; j++, v++)
+		{
+			vec3_t nxt;
+			vec4_t tangent;
+
+			VectorCopy(v->xyz, verts[j]);
+
+			normals[j] = R_VboPackNormal(v->normal);
+			CrossProduct(v->normal, v->tangent, nxt);
+			VectorCopy(v->tangent, tangent);
+			tangent[3] = (DotProduct(nxt, v->bitangent) < 0.0f) ? -1.0f : 1.0f;
+		}
+
+		st = surf->st;
+		for (j = 0; j < surf->numVerts; j++, st++) {
+			texcoords[j][0] = st->st[0];
+			texcoords[j][1] = st->st[1];
+		}
+
+		vboSurf->surfaceType = SF_VBO_MDVMESH;
+		vboSurf->mdvModel = mdvModel;
+		vboSurf->mdvSurface = surf;
+		vboSurf->numIndexes = surf->numIndexes;
+		vboSurf->numVerts = surf->numVerts;
+
+		vboSurf->minIndex = 0;
+		vboSurf->maxIndex = surf->numVerts;
+
+		vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
+
+		vboSurf->vbo->ofs_xyz = ofs_xyz;
+		vboSurf->vbo->ofs_normal = ofs_normal;
+		vboSurf->vbo->ofs_st = ofs_st;
+
+		vboSurf->vbo->stride_xyz = sizeof(*verts);
+		vboSurf->vbo->stride_normal = sizeof(*normals);
+		vboSurf->vbo->stride_st = sizeof(*st);
+
+		vboSurf->vbo->size_xyz = sizeof(*verts) * surf->numVerts;
+		vboSurf->vbo->size_normal = sizeof(*normals) * surf->numVerts;
+
+		Z_Free(data);
+
+		vboSurf->ibo = R_CreateIBO((byte *)surf->indexes, sizeof(glIndex_t) * surf->numIndexes, VBO_USAGE_STATIC);
+	}
+#else //!__MODEL_MESH_MERGE__
 	// swap all the surfaces
 	mdvModel->numSurfaces = scene->mNumMeshes;
 	mdvModel->surfaces = surf = (mdvSurface_t *)ri->Hunk_Alloc(sizeof(*surf) * mdvModel->numSurfaces, h_low);
@@ -615,12 +901,12 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		surf = mdvModel->surfaces;
 
 		/*
-#ifdef __INSTANCED_MODELS__
+		#ifdef __INSTANCED_MODELS__
 		GLSL_BindProgram(&tr.instanceShader);
 		mdvModel->vao = NULL;
 		qglGenVertexArrays(1, &mdvModel->vao);
 		qglBindVertexArray(mdvModel->vao);
-#endif //__INSTANCED_MODELS__
+		#endif //__INSTANCED_MODELS__
 		*/
 
 		for (i = 0; i < mdvModel->numSurfaces; i++, vboSurf++, surf++)
@@ -680,11 +966,11 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			vboSurf->minIndex = 0;
 			vboSurf->maxIndex = surf->numVerts;
 
-/*#ifdef __INSTANCED_MODELS__
+			/*#ifdef __INSTANCED_MODELS__
 			if (mdvModel->numFrames <= 1)
-				vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_STATIC);
+			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_STATIC);
 			else
-#endif //__INSTANCED_MODELS__*/
+			#endif //__INSTANCED_MODELS__*/
 			vboSurf->vbo = R_CreateVBO(data, dataSize, VBO_USAGE_DYNAMIC);
 
 			vboSurf->vbo->ofs_xyz = ofs_xyz;
@@ -704,7 +990,7 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 		}
 
 		/*
-#ifdef __INSTANCED_MODELS__
+		#ifdef __INSTANCED_MODELS__
 		qglGenBuffers(1, &tr.instanceShader.instances_buffer);
 		qglBindBuffer(GL_ARRAY_BUFFER, tr.instanceShader.instances_buffer);
 		qglBindBufferBase(GL_ARRAY_BUFFER, ATTR_INDEX_INSTANCES_POSITION, tr.instanceShader.instances_buffer);
@@ -720,9 +1006,10 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 
 		qglBindVertexArray(0);
 		GLSL_BindProgram(NULL);
-#endif //__INSTANCED_MODELS__
+		#endif //__INSTANCED_MODELS__
 		*/
 	}
+#endif //__MODEL_MESH_MERGE__
 
 	// No longer need the scene data...
 	assImpImporter.FreeScene();

@@ -1850,7 +1850,7 @@ void MAPPING_LoadMapInfo(void)
 				tr.grassImage[i] = R_FindImageFile(grassImages[i], IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 			}*/
 
-			tr.grassAliasImage = R_BakeTextures(grassImages, 16, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+			tr.grassAliasImage = R_BakeTextures(grassImages, 16, "grass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		}
 
 		char seaGrassImages[4][512] = { 0 };
@@ -1870,7 +1870,7 @@ void MAPPING_LoadMapInfo(void)
 			tr.seaGrassImage[i] = R_FindImageFile(seaGrassImages[i], IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		}*/
 
-		tr.seaGrassAliasImage = R_BakeTextures(seaGrassImages, 4, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		tr.seaGrassAliasImage = R_BakeTextures(seaGrassImages, 4, "seaGrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
 		// Grass maps... Try to load map based image first...
 		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);

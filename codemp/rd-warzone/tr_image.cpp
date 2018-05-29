@@ -4442,7 +4442,7 @@ int R_GetBakedTextureForOffset(vec2_t offset, int numTextures)
 	return 0;
 }
 
-image_t	*R_BakeTextures(char names[16][512], int numNames, imgType_t type, int flags)
+image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputName, imgType_t type, int flags)
 {
 	image_t		*image;
 	
@@ -4712,14 +4712,17 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, imgType_t type, int f
 
 	SKIP_IMAGE_RESIZE = qtrue;
 
-	image = R_CreateImage(names[0], finalPic, 4096, 4096, type, flags, 0);
+	image = R_CreateImage(outputName, finalPic, 4096, 4096, type, flags, 0);
 
 	image->hasAlpha = true;
 
 	VectorCopy4(finalAvgColor, image->lightColor);
 	VectorCopy4(finalAvgColor, image->averageColor); // just in case i do something with lightColor in the future...
 
-	//RE_SavePNG("outAlias.png", finalPic, 4096, 4096, 4);
+	// Debugging...
+	//extern std::string AssImp_getTextureName(const std::string& path);
+	//RE_SavePNG(va("%s_aliasMap.png", AssImp_getTextureName(outputName).c_str()), finalPic, 4096, 4096, 4);
+	//
 
 	Z_Free(finalPic);
 

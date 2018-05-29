@@ -4152,7 +4152,7 @@ void RE_AddDecalToScene ( qhandle_t shader, const vec3_t origin, const vec3_t di
 void R_AddDecals( void );
 
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags );
-image_t	*R_BakeTextures(char names[16][512], int numNames, imgType_t type, int flags);
+image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputName, imgType_t type, int flags);
 
 #ifdef __DEFERRED_IMAGE_LOADING__
 image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags);
