@@ -1,17 +1,6 @@
 #define THREE_WAY_GRASS_CLUMPS // 3 way probably gives better coverage, at extra cost... otherwise 2 way X shape... 
-//#define __USE_CONTROL_MAP__
 
 #define MAX_FOLIAGES				85
-
-/*
-#ifdef THREE_WAY_GRASS_CLUMPS
-#define MAX_FOLIAGES				3
-#else //!THREE_WAY_GRASS_CLUMPS
-#define MAX_FOLIAGES				2
-#endif //THREE_WAY_GRASS_CLUMPS
-*/
-
-#define GRASSMAP_SCONTROL_MIN		0.2
 
 layout(triangles) in;
 //layout(triangles, invocations = 8) in;
@@ -28,7 +17,7 @@ uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHAD
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, GRASS_UNDERWATER_ONLY, 0.0, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local10; // foliageLODdistance, 0.0, 0.0, GRASS_TYPE_UNIFORMALITY
 uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 
 #define SHADER_MAP_SIZE				u_Local1.r
@@ -51,7 +40,6 @@ uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 #define GRASS_HEIGHT				u_Local8.b
 
 #define MAX_RANGE					u_Local10.r
-#define GRASS_UNDERWATER_ONLY		u_Local10.g
 #define GRASS_TYPE_UNIFORMALITY		u_Local10.a
 
 #define GRASS_WIDTH_REPEATS			u_Local11.r
@@ -201,46 +189,6 @@ vec2 BakedOffsetsBegin[16] = vec2[]
 
 const vec2 roadPx = vec2(1.0 / 2048.0);
 
-#ifdef __USE_CONTROL_MAP__
-vec4 GetControlMap(vec3 m_vertPos)
-{
-	vec4 xaxis = texture(u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
-	vec4 yaxis = texture(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
-	vec4 zaxis = texture(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
-
-	if (SHADER_HAS_SPLATMAP4 > 0.0)
-	{// Also grab the roads map, if we have one...
-		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
-		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
-
-		float road = texture(u_RoadsControlMap, pixel).r;
-
-		if (road > GRASS_DISTANCE_FROM_ROADS)
-		{
-			return vec4(0.0); // Force no grass near roads, or on black parts of the road map (obstacles)...
-		}
-		else if (road > 0.0)
-		{
-			float scale = 1.0 - (road / GRASS_DISTANCE_FROM_ROADS);
-			xaxis.a = yaxis.a = zaxis.a = scale;
-		}
-		else
-		{
-			xaxis.a = yaxis.a = zaxis.a = 1.0;
-		}
-	}
-
-	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
-}
-
-vec4 GetGrassMap(vec3 m_vertPos)
-{
-	vec4 control = GetControlMap(m_vertPos);
-	control.rgb = clamp(clamp(clamp(control.rgb * 1024.0, 0.0, 1.0) - 0.05, 0.0, 1.0) * 0.5, 0.0, 1.0);
-	return control;
-}
-#endif //__USE_CONTROL_MAP__
-
 vec3 vLocalSeed;
 
 // This function returns random number from zero to one
@@ -281,12 +229,10 @@ void main()
 								// invocations support...
 								//	vLocalSeed = Pos*float(gl_InvocationID);
 
-#ifndef __USE_CONTROL_MAP__
 	vec3 control;
 	control.r = randZeroOne();
 	control.g = randZeroOne();
 	control.b = randZeroOne();
-#endif //__USE_CONTROL_MAP__
 
 	float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
 
@@ -318,14 +264,6 @@ void main()
 		}
 	}
 
-#ifdef __USE_CONTROL_MAP__
-	vec4 controlMap = GetGrassMap(vGrassFieldPos);
-
-	if (controlMap.a <= 0.0)
-	{// Check if this area is on the grass map. If not, there is no grass here...
-		return;
-	}
-#else //!__USE_CONTROL_MAP__
 	vec4 controlMap;
 
 	controlMap.rgb = control.rgb;
@@ -356,7 +294,6 @@ void main()
 	{
 		controlMap.a = 1.0;
 	}
-#endif //__USE_CONTROL_MAP__
 
 	float controlMapScale = length(controlMap.rgb) / 3.0;
 	controlMapScale *= controlMapScale;
@@ -374,7 +311,6 @@ void main()
 
 	if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 	{// Randomize...
-	 //iGrassType = randomInt(16, 19);
 		iGrassType = randomInt(0, 3);
 	}
 
@@ -391,40 +327,9 @@ void main()
 	tcOffsetEnd = tcOffsetBegin + 0.25;
 
 	iGrassType = 1;
-
-#elif defined(__USE_FAST_GRASS__)
-	if (GRASS_UNDERWATER_ONLY == 1.0 || heightAboveWater < 0.0)
-	{
-		iGrassType = 1;
-
-		if (heightAboveWaterLength <= 192.0)
-		{// When near water edge, reduce the size of the grass...
-			sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
-		}
-		else
-		{// Deep underwater plants draw larger...
-			sizeMult *= clamp(1.0 + (heightAboveWaterLength / 192.0), 1.0, 16.0);
-		}
-
-		tcOffsetBegin = BakedOffsetsBegin[0];
-		tcOffsetEnd = tcOffsetBegin + 0.25;
-	}
-	else
-	{
-		iGrassType = 0;
-
-		if (heightAboveWaterLength <= 256.0)
-		{// When near water edge, reduce the size of the grass...
-			sizeMult *= clamp(heightAboveWaterLength / 192.0, 0.0, 1.0) * fSizeRandomness;
-		}
-
-		tcOffsetBegin = BakedOffsetsBegin[0];
-		tcOffsetEnd = tcOffsetBegin + 0.25;
-	}
 #else //!defined(__USE_UNDERWATER_ONLY__)
-	if (GRASS_UNDERWATER_ONLY == 1.0 || heightAboveWater < 0.0)
+	if (heightAboveWater < 0.0)
 	{
-		//iGrassType = 16;
 		iGrassType = 0;
 
 		if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
@@ -448,44 +353,7 @@ void main()
 	}
 	else
 	{
-#ifdef __USE_CONTROL_MAP__
-		if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.g >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
-		{// Any main grass...
-			iGrassType = randomInt(0, 2);
-		}
-		else if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.g >= GRASSMAP_SCONTROL_MIN)
-		{// Either r or g grass...
-			iGrassType = randomInt(0, 1);
-		}
-		else if (controlMap.r >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
-		{// Either r or b grass...
-			iGrassType = randomInt(0, 1);
-			iGrassType += iGrassType; // so 0 or 2
-		}
-		else if (controlMap.g >= GRASSMAP_SCONTROL_MIN && controlMap.b >= GRASSMAP_SCONTROL_MIN)
-		{// Either g or b grass...
-			iGrassType = randomInt(1, 2);
-		}
-		else if (controlMap.r >= GRASSMAP_SCONTROL_MIN)
-		{// Always r grass... (some randomcy applied at end)
-			iGrassType = 0;
-		}
-		else if (controlMap.g >= GRASSMAP_SCONTROL_MIN)
-		{// Always g grass... (some randomcy applied at end)
-			iGrassType = 1;
-		}
-		else if (controlMap.b >= GRASSMAP_SCONTROL_MIN)
-		{// b grass map forces randomization...
-			iGrassType = randomInt(0, 15);
-		}
-		else
-		{// Any grass at all...
-			iGrassType = randomInt(0, 15);
-		}
-
-#else //!__USE_CONTROL_MAP__
 		iGrassType = randomInt(0, 2);
-#endif //__USE_CONTROL_MAP__
 
 		if (randZeroOne() > GRASS_TYPE_UNIFORMALITY)
 		{// Randomize...
@@ -528,11 +396,11 @@ void main()
 	float fWindPower = inWindPower[gl_InvocationID];
 	float randDir = sin(randZeroOne()*0.7f)*0.1f;
 
-	#ifdef THREE_WAY_GRASS_CLUMPS
+#ifdef THREE_WAY_GRASS_CLUMPS
 	for (int i = 0; i < 3; i++)
-	#else //!THREE_WAY_GRASS_CLUMPS
+#else //!THREE_WAY_GRASS_CLUMPS
 	for (int i = 0; i < 2; i++)
-	#endif //THREE_WAY_GRASS_CLUMPS
+#endif //THREE_WAY_GRASS_CLUMPS
 	{// Draw either 2 or 3 copies at each position at different angles...
 		vec3 direction = (rotationMatrix(vec3(0, 1, 0), randDir)*vec4(vBaseDir[i], 1.0)).xyz;
 		

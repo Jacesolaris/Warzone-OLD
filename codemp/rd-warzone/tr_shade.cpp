@@ -2564,10 +2564,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					if (GRASS_UNDERWATER_ONLY)
 						sp2 = &tr.grassShader[0];
-					else if (r_foliage->integer == 1)
-						sp2 = &tr.grassShader[1];
 					else
-						sp2 = &tr.grassShader[2];
+						sp2 = &tr.grassShader[1];
 
 					multiPass = qtrue;
 					passMax = 1;// GRASS_DENSITY;
@@ -3219,52 +3217,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
-				if (sp == &tr.grassShader[1])
-				{// Fast grass... Only use grassImage[0]...
-					//GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
-					GL_BindToTMU(tr.grassAliasImage, TB_DIFFUSEMAP);
-				}
-				else if (GRASS_UNDERWATER_ONLY)
+				if (GRASS_UNDERWATER_ONLY)
 				{
-					
-				}
-				else
-				{
-					/*GL_BindToTMU(tr.grassImage[0], TB_DIFFUSEMAP);
-					GL_BindToTMU(tr.grassImage[1], TB_SPLATMAP1);
-					GL_BindToTMU(tr.grassImage[2], TB_SPLATMAP2);
-					GL_BindToTMU(tr.grassImage[3], TB_SPLATMAP3);
-					GL_BindToTMU(tr.grassImage[4], TB_STEEPMAP);
-					GL_BindToTMU(tr.grassImage[5], TB_ROADMAP);
-					GL_BindToTMU(tr.grassImage[6], TB_DETAILMAP);
-					GL_BindToTMU(tr.grassImage[7], TB_SPECULARMAP);
-					GL_BindToTMU(tr.grassImage[8], TB_DELUXEMAP);
-					GL_BindToTMU(tr.grassImage[9], TB_NORMALMAP);
-					GL_BindToTMU(tr.grassImage[10], TB_OVERLAYMAP);
-					GL_BindToTMU(tr.grassImage[11], TB_LIGHTMAP);
-					GL_BindToTMU(tr.grassImage[12], TB_SHADOWMAP);
-					GL_BindToTMU(tr.grassImage[13], TB_CUBEMAP);
-					GL_BindToTMU(tr.grassImage[14], TB_POSITIONMAP);
-					GL_BindToTMU(tr.grassImage[15], TB_HEIGHTMAP);*/
-					GL_BindToTMU(tr.grassAliasImage, TB_DIFFUSEMAP);
-				}
-
-				if (sp == &tr.grassShader[1])
-				{// Fast grass... Only use seaGrassImage[0]...
-					//GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
 					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 				else
 				{
-					/*GL_BindToTMU(tr.seaGrassImage[0], TB_WATER_EDGE_MAP);
-					GL_BindToTMU(tr.seaGrassImage[1], TB_WATERPOSITIONMAP);
-					GL_BindToTMU(tr.seaGrassImage[2], TB_WATERHEIGHTMAP);
-					GL_BindToTMU(tr.seaGrassImage[3], TB_GLOWMAP);*/
+					GL_BindToTMU(tr.grassAliasImage, TB_DIFFUSEMAP);
 					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 
 				vec4_t l10;
-				VectorSet4(l10, GRASS_DISTANCE, GRASS_UNDERWATER_ONLY, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
+				VectorSet4(l10, GRASS_DISTANCE, 0.0, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				vec4_t l11;

@@ -3228,23 +3228,9 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		Q_strcat(extradefines, 1024, "#define __USE_UNDERWATER_ONLY__\n");
 
-#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		if (ALLOW_GL_400)
+		if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 		{
-			Q_strcat(extradefines, 1024, "#define USE_400\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
-			}
-		}
-		else
-#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load grass shader!");
-			}
+			ri->Error(ERR_FATAL, "Could not load grass shader!");
 		}
 
 
@@ -3252,49 +3238,9 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		extradefines[0] = '\0';
 
-		Q_strcat(extradefines, 1024, "#define __USE_FAST_GRASS__\n");
-
-#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		if (ALLOW_GL_400)
+		if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 		{
-			Q_strcat(extradefines, 1024, "#define USE_400\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load grass2 shader!");
-			}
-		}
-		else
-#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load grass2 shader!");
-			}
-		}
-
-
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
-
-		extradefines[0] = '\0';
-
-#ifdef __GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		if (ALLOW_GL_400)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_400\n");
-
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[2], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
-			}
-		}
-		else
-#endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
-		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grassShader[2], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
-			{
-				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
-			}
+			ri->Error(ERR_FATAL, "Could not load grass2 shader!");
 		}
 	}
 
@@ -4384,9 +4330,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		
 		// Grass/plant textures...
 		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass 0...
-		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP); // 16 - Sea grass 1...
-		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_WATERHEIGHTMAP, TB_WATERHEIGHTMAP); // 16 - Sea grass 2...
-		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_GLOWMAP, TB_GLOWMAP); // 16 - Sea grass 3...
 
 		// Control textures...
 		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
@@ -4411,14 +4354,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		
 		// Grass/plant textures...
 		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP); // 0
-		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_SPLATMAP1, TB_SPLATMAP1); // 1
-		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_SPLATMAP2, TB_SPLATMAP2); // 2
-		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_SPLATMAP3, TB_SPLATMAP3); // 3
 
 		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass 0...
-		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP); // 16 - Sea grass 1...
-		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_WATERHEIGHTMAP, TB_WATERHEIGHTMAP); // 16 - Sea grass 2...
-		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_GLOWMAP, TB_GLOWMAP); // 16 - Sea grass 3...
 
 		// Control textures...
 		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
@@ -4426,50 +4363,6 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.grassShader[1]);
-#endif
-
-		numEtcShaders++;
-
-
-
-		if (!GLSL_EndLoadGPUShader(&tr.grassShader[2]))
-		{
-			ri->Error(ERR_FATAL, "Could not load grass3 shader!");
-		}
-
-		GLSL_InitUniforms(&tr.grassShader[2]);
-
-		GLSL_BindProgram(&tr.grassShader[2]);
-		// Grass/plant textures...
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP); // 0
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_SPLATMAP1, TB_SPLATMAP1); // 1
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_SPLATMAP2, TB_SPLATMAP2); // 2
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_SPLATMAP3, TB_SPLATMAP3); // 3
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_STEEPMAP, TB_STEEPMAP); // 4
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_ROADMAP, TB_ROADMAP); // 5
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_DETAILMAP, TB_DETAILMAP); // 6
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_SPECULARMAP, TB_SPECULARMAP); // 7
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_DELUXEMAP, TB_DELUXEMAP); // 8
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_NORMALMAP, TB_NORMALMAP); // 9
-
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP); // 10
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_LIGHTMAP, TB_LIGHTMAP); // 11
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_SHADOWMAP, TB_SHADOWMAP); // 12
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_CUBEMAP, TB_CUBEMAP); // 13
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_POSITIONMAP, TB_POSITIONMAP); // 14
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_HEIGHTMAP, TB_HEIGHTMAP); // 15
-
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass 0...
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP); // 16 - Sea grass 1...
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_WATERHEIGHTMAP, TB_WATERHEIGHTMAP); // 16 - Sea grass 2...
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_GLOWMAP, TB_GLOWMAP); // 16 - Sea grass 3...
-
-																			 // Control textures...
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-		GLSL_SetUniformInt(&tr.grassShader[2], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.grassShader[2]);
 #endif
 
 		numEtcShaders++;
@@ -6322,7 +6215,6 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.foliageShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[0]);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[1]);
-	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[2]);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
 	GLSL_DeleteGPUShader(&tr.hbao2Shader);
 	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);

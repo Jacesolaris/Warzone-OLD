@@ -2900,7 +2900,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterPostShader;
 	shaderProgram_t furShader;
 	shaderProgram_t foliageShader;
-	shaderProgram_t grassShader[3];
+	shaderProgram_t grassShader[2];
 	shaderProgram_t hbaoShader;
 	shaderProgram_t hbao2Shader;
 	shaderProgram_t hbaoCombineShader;

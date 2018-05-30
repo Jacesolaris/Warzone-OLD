@@ -1,32 +1,5 @@
-uniform sampler2D	u_DiffuseMap;
-
-#if !defined(__USE_FAST_GRASS__)
-uniform sampler2D	u_SplatMap1;
-uniform sampler2D	u_SplatMap2;
-uniform sampler2D	u_SplatMap3;
-uniform sampler2D	u_SteepMap;
-uniform sampler2D	u_RoadMap;
-uniform sampler2D	u_DetailMap;
-uniform sampler2D	u_SpecularMap;
-uniform sampler2D	u_DeluxeMap;
-uniform sampler2D	u_NormalMap;
-
-uniform sampler2D	u_OverlayMap;
-uniform sampler2D	u_LightMap;
-uniform sampler2D	u_ShadowMap;
-uniform sampler2D	u_CubeMap;
-uniform sampler2D	u_PositionMap;
-uniform sampler2D	u_HeightMap;
-
-	#ifdef __HIGH_MTU_AVAILABLE__
-	uniform sampler2D	u_WaterEdgeMap; // Sea grass 0
-	uniform sampler2D	u_WaterPositionMap; // Sea grass 1
-	uniform sampler2D	u_WaterHeightMap; // Sea grass 2
-	uniform sampler2D	u_GlowMap; // Sea grass 3
-	#endif //__HIGH_MTU_AVAILABLE__
-#else //defined(__USE_FAST_GRASS__)
-uniform sampler2D	u_WaterEdgeMap; // Sea grass 0
-#endif //!defined(__USE_FAST_GRASS__)
+uniform sampler2D	u_DiffuseMap;	// Land grass atlas
+uniform sampler2D	u_WaterEdgeMap; // Sea grass atlas
 
 uniform vec3		u_ViewOrigin;
 
@@ -162,87 +135,24 @@ void main()
 
 	if (GRASS_WIDTH_REPEATS > 0.0) tc.x *= (GRASS_WIDTH_REPEATS * 2.0);
 
-	/*
 #if defined(__USE_UNDERWATER_ONLY__)
-	if (iGrassType >= 19)
-		diffuse = texture(u_GlowMap, tc);
-	else if (iGrassType >= 18)
-		diffuse = texture(u_WaterHeightMap, tc);
-	else if (iGrassType >= 17)
-		diffuse = texture(u_WaterPositionMap, tc);
-	else
-		diffuse = texture(u_WaterEdgeMap, tc);
-#elif defined(__USE_FAST_GRASS__)
+	diffuse = texture(u_WaterEdgeMap, tc);
+#else //!defined(__USE_UNDERWATER_ONLY__)
 	if (iGrassType >= 1)
+	{
 		diffuse = texture(u_WaterEdgeMap, tc);
+	}
 	else
+	{
 		diffuse = texture(u_DiffuseMap, tc);
-#else
-	#if defined(__HIGH_MTU_AVAILABLE__)
-	if (iGrassType >= 19)
-		diffuse = texture(u_GlowMap, tc);
-	else if (iGrassType >= 18)
-		diffuse = texture(u_WaterHeightMap, tc);
-	else if (iGrassType >= 17)
-		diffuse = texture(u_WaterPositionMap, tc);
-	else if (iGrassType >= 16)
-		diffuse = texture(u_WaterEdgeMap, tc);
-	else if (iGrassType >= 15)
-	#else //!defined(__HIGH_MTU_AVAILABLE__)
-	if (iGrassType >= 15)
-	#endif //defined(__HIGH_MTU_AVAILABLE__)
-		diffuse = texture(u_HeightMap, tc);
-	else if (iGrassType >= 14)
-		diffuse = texture(u_PositionMap, tc);
-	else if (iGrassType >= 13)
-		diffuse = texture(u_CubeMap, tc);
-	else if (iGrassType >= 12)
-		diffuse = texture(u_LightMap, tc);
-	else if (iGrassType >= 11)
-		diffuse = texture(u_ShadowMap, tc);
-	else if (iGrassType >= 10)
-		diffuse = texture(u_OverlayMap, tc);
-	else if (iGrassType >= 9)
-		diffuse = texture(u_NormalMap, tc);
-	else if (iGrassType >= 8)
-		diffuse = texture(u_DeluxeMap, tc);
-	else if (iGrassType >= 7)
-		diffuse = texture(u_SpecularMap, tc);
-	else if (iGrassType >= 6)
-		diffuse = texture(u_DetailMap, tc);
-	else if (iGrassType >= 5)
-		diffuse = texture(u_RoadMap, tc);
-	else if (iGrassType >= 4)
-		diffuse = texture(u_SteepMap, tc);
-	else if (iGrassType >= 3)
-		diffuse = texture(u_SplatMap3, tc);
-	else if (iGrassType >= 2)
-		diffuse = texture(u_SplatMap2, tc);
-	else if (iGrassType >= 1)
-		diffuse = texture(u_SplatMap1, tc);
-	else
-		diffuse = texture(u_DiffuseMap, tc);
+	}
 #endif //defined(__USE_UNDERWATER_ONLY__)
-	*/
-
-	if (iGrassType >= 1)
-	{
-		diffuse = texture(u_WaterEdgeMap, tc);
-	}
-	else
-	{
-		diffuse = texture(u_DiffuseMap, tc);
-	}
 
 	if (diffuse.a > 0.5)
 	{
 		gl_FragColor = vec4(diffuse.rgb, 1.0);
 		out_Glow = vec4(0.0);
-		
-		//vec3 dir = normalize(u_ViewOrigin - vVertPosition);
-		//out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy) * dir), 0.0, 1.0);
 		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy)), 0.0, 1.0);
-
 #ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
 #endif //__USE_REAL_NORMALMAPS__

@@ -8,7 +8,7 @@ uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHAD
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, GRASS___USE_UNDERWATER_ONLY__, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local10; // foliageLODdistance, 0.0, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY
 
 #define SHADER_MAP_SIZE				u_Local1.r
 #define SHADER_SWAY					u_Local1.g
@@ -30,7 +30,6 @@ uniform vec4						u_Local10; // foliageLODdistance, GRASS___USE_UNDERWATER_ONLY_
 #define GRASS_HEIGHT				u_Local8.b
 
 #define MAX_RANGE					u_Local10.r
-#define GRASS___USE_UNDERWATER_ONLY__		u_Local10.g
 #define GRASS_DENSITY				u_Local10.b
 #define GRASS_TYPE_UNIFORMALITY		u_Local10.a
 
