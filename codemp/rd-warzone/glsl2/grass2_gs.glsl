@@ -67,25 +67,12 @@ uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZ
 uniform vec4						u_Mins;
 uniform vec4						u_Maxs;
 
+flat in float inWindPower[];
+
 smooth out vec2						vTexCoord;
 smooth out vec3						vVertPosition;
 smooth out vec2						vVertNormal;
 flat out int						iGrassType;
-
-//
-// General Settings...
-//
-
-const float							fWindStrength = 12.0;
-const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
-
-float								controlScale = 1.0 / SHADER_MAP_SIZE;
-
-vec3 vLocalSeed;
-
-const float xdec = 1.0/255.0;
-const float ydec = 1.0/65025.0;
-const float zdec = 1.0/16581375.0;
 
 //#define __ENCODE_NORMALS_RECONSTRUCT_Z__
 #define __ENCODE_NORMALS_STEREOGRAPHIC_PROJECTION__
@@ -154,79 +141,12 @@ vec2 EncodeNormal(vec3 n)
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
+const float xdec = 1.0 / 255.0;
+const float ydec = 1.0 / 65025.0;
+const float zdec = 1.0 / 16581375.0;
+
 float EncodeFloatRGBA( vec4 rgba ) {
   return dot( rgba, vec4(1.0, xdec, ydec, zdec) );
-}
-
-// This function returns random number from zero to one
-float randZeroOne()
-{
-	uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
-	n = n * (n * n * 15731u + 789221u);
-	n = (n >> 9u) | 0x3F800000u;
-
-	float fRes = 2.0 - uintBitsToFloat(n);
-	vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-	return fRes;
-}
-
-int randomInt(int min, int max)
-{
-	float fRandomFloat = randZeroOne();
-	return int(float(min) + fRandomFloat*float(max - min));
-}
-
-// Produce a psuedo random point that exists on the current triangle primitive.
-vec4 randomBarycentricCoordinate() {
-	float R = randZeroOne();
-	float S = randZeroOne();
-
-	if (R + S >= 1) {
-		R = 1 - R;
-		S = 1 - S;
-	}
-
-	return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
-}
-
-const vec2 roadPx = vec2(1.0 / 2048.0);
-
-vec4 GetControlMap(vec3 m_vertPos)
-{
-	vec4 xaxis = texture(u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
-	vec4 yaxis = texture(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
-	vec4 zaxis = texture(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
-
-	if (SHADER_HAS_SPLATMAP4 > 0.0)
-	{// Also grab the roads map, if we have one...
-		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
-		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
-		
-		float road = texture(u_RoadsControlMap, pixel).r;
-
-		if (road > GRASS_DISTANCE_FROM_ROADS)
-		{
-			return vec4(0.0); // Force no grass near roads, or on black parts of the road map (obstacles)...
-		}
-		else if (road > 0.0)
-		{
-			float scale = 1.0 - (road / GRASS_DISTANCE_FROM_ROADS);
-			xaxis.a = yaxis.a = zaxis.a = scale;
-		}
-		else
-		{
-			xaxis.a = yaxis.a = zaxis.a = 1.0;
-		}
-	}
-
-	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
-}
-
-vec4 GetGrassMap(vec3 m_vertPos)
-{
-	vec4 control = GetControlMap(m_vertPos);
-	control.rgb = clamp(clamp(clamp(control.rgb * 1024.0, 0.0, 1.0) - 0.05, 0.0, 1.0) * 0.5, 0.0, 1.0);
-	return control;
 }
 
 mat4 rotationMatrix(vec3 axis, float angle) 
@@ -242,7 +162,12 @@ mat4 rotationMatrix(vec3 axis, float angle)
                 0.0,                                0.0,                                0.0,                                1.0); 
 }
 
+
+const vec3							vWindDirection = normalize(vec3(1.0, 1.0, 0.0));
+
+
 const float PIover180 = 3.1415/180.0; 
+
 const vec3 vBaseDir[] = vec3[] (
 	vec3(1.0, 0.0, 0.0),
 #ifdef THREE_WAY_GRASS_CLUMPS
@@ -273,9 +198,76 @@ vec2 BakedOffsetsBegin[16] = vec2[]
 	vec2( 0.75, 0.75 )
 );
 
+
+const vec2 roadPx = vec2(1.0 / 2048.0);
+
+#ifdef __USE_CONTROL_MAP__
+vec4 GetControlMap(vec3 m_vertPos)
+{
+	vec4 xaxis = texture(u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
+	vec4 yaxis = texture(u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
+	vec4 zaxis = texture(u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
+
+	if (SHADER_HAS_SPLATMAP4 > 0.0)
+	{// Also grab the roads map, if we have one...
+		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
+
+		float road = texture(u_RoadsControlMap, pixel).r;
+
+		if (road > GRASS_DISTANCE_FROM_ROADS)
+		{
+			return vec4(0.0); // Force no grass near roads, or on black parts of the road map (obstacles)...
+		}
+		else if (road > 0.0)
+		{
+			float scale = 1.0 - (road / GRASS_DISTANCE_FROM_ROADS);
+			xaxis.a = yaxis.a = zaxis.a = scale;
+		}
+		else
+		{
+			xaxis.a = yaxis.a = zaxis.a = 1.0;
+		}
+	}
+
+	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
+}
+
+vec4 GetGrassMap(vec3 m_vertPos)
+{
+	vec4 control = GetControlMap(m_vertPos);
+	control.rgb = clamp(clamp(clamp(control.rgb * 1024.0, 0.0, 1.0) - 0.05, 0.0, 1.0) * 0.5, 0.0, 1.0);
+	return control;
+}
+#endif //__USE_CONTROL_MAP__
+
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+	uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+	n = n * (n * n * 15731u + 789221u);
+	n = (n >> 9u) | 0x3F800000u;
+
+	float fRes = 2.0 - uintBitsToFloat(n);
+	vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+	return fRes;
+}
+
+int randomInt(int min, int max)
+{
+	float fRandomFloat = randZeroOne();
+	return int(float(min) + fRandomFloat*float(max - min));
+}
+
 void main()
 {
 	iGrassType = 0;
+
+	//
+	//
+	//
 
 	//face center------------------------
 	vec3 Vert1 = gl_in[0].gl_Position.xyz;
@@ -283,11 +275,11 @@ void main()
 	vec3 Vert3 = gl_in[2].gl_Position.xyz;
 
 	vec3 vGrassFieldPos = (Vert1 + Vert2 + Vert3) / 3.0;   //Center of the triangle - copy for later
-	//-----------------------------------
+														   //-----------------------------------
 
-	vLocalSeed = vGrassFieldPos;// *PASS_NUMBER;
-	// invocations support...
-	//	vLocalSeed = Pos*float(gl_InvocationID);
+	vLocalSeed = vGrassFieldPos;
+								// invocations support...
+								//	vLocalSeed = Pos*float(gl_InvocationID);
 
 #ifndef __USE_CONTROL_MAP__
 	vec3 control;
@@ -295,10 +287,6 @@ void main()
 	control.g = randZeroOne();
 	control.b = randZeroOne();
 #endif //__USE_CONTROL_MAP__
-
-	vLocalSeed = vGrassFieldPos*PASS_NUMBER;
-	//	// invocations support...
-	//	vLocalSeed = vGrassFieldPos*float(gl_InvocationID);
 
 	float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
 
@@ -386,7 +374,7 @@ void main()
 
 	if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 	{// Randomize...
-		//iGrassType = randomInt(16, 19);
+	 //iGrassType = randomInt(16, 19);
 		iGrassType = randomInt(0, 3);
 	}
 
@@ -537,16 +525,7 @@ void main()
 		fGrassPatchHeight *= 1.25;
 	}
 
-	// Wind calculation stuff...
-	float fWindPower = 0.5f + sin(vGrassFieldPos.x / 30 + vGrassFieldPos.z / 30 + u_Time*(1.2f + fWindStrength / 20.0f));
-
-	if (fWindPower < 0.0f)
-		fWindPower = fWindPower*0.2f;
-	else
-		fWindPower = fWindPower*0.3f;
-
-	fWindPower *= fWindStrength;
-
+	float fWindPower = inWindPower[gl_InvocationID];
 	float randDir = sin(randZeroOne()*0.7f)*0.1f;
 
 	#ifdef THREE_WAY_GRASS_CLUMPS
@@ -566,15 +545,10 @@ void main()
 		vec3 vc = va + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
 		vec3 vd = vb + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
 
-		vec3 vDir = normalize(u_ViewOrigin - vVertPosition);
-		//vec3 baseNorm = normalize(cross(va - vb, vd - vc));
-		//vec3 baseNorm = normalize(cross(vb.xyz - va.xyz, vc.xyz - va.xyz));
 		vec3 baseNorm = normalize(cross(normalize(va - P), normalize(vb - P)));
-		//vVertNormal = EncodeNormal(normalize(mix(vDir, baseNorm, 0.5)));
 		vec3 I = normalize(P.xyz - u_ViewOrigin.xyz);
 		vec3 Nf = normalize(faceforward(baseNorm, I, baseNorm));
 		vVertNormal = EncodeNormal(Nf);
-		//vVertNormal = EncodeNormal((vDir + baseNorm) / 2.0);
 
 		vVertPosition = va.xyz;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);

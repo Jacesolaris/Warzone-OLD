@@ -50,7 +50,7 @@ glsl_compute_version_string(void *mem_ctx, bool is_es, unsigned version)
 
 
 static const unsigned known_desktop_glsl_versions[] =
-   { 110, 120, 130, 140, 150, 330, 400, 410, 420, 430, 440 };
+   { 110, 120, 130, 140, 150, 330, 400, 410, 420, 430, 440, 500, 510, 520, 530, 540 };
 
 
 _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
@@ -153,12 +153,11 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
    this->num_supported_versions = 0;
    if (_mesa_is_desktop_gl(ctx)) {
       for (unsigned i = 0; i < ARRAY_SIZE(known_desktop_glsl_versions); i++) {
-         if (known_desktop_glsl_versions[i] <= ctx->Const.GLSLVersion) {
-            this->supported_versions[this->num_supported_versions].ver
-               = known_desktop_glsl_versions[i];
+         //if (known_desktop_glsl_versions[i] <= ctx->Const.GLSLVersion) {
+            this->supported_versions[this->num_supported_versions].ver = known_desktop_glsl_versions[i];
             this->supported_versions[this->num_supported_versions].es = false;
             this->num_supported_versions++;
-         }
+         //}
       }
    }
    if (ctx->API == API_OPENGLES2 || ctx->Extensions.ARB_ES2_compatibility) {

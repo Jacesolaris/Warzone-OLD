@@ -141,6 +141,16 @@ initialize_context(struct gl_context *ctx, gl_api api)
       break;
    case 150:
    case 330:
+   case 400:
+   case 410:
+   case 420:
+   case 430:
+   case 440:
+   case 500:
+   case 510:
+   case 520:
+   case 530:
+   case 540:
       ctx->Const.MaxClipPlanes = 8;
       ctx->Const.MaxDrawBuffers = 8;
       ctx->Const.MinProgramTexelOffset = -8;
@@ -326,6 +336,16 @@ main(int argc, char **argv)
          case 140:
          case 150:
          case 330:
+		 case 400:
+		 case 410:
+		 case 420:
+		 case 430:
+		 case 440:
+		 case 500:
+		 case 510:
+		 case 520:
+		 case 530:
+		 case 540:
             glsl_es = false;
             break;
          default:
