@@ -23,6 +23,7 @@ flat varying float	var_IsWater;
 // Maximum waves amplitude
 #define maxAmplitude u_Local10.g
 
+#if 0
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
 	float base =      u_DeformParams[0];
@@ -91,6 +92,7 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 
 	return pos + normal * (base + func * amplitude);
 }
+#endif
 
 float normalToSlope(in vec3 normal) {
 	float	forward;
@@ -130,10 +132,12 @@ void main()
 	vec3 position  = attr_Position.xyz;
 	vec3 normal    = attr_Normal * 2.0 - 1.0;
 
+#if 0 // Angel's JH3 water used this, but since he's left, disabling for more speed.
 	if (USE_DEFORM == 1.0)
 	{
 		position = DeformPosition(position, normal, attr_TexCoord0.st);
 	}
+#endif
 
 	var_vertPos = position.xyz;
 	var_TexCoords = attr_TexCoord0.st;

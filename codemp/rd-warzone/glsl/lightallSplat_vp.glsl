@@ -128,6 +128,7 @@ varying vec3	var_vertPos;
 varying vec3	var_Blending;
 varying float	var_Slope;
 
+#if 0
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
 	float base =      u_DeformParams[0];
@@ -243,7 +244,7 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 
 	return st2 + texOffset * amplitude;
 }
-
+#endif
 
 vec4 CalcColor(vec3 position, vec3 normal)
 {
@@ -356,6 +357,7 @@ void main()
 	}
 #endif //__HEIGHTMAP_TERRAIN_TEST__
 
+#if 0
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		//position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
@@ -382,6 +384,7 @@ void main()
 		normal = normalize(normal4.xyz);
 	}
 	else
+#endif
 	{
 		position  = attr_Position;
 		normal    = attr_Normal * 2.0 - 1.0;
@@ -393,15 +396,18 @@ void main()
 
 	vec2 texCoords = attr_TexCoord0.st;
 
+#if 0
 	if (USE_DEFORM == 1.0)
 	{
 		position = DeformPosition(position, normal, attr_TexCoord0.st);
 	}
+#endif
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
 	vec3 preMMPos = position.xyz;
 
+#if 0
 	//if (USE_VERTEX_ANIM == 1.0 || USE_SKELETAL_ANIM == 1.0)
 	{
 		position = (u_ModelMatrix * vec4(position, 1.0)).xyz;
@@ -413,6 +419,7 @@ void main()
 		texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
 		texCoords = ModTexCoords(texCoords, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
 	}
+#endif
 
 
 	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
