@@ -1296,6 +1296,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ViewLeft", GLSL_VEC3, 1 },
 	{ "u_ViewUp", GLSL_VEC3, 1 },
 	{ "u_PlayerOrigin", GLSL_VEC3, 1 },
+#ifdef __HUMANOIDS_BEND_GRASS__
+	{ "u_HumanoidOriginsNum", GLSL_INT, 1 },
+	{ "u_HumanoidOrigins", GLSL_VEC3, MAX_GRASSBEND_HUMANOIDS },
+#endif //__HUMANOIDS_BEND_GRASS__
 
 	{ "u_InstancePositions", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
 	{ "u_InstanceScales", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
@@ -3228,6 +3232,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		extradefines[0] = '\0';
 
 		Q_strcat(extradefines, 1024, "#define __USE_UNDERWATER_ONLY__\n");
+#ifdef __HUMANOIDS_BEND_GRASS__
+		Q_strcat(extradefines, 1024, "#define __HUMANOIDS_BEND_GRASS__\n");
+		Q_strcat(extradefines, 1024, va("#define MAX_GRASSBEND_HUMANOIDS %i\n", MAX_GRASSBEND_HUMANOIDS));
+#endif //__HUMANOIDS_BEND_GRASS__
 
 		if (!GLSL_BeginLoadGPUShader(&tr.grassShader[0], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 		{
@@ -3238,6 +3246,11 @@ int GLSL_BeginLoadGPUShaders(void)
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 
 		extradefines[0] = '\0';
+
+#ifdef __HUMANOIDS_BEND_GRASS__
+		Q_strcat(extradefines, 1024, "#define __HUMANOIDS_BEND_GRASS__\n");
+		Q_strcat(extradefines, 1024, va("#define MAX_GRASSBEND_HUMANOIDS %i\n", MAX_GRASSBEND_HUMANOIDS));
+#endif //__HUMANOIDS_BEND_GRASS__
 
 		if (!GLSL_BeginLoadGPUShader(&tr.grassShader[1], "grass2", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_grass2_vp, fallbackShader_grass2_fp, fallbackShader_grass2_cs, fallbackShader_grass2_es, fallbackShader_grass2_gs))
 		{

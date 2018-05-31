@@ -11368,10 +11368,12 @@ stillDoSaber:
 		{// Mark this refent as being the player, so that we can use it's position in renderer...
 			legs.isLocalPlayer = qtrue;
 			legs.localPlayerGameEntityNum = cg.clientNum;
+			legs.isHumanoid = qtrue;
 		}
 		else
 		{
 			legs.isLocalPlayer = qfalse;
+			legs.isHumanoid = qtrue;
 		}
 
 		AddRefEntityToScene(&legs);

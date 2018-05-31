@@ -50,6 +50,10 @@ uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 
 uniform vec3						u_ViewOrigin;
 uniform vec3						u_PlayerOrigin;
+#ifdef __HUMANOIDS_BEND_GRASS__
+uniform int							u_HumanoidOriginsNum;
+uniform vec3						u_HumanoidOrigins[MAX_GRASSBEND_HUMANOIDS];
+#endif //__HUMANOIDS_BEND_GRASS__
 uniform float						u_Time;
 
 uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
@@ -130,13 +134,23 @@ vec2 EncodeNormal(vec3 n)
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
-const float xdec = 1.0 / 255.0;
-const float ydec = 1.0 / 65025.0;
-const float zdec = 1.0 / 16581375.0;
-
-float EncodeFloatRGBA( vec4 rgba ) {
-  return dot( rgba, vec4(1.0, xdec, ydec, zdec) );
+#if 0
+float encode(float4 color)
+{
+	int rgba = (int(color.x * 255.0) << 24) + (int(color.y * 255.0) << 16) + (int(color.z * 255.0) << 8) + int(color.w * 255.0);
+	return intBitsToFloat(rgba);
 }
+
+vec4 decode(float value)
+{
+	int rgba = floatBitsToInt(value);
+	float r = float(rgba >> 24) / 255.0;
+	float g = float((rgba & 0x00ff0000) >> 16) / 255.0;
+	float b = float((rgba & 0x0000ff00) >> 8) / 255.0;
+	float a = float(rgba & 0x000000ff) / 255.0;
+	return vec4(r, g, b, a);
+}
+#endif
 
 mat4 rotationMatrix(vec3 axis, float angle) 
 { 
@@ -419,6 +433,7 @@ void main()
 		vec3 Nf = normalize(faceforward(baseNorm, I, baseNorm));
 		vVertNormal = EncodeNormal(Nf);
 
+#ifndef __HUMANOIDS_BEND_GRASS__ // Just the player...
 		vec3 playerOffset = vec3(0.0);
 		float distanceToPlayer = distance(u_PlayerOrigin.xy, P.xy);
 		float PLAYER_BEND_CLOSENESS = GRASS_HEIGHT * 1.5;
@@ -428,6 +443,41 @@ void main()
 			dirToPlayer.z = 0.0;
 			playerOffset = dirToPlayer * (PLAYER_BEND_CLOSENESS - distanceToPlayer);
 		}
+#else //__HUMANOIDS_BEND_GRASS__ - Any player/NPC...
+		int closestHumanoid = -1;
+		float closestHumanoidDistance = distance(u_PlayerOrigin.xy, P.xy);
+
+		for (int h = 0; h < u_HumanoidOriginsNum; h++)
+		{
+			float dist = distance(u_HumanoidOrigins[h].xy, P.xy);
+
+			if (dist < closestHumanoidDistance)
+			{
+				closestHumanoid = h;
+				closestHumanoidDistance = dist;
+			}
+		}
+
+		vec3 playerOffset = vec3(0.0);
+		float PLAYER_BEND_CLOSENESS;
+		
+		if (closestHumanoid == -1)
+			PLAYER_BEND_CLOSENESS = GRASS_HEIGHT * 1.5;
+		else
+			PLAYER_BEND_CLOSENESS = GRASS_HEIGHT * 1.25;
+
+		if (closestHumanoidDistance < PLAYER_BEND_CLOSENESS)
+		{
+			vec3 dirToPlayer;
+			if (closestHumanoid == -1)
+				dirToPlayer = normalize(P - u_PlayerOrigin);
+			else
+				dirToPlayer = normalize(P - u_HumanoidOrigins[closestHumanoid]);
+
+			dirToPlayer.z = 0.0;
+			playerOffset = dirToPlayer * (PLAYER_BEND_CLOSENESS - closestHumanoidDistance);
+		}
+#endif //__HUMANOIDS_BEND_GRASS__
 
 		vVertPosition = va.xyz;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);

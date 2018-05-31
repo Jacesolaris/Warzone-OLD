@@ -3229,6 +3229,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PLAYERORIGIN, backEnd.localPlayerOrigin);
 
+#ifdef __HUMANOIDS_BEND_GRASS__ // Bend grass for all close player/NPCs...
+				GLSL_SetUniformInt(sp, UNIFORM_HUMANOIDORIGINSNUM, backEnd.humanoidOriginsNum);
+				GLSL_SetUniformVec3xX(sp, UNIFORM_HUMANOIDORIGINS, backEnd.humanoidOrigins, backEnd.humanoidOriginsNum);
+#endif //__HUMANOIDS_BEND_GRASS__
+
 				vec4_t l10;
 				VectorSet4(l10, GRASS_DISTANCE, 0.0, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);

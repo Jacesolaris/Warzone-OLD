@@ -258,6 +258,7 @@ Ghoul2 Insert End
 */
 	qboolean	isLocalPlayer;
 	int			localPlayerGameEntityNum;
+	qboolean	isHumanoid;
 
 	qboolean	ignoreCull;
 	qboolean	noMerge;

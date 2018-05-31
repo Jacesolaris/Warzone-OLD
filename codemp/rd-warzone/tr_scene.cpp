@@ -65,6 +65,7 @@ void R_InitNextFrame(void) {
 	r_numpolyverts = 0;
 
 	backEnd.localPlayerValid = qfalse;
+	backEnd.humanoidOriginsNum = 0;
 }
 
 
@@ -292,6 +293,55 @@ void RE_AddPolyToScene(qhandle_t hShader, int numVerts, const polyVert_t *verts,
 
 //#define __PVS_CULL__ // UQ1: Testing...
 
+#ifdef __HUMANOIDS_BEND_GRASS__
+extern qboolean TR_InFOV(vec3_t spot, vec3_t from);
+
+void RE_AddCloseHumanoidOrigin(const vec3_t origin)
+{
+	float entityDistance = Distance(origin, backEnd.refdef.vieworg);
+
+	if (entityDistance > 1024.0)
+	{// Skip it...
+		return;
+	}
+
+	/*if (!TR_InFOV((float *)origin, backEnd.refdef.vieworg))
+	{// Not on screen...
+		return;
+	}*/
+
+	if (backEnd.humanoidOriginsNum < MAX_GRASSBEND_HUMANOIDS)
+	{// Free space in the list, just add it at the end...
+		VectorCopy(origin, backEnd.humanoidOrigins[backEnd.humanoidOriginsNum]);
+		backEnd.humanoidOriginsNum++;
+		return;
+	}
+
+	// List is full, find the furthest option...
+	int furthest = -1;
+	float furthestDist = 0.0;
+
+	for (int i = 0; i < MAX_GRASSBEND_HUMANOIDS; i++)
+	{
+		float dist = Distance(backEnd.humanoidOrigins[i], backEnd.refdef.vieworg);
+		
+		if (dist > furthestDist)
+		{
+			furthest = i;
+			furthestDist = dist;
+		}
+	}
+
+	if (furthest != -1)
+	{// We found a furthest option, check if this new position is closer, if so, replace the old one...
+		if (entityDistance < furthestDist)
+		{
+			VectorCopy(origin, backEnd.humanoidOrigins[furthest]);
+		}
+	}
+}
+#endif //__HUMANOIDS_BEND_GRASS__
+
 /*
 =====================
 RE_AddRefEntityToScene
@@ -345,6 +395,12 @@ void RE_AddRefEntityToScene(const refEntity_t *ent) {
 		backEnd.localPlayerEntity = &backEndData->entities[r_numentities];
 		backEnd.localPlayerValid = qtrue;
 	}
+#ifdef __HUMANOIDS_BEND_GRASS__
+	else if (ent->isHumanoid)
+	{// Record this humanoid (player/NPC to origins list)...
+		RE_AddCloseHumanoidOrigin(ent->origin);
+	}
+#endif //__HUMANOIDS_BEND_GRASS__
 
 	r_numentities++;
 }

@@ -108,8 +108,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __TESS_SORTING__
 #define __MATERIAL_SORTING__
 
-//#define __REALTIME_SURFACE_SORTING__			// Meh, on big maps with lots of models, sorting is much slower then not sorting...
 
+#define __HUMANOIDS_BEND_GRASS__
+#ifdef __HUMANOIDS_BEND_GRASS__
+	#define MAX_GRASSBEND_HUMANOIDS 4
+#endif //__HUMANOIDS_BEND_GRASS__
+
+//#define __REALTIME_SURFACE_SORTING__			// Meh, on big maps with lots of models, sorting is much slower then not sorting...
 #ifdef __REALTIME_SURFACE_SORTING__
 	#define __REALTIME_DISTANCE_SORTING__
 	//#define __REALTIME_FX_SORTING__
@@ -1639,7 +1644,12 @@ typedef enum
 	UNIFORM_VIEWFORWARD,
 	UNIFORM_VIEWLEFT,
 	UNIFORM_VIEWUP,
+
 	UNIFORM_PLAYERORIGIN,
+#ifdef __HUMANOIDS_BEND_GRASS__
+	UNIFORM_HUMANOIDORIGINSNUM,
+	UNIFORM_HUMANOIDORIGINS,
+#endif //__HUMANOIDS_BEND_GRASS__
 
 	UNIFORM_INSTANCE_POSITIONS,
 	UNIFORM_INSTANCE_SCALES,
@@ -2651,6 +2661,8 @@ typedef struct {
 	int						localPlayerGameEntityNum;
 	trRefEntity_t			*localPlayerEntity;
 	int						localPlayerEntityNum;
+	int						humanoidOriginsNum;
+	vec3_t					humanoidOrigins[MAX_GRASSBEND_HUMANOIDS];
 } backEndState_t;
 
 /*
