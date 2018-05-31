@@ -49,6 +49,7 @@ uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 #define GRASS_TYPE_UNIFORM_WATER	0.66
 
 uniform vec3						u_ViewOrigin;
+uniform vec3						u_PlayerOrigin;
 uniform float						u_Time;
 
 uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
@@ -418,6 +419,16 @@ void main()
 		vec3 Nf = normalize(faceforward(baseNorm, I, baseNorm));
 		vVertNormal = EncodeNormal(Nf);
 
+		vec3 playerOffset = vec3(0.0);
+		float distanceToPlayer = distance(u_PlayerOrigin.xy, P.xy);
+		float PLAYER_BEND_CLOSENESS = GRASS_HEIGHT * 1.5;
+		if (distanceToPlayer < PLAYER_BEND_CLOSENESS)
+		{
+			vec3 dirToPlayer = normalize(P - u_PlayerOrigin);
+			dirToPlayer.z = 0.0;
+			playerOffset = dirToPlayer * (PLAYER_BEND_CLOSENESS - distanceToPlayer);
+		}
+
 		vVertPosition = va.xyz;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 		vTexCoord = vec2(tcOffsetBegin[0], tcOffsetEnd[1]);
@@ -428,12 +439,12 @@ void main()
 		vTexCoord = vec2(tcOffsetEnd[0], tcOffsetEnd[1]);
 		EmitVertex();
 
-		vVertPosition = vc.xyz + vWindDirection*fWindPower;
+		vVertPosition = vc.xyz + playerOffset + vWindDirection*fWindPower;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 		vTexCoord = vec2(tcOffsetBegin[0], tcOffsetBegin[1]);
 		EmitVertex();
 
-		vVertPosition = vd.xyz + vWindDirection*fWindPower;
+		vVertPosition = vd.xyz + playerOffset + vWindDirection*fWindPower;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vVertPosition, 1.0);
 		vTexCoord = vec2(tcOffsetEnd[0], tcOffsetBegin[1]);
 		EmitVertex();

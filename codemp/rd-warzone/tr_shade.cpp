@@ -3227,6 +3227,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 
+				GLSL_SetUniformVec3(sp, UNIFORM_PLAYERORIGIN, backEnd.localPlayerOrigin);
+
 				vec4_t l10;
 				VectorSet4(l10, GRASS_DISTANCE, 0.0, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);

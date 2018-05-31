@@ -1295,6 +1295,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ViewForward", GLSL_VEC3, 1 },
 	{ "u_ViewLeft", GLSL_VEC3, 1 },
 	{ "u_ViewUp", GLSL_VEC3, 1 },
+	{ "u_PlayerOrigin", GLSL_VEC3, 1 },
 
 	{ "u_InstancePositions", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
 	{ "u_InstanceScales", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
