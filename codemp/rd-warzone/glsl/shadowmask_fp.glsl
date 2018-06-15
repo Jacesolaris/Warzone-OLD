@@ -65,8 +65,7 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, floa
 	//vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
 	vec2 offset = mod(sCoord.xy, 0.5);
 	offset.y += offset.x;  // y ^= x in floating point
-	if (offset.y > 1.1) offset.y = 0;
-
+	if (offset.y > 1.1) offset.y = 0;
 	float shadowCoeff = (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, 0.5), scale) +
                offset_lookup(shadowmap, sCoord, offset + vec2(0.5, 0.5), scale) +
                offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, -1.5), scale) +

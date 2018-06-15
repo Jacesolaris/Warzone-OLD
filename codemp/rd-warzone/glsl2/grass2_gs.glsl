@@ -9,15 +9,15 @@ layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
 uniform mat4						u_ModelViewProjectionMatrix;
 
-uniform sampler2D					u_SplatControlMap;
 uniform sampler2D					u_RoadsControlMap;
+uniform sampler2D					u_HeightMap;
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, 0.0, 0.0, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, 0.0, GRASS_TYPE_UNIFORMALITY
 uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 
 #define SHADER_MAP_SIZE				u_Local1.r
@@ -40,6 +40,7 @@ uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
 #define GRASS_HEIGHT				u_Local8.b
 
 #define MAX_RANGE					u_Local10.r
+#define TERRAIN_TESS_OFFSET			u_Local10.g
 #define GRASS_TYPE_UNIFORMALITY		u_Local10.a
 
 #define GRASS_WIDTH_REPEATS			u_Local11.r
@@ -224,6 +225,46 @@ int randomInt(int min, int max)
 	return int(float(min) + fRandomFloat*float(max - min));
 }
 
+float GetRoadFactor(vec2 pixel)
+{
+	float roadScale = 1.0;
+
+	if (SHADER_HAS_SPLATMAP4 > 0.0)
+	{// Also grab the roads map, if we have one...
+		float road = texture(u_RoadsControlMap, pixel).r;
+
+		if (road > GRASS_DISTANCE_FROM_ROADS)
+		{
+			roadScale = 0.0;
+		}
+		else if (road > 0.0)
+		{
+			roadScale = 1.0 - clamp(road / GRASS_DISTANCE_FROM_ROADS, 0.0, 1.0);
+		}
+		else
+		{
+			roadScale = 1.0;
+		}
+	}
+	else
+	{
+		roadScale = 1.0;
+	}
+
+	return roadScale;
+}
+
+float GetHeightmap(vec2 pixel)
+{
+	return texture(u_HeightMap, pixel).r;
+}
+
+vec2 GetMapTC(vec3 pos)
+{
+	vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+	return (pos.xy - u_Mins.xy) / mapSize;
+}
+
 void main()
 {
 	iGrassType = 0;
@@ -282,33 +323,23 @@ void main()
 	vec4 controlMap;
 
 	controlMap.rgb = control.rgb;
-	controlMap.a = 0.0;
+	controlMap.a = 1.0;
+
+	vec2 pixel = GetMapTC(vGrassFieldPos);
 
 	if (SHADER_HAS_SPLATMAP4 > 0.0)
 	{// Also grab the roads map, if we have one...
-		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
-		vec2 pixel = (vGrassFieldPos.xy - u_Mins.xy) / mapSize;
+		controlMap.a = GetRoadFactor(pixel);
 
-		float road = texture(u_RoadsControlMap, pixel).r;
-
-		if (road > GRASS_DISTANCE_FROM_ROADS)
+		if (controlMap.a == 0.0)
 		{
 			return;
 		}
-		else if (road > 0.0)
-		{
-			float scale = 1.0 - (road / GRASS_DISTANCE_FROM_ROADS);
-			controlMap.a = scale;
-		}
-		else
-		{
-			controlMap.a = 1.0;
-		}
 	}
-	else
-	{
-		controlMap.a = 1.0;
-	}
+
+	float terrainOffsetScale = GetHeightmap(pixel);
+	float terrainOffset = max(terrainOffsetScale, 1.0 - clamp(controlMap.a * 0.6 + 0.4, 0.0, 1.0)) - 0.5;
+	vGrassFieldPos.z += terrainOffset * TERRAIN_TESS_OFFSET;
 
 	float controlMapScale = length(controlMap.rgb) / 3.0;
 	controlMapScale *= controlMapScale;

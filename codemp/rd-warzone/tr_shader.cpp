@@ -7997,9 +7997,9 @@ char uniqueGenericFoliageTreeBarkShader[] = "{\n"\
 "q3map_material	solidwood\n"\
 "glowStrength 0.75\n"\
 "entityMergable\n"\
-"tesselation\n"\
-"tesselationLevel 3.0\n"\
-"tesselationAlpha 1.0\n"\
+"//tesselation\n"\
+"//tesselationLevel 3.0\n"\
+"//tesselationAlpha 1.0\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\

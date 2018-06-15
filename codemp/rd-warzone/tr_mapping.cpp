@@ -1352,6 +1352,10 @@ int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
 float		DISPLACEMENT_MAPPING_STRENGTH = 18.0;
 qboolean	MAP_REFLECTION_ENABLED = qfalse;
+qboolean	TERRAIN_TESSELLATION_ENABLED = qtrue;
+float		TERRAIN_TESSELLATION_LEVEL = 11.0;
+float		TERRAIN_TESSELLATION_OFFSET = 16.0;
+float		TERRAIN_TESSELLATION_MIN_SIZE = 512.0;
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
@@ -1499,6 +1503,26 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	MAP_REFLECTION_ENABLED = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_SCREEN_SPACE_REFLECTIONS", "0")) > 0) ? qtrue : qfalse;
+
+	//
+	// Tessellation...
+	//
+	TERRAIN_TESSELLATION_ENABLED = (atoi(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_ENABLED", "1")) > 0) ? qtrue : qfalse;
+
+	if (TERRAIN_TESSELLATION_ENABLED)
+	{
+		TERRAIN_TESSELLATION_LEVEL = atof(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_LEVEL", "32.0"));
+		TERRAIN_TESSELLATION_OFFSET = atof(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_OFFSET", "24.0"));
+		TERRAIN_TESSELLATION_MIN_SIZE = atof(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_MIN_SIZE", "512.0"));
+
+		// Fuck it, this is generic instead... I can't be fucked doing collision loading for map based ones as well, for now...
+		tr.tessellationMapImage = R_FindImageFile(va("maps/%s_tess.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
+
+		if (!tr.tessellationMapImage)
+		{
+			tr.tessellationMapImage = R_FindImageFile("gfx/tessControlImage", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
+		}
+	}
 
 	//
 	// Sun + Day/Night...
@@ -1908,6 +1932,9 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and lifts and portals merging is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", DISABLE_LIFTS_AND_PORTALS_MERGE ? "ENABLED" : "DISABLED");
 	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 and screen space reflections are ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED", MAP_REFLECTION_ENABLED ? "ENABLED" : "DISABLED");
+
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation is ^7%s^5 and terrain tessellation max level ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_ENABLED ? "ENABLED" : "DISABLED", TERRAIN_TESSELLATION_LEVEL);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation max offset is ^7%.4f^5 and terrain tessellation minimum vert size is ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_OFFSET, TERRAIN_TESSELLATION_MIN_SIZE);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 and sun volumetric scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE, SUN_VOLUMETRIC_SCALE);

@@ -2,6 +2,7 @@
 //#define __SPLATS_LOOKUP_ALPHA__			// Meh, waste of lookups... If we do need them at some point, then we can still enable them or add a mapinfo i guess...
 //#define __USE_FULL_SPLAT_BLENDFUNC__		// Meh... fast should be nearly as good...
 #define __HIGH_PASS_SHARPEN__
+//#define __USE_REGIONS__
 
 
 #define SNOW_HEIGHT_STRENGTH		0.25 // Distance above water to start snow...
@@ -59,7 +60,7 @@ uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEM
 #define USE_GLOW_BLEND_MODE			u_Settings3.a
 
 #define MAP_LIGHTMAP_MULTIPLIER		u_Settings4.r
-#define MAP_LIGHTMAP_ENHANCEMENT		u_Settings4.g
+#define MAP_LIGHTMAP_ENHANCEMENT	u_Settings4.g
 
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
@@ -299,6 +300,7 @@ vec4 GetControlMap( void )
 	float scale = 1.0 / SHADER_MAP_SIZE; /* control scale */
 	vec4 control;
 	
+#ifdef __USE_REGIONS__
 	if (USE_REGIONS > 0.0)
 	{
 		// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
@@ -312,7 +314,9 @@ vec4 GetControlMap( void )
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 	}
-	else if (USE_TRIPLANAR >= 2.0)
+	else 
+#endif //__USE_REGIONS__
+	if (USE_TRIPLANAR >= 2.0)
 	{
 		control = vec4(var_Color.rgb, 0.0);
 	}
@@ -430,10 +434,12 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 
 	float scale = 0.01;
 
+#ifdef __USE_REGIONS__
 	if (USE_REGIONS > 0.0)
 	{
 		scale = 0.001;
 	}
+#endif //__USE_REGIONS__
 
 	if (SHADER_HAS_SPLATMAP1 > 0.0 && control.r > 0.0)
 	{
@@ -541,12 +547,14 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 			return vec4(control.rgb, 1.0);
 		}
 
+#ifdef __USE_REGIONS__
 		if (USE_REGIONS > 0.0 
 			&& (SHADER_HAS_SPLATMAP1 > 0 || SHADER_HAS_SPLATMAP2 > 0 || SHADER_HAS_SPLATMAP3 > 0 || SHADER_HAS_SPLATMAP4 > 0))
 		{// Regions...
 			return GenerateTerrainMap(texCoords);
 		}
 		else
+#endif //__USE_REGIONS__
 		{// Tri-Planar...
 			if (SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 			{// Steep maps (water edges)...

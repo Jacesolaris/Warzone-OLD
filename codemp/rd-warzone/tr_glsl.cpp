@@ -205,6 +205,10 @@ extern const char *fallbackShader_testshader_fp;
 extern const char *fallbackShader_tessellation_cs;
 extern const char *fallbackShader_tessellation_es;
 extern const char *fallbackShader_tessellation_gs;
+
+extern const char *fallbackShader_tessellationTerrain_cs;
+extern const char *fallbackShader_tessellationTerrain_es;
+extern const char *fallbackShader_tessellationTerrain_gs;
 #endif //NEW_TESSELATION
 
 #ifdef HEIGHTMAP_TESSELATION
@@ -1317,8 +1321,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_CubeMapInfo", GLSL_VEC4, 1 },
 	{ "u_CubeMapStrength", GLSL_FLOAT, 1 },
 
-	{ "u_BoneMatrices", GLSL_MAT16, 20 },
+	{ "u_BoneMatrices", GLSL_MAT16, MAX_GLM_BONEREFS/*20*/ },
+#ifdef __EXPERIMETNAL_CHARACTER_EDITOR__
 	{ "u_BoneScales", GLSL_FLOAT, 20 },
+#endif //__EXPERIMETNAL_CHARACTER_EDITOR__
 
 	// UQ1: Added...
 	{ "u_Mins", GLSL_VEC4, 1 },
@@ -1484,7 +1490,7 @@ char *GLSL_GetHighestSupportedVersion(void)
 
 	ALLOW_GL_400 = qfalse;
 
-	if (glRefConfig.glslMajorVersion >= 4/*r_tesselation->integer*/)
+	if (glRefConfig.glslMajorVersion >= 4)
 	{
 		if (glRefConfig.glslMajorVersion >= 5)
 			sprintf(GLSL_MAX_VERSION, "#version 500 core\n");
@@ -3042,6 +3048,8 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
+
 		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[0], "lightall", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightall shader!");
@@ -3065,6 +3073,8 @@ int GLSL_BeginLoadGPUShaders(void)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
 		strcat(extradefines, "#define USE_TESSELLATION\n");
+
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
 
 #ifdef NEW_TESSELATION
 		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[1], "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, NULL/*fallbackShader_tessellation_gs*/))
@@ -3098,6 +3108,8 @@ int GLSL_BeginLoadGPUShaders(void)
 		strcat(extradefines, "#define __HEIGHTMAP_TERRAIN_TEST__\n");
 #endif //__HEIGHTMAP_TERRAIN_TEST__
 
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
+
 		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[0], "lightallSplat", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, NULL, NULL, NULL))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallSplat shader!");
@@ -3122,6 +3134,8 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		strcat(extradefines, "#define USE_TESSELLATION\n");
 
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
+
 #ifdef NEW_TESSELATION
 		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[1], "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, NULL/*fallbackShader_tessellation_gs*/))
 #elif defined(HEIGHTMAP_TESSELATION2)
@@ -3135,9 +3149,43 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
+
+		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_deluxeMapping->integer)
+			strcat(extradefines, "#define USE_DELUXEMAP\n");
+
+		strcat(extradefines, "#define USE_TESSELLATION\n");
+
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
+
+#ifdef NEW_TESSELATION
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[2], "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_tessellationTerrain_cs, fallbackShader_tessellationTerrain_es, NULL/*fallbackShader_tessellationTerrain_gs*/))
+#elif defined(HEIGHTMAP_TESSELATION2)
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[2], "lightallSplat", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllSplatShader[2], "lightallSplat", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightallSplat_vp, fallbackShader_lightallSplat_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
+		{
+			ri->Error(ERR_FATAL, "Could not load lightallSplat_tessTerrain shader!");
+		}
+	}
+
+	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
+
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
 
 		if (!GLSL_BeginLoadGPUShader(&tr.depthPassShader, "depthPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_depthPass_vp, fallbackShader_depthPass_fp, NULL, NULL, NULL))
 		{
@@ -4124,7 +4172,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		if (!GLSL_EndLoadGPUShader(&tr.lightAllSplatShader[i]))
 		{
@@ -4348,6 +4396,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		// Control textures...
 		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+		GLSL_SetUniformInt(&tr.grassShader[0], UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.grassShader[0]);
@@ -4374,6 +4423,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		// Control textures...
 		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+		GLSL_SetUniformInt(&tr.grassShader[1], UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.grassShader[1]);
@@ -6176,6 +6226,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.lightAllShader[1]);
 	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[0]);
 	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[1]);
+	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[2]);
 	GLSL_DeleteGPUShader(&tr.skyShader);
 	GLSL_DeleteGPUShader(&tr.depthPassShader);
 
@@ -6332,7 +6383,7 @@ void GLSL_BindProgram(shaderProgram_t * program)
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;
 
-		if (program == &tr.lightAllShader[0] || program == &tr.lightAllSplatShader[0] || program == &tr.lightAllShader[1] || program == &tr.lightAllSplatShader[1])
+		if (program == &tr.lightAllShader[0] || program == &tr.lightAllSplatShader[0] || program == &tr.lightAllShader[1] || program == &tr.lightAllSplatShader[1] || program == &tr.lightAllSplatShader[2])
 			backEnd.pc.c_lightallBinds++;
 		else if (program == &tr.depthPassShader)
 			backEnd.pc.c_depthPassBinds++;

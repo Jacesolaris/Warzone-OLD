@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 
 //#define __REGEN_NORMALS__
-//#define __REGEN_NORMALS_2__
+#define __REGEN_NORMALS_2__
 
 extern char currentMapName[128];
 
@@ -729,66 +729,57 @@ void GenerateNormalsForXZY(vec3_t *xyz, vec3_t *normals)
 
 void GenerateNormalsForMesh(srfBspSurface_t *cv)
 {
-	//aiVector3D *mNormals = new aiVector3D[ds->numVerts];
-
-	// Set flat normals...
+//#pragma omp parallel for schedule(dynamic)
 	for (int i = 0; i < cv->numIndexes; i += 3)
 	{
 		int tri[3];
 		tri[0] = cv->indexes[i];
-		tri[1] = cv->indexes[i+1];
-		tri[2] = cv->indexes[i+2];
+		tri[1] = cv->indexes[i + 1];
+		tri[2] = cv->indexes[i + 2];
 
 		if (tri[0] >= cv->numVerts)
 		{
-			ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[0], cv->numVerts);
+			//ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[0], cv->numVerts);
 			return;
 		}
 		if (tri[1] >= cv->numVerts)
 		{
-			ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[1], cv->numVerts);
+			//ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[1], cv->numVerts);
 			return;
 		}
 		if (tri[2] >= cv->numVerts)
 		{
-			ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[2], cv->numVerts);
+			//ri->Printf(PRINT_WARNING, "Shitty BSP index data - Bad index in face surface (vert) %i >=  (maxVerts) %i.", tri[2], cv->numVerts);
 			return;
 		}
 
-		aiVector3D pV1;
-		pV1.Set(cv->verts[tri[0]].xyz[0], cv->verts[tri[0]].xyz[1], cv->verts[tri[0]].xyz[2]);
-		aiVector3D pV2;
-		pV2.Set(cv->verts[tri[1]].xyz[0], cv->verts[tri[1]].xyz[1], cv->verts[tri[1]].xyz[2]);
-		aiVector3D pV3;
-		pV2.Set(cv->verts[tri[2]].xyz[0], cv->verts[tri[2]].xyz[1], cv->verts[tri[2]].xyz[2]);
+		float* a = (float *)cv->verts[tri[0]].xyz;
+		float* b = (float *)cv->verts[tri[1]].xyz;
+		float* c = (float *)cv->verts[tri[2]].xyz;
+		vec3_t ba, ca;
+		VectorSubtract(b, a, ba);
+		VectorSubtract(c, a, ca);
 
-		aiVector3D vNor = ((pV2 - pV1) ^ (pV3 - pV1));
+		vec3_t normal;
+		CrossProduct(ca, ba, normal);
+		VectorNormalize(normal);
 
-		vNor.NormalizeSafe();
+		//ri->Printf(PRINT_WARNING, "OLD: %f %f %f. NEW: %f %f %f.\n", cv->verts[tri[0]].normal[0], cv->verts[tri[0]].normal[1], cv->verts[tri[0]].normal[2], normal[0], normal[1], normal[2]);
 
-		//vNor.Set(vNor.x * 0.5 + 0.5, vNor.y * 0.5 + 0.5, vNor.z * 0.5 + 0.5);
-
-		//mNormals[tri[0]] = vNor;
-		//mNormals[tri[1]] = vNor;
-		//mNormals[tri[2]] = vNor;
-
-		VectorSet(cv->verts[tri[0]].normal, vNor.x, vNor.y, vNor.z);
-		VectorSet(cv->verts[tri[1]].normal, vNor.x, vNor.y, vNor.z);
-		VectorSet(cv->verts[tri[2]].normal, vNor.x, vNor.y, vNor.z);
+#pragma omp critical
+		{
+			VectorCopy(normal, cv->verts[tri[0]].normal);
+			VectorCopy(normal, cv->verts[tri[1]].normal);
+			VectorCopy(normal, cv->verts[tri[2]].normal);
+		}
 
 		//ForceCrash();
 	}
 
-#if 0
 	// Now the hard part, make smooth normals...
-	//std::vector<bool> abHad(ds->numVerts, false);
-	//aiVector3D* pcNew = new aiVector3D[ds->numVerts];
-	
-	for (unsigned int i = 0; i < cv->numVerts; ++i) {
-		/*if (abHad[i]) {
-			continue;
-		}*/
-
+#pragma omp parallel for schedule(dynamic)
+	for (int i = 0; i < cv->numVerts; i++)
+	{
 		int verticesFound[65536];
 		int numVerticesFound = 0;
 
@@ -800,59 +791,115 @@ void GenerateNormalsForMesh(srfBspSurface_t *cv)
 			tri[1] = cv->indexes[v + 1];
 			tri[2] = cv->indexes[v + 2];
 
-			if (tri[0] == i)
+			if (tri[0] == i && Distance(cv->verts[i].normal, cv->verts[tri[0]].normal) <= 1.0)
 			{
-				verticesFound[numVerticesFound] = tri[1];
-				numVerticesFound++;
-				verticesFound[numVerticesFound] = tri[2];
-				numVerticesFound++;
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
 			}
 
-			if (tri[1] == i)
+			if (tri[1] == i && Distance(cv->verts[i].normal, cv->verts[tri[1]].normal) <= 1.0)
 			{
-				verticesFound[numVerticesFound] = tri[0];
-				numVerticesFound++;
-				verticesFound[numVerticesFound] = tri[2];
-				numVerticesFound++;
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
 			}
 
-			if (tri[2] == i)
+			if (tri[2] == i && Distance(cv->verts[i].normal, cv->verts[tri[2]].normal) <= 1.0)
 			{
-				verticesFound[numVerticesFound] = tri[0];
-				numVerticesFound++;
-				verticesFound[numVerticesFound] = tri[1];
-				numVerticesFound++;
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			// Also merge close normals...
+			if (tri[0] != i 
+				&& Distance(cv->verts[i].xyz, cv->verts[tri[0]].xyz) <= 4.0
+				&& Distance(cv->verts[i].normal, cv->verts[tri[0]].normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			if (tri[1] != i 
+				&& Distance(cv->verts[i].xyz, cv->verts[tri[1]].xyz) <= 4.0
+				&& Distance(cv->verts[i].normal, cv->verts[tri[1]].normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			if (tri[2] != i 
+				&& Distance(cv->verts[i].xyz, cv->verts[tri[2]].xyz) <= 4.0
+				&& Distance(cv->verts[i].normal, cv->verts[tri[2]].normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
 			}
 		}
 
 		aiVector3D pcNor;
+		pcNor.Set(cv->verts[i].normal[0], cv->verts[i].normal[1], cv->verts[i].normal[2]);
+		int numAdded = 1;
 		for (unsigned int a = 0; a < numVerticesFound; ++a) {
-			//pcNor += mNormals[verticesFound[a]];
 			aiVector3D thisNor;
 			thisNor.Set(cv->verts[verticesFound[a]].normal[0], cv->verts[verticesFound[a]].normal[1], cv->verts[verticesFound[a]].normal[2]);
 			pcNor += thisNor;
+			numAdded++;
 		}
+		pcNor /= numAdded;
 		pcNor.NormalizeSafe();
 
-		// Write the smoothed normal back to all affected normals
-		/*for (unsigned int a = 0; a < numVerticesFound; ++a)
+#pragma omp critical
 		{
-			unsigned int vidx = verticesFound[a];
-			pcNew[vidx] = pcNor;
-			abHad[vidx] = true;
-		}*/
-		VectorSet(cv->verts[i].normal, pcNor.x, pcNor.y, pcNor.z);
+			VectorSet(cv->verts[i].normal, pcNor.x, pcNor.y, pcNor.z);
+		}
 	}
-
-	// Write the new normals back to the verts array data...
-	/*for (int i = 0; i < ds->numVerts; i++)
-	{
-		VectorSet(verts[i].normal, pcNew[i].x, pcNew[i].y, pcNew[i].z);
-	}*/
-
-	//delete[] mNormals;
-	//delete[] pcNew;
-#endif
 }
 #endif //__REGEN_NORMALS_2__
 

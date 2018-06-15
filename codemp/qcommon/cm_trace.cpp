@@ -13,6 +13,448 @@
 
 //#define CAPSULE_DEBUG
 
+//#define TESSELLATED_TERRAIN_COLLISIONS
+
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+// =======================================================================================================================================
+//
+// Roads Map System...
+//
+// =======================================================================================================================================
+#include "../rd-warzone/TinyImageLoader/TinyImageLoader.h"
+
+char *CM_TIL_TextureFileExistsFull(const char *name)
+{
+	if (!name || !name[0] || name[0] == '\0' || strlen(name) < 1) return NULL;
+
+	char texName[512] = { 0 };
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.png", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "png";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.tga", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "tga";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.jpg", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "jpg";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.dds", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "dds";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.gif", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "gif";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.bmp", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "bmp";
+	}
+
+	memset(&texName, 0, sizeof(char) * 512);
+	COM_StripExtension(name, texName, sizeof(texName));
+	sprintf(texName, "%s.ico", name);
+
+	if (FS_FileExists(texName))
+	{
+		return "ico";
+	}
+
+	return NULL;
+}
+
+qboolean	GRASS_ENABLED = qfalse;
+float		GRASS_DISTANCE_FROM_ROADS = 0.0;
+qboolean	TERRAIN_TESSELLATION_ENABLED = qtrue;
+float		TERRAIN_TESSELLATION_OFFSET = 16.0;
+
+#define MAX_FOLIAGE_ALLOWED_MATERIALS 64
+
+int FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
+int FOLIAGE_ALLOWED_MATERIALS[MAX_FOLIAGE_ALLOWED_MATERIALS] = { 0 };
+
+qboolean R_SurfaceIsAllowedFoliage(int materialType)
+{
+	for (int i = 0; i < FOLIAGE_ALLOWED_MATERIALS_NUM; i++)
+	{
+		if (materialType == FOLIAGE_ALLOWED_MATERIALS[i]) return qtrue;
+	}
+
+	return qfalse;
+}
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+
+void CM_SetTerrainContents(clipMap_t &cm)
+{
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+	for (int i = 0; i < cm.numShaders; i++)
+	{
+		CCMShader shader = cm.shaders[i];
+
+		if (shader.materialType == MATERIAL_SHORTGRASS || shader.materialType == MATERIAL_LONGGRASS || R_SurfaceIsAllowedFoliage(shader.materialType))
+		{// Is valid on this map for grasses, so terrain possibility...
+			const char *texName = shader.GetName();
+			char *ext = CM_TIL_TextureFileExistsFull(va("%s_splat1", texName));
+
+			if (ext)
+			{// Has a splat map, this is terrain...
+				if (!(shader.contentFlags & CONTENTS_TERRAIN))
+				{
+					//Com_Printf("%s set as terrain.\n", va("%s_splat1", texName));
+					shader.contentFlags |= CONTENTS_TERRAIN;
+				}
+			}
+			/*else
+			{
+				Com_Printf("%s does not exist.\n", va("%s_splat1", texName));
+			}*/
+		}
+	}
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+}
+
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+qboolean TIL_INITIALIZED = qfalse;
+
+qboolean ROAD_MAP_INITIALIZED = qfalse;
+til::Image *ROAD_MAP = NULL;
+
+#ifndef DEDICATED
+// isn't defined for dedicated *shrug*
+const char *materialNames[MATERIAL_LAST] =
+{
+	MATERIALS
+};
+#endif
+
+vec3_t MAP_INFO_MINS, MAP_INFO_MAXS;
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+
+void CM_LoadRoadImage(const char *mapName)
+{
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+	if (!ROAD_MAP && !ROAD_MAP_INITIALIZED)
+	{
+		ROAD_MAP_INITIALIZED = qtrue;
+
+		char name[512] = { 0 };
+		char tempName[128] = { 0 };
+		COM_StripExtension(mapName, tempName, sizeof(tempName));
+		strcpy(name, va("%s_roads", tempName));
+		char *ext = CM_TIL_TextureFileExistsFull(name);
+
+		if (ext)
+		{
+			if (!TIL_INITIALIZED)
+			{
+				til::TIL_Init();
+				TIL_INITIALIZED = qtrue;
+			}
+
+			char fullPath[1024] = { 0 };
+			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
+			ROAD_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+
+			if (ROAD_MAP && ROAD_MAP->GetHeight() > 0 && ROAD_MAP->GetWidth() > 0)
+			{
+				Com_Printf("CM_LoadRoadImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
+			}
+			else
+			{
+				Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
+				til::TIL_Release(ROAD_MAP);
+				ROAD_MAP = NULL;
+			}
+		}
+		/*else
+		{
+			Com_Printf("%s does not exist.\n", name);
+		}*/
+
+		//
+		// Also load all needed mapinfo settings...
+		//
+		char mapname[256] = { 0 };
+
+		// because JKA uses mp/ dir, why??? so pointless...
+		if (IniExists(va("%s.mapInfo", tempName)))
+			sprintf(mapname, "%s.mapInfo", tempName);
+		else if (IniExists(va("mp/%s.mapInfo", tempName)))
+			sprintf(mapname, "mp/%s.mapInfo", tempName);
+		else
+			sprintf(mapname, "%s.mapInfo", tempName);
+
+		MAP_INFO_MINS[0] = atof(IniRead(mapname, "BOUNDS", "MINS0", "999999.0"));
+		MAP_INFO_MINS[1] = atof(IniRead(mapname, "BOUNDS", "MINS1", "999999.0"));
+		MAP_INFO_MINS[2] = atof(IniRead(mapname, "BOUNDS", "MINS2", "999999.0"));
+
+		MAP_INFO_MAXS[0] = atof(IniRead(mapname, "BOUNDS", "MAXS0", "-999999.0"));
+		MAP_INFO_MAXS[1] = atof(IniRead(mapname, "BOUNDS", "MAXS1", "-999999.0"));
+		MAP_INFO_MAXS[2] = atof(IniRead(mapname, "BOUNDS", "MAXS2", "-999999.0"));
+
+		if (!(MAP_INFO_MINS[0] < 999999.0 && MAP_INFO_MINS[1] < 999999.0 && MAP_INFO_MINS[2] < 999999.0
+			&& MAP_INFO_MAXS[0] > -999999.0 && MAP_INFO_MAXS[1] > -999999.0 && MAP_INFO_MAXS[2] > -999999.0))
+		{
+			CM_GetWorldBounds(MAP_INFO_MINS, MAP_INFO_MAXS);
+		}
+
+		GRASS_ENABLED = (atoi(IniRead(mapname, "GRASS", "GRASS_ENABLED", "0")) > 0) ? qtrue : qfalse;
+		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
+
+		TERRAIN_TESSELLATION_ENABLED = (atoi(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_ENABLED", "1")) > 0) ? qtrue : qfalse;
+		TERRAIN_TESSELLATION_OFFSET = atof(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_OFFSET", "16.0"));
+
+		//Com_Printf("%s - GRASS %s. gDist %f. Tess %s. tOffset %f.\n", va("%s.mapInfo", tempName), GRASS_ENABLED ? "true" : "false", GRASS_DISTANCE_FROM_ROADS, TERRAIN_TESSELLATION_ENABLED ? "true" : "false", TERRAIN_TESSELLATION_OFFSET);
+
+		// Parse any specified extra surface material types to add grasses to...
+		extern const char *materialNames[MATERIAL_LAST];
+
+		for (int m = 0; m < 8; m++)
+		{
+			char grassMaterial[64] = { 0 };
+			strcpy(grassMaterial, IniRead(mapname, "GRASS", va("GRASS_ALLOW_MATERIAL%i", m), ""));
+
+			if (!grassMaterial || !grassMaterial[0] || grassMaterial[0] == '\0' || strlen(grassMaterial) <= 1) continue;
+
+			for (int i = 0; i < MATERIAL_LAST; i++)
+			{
+				if (!Q_stricmp(grassMaterial, materialNames[i]))
+				{// Got one, add it to the allowed list...
+					FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = i;
+					FOLIAGE_ALLOWED_MATERIALS_NUM++;
+					break;
+				}
+			}
+		}
+	}
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+}
+
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+qboolean TESS_MAP_INITIALIZED = qfalse;
+til::Image *TESS_MAP = NULL;
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+
+void CM_LoadHeightMapImage(const char *mapName)
+{
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+	if (!TESS_MAP && !TESS_MAP_INITIALIZED)
+	{
+		TESS_MAP_INITIALIZED = qtrue;
+
+		char name[512] = { 0 };
+		char tempName[512] = { 0 };
+		COM_StripExtension(mapName, tempName, sizeof(tempName));
+		strcpy(name, va("%s_tess", tempName));
+		char *ext = CM_TIL_TextureFileExistsFull(name);
+
+		if (ext)
+		{// Load map based tess map if one exists...
+			if (!TIL_INITIALIZED)
+			{
+				til::TIL_Init();
+				TIL_INITIALIZED = qtrue;
+			}
+
+			char fullPath[1024] = { 0 };
+			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
+			TESS_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+
+			if (TESS_MAP && TESS_MAP->GetHeight() > 0 && TESS_MAP->GetWidth() > 0)
+			{
+				Com_Printf("CM_LoadHeightMapImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, TESS_MAP->GetWidth(), TESS_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
+			}
+			else
+			{
+				Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
+				til::TIL_Release(TESS_MAP);
+				TESS_MAP = NULL;
+			}
+		}
+		/*else
+		{
+			Com_Printf("%s does not exist.\n", name);
+		}*/
+
+		if (!TESS_MAP)
+		{// Load the generic tess map...
+			memset(name, 0, sizeof(name));
+			strcpy(name, "gfx/tessControlImage");
+			char *ext = CM_TIL_TextureFileExistsFull(name);
+
+			if (ext)
+			{
+				if (!TIL_INITIALIZED)
+				{
+					til::TIL_Init();
+					TIL_INITIALIZED = qtrue;
+				}
+
+				char fullPath[1024] = { 0 };
+				sprintf_s(fullPath, "warzone/%s.%s", name, ext);
+				TESS_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+
+				if (TESS_MAP && TESS_MAP->GetHeight() > 0 && TESS_MAP->GetWidth() > 0)
+				{
+					Com_Printf("CM_LoadHeightMapImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, TESS_MAP->GetWidth(), TESS_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
+				}
+				else
+				{
+					Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
+					til::TIL_Release(TESS_MAP);
+					TESS_MAP = NULL;
+				}
+			}
+			/*else
+			{
+				Com_Printf("%s does not exist.\n", name);
+			}*/
+		}
+	}
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+}
+
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+#define PixelCopy(a,b) ((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
+
+qboolean RadSampleImage(uint8_t *pixels, int width, int height, qboolean is16bit, float st[2], float color[4])
+{
+	qboolean texturesRGB = qfalse;
+	float	sto[2];
+	int		x, y;
+
+	/* clear color first */
+	color[0] = color[1] = color[2] = color[3] = 0;
+
+	/* dummy check */
+	if (pixels == NULL || width < 1 || height < 1)
+		return qfalse;
+
+#if 1
+	/* bias st */
+	sto[0] = st[0];
+	while (sto[0] < 0.0f)
+		sto[0] += 1.0f;
+	sto[1] = st[1];
+	while (sto[1] < 0.0f)
+		sto[1] += 1.0f;
+
+	/* get offsets */
+	x = ((float)width * sto[0]);// +0.5f;
+	x %= width;
+	y = ((float)height * sto[1]);// +0.5f;
+	y %= height;
+#else
+	x = st[0];
+	x *= width;
+	y = st[1];
+	y *= height;
+#endif
+
+	/* get pixel */
+	if (is16bit)
+	{
+		pixels += (y * width * 3) + (x * 3);
+		PixelCopy(pixels, color);
+		color[3] = 1.0;
+	}
+	else
+	{
+		pixels += (y * width * 4) + (x * 4);
+		PixelCopy(pixels, color);
+		color[3] = pixels[3];
+	}
+
+	return qtrue;
+}
+
+float GetHeightmap(vec2_t pixel)
+{
+	qboolean is16bit = qfalse;
+
+	if (TESS_MAP->GetBitDepth() >= 5) is16bit = qtrue;
+
+	vec4_t color;
+	RadSampleImage((uint8_t *)TESS_MAP->GetPixels(), TESS_MAP->GetWidth(), TESS_MAP->GetHeight(), is16bit, pixel, color);
+	return color[0];
+}
+
+float GetRoadFactor(vec2_t pixel)
+{
+	qboolean is16bit = qfalse;
+
+	if (ROAD_MAP->GetBitDepth() >= 5) is16bit = qtrue;
+
+	vec4_t color;
+	RadSampleImage((uint8_t *)ROAD_MAP->GetPixels(), ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight(), is16bit, pixel, color);
+	float roadScale = color[0];
+
+	if (roadScale > GRASS_DISTANCE_FROM_ROADS)
+	{
+		roadScale = 0.0;
+	}
+	else if (roadScale > 0.0)
+	{
+		roadScale = 1.0 - Q_clamp(0.0, roadScale / GRASS_DISTANCE_FROM_ROADS, 1.0);
+	}
+	else
+	{
+		roadScale = 1.0;
+	}
+	
+	return 1.0 - Q_clamp(0.0, roadScale * 0.6 + 0.4, 1.0);;
+}
+
+float R_TraceOffsetForPosition(vec3_t pos)
+{
+	if (!GRASS_ENABLED || !TERRAIN_TESSELLATION_ENABLED || !TESS_MAP) return 0.0;
+
+	vec2_t pixel;
+	vec2_t mapSize;
+	//CM_GetWorldBounds(MAP_INFO_MINS, MAP_INFO_MAXS);
+	mapSize[0] = MAP_INFO_MAXS[0] - MAP_INFO_MINS[0];
+	mapSize[1] = MAP_INFO_MAXS[1] - MAP_INFO_MINS[1];
+	pixel[0] = (pos[0] - MAP_INFO_MINS[0]) / mapSize[0];
+	pixel[1] = (pos[1] - MAP_INFO_MINS[1]) / mapSize[1];
+
+	float roadScale = ROAD_MAP ? GetRoadFactor(pixel) : 0.0;
+	float offsetScale = GetHeightmap(pixel);
+
+	float offset = max(offsetScale, roadScale) - 0.5;
+	return offset * TERRAIN_TESSELLATION_OFFSET;
+}
+#endif //TESSELLATED_TERRAIN_COLLISIONS
+
 /*
 ===============================================================================
 
@@ -1203,6 +1645,15 @@ CM_Trace
 void CM_Trace( trace_t *trace, const vec3_t start, const vec3_t end,
 						  const vec3_t mins, const vec3_t maxs,
 						  clipHandle_t model, const vec3_t origin, int brushmask, int capsule, sphere_t *sphere ) {
+
+//#define __TEST_NO_COLLISIONS__
+#ifdef __TEST_NO_COLLISIONS__
+	// fill in a default trace
+	memset(trace, 0, sizeof(*trace));
+	trace->fraction = 1;	// assume it goes the entire distance until shown otherwise
+	VectorCopy(end, trace->endpos);
+	return;
+#endif //__TEST_NO_COLLISIONS__
 trace_lock.lock();
 							  
 	int			i;
@@ -1437,14 +1888,24 @@ trace_lock.unlock();
 		}
 	}
 
-        // If allsolid is set (was entirely inside something solid), the plane is not valid.
-        // If fraction == 1.0, we never hit anything, and thus the plane is not valid.
-        // Otherwise, the normal on the plane should have unit length
-        assert(trace->allsolid ||
-               trace->fraction == 1.0 ||
-               VectorLengthSquared(trace->plane.normal) > 0.9999);
+	// If allsolid is set (was entirely inside something solid), the plane is not valid.
+	// If fraction == 1.0, we never hit anything, and thus the plane is not valid.
+	// Otherwise, the normal on the plane should have unit length
+	assert(trace->allsolid ||
+		trace->fraction == 1.0 ||
+		VectorLengthSquared(trace->plane.normal) > 0.9999);
 
 trace_lock.unlock();
+
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+	//if (/*trace->fraction < 1.0 &&*/ (trace->contents & CONTENTS_TERRAIN))
+	if (trace->fraction < 1.0)
+	{
+		float offset = R_TraceOffsetForPosition(trace->endpos);
+		Com_Printf("offset %f.\n", offset);
+		trace->endpos[2] += offset;
+	}
+#endif //TESSELLATED_TERRAIN_COLLISIONS
 }
 
 /*

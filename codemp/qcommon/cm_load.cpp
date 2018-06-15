@@ -1107,8 +1107,9 @@ qboolean CM_DeleteCachedMap(qboolean bGuaranteedOkToDelete)
 }
 
 
-
-
+extern void CM_LoadRoadImage(const char *mapName);
+extern void CM_LoadHeightMapImage(const char *mapName);
+extern void CM_SetTerrainContents(clipMap_t &cm);
 
 static void CM_LoadMap_Actual( const char *name, qboolean clientload, int *checksum, clipMap_t &cm )
 { //rwwRMG - function needs heavy modification
@@ -1272,6 +1273,10 @@ static void CM_LoadMap_Actual( const char *name, qboolean clientload, int *check
 	if ( !clientload ) {
 		Q_strncpyz( cm.name, origName, sizeof( cm.name ) );
 	}
+
+	CM_LoadRoadImage(name);
+	CM_LoadHeightMapImage(name);
+	CM_SetTerrainContents(cm);
 }
 
 

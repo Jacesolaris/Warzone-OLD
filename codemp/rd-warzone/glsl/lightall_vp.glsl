@@ -1,3 +1,5 @@
+//#define __EXPERIMETNAL_CHARACTER_EDITOR__
+
 attribute vec2 attr_TexCoord0;
 
 attribute vec2 attr_TexCoord1;
@@ -100,8 +102,10 @@ uniform vec4   u_BaseColor;
 uniform vec4   u_VertColor;
 
 uniform float  u_VertexLerp;
-uniform mat4   u_BoneMatrices[20];
+uniform mat4   u_BoneMatrices[MAX_GLM_BONEREFS];
+#ifdef __EXPERIMETNAL_CHARACTER_EDITOR__
 uniform float  u_BoneScales[20];
+#endif //__EXPERIMETNAL_CHARACTER_EDITOR__
 
 uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
@@ -330,10 +334,21 @@ void main()
 		{
 			int boneIndex = int(attr_BoneIndexes[i]);
 
-			vec4 boneScale = vec4(u_BoneScales[boneIndex], u_BoneScales[boneIndex], u_BoneScales[boneIndex], 1.0);
+			if (boneIndex >= MAX_GLM_BONEREFS)
+			{// Skip...
 
-			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] * boneScale; // Could do X,Y,Z model scaling here...
-			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] * boneScale; // Could do X,Y,Z model scaling here...
+			}
+			else
+			{
+#ifdef __EXPERIMETNAL_CHARACTER_EDITOR__
+				vec4 boneScale = vec4(u_BoneScales[boneIndex], u_BoneScales[boneIndex], u_BoneScales[boneIndex], 1.0);
+				position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] * boneScale; // Could do X,Y,Z model scaling here...
+				normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] * boneScale; // Could do X,Y,Z model scaling here...
+#else //!__EXPERIMETNAL_CHARACTER_EDITOR__
+				position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i]; // Could do X,Y,Z model scaling here...
+				normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i]; // Could do X,Y,Z model scaling here...
+#endif //__EXPERIMETNAL_CHARACTER_EDITOR__
+			}
 		}
 
 		position = position4.xyz;

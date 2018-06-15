@@ -55,7 +55,7 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 		maxIndex = numIndexes / 2;
 	}
 
-	if (/*r_tesselation->integer &&*/ tesselation)
+	if (tesselation)
 	{
 		//GLint MaxPatchVertices = 0;
 		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
@@ -76,7 +76,7 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex,
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation)
 {
-	if (/*r_tesselation->integer &&*/ tesselation)
+	if (tesselation)
 	{
 		//GLint MaxPatchVertices = 0;
 		//qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
@@ -1272,15 +1272,20 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 	settings[3] = parallaxScale;
 }
 
-extern float MAP_GLOW_MULTIPLIER;
-extern float MAP_GLOW_MULTIPLIER_NIGHT;
-extern float MAP_WATER_LEVEL;
-extern float MAP_INFO_MAXSIZE;
-extern vec3_t  MAP_INFO_MINS;
-extern vec3_t  MAP_INFO_MAXS;
-extern vec3_t  MAP_INFO_SIZE;
+extern float		MAP_GLOW_MULTIPLIER;
+extern float		MAP_GLOW_MULTIPLIER_NIGHT;
+extern float		MAP_WATER_LEVEL;
+extern float		MAP_INFO_MAXSIZE;
+extern vec3_t		MAP_INFO_MINS;
+extern vec3_t		MAP_INFO_MAXS;
+extern vec3_t		MAP_INFO_SIZE;
 
-void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum, qboolean IS_DEPTH_PASS)
+extern qboolean		TERRAIN_TESSELLATION_ENABLED;
+extern float		TERRAIN_TESSELLATION_LEVEL;
+extern float		TERRAIN_TESSELLATION_OFFSET;
+extern float		TERRAIN_TESSELLATION_MIN_SIZE;
+
+void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum, int IS_DEPTH_PASS)
 {
 	float	materialType = 0.0;
 	float	hasOverlay = 0.0;
@@ -1402,7 +1407,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 		}
 
 		vec4_t	local1;
-		VectorSet4(local1, 0.0, doSway, overlaySway, materialType);
+		VectorSet4(local1, (IS_DEPTH_PASS == 2) ? (TERRAIN_TESSELLATION_OFFSET + 1.0) : 0.0, doSway, overlaySway, materialType);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 
 		vec4_t vector;
@@ -1841,7 +1846,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	int		deformGen;
 	float	deformParams[7];
 
-	qboolean useTesselation = qfalse;
+	int useTesselation = 0;
 	qboolean isWater = qfalse;
 	qboolean isGrass = qfalse;
 	qboolean isGroundFoliage = qfalse;
@@ -1852,7 +1857,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	float tessOuter = 0.0;
 	float tessAlpha = 0.0;
 
-	qboolean IS_DEPTH_PASS = qfalse;
+	int IS_DEPTH_PASS = 0;
 
 	if ((tess.shader->isIndoor) && (tr.viewParms.flags & VPF_SHADOWPASS))
 	{// Don't draw stuff marked as inside to sun shadow map...
@@ -1872,7 +1877,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #if 1
 	if (backEnd.depthFill)
 	{
-		IS_DEPTH_PASS = qtrue;
+		IS_DEPTH_PASS = 1;
 
 		/*if (r_foliage->integer
 			&& GRASS_ENABLED
@@ -1891,7 +1896,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	}
 	/*else if (tr.viewParms.flags & VPF_SHADOWPASS)
 	{
-		IS_DEPTH_PASS = qtrue;
+		IS_DEPTH_PASS = 1;
 
 		if (r_foliage->integer
 			&& GRASS_ENABLED
@@ -1928,7 +1933,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 	}
 
-	if (r_tesselation->integer)
+	if (r_tessellation->integer)
 	{
 		/*if (tess.shader->hasSplatMaps && !tess.shader->tesselation)
 		{
@@ -1942,42 +1947,63 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& !(tr.viewParms.flags & VPF_DEPTHSHADOW)
 			//&& !(tr.viewParms.flags & VPF_NOPOSTPROCESS)
 			&& !(tr.viewParms.flags & VPF_SHADOWPASS)
-			&& !(tr.viewParms.flags & VPF_EMISSIVEMAP)
-			&& tess.shader->tesselation 
-			&& tess.shader->tesselationLevel > 1.0 
-			&& tess.shader->tesselationAlpha != 0.0)
+			&& !(tr.viewParms.flags & VPF_EMISSIVEMAP))
 		{
-			useTesselation = qtrue;
-			tessInner = tess.shader->tesselationLevel;
-			tessOuter = tessInner;
-			tessAlpha = tess.shader->tesselationAlpha;
-		}
-		/*else if (r_testvalue0->integer)
-		{
+			if (tess.shader->tesselation
+				&& tess.shader->tesselationLevel > 1.0
+				&& tess.shader->tesselationAlpha != 0.0)
+			{
+				useTesselation = 1;
+				tessInner = tess.shader->tesselationLevel;
+				tessOuter = tessInner;
+				tessAlpha = tess.shader->tesselationAlpha;
+			}
+#ifdef __TERRAIN_TESSELATION__
+			else if (TERRAIN_TESSELLATION_ENABLED
+				&& r_terrainTessellation->integer
+				&& r_terrainTessellationMax->value >= 2.0
+				&& (r_foliage->integer && GRASS_ENABLED && (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
+			{// Always add tesselation to ground surfaces...
+				if (IS_DEPTH_PASS)
+				{// When doing depth pass, we simply lower the terrain by the max tessellation amount, reduces pixel culling, but is good enough and faster then tesselating the depth pass.
+					IS_DEPTH_PASS = 2;
+				}
+				else
+				{
+					useTesselation = 2;
+					tessInner = max(min(r_terrainTessellationMax->value, TERRAIN_TESSELLATION_LEVEL), 2.0);
+					tessOuter = tessInner;
+					tessAlpha = TERRAIN_TESSELLATION_OFFSET;
+				}
+			}
+#endif //__TERRAIN_TESSELATION__
+			/*else if (r_testvalue0->integer)
+			{
 			if (r_testvalue1->integer && tess.shader->materialType == MATERIAL_SOLIDWOOD)
 			{// Always add tesselation to wood...
-				useTesselation = qtrue;
-				tessInner = 3.0;
-				tessOuter = tessInner;
-				tessAlpha = 1.0;
+			useTesselation = 1;
+			tessInner = 3.0;
+			tessOuter = tessInner;
+			tessAlpha = 1.0;
 			}
 
 			if (r_testvalue2->integer && tess.shader->materialType == MATERIAL_GREENLEAVES)
 			{// Always add tesselation to wood...
-				useTesselation = qtrue;
-				tessInner = 3.0;
-				tessOuter = tessInner;
-				tessAlpha = 1.0;
+			useTesselation = 1;
+			tessInner = 3.0;
+			tessOuter = tessInner;
+			tessAlpha = 1.0;
 			}
 
 			if (r_testvalue3->integer && tess.shader->materialType == MATERIAL_SOLIDMETAL)
 			{// Always add tesselation to wood...
-				useTesselation = qtrue;
-				tessInner = 3.0;
-				tessOuter = tessInner;
-				tessAlpha = 1.0;
+			useTesselation = 1;
+			tessInner = 3.0;
+			tessOuter = tessInner;
+			tessAlpha = 1.0;
 			}
-		}*/
+			}*/
+		}
 	}
 
 	qboolean usingDeforms = ShaderRequiresCPUDeforms(tess.shader);
@@ -2162,7 +2188,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (pStage->isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 		{
-			if (IS_DEPTH_PASS)
+			if (IS_DEPTH_PASS == 1)
 			{
 				break;
 			}
@@ -2184,7 +2210,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #ifdef __WATER_STUFF__
 		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 2 /*&& WATER_ENABLED*/)
 		{
-			/*if (IS_DEPTH_PASS)
+			/*if (IS_DEPTH_PASS == 1)
 			{
 				break;
 			}
@@ -2336,10 +2362,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				useDeform = 1.0;
 			}
 
-			if (useTesselation)
+			if (useTesselation == 1)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 				sp = &tr.lightAllShader[1];
+				backEnd.pc.c_lightallDraws++;
+			}
+			else if (useTesselation == 2)
+			{
+				index |= LIGHTDEF_USE_TESSELLATION;
+				sp = &tr.lightAllSplatShader[2];
 				backEnd.pc.c_lightallDraws++;
 			}
 			else
@@ -2406,6 +2438,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Procedural city sky scraper texture, use triplanar, not regions...
 				index |= LIGHTDEF_USE_TRIPLANAR;
 			}
+#ifdef __USE_REGIONS__
 			else if (r_splatMapping->integer
 				//&& !r_lowVram->integer
 				&& tess.shader->materialType == MATERIAL_ROCK
@@ -2417,6 +2450,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				index |= LIGHTDEF_USE_REGIONS;
 			}
+#endif //__USE_REGIONS__
 			else if (r_splatMapping->integer
 				//&& !r_lowVram->integer
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
@@ -2535,8 +2569,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//&& !r_lowVram->integer
 				&& ((index & LIGHTDEF_USE_REGIONS) || (index & LIGHTDEF_USE_TRIPLANAR)))
 			{
-				if (useTesselation)
+				if (useTesselation == 1)
 					sp = &tr.lightAllSplatShader[1];
+				else if (useTesselation == 2)
+					sp = &tr.lightAllSplatShader[2];
 				else
 					sp = &tr.lightAllSplatShader[0];
 			}
@@ -2711,6 +2747,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, (const float *)glState.boneMatrices, glState.numBones);
 			
+#ifdef __EXPERIMETNAL_CHARACTER_EDITOR__
 			// Init character editor scale infos, if needed...
 			extern void CharacterEditor_InitializeBoneScaleValues(void);
 			CharacterEditor_InitializeBoneScaleValues();
@@ -2725,6 +2762,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				extern float genericBoneScaleValues[20];
 				GLSL_SetUniformFloatxX(sp, UNIFORM_BONE_SCALES, (const float *)genericBoneScaleValues, 20);
 			}
+#endif //__EXPERIMETNAL_CHARACTER_EDITOR__
 		}
 
 		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
@@ -2938,7 +2976,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (r_splatMapping->integer 
 				//&& !r_lowVram->integer
-				&& (sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllSplatShader[1]))
+				&& (sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllSplatShader[1] || sp == &tr.lightAllSplatShader[2]))
 			{
 #ifdef __USE_DETAIL_MAPS__
 				if (pStage->bundle[TB_DETAILMAP].image[0])
@@ -3023,6 +3061,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//GL_BindToTMU(tr.blackImage, TB_ROADMAP);
 			}
 
+			if (useTesselation == 2)
+			{
+				GL_BindToTMU(tr.tessellationMapImage, TB_HEIGHTMAP);
+			}
+
 			vec4_t loc;
 			VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
@@ -3078,7 +3121,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_COLORMAP); // Sky up...
 #endif
 		}
-		else if ( sp == &tr.lightAllShader[0] || sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllShader[1] || sp == &tr.lightAllSplatShader[1] )
+		else if ( sp == &tr.lightAllShader[0] || sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllShader[1] || sp == &tr.lightAllSplatShader[1] || sp == &tr.lightAllSplatShader[2])
 		{
 			int i;
 
@@ -3234,8 +3277,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec3xX(sp, UNIFORM_HUMANOIDORIGINS, backEnd.humanoidOrigins, backEnd.humanoidOriginsNum);
 #endif //__HUMANOIDS_BEND_GRASS__
 
+				float TERRAIN_TESS_OFFSET = 0.0;
+
+				// Check if this is grass on a tessellated terrain, if so, we want to lower the verts in the vert shader by the maximum possible tessellation height...
+				if (TERRAIN_TESSELLATION_ENABLED
+					&& r_tessellation->integer
+					&& r_terrainTessellation->integer
+					&& r_terrainTessellationMax->value >= 2.0)
+				{// When tessellating terrain, we need to drop the grasses down lower to allow for the offset...
+					TERRAIN_TESS_OFFSET = TERRAIN_TESSELLATION_OFFSET;
+					GL_BindToTMU(tr.tessellationMapImage, TB_HEIGHTMAP);
+				}
+
 				vec4_t l10;
-				VectorSet4(l10, GRASS_DISTANCE, 0.0, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
+				VectorSet4(l10, GRASS_DISTANCE, TERRAIN_TESS_OFFSET, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				vec4_t l11;
@@ -3423,7 +3478,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (useTesselation)
 			{
 				vec4_t l10;
-				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
+				VectorSet4(l10, tessAlpha, tessInner, tessOuter, TERRAIN_TESSELLATION_MIN_SIZE);
 				GLSL_SetUniformVec4(sp, UNIFORM_TESSELATION_INFO, l10);
 			}
 
@@ -3474,6 +3529,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
 				}
 				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (isGrass && useTesselation == 2 && sp == &tr.lightAllSplatShader[2])
+			{
+				vec4_t l8;
+				VectorSet4(l8, GRASS_DISTANCE_FROM_ROADS, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
 			}
 
 

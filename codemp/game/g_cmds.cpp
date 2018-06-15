@@ -3523,6 +3523,28 @@ void Cmd_Vehicle_f(gentity_t *ent)
 #endif //__PLAYER_VEHICLES__
 }
 
+void Cmd_Teleport_f(gentity_t *ent)
+{
+	if (!ent || !ent->client)
+	{
+		return;
+	}
+
+	if (trap->Argc() > 3)
+	{
+		vec3_t coord;
+
+		char sArg[MAX_STRING_CHARS] = { 0 };
+		trap->Argv(1, sArg, sizeof(sArg));
+		coord[0] = atoi(sArg);
+		trap->Argv(2, sArg, sizeof(sArg));
+		coord[1] = atoi(sArg);
+		trap->Argv(3, sArg, sizeof(sArg));
+		coord[2] = atoi(sArg);
+		TeleportPlayer(ent, coord, ent->r.currentAngles);
+	}
+}
+
 #if 0
 //[Create Dungeon]
 void Cmd_Clear_Dungeon_F(gentity_t *ent){
@@ -3600,6 +3622,7 @@ command_t commands[] = {
 	{ "team",				Cmd_Team_f,					CMD_NOINTERMISSION },
 //	{ "teamtask",			Cmd_TeamTask_f,				CMD_NOINTERMISSION },
 	{ "teamvote",			Cmd_TeamVote_f,				CMD_NOINTERMISSION },
+	{ "teleport",			Cmd_Teleport_f,				CMD_CHEAT | CMD_NOINTERMISSION },
 	{ "tell",				Cmd_Tell_f,					0 },
 	{ "thedestroyer",		Cmd_TheDestroyer_f,			CMD_CHEAT|CMD_ALIVE|CMD_NOINTERMISSION },
 	{ "t_use",				Cmd_TargetUse_f,			CMD_CHEAT|CMD_ALIVE },

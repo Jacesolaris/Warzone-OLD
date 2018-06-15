@@ -43,7 +43,7 @@ uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
 
 //uniform float				u_VertexLerp;
-uniform mat4				u_BoneMatrices[20];
+//uniform mat4				u_BoneMatrices[20];
 
 uniform vec2				u_textureScale;
 
@@ -207,6 +207,7 @@ void main()
 	vec3 position;
 	vec3 normal;
 
+/*
 	if (USE_VERTEX_ANIM == 1.0)
 	{
 		//position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
@@ -233,7 +234,7 @@ void main()
 		position = position4.xyz;
 		normal = normalize(normal4.xyz);
 	}
-	else
+	else*/
 	{
 		position  = attr_Position;
 		normal    = attr_Normal * 2.0 - 1.0;

@@ -667,58 +667,6 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 				return;
 			}
 
-#ifdef __ZFAR_CULLING_ON_LEAFS__
-			if (r_occlusion->integer && node->contents != -1)
-			{
-				float closestCornerDistance = 9999999.0;
-
-				for (int i = 0; i < 8; i++)
-				{
-					vec3_t v;
-
-					if (i & 1)
-					{
-						v[0] = node->mins[0];
-					}
-					else
-					{
-						v[0] = node->maxs[0];
-					}
-
-					if (i & 2)
-					{
-						v[1] = node->mins[1];
-					}
-					else
-					{
-						v[1] = node->maxs[1];
-					}
-
-					if (i & 4)
-					{
-						v[2] = node->mins[2];
-					}
-					else
-					{
-						v[2] = node->maxs[2];
-					}
-
-					float distance = Distance(tr.viewParms.ori.origin, v);
-
-					if (distance < closestCornerDistance)
-					{
-						closestCornerDistance = distance;
-					}
-				}
-
-				if (closestCornerDistance > tr.occlusionZfar * 2.0)// * 1.75)
-				{
-					return;
-				}
-			}
-#endif //__ZFAR_CULLING_ON_LEAFS__
-
-
 			int		r;
 
 			if (planeBits & 1) {
@@ -771,6 +719,57 @@ static void R_RecursiveWorldNode(mnode_t *node, int planeBits, int dlightBits, i
 				}
 			}
 		}
+
+#ifdef __ZFAR_CULLING_ON_LEAFS__
+		if (r_occlusion->integer && node->contents != -1)
+		{
+			float closestCornerDistance = 9999999.0;
+
+			for (int i = 0; i < 8; i++)
+			{
+				vec3_t v;
+
+				if (i & 1)
+				{
+					v[0] = node->mins[0];
+				}
+				else
+				{
+					v[0] = node->maxs[0];
+				}
+
+				if (i & 2)
+				{
+					v[1] = node->mins[1];
+				}
+				else
+				{
+					v[1] = node->maxs[1];
+				}
+
+				if (i & 4)
+				{
+					v[2] = node->mins[2];
+				}
+				else
+				{
+					v[2] = node->maxs[2];
+				}
+
+				float distance = Distance(tr.viewParms.ori.origin, v);
+
+				if (distance < closestCornerDistance)
+				{
+					closestCornerDistance = distance;
+				}
+			}
+
+			if (closestCornerDistance > tr.occlusionZfar * 2.0)// * 1.75)
+			{
+				return;
+			}
+		}
+#endif //__ZFAR_CULLING_ON_LEAFS__
 
 		if (node->contents != -1) {
 			break;

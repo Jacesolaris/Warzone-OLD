@@ -3543,6 +3543,8 @@ static void MDXABoneToMatrix ( const mdxaBone_t& bone, matrix_t& matrix )
 	matrix[15] = 1.0f;
 }
 
+//int maxSeenBoneRefs = 0;
+
 //This is a slightly mangled version of the same function from the sof2sp base.
 //It provides a pretty significant performance increase over the existing one.
 void RB_SurfaceGhoul( CRenderableSurface *surf ) 
@@ -3550,7 +3552,7 @@ void RB_SurfaceGhoul( CRenderableSurface *surf )
 	glState.vertexAnimation = qfalse;
 
 #if 1
-	static matrix_t boneMatrices[80] = {};
+	static matrix_t boneMatrices[MAX_GLM_BONEREFS/*80*/] = {}; // UQ1: Gonna limit this to MAX_GLM_BONEREFS (10), and cull any extras. Should be almost unnoticable, but save a bunch of time.
 
 	mdxmSurface_t *surfData = surf->surfaceData;
 	mdxmVBOMesh_t *surface = surf->vboMesh;
@@ -3577,17 +3579,26 @@ void RB_SurfaceGhoul( CRenderableSurface *surf )
 	tess.maxIndex = surface->maxIndex;
 	tess.firstIndex = surface->indexOffset;
 
-	int *boneReferences = (int *)((byte *)surfData + surfData->ofsBoneReferences);
+	if (surfData->numBoneReferences > 0)
+	{// UQ1: if there's no bone refs, then why send the array and do the extre GPU work at all?
+		int *boneReferences = (int *)((byte *)surfData + surfData->ofsBoneReferences);
 
-	for ( int i = 0; i < surfData->numBoneReferences; i++ )
-	{
-		const mdxaBone_t& bone = surf->boneCache->EvalRender (boneReferences[i]);
-		MDXABoneToMatrix (bone, boneMatrices[i]);
+		for (int i = 0; i < surfData->numBoneReferences && i < MAX_GLM_BONEREFS; i++)
+		{
+			const mdxaBone_t& bone = surf->boneCache->EvalRender(boneReferences[i]);
+			MDXABoneToMatrix(bone, boneMatrices[i]);
+		}
+
+		glState.boneMatrices = boneMatrices;
+		glState.numBones = surfData->numBoneReferences < MAX_GLM_BONEREFS ? surfData->numBoneReferences : MAX_GLM_BONEREFS;
+		glState.skeletalAnimation = qtrue;
+
+		/*if (surfData->numBoneReferences > maxSeenBoneRefs)
+		{
+			ri->Printf(PRINT_WARNING, "Max seen bone refs is now %i. previous was %i.\n", surfData->numBoneReferences, maxSeenBoneRefs);
+			maxSeenBoneRefs = surfData->numBoneReferences;
+		}*/
 	}
-
-	glState.boneMatrices = boneMatrices;
-	glState.numBones = surfData->numBoneReferences;
-	glState.skeletalAnimation = qtrue;
 
 	RB_EndSurface();
 

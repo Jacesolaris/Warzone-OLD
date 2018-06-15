@@ -23,6 +23,37 @@ uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim
 #define USE_SKELETAL_ANIM	u_Settings1.g
 #define USE_FOG				u_Settings1.b
 
+uniform vec4						u_Local1; // TERRAIN_TESSELLATION_OFFSET, sway, overlaySway, materialType
+uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, WATER_LEVEL
+uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
+uniform vec4						u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
+
+#define TERRAIN_TESSELLATION_OFFSET	u_Local1.r
+#define SHADER_SWAY					u_Local1.g
+#define SHADER_OVERLAY_SWAY			u_Local1.b
+#define SHADER_MATERIAL_TYPE		u_Local1.a
+
+#define SHADER_HAS_STEEPMAP			u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
+#define SHADER_HAS_NORMALMAP		u_Local2.b
+#define SHADER_WATER_LEVEL			u_Local2.a
+
+#define SHADER_HAS_SPLATMAP1		u_Local3.r
+#define SHADER_HAS_SPLATMAP2		u_Local3.g
+#define SHADER_HAS_SPLATMAP3		u_Local3.b
+#define SHADER_HAS_SPLATMAP4		u_Local3.a
+
+#define SHADER_STAGE_NUM			u_Local4.r
+#define SHADER_GLOW_STRENGTH		u_Local4.g
+#define SHADER_SHOW_SPLAT			u_Local4.b
+
+#define SHADER_DAY_NIGHT_ENABLED	u_Local5.r
+#define SHADER_NIGHT_SCALE			u_Local5.g
+#define SHADER_SKY_DIRECTION		u_Local5.b
+#define SHADER_AURORA_ENABLED		u_Local5.a
+
 
 uniform float				u_Time;
 
@@ -43,7 +74,7 @@ uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
 
 //uniform float				u_VertexLerp;
-uniform mat4				u_BoneMatrices[20];
+uniform mat4				u_BoneMatrices[MAX_GLM_BONEREFS];
 
 uniform vec2				u_textureScale;
 
@@ -201,6 +232,39 @@ vec4 CalcColor(vec3 position, vec3 normal)
 	return color;
 }
 
+float normalToSlope(in vec3 normal) {
+	float	forward;
+	float	pitch;
+
+	if (normal.g == 0.0 && normal.r == 0.0) {
+		if (normal.b > 0.0) {
+			pitch = 90;
+		}
+		else {
+			pitch = 270;
+		}
+	}
+	else {
+		forward = sqrt(normal.r*normal.r + normal.g*normal.g);
+		pitch = (atan(normal.b, forward) * 180 / M_PI);
+		if (pitch < 0.0) {
+			pitch += 360;
+		}
+	}
+
+	pitch = -pitch;
+
+	if (pitch > 180)
+		pitch -= 360;
+
+	if (pitch < -180)
+		pitch += 360;
+
+	pitch += 90.0f;
+
+	return pitch;
+}
+
 void main()
 {
 	vec3 position;
@@ -225,8 +289,15 @@ void main()
 		{
 			int boneIndex = int(attr_BoneIndexes[i]);
 
-			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
-			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
+			if (boneIndex >= MAX_GLM_BONEREFS)
+			{// Skip...
+				
+			}
+			else
+			{
+				position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
+				normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i] /* * u_Local9.rgba */; // Could do X,Y,Z model scaling here...
+			}
 		}
 
 		position = position4.xyz;
@@ -236,6 +307,20 @@ void main()
 	{
 		position  = attr_Position;
 		normal    = attr_Normal * 2.0 - 1.0;
+	}
+
+	if (TERRAIN_TESSELLATION_OFFSET != 0.0)
+	{// Tesselated terrain, lower the depth of the terrain...
+		float pitch = normalToSlope(normal.xyz);
+
+		if (pitch >= 90.0 || pitch <= -90.0)
+		{
+			position.z += TERRAIN_TESSELLATION_OFFSET;
+		}
+		else
+		{
+			position.z -= TERRAIN_TESSELLATION_OFFSET;
+		}
 	}
 
 	vec2 texCoords = attr_TexCoord0.st;

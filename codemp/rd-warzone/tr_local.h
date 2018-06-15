@@ -98,6 +98,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __HEIGHTMAP_TERRAIN_TEST__			// Testing stuff...
 
+#define __TERRAIN_TESSELATION__
+
+
+#define __HUMANOIDS_BEND_GRASS__
+#ifdef __HUMANOIDS_BEND_GRASS__
+#define MAX_GRASSBEND_HUMANOIDS 4
+#endif //__HUMANOIDS_BEND_GRASS__
+
 
 #define __FX_SORTING__
 #define __WATER_SORTING__
@@ -107,12 +115,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __GLOW_SORTING__
 #define __TESS_SORTING__
 #define __MATERIAL_SORTING__
-
-
-#define __HUMANOIDS_BEND_GRASS__
-#ifdef __HUMANOIDS_BEND_GRASS__
-	#define MAX_GRASSBEND_HUMANOIDS 4
-#endif //__HUMANOIDS_BEND_GRASS__
 
 //#define __REALTIME_SURFACE_SORTING__			// Meh, on big maps with lots of models, sorting is much slower then not sorting...
 #ifdef __REALTIME_SURFACE_SORTING__
@@ -127,6 +129,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	//#define __REALTIME_TESS_SORTING__
 	//#define __REALTIME_MATERIAL_SORTING__
 #endif /__REALTIME_SURFACE_SORTING__
+
+
+#define MAX_GLM_BONEREFS 10 //16 //20
 
 // -----------------------------------------------------------------------------------------------------------------------------
 //                                                Warzone Surface Merging Defines
@@ -276,7 +281,9 @@ extern cvar_t	*r_superSampleMultiplier;
 
 extern cvar_t	*r_instanceCloudReductionCulling;
 
-extern cvar_t	*r_tesselation;
+extern cvar_t	*r_tessellation;
+extern cvar_t	*r_terrainTessellation;
+extern cvar_t	*r_terrainTessellationMax;
 
 extern cvar_t	*r_cartoon;
 
@@ -1668,8 +1675,9 @@ typedef enum
 	UNIFORM_CUBEMAPSTRENGTH,
 
 	UNIFORM_BONE_MATRICES,
+#ifdef __EXPERIMETNAL_CHARACTER_EDITOR__
 	UNIFORM_BONE_SCALES,
-		
+#endif //__EXPERIMETNAL_CHARACTER_EDITOR__
 
 	// UQ1: Added...
 	UNIFORM_MINS,
@@ -2731,6 +2739,7 @@ typedef struct trGlobals_s {
 	image_t					*grassMaskImage[10];
 	image_t					*paletteImage;
 	image_t					*roadsMapImage;
+	image_t					*tessellationMapImage;
 	image_t					*roadImage;
 	image_t					*moonImage;
 	image_t					*auroraImage[2];
@@ -2865,8 +2874,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t weatherShader;
 	shaderProgram_t occlusionShader;
 	shaderProgram_t depthAdjustShader;
-	shaderProgram_t lightAllShader[2];
-	shaderProgram_t lightAllSplatShader[2];
+	shaderProgram_t lightAllShader[3];
+	shaderProgram_t lightAllSplatShader[3];
 	shaderProgram_t skyShader;
 	shaderProgram_t depthPassShader;
 	shaderProgram_t sunPassShader;

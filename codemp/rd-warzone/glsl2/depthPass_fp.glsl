@@ -28,14 +28,14 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 #define USE_ISDETAIL				u_Settings3.g
 #define USE_EMISSIVE_BLACK			u_Settings3.b
 
-uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local1; // TERRAIN_TESSELLATION_OFFSET, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, WATER_LEVEL
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
 uniform vec4						u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 
-#define SHADER_MAP_SIZE				u_Local1.r
+#define TERRAIN_TESSELLATION_OFFSET	u_Local1.r
 #define SHADER_SWAY					u_Local1.g
 #define SHADER_OVERLAY_SWAY			u_Local1.b
 #define SHADER_MATERIAL_TYPE		u_Local1.a

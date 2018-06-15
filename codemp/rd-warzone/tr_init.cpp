@@ -44,7 +44,10 @@ cvar_t	*r_drawSort;
 cvar_t	*r_superSampleMultiplier;
 
 cvar_t	*r_instanceCloudReductionCulling;
-cvar_t	*r_tesselation;
+
+cvar_t	*r_tessellation;
+cvar_t	*r_terrainTessellation;
+cvar_t	*r_terrainTessellationMax;
 
 cvar_t	*r_cartoon;
 
@@ -1416,7 +1419,9 @@ void R_Register( void )
 
 	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE );
+	r_tessellation = ri->Cvar_Get( "r_tessellation", "1", CVAR_ARCHIVE );
+	r_terrainTessellation = ri->Cvar_Get("r_terrainTessellation", "1", CVAR_ARCHIVE);
+	r_terrainTessellationMax = ri->Cvar_Get("r_terrainTessellationMax", "64", CVAR_ARCHIVE);
 
 	r_cartoon = ri->Cvar_Get("r_cartoon", "0", CVAR_ARCHIVE);
 

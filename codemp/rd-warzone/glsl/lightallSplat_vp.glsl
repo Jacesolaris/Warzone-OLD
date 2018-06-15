@@ -100,7 +100,7 @@ uniform vec4   u_BaseColor;
 uniform vec4   u_VertColor;
 
 uniform float  u_VertexLerp;
-uniform mat4   u_BoneMatrices[20];
+uniform mat4   u_BoneMatrices[MAX_GLM_BONEREFS];
 
 uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
@@ -115,7 +115,6 @@ out vec4 PrimaryLightDir_CS_in;
 out vec2 TexCoord2_CS_in;
 out vec3 Blending_CS_in;
 out float Slope_CS_in;
-out float usingSteepMap_CS_in;
 #endif
 
 varying vec2	var_TexCoords;
@@ -376,8 +375,15 @@ void main()
 		{
 			int boneIndex = int(attr_BoneIndexes[i]);
 
-			position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
-			normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
+			if (boneIndex >= MAX_GLM_BONEREFS)
+			{// Skip...
+
+			}
+			else
+			{
+				position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
+				normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
+			}
 		}
 
 		position = position4.xyz;
@@ -462,7 +468,7 @@ void main()
 
 		if (SHADER_HAS_STEEPMAP > 0.0)
 		{// Steep maps...
-#if 0
+#if 1
 			float pitch = normalToSlope(normalize(normal.xyz));
 
 			if (pitch > 46.0 || pitch < -46.0)
