@@ -4969,9 +4969,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
 		&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
-			|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "models/")
 			|| StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menu")))
-	{// Ignore splat checks on menus, models, and gfx dirs...
+	{// Ignore splat checks on menu and gfx dirs...
 		checkSplats = qfalse;
 		checkNormals = qfalse;
 	}

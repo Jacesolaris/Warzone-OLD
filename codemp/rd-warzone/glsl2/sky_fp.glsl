@@ -1,4 +1,5 @@
 #define __HIGH_PASS_SHARPEN__
+#define __CLOUDS__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
@@ -32,9 +33,8 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 #define USE_DETAIL_COORD			u_Settings3.b
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
-uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, WATER_LEVEL
-uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4						u_Local4; // stageNum, glowStrength, r_showsplat, 0.0
+uniform vec4						u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
+uniform vec4						u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
 uniform vec4						u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 
@@ -43,19 +43,15 @@ uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 #define SHADER_OVERLAY_SWAY			u_Local1.b
 #define SHADER_MATERIAL_TYPE		u_Local1.a
 
-#define SHADER_HAS_STEEPMAP			u_Local2.r
-#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
-#define SHADER_HAS_NORMALMAP		u_Local2.b
-#define SHADER_WATER_LEVEL			u_Local2.a
+#define CLOUDS_ENABLED				u_Local2.r
+#define CLOUDS_CLOUDSCALE			u_Local2.g
+#define CLOUDS_SPEED				u_Local2.b
+#define CLOUDS_DARK					u_Local2.a
 
-#define SHADER_HAS_SPLATMAP1		u_Local3.r
-#define SHADER_HAS_SPLATMAP2		u_Local3.g
-#define SHADER_HAS_SPLATMAP3		u_Local3.b
-#define SHADER_HAS_SPLATMAP4		u_Local3.a
-
-#define SHADER_STAGE_NUM			u_Local4.r
-#define SHADER_GLOW_STRENGTH		u_Local4.g
-#define SHADER_SHOW_SPLAT			u_Local4.b
+#define CLOUDS_LIGHT				u_Local3.r
+#define CLOUDS_CLOUDCOVER			u_Local3.g
+#define CLOUDS_CLOUDALPHA			u_Local3.b
+#define CLOUDS_SKYTINT				u_Local3.a
 
 #define SHADER_DAY_NIGHT_ENABLED	u_Local5.r
 #define SHADER_NIGHT_SCALE			u_Local5.g
@@ -306,6 +302,123 @@ vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 }
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
+#ifdef __CLOUDS__
+/*
+const float CLOUDS_CLOUDSCALE = 1.1;
+const float CLOUDS_SPEED = 0.003;
+const float CLOUDS_DARK = 0.5;
+const float CLOUDS_LIGHT = 0.3;
+const float CLOUDS_CLOUDCOVER = 0.2;
+const float CLOUDS_CLOUDALPHA = 2.0;
+const float CLOUDS_SKYTINT = 0.5;
+//const vec3 skycolour1 = vec3(0.2, 0.4, 0.6);
+//const vec3 skycolour2 = vec3(0.4, 0.7, 1.0);
+*/
+
+const mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+
+vec2 hash(vec2 p) {
+	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+float noise(in vec2 p) {
+	const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+	const float K2 = 0.211324865; // (3-sqrt(3))/6;
+	vec2 i = floor(p + (p.x + p.y)*K1);
+	vec2 a = p - i + (i.x + i.y)*K2;
+	vec2 o = (a.x>a.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0); //vec2 of = 0.5 + 0.5*vec2(sign(a.x-a.y), sign(a.y-a.x));
+	vec2 b = a - o + K2;
+	vec2 c = a - 1.0 + 2.0*K2;
+	vec3 h = max(0.5 - vec3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
+	vec3 n = h*h*h*h*vec3(dot(a, hash(i + 0.0)), dot(b, hash(i + o)), dot(c, hash(i + 1.0)));
+	return dot(n, vec3(70.0));
+}
+
+float fbm(vec2 n) {
+	float total = 0.0, amplitude = 0.1;
+	for (int i = 0; i < 7; i++) {
+		total += noise(n) * amplitude;
+		n = m * n;
+		amplitude *= 0.4;
+	}
+	return total;
+}
+
+vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
+{
+	//vec3 skycolour1 = skycolour;
+	//vec3 skycolour2 = skycolour;
+	vec4 fragColor = vec4(0.0);
+	vec2 p = fragCoord.xy;// / iResolution.xy;
+	vec2 uv = p;
+	float time = u_Time * CLOUDS_SPEED;
+	float q = fbm(uv * CLOUDS_CLOUDSCALE * 0.5);
+
+	//ridged noise shape
+	float r = 0.0;
+	uv *= CLOUDS_CLOUDSCALE;
+	uv -= q - time;
+	float weight = 0.8;
+	for (int i = 0; i<8; i++) {
+		r += abs(weight*noise(uv));
+		uv = m*uv + time;
+		weight *= 0.7;
+	}
+
+	//noise shape
+	float f = 0.0;
+	uv = p;
+	uv *= CLOUDS_CLOUDSCALE;
+	uv -= q - time;
+	weight = 0.7;
+	for (int i = 0; i<8; i++) {
+		f += weight*noise(uv);
+		uv = m*uv + time;
+		weight *= 0.6;
+	}
+
+	f *= r + f;
+
+	//noise colour
+	float c = 0.0;
+	time = u_Time * CLOUDS_SPEED * 2.0;
+	uv = p;
+	uv *= CLOUDS_CLOUDSCALE*2.0;
+	uv -= q - time;
+	weight = 0.4;
+	for (int i = 0; i<7; i++) {
+		c += weight*noise(uv);
+		uv = m*uv + time;
+		weight *= 0.6;
+	}
+
+	//noise ridge colour
+	float c1 = 0.0;
+	time = u_Time * CLOUDS_SPEED * 3.0;
+	uv = p;
+	uv *= CLOUDS_CLOUDSCALE*3.0;
+	uv -= q - time;
+	weight = 0.4;
+	for (int i = 0; i<7; i++) {
+		c1 += abs(weight*noise(uv));
+		uv = m*uv + time;
+		weight *= 0.6;
+	}
+
+	c += c1;
+
+	//vec3 skycolour = mix(skycolour2, skycolour1, p.y);
+	vec3 cloudcolour = vec3(1.1, 1.1, 0.9) * clamp((CLOUDS_DARK + CLOUDS_LIGHT*c), 0.0, 1.0);
+
+	f = CLOUDS_CLOUDCOVER + CLOUDS_CLOUDALPHA*f*r;
+
+	vec3 result = mix(skycolour, clamp(CLOUDS_SKYTINT * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
+
+	return result;
+}
+#endif //__CLOUDS__
+
 void main()
 {
 #if 0
@@ -429,6 +542,14 @@ void main()
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + color, auroraPower * str);
 			}
 		}
+
+#ifdef __CLOUDS__
+		if (CLOUDS_ENABLED > 0.0)
+		{// Procedural clouds are enabled...
+			vec3 pViewDir = normalize(var_Position.xyz);
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, Clouds(pViewDir.xy * 0.5 + 0.5, gl_FragColor.rgb), clamp(pow(pViewDir.z, 2.5), 0.0, 1.0));
+		}
+#endif //__CLOUDS__
 
 		gl_FragColor.a *= var_Color.a;
 	}

@@ -1364,6 +1364,14 @@ vec3_t		SUN_COLOR_MAIN = { 0.85 };
 vec3_t		SUN_COLOR_SECONDARY = { 0.4 };
 vec3_t		SUN_COLOR_TERTIARY = { 0.2 };
 vec3_t		SUN_COLOR_AMBIENT = { 0.85 };
+qboolean	PROCEDURAL_CLOUDS_ENABLED = qtrue;
+float		PROCEDURAL_CLOUDS_CLOUDSCALE = 1.1;
+float		PROCEDURAL_CLOUDS_SPEED = 0.003;
+float		PROCEDURAL_CLOUDS_DARK = 0.5;
+float		PROCEDURAL_CLOUDS_LIGHT = 0.3;
+float		PROCEDURAL_CLOUDS_CLOUDCOVER = 0.2;
+float		PROCEDURAL_CLOUDS_CLOUDALPHA = 2.0;
+float		PROCEDURAL_CLOUDS_SKYTINT = 0.5;
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 int			MAP_LIGHTMAP_ENHANCEMENT = 1;
@@ -1568,6 +1576,18 @@ void MAPPING_LoadMapInfo(void)
 	SUN_COLOR_AMBIENT[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_R", "0.85"));
 	SUN_COLOR_AMBIENT[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_G", "0.85"));
 	SUN_COLOR_AMBIENT[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_B", "0.85"));
+
+	//
+	// Clouds....
+	//
+	PROCEDURAL_CLOUDS_ENABLED = (atoi(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	PROCEDURAL_CLOUDS_CLOUDSCALE = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_CLOUDSCALE", "1.1"));
+	PROCEDURAL_CLOUDS_SPEED = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_SPEED", "0.003"));
+	PROCEDURAL_CLOUDS_DARK = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_DARK", "0.5"));
+	PROCEDURAL_CLOUDS_LIGHT = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_LIGHT", "0.3"));
+	PROCEDURAL_CLOUDS_CLOUDCOVER = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_CLOUDCOVER", "0.2"));
+	PROCEDURAL_CLOUDS_CLOUDALPHA = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_CLOUDALPHA", "2.0"));
+	PROCEDURAL_CLOUDS_SKYTINT = atof(IniRead(mapname, "CLOUDS", "PROCEDURAL_CLOUDS_SKYTINT", "0.5"));
 
 	//
 	// Aurora....
@@ -1939,6 +1959,11 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 and sun volumetric scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE, SUN_VOLUMETRIC_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural clouds are ^7%s^5 and cloud scale is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_CLOUDS_CLOUDSCALE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud speed is ^7%.4f^5 and cloud cover is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_CLOUDCOVER);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud dark is ^7%.4f^5 and cloud light is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_DARK, PROCEDURAL_CLOUDS_LIGHT);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud alpha is ^7%.4f^5 and cloud tint is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lighting method is ^7%s^5 on this map.\n", MAP_LIGHTING_METHOD ? "Standard" : "PBR");

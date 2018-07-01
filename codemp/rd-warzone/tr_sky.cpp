@@ -433,6 +433,15 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
+	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
+	extern float		PROCEDURAL_CLOUDS_CLOUDSCALE;
+	extern float		PROCEDURAL_CLOUDS_SPEED;
+	extern float		PROCEDURAL_CLOUDS_DARK;
+	extern float		PROCEDURAL_CLOUDS_LIGHT;
+	extern float		PROCEDURAL_CLOUDS_CLOUDCOVER;
+	extern float		PROCEDURAL_CLOUDS_CLOUDALPHA;
+	extern float		PROCEDURAL_CLOUDS_SKYTINT;
+
 	{
 		shaderProgram_t *sp = &tr.skyShader;
 		vec4_t vector;
@@ -446,12 +455,16 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
+
+			VectorSet4(vector, PROCEDURAL_CLOUDS_ENABLED ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
+
+			VectorSet4(vector, PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
 		}
 
 		{// unused...
 			VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector); // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
 		}
 

@@ -1977,31 +1977,48 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 #endif //__TERRAIN_TESSELATION__
-			/*else if (r_testvalue0->integer)
-			{
-			if (r_testvalue1->integer && tess.shader->materialType == MATERIAL_SOLIDWOOD)
-			{// Always add tesselation to wood...
-			useTesselation = 1;
-			tessInner = 3.0;
-			tessOuter = tessInner;
-			tessAlpha = 1.0;
+#if 0
+			else if (TERRAIN_TESSELLATION_ENABLED
+				&& r_terrainTessellation->integer
+				&& r_terrainTessellationMax->value >= 2.0
+				&& tess.shader->hasSplatMaps
+				&& tess.shader->materialType == MATERIAL_ROCK)
+			{// Always add tesselation to ground surfaces...
+				if (IS_DEPTH_PASS)
+				{// When doing depth pass, we simply lower the terrain by the max tessellation amount, reduces pixel culling, but is good enough and faster then tesselating the depth pass.
+					IS_DEPTH_PASS = 2;
+				}
+				else
+				{
+					useTesselation = 2;
+					tessInner = max(min(r_terrainTessellationMax->value, r_testvalue0->value/*TERRAIN_TESSELLATION_LEVEL*/), 2.0);
+					tessOuter = tessInner;
+					tessAlpha = r_testvalue1->value;// TERRAIN_TESSELLATION_OFFSET;
+				}
 			}
+#endif
+			/*if (tess.shader->materialType == MATERIAL_SOLIDWOOD)
+			{// Always add tesselation to wood...
+				useTesselation = 1;
+				tessInner = 3.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
+			}*/
 
-			if (r_testvalue2->integer && tess.shader->materialType == MATERIAL_GREENLEAVES)
+			/*if (tess.shader->materialType == MATERIAL_GREENLEAVES)
 			{// Always add tesselation to wood...
-			useTesselation = 1;
-			tessInner = 3.0;
-			tessOuter = tessInner;
-			tessAlpha = 1.0;
-			}
+				useTesselation = 1;
+				tessInner = 3.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
+			}*/
 
-			if (r_testvalue3->integer && tess.shader->materialType == MATERIAL_SOLIDMETAL)
+			/*if (tess.shader->materialType == MATERIAL_SOLIDMETAL)
 			{// Always add tesselation to wood...
-			useTesselation = 1;
-			tessInner = 3.0;
-			tessOuter = tessInner;
-			tessAlpha = 1.0;
-			}
+				useTesselation = 1;
+				tessInner = 3.0;
+				tessOuter = tessInner;
+				tessAlpha = 1.0;
 			}*/
 		}
 	}
@@ -2368,12 +2385,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				sp = &tr.lightAllShader[1];
 				backEnd.pc.c_lightallDraws++;
 			}
-			else if (useTesselation == 2)
+			/*else if (useTesselation == 2)
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 				sp = &tr.lightAllSplatShader[2];
 				backEnd.pc.c_lightallDraws++;
-			}
+			}*/
 			else
 			{
 				sp = &tr.depthPassShader;

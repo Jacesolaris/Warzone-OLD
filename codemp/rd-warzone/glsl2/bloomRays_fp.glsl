@@ -52,12 +52,16 @@ vec3 ProcessBloomRays(vec2 inTC)
 			{
 				texCoord -= deltaTexCoord;
 
-				vec4 sample2 = texture(u_GlowMap, vec2(texCoord.x, 1.0 - texCoord.y));
+				if (texCoord.x >= 0.0 && texCoord.x <= 1.0 && texCoord.y >= 0.0 && texCoord.y <= 1.0)
+				{// Don't bother with lookups outside screen area...
+					vec4 sample2 = texture(u_GlowMap, vec2(texCoord.x, 1.0 - texCoord.y));
 
-				float grey = (length(sample2.rgb * sample2.a) / 3.0) * 0.01;
-				AddContrast(grey, 1.175, 0.1);
+					float grey = (length(sample2.rgb * sample2.a) / 3.0) * 0.01;
+					AddContrast(grey, 1.175, 0.1);
 
-				lens.xyz += sample2.xyz * grey * illuminationDecay * BLOOMRAYS_WEIGHT;
+					lens.xyz += sample2.xyz * grey * illuminationDecay * BLOOMRAYS_WEIGHT;
+				}
+
 				illuminationDecay *= BLOOMRAYS_DECAY;
 
 				if (illuminationDecay <= 0.0)

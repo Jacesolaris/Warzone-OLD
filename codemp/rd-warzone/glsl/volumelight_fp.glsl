@@ -56,8 +56,13 @@ void main ( void )
 	for(int g = 0; g < iBloomraySamples; g++)
 	{
 		texCoord -= deltaTexCoord;
-		float linDepth = textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r;
-		lens += linDepth * illuminationDecay * fBloomrayWeight;
+
+		if (texCoord.x >= 0.0 && texCoord.x <= 1.0 && texCoord.y >= 0.0 && texCoord.y <= 1.0)
+		{// Don't bother with lookups outside screen area...
+			float linDepth = textureLod(u_ScreenDepthMap, texCoord.xy, 0.0).r;
+			lens += linDepth * illuminationDecay * fBloomrayWeight;
+		}
+
 		illuminationDecay *= fBloomrayDecay;
 
 		if (illuminationDecay <= 0.0)
