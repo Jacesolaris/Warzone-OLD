@@ -1364,6 +1364,7 @@ vec3_t		SUN_COLOR_MAIN = { 0.85 };
 vec3_t		SUN_COLOR_SECONDARY = { 0.4 };
 vec3_t		SUN_COLOR_TERTIARY = { 0.2 };
 vec3_t		SUN_COLOR_AMBIENT = { 0.85 };
+qboolean	PROCEDURAL_SKY_ENABLED = qfalse;
 qboolean	PROCEDURAL_CLOUDS_ENABLED = qtrue;
 float		PROCEDURAL_CLOUDS_CLOUDSCALE = 1.1;
 float		PROCEDURAL_CLOUDS_SPEED = 0.003;
@@ -1576,6 +1577,11 @@ void MAPPING_LoadMapInfo(void)
 	SUN_COLOR_AMBIENT[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_R", "0.85"));
 	SUN_COLOR_AMBIENT[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_G", "0.85"));
 	SUN_COLOR_AMBIENT[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_B", "0.85"));
+
+	//
+	// Procedural Sky...
+	//
+	PROCEDURAL_SKY_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_SKY_ENABLED", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Clouds....
@@ -1959,6 +1965,8 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 and sun volumetric scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE, SUN_VOLUMETRIC_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
+
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky is ^7%s^5 on this map.\n", PROCEDURAL_SKY_ENABLED ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural clouds are ^7%s^5 and cloud scale is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_CLOUDS_CLOUDSCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud speed is ^7%.4f^5 and cloud cover is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_CLOUDCOVER);

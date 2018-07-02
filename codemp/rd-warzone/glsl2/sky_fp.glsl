@@ -32,13 +32,13 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 #define USE_ISDETAIL				u_Settings3.g
 #define USE_DETAIL_COORD			u_Settings3.b
 
-uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local1; // PROCEDURAL_SKY_ENABLED, 0.0, 0.0, materialType
 uniform vec4						u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
 uniform vec4						u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
 uniform vec4						u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
 uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 
-#define SHADER_MAP_SIZE				u_Local1.r
+#define PROCEDURAL_SKY_ENABLED		u_Local1.r
 #define SHADER_SWAY					u_Local1.g
 #define SHADER_OVERLAY_SWAY			u_Local1.b
 #define SHADER_MATERIAL_TYPE		u_Local1.a
@@ -164,23 +164,35 @@ vec3 GetStars( vec2 coord )
 	return vec3(color);
 }
 
-vec3 extra_cheap_atmosphere(vec3 raydir, vec3 sundir, vec3 suncolorIn) {
+vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, vec3 suncolorIn) {
+	vec3 sundir = sunDir;
 	sundir.y = abs(sundir.y);
-	float special_trick = 1.0 / (raydir.y * 1.0 + 0.1);
-	float special_trick2 = 1.0 / (sundir.y * 11.0 + 1.0);
-	float raysundt = pow(abs(dot(sundir, raydir)), 2.0);
-	float sundt = pow(max(0.0, dot(sundir, raydir)), 8.0);
+	float sunDirLength = pow(clamp(length(sundir.y), 0.0, 1.0), 2.25);
+	float rayDirLength = pow(clamp(length(raydir.y), 0.0, 1.0), 0.85);
+	float special_trick = 1.0 / (rayDirLength/*raydir.y*/ * 1.0 + 0.2/*0.1*/);
+	float special_trick2 = 1.0 / (sunDirLength/*sundir.y*/ * 11.0 + 1.0);
+	float dotSun = dot(sundir, /*skyViewDir2*/raydir);
+	float raysundt = pow(abs(dotSun), 2.0);
+	float sundt = pow(max(0.0, dotSun), 8.0);
 	float mymie = sundt * special_trick * 0.2;
-	vec3 suncolor = mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - vec3(5.5, 13.0, 22.4) / 22.4), special_trick2);
+	vec3 skyColor = vec3(0.2455, 0.58, 1.0);
+	vec3 suncolor = mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - skyColor), special_trick2);
 	//suncolor *= suncolorIn;
-	vec3 bluesky = vec3(5.5, 13.0, 22.4) / 22.4 * suncolor;
-	vec3 bluesky2 = max(vec3(0.0), bluesky - vec3(5.5, 13.0, 22.4) * 0.004 * (special_trick + -6.0 * sundir.y * sundir.y));
+	vec3 bluesky = skyColor * suncolor;
+	vec3 bluesky2 = max(bluesky/*vec3(0.0)*/, bluesky - skyColor * 0.0896 * (special_trick + -6.0 * sunDirLength/*sundir.y*/ * sunDirLength/*sundir.y*/));
 	bluesky2 *= special_trick * (0.24 + raysundt * 0.24);
-	return bluesky2 + mymie * suncolor;
-}
 
-vec3 getatm(vec3 ray, vec3 sundir, vec3 suncolorIn) {
-	return extra_cheap_atmosphere(ray, normalize(vec3(1.0, 0.1, 1.0)), suncolorIn) * 0.5;
+	/*if (u_Local9.g == 1.0)
+		return bluesky;
+	if (u_Local9.g == 2.0)
+		return bluesky2;
+	if (u_Local9.g == 3.0)
+		return suncolor;
+	if (u_Local9.g == 4.0)
+		return mymie * suncolor;*/
+
+	//return bluesky2 + mymie * suncolor;
+	return (bluesky + bluesky2 + (mymie * suncolor)) * 0.5;
 }
 
 #define PI M_PI
@@ -303,18 +315,6 @@ vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
 #ifdef __CLOUDS__
-/*
-const float CLOUDS_CLOUDSCALE = 1.1;
-const float CLOUDS_SPEED = 0.003;
-const float CLOUDS_DARK = 0.5;
-const float CLOUDS_LIGHT = 0.3;
-const float CLOUDS_CLOUDCOVER = 0.2;
-const float CLOUDS_CLOUDALPHA = 2.0;
-const float CLOUDS_SKYTINT = 0.5;
-//const vec3 skycolour1 = vec3(0.2, 0.4, 0.6);
-//const vec3 skycolour2 = vec3(0.4, 0.7, 1.0);
-*/
-
 const mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
 
 vec2 hash(vec2 p) {
@@ -432,44 +432,49 @@ void main()
 	{
 		vec2 texCoords = var_TexCoords;
 
-		gl_FragColor = texture(u_DiffuseMap, texCoords);
+		if (PROCEDURAL_SKY_ENABLED <= 0.0)
+		{
+			gl_FragColor = texture(u_DiffuseMap, texCoords);
 #ifdef __HIGH_PASS_SHARPEN__
-		gl_FragColor.rgb = Enhance(u_DiffuseMap, texCoords, gl_FragColor.rgb, 1.0/*8.0*/);
+			gl_FragColor.rgb = Enhance(u_DiffuseMap, texCoords, gl_FragColor.rgb, 1.0/*8.0*/);
 #endif //__HIGH_PASS_SHARPEN__
-
-#if 0
-		// Experimenting with atmospheric scatter...
+		}
+		else
+		{
 #if 1
-		//vec3 skyViewDir = normalize(u_ViewOrigin.xzy - var_Position.xzy);
-		//vec3 skySundir = normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy);
-		//vec3 skyRaydir = reflect(skyViewDir, var_Normal.xzy);
-		vec3 skyViewDir = normalize(u_ViewOrigin.xzy - var_Position.xzy);
-		vec3 skySundir = normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy);
-		vec3 atmos = getatm(skyRaydir, skySundir, u_PrimaryLightColor);
+			//float MAP_LEVEL_OFFSET = MAP_PLAYABLE_MINS * u_Local9.g;
+			vec3 position = var_Position.xzy;
+			//position.y += MAP_LEVEL_OFFSET;
+			vec3 lightPosition = u_PrimaryLightOrigin.xzy;
+			//lightPosition.y += MAP_LEVEL_OFFSET;
+
+			vec3 skyViewDir = normalize(position);
+			vec3 skyViewDir2 = normalize(u_ViewOrigin.xzy - var_Position.xzy);
+			//vec3 skySunDir = normalize(u_ViewOrigin.xzy - lightPosition);
+			vec3 skySunDir = normalize(lightPosition);
+			//vec3 skySunDir = normalize(position - lightPosition);
+			vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, skySunDir, u_PrimaryLightColor);
 #else
-		vec3 skyRaydir = normalize(u_ViewOrigin.xzy - var_Position.xzy);
-		vec3 skySundir = normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy);
+			vec3 skyRaydir = normalize(u_ViewOrigin.xzy - var_Position.xzy);
+			vec3 skySundir = normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy);
 
-		vec3 atmos = atmosphere(
-			skyRaydir,						// normalized ray direction
-			u_ViewOrigin.xzy/*vec3(0, 6372e3, 0)*/,             // ray origin
-			u_PrimaryLightOrigin.xzy/*uSunPos*/,                        // position of the sun
-			22.0,                           // intensity of the sun
-			6371e3,                         // radius of the planet in meters
-			6471e3,                         // radius of the atmosphere in meters
-			vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
-			21e-6,                          // Mie scattering coefficient
-			8e3,                            // Rayleigh scale height
-			1.2e3,                          // Mie scale height
-			0.758                           // Mie preferred scattering direction
-		);
+			vec3 atmos = atmosphere(
+				skyRaydir,						// normalized ray direction
+				u_ViewOrigin.xzy/*vec3(0, 6372e3, 0)*/,             // ray origin
+				u_PrimaryLightOrigin.xzy/*uSunPos*/,                        // position of the sun
+				22.0,                           // intensity of the sun
+				6371e3,                         // radius of the planet in meters
+				6471e3,                         // radius of the atmosphere in meters
+				vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
+				21e-6,                          // Mie scattering coefficient
+				8e3,                            // Rayleigh scale height
+				1.2e3,                          // Mie scale height
+				0.758                           // Mie preferred scattering direction
+			);
 #endif
 
-		// Apply exposure.
-		//atmos = 1.0 - exp(-1.0 * atmos);
-
-		gl_FragColor.rgb += atmos * u_Local9.r;
-#endif
+			gl_FragColor.rgb = atmos;
+		}
 
 		if (SHADER_MATERIAL_TYPE == 1024.0)
 		{// This is sky, and aurora is enabled...

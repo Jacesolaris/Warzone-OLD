@@ -433,6 +433,8 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
+	extern qboolean		PROCEDURAL_SKY_ENABLED;
+
 	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
 	extern float		PROCEDURAL_CLOUDS_CLOUDSCALE;
 	extern float		PROCEDURAL_CLOUDS_SPEED;
@@ -450,17 +452,19 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		GLSL_BindProgram(sp);
 
 		{// used...
-			VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // MAP_SIZE, sway, overlaySway, materialType
+			//extern float		MAP_WATER_LEVEL;// = 131072.0;
+			extern vec3_t  PROCEDURAL_SKY_ENABLED;
+			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, 0.0, 0.0, 1024.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
 
 			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
 
 			VectorSet4(vector, PROCEDURAL_CLOUDS_ENABLED ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
 
 			VectorSet4(vector, PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector); // hasSteepMap, hasWaterEdgeMap, hasNormalMap, MAP_WATER_LEVEL
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 		}
 
 		{// unused...
@@ -545,9 +549,10 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		//	GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
 		vec3_t out;
-		float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
-		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
-		GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, out);
+		//float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+		//VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+		//GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, out);
+		GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 		GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 		GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
 
