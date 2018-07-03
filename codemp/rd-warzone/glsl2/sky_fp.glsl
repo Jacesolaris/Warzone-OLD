@@ -474,6 +474,7 @@ void main()
 #endif
 
 			gl_FragColor.rgb = atmos;
+			gl_FragColor.a = 1.0;
 		}
 
 		if (SHADER_MATERIAL_TYPE == 1024.0)

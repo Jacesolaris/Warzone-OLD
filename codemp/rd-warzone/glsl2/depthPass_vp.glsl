@@ -88,6 +88,7 @@ uniform vec4				u_PrimaryLightOrigin;
 varying vec3				var_VertPos;
 varying vec2				var_TexCoords;
 varying vec4				var_Color;
+//varying flat int			var_IgnoreCompletely;
 
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -309,6 +310,8 @@ void main()
 		normal    = attr_Normal * 2.0 - 1.0;
 	}
 
+	//var_IgnoreCompletely = 0;
+
 	if (TERRAIN_TESSELLATION_OFFSET != 0.0)
 	{// Tesselated terrain, lower the depth of the terrain...
 		float pitch = normalToSlope(normal.xyz);
@@ -316,6 +319,7 @@ void main()
 		if (pitch >= 90.0 || pitch <= -90.0)
 		{
 			position.z += TERRAIN_TESSELLATION_OFFSET;
+			//var_IgnoreCompletely = 1;
 		}
 		else
 		{

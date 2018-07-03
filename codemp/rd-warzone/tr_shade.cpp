@@ -1841,6 +1841,11 @@ extern qboolean ALLOW_GL_400;
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
+	if (tess.shader->surfaceFlags & SURF_NODRAW)
+	{
+		return;
+	}
+
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float	eyeT = 0;
 	int		deformGen;

@@ -68,6 +68,7 @@ uniform float						u_Time;
 varying vec3						var_VertPos;
 varying vec2						var_TexCoords;
 varying vec4						var_Color;
+//varying flat int					var_IgnoreCompletely;
 
 const float							fBranchHardiness = 0.001;
 const float							fBranchSize = 128.0;
@@ -91,6 +92,12 @@ vec2 GetSway ()
 
 void main()
 {
+	/*if (var_IgnoreCompletely == 1)
+	{
+		gl_FragColor = vec4(0.0);
+		return;
+	}*/
+
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
 		gl_FragColor = vec4(1.0);

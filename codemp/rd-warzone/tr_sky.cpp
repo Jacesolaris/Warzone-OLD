@@ -453,7 +453,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 		{// used...
 			//extern float		MAP_WATER_LEVEL;// = 131072.0;
-			extern vec3_t  PROCEDURAL_SKY_ENABLED;
+			extern qboolean  PROCEDURAL_SKY_ENABLED;
 			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, 0.0, 0.0, 1024.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
 
