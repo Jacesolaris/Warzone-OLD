@@ -7946,6 +7946,14 @@ char uniqueGenericGlow[] = "{\n"\
 "noScreenMap\n"\
 "}\n";
 
+char uniqueGenericLightmap[] = "{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen lightingDiffuse\n"\
+"depthFunc equal\n"\
+"noScreenMap\n"\
+"}\n";
+
 char uniqueGenericSkyMap[] = "{\n"\
 "map $skyimage\n"\
 "blendFunc GL_DST_COLOR GL_SRC_COLOR\n"\
@@ -8097,13 +8105,7 @@ char uniqueGenericMetalShader[] = "{\n"\
 "rgbGen entity\n"\
 "}\n"\
 "%s"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"noScreenMap\n"\
-"}\n"\
+"%s"\
 "}\n"\
 "";
 
@@ -8155,13 +8157,7 @@ char uniqueGenericShader[] = "{\n"\
 "rgbGen identity\n"\
 "}\n"\
 "%s"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"noScreenMap\n"\
-"}\n"\
+"%s"\
 "}\n"\
 "";
 
@@ -8370,6 +8366,14 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 #endif //__SHADER_GENERATOR__
 	}
 
+	extern qboolean MAP_LIGHTMAP_DISABLED;
+
+	char lightMapText[512] = { 0 };
+	if (!MAP_LIGHTMAP_DISABLED)
+	{// Enable the lightmap section...
+		strcpy(lightMapText, uniqueGenericLightmap);
+	}
+
 #ifdef __SHADER_GENERATOR__
 	if (shaderError 
 		|| ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && (shaderError || !StringContainsWord(name, "icon"))))
@@ -8510,7 +8514,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 		else if (StringContainsWord(strippedName, "players/hk"))
 		{
-			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, strippedName);
+			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
 		}
 		else if (StringContainsWord(strippedName, "player"))
 		{
@@ -8518,7 +8522,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 		else if (StringContainsWord(strippedName, "weapon") || material == MATERIAL_SOLIDMETAL || material == MATERIAL_HOLLOWMETAL)
 		{
-			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, strippedName);
+			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
 		}
 		else if (material == MATERIAL_ROCK || StringContainsWord(name, "warzone/rocks"))
 		{
@@ -8539,7 +8543,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 		else
 		{
-			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, shaderCustomMap, strippedName);
+			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, shaderCustomMap, lightMapText);
 		}
 
 		flags = IMGFLAG_NONE;
