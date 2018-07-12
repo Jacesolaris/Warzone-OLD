@@ -15,7 +15,7 @@
 
 //#define TESSELLATED_TERRAIN_COLLISIONS
 
-#ifdef TESSELLATED_TERRAIN_COLLISIONS
+//#ifdef TESSELLATED_TERRAIN_COLLISIONS
 // =======================================================================================================================================
 //
 // Roads Map System...
@@ -92,6 +92,7 @@ char *CM_TIL_TextureFileExistsFull(const char *name)
 
 	return NULL;
 }
+//#endif //TESSELLATED_TERRAIN_COLLISIONS
 
 qboolean	GRASS_ENABLED = qfalse;
 float		GRASS_DISTANCE_FROM_ROADS = 0.0;
@@ -112,11 +113,11 @@ qboolean R_SurfaceIsAllowedFoliage(int materialType)
 
 	return qfalse;
 }
-#endif //TESSELLATED_TERRAIN_COLLISIONS
+//#endif //TESSELLATED_TERRAIN_COLLISIONS
 
 void CM_SetTerrainContents(clipMap_t &cm)
 {
-#ifdef TESSELLATED_TERRAIN_COLLISIONS
+//#ifdef TESSELLATED_TERRAIN_COLLISIONS
 	for (int i = 0; i < cm.numShaders; i++)
 	{
 		CCMShader shader = cm.shaders[i];
@@ -140,10 +141,10 @@ void CM_SetTerrainContents(clipMap_t &cm)
 			}*/
 		}
 	}
-#endif //TESSELLATED_TERRAIN_COLLISIONS
+//#endif //TESSELLATED_TERRAIN_COLLISIONS
 }
 
-#ifdef TESSELLATED_TERRAIN_COLLISIONS
+//#ifdef TESSELLATED_TERRAIN_COLLISIONS
 qboolean TIL_INITIALIZED = qfalse;
 
 qboolean ROAD_MAP_INITIALIZED = qfalse;
@@ -158,11 +159,10 @@ const char *materialNames[MATERIAL_LAST] =
 #endif
 
 vec3_t MAP_INFO_MINS, MAP_INFO_MAXS;
-#endif //TESSELLATED_TERRAIN_COLLISIONS
+//#endif //TESSELLATED_TERRAIN_COLLISIONS
 
 void CM_LoadRoadImage(const char *mapName)
 {
-#ifdef TESSELLATED_TERRAIN_COLLISIONS
 	if (!ROAD_MAP && !ROAD_MAP_INITIALIZED)
 	{
 		ROAD_MAP_INITIALIZED = qtrue;
@@ -170,36 +170,6 @@ void CM_LoadRoadImage(const char *mapName)
 		char name[512] = { 0 };
 		char tempName[128] = { 0 };
 		COM_StripExtension(mapName, tempName, sizeof(tempName));
-		strcpy(name, va("%s_roads", tempName));
-		char *ext = CM_TIL_TextureFileExistsFull(name);
-
-		if (ext)
-		{
-			if (!TIL_INITIALIZED)
-			{
-				til::TIL_Init();
-				TIL_INITIALIZED = qtrue;
-			}
-
-			char fullPath[1024] = { 0 };
-			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
-			ROAD_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
-
-			if (ROAD_MAP && ROAD_MAP->GetHeight() > 0 && ROAD_MAP->GetWidth() > 0)
-			{
-				Com_Printf("CM_LoadRoadImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
-			}
-			else
-			{
-				Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
-				til::TIL_Release(ROAD_MAP);
-				ROAD_MAP = NULL;
-			}
-		}
-		/*else
-		{
-			Com_Printf("%s does not exist.\n", name);
-		}*/
 
 		//
 		// Also load all needed mapinfo settings...
@@ -256,8 +226,40 @@ void CM_LoadRoadImage(const char *mapName)
 				}
 			}
 		}
-	}
+
+#ifdef TESSELLATED_TERRAIN_COLLISIONS
+		strcpy(name, va("%s_roads", tempName));
+		char *ext = CM_TIL_TextureFileExistsFull(name);
+
+		if (ext)
+		{
+			if (!TIL_INITIALIZED)
+			{
+				til::TIL_Init();
+				TIL_INITIALIZED = qtrue;
+			}
+
+			char fullPath[1024] = { 0 };
+			sprintf_s(fullPath, "warzone/%s.%s", name, ext);
+			ROAD_MAP = til::TIL_Load(fullPath/*, TIL_FILE_ADDWORKINGDIR*/);
+
+			if (ROAD_MAP && ROAD_MAP->GetHeight() > 0 && ROAD_MAP->GetWidth() > 0)
+			{
+				Com_Printf("CM_LoadRoadImage: Loaded image %s. Size %i x %i. Bit Depth %i.\n", fullPath, ROAD_MAP->GetWidth(), ROAD_MAP->GetHeight(), ROAD_MAP->GetBitDepth());
+			}
+			else
+			{
+				Com_Printf("CM_LoadRoadImage: Clould not load image %s. %s\n", fullPath, til::TIL_GetError());
+				til::TIL_Release(ROAD_MAP);
+				ROAD_MAP = NULL;
+			}
+		}
+		/*else
+		{
+		Com_Printf("%s does not exist.\n", name);
+		}*/
 #endif //TESSELLATED_TERRAIN_COLLISIONS
+	}
 }
 
 #ifdef TESSELLATED_TERRAIN_COLLISIONS

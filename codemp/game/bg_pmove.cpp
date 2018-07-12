@@ -1,4 +1,4 @@
-// Copyright (C) 1999-2000 Id Software, Inc.
+﻿// Copyright (C) 1999-2000 Id Software, Inc.
 //
 // bg_pmove.c -- both games player movement code
 // takes a playerstate and a usercmd as input and returns a modifed playerstate
@@ -14,6 +14,134 @@
 	#include "cgame/cg_local.h"
 #elif _UI
 	#include "ui/ui_local.h"
+#endif
+
+#if defined(_GAME) || defined(_CGAME)
+#define HASHSCALE1 .1031
+
+float glsl_mix(float x, float y, float a)
+{
+	float inva = 1.0f - a;
+	return x * inva + y * a;
+}
+
+float randomf(vec2_t p)
+{
+	vec3_t p3;
+	p3[0] = (p[0] * HASHSCALE1) - floorf(p[0] * HASHSCALE1);
+	p3[1] = (p[1] * HASHSCALE1) - floorf(p[1] * HASHSCALE1);
+	p3[2] = (p[0] * HASHSCALE1) - floorf(p[0] * HASHSCALE1);
+
+	//p3 += dot(p3, p3.yzx + 19.19);
+	//return fract((p3.x + p3.y) * p3.z);
+
+	vec3_t p4;
+	p4[0] = p3[1] + 19.19;
+	p4[1] = p3[2] + 19.19;
+	p4[2] = p3[0] + 19.19;
+
+	float dp = DotProduct(p3, p4);
+	p3[0] += dp;
+	p3[1] += dp;
+	p3[2] += dp;
+
+	float out;
+	out = (p3[0] + p3[1]) * p3[2];
+	out = out - floorf(out);
+	return out;
+}
+
+// 2D Noise based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noise(vec2_t st) {
+	vec2_t i;
+	i[0] = floorf(st[0]);
+	i[1] = floorf(st[1]);
+	vec2_t f;
+	f[0] = st[0] - floorf(st[0]);
+	f[1] = st[1] - floorf(st[1]);
+	
+	// Four corners in 2D of a tile
+	float a = randomf(i);
+	vec2_t temp;
+	temp[0] = i[0] + 1.0;
+	temp[1] = i[1] + 0.0;
+	float b = randomf(temp);
+	temp[0] = i[0] + 0.0;
+	temp[1] = i[1] + 1.0;
+	float c = randomf(temp);
+	temp[0] = i[0] + 1.0;
+	temp[1] = i[1] + 1.0;
+	float d = randomf(temp);
+
+	// Smooth Interpolation
+
+	// Cubic Hermine Curve.  Same as SmoothStep()
+	vec2_t u;
+	u[0] = f[0] * f[0] * (3.0 - 2.0*f[0]);
+	u[1] = f[1] * f[1] * (3.0 - 2.0*f[1]);
+	
+	// Mix 4 coorners percentages
+	return Q_clamp(0.0, glsl_mix(a, b, u[0] + (c - a) * u[1] * (1.0 - u[0], 1.0) + (d - b) * u[0] * u[1]), 1.0);
+}
+
+float LDHeightForPosition(vec3_t pos)
+{
+	vec2_t p;
+	p[0] = pos[0] * 0.00875;
+	p[1] = pos[1] * 0.00875;
+	return noise(p);
+}
+
+float TessellationOffsetForPosition(vec3_t pos)
+{
+	float roadScale = 0.0;// GetRoadFactor(pixel);
+	float SmoothRand = LDHeightForPosition(pos);
+	float offsetScale = SmoothRand * Q_clamp(0.75, 1.0 - roadScale, 1.0);
+
+	float offset = max(offsetScale, roadScale) - 0.5;
+	float finalOffset = offset * 28.0;// TERRAIN_TESS_OFFSET;
+
+	Com_Printf("pos %i %i %i. offset %f. finalOffset %f.\n", int(pos[0]), int(pos[1]), int(pos[2]), offset, finalOffset);
+	return finalOffset;
+}
+
+float TessellationOffsetForTrace(trace_t trace)
+{
+	//if (trace.contents & CONTENTS_TERRAIN)
+	{
+		return TessellationOffsetForPosition(trace.endpos);
+	}
+	/*else
+	{
+	return 0.0;
+	}*/
+}
+
+void BG_MoveTrace(trace_t *trace, vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t traceto, int clientNum, int contents)
+{
+	/*vec3_t from;
+	VectorCopy(origin, from);
+	from[2] += TessellationOffsetForPosition(from);
+
+	vec3_t to;
+	VectorCopy(traceto, to);
+	to[2] += TessellationOffsetForPosition(to);
+
+	pm->trace(trace, from, mins, maxs, to, clientNum, contents);*/
+	pm->trace(trace, origin, mins, maxs, traceto, clientNum, contents);
+}
+
+#else
+float TessellationOffsetForPosition(trace_t trace)
+{
+	return 0.0;
+}
+
+void BG_MoveTrace(trace_t *trace, vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t traceto, int clientNum, int contents)
+{
+	pm->trace(trace, origin, mins, maxs, traceto, clientNum, contents);
+}
 #endif
 
 #ifdef _GAME
@@ -710,7 +838,8 @@ void PM_pitch_roll_for_slope( bgEntity_t *forwhom, vec3_t pass_slope, vec3_t sto
 		startspot[2] += pm->mins[2] + 4;
 		VectorCopy( startspot, endspot );
 		endspot[2] -= 300;
-		pm->trace( &trace, pm->ps->origin, vec3_origin, vec3_origin, endspot, forwhom->s.number, MASK_SOLID );
+		BG_MoveTrace( &trace, pm->ps->origin, vec3_origin, vec3_origin, endspot, forwhom->s.number, MASK_SOLID );
+
 //		if(trace_fraction>0.05&&forwhom.movetype==MOVETYPE_STEP)
 //			forwhom.flags(-)FL_ONGROUND;
 
@@ -1116,7 +1245,8 @@ void PM_HoverTrace( void )
 		{//sit on water
 			traceContents |= (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA);
 		}
-		pm->trace( trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, traceContents );
+		BG_MoveTrace( trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, traceContents );
+
 		if (trace->plane.normal[0] > 0.5f || trace->plane.normal[0] < -0.5f ||
 			trace->plane.normal[1] > 0.5f || trace->plane.normal[1] < -0.5f)
 		{ //steep slanted hill, don't go up it.
@@ -1698,7 +1828,7 @@ qboolean PM_AdjustAngleForWallRun( playerState_t *ps, usercmd_t *ucmd, qboolean 
 		}
 		VectorMA( ps->origin, dist, rt, traceTo );
 
-		pm->trace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+		BG_MoveTrace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
 
 		if ( trace.fraction < 1.0f
 			&& (trace.plane.normal[2] >= 0.0f && trace.plane.normal[2] <= 0.4f) )//&& ent->client->ps.groundEntityNum == ENTITYNUM_NONE )
@@ -1712,7 +1842,8 @@ qboolean PM_AdjustAngleForWallRun( playerState_t *ps, usercmd_t *ucmd, qboolean 
 			AngleVectors( wallRunAngles, wallRunFwd, NULL, NULL );
 
 			VectorMA( pm->ps->origin, 32, wallRunFwd, traceTo2 );
-			pm->trace( &trace2, pm->ps->origin, mins, maxs, traceTo2, pm->ps->clientNum, MASK_PLAYERSOLID );
+			BG_MoveTrace( &trace2, pm->ps->origin, mins, maxs, traceTo2, pm->ps->clientNum, MASK_PLAYERSOLID );
+
 			if ( trace2.fraction < 1.0f && DotProduct( trace2.plane.normal, wallRunFwd ) <= -0.999f )
 			{//wall we can't run on in front of us
 				trace.fraction = 1.0f;//just a way to get it to kick us off the wall below
@@ -1803,7 +1934,8 @@ qboolean PM_AdjustAngleForWallRunUp( playerState_t *ps, usercmd_t *ucmd, qboolea
 
 		AngleVectors( fwdAngles, fwd, NULL, NULL );
 		VectorMA( ps->origin, dist, fwd, traceTo );
-		pm->trace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+		BG_MoveTrace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+
 		if ( trace.fraction > 0.5f )
 		{//hmm, some room, see if there's a floor right here
 			trace_t	trace2;
@@ -1813,7 +1945,8 @@ qboolean PM_AdjustAngleForWallRunUp( playerState_t *ps, usercmd_t *ucmd, qboolea
 			top[2] += (pm->mins[2]*-1) + 4.0f;
 			VectorCopy( top, bottom );
 			bottom[2] -= 64.0f;
-			pm->trace( &trace2, top, pm->mins, pm->maxs, bottom, ps->clientNum, MASK_PLAYERSOLID );
+			BG_MoveTrace( &trace2, top, pm->mins, pm->maxs, bottom, ps->clientNum, MASK_PLAYERSOLID );
+
 			if ( !trace2.allsolid
 				&& !trace2.startsolid
 				&& trace2.fraction < 1.0f
@@ -1842,7 +1975,8 @@ qboolean PM_AdjustAngleForWallRunUp( playerState_t *ps, usercmd_t *ucmd, qboolea
 			trace_t	trace2;
 			VectorCopy( ps->origin, traceTo );
 			traceTo[2] += 64;
-			pm->trace( &trace2, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+			BG_MoveTrace( &trace2, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+
 			if ( trace2.fraction < 1.0f )
 			{//will hit a ceiling, so force jump-off right now
 				//NOTE: hits any entity or clip brush in the way, too, not just architecture!
@@ -1991,7 +2125,8 @@ qboolean PM_AdjustAngleForWallJump( playerState_t *ps, usercmd_t *ucmd, qboolean
 			}
 		}
 		VectorMA( ps->origin, dist, checkDir, traceTo );
-		pm->trace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+		BG_MoveTrace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+
 		if ( //ucmd->upmove <= 0 &&
 			ps->legsTimer > 100 &&
 			trace.fraction < 1.0f &&
@@ -2178,7 +2313,8 @@ static qboolean PM_CheckJump( void )
 				bgEntity_t *traceEnt;
 
 				VectorMA(pm->ps->origin, 8, checkDir, traceto);
-				pm->trace(&trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID);//FIXME: clip brushes too?
+				BG_MoveTrace(&trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID);//FIXME: clip brushes too?
+
 				VectorSubtract(pm->ps->origin, traceto, idealNormal);
 				VectorNormalize(idealNormal);
 				traceEnt = PM_BGEntForNum(trace.entityNum);
@@ -2509,7 +2645,7 @@ static qboolean PM_CheckJump( void )
 
 		AngleVectors( pm->ps->viewangles, forward, NULL, NULL );
 		VectorMA( pm->ps->origin, -8, forward, back );
-		pm->trace( &trace, pm->ps->origin, pm->mins, pm->maxs, back, pm->ps->clientNum, pm->tracemask );
+		BG_MoveTrace( &trace, pm->ps->origin, pm->mins, pm->maxs, back, pm->ps->clientNum, pm->tracemask );
 
 		if ( trace.fraction <= 1.0f )
 		{
@@ -2671,7 +2807,8 @@ static qboolean PM_CheckJump( void )
 
 				if ( doTrace )
 				{
-					pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, contents );
+					BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, contents );
+
 					VectorCopy( trace.plane.normal, wallNormal );
 					VectorNormalize( wallNormal );
 					VectorSubtract( pm->ps->origin, traceto, idealNormal );
@@ -2789,7 +2926,8 @@ static qboolean PM_CheckJump( void )
 				}
 				if ( anim != -1 )
 				{
-					pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+					BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+
 					if ( trace.fraction < 1.0f )
 					{//flip off wall
 						int parts = 0;
@@ -2843,7 +2981,8 @@ static qboolean PM_CheckJump( void )
 				}
 				if ( anim != -1 )
 				{
-					pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+					BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+
 					if ( trace.fraction < 1.0f )
 					{//flip off wall
 						int parts = SETANIM_LEGS;
@@ -2887,7 +3026,8 @@ static qboolean PM_CheckJump( void )
 				AngleVectors( fwdAngles, fwd, NULL, NULL );
 				VectorMA( pm->ps->origin, 32, fwd, traceto );
 
-				pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, MASK_PLAYERSOLID );//FIXME: clip brushes too?
+				BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, MASK_PLAYERSOLID );//FIXME: clip brushes too?
+
 				VectorSubtract( pm->ps->origin, traceto, idealNormal );
 				VectorNormalize( idealNormal );
 
@@ -2961,7 +3101,8 @@ static qboolean PM_CheckJump( void )
 						AngleVectors( fwdAngles, fwd, NULL, NULL );
 						VectorMA( pm->ps->origin, 32, fwd, traceto );
 
-						pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, contents );//FIXME: clip brushes too?
+						BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, contents );//FIXME: clip brushes too?
+
 						VectorSubtract( pm->ps->origin, traceto, idealNormal );
 						VectorNormalize( idealNormal );
 						traceEnt = PM_BGEntForNum(trace.entityNum);
@@ -3063,7 +3204,8 @@ static qboolean PM_CheckJump( void )
 						bgEntity_t *traceEnt;
 
 						VectorMA( pm->ps->origin, 8, checkDir, traceto );
-						pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID );//FIXME: clip brushes too?
+						BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID );//FIXME: clip brushes too?
+
 						VectorSubtract( pm->ps->origin, traceto, idealNormal );
 						VectorNormalize( idealNormal );
 						traceEnt = PM_BGEntForNum(trace.entityNum);
@@ -4152,7 +4294,8 @@ static int PM_TryRoll( void )
 
 	if ( anim != -1 )
 	{ //We want to roll. Perform a trace to see if we can, and if so, send us into one.
-		pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID );
+		BG_MoveTrace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID );
+
 		if ( trace.fraction >= 1.0f )
 		{
 			pm->ps->saberMove = LS_NONE;
@@ -4514,13 +4657,15 @@ static int PM_CorrectAllSolid( trace_t *trace ) {
 				point[0] += (float) i;
 				point[1] += (float) j;
 				point[2] += (float) k;
-				pm->trace (trace, point, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+				BG_MoveTrace (trace, point, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+
 				if ( !trace->allsolid ) {
 					point[0] = pm->ps->origin[0];
 					point[1] = pm->ps->origin[1];
 					point[2] = pm->ps->origin[2] - 0.25;
 
-					pm->trace (trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+					BG_MoveTrace (trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+
 					pml.groundTrace = *trace;
 					return qtrue;
 				}
@@ -4577,7 +4722,8 @@ static void PM_GroundTraceMissed( void ) {
 		VectorCopy( pm->ps->origin, point );
 		point[2] -= 64;
 
-		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+
 		if ( trace.fraction == 1.0 || pm->ps->pm_type == PM_FLOAT ) {
 			if ( pm->ps->velocity[2] <= 0 && !(pm->ps->pm_flags&PMF_JUMP_HELD))
 			{
@@ -4606,7 +4752,8 @@ static void PM_GroundTraceMissed( void ) {
 		VectorCopy( pm->ps->origin, point );
 		point[2] -= 64;
 
-		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+
 		if ( trace.fraction == 1.0 || pm->ps->pm_type == PM_FLOAT )
 		{
 			pm->ps->inAirAnim = qtrue;
@@ -4706,19 +4853,20 @@ static void PM_GroundTrace(void) {
 		}
 		else
 		{
-			pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+			BG_MoveTrace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+
 			ent->CACHE_trace = trace;
 			ent->CACHE_last_trace = level.time;
 		}
 	}
 	else
 	{
-		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
 	}
 #else //!(defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME))
 	if (!skipTrace)
 	{
-		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
 	}
 #endif //defined(__NPC_CPU_USAGE_TWEAKS__) && defined(_GAME)
 	pml.groundTrace = trace;
@@ -4727,7 +4875,8 @@ static void PM_GroundTrace(void) {
 	if ( trace.allsolid ) {
 		if (skipTrace)
 		{
-			pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+			BG_MoveTrace(&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+
 			skipTrace = qfalse;
 
 			if (!PM_CorrectAllSolid(&trace))
@@ -5053,7 +5202,8 @@ void PM_CheckFixMins( void )
 		VectorSet( curMins, pm->mins[0], pm->mins[1], 0 );
 		VectorSet( curMaxs, pm->maxs[0], pm->maxs[1], pm->ps->standheight );
 
-		pm->trace( &trace, pm->ps->origin, curMins, curMaxs, end, pm->ps->clientNum, pm->tracemask );
+		BG_MoveTrace( &trace, pm->ps->origin, curMins, curMaxs, end, pm->ps->clientNum, pm->tracemask );
+
 		if ( !trace.allsolid && !trace.startsolid )
 		{//should never start in solid
 			if ( trace.fraction >= 1.0f )
@@ -5067,7 +5217,8 @@ void PM_CheckFixMins( void )
 				//need to trace up, too
 				float updist = ((1.0f-trace.fraction) * -MINS_Z);
 				end[2] = pm->ps->origin[2]+updist;
-				pm->trace( &trace, pm->ps->origin, curMins, curMaxs, end, pm->ps->clientNum, pm->tracemask );
+				BG_MoveTrace( &trace, pm->ps->origin, curMins, curMaxs, end, pm->ps->clientNum, pm->tracemask );
+
 				if ( !trace.allsolid && !trace.startsolid )
 				{//should never start in solid
 					if ( trace.fraction >= 1.0f )
@@ -5109,8 +5260,8 @@ static qboolean PM_CanStand ( void )
     float x, y;
     trace_t trace;
 
-    const vec3_t lineMins = { -5.0f, -5.0f, -2.5f };
-    const vec3_t lineMaxs = { 5.0f, 5.0f, 0.0f };
+    vec3_t lineMins = { -5.0f, -5.0f, -2.5f };
+    vec3_t lineMaxs = { 5.0f, 5.0f, 0.0f };
 
     for ( x = pm->mins[0] + 5.0f; canStand && x <= (pm->maxs[0] - 5.0f); x += 10.0f )
     {
@@ -5123,7 +5274,8 @@ static qboolean PM_CanStand ( void )
 			VectorAdd (start, pm->ps->origin, start);
 			VectorAdd (end, pm->ps->origin, end);
 
-			pm->trace (&trace, start, lineMins, lineMaxs, end, pm->ps->clientNum, pm->tracemask);
+			BG_MoveTrace (&trace, start, lineMins, lineMaxs, end, pm->ps->clientNum, pm->tracemask);
+
 			if ( trace.allsolid || trace.fraction < 1.0f )
 			{
 				canStand = qfalse;
@@ -5175,7 +5327,8 @@ static void PM_CheckDuck (void)
 			pm->maxs[2] = pm->ps->standheight;//DEFAULT_MAXS_2;
 			pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
 
-			pm->trace (&solidTr, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->m_iVehicleNum, pm->tracemask);
+			BG_MoveTrace (&solidTr, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->m_iVehicleNum, pm->tracemask);
+
 			if (solidTr.startsolid || solidTr.allsolid || solidTr.fraction != 1.0f)
 			{ //whoops, can't fit here. Down to 0!
 				VectorClear(pm->mins);
@@ -5473,11 +5626,13 @@ void PM_FootSlopeTrace( float *pDiff, float *pInterval )
 	VectorSet( footMins, -3, -3, 0 );
 	VectorSet( footMaxs, 3, 3, 1 );
 
-	pm->trace( &trace, footLOrg, footMins, footMaxs, footLBot, pm->ps->clientNum, pm->tracemask );
+	BG_MoveTrace( &trace, footLOrg, footMins, footMaxs, footLBot, pm->ps->clientNum, pm->tracemask );
+
 	VectorCopy( trace.endpos, footLBot );
 	VectorCopy( trace.plane.normal, footLSlope );
 
-	pm->trace( &trace, footROrg, footMins, footMaxs, footRBot, pm->ps->clientNum, pm->tracemask );
+	BG_MoveTrace( &trace, footROrg, footMins, footMaxs, footRBot, pm->ps->clientNum, pm->tracemask );
+
 	VectorCopy( trace.endpos, footRBot );
 	VectorCopy( trace.plane.normal, footRSlope );
 
@@ -6676,7 +6831,8 @@ void PM_CheckLadderMove(void)
 
 		VectorMA(pm->ps->origin, tracedist, flatforward, spot);
 
-		pm->trace(&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace(&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+
 		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
 		{
 			pml.ladder = qtrue;
@@ -6690,7 +6846,8 @@ void PM_CheckLadderMove(void)
 		VectorNormalize (flatforward);
 
 		VectorMA (pm->ps->origin, tracedist, flatforward, spot);
-		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace (&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+
 		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
 		{
 		pml.ladder = qtrue;
@@ -6713,7 +6870,8 @@ void PM_CheckLadderMove(void)
 			VectorCopy(pm->mins, mins);
 			mins[2] = -1;
 			VectorMA(pm->ps->origin, -tracedist, pml.laddervec, spot);
-			pm->trace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+			BG_MoveTrace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
+
 			if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
 			{
 				pml.ladderforward = qtrue;
@@ -6957,7 +7115,7 @@ static void PM_WaterEvents( void ) {		// FIXME?
 		start[2] += 10;
 		end[2] -= 40;
 
-		pm->trace( &tr, start, vec3_origin, vec3_origin, end, pm->ps->clientNum, MASK_WATER );
+		BG_MoveTrace( &tr, start, vec3_origin, vec3_origin, end, pm->ps->clientNum, MASK_WATER );
 
 		if ( tr.fraction < 1.0f )
 		{
@@ -7114,7 +7272,7 @@ int BG_VehTraceFromCamPos( trace_t *camTrace, bgEntity_t *bgEnt, const vec3_t en
 	VectorNormalize( viewDir2End );
 	VectorMA( camPos, MAX_XHAIR_DIST_ACCURACY, viewDir2End, extraEnd );
 
-	pm->trace( camTrace, camPos, vec3_origin, vec3_origin, extraEnd, bgEnt->s.number, CONTENTS_SOLID|CONTENTS_BODY );
+	BG_MoveTrace( camTrace, camPos, vec3_origin, vec3_origin, extraEnd, bgEnt->s.number, CONTENTS_SOLID|CONTENTS_BODY );
 
 	if ( !camTrace->allsolid
 		&& !camTrace->startsolid
@@ -7179,7 +7337,7 @@ void PM_RocketLock( float lockDist, qboolean vehicleLock )
 	}
 
 
-	pm->trace(&tr, muzzlePoint, NULL, NULL, ang, pm->ps->clientNum, MASK_PLAYERSOLID);
+	BG_MoveTrace(&tr, muzzlePoint, NULL, NULL, ang, pm->ps->clientNum, MASK_PLAYERSOLID);
 
 	if ( vehicleLock )
 	{//vehicles also do a trace from the camera point if the main one misses
@@ -7505,7 +7663,7 @@ int PM_ItemUsable(playerState_t *ps, int forcedUse)
 		trtest[1] = fwdorg[1] + fwd[1]*16;
 		trtest[2] = fwdorg[2] + fwd[2]*16;
 
-		pm->trace(&tr, ps->origin, mins, maxs, trtest, ps->clientNum, MASK_PLAYERSOLID);
+		BG_MoveTrace(&tr, ps->origin, mins, maxs, trtest, ps->clientNum, MASK_PLAYERSOLID);
 
 		if ((tr.fraction != 1 && tr.entityNum != ps->clientNum) || tr.startsolid || tr.allsolid)
 		{
@@ -7526,12 +7684,14 @@ int PM_ItemUsable(playerState_t *ps, int forcedUse)
 		AngleVectors (ps->viewangles, fwd, NULL, NULL);
 		fwd[2] = 0;
 		VectorMA(ps->origin, 64, fwd, dest);
-		pm->trace(&tr, ps->origin, mins, maxs, dest, ps->clientNum, MASK_SHOT );
+		BG_MoveTrace(&tr, ps->origin, mins, maxs, dest, ps->clientNum, MASK_SHOT );
+
 		if (tr.fraction > 0.9 && !tr.startsolid && !tr.allsolid)
 		{
 			VectorCopy(tr.endpos, pos);
 			VectorSet( dest, pos[0], pos[1], pos[2] - 4096 );
-			pm->trace( &tr, pos, mins, maxs, dest, ps->clientNum, MASK_SOLID );
+			BG_MoveTrace( &tr, pos, mins, maxs, dest, ps->clientNum, MASK_SOLID );
+
 			if ( !tr.startsolid && !tr.allsolid )
 			{
 				return 1;
@@ -12878,13 +13038,13 @@ Can be called by either the server or the client
 std::mutex pmove_mutex;
 #endif //__NPC_DYNAMIC_THREADS__
 
-void Pmove (pmove_t *pmove) {
+void Pmove(pmove_t *pmove) {
 	int			finalTime;
 	qboolean	locked = qfalse;
 
 	finalTime = pmove->cmd.serverTime;
 
-	if ( finalTime < pmove->ps->commandTime ) {
+	if (finalTime < pmove->ps->commandTime) {
 		return;	// should not happen
 	}
 
@@ -12892,7 +13052,7 @@ void Pmove (pmove_t *pmove) {
 	pmove_mutex.lock();
 #endif //__NPC_DYNAMIC_THREADS__
 
-	if ( finalTime > pmove->ps->commandTime + 1000 ) {
+	if (finalTime > pmove->ps->commandTime + 1000) {
 		pmove->ps->commandTime = finalTime - 1000;
 	}
 
@@ -12913,37 +13073,42 @@ void Pmove (pmove_t *pmove) {
 		pmove->ps->pm_type = PM_NORMAL;		// Hack, i know, but this way we can still do the normal pmove stuff
 	}
 
-	pmove->ps->pmove_framecount = (pmove->ps->pmove_framecount+1) & ((1<<PS_PMOVEFRAMECOUNTBITS)-1);
+	pmove->ps->pmove_framecount = (pmove->ps->pmove_framecount + 1) & ((1 << PS_PMOVEFRAMECOUNTBITS) - 1);
 
 	// chop the move up if it is too long, to prevent framerate
 	// dependent behavior
-	while ( pmove->ps->commandTime != finalTime ) {
+	while (pmove->ps->commandTime != finalTime) {
 		int		msec;
 
 		msec = finalTime - pmove->ps->commandTime;
 
-		if ( pmove->pmove_fixed ) {
-			if ( msec > pmove->pmove_msec ) {
+		if (pmove->pmove_fixed) {
+			if (msec > pmove->pmove_msec) {
 				msec = pmove->pmove_msec;
 			}
 		}
 		else {
-			if ( msec > 66 ) {
+			if (msec > 66) {
 				msec = 66;
 			}
 		}
 		pmove->cmd.serverTime = pmove->ps->commandTime + msec;
 
-		PmoveSingle( pmove );
+		PmoveSingle(pmove);
 
-		if ( pmove->ps->pm_flags & PMF_JUMP_HELD ) {
+		/*if (pmove->ps->lastOnGround == pm->cmd.serverTime)
+		{
+			pmove->ps->origin[2] += TessellationOffsetForPosition(pmove->ps->origin);
+		}*/
+
+		if (pmove->ps->pm_flags & PMF_JUMP_HELD) {
 			pmove->cmd.upmove = 20;
 		}
 	}
 	if (locked) {
 		pmove->ps->pm_type = PM_NOMOVE;		// Restore it
 	}
-
+	
 #ifdef __NPC_DYNAMIC_THREADS__
 	pmove_mutex.unlock();
 #endif //__NPC_DYNAMIC_THREADS__

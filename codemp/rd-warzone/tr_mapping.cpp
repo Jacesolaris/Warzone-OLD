@@ -1255,6 +1255,7 @@ void R_CreateRoadMapImage(void)
 					case MATERIAL_LONGGRASS:		// 6					// long jungle grass
 					case MATERIAL_MUD:				// 17					// wet soil
 					case MATERIAL_DIRT:				// 7					// hard mud
+					case MATERIAL_SNOW:				// 14					// snow
 					{
 						float slope = ROAD_GetSlope(tr.plane.normal);
 						UINT8 brightness = 0;
@@ -1276,11 +1277,33 @@ void R_CreateRoadMapImage(void)
 					}
 					default:
 					{
-						// Material isn't a road-able surface type...  Draw black...
-						red[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
-						green[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
-						blue[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
-						alpha[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						extern qboolean RB_ShouldUseGeometryGrass(int materialType);
+						if (RB_ShouldUseGeometryGrass(MATERIAL_TYPE))
+						{
+							float slope = ROAD_GetSlope(tr.plane.normal);
+							UINT8 brightness = 0;
+
+							if (slope < 0) slope *= -1.0;
+
+							if (slope < MAX_ROAD_SLOPE)
+							{// In valid range... Work out brightness...
+								float temp = 1.0 - (slope / MAX_ROAD_SLOPE);
+								brightness = UINT8(float(255.0) * float(temp));
+							}
+
+							red[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+							green[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = brightness;
+							blue[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+							alpha[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						}
+						else
+						{
+							// Material isn't a road-able surface type...  Draw black...
+							red[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+							green[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+							blue[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 0;
+							alpha[(MAP_INFO_TRACEMAP_SIZE - 1) - imageY][imageX] = 255;
+						}
 						FOUND = qtrue;
 						break;
 					}
@@ -1432,7 +1455,9 @@ float		GRASS_HEIGHT = 48.0;
 int			GRASS_DISTANCE = 2048;
 float		GRASS_MAX_SLOPE = 10.0;
 float		GRASS_TYPE_UNIFORMALITY = 0.97;
+float		GRASS_TYPE_UNIFORMALITY_SCALER = 0.008;
 float		GRASS_DISTANCE_FROM_ROADS = 0.25;
+float		GRASS_SCALES[16] = { 1.0 };
 vec3_t		MOON_COLOR = { 0.2f };
 vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
 float		MOON_GLOW_STRENGTH = 0.5;
@@ -1473,6 +1498,11 @@ void SetupWeather(char *mapname); // below...
 void MAPPING_LoadMapInfo(void)
 {
 	qglFinish();
+
+	for (int i = 0; i < 16; i++)
+	{// Init all grass scales...
+		GRASS_SCALES[i] = 1.0;
+	}
 
 #ifdef __OCEAN__
 	MAP_WATER_LEVEL = 131072.0;
@@ -1777,7 +1807,16 @@ void MAPPING_LoadMapInfo(void)
 		GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "4096"));
 		GRASS_MAX_SLOPE = atof(IniRead(mapname, "GRASS", "GRASS_MAX_SLOPE", "10.0"));
 		GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
+		GRASS_TYPE_UNIFORMALITY_SCALER = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY_SCALER", "0.008"));
 		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
+
+		for (int i = 0; i < 16; i++)
+		{// Init all grass scales...
+			if (i < 3)
+				GRASS_SCALES[i] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", i), "1.0"));
+			else
+				GRASS_SCALES[i] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", i), "1.25"));
+		}
 		
 		// Parse any specified extra surface material types to add grasses to...
 		extern const char *materialNames[MATERIAL_LAST];
@@ -2013,7 +2052,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass width repeats is ^7%i^5 and grass max slope is ^7%.4f^5 on this map.\n", GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 and grass uniformality scaler is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY, GRASS_TYPE_UNIFORMALITY_SCALER);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon color is ^7%.4f %.4f %.4f^5 and moon glow strength ^7%.4f^5 on this map.\n", MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);

@@ -26,6 +26,7 @@ extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
 extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
 
 extern qboolean LODMODEL_MAP;
+extern int		GRASS_DISTANCE;
 
 void RB_CullSurfaceOcclusion(msurface_t *surf)
 {
@@ -69,6 +70,9 @@ Tries to cull surfaces before they are lighted or
 added to the sorting list.
 ================
 */
+extern qboolean		TERRAIN_TESSELLATION_ENABLED;
+extern float		TERRAIN_TESSELLATION_LEVEL;
+
 static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 #ifdef __ZFAR_CULLING_ON_SURFACES__
 	surf->depthDrawOnly = qfalse;
@@ -79,9 +83,47 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qfalse;
 	}
 
+	if (surf->shader->surfaceFlags & SURF_NODRAW)
+	{// Always skip nodraw surfs on all calculations...
+		return qtrue;
+	}
+
 	if (*surf->data == SF_GRID && r_nocurves->integer) {
 		return qtrue;
 	}
+
+	if ((TERRAIN_TESSELLATION_ENABLED && surf->shader->hasSplatMaps) || surf->shader->isGrass)
+	{// When doing tessellation or grass surfs, check if this surf is in tess or grass range. If so, skip culling because we always need to add grasses to it (visible or not).
+		float dist = Distance(tr.viewParms.ori.origin, surf->cullinfo.centerOrigin);
+
+		if (surf->shader->isGrass && dist <= GRASS_DISTANCE)
+		{// In grass range, never cull...
+			return qfalse;
+		}
+		else if (surf->shader->hasSplatMaps)
+		{
+			float dist = round(dist);
+			float distFactor = 1.0;
+
+			if (dist > 4096.0)
+			{// Closer then 4096.0 gets full tess...
+				distFactor = dist / 4096.0;
+			}
+
+			/*if (TERRAIN_TESSELLATION_ENABLED
+				&& r_terrainTessellation->integer
+				&& r_terrainTessellationMax->value >= 2.0
+				&& (r_foliage->integer && GRASS_ENABLED && (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
+			*/
+
+			float tessLevel = max(min(r_terrainTessellationMax->value, TERRAIN_TESSELLATION_LEVEL), 2.0);
+			if (max(tessLevel / distFactor, 1.0) > 1.0)
+			{// In tessellation range, never cull...
+				return qfalse;
+			}
+		}
+	}
+
 
 	/*if (r_testvalue0->integer)
 	{

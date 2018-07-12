@@ -25,6 +25,7 @@ output: origin, velocity, impacts, stairup boolean
 
 */
 
+extern void BG_MoveTrace(trace_t *trace, vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t traceto, int clientNum, int contents);
 
 //do vehicle impact stuff
 // slight rearrangement by BTO (VV) so that we only have one namespace include
@@ -728,7 +729,7 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 		VectorMA( pm->ps->origin, time_left, pm->ps->velocity, end );
 
 		// see if we can make it there
-		pm->trace ( &trace, pm->ps->origin, mins, maxs, end, pm->ps->clientNum, pm->tracemask);
+		BG_MoveTrace ( &trace, pm->ps->origin, mins, maxs, end, pm->ps->clientNum, pm->tracemask);
 
 		if (trace.allsolid) {
 			// entity is completely trapped in another solid
@@ -1010,7 +1011,8 @@ void PM_StepSlideMove( qboolean gravity ) {
 
 	VectorCopy(start_o, down);
 	down[2] -= STEPSIZE;
-	pm->trace (&trace, start_o, mins, maxs, down, pm->ps->clientNum, pm->tracemask);
+	BG_MoveTrace (&trace, start_o, mins, maxs, down, pm->ps->clientNum, pm->tracemask);
+
 	VectorSet(up, 0, 0, 1);
 	// never step up when you still have up velocity
 	if ( pm->ps->velocity[2] > 0 && (trace.fraction == 1.0 ||
@@ -1055,7 +1057,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 	}
 
 	// test the player position if they were a stepheight higher
-	pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
+	BG_MoveTrace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
 
 	if ( trace.allsolid || PM_TracedEntityIsPlayerNPC(trace.entityNum)) {
 		if ( pm->debugLevel ) {
@@ -1069,7 +1071,8 @@ void PM_StepSlideMove( qboolean gravity ) {
 			up[2] += 64.0f;
 			isGiant = qtrue;
 
-			pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
+			BG_MoveTrace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
+
 			if ( trace.allsolid || PM_TracedEntityIsPlayerNPC(trace.entityNum)) {
 				if ( pm->debugLevel ) {
 					Com_Printf("%i:bend can't step\n", c_pmove);
@@ -1093,7 +1096,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 	// push down the final amount
 	VectorCopy (pm->ps->origin, down);
 	down[2] -= stepSize;
-	pm->trace (&trace, pm->ps->origin, mins, maxs, down, pm->ps->clientNum, pm->tracemask);
+	BG_MoveTrace (&trace, pm->ps->origin, mins, maxs, down, pm->ps->clientNum, pm->tracemask);
 
 	if ( pm->stepSlideFix )
 	{
@@ -1195,7 +1198,8 @@ void PM_StepSlideMove( qboolean gravity ) {
 
 #if 0
 	// if the down trace can trace back to the original position directly, don't step
-	pm->trace( &trace, pm->ps->origin, pm->mins, pm->maxs, start_o, pm->ps->clientNum, pm->tracemask);
+	BG_MoveTrace( &trace, pm->ps->origin, pm->mins, pm->maxs, start_o, pm->ps->clientNum, pm->tracemask);
+
 	if ( trace.fraction == 1.0 ) {
 		// use the original move
 		VectorCopy (down_o, pm->ps->origin);

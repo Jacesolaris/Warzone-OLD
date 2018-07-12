@@ -32,12 +32,14 @@ float		NUM_TREE_TYPES = 9;
 
 float		NUM_PLANT_SHADERS = 0;
 
-#define		PLANT_SCALE_MULTIPLIER 1.0
+//#define		PLANT_SCALE_MULTIPLIER 1.0
 
 #define		MAX_PLANT_SHADERS 100
 #define		MAX_PLANT_MODELS 69
 
 float		TREE_SCALE_MULTIPLIER = 1.0;
+
+float		PLANT_SCALE_MULTIPLIER = 1.0;
 
 static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
@@ -2661,6 +2663,8 @@ void FOLIAGE_DrawGrass(void)
 				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
 			}
 		}
+
+		PLANT_SCALE_MULTIPLIER = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLIAGE_SCALE", "1.0"));
 
 		if (MAP_HAS_TREES)
 		{

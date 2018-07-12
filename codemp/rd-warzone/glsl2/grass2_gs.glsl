@@ -1,65 +1,68 @@
 #define THREE_WAY_GRASS_CLUMPS // 3 way probably gives better coverage, at extra cost... otherwise 2 way X shape... 
 
-#define MAX_FOLIAGES				85
+#define MAX_FOLIAGES					85
 
 layout(triangles) in;
 //layout(triangles, invocations = 8) in;
 layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
 
-uniform mat4						u_ModelViewProjectionMatrix;
+uniform mat4							u_ModelViewProjectionMatrix;
 
-uniform sampler2D					u_RoadsControlMap;
-uniform sampler2D					u_HeightMap;
+uniform sampler2D						u_RoadsControlMap;
+uniform sampler2D						u_HeightMap;
 
-uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
-uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
-uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
-uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, 0.0, GRASS_TYPE_UNIFORMALITY
-uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0
+uniform vec4							u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4							u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
+uniform vec4							u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4							u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
+uniform vec4							u_Local9; // testvalue0, 1, 2, 3
+uniform vec4							u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, 0.0, GRASS_TYPE_UNIFORMALITY
+uniform vec4							u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, GRASS_TYPE_UNIFORMALITY_SCALER, 0.0
 
-#define SHADER_MAP_SIZE				u_Local1.r
-#define SHADER_SWAY					u_Local1.g
-#define SHADER_OVERLAY_SWAY			u_Local1.b
-#define SHADER_MATERIAL_TYPE		u_Local1.a
+#define SHADER_MAP_SIZE					u_Local1.r
+#define SHADER_SWAY						u_Local1.g
+#define SHADER_OVERLAY_SWAY				u_Local1.b
+#define SHADER_MATERIAL_TYPE			u_Local1.a
 
-#define SHADER_HAS_STEEPMAP			u_Local2.r
-#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
-#define SHADER_HAS_NORMALMAP		u_Local2.b
-#define SHADER_WATER_LEVEL			u_Local2.a
+#define SHADER_HAS_STEEPMAP				u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP			u_Local2.g
+#define SHADER_HAS_NORMALMAP			u_Local2.b
+#define SHADER_WATER_LEVEL				u_Local2.a
 
-#define SHADER_HAS_SPLATMAP1		u_Local3.r
-#define SHADER_HAS_SPLATMAP2		u_Local3.g
-#define SHADER_HAS_SPLATMAP3		u_Local3.b
-#define SHADER_HAS_SPLATMAP4		u_Local3.a
+#define SHADER_HAS_SPLATMAP1			u_Local3.r
+#define SHADER_HAS_SPLATMAP2			u_Local3.g
+#define SHADER_HAS_SPLATMAP3			u_Local3.b
+#define SHADER_HAS_SPLATMAP4			u_Local3.a
 
-#define PASS_NUMBER					u_Local8.r
-#define GRASS_DISTANCE_FROM_ROADS	u_Local8.g
-#define GRASS_HEIGHT				u_Local8.b
+#define PASS_NUMBER						u_Local8.r
+#define GRASS_DISTANCE_FROM_ROADS		u_Local8.g
+#define GRASS_HEIGHT					u_Local8.b
 
-#define MAX_RANGE					u_Local10.r
-#define TERRAIN_TESS_OFFSET			u_Local10.g
-#define GRASS_TYPE_UNIFORMALITY		u_Local10.a
+#define MAX_RANGE						u_Local10.r
+#define TERRAIN_TESS_OFFSET				u_Local10.g
+#define GRASS_TYPE_UNIFORMALITY			u_Local10.a
 
-#define GRASS_WIDTH_REPEATS			u_Local11.r
-#define GRASS_MAX_SLOPE				u_Local11.g
+#define GRASS_WIDTH_REPEATS				u_Local11.r
+#define GRASS_MAX_SLOPE					u_Local11.g
+#define GRASS_TYPE_UNIFORMALITY_SCALER	u_Local11.b
 
-#define MAP_WATER_LEVEL				SHADER_WATER_LEVEL // TODO: Use water map
-#define GRASS_TYPE_UNIFORM_WATER	0.66
+#define MAP_WATER_LEVEL					SHADER_WATER_LEVEL // TODO: Use water map
+#define GRASS_TYPE_UNIFORM_WATER		0.66
 
-uniform vec3						u_ViewOrigin;
-uniform vec3						u_PlayerOrigin;
+uniform vec3							u_ViewOrigin;
+uniform vec3							u_PlayerOrigin;
 #ifdef __HUMANOIDS_BEND_GRASS__
-uniform int							u_HumanoidOriginsNum;
-uniform vec3						u_HumanoidOrigins[MAX_GRASSBEND_HUMANOIDS];
+uniform int								u_HumanoidOriginsNum;
+uniform vec3							u_HumanoidOrigins[MAX_GRASSBEND_HUMANOIDS];
 #endif //__HUMANOIDS_BEND_GRASS__
-uniform float						u_Time;
+uniform float							u_Time;
 
-uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
-uniform vec4						u_Mins;
-uniform vec4						u_Maxs;
+uniform vec4							u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+uniform vec4							u_Mins;
+uniform vec4							u_Maxs;
+
+uniform float							u_GrassScales[16];
 
 flat in float inWindPower[];
 
@@ -225,6 +228,39 @@ int randomInt(int min, int max)
 	return int(float(min) + fRandomFloat*float(max - min));
 }
 
+#define HASHSCALE1 .1031
+
+float random(vec2 p)
+{
+	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE1);
+	p3 += dot(p3, p3.yzx + 19.19);
+	return fract((p3.x + p3.y) * p3.z);
+}
+
+// 2D Noise based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noise(in vec2 st) {
+	vec2 i = floor(st);
+	vec2 f = fract(st);
+
+	// Four corners in 2D of a tile
+	float a = random(i);
+	float b = random(i + vec2(1.0, 0.0));
+	float c = random(i + vec2(0.0, 1.0));
+	float d = random(i + vec2(1.0, 1.0));
+
+	// Smooth Interpolation
+
+	// Cubic Hermine Curve.  Same as SmoothStep()
+	vec2 u = f*f*(3.0 - 2.0*f);
+	// u = smoothstep(0.,1.,f);
+
+	// Mix 4 coorners percentages
+	return mix(a, b, u.x) +
+		(c - a)* u.y * (1.0 - u.x) +
+		(d - b) * u.x * u.y;
+}
+
 float GetRoadFactor(vec2 pixel)
 {
 	float roadScale = 1.0;
@@ -251,7 +287,7 @@ float GetRoadFactor(vec2 pixel)
 		roadScale = 1.0;
 	}
 
-	return roadScale;
+	return 1.0 - clamp(roadScale * 0.6 + 0.4, 0.0, 1.0);
 }
 
 float GetHeightmap(vec2 pixel)
@@ -265,6 +301,22 @@ vec2 GetMapTC(vec3 pos)
 	return (pos.xy - u_Mins.xy) / mapSize;
 }
 
+float LDHeightForPosition(vec3 pos)
+{
+	return noise(vec2(pos.xy * 0.00875));
+}
+
+float OffsetForPosition(vec3 pos)
+{
+	vec2 pixel = GetMapTC(pos);
+	float roadScale = GetRoadFactor(pixel);
+	float SmoothRand = LDHeightForPosition(pos);
+	float offsetScale = SmoothRand * clamp(1.0 - roadScale, 0.75, 1.0);
+
+	float offset = max(offsetScale, roadScale) - 0.5;
+	return offset * TERRAIN_TESS_OFFSET;
+}
+
 void main()
 {
 	iGrassType = 0;
@@ -274,9 +326,9 @@ void main()
 	//
 
 	//face center------------------------
-	vec3 Vert1 = gl_in[0].gl_Position.xyz;
-	vec3 Vert2 = gl_in[1].gl_Position.xyz;
-	vec3 Vert3 = gl_in[2].gl_Position.xyz;
+	vec3 Vert1 = gl_in[0].gl_Position.xyz + OffsetForPosition(gl_in[0].gl_Position.xyz);
+	vec3 Vert2 = gl_in[1].gl_Position.xyz + OffsetForPosition(gl_in[1].gl_Position.xyz);
+	vec3 Vert3 = gl_in[2].gl_Position.xyz + OffsetForPosition(gl_in[2].gl_Position.xyz);
 
 	vec3 vGrassFieldPos = (Vert1 + Vert2 + Vert3) / 3.0;   //Center of the triangle - copy for later
 														   //-----------------------------------
@@ -329,17 +381,18 @@ void main()
 
 	if (SHADER_HAS_SPLATMAP4 > 0.0)
 	{// Also grab the roads map, if we have one...
-		controlMap.a = GetRoadFactor(pixel);
+		controlMap.a = 1.0 - GetRoadFactor(pixel);
 
-		if (controlMap.a == 0.0)
-		{
+		//if (controlMap.a == 0.0)
+		if (controlMap.a <= 0.7)
+		{// Road or road edge...
 			return;
 		}
 	}
 
-	float terrainOffsetScale = GetHeightmap(pixel);
-	float terrainOffset = max(terrainOffsetScale, 1.0 - clamp(controlMap.a * 0.6 + 0.4, 0.0, 1.0)) - 0.5;
-	vGrassFieldPos.z += terrainOffset * TERRAIN_TESS_OFFSET;
+	//float terrainOffsetScale = GetHeightmap(pixel);
+	//float terrainOffset = max(terrainOffsetScale, 1.0 - clamp(controlMap.a * 0.6 + 0.4, 0.0, 1.0)) - 0.5;
+	//vGrassFieldPos.z += terrainOffset * TERRAIN_TESS_OFFSET;
 
 	float controlMapScale = length(controlMap.rgb) / 3.0;
 	controlMapScale *= controlMapScale;
@@ -354,6 +407,8 @@ void main()
 
 #if defined(__USE_UNDERWATER_ONLY__)
 	iGrassType = 0;
+
+	vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER);
 
 	if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 	{// Randomize...
@@ -378,6 +433,8 @@ void main()
 	{
 		iGrassType = 0;
 
+		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER);
+
 		if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 		{// Randomize...
 			iGrassType = randomInt(0, 3);
@@ -395,11 +452,14 @@ void main()
 		tcOffsetBegin = BakedOffsetsBegin[iGrassType];
 		tcOffsetEnd = tcOffsetBegin + 0.25;
 
+		// Final value set to 1 == an underwater grass...
 		iGrassType = 1;
 	}
 	else
 	{
 		iGrassType = randomInt(0, 2);
+
+		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER);
 
 		if (randZeroOne() > GRASS_TYPE_UNIFORMALITY)
 		{// Randomize...
@@ -414,6 +474,14 @@ void main()
 		tcOffsetBegin = BakedOffsetsBegin[iGrassType];
 		tcOffsetEnd = tcOffsetBegin + 0.25;
 
+		/*if (iGrassType > 2 && iGrassType < 16)
+		{// Rare randomized grasses (3 -> 16 - the plants) are a bit larger then the standard grass...
+			sizeMult *= 1.25;
+		}*/
+
+		sizeMult *= u_GrassScales[iGrassType]; // Scale by grass type...
+
+		// Final value set to 0 == an above water grass...
 		iGrassType = 0;
 	}
 #endif //defined(__USE_UNDERWATER_ONLY__)
@@ -432,11 +500,6 @@ void main()
 	if (fGrassFinalSize <= GRASS_HEIGHT * 0.05)
 	{
 		return;
-	}
-
-	if (iGrassType > 2 && iGrassType < 16)
-	{// Rare randomized grasses (3 -> 16 - the plants) are a bit larger then the standard grass...
-		fGrassPatchHeight *= 1.25;
 	}
 
 	float fWindPower = inWindPower[gl_InvocationID];

@@ -1820,7 +1820,9 @@ extern float		GRASS_HEIGHT;
 extern int			GRASS_DISTANCE;
 extern float		GRASS_MAX_SLOPE;
 extern float		GRASS_TYPE_UNIFORMALITY;
+extern float		GRASS_TYPE_UNIFORMALITY_SCALER;
 extern float		GRASS_DISTANCE_FROM_ROADS;
+extern float		GRASS_SCALES[16];
 extern vec3_t		MOON_COLOR;
 extern vec3_t		MOON_ATMOSPHERE_COLOR;
 extern float		MOON_GLOW_STRENGTH;
@@ -3292,6 +3294,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 
+				GLSL_SetUniformFloatxX(sp, UNIFORM_GRASSSCALES, GRASS_SCALES, 16);
+
 				GLSL_SetUniformVec3(sp, UNIFORM_PLAYERORIGIN, backEnd.localPlayerOrigin);
 
 #ifdef __HUMANOIDS_BEND_GRASS__ // Bend grass for all close player/NPCs...
@@ -3316,7 +3320,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 
 				vec4_t l11;
-				VectorSet4(l11, GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, 0.0, 0.0);
+				VectorSet4(l11, GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, GRASS_TYPE_UNIFORMALITY_SCALER, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL11, l11);
 
 				if (tr.roadsMapImage != tr.blackImage)

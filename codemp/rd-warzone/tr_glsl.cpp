@@ -1305,6 +1305,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_HumanoidOrigins", GLSL_VEC3, MAX_GRASSBEND_HUMANOIDS },
 #endif //__HUMANOIDS_BEND_GRASS__
 
+	{ "u_GrassScales", GLSL_FLOAT, 16 },
+
 	{ "u_InstancePositions", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
 	{ "u_InstanceScales", GLSL_VEC3, MAX_INSTANCED_MODEL_INSTANCES },
 	{ "u_InstanceMatrixes", GLSL_MAT16, MAX_INSTANCED_MODEL_INSTANCES },
