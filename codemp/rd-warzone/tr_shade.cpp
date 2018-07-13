@@ -1801,6 +1801,44 @@ void RB_UpdateCloseLights ( void )
 
 	//ri->Printf(PRINT_ALL, "Found %i close lights this frame from %i dlights. Max allowed %i.\n", NUM_CLOSE_LIGHTS, backEnd.refdef.num_dlights, MAX_CLOSE_LIGHTS);
 
+	int NUM_LIGHTS = r_lowVram->integer ? min(NUM_CLOSE_LIGHTS, min(r_maxDeferredLights->integer, 8.0)) : min(NUM_CLOSE_LIGHTS, min(r_maxDeferredLights->integer, MAX_DEFERRED_LIGHTS));
+
+	//if (NUM_CLOSE_LIGHTS >= min(r_maxDeferredLights->integer, MAX_DEFERRED_LIGHTS))
+	{// Sort them by radius...
+		for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+		{
+			for (int j = 0; j < NUM_CLOSE_LIGHTS; j++)
+			{
+				if (i == j) continue;
+
+				if (CLOSEST_LIGHTS_DISTANCES[j] > CLOSEST_LIGHTS_DISTANCES[i])
+				{
+					int lightNum = CLOSEST_LIGHTS[i];
+					CLOSEST_LIGHTS[i] = CLOSEST_LIGHTS[j];
+					CLOSEST_LIGHTS[j] = lightNum;
+
+					vec3_t lightOrg;
+					VectorCopy(CLOSEST_LIGHTS_POSITIONS[i], lightOrg);
+					VectorCopy(CLOSEST_LIGHTS_POSITIONS[j], CLOSEST_LIGHTS_POSITIONS[i]);
+					VectorCopy(lightOrg, CLOSEST_LIGHTS_POSITIONS[j]);
+
+					float lightDist = CLOSEST_LIGHTS_DISTANCES[i];
+					CLOSEST_LIGHTS_DISTANCES[i] = CLOSEST_LIGHTS_DISTANCES[j];
+					CLOSEST_LIGHTS_DISTANCES[j] = lightDist;
+
+					float lightHS = CLOSEST_LIGHTS_HEIGHTSCALES[i];
+					CLOSEST_LIGHTS_HEIGHTSCALES[j] = CLOSEST_LIGHTS_HEIGHTSCALES[i];
+					CLOSEST_LIGHTS_HEIGHTSCALES[i] = lightHS;
+
+					vec3_t lightColor;
+					VectorCopy(CLOSEST_LIGHTS_COLORS[i], lightColor);
+					VectorCopy(CLOSEST_LIGHTS_COLORS[j], CLOSEST_LIGHTS_COLORS[i]);
+					VectorCopy(lightColor, CLOSEST_LIGHTS_COLORS[j]);
+				}
+			}
+		}
+	}
+
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }
 

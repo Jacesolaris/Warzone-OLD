@@ -1364,6 +1364,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_lightPositions", GLSL_VEC2, MAX_DEFERRED_LIGHTS },
 	{ "u_lightDistances", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
 	{ "u_lightHeightScales", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
+	{ "u_lightMax", GLSL_INT, 1 },
+	{ "u_lightMaxDistance", GLSL_FLOAT, 1 },
 	{ "u_lightColors", GLSL_VEC3, MAX_DEFERRED_LIGHTS },
 	{ "u_vlightPositions2", GLSL_VEC3, 1 },
 	{ "u_vlightPositions", GLSL_VEC2, 1 },

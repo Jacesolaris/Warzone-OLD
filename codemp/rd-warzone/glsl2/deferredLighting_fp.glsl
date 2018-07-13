@@ -67,6 +67,8 @@ uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
 uniform float		u_lightHeightScales[MAX_DEFERRED_LIGHTS];
 uniform vec3		u_lightColors[MAX_DEFERRED_LIGHTS];
+//uniform int			u_lightMax;
+uniform float		u_lightMaxDistance;
 
 varying vec2		var_TexCoords;
 
@@ -1389,7 +1391,9 @@ void main(void)
 					lightDist -= length(lightPos.z - position.z);
 				}
 
-				float lightDistMult = 1.0 - clamp((distance(lightPos.xyz, u_ViewOrigin.xyz) / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
+				float lightPlayerDist = distance(lightPos.xyz, u_ViewOrigin.xyz);
+
+				float lightDistMult = 1.0 - clamp((lightPlayerDist / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
 				lightDistMult = pow(lightDistMult, 2.0);
 
 				if (lightDistMult <= 0.0) continue;
@@ -1403,9 +1407,13 @@ void main(void)
 
 				float lightStrength = lightDistMult * lightFade * specularReflectivePower * 0.5;
 
+				//float maxLightsScale = mix(0.0, 1.0, clamp(pow(1.0 - (float(li) / float(u_lightMax)), u_Local3.r), 0.0, 1.0));
+				float maxLightsScale = mix(0.01, 1.0, clamp(pow(1.0 - (lightPlayerDist / u_lightMaxDistance), 0.5), 0.0, 1.0));
+				lightStrength *= maxLightsScale;
+
 				if (lightStrength > 0.0)
 				{
-					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a; // Normalize.
+					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a * maxLightsScale; // Normalize.
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);

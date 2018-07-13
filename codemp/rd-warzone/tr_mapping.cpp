@@ -1812,10 +1812,7 @@ void MAPPING_LoadMapInfo(void)
 
 		for (int i = 0; i < 16; i++)
 		{// Init all grass scales...
-			if (i < 3)
-				GRASS_SCALES[i] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", i), "1.0"));
-			else
-				GRASS_SCALES[i] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", i), "1.25"));
+			GRASS_SCALES[i] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", i), "1.0"));
 		}
 		
 		// Parse any specified extra surface material types to add grasses to...

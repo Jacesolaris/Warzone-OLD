@@ -25,7 +25,7 @@ void main ( void )
 
 	vec3	totalColor = vec3(0.0, 0.0, 0.0);
 
-	totalColor.rgb += u_vlightColors * 0.05;
+	totalColor.rgb += u_vlightColors * /*0.05*/0.025;
 	totalColor.rgb *= VOLUMETRIC_STRENGTH * 1.5125;
 
 	if (u_Local1.r > 0.0)
