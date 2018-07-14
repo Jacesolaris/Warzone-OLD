@@ -2123,6 +2123,21 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 		return -1;
 	else if (qboolean(aa->shader->materialType == MATERIAL_SMOKE) > qboolean(bb->shader->materialType == MATERIAL_SMOKE))
 		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_MAGIC_PARTICLES) < qboolean(bb->shader->materialType == MATERIAL_MAGIC_PARTICLES))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_MAGIC_PARTICLES) > qboolean(bb->shader->materialType == MATERIAL_MAGIC_PARTICLES))
+		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE) < qboolean(bb->shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE) > qboolean(bb->shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE))
+		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_FIREFLIES) < qboolean(bb->shader->materialType == MATERIAL_FIREFLIES))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_FIREFLIES) > qboolean(bb->shader->materialType == MATERIAL_FIREFLIES))
+		return 1;
 #endif //__FX_SORTING__
 
 #ifdef __WATER_SORTING__
@@ -3682,6 +3697,9 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
 	case MATERIAL_SMOKE:
+	case MATERIAL_MAGIC_PARTICLES:
+	case MATERIAL_MAGIC_PARTICLES_TREE:
+	case MATERIAL_FIREFLIES:
 		return qfalse;
 		break;
 	default:

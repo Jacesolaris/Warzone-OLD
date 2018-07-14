@@ -1255,6 +1255,9 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
 	case MATERIAL_SMOKE:
+	case MATERIAL_MAGIC_PARTICLES:
+	case MATERIAL_MAGIC_PARTICLES_TREE:
+	case MATERIAL_FIREFLIES:
 		specularScale = 0.0;
 		cubemapScale = 0.0;
 		parallaxScale = 0.0;
@@ -2341,6 +2344,39 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 		}
+		else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES)
+		{// Special case for procedural fire...
+			if (IS_DEPTH_PASS) return;
+
+			sp = &tr.magicParticlesShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
+		else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE)
+		{// Special case for procedural fire...
+			if (IS_DEPTH_PASS) return;
+
+			sp = &tr.magicParticlesTreeShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
+		else if (tess.shader->materialType == MATERIAL_FIREFLIES)
+		{// Special case for procedural fire...
+			if (IS_DEPTH_PASS) return;
+
+			sp = &tr.magicParticlesFireFlyShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
 		else if ((IS_DEPTH_PASS || (tr.viewParms.flags & VPF_CUBEMAP))
 			&& !((tr.viewParms.flags & VPF_EMISSIVEMAP) && (pStage->glow || pStage->glowMapped)))
 		{
@@ -2888,6 +2924,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->stateBits = stateBits;
 		}
 		else if (tess.shader->materialType == MATERIAL_SMOKE)
+		{// Special case for procedural smoke...
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES)
+		{// Special case for procedural smoke...
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE)
+		{// Special case for procedural smoke...
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
+		else if (tess.shader->materialType == MATERIAL_FIREFLIES)
 		{// Special case for procedural smoke...
 			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 			pStage->stateBits = stateBits;
@@ -3528,6 +3579,57 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
 				//VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
 				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES)
+			{// Special case for procedural smoke...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*2.0);
+
+				{
+					vec4_t l6;
+					VectorSet4(l6, pStage->particleColor[0], pStage->particleColor[1], pStage->particleColor[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, l6);
+				}
+
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES_TREE)
+			{// Special case for procedural smoke...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*2.0);
+
+				{
+					vec4_t l6;
+					VectorSet4(l6, pStage->particleColor[0], pStage->particleColor[1], pStage->particleColor[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, l6);
+				}
+
+				{
+					vec4_t l7;
+					VectorSet4(l7, pStage->fireFlyColor[0], pStage->fireFlyColor[1], pStage->fireFlyColor[2], pStage->fireFlyCount);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, l7);
+				}
+
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (tess.shader->materialType == MATERIAL_FIREFLIES)
+			{// Special case for procedural smoke...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*2.0);
+
+				{
+					vec4_t l7;
+					VectorSet4(l7, pStage->fireFlyColor[0], pStage->fireFlyColor[1], pStage->fireFlyColor[2], pStage->fireFlyCount);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, l7);
+				}
+
 				GL_Cull(CT_TWO_SIDED);
 			}
 #ifdef __WATER_STUFF__

@@ -287,6 +287,9 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
 	case MATERIAL_SMOKE:
+	case MATERIAL_MAGIC_PARTICLES:
+	case MATERIAL_MAGIC_PARTICLES_TREE:
+	case MATERIAL_FIREFLIES:
 		specularReflectionScale = 0.0;
 		cubeReflectionScale = 0.0;
 		break;
@@ -971,13 +974,16 @@ void main(void)
 	vec4 outColor = vec4(color.rgb, 1.0);
 	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 
-	if (position.a-1.0 == MATERIAL_SKY 
-		|| position.a-1.0 == MATERIAL_SUN 
-		|| position.a-1.0 == MATERIAL_GLASS
-		|| position.a-1.0 == MATERIAL_EFX
-		|| position.a-1.0 == MATERIAL_BLASTERBOLT
+	if (position.a - 1.0 == MATERIAL_SKY
+		|| position.a - 1.0 == MATERIAL_SUN
+		|| position.a - 1.0 == MATERIAL_GLASS
+		|| position.a - 1.0 == MATERIAL_EFX
+		|| position.a - 1.0 == MATERIAL_BLASTERBOLT
 		|| position.a - 1.0 == MATERIAL_FIRE
-		|| position.a - 1.0 == MATERIAL_SMOKE)
+		|| position.a - 1.0 == MATERIAL_SMOKE
+		|| position.a - 1.0 == MATERIAL_MAGIC_PARTICLES
+		|| position.a - 1.0 == MATERIAL_MAGIC_PARTICLES_TREE
+		|| position.a - 1.0 == MATERIAL_FIREFLIES)
 	{// Skybox... Skip...
 		if (u_Local9.g > 0.0)
 		{

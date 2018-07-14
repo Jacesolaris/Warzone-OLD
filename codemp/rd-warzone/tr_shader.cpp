@@ -1702,6 +1702,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	stage->active = qtrue;
 	stage->useSkyImage = false;
 
+	stage->particleColor[0] = 1.0;
+	stage->particleColor[1] = 1.0;
+	stage->particleColor[2] = 0.0;
+
+	stage->fireFlyCount = 30;
+	stage->fireFlyColor[0] = 0.94;
+	stage->fireFlyColor[1] = 0.94;
+	stage->fireFlyColor[2] = 0.14;
+
 	while ( 1 )
 	{
 		token = COM_ParseExt( text, qtrue );
@@ -2799,6 +2808,41 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 			continue;
 		}
+		else if (Q_stricmp(token, "particleColor") == 0)
+		{
+			vec3_t	color;
+
+			ParseVector(text, 3, color);
+
+			stage->particleColor[0] = color[0];
+			stage->particleColor[1] = color[1];
+			stage->particleColor[2] = color[2];
+			continue;
+		}
+		else if (Q_stricmp(token, "fireFlyCount") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for fireFlyCount exponent in shader '%s'\n", shader.name);
+				stage->fireFlyCount = 30;
+				continue;
+			}
+
+			stage->fireFlyCount = atoi(token);
+			continue;
+		}
+		else if (Q_stricmp(token, "fireFlyColor") == 0)
+		{
+			vec3_t	color;
+
+			ParseVector(text, 3, color);
+
+			stage->fireFlyColor[0] = color[0];
+			stage->fireFlyColor[1] = color[1];
+			stage->fireFlyColor[2] = color[2];
+			continue;
+		}
 		else if (Q_stricmp(token, "emissiveRadiusScale") == 0)
 		{
 			token = COM_ParseExt(text, qfalse);
@@ -3622,6 +3666,9 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
 	case MATERIAL_SMOKE:
+	case MATERIAL_MAGIC_PARTICLES:
+	case MATERIAL_MAGIC_PARTICLES_TREE:
+	case MATERIAL_FIREFLIES:
 		return qtrue;
 		break;
 	default:
@@ -3753,6 +3800,15 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_SMOKE:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SMOKE.\n", name);
+		break;
+	case MATERIAL_MAGIC_PARTICLES:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_MAGIC_PARTICLES.\n", name);
+		break;
+	case MATERIAL_MAGIC_PARTICLES_TREE:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_MAGIC_PARTICLES_TREE.\n", name);
+		break;
+	case MATERIAL_FIREFLIES:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_FIREFLIES.\n", name);
 		break;
 	default:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_NONE.\n", name);
@@ -7302,7 +7358,7 @@ static shader_t *FinishShader( void ) {
 		shader.sort = SS_DECAL;
 	}
 
-	if (shader.glowStrength < 2.0 
+	if (shader.glowStrength == 1.0 
 		&& (StringContainsWord(shader.name, "models/players") || StringContainsWord(shader.name, "models/weapons")))
 	{// If this shader has glows, but still has the default glow strength, amp up the brightness because these are small glow objects...
 		if (StringContainsWord(shader.name, "players/hk"))

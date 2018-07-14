@@ -1057,6 +1057,21 @@ static int RealtimeSurfaceCompare(const void *a, const void *b)
 		return -1;
 	else if (qboolean(shadera->materialType == MATERIAL_SMOKE) > qboolean(shaderb->materialType == MATERIAL_SMOKE))
 		return 1;
+
+	if (qboolean(shadera->materialType == MATERIAL_MAGIC_PARTICLES) < qboolean(shaderb->materialType == MATERIAL_MAGIC_PARTICLES))
+		return -1;
+	else if (qboolean(shadera->materialType == MATERIAL_MAGIC_PARTICLES) > qboolean(shaderb->materialType == MATERIAL_MAGIC_PARTICLES))
+		return 1;
+
+	if (qboolean(shadera->materialType == MATERIAL_MAGIC_PARTICLES_TREE) < qboolean(shaderb->materialType == MATERIAL_MAGIC_PARTICLES_TREE))
+		return -1;
+	else if (qboolean(shadera->materialType == MATERIAL_MAGIC_PARTICLES_TREE) > qboolean(shaderb->materialType == MATERIAL_MAGIC_PARTICLES_TREE))
+		return 1;
+
+	if (qboolean(shadera->materialType == MATERIAL_FIREFLIES) < qboolean(shaderb->materialType == MATERIAL_FIREFLIES))
+		return -1;
+	else if (qboolean(shadera->materialType == MATERIAL_FIREFLIES) > qboolean(shaderb->materialType == MATERIAL_FIREFLIES))
+		return 1;
 #endif //__REALTIME_FX_SORTING__
 
 

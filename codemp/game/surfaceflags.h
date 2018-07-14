@@ -78,85 +78,91 @@
 #define SURF_UNUSED40000000		(0x40000000u) //
 #define SURF_UNUSED80000000		(0x80000000u) //
 
-#define MATERIAL_BITS			5
-#define MATERIAL_MASK			0x1f	// mask to get the material type
+#define MATERIAL_BITS							5
+#define MATERIAL_MASK							0x1f	// mask to get the material type
 
-#define MATERIAL_NONE			0			// for when the artist hasn't set anything up =)
-#define MATERIAL_SOLIDWOOD		1			// freshly cut timber
-#define MATERIAL_HOLLOWWOOD		2			// termite infested creaky wood
-#define MATERIAL_SOLIDMETAL		3			// solid girders
-#define MATERIAL_HOLLOWMETAL	4			// hollow metal machines
-#define MATERIAL_SHORTGRASS		5			// manicured lawn
-#define MATERIAL_LONGGRASS		6			// long jungle grass
-#define MATERIAL_DIRT			7			// hard mud
-#define MATERIAL_SAND			8			// sandy beach
-#define MATERIAL_GRAVEL			9			// lots of small stones
-#define MATERIAL_GLASS			10			//
-#define MATERIAL_CONCRETE		11			// hardened concrete pavement
-#define MATERIAL_MARBLE			12			// marble floors
-#define MATERIAL_WATER			13			// light covering of water on a surface
-#define MATERIAL_SNOW			14			// freshly laid snow
-#define MATERIAL_ICE			15			// packed snow/solid ice
-#define MATERIAL_FLESH			16			// hung meat, corpses in the world
-#define MATERIAL_MUD			17			// wet soil
-#define MATERIAL_BPGLASS		18			// bulletproof glass
-#define MATERIAL_DRYLEAVES		19			// dried up leaves on the floor
-#define MATERIAL_GREENLEAVES	20			// fresh leaves still on a tree
-#define MATERIAL_FABRIC			21			// Cotton sheets
-#define MATERIAL_CANVAS			22			// tent material
-#define MATERIAL_ROCK			23			//
-#define MATERIAL_RUBBER			24			// hard tire like rubber
-#define MATERIAL_PLASTIC		25			//
-#define MATERIAL_TILES			26			// tiled floor
-#define MATERIAL_CARPET			27			// lush carpet
-#define MATERIAL_PLASTER		28			// drywall style plaster
-#define MATERIAL_SHATTERGLASS	29			// glass with the Crisis Zone style shattering
-#define MATERIAL_ARMOR			30			// body armor
-#define MATERIAL_COMPUTER		31			// computers/electronic equipment
-#define MATERIAL_PUDDLE			32			// shallow puddle on floor surface
-#define MATERIAL_EFX			33			// any efx surfaces
-#define MATERIAL_BLASTERBOLT	34			// blaster bolts, sabers, etc
-#define MATERIAL_FIRE			35			// fire
-#define MATERIAL_SMOKE			36			// smoke
-#define MATERIAL_LAST			37			// number of materials
+#define MATERIAL_NONE							0			// for when the artist hasn't set anything up =)
+#define MATERIAL_SOLIDWOOD						1			// freshly cut timber
+#define MATERIAL_HOLLOWWOOD						2			// termite infested creaky wood
+#define MATERIAL_SOLIDMETAL						3			// solid girders
+#define MATERIAL_HOLLOWMETAL					4			// hollow metal machines
+#define MATERIAL_SHORTGRASS						5			// manicured lawn
+#define MATERIAL_LONGGRASS						6			// long jungle grass
+#define MATERIAL_DIRT							7			// hard mud
+#define MATERIAL_SAND							8			// sandy beach
+#define MATERIAL_GRAVEL							9			// lots of small stones
+#define MATERIAL_GLASS							10			//
+#define MATERIAL_CONCRETE						11			// hardened concrete pavement
+#define MATERIAL_MARBLE							12			// marble floors
+#define MATERIAL_WATER							13			// light covering of water on a surface
+#define MATERIAL_SNOW							14			// freshly laid snow
+#define MATERIAL_ICE							15			// packed snow/solid ice
+#define MATERIAL_FLESH							16			// hung meat, corpses in the world
+#define MATERIAL_MUD							17			// wet soil
+#define MATERIAL_BPGLASS						18			// bulletproof glass
+#define MATERIAL_DRYLEAVES						19			// dried up leaves on the floor
+#define MATERIAL_GREENLEAVES					20			// fresh leaves still on a tree
+#define MATERIAL_FABRIC							21			// Cotton sheets
+#define MATERIAL_CANVAS							22			// tent material
+#define MATERIAL_ROCK							23			//
+#define MATERIAL_RUBBER							24			// hard tire like rubber
+#define MATERIAL_PLASTIC						25			//
+#define MATERIAL_TILES							26			// tiled floor
+#define MATERIAL_CARPET							27			// lush carpet
+#define MATERIAL_PLASTER						28			// drywall style plaster
+#define MATERIAL_SHATTERGLASS					29			// glass with the Crisis Zone style shattering
+#define MATERIAL_ARMOR							30			// body armor
+#define MATERIAL_COMPUTER						31			// computers/electronic equipment
+#define MATERIAL_PUDDLE							32			// shallow puddle on floor surface
+#define MATERIAL_EFX							33			// any efx surfaces
+#define MATERIAL_BLASTERBOLT					34			// blaster bolts, sabers, etc
+#define MATERIAL_FIRE							35			// fire
+#define MATERIAL_SMOKE							36			// smoke
+#define MATERIAL_FIREFLIES						37			// fire flies fx
+#define MATERIAL_MAGIC_PARTICLES_TREE			38			// magic tree particle fx
+#define MATERIAL_MAGIC_PARTICLES				39			// magic particles (small particle fx)
+#define MATERIAL_LAST							40			// number of materials
 
 // Defined as a macro here so one change will affect all the relevant files
 
-#define MATERIALS	\
-	"none",			\
-	"solidwood",	\
-	"hollowwood",	\
-	"solidmetal",	\
-	"hollowmetal",	\
-	"shortgrass",	\
-	"longgrass",	\
-	"dirt",	   		\
-	"sand",	   		\
-	"gravel",		\
-	"glass",		\
-	"concrete",		\
-	"marble",		\
-	"water",		\
-	"snow",	   		\
-	"ice",			\
-	"flesh",		\
-	"mud",			\
-	"bpglass",		\
-	"dryleaves",	\
-	"greenleaves",	\
-	"fabric",		\
-	"canvas",		\
-	"rock",			\
-	"rubber",		\
-	"plastic",		\
-	"tiles",		\
-	"carpet",		\
-	"plaster",		\
-	"shatterglass",	\
-	"armor",		\
-	"computer",		\
-	"puddle",		\
-	"efx",			\
-	"blasterbolt",	\
-	"fire",			\
-	"smoke"
+#define MATERIALS						\
+	"none",								\
+	"solidwood",						\
+	"hollowwood",						\
+	"solidmetal",						\
+	"hollowmetal",						\
+	"shortgrass",						\
+	"longgrass",						\
+	"dirt",	   							\
+	"sand",	   							\
+	"gravel",							\
+	"glass",							\
+	"concrete",							\
+	"marble",							\
+	"water",							\
+	"snow",	   							\
+	"ice",								\
+	"flesh",							\
+	"mud",								\
+	"bpglass",							\
+	"dryleaves",						\
+	"greenleaves",						\
+	"fabric",							\
+	"canvas",							\
+	"rock",								\
+	"rubber",							\
+	"plastic",							\
+	"tiles",							\
+	"carpet",							\
+	"plaster",							\
+	"shatterglass",						\
+	"armor",							\
+	"computer",							\
+	"puddle",							\
+	"efx",								\
+	"blasterbolt",						\
+	"fire",								\
+	"smoke",							\
+	"fireflies",						\
+	"magicparticlestree",				\
+	"magicparticles",

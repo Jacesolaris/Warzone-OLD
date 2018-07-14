@@ -1227,6 +1227,11 @@ typedef struct {
 	float			emissiveColorScale;
 	float			emissiveHeightScale;
 
+	vec3_t			particleColor;
+
+	int				fireFlyCount;
+	vec3_t			fireFlyColor;
+
 	bool			isFoliage;
 	bool			isFoliageChecked;
 
@@ -2889,6 +2894,9 @@ typedef struct trGlobals_s {
 	shaderProgram_t planetPassShader;
 	shaderProgram_t fireShader;
 	shaderProgram_t smokeShader;
+	shaderProgram_t magicParticlesShader;
+	shaderProgram_t magicParticlesTreeShader;
+	shaderProgram_t magicParticlesFireFlyShader;
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;

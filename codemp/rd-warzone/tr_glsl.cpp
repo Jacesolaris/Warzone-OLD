@@ -50,6 +50,12 @@ extern const char *fallbackShader_fire_vp;
 extern const char *fallbackShader_fire_fp;
 extern const char *fallbackShader_smoke_vp;
 extern const char *fallbackShader_smoke_fp;
+extern const char *fallbackShader_magicParticles_vp;
+extern const char *fallbackShader_magicParticles_fp;
+extern const char *fallbackShader_magicParticlesTree_vp;
+extern const char *fallbackShader_magicParticlesTree_fp;
+extern const char *fallbackShader_magicParticlesFireFly_vp;
+extern const char *fallbackShader_magicParticlesFireFly_fp;
 extern const char *fallbackShader_depthPass_vp;
 extern const char *fallbackShader_depthPass_fp;
 extern const char *fallbackShader_sky_vp;
@@ -1551,45 +1557,48 @@ char *GLSL_GetHighestSupportedVersion(void)
 }
 
 const char glslMaterialsList[] =
-"#define MATERIAL_NONE			0\n"\
-"#define MATERIAL_SOLIDWOOD		1\n"\
-"#define MATERIAL_HOLLOWWOOD	2\n"\
-"#define MATERIAL_SOLIDMETAL	3\n"\
-"#define MATERIAL_HOLLOWMETAL	4\n"\
-"#define MATERIAL_SHORTGRASS	5\n"\
-"#define MATERIAL_LONGGRASS		6\n"\
-"#define MATERIAL_DIRT			7\n"\
-"#define MATERIAL_SAND			8\n"\
-"#define MATERIAL_GRAVEL		9\n"\
-"#define MATERIAL_GLASS			10\n"\
-"#define MATERIAL_CONCRETE		11\n"\
-"#define MATERIAL_MARBLE		12\n"\
-"#define MATERIAL_WATER			13\n"\
-"#define MATERIAL_SNOW			14\n"\
-"#define MATERIAL_ICE			15\n"\
-"#define MATERIAL_FLESH			16\n"\
-"#define MATERIAL_MUD			17\n"\
-"#define MATERIAL_BPGLASS		18\n"\
-"#define MATERIAL_DRYLEAVES		19\n"\
-"#define MATERIAL_GREENLEAVES	20\n"\
-"#define MATERIAL_FABRIC		21\n"\
-"#define MATERIAL_CANVAS		22\n"\
-"#define MATERIAL_ROCK			23\n"\
-"#define MATERIAL_RUBBER		24\n"\
-"#define MATERIAL_PLASTIC		25\n"\
-"#define MATERIAL_TILES			26\n"\
-"#define MATERIAL_CARPET		27\n"\
-"#define MATERIAL_PLASTER		28\n"\
-"#define MATERIAL_SHATTERGLASS	29\n"\
-"#define MATERIAL_ARMOR			30\n"\
-"#define MATERIAL_COMPUTER		31\n"\
-"#define MATERIAL_PUDDLE		32\n"\
-"#define MATERIAL_EFX			33\n"\
-"#define MATERIAL_BLASTERBOLT	34\n"\
-"#define MATERIAL_FIRE			35\n"\
-"#define MATERIAL_SMOKE			36\n"\
-"#define MATERIAL_SKY			1024\n"\
-"#define MATERIAL_SUN			1025\n"\
+"#define MATERIAL_NONE							0\n"\
+"#define MATERIAL_SOLIDWOOD						1\n"\
+"#define MATERIAL_HOLLOWWOOD					2\n"\
+"#define MATERIAL_SOLIDMETAL					3\n"\
+"#define MATERIAL_HOLLOWMETAL					4\n"\
+"#define MATERIAL_SHORTGRASS					5\n"\
+"#define MATERIAL_LONGGRASS						6\n"\
+"#define MATERIAL_DIRT							7\n"\
+"#define MATERIAL_SAND							8\n"\
+"#define MATERIAL_GRAVEL						9\n"\
+"#define MATERIAL_GLASS							10\n"\
+"#define MATERIAL_CONCRETE						11\n"\
+"#define MATERIAL_MARBLE						12\n"\
+"#define MATERIAL_WATER							13\n"\
+"#define MATERIAL_SNOW							14\n"\
+"#define MATERIAL_ICE							15\n"\
+"#define MATERIAL_FLESH							16\n"\
+"#define MATERIAL_MUD							17\n"\
+"#define MATERIAL_BPGLASS						18\n"\
+"#define MATERIAL_DRYLEAVES						19\n"\
+"#define MATERIAL_GREENLEAVES					20\n"\
+"#define MATERIAL_FABRIC						21\n"\
+"#define MATERIAL_CANVAS						22\n"\
+"#define MATERIAL_ROCK							23\n"\
+"#define MATERIAL_RUBBER						24\n"\
+"#define MATERIAL_PLASTIC						25\n"\
+"#define MATERIAL_TILES							26\n"\
+"#define MATERIAL_CARPET						27\n"\
+"#define MATERIAL_PLASTER						28\n"\
+"#define MATERIAL_SHATTERGLASS					29\n"\
+"#define MATERIAL_ARMOR							30\n"\
+"#define MATERIAL_COMPUTER						31\n"\
+"#define MATERIAL_PUDDLE						32\n"\
+"#define MATERIAL_EFX							33\n"\
+"#define MATERIAL_BLASTERBOLT					34\n"\
+"#define MATERIAL_FIRE							35\n"\
+"#define MATERIAL_SMOKE							36\n"\
+"#define MATERIAL_FIREFLIES						37\n"\
+"#define MATERIAL_MAGIC_PARTICLES_TREE			38\n"\
+"#define MATERIAL_MAGIC_PARTICLES				39\n"\
+"#define MATERIAL_SKY							1024\n"\
+"#define MATERIAL_SUN							1025\n"\
 "\n";
 
 void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest, int size, char *forceVersion)
@@ -3255,6 +3264,30 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load smoke shader!");
 	}
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.magicParticlesShader, "magicParticles", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicParticles_vp, fallbackShader_magicParticles_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicParticles shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.magicParticlesTreeShader, "magicParticlesTree", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicParticlesTree_vp, fallbackShader_magicParticlesTree_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicParticlesTree shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.magicParticlesFireFlyShader, "magicParticlesFireFly", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicParticlesFireFly_vp, fallbackShader_magicParticlesFireFly_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicParticlesFireFly shader!");
+	}
+
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
@@ -4336,6 +4369,61 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.smokeShader);
+#endif
+
+	numLightShaders++;
+
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.magicParticlesShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicParticles shader!");
+	}
+
+	GLSL_InitUniforms(&tr.magicParticlesShader);
+
+	GLSL_BindProgram(&tr.magicParticlesShader);
+	GLSL_SetUniformInt(&tr.magicParticlesShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.magicParticlesShader);
+#endif
+
+	numLightShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.magicParticlesTreeShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicParticlesTree shader!");
+	}
+
+	GLSL_InitUniforms(&tr.magicParticlesTreeShader);
+
+	GLSL_BindProgram(&tr.magicParticlesTreeShader);
+	GLSL_SetUniformInt(&tr.magicParticlesTreeShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.magicParticlesTreeShader);
+#endif
+
+
+
+	numLightShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.magicParticlesFireFlyShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicParticlesFireFly shader!");
+	}
+
+	GLSL_InitUniforms(&tr.magicParticlesFireFlyShader);
+
+	GLSL_BindProgram(&tr.magicParticlesFireFlyShader);
+	GLSL_SetUniformInt(&tr.magicParticlesFireFlyShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.magicParticlesFireFlyShader);
 #endif
 
 	numLightShaders++;
@@ -6240,6 +6328,9 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.fireShader);
 	GLSL_DeleteGPUShader(&tr.smokeShader);
+	GLSL_DeleteGPUShader(&tr.magicParticlesShader);
+	GLSL_DeleteGPUShader(&tr.magicParticlesTreeShader);
+	GLSL_DeleteGPUShader(&tr.magicParticlesFireFlyShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);

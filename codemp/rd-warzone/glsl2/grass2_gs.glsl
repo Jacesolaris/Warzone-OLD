@@ -397,8 +397,9 @@ void main()
 	float controlMapScale = length(controlMap.rgb) / 3.0;
 	controlMapScale *= controlMapScale;
 	controlMapScale += 0.1;
+	controlMapScale = clamp(controlMapScale, 0.0, 1.0);
 
-	float fSizeRandomness = randZeroOne() * 0.25 + 0.75;
+	float fSizeRandomness = clamp(randZeroOne() * 0.25 + 0.75, 0.0, 1.0);
 	float sizeMult = 1.25;
 	float fGrassPatchHeight = 1.0;
 
@@ -479,7 +480,7 @@ void main()
 			sizeMult *= 1.25;
 		}*/
 
-		sizeMult *= u_GrassScales[iGrassType]; // Scale by grass type...
+		sizeMult *= u_GrassScales[clamp(iGrassType, 0, 15)]; // Scale by grass type...
 
 		// Final value set to 0 == an above water grass...
 		iGrassType = 0;
