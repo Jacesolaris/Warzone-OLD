@@ -8372,8 +8372,12 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	{
 		isEfxShader = qtrue;
 	}
+	else if (StringContains((char *)shader.name, "magicParticles", qfalse) || StringContains((char *)shader.name, "fireflies", qfalse))
+	{
+		isEfxShader = qtrue;
+	}
 
-	if (shaderText && shaderText[0] && (StringContains((char *)shaderText, "warzoneEnabled", qfalse) || isEfxShader))
+	if ((shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneEnabled", qfalse)) || isEfxShader)
 	{// This is marked as a warzone enabled shader...
 		forceShaderFileUsage = qtrue;
 	}

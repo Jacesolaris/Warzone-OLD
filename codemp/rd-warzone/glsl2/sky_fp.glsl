@@ -150,19 +150,63 @@ float rand(vec2 co)
     return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec3 GetStars( vec2 coord )
-{
-	float prob = 0.998;
-	float color = 0.0;
-	float r = rand(coord.xy);
+#if 0
+#define iterations 17
+#define formuparam 0.53
 
-	if (r > prob)
+#define volsteps 20
+#define stepsize 0.1
+
+#define zoom   0.800
+#define tile   0.850
+#define speed  0.010 
+
+#define brightness 0.0015
+#define darkmatter 0.300
+#define distfading 0.730
+#define saturation 0.850
+
+
+void NightSky(out vec4 fragColor, in vec2 fragCoord)
+{
+	vec3 skyViewDir = normalize(var_Position.xzy);
+
+	//in vec3 ro, in vec3 rd )
+	//get coords and direction
+	vec3 dir = skyViewDir;// rd;
+	vec3 from = vec3(0.0);// ro;
+
+	//volumetric rendering
+	float s = 0.1, fade = 1.;
+	vec3 v = vec3(0.);
+	for (int r = 0; r<volsteps; r++) 
 	{
-		color = r * (0.25 * rand(coord.xy * u_Time) + 0.75);
+		vec3 p = from + s*dir*.5;
+		p = abs(vec3(tile) - mod(p, vec3(tile*2.))); // tiling fold
+		//p *= 0.5;
+		
+		float pa, a = pa = 0.;
+		for (int i = 0; i<iterations; i++) 
+		{
+			p = abs(p) / dot(p, p) - formuparam; // the magic formula
+			a += abs(length(p) - pa); // absolute sum of average change
+			pa = length(p);
+		}
+		float dm = max(0., darkmatter - a*a*.001); //dark matter
+		a *= a*a; // add contrast
+		if (r>6) fade *= 1. - dm; // dark matter, don't render near
+							  //v+=vec3(dm,dm*.5,0.);
+		v += fade;
+		v += vec3(s, s*s, s*s*s*s)*a*brightness*fade; // coloring based on distance
+		fade *= distfading; // distance fading
+		s += stepsize;
 	}
-	
-	return vec3(color);
+
+	v = mix(vec3(length(v)), v, saturation); //color adjust
+	fragColor = vec4(v*.01, 1.);
+
 }
+#endif
 
 vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, vec3 suncolorIn) {
 	vec3 sundir = sunDir;
@@ -350,7 +394,7 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 	//vec3 skycolour1 = skycolour;
 	//vec3 skycolour2 = skycolour;
 	vec4 fragColor = vec4(0.0);
-	vec2 p = fragCoord.xy;// / iResolution.xy;
+	vec2 p = fragCoord.xy;// / u_Dimensions.xy;
 	vec2 uv = p;
 	float time = u_Time * CLOUDS_SPEED;
 	float q = fbm(uv * CLOUDS_CLOUDSCALE * 0.5);
@@ -422,7 +466,8 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 void main()
 {
 #if 0
-	gl_FragColor = vec4(GetStars( var_TexCoords ) * u_Local9.g, 1.0);
+	//gl_FragColor = vec4(GetStars( var_TexCoords ) * u_Local9.g, 1.0);
+	NightSky(gl_FragColor, var_TexCoords);
 #else
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
