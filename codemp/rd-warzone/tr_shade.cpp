@@ -3383,7 +3383,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 
-				GLSL_SetUniformFloatxX(sp, UNIFORM_GRASSSCALES, GRASS_SCALES, 16);
+				//GLSL_SetUniformFloatxX(sp, UNIFORM_GRASSSCALES, GRASS_SCALES, 16);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_PLAYERORIGIN, backEnd.localPlayerOrigin);
 
@@ -3701,6 +3701,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l8;
 				VectorSet4(l8, GRASS_DISTANCE_FROM_ROADS, 0.0, 0.0, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+			}
+
+			if (isGrass && passNum >= 1)
+			{// When doing grass, make sure that the scales are updated...
+				GLSL_SetUniformFloatxX(sp, UNIFORM_GRASSSCALES, (const float *)GRASS_SCALES, 16);
 			}
 
 

@@ -2539,7 +2539,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, /*MAX_DEFERRED_LIGHTS*/NUM_LIGHTS);
 	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTHEIGHTSCALES, CLOSEST_LIGHTS_HEIGHTSCALES, /*MAX_DEFERRED_LIGHTS*/NUM_LIGHTS);
 	//GLSL_SetUniformInt(shader, UNIFORM_LIGHT_MAX, min(r_maxDeferredLights->integer, MAX_DEFERRED_LIGHTS));
-	GLSL_SetUniformFloat(shader, UNIFORM_LIGHT_MAX_DISTANCE, maxDist);
+	GLSL_SetUniformFloat(shader, UNIFORM_LIGHT_MAX_DISTANCE, (NUM_LIGHTS >= r_maxDeferredLights->integer / 2) ? maxDist : 8192.0);
 
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 

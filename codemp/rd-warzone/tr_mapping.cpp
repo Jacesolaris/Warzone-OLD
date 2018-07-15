@@ -1383,10 +1383,10 @@ qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		SUN_PHONG_SCALE = 1.0;
 float		SUN_VOLUMETRIC_SCALE = 1.0;
-vec3_t		SUN_COLOR_MAIN = { 0.85 };
-vec3_t		SUN_COLOR_SECONDARY = { 0.4 };
-vec3_t		SUN_COLOR_TERTIARY = { 0.2 };
-vec3_t		SUN_COLOR_AMBIENT = { 0.85 };
+vec3_t		SUN_COLOR_MAIN = { 0.85f };
+vec3_t		SUN_COLOR_SECONDARY = { 0.4f };
+vec3_t		SUN_COLOR_TERTIARY = { 0.2f };
+vec3_t		SUN_COLOR_AMBIENT = { 0.85f };
 qboolean	PROCEDURAL_SKY_ENABLED = qfalse;
 qboolean	PROCEDURAL_CLOUDS_ENABLED = qtrue;
 float		PROCEDURAL_CLOUDS_CLOUDSCALE = 1.1;
@@ -1810,10 +1810,10 @@ void MAPPING_LoadMapInfo(void)
 		GRASS_TYPE_UNIFORMALITY_SCALER = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY_SCALER", "0.008"));
 		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
 
-		for (int i = 0; i < 16; i++)
+		for (int m = 0; m < 16; m++)
 		{// Init all grass scales...
-			GRASS_SCALES[i] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", i), "1.0"));
-			//ri->Printf(PRINT_WARNING, "GrassScale %i: %f.\n", i, GRASS_SCALES[i]);
+			GRASS_SCALES[m] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", m), "1.0"));
+			//ri->Printf(PRINT_WARNING, "GrassScale %i: %f.\n", m, GRASS_SCALES[m]);
 		}
 		
 		// Parse any specified extra surface material types to add grasses to...
