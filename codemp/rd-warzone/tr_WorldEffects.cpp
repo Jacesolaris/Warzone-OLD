@@ -38,7 +38,7 @@ extern void Volumetric_Trace(trace_t *results, const vec3_t start, const vec3_t 
 #define	MAX_WIND_ZONES			10
 #define MAX_WEATHER_ZONES		10
 #define	MAX_PUFF_SYSTEMS		2
-#define	MAX_PARTICLE_CLOUDS		5
+#define	MAX_PARTICLE_CLOUDS		64//5
 
 #define POINTCACHE_CELL_SIZE	96.0f
 
@@ -1620,6 +1620,17 @@ public:
 		CWeatherParticle*	part=0;
 		int			particleNum;
 
+		switch (mBlendMode)
+		{
+		case 2:
+			FBO_Bind(tr.renderFbo);
+			break;
+		case 0:
+		case 1:
+		default:
+			break;
+		}
+
 		shaderProgram_t *shader = &tr.weatherShader;
 		GLSL_BindProgram(shader);
 		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
@@ -1630,17 +1641,34 @@ public:
 
 		vec3_t norm;
 		VectorSubtract(vec3_origin, backEnd.viewParms.ori.axis[0], norm);
+		VectorNormalize(norm);
 
 		vec4_t l0;
-		VectorSet4(l0, norm[0], norm[1], norm[2], 0.0);
-		GLSL_SetUniformVec4(&tr.waterForwardShader, UNIFORM_LOCAL0, l0);
+		VectorSet4(l0, norm[0], norm[1], norm[2], (mBlendMode == 2) ? 1.0 : 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, l0);
 
 		// Set The GL State And Image Binding
 		//------------------------------------
 		//GL_Cull(CT_TWO_SIDED);
 		GL_Cull(CT_FRONT_SIDED);
-		GL_State((mBlendMode == 0) ? (GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0 /*| GLS_DEPTHMASK_TRUE*/) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0 /*| GLS_DEPTHMASK_TRUE*/));
-		//GL_State((mBlendMode == 0) ? (GLS_ALPHA) : (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE));
+
+		uint32_t blendMode = 0;
+
+		switch (mBlendMode)
+		{
+		case 1:
+			blendMode = (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0 /*| GLS_DEPTHMASK_TRUE*/);
+			break;
+		case 2:
+			blendMode = (GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GE_128 | GLS_DEPTHMASK_TRUE);
+			break;
+		case 0:
+		default:
+			blendMode = (GLS_ALPHA | GLS_DEPTHFUNC_LESS | GLS_ATEST_GT_0 /*| GLS_DEPTHMASK_TRUE*/);
+			break;
+		}
+		
+		GL_State(blendMode);
 
 		// Enable And Disable Things
 		//---------------------------
@@ -1648,7 +1676,18 @@ public:
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (mFilterMode == 0) ? (GL_LINEAR) : (GL_NEAREST));
 
-		qglDepthMask(GL_FALSE);
+		switch (mBlendMode)
+		{
+		case 2:
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			qglDepthMask(GL_TRUE);
+			break;
+		case 0:
+		case 1:
+		default:
+			qglDepthMask(GL_FALSE);
+			break;
+		}
 
 		tess.numVertexes = 0;
 		tess.numIndexes = 0;
@@ -1675,7 +1714,12 @@ public:
 			{
 				qglColor4f(mColor[0], mColor[1], mColor[2], part->mAlpha);
 			}
-
+			// Let GLSL handle the alpha
+			//---------------------------------------
+			else if (mBlendMode == 2)
+			{
+				qglColor4f(mColor[0], mColor[1], mColor[2], mColor[3]);
+			}
 			// Otherwise Apply Alpha To All Channels
 			//---------------------------------------
 			else
@@ -1691,8 +1735,20 @@ public:
 
 				if (tess.numVertexes + 3 >= SHADER_MAX_VERTEXES || tess.numIndexes + 3 >= SHADER_MAX_INDEXES)
 				{// Would go over the limit, render current queue and continue...
-					RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
-					GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+					switch (mBlendMode)
+					{
+					case 2:
+						RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+						GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+						break;
+					case 0:
+					case 1:
+					default:
+						RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+						GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+						break;
+					}
+					
 					R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
 					tess.numIndexes = 0;
@@ -1735,12 +1791,31 @@ public:
 					part->mPosition[2] + mCameraLeftPlusUp[2],
 					1.0);
 
+#if 0
 				// constant normal all the way around
 				VectorSubtract(vec3_origin, backEnd.viewParms.ori.axis[0], normal);
+
+				/*float* a = (float *)triVerts[0];
+				float* b = (float *)triVerts[1];
+				float* c = (float *)triVerts[2];
+				vec3_t ba, ca;
+				VectorSubtract(b, a, ba);
+				VectorSubtract(c, a, ca);
+
+				CrossProduct(ca, ba, normal);
+				VectorNormalize(normal);
+
+				normal[0] = normal[0] * 0.5 + 0.5;
+				normal[1] = normal[1] * 0.5 + 0.5;
+				normal[2] = normal[2] * 0.5 + 0.5;*/
+
+				//VectorSubtract(triVerts[0], backEnd.refdef.vieworg, normal);
+				VectorNormalize(normal);
 
 				tess.normal[ndx] =
 					tess.normal[ndx + 1] =
 					tess.normal[ndx + 2] = R_VboPackNormal(normal);
+#endif
 
 				VectorCopy4(triVerts[0], tess.xyz[ndx]);
 				VectorCopy4(triVerts[1], tess.xyz[ndx + 1]);
@@ -1775,8 +1850,20 @@ public:
 
 				if (tess.numVertexes + 4 >= SHADER_MAX_VERTEXES || tess.numIndexes + 6 >= SHADER_MAX_INDEXES)
 				{// Would go over the limit, render current queue and continue...
-					RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
-					GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+					switch (mBlendMode)
+					{
+					case 2:
+						RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+						GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+						break;
+					case 0:
+					case 1:
+					default:
+						RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+						GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+						break;
+					}
+
 					R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
 					tess.numIndexes = 0;
@@ -1833,13 +1920,33 @@ public:
 					part->mPosition[2] + mCameraLeftPlusUp[2],
 					1.0);
 
+#if 0
 				// constant normal all the way around
 				VectorSubtract(vec3_origin, backEnd.viewParms.ori.axis[0], normal);
+
+				/*
+				float* a = (float *)quadVerts[2];
+				float* b = (float *)quadVerts[1];
+				float* c = (float *)quadVerts[0];
+				vec3_t ba, ca;
+				VectorSubtract(b, a, ba);
+				VectorSubtract(c, a, ca);
+
+				CrossProduct(ca, ba, normal);
+				VectorNormalize(normal);
+
+				normal[0] = normal[0] * 0.5 + 0.5;
+				normal[1] = normal[1] * 0.5 + 0.5;
+				normal[2] = normal[2] * 0.5 + 0.5;*/
+
+				//VectorSubtract(quadVerts[0], backEnd.refdef.vieworg, normal);
+				VectorNormalize(normal);
 
 				tess.normal[ndx] =
 					tess.normal[ndx + 1] =
 					tess.normal[ndx + 2] =
 					tess.normal[ndx + 3] = R_VboPackNormal(normal);
+#endif
 
 				VectorCopy4(quadVerts[0], tess.xyz[ndx]);
 				VectorCopy4(quadVerts[1], tess.xyz[ndx + 1]);
@@ -1873,8 +1980,20 @@ public:
 			}
 		}
 
-		RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
-		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+		switch (mBlendMode)
+		{
+		case 2:
+			RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+			GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+			break;
+		case 0:
+		case 1:
+		default:
+			RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+			GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);// | ATTR_COLOR | ATTR_NORMAL);
+			break;
+		}
+
 		R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
 		//
@@ -2432,6 +2551,190 @@ void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 		nCloud.mWaterParticles = true;
 	}
 
+	// Create Falling Leafs
+	//---------------------
+	else if (Q_stricmp(token, "fallingleafs") == 0)
+	{
+		if (mParticleClouds.full())
+		{
+			return;
+		}
+
+#define FALLING_LEAFS_NUM				2//r_testvalue0->integer//20
+#define FALLING_LEAFS_SIZE				4.0//r_testvalue1->value
+#define FALLING_LEAFS_DELTA				0//r_testvalue2->value
+#define FALLING_LEAFS_DELTA_TARGET		0//r_testvalue3->value
+
+#define FALLING_LEAFS_GRAVITY			80.0//5.0//r_testshaderValue1->value//200
+#define FALLING_LEAFS_COLOR				3.0//r_testshaderValue2->value//3.0f
+#define FALLING_LEAFS_FADE				100.0//255.0//r_testshaderValue3->value//100.0f
+
+		vec4_t wind;
+		wind[0] = 50.0;// r_testshaderValue4->value;
+		wind[1] = 50.0;// r_testshaderValue5->value;
+		wind[2] = 50.0;// r_testshaderValue6->value;
+		wind[3] = 10.0;// r_testshaderValue7->value;
+
+		CWeatherParticleCloud& nCloud = mParticleClouds.push_back();
+		nCloud.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf01.png", 4);
+		nCloud.mHeight = FALLING_LEAFS_SIZE;
+		nCloud.mWidth = FALLING_LEAFS_SIZE;
+		nCloud.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud.mFilterMode = 0;
+		nCloud.mBlendMode = 2;
+		nCloud.mFade = FALLING_LEAFS_FADE;
+		nCloud.mColor = FALLING_LEAFS_COLOR;
+		nCloud.mRotationChangeNext = 3;
+		nCloud.mOrientWithVelocity = false;
+		nCloud.mWaterParticles = false;
+		nCloud.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud2 = mParticleClouds.push_back();
+		nCloud2.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf02.png", 4);
+		nCloud2.mHeight = FALLING_LEAFS_SIZE;
+		nCloud2.mWidth = FALLING_LEAFS_SIZE;
+		nCloud2.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud2.mFilterMode = 0;
+		nCloud2.mBlendMode = 2;
+		nCloud2.mFade = FALLING_LEAFS_FADE;
+		nCloud2.mColor = FALLING_LEAFS_COLOR;
+		nCloud2.mRotationChangeNext = 3;
+		nCloud2.mOrientWithVelocity = false;
+		nCloud2.mWaterParticles = false;
+		nCloud2.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud2.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud3 = mParticleClouds.push_back();
+		nCloud3.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf03.png", 4);
+		nCloud3.mHeight = FALLING_LEAFS_SIZE;
+		nCloud3.mWidth = FALLING_LEAFS_SIZE;
+		nCloud3.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud3.mFilterMode = 0;
+		nCloud3.mBlendMode = 2;
+		nCloud3.mFade = FALLING_LEAFS_FADE;
+		nCloud3.mColor = FALLING_LEAFS_COLOR;
+		nCloud3.mRotationChangeNext = 3;
+		nCloud3.mOrientWithVelocity = false;
+		nCloud3.mWaterParticles = false;
+		nCloud3.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud3.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud4 = mParticleClouds.push_back();
+		nCloud4.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf04.png", 4);
+		nCloud4.mHeight = FALLING_LEAFS_SIZE;
+		nCloud4.mWidth = FALLING_LEAFS_SIZE;
+		nCloud4.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud4.mFilterMode = 0;
+		nCloud4.mBlendMode = 2;
+		nCloud4.mFade = FALLING_LEAFS_FADE;
+		nCloud4.mColor = FALLING_LEAFS_COLOR;
+		nCloud4.mRotationChangeNext = 3;
+		nCloud4.mOrientWithVelocity = false;
+		nCloud4.mWaterParticles = false;
+		nCloud4.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud4.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud5 = mParticleClouds.push_back();
+		nCloud5.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf05.png", 4);
+		nCloud5.mHeight = FALLING_LEAFS_SIZE;
+		nCloud5.mWidth = FALLING_LEAFS_SIZE;
+		nCloud5.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud5.mFilterMode = 0;
+		nCloud5.mBlendMode = 2;
+		nCloud5.mFade = FALLING_LEAFS_FADE;
+		nCloud5.mColor = FALLING_LEAFS_COLOR;
+		nCloud5.mRotationChangeNext = 3;
+		nCloud5.mOrientWithVelocity = false;
+		nCloud5.mWaterParticles = false;
+		nCloud5.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud5.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud6 = mParticleClouds.push_back();
+		nCloud6.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf06.png", 4);
+		nCloud6.mHeight = FALLING_LEAFS_SIZE;
+		nCloud6.mWidth = FALLING_LEAFS_SIZE;
+		nCloud6.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud6.mFilterMode = 0;
+		nCloud6.mBlendMode = 2;
+		nCloud6.mFade = FALLING_LEAFS_FADE;
+		nCloud6.mColor = FALLING_LEAFS_COLOR;
+		nCloud6.mRotationChangeNext = 3;
+		nCloud6.mOrientWithVelocity = false;
+		nCloud6.mWaterParticles = false;
+		nCloud6.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud6.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud7 = mParticleClouds.push_back();
+		nCloud7.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf07.png", 4);
+		nCloud7.mHeight = FALLING_LEAFS_SIZE;
+		nCloud7.mWidth = FALLING_LEAFS_SIZE;
+		nCloud7.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud7.mFilterMode = 0;
+		nCloud7.mBlendMode = 2;
+		nCloud7.mFade = FALLING_LEAFS_FADE;
+		nCloud7.mColor = FALLING_LEAFS_COLOR;
+		nCloud7.mRotationChangeNext = 3;
+		nCloud7.mOrientWithVelocity = false;
+		nCloud7.mWaterParticles = false;
+		nCloud7.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud7.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud8 = mParticleClouds.push_back();
+		nCloud8.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf08.png", 4);
+		nCloud8.mHeight = FALLING_LEAFS_SIZE;
+		nCloud8.mWidth = FALLING_LEAFS_SIZE;
+		nCloud8.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud8.mFilterMode = 0;
+		nCloud8.mBlendMode = 2;
+		nCloud8.mFade = FALLING_LEAFS_FADE;
+		nCloud8.mColor = FALLING_LEAFS_COLOR;
+		nCloud8.mRotationChangeNext = 3;
+		nCloud8.mOrientWithVelocity = false;
+		nCloud8.mWaterParticles = false;
+		nCloud8.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud8.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud9 = mParticleClouds.push_back();
+		nCloud9.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf09.png", 4);
+		nCloud9.mHeight = FALLING_LEAFS_SIZE;
+		nCloud9.mWidth = FALLING_LEAFS_SIZE;
+		nCloud9.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud9.mFilterMode = 0;
+		nCloud9.mBlendMode = 2;
+		nCloud9.mFade = FALLING_LEAFS_FADE;
+		nCloud9.mColor = FALLING_LEAFS_COLOR;
+		nCloud9.mRotationChangeNext = 3;
+		nCloud9.mOrientWithVelocity = false;
+		nCloud9.mWaterParticles = false;
+		nCloud9.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud9.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWeatherParticleCloud& nCloud10 = mParticleClouds.push_back();
+		nCloud10.Initialize(FALLING_LEAFS_NUM, "gfx/world/fallingleaf10.png", 4);
+		nCloud10.mHeight = FALLING_LEAFS_SIZE;
+		nCloud10.mWidth = FALLING_LEAFS_SIZE;
+		nCloud10.mGravity = FALLING_LEAFS_GRAVITY;
+		nCloud10.mFilterMode = 0;
+		nCloud10.mBlendMode = 2;
+		nCloud10.mFade = FALLING_LEAFS_FADE;
+		nCloud10.mColor = FALLING_LEAFS_COLOR;
+		nCloud10.mRotationChangeNext = 3;
+		nCloud10.mOrientWithVelocity = false;
+		nCloud10.mWaterParticles = false;
+		nCloud10.mRotationDelta = FALLING_LEAFS_DELTA;
+		nCloud10.mRotationDeltaTarget = FALLING_LEAFS_DELTA_TARGET;
+
+		CWindZone& nWind = mWindZones.push_back();
+		nWind.Initialize();
+		nWind.mCurrentVelocity.v[0] = wind[1];// 20;
+		nWind.mCurrentVelocity.v[1] = wind[2];// 100;
+		nWind.mCurrentVelocity.v[2] = wind[3];//20;
+		nWind.mCurrentVelocity.Clear();
+		nWind.mCurrentVelocity[1] = wind[3];// 800.0f;
+		nWind.mTargetVelocityTimeRemaining = -1;
+	}
+
 	// Create A Snow Storm
 	//---------------------
 	else if (Q_stricmp(token, "snow") == 0)
@@ -2633,6 +2936,7 @@ void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp)
 			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7oldrain^5 - original JKA rain\n", heading);
 			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7oldheavyrain^5 - original JKA heavy rain\n", heading);
 			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7snow^5 - original JKA snow\n", heading);
+			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7fallingleafs^5 - warzone falling leafs\n", heading);
 			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7spacedust\n", heading);
 			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7sand\n", heading);
 			ri->Printf(PRINT_ALL, "^1*** ^3%s^5: 	^7fog\n", heading);
