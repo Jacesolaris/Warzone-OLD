@@ -1388,6 +1388,10 @@ vec3_t		SUN_COLOR_SECONDARY = { 0.4f };
 vec3_t		SUN_COLOR_TERTIARY = { 0.2f };
 vec3_t		SUN_COLOR_AMBIENT = { 0.85f };
 qboolean	PROCEDURAL_SKY_ENABLED = qfalse;
+vec3_t		PROCEDURAL_SKY_DAY_COLOR = { 1.0f };
+vec4_t		PROCEDURAL_SKY_NIGHT_COLOR = { 1.0f };
+float		PROCEDURAL_SKY_NIGHT_HDR_MIN = { 1.0f };
+float		PROCEDURAL_SKY_NIGHT_HDR_MAX = { 255.0f };
 qboolean	PROCEDURAL_CLOUDS_ENABLED = qtrue;
 float		PROCEDURAL_CLOUDS_CLOUDSCALE = 1.1;
 float		PROCEDURAL_CLOUDS_SPEED = 0.003;
@@ -1417,6 +1421,7 @@ float		MAP_HDR_MIN = 26.0;
 float		MAP_HDR_MAX = 209.0;
 qboolean	AURORA_ENABLED = qtrue;
 qboolean	AURORA_ENABLED_DAY = qfalse;
+vec3_t		AURORA_COLOR = { 1.0 };
 qboolean	AO_ENABLED = qtrue;
 qboolean	AO_BLUR = qtrue;
 qboolean	AO_DIRECTIONAL = qfalse;
@@ -1598,12 +1603,15 @@ void MAPPING_LoadMapInfo(void)
 	SUN_COLOR_MAIN[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_R", "0.85"));
 	SUN_COLOR_MAIN[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_G", "0.85"));
 	SUN_COLOR_MAIN[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_B", "0.85"));
+
 	SUN_COLOR_SECONDARY[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_SECONDARY_R", "0.4"));
 	SUN_COLOR_SECONDARY[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_SECONDARY_G", "0.4"));
 	SUN_COLOR_SECONDARY[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_SECONDARY_B", "0.4"));
+
 	SUN_COLOR_TERTIARY[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_R", "0.2"));
 	SUN_COLOR_TERTIARY[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_G", "0.2"));
 	SUN_COLOR_TERTIARY[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_TERTIARY_B", "0.2"));
+
 	SUN_COLOR_AMBIENT[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_R", "0.85"));
 	SUN_COLOR_AMBIENT[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_G", "0.85"));
 	SUN_COLOR_AMBIENT[2] = atof(IniRead(mapname, "SUN", "SUN_COLOR_AMBIENT_B", "0.85"));
@@ -1612,6 +1620,18 @@ void MAPPING_LoadMapInfo(void)
 	// Procedural Sky...
 	//
 	PROCEDURAL_SKY_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_SKY_ENABLED", "0")) > 0) ? qtrue : qfalse;
+
+	PROCEDURAL_SKY_DAY_COLOR[0] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_DAY_COLOR_R", "0.2455"));
+	PROCEDURAL_SKY_DAY_COLOR[1] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_DAY_COLOR_G", "0.58"));
+	PROCEDURAL_SKY_DAY_COLOR[2] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_DAY_COLOR_B", "1.0"));
+
+	PROCEDURAL_SKY_NIGHT_COLOR[0] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_COLOR_R", "1.0"));
+	PROCEDURAL_SKY_NIGHT_COLOR[1] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_COLOR_G", "1.0"));
+	PROCEDURAL_SKY_NIGHT_COLOR[2] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_COLOR_B", "1.0"));
+	PROCEDURAL_SKY_NIGHT_COLOR[3] = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_COLOR_GLOW", "1.0"));
+
+	PROCEDURAL_SKY_NIGHT_HDR_MIN = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MIN", "16.0"));
+	PROCEDURAL_SKY_NIGHT_HDR_MAX = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MAX", "280.0"));
 
 	//
 	// Clouds....
@@ -1630,6 +1650,10 @@ void MAPPING_LoadMapInfo(void)
 	//
 	AURORA_ENABLED = (atoi(IniRead(mapname, "AURORA", "AURORA_ENABLED", "1")) > 0) ? qtrue : qfalse;
 	AURORA_ENABLED_DAY = (atoi(IniRead(mapname, "AURORA", "AURORA_ENABLED_DAY", "0")) > 0) ? qtrue : qfalse;
+
+	AURORA_COLOR[0] = atof(IniRead(mapname, "AURORA", "AURORA_COLOR_R", "1.0"));
+	AURORA_COLOR[1] = atof(IniRead(mapname, "AURORA", "AURORA_COLOR_G", "1.0"));
+	AURORA_COLOR[2] = atof(IniRead(mapname, "AURORA", "AURORA_COLOR_B", "1.0"));
 
 	//
 	// Weather...
@@ -2004,6 +2028,9 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky is ^7%s^5 on this map.\n", PROCEDURAL_SKY_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural day sky color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky color is ^7%.4f %.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_COLOR[0], PROCEDURAL_SKY_NIGHT_COLOR[1], PROCEDURAL_SKY_NIGHT_COLOR[2], PROCEDURAL_SKY_NIGHT_COLOR[3]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky HDR minimum is ^7%.4f^5 and procedural night sky HDR maximum is  ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural clouds are ^7%s^5 and cloud scale is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_CLOUDS_CLOUDSCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud speed is ^7%.4f^5 and cloud cover is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_CLOUDCOVER);
@@ -2027,6 +2054,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion blur is ^7%s^5 and Directional Occlusion is ^7%s^5 on this map.\n", AO_BLUR ? "ENABLED" : "DISABLED", AO_DIRECTIONAL ? "ENABLED" : "DISABLED");
 	
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Aurora color adjustment is ^7%.4f %.4f %.4f^5 on this map.\n", AURORA_COLOR[0], AURORA_COLOR[1], AURORA_COLOR[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Standard fog is ^7%s^5 on this map.\n", FOG_STANDARD_ENABLE ? "ENABLED" : "DISABLED");
@@ -2067,14 +2095,66 @@ extern void RE_WorldEffectCommand_REAL(const char *command, qboolean noHelp);
 
 extern qboolean CONTENTS_INSIDE_OUTSIDE_FOUND;
 
+void SetupWeatherForName(char *name)
+{
+	/* Convert WZ weather names to JKA ones... */
+	if (!Q_stricmp(name, "rainstorm") || !Q_stricmp(name, "storm"))
+	{
+		ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rainstorm^5 for this map.\n");
+		RE_WorldEffectCommand_REAL("heavyrain", qtrue);
+		//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
+		RE_WorldEffectCommand_REAL("gustingwind", qtrue);
+	}
+	else if (!Q_stricmp(name, "snow"))
+	{
+		ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snow^5 for this map.\n");
+		RE_WorldEffectCommand_REAL("snow", qtrue);
+		//RE_WorldEffectCommand_REAL("fog", qtrue);
+	}
+	else if (!Q_stricmp(name, "heavysnow"))
+	{
+		ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavysnow^5 for this map.\n");
+		RE_WorldEffectCommand_REAL("snow", qtrue);
+		RE_WorldEffectCommand_REAL("snow", qtrue);
+		//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
+		RE_WorldEffectCommand_REAL("wind", qtrue);
+	}
+	else if (!Q_stricmp(name, "snowstorm"))
+	{
+		ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snowstorm^5 for this map.\n");
+		RE_WorldEffectCommand_REAL("snow", qtrue);
+		RE_WorldEffectCommand_REAL("snow", qtrue);
+		//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
+		RE_WorldEffectCommand_REAL("gustingwind", qtrue);
+	}
+	/* Nothing? Try to use what was set in the mapInfo setting directly... */
+	else
+	{
+		ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics added ^7%s^5 to this map.\n", name);
+		RE_WorldEffectCommand_REAL(name, qtrue);
+	}
+}
+
 void SetupWeather(char *mapname)
 {
+	qboolean primaryUsed = qfalse;
+
 	if (JKA_WEATHER_ENABLED && WZ_WEATHER_ENABLED)
 	{
 		WZ_WEATHER_SOUND_ONLY = qtrue;
 	}
 
 	char *atmosphericString = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE", "");
+
+	if (strlen(atmosphericString) <= 1)
+	{
+		atmosphericString = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE_PRIMARY", "");
+
+		if (strlen(atmosphericString) > 1)
+		{
+			primaryUsed = qtrue;
+		}
+	}
 
 	if (strlen(atmosphericString) <= 1)
 	{// Check old config file for redundancy...
@@ -2096,77 +2176,58 @@ void SetupWeather(char *mapname)
 		WZ_WEATHER_SOUND_ONLY = qtrue;
 	}
 
-	if (JKA_WEATHER_ENABLED && strlen(atmosphericString) > 1)
-	{
-		strcpy(CURRENT_WEATHER_OPTION, atmosphericString);
+	strcpy(CURRENT_WEATHER_OPTION, "none");
 
+	if (JKA_WEATHER_ENABLED)
+	{
 		RE_WorldEffectCommand_REAL("clear", qtrue);
 
-		if (JKA_WEATHER_ENABLED && !CONTENTS_INSIDE_OUTSIDE_FOUND)
+		if (!CONTENTS_INSIDE_OUTSIDE_FOUND)
+		{
 			RB_SetupGlobalWeatherZone();
+		}
 
-		/* Convert WZ weather names to JKA ones... */
-		if (!Q_stricmp(CURRENT_WEATHER_OPTION, "rain"))
+		if (strlen(atmosphericString) > 1)
 		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rain^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("lightrain", qtrue);
-			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
+			strcpy(CURRENT_WEATHER_OPTION, atmosphericString);
+			SetupWeatherForName(CURRENT_WEATHER_OPTION);
 		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "heavyrain"))
+
+		char *atmosphericString2 = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE_SECONDARY", "");
+		
+		if (strlen(atmosphericString2) >= 1)
 		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavyrain^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("rain", qtrue);
-			//RE_WorldEffectCommand_REAL("fog", qtrue);
-			RE_WorldEffectCommand_REAL("wind", qtrue);
+			SetupWeatherForName(atmosphericString2);
+
+			if (!Q_stricmp(CURRENT_WEATHER_OPTION, "none"))
+			{
+				strcpy(CURRENT_WEATHER_OPTION, atmosphericString2);
+			}
 		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "rainstorm") || !Q_stricmp(CURRENT_WEATHER_OPTION, "storm"))
+
+		char *atmosphericString3 = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE_TERTIARY", "");
+
+		if (strlen(atmosphericString3) >= 1)
 		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7rainstorm^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("heavyrain", qtrue);
-			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
-			RE_WorldEffectCommand_REAL("gustingwind", qtrue);
+			SetupWeatherForName(atmosphericString3);
+
+			if (!Q_stricmp(CURRENT_WEATHER_OPTION, "none"))
+			{
+				strcpy(CURRENT_WEATHER_OPTION, atmosphericString3);
+			}
 		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "vividrain"))
+
+		char *atmosphericString4 = (char*)IniRead(mapname, "ATMOSPHERICS", "WEATHER_TYPE_QUATERNARY", "");
+
+		if (strlen(atmosphericString4) >= 1)
 		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7vividrain^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("vividrain", qtrue);
-			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
+			SetupWeatherForName(atmosphericString4);
+
+			if (!Q_stricmp(CURRENT_WEATHER_OPTION, "none"))
+			{
+				strcpy(CURRENT_WEATHER_OPTION, atmosphericString4);
+			}
 		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "vividrain2"))
-		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7vividrain2^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("vividrain2", qtrue);
-			//RE_WorldEffectCommand_REAL("light_fog", qtrue);
-		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "snow"))
-		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snow^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("snow", qtrue);
-			//RE_WorldEffectCommand_REAL("fog", qtrue);
-		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "heavysnow"))
-		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7heavysnow^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("snow", qtrue);
-			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
-			RE_WorldEffectCommand_REAL("wind", qtrue);
-		}
-		else if (!Q_stricmp(CURRENT_WEATHER_OPTION, "snowstorm"))
-		{
-			ri->Printf(PRINT_ALL, "^1*** ^3JKA^5 atmospherics set to ^7snowstorm^5 for this map.\n");
-			RE_WorldEffectCommand_REAL("snow", qtrue);
-			//RE_WorldEffectCommand_REAL("heavyrainfog", qtrue);
-			RE_WorldEffectCommand_REAL("gustingwind", qtrue);
-		}
-		/* Nothing? Try to use what was set in the mapInfo setting directly... */
-		else
-		{
-			RE_WorldEffectCommand_REAL(CURRENT_WEATHER_OPTION, qtrue);
-		}
-	}
-	else
-	{
-		strcpy(CURRENT_WEATHER_OPTION, "none");
 	}
 }
 

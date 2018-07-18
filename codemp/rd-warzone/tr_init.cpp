@@ -51,6 +51,8 @@ cvar_t	*r_terrainTessellationMax;
 
 cvar_t	*r_cartoon;
 
+cvar_t	*r_skydome;
+
 cvar_t	*r_fur;
 
 cvar_t	*r_groundFoliage;
@@ -622,6 +624,7 @@ void GL_CheckErrs( char *file, int line ) {
 	}
 
 	ri->Error( ERR_FATAL, "GL_CheckErrors: %s in %s at line %d", s , file, line);
+	//ri->Printf(PRINT_ERROR, "GL_CheckErrors: %s in %s at line %d", s, file, line);
 }
 
 
@@ -1424,6 +1427,8 @@ void R_Register( void )
 	r_terrainTessellationMax = ri->Cvar_Get("r_terrainTessellationMax", "64", CVAR_ARCHIVE);
 
 	r_cartoon = ri->Cvar_Get("r_cartoon", "0", CVAR_ARCHIVE);
+
+	r_skydome = ri->Cvar_Get("r_skydome", "0", CVAR_ARCHIVE);
 
 	r_fur = ri->Cvar_Get("r_fur", "0", CVAR_ARCHIVE);
 

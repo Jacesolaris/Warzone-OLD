@@ -20,8 +20,10 @@ void main()
 {		
 	gl_Position = u_ModelViewProjectionMatrix * vec4(attr_Position, 1.0);
 
-#define playerLookAtDir normalize(attr_Position.xyz - u_ViewOrigin.xyz)
-#define sunDir normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz)
+//#define playerLookAtDir normalize(attr_Position.xyz - u_ViewOrigin.xyz)
+//#define sunDir normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz)
+#define playerLookAtDir normalize(attr_Position.xyz)
+#define sunDir normalize(u_PrimaryLightOrigin.xyz)
 
 	playerLookingAtSun = dot(playerLookAtDir, sunDir);
 	fWorldPos = attr_Position.xyz;

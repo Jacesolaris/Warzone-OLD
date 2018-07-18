@@ -87,6 +87,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __DEPTH_PREPASS_STUFF__
 
+#define __REGENERATE_BSP_NORMALS__				// Re-generate smooth normals for all of the map.
+
+#define __USE_VBO_AREAS__						// Break up map VBO's into areas.
+
 #define __OCEAN__								// System to add water outside of map boundaries...
 
 //#define __RENDERER_THREADING__				// Just testing...
@@ -288,6 +292,8 @@ extern cvar_t	*r_terrainTessellation;
 extern cvar_t	*r_terrainTessellationMax;
 
 extern cvar_t	*r_cartoon;
+
+extern cvar_t	*r_skydome;
 
 extern cvar_t	*r_fur;
 

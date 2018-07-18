@@ -434,6 +434,12 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
 	extern qboolean		PROCEDURAL_SKY_ENABLED;
+	extern vec3_t		PROCEDURAL_SKY_DAY_COLOR;
+	extern vec4_t		PROCEDURAL_SKY_NIGHT_COLOR;
+	extern float		PROCEDURAL_SKY_NIGHT_HDR_MIN;
+	extern float		PROCEDURAL_SKY_NIGHT_HDR_MAX;
+
+	extern vec3_t		AURORA_COLOR;
 
 	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
 	extern float		PROCEDURAL_CLOUDS_CLOUDSCALE;
@@ -457,22 +463,15 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, 0.0, 0.0, 1024.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
 
-			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
-
 			VectorSet4(vector, PROCEDURAL_CLOUDS_ENABLED ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
 
 			VectorSet4(vector, PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
-		}
 
-		{// unused...
-			VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+			VectorSet4(vector, PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, 0.0, 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
-		}
 
-		{// used...
 			float auroraEnabled = 0.0;
 
 			if (AURORA_ENABLED && AURORA_ENABLED_DAY)
@@ -482,6 +481,17 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 			VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, auroraEnabled);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector); // dayNightEnabled, nightScale, skyDirection, auroraEnabled
+
+			VectorSet4(vector, PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2], 1.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vector);
+			
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, PROCEDURAL_SKY_NIGHT_COLOR);
+
+			VectorSet4(vector, AURORA_COLOR[0], AURORA_COLOR[1], AURORA_COLOR[2], 1.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vector);
+
+			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
 		}
 
 
@@ -1248,7 +1258,7 @@ void RB_StageIteratorSky( void ) {
 		RB_ClipSkyPolygons(&tess);
 	}
 
-	if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
+	if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage || r_skydome->integer ) 
 	{// UQ1: Set a default image...
 		matrix_t oldmodelview;
 

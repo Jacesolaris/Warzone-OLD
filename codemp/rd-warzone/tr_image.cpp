@@ -2369,7 +2369,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 	int			scaled_width = width;
 	int			scaled_height = height;
 	int			i, c;
-	byte		*scan;
+	byte		*scan = NULL;
 
 	if ( !IsPowerOfTwo (width) || !IsPowerOfTwo (height) )
 	{
@@ -2575,9 +2575,9 @@ done:
 
 	GL_CheckErrors();
 
-	if ( scaledBuffer != 0 )
+	if ( scaledBuffer != NULL )
 		ri->Hunk_FreeTempMemory( scaledBuffer );
-	if ( resampledBuffer != 0 )
+	if ( resampledBuffer != NULL )
 		ri->Hunk_FreeTempMemory( resampledBuffer );
 }
 
@@ -2685,6 +2685,8 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		ri->Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit");
 	}
 
+	//ri->Printf(PRINT_WARNING, "R_CreateImage Debug: %s.\n", name);
+
 	image = tr.images[tr.numImages] = (image_t *)ri->Hunk_Alloc( sizeof( image_t ), h_low );
 	image->texnum = 1024 + tr.numImages;
 	tr.numImages++;
@@ -2708,6 +2710,8 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		else
 			internalFormat = RawImage_GetFormat(pic, width * height, isLightmap, image->type, image->flags);
 	}
+
+	//ri->Printf(PRINT_WARNING, "R_CreateImage Debug: %s. Got raw format.\n", name);
 
 	image->internalFormat = internalFormat;
 
@@ -2771,7 +2775,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	{
 		GL_Bind(image);
 
-		if (pic)
+		if (pic != NULL)
 		{
 			Upload32( pic, image->width, image->height, image->type, image->flags,
 				isLightmap, image->internalFormat, &image->uploadWidth,
@@ -2787,6 +2791,8 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 	}
+
+	//ri->Printf(PRINT_WARNING, "R_CreateImage Debug: %s. Uploaded.\n", name);
 
 	GL_SelectTexture( 0 );
 
@@ -3986,9 +3992,9 @@ extern byte *skyImagesData[6];
 
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
-	image_t	*image;
+	image_t	*image = NULL;
 	int		width, height;
-	byte	*pic;
+	byte	*pic = NULL;
 	long	hash;
 
 	if (!name || ri->Cvar_VariableIntegerValue( "dedicated" )) {
@@ -4073,6 +4079,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	}
 #endif //__TINY_IMAGE_LOADER__
 
+
 /*
 	// If compressed textures are enabled, try loading a DDS first, it'll load fastest
 	if (pic == NULL)
@@ -4091,7 +4098,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
+	//ri->Printf(PRINT_WARNING, "FindImage Debug: Loaded image %s. width %ix%i.\n", name, width, height);
+
 	qboolean USE_ALPHA = RawImage_HasAlpha(pic, width * height);
+
+	//ri->Printf(PRINT_WARNING, "FindImage Debug: %s. HAS_ALPHA %s.\n", name, USE_ALPHA ? "yes" : "no");
 
 #ifdef __CRC_IMAGE_HASHING__
 	size_t dataLen = width * height * 4 * sizeof(byte);
@@ -4156,6 +4167,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			R_GetTextureAverageColor(pic, width, height, USE_ALPHA, avgColor);
 		}
 	}
+
+	//ri->Printf(PRINT_WARNING, "FindImage Debug: %s. avgColor done!\n", name);
 
 #if 0
 	if (type == IMGTYPE_COLORALPHA)
@@ -4302,10 +4315,14 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	SKIP_IMAGE_RESIZE = qfalse;
 	if (StringContainsWord(name, "menu/")) SKIP_IMAGE_RESIZE = qtrue;
 
+	//ri->Printf(PRINT_WARNING, "FindImage Debug: %s. R_CreateImage - pic: %s. w: %i. h: %i. t: %i. f: %i.\n", name, pic == NULL ? "NULL" : "yes", width, height, type, flags);
+
 	if (type != IMGTYPE_SPLATCONTROLMAP)
 		image = R_CreateImage( name, pic, width, height, type, flags, 0 );
 	else
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_NO_COMPRESSION*/, 0/*GL_RGBA8*/ );
+
+	//ri->Printf(PRINT_WARNING, "FindImage Debug: %s. CreateImage done!\n", name);
 
 	image->hasAlpha = USE_ALPHA ? true : false;
 

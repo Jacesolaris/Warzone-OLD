@@ -3,60 +3,72 @@
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
-uniform sampler2D					u_DiffuseMap;
-uniform sampler2D					u_OverlayMap; // Night sky image... When doing sky...
-uniform sampler2D					u_SplatMap1;
-uniform sampler2D					u_SplatMap2;
+uniform sampler2D						u_DiffuseMap;
+uniform sampler2D						u_OverlayMap; // Night sky image... When doing sky...
+uniform sampler2D						u_SplatMap1;
+uniform sampler2D						u_SplatMap2;
 
-uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
-uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+uniform vec4							u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+uniform vec4							u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
+uniform vec4							u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4							u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
 
-#define USE_TC						u_Settings0.r
-#define USE_DEFORM					u_Settings0.g
-#define USE_RGBA					u_Settings0.b
-#define USE_TEXTURECLAMP			u_Settings0.a
+#define USE_TC							u_Settings0.r
+#define USE_DEFORM						u_Settings0.g
+#define USE_RGBA						u_Settings0.b
+#define USE_TEXTURECLAMP				u_Settings0.a
 
-#define USE_VERTEX_ANIM				u_Settings1.r
-#define USE_SKELETAL_ANIM			u_Settings1.g
-#define USE_BLEND					u_Settings1.b
-#define USE_IS2D					u_Settings1.a
+#define USE_VERTEX_ANIM					u_Settings1.r
+#define USE_SKELETAL_ANIM				u_Settings1.g
+#define USE_BLEND						u_Settings1.b
+#define USE_IS2D						u_Settings1.a
 
-#define USE_LIGHTMAP				u_Settings2.r
-#define USE_GLOW_BUFFER				u_Settings2.g
-#define USE_CUBEMAP					u_Settings2.b
-#define USE_TRIPLANAR				u_Settings2.a
+#define USE_LIGHTMAP					u_Settings2.r
+#define USE_GLOW_BUFFER					u_Settings2.g
+#define USE_CUBEMAP						u_Settings2.b
+#define USE_TRIPLANAR					u_Settings2.a
 
-#define USE_REGIONS					u_Settings3.r
-#define USE_ISDETAIL				u_Settings3.g
-#define USE_DETAIL_COORD			u_Settings3.b
+#define USE_REGIONS						u_Settings3.r
+#define USE_ISDETAIL					u_Settings3.g
+#define USE_DETAIL_COORD				u_Settings3.b
 
-uniform vec4						u_Local1; // PROCEDURAL_SKY_ENABLED, 0.0, 0.0, materialType
-uniform vec4						u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
-uniform vec4						u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
-uniform vec4						u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
-uniform vec4						u_Local9; // testvalue0, 1, 2, 3
+uniform vec4							u_Local1; // PROCEDURAL_SKY_ENABLED, 0.0, 0.0, materialType
+uniform vec4							u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
+uniform vec4							u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
+uniform vec4							u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, 0.0, 0.0
+uniform vec4							u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
+uniform vec4							u_Local6; // PROCEDURAL_SKY_DAY_COLOR
+uniform vec4							u_Local7; // PROCEDURAL_SKY_NIGHT_COLOR
+uniform vec4							u_Local8; // AURORA_COLOR
+uniform vec4							u_Local9; // testvalue0, 1, 2, 3
 
-#define PROCEDURAL_SKY_ENABLED		u_Local1.r
-#define SHADER_SWAY					u_Local1.g
-#define SHADER_OVERLAY_SWAY			u_Local1.b
-#define SHADER_MATERIAL_TYPE		u_Local1.a
+#define PROCEDURAL_SKY_ENABLED			u_Local1.r
+#define SHADER_SWAY						u_Local1.g
+#define SHADER_OVERLAY_SWAY				u_Local1.b
+#define SHADER_MATERIAL_TYPE			u_Local1.a
 
-#define CLOUDS_ENABLED				u_Local2.r
-#define CLOUDS_CLOUDSCALE			u_Local2.g
-#define CLOUDS_SPEED				u_Local2.b
-#define CLOUDS_DARK					u_Local2.a
+#define CLOUDS_ENABLED					u_Local2.r
+#define CLOUDS_CLOUDSCALE				u_Local2.g
+#define CLOUDS_SPEED					u_Local2.b
+#define CLOUDS_DARK						u_Local2.a
 
-#define CLOUDS_LIGHT				u_Local3.r
-#define CLOUDS_CLOUDCOVER			u_Local3.g
-#define CLOUDS_CLOUDALPHA			u_Local3.b
-#define CLOUDS_SKYTINT				u_Local3.a
+#define CLOUDS_LIGHT					u_Local3.r
+#define CLOUDS_CLOUDCOVER				u_Local3.g
+#define CLOUDS_CLOUDALPHA				u_Local3.b
+#define CLOUDS_SKYTINT					u_Local3.a
 
-#define SHADER_DAY_NIGHT_ENABLED	u_Local5.r
-#define SHADER_NIGHT_SCALE			u_Local5.g
-#define SHADER_SKY_DIRECTION		u_Local5.b
-#define SHADER_AURORA_ENABLED		u_Local5.a
+#define PROCEDURAL_SKY_NIGHT_HDR_MIN	u_Local4.r
+#define PROCEDURAL_SKY_NIGHT_HDR_MAX	u_Local4.g
+
+#define SHADER_DAY_NIGHT_ENABLED		u_Local5.r
+#define SHADER_NIGHT_SCALE				u_Local5.g
+#define SHADER_SKY_DIRECTION			u_Local5.b
+#define SHADER_AURORA_ENABLED			u_Local5.a
+
+#define PROCEDURAL_SKY_DAY_COLOR		u_Local6
+#define PROCEDURAL_SKY_NIGHT_COLOR		u_Local7
+
+#define AURORA_COLOR					u_Local8
 
 
 uniform vec2						u_Dimensions;
@@ -150,64 +162,6 @@ float rand(vec2 co)
     return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
 }
 
-#if 0
-#define iterations 17
-#define formuparam 0.53
-
-#define volsteps 20
-#define stepsize 0.1
-
-#define zoom   0.800
-#define tile   0.850
-#define speed  0.010 
-
-#define brightness 0.0015
-#define darkmatter 0.300
-#define distfading 0.730
-#define saturation 0.850
-
-
-void NightSky(out vec4 fragColor, in vec2 fragCoord)
-{
-	vec3 skyViewDir = normalize(var_Position.xzy);
-
-	//in vec3 ro, in vec3 rd )
-	//get coords and direction
-	vec3 dir = skyViewDir;// rd;
-	vec3 from = vec3(0.0);// ro;
-
-	//volumetric rendering
-	float s = 0.1, fade = 1.;
-	vec3 v = vec3(0.);
-	for (int r = 0; r<volsteps; r++) 
-	{
-		vec3 p = from + s*dir*.5;
-		p = abs(vec3(tile) - mod(p, vec3(tile*2.))); // tiling fold
-		//p *= 0.5;
-		
-		float pa, a = pa = 0.;
-		for (int i = 0; i<iterations; i++) 
-		{
-			p = abs(p) / dot(p, p) - formuparam; // the magic formula
-			a += abs(length(p) - pa); // absolute sum of average change
-			pa = length(p);
-		}
-		float dm = max(0., darkmatter - a*a*.001); //dark matter
-		a *= a*a; // add contrast
-		if (r>6) fade *= 1. - dm; // dark matter, don't render near
-							  //v+=vec3(dm,dm*.5,0.);
-		v += fade;
-		v += vec3(s, s*s, s*s*s*s)*a*brightness*fade; // coloring based on distance
-		fade *= distfading; // distance fading
-		s += stepsize;
-	}
-
-	v = mix(vec3(length(v)), v, saturation); //color adjust
-	fragColor = vec4(v*.01, 1.);
-
-}
-#endif
-
 vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, vec3 suncolorIn) {
 	vec3 sundir = sunDir;
 	sundir.y = abs(sundir.y);
@@ -219,23 +173,13 @@ vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, vec3 sun
 	float raysundt = pow(abs(dotSun), 2.0);
 	float sundt = pow(max(0.0, dotSun), 8.0);
 	float mymie = sundt * special_trick * 0.2;
-	vec3 skyColor = vec3(0.2455, 0.58, 1.0);
+	vec3 skyColor = PROCEDURAL_SKY_DAY_COLOR.rgb;//vec3(0.2455, 0.58, 1.0);
 	vec3 suncolor = mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - skyColor), special_trick2);
 	//suncolor *= suncolorIn;
 	vec3 bluesky = skyColor * suncolor;
 	vec3 bluesky2 = max(bluesky/*vec3(0.0)*/, bluesky - skyColor * 0.0896 * (special_trick + -6.0 * sunDirLength/*sundir.y*/ * sunDirLength/*sundir.y*/));
 	bluesky2 *= special_trick * (0.24 + raysundt * 0.24);
 
-	/*if (u_Local9.g == 1.0)
-		return bluesky;
-	if (u_Local9.g == 2.0)
-		return bluesky2;
-	if (u_Local9.g == 3.0)
-		return suncolor;
-	if (u_Local9.g == 4.0)
-		return mymie * suncolor;*/
-
-	//return bluesky2 + mymie * suncolor;
 	return (bluesky + bluesky2 + (mymie * suncolor)) * 0.5;
 }
 
@@ -463,18 +407,80 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 }
 #endif //__CLOUDS__
 
+void GetStars(out vec4 fragColor, in vec3 position)
+{
+#define iterations 14
+#define formuparam 0.530
+#define volsteps 18
+#define stepsize 0.2
+
+#define zoom   0.800
+#define tile   0.850
+
+#define brightness 0.0015
+#define darkmatter 0.400
+#define distfading 0.760
+#define saturation 0.800
+
+    float zoomFactor = .3;
+
+	vec3 x = position.xyz / length(position.xyz);
+	vec2 fragCoord = x.xy * u_Dimensions;
+
+	//get coords and direction
+	vec2 uv=fragCoord.xy/u_Dimensions.xy*zoomFactor-0.001;
+	
+	vec3 dir=vec3((uv+0.025)*zoom,1000.0 + (0.22 * x.z));
+	
+	float a1=0.0;
+	mat2 rot1=mat2(cos(a1),tan(a1),-sin(a1),cos(a1));
+	mat2 rot2=rot1;
+	dir.xz*=rot1;
+	dir.xy*=rot2;
+	
+	vec3 from=vec3(0.,1.,0.);
+	from+=vec3((tan(.15),.152,-2.));
+	
+	from.xz*=rot1;
+	from.xy*=rot2;
+	
+	//volumetric rendering
+	float s=.4,fade=.2;
+	vec3 v=vec3(0.8);
+	for (int r=0; r<volsteps; r++) {
+		vec3 p=from+s*dir*.5;
+		p = abs(vec3(tile)-mod(p,vec3(tile*2.))); // tiling fold
+		float pa,a=pa=0.;
+		for (int i=0; i<iterations; i++) { 
+			p=abs(p)/dot(p,p)-formuparam; // the magic formula
+			a+=abs(length(p)-pa); // absolute sum of average change
+			pa=length(p);
+		}
+		float dm=max(0.,darkmatter-a*a*tan(.001)); //dark matter
+		a*=a*a*2.; // add contrast
+		if (r>3) fade*=1.-dm; // dark matter, don't render near
+		//v+=vec3(dm,dm*.5,0.);
+		v+=fade;
+		v+=vec3(s,s*s,s*s*s*s)*a*brightness*fade; // coloring based on distance
+		fade*=distfading; // distance fading
+		s+=stepsize;
+	}
+	v=mix(vec3(length(v)),v,saturation); //color adjust
+    
+	fragColor = vec4(v*.01,1.);
+}
+
 void main()
 {
-#if 0
-	//gl_FragColor = vec4(GetStars( var_TexCoords ) * u_Local9.g, 1.0);
-	NightSky(gl_FragColor, var_TexCoords);
-#else
+	vec3 nightGlow = vec3(0.0);
+
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
 		gl_FragColor = vec4(1.0);
 	}
 	else
 	{
+		vec3 nightDiffuse = vec3(0.0);
 		vec2 texCoords = var_TexCoords;
 
 		if (PROCEDURAL_SKY_ENABLED <= 0.0)
@@ -487,17 +493,12 @@ void main()
 		else
 		{
 #if 1
-			//float MAP_LEVEL_OFFSET = MAP_PLAYABLE_MINS * u_Local9.g;
 			vec3 position = var_Position.xzy;
-			//position.y += MAP_LEVEL_OFFSET;
 			vec3 lightPosition = u_PrimaryLightOrigin.xzy;
-			//lightPosition.y += MAP_LEVEL_OFFSET;
 
 			vec3 skyViewDir = normalize(position);
 			vec3 skyViewDir2 = normalize(u_ViewOrigin.xzy - var_Position.xzy);
-			//vec3 skySunDir = normalize(u_ViewOrigin.xzy - lightPosition);
 			vec3 skySunDir = normalize(lightPosition);
-			//vec3 skySunDir = normalize(position - lightPosition);
 			vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, skySunDir, u_PrimaryLightColor);
 #else
 			vec3 skyRaydir = normalize(u_ViewOrigin.xzy - var_Position.xzy);
@@ -518,7 +519,7 @@ void main()
 			);
 #endif
 
-			gl_FragColor.rgb = atmos;
+			gl_FragColor.rgb = clamp(atmos, 0.0, 1.0);
 			gl_FragColor.a = 1.0;
 		}
 
@@ -526,12 +527,27 @@ void main()
 		{// This is sky, and aurora is enabled...
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
-				vec3 nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
+				if (PROCEDURAL_SKY_ENABLED > 0.0)
+				{
+					vec4 nCol;
+					GetStars(nCol, var_Position);
+					nightDiffuse = clamp(nCol.rgb, 0.0, 1.0);
+					nightDiffuse *= PROCEDURAL_SKY_NIGHT_COLOR.rgb;
+
+#define night_const_1 (PROCEDURAL_SKY_NIGHT_HDR_MIN / 255.0)
+#define night_const_2 (255.0 / PROCEDURAL_SKY_NIGHT_HDR_MAX)
+					nightDiffuse = clamp((clamp(nightDiffuse - night_const_1, 0.0, 1.0)) * night_const_2, 0.0, 1.0);
+				}
+				else
+				{
+					nightDiffuse = texture(u_OverlayMap, texCoords).rgb;
 #ifdef __HIGH_PASS_SHARPEN__
-				nightDiffuse.rgb = Enhance(u_OverlayMap, texCoords, nightDiffuse.rgb, 1.0);
+					nightDiffuse.rgb = Enhance(u_OverlayMap, texCoords, nightDiffuse.rgb, 1.0);
 #endif //__HIGH_PASS_SHARPEN__
-				//nightDiffuse += GetStars( texCoords ) * u_Local9.g;
+				}
+
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, SHADER_NIGHT_SCALE); // Mix in night sky with original sky from day -> night...
+				nightGlow = nightDiffuse * SHADER_NIGHT_SCALE;
 			}
 
 			if (SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0													/* Not up/down sky textures */
@@ -590,6 +606,9 @@ void main()
 				float str = max(color.r, max(color.g, color.b));
 
 				color *= 0.7;
+
+				color *= AURORA_COLOR.rgb;
+
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb + color, auroraPower * str);
 			}
 		}
@@ -598,13 +617,21 @@ void main()
 		if (CLOUDS_ENABLED > 0.0)
 		{// Procedural clouds are enabled...
 			vec3 pViewDir = normalize(var_Position.xyz);
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, Clouds(pViewDir.xy * 0.5 + 0.5, gl_FragColor.rgb), clamp(pow(pViewDir.z, 2.5), 0.0, 1.0));
+
+			vec3 cloudColor = Clouds(pViewDir.xy * 0.5 + 0.5, gl_FragColor.rgb);
+
+			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
+			{// Adjust cloud color at night...
+				float nMult = clamp(1.25 - SHADER_NIGHT_SCALE, 0.0, 1.0);
+				cloudColor *= nMult;
+			}
+
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, cloudColor, clamp(pow(pViewDir.z, 2.5), 0.0, 1.0));
 		}
 #endif //__CLOUDS__
 
 		gl_FragColor.a *= var_Color.a;
 	}
-#endif
 
 	if (USE_BLEND > 0.0)
 	{// Emulate RGB blending... Fuck I hate this crap...
@@ -631,7 +658,13 @@ void main()
 	{
 		if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7)
 		{// Add night sky to glow map...
-			out_Glow = gl_FragColor;
+			out_Glow = vec4(nightGlow, gl_FragColor.a);
+
+			if (PROCEDURAL_SKY_ENABLED > 0.0)
+			{
+				out_Glow *= vec4(1.0, 1.0, 1.0, 8.0);
+				out_Glow.a *= PROCEDURAL_SKY_NIGHT_COLOR.a;
+			}
 		
 			// Scale by closeness to actual night...
 			float mult = (SHADER_NIGHT_SCALE - 0.7) * 3.333;

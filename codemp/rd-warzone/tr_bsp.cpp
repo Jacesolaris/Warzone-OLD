@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-//#define __REGEN_NORMALS__
-#define __REGEN_NORMALS_2__
 
 extern char currentMapName[128];
 
@@ -697,29 +695,7 @@ static shader_t *ShaderForShaderNum( int shaderNum, const int *lightmapNums, con
 	return shader;
 }
 
-#ifdef __REGEN_NORMALS__
-void GenerateNormalsForXZY(vec3_t *xyz, vec3_t *normals)
-{
-	/*
-	vec3_t cr1, cr2;
-	VectorSet(cr1, (xyz[2][0] - xyz[0][0]), (xyz[2][1] - xyz[0][1]), (xyz[2][2] - xyz[0][2]));
-	VectorSet(cr2, (xyz[1][0] - xyz[0][0]), (xyz[1][1] - xyz[0][1]), (xyz[1][2] - xyz[0][2]));
-	CrossProduct(cr1, cr2, *normals);
-	VectorNormalize(*normals);
-	*/
-	
-	float* a = xyz[0];
-	float* b = xyz[1];
-	float* c = xyz[2];
-	vec3_t ba, ca;
-	VectorSubtract(b, a, ba);
-	VectorSubtract(c, a, ca);
-	CrossProduct(ca, ba, *normals);
-	VectorNormalize(*normals);
-}
-#endif //__REGEN_NORMALS__
-
-#ifdef __REGEN_NORMALS_2__
+#ifdef __REGENERATE_BSP_NORMALS__
 // assimp include files. These three are usually needed.
 #include "assimp/Importer.hpp"	//OO version Header!
 #include "assimp/postprocess.h"
@@ -901,7 +877,7 @@ void GenerateNormalsForMesh(srfBspSurface_t *cv)
 		}
 	}
 }
-#endif //__REGEN_NORMALS_2__
+#endif //__REGENERATE_BSP_NORMALS__
 
 /*
 ===============
@@ -963,10 +939,6 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	for(i = 0; i < numVerts; i++)
 	{
 		vec4_t color;
-
-#ifdef __REGEN_NORMALS__
-		GenerateNormalsForXZY(&verts[i].xyz, &verts[i].normal);
-#endif
 
 		for(j = 0; j < 3; j++)
 		{
@@ -1053,9 +1025,9 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	cv->cullPlane.type = PlaneTypeForNormal( cv->cullPlane.normal );
 	surf->cullinfo.plane = cv->cullPlane;
 
-#ifdef __REGEN_NORMALS_2__
+#ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(cv);
-#endif //__REGEN_NORMALS_2__
+#endif //__REGENERATE_BSP_NORMALS__
 
 	surf->data = (surfaceType_t *)cv;
 
@@ -1126,10 +1098,6 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	{
 		vec4_t color;
 
-#ifdef __REGEN_NORMALS__
-		GenerateNormalsForXZY(&verts[i].xyz, &verts[i].normal);
-#endif
-
 		for(j = 0; j < 3; j++)
 		{
 			points[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
@@ -1190,9 +1158,9 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	VectorSubtract( bounds[0], grid->lodOrigin, tmpVec );
 	grid->lodRadius = VectorLength( tmpVec );
 
-#ifdef __REGEN_NORMALS_2__
+#ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(grid);
-#endif //__REGEN_NORMALS_2__
+#endif //__REGENERATE_BSP_NORMALS__
 }
 
 /*
@@ -1240,10 +1208,6 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	for(i = 0; i < numVerts; i++)
 	{
 		vec4_t color;
-
-#ifdef __REGEN_NORMALS__
-		GenerateNormalsForXZY(&verts[i].xyz, &verts[i].normal);
-#endif
 
 		for(j = 0; j < 3; j++)
 		{
@@ -1328,9 +1292,9 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		cv->numIndexes -= badTriangles * 3;
 	}
 
-#ifdef __REGEN_NORMALS_2__
+#ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(cv);
-#endif //__REGEN_NORMALS_2__
+#endif //__REGENERATE_BSP_NORMALS__
 
 	// Calculate tangent spaces
 	{
@@ -2409,10 +2373,6 @@ static void CopyVert(const srfVert_t * in, srfVert_t * out)
 		out->lightdir[j]  = in->lightdir[j];
 	}
 
-#ifdef __REGEN_NORMALS__
-	GenerateNormalsForXZY(&out->xyz, &out->normal);
-#endif
-
 	out->tangent[3] = in->tangent[3];
 
 	for(j = 0; j < 2; j++)
@@ -2436,6 +2396,169 @@ struct packedVertex_t
 	vec4_t colors[MAXLIGHTMAPS];
 	uint32_t lightDirection;
 };
+
+#ifdef __USE_VBO_AREAS__
+#define NUM_MAP_AREAS 64//16//9
+#define NUM_MAP_SECTIONS sqrt(NUM_MAP_AREAS)
+
+struct mapArea_t
+{
+	vec3_t mins;
+	vec3_t maxs;
+};
+
+struct mapAreas_t
+{
+	int numAreas = 0;
+	mapArea_t areas[NUM_MAP_AREAS*2];
+};
+
+mapAreas_t MAP_AREAS;
+
+void Setup_VBO_Areas(void)
+{
+	int		areaNum = 0;
+	vec3_t	mapMins, mapMaxs;
+	
+	VectorCopy(tr.world->nodes[0].mins, mapMins);
+	VectorCopy(tr.world->nodes[0].maxs, mapMaxs);
+
+	vec3_t mapSize, modifier;
+	VectorSubtract(tr.world->nodes[0].maxs, tr.world->nodes[0].mins, mapSize);
+	modifier[0] = mapSize[0] / NUM_MAP_SECTIONS;
+	modifier[1] = mapSize[1] / NUM_MAP_SECTIONS;
+	modifier[2] = mapSize[2] / 2;
+
+	for (int x = 0; x < NUM_MAP_SECTIONS; x++)
+	{
+		for (int y = 0; y < NUM_MAP_SECTIONS; y++)
+		{
+			for (int z = 0; z < 2; z++)
+			{
+				vec3_t mins, maxs;
+				VectorCopy(tr.world->nodes[0].mins, mins);
+				mins[0] += (modifier[0] * x);
+				mins[1] += (modifier[1] * y);
+				mins[2] += (modifier[2] * z);
+
+				// Extend the edges outside the map a little, allow for precision errors, etc...
+				if (x == 0)
+				{
+					mins[0] -= 512.0;
+				}
+				else if (y == 0)
+				{
+					mins[1] -= 512.0;
+				}
+				else if (z == 0)
+				{
+					mins[2] -= 512.0;
+				}
+
+				VectorCopy(tr.world->nodes[0].mins, maxs);
+				maxs[0] += (modifier[0] * (x + 1));
+				maxs[1] += (modifier[1] * (y + 1));
+				maxs[2] += (modifier[2] * (z + 1));
+
+				// Extend the edges outside the map a little, allow for precision errors, etc...
+				if (x == NUM_MAP_SECTIONS - 1)
+				{
+					maxs[0] += 512.0;
+				}
+				else if (y == NUM_MAP_SECTIONS - 1)
+				{
+					maxs[1] += 512.0;
+				}
+				else if (z == 1)
+				{
+					maxs[2] += 512.0;
+				}
+
+				VectorCopy(mins, MAP_AREAS.areas[MAP_AREAS.numAreas].mins);
+				VectorCopy(maxs, MAP_AREAS.areas[MAP_AREAS.numAreas].maxs);
+				MAP_AREAS.numAreas++;
+			}
+		}
+	}
+
+	for (int i = 0; i < MAP_AREAS.numAreas; i++)
+	{
+		ri->Printf(PRINT_WARNING, "Area %i. mins %i %i %i. maxs %i %i %i.\n"
+			, i
+			, (int)MAP_AREAS.areas[i].mins[0], (int)MAP_AREAS.areas[i].mins[1], (int)MAP_AREAS.areas[i].mins[2]
+			, (int)MAP_AREAS.areas[i].maxs[0], (int)MAP_AREAS.areas[i].maxs[1], (int)MAP_AREAS.areas[i].maxs[2]);
+	}
+}
+
+qboolean R_PointInXYBounds(vec3_t point, vec3_t mins, vec3_t maxs)
+{
+	int i;
+
+	for (i = 0; i < 2/*3*/; i++)
+	{
+		if (point[i] < mins[i])
+		{
+			return qfalse;
+		}
+		if (point[i] > maxs[i])
+		{
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+int GetVBOArea(vec3_t origin)
+{
+	for (int i = 0; i < MAP_AREAS.numAreas; i++)
+	{
+		if (R_PointInXYBounds(origin, MAP_AREAS.areas[i].mins, MAP_AREAS.areas[i].maxs))
+		{
+			return i;
+		}
+	}
+
+	return MAP_AREAS.numAreas / 2; // should never happen, just give it the center of map, should it happen.
+}
+
+/*
+qboolean R_NodeInFOV(vec3_t spot, vec3_t from)
+{
+//return qtrue;
+
+vec3_t	deltaVector, angles, deltaAngles;
+vec3_t	fromAnglesCopy;
+vec3_t	fromAngles;
+//int hFOV = backEnd.refdef.fov_x * 0.5;
+//int vFOV = backEnd.refdef.fov_y * 0.5;
+int hFOV = 120;
+int vFOV = 120;
+//int hFOV = backEnd.refdef.fov_x;
+//int vFOV = backEnd.refdef.fov_y;
+//int hFOV = 80;
+//int vFOV = 80;
+//int hFOV = tr.refdef.fov_x * 0.5;
+//int vFOV = tr.refdef.fov_y * 0.5;
+
+TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+
+VectorSubtract(spot, from, deltaVector);
+vectoangles(deltaVector, angles);
+VectorCopy(fromAngles, fromAnglesCopy);
+
+deltaAngles[PITCH] = AngleDelta(fromAnglesCopy[PITCH], angles[PITCH]);
+deltaAngles[YAW] = AngleDelta(fromAnglesCopy[YAW], angles[YAW]);
+
+if (fabs(deltaAngles[PITCH]) <= vFOV && fabs(deltaAngles[YAW]) <= hFOV)
+{
+return qtrue;
+}
+
+return qfalse;
+}
+*/
+#endif //__USE_VBO_AREAS__
 
 /*
 ===============
@@ -2468,6 +2591,8 @@ static void R_CreateWorldVBOs(void)
 
 	// count surfaces
 	numSortedSurfaces = 0;
+
+	Setup_VBO_Areas();
 
 	for(surface = &s_worldData.surfaces[0]; surface < &s_worldData.surfaces[s_worldData.numsurfaces]; surface++)
 	{
@@ -2527,140 +2652,240 @@ static void R_CreateWorldVBOs(void)
 
 	qsort(surfacesSorted, numSortedSurfaces, sizeof(*surfacesSorted), BSPSurfaceCompare);
 
+#ifdef __USE_VBO_AREAS__
 	k = 0;
-	for(firstSurf = lastSurf = surfacesSorted; firstSurf < &surfacesSorted[numSortedSurfaces]; firstSurf = lastSurf)
+
+	for (int a = 0; a < MAP_AREAS.numAreas; a++)
 	{
-		int currVboSize, currIboSize;
-
-		// Find range of surfaces to merge by:
-		// - Collecting a number of surfaces which fit under maxVboSize/maxIboSize, or
-		// - All the surfaces with a single shader which go over maxVboSize/maxIboSize
-		currVboSize = currIboSize = 0;
-		while (currVboSize < maxVboSize && currIboSize < maxIboSize && lastSurf < &surfacesSorted[numSortedSurfaces])
+#else
+	k = 0;
+#endif //__USE_VBO_AREAS__
+		for (firstSurf = lastSurf = surfacesSorted; firstSurf < &surfacesSorted[numSortedSurfaces]; firstSurf = lastSurf)
 		{
-			int addVboSize, addIboSize, currShaderIndex;
+			int currVboSize, currIboSize;
 
-			addVboSize = addIboSize = 0;
-			currShaderIndex = (*lastSurf)->shader->sortedIndex;
-
-			for(currSurf = lastSurf; currSurf < &surfacesSorted[numSortedSurfaces] && (*currSurf)->shader->sortedIndex == currShaderIndex; currSurf++)
+			// Find range of surfaces to merge by:
+			// - Collecting a number of surfaces which fit under maxVboSize/maxIboSize, or
+			// - All the surfaces with a single shader which go over maxVboSize/maxIboSize
+			currVboSize = currIboSize = 0;
+			while (currVboSize < maxVboSize && currIboSize < maxIboSize && lastSurf < &surfacesSorted[numSortedSurfaces])
 			{
-				srfBspSurface_t *bspSurf = (srfBspSurface_t *) (*currSurf)->data;
+				int addVboSize, addIboSize, currShaderIndex;
 
-				addVboSize += bspSurf->numVerts * sizeof(srfVert_t);
-				addIboSize += bspSurf->numIndexes * sizeof(glIndex_t);
-			}
+				addVboSize = addIboSize = 0;
+				currShaderIndex = (*lastSurf)->shader->sortedIndex;
 
-			if ((currVboSize != 0 && addVboSize + currVboSize > maxVboSize)
-			 || (currIboSize != 0 && addIboSize + currIboSize > maxIboSize))
-				break;
-
-			lastSurf = currSurf;
-
-			currVboSize += addVboSize;
-			currIboSize += addIboSize;
-		}
-
-		// count verts/indexes/surfaces
-		numVerts = 0;
-		numIndexes = 0;
-		numSurfaces = 0;
-		for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)
-		{
-			srfBspSurface_t *bspSurf = (srfBspSurface_t *) (*currSurf)->data;
-
-			numVerts += bspSurf->numVerts;
-			numIndexes += bspSurf->numIndexes;
-			numSurfaces++;
-		}
-
-		ri->Printf(PRINT_ALL, "...calculating world VBO %d ( %i verts %i tris )\n", k, numVerts, numIndexes / 3);
-
-		// create arrays
-		verts = (packedVertex_t *)ri->Hunk_AllocateTempMemory(numVerts * sizeof(packedVertex_t)); 
-		indexes = (glIndex_t *)ri->Hunk_AllocateTempMemory(numIndexes * sizeof(glIndex_t)); 
-
-		// set up indices and copy vertices
-		numVerts = 0;
-		numIndexes = 0;
-		for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)
-		{
-			srfBspSurface_t *bspSurf = (srfBspSurface_t *) (*currSurf)->data;
-			glIndex_t *surfIndex;
-
-			bspSurf->firstIndex = numIndexes;
-			bspSurf->minIndex = numVerts + bspSurf->indexes[0];
-			bspSurf->maxIndex = numVerts + bspSurf->indexes[0];
-
-			for(i = 0, surfIndex = bspSurf->indexes; i < bspSurf->numIndexes; i++, surfIndex++)
-			{
-				indexes[numIndexes++] = numVerts + *surfIndex;
-				bspSurf->minIndex = MIN(bspSurf->minIndex, numVerts + *surfIndex);
-				bspSurf->maxIndex = MAX(bspSurf->maxIndex, numVerts + *surfIndex);
-			}
-
-			bspSurf->firstVert = numVerts;
-
-
-			for(i = 0; i < bspSurf->numVerts; i++)
-			{
-				packedVertex_t& vert = verts[numVerts++];
-
-				VectorCopy (bspSurf->verts[i].xyz, vert.position);
-
-#ifdef __REGEN_NORMALS__
-				GenerateNormalsForXZY(&bspSurf->verts[i].xyz, &bspSurf->verts[i].normal);
-#endif
-
-				vert.normal = R_VboPackNormal (bspSurf->verts[i].normal);
-				vert.tangent = R_VboPackTangent (bspSurf->verts[i].tangent);
-				VectorCopy2 (bspSurf->verts[i].st, vert.texcoords[0]);
-
-				for (int j = 0; j < MAXLIGHTMAPS; j++)
+				for (currSurf = lastSurf; currSurf < &surfacesSorted[numSortedSurfaces] && (*currSurf)->shader->sortedIndex == currShaderIndex; currSurf++)
 				{
-					VectorCopy2 (bspSurf->verts[i].lightmap[j], vert.texcoords[1 + j]);
+					srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
+
+#ifdef __USE_VBO_AREAS__
+					vec3_t center;
+					if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
+					{
+						VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
+						VectorScale(center, 0.5f, center);
+					}
+					else
+					{
+						VectorCopy(bspSurf->cullOrigin, center);
+					}
+
+					int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
+
+					if (thisArea != a)
+					{// Not in the current VBO area, skip and it will be added to the right area later...
+						continue;
+					}
+#endif //__USE_VBO_AREAS__
+
+					addVboSize += bspSurf->numVerts * sizeof(srfVert_t);
+					addIboSize += bspSurf->numIndexes * sizeof(glIndex_t);
 				}
 
-				for (int j = 0; j < MAXLIGHTMAPS; j++)
+				if ((currVboSize != 0 && addVboSize + currVboSize > maxVboSize)
+					|| (currIboSize != 0 && addIboSize + currIboSize > maxIboSize))
+					break;
+
+				lastSurf = currSurf;
+
+				currVboSize += addVboSize;
+				currIboSize += addIboSize;
+			}
+
+			// count verts/indexes/surfaces
+			numVerts = 0;
+			numIndexes = 0;
+			numSurfaces = 0;
+			for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)
+			{
+				srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
+
+#ifdef __USE_VBO_AREAS__
+				vec3_t center;
+				if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
 				{
-					VectorCopy4 (bspSurf->verts[i].vertexColors[j], vert.colors[j]);
+					VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
+					VectorScale(center, 0.5f, center);
+				}
+				else
+				{
+					VectorCopy(bspSurf->cullOrigin, center);
 				}
 
-				vert.lightDirection = R_VboPackNormal (bspSurf->verts[i].lightdir);
+				int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
+
+				if (thisArea != a)
+				{// Not in the current VBO area, skip and it will be added to the right area later...
+					continue;
+				}
+#endif //__USE_VBO_AREAS__
+
+				numVerts += bspSurf->numVerts;
+				numIndexes += bspSurf->numIndexes;
+				numSurfaces++;
 			}
+
+#ifdef __USE_VBO_AREAS__
+			if (numVerts == 0 && numIndexes == 0)
+			{// Nothing to add...
+				continue;
+			}
+#endif //__USE_VBO_AREAS__
+
+			ri->Printf(PRINT_ALL, "...calculating world VBO %i ( %i verts %i tris )\n", k, numVerts, numIndexes / 3);
+
+			// create arrays
+			verts = (packedVertex_t *)ri->Hunk_AllocateTempMemory(numVerts * sizeof(packedVertex_t));
+			indexes = (glIndex_t *)ri->Hunk_AllocateTempMemory(numIndexes * sizeof(glIndex_t));
+
+			// set up indices and copy vertices
+			numVerts = 0;
+			numIndexes = 0;
+			for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)
+			{
+				srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
+				glIndex_t *surfIndex;
+
+#ifdef __USE_VBO_AREAS__
+				vec3_t center;
+				if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
+				{
+					VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
+					VectorScale(center, 0.5f, center);
+				}
+				else
+				{
+					VectorCopy(bspSurf->cullOrigin, center);
+				}
+
+				int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
+
+				if (thisArea != a)
+				{// Not in the current VBO area, skip and it will be added to the right area later...
+					continue;
+				}
+#endif //__USE_VBO_AREAS__
+
+				bspSurf->firstIndex = numIndexes;
+				bspSurf->minIndex = numVerts + bspSurf->indexes[0];
+				bspSurf->maxIndex = numVerts + bspSurf->indexes[0];
+
+				for (i = 0, surfIndex = bspSurf->indexes; i < bspSurf->numIndexes; i++, surfIndex++)
+				{
+					indexes[numIndexes++] = numVerts + *surfIndex;
+					bspSurf->minIndex = MIN(bspSurf->minIndex, numVerts + *surfIndex);
+					bspSurf->maxIndex = MAX(bspSurf->maxIndex, numVerts + *surfIndex);
+				}
+
+				bspSurf->firstVert = numVerts;
+
+
+				for (i = 0; i < bspSurf->numVerts; i++)
+				{
+					packedVertex_t& vert = verts[numVerts++];
+
+					VectorCopy(bspSurf->verts[i].xyz, vert.position);
+
+					vert.normal = R_VboPackNormal(bspSurf->verts[i].normal);
+					vert.tangent = R_VboPackTangent(bspSurf->verts[i].tangent);
+					VectorCopy2(bspSurf->verts[i].st, vert.texcoords[0]);
+
+					for (int j = 0; j < MAXLIGHTMAPS; j++)
+					{
+						VectorCopy2(bspSurf->verts[i].lightmap[j], vert.texcoords[1 + j]);
+					}
+
+					for (int j = 0; j < MAXLIGHTMAPS; j++)
+					{
+						VectorCopy4(bspSurf->verts[i].vertexColors[j], vert.colors[j]);
+					}
+
+					vert.lightDirection = R_VboPackNormal(bspSurf->verts[i].lightdir);
+				}
+			}
+
+#ifdef __USE_VBO_AREAS__
+			if (numVerts == 0 && numIndexes == 0)
+			{// Nothing to add...
+				continue;
+			}
+#endif //__USE_VBO_AREAS__
+
+			vbo = R_CreateVBO((byte *)verts, sizeof(packedVertex_t) * numVerts, VBO_USAGE_STATIC);
+			ibo = R_CreateIBO((byte *)indexes, numIndexes * sizeof(glIndex_t), VBO_USAGE_STATIC);
+
+			// Setup the offsets and strides
+			vbo->ofs_xyz = offsetof(packedVertex_t, position);
+			vbo->ofs_normal = offsetof(packedVertex_t, normal);
+			vbo->ofs_st = offsetof(packedVertex_t, texcoords);
+			vbo->ofs_vertexcolor = offsetof(packedVertex_t, colors);
+			vbo->ofs_lightdir = offsetof(packedVertex_t, lightDirection);
+
+			const size_t packedVertexSize = sizeof(packedVertex_t);
+			vbo->stride_xyz = packedVertexSize;
+			vbo->stride_normal = packedVertexSize;
+			vbo->stride_st = packedVertexSize;
+			vbo->stride_vertexcolor = packedVertexSize;
+			vbo->stride_lightdir = packedVertexSize;
+
+			// point bsp surfaces to VBO
+			for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)
+			{
+				srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
+
+#ifdef __USE_VBO_AREAS__
+				vec3_t center;
+				if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
+				{
+					VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
+					VectorScale(center, 0.5f, center);
+				}
+				else
+				{
+					VectorCopy(bspSurf->cullOrigin, center);
+				}
+
+				int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
+
+				if (thisArea != a)
+				{// Not in the current VBO area, skip and it will be added to the right area later...
+					continue;
+				}
+#endif //__USE_VBO_AREAS__
+
+				bspSurf->vbo = vbo;
+				bspSurf->ibo = ibo;
+			}
+
+			ri->Hunk_FreeTempMemory(indexes);
+			ri->Hunk_FreeTempMemory(verts);
+
+			k++;
 		}
-
-		vbo = R_CreateVBO((byte *)verts, sizeof (packedVertex_t) * numVerts, VBO_USAGE_STATIC);
-		ibo = R_CreateIBO((byte *)indexes, numIndexes * sizeof (glIndex_t), VBO_USAGE_STATIC);
-
-		// Setup the offsets and strides
-		vbo->ofs_xyz = offsetof (packedVertex_t, position);
-		vbo->ofs_normal = offsetof (packedVertex_t, normal);
-		vbo->ofs_st = offsetof (packedVertex_t, texcoords);
-		vbo->ofs_vertexcolor = offsetof (packedVertex_t, colors);
-		vbo->ofs_lightdir = offsetof (packedVertex_t, lightDirection);
-
-		const size_t packedVertexSize = sizeof (packedVertex_t);
-		vbo->stride_xyz = packedVertexSize;
-		vbo->stride_normal = packedVertexSize;
-		vbo->stride_st = packedVertexSize;
-		vbo->stride_vertexcolor = packedVertexSize;
-		vbo->stride_lightdir = packedVertexSize;
-
-		// point bsp surfaces to VBO
-		for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)
-		{
-			srfBspSurface_t *bspSurf = (srfBspSurface_t *) (*currSurf)->data;
-
-			bspSurf->vbo = vbo;
-			bspSurf->ibo = ibo;
-		}
-
-		ri->Hunk_FreeTempMemory(indexes);
-		ri->Hunk_FreeTempMemory(verts);
-
-		k++;
+#ifdef __USE_VBO_AREAS__
 	}
+#endif //__USE_VBO_AREAS__
 
 	Z_Free(surfacesSorted);
 

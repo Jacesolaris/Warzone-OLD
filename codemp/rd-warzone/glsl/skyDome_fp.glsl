@@ -440,9 +440,11 @@ vec3 renderSkyCloudDome(vec3 ro, vec3 rd)
 
 void main()
 {
-	vec3 rd = normalize(u_ViewOrigin - var_Position);
+	//vec3 rd = normalize(u_ViewOrigin - var_Position);
+	vec3 rd = normalize(var_Position);
 	//vec3 ro = vec3(-0.5 + 3.5*cos(PI2 *mx), 0.0 + 2.0*my, 0.5 + 3.5*sin(PI2 *mx));
-	vec3 ro = vec3(1.0, 1.0, 0.0);// normalize(-u_ViewOrigin);
+	//vec3 ro = vec3(1.0, 1.0, 0.0);// normalize(-u_ViewOrigin);
+	vec3 ro = vec3(0.0);
 	vec3 color = renderSkyCloudDome(ro, rd);
 	gl_FragColor = vec4(color.rgb, 1.0);
 	out_Glow = vec4(0.0);

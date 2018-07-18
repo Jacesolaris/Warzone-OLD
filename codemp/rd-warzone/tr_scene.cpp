@@ -529,17 +529,20 @@ float RB_NightScale ( void )
 		return 0.0;
 	}
 
-	if (DAY_NIGHT_24H_TIME >= 7.5 && DAY_NIGHT_24H_TIME <= 9.5)
+#define SUNRISE_TIME 8.2//r_testvalue0->value
+#define SUNSET_TIME 21.8//r_testvalue1->value
+
+	if (DAY_NIGHT_24H_TIME >= SUNRISE_TIME-2.0 && DAY_NIGHT_24H_TIME <= SUNRISE_TIME)
 	{// Sunrise...
-		return (9.5 - DAY_NIGHT_24H_TIME) / 2.0;
+		return (SUNRISE_TIME - DAY_NIGHT_24H_TIME) / 2.0;
 	}
 
-	if (DAY_NIGHT_24H_TIME >= 19.0 && DAY_NIGHT_24H_TIME <= 21.0)
+	if (DAY_NIGHT_24H_TIME >= SUNSET_TIME-2.0 && DAY_NIGHT_24H_TIME <= SUNSET_TIME)
 	{// Sunset...
-		return 1.0 - ((21.0 - DAY_NIGHT_24H_TIME) / 2.0);
+		return 1.0 - ((SUNSET_TIME - DAY_NIGHT_24H_TIME) / 2.0);
 	}
 
-	if (DAY_NIGHT_24H_TIME >= 8.0 && DAY_NIGHT_24H_TIME <= 19.0)
+	if (DAY_NIGHT_24H_TIME >= SUNRISE_TIME-1.5 && DAY_NIGHT_24H_TIME <= SUNSET_TIME-2.0)
 	{// Daytime...
 		return 0.0;
 	}
