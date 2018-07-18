@@ -48,8 +48,8 @@ uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMI
 uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
 uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
-uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_SIZE[2]
-uniform vec4		u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, 0.0, 0.0
+uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
+uniform vec4		u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
 
 uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3		u_ViewOrigin;
@@ -367,7 +367,7 @@ float getHeight(vec2 uv) {
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
 #define pw pixel.x
 #define ph pixel.y
-vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, float reflectiveness)
+vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, float reflectiveness, float ssReflection)
 {
 	if (reflectiveness <= 0.5)
 	{// Top of screen pixel is water, don't check...
@@ -377,7 +377,6 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	float pixelDistance = distance(positionMap.xyz, u_ViewOrigin.xyz);
 
 	//const float scanSpeed = 48.0;// 16.0;// 5.0; // How many pixels to scan by on the 1st rough pass...
-	//float scanSpeed = u_Local3.r;
 	const float scanSpeed = 16.0;
 
 	// Quick scan for pixel that is not water...
@@ -935,6 +934,66 @@ float checkVisibility(vec2 p1, vec2 p2) {
 }
 #endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
 
+//
+// Normal variation...
+//
+const float pi = 3.14159;
+const vec4 cHashA4 = vec4 (0., 1., 57., 58.);
+const vec3 cHashA3 = vec3 (1., 57., 113.);
+const float cHashM = 43758.54;
+
+vec4 Hashv4f (float p)
+{
+  return fract (sin (p + cHashA4) * cHashM);
+}
+
+float Noisefv2 (vec2 p)
+{
+  vec2 i = floor (p);
+  vec2 f = fract (p);
+  f = f * f * (3. - 2. * f);
+  vec4 t = Hashv4f (dot (i, cHashA3.xy));
+  return mix (mix (t.x, t.y, f.x), mix (t.z, t.w, f.x), f.y);
+}
+
+vec3 Noisev3v2 (vec2 p)
+{
+  vec2 i = floor (p);
+  vec2 f = fract (p);
+  vec2 ff = f * f;
+  vec2 u = ff * (3. - 2. * f);
+  vec2 uu = 30. * ff * (ff - 2. * f + 1.);
+  vec4 h = Hashv4f (dot (i, cHashA3.xy));
+  return vec3 (h.x + (h.y - h.x) * u.x + (h.z - h.x) * u.y +
+     (h.x - h.y - h.z + h.w) * u.x * u.y, uu * (vec2 (h.y - h.x, h.z - h.x) +
+     (h.x - h.y - h.z + h.w) * u.yx));
+}
+
+float Fbmn (vec3 p, vec3 n)
+{
+  vec3 s;
+  float a;
+  s = vec3 (0.);
+  a = 1.;
+  for (int i = 0; i < 5; i ++) {
+    s += a * vec3 (Noisefv2 (p.yz), Noisefv2 (p.zx), Noisefv2 (p.xy));
+    a *= 0.5;
+    p *= 2.;
+  }
+  return dot (s, abs (n));
+}
+
+vec3 VaryNf (vec3 p, vec3 n, float f)
+{
+  vec3 g;
+  float s;
+  vec3 e = vec3 (0.1, 0., 0.);
+  s = Fbmn (p, n);
+  g = vec3 (Fbmn (p + e.xyy, n) - s,
+     Fbmn (p + e.yxy, n) - s, Fbmn (p + e.yyx, n) - s);
+  return normalize (n + f * (g - n * dot (n, g)));
+}
+
 /*
 ** Contrast, saturation, brightness
 ** Code of this function is from TGM's shader pack
@@ -966,6 +1025,17 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
 	float a1 = t.w;
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
+}
+
+vec3 splatblend(vec3 color1, float a1, vec3 color2, float a2)
+{
+    float depth = 0.2;
+	float ma = max(a1, a2) - depth;
+
+    float b1 = max(a1 - ma, 0);
+    float b2 = max(a2 - ma, 0);
+
+    return ((color1.rgb * b1) + (color2.rgb * b2)) / (b1 + b2);
 }
 
 void main(void)
@@ -1038,6 +1108,7 @@ void main(void)
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
 #ifdef __USE_REAL_NORMALMAPS__
+
 	// Now add detail offsets to the normal value...
 	vec4 normalDetail = textureLod(u_OverlayMap, texCoords, 0.0);
 
@@ -1049,12 +1120,15 @@ void main(void)
 		normalDetail = normalVector(texCoords);
 #endif //__FAST_NORMAL_DETAIL__
 	}
-#else
+
+#else //!__USE_REAL_NORMALMAPS__
+
 #ifdef __FAST_NORMAL_DETAIL__
 	vec4 normalDetail = normalVector(outColor.rgb);
 #else //!__FAST_NORMAL_DETAIL__
 	vec4 normalDetail = normalVector(texCoords);
 #endif //__FAST_NORMAL_DETAIL__
+
 #endif //__USE_REAL_NORMALMAPS__
 
 	// Simply offset the normal value based on the detail value... It looks good enough, but true PBR would probably want to use the tangent/bitangent below instead...
@@ -1070,13 +1144,53 @@ void main(void)
 	//mat3 tangentToWorld = mat3(tangent.xyz, bitangent.xyz, norm.xyz);
 	//norm.xyz = tangentToWorld * normalDetail.xyz;
 
-
 	//
 	// Default material settings... PBR inputs could go here instead...
 	//
 
 #define specularReflectivePower		materialSettings.x
 #define reflectionPower				materialSettings.y
+
+	float snow = 0.0;
+	float wetness = 0.0;
+
+	if (u_Local9.b > 0.0)
+	{// snow testing
+		//u_Local9.a // PROCEDURAL_SNOW_LOWEST_ELEVATION
+		//u_Local8.a // max map height
+
+		if (position.z >= u_Local9.a)
+		{
+			float snowMult = 1.0;
+
+			if (u_Local9.a > -999999.0)
+			{// Elevation is enabled...
+				float elevationRange = u_Local8.a - u_Local9.a;
+				float pixelElevation = position.z - u_Local9.a;
+			
+				snowMult = clamp(pow(clamp(pixelElevation / elevationRange, 0.0, 1.0) * 4.0, 2.0), 0.0, 1.0);
+			}
+			
+			vec3 sBump = VaryNf(normalize(position.xyz), flatNorm.xyz, 2.0);
+
+			snow = clamp(dot(normalize(sBump.rgb), vec3(0., 0., 1.)), 0., 1.);
+
+			if (position.a - 1.0 == MATERIAL_GREENLEAVES)
+				snow = pow(snow, 1.333);
+			else
+				snow = pow(snow, 0.4);
+
+			snow *= snowMult;
+
+			materialSettings.x += 0.05 * clamp(1.0 - materialSettings.x, 0.05, 0.95) * snow;
+			materialSettings.y += 3.0 * clamp(1.0 - materialSettings.y, 0.05, 0.95) * snow;
+		}
+	}
+
+	/*if (u_Local3.g != 0.0)
+	{// wet testing
+		wetness += 1.0;
+	}*/
 
 
 	//
@@ -1115,34 +1229,16 @@ void main(void)
 	float diffuse = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 	color.rgb = outColor.rgb = outColor.rgb * diffuse;
 
-	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
+	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
 
-//#define __DEBUG_LIGHT__
-#ifdef __DEBUG_LIGHT__
-	if (u_Local3.r == 1.0)
-	{
-		outColor.rgb = vec3(specularReflectivePower);
-		outColor.a = 1.0;
-		gl_FragColor = outColor;
-		return;
+	if (snow > 0.0)
+	{// snow testing
+		//outColor.rgb = mix(outColor.rgb, vec3(0.4)*snow, snow);
+		float snowMix = 1.0 - clamp(origColorStrength * 3.15, 0.0, 1.0);
+		outColor.rgb = splatblend(outColor.rgb, 1.0 - snowMix, vec3(0.4)/**snow*/, snow * snowMix);
 	}
 
-	if (u_Local3.r == 2.0)
-	{
-		outColor.rgb = vec3(reflectionPower);
-		outColor.a = 1.0;
-		gl_FragColor = outColor;
-		return;
-	}
-
-	if (u_Local3.r == 3.0)
-	{
-		outColor.rgb = vec3(lightsReflectionFactor);
-		outColor.a = 1.0;
-		gl_FragColor = outColor;
-		return;
-	}
-#endif
+	origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
 
 	//
 	// Now all the hard work...
@@ -1366,7 +1462,8 @@ void main(void)
 
 				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance * origColorStrength * 8.0;
 
-				lightColor = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
+				vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
+				lightColor.rgb += blinn + (blinn * wetness);
 
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
@@ -1449,67 +1546,23 @@ void main(void)
 					}
 #endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
 					
-					addedLight.rgb += blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
+					vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
+					addedLight.rgb += blinn + (blinn * wetness);
 				}
 			}
 
 			addedLight.rgb *= lightsReflectionFactor; // More grey colors get more colorization from lights...
 			outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
 		}
-
-#ifdef __EMISSIVE_IBL__
-		if (u_Local9.r > 0.0 && u_Local3.a == 1.0)
-		{// Debugging...
-			outColor.rgb = emissiveCubeLightColor;
-		}
-		else if (u_Local9.r > 0.0 && specularReflectivePower > 0.0 && length(emissiveCubeLightColor.rgb) > 0.0)
-		{// Also do emissive cube lighting (Emissive IBL)... Experimental crap...
-			//emissiveCubeLightColor = texture(u_EmissiveCubeMap, R + parallax).rgb;
-			//emissiveCubeLightDirection = R + parallax;
-
-			phongFactor = u_Local1.r * 12.0;
-
-			if (phongFactor <= 0.0)
-			{// Never allow no phong...
-				phongFactor = 1.0;
-			}
-
-			vec3 addedLight = vec3(0.0);
-
-// Indices of refraction
-#define Air 1.0
-#define Bubble 1.06
-
-// Air to glass ratio of the indices of refraction (Eta)
-#define Eta (Air / Bubble)
-
-// see http://en.wikipedia.org/wiki/Refractive_index Reflectivity
-#define R0 (((Air - Bubble) * (Air - Bubble)) / ((Air + Bubble) * (Air + Bubble)))
-
-#define shininess 1.0
-
-			float NdotV = max(0.0, dot(E, N));
-			float f = R0 + (1.0 - R0) * pow(1.0 - NdotV, 5.0) * pow(shininess, 20.0);
-			//f = length(f.rgb) / 3.0;
-
-			// Diffuse...
-			float diffuse = getdiffuse(N, emissiveCubeLightDirection, u_Local3.r);
-			addedLight += diffuse * emissiveCubeLightColor * specularReflectivePower * u_Local3.g;// 0.01;
-
-			// CryTek's way
-			vec3 mirrorEye = (2.0f * dot(E, N) * N - E);
-			float dotSpec = saturate(dot(mirrorEye.xyz, -emissiveCubeLightDirection) * 0.5f + 0.5f);
-			vec3 spec = (1.0f - f) * saturate(-emissiveCubeLightDirection.y) * ((pow(dotSpec, 512.0f)) * (shininess * 1.8f + 0.2f)) * emissiveCubeLightColor;
-			addedLight += spec * 25.0 * saturate(shininess - 0.05f) * emissiveCubeLightColor * specularReflectivePower * u_Local3.b;// 0.1;
-			outColor.rgb = max(outColor.rgb, addedLight.rgb);
-		}
-#endif //__EMISSIVE_IBL__
 	}
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
-	if (u_Local8.r > 0.0 && ssrReflectivePower > 0.0)
+	if (u_Local8.r > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0))
 	{
-		outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower);
+		if (wetness > 0.0)
+			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + 0.37504, ssReflection);
+		else
+			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower, ssReflection);
 	}
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 

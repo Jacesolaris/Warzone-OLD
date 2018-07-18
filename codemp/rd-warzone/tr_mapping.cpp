@@ -1400,6 +1400,8 @@ float		PROCEDURAL_CLOUDS_LIGHT = 0.3;
 float		PROCEDURAL_CLOUDS_CLOUDCOVER = 0.2;
 float		PROCEDURAL_CLOUDS_CLOUDALPHA = 2.0;
 float		PROCEDURAL_CLOUDS_SKYTINT = 0.5;
+qboolean	PROCEDURAL_SNOW_ENABLED = qfalse;
+float		PROCEDURAL_SNOW_LOWEST_ELEVATION = -999999.9;
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 int			MAP_LIGHTMAP_ENHANCEMENT = 1;
@@ -1654,6 +1656,12 @@ void MAPPING_LoadMapInfo(void)
 	AURORA_COLOR[0] = atof(IniRead(mapname, "AURORA", "AURORA_COLOR_R", "1.0"));
 	AURORA_COLOR[1] = atof(IniRead(mapname, "AURORA", "AURORA_COLOR_G", "1.0"));
 	AURORA_COLOR[2] = atof(IniRead(mapname, "AURORA", "AURORA_COLOR_B", "1.0"));
+
+	//
+	// Procedural Snow...
+	//
+	PROCEDURAL_SNOW_ENABLED = (atoi(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	PROCEDURAL_SNOW_LOWEST_ELEVATION = atof(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_LOWEST_ELEVATION", "-999999.9"));
 
 	//
 	// Weather...
@@ -2086,6 +2094,8 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
+
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow is ^7%s^5 and snow lowest elevation is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_SNOW_LOWEST_ELEVATION);
 
 	qglFinish();
 }
