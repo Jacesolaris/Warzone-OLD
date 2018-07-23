@@ -275,6 +275,7 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 	case MATERIAL_PUDDLE:
+	case MATERIAL_LAVA:
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:

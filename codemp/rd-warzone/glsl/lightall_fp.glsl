@@ -1,4 +1,5 @@
 #define __HIGH_PASS_SHARPEN__
+#define __LAVA__					// hmm, move to it's own shader?
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 #define SCREEN_MAPS_LEAFS_THRESHOLD 0.001
@@ -42,7 +43,7 @@ uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEM
 #define USE_GLOW_BLEND_MODE			u_Settings3.a
 
 #define MAP_LIGHTMAP_MULTIPLIER		u_Settings4.r
-#define MAP_LIGHTMAP_ENHANCEMENT		u_Settings4.g
+#define MAP_LIGHTMAP_ENHANCEMENT	u_Settings4.g
 
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
@@ -270,6 +271,102 @@ vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 }
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
+#if defined(__LAVA__)
+#define time u_Time*0.1
+
+float hash21(in vec2 n){ return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453); }
+mat2 makem2(in float theta){float c = cos(theta);float s = sin(theta);return mat2(c,-s,s,c);}
+//float noise( in vec2 x ){return texture(u_DiffuseMap, x*0.00333/*0.01*/).x;}
+
+#define HASHSCALE1 .1031
+
+float random(vec2 p)
+{
+	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE1);
+	p3 += dot(p3, p3.yzx + 19.19);
+	return fract((p3.x + p3.y) * p3.z);
+}
+
+// 2D Noise based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noise(in vec2 st) {
+	vec2 i = floor(st);
+	vec2 f = fract(st);
+
+	// Four corners in 2D of a tile
+	float a = random(i);
+	float b = random(i + vec2(1.0, 0.0));
+	float c = random(i + vec2(0.0, 1.0));
+	float d = random(i + vec2(1.0, 1.0));
+
+	// Smooth Interpolation
+
+	// Cubic Hermine Curve.  Same as SmoothStep()
+	vec2 u = f*f*(3.0 - 2.0*f);
+	// u = smoothstep(0.,1.,f);
+
+	// Mix 4 coorners percentages
+	return mix(a, b, u.x) +
+		(c - a)* u.y * (1.0 - u.x) +
+		(d - b) * u.x * u.y;
+}
+
+vec2 gradn(vec2 p)
+{
+	float ep = .09;
+	float gradx = noise(vec2(p.x+ep,p.y))-noise(vec2(p.x-ep,p.y));
+	float grady = noise(vec2(p.x,p.y+ep))-noise(vec2(p.x,p.y-ep));
+	return vec2(gradx,grady);
+}
+
+float flow(in vec2 p)
+{
+	float z=2.;
+	float rz = 0.;
+	vec2 bp = p;
+	for (float i= 1.;i < 7.;i++ )
+	{
+		//primary flow speed
+		p += time*.6;
+		
+		//secondary flow speed (speed of the perceived flow)
+		bp += time*1.9;
+		
+		//displacement field (try changing time multiplier)
+		vec2 gr = gradn(i*p*.34+time*1.);
+		
+		//rotation of the displacement field
+		gr*=makem2(time*6.-(0.05*p.x+0.03*p.y)*40.);
+		
+		//displace the system
+		p += gr*.5;
+		
+		//add noise octave
+		rz+= (sin(noise(p)*7.)*0.5+0.5)/(z*2.75);
+		
+		//blend factor (blending displaced system with base system)
+		//you could call this advection factor (.5 being low, .95 being high)
+		p = mix(bp,p,.77);
+		
+		//intensity scaling
+		z *= 1.4;
+		//octave scaling
+		p *= 2.;
+		bp *= 1.9;
+	}
+	return rz;
+}
+
+void GetLava( out vec4 fragColor, in vec2 uv )
+{
+	vec2 p = (m_vertPos.xy + m_vertPos.z) * 0.05;
+	float rz = flow(p);
+	vec3 col = vec3(.2,0.07,0.01)/rz;
+	col=pow(col,vec3(1.4));
+	fragColor = vec4(col,1.0);
+}
+#endif //defined(__LAVA__)
+
 void main()
 {
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
@@ -284,6 +381,30 @@ void main()
 
 	vec4 diffuse = texture(u_DiffuseMap, texCoords);
 
+#if defined(__LAVA__)
+	if ( SHADER_MATERIAL_TYPE == MATERIAL_LAVA )
+	{
+		GetLava( diffuse, texCoords );
+	}
+	else
+	{
+		diffuse = texture(u_DiffuseMap, texCoords);
+
+#if defined(__HIGH_PASS_SHARPEN__)
+		if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
+		{
+			diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 16.0);
+		}
+		else
+		{
+			diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0 + (gl_FragCoord.z * 8.0));
+		}
+#endif //defined(__HIGH_PASS_SHARPEN__)
+	}
+#else
+
+	diffuse = texture(u_DiffuseMap, texCoords);
+
 #if defined(__HIGH_PASS_SHARPEN__)
 	if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
 	{
@@ -294,6 +415,8 @@ void main()
 		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0 + (gl_FragCoord.z * 8.0));
 	}
 #endif //defined(__HIGH_PASS_SHARPEN__)
+
+#endif //defined(__LAVA__)
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
@@ -316,7 +439,7 @@ void main()
 	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
 
 
-	if (LIGHTMAP_ENABLED)
+	if (LIGHTMAP_ENABLED && SHADER_MATERIAL_TYPE != MATERIAL_LAVA)
 	{// TODO: Move to screen space?
 		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
 
@@ -417,6 +540,7 @@ void main()
 		&& USE_IS2D <= 0.0 
 		&& USE_VERTEX_ANIM <= 0.0
 		&& USE_SKELETAL_ANIM <= 0.0
+		&& SHADER_MATERIAL_TYPE != MATERIAL_LAVA
 		&& SHADER_MATERIAL_TYPE != MATERIAL_SKY 
 		&& SHADER_MATERIAL_TYPE != MATERIAL_SUN 
 		&& SHADER_MATERIAL_TYPE != MATERIAL_EFX
@@ -519,6 +643,28 @@ void main()
 #define glow_const_1 ( 23.0 / 255.0)
 #define glow_const_2 (255.0 / 229.0)
 
+#if defined(__LAVA__)
+	if (SHADER_MATERIAL_TYPE == MATERIAL_LAVA)
+	{
+		float power = length(gl_FragColor.rgb) / 3.0;
+		
+		power = pow(clamp(power*5.0, 0.0, 1.0), 3.0);
+
+		out_Glow = vec4(gl_FragColor.rgb * power, 1.0);
+		
+		if (power > 0.8)
+			out_Glow = out_Glow * vec4(0.2, 0.2, 0.2, 8.0);
+		else
+			out_Glow = vec4(0.0);
+
+		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
+		out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
+#ifdef __USE_REAL_NORMALMAPS__
+		out_NormalDetail = norm;
+#endif //__USE_REAL_NORMALMAPS__
+	}
+	else
+#endif //defined(__LAVA__)
 	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 	{
 		out_Glow = vec4(0.0);

@@ -1697,8 +1697,8 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 			int64_t fogIndex, int64_t dlightMap, int64_t postRender,
 					int cubemap, qboolean depthDrawOnly) {
 	int			index;
-
-	if (!shader || (shader->surfaceFlags & SURF_NODRAW))
+	
+	if (r_cullNoDraws->integer && (!shader || (shader->surfaceFlags & SURF_NODRAW) || (*surface == SF_SKIP)))
 	{// How did we even get here?
 		return;
 	}

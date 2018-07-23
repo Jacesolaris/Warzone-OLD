@@ -9,6 +9,7 @@
 //#define __HEIGHTMAP_SHADOWS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 //#define __IRRADIANCE__
+//#define __TEXTURE_IMPROVED__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -144,6 +145,27 @@ vec2 EncodeNormal(vec3 n)
 	return vec2(n.xy * 0.5 + 0.5);
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
+
+
+#ifdef __TEXTURE_IMPROVED__
+vec4 textureImproved( sampler2D tex, vec2 uv )
+{
+	vec2 p = uv*u_Dimensions.xy + 0.5;
+
+	vec2 i = floor(p);
+	vec2 f = p - i;
+	f = f*f*f*(f*(f*6.0-15.0)+10.0);
+	p = i + f;
+
+	p = (p - 0.5)/u_Dimensions.xy;
+	return texture( tex, p );
+}
+#else //!__TEXTURE_IMPROVED__
+vec4 textureImproved( sampler2D tex, vec2 uv )
+{
+	return texture( tex, uv );
+}
+#endif //__TEXTURE_IMPROVED__
 
 
 vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
@@ -283,6 +305,10 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		specularReflectionScale = 0.1;
 		cubeReflectionScale = 0.7;
 		break;
+	case MATERIAL_LAVA:
+		specularReflectionScale = 0.002;
+		cubeReflectionScale = 0.0;
+		break;
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
@@ -361,7 +387,7 @@ vec3 TangentFromNormal ( vec3 normal )
 }
 
 float getHeight(vec2 uv) {
-  return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
+  return length(textureImproved(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
@@ -554,7 +580,7 @@ float cellTile(in vec3 p)
     return d.x*2.66; // Normalize... roughly.
 }
 
-float map(vec3 p)
+float aomap(vec3 p)
 {
     float n = (.5-cellTile(p))*1.5;
     return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
@@ -568,7 +594,7 @@ float calculateAO(in vec3 pos, in vec3 nor)
 	float sca = 0.00013/*2.0*/, occ = 0.0;
 	for( int i=0; i<5; i++ ){
 		float hr = 0.01 + float(i)*0.5/4.0;        
-		float dd = map(nor * hr + pos);
+		float dd = aomap(nor * hr + pos);
 		occ += (hr - dd)*sca;
 		sca *= 0.7;
 	}
@@ -1038,9 +1064,27 @@ vec3 splatblend(vec3 color1, float a1, vec3 color2, float a2)
     return ((color1.rgb * b1) + (color2.rgb * b2)) / (b1 + b2);
 }
 
+// Grey scale.
+float getGrey(vec3 p){ return p.x*0.299 + p.y*0.587 + p.z*0.114; }
+
+// Texture bump mapping. Four tri-planar lookups, or 12 texture lookups in total.
+vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
+{
+    const float eps = 0.001;
+    vec3 grad = vec3( getGrey(textureImproved(tex, vec2(tc.x-eps, tc.y)).rgb),
+                      getGrey(textureImproved(tex, vec2(tc.x, tc.y-eps)).rgb),
+                      getGrey(textureImproved(tex, vec2(tc.x, tc.y)).rgb));
+    
+    grad = (grad - getGrey(textureImproved(tex, tc.xy).rgb))/eps; 
+            
+    grad -= nor*dot(nor, grad);          
+
+    return normalize( nor + grad*bumpfactor );
+}
+
 void main(void)
 {
-	vec4 color = textureLod(u_DiffuseMap, var_TexCoords, 0.0);
+	vec4 color = textureImproved(u_DiffuseMap, var_TexCoords);//textureLod(u_DiffuseMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
 	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 
@@ -1078,7 +1122,6 @@ void main(void)
 		return;
 	}
 
-
 	vec2 texCoords = var_TexCoords;
 	vec2 materialSettings = RB_PBR_DefaultsForMaterial(position.a-1.0);
 	bool isMetalic = (position.a - 1.0 == MATERIAL_SOLIDMETAL || position.a - 1.0 == MATERIAL_HOLLOWMETAL) ? true : false;
@@ -1089,6 +1132,10 @@ void main(void)
 
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	norm.xyz = DecodeNormal(norm.xy);
+
+
+	norm.xyz = doBumpMap( u_DiffuseMap, texCoords, norm.xyz, 0.005);
+
 
 	vec3 flatNorm = norm.xyz = normalize(norm.xyz);
 
@@ -1229,16 +1276,18 @@ void main(void)
 	float diffuse = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 	color.rgb = outColor.rgb = outColor.rgb * diffuse;
 
-	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
+	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
+	float snowColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
 
 	if (snow > 0.0)
 	{// snow testing
 		//outColor.rgb = mix(outColor.rgb, vec3(0.4)*snow, snow);
-		float snowMix = 1.0 - clamp(origColorStrength * 3.15, 0.0, 1.0);
-		outColor.rgb = splatblend(outColor.rgb, 1.0 - snowMix, vec3(0.4)/**snow*/, snow * snowMix);
+		//float snowMix = 1.0 - clamp(snowColorStrength * 3.15, 0.0, 1.0);
+		float snowMix = 1.0 - clamp(pow(snowColorStrength * 0.575 + 0.05, 0.34), 0.0, 1.0);
+		snowMix *= snow;
+		outColor.rgb = splatblend(outColor.rgb, 1.0 - snowMix, vec3(clamp(pow(snow, 0.001), 0.0, 1.0)), snowMix);
 	}
 
-	origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
 
 	//
 	// Now all the hard work...
@@ -1631,7 +1680,7 @@ void main(void)
 #if defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
 	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
 	{
-		float shadowValue = texture(u_ShadowMap, texCoords).r;
+		float shadowValue = textureImproved(u_ShadowMap, texCoords).r;
 
 		shadowValue = pow(shadowValue, 1.5);
 
@@ -1648,6 +1697,7 @@ void main(void)
 	//float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0); // darken distant
 	//float depth = clamp(pow(clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5) * 100000.0 + 1.0, 1.0, 2.0); // brighten distant
 	//outColor.rgb *= depth;
+
 
 	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
 	{// C/S/B enabled...

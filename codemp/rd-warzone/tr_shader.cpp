@@ -3756,6 +3756,7 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 	case MATERIAL_PUDDLE:
+	case MATERIAL_LAVA:
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
@@ -3882,6 +3883,9 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_PUDDLE:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_PUDDLE.\n", name);
+		break;
+	case MATERIAL_LAVA:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_LAVA.\n", name);
 		break;
 	case MATERIAL_EFX:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_EFX.\n", name);
@@ -4025,8 +4029,15 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 	return qfalse;
 }
 
+extern qboolean GENERIC_MATERIALS_PREFER_SHINY;
+
 qboolean IsKnownShinyMap ( const char *heystack )
 {
+	if (GENERIC_MATERIALS_PREFER_SHINY)
+	{// MapInfo override for this map. Mapper said we should use shiny options.
+		return qtrue;
+	}
+
 	if (IsKnownShinyMap2( heystack ))
 	{
 		if (r_materialDebug->integer >= 2)
@@ -5699,6 +5710,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_ROOFMAP] = roofMap->bundle[0];
 				hasRealRoofMap = qtrue;
 				diffuse->bundle[TB_ROOFMAP].roofMapLoaded = qtrue;
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Shader roof map exists for %s [%i x %i].\n", diffuse->bundle[0].image[0]->imgName, roofMap->bundle[0].image[0]->width, roofMap->bundle[0].image[0]->height);
 			}
 			else if (!diffuse->bundle[TB_ROOFMAP].roofMapLoaded)
 			{// Check if we can load one...
@@ -7944,6 +7956,11 @@ static shader_t *FinishShader( void ) {
 	if (stage == 0 && !shader.isSky)
 		shader.sort = SS_FOG;
 
+	if (shader.contentFlags & CONTENTS_LAVA)
+	{// Override missing basejka material type.. lava.
+		shader.materialType = MATERIAL_LAVA;
+	}
+
 	// determine which stage iterator function is appropriate
 	ComputeStageIteratorFunc();
 
@@ -8877,7 +8894,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 	catch (int code) {
 		// TODO: Debug dump...
-		ri->Printf(PRINT_WARNING, "Crashed loading shader %s. Forcing default shader.\n", name);
+		ri->Printf(PRINT_WARNING, "Crashed loading shader %s. Forcing default shader. Error code %i.\n", name, code);
 		return tr.defaultShader;
 	}
 

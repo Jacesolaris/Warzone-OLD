@@ -79,13 +79,17 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 	surf->depthDrawOnlyFoliage = qfalse;
 #endif //__ZFAR_CULLING_ON_SURFACES__
 
-	if (r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE || SKIP_CULL_FRAME) {
+	if (r_nocull->integer || SKIP_CULL_FRAME) {
 		return qfalse;
 	}
 
-	if (surf->shader->surfaceFlags & SURF_NODRAW)
+	if (r_cullNoDraws->integer && ((surf->shader->surfaceFlags & SURF_NODRAW) || (*surf->data == SF_SKIP)))
 	{// Always skip nodraw surfs on all calculations...
 		return qtrue;
+	}
+
+	if (surf->cullinfo.type == CULLINFO_NONE) {
+		return qfalse;
 	}
 
 	if (*surf->data == SF_GRID && r_nocurves->integer) {
@@ -444,7 +448,7 @@ static void R_AddWorldSurface(msurface_t *surf, int entityNum, int dlightBits, i
 	// FIXME: bmodel fog?
 	int cubemapIndex = 0;
 
-	if (!surf->shader || (surf->shader->surfaceFlags & SURF_NODRAW))
+	if (r_cullNoDraws->integer && (!surf->shader || (surf->shader->surfaceFlags & SURF_NODRAW) || (*surf->data == SF_SKIP)))
 	{// How did we even get here?
 		return;
 	}

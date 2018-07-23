@@ -1550,7 +1550,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			{
 				drawSurf_t		*drawSurf = &drawSurfs[i];
 
-				if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES) continue;
+				if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES || *drawSurf->surface <= SF_SKIP) continue;
 
 				shader_t		*shader = tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
 				int64_t			entityNum = (drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT) & REFENTITYNUM_MASK;
@@ -1599,7 +1599,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 			drawSurf = &drawSurfs[i];
 
-			if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES) continue;
+			if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES || *drawSurf->surface <= SF_SKIP) continue;
 
 #ifdef __ZFAR_CULLING_ON_SURFACES__
 			if (r_occlusion->integer)
@@ -2902,7 +2902,6 @@ qboolean ALLOW_NULL_FBO_BIND = qfalse;
 
 extern qboolean ENABLE_DISPLACEMENT_MAPPING;
 extern qboolean FOG_POST_ENABLED;
-extern qboolean WATER_FOG_ENABLED;
 extern qboolean AO_DIRECTIONAL;
 extern int LATE_LIGHTING_ENABLED;
 
@@ -3319,18 +3318,6 @@ const void *RB_PostProcess(const void *data)
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			DEBUG_EndTimer(qtrue);
-
-
-			if (WATER_FOG_ENABLED && !(tr.refdef.rdflags & RDF_UNDERWATER))
-			{// When not underwater, also draw volumetric fog above the water...
-				if (!r_lowVram->integer)
-				{
-					DEBUG_StartTimer("Water Post Fog", qtrue);
-					RB_WaterPostFogShader(currentFbo, srcBox, currentOutFbo, dstBox);
-					RB_SwapFBOs(&currentFbo, &currentOutFbo);
-					DEBUG_EndTimer(qtrue);
-				}
-			}
 		}
 
 		if (!SCREEN_BLUR && FOG_POST_ENABLED && r_fogPost->integer && !LATE_LIGHTING_ENABLED)

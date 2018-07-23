@@ -290,11 +290,6 @@ float GetRoadFactor(vec2 pixel)
 	return 1.0 - clamp(roadScale * 0.6 + 0.4, 0.0, 1.0);
 }
 
-float GetHeightmap(vec2 pixel)
-{
-	return texture(u_HeightMap, pixel).r;
-}
-
 vec2 GetMapTC(vec3 pos)
 {
 	vec2 mapSize = u_Maxs.xy - u_Mins.xy;
@@ -390,10 +385,6 @@ void main()
 		}
 	}
 
-	//float terrainOffsetScale = GetHeightmap(pixel);
-	//float terrainOffset = max(terrainOffsetScale, 1.0 - clamp(controlMap.a * 0.6 + 0.4, 0.0, 1.0)) - 0.5;
-	//vGrassFieldPos.z += terrainOffset * TERRAIN_TESS_OFFSET;
-
 	float controlMapScale = length(controlMap.rgb) / 3.0;
 	controlMapScale *= controlMapScale;
 	controlMapScale += 0.1;
@@ -409,7 +400,7 @@ void main()
 #if defined(__USE_UNDERWATER_ONLY__)
 	iGrassType = 0;
 
-	vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER);
+	vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER) + 1.0;
 
 	if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 	{// Randomize...
@@ -434,7 +425,7 @@ void main()
 	{
 		iGrassType = 0;
 
-		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER);
+		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER) + 1.0;
 
 		if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
 		{// Randomize...
@@ -460,7 +451,7 @@ void main()
 	{
 		iGrassType = randomInt(0, 2);
 
-		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER);
+		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER) + 1.0;
 
 		if (randZeroOne() > GRASS_TYPE_UNIFORMALITY)
 		{// Randomize...
@@ -475,12 +466,12 @@ void main()
 		tcOffsetBegin = BakedOffsetsBegin[iGrassType];
 		tcOffsetEnd = tcOffsetBegin + 0.25;
 
-		/*if (iGrassType > 2 && iGrassType < 16)
+		if (iGrassType > 2 && iGrassType < 16)
 		{// Rare randomized grasses (3 -> 16 - the plants) are a bit larger then the standard grass...
-			sizeMult *= 1.25;
-		}*/
+			sizeMult *= 2.75;
+		}
 
-		sizeMult *= u_GrassScales[clamp(iGrassType, 0, 15)]; // Scale by grass type...
+		//sizeMult *= u_GrassScales[clamp(iGrassType, 0, 15)]; // Scale by grass type...
 
 		// Final value set to 0 == an above water grass...
 		iGrassType = 0;
@@ -524,8 +515,10 @@ void main()
 		vec3 vd = vb + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
 
 		vec3 baseNorm = normalize(cross(normalize(va - P), normalize(vb - P)));
-		vec3 I = normalize(P.xyz - u_ViewOrigin.xyz);
+		//vec3 I = normalize(P.xyz - u_ViewOrigin.xyz);
+		vec3 I = normalize(vec3(normalize(P.xyz - u_ViewOrigin.xyz).xy, 0.0));
 		vec3 Nf = normalize(faceforward(baseNorm, I, baseNorm));
+
 		vVertNormal = EncodeNormal(Nf);
 
 #ifndef __HUMANOIDS_BEND_GRASS__ // Just the player...

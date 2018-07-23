@@ -4271,7 +4271,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_')
 	{
-		if (!(flags & IMGFLAG_MIPMAP) && type != IMGTYPE_SPLATCONTROLMAP && R_ShouldMipMap(name))
+		if (!(flags & IMGFLAG_MIPMAP) && type != IMGTYPE_SPLATCONTROLMAP && R_ShouldMipMap(name) /*&& (width >= 512 || height >= 512)*/)
 		{// UQ: Testing mipmap all...
 			flags |= IMGFLAG_MIPMAP;
 		}

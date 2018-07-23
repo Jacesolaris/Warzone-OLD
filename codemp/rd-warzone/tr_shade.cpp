@@ -1251,6 +1251,11 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 		cubemapScale = 0.7;
 		parallaxScale = 1.5;
 		break;
+	case MATERIAL_LAVA:
+		specularScale = 0.1;
+		cubemapScale = 0.0;
+		parallaxScale = 1.5;
+		break;
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
@@ -1884,7 +1889,7 @@ extern qboolean ALLOW_GL_400;
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
-	if (tess.shader->surfaceFlags & SURF_NODRAW)
+	if (r_cullNoDraws->integer && (tess.shader->surfaceFlags & SURF_NODRAW))
 	{
 		return;
 	}
@@ -3210,9 +3215,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if (IS_DEPTH_PASS || backEnd.depthFill)
 		{
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
-				GL_BindToTMU( tr.whiteImage, 0 );
-			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
-				GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP );
+				GL_BindToTMU(tr.whiteImage, 0);
+			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
+				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP);
+		}
+		else if (tess.shader->materialType == MATERIAL_LAVA)
+		{// Don't need any textures... Procedural...
+			//GL_BindToTMU(tr.random2KImage[0], TB_DIFFUSEMAP);
 		}
 #ifdef __WATER_STUFF__
 		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 2 /*&& WATER_ENABLED*/)

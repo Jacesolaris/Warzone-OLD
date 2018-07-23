@@ -113,15 +113,16 @@
 #define MATERIAL_SHATTERGLASS					29			// glass with the Crisis Zone style shattering
 #define MATERIAL_ARMOR							30			// body armor
 #define MATERIAL_COMPUTER						31			// computers/electronic equipment
-#define MATERIAL_PUDDLE							32			// shallow puddle on floor surface
-#define MATERIAL_EFX							33			// any efx surfaces
-#define MATERIAL_BLASTERBOLT					34			// blaster bolts, sabers, etc
-#define MATERIAL_FIRE							35			// fire
-#define MATERIAL_SMOKE							36			// smoke
-#define MATERIAL_FIREFLIES						37			// fire flies fx
-#define MATERIAL_MAGIC_PARTICLES_TREE			38			// magic tree particle fx
-#define MATERIAL_MAGIC_PARTICLES				39			// magic particles (small particle fx)
-#define MATERIAL_LAST							40			// number of materials
+#define MATERIAL_PUDDLE							32			// shallow puddle on floor surface, or water that should not use GLSL.
+#define MATERIAL_LAVA							33			// lava
+#define MATERIAL_EFX							34			// any efx surfaces
+#define MATERIAL_BLASTERBOLT					35			// blaster bolts, sabers, etc
+#define MATERIAL_FIRE							36			// fire
+#define MATERIAL_SMOKE							37			// smoke
+#define MATERIAL_FIREFLIES						38			// fire flies fx
+#define MATERIAL_MAGIC_PARTICLES_TREE			39			// magic tree particle fx
+#define MATERIAL_MAGIC_PARTICLES				40			// magic particles (small particle fx)
+#define MATERIAL_LAST							41			// number of materials
 
 // Defined as a macro here so one change will affect all the relevant files
 
@@ -159,6 +160,7 @@
 	"armor",							\
 	"computer",							\
 	"puddle",							\
+	"lava",								\
 	"efx",								\
 	"blasterbolt",						\
 	"fire",								\

@@ -283,6 +283,8 @@ extern cvar_t	*r_drawSort;
 
 extern cvar_t	*r_compressedTextures;
 
+extern cvar_t	*r_cullNoDraws;
+
 extern cvar_t	*r_superSampleMultiplier;
 
 extern cvar_t	*r_instanceCloudReductionCulling;
@@ -2965,7 +2967,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t bloomRaysShader;
 	shaderProgram_t distanceBlurShader[4];
 	shaderProgram_t fogPostShader;
-	shaderProgram_t waterPostFogShader;
 	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t showNormalsShader;
 	shaderProgram_t showDepthShader;

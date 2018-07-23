@@ -2451,6 +2451,7 @@ static void RB_SurfaceDisplayList( srfDisplayList_t *surf ) {
 }
 
 static void RB_SurfaceSkip( void *surf ) {
+	//ri->Printf(PRINT_ALL, "Skip surface tesselated.\n");
 }
 
 #ifdef __XYC_SURFACE_SPRITES__

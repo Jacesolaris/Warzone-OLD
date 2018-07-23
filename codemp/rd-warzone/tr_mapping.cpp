@@ -830,7 +830,7 @@ void R_CreateHeightMapImage(void)
 		{
 			int y = MAP_INFO_MINS[1] + (imageY * MAP_INFO_SCATTEROFFSET[1]);
 
-			qboolean	HIT_WATER = qfalse;
+			//qboolean	HIT_WATER = qfalse;
 
 			for (z = MAP_INFO_MAXS[2]; z > MAP_INFO_MINS[2]; z -= 48.0)
 			{
@@ -841,10 +841,10 @@ void R_CreateHeightMapImage(void)
 				VectorSet(pos, x, y, z);
 				VectorSet(down, x, y, -65536);
 
-				if (HIT_WATER)
+				//if (HIT_WATER)
 					Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID);
-				else
-					Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER/*|CONTENTS_OPAQUE*/);
+				//else
+				//	Mapping_Trace(&tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID | CONTENTS_WATER/*|CONTENTS_OPAQUE*/);
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
@@ -882,30 +882,30 @@ void R_CreateHeightMapImage(void)
 					continue;
 				}
 
-				if (!HIT_WATER && tr.contents & CONTENTS_WATER)
+				/*if (!HIT_WATER && tr.contents & CONTENTS_WATER)
 				{
 					HIT_WATER = qtrue;
 					continue;
-				}
+				}*/
 
 				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
 				float distScale = DIST_FROM_ROOF / MAP_INFO_SIZE[2];
 				if (distScale > 1.0) distScale = 1.0;
 				float HEIGHT_COLOR_MULT = (1.0 - distScale);
 
-				float isUnderWater = 0;
+				/*float isUnderWater = 0;
 
 				if (HIT_WATER)
 				{
 					isUnderWater = 1.0;
-				}
+				}*/
 
 				red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
 				green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
 				blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = HEIGHT_COLOR_MULT * 255;		// height map
-				alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = isUnderWater * 255;			// is under water
+				alpha[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 1.0/*isUnderWater*/ * 255;			// is under water
 
-				HIT_WATER = qfalse;
+				//HIT_WATER = qfalse;
 				break;
 			}
 		}
@@ -1367,6 +1367,7 @@ void R_CreateRoadMapImage(void)
 	}
 }
 
+qboolean	GENERIC_MATERIALS_PREFER_SHINY = qfalse;
 qboolean	DISABLE_DEPTH_PREPASS = qfalse;
 qboolean	LODMODEL_MAP = qfalse;
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
@@ -1440,18 +1441,20 @@ float		FOG_DENSITY = 0.5;
 float		FOG_ACCUMULATION_MODIFIER = 3.0;
 float		FOG_RANGE_MULTIPLIER = 1.0;
 qboolean	FOG_VOLUMETRIC_ENABLE = qfalse;
-float		FOG_VOLUMETRIC_DENSITY = 1.0;
-float		FOG_VOLUMETRIC_STRENGTH = 1.0;
+float		FOG_VOLUMETRIC_SUN_PENETRATION = 1.0;
+float		FOG_VOLUMETRIC_ALPHA = 1.0;
 float		FOG_VOLUMETRIC_CLOUDINESS = 1.0;
 float		FOG_VOLUMETRIC_WIND = 1.0;
-float		FOG_VOLUMETRIC_VELOCITY = 0.001;
+float		FOG_VOLUMETRIC_ALTITUDE_BOTTOM = -65536.0;
+float		FOG_VOLUMETRIC_ALTITUDE_TOP = 65536.0;
+float		FOG_VOLUMETRIC_ALTITUDE_FADE = -65536.0;
 vec3_t		FOG_VOLUMETRIC_COLOR = { 0 };
+vec4_t		FOG_VOLUMETRIC_BBOX = { 0.0 };
 qboolean	WATER_ENABLED = qfalse;
 qboolean	WATER_USE_OCEAN = qfalse;
 qboolean	WATER_FARPLANE_ENABLED = qfalse;
 float		WATER_REFLECTIVENESS = 0.28;
 float		WATER_WAVE_HEIGHT = 64.0;
-qboolean	WATER_FOG_ENABLED = qfalse;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
 qboolean	GRASS_ENABLED = qtrue;
@@ -1537,6 +1540,7 @@ void MAPPING_LoadMapInfo(void)
 	MAP_MAX_VIS_RANGE = atoi(IniRead(mapname, "FIXES", "MAP_MAX_VIS_RANGE", "0"));
 	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
 	DISABLE_LIFTS_AND_PORTALS_MERGE = (atoi(IniRead(mapname, "FIXES", "DISABLE_LIFTS_AND_PORTALS_MERGE", "1")) > 0) ? qtrue : qfalse;
+	GENERIC_MATERIALS_PREFER_SHINY = (atoi(IniRead(mapname, "FIXES", "GENERIC_MATERIALS_PREFER_SHINY", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Misc effect enablers...
@@ -1755,14 +1759,20 @@ void MAPPING_LoadMapInfo(void)
 
 		if (FOG_VOLUMETRIC_ENABLE)
 		{
-			FOG_VOLUMETRIC_DENSITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_DENSITY", "0.01"));
-			FOG_VOLUMETRIC_STRENGTH = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_STRENGTH", "1.0"));
-			FOG_VOLUMETRIC_VELOCITY = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_VELOCITY", "0.1"));
+			FOG_VOLUMETRIC_SUN_PENETRATION = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_SUN_PENETRATION", "1.0"));
+			FOG_VOLUMETRIC_ALTITUDE_BOTTOM = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALTITUDE_BOTTOM", "-65536.0"));
+			FOG_VOLUMETRIC_ALTITUDE_TOP = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALTITUDE_TOP", "65536.0"));
+			FOG_VOLUMETRIC_ALTITUDE_FADE = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALTITUDE_FADE", "-65536.0"));
 			FOG_VOLUMETRIC_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_CLOUDINESS", "1.0"));
 			FOG_VOLUMETRIC_WIND = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_WIND", "1.0"));
 			FOG_VOLUMETRIC_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_R", "1.0"));
 			FOG_VOLUMETRIC_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_G", "1.0"));
 			FOG_VOLUMETRIC_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_B", "1.0"));
+			FOG_VOLUMETRIC_ALPHA = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALPHA", "1.0"));
+			FOG_VOLUMETRIC_BBOX[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MIN_X", "0.0"));
+			FOG_VOLUMETRIC_BBOX[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MIN_Y", "0.0"));
+			FOG_VOLUMETRIC_BBOX[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MAX_X", "0.0"));
+			FOG_VOLUMETRIC_BBOX[3] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MAX_Y", "0.0"));
 		}
 	}
 
@@ -1787,7 +1797,6 @@ void MAPPING_LoadMapInfo(void)
 	{
 		WATER_USE_OCEAN = (atoi(IniRead(mapname, "WATER", "WATER_OCEAN_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_FARPLANE_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FARPLANE_ENABLED", "0")) > 0) ? qtrue : qfalse;
-		WATER_FOG_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FOG_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_REFLECTIVENESS = Q_clamp(0.0, atof(IniRead(mapname, "WATER", "WATER_REFLECTIVENESS", "0.28")), 1.0);
 		WATER_WAVE_HEIGHT = atof(IniRead(mapname, "WATER", "WATER_WAVE_HEIGHT", "64.0"));
 		WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
@@ -2021,6 +2030,8 @@ void MAPPING_LoadMapInfo(void)
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
 
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Generic material selections prefer ^7%s^5 on this map.\n", GENERIC_MATERIALS_PREFER_SHINY ? "SHINY" : "MATTE");
+
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lodmodels are ^7%s^5 on this map.\n", LODMODEL_MAP ? "USED" : "UNUSED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Depth prepass is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_DEPTH_PREPASS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
 
@@ -2070,12 +2081,15 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog accumulation modifier is ^7%.4f^5 on this map.\n", FOG_ACCUMULATION_MODIFIER);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog color (main) ^7%.4f %.4f %.4f^5 (sun) ^7%.4f %.4f %.4f^5 on this map.\n", FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog is ^7%s^5 on this map.\n", FOG_VOLUMETRIC_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog density is ^7%.4f^5 and Volumetric fog cloudiness is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_DENSITY, FOG_VOLUMETRIC_CLOUDINESS);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog wind is ^7%.4f^5 and Volumetric fog velocity is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_WIND, FOG_VOLUMETRIC_VELOCITY);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog strength is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_STRENGTH);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog sun penetration is ^7%.4f^5 and Volumetric fog cloudiness is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_SUN_PENETRATION, FOG_VOLUMETRIC_CLOUDINESS);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog wind is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_WIND);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog altitude (bottom) is ^7%.4f^5 and volumetric fog altitude (top) is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_ALTITUDE_BOTTOM, FOG_VOLUMETRIC_ALTITUDE_TOP);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog fade altitude is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_ALTITUDE_FADE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog color ^7%.4f %.4f %.4f^5 on this map.\n", FOG_VOLUMETRIC_COLOR[0], FOG_VOLUMETRIC_COLOR[1], FOG_VOLUMETRIC_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog alpha is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_ALPHA);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog box min ^7%.4f %.4f^5 and volumetric fog box max ^7%.4f %.4f^5 on this map.\n", FOG_VOLUMETRIC_BBOX[0], FOG_VOLUMETRIC_BBOX[1], FOG_VOLUMETRIC_BBOX[2], FOG_VOLUMETRIC_BBOX[3]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 and water fog is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED", WATER_FOG_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, WATER_USE_OCEAN ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water far plane is ^7%s^5 and wave height is ^7%.4f^5 on this map.\n", WATER_FARPLANE_ENABLED ? "ENABLED" : "DISABLED", WATER_WAVE_HEIGHT);
