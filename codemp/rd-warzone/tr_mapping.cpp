@@ -2496,6 +2496,13 @@ void R_LoadMapInfo(void)
 	{
 		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
+#else
+	tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+
+	if (!tr.heightMapImage || tr.heightMapImage == tr.defaultImage)
+	{
+		tr.heightMapImage = tr.blackImage;
+	}
 #endif
 
 #if 0

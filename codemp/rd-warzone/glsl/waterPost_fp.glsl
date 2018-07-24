@@ -43,7 +43,7 @@ uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLO
 uniform vec4		u_Local4;				// DayNightFactor, 0, 0, 0
 uniform vec4		u_Local7;				// testshadervalue1, etc
 uniform vec4		u_Local8;				// testshadervalue5, etc
-uniform vec4		u_Local10;				// waveHeight, waveDensity, USE_OCEAN
+uniform vec4		u_Local10;				// waveHeight, waveDensity, USE_OCEAN, viewUpDown
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo;				// zmin, zmax, zmax / zmin

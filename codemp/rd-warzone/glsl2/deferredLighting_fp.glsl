@@ -3,75 +3,69 @@
 #define __FAST_NORMAL_DETAIL__
 #define __AMBIENT_OCCLUSION__
 #define __ENHANCED_AO__
-//#define __ENVMAP__
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
-//#define __HEIGHTMAP_SHADOWS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
-//#define __IRRADIANCE__
-//#define __TEXTURE_IMPROVED__
+//#define __BUMP_ENHANCE__
+//#define __HSHADOW_OCC_TESTING__ // Just testing stuff...
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
-
-	#ifdef USE_EMISSIVECUBES
-		//#define __EMISSIVE_IBL__
-	#endif //USE_EMISSIVECUBES
 #endif //USE_CUBEMAPS
 
 #endif //__LQ_MODE__
 
-uniform sampler2D	u_DiffuseMap;		// Screen image
-uniform sampler2D	u_ScreenDepthMap;	// Depth map
-uniform sampler2D	u_NormalMap;		// Flat normals
-uniform sampler2D	u_PositionMap;		// positionMap
-uniform sampler2D	u_DeluxeMap;		// Random2K image...
-uniform sampler2D	u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
-uniform sampler2D	u_SteepMap;			// ssao image
-uniform sampler2D	u_HeightMap;		// ssdoImage
-uniform sampler2D	u_GlowMap;			// anamorphic
-uniform sampler2D	u_ShadowMap;		// Screen Shadow Map
-uniform sampler2D	u_WaterEdgeMap;		// tr.shinyImage
-uniform sampler2D	u_RoadsControlMap;	// unused
-uniform samplerCube	u_SkyCubeMap;		// Day sky cubemap
-uniform samplerCube	u_SkyCubeMapNight;	// Night sky cubemap
-uniform samplerCube	u_CubeMap;			// Closest cubemap
-uniform samplerCube	u_EmissiveCubeMap;	// Closest emissive cubemap
+uniform sampler2D						u_DiffuseMap;		// Screen image
+uniform sampler2D						u_ScreenDepthMap;	// Depth map
+uniform sampler2D						u_NormalMap;		// Flat normals
+uniform sampler2D						u_PositionMap;		// positionMap
+uniform sampler2D						u_DeluxeMap;		// linear depth 4096...
+uniform sampler2D						u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
+uniform sampler2D						u_SteepMap;			// ssao image
+uniform sampler2D						u_HeightMap;		// ssdoImage
+uniform sampler2D						u_GlowMap;			// anamorphic
+uniform sampler2D						u_ShadowMap;		// Screen Shadow Map
+uniform sampler2D						u_WaterEdgeMap;		// tr.shinyImage
+uniform sampler2D						u_RoadsControlMap;	// map heightmap
+uniform samplerCube						u_SkyCubeMap;		// Day sky cubemap
+uniform samplerCube						u_SkyCubeMapNight;	// Night sky cubemap
+uniform samplerCube						u_CubeMap;			// Closest cubemap
+uniform samplerCube						u_EmissiveCubeMap;	// Closest emissive cubemap
 
-uniform mat4		u_ModelViewProjectionMatrix;
+uniform mat4							u_ModelViewProjectionMatrix;
 
-uniform vec2		u_Dimensions;
+uniform vec2							u_Dimensions;
 
-uniform vec4		u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
-uniform vec4		u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
-uniform vec4		u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
-uniform vec4		u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
-uniform vec4		u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
-uniform vec4		u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
-uniform vec4		u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
-uniform vec4		u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
-uniform vec4		u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
+uniform vec4							u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
+uniform vec4							u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
+uniform vec4							u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
+uniform vec4							u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
+uniform vec4							u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
+uniform vec4							u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
+uniform vec4							u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
+uniform vec4							u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
+uniform vec4							u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
 
-uniform vec4		u_ViewInfo; // znear, zfar, zfar / znear, fov
-uniform vec3		u_ViewOrigin;
-uniform vec4		u_PrimaryLightOrigin;
-uniform vec3		u_PrimaryLightColor;
+uniform vec4							u_ViewInfo; // znear, zfar, zfar / znear, fov
+uniform vec3							u_ViewOrigin;
+uniform vec4							u_PrimaryLightOrigin;
+uniform vec3							u_PrimaryLightColor;
 
-uniform vec4		u_CubeMapInfo;
-uniform float		u_CubeMapStrength;
+uniform vec4							u_CubeMapInfo;
+uniform float							u_CubeMapStrength;
 
-uniform int			u_lightCount;
-#if !defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
-uniform vec2		u_lightPositions[MAX_DEFERRED_LIGHTS];
-#endif
-uniform vec3		u_lightPositions2[MAX_DEFERRED_LIGHTS];
-uniform float		u_lightDistances[MAX_DEFERRED_LIGHTS];
-uniform float		u_lightHeightScales[MAX_DEFERRED_LIGHTS];
-uniform vec3		u_lightColors[MAX_DEFERRED_LIGHTS];
-//uniform int			u_lightMax;
-uniform float		u_lightMaxDistance;
+uniform int								u_lightCount;
+uniform vec3							u_lightPositions2[MAX_DEFERRED_LIGHTS];
+uniform float							u_lightDistances[MAX_DEFERRED_LIGHTS];
+uniform float							u_lightHeightScales[MAX_DEFERRED_LIGHTS];
+uniform vec3							u_lightColors[MAX_DEFERRED_LIGHTS];
+//uniform int								u_lightMax;
+uniform float							u_lightMaxDistance;
 
-varying vec2		var_TexCoords;
+uniform vec4							u_Mins;
+uniform vec4							u_Maxs;
+
+varying vec2							var_TexCoords;
 
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
@@ -145,27 +139,6 @@ vec2 EncodeNormal(vec3 n)
 	return vec2(n.xy * 0.5 + 0.5);
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
-
-
-#ifdef __TEXTURE_IMPROVED__
-vec4 textureImproved( sampler2D tex, vec2 uv )
-{
-	vec2 p = uv*u_Dimensions.xy + 0.5;
-
-	vec2 i = floor(p);
-	vec2 f = p - i;
-	f = f*f*f*(f*(f*6.0-15.0)+10.0);
-	p = i + f;
-
-	p = (p - 0.5)/u_Dimensions.xy;
-	return texture( tex, p );
-}
-#else //!__TEXTURE_IMPROVED__
-vec4 textureImproved( sampler2D tex, vec2 uv )
-{
-	return texture( tex, uv );
-}
-#endif //__TEXTURE_IMPROVED__
 
 
 vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
@@ -335,15 +308,45 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	return settings;
 }
 
-#ifdef __EMISSIVE_IBL__
-float saturate(in float val) {
-	return clamp(val, 0.0, 1.0);
+float lhash( const in float n ) {
+	return fract(sin(n)*4378.5453);
 }
 
-vec3 saturate(in vec3 val) {
-	return clamp(val, vec3(0.0), vec3(1.0));
+float lnoise(in vec3 o) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * 1009.0;
+
+	float a = lhash(n+  0.0);
+	float b = lhash(n+  1.0);
+	float c = lhash(n+ 57.0);
+	float d = lhash(n+ 58.0);
+	
+	float e = lhash(n+  0.0 + 1009.0);
+	float f = lhash(n+  1.0 + 1009.0);
+	float g = lhash(n+ 57.0 + 1009.0);
+	float h = lhash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
 }
-#endif //__EMISSIVE_IBL__
 
 #ifdef __RANDOMIZE_LIGHT_PIXELS__
 float lrand(vec2 co) {
@@ -387,7 +390,7 @@ vec3 TangentFromNormal ( vec3 normal )
 }
 
 float getHeight(vec2 uv) {
-  return length(textureImproved(u_DiffuseMap, uv).rgb) / 3.0;
+  return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
@@ -553,7 +556,7 @@ vec4 normalVector(vec2 coord) {
 }
 #endif //__FAST_NORMAL_DETAIL__
 
-#if defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
+#if defined(__AMBIENT_OCCLUSION__)
 float drawObject(in vec3 p){
     p = abs(fract(p)-.5);
     return dot(p, vec3(.5));
@@ -585,7 +588,7 @@ float aomap(vec3 p)
     float n = (.5-cellTile(p))*1.5;
     return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
 }
-#endif //defined(__AMBIENT_OCCLUSION__) || defined(__ENVMAP__)
+#endif //defined(__AMBIENT_OCCLUSION__)
 
 
 #if defined(__AMBIENT_OCCLUSION__)
@@ -606,103 +609,6 @@ float bad_ao(vec3 n) {
     return abs(dot(n, vec3(0.0, 1.0, 0.0))); 
 }
 #endif //defined(__AMBIENT_OCCLUSION__)
-
-#if defined(__ENVMAP__)
-vec3 envMap(vec3 p, float warmth)
-{
-    float c = cellTile(p*6.);
-    c = smoothstep(0.2, 1., c); // Contract gives it more of a lit look... kind of.
-    
-	// Icy glow... for whatever reason.
-    vec3 coolMap = vec3(pow(c, 8.), c*c, c);
-    
-	// Alternate firey glow.
-    vec3 heatMap = vec3(min(c*1.5, 1.), pow(c, 2.5), pow(c, 12.));
-
-	// Mix Ice and Heat based on warmth setting...
-	return mix(coolMap, heatMap, clamp(warmth, 0.0, 1.0));
-}
-#endif //defined(__ENVMAP__)
-
-
-#if defined(__HEIGHTMAP_SHADOWS__)
-float adjustHeightZeroOne(float height)
-{
-	return (height / u_Local8.a) * 0.5 + 0.5;
-}
-
-float getHeightmap(vec2 uv)
-{
-	vec2 p = texture(u_PositionMap, uv).zw;
-
-	float material = p.y - 1.0;
-
-	if (material == MATERIAL_SKY || material == MATERIAL_SUN)
-	{
-		return -1.0;
-	}
-
-	float height = p.x;
-	return adjustHeightZeroOne(height);
-}
-
-float GetShadow(vec2 uv, vec3 lp, vec3 lDir) {
-	const int steps = 8;// int(u_Local3.g);// 64;
-	const float invSteps = 1.0 / float(steps);
-	//float bias = 0.01;
-
-	//vec3 lightOrg = u_ViewOrigin.xzy - lp.xzy;
-	//lightOrg.x = adjustHeightZeroOne(lightOrg.x);
-	//lightOrg.y = adjustHeightZeroOne(lightOrg.y);
-	//lightOrg.z = adjustHeightZeroOne(lightOrg.z);
-	//lightOrg = normalize(lightOrg);
-	
-	//vec3 lightOrg = normalize(vec3(0.0, 1.0, 0.0));
-
-	vec3 lightOrg = vec3(0.0, -lDir.b, 0.0);
-	if (lDir.g > 0.0)
-		lightOrg.r = lDir.g;
-	else if (lDir.b > 0.0)
-		lightOrg.r = -lDir.r;
-
-	//if (u_Local3.r == 6.0)
-	//	return lightOrg.r;
-
-	vec3 inc = lightOrg * invSteps;
-
-	float heightmap = getHeightmap(uv);
-	
-	vec3 position = vec3(uv, heightmap);
-
-	float shadow = 1.0;
-	float k = 0.0;// u_Local3.b;
-	float tmax = 8.0;// u_Local3.a;
-
-	for (int i = 0; i < steps && position.z < 1.0 && position.y > 0.0 && position.y < 1.0 && position.x > 0.0 && position.x < 1.0; i++) {
-		position += inc;
-
-		float offsetHightmap = getHeightmap(position.xy);// -bias;
-
-		//if (offsetHightmap > position.z)
-		//{
-		//	return 0.0;
-		//}
-
-		if (offsetHightmap != -1.0)
-		{
-			shadow = min(shadow, offsetHightmap*1.5);
-
-			k += offsetHightmap;
-
-			if (k > tmax)
-			{
-				break;
-			}
-		}
-	}
-	return shadow;
-}
-#endif //defined(__HEIGHTMAP_SHADOWS__)
 
 
 vec3 TrueHDR ( vec3 color )
@@ -725,19 +631,6 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 // Full lighting... Blinn phong and basic lighting as well...
 //
 #if defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
-
-#if 0
-float getspecularLight(vec3 n, vec3 l, vec3 e, float s) {
-	//float nrm = (s + 8.0) / (3.1415 * 8.0);
-	float ndotl = clamp(max(dot(reflect(e, n), l), 0.0), 0.1, 1.0);
-	return clamp(pow(ndotl, s), 0.1, 1.0);// * nrm;
-}
-
-float getdiffuse(vec3 n, vec3 l, float p) {
-	float ndotl = clamp(dot(n, l), 0.5, 0.9);
-	return pow(ndotl, p);
-}
-#else
 float getspecularLight(vec3 surfaceNormal, vec3 lightDirection, vec3 viewDirection, float shininess)
 {
 	//Calculate Blinn-Phong power
@@ -750,19 +643,12 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 	return pow(ndotl, p);
 	//return pow(dot(n, l) * 0.4 + 0.6, p);
 }
-#endif
 
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
-	/*float fre = clamp(dot(normal, -view) + 1.0, 0.0, 1.0);
-	vec3 diffuse = diffuseColor * getdiffuse(normal, light, 2.0);
-	vec3 specular = specularColor * clamp(getspecularLight(normal, -light, view, 0.2) * fre * u_Local3.r, u_Local3.g, u_Local3.b);
-	return diffuse + specular;*/
-
 	// Ambient light.
 	float ambience = 4.0;// 0.25;
 
 	// Diffuse lighting.
-	//float diff = max(dot(normal, light), 0.0);
 	float diff = getdiffuse(normal, light, 2.0) * 16.0;
 
 	// Specular lighting.
@@ -866,10 +752,15 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 }
 
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
-	float noise = texture(u_DeluxeMap, pos.xy).x * 0.5;
+	/*float noise = texture(u_DeluxeMap, pos.xy).x * 0.5;
 	noise += texture(u_DeluxeMap, pos.xy * 0.5).y;
 	noise += texture(u_DeluxeMap, pos.xy * 0.25).z * 2.0;
-	noise += texture(u_DeluxeMap, pos.xy * 0.125).w * 4.0;
+	noise += texture(u_DeluxeMap, pos.xy * 0.125).w * 4.0;*/
+
+	float noise = lnoise(pos.xyx) * 0.5;
+	noise += lnoise(pos.yzx * 0.5);
+	noise += lnoise(pos.zxy * 0.25) * 2.0;
+	noise += lnoise(pos.yxz * 0.125) * 4.0;
 
 	vec3 albedo = pow(color, vec3(2.2));
 	albedo = mix(albedo, albedo * 1.3, noise * 0.35 - 1.0);
@@ -910,55 +801,6 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 	return (clamp(diffuseColor, 0.0, 1.0) * ambience) + (clamp(diffuseColor, 0.0, 1.0) * diff) + (clamp(specularColor, 0.0, 1.0) * clamp(albedo, 0.0, 1.0) * spec);
 }
 #endif //defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
-
-#if !defined(__LQ_MODE__) && defined(__IRRADIANCE__)
-vec3 computeIrradiance(vec3 n)
-{
-	// Coefficients for SH 03
-	vec3 l_0_p0 = vec3(0.379727, 0.427857, 0.452654);
-	vec3 l_1_n1 = vec3(0.288207, 0.358230, 0.414330);
-	vec3 l_1_p0 = vec3(0.039812, 0.031627, 0.012003);
-	vec3 l_1_p1 = vec3(-0.103013, -0.102729, -0.087898);
-	vec3 l_2_n2 = vec3(-0.060510, -0.053534, -0.037656);
-	vec3 l_2_n1 = vec3(0.008683, -0.013685, -0.045723);
-	vec3 l_2_p0 = vec3(-0.092757, -0.124872, -0.152495);
-	vec3 l_2_p1 = vec3(-0.059096, -0.052316, -0.038539);
-	vec3 l_2_p2 = vec3(0.022220, -0.002188, -0.042826);
-
-	vec3 irr = vec3(0.0);
-
-	float c1 = 0.429043;
-	float c2 = 0.511664;
-	float c3 = 0.743125;
-	float c4 = 0.886227;
-	float c5 = 0.247708;
-
-	irr += c1 * l_2_p2 * (n.x*n.x - n.y*n.y);
-	irr += c3 * l_2_p0 * (n.z*n.z);
-	irr += c4 * l_0_p0;
-	irr -= c5 * l_2_p0;
-	irr += 2.0 * c1 * (l_2_n2*n.x*n.y + l_2_p1*n.x*n.z + l_2_n1*n.y*n.z);
-	irr += 2.0 * c2 * (l_1_p1*n.x + l_1_n1*n.y + l_1_p0*n.z);
-
-	return vec3(irr);
-}
-#endif //!defined(__LQ_MODE__) && defined(__IRRADIANCE__)
-
-#if !defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
-float checkVisibility(vec2 p1, vec2 p2) {
-	float percent = 1.0;
-	float iter = 0.1;
-	float d1 = texture(u_ScreenDepthMap, p1).r;
-	float d2 = texture(u_ScreenDepthMap, p2).r;
-	for (int i = 1; i < 9; i++) {
-		vec2 mx = mix(p1, p2, iter);
-		float d = texture(u_ScreenDepthMap, mx).r;
-		percent -= smoothstep(0.0, 0.9, max(0.0, mix(d1, d2, iter) - d));
-		iter += 0.1;
-	}
-	return max(0.0, percent);
-}
-#endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
 
 //
 // Normal variation...
@@ -1071,20 +913,111 @@ float getGrey(vec3 p){ return p.x*0.299 + p.y*0.587 + p.z*0.114; }
 vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
 {
     const float eps = 0.001;
-    vec3 grad = vec3( getGrey(textureImproved(tex, vec2(tc.x-eps, tc.y)).rgb),
-                      getGrey(textureImproved(tex, vec2(tc.x, tc.y-eps)).rgb),
-                      getGrey(textureImproved(tex, vec2(tc.x, tc.y)).rgb));
+    vec3 grad = vec3( getGrey(texture(tex, vec2(tc.x-eps, tc.y)).rgb),
+                      getGrey(texture(tex, vec2(tc.x, tc.y-eps)).rgb),
+                      getGrey(texture(tex, vec2(tc.x, tc.y)).rgb));
     
-    grad = (grad - getGrey(textureImproved(tex, tc.xy).rgb))/eps; 
+    grad = (grad - getGrey(texture(tex, tc.xy).rgb))/eps; 
             
     grad -= nor*dot(nor, grad);          
 
     return normalize( nor + grad*bumpfactor );
 }
 
+#ifdef __HSHADOW_OCC_TESTING__
+float getDepth(vec2 coord) {
+    return texture(u_DeluxeMap/*u_ScreenDepthMap*/, coord).r;
+}
+
+vec3 getViewPosition(vec2 coord) {
+    vec3 pos = vec3((coord.s * 2.0 - 1.0), (coord.t * 2.0 - 1.0) / (u_Dimensions.x/u_Dimensions.y), 1.0);
+    return (pos * getDepth(coord));
+}
+
+vec3 getViewNormal(vec2 coord) {
+	vec3 p0 = getViewPosition(coord);
+	vec3 p1 = getViewPosition(coord + vec2(u_Local3.g/*1.0*/ / u_Dimensions.x, 0.0));
+	vec3 p2 = getViewPosition(coord + vec2(0.0, u_Local3.g/*1.0*/ / u_Dimensions.y));
+
+	vec3 dx = p1 - p0;
+	vec3 dy = p2 - p0;
+	return normalize(cross(dy, dx) + 0.0000001);
+}
+
+vec2 GetMapTC(vec3 pos)
+{
+	vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+	return (pos.xy - u_Mins.xy) / mapSize;
+}
+
+float DistanceField( vec3 pos, float d )
+{
+	//float hSize = (u_Maxs.z - u_Mins.z);// * u_Local3.a;
+	return texture(u_RoadsControlMap, GetMapTC(pos)).r;
+}
+
+float calcOcclusion( in vec3 pos, in vec3 nor, float t, vec3 lightDir )
+{
+	float occ = 0.0;
+    for( int i=0; i<8; i++ )
+    {
+        float h = 0.005 + 0.25*float(i)/ /*7.0*/u_Local3.a;
+        vec3 dir = lightDir;//normalize( sin( float(i)*73.4 + lightDir/*vec3(0.0,2.1,4.2)*/ ));
+        dir = normalize( nor + dir );
+        occ += (h-DistanceField( pos + h*dir, t ));
+    }
+    return clamp( 1.0 - 9.0*occ/8.0, 0.0, 1.0 );    
+}
+
+#if 1
+float calcShadow( in vec3 ro, in vec3 rd )
+{
+    float res = 1.0;
+
+    //float t = 0.1;
+	float t = DistanceField(ro, 0.0/*length(pos)*/);
+
+	//float d = distance(ro, u_PrimaryLightOrigin.xyz);
+	//float tPlus = 32.0 / d;
+
+    for( int i=0; i<32; i++ )
+    {
+        vec3 pos = ro + (rd*t*u_Local3.a);
+        float h = DistanceField(pos, 0.0/*length(pos)*/);
+        res = min( res, smoothstep(0.0,1.0,u_Local3.b/*8.0*/*h/t) );
+        t += h;//clamp( h, 0.05, 10.0 );
+		if( res<0.01 ) break;
+    }
+    return clamp(res,0.0,1.0);
+}
+#else
+float calcShadow(vec3 rayOrigin, vec3 lightPos, float dNearLight, float kShadowSoftness)
+{
+    const int maxStep = 128;
+    const float dNearIntersect = 0.0000001;
+    vec3 rayDirection = lightPos - rayOrigin;
+    float dMax = length(rayDirection) - dNearLight;
+    rayDirection = normalize(rayDirection);
+    float res = 1.0;
+    float d=0.0;
+    for(int k=0; k<maxStep; k++)
+    {
+        float closest = DistanceField(rayOrigin + rayDirection*d, 0.0);
+        if(closest<dNearIntersect)
+            return 0.0;
+        res = min(res, kShadowSoftness*closest/d);
+        d += closest;
+        if(d>=dMax)
+            break;
+    }
+    return res;
+}
+#endif
+#endif //__HSHADOW_OCC_TESTING__
+
 void main(void)
 {
-	vec4 color = textureImproved(u_DiffuseMap, var_TexCoords);//textureLod(u_DiffuseMap, var_TexCoords, 0.0);
+	vec4 color = texture(u_DiffuseMap, var_TexCoords);//textureLod(u_DiffuseMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
 	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
 
@@ -1122,6 +1055,48 @@ void main(void)
 		return;
 	}
 
+#ifdef __HSHADOW_OCC_TESTING__
+	{
+		
+		vec3 viewNormal = getViewNormal(var_TexCoords);
+		/*float vNv = viewNormal.z * 0.5 + 0.5;
+
+		//if (u_Local3.r == 1.0) vNv = viewNormal.y * 0.5 + 0.5;
+		//if (u_Local3.r == 2.0) vNv = viewNormal.x * 0.5 + 0.5;
+
+		if (u_Local3.r == 1.0)
+		{
+			gl_FragColor = vec4(vNv, vNv, vNv, 1.0);
+			return;
+		}
+		*/
+
+		if (u_Local3.r != 0.0)
+		{
+			//vec3 rd = normalize(position.xzy);
+			//float shd = calcShadow( position.xyz, normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin) );
+			
+			//float shd = calcShadow( position.xyz, normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz) );
+			//float shd = calcShadow( position.xyz, u_PrimaryLightOrigin.xyz, u_Local3.b/*1.0*/, 32.0 );
+
+			float shd = 1.0 - calcOcclusion( position.xyz, viewNormal, u_Local3.g, normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz) );
+
+			shd = mix( .2, 1.0, smoothstep( 0.0, .7, shd ) );
+
+			//result *= mix( .2, 1.0, smoothstep( 0.0, .7, calcOcclusion( pos, norm, t ) ) );
+			
+
+			if (u_Local3.r == 100.0)
+			{
+				gl_FragColor = vec4(shd, shd, shd, 1.0);
+				return;
+			}
+
+			outColor.rgb *= shd * u_Local3.r;
+		}
+	}
+#endif //__HSHADOW_OCC_TESTING__
+
 	vec2 texCoords = var_TexCoords;
 	vec2 materialSettings = RB_PBR_DefaultsForMaterial(position.a-1.0);
 	bool isMetalic = (position.a - 1.0 == MATERIAL_SOLIDMETAL || position.a - 1.0 == MATERIAL_HOLLOWMETAL) ? true : false;
@@ -1134,7 +1109,9 @@ void main(void)
 	norm.xyz = DecodeNormal(norm.xy);
 
 
+#ifdef __BUMP_ENHANCE__
 	norm.xyz = doBumpMap( u_DiffuseMap, texCoords, norm.xyz, 0.005);
+#endif //__BUMP_ENHANCE__
 
 
 	vec3 flatNorm = norm.xyz = normalize(norm.xyz);
@@ -1299,21 +1276,6 @@ void main(void)
 	vec3 emissiveCubeLightDirection = vec3(0.0);
 	vec3 irradiance = vec3(1.0);
 
-#if !defined(__LQ_MODE__) && defined(__IRRADIANCE__)
-	if (u_Local3.r > 0.0)
-	{
-		irradiance = computeIrradiance(N);
-
-		if (u_Local3.r >= 2.0)
-		{
-			outColor.rgb = vec3(irradiance);
-			outColor.a = 1.0;
-			gl_FragColor = outColor;
-			return;
-		}
-	}
-#endif //!defined(__LQ_MODE__) && defined(__IRRADIANCE__)
-
 #ifndef __LQ_MODE__
 	if (u_Local7.a > 0.0)
 	{// Sky cube light contributions... If enabled...
@@ -1383,7 +1345,7 @@ void main(void)
 #ifndef __LQ_MODE__
 		if (u_Local7.r > 0.0)
 		{// Cubemaps enabled...
-#if defined(__CUBEMAPS__) || defined(__EMISSIVE_IBL__)
+#if defined(__CUBEMAPS__)
 			//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
 			vec3 cubeLightColor = vec3(0.0);
 			
@@ -1399,16 +1361,6 @@ void main(void)
 			vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
 			parallax.z *= -1.0;
 
-#ifdef __EMISSIVE_IBL__
-			if (u_Local9.r > 0.0)
-			{// Also grab emissive cube lighting color...
-				emissiveCubeLightColor = textureLod(u_EmissiveCubeMap, cubeRayDir + parallax, 4.0).rgb;
-				//emissiveCubeLightColor += texture(u_EmissiveCubeMap, rayDir + parallax).rgb;
-				//emissiveCubeLightColor /= 2.0;
-				emissiveCubeLightDirection = cubeRayDir + parallax;
-			}
-#endif //__EMISSIVE_IBL__
-		
 #ifdef __CUBEMAPS__
 			if (cubeReflectionFactor > 0.0 && NE > 0.0 && u_CubeMapStrength > 0.0)
 			{
@@ -1430,7 +1382,7 @@ void main(void)
 				}
 			}
 #endif //__CUBEMAPS__
-#endif //defined(__CUBEMAPS__) || defined(__EMISSIVE_IBL__)
+#endif //defined(__CUBEMAPS__)
 		}
 		else
 		{
@@ -1581,20 +1533,6 @@ void main(void)
 					}
 #endif //__LQ_MODE__
 
-#if !defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
-					if (u_lightPositions[li].x >= 0.0 && u_lightPositions[li].x <= 1.0 && u_lightPositions[li].y >= 0.0 && u_lightPositions[li].y <= 1.0)
-					{
-						light_occlusion *= checkVisibility(texCoords, u_lightPositions[li]);
-
-						if (u_Local3.r >= 0.0 && li == int(u_Local3.r))
-						{
-							outColor.rgb = vec3(light_occlusion);
-							gl_FragColor = outColor;
-							return;
-						}
-					}
-#endif //!defined(__LQ_MODE__) && defined(__LIGHT_OCCLUSION__)
-					
 					vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
 					addedLight.rgb += blinn + (blinn * wetness);
 				}
@@ -1662,25 +1600,10 @@ void main(void)
 	}
 #endif //defined(__ENHANCED_AO__)
 
-#if defined(__ENVMAP__)
-	if (u_Local1.a > 0.0)
-	{// Envmap enabled...
-		float lightScale = clamp(1.0 - clamp(max(max(outColor.r, outColor.g), outColor.b), 0.0, 1.0), 0.0, 1.0);
-		float invLightScale = clamp((1.0 - lightScale) * 1.2, 0.2, 1.0);
-		vec3 env = envMap(rayDir, 0.6 /* warmth */);
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + ((env * (specularReflectivePower * 0.5) * invLightScale) * lightScale), clamp((specularReflectivePower * 0.5) * lightScale * cubeReflectionFactor, 0.0, 1.0));
-	}
-#endif //defined(__ENVMAP__)
-
-#if defined(__HEIGHTMAP_SHADOWS__)
-	float hshadow = GetShadow(texCoords, u_PrimaryLightOrigin.xyz, sunDir.xyz);
-	outColor.rgb *= hshadow;
-#endif //defined(__HEIGHTMAP_SHADOWS__)
-
 #if defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
 	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
 	{
-		float shadowValue = textureImproved(u_ShadowMap, texCoords).r;
+		float shadowValue = texture(u_ShadowMap, texCoords).r;
 
 		shadowValue = pow(shadowValue, 1.5);
 

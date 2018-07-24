@@ -2094,8 +2094,12 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 
 	{
+		vec3_t mAngles, mCameraForward, mCameraLeft, mCameraDown;
+		TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
+		AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);
+
 		vec4_t loc;
-		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, 0.0);
+		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, mCameraDown[2]);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
 
@@ -2394,7 +2398,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 	GLSL_SetUniformInt(shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
+	//GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
+	GL_BindToTMU(tr.linearDepthImage4096, TB_DELUXEMAP);
 
 	if (r_normalMappingReal->integer)
 	{
@@ -2442,7 +2447,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GL_BindToTMU(tr.shinyImage, TB_WATER_EDGE_MAP);
 
 	GLSL_SetUniformInt(shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
-	GL_BindToTMU(tr.blackCube, TB_ROADSCONTROLMAP); // Unused...
+	//GL_BindToTMU(tr.blackCube, TB_ROADSCONTROLMAP); // Unused...
+	GL_BindToTMU(tr.heightMapImage, TB_ROADSCONTROLMAP);
 
 	GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
 	GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
@@ -2622,6 +2628,14 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	VectorSet4(local9, haveEmissiveCube ? 1.0 : 0.0, MAP_USE_PALETTE_ON_SKY ? 1.0 : 0.0, PROCEDURAL_SNOW_ENABLED ? 1.0 : 0.0, PROCEDURAL_SNOW_LOWEST_ELEVATION);
 	GLSL_SetUniformVec4(shader, UNIFORM_LOCAL9, local9);
 	
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_MINS, loc);
+
+		VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_MAXS, loc);
+	}
 
 	{
 		vec2_t screensize;
