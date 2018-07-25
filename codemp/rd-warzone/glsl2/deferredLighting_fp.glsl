@@ -1015,11 +1015,33 @@ float calcShadow(vec3 rayOrigin, vec3 lightPos, float dNearLight, float kShadowS
 #endif
 #endif //__HSHADOW_OCC_TESTING__
 
+
+//#define __HIGH_PASS_SHARPEN__
+
+#if defined(__HIGH_PASS_SHARPEN__)
+vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
+{
+	vec3 blur = textureLod(tex, uv, level).xyz;
+	vec3 col = ((color - blur)*0.5 + 0.5);
+	col *= ((color - blur)*0.25 + 0.25) * 8.0;
+	col = col * color;
+	return col;
+}
+#endif //defined(__HIGH_PASS_SHARPEN__)
+
+
 void main(void)
 {
 	vec4 color = texture(u_DiffuseMap, var_TexCoords);//textureLod(u_DiffuseMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
 	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
+
+#if defined(__HIGH_PASS_SHARPEN__)
+	if (u_Local3.r != 0.0)
+	{
+		color.rgb = Enhance(u_DiffuseMap, var_TexCoords, color.rgb, u_Local3.r);
+	}
+#endif //defined(__HIGH_PASS_SHARPEN__)
 
 	if (position.a - 1.0 == MATERIAL_SKY
 		|| position.a - 1.0 == MATERIAL_SUN

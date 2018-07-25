@@ -2,6 +2,7 @@
 #define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
+//#define EXPERIMENTAL_WATERFALL	// Experimental waterfalls...
 //#define __DEBUG__
 
 //#define TEST_WATER
@@ -38,9 +39,9 @@ uniform vec4		u_MapInfo;				// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE
 
 uniform vec4		u_Local0;				// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;				// MAP_WATER_LEVEL, USE_GLSL_REFLECTION, IS_UNDERWATER, WATER_REFLECTIVENESS
-uniform vec4		u_Local2;				// WATER_COLOR_SHALLOW_R, WATER_COLOR_SHALLOW_G, WATER_COLOR_SHALLOW_B
+uniform vec4		u_Local2;				// WATER_COLOR_SHALLOW_R, WATER_COLOR_SHALLOW_G, WATER_COLOR_SHALLOW_B, WATER_CLARITY
 uniform vec4		u_Local3;				// WATER_COLOR_DEEP_R, WATER_COLOR_DEEP_G, WATER_COLOR_DEEP_B
-uniform vec4		u_Local4;				// DayNightFactor, 0, 0, 0
+uniform vec4		u_Local4;				// DayNightFactor, WATER_EXTINCTION1, WATER_EXTINCTION2, WATER_EXTINCTION3
 uniform vec4		u_Local7;				// testshadervalue1, etc
 uniform vec4		u_Local8;				// testshadervalue5, etc
 uniform vec4		u_Local10;				// waveHeight, waveDensity, USE_OCEAN, viewUpDown
@@ -72,7 +73,8 @@ uniform float		u_Time;
 
 // Over-all water clearness...
 //const float waterClarity = 0.001;
-const float waterClarity = 0.03;
+//const float waterClarity = 0.03;
+#define waterClarity u_Local2.a
 
 // How fast will colours fade out. You can also think about this
 // values as how clear water is. Therefore use smaller values (eg. 0.05f)
@@ -129,7 +131,8 @@ vec3 waterColorShallow = u_Local2.rgb;
 //const vec3 waterColorDeep = vec3(0.0059, 0.1276, 0.18);
 vec3 waterColorDeep = u_Local3.rgb;
 
-const vec3 extinction = vec3(35.0, 480.0, 8192.0);
+//const vec3 extinction = vec3(35.0, 480.0, 8192.0);
+vec3 extinction = u_Local4.gba;
 
 // Water transparency along eye vector.
 //const float visibility = 320.0;
@@ -763,7 +766,7 @@ float WaterFallNearby ( vec2 uv, out float hit )
 
 vec4 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float timer, float slope, float wfEdgeFactor, float wfHitType)
 {
-#if 0
+#ifdef EXPERIMENTAL_WATERFALL
 	//return vec4(0.5 + (0.5 * (1.0 - wfEdgeFactor)), 0.0, 0.0, 1.0);
 
 	vec3 n = normalize(position);
@@ -795,7 +798,7 @@ vec4 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float
 	vec3 wfColor = mix(refraction.rgb, vec3(1.0), vec3(rand));
 	
 	return vec4(mix(color, wfColor, vec3(edgeFactor)), 1.0);
-#else
+#else //!EXPERIMENTAL_WATERFALL
 	vec3 eyeVecNorm = normalize(ViewOrigin - waterMapUpper.xyz);
 	vec3 pixelDir = eyeVecNorm;
 	vec3 normal = normalize(pixelDir + (color.rgb * 0.5 - 0.25));
@@ -836,7 +839,7 @@ vec4 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float
 #endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
 	return vec4(color, 1.0);
-#endif
+#endif //EXPERIMENTAL_WATERFALL
 }
 
 void main ( void )
@@ -872,6 +875,7 @@ void main ( void )
 	}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
+#ifdef EXPERIMENTAL_WATERFALL
 	float hitType = 0.0;
 	float edgeFactor = 0.0;
 	
@@ -898,6 +902,13 @@ void main ( void )
 			color2 = color;
 		}
 	}
+#else //!EXPERIMENTAL_WATERFALL
+	if (waterMapLower.a >= 2.0 /*&& positionMap.a-1.0 < 1024.0*/)
+	{// Actual waterfall pixel...
+		gl_FragColor = WaterFall(color.rgb, color2.rgb, waterMapUpper.xyz, position.xyz, timer, waterMapLower.a - 2.0, 0.0, waterMapLower.a);
+		return;
+	}
+#endif //EXPERIMENTAL_WATERFALL
 
 	if (waterMapUpper.a <= 0.0)
 	{// Should be safe to skip everything else.

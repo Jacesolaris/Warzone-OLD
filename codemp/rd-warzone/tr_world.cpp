@@ -1608,6 +1608,9 @@ void R_AddWorldSurfaces(void) {
 		if (r_occlusion->integer >= 1)
 		{
 			RB_CheckOcclusions();
+
+			extern void SetVBOVisibleAreas(void);
+			SetVBOVisibleAreas();
 		}
 	}
 

@@ -1845,6 +1845,7 @@ extern vec3_t		MAP_INFO_SCATTEROFFSET;
 extern float		MAP_INFO_MAXSIZE;
 
 extern float		WATER_REFLECTIVENESS;
+extern float		WATER_CLARITY;
 extern vec3_t		WATER_COLOR_SHALLOW;
 extern vec3_t		WATER_COLOR_DEEP;
 
@@ -1926,6 +1927,9 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 extern qboolean WATER_USE_OCEAN;
 extern float WATER_WAVE_HEIGHT;
+extern float WATER_EXTINCTION1;
+extern float WATER_EXTINCTION2;
+extern float WATER_EXTINCTION3;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -2065,7 +2069,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], 0.0);
+		VectorSet4(loc, WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_CLARITY);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2, loc);
 	}
 
@@ -2077,7 +2081,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 0.0, 0.0, 0.0);
+		VectorSet4(loc, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, WATER_EXTINCTION1, WATER_EXTINCTION2, WATER_EXTINCTION3);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL4, loc);
 	}
 

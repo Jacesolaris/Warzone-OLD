@@ -552,6 +552,7 @@ float RB_NightScale ( void )
 }
 
 extern float DAY_NIGHT_CYCLE_SPEED;
+extern float DAY_NIGHT_START_TIME;
 
 extern qboolean SUN_VISIBLE;
 extern vec3_t SUN_POSITION;
@@ -562,6 +563,11 @@ extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
 extern void Volumetric_RoofHeight(vec3_t from);
 extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
 
+void R_ShowTime(void)
+{
+	ri->Printf(PRINT_ALL, "^5The current day/night ^5Day night cycle time is ^7%.4f^5.\n", DAY_NIGHT_CURRENT_TIME * 24.0);
+}
+
 void RB_UpdateDayNightCycle()
 {
 	int nowTime = ri->Milliseconds();
@@ -569,7 +575,15 @@ void RB_UpdateDayNightCycle()
 	if (DAY_NIGHT_UPDATE_TIME == 0)
 	{// Init stuff...
 		VectorCopy4(tr.refdef.sunAmbCol, DAY_NIGHT_AMBIENT_COLOR_ORIGINAL);
-		DAY_NIGHT_CURRENT_TIME = 9.0 / 24.0; // Start at 9am...
+
+		if (DAY_NIGHT_START_TIME != 0.0)
+		{// Mapinfo custom start time.
+			DAY_NIGHT_CURRENT_TIME = DAY_NIGHT_START_TIME / 24.0;
+		}
+		else
+		{
+			DAY_NIGHT_CURRENT_TIME = 9.0 / 24.0; // Start at 9am...
+		}
 	}
 
 	if (DAY_NIGHT_UPDATE_TIME < nowTime)

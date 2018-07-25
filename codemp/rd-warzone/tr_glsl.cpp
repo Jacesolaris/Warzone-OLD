@@ -1360,6 +1360,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local9", GLSL_VEC4, 1 },
 	{ "u_Local10", GLSL_VEC4, 1 },
 	{ "u_Local11", GLSL_VEC4, 1 },
+	{ "u_Local12", GLSL_VEC4, 1 },
 
 	{ "u_TesselationInfo", GLSL_VEC4, 1 },
 

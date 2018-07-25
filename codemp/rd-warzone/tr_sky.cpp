@@ -439,6 +439,13 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	extern float		PROCEDURAL_SKY_NIGHT_HDR_MIN;
 	extern float		PROCEDURAL_SKY_NIGHT_HDR_MAX;
 
+	extern qboolean		PROCEDURAL_BACKGROUND_HILLS_ENABLED;
+	extern float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS;
+	extern float		PROCEDURAL_BACKGROUND_HILLS_UPDOWN;
+	extern float		PROCEDURAL_BACKGROUND_HILLS_SEED;
+	extern vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR;
+	extern vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2;
+
 	extern vec3_t		AURORA_COLOR;
 
 	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
@@ -492,6 +499,15 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
+
+			VectorSet4(vector, PROCEDURAL_BACKGROUND_HILLS_ENABLED, PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS, PROCEDURAL_BACKGROUND_HILLS_UPDOWN, PROCEDURAL_BACKGROUND_HILLS_SEED);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, vector);
+
+			VectorSet4(vector, PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL11, vector);
+
+			VectorSet4(vector, PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[2], 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL12, vector);
 		}
 
 

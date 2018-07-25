@@ -72,6 +72,7 @@ extern qboolean	WATER_ENABLED;
 extern qboolean	WATER_USE_OCEAN;
 extern qboolean	WATER_FARPLANE_ENABLED;
 extern float		WATER_REFLECTIVENESS;
+extern float		WATER_CLARITY;
 extern vec3_t		WATER_COLOR_SHALLOW;
 extern vec3_t		WATER_COLOR_DEEP;
 extern qboolean	GRASS_ENABLED;
@@ -217,6 +218,7 @@ void DockMapInfo::imgui() {
 		ImGui::Checkbox("WATER_USE_OCEAN", &WATER_USE_OCEAN);
 		ImGui::Checkbox("WATER_FARPLANE_ENABLED", &WATER_FARPLANE_ENABLED);
 		ImGui::DragFloat("WATER_REFLECTIVENESS", &WATER_REFLECTIVENESS);
+		ImGui::DragFloat("WATER_CLARITY", &WATER_CLARITY);
 		ImGui::DragFloat3("WATER_COLOR_SHALLOW", WATER_COLOR_SHALLOW);
 		ImGui::DragFloat3("WATER_COLOR_DEEP", WATER_COLOR_DEEP);
 		ImGui::DragFloat("MAP_WATER_LEVEL", &MAP_WATER_LEVEL);

@@ -818,6 +818,23 @@ RB_SurfaceTriangles
 static void RB_SurfaceTriangles( srfBspSurface_t *srf ) {
 	glState.vertexAnimation = qfalse;
 
+#ifdef __USE_VBO_AREAS__
+	if (srf->vboArea != -1)
+	{
+		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill)
+		{
+			extern qboolean GetVBOAreaVisible(int area);
+
+			if (!GetVBOAreaVisible(srf->vboArea))
+			{// Skip drawing. Not visible...
+				//if (r_areaVisDebug->integer > 1)
+				//	ri->Printf(PRINT_ALL, "Culled a VBO surf in area %i.\n", srf->vboArea);
+				return;
+			}
+		}
+	}
+#endif //__USE_VBO_AREAS__
+
 #ifdef __PSHADOWS__
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
 				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
@@ -1975,6 +1992,23 @@ RB_SurfaceFace
 static void RB_SurfaceFace( srfBspSurface_t *srf ) {
 	glState.vertexAnimation = qfalse;
 
+#ifdef __USE_VBO_AREAS__
+	if (srf->vboArea != -1)
+	{
+		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill)
+		{
+			extern qboolean GetVBOAreaVisible(int area);
+
+			if (!GetVBOAreaVisible(srf->vboArea))
+			{// Skip drawing. Not visible...
+				//if (r_areaVisDebug->integer > 1)
+				//	ri->Printf(PRINT_ALL, "Culled a VBO surf in area %i.\n", srf->vboArea);
+				return;
+			}
+		}
+	}
+#endif //__USE_VBO_AREAS__
+
 #ifdef __PSHADOWS__
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
 				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
@@ -2056,6 +2090,23 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 	int     pshadowBits;
 #endif
 	//int		*vDlightBits;
+
+#ifdef __USE_VBO_AREAS__
+	if (srf->vboArea != -1)
+	{
+		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill)
+		{
+			extern qboolean GetVBOAreaVisible(int area);
+
+			if (!GetVBOAreaVisible(srf->vboArea))
+			{// Skip drawing. Not visible...
+				//if (r_areaVisDebug->integer > 1)
+				//	ri->Printf(PRINT_ALL, "Culled a VBO surf in area %i.\n", srf->vboArea);
+				return;
+			}
+		}
+	}
+#endif //__USE_VBO_AREAS__
 
 #ifdef __PSHADOWS__
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
@@ -2362,6 +2413,23 @@ static void RB_SurfaceFlare(srfFlare_t *surf)
 static void RB_SurfaceVBOMesh(srfBspSurface_t * srf)
 {
 	glState.vertexAnimation = qfalse;
+	
+#ifdef __USE_VBO_AREAS__
+	if (srf->vboArea != -1)
+	{
+		if (!(tr.viewParms.flags & VPF_DEPTHSHADOW) && !backEnd.depthFill)
+		{
+			extern qboolean GetVBOAreaVisible(int area);
+
+			if (!GetVBOAreaVisible(srf->vboArea))
+			{// Skip drawing. Not visible...
+				//if (r_areaVisDebug->integer > 1)
+				//	ri->Printf(PRINT_ALL, "Culled a VBO surf in area %i.\n", srf->vboArea);
+				return;
+			}
+		}
+	}
+#endif //__USE_VBO_AREAS__
 
 #ifdef __PSHADOWS__
 	RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex,

@@ -1,74 +1,87 @@
 #define __HIGH_PASS_SHARPEN__
 #define __CLOUDS__
+#define __BACKGROUND_HILLS__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
-uniform sampler2D						u_DiffuseMap;
-uniform sampler2D						u_OverlayMap; // Night sky image... When doing sky...
-uniform sampler2D						u_SplatMap1;
-uniform sampler2D						u_SplatMap2;
+uniform sampler2D										u_DiffuseMap;
+uniform sampler2D										u_OverlayMap; // Night sky image... When doing sky...
+uniform sampler2D										u_SplatMap1;
+uniform sampler2D										u_SplatMap2;
 
-uniform vec4							u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4							u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
-uniform vec4							u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4							u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+uniform vec4											u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+uniform vec4											u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
+uniform vec4											u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4											u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
 
-#define USE_TC							u_Settings0.r
-#define USE_DEFORM						u_Settings0.g
-#define USE_RGBA						u_Settings0.b
-#define USE_TEXTURECLAMP				u_Settings0.a
+#define USE_TC											u_Settings0.r
+#define USE_DEFORM										u_Settings0.g
+#define USE_RGBA										u_Settings0.b
+#define USE_TEXTURECLAMP								u_Settings0.a
 
-#define USE_VERTEX_ANIM					u_Settings1.r
-#define USE_SKELETAL_ANIM				u_Settings1.g
-#define USE_BLEND						u_Settings1.b
-#define USE_IS2D						u_Settings1.a
+#define USE_VERTEX_ANIM									u_Settings1.r
+#define USE_SKELETAL_ANIM								u_Settings1.g
+#define USE_BLEND										u_Settings1.b
+#define USE_IS2D										u_Settings1.a
 
-#define USE_LIGHTMAP					u_Settings2.r
-#define USE_GLOW_BUFFER					u_Settings2.g
-#define USE_CUBEMAP						u_Settings2.b
-#define USE_TRIPLANAR					u_Settings2.a
+#define USE_LIGHTMAP									u_Settings2.r
+#define USE_GLOW_BUFFER									u_Settings2.g
+#define USE_CUBEMAP										u_Settings2.b
+#define USE_TRIPLANAR									u_Settings2.a
 
-#define USE_REGIONS						u_Settings3.r
-#define USE_ISDETAIL					u_Settings3.g
-#define USE_DETAIL_COORD				u_Settings3.b
+#define USE_REGIONS										u_Settings3.r
+#define USE_ISDETAIL									u_Settings3.g
+#define USE_DETAIL_COORD								u_Settings3.b
 
-uniform vec4							u_Local1; // PROCEDURAL_SKY_ENABLED, 0.0, 0.0, materialType
-uniform vec4							u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
-uniform vec4							u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
-uniform vec4							u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, 0.0, 0.0
-uniform vec4							u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
-uniform vec4							u_Local6; // PROCEDURAL_SKY_DAY_COLOR
-uniform vec4							u_Local7; // PROCEDURAL_SKY_NIGHT_COLOR
-uniform vec4							u_Local8; // AURORA_COLOR
-uniform vec4							u_Local9; // testvalue0, 1, 2, 3
+uniform vec4											u_Local1; // PROCEDURAL_SKY_ENABLED, 0.0, 0.0, materialType
+uniform vec4											u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
+uniform vec4											u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
+uniform vec4											u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, 0.0, 0.0
+uniform vec4											u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
+uniform vec4											u_Local6; // PROCEDURAL_SKY_DAY_COLOR
+uniform vec4											u_Local7; // PROCEDURAL_SKY_NIGHT_COLOR
+uniform vec4											u_Local8; // AURORA_COLOR
+uniform vec4											u_Local9; // testvalue0, 1, 2, 3
+uniform vec4											u_Local10; // PROCEDURAL_BACKGROUND_HILLS_ENABLED, PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS, PROCEDURAL_BACKGROUND_HILLS_UPDOWN, PROCEDURAL_BACKGROUND_HILLS_SEED
+uniform vec4											u_Local11; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR
+uniform vec4											u_Local12; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2
 
-#define PROCEDURAL_SKY_ENABLED			u_Local1.r
-#define SHADER_SWAY						u_Local1.g
-#define SHADER_OVERLAY_SWAY				u_Local1.b
-#define SHADER_MATERIAL_TYPE			u_Local1.a
+#define PROCEDURAL_SKY_ENABLED							u_Local1.r
+#define SHADER_SWAY										u_Local1.g
+#define SHADER_OVERLAY_SWAY								u_Local1.b
+#define SHADER_MATERIAL_TYPE							u_Local1.a
 
-#define CLOUDS_ENABLED					u_Local2.r
-#define CLOUDS_CLOUDSCALE				u_Local2.g
-#define CLOUDS_SPEED					u_Local2.b
-#define CLOUDS_DARK						u_Local2.a
+#define CLOUDS_ENABLED									u_Local2.r
+#define CLOUDS_CLOUDSCALE								u_Local2.g
+#define CLOUDS_SPEED									u_Local2.b
+#define CLOUDS_DARK										u_Local2.a
 
-#define CLOUDS_LIGHT					u_Local3.r
-#define CLOUDS_CLOUDCOVER				u_Local3.g
-#define CLOUDS_CLOUDALPHA				u_Local3.b
-#define CLOUDS_SKYTINT					u_Local3.a
+#define CLOUDS_LIGHT									u_Local3.r
+#define CLOUDS_CLOUDCOVER								u_Local3.g
+#define CLOUDS_CLOUDALPHA								u_Local3.b
+#define CLOUDS_SKYTINT									u_Local3.a
 
-#define PROCEDURAL_SKY_NIGHT_HDR_MIN	u_Local4.r
-#define PROCEDURAL_SKY_NIGHT_HDR_MAX	u_Local4.g
+#define PROCEDURAL_SKY_NIGHT_HDR_MIN					u_Local4.r
+#define PROCEDURAL_SKY_NIGHT_HDR_MAX					u_Local4.g
 
-#define SHADER_DAY_NIGHT_ENABLED		u_Local5.r
-#define SHADER_NIGHT_SCALE				u_Local5.g
-#define SHADER_SKY_DIRECTION			u_Local5.b
-#define SHADER_AURORA_ENABLED			u_Local5.a
+#define SHADER_DAY_NIGHT_ENABLED						u_Local5.r
+#define SHADER_NIGHT_SCALE								u_Local5.g
+#define SHADER_SKY_DIRECTION							u_Local5.b
+#define SHADER_AURORA_ENABLED							u_Local5.a
 
-#define PROCEDURAL_SKY_DAY_COLOR		u_Local6
-#define PROCEDURAL_SKY_NIGHT_COLOR		u_Local7
+#define PROCEDURAL_SKY_DAY_COLOR						u_Local6
+#define PROCEDURAL_SKY_NIGHT_COLOR						u_Local7
 
-#define AURORA_COLOR					u_Local8
+#define AURORA_COLOR									u_Local8
+
+#define PROCEDURAL_BACKGROUND_HILLS_ENABLED 			u_Local10.r
+#define PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS			u_Local10.g
+#define PROCEDURAL_BACKGROUND_HILLS_UPDOWN				u_Local10.b
+#define PROCEDURAL_BACKGROUND_HILLS_SEED				u_Local10.a
+
+#define PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR		u_Local11.rgb
+
+#define PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2	u_Local12.rgb
 
 
 uniform vec2						u_Dimensions;
@@ -303,7 +316,7 @@ vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
 #ifdef __CLOUDS__
-const mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+const mat2 mc = mat2(1.6, 1.2, -1.2, 1.6);
 
 vec2 hash(vec2 p) {
 	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
@@ -327,7 +340,7 @@ float fbm(vec2 n) {
 	float total = 0.0, amplitude = 0.1;
 	for (int i = 0; i < 7; i++) {
 		total += noise(n) * amplitude;
-		n = m * n;
+		n = mc * n;
 		amplitude *= 0.4;
 	}
 	return total;
@@ -350,7 +363,7 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 	float weight = 0.8;
 	for (int i = 0; i<8; i++) {
 		r += abs(weight*noise(uv));
-		uv = m*uv + time;
+		uv = mc*uv + time;
 		weight *= 0.7;
 	}
 
@@ -362,7 +375,7 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 	weight = 0.7;
 	for (int i = 0; i<8; i++) {
 		f += weight*noise(uv);
-		uv = m*uv + time;
+		uv = mc*uv + time;
 		weight *= 0.6;
 	}
 
@@ -377,7 +390,7 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 	weight = 0.4;
 	for (int i = 0; i<7; i++) {
 		c += weight*noise(uv);
-		uv = m*uv + time;
+		uv = mc*uv + time;
 		weight *= 0.6;
 	}
 
@@ -390,7 +403,7 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 	weight = 0.4;
 	for (int i = 0; i<7; i++) {
 		c1 += abs(weight*noise(uv));
-		uv = m*uv + time;
+		uv = mc*uv + time;
 		weight *= 0.6;
 	}
 
@@ -470,8 +483,195 @@ void GetStars(out vec4 fragColor, in vec3 position)
 	fragColor = vec4(v*.01,1.);
 }
 
+#ifdef __BACKGROUND_HILLS__
+#define EPSILON 0.1
+
+#define bghtime (u_Time+285.)
+
+float hash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float pnoise(in vec3 o) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * 1009.0;
+
+	float a = hash(n+  0.0);
+	float b = hash(n+  1.0);
+	float c = hash(n+ 57.0);
+	float d = hash(n+ 58.0);
+	
+	float e = hash(n+  0.0 + 1009.0);
+	float f = hash(n+  1.0 + 1009.0);
+	float g = hash(n+ 57.0 + 1009.0);
+	float h = hash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 m = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float SmoothNoise( vec3 p )
+{
+    float f;
+    f  = 0.5000*pnoise( p ); p = m*p*2.02;
+    f += 0.2500*pnoise( p ); 
+	
+    return f * (1.0 / (0.5000 + 0.2500));
+}
+
+float hillnoise(in vec3 o) {
+ 	return SmoothNoise(o.xyy);   
+}
+
+mat2 rot(const in float a) {
+	return mat2(cos(a),sin(a),-sin(a),cos(a));	
+}
+
+const mat2 m2 = mat2( 0.60, -0.80, 0.80, 0.60 );
+
+const mat3 m3 = mat3( 0.00,  0.80,  0.60,
+                     -0.80,  0.36, -0.48,
+                     -0.60, -0.48,  0.64 );
+
+float fbm( in vec3 p ) {
+    float f = 0.0;
+    f += 0.5000*hillnoise( p ); p = m3*p*1.22*PROCEDURAL_BACKGROUND_HILLS_SEED;
+    f += 0.2500*pnoise( p ); p = m3*p*1.53*PROCEDURAL_BACKGROUND_HILLS_SEED;
+    f += 0.1250*pnoise( p ); p = m3*p*4.01*PROCEDURAL_BACKGROUND_HILLS_SEED;
+    f += 0.0625*pnoise( p );
+    return f/0.9375;
+}
+
+// intersection functions
+
+bool intersectPlane(const in vec3 ro, const in vec3 rd, const in float height, inout float dist) {	
+	if (rd.y==0.0) {
+		return false;
+	}
+		
+	float d = -(ro.y - height)/rd.y;
+	d = min(100000.0, d);
+	if( d > 0. && d < dist ) {
+		dist = d;
+		return true;
+    } else {
+		return false;
+	}
+}
+
+// light direction
+
+vec3 lig = normalize(u_PrimaryLightOrigin.xzy/*vec3( 0.3,0.5, 0.6)*/);
+
+// terrain functions
+float terrainMap( const in vec3 p ) 
+{
+    float dist = pow(length(p) / 64.0, 0.2);
+    return (((fbm( (p.xzz*0.5+16.0)*0.00346 ) * 1.5 - PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS)*250.0*dist)+(dist*8.0)) - PROCEDURAL_BACKGROUND_HILLS_UPDOWN;
+}
+
+vec4 raymarchTerrain( const in vec3 ro, const in vec3 rd, const in vec3 bgc, const in float startdist, in float dist ) {
+	float t = startdist;
+
+    // raymarch	
+	vec4 sum = vec4( 0.0 );
+	vec3 col = vec3(0.0);//bgc;
+	float alpha = 0.0;
+	bool hit = false;
+	
+	for( int i=0; i<8; i++ ) {
+		if( hit ) break;
+		
+		t += float(i*64);// + t/100.;
+		vec3 pos = ro + t*rd;
+		
+		if( pos.y < terrainMap(pos) ) {
+			hit = true;
+		}		
+	}
+	if( hit ) 
+	{
+		// binary search for hit		
+		float dt = 4.+t/400.;
+		t -= dt;
+		
+		vec3 pos = ro + t*rd;	
+		t += (0.5 - step( pos.y , terrainMap(pos) )) * dt;		
+		for( int j=0; j<2; j++ ) {
+			pos = ro + t*rd;
+			dt *= 0.5;
+			t += (0.5 - step( pos.y , terrainMap(pos) )) * dt;
+		}
+		pos = ro + t*rd;
+		
+		vec3 dx = vec3( 100.*EPSILON, 0., 0. );
+		vec3 dz = vec3( 0., 0., 100.*EPSILON );
+		
+		vec3 normal = vec3( 0., 0., 0. );
+		normal.x = (terrainMap(pos + dx) - terrainMap(pos-dx) ) / (200. * EPSILON);
+		normal.z = (terrainMap(pos + dz) - terrainMap(pos-dz) ) / (200. * EPSILON);
+		normal.y = 1.;
+		normal = normalize( normal );		
+
+		//col = vec3(0.2) + 0.7*texture( iChannel2, pos.xz * 0.01 ).xyz * vec3(1.,.9,0.6);
+		
+		float veg = 0.3*fbm(pos*0.2)+normal.y;
+					
+		if( veg > 0.75 ) {
+			col = vec3( PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR )*(0.5+0.5*fbm(pos*0.5))*0.6;
+		} else 
+		if( veg > 0.66 ) {
+			col = col*0.6+vec3( PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2 )*(0.5+0.5*fbm(pos*0.25))*0.3;
+		}
+		col *= vec3(0.5, 0.52, 0.65)*vec3(1.,.9,0.8);
+		
+		vec3 brdf = col;
+		
+		float diff = clamp( dot( normal, -lig ), 0., 1.);
+		
+		col = brdf*diff*vec3(1.0,.6,0.1);
+		col += brdf*clamp( dot( normal, lig ), 0., 1.)*vec3(0.8,.6,0.5)*0.8;
+		col += brdf*clamp( dot( normal, vec3(0.,1.,0.) ), 0., 1.)*vec3(0.8,.8,1.)*0.2;
+		
+		dist = t;
+		t -= pos.y*3.5;
+		alpha = 1.0-clamp(exp(-0.0000005*t*t), 0.0, 1.0);
+		col = mix( col, bgc, alpha );
+	}
+
+	return vec4(col, alpha >= 0.1 ? 1.0 : 0.0);
+}
+
+void GetBackgroundHills( inout vec4 fragColor, in vec2 fragCoord, vec3 ro, vec3 rd ) {
+	fragColor = raymarchTerrain( ro, rd, fragColor.rgb, 1200.0, 1200.0 );
+}
+#endif //__BACKGROUND_HILLS__
+
 void main()
 {
+	vec4 terrainColor = vec4(0.0);
 	vec3 nightGlow = vec3(0.0);
 
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
@@ -523,7 +723,21 @@ void main()
 			gl_FragColor.a = 1.0;
 		}
 
-		if (SHADER_MATERIAL_TYPE == 1024.0)
+#ifdef __BACKGROUND_HILLS__
+		if (PROCEDURAL_SKY_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
+		{
+			vec3 skyViewDir = normalize(var_Position.xzy);
+			terrainColor = mix(gl_FragColor, vec4(0.1, 0.1, 0.1, 1.0), clamp(SHADER_NIGHT_SCALE * 2.0, 0.0, 1.0));
+			GetBackgroundHills( terrainColor, texCoords, vec3(0.0), skyViewDir );
+		}
+#endif //__BACKGROUND_HILLS__
+
+		if (SHADER_SKY_DIRECTION == 5.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE >= 1.0)
+		{// At night, just do a black lower sky side...
+			terrainColor = vec4(0.0, 0.0, 0.0, 1.0);
+		}
+
+		if (SHADER_MATERIAL_TYPE == 1024.0 && terrainColor != 1.0)
 		{// This is sky, and aurora is enabled...
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
@@ -614,7 +828,7 @@ void main()
 		}
 
 #ifdef __CLOUDS__
-		if (CLOUDS_ENABLED > 0.0)
+		if (CLOUDS_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 5.0)
 		{// Procedural clouds are enabled...
 			vec3 pViewDir = normalize(var_Position.xyz);
 
@@ -629,6 +843,21 @@ void main()
 			gl_FragColor.rgb = mix(gl_FragColor.rgb, cloudColor, clamp(pow(pViewDir.z, 2.5), 0.0, 1.0));
 		}
 #endif //__CLOUDS__
+
+#ifdef __BACKGROUND_HILLS__
+		if (PROCEDURAL_SKY_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
+		{// Only on horizontal sides.
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, terrainColor.rgb, terrainColor.a);
+		}
+#endif //__BACKGROUND_HILLS__
+
+		// Tonemap.
+		gl_FragColor.rgb = pow( gl_FragColor.rgb, vec3(0.7) );
+	
+		// Contrast and saturation.
+		gl_FragColor.rgb = gl_FragColor.rgb*gl_FragColor.rgb*(3.0-2.0*gl_FragColor.rgb);
+		gl_FragColor.rgb = mix( gl_FragColor.rgb, vec3(dot(gl_FragColor.rgb,vec3(0.33))), -0.5 );
+	
 
 		gl_FragColor.a *= var_Color.a;
 	}
@@ -656,7 +885,7 @@ void main()
 	
 	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)
 	{
-		if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7)
+		if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7 && terrainColor.a != 1.0)
 		{// Add night sky to glow map...
 			out_Glow = vec4(nightGlow, gl_FragColor.a);
 

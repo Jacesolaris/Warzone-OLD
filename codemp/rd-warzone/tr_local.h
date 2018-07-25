@@ -380,6 +380,8 @@ extern cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionTolerance;
 extern cvar_t  *r_occlusionToleranceFoliage;
 extern cvar_t  *r_occlusionDebug;
+extern cvar_t  *r_areaVisDebug;
+
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
 extern cvar_t  *r_ext_texture_float;
@@ -1724,6 +1726,7 @@ typedef enum
 	UNIFORM_LOCAL9,
 	UNIFORM_LOCAL10,
 	UNIFORM_LOCAL11,
+	UNIFORM_LOCAL12,
 
 	UNIFORM_TESSELATION_INFO,
 
@@ -2058,6 +2061,10 @@ typedef struct srfBspSurface_s
 	int				width, height;
 	float			*widthLodError;
 	float			*heightLodError;
+
+#ifdef __USE_VBO_AREAS__
+	int				vboArea = -1;
+#endif //__USE_VBO_AREAS__
 } srfBspSurface_t;
 
 // inter-quake-model
@@ -3173,6 +3180,8 @@ extern  cvar_t  *r_occlusion;
 extern cvar_t  *r_occlusionTolerance;
 extern cvar_t  *r_occlusionToleranceFoliage;
 extern cvar_t  *r_occlusionDebug;
+extern cvar_t  *r_areaVisDebug;
+
 extern  cvar_t  *r_ext_draw_range_elements;
 extern  cvar_t  *r_ext_multi_draw_arrays;
 extern  cvar_t  *r_ext_framebuffer_object;

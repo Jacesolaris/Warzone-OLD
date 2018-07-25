@@ -1382,6 +1382,7 @@ float		TERRAIN_TESSELLATION_OFFSET = 16.0;
 float		TERRAIN_TESSELLATION_MIN_SIZE = 512.0;
 qboolean	DAY_NIGHT_CYCLE_ENABLED = qfalse;
 float		DAY_NIGHT_CYCLE_SPEED = 1.0;
+float		DAY_NIGHT_START_TIME = 0.0;
 float		SUN_PHONG_SCALE = 1.0;
 float		SUN_VOLUMETRIC_SCALE = 1.0;
 vec3_t		SUN_COLOR_MAIN = { 0.85f };
@@ -1393,6 +1394,12 @@ vec3_t		PROCEDURAL_SKY_DAY_COLOR = { 1.0f };
 vec4_t		PROCEDURAL_SKY_NIGHT_COLOR = { 1.0f };
 float		PROCEDURAL_SKY_NIGHT_HDR_MIN = { 1.0f };
 float		PROCEDURAL_SKY_NIGHT_HDR_MAX = { 255.0f };
+qboolean	PROCEDURAL_BACKGROUND_HILLS_ENABLED = qtrue;
+float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS = 0.4;
+float		PROCEDURAL_BACKGROUND_HILLS_UPDOWN = 190.0;
+float		PROCEDURAL_BACKGROUND_HILLS_SEED = 1.0;
+vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR = { 0.0 };
+vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2 = { 0.0 };
 qboolean	PROCEDURAL_CLOUDS_ENABLED = qtrue;
 float		PROCEDURAL_CLOUDS_CLOUDSCALE = 1.1;
 float		PROCEDURAL_CLOUDS_SPEED = 0.003;
@@ -1455,8 +1462,12 @@ qboolean	WATER_USE_OCEAN = qfalse;
 qboolean	WATER_FARPLANE_ENABLED = qfalse;
 float		WATER_REFLECTIVENESS = 0.28;
 float		WATER_WAVE_HEIGHT = 64.0;
+float		WATER_CLARITY = 0.03;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
+float		WATER_EXTINCTION1 = 35.0;
+float		WATER_EXTINCTION2 = 480.0;
+float		WATER_EXTINCTION3 = 8192.0;
 qboolean	GRASS_ENABLED = qtrue;
 qboolean	GRASS_UNDERWATER_ONLY = qfalse;
 int			GRASS_WIDTH_REPEATS = 0;
@@ -1468,6 +1479,7 @@ float		GRASS_TYPE_UNIFORMALITY = 0.97;
 float		GRASS_TYPE_UNIFORMALITY_SCALER = 0.008;
 float		GRASS_DISTANCE_FROM_ROADS = 0.25;
 float		GRASS_SCALES[16] = { 1.0 };
+qboolean	MOON_ENABLED = qtrue;
 vec3_t		MOON_COLOR = { 0.2f };
 vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
 float		MOON_GLOW_STRENGTH = 0.5;
@@ -1579,6 +1591,7 @@ void MAPPING_LoadMapInfo(void)
 	//
 	int dayNightEnableValue = atoi(IniRead(mapname, "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_ENABLED", "0"));
 	DAY_NIGHT_CYCLE_SPEED = atof(IniRead(mapname, "DAY_NIGHT_CYCLE", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
+	DAY_NIGHT_START_TIME = atof(IniRead(mapname, "DAY_NIGHT_CYCLE", "DAY_NIGHT_START_TIME", "0.0"));
 
 	DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
 
@@ -1587,6 +1600,7 @@ void MAPPING_LoadMapInfo(void)
 		dayNightEnableValue = atoi(IniRead(mapname, "SUN", "DAY_NIGHT_CYCLE_ENABLED", "0"));
 		DAY_NIGHT_CYCLE_SPEED = atof(IniRead(mapname, "SUN", "DAY_NIGHT_CYCLE_SPEED", "1.0"));
 		DAY_NIGHT_CYCLE_ENABLED = dayNightEnableValue ? qtrue : qfalse;
+		DAY_NIGHT_START_TIME = atof(IniRead(mapname, "SUN", "DAY_NIGHT_START_TIME", "0.0"));
 	}
 
 	if (dayNightEnableValue != -1 && !DAY_NIGHT_CYCLE_ENABLED)
@@ -1638,6 +1652,19 @@ void MAPPING_LoadMapInfo(void)
 
 	PROCEDURAL_SKY_NIGHT_HDR_MIN = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MIN", "16.0"));
 	PROCEDURAL_SKY_NIGHT_HDR_MAX = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MAX", "280.0"));
+
+	PROCEDURAL_BACKGROUND_HILLS_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS", "0.4"));
+	PROCEDURAL_BACKGROUND_HILLS_UPDOWN = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_UPDOWN", "190.0"));
+	PROCEDURAL_BACKGROUND_HILLS_SEED = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_SEED", "1.0"));
+
+	PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[0] = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR_R", "0.4"));
+	PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[1] = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR_G", "0.6"));
+	PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[2] = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLORR_B", "0.3"));
+
+	PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[0] = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR_R", "0.4"));
+	PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[1] = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR_G", "0.5"));
+	PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[2] = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLORR_B", "0.3"));
 
 	//
 	// Clouds....
@@ -1799,12 +1826,17 @@ void MAPPING_LoadMapInfo(void)
 		WATER_FARPLANE_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FARPLANE_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_REFLECTIVENESS = Q_clamp(0.0, atof(IniRead(mapname, "WATER", "WATER_REFLECTIVENESS", "0.28")), 1.0);
 		WATER_WAVE_HEIGHT = atof(IniRead(mapname, "WATER", "WATER_WAVE_HEIGHT", "64.0"));
+		WATER_CLARITY = atof(IniRead(mapname, "WATER", "WATER_CLARITY", "0.03"));
 		WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
 		WATER_COLOR_SHALLOW[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
 		WATER_COLOR_SHALLOW[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
 		WATER_COLOR_DEEP[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_R", "0.0059"));
 		WATER_COLOR_DEEP[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_G", "0.1276"));
 		WATER_COLOR_DEEP[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_DEEP_B", "0.18"));
+		WATER_EXTINCTION1 = atof(IniRead(mapname, "WATER", "WATER_EXTINCTION1", "35.0"));
+		WATER_EXTINCTION2 = atof(IniRead(mapname, "WATER", "WATER_EXTINCTION2", "480.0"));
+		WATER_EXTINCTION3 = atof(IniRead(mapname, "WATER", "WATER_EXTINCTION3", "8192.0"));
+
 		float NEW_MAP_WATER_LEVEL = atof(IniRead(mapname, "WATER", "MAP_WATER_LEVEL", "131072.0"));
 
 		if (NEW_MAP_WATER_LEVEL < 131000.0 && NEW_MAP_WATER_LEVEL > -131000.0)
@@ -1884,6 +1916,7 @@ void MAPPING_LoadMapInfo(void)
 	//
 	if (DAY_NIGHT_CYCLE_ENABLED)
 	{
+		MOON_ENABLED = (atoi(IniRead(mapname, "MOON", "MOON_ENABLED", "1")) > 0) ? qtrue : qfalse;
 		tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/random"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		if (!tr.moonImage) tr.moonImage = R_FindImageFile("gfx/random", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		MOON_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_COLOR_R", "0.2"));
@@ -2043,6 +2076,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation max offset is ^7%.4f^5 and terrain tessellation minimum vert size is ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_OFFSET, TERRAIN_TESSELLATION_MIN_SIZE);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle start time is ^7%.4f^5 on this map.\n", DAY_NIGHT_START_TIME);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 and sun volumetric scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE, SUN_VOLUMETRIC_SCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
@@ -2050,6 +2084,10 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural day sky color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky color is ^7%.4f %.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_COLOR[0], PROCEDURAL_SKY_NIGHT_COLOR[1], PROCEDURAL_SKY_NIGHT_COLOR[2], PROCEDURAL_SKY_NIGHT_COLOR[3]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky HDR minimum is ^7%.4f^5 and procedural night sky HDR maximum is  ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills are ^7%s^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_ENABLED ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills smoothness is ^7%.4f^5 and Procedural background hills up/down is ^7%.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS, PROCEDURAL_BACKGROUND_HILLS_UPDOWN);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills seed is ^7%.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_SEED);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills vegetation color is ^7%.4f %.4f %.4f^5 and procedural background hills vegetation secondary color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[2], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural clouds are ^7%s^5 and cloud scale is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_CLOUDS_CLOUDSCALE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud speed is ^7%.4f^5 and cloud cover is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_CLOUDCOVER);
@@ -2093,6 +2131,8 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, WATER_USE_OCEAN ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water far plane is ^7%s^5 and wave height is ^7%.4f^5 on this map.\n", WATER_FARPLANE_ENABLED ? "ENABLED" : "DISABLED", WATER_WAVE_HEIGHT);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water clarity is ^7%.4f^5 and water extinction1 is ^7%.4f^5 on this map.\n", WATER_CLARITY, WATER_EXTINCTION1);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction2 is ^7%.4f^5 and water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION2, WATER_EXTINCTION3);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 
@@ -2102,6 +2142,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 and grass uniformality scaler is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY, GRASS_TYPE_UNIFORMALITY_SCALER);
 
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon is ^7%s^5 on this map.\n", MOON_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon color is ^7%.4f %.4f %.4f^5 and moon glow strength ^7%.4f^5 on this map.\n", MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon atmosphere color is ^7%.4f %.4f %.4f^5 on this map.\n", MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);

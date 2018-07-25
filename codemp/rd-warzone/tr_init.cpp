@@ -143,6 +143,7 @@ cvar_t  *r_occlusion;
 cvar_t  *r_occlusionTolerance;
 cvar_t  *r_occlusionToleranceFoliage;
 cvar_t  *r_occlusionDebug;
+cvar_t  *r_areaVisDebug;
 cvar_t  *r_ext_draw_range_elements;
 cvar_t  *r_ext_multi_draw_arrays;
 cvar_t  *r_ext_texture_float;
@@ -1409,6 +1410,8 @@ void GfxMemInfo_f( void )
 #define SWAPINTERVAL_FLAGS CVAR_ARCHIVE | CVAR_LATCH
 #endif
 
+extern void R_ShowTime(void);
+
 /*
 ===============
 R_Register
@@ -1458,6 +1461,8 @@ void R_Register( void )
 	r_occlusionTolerance = ri->Cvar_Get("r_occlusionTolerance", "0.0005", CVAR_ARCHIVE);
 	r_occlusionToleranceFoliage = ri->Cvar_Get("r_occlusionToleranceFoliage", "0.025", CVAR_ARCHIVE);
 	r_occlusionDebug = ri->Cvar_Get( "r_occlusionDebug", "0", CVAR_ARCHIVE);
+	r_areaVisDebug = ri->Cvar_Get("r_areaVisDebug", "0", CVAR_ARCHIVE);
+
 	r_ext_draw_range_elements = ri->Cvar_Get( "r_ext_draw_range_elements", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_multi_draw_arrays = ri->Cvar_Get( "r_ext_multi_draw_arrays", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_float = ri->Cvar_Get( "r_ext_texture_float", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1870,6 +1875,7 @@ extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
 	ri->Cmd_AddCommand("genworldmap", R_CreateBspMapImage);
 	ri->Cmd_AddCommand("genheightmap", R_CreateHeightMapImage);
 	ri->Cmd_AddCommand("genroadmap", R_CreateRoadMapImage);
+	ri->Cmd_AddCommand("showtime", R_ShowTime);
 }
 
 void R_InitQueries(void)

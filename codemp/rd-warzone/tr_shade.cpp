@@ -1869,6 +1869,7 @@ extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_TYPE_UNIFORMALITY_SCALER;
 extern float		GRASS_DISTANCE_FROM_ROADS;
 extern float		GRASS_SCALES[16];
+extern qboolean		MOON_ENABLED;
 extern vec3_t		MOON_COLOR;
 extern vec3_t		MOON_ATMOSPHERE_COLOR;
 extern float		MOON_GLOW_STRENGTH;
@@ -2319,6 +2320,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
 		{// Special case for procedural moon...
 			if (IS_DEPTH_PASS) return;
+			if (!MOON_ENABLED) return;
 
 			sp = &tr.moonPassShader;
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);

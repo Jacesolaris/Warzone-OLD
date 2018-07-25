@@ -2403,8 +2403,9 @@ struct packedVertex_t
 
 struct mapArea_t
 {
-	vec3_t mins;
-	vec3_t maxs;
+	vec3_t		mins;
+	vec3_t		maxs;
+	qboolean	visible = qfalse;
 };
 
 struct mapAreas_t
@@ -2522,6 +2523,80 @@ int GetVBOArea(vec3_t origin)
 	return MAP_AREAS.numAreas / 2; // should never happen, just give it the center of map, should it happen.
 }
 
+void SetVBOVisibleAreas(void)
+{
+#if 0
+	int numVisible = 0;
+	int numInVisible = 0;
+
+	vec3_t	mapMins, mapMaxs;
+
+	VectorCopy(tr.world->nodes[0].mins, mapMins);
+	VectorCopy(tr.world->nodes[0].maxs, mapMaxs);
+
+	vec3_t mapSize, modifier;
+	VectorSubtract(tr.world->nodes[0].maxs, tr.world->nodes[0].mins, mapSize);
+	modifier[0] = mapSize[0] / NUM_MAP_SECTIONS;
+	modifier[1] = mapSize[1] / NUM_MAP_SECTIONS;
+	modifier[2] = mapSize[2] / 2;
+
+	float highestMod = max(modifier[0], modifier[1]);
+
+	for (int i = 0; i < MAP_AREAS.numAreas; i++)
+	{
+		if (r_occlusion->integer)
+		{
+			//vec3_t center;
+
+			//center[0] = (MAP_AREAS.areas[i].mins[0] + MAP_AREAS.areas[i].maxs[0]) / 2.0;
+			//center[1] = (MAP_AREAS.areas[i].mins[1] + MAP_AREAS.areas[i].maxs[1]) / 2.0;
+			//center[2] = (MAP_AREAS.areas[i].mins[2] + MAP_AREAS.areas[i].maxs[2]) / 2.0;
+
+			vec3_t closest;
+
+			if (Distance(backEnd.refdef.vieworg, MAP_AREAS.areas[i].mins) < Distance(backEnd.refdef.vieworg, MAP_AREAS.areas[i].maxs))
+			{
+				VectorCopy(MAP_AREAS.areas[i].mins, closest);
+			}
+			else
+			{
+				VectorCopy(MAP_AREAS.areas[i].maxs, closest);
+			}
+
+			if (r_occlusion->integer && Distance(backEnd.refdef.vieworg, closest/*center*/) > (tr.occlusionZfar * 1.75) + highestMod)
+			{
+				MAP_AREAS.areas[i].visible = qfalse;
+				numInVisible++;
+			}
+			else
+			{
+				MAP_AREAS.areas[i].visible = qtrue;
+				numVisible++;
+			}
+		}
+		else
+		{
+			MAP_AREAS.areas[i].visible = qtrue;
+			numVisible++;
+		}
+	}
+
+	if (r_areaVisDebug->integer)
+	{
+		ri->Printf(PRINT_ALL, "v: %i. i: %i.\n", numVisible, numInVisible);
+	}
+#endif
+}
+
+qboolean GetVBOAreaVisible(int area)
+{
+#if 0
+	return MAP_AREAS.areas[area].visible;
+#else
+	return qtrue;
+#endif
+}
+
 /*
 qboolean R_NodeInFOV(vec3_t spot, vec3_t from)
 {
@@ -2592,12 +2667,18 @@ static void R_CreateWorldVBOs(void)
 	// count surfaces
 	numSortedSurfaces = 0;
 
+#ifdef __USE_VBO_AREAS__
 	Setup_VBO_Areas();
+#endif //__USE_VBO_AREAS__
 
 	for(surface = &s_worldData.surfaces[0]; surface < &s_worldData.surfaces[s_worldData.numsurfaces]; surface++)
 	{
 		srfBspSurface_t *bspSurf;
 		shader_t *shader = surface->shader;
+
+#ifdef __USE_VBO_AREAS__
+		bspSurf->vboArea = -1;
+#endif //__USE_VBO_AREAS__
 
 		if (shader->isPortal)
 			continue;
@@ -2872,6 +2953,8 @@ static void R_CreateWorldVBOs(void)
 				{// Not in the current VBO area, skip and it will be added to the right area later...
 					continue;
 				}
+
+				bspSurf->vboArea = a;
 #endif //__USE_VBO_AREAS__
 
 				bspSurf->vbo = vbo;
