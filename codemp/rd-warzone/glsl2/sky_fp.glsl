@@ -33,10 +33,10 @@ uniform vec4											u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL,
 #define USE_ISDETAIL									u_Settings3.g
 #define USE_DETAIL_COORD								u_Settings3.b
 
-uniform vec4											u_Local1; // PROCEDURAL_SKY_ENABLED, 0.0, 0.0, materialType
+uniform vec4											u_Local1; // PROCEDURAL_SKY_ENABLED, DAY_NIGHT_24H_TIME/24.0, PROCEDURAL_SKY_STAR_DENSITY, materialType
 uniform vec4											u_Local2; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
 uniform vec4											u_Local3; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
-uniform vec4											u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, 0.0, 0.0
+uniform vec4											u_Local4; // PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, PROCEDURAL_SKY_DARKMATTER_FACTOR
 uniform vec4											u_Local5; // dayNightEnabled, nightScale, skyDirection, auroraEnabled -- Sky draws only!
 uniform vec4											u_Local6; // PROCEDURAL_SKY_DAY_COLOR
 uniform vec4											u_Local7; // PROCEDURAL_SKY_NIGHT_COLOR
@@ -47,8 +47,8 @@ uniform vec4											u_Local11; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR
 uniform vec4											u_Local12; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2
 
 #define PROCEDURAL_SKY_ENABLED							u_Local1.r
-#define SHADER_SWAY										u_Local1.g
-#define SHADER_OVERLAY_SWAY								u_Local1.b
+#define DAY_NIGHT_24H_TIME								u_Local1.g
+#define PROCEDURAL_SKY_STAR_DENSITY						u_Local1.b
 #define SHADER_MATERIAL_TYPE							u_Local1.a
 
 #define CLOUDS_ENABLED									u_Local2.r
@@ -63,6 +63,8 @@ uniform vec4											u_Local12; // PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR
 
 #define PROCEDURAL_SKY_NIGHT_HDR_MIN					u_Local4.r
 #define PROCEDURAL_SKY_NIGHT_HDR_MAX					u_Local4.g
+#define PROCEDURAL_SKY_PLANETARY_ROTATION				u_Local4.b
+#define PROCEDURAL_SKY_DARKMATTER_FACTOR				u_Local4.a
 
 #define SHADER_DAY_NIGHT_ENABLED						u_Local5.r
 #define SHADER_NIGHT_SCALE								u_Local5.g
@@ -424,20 +426,22 @@ void GetStars(out vec4 fragColor, in vec3 position)
 {
 #define iterations 14
 #define formuparam 0.530
-#define volsteps 18
+#define volsteps int(clamp(PROCEDURAL_SKY_STAR_DENSITY, 1.0, 18.0))
 #define stepsize 0.2
 
 #define zoom   0.800
 #define tile   0.850
 
 #define brightness 0.0015
-#define darkmatter 0.400
+#define darkmatter PROCEDURAL_SKY_DARKMATTER_FACTOR//0.400
 #define distfading 0.760
 #define saturation 0.800
 
     float zoomFactor = .3;
 
-	vec3 x = position.xyz / length(position.xyz);
+	vec3 pos = position;
+
+	vec3 x = pos.xyz / length(pos.xyz);
 	vec2 fragCoord = x.xy * u_Dimensions;
 
 	//get coords and direction
@@ -450,6 +454,11 @@ void GetStars(out vec4 fragColor, in vec3 position)
 	mat2 rot2=rot1;
 	dir.xz*=rot1;
 	dir.xy*=rot2;
+
+	// Adjust for planetary rotation...
+	float dnt = DAY_NIGHT_24H_TIME * 2.0 - 1.0;
+	if (dnt <= 0.0) dnt = 1.0 + (1.0 - length(dnt));
+	dir.xy += dnt * PROCEDURAL_SKY_PLANETARY_ROTATION;
 	
 	vec3 from=vec3(0.,1.,0.);
 	from+=vec3((tan(.15),.152,-2.));

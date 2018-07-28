@@ -2783,7 +2783,6 @@ typedef struct trGlobals_s {
 	image_t					*renderNormalDetailedImage;
 	image_t					*renderPositionMapImage;
 	image_t					*waterPositionMapImage;
-	image_t					*waterPositionMapImage2;
 #if 0
 	image_t					*glowImageScaled[4];
 #else

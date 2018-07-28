@@ -1385,6 +1385,7 @@ float		DAY_NIGHT_CYCLE_SPEED = 1.0;
 float		DAY_NIGHT_START_TIME = 0.0;
 float		SUN_PHONG_SCALE = 1.0;
 float		SUN_VOLUMETRIC_SCALE = 1.0;
+float		SUN_VOLUMETRIC_FALLOFF = 1.0;
 vec3_t		SUN_COLOR_MAIN = { 0.85f };
 vec3_t		SUN_COLOR_SECONDARY = { 0.4f };
 vec3_t		SUN_COLOR_TERTIARY = { 0.2f };
@@ -1394,6 +1395,9 @@ vec3_t		PROCEDURAL_SKY_DAY_COLOR = { 1.0f };
 vec4_t		PROCEDURAL_SKY_NIGHT_COLOR = { 1.0f };
 float		PROCEDURAL_SKY_NIGHT_HDR_MIN = { 1.0f };
 float		PROCEDURAL_SKY_NIGHT_HDR_MAX = { 255.0f };
+int			PROCEDURAL_SKY_STAR_DENSITY = 8;
+float		PROCEDURAL_SKY_DARKMATTER_FACTOR = 0.6;
+float		PROCEDURAL_SKY_PLANETARY_ROTATION = 0.3;
 qboolean	PROCEDURAL_BACKGROUND_HILLS_ENABLED = qtrue;
 float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS = 0.4;
 float		PROCEDURAL_BACKGROUND_HILLS_UPDOWN = 190.0;
@@ -1441,22 +1445,26 @@ qboolean	SHADOWS_ENABLED = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
 float		SHADOW_MAXBRIGHT = 1.0;
 qboolean	FOG_POST_ENABLED = qtrue;
-qboolean	FOG_STANDARD_ENABLE = qtrue;
-vec3_t		FOG_COLOR = { 0 };
-vec3_t		FOG_COLOR_SUN = { 0 };
-float		FOG_DENSITY = 0.5;
-float		FOG_ACCUMULATION_MODIFIER = 3.0;
-float		FOG_RANGE_MULTIPLIER = 1.0;
-qboolean	FOG_VOLUMETRIC_ENABLE = qfalse;
-float		FOG_VOLUMETRIC_SUN_PENETRATION = 1.0;
-float		FOG_VOLUMETRIC_ALPHA = 1.0;
-float		FOG_VOLUMETRIC_CLOUDINESS = 1.0;
-float		FOG_VOLUMETRIC_WIND = 1.0;
-float		FOG_VOLUMETRIC_ALTITUDE_BOTTOM = -65536.0;
-float		FOG_VOLUMETRIC_ALTITUDE_TOP = 65536.0;
-float		FOG_VOLUMETRIC_ALTITUDE_FADE = -65536.0;
-vec3_t		FOG_VOLUMETRIC_COLOR = { 0 };
-vec4_t		FOG_VOLUMETRIC_BBOX = { 0.0 };
+qboolean	FOG_LINEAR_ENABLE = qfalse;
+vec3_t		FOG_LINEAR_COLOR = { 1.0 };
+float		FOG_LINEAR_ALPHA = 0.65;
+qboolean	FOG_WORLD_ENABLE = qtrue;
+vec3_t		FOG_WORLD_COLOR = { 0 };
+vec3_t		FOG_WORLD_COLOR_SUN = { 0 };
+float		FOG_WORLD_CLOUDINESS = 0.5;
+float		FOG_WORLD_WIND = 3.0;
+float		FOG_WORLD_ALPHA = 1.0;
+float		FOG_WORLD_FADE_ALTITUDE = -65536.0;
+qboolean	FOG_LAYER_ENABLE = qfalse;
+float		FOG_LAYER_SUN_PENETRATION = 1.0;
+float		FOG_LAYER_ALPHA = 1.0;
+float		FOG_LAYER_CLOUDINESS = 1.0;
+float		FOG_LAYER_WIND = 1.0;
+float		FOG_LAYER_ALTITUDE_BOTTOM = -65536.0;
+float		FOG_LAYER_ALTITUDE_TOP = 65536.0;
+float		FOG_LAYER_ALTITUDE_FADE = -65536.0;
+vec3_t		FOG_LAYER_COLOR = { 0 };
+vec4_t		FOG_LAYER_BBOX = { 0.0 };
 qboolean	WATER_ENABLED = qfalse;
 qboolean	WATER_USE_OCEAN = qfalse;
 qboolean	WATER_FARPLANE_ENABLED = qfalse;
@@ -1619,6 +1627,7 @@ void MAPPING_LoadMapInfo(void)
 
 	SUN_PHONG_SCALE = atof(IniRead(mapname, "SUN", "SUN_PHONG_SCALE", "1.0"));
 	SUN_VOLUMETRIC_SCALE = atof(IniRead(mapname, "SUN", "SUN_VOLUMETRIC_SCALE", "1.0"));
+	SUN_VOLUMETRIC_FALLOFF = atof(IniRead(mapname, "SUN", "SUN_VOLUMETRIC_FALLOFF", "1.0"));
 
 	SUN_COLOR_MAIN[0] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_R", "0.85"));
 	SUN_COLOR_MAIN[1] = atof(IniRead(mapname, "SUN", "SUN_COLOR_MAIN_G", "0.85"));
@@ -1652,6 +1661,10 @@ void MAPPING_LoadMapInfo(void)
 
 	PROCEDURAL_SKY_NIGHT_HDR_MIN = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MIN", "16.0"));
 	PROCEDURAL_SKY_NIGHT_HDR_MAX = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_NIGHT_HDR_MAX", "280.0"));
+
+	PROCEDURAL_SKY_STAR_DENSITY = atoi(IniRead(mapname, "SKY", "PROCEDURAL_SKY_STAR_DENSITY", "8"));
+	PROCEDURAL_SKY_DARKMATTER_FACTOR = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_DARKMATTER_FACTOR", "0.6"));
+	PROCEDURAL_SKY_PLANETARY_ROTATION = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_PLANETARY_ROTATION", "0.3"));
 
 	PROCEDURAL_BACKGROUND_HILLS_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_ENABLED", "1")) > 0) ? qtrue : qfalse;
 	PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS", "0.4"));
@@ -1767,39 +1780,50 @@ void MAPPING_LoadMapInfo(void)
 
 	if (FOG_POST_ENABLED)
 	{
-		FOG_STANDARD_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_STANDARD_ENABLE", "1")) > 0) ? qtrue : qfalse;
-
-		if (FOG_STANDARD_ENABLE)
+		FOG_LINEAR_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_LINEAR_ENABLE", "0")) > 0) ? qtrue : qfalse;
+		
+		if (FOG_LINEAR_ENABLE)
 		{
-			FOG_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_R", "0.5"));
-			FOG_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_G", "0.6"));
-			FOG_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_B", "0.7"));
-			FOG_COLOR_SUN[0] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_R", "1.0"));
-			FOG_COLOR_SUN[1] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_G", "0.9"));
-			FOG_COLOR_SUN[2] = atof(IniRead(mapname, "FOG", "FOG_COLOR_SUN_B", "0.7"));
-			FOG_DENSITY = atof(IniRead(mapname, "FOG", "FOG_DENSITY", "0.5"));
-			FOG_ACCUMULATION_MODIFIER = atof(IniRead(mapname, "FOG", "FOG_ACCUMULATION_MODIFIER", "3.0"));
-			FOG_RANGE_MULTIPLIER = atof(IniRead(mapname, "FOG", "FOG_RANGE_MULTIPLIER", "1.0"));
+			FOG_LINEAR_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_LINEAR_COLOR_R", "1.0"));
+			FOG_LINEAR_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_LINEAR_COLOR_G", "1.0"));
+			FOG_LINEAR_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_LINEAR_COLOR_B", "1.0"));
+			FOG_LINEAR_ALPHA = atof(IniRead(mapname, "FOG", "FOG_LINEAR_ALPHA", "0.65"));
 		}
 
-		FOG_VOLUMETRIC_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ENABLE", "0")) > 0) ? qtrue : qfalse;
+		FOG_WORLD_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_WORLD_ENABLE", "0")) > 0) ? qtrue : qfalse;
 
-		if (FOG_VOLUMETRIC_ENABLE)
+		if (FOG_WORLD_ENABLE)
 		{
-			FOG_VOLUMETRIC_SUN_PENETRATION = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_SUN_PENETRATION", "1.0"));
-			FOG_VOLUMETRIC_ALTITUDE_BOTTOM = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALTITUDE_BOTTOM", "-65536.0"));
-			FOG_VOLUMETRIC_ALTITUDE_TOP = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALTITUDE_TOP", "65536.0"));
-			FOG_VOLUMETRIC_ALTITUDE_FADE = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALTITUDE_FADE", "-65536.0"));
-			FOG_VOLUMETRIC_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_CLOUDINESS", "1.0"));
-			FOG_VOLUMETRIC_WIND = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_WIND", "1.0"));
-			FOG_VOLUMETRIC_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_R", "1.0"));
-			FOG_VOLUMETRIC_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_G", "1.0"));
-			FOG_VOLUMETRIC_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_COLOR_B", "1.0"));
-			FOG_VOLUMETRIC_ALPHA = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_ALPHA", "1.0"));
-			FOG_VOLUMETRIC_BBOX[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MIN_X", "0.0"));
-			FOG_VOLUMETRIC_BBOX[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MIN_Y", "0.0"));
-			FOG_VOLUMETRIC_BBOX[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MAX_X", "0.0"));
-			FOG_VOLUMETRIC_BBOX[3] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MAX_Y", "0.0"));
+			FOG_WORLD_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_WORLD_COLOR_R", "1.0"));
+			FOG_WORLD_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_WORLD_COLOR_G", "1.0"));
+			FOG_WORLD_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_WORLD_COLOR_B", "1.0"));
+			FOG_WORLD_COLOR_SUN[0] = atof(IniRead(mapname, "FOG", "FOG_WORLD_COLOR_SUN_R", va("%f", SUN_COLOR_MAIN[0])));
+			FOG_WORLD_COLOR_SUN[1] = atof(IniRead(mapname, "FOG", "FOG_WORLD_COLOR_SUN_G", va("%f", SUN_COLOR_MAIN[1])));
+			FOG_WORLD_COLOR_SUN[2] = atof(IniRead(mapname, "FOG", "FOG_WORLD_COLOR_SUN_B", va("%f", SUN_COLOR_MAIN[2])));
+			FOG_WORLD_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_WORLD_CLOUDINESS", "0.5"));
+			FOG_WORLD_WIND = atof(IniRead(mapname, "FOG", "FOG_WORLD_WIND", "3.0"));
+			FOG_WORLD_ALPHA = atof(IniRead(mapname, "FOG", "FOG_WORLD_ALPHA", "0.65"));
+			FOG_WORLD_FADE_ALTITUDE = atof(IniRead(mapname, "FOG", "FOG_WORLD_FADE_ALTITUDE", va("%f", MAP_INFO_MINS[2])));
+		}
+
+		FOG_LAYER_ENABLE = (atoi(IniRead(mapname, "FOG", "FOG_LAYER_ENABLE", "0")) > 0) ? qtrue : qfalse;
+
+		if (FOG_LAYER_ENABLE)
+		{
+			FOG_LAYER_SUN_PENETRATION = atof(IniRead(mapname, "FOG", "FOG_LAYER_SUN_PENETRATION", "1.0"));
+			FOG_LAYER_ALTITUDE_BOTTOM = atof(IniRead(mapname, "FOG", "FOG_LAYER_ALTITUDE_BOTTOM", "-65536.0"));
+			FOG_LAYER_ALTITUDE_TOP = atof(IniRead(mapname, "FOG", "FOG_LAYER_ALTITUDE_TOP", "65536.0"));
+			FOG_LAYER_ALTITUDE_FADE = atof(IniRead(mapname, "FOG", "FOG_LAYER_ALTITUDE_FADE", "-65536.0"));
+			FOG_LAYER_CLOUDINESS = atof(IniRead(mapname, "FOG", "FOG_LAYER_CLOUDINESS", "1.0"));
+			FOG_LAYER_WIND = atof(IniRead(mapname, "FOG", "FOG_LAYER_WIND", "1.0"));
+			FOG_LAYER_COLOR[0] = atof(IniRead(mapname, "FOG", "FOG_LAYER_COLOR_R", "1.0"));
+			FOG_LAYER_COLOR[1] = atof(IniRead(mapname, "FOG", "FOG_LAYER_COLOR_G", "1.0"));
+			FOG_LAYER_COLOR[2] = atof(IniRead(mapname, "FOG", "FOG_LAYER_COLOR_B", "1.0"));
+			FOG_LAYER_ALPHA = atof(IniRead(mapname, "FOG", "FOG_LAYER_ALPHA", "0.65"));
+			FOG_LAYER_BBOX[0] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MIN_X", "0.0"));
+			FOG_LAYER_BBOX[1] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MIN_Y", "0.0"));
+			FOG_LAYER_BBOX[2] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MAX_X", "0.0"));
+			FOG_LAYER_BBOX[3] = atof(IniRead(mapname, "FOG", "FOG_VOLUMETRIC_BOX_MAX_Y", "0.0"));
 		}
 	}
 
@@ -2077,11 +2101,14 @@ void MAPPING_LoadMapInfo(void)
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle start time is ^7%.4f^5 on this map.\n", DAY_NIGHT_START_TIME);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 and sun volumetric scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE, SUN_VOLUMETRIC_SCALE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun volumetric scale is ^7%.4f^5 and sun volumetric falloff is ^7%.4f^5 on this map.\n", SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky is ^7%s^5 on this map.\n", PROCEDURAL_SKY_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural day sky color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky star density is ^7%i^5 and dark matter factor is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_DARKMATTER_FACTOR);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky planetary rotation rate is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_PLANETARY_ROTATION);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky color is ^7%.4f %.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_COLOR[0], PROCEDURAL_SKY_NIGHT_COLOR[1], PROCEDURAL_SKY_NIGHT_COLOR[2], PROCEDURAL_SKY_NIGHT_COLOR[3]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky HDR minimum is ^7%.4f^5 and procedural night sky HDR maximum is  ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills are ^7%s^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_ENABLED ? "ENABLED" : "DISABLED");
@@ -2114,18 +2141,20 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Aurora color adjustment is ^7%.4f %.4f %.4f^5 on this map.\n", AURORA_COLOR[0], AURORA_COLOR[1], AURORA_COLOR[2]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Standard fog is ^7%s^5 on this map.\n", FOG_STANDARD_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog density is ^7%.4f^5 Fog range multiplier is ^7%.4f^5 on this map.\n", FOG_DENSITY, FOG_RANGE_MULTIPLIER);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog accumulation modifier is ^7%.4f^5 on this map.\n", FOG_ACCUMULATION_MODIFIER);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog color (main) ^7%.4f %.4f %.4f^5 (sun) ^7%.4f %.4f %.4f^5 on this map.\n", FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog is ^7%s^5 on this map.\n", FOG_VOLUMETRIC_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog sun penetration is ^7%.4f^5 and Volumetric fog cloudiness is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_SUN_PENETRATION, FOG_VOLUMETRIC_CLOUDINESS);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog wind is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_WIND);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog altitude (bottom) is ^7%.4f^5 and volumetric fog altitude (top) is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_ALTITUDE_BOTTOM, FOG_VOLUMETRIC_ALTITUDE_TOP);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog fade altitude is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_ALTITUDE_FADE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog color ^7%.4f %.4f %.4f^5 on this map.\n", FOG_VOLUMETRIC_COLOR[0], FOG_VOLUMETRIC_COLOR[1], FOG_VOLUMETRIC_COLOR[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog alpha is ^7%.4f^5 on this map.\n", FOG_VOLUMETRIC_ALPHA);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Volumetric fog box min ^7%.4f %.4f^5 and volumetric fog box max ^7%.4f %.4f^5 on this map.\n", FOG_VOLUMETRIC_BBOX[0], FOG_VOLUMETRIC_BBOX[1], FOG_VOLUMETRIC_BBOX[2], FOG_VOLUMETRIC_BBOX[3]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Linear fog is ^7%s^5 on this map.\n", FOG_LINEAR_ENABLE ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Linear fog color is ^7%.4f %.4f %.4f^5 and linear fog alpha is ^7%.4f^5 on this map.\n", FOG_LINEAR_COLOR[0], FOG_LINEAR_COLOR[1], FOG_LINEAR_COLOR[2], FOG_LINEAR_ALPHA);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog is ^7%s^5 on this map.\n", FOG_WORLD_ENABLE ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog cloudiness is ^7%.4f^5 and world fog alpha is ^7%.4f^5 on this map.\n", FOG_WORLD_CLOUDINESS, FOG_WORLD_ALPHA);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog wind strength is ^7%.4f^5 and world fog fade altitude is ^7%.4f^5 on this map.\n", FOG_WORLD_WIND, FOG_WORLD_FADE_ALTITUDE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog color (main) is ^7%.4f %.4f %.4f^5 and world fog color (sun) is ^7%.4f %.4f %.4f^5 on this map.\n", FOG_WORLD_COLOR[0], FOG_WORLD_COLOR[1], FOG_WORLD_COLOR[2], FOG_WORLD_COLOR_SUN[0], FOG_WORLD_COLOR_SUN[1], FOG_WORLD_COLOR_SUN[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer is ^7%s^5 on this map.\n", FOG_LAYER_ENABLE ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer sun penetration is ^7%.4f^5 and fog layer cloudiness is ^7%.4f^5 on this map.\n", FOG_LAYER_SUN_PENETRATION, FOG_LAYER_CLOUDINESS);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer wind is ^7%.4f^5 on this map.\n", FOG_LAYER_WIND);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer altitude (bottom) is ^7%.4f^5 and fog layer altitude (top) is ^7%.4f^5 on this map.\n", FOG_LAYER_ALTITUDE_BOTTOM, FOG_LAYER_ALTITUDE_TOP);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer fade altitude is ^7%.4f^5 on this map.\n", FOG_LAYER_ALTITUDE_FADE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer color is ^7%.4f %.4f %.4f^5 on this map.\n", FOG_LAYER_COLOR[0], FOG_LAYER_COLOR[1], FOG_LAYER_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer alpha is ^7%.4f^5 on this map.\n", FOG_LAYER_ALPHA);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer box min ^7%.4f %.4f^5 and fog layer box max ^7%.4f %.4f^5 on this map.\n", FOG_LAYER_BBOX[0], FOG_LAYER_BBOX[1], FOG_LAYER_BBOX[2], FOG_LAYER_BBOX[3]);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);

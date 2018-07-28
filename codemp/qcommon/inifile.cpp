@@ -448,21 +448,37 @@ PLAYER_HEALTH = atoi(IniRead("general.ini","PLAYER_SETTINGS","PLAYER_HEALTH","10
 
 const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 {
-	const char *value = IniReadCPP(aFilespec, aSection, aKey, aDefault);
-	
-	if (value[0] == '\0' || !strcmp(value, "") || !strcmp(value, aDefault))
+	try
 	{
+		const char *value = IniReadCPP(aFilespec, aSection, aKey, aDefault);
+
+		if (value[0] == '\0' || !strcmp(value, "") || !strcmp(value, aDefault))
+		{
 #ifdef __INI_DEBUG__
-		DebugPrint(va("[file] %s [section] %s [key] %s [default value] %s\n", aFilespec, aSection, aKey, aDefault));
+			DebugPrint(va("[file] %s [section] %s [key] %s [default value] %s\n", aFilespec, aSection, aKey, aDefault));
 #endif //__INI_DEBUG__
-		return aDefault;
+			return aDefault;
 	}
 
 #ifdef __INI_DEBUG__
-	DebugPrint(va("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value));
+		DebugPrint(va("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value));
 #endif //__INI_DEBUG__
 
-	return value;
+		return value;
+	}
+	catch (int code) 
+	{
+#if defined(rd_warzone_x86_EXPORTS)
+		ri->Printf(PRINT_WARNING, "Error reading %s from section %s of ini file %s. Check your ini file. Returning default value. Error code %i.\n", aKey, aSection, aFilespec, code);
+#elif defined(_CGAME) || defined(_GAME) || defined(uix86_EXPORTS)
+		trap->Print("Error reading %s from section %s of ini file %s. Check your ini file. Returning default value. Error code %i.\n", aKey, aSection, aFilespec, code);
+#elif defined(DEDICATED)
+		Com_Printf("Error reading %s from section %s of ini file %s. Check your ini file. Returning default value. Error code %i.\n", aKey, aSection, aFilespec, code);
+#else
+		Com_Printf("Error reading %s from section %s of ini file %s. Check your ini file. Returning default value. Error code %i.\n", aKey, aSection, aFilespec, code);
+#endif
+		return aDefault;
+	}
 }
 
 void IniWrite(char *aFilespec, char *aSection, char *aKey, char *aValue)

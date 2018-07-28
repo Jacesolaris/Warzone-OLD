@@ -7,7 +7,7 @@
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 //#define __BUMP_ENHANCE__
-//#define __HSHADOW_OCC_TESTING__ // Just testing stuff...
+//#define __HIGH_PASS_SHARPEN__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -19,7 +19,7 @@ uniform sampler2D						u_DiffuseMap;		// Screen image
 uniform sampler2D						u_ScreenDepthMap;	// Depth map
 uniform sampler2D						u_NormalMap;		// Flat normals
 uniform sampler2D						u_PositionMap;		// positionMap
-uniform sampler2D						u_DeluxeMap;		// linear depth 4096...
+uniform sampler2D						u_WaterPositionMap;	// water positions
 uniform sampler2D						u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
 uniform sampler2D						u_SteepMap;			// ssao image
 uniform sampler2D						u_HeightMap;		// ssdoImage
@@ -139,6 +139,29 @@ vec2 EncodeNormal(vec3 n)
 	return vec2(n.xy * 0.5 + 0.5);
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
+
+
+vec4 positionMapAtCoord ( vec2 coord )
+{
+	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
+
+	bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
+
+	float isWater = textureLod(u_WaterPositionMap, coord, 0.0).a;
+
+	if (isWater > 0.0 || (isWater > 0.0 && isSky))
+	{
+		vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
+		
+		if (wMap.z > pos.z || isSky)
+		{
+			pos.xyz = wMap.xyz;
+			pos.a = MATERIAL_WATER + 1.0;
+		}
+	}
+
+	return pos;
+}
 
 
 vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
@@ -414,7 +437,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
-		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 
 		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
@@ -449,7 +472,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
-		vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, y), 0.0);
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 		
 		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
@@ -475,9 +498,6 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 
-	//float finalMaterial = textureLod(u_PositionMap, vec2(coord.x, LAND_Y), 0.0).a;
-	//float finalNormal = textureLod(u_NormalMap, vec2(coord.x, LAND_Y), 0.0).a;
-
 	float d = 1.0 / ((1.0 - (LAND_Y - coord.y)) * 1.75);
 
 	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0 * d), 0.0, 1.0);
@@ -487,7 +507,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 
-	vec4 pMap = textureLod(u_PositionMap, vec2(coord.x, upPos), 0.0);
+	vec4 pMap = positionMapAtCoord(vec2(coord.x, upPos));
 
 	if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
 	{// The reflected pixel is closer then the original, this would be a bad reflection.
@@ -752,11 +772,6 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 }
 
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
-	/*float noise = texture(u_DeluxeMap, pos.xy).x * 0.5;
-	noise += texture(u_DeluxeMap, pos.xy * 0.5).y;
-	noise += texture(u_DeluxeMap, pos.xy * 0.25).z * 2.0;
-	noise += texture(u_DeluxeMap, pos.xy * 0.125).w * 4.0;*/
-
 	float noise = lnoise(pos.xyx) * 0.5;
 	noise += lnoise(pos.yzx * 0.5);
 	noise += lnoise(pos.zxy * 0.25) * 2.0;
@@ -924,100 +939,6 @@ vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
     return normalize( nor + grad*bumpfactor );
 }
 
-#ifdef __HSHADOW_OCC_TESTING__
-float getDepth(vec2 coord) {
-    return texture(u_DeluxeMap/*u_ScreenDepthMap*/, coord).r;
-}
-
-vec3 getViewPosition(vec2 coord) {
-    vec3 pos = vec3((coord.s * 2.0 - 1.0), (coord.t * 2.0 - 1.0) / (u_Dimensions.x/u_Dimensions.y), 1.0);
-    return (pos * getDepth(coord));
-}
-
-vec3 getViewNormal(vec2 coord) {
-	vec3 p0 = getViewPosition(coord);
-	vec3 p1 = getViewPosition(coord + vec2(u_Local3.g/*1.0*/ / u_Dimensions.x, 0.0));
-	vec3 p2 = getViewPosition(coord + vec2(0.0, u_Local3.g/*1.0*/ / u_Dimensions.y));
-
-	vec3 dx = p1 - p0;
-	vec3 dy = p2 - p0;
-	return normalize(cross(dy, dx) + 0.0000001);
-}
-
-vec2 GetMapTC(vec3 pos)
-{
-	vec2 mapSize = u_Maxs.xy - u_Mins.xy;
-	return (pos.xy - u_Mins.xy) / mapSize;
-}
-
-float DistanceField( vec3 pos, float d )
-{
-	//float hSize = (u_Maxs.z - u_Mins.z);// * u_Local3.a;
-	return texture(u_RoadsControlMap, GetMapTC(pos)).r;
-}
-
-float calcOcclusion( in vec3 pos, in vec3 nor, float t, vec3 lightDir )
-{
-	float occ = 0.0;
-    for( int i=0; i<8; i++ )
-    {
-        float h = 0.005 + 0.25*float(i)/ /*7.0*/u_Local3.a;
-        vec3 dir = lightDir;//normalize( sin( float(i)*73.4 + lightDir/*vec3(0.0,2.1,4.2)*/ ));
-        dir = normalize( nor + dir );
-        occ += (h-DistanceField( pos + h*dir, t ));
-    }
-    return clamp( 1.0 - 9.0*occ/8.0, 0.0, 1.0 );    
-}
-
-#if 1
-float calcShadow( in vec3 ro, in vec3 rd )
-{
-    float res = 1.0;
-
-    //float t = 0.1;
-	float t = DistanceField(ro, 0.0/*length(pos)*/);
-
-	//float d = distance(ro, u_PrimaryLightOrigin.xyz);
-	//float tPlus = 32.0 / d;
-
-    for( int i=0; i<32; i++ )
-    {
-        vec3 pos = ro + (rd*t*u_Local3.a);
-        float h = DistanceField(pos, 0.0/*length(pos)*/);
-        res = min( res, smoothstep(0.0,1.0,u_Local3.b/*8.0*/*h/t) );
-        t += h;//clamp( h, 0.05, 10.0 );
-		if( res<0.01 ) break;
-    }
-    return clamp(res,0.0,1.0);
-}
-#else
-float calcShadow(vec3 rayOrigin, vec3 lightPos, float dNearLight, float kShadowSoftness)
-{
-    const int maxStep = 128;
-    const float dNearIntersect = 0.0000001;
-    vec3 rayDirection = lightPos - rayOrigin;
-    float dMax = length(rayDirection) - dNearLight;
-    rayDirection = normalize(rayDirection);
-    float res = 1.0;
-    float d=0.0;
-    for(int k=0; k<maxStep; k++)
-    {
-        float closest = DistanceField(rayOrigin + rayDirection*d, 0.0);
-        if(closest<dNearIntersect)
-            return 0.0;
-        res = min(res, kShadowSoftness*closest/d);
-        d += closest;
-        if(d>=dMax)
-            break;
-    }
-    return res;
-}
-#endif
-#endif //__HSHADOW_OCC_TESTING__
-
-
-//#define __HIGH_PASS_SHARPEN__
-
 #if defined(__HIGH_PASS_SHARPEN__)
 vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 {
@@ -1034,7 +955,7 @@ void main(void)
 {
 	vec4 color = texture(u_DiffuseMap, var_TexCoords);//textureLod(u_DiffuseMap, var_TexCoords, 0.0);
 	vec4 outColor = vec4(color.rgb, 1.0);
-	vec4 position = textureLod(u_PositionMap, var_TexCoords, 0.0);
+	vec4 position = positionMapAtCoord(var_TexCoords);
 
 #if defined(__HIGH_PASS_SHARPEN__)
 	if (u_Local3.r != 0.0)
@@ -1076,48 +997,6 @@ void main(void)
 		gl_FragColor = outColor;
 		return;
 	}
-
-#ifdef __HSHADOW_OCC_TESTING__
-	{
-		
-		vec3 viewNormal = getViewNormal(var_TexCoords);
-		/*float vNv = viewNormal.z * 0.5 + 0.5;
-
-		//if (u_Local3.r == 1.0) vNv = viewNormal.y * 0.5 + 0.5;
-		//if (u_Local3.r == 2.0) vNv = viewNormal.x * 0.5 + 0.5;
-
-		if (u_Local3.r == 1.0)
-		{
-			gl_FragColor = vec4(vNv, vNv, vNv, 1.0);
-			return;
-		}
-		*/
-
-		if (u_Local3.r != 0.0)
-		{
-			//vec3 rd = normalize(position.xzy);
-			//float shd = calcShadow( position.xyz, normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin) );
-			
-			//float shd = calcShadow( position.xyz, normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz) );
-			//float shd = calcShadow( position.xyz, u_PrimaryLightOrigin.xyz, u_Local3.b/*1.0*/, 32.0 );
-
-			float shd = 1.0 - calcOcclusion( position.xyz, viewNormal, u_Local3.g, normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz) );
-
-			shd = mix( .2, 1.0, smoothstep( 0.0, .7, shd ) );
-
-			//result *= mix( .2, 1.0, smoothstep( 0.0, .7, calcOcclusion( pos, norm, t ) ) );
-			
-
-			if (u_Local3.r == 100.0)
-			{
-				gl_FragColor = vec4(shd, shd, shd, 1.0);
-				return;
-			}
-
-			outColor.rgb *= shd * u_Local3.r;
-		}
-	}
-#endif //__HSHADOW_OCC_TESTING__
 
 	vec2 texCoords = var_TexCoords;
 	vec2 materialSettings = RB_PBR_DefaultsForMaterial(position.a-1.0);
@@ -1566,7 +1445,7 @@ void main(void)
 	}
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
-	if (u_Local8.r > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0))
+	if (u_Local8.r > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0) && position.a - 1.0 != MATERIAL_WATER)
 	{
 		if (wetness > 0.0)
 			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + 0.37504, ssReflection);

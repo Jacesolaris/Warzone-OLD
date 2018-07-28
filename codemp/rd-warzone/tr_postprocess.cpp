@@ -24,22 +24,26 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern char currentMapName[128];
 
-extern qboolean		FOG_STANDARD_ENABLE;
-extern vec3_t		FOG_COLOR;
-extern vec3_t		FOG_COLOR_SUN;
-extern float		FOG_DENSITY;
-extern float		FOG_ACCUMULATION_MODIFIER;
-extern float		FOG_RANGE_MULTIPLIER;
-extern qboolean		FOG_VOLUMETRIC_ENABLE;
-extern vec3_t		FOG_VOLUMETRIC_COLOR;
-extern float		FOG_VOLUMETRIC_SUN_PENETRATION;
-extern float		FOG_VOLUMETRIC_ALPHA;
-extern float		FOG_VOLUMETRIC_CLOUDINESS;
-extern float		FOG_VOLUMETRIC_WIND;
-extern float		FOG_VOLUMETRIC_ALTITUDE_BOTTOM;
-extern float		FOG_VOLUMETRIC_ALTITUDE_TOP;
-extern float		FOG_VOLUMETRIC_ALTITUDE_FADE;
-extern vec4_t		FOG_VOLUMETRIC_BBOX;
+extern qboolean		FOG_LINEAR_ENABLE;
+extern vec3_t		FOG_LINEAR_COLOR;
+extern float		FOG_LINEAR_ALPHA;
+extern qboolean		FOG_WORLD_ENABLE;
+extern vec3_t		FOG_WORLD_COLOR;
+extern vec3_t		FOG_WORLD_COLOR_SUN;
+extern float		FOG_WORLD_CLOUDINESS;
+extern float		FOG_WORLD_WIND;
+extern float		FOG_WORLD_ALPHA;
+extern float		FOG_WORLD_FADE_ALTITUDE;
+extern qboolean		FOG_LAYER_ENABLE;
+extern vec3_t		FOG_LAYER_COLOR;
+extern float		FOG_LAYER_SUN_PENETRATION;
+extern float		FOG_LAYER_ALPHA;
+extern float		FOG_LAYER_CLOUDINESS;
+extern float		FOG_LAYER_WIND;
+extern float		FOG_LAYER_ALTITUDE_BOTTOM;
+extern float		FOG_LAYER_ALTITUDE_TOP;
+extern float		FOG_LAYER_ALTITUDE_FADE;
+extern vec4_t		FOG_LAYER_BBOX;
 
 extern float		SUN_PHONG_SCALE;
 extern float		SHADOW_MINBRIGHT;
@@ -1296,6 +1300,7 @@ float RB_PixelDistance(float from[2], float to[2])
 }
 
 extern float SUN_VOLUMETRIC_SCALE;
+extern float SUN_VOLUMETRIC_FALLOFF;
 
 qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -1397,7 +1402,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	
 	{
 		vec4_t local0;
-		VectorSet4(local0, glowDimensionsX, glowDimensionsY, r_volumeLightStrength->value * 0.4 * SUN_VOLUMETRIC_SCALE, r_testvalue0->value); // * 0.4 to compensate for old setting.
+		VectorSet4(local0, glowDimensionsX, glowDimensionsY, r_volumeLightStrength->value * 0.4 * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF); // * 0.4 to compensate for old setting.
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 	}
 	
@@ -2401,9 +2406,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
-	GLSL_SetUniformInt(shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	//GL_BindToTMU(tr.random2KImage[0], TB_DELUXEMAP);
-	GL_BindToTMU(tr.linearDepthImage4096, TB_DELUXEMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
 
 	if (r_normalMappingReal->integer)
 	{
@@ -3170,50 +3174,68 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_COLOR[0], FOG_COLOR[1], FOG_COLOR[2], FOG_STANDARD_ENABLE ? 1.0 : 0.0);
+		VectorSet4(loc, FOG_WORLD_COLOR[0], FOG_WORLD_COLOR[1], FOG_WORLD_COLOR[2], FOG_WORLD_ENABLE ? 1.0 : 0.0);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL2, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_COLOR_SUN[0], FOG_COLOR_SUN[1], FOG_COLOR_SUN[2], FOG_RANGE_MULTIPLIER);
+		VectorSet4(loc, FOG_WORLD_COLOR_SUN[0], FOG_WORLD_COLOR_SUN[1], FOG_WORLD_COLOR_SUN[2], FOG_WORLD_ALPHA);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL3, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_DENSITY, FOG_VOLUMETRIC_ENABLE ? 1.0 : 0.0, FOG_VOLUMETRIC_SUN_PENETRATION, FOG_VOLUMETRIC_ALTITUDE_BOTTOM);
+		VectorSet4(loc, FOG_WORLD_CLOUDINESS, FOG_LAYER_ENABLE ? 1.0 : 0.0, FOG_LAYER_SUN_PENETRATION, FOG_LAYER_ALTITUDE_BOTTOM);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL4, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, FOG_VOLUMETRIC_COLOR[0], FOG_VOLUMETRIC_COLOR[1], FOG_VOLUMETRIC_COLOR[2], FOG_VOLUMETRIC_ALPHA);
+		VectorSet4(loc, FOG_LAYER_COLOR[0], FOG_LAYER_COLOR[1], FOG_LAYER_COLOR[2], FOG_LAYER_ALPHA);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL5, loc);
 	}
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, MAP_INFO_MAXSIZE, FOG_ACCUMULATION_MODIFIER, FOG_VOLUMETRIC_CLOUDINESS, FOG_VOLUMETRIC_WIND);
+		VectorSet4(loc, MAP_INFO_MAXSIZE, FOG_WORLD_WIND, FOG_LAYER_CLOUDINESS, FOG_LAYER_WIND);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL6, loc);
 	}
 
 	{
 		vec4_t local7;
-		VectorSet4(local7, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, FOG_VOLUMETRIC_ALTITUDE_TOP, FOG_VOLUMETRIC_ALTITUDE_FADE, 0.0);
+		VectorSet4(local7, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, FOG_LAYER_ALTITUDE_TOP, FOG_LAYER_ALTITUDE_FADE, 0.0);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL7, local7);
 	}
 
 	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL8, backEnd.refdef.sunCol);
 
-	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL9, FOG_VOLUMETRIC_BBOX);
+	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL9, FOG_LAYER_BBOX);
+
+	{
+		vec4_t local10;
+		VectorSet4(local10, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], FOG_WORLD_FADE_ALTITUDE);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL10, local10);
+	}
+
+	{
+		vec4_t local11;
+		VectorSet4(local11, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], FOG_LINEAR_ENABLE);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL11, local11);
+	}
+
+	{
+		vec4_t local12;
+		VectorSet4(local12, FOG_LINEAR_COLOR[0], FOG_LINEAR_COLOR[1], FOG_LINEAR_COLOR[2], FOG_LINEAR_ALPHA);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL12, local12);
+	}
 
 	{
 		vec4_t loc;
 		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_MAPINFO, loc);
 	}
-	
+
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fogPostShader, color, 0);
 }
 

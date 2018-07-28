@@ -5,7 +5,7 @@ uniform sampler2D			u_ScreenDepthMap;
 uniform vec2				u_vlightPositions;
 uniform vec3				u_vlightColors;
 
-uniform vec4				u_Local0;
+uniform vec4				u_Local0; // glowDimensionsX, glowDimensionsY, r_volumeLightStrength * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF
 uniform vec4				u_Local1; // nightScale, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value
 uniform vec4				u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
@@ -69,7 +69,7 @@ void main ( void )
 			break;
 	}
 
-	totalColor += clamp(lightColor * (lens * 0.05) * fall, 0.0, 1.0);
+	totalColor += clamp(lightColor * (lens * 0.05) * pow(fall, u_Local0.a), 0.0, 1.0);
 
 	totalColor.rgb += u_vlightColors * 0.05;
 

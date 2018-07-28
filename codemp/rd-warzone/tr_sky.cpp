@@ -438,6 +438,9 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	extern vec4_t		PROCEDURAL_SKY_NIGHT_COLOR;
 	extern float		PROCEDURAL_SKY_NIGHT_HDR_MIN;
 	extern float		PROCEDURAL_SKY_NIGHT_HDR_MAX;
+	extern int			PROCEDURAL_SKY_STAR_DENSITY;
+	extern float		PROCEDURAL_SKY_DARKMATTER_FACTOR;
+	extern float		PROCEDURAL_SKY_PLANETARY_ROTATION;
 
 	extern qboolean		PROCEDURAL_BACKGROUND_HILLS_ENABLED;
 	extern float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS;
@@ -466,8 +469,9 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 		{// used...
 			//extern float		MAP_WATER_LEVEL;// = 131072.0;
-			extern qboolean  PROCEDURAL_SKY_ENABLED;
-			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, 0.0, 0.0, 1024.0);
+			extern qboolean		PROCEDURAL_SKY_ENABLED;
+			extern float		DAY_NIGHT_24H_TIME;
+			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, DAY_NIGHT_24H_TIME / 24.0, PROCEDURAL_SKY_STAR_DENSITY, 1024.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
 
 			VectorSet4(vector, PROCEDURAL_CLOUDS_ENABLED ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
@@ -476,7 +480,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			VectorSet4(vector, PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 
-			VectorSet4(vector, PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, 0.0, 0.0);
+			VectorSet4(vector, PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, Q_clamp(0.0, 1.0 - PROCEDURAL_SKY_DARKMATTER_FACTOR, 1.0));
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
 
 			float auroraEnabled = 0.0;
