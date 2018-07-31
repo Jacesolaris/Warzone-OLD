@@ -81,6 +81,145 @@ void RE_ClearScene(void) {
 	r_firstScenePoly = r_numpolys;
 }
 
+#ifdef __INDOOR_OUTDOOR_CULLING__
+extern int ENABLE_INDOOR_OUTDOOR_SYSTEM;
+extern qboolean INDOOR_BRUSH_FOUND;
+
+void Indoors_Trace(trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask)
+{
+	results->entityNum = ENTITYNUM_NONE;
+	ri->CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, 0);
+	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
+}
+
+void R_CheckIfOutside(void)
+{
+	if (!ENABLE_INDOOR_OUTDOOR_SYSTEM) return;
+	if (!INDOOR_BRUSH_FOUND) return;
+
+	if (backEnd.viewIsOutdoorsCheckTime > backEnd.refdef.time - 1000)
+	{// Wait before next check...
+		return;
+	}
+
+	backEnd.viewIsOutdoorsCheckTime = backEnd.refdef.time;
+
+	// Trace for sky above...
+	trace_t trace;
+	vec3_t start, end;
+
+	VectorCopy(backEnd.refdef.vieworg, start);
+	start[2] += 16.0;
+
+	VectorCopy(backEnd.refdef.vieworg, end);
+	end[2] += 524288.0;
+
+	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{// Sky seen...
+		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		backEnd.viewIsOutdoors = qtrue;
+		return;
+	}
+
+	// Second attempt...
+	VectorCopy(backEnd.refdef.vieworg, end);
+	end[2] += 524288.0;
+	end[0] += 512.0;
+
+	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{// Sky seen...
+		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		backEnd.viewIsOutdoors = qtrue;
+		return;
+	}
+
+	// Third attempt...
+	VectorCopy(backEnd.refdef.vieworg, end);
+	end[2] += 524288.0;
+	end[1] += 512.0;
+
+	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{// Sky seen...
+		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		backEnd.viewIsOutdoors = qtrue;
+		return;
+	}
+
+	// Fourth attempt...
+	VectorCopy(backEnd.refdef.vieworg, end);
+	end[2] += 524288.0;
+	end[0] -= 512.0;
+
+	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{// Sky seen...
+		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		backEnd.viewIsOutdoors = qtrue;
+		return;
+	}
+
+	// Fifth attempt...
+	VectorCopy(backEnd.refdef.vieworg, end);
+	end[2] += 524288.0;
+	end[1] -= 512.0;
+
+	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
+
+	if (trace.surfaceFlags & SURF_SKY)
+	{// Sky seen...
+		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		backEnd.viewIsOutdoors = qtrue;
+		return;
+	}
+
+	// Didn't see any sky...
+	ri->Printf(PRINT_WARNING, "You are inside.\n");
+	backEnd.viewIsOutdoors = qfalse;
+}
+
+qboolean R_IndoorOutdoorCull(shader_t *shader)
+{
+	if (!ENABLE_INDOOR_OUTDOOR_SYSTEM) return qfalse;
+	if (!INDOOR_BRUSH_FOUND) return qfalse;
+
+	if (shader->isPortal) return qfalse;
+	if (shader->isSky) return qfalse;
+	//if (backEnd.currentEntity == &backEnd.entity2D) return qfalse;
+	
+	for (int stage = 0; stage <= shader->maxStage && stage < MAX_SHADER_STAGES; stage++)
+	{
+		shaderStage_t *pStage = shader->stages[stage];
+
+		if (!pStage) break;
+		if (!pStage->active) continue;
+
+		if (pStage->stateBits & GLS_DEPTHTEST_DISABLE)
+		{// 2D probably, don't cull...
+			return qfalse;
+		}
+	}
+
+	if (backEnd.viewIsOutdoors && shader->isIndoor)
+	{// Is indoor shader and we are outdoors, cull...
+		return qtrue;
+	}
+
+	if (!backEnd.viewIsOutdoors && !shader->isIndoor)
+	{// Is outdoor shader and we are indoors, cull...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+#endif //__INDOOR_OUTDOOR_CULLING__
+
 /*
 ===========================================================================
 
@@ -999,6 +1138,18 @@ void RE_BeginScene(const refdef_t *fd)
 
 	RB_AddGlowShaderLights();
 	RB_UpdateCloseLights();
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+	if (ENABLE_INDOOR_OUTDOOR_SYSTEM && INDOOR_BRUSH_FOUND)
+	{
+		if (ENABLE_INDOOR_OUTDOOR_SYSTEM > 1)
+			ri->Printf(PRINT_WARNING, "%i inside or outside surfaces were culled last frame. %i were not culled.\n", backEnd.viewIsOutdoorsCulledCount, backEnd.viewIsOutdoorsNotCulledCount);
+
+		backEnd.viewIsOutdoorsCulledCount = 0;
+		backEnd.viewIsOutdoorsNotCulledCount = 0;
+		R_CheckIfOutside();
+	}
+#endif //__INDOOR_OUTDOOR_CULLING__
 
 	// Add the decals here because decals add polys and we need to ensure
 	// that the polys are added before the the renderer is prepared

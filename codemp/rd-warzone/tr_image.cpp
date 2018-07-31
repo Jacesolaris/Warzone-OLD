@@ -3047,6 +3047,7 @@ FBO_t *R_CreateNormalMapDestinationFBO( int width, int height )
 	return tr.NormalMapDestinationFBO;
 }
 
+#if 0
 image_t *R_TextureESharpenGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t *srcImage )
 {
 	int			normalFlags;
@@ -3193,6 +3194,7 @@ image_t *R_TextureDarkExpandGLSL ( const char *name, byte *pic, int width, int h
 
 	return dstImage;
 }
+#endif
 
 void R_SaveNormalMap (const char *name, image_t *dstImage)
 {

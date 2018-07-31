@@ -3192,7 +3192,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && r_sss->integer)
+		/*if (!SCREEN_BLUR && r_sss->integer)
 		{
 			if (!r_lowVram->integer)
 			{
@@ -3205,7 +3205,7 @@ const void *RB_PostProcess(const void *data)
 
 				DEBUG_EndTimer(qtrue);
 			}
-		}
+		}*/
 
 		if (!SCREEN_BLUR && r_anamorphic->integer)
 		{
@@ -3225,7 +3225,7 @@ const void *RB_PostProcess(const void *data)
 			DEBUG_EndTimer(qtrue);
 		}
 
-		if (!SCREEN_BLUR && (r_ssr->value > 0.0 || r_sse->value > 0.0))
+		/*if (!SCREEN_BLUR && (r_ssr->value > 0.0 || r_sse->value > 0.0))
 		{
 			if (!r_lowVram->integer)
 			{
@@ -3234,7 +3234,7 @@ const void *RB_PostProcess(const void *data)
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 				DEBUG_EndTimer(qtrue);
 			}
-		}
+		}*/
 
 		/*if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
@@ -3290,7 +3290,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && r_hbao->integer)
+		/*if (!SCREEN_BLUR && r_hbao->integer)
 		{
 			if (!r_lowVram->integer)
 			{
@@ -3299,7 +3299,7 @@ const void *RB_PostProcess(const void *data)
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 				DEBUG_EndTimer(qtrue);
 			}
-		}
+		}*/
 
 		if (!SCREEN_BLUR && ENABLE_DISPLACEMENT_MAPPING && r_ssdm->integer)
 		{
@@ -3415,7 +3415,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && r_esharpening2->integer)
+		/*if (!SCREEN_BLUR && r_esharpening2->integer)
 		{
 			if (!r_lowVram->integer)
 			{
@@ -3424,7 +3424,7 @@ const void *RB_PostProcess(const void *data)
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
 				DEBUG_EndTimer(qtrue);
 			}
-		}
+		}*/
 
 		if (!SCREEN_BLUR && r_darkexpand->integer)
 		{

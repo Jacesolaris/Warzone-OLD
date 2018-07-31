@@ -620,6 +620,7 @@ void R_CreateBspMapImage(void)
 					break;
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+				case MATERIAL_POLISHEDWOOD:
 				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.1 * 255 * HEIGHT_COLOR_MULT;
@@ -648,6 +649,7 @@ void R_CreateBspMapImage(void)
 					FOUND = qtrue;
 					break;
 				case MATERIAL_TILES:			// 26			// tiled floor
+				case MATERIAL_POLISHEDWOOD:
 					red[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					green[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
 					blue[(MAP_INFO_TRACEMAP_SIZE-1)-imageY][imageX] = 0.4 * 255 * HEIGHT_COLOR_MULT;
@@ -1372,6 +1374,7 @@ qboolean	DISABLE_DEPTH_PREPASS = qfalse;
 qboolean	LODMODEL_MAP = qfalse;
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
 qboolean	DISABLE_LIFTS_AND_PORTALS_MERGE = qtrue;
+int			ENABLE_INDOOR_OUTDOOR_SYSTEM = 0;
 int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
 float		DISPLACEMENT_MAPPING_STRENGTH = 18.0;
@@ -1561,6 +1564,7 @@ void MAPPING_LoadMapInfo(void)
 	DISABLE_MERGED_GLOWS = (atoi(IniRead(mapname, "FIXES", "DISABLE_MERGED_GLOWS", "0")) > 0) ? qtrue : qfalse;
 	DISABLE_LIFTS_AND_PORTALS_MERGE = (atoi(IniRead(mapname, "FIXES", "DISABLE_LIFTS_AND_PORTALS_MERGE", "1")) > 0) ? qtrue : qfalse;
 	GENERIC_MATERIALS_PREFER_SHINY = (atoi(IniRead(mapname, "FIXES", "GENERIC_MATERIALS_PREFER_SHINY", "0")) > 0) ? qtrue : qfalse;
+	ENABLE_INDOOR_OUTDOOR_SYSTEM = atoi(IniRead(mapname, "FIXES", "ENABLE_INDOOR_OUTDOOR_SYSTEM", "0"));
 
 	//
 	// Misc effect enablers...
@@ -2088,6 +2092,8 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Generic material selections prefer ^7%s^5 on this map.\n", GENERIC_MATERIALS_PREFER_SHINY ? "SHINY" : "MATTE");
+
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Indoor/Outdoor culling system is ^7%s^5 on this map.\n", (ENABLE_INDOOR_OUTDOOR_SYSTEM == 0) ? "DISABLED" : (ENABLE_INDOOR_OUTDOOR_SYSTEM == 1) ? "ENABLED" : "DEBUG MODE");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lodmodels are ^7%s^5 on this map.\n", LODMODEL_MAP ? "USED" : "UNUSED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Depth prepass is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_DEPTH_PREPASS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");

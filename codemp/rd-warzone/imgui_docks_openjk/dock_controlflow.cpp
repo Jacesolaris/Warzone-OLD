@@ -24,15 +24,15 @@ void DockControlFlow::imgui() {
 		showCvar("if (r_cartoon >= 2) RB_CellShade()"                          , r_cartoon         );
 		showCvar("if (r_cartoon >= 3) RB_Paint()"                              , r_cartoon         );
 		showCvar("if (AO_DIRECTIONAL) RB_SSDO()"                               , r_ssdo            );
-		showCvar("RB_SSS()"                                                    , r_sss             );
+		//showCvar("RB_SSS()"                                                    , r_sss             );
 		showCvar("if (r_bloom >= 2 || r_anamorphic) RB_CreateAnamorphicImage()", r_anamorphic      );
 		showCvar("if (!LATE_LIGHTING_ENABLED) RB_DeferredLighting()"           , r_deferredLighting);
-		showCvar("if (r_ssr > 0 || r_sse > 0) RB_ScreenSpaceReflections()"     , r_ssr             );
+		//showCvar("if (r_ssr > 0 || r_sse > 0) RB_ScreenSpaceReflections()"     , r_ssr             );
 		//showCvar("RB_Underwater",r_underwater); // commented out in RB_PostProcess too
 		showCvar("RB_MagicDetail"                                              , r_magicdetail     );
 		showCvar("Screen RB_GaussianBlur()"                                    , r_screenBlurSlow  );
 		showCvar("Screen RB_FastBlur()"                                        , r_screenBlurFast  );
-		showCvar("RB_HBAO"                                                     , r_hbao            );
+		//showCvar("RB_HBAO"                                                     , r_hbao            );
 		showCvar("RB_SSDM (ENABLE_DISPLACEMENT_MAPPING)"                       , r_ssdm            );
 		showCvar("RB_WaterPost (r_glslWater->integer <= 2 && WATER_ENABLED)"   , r_glslWater       );
 		showCvar("RB_FogPostShader (FOG_POST_ENABLED && LATE_LIGHTING_ENABLED)", r_fogPost         );
@@ -45,7 +45,7 @@ void DockControlFlow::imgui() {
 		showCvar("RB_FogPostShader (FOG_POST_ENABLED && LATE_LIGHTING_ENABLED)", r_fogPost         );
 		showCvar("RB_DeferredLighting (LATE_LIGHTING_ENABLED >= 2)"            , r_deferredLighting);
 		showCvar("RB_ESharpening"                                              , r_esharpening     );
-		showCvar("RB_ESharpening2"                                             , r_esharpening2    );
+		//showCvar("RB_ESharpening2"                                             , r_esharpening2    );
 		showCvar("RB_DarkExpand"                                               , r_darkexpand      );
 		showCvar("RB_DistanceBlur"                                             , r_distanceBlur    );
 		showCvar("Bloom"                                                       , r_bloom           );

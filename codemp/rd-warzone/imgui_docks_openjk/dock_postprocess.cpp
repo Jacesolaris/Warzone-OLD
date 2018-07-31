@@ -164,12 +164,12 @@ void DockPostProcess::MakeCvarList() {
 	AddCvar(r_ao, 3);
 	AddCvar(r_cartoon, 3);
 	AddCvar(r_ssdo, 1);
-	AddCvar(r_sss, 1);
+	//AddCvar(r_sss, 1);
 	AddCvar(r_deferredLighting, 1);
-	AddCvar(r_ssr, 1);
-	AddCvar(r_sse, 1);
+	//AddCvar(r_ssr, 1);
+	//AddCvar(r_sse, 1);
 	AddCvar(r_magicdetail, 1);
-	AddCvar(r_hbao, 1);
+	//AddCvar(r_hbao, 1);
 	AddCvar(r_glslWater, 3);
 	AddCvar(r_fogPost, 1);
 	AddCvar(r_multipost, 1);
@@ -178,7 +178,7 @@ void DockPostProcess::MakeCvarList() {
 	AddCvar(r_testshader, 1);
 	AddCvar(r_colorCorrection, 1);
 	AddCvar(r_esharpening, 1);
-	AddCvar(r_esharpening2, 1);
+	//AddCvar(r_esharpening2, 1);
 	AddCvar(r_darkexpand, 1);
 	AddCvar(r_distanceBlur, 5);
 	AddCvar(r_volumeLight, 1);

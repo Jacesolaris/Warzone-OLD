@@ -2614,6 +2614,7 @@ static void _PlayerFootStep( const vec3_t origin,
 			break;
 		case MATERIAL_SOLIDWOOD:
 		case MATERIAL_HOLLOWWOOD:
+		case MATERIAL_POLISHEDWOOD:
 			if ( footStepType == FOOTSTEP_HEAVY_R || footStepType == FOOTSTEP_HEAVY_L) {
 				soundType = FOOTSTEP_WOODRUN;
 			} else {

@@ -33,19 +33,6 @@ void RB_CullSurfaceOcclusion(msurface_t *surf)
 #ifdef __ZFAR_CULLING_ON_SURFACES__
 	if (r_occlusion->integer)
 	{
-		if (surf->cullinfo.centerDistanceTime + 1000 < backEnd.refdef.time)
-		{
-			if (!surf->cullinfo.centerOriginInitialized)
-			{
-				surf->cullinfo.centerOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
-				surf->cullinfo.centerOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
-				surf->cullinfo.centerOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
-				surf->cullinfo.centerOriginInitialized = qtrue;
-			}
-
-			surf->cullinfo.currentDistance = Distance(tr.viewParms.ori.origin, surf->cullinfo.centerOrigin);
-		}
-
 		if (surf->shader->materialType == MATERIAL_GREENLEAVES || (surf->shader->hasAlphaTestBits && !surf->shader->hasSplatMaps))
 		{// Tree leaves and alpha surfaces can be culled easier by occlusion culling...
 			if (surf->cullinfo.currentDistance > tr.occlusionZfarFoliage * 1.75)
@@ -96,9 +83,46 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		return qtrue;
 	}
 
+	if (!surf->cullinfo.centerOriginInitialized)
+	{
+		surf->cullinfo.centerOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+		surf->cullinfo.centerOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+		surf->cullinfo.centerOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+		surf->cullinfo.centerOriginInitialized = qtrue;
+	}
+
+	if (surf->cullinfo.centerDistanceTime < backEnd.refdef.time - 1000)
+	{
+		surf->cullinfo.currentDistance = Distance(tr.viewParms.ori.origin, surf->cullinfo.centerOrigin);
+		surf->cullinfo.centerDistanceTime = backEnd.refdef.time;
+	}
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+	extern qboolean INDOOR_BRUSH_FOUND;
+	extern int ENABLE_INDOOR_OUTDOOR_SYSTEM;
+	extern qboolean R_IndoorOutdoorCull(shader_t *shader);
+
+	if (ENABLE_INDOOR_OUTDOOR_SYSTEM && INDOOR_BRUSH_FOUND)
+	{
+		//float dist = surf->cullinfo.currentDistance;
+		float sdist = Distance(tr.viewParms.ori.origin, surf->cullinfo.centerOrigin);
+
+		if (sdist > 1024 && R_IndoorOutdoorCull(surf->shader))
+		{
+			backEnd.viewIsOutdoorsCulledCount++;
+			return qtrue;
+		}
+		else
+		{
+			backEnd.viewIsOutdoorsNotCulledCount++;
+		}
+	}
+#endif //__INDOOR_OUTDOOR_CULLING__
+
 	if ((TERRAIN_TESSELLATION_ENABLED && surf->shader->hasSplatMaps) || surf->shader->isGrass)
 	{// When doing tessellation or grass surfs, check if this surf is in tess or grass range. If so, skip culling because we always need to add grasses to it (visible or not).
 		float dist = Distance(tr.viewParms.ori.origin, surf->cullinfo.centerOrigin);
+		//float dist = surf->cullinfo.currentDistance;
 
 		if (surf->shader->isGrass && dist <= GRASS_DISTANCE)
 		{// In grass range, never cull...
@@ -595,7 +619,7 @@ int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 	{
 		if (p->dist <= emins[p->type])
 			return 1;
-		if (p->dist >= emaxs[p->type])// && emins[p->type] != 0) // UQ1: added  && emins[p->type] != 0  to fix a Q3 missing sky bug. It obviously is not being set somewhere...
+		if (p->dist >= emaxs[p->type])
 			return 2;
 		return 3;
 	}
@@ -615,7 +639,7 @@ int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 	sides = 0;
 	if (dist[0] >= p->dist)
 		sides = 1;
-	if (dist[1] < p->dist)// && emins[p->type] != 0) // UQ1: added  && emins[p->type] != 0  to fix a Q3 missing sky bug. It obviously is not being set somewhere...
+	if (dist[1] < p->dist)
 		sides |= 2;
 
 	return sides;
@@ -1609,8 +1633,10 @@ void R_AddWorldSurfaces(void) {
 		{
 			RB_CheckOcclusions();
 
+#ifdef __USE_VBO_AREAS__
 			extern void SetVBOVisibleAreas(void);
 			SetVBOVisibleAreas();
+#endif //__USE_VBO_AREAS__
 		}
 	}
 

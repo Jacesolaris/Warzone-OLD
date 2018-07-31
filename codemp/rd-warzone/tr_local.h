@@ -89,7 +89,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define __REGENERATE_BSP_NORMALS__				// Re-generate smooth normals for all of the map.
 
-#define __USE_VBO_AREAS__						// Break up map VBO's into areas.
+//#define __USE_VBO_AREAS__						// Break up map VBO's into areas.
 
 #define __OCEAN__								// System to add water outside of map boundaries...
 
@@ -121,6 +121,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __GLOW_SORTING__
 #define __TESS_SORTING__
 #define __MATERIAL_SORTING__
+
+#define __INDOOR_OUTDOOR_CULLING__
 
 //#define __REALTIME_SURFACE_SORTING__			// Meh, on big maps with lots of models, sorting is much slower then not sorting...
 #ifdef __REALTIME_SURFACE_SORTING__
@@ -593,20 +595,20 @@ extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_testvalue2;
 extern cvar_t  *r_testvalue3;
 extern cvar_t  *r_esharpening;
-extern cvar_t  *r_esharpening2;
+//extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_fxaaScanMod;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
 extern cvar_t  *r_screenBlurSlow;
 extern cvar_t  *r_screenBlurFast;
-extern cvar_t  *r_hbao;
+//extern cvar_t  *r_hbao;
 extern cvar_t  *r_deferredLighting;
 extern cvar_t  *r_ssdm;
-extern cvar_t  *r_ssr;
-extern cvar_t  *r_ssrStrength;
-extern cvar_t  *r_sse;
-extern cvar_t  *r_sseStrength;
+//extern cvar_t  *r_ssr;
+//extern cvar_t  *r_ssrStrength;
+//extern cvar_t  *r_sse;
+//extern cvar_t  *r_sseStrength;
 extern cvar_t  *r_colorCorrection;
 extern cvar_t  *r_steepParallax;
 extern cvar_t  *r_trueAnaglyph;
@@ -2697,6 +2699,13 @@ typedef struct {
 	int						localPlayerEntityNum;
 	int						humanoidOriginsNum;
 	vec3_t					humanoidOrigins[MAX_GRASSBEND_HUMANOIDS];
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+	qboolean				viewIsOutdoors = qtrue;
+	int						viewIsOutdoorsCheckTime = 0;
+	int						viewIsOutdoorsCulledCount = 0;
+	int						viewIsOutdoorsNotCulledCount = 0;
+#endif //__INDOOR_OUTDOOR_CULLING__
 } backEndState_t;
 
 /*
@@ -2932,8 +2941,8 @@ typedef struct trGlobals_s {
 
 	shaderProgram_t linearizeDepthShader;
 	shaderProgram_t surfaceSpriteShader;
-	shaderProgram_t sssShader;
-	shaderProgram_t sssBlurShader;
+	//shaderProgram_t sssShader;
+	//shaderProgram_t sssBlurShader;
 	shaderProgram_t ssdoShader;
 	shaderProgram_t ssdoBlurShader;
 	shaderProgram_t generateNormalMapShader;
@@ -2951,11 +2960,11 @@ typedef struct trGlobals_s {
 	shaderProgram_t furShader;
 	shaderProgram_t foliageShader;
 	shaderProgram_t grassShader[2];
-	shaderProgram_t hbaoShader;
-	shaderProgram_t hbao2Shader;
-	shaderProgram_t hbaoCombineShader;
+	//shaderProgram_t hbaoShader;
+	//shaderProgram_t hbao2Shader;
+	//shaderProgram_t hbaoCombineShader;
 	shaderProgram_t esharpeningShader;
-	shaderProgram_t esharpening2Shader;
+	//shaderProgram_t esharpening2Shader;
 	shaderProgram_t fxaaShader;
 	shaderProgram_t underwaterShader;
 	shaderProgram_t bloomDarkenShader;
@@ -2979,8 +2988,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t deferredLightingShader[2];
 	shaderProgram_t ssdmShader;
 	shaderProgram_t ssdmGenerateShader[2];
-	shaderProgram_t ssrShader;
-	shaderProgram_t ssrCombineShader;
+	//shaderProgram_t ssrShader;
+	//shaderProgram_t ssrCombineShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *anamorphicRenderFBOImage;
@@ -3388,7 +3397,7 @@ extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_testvalue2;
 extern cvar_t  *r_testvalue3;
 extern cvar_t  *r_esharpening;
-extern cvar_t  *r_esharpening2;
+//extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_fxaaScanMod;
 extern cvar_t  *r_underwater;

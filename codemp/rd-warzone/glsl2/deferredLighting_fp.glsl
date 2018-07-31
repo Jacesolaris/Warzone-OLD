@@ -7,7 +7,6 @@
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 //#define __BUMP_ENHANCE__
-//#define __HIGH_PASS_SHARPEN__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -213,6 +212,10 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		specularReflectionScale = 0.00075;
 		cubeReflectionScale = 0.0;
 		break;
+	case MATERIAL_POLISHEDWOOD:		// 3			// shiny polished wood
+		specularReflectionScale = 0.026;
+		cubeReflectionScale = 0.35;
+		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		specularReflectionScale = 0.098;
 		cubeReflectionScale = 0.98;
@@ -323,7 +326,10 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 
 	// TODO: Update original values with these modifications that I added after... Save time on the math, even though it's minor...
 	//specularReflectionScale = specularReflectionScale * 0.5 + 0.5;
+	//specularReflectionScale = specularReflectionScale * u_Local3.b + u_Local3.a;
+	
 	cubeReflectionScale = cubeReflectionScale * 0.75 + 0.25;
+	//cubeReflectionScale = cubeReflectionScale * u_Local3.r + u_Local3.g;
 
 	settings.x = specularReflectionScale;
 	settings.y = cubeReflectionScale;
@@ -901,15 +907,6 @@ vec3 ContrastSaturationBrightness(vec3 color, float con, float sat, float brt)
 	return conColor;
 }
 
-vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
-{
-	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
-	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
-	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
-	float a1 = t.w;
-	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
-}
-
 vec3 splatblend(vec3 color1, float a1, vec3 color2, float a2)
 {
     float depth = 0.2;
@@ -939,30 +936,11 @@ vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
     return normalize( nor + grad*bumpfactor );
 }
 
-#if defined(__HIGH_PASS_SHARPEN__)
-vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
-{
-	vec3 blur = textureLod(tex, uv, level).xyz;
-	vec3 col = ((color - blur)*0.5 + 0.5);
-	col *= ((color - blur)*0.25 + 0.25) * 8.0;
-	col = col * color;
-	return col;
-}
-#endif //defined(__HIGH_PASS_SHARPEN__)
-
-
 void main(void)
 {
-	vec4 color = texture(u_DiffuseMap, var_TexCoords);//textureLod(u_DiffuseMap, var_TexCoords, 0.0);
+	vec4 color = texture(u_DiffuseMap, var_TexCoords);
 	vec4 outColor = vec4(color.rgb, 1.0);
 	vec4 position = positionMapAtCoord(var_TexCoords);
-
-#if defined(__HIGH_PASS_SHARPEN__)
-	if (u_Local3.r != 0.0)
-	{
-		color.rgb = Enhance(u_DiffuseMap, var_TexCoords, color.rgb, u_Local3.r);
-	}
-#endif //defined(__HIGH_PASS_SHARPEN__)
 
 	if (position.a - 1.0 == MATERIAL_SKY
 		|| position.a - 1.0 == MATERIAL_SUN
@@ -1195,30 +1173,19 @@ void main(void)
 		vec3 reflected = cubeRayDir + parallax;
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
 
-		//vec3 reflected2 = rayDir + parallax;
-		//reflected2 = vec3(-reflected2.y, -reflected2.z, -reflected2.x);
-
 		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
 		{// Mix between night and day colors...
 			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
-			//skyColorDay += texture(u_SkyCubeMap, reflected2).rgb;
-			//skyColorDay /= 2.0;
 			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
-			//skyColorNight += texture(u_SkyCubeMapNight, reflected2).rgb;
-			//skyColorNight /= 2.0;
 			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
 		}
 		else if (u_Local6.a >= 1.0)
 		{// Night only colors...
 			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
-			//skyColor += texture(u_SkyCubeMapNight, reflected2).rgb;
-			//skyColor /= 2.0;
 		}
 		else
 		{// Day only colors...
 			skyColor = texture(u_SkyCubeMap, reflected).rgb;
-			//skyColor += texture(u_SkyCubeMap, reflected2).rgb;
-			//skyColor /= 2.0;
 		}
 
 		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.333), 0.0, 1.0);
@@ -1244,10 +1211,9 @@ void main(void)
 		specularColor.rgb = mix(specularColor.rgb, skyColor * specularColor.rgb, reflectionPower);
 
 #ifndef __LQ_MODE__
+#if defined(__CUBEMAPS__)
 		if (u_Local7.r > 0.0)
 		{// Cubemaps enabled...
-#if defined(__CUBEMAPS__)
-			//vec3 reflectance = EnvironmentBRDF(cubeReflectionFactor, NE, specularColor.rgb);
 			vec3 cubeLightColor = vec3(0.0);
 			
 			// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
@@ -1262,7 +1228,6 @@ void main(void)
 			vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
 			parallax.z *= -1.0;
 
-#ifdef __CUBEMAPS__
 			if (cubeReflectionFactor > 0.0 && NE > 0.0 && u_CubeMapStrength > 0.0)
 			{
 				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
@@ -1282,8 +1247,6 @@ void main(void)
 					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, clamp(NE * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor, 0.0, 1.0));
 				}
 			}
-#endif //__CUBEMAPS__
-#endif //defined(__CUBEMAPS__)
 		}
 		else
 		{
@@ -1291,6 +1254,11 @@ void main(void)
 			shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
 			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		}
+#else //!defined(__CUBEMAPS__)
+		vec3 shiny = textureLod(u_WaterEdgeMap, ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+		shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
+#endif //defined(__CUBEMAPS__)
 #endif //!__LQ_MODE__
 	}
 
@@ -1447,10 +1415,26 @@ void main(void)
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
 	if (u_Local8.r > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0) && position.a - 1.0 != MATERIAL_WATER)
 	{
+#if 1
 		if (wetness > 0.0)
 			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + 0.37504, ssReflection);
 		else
 			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower, ssReflection);
+#else
+		/*
+		vec3 rf = reflect(E.xyz, flatNorm.xyz);
+		float maxDistance = u_Local3.r;
+		float lenz = length(rf.z);
+		float offset = (maxDistance + ((1.0-lenz) * maxDistance));
+		float tcoff = (1.0 - texCoords.y) - (offset / u_Local3.g);
+		tcoff -= distance(0.5, maxDistance);
+		//float tcoff = (offset - texCoords.y) * offset;
+		*/
+		float tcoff = reflect(-texCoords.y, flatNorm.z);
+		//vec3 reflection = texture(u_DiffuseMap, vec2(texCoords.x, 1.0 - tcoff)).rgb;
+		vec3 reflection = texture(u_DiffuseMap, vec2(texCoords.x, 1.0 - (tcoff + (distance(texCoords.y, 1.0 - (E.z * 0.5 + 0.5)) * u_Local3.a)))).rgb;
+		outColor.rgb += reflection;
+#endif
 	}
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 

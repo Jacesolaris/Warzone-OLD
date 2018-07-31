@@ -3734,6 +3734,7 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_TILES:			// 26			// tiled floor
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+	case MATERIAL_POLISHEDWOOD:
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
@@ -3817,6 +3818,9 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_HOLLOWWOOD.\n", name);
+		break;
+	case MATERIAL_POLISHEDWOOD:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_POLISHEDWOOD.\n", name);
 		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SOLIDMETAL.\n", name);
@@ -4500,7 +4504,7 @@ static qboolean ParseShader( const char *name, const char **text )
 			continue;
 		}
 		// If this shader is indoors
-		else if (Q_stricmp(token, "indoor") == 0 || Q_stricmp(token, "duncan") == 0)
+		else if (Q_stricmp(token, "indoor") == 0 || Q_stricmp(token, "inside") == 0)
 		{
 			shader.isIndoor = qtrue;
 			SkipRestOfLine(text);

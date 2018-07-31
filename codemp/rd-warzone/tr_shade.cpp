@@ -1139,6 +1139,11 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 		cubemapScale = 0.0;
 		parallaxScale = 1.5;
 		break;
+	case MATERIAL_POLISHEDWOOD:
+		specularScale = 0.56;
+		cubemapScale = 0.15;
+		parallaxScale = 1.5;
+		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		specularScale = 0.98;
 		cubemapScale = 0.98;
@@ -1996,6 +2001,28 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			tess.shader->tesselationAlpha = 1.0;
 		}*/
 
+#ifdef __TERRAIN_TESSELATION__
+		if (TERRAIN_TESSELLATION_ENABLED
+			&& r_terrainTessellation->integer
+			&& r_terrainTessellationMax->value >= 2.0
+			&& (r_foliage->integer && GRASS_ENABLED && (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
+		{// Always add tesselation to ground surfaces...
+			tess.shader->tesselation = qfalse;
+
+			if (IS_DEPTH_PASS)
+			{// When doing depth pass, we simply lower the terrain by the max tessellation amount, reduces pixel culling, but is good enough and faster then tesselating the depth pass.
+				IS_DEPTH_PASS = 2;
+			}
+			else
+			{
+				useTesselation = 2;
+				tessInner = max(min(r_terrainTessellationMax->value, TERRAIN_TESSELLATION_LEVEL), 2.0);
+				tessOuter = tessInner;
+				tessAlpha = TERRAIN_TESSELLATION_OFFSET;
+			}
+		}
+		else
+#endif //__TERRAIN_TESSELATION__
 		if (!(tr.viewParms.flags & VPF_CUBEMAP)
 			//&& !(tr.viewParms.flags & VPF_SHADOWMAP)
 			&& !(tr.viewParms.flags & VPF_DEPTHSHADOW)
@@ -2012,25 +2039,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				tessOuter = tessInner;
 				tessAlpha = tess.shader->tesselationAlpha;
 			}
-#ifdef __TERRAIN_TESSELATION__
-			else if (TERRAIN_TESSELLATION_ENABLED
-				&& r_terrainTessellation->integer
-				&& r_terrainTessellationMax->value >= 2.0
-				&& (r_foliage->integer && GRASS_ENABLED && (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType))))
-			{// Always add tesselation to ground surfaces...
-				if (IS_DEPTH_PASS)
-				{// When doing depth pass, we simply lower the terrain by the max tessellation amount, reduces pixel culling, but is good enough and faster then tesselating the depth pass.
-					IS_DEPTH_PASS = 2;
-				}
-				else
-				{
-					useTesselation = 2;
-					tessInner = max(min(r_terrainTessellationMax->value, TERRAIN_TESSELLATION_LEVEL), 2.0);
-					tessOuter = tessInner;
-					tessAlpha = TERRAIN_TESSELLATION_OFFSET;
-				}
-			}
-#endif //__TERRAIN_TESSELATION__
 #if 0
 			else if (TERRAIN_TESSELLATION_ENABLED
 				&& r_terrainTessellation->integer

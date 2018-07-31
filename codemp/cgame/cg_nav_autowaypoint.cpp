@@ -3756,6 +3756,7 @@ qboolean MaterialIsValidForWP(int materialType)
 	case MATERIAL_TILES:			// 26			// tiled floor
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+	case MATERIAL_POLISHEDWOOD:
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
@@ -4122,6 +4123,9 @@ void DebugSurfaceType( int materialType)
 		break;
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 		trap->Print("Surface material is MATERIAL_HOLLOWWOOD.\n");
+		break;
+	case MATERIAL_POLISHEDWOOD:
+		trap->Print("Surface material is MATERIAL_POLISHEDWOOD.\n");
 		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		trap->Print("Surface material is MATERIAL_SOLIDMETAL.\n");

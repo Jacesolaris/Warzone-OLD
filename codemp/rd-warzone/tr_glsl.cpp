@@ -1589,14 +1589,15 @@ const char glslMaterialsList[] =
 "#define MATERIAL_ARMOR							30\n"\
 "#define MATERIAL_COMPUTER						31\n"\
 "#define MATERIAL_PUDDLE						32\n"\
-"#define MATERIAL_LAVA							33\n"\
-"#define MATERIAL_EFX							34\n"\
-"#define MATERIAL_BLASTERBOLT					35\n"\
-"#define MATERIAL_FIRE							36\n"\
-"#define MATERIAL_SMOKE							37\n"\
-"#define MATERIAL_FIREFLIES						38\n"\
-"#define MATERIAL_MAGIC_PARTICLES_TREE			39\n"\
-"#define MATERIAL_MAGIC_PARTICLES				40\n"\
+"#define MATERIAL_POLISHEDWOOD					33\n"\
+"#define MATERIAL_LAVA							34\n"\
+"#define MATERIAL_EFX							35\n"\
+"#define MATERIAL_BLASTERBOLT					36\n"\
+"#define MATERIAL_FIRE							37\n"\
+"#define MATERIAL_SMOKE							38\n"\
+"#define MATERIAL_FIREFLIES						39\n"\
+"#define MATERIAL_MAGIC_PARTICLES_TREE			40\n"\
+"#define MATERIAL_MAGIC_PARTICLES				41\n"\
 "#define MATERIAL_SKY							1024\n"\
 "#define MATERIAL_SUN							1025\n"\
 "\n";
@@ -3438,6 +3439,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load ssdoBlur shader!");
 	}
 
+	/*
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -3453,6 +3455,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load sssBlur shader!");
 	}
+	*/
 
 #ifdef __XYC_SURFACE_SPRITES__
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
@@ -3869,6 +3872,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load ssdmGenerate2 shader!");
 	}
 
+	/*
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -3884,6 +3888,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load ssrCombine shader!");
 	}
+	*/
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -3947,13 +3952,13 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load esharpening shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	/*attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.esharpening2Shader, "esharpening2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_esharpening2_vp, fallbackShader_esharpening2_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load esharpening2 shader!");
-	}
+	}*/
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -4038,7 +4043,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	/*attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define FAST_HBAO\n");
@@ -4062,7 +4067,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.hbaoCombineShader, "hbaoCombine", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_hbaoCombine_vp, fallbackShader_hbaoCombine_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load hbaoCombine shader!");
-	}
+	}*/
 
 	//
 	// UQ1: End Added...
@@ -4694,7 +4699,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.sssShader))
+	/*if (!GLSL_EndLoadGPUShader(&tr.sssShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load sss shader!");
 	}
@@ -4727,7 +4732,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numEtcShaders++;
-
+	*/
 
 
 #ifdef __XYC_SURFACE_SPRITES__
@@ -5547,7 +5552,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.ssrShader))
+	/*if (!GLSL_EndLoadGPUShader(&tr.ssrShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssr!");
 	}
@@ -5581,6 +5586,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numEtcShaders++;
+	*/
 
 
 
@@ -5793,6 +5799,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 
 
+	/*
 	//esharpeningShader
 	if (!GLSL_EndLoadGPUShader(&tr.esharpening2Shader))
 	{
@@ -5833,6 +5840,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 #endif
 
 	numEtcShaders++;
+	*/
 
 
 	//fxaaShader
@@ -6189,7 +6197,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
+	/*if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load hbao shader!");
 	}
@@ -6240,7 +6248,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	GLSL_FinishGPUShader(&tr.hbaoCombineShader);
 #endif
 
-	numEtcShaders++;
+	numEtcShaders++;*/
 
 	//
 	// UQ1: End Added...
@@ -6317,8 +6325,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.shadowmaskShader);
 
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
-	GLSL_DeleteGPUShader(&tr.sssShader);
-	GLSL_DeleteGPUShader(&tr.sssBlurShader);
+	//GLSL_DeleteGPUShader(&tr.sssShader);
+	//GLSL_DeleteGPUShader(&tr.sssBlurShader);
 	GLSL_DeleteGPUShader(&tr.ssdoShader);
 	GLSL_DeleteGPUShader(&tr.ssdoBlurShader);
 
@@ -6338,7 +6346,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.cellShadeShader);
 	GLSL_DeleteGPUShader(&tr.paintShader);
 	GLSL_DeleteGPUShader(&tr.esharpeningShader);
-	GLSL_DeleteGPUShader(&tr.esharpening2Shader);
+	//GLSL_DeleteGPUShader(&tr.esharpening2Shader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterForwardShader);
 	GLSL_DeleteGPUShader(&tr.waterForwardFastShader);
@@ -6348,9 +6356,9 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.foliageShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[0]);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[1]);
-	GLSL_DeleteGPUShader(&tr.hbaoShader);
-	GLSL_DeleteGPUShader(&tr.hbao2Shader);
-	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
+	//GLSL_DeleteGPUShader(&tr.hbaoShader);
+	//GLSL_DeleteGPUShader(&tr.hbao2Shader);
+	//GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
 	GLSL_DeleteGPUShader(&tr.bloomBlurShader);
 	GLSL_DeleteGPUShader(&tr.bloomCombineShader);
 	GLSL_DeleteGPUShader(&tr.lensflareShader);
@@ -6384,8 +6392,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.ssdmShader);
 	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader[0]);
 	GLSL_DeleteGPUShader(&tr.ssdmGenerateShader[1]);
-	GLSL_DeleteGPUShader(&tr.ssrShader);
-	GLSL_DeleteGPUShader(&tr.ssrCombineShader);
+	//GLSL_DeleteGPUShader(&tr.ssrShader);
+	//GLSL_DeleteGPUShader(&tr.ssrCombineShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
 	GLSL_DeleteGPUShader(&tr.skyDomeShader);
 	GLSL_DeleteGPUShader(&tr.generateNormalMapShader);

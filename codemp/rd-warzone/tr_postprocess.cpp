@@ -1854,6 +1854,7 @@ extern float		WATER_CLARITY;
 extern vec3_t		WATER_COLOR_SHALLOW;
 extern vec3_t		WATER_COLOR_DEEP;
 
+#if 0
 void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -1929,6 +1930,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//FBO_Blit(hdrFbo, hdrBox, NULL, tr.sssFbo2, ldrBox, &tr.sssShader, color, 0);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
 }
+#endif
 
 extern qboolean WATER_USE_OCEAN;
 extern float WATER_WAVE_HEIGHT;
@@ -2139,6 +2141,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, colorWhite, 0);
 }
 
+#if 0
 void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2219,6 +2222,7 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 #endif //defined(HBAO_DEBUG) || defined(HBAO_SINGLE_PASS)
 }
+#endif
 
 void RB_ESharpening(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -2243,7 +2247,7 @@ void RB_ESharpening(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpeningShader, color, 0);
 }
 
-
+#if 0
 void RB_ESharpening2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2266,7 +2270,7 @@ void RB_ESharpening2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpening2Shader, color, 0);
 }
-
+#endif
 
 void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int direction)
 {
@@ -2803,6 +2807,7 @@ void RB_SSDM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssdmShader, color, 0);
 }
 
+#if 0
 void RB_ScreenSpaceReflections(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2879,6 +2884,7 @@ void RB_ScreenSpaceReflections(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec
 
 	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.ssrCombineShader, color, 0);
 }
+#endif
 
 void RB_ShowNormals(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {

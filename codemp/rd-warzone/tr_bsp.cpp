@@ -2405,6 +2405,7 @@ struct mapArea_t
 {
 	vec3_t		mins;
 	vec3_t		maxs;
+	vec3_t		center;
 	qboolean	visible = qfalse;
 };
 
@@ -2477,18 +2478,21 @@ void Setup_VBO_Areas(void)
 
 				VectorCopy(mins, MAP_AREAS.areas[MAP_AREAS.numAreas].mins);
 				VectorCopy(maxs, MAP_AREAS.areas[MAP_AREAS.numAreas].maxs);
+				MAP_AREAS.areas[MAP_AREAS.numAreas].center[0] = (mins[0] + maxs[0]) * 0.5;
+				MAP_AREAS.areas[MAP_AREAS.numAreas].center[1] = (mins[1] + maxs[1]) * 0.5;
+				MAP_AREAS.areas[MAP_AREAS.numAreas].center[2] = (mins[2] + maxs[2]) * 0.5;
 				MAP_AREAS.numAreas++;
 			}
 		}
 	}
 
-	for (int i = 0; i < MAP_AREAS.numAreas; i++)
+	/*for (int i = 0; i < MAP_AREAS.numAreas; i++)
 	{
 		ri->Printf(PRINT_WARNING, "Area %i. mins %i %i %i. maxs %i %i %i.\n"
 			, i
 			, (int)MAP_AREAS.areas[i].mins[0], (int)MAP_AREAS.areas[i].mins[1], (int)MAP_AREAS.areas[i].mins[2]
 			, (int)MAP_AREAS.areas[i].maxs[0], (int)MAP_AREAS.areas[i].maxs[1], (int)MAP_AREAS.areas[i].maxs[2]);
-	}
+	}*/
 }
 
 qboolean R_PointInXYBounds(vec3_t point, vec3_t mins, vec3_t maxs)
@@ -2523,47 +2527,115 @@ int GetVBOArea(vec3_t origin)
 	return MAP_AREAS.numAreas / 2; // should never happen, just give it the center of map, should it happen.
 }
 
+extern int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p);
+
+qboolean R_AreaInFOV(vec3_t spot, vec3_t from)
+{
+	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
+	vec3_t	fromAngles;
+	int hFOV = r_testvalue0->integer;// 180;
+	int vFOV = r_testvalue0->integer;//180;
+
+	extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
+	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+
+	VectorSubtract(spot, from, deltaVector);
+	vectoangles(deltaVector, angles);
+	VectorCopy(fromAngles, fromAnglesCopy);
+
+	deltaAngles[PITCH] = AngleDelta(fromAnglesCopy[PITCH], angles[PITCH]);
+	deltaAngles[YAW] = AngleDelta(fromAnglesCopy[YAW], angles[YAW]);
+
+	if (fabs(deltaAngles[PITCH]) <= vFOV && fabs(deltaAngles[YAW]) <= hFOV)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+
+qboolean VBOAreaVisible(int areanum)
+{
+	mapArea_t *area = &MAP_AREAS.areas[areanum];
+
+#if 0
+	int r;
+	int planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
+
+	if (planeBits & 1) {
+		r = R_BoxOnPlaneSide(area->mins, area->maxs, &tr.viewParms.frustum[0]);
+		if (r == 2) {
+			return qfalse;				// culled
+		}
+		if (r == 1) {
+			planeBits &= ~1;			// all descendants will also be in front
+		}
+	}
+
+	if (planeBits & 2) {
+		r = R_BoxOnPlaneSide(area->mins, area->maxs, &tr.viewParms.frustum[1]);
+		if (r == 2) {
+			return qfalse;				// culled
+		}
+		if (r == 1) {
+			planeBits &= ~2;			// all descendants will also be in front
+		}
+	}
+
+	if (planeBits & 4) {
+		r = R_BoxOnPlaneSide(area->mins, area->maxs, &tr.viewParms.frustum[2]);
+		if (r == 2) {
+			return qfalse;				// culled
+		}
+		if (r == 1) {
+			planeBits &= ~4;			// all descendants will also be in front
+		}
+	}
+
+	if (planeBits & 8) {
+		r = R_BoxOnPlaneSide(area->mins, area->maxs, &tr.viewParms.frustum[3]);
+		if (r == 2) {
+			return qfalse;				// culled
+		}
+		if (r == 1) {
+			planeBits &= ~8;			// all descendants will also be in front
+		}
+	}
+
+	if (planeBits & 16) {
+		r = R_BoxOnPlaneSide(area->mins, area->maxs, &tr.viewParms.frustum[4]);
+		if (r == 2) {
+			return qfalse;				// culled
+		}
+		if (r == 1) {
+			planeBits &= ~16;			// all descendants will also be in front
+		}
+	}
+#else
+	if (!R_AreaInFOV(area->mins, tr.refdef.vieworg)
+		&& !R_AreaInFOV(area->maxs, tr.refdef.vieworg)
+		&& !R_AreaInFOV(area->center, tr.refdef.vieworg))
+	{
+		return qfalse;
+	}
+#endif
+
+	return qtrue;
+}
+
 void SetVBOVisibleAreas(void)
 {
 #if 0
 	int numVisible = 0;
 	int numInVisible = 0;
 
-	vec3_t	mapMins, mapMaxs;
-
-	VectorCopy(tr.world->nodes[0].mins, mapMins);
-	VectorCopy(tr.world->nodes[0].maxs, mapMaxs);
-
-	vec3_t mapSize, modifier;
-	VectorSubtract(tr.world->nodes[0].maxs, tr.world->nodes[0].mins, mapSize);
-	modifier[0] = mapSize[0] / NUM_MAP_SECTIONS;
-	modifier[1] = mapSize[1] / NUM_MAP_SECTIONS;
-	modifier[2] = mapSize[2] / 2;
-
-	float highestMod = max(modifier[0], modifier[1]);
-
 	for (int i = 0; i < MAP_AREAS.numAreas; i++)
 	{
 		if (r_occlusion->integer)
 		{
-			//vec3_t center;
-
-			//center[0] = (MAP_AREAS.areas[i].mins[0] + MAP_AREAS.areas[i].maxs[0]) / 2.0;
-			//center[1] = (MAP_AREAS.areas[i].mins[1] + MAP_AREAS.areas[i].maxs[1]) / 2.0;
-			//center[2] = (MAP_AREAS.areas[i].mins[2] + MAP_AREAS.areas[i].maxs[2]) / 2.0;
-
-			vec3_t closest;
-
-			if (Distance(backEnd.refdef.vieworg, MAP_AREAS.areas[i].mins) < Distance(backEnd.refdef.vieworg, MAP_AREAS.areas[i].maxs))
-			{
-				VectorCopy(MAP_AREAS.areas[i].mins, closest);
-			}
-			else
-			{
-				VectorCopy(MAP_AREAS.areas[i].maxs, closest);
-			}
-
-			if (r_occlusion->integer && Distance(backEnd.refdef.vieworg, closest/*center*/) > (tr.occlusionZfar * 1.75) + highestMod)
+			if (!VBOAreaVisible(i))
 			{
 				MAP_AREAS.areas[i].visible = qfalse;
 				numInVisible++;
@@ -2596,43 +2668,6 @@ qboolean GetVBOAreaVisible(int area)
 	return qtrue;
 #endif
 }
-
-/*
-qboolean R_NodeInFOV(vec3_t spot, vec3_t from)
-{
-//return qtrue;
-
-vec3_t	deltaVector, angles, deltaAngles;
-vec3_t	fromAnglesCopy;
-vec3_t	fromAngles;
-//int hFOV = backEnd.refdef.fov_x * 0.5;
-//int vFOV = backEnd.refdef.fov_y * 0.5;
-int hFOV = 120;
-int vFOV = 120;
-//int hFOV = backEnd.refdef.fov_x;
-//int vFOV = backEnd.refdef.fov_y;
-//int hFOV = 80;
-//int vFOV = 80;
-//int hFOV = tr.refdef.fov_x * 0.5;
-//int vFOV = tr.refdef.fov_y * 0.5;
-
-TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
-
-VectorSubtract(spot, from, deltaVector);
-vectoangles(deltaVector, angles);
-VectorCopy(fromAngles, fromAnglesCopy);
-
-deltaAngles[PITCH] = AngleDelta(fromAnglesCopy[PITCH], angles[PITCH]);
-deltaAngles[YAW] = AngleDelta(fromAnglesCopy[YAW], angles[YAW]);
-
-if (fabs(deltaAngles[PITCH]) <= vFOV && fabs(deltaAngles[YAW]) <= hFOV)
-{
-return qtrue;
-}
-
-return qfalse;
-}
-*/
 #endif //__USE_VBO_AREAS__
 
 /*
@@ -2676,10 +2711,6 @@ static void R_CreateWorldVBOs(void)
 		srfBspSurface_t *bspSurf;
 		shader_t *shader = surface->shader;
 
-#ifdef __USE_VBO_AREAS__
-		bspSurf->vboArea = -1;
-#endif //__USE_VBO_AREAS__
-
 		if (shader->isPortal)
 			continue;
 
@@ -2694,6 +2725,10 @@ static void R_CreateWorldVBOs(void)
 			continue;
 
 		bspSurf = (srfBspSurface_t *) surface->data;
+
+#ifdef __USE_VBO_AREAS__
+		bspSurf->vboArea = -1;
+#endif //__USE_VBO_AREAS__
 
 		if (!bspSurf->numIndexes || !bspSurf->numVerts)
 			continue;
@@ -3935,6 +3970,9 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 		return qfalse;
 		break;
+	case MATERIAL_POLISHEDWOOD:
+		return qtrue;
+		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		return qtrue;
 		break;
@@ -4123,6 +4161,11 @@ int R_CloseLightOfColorNear(vec3_t pos, float distance, vec4_t color, float colo
 
 qboolean CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
 
+#ifdef __INDOOR_OUTDOOR_CULLING__
+extern int ENABLE_INDOOR_OUTDOOR_SYSTEM;
+qboolean INDOOR_BRUSH_FOUND = qfalse;
+#endif //__INDOOR_OUTDOOR_CULLING__
+
 static void R_SetupMapGlowsAndWaterPlane( void )
 {
 	qboolean setupWaterLevel = qfalse;
@@ -4134,6 +4177,14 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 	w = &s_worldData;
 
 	CONTENTS_INSIDE_OUTSIDE_FOUND = qfalse;
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+	INDOOR_BRUSH_FOUND = qfalse;
+
+	int numIndoorSeen = 0;
+	int indoorSeen = 0;
+	int outdoorSeen = 0;
+#endif //__INDOOR_OUTDOOR_CULLING__
 
 	if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0))
 	{
@@ -4160,7 +4211,27 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			if ((surf->shader->contentFlags & CONTENTS_INSIDE) || (surf->shader->contentFlags & CONTENTS_OUTSIDE))
 			{
 				CONTENTS_INSIDE_OUTSIDE_FOUND = qtrue;
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+				if (surf->shader->contentFlags & CONTENTS_INSIDE)
+				{
+					indoorSeen++;
+				}
+
+				if (surf->shader->contentFlags & CONTENTS_OUTSIDE)
+				{
+					outdoorSeen++;
+				}
+#endif //__INDOOR_OUTDOOR_CULLING__
 			}
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+			if (surf->shader->isIndoor)
+			{
+				INDOOR_BRUSH_FOUND = qtrue;
+				numIndoorSeen++;
+			}
+#endif //__INDOOR_OUTDOOR_CULLING__
 
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
@@ -4305,6 +4376,48 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			}
 		}
 	}
+
+#ifdef __INDOOR_OUTDOOR_CULLING__
+	if (ENABLE_INDOOR_OUTDOOR_SYSTEM > 1)
+		ri->Printf(PRINT_WARNING, "Found %i wzindoor, %i jka indoor, and %i jka outdoor surfaces.\n", numIndoorSeen, indoorSeen, outdoorSeen);
+
+	if (ENABLE_INDOOR_OUTDOOR_SYSTEM && CONTENTS_INSIDE_OUTSIDE_FOUND)
+	{// Mark any old school indoor/outdoor stuff as best we can...
+		INDOOR_BRUSH_FOUND = qtrue;
+
+		for (int i = 0; i < w->numsurfaces; i++)
+		{// Get a count of how many we need... Add them to temp list if not too close to another...
+			msurface_t *surf = &w->surfaces[i];
+			
+			if (surf->shader)
+			{
+				if (surf->shader->contentFlags & CONTENTS_INSIDE)
+				{
+					surf->shader->isIndoor = qtrue;
+				}
+				else if (surf->shader->contentFlags & CONTENTS_OUTSIDE)
+				{
+					surf->shader->isIndoor = qfalse;
+				}
+				else if (indoorSeen || outdoorSeen)
+				{
+					if (indoorSeen)
+					{// We have seen indoors, and this is not marked, so assume outdoor.
+						surf->shader->isIndoor = qfalse;
+					}
+					else if (outdoorSeen)
+					{// We have seen outdoors, and this is not marked, so assume indoor.
+						surf->shader->isIndoor = qtrue;
+					}
+				}
+				else
+				{// Nothing was marked, assume outdoor on everything... Trace???
+					surf->shader->isIndoor = qfalse;
+				}
+			}
+		}
+	}
+#endif //__INDOOR_OUTDOOR_CULLING__
 
 	if (MAP_WATER_LEVEL2 < 131000.0 && MAP_WATER_LEVEL2 > -131000.0)
 	{// If we have a secondary water level, use it instead, it should be the top of the water, not the bottom plane.

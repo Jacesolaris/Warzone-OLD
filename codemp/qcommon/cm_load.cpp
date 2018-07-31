@@ -253,6 +253,7 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_TILES:			// 26			// tiled floor
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+	case MATERIAL_POLISHEDWOOD:
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor

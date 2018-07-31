@@ -1113,12 +1113,12 @@ void GUI_PostProcessMakeCvarList() {
 	GUI_PostProcessAddCvar(r_ao, 3);
 	GUI_PostProcessAddCvar(r_cartoon, 3);
 	GUI_PostProcessAddCvar(r_ssdo, 1);
-	GUI_PostProcessAddCvar(r_sss, 1);
+	//GUI_PostProcessAddCvar(r_sss, 1);
 	GUI_PostProcessAddCvar(r_deferredLighting, 1);
-	GUI_PostProcessAddCvar(r_ssr, 1);
-	GUI_PostProcessAddCvar(r_sse, 1);
+	//GUI_PostProcessAddCvar(r_ssr, 1);
+	//GUI_PostProcessAddCvar(r_sse, 1);
 	GUI_PostProcessAddCvar(r_magicdetail, 1);
-	GUI_PostProcessAddCvar(r_hbao, 1);
+	//GUI_PostProcessAddCvar(r_hbao, 1);
 	GUI_PostProcessAddCvar(r_glslWater, 3);
 	GUI_PostProcessAddCvar(r_fogPost, 1);
 	GUI_PostProcessAddCvar(r_multipost, 1);
@@ -1127,7 +1127,7 @@ void GUI_PostProcessMakeCvarList() {
 	GUI_PostProcessAddCvar(r_testshader, 1);
 	GUI_PostProcessAddCvar(r_colorCorrection, 1);
 	GUI_PostProcessAddCvar(r_esharpening, 1);
-	GUI_PostProcessAddCvar(r_esharpening2, 1);
+	//GUI_PostProcessAddCvar(r_esharpening2, 1);
 	GUI_PostProcessAddCvar(r_darkexpand, 1);
 	GUI_PostProcessAddCvar(r_distanceBlur, 5);
 	GUI_PostProcessAddCvar(r_volumeLight, 1);
