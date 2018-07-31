@@ -1,42 +1,53 @@
 layout(vertices = MAX_PATCH_VERTICES) out;
 //layout(vertices = 3) out; // (1)
 
-flat in	int			vertIsSlope[];
+flat in	int									vertIsSlope[];
 
-uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
-uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
-uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
-uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
-uniform vec4						u_Local9; // testvalue0, 1, 2, 3
-uniform vec4						u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY
+uniform vec4								u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4								u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
+uniform vec4								u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4								u_Local8; // GRASS_SURFACE_MINIMUM_SIZE, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, GRASS_SURFACE_SIZE_DIVIDER
+uniform vec4								u_Local9; // testvalue0, 1, 2, 3
+uniform vec4								u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, GRASS_DENSITY, GRASS_TYPE_UNIFORMALITY
+uniform vec4								u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, GRASS_TYPE_UNIFORMALITY_SCALER, 0.0
+uniform vec4								u_Local12; // GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTIPLIER_RARE, GRASS_SIZE_MULTIPLIER_UNDERWATER, 0.0
 
-#define SHADER_MAP_SIZE				u_Local1.r
-#define SHADER_SWAY					u_Local1.g
-#define SHADER_OVERLAY_SWAY			u_Local1.b
-#define SHADER_MATERIAL_TYPE		u_Local1.a
+#define SHADER_MAP_SIZE						u_Local1.r
+#define SHADER_SWAY							u_Local1.g
+#define SHADER_OVERLAY_SWAY					u_Local1.b
+#define SHADER_MATERIAL_TYPE				u_Local1.a
 
-#define SHADER_HAS_STEEPMAP			u_Local2.r
-#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
-#define SHADER_HAS_NORMALMAP		u_Local2.b
-#define SHADER_WATER_LEVEL			u_Local2.a
+#define SHADER_HAS_STEEPMAP					u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP				u_Local2.g
+#define SHADER_HAS_NORMALMAP				u_Local2.b
+#define SHADER_WATER_LEVEL					u_Local2.a
 
-#define SHADER_HAS_SPLATMAP1		u_Local3.r
-#define SHADER_HAS_SPLATMAP2		u_Local3.g
-#define SHADER_HAS_SPLATMAP3		u_Local3.b
-#define SHADER_HAS_SPLATMAP4		u_Local3.a
+#define SHADER_HAS_SPLATMAP1				u_Local3.r
+#define SHADER_HAS_SPLATMAP2				u_Local3.g
+#define SHADER_HAS_SPLATMAP3				u_Local3.b
+#define SHADER_HAS_SPLATMAP4				u_Local3.a
 
-#define PASS_NUMBER					u_Local8.r
-#define GRASS_DISTANCE_FROM_ROADS	u_Local8.g
-#define GRASS_HEIGHT				u_Local8.b
+#define GRASS_SURFACE_MINIMUM_SIZE			u_Local8.r
+#define GRASS_DISTANCE_FROM_ROADS			u_Local8.g
+#define GRASS_HEIGHT						u_Local8.b
+#define GRASS_SURFACE_SIZE_DIVIDER			u_Local8.a
 
-#define MAX_RANGE					u_Local10.r
-#define GRASS_DENSITY				u_Local10.b
-#define GRASS_TYPE_UNIFORMALITY		u_Local10.a
+#define MAX_RANGE							u_Local10.r
+#define GRASS_DENSITY						u_Local10.b
+#define GRASS_TYPE_UNIFORMALITY				u_Local10.a
 
-#define MAP_WATER_LEVEL				SHADER_WATER_LEVEL // TODO: Use water map
-#define GRASS_TYPE_UNIFORM_WATER	0.66
+#define GRASS_WIDTH_REPEATS					u_Local11.r
+#define GRASS_MAX_SLOPE						u_Local11.g
+#define GRASS_TYPE_UNIFORMALITY_SCALER		u_Local11.b
 
-uniform vec3						u_ViewOrigin;
+#define GRASS_SIZE_MULTIPLIER_COMMON		u_Local12.r
+#define GRASS_SIZE_MULTIPLIER_RARE			u_Local12.g
+#define GRASS_SIZE_MULTIPLIER_UNDERWATER	u_Local12.b
+
+#define MAP_WATER_LEVEL						SHADER_WATER_LEVEL // TODO: Use water map
+#define GRASS_TYPE_UNIFORM_WATER			0.66
+
+uniform vec3								u_ViewOrigin;
 
 //uniform float uTessLevel;
 //const float uTessLevel = 7.0;
@@ -106,13 +117,13 @@ void main()
 
 	float vSize = (distance(Vert1, Vert2) + distance(Vert1, Vert3) + distance(Vert2, Vert3)) / 3.0;
 
-	if (vSize < 64.0)
+	if (vSize < GRASS_SURFACE_MINIMUM_SIZE)
 	{// Don't even bother...
 		gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelInner[0] = 0.0;// 1.0;
 		return;
 	}
 
-	float sizeMult = clamp(float(vSize) / 512.0, 0.0, 1.0); // Scale by vert size, so tiny verts don't get a crapload of grass...
+	float sizeMult = clamp(float(vSize) / GRASS_SURFACE_SIZE_DIVIDER, 0.0, 1.0); // Scale by vert size, so tiny verts don't get a crapload of grass...
 
 	float uTessLevel = (GRASS_DENSITY * sizeMult > 1.0) ? GRASS_DENSITY * sizeMult : 1.0;
 

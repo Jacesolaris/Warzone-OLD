@@ -1486,10 +1486,15 @@ int			GRASS_DENSITY = 2;
 float		GRASS_HEIGHT = 48.0;
 int			GRASS_DISTANCE = 2048;
 float		GRASS_MAX_SLOPE = 10.0;
+float		GRASS_SURFACE_MINIMUM_SIZE = 128.0;
+float		GRASS_SURFACE_SIZE_DIVIDER = 1024.0;
 float		GRASS_TYPE_UNIFORMALITY = 0.97;
 float		GRASS_TYPE_UNIFORMALITY_SCALER = 0.008;
 float		GRASS_DISTANCE_FROM_ROADS = 0.25;
-float		GRASS_SCALES[16] = { 1.0 };
+float		GRASS_SIZE_MULTIPLIER_COMMON = 1.0;
+float		GRASS_SIZE_MULTIPLIER_RARE = 2.75;
+float		GRASS_SIZE_MULTIPLIER_UNDERWATER = 1.0;
+float		GRASS_LOD_START_RANGE = 8192.0;
 qboolean	MOON_ENABLED = qtrue;
 vec3_t		MOON_COLOR = { 0.2f };
 vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
@@ -1531,11 +1536,6 @@ void SetupWeather(char *mapname); // below...
 void MAPPING_LoadMapInfo(void)
 {
 	qglFinish();
-
-	for (int i = 0; i < 16; i++)
-	{// Init all grass scales...
-		GRASS_SCALES[i] = 1.0;
-	}
 
 #ifdef __OCEAN__
 	MAP_WATER_LEVEL = 131072.0;
@@ -1907,16 +1907,16 @@ void MAPPING_LoadMapInfo(void)
 		GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "42.0"));
 		GRASS_DISTANCE = atoi(IniRead(mapname, "GRASS", "GRASS_DISTANCE", "4096"));
 		GRASS_MAX_SLOPE = atof(IniRead(mapname, "GRASS", "GRASS_MAX_SLOPE", "10.0"));
+		GRASS_SURFACE_MINIMUM_SIZE = atof(IniRead(mapname, "GRASS", "GRASS_SURFACE_MINIMUM_SIZE", "128.0"));
+		GRASS_SURFACE_SIZE_DIVIDER = atof(IniRead(mapname, "GRASS", "GRASS_SURFACE_SIZE_DIVIDER", "1024.0"));
+		GRASS_LOD_START_RANGE = atof(IniRead(mapname, "GRASS", "GRASS_LOD_START_RANGE", va("%f", GRASS_DISTANCE)));
 		GRASS_TYPE_UNIFORMALITY = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY", "0.97"));
 		GRASS_TYPE_UNIFORMALITY_SCALER = atof(IniRead(mapname, "GRASS", "GRASS_TYPE_UNIFORMALITY_SCALER", "0.008"));
 		GRASS_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "GRASS", "GRASS_DISTANCE_FROM_ROADS", "0.25")), 0.9);
-
-		for (int m = 0; m < 16; m++)
-		{// Init all grass scales...
-			GRASS_SCALES[m] = atof(IniRead(mapname, "GRASS", va("GRASS_SCALES%i", m), "1.0"));
-			//ri->Printf(PRINT_WARNING, "GrassScale %i: %f.\n", m, GRASS_SCALES[m]);
-		}
-		
+		GRASS_SIZE_MULTIPLIER_COMMON = atof(IniRead(mapname, "GRASS", "GRASS_SIZE_MULTIPLIER_COMMON", "1.0"));
+		GRASS_SIZE_MULTIPLIER_RARE = atof(IniRead(mapname, "GRASS", "GRASS_SIZE_MULTIPLIER_RARE", "2.75"));
+		GRASS_SIZE_MULTIPLIER_UNDERWATER = atof(IniRead(mapname, "GRASS", "GRASS_SIZE_MULTIPLIER_UNDERWATER", "1.0"));
+	
 		// Parse any specified extra surface material types to add grasses to...
 		extern const char *materialNames[MATERIAL_LAST];
 
@@ -2174,7 +2174,10 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and underwater grass only is ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", GRASS_UNDERWATER_ONLY ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass width repeats is ^7%i^5 and grass max slope is ^7%.4f^5 on this map.\n", GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass minimum surface size is ^7%.4f^5 and surface size divider is ^7%.4f^5 on this map.\n", GRASS_SURFACE_MINIMUM_SIZE, GRASS_SURFACE_SIZE_DIVIDER);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (common) is ^7%.4f^5 and grass size multiplier (rare) is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTIPLIER_RARE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (underwater) is ^7%.4f^5 and grass lod start range is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_UNDERWATER, GRASS_LOD_START_RANGE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 and grass uniformality scaler is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY, GRASS_TYPE_UNIFORMALITY_SCALER);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon is ^7%s^5 on this map.\n", MOON_ENABLED ? "ENABLED" : "DISABLED");

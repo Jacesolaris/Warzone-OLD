@@ -28,8 +28,6 @@ uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVE
 uniform vec3				u_ViewOrigin;
 uniform float				u_Time;
 
-uniform float				u_GrassScales[16];
-
 uniform vec4				u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
 uniform vec4				u_Mins;
 uniform vec4				u_Maxs;
@@ -409,11 +407,6 @@ void main()
 
 		float size = clamp(fGrassPatchSize*fGrassPatchHeight, fGrassPatchSize*0.9, fGrassPatchSize*1.2);
 		size *= distanceSizeMult;
-
-		if (!isUnderwaterVert)
-		{
-			size *= u_GrassScales[iGrassType]; // Scale by grass type...
-		}
 
 		vec3 doublesize = vec3(size * 4.0, size * 4.0, size);
 

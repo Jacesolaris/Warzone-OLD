@@ -4,6 +4,7 @@
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 //#define EXPERIMENTAL_WATERFALL	// Experimental waterfalls...
 //#define __DEBUG__
+//#define USE_LIGHTING				// Use lighting in this shader? trying to handle the lighting in deferredlight now instead.
 
 //#define TEST_WATER
 
@@ -1125,7 +1126,7 @@ void main ( void )
 		vec3 R = reflect(eyeVecNorm, lightingNormal);
 
 
-#if 1
+#ifdef USE_LIGHTING
 		// Also do dlights. Includes map glows and sabers and all that good stuff...
 		if (u_lightCount > 0.0)
 		{

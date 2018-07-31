@@ -2062,6 +2062,9 @@ compare function for qsort()
 */
 static int BSPSurfaceCompare(const void *a, const void *b)
 {
+	//
+	// Sort by all the things... Minimize shader and state changes...
+	//
 	msurface_t   *aa, *bb;
 
 	aa = *(msurface_t **) a;
@@ -2200,6 +2203,14 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 		return 1;
 #endif //__ALPHA_SORTING__
 
+#ifdef __GRASS_SORTING__
+	// Sort by has geometry grass addition required...
+	if ((aa->shader->materialType == MATERIAL_SHORTGRASS || aa->shader->materialType == MATERIAL_LONGGRASS) < (bb->shader->materialType == MATERIAL_SHORTGRASS || bb->shader->materialType == MATERIAL_LONGGRASS))
+		return -1;
+
+	else if ((aa->shader->materialType == MATERIAL_SHORTGRASS || aa->shader->materialType == MATERIAL_LONGGRASS) > (bb->shader->materialType == MATERIAL_SHORTGRASS || bb->shader->materialType == MATERIAL_LONGGRASS))
+		return 1;
+#endif //__GRASS_SORTING__
 
 #ifdef __SPLATMAP_SORTING__
 	// Splat maps are always solid with no alpha, and nearly always terrain or large objects, so do them first, they should block a lot of pixels...
@@ -2279,8 +2290,14 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	}
 #endif //__SPLATMAP_SORTING__
 
+	// sort by actual shader
+	if (aa->shader < bb->shader)
+		return -1;
 
-	// sort by shader
+	else if (aa->shader > bb->shader)
+		return 1;
+
+	// sort by shader sortIndex
 	if (aa->shader->sortedIndex < bb->shader->sortedIndex)
 		return -1;
 
@@ -2309,6 +2326,25 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 
 
 #ifdef __TESS_SORTING__
+#ifdef __TERRAIN_TESSELATION__
+	extern qboolean TERRAIN_TESSELLATION_ENABLED;
+	extern qboolean GRASS_ENABLED;
+	extern qboolean RB_ShouldUseGeometryGrass(int materialType);
+
+	qboolean isTerrainTessEnabled = (TERRAIN_TESSELLATION_ENABLED && r_terrainTessellation->integer && r_terrainTessellationMax->value >= 2.0 && (r_foliage->integer && GRASS_ENABLED)) ? qtrue : qfalse;
+	qboolean aaIsTessTerrain = (aa->shader->isGrass || RB_ShouldUseGeometryGrass(aa->shader->materialType)) ? qtrue : qfalse;
+	qboolean bbIsTessTerrain = (aa->shader->isGrass || RB_ShouldUseGeometryGrass(aa->shader->materialType)) ? qtrue : qfalse;
+
+	if (isTerrainTessEnabled && (aaIsTessTerrain || bbIsTessTerrain))
+	{// Always add tesselation to ground surfaces...
+		if (aaIsTessTerrain < bbIsTessTerrain)
+			return -1;
+
+		else if (aaIsTessTerrain > bbIsTessTerrain)
+			return 1;
+	}
+	else
+#endif //__TERRAIN_TESSELATION__
 	if (aa->shader->tesselation)
 	{// Check tesselation settings... Draw faster tesselation surfs first...
 		if (aa->shader->tesselationLevel < bb->shader->tesselationLevel)

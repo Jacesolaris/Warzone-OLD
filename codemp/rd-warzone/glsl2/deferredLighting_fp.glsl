@@ -14,63 +14,103 @@
 
 #endif //__LQ_MODE__
 
-uniform sampler2D						u_DiffuseMap;		// Screen image
-uniform sampler2D						u_ScreenDepthMap;	// Depth map
-uniform sampler2D						u_NormalMap;		// Flat normals
-uniform sampler2D						u_PositionMap;		// positionMap
-uniform sampler2D						u_WaterPositionMap;	// water positions
-uniform sampler2D						u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
-uniform sampler2D						u_SteepMap;			// ssao image
-uniform sampler2D						u_HeightMap;		// ssdoImage
-uniform sampler2D						u_GlowMap;			// anamorphic
-uniform sampler2D						u_ShadowMap;		// Screen Shadow Map
-uniform sampler2D						u_WaterEdgeMap;		// tr.shinyImage
-uniform sampler2D						u_RoadsControlMap;	// map heightmap
-uniform samplerCube						u_SkyCubeMap;		// Day sky cubemap
-uniform samplerCube						u_SkyCubeMapNight;	// Night sky cubemap
-uniform samplerCube						u_CubeMap;			// Closest cubemap
-uniform samplerCube						u_EmissiveCubeMap;	// Closest emissive cubemap
+uniform sampler2D							u_DiffuseMap;		// Screen image
+uniform sampler2D							u_ScreenDepthMap;	// Depth map
+uniform sampler2D							u_NormalMap;		// Flat normals
+uniform sampler2D							u_PositionMap;		// positionMap
+uniform sampler2D							u_WaterPositionMap;	// water positions
+uniform sampler2D							u_OverlayMap;		// Real normals. Alpha channel 1.0 means enabled...
+uniform sampler2D							u_SteepMap;			// ssao image
+uniform sampler2D							u_HeightMap;		// ssdoImage
+uniform sampler2D							u_GlowMap;			// anamorphic
+uniform sampler2D							u_ShadowMap;		// Screen Shadow Map
+uniform sampler2D							u_WaterEdgeMap;		// tr.shinyImage
+uniform sampler2D							u_RoadsControlMap;	// map heightmap
+uniform samplerCube							u_SkyCubeMap;		// Day sky cubemap
+uniform samplerCube							u_SkyCubeMapNight;	// Night sky cubemap
+uniform samplerCube							u_CubeMap;			// Closest cubemap
+uniform samplerCube							u_EmissiveCubeMap;	// Closest emissive cubemap
 
-uniform mat4							u_ModelViewProjectionMatrix;
+uniform mat4								u_ModelViewProjectionMatrix;
 
-uniform vec2							u_Dimensions;
+uniform vec2								u_Dimensions;
 
-uniform vec4							u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
-uniform vec4							u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
-uniform vec4							u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
-uniform vec4							u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
-uniform vec4							u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
-uniform vec4							u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
-uniform vec4							u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
-uniform vec4							u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
-uniform vec4							u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
+uniform vec4								u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
+uniform vec4								u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
+uniform vec4								u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
+uniform vec4								u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
+uniform vec4								u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABLED
+uniform vec4								u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
+uniform vec4								u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
+uniform vec4								u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
+uniform vec4								u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
 
-uniform vec4							u_ViewInfo; // znear, zfar, zfar / znear, fov
-uniform vec3							u_ViewOrigin;
-uniform vec4							u_PrimaryLightOrigin;
-uniform vec3							u_PrimaryLightColor;
+uniform vec4								u_ViewInfo; // znear, zfar, zfar / znear, fov
+uniform vec3								u_ViewOrigin;
+uniform vec4								u_PrimaryLightOrigin;
+uniform vec3								u_PrimaryLightColor;
 
-uniform vec4							u_CubeMapInfo;
-uniform float							u_CubeMapStrength;
+uniform vec4								u_CubeMapInfo;
+uniform float								u_CubeMapStrength;
 
-uniform int								u_lightCount;
-uniform vec3							u_lightPositions2[MAX_DEFERRED_LIGHTS];
-uniform float							u_lightDistances[MAX_DEFERRED_LIGHTS];
-uniform float							u_lightHeightScales[MAX_DEFERRED_LIGHTS];
-uniform vec3							u_lightColors[MAX_DEFERRED_LIGHTS];
-//uniform int								u_lightMax;
-uniform float							u_lightMaxDistance;
+uniform int									u_lightCount;
+uniform vec3								u_lightPositions2[MAX_DEFERRED_LIGHTS];
+uniform float								u_lightDistances[MAX_DEFERRED_LIGHTS];
+uniform float								u_lightHeightScales[MAX_DEFERRED_LIGHTS];
+uniform vec3								u_lightColors[MAX_DEFERRED_LIGHTS];
+//uniform int									u_lightMax;
+uniform float								u_lightMaxDistance;
 
-uniform vec4							u_Mins;
-uniform vec4							u_Maxs;
+uniform vec4								u_Mins;
+uniform vec4								u_Maxs;
 
-varying vec2							var_TexCoords;
+varying vec2								var_TexCoords;
 
+
+#define BLINN_PHONG_STRENGTH				u_Local1.r
+#define SUN_PHONG_SCALE						u_Local1.g
+#define AO_TYPE								u_Local1.b
+#define USE_ENVMAPPING						u_Local1.a
+
+#define USE_SSDO							u_Local2.r
+#define SHADOWS_ENABLED						u_Local2.g
+#define SHADOW_MINBRIGHT					u_Local2.b
+#define SHADOW_MAXBRIGHT					u_Local2.a
+
+#define MAP_INFO_MAXSIZE					u_Local4.r // UNUSED
+#define MAP_WATER_LEVEL						u_Local4.g // UNUSED
+#define FLOAT_TIME							u_Local4.b // UNUSED
+#define MAP_EMISSIVE_COLOR_SCALE			u_Local4.a
+
+#define CONTRAST_STRENGTH					u_Local5.r
+#define SATURATION_STRENGTH					u_Local5.g
+#define BRIGHTNESS_STRENGTH					u_Local5.b
+#define TRUEHDR_ENABLED						u_Local5.a
+
+#define AO_MINBRIGHT						u_Local6.r
+#define AO_MULTBRIGHT						u_Local6.g
+#define VIBRANCY							u_Local6.b
+#define NIGHT_SCALE							u_Local6.a
+
+#define CUBEMAP_ENABLED						u_Local7.r
+#define CUBEMAP_CULLRANGE					u_Local7.g
+#define CUBEMAP_SIZE						u_Local7.b // UNUSED
+#define SKY_LIGHT_CONTRIBUTION				u_Local7.a
+
+#define REFLECTIONS_ENABLED					u_Local8.r
+#define MAP_HDR_MIN							u_Local8.g
+#define MAP_HDR_MAX							u_Local8.b
+#define MAP_INFO_PLAYABLE_HEIGHT			u_Local8.a
+
+#define HAVE_EMISSIVE_CUBE					u_Local9.r // UNUSED
+#define MAP_USE_PALETTE_ON_SKY				u_Local9.g
+#define SNOW_ENABLED						u_Local9.b
+#define PROCEDURAL_SNOW_LOWEST_ELEVATION	u_Local9.a
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
-#define hdr_const_1 (u_Local8.g / 255.0)
-#define hdr_const_2 (255.0 / u_Local8.b)
+#define hdr_const_1 (MAP_HDR_MIN / 255.0)
+#define hdr_const_2 (255.0 / MAP_HDR_MAX)
 
 //#define __ENCODE_NORMALS_RECONSTRUCT_Z__
 #define __ENCODE_NORMALS_STEREOGRAPHIC_PROJECTION__
@@ -140,8 +180,10 @@ vec2 EncodeNormal(vec3 n)
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
 
-vec4 positionMapAtCoord ( vec2 coord )
+vec4 positionMapAtCoord ( vec2 coord, out bool changedToWater )
 {
+	changedToWater = false;
+
 	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
 
 	bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
@@ -155,7 +197,15 @@ vec4 positionMapAtCoord ( vec2 coord )
 		if (wMap.z > pos.z || isSky)
 		{
 			pos.xyz = wMap.xyz;
-			pos.a = MATERIAL_WATER + 1.0;
+
+			if (!isSky)
+			{// So we know if this is a shoreline or water in skybox...
+				changedToWater = true;
+			}
+			else
+			{// Also change the material...
+				pos.a = MATERIAL_WATER + 1.0;
+			}
 		}
 	}
 
@@ -432,6 +482,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 
+	bool changedToWater = false;
 	float pixelDistance = distance(positionMap.xyz, u_ViewOrigin.xyz);
 
 	//const float scanSpeed = 48.0;// 16.0;// 5.0; // How many pixels to scan by on the 1st rough pass...
@@ -443,7 +494,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
-		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater);
 
 		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
@@ -478,7 +529,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
-		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater);
 		
 		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
@@ -513,7 +564,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 
-	vec4 pMap = positionMapAtCoord(vec2(coord.x, upPos));
+	vec4 pMap = positionMapAtCoord(vec2(coord.x, upPos), changedToWater);
 
 	if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
 	{// The reflected pixel is closer then the original, this would be a bad reflection.
@@ -938,9 +989,10 @@ vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
 
 void main(void)
 {
+	bool changedToWater = false;
 	vec4 color = texture(u_DiffuseMap, var_TexCoords);
 	vec4 outColor = vec4(color.rgb, 1.0);
-	vec4 position = positionMapAtCoord(var_TexCoords);
+	vec4 position = positionMapAtCoord(var_TexCoords, changedToWater);
 
 	if (position.a - 1.0 == MATERIAL_SKY
 		|| position.a - 1.0 == MATERIAL_SUN
@@ -953,22 +1005,22 @@ void main(void)
 		|| position.a - 1.0 == MATERIAL_MAGIC_PARTICLES_TREE
 		|| position.a - 1.0 == MATERIAL_FIREFLIES)
 	{// Skybox... Skip...
-		if (u_Local9.g > 0.0)
+		if (MAP_USE_PALETTE_ON_SKY > 0.0)
 		{
-			if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
+			if (!(CONTRAST_STRENGTH == 1.0 && SATURATION_STRENGTH == 1.0 && BRIGHTNESS_STRENGTH == 1.0))
 			{// C/S/B enabled...
-				outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
+				outColor.rgb = ContrastSaturationBrightness(outColor.rgb, CONTRAST_STRENGTH, SATURATION_STRENGTH, BRIGHTNESS_STRENGTH);
 			}
 		}
 
-		if (u_Local5.a > 0.0)
+		if (TRUEHDR_ENABLED > 0.0)
 		{// TrueHDR enabled...
 			outColor.rgb = TrueHDR(outColor.rgb);
 		}
 
-		if (u_Local6.b > 0.0)
+		if (VIBRANCY > 0.0)
 		{// Vibrancy enabled...
-			outColor.rgb = Vibrancy(outColor.rgb, u_Local6.b);
+			outColor.rgb = Vibrancy(outColor.rgb, VIBRANCY);
 		}
 
 		outColor.rgb = clamp(outColor.rgb, 0.0, 1.0);
@@ -1057,19 +1109,16 @@ void main(void)
 	float snow = 0.0;
 	float wetness = 0.0;
 
-	if (u_Local9.b > 0.0)
+	if (SNOW_ENABLED > 0.0)
 	{// snow testing
-		//u_Local9.a // PROCEDURAL_SNOW_LOWEST_ELEVATION
-		//u_Local8.a // max map height
-
-		if (position.z >= u_Local9.a)
+		if (position.z >= PROCEDURAL_SNOW_LOWEST_ELEVATION)
 		{
 			float snowMult = 1.0;
 
-			if (u_Local9.a > -999999.0)
+			if (PROCEDURAL_SNOW_LOWEST_ELEVATION > -999999.0)
 			{// Elevation is enabled...
-				float elevationRange = u_Local8.a - u_Local9.a;
-				float pixelElevation = position.z - u_Local9.a;
+				float elevationRange = MAP_INFO_PLAYABLE_HEIGHT - PROCEDURAL_SNOW_LOWEST_ELEVATION;
+				float pixelElevation = position.z - PROCEDURAL_SNOW_LOWEST_ELEVATION;
 			
 				snowMult = clamp(pow(clamp(pixelElevation / elevationRange, 0.0, 1.0) * 4.0, 2.0), 0.0, 1.0);
 			}
@@ -1156,7 +1205,7 @@ void main(void)
 	vec3 irradiance = vec3(1.0);
 
 #ifndef __LQ_MODE__
-	if (u_Local7.a > 0.0)
+	if (SKY_LIGHT_CONTRIBUTION > 0.0)
 	{// Sky cube light contributions... If enabled...
 		// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
 		vec4 cubeInfo = vec4(0.0, 0.0, 0.0, 1.0);//u_CubeMapInfo;
@@ -1173,13 +1222,13 @@ void main(void)
 		vec3 reflected = cubeRayDir + parallax;
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
 
-		if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+		if (NIGHT_SCALE > 0.0 && NIGHT_SCALE < 1.0)
 		{// Mix between night and day colors...
 			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
 			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
-			skyColor = mix(skyColorDay, skyColorNight, clamp(u_Local6.a, 0.0, 1.0));
+			skyColor = mix(skyColorDay, skyColorNight, clamp(NIGHT_SCALE, 0.0, 1.0));
 		}
-		else if (u_Local6.a >= 1.0)
+		else if (NIGHT_SCALE >= 1.0)
 		{// Night only colors...
 			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
 		}
@@ -1212,7 +1261,7 @@ void main(void)
 
 #ifndef __LQ_MODE__
 #if defined(__CUBEMAPS__)
-		if (u_Local7.r > 0.0)
+		if (CUBEMAP_ENABLED > 0.0)
 		{// Cubemaps enabled...
 			vec3 cubeLightColor = vec3(0.0);
 			
@@ -1232,7 +1281,7 @@ void main(void)
 			{
 				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
 				float cubeDist = distance(u_CubeMapInfo.xyz, position.xyz);
-				float cubeFade = (1.0 - clamp(curDist / u_Local7.g, 0.0, 1.0)) * (1.0 - clamp(cubeDist / u_Local7.g, 0.0, 1.0));
+				float cubeFade = (1.0 - clamp(curDist / CUBEMAP_CULLRANGE, 0.0, 1.0)) * (1.0 - clamp(cubeDist / CUBEMAP_CULLRANGE, 0.0, 1.0));
 
 				if (cubeFade > 0.0)
 				{
@@ -1269,30 +1318,30 @@ void main(void)
 	bool useOcclusion = false;
 
 #ifndef __LQ_MODE__
-	if (u_Local2.r == 1.0)
+	if (USE_SSDO == 1.0)
 	{
 		useOcclusion = true;
 		occlusion = texture(u_HeightMap, texCoords);
 	}
 #endif //!__LQ_MODE__
 
-	if (u_Local7.a > 0.0)
+	if (SKY_LIGHT_CONTRIBUTION > 0.0)
 	{// Sky light contributions...
 #ifndef __LQ_MODE__
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * u_Local7.a * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
+		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * SKY_LIGHT_CONTRIBUTION * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 #endif //__LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		//outColor.rgb = skyColor;
 	}
 
 
-	if (u_Local1.r > 0.0)
+	if (BLINN_PHONG_STRENGTH > 0.0)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...
-		float phongFactor = (u_Local1.r * 12.0) * u_Local1.g;
+		float phongFactor = (BLINN_PHONG_STRENGTH * 12.0) * SUN_PHONG_SCALE;
 
 #define LIGHT_COLOR_POWER			4.0
 
-		if (phongFactor > 0.0 && u_Local6.a < 1.0)
+		if (phongFactor > 0.0 && NIGHT_SCALE < 1.0)
 		{// this is blinn phong
 			float light_occlusion = 1.0;
 
@@ -1314,13 +1363,13 @@ void main(void)
 			{
 				lightColor *= lightMult;
 				lightColor *= max(outColor.r, max(outColor.g, outColor.b)) * 0.9 + 0.1;
-				lightColor *= clamp(1.0 - u_Local6.a, 0.0, 1.0); // Day->Night scaling of sunlight...
+				lightColor *= clamp(1.0 - NIGHT_SCALE, 0.0, 1.0); // Day->Night scaling of sunlight...
 				lightColor = clamp(lightColor, 0.0, 0.7);
 
 				// Add vibrancy to light color at sunset/sunrise???
-				if (u_Local6.a > 0.0 && u_Local6.a < 1.0)
+				if (NIGHT_SCALE > 0.0 && NIGHT_SCALE < 1.0)
 				{// Vibrancy gets greater the closer we get to night time...
-					float vib = u_Local6.a;
+					float vib = NIGHT_SCALE;
 					if (vib > 0.8)
 					{// Scale back vibrancy to 0.0 just before nightfall...
 						float downScale = 1.0 - vib;
@@ -1341,7 +1390,7 @@ void main(void)
 
 		if (u_lightCount > 0.0 && specularReflectivePower > 0.0)
 		{
-			phongFactor = u_Local1.r * 12.0;
+			phongFactor = BLINN_PHONG_STRENGTH * 12.0;
 
 			if (phongFactor <= 0.0)
 			{// Never allow no phong...
@@ -1386,7 +1435,7 @@ void main(void)
 
 				if (lightStrength > 0.0)
 				{
-					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * u_Local4.a * maxLightsScale; // Normalize.
+					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * MAP_EMISSIVE_COLOR_SCALE * maxLightsScale; // Normalize.
 					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
@@ -1413,7 +1462,7 @@ void main(void)
 	}
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
-	if (u_Local8.r > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0) && position.a - 1.0 != MATERIAL_WATER)
+	if (REFLECTIONS_ENABLED > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0) && position.a - 1.0 != MATERIAL_WATER && !changedToWater)
 	{
 #if 1
 		if (wetness > 0.0)
@@ -1439,27 +1488,27 @@ void main(void)
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
 #if defined(__AMBIENT_OCCLUSION__)
-	if (u_Local1.b == 1.0)
+	if (AO_TYPE == 1.0)
 	{// Fast AO enabled...
 		float ao = calculateAO(sunDir, N * 10000.0);
 		//float selfShadow = bad_ao(bump.xyz);
 		//float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 		float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0), 0.0, 1.0);
-		//ao = clamp(ao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
-		ao = clamp(((ao + selfShadow) / 2.0) * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
-		//ao = clamp((ao * selfShadow) * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
+		//ao = clamp(ao * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
+		ao = clamp(((ao + selfShadow) / 2.0) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
+		//ao = clamp((ao * selfShadow) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		outColor.rgb *= ao;
 	}
 #endif //defined(__AMBIENT_OCCLUSION__)
 
 #if defined(__ENHANCED_AO__)
-	if (u_Local1.b >= 2.0)
+	if (AO_TYPE >= 2.0)
 	{// Better, HQ AO enabled...
 		float msao = 0.0;
 
-		if (u_Local1.b >= 3.0)
+		if (AO_TYPE >= 3.0)
 		{
-			int width = int(u_Local1.b-2.0);
+			int width = int(AO_TYPE-2.0);
 			float numSamples = 0.0;
 		
 			for (int x = -width; x <= width; x+=2)
@@ -1480,13 +1529,13 @@ void main(void)
 		}
 
 		float sao = clamp(msao, 0.0, 1.0);
-		sao = clamp(sao * u_Local6.g + u_Local6.r, u_Local6.r, 1.0);
+		sao = clamp(sao * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		outColor.rgb *= sao;
 	}
 #endif //defined(__ENHANCED_AO__)
 
 #if defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
-	if (u_Local2.g > 0.0 && u_Local6.a < 1.0)
+	if (SHADOWS_ENABLED > 0.0 && NIGHT_SCALE < 1.0)
 	{
 		float shadowValue = texture(u_ShadowMap, texCoords).r;
 
@@ -1495,8 +1544,8 @@ void main(void)
 #define sm_cont_1 ( 64.0 / 255.0)
 #define sm_cont_2 (255.0 / 200.0)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
-		float finalShadow = clamp(shadowValue + u_Local2.b, u_Local2.b, u_Local2.a);
-		finalShadow = mix(finalShadow, 1.0, clamp(u_Local6.a, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
+		float finalShadow = clamp(shadowValue + SHADOW_MINBRIGHT, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+		finalShadow = mix(finalShadow, 1.0, clamp(NIGHT_SCALE, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
 		outColor.rgb *= finalShadow;
 	}
 #endif //defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
@@ -1507,19 +1556,19 @@ void main(void)
 	//outColor.rgb *= depth;
 
 
-	if (!(u_Local5.r == 1.0 && u_Local5.g == 1.0 && u_Local5.b == 1.0))
+	if (!(CONTRAST_STRENGTH == 1.0 && SATURATION_STRENGTH == 1.0 && BRIGHTNESS_STRENGTH == 1.0))
 	{// C/S/B enabled...
-		outColor.rgb = ContrastSaturationBrightness(outColor.rgb, u_Local5.r, u_Local5.g, u_Local5.b);
+		outColor.rgb = ContrastSaturationBrightness(outColor.rgb, CONTRAST_STRENGTH, SATURATION_STRENGTH, BRIGHTNESS_STRENGTH);
 	}
 
-	if (u_Local5.a > 0.0)
+	if (TRUEHDR_ENABLED > 0.0)
 	{// TrueHDR enabled...
 		outColor.rgb = TrueHDR( outColor.rgb );
 	}
 
-	if (u_Local6.b > 0.0)
+	if (VIBRANCY > 0.0)
 	{// Vibrancy enabled...
-		outColor.rgb = Vibrancy( outColor.rgb, u_Local6.b );
+		outColor.rgb = Vibrancy( outColor.rgb, VIBRANCY );
 	}
 
 	outColor.rgb = clamp(outColor.rgb, 0.0, 1.0);

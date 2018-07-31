@@ -1873,7 +1873,12 @@ extern float		GRASS_MAX_SLOPE;
 extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_TYPE_UNIFORMALITY_SCALER;
 extern float		GRASS_DISTANCE_FROM_ROADS;
-extern float		GRASS_SCALES[16];
+extern float		GRASS_SURFACE_MINIMUM_SIZE;
+extern float		GRASS_SURFACE_SIZE_DIVIDER;
+extern float		GRASS_SIZE_MULTIPLIER_COMMON;
+extern float		GRASS_SIZE_MULTIPLIER_RARE;
+extern float		GRASS_SIZE_MULTIPLIER_UNDERWATER;
+extern float		GRASS_LOD_START_RANGE;
 extern qboolean		MOON_ENABLED;
 extern vec3_t		MOON_COLOR;
 extern vec3_t		MOON_ATMOSPHERE_COLOR;
@@ -3402,8 +3407,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GL_BindToTMU(tr.seaGrassAliasImage, TB_WATER_EDGE_MAP);
 				}
 
-				//GLSL_SetUniformFloatxX(sp, UNIFORM_GRASSSCALES, GRASS_SCALES, 16);
-
 				GLSL_SetUniformVec3(sp, UNIFORM_PLAYERORIGIN, backEnd.localPlayerOrigin);
 
 #ifdef __HUMANOIDS_BEND_GRASS__ // Bend grass for all close player/NPCs...
@@ -3710,9 +3713,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #endif //__GEOMETRY_SHADER_ALLOW_INVOCATIONS__
 				{
 					vec4_t l8;
-					VectorSet4(l8, (float)passNum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0);
+					VectorSet4(l8, GRASS_SURFACE_MINIMUM_SIZE, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, GRASS_SURFACE_SIZE_DIVIDER);
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
 				}
+
+				{
+					vec4_t l12;
+					VectorSet4(l12, GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTIPLIER_RARE, GRASS_SIZE_MULTIPLIER_UNDERWATER, GRASS_LOD_START_RANGE);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL12, l12);
+				}
+
 				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (isGrass && useTesselation == 2 && sp == &tr.lightAllSplatShader[2])
@@ -3720,11 +3730,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l8;
 				VectorSet4(l8, GRASS_DISTANCE_FROM_ROADS, 0.0, 0.0, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-			}
-
-			if (isGrass && passNum >= 1)
-			{// When doing grass, make sure that the scales are updated...
-				GLSL_SetUniformFloatxX(sp, UNIFORM_GRASSSCALES, (const float *)GRASS_SCALES, 16);
 			}
 
 
