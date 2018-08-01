@@ -85,6 +85,8 @@ void OCEAN_InitOceanFast()
 			}
 		}
 
+		R_VertexCacheOptimizeMeshIndexes(NR_VERTICES, 3 * NR_TRIANGLES, (uint32_t *)indices);
+
 		// Create a vertex array object
 		qglGenVertexArrays(1, &gFastVaoID);
 		qglBindVertexArray(gFastVaoID);
@@ -176,6 +178,8 @@ void OCEAN_InitOcean()
 				indices[6 * indexPosition + 5] = (y + 1)*(QUAD_GRID_SIZE + 1) + x + 1;//tr
 			}
 		}
+
+		R_VertexCacheOptimizeMeshIndexes(NR_VERTICES, 3 * NR_TRIANGLES, (uint32_t *)indices);
 
 		// Create a vertex array object
 		qglGenVertexArrays(1, &gVaoID);

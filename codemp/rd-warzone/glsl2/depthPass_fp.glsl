@@ -8,6 +8,7 @@ uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
 uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
 uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEMENT, hasAlphaTestBits, 0.0
 
 #define USE_TC						u_Settings0.r
 #define USE_DEFORM					u_Settings0.g
@@ -27,6 +28,9 @@ uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=De
 #define USE_REGIONS					u_Settings3.r
 #define USE_ISDETAIL				u_Settings3.g
 #define USE_EMISSIVE_BLACK			u_Settings3.b
+
+#define HAS_ALPHA_BITS				u_Settings4.b
+
 
 uniform vec4						u_Local1; // TERRAIN_TESSELLATION_OFFSET, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, WATER_LEVEL
@@ -98,7 +102,7 @@ void main()
 		return;
 	}*/
 
-	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
+	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0 || HAS_ALPHA_BITS <= 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
 		gl_FragColor = vec4(1.0);
 	}

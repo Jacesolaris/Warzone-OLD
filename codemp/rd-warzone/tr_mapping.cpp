@@ -1430,6 +1430,9 @@ vec3_t		MAP_AMBIENT_CSB_NIGHT = { 1 };
 vec3_t		MAP_AMBIENT_COLOR_NIGHT = { 1 };
 float		MAP_GLOW_MULTIPLIER_NIGHT = 1.0;
 float		SKY_LIGHTING_SCALE = 1.0;
+qboolean	MAP_COLOR_SWITCH_RG = qfalse;
+qboolean	MAP_COLOR_SWITCH_RB = qfalse;
+qboolean	MAP_COLOR_SWITCH_GB = qfalse;
 float		MAP_EMISSIVE_COLOR_SCALE = 1.0;
 float		MAP_EMISSIVE_COLOR_SCALE_NIGHT = 1.0;
 float		MAP_EMISSIVE_RADIUS_SCALE = 1.0;
@@ -1755,6 +1758,10 @@ void MAPPING_LoadMapInfo(void)
 	MAP_GLOW_MULTIPLIER_NIGHT = atof(IniRead(mapname, "PALETTE", "MAP_GLOW_MULTIPLIER_NIGHT", va("%f", MAP_GLOW_MULTIPLIER)));
 
 	SKY_LIGHTING_SCALE = atof(IniRead(mapname, "PALETTE", "SKY_LIGHTING_SCALE", "1.0"));
+
+	MAP_COLOR_SWITCH_RG = (atoi(IniRead(mapname, "PALETTE", "MAP_COLOR_SWITCH_RG", "0")) > 0) ? qtrue : qfalse;
+	MAP_COLOR_SWITCH_RB = (atoi(IniRead(mapname, "PALETTE", "MAP_COLOR_SWITCH_RB", "0")) > 0) ? qtrue : qfalse;
+	MAP_COLOR_SWITCH_GB = (atoi(IniRead(mapname, "PALETTE", "MAP_COLOR_SWITCH_GB", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Ambient Occlusion...
@@ -2136,6 +2143,8 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map color switch RG is ^7%s^5, map color switch RB is ^7%s^5, and map color switch GB is ^7%s^5 on this map.\n", MAP_COLOR_SWITCH_RG ? "ENABLED" : "DISABLED", MAP_COLOR_SWITCH_RB ? "ENABLED" : "DISABLED", MAP_COLOR_SWITCH_GB ? "ENABLED" : "DISABLED");
+
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and night emissive color scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_COLOR_SCALE_NIGHT);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive radius scale is ^7%.4f^5 and night emissive radius scale is ^7%.4f^5on this map.\n", MAP_EMISSIVE_RADIUS_SCALE, MAP_EMISSIVE_RADIUS_SCALE_NIGHT);
 	

@@ -4620,6 +4620,7 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 					}
 				}
 			}
+			
 			// find the next surface
 			surf = (mdxmSurface_t *)( (byte *)surf + surf->ofsEnd );
 		}
@@ -4812,6 +4813,8 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 						tdir,
 						bitangentsf[baseVertexes[n] + index[i]]);
 				}
+
+				R_VertexCacheOptimizeMeshIndexes(surf->numVerts, surf->numTriangles * 3, (uint32_t *)((byte *)surf + surf->ofsTriangles));
 			}
 
 			// Finally add it to the vertex buffer data

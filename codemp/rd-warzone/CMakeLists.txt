@@ -66,6 +66,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_occlusion.cpp"
 	"${MPDir}/rd-warzone/tr_ocean.cpp"
 	"${MPDir}/rd-warzone/tr_ocean.h"
+	"${MPDir}/rd-warzone/tr_optimization.cpp"
 	"${MPDir}/rd-warzone/tr_postprocess.cpp"
 	"${MPDir}/rd-warzone/tr_postprocess.h"
 	"${MPDir}/rd-warzone/tr_quicksprite.cpp"
@@ -137,16 +138,11 @@ set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneGhoul2Files})
 #source_group("Awesomium Headers" FILES ${MPWarzoneAwesomiumFiles})
 #set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAwesomiumFiles})
 
-set(MPWarzoneMaskedOcclusionCullingFiles
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/CullingThreadpool.cpp"
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/CullingThreadpool.h"
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCulling.cpp"
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCulling.h"
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCullingAVX2.cpp"
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/MaskedOcclusionCullingCommon.inl"
-	"${MPDir}/rd-warzone/MaskedOcclusionCulling/README.md")
-source_group("MaskedOcclusionCulling" FILES ${MPWarzoneMaskedOcclusionCullingFiles})
-set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneMaskedOcclusionCullingFiles})
+set(MPWarzoneMeshOptimizationFiles
+	"${MPDir}/rd-warzone/meshOptimization/triListOpt.cpp"
+	"${MPDir}/rd-warzone/meshOptimization/triListOpt.h")
+source_group("MeshOptimization" FILES ${MPWarzoneMeshOptimizationFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneMeshOptimizationFiles})
 
 set(MPWarzoneTinyImageLoaderFiles
 	"${MPDir}/rd-warzone/TinyImageLoader/TILColors.h"

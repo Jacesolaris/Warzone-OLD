@@ -831,6 +831,8 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			}
 		}
 
+		R_VertexCacheOptimizeMeshIndexes(surf->numVerts, surf->numIndexes, surf->indexes);
+
 		// calc tangent spaces
 		{
 			for (j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
@@ -2147,6 +2149,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			st->st[0] = LittleFloat(md3st->st[0]);
 			st->st[1] = LittleFloat(md3st->st[1]);
 		}
+
+		R_VertexCacheOptimizeMeshIndexes(surf->numVerts, surf->numIndexes, surf->indexes);
 
 		// calc tangent spaces
 		{

@@ -1715,6 +1715,7 @@ typedef enum
 	UNIFORM_SETTINGS2,
 	UNIFORM_SETTINGS3,
 	UNIFORM_SETTINGS4,
+	UNIFORM_SETTINGS5,
 	UNIFORM_LOCAL0,
 	UNIFORM_LOCAL1,
 	UNIFORM_LOCAL2,
@@ -4371,6 +4372,10 @@ int getMilliSpan(int nTimeStart);
 void DEBUG_StartTimer(char *name, qboolean usePerfCvar);
 void DEBUG_EndTimer(qboolean usePerfCvar);
 
+/*
+tr_optimize.cpp
+*/
+void R_VertexCacheOptimizeMeshIndexes(uint32_t numVerts, uint32_t numIndexes, uint32_t *indexes);
 
 #include "tr_glsl.h"
 

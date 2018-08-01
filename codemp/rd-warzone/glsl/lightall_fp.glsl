@@ -21,6 +21,7 @@ uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMethod, i
 uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
 uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, USE_GLOW_BLEND_MODE
 uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEMENT, 0.0, 0.0
+uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, 0.0
 
 #define USE_TC						u_Settings0.r
 #define USE_DEFORM					u_Settings0.g
@@ -44,6 +45,10 @@ uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEM
 
 #define MAP_LIGHTMAP_MULTIPLIER		u_Settings4.r
 #define MAP_LIGHTMAP_ENHANCEMENT	u_Settings4.g
+
+#define MAP_COLOR_SWITCH_RG			u_Settings5.r
+#define MAP_COLOR_SWITCH_RB			u_Settings5.g
+#define MAP_COLOR_SWITCH_GB			u_Settings5.b
 
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
@@ -638,6 +643,21 @@ void main()
 		&& USE_SKELETAL_ANIM <= 0.0)
 	{// TODO: Shader setting...
 		useDisplacementMapping = 1.0;
+	}
+
+	if (MAP_COLOR_SWITCH_RG > 0.0)
+	{
+		gl_FragColor.rg = gl_FragColor.gr;
+	}
+
+	if (MAP_COLOR_SWITCH_RB > 0.0)
+	{
+		gl_FragColor.rb = gl_FragColor.br;
+	}
+
+	if (MAP_COLOR_SWITCH_GB > 0.0)
+	{
+		gl_FragColor.gb = gl_FragColor.bg;
 	}
 
 #define glow_const_1 ( 23.0 / 255.0)

@@ -7021,6 +7021,49 @@ static int CollapseStagesToGLSL(void)
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
 
+#if 0
+	// Set up a value to skip stage checks later... does this even run per frame? i shoud actually check probably...
+	for (int stage = 0; stage < MAX_SHADER_STAGES; stage++)
+	{
+		shaderStage_t *pStage = shader.stages[stage];
+
+		if (!pStage)
+		{// How does this happen???
+			continue;
+		}
+
+		if (!pStage->active)
+		{// Shouldn't this be here, just in case???
+			continue;
+		}
+
+		if (pStage->stateBits & GLS_ATEST_BITS)
+		{
+			shader.hasAlphaTestBits = max(shader.hasAlphaTestBits, 1);
+		}
+
+		if (pStage->alphaGen)
+		{
+			shader.hasAlphaTestBits = max(shader.hasAlphaTestBits, 2);
+		}
+
+		if (shader.hasAlpha)
+		{
+			shader.hasAlphaTestBits = max(shader.hasAlphaTestBits, 3);
+		}
+
+		/*if (shader.cullType == CT_TWO_SIDED)
+		{
+			shader.hasAlphaTestBits = max(shader.hasAlphaTestBits, 4);
+		}*/
+	}
+
+	if (shader.hasAlphaTestBits == 0)
+	{
+		shader.hasAlphaTestBits = -1;
+	}
+#endif
+
 #if 1
 	if (r_debugShaderStages->integer && numStages >= 1 && !tr.world)
 	{

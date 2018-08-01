@@ -1862,6 +1862,9 @@ extern vec3_t		MAP_AMBIENT_COLOR;
 extern vec3_t		MAP_AMBIENT_COLOR_NIGHT;
 extern int			MAP_LIGHTMAP_ENHANCEMENT;
 extern float		MAP_LIGHTMAP_MULTIPLIER;
+extern qboolean		MAP_COLOR_SWITCH_RG;
+extern qboolean		MAP_COLOR_SWITCH_RB;
+extern qboolean		MAP_COLOR_SWITCH_GB;
 
 extern qboolean		GRASS_ENABLED;
 extern qboolean		GRASS_UNDERWATER_ONLY;
@@ -2841,9 +2844,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(vec,
 				MAP_LIGHTMAP_MULTIPLIER,
 				MAP_LIGHTMAP_ENHANCEMENT,
-				0.0,
+				(tess.shader->hasAlphaTestBits || tess.shader->materialType == MATERIAL_GREENLEAVES) ? 1.0 : 0.0, // TODO: MATERIAL_GREENLEAVES because something isnt right with models...
 				0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS4, vec);
+
+			VectorSet4(vec,
+				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_RG) ? 1.0 : 0.0,
+				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_RB) ? 1.0 : 0.0,
+				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_GB) ? 1.0 : 0.0,
+				0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
 		}
 
 		// UQ1: Used by both generic and lightall...
@@ -3453,6 +3463,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 					VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
 					GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
+				}
+
+				{
+					vec4_t vec;
+					VectorSet4(vec,
+						MAP_COLOR_SWITCH_RG ? 1.0 : 0.0,
+						MAP_COLOR_SWITCH_RB ? 1.0 : 0.0,
+						MAP_COLOR_SWITCH_GB ? 1.0 : 0.0,
+						0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
 				}
 
 				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );

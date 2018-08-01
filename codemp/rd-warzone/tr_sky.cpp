@@ -460,6 +460,63 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	extern float		PROCEDURAL_CLOUDS_CLOUDALPHA;
 	extern float		PROCEDURAL_CLOUDS_SKYTINT;
 
+	if (backEnd.depthFill)
+	{
+		shaderProgram_t *sp = &tr.shadowmapShader;
+		vec4_t vector;
+
+		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+		GLSL_BindProgram(sp);
+
+		{// unused...
+			VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS0, vector); // useTC, useDeform, useRGBA, isTextureClamped
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS1, vector); // useVertexAnim, useSkeletalAnim, blendMode, is2D
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS2, vector); // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vector); // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, 0.0
+		}
+
+
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+
+
+		if (backEnd.viewParms.flags & VPF_EMISSIVEMAP)
+		{
+			color[0] =
+				color[1] =
+				color[2] = 0.0;
+			color[3] = 1.0f;
+			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, color);
+		}
+		else
+		{
+			color[0] =
+				color[1] =
+				color[2] = backEnd.refdef.colorScale;
+			color[3] = 1.0f;
+			GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, color);
+		}
+
+		color[0] =
+			color[1] =
+			color[2] =
+			color[3] = 0.0f;
+		GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, color);
+
+		VectorSet4(vector, 1.0, 0.0, 0.0, 1.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, vector);
+
+		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, vector);
+
+		vec2_t scale;
+		scale[0] = scale[1] = 1.0;
+		GLSL_SetUniformVec2(sp, UNIFORM_TEXTURESCALE, scale);
+
+		GLSL_SetUniformFloat(sp, UNIFORM_TIME, tr.refdef.floatTime);
+	}
+	else
 	{
 		shaderProgram_t *sp = &tr.skyShader;
 		vec4_t vector;

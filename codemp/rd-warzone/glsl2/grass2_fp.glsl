@@ -3,6 +3,12 @@ uniform sampler2D	u_WaterEdgeMap; // Sea grass atlas
 
 uniform vec3		u_ViewOrigin;
 
+uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, 0.0
+
+#define MAP_COLOR_SWITCH_RG			u_Settings5.r
+#define MAP_COLOR_SWITCH_RB			u_Settings5.g
+#define MAP_COLOR_SWITCH_GB			u_Settings5.b
+
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
 uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
@@ -147,6 +153,21 @@ void main()
 		diffuse = texture(u_DiffuseMap, tc);
 	}
 #endif //defined(__USE_UNDERWATER_ONLY__)
+
+	if (MAP_COLOR_SWITCH_RG > 0.0)
+	{
+		diffuse.rg = diffuse.gr;
+	}
+
+	if (MAP_COLOR_SWITCH_RB > 0.0)
+	{
+		diffuse.rb = diffuse.br;
+	}
+
+	if (MAP_COLOR_SWITCH_GB > 0.0)
+	{
+		diffuse.gb = diffuse.bg;
+	}
 
 	if (diffuse.a > 0.5)
 	{

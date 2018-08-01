@@ -1029,6 +1029,8 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	GenerateNormalsForMesh(cv);
 #endif //__REGENERATE_BSP_NORMALS__
 
+	R_VertexCacheOptimizeMeshIndexes(cv->numVerts, cv->numIndexes, cv->indexes);
+
 	surf->data = (surfaceType_t *)cv;
 
 	// Calculate tangent spaces
@@ -1157,6 +1159,8 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	VectorScale( bounds[1], 0.5f, grid->lodOrigin );
 	VectorSubtract( bounds[0], grid->lodOrigin, tmpVec );
 	grid->lodRadius = VectorLength( tmpVec );
+
+	R_VertexCacheOptimizeMeshIndexes(grid->numVerts, grid->numIndexes, grid->indexes);
 
 #ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(grid);
@@ -1291,6 +1295,8 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		ri->Printf(PRINT_WARNING, "Trisurf has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", surf->shader->name, numIndexes / 3, numVerts, numIndexes / 3 - badTriangles);
 		cv->numIndexes -= badTriangles * 3;
 	}
+
+	R_VertexCacheOptimizeMeshIndexes(cv->numVerts, cv->numIndexes, cv->indexes);
 
 #ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(cv);
@@ -2089,6 +2095,11 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	if (qboolean(aa->shader->materialType == MATERIAL_SMOKE) < qboolean(bb->shader->materialType == MATERIAL_SMOKE))
 		return -1;
 	else if (qboolean(aa->shader->materialType == MATERIAL_SMOKE) > qboolean(bb->shader->materialType == MATERIAL_SMOKE))
+		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_LAVA) < qboolean(bb->shader->materialType == MATERIAL_LAVA))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_LAVA) > qboolean(bb->shader->materialType == MATERIAL_LAVA))
 		return 1;
 
 	if (qboolean(aa->shader->materialType == MATERIAL_MAGIC_PARTICLES) < qboolean(bb->shader->materialType == MATERIAL_MAGIC_PARTICLES))
