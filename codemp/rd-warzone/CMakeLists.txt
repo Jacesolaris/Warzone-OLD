@@ -139,6 +139,7 @@ set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneGhoul2Files})
 #set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAwesomiumFiles})
 
 set(MPWarzoneMeshOptimizationFiles
+  "${MPDir}/rd-warzone/meshOptimization/meshoptimizer.h"
 	"${MPDir}/rd-warzone/meshOptimization/triListOpt.cpp"
 	"${MPDir}/rd-warzone/meshOptimization/triListOpt.h")
 source_group("MeshOptimization" FILES ${MPWarzoneMeshOptimizationFiles})
@@ -487,8 +488,8 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-#target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib;../../../lib/assimp-vc140-mt")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/glsl_optimizer_lib;../../../lib/assimp-vc140-mt")
+#target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium;../../../lib/glsl_optimizer_lib;../../../lib/assimp-vc140-mt;../../../lib/meshoptimizer")
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/glsl_optimizer_lib;../../../lib/assimp-vc140-mt;../../../lib/meshoptimizer")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)

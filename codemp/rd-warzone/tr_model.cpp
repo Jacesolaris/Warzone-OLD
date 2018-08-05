@@ -831,8 +831,6 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			}
 		}
 
-		R_VertexCacheOptimizeMeshIndexes(surf->numVerts, surf->numIndexes, surf->indexes);
-
 		// calc tangent spaces
 		{
 			for (j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
@@ -923,6 +921,8 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			int ofs_xyz, ofs_normal, ofs_st;
 
 			dataSize = 0;
+
+			R_OptimizeMesh((uint32_t *)&surf->numVerts, (uint32_t *)&surf->numIndexes, surf->indexes, (vec3_t *)(data + ofs_xyz));
 
 			ofs_xyz = dataSize;
 			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*verts);
@@ -2150,8 +2150,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			st->st[1] = LittleFloat(md3st->st[1]);
 		}
 
-		R_VertexCacheOptimizeMeshIndexes(surf->numVerts, surf->numIndexes, surf->indexes);
-
 		// calc tangent spaces
 		{
 			for(j = 0, v = surf->verts; j < (surf->numVerts * mdvModel->numFrames); j++, v++)
@@ -2240,6 +2238,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 			int ofs_xyz, ofs_normal, ofs_st;
 
 			dataSize = 0;
+
+			R_OptimizeMesh((uint32_t *)&surf->numVerts, (uint32_t *)&surf->numIndexes, surf->indexes, (vec3_t *)(data + ofs_xyz));
 
 			ofs_xyz = dataSize;
 			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*verts);

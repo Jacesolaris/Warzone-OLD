@@ -1029,7 +1029,7 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	GenerateNormalsForMesh(cv);
 #endif //__REGENERATE_BSP_NORMALS__
 
-	R_VertexCacheOptimizeMeshIndexes(cv->numVerts, cv->numIndexes, cv->indexes);
+	//R_OptimizeMesh((uint32_t *)&cv->numVerts, (uint32_t *)&cv->numIndexes, cv->indexes, NULL);
 
 	surf->data = (surfaceType_t *)cv;
 
@@ -1160,7 +1160,7 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	VectorSubtract( bounds[0], grid->lodOrigin, tmpVec );
 	grid->lodRadius = VectorLength( tmpVec );
 
-	R_VertexCacheOptimizeMeshIndexes(grid->numVerts, grid->numIndexes, grid->indexes);
+	//R_OptimizeMesh((uint32_t *)&grid->numVerts, (uint32_t *)&grid->numIndexes, grid->indexes, NULL);
 
 #ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(grid);
@@ -1296,7 +1296,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		cv->numIndexes -= badTriangles * 3;
 	}
 
-	R_VertexCacheOptimizeMeshIndexes(cv->numVerts, cv->numIndexes, cv->indexes);
+	//R_OptimizeMesh((uint32_t *)&cv->numVerts, (uint32_t *)&cv->numIndexes, cv->indexes, NULL);
 
 #ifdef __REGENERATE_BSP_NORMALS__
 	GenerateNormalsForMesh(cv);

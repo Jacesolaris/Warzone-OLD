@@ -87,7 +87,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __DEPTH_PREPASS_STUFF__
 
-#define __REGENERATE_BSP_NORMALS__				// Re-generate smooth normals for all of the map.
+//#define __REGENERATE_BSP_NORMALS__				// Re-generate smooth normals for all of the map.
 
 //#define __USE_VBO_AREAS__						// Break up map VBO's into areas.
 
@@ -4375,7 +4375,7 @@ void DEBUG_EndTimer(qboolean usePerfCvar);
 /*
 tr_optimize.cpp
 */
-void R_VertexCacheOptimizeMeshIndexes(uint32_t numVerts, uint32_t numIndexes, uint32_t *indexes);
+void R_OptimizeMesh(uint32_t *numVerts, uint32_t *numIndexes, uint32_t *indexes, vec3_t *verts);
 
 #include "tr_glsl.h"
 

@@ -4813,9 +4813,11 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod) {
 						tdir,
 						bitangentsf[baseVertexes[n] + index[i]]);
 				}
-
-				R_VertexCacheOptimizeMeshIndexes(surf->numVerts, surf->numTriangles * 3, (uint32_t *)((byte *)surf + surf->ofsTriangles));
 			}
+
+			uint32_t numTris = surf->numTriangles * 3;
+			R_OptimizeMesh((uint32_t *)&surf->numVerts, (uint32_t *)&numTris, (uint32_t *)((byte *)surf + surf->ofsTriangles), NULL);
+			surf->numTriangles = numTris / 3;
 
 			// Finally add it to the vertex buffer data
 			for ( int k = 0; k < surf->numVerts; k++ )
