@@ -2800,6 +2800,18 @@ const void	*RB_WorldEffects( const void *data )
 	}
 #endif //__INSTANCED_MODELS__
 
+	qboolean waterEnabled = qfalse;
+
+#ifdef __OCEAN__
+	extern qboolean WATER_FARPLANE_ENABLED;
+	if (r_glslWater->integer && WATER_ENABLED && WATER_FARPLANE_ENABLED)
+	{
+		waterEnabled = qtrue;
+	}
+#endif //__OCEAN__
+
+	extern qboolean RB_WeatherEnabled(void);
+
 	if (!tr.world
 		|| (tr.viewParms.flags & VPF_NOPOSTPROCESS)
 		|| (tr.refdef.rdflags & RDF_NOWORLDMODEL)
@@ -2807,7 +2819,8 @@ const void	*RB_WorldEffects( const void *data )
 		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
-		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		|| (!RB_WeatherEnabled() && !waterEnabled))
 	{
 		// do nothing
 		return (const void *)(cmd + 1);
@@ -2823,14 +2836,13 @@ const void	*RB_WorldEffects( const void *data )
 	uint32_t previousState = glState.glStateBits;
 	int previousCull = glState.faceCulling;
 
-	if (r_weather->integer)
+	if (RB_WeatherEnabled())
 	{
 		RB_RenderWorldEffects();
 	}
 
 #ifdef __OCEAN__
-	extern qboolean WATER_FARPLANE_ENABLED;
-	if (r_glslWater->integer && WATER_ENABLED && WATER_FARPLANE_ENABLED)
+	if (waterEnabled)
 	{
 		extern void OCEAN_Render(void);
 		OCEAN_Render();

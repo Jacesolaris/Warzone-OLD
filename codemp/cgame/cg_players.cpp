@@ -504,11 +504,13 @@ CG_RegisterClientModelname
 qboolean BG_IsValidCharacterModel(const char *modelName, const char *skinName);
 qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team, float *colors );
 
+#define MAX_SKIN_PATH 128
+
 static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelName, const char *skinName, const char *teamName, int clientNum ) {
 	int handle;
-	char		afilename[MAX_QPATH];
+	char		afilename[MAX_SKIN_PATH];
 	char		/**GLAName,*/ *slash;
-	char		GLAName[MAX_QPATH];
+	char		GLAName[MAX_SKIN_PATH];
 	vec3_t	tempVec = {0,0,0};
 	qboolean badModel = qfalse;
 	char	surfOff[MAX_SURF_LIST_SIZE];
@@ -579,9 +581,10 @@ retryModel:
 	}
 	Com_sprintf( afilename, sizeof( afilename ), "models/players/%s/model.glm", modelName );
 
+#if 0
 	if (!trap->FS_FileExists(afilename))
 	{
-		char modelName2[64] = { 0 };
+		char modelName2[MAX_SKIN_PATH] = { 0 };
 		Com_sprintf(modelName2, sizeof(modelName2), "models/players/%s/model.fbx", afilename);
 
 		if (trap->FS_FileExists(modelName2))
@@ -589,6 +592,7 @@ retryModel:
 			strcpy(afilename, modelName2);
 		}
 	}
+#endif
 
 	handle = trap->G2API_InitGhoul2Model(&ci->ghoul2Model, afilename, 0, ci->torsoSkin, 0, 0, 0);
 
@@ -7123,8 +7127,8 @@ void CG_CacheG2AnimInfo(char *modelName)
 {
 	void *g2 = NULL;
 	char *slash;
-	char useModel[MAX_QPATH];
-	char useSkin[MAX_QPATH];
+	char useModel[MAX_SKIN_PATH];
+	char useSkin[MAX_SKIN_PATH];
 	int animIndex;
 
 	//Q_strncpyz(useModel, modelName, sizeof( useModel ) );
@@ -7145,15 +7149,16 @@ void CG_CacheG2AnimInfo(char *modelName)
 			trap->R_RegisterSkin(va("models/players/%s/model_default.skin", useModel));
 		}
 
-		char origModelName[64] = { 0 };
+		char origModelName[MAX_SKIN_PATH] = { 0 };
 		strcpy(origModelName, useModel);
 
 		//Q_strncpyz(useModel, va("models/players/%s/model.glm", useModel), sizeof( useModel ) );
 		strcpy(useModel, va("models/players/%s/model.glm", useModel));
 
+#if 0
 		if (!trap->FS_FileExists(useModel))
 		{
-			char modelName2[64] = { 0 };
+			char modelName2[MAX_SKIN_PATH] = { 0 };
 			Com_sprintf(modelName2, sizeof(modelName2), "models/players/%s/model.fbx", origModelName);
 
 			if (trap->FS_FileExists(modelName2))
@@ -7161,14 +7166,15 @@ void CG_CacheG2AnimInfo(char *modelName)
 				strcpy(useModel, modelName2);
 			}
 		}
+#endif
 	}
 
 	trap->G2API_InitGhoul2Model(&g2, useModel, 0, 0, 0, 0, 0);
 
 	if (g2)
 	{
-		char GLAName[MAX_QPATH];
-		char originalModelName[MAX_QPATH];
+		char GLAName[MAX_SKIN_PATH];
+		char originalModelName[MAX_SKIN_PATH];
 
 		animIndex = -1;
 
@@ -7270,7 +7276,7 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 
 	if (cModelName && cModelName[0])
 	{
-		char modelName[MAX_QPATH];
+		char modelName[MAX_SKIN_PATH];
 		int skinID;
 		char *slash;
 
@@ -7325,13 +7331,14 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 				skinID = trap->R_RegisterSkin(va("models/players/%s/model_default.skin", modelName));
 			}
 
-			char origModelName[64] = { 0 };
+			char origModelName[MAX_SKIN_PATH] = { 0 };
 			strcpy(origModelName, modelName);
 			strcpy(modelName, va("models/players/%s/model.glm", modelName));
 
+#if 0
 			if (!trap->FS_FileExists(modelName))
 			{
-				char modelName2[64] = { 0 };
+				char modelName2[MAX_SKIN_PATH] = { 0 };
 				Com_sprintf(modelName2, sizeof(modelName2), "models/players/%s/model.fbx", origModelName);
 
 				if (trap->FS_FileExists(modelName2))
@@ -7339,6 +7346,7 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 					strcpy(modelName, modelName2);
 				}
 			}
+#endif
 
 			//this sound is *only* used for vehicles now
 			cgs.media.noAmmoSound = trap->S_RegisterSound( "sound/weapons/noammo.wav" );
@@ -7357,15 +7365,15 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 
 		if (cent->ghoul2)
 		{
-			char GLAName[MAX_QPATH];
-			char originalModelName[MAX_QPATH];
+			char GLAName[MAX_SKIN_PATH];
+			char originalModelName[MAX_SKIN_PATH];
 			char *saber;
 			int j = 0;
 
 			if (cent->currentState.NPC_class == CLASS_VEHICLE &&
 				cent->m_pVehicle)
 			{ //do special vehicle stuff
-				char strTemp[128];
+				char strTemp[MAX_SKIN_PATH];
 				int i;
 
 				// Setup the default first bolt
@@ -7377,18 +7385,18 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 				// Setup the Exhausts.
 				for ( i = 0; i < MAX_VEHICLE_EXHAUSTS; i++ )
 				{
-					Com_sprintf( strTemp, 128, "*exhaust%i", i + 1 );
+					Com_sprintf( strTemp, MAX_SKIN_PATH, "*exhaust%i", i + 1 );
 					cent->m_pVehicle->m_iExhaustTag[i] = trap->G2API_AddBolt( cent->ghoul2, 0, strTemp );
 				}
 
 				// Setup the Muzzles.
 				for ( i = 0; i < MAX_VEHICLE_MUZZLES; i++ )
 				{
-					Com_sprintf( strTemp, 128, "*muzzle%i", i + 1 );
+					Com_sprintf( strTemp, MAX_SKIN_PATH, "*muzzle%i", i + 1 );
 					cent->m_pVehicle->m_iMuzzleTag[i] = trap->G2API_AddBolt( cent->ghoul2, 0, strTemp );
 					if ( cent->m_pVehicle->m_iMuzzleTag[i] == -1 )
 					{//ergh, try *flash?
-						Com_sprintf( strTemp, 128, "*flash%i", i + 1 );
+						Com_sprintf( strTemp, MAX_SKIN_PATH, "*flash%i", i + 1 );
 						cent->m_pVehicle->m_iMuzzleTag[i] = trap->G2API_AddBolt( cent->ghoul2, 0, strTemp );
 					}
 				}

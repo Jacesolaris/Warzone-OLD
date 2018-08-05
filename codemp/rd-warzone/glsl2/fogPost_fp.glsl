@@ -14,7 +14,7 @@ uniform vec4		u_Local3;		// FOG_WORLD_COLOR_SUN_R, FOG_WORLD_COLOR_SUN_G, FOG_WO
 uniform vec4		u_Local4;		// FOG_WORLD_CLOUDINESS, FOG_LAYER, FOG_LAYER_SUN_PENETRATION, FOG_LAYER_ALTITUDE_BOTTOM
 uniform vec4		u_Local5;		// FOG_LAYER_COLOR_R, FOG_LAYER_COLOR_G, FOG_LAYER_COLOR_B, FOG_LAYER_ALPHA
 uniform vec4		u_Local6;		// MAP_INFO_MAXSIZE, FOG_WORLD_WIND, FOG_LAYER_CLOUDINESS, FOG_LAYER_WIND
-uniform vec4		u_Local7;		// nightScale, FOG_LAYER_ALTITUDE_TOP, FOG_LAYER_ALTITUDE_FADE, 0.0
+uniform vec4		u_Local7;		// nightScale, FOG_LAYER_ALTITUDE_TOP, FOG_LAYER_ALTITUDE_FADE, WATER_ENABLED
 uniform vec4		u_Local8;		// sun color
 uniform vec4		u_Local9;		// FOG_LAYER_BBOX
 uniform vec4		u_Local10;		// MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], FOG_WORLD_FADE_ALTITUDE
@@ -28,21 +28,27 @@ uniform float		u_Time;
 
 varying vec2		var_TexCoords;
 
+
+#define WATER_ENABLED	u_Local7.a
+
 vec4 positionMapAtCoord ( vec2 coord )
 {
 	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
 
-	bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
-
-	float isWater = textureLod(u_WaterPositionMap, coord, 0.0).a;
-
-	if (isWater > 0.0 || (isWater > 0.0 && isSky))
+	if (WATER_ENABLED > 0.0)
 	{
-		vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
-		
-		if (wMap.z > pos.z || isSky)
+		bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
+
+		float isWater = textureLod(u_WaterPositionMap, coord, 0.0).a;
+
+		if (isWater > 0.0 || (isWater > 0.0 && isSky))
 		{
-			pos.xyz = wMap.xyz;
+			vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
+		
+			if (wMap.z > pos.z || isSky)
+			{
+				pos.xyz = wMap.xyz;
+			}
 		}
 	}
 

@@ -274,6 +274,11 @@ void RB_OcclusionCulling(void)
 	{
 		if (r_occlusion->integer)
 		{
+			// finish any 2D drawing if needed
+			if (tess.numIndexes) {
+				RB_EndSurface();
+			}
+
 			qboolean first = qtrue;
 
 			if (nextOcclusionCheck == 0)

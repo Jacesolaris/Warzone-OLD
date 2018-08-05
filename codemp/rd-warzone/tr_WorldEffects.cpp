@@ -2049,6 +2049,20 @@ void RB_SetupGlobalWeatherZone(void)
 	WEATHER_KLUDGE_DONE = qtrue;
 }
 
+qboolean RB_WeatherEnabled(void)
+{
+	if (!r_weather->integer
+		|| !tr.world
+		|| (tr.refdef.rdflags & RDF_NOWORLDMODEL)
+		|| (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)
+		|| !mParticleClouds.size())
+	{	//  no world rendering or no world or no particle clouds
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // RB_RenderWorldEffects - If any particle clouds exist, this will update and render them
 ////////////////////////////////////////////////////////////////////////////////////////

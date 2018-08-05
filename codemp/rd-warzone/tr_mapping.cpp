@@ -1891,6 +1891,11 @@ void MAPPING_LoadMapInfo(void)
 			MAP_WATER_LEVEL = 131072.0;
 		}
 	}
+	
+	if (!WATER_ENABLED)
+	{
+		MAP_WATER_LEVEL = 131072.0;
+	}
 
 	//
 	// Climate...

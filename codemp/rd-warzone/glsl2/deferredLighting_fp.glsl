@@ -61,7 +61,7 @@ uniform vec3								u_lightColors[MAX_DEFERRED_LIGHTS];
 //uniform int									u_lightMax;
 uniform float								u_lightMaxDistance;
 
-uniform vec4								u_Mins;
+uniform vec4								u_Mins; // mins, mins, mins, WATER_ENABLED
 uniform vec4								u_Maxs;
 
 varying vec2								var_TexCoords;
@@ -106,6 +106,8 @@ varying vec2								var_TexCoords;
 #define MAP_USE_PALETTE_ON_SKY				u_Local9.g
 #define SNOW_ENABLED						u_Local9.b
 #define PROCEDURAL_SNOW_LOWEST_ELEVATION	u_Local9.a
+
+#define WATER_ENABLED						u_Mins.a
 
 vec2 pixel = vec2(1.0) / u_Dimensions;
 
@@ -186,25 +188,28 @@ vec4 positionMapAtCoord ( vec2 coord, out bool changedToWater )
 
 	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
 
-	bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
-
-	float isWater = textureLod(u_WaterPositionMap, coord, 0.0).a;
-
-	if (isWater > 0.0 || (isWater > 0.0 && isSky))
+	if (WATER_ENABLED > 0.0)
 	{
-		vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
-		
-		if (wMap.z > pos.z || isSky)
-		{
-			pos.xyz = wMap.xyz;
+		bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
 
-			if (!isSky)
-			{// So we know if this is a shoreline or water in skybox...
-				changedToWater = true;
-			}
-			else
-			{// Also change the material...
-				pos.a = MATERIAL_WATER + 1.0;
+		float isWater = textureLod(u_WaterPositionMap, coord, 0.0).a;
+
+		if (isWater > 0.0 || (isWater > 0.0 && isSky))
+		{
+			vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
+		
+			if (wMap.z > pos.z || isSky)
+			{
+				pos.xyz = wMap.xyz;
+
+				if (!isSky)
+				{// So we know if this is a shoreline or water in skybox...
+					changedToWater = true;
+				}
+				else
+				{// Also change the material...
+					pos.a = MATERIAL_WATER + 1.0;
+				}
 			}
 		}
 	}

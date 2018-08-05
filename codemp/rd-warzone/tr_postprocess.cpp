@@ -2371,6 +2371,7 @@ extern vec4_t		currentPlayerCubemapVec;
 extern float		currentPlayerCubemapDistance;
 #endif //__PLAYER_BASED_CUBEMAPS__
 
+extern qboolean		WATER_ENABLED;
 extern int			MAP_LIGHTING_METHOD;
 extern float		SKY_LIGHTING_SCALE;
 extern float		MAP_GLOW_MULTIPLIER;
@@ -2642,7 +2643,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	
 	{
 		vec4_t loc;
-		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], WATER_ENABLED ? 1.0 : 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_MINS, loc);
 
 		VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
@@ -3210,7 +3211,7 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	{
 		vec4_t local7;
-		VectorSet4(local7, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, FOG_LAYER_ALTITUDE_TOP, FOG_LAYER_ALTITUDE_FADE, 0.0);
+		VectorSet4(local7, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, FOG_LAYER_ALTITUDE_TOP, FOG_LAYER_ALTITUDE_FADE, WATER_ENABLED);
 		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL7, local7);
 	}
 
