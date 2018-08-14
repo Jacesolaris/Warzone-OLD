@@ -1072,6 +1072,11 @@ static int RealtimeSurfaceCompare(const void *a, const void *b)
 		return -1;
 	else if (qboolean(shadera->materialType == MATERIAL_FIREFLIES) > qboolean(shaderb->materialType == MATERIAL_FIREFLIES))
 		return 1;
+
+	if (qboolean(shadera->materialType == MATERIAL_PORTAL) < qboolean(shaderb->materialType == MATERIAL_PORTAL))
+		return -1;
+	else if (qboolean(shadera->materialType == MATERIAL_PORTAL) > qboolean(shaderb->materialType == MATERIAL_PORTAL))
+		return 1;
 #endif //__REALTIME_FX_SORTING__
 
 

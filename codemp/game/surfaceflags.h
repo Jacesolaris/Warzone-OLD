@@ -123,7 +123,8 @@
 #define MATERIAL_FIREFLIES						39			// fire flies fx
 #define MATERIAL_MAGIC_PARTICLES_TREE			40			// magic tree particle fx
 #define MATERIAL_MAGIC_PARTICLES				41			// magic particles (small particle fx)
-#define MATERIAL_LAST							42			// number of materials
+#define MATERIAL_PORTAL							42			// area transition portal
+#define MATERIAL_LAST							43			// number of materials
 
 // Defined as a macro here so one change will affect all the relevant files
 
@@ -169,4 +170,5 @@
 	"smoke",							\
 	"fireflies",						\
 	"magicparticlestree",				\
-	"magicparticles",
+	"magicparticles",					\
+	"portal",

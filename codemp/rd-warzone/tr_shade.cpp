@@ -1268,6 +1268,7 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 	case MATERIAL_MAGIC_PARTICLES:
 	case MATERIAL_MAGIC_PARTICLES_TREE:
 	case MATERIAL_FIREFLIES:
+	case MATERIAL_PORTAL:
 		specularScale = 0.0;
 		cubemapScale = 0.0;
 		parallaxScale = 0.0;
@@ -2400,6 +2401,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 		}
+		else if (tess.shader->materialType == MATERIAL_PORTAL)
+		{// Special case for procedural area transition portals...
+			if (IS_DEPTH_PASS) return;
+
+			sp = &tr.portalShader;
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			isGrass = qfalse;
+			multiPass = qfalse;
+
+			GLSL_BindProgram(sp);
+		}
 		else if ((IS_DEPTH_PASS || (tr.viewParms.flags & VPF_CUBEMAP))
 			&& !((tr.viewParms.flags & VPF_EMISSIVEMAP) && (pStage->glow || pStage->glowMapped)))
 		{
@@ -2973,6 +2985,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
 			pStage->stateBits = stateBits;
 		}
+		else if (tess.shader->materialType == MATERIAL_PORTAL)
+		{// Special case for procedural portals...
+			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+			pStage->stateBits = stateBits;
+		}
 		/*
 		else if (pStage->glow)
 		{
@@ -3006,10 +3023,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #endif
 
 		//
-		//
+		// Texture bindings...
 		//
 
-		if (IS_DEPTH_PASS || sp == &tr.depthPassShader)
+		/*if (tess.shader->materialType == MATERIAL_PORTAL)
+		{
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
+			else if (!(pStage->stateBits & GLS_ATEST_BITS))
+				GL_BindToTMU(tr.whiteImage, 0);
+		}
+		else*/ if (IS_DEPTH_PASS || sp == &tr.depthPassShader)
 		{
 			vec4_t baseColor = { 1.0 };
 			vec4_t vertColor = { 1.0 };
@@ -3228,12 +3252,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
 			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
-				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP);
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
 		}
 		else if ((tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_DIFFUSEMAP].image[0], TB_DIFFUSEMAP);
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 			else if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
 		}
@@ -3242,7 +3266,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
 			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
-				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP);
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
 		}
 		else if (tess.shader->materialType == MATERIAL_LAVA)
 		{// Don't need any textures... Procedural...
@@ -3254,7 +3278,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
 			else if (pStage->bundle[TB_COLORMAP].image[0] != 0)
-				GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_COLORMAP].image[0], TB_COLORMAP);
+				R_BindAnimatedImageToTMU(&pStage->bundle[TB_COLORMAP], TB_COLORMAP);
 		}
 #endif //__WATER_STUFF__
 		else if (pStage->useSkyImage && tr.skyImageShader)
@@ -3277,7 +3301,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
 					if (i == TB_LIGHTMAP)
-						GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_LIGHTMAP].image[0], i);
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], i);
 					else
 						GL_BindToTMU( tr.whiteImage, i );
 				}
@@ -3287,7 +3311,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
 					if (i == TB_LIGHTMAP)
-						GL_BindToTMU/*R_BindAnimatedImageToTMU*/( pStage->bundle[TB_DELUXEMAP].image[0], i);
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
 					else
 						GL_BindToTMU( tr.whiteImage, i );
 				}
@@ -3302,7 +3326,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (!lightMapsDisabled)
 				{
 					if (pStage->bundle[TB_LIGHTMAP].image[0])
-						GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_LIGHTMAP].image[0], TB_LIGHTMAP);
+						R_BindAnimatedImageToTMU(&pStage->bundle[TB_LIGHTMAP], TB_LIGHTMAP);
 					else
 						GL_BindToTMU(tr.whiteImage, TB_LIGHTMAP);
 				}
@@ -3322,7 +3346,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					{
 						if (pStage->bundle[TB_NORMALMAP].image[0])
 						{
-							GL_BindToTMU/*R_BindAnimatedImageToTMU*/(pStage->bundle[TB_NORMALMAP].image[0], TB_NORMALMAP);
+							R_BindAnimatedImageToTMU(&pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
 						}
 						else if (r_normalMapping->integer >= 2)
 						{
@@ -3670,6 +3694,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vec4_t l7;
 					VectorSet4(l7, pStage->fireFlyColor[0], pStage->fireFlyColor[1], pStage->fireFlyColor[2], pStage->fireFlyCount);
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, l7);
+				}
+
+				GL_Cull(CT_TWO_SIDED);
+			}
+			else if (tess.shader->materialType == MATERIAL_PORTAL)
+			{// Special case for procedural portals...
+				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*2.0);
+
+				{
+					vec4_t vec;
+					VectorSet4(vec, pStage->portalColor1[0], pStage->portalColor1[1], pStage->portalColor1[2], 1.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vec);
+
+					VectorSet4(vec, pStage->portalColor2[0], pStage->portalColor2[1], pStage->portalColor2[2], 1.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
+
+					VectorSet4(vec, pStage->portalImageColor[0], pStage->portalImageColor[1], pStage->portalImageColor[2], pStage->portalImageAlpha);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
 				}
 
 				GL_Cull(CT_TWO_SIDED);

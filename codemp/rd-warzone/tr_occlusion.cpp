@@ -2,6 +2,28 @@
 
 extern int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p);
 
+void ClosestPointInBoundingBox(const float *mins, const float *maxs, const float *inPoint, float *outPoint)
+{
+	outPoint[0] = inPoint[0];
+	outPoint[1] = inPoint[1];
+	outPoint[2] = inPoint[2];
+
+	if (inPoint[0] < mins[0])
+		outPoint[0] = mins[0];
+	else if (inPoint[0] > maxs[0])
+		outPoint[0] = maxs[0];
+
+	if (inPoint[1] < mins[1])
+		outPoint[1] = mins[1];
+	else if (inPoint[1] > maxs[1])
+		outPoint[1] = maxs[1];
+
+	if (inPoint[2] < mins[2])
+		outPoint[2] = mins[2];
+	else if (inPoint[2] > maxs[2])
+		outPoint[2] = maxs[2];
+}
+
 int occlusionFrame = 0;
 int numOccluded = 0;
 int numNotOccluded = 0;
@@ -367,7 +389,7 @@ void RB_OcclusionCulling(void)
 			tess.minIndex = 0;
 			tess.maxIndex = 0;
 			
-			for (int z = occlusionRanges[0], range = 0; z <= tr.distanceCull * 1.75; z = occlusionRanges[range], range++)
+			for (int z = occlusionRanges[0], range = 0; z <= tr.distanceCull * 1.75 && range < NUM_OCCLUSION_RANGES; z = occlusionRanges[range], range++)
 			{
 				occlusionRangeId[numOcclusionQueries] = range;
 

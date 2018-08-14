@@ -2116,6 +2116,11 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 		return -1;
 	else if (qboolean(aa->shader->materialType == MATERIAL_FIREFLIES) > qboolean(bb->shader->materialType == MATERIAL_FIREFLIES))
 		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_PORTAL) < qboolean(bb->shader->materialType == MATERIAL_PORTAL))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_PORTAL) > qboolean(bb->shader->materialType == MATERIAL_PORTAL))
+		return 1;
 #endif //__FX_SORTING__
 
 #ifdef __WATER_SORTING__
@@ -4096,6 +4101,7 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 	case MATERIAL_MAGIC_PARTICLES:
 	case MATERIAL_MAGIC_PARTICLES_TREE:
 	case MATERIAL_FIREFLIES:
+	case MATERIAL_PORTAL:
 		return qfalse;
 		break;
 	default:

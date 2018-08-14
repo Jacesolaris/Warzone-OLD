@@ -1242,6 +1242,11 @@ typedef struct {
 
 	vec3_t			particleColor;
 
+	vec3_t			portalColor1;
+	vec3_t			portalColor2;
+	vec3_t			portalImageColor;
+	float			portalImageAlpha;
+
 	int				fireFlyCount;
 	vec3_t			fireFlyColor;
 
@@ -2920,6 +2925,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t magicParticlesShader;
 	shaderProgram_t magicParticlesTreeShader;
 	shaderProgram_t magicParticlesFireFlyShader;
+	shaderProgram_t portalShader;
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;

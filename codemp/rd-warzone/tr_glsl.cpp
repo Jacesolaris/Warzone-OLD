@@ -56,6 +56,8 @@ extern const char *fallbackShader_magicParticlesTree_vp;
 extern const char *fallbackShader_magicParticlesTree_fp;
 extern const char *fallbackShader_magicParticlesFireFly_vp;
 extern const char *fallbackShader_magicParticlesFireFly_fp;
+extern const char *fallbackShader_portal_vp;
+extern const char *fallbackShader_portal_fp;
 extern const char *fallbackShader_depthPass_vp;
 extern const char *fallbackShader_depthPass_fp;
 extern const char *fallbackShader_sky_vp;
@@ -1597,6 +1599,7 @@ const char glslMaterialsList[] =
 "#define MATERIAL_FIREFLIES						39\n"\
 "#define MATERIAL_MAGIC_PARTICLES_TREE			40\n"\
 "#define MATERIAL_MAGIC_PARTICLES				41\n"\
+"#define MATERIAL_PORTAL						42\n"\
 "#define MATERIAL_SKY							1024\n"\
 "#define MATERIAL_SUN							1025\n"\
 "\n";
@@ -3289,6 +3292,15 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.portalShader, "portal", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_portal_vp, fallbackShader_portal_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load portal shader!");
+	}
+
+
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 	extradefines[0] = '\0';
@@ -4420,6 +4432,23 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.magicParticlesFireFlyShader);
+#endif
+
+	numLightShaders++;
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.portalShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load portal shader!");
+	}
+
+	GLSL_InitUniforms(&tr.portalShader);
+
+	GLSL_BindProgram(&tr.portalShader);
+	GLSL_SetUniformInt(&tr.portalShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.portalShader);
 #endif
 
 	numLightShaders++;
@@ -6311,6 +6340,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.magicParticlesShader);
 	GLSL_DeleteGPUShader(&tr.magicParticlesTreeShader);
 	GLSL_DeleteGPUShader(&tr.magicParticlesFireFlyShader);
+	GLSL_DeleteGPUShader(&tr.portalShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);

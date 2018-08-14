@@ -1704,14 +1704,30 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	stage->active = qtrue;
 	stage->useSkyImage = false;
 
+	/* WZ Particle EFX */
 	stage->particleColor[0] = 1.0;
 	stage->particleColor[1] = 1.0;
 	stage->particleColor[2] = 0.0;
 
+	/* WZ FireFly EFX */
 	stage->fireFlyCount = 30;
 	stage->fireFlyColor[0] = 0.94;
 	stage->fireFlyColor[1] = 0.94;
 	stage->fireFlyColor[2] = 0.14;
+
+	/* WZ Portal EFX */
+	stage->portalColor1[0] = 0.125;
+	stage->portalColor1[1] = 0.291;
+	stage->portalColor1[2] = 0.923;
+
+	stage->portalColor2[0] = 0.925;
+	stage->portalColor2[1] = 0.791;
+	stage->portalColor2[2] = 0.323;
+
+	stage->portalImageColor[0] = 1.0;
+	stage->portalImageColor[1] = 1.0;
+	stage->portalImageColor[2] = 1.0;
+	stage->portalImageAlpha = 1.0;
 
 	while ( 1 )
 	{
@@ -2845,6 +2861,52 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			stage->fireFlyColor[2] = color[2];
 			continue;
 		}
+		else if (Q_stricmp(token, "portalColor1") == 0)
+		{
+			vec3_t	color;
+
+			ParseVector(text, 3, color);
+
+			stage->portalColor1[0] = color[0];
+			stage->portalColor1[1] = color[1];
+			stage->portalColor1[2] = color[2];
+			continue;
+		}
+		else if (Q_stricmp(token, "portalColor2") == 0)
+		{
+			vec3_t	color;
+
+			ParseVector(text, 3, color);
+
+			stage->portalColor2[0] = color[0];
+			stage->portalColor2[1] = color[1];
+			stage->portalColor2[2] = color[2];
+			continue;
+		}
+		else if (Q_stricmp(token, "portalImageColor") == 0)
+		{
+			vec3_t	color;
+
+			ParseVector(text, 3, color);
+
+			stage->portalImageColor[0] = color[0];
+			stage->portalImageColor[1] = color[1];
+			stage->portalImageColor[2] = color[2];
+			continue;
+		}
+		else if (Q_stricmp(token, "portalImageAlpha") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for portalImageAlpha exponent in shader '%s'\n", shader.name);
+				stage->portalImageAlpha = 1.0;
+				continue;
+			}
+
+			stage->portalImageAlpha = atof(token);
+			continue;
+		}
 		else if (Q_stricmp(token, "emissiveRadiusScale") == 0)
 		{
 			token = COM_ParseExt(text, qfalse);
@@ -3765,6 +3827,7 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_MAGIC_PARTICLES:
 	case MATERIAL_MAGIC_PARTICLES_TREE:
 	case MATERIAL_FIREFLIES:
+	case MATERIAL_PORTAL:
 		return qtrue;
 		break;
 	default:
@@ -3911,6 +3974,9 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_FIREFLIES:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_FIREFLIES.\n", name);
+		break;
+	case MATERIAL_PORTAL:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_PORTAL.\n", name);
 		break;
 	default:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_NONE.\n", name);
@@ -4520,6 +4586,7 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if ( !Q_stricmp( token, "material" ) || !Q_stricmp( token, "q3map_material" ) )
 		{
 			ParseMaterial( text );
+			continue;
 		}
 		// sun parms
 		else if ( !Q_stricmp( token, "sun" ) || !Q_stricmp( token, "q3map_sun" ) || !Q_stricmp( token, "q3map_sunExt" ) || !Q_stricmp( token, "q3gl2_sun" ) ) {
@@ -4658,6 +4725,7 @@ static qboolean ParseShader( const char *name, const char **text )
 			if (token[0]) {
 				shader.clampTime = atof(token);
 			}
+			continue;
 		}
 		// skip stuff that only the q3map needs
 		else if ( !Q_stricmpn( token, "q3map", 5 ) ) {
@@ -8543,13 +8611,25 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		if (StringContains((char *)shader.name, "gfx/", qfalse) || StringContains((char *)shader.name, "gfx_base/", qfalse))
 		{
 			isEfxShader = qtrue;
+			forceShaderFileUsage = qtrue;
 		}
 		else if (StringContains((char *)shader.name, "magicParticles", qfalse) || StringContains((char *)shader.name, "fireflies", qfalse))
 		{
 			isEfxShader = qtrue;
+			forceShaderFileUsage = qtrue;
 		}
 
-		if ((shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneEnabled", qfalse)) || isEfxShader)
+		if (!forceShaderFileUsage && shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneEnabled", qfalse))
+		{// This is marked as a warzone enabled shader...
+			forceShaderFileUsage = qtrue;
+		}
+
+		if (!forceShaderFileUsage && shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneShader", qfalse))
+		{// This is marked as a warzone enabled shader...
+			forceShaderFileUsage = qtrue;
+		}
+
+		if (!forceShaderFileUsage && shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneSupported", qfalse))
 		{// This is marked as a warzone enabled shader...
 			forceShaderFileUsage = qtrue;
 		}

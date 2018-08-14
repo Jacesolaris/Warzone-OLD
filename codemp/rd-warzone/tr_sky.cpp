@@ -370,6 +370,13 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		return;
 	}
 
+	tess.numIndexes = 0;
+	tess.firstIndex = 0;
+	tess.numVertexes = 0;
+	tess.minIndex = 0;
+	tess.maxIndex = 0;
+
+
 	int s, t;
 	int firstVertex = tess.numVertexes;
 	//int firstIndex = tess.numIndexes;
