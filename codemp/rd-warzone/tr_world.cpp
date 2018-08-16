@@ -388,6 +388,18 @@ static int R_PshadowSurface(msurface_t *surf, int pshadowBits) {
 	int         i;
 	pshadow_t    *ps;
 
+	switch (*surf->data)
+	{// UQ1: If we are not going to use these others, why do the math?
+	case SF_FACE:
+	case SF_GRID:
+	case SF_TRIANGLES:
+	case SF_VBO_MESH:
+		break;
+	default:
+		return 0;
+		break;
+	}
+
 	if ( surf->cullinfo.type & CULLINFO_PLANE )
 	{
 		for ( i = 0 ; i < tr.refdef.num_pshadows ; i++ ) {

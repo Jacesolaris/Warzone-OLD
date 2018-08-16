@@ -823,7 +823,7 @@ void RB_BeginDrawingView (void) {
 		clearBits |= GL_COLOR_BUFFER_BIT;
 	}
 
-	if ( r_measureOverdraw->integer /*|| r_shadows->integer == 2*/ )
+	if ( r_measureOverdraw->integer )
 	{
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
@@ -3702,7 +3702,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_BlitFromTexture(tr.renderFbo->colorImage[3], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
-	if (0 && r_shadows->integer == 2/*4*/)
+	if (0 && r_shadows->integer == 2)
 	{
 		ivec4_t dstBox;
 		VectorSet4(dstBox, 512 + 0, glConfig.vidHeight - 128, 128, 128);

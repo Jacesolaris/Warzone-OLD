@@ -102,6 +102,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __HEIGHTMAP_TERRAIN_TEST__			// Testing stuff...
 
+//#define __INDOOR_SHADOWS__						// Testing stuff...
+
 #define __USE_REGIONS__
 
 #define __TERRAIN_TESSELATION__
@@ -1886,6 +1888,7 @@ typedef struct {
 	qboolean	isPortal;			// true if this view is through a portal
 	qboolean	isMirror;			// the portal is a mirror, invert the face culling
 	int flags;
+	vec3_t		realLightOrigin;	// may be different than normal light origin for pshadows
 	int			frameSceneNum;		// copied from tr.frameSceneNum
 	int			frameCount;			// copied from tr.frameCount
 	cplane_t	portalPlane;		// clip anything behind this if mirroring
@@ -2160,6 +2163,8 @@ typedef struct pshadow_s
 
 	vec3_t lightViewAxis[3];
 	vec3_t lightOrigin;
+	vec3_t realLightOrigin;
+	float invLightPower;
 	float  lightRadius;
 	cplane_t cullPlane;
 } pshadow_t;
@@ -2710,6 +2715,7 @@ typedef struct {
 	int						viewIsOutdoorsCheckTime = 0;
 	int						viewIsOutdoorsCulledCount = 0;
 	int						viewIsOutdoorsNotCulledCount = 0;
+	vec3_t					viewIsOutdoorsHitPosition;
 #endif //__INDOOR_OUTDOOR_CULLING__
 } backEndState_t;
 
@@ -3440,7 +3446,7 @@ void R_SwapBuffers( int );
 
 void R_RenderView( viewParms_t *parms );
 void R_RenderPshadowMaps(const refdef_t *fd);
-void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sundir, float lightHeight);
+void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sundir, float lightHeight, vec3_t lightOrg);
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene );
 void R_RenderEmissiveMapSide(int cubemapIndex, int cubemapSide, qboolean subscene);
 void R_AddMD3Surfaces( trRefEntity_t *e );

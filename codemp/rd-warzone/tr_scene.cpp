@@ -94,13 +94,15 @@ void Indoors_Trace(trace_t *results, const vec3_t start, const vec3_t mins, cons
 
 void R_CheckIfOutside(void)
 {
-	if (!ENABLE_INDOOR_OUTDOOR_SYSTEM) return;
-	if (!INDOOR_BRUSH_FOUND) return;
+//#ifndef __INDOOR_SHADOWS__
+//	if (!ENABLE_INDOOR_OUTDOOR_SYSTEM) return;
+//	if (!INDOOR_BRUSH_FOUND) return;
+//#endif //__INDOOR_SHADOWS__
 
-	if (backEnd.viewIsOutdoorsCheckTime > backEnd.refdef.time - 1000)
+	/*if (backEnd.viewIsOutdoorsCheckTime > backEnd.refdef.time - 1000)
 	{// Wait before next check...
 		return;
-	}
+	}*/
 
 	backEnd.viewIsOutdoorsCheckTime = backEnd.refdef.time;
 
@@ -108,23 +110,26 @@ void R_CheckIfOutside(void)
 	trace_t trace;
 	vec3_t start, end;
 
-	VectorCopy(backEnd.refdef.vieworg, start);
+	VectorCopy(backEnd.localPlayerOrigin, start);
 	start[2] += 16.0;
 
-	VectorCopy(backEnd.refdef.vieworg, end);
+	VectorCopy(backEnd.localPlayerOrigin, end);
 	end[2] += 524288.0;
 
 	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
+	VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
+
 	if (trace.surfaceFlags & SURF_SKY)
 	{// Sky seen...
-		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
+		VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
 		return;
 	}
 
 	// Second attempt...
-	VectorCopy(backEnd.refdef.vieworg, end);
+	VectorCopy(backEnd.localPlayerOrigin, end);
 	end[2] += 524288.0;
 	end[0] += 512.0;
 
@@ -132,13 +137,14 @@ void R_CheckIfOutside(void)
 
 	if (trace.surfaceFlags & SURF_SKY)
 	{// Sky seen...
-		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
+		VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
 		return;
 	}
 
 	// Third attempt...
-	VectorCopy(backEnd.refdef.vieworg, end);
+	VectorCopy(backEnd.localPlayerOrigin, end);
 	end[2] += 524288.0;
 	end[1] += 512.0;
 
@@ -146,13 +152,14 @@ void R_CheckIfOutside(void)
 
 	if (trace.surfaceFlags & SURF_SKY)
 	{// Sky seen...
-		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
+		VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
 		return;
 	}
 
 	// Fourth attempt...
-	VectorCopy(backEnd.refdef.vieworg, end);
+	VectorCopy(backEnd.localPlayerOrigin, end);
 	end[2] += 524288.0;
 	end[0] -= 512.0;
 
@@ -160,13 +167,14 @@ void R_CheckIfOutside(void)
 
 	if (trace.surfaceFlags & SURF_SKY)
 	{// Sky seen...
-		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
+		VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
 		return;
 	}
 
 	// Fifth attempt...
-	VectorCopy(backEnd.refdef.vieworg, end);
+	VectorCopy(backEnd.localPlayerOrigin, end);
 	end[2] += 524288.0;
 	end[1] -= 512.0;
 
@@ -174,13 +182,14 @@ void R_CheckIfOutside(void)
 
 	if (trace.surfaceFlags & SURF_SKY)
 	{// Sky seen...
-		ri->Printf(PRINT_WARNING, "You are outside.\n");
+		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
+		VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
 		return;
 	}
 
 	// Didn't see any sky...
-	ri->Printf(PRINT_WARNING, "You are inside.\n");
+	//ri->Printf(PRINT_WARNING, "You are inside.\n");
 	backEnd.viewIsOutdoors = qfalse;
 }
 
@@ -1140,7 +1149,9 @@ void RE_BeginScene(const refdef_t *fd)
 	RB_UpdateCloseLights();
 
 #ifdef __INDOOR_OUTDOOR_CULLING__
-	if (ENABLE_INDOOR_OUTDOOR_SYSTEM && INDOOR_BRUSH_FOUND)
+//#ifndef __INDOOR_SHADOWS__
+//	if (ENABLE_INDOOR_OUTDOOR_SYSTEM && INDOOR_BRUSH_FOUND)
+//#endif //__INDOOR_SHADOWS__
 	{
 		if (ENABLE_INDOOR_OUTDOOR_SYSTEM > 1)
 			ri->Printf(PRINT_WARNING, "%i inside or outside surfaces were culled last frame. %i were not culled.\n", backEnd.viewIsOutdoorsCulledCount, backEnd.viewIsOutdoorsNotCulledCount);
@@ -1317,7 +1328,7 @@ void RE_RenderScene(const refdef_t *fd) {
 
 #ifdef __PSHADOWS__
 	/* playing with more shadows */
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_shadows->integer == 2/*4*/)
+	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_shadows->integer == 2)
 	{
 		R_RenderPshadowMaps(fd);
 	}
@@ -1346,21 +1357,42 @@ void RE_RenderScene(const refdef_t *fd) {
 			tr.viewParms.zFar = tr.occlusionOriginalZfar;
 		}*/
 
-//#define __GLOW_SHADOWS__
-
-#ifdef __GLOW_SHADOWS__
 		float lightHeight = 999999.9;
-		vec3_t origVieworg;
-		qboolean isNonSunLight = qfalse;
+		vec3_t lightOrigin;
+		VectorCopy(fd->vieworg, lightOrigin);
 
+#ifdef __INDOOR_SHADOWS__
+#if 1
+		if (!backEnd.viewIsOutdoors)
+		{
+			lightDir[0] = 0.0;
+			lightDir[1] = 0.0;
+			if (r_testvalue0->integer < 1)
+				lightDir[2] = 1.0;
+			else
+				lightDir[2] = -1.0;
+			lightDir[3] = 0.0;
+			
+			VectorCopy(backEnd.viewIsOutdoorsHitPosition, lightOrigin);
+			lightOrigin[2] -= r_testvalue1->value;// 8.0;
+
+			lightHeight = lightOrigin[2] - backEnd.localPlayerOrigin[2];
+		}
+		else
+		{
+			VectorCopy4(tr.refdef.sunDir, lightDir);
+		}
+#else
 		vec3_t pos;
 		VectorCopy(tr.refdef.vieworg, pos);
 		pos[2] += 48;
 		RE_FindRoof(pos);
-		// VOLUMETRIC_ROOF now contains the location of the roof above us... VOLUMETRIC_HIT_SKY is if it was sky or not...
+		// TRACE_ROOF now contains the location of the roof above us... TRACE_HIT_SKY is if it was sky or not...
 
-		if (TRACE_HIT_SKY)
-		{
+		float ROOF_HEIGHT = TRACE_ROOF[2] - pos[2];
+
+		if (TRACE_HIT_SKY || ROOF_HEIGHT < 256.0)
+		{// This light isn't high enough above us, or we hit sky...
 			VectorCopy4(tr.refdef.sunDir, lightDir);
 			//ri->Printf(PRINT_ALL, "Hit sky.\n");
 		}
@@ -1371,7 +1403,14 @@ void RE_RenderScene(const refdef_t *fd) {
 
 			for (int l = 0; l < CLOSE_TOTAL; l++)
 			{
-				float dist = Distance(TRACE_ROOF, CLOSE_POS[l]) * DistanceVertical(TRACE_ROOF, CLOSE_POS[l]);
+				float thisHeight = CLOSE_POS[l][2] - pos[2];
+
+				if (/*thisHeight < 256.0 ||*/ ROOF_HEIGHT < thisHeight)
+				{// This light is either too close, or above our current roof height...
+					continue;
+				}
+				
+				float dist = DistanceHorizontal(TRACE_ROOF, CLOSE_POS[l]);
 
 				if (dist < bestDist)
 				{
@@ -1387,24 +1426,39 @@ void RE_RenderScene(const refdef_t *fd) {
 			}
 			else
 			{
+				vec3_t lightDir2;
+
 				if (r_testvalue0->integer < 1)
-					VectorSubtract(CLOSE_POS[best], tr.refdef.vieworg, lightDir);
+					VectorSubtract(CLOSE_POS[best], tr.refdef.vieworg, lightDir2);
 				else
-					VectorSubtract(tr.refdef.vieworg, CLOSE_POS[best], lightDir);
-				VectorNormalize(lightDir);
-				lightHeight = CLOSE_POS[best][2];
+					VectorSubtract(tr.refdef.vieworg, CLOSE_POS[best], lightDir2);
+
+				VectorNormalize(lightDir2);
+
+				VectorCopy(lightDir2, lightDir);
+
+				lightDir[3] = 0.0f;
+
+				lightDir[0] = 0.0;
+				lightDir[1] = 0.0;
+				if (r_testvalue0->integer < 1)
+					lightDir[2] = 1.0;
+				else
+					lightDir[2] = -1.0;
+
+				lightHeight = CLOSE_POS[best][2] - tr.refdef.vieworg[2];
 				
-				isNonSunLight = qtrue;
-				VectorCopy(fd->vieworg, origVieworg);
-				VectorCopy(CLOSE_POS[best], (float *)fd->vieworg); // Hack - override const :(
+				VectorCopy(CLOSE_POS[best], lightOrigin);
+				lightOrigin[2] -= 48.0;
+				lightHeight -= 48.0;
 
 				ri->Printf(PRINT_ALL, "Used glow light at %f %f %f. %i total glow lights.\n", CLOSE_POS[best][0], CLOSE_POS[best][1], CLOSE_POS[best][2], CLOSE_TOTAL);
 			}
 		}
-#else //__GLOW_SHADOWS__
-		float lightHeight = 999999.9;
+#endif
+#else //__INDOOR_SHADOWS__
 		VectorCopy4(tr.refdef.sunDir, lightDir);
-#endif //__GLOW_SHADOWS__
+#endif //__INDOOR_SHADOWS__
 
 		int nowTime = ri->Milliseconds();
 
@@ -1418,24 +1472,15 @@ void RE_RenderScene(const refdef_t *fd) {
 		VectorCopy(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN);
 
 		// Always update close shadows, so players/npcs moving around get shadows, even if the player's view doesn't change...
-		R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight);
-		R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight);
-		//R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
+		R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight, lightOrigin);
+		R_RenderSunShadowMaps(fd, 1, lightDir, lightHeight, lightOrigin);
 
 		// Timed updates for distant shadows, or forced by view change...
 		if (nowTime >= NEXT_SHADOWMAP_UPDATE[0] || forceUpdate)
 		{
-			//R_RenderSunShadowMaps(fd, 3, lightDir, lightHeight);
-			R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight);
+			R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight, lightOrigin);
 			NEXT_SHADOWMAP_UPDATE[0] = nowTime + 5000;
 		}
-
-#ifdef __GLOW_SHADOWS__
-		if (isNonSunLight)
-		{
-			VectorCopy(origVieworg, (float *)fd->vieworg); // Hack - override const :(
-		}
-#endif //__GLOW_SHADOWS__
 
 		/*if (r_occlusion->integer)
 		{// Set occlusion zFar again, now that depth prepass is completed...

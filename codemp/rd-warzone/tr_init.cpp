@@ -1813,7 +1813,7 @@ void R_Register( void )
 	r_drawBuffer = ri->Cvar_Get( "r_drawBuffer", "GL_BACK", CVAR_CHEAT );
 	r_lockpvs = ri->Cvar_Get ("r_lockpvs", "0", CVAR_CHEAT);
 	r_noportals = ri->Cvar_Get ("r_noportals", "0", CVAR_CHEAT);
-	r_shadows = ri->Cvar_Get( "cg_shadows", "0", 0 );
+	r_shadows = ri->Cvar_Get( "cg_shadows", "2", 0 );
 
 	r_marksOnTriangleMeshes = ri->Cvar_Get("r_marksOnTriangleMeshes", "0", CVAR_ARCHIVE);
 

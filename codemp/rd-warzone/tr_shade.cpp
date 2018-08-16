@@ -41,6 +41,49 @@ extern void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input
 
 extern qboolean RB_CheckOcclusion(matrix_t MVP, shaderCommands_t *input);
 
+extern vec3_t		SUN_COLOR_MAIN;
+extern vec3_t		SUN_COLOR_SECONDARY;
+extern vec3_t		SUN_COLOR_TERTIARY;
+extern vec3_t		MAP_AMBIENT_COLOR;
+extern vec3_t		MAP_AMBIENT_COLOR_NIGHT;
+extern int			MAP_LIGHTMAP_ENHANCEMENT;
+extern float		MAP_LIGHTMAP_MULTIPLIER;
+extern qboolean		MAP_COLOR_SWITCH_RG;
+extern qboolean		MAP_COLOR_SWITCH_RB;
+extern qboolean		MAP_COLOR_SWITCH_GB;
+
+extern qboolean		GRASS_ENABLED;
+extern qboolean		GRASS_UNDERWATER_ONLY;
+extern int			GRASS_WIDTH_REPEATS;
+extern int			GRASS_DENSITY;
+extern float		GRASS_HEIGHT;
+extern int			GRASS_DISTANCE;
+extern float		GRASS_MAX_SLOPE;
+extern float		GRASS_TYPE_UNIFORMALITY;
+extern float		GRASS_TYPE_UNIFORMALITY_SCALER;
+extern float		GRASS_DISTANCE_FROM_ROADS;
+extern float		GRASS_SURFACE_MINIMUM_SIZE;
+extern float		GRASS_SURFACE_SIZE_DIVIDER;
+extern float		GRASS_SIZE_MULTIPLIER_COMMON;
+extern float		GRASS_SIZE_MULTIPLIER_RARE;
+extern float		GRASS_SIZE_MULTIPLIER_UNDERWATER;
+extern float		GRASS_LOD_START_RANGE;
+extern qboolean		MOON_ENABLED;
+extern vec3_t		MOON_COLOR;
+extern vec3_t		MOON_ATMOSPHERE_COLOR;
+extern float		MOON_GLOW_STRENGTH;
+extern float		MOON_ROTATION_RATE;
+
+extern float		WATER_WAVE_HEIGHT;
+
+extern qboolean		TERRAIN_TESSELLATION_ENABLED;
+extern float		TERRAIN_TESSELLATION_LEVEL;
+extern float		TERRAIN_TESSELLATION_OFFSET;
+extern float		TERRAIN_TESSELLATION_MIN_SIZE;
+
+
+qboolean RB_ShouldUseGeometryGrass(int materialType);
+
 /*
 ==================
 R_DrawElements
@@ -882,28 +925,72 @@ static void ProjectPshadowVBOGLSL( void ) {
 		return;
 	}
 
+	if (backEnd.depthFill
+		|| (tr.viewParms.flags & VPF_CUBEMAP)
+		|| (tr.viewParms.flags & VPF_DEPTHSHADOW)
+		|| (tr.viewParms.flags & VPF_SHADOWPASS)
+		|| (tr.viewParms.flags & VPF_EMISSIVEMAP))
+	{
+		return;
+	}
+
+	if (!(!backEnd.viewIsOutdoors || !SHADOWS_ENABLED || RB_NightScale() == 1.0))
+	{// Also skip during day, when outdoors...
+		return;
+	}
+
 	shaderProgram_t *sp = &tr.pshadowShader;
 
 	GLSL_BindProgram(sp);
 
 	GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-	GL_Cull(CT_TWO_SIDED);
+	GL_Cull(CT_FRONT_SIDED);
+
+	qboolean usingTessellation = qfalse;
+
+	if (r_tessellation->integer)
+	{
+#ifdef __TERRAIN_TESSELATION__
+		if (TERRAIN_TESSELLATION_ENABLED
+			&& r_terrainTessellation->integer
+			&& r_terrainTessellationMax->value >= 2.0
+			&& (r_foliage->integer && GRASS_ENABLED && (input->shader->isGrass || RB_ShouldUseGeometryGrass(input->shader->materialType))))
+		{// Always add tesselation to ground surfaces...
+			usingTessellation = qtrue;
+		}
+		else
+#endif //__TERRAIN_TESSELATION__
+		if (input->shader->tesselation
+			&& input->shader->tesselationLevel > 1.0
+			&& input->shader->tesselationAlpha != 0.0)
+		{
+			usingTessellation = qtrue;
+		}
+	}
 
 	// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 	// where they aren't rendered
-	GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL);
-
+	if (usingTessellation)
+		GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHTEST_DISABLE);
+	else
+		GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_LESS | GLS_DEPTHFUNC_EQUAL);
+	
 	for ( int l = 0 ; l < backEnd.refdef.num_pshadows ; l++ ) 
 	{
 		pshadow_t	*ps;
 		vec4_t vector;
 
-		//if ( !( tess.pshadowBits & ( 1 << l ) ) ) {
-		//	continue;	// this surface definately doesn't have any of this shadow
-		//}
+		if ( !( tess.pshadowBits & ( 1 << l ) ) ) {
+			continue;	// this surface definately doesn't have any of this shadow
+		}
 
 		ps = &backEnd.refdef.pshadows[l];
+
+		if (ps->invLightPower >= 1.0)
+		{
+			continue;
+		}
 
 		VectorCopy(ps->lightOrigin, vector);
 		vector[3] = 1.0f;
@@ -918,13 +1005,25 @@ static void ProjectPshadowVBOGLSL( void ) {
 		VectorScale(ps->lightViewAxis[2], 1.0f / ps->viewRadius, vector);
 		GLSL_SetUniformVec3(sp, UNIFORM_LIGHTUP, vector);
 
-		//GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, ps->lightRadius);
+		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, ps->lightRadius);
 
-		//GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 		vec4_t l0;
-		VectorSet4(l0, tr.pshadowMaps[l]->width, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value);
+		VectorSet4(l0, tr.pshadowMaps[l]->width, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, l0);
+
+		vector[0] = ps->realLightOrigin[0];
+		vector[1] = ps->realLightOrigin[1];
+		vector[2] = ps->realLightOrigin[2];
+		vector[3] = usingTessellation ? 1.0 : 0.0;
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector);
+
+		vector[0] = ps->entityOrigins[0][0];
+		vector[1] = ps->entityOrigins[0][1];
+		vector[2] = ps->entityOrigins[0][2];
+		vector[3] = ps->invLightPower;
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
 
 
 		GL_BindToTMU( tr.pshadowMaps[l], TB_DIFFUSEMAP );
@@ -1293,11 +1392,6 @@ extern float		MAP_INFO_MAXSIZE;
 extern vec3_t		MAP_INFO_MINS;
 extern vec3_t		MAP_INFO_MAXS;
 extern vec3_t		MAP_INFO_SIZE;
-
-extern qboolean		TERRAIN_TESSELLATION_ENABLED;
-extern float		TERRAIN_TESSELLATION_LEVEL;
-extern float		TERRAIN_TESSELLATION_OFFSET;
-extern float		TERRAIN_TESSELLATION_MIN_SIZE;
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, int stageNum, int IS_DEPTH_PASS)
 {
@@ -1856,41 +1950,6 @@ void RB_UpdateCloseLights ( void )
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }
 
-extern vec3_t		SUN_COLOR_MAIN;
-extern vec3_t		SUN_COLOR_SECONDARY;
-extern vec3_t		SUN_COLOR_TERTIARY;
-extern vec3_t		MAP_AMBIENT_COLOR;
-extern vec3_t		MAP_AMBIENT_COLOR_NIGHT;
-extern int			MAP_LIGHTMAP_ENHANCEMENT;
-extern float		MAP_LIGHTMAP_MULTIPLIER;
-extern qboolean		MAP_COLOR_SWITCH_RG;
-extern qboolean		MAP_COLOR_SWITCH_RB;
-extern qboolean		MAP_COLOR_SWITCH_GB;
-
-extern qboolean		GRASS_ENABLED;
-extern qboolean		GRASS_UNDERWATER_ONLY;
-extern int			GRASS_WIDTH_REPEATS;
-extern int			GRASS_DENSITY;
-extern float		GRASS_HEIGHT;
-extern int			GRASS_DISTANCE;
-extern float		GRASS_MAX_SLOPE;
-extern float		GRASS_TYPE_UNIFORMALITY;
-extern float		GRASS_TYPE_UNIFORMALITY_SCALER;
-extern float		GRASS_DISTANCE_FROM_ROADS;
-extern float		GRASS_SURFACE_MINIMUM_SIZE;
-extern float		GRASS_SURFACE_SIZE_DIVIDER;
-extern float		GRASS_SIZE_MULTIPLIER_COMMON;
-extern float		GRASS_SIZE_MULTIPLIER_RARE;
-extern float		GRASS_SIZE_MULTIPLIER_UNDERWATER;
-extern float		GRASS_LOD_START_RANGE;
-extern qboolean		MOON_ENABLED;
-extern vec3_t		MOON_COLOR;
-extern vec3_t		MOON_ATMOSPHERE_COLOR;
-extern float		MOON_GLOW_STRENGTH;
-extern float		MOON_ROTATION_RATE;
-
-extern float		WATER_WAVE_HEIGHT;
-
 float waveTime = 0.5;
 float waveFreq = 0.1;
 
@@ -1947,20 +2006,29 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	{
 		IS_DEPTH_PASS = 1;
 
-		/*if (r_foliage->integer
+		if (r_foliage->integer
+			&& r_foliageShadows->integer
 			&& GRASS_ENABLED
 			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
-		}*/
+		}
 	}
 	else if ((tr.viewParms.flags & VPF_CUBEMAP)
 		|| (tr.viewParms.flags & VPF_DEPTHSHADOW)
 		|| (tr.viewParms.flags & VPF_SHADOWPASS)
 		|| (tr.viewParms.flags & VPF_EMISSIVEMAP))
 	{
-
+		if (r_foliage->integer
+			&& r_foliageShadows->integer
+			&& GRASS_ENABLED
+			&& ((tr.viewParms.flags & VPF_DEPTHSHADOW) || (tr.viewParms.flags & VPF_SHADOWPASS))
+			&& (tess.shader->isGrass || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
+		{
+			isGrass = qtrue;
+			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
+		}
 	}
 	/*else if (tr.viewParms.flags & VPF_SHADOWPASS)
 	{
@@ -3888,7 +3956,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 		vector[3] = 1.0f;
 		GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vector);
 		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, backEnd.viewParms.zFar);
-
+		
 		GL_State( 0 );
 
 		//
@@ -4172,7 +4240,7 @@ void RB_StageIteratorGeneric( void )
 	RB_IterateStagesGeneric( input );
 
 #ifdef __PSHADOWS__
-	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && r_shadows->integer == 2/*4*/)
+	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && r_shadows->integer == 2)
 	{
 		ProjectPshadowVBOGLSL();
 	}

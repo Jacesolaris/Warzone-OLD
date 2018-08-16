@@ -2826,6 +2826,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 			continue;
 		}
+		else if (!Q_stricmp(token, "isFoliage"))
+		{
+			stage->isFoliage = qtrue;
+			stage->isFoliageChecked = qtrue;
+			continue;
+		}
 		else if (Q_stricmp(token, "particleColor") == 0)
 		{
 			vec3_t	color;
