@@ -854,7 +854,7 @@ void main()
 #endif //__CLOUDS__
 
 #ifdef __BACKGROUND_HILLS__
-		if (PROCEDURAL_SKY_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
+		if (PROCEDURAL_BACKGROUND_HILLS_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
 		{// Only on horizontal sides.
 			gl_FragColor.rgb = mix(gl_FragColor.rgb, terrainColor.rgb, terrainColor.a);
 		}

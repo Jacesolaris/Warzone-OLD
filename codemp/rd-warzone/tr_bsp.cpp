@@ -703,8 +703,15 @@ static shader_t *ShaderForShaderNum( int shaderNum, const int *lightmapNums, con
 #include "assimp/DefaultLogger.hpp"
 #include "assimp/LogStream.hpp"
 
+extern qboolean ENABLE_REGEN_SMOOTH_NORMALS;
+
 void GenerateNormalsForMesh(srfBspSurface_t *cv)
 {
+	if (!ENABLE_REGEN_SMOOTH_NORMALS)
+	{// Not enabled for this map, skip...
+		return;
+	}
+
 //#pragma omp parallel for schedule(dynamic)
 	for (int i = 0; i < cv->numIndexes; i += 3)
 	{

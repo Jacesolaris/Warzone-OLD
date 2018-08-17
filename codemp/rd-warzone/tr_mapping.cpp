@@ -1374,6 +1374,7 @@ qboolean	DISABLE_DEPTH_PREPASS = qfalse;
 qboolean	LODMODEL_MAP = qfalse;
 qboolean	DISABLE_MERGED_GLOWS = qfalse;
 qboolean	DISABLE_LIFTS_AND_PORTALS_MERGE = qtrue;
+qboolean	ENABLE_REGEN_SMOOTH_NORMALS = qfalse;
 int			ENABLE_INDOOR_OUTDOOR_SYSTEM = 0;
 int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
@@ -1568,6 +1569,12 @@ void MAPPING_LoadMapInfo(void)
 	DISABLE_LIFTS_AND_PORTALS_MERGE = (atoi(IniRead(mapname, "FIXES", "DISABLE_LIFTS_AND_PORTALS_MERGE", "1")) > 0) ? qtrue : qfalse;
 	GENERIC_MATERIALS_PREFER_SHINY = (atoi(IniRead(mapname, "FIXES", "GENERIC_MATERIALS_PREFER_SHINY", "0")) > 0) ? qtrue : qfalse;
 	ENABLE_INDOOR_OUTDOOR_SYSTEM = atoi(IniRead(mapname, "FIXES", "ENABLE_INDOOR_OUTDOOR_SYSTEM", "0"));
+	ENABLE_REGEN_SMOOTH_NORMALS = (atoi(IniRead(mapname, "FIXES", "ENABLE_REGEN_SMOOTH_NORMALS", "0"))) ? qtrue : qfalse;
+
+	if (!ENABLE_REGEN_SMOOTH_NORMALS && StringContainsWord(currentMapName, "mp/")) 
+	{// Meh, always regen them on base mp maps...
+		ENABLE_REGEN_SMOOTH_NORMALS = qtrue;
+	}
 
 	//
 	// Misc effect enablers...
@@ -1673,7 +1680,7 @@ void MAPPING_LoadMapInfo(void)
 	PROCEDURAL_SKY_DARKMATTER_FACTOR = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_DARKMATTER_FACTOR", "0.6"));
 	PROCEDURAL_SKY_PLANETARY_ROTATION = atof(IniRead(mapname, "SKY", "PROCEDURAL_SKY_PLANETARY_ROTATION", "0.3"));
 
-	PROCEDURAL_BACKGROUND_HILLS_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_ENABLED", "1")) > 0) ? qtrue : qfalse;
+	PROCEDURAL_BACKGROUND_HILLS_ENABLED = (atoi(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_ENABLED", PROCEDURAL_SKY_ENABLED ? "1" : "0")) > 0) ? qtrue : qfalse;
 	PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS", "0.4"));
 	PROCEDURAL_BACKGROUND_HILLS_UPDOWN = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_UPDOWN", "190.0"));
 	PROCEDURAL_BACKGROUND_HILLS_SEED = atof(IniRead(mapname, "SKY", "PROCEDURAL_BACKGROUND_HILLS_SEED", "1.0"));
@@ -2104,6 +2111,7 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Generic material selections prefer ^7%s^5 on this map.\n", GENERIC_MATERIALS_PREFER_SHINY ? "SHINY" : "MATTE");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Smooth normals generation is ^7%s^5 on this map.\n", ENABLE_REGEN_SMOOTH_NORMALS ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Indoor/Outdoor culling system is ^7%s^5 on this map.\n", (ENABLE_INDOOR_OUTDOOR_SYSTEM == 0) ? "DISABLED" : (ENABLE_INDOOR_OUTDOOR_SYSTEM == 1) ? "ENABLED" : "DEBUG MODE");
 

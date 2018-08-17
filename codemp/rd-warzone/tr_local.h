@@ -87,7 +87,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __DEPTH_PREPASS_STUFF__
 
-//#define __REGENERATE_BSP_NORMALS__				// Re-generate smooth normals for all of the map.
+#define __REGENERATE_BSP_NORMALS__				// Re-generate smooth normals for all of the map.
 
 //#define __USE_VBO_AREAS__						// Break up map VBO's into areas.
 
@@ -4361,6 +4361,8 @@ extern float mix(float x, float y, float a);
 void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE);
 
 char *R_TIL_TextureFileExists(const char *name);
+
+shader_t *R_ReloadShader(const char *name);
 
 /*
 ============================================================

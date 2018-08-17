@@ -9034,6 +9034,76 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	return FinishShader();
 }
 
+shader_t *R_ReloadShader(const char *name) {
+	char		strippedName[MAX_IMAGE_PATH];
+	int			hash;
+	shader_t	*sh;
+
+	if ((name == NULL) || (name[0] == 0)) {
+		return tr.defaultShader;
+	}
+
+	COM_StripExtension(name, strippedName, sizeof(strippedName));
+
+	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
+
+	//
+	// see if the shader is already loaded
+	//
+	for (sh = hashTable[hash]; sh; sh = sh->next) {
+		// NOTE: if there was no shader or image available with the name strippedName
+		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
+		// have to check all default shaders otherwise for every call to R_FindShader
+		// with that same strippedName a new default shader is created.
+		if (Q_stricmp(sh->name, strippedName) == 0) {
+
+
+			int i, hash;
+
+			hash = generateHashValue(name, MAX_SHADERTEXT_HASH);
+
+			if (shaderTextHashTable[hash])
+			{
+				for (i = 0; shaderTextHashTable[hash][i]; i++)
+				{
+					char *p = shaderTextHashTable[hash][i];
+					char *token = COM_ParseExt((const char **)&p, qtrue);
+
+					if (!Q_stricmp(token, name))
+					{
+						memset(p, 0, sizeof(char) * strlen(p));
+						break;
+					}
+				}
+			}
+
+
+
+			shader_t *next = sh->next;
+			int index = sh->index;
+			int sortedIndex = sh->sortedIndex;
+
+			// match found. Blank it...
+			memset(sh, 0, sizeof(shader_t));
+			// Load the shader again...
+			shader_t *sh2 = R_FindShader(name, lightmapsNone, stylesDefault, qtrue);
+			// Copy the new one over the old...
+			memcpy(sh, sh2, sizeof(shader_t));
+			// Give it the original's next value.
+			sh->next = next;
+			sh->index = index;
+			sh->sortedIndex = sortedIndex;
+			// Blank the original copy of the new one, so it can be reused by something else...
+			memset(sh2, 0, sizeof(shader_t));
+			// Return the new copy.
+			return sh;
+		}
+	}
+
+	// Just load it...
+	return R_FindShader(name, lightmapsNone, stylesDefault, qtrue);
+}
+
 shader_t *R_FindServerShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage )
 {
 	char		strippedName[MAX_IMAGE_PATH];

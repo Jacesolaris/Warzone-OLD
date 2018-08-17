@@ -1410,6 +1410,21 @@ void GfxMemInfo_f( void )
 #define SWAPINTERVAL_FLAGS CVAR_ARCHIVE | CVAR_LATCH
 #endif
 
+void R_ReloadShaderCommand(void)
+{
+	char temp[2048] = { 0 };
+	ri->Cmd_ArgsBuffer(temp, sizeof(temp));
+
+	if (!temp || !temp[0])
+	{
+		ri->Printf(PRINT_ALL, "Usage: /reloadshader <shaderName>\n");
+		return;
+	}
+
+	ri->Printf(PRINT_ALL, "Reloading shader %s.\n", temp);
+	R_ReloadShader(temp);
+}
+
 extern void R_ShowTime(void);
 
 /*
@@ -1876,6 +1891,7 @@ extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
 	ri->Cmd_AddCommand("genheightmap", R_CreateHeightMapImage);
 	ri->Cmd_AddCommand("genroadmap", R_CreateRoadMapImage);
 	ri->Cmd_AddCommand("showtime", R_ShowTime);
+	ri->Cmd_AddCommand("reloadshader", R_ReloadShaderCommand);
 }
 
 void R_InitQueries(void)
