@@ -215,7 +215,7 @@ vec2 GetMapTC(vec3 pos)
 
 vec3 GetCausicMap(vec3 m_vertPos)
 {
-	vec2 coord = (m_vertPos.xy * 0.005) + ((u_Time * 0.1) * normalize(m_vertPos).xy * 0.5);
+	vec2 coord = (m_vertPos.xy * m_vertPos.z * 0.000025) + ((u_Time * 0.1) * normalize(m_vertPos).xy * 0.5);
 	return texture(u_DetailMap, coord).rgb;
 }
 
@@ -682,6 +682,8 @@ float getwavesDetail(vec2 position) {
 
 void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
 #if !defined(__LQ_MODE__) && defined(REAL_WAVES)
+#define waveDetailFactor 0.333 //0.5
+
 	if (USE_OCEAN > 0.0)
 	{
 		height = getwaves(pos.xy) * depth;
@@ -702,9 +704,9 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 
 		ex = vec2(e, 0.0) * 64.0;
 
-		float dheight = getwavesDetail(pos.xy * 0.5) * depth;
-		float dheight2 = getwavesDetail((pos.xy * 0.5) + ex.xy) * depth;
-		float dheight3 = getwavesDetail((pos.xy * 0.5) + ex.yx) * depth;
+		float dheight = getwavesDetail(pos.xy * waveDetailFactor) * depth;
+		float dheight2 = getwavesDetail((pos.xy * waveDetailFactor) + ex.xy) * depth;
+		float dheight3 = getwavesDetail((pos.xy * waveDetailFactor) + ex.yx) * depth;
 
 		vec3 da = vec3(depth, dheight * 0.05, depth);
 		vec3 db = vec3(depth - e, dheight2 * 0.05, depth);
@@ -719,13 +721,20 @@ void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float hei
 	{
 		vec2 ex = vec2(e, 0) * 64.0;
 
-		height = getwavesDetail(pos.xy * 0.5) * depth;
-		float height2 = getwavesDetail((pos.xy * 0.5) + ex.xy) * depth;
-		float height3 = getwavesDetail((pos.xy * 0.5) + ex.yx) * depth;
+		height = getwavesDetail(pos.xy * waveDetailFactor) * depth;
+		float height2 = getwavesDetail((pos.xy * waveDetailFactor) + ex.xy) * depth;
+		float height3 = getwavesDetail((pos.xy * waveDetailFactor) + ex.yx) * depth;
 
-		vec3 da = vec3(pos.x, height, pos.y);
+		/*vec3 da = vec3(pos.x, height, pos.y);
 		waveNormal = normalize(cross(normalize(da - vec3(pos.x - e, height2, pos.y)), normalize(da - vec3(pos.x, height3, pos.y + e))));
 		waveNormal.xz *= 256.0;
+		waveNormal = normalize(waveNormal);
+		lightingNormal = waveNormal;*/
+
+		vec3 da = vec3(depth, height * 0.05, depth);
+		vec3 db = vec3(depth - e, height2 * 0.05, depth);
+		vec3 dc = vec3(depth, height2 * 0.05, depth + e);
+		waveNormal = cross(normalize(da - db), normalize(da - dc));
 		waveNormal = normalize(waveNormal);
 		lightingNormal = waveNormal;
 	}
@@ -1027,9 +1036,12 @@ void main ( void )
 			float vDist = distance(vec3(surfacePoint.x, ViewOrigin.y + waveHeight, surfacePoint.z), ViewOrigin);
 			vec3 vDir = normalize(ViewOrigin - vec3(surfacePoint.x, ViewOrigin.y + waveHeight, surfacePoint.z));
 			surfacePoint += vDir * vDist * height * (pixelIsUnderWater ? -1.0 : 1.0);
+			//if (u_Local0.r == 0.0)
+			//	surfacePoint += lightingNormal * height * u_Local0.g; // 0.875
+			//else if (u_Local0.r == 1.0)
+			//	surfacePoint.y += lightingNormal.y * height * u_Local0.g;
 		}
 #endif //defined(REAL_WAVES) && !defined(__LQ_MODE__)
-
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
 
@@ -1082,7 +1094,7 @@ void main ( void )
 		causicStrength *= 1.0 - clamp(pixDist / 1024.0, 0.0, 1.0);
 
 #if !defined(__LQ_MODE__)
-		if (/*!pixelIsUnderWater &&*/ USE_OCEAN > 0.0)
+		if (USE_OCEAN > 0.0)
 		{
 			if (depth2 < foamExistence.x)
 			{
@@ -1141,7 +1153,7 @@ void main ( void )
 
 
 
-		vec3 caustic = color * GetCausicMap(origWaterMapUpper.xzy);
+		vec3 caustic = color * GetCausicMap(surfacePoint.xzy/*origWaterMapUpper.xzy*/);
 		color = clamp(color + (caustic * causicStrength), 0.0, 1.0);
 
 
