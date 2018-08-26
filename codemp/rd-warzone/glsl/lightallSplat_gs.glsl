@@ -21,7 +21,6 @@ in vec4 PrimaryLightDir_CS_in[];
 in vec2 TexCoord2_CS_in[];
 in vec3 Blending_CS_in[];
 in float Slope_CS_in[];
-in float usingSteepMap_CS_in[];
 
 out precise vec3 WorldPos_FS_in;
 out precise vec2 TexCoord_FS_in;
@@ -34,7 +33,6 @@ out precise vec4 PrimaryLightDir_FS_in;
 out precise vec2 TexCoord2_FS_in;
 out precise vec3 Blending_FS_in;
 flat out float Slope_FS_in;
-flat out float usingSteepMap_FS_in;
 
 
 //
@@ -127,7 +125,6 @@ void main (void)
 		TexCoord2_FS_in			= TexCoord2_CS_in[i];
 		Blending_FS_in			= Blending_CS_in[i];
 		Slope_FS_in				= Slope_CS_in[i];
-		usingSteepMap_FS_in		= usingSteepMap_CS_in[i];
 
 		EmitVertex();
 	}

@@ -120,7 +120,6 @@ out vec4 PrimaryLightDir_CS_in;
 out vec2 TexCoord2_CS_in;
 out vec3 Blending_CS_in;
 out float Slope_CS_in;
-out float usingSteepMap_CS_in;
 #endif
 
 varying vec2	var_TexCoords;

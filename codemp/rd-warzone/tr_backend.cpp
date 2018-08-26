@@ -1606,14 +1606,26 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 			if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES || *drawSurf->surface <= SF_SKIP) continue;
 
+			shader_t *thisShader = tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
+
+			if (thisShader->surfaceFlags & SURF_NODRAW)
+			{// Skip nodraws completely...
+				continue;
+			}
+
+			if (thisShader == tr.defaultShader)
+			{// Don't draw this either...
+				continue;
+			}
+
 #ifdef __ZFAR_CULLING_ON_SURFACES__
 			if (r_occlusion->integer)
 			{
 				if (!backEnd.depthFill
 					&& drawSurf->depthDrawOnly
 					&& !backEnd.projection2D
-					&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isSky
-					&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isWater)
+					&& !thisShader->isSky
+					&& !thisShader->isWater)
 				{// Surface is marked as only for depth draws, skip it unless its sky or water...
 					continue;
 				}
@@ -1657,7 +1669,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 			if (shader != NULL
 				&& shader->isWater
-				&& tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->isWater)
+				&& thisShader->isWater)
 			{
 				isWaterMerge = qtrue;
 			}
@@ -1668,7 +1680,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			{// In depth and shadow passes, let's merge all the non-alpha draws, being a simple solid texture and all...
 				if (shader != NULL
 					&& !shader->hasAlpha
-					&& !tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->hasAlpha)
+					&& !thisShader->hasAlpha)
 				{
 					isDepthMerge = qtrue;
 				}

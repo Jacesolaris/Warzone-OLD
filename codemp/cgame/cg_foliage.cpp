@@ -41,6 +41,10 @@ float		TREE_SCALE_MULTIPLIER = 1.0;
 
 float		PLANT_SCALE_MULTIPLIER = 1.0;
 
+float	CUSTOM_FOLIAGE_MAX_DISTANCE = 0.0;
+char	CustomFoliageModelsList[69][128] = { 0 };
+float	CUSTOM_FOLIAGE_SCALES[69] = { 0.0 };
+
 static const char *TropicalPlantsModelsList[] = {
 	"models/warzone/plants/groundplant01.md3",
 	"models/warzone/plants/groundplant01.md3",
@@ -1492,8 +1496,8 @@ void FOLIAGE_Calc_In_Range_Areas(void)
 
 	int i = 0;
 
-	FOLIAGE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
-	FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
+	FOLIAGE_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
+	FOLIAGE_TREE_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
 	if (MAP_HAS_TREES)
 	{
@@ -1885,9 +1889,9 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 	VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
 
-	FOLIAGE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
+	FOLIAGE_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
 	FOLIAGE_PLANT_VISIBLE_DISTANCE = FOLIAGE_VISIBLE_DISTANCE;//FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
-	FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
+	FOLIAGE_TREE_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
 	if (dist <= FOLIAGE_PLANT_VISIBLE_DISTANCE)
 	{// Draw grass...
@@ -1905,12 +1909,14 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 
 			if (distMult <= 0.0) return;
 
-			float PLANT_SCALE_XY = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale;
-			float PLANT_SCALE_Z = 0.4 * FOLIAGE_PLANT_SCALE[num] * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
+			float customScale = (CUSTOM_FOLIAGE_SCALES[FOLIAGE_PLANT_SELECTION[num]] != 0.0) ? CUSTOM_FOLIAGE_SCALES[FOLIAGE_PLANT_SELECTION[num]] : 1.0;
+
+			float PLANT_SCALE_XY = 0.4 * FOLIAGE_PLANT_SCALE[num] * customScale * PLANT_SCALE_MULTIPLIER*distFadeScale;
+			float PLANT_SCALE_Z = 0.4 * FOLIAGE_PLANT_SCALE[num] * customScale * PLANT_SCALE_MULTIPLIER*distFadeScale*distMult;
 
 			re.reType = RT_PLANT;//RT_MODEL;
 
-			re.origin[2] += 8.0 + (1.0 - (FOLIAGE_PLANT_SCALE[num] * distMult));
+			re.origin[2] += 8.0 + (1.0 - (FOLIAGE_PLANT_SCALE[num] * customScale * distMult));
 
 			re.hModel = FOLIAGE_PLANT_MODELS[FOLIAGE_PLANT_SELECTION[num] - 1];
 
@@ -1933,11 +1939,13 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 			re.customShader = 0;
 			re.renderfx = 0;
 
+			float customScale = (CUSTOM_FOLIAGE_SCALES[FOLIAGE_TREE_SELECTION[num]] != 0.0) ? CUSTOM_FOLIAGE_SCALES[FOLIAGE_TREE_SELECTION[num]] : 1.0;
+
 			if (dist > FOLIAGE_AREA_SIZE*cg_foliageTreeBillboardRangeMult.value || dist > FOLIAGE_TREE_VISIBLE_DISTANCE)
 			{
 				re.reType = RT_SPRITE;
 
-				re.radius = FOLIAGE_TREE_SCALE[num] * 2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num] - 1] * TREE_SCALE_MULTIPLIER;
+				re.radius = FOLIAGE_TREE_SCALE[num] * customScale * 2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num] - 1] * TREE_SCALE_MULTIPLIER;
 
 				re.customShader = FOLIAGE_TREE_BILLBOARD_SHADER[FOLIAGE_TREE_SELECTION[num] - 1];
 
@@ -1963,7 +1971,7 @@ void FOLIAGE_AddToScreen(int num, int passType) {
 				re.reType = RT_MODEL;
 				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num] - 1];
 
-				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER);
+				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num] * customScale * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num] * 2.5*TREE_SCALE_MULTIPLIER);
 
 				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num] - 1];
 
@@ -2548,9 +2556,9 @@ void FOLIAGE_DrawGrass(void)
 		return;
 	}
 
-	FOLIAGE_VISIBLE_DISTANCE = (FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value);
-	FOLIAGE_PLANT_VISIBLE_DISTANCE = (FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value);
-	FOLIAGE_TREE_VISIBLE_DISTANCE = (FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value);
+	FOLIAGE_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : (FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value);
+	FOLIAGE_PLANT_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : (FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value);
+	FOLIAGE_TREE_VISIBLE_DISTANCE = (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0) ? CUSTOM_FOLIAGE_MAX_DISTANCE : (FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value);
 
 	if (!FOLIAGE_INITIALIZED)
 	{// Init/register all foliage models...
@@ -2571,116 +2579,269 @@ void FOLIAGE_DrawGrass(void)
 			strcpy(FOLIAGE_MODEL_SELECTION, IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLIAGE_SET", "default"));
 		}
 
-		char *foliageSet = NULL;
-
-		if (!strcmp(FOLIAGE_MODEL_SELECTION, "grass")) 
+		if (!Q_stricmp(FOLIAGE_MODEL_SELECTION, "custom")) 
 		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grass^5\".\n", "FOLIAGE", cgs.currentmapname);
+			MAP_HAS_TREES = qfalse;
 
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			trap->Print("^1*** ^3%s^5: Map grass selection using \"^7custom^5\" foliage set.\n", "FOLIAGE", cgs.currentmapname);
+
+			int		customRealNormalTempModelsAdded = 0;
+			int		customRealRareTempModelsAdded = 0;
+			char	customNormalFoliageModelsTempList[69][128] = { 0 };
+			char	customRareFoliageModelsTempList[69][128] = { 0 };
+			float	customNormalFoliageModelsTempScalesList[69] = { 1.0 };
+			float	customRareFoliageModelsTempScalesList[69] = { 1.0 };
+
+			CUSTOM_FOLIAGE_MAX_DISTANCE = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLIAGE_MAX_DISTANCE", "0"));
+
+			if (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0)
 			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(GrassyPlantsModelsList[i]);
+				trap->Print("^1*** ^3%s^5: Foliage system using custom max range of \"^7%.4f^5\".\n", "FOLIAGE", CUSTOM_FOLIAGE_MAX_DISTANCE);
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "grassonly"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grassonly^5\".\n", "FOLIAGE", cgs.currentmapname);
 
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
+#define		ANY_AREA_MODEL_POSITION		46
+#define		RARE_MODELS_START			47
+
+			for (i = 0; i < ANY_AREA_MODEL_POSITION; i++)
 			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(GrassOnlyModelsList[i]);
+				char temp[128] = { 0 };
+				strcpy(temp, IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", va("openAreaFoliageModel%i", i), ""));
+				float customScale = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", va("openAreaFoliageModelScale%i", i), "1.0"));
+
+				if (temp && temp[0] != 0 && strlen(temp) > 0)
+				{// Exists...
+					// Add it to temp list, so we can use randoms from it if they don't add a full list...
+					strcpy(customNormalFoliageModelsTempList[customRealNormalTempModelsAdded], temp);
+					customNormalFoliageModelsTempScalesList[customRealNormalTempModelsAdded] = customScale;
+					customRealNormalTempModelsAdded++;
+					// And add it to the real list...
+					strcpy(customNormalFoliageModelsTempList[i], temp);
+					CUSTOM_FOLIAGE_SCALES[i] = customScale;
+				}
+				else if (customRealNormalTempModelsAdded > 0)
+				{// Doesn't exist, so pick one from the previously added list...
+					int choice = irand(0, customRealNormalTempModelsAdded - 1);
+					strcpy(CustomFoliageModelsList[i], customNormalFoliageModelsTempList[choice]);
+					CUSTOM_FOLIAGE_SCALES[i] = customNormalFoliageModelsTempScalesList[choice];
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "tropical"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7tropical^5\".\n", "FOLIAGE", cgs.currentmapname);
 
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			int upto = 0;
+			for (i = RARE_MODELS_START; i < MAX_PLANT_MODELS; i++, upto++)
 			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
+				char temp[128] = { 0 };
+				strcpy(temp, IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", va("rareFoliageModel%i", upto), ""));
+				float customScale = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", va("rareFoliageModelScale%i", upto), "1.0"));
+
+				if (temp && temp[0] != 0 && strlen(temp) > 0)
+				{// Exists...
+				 // Add it to temp list, so we can use randoms from it if they don't add a full list...
+					strcpy(customRareFoliageModelsTempList[customRealRareTempModelsAdded], temp);
+					customRareFoliageModelsTempScalesList[customRealRareTempModelsAdded] = customScale;
+					customRealRareTempModelsAdded++;
+					// And add it to the real list...
+					strcpy(customRareFoliageModelsTempList[i], temp);
+					CUSTOM_FOLIAGE_SCALES[i] = customScale;
+				}
+				else if (customRealRareTempModelsAdded > 0)
+				{// Doesn't exist, so pick one from the previously added list...
+					int choice = irand(0, customRealRareTempModelsAdded - 1);
+					strcpy(CustomFoliageModelsList[i], customRareFoliageModelsTempList[choice]);
+					CUSTOM_FOLIAGE_SCALES[i] = customRareFoliageModelsTempScalesList[choice];
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest^5\".\n", "FOLIAGE", cgs.currentmapname);
 
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(ForestPlantsModelsList[i]);
+			strcpy(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION], IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "anyAreaFoliageModel", ""));
+			CUSTOM_FOLIAGE_SCALES[ANY_AREA_MODEL_POSITION] = 1.0;
+
+			if (!(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION] && CustomFoliageModelsList[ANY_AREA_MODEL_POSITION][0] != 0 && strlen(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION]) > 0))
+			{// Sanity check, fallback to using either a rare or a normal model for the anyArea model, if there was none specified...
+				if (customRealRareTempModelsAdded > 0)
+				{// Have rares? Use one...
+					int choice = irand(0, customRealRareTempModelsAdded - 1);
+					strcpy(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION], customRareFoliageModelsTempList[choice]);
+					CUSTOM_FOLIAGE_SCALES[i] = customRareFoliageModelsTempScalesList[choice];
+				}
+				else if (customRealNormalTempModelsAdded > 0)
+				{// Have standards? Use one...
+					int choice = irand(0, customRealNormalTempModelsAdded - 1);
+					strcpy(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION], customNormalFoliageModelsTempList[choice]);
+					CUSTOM_FOLIAGE_SCALES[i] = customNormalFoliageModelsTempScalesList[choice];
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest2"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest2^5\".\n", "FOLIAGE", cgs.currentmapname);
 
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(ForestPlants2ModelsList[i]);
+			// Sanity check, make sure we have filled all possible slots...
+			if (customRealRareTempModelsAdded > 0)
+			{// Had no Standards? Use Rares...
+				for (i = 0; i < ANY_AREA_MODEL_POSITION; i++, upto++)
+				{
+					if (!CustomFoliageModelsList[i] || CustomFoliageModelsList[i][0] == 0 || strlen(CustomFoliageModelsList[i]) <= 0)
+					{
+						int choice = irand(0, customRealRareTempModelsAdded - 1);
+						strcpy(CustomFoliageModelsList[i], customRareFoliageModelsTempList[choice]);
+						CUSTOM_FOLIAGE_SCALES[i] = customRareFoliageModelsTempScalesList[choice];
+					}
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "fieldgrass"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrass^5\".\n", "FOLIAGE", cgs.currentmapname);
-
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(FieldGrassModelsList[i]);
+			else if (customRealNormalTempModelsAdded > 0)
+			{// Had no Rares? Use Standards...
+				for (i = RARE_MODELS_START; i < MAX_PLANT_MODELS; i++, upto++)
+				{
+					if (!CustomFoliageModelsList[i] || CustomFoliageModelsList[i][0] == 0 || strlen(CustomFoliageModelsList[i]) <= 0)
+					{
+						int choice = irand(0, customRealNormalTempModelsAdded - 1);
+						strcpy(CustomFoliageModelsList[i], customNormalFoliageModelsTempList[choice]);
+						CUSTOM_FOLIAGE_SCALES[i] = customNormalFoliageModelsTempScalesList[choice];
+					}
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "fieldgrassshrubs"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrassshrubs^5\".\n", "FOLIAGE", cgs.currentmapname);
-
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(FieldGrassShrubsModelsList[i]);
+			else if (!(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION] && CustomFoliageModelsList[ANY_AREA_MODEL_POSITION][0] != 0 && strlen(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION]) > 0))
+			{// Had no rares or normal foliages, but we did have an anyArea model, use that for everything...
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					if (!CustomFoliageModelsList[i] || CustomFoliageModelsList[i][0] == 0 || strlen(CustomFoliageModelsList[i]) <= 0)
+					{
+						strcpy(CustomFoliageModelsList[i], CustomFoliageModelsList[ANY_AREA_MODEL_POSITION]);
+						CUSTOM_FOLIAGE_SCALES[i] = 1.0;
+					}
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "mushroomforest"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest^5\".\n", "FOLIAGE", cgs.currentmapname);
-
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
-			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForestModelsList[i]);
+			else
+			{// Had absolutely nothing??? Add standard green grasses everywhere...
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					if (!CustomFoliageModelsList[i] || CustomFoliageModelsList[i][0] == 0 || strlen(CustomFoliageModelsList[i]) <= 0)
+					{
+						strcpy(CustomFoliageModelsList[i], "models/warzone/plants/gcgrass01.md3");
+						CUSTOM_FOLIAGE_SCALES[i] = 1.0;
+					}
+				}
 			}
-		}
-		else if (!strcmp(FOLIAGE_MODEL_SELECTION, "mushroomforest2"))
-		{
-			trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest2^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+			if (!(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION] && CustomFoliageModelsList[ANY_AREA_MODEL_POSITION][0] != 0 && strlen(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION]) > 0))
+			{// Sanity check, still nothing for the anyArea model, default to basic grass model...
+				strcpy(CustomFoliageModelsList[ANY_AREA_MODEL_POSITION], "models/warzone/plants/gcgrass01.md3");
+				CUSTOM_FOLIAGE_SCALES[ANY_AREA_MODEL_POSITION] = 1.0;
+			}
 
 			for (i = 0; i < MAX_PLANT_MODELS; i++)
 			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForest2ModelsList[i]);
+				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(CustomFoliageModelsList[i]);
 			}
 		}
 		else
 		{
-			trap->Print("^1*** ^3%s^5: No map grass selection found. Using default option \"^7tropical^5\".\n", "FOLIAGE", cgs.currentmapname);
+			char *foliageSet = NULL;
 
-			for (i = 0; i < MAX_PLANT_MODELS; i++)
+			if (!strcmp(FOLIAGE_MODEL_SELECTION, "grass"))
 			{
-				FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grass^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(GrassyPlantsModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "grassonly"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7grassonly^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(GrassOnlyModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "tropical"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7tropical^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(ForestPlantsModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "forest2"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7forest2^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(ForestPlants2ModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "fieldgrass"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrass^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(FieldGrassModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "fieldgrassshrubs"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7fieldgrassshrubs^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(FieldGrassShrubsModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "mushroomforest"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForestModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "mushroomforest2"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7mushroomforest2^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForest2ModelsList[i]);
+				}
+			}
+			else
+			{
+				trap->Print("^1*** ^3%s^5: No map grass selection found. Using default option \"^7tropical^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(TropicalPlantsModelsList[i]);
+				}
+			}
+
+			if (MAP_HAS_TREES)
+			{
+				// Read all the tree info from the new .climate ini files...
+				TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
+
+				for (i = 0; i < 9; i++)
+				{
+					FOLIAGE_TREE_MODEL[i] = trap->R_RegisterModel(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""));
+
+					FOLIAGE_TREE_BILLBOARD_SHADER[i] = trap->R_RegisterShader(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardShader%i", i), ""));
+					FOLIAGE_TREE_BILLBOARD_SIZE[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardSize%i", i), "128.0"));
+					FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
+					FOLIAGE_TREE_ZOFFSET[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeZoffset%i", i), "-4.0"));
+				}
 			}
 		}
 
 		PLANT_SCALE_MULTIPLIER = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLIAGE_SCALE", "1.0"));
-
-		if (MAP_HAS_TREES)
-		{
-			// Read all the tree info from the new .climate ini files...
-			TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "1.0"));
-
-			for (i = 0; i < 9; i++)
-			{
-				FOLIAGE_TREE_MODEL[i] = trap->R_RegisterModel(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeModel%i", i), ""));
-
-				FOLIAGE_TREE_BILLBOARD_SHADER[i] = trap->R_RegisterShader(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardShader%i", i), ""));
-				FOLIAGE_TREE_BILLBOARD_SIZE[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeBillboardSize%i", i), "128.0"));
-				FOLIAGE_TREE_RADIUS[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeRadius%i", i), "24.0"));
-				FOLIAGE_TREE_ZOFFSET[i] = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", va("treeZoffset%i", i), "-4.0"));
-			}
-		}
 
 		FOLIAGE_INITIALIZED = qtrue;
 	}

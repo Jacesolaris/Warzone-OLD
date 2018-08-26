@@ -53,6 +53,9 @@ uniform vec3								u_PrimaryLightColor;
 uniform vec4								u_CubeMapInfo;
 uniform float								u_CubeMapStrength;
 
+uniform float								u_MaterialSpeculars[MATERIAL_LAST];
+uniform float								u_MaterialReflectiveness[MATERIAL_LAST];
+
 uniform int									u_lightCount;
 uniform vec3								u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float								u_lightDistances[MAX_DEFERRED_LIGHTS];
@@ -198,7 +201,7 @@ vec4 positionMapAtCoord ( vec2 coord, out bool changedToWater )
 		{
 			vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
 		
-			if (wMap.z > pos.z || isSky)
+			if ((wMap.z > pos.z || isSky) && u_ViewOrigin.z > wMap.z)
 			{
 				pos.xyz = wMap.xyz;
 
@@ -386,6 +389,19 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	
 	cubeReflectionScale = cubeReflectionScale * 0.75 + 0.25;
 	//cubeReflectionScale = cubeReflectionScale * u_Local3.r + u_Local3.g;
+
+	if (int(MATERIAL_TYPE) < MATERIAL_LAST)
+	{// Check for game specified overrides...
+		if (u_MaterialSpeculars[int(MATERIAL_TYPE)] != 0.0)
+		{
+			specularReflectionScale = u_MaterialSpeculars[int(MATERIAL_TYPE)];
+		}
+
+		if (u_MaterialReflectiveness[int(MATERIAL_TYPE)] != 0.0)
+		{
+			cubeReflectionScale = u_MaterialReflectiveness[int(MATERIAL_TYPE)];
+		}
+	}
 
 	settings.x = specularReflectionScale;
 	settings.y = cubeReflectionScale;
@@ -1148,7 +1164,7 @@ void main(void)
 
 	/*if (u_Local3.g != 0.0)
 	{// wet testing
-		wetness += 1.0;
+		wetness += u_Local3.r;
 	}*/
 
 
@@ -1389,7 +1405,7 @@ void main(void)
 				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance * origColorStrength * 8.0;
 
 				vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
-				lightColor.rgb += blinn + (blinn * wetness);
+				lightColor.rgb += blinn + (blinn * wetness * 0.1);
 
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
@@ -1459,7 +1475,7 @@ void main(void)
 #endif //__LQ_MODE__
 
 					vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
-					addedLight.rgb += blinn + (blinn * wetness);
+					addedLight.rgb += blinn + (blinn * wetness * 0.1);
 				}
 			}
 
@@ -1473,7 +1489,7 @@ void main(void)
 	{
 #if 1
 		if (wetness > 0.0)
-			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + 0.37504, ssReflection);
+			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + wetness/*0.37504*/, ssReflection);
 		else
 			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower, ssReflection);
 #else

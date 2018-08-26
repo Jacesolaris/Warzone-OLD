@@ -2457,7 +2457,7 @@ struct packedVertex_t
 };
 
 #ifdef __USE_VBO_AREAS__
-#define NUM_MAP_AREAS 64//16//9
+#define NUM_MAP_AREAS 256//64//16//9
 #define NUM_MAP_SECTIONS sqrt(NUM_MAP_AREAS)
 
 struct mapArea_t
@@ -4913,6 +4913,10 @@ void R_MergeLeafSurfaces(void)
 
 			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
 
+//#ifdef __USE_VBO_AREAS__
+//			int area1 = GetVBOArea(surf1->cullinfo.centerOrigin);
+//#endif //__USE_VBO_AREAS__
+
 			for (k = j + 1; k < leaf->nummarksurfaces; k++)
 			{
 				int surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
@@ -4922,6 +4926,12 @@ void R_MergeLeafSurfaces(void)
 
 				msurface_t *surf2 = s_worldData.surfaces + surfNum2;
 				shader_t *shader2 = surf2->shader;
+
+//#ifdef __USE_VBO_AREAS__
+//				int area2 = GetVBOArea(surf1->cullinfo.centerOrigin);
+//				if (area1 != area2)
+//					continue;
+//#endif //__USE_VBO_AREAS__
 
 				if (shader1 != shader2 && deforms && ShaderRequiresCPUDeforms(shader2))
 					continue;

@@ -746,7 +746,7 @@ void main()
 			terrainColor = vec4(0.0, 0.0, 0.0, 1.0);
 		}
 
-		if (SHADER_MATERIAL_TYPE == 1024.0 && terrainColor != 1.0)
+		if (SHADER_MATERIAL_TYPE == 1024.0 && terrainColor.a != 1.0)
 		{// This is sky, and aurora is enabled...
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...

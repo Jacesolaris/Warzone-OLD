@@ -15,6 +15,8 @@
 //#include "../Recast/Sample_Debug.h"
 #endif
 
+extern const char *materialNames[MATERIAL_LAST];
+
 extern char currentMapName[128];
 
 extern	world_t		s_worldData;
@@ -1505,6 +1507,8 @@ vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
 float		MOON_GLOW_STRENGTH = 0.5;
 float		MOON_ROTATION_RATE = 0.08;
 char		ROAD_TEXTURE[256] = { 0 };
+float		MATERIAL_SPECULAR_STRENGTHS[MATERIAL_LAST] = { 0.0 };
+float		MATERIAL_SPECULAR_REFLECTIVENESS[MATERIAL_LAST] = { 0.0 };
 
 qboolean	JKA_WEATHER_ENABLED = qfalse;
 qboolean	WZ_WEATHER_ENABLED = qfalse;
@@ -1937,8 +1941,6 @@ void MAPPING_LoadMapInfo(void)
 		GRASS_SIZE_MULTIPLIER_UNDERWATER = atof(IniRead(mapname, "GRASS", "GRASS_SIZE_MULTIPLIER_UNDERWATER", "1.0"));
 	
 		// Parse any specified extra surface material types to add grasses to...
-		extern const char *materialNames[MATERIAL_LAST];
-
 		for (int m = 0; m < 8; m++)
 		{
 			char grassMaterial[64] = { 0 };
@@ -1956,6 +1958,19 @@ void MAPPING_LoadMapInfo(void)
 				}
 			}
 		}
+	}
+
+	//
+	// Lighting...
+	//
+	for (int i = 0; i < MATERIAL_LAST; i++)
+	{
+		MATERIAL_SPECULAR_STRENGTHS[i] = atof(IniRead(mapname, "MATERIAL_SPECULAR", va("%s", materialNames[i]), "0.0"));
+	}
+
+	for (int i = 0; i < MATERIAL_LAST; i++)
+	{
+		MATERIAL_SPECULAR_REFLECTIVENESS[i] = atof(IniRead(mapname, "MATERIAL_REFLECTIVENESS", va("%s", materialNames[i]), "0.0"));
 	}
 
 	//

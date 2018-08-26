@@ -1737,6 +1737,9 @@ typedef enum
 	UNIFORM_LOCAL11,
 	UNIFORM_LOCAL12,
 
+	UNIFORM_MATERIAL_SPECULARS,
+	UNIFORM_MATERIAL_REFLECTIVENESS,
+
 	UNIFORM_TESSELATION_INFO,
 
 	UNIFORM_LIGHTCOUNT,
@@ -4390,6 +4393,12 @@ void DEBUG_EndTimer(qboolean usePerfCvar);
 tr_optimize.cpp
 */
 void R_OptimizeMesh(uint32_t *numVerts, uint32_t *numIndexes, uint32_t *indexes, vec3_t *verts);
+
+
+#ifdef __USE_VBO_AREAS__
+int GetVBOArea(vec3_t origin);
+#endif //__USE_VBO_AREAS__
+
 
 #include "tr_glsl.h"
 

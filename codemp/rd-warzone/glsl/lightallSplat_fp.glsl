@@ -370,6 +370,66 @@ vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
 }
 #endif //defined(__HIGH_PASS_SHARPEN__)
 
+vec3 vLocalSeed;
+
+float hash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float noise(in vec3 o) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * 1009.0;
+
+	float a = hash(n+  0.0);
+	float b = hash(n+  1.0);
+	float c = hash(n+ 57.0);
+	float d = hash(n+ 58.0);
+	
+	float e = hash(n+  0.0 + 1009.0);
+	float f = hash(n+  1.0 + 1009.0);
+	float g = hash(n+ 57.0 + 1009.0);
+	float h = hash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 m = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float SmoothNoise( vec3 p )
+{
+    float f;
+    f  = 0.5000*noise( p ); p = m*p*2.02;
+    f += 0.2500*noise( p ); 
+	
+    return f * (1.0 / (0.5000 + 0.2500));
+}
+
+float randZeroOne()
+{
+	return SmoothNoise(vec3(vLocalSeed.xy, 0.0) * 0.01); // * 0.01 to smooth over a larger area...
+}
+
 vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 {
 	vec4 xaxis;
@@ -412,9 +472,10 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	return color;
 }
 
-vec4 QuickMix(vec3 color1, vec3 color2, float mix)
+vec4 SmoothMix(vec3 color1, vec3 color2, float mixf)
 {
-	float mixVal = clamp(mix, 0.0, 1.0);
+	float mixVal = clamp(mixf, 0.0, 1.0);
+	mixVal = smoothstep(0.0, 1.0, mixf);
 	return vec4((color1 * (1.0 - mixVal)) + (color2 * mixVal), 1.0);
 }
 
@@ -449,27 +510,27 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 	{
 		vec4 tex = GetMap(u_SplatMap1, scale, depth);
 		//splatColor = mix(splatColor, tex, control.r * tex.a);
-		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.r * tex.a);
+		splatColor = SmoothMix(splatColor.rgb, tex.rgb, control.r * tex.a);
 	}
 
 	if (SHADER_HAS_SPLATMAP2 > 0.0 && control.g > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap2, scale, depth);
 		//splatColor = mix(splatColor, tex, control.g * tex.a);
-		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.g * tex.a);
+		splatColor = SmoothMix(splatColor.rgb, tex.rgb, control.g * tex.a);
 	}
 
 	if (SHADER_HAS_SPLATMAP3 > 0.0 && control.b > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap3, scale, depth);
 		//splatColor = mix(splatColor, tex, control.b * tex.a);
-		splatColor = QuickMix(splatColor.rgb, tex.rgb, control.b * tex.a);
+		splatColor = SmoothMix(splatColor.rgb, tex.rgb, control.b * tex.a);
 	}
 
 	if (SHADER_HAS_SPLATMAP4 > 0.0 && control.a > 0.0 && IsRoadmapMaterial())
 	{
 		vec4 tex = GetMap(u_RoadMap, scale, depth);
-		splatColor = QuickMix(splatColor.rgb, tex.rgb, pow(control.a * 3.0, 0.5) * tex.a);
+		splatColor = SmoothMix(splatColor.rgb, tex.rgb, pow(control.a * 3.0, 0.5) * tex.a);
 	}
 
 	if (depth != -1.0)
@@ -497,12 +558,14 @@ vec4 GenerateTerrainMap(vec2 coord)
 #ifdef __USE_FULL_SPLAT_BLENDFUNC__
 	return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 #else //!__USE_FULL_SPLAT_BLENDFUNC__
-	return QuickMix(tex1.rgb, tex2.rgb, 1.0 - (mixVal * a1));
+	return SmoothMix(tex1.rgb, tex2.rgb, 1.0 - clamp(mixVal * a1, 0.0, 1.0));
 #endif //__USE_FULL_SPLAT_BLENDFUNC__
 }
 
-vec4 GetDiffuse(vec2 texCoords, float pixRandom)
+vec4 GetDiffuse2(vec2 texCoords, out float a1)
 {
+	a1 = 0.0;
+
 	if (USE_REGIONS > 0.0 || USE_TRIPLANAR > 0.0)
 	{
 		if (SHADER_SHOW_SPLAT > 0.0)
@@ -555,65 +618,30 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 		if (USE_REGIONS > 0.0 
 			&& (SHADER_HAS_SPLATMAP1 > 0 || SHADER_HAS_SPLATMAP2 > 0 || SHADER_HAS_SPLATMAP3 > 0 || SHADER_HAS_SPLATMAP4 > 0))
 		{// Regions...
-			return GenerateTerrainMap(texCoords);
+			vec4 terrain = GenerateTerrainMap(texCoords);
+			a1 = GetDepthForPixel(terrain);
+			return terrain;
 		}
 		else
 #endif //__USE_REGIONS__
 		{// Tri-Planar...
-			if (SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 128.0 + (64.0 * pixRandom))
-			{// Steep maps (water edges)...
-				float maxAbove = 128.0 + (64.0 * pixRandom);
-				float mixVal = clamp(((SHADER_WATER_LEVEL + maxAbove) - m_vertPos.z) / maxAbove, 0.0, 1.0);
-
-				float a1 = 0.0;
-				float a2 = 0.0;
-				vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
-				vec4 tex2 = GetMap(u_DiffuseMap, 0.0075, a2);
-
-				if (SHADER_HAS_SPLATMAP1 <= 0.0 && SHADER_HAS_SPLATMAP2 <= 0.0 && SHADER_HAS_SPLATMAP3 <= 0.0 && SHADER_HAS_SPLATMAP4 <= 0.0)
-				{// No splat maps...
-#ifdef __USE_FULL_SPLAT_BLENDFUNC__
-					return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
-#else //!__USE_FULL_SPLAT_BLENDFUNC__
-					return QuickMix(tex1.rgb, tex2.rgb, 1.0 - (mixVal * a1));
-#endif //__USE_FULL_SPLAT_BLENDFUNC__
-				}
-
-				// Splat mapping...
-				float a3 = 0.0;
-				vec4 tex3 = GetSplatMap(texCoords, tex2, a3);
-
-				a1 = 1.0 - a1;
-				a3 = 1.0 - a3;
-
-#ifdef __USE_FULL_SPLAT_BLENDFUNC__
-				return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex3, a3 * (1.0 - (a3 * mixVal))), 1.0);
-#else //!__USE_FULL_SPLAT_BLENDFUNC__
-				return QuickMix(tex1.rgb, tex3.rgb, 1.0 - (mixVal * a1));
-#endif //__USE_FULL_SPLAT_BLENDFUNC__
-			}
-			else if (USE_TRIPLANAR >= 2.0 && (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())))
+			if (USE_TRIPLANAR >= 2.0 && (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())))
 			{// Steep maps (using vertex colors)...
 				// Splat mapping...
-				float a1 = 0.0;
+				a1 = 0.0;
 				vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
 				return GetSplatMap(texCoords, tex, a1);
-			}
-			else if (SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0)
-			{// Steep maps (high angles)...
-				float a1 = -1.0;
-				return GetMap(u_SteepMap, 0.0025, a1);
 			}
 			else if (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial()))
 			{// Steep maps (low angles)...
 				// Splat mapping...
-				float a1 = 0.0;
+				a1 = 0.0;
 				vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
 				return GetSplatMap(texCoords, tex, a1);
 			}
 			else
 			{
-				float a1 = -1.0;
+				a1 = -1.0;
 				return GetMap(u_DiffuseMap, 0.0075, a1);
 			}
 		}
@@ -624,18 +652,48 @@ vec4 GetDiffuse(vec2 texCoords, float pixRandom)
 	}
 }
 
-vec3 vLocalSeed;
-
-// This function returns random number from zero to one
-float randZeroOne()
+vec4 GetDiffuse(vec2 texCoords)
 {
-    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
-    n = n * (n * n * 15731u + 789221u);
-    n = (n >> 9u) | 0x3F800000u;
+	float diffuseA = 0.0;
+	vec4 diffuse = GetDiffuse2(texCoords, diffuseA);
 
-    float fRes =  2.0 - uintBitsToFloat(n);
-    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
-    return fRes;
+	if (USE_REGIONS > 0.0 || USE_TRIPLANAR > 0.0)
+	{
+		if (SHADER_HAS_STEEPMAP > 0.0 && var_Slope > 0)
+		{// Do full slope blending...
+			float a1 = -1.0;
+			vec4 steep = GetMap(u_SteepMap, 0.0025, a1);
+			diffuse.rgb = mix(diffuse.rgb, steep.rgb, var_Slope * steep.a);
+		}
+
+		// Do water edge blending...
+		float waterBlendMaxZ = SHADER_WATER_LEVEL + 192.0;
+		float waterBlendMaxHeight = 192.0;
+
+		if (SHADER_HAS_WATEREDGEMAP > 0.0 && USE_REGIONS <= 0.0 && m_vertPos.z <= waterBlendMaxZ)
+		{// Steep maps (water edges)...
+			vLocalSeed = m_vertPos.xyz;
+			float pixRandom = randZeroOne();
+
+			waterBlendMaxHeight = 64.0 + (pixRandom * 128.0);
+			waterBlendMaxZ = SHADER_WATER_LEVEL + waterBlendMaxHeight;
+
+			float mixVal = 1.0 - clamp(max(waterBlendMaxZ - m_vertPos.z, 0.0) / waterBlendMaxHeight, 0.0, 1.0);
+
+			float a1 = 0.0;
+			vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
+			a1 = clamp(a1, 0.0, 1.0);
+
+#ifdef __USE_FULL_SPLAT_BLENDFUNC__
+			float a2 = clamp(diffuseA, 0.0, 1.0);
+			diffuse = vec4(splatblend(tex1, a1 * (a1 * mixVal), diffuse, a2 * (1.0 - (a2 * mixVal))), 1.0);
+#else //!__USE_FULL_SPLAT_BLENDFUNC__
+			diffuse = SmoothMix(tex1.rgb, diffuse.rgb, max(mixVal, a1 * mixVal));
+#endif //__USE_FULL_SPLAT_BLENDFUNC__
+		}
+	}
+
+	return diffuse;
 }
 
 const float							fBranchHardiness = 0.001;
@@ -684,13 +742,6 @@ void main()
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
 
 	vec2 texCoords = m_TexCoords.xy;
-	float pixRandom = 0.0;
-
-	if (USE_TRIPLANAR > 0.0 && SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL + 192.0)
-	{// Only water edge map surfaces use this atm... Other stuff can skip calculation...
-		vLocalSeed = m_vertPos.xyz;
-		pixRandom = randZeroOne();
-	}
 
 #if 0 // Shouldn't need this on splatmap draws...
 	if (SHADER_SWAY > 0.0)
@@ -706,7 +757,7 @@ void main()
 		colorMap = vec4(1.0);
 	}
 
-	vec4 diffuse = GetDiffuse(texCoords, pixRandom);
+	vec4 diffuse = GetDiffuse(texCoords);
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * colorMap.a, 0.0, 1.0);

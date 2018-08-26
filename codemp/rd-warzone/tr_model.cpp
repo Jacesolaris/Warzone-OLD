@@ -744,14 +744,14 @@ static qboolean R_LoadAssImp(model_t * mod, int lod, void *buffer, const char *m
 			sh = tr.defaultShader;
 		}
 
-		if (!sh || sh == tr.defaultShader)
-		{
-			//if (aiSurf->mName.data && aiSurf->mName.data[0] && aiSurf->mName.length && StringContainsWord(aiSurf->mName.C_Str(), "collision"))
-			{// A collision surface, set it to nodraw... TODO: Generate planes?!?!?!?
-				//sh = R_FindShader("textures/system/nodraw", lightmapsNone, stylesDefault, qtrue);
-				numRemoved++;
-				continue;
-			}
+		if (!sh 
+			|| sh == tr.defaultShader 
+			|| (sh->surfaceFlags & SURF_NODRAW)
+			|| (aiSurf->mName.data && aiSurf->mName.data[0] && aiSurf->mName.length && StringContainsWord(aiSurf->mName.C_Str(), "collision"))
+			|| (aiSurf->mName.data && aiSurf->mName.data[0] && aiSurf->mName.length && StringContainsWord(aiSurf->mName.C_Str(), "nodraw")))
+		{// A collision surface, set it to nodraw... TODO: Generate planes?!?!?!?
+			numRemoved++;
+			continue;
 		}
 
 		// give pointer to model for Tess_SurfaceMDX
@@ -2563,6 +2563,13 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 
 			std::string finalPath = R_FindAndAdjustShaderNames(mod_name, surf->name, textureName);
 			sh = R_FindShader(finalPath.c_str(), lightmapsNone, stylesDefault, qtrue);
+
+			if ((sh && (sh == tr.defaultShader || (sh->surfaceFlags & SURF_NODRAW)))
+				|| StringContainsWord(sh->name, "collision")
+				|| StringContainsWord(sh->name, "nodraw"))
+			{// A collision surface, set it to nodraw... TODO: Generate planes?!?!?!?
+				continue;
+			}
 
 			if (sh == NULL || sh == tr.defaultShader)
 			{

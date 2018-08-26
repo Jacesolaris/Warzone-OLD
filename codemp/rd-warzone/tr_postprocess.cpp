@@ -2385,6 +2385,9 @@ extern vec3_t		MAP_INFO_PLAYABLE_MAXS;
 extern qboolean		PROCEDURAL_SNOW_ENABLED;
 extern float		PROCEDURAL_SNOW_LOWEST_ELEVATION;
 
+extern float		MATERIAL_SPECULAR_STRENGTHS[MATERIAL_LAST];
+extern float		MATERIAL_SPECULAR_REFLECTIVENESS[MATERIAL_LAST];
+
 void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2552,6 +2555,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	}
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	GLSL_SetUniformFloatxX(shader, UNIFORM_MATERIAL_SPECULARS, MATERIAL_SPECULAR_STRENGTHS, MATERIAL_LAST);
+	GLSL_SetUniformFloatxX(shader, UNIFORM_MATERIAL_REFLECTIVENESS, MATERIAL_SPECULAR_REFLECTIVENESS, MATERIAL_LAST);
 	
 	GLSL_SetUniformInt(shader, UNIFORM_LIGHTCOUNT, NUM_LIGHTS);
 

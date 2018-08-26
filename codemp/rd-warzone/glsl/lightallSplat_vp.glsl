@@ -473,7 +473,8 @@ void main()
 
 			if (pitch > 46.0 || pitch < -46.0)
 			{
-				var_Slope = 1.0;
+				//var_Slope = 1.0;
+				var_Slope = clamp((length(pitch) - 46.0) / 44.0, 0.0, 1.0);
 			}
 			else
 			{

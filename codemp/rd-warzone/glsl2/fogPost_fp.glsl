@@ -45,7 +45,7 @@ vec4 positionMapAtCoord ( vec2 coord )
 		{
 			vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
 		
-			if (wMap.z > pos.z || isSky)
+			if ((wMap.z > pos.z || isSky) && u_ViewOrigin.z > wMap.z)
 			{
 				pos.xyz = wMap.xyz;
 			}

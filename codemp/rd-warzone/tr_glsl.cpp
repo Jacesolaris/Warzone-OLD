@@ -1363,6 +1363,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local11", GLSL_VEC4, 1 },
 	{ "u_Local12", GLSL_VEC4, 1 },
 
+	{ "u_MaterialSpeculars", GLSL_FLOAT, MATERIAL_LAST },
+	{ "u_MaterialReflectiveness", GLSL_FLOAT, MATERIAL_LAST },
+
 	{ "u_TesselationInfo", GLSL_VEC4, 1 },
 
 	{ "u_lightCount", GLSL_INT, 1 },
@@ -1600,6 +1603,7 @@ const char glslMaterialsList[] =
 "#define MATERIAL_MAGIC_PARTICLES_TREE			40\n"\
 "#define MATERIAL_MAGIC_PARTICLES				41\n"\
 "#define MATERIAL_PORTAL						42\n"\
+"#define MATERIAL_LAST							43\n"\
 "#define MATERIAL_SKY							1024\n"\
 "#define MATERIAL_SUN							1025\n"\
 "\n";
