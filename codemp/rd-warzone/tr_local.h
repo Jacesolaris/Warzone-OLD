@@ -246,6 +246,8 @@ extern vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
 extern qboolean		MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS];
 extern float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS];
 extern float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS];
+extern float		MAP_GLOW_CONEANGLE[MAX_GLOW_LOCATIONS];
+extern vec3_t		MAP_GLOW_CONEDIRECTION[MAX_GLOW_LOCATIONS];
 
 #define				MAX_WORLD_GLOW_DLIGHT_RANGE MAX_DEFERRED_LIGHT_RANGE
 #define				MAX_WORLD_GLOW_DLIGHTS (MAX_DEFERRED_LIGHTS - 1)
@@ -765,6 +767,8 @@ typedef struct dlight_s {
 	vec3_t	origin;
 	vec3_t	color;				// range from 0.0 to 1.0, should be color normalized
 	float	radius;
+	float	coneAngle;
+	vec3_t	coneDirection;
 
 	vec3_t	transformed;		// origin in local coordinate system
 	int		additive;			// texture detail is lost tho when the lightmap is dark
@@ -1241,6 +1245,7 @@ typedef struct {
 	float			emissiveRadiusScale;
 	float			emissiveColorScale;
 	float			emissiveHeightScale;
+	float			emissiveConeAngle;
 
 	vec3_t			particleColor;
 
@@ -1747,6 +1752,8 @@ typedef enum
 	UNIFORM_LIGHTPOSITIONS,
 	UNIFORM_LIGHTDISTANCES,
 	UNIFORM_LIGHTHEIGHTSCALES,
+	UNIFORM_LIGHT_CONEANGLES,
+	UNIFORM_LIGHT_CONEDIRECTIONS,
 	UNIFORM_LIGHT_MAX,
 	UNIFORM_LIGHT_MAX_DISTANCE,
 	UNIFORM_LIGHTCOLORS,
@@ -3845,6 +3852,7 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
 void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
+void GLSL_SetUniformVec2xX(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
 void GLSL_SetUniformVec3xX(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
 void GLSL_SetUniformFloatxX(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
 void GLSL_SetUniformVec3x64(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);

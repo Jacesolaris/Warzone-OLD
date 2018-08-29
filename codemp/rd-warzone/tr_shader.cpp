@@ -2823,6 +2823,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				stage->emissiveColorScale = 1.5;
 
 			stage->emissiveHeightScale = 0.0;
+			stage->emissiveConeAngle = 0.0;
 
 			continue;
 		}
@@ -2952,6 +2953,19 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			stage->emissiveHeightScale = atof(token);
+			continue;
+		}
+		else if (Q_stricmp(token, "emissiveConeAngle") == 0)
+		{
+			token = COM_ParseExt(text, qfalse);
+			if (token[0] == 0)
+			{
+				ri->Printf(PRINT_WARNING, "WARNING: missing parameter for emissiveConeAngle exponent in shader '%s'\n", shader.name);
+				stage->emissiveConeAngle = 0.0;
+				continue;
+			}
+
+			stage->emissiveConeAngle = atof(token);
 			continue;
 		}
 		//

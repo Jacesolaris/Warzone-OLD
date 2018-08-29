@@ -4160,6 +4160,8 @@ vec3_t		MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS] = { 0 };
 vec4_t		MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS] = { 0 };
 float		MAP_GLOW_RADIUSES[MAX_GLOW_LOCATIONS] = { 0 };
 float		MAP_GLOW_HEIGHTSCALES[MAX_GLOW_LOCATIONS] = { 0 };
+float		MAP_GLOW_CONEANGLE[MAX_GLOW_LOCATIONS] = { 0 };
+vec3_t		MAP_GLOW_CONEDIRECTION[MAX_GLOW_LOCATIONS] = { 0 };
 qboolean	MAP_GLOW_COLORS_AVILABLE[MAX_GLOW_LOCATIONS] = { qfalse };
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
@@ -4194,6 +4196,8 @@ int R_CloseLightNear(vec3_t pos, float distance)
 {
 	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
 	{
+		if (MAP_GLOW_CONEANGLE[i] != 0.0) continue;
+
 		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < distance)
 		{
 			return i;
@@ -4207,6 +4211,8 @@ int R_CloseLightOfColorNear(vec3_t pos, float distance, vec4_t color, float colo
 {
 	for (int i = 0; i < NUM_MAP_GLOW_LOCATIONS; i++)
 	{
+		if (MAP_GLOW_CONEANGLE[i] != 0.0) continue;
+
 		if (Distance(MAP_GLOW_LOCATIONS[i], pos) < distance)
 		{
 			if (Distance(MAP_GLOW_COLORS[i], color) < colorTolerance) // forget alpha...
@@ -4262,6 +4268,11 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 		float				emissiveRadiusScale = 0.0;
 		float				emissiveColorScale = 0.0;
 		float				emissiveHeightScale = 0.0;
+		float				emissiveConeAngle = 0.0;
+		vec3_t				emissiveConeDirection = { 0.0 };
+		emissiveConeDirection[0] = 0.0;
+		emissiveConeDirection[1] = 0.0;
+		emissiveConeDirection[2] = 0.0;
 
 		qboolean	hasGlow = qfalse;
 		vec4_t		glowColor = { 0 };
@@ -4311,6 +4322,48 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					emissiveRadiusScale = surf->shader->stages[stage]->emissiveRadiusScale;
 					emissiveColorScale = surf->shader->stages[stage]->emissiveColorScale;
 					emissiveHeightScale = surf->shader->stages[stage]->emissiveHeightScale;
+
+					if (surf->cullinfo.type & CULLINFO_SPHERE)
+					{
+						radius = surf->cullinfo.radius;
+					}
+					else if (surf->cullinfo.type & CULLINFO_BOX)
+					{
+						radius = Distance(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]) / 2.0;
+					}
+
+					if (/*surf->shader->stages[stage]->emissiveConeAngle > 0.0 &&*/ radius >= 32.0)
+					{
+						//if (*surf->data == SF_FACE || *surf->data == SF_TRIANGLES)
+						{
+							srfBspSurface_t *bspSurf = (srfBspSurface_t *)surf->data;
+							if (bspSurf)
+							{
+								emissiveConeAngle = surf->shader->stages[stage]->emissiveConeAngle;
+								//VectorCopy(bspSurf->verts[0].normal, emissiveConeDirection);
+								emissiveConeDirection[0] = bspSurf->verts[0].normal[0] * 2.0 - 1.0;
+								emissiveConeDirection[1] = bspSurf->verts[0].normal[1] * 2.0 - 1.0;
+								emissiveConeDirection[2] = bspSurf->verts[0].normal[2] * 2.0 - 1.0;
+							}
+						}
+					}
+					else
+					{
+						//if (*surf->data == SF_FACE || *surf->data == SF_TRIANGLES)
+						{
+							srfBspSurface_t *bspSurf = (srfBspSurface_t *)surf->data;
+							if (bspSurf && surf->shader->stages[stage]->emissiveConeAngle > 0.0)
+							{
+								emissiveConeAngle = surf->shader->stages[stage]->emissiveConeAngle;
+								emissiveConeDirection[0] = bspSurf->verts[0].normal[0] * 2.0 - 1.0;
+								emissiveConeDirection[1] = bspSurf->verts[0].normal[1] * 2.0 - 1.0;
+								emissiveConeDirection[2] = bspSurf->verts[0].normal[2] * 2.0 - 1.0;
+							}
+						}
+					}
+
+					radius = 0;
+
 					//ri->Printf(PRINT_WARNING, "%s color is %f %f %f.\n", surf->shader->stages[stage]->bundle[0].image[0]->imgName, glowColor[0], glowColor[1], glowColor[2]);
 					break;
 				}
@@ -4359,7 +4412,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 			int sameColorTooCloseID = R_CloseLightOfColorNear(surfOrigin, 16.0, glowColor, 99999.0);
 			int sameColorGlowNearID = R_CloseLightOfColorNear(surfOrigin, EMISSIVE_MERGE_RADIUS, glowColor, 1.0);
 
-			if (sameColorTooCloseID >= 0)
+			if (emissiveConeAngle == 0.0 && sameColorTooCloseID >= 0)
 			{// Don't add this duplicate light at all... Just mix the colors... In case theres 2 overlayed textures of diff colors, etc...
 				MAP_GLOW_COLORS[sameColorTooCloseID][0] = (MAP_GLOW_COLORS[sameColorTooCloseID][0] + glowColor[0]) / 2.0;
 				MAP_GLOW_COLORS[sameColorTooCloseID][1] = (MAP_GLOW_COLORS[sameColorTooCloseID][1] + glowColor[1]) / 2.0;
@@ -4374,7 +4427,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 						, MAP_GLOW_COLORS[sameColorTooCloseID][0], MAP_GLOW_COLORS[sameColorTooCloseID][1], MAP_GLOW_COLORS[sameColorTooCloseID][2]);
 				}
 			}
-			else if (sameColorGlowNearID >= 0)
+			else if (emissiveConeAngle == 0.0 && sameColorGlowNearID >= 0)
 			{// Already the same color light nearby... Merge...
 				// Add extra radius to the original one, instead of adding a new light...
 				float distFromOther = Distance(MAP_GLOW_LOCATIONS[sameColorGlowNearID], surfOrigin);
@@ -4418,17 +4471,23 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
 					MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS] = radius * emissiveRadiusScale * 2.25;
 					MAP_GLOW_HEIGHTSCALES[NUM_MAP_GLOW_LOCATIONS] = emissiveHeightScale;
+					
+					MAP_GLOW_CONEANGLE[NUM_MAP_GLOW_LOCATIONS] = emissiveConeAngle;
+					VectorCopy(emissiveConeDirection, MAP_GLOW_CONEDIRECTION[NUM_MAP_GLOW_LOCATIONS]);
+					
 					MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 
-					if (r_debugEmissiveLights->integer)
+					//if (r_debugEmissiveLights->integer)
 					{
-						ri->Printf(PRINT_WARNING, "Light %i (at %i %i %i) radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f.\n"
+						ri->Printf(PRINT_WARNING, "Light %i (at %i %i %i) radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f. coneAngle %f. coneDirection %f %f %f.\n"
 							, NUM_MAP_GLOW_LOCATIONS
 							, (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][0], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][1], (int)MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS][2]
 							, MAP_GLOW_RADIUSES[NUM_MAP_GLOW_LOCATIONS]
 							, emissiveColorScale
 							, emissiveRadiusScale
-							, glowColor[0], glowColor[1], glowColor[2]);
+							, glowColor[0], glowColor[1], glowColor[2]
+							, emissiveConeAngle
+							, emissiveConeDirection[0], emissiveConeDirection[1], emissiveConeDirection[2]);
 					}
 
 					NUM_MAP_GLOW_LOCATIONS++;

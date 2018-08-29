@@ -590,7 +590,7 @@ RE_AddDynamicLightToScene
 
 =====================
 */
-void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale) {
+void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale, float coneAngle, vec3_t coneDirection) {
 	dlight_t	*dl;
 
 	if (!tr.registered) {
@@ -612,6 +612,8 @@ void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float
 	dl->additive = additive;
 	dl->isGlowBased = isGlowBased;
 	dl->heightScale = heightScale;
+	dl->coneAngle = coneAngle;
+	VectorCopy(coneDirection, dl->coneDirection);
 }
 
 extern void R_AddLightVibrancy(float *color, float vibrancy);
@@ -633,8 +635,10 @@ void RE_AddLightToScene(const vec3_t org, float intensity, float r, float g, flo
 	//color[0] /= gMax;
 	//color[1] /= gMax;
 	//color[2] /= gMax;
-	
-	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qfalse, qfalse, 0);
+
+	vec3_t cd;
+	VectorClear(cd);
+	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qfalse, qfalse, 0, 0, cd);
 }
 
 /*
@@ -655,7 +659,9 @@ void RE_AddAdditiveLightToScene(const vec3_t org, float intensity, float r, floa
 	//color[1] /= gMax;
 	//color[2] /= gMax;
 
-	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qtrue, qfalse, 0);
+	vec3_t cd;
+	VectorClear(cd);
+	RE_AddDynamicLightToScene(org, intensity, color[0], color[1], color[2], qtrue, qfalse, 0, 0, cd);
 }
 
 #ifdef __DAY_NIGHT__

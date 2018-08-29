@@ -1717,6 +1717,8 @@ vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS] = {0};
 vec2_t		CLOSEST_LIGHTS_SCREEN_POSITIONS[MAX_DEFERRED_LIGHTS];
 float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS] = {0};
 float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS] = { 0 };
+float		CLOSEST_LIGHTS_CONEANGLES[MAX_DEFERRED_LIGHTS] = { 0 };
+vec3_t		CLOSEST_LIGHTS_CONEDIRECTIONS[MAX_DEFERRED_LIGHTS] = { 0 };
 vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS] = {0};
 
 extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
@@ -1844,6 +1846,8 @@ void RB_UpdateCloseLights ( void )
 			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][0] = x;
 			CLOSEST_LIGHTS_SCREEN_POSITIONS[NUM_CLOSE_LIGHTS][1] = y;
 #endif //__LIGHT_OCCLUSION__
+			CLOSEST_LIGHTS_CONEANGLES[NUM_CLOSE_LIGHTS] = dl->coneAngle;
+			VectorCopy(dl->coneDirection, CLOSEST_LIGHTS_CONEDIRECTIONS[NUM_CLOSE_LIGHTS]);
 			NUM_CLOSE_LIGHTS++;
 			continue;
 		}
@@ -1892,6 +1896,8 @@ void RB_UpdateCloseLights ( void )
 				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][0] = x;
 				CLOSEST_LIGHTS_SCREEN_POSITIONS[farthest_light][1] = y;
 #endif //__LIGHT_OCCLUSION__
+				CLOSEST_LIGHTS_CONEANGLES[farthest_light] = dl->coneAngle;
+				VectorCopy(dl->coneDirection, CLOSEST_LIGHTS_CONEDIRECTIONS[farthest_light]);
 			}
 		}
 	}
@@ -1942,6 +1948,11 @@ void RB_UpdateCloseLights ( void )
 					VectorCopy(CLOSEST_LIGHTS_COLORS[i], lightColor);
 					VectorCopy(CLOSEST_LIGHTS_COLORS[j], CLOSEST_LIGHTS_COLORS[i]);
 					VectorCopy(lightColor, CLOSEST_LIGHTS_COLORS[j]);
+
+					vec3_t lightDirection;
+					VectorCopy(CLOSEST_LIGHTS_CONEDIRECTIONS[i], lightDirection);
+					VectorCopy(CLOSEST_LIGHTS_CONEDIRECTIONS[j], CLOSEST_LIGHTS_CONEDIRECTIONS[i]);
+					VectorCopy(lightDirection, CLOSEST_LIGHTS_CONEDIRECTIONS[j]);
 				}
 			}
 		}

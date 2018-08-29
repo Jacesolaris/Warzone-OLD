@@ -63,6 +63,8 @@ extern vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_DEFERRED_LIGHTS];
 extern float		CLOSEST_LIGHTS_DISTANCES[MAX_DEFERRED_LIGHTS];
 extern float		CLOSEST_LIGHTS_HEIGHTSCALES[MAX_DEFERRED_LIGHTS];
 extern vec3_t		CLOSEST_LIGHTS_COLORS[MAX_DEFERRED_LIGHTS];
+extern float		CLOSEST_LIGHTS_CONEANGLES[MAX_DEFERRED_LIGHTS];
+extern vec3_t		CLOSEST_LIGHTS_CONEDIRECTIONS[MAX_DEFERRED_LIGHTS];
 
 #ifdef __PLAYER_BASED_CUBEMAPS__
 extern int			currentPlayerCubemap;
@@ -1060,7 +1062,7 @@ extern vec3_t SUN_POSITION;
 extern vec2_t SUN_SCREEN_POSITION;
 extern qboolean SUN_VISIBLE;
 
-extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale );
+extern void RE_AddDynamicLightToScene(const vec3_t org, float intensity, float r, float g, float b, int additive, qboolean isGlowBased, float heightScale, float coneAngle, vec3_t coneDirection);
 
 int			CLOSE_TOTAL = 0;
 int			CLOSE_LIST[MAX_WORLD_GLOW_DLIGHTS];
@@ -1068,6 +1070,8 @@ float		CLOSE_DIST[MAX_WORLD_GLOW_DLIGHTS];
 vec3_t		CLOSE_POS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_RADIUS[MAX_WORLD_GLOW_DLIGHTS];
 float		CLOSE_HEIGHTSCALES[MAX_WORLD_GLOW_DLIGHTS];
+float		CLOSE_CONEANGLE[MAX_WORLD_GLOW_DLIGHTS];
+vec3_t		CLOSE_CONEDIRECTION[MAX_WORLD_GLOW_DLIGHTS];
 vec4_t		CLOSE_COLORS[MAX_WORLD_GLOW_DLIGHTS];
 
 extern float		MAP_EMISSIVE_COLOR_SCALE;
@@ -1145,6 +1149,8 @@ void RB_AddGlowShaderLights ( void )
 				VectorCopy(MAP_GLOW_LOCATIONS[maplight], CLOSE_POS[CLOSE_TOTAL]);
 				CLOSE_RADIUS[CLOSE_TOTAL] = MAP_GLOW_RADIUSES[maplight];
 				CLOSE_HEIGHTSCALES[CLOSE_TOTAL] = MAP_GLOW_HEIGHTSCALES[maplight];
+				CLOSE_CONEANGLE[CLOSE_TOTAL] = MAP_GLOW_CONEANGLE[maplight];
+				VectorCopy(MAP_GLOW_CONEDIRECTION[maplight], CLOSE_CONEDIRECTION[CLOSE_TOTAL]);
 				CLOSE_TOTAL++;
 				continue;
 			}
@@ -1169,6 +1175,8 @@ void RB_AddGlowShaderLights ( void )
 					VectorCopy(MAP_GLOW_LOCATIONS[maplight], CLOSE_POS[farthest_light]);
 					CLOSE_RADIUS[farthest_light] = MAP_GLOW_RADIUSES[maplight];
 					CLOSE_HEIGHTSCALES[farthest_light] = MAP_GLOW_HEIGHTSCALES[maplight];
+					CLOSE_CONEANGLE[farthest_light] = MAP_GLOW_CONEANGLE[maplight];
+					VectorCopy(MAP_GLOW_CONEDIRECTION[maplight], CLOSE_CONEDIRECTION[farthest_light]);
 				}
 			}
 		}
@@ -1199,7 +1207,7 @@ void RB_AddGlowShaderLights ( void )
 				
 				float dayNightFactor = mix(MAP_EMISSIVE_RADIUS_SCALE, MAP_EMISSIVE_RADIUS_SCALE_NIGHT, RB_NightScale());
 				float radius = CLOSE_RADIUS[i] * strength * dayNightFactor * 0.2 * r_debugEmissiveRadiusScale->value;
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], radius, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], radius, glowColor[0], glowColor[1], glowColor[2], qfalse, qtrue, CLOSE_HEIGHTSCALES[i], CLOSE_CONEANGLE[i], CLOSE_CONEDIRECTION[i]);
 				num_colored++;
 
 				//if (radius <= 0 || glowColor[0] < 0.0 || glowColor[1] < 0.0 || glowColor[2] < 0.0 || glowColor[0] > 1.0 || glowColor[1] > 1.0 || glowColor[2] > 1.0)
@@ -1210,7 +1218,7 @@ void RB_AddGlowShaderLights ( void )
 			{
 				float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], playerOrigin) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
 				//float strength = 1.0 - Q_clamp(0.0, Distance(MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], backEnd.refdef.vieworg) / MAX_WORLD_GLOW_DLIGHT_RANGE, 1.0);
-				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue, CLOSE_HEIGHTSCALES[i]);
+				RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], CLOSE_RADIUS[i] * strength, -1.0, -1.0, -1.0, qfalse, qtrue, CLOSE_HEIGHTSCALES[i], CLOSE_CONEANGLE[i], CLOSE_CONEDIRECTION[i]);
 				num_uncolored++;
 			}
 #endif
@@ -2049,6 +2057,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTHEIGHTSCALES, CLOSEST_LIGHTS_HEIGHTSCALES, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHT_CONEANGLES, CLOSEST_LIGHTS_CONEANGLES, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHT_CONEDIRECTIONS, CLOSEST_LIGHTS_CONEDIRECTIONS, MAX_DEFERRED_LIGHTS);
 
 	{
 		vec4_t loc;
@@ -2569,6 +2579,8 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, /*MAX_DEFERRED_LIGHTS*/NUM_LIGHTS);
 	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTHEIGHTSCALES, CLOSEST_LIGHTS_HEIGHTSCALES, /*MAX_DEFERRED_LIGHTS*/NUM_LIGHTS);
 	//GLSL_SetUniformInt(shader, UNIFORM_LIGHT_MAX, min(r_maxDeferredLights->integer, MAX_DEFERRED_LIGHTS));
+	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHT_CONEANGLES, CLOSEST_LIGHTS_CONEANGLES, MAX_DEFERRED_LIGHTS);
+	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHT_CONEDIRECTIONS, CLOSEST_LIGHTS_CONEDIRECTIONS, MAX_DEFERRED_LIGHTS);
 	GLSL_SetUniformFloat(shader, UNIFORM_LIGHT_MAX_DISTANCE, (NUM_LIGHTS >= r_maxDeferredLights->integer / 2) ? maxDist : 8192.0);
 
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);

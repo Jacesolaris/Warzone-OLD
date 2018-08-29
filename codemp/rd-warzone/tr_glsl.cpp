@@ -1373,6 +1373,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_lightPositions", GLSL_VEC2, MAX_DEFERRED_LIGHTS },
 	{ "u_lightDistances", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
 	{ "u_lightHeightScales", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
+	{ "u_lightConeAngles", GLSL_FLOAT, MAX_DEFERRED_LIGHTS },
+	{ "u_lightConeDirections", GLSL_VEC3, MAX_DEFERRED_LIGHTS },
 	{ "u_lightMax", GLSL_INT, 1 },
 	{ "u_lightMaxDistance", GLSL_FLOAT, 1 },
 	{ "u_lightColors", GLSL_VEC3, MAX_DEFERRED_LIGHTS },
@@ -2750,6 +2752,33 @@ void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2
 	Com_Memcpy(compare, elements, sizeof (vec2_t)* numElements);
 
 	qglUniform2fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+}
+
+void GLSL_SetUniformVec2xX(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	float *compare;
+
+	if (uniformsInfo[uniformNum].type != GLSL_VEC2)
+	{
+		ri->Printf(PRINT_WARNING, "GLSL_SetUniformVec2xX: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements * 2)) return;
+
+	Com_Memcpy(compare, elements, sizeof(vec2_t)* numElements);
+
+	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
 }
 
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v)

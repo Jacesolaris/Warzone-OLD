@@ -61,6 +61,8 @@ uniform vec3								u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float								u_lightDistances[MAX_DEFERRED_LIGHTS];
 uniform float								u_lightHeightScales[MAX_DEFERRED_LIGHTS];
 uniform vec3								u_lightColors[MAX_DEFERRED_LIGHTS];
+uniform float								u_lightConeAngles[MAX_DEFERRED_LIGHTS];
+uniform vec3								u_lightConeDirections[MAX_DEFERRED_LIGHTS];
 //uniform int									u_lightMax;
 uniform float								u_lightMaxDistance;
 
@@ -1428,8 +1430,44 @@ void main(void)
 			for (int li = 0; li < u_lightCount; li++)
 			{
 				vec3 lightPos = u_lightPositions2[li].xyz;
-
+				vec3 lightDir = normalize(lightPos - position.xyz);
 				float lightDist = distance(lightPos, position.xyz);
+				float coneModifier = 1.0;
+
+				/*
+				uniform float								u_lightConeAngles[MAX_DEFERRED_LIGHTS];
+				uniform vec3								u_lightConeDirections[MAX_DEFERRED_LIGHTS];
+				*/
+				if (u_lightConeAngles[li] > 0.0)
+				{
+					/*vec3 coneDir;
+
+					vec3 c1 = cross(u_lightConeDirections[li], vec3(0.0, 0.0, 1.0)); 
+					vec3 c2 = cross(u_lightConeDirections[li], vec3(0.0, 1.0, 0.0)); 
+
+					if( length(c1) > length(c2) )
+					{
+						coneDir = c1;
+					}
+					else
+					{
+						coneDir = c2;
+					}
+
+					coneDir = normalize(coneDir);*/
+					vec3 coneDir = normalize(u_lightConeDirections[li]);
+
+					float lightToSurfaceAngle = degrees(acos(dot(-lightDir, coneDir)));
+					
+					if (lightToSurfaceAngle > u_lightConeAngles[li])
+					{// Outside of this light's cone...
+						continue;
+					}
+					else
+					{// Adjust the brightness so the light is brightest at the center of the cone, and darker around the edges...
+						//coneModifier = /*1.0 -*/ (lightToSurfaceAngle / u_lightConeAngles[li]);
+					}
+				}
 
 				if (u_lightHeightScales[li] > 0.0)
 				{// ignore height differences, check later...
@@ -1450,7 +1488,7 @@ void main(void)
 
 				lightFade = pow(lightFade, 2.0);
 
-				float lightStrength = lightDistMult * lightFade * specularReflectivePower * 0.5;
+				float lightStrength = coneModifier * lightDistMult * lightFade * specularReflectivePower * 0.5;
 
 				//float maxLightsScale = mix(0.0, 1.0, clamp(pow(1.0 - (float(li) / float(u_lightMax)), u_Local3.r), 0.0, 1.0));
 				float maxLightsScale = mix(0.01, 1.0, clamp(pow(1.0 - (lightPlayerDist / u_lightMaxDistance), 0.5), 0.0, 1.0));
@@ -1459,7 +1497,6 @@ void main(void)
 				if (lightStrength > 0.0)
 				{
 					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * MAP_EMISSIVE_COLOR_SCALE * maxLightsScale; // Normalize.
-					vec3 lightDir = normalize(lightPos - position.xyz);
 					float light_occlusion = 1.0;
 					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 				
