@@ -133,7 +133,7 @@ void OCEAN_InitOcean()
 	if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)) return;
 	if (gVaoID != 0) return;
 
-	if (!WATER_INITIALIZED && WATER_ENABLED && r_glslWater->integer >= 3)
+	if (!WATER_INITIALIZED && WATER_ENABLED && r_glslWater->integer >= 4)
 	{// Water is ready to be set up for this map...
 		WATER_INITIALIZED = qtrue;
 
@@ -225,7 +225,7 @@ void OCEAN_Render(void)
 	if (!WATER_ENABLED || !WATER_FARPLANE_ENABLED) return;
 	if (!(MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)) return;
 
-	if (WATER_ENABLED && WATER_FARPLANE_ENABLED && r_glslWater->integer >= 3)
+	if (WATER_ENABLED && WATER_FARPLANE_ENABLED && r_glslWater->integer >= 4)
 	{
 		extern void SetViewportAndScissor(void);
 

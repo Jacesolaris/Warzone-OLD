@@ -472,6 +472,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		shaderProgram_t *sp = &tr.shadowmapShader;
 		vec4_t vector;
 
+		RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_BindProgram(sp);
 
@@ -528,7 +529,9 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		shaderProgram_t *sp = &tr.skyShader;
 		vec4_t vector;
 
+		RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+		//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_BindProgram(sp);
 
 		{// used...

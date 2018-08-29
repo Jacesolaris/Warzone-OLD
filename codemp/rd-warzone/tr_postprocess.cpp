@@ -1942,7 +1942,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t		color;
 
-	shaderProgram_t *shader = &tr.waterPostShader;
+	shaderProgram_t *shader = &tr.waterPostShader[Q_clampi(0, r_glslWater->integer-1, 2)];
 
 	// bloom
 	color[0] =
@@ -1953,15 +1953,15 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);//backEnd.ori.modelViewMatrix);
+	/*GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);//backEnd.ori.modelViewMatrix);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
 	
 	matrix_t trans, model, mvp, invMvp;
 	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	Matrix16SimpleInverse( glState.modelviewProjection/*mvp*/, invMvp);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);
+	Matrix16SimpleInverse( glState.modelviewProjection, invMvp);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);*/
 
 	/*
 	heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -2012,6 +2012,9 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformInt(shader, UNIFORM_DETAILMAP, TB_DETAILMAP);
 	GL_BindToTMU(tr.waterCausicsImage, TB_DETAILMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+	GL_BindToTMU(tr.waterHeightMapImage, TB_HEIGHTMAP);
 
 	//GLSL_SetUniformInt(shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 	//GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP);
@@ -2082,7 +2085,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2], 0.0);
+		VectorSet4(loc, WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2], tr.waterHeightMapImage != tr.whiteImage ? 1.0 : 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL3, loc);
 	}
 
@@ -2132,10 +2135,6 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
-
-	GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
-
-	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
 	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, colorWhite, 0);

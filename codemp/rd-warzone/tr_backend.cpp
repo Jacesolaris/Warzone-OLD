@@ -733,7 +733,7 @@ void RB_ClearWaterPositionMap ( void )
 		&& !(backEnd.viewParms.flags & VPF_SHADOWMAP)
 		&& !(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
 	{
-		if (r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
+		if (r_glslWater->integer && r_glslWater->integer <= 3 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 		{
 			FBO_t *oldFbo = glState.currentFBO;
 			FBO_Bind(tr.waterFbo);
@@ -3341,7 +3341,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (!SCREEN_BLUR && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED)
+		if (!SCREEN_BLUR && r_glslWater->integer && r_glslWater->integer <= 3 && WATER_ENABLED)
 		{
 			DEBUG_StartTimer("Water Post", qtrue);
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -3566,10 +3566,13 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && r_fxaa->integer)
 		{
-			DEBUG_StartTimer("FXAA", qtrue);
-			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs(&currentFbo, &currentOutFbo);
-			DEBUG_EndTimer(qtrue);
+			for (int pass = 0; pass < r_fxaa->integer; pass++)
+			{
+				DEBUG_StartTimer("FXAA", qtrue);
+				RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs(&currentFbo, &currentOutFbo);
+				DEBUG_EndTimer(qtrue);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_showdepth->integer)

@@ -2342,7 +2342,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #define __USE_DETAIL_DEPTH_SKIP__		// Skip drawing detail crap at all in shadow and depth prepasses - they should never be needed...
 #define __LIGHTMAP_IS_DETAIL__			// Lightmap stages are considered detail...
 
-		if (pStage->isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
+		if (pStage->isWater && r_glslWater->integer && r_glslWater->integer <= 3 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 		{
 			if (IS_DEPTH_PASS == 1)
 			{
@@ -2364,7 +2364,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 		}
 #ifdef __WATER_STUFF__
-		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 2 /*&& WATER_ENABLED*/)
+		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 3 /*&& WATER_ENABLED*/)
 		{
 			/*if (IS_DEPTH_PASS == 1)
 			{
@@ -2386,7 +2386,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 		}
 #else
-		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 2 /*&& WATER_ENABLED*/)
+		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 3 /*&& WATER_ENABLED*/)
 		{
 			break;
 		}
@@ -3341,7 +3341,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//GL_BindToTMU(tr.random2KImage[0], TB_DIFFUSEMAP);
 		}
 #ifdef __WATER_STUFF__
-		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 2 /*&& WATER_ENABLED*/)
+		else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 3 /*&& WATER_ENABLED*/)
 		{
 			if (!(pStage->stateBits & GLS_ATEST_BITS))
 				GL_BindToTMU(tr.whiteImage, 0);
@@ -3788,7 +3788,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_Cull(CT_TWO_SIDED);
 			}
 #ifdef __WATER_STUFF__
-			else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 2 /*&& WATER_ENABLED*/)
+			else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 3 /*&& WATER_ENABLED*/)
 			{
 				GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
@@ -3807,7 +3807,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
-			if (isWater && r_glslWater->integer && r_glslWater->integer <= 2 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
+			if (isWater && r_glslWater->integer && r_glslWater->integer <= 3 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...

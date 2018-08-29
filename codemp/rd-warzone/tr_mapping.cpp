@@ -2117,12 +2117,24 @@ void MAPPING_LoadMapInfo(void)
 		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		//tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-		//if (r_glslWater->integer < 2)
+		//if (r_glslWater->integer < 3)
 		//	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		//else
 		tr.waterNormalImage = R_FindImageFile("textures/water/waves.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+
+		{
+			// Water height maps... Try to load map based image first...
+			ri->Printf(PRINT_ALL, "Loading waterHeightMap file %s.\n", va("maps/%s_waterHeightMap.tga", currentMapName));
+			tr.waterHeightMapImage = R_FindImageFile(va("maps/%s_waterHeightMap.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+
+			if (!tr.waterHeightMapImage || tr.waterHeightMapImage == tr.defaultImage)
+			{
+				ri->Printf(PRINT_ALL, "No waterHeightMap was found.\n");
+				tr.waterHeightMapImage = tr.whiteImage;
+			}
+		}
 	}
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Generic material selections prefer ^7%s^5 on this map.\n", GENERIC_MATERIALS_PREFER_SHINY ? "SHINY" : "MATTE");
@@ -2613,11 +2625,13 @@ void R_LoadMapInfo(void)
 		tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 	}
 #else
-	tr.heightMapImage = R_FindImageFile(va("heightMapImage/%s.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+	ri->Printf(PRINT_ALL, "Loading heightMap file %s.\n", va("maps/%s_heightMap.tga", currentMapName));
+	tr.heightMapImage = R_FindImageFile(va("maps/%s_heightMap.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
 	if (!tr.heightMapImage || tr.heightMapImage == tr.defaultImage)
 	{
-		tr.heightMapImage = tr.blackImage;
+		ri->Printf(PRINT_ALL, "No heightMap was found.\n");
+		tr.heightMapImage = tr.whiteImage;
 	}
 #endif
 
