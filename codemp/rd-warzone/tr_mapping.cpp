@@ -1479,7 +1479,8 @@ qboolean	WATER_USE_OCEAN = qfalse;
 qboolean	WATER_FARPLANE_ENABLED = qfalse;
 float		WATER_REFLECTIVENESS = 0.28;
 float		WATER_WAVE_HEIGHT = 64.0;
-float		WATER_CLARITY = 0.03;
+float		WATER_CLARITY = 0.3;
+float		WATER_UNDERWATER_CLARITY = 0.01;
 vec3_t		WATER_COLOR_SHALLOW = { 0 };
 vec3_t		WATER_COLOR_DEEP = { 0 };
 float		WATER_EXTINCTION1 = 35.0;
@@ -1872,7 +1873,8 @@ void MAPPING_LoadMapInfo(void)
 		WATER_FARPLANE_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FARPLANE_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_REFLECTIVENESS = Q_clamp(0.0, atof(IniRead(mapname, "WATER", "WATER_REFLECTIVENESS", "0.28")), 1.0);
 		WATER_WAVE_HEIGHT = atof(IniRead(mapname, "WATER", "WATER_WAVE_HEIGHT", "64.0"));
-		WATER_CLARITY = atof(IniRead(mapname, "WATER", "WATER_CLARITY", "0.03"));
+		WATER_CLARITY = atof(IniRead(mapname, "WATER", "WATER_CLARITY", "0.3"));
+		WATER_UNDERWATER_CLARITY = atof(IniRead(mapname, "WATER", "WATER_UNDERWATER_CLARITY", "0.01"));
 		WATER_COLOR_SHALLOW[0] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_R", "0.0078"));
 		WATER_COLOR_SHALLOW[1] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_G", "0.5176"));
 		WATER_COLOR_SHALLOW[2] = atof(IniRead(mapname, "WATER", "WATER_COLOR_SHALLOW_B", "0.7"));
@@ -2215,8 +2217,9 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, WATER_USE_OCEAN ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water far plane is ^7%s^5 and wave height is ^7%.4f^5 on this map.\n", WATER_FARPLANE_ENABLED ? "ENABLED" : "DISABLED", WATER_WAVE_HEIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water clarity is ^7%.4f^5 and water extinction1 is ^7%.4f^5 on this map.\n", WATER_CLARITY, WATER_EXTINCTION1);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction2 is ^7%.4f^5 and water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION2, WATER_EXTINCTION3);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water clarity is ^7%.4f^5 and underwater clarity is ^7%.4f^5 on this map.\n", WATER_CLARITY, WATER_UNDERWATER_CLARITY);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction1 is ^7%.4f^5 and water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION1, WATER_EXTINCTION2);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION3);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 

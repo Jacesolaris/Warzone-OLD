@@ -1859,6 +1859,7 @@ extern float		MAP_INFO_MAXSIZE;
 
 extern float		WATER_REFLECTIVENESS;
 extern float		WATER_CLARITY;
+extern float		WATER_UNDERWATER_CLARITY;
 extern vec3_t		WATER_COLOR_SHALLOW;
 extern vec3_t		WATER_COLOR_DEEP;
 
@@ -2118,12 +2119,12 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 
 	{
-		vec3_t mAngles, mCameraForward, mCameraLeft, mCameraDown;
+		/*vec3_t mAngles, mCameraForward, mCameraLeft, mCameraDown;
 		TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
-		AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);
+		AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);*/
 
 		vec4_t loc;
-		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, mCameraDown[2]);
+		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, WATER_UNDERWATER_CLARITY);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
 

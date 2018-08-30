@@ -59,7 +59,7 @@ vec3 getViewNormal(vec2 coord){
     return normalize(cross( dy , dx ));
 }
 
-vec2 getViewCoord(vec3 pos){
+vec2 getViewCoord(vec3 pos) {
     vec3 norm = pos / pos.z;
     vec2 view = vec2((norm.x / fov + 1.0) / 2.0, (norm.y / fov * aspectratio + 1.0) / 2.0);
     return view;

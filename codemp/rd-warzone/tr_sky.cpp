@@ -387,8 +387,35 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	//tess.numVertexes = 0;
 	//tess.numIndexes = 0;
 	tess.firstIndex = tess.numIndexes;
+
+	extern qboolean		PROCEDURAL_SKY_ENABLED;
+	extern vec3_t		PROCEDURAL_SKY_DAY_COLOR;
+	extern vec4_t		PROCEDURAL_SKY_NIGHT_COLOR;
+	extern float		PROCEDURAL_SKY_NIGHT_HDR_MIN;
+	extern float		PROCEDURAL_SKY_NIGHT_HDR_MAX;
+	extern int			PROCEDURAL_SKY_STAR_DENSITY;
+	extern float		PROCEDURAL_SKY_DARKMATTER_FACTOR;
+	extern float		PROCEDURAL_SKY_PLANETARY_ROTATION;
+
+	extern qboolean		PROCEDURAL_BACKGROUND_HILLS_ENABLED;
+	extern float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS;
+	extern float		PROCEDURAL_BACKGROUND_HILLS_UPDOWN;
+	extern float		PROCEDURAL_BACKGROUND_HILLS_SEED;
+	extern vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR;
+	extern vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2;
+
+	extern vec3_t		AURORA_COLOR;
+
+	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
+	extern float		PROCEDURAL_CLOUDS_CLOUDSCALE;
+	extern float		PROCEDURAL_CLOUDS_SPEED;
+	extern float		PROCEDURAL_CLOUDS_DARK;
+	extern float		PROCEDURAL_CLOUDS_LIGHT;
+	extern float		PROCEDURAL_CLOUDS_CLOUDCOVER;
+	extern float		PROCEDURAL_CLOUDS_CLOUDALPHA;
+	extern float		PROCEDURAL_CLOUDS_SKYTINT;
 	
-	GL_Bind( image );
+	GL_Bind(PROCEDURAL_SKY_ENABLED ? tr.whiteImage : image );
 	GL_Cull( CT_TWO_SIDED );
 
 	for ( t = mins[1]+HALF_SKY_SUBDIVISIONS; t <= maxs[1]+HALF_SKY_SUBDIVISIONS; t++ )
@@ -440,39 +467,12 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	// FIXME: A lot of this can probably be removed for speed, and refactored into a more convenient function
 	RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 
-	extern qboolean		PROCEDURAL_SKY_ENABLED;
-	extern vec3_t		PROCEDURAL_SKY_DAY_COLOR;
-	extern vec4_t		PROCEDURAL_SKY_NIGHT_COLOR;
-	extern float		PROCEDURAL_SKY_NIGHT_HDR_MIN;
-	extern float		PROCEDURAL_SKY_NIGHT_HDR_MAX;
-	extern int			PROCEDURAL_SKY_STAR_DENSITY;
-	extern float		PROCEDURAL_SKY_DARKMATTER_FACTOR;
-	extern float		PROCEDURAL_SKY_PLANETARY_ROTATION;
-
-	extern qboolean		PROCEDURAL_BACKGROUND_HILLS_ENABLED;
-	extern float		PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS;
-	extern float		PROCEDURAL_BACKGROUND_HILLS_UPDOWN;
-	extern float		PROCEDURAL_BACKGROUND_HILLS_SEED;
-	extern vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR;
-	extern vec3_t		PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2;
-
-	extern vec3_t		AURORA_COLOR;
-
-	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
-	extern float		PROCEDURAL_CLOUDS_CLOUDSCALE;
-	extern float		PROCEDURAL_CLOUDS_SPEED;
-	extern float		PROCEDURAL_CLOUDS_DARK;
-	extern float		PROCEDURAL_CLOUDS_LIGHT;
-	extern float		PROCEDURAL_CLOUDS_CLOUDCOVER;
-	extern float		PROCEDURAL_CLOUDS_CLOUDALPHA;
-	extern float		PROCEDURAL_CLOUDS_SKYTINT;
-
 	if (backEnd.depthFill)
 	{
 		shaderProgram_t *sp = &tr.shadowmapShader;
 		vec4_t vector;
 
-		RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+		//RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_BindProgram(sp);
 
@@ -529,7 +529,14 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		shaderProgram_t *sp = &tr.skyShader;
 		vec4_t vector;
 
-		RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
+		//FBO_Bind(tr.renderFbo);
+
+		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+		//GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHMASK_TRUE | GLS_DEPTHTEST_DISABLE);
+		//qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		//qglDepthMask(GL_TRUE);
+
+		//RB_UpdateVBOs(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		//GLSL_VertexAttribPointers(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL);
 		GLSL_BindProgram(sp);
@@ -1363,8 +1370,8 @@ void RB_StageIteratorSky( void ) {
 
 		// generate the vertexes for all the clouds, which will be drawn
 		// by the generic shader routine
-		R_BuildCloudData(&tess);
-		RB_StageIteratorGeneric();
+		//R_BuildCloudData(&tess);
+		//RB_StageIteratorGeneric();
 
 		// back to normal depth range
 		qglDepthRange(0.0, 1.0);
@@ -1399,10 +1406,15 @@ void RB_StageIteratorSky( void ) {
 	DrawSkyDome(tess.shader);
 #endif //___FORCED_SKYDOME___
 
-	// generate the vertexes for all the clouds, which will be drawn
-	// by the generic shader routine
-	R_BuildCloudData( &tess );
-	RB_StageIteratorGeneric();
+	extern qboolean		PROCEDURAL_SKY_ENABLED;
+
+	if (!PROCEDURAL_SKY_ENABLED)
+	{
+		// generate the vertexes for all the clouds, which will be drawn
+		// by the generic shader routine
+		R_BuildCloudData(&tess);
+		RB_StageIteratorGeneric();
+	}
 
 	// draw the inner skybox
 

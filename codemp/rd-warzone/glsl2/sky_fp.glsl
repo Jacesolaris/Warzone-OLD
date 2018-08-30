@@ -871,6 +871,7 @@ void main()
 		gl_FragColor.a *= var_Color.a;
 	}
 
+	/*
 	if (USE_BLEND > 0.0)
 	{// Emulate RGB blending... Fuck I hate this crap...
 		float colStr = clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0);
@@ -891,8 +892,11 @@ void main()
 			gl_FragColor.a = colStr;
 		}
 	}
+	*/
+
+	gl_FragColor.a = 1.0; // just force it.
 	
-	if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)
+	//if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)
 	{
 		if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7 && terrainColor.a != 1.0)
 		{// Add night sky to glow map...
@@ -919,13 +923,13 @@ void main()
 			out_Glow = vec4(0.0);
 		}
 
-		out_Position = vec4(var_Position.rgb, SHADER_MATERIAL_TYPE+1.0);
+		out_Position = vec4(var_Position.rgb, 1025.0/*SHADER_MATERIAL_TYPE+1.0*/);
 		out_Normal = vec4(EncodeNormal(var_Normal.rgb), 0.0, 1.0);
 #ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
 #endif //__USE_REAL_NORMALMAPS__
 	}
-	else
+	/*else
 	{
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
@@ -933,5 +937,5 @@ void main()
 #ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);
 #endif //__USE_REAL_NORMALMAPS__
-	}
+	}*/
 }
