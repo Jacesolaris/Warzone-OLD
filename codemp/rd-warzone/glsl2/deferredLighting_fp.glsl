@@ -187,11 +187,12 @@ vec2 EncodeNormal(vec3 n)
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
 
-vec4 positionMapAtCoord ( vec2 coord, out bool changedToWater )
+vec4 positionMapAtCoord ( vec2 coord, out bool changedToWater, out vec3 originalPosition )
 {
 	changedToWater = false;
 
 	vec4 pos = textureLod(u_PositionMap, coord, 0.0);
+	originalPosition = pos.xyz;
 
 	if (WATER_ENABLED > 0.0)
 	{
@@ -507,6 +508,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	}
 
 	bool changedToWater = false;
+	vec3 originalPosition;
 	float pixelDistance = distance(positionMap.xyz, u_ViewOrigin.xyz);
 
 	//const float scanSpeed = 48.0;// 16.0;// 5.0; // How many pixels to scan by on the 1st rough pass...
@@ -518,7 +520,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
-		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater);
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater, originalPosition);
 
 		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
@@ -553,7 +555,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
-		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater);
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater, originalPosition);
 		
 		float pMapDistance = distance(pMap.xyz, u_ViewOrigin.xyz);
 
@@ -588,7 +590,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 		return inColor;
 	}
 
-	vec4 pMap = positionMapAtCoord(vec2(coord.x, upPos), changedToWater);
+	vec4 pMap = positionMapAtCoord(vec2(coord.x, upPos), changedToWater, originalPosition);
 
 	if (pMap.a > 1.0 && pMap.xyz != vec3(0.0) && distance(pMap.xyz, u_ViewOrigin.xyz) <= pixelDistance)
 	{// The reflected pixel is closer then the original, this would be a bad reflection.
@@ -1011,12 +1013,69 @@ vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
     return normalize( nor + grad*bumpfactor );
 }
 
+//
+// Procedural texturing variation...
+//
+float proceduralHash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float proceduralNoise(in vec3 o) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * 1009.0;
+
+	float a = proceduralHash(n+  0.0);
+	float b = proceduralHash(n+  1.0);
+	float c = proceduralHash(n+ 57.0);
+	float d = proceduralHash(n+ 58.0);
+	
+	float e = proceduralHash(n+  0.0 + 1009.0);
+	float f = proceduralHash(n+  1.0 + 1009.0);
+	float g = proceduralHash(n+ 57.0 + 1009.0);
+	float h = proceduralHash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 proceduralMat = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float proceduralSmoothNoise( vec3 p )
+{
+    float f;
+    f  = 0.5000*proceduralNoise( p ); p = proceduralMat*p*2.02;
+    f += 0.2500*proceduralNoise( p ); 
+	
+    return clamp(f * 1.3333333333333333333333333333333, 0.0, 1.0);
+}
+
 void main(void)
 {
 	bool changedToWater = false;
 	vec4 color = texture(u_DiffuseMap, var_TexCoords);
 	vec4 outColor = vec4(color.rgb, 1.0);
-	vec4 position = positionMapAtCoord(var_TexCoords, changedToWater);
+	vec3 originalPosition;
+	vec4 position = positionMapAtCoord(var_TexCoords, changedToWater, originalPosition);
 
 	if (position.a - 1.0 == MATERIAL_SKY
 		|| position.a - 1.0 == MATERIAL_SUN
@@ -1135,7 +1194,7 @@ void main(void)
 	float wetness = 0.0;
 
 	if (SNOW_ENABLED > 0.0)
-	{// snow testing
+	{// calculate procedural snow factor...
 		if (position.z >= PROCEDURAL_SNOW_LOWEST_ELEVATION)
 		{
 			float snowMult = 1.0;
@@ -1168,7 +1227,6 @@ void main(void)
 	{// wet testing
 		wetness += u_Local3.r;
 	}*/
-
 
 	//
 	// This is the basics of creating a fake PBR look to the lighting. It could be replaced, or overridden by actual PBR pixel buffer inputs.
@@ -1207,15 +1265,67 @@ void main(void)
 	color.rgb = outColor.rgb = outColor.rgb * diffuse;
 
 	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
-	float snowColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
+
+	if (position.a - 1.0 == MATERIAL_SOLIDWOOD
+		|| position.a - 1.0 == MATERIAL_SHORTGRASS
+		|| position.a - 1.0 == MATERIAL_LONGGRASS
+		|| position.a - 1.0 == MATERIAL_ROCK)
+	{// add procedural moss...
+		vec3 usePos = changedToWater ? originalPosition.xyz : position.xyz;
+		vec3 pos = usePos.xyz * 0.005;
+		float moss = clamp(proceduralSmoothNoise( pos ), 0.0, 1.0);
+		float mossMix = clamp(pow(moss, 3.0), 0.0, 1.0);
+
+#define mossLower ( 48.0 / 255.0 )
+#define mossUpper ( 255.0 / 12.0 )
+		mossMix = clamp((clamp(mossMix - mossLower, 0.0, 1.0)) * mossUpper, 0.0, 1.0);
+
+		//outColor.rgb = mix(outColor.rgb, vec3(1.0, 0.0, 0.0), mossMix);
+
+		if (mossMix > 0.0)
+		{
+			const vec3 colorLight = vec3(0.0, 0.65, 0.0);
+			const vec3 colorDark = vec3(0.0, 0.0, 0.0);
+
+			vec3 pos2 = usePos.xyz * 0.5;
+			vec3 pos3 = usePos.xyz * 0.5035;
+
+			pos2 = mix(pos2, pos3, 0.5);
+
+			vec3 pos4 = usePos.xyz * 0.08;
+			float mossPatches = clamp(proceduralSmoothNoise( pos4 ), 0.0, 1.0);
+			mossPatches = clamp(pow(mossPatches, 2.5), 0.0, 1.0);
+#define mossPatchLower ( 1.0 / 255.0 )
+#define mossPatchUpper ( 255.0 / 96.0 )
+			mossPatches = clamp((clamp(mossPatches - mossPatchLower, 0.0, 1.0)) * mossPatchUpper, 0.0, 1.0);
+
+			float mossStr = proceduralSmoothNoise(pos2);
+			float mossDark = proceduralSmoothNoise(pos2 * 0.8);
+			vec3 col = mix(colorDark, colorLight, mossStr);
+			col = mix(col, outColor.rgb, mossDark);
+
+			vec3 pos5 = usePos.xyz * 3.5;
+			float shadow = clamp(proceduralSmoothNoise( pos5 ), 0.0, 1.0);
+			col = mix(col, vec3(0.0, 0.065, 0.0), shadow);
+
+			mossMix *= mossPatches;
+			outColor.rgb = splatblend(outColor.rgb, 1.0 - mossMix, col, mossMix);
+		}
+	}
 
 	if (snow > 0.0)
-	{// snow testing
-		//outColor.rgb = mix(outColor.rgb, vec3(0.4)*snow, snow);
-		//float snowMix = 1.0 - clamp(snowColorStrength * 3.15, 0.0, 1.0);
+	{// add procedural snow...
+		float snowColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
 		float snowMix = 1.0 - clamp(pow(snowColorStrength * 0.575 + 0.05, 0.34), 0.0, 1.0);
 		snowMix *= snow;
-		outColor.rgb = splatblend(outColor.rgb, 1.0 - snowMix, vec3(clamp(pow(snow, 0.001), 0.0, 1.0)), snowMix);
+
+		vec3 snowColor = vec3(clamp(pow(snow, 0.001), 0.0, 1.0));
+
+		vec3 pos5 = position.xyz * 3.5;
+		float shadow = clamp(proceduralSmoothNoise( pos5 ), 0.0, 1.0);
+		snowColor = mix(snowColor, vec3(0.8), shadow);
+
+		outColor.rgb = splatblend(outColor.rgb, 1.0 - snowMix, snowColor, snowMix);
 	}
 
 
