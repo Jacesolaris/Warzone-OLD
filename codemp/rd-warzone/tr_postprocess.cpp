@@ -2608,7 +2608,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		useAO = 0.0;
 
 	vec4_t local1;
-	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, useAO, r_env->integer ? 1.0 : 0.0);
+	VectorSet4(local1, r_blinnPhong->value, SUN_PHONG_SCALE, useAO, r_ssdm->integer ? 1.0 : 0.0);
 	GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, local1);
 
 	qboolean shadowsEnabled = qfalse;
@@ -2761,6 +2761,13 @@ void RB_SSDM_Generate(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 		float zmin = r_znear->value;
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 512.0/*r_testvalue2->value > 0.0 ? r_testvalue2->value : backEnd.viewParms.zFar*/);
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec3_t out;
+		float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
+		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+		GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN, out);
 	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, tr.ssdmFbo, ldrBox, shader, color, 0);

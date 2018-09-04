@@ -1,5 +1,6 @@
 ﻿#ifndef __LQ_MODE__
 
+//#define SSDM_PROCEDURAL_MOSS
 #define __FAST_NORMAL_DETAIL__
 #define __AMBIENT_OCCLUSION__
 #define __ENHANCED_AO__
@@ -35,7 +36,7 @@ uniform mat4								u_ModelViewProjectionMatrix;
 
 uniform vec2								u_Dimensions;
 
-uniform vec4								u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, r_env
+uniform vec4								u_Local1; // r_blinnPhong, SUN_PHONG_SCALE, r_ao, SSDM_ENABLED
 uniform vec4								u_Local2; // SSDO, SHADOWS_ENABLED, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT
 uniform vec4								u_Local3; // r_testShaderValue1, r_testShaderValue2, r_testShaderValue3, r_testShaderValue4
 uniform vec4								u_Local4; // MAP_INFO_MAXSIZE, MAP_WATER_LEVEL, floatTime, MAP_EMISSIVE_COLOR_SCALE
@@ -75,7 +76,7 @@ varying vec2								var_TexCoords;
 #define BLINN_PHONG_STRENGTH				u_Local1.r
 #define SUN_PHONG_SCALE						u_Local1.g
 #define AO_TYPE								u_Local1.b
-#define USE_ENVMAPPING						u_Local1.a
+#define SSDM_ENABLED						u_Local1.a
 
 #define USE_SSDO							u_Local2.r
 #define SHADOWS_ENABLED						u_Local2.g
@@ -1069,6 +1070,54 @@ float proceduralSmoothNoise( vec3 p )
     return clamp(f * 1.3333333333333333333333333333333, 0.0, 1.0);
 }
 
+void AddProceduralMoss(inout vec4 outColor, in vec4 position, in bool changedToWater, in vec3 originalPosition)
+{
+	if (position.a - 1.0 == MATERIAL_SOLIDWOOD
+		|| position.a - 1.0 == MATERIAL_SHORTGRASS
+		|| position.a - 1.0 == MATERIAL_LONGGRASS
+		|| position.a - 1.0 == MATERIAL_ROCK)
+	{// add procedural moss...
+		vec3 usePos = changedToWater ? originalPosition.xyz : position.xyz;
+		vec3 pos = usePos.xyz * 0.005;
+		float moss = clamp(proceduralSmoothNoise( pos ), 0.0, 1.0);
+		float mossMix = clamp(pow(moss, 3.0), 0.0, 1.0);
+
+#define mossLower ( 48.0 / 255.0 )
+#define mossUpper ( 255.0 / 12.0 )
+		mossMix = clamp((clamp(mossMix - mossLower, 0.0, 1.0)) * mossUpper, 0.0, 1.0);
+
+		if (mossMix > 0.0)
+		{
+			const vec3 colorLight = vec3(0.0, 0.65, 0.0);
+			const vec3 colorDark = vec3(0.0, 0.0, 0.0);
+
+			vec3 pos2 = usePos.xyz * 0.5;
+			vec3 pos3 = usePos.xyz * 0.5035;
+
+			pos2 = mix(pos2, pos3, 0.5);
+
+			vec3 pos4 = usePos.xyz * 0.08;
+			float mossPatches = clamp(proceduralSmoothNoise( pos4 ), 0.0, 1.0);
+			mossPatches = clamp(pow(mossPatches, 2.5), 0.0, 1.0);
+#define mossPatchLower ( 1.0 / 255.0 )
+#define mossPatchUpper ( 255.0 / 96.0 )
+			mossPatches = clamp((clamp(mossPatches - mossPatchLower, 0.0, 1.0)) * mossPatchUpper, 0.0, 1.0);
+
+			float mossStr = proceduralSmoothNoise(pos2);
+			float mossDark = proceduralSmoothNoise(pos2 * 0.8);
+			vec3 col = mix(colorDark, colorLight, mossStr);
+			col = mix(col, outColor.rgb, mossDark);
+
+			vec3 pos5 = usePos.xyz * 3.5;
+			float shadow = clamp(proceduralSmoothNoise( pos5 ), 0.0, 1.0);
+			col = mix(col, vec3(0.0, 0.065, 0.0), shadow);
+
+			mossMix *= mossPatches;
+			outColor.rgb = splatblend(outColor.rgb, 1.0 - mossMix, col, mossMix);
+		}
+	}
+}
+
 void main(void)
 {
 	bool changedToWater = false;
@@ -1266,51 +1315,11 @@ void main(void)
 
 	float origColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0) * 0.75 + 0.25;
 
-	if (position.a - 1.0 == MATERIAL_SOLIDWOOD
-		|| position.a - 1.0 == MATERIAL_SHORTGRASS
-		|| position.a - 1.0 == MATERIAL_LONGGRASS
-		|| position.a - 1.0 == MATERIAL_ROCK)
-	{// add procedural moss...
-		vec3 usePos = changedToWater ? originalPosition.xyz : position.xyz;
-		vec3 pos = usePos.xyz * 0.005;
-		float moss = clamp(proceduralSmoothNoise( pos ), 0.0, 1.0);
-		float mossMix = clamp(pow(moss, 3.0), 0.0, 1.0);
-
-#define mossLower ( 48.0 / 255.0 )
-#define mossUpper ( 255.0 / 12.0 )
-		mossMix = clamp((clamp(mossMix - mossLower, 0.0, 1.0)) * mossUpper, 0.0, 1.0);
-
-		//outColor.rgb = mix(outColor.rgb, vec3(1.0, 0.0, 0.0), mossMix);
-
-		if (mossMix > 0.0)
-		{
-			const vec3 colorLight = vec3(0.0, 0.65, 0.0);
-			const vec3 colorDark = vec3(0.0, 0.0, 0.0);
-
-			vec3 pos2 = usePos.xyz * 0.5;
-			vec3 pos3 = usePos.xyz * 0.5035;
-
-			pos2 = mix(pos2, pos3, 0.5);
-
-			vec3 pos4 = usePos.xyz * 0.08;
-			float mossPatches = clamp(proceduralSmoothNoise( pos4 ), 0.0, 1.0);
-			mossPatches = clamp(pow(mossPatches, 2.5), 0.0, 1.0);
-#define mossPatchLower ( 1.0 / 255.0 )
-#define mossPatchUpper ( 255.0 / 96.0 )
-			mossPatches = clamp((clamp(mossPatches - mossPatchLower, 0.0, 1.0)) * mossPatchUpper, 0.0, 1.0);
-
-			float mossStr = proceduralSmoothNoise(pos2);
-			float mossDark = proceduralSmoothNoise(pos2 * 0.8);
-			vec3 col = mix(colorDark, colorLight, mossStr);
-			col = mix(col, outColor.rgb, mossDark);
-
-			vec3 pos5 = usePos.xyz * 3.5;
-			float shadow = clamp(proceduralSmoothNoise( pos5 ), 0.0, 1.0);
-			col = mix(col, vec3(0.0, 0.065, 0.0), shadow);
-
-			mossMix *= mossPatches;
-			outColor.rgb = splatblend(outColor.rgb, 1.0 - mossMix, col, mossMix);
-		}
+#ifdef SSDM_PROCEDURAL_MOSS
+	if (SSDM_ENABLED <= 0.0)
+#endif //SSDM_PROCEDURAL_MOSS
+	{// Add any procedural moss...
+		AddProceduralMoss(outColor, position, changedToWater, originalPosition);
 	}
 
 	if (snow > 0.0)

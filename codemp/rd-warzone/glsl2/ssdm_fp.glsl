@@ -1,3 +1,5 @@
+//#define TEST_PARALLAX
+
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_RoadMap;
 uniform sampler2D				u_PositionMap;
@@ -86,11 +88,13 @@ vec2 EncodeNormal(vec3 n)
 
 void main(void)
 {
+#ifndef TEST_PARALLAX
 	vec3 dMap = texture(u_RoadMap, var_TexCoords).rgb;
+	vec4 color = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
 
 	if (dMap.r <= 0.0)
 	{
-		gl_FragColor = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
+		gl_FragColor = color;
 		return;
 	}
 	
@@ -99,7 +103,7 @@ void main(void)
 
 	if (invDepth <= 0.0)
 	{
-		gl_FragColor = vec4(texture(u_DiffuseMap, var_TexCoords).rgb, 1.0);
+		gl_FragColor = color;
 		return;
 	}
 
@@ -125,7 +129,43 @@ void main(void)
 	float screenEdgeScale = clamp(max(distFromCenter.x, distFromCenter.y) * 2.0, 0.0, 1.0);
 	screenEdgeScale = 1.0 - pow(screenEdgeScale, 16.0/displacementStrengthMod);
 
-	texCoords += norm.xy * vec2((-DISPLACEMENT_STRENGTH * materialMultiplier) * px) * invDepth * screenEdgeScale * dMap.r;
+	float finalModifier = invDepth * screenEdgeScale;
 
-	gl_FragColor = vec4(texture(u_DiffuseMap, texCoords).rgb, 1.0);
+	float offset = -DISPLACEMENT_STRENGTH * materialMultiplier * finalModifier * dMap.r;
+
+
+	texCoords += norm.xy * px * offset;
+	//color = vec4(texture(u_DiffuseMap, texCoords).rgb * shadow, 1.0);
+
+	vec3 col = vec3(0.0);
+	float steps = min(DISPLACEMENT_STRENGTH * materialMultiplier, 4.0);
+	vec2 dir = (texCoords - var_TexCoords) / steps;
+	col = texture(u_DiffuseMap, texCoords).rgb;
+
+	for (float x = steps; x > 0.0; x -= 1.0)
+	{
+		col += texture(u_DiffuseMap, var_TexCoords + (dir*x)).rgb;
+	}
+	col /= steps+1.0;
+	color = vec4(col, 1.0);
+
+	float shadow = 1.0 - clamp(dMap.r, 0.0, 1.0);
+	shadow = pow(shadow, 8.0);
+	shadow = 1.0 - (shadow * finalModifier);
+	shadow = clamp(shadow, 0.0, 1.0);
+	color.rgb *= shadow;
+
+	gl_FragColor = color;
+#else //!TEST_PARALLAX
+	vec2 texCoords = var_TexCoords;
+	vec3 dMap = texture(u_RoadMap, texCoords).rgb;
+	if (length(dMap.rg) == 0.0)
+	{
+		gl_FragColor = vec4(texture(u_DiffuseMap, texCoords).rgb, 1.0);
+	}
+	else
+	{
+		gl_FragColor = vec4(texture(u_DiffuseMap, dMap.xy*2.0-1.0).rgb * pow(dMap.b, 4.0), 1.0);
+	}
+#endif //TEST_PARALLAX
 }

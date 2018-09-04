@@ -1,3 +1,5 @@
+//#define TEST_PARALLAX
+
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_PositionMap;
@@ -10,6 +12,7 @@ uniform vec4					u_Local1; // DISPLACEMENT_MAPPING_STRENGTH, r_testShaderValue1,
 
 uniform vec4					u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3					u_ViewOrigin;
+uniform vec4					u_PrimaryLightOrigin;
 
 varying vec2					var_TexCoords;
 
@@ -113,9 +116,10 @@ float lumaForColor(vec3 color)
 	return luma;
 }
 
-float plumaAtCoord(vec2 coord) {
-  vec3 pixel = texture(u_DiffuseMap, coord).rgb;
-  return lumaForColor(pixel);
+float plumaAtCoord(vec2 coord) 
+{
+	vec3 pixel = texture(u_DiffuseMap, coord).rgb;
+	return lumaForColor(pixel);
 }
 
 float GetDisplacementAtCoord(vec2 coord)
@@ -135,32 +139,21 @@ float GetDisplacementAtCoord(vec2 coord)
 	vec3 gMap = texture(u_GlowMap, coord2).rgb;													// Glow map strength at this pixel
 	float invGlowStrength = 1.0 - clamp(max(gMap.r, max(gMap.g, gMap.b)), 0.0, 1.0);
 
-	//if (u_Local1.g > 0.0)
-	{
-		vec3 pixel = texture(u_DiffuseMap, coord).rgb;
-		float luma = lumaForColor(pixel);
+	vec3 pixel = texture(u_DiffuseMap, coord).rgb;
+	float luma = lumaForColor(pixel);
 
-		float maxColor = clamp(max(pixel.r, max(pixel.g, pixel.b)), 0.0, 1.0);
-		maxColor = clamp(maxColor * 8.0 - 6.0, 0.0, 1.0);
+	float maxColor = clamp(max(pixel.r, max(pixel.g, pixel.b)), 0.0, 1.0);
+	maxColor = clamp(maxColor * 8.0 - 6.0, 0.0, 1.0);
 
-		float displacement = invGlowStrength * ((maxColor + luma) / 2.0);
+	float displacement = invGlowStrength * ((maxColor + luma) / 2.0);
 
-		// Contrast...
-		displacement = clamp((clamp(displacement - contLower, 0.0, 1.0)) * contUpper, 0.0, 1.0);
+	// Contrast...
+	displacement = clamp((clamp(displacement - contLower, 0.0, 1.0)) * contUpper, 0.0, 1.0);
 
-		return displacement;
-	}
-	/*else
-	{
-		float displacement = invGlowStrength * clamp(plumaAtCoord(coord), 0.0, 1.0);
-
-		// Contrast...
-		displacement = clamp((clamp(displacement - contLower, 0.0, 1.0)) * contUpper, 0.0, 1.0);
-
-		return displacement;
-	}*/
+	return displacement;
 }
 
+#ifndef TEST_PARALLAX
 float ReliefMapping(vec2 dp, vec2 ds, float origDepth, float materialMultiplier)
 {
 	//return clamp(GetDisplacementAtCoord(dp + ds), 0.0, 1.0);
@@ -204,6 +197,146 @@ float ReliefMapping(vec2 dp, vec2 ds, float origDepth, float materialMultiplier)
 	float finished = (stepsDone / linear_steps);
 	return clamp(best_depth, 0.0, 1.0) * finished;
 }
+#else //TEST_PARALLAX
+#define parallaxScale u_Local1.g
+
+vec2 parallaxMapping(in vec3 V, in vec2 T, out float parallaxHeight)
+{
+   // determine optimal number of layers
+   const float minLayers = 10;
+   const float maxLayers = 15;
+   float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0, 0, 1), V)));
+
+   // height of each layer
+   float layerHeight = 1.0 / numLayers;
+   // current depth of the layer
+   float curLayerHeight = 0;
+   // shift of texture coordinates for each layer
+   vec2 dtex = parallaxScale * V.xy / V.z / numLayers;
+
+   // current texture coordinates
+   vec2 currentTextureCoords = T;
+
+   // depth from heightmap
+   float heightFromTexture = GetDisplacementAtCoord(currentTextureCoords).r;
+
+   float layer = 0.0;
+
+   // while point is above the surface
+   while(heightFromTexture > curLayerHeight) 
+   {
+      // to the next layer
+      curLayerHeight += layerHeight; 
+      // shift of texture coordinates
+      currentTextureCoords -= dtex;
+      // new depth from heightmap
+      heightFromTexture = GetDisplacementAtCoord(currentTextureCoords).r;
+
+	  layer += 1.0;
+	  if (layer >= maxLayers) break;
+   }
+
+   ///////////////////////////////////////////////////////////
+
+   // previous texture coordinates
+   vec2 texStep	= dtex;
+   vec2 prevTCoords = currentTextureCoords + texStep;
+
+   // heights for linear interpolation
+   float nextH	= heightFromTexture - curLayerHeight;
+   float prevH	= GetDisplacementAtCoord(prevTCoords).r - curLayerHeight + layerHeight;
+
+   // proportions for linear interpolation
+   float weight = nextH / (nextH - prevH);
+
+   // interpolation of texture coordinates
+   vec2 finalTexCoords = prevTCoords * weight + currentTextureCoords * (1.0-weight);
+
+   // interpolation of depth values
+   parallaxHeight = curLayerHeight + prevH * weight + nextH * (1.0 - weight);
+
+   // return result
+   return finalTexCoords;
+}
+
+float parallaxSoftShadowMultiplier(in vec3 L, in vec2 initialTexCoord, in float initialHeight)
+{
+   float shadowMultiplier = 1;
+
+   const float minLayers = 15;
+   const float maxLayers = 30;
+
+   // calculate lighting only for surface oriented to the light source
+   if(dot(vec3(0, 0, 1), L) > 0)
+   {
+      // calculate initial parameters
+      float numSamplesUnderSurface	= 0;
+      shadowMultiplier	= 0;
+      float numLayers	= mix(maxLayers, minLayers, abs(dot(vec3(0, 0, 1), L)));
+      float layerHeight	= initialHeight / numLayers;
+      vec2 texStep	= parallaxScale * L.xy / L.z / numLayers;
+
+      // current parameters
+      float currentLayerHeight	= initialHeight - layerHeight;
+      vec2 currentTextureCoords	= initialTexCoord + texStep;
+      float heightFromTexture	= GetDisplacementAtCoord(currentTextureCoords).r;
+      int stepIndex	= 1;
+
+	  float layer = 0.0;
+
+      // while point is below depth 0.0 )
+      while(currentLayerHeight > 0)
+      {
+         // if point is under the surface
+         if(heightFromTexture < currentLayerHeight)
+         {
+            // calculate partial shadowing factor
+            numSamplesUnderSurface	+= 1;
+            float newShadowMultiplier	= (currentLayerHeight - heightFromTexture) * (1.0 - stepIndex / numLayers);
+            shadowMultiplier	= max(shadowMultiplier, newShadowMultiplier);
+         }
+
+         // offset to the next layer
+         stepIndex	+= 1;
+         currentLayerHeight	-= layerHeight;
+         currentTextureCoords	+= texStep;
+         heightFromTexture	= GetDisplacementAtCoord(currentTextureCoords).r;
+
+		layer += 1.0;
+		if (layer >= maxLayers) break;
+      }
+
+      // Shadowing factor should be 1 if there were no points under the surface
+      if(numSamplesUnderSurface < 1)
+      {
+         shadowMultiplier = 1;
+      }
+      else
+      {
+         shadowMultiplier = 1.0 - shadowMultiplier;
+      }
+   }
+   return shadowMultiplier;
+}
+
+vec3 TangentFromNormal ( vec3 normal )
+{
+	vec3 tangent;
+	vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0)); 
+	vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0)); 
+
+	if( length(c1) > length(c2) )
+	{
+		tangent = c1;
+	}
+	else
+	{
+		tangent = c2;
+	}
+
+	return normalize(tangent);
+}
+#endif //TEST_PARALLAX
 
 void main(void)
 {
@@ -212,6 +345,8 @@ void main(void)
 		gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 		return;
 	}
+
+#ifndef TEST_PARALLAX
 
 	float depth = getDepth(var_TexCoords);
 	float invDepth = clamp((1.0 - depth) * 2.0 - 1.0, 0.0, 1.0);
@@ -248,4 +383,46 @@ void main(void)
 #endif
 	
 	gl_FragColor = vec4(displacement, norm.x * 0.5 + 0.5, norm.y * 0.5 + 0.5, 1.0);
+
+#else //!TEST_PARALLAX
+
+	// normalize vectors after vertex shader
+	//vec3 V = normalize(o_toCameraInTangentSpace);
+	//vec3 L = normalize(o_toLightInTangentSpace);
+
+	vec3 position = texture(u_PositionMap, var_TexCoords).xyz;
+
+	vec3 V = normalize(u_ViewOrigin.xyz - position.xyz).xzy;
+	vec3 L = normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz).xzy;
+
+	vec3 norm = DecodeNormal(textureLod(u_NormalMap, var_TexCoords, 0.0).xy);
+	vec3 tangent = TangentFromNormal( norm.xzy );
+	vec3 bitangent = normalize( cross(norm.xzy, tangent) );
+	//mat3 tangentToWorld = mat3(tangent.xzy, bitangent.xzy, norm.xzy);
+
+	V = vec3(
+		dot(V, norm),
+		dot(V, tangent),
+		dot(V, bitangent)
+	);
+
+	L = vec3(
+		dot(L, norm),
+		dot(L, tangent),
+		dot(L, bitangent)
+	);
+
+	// get new texture coordinates from Parallax Mapping
+	float parallaxHeight;
+	vec2 T = parallaxMapping(V, var_TexCoords, parallaxHeight);
+
+	// get self-shadowing factor for elements of parallax
+	float shadowMultiplier = parallaxSoftShadowMultiplier(L, T, parallaxHeight - 0.05);
+
+	// calculate lighting
+	//resultingColor = normalMappingLighting(T, L, V, shadowMultiplier);
+
+	gl_FragColor = vec4(T*0.5+0.5, shadowMultiplier, 1.0);
+
+#endif //TEST_PARALLAX
 }

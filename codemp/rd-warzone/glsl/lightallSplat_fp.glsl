@@ -502,7 +502,8 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 #ifdef __USE_REGIONS__
 	if (USE_REGIONS > 0.0)
 	{
-		scale = 0.001;
+		//scale = 0.001;
+		scale = 0.0025;
 	}
 #endif //__USE_REGIONS__
 
