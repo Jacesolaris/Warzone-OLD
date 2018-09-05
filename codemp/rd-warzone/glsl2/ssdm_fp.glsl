@@ -110,17 +110,17 @@ void main(void)
 	//invDepth = clamp(length(invDepth * 1.75 - 0.75), 0.0, 1.0);
 
 	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
-	/*float materialMultiplier = 1.0;
+	float materialMultiplier = 1.0;
 
 	if (material == MATERIAL_ROCK)
 	{// Rock gets more displacement...
-		materialMultiplier = 6.0;
+		materialMultiplier = 3.0;
 	}
 	else if (material == MATERIAL_SOLIDWOOD)
 	{// Rock gets more displacement...
-		materialMultiplier = 3.0;
-	}*/
-	const float materialMultiplier = 1.0;
+		materialMultiplier = 1.5;
+	}
+	//const float materialMultiplier = 1.0;
 
 	vec3 norm = vec3(dMap.gb, 0.0) * 2.0 - 1.0;
 	norm.z = sqrt(1.0 - dot(norm.xy, norm.xy)); // reconstruct Z from X and Y
@@ -130,9 +130,9 @@ void main(void)
 	float screenEdgeScale = clamp(max(distFromCenter.x, distFromCenter.y) * 2.0, 0.0, 1.0);
 	screenEdgeScale = 1.0 - pow(screenEdgeScale, 16.0/displacementStrengthMod);
 
-	float finalModifier = invDepth * screenEdgeScale;
+	float finalModifier = invDepth;
 
-	float offset = -DISPLACEMENT_STRENGTH * materialMultiplier * finalModifier * dMap.r;
+	float offset = -DISPLACEMENT_STRENGTH * materialMultiplier * finalModifier * screenEdgeScale * dMap.r;
 
 
 	texCoords += norm.xy * px * offset;
@@ -153,7 +153,7 @@ void main(void)
 	float shadow = 1.0 - clamp(dMap.r, 0.0, 1.0);
 	shadow = pow(shadow, 8.0);
 	shadow = 1.0 - (shadow * finalModifier);
-	shadow = clamp(shadow, 0.0, 1.0);
+	shadow = clamp(shadow * 0.75 + 0.25, 0.0, 1.0);
 	color.rgb *= shadow;
 
 	gl_FragColor = color;

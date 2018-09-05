@@ -360,17 +360,17 @@ void main(void)
 	vec3 norm = getViewNormal(var_TexCoords);
 	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
 	
-	/*float materialMultiplier = 1.0;
+	float materialMultiplier = 1.0;
 
 	if (material == MATERIAL_ROCK)
 	{// Rock gets more displacement...
-		materialMultiplier = 6.0;
+		materialMultiplier = 3.0;
 	}
 	else if (material == MATERIAL_SOLIDWOOD)
 	{// Rock gets more displacement...
-		materialMultiplier = 3.0;
-	}*/
-	const float materialMultiplier = 1.0;
+		materialMultiplier = 1.5;
+	}
+	//const float materialMultiplier = 1.0;
 
 #if 1
 	vec2 coord2 = var_TexCoords;
