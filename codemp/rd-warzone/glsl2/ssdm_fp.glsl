@@ -110,7 +110,7 @@ void main(void)
 	//invDepth = clamp(length(invDepth * 1.75 - 0.75), 0.0, 1.0);
 
 	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
-	float materialMultiplier = 1.0;
+	/*float materialMultiplier = 1.0;
 
 	if (material == MATERIAL_ROCK)
 	{// Rock gets more displacement...
@@ -119,7 +119,8 @@ void main(void)
 	else if (material == MATERIAL_SOLIDWOOD)
 	{// Rock gets more displacement...
 		materialMultiplier = 3.0;
-	}
+	}*/
+	const float materialMultiplier = 1.0;
 
 	vec3 norm = vec3(dMap.gb, 0.0) * 2.0 - 1.0;
 	norm.z = sqrt(1.0 - dot(norm.xy, norm.xy)); // reconstruct Z from X and Y

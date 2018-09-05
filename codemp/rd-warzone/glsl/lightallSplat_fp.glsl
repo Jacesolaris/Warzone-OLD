@@ -305,9 +305,8 @@ vec4 GetControlMap( void )
 	vec4 control;
 	
 #ifdef __USE_REGIONS__
-	if (USE_REGIONS > 0.0)
-	{
-		// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
+	/*if (USE_REGIONS > 0.0)
+	{// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
 		float maxHeightOverWater = MAP_MAX_HEIGHT - SHADER_WATER_LEVEL;
 		float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
 		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
@@ -318,7 +317,7 @@ vec4 GetControlMap( void )
 		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
 	}
-	else 
+	else */
 #endif //__USE_REGIONS__
 	if (USE_TRIPLANAR >= 2.0)
 	{
@@ -439,7 +438,7 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	yaxis.a = 1.0;
 	zaxis.a = 1.0;
 
-	vec2 tScale = vec2(1.0) * scale;
+	vec2 tScale = vec2(scale);
 
 	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
 	{
@@ -486,8 +485,12 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 		return inColor;
 	}
 
+#ifdef __USE_REGIONS__
+	if (USE_REGIONS <= 0.0 && SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL)
+#else //!__USE_REGIONS__
 	if (SHADER_HAS_WATEREDGEMAP > 0.0 && m_vertPos.z <= SHADER_WATER_LEVEL)
-	{// Steep maps (water edges)... Underwater doesn't use splats for now...
+#endif //__USE_REGIONS__
+	{// Steep maps (water edges)... Underwater doesn't use splats for now... Except if this is using regions...
 		return inColor;
 	}
 
@@ -502,7 +505,6 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 #ifdef __USE_REGIONS__
 	if (USE_REGIONS > 0.0)
 	{
-		//scale = 0.001;
 		scale = 0.0025;
 	}
 #endif //__USE_REGIONS__
@@ -540,27 +542,6 @@ vec4 GetSplatMap(vec2 texCoords, vec4 inColor, inout float depth)
 	}
 
 	return splatColor;
-}
-
-vec4 GenerateTerrainMap(vec2 coord)
-{
-	// Splat mapping...
-	float a1 = 0.0;
-	float a2 = 0.0;
-	vec4 tex1 = GetMap(u_DiffuseMap, 0.0075, a1);
-	vec4 tex2 = GetSplatMap(coord, tex1, a2);
-
-	float maxHeightOverWater = MAP_MAX_HEIGHT - SHADER_WATER_LEVEL;
-	float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
-	float mixVal = 1.0 - clamp(pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH), 0.0, 1.0);
-
-	mixVal *= -32.0;//u_Local9.r;
-
-#ifdef __USE_FULL_SPLAT_BLENDFUNC__
-	return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
-#else //!__USE_FULL_SPLAT_BLENDFUNC__
-	return SmoothMix(tex1.rgb, tex2.rgb, 1.0 - clamp(mixVal * a1, 0.0, 1.0));
-#endif //__USE_FULL_SPLAT_BLENDFUNC__
 }
 
 vec4 GetDiffuse2(vec2 texCoords, out float a1)
@@ -615,13 +596,21 @@ vec4 GetDiffuse2(vec2 texCoords, out float a1)
 			return vec4(control.rgb, 1.0);
 		}
 
+		float scale = 0.0075;
+
 #ifdef __USE_REGIONS__
-		if (USE_REGIONS > 0.0 
-			&& (SHADER_HAS_SPLATMAP1 > 0 || SHADER_HAS_SPLATMAP2 > 0 || SHADER_HAS_SPLATMAP3 > 0 || SHADER_HAS_SPLATMAP4 > 0))
+		if (USE_REGIONS > 0.0)
+		{
+			scale = 0.0025;
+		}
+#endif //__USE_REGIONS__
+
+#ifdef __USE_REGIONS__
+		if (USE_REGIONS > 0.0 && (SHADER_HAS_SPLATMAP1 > 0 || SHADER_HAS_SPLATMAP2 > 0 || SHADER_HAS_SPLATMAP3 > 0 || SHADER_HAS_SPLATMAP4 > 0))
 		{// Regions...
-			vec4 terrain = GenerateTerrainMap(texCoords);
-			a1 = GetDepthForPixel(terrain);
-			return terrain;
+			a1 = 0.0;
+			vec4 tex = GetMap(u_DiffuseMap, scale, a1);
+			return GetSplatMap(texCoords, tex, a1);
 		}
 		else
 #endif //__USE_REGIONS__
@@ -630,20 +619,20 @@ vec4 GetDiffuse2(vec2 texCoords, out float a1)
 			{// Steep maps (using vertex colors)...
 				// Splat mapping...
 				a1 = 0.0;
-				vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
+				vec4 tex = GetMap(u_DiffuseMap, scale, a1);
 				return GetSplatMap(texCoords, tex, a1);
 			}
 			else if (SHADER_HAS_SPLATMAP1 > 0.0 || SHADER_HAS_SPLATMAP2 > 0.0 || SHADER_HAS_SPLATMAP3 > 0.0 || (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial()))
 			{// Steep maps (low angles)...
 				// Splat mapping...
 				a1 = 0.0;
-				vec4 tex = GetMap(u_DiffuseMap, 0.0075, a1);
+				vec4 tex = GetMap(u_DiffuseMap, scale, a1);
 				return GetSplatMap(texCoords, tex, a1);
 			}
 			else
 			{
 				a1 = -1.0;
-				return GetMap(u_DiffuseMap, 0.0075, a1);
+				return GetMap(u_DiffuseMap, scale, a1);
 			}
 		}
 	}
