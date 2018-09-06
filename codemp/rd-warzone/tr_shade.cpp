@@ -68,6 +68,18 @@ extern float		GRASS_SIZE_MULTIPLIER_COMMON;
 extern float		GRASS_SIZE_MULTIPLIER_RARE;
 extern float		GRASS_SIZE_MULTIPLIER_UNDERWATER;
 extern float		GRASS_LOD_START_RANGE;
+
+extern qboolean		VINES_ENABLED;
+extern int			VINES_WIDTH_REPEATS;
+extern int			VINES_DENSITY;
+extern float		VINES_HEIGHT;
+extern int			VINES_DISTANCE;
+extern float		VINES_MIN_SLOPE;
+extern float		VINES_TYPE_UNIFORMALITY;
+extern float		VINES_TYPE_UNIFORMALITY_SCALER;
+extern float		VINES_SURFACE_MINIMUM_SIZE;
+extern float		VINES_SURFACE_SIZE_DIVIDER;
+
 extern qboolean		MOON_ENABLED;
 extern vec3_t		MOON_COLOR;
 extern vec3_t		MOON_ATMOSPHERE_COLOR;
@@ -1987,6 +1999,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	int useTesselation = 0;
 	qboolean isWater = qfalse;
 	qboolean isGrass = qfalse;
+	qboolean isVines = qfalse;
 	qboolean isGroundFoliage = qfalse;
 	qboolean isFur = qfalse;
 	qboolean isEmissiveBlack = qfalse;
@@ -2024,6 +2037,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
+		}
+		else if (r_foliage->integer
+			&& r_foliageShadows->integer
+			&& VINES_ENABLED
+			&& (tess.shader->materialType == MATERIAL_SOLIDWOOD || tess.shader->materialType == MATERIAL_ROCK))
+		{
+			isVines = qtrue;
 		}
 	}
 	else if ((tr.viewParms.flags & VPF_CUBEMAP)
@@ -2065,6 +2085,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			isGrass = qtrue;
 			tess.shader->isGrass = qtrue; // Cache to speed up future checks...
+		}
+		else if (r_foliage->integer
+			&& VINES_ENABLED
+			&& (tess.shader->materialType == MATERIAL_SOLIDWOOD || tess.shader->materialType == MATERIAL_ROCK))
+		{
+			isVines = qtrue;
 		}
 		else if (r_groundFoliage->integer
 			&& (tess.shader->isGroundFoliage || RB_ShouldUseGeometryGrass(tess.shader->materialType)))
@@ -2806,18 +2832,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			// Hmm, I think drawing all these grasses to the depth prepass is gonna slow things more than the benefit of pixel culls in the final pass...
 			// the landscape itself should be good enough... *sigh* this makes things partially trans...
 
-			if ((r_foliage->integer && isGrass))
+			if (isGrass)
 			{// Special extra pass stuff for grass...
-				if (isGrass && r_foliage->integer)
-				{
-					if (GRASS_UNDERWATER_ONLY)
-						sp2 = &tr.grassShader[0];
-					else
-						sp2 = &tr.grassShader[1];
+				if (GRASS_UNDERWATER_ONLY)
+					sp2 = &tr.grassShader[0];
+				else
+					sp2 = &tr.grassShader[1];
 
-					multiPass = qtrue;
-					passMax = 1;// GRASS_DENSITY;
-				}
+				multiPass = qtrue;
+				passMax = 1;// GRASS_DENSITY;
+			}
+			else if (isVines)
+			{
+				sp2 = &tr.vinesShader;
+
+				multiPass = qtrue;
+				passMax = 1;
 			}
 			else if (r_groundFoliage->integer && isGroundFoliage)
 			{
@@ -3582,6 +3612,81 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_Cull(CT_TWO_SIDED);
 			}
+			else if (isVines && passNum == 1 && sp2)
+			{// Switch to vines geometry shader, once... Repeats will reuse it...
+				sp = sp2;
+				sp2 = NULL;
+
+				GLSL_BindProgram(sp);
+
+				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
+
+				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+				GL_BindToTMU(tr.vinesAliasImage, TB_DIFFUSEMAP);
+				//GL_BindToTMU(tr.seaVinesAliasImage, TB_WATER_EDGE_MAP);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PLAYERORIGIN, backEnd.localPlayerOrigin);
+
+#ifdef __HUMANOIDS_BEND_GRASS__ // Bend grass for all close player/NPCs...
+				GLSL_SetUniformInt(sp, UNIFORM_HUMANOIDORIGINSNUM, backEnd.humanoidOriginsNum);
+				GLSL_SetUniformVec3xX(sp, UNIFORM_HUMANOIDORIGINS, backEnd.humanoidOrigins, backEnd.humanoidOriginsNum);
+#endif //__HUMANOIDS_BEND_GRASS__
+
+				float TERRAIN_TESS_OFFSET = 0.0;
+
+				// Check if this is grass on a tessellated terrain, if so, we want to lower the verts in the vert shader by the maximum possible tessellation height...
+				if (TERRAIN_TESSELLATION_ENABLED
+					&& r_tessellation->integer
+					&& r_terrainTessellation->integer
+					&& r_terrainTessellationMax->value >= 2.0)
+				{// When tessellating terrain, we need to drop the grasses down lower to allow for the offset...
+					TERRAIN_TESS_OFFSET = TERRAIN_TESSELLATION_OFFSET;
+					GL_BindToTMU(tr.tessellationMapImage, TB_HEIGHTMAP);
+				}
+
+				vec4_t l10;
+				VectorSet4(l10, VINES_DISTANCE, TERRAIN_TESS_OFFSET, VINES_DENSITY, VINES_TYPE_UNIFORMALITY);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				vec4_t l11;
+				VectorSet4(l11, VINES_WIDTH_REPEATS, VINES_MIN_SLOPE, VINES_TYPE_UNIFORMALITY_SCALER, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL11, l11);
+
+				/*{
+					vec4_t loc;
+					VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_MINS, loc);
+
+					VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_MAXS, loc);
+
+					VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
+				}*/
+
+				{
+					vec4_t vec;
+					VectorSet4(vec,
+						MAP_COLOR_SWITCH_RG ? 1.0 : 0.0,
+						MAP_COLOR_SWITCH_RB ? 1.0 : 0.0,
+						MAP_COLOR_SWITCH_GB ? 1.0 : 0.0,
+						0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
+				}
+
+				GL_Cull(CT_TWO_SIDED);
+			}
 			else if (isGroundFoliage && passNum == 1 && sp2)
 			{
 				sp = sp2;
@@ -3869,6 +3974,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_Cull(CT_TWO_SIDED);
 			}
+			else if (multiPass && passNum >= 1 && isVines)
+			{// Need to send stage num to these geometry shaders...
+				{
+					vec4_t l8;
+					VectorSet4(l8, VINES_SURFACE_MINIMUM_SIZE, 0.0, VINES_HEIGHT, VINES_SURFACE_SIZE_DIVIDER);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+				}
+
+				GL_Cull(CT_TWO_SIDED);
+			}
 			else if (isGrass && useTesselation == 2 && sp == &tr.lightAllSplatShader[2])
 			{
 				vec4_t l8;
@@ -3910,7 +4025,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (!multiPass)
 			{
-				if ((isGrass && r_foliage->integer) || (isGroundFoliage && r_groundFoliage->integer) || (isFur && r_fur->integer))
+				if ((isGrass && r_foliage->integer) || (isGroundFoliage && r_groundFoliage->integer) || (isFur && r_fur->integer) || (isVines && r_foliage->integer))
 				{// Set cull type back to original... Just in case...
 					GL_Cull( input->shader->cullType );
 				}

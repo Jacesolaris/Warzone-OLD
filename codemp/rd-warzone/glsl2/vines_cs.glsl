@@ -49,10 +49,6 @@ uniform vec4								u_Local12; // GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTI
 
 uniform vec3								u_ViewOrigin;
 
-//uniform float uTessLevel;
-//const float uTessLevel = 7.0;
-//float uTessLevel = (u_Local9.r > 1.0) ? u_Local9.r : 1.0;
-
 void main() 
 {
 	// (2)
@@ -69,25 +65,7 @@ void main()
 	vec3 Vert2 = gl_in[1].gl_Position.xyz;
 	vec3 Vert3 = gl_in[2].gl_Position.xyz;
 
-#ifdef __USE_UNDERWATER_ONLY__
-	float waterCheckLevel = MAP_WATER_LEVEL - 128.0;
-
-	if (Vert1.z >= waterCheckLevel && Vert2.z >= waterCheckLevel && Vert3.z >= waterCheckLevel)
-	{// Can skip this triangle completely...
-		gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelInner[0] = 0.0;// 1.0;
-		return;
-	}
-#endif //__USE_UNDERWATER_ONLY__
-
 	vec3 Pos = (Vert1 + Vert2 + Vert3) / 3.0;   //Center of the triangle - copy for later
-
-#ifdef __USE_UNDERWATER_ONLY__
-	if (Pos.z >= MAP_WATER_LEVEL)
-	{// Do less grasses underwater...
-		gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelInner[0] = 0.0;// 1.0;
-		return;
-	}
-#endif //__USE_UNDERWATER_ONLY__
 
 	// UQ1: Checked and distance is faster
 	float VertDist = distance(u_ViewOrigin, Pos);
@@ -127,10 +105,10 @@ void main()
 
 	float uTessLevel = (GRASS_DENSITY * sizeMult > 1.0) ? GRASS_DENSITY * sizeMult : 1.0;
 
-	if (Pos.z < MAP_WATER_LEVEL)
+	/*if (Pos.z < MAP_WATER_LEVEL)
 	{// Do less grasses underwater...
 		uTessLevel = max(float(int(uTessLevel / 6.0)), 1.0);
-	}
+	}*/
 
 	// (3)
 	gl_TessLevelOuter[0] = uTessLevel;

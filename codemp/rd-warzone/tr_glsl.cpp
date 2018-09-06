@@ -136,9 +136,11 @@ extern const char *fallbackShader_grass2_vp;
 extern const char *fallbackShader_grass2_cs;
 extern const char *fallbackShader_grass2_es;
 extern const char *fallbackShader_grass2_gs;
-extern const char *fallbackShader_grass3_fp;
-extern const char *fallbackShader_grass3_vp;
-extern const char *fallbackShader_grass3_gs;
+extern const char *fallbackShader_vines_fp;
+extern const char *fallbackShader_vines_vp;
+extern const char *fallbackShader_vines_cs;
+extern const char *fallbackShader_vines_es;
+extern const char *fallbackShader_vines_gs;
 extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
 extern const char *fallbackShader_hbaoCombine_vp;
@@ -3388,6 +3390,18 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 	}
 
+	if (r_foliage->integer)
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+
+		extradefines[0] = '\0';
+
+		if (!GLSL_BeginLoadGPUShader(&tr.vinesShader, "vines", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_vines_vp, fallbackShader_vines_fp, fallbackShader_vines_cs, fallbackShader_vines_es, fallbackShader_vines_gs))
+		{
+			ri->Error(ERR_FATAL, "Could not load vines shader!");
+		}
+	}
+
 	attribs = ATTR_POSITION | ATTR_POSITION2 | ATTR_NORMAL | ATTR_NORMAL2 | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -4598,6 +4612,26 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.grassShader[1]);
+#endif
+
+		numEtcShaders++;
+
+
+		if (!GLSL_EndLoadGPUShader(&tr.vinesShader))
+		{
+			ri->Error(ERR_FATAL, "Could not load vines shader!");
+		}
+
+		GLSL_InitUniforms(&tr.vinesShader);
+
+		GLSL_BindProgram(&tr.vinesShader);
+
+		// Grass/plant textures...
+		GLSL_SetUniformInt(&tr.vinesShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP); // 0
+		GLSL_SetUniformInt(&tr.vinesShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass 0...
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.vinesShader);
 #endif
 
 		numEtcShaders++;
@@ -6443,6 +6477,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.foliageShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[0]);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[1]);
+	GLSL_DeleteGPUShader(&tr.vinesShader);
 	//GLSL_DeleteGPUShader(&tr.hbaoShader);
 	//GLSL_DeleteGPUShader(&tr.hbao2Shader);
 	//GLSL_DeleteGPUShader(&tr.hbaoCombineShader);

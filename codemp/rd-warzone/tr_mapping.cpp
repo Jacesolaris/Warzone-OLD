@@ -1502,6 +1502,17 @@ float		GRASS_SIZE_MULTIPLIER_COMMON = 1.0;
 float		GRASS_SIZE_MULTIPLIER_RARE = 2.75;
 float		GRASS_SIZE_MULTIPLIER_UNDERWATER = 1.0;
 float		GRASS_LOD_START_RANGE = 8192.0;
+qboolean	VINES_ENABLED = qtrue;
+qboolean	VINES_UNDERWATER_ONLY = qfalse;
+int			VINES_WIDTH_REPEATS = 0;
+int			VINES_DENSITY = 2;
+float		VINES_HEIGHT = 48.0;
+int			VINES_DISTANCE = 2048;
+float		VINES_MIN_SLOPE = 100.0;
+float		VINES_SURFACE_MINIMUM_SIZE = 128.0;
+float		VINES_SURFACE_SIZE_DIVIDER = 1024.0;
+float		VINES_TYPE_UNIFORMALITY = 0.97;
+float		VINES_TYPE_UNIFORMALITY_SCALER = 0.008;
 qboolean	MOON_ENABLED = qtrue;
 vec3_t		MOON_COLOR = { 0.2f };
 vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
@@ -1962,6 +1973,21 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
+	VINES_ENABLED = (atoi(IniRead(mapname, "VINES", "VINES_ENABLED", "0")) > 0) ? qtrue : qfalse;
+
+	if (VINES_ENABLED)
+	{
+		VINES_DENSITY = atoi(IniRead(mapname, "VINES", "VINES_DENSITY", "1"));
+		VINES_WIDTH_REPEATS = atoi(IniRead(mapname, "VINES", "VINES_WIDTH_REPEATS", "0"));
+		VINES_HEIGHT = atof(IniRead(mapname, "VINES", "VINES_HEIGHT", "7.0"));
+		VINES_DISTANCE = atoi(IniRead(mapname, "VINES", "VINES_DISTANCE", "8192"));
+		VINES_MIN_SLOPE = atof(IniRead(mapname, "VINES", "VINES_MIN_SLOPE", "95.0"));
+		VINES_SURFACE_MINIMUM_SIZE = atof(IniRead(mapname, "VINES", "VINES_SURFACE_MINIMUM_SIZE", "16.0"));
+		VINES_SURFACE_SIZE_DIVIDER = atof(IniRead(mapname, "VINES", "VINES_SURFACE_SIZE_DIVIDER", "65536.0"));
+		VINES_TYPE_UNIFORMALITY = atof(IniRead(mapname, "VINES", "VINES_TYPE_UNIFORMALITY", "0.97"));
+		VINES_TYPE_UNIFORMALITY_SCALER = atof(IniRead(mapname, "VINES", "VINES_TYPE_UNIFORMALITY_SCALER", "0.008"));
+	}
+
 	//
 	// Lighting...
 	//
@@ -2109,6 +2135,40 @@ void MAPPING_LoadMapInfo(void)
 		{// No default image? Use white...
 			tr.defaultGrassMapImage = tr.whiteImage;
 		}
+	}
+
+	if ((VINES_ENABLED && r_foliage->integer))
+	{
+		if (!VINES_UNDERWATER_ONLY)
+		{
+			char grassImages[16][512] = { 0 };
+
+			for (int i = 0; i < 16; i++)
+			{
+				strcpy(grassImages[i], IniRead(mapname, "VINES", va("vinesImage%i", i), "models/warzone/vines/jungleivy01"));
+
+				if (!R_TextureFileExists(grassImages[i]))
+				{
+					strcpy(grassImages[i], "models/warzone/vines/jungleivy01");
+				}
+			}
+
+			tr.vinesAliasImage = R_BakeTextures(grassImages, 16, "vines", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		}
+
+		/*char seaGrassImages[4][512] = { 0 };
+
+		for (int i = 0; i < 4; i++)
+		{
+			strcpy(seaGrassImages[i], IniRead(mapname, "VINES", va("seaVinesImage%i", i), "models/warzone/vines/seavines01"));
+
+			if (!R_TextureFileExists(seaGrassImages[i]))
+			{
+				strcpy(seaGrassImages[i], "models/warzone/vines/seavines01");
+			}
+		}
+
+		tr.seaVinesAliasImage = R_BakeTextures(seaGrassImages, 4, "seaVines", IMGTYPE_COLORALPHA, IMGFLAG_NONE);*/
 	}
 
 	if (WATER_ENABLED)

@@ -2794,6 +2794,10 @@ typedef struct trGlobals_s {
 	image_t					*seaGrassImage[4];
 	image_t					*seaGrassAliasImage;
 	image_t					*grassMaskImage[10];
+	image_t					*vinesImage[16];
+	image_t					*vinesAliasImage;
+	image_t					*seaVinesImage[4];
+	image_t					*seaVinesAliasImage;
 	image_t					*paletteImage;
 	image_t					*roadsMapImage;
 	image_t					*tessellationMapImage;
@@ -2983,6 +2987,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t furShader;
 	shaderProgram_t foliageShader;
 	shaderProgram_t grassShader[2];
+	shaderProgram_t vinesShader;
 	//shaderProgram_t hbaoShader;
 	//shaderProgram_t hbao2Shader;
 	//shaderProgram_t hbaoCombineShader;
