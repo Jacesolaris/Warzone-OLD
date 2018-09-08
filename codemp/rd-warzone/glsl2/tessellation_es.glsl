@@ -1,30 +1,42 @@
-uniform mat4	u_ModelViewProjectionMatrix;
-uniform mat4	u_ModelMatrix;
+uniform mat4						u_ModelViewProjectionMatrix;
+uniform mat4						u_ModelMatrix;
 
-uniform vec4				u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
-uniform vec4				u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
-uniform vec4				u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
-uniform vec4				u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
+uniform sampler2D					u_RoadsControlMap;
+uniform sampler2D					u_HeightMap;
 
-#define USE_TC				u_Settings0.r
-#define USE_DEFORM			u_Settings0.g
-#define USE_RGBA			u_Settings0.b
-#define USE_TEXTURECLAMP	u_Settings0.a
+uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
+uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, useFog, is2D
+uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
+uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL
 
-#define USE_VERTEX_ANIM		u_Settings1.r
-#define USE_SKELETAL_ANIM	u_Settings1.g
-#define USE_FOG				u_Settings1.b
-#define USE_IS2D			u_Settings1.a
+#define USE_TC						u_Settings0.r
+#define USE_DEFORM					u_Settings0.g
+#define USE_RGBA					u_Settings0.b
+#define USE_TEXTURECLAMP			u_Settings0.a
 
-#define USE_LIGHTMAP		u_Settings2.r
-#define USE_GLOW_BUFFER		u_Settings2.g
-#define USE_CUBEMAP			u_Settings2.b
-#define USE_TRIPLANAR		u_Settings2.a
+#define USE_VERTEX_ANIM				u_Settings1.r
+#define USE_SKELETAL_ANIM			u_Settings1.g
+#define USE_FOG						u_Settings1.b
+#define USE_IS2D					u_Settings1.a
 
-#define USE_REGIONS			u_Settings3.r
-#define USE_ISDETAIL		u_Settings3.g
+#define USE_LIGHTMAP				u_Settings2.r
+#define USE_GLOW_BUFFER				u_Settings2.g
+#define USE_CUBEMAP					u_Settings2.b
+#define USE_TRIPLANAR				u_Settings2.a
 
-uniform float	u_Time;
+#define USE_REGIONS					u_Settings3.r
+#define USE_ISDETAIL				u_Settings3.g
+
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
+uniform vec4						u_Local12; // TERRAIN_TESS_OFFSET, GRASS_DISTANCE_FROM_ROADS, 0.0, 0.0
+
+#define TERRAIN_TESS_OFFSET			u_Local12.r
+#define GRASS_DISTANCE_FROM_ROADS	u_Local12.g
+
+uniform vec4						u_Mins;
+uniform vec4						u_Maxs;
+
+uniform float						u_Time;
 
 out precise vec3 WorldPos_FS_in;
 out precise vec2 TexCoord_FS_in;
@@ -161,6 +173,97 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 	return pos + normal * (base + func * amplitude);
 }
 
+
+#define HASHSCALE1 .1031
+
+float random(vec2 p)
+{
+	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE1);
+	p3 += dot(p3, p3.yzx + 19.19);
+	return fract((p3.x + p3.y) * p3.z);
+}
+
+// 2D Noise based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noise(in vec2 st) {
+	vec2 i = floor(st);
+	vec2 f = fract(st);
+
+	// Four corners in 2D of a tile
+	float a = random(i);
+	float b = random(i + vec2(1.0, 0.0));
+	float c = random(i + vec2(0.0, 1.0));
+	float d = random(i + vec2(1.0, 1.0));
+
+	// Smooth Interpolation
+
+	// Cubic Hermine Curve.  Same as SmoothStep()
+	vec2 u = f*f*(3.0 - 2.0*f);
+	// u = smoothstep(0.,1.,f);
+
+	// Mix 4 coorners percentages
+	return mix(a, b, u.x) +
+		(c - a)* u.y * (1.0 - u.x) +
+		(d - b) * u.x * u.y;
+}
+
+float GetRoadFactor(vec2 pixel)
+{
+	float roadScale = 1.0;
+
+	//if (SHADER_HAS_SPLATMAP4 > 0.0)
+	{// Also grab the roads map, if we have one...
+		float road = texture(u_RoadsControlMap, pixel).r;
+
+		if (road > GRASS_DISTANCE_FROM_ROADS)
+		{
+			roadScale = 0.0;
+		}
+		else if (road > 0.0)
+		{
+			roadScale = 1.0 - clamp(road / GRASS_DISTANCE_FROM_ROADS, 0.0, 1.0);
+		}
+		else
+		{
+			roadScale = 1.0;
+		}
+	}
+	//else
+	//{
+	//	roadScale = 1.0;
+	//}
+
+	return 1.0 - clamp(roadScale * 0.6 + 0.4, 0.0, 1.0);
+}
+
+float GetHeightmap(vec2 pixel)
+{
+	return texture(u_HeightMap, pixel).r;
+}
+
+vec2 GetMapTC(vec3 pos)
+{
+	vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+	return (pos.xy - u_Mins.xy) / mapSize;
+}
+
+float LDHeightForPosition(vec3 pos)
+{
+	return noise(vec2(pos.xy * 0.00875));
+}
+
+float OffsetForPosition(vec3 pos)
+{
+	vec2 pixel = GetMapTC(pos);
+	float roadScale = GetRoadFactor(pixel);
+	float SmoothRand = LDHeightForPosition(pos);
+	float offsetScale = SmoothRand * clamp(1.0 - roadScale, 0.75, 1.0);
+
+	float offset = max(offsetScale, roadScale) - 0.5;
+	return offset * TERRAIN_TESS_OFFSET;//uTessAlpha;
+}
+
+
 void main()
 {
 	vec3 uvwSquared = uvw*uvw;
@@ -247,6 +350,11 @@ void main()
 	// final position and normal
 	vec3 finalPos = (1.0 - uTessAlpha)*barPos + uTessAlpha*pnPos;
 
+	/*if ((USE_SKELETAL_ANIM > 0.0 || USE_VERTEX_ANIM > 0.0) && TERRAIN_TESS_OFFSET != 0.0)
+	{// When on terrain that is tessellated, offset the z to match the terrain tess height...
+		finalPos.z += OffsetForPosition(finalPos);
+	}*/
+
 #ifndef __USE_GEOM_SHADER__
 	gl_Position = u_ModelViewProjectionMatrix * vec4(finalPos, 1.0);
 
@@ -257,8 +365,8 @@ void main()
 
 	finalPos = (u_ModelMatrix * vec4(finalPos, 1.0)).xyz;
 	Normal_GS_in = (u_ModelMatrix * vec4(Normal_GS_in, 0.0)).xyz;
-	//Normal_GS_in = uTessAlpha*(u_ModelMatrix * vec4(pnNormal, 0.0) + (1.0 - uTessAlpha)*(u_ModelMatrix * vec4(barNormal, 0.0);
 
+	//Normal_GS_in = uTessAlpha*(u_ModelMatrix * vec4(pnNormal, 0.0) + (1.0 - uTessAlpha)*(u_ModelMatrix * vec4(barNormal, 0.0);
 #else //__USE_GEOM_SHADER__
 	gl_Position = vec4(finalPos, 1.0);
 #endif //__USE_GEOM_SHADER__

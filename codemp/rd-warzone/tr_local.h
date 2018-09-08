@@ -306,8 +306,6 @@ extern cvar_t	*r_skydome;
 
 extern cvar_t	*r_fur;
 
-extern cvar_t	*r_groundFoliage;
-
 extern cvar_t	*r_foliage;
 extern cvar_t	*r_foliagePasses;
 extern cvar_t	*r_foliageDistance;
@@ -2798,6 +2796,7 @@ typedef struct trGlobals_s {
 	image_t					*vinesAliasImage;
 	image_t					*seaVinesImage[4];
 	image_t					*seaVinesAliasImage;
+	image_t					*foliageAliasImage;
 	image_t					*paletteImage;
 	image_t					*roadsMapImage;
 	image_t					*tessellationMapImage;

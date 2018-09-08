@@ -57,8 +57,6 @@ cvar_t	*r_skydome;
 
 cvar_t	*r_fur;
 
-cvar_t	*r_groundFoliage;
-
 cvar_t	*r_foliage;
 cvar_t	*r_foliagePasses;
 cvar_t	*r_foliageDistance;
@@ -1453,8 +1451,6 @@ void R_Register( void )
 	r_skydome = ri->Cvar_Get("r_skydome", "0", CVAR_ARCHIVE);
 
 	r_fur = ri->Cvar_Get("r_fur", "0", CVAR_ARCHIVE);
-
-	r_groundFoliage = ri->Cvar_Get("r_groundFoliage", "0", CVAR_ARCHIVE);
 
 	r_foliage = ri->Cvar_Get( "r_foliage", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "2", CVAR_ARCHIVE );

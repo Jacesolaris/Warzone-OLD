@@ -165,14 +165,6 @@ float LDHeightForPosition(vec3 pos)
 
 float OffsetForPosition(vec3 pos)
 {
-#if 0
-	vec2 pixel = GetMapTC(pos);
-	float roadScale = GetRoadFactor(pixel);
-	float offsetScale = GetHeightmap(pixel);
-
-	float offset = max(offsetScale, roadScale) - 0.5;
-	return offset * uTessAlpha;
-#else
 	vec2 pixel = GetMapTC(pos);
 	float roadScale = GetRoadFactor(pixel);
 	float SmoothRand = LDHeightForPosition(pos);
@@ -180,7 +172,6 @@ float OffsetForPosition(vec3 pos)
 
 	float offset = max(offsetScale, roadScale) - 0.5;
 	return offset * uTessAlpha;
-#endif
 }
 
 void main()

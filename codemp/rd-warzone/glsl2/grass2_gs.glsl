@@ -18,7 +18,7 @@ uniform vec4								u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSp
 uniform vec4								u_Local8; // GRASS_SURFACE_MINIMUM_SIZE, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, GRASS_SURFACE_SIZE_DIVIDER
 uniform vec4								u_Local9; // testvalue0, 1, 2, 3
 uniform vec4								u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, 0.0, GRASS_TYPE_UNIFORMALITY
-uniform vec4								u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, GRASS_TYPE_UNIFORMALITY_SCALER, 0.0
+uniform vec4								u_Local11; // GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE, GRASS_TYPE_UNIFORMALITY_SCALER, GRASS_RARE_PATCHES_ONLY
 uniform vec4								u_Local12; // GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTIPLIER_RARE, GRASS_SIZE_MULTIPLIER_UNDERWATER, GRASS_LOD_START_RANGE
 
 #define SHADER_MAP_SIZE						u_Local1.r
@@ -48,6 +48,7 @@ uniform vec4								u_Local12; // GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTI
 #define GRASS_WIDTH_REPEATS					u_Local11.r
 #define GRASS_MAX_SLOPE						u_Local11.g
 #define GRASS_TYPE_UNIFORMALITY_SCALER		u_Local11.b
+#define GRASS_RARE_PATCHES_ONLY				u_Local11.a
 
 #define GRASS_SIZE_MULTIPLIER_COMMON		u_Local12.r
 #define GRASS_SIZE_MULTIPLIER_RARE			u_Local12.g
@@ -485,6 +486,10 @@ void main()
 		{// Randomize...
 			iGrassType = randomInt(3, 15);
 		}
+		else if (GRASS_RARE_PATCHES_ONLY > 0.0)
+		{// If only drawing rare grasses, skip adding anything when it's not a rare...
+			return;
+		}
 
 		if (heightAboveWaterLength <= 256.0)
 		{// When near water edge, reduce the size of the grass...
@@ -549,10 +554,17 @@ void main()
 		vec3 vc = va + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
 		vec3 vd = vb + vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight);
 
-		vec3 baseNorm = normalize(cross(normalize(va - P), normalize(vb - P)));
+		
+		//vec3 baseNorm = normalize(cross(normalize(va - P), normalize(vb - P)));
+		vec3 baseNorm = normalize(cross(normalize(vb - va), normalize(vc - va)));
 		//vec3 I = normalize(P.xyz - u_ViewOrigin.xyz);
 		vec3 I = normalize(vec3(normalize(P.xyz - u_ViewOrigin.xyz).xy, 0.0));
+		//vec3 I = normalize(vec3(normalize(P.xyz).xy, 0.0));
 		vec3 Nf = normalize(faceforward(baseNorm, I, baseNorm));
+		
+		
+		//vec3 baseNorm = vec3(0.0, 0.0, 1.0);//-normalize(cross(normalize(-(direction * fGrassFinalSize) - (direction * fGrassFinalSize)), normalize(-vec3(0.0, 0.0, fGrassFinalSize * fGrassPatchHeight) - (direction * fGrassFinalSize))));
+		//vec3 Nf = baseNorm;
 
 		vVertNormal = EncodeNormal(Nf);
 

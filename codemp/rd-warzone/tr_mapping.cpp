@@ -1488,6 +1488,7 @@ float		WATER_EXTINCTION2 = 480.0;
 float		WATER_EXTINCTION3 = 8192.0;
 qboolean	GRASS_ENABLED = qtrue;
 qboolean	GRASS_UNDERWATER_ONLY = qfalse;
+qboolean	GRASS_RARE_PATCHES_ONLY = qfalse;
 int			GRASS_WIDTH_REPEATS = 0;
 int			GRASS_DENSITY = 2;
 float		GRASS_HEIGHT = 48.0;
@@ -1502,6 +1503,17 @@ float		GRASS_SIZE_MULTIPLIER_COMMON = 1.0;
 float		GRASS_SIZE_MULTIPLIER_RARE = 2.75;
 float		GRASS_SIZE_MULTIPLIER_UNDERWATER = 1.0;
 float		GRASS_LOD_START_RANGE = 8192.0;
+qboolean	FOLIAGE_ENABLED = qfalse;
+int			FOLIAGE_DENSITY = 2;
+float		FOLIAGE_HEIGHT = 24.0;
+int			FOLIAGE_DISTANCE = 4096;
+float		FOLIAGE_MAX_SLOPE = 10.0;
+float		FOLIAGE_SURFACE_MINIMUM_SIZE = 128.0;
+float		FOLIAGE_SURFACE_SIZE_DIVIDER = 1024.0;
+float		FOLIAGE_LOD_START_RANGE = FOLIAGE_DISTANCE;
+float		FOLIAGE_TYPE_UNIFORMALITY = 0.97;
+float		FOLIAGE_TYPE_UNIFORMALITY_SCALER = 0.008;
+float		FOLIAGE_DISTANCE_FROM_ROADS = 0.25;
 qboolean	VINES_ENABLED = qtrue;
 qboolean	VINES_UNDERWATER_ONLY = qfalse;
 int			VINES_WIDTH_REPEATS = 0;
@@ -1938,6 +1950,7 @@ void MAPPING_LoadMapInfo(void)
 	if (GRASS_ENABLED)
 	{
 		GRASS_UNDERWATER_ONLY = (atoi(IniRead(mapname, "GRASS", "GRASS_UNDERWATER_ONLY", "0")) > 0) ? qtrue : qfalse;
+		GRASS_RARE_PATCHES_ONLY = (atoi(IniRead(mapname, "GRASS", "GRASS_RARE_PATCHES_ONLY", "0")) > 0) ? qtrue : qfalse;
 		GRASS_DENSITY = atoi(IniRead(mapname, "GRASS", "GRASS_DENSITY", "2"));
 		GRASS_WIDTH_REPEATS = atoi(IniRead(mapname, "GRASS", "GRASS_WIDTH_REPEATS", "0"));
 		GRASS_HEIGHT = atof(IniRead(mapname, "GRASS", "GRASS_HEIGHT", "42.0"));
@@ -1971,6 +1984,25 @@ void MAPPING_LoadMapInfo(void)
 				}
 			}
 		}
+	}
+
+	//
+	// Ground Foliage...
+	//
+	FOLIAGE_ENABLED = (atoi(IniRead(mapname, "FOLIAGE", "FOLIAGE_ENABLED", "0")) > 0) ? qtrue : qfalse;
+
+	if (FOLIAGE_ENABLED)
+	{
+		FOLIAGE_DENSITY = atoi(IniRead(mapname, "FOLIAGE", "FOLIAGE_DENSITY", "2"));
+		FOLIAGE_HEIGHT = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_HEIGHT", "42.0"));
+		FOLIAGE_DISTANCE = atoi(IniRead(mapname, "FOLIAGE", "FOLIAGE_DISTANCE", "4096"));
+		FOLIAGE_MAX_SLOPE = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_MAX_SLOPE", "10.0"));
+		FOLIAGE_SURFACE_MINIMUM_SIZE = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_SURFACE_MINIMUM_SIZE", "128.0"));
+		FOLIAGE_SURFACE_SIZE_DIVIDER = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_SURFACE_SIZE_DIVIDER", "1024.0"));
+		FOLIAGE_LOD_START_RANGE = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_LOD_START_RANGE", va("%f", FOLIAGE_DISTANCE)));
+		FOLIAGE_TYPE_UNIFORMALITY = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_TYPE_UNIFORMALITY", "0.97"));
+		FOLIAGE_TYPE_UNIFORMALITY_SCALER = atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_TYPE_UNIFORMALITY_SCALER", "0.008"));
+		FOLIAGE_DISTANCE_FROM_ROADS = Q_clamp(0.0, atof(IniRead(mapname, "FOLIAGE", "FOLIAGE_DISTANCE_FROM_ROADS", "0.25")), 0.9);
 	}
 
 	VINES_ENABLED = (atoi(IniRead(mapname, "VINES", "VINES_ENABLED", "0")) > 0) ? qtrue : qfalse;
@@ -2045,14 +2077,6 @@ void MAPPING_LoadMapInfo(void)
 	{
 		tr.auroraImage[0] = R_FindImageFile("gfx/misc/aurora1", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		tr.auroraImage[1] = R_FindImageFile("gfx/misc/aurora2", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-	}
-	
-	if (r_groundFoliage->integer)
-	{
-		tr.groundFoliageImage[0] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE1", "models/warzone/groundFoliage/groundFoliage00.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		tr.groundFoliageImage[1] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE2", "models/warzone/groundFoliage/groundFoliage01.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		tr.groundFoliageImage[2] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE3", "models/warzone/groundFoliage/groundFoliage02.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		tr.groundFoliageImage[3] = R_FindImageFile(IniRead(mapname, "FOLIAGE", "GROUNDFOLIAGE_IMAGE4", "models/warzone/groundFoliage/groundFoliage03.png"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
 
 	if (MAP_MAX_VIS_RANGE && tr.distanceCull != MAP_MAX_VIS_RANGE)
@@ -2137,38 +2161,38 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
+	if ((FOLIAGE_ENABLED && r_foliage->integer))
+	{
+		char grassImages[16][512] = { 0 };
+
+		for (int i = 0; i < 16; i++)
+		{
+			strcpy(grassImages[i], IniRead(mapname, "FOLIAGE", va("foliageImage%i", i), "models/warzone/groundFoliage/groundFoliage00"));
+
+			if (!R_TextureFileExists(grassImages[i]))
+			{
+				strcpy(grassImages[i], "models/warzone/groundFoliage/groundFoliage00");
+			}
+		}
+
+		tr.foliageAliasImage = R_BakeTextures(grassImages, 16, "foliage", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	}
+
 	if ((VINES_ENABLED && r_foliage->integer))
 	{
-		if (!VINES_UNDERWATER_ONLY)
+		char grassImages[16][512] = { 0 };
+
+		for (int i = 0; i < 16; i++)
 		{
-			char grassImages[16][512] = { 0 };
+			strcpy(grassImages[i], IniRead(mapname, "VINES", va("vinesImage%i", i), "models/warzone/vines/jungleivy01"));
 
-			for (int i = 0; i < 16; i++)
+			if (!R_TextureFileExists(grassImages[i]))
 			{
-				strcpy(grassImages[i], IniRead(mapname, "VINES", va("vinesImage%i", i), "models/warzone/vines/jungleivy01"));
-
-				if (!R_TextureFileExists(grassImages[i]))
-				{
-					strcpy(grassImages[i], "models/warzone/vines/jungleivy01");
-				}
-			}
-
-			tr.vinesAliasImage = R_BakeTextures(grassImages, 16, "vines", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		}
-
-		/*char seaGrassImages[4][512] = { 0 };
-
-		for (int i = 0; i < 4; i++)
-		{
-			strcpy(seaGrassImages[i], IniRead(mapname, "VINES", va("seaVinesImage%i", i), "models/warzone/vines/seavines01"));
-
-			if (!R_TextureFileExists(seaGrassImages[i]))
-			{
-				strcpy(seaGrassImages[i], "models/warzone/vines/seavines01");
+				strcpy(grassImages[i], "models/warzone/vines/jungleivy01");
 			}
 		}
 
-		tr.seaVinesAliasImage = R_BakeTextures(seaGrassImages, 4, "seaVines", IMGTYPE_COLORALPHA, IMGFLAG_NONE);*/
+		tr.vinesAliasImage = R_BakeTextures(grassImages, 16, "vines", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	}
 
 	if (WATER_ENABLED)
@@ -2284,6 +2308,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and underwater grass only is ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", GRASS_UNDERWATER_ONLY ? "ENABLED" : "DISABLED");
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass rare patches only is ^7%s^5 on this map.\n", GRASS_RARE_PATCHES_ONLY ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass width repeats is ^7%i^5 and grass max slope is ^7%.4f^5 on this map.\n", GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass minimum surface size is ^7%.4f^5 and surface size divider is ^7%.4f^5 on this map.\n", GRASS_SURFACE_MINIMUM_SIZE, GRASS_SURFACE_SIZE_DIVIDER);

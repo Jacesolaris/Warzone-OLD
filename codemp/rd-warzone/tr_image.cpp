@@ -4740,7 +4740,7 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputNam
 
 	// Debugging...
 	//extern std::string AssImp_getTextureName(const std::string& path);
-	//RE_SavePNG(va("%s_aliasMap.png", AssImp_getTextureName(outputName).c_str()), finalPic, 4096, 4096, 4);
+	//RE_SavePNG(va("%s_aliasMap.png", outputName), finalPic, 4096, 4096, 4);
 	//
 
 	Z_Free(finalPic);

@@ -127,6 +127,8 @@ extern const char *fallbackShader_waterForwardFast_fp;
 extern const char *fallbackShader_waterForwardFast_vp;
 extern const char *fallbackShader_foliage_fp;
 extern const char *fallbackShader_foliage_vp;
+extern const char *fallbackShader_foliage_cs;
+extern const char *fallbackShader_foliage_es;
 extern const char *fallbackShader_foliage_gs;
 extern const char *fallbackShader_fur_fp;
 extern const char *fallbackShader_fur_vp;
@@ -3346,15 +3348,16 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-
-	extradefines[0] = '\0';
-
-	if (!GLSL_BeginLoadGPUShader(&tr.foliageShader, "foliage", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 core", fallbackShader_foliage_vp, fallbackShader_foliage_fp, NULL, NULL, fallbackShader_foliage_gs))
 	{
-		ri->Error(ERR_FATAL, "Could not load foliage shader!");
-	}
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 
+		extradefines[0] = '\0';
+
+		if (!GLSL_BeginLoadGPUShader(&tr.foliageShader, "foliage", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, "400 core", fallbackShader_foliage_vp, fallbackShader_foliage_fp, fallbackShader_foliage_cs, fallbackShader_foliage_es, fallbackShader_foliage_gs))
+		{
+			ri->Error(ERR_FATAL, "Could not load foliage shader!");
+		}
+	}
 
 
 	if (r_foliage->integer)
@@ -4276,6 +4279,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_DETAILMAP, TB_DETAILMAP);
 		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
 
+		GLSL_SetUniformInt(&tr.lightAllShader[i], UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.lightAllShader[i]);
 #endif
@@ -4551,10 +4556,13 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_BindProgram(&tr.foliageShader);
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	
+	// Control textures...
 	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+
+	GLSL_SetUniformInt(&tr.foliageShader, UNIFORM_WATER_EDGE_MAP, TB_WATER_EDGE_MAP); // 16 - Sea grass 0...
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.foliageShader);

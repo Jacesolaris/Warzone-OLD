@@ -1,26 +1,63 @@
-uniform sampler2D	u_DiffuseMap;
-uniform sampler2D	u_SplatControlMap;
-uniform sampler2D	u_SplatMap1;
-uniform sampler2D	u_SplatMap2;
-uniform sampler2D	u_SplatMap3;
+uniform sampler2D	u_DiffuseMap;	// Land grass atlas
+uniform sampler2D	u_WaterEdgeMap; // Sea grass atlas
 
-uniform vec4		u_Local4;
-uniform vec4		u_Local5;
-uniform vec4		u_Local6;
-uniform vec4		u_Local10;
+uniform vec3		u_ViewOrigin;
 
-in vec4				v_position;
-in vec3				v_normal;
-in vec2				v_texCoord;
-in vec3				v_PrimaryLightDir;
-flat in int			v_foliageLayer;
+uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, 0.0
 
-out vec4 out_Glow;
-out vec4 out_Position;
-out vec4 out_Normal;
+#define MAP_COLOR_SWITCH_RG			u_Settings5.r
+#define MAP_COLOR_SWITCH_RB			u_Settings5.g
+#define MAP_COLOR_SWITCH_GB			u_Settings5.b
+
+uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
+uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
+uniform vec4						u_Local3; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4						u_Local8; // passnum, GRASS_DISTANCE_FROM_ROADS, GRASS_HEIGHT, 0.0
+uniform vec4						u_Local9; // testvalue0, 1, 2, 3
+uniform vec4						u_Local10; // foliageLODdistance, TERRAIN_TESS_OFFSET, 0.0, GRASS_TYPE_UNIFORMALITY
+uniform vec4						u_Local11; // GRASS_WIDTH_REPEATS, 0.0, 0.0, 0.0
+
+#define SHADER_MAP_SIZE				u_Local1.r
+#define SHADER_SWAY					u_Local1.g
+#define SHADER_OVERLAY_SWAY			u_Local1.b
+#define SHADER_MATERIAL_TYPE		u_Local1.a
+
+#define SHADER_HAS_STEEPMAP			u_Local2.r
+#define SHADER_HAS_WATEREDGEMAP		u_Local2.g
+#define SHADER_HAS_NORMALMAP		u_Local2.b
+#define SHADER_WATER_LEVEL			u_Local2.a
+
+#define SHADER_HAS_SPLATMAP1		u_Local3.r
+#define SHADER_HAS_SPLATMAP2		u_Local3.g
+#define SHADER_HAS_SPLATMAP3		u_Local3.b
+#define SHADER_HAS_SPLATMAP4		u_Local3.a
+
+#define PASS_NUMBER					u_Local8.r
+#define GRASS_DISTANCE_FROM_ROADS	u_Local8.g
+#define GRASS_HEIGHT				u_Local8.b
+
+#define MAX_RANGE					u_Local10.r
+#define TERRAIN_TESS_OFFSET			u_Local10.g
+#define GRASS_TYPE_UNIFORMALITY		u_Local10.a
+
+#define GRASS_WIDTH_REPEATS			u_Local11.r
+
+smooth in vec2		vTexCoord;
+smooth in vec3		vVertPosition;
+//flat in float		vVertNormal;
+smooth in vec2		vVertNormal;
+flat in int			iGrassType;
+
+out vec4			out_Glow;
+out vec4			out_Normal;
 #ifdef __USE_REAL_NORMALMAPS__
-out vec4 out_NormalDetail;
+out vec4			out_NormalDetail;
 #endif //__USE_REAL_NORMALMAPS__
+out vec4			out_Position;
+
+const float xdec = 1.0/255.0;
+const float ydec = 1.0/65025.0;
+const float zdec = 1.0/16581375.0;
 
 //#define __ENCODE_NORMALS_RECONSTRUCT_Z__
 #define __ENCODE_NORMALS_STEREOGRAPHIC_PROJECTION__
@@ -89,70 +126,56 @@ vec2 EncodeNormal(vec3 n)
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
-vec4 GetControlMap(vec3 m_vertPos)
-{
-	float scale = 1.0 / u_Local6.b; /* control scale */
-	float offset = (u_Local6.b / 2.0) * scale;
-	vec4 xaxis = texture( u_SplatControlMap, (m_vertPos.yz * scale) + offset);
-	vec4 yaxis = texture( u_SplatControlMap, (m_vertPos.xz * scale) + offset);
-	vec4 zaxis = texture( u_SplatControlMap, (m_vertPos.xy * scale) + offset);
-	vec4 control = xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
-	control = clamp(control * u_Local10.b, 0.0, 1.0);
-	return control;
+vec4 DecodeFloatRGBA( float v ) {
+  vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
+  enc = fract(enc);
+  enc -= enc.yzww * vec4(xdec,xdec,xdec,0.0);
+  return enc;
 }
 
-vec4 GetGrassMap(vec3 m_vertPos)
+void main() 
 {
-	vec4 control = GetControlMap(m_vertPos);
-	return control;
-}
+	vec4 diffuse;
 
-void main()
-{
-	vec2 texCoords = v_texCoord * u_Local10.g;
-	texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - v_texCoord.y) + 1.0), 0.0);
+	vec2 tc = vTexCoord;
 
-	vec4 grassMap = GetGrassMap(v_position.xyz);
+	diffuse = texture(u_DiffuseMap, tc);
 
-	int grassMap2[4];
-	//grassMap2[0] = (grassMap.r >= 0.2 || grassMap.g >= 0.2 || grassMap.b >= 0.2) ? 1 : 0;
-	grassMap2[0] = 0;
-	grassMap2[1] = grassMap.r >= 0.3 ? 1 : 0;
-	grassMap2[2] = grassMap.g >= 0.3 ? 1 : 0;
-	grassMap2[3] = grassMap.b >= 0.3 ? 1 : 0;
-
-	gl_FragColor = vec4(0.0);
-
-	if (v_foliageLayer == 3 && grassMap2[3] == 1)
+	if (MAP_COLOR_SWITCH_RG > 0.0)
 	{
-		gl_FragColor = texture(u_SplatMap3, texCoords);
-	}
-	else if (v_foliageLayer == 2 && grassMap2[2] == 1)
-	{
-		gl_FragColor = texture(u_SplatMap2, texCoords);
-	}
-	else if (v_foliageLayer == 1 && grassMap2[1] == 1)
-	{
-		gl_FragColor = texture(u_SplatMap1, texCoords);
-	}
-	else if (grassMap2[0] == 1)
-	{
-		gl_FragColor = texture(u_DiffuseMap, texCoords);
+		diffuse.rg = diffuse.gr;
 	}
 
-	if (gl_FragColor.a > 0.5) 
+	if (MAP_COLOR_SWITCH_RB > 0.0)
 	{
-		gl_FragColor.a = 1.0;
+		diffuse.rb = diffuse.br;
+	}
+
+	if (MAP_COLOR_SWITCH_GB > 0.0)
+	{
+		diffuse.gb = diffuse.bg;
+	}
+
+	//diffuse.rgba = vec4(1.0);
+
+	if (diffuse.a > 0.5)
+	{
+		gl_FragColor = vec4(diffuse.rgb, 1.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy)), 0.0, 1.0);
+#ifdef __USE_REAL_NORMALMAPS__
+		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
+		out_Position = vec4(vVertPosition, MATERIAL_GREENLEAVES+1.0);
 	}
 	else
 	{
-		gl_FragColor.a = 0.0;
-	}
-
-	out_Position = vec4(v_position.xyz, gl_FragColor.a > 0.0 ? MATERIAL_GREENLEAVES + 1.0 : 0.0);
-	out_Normal = vec4(EncodeNormal(v_normal.xyz), 0.0, gl_FragColor.a > 0.0 ? 1.0 : 0.0);
-	out_Glow = vec4(0.0);
+		gl_FragColor = vec4(0.0);
+		out_Glow = vec4(0.0);
+		out_Normal = vec4(0.0);
 #ifdef __USE_REAL_NORMALMAPS__
-	out_NormalDetail = vec4(0.0);
+		out_NormalDetail = vec4(0.0);
 #endif //__USE_REAL_NORMALMAPS__
+		out_Position = vec4(0.0);
+	}
 }

@@ -326,7 +326,8 @@ void main()
 		vec3 vc = topVerts[0] - vec3(0.0, 0.0, topVertsDistance * GRASS_HEIGHT);
 		vec3 vd = topVerts[1] - vec3(0.0, 0.0, topVertsDistance * GRASS_HEIGHT);
 
-		vec3 baseNorm = normalize(cross(normalize(va - P), normalize(vb - P)));
+		//vec3 baseNorm = normalize(cross(normalize(va - P), normalize(vb - P)));
+		vec3 baseNorm = normalize(cross(normalize(vb - va), normalize(vc - va)));
 		//vec3 I = normalize(P.xyz - u_ViewOrigin.xyz);
 		vec3 I = normalize(vec3(normalize(P.xyz - u_ViewOrigin.xyz).xy, 0.0));
 		vec3 Nf = normalize(faceforward(baseNorm, I, baseNorm));

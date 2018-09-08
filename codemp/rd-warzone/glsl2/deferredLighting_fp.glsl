@@ -1177,7 +1177,6 @@ void main(void)
 	norm.xyz = doBumpMap( u_DiffuseMap, texCoords, norm.xyz, 0.005);
 #endif //__BUMP_ENHANCE__
 
-
 	vec3 flatNorm = norm.xyz = normalize(norm.xyz);
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
