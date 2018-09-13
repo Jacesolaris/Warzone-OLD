@@ -1,5 +1,4 @@
 #define REAL_WAVES					// You probably always want this turned on.
-#define USE_UNDERWATER				// TODO: Convert from HLSL when I can be bothered.
 //#define USE_REFLECTION				// Enable reflections on water. Define moved to renderer code.
 #define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 //#define EXPERIMENTAL_WATERFALL	// Experimental waterfalls...
@@ -1136,10 +1135,33 @@ void main ( void )
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
 
-		if ((!pixelIsUnderWater && depth2 < 0.0 && waterMapLower.y < surfacePoint.y) || (pixelIsUnderWater && depth2 < 0.0 && waterMapLower.y > surfacePoint.y))
-		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
-			gl_FragColor = vec4(color2, 1.0);
-			return;
+		if (pixelIsUnderWater)
+		{
+			if (position.y < level)
+			{
+				gl_FragColor = vec4(color2, 1.0);
+				return;
+			}
+
+			if (depth2 < 0.0 /*&& waterMapLower.y > surfacePoint.y*/)
+			{// Waves against shoreline. Pixel is below waterLevel + waveHeight...
+				gl_FragColor = vec4(color2, 1.0);
+				return;
+			}
+		}
+		else
+		{
+			if (position.y > level)
+			{
+				gl_FragColor = vec4(color2, 1.0);
+				return;
+			}
+
+			if (depth2 < 0.0 && waterMapLower.y < surfacePoint.y)
+			{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
+				gl_FragColor = vec4(color2, 1.0);
+				return;
+			}
 		}
 
 		//depth = length(position - surfacePoint);

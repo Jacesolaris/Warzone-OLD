@@ -2474,7 +2474,9 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 	GLSL_SetUniformInt(shader, UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
 	//GL_BindToTMU(tr.blackCube, TB_ROADSCONTROLMAP); // Unused...
-	GL_BindToTMU(tr.heightMapImage, TB_ROADSCONTROLMAP);
+	qboolean haveHeightMap = (qboolean)(tr.heightMapImage != NULL && tr.heightMapImage != tr.blackImage && tr.heightMapImage != tr.defaultImage && tr.heightMapImage != tr.whiteImage);
+	qboolean haveWaterHeightMap = (qboolean)(tr.heightMapImage != NULL && tr.heightMapImage != tr.blackImage && tr.heightMapImage != tr.defaultImage && tr.heightMapImage != tr.whiteImage);
+	GL_BindToTMU(haveHeightMap ? tr.heightMapImage : (haveWaterHeightMap ? tr.waterHeightImage : tr.heightMapImage), TB_ROADSCONTROLMAP);
 
 	GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
 	GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);

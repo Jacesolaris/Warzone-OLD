@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //                                               Warzone Basic Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 #define __GLSL_OPTIMIZER__						// Enable GLSL optimization...
+//#define __USE_GLSL_SHADER_CACHE__				// Enable GLSL shader binary caching...
 
 //#define __USE_QGL_FINISH__					// For testing...
 #define __USE_QGL_FLUSH__						// Use this one...
@@ -1796,6 +1797,10 @@ typedef struct shaderProgram_s
 	char vertexText[MAX_GLSL_LENGTH];
 	char fragText[MAX_GLSL_LENGTH];
 	int usageCount;
+
+#ifdef __USE_GLSL_SHADER_CACHE__
+	qboolean binaryLoaded = qfalse;
+#endif //__USE_GLSL_SHADER_CACHE__
 } shaderProgram_t;
 
 // trRefdef_t holds everything that comes in refdef_t,

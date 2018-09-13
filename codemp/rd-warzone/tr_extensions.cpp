@@ -100,6 +100,10 @@ PFNGLGETATTACHEDSHADERSPROC qglGetAttachedShaders;
 PFNGLGETPROGRAMINFOLOGPROC qglGetProgramInfoLog;
 PFNGLBINDFRAGDATALOCATIONPROC qglBindFragDataLocation;
 
+PFNGLPROGRAMBINARYPROC qglProgramBinary;
+PFNGLGETPROGRAMBINARYPROC qglGetProgramBinary;
+PFNGLPROGRAMPARAMETERIPROC qglProgramParameteri;
+
 // Vertex attributes
 PFNGLGETACTIVEATTRIBPROC qglGetActiveAttrib;
 PFNGLGETATTRIBLOCATIONPROC qglGetAttribLocation;
@@ -212,7 +216,7 @@ PFNGLTEXSTORAGE1DPROC qglTexStorage1D;
 PFNGLTEXSTORAGE2DPROC qglTexStorage2D;
 PFNGLTEXSTORAGE3DPROC qglTexStorage3D;
 
-static qboolean GLimp_HaveExtension(const char *ext)
+/*static*/ qboolean GLimp_HaveExtension(const char *ext)
 {
 	const char *ptr = Q_stristr( glConfigExt.originalExtensionString, ext );
 	if (ptr == NULL)
@@ -253,7 +257,7 @@ void GLimp_InitExtraExtensions()
 	GetGLFunction (qglMultiDrawArrays, "glMultiDrawArrays", qtrue);
 	GetGLFunction (qglMultiDrawElements, "glMultiDrawElements", qtrue);
 	GetGLFunction (qglMultiDrawElementsBaseVertex, "glMultiDrawElementsBaseVertex", qtrue);
-	GetGLFunction(qglMultiDrawElementsIndirect, "glMultiDrawElementsIndirect", qtrue);
+	GetGLFunction (qglMultiDrawElementsIndirect, "glMultiDrawElementsIndirect", qtrue);
 
 	// Vertex arrays
 	GetGLFunction (qglVertexAttribPointer, "glVertexAttribPointer", qtrue);
@@ -310,6 +314,10 @@ void GLimp_InitExtraExtensions()
 	GetGLFunction (qglGetAttachedShaders, "glGetAttachedShaders", qtrue);
 	GetGLFunction (qglGetProgramInfoLog, "glGetProgramInfoLog", qtrue);
 	GetGLFunction (qglBindFragDataLocation, "glBindFragDataLocation", qtrue);
+
+	GetGLFunction(qglProgramBinary, "glProgramBinary", qtrue);
+	GetGLFunction(qglGetProgramBinary, "glGetProgramBinary", qtrue);
+	GetGLFunction(qglProgramParameteri, "glProgramParameteri", qtrue);
 
 	// Vertex attributes
 	GetGLFunction (qglGetActiveAttrib, "glGetActiveAttrib", qtrue);

@@ -692,21 +692,71 @@ float aomap(vec3 p)
     float n = (.5-cellTile(p))*1.5;
     return p.y + dot(sin(p/2. + cos(p.yzx/2. + 3.14159/2.)), vec3(.5)) + n;
 }
-#endif //defined(__AMBIENT_OCCLUSION__)
 
+vec2 GetMapTC(vec3 pos)
+{
+	vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+	return (pos.xy - u_Mins.xy) / mapSize;
+}
 
-#if defined(__AMBIENT_OCCLUSION__)
-float calculateAO(in vec3 pos, in vec3 nor)
+float calculateAO(in vec3 pos, in vec3 nor, in vec2 texCoords)
 {
 	float sca = 0.00013/*2.0*/, occ = 0.0;
-	for( int i=0; i<5; i++ ){
+#if 1
+	for( int i=0; i<5; i++ ) {
 		float hr = 0.01 + float(i)*0.5/4.0;        
 		float dd = aomap(nor * hr + pos);
 		occ += (hr - dd)*sca;
 		sca *= 0.7;
 	}
+#elif 0
+	for( int i=0; i<5; i++ ) {
+		float hr = 0.01 + float(i)*0.5/4.0;        
+		vec2 uv = GetMapTC(nor * hr + pos);
+		float dd = texture(u_RoadsControlMap, uv).r;
+		occ += (hr - dd)*sca;
+		sca *= 0.7;
+	}
+#elif 0
+    for( int i=0; i<8; i++ )
+    {
+        float h = 0.005 + 0.25*float(i)/7.0;
+        vec3 dir = normalize( sin( float(i)*73.4 + vec3(0.0,2.1,4.2) ));
+        dir = normalize( nor + dir );
+		vec2 uv = GetMapTC(pos + h*dir);
+        occ += h-texture(u_RoadsControlMap, uv).r;
+    }
+    return clamp( 1.0 - 9.0*occ/8.0, 0.0, 1.0 );
+#else
+	for( int i=0; i<5; i++ ) {
+		float hr = 0.01 + float(i)*0.5/4.0;
+		float pwri = pow(float(i), u_Local3.r/*2.0*/);
+		vec2 uv = texCoords + vec2(0.0, pixel.y * pwri);
+		float dd = texture(u_RoadsControlMap, uv).r;
+		occ += (hr - dd)*u_Local3.g;//sca;
+		sca *= 0.7;
+	}
+#endif
 	return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
+
+/*float calcShadow( in vec3 ro, in vec3 rd, float k )
+{
+    float res = 1.0;
+
+    float t = 0.1;
+    for( int i=0; i<32; i++ )
+    {
+        vec3 pos = ro + rd*t;
+        //float h = DistanceField(pos, length(pos));
+		vec2 uv = GetMapTC(pos);
+		float h = texture(u_RoadsControlMap, uv).r;
+        res = min( res, smoothstep(0.0,1.0,8.0*h/t) );
+        t += clamp( h, 0.05, 10.0 );
+		if( res<0.01 ) break;
+    }
+    return clamp(res,0.0,1.0);
+}*/
 
 // that is really shitty AO but at least unlit fragments do not look so plain... :)
 float bad_ao(vec3 n) {
@@ -1668,7 +1718,8 @@ void main(void)
 #if defined(__AMBIENT_OCCLUSION__)
 	if (AO_TYPE == 1.0)
 	{// Fast AO enabled...
-		float ao = calculateAO(sunDir, N * 10000.0);
+		float ao = calculateAO(sunDir, N * 10000.0, texCoords);
+		//float ao = calculateAO(position.xyz, N, texCoords);
 		//float selfShadow = bad_ao(bump.xyz);
 		//float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 		float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0), 0.0, 1.0);
@@ -1676,6 +1727,12 @@ void main(void)
 		ao = clamp(((ao + selfShadow) / 2.0) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		//ao = clamp((ao * selfShadow) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		outColor.rgb *= ao;
+
+		/*if (u_Local3.r > 0.0)
+		{
+			float sh = calcShadow( position.xyz, sunDir, u_Local3.g );
+			outColor.rgb *= sh;
+		}*/
 	}
 #endif //defined(__AMBIENT_OCCLUSION__)
 
