@@ -6721,6 +6721,11 @@ JustDoIt:
 	CG_DoSaberTrails(cent, client, org_, end, axis_, (saber_colors_t)scolor, saberTrail, saberNum, bladeNum);
 	CG_Do3DSaber(org_, axis_[0], saberLen, client->saber[saberNum].blade[bladeNum].lengthMax, client->saber[saberNum].blade[bladeNum].radius, (saber_colors_t)scolor);
 
+	if (client->saber[saberNum].soundLoop)
+		trap->S_AddLoopingSound(cent->currentState.number, org_, vec3_origin, client->saber[saberNum].soundLoop);
+	else
+		trap->S_AddLoopingSound(cent->currentState.number, org_, vec3_origin, trap->S_RegisterSound("sound/weapons/saber/saberhum1.wav"));
+
 	//[NewLightningEFX]
 	if (cent->currentState.emplacedOwner + 1000 > cg.time)
 	{

@@ -94,6 +94,7 @@ void Indoors_Trace(trace_t *results, const vec3_t start, const vec3_t mins, cons
 
 void R_CheckIfOutside(void)
 {
+	const float outside_check_max_height = 4096.0;// 524288.0;
 //#ifndef __INDOOR_SHADOWS__
 //	if (!ENABLE_INDOOR_OUTDOOR_SYSTEM) return;
 //	if (!INDOOR_BRUSH_FOUND) return;
@@ -114,13 +115,13 @@ void R_CheckIfOutside(void)
 	start[2] += 16.0;
 
 	VectorCopy(backEnd.localPlayerOrigin, end);
-	end[2] += 524288.0;
+	end[2] += outside_check_max_height;
 
 	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
 	VectorCopy(trace.endpos, backEnd.viewIsOutdoorsHitPosition);
 
-	if (trace.surfaceFlags & SURF_SKY)
+	if ((trace.surfaceFlags & SURF_SKY) || trace.fraction == 1.0)
 	{// Sky seen...
 		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
@@ -130,12 +131,12 @@ void R_CheckIfOutside(void)
 
 	// Second attempt...
 	VectorCopy(backEnd.localPlayerOrigin, end);
-	end[2] += 524288.0;
+	end[2] += outside_check_max_height;
 	end[0] += 512.0;
 
 	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
-	if (trace.surfaceFlags & SURF_SKY)
+	if ((trace.surfaceFlags & SURF_SKY) || trace.fraction == 1.0)
 	{// Sky seen...
 		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
@@ -145,12 +146,12 @@ void R_CheckIfOutside(void)
 
 	// Third attempt...
 	VectorCopy(backEnd.localPlayerOrigin, end);
-	end[2] += 524288.0;
+	end[2] += outside_check_max_height;
 	end[1] += 512.0;
 
 	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
-	if (trace.surfaceFlags & SURF_SKY)
+	if ((trace.surfaceFlags & SURF_SKY) || trace.fraction == 1.0)
 	{// Sky seen...
 		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
@@ -160,12 +161,12 @@ void R_CheckIfOutside(void)
 
 	// Fourth attempt...
 	VectorCopy(backEnd.localPlayerOrigin, end);
-	end[2] += 524288.0;
+	end[2] += outside_check_max_height;
 	end[0] -= 512.0;
 
 	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
-	if (trace.surfaceFlags & SURF_SKY)
+	if ((trace.surfaceFlags & SURF_SKY) || trace.fraction == 1.0)
 	{// Sky seen...
 		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;
@@ -175,12 +176,12 @@ void R_CheckIfOutside(void)
 
 	// Fifth attempt...
 	VectorCopy(backEnd.localPlayerOrigin, end);
-	end[2] += 524288.0;
+	end[2] += outside_check_max_height;
 	end[1] -= 512.0;
 
 	Indoors_Trace(&trace, start, NULL, NULL, end, backEnd.localPlayerEntityNum, (CONTENTS_SOLID | CONTENTS_TERRAIN));
 
-	if (trace.surfaceFlags & SURF_SKY)
+	if ((trace.surfaceFlags & SURF_SKY) || trace.fraction == 1.0)
 	{// Sky seen...
 		//ri->Printf(PRINT_WARNING, "You are outside.\n");
 		backEnd.viewIsOutdoors = qtrue;

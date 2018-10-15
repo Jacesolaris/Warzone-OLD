@@ -1811,6 +1811,13 @@ void GLSL_GetShaderHeader(GLenum shaderType, const GLcharARB *extra, char *dest,
 		GL_ADD,
 		GL_REPLACE));
 
+	Q_strcat(dest, size,
+		va("#ifndef colorGenWarzone_t\n"
+			"#define colorGenWarzone_t\n"
+			"#define CGEN_LIGHTING_WARZONE %i\n"
+			"#endif\n",
+			CGEN_LIGHTING_WARZONE));
+
 	if (!r_lowVram->integer)
 		Q_strcat(dest, size, "#define __HIGH_MTU_AVAILABLE__\n");
 

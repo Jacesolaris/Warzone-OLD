@@ -200,6 +200,7 @@ typedef enum {
 	CGEN_WAVEFORM,			// programmatically generated
 	CGEN_LIGHTING_DIFFUSE,
 	CGEN_LIGHTING_DIFFUSE_ENTITY, //diffuse lighting * entity
+	CGEN_LIGHTING_WARZONE,
 	CGEN_FOG,				// standard fog
 	CGEN_CONST,				// fixed color
 	CGEN_LIGHTMAPSTYLE,

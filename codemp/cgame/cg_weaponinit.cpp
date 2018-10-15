@@ -331,11 +331,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileWallImpactfx					= trap->FX_RegisterEffect("explosives/fragmedium");
 		weaponInfo->altMissileWallImpactfx				= trap->FX_RegisterEffect("explosives/fragmedium");
 		
-		weaponInfo->EnhancedFX_fleshImpact				= trap->FX_RegisterEffect("explosives/fragmedium");
-		weaponInfo->EnhancedFX_altfleshImpact			= trap->FX_RegisterEffect("explosives/fragmedium");
-		weaponInfo->EnhancedFX_missileWallImpactfx		= trap->FX_RegisterEffect("explosives/fragmedium");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx	= trap->FX_RegisterEffect("explosives/fragmedium");
-
 
 		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/grenade_bounce1.mp3");
 		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/grenade_bounce2.mp3");
@@ -382,18 +377,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
 
-		weaponInfo->fleshImpactEffect					= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->altFleshImpactEffect				= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->missileWallImpactfx					= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		weaponInfo->altMissileWallImpactfx				= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		weaponInfo->fleshImpactEffect					= trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact_flesh");
+		weaponInfo->altFleshImpactEffect				= trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact_flesh");
+		weaponInfo->missileWallImpactfx					= trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact");
+		weaponInfo->altMissileWallImpactfx				= trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact");
 
 
-		weaponInfo->EnhancedFX_fleshImpact				= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_altfleshImpact			= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_missileWallImpactfx		= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx	= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-
-		trap->FX_RegisterEffect("blasters/red_deflect");
+		//trap->FX_RegisterEffect("warzone_modular_weapons/blaster_deflect");
 		break;
 
 	case WP_CYROBAN_GRENADE:
@@ -432,11 +422,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFleshImpactEffect				= trap->FX_RegisterEffect("explosives/cryobanmedium");
 		weaponInfo->missileWallImpactfx					= trap->FX_RegisterEffect("explosives/cryobanmedium");
 		weaponInfo->altMissileWallImpactfx				= trap->FX_RegisterEffect("explosives/cryobanmedium");
-
-		weaponInfo->EnhancedFX_fleshImpact				= trap->FX_RegisterEffect("explosives/cryobanmedium");
-		weaponInfo->EnhancedFX_altfleshImpact			= trap->FX_RegisterEffect("explosives/cryobanmedium");
-		weaponInfo->EnhancedFX_missileWallImpactfx		= trap->FX_RegisterEffect("explosives/cryobanmedium");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx	= trap->FX_RegisterEffect("explosives/cryobanmedium");
 
 
 		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/grenade_bounce1.mp3");
@@ -481,12 +466,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFleshImpactEffect				= trap->FX_RegisterEffect("explosives/shockwave");
 		weaponInfo->missileWallImpactfx					= trap->FX_RegisterEffect("explosives/baradium_class-e");
 		weaponInfo->altMissileWallImpactfx				= trap->FX_RegisterEffect("explosives/shockwave");
-
-		weaponInfo->EnhancedFX_fleshImpact				= trap->FX_RegisterEffect("explosives/baradium_class-e");
-		weaponInfo->EnhancedFX_altfleshImpact			= trap->FX_RegisterEffect("explosives/shockwave");
-		weaponInfo->EnhancedFX_missileWallImpactfx		= trap->FX_RegisterEffect("explosives/baradium_class-e");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx	= trap->FX_RegisterEffect("explosives/shockwave");
-
 
 		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/grenade_bounce1.mp3");
 		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/grenade_bounce2.mp3");
@@ -568,16 +547,12 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blaster/shot");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blaster/shot");
 
-		weaponInfo->altFleshImpactEffect				= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->missileWallImpactfx					= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		weaponInfo->altMissileWallImpactfx				= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		
-		
-		weaponInfo->EnhancedFX_fleshImpact				= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_altfleshImpact			= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_missileWallImpactfx		= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx	= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		trap->FX_RegisterEffect("blasters/red_deflect");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact_flesh");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact_flesh");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("warzone_modular_weapons/blaster_impact");
+
+		//trap->FX_RegisterEffect("warzone_modular_weapons/blaster_deflect");
 		break;
 	 default:
 		MAKERGB( weaponInfo->flashDlightColor, 1, 1, 1 );

@@ -748,22 +748,27 @@ Include velocity in case I get around to doing doppler...
 */
 void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
 	if (sfxHandle >= MAX_SFX || sfxHandle < 0) return;
+
+	if (!s_knownSfx[sfxHandle].bInMemory) // Hmm guess I should make sure it's loaded before trying to use it :)
+		S_memoryLoad(&s_knownSfx[sfxHandle]);
+
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 	
 	if (entityNum >= 0 /*&& (cl.entityBaselines[entityNum].eType == ET_NPC || cl.entityBaselines[entityNum].eType == ET_PLAYER)*/)
 	{
 		if (origin)	if (Distance(cl.snap.ps.origin, origin) > 2048) return;
+		
 		/*
 		if (origin)
-			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_BODY, origin[0], origin[1], origin[2]);
+			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s (ID %i) on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, (int)s_knownSfx[sfxHandle].bassSampleID, CHAN_BODY, origin[0], origin[1], origin[2]);
 		else
-			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_BODY);
+			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s (ID %i) on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, (int)s_knownSfx[sfxHandle].bassSampleID, CHAN_BODY);
 		*/
-
+		
 		if (S_ShouldCull((float *)origin, qfalse, entityNum))
-			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin, 0.25);
+			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_WEAPON, (float *)origin, 0.25);
 		else
-			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin, 1.0);
+			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_WEAPON, (float *)origin, 1.0);
 	}
 	else
 	{

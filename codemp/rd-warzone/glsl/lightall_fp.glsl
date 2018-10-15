@@ -16,6 +16,10 @@ uniform sampler2D					u_NormalMap;
 
 uniform vec4						u_MapAmbient; // a basic light/color addition across the whole map...
 
+uniform vec4						u_PrimaryLightOrigin;
+uniform vec3						u_PrimaryLightColor;
+uniform float						u_PrimaryLightRadius;
+
 uniform vec4						u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMethod, is2D
 uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
@@ -452,12 +456,13 @@ void main()
 			lightmapColor.rgb *= lightmapColor.a;
 		#endif //defined(RGBM_LIGHTMAP)
 
+#define lm_const_1 ( 56.0 / 255.0)
+#define lm_const_2 (255.0 / 200.0)
+
 		if (MAP_LIGHTMAP_ENHANCEMENT <= 0.0)
 		{
 			float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
 
-#define lm_const_1 ( 56.0 / 255.0)
-#define lm_const_2 (255.0 / 200.0)
 			lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
 			lmBrightMult = lmBrightMult * 0.7;
 
@@ -470,14 +475,13 @@ void main()
 			lightColor /= clamp(max(surfNL, 0.25), 0.0, 1.0);
 			ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 			lightColor *= lightmapColor.rgb;
+			lightColor = clamp(lightColor * 133.333, 0.0, 1.0);
 		}
 		else if (MAP_LIGHTMAP_ENHANCEMENT == 1.0)
 		{
 			// Old style...
 			float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
 
-#define lm_const_1 ( 56.0 / 255.0)
-#define lm_const_2 (255.0 / 200.0)
 			lmBrightMult = clamp((clamp(lmBrightMult - lm_const_1, 0.0, 1.0)) * lm_const_2, 0.0, 1.0);
 			lmBrightMult = lmBrightMult * 0.7;
 
@@ -490,27 +494,20 @@ void main()
 			lightColor /= clamp(max(surfNL, 0.25), 0.0, 1.0);
 			ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 			lightColor *= lightmapColor.rgb;
+			lightColor = clamp(lightColor * 133.333, 0.0, 1.0);
 
 
 			// New style...
 			vec3 lightColor2 = lightmapColor.rgb * MAP_LIGHTMAP_MULTIPLIER;
-
 			vec3 E = normalize(m_ViewDir);
-
 			vec3 bNorm = normalize(N.xyz + ((diffuse.rgb * 2.0 - 1.0) * -0.25)); // just add some fake bumpiness to it, fast as possible...
 
 			float dif = min(getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 0.3), 0.15);
-			vec3 ambientColor2 = clamp(dif * lightColor2, 0.0, 1.0);
-
-			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
-			//lightColor2 = clamp(spec * lightColor2, 0.0, 1.0);
+			vec3 ambientColor2 = clamp(dif * lightColor, 0.0, 1.0);
 
 			float fre = pow(clamp(dot(bNorm, -E) + 1.0, 0.0, 1.0), 0.3);
-			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
-			float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0) * fre, 0.05, 1.0);
-			spec = clamp(spec, 0.25, 0.325);
-			lightColor2 = clamp(spec * lightColor2, 0.0, 1.0);
-
+			float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0) * fre, 0.05, 1.0) * 512.0;
+			lightColor2 = clamp(spec * lightColor, 0.0, 1.0);
 
 			// Mix them 50/50
 			lightColor = (lightColor + lightColor2) * 0.5;
@@ -521,19 +518,13 @@ void main()
 			lightColor = lightmapColor.rgb * MAP_LIGHTMAP_MULTIPLIER;
 
 			vec3 E = normalize(m_ViewDir);
-
 			vec3 bNorm = normalize(N.xyz + ((diffuse.rgb * 2.0 - 1.0) * -0.25)); // just add some fake bumpiness to it, fast as possible...
 
 			float dif = min(getdiffuseLight(bNorm, var_PrimaryLightDir.xyz, 0.3), 0.15);
 			ambientColor = clamp(dif * lightColor, 0.0, 1.0);
 
-			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
-			//lightColor = clamp(spec * lightColor, 0.0, 1.0);
-
 			float fre = pow(clamp(dot(bNorm, -E) + 1.0, 0.0, 1.0), 0.3);
-			//float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0), 0.05, 0.125);
-			float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0) * fre, 0.05, 1.0);
-			spec = clamp(spec, 0.25, 0.325);
+			float spec = clamp(getspecularLight(bNorm, -var_PrimaryLightDir.xyz, E, 16.0) * fre, 0.05, 1.0) * 512.0;
 			lightColor = clamp(spec * lightColor, 0.0, 1.0);
 		}
 	}

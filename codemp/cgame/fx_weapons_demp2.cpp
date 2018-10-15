@@ -47,7 +47,6 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		return;
@@ -59,19 +58,7 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -89,7 +76,6 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].WallBounceEffectFX;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_WallBouncefx;
 
 	if (!fx) {
 		return;
@@ -101,19 +87,7 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altWallBounceEffectFX;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altWallBouncefx)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altWallBouncefx;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -133,7 +107,6 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
 		return;
@@ -145,19 +118,7 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altFleshImpactEffect;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altfleshImpact)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altfleshImpact;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -237,7 +198,6 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		return;
@@ -249,19 +209,7 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -279,7 +227,6 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
 		return;
@@ -291,19 +238,7 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altFleshImpactEffect;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altfleshImpact)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altfleshImpact;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.

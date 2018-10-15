@@ -971,6 +971,7 @@ typedef enum {
 	CGEN_WAVEFORM,			// programmatically generated
 	CGEN_LIGHTING_DIFFUSE,
 	CGEN_LIGHTING_DIFFUSE_ENTITY, // diffuse lighting * entity
+	CGEN_LIGHTING_WARZONE,
 	CGEN_FOG,				// standard fog
 	CGEN_CONST,				// fixed color
 	CGEN_LIGHTMAPSTYLE,		// lightmap style
@@ -1308,6 +1309,8 @@ typedef struct shader_s {
 
 	int			surfaceFlags;			// if explicitlyDefined, this will have SURF_* flags
 	int			contentFlags;
+
+	qboolean	warzoneEnabled;
 
 	qboolean	entityMergable;			// merge across entites optimizable (smoke, blood)
 
@@ -1905,6 +1908,9 @@ typedef struct {
 	int			frameSceneNum;		// copied from tr.frameSceneNum
 	int			frameCount;			// copied from tr.frameCount
 	cplane_t	portalPlane;		// clip anything behind this if mirroring
+	vec4_t		emissiveLightDirection;
+	vec4_t		emissiveLightOrigin;
+	vec3_t		emissiveLightColor;
 	int			viewportX, viewportY, viewportWidth, viewportHeight;
 	FBO_t		*targetFbo;
 	int         targetFboLayer;

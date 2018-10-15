@@ -1614,12 +1614,8 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	//
 	//if (origin)
 	{// If there's no origin, surely this can't be an update...
-		qboolean FOUND = qfalse;
-
 		for (int ch = 0; ch < MAX_BASS_CHANNELS; ch++) 
 		{
-			if (FOUND) continue;
-			
 			if (SOUND_CHANNELS[ch].isActive && SOUND_CHANNELS[ch].isLooping)
 			{// This is active and looping...
 				if (SOUND_CHANNELS[ch].entityChannel == entityChannel 
@@ -1631,15 +1627,15 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 					c->volume = volume;
 					//Com_Printf("BASS DEBUG: Sound position (%f %f %f) and volume (%f) updated.\n", origin[0], origin[1], origin[2], volume);
 					return;
-					//FOUND = qtrue;
 				}
 			}
 		}
-
-		if (FOUND) return;
 	}
 
-	//Com_Printf("BASS DEBUG: Sound %i for entity %i channel %i position (%f %f %f) and volume (%f) added.\n", (int)samplechan, entityNum, entityChannel, origin[0], origin[1], origin[2], volume);
+	/*if (origin)
+		Com_Printf("BASS DEBUG: Sound %i for entity %i channel %i position (%f %f %f) and volume (%f) added.\n", (int)samplechan, entityNum, entityChannel, origin[0], origin[1], origin[2], volume);
+	else
+		Com_Printf("BASS DEBUG: Sound %i for entity %i channel %i position (%f %f %f) and volume (%f) added.\n", (int)samplechan, entityNum, entityChannel, 0, 0, 0, volume);*/
 
 	int chan = BASS_FindFreeChannel();
 

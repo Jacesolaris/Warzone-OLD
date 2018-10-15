@@ -3328,8 +3328,8 @@ static void CG_FX( centity_t *cent )
 		fxDir[1] = 1;
 	}
 	//[New EFX System]
-	efxIndex = CG_EnableEnhancedFX(cgs.gameEffects[s1->modelindex],
-		cgs.gameEffects[s1->boneIndex1]);
+	efxIndex = CG_EnableEnhancedFX(cgs.gameEffects[s1->modelindex], cgs.gameEffects[s1->boneIndex1]);
+
 	if (!efxIndex)
 	{
 		s3 = CG_ConfigString(CS_EFFECTS + s1->boneIndex2);

@@ -823,13 +823,7 @@ typedef struct weaponInfo_s {
 	fxHandle_t		ProjectileEffectFX;
 	fxHandle_t		Chargingfx;
 	fxHandle_t		Altchargingfx;
-	//all enhanced stuff under here.
-	fxHandle_t		EnhancedFX_WallBouncefx;
-	fxHandle_t		EnhancedFX_altWallBouncefx;
-	fxHandle_t		EnhancedFX_fleshImpact; // should we do these or use generic ones?
-	fxHandle_t		EnhancedFX_altfleshImpact;
-	fxHandle_t		EnhancedFX_missileWallImpactfx;
-	fxHandle_t		EnhancedFX_altmissileWallImpactfx;
+
 	qhandle_t		tracelineShader;
 	
 	qhandle_t		altMissileModel;
@@ -1850,6 +1844,8 @@ typedef struct cgs_s {
 	float			screenYScale;
 	float			screenXBias;
 
+	int				currentFPS;
+
 	int				serverCommandSequence;	// reliable command stream counter
 	int				processedSnapshotNum;// the number of snapshots cgame has requested
 
@@ -2336,11 +2332,6 @@ void FX_ConcAltShot( vec3_t start, vec3_t end, int weapon );
 // Effects related prototypes
 //-----------------------------
 
-//[New EFX System]
-fxHandle_t CG_EnableEnhancedFX(fxHandle_t normal, fxHandle_t AdvanceEnhancedFX);
-//[/New EFX System]
-
-
 // Environmental effects
 void CG_Spark( vec3_t origin, vec3_t dir );
 
@@ -2368,6 +2359,8 @@ void FX_ForceDrained(vec3_t origin, vec3_t dir);
 //-----------------------------
 // Effects related prototypes
 //-----------------------------
+
+fxHandle_t CG_EnableEnhancedFX(fxHandle_t normal, fxHandle_t AdvanceEnhancedFX);
 
 // Environmental effects
 void CG_Spark( vec3_t origin, vec3_t dir );

@@ -1667,6 +1667,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				stage->rgbGen = CGEN_ONE_MINUS_VERTEX;
 			}
+			else if (!Q_stricmp(token, "warzoneLighting"))
+			{
+				stage->rgbGen = CGEN_LIGHTING_WARZONE;
+			}
 			else
 			{
 				Com_Printf (S_COLOR_YELLOW  "WARNING: unknown rgbGen parameter '%s' in shader '%s'\n", token, shader.name );

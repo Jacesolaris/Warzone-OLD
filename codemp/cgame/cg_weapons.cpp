@@ -448,7 +448,7 @@ sound should only be done on the world model case.
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team, vec3_t newAngles, qboolean thirdPerson ) {
 	refEntity_t				gun;
 	refEntity_t				barrel;
-	vec3_t					angles;
+	//vec3_t					angles;
 	weapon_t				weaponNum;
 	weaponInfo_t			*weapon;
 	centity_t				*nonPredictedCent;
@@ -2337,21 +2337,7 @@ Caused by an EV_MISSILE_MISS event, or directly by local bullet tracing
 */
 void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, impactSound_t soundType, qboolean altFire, int charge)
 {
-	int parm;
-	vec3_t up={0,0,1};
-
-	switch( weapon )
-	{
-	case WP_CYROBAN_GRENADE:
-	case WP_FRAG_GRENADE:
-	case WP_THERMAL:
-		FX_WeaponHitWall(origin, dir, weapon, altFire);
-		break;
-
-	default:
-		FX_WeaponHitWall(origin, dir, weapon, altFire);
-		break;
-	}
+	FX_WeaponHitWall(origin, dir, weapon, altFire);
 }
 
 
@@ -2363,21 +2349,7 @@ CG_MissileHitPlayer
 void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, qboolean altFire)
 {
 	qboolean	humanoid = qtrue;
-	vec3_t up={0,0,1};
-
-	// some weapons will make an explosion with the blood, while
-	// others will just make the blood
-	switch ( weapon ) {
-	case WP_CYROBAN_GRENADE:
-	case WP_FRAG_GRENADE:
-	case WP_THERMAL:
-		FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
-		break;
-
-	default:
-		FX_WeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-	}
+	FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 }
 
 

@@ -755,6 +755,17 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 		case CGEN_LIGHTMAPSTYLE:
 			VectorScale4 (styleColors[pStage->lightmapStyle], 1.0f / 255.0f, baseColor);
 			break;
+		case CGEN_LIGHTING_WARZONE:
+			baseColor[0] =
+				baseColor[1] =
+				baseColor[2] =
+				baseColor[3] = 0.0f;
+
+			vertColor[0] =
+				vertColor[1] =
+				vertColor[2] =
+				vertColor[3] = mix(tr.identityLight, 1.0f, 0.5);
+			break;
 		case CGEN_IDENTITY:
 		case CGEN_LIGHTING_DIFFUSE:
 		case CGEN_BAD:
@@ -1983,6 +1994,62 @@ void RB_UpdateCloseLights ( void )
 		}
 	}
 
+	//
+	// Make an average light color and direction... Default to sun direction, offset by local lighting...
+	//
+	backEnd.viewParms.emissiveLightDirection[3] = 0.0;
+	VectorCopy(backEnd.refdef.sunDir, backEnd.viewParms.emissiveLightDirection);
+	
+	vec3_t out;
+	float dist = 4096.0;
+	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+	VectorCopy(out, backEnd.viewParms.emissiveLightOrigin);
+
+	VectorCopy(backEnd.refdef.sunCol, backEnd.viewParms.emissiveLightColor);
+
+	// Sun counts as 2x power, so we bias toward it...
+	VectorScale(backEnd.viewParms.emissiveLightDirection, 2.0, backEnd.viewParms.emissiveLightDirection);
+	VectorScale(backEnd.viewParms.emissiveLightOrigin, 2.0, backEnd.viewParms.emissiveLightOrigin);
+	VectorScale(backEnd.viewParms.emissiveLightColor, 2.0, backEnd.viewParms.emissiveLightColor);
+
+	float nightScale = RB_NightScale();
+
+	if (nightScale > 0.0)
+	{
+		float nightOffset = mix(1.0, -1.0, nightScale);
+		VectorScale(backEnd.viewParms.emissiveLightDirection, nightOffset, backEnd.viewParms.emissiveLightDirection);
+		VectorScale(backEnd.viewParms.emissiveLightOrigin, nightOffset, backEnd.viewParms.emissiveLightOrigin);
+	}
+
+	for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+	{// emissives...
+		vec3_t dir;
+		VectorSubtract(backEnd.refdef.vieworg, CLOSEST_LIGHTS_POSITIONS[i], dir);
+		VectorNormalizeFast(dir);
+
+		VectorAdd(backEnd.viewParms.emissiveLightDirection, dir, backEnd.viewParms.emissiveLightDirection);
+		VectorAdd(backEnd.viewParms.emissiveLightOrigin, CLOSEST_LIGHTS_POSITIONS[i], backEnd.viewParms.emissiveLightOrigin);
+		VectorAdd(backEnd.viewParms.emissiveLightColor, CLOSEST_LIGHTS_COLORS[i], backEnd.viewParms.emissiveLightColor);
+	}
+
+	float numLightsAveragedWeighted = 2.0 + NUM_CLOSE_LIGHTS;
+	backEnd.viewParms.emissiveLightDirection[0] /= numLightsAveragedWeighted;
+	backEnd.viewParms.emissiveLightDirection[1] /= numLightsAveragedWeighted;
+	backEnd.viewParms.emissiveLightDirection[2] /= numLightsAveragedWeighted;
+
+	backEnd.viewParms.emissiveLightOrigin[0] /= numLightsAveragedWeighted;
+	backEnd.viewParms.emissiveLightOrigin[1] /= numLightsAveragedWeighted;
+	backEnd.viewParms.emissiveLightOrigin[2] /= numLightsAveragedWeighted;
+
+	backEnd.viewParms.emissiveLightColor[0] /= numLightsAveragedWeighted;
+	backEnd.viewParms.emissiveLightColor[1] /= numLightsAveragedWeighted;
+	backEnd.viewParms.emissiveLightColor[2] /= numLightsAveragedWeighted;
+
+	// Bias the vibrancy of the average light color to be mostly white...
+	mix(backEnd.viewParms.emissiveLightColor[0], 1.0, 0.8);
+	mix(backEnd.viewParms.emissiveLightColor[1], 1.0, 0.8);
+	mix(backEnd.viewParms.emissiveLightColor[2], 1.0, 0.8);
+
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }
 
@@ -2753,6 +2820,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			case CGEN_LIGHTING_DIFFUSE:
 				useRGBA = 1.0;
 				break;
+			case CGEN_LIGHTING_WARZONE:
+				useRGBA = 1.0;
+				break;
 			default:
 				break;
 			}
@@ -3014,7 +3084,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS3, vec);
 
 			VectorSet4(vec,
-				MAP_LIGHTMAP_MULTIPLIER,
+				MAP_LIGHTMAP_MULTIPLIER * 0.0075,
 				MAP_LIGHTMAP_ENHANCEMENT,
 				(tess.shader->hasAlphaTestBits || tess.shader->materialType == MATERIAL_GREENLEAVES) ? 1.0 : 0.0, // TODO: MATERIAL_GREENLEAVES because something isnt right with models...
 				0.0);
@@ -3238,8 +3308,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+				//GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				//GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.viewParms.emissiveLightOrigin);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.viewParms.emissiveLightColor);
 			}
 		}
 		else
@@ -3291,6 +3363,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
 				GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
 				GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+			}
+			else if (pStage->rgbGen == CGEN_LIGHTING_WARZONE)
+			{
+				/*GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, backEnd.refdef.sunCol);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);*/
+				
+				//GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.viewParms.emissiveLightDirection);
+				//GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.viewParms.emissiveLightColor);
 			}
 
 			if (pStage->alphaGen == AGEN_PORTAL)
@@ -3373,8 +3457,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+				//GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+				//GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.viewParms.emissiveLightOrigin);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.viewParms.emissiveLightColor);
 			}
 
 			if (tr.roadsMapImage != tr.blackImage)

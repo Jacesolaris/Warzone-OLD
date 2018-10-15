@@ -103,6 +103,7 @@ uniform float  u_VertexLerp;
 uniform mat4   u_BoneMatrices[MAX_GLM_BONEREFS];
 
 uniform vec4  u_PrimaryLightOrigin;
+uniform vec3  u_PrimaryLightColor;
 uniform float u_PrimaryLightRadius;
 
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
@@ -255,6 +256,17 @@ vec4 CalcColor(vec3 position, vec3 normal)
 		{
 			float incoming = clamp(dot(normal, u_ModelLightDir), 0.0, 1.0);
 			color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0);
+		}
+
+		if (u_ColorGen == CGEN_LIGHTING_WARZONE)
+		{
+			vec3 light = normalize(u_PrimaryLightOrigin.xyz);
+			float diffuse = clamp(pow(dot(normal, light), 16.0), 0.0, 1.0);
+			vec3 reflected = -reflect(light, normal);
+			vec3 viewer = normalize(u_LocalViewOrigin - position);
+			float spec = clamp(pow(dot(reflected, viewer), 64.0), 0.0, 1.0);
+			vec3 lColor = u_PrimaryLightColor;//mix(u_PrimaryLightColor, vec3(1.0), 0.8);
+			color.rgb = clamp(lColor * (diffuse + spec + 1.0), 0.0, 1.0);
 		}
 	
 		if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)

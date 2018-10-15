@@ -44,7 +44,6 @@ void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		return;
@@ -56,19 +55,7 @@ void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -80,7 +67,6 @@ void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean al
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		return;
@@ -92,19 +78,7 @@ void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean al
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -122,22 +96,9 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
-	//trap->Print("Hit player - weapon %i\n", weapon);
-	//trap->Print("FX: %i. FX2: %i.\n", (int)fx, (int)fx2);
+
 	if (!fx) {
 		return;
-	}
-
-	if (!fx2) {
-		if (fx) {
-			// We don't have an fx2, but we have an fx. Use it for enhanced as well..
-			fx2 = fx;
-		}
-		else {
-			// If there is no primary (missileWallImpactfx) fx. Use original fx.
-			return;
-		}
 	}
 
 	if (altFire) {
@@ -151,32 +112,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 			// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
 			return;
 		}
-
-		if (!fx2) {
-			if (fx) {
-				// We don't have an fx2, but we have an fx. Use it for enhanced as well..
-				fx2 = fx;
-			}
-			else {
-				// If there is no primary (missileWallImpactfx) fx. Use original fx.
-				return;
-			}
-		}
-
-		if (cg_weapons[weapon].EnhancedFX_altfleshImpact)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altfleshImpact;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	trap->Print("DEBUG: FX: %i. FX2: %i.\n", (int)fx, (int)fx2);
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.
@@ -189,7 +125,6 @@ void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, in
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
 		return;
@@ -201,19 +136,7 @@ void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, in
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altFleshImpactEffect;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altfleshImpact)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altfleshImpact;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.

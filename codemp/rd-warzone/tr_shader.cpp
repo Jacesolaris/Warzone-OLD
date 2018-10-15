@@ -2658,6 +2658,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				stage->rgbGen = CGEN_ONE_MINUS_VERTEX;
 			}
+			else if (!Q_stricmp(token, "warzoneLighting"))
+			{
+				stage->rgbGen = CGEN_LIGHTING_WARZONE;
+			}
 			else
 			{
 				ri->Printf( PRINT_WARNING, "WARNING: unknown rgbGen parameter '%s' in shader '%s'\n", token, shader.name );
@@ -4373,9 +4377,9 @@ int DetectMaterialType ( const char *name )
 			&& !StringContainsWord(name, "mp/dark_")) // Dont bother reporting gfx/ or hud items...
 			if (r_materialDebug->integer)
 				ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
-	}
 
-	return MATERIAL_NONE;
+		return MATERIAL_CONCRETE;// MATERIAL_NONE;
+	}
 }
 
 void AssignMaterialType ( const char *name, const char *text )
@@ -4586,6 +4590,7 @@ static qboolean ParseShader( const char *name, const char **text )
 		}
 		else if (Q_stricmp(token, "warzoneShader") == 0 || Q_stricmp(token, "warzoneEnabled") == 0 || Q_stricmp(token, "warzoneSupported") == 0)
 		{// Just skip past these markers, handled in FindShader()...
+			shader.warzoneEnabled = qtrue;
 			SkipRestOfLine(text);
 			continue;
 		}
@@ -5127,6 +5132,11 @@ static void ComputeVertexAttribs(void)
 
 			case CGEN_LIGHTING_DIFFUSE:
 			case CGEN_LIGHTING_DIFFUSE_ENTITY:
+				shader.vertexAttribs |= ATTR_NORMAL;
+				break;
+
+			case CGEN_LIGHTING_WARZONE:
+				shader.vertexAttribs |= ATTR_COLOR;
 				shader.vertexAttribs |= ATTR_NORMAL;
 				break;
 
@@ -6996,6 +7006,15 @@ static int CollapseStagesToGLSL(void)
 		if (!stages[i].active)
 			continue;
 
+		if (stages[i].bundle[0].isLightmap)
+			stages[i].noScreenMap = qtrue;
+
+		if ((stages[i].stateBits & GLS_DEPTHTEST_DISABLE) || (stages[i].stateBits & GLS_DEPTHFUNC_EQUAL))
+			stages[i].noScreenMap = qtrue;
+		
+		//if (stages[i].bundle[0].tcGen != TCGEN_IDENTITY && stages[i].bundle[0].tcGen != TCGEN_TEXTURE)
+		//	stages[i].noScreenMap = qtrue;
+
 		if (i == numStages)
 		{
 			numStages++;
@@ -8267,6 +8286,7 @@ char uniqueGenericLightmap[] = "{\n"\
 "map $lightmap\n"\
 "blendfunc GL_DST_COLOR GL_ZERO\n"\
 "rgbGen lightingDiffuse\n"\
+"//rgbGen warzoneLighting\n"\
 "depthFunc equal\n"\
 "noScreenMap\n"\
 "}\n";
@@ -8293,7 +8313,9 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"//rgbGen identity\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "}\n"\
 "";
@@ -8311,7 +8333,9 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"//rgbGen identity\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "}\n"\
 "";
@@ -8328,7 +8352,9 @@ char uniqueGenericFoliageTreeBarkShader[] = "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"//rgbGen identity\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "//tcMod scale 2.5 2.5\n"\
 "}\n"\
 "}\n"\
@@ -8349,7 +8375,9 @@ char uniqueGenericFoliageLeafsShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"//rgbGen identity\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "}\n"\
 "";
@@ -8370,10 +8398,9 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen lightingDiffuse\n"\
-"//rgbGen entity\n"\
-"//rgbGen identity\n"\
-"//rgbGen Vertex\n"\
+"//rgbGen lightingDiffuse\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "%s"\
 "}\n"\
@@ -8396,10 +8423,9 @@ char uniqueGenericArmorShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen lightingDiffuse\n"\
-"//rgbGen entity\n"\
-"//rgbGen identity\n"\
-"//rgbGen Vertex\n"\
+"//rgbGen lightingDiffuse\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "%s"\
 "}\n"\
@@ -8417,9 +8443,11 @@ char uniqueGenericMetalShader[] = "{\n"\
 "//blendfunc GL_SRC_ALPHA GL_ZERO\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
-"//rgbGen lightingDiffuse\n"\
 "depthWrite\n"\
-"rgbGen entity\n"\
+"//rgbGen entity\n"\
+"//rgbGen lightingDiffuse\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "%s"\
 "%s"\
@@ -8439,7 +8467,9 @@ char uniqueGenericRockShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"//rgbGen identity\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "}\n"\
 "";
@@ -8455,7 +8485,9 @@ char uniqueGenericWeaponShader[] = "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
-"rgbGen lightingDiffuse\n"\
+"//rgbGen lightingDiffuse\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "depthWrite\n"\
 "//rgbGen entity\n"\
 "}\n"\
@@ -8471,7 +8503,9 @@ char uniqueGenericShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"//rgbGen identity\n"\
+"rgbGen identityLighting\n"\
+"//rgbGen warzoneLighting\n"\
 "}\n"\
 "%s"\
 "%s"\
@@ -8479,12 +8513,24 @@ char uniqueGenericShader[] = "{\n"\
 "";
 
 
-qboolean R_ForceGenericShader ( const char *name, const char *text )
+qboolean R_AllowGenericShader ( const char *name, const char *text )
 {
 	if (IsNonDetectionMap()) return qfalse;
 
 	//if (StringContainsWord(name, "JH3-TE"))
 	//	return qtrue;
+
+	if (StringContainsWord(name, "icon"))
+		return qfalse;
+
+	if (StringContainsWord(name, "gfx/"))
+		return qfalse;
+
+	if (StringContainsWord(name, "menu/"))
+		return qfalse;
+
+	if (StringContainsWord(name, "ui/"))
+		return qfalse;
 
 	if (StringContainsWord(name, "gfx/water"))
 		return qfalse;
@@ -8532,6 +8578,9 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 	else if (StringContainsWord(name, "reborn") || StringContainsWord(name, "trooper"))
 		return qtrue;
 	else if (StringContainsWord(name, "boba") || StringContainsWord(name, "pilot"))
+		return qtrue;
+
+	if (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))
 		return qtrue;
 
 	return qfalse;
@@ -8597,404 +8646,76 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		ri->Printf( PRINT_WARNING, "WARNING: shader '%s' has invalid lightmap index of %d\n", name, lightmapIndexes[0]  );
 		lightmapIndexes = lightmapsVertex;
 	}
-	
-	try {
-		COM_StripExtension(name, strippedName, sizeof(strippedName));
 
-		hash = generateHashValue(strippedName, FILE_HASH_SIZE);
+	COM_StripExtension(name, strippedName, sizeof(strippedName));
 
-		//
-		// see if the shader is already loaded
-		//
-		for (sh = hashTable[hash]; sh; sh = sh->next) {
-			// NOTE: if there was no shader or image available with the name strippedName
-			// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
-			// have to check all default shaders otherwise for every call to R_FindShader
-			// with that same strippedName a new default shader is created.
-			if (IsShader(sh, strippedName, lightmapIndexes, styles)) {
-				// match found
-				return sh;
-			}
-		}
+	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 
-#ifdef __DEBUG_SHADER_LOADING__
-		ri->Printf(PRINT_ALL, "Loading new shader %s.\n", name);
-#endif //__DEBUG_SHADER_LOADING__
-
-		// clear the global shader
-		ClearGlobalShader();
-		Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-		Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
-		Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
-
-		//
-		// attempt to define shader from an explicit parameter file
-		//
-		shaderText = FindShaderInShaderText(strippedName);
-
-		qboolean forceShaderFileUsage = qfalse;
-		qboolean isEfxShader = qfalse;
-
-		if (StringContains((char *)shader.name, "gfx/", qfalse) || StringContains((char *)shader.name, "gfx_base/", qfalse))
-		{
-			isEfxShader = qtrue;
-			forceShaderFileUsage = qtrue;
-		}
-		else if (StringContains((char *)shader.name, "magicParticles", qfalse) || StringContains((char *)shader.name, "fireflies", qfalse))
-		{
-			isEfxShader = qtrue;
-			forceShaderFileUsage = qtrue;
-		}
-
-		if (!forceShaderFileUsage && shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneEnabled", qfalse))
-		{// This is marked as a warzone enabled shader...
-			forceShaderFileUsage = qtrue;
-		}
-
-		if (!forceShaderFileUsage && shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneShader", qfalse))
-		{// This is marked as a warzone enabled shader...
-			forceShaderFileUsage = qtrue;
-		}
-
-		if (!forceShaderFileUsage && shaderText && shaderText[0] && StringContains((char *)shaderText, "warzoneSupported", qfalse))
-		{// This is marked as a warzone enabled shader...
-			forceShaderFileUsage = qtrue;
-		}
-
-		if (!Q_stricmp(shader.name, "textures/system")
-			|| StringContainsWord(shader.name, "nodraw_solid")
-			|| StringContainsWord(shader.name, "collision"))
-		{
-			forceShaderFileUsage = qtrue;
-		}
-
-		if (!forceShaderFileUsage)
-		{
-			qboolean shaderError = qfalse;
-
-			//
-			// Since this texture does not have a shader, create one for it - conditionally...
-			//
-#ifdef __SHADER_GENERATOR__
-			if (shaderText && (forceShaderFileUsage || !R_ForceGenericShader(name, shaderText))) {
-#else //!__SHADER_GENERATOR__
-			if (shaderText) {
-#endif //__SHADER_GENERATOR__
-				// enable this when building a pak file to get a global list
-				// of all explicit shaders
-				if (r_printShaders->integer) {
-					ri->Printf(PRINT_ALL, "*SHADER* %s\n", name);
-				}
-
-				//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
-
-				if (!ParseShader(name, &shaderText)) {
-					// had errors, so use default shader
-					shader.defaultShader = qtrue;
-					shaderError = qtrue;
-				}
-#ifdef __SHADER_GENERATOR__
-				if (shaderError)
-				{
-					// clear the global shader
-					ClearGlobalShader();
-					Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-					Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
-					Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
-				}
-				else if (!shader.defaultShader || StringContainsWord(name, "icon") || !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
-				{
-					sh = FinishShader();
-					if (isEfxShader) sh->materialType = MATERIAL_EFX;
-					return sh;
-				}
-#else //!__SHADER_GENERATOR__
-				sh = FinishShader();
-				return sh;
-#endif //__SHADER_GENERATOR__
-			}
-
-			extern qboolean MAP_LIGHTMAP_DISABLED;
-
-			char lightMapText[512] = { 0 };
-			if (!MAP_LIGHTMAP_DISABLED)
-			{// Enable the lightmap section...
-				strcpy(lightMapText, uniqueGenericLightmap);
-			}
-
-#ifdef __SHADER_GENERATOR__
-			if (shaderError
-				|| ((R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7))) && (shaderError || !StringContainsWord(name, "icon"))))
-			{
-				shaderError = qfalse;
-
-				char shaderCustomMap[256] = { 0 };
-				int material = DetectMaterialType(name);
-
-				shader.defaultShader = qfalse;
-
-				// Check if this texture has a _glow component...
-				char glowName[MAX_IMAGE_PATH] = { 0 };
-				char glowName2[MAX_IMAGE_PATH] = { 0 };
-				char glowName3[MAX_IMAGE_PATH] = { 0 };
-				char glowName4[MAX_IMAGE_PATH] = { 0 };
-
-				flags = IMGFLAG_NONE;
-
-				if (r_srgb->integer)
-					flags |= IMGFLAG_SRGB;
-
-				if (mipRawImage)
-				{
-					flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
-
-					//if (r_genNormalMaps->integer)
-					flags |= IMGFLAG_GENNORMALMAP;
-				}
-				else
-				{
-					flags |= IMGFLAG_CLAMPTOEDGE;
-				}
-
-				// Do we have a glow?
-				sprintf(glowName, "%s_glow", strippedName);
-				sprintf(glowName2, "%s_glw", strippedName);
-				sprintf(glowName3, "%sglow", strippedName);
-				sprintf(glowName4, "%sglw", strippedName);
-
-				if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
-				{
-					sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
-				}
-				else if (R_TextureFileExists(glowName2) || R_TIL_TextureFileExists(glowName))
-				{
-					sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
-				}
-				else if (R_TextureFileExists(glowName3) || R_TIL_TextureFileExists(glowName))
-				{
-					sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
-				}
-				else if (R_TextureFileExists(glowName4) || R_TIL_TextureFileExists(glowName))
-				{
-					sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
-				}
-
-				if (shaderCustomMap[0] == 0)
-				{// No glow? Add sky reflection map...
-					vec4_t settings;
-					RB_PBR_DefaultsForMaterial(settings, material);
-					float reflectionStrength = settings[1] * settings[2];
-
-					if (reflectionStrength > 0.0)
-					{// If the reflectiveness of this material is high enough, add sky reflection...
-						char shaderCustomAdditionMap[256] = { 0 };
-						reflectionStrength = reflectionStrength * 0.25 + 0.25;
-						sprintf(shaderCustomAdditionMap, uniqueGenericSkyMap, reflectionStrength);
-						sprintf(shaderCustomMap, shaderCustomAdditionMap);
-					}
-				}
-
-				// Generate the shader...
-				if (StringContainsWord(strippedName, "warzone/billboard") || StringContainsWord(strippedName, "warzone\\billboard"))
-				{
-					sprintf(myShader, uniqueGenericFoliageBillboardShader, strippedName, strippedName);
-				}
-				else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
-					&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
-				{
-					sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-				}
-				else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
-					&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
-				{
-					sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-				}
-				else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(name, "warzone/plant"))
-				{
-					sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-				}
-				else if (StringContainsWord(strippedName, "yavin/grass") || StringContainsWord(strippedName, "yavin\\grass")
-					|| StringContainsWord(strippedName, "yavin/tree_leaves") || StringContainsWord(strippedName, "yavin\\tree_leaves")
-					|| StringContainsWord(strippedName, "yavin/tree1") || StringContainsWord(strippedName, "yavin\\tree1")
-					|| StringContainsWord(strippedName, "yavin/vine") || StringContainsWord(strippedName, "yavin\\vine"))
-				{
-					sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-				}
-				else if (StringContainsWord(strippedName, "warzone/plants") || StringContainsWord(strippedName, "warzone\\plants"))
-				{
-					sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-				}
-				else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree")
-					|| StringContainsWord(strippedName, "warzone/deadtree") || StringContainsWord(strippedName, "warzone\\deadtree"))
-				{
-					if (StringContainsWord(strippedName, "bark")
-						|| StringContainsWord(strippedName, "trunk")
-						|| StringContainsWord(strippedName, "giant_tree")
-						|| StringContainsWord(strippedName, "vine01"))
-					{
-						sprintf(myShader, uniqueGenericFoliageTreeBarkShader, strippedName, strippedName, "");
-					}
-					else
-					{
-						//sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-						sprintf(myShader, uniqueGenericFoliageLeafsShader, strippedName, strippedName, "");
-					}
-				}
-				else if (StringContainsWord(strippedName, "warzone/test_trees") || StringContainsWord(strippedName, "warzone\\test_trees"))
-				{
-					if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk"))
-					{
-						sprintf(myShader, uniqueGenericFoliageTreeBarkShader, strippedName, strippedName, "");
-					}
-					else
-					{
-						//sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-						sprintf(myShader, uniqueGenericFoliageLeafsShader, strippedName, strippedName, "");
-					}
-				}
-				else if (StringContainsWord(name, "models/weapon"))
-				{
-					sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, shaderCustomMap, strippedName);
-				}
-				else if (material == MATERIAL_ARMOR)
-				{
-					sprintf(myShader, uniqueGenericArmorShader, strippedName, strippedName, shaderCustomMap, strippedName);
-				}
-				else if (StringContainsWord(strippedName, "players/hk"))
-				{
-					sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
-				}
-				else if (StringContainsWord(strippedName, "player"))
-				{
-					sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, shaderCustomMap, strippedName);
-				}
-				else if (StringContainsWord(strippedName, "weapon") || material == MATERIAL_SOLIDMETAL || material == MATERIAL_HOLLOWMETAL)
-				{
-					sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
-				}
-				else if (material == MATERIAL_ROCK || StringContainsWord(name, "warzone/rocks"))
-				{
-					sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
-				}
-				else if (StringContainsWord(name, "vjun/vj4"))
-				{
-					if (StringContainsWord(name, "vjun/vj4_b"))
-					{// pff
-						char realName[128];
-						sprintf(realName, "models/map_objects/vjun/vj4");
-						sprintf(myShader, uniqueGenericRockShader, strippedName, realName, shaderCustomMap, realName);
-					}
-					else
-					{
-						sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
-					}
-				}
-				else
-				{
-					sprintf(myShader, uniqueGenericShader, strippedName, strippedName, shaderCustomMap, lightMapText);
-				}
-
-				flags = IMGFLAG_NONE;
-
-				//
-				// attempt to define shader from an explicit parameter file
-				//
-				const char *shaderText2 = myShader;
-				if (shaderText2) {
-					// enable this when building a pak file to get a global list
-					// of all explicit shaders
-					if (r_printShaders->integer) {
-						ri->Printf(PRINT_ALL, "*SHADER* %s\n", name);
-					}
-
-					//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
-
-					if (!ParseShader(name, &shaderText2)) {
-						// had errors, so use default shader
-						shader.defaultShader = qtrue;
-						shaderError = qtrue;
-					}
-					else {
-						if (!StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
-							if (r_genericShaderDebug->integer)
-								ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
-					}
-
-					if (shaderError)
-					{
-						// clear the global shader
-						ClearGlobalShader();
-						Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-						Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
-						Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
-					}
-					else
-					{
-						sh = FinishShader();
-						return sh;
-					}
-				}
-			}
-
-			if (shaderText
-				&& shaderError
-				&& (R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
-				&& (!StringContainsWord(name, "icon") || shaderError))
-			{// If we failed to make a functioning forced generic shader (wierd texture names not matching shader, etc), fall back to a real shader...
-				if (shaderText) {
-					// clear the global shader
-					ClearGlobalShader();
-					Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-					Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
-					Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
-
-					// enable this when building a pak file to get a global list
-					// of all explicit shaders
-					if (r_printShaders->integer) {
-						ri->Printf(PRINT_ALL, "*SHADER* %s\n", name);
-					}
-
-					//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
-
-					if (!ParseShader(name, &shaderText)) {
-						// had errors, so use default shader
-						shader.defaultShader = qtrue;
-					}
-					sh = FinishShader();
-					return sh;
-				}
-			}
-		}
-		else if (shaderText) 
-		{
-			// clear the global shader
-			ClearGlobalShader();
-			Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-			Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
-			Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
-
-			// enable this when building a pak file to get a global list
-			// of all explicit shaders
-			if (r_printShaders->integer) {
-				ri->Printf(PRINT_ALL, "*SHADER* %s\n", name);
-			}
-
-			//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
-
-			if (!ParseShader(name, &shaderText)) {
-				// had errors, so use default shader
-				shader.defaultShader = qtrue;
-			}
-			sh = FinishShader();
+	//
+	// see if the shader is already loaded
+	//
+	for (sh = hashTable[hash]; sh; sh = sh->next) {
+		// NOTE: if there was no shader or image available with the name strippedName
+		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
+		// have to check all default shaders otherwise for every call to R_FindShader
+		// with that same strippedName a new default shader is created.
+		if (IsShader(sh, strippedName, lightmapIndexes, styles)) {
+			// match found
 			return sh;
 		}
-#endif //__SHADER_GENERATOR__
+	}
 
-		//
-		// if not defined in the in-memory shader descriptions,
-		// look for a single supported image file
-		//
+#ifdef __DEBUG_SHADER_LOADING__
+	ri->Printf(PRINT_ALL, "Loading new shader %s.\n", name);
+#endif //__DEBUG_SHADER_LOADING__
 
+	// clear the global shader
+	ClearGlobalShader();
+	Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+	Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+	Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+
+	//
+	// attempt to define shader from an explicit parameter file
+	//
+	shaderText = FindShaderInShaderText(strippedName);
+
+	qboolean isEfxShader = qfalse;
+
+	if (StringContainsWord(strippedName, "gfx/") || StringContainsWord(strippedName, "gfx_base/"))
+	{
+		isEfxShader = qtrue;
+	}
+	else if (StringContainsWord(strippedName, "magicParticles") || StringContainsWord(strippedName, "fireflies"))
+	{
+		isEfxShader = qtrue;
+	}
+
+#ifdef __SHADER_GENERATOR__
+	qboolean		forceShaderFileUsage = qfalse;
+	qboolean		haveImage = qfalse;
+	int				material = DetectMaterialType(name);
+	const char		*originalShaderText = shaderText;
+	qboolean		allowGeneric = R_AllowGenericShader(name, shaderText);
+
+	if (StringContainsWord(strippedName, "gfx/") || StringContainsWord(strippedName, "gfx_base/"))
+	{
+		forceShaderFileUsage = qtrue;
+	}
+	else if (StringContainsWord(strippedName, "magicParticles") || StringContainsWord(strippedName, "fireflies"))
+	{
+		forceShaderFileUsage = qtrue;
+	}
+
+	if (!Q_stricmp(strippedName, "textures/system")
+		|| StringContainsWord(strippedName, "nodraw_solid")
+		|| StringContainsWord(strippedName, "collision"))
+	{
+		forceShaderFileUsage = qtrue;
+	}
+
+	if (allowGeneric || !shaderText)
+	{
 		flags = IMGFLAG_NONE;
 
 		if (r_srgb->integer)
@@ -9013,77 +8734,456 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 
 #ifdef __DEFERRED_IMAGE_LOADING__
-		image = R_DeferImageLoad(name, IMGTYPE_COLORALPHA, flags);
+		image = R_DeferImageLoad(strippedName, IMGTYPE_COLORALPHA, flags);
 #else //!__DEFERRED_IMAGE_LOADING__
-		image = R_FindImageFile(name, IMGTYPE_COLORALPHA, flags);
+		image = R_FindImageFile(strippedName, IMGTYPE_COLORALPHA, flags);
 #endif //__DEFERRED_IMAGE_LOADING__
 
-		if (!image) {
-			ri->Printf(PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name);
+		if ((image && image != tr.defaultImage) || R_TIL_TextureFileExists(strippedName))
+		{
+			haveImage = qtrue;
+		}
+	}
+
+	if (originalShaderText)
+	{// See if it is warzone enabled by parsing it, if so, use it, otherwise try warzone generic shaders, etc...
+		if (ParseShader(name, &originalShaderText))
+		{
+			if (shader.warzoneEnabled)
+			{// It's a proper warzone shader, use it...
+				sh = FinishShader();
+
+				if (isEfxShader) sh->materialType = MATERIAL_EFX;
+				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
+
+				if (r_genericShaderDebug->integer && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+				{
+					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s shader is a warzoneEnabled shader.\n", strippedName);
+				}
+				return sh;
+			}
+			else if (!allowGeneric)
+			{
+				sh = FinishShader();
+
+				if (isEfxShader) sh->materialType = MATERIAL_EFX;
+				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
+
+				if (r_genericShaderDebug->integer && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+				{
+					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s shader is not allowed to use AGS.\n", strippedName);
+				}
+				return sh;
+			}
+			else if (forceShaderFileUsage)
+			{
+				sh = FinishShader();
+
+				if (isEfxShader) sh->materialType = MATERIAL_EFX;
+				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
+
+				if (r_genericShaderDebug->integer && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+				{
+					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s shader is forceShaderFileUsage.\n", strippedName);
+				}
+				return sh;
+			}
+			else if (!haveImage)
+			{// Todo, store diffuse tex name from this shader and try below?
+				sh = FinishShader();
+
+				if (isEfxShader) sh->materialType = MATERIAL_EFX;
+				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
+
+				if (r_genericShaderDebug->integer && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+				{
+					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s texture does not exist.\n", strippedName);
+				}
+				return sh;
+			}
+			else if (shader.hasGlow)
+			{
+				sh = FinishShader();
+
+				if (isEfxShader) sh->materialType = MATERIAL_EFX;
+				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
+
+				if (r_genericShaderDebug->integer && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+				{
+					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s original had a glow stage.\n", strippedName);
+				}
+				return sh;
+			}
+			else
+			{// Not a warzone shader, and is allowed to use AGS, so clear it and let warzone try it's stuff...
+				// clear the global shader
+				ClearGlobalShader();
+				Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+				Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+				Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+			}
+		}
+		else
+		{
+			// clear the global shader
+			ClearGlobalShader();
+			Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+			Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+			Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+		}
+	}
+
+	if (haveImage && (allowGeneric || (!shaderText && !StringContainsWord(strippedName, "icon") && (!strncmp(strippedName, "textures/", 9) || !strncmp(strippedName, "models/", 7)))))
+	{// Use the generic shader construction system...
+		extern qboolean MAP_LIGHTMAP_DISABLED;
+
+		char lightMapText[512] = { 0 };
+		if (!MAP_LIGHTMAP_DISABLED)
+		{// Enable the lightmap section...
+			strcpy(lightMapText, uniqueGenericLightmap);
+		}
+
+		char shaderCustomMap[256] = { 0 };
+		int material = DetectMaterialType(name);
+
+		shader.defaultShader = qfalse;
+
+		// Check if this texture has a _glow component...
+		char glowName[MAX_IMAGE_PATH] = { 0 };
+		char glowName2[MAX_IMAGE_PATH] = { 0 };
+		char glowName3[MAX_IMAGE_PATH] = { 0 };
+		char glowName4[MAX_IMAGE_PATH] = { 0 };
+
+		// Do we have a glow?
+		sprintf(glowName, "%s_glow", strippedName);
+		sprintf(glowName2, "%s_glw", strippedName);
+		sprintf(glowName3, "%sglow", strippedName);
+		sprintf(glowName4, "%sglw", strippedName);
+
+		if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
+		{
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+		}
+		else if (R_TextureFileExists(glowName2) || R_TIL_TextureFileExists(glowName))
+		{
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+		}
+		else if (R_TextureFileExists(glowName3) || R_TIL_TextureFileExists(glowName))
+		{
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+		}
+		else if (R_TextureFileExists(glowName4) || R_TIL_TextureFileExists(glowName))
+		{
+			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+		}
+
+		if (shaderCustomMap[0] == 0)
+		{// No glow? Add sky reflection map...
+			vec4_t settings;
+			RB_PBR_DefaultsForMaterial(settings, material);
+			float reflectionStrength = settings[1] * settings[2];
+
+			if (reflectionStrength > 0.0)
+			{// If the reflectiveness of this material is high enough, add sky reflection...
+				char shaderCustomAdditionMap[256] = { 0 };
+				reflectionStrength = reflectionStrength * 0.75 + 0.25;
+				sprintf(shaderCustomAdditionMap, uniqueGenericSkyMap, reflectionStrength);
+				sprintf(shaderCustomMap, shaderCustomAdditionMap);
+			}
+		}
+
+		// Generate the shader...
+		if (StringContainsWord(strippedName, "warzone/billboard") || StringContainsWord(strippedName, "warzone\\billboard"))
+		{
+			sprintf(myShader, uniqueGenericFoliageBillboardShader, strippedName, strippedName);
+		}
+		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+			&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
+			&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(name, "warzone/plant"))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "yavin/grass") || StringContainsWord(strippedName, "yavin\\grass")
+			|| StringContainsWord(strippedName, "yavin/tree_leaves") || StringContainsWord(strippedName, "yavin\\tree_leaves")
+			|| StringContainsWord(strippedName, "yavin/tree1") || StringContainsWord(strippedName, "yavin\\tree1")
+			|| StringContainsWord(strippedName, "yavin/vine") || StringContainsWord(strippedName, "yavin\\vine"))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/plants") || StringContainsWord(strippedName, "warzone\\plants"))
+		{
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree")
+			|| StringContainsWord(strippedName, "warzone/deadtree") || StringContainsWord(strippedName, "warzone\\deadtree"))
+		{
+			if (StringContainsWord(strippedName, "bark")
+				|| StringContainsWord(strippedName, "trunk")
+				|| StringContainsWord(strippedName, "giant_tree")
+				|| StringContainsWord(strippedName, "vine01"))
+			{
+				sprintf(myShader, uniqueGenericFoliageTreeBarkShader, strippedName, strippedName, "");
+			}
+			else
+			{
+				//sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+				sprintf(myShader, uniqueGenericFoliageLeafsShader, strippedName, strippedName, "");
+			}
+		}
+		else if (StringContainsWord(strippedName, "warzone/test_trees") || StringContainsWord(strippedName, "warzone\\test_trees"))
+		{
+			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk"))
+			{
+				sprintf(myShader, uniqueGenericFoliageTreeBarkShader, strippedName, strippedName, "");
+			}
+			else
+			{
+				//sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+				sprintf(myShader, uniqueGenericFoliageLeafsShader, strippedName, strippedName, "");
+			}
+		}
+		else if (StringContainsWord(name, "models/weapon"))
+		{
+			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, shaderCustomMap, strippedName);
+		}
+		else if (material == MATERIAL_ARMOR)
+		{
+			sprintf(myShader, uniqueGenericArmorShader, strippedName, strippedName, shaderCustomMap, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "players/hk"))
+		{
+			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
+		}
+		else if (StringContainsWord(strippedName, "player"))
+		{
+			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, shaderCustomMap, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "weapon") || material == MATERIAL_SOLIDMETAL || material == MATERIAL_HOLLOWMETAL)
+		{
+			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
+		}
+		else if (material == MATERIAL_ROCK || StringContainsWord(name, "warzone/rocks"))
+		{
+			sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
+		}
+		else if (StringContainsWord(name, "vjun/vj4"))
+		{
+			if (StringContainsWord(name, "vjun/vj4_b"))
+			{// pff
+				char realName[128];
+				sprintf(realName, "models/map_objects/vjun/vj4");
+				sprintf(myShader, uniqueGenericRockShader, strippedName, realName, shaderCustomMap, realName);
+			}
+			else
+			{
+				sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
+			}
+		}
+		else
+		{
+			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, shaderCustomMap, lightMapText);
+		}
+
+		//
+		// attempt to define shader from an explicit parameter file
+		//
+		const char *shaderText2 = myShader;
+
+		if (shaderText2)
+		{
+			if (ParseShader(name, &shaderText2))
+			{
+				if (r_genericShaderDebug->integer && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+				{
+					ri->Printf(PRINT_WARNING, "AGS generated for %s. Detected material %s.\n", strippedName, materialNames[material]);
+
+					if (r_genericShaderDebug->integer > 2)
+					{
+						ri->Printf(PRINT_ALL, "%s\n", strippedName);
+						ri->Printf(PRINT_ALL, "%s\n", myShader);
+					}
+				}
+
+				sh = FinishShader();
+
+				if (isEfxShader) sh->materialType = MATERIAL_EFX;
+				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
+
+				return sh;
+			}
+			else
+			{
+				ri->Printf(PRINT_WARNING, "AGS generation failed for %s. Detected material %s. Falling back to JKA system. Generated source follows.\n", strippedName, materialNames[material]);
+				ri->Printf(PRINT_WARNING, "%s\n", strippedName);
+				ri->Printf(PRINT_WARNING, "%s\n", myShader);
+			}
+		}
+
+		// clear the global shader
+		ClearGlobalShader();
+		Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+		Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+		Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+	}
+	else
+	{
+		if (r_genericShaderDebug->integer > 1 && allowGeneric && !StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+		{
+			if (!haveImage)
+				ri->Printf(PRINT_WARNING, "AGS failed because %s texture does not exist.\n", strippedName);
+			else if (!allowGeneric)
+				ri->Printf(PRINT_WARNING, "AGS failed because %s is not allowed to use generic shader.\n", strippedName);
+			else if (!shaderText && !StringContainsWord(strippedName, "icon") && (!strncmp(strippedName, "textures/", 9) || !strncmp(strippedName, "models/", 7)))
+				ri->Printf(PRINT_WARNING, "AGS failed because %s is an icon or not textures/ or models/.\n", strippedName);
+			else
+				ri->Printf(PRINT_WARNING, "AGS failed because %s is, umm, hmmm ... rend2 hasn't been laid in too long and is grumpy...\n", strippedName);
+		}
+	}
+#endif //__SHADER_GENERATOR__
+
+	//
+	// Use original shader...
+	//
+
+	shader.defaultShader = qfalse;
+
+	if (shaderText)
+	{
+		// clear the global shader
+		ClearGlobalShader();
+		Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
+		Com_Memcpy(shader.lightmapIndex, lightmapIndexes, sizeof(shader.lightmapIndex));
+		Com_Memcpy(shader.styles, styles, sizeof(shader.styles));
+
+		// enable this when building a pak file to get a global list
+		// of all explicit shaders
+		if (r_printShaders->integer) {
+			ri->Printf(PRINT_ALL, "*SHADER* %s\n", name);
+		}
+
+		//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
+
+		if (!ParseShader(name, &shaderText))
+		{
+			// had errors, so use default shader
 			shader.defaultShader = qtrue;
-			return FinishShader();
 		}
+		else
+		{
+			sh = FinishShader();
 
-		//
-		// create the default shading commands
-		//
-		if (shader.lightmapIndex[0] == LIGHTMAP_NONE) {
-			// dynamic colors at vertexes
-			stages[0].bundle[0].image[0] = image;
-			stages[0].active = qtrue;
-			stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
-			stages[0].stateBits = GLS_DEFAULT;
-		}
-		else if (shader.lightmapIndex[0] == LIGHTMAP_BY_VERTEX) {
-			// explicit colors at vertexes
-			stages[0].bundle[0].image[0] = image;
-			stages[0].active = qtrue;
-			stages[0].rgbGen = CGEN_EXACT_VERTEX;
-			stages[0].alphaGen = AGEN_SKIP;
-			stages[0].stateBits = GLS_DEFAULT;
-		}
-		else if (shader.lightmapIndex[0] == LIGHTMAP_2D) {
-			// GUI elements
-			stages[0].bundle[0].image[0] = image;
-			stages[0].active = qtrue;
-			stages[0].rgbGen = CGEN_VERTEX;
-			stages[0].alphaGen = AGEN_VERTEX;
-			stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-				GLS_SRCBLEND_SRC_ALPHA |
-				GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-		}
-		else if (shader.lightmapIndex[0] == LIGHTMAP_WHITEIMAGE) {
-			// fullbright level
-			stages[0].bundle[0].image[0] = tr.whiteImage;
-			stages[0].active = qtrue;
-			stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
-			stages[0].stateBits = GLS_DEFAULT;
+			if (isEfxShader) sh->materialType = MATERIAL_EFX;
 
-			stages[1].bundle[0].image[0] = image;
-			stages[1].active = qtrue;
-			stages[1].rgbGen = CGEN_IDENTITY;
-			stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
-		}
-		else {
-			// two pass lightmap
-			stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex[0]];
-			stages[0].bundle[0].isLightmap = qtrue;
-			stages[0].active = qtrue;
-			stages[0].rgbGen = CGEN_IDENTITY;	// lightmaps are scaled on creation
-														// for identitylight
-			stages[0].stateBits = GLS_DEFAULT;
+			if (sh->materialType == MATERIAL_NONE)
+			{
+				int material = DetectMaterialType(name);
+				sh->materialType = material;
+			}
 
-			stages[1].bundle[0].image[0] = image;
-			stages[1].active = qtrue;
-			stages[1].rgbGen = CGEN_IDENTITY;
-			stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
+			return sh;
 		}
 	}
-	catch (int code) {
-		// TODO: Debug dump...
-		ri->Printf(PRINT_WARNING, "Crashed loading shader %s. Forcing default shader. Error code %i.\n", name, code);
-		return tr.defaultShader;
+
+
+	//
+	// if not defined in the in-memory shader descriptions,
+	// look for a single supported image file
+	//
+
+	flags = IMGFLAG_NONE;
+
+	if (r_srgb->integer)
+		flags |= IMGFLAG_SRGB;
+
+	if (mipRawImage)
+	{
+		flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+
+		//if (r_genNormalMaps->integer)
+		flags |= IMGFLAG_GENNORMALMAP;
 	}
+	else
+	{
+		flags |= IMGFLAG_CLAMPTOEDGE;
+	}
+
+#ifdef __DEFERRED_IMAGE_LOADING__
+	image = R_DeferImageLoad(name, IMGTYPE_COLORALPHA, flags);
+#else //!__DEFERRED_IMAGE_LOADING__
+	image = R_FindImageFile(name, IMGTYPE_COLORALPHA, flags);
+#endif //__DEFERRED_IMAGE_LOADING__
+
+	if (!image) {
+		ri->Printf(PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name);
+		shader.defaultShader = qtrue;
+		return FinishShader();
+	}
+
+	//
+	// create the default shading commands
+	//
+	if (shader.lightmapIndex[0] == LIGHTMAP_NONE) {
+		// dynamic colors at vertexes
+		stages[0].bundle[0].image[0] = image;
+		stages[0].active = qtrue;
+		stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
+		stages[0].stateBits = GLS_DEFAULT;
+	}
+	else if (shader.lightmapIndex[0] == LIGHTMAP_BY_VERTEX) {
+		// explicit colors at vertexes
+		stages[0].bundle[0].image[0] = image;
+		stages[0].active = qtrue;
+		stages[0].rgbGen = CGEN_EXACT_VERTEX;
+		stages[0].alphaGen = AGEN_SKIP;
+		stages[0].stateBits = GLS_DEFAULT;
+	}
+	else if (shader.lightmapIndex[0] == LIGHTMAP_2D) {
+		// GUI elements
+		stages[0].bundle[0].image[0] = image;
+		stages[0].active = qtrue;
+		stages[0].rgbGen = CGEN_VERTEX;
+		stages[0].alphaGen = AGEN_VERTEX;
+		stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
+			GLS_SRCBLEND_SRC_ALPHA |
+			GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+	}
+	else if (shader.lightmapIndex[0] == LIGHTMAP_WHITEIMAGE) {
+		// fullbright level
+		stages[0].bundle[0].image[0] = tr.whiteImage;
+		stages[0].active = qtrue;
+		stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
+		stages[0].stateBits = GLS_DEFAULT;
+
+		stages[1].bundle[0].image[0] = image;
+		stages[1].active = qtrue;
+		stages[1].rgbGen = CGEN_IDENTITY;
+		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
+	}
+	else {
+		// two pass lightmap
+		stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex[0]];
+		stages[0].bundle[0].isLightmap = qtrue;
+		stages[0].active = qtrue;
+		stages[0].rgbGen = CGEN_IDENTITY;	// lightmaps are scaled on creation
+													// for identitylight
+		stages[0].stateBits = GLS_DEFAULT;
+
+		stages[1].bundle[0].image[0] = image;
+		stages[1].active = qtrue;
+		stages[1].rgbGen = CGEN_IDENTITY;
+		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
+	}
+
+	if (isEfxShader) shader.materialType = MATERIAL_EFX;
+	if (shader.materialType == MATERIAL_NONE) shader.materialType = material;
 
 	return FinishShader();
 }

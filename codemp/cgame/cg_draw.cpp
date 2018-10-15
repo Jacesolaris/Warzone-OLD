@@ -12,6 +12,7 @@
 #include "ui/ui_shared.h"
 #include "ui/ui_public.h"
 
+
 extern qboolean drawingSniperScopeView;
 
 //[AUTOWAYPOINT]
@@ -4717,8 +4718,9 @@ CG_DrawFPS
 ==================
 */
 #define	FPS_FRAMES	16
-static float CG_DrawFPS( float y ) {
-	char		*s;
+
+int CG_GetCurrentFPS( void )
+{
 	int			w;
 	static unsigned short previousTimes[FPS_FRAMES];
 	static unsigned short index;
@@ -4726,7 +4728,6 @@ static float CG_DrawFPS( float y ) {
 	int		t, i, fps, total;
 	unsigned short frameTime;
 	const int		xOffset = 0;
-
 
 	// don't use serverTime, because that will be drifting to
 	// correct for internet lag changes, timescales, timedemos, etc
@@ -4741,13 +4742,25 @@ static float CG_DrawFPS( float y ) {
 	}
 	// average multiple frames together to smooth changes out a bit
 	total = 0;
-	for ( i = 0 ; i < FPS_FRAMES ; i++ ) {
+	for (i = 0; i < FPS_FRAMES; i++) {
 		total += previousTimes[i];
 	}
-	if ( !total ) {
+	if (!total) {
 		total = 1;
 	}
+	
 	fps = 1000 * FPS_FRAMES / total;
+	
+	cgs.currentFPS = fps;
+
+	return fps;
+}
+
+static float CG_DrawFPS( float y ) {
+	char			*s;
+	const int		xOffset = 0;
+	int				w;
+	int				fps = cgs.currentFPS;
 
 	s = va( "%ifps", fps );
 	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
@@ -6030,6 +6043,7 @@ Should we draw something different for long lag vs no packets?
 ==============
 */
 static void CG_DrawDisconnect( void ) {
+#if 0 // UQ1: Disabled for now because it doesn't like high FPS... Not sure we need it anyway...
 	float		x, y;
 	int			cmdNum;
 	usercmd_t	cmd;
@@ -6070,6 +6084,7 @@ static void CG_DrawDisconnect( void ) {
 	y = 480 - 48;
 
 	CG_DrawPic( x, y, 48, 48, trap->R_RegisterShader("gfx/2d/net.tga" ) );
+#endif
 }
 
 
@@ -6985,7 +7000,9 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 
 	if ( worldPoint && VectorLength( worldPoint ) )
 	{
-		if ( !CG_WorldCoordToScreenCoordFloat( worldPoint, &x, &y ) )
+		vec3_t finalPoint;
+		VectorSet(finalPoint, worldPoint[0], worldPoint[1], worldPoint[2] - (cg_thirdPersonVertOffset.value * 2.0));
+		if ( !CG_WorldCoordToScreenCoordFloat(finalPoint, &x, &y ) )
 		{//off screen, don't draw it
 			return;
 		}
@@ -11160,6 +11177,7 @@ CG_DrawActive
 Perform all drawing needed to completely fill the screen
 =====================
 */
+
 void CG_DrawActive( stereoFrame_t stereoView ) {
 	float		separation;
 	vec3_t		baseOrg;

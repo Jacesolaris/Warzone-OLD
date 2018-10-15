@@ -4477,7 +4477,7 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 					
 					MAP_GLOW_COLORS_AVILABLE[NUM_MAP_GLOW_LOCATIONS] = qtrue;
 
-					//if (r_debugEmissiveLights->integer)
+					if (r_debugEmissiveLights->integer)
 					{
 						ri->Printf(PRINT_WARNING, "Light %i (at %i %i %i) radius %f. emissiveColorScale %f. emissiveRadiusScale %f. color %f %f %f. coneAngle %f. coneDirection %f %f %f.\n"
 							, NUM_MAP_GLOW_LOCATIONS

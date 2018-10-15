@@ -2569,6 +2569,8 @@ extern void CG_Draw2D( void );
 extern void InventoryWindow ( void );
 //extern void RenderGenericWeaponView ( void );
 
+int sceneRenderID = 0;
+
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
 	const char *cstr;
@@ -2669,6 +2671,46 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			return;
 		}
 	}
+
+	/* BEGIN: experimental framerate scaling */
+	extern int CG_GetCurrentFPS(void);
+	int fps = CG_GetCurrentFPS();
+
+	qboolean renderCurrentScene = qtrue;
+
+	/*
+	if (fps <= r_fpsTarget.integer * r_fpsTargetMaxSkipFrames.integer)
+	{
+		sceneRenderID++;
+
+		if (sceneRenderID <= r_fpsTargetMaxSkipFrames.integer)
+		{
+			renderCurrentScene = qfalse;
+		}
+		else
+		{
+			sceneRenderID = 0;
+		}
+	}
+	*/
+	if (fps < r_fpsTarget.integer)
+	{
+		if (sceneRenderID <= r_fpsTargetMaxSkipFrames.integer)
+		{
+			renderCurrentScene = qfalse;
+			sceneRenderID++;
+		}
+		else
+		{
+			sceneRenderID = 0;
+		}
+	}
+	else
+	{
+		sceneRenderID = 0;
+	}
+	
+	/* END: experimental framerate scaling */
 
 	// let the client system know what our weapon and zoom settings are
 	if (cg.snap && cg.snap->ps.saberLockTime > cg.time)
@@ -2820,28 +2862,31 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_DrawSkyBoxPortal(cstr);
 	}
 
-	CG_CalcScreenEffects();
-
-	// first person blend blobs, done after AnglesToAxis
-	if ( !cg.renderingThirdPerson && cg.predictedPlayerState.pm_type != PM_SPECTATOR ) {
-		CG_DamageBlendBlob();
-	}
-
-	// build the render lists
-	if ( !cg.hyperspace ) {
-		CG_AddPacketEntities(qfalse);			// adter calcViewValues, so predicted player state is correct
-		CG_AddMarks();
-		CG_AddLocalEntities();
-		CG_AddAtmosphericEffects();  	// Add rain/snow etc.
-	}
-
-	if (!drawingSniperScopeView && cg.predictedPlayerState.weapon != WP_MODULIZED_WEAPON)
+	if (renderCurrentScene)
 	{
-		CG_AddViewWeapon( &cg.predictedPlayerState );
-		//RenderGenericWeaponView();
+		CG_CalcScreenEffects();
+
+		// first person blend blobs, done after AnglesToAxis
+		if (!cg.renderingThirdPerson && cg.predictedPlayerState.pm_type != PM_SPECTATOR) {
+			CG_DamageBlendBlob();
+		}
+
+		// build the render lists
+		if (!cg.hyperspace) {
+			CG_AddPacketEntities(qfalse);			// adter calcViewValues, so predicted player state is correct
+			CG_AddMarks();
+			CG_AddLocalEntities();
+			CG_AddAtmosphericEffects();  	// Add rain/snow etc.
+		}
+
+		if (!drawingSniperScopeView && cg.predictedPlayerState.weapon != WP_MODULIZED_WEAPON)
+		{
+			CG_AddViewWeapon(&cg.predictedPlayerState);
+			//RenderGenericWeaponView();
+		}
 	}
 
-	if ( !cg.hyperspace)
+	if (/*renderCurrentScene &&*/ !cg.hyperspace)
 	{
 		trap->FX_AddScheduledEffects(qfalse);
 	}
@@ -2853,7 +2898,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	}
 
 	// finish up the rest of the refdef
-	if ( cg.testModelEntity.hModel ) {
+	if (renderCurrentScene && cg.testModelEntity.hModel ) {
 		CG_AddTestModel();
 	}
 
@@ -2922,7 +2967,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	}
 
 	// actually issue the rendering calls
-	CG_DrawActive( stereoView );
+	if (renderCurrentScene)
+	{
+		CG_DrawActive(stereoView);
+	}
 	
 	if ( !drawingSniperScopeView && cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS )
 	{
@@ -2930,53 +2978,59 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// Draw the view inside the scope...
 		//
 
-		refdef_t		refdefBackup;
+		if (renderCurrentScene)
+		{
+			refdef_t		refdefBackup;
 
-		memcpy( &refdefBackup, &cg.refdef, sizeof(refdef_t));
+			memcpy(&refdefBackup, &cg.refdef, sizeof(refdef_t));
 
-		drawingSniperScopeView = qtrue;
+			drawingSniperScopeView = qtrue;
 
-		if (scopeData[cg.predictedPlayerState.scopeType].scopeViewX == 0 
-			&& scopeData[cg.predictedPlayerState.scopeType].scopeViewY == 0 
-			&& scopeData[cg.predictedPlayerState.scopeType].scopeViewW == 0 
-			&& scopeData[cg.predictedPlayerState.scopeType].scopeViewH == 0)
-		{// Unknown scope size for this, use the developer cvars to set size...
-			// UQ1: Using 640x480 screen size. Adjusted by the CG_DrawScopeView to match real size...
+			if (scopeData[cg.predictedPlayerState.scopeType].scopeViewX == 0
+				&& scopeData[cg.predictedPlayerState.scopeType].scopeViewY == 0
+				&& scopeData[cg.predictedPlayerState.scopeType].scopeViewW == 0
+				&& scopeData[cg.predictedPlayerState.scopeType].scopeViewH == 0)
+			{// Unknown scope size for this, use the developer cvars to set size...
+				// UQ1: Using 640x480 screen size. Adjusted by the CG_DrawScopeView to match real size...
 #ifdef __SCOPE_DEVELOPER__
 			// *IMPORTANT* !!! Disable __SCOPE_DEVELOPER__ as soon as scopes have all had their size values set in scopeData !!!
-			cg.refdef.x = cg_scopeX.integer * cgs.screenXScale;
-			cg.refdef.y = cg_scopeY.integer * cgs.screenYScale;
-			cg.refdef.width = cg_scopeW.integer * cgs.screenXScale;
-			cg.refdef.height = cg_scopeH.integer * cgs.screenYScale;
+				cg.refdef.x = cg_scopeX.integer * cgs.screenXScale;
+				cg.refdef.y = cg_scopeY.integer * cgs.screenYScale;
+				cg.refdef.width = cg_scopeW.integer * cgs.screenXScale;
+				cg.refdef.height = cg_scopeH.integer * cgs.screenYScale;
 #else //!__SCOPE_DEVELOPER__
 			// When not in scope developer mode, 0,0,0,0 means this scope never draws a second view inside the scope picture(s)...
 #endif //__SCOPE_DEVELOPER__
-		}
-		else
-		{// Known scope. Use set scopeData values...
-			// UQ1: Using 640x480 screen size. Adjusted by the CG_DrawScopeView to match real size...
-			cg.refdef.x = scopeData[cg.predictedPlayerState.scopeType].scopeViewX * cgs.screenXScale;
-			cg.refdef.y = scopeData[cg.predictedPlayerState.scopeType].scopeViewY * cgs.screenYScale;
-			cg.refdef.width = scopeData[cg.predictedPlayerState.scopeType].scopeViewW * cgs.screenXScale;
-			cg.refdef.height = scopeData[cg.predictedPlayerState.scopeType].scopeViewH * cgs.screenYScale;
-		}
-	
-		CG_DrawActiveFrame( serverTime, stereoView, demoPlayback );
+			}
+			else
+			{// Known scope. Use set scopeData values...
+				// UQ1: Using 640x480 screen size. Adjusted by the CG_DrawScopeView to match real size...
+				cg.refdef.x = scopeData[cg.predictedPlayerState.scopeType].scopeViewX * cgs.screenXScale;
+				cg.refdef.y = scopeData[cg.predictedPlayerState.scopeType].scopeViewY * cgs.screenYScale;
+				cg.refdef.width = scopeData[cg.predictedPlayerState.scopeType].scopeViewW * cgs.screenXScale;
+				cg.refdef.height = scopeData[cg.predictedPlayerState.scopeType].scopeViewH * cgs.screenYScale;
+			}
 
-		memcpy( &cg.refdef, &refdefBackup, sizeof(refdef_t));
+			CG_DrawActiveFrame(serverTime, stereoView, demoPlayback);
+
+			memcpy(&cg.refdef, &refdefBackup, sizeof(refdef_t));
+		}
+
 		drawingSniperScopeView = qfalse;
 		return;
 	}
 
 	// draw status bar and other floating elements
 	// UQ1: Now drawn here instead of CG_DrawActive() so we can overlay the zoom view above before drawing the scope graphics over that...
-	CG_Draw2D();
+	if (renderCurrentScene || sceneRenderID == 1) // seems 2d is delayed?
+	{
+		CG_Draw2D();
+		CG_DrawAutoMap();
 
-	CG_DrawAutoMap();
+		if (cg_stats.integer) {
+			trap->Print("cg.clientFrame:%i\n", cg.clientFrame);
+		}
 
-	if ( cg_stats.integer ) {
-		trap->Print( "cg.clientFrame:%i\n", cg.clientFrame );
+		//InventoryWindow();
 	}
-
-	//InventoryWindow();
 }

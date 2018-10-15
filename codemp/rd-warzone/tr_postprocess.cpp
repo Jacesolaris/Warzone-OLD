@@ -3594,4 +3594,21 @@ void RB_LinearizeDepth(void)
 	}
 
 	FBO_Blit(tr.renderFbo, NULL, NULL, tr.linearizeDepthFbo, NULL, &tr.linearizeDepthShader, colorWhite, 0);
+
+	/*
+	if (r_testvalue0->integer)
+	{
+		int texNum = glState.currenttextures[glState.currenttmu];
+
+		// Make mipmaps for some, so we can with any luck speed up some stuff...
+		qglActiveTextureARB(GL_TEXTURE0_ARB);
+		qglBindTexture(GL_TEXTURE_2D, tr.linearDepthImage4096->texnum);
+		qglGenerateMipmap(GL_TEXTURE_2D);
+
+		qglBindTexture(GL_TEXTURE_2D, tr.linearDepthImageZfar->texnum);
+		qglGenerateMipmap(GL_TEXTURE_2D);
+
+		qglBindTexture(GL_TEXTURE_2D, texNum);
+	}
+	*/
 }

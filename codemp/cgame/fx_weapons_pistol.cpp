@@ -15,7 +15,6 @@ FX_BryarAltProjectileThink
 void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon )
 {
 	vec3_t forward;
-	int t;
 
 	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
 	{
@@ -40,7 +39,6 @@ void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qbo
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		return;
@@ -52,19 +50,7 @@ void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qbo
 		{// We have alt fx for this weapon. Use it.
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
-
-		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
-		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
-		}
-		else
-		{// We have no alt enhanced fx.
-			fx2 = fx; // Force normal fx.
-		}
 	}
-
-	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
-	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
 	{// We have fx for this. Play it.

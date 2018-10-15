@@ -294,195 +294,245 @@ qboolean HaveSurfaceType( int materialType)
 	return qfalse;
 }
 
-int GetMaterialType ( const char *name, int materialType )
+int DetectMaterialType(const char *name)
 {
-	if (StringContainsWord(name, "gfx/2d") 
-		|| StringContainsWord(name, "gfx/console")
-		|| StringContainsWord(name, "gfx/colors")
-		|| StringContainsWord(name, "gfx/digits")
-		|| StringContainsWord(name, "gfx/hud")
-		|| StringContainsWord(name, "gfx/jkg")
-		|| StringContainsWord(name, "gfx/menu")) 
+	if (StringContainsWord(name, "gfx/water"))
 		return MATERIAL_NONE;
-
-	if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+	if (StringContainsWord(name, "gfx/atmospheric"))
+		return MATERIAL_NONE;
+	if (StringContainsWord(name, "warzone/plant"))
+		return MATERIAL_GREENLEAVES;
+	else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
 		return MATERIAL_SOLIDWOOD;
 	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
 		&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
 		return MATERIAL_SOLIDWOOD;
 
+	//
+	// Special cases - where we are pretty sure we want lots of specular and reflection...
+	//
+	else if (StringContainsWord(name, "jetpack"))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet") || StringContainsWord(name, "feather"))
+		return MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "/ships/") || StringContainsWord(name, "engine") || StringContainsWord(name, "mp/flag"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "wing") || StringContainsWord(name, "xwbody") || StringContainsWord(name, "tie_"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "ship") || StringContainsWord(name, "shuttle") || StringContainsWord(name, "falcon"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "freight") || StringContainsWord(name, "transport") || StringContainsWord(name, "crate"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "container") || StringContainsWord(name, "barrel") || StringContainsWord(name, "train"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "crane") || StringContainsWord(name, "plate") || StringContainsWord(name, "cargo"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "ship_"))
+		return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+	else if (!StringContainsWord(name, "trainer") && StringContainsWord(name, "train"))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "reborn") || StringContainsWord(name, "trooper"))
+		return MATERIAL_ARMOR;
+	else if (StringContainsWord(name, "boba") || StringContainsWord(name, "pilot"))
+		return MATERIAL_ARMOR;
+	else if (StringContainsWord(name, "water") && !StringContainsWord(name, "splash") && !StringContainsWord(name, "drip") && !StringContainsWord(name, "ripple") && !StringContainsWord(name, "bubble") && !StringContainsWord(name, "woosh") && !StringContainsWord(name, "underwater") && !StringContainsWord(name, "bottom"))
+	{
+		return MATERIAL_WATER;
+	}
+	else if (StringContainsWord(name, "grass") || StringContainsWord(name, "foliage") || StringContainsWord(name, "yavin/ground") || StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "volcano/terrain") || StringContainsWord(name, "bay/terrain") || StringContainsWord(name, "towers/terrain") || StringContainsWord(name, "yavinassault/terrain"))
+		return MATERIAL_SHORTGRASS;
+	else if (StringContainsWord(name, "vj4")) // special case for vjun rock...
+		return MATERIAL_ROCK;
+
+	//
+	// Player model stuff overrides
+	//
+	else if (StringContainsWord(name, "players") && StringContainsWord(name, "eye") || StringContainsWord(name, "goggles"))
+		return MATERIAL_GLASS;
+	else if (StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
+		return MATERIAL_HOLLOWMETAL;
+	else if (!StringContainsWord(name, "players") && StringContainsWord(name, "bespin"))
+		return MATERIAL_MARBLE;
+	else if (StringContainsWord(name, "players") && !StringContainsWord(name, "glass") && (StringContainsWord(name, "sithsoldier") || StringContainsWord(name, "sith_assassin") || StringContainsWord(name, "r2d2") || StringContainsWord(name, "protocol") || StringContainsWord(name, "r5d2") || StringContainsWord(name, "c3po") || StringContainsWord(name, "hk4") || StringContainsWord(name, "hk5") || StringContainsWord(name, "droid") || StringContainsWord(name, "shadowtrooper")))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "players") && StringContainsWord(name, "shadowtrooper"))
+		return MATERIAL_SOLIDMETAL; // dunno about this one.. looks good as armor...
+	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "mandalore") || StringContainsWord(name, "mandalorian") || StringContainsWord(name, "sith_warrior/body")))
+		return MATERIAL_ARMOR;
+	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hood") || StringContainsWord(name, "robe") || StringContainsWord(name, "cloth") || StringContainsWord(name, "pants") || StringContainsWord(name, "sith_warrior/bandon_body")))
+		return MATERIAL_FABRIC;
+	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hair") || StringContainsWord(name, "chewbacca"))) // use carpet
+		return MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
+	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "flesh") || StringContainsWord(name, "body") || StringContainsWord(name, "leg") || StringContainsWord(name, "hand") || StringContainsWord(name, "head") || StringContainsWord(name, "hips") || StringContainsWord(name, "torso") || StringContainsWord(name, "tentacles") || StringContainsWord(name, "face") || StringContainsWord(name, "arms") || StringContainsWord(name, "sith_warrior/head") || StringContainsWord(name, "sith_warrior/bandon_head")))
+		return MATERIAL_FLESH;
+	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "arm") || StringContainsWord(name, "foot") || StringContainsWord(name, "neck")))
+		return MATERIAL_FLESH;
+	else if (StringContainsWord(name, "players") && (StringContainsWord(name, "skirt") || StringContainsWord(name, "boots") || StringContainsWord(name, "accesories") || StringContainsWord(name, "accessories") || StringContainsWord(name, "vest") || StringContainsWord(name, "holster") || StringContainsWord(name, "cap") || StringContainsWord(name, "collar")))
+		return MATERIAL_FABRIC;
+	else if (!StringContainsWord(name, "players") && StringContainsWord(name, "_cc"))
+		return MATERIAL_MARBLE;
+	//
+	// If player model material not found above, use defaults...
+	//
+
+	//
+	// Stuff we can be pretty sure of...
+	//
+	else if (StringContainsWord(name, "concrete"))
+		return MATERIAL_CONCRETE;
+	else if (!StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && StringContainsWord(name, "models/weapon") && StringContainsWord(name, "saber") && StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
+		return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
+	else if (!StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && (StringContainsWord(name, "models/weapon") || StringContainsWord(name, "scope") || StringContainsWord(name, "blaster") || StringContainsWord(name, "pistol") || StringContainsWord(name, "thermal") || StringContainsWord(name, "bowcaster") || StringContainsWord(name, "cannon") || StringContainsWord(name, "saber") || StringContainsWord(name, "rifle") || StringContainsWord(name, "rocket")))
+		return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
+	else if (StringContainsWord(name, "metal") || StringContainsWord(name, "pipe") || StringContainsWord(name, "shaft") || StringContainsWord(name, "jetpack") || StringContainsWord(name, "antenna") || StringContainsWord(name, "xwing") || StringContainsWord(name, "tie_") || StringContainsWord(name, "raven") || StringContainsWord(name, "falcon") || StringContainsWord(name, "engine") || StringContainsWord(name, "elevator") || StringContainsWord(name, "evaporator") || StringContainsWord(name, "airpur") || StringContainsWord(name, "gonk") || StringContainsWord(name, "droid") || StringContainsWord(name, "cart") || StringContainsWord(name, "vent") || StringContainsWord(name, "tank") || StringContainsWord(name, "transformer") || StringContainsWord(name, "generator") || StringContainsWord(name, "grate") || StringContainsWord(name, "rack") || StringContainsWord(name, "mech") || StringContainsWord(name, "turbolift") || StringContainsWord(name, "tube") || StringContainsWord(name, "coil") || StringContainsWord(name, "vader_trim") || StringContainsWord(name, "newfloor_vjun") || StringContainsWord(name, "bay_beam"))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "armor") || StringContainsWord(name, "armour"))
+		return MATERIAL_ARMOR;
+	else if (StringContainsWord(name, "textures/byss/") && !StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && !StringContainsWord(name, "static") && !StringContainsWord(name, "isd") && !StringContainsWord(name, "power") && !StringContainsWord(name, "env_") && !StringContainsWord(name, "byss_switch"))
+		return MATERIAL_SOLIDMETAL; // special for byss shiny
+	else if (StringContainsWord(name, "textures/vjun/") && !StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && !StringContainsWord(name, "static") && !StringContainsWord(name, "light") && !StringContainsWord(name, "env_") && !StringContainsWord(name, "_env") && !StringContainsWord(name, "switch_off") && !StringContainsWord(name, "switch_on") && !StringContainsWord(name, "screen") && !StringContainsWord(name, "blend") && !StringContainsWord(name, "o_ground") && !StringContainsWord(name, "_onoffg") && !StringContainsWord(name, "_onoffr") && !StringContainsWord(name, "console"))
+		return MATERIAL_SOLIDMETAL; // special for vjun shiny
+	else if (StringContainsWord(name, "sand"))
+		return MATERIAL_SAND;
+	else if (StringContainsWord(name, "gravel"))
+		return MATERIAL_GRAVEL;
+	else if ((StringContainsWord(name, "dirt") || StringContainsWord(name, "ground")) && !StringContainsWord(name, "menus/main_background"))
+		return MATERIAL_DIRT;
+	else if (IsKnownShinyMap(name) && StringContainsWord(name, "stucco"))
+		return MATERIAL_TILES;
+	else if (StringContainsWord(name, "rift") && StringContainsWord(name, "piller"))
+		return MATERIAL_MARBLE;
+	else if (StringContainsWord(name, "stucco") || StringContainsWord(name, "piller") || StringContainsWord(name, "sith_jp"))
+		return MATERIAL_CONCRETE;
+	else if (StringContainsWord(name, "marbl") || StringContainsWord(name, "teeth"))
+		return MATERIAL_MARBLE;
+	else if (StringContainsWord(name, "snow"))
+		return MATERIAL_SNOW;
+	else if (StringContainsWord(name, "canvas"))
+		return MATERIAL_CANVAS;
+	else if (StringContainsWord(name, "rock"))
+		return MATERIAL_ROCK;
+	else if (StringContainsWord(name, "rubber"))
+		return MATERIAL_RUBBER;
+	else if (StringContainsWord(name, "carpet"))
+		return MATERIAL_CARPET;
+	else if (StringContainsWord(name, "plaster"))
+		return MATERIAL_PLASTER;
+	else if (StringContainsWord(name, "computer") || StringContainsWord(name, "console") || StringContainsWord(name, "button") || StringContainsWord(name, "terminal") || StringContainsWord(name, "switch") || StringContainsWord(name, "panel") || StringContainsWord(name, "control"))
+		return MATERIAL_COMPUTER;
+	else if (StringContainsWord(name, "fabric"))
+		return MATERIAL_FABRIC;
+	else if (StringContainsWord(name, "tree") || StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves") || StringContainsWord(name, "fern") || StringContainsWord(name, "vine"))
+		return MATERIAL_GREENLEAVES;
+	else if (StringContainsWord(name, "wood") && !StringContainsWord(name, "street"))
+		return MATERIAL_SOLIDWOOD;
+	else if (StringContainsWord(name, "bamboo"))
+		return MATERIAL_SOLIDWOOD;
+	else if (StringContainsWord(name, "mud"))
+		return MATERIAL_MUD;
+	else if (StringContainsWord(name, "ice"))
+		return MATERIAL_ICE;
+	else if ((StringContainsWord(name, "grass") || StringContainsWord(name, "foliage")) && (StringContainsWord(name, "long") || StringContainsWord(name, "tall") || StringContainsWord(name, "thick")))
+		return MATERIAL_LONGGRASS;
+	else if (StringContainsWord(name, "grass") || StringContainsWord(name, "foliage"))
+		return MATERIAL_SHORTGRASS;
+	else if (IsKnownShinyMap(name) && StringContainsWord(name, "floor"))
+		return MATERIAL_TILES;
+	else if (StringContainsWord(name, "floor"))
+		return MATERIAL_CONCRETE;
+	else if (StringContainsWord(name, "textures/mp/") && !StringContainsWord(name, "glow") && !StringContainsWord(name, "glw") && !StringContainsWord(name, "static") && !StringContainsWord(name, "light") && !StringContainsWord(name, "env_") && !StringContainsWord(name, "_env") && !StringContainsWord(name, "underside") && !StringContainsWord(name, "blend") && !StringContainsWord(name, "t_pit") && !StringContainsWord(name, "desert") && !StringContainsWord(name, "cliff"))
+		return MATERIAL_SOLIDMETAL; // special for mp shiny
+	else if (IsKnownShinyMap(name) && StringContainsWord(name, "frame"))
+		return MATERIAL_SOLIDMETAL;
+	else if (IsKnownShinyMap(name) && StringContainsWord(name, "wall"))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "wall") || StringContainsWord(name, "underside"))
+		return MATERIAL_CONCRETE;
+	else if (IsKnownShinyMap(name) && StringContainsWord(name, "door"))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "door"))
+		return MATERIAL_CONCRETE;
+	else if (IsKnownShinyMap(name) && StringContainsWord(name, "ground"))
+		return MATERIAL_TILES; // dunno about this one
+	else if (StringContainsWord(name, "ground"))
+		return MATERIAL_CONCRETE;
+	else if (StringContainsWord(name, "desert"))
+		return MATERIAL_CONCRETE;
+	else if (IsKnownShinyMap(name) && (StringContainsWord(name, "tile") || StringContainsWord(name, "lift")))
+		return MATERIAL_SOLIDMETAL;
+	else if (StringContainsWord(name, "tile") || StringContainsWord(name, "lift"))
+		return MATERIAL_TILES;
+	else if (StringContainsWord(name, "glass") || StringContainsWord(name, "light") || StringContainsWord(name, "screen") || StringContainsWord(name, "lamp") || StringContainsWord(name, "crystal"))
+		return MATERIAL_GLASS;
+	else if (StringContainsWord(name, "flag"))
+		return MATERIAL_FABRIC;
+	else if (StringContainsWord(name, "column") || StringContainsWord(name, "stone") || StringContainsWord(name, "statue"))
+		return MATERIAL_MARBLE;
+	// Extra backup - backup stuff. Used when nothing better found...
+	else if (StringContainsWord(name, "red") || StringContainsWord(name, "blue") || StringContainsWord(name, "yellow") || StringContainsWord(name, "white") || StringContainsWord(name, "monitor"))
+		return MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "yavin") && (StringContainsWord(name, "trim") || StringContainsWord(name, "step") || StringContainsWord(name, "pad")))
+		return MATERIAL_ROCK;
+	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "coruscant") || StringContainsWord(name, "/rooftop/") || StringContainsWord(name, "/nar_") || StringContainsWord(name, "/imperial/")))
+		return MATERIAL_TILES;
+	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "deathstar") || StringContainsWord(name, "imperial") || StringContainsWord(name, "shuttle") || StringContainsWord(name, "destroyer")))
+		return MATERIAL_TILES;
+	else if (!StringContainsWord(name, "players") && StringContainsWord(name, "dantooine"))
+		return MATERIAL_MARBLE;
+	else if (StringContainsWord(name, "outside"))
+		return MATERIAL_CONCRETE; // Outside, assume concrete...
+	else if (StringContainsWord(name, "out") && (StringContainsWord(name, "trim") || StringContainsWord(name, "step") || StringContainsWord(name, "pad")))
+		return MATERIAL_CONCRETE; // Outside, assume concrete...
+	else if (StringContainsWord(name, "out") && (StringContainsWord(name, "frame") || StringContainsWord(name, "wall") || StringContainsWord(name, "round") || StringContainsWord(name, "crate") || StringContainsWord(name, "trim") || StringContainsWord(name, "support") || StringContainsWord(name, "step") || StringContainsWord(name, "pad") || StringContainsWord(name, "weapon") || StringContainsWord(name, "gun")))
+		return MATERIAL_CONCRETE; // Outside, assume concrete...
+	else if (StringContainsWord(name, "frame") || StringContainsWord(name, "wall") || StringContainsWord(name, "round") || StringContainsWord(name, "crate") || StringContainsWord(name, "trim") || StringContainsWord(name, "support") || StringContainsWord(name, "step") || StringContainsWord(name, "pad") || StringContainsWord(name, "weapon") || StringContainsWord(name, "gun"))
+		return MATERIAL_CONCRETE;
+	else if (StringContainsWord(name, "yavin"))
+		return MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
+	else if (StringContainsWord(name, "black") || StringContainsWord(name, "boon") || StringContainsWord(name, "items") || StringContainsWord(name, "shield"))
+		return MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "refract") || StringContainsWord(name, "reflect"))
+		return MATERIAL_PLASTIC;
+	else if (StringContainsWord(name, "map_objects") || StringContainsWord(name, "key"))
+		return MATERIAL_SOLIDMETAL; // hmmm, maybe... testing...
+	else if (StringContainsWord(name, "rodian"))
+		return MATERIAL_FLESH;
+	else if (StringContainsWord(name, "players")) // Fall back to flesh on anything not caught above...
+		return MATERIAL_FLESH;
+	else if (IsKnownShinyMap(name)) // Chances are it's shiny...
+		return MATERIAL_TILES;
+
+	return MATERIAL_CONCRETE;// MATERIAL_NONE;
+}
+
+int GetMaterialType ( const char *name, int materialType )
+{
+	if (StringContainsWord(name, "gfx/2d")
+		|| StringContainsWord(name, "gfx/console")
+		|| StringContainsWord(name, "gfx/colors")
+		|| StringContainsWord(name, "gfx/digits")
+		|| StringContainsWord(name, "gfx/hud")
+		|| StringContainsWord(name, "gfx/jkg")
+		|| StringContainsWord(name, "gfx/menu")) 
+		return MATERIAL_EFX;
+
 	if (!HaveSurfaceType(materialType))
 	{
-		//
-		// Special cases - where we are pretty sure we want lots of specular and reflection...
-		//
-		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet") || StringsContainWord(name, name, "feather"))
-			return MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "/ships/") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "mp/flag"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "wing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "ship_"))
-			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (!StringsContainWord(name, name, "trainer") && StringsContainWord(name, name, "train"))
-			return MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
-			return MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
-			return MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
-		{
-			return MATERIAL_WATER;
-		}
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain") || StringsContainWord(name, name, "yavinassault/terrain"))
-			return MATERIAL_SHORTGRASS;
-		//
-		// Stuff we can be pretty sure of...
-		//
-		else if (StringsContainWord(name, name, "concrete"))
-			return MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "models/weapon") && StringsContainWord(name, name, "saber") && !StringsContainWord(name, name, "glow"))
-			return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
-		else if (StringsContainWord(name, name, "/weapon") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "rocket"))
-			return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
-		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "evaporator") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "gonk") || StringsContainWord(name, name, "droid") || StringsContainWord(name, name, "cart") || StringsContainWord(name, name, "vent") || StringsContainWord(name, name, "tank") || StringsContainWord(name, name, "transformer") || StringsContainWord(name, name, "generator") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "rack") || StringsContainWord(name, name, "mech") || StringsContainWord(name, name, "turbolift") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "tube") || StringsContainWord(name, name, "coil") || StringsContainWord(name, name, "vader_trim") || StringsContainWord(name, name, "newfloor_vjun") || StringsContainWord(name, name, "bay_beam"))
-			return MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "eye"))
-			return MATERIAL_GLASS;
-		else if (StringsContainWord(name, name, "textures/byss/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "isd") && !StringsContainWord(name, name, "power") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "byss_switch"))
-			return MATERIAL_SOLIDMETAL; // special for byss shiny
-		else if (StringsContainWord(name, name, "textures/vjun/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "switch_off") && !StringsContainWord(name, name, "switch_on") && !StringsContainWord(name, name, "screen") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "o_ground") && !StringsContainWord(name, name, "_onoffg") && !StringsContainWord(name, name, "_onoffr") && !StringsContainWord(name, name, "console"))
-			return MATERIAL_SOLIDMETAL; // special for vjun shiny
-		else if (StringsContainWord(name, name, "sand"))
-			return MATERIAL_SAND;
-		else if (StringsContainWord(name, name, "gravel"))
-			return MATERIAL_GRAVEL;
-		else if ((StringsContainWord(name, name, "dirt") || StringsContainWord(name, name, "ground")) && !StringsContainWord(name, name, "menus/main_background"))
-			return MATERIAL_DIRT;
-		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "stucco"))
-			return MATERIAL_TILES;
-		else if (StringsContainWord(name, name, "rift") && StringsContainWord(name, name, "piller"))
-			return MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "stucco") || StringsContainWord(name, name, "piller") || StringsContainWord(name, name, "sith_jp"))
-			return MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "marbl") || StringsContainWord(name, name, "teeth"))
-			return MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "snow"))
-			return MATERIAL_SNOW;
-		else if (StringsContainWord(name, name, "hood") || StringsContainWord(name, name, "robe") || StringsContainWord(name, name, "cloth") || StringsContainWord(name, name, "pants"))
-			return MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "hair") || StringsContainWord(name, name, "chewbacca")) // use carpet
-			return MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
-		else if (StringsContainWord(name, name, "armor") || StringsContainWord(name, name, "armour"))
-			return MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "flesh") || StringsContainWord(name, name, "body") || StringsContainWord(name, name, "leg") || StringsContainWord(name, name, "hand") || StringsContainWord(name, name, "head") || StringsContainWord(name, name, "hips") || StringsContainWord(name, name, "torso") || StringsContainWord(name, name, "tentacles") || StringsContainWord(name, name, "face") || StringsContainWord(name, name, "arms"))
-			return MATERIAL_FLESH;
-		else if (StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "skirt") || StringsContainWord(name, name, "boots") || StringsContainWord(name, name, "accesories") || StringsContainWord(name, name, "accessories") || StringsContainWord(name, name, "vest") || StringsContainWord(name, name, "holster") || StringsContainWord(name, name, "cap")))
-			return MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "canvas"))
-			return MATERIAL_CANVAS;
-		else if (StringsContainWord(name, name, "rock"))
-			return MATERIAL_ROCK;
-		else if (StringsContainWord(name, name, "rubber"))
-			return MATERIAL_RUBBER;
-		else if (StringsContainWord(name, name, "carpet"))
-			return MATERIAL_CARPET;
-		else if (StringsContainWord(name, name, "plaster"))
-			return MATERIAL_PLASTER;
-		else if (StringsContainWord(name, name, "computer") || StringsContainWord(name, name, "console") || StringsContainWord(name, name, "button") || StringsContainWord(name, name, "terminal") || StringsContainWord(name, name, "switch") || StringsContainWord(name, name, "panel") || StringsContainWord(name, name, "control"))
-			return MATERIAL_COMPUTER;
-		else if (StringsContainWord(name, name, "fabric"))
-			return MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
-			return MATERIAL_GREENLEAVES;
-		else if (StringsContainWord(name, name, "wood") && !StringsContainWord(name, name, "street"))
-			return MATERIAL_SOLIDWOOD;
-		else if (StringsContainWord(name, name, "mud"))
-			return MATERIAL_MUD;
-		else if (StringsContainWord(name, name, "ice"))
-			return MATERIAL_ICE;
-		else if ((StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage")) && (StringsContainWord(name, name, "long") || StringsContainWord(name, name, "tall") || StringsContainWord(name, name, "thick")))
-			return MATERIAL_LONGGRASS;
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage"))
-			return MATERIAL_SHORTGRASS;
-		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "floor"))
-			return MATERIAL_TILES;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
-			return MATERIAL_MARBLE;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
-			return MATERIAL_TILES;
-		else if (StringsContainWord(name, name, "floor"))
-			return MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "textures/mp/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "underside") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "t_pit") && !StringsContainWord(name, name, "desert") && !StringsContainWord(name, name, "cliff") && !StringsContainWord(name, name, "t_pit"))
-			return MATERIAL_SOLIDMETAL; // special for mp shiny
-		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "frame"))
-			return MATERIAL_SOLIDMETAL;
-		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "wall"))
-			return MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "underside"))
-			return MATERIAL_CONCRETE;
-		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "door"))
-			return MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "door"))
-			return MATERIAL_CONCRETE;
-		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "ground"))
-			return MATERIAL_TILES; // dunno about this one
-		else if (StringsContainWord(name, name, "ground"))
-			return MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "desert"))
-			return MATERIAL_CONCRETE;
-		else if (IsKnownShinyMap(name) && (StringsContainWord(name, name, "tile") || StringsContainWord(name, name, "lift")))
-			return MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "tile") || StringsContainWord(name, name, "lift"))
-			return MATERIAL_TILES;
-		else if (StringsContainWord(name, name, "glass") || StringsContainWord(name, name, "light") || StringsContainWord(name, name, "screen") || StringsContainWord(name, name, "lamp") || StringsContainWord(name, name, "crystal"))
-			return MATERIAL_GLASS;
-		else if (StringsContainWord(name, name, "flag"))
-			return MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "column") || StringsContainWord(name, name, "stone") || StringsContainWord(name, name, "statue"))
-			return MATERIAL_MARBLE;
-		// Extra backup - backup stuff. Used when nothing better found...
-		else if (StringsContainWord(name, name, "red") || StringsContainWord(name, name, "blue") || StringsContainWord(name, name, "yellow") || StringsContainWord(name, name, "white") || StringsContainWord(name, name, "monitor"))
-			return MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "yavin") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
-			return MATERIAL_ROCK;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "deathstar") || StringsContainWord(name, name, "imperial") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "destroyer")))
-			return MATERIAL_TILES;
-		else if (!StringsContainWord(name, name, "players") && StringsContainWord(name, name, "dantooine"))
-			return MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "outside"))
-			return MATERIAL_CONCRETE; // Outside, assume concrete...
-		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
-			return MATERIAL_CONCRETE; // Outside, assume concrete...
-		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun")))
-			return MATERIAL_CONCRETE; // Outside, assume concrete...
-		else if (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun"))
-			return MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "yavin"))
-			return MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
-		else if (StringsContainWord(name, name, "black") || StringsContainWord(name, name, "boon") || StringsContainWord(name, name, "items") || StringsContainWord(name, name, "shield"))
-			return MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "refract") || StringsContainWord(name, name, "reflect"))
-			return MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "map_objects"))
-			return MATERIAL_SOLIDMETAL; // hmmm, maybe... testing...
-		else if (StringsContainWord(name, name, "rodian"))
-			return MATERIAL_FLESH;
-		else if (IsKnownShinyMap(name)) // Chances are it's shiny...
-			return MATERIAL_TILES;
+		int material = DetectMaterialType(name);
+
+		if (material)
+			return material;
 	}
 	else
 	{
-		if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
+		if (StringContainsWord(name, "gfx/water"))
+			return MATERIAL_EFX;
+		else if (StringContainsWord(name, "gfx/atmospheric"))
+			return MATERIAL_EFX;
+		else if (StringContainsWord(name, "warzone/plant"))
+			return MATERIAL_GREENLEAVES;
+		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 			&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
 			return MATERIAL_SOLIDWOOD;
 		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
@@ -492,50 +542,75 @@ int GetMaterialType ( const char *name, int materialType )
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
 		//
-		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet"))
+		else if (StringContainsWord(name, "vj4")) // special case for vjun rock...
+			return MATERIAL_ROCK;
+		else if (StringContainsWord(name, "plastic") || StringContainsWord(name, "stormtrooper") || StringContainsWord(name, "snowtrooper") || StringContainsWord(name, "medpac") || StringContainsWord(name, "bacta") || StringContainsWord(name, "helmet"))
 			return MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "/ships/") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "mp/flag"))
+		else if (StringContainsWord(name, "/ships/") || StringContainsWord(name, "engine") || StringContainsWord(name, "mp/flag"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "wing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_"))
+		else if (StringContainsWord(name, "wing") || StringContainsWord(name, "xwbody") || StringContainsWord(name, "tie_"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon"))
+		else if (StringContainsWord(name, "ship") || StringContainsWord(name, "shuttle") || StringContainsWord(name, "falcon"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate"))
+		else if (StringContainsWord(name, "freight") || StringContainsWord(name, "transport") || StringContainsWord(name, "crate"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train"))
+		else if (StringContainsWord(name, "container") || StringContainsWord(name, "barrel") || StringContainsWord(name, "train"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+		else if (StringContainsWord(name, "crane") || StringContainsWord(name, "plate") || StringContainsWord(name, "cargo"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "ship_"))
+		else if (StringContainsWord(name, "ship_"))
 			return MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
+		else if (StringContainsWord(name, "models/weapon") && StringContainsWord(name, "saber") && !StringContainsWord(name, "glow") && StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
+			return MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
+		else if (StringContainsWord(name, "reborn") || StringContainsWord(name, "trooper"))
 			return MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
+		else if (StringContainsWord(name, "boba") || StringContainsWord(name, "pilot"))
 			return MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "grass") || (StringsContainWord(name, name, "foliage") && !StringsContainWord(name, name, "billboard")) || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
+		else if (StringContainsWord(name, "grass") || (StringContainsWord(name, "foliage") && !StringContainsWord(name, "billboard")) || StringContainsWord(name, "yavin/ground") || StringContainsWord(name, "mp/s_ground") || StringContainsWord(name, "yavinassault/terrain"))
 			return MATERIAL_SHORTGRASS;
+
+		//
+		// Player model stuff overrides
+		//
+		else if (StringContainsWord(name, "players") && StringContainsWord(name, "eye"))
+			return MATERIAL_GLASS;
+		else if (StringContainsWord(name, "bespin/bench") && StringContainsWord(name, "bespin/light"))
+			return MATERIAL_HOLLOWMETAL;
+		else if (!StringContainsWord(name, "players") && StringContainsWord(name, "bespin"))
+			return MATERIAL_MARBLE;
+		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "sithsoldier") || StringContainsWord(name, "r2d2") || StringContainsWord(name, "protocol") || StringContainsWord(name, "r5d2") || StringContainsWord(name, "c3po")))
+			return MATERIAL_SOLIDMETAL;
+		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hood") || StringContainsWord(name, "robe") || StringContainsWord(name, "cloth") || StringContainsWord(name, "pants")))
+			return MATERIAL_FABRIC;
+		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "hair") || StringContainsWord(name, "chewbacca"))) // use carpet
+			return MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
+		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "flesh") || StringContainsWord(name, "body") || StringContainsWord(name, "leg") || StringContainsWord(name, "hand") || StringContainsWord(name, "head") || StringContainsWord(name, "hips") || StringContainsWord(name, "torso") || StringContainsWord(name, "tentacles") || StringContainsWord(name, "face") || StringContainsWord(name, "arms")))
+			return MATERIAL_FLESH;
+		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "arm") || StringContainsWord(name, "foot") || StringContainsWord(name, "neck")))
+			return MATERIAL_FLESH;
+		else if (StringContainsWord(name, "players") && (StringContainsWord(name, "skirt") || StringContainsWord(name, "boots") || StringContainsWord(name, "accesories") || StringContainsWord(name, "accessories") || StringContainsWord(name, "vest") || StringContainsWord(name, "holster") || StringContainsWord(name, "cap") || StringContainsWord(name, "collar")))
+			return MATERIAL_FABRIC;
+		else if (!StringContainsWord(name, "players") && StringContainsWord(name, "_cc"))
+			return MATERIAL_MARBLE;
+		//
+		// If player model material not found above, use defaults...
+		//
 	}
-	
-	if (StringsContainWord(name, name, "common/water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
+
+	if (StringContainsWord(name, "gfx/water"))
+		return MATERIAL_EFX;
+	else if (StringContainsWord(name, "gfx/atmospheric"))
+		return MATERIAL_EFX;
+	else if (StringContainsWord(name, "common/water") && !StringContainsWord(name, "splash") && !StringContainsWord(name, "drip") && !StringContainsWord(name, "ripple") && !StringContainsWord(name, "bubble") && !StringContainsWord(name, "woosh") && !StringContainsWord(name, "underwater") && !StringContainsWord(name, "bottom"))
 	{
 		return MATERIAL_WATER;
 	}
-	else if (!StringsContainWord(name, name, "billboard") &&
-		(StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") 
-		|| StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain")
-		|| StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "plant") || StringsContainWord(name, name, "bush") 
-		|| StringsContainWord(name, name, "shrub") || StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") 
-		|| StringsContainWord(name, name, "branch") || StringsContainWord(name, name, "flower") || StringsContainWord(name, name, "weed")))
-	{// Always greenleaves... No parallax...
-		return MATERIAL_GREENLEAVES;
+	else if (StringContainsWord(name, "vj4"))
+	{// special case for vjun rock...
+		return MATERIAL_ROCK;
 	}
-	else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpack"))
-		if (!(materialType & MATERIAL_PLASTIC)) return MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, name, "grass") || (StringsContainWord(name, name, "foliage") && !StringsContainWord(name, name, "billboard")) || StringsContainWord(name, name, "yavin/ground") 
-		|| StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
-		if (!(materialType & MATERIAL_SHORTGRASS)) return MATERIAL_SHORTGRASS;
 
-	return MATERIAL_NONE;
+	return MATERIAL_CONCRETE;
 }
 
 

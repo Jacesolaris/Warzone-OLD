@@ -180,7 +180,7 @@ vec4 CalcColor(vec3 position, vec3 normal)
 
 		color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0);
 	}
-	
+
 	vec3 viewer = u_LocalViewOrigin - position;
 
 	if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)

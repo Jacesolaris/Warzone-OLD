@@ -1332,11 +1332,12 @@ void main(void)
 
 	// This should give me roughly how close to grey this color is... For light colorization.. Highly colored stuff should get less color added to it...
 	float greynessFactor = 1.0 - clamp((length(outColor.r - outColor.g) + length(outColor.r - outColor.b) + length(outColor.g - outColor.b)) / 3.0, 0.0, 1.0);
-	greynessFactor = pow(greynessFactor, 64.0);
+	//greynessFactor = clamp(pow(greynessFactor, u_Local3.r/*64.0*/), 0.0, 1.0);
 
 	// Also check how bright it is, so we can scale the lighting up/down...
 	float brightnessFactor = 1.0 - clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
-	brightnessFactor = 1.0 - pow(brightnessFactor, 16.0);
+	//brightnessFactor = 1.0 - clamp(pow(brightnessFactor,  u_Local3.g/*16.0*/), 0.0, 1.0);
+	brightnessFactor = 1.0 - clamp(pow(brightnessFactor,  6.0), 0.0, 1.0);
 
 	// It looks better to use slightly different cube and light reflection multipliers... Lights should always add some light, cubes should allow none on some pixels..
 	float cubeReflectionFactor = clamp(greynessFactor * brightnessFactor, 0.5, 1.0) * reflectionPower;
@@ -1415,19 +1416,42 @@ void main(void)
 		vec3 reflected = cubeRayDir + parallax;
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
 
+		const float lod1 = 4.0;
+		const float lod2 = 5.0;
+		const float lod3 = 7.0;
+		const float lod4 = 10.0;
+
 		if (NIGHT_SCALE > 0.0 && NIGHT_SCALE < 1.0)
 		{// Mix between night and day colors...
-			vec3 skyColorDay = texture(u_SkyCubeMap, reflected).rgb;
-			vec3 skyColorNight = texture(u_SkyCubeMapNight, reflected).rgb;
+			vec3 skyColorDay = textureLod(u_SkyCubeMap, reflected, lod1).rgb;
+			skyColorDay += textureLod(u_SkyCubeMap, reflected, lod2).rgb;
+			skyColorDay += textureLod(u_SkyCubeMap, reflected, lod3).rgb;
+			skyColorDay += textureLod(u_SkyCubeMap, reflected, lod4).rgb;
+			skyColorDay /= 4.0;
+
+			vec3 skyColorNight = textureLod(u_SkyCubeMapNight, reflected, lod1).rgb;
+			skyColorNight += textureLod(u_SkyCubeMapNight, reflected, lod2).rgb;
+			skyColorNight += textureLod(u_SkyCubeMapNight, reflected, lod3).rgb;
+			skyColorNight += textureLod(u_SkyCubeMapNight, reflected, lod4).rgb;
+			skyColorNight /= 4.0;
+
 			skyColor = mix(skyColorDay, skyColorNight, clamp(NIGHT_SCALE, 0.0, 1.0));
 		}
 		else if (NIGHT_SCALE >= 1.0)
 		{// Night only colors...
-			skyColor = texture(u_SkyCubeMapNight, reflected).rgb;
+			skyColor = textureLod(u_SkyCubeMapNight, reflected, lod1).rgb;
+			skyColor += textureLod(u_SkyCubeMapNight, reflected, lod2).rgb;
+			skyColor += textureLod(u_SkyCubeMapNight, reflected, lod3).rgb;
+			skyColor += textureLod(u_SkyCubeMapNight, reflected, lod4).rgb;
+			skyColor /= 4.0;
 		}
 		else
 		{// Day only colors...
-			skyColor = texture(u_SkyCubeMap, reflected).rgb;
+			skyColor = textureLod(u_SkyCubeMap, reflected, lod1).rgb;
+			skyColor += textureLod(u_SkyCubeMap, reflected, lod2).rgb;
+			skyColor += textureLod(u_SkyCubeMap, reflected, lod3).rgb;
+			skyColor += textureLod(u_SkyCubeMap, reflected, lod4).rgb;
+			skyColor /= 4.0;
 		}
 
 		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.333), 0.0, 1.0);
@@ -1492,12 +1516,28 @@ void main(void)
 		}
 		else
 		{
-			vec3 shiny = textureLod(u_WaterEdgeMap, ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+			vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
+
+			//vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+			vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 4.0 - (cubeReflectionFactor * 4.0)).rgb;
+			shiny += textureLod(u_WaterEdgeMap, shinyTC, 5.0 - (cubeReflectionFactor * 5.0)).rgb;
+			shiny += textureLod(u_WaterEdgeMap, shinyTC, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+			shiny += textureLod(u_WaterEdgeMap, shinyTC, 10.0 - (cubeReflectionFactor * 10.0)).rgb;
+			shiny /= 4.0;
+
 			shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
 			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		}
 #else //!defined(__CUBEMAPS__)
-		vec3 shiny = textureLod(u_WaterEdgeMap, ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+		vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
+
+		//vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+		vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 4.0 - (cubeReflectionFactor * 4.0)).rgb;
+		shiny += textureLod(u_WaterEdgeMap, shinyTC, 5.0 - (cubeReflectionFactor * 5.0)).rgb;
+		shiny += textureLod(u_WaterEdgeMap, shinyTC, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+		shiny += textureLod(u_WaterEdgeMap, shinyTC, 10.0 - (cubeReflectionFactor * 10.0)).rgb;
+		shiny /= 4.0;
+
 		shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 #endif //defined(__CUBEMAPS__)
