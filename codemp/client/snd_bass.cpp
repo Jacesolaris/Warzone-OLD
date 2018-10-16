@@ -66,6 +66,7 @@ typedef struct {
 } Channel;
 
 Channel		MUSIC_CHANNEL;
+Channel		MUSIC_CHANNEL2;
 
 qboolean	SOUND_CHANNELS_INITIALIZED = qfalse;
 Channel		SOUND_CHANNELS[MAX_BASS_CHANNELS];
@@ -1385,16 +1386,8 @@ void BASS_StartStreamingMusic(char *filename)
 	else
 	{// local file...
 	 //Com_Printf("Playing [LOCAL] stream %s.\n", filename);
-#if 1
 		char fullPath[1024] = { 0 };
 		sprintf_s(fullPath, "warzone/%s", filename);
-#else
-		char *basepath = Cvar_VariableString("fs_basepath");
-		char *homepath = Cvar_VariableString("fs_homepath");
-		char *cdpath = Cvar_VariableString("fs_cdpath");
-		char *gamedir = Cvar_VariableString("fs_game");
-		char *fullPath = FS_BuildOSPath(basepath, gamedir, filename);
-#endif
 
 		//Com_Printf("Playing stream %s.\n", fullPath);
 
@@ -1465,8 +1458,26 @@ void BASS_MusicUpdateThread( void * aArg )
 		// Do we need a new track yet???
 		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 		{// Still playing a track...
-			this_thread::sleep_for(chrono::milliseconds(1000));
-			continue;
+			QWORD length = BASS_ChannelGetLength(MUSIC_CHANNEL.channel, BASS_POS_BYTE); // get channel's length
+			QWORD fadelen = length - BASS_ChannelGetPosition(MUSIC_CHANNEL.channel, BASS_POS_BYTE); // get length remaining
+			fadelen /= 1000;
+			fadelen /= 1000;
+			fadelen *= 3;
+			// What we have left now in fadelen is roughly seconds (depends on encode)... Don't want to scan for exact times (only MP3 supported), so these rough times will do...
+
+			//Com_Printf("%i seconds left on current music track...\n", (int)fadelen);
+
+			if (fadelen <= 3)
+			{// Start playing next track at the same time... Copy the finish track to a new temp channel, then reuse the main channel for the new track...
+				//Com_Printf("%i seconds left on current music track... Track is fading out on its own channel. Starting new track.\n", (int)fadelen);
+				memcpy(&MUSIC_CHANNEL2, &MUSIC_CHANNEL, sizeof(MUSIC_CHANNEL));
+				memset(&MUSIC_CHANNEL, 0, sizeof(MUSIC_CHANNEL));
+			}
+			else
+			{// Wait...
+				this_thread::sleep_for(chrono::milliseconds(1000));
+				continue;
+			}
 		}
 
 		// Seems we need a new track... Select a random one and play it!
