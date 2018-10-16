@@ -1121,42 +1121,75 @@ const char *JKA_TRACKS[] =
 	"music/yavin2_old/yavtemp_explore.mp3",
 };
 
-int JKA_TRACKS_NUM = 133;
+int GALACTIC_RADIO_TRACKS_NUM = 133;
 
 // channel (sample/music) info structure
 typedef struct {
-	char name[260+1];
-} dMusicList_t;
+	char name[260 + 1];
+} radioMusicList_t;
 
 //
-// Psy Dynamic Tracks...
+// Galactic Radio (extra) Tracks...
 //
 
-qboolean PSY_TRACKS_LOADED = qfalse;
+qboolean GALACTIC_RADIO_EXTRA_TRACKS_LOADED = qfalse;
 
-int PSY_TRACKS_NUM = 0;
+int GALACTIC_RADIO_EXTRA_TRACKS_NUM = 0;
 
-typedef struct {
-	char name[260+1];
-} psyMusicList_t;
+radioMusicList_t GALACTIC_RADIO_EXTRA_TRACKS[512 + 1];
 
-psyMusicList_t PSY_TRACKS[512+1];
-
-void BASS_GetPsyTracks( void )
+void BASS_GetGalacticExtraTracks(void)
 {
-	if (PSY_TRACKS_LOADED) return;
+	if (GALACTIC_RADIO_EXTRA_TRACKS_LOADED) return;
 
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir ("warzone/music/psy")) != NULL) {
+	if ((dir = opendir("warzone/music/galactic")) != NULL) {
+		/* all the files and directories within psy directory */
+		while ((ent = readdir(dir)) != NULL) {
+			if (ent->d_name[0] == '.') continue; // skip back directory...
+			if (ent->d_namlen < 3) continue;
+
+			sprintf(GALACTIC_RADIO_EXTRA_TRACKS[GALACTIC_RADIO_EXTRA_TRACKS_NUM].name, "music/galactic/%s", ent->d_name);
+			//Com_Printf("Added relaxing track %s.\n", GALACTIC_RADIO_TRACKS[GALACTIC_RADIO_TRACKS_NUM].name);
+			GALACTIC_RADIO_EXTRA_TRACKS_NUM++;
+		}
+		closedir(dir);
+	}
+	else {
+		/* could not open directory */
+		perror("");
+	}
+
+	GALACTIC_RADIO_EXTRA_TRACKS_LOADED = qtrue;
+	//Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Galactic Radio^5 extra music tracks.\n", GALACTIC_RADIO_EXTRA_TRACKS_NUM);
+}
+
+//
+// Mind Worm Radio Tracks...
+//
+
+qboolean MINDWORM_TRACKS_LOADED = qfalse;
+
+int MINDWORM_TRACKS_NUM = 0;
+
+radioMusicList_t MINDWORM_TRACKS[512+1];
+
+void BASS_GetMindWormTracks( void )
+{
+	if (MINDWORM_TRACKS_LOADED) return;
+
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir ("warzone/music/mindworm")) != NULL) {
 		/* all the files and directories within psy directory */
 		while ((ent = readdir (dir)) != NULL) {
 			if (ent->d_name[0] == '.') continue; // skip back directory...
 			if (ent->d_namlen < 3) continue;
 
-			sprintf(PSY_TRACKS[PSY_TRACKS_NUM].name, "music/psy/%s", ent->d_name);
-			//Com_Printf("Added psy track %s.\n", PSY_TRACKS[PSY_TRACKS_NUM].name);
-			PSY_TRACKS_NUM++;
+			sprintf(MINDWORM_TRACKS[MINDWORM_TRACKS_NUM].name, "music/mindworm/%s", ent->d_name);
+			//Com_Printf("Added mindworm track %s.\n", MINDWORM_TRACKS[MINDWORM_TRACKS_NUM].name);
+			MINDWORM_TRACKS_NUM++;
 		}
 		closedir (dir);
 	} else {
@@ -1164,8 +1197,82 @@ void BASS_GetPsyTracks( void )
 		perror ("");
 	}
 
-	PSY_TRACKS_LOADED = qtrue;
-	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3PSY^5 music tracks.\n", PSY_TRACKS_NUM);
+	MINDWORM_TRACKS_LOADED = qtrue;
+	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Mindworm Radio^5 music tracks.\n", MINDWORM_TRACKS_NUM);
+}
+
+//
+// Relaxing In The Rim Radio Tracks...
+//
+
+qboolean RELAXING_TRACKS_LOADED = qfalse;
+
+int RELAXING_TRACKS_NUM = 0;
+
+radioMusicList_t RELAXING_TRACKS[512 + 1];
+
+void BASS_GetRelaxingTracks(void)
+{
+	if (RELAXING_TRACKS_LOADED) return;
+
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir("warzone/music/relaxing")) != NULL) {
+		/* all the files and directories within psy directory */
+		while ((ent = readdir(dir)) != NULL) {
+			if (ent->d_name[0] == '.') continue; // skip back directory...
+			if (ent->d_namlen < 3) continue;
+
+			sprintf(RELAXING_TRACKS[RELAXING_TRACKS_NUM].name, "music/relaxing/%s", ent->d_name);
+			//Com_Printf("Added relaxing track %s.\n", RELAXING_TRACKS[MINDWORM_TRACKS_NUM].name);
+			RELAXING_TRACKS_NUM++;
+		}
+		closedir(dir);
+	}
+	else {
+		/* could not open directory */
+		perror("");
+	}
+
+	RELAXING_TRACKS_LOADED = qtrue;
+	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Relaxing In The Rim Radio^5 music tracks.\n", RELAXING_TRACKS_NUM);
+}
+
+//
+// Imperial Advertisement Tracks...
+//
+
+qboolean IMP_ADS_TRACKS_LOADED = qfalse;
+
+int IMP_ADS_TRACKS_NUM = 0;
+
+radioMusicList_t IMP_ADS_TRACKS[512 + 1];
+
+void BASS_GetImpAdsTracks(void)
+{
+	if (IMP_ADS_TRACKS_LOADED) return;
+
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir("warzone/music/ads-imperial")) != NULL) {
+		/* all the files and directories within psy directory */
+		while ((ent = readdir(dir)) != NULL) {
+			if (ent->d_name[0] == '.') continue; // skip back directory...
+			if (ent->d_namlen < 3) continue;
+
+			sprintf(IMP_ADS_TRACKS[IMP_ADS_TRACKS_NUM].name, "music/ads-imperial/%s", ent->d_name);
+			//Com_Printf("Added mindworm track %s.\n", IMP_ADS_TRACKS[IMP_ADS_TRACKS_NUM].name);
+			IMP_ADS_TRACKS_NUM++;
+		}
+		closedir(dir);
+	}
+	else {
+		/* could not open directory */
+		perror("");
+	}
+
+	IMP_ADS_TRACKS_LOADED = qtrue;
+	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Imperial^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
 }
 
 //
@@ -1212,16 +1319,16 @@ void BASS_GetCustomTracks( void )
 // Dynamic music system code...
 //
 
-#define			MAX_DYNAMIC_LIST 2048
+#define				MAX_DYNAMIC_LIST 2048
 
-qboolean		MUSIC_LIST_INITIALIZED = qfalse;
-int				MUSIC_LIST_COUNT = 0;
-dMusicList_t	MUSIC_LIST[MAX_DYNAMIC_LIST+1];
+qboolean			MUSIC_LIST_INITIALIZED = qfalse;
+int					MUSIC_LIST_COUNT = 0;
+radioMusicList_t	MUSIC_LIST[MAX_DYNAMIC_LIST+1];
 
 // For multithreading...
-qboolean		MUSIC_LIST_UPDATING = qfalse;
+qboolean			MUSIC_LIST_UPDATING = qfalse;
 
-int				CURRENT_MUSIC_SELECTION = 0;
+int					CURRENT_MUSIC_SELECTION = 0;
 
 void BASS_AddDynamicTrack ( char *name )
 {
@@ -1243,11 +1350,11 @@ void BASS_AddDynamicTrack ( char *name )
 
 	if (MUSIC_LIST_COUNT >= MAX_DYNAMIC_LIST) return; // Hit MAX allowed number...
 
-	int NUM_TRACKS = JKA_TRACKS_NUM;
+	int NUM_TRACKS = GALACTIC_RADIO_TRACKS_NUM;
 
-	//if (s_musicSelection->integer == 1) NUM_TRACKS = PSY_TRACKS_NUM;
+	//if (s_musicSelection->integer == 1) NUM_TRACKS = MINDWORM_TRACKS_NUM;
 	//if (s_musicSelection->integer == 2) NUM_TRACKS = CUSTOM_TRACKS_NUM;
-	if (s_musicSelection->integer == 3) NUM_TRACKS = JKA_TRACKS_NUM + PSY_TRACKS_NUM + CUSTOM_TRACKS_NUM;
+	if (s_musicSelection->integer == 3) NUM_TRACKS = GALACTIC_RADIO_TRACKS_NUM + MINDWORM_TRACKS_NUM + CUSTOM_TRACKS_NUM;
 
 	for (int i = MUSIC_LIST_COUNT-1; i >= NUM_TRACKS; i--)
 	{// Reverse check because "extra" music will always be at the end of the list :)
@@ -1260,6 +1367,54 @@ void BASS_AddDynamicTrack ( char *name )
 	MUSIC_LIST_UPDATING = qfalse;
 }
 
+//
+// Recently played tracks list, to stop repeats...
+//
+#define MUSIC_PREVIOUS_LIST_SIZE 8
+
+qboolean MUSIC_PREVIOUS_TRACKS_INITIALIZED = qfalse;
+
+int MUSIC_PREVIOUS_TRACKS_ADDED = 0;
+int MUSIC_PREVIOUS_TRACKS[MUSIC_PREVIOUS_LIST_SIZE] = { -1 };
+
+void BASS_MusicPlayedInit(void)
+{
+	MUSIC_PREVIOUS_TRACKS_ADDED = 0;
+	memset(&MUSIC_PREVIOUS_TRACKS, -1, sizeof(MUSIC_PREVIOUS_TRACKS));
+}
+
+qboolean BASS_MusicWasPreviouslyPlayed(int id)
+{
+	for (int i = 0; i < MUSIC_PREVIOUS_TRACKS_ADDED; i++)
+	{
+		if (id == MUSIC_PREVIOUS_TRACKS[i])
+			return qtrue;
+	}
+
+	return qfalse;
+}
+
+void BASS_MusicInsertPlayed(int id)
+{
+	if (MUSIC_PREVIOUS_TRACKS_ADDED >= MUSIC_PREVIOUS_LIST_SIZE)
+	{
+		// Remove the oldest one, and sort the current list...
+		for (int i = 0; i < MUSIC_PREVIOUS_LIST_SIZE - 1; i++)
+		{
+			MUSIC_PREVIOUS_TRACKS[i] = MUSIC_PREVIOUS_TRACKS[i + 1];
+		}
+
+		MUSIC_PREVIOUS_TRACKS[MUSIC_PREVIOUS_LIST_SIZE] = -1;
+		MUSIC_PREVIOUS_TRACKS_ADDED--;
+	}
+
+	MUSIC_PREVIOUS_TRACKS[MUSIC_PREVIOUS_TRACKS_ADDED] = id;
+	MUSIC_PREVIOUS_TRACKS_ADDED++;
+}
+
+//
+// Initialization of music lists...
+//
 void BASS_InitDynamicList ( void )
 {
 	if (BASS_CheckSoundDisabled()) return;
@@ -1286,17 +1441,29 @@ void BASS_InitDynamicList ( void )
 
 	memset(MUSIC_LIST, 0, sizeof(MUSIC_LIST));
 
-	if (s_musicSelection->integer == 1)
-	{// Add all known PSY tracks to the list...
-		BASS_GetPsyTracks();
+	BASS_MusicPlayedInit();
 
-		for (int i = 0; i < PSY_TRACKS_NUM; i++)
+	if (s_musicSelection->integer == 1)
+	{// Add all known "Mind Worm Radio" tracks to the list...
+		BASS_GetMindWormTracks();
+
+		for (int i = 0; i < MINDWORM_TRACKS_NUM; i++)
 		{
-			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, PSY_TRACKS[i].name);
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, MINDWORM_TRACKS[i].name);
 			MUSIC_LIST_COUNT++;
 		}
 	}
 	else if (s_musicSelection->integer == 2)
+	{// Add all known "Relaxing In The Rim Radio" tracks to the list...
+		BASS_GetRelaxingTracks();
+
+		for (int i = 0; i < RELAXING_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, RELAXING_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+	}
+	else if (s_musicSelection->integer == 3)
 	{// Add all known CUSTOM tracks to the list...
 		BASS_GetCustomTracks();
 
@@ -1306,40 +1473,40 @@ void BASS_InitDynamicList ( void )
 			MUSIC_LIST_COUNT++;
 		}
 	}
-	else if (s_musicSelection->integer == 3)
-	{// Add all known JKA + PSY + CUSTOM tracks to the list...
-		if (MUSIC_SELECTION_CHANGED) Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3JKA^5 music tracks.\n", JKA_TRACKS_NUM);
-
-		BASS_GetPsyTracks();
-		BASS_GetCustomTracks();
-
-		for (int i = 0; i < JKA_TRACKS_NUM; i++)
-		{
-			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, (char *)JKA_TRACKS[i]);
-			MUSIC_LIST_COUNT++;
-		}
-		for (int i = 0; i < PSY_TRACKS_NUM; i++)
-		{
-			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, PSY_TRACKS[i].name);
-			MUSIC_LIST_COUNT++;
-		}
-		for (int i = 0; i < CUSTOM_TRACKS_NUM; i++)
-		{
-			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, CUSTOM_TRACKS[i].name);
-			MUSIC_LIST_COUNT++;
-		}
-	}
 	else
-	{
-		if (MUSIC_SELECTION_CHANGED) Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3JKA^5 music tracks.\n", JKA_TRACKS_NUM);
+	{// Add all known "Galactic Radio" tracks to the list...
+		BASS_GetGalacticExtraTracks();
 
 		// Add all known JKA tracks to the list...
-		for (int i = 0; i < JKA_TRACKS_NUM; i++)
+		for (int i = 0; i < GALACTIC_RADIO_TRACKS_NUM; i++)
 		{
 			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, (char *)JKA_TRACKS[i]);
 			MUSIC_LIST_COUNT++;
 		}
+
+		// Add the extra tracks...
+		for (int i = 0; i < GALACTIC_RADIO_EXTRA_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, GALACTIC_RADIO_EXTRA_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+
+		if (MUSIC_SELECTION_CHANGED) Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Galactic Radio^5 music tracks.\n", MUSIC_LIST_COUNT);
 	}
+
+	{// Add imperial ads to all stations...
+		BASS_GetImpAdsTracks();
+
+		// Add the imperial ads...
+		for (int i = 0; i < IMP_ADS_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, IMP_ADS_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+
+		//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Imperial^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
+	}
+
 
 	MUSIC_LIST_INITIALIZED = qtrue;
 	MUSIC_LIST_UPDATING = qfalse;
@@ -1348,7 +1515,17 @@ void BASS_InitDynamicList ( void )
 #ifdef __BASS_STREAM_MUSIC__
 bool BASS_IsMusicInPK3(char * filename)
 {
-	if (!strncmp(filename, "music/psy", 9))
+	if (!strncmp(filename, "music/galactic", 9))
+	{
+		return false;
+	}
+
+	if (!strncmp(filename, "music/mindworm", 9))
+	{
+		return false;
+	}
+
+	if (!strncmp(filename, "music/relaxing", 9))
 	{
 		return false;
 	}
@@ -1427,6 +1604,12 @@ void BASS_StartStreamingMusic(char *filename)
 
 void BASS_MusicUpdateThread( void * aArg )
 {
+	if (!MUSIC_PREVIOUS_TRACKS_INITIALIZED)
+	{
+		BASS_MusicPlayedInit();
+		MUSIC_PREVIOUS_TRACKS_INITIALIZED = qtrue;
+	}
+
 	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
 		if (BASS_CheckSoundDisabled())
@@ -1467,7 +1650,7 @@ void BASS_MusicUpdateThread( void * aArg )
 
 			//Com_Printf("%i seconds left on current music track...\n", (int)fadelen);
 
-			if (fadelen <= 3)
+			if (fadelen < 2)
 			{// Start playing next track at the same time... Copy the finish track to a new temp channel, then reuse the main channel for the new track...
 				//Com_Printf("%i seconds left on current music track... Track is fading out on its own channel. Starting new track.\n", (int)fadelen);
 				memcpy(&MUSIC_CHANNEL2, &MUSIC_CHANNEL, sizeof(MUSIC_CHANNEL));
@@ -1480,18 +1663,19 @@ void BASS_MusicUpdateThread( void * aArg )
 			}
 		}
 
-		// Seems we need a new track... Select a random one and play it!
-		int trackChoice = irand(0, MUSIC_LIST_COUNT-1);
-		int trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
-		
-		while (MUSIC_LIST_COUNT > 1 && trackChoice2 == trackChoice) // Try again to pick a different one if we can...
-			trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
-
 		if (BASS_MUSIC_UPDATE_THREAD_STOP)
 			break;
 
+		// Seems we need a new track... Select a random one and play it!
+		int trackChoice = irand(0, MUSIC_LIST_COUNT-1);
+
+		while (BASS_MusicWasPreviouslyPlayed(trackChoice))
+			trackChoice = irand(0, MUSIC_LIST_COUNT - 1);
+
 		if (!BASS_UPDATE_THREAD_STOP)
 		{
+			BASS_MusicInsertPlayed(trackChoice);
+
 			//Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
 #ifdef __BASS_STREAM_MUSIC__
 			if (!BASS_IsMusicInPK3(MUSIC_LIST[trackChoice].name))
@@ -1500,6 +1684,13 @@ void BASS_MusicUpdateThread( void * aArg )
 			}
 			else
 			{
+				int trackChoice2 = irand(0, MUSIC_LIST_COUNT - 1);
+
+				while (MUSIC_LIST_COUNT > 1 && trackChoice2 == trackChoice) // Try again to pick a different one if we can...
+					trackChoice2 = irand(0, MUSIC_LIST_COUNT - 1);
+
+				BASS_MusicInsertPlayed(trackChoice2);
+
 				BASS_StopMusic(MUSIC_CHANNEL.channel);
 				S_StartBackgroundTrack_Actual(MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
 			}
