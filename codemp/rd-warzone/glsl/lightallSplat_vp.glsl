@@ -260,13 +260,13 @@ vec4 CalcColor(vec3 position, vec3 normal)
 
 		if (u_ColorGen == CGEN_LIGHTING_WARZONE)
 		{
-			vec3 light = normalize(u_PrimaryLightOrigin.xyz);
-			float diffuse = clamp(pow(dot(normal, light), 16.0), 0.0, 1.0);
+			vec3 light = normalize(u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w));
+			float diffuse = clamp(pow(dot(normal, light), 16.0), 0.25, 1.0);
 			vec3 reflected = -reflect(light, normal);
 			vec3 viewer = normalize(u_LocalViewOrigin - position);
-			float spec = clamp(pow(dot(reflected, viewer), 64.0), 0.0, 1.0);
-			vec3 lColor = u_PrimaryLightColor;//mix(u_PrimaryLightColor, vec3(1.0), 0.8);
-			color.rgb = clamp(lColor * (diffuse + spec + 1.0), 0.0, 1.0);
+			float spec = clamp(pow(dot(reflected, viewer), 64.0), 0.25, 1.0);
+			vec3 lColor = mix(u_PrimaryLightColor, vec3(1.0), 0.8);
+			color.rgb = clamp(lColor * (diffuse + spec + 0.5), 0.0, 1.0);
 		}
 	
 		if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)

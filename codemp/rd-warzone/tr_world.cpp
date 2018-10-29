@@ -130,7 +130,7 @@ static qboolean	R_CullSurface(msurface_t *surf, int entityNum) {
 		}
 		else if (surf->shader->hasSplatMaps)
 		{
-			float dist = round(dist);
+			dist = round(dist);
 			float distFactor = 1.0;
 
 			if (dist > 4096.0)

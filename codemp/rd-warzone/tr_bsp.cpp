@@ -2312,6 +2312,28 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 			return 1;
 	}
 #endif //__SPLATMAP_SORTING__
+	
+#ifdef __MERGED_SORTING__
+	if (aa->isMerged > bb->isMerged)
+		return -1;
+
+	else if (aa->isMerged < bb->isMerged)
+		return 1;
+#endif //__MERGED_SORTING__
+
+#ifdef __DEPTHDRAW_SORTING__
+	if (aa->depthDrawOnlyFoliage < bb->depthDrawOnlyFoliage)
+		return -1;
+
+	else if (aa->depthDrawOnlyFoliage > bb->depthDrawOnlyFoliage)
+		return 1;
+
+	if (aa->depthDrawOnly < bb->depthDrawOnly)
+		return -1;
+
+	else if (aa->depthDrawOnly > bb->depthDrawOnly)
+		return 1;
+#endif //__DEPTHDRAW_SORTING__
 
 	// sort by actual shader
 	if (aa->shader < bb->shader)
@@ -2393,7 +2415,27 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 			return 1;
 	}
 #endif //__MATERIAL_SORTING__
+	
+#ifdef __INDOOR_OUTDOOR_CULLING__
+#ifdef __INDOOR_SORTING__
+	if (backEnd.viewIsOutdoors)
+	{
+		if (aa->shader->isIndoor < bb->shader->isIndoor)
+			return -1;
+		
+		else if (aa->shader->isIndoor > bb->shader->isIndoor)
+			return 1;
+	}
+	else
+	{
+		if (aa->shader->isIndoor > bb->shader->isIndoor)
+			return -1;
 
+		else if (aa->shader->isIndoor < bb->shader->isIndoor)
+			return 1;
+	}
+#endif //__INDOOR_SORTING__
+#endif //__INDOOR_OUTDOOR_CULLING__
 
 #ifdef __Q3_FOG__
 	// by fogIndex

@@ -1994,6 +1994,7 @@ void RB_UpdateCloseLights ( void )
 		}
 	}
 
+#ifdef __CALCULATE_LIGHTDIR_FROM_LIGHT_AVERAGES__
 	//
 	// Make an average light color and direction... Default to sun direction, offset by local lighting...
 	//
@@ -2049,6 +2050,16 @@ void RB_UpdateCloseLights ( void )
 	mix(backEnd.viewParms.emissiveLightColor[0], 1.0, 0.8);
 	mix(backEnd.viewParms.emissiveLightColor[1], 1.0, 0.8);
 	mix(backEnd.viewParms.emissiveLightColor[2], 1.0, 0.8);
+#else //!__CALCULATE_LIGHTDIR_FROM_LIGHT_AVERAGES__
+	//
+	// Use sun like rend2 does...
+	//
+	VectorCopy(backEnd.refdef.sunCol, backEnd.viewParms.emissiveLightColor);
+	VectorCopy(backEnd.refdef.sunDir, backEnd.viewParms.emissiveLightDirection);
+
+	float dist = 4096.0;
+	VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, backEnd.viewParms.emissiveLightOrigin);
+#endif //__CALCULATE_LIGHTDIR_FROM_LIGHT_AVERAGES__
 
 	CLOSE_LIGHTS_UPDATE = qfalse;
 }

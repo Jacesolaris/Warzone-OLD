@@ -7622,6 +7622,21 @@ static shader_t *FinishShader( void ) {
 		shader.sort = SS_DECAL;
 	}
 
+	for (stage = 0; stage < MAX_SHADER_STAGES; stage++)
+	{// TESTING: Replace anything with IDENTITY rgbGen with new warzone lighting...
+		shaderStage_t *pStage = &stages[stage];
+
+		if (!pStage->active) {
+			continue;
+		}
+
+		if (pStage->rgbGen == CGEN_IDENTITY || pStage->rgbGen == CGEN_IDENTITY_LIGHTING)
+		{
+			pStage->rgbGen = CGEN_LIGHTING_WARZONE;
+		}
+	}
+
+
 	if (shader.glowStrength == 1.0 
 		&& (StringContainsWord(shader.name, "models/players") || StringContainsWord(shader.name, "models/weapons")))
 	{// If this shader has glows, but still has the default glow strength, amp up the brightness because these are small glow objects...

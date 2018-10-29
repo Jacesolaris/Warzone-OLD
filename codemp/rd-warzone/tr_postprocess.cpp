@@ -2393,6 +2393,7 @@ extern float		MAP_HDR_MAX;
 extern vec3_t		MAP_INFO_PLAYABLE_SIZE;
 extern vec3_t		MAP_INFO_PLAYABLE_MAXS;
 extern qboolean		PROCEDURAL_SNOW_ENABLED;
+extern float		PROCEDURAL_SNOW_CURVE;
 extern float		PROCEDURAL_SNOW_LOWEST_ELEVATION;
 
 extern float		MATERIAL_SPECULAR_STRENGTHS[MATERIAL_LAST];
@@ -2658,7 +2659,7 @@ void RB_DeferredLighting(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	GLSL_SetUniformVec4(shader, UNIFORM_LOCAL8, local8);
 
 	vec4_t local9;
-	VectorSet4(local9, haveEmissiveCube ? 1.0 : 0.0, MAP_USE_PALETTE_ON_SKY ? 1.0 : 0.0, PROCEDURAL_SNOW_ENABLED ? 1.0 : 0.0, PROCEDURAL_SNOW_LOWEST_ELEVATION);
+	VectorSet4(local9, PROCEDURAL_SNOW_CURVE, MAP_USE_PALETTE_ON_SKY ? 1.0 : 0.0, PROCEDURAL_SNOW_ENABLED ? 1.0 : 0.0, PROCEDURAL_SNOW_LOWEST_ELEVATION);
 	GLSL_SetUniformVec4(shader, UNIFORM_LOCAL9, local9);
 	
 	{

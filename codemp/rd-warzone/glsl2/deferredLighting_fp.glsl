@@ -8,6 +8,7 @@
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 //#define __BUMP_ENHANCE__
+//#define __EXPERIMENTAL_WETNESS__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -44,7 +45,7 @@ uniform vec4								u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABL
 uniform vec4								u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4								u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
 uniform vec4								u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
-uniform vec4								u_Local9; // haveEmissiveCube, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
+uniform vec4								u_Local9; // PROCEDURAL_SNOW_CURVE, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
 
 uniform vec4								u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3								u_ViewOrigin;
@@ -108,7 +109,7 @@ varying vec2								var_TexCoords;
 #define MAP_HDR_MAX							u_Local8.b
 #define MAP_INFO_PLAYABLE_HEIGHT			u_Local8.a
 
-#define HAVE_EMISSIVE_CUBE					u_Local9.r // UNUSED
+#define PROCEDURAL_SNOW_CURVE				u_Local9.r
 #define MAP_USE_PALETTE_ON_SKY				u_Local9.g
 #define SNOW_ENABLED						u_Local9.b
 #define PROCEDURAL_SNOW_LOWEST_ELEVATION	u_Local9.a
@@ -784,14 +785,14 @@ vec3 Vibrancy ( vec3 origcolor, float vibrancyStrength )
 //
 // Full lighting... Blinn phong and basic lighting as well...
 //
-#if defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float getspecularLight(vec3 surfaceNormal, vec3 lightDirection, vec3 viewDirection, float shininess)
 {
 	//Calculate Blinn-Phong power
 	vec3 H = normalize(viewDirection + lightDirection);
-	return clamp(pow(max(0.0, dot(surfaceNormal, H)), shininess), 0.1, 1.0);
+	return clamp(pow(max(0.0, dot(surfaceNormal, H)), shininess), 0.0, 1.0);
 }
 
+#if defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 float getdiffuse(vec3 n, vec3 l, float p) {
 	float ndotl = clamp(dot(n, l), 0.5, 0.9);
 	return pow(ndotl, p);
@@ -1289,7 +1290,9 @@ void main(void)
 #define reflectionPower				materialSettings.y
 
 	float snow = 0.0;
+#ifdef __EXPERIMENTAL_WETNESS__
 	float wetness = 0.0;
+#endif //__EXPERIMENTAL_WETNESS__
 
 	if (SNOW_ENABLED > 0.0)
 	{// calculate procedural snow factor...
@@ -1303,6 +1306,7 @@ void main(void)
 				float pixelElevation = position.z - PROCEDURAL_SNOW_LOWEST_ELEVATION;
 			
 				snowMult = clamp(pow(clamp(pixelElevation / elevationRange, 0.0, 1.0) * 4.0, 2.0), 0.0, 1.0);
+				//snowMult = clamp(pow(snowMult, PROCEDURAL_SNOW_CURVE), 0.0, 1.0);
 			}
 			
 			vec3 sBump = VaryNf(normalize(position.xyz), flatNorm.xyz, 2.0);
@@ -1314,17 +1318,21 @@ void main(void)
 			else
 				snow = pow(snow, 0.4);
 
+			snow = clamp(pow(snow, PROCEDURAL_SNOW_CURVE), 0.0, 1.0);
+
 			snow *= snowMult;
 
 			materialSettings.x += 0.05 * clamp(1.0 - materialSettings.x, 0.05, 0.95) * snow;
-			materialSettings.y += 3.0 * clamp(1.0 - materialSettings.y, 0.05, 0.95) * snow;
+			materialSettings.y += 1.5 * clamp(1.0 - materialSettings.y, 0.05, 0.95) * snow;
 		}
 	}
 
-	/*if (u_Local3.g != 0.0)
+#ifdef __EXPERIMENTAL_WETNESS__
+	if (u_Local3.r != 0.0)
 	{// wet testing
-		wetness += u_Local3.r;
-	}*/
+		wetness += 32.0 * u_Local3.r;
+	}
+#endif //__EXPERIMENTAL_WETNESS__
 
 	//
 	// This is the basics of creating a fake PBR look to the lighting. It could be replaced, or overridden by actual PBR pixel buffer inputs.
@@ -1615,7 +1623,15 @@ void main(void)
 				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance * origColorStrength * 8.0;
 
 				vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
-				lightColor.rgb += blinn + (blinn * wetness * 0.1);
+				lightColor.rgb += blinn;
+
+#ifdef __EXPERIMENTAL_WETNESS__
+				if (wetness > 0.0)
+				{
+					float wet = getspecularLight(N, normalize(-sunDir), E, wetness);
+					lightColor.rgb += lightColor.rgb * wet;
+				}
+#endif //__EXPERIMENTAL_WETNESS__
 
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
@@ -1720,7 +1736,15 @@ void main(void)
 #endif //__LQ_MODE__
 
 					vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
-					addedLight.rgb += blinn + (blinn * wetness * 0.1);
+					addedLight.rgb += blinn;
+
+#ifdef __EXPERIMENTAL_WETNESS__
+					if (wetness > 0.0)
+					{
+						float wet = getspecularLight(N, lightDir, E, wetness) * lightStrength * 64.0;
+						addedLight.rgb += lightColor.rgb * wet;
+					}
+#endif //__EXPERIMENTAL_WETNESS__
 				}
 			}
 
@@ -1730,12 +1754,18 @@ void main(void)
 	}
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
+#ifdef __EXPERIMENTAL_WETNESS__
 	if (REFLECTIONS_ENABLED > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0) && position.a - 1.0 != MATERIAL_WATER && !changedToWater)
+#else //!__EXPERIMENTAL_WETNESS__
+	if (REFLECTIONS_ENABLED > 0.0 && ssrReflectivePower > 0.0 && position.a - 1.0 != MATERIAL_WATER && !changedToWater)
+#endif //__EXPERIMENTAL_WETNESS__
 	{
 #if 1
+#ifdef __EXPERIMENTAL_WETNESS__
 		if (wetness > 0.0)
 			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + wetness/*0.37504*/, ssReflection);
 		else
+#endif //__EXPERIMENTAL_WETNESS__
 			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower, ssReflection);
 #else
 		/*

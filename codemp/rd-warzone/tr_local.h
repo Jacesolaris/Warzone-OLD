@@ -105,6 +105,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#define __INDOOR_SHADOWS__						// Testing stuff...
 
+//#define __CALCULATE_LIGHTDIR_FROM_LIGHT_AVERAGES__
+
 #define __USE_REGIONS__
 
 #define __TERRAIN_TESSELATION__
@@ -121,10 +123,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __ALPHA_SORTING__
 #define __GRASS_SORTING__
 #define __SPLATMAP_SORTING__
+//#define __MERGED_SORTING__
+//#define __DEPTHDRAW_SORTING__
 #define __NUMSTAGES_SORTING__
 #define __GLOW_SORTING__
 #define __TESS_SORTING__
 #define __MATERIAL_SORTING__
+//#define __INDOOR_SORTING__
 
 #define __INDOOR_OUTDOOR_CULLING__
 
