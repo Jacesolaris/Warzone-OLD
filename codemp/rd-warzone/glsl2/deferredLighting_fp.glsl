@@ -45,7 +45,8 @@ uniform vec4								u_Local5; // CONTRAST, SATURATION, BRIGHTNESS, TRUEHDR_ENABL
 uniform vec4								u_Local6; // AO_MINBRIGHT, AO_MULTBRIGHT, VIBRANCY, NightScale
 uniform vec4								u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSize, r_skyLightContribution
 uniform vec4								u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
-uniform vec4								u_Local9; // PROCEDURAL_SNOW_CURVE, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
+uniform vec4								u_Local9; // PROCEDURAL_SNOW_HEIGHT_CURVE, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
+uniform vec4								u_Local10; // PROCEDURAL_SNOW_LUMINOSITY_CURVE, PROCEDURAL_SNOW_BRIGHTNESS, 0.0, 0.0
 
 uniform vec4								u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3								u_ViewOrigin;
@@ -109,10 +110,13 @@ varying vec2								var_TexCoords;
 #define MAP_HDR_MAX							u_Local8.b
 #define MAP_INFO_PLAYABLE_HEIGHT			u_Local8.a
 
-#define PROCEDURAL_SNOW_CURVE				u_Local9.r
+#define PROCEDURAL_SNOW_HEIGHT_CURVE		u_Local9.r
 #define MAP_USE_PALETTE_ON_SKY				u_Local9.g
 #define SNOW_ENABLED						u_Local9.b
 #define PROCEDURAL_SNOW_LOWEST_ELEVATION	u_Local9.a
+
+#define PROCEDURAL_SNOW_LUMINOSITY_CURVE	u_Local10.r
+#define PROCEDURAL_SNOW_BRIGHTNESS			u_Local10.g
 
 #define WATER_ENABLED						u_Mins.a
 
@@ -1290,6 +1294,7 @@ void main(void)
 #define reflectionPower				materialSettings.y
 
 	float snow = 0.0;
+	float snowHeightFactor = 1.0;
 #ifdef __EXPERIMENTAL_WETNESS__
 	float wetness = 0.0;
 #endif //__EXPERIMENTAL_WETNESS__
@@ -1298,32 +1303,27 @@ void main(void)
 	{// calculate procedural snow factor...
 		if (position.z >= PROCEDURAL_SNOW_LOWEST_ELEVATION)
 		{
-			float snowMult = 1.0;
-
 			if (PROCEDURAL_SNOW_LOWEST_ELEVATION > -999999.0)
 			{// Elevation is enabled...
 				float elevationRange = MAP_INFO_PLAYABLE_HEIGHT - PROCEDURAL_SNOW_LOWEST_ELEVATION;
 				float pixelElevation = position.z - PROCEDURAL_SNOW_LOWEST_ELEVATION;
 			
-				snowMult = clamp(pow(clamp(pixelElevation / elevationRange, 0.0, 1.0) * 4.0, 2.0), 0.0, 1.0);
-				//snowMult = clamp(pow(snowMult, PROCEDURAL_SNOW_CURVE), 0.0, 1.0);
+				snowHeightFactor = clamp(pow(clamp(pixelElevation / elevationRange, 0.0, 1.0) * 4.0, 2.0), 0.0, 1.0);
 			}
 			
 			vec3 sBump = VaryNf(normalize(position.xyz), flatNorm.xyz, 2.0);
 
-			snow = clamp(dot(normalize(sBump.rgb), vec3(0., 0., 1.)), 0., 1.);
+			snow = clamp(dot(normalize(sBump.rgb), vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
 
 			if (position.a - 1.0 == MATERIAL_GREENLEAVES)
-				snow = pow(snow, 1.333);
+				snow = pow(snow * 0.25 + 0.75, 1.333);
 			else
 				snow = pow(snow, 0.4);
 
-			snow = clamp(pow(snow, PROCEDURAL_SNOW_CURVE), 0.0, 1.0);
+			snow *= snowHeightFactor;
 
-			snow *= snowMult;
-
-			materialSettings.x += 0.05 * clamp(1.0 - materialSettings.x, 0.05, 0.95) * snow;
-			materialSettings.y += 1.5 * clamp(1.0 - materialSettings.y, 0.05, 0.95) * snow;
+			//materialSettings.x += 0.05 * clamp(1.0 - materialSettings.x, 0.05, 0.95) * snow;
+			//materialSettings.y += 1.5 * clamp(1.0 - materialSettings.y, 0.05, 0.95) * snow;
 		}
 	}
 
@@ -1382,16 +1382,9 @@ void main(void)
 
 	if (snow > 0.0)
 	{// add procedural snow...
-		float snowColorStrength = clamp(max(color.r, max(color.g, color.b)), 0.0, 1.0);
-		float snowMix = 1.0 - clamp(pow(snowColorStrength * 0.575 + 0.05, 0.34), 0.0, 1.0);
-		snowMix *= snow;
-
-		vec3 snowColor = vec3(clamp(pow(snow, 0.001), 0.0, 1.0));
-
-		vec3 pos5 = position.xyz * 3.5;
-		float shadow = clamp(proceduralSmoothNoise( pos5 ), 0.0, 1.0);
-		snowColor = mix(snowColor, vec3(0.8), shadow);
-
+		vec3 snowColor = vec3(PROCEDURAL_SNOW_BRIGHTNESS);
+		float snowColorFactor = clamp(pow(max(color.r, max(color.g, color.b)), PROCEDURAL_SNOW_LUMINOSITY_CURVE), 0.0, 1.0);
+		float snowMix = clamp(mix(snow*snowColorFactor, 1.0, snowHeightFactor * PROCEDURAL_SNOW_HEIGHT_CURVE), 0.0, 1.0);
 		outColor.rgb = splatblend(outColor.rgb, 1.0 - snowMix, snowColor, snowMix);
 	}
 

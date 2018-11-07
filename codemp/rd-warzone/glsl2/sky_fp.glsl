@@ -1,6 +1,7 @@
 #define __HIGH_PASS_SHARPEN__
 #define __CLOUDS__
 #define __BACKGROUND_HILLS__
+#define __NEW_STARS__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 
@@ -175,6 +176,59 @@ vec2 EncodeNormal(vec3 n)
 float rand(vec2 co)
 {
     return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float hash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float pnoise(in vec3 o) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * 1009.0;
+
+	float a = hash(n+  0.0);
+	float b = hash(n+  1.0);
+	float c = hash(n+ 57.0);
+	float d = hash(n+ 58.0);
+	
+	float e = hash(n+  0.0 + 1009.0);
+	float f = hash(n+  1.0 + 1009.0);
+	float g = hash(n+ 57.0 + 1009.0);
+	float h = hash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 m = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float SmoothNoise( vec3 p )
+{
+    float f;
+    f  = 0.5000*pnoise( p ); p = m*p*2.02;
+    f += 0.2500*pnoise( p ); 
+	
+    return f * (1.0 / (0.5000 + 0.2500));
 }
 
 vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, vec3 suncolorIn) {
@@ -422,6 +476,47 @@ vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 }
 #endif //__CLOUDS__
 
+#ifdef __NEW_STARS__
+vec3 reachForTheStars(in vec3 from, in vec3 dir, int levels, float power) 
+{
+	vec3 color=vec3(0.0);
+	vec3 st = (dir * 2.+ vec3(0.3,2.5,1.25)) * .3;
+	for (int i = 0; i < levels; i++) st = abs(st) / dot(st,st) - .9;
+    float star = min( 1., pow( min( 5., length(st) ), 3. ) * .0025 )*1.5;
+
+   	vec3 randc = vec3(SmoothNoise( dir.xyz*10.0*float(levels) ), SmoothNoise( dir.xzy*10.0*float(levels) ), SmoothNoise( dir.yzx*10.0*float(levels) ));
+	color += star * randc;
+
+	return pow(color*2.25, vec3(power));
+}
+
+void GetStars(out vec4 fragColor, in vec3 position)
+{
+	vec3 from=vec3(0.0);
+	vec3 dir = normalize(position);
+
+	// Adjust for planetary rotation...
+	float dnt = DAY_NIGHT_24H_TIME * 2.0 - 1.0;
+	if (dnt <= 0.0) dnt = 1.0 + (1.0 - length(dnt));
+	dir.xy += dnt * PROCEDURAL_SKY_PLANETARY_ROTATION;
+
+	// Nebulae...
+    vec3 color1 = clamp(reachForTheStars(from, -dir, 1, 0.5) * 0.7, 0.0, 1.0) * vec3(0.0, 0.0, 1.0);
+	vec3 color2 = clamp(reachForTheStars(from, dir, 2, 0.5) * 0.6, 0.0, 1.0) * vec3(1.0, 0.0, 0.0);
+    vec3 color3 = clamp(reachForTheStars(from, dir, 3, 0.5) * 0.4, 0.0, 1.0) * vec3(1.0, 1.0, 0.0);
+
+	// Small stars...
+    vec3 colorStars = clamp(reachForTheStars(from, dir, 17/*13*/, 0.9), 0.0, 1.0);
+
+	// Add them all together...
+    vec3 color = color1 + color2 + color3 + colorStars;
+
+	color = clamp(color, 0.0, 1.0);
+    color = pow(color, vec3(1.2));
+
+	fragColor = vec4(color, 1.0);
+}
+#else //!__NEW_STARS__
 void GetStars(out vec4 fragColor, in vec3 position)
 {
 #define iterations 14
@@ -491,64 +586,12 @@ void GetStars(out vec4 fragColor, in vec3 position)
     
 	fragColor = vec4(v*.01,1.);
 }
+#endif //__NEW_STARS__
 
 #ifdef __BACKGROUND_HILLS__
 #define EPSILON 0.1
 
 #define bghtime (u_Time+285.)
-
-float hash( const in float n ) {
-	return fract(sin(n)*4378.5453);
-}
-
-float pnoise(in vec3 o) 
-{
-	vec3 p = floor(o);
-	vec3 fr = fract(o);
-		
-	float n = p.x + p.y*57.0 + p.z * 1009.0;
-
-	float a = hash(n+  0.0);
-	float b = hash(n+  1.0);
-	float c = hash(n+ 57.0);
-	float d = hash(n+ 58.0);
-	
-	float e = hash(n+  0.0 + 1009.0);
-	float f = hash(n+  1.0 + 1009.0);
-	float g = hash(n+ 57.0 + 1009.0);
-	float h = hash(n+ 58.0 + 1009.0);
-	
-	
-	vec3 fr2 = fr * fr;
-	vec3 fr3 = fr2 * fr;
-	
-	vec3 t = 3.0 * fr2 - 2.0 * fr3;
-	
-	float u = t.x;
-	float v = t.y;
-	float w = t.z;
-
-	// this last bit should be refactored to the same form as the rest :)
-	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
-	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
-	
-	float res = res1 * (1.0- w) + res2 * (w);
-	
-	return res;
-}
-
-const mat3 m = mat3( 0.00,  0.80,  0.60,
-                    -0.80,  0.36, -0.48,
-                    -0.60, -0.48,  0.64 );
-
-float SmoothNoise( vec3 p )
-{
-    float f;
-    f  = 0.5000*pnoise( p ); p = m*p*2.02;
-    f += 0.2500*pnoise( p ); 
-	
-    return f * (1.0 / (0.5000 + 0.2500));
-}
 
 float hillnoise(in vec3 o) {
  	return SmoothNoise(o.xyy);   
@@ -767,6 +810,17 @@ void main()
 #ifdef __HIGH_PASS_SHARPEN__
 					nightDiffuse.rgb = Enhance(u_OverlayMap, texCoords, nightDiffuse.rgb, 1.0);
 #endif //__HIGH_PASS_SHARPEN__
+				}
+
+				{
+					vec3 position = var_Position.xzy;
+					vec3 lightPosition = u_PrimaryLightOrigin.xzy;
+
+					vec3 skyViewDir = normalize(position);
+					vec3 skyViewDir2 = normalize(u_ViewOrigin.xzy - var_Position.xzy);
+					vec3 skySunDir = normalize(lightPosition);
+					vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, -skySunDir, vec3(1.0));
+					nightDiffuse = mix(nightDiffuse, nightDiffuse + atmos, 0.5);
 				}
 
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, SHADER_NIGHT_SCALE); // Mix in night sky with original sky from day -> night...

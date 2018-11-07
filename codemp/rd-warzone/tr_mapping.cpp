@@ -1420,7 +1420,9 @@ float		PROCEDURAL_CLOUDS_CLOUDALPHA = 2.0;
 float		PROCEDURAL_CLOUDS_SKYTINT = 0.5;
 qboolean	PROCEDURAL_SNOW_ENABLED = qfalse;
 float		PROCEDURAL_SNOW_LOWEST_ELEVATION = -999999.9;
-float		PROCEDURAL_SNOW_CURVE = 1.0;
+float		PROCEDURAL_SNOW_HEIGHT_CURVE = 1.0;
+float		PROCEDURAL_SNOW_LUMINOSITY_CURVE = 0.35;
+float		PROCEDURAL_SNOW_BRIGHTNESS = 0.5;
 int			LATE_LIGHTING_ENABLED = 0;
 qboolean	MAP_LIGHTMAP_DISABLED = qfalse;
 int			MAP_LIGHTMAP_ENHANCEMENT = 1;
@@ -1748,7 +1750,9 @@ void MAPPING_LoadMapInfo(void)
 	// Procedural Snow...
 	//
 	PROCEDURAL_SNOW_ENABLED = (atoi(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_ENABLED", "0")) > 0) ? qtrue : qfalse;
-	PROCEDURAL_SNOW_CURVE = atof(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_CURVE", "1.0"));
+	PROCEDURAL_SNOW_HEIGHT_CURVE = atof(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_HEIGHT_CURVE", "1.0"));
+	PROCEDURAL_SNOW_LUMINOSITY_CURVE = atof(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_LUMINOSITY_CURVE", "0.35"));
+	PROCEDURAL_SNOW_BRIGHTNESS = atof(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_BRIGHTNESS", "0.5"));
 	PROCEDURAL_SNOW_LOWEST_ELEVATION = atof(IniRead(mapname, "SNOW", "PROCEDURAL_SNOW_LOWEST_ELEVATION", "-999999.9"));
 
 	//
@@ -2328,7 +2332,8 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow is ^7%s^5 and snow lowest elevation is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_SNOW_LOWEST_ELEVATION);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow curve is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_CURVE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow height curve is ^7%.4f^5 and snow luminosity curve is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_HEIGHT_CURVE, PROCEDURAL_SNOW_LUMINOSITY_CURVE);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow brightness is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_BRIGHTNESS);
 	qglFinish();
 }
 
