@@ -1232,6 +1232,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_RoadsControlMap", GLSL_INT, 1 },
 	{ "u_RoadMap", GLSL_INT, 1 },
 	{ "u_DetailMap", GLSL_INT, 1 },
+	{ "u_MoonMaps", GLSL_INT, 8 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
 	{ "u_ScreenDepthMap", GLSL_INT, 1 },
@@ -1336,7 +1337,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_BoneScales", GLSL_FLOAT, 20 },
 #endif //__EXPERIMETNAL_CHARACTER_EDITOR__
 
-	// UQ1: Added...
+		// UQ1: Added...
 	{ "u_Mins", GLSL_VEC4, 1 },
 	{ "u_Maxs", GLSL_VEC4, 1 },
 	{ "u_MapInfo", GLSL_VEC4, 1 },
@@ -1366,6 +1367,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local10", GLSL_VEC4, 1 },
 	{ "u_Local11", GLSL_VEC4, 1 },
 	{ "u_Local12", GLSL_VEC4, 1 },
+
+	{ "u_MoonCount", GLSL_INT, 1 },
+	{ "u_MoonInfos", GLSL_VEC4, 8 },
+	{ "u_MoonInfos2", GLSL_VEC2, 8 },
 
 	{ "u_MaterialSpeculars", GLSL_FLOAT, MATERIAL_LAST },
 	{ "u_MaterialReflectiveness", GLSL_FLOAT, MATERIAL_LAST },
@@ -2804,6 +2809,32 @@ void GLSL_FinishGPUShader(shaderProgram_t *program)
 	GL_CheckErrors();
 }
 
+qboolean GLSL_CompareFloatBuffers(const float *buffer1, float *buffer2, int numElements)
+{
+	for (int i = 0; i < numElements; i++)
+	{
+		if (buffer1[i] != buffer2[i])
+		{
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+qboolean GLSL_CompareIntBuffers(const int *buffer1, int *buffer2, int numElements)
+{
+	for (int i = 0; i < numElements; i++)
+	{
+		if (buffer1[i] != buffer2[i])
+		{
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value)
 {
 	GLint *uniforms = program->uniforms;
@@ -2829,6 +2860,33 @@ void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value)
 	qglUniform1i(uniforms[uniformNum], value);
 }
 
+void GLSL_SetUniformIntxX(shaderProgram_t *program, int uniformNum, const int *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	GLint *compare = (GLint *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (uniformsInfo[uniformNum].type != GLSL_INT)
+	{
+		ri->Printf(PRINT_WARNING, "GLSL_SetUniformInt: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (int *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareIntBuffers((const int *)elements, compare, numElements)) return;
+
+	Com_Memcpy(compare, elements, sizeof(int)* numElements);
+
+	qglUniform1iv(uniforms[uniformNum], numElements, (const GLint *)elements);
+}
+
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value)
 {
 	GLint *uniforms = program->uniforms;
@@ -2852,19 +2910,6 @@ void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat valu
 	*compare = value;
 
 	qglUniform1f(uniforms[uniformNum], value);
-}
-
-qboolean GLSL_CompareFloatBuffers(const float *buffer1, float *buffer2, int numElements)
-{
-	for (int i = 0; i < numElements; i++)
-	{
-		if (buffer1[i] != buffer2[i])
-		{
-			return qfalse;
-		}
-	}
-
-	return qtrue;
 }
 
 void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v)
@@ -2941,7 +2986,7 @@ void GLSL_SetUniformVec2xX(shaderProgram_t *program, int uniformNum, const vec2_
 
 	Com_Memcpy(compare, elements, sizeof(vec2_t)* numElements);
 
-	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+	qglUniform2fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
 }
 
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v)
@@ -3040,6 +3085,33 @@ void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t 
 	VectorCopy4(v, compare);
 
 	qglUniform4f(uniforms[uniformNum], v[0], v[1], v[2], v[3]);
+}
+
+void GLSL_SetUniformVec4xX(shaderProgram_t *program, int uniformNum, const vec4_t *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	float *compare;
+
+	if (uniformsInfo[uniformNum].type != GLSL_VEC4)
+	{
+		ri->Printf(PRINT_WARNING, "GLSL_SetUniformVec4xX: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+
+	if (GLSL_CompareFloatBuffers((const float *)elements, compare, numElements * 4)) return;
+
+	Com_Memcpy(compare, elements, sizeof(vec4_t)* numElements);
+
+	qglUniform4fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
 }
 
 void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_t v)
@@ -4514,6 +4586,9 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	GLSL_BindProgram(&tr.skyShader);
 	GLSL_SetUniformInt(&tr.skyShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.skyShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.skyShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.skyShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.skyShader);

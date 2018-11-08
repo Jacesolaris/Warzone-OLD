@@ -1126,7 +1126,15 @@ enum
 	TB_SHADOWMAP4		= 26,
 	TB_SHADOWMAP5		= 27,
 	TB_ROOFMAP			= 28,
-	NUM_TEXTURE_BUNDLES = 29
+	TB_MOONMAP1			= 29,
+	TB_MOONMAP2			= 30,
+	TB_MOONMAP3			= 31,
+	TB_MOONMAP4			= 32,
+	TB_MOONMAP5			= 33,
+	TB_MOONMAP6			= 34,
+	TB_MOONMAP7			= 35,
+	TB_MOONMAP8			= 36,
+	NUM_TEXTURE_BUNDLES = 37
 };
 
 typedef enum
@@ -1613,6 +1621,8 @@ typedef enum
 	UNIFORM_ROADMAP,
 	UNIFORM_DETAILMAP,
 
+	UNIFORM_MOONMAPS,
+
 	UNIFORM_SCREENIMAGEMAP,
 	UNIFORM_SCREENDEPTHMAP,
 
@@ -1748,6 +1758,10 @@ typedef enum
 	UNIFORM_LOCAL10,
 	UNIFORM_LOCAL11,
 	UNIFORM_LOCAL12,
+
+	UNIFORM_MOON_COUNT,
+	UNIFORM_MOON_INFOS,
+	UNIFORM_MOON_INFOS2,
 
 	UNIFORM_MATERIAL_SPECULARS,
 	UNIFORM_MATERIAL_REFLECTIVENESS,
@@ -2817,7 +2831,7 @@ typedef struct trGlobals_s {
 	image_t					*roadsMapImage;
 	image_t					*tessellationMapImage;
 	image_t					*roadImage;
-	image_t					*moonImage;
+	image_t					*moonImage[8];
 	image_t					*auroraImage[2];
 	image_t					*shinyImage;
 
@@ -2905,7 +2919,6 @@ typedef struct trGlobals_s {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
-	shader_t				*moonShader;
 	shader_t				*sunFlareShader;
 	shader_t				*skyImageShader;
 
@@ -3864,12 +3877,14 @@ void GLSL_VertexAttribPointers(uint32_t attribBits);
 void GLSL_BindProgram(shaderProgram_t * program);
 
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
+void GLSL_SetUniformIntxX(shaderProgram_t *program, int uniformNum, const int *elements, int numElements);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);
 void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_t v);
 void GLSL_SetUniformFloat7(shaderProgram_t *program, int uniformNum, const float *v);
 void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v);
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v);
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
+void GLSL_SetUniformVec4xX(shaderProgram_t *program, int uniformNum, const vec4_t *elements, int numElements);
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
 void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
 void GLSL_SetUniformVec2xX(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);

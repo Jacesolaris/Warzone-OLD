@@ -586,6 +586,43 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 			VectorSet4(vector, PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[2], 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL12, vector);
+
+
+			extern int			MOON_COUNT;
+			extern qboolean		MOON_ENABLED[8];
+			extern float		MOON_SIZE[8];
+			extern float		MOON_BRIGHTNESS[8];
+			extern float		MOON_TEXTURE_SCALE[8];
+			extern float		MOON_ROTATION_OFFSET_X[8];
+			extern float		MOON_ROTATION_OFFSET_Y[8];
+
+			GLSL_SetUniformInt(sp, UNIFORM_MOON_COUNT, MOON_COUNT);
+
+			vec4_t	moonInfos[8];
+			vec2_t	moonInfos2[8];
+			int		moonBundles[8] = { TB_MOONMAP1 };
+
+			for (int i = 0; i < MOON_COUNT; i++)
+			{
+				moonInfos[i][0] = MOON_ENABLED[i] ? 1.0 : 0.0;
+				moonInfos[i][1] = MOON_ROTATION_OFFSET_X[i];
+				moonInfos[i][2] = MOON_ROTATION_OFFSET_Y[i];
+				moonInfos[i][3] = MOON_SIZE[i];
+
+				moonInfos2[i][0] = MOON_BRIGHTNESS[i];
+				moonInfos2[i][1] = MOON_TEXTURE_SCALE[i];
+
+				moonBundles[i] = TB_MOONMAP1 + i;
+			}
+
+			GLSL_SetUniformVec4xX(sp, UNIFORM_MOON_INFOS, moonInfos, MOON_COUNT);
+			GLSL_SetUniformVec2xX(sp, UNIFORM_MOON_INFOS2, moonInfos2, MOON_COUNT);
+			GLSL_SetUniformIntxX(sp, UNIFORM_MOONMAPS, moonBundles, MOON_COUNT);
+
+			for (int i = 0; i < MOON_COUNT; i++)
+			{
+				GL_BindToTMU(tr.moonImage[i], TB_MOONMAP1 + i);
+			}
 		}
 
 
@@ -646,6 +683,9 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 
 		GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		GL_BindToTMU(tr.auroraImage[1], TB_SPLATMAP2);
+
+		//GLSL_SetUniformInt(sp, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		//GL_BindToTMU(tr.moonImage, TB_SPLATMAP3);
 
 		//if (r_testvalue0->integer)
 			GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
@@ -1048,33 +1088,36 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		GL_SetModelviewMatrix(modelview);
 	}
 
-	dist = 	backEnd.viewParms.zFar / 1.75;
-	size = dist * scale;
+	if (shader == tr.sunFlareShader)
+	{// Now done in sky shader...
+		dist = backEnd.viewParms.zFar / 1.75;
+		size = dist * scale;
 
-	if (r_proceduralSun->integer)
-	{
-		size *= r_proceduralSunScale->value;
+		if (r_proceduralSun->integer)
+		{
+			size *= r_proceduralSunScale->value;
+		}
+
+		VectorScale(tr.sunDirection, dist, origin);
+
+		PerpendicularVector(vec1, tr.sunDirection);
+		CrossProduct(tr.sunDirection, vec1, vec2);
+
+		VectorScale(vec1, size, vec1);
+		VectorScale(vec2, size, vec2);
+
+		// farthest depth range
+		qglDepthRange(1.0, 1.0);
+
+		RB_BeginSurface(shader, 0, 0);
+
+		RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol);
+
+		RB_EndSurface();
 	}
 
-	VectorScale( tr.sunDirection, dist, origin );
-
-	PerpendicularVector( vec1, tr.sunDirection );
-	CrossProduct( tr.sunDirection, vec1, vec2 );
-
-	VectorScale( vec1, size, vec1 );
-	VectorScale( vec2, size, vec2 );
-
-	// farthest depth range
-	qglDepthRange( 1.0, 1.0 );
-
-	RB_BeginSurface( shader, 0, 0 );
-
-	RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol);
-
-	RB_EndSurface();
-
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	qglDepthRange(0.0, 1.0);
 
 	if (r_dynamiclight->integer)
 	{// Lets have some volumetrics with that!

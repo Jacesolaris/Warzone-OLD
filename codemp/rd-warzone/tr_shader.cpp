@@ -9834,8 +9834,6 @@ static void CreateExternalShaders( void ) {
 
 	tr.sunShader = R_FindShader( "sun", lightmapsNone, stylesDefault, qtrue );
 	tr.sunShader->isSky = qtrue;
-	tr.moonShader = R_FindShader("moon", lightmapsNone, stylesDefault, qtrue);
-	tr.moonShader->isSky = qtrue;
 	tr.sunFlareShader = R_FindShader( "gfx/2d/sunflare", lightmapsNone, stylesDefault, qtrue);
 
 	// HACK: if sunflare is missing, make one using the flare image or dlight image

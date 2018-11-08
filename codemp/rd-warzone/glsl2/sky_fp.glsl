@@ -7,8 +7,13 @@
 
 uniform sampler2D										u_DiffuseMap;
 uniform sampler2D										u_OverlayMap; // Night sky image... When doing sky...
-uniform sampler2D										u_SplatMap1;
-uniform sampler2D										u_SplatMap2;
+uniform sampler2D										u_SplatMap1; // auroraImage[0]
+uniform sampler2D										u_SplatMap2; // auroraImage[1]
+
+uniform int												u_MoonCount; // moons total count
+uniform sampler2D										u_MoonMaps[8]; // moon textures
+uniform vec4											u_MoonInfos[8]; // MOON_ENABLED, MOON_ROTATION_OFFSET_X, MOON_ROTATION_OFFSET_Y, MOON_SIZE
+uniform vec2											u_MoonInfos2[8]; // MOON_BRIGHTNESS, MOON_TEXTURE_SCALE
 
 uniform vec4											u_Settings0; // useTC, useDeform, useRGBA, isTextureClamped
 uniform vec4											u_Settings1; // useVertexAnim, useSkeletalAnim, blendMode, is2D
@@ -231,147 +236,6 @@ float SmoothNoise( vec3 p )
     return f * (1.0 / (0.5000 + 0.2500));
 }
 
-vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, vec3 suncolorIn) {
-	vec3 sundir = sunDir;
-	sundir.y = abs(sundir.y);
-	float sunDirLength = pow(clamp(length(sundir.y), 0.0, 1.0), 2.25);
-	float rayDirLength = pow(clamp(length(raydir.y), 0.0, 1.0), 0.85);
-	float special_trick = 1.0 / (rayDirLength/*raydir.y*/ * 1.0 + 0.2/*0.1*/);
-	float special_trick2 = 1.0 / (sunDirLength/*sundir.y*/ * 11.0 + 1.0);
-	float dotSun = dot(sundir, /*skyViewDir2*/raydir);
-	float raysundt = pow(abs(dotSun), 2.0);
-	float sundt = pow(max(0.0, dotSun), 8.0);
-	float mymie = sundt * special_trick * 0.2;
-	vec3 skyColor = PROCEDURAL_SKY_DAY_COLOR.rgb;//vec3(0.2455, 0.58, 1.0);
-	vec3 suncolor = mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - skyColor), special_trick2);
-	//suncolor *= suncolorIn;
-	vec3 bluesky = skyColor * suncolor;
-	vec3 bluesky2 = max(bluesky/*vec3(0.0)*/, bluesky - skyColor * 0.0896 * (special_trick + -6.0 * sunDirLength/*sundir.y*/ * sunDirLength/*sundir.y*/));
-	bluesky2 *= special_trick * (0.24 + raysundt * 0.24);
-
-	return (bluesky + bluesky2 + (mymie * suncolor)) * 0.5;
-}
-
-#define PI M_PI
-#define iSteps 16
-#define jSteps 8
-
-vec2 rsi(vec3 r0, vec3 rd, float sr) {
-	// ray-sphere intersection that assumes
-	// the sphere is centered at the origin.
-	// No intersection when result.x > result.y
-	float a = dot(rd, rd);
-	float b = 2.0 * dot(rd, r0);
-	float c = dot(r0, r0) - (sr * sr);
-	float d = (b*b) - 4.0*a*c;
-	if (d < 0.0) return vec2(1e5, -1e5);
-	return vec2(
-		(-b - sqrt(d)) / (2.0*a),
-		(-b + sqrt(d)) / (2.0*a)
-	);
-}
-
-vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAtmos, vec3 kRlh, float kMie, float shRlh, float shMie, float g) {
-	// Normalize the sun and view directions.
-	pSun = normalize(pSun);
-	r = normalize(r);
-
-	// Calculate the step size of the primary ray.
-	vec2 p = rsi(r0, r, rAtmos);
-	if (p.x > p.y) return vec3(0, 0, 0);
-	p.y = min(p.y, rsi(r0, r, rPlanet).x);
-	float iStepSize = (p.y - p.x) / float(iSteps);
-
-	// Initialize the primary ray time.
-	float iTime = 0.0;
-
-	// Initialize accumulators for Rayleigh and Mie scattering.
-	vec3 totalRlh = vec3(0, 0, 0);
-	vec3 totalMie = vec3(0, 0, 0);
-
-	// Initialize optical depth accumulators for the primary ray.
-	float iOdRlh = 0.0;
-	float iOdMie = 0.0;
-
-	// Calculate the Rayleigh and Mie phases.
-	float mu = dot(r, pSun);
-	float mumu = mu * mu;
-	float gg = g * g;
-	float pRlh = 3.0 / (16.0 * PI) * (1.0 + mumu);
-	float pMie = 3.0 / (8.0 * PI) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * g, 1.5) * (2.0 + gg));
-
-	// Sample the primary ray.
-	for (int i = 0; i < iSteps; i++) {
-
-		// Calculate the primary ray sample position.
-		vec3 iPos = r0 + r * (iTime + iStepSize * 0.5);
-
-		// Calculate the height of the sample.
-		float iHeight = length(iPos) - rPlanet;
-
-		// Calculate the optical depth of the Rayleigh and Mie scattering for this step.
-		float odStepRlh = exp(-iHeight / shRlh) * iStepSize;
-		float odStepMie = exp(-iHeight / shMie) * iStepSize;
-
-		// Accumulate optical depth.
-		iOdRlh += odStepRlh;
-		iOdMie += odStepMie;
-
-		// Calculate the step size of the secondary ray.
-		float jStepSize = rsi(iPos, pSun, rAtmos).y / float(jSteps);
-
-		// Initialize the secondary ray time.
-		float jTime = 0.0;
-
-		// Initialize optical depth accumulators for the secondary ray.
-		float jOdRlh = 0.0;
-		float jOdMie = 0.0;
-
-		// Sample the secondary ray.
-		for (int j = 0; j < jSteps; j++) {
-
-			// Calculate the secondary ray sample position.
-			vec3 jPos = iPos + pSun * (jTime + jStepSize * 0.5);
-
-			// Calculate the height of the sample.
-			float jHeight = length(jPos) - rPlanet;
-
-			// Accumulate the optical depth.
-			jOdRlh += exp(-jHeight / shRlh) * jStepSize;
-			jOdMie += exp(-jHeight / shMie) * jStepSize;
-
-			// Increment the secondary ray time.
-			jTime += jStepSize;
-		}
-
-		// Calculate attenuation.
-		vec3 attn = exp(-(kMie * (iOdMie + jOdMie) + kRlh * (iOdRlh + jOdRlh)));
-
-		// Accumulate scattering.
-		totalRlh += odStepRlh * attn;
-		totalMie += odStepMie * attn;
-
-		// Increment the primary ray time.
-		iTime += iStepSize;
-
-	}
-
-	// Calculate and return the final color.
-	return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
-}
-
-#if defined(__HIGH_PASS_SHARPEN__)
-vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
-{
-	vec3 blur = textureLod(tex, uv, level).xyz;
-	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
-	col *= ((color - blur)*0.25 + 0.25) * 8.0;
-	col = mix(color, col * color, 1.0);
-	return col;
-}
-#endif //defined(__HIGH_PASS_SHARPEN__)
-
-#ifdef __CLOUDS__
 const mat2 mc = mat2(1.6, 1.2, -1.2, 1.6);
 
 vec2 hash(vec2 p) {
@@ -402,6 +266,46 @@ float fbm(vec2 n) {
 	return total;
 }
 
+vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, inout vec3 sunColorMod) {
+	//return vec3(0.2, 0.3, 0.5);
+
+	vec3 sundir = sunDir;
+	sundir.y = abs(sundir.y);
+	float sunDirLength = pow(clamp(length(sundir.y), 0.0, 1.0), 2.25);
+	float rayDirLength = pow(clamp(length(raydir.y), 0.0, 1.0), 0.85);
+	float special_trick = 1.0 / (rayDirLength * 1.0 + 0.2);
+	float special_trick2 = 1.0 / (sunDirLength * 11.0 + 1.0);
+	float dotSun = dot(sundir, raydir);
+	float raysundt = pow(abs(dotSun), 2.0);
+	float sundt = pow(max(0.0, dotSun), 8.0);
+	float mymie = sundt * special_trick * 0.2;
+	vec3 skyColor = PROCEDURAL_SKY_DAY_COLOR.rgb;
+	//vec3 suncolor = clamp(mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - skyColor), special_trick2), 0.0, 1.0);
+	vec3 suncolor = mix(u_PrimaryLightColor.rgb, vec3(2.0, 0.3, 0.1), clamp(special_trick2 * pow(max(0.0, dotSun), 1.5), 0.15, 0.75));
+	vec3 bluesky = skyColor * suncolor;
+	vec3 bluesky2 = max(bluesky, bluesky - skyColor * 0.0896 * (special_trick + -6.0 * sunDirLength * sunDirLength));
+	bluesky2 *= special_trick * (0.24 + raysundt * 0.24);
+
+	bluesky = clamp(bluesky, 0.0, 1.0);
+	bluesky2 = clamp(bluesky2, 0.0, 1.0);
+
+	vec3 color = (bluesky + bluesky2 + (mymie * suncolor));
+	sunColorMod = clamp(color, 0.0, 1.0);
+	return color * 0.5;
+}
+
+#if defined(__HIGH_PASS_SHARPEN__)
+vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
+{
+	vec3 blur = textureLod(tex, uv, level).xyz;
+	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
+	col *= ((color - blur)*0.25 + 0.25) * 8.0;
+	col = mix(color, col * color, 1.0);
+	return col;
+}
+#endif //defined(__HIGH_PASS_SHARPEN__)
+
+#ifdef __CLOUDS__
 vec3 Clouds(in vec2 fragCoord, vec3 skycolour)
 {
 	//vec3 skycolour1 = skycolour;
@@ -492,8 +396,10 @@ vec3 reachForTheStars(in vec3 from, in vec3 dir, int levels, float power)
 
 void GetStars(out vec4 fragColor, in vec3 position)
 {
-	vec3 from=vec3(0.0);
+	vec3 color = vec3(0.0);
+	vec3 from = vec3(0.0);
 	vec3 dir = normalize(position);
+	vec3 origdir = normalize(position);
 
 	// Adjust for planetary rotation...
 	float dnt = DAY_NIGHT_24H_TIME * 2.0 - 1.0;
@@ -501,18 +407,18 @@ void GetStars(out vec4 fragColor, in vec3 position)
 	dir.xy += dnt * PROCEDURAL_SKY_PLANETARY_ROTATION;
 
 	// Nebulae...
-    vec3 color1 = clamp(reachForTheStars(from, -dir, 1, 0.5) * 0.7, 0.0, 1.0) * vec3(0.0, 0.0, 1.0);
+	vec3 color1 = clamp(reachForTheStars(from, -dir, 1, 0.5) * 0.7, 0.0, 1.0) * vec3(0.0, 0.0, 1.0);
 	vec3 color2 = clamp(reachForTheStars(from, dir, 2, 0.5) * 0.6, 0.0, 1.0) * vec3(1.0, 0.0, 0.0);
-    vec3 color3 = clamp(reachForTheStars(from, dir, 3, 0.5) * 0.4, 0.0, 1.0) * vec3(1.0, 1.0, 0.0);
+	vec3 color3 = clamp(reachForTheStars(from, dir, 3, 0.5) * 0.4, 0.0, 1.0) * vec3(1.0, 1.0, 0.0);
 
 	// Small stars...
-    vec3 colorStars = clamp(reachForTheStars(from, dir, 17/*13*/, 0.9), 0.0, 1.0);
+	vec3 colorStars = clamp(reachForTheStars(from, dir, 17/*13*/, 0.9), 0.0, 1.0);
 
 	// Add them all together...
-    vec3 color = color1 + color2 + color3 + colorStars;
+	color = color1 + color2 + color3 + colorStars;
 
 	color = clamp(color, 0.0, 1.0);
-    color = pow(color, vec3(1.2));
+	color = pow(color, vec3(1.2));
 
 	fragColor = vec4(color, 1.0);
 }
@@ -587,6 +493,71 @@ void GetStars(out vec4 fragColor, in vec3 position)
 	fragColor = vec4(v*.01,1.);
 }
 #endif //__NEW_STARS__
+
+void GetSun(out vec4 fragColor, in vec3 position)
+{
+	vec3 from = vec3(0.0);
+	vec3 dir = normalize(position);
+
+	vec3 sunPos = normalize(u_PrimaryLightOrigin.xyz);
+
+	float sunSize = 1.0 - (0.0015 * 1.0);
+	float sun = dot(dir, sunPos);
+
+	if (sun > sunSize) {
+		fragColor = vec4(u_PrimaryLightColor.rgb, 1.0);
+		return; // Since this planet drew a pixel, don't check any more planets, this is the closest one (first in the list)...
+	}
+
+	fragColor = vec4(0.0);
+}
+
+// 2D rotation function
+mat2 rot2D(float a) {
+	return mat2(cos(a),sin(a),-sin(a),cos(a));	
+}
+
+void GetPlanets(out vec4 fragColor, in vec3 position)
+{
+	vec3 from = vec3(0.0);
+	vec3 dir = normalize(position);
+
+	for (int i = 0; i < u_MoonCount; i++)
+	{
+		//if (u_MoonInfos[i].r <= 0.0) continue;
+
+		vec3 sunPos = normalize(u_PrimaryLightOrigin.xyz);
+		vec3 planetPos = -normalize(u_PrimaryLightOrigin.xyz);
+
+		float planetSize = 1.0 - (0.0015 * u_MoonInfos[i].a);
+		float planetTexScale = 6.0 * u_MoonInfos2[i].g;
+		float planetTexBright = 2.0 * u_MoonInfos2[i].r;
+		float planetTexBright2 = 64.0;
+
+		// Adjust for planetary rotation...
+		mat2 planetRot1 = rot2D(u_MoonInfos[i].b);
+		mat2 planetRot2 = rot2D(u_MoonInfos[i].g);
+		planetPos.yz *= planetRot1;
+		planetPos.xy *= planetRot2;
+		planetPos = normalize(planetPos);
+
+		float planet = dot(dir, planetPos);
+
+		if (planet > planetSize) {
+			float ldot = clamp(dot(dir, sunPos), 0.0, 1.0);
+			float lglow = clamp(pow(max(0.0, dot(dir - planetPos, sunPos)), 3.0) * 768.0, 0.015, 1.0);
+
+			//vec3 planetshade = texture(u_MoonMaps[i], dir.xy * planetTexScale).rgb * planetTexBright;
+			vec3 planetshade = texture(u_MoonMaps[i], (dir.xy - planetPos.xy) * planetTexScale).rgb * planetTexBright;
+			vec3 color = planetshade * 0.7 * lglow;
+			color += max(0.0, 0.007 - abs(planet - planetSize)) * lglow * planetTexBright2;
+			fragColor = vec4(clamp(color, 0.0, 1.0), 0.8/*0.825*/);
+			return; // Since this planet drew a pixel, don't check any more planets, this is the closest one (first in the list)...
+		}
+	}
+
+	fragColor = vec4(0.0);
+}
 
 #ifdef __BACKGROUND_HILLS__
 #define EPSILON 0.1
@@ -709,11 +680,14 @@ vec4 raymarchTerrain( const in vec3 ro, const in vec3 rd, const in vec3 bgc, con
 		
 		dist = t;
 		t -= pos.y*3.5;
-		alpha = 1.0-clamp(exp(-0.0000005*t*t), 0.0, 1.0);
-		col = mix( col, bgc, alpha );
+		alpha = clamp(exp(-0.0000005*t*t), 0.0, 0.3);
+		col = mix( bgc, col, alpha );
+
+		return vec4(col, 1.0);
 	}
 
-	return vec4(col, alpha >= 0.1 ? 1.0 : 0.0);
+	//return vec4(col, alpha >= 0.1 ? 1.0 : 0.0);
+	return vec4(0.0);
 }
 
 void GetBackgroundHills( inout vec4 fragColor, in vec2 fragCoord, vec3 ro, vec3 rd ) {
@@ -725,6 +699,7 @@ void main()
 {
 	vec4 terrainColor = vec4(0.0);
 	vec3 nightGlow = vec3(0.0);
+	vec3 sunColorMod = vec3(1.0);
 
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
@@ -744,64 +719,73 @@ void main()
 		}
 		else
 		{
-#if 1
 			vec3 position = var_Position.xzy;
 			vec3 lightPosition = u_PrimaryLightOrigin.xzy;
 
 			vec3 skyViewDir = normalize(position);
 			vec3 skyViewDir2 = normalize(u_ViewOrigin.xzy - var_Position.xzy);
 			vec3 skySunDir = normalize(lightPosition);
-			vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, skySunDir, u_PrimaryLightColor);
-#else
-			vec3 skyRaydir = normalize(u_ViewOrigin.xzy - var_Position.xzy);
-			vec3 skySundir = normalize(u_ViewOrigin.xzy - u_PrimaryLightOrigin.xzy);
+			vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, skySunDir, sunColorMod);
 
-			vec3 atmos = atmosphere(
-				skyRaydir,						// normalized ray direction
-				u_ViewOrigin.xzy/*vec3(0, 6372e3, 0)*/,             // ray origin
-				u_PrimaryLightOrigin.xzy/*uSunPos*/,                        // position of the sun
-				22.0,                           // intensity of the sun
-				6371e3,                         // radius of the planet in meters
-				6471e3,                         // radius of the atmosphere in meters
-				vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
-				21e-6,                          // Mie scattering coefficient
-				8e3,                            // Rayleigh scale height
-				1.2e3,                          // Mie scale height
-				0.758                           // Mie preferred scattering direction
-			);
-#endif
+#ifdef __BACKGROUND_HILLS__
+			if (SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
+			{
+				terrainColor.rgb = mix(atmos, vec3(0.1), clamp(SHADER_NIGHT_SCALE * 2.0, 0.0, 1.0));
+				terrainColor.a = 0.0;
+				GetBackgroundHills( terrainColor, texCoords, vec3(0.0), skyViewDir );
+			}
+#endif //__BACKGROUND_HILLS__
+
+			if (terrainColor.a <= 0.0)
+			{// In the day, we still want to draw planets... Only if this is not background terrain...
+				vec4 pCol;
+				GetPlanets(pCol, var_Position);
+
+				if (pCol.a > 0.0)
+				{// Planet here, blend this behind the atmosphere...
+					atmos = mix(atmos, pCol.rgb, 0.3/*pCol.a*/);
+				}
+			}
 
 			gl_FragColor.rgb = clamp(atmos, 0.0, 1.0);
 			gl_FragColor.a = 1.0;
 		}
 
-#ifdef __BACKGROUND_HILLS__
-		if (PROCEDURAL_SKY_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
+		vec4 sun;
+		GetSun(sun, var_Position);
+
+		if (sun.a > 0.0)
 		{
-			vec3 skyViewDir = normalize(var_Position.xzy);
-			terrainColor = mix(gl_FragColor, vec4(0.1, 0.1, 0.1, 1.0), clamp(SHADER_NIGHT_SCALE * 2.0, 0.0, 1.0));
-			GetBackgroundHills( terrainColor, texCoords, vec3(0.0), skyViewDir );
+			gl_FragColor = vec4(sun.rgb * sunColorMod, sun.a);
 		}
-#endif //__BACKGROUND_HILLS__
 
 		if (SHADER_SKY_DIRECTION == 5.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE >= 1.0)
 		{// At night, just do a black lower sky side...
 			terrainColor = vec4(0.0, 0.0, 0.0, 1.0);
 		}
 
+#define night_const_1 (PROCEDURAL_SKY_NIGHT_HDR_MIN / 255.0)
+#define night_const_2 (255.0 / PROCEDURAL_SKY_NIGHT_HDR_MAX)
+
 		if (SHADER_MATERIAL_TYPE == 1024.0 && terrainColor.a != 1.0)
 		{// This is sky, and aurora is enabled...
 			if (SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.0)
 			{// Day/Night cycle is enabled, and some night sky contribution is required...
-				if (PROCEDURAL_SKY_ENABLED > 0.0)
+				float atmosMix = 0.8;
+				vec4 pCol;
+				GetPlanets(pCol, var_Position);
+
+				if (pCol.a > 0.0)
+				{// Planet here, draw this instead of stars...
+					nightDiffuse = pCol.rgb;
+					atmosMix = pCol.a;
+				}
+				else if (PROCEDURAL_SKY_ENABLED > 0.0)
 				{
 					vec4 nCol;
 					GetStars(nCol, var_Position);
 					nightDiffuse = clamp(nCol.rgb, 0.0, 1.0);
 					nightDiffuse *= PROCEDURAL_SKY_NIGHT_COLOR.rgb;
-
-#define night_const_1 (PROCEDURAL_SKY_NIGHT_HDR_MIN / 255.0)
-#define night_const_2 (255.0 / PROCEDURAL_SKY_NIGHT_HDR_MAX)
 					nightDiffuse = clamp((clamp(nightDiffuse - night_const_1, 0.0, 1.0)) * night_const_2, 0.0, 1.0);
 				}
 				else
@@ -819,8 +803,8 @@ void main()
 					vec3 skyViewDir = normalize(position);
 					vec3 skyViewDir2 = normalize(u_ViewOrigin.xzy - var_Position.xzy);
 					vec3 skySunDir = normalize(lightPosition);
-					vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, -skySunDir, vec3(1.0));
-					nightDiffuse = mix(nightDiffuse, nightDiffuse + atmos, 0.5);
+					vec3 atmos = extra_cheap_atmosphere(skyViewDir, skyViewDir2, -skySunDir, sunColorMod);
+					nightDiffuse = mix(atmos, nightDiffuse, atmosMix);
 				}
 
 				gl_FragColor.rgb = mix(gl_FragColor.rgb, nightDiffuse, SHADER_NIGHT_SCALE); // Mix in night sky with original sky from day -> night...
@@ -910,7 +894,7 @@ void main()
 #ifdef __BACKGROUND_HILLS__
 		if (PROCEDURAL_BACKGROUND_HILLS_ENABLED > 0.0 && SHADER_SKY_DIRECTION != 4.0 && SHADER_SKY_DIRECTION != 5.0)
 		{// Only on horizontal sides.
-			gl_FragColor.rgb = mix(gl_FragColor.rgb, terrainColor.rgb, terrainColor.a);
+			gl_FragColor.rgb = mix(gl_FragColor.rgb, terrainColor.rgb, terrainColor.a > 0.0 ? 1.0 : 0.0);
 		}
 #endif //__BACKGROUND_HILLS__
 

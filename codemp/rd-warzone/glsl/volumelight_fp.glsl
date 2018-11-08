@@ -41,6 +41,12 @@ void main ( void )
 	vec3	totalColor = vec3(0.0, 0.0, 0.0);
 	vec3	lightColor = u_vlightColors * 1.5;
 
+	if (u_Local1.r > 0.0)
+	{// Adjust the sun color at sunrise/sunset...
+		vec3 sunsetSun = vec3(2.0, 0.3, 0.1);
+		lightColor = mix(lightColor, sunsetSun, pow(u_Local1.r, u_Local1.g));
+	}
+
 	float dist = length(var_TexCoords - u_vlightPositions);
 	float fall = pow(clamp((2.0 - dist) / 2.0, 0.0, 1.0), 2.0);
 

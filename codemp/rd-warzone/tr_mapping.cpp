@@ -1528,11 +1528,13 @@ float		VINES_SURFACE_MINIMUM_SIZE = 128.0;
 float		VINES_SURFACE_SIZE_DIVIDER = 1024.0;
 float		VINES_TYPE_UNIFORMALITY = 0.97;
 float		VINES_TYPE_UNIFORMALITY_SCALER = 0.008;
-qboolean	MOON_ENABLED = qtrue;
-vec3_t		MOON_COLOR = { 0.2f };
-vec3_t		MOON_ATMOSPHERE_COLOR = { 1.0 };
-float		MOON_GLOW_STRENGTH = 0.5;
-float		MOON_ROTATION_RATE = 0.08;
+int			MOON_COUNT = 0;
+qboolean	MOON_ENABLED[8] = { qfalse };
+float		MOON_SIZE[8] = { 1.0 };
+float		MOON_BRIGHTNESS[8] = { 1.0 };
+float		MOON_TEXTURE_SCALE[8] = { 1.0 };
+float		MOON_ROTATION_OFFSET_X[8] = { 0.0 };
+float		MOON_ROTATION_OFFSET_Y[8] = { 0.0 };
 char		ROAD_TEXTURE[256] = { 0 };
 float		MATERIAL_SPECULAR_STRENGTHS[MATERIAL_LAST] = { 0.0 };
 float		MATERIAL_SPECULAR_REFLECTIVENESS[MATERIAL_LAST] = { 0.0 };
@@ -2044,17 +2046,54 @@ void MAPPING_LoadMapInfo(void)
 	//
 	if (DAY_NIGHT_CYCLE_ENABLED)
 	{
-		MOON_ENABLED = (atoi(IniRead(mapname, "MOON", "MOON_ENABLED", "1")) > 0) ? qtrue : qfalse;
-		tr.moonImage = R_FindImageFile(IniRead(mapname, "MOON", "moonImage", "gfx/random"), IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		if (!tr.moonImage) tr.moonImage = R_FindImageFile("gfx/random", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		MOON_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_COLOR_R", "0.2"));
-		MOON_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_COLOR_G", "0.2"));
-		MOON_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_COLOR_B", "0.2"));
-		MOON_ATMOSPHERE_COLOR[0] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_R", "1.0"));
-		MOON_ATMOSPHERE_COLOR[1] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_G", "1.0"));
-		MOON_ATMOSPHERE_COLOR[2] = atof(IniRead(mapname, "MOON", "MOON_ATMOSPHERE_COLOR_B", "1.0"));
-		MOON_GLOW_STRENGTH = atof(IniRead(mapname, "MOON", "MOON_GLOW_STRENGTH", "0.5"));
-		MOON_ROTATION_RATE = atof(IniRead(mapname, "MOON", "MOON_ROTATION_RATE", "0.08"));
+		MOON_COUNT = 0;
+
+		// Add the primary moon...
+		MOON_ENABLED[0] = (atoi(IniRead(mapname, "MOON", "MOON_ENABLED1", "1")) > 0) ? qtrue : qfalse;
+
+		if (MOON_ENABLED[0])
+		{
+			MOON_COUNT++;
+		}
+
+		MOON_ROTATION_OFFSET_X[0] = atof(IniRead(mapname, "MOON", "MOON_ROTATION_OFFSET_X1", "0.0"));
+		MOON_ROTATION_OFFSET_Y[0] = atof(IniRead(mapname, "MOON", "MOON_ROTATION_OFFSET_Y1", "0.0"));
+		MOON_SIZE[0] = atof(IniRead(mapname, "MOON", "MOON_SIZE1", "1.0"));
+		MOON_BRIGHTNESS[0] = atof(IniRead(mapname, "MOON", "MOON_BRIGHTNESS1", "1.0"));
+		MOON_TEXTURE_SCALE[0] = atof(IniRead(mapname, "MOON", "MOON_TEXTURE_SCALE1", "1.0"));
+
+		char moonImageName[512] = { 0 };
+		strcpy(moonImageName, IniRead(mapname, "MOON", "moonImage1", "gfx/moons/moon"));
+		ri->Printf(PRINT_WARNING, "Moon 0: size %f. rotX %f. rotY %f. bright %f. texScale %f. %s.\n", MOON_SIZE[0], MOON_ROTATION_OFFSET_X[0], MOON_ROTATION_OFFSET_Y[0], MOON_BRIGHTNESS[0], MOON_TEXTURE_SCALE[0], moonImageName);
+
+		tr.moonImage[0] = R_FindImageFile(moonImageName, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		if (!tr.moonImage[0]) tr.moonImage[0] = R_FindImageFile("gfx/moons/moon", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		if (!strcmp(moonImageName, "gfx/random"))
+		{// I changed the code, this is for old mapinfo's to be converted instead of (random) disco moon colors...
+			tr.moonImage[0] = R_FindImageFile("gfx/misc/moontexture", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+		}
+
+		// Add any extra moons...
+		for (int i = 1; i < 8; i++)
+		{
+			MOON_ENABLED[MOON_COUNT] = (atoi(IniRead(mapname, "MOON", va("MOON_ENABLED%i", i+1), "0")) > 0) ? qtrue : qfalse;
+
+			if (MOON_ENABLED[MOON_COUNT])
+			{
+				MOON_ROTATION_OFFSET_X[MOON_COUNT] = atof(IniRead(mapname, "MOON", va("MOON_ROTATION_OFFSET_X%i", i + 1), va("%i", i)));
+				MOON_ROTATION_OFFSET_Y[MOON_COUNT] = atof(IniRead(mapname, "MOON", va("MOON_ROTATION_OFFSET_Y%i", i + 1), va("%i", i - 1)));
+				MOON_SIZE[MOON_COUNT] = atof(IniRead(mapname, "MOON", va("MOON_SIZE%i", i + 1), "1.0"));
+				MOON_BRIGHTNESS[MOON_COUNT] = atof(IniRead(mapname, "MOON", va("MOON_BRIGHTNESS%i", i + 1), "1.0"));
+				MOON_TEXTURE_SCALE[MOON_COUNT] = atof(IniRead(mapname, "MOON", va("MOON_TEXTURE_SCALE%i", i + 1), "1.0"));
+				
+				memset(moonImageName, 0, sizeof(moonImageName));
+				strcpy(moonImageName, IniRead(mapname, "MOON", va("moonImage%i", i + 1), "gfx/moons/moon"));
+				ri->Printf(PRINT_WARNING, "Moon %i: size %f. rotX %f. rotY %f. bright %f. texScale %f. %s.\n", i, MOON_SIZE[MOON_COUNT], MOON_ROTATION_OFFSET_X[MOON_COUNT], MOON_ROTATION_OFFSET_Y[MOON_COUNT], MOON_BRIGHTNESS[MOON_COUNT], MOON_TEXTURE_SCALE[MOON_COUNT], moonImageName);
+
+				tr.moonImage[MOON_COUNT] = R_FindImageFile(moonImageName, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+				MOON_COUNT++;
+			}
+		}
 	}
 
 
@@ -2134,7 +2173,7 @@ void MAPPING_LoadMapInfo(void)
 			tr.grassAliasImage = R_BakeTextures(grassImages, 16, "grass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		}
 
-		char seaGrassImages[4][512] = { 0 };
+		char seaGrassImages[16][512] = { 0 };
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -2323,10 +2362,7 @@ void MAPPING_LoadMapInfo(void)
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (underwater) is ^7%.4f^5 and grass lod start range is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_UNDERWATER, GRASS_LOD_START_RANGE);
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 and grass uniformality scaler is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY, GRASS_TYPE_UNIFORMALITY_SCALER);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon is ^7%s^5 on this map.\n", MOON_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon seed texture is ^7%s^5 and moon rotation rate is ^7%.4f^5 on this map.\n", tr.moonImage->imgName, MOON_ROTATION_RATE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon color is ^7%.4f %.4f %.4f^5 and moon glow strength ^7%.4f^5 on this map.\n", MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Moon atmosphere color is ^7%.4f %.4f %.4f^5 on this map.\n", MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
+	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5There are ^7%i^5 moons enabled on this map.\n", MOON_COUNT);
 
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
 	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");

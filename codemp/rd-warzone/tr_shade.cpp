@@ -93,12 +93,6 @@ extern float		VINES_TYPE_UNIFORMALITY_SCALER;
 extern float		VINES_SURFACE_MINIMUM_SIZE;
 extern float		VINES_SURFACE_SIZE_DIVIDER;
 
-extern qboolean		MOON_ENABLED;
-extern vec3_t		MOON_COLOR;
-extern vec3_t		MOON_ATMOSPHERE_COLOR;
-extern float		MOON_GLOW_STRENGTH;
-extern float		MOON_ROTATION_RATE;
-
 extern float		WATER_WAVE_HEIGHT;
 
 extern qboolean		TERRAIN_TESSELLATION_ENABLED;
@@ -1455,10 +1449,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	{// SPECIAL MATERIAL TYPE FOR SUN
 		materialType = 1025.0;
 	}
-	else if (tess.shader == tr.moonShader)
-	{// SPECIAL MATERIAL TYPE FOR MOON
-		materialType = 1025.0;
-	}
 	else if (isSky)
 	{// SPECIAL MATERIAL TYPE FOR SKY
 		materialType = 1024.0;
@@ -2554,19 +2544,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_BindProgram(sp);
 		}
-		else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
-		{// Special case for procedural moon...
-			if (IS_DEPTH_PASS) return;
-			if (!MOON_ENABLED) return;
-
-			sp = &tr.moonPassShader;
-			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-			isGrass = qfalse;
-			isGroundFoliage = qfalse;
-			multiPass = qfalse;
-
-			GLSL_BindProgram(sp);
-		}
 		else if (tess.shader->materialType == MATERIAL_FIRE)
 		{// Special case for procedural fire...
 			if (IS_DEPTH_PASS) return;
@@ -3195,8 +3172,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GE_128;
 			pStage->stateBits = stateBits;
 		}
-		else if ((r_proceduralSun->integer && tess.shader == tr.sunShader)
-			|| (r_proceduralSun->integer && tess.shader == tr.moonShader))
+		else if (r_proceduralSun->integer && tess.shader == tr.sunShader)
 		{
 			stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
 			pStage->stateBits = stateBits;
@@ -3975,24 +3951,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_Cull(CT_TWO_SIDED);
 			}
-			else if (r_proceduralSun->integer && tess.shader == tr.moonShader)
-			{// Procedural moon...
-				//stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GE_128;
-				//stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
-				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_ATEST_GT_0;
-				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);
-
-				GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
-
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
-
-				vec4_t vec;
-				VectorSet4(vec, MOON_ROTATION_RATE, MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
-				VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
-				GL_Cull(CT_TWO_SIDED);
-			}
 			else if (tess.shader->materialType == MATERIAL_FIRE)
 			{// Special case for procedural fire...
 				stateBits = GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0;
@@ -4001,12 +3959,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
-
-				//vec4_t vec;
-				//VectorSet4(vec, MOON_ROTATION_RATE, MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
-				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
-				//VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
-				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
 				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (tess.shader->materialType == MATERIAL_SMOKE)
@@ -4017,12 +3969,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//GL_BindToTMU(tr.moonImage, TB_DIFFUSEMAP);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
-
-				//vec4_t vec;
-				//VectorSet4(vec, MOON_ROTATION_RATE, MOON_ATMOSPHERE_COLOR[0], MOON_ATMOSPHERE_COLOR[1], MOON_ATMOSPHERE_COLOR[2]);
-				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vec);
-				//VectorSet4(vec, MOON_COLOR[0], MOON_COLOR[1], MOON_COLOR[2], MOON_GLOW_STRENGTH);
-				//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vec);
 				GL_Cull(CT_TWO_SIDED);
 			}
 			else if (tess.shader->materialType == MATERIAL_MAGIC_PARTICLES)

@@ -2470,7 +2470,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 		if (r_drawSun->integer)
 		{
 			RB_DrawSun(0.1, tr.sunShader);
-			RB_DrawMoon(0.05, tr.moonShader);
+			//RB_DrawMoon(0.05, tr.moonShader); // UQ1: Now in the skybox shader...
 		}
 
 		//if (r_drawSunRays->integer)

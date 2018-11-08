@@ -2089,11 +2089,6 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	else if (qboolean(aa->shader == tr.sunShader) > qboolean(bb->shader == tr.sunShader))
 		return 1;
 
-	if (qboolean(aa->shader == tr.moonShader) < qboolean(bb->shader == tr.moonShader))
-		return -1;
-	else if (qboolean(aa->shader == tr.moonShader) > qboolean(bb->shader == tr.moonShader))
-		return 1;
-
 	if (qboolean(aa->shader->materialType == MATERIAL_FIRE) < qboolean(bb->shader->materialType == MATERIAL_FIRE))
 		return -1;
 	else if (qboolean(aa->shader->materialType == MATERIAL_FIRE) > qboolean(bb->shader->materialType == MATERIAL_FIRE))

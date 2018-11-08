@@ -82,10 +82,6 @@ extern float		GRASS_HEIGHT;
 extern int			GRASS_DISTANCE;
 extern float		GRASS_TYPE_UNIFORMALITY;
 extern float		GRASS_DISTANCE_FROM_ROADS;
-extern vec3_t		MOON_COLOR;
-extern vec3_t		MOON_ATMOSPHERE_COLOR;
-extern float		MOON_GLOW_STRENGTH;
-extern float		MOON_ROTATION_RATE;
 extern char		ROAD_TEXTURE[256];
 extern qboolean	JKA_WEATHER_ENABLED;
 extern qboolean	WZ_WEATHER_ENABLED;
@@ -233,13 +229,6 @@ void DockMapInfo::imgui() {
 		ImGui::DragInt("GRASS_DISTANCE", &GRASS_DISTANCE);
 		ImGui::DragFloat("GRASS_TYPE_UNIFORMALITY", &GRASS_TYPE_UNIFORMALITY);
 		ImGui::DragFloat("GRASS_DISTANCE_FROM_ROADS", &GRASS_DISTANCE_FROM_ROADS);
-	}
-
-	if (ImGui::CollapsingHeader("Moon")) {
-		ImGui::DragFloat3("MOON_COLOR", MOON_COLOR);
-		ImGui::DragFloat3("MOON_ATMOSPHERE_COLOR", MOON_ATMOSPHERE_COLOR);
-		ImGui::DragFloat("MOON_GLOW_STRENGTH", &MOON_GLOW_STRENGTH);
-		ImGui::DragFloat("MOON_ROTATION_RATE", &MOON_ROTATION_RATE);
 	}
 
 	if (ImGui::CollapsingHeader("Roads")) {
