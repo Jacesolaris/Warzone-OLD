@@ -2698,6 +2698,7 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 			if (!StringContainsWord(name, "deferredLighting")
 				&& !StringContainsWord(name, "fxaa")
+				&& !StringContainsWord(name, "sky") // too big for optimizer i thinks...
 				&& !StringContainsWord(name, "instances")) // NV fxaa is not a fan of optimization
 			{
 				if (fpCode)

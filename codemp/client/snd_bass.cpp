@@ -1276,6 +1276,43 @@ void BASS_GetImpAdsTracks(void)
 }
 
 //
+// Imperial Advertisement Tracks...
+//
+
+qboolean GENERIC_ADS_TRACKS_LOADED = qfalse;
+
+int GENERIC_ADS_TRACKS_NUM = 0;
+
+radioMusicList_t GENERIC_ADS_TRACKS[512 + 1];
+
+void BASS_GetGenericAdsTracks(void)
+{
+	if (GENERIC_ADS_TRACKS_LOADED) return;
+
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir("warzone/music/ads-generic")) != NULL) {
+		/* all the files and directories within psy directory */
+		while ((ent = readdir(dir)) != NULL) {
+			if (ent->d_name[0] == '.') continue; // skip back directory...
+			if (ent->d_namlen < 3) continue;
+
+			sprintf(GENERIC_ADS_TRACKS[GENERIC_ADS_TRACKS_NUM].name, "music/ads-generic/%s", ent->d_name);
+			//Com_Printf("Added mindworm track %s.\n", GENERIC_ADS_TRACKS[GENERIC_ADS_TRACKS_NUM].name);
+			GENERIC_ADS_TRACKS_NUM++;
+		}
+		closedir(dir);
+	}
+	else {
+		/* could not open directory */
+		perror("");
+	}
+
+	GENERIC_ADS_TRACKS_LOADED = qtrue;
+	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Generic^5 advertisements.\n", GENERIC_ADS_TRACKS_NUM);
+}
+
+//
 // Custom Dynamic Tracks...
 //
 
@@ -1494,6 +1531,9 @@ void BASS_InitDynamicList ( void )
 		if (MUSIC_SELECTION_CHANGED) Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Galactic Radio^5 music tracks.\n", MUSIC_LIST_COUNT);
 	}
 
+	//
+	// TODO? Keep these separate, and play 3 or 4 in a row before returning to music?
+	//
 	{// Add imperial ads to all stations...
 		BASS_GetImpAdsTracks();
 
@@ -1505,6 +1545,19 @@ void BASS_InitDynamicList ( void )
 		}
 
 		//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Imperial^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
+	}
+
+	{// Add generic ads to all stations...
+		BASS_GetGenericAdsTracks();
+
+		// Add the imperial ads...
+		for (int i = 0; i < GENERIC_ADS_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, GENERIC_ADS_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+
+		//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Generic^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
 	}
 
 
