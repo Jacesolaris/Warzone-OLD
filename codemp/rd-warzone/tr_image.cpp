@@ -5209,6 +5209,8 @@ void R_CreateBuiltinImages( void ) {
 		tr.screenShadowBlurImage = R_CreateImage("*screenShadowBlur", NULL, (width/2.0) / vramScaleDiv, (height/2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrFormat);
 	}
 
+	tr.renderSkyImage = R_CreateImage("*renderSkyCube", NULL, 2048 / vramScaleDiv, 2048 / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, hdrFormat);
+
 	if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
 	{
 		tr.renderCubeImage = R_CreateImage("*renderCube", NULL, r_cubeMapSize->integer / vramScaleDiv, r_cubeMapSize->integer / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, hdrFormat);

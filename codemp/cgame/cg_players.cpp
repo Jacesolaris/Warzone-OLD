@@ -3207,6 +3207,9 @@ void CG_TriggerAnimSounds( centity_t *cent )
 
 	assert(cent->localAnimIndex >= 0);
 
+	if (cent->localAnimIndex < 0) cent->localAnimIndex = 0;
+	if (cent->eventAnimIndex < 0) cent->eventAnimIndex = 0;
+
 	sFileIndex = cent->eventAnimIndex;
 
 	if (trap->G2API_GetBoneFrame(cent->ghoul2, "model_root", cg.time, &currentFrame, cgs.gameModels, 0))

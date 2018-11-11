@@ -1582,7 +1582,8 @@ void RE_RenderScene(const refdef_t *fd) {
 		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
-		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		|| (tr.renderSkyFbo && backEnd.viewParms.targetFbo == tr.renderSkyFbo))
 	{
 		// do nothing
 	}

@@ -3378,8 +3378,11 @@ static void DefaultDaySkyParms(void) {
 		}
 	}
 
+#ifndef __GENERATED_SKY_CUBES__
 	//ri->Printf(PRINT_WARNING, "DEBUG: DefaultSkyCube.\n");
 	tr.skyCubeMap = R_UploadSkyCube("*skyCube", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
+#endif //__GENERATED_SKY_CUBES__
+	skyImageNum = -1;
 }
 
 static void DefaultNightSkyParms(void) {
@@ -3420,8 +3423,11 @@ static void DefaultNightSkyParms(void) {
 		}
 	}
 
+#ifndef __GENERATED_SKY_CUBES__
 	//ri->Printf(PRINT_WARNING, "DEBUG: DefaultSkyCubeNight.\n");
 	tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
+#endif //__GENERATED_SKY_CUBES__
+	skyImageNum = -1;
 }
 
 /*
@@ -3488,8 +3494,11 @@ static void ParseSkyParms( const char **text ) {
 			}
 		}
 
+#ifndef __GENERATED_SKY_CUBES__
 		//ri->Printf(PRINT_WARNING, "DEBUG: SkyCubeDay.\n");
 		tr.skyCubeMap = R_UploadSkyCube("*skyCubeDay", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
+#endif //__GENERATED_SKY_CUBES__
+		skyImageNum = -1;
 
 		qboolean newSky = qfalse;
 
@@ -3509,8 +3518,11 @@ static void ParseSkyParms( const char **text ) {
 
 		if (newSky)
 		{
+#ifndef __GENERATED_SKY_CUBES__
 			//ri->Printf(PRINT_WARNING, "DEBUG: SkyCubeNight.\n");
 			tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
+#endif //__GENERATED_SKY_CUBES__
+			skyImageNum = -1;
 		}
 		else
 		{
@@ -3609,8 +3621,11 @@ static void ParseNightSkyParms(const char **text) {
 			}
 		}
 
+#ifndef __GENERATED_SKY_CUBES__
 		//ri->Printf(PRINT_WARNING, "DEBUG: SkyCubeNightParse.\n");
 		tr.skyCubeMapNight = R_UploadSkyCube("*skyCubeNight", SKY_CUBE_SIZE, SKY_CUBE_SIZE);
+#endif //__GENERATED_SKY_CUBES__
+		skyImageNum = -1;
 	}
 
 	// cloudheight

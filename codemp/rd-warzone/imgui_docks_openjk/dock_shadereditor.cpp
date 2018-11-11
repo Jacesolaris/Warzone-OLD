@@ -69,10 +69,10 @@ void DockShaders::recompileShader() {
 void DockShaders::imgui() {
 
 
-	#define NUM_SHADERS 256
+	#define NUM_SHADERS 1024
 	int num_shaders = shaders_next_id;
 	//shaderProgram_t *shaders[NUM_SHADERS];
-	char items[NUM_SHADERS][256];
+	char items[NUM_SHADERS][512];
 	char *items_[NUM_SHADERS]; // just a pointer list
 
 	

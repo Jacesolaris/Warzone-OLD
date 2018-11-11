@@ -361,6 +361,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	//if (u_Local7.a > 0.0)
 	{// Sky cube light contributions... If enabled...
+#if 1
 		vec4 cubeInfo = vec4(0.0, 0.0, 0.0, 1.0);
 		cubeInfo.xyz -= u_ViewOrigin.xyz;
 
@@ -378,6 +379,10 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		vec3 reflected = cubeRayDir + parallax;
 
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
+#else
+		vec3 E = normalize(ViewOrigin.xzy - positionMap.xzy);
+		vec3 reflected = reflect(E, vec3(0.0, 0.0, 1.0));
+#endif
 
 		if (u_Local4.r > 0.0 && u_Local4.r < 1.0)
 		{// Mix between night and day colors...

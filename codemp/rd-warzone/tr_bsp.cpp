@@ -4901,6 +4901,163 @@ static void R_RenderAllCubemaps(void)
 }
 #endif //__REALTIME_CUBEMAP__
 
+extern qboolean MATRIX_UPDATE;
+extern qboolean CLOSE_LIGHTS_UPDATE;
+
+#ifdef __GENERATED_SKY_CUBES__
+void R_RenderSkyCubeSide(int cubemapSide, qboolean subscene, int flag /* VPF_SKYCUBEDAY, VPF_SKYCUBENIGHT*/)
+{
+	refdef_t refdef;
+	viewParms_t	parms;
+	float oldColorScale = tr.refdef.colorScale;
+
+	memset(&refdef, 0, sizeof(refdef));
+	refdef.rdflags = 0;
+	VectorSet(refdef.vieworg, 0.0, 0.0, 0.0);
+
+	switch (cubemapSide)
+	{
+	case 0:
+		// -X
+		VectorSet(refdef.viewaxis[0], -1, 0, 0);
+		VectorSet(refdef.viewaxis[1], 0, 0, -1);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	case 1:
+		// +X
+		VectorSet(refdef.viewaxis[0], 1, 0, 0);
+		VectorSet(refdef.viewaxis[1], 0, 0, 1);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	case 2:
+		// -Y
+		VectorSet(refdef.viewaxis[0], 0, -1, 0);
+		VectorSet(refdef.viewaxis[1], 1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 0, -1);
+		break;
+	case 3:
+		// +Y
+		VectorSet(refdef.viewaxis[0], 0, 1, 0);
+		VectorSet(refdef.viewaxis[1], 1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 0, 1);
+		break;
+	case 4:
+		// -Z
+		VectorSet(refdef.viewaxis[0], 0, 0, -1);
+		VectorSet(refdef.viewaxis[1], 1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	case 5:
+		// +Z
+		VectorSet(refdef.viewaxis[0], 0, 0, 1);
+		VectorSet(refdef.viewaxis[1], -1, 0, 0);
+		VectorSet(refdef.viewaxis[2], 0, 1, 0);
+		break;
+	}
+
+	refdef.fov_x = 90;
+	refdef.fov_y = 90;
+
+	refdef.x = 0;
+	refdef.y = 0;
+	refdef.width = tr.skyCubeMap->width;
+	refdef.height = tr.skyCubeMap->height;
+
+	refdef.time = 0;
+
+	if (!subscene)
+	{
+		RE_BeginScene(&refdef);
+	}
+
+	tr.refdef.colorScale = 1.0f;
+
+	Com_Memset(&parms, 0, sizeof(parms));
+
+	parms.viewportX = 0;
+	parms.viewportY = 0;
+	parms.viewportWidth = tr.skyCubeMap->width;
+	parms.viewportHeight = tr.skyCubeMap->height;
+	parms.isPortal = qfalse;
+	parms.isMirror = qtrue;
+	parms.flags = VPF_NOVIEWMODEL | VPF_NOCUBEMAPS | VPF_NOPOSTPROCESS | VPF_CUBEMAP | flag;
+
+	parms.fovX = 90;
+	parms.fovY = 90;
+
+	VectorCopy(refdef.vieworg, parms.ori.origin);
+	VectorCopy(refdef.viewaxis[0], parms.ori.axis[0]);
+	VectorCopy(refdef.viewaxis[1], parms.ori.axis[1]);
+	VectorCopy(refdef.viewaxis[2], parms.ori.axis[2]);
+
+	VectorCopy(refdef.vieworg, parms.pvsOrigin);
+
+	// FIXME: sun shadows aren't rendered correctly in cubemaps
+	// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
+	if (0) //(r_depthPrepass->value && ((r_forceSun->integer) || tr.sunShadows))
+	{
+		parms.flags |= VPF_USESUNLIGHT;
+	}
+
+	MATRIX_UPDATE = qtrue;
+	CLOSE_LIGHTS_UPDATE = qtrue;
+
+	parms.targetFbo = tr.renderSkyFbo;
+	parms.targetFboLayer = cubemapSide;
+	parms.targetFboCubemapIndex = -1;
+
+	R_RenderView(&parms);
+
+	if (subscene)
+	{
+		tr.refdef.colorScale = oldColorScale;
+	}
+	else
+	{
+		RE_EndScene();
+	}
+}
+
+void R_GenerateSkyCubes(void)
+{
+	GLenum cubemapFormat = GL_RGBA8;
+
+	if (r_hdr->integer)
+	{
+		cubemapFormat = GL_RGBA16F;
+	}
+
+	int vramScaleDiv = 1;
+
+	if (r_lowVram->integer >= 2)
+	{// 1GB vram cards...
+		vramScaleDiv = 4;
+	}
+	else if (r_lowVram->integer >= 1)
+	{// 2GB vram cards...
+		vramScaleDiv = 2;
+	}
+
+	tr.skyCubeMap = R_CreateImage("*skyCubeDay", NULL, 2048 / vramScaleDiv, 2048 / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
+	tr.skyCubeMapNight = R_CreateImage("*skyCubeNight", NULL, 2048 / vramScaleDiv, 2048 / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
+
+	for (int j = 0; j < 6; j++)
+	{
+		RE_ClearScene();
+		R_RenderSkyCubeSide(j, qfalse, VPF_SKYCUBEDAY);
+		R_IssuePendingRenderCommands();
+		R_InitNextFrame();
+	}
+
+	for (int j = 0; j < 6; j++)
+	{
+		RE_ClearScene();
+		R_RenderSkyCubeSide(j, qfalse, VPF_SKYCUBENIGHT);
+		R_IssuePendingRenderCommands();
+		R_InitNextFrame();
+	}
+}
+#endif //__GENERATED_SKY_CUBES__
 
 /*
 =================
@@ -5926,6 +6083,11 @@ void RE_LoadWorldMap( const char *name ) {
 		DEBUG_EndTimer(qfalse);
 	}
 #endif //__REALTIME_CUBEMAP__
+
+#ifdef __GENERATED_SKY_CUBES__
+	// Generate the day/night sky cubemaps...
+	R_GenerateSkyCubes();
+#endif //__GENERATED_SKY_CUBES__
 
     ri->FS_FreeFile( buffer.v );
 

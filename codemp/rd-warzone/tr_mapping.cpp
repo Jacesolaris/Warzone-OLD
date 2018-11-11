@@ -1633,12 +1633,12 @@ void MAPPING_LoadMapInfo(void)
 		TERRAIN_TESSELLATION_MIN_SIZE = atof(IniRead(mapname, "TESSELLATION", "TERRAIN_TESSELLATION_MIN_SIZE", "512.0"));
 
 		// Fuck it, this is generic instead... I can't be fucked doing collision loading for map based ones as well, for now...
-		tr.tessellationMapImage = R_FindImageFile(va("maps/%s_tess.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
+		/*tr.tessellationMapImage = R_FindImageFile(va("maps/%s_tess.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.tessellationMapImage)
 		{
 			tr.tessellationMapImage = R_FindImageFile("gfx/tessControlImage", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
-		}
+		}*/
 	}
 
 	//
@@ -2064,7 +2064,7 @@ void MAPPING_LoadMapInfo(void)
 
 		char moonImageName[512] = { 0 };
 		strcpy(moonImageName, IniRead(mapname, "MOON", "moonImage1", "gfx/moons/moon"));
-		ri->Printf(PRINT_WARNING, "Moon 0: size %f. rotX %f. rotY %f. bright %f. texScale %f. %s.\n", MOON_SIZE[0], MOON_ROTATION_OFFSET_X[0], MOON_ROTATION_OFFSET_Y[0], MOON_BRIGHTNESS[0], MOON_TEXTURE_SCALE[0], moonImageName);
+		//ri->Printf(PRINT_WARNING, "Moon 0: size %f. rotX %f. rotY %f. bright %f. texScale %f. %s.\n", MOON_SIZE[0], MOON_ROTATION_OFFSET_X[0], MOON_ROTATION_OFFSET_Y[0], MOON_BRIGHTNESS[0], MOON_TEXTURE_SCALE[0], moonImageName);
 
 		tr.moonImage[0] = R_FindImageFile(moonImageName, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		if (!tr.moonImage[0]) tr.moonImage[0] = R_FindImageFile("gfx/moons/moon", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
@@ -2088,7 +2088,7 @@ void MAPPING_LoadMapInfo(void)
 				
 				memset(moonImageName, 0, sizeof(moonImageName));
 				strcpy(moonImageName, IniRead(mapname, "MOON", va("moonImage%i", i + 1), "gfx/moons/moon"));
-				ri->Printf(PRINT_WARNING, "Moon %i: size %f. rotX %f. rotY %f. bright %f. texScale %f. %s.\n", i, MOON_SIZE[MOON_COUNT], MOON_ROTATION_OFFSET_X[MOON_COUNT], MOON_ROTATION_OFFSET_Y[MOON_COUNT], MOON_BRIGHTNESS[MOON_COUNT], MOON_TEXTURE_SCALE[MOON_COUNT], moonImageName);
+				//ri->Printf(PRINT_WARNING, "Moon %i: size %f. rotX %f. rotY %f. bright %f. texScale %f. %s.\n", i, MOON_SIZE[MOON_COUNT], MOON_ROTATION_OFFSET_X[MOON_COUNT], MOON_ROTATION_OFFSET_Y[MOON_COUNT], MOON_BRIGHTNESS[MOON_COUNT], MOON_TEXTURE_SCALE[MOON_COUNT], moonImageName);
 
 				tr.moonImage[MOON_COUNT] = R_FindImageFile(moonImageName, IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 				MOON_COUNT++;
@@ -2193,7 +2193,7 @@ void MAPPING_LoadMapInfo(void)
 		tr.seaGrassAliasImage = R_BakeTextures(seaGrassImages, 4, "seaGrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
 		// Grass maps... Try to load map based image first...
-		tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
+		/*tr.defaultGrassMapImage = R_FindImageFile(va("maps/%s_grass.tga", currentMapName), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NOLIGHTSCALE);
 
 		if (!tr.defaultGrassMapImage)
 		{// No map based image? Use default...
@@ -2203,7 +2203,7 @@ void MAPPING_LoadMapInfo(void)
 		if (!tr.defaultGrassMapImage)
 		{// No default image? Use white...
 			tr.defaultGrassMapImage = tr.whiteImage;
-		}
+		}*/
 	}
 
 	if ((FOLIAGE_ENABLED && r_foliage->integer))
@@ -2246,23 +2246,22 @@ void MAPPING_LoadMapInfo(void)
 		tr.waterFoamImage[1] = R_FindImageFile("textures/water/waterFoamGrey02.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		tr.waterFoamImage[2] = R_FindImageFile("textures/water/waterFoamGrey03.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 		tr.waterFoamImage[3] = R_FindImageFile("textures/water/waterFoamGrey04.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		//tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
-		//if (r_glslWater->integer < 3)
-		//	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
-		//else
-		tr.waterNormalImage = R_FindImageFile("textures/water/waves.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+		if (WATER_ENABLED && WATER_FARPLANE_ENABLED && r_glslWater->integer >= 4)
+		{
+			tr.waterNormalImage = R_FindImageFile("textures/water/waves.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
+		}
 
 		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 
 		{
 			// Water height maps... Try to load map based image first...
-			ri->Printf(PRINT_ALL, "Loading waterHeightMap file %s.\n", va("maps/%s_waterHeightMap.tga", currentMapName));
+			//ri->Printf(PRINT_ALL, "Loading waterHeightMap file %s.\n", va("maps/%s_waterHeightMap.tga", currentMapName));
 			tr.waterHeightMapImage = R_FindImageFile(va("maps/%s_waterHeightMap.tga", currentMapName), IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE);
 
 			if (!tr.waterHeightMapImage || tr.waterHeightMapImage == tr.defaultImage)
 			{
-				ri->Printf(PRINT_ALL, "No waterHeightMap was found.\n");
+				//ri->Printf(PRINT_ALL, "No waterHeightMap was found.\n");
 				tr.waterHeightMapImage = tr.whiteImage;
 			}
 		}

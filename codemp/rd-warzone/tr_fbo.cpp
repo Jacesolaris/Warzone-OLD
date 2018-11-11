@@ -877,6 +877,23 @@ void FBO_Init(void)
 		R_CheckFBO(tr.renderCubeFbo);
 	}
 
+	if (tr.renderSkyImage != NULL)
+	{
+		tr.renderSkyFbo = FBO_Create("_renderSkyFbo", tr.renderSkyImage->width, tr.renderSkyImage->height);
+		FBO_Bind(tr.renderSkyFbo);
+
+		//FBO_AttachTextureImage(tr.renderCubeImage, 0);
+		R_AttachFBOTexture2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, tr.renderSkyImage->texnum, 0);
+		glState.currentFBO->colorImage[0] = tr.renderSkyImage;
+		glState.currentFBO->colorBuffers[0] = tr.renderSkyImage->texnum;
+
+		FBO_CreateBuffer(tr.renderSkyFbo, GL_DEPTH_COMPONENT24, 0, 0);
+
+		FBO_SetupDrawBuffers();
+
+		R_CheckFBO(tr.renderSkyFbo);
+	}
+
 	/*
 	{
 		tr.awesomiumuiFbo = FBO_Create("_awesomiumui", tr.awesomiumuiImage->width, tr.awesomiumuiImage->height);

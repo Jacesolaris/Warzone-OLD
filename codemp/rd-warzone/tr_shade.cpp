@@ -959,7 +959,9 @@ static void ProjectPshadowVBOGLSL( void ) {
 		|| (tr.viewParms.flags & VPF_CUBEMAP)
 		|| (tr.viewParms.flags & VPF_DEPTHSHADOW)
 		|| (tr.viewParms.flags & VPF_SHADOWPASS)
-		|| (tr.viewParms.flags & VPF_EMISSIVEMAP))
+		|| (tr.viewParms.flags & VPF_EMISSIVEMAP)
+		|| (tr.viewParms.flags & VPF_SKYCUBEDAY)
+		|| (tr.viewParms.flags & VPF_SKYCUBENIGHT))
 	{
 		return;
 	}
@@ -2144,7 +2146,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	else if ((tr.viewParms.flags & VPF_CUBEMAP)
 		|| (tr.viewParms.flags & VPF_DEPTHSHADOW)
 		|| (tr.viewParms.flags & VPF_SHADOWPASS)
-		|| (tr.viewParms.flags & VPF_EMISSIVEMAP))
+		|| (tr.viewParms.flags & VPF_EMISSIVEMAP)
+		|| (tr.viewParms.flags & VPF_SKYCUBEDAY)
+		|| (tr.viewParms.flags & VPF_SKYCUBENIGHT))
 	{
 		if (r_foliage->integer
 			&& r_foliageShadows->integer
@@ -2244,7 +2248,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& !(tr.viewParms.flags & VPF_DEPTHSHADOW)
 			//&& !(tr.viewParms.flags & VPF_NOPOSTPROCESS)
 			&& !(tr.viewParms.flags & VPF_SHADOWPASS)
-			&& !(tr.viewParms.flags & VPF_EMISSIVEMAP))
+			&& !(tr.viewParms.flags & VPF_EMISSIVEMAP)
+			&& !(tr.viewParms.flags & VPF_SKYCUBEDAY)
+			&& !(tr.viewParms.flags & VPF_SKYCUBENIGHT))
 		{
 			if (tess.shader->tesselation
 				&& tess.shader->tesselationLevel > 1.0
@@ -3613,7 +3619,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 #ifdef __HEIGHTMAP_TERRAIN_TEST__
 				{// Testing
-					GL_BindToTMU(tr.defaultGrassMapImage/*tr.random2KImage[0]*/, TB_HEIGHTMAP);
+					//GL_BindToTMU(tr.defaultGrassMapImage/*tr.random2KImage[0]*/, TB_HEIGHTMAP);
 				}
 #endif //__HEIGHTMAP_TERRAIN_TEST__
 			}
@@ -3732,7 +3738,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
 				}
 
-				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
+				//GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
 
 				GL_Cull(CT_TWO_SIDED);
 			}
@@ -4046,7 +4052,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #ifdef __WATER_STUFF__
 			else if (pStage->isWater && r_glslWater->integer && r_glslWater->integer > 3 /*&& WATER_ENABLED*/)
 			{
-				GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
+				//GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime*10.0);
 			}
 #endif //__WATER_STUFF__
@@ -4452,7 +4458,7 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_MAPINFO, loc);
 			}
 
-			GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
+			//GL_BindToTMU(tr.defaultGrassMapImage, TB_SPLATCONTROLMAP);
 
 			GL_Cull(CT_TWO_SIDED);
 

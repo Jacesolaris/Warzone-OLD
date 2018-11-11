@@ -109,6 +109,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define __USE_REGIONS__
 
+//#define __GENERATED_SKY_CUBES__				// Generate sky cubemaps from sky render instead of using map's skybox textures... Doesn't like non-procedural for some reason, so disabled.
+
 #define __TERRAIN_TESSELATION__
 
 
@@ -1914,6 +1916,8 @@ typedef enum {
 	VPF_SHADOWPASS		= 0x200,
 	VPF_CUBEMAP			= 0x400,
 	VPF_EMISSIVEMAP		= 0x800,
+	VPF_SKYCUBEDAY		= 0x1000,
+	VPF_SKYCUBENIGHT	= 0x2000,
 } viewParmFlags_t;
 
 typedef struct {
@@ -2875,6 +2879,7 @@ typedef struct trGlobals_s {
 	image_t                 *linearDepthImageZfar;
 
 	image_t                 *renderCubeImage;
+	image_t                 *renderSkyImage;
 	
 	image_t					*textureDepthImage;
 
@@ -2910,6 +2915,7 @@ typedef struct trGlobals_s {
 	FBO_t					*screenShadowBlurTempFbo;
 	FBO_t					*screenShadowBlurFbo;
 	FBO_t                   *renderCubeFbo;
+	FBO_t                   *renderSkyFbo;
 	FBO_t					*awesomiumuiFbo;
 
 	shader_t				*defaultShader;

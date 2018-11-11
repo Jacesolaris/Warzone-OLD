@@ -731,7 +731,8 @@ void RB_ClearWaterPositionMap ( void )
 	if (!backEnd.depthFill 
 		&& !(backEnd.viewParms.flags & VPF_SHADOWPASS) 
 		&& !(backEnd.viewParms.flags & VPF_SHADOWMAP)
-		&& !(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+		&& !(tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		&& !(tr.renderSkyFbo != NULL && backEnd.viewParms.targetFbo == tr.renderSkyFbo))
 	{
 		if (r_glslWater->integer && r_glslWater->integer <= 3 && WATER_ENABLED && MAP_WATER_LEVEL < 131000.0 && MAP_WATER_LEVEL > -131000.0)
 		{
@@ -805,6 +806,13 @@ void RB_BeginDrawingView (void) {
 			qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.realtimeCubemap->texnum, 0);
 #endif //__REALTIME_CUBEMAP__
 		}
+		else if (tr.renderSkyFbo != NULL && backEnd.viewParms.targetFbo == tr.renderSkyFbo)
+		{
+			if (backEnd.viewParms.flags & VPF_SKYCUBENIGHT)
+				qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.skyCubeMapNight->texnum, 0);
+			else
+				qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.skyCubeMap->texnum, 0);
+		}
 	}
 
 	//
@@ -857,6 +865,12 @@ void RB_BeginDrawingView (void) {
 	{
 		clearBits |= GL_COLOR_BUFFER_BIT;
 		qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+	}
+
+	if (tr.renderSkyFbo != NULL && backEnd.viewParms.targetFbo == tr.renderSkyFbo)
+	{
+		clearBits |= GL_COLOR_BUFFER_BIT;
+		qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 	qglClear( clearBits );
@@ -1343,7 +1357,8 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	if (((backEnd.refdef.rdflags & RDF_BLUR)
 		|| (tr.viewParms.flags & VPF_SHADOWPASS)
 		|| backEnd.depthFill
-		|| (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)))
+		|| (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		|| (tr.renderSkyFbo != NULL && backEnd.viewParms.targetFbo == tr.renderSkyFbo)))
 	{
 		CUBEMAPPING = qfalse;
 	}
@@ -2517,6 +2532,21 @@ const void	*RB_DrawSurfs( const void *data ) {
 		GL_SelectTexture(0);
 		ALLOW_NULL_FBO_BIND = qfalse;
 	}
+	else if (tr.renderSkyFbo != NULL && backEnd.viewParms.targetFbo == tr.renderSkyFbo)
+	{
+		ALLOW_NULL_FBO_BIND = qtrue;
+		FBO_Bind(NULL);
+		GL_SelectTexture(TB_CUBEMAP);
+		
+		if (backEnd.viewParms.flags & VPF_SKYCUBENIGHT)
+			GL_BindToTMU(tr.skyCubeMapNight, TB_CUBEMAP);
+		else
+			GL_BindToTMU(tr.skyCubeMap, TB_CUBEMAP);
+
+		qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		GL_SelectTexture(0);
+		ALLOW_NULL_FBO_BIND = qfalse;
+	}
 
 	return (const void *)(cmd + 1);
 }
@@ -2789,7 +2819,8 @@ const void	*RB_WorldEffects( const void *data )
 		&& !(tr.viewParms.flags & VPF_NOPOSTPROCESS)
 		&& !(tr.refdef.rdflags & RDF_NOWORLDMODEL)
 		&& !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)
-		&& !(tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+		&& !(tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		&& !(tr.renderSkyFbo && backEnd.viewParms.targetFbo == tr.renderSkyFbo))
 	{
 		matrix_t previousModelViewMarix, previousProjectionMatrix;
 
@@ -2837,6 +2868,7 @@ const void	*RB_WorldEffects( const void *data )
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
 		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		|| (tr.renderSkyFbo && backEnd.viewParms.targetFbo == tr.renderSkyFbo)
 		|| (!RB_WeatherEnabled() && !waterEnabled))
 	{
 		// do nothing
@@ -2954,7 +2986,8 @@ const void *RB_PostProcess(const void *data)
 		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
 		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
 		|| backEnd.depthFill
-		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo))
+		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		|| (tr.renderSkyFbo && backEnd.viewParms.targetFbo == tr.renderSkyFbo))
 	{
 		// do nothing
 		return (const void *)(cmd + 1);
@@ -3742,6 +3775,22 @@ const void *RB_PostProcess(const void *data)
 			//FBO_BlitFromTexture(tr.renderCubeImage, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
 			FBO_BlitFromTexture(tr.realtimeCubemap/*tr.cubemaps[cubemapIndex - 1]*/, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
 		}
+	}
+#endif
+
+#if 0
+	//if (backEnd.viewParms.flags & VPF_SKYCUBEDAY)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 0, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.skyCubeMap, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
+	}
+
+	//if (backEnd.viewParms.flags & VPF_SKYCUBENIGHT)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.skyCubeMapNight, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
 	}
 #endif
 

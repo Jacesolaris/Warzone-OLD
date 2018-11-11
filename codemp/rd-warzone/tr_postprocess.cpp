@@ -2004,9 +2004,6 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
 	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
 
-	//GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	//GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
-
 	GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 	GL_BindToTMU(tr.waterFoamImage[0], TB_OVERLAYMAP);
 

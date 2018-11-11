@@ -545,7 +545,15 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			//extern float		MAP_WATER_LEVEL;// = 131072.0;
 			extern qboolean		PROCEDURAL_SKY_ENABLED;
 			extern float		DAY_NIGHT_24H_TIME;
-			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, DAY_NIGHT_24H_TIME / 24.0, PROCEDURAL_SKY_STAR_DENSITY, 1024.0);
+
+			float dayNight24 = DAY_NIGHT_24H_TIME / 24.0;
+
+			if (tr.viewParms.flags & VPF_SKYCUBEDAY)
+				dayNight24 = 12.0;
+			else if (tr.viewParms.flags & VPF_SKYCUBENIGHT)
+				dayNight24 = 0.0;
+
+			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, dayNight24, PROCEDURAL_SKY_STAR_DENSITY, 1024.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
 
 			VectorSet4(vector, PROCEDURAL_CLOUDS_ENABLED ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
@@ -555,7 +563,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 
 			VectorSet4(vector, PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX, PROCEDURAL_SKY_PLANETARY_ROTATION, Q_clamp(0.0, 1.0 - PROCEDURAL_SKY_DARKMATTER_FACTOR, 1.0));
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector); // stageNum, glowStrength, r_showsplat, 0.0
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 
 			float auroraEnabled = 0.0;
 
@@ -564,7 +572,14 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			else if (AURORA_ENABLED)
 				auroraEnabled = 1.0;
 
-			VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, skyDirection, auroraEnabled);
+			float nightScale = RB_NightScale();
+			
+			if (tr.viewParms.flags & VPF_SKYCUBEDAY)
+				nightScale = 0.0;
+			else if (tr.viewParms.flags & VPF_SKYCUBENIGHT)
+				nightScale = 1.0;
+
+			VectorSet4(vector, DAY_NIGHT_CYCLE_ENABLED ? 1.0 : 0.0, DAY_NIGHT_CYCLE_ENABLED ? nightScale : 0.0, skyDirection, auroraEnabled);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector); // dayNightEnabled, nightScale, skyDirection, auroraEnabled
 
 			VectorSet4(vector, PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2], 1.0);
@@ -693,10 +708,24 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		//	GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
 		vec3_t out;
-		//float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
-		//VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
-		//GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, out);
-		GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+		
+		if (tr.viewParms.flags & VPF_SKYCUBEDAY)
+		{
+			vec4_t sunDir;
+			VectorSet(sunDir, 0.0, 0.0, 1.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+		}
+		else if (tr.viewParms.flags & VPF_SKYCUBENIGHT)
+		{
+			vec4_t sunDir;
+			VectorSet(sunDir, 0.0, 0.0, -1.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+		}
+		else
+		{
+			GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
+		}
+
 		GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 		GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
 

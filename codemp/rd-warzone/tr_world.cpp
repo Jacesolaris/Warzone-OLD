@@ -1588,6 +1588,14 @@ void R_AddWorldSurfaces(void) {
 		return;
 	}
 
+	/*if (tr.viewParms.flags & VPF_SKYCUBEDAY) {
+		return;
+	}
+
+	if (tr.viewParms.flags & VPF_SKYCUBENIGHT) {
+		return;
+	}*/
+
 	/*
 	#ifdef __RENDERER_FOLIAGE__
 	FOLIAGE_NUM_SURFACES = 0;
@@ -1685,6 +1693,19 @@ void R_AddWorldSurfaces(void) {
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
 
+#if 1
+			if (!(tr.world->surfaces + i)->shader->isSky)
+			{// Skip everything except sky when drawing sky cubes...
+				if (tr.viewParms.flags & VPF_SKYCUBEDAY) {
+					continue;
+				}
+
+				if (tr.viewParms.flags & VPF_SKYCUBENIGHT) {
+					continue;
+				}
+			}
+#endif
+
 			if (!(tr.world->surfaces + i)->isMerged)
 			{
 #ifdef __PSHADOWS__
@@ -1707,6 +1728,19 @@ void R_AddWorldSurfaces(void) {
 		{
 			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
 				continue;
+
+#if 1
+			if (!(tr.world->mergedSurfaces + i)->shader->isSky)
+			{// Skip everything except sky when drawing sky cubes...
+				if (tr.viewParms.flags & VPF_SKYCUBEDAY) {
+					continue;
+				}
+
+				if (tr.viewParms.flags & VPF_SKYCUBENIGHT) {
+					continue;
+				}
+			}
+#endif
 
 #ifdef __PSHADOWS__
 			R_AddWorldSurface( tr.world->mergedSurfaces + i, tr.currentEntityNum, 0/*tr.world->mergedSurfacesDlightBits[i]*/, tr.world->mergedSurfacesPshadowBits[i], qtrue );

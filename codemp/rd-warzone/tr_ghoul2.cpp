@@ -4372,6 +4372,194 @@ qboolean model_upload_mdxm_to_gpu(model_t *mod);
 
 extern std::string R_FindAndAdjustShaderNames(std::string modelName, std::string surfaceName, std::string shaderPath);
 
+//#define __REGENERATE_GLM_NORMALS__
+
+#ifdef __REGENERATE_GLM_NORMALS__
+// assimp include files. These three are usually needed.
+#include "assimp/Importer.hpp"	//OO version Header!
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include "assimp/DefaultLogger.hpp"
+#include "assimp/LogStream.hpp"
+
+void GenerateNormalsForGLM(mdxmSurface_t *surf)
+{
+	int numIndexes = surf->numTriangles;
+	int numVerts = surf->numVerts;
+	
+	//#pragma omp parallel for schedule(dynamic)
+	for (int i = 0; i < numIndexes; i ++)
+	{
+		mdxmTriangle_t *thisTri = (mdxmTriangle_t *)((byte *)surf + surf->ofsTriangles + i);
+
+		int tri[3];
+		tri[0] = thisTri->indexes[0];
+		tri[1] = thisTri->indexes[1];
+		tri[2] = thisTri->indexes[2];
+
+		mdxmVertex_t *t1 = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + tri[0]);
+		mdxmVertex_t *t2 = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + tri[1]);
+		mdxmVertex_t *t3 = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + tri[2]);
+		
+		float* a = (float *)t1->vertCoords;
+		float* b = (float *)t2->vertCoords;
+		float* c = (float *)t3->vertCoords;
+		vec3_t ba, ca;
+		VectorSubtract(b, a, ba);
+		VectorSubtract(c, a, ca);
+
+		vec3_t normal;
+		CrossProduct(ca, ba, normal);
+		VectorNormalize(normal);
+
+		//ri->Printf(PRINT_WARNING, "OLD: %f %f %f. NEW: %f %f %f.\n", cv->verts[tri[0]].normal[0], cv->verts[tri[0]].normal[1], cv->verts[tri[0]].normal[2], normal[0], normal[1], normal[2]);
+
+#pragma omp critical
+		{
+			VectorCopy(normal, t1->normal);
+			VectorCopy(normal, t2->normal);
+			VectorCopy(normal, t3->normal);
+		}
+
+		//ForceCrash();
+	}
+
+	// Now the hard part, make smooth normals...
+#pragma omp parallel for schedule(dynamic)
+	for (int i = 0; i < numVerts; i++)
+	{
+		int verticesFound[65536];
+		int numVerticesFound = 0;
+
+		mdxmVertex_t *vIn = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + i);
+
+		// Get all vertices that share this one ...
+		for (int v = 0; v < numIndexes; v += 3)
+		{
+			mdxmTriangle_t *thisTri = (mdxmTriangle_t *)((byte *)surf + surf->ofsTriangles + v);
+
+			int tri[3];
+			tri[0] = thisTri->indexes[0];
+			tri[1] = thisTri->indexes[1];
+			tri[2] = thisTri->indexes[2];
+
+			mdxmVertex_t *t0 = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + tri[0]);
+			mdxmVertex_t *t1 = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + tri[1]);
+			mdxmVertex_t *t2 = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + tri[2]);
+
+			if (tri[0] == i && Distance(vIn->normal, t0->normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			if (tri[1] == i && Distance(vIn->normal, t1->normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			if (tri[2] == i && Distance(vIn->normal, t2->normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			// Also merge close normals...
+			if (tri[0] != i
+				&& Distance(vIn->vertCoords, t0->vertCoords) <= 4.0
+				&& Distance(vIn->normal, t0->normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			if (tri[1] != i
+				&& Distance(vIn->vertCoords, t1->vertCoords) <= 4.0
+				&& Distance(vIn->normal, t1->normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+
+			if (tri[2] != i
+				&& Distance(vIn->vertCoords, t2->vertCoords) <= 4.0
+				&& Distance(vIn->normal, t2->normal) <= 1.0)
+			{
+#pragma omp critical
+				{
+					verticesFound[numVerticesFound] = tri[0];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[1];
+					numVerticesFound++;
+					verticesFound[numVerticesFound] = tri[2];
+					numVerticesFound++;
+				}
+				continue;
+			}
+		}
+
+		aiVector3D pcNor;
+		pcNor.Set(vIn->normal[0], vIn->normal[1], vIn->normal[2]);
+		int numAdded = 1;
+		for (unsigned int a = 0; a < numVerticesFound; ++a) {
+			aiVector3D thisNor;
+			mdxmVertex_t *vNew = (mdxmVertex_t *)((byte *)surf + surf->ofsVerts + verticesFound[a]);
+			thisNor.Set(vNew->normal[0], vNew->normal[1], vNew->normal[2]);
+			pcNor += thisNor;
+			numAdded++;
+		}
+		pcNor /= numAdded;
+		pcNor.NormalizeSafe();
+
+#pragma omp critical
+		{
+			VectorSet(vIn->normal, pcNor.x, pcNor.y, pcNor.z);
+		}
+	}
+}
+#endif //__REGENERATE_GLM_NORMALS__
+
 qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached ) {
 	int					i,l, j;
 	mdxmHeader_t		*pinmodel, *mdxm;
@@ -4604,6 +4792,10 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 				v = (mdxmVertex_t *)&v->weights[/*v->numWeights*/surf->maxVertBoneWeights];
 			}
 #endif
+			if (1)
+			{
+
+			}
 
 			if (isAnOldModelFile)
 			{
@@ -4623,6 +4815,10 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 			
 			// find the next surface
 			surf = (mdxmSurface_t *)( (byte *)surf + surf->ofsEnd );
+
+#ifdef __REGENERATE_GLM_NORMALS__
+			GenerateNormalsForGLM(surf);
+#endif //__REGENERATE_GLM_NORMALS__
 		}
 		// find the next LOD
 		lod = (mdxmLOD_t *)( (byte *)lod + lod->ofsEnd );

@@ -8,7 +8,6 @@
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 //#define __BUMP_ENHANCE__
-//#define __EXPERIMENTAL_WETNESS__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -1295,9 +1294,6 @@ void main(void)
 
 	float snow = 0.0;
 	float snowHeightFactor = 1.0;
-#ifdef __EXPERIMENTAL_WETNESS__
-	float wetness = 0.0;
-#endif //__EXPERIMENTAL_WETNESS__
 
 	if (SNOW_ENABLED > 0.0)
 	{// calculate procedural snow factor...
@@ -1326,13 +1322,6 @@ void main(void)
 			//materialSettings.y += 1.5 * clamp(1.0 - materialSettings.y, 0.05, 0.95) * snow;
 		}
 	}
-
-#ifdef __EXPERIMENTAL_WETNESS__
-	if (u_Local3.r != 0.0)
-	{// wet testing
-		wetness += 32.0 * u_Local3.r;
-	}
-#endif //__EXPERIMENTAL_WETNESS__
 
 	//
 	// This is the basics of creating a fake PBR look to the lighting. It could be replaced, or overridden by actual PBR pixel buffer inputs.
@@ -1380,7 +1369,7 @@ void main(void)
 		AddProceduralMoss(outColor, position, changedToWater, originalPosition);
 	}
 
-	if (snow > 0.0)
+	if (SNOW_ENABLED > 0.0 && snow > 0.0)
 	{// add procedural snow...
 		vec3 snowColor = vec3(PROCEDURAL_SNOW_BRIGHTNESS);
 		float snowColorFactor = clamp(pow(max(color.r, max(color.g, color.b)), PROCEDURAL_SNOW_LUMINOSITY_CURVE), 0.0, 1.0);
@@ -1399,11 +1388,17 @@ void main(void)
 	vec3 emissiveCubeLightDirection = vec3(0.0);
 	vec3 irradiance = vec3(1.0);
 
+	/*if (NIGHT_SCALE > 0.0)
+		gl_FragColor = texture(u_SkyCubeMapNight, reflect(E.xyz, N.xyz), 1.0);
+	else
+		gl_FragColor = texture(u_SkyCubeMap, reflect(E.xyz, N.xyz), 1.0);
+	return;*/
+
 #ifndef __LQ_MODE__
-	if (SKY_LIGHT_CONTRIBUTION > 0.0)
+	if (SKY_LIGHT_CONTRIBUTION > 0.0 && (cubeReflectionFactor > 0.0 || reflectionPower > 0.0))
 	{// Sky cube light contributions... If enabled...
-		// This used to be done in rend2 code, now done here because I need u_CubeMapInfo.xyz to be cube origin for distance checks above... u_CubeMapInfo.w is now radius.
-		vec4 cubeInfo = vec4(0.0, 0.0, 0.0, 1.0);//u_CubeMapInfo;
+#if 1
+		vec4 cubeInfo = vec4(0.0, 0.0, 0.0, 1.0);
 		cubeInfo.xyz -= u_ViewOrigin.xyz;
 
 		cubeInfo.w = pow(distance(u_ViewOrigin.xyz, vec3(0.0, 0.0, 0.0)), 3.0);
@@ -1415,50 +1410,75 @@ void main(void)
 		parallax.z *= -1.0;
 		
 		vec3 reflected = cubeRayDir + parallax;
-		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
+		reflected = vec3(-reflected.y, -reflected.z, -reflected.x); // for old sky cubemap generation based on sky textures
+#else
+		vec3 reflected = reflect(E.xyz, flatNorm.xyz/*N.xyz*/);
+#endif
 
 		const float lod1 = 4.0;
+#ifndef __LQ_MODE__
 		const float lod2 = 5.0;
 		const float lod3 = 7.0;
 		const float lod4 = 10.0;
+#endif //__LQ_MODE__
 
 		if (NIGHT_SCALE > 0.0 && NIGHT_SCALE < 1.0)
 		{// Mix between night and day colors...
 			vec3 skyColorDay = textureLod(u_SkyCubeMap, reflected, lod1).rgb;
+#ifndef __LQ_MODE__
 			skyColorDay += textureLod(u_SkyCubeMap, reflected, lod2).rgb;
 			skyColorDay += textureLod(u_SkyCubeMap, reflected, lod3).rgb;
 			skyColorDay += textureLod(u_SkyCubeMap, reflected, lod4).rgb;
 			skyColorDay /= 4.0;
+#endif //__LQ_MODE__
 
 			vec3 skyColorNight = textureLod(u_SkyCubeMapNight, reflected, lod1).rgb;
+#ifndef __LQ_MODE__
 			skyColorNight += textureLod(u_SkyCubeMapNight, reflected, lod2).rgb;
 			skyColorNight += textureLod(u_SkyCubeMapNight, reflected, lod3).rgb;
 			skyColorNight += textureLod(u_SkyCubeMapNight, reflected, lod4).rgb;
 			skyColorNight /= 4.0;
+#endif //__LQ_MODE__
 
 			skyColor = mix(skyColorDay, skyColorNight, clamp(NIGHT_SCALE, 0.0, 1.0));
 		}
 		else if (NIGHT_SCALE >= 1.0)
 		{// Night only colors...
 			skyColor = textureLod(u_SkyCubeMapNight, reflected, lod1).rgb;
+#ifndef __LQ_MODE__
 			skyColor += textureLod(u_SkyCubeMapNight, reflected, lod2).rgb;
 			skyColor += textureLod(u_SkyCubeMapNight, reflected, lod3).rgb;
 			skyColor += textureLod(u_SkyCubeMapNight, reflected, lod4).rgb;
 			skyColor /= 4.0;
+#endif //__LQ_MODE__
 		}
 		else
 		{// Day only colors...
 			skyColor = textureLod(u_SkyCubeMap, reflected, lod1).rgb;
+#ifndef __LQ_MODE__
 			skyColor += textureLod(u_SkyCubeMap, reflected, lod2).rgb;
 			skyColor += textureLod(u_SkyCubeMap, reflected, lod3).rgb;
 			skyColor += textureLod(u_SkyCubeMap, reflected, lod4).rgb;
 			skyColor /= 4.0;
+#endif //__LQ_MODE__
 		}
 
 		skyColor = clamp(ContrastSaturationBrightness(skyColor, 1.0, 2.0, 0.333), 0.0, 1.0);
 		skyColor = clamp(Vibrancy( skyColor, 0.4 ), 0.0, 1.0);
 	}
 #endif //__LQ_MODE__
+
+	/*if (cubeReflectionFactor > 0.0)
+	{
+		vec2 ref = reflect(E, N).yz;
+		if (u_Local3.g == 1.0) ref = reflect(E, N).xy;
+		if (u_Local3.g == 2.0) ref = reflect(E, N).xz;
+		vec2 tex;
+		tex.s = ref.x * -0.5 + 0.5;
+		tex.t = ref.y *  0.5 + 0.5;
+		vec3 env = texture(u_DiffuseMap, u_Local3.b == 1.0 ? 1.0-tex : tex).rgb;
+		outColor.rgb = mix(outColor.rgb, env, clamp(cubeReflectionFactor * u_Local3.r, 0.0, 1.0));
+	}*/
 
 	if (specularReflectivePower > 0.0)
 	{// If this pixel is ging to get any specular reflection, generate (PBR would instead look up image buffer) specular color, and grab any cubeMap lighting as well...
@@ -1517,30 +1537,42 @@ void main(void)
 		}
 		else
 		{
+			if (cubeReflectionFactor > 0.0)
+			{
+				vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
+
+#ifdef __LQ_MODE__
+				vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+#else //!__LQ_MODE__
+				vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 4.0 - (cubeReflectionFactor * 4.0)).rgb;
+				shiny += textureLod(u_WaterEdgeMap, shinyTC, 5.0 - (cubeReflectionFactor * 5.0)).rgb;
+				shiny += textureLod(u_WaterEdgeMap, shinyTC, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+				shiny += textureLod(u_WaterEdgeMap, shinyTC, 10.0 - (cubeReflectionFactor * 10.0)).rgb;
+				shiny /= 4.0;
+#endif //__LQ_MODE__
+
+				shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
+				outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
+			}
+		}
+#else //!defined(__CUBEMAPS__)
+		if (cubeReflectionFactor > 0.0)
+		{
 			vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
 
-			//vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+#ifdef __LQ_MODE__
+			vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
+#else //!__LQ_MODE__
 			vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 4.0 - (cubeReflectionFactor * 4.0)).rgb;
 			shiny += textureLod(u_WaterEdgeMap, shinyTC, 5.0 - (cubeReflectionFactor * 5.0)).rgb;
 			shiny += textureLod(u_WaterEdgeMap, shinyTC, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
 			shiny += textureLod(u_WaterEdgeMap, shinyTC, 10.0 - (cubeReflectionFactor * 10.0)).rgb;
 			shiny /= 4.0;
+#endif //__LQ_MODE__
 
 			shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
 			outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		}
-#else //!defined(__CUBEMAPS__)
-		vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
-
-		//vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 5.5 - (cubeReflectionFactor * 5.5)).rgb;
-		vec3 shiny = textureLod(u_WaterEdgeMap, shinyTC, 4.0 - (cubeReflectionFactor * 4.0)).rgb;
-		shiny += textureLod(u_WaterEdgeMap, shinyTC, 5.0 - (cubeReflectionFactor * 5.0)).rgb;
-		shiny += textureLod(u_WaterEdgeMap, shinyTC, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
-		shiny += textureLod(u_WaterEdgeMap, shinyTC, 10.0 - (cubeReflectionFactor * 10.0)).rgb;
-		shiny /= 4.0;
-
-		shiny = clamp(ContrastSaturationBrightness(shiny, 1.75, 1.0, 0.333), 0.0, 1.0);
-		outColor.rgb = mix(outColor.rgb, outColor.rgb + shiny.rgb, clamp(NE * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 #endif //defined(__CUBEMAPS__)
 #endif //!__LQ_MODE__
 	}
@@ -1618,14 +1650,6 @@ void main(void)
 				vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
 				lightColor.rgb += blinn;
 
-#ifdef __EXPERIMENTAL_WETNESS__
-				if (wetness > 0.0)
-				{
-					float wet = getspecularLight(N, normalize(-sunDir), E, wetness);
-					lightColor.rgb += lightColor.rgb * wet;
-				}
-#endif //__EXPERIMENTAL_WETNESS__
-
 				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
 			}
 		}
@@ -1657,21 +1681,6 @@ void main(void)
 				*/
 				if (u_lightConeAngles[li] > 0.0)
 				{
-					/*vec3 coneDir;
-
-					vec3 c1 = cross(u_lightConeDirections[li], vec3(0.0, 0.0, 1.0)); 
-					vec3 c2 = cross(u_lightConeDirections[li], vec3(0.0, 1.0, 0.0)); 
-
-					if( length(c1) > length(c2) )
-					{
-						coneDir = c1;
-					}
-					else
-					{
-						coneDir = c2;
-					}
-
-					coneDir = normalize(coneDir);*/
 					vec3 coneDir = normalize(u_lightConeDirections[li]);
 
 					float lightToSurfaceAngle = degrees(acos(dot(-lightDir, coneDir)));
@@ -1730,14 +1739,6 @@ void main(void)
 
 					vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
 					addedLight.rgb += blinn;
-
-#ifdef __EXPERIMENTAL_WETNESS__
-					if (wetness > 0.0)
-					{
-						float wet = getspecularLight(N, lightDir, E, wetness) * lightStrength * 64.0;
-						addedLight.rgb += lightColor.rgb * wet;
-					}
-#endif //__EXPERIMENTAL_WETNESS__
 				}
 			}
 
@@ -1747,19 +1748,10 @@ void main(void)
 	}
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
-#ifdef __EXPERIMENTAL_WETNESS__
-	if (REFLECTIONS_ENABLED > 0.0 && (ssrReflectivePower > 0.0 || wetness > 0.0) && position.a - 1.0 != MATERIAL_WATER && !changedToWater)
-#else //!__EXPERIMENTAL_WETNESS__
 	if (REFLECTIONS_ENABLED > 0.0 && ssrReflectivePower > 0.0 && position.a - 1.0 != MATERIAL_WATER && !changedToWater)
-#endif //__EXPERIMENTAL_WETNESS__
 	{
 #if 1
-#ifdef __EXPERIMENTAL_WETNESS__
-		if (wetness > 0.0)
-			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower + wetness/*0.37504*/, ssReflection);
-		else
-#endif //__EXPERIMENTAL_WETNESS__
-			outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower, ssReflection);
+		outColor.rgb = AddReflection(texCoords, position, flatNorm, outColor.rgb, ssrReflectivePower, ssReflection);
 #else
 		/*
 		vec3 rf = reflect(E.xyz, flatNorm.xyz);
