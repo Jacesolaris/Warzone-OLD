@@ -3843,7 +3843,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				sp2 = NULL;
 
 				GLSL_BindProgram(sp);
-
+				
 				stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_ATEST_GT_0;
 
 				RB_SetMaterialBasedProperties(sp, pStage, stage, qfalse);

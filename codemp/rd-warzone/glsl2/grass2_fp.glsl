@@ -171,7 +171,34 @@ void main()
 
 	if (diffuse.a > 0.5)
 	{
-		gl_FragColor = vec4(diffuse.rgb, 1.0);
+#if 0
+		float alpha = 1.0;
+		float dist = distance(vVertPosition, u_ViewOrigin);
+		float fadeStart = MAX_RANGE * 0.75;
+		if (dist > fadeStart)
+		{
+			float fadeDiv = MAX_RANGE * 0.25;
+			float fd = dist - fadeStart;
+			alpha = 1.0 - clamp(fd / fadeDiv, 0.0, 1.0);
+		}
+		else if (dist <= 64.0)
+		{
+			alpha = clamp(dist / 64.0, 0.0, 1.0);
+		}
+
+		diffuse.a = alpha;
+#else
+		diffuse.a = 1.0;
+#endif
+	}
+	else
+	{
+		diffuse.a = 0.0;
+	}
+
+	if (diffuse.a > 0.05/*0.5*/)
+	{
+		gl_FragColor = vec4(diffuse.rgb, diffuse.a/*1.0*/);
 		out_Glow = vec4(0.0);
 		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy)), 0.0, 1.0);
 #ifdef __USE_REAL_NORMALMAPS__

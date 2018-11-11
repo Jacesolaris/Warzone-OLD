@@ -1307,7 +1307,8 @@ void main(void)
 				snowHeightFactor = clamp(pow(clamp(pixelElevation / elevationRange, 0.0, 1.0) * 4.0, 2.0), 0.0, 1.0);
 			}
 			
-			vec3 sBump = VaryNf(normalize(position.xyz), flatNorm.xyz, 2.0);
+			//vec3 sBump = VaryNf(normalize(position.xyz), flatNorm.xyz, 2.0);
+			vec3 sBump = bump;
 
 			snow = clamp(dot(normalize(sBump.rgb), vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
 
