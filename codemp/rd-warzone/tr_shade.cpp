@@ -3090,6 +3090,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_GB) ? 1.0 : 0.0,
 				0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
+
+			GLSL_SetUniformFloat(sp, UNIFORM_ZFAR, r_occlusion->integer ? tr.occlusionZfar : backEnd.viewParms.zFar);
 		}
 
 		// UQ1: Used by both generic and lightall...

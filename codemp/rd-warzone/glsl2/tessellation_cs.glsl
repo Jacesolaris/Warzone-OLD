@@ -2,6 +2,8 @@ layout(vertices = MAX_PATCH_VERTICES) out;
 //layout(vertices = 3) out;
 
 uniform vec4			u_TesselationInfo;
+uniform vec3			u_ViewOrigin;
+uniform float			u_zFar;
 
 #define TessLevelInner	u_TesselationInfo.g
 #define TessLevelOuter	u_TesselationInfo.b
@@ -36,8 +38,6 @@ struct PnPatch
 };
 
 // tessellation levels
-uniform vec3			u_ViewOrigin;
-
 #define gTessellationLevelInner u_TesselationInfo.g
 #define gTessellationLevelOuter u_TesselationInfo.b
 
@@ -72,6 +72,16 @@ void main()
 {
 	//vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 
+	// Calculate the distance from the camera to the three control points
+	float EyeToVertexDistance0 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[0].xyz);
+	float EyeToVertexDistance1 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[1].xyz);
+	float EyeToVertexDistance2 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[2].xyz);
+
+	if (EyeToVertexDistance0 > u_zFar && EyeToVertexDistance1 > u_zFar && EyeToVertexDistance2 > u_zFar)
+	{// Skip it all...
+		gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelInner[0] = 0.0;
+		return;
+	}
 																																			  // get data
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 	WorldPos_ES_in[gl_InvocationID] = WorldPos_CS_in[gl_InvocationID];
@@ -114,11 +124,6 @@ void main()
 	// set tess levels
 	gl_TessLevelOuter[gl_InvocationID] = gTessellationLevelOuter;
 	gl_TessLevelInner[0] = gTessellationLevelInner;
-
-	// Calculate the distance from the camera to the three control points
-	float EyeToVertexDistance0 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[0].xyz);
-	float EyeToVertexDistance1 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[1].xyz);
-	float EyeToVertexDistance2 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[2].xyz);
 
 	// Calculate the tessellation levels
 	gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance2);

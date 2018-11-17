@@ -1,6 +1,8 @@
 layout(vertices = MAX_PATCH_VERTICES) out;
 
 uniform vec4			u_TesselationInfo;
+uniform vec3			u_ViewOrigin;
+uniform float			u_zFar;
 
 #define TessLevelInner	u_TesselationInfo.g
 #define TessLevelOuter	u_TesselationInfo.b
@@ -20,8 +22,6 @@ in vec3 Blending_CS_in[];
 in float Slope_CS_in[];
 
 // tessellation levels
-uniform vec3			u_ViewOrigin;
-
 out vec4 WorldPos_ES_in[MAX_PATCH_VERTICES];
 out vec3 iNormal[MAX_PATCH_VERTICES];
 out vec2 iTexCoord[MAX_PATCH_VERTICES];
@@ -49,6 +49,12 @@ void main()
 	vec3 Vert1 = gl_in[0].gl_Position.xyz;
 	vec3 Vert2 = gl_in[1].gl_Position.xyz;
 	vec3 Vert3 = gl_in[2].gl_Position.xyz;
+
+	if (distance(Vert1, u_ViewOrigin) > u_zFar && distance(Vert2, u_ViewOrigin) > u_zFar && distance(Vert3, u_ViewOrigin) > u_zFar)
+	{// Skip it all...
+		gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelInner[0] = 0.0;
+		return;
+	}
 
 	float vSize = (distance(Vert1, Vert2) + distance(Vert1, Vert3) + distance(Vert2, Vert3)) / 3.0;
 

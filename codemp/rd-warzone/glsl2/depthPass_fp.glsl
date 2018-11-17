@@ -67,6 +67,7 @@ uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 uniform vec2						u_Dimensions;
 uniform vec3						u_ViewOrigin;
 uniform float						u_Time;
+uniform float						u_zFar;
 
 
 varying vec3						var_VertPos;
@@ -108,6 +109,12 @@ void main()
 	}
 	else
 	{
+		if (USE_IS2D <= 0.0 && distance(var_VertPos, u_ViewOrigin) > u_zFar)
+		{// Skip it all...
+			gl_FragColor = vec4(0.0);
+			return;
+		}
+
 		vec2 texCoords = var_TexCoords;
 
 		if (SHADER_SWAY > 0.0)

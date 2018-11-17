@@ -1350,6 +1350,8 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_Dimensions", GLSL_VEC2, 1 },
 	{ "u_MapAmbient", GLSL_VEC4, 1 },
+	{ "u_zFar", GLSL_FLOAT, 1 },
+
 	{ "u_Settings0", GLSL_VEC4, 1 },
 	{ "u_Settings1", GLSL_VEC4, 1 },
 	{ "u_Settings2", GLSL_VEC4, 1 },

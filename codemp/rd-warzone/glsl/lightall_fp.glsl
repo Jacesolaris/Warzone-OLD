@@ -64,11 +64,14 @@ uniform vec4						u_Local9; // testvalue0, 1, 2, 3
 uniform vec2						u_Dimensions;
 uniform vec2						u_textureScale;
 
+uniform vec3						u_ViewOrigin;
 uniform vec4						u_MapInfo; // MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
 uniform vec4						u_Mins;
 uniform vec4						u_Maxs;
 
 uniform float						u_Time;
+
+uniform float						u_zFar;
 
 #define MAP_MAX_HEIGHT				u_Maxs.b
 
@@ -378,6 +381,18 @@ void GetLava( out vec4 fragColor, in vec2 uv )
 
 void main()
 {
+	if (USE_IS2D <= 0.0 && distance(m_vertPos, u_ViewOrigin) > u_zFar)
+	{// Skip it all...
+		gl_FragColor = vec4(0.0);
+		out_Glow = vec4(0.0);
+		out_Position = vec4(0.0);
+		out_Normal = vec4(0.0);
+#ifdef __USE_REAL_NORMALMAPS__
+		out_NormalDetail = vec4(0.0);
+#endif //__USE_REAL_NORMALMAPS__
+		return;
+	}
+
 	bool LIGHTMAP_ENABLED = (USE_LIGHTMAP > 0.0 && USE_GLOW_BUFFER != 1.0 && USE_IS2D <= 0.0) ? true : false;
 
 	vec2 texCoords = m_TexCoords.xy;
