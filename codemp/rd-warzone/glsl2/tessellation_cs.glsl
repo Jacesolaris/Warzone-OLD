@@ -77,11 +77,11 @@ void main()
 	float EyeToVertexDistance1 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[1].xyz);
 	float EyeToVertexDistance2 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[2].xyz);
 
-	if (EyeToVertexDistance0 > u_zFar && EyeToVertexDistance1 > u_zFar && EyeToVertexDistance2 > u_zFar)
+	/*if (EyeToVertexDistance0 > u_zFar && EyeToVertexDistance1 > u_zFar && EyeToVertexDistance2 > u_zFar)
 	{// Skip it all...
 		gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelInner[0] = 0.0;
 		return;
-	}
+	}*/
 																																			  // get data
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 	WorldPos_ES_in[gl_InvocationID] = WorldPos_CS_in[gl_InvocationID];

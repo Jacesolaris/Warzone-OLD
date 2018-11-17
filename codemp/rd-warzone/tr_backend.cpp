@@ -1421,18 +1421,59 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	}
 #endif //__REALTIME_SURFACE_SORTING__
 
-#if 0
-	if (r_testvalue0->integer)
+#ifdef __RENDER_FOLIAGE_LAST__
+/*
+typedef enum {
+	FOLIAGE_NONE,
+	FOLIAGE_GRASS,
+	FOLIAGE_GROUNDFOLIAGE,
+	FOLIAGE_VINES,
+	FOLIAGE_MAX
+} foliageTypes_t;
+*/
+	for (int type = FOLIAGE_NONE; type < FOLIAGE_MAX; type++)
 	{
-		listShadersNum = 0;
+		// draw everything
+		backEnd.currentEntity = &tr.worldEntity;
 
-		// Make a list of all combinations of shader/entitynum/postprocess...
+		oldShader = NULL;
+		oldEntityNum = -1;
+		oldPostRender = 0;
+		oldCubemapIndex = -1;
+		oldDepthRange = 0;
+		oldSort = (uint64_t)-1;
+
+		backEnd.renderingFoliageType = (foliageTypes_t)type;
+
+		// First draw world normally...
 		for (i = 0; i < numDrawSurfs; ++i)
 		{
-			drawSurf_t		*drawSurf = &drawSurfs[i];
-			shader_t		*shader = tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
-			int64_t			entityNum = (drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT) & REFENTITYNUM_MASK;
-			int64_t			postRender = (drawSurf->sort >> QSORT_POSTRENDER_SHIFT) & 1;
+			int64_t			zero = 0;
+			drawSurf_t		*drawSurf = NULL;
+			drawSurf_t		*oldDrawSurf = NULL;
+			shader_t		*shader = NULL;
+			int64_t			entityNum = -1;
+			int64_t			postRender = -1;
+			int             cubemapIndex, newCubemapIndex;
+			int				depthRange;
+
+			//if ((backEnd.depthFill || (tr.viewParms.flags & VPF_DEPTHSHADOW)) && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
+
+			drawSurf = &drawSurfs[i];
+
+			if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES || *drawSurf->surface <= SF_SKIP) continue;
+
+			shader_t *thisShader = tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
+
+			if (thisShader->surfaceFlags & SURF_NODRAW)
+			{// Skip nodraws completely...
+				continue;
+			}
+
+			if (thisShader == tr.defaultShader)
+			{// Don't draw this either...
+				continue;
+			}
 
 #ifdef __ZFAR_CULLING_ON_SURFACES__
 			if (r_occlusion->integer)
@@ -1440,65 +1481,197 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 				if (!backEnd.depthFill
 					&& drawSurf->depthDrawOnly
 					&& !backEnd.projection2D
-					&& !shader->isSky
-					&& !shader->isWater)
+					&& !thisShader->isSky
+					&& !thisShader->isWater)
 				{// Surface is marked as only for depth draws, skip it unless its sky or water...
 					continue;
 				}
 			}
 #endif //__ZFAR_CULLING_ON_SURFACES__
 
-			int				foundID = -1;
+			qboolean doDraw = qtrue;
 
-			for (int j = 0; j < listShadersNum; j++)
-			{
-				if (listShaders[j] == shader && listEntityNums[j] == entityNum && listPostProcesses[j] == postRender)
-				{// Found it...
-					foundID = j;
-					break;
+			if (backEnd.renderingFoliageType != FOLIAGE_NONE)
+			{// Skip any surfs that are not of this renderingFoliageType...
+				extern qboolean RB_ShouldUseGeometryGrass(int materialType);
+
+				qboolean isGrass = qfalse;
+				qboolean isVines = qfalse;
+				qboolean isGroundFoliage = qfalse;
+
+				if (thisShader->isGrass || thisShader->isGroundFoliage || RB_ShouldUseGeometryGrass(thisShader->materialType))
+				{
+					isGrass = qtrue;
+					isGroundFoliage = qtrue;
+				}
+				else if (thisShader->isVines || (thisShader->materialType == MATERIAL_SOLIDWOOD || thisShader->materialType == MATERIAL_ROCK))
+				{
+					isVines = qtrue;
+				}
+
+				if (isGrass && backEnd.renderingFoliageType == FOLIAGE_GRASS)
+				{
+					doDraw = qtrue;
+				}
+				else if (isGroundFoliage && backEnd.renderingFoliageType == FOLIAGE_GROUNDFOLIAGE)
+				{
+					doDraw = qtrue;
+				}
+				else if (isVines && backEnd.renderingFoliageType == FOLIAGE_VINES)
+				{
+					doDraw = qtrue;
+				}
+				else
+				{
+					//continue;
+					doDraw = qfalse;
 				}
 			}
 
-			if (foundID == -1)
+#ifdef __PLAYER_BASED_CUBEMAPS__
+#ifdef __REALTIME_CUBEMAP__
+			newCubemapIndex = 0;
+#else //!__REALTIME_CUBEMAP__
+			newCubemapIndex = 0;// currentPlayerCubemap;
+#endif //__REALTIME_CUBEMAP__
+#else //!__PLAYER_BASED_CUBEMAPS__
+			if (!CUBEMAPPING)
 			{
-				listShaders[listShadersNum] = shader;
-				listEntityNums[listShadersNum] = entityNum;
-				listPostProcesses[listShadersNum] = postRender;
-				listShadersNum++;
+				newCubemapIndex = 0;
 			}
-		}
-
-		// Merge everything possible...
-		for (int j = 0; j < listShadersNum; j++)
-		{
-			shader_t		*thisShader = listShaders[j];
-			int64_t			thisEntityNum = listEntityNums[j];
-			int64_t			thisPostRender = listPostProcesses[j];
-
-			if (j == 0)
+			else
 			{
-				RB_EndSurface();
+				if (r_cubeMapping->integer >= 1 && !r_lowVram->integer)
+				{
+					newCubemapIndex = drawSurf->cubemapIndex;
+				}
+				else
+				{
+					newCubemapIndex = 0;
+				}
+
+				if (newCubemapIndex > 0)
+				{// Let's see if we can swap with a close cubemap and merge them...
+
+					if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex - 1]) > r_cubemapCullRange->value)
+					{// Too far away to care about cubemaps... Allow merge...
+						newCubemapIndex = 0;
+					}
+				}
+			}
+#endif //__PLAYER_BASED_CUBEMAPS__
+
+			qboolean isWaterMerge = qfalse;
+
+			if (shader != NULL
+				&& shader->isWater
+				&& thisShader->isWater)
+			{
+				isWaterMerge = qtrue;
 			}
 
-			RB_BeginSurface(thisShader, 0, 0);
-			backEnd.pc.c_surfBatches++;
+			qboolean isDepthMerge = qfalse;
 
+			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+			{// In depth and shadow passes, let's merge all the non-alpha draws, being a simple solid texture and all...
+				if (shader != NULL
+					&& !shader->hasAlpha
+					&& !thisShader->hasAlpha)
+				{
+					isDepthMerge = qtrue;
+				}
+			}
+
+			/*if (*drawSurf->surface != SF_VBO_MDVMESH && oldDrawSurf != NULL && *oldDrawSurf->surface == SF_VBO_MDVMESH)
+			{
+			RB_EndSurface();
+			}
+
+			oldDrawSurf = drawSurf;*/
+
+			if (doDraw
+				&& (isWaterMerge || isDepthMerge || drawSurf->sort == oldSort)
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__) && !defined(__REALTIME_CUBEMAP__)
+				&& (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex)
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
+				)
+			{// fast path, same as previous sort
+				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+				numShaderDraws++;
+#endif //__DEBUG_MERGE__
+				continue;
+			}
+
+			oldSort = drawSurf->sort;
+			R_DecomposeSort(drawSurf->sort, &entityNum, &shader, &zero, &postRender);
+
+			cubemapIndex = newCubemapIndex;
+
+			qboolean dontMerge = qfalse;
+
+			if (DISABLE_LIFTS_AND_PORTALS_MERGE)
+			{
+				// UQ1: We can't merge movers and portals, but we can merge pretty much everything else...
+				trRefEntity_t *ent = NULL;
+				trRefEntity_t *oldent = NULL;
+
+				if (entityNum >= 0) oldent = &backEnd.refdef.entities[entityNum];
+				if (oldEntityNum >= 0) oldent = &backEnd.refdef.entities[oldEntityNum];
+
+				if (ent && (ent->e.noMerge || (ent->e.renderfx & RF_SETANIMINDEX)))
+				{// Either a mover, or a portal... Don't allow merges...
+					dontMerge = qtrue;
+				}
+				else if (oldent && (oldent->e.noMerge || (oldent->e.renderfx & RF_SETANIMINDEX)))
+				{// Either a mover, or a portal... Don't allow merges...
+					dontMerge = qtrue;
+				}
+			}
+
+			//
+			// change the tess parameters if needed
+			// a "entityMergable" shader is a shader that can have surfaces from seperate
+			// entities merged into a single batch, like smoke and blood puff sprites
+			if (shader != NULL
+				&& (shader != oldShader
+					|| postRender != oldPostRender
+#if !defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__) && !defined(__REALTIME_CUBEMAP__)
+					|| (CUBEMAPPING && cubemapIndex != oldCubemapIndex)
+#endif //!defined(__LAZY_CUBEMAP__) && !defined(__PLAYER_BASED_CUBEMAPS__)
+					|| (entityNum != oldEntityNum && !shader->entityMergable && dontMerge)))
+			{
+				if (oldShader != NULL)
+				{
+					RB_EndSurface();
+				}
+
+				RB_BeginSurface(shader, 0, cubemapIndex);
+
+				backEnd.pc.c_surfBatches++;
+				oldShader = shader;
+				oldPostRender = postRender;
+				oldCubemapIndex = cubemapIndex;
+#ifdef __DEBUG_MERGE__
+				numShaderChanges++;
+#endif //__DEBUG_MERGE__
+			}
 
 			//
 			// change the modelview matrix if needed
 			//
-			if (thisEntityNum != oldEntityNum)
+			if (entityNum != oldEntityNum)
 			{
 				qboolean sunflare = qfalse;
-				int depthRange = 0;
+				depthRange = 0;
 
 				// we have to reset the shaderTime as well otherwise image animations start
 				// from the wrong frame
 				tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
 
-				if (thisEntityNum != REFENTITYNUM_WORLD)
+				if (entityNum != REFENTITYNUM_WORLD)
 				{
-					backEnd.currentEntity = &backEnd.refdef.entities[thisEntityNum];
+					backEnd.currentEntity = &backEnd.refdef.entities[entityNum];
 					backEnd.refdef.floatTime = originalTime - backEnd.currentEntity->e.shaderTime;
 
 					// set up the transformation matrix
@@ -1561,47 +1734,28 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					oldDepthRange = depthRange;
 				}
 
-				oldEntityNum = thisEntityNum;
+				oldEntityNum = entityNum;
 			}
 
-
-
-			for (i = 0; i < numDrawSurfs; ++i)
-			{
-				drawSurf_t		*drawSurf = &drawSurfs[i];
-
-				if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES || *drawSurf->surface <= SF_SKIP) continue;
-
-				shader_t		*shader = tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
-				int64_t			entityNum = (drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT) & REFENTITYNUM_MASK;
-				int64_t			postRender = (drawSurf->sort >> QSORT_POSTRENDER_SHIFT) & 1;
-
-				if (thisShader != shader || thisEntityNum != entityNum || thisPostRender != postRender)
-				{
-					continue;
-				}
-
-#ifdef __ZFAR_CULLING_ON_SURFACES__
-				if (r_occlusion->integer)
-				{
-					if (!backEnd.depthFill
-						&& drawSurf->depthDrawOnly
-						&& !backEnd.projection2D
-						&& !shader->isSky
-						&& !shader->isWater)
-					{// Surface is marked as only for depth draws, skip it unless its sky or water...
-						continue;
-					}
-				}
-#endif //__ZFAR_CULLING_ON_SURFACES__
-
-				// add the triangles for this surface
-				rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
-			}
+			// add the triangles for this surface
+			if (doDraw) rb_surfaceTable[*drawSurf->surface](drawSurf->surface);
+#ifdef __DEBUG_MERGE__
+			numShaderDraws++;
+#endif //__DEBUG_MERGE__
 		}
+
+		// draw the contents of the last shader batch
+		if (oldShader != NULL) {
+			RB_EndSurface();
+		}
+
+		// go back to the world modelview matrix
+		GL_SetModelviewMatrix(backEnd.viewParms.world.modelViewMatrix);
+
+		// Restore depth range for subsequent rendering
+		qglDepthRange(0.0f, 1.0f);
 	}
-	else
-#endif
+#else
 	{
 		// First draw world normally...
 		for (i = 0; i < numDrawSurfs; ++i)
@@ -1862,7 +2016,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #endif //__DEBUG_MERGE__
 		}
 	}
-
+#endif
 
 #ifdef __DEBUG_MERGE__
 	ri->Printf(PRINT_ALL, "%i total surface draws. %i shader changes.\n", numShaderDraws, numShaderChanges);

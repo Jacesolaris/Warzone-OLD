@@ -119,6 +119,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_GRASSBEND_HUMANOIDS 4
 #endif //__HUMANOIDS_BEND_GRASS__
 
+#define __RENDER_FOLIAGE_LAST__
 
 #define __FX_SORTING__
 #define __WATER_SORTING__
@@ -1354,6 +1355,7 @@ typedef struct shader_s {
 
 	qboolean	isGrass;
 	qboolean	isGroundFoliage;
+	qboolean	isVines;
 	qboolean	isFur;
 
 	float		glowStrength;
@@ -2725,6 +2727,14 @@ typedef struct {
 	int		msec;			// total msec for backend run
 } backEndCounters_t;
 
+typedef enum {
+	FOLIAGE_NONE,
+	FOLIAGE_GRASS,
+	FOLIAGE_GROUNDFOLIAGE,
+	FOLIAGE_VINES,
+	FOLIAGE_MAX
+} foliageTypes_t;
+
 // all state modified by the back end is seperated
 // from the front end state
 typedef struct {
@@ -2735,6 +2745,8 @@ typedef struct {
 	qboolean			isHyperspace;
 	trRefEntity_t		*currentEntity;
 	qboolean			skyRenderedThisView;	// flag for drawing sun
+
+	foliageTypes_t		renderingFoliageType;
 
 	qboolean			projection2D;	// if qtrue, drawstretchpic doesn't need to change modes
 	byte				color2D[4];
