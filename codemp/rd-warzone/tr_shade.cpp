@@ -1440,8 +1440,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 
 	qboolean isSky = tess.shader->isSky;
 
-	vec4_t materialSettings;
-	RB_PBR_DefaultsForMaterial(materialSettings, tess.shader->materialType);
+	//vec4_t materialSettings;
+	//RB_PBR_DefaultsForMaterial(materialSettings, tess.shader->materialType);
 
 	if (pStage->isWater && r_glslWater->integer && WATER_ENABLED)
 	{
@@ -1457,7 +1457,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage, i
 	}
 	else
 	{
-		materialType = materialSettings[0];
+		materialType = tess.shader->materialType;// materialSettings[0];
 	}
 
 	if (!IS_DEPTH_PASS)

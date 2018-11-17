@@ -1117,7 +1117,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		GL_SetModelviewMatrix(modelview);
 	}
 
-	if (shader == tr.sunFlareShader)
+	//if (shader == tr.sunFlareShader)
 	{// Now done in sky shader...
 		dist = backEnd.viewParms.zFar / 1.75;
 		size = dist * scale;
@@ -1140,13 +1140,22 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 		RB_BeginSurface(shader, 0, 0);
 
-		RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol);
+		if (shader != tr.sunFlareShader)
+		{
+			vec4_t col;
+			VectorSet4(col, 0, 0, 0, 0);
+			RB_AddQuadStamp(origin, vec1, vec2, col);
+		}
+		else
+		{
+			RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol);
+		}
 
 		RB_EndSurface();
-	}
 
-	// back to normal depth range
-	qglDepthRange(0.0, 1.0);
+		// back to normal depth range
+		qglDepthRange(0.0, 1.0);
+	}
 
 	if (r_dynamiclight->integer)
 	{// Lets have some volumetrics with that!

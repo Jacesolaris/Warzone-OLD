@@ -10,7 +10,7 @@ uniform vec4		u_Local1; // testvalues
 
 
 varying vec2		var_TexCoords;
-varying float		var_FocalDepth;
+flat varying float	var_FocalDepth;
 
 
 vec2 sampleOffset = vec2(1.0/u_Dimensions);

@@ -2878,6 +2878,9 @@ typedef struct trGlobals_s {
 	image_t                 *linearDepthImage4096;
 	image_t                 *linearDepthImageZfar;
 
+	image_t					*dofFocusDepthScratchImage;
+	image_t					*dofFocusDepthImage;
+
 	image_t                 *renderCubeImage;
 	image_t                 *renderSkyImage;
 	
@@ -3043,6 +3046,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t fastBlurShader;
 	shaderProgram_t bloomRaysShader;
 	shaderProgram_t distanceBlurShader[4];
+	shaderProgram_t dofFocusDepthShader;
 	shaderProgram_t fogPostShader;
 	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t showNormalsShader;
@@ -3075,6 +3079,7 @@ typedef struct trGlobals_s {
 	FBO_t		   *NormalMapDestinationFBO;
 	
 	FBO_t		   *linearizeDepthFbo;
+	FBO_t			*dofFocusDepthFbo;
 	
 	FBO_t			*depthAdjustFbo;
 	FBO_t			*genericDepthFbo;

@@ -177,6 +177,8 @@ extern const char *fallbackShader_fastBlur_vp;
 extern const char *fallbackShader_fastBlur_fp;
 extern const char *fallbackShader_distanceBlur_vp;
 extern const char *fallbackShader_distanceBlur_fp;
+extern const char *fallbackShader_dofFocusDepth_vp;
+extern const char *fallbackShader_dofFocusDepth_fp;
 extern const char *fallbackShader_bloomRays_vp;
 extern const char *fallbackShader_bloomRays_fp;
 extern const char *fallbackShader_fogPost_vp;
@@ -4031,6 +4033,15 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
+	//dofAvgDepth
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.dofFocusDepthShader, "dofFocusDepth", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_dofFocusDepth_vp, fallbackShader_dofFocusDepth_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load dofFocusDepth shader!");
+	}
+
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -6057,6 +6068,32 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.dofFocusDepthShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load dofFocusDepth shader!");
+	}
+
+	GLSL_InitUniforms(&tr.dofFocusDepthShader);
+
+	GLSL_BindProgram(&tr.dofFocusDepthShader);
+
+	GLSL_SetUniformInt(&tr.dofFocusDepthShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.dofFocusDepthShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.dofFocusDepthShader);
+#endif
+
+	numEtcShaders++;
+
+
 
 	for (i = 0; i < 4; i++)
 	{
@@ -6748,6 +6785,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[1]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[2]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[3]);
+	GLSL_DeleteGPUShader(&tr.dofFocusDepthShader);
 	GLSL_DeleteGPUShader(&tr.fogPostShader);
 	GLSL_DeleteGPUShader(&tr.colorCorrectionShader);
 	GLSL_DeleteGPUShader(&tr.showNormalsShader);

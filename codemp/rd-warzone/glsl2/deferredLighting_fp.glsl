@@ -521,8 +521,9 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
+	float topY = min(coord.y + 0.6, 1.0); // Don'y scan further then this, waste of time as it will be bleneded out...
 
-	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
+	for (float y = coord.y; y <= topY; y += ph * scanSpeed)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater, originalPosition);
@@ -706,41 +707,14 @@ vec2 GetMapTC(vec3 pos)
 float calculateAO(in vec3 pos, in vec3 nor, in vec2 texCoords)
 {
 	float sca = 0.00013/*2.0*/, occ = 0.0;
-#if 1
+
 	for( int i=0; i<5; i++ ) {
 		float hr = 0.01 + float(i)*0.5/4.0;        
 		float dd = aomap(nor * hr + pos);
 		occ += (hr - dd)*sca;
 		sca *= 0.7;
 	}
-#elif 0
-	for( int i=0; i<5; i++ ) {
-		float hr = 0.01 + float(i)*0.5/4.0;        
-		vec2 uv = GetMapTC(nor * hr + pos);
-		float dd = texture(u_RoadsControlMap, uv).r;
-		occ += (hr - dd)*sca;
-		sca *= 0.7;
-	}
-#elif 0
-    for( int i=0; i<8; i++ )
-    {
-        float h = 0.005 + 0.25*float(i)/7.0;
-        vec3 dir = normalize( sin( float(i)*73.4 + vec3(0.0,2.1,4.2) ));
-        dir = normalize( nor + dir );
-		vec2 uv = GetMapTC(pos + h*dir);
-        occ += h-texture(u_RoadsControlMap, uv).r;
-    }
-    return clamp( 1.0 - 9.0*occ/8.0, 0.0, 1.0 );
-#else
-	for( int i=0; i<5; i++ ) {
-		float hr = 0.01 + float(i)*0.5/4.0;
-		float pwri = pow(float(i), u_Local3.r/*2.0*/);
-		vec2 uv = texCoords + vec2(0.0, pixel.y * pwri);
-		float dd = texture(u_RoadsControlMap, uv).r;
-		occ += (hr - dd)*u_Local3.g;//sca;
-		sca *= 0.7;
-	}
-#endif
+
 	return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
 
@@ -955,65 +929,6 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 }
 #endif //defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 
-//
-// Normal variation...
-//
-const float pi = 3.14159;
-const vec4 cHashA4 = vec4 (0., 1., 57., 58.);
-const vec3 cHashA3 = vec3 (1., 57., 113.);
-const float cHashM = 43758.54;
-
-vec4 Hashv4f (float p)
-{
-  return fract (sin (p + cHashA4) * cHashM);
-}
-
-float Noisefv2 (vec2 p)
-{
-  vec2 i = floor (p);
-  vec2 f = fract (p);
-  f = f * f * (3. - 2. * f);
-  vec4 t = Hashv4f (dot (i, cHashA3.xy));
-  return mix (mix (t.x, t.y, f.x), mix (t.z, t.w, f.x), f.y);
-}
-
-vec3 Noisev3v2 (vec2 p)
-{
-  vec2 i = floor (p);
-  vec2 f = fract (p);
-  vec2 ff = f * f;
-  vec2 u = ff * (3. - 2. * f);
-  vec2 uu = 30. * ff * (ff - 2. * f + 1.);
-  vec4 h = Hashv4f (dot (i, cHashA3.xy));
-  return vec3 (h.x + (h.y - h.x) * u.x + (h.z - h.x) * u.y +
-     (h.x - h.y - h.z + h.w) * u.x * u.y, uu * (vec2 (h.y - h.x, h.z - h.x) +
-     (h.x - h.y - h.z + h.w) * u.yx));
-}
-
-float Fbmn (vec3 p, vec3 n)
-{
-  vec3 s;
-  float a;
-  s = vec3 (0.);
-  a = 1.;
-  for (int i = 0; i < 5; i ++) {
-    s += a * vec3 (Noisefv2 (p.yz), Noisefv2 (p.zx), Noisefv2 (p.xy));
-    a *= 0.5;
-    p *= 2.;
-  }
-  return dot (s, abs (n));
-}
-
-vec3 VaryNf (vec3 p, vec3 n, float f)
-{
-  vec3 g;
-  float s;
-  vec3 e = vec3 (0.1, 0., 0.);
-  s = Fbmn (p, n);
-  g = vec3 (Fbmn (p + e.xyy, n) - s,
-     Fbmn (p + e.yxy, n) - s, Fbmn (p + e.yyx, n) - s);
-  return normalize (n + f * (g - n * dot (n, g)));
-}
 
 /*
 ** Contrast, saturation, brightness

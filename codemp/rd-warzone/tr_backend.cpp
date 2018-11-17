@@ -3402,6 +3402,8 @@ const void *RB_PostProcess(const void *data)
 		{
 			if (!r_lowVram->integer)
 			{
+				RB_DofFocusDepth();
+
 				DEBUG_StartTimer("DOF", qtrue);
 				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
 				RB_SwapFBOs(&currentFbo, &currentOutFbo);
@@ -3727,6 +3729,13 @@ const void *RB_PostProcess(const void *data)
 		FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 		VectorSet4(dstBox, 512, glConfig.vidHeight - 256, 256, 256);
 		FBO_BlitFromTexture(tr.screenShadowImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+	}
+
+	if (0)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.dofFocusDepthImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
 	if (0)

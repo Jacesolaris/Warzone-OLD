@@ -998,6 +998,17 @@ void FBO_Init(void)
 		R_CheckFBO(tr.linearizeDepthFbo);
 	}
 
+	//
+	// UQ1's dofFocusDepth FBO...
+	//
+	{
+		tr.dofFocusDepthFbo = FBO_Create("_dofFocusDepth", tr.dofFocusDepthImage->width, tr.dofFocusDepthImage->height);
+		FBO_Bind(tr.dofFocusDepthFbo);
+		FBO_AttachTextureImage(tr.dofFocusDepthImage, 0);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.dofFocusDepthFbo);
+	}
+
 	GL_CheckErrors();
 
 	FBO_Bind(NULL);

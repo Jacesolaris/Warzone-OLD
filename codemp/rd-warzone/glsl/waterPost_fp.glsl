@@ -415,10 +415,11 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
+	float topY = min(coord.y + 0.6, 1.0); // Don'y scan further then this, waste of time as it will be bleneded out...
 
 	const float scanSpeed = 16.0; // How many pixels to scan by on the 1st rough pass...
 	
-	for (float y = coord.y; y <= 1.0; y += ph * scanSpeed)
+	for (float y = coord.y; y <= topY; y += ph * scanSpeed)
 	{
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
@@ -554,9 +555,11 @@ float getwaves(vec2 position) {
 	}
 	//return pow(w / ws, 0.2);
 	return clamp(w / ws, 0.0, 1.0);
+	//return clamp(pow(clamp(w / ws, 0.0, 1.0), u_Local0.r), 0.0, 1.0);
 }
 
 float getwavesDetail(vec2 position) {
+#if 1
 	position *= 0.1;
 	float iter = 0.0;
 	float phase = 1.5;
@@ -578,7 +581,18 @@ float getwavesDetail(vec2 position) {
 		speed *= 1.07;//1.02;
 	}
 
-	return clamp(w / ws, 0.0, 1.0);
+	float height = clamp(w / ws, 0.0, 1.0);
+	/*
+	float height1 = SmoothNoise(position.xyy * 6.0) * 0.6 + 0.3;
+	float height2 = SmoothNoise(position.xyy * 48.0) * 0.6 + 0.3;
+	float height3 = mix(height1, height2, 0.075);
+	height = mix(height, height3, u_Local0.g);
+	*/
+#else
+	position *= 0.1;
+	float height = SmoothNoise(position.xyy * u_Local0.r) * u_Local0.b + u_Local0.a;
+#endif
+	return height;
 }
 
 void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout float chopheight, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
@@ -1131,7 +1145,11 @@ void main ( void )
 		else
 		{
 			level = level + (height * waveHeight);
+			
 			surfacePoint.xyz += lightingNormal * height * waveHeight;
+			
+			//surfacePoint.xyz = waterMapLower.xyz;
+			//surfacePoint.y += height * waveHeight;
 
 			depth = length(position - surfacePoint) * waterClarity;
 			depth2 = surfacePoint.y - position.y;
@@ -1216,6 +1234,7 @@ void main ( void )
 
 		float fresnel = fresnelTerm(lightingNormal, eyeVecNorm);
 		fresnel = pow(fresnel, 0.5);
+		//fresnel = mix(fresnel, SmoothNoise(surfacePoint * u_Local0.g), u_Local0.r);
 
 		vec3 dist = -eyeVecNorm;
 

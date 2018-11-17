@@ -18,6 +18,7 @@ uniform float		u_Time;
 
 varying vec2		var_TexCoords;
 
+#if 0
 //
 // Drawing effect...
 //
@@ -127,4 +128,108 @@ void main()
 {
 	Drawing(gl_FragColor, var_TexCoords * Res0);
 }
+#else
+//
+// SS Snow (and rain) testing
+//
 
+float iTime = u_Time;
+
+float hash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float noise(in vec3 o) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * 1009.0;
+
+	float a = hash(n+  0.0);
+	float b = hash(n+  1.0);
+	float c = hash(n+ 57.0);
+	float d = hash(n+ 58.0);
+	
+	float e = hash(n+  0.0 + 1009.0);
+	float f = hash(n+  1.0 + 1009.0);
+	float g = hash(n+ 57.0 + 1009.0);
+	float h = hash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 m = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float SmoothNoise( vec3 p )
+{
+    float f;
+    f  = 0.5000*noise( p ); p = m*p*2.02;
+    f += 0.2500*noise( p ); 
+	
+    return f * (1.0 / (0.5000 + 0.2500));
+}
+
+void main()
+{
+	vec3 col = texture(u_DiffuseMap, var_TexCoords).rgb;
+	vec4 position = texture(u_PositionMap, var_TexCoords);
+	vec3 originalRayDir = normalize(u_ViewOrigin - position.xyz);
+	//vec3 originalRayDir = -normalize(position.xyz);
+	vec3 vCameraPos = u_ViewOrigin;//normalize(u_ViewOrigin);//vec3(0.0);//u_ViewOrigin;
+
+	// Twelve layers of rain sheets...
+	//vec2 q = var_TexCoords;
+	float dis = 1.;
+	for (int i = 0; i < 12; i++)
+	{
+		vec3 plane = vCameraPos + originalRayDir * dis;
+		
+		//if (plane.z > position.z || u_Local0.r > 0.0)
+		{
+			float f = pow(dis, .45)+.25;
+
+			//vec2 st =  f * (q * vec2(1.5, .05)+vec2(-iTime*.1+q.y*.5, iTime*.12));
+			//f = (texture(u_SpecularMap, st * .5, -99.0).x + texture(u_SpecularMap, st*.284, -99.0).y);
+			//f = (noise(st * 256.0) + noise(st * 145.408));
+			vec3 p = plane * f * 1.0;
+			f = SmoothNoise(vec3(p.xy, p.z-(iTime*32.0))) * 1.7;
+			//f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, q.y*.4+.05);
+			f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, 1.0);
+
+			vec3 bri = vec3(1.0/*.25*/);
+			/*for (int t = 0; t < NUM_LIGHTS; t++)
+			{
+				vec3 v3 = lightArray[t].xyz - plane.xyz;
+				float l = dot(v3, v3);
+				l = max(3.0-(l*l * .02), 0.0);
+				bri += l * lightColours[t];
+			}*/
+			col += bri*f;
+		}
+		dis += 3.5;
+	}
+
+	col = clamp(col, 0.0, 1.0);
+
+	gl_FragColor = vec4(col, 1.0);
+}
+#endif

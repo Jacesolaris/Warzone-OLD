@@ -2279,6 +2279,27 @@ void RB_ESharpening2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 }
 #endif
 
+void RB_DofFocusDepth(void)
+{
+	GLSL_BindProgram(&tr.dofFocusDepthShader);
+
+	GLSL_SetUniformInt(&tr.dofFocusDepthShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
+
+	GLSL_SetUniformMatrix16(&tr.dofFocusDepthShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	{
+		const float quality = 32.0;
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth / quality;
+		screensize[1] = glConfig.vidHeight / quality;
+
+		GLSL_SetUniformVec2(&tr.dofFocusDepthShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	FBO_BlitFromTexture(tr.dofFocusDepthScratchImage, NULL, NULL, tr.dofFocusDepthFbo, NULL, &tr.dofFocusDepthShader, colorWhite, 0);
+}
+
 void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int direction)
 {
 	vec4_t color;
@@ -2296,11 +2317,10 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
-	float zfar = 2048;
+	float zfar = 4096;
 
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
-	zfar = 4096;
 	
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
@@ -2317,6 +2337,9 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 	{
 		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
 	}
+
+	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GL_BindToTMU(tr.dofFocusDepthImage, TB_SPECULARMAP);
 
 	{
 		vec2_t screensize;

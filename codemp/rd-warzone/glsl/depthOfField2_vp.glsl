@@ -4,11 +4,12 @@ attribute vec4		attr_TexCoord0;
 uniform mat4		u_ModelViewProjectionMatrix;
 
 uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D	u_SpecularMap;
 
 uniform vec4		u_Local0; // dofValue, 0, 0, 0
 
 varying vec2		var_TexCoords;
-varying float		var_FocalDepth;
+flat varying float	var_FocalDepth;
 
 
 #define BLUR_FOCUS
@@ -16,7 +17,8 @@ varying float		var_FocalDepth;
 #define DOF_FOCUSPOINT	 		vec2(0.5,0.75)//vec2(0.5,0.5)	//[0.0 to 1.0] Screen coordinates of focus point. First value is horizontal, second value is vertical position.
 
 float GetFocalDepth(vec2 focalpoint)
-{ 
+{
+#if 0
 	//if (u_Local0.r == 1.0 || u_Local0.r == 3.0)
 	//	return DOF_MANUALFOCUSDEPTH;
 
@@ -39,6 +41,9 @@ float GetFocalDepth(vec2 focalpoint)
 	depthsum = depthsum/5.0;
 #endif
 #endif //BLUR_FOCUS
+#else
+	float depthsum = clamp(texture(u_SpecularMap, vec2(0.5, 0.5)).x + 0.1, 0.0, 1.0) * 0.999;
+#endif
 
 	return depthsum; 
 }
