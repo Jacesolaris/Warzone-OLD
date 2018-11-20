@@ -306,6 +306,10 @@ cvar_t	*r_glslOptimize;
 cvar_t	*r_lowVram;
 cvar_t	*r_volumeLightHQ;
 cvar_t	*r_debugBinds;
+cvar_t	*r_debugMapInfo;
+cvar_t	*r_debugGlowMerge;
+cvar_t	*r_debugSplatMaps;
+cvar_t	*r_debugGLSLOptimizer;
 cvar_t	*r_debugShaderStages;
 cvar_t	*r_debugImageCrcHashing;
 cvar_t	*r_splatMapping;
@@ -1612,6 +1616,10 @@ void R_Register( void )
 	r_debugBinds = ri->Cvar_Get("r_debugBinds", "0", CVAR_ARCHIVE);
 	r_debugShaderStages = ri->Cvar_Get("r_debugShaderStages", "0", CVAR_ARCHIVE);
 	r_debugImageCrcHashing = ri->Cvar_Get("r_debugImageCrcHashing", "0", CVAR_ARCHIVE);
+	r_debugMapInfo = ri->Cvar_Get("r_debugMapInfo", "0", CVAR_ARCHIVE);
+	r_debugGlowMerge = ri->Cvar_Get("r_debugGlowMerge", "0", CVAR_ARCHIVE);
+	r_debugSplatMaps = ri->Cvar_Get("r_debugSplatMaps", "0", CVAR_ARCHIVE);
+	r_debugGLSLOptimizer = ri->Cvar_Get("r_debugGLSLOptimizer", "0", CVAR_ARCHIVE);
 
 	r_splatMapping = ri->Cvar_Get("r_splatMapping", "1", CVAR_ARCHIVE | CVAR_LATCH);
 

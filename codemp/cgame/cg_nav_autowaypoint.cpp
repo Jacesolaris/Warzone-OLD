@@ -332,7 +332,11 @@ int UQ_Get_CPU_Info( void )
 
 	if (CPU_CHECKED) return CPU_INFO_VALUE;
 
+//#define __PRINT_CPU_INFO__
+
+#ifdef __PRINT_CPU_INFO__
 	trap->Print("^4-------------------------- ^5[^7CPU Information^5] ^4--------------------------\n");
+#endif //__PRINT_CPU_INFO__
 
     // __cpuid with an InfoType argument of 0 returns the number of
     // valid Ids in CPUInfo[0] and the CPU identification string in
@@ -350,11 +354,13 @@ int UQ_Get_CPU_Info( void )
     for (i=0; i<=nIds; ++i)
     {
         __cpuid(CPUInfo, i);
+#ifdef __PRINT_CPU_INFO__
         /*trap->Print("\nFor InfoType %d\n", i);
         trap->Print("CPUInfo[0] = 0x%x\n", CPUInfo[0]);
         trap->Print("CPUInfo[1] = 0x%x\n", CPUInfo[1]);
         trap->Print("CPUInfo[2] = 0x%x\n", CPUInfo[2]);
         trap->Print("CPUInfo[3] = 0x%x\n", CPUInfo[3]);*/
+#endif //__PRINT_CPU_INFO__
 
         // Interpret CPU feature information.
         if  (i == 1)
@@ -391,11 +397,13 @@ int UQ_Get_CPU_Info( void )
     for (i=0x80000000; i<=nExIds; ++i)
     {
         __cpuid(CPUInfo, i);
+#ifdef __PRINT_CPU_INFO__
         //trap->Print("\nFor InfoType %x\n", i);
         //trap->Print("CPUInfo[0] = 0x%x\n", CPUInfo[0]);
         //trap->Print("CPUInfo[1] = 0x%x\n", CPUInfo[1]);
         //trap->Print("CPUInfo[2] = 0x%x\n", CPUInfo[2]);
         //trap->Print("CPUInfo[3] = 0x%x\n", CPUInfo[3]);
+#endif //__PRINT_CPU_INFO__
 
         // Interpret CPU brand string and cache information.
         if  (i == 0x80000002)
@@ -420,6 +428,7 @@ int UQ_Get_CPU_Info( void )
 
     // Display all the information in user-friendly format.
 
+#ifdef __PRINT_CPU_INFO__
     if  (nExIds >= 0x80000004)
         trap->Print("^5CPU Brand String: ^3%s\n", CPUBrandString);
 
@@ -490,6 +499,7 @@ int UQ_Get_CPU_Info( void )
     }
 
 	trap->Print("^4-----------------------------------------------------------------------\n");
+#endif //__PRINT_CPU_INFO__
 
 	CPU_CHECKED = qtrue;
 	CPU_INFO_VALUE = nRet;

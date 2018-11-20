@@ -5512,7 +5512,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				////ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
+				////if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
 				diffuse->bundle[TB_SPECULARMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPECULARMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPECULARMAP].image[0] = specularImg;
@@ -5724,7 +5724,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
 				diffuse->bundle[TB_STEEPMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_STEEPMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_STEEPMAP].image[0] = specularImg;
@@ -5803,7 +5803,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map2 %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded steep map2 %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
 				diffuse->bundle[TB_WATER_EDGE_MAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_WATER_EDGE_MAP].numImageAnimations = 0;
 				diffuse->bundle[TB_WATER_EDGE_MAP].image[0] = specularImg;
@@ -5827,7 +5827,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_ROOFMAP] = roofMap->bundle[0];
 				hasRealRoofMap = qtrue;
 				diffuse->bundle[TB_ROOFMAP].roofMapLoaded = qtrue;
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Shader roof map exists for %s [%i x %i].\n", diffuse->bundle[0].image[0]->imgName, roofMap->bundle[0].image[0]->width, roofMap->bundle[0].image[0]->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Shader roof map exists for %s [%i x %i].\n", diffuse->bundle[0].image[0]->imgName, roofMap->bundle[0].image[0]->width, roofMap->bundle[0].image[0]->height);
 			}
 			else if (!diffuse->bundle[TB_ROOFMAP].roofMapLoaded)
 			{// Check if we can load one...
@@ -5858,7 +5858,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (specularImg)
 				{
-					ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded roof map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
+					if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded roof map %s [%i x %i].\n", specularName2, specularImg->width, specularImg->height);
 					diffuse->bundle[TB_ROOFMAP] = diffuse->bundle[0];
 					diffuse->bundle[TB_ROOFMAP].numImageAnimations = 0;
 					diffuse->bundle[TB_ROOFMAP].image[0] = specularImg;
@@ -5867,7 +5867,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				else
 				{
 					hasRealRoofMap = qfalse;
-					//ri->Printf(PRINT_WARNING, "+++++++++++++++ FAILED TO LOAD roof map %s.\n", specularName2);
+					//if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ FAILED TO LOAD roof map %s.\n", specularName2);
 				}
 
 				diffuse->bundle[TB_ROOFMAP].roofMapLoaded = qtrue;
@@ -5930,7 +5930,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATCONTROLMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATCONTROLMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATCONTROLMAP].image[0] = splatImg;
@@ -5979,7 +5979,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP1] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP1].image[0] = splatImg;
@@ -6029,7 +6029,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP2] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP2].image[0] = splatImg;
@@ -6079,7 +6079,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				if (r_debugSplatMaps->integer) ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP3] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP3].image[0] = splatImg;
@@ -6533,7 +6533,7 @@ static int CollapseStagesToGLSL(void)
 
 				if (diffuseStage == -1 && glowStage != -1)
 				{
-					ri->Printf(PRINT_ALL, "^1PERFORMANCE WARNING^5: Shader ^7%s^5 has depricated diffuse stage for merged glows. Update your shader for Warzone, or use a <originalTextureName>_g texture for the glow!\n", shader.name);
+					if (r_debugGlowMerge->integer) ri->Printf(PRINT_ALL, "^1PERFORMANCE WARNING^5: Shader ^7%s^5 has depricated diffuse stage for merged glows. Update your shader for Warzone, or use a <originalTextureName>_g texture for the glow!\n", shader.name);
 				}
 				else if (glowStage != -1)
 				{// We can save a draw call here, so merge the glow stage into the diffuse stage...
@@ -6578,7 +6578,7 @@ static int CollapseStagesToGLSL(void)
 
 					gStage->active = qfalse;
 
-					ri->Printf(PRINT_ALL, "^3PERFORMANCE ENHANCEMENT^5: Successfully merged glow stage ^7%i^5 into a diffuse stage ^7%i^5 for shader ^7%s^5.\n", glowStage, diffuseStage, shader.name);
+					if (r_debugGlowMerge->integer) ri->Printf(PRINT_ALL, "^3PERFORMANCE ENHANCEMENT^5: Successfully merged glow stage ^7%i^5 into a diffuse stage ^7%i^5 for shader ^7%s^5.\n", glowStage, diffuseStage, shader.name);
 				}
 			}
 		}

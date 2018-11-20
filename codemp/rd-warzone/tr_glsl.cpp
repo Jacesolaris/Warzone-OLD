@@ -2411,6 +2411,8 @@ glslopt_ctx *ctx = NULL;
 
 void GLSL_PrintShaderOptimizationStats(char *shaderName, glslopt_shader *shader)
 {
+	if (!r_debugGLSLOptimizer->integer) return;
+
 	static const char* kGlslTypeNames[kGlslTypeCount] = {
 		"float",
 		"int",
@@ -2677,7 +2679,7 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	if (r_glslOptimize->integer)
 	{
 		try {
-			if (!StringContainsWord(name, "lightAll")
+			if (!StringContainsWord(name, "lightall")
 				&& !StringContainsWord(name, "depthPass")
 				&& !StringContainsWord(name, "sky")
 				&& !StringContainsWord(name, "fxaa")
@@ -2694,7 +2696,7 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 					}
 					else {
 						const char *errorLog = glslopt_get_log(shader);
-						ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
+						if (r_debugGLSLOptimizer->integer) ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
 					}
 					glslopt_shader_delete(shader);
 				}
@@ -2720,7 +2722,7 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 					}
 					else {
 						const char *errorLog = glslopt_get_log(shader);
-						ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
+						if (r_debugGLSLOptimizer->integer) ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
 					}
 					glslopt_shader_delete(shader);
 				}

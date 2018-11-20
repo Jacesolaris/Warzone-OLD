@@ -1574,12 +1574,6 @@ void MAPPING_LoadMapInfo(void)
 {
 	qglFinish();
 
-#ifdef __OCEAN__
-	MAP_WATER_LEVEL = 131072.0;
-	WATER_INITIALIZED = qfalse;
-	WATER_FAST_INITIALIZED = qfalse;
-#endif //__OCEAN__
-
 	char mapname[256] = { 0 };
 	
 	// because JKA uses mp/ dir, why??? so pointless...
@@ -1900,6 +1894,10 @@ void MAPPING_LoadMapInfo(void)
 
 	if (WATER_ENABLED /*&& !WATER_INITIALIZED*/)
 	{
+		MAP_WATER_LEVEL = 131072.0;
+		WATER_INITIALIZED = qfalse;
+		WATER_FAST_INITIALIZED = qfalse;
+
 		WATER_USE_OCEAN = (atoi(IniRead(mapname, "WATER", "WATER_OCEAN_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_FARPLANE_ENABLED = (atoi(IniRead(mapname, "WATER", "WATER_FARPLANE_ENABLED", "0")) > 0) ? qtrue : qfalse;
 		WATER_REFLECTIVENESS = Q_clamp(0.0, atof(IniRead(mapname, "WATER", "WATER_REFLECTIVENESS", "0.28")), 1.0);
@@ -1934,13 +1932,13 @@ void MAPPING_LoadMapInfo(void)
 		{
 			MAP_WATER_LEVEL = 131072.0;
 		}
+
+		if (!WATER_ENABLED)
+		{
+			MAP_WATER_LEVEL = 131072.0;
+		}
 	}
 	
-	if (!WATER_ENABLED)
-	{
-		MAP_WATER_LEVEL = 131072.0;
-	}
-
 	//
 	// Climate...
 	//
@@ -2267,108 +2265,112 @@ void MAPPING_LoadMapInfo(void)
 		}
 	}
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Generic material selections prefer ^7%s^5 on this map.\n", GENERIC_MATERIALS_PREFER_SHINY ? "SHINY" : "MATTE");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Smooth normals generation is ^7%s^5 on this map.\n", ENABLE_REGEN_SMOOTH_NORMALS ? "ENABLED" : "DISABLED");
+	if (r_debugMapInfo->integer)
+	{
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Generic material selections prefer ^7%s^5 on this map.\n", GENERIC_MATERIALS_PREFER_SHINY ? "SHINY" : "MATTE");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Smooth normals generation is ^7%s^5 on this map.\n", ENABLE_REGEN_SMOOTH_NORMALS ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Indoor/Outdoor culling system is ^7%s^5 on this map.\n", (ENABLE_INDOOR_OUTDOOR_SYSTEM == 0) ? "DISABLED" : (ENABLE_INDOOR_OUTDOOR_SYSTEM == 1) ? "ENABLED" : "DEBUG MODE");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Indoor/Outdoor culling system is ^7%s^5 on this map.\n", (ENABLE_INDOOR_OUTDOOR_SYSTEM == 0) ? "DISABLED" : (ENABLE_INDOOR_OUTDOOR_SYSTEM == 1) ? "ENABLED" : "DEBUG MODE");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lodmodels are ^7%s^5 on this map.\n", LODMODEL_MAP ? "USED" : "UNUSED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Depth prepass is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_DEPTH_PREPASS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lodmodels are ^7%s^5 on this map.\n", LODMODEL_MAP ? "USED" : "UNUSED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Depth prepass is ^7%s^5 and max vis range is ^7%s^5 on this map.\n", DISABLE_DEPTH_PREPASS ? "DISABLED" : "ENABLED", MAP_MAX_VIS_RANGE ? va("%i", MAP_MAX_VIS_RANGE) : "default");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and lifts and portals merging is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", DISABLE_LIFTS_AND_PORTALS_MERGE ? "ENABLED" : "DISABLED");
-	
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 and screen space reflections are ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED", MAP_REFLECTION_ENABLED ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Glow <textname>_g support is ^7%s^5 and lifts and portals merging is ^7%s^5 on this map.\n", DISABLE_MERGED_GLOWS ? "DISABLED" : "ENABLED", DISABLE_LIFTS_AND_PORTALS_MERGE ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation is ^7%s^5 and terrain tessellation max level ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_ENABLED ? "ENABLED" : "DISABLED", TERRAIN_TESSELLATION_LEVEL);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation max offset is ^7%.4f^5 and terrain tessellation minimum vert size is ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_OFFSET, TERRAIN_TESSELLATION_MIN_SIZE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Displacement mapping support is ^7%s^5 and screen space reflections are ^7%s^5 on this map.\n", ENABLE_DISPLACEMENT_MAPPING ? "ENABLED" : "DISABLED", MAP_REFLECTION_ENABLED ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle start time is ^7%.4f^5 on this map.\n", DAY_NIGHT_START_TIME);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun volumetric scale is ^7%.4f^5 and sun volumetric falloff is ^7%.4f^5 on this map.\n", SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation is ^7%s^5 and terrain tessellation max level ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_ENABLED ? "ENABLED" : "DISABLED", TERRAIN_TESSELLATION_LEVEL);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Terrain tessellation max offset is ^7%.4f^5 and terrain tessellation minimum vert size is ^7%.4f^5 on this map.\n", TERRAIN_TESSELLATION_OFFSET, TERRAIN_TESSELLATION_MIN_SIZE);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky is ^7%s^5 on this map.\n", PROCEDURAL_SKY_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural day sky color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky star density is ^7%i^5 and dark matter factor is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_DARKMATTER_FACTOR);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky planetary rotation rate is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_PLANETARY_ROTATION);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky color is ^7%.4f %.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_COLOR[0], PROCEDURAL_SKY_NIGHT_COLOR[1], PROCEDURAL_SKY_NIGHT_COLOR[2], PROCEDURAL_SKY_NIGHT_COLOR[3]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky HDR minimum is ^7%.4f^5 and procedural night sky HDR maximum is  ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills are ^7%s^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills smoothness is ^7%.4f^5 and Procedural background hills up/down is ^7%.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS, PROCEDURAL_BACKGROUND_HILLS_UPDOWN);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills seed is ^7%.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_SEED);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills vegetation color is ^7%.4f %.4f %.4f^5 and procedural background hills vegetation secondary color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[2], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle is ^7%s^5 and Day night cycle speed modifier is ^7%.4f^5 on this map.\n", DAY_NIGHT_CYCLE_ENABLED ? "ENABLED" : "DISABLED", DAY_NIGHT_CYCLE_SPEED);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day night cycle start time is ^7%.4f^5 on this map.\n", DAY_NIGHT_START_TIME);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun phong scale is ^7%.4f^5 on this map.\n", SUN_PHONG_SCALE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun volumetric scale is ^7%.4f^5 and sun volumetric falloff is ^7%.4f^5 on this map.\n", SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sun color (main) ^7%.4f %.4f %.4f^5 (secondary) ^7%.4f %.4f %.4f^5 (tertiary) ^7%.4f %.4f %.4f^5 (ambient) ^7%.4f %.4f %.4f^5 on this map.\n", SUN_COLOR_MAIN[0], SUN_COLOR_MAIN[1], SUN_COLOR_MAIN[2], SUN_COLOR_SECONDARY[0], SUN_COLOR_SECONDARY[1], SUN_COLOR_SECONDARY[2], SUN_COLOR_TERTIARY[0], SUN_COLOR_TERTIARY[1], SUN_COLOR_TERTIARY[2], SUN_COLOR_AMBIENT[0], SUN_COLOR_AMBIENT[1], SUN_COLOR_AMBIENT[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural clouds are ^7%s^5 and cloud scale is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_CLOUDS_CLOUDSCALE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud speed is ^7%.4f^5 and cloud cover is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_CLOUDCOVER);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud dark is ^7%.4f^5 and cloud light is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_DARK, PROCEDURAL_CLOUDS_LIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud alpha is ^7%.4f^5 and cloud tint is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky is ^7%s^5 on this map.\n", PROCEDURAL_SKY_ENABLED ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural day sky color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_DAY_COLOR[0], PROCEDURAL_SKY_DAY_COLOR[1], PROCEDURAL_SKY_DAY_COLOR[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky star density is ^7%i^5 and dark matter factor is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_STAR_DENSITY, PROCEDURAL_SKY_DARKMATTER_FACTOR);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural sky planetary rotation rate is ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_PLANETARY_ROTATION);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky color is ^7%.4f %.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_COLOR[0], PROCEDURAL_SKY_NIGHT_COLOR[1], PROCEDURAL_SKY_NIGHT_COLOR[2], PROCEDURAL_SKY_NIGHT_COLOR[3]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural night sky HDR minimum is ^7%.4f^5 and procedural night sky HDR maximum is  ^7%.4f^5 on this map.\n", PROCEDURAL_SKY_NIGHT_HDR_MIN, PROCEDURAL_SKY_NIGHT_HDR_MAX);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills are ^7%s^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_ENABLED ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills smoothness is ^7%.4f^5 and Procedural background hills up/down is ^7%.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS, PROCEDURAL_BACKGROUND_HILLS_UPDOWN);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills seed is ^7%.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_SEED);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural background hills vegetation color is ^7%.4f %.4f %.4f^5 and procedural background hills vegetation secondary color is ^7%.4f %.4f %.4f^5 on this map.\n", PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR[2], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[0], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[1], PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lighting method is ^7%s^5 on this map.\n", MAP_LIGHTING_METHOD ? "Standard" : "PBR");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of palette on sky is ^7%s^5 and lightmap cap is ^7%.4f^5 on this map.\n", MAP_USE_PALETTE_ON_SKY ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_MULTIPLIER);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of alt lightmap method is ^7%s^5 on this map.\n", (MAP_LIGHTMAP_ENHANCEMENT == 2) ? "FULL" : (MAP_LIGHTMAP_ENHANCEMENT == 1) ? "HYBRID" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sky lighting scale is ^7%.4f^5 on this map.\n", SKY_LIGHTING_SCALE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map color switch RG is ^7%s^5, map color switch RB is ^7%s^5, and map color switch GB is ^7%s^5 on this map.\n", MAP_COLOR_SWITCH_RG ? "ENABLED" : "DISABLED", MAP_COLOR_SWITCH_RB ? "ENABLED" : "DISABLED", MAP_COLOR_SWITCH_GB ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural clouds are ^7%s^5 and cloud scale is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_CLOUDS_CLOUDSCALE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud speed is ^7%.4f^5 and cloud cover is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_CLOUDCOVER);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud dark is ^7%.4f^5 and cloud light is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_DARK, PROCEDURAL_CLOUDS_LIGHT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Cloud alpha is ^7%.4f^5 and cloud tint is ^7%.4f^5 on this map.\n", PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and night emissive color scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_COLOR_SCALE_NIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive radius scale is ^7%.4f^5 and night emissive radius scale is ^7%.4f^5on this map.\n", MAP_EMISSIVE_RADIUS_SCALE, MAP_EMISSIVE_RADIUS_SCALE_NIGHT);
-	
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion blur is ^7%s^5 and Directional Occlusion is ^7%s^5 on this map.\n", AO_BLUR ? "ENABLED" : "DISABLED", AO_DIRECTIONAL ? "ENABLED" : "DISABLED");
-	
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Aurora color adjustment is ^7%.4f %.4f %.4f^5 on this map.\n", AURORA_COLOR[0], AURORA_COLOR[1], AURORA_COLOR[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Late lighting is ^7%s^5 and lightmaps are ^7%s^5 on this map.\n", LATE_LIGHTING_ENABLED ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_DISABLED ? "DISABLED" : "ENABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Lighting method is ^7%s^5 on this map.\n", MAP_LIGHTING_METHOD ? "Standard" : "PBR");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of palette on sky is ^7%s^5 and lightmap cap is ^7%.4f^5 on this map.\n", MAP_USE_PALETTE_ON_SKY ? "ENABLED" : "DISABLED", MAP_LIGHTMAP_MULTIPLIER);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Use of alt lightmap method is ^7%s^5 on this map.\n", (MAP_LIGHTMAP_ENHANCEMENT == 2) ? "FULL" : (MAP_LIGHTMAP_ENHANCEMENT == 1) ? "HYBRID" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map HDR min is ^7%.4f^5 and map HDR max is ^7%.4f^5 on this map.\n", MAP_HDR_MIN, MAP_HDR_MAX);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Sky lighting scale is ^7%.4f^5 on this map.\n", SKY_LIGHTING_SCALE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR[0], MAP_AMBIENT_COLOR[1], MAP_AMBIENT_COLOR[2], MAP_AMBIENT_CSB[0], MAP_AMBIENT_CSB[1], MAP_AMBIENT_CSB[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Night ambient color is ^7%.4f %.4f %.4f^5 and csb is ^7%.4f %.4f %.4f^5 on this map.\n", MAP_AMBIENT_COLOR_NIGHT[0], MAP_AMBIENT_COLOR_NIGHT[1], MAP_AMBIENT_COLOR_NIGHT[2], MAP_AMBIENT_CSB_NIGHT[0], MAP_AMBIENT_CSB_NIGHT[1], MAP_AMBIENT_CSB_NIGHT[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Day glow multiplier is ^7%.4f^5 and night glow multiplier is ^7%.4f^5 on this map.\n", MAP_GLOW_MULTIPLIER, MAP_GLOW_MULTIPLIER_NIGHT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Map color switch RG is ^7%s^5, map color switch RB is ^7%s^5, and map color switch GB is ^7%s^5 on this map.\n", MAP_COLOR_SWITCH_RG ? "ENABLED" : "DISABLED", MAP_COLOR_SWITCH_RB ? "ENABLED" : "DISABLED", MAP_COLOR_SWITCH_GB ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Linear fog is ^7%s^5 on this map.\n", FOG_LINEAR_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Linear fog color is ^7%.4f %.4f %.4f^5 and linear fog alpha is ^7%.4f^5 on this map.\n", FOG_LINEAR_COLOR[0], FOG_LINEAR_COLOR[1], FOG_LINEAR_COLOR[2], FOG_LINEAR_ALPHA);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog is ^7%s^5 on this map.\n", FOG_WORLD_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog cloudiness is ^7%.4f^5 and world fog alpha is ^7%.4f^5 on this map.\n", FOG_WORLD_CLOUDINESS, FOG_WORLD_ALPHA);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog wind strength is ^7%.4f^5 and world fog fade altitude is ^7%.4f^5 on this map.\n", FOG_WORLD_WIND, FOG_WORLD_FADE_ALTITUDE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog color (main) is ^7%.4f %.4f %.4f^5 and world fog color (sun) is ^7%.4f %.4f %.4f^5 on this map.\n", FOG_WORLD_COLOR[0], FOG_WORLD_COLOR[1], FOG_WORLD_COLOR[2], FOG_WORLD_COLOR_SUN[0], FOG_WORLD_COLOR_SUN[1], FOG_WORLD_COLOR_SUN[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer is ^7%s^5 on this map.\n", FOG_LAYER_ENABLE ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer sun penetration is ^7%.4f^5 and fog layer cloudiness is ^7%.4f^5 on this map.\n", FOG_LAYER_SUN_PENETRATION, FOG_LAYER_CLOUDINESS);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer wind is ^7%.4f^5 on this map.\n", FOG_LAYER_WIND);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer altitude (bottom) is ^7%.4f^5 and fog layer altitude (top) is ^7%.4f^5 on this map.\n", FOG_LAYER_ALTITUDE_BOTTOM, FOG_LAYER_ALTITUDE_TOP);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer fade altitude is ^7%.4f^5 on this map.\n", FOG_LAYER_ALTITUDE_FADE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer color is ^7%.4f %.4f %.4f^5 on this map.\n", FOG_LAYER_COLOR[0], FOG_LAYER_COLOR[1], FOG_LAYER_COLOR[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer alpha is ^7%.4f^5 on this map.\n", FOG_LAYER_ALPHA);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer box min ^7%.4f %.4f^5 and fog layer box max ^7%.4f %.4f^5 on this map.\n", FOG_LAYER_BBOX[0], FOG_LAYER_BBOX[1], FOG_LAYER_BBOX[2], FOG_LAYER_BBOX[3]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive color scale is ^7%.4f^5 and night emissive color scale is ^7%.4f^5 on this map.\n", MAP_EMISSIVE_COLOR_SCALE, MAP_EMISSIVE_COLOR_SCALE_NIGHT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Emissive radius scale is ^7%.4f^5 and night emissive radius scale is ^7%.4f^5on this map.\n", MAP_EMISSIVE_RADIUS_SCALE, MAP_EMISSIVE_RADIUS_SCALE_NIGHT);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, WATER_USE_OCEAN ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water far plane is ^7%s^5 and wave height is ^7%.4f^5 on this map.\n", WATER_FARPLANE_ENABLED ? "ENABLED" : "DISABLED", WATER_WAVE_HEIGHT);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water clarity is ^7%.4f^5 and underwater clarity is ^7%.4f^5 on this map.\n", WATER_CLARITY, WATER_UNDERWATER_CLARITY);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction1 is ^7%.4f^5 and water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION1, WATER_EXTINCTION2);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION3);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Shadows are ^7%s^5 on this map. Minimum brightness is ^7%.4f^5 and Maximum brightness is ^7%.4f^5 on this map.\n", SHADOWS_ENABLED ? "ENABLED" : "DISABLED", SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion is ^7%s^5 on this map. Minimum bright is ^7%.4f^5. Maximum bright is ^7%.4f^5.\n", AO_ENABLED ? "ENABLED" : "DISABLED", AO_MINBRIGHT, AO_MULTBRIGHT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Ambient Occlusion blur is ^7%s^5 and Directional Occlusion is ^7%s^5 on this map.\n", AO_BLUR ? "ENABLED" : "DISABLED", AO_DIRECTIONAL ? "ENABLED" : "DISABLED");
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Auroras are ^7%s^5 and Day Auroras are ^7%s^5 on this map.\n", AURORA_ENABLED ? "ENABLED" : "DISABLED", AURORA_ENABLED_DAY ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Aurora color adjustment is ^7%.4f %.4f %.4f^5 on this map.\n", AURORA_COLOR[0], AURORA_COLOR[1], AURORA_COLOR[2]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and underwater grass only is ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", GRASS_UNDERWATER_ONLY ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass rare patches only is ^7%s^5 on this map.\n", GRASS_RARE_PATCHES_ONLY ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass width repeats is ^7%i^5 and grass max slope is ^7%.4f^5 on this map.\n", GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass minimum surface size is ^7%.4f^5 and surface size divider is ^7%.4f^5 on this map.\n", GRASS_SURFACE_MINIMUM_SIZE, GRASS_SURFACE_SIZE_DIVIDER);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (common) is ^7%.4f^5 and grass size multiplier (rare) is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTIPLIER_RARE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (underwater) is ^7%.4f^5 and grass lod start range is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_UNDERWATER, GRASS_LOD_START_RANGE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 and grass uniformality scaler is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY, GRASS_TYPE_UNIFORMALITY_SCALER);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog is ^7%s^5 on this map.\n", FOG_POST_ENABLED ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Linear fog is ^7%s^5 on this map.\n", FOG_LINEAR_ENABLE ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Linear fog color is ^7%.4f %.4f %.4f^5 and linear fog alpha is ^7%.4f^5 on this map.\n", FOG_LINEAR_COLOR[0], FOG_LINEAR_COLOR[1], FOG_LINEAR_COLOR[2], FOG_LINEAR_ALPHA);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog is ^7%s^5 on this map.\n", FOG_WORLD_ENABLE ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog cloudiness is ^7%.4f^5 and world fog alpha is ^7%.4f^5 on this map.\n", FOG_WORLD_CLOUDINESS, FOG_WORLD_ALPHA);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog wind strength is ^7%.4f^5 and world fog fade altitude is ^7%.4f^5 on this map.\n", FOG_WORLD_WIND, FOG_WORLD_FADE_ALTITUDE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5World fog color (main) is ^7%.4f %.4f %.4f^5 and world fog color (sun) is ^7%.4f %.4f %.4f^5 on this map.\n", FOG_WORLD_COLOR[0], FOG_WORLD_COLOR[1], FOG_WORLD_COLOR[2], FOG_WORLD_COLOR_SUN[0], FOG_WORLD_COLOR_SUN[1], FOG_WORLD_COLOR_SUN[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer is ^7%s^5 on this map.\n", FOG_LAYER_ENABLE ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer sun penetration is ^7%.4f^5 and fog layer cloudiness is ^7%.4f^5 on this map.\n", FOG_LAYER_SUN_PENETRATION, FOG_LAYER_CLOUDINESS);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer wind is ^7%.4f^5 on this map.\n", FOG_LAYER_WIND);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer altitude (bottom) is ^7%.4f^5 and fog layer altitude (top) is ^7%.4f^5 on this map.\n", FOG_LAYER_ALTITUDE_BOTTOM, FOG_LAYER_ALTITUDE_TOP);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer fade altitude is ^7%.4f^5 on this map.\n", FOG_LAYER_ALTITUDE_FADE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer color is ^7%.4f %.4f %.4f^5 on this map.\n", FOG_LAYER_COLOR[0], FOG_LAYER_COLOR[1], FOG_LAYER_COLOR[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer alpha is ^7%.4f^5 on this map.\n", FOG_LAYER_ALPHA);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Fog layer box min ^7%.4f %.4f^5 and fog layer box max ^7%.4f %.4f^5 on this map.\n", FOG_LAYER_BBOX[0], FOG_LAYER_BBOX[1], FOG_LAYER_BBOX[2], FOG_LAYER_BBOX[3]);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5There are ^7%i^5 moons enabled on this map.\n", MOON_COUNT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Enhanced water is ^7%s^5 on this map.\n", WATER_ENABLED ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water color (shallow) ^7%.4f %.4f %.4f^5 (deep) ^7%.4f %.4f %.4f^5 on this map.\n", WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2]);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water reflectiveness is ^7%.4f^5 and oceans are ^7%s^5 on this map.\n", WATER_REFLECTIVENESS, WATER_USE_OCEAN ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water far plane is ^7%s^5 and wave height is ^7%.4f^5 on this map.\n", WATER_FARPLANE_ENABLED ? "ENABLED" : "DISABLED", WATER_WAVE_HEIGHT);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water clarity is ^7%.4f^5 and underwater clarity is ^7%.4f^5 on this map.\n", WATER_CLARITY, WATER_UNDERWATER_CLARITY);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction1 is ^7%.4f^5 and water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION1, WATER_EXTINCTION2);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Water extinction3 is ^7%.4f^5 on this map.\n", WATER_EXTINCTION3);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Road texture is ^7%s^5 and road control texture is %s on this map.\n", ROAD_TEXTURE, (!tr.roadsMapImage || tr.roadsMapImage == tr.blackImage) ? "none" : tr.roadsMapImage->imgName);
 
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow is ^7%s^5 and snow lowest elevation is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_SNOW_LOWEST_ELEVATION);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow height curve is ^7%.4f^5 and snow luminosity curve is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_HEIGHT_CURVE, PROCEDURAL_SNOW_LUMINOSITY_CURVE);
-	ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow brightness is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_BRIGHTNESS);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass is ^7%s^5 and underwater grass only is ^7%s^5 on this map.\n", GRASS_ENABLED ? "ENABLED" : "DISABLED", GRASS_UNDERWATER_ONLY ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass rare patches only is ^7%s^5 on this map.\n", GRASS_RARE_PATCHES_ONLY ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass density is ^7%i^5 and grass distance is ^7%i^5 on this map.\n", GRASS_DENSITY, GRASS_DISTANCE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass width repeats is ^7%i^5 and grass max slope is ^7%.4f^5 on this map.\n", GRASS_WIDTH_REPEATS, GRASS_MAX_SLOPE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass minimum surface size is ^7%.4f^5 and surface size divider is ^7%.4f^5 on this map.\n", GRASS_SURFACE_MINIMUM_SIZE, GRASS_SURFACE_SIZE_DIVIDER);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass height is ^7%.4f^5 and grass distance from roads is ^7%.4f^5 on this map.\n", GRASS_HEIGHT, GRASS_DISTANCE_FROM_ROADS);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (common) is ^7%.4f^5 and grass size multiplier (rare) is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_COMMON, GRASS_SIZE_MULTIPLIER_RARE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass size multiplier (underwater) is ^7%.4f^5 and grass lod start range is ^7%.4f^5 on this map.\n", GRASS_SIZE_MULTIPLIER_UNDERWATER, GRASS_LOD_START_RANGE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Grass uniformality is ^7%.4f^5 and grass uniformality scaler is ^7%.4f^5 on this map.\n", GRASS_TYPE_UNIFORMALITY, GRASS_TYPE_UNIFORMALITY_SCALER);
+
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5There are ^7%i^5 moons enabled on this map.\n", MOON_COUNT);
+
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5JKA weather is ^7%s^5 and WZ weather is ^7%s^5 on this map.\n", JKA_WEATHER_ENABLED ? "ENABLED" : "DISABLED", WZ_WEATHER_ENABLED ? "ENABLED" : "DISABLED");
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Atmospheric name is ^7%s^5 and WZ weather sound only is ^7%s^5 on this map.\n", CURRENT_WEATHER_OPTION, WZ_WEATHER_SOUND_ONLY ? "ENABLED" : "DISABLED");
+
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow is ^7%s^5 and snow lowest elevation is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_ENABLED ? "ENABLED" : "DISABLED", PROCEDURAL_SNOW_LOWEST_ELEVATION);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow height curve is ^7%.4f^5 and snow luminosity curve is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_HEIGHT_CURVE, PROCEDURAL_SNOW_LUMINOSITY_CURVE);
+		ri->Printf(PRINT_ALL, "^4*** ^3MAP-INFO^4: ^5Procedural snow brightness is ^7%.4f^5 on this map.\n", PROCEDURAL_SNOW_BRIGHTNESS);
+	}
+
 	qglFinish();
 }
 

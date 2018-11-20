@@ -3,8 +3,8 @@
 //#define SSDM_PROCEDURAL_MOSS
 #define __FAST_NORMAL_DETAIL__
 #define __AMBIENT_OCCLUSION__
-#define __ENHANCED_AO__
-#define __RANDOMIZE_LIGHT_PIXELS__
+//#define __ENHANCED_AO__
+//#define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 
