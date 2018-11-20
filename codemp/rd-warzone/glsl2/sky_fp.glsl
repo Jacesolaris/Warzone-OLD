@@ -505,8 +505,17 @@ void GetSun(out vec4 fragColor, in vec3 position)
 	float sun = dot(dir, sunPos);
 
 	if (sun > sunSize) {
-		fragColor = vec4(u_PrimaryLightColor.rgb, 1.0);
-		return; // Since this planet drew a pixel, don't check any more planets, this is the closest one (first in the list)...
+		vec3 lightColor = u_PrimaryLightColor.rgb;
+
+		if (SHADER_NIGHT_SCALE > 0.0)
+		{
+			vec3 sunsetSun = vec3(1.0, 0.8, 0.625);
+			//vec3 sunsetSun = vec3(u_Local9.r, u_Local9.g, u_Local9.b);
+			lightColor = mix(lightColor, sunsetSun, SHADER_NIGHT_SCALE);
+		}
+
+		fragColor = vec4(lightColor.rgb, 1.0);
+		return;
 	}
 
 	fragColor = vec4(0.0);
@@ -958,9 +967,9 @@ void main()
 		}
 		else
 		{
-			/*if (sun.a > 0.0)
+			if (sun.a > 0.0 && terrainColor.a <= 0.0)
 				out_Glow = sun;
-			else*/
+			else
 				out_Glow = vec4(0.0);
 		}
 

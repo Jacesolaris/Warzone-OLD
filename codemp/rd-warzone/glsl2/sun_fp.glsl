@@ -183,6 +183,22 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
 	vec2 p = (-u_Dimensions.xy + 2.0*fragCoord.xy) / u_Dimensions.y;
 	p *= 2.0; // Sun scale (larger is smaller sun)
 
+	vec3 ray = normalize(vec3(p,2.0));
+    vec3 pos = vec3(0.0,0.0,3.0);
+
+	float zero=sphereZero(ray,pos,0.9);
+
+#if 1
+	// Sun is now done in skybox, this is only used for occlusion queries, so either on or off will do...
+	if (zero>0.0) 
+	{
+		fragColor = vec4(1.0);
+	}
+	else
+	{
+		fragColor = vec4(0.0);
+	}
+#else
     float time=u_Time;
     
 	float mx = time*0.025;
@@ -197,9 +213,6 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
     mat3 imr=mat3(vec3(coss.x,0.0,-sins.x),vec3(0.0,1.0,0.0),vec3(sins.x,0.0,coss.x));
     imr=imr*mat3(vec3(1.0,0.0,0.0),vec3(0.0,coss.y,-sins.y),vec3(0.0,sins.y,coss.y));
 	
-    vec3 ray = normalize(vec3(p,2.0));
-    vec3 pos = vec3(0.0,0.0,3.0);
-    
     float s1=noiseSpere(ray,pos,1.0,mr,0.5,vec3(0.0),time);
     s1=pow(min(1.0,s1*2.4),2.0);
 	s1 *= 0.25;
@@ -214,8 +227,6 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
     fragColor.xyz -= vec3(ring(ray,pos,1.03,11.0))*2.0;
     fragColor = max( vec4(0.0), fragColor );
     
-    float zero=sphereZero(ray,pos,0.9);
-
     if (zero>0.0) 
 	{
 	    //vec4 s4=noiseSpace(ray,pos,100.0,mr,0.05,vec3(1.0,2.0,4.0),0.0);
@@ -223,6 +234,7 @@ void getSun( out vec4 fragColor, in vec2 fragCoord )
 		vec4 s4=vec4(0.0);
     	fragColor.xyz += mix(mix(vec3(1.0,0.0,0.0),vec3(0.0,0.0,1.0),s4.y*1.9),vec3(0.9,1.0,0.1),s4.w*0.75)*s4.x*pow(s4.z*2.5,3.0)*0.2*zero;
     }
+#endif
     
     fragColor = clamp( fragColor, 0.0, 1.0 );
 }

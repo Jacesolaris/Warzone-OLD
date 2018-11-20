@@ -3,7 +3,8 @@
 uniform sampler2D			u_ScreenDepthMap;
 
 uniform vec4				u_Local0; // 0.0, 0.0, r_volumeLightStrength * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF
-uniform vec4				u_Local1; // nightScale, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value
+uniform vec4				u_Local1; // nightScale, isVolumelightShader, r_testvalue0->value, r_testvalue1->value
+uniform vec4				u_Local2; // r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value
 
 // General options...
 #define VOLUMETRIC_STRENGTH		u_Local0.b
@@ -134,18 +135,9 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, floa
 {
 	float mult;
 	vec4 sCoord = vec4(st);
-
-	//vec2 offset = vec2(greaterThan(fract(st.xy * 0.5), vec2(0.25)));  // mod
 	vec2 offset = mod(sCoord.xy, 0.5);
 	offset.y += offset.x;  // y ^= x in floating point
 	if (offset.y > 1.1) offset.y = 0;
-	/*float shadowCoeff = (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, 0.5), scale) +
-               offset_lookup(shadowmap, sCoord, offset + vec2(0.5, 0.5), scale) +
-               offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, -1.5), scale) +
-               offset_lookup(shadowmap, sCoord, offset + vec2(0.5, -1.5), scale) ) 
-			   * 0.25;
-
-	return shadowCoeff;*/
 	return offset_lookup(shadowmap, sCoord, offset, 0.0);
 }
 
@@ -209,20 +201,9 @@ void main()
 		return;
 	}
 
-	vec3 lightColor = u_vlightColors;
-
-	if (u_Local1.r > 0.0)
-	{// Adjust the sun color at sunrise/sunset...
-		vec3 sunsetSun = vec3(2.0, 0.3, 0.1);
-		lightColor = mix(lightColor, sunsetSun, u_Local1.r/*pow(u_Local1.r, u_Local1.g)*/);
-	}
-
 	float shadow = GetVolumetricShadow();
-
-	vec3 totalColor = lightColor * shadow;
-
+	vec3 totalColor = u_vlightColors * shadow;
 	totalColor.rgb *= VOLUMETRIC_STRENGTH;// * 1.5125;
-
 	
 	// Amplify contrast...
 #define lightLower ( 512.0 / 255.0 )
@@ -236,8 +217,12 @@ void main()
 	totalColor.rgb *= atten;
 	//totalColor.rgb = vec3(atten);
 
-	//float sun = 1.0 - clamp(pow(distance(vDir, lDir) / 5.0, u_Local1.b), 0.0, 1.0) * u_Local1.a;
-	//totalColor.rgb += totalColor * sun;
+	if (u_Local1.r > 0.0)
+	{// Adjust the sun color at sunrise/sunset...
+		vec3 sunsetSun = vec3(1.0, 0.8, 0.625);
+		//vec3 sunsetSun = vec3(u_Local2.r, u_Local2.g, u_Local2.b);
+		totalColor = mix(totalColor, sunsetSun, u_Local1.r);
+	}
 
 	if (u_Local1.r > 0.0)
 	{// Sunset, Sunrise, and Night times... Scale down screen color, before adding lighting...

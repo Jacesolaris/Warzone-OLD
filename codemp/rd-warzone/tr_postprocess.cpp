@@ -838,7 +838,7 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local1;
-		VectorSet4(local1, backEnd.refdef.floatTime, 0.0 /*invert y*/, 0.0, 0.0);
+		VectorSet4(local1, backEnd.refdef.floatTime, 0.0 /*is volumelight shader*/, 0.0, 0.0);
 		GLSL_SetUniformVec4(&tr.volumeLightCombineShader, UNIFORM_LOCAL1, local1);
 	}
 
@@ -1492,8 +1492,14 @@ qboolean RB_GenerateVolumeLightImage(void)
 
 		{
 			vec4_t local1;
-			VectorSet4(local1, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 1.0 /*invert y*/, r_testvalue0->value, r_testvalue1->value);
+			VectorSet4(local1, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 0.0, 0.0, 0.0);
 			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, local1);
+		}
+
+		{
+			vec4_t local2;
+			VectorSet4(local2, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2, local2);
 		}
 
 		RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
@@ -1543,22 +1549,11 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	{
 		vec4_t local1;
-		VectorSet4(local1, backEnd.refdef.floatTime, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
+		VectorSet4(local1, backEnd.refdef.floatTime, 1.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(&tr.volumeLightCombineShader, UNIFORM_LOCAL1, local1);
 	}
 
-#ifndef __USING_SHADOW_MAP__
-	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.volumeLightCombineShader, color, 0);
-#else //__USING_SHADOW_MAP__
-	/*ivec4_t box;
-	box[0] = backEnd.viewParms.viewportX      * tr.volumetricFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-	box[1] = backEnd.viewParms.viewportY      * tr.volumetricFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-	box[2] = backEnd.viewParms.viewportWidth  * tr.volumetricFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-	box[3] = backEnd.viewParms.viewportHeight * tr.volumetricFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);*/
-
 	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
-	//FBO_BlitFromTexture(hdrFbo->colorImage[0], r_testvalue0->integer ? box : NULL, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
-#endif //__USING_SHADOW_MAP__
 
 	//ri->Printf(PRINT_WARNING, "%i visible dlights. %i total dlights.\n", NUM_CLOSE_VLIGHTS, backEnd.refdef.num_dlights);
 	return qtrue;

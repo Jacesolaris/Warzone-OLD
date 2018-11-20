@@ -590,8 +590,8 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			VectorSet4(vector, AURORA_COLOR[0], AURORA_COLOR[1], AURORA_COLOR[2], 1.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vector);
 
-			VectorSet4(vector, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testshadervalues
+			VectorSet4(vector, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector); // testvalues
 
 			VectorSet4(vector, PROCEDURAL_BACKGROUND_HILLS_ENABLED, PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS, PROCEDURAL_BACKGROUND_HILLS_UPDOWN, PROCEDURAL_BACKGROUND_HILLS_SEED);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, vector);
