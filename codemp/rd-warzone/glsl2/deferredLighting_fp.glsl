@@ -7,7 +7,6 @@
 #define __RANDOMIZE_LIGHT_PIXELS__
 #define __SCREEN_SPACE_REFLECTIONS__
 //#define __FAST_LIGHTING__ // Game code now defines this when enabled...
-//#define __BUMP_ENHANCE__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -965,24 +964,6 @@ vec3 splatblend(vec3 color1, float a1, vec3 color2, float a2)
     return ((color1.rgb * b1) + (color2.rgb * b2)) / (b1 + b2);
 }
 
-// Grey scale.
-float getGrey(vec3 p){ return p.x*0.299 + p.y*0.587 + p.z*0.114; }
-
-// Texture bump mapping. Four tri-planar lookups, or 12 texture lookups in total.
-vec3 doBumpMap( sampler2D tex, in vec2 tc, in vec3 nor, float bumpfactor)
-{
-    const float eps = 0.001;
-    vec3 grad = vec3( getGrey(texture(tex, vec2(tc.x-eps, tc.y)).rgb),
-                      getGrey(texture(tex, vec2(tc.x, tc.y-eps)).rgb),
-                      getGrey(texture(tex, vec2(tc.x, tc.y)).rgb));
-    
-    grad = (grad - getGrey(texture(tex, tc.xy).rgb))/eps; 
-            
-    grad -= nor*dot(nor, grad);          
-
-    return normalize( nor + grad*bumpfactor );
-}
-
 //
 // Procedural texturing variation...
 //
@@ -1141,10 +1122,6 @@ void main(void)
 	vec4 norm = textureLod(u_NormalMap, texCoords, 0.0);
 	norm.xyz = DecodeNormal(norm.xy);
 
-
-#ifdef __BUMP_ENHANCE__
-	norm.xyz = doBumpMap( u_DiffuseMap, texCoords, norm.xyz, 0.005);
-#endif //__BUMP_ENHANCE__
 
 	vec3 flatNorm = norm.xyz = normalize(norm.xyz);
 
@@ -1415,7 +1392,7 @@ void main(void)
 
 #ifndef __LQ_MODE__
 #if defined(__CUBEMAPS__)
-		if (CUBEMAP_ENABLED > 0.0)
+		if (CUBEMAP_ENABLED > 0.0 && cubeReflectionFactor > 0.0 && NE > 0.0 && u_CubeMapStrength > 0.0)
 		{// Cubemaps enabled...
 			vec3 cubeLightColor = vec3(0.0);
 			
@@ -1431,29 +1408,21 @@ void main(void)
 			vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
 			parallax.z *= -1.0;
 
-			if (cubeReflectionFactor > 0.0 && NE > 0.0 && u_CubeMapStrength > 0.0)
+			float curDist = distance(u_ViewOrigin.xyz, position.xyz);
+			float cubeDist = distance(u_CubeMapInfo.xyz, position.xyz);
+			float cubeFade = (1.0 - clamp(curDist / CUBEMAP_CULLRANGE, 0.0, 1.0)) * (1.0 - clamp(cubeDist / CUBEMAP_CULLRANGE, 0.0, 1.0));
+
+			if (cubeFade > 0.0)
 			{
-				float curDist = distance(u_ViewOrigin.xyz, position.xyz);
-				float cubeDist = distance(u_CubeMapInfo.xyz, position.xyz);
-				float cubeFade = (1.0 - clamp(curDist / CUBEMAP_CULLRANGE, 0.0, 1.0)) * (1.0 - clamp(cubeDist / CUBEMAP_CULLRANGE, 0.0, 1.0));
-
-				if (cubeFade > 0.0)
-				{
-					cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
-					cubeLightColor += texture(u_CubeMap, cubeRayDir + parallax).rgb;
-					//cubeLightColor += texture(u_CubeMap, rayDir + parallax).rgb;
-					cubeLightColor /= 2.0;
-
-					//cubeLightColor = clamp(ContrastSaturationBrightness(cubeLightColor, 3.0, 4.0, 0.3), 0.0, 1.0);
-					//cubeLightColor = clamp(Vibrancy(cubeLightColor, 0.4), 0.0, 1.0);
-
-					outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, clamp(NE * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor, 0.0, 1.0));
-				}
+				cubeLightColor = textureLod(u_CubeMap, cubeRayDir + parallax, 7.0 - (cubeReflectionFactor * 7.0)).rgb;
+				cubeLightColor += texture(u_CubeMap, cubeRayDir + parallax).rgb;
+				cubeLightColor /= 2.0;
+				outColor.rgb = mix(outColor.rgb, outColor.rgb + cubeLightColor.rgb, clamp(NE * cubeFade * (u_CubeMapStrength * 20.0) * cubeReflectionFactor, 0.0, 1.0));
 			}
 		}
 		else
 		{
-			if (cubeReflectionFactor > 0.0)
+			if (cubeReflectionFactor > 0.0 && NE > 0.0)
 			{
 				vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
 
@@ -1472,7 +1441,7 @@ void main(void)
 			}
 		}
 #else //!defined(__CUBEMAPS__)
-		if (cubeReflectionFactor > 0.0)
+		if (cubeReflectionFactor > 0.0 && NE > 0.0)
 		{
 			vec2 shinyTC = ((cubeRayDir.xy + cubeRayDir.z) / 2.0) * 0.5 + 0.5;
 
@@ -1507,7 +1476,7 @@ void main(void)
 	}
 #endif //!__LQ_MODE__
 
-	if (SKY_LIGHT_CONTRIBUTION > 0.0)
+	if (SKY_LIGHT_CONTRIBUTION > 0.0 && cubeReflectionFactor > 0.0)
 	{// Sky light contributions...
 #ifndef __LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * SKY_LIGHT_CONTRIBUTION * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
@@ -1517,7 +1486,7 @@ void main(void)
 	}
 
 
-	if (BLINN_PHONG_STRENGTH > 0.0)
+	if (BLINN_PHONG_STRENGTH > 0.0 && specularReflectivePower > 0.0)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...
 		float phongFactor = (BLINN_PHONG_STRENGTH * 12.0) * SUN_PHONG_SCALE;
 
@@ -1570,7 +1539,7 @@ void main(void)
 			}
 		}
 
-		if (u_lightCount > 0.0 && specularReflectivePower > 0.0)
+		if (u_lightCount > 0.0)
 		{
 			phongFactor = BLINN_PHONG_STRENGTH * 12.0;
 

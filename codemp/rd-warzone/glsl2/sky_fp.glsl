@@ -413,6 +413,9 @@ void GetStars(out vec4 fragColor, in vec3 position)
 
 	// Small stars...
 	vec3 colorStars = clamp(reachForTheStars(from, dir, 17/*13*/, 0.9), 0.0, 1.0);
+	// bias stars toward white...
+	float starStrength = max(colorStars.r, max(colorStars.g, colorStars.b));
+	colorStars = mix(colorStars, vec3(1.0), clamp(1.85 * starStrength, 0.0, 1.0));
 
 	// Add them all together...
 	color = color1 + color2 + color3 + colorStars;
