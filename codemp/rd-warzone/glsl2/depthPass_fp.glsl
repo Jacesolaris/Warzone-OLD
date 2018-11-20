@@ -109,11 +109,11 @@ void main()
 	}
 	else
 	{
-		if (USE_IS2D <= 0.0 && distance(var_VertPos, u_ViewOrigin) > u_zFar)
-		{// Skip it all...
+		/*if (USE_IS2D <= 0.0 && distance(var_VertPos, u_ViewOrigin) > u_zFar)
+		{// Skip it all... Hmm, not on shadows...
 			gl_FragColor = vec4(0.0);
 			return;
-		}
+		}*/
 
 		vec2 texCoords = var_TexCoords;
 

@@ -1075,7 +1075,117 @@ extern vec3_t VOLUMETRIC_ROOF;
 extern qboolean RB_UpdateSunFlareVis(void);
 extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
 extern void Volumetric_RoofHeight(vec3_t from);
-extern void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y);
+extern void TR_AxisToAngles(const vec3_t axis[3], vec3_t angles);
+
+void WorldCoordToScreenCoord2(vec3_t origin, float *x, float *y, qboolean *goodY)
+{
+	int	xcenter, ycenter;
+	vec3_t	local, transformed;
+	vec3_t	vfwd, vright, vup, viewAngles;
+
+	TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+
+	//NOTE: did it this way because most draw functions expect virtual 640x480 coords
+	//	and adjust them for current resolution
+	xcenter = glConfig.vidWidth / 2;
+	ycenter = glConfig.vidHeight / 2;
+
+	VectorSubtract(origin, backEnd.refdef.vieworg, local);
+
+	AngleVectors(viewAngles, vfwd, vright, vup);
+
+	transformed[0] = DotProduct(local, vright);
+	transformed[1] = DotProduct(local, vup);
+	transformed[2] = DotProduct(local, vfwd);
+
+	// Make sure Z is not negative.
+	/*if(transformed[2] < 0.01)
+	{
+	transformed[2] *= -1.0;
+	}*/
+
+
+	// Simple convert to screen coords.
+	float xzi = xcenter / transformed[2] * (95.0 / backEnd.refdef.fov_x);
+	float yzi = ycenter / transformed[2] * (106.0 / backEnd.refdef.fov_y);
+
+	*x = (xcenter + xzi * transformed[0]);
+	*y = (ycenter - yzi * transformed[1]);
+
+	*x = (*x / glConfig.vidWidth);
+	*y = (*y / glConfig.vidHeight);
+	*y = 1.0 - *y;
+	/*if (*y >= 0.0 && *y <= 1.0)
+	{
+		*y = 1.0 - *y;
+		*goodY = qtrue;
+	}*/
+}
+
+void R_SetSunScreenPos(vec3_t sunDirection)
+{
+	qboolean goodY = qfalse;
+	vec3_t pos;
+	float dist = 4096.0;
+
+	VectorScale(sunDirection, dist, pos);
+	VectorCopy(pos, SUN_POSITION);
+	VectorAdd(SUN_POSITION, backEnd.refdef.vieworg, SUN_POSITION);
+	WorldCoordToScreenCoord2(SUN_POSITION, &SUN_SCREEN_POSITION[0], &SUN_SCREEN_POSITION[1], &goodY);
+/*
+	ri->Printf(PRINT_WARNING, "Sun screen pos is %f %f.\n", SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]);
+
+	if (SUN_SCREEN_POSITION[0] >= 0.0 && SUN_SCREEN_POSITION[0] <= 1.0 && SUN_SCREEN_POSITION[1] >= 0.0 && SUN_SCREEN_POSITION[1] <= 1.0)
+	{// Fully on screen...
+		return;
+	}
+
+	vec3_t sDirInv;
+	vec2_t sPosInv;
+	VectorCopy(sunDirection, sDirInv);
+	sDirInv[0] = -sDirInv[0];
+	sDirInv[1] = -sDirInv[1];
+	VectorScale(sDirInv, dist, pos);
+	VectorAdd(pos, backEnd.refdef.vieworg, pos);
+	WorldCoordToScreenCoord2(pos, &sPosInv[0], &sPosInv[1], &goodY);
+
+	ri->Printf(PRINT_WARNING, "Inv sun screen pos is %f %f.\n", sPosInv[0], sPosInv[1]);
+
+	if (sPosInv[0] >= 0.0 && sPosInv[0] <= 1.0 && sPosInv[1] >= 0.0 && sPosInv[1] <= 1.0)
+	{// Inv is fully on screen... (todo: need to pass this inv to glsl)
+		SUN_SCREEN_POSITION[0] = sPosInv[0];
+		SUN_SCREEN_POSITION[1] = sPosInv[1];
+		return;
+	}
+
+	if (sPosInv[1] >= 0.0 && sPosInv[1] <= 1.0)
+	{// if inv y is on screen then keep it...
+		SUN_SCREEN_POSITION[1] = sPosInv[1];
+	}
+	
+	if (SUN_SCREEN_POSITION[1] < 0.0)
+	{// It's off screen and down?
+		ri->Printf(PRINT_WARNING, "It's ???.\n");
+	}
+	
+	if (SUN_SCREEN_POSITION[1] > 1.0)
+	{// It's off screen and up
+		ri->Printf(PRINT_WARNING, "It's ???2.\n");
+	}
+	
+	if (SUN_SCREEN_POSITION[0] < 0.0)
+	{// It's just off screen and to the left
+		//SUN_SCREEN_POSITION[0] = 0.0;
+		ri->Printf(PRINT_WARNING, "It's off screen to left.\n");
+	}
+	
+	if (SUN_SCREEN_POSITION[0] > 1.0)
+	{// It's just off screen and to the right
+		//SUN_SCREEN_POSITION[0] = 1.0;
+		ri->Printf(PRINT_WARNING, "It's off screen to right.\n");
+	}
+*/
+}
 
 /*
 ** RB_DrawSun
@@ -1162,18 +1272,8 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		const float cutoff = 0.25f;
 		float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
 
-		float dist;
-		vec4_t pos;
+		R_SetSunScreenPos(tr.sunDirection);
 
-		dist = 4096.0;
-
-		VectorScale( tr.sunDirection, dist, pos );
-
-		VectorCopy(pos, SUN_POSITION);
-
-		VectorAdd(SUN_POSITION, backEnd.refdef.vieworg, SUN_POSITION);
-		WorldCoordToScreenCoord(SUN_POSITION, &SUN_SCREEN_POSITION[0], &SUN_SCREEN_POSITION[1]);
-		
 		if (dot < cutoff)
 		{
 			SUN_VISIBLE = qfalse;

@@ -2638,7 +2638,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 		if (r_drawSun->integer)
 		{
-			RB_DrawSun(0.1, tr.sunShader);
+			//RB_DrawSun(0.1, tr.sunShader);
 			//RB_DrawMoon(0.05, tr.moonShader); // UQ1: Now in the skybox shader...
 		}
 
@@ -3235,7 +3235,6 @@ const void *RB_PostProcess(const void *data)
 
 		GLSL_BindProgram(&tr.shadowmaskShader);
 
-		//GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
 		GL_BindToTMU(tr.linearDepthImageZfar, TB_COLORMAP);
 
 		GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
@@ -3247,31 +3246,18 @@ const void *RB_PostProcess(const void *data)
 		GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 		GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 
-		//GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
-		//GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP4, backEnd.refdef.sunShadowMvp[3]);
-
-		//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-		//GL_BindToTMU(tr.random2KImage[0], TB_GLOWMAP);
-
-		//GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-		//GL_BindToTMU(tr.random2KImage[1], TB_SPECULARMAP);
-
 		GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
 		vec4_t vec;
 		VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
 		GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
 
-		//GLSL_SetUniformFloatxX(&tr.shadowmaskShader, UNIFORM_SHADOWZFAR, tr.refdef.sunShadowCascadeZfar, 5);
-
 		{
 			vec4_t viewInfo;
 
-			float zmax = r_occlusion->integer ? tr.occlusionOriginalZfar : backEnd.viewParms.zFar;// backEnd.viewParms.zFar;
-			//float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-			//float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+			float zmax = r_occlusion->integer ? tr.occlusionOriginalZfar : backEnd.viewParms.zFar;
 
-			float zmax2 = backEnd.viewParms.zFar;// backEnd.viewParms.zFar;
+			float zmax2 = backEnd.viewParms.zFar;
 			float ymax2 = zmax2 * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 			float xmax2 = zmax2 * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 
@@ -3308,6 +3294,27 @@ const void *RB_PostProcess(const void *data)
 		SetViewportAndScissor();
 	}
 
+	//
+	// UQ1: Added...
+	//
+	qboolean SCREEN_BLUR = qfalse;
+	qboolean SCREEN_BLUR_MENU = glConfig.menuIsOpen;
+
+	if (backEnd.refdef.rdflags & RDF_BLUR)
+	{// Skip most of the fancy stuff when doing a blured screen...
+		SCREEN_BLUR = qtrue;
+	}
+
+	/*if (!SCREEN_BLUR && r_dynamiclight->integer && r_volumeLight->integer)
+	{
+		if (!r_lowVram->integer)
+		{
+			DEBUG_StartTimer("Volumetric Light Generate", qtrue);
+			RB_GenerateVolumeLightImage();
+			DEBUG_EndTimer(qtrue);
+		}
+	}*/
+
 	DEBUG_StartTimer("Dynamic Glow", qtrue);
 
 	if (!(backEnd.refdef.rdflags & RDF_BLUR)
@@ -3342,17 +3349,6 @@ const void *RB_PostProcess(const void *data)
 
 		FBO_t *currentFbo = tr.genericFbo3;
 		FBO_t *currentOutFbo = tr.genericFbo;
-
-		//
-		// UQ1: Added...
-		//
-		qboolean SCREEN_BLUR = qfalse;
-		qboolean SCREEN_BLUR_MENU = glConfig.menuIsOpen;
-
-		if (backEnd.refdef.rdflags & RDF_BLUR)
-		{// Skip most of the fancy stuff when doing a blured screen...
-			SCREEN_BLUR = qtrue;
-		}
 
 		if (!SCREEN_BLUR && ENABLE_DISPLACEMENT_MAPPING && r_ssdm->integer)
 		{
@@ -3735,7 +3731,11 @@ const void *RB_PostProcess(const void *data)
 		{
 			if (!r_lowVram->integer)
 			{
-				DEBUG_StartTimer("Volume Light", qtrue);
+				DEBUG_StartTimer("Volumetric Light Generate", qtrue);
+				RB_GenerateVolumeLightImage();
+				DEBUG_EndTimer(qtrue);
+
+				DEBUG_StartTimer("Volume Combine", qtrue);
 				if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
 					RB_SwapFBOs(&currentFbo, &currentOutFbo);
 				DEBUG_EndTimer(qtrue);

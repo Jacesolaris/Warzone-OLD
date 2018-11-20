@@ -823,7 +823,7 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+	//GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -838,7 +838,7 @@ void RB_BloomRays(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local1;
-		VectorSet4(local1, backEnd.refdef.floatTime, 0.0, 0.0, 0.0);
+		VectorSet4(local1, backEnd.refdef.floatTime, 0.0 /*invert y*/, 0.0, 0.0);
 		GLSL_SetUniformVec4(&tr.volumeLightCombineShader, UNIFORM_LOCAL1, local1);
 	}
 
@@ -1267,15 +1267,19 @@ void WorldCoordToScreenCoord(vec3_t origin, float *x, float *y)
 	*y = (ycenter - yzi * transformed[1]);
 
 	*x = *x / glConfig.vidWidth;
-	*y = 1.0 - (*y / glConfig.vidHeight);
+	//*y = 1.0 - (*y / glConfig.vidHeight);
+	*y = (*y / glConfig.vidHeight);
+	*y = 1.0 - *y;
 
-	if (transformed[2] < 0.01)
+	/*if (transformed[2] < 0.01)
 	{
-		*x = -1;
-		*y = -1;
-		*x = Q_clamp(-1.0, *x, 1.0);
-		*y = Q_clamp(-1.0, *y, 1.0);
-	}
+		//*x = -1;
+		//*y = -1;
+		//*x = Q_clamp(-1.0, *x, 1.0);
+		//*y = Q_clamp(-1.0, *y, 1.0);
+		*x = Q_clamp(-1.0, *x, 2.0);
+		*y = Q_clamp(-1.0, *y, 2.0);
+	}*/
 #else // this just sucks...
 	vec4_t pos, hpos;
 	VectorSet4(pos, origin[0], origin[1], origin[2], 1.0);
@@ -1310,36 +1314,24 @@ float RB_PixelDistance(float from[2], float to[2])
 extern float SUN_VOLUMETRIC_SCALE;
 extern float SUN_VOLUMETRIC_FALLOFF;
 
-qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+qboolean RB_GenerateVolumeLightImage(void)
 {
-	vec4_t color;
-	int NUM_VISIBLE_LIGHTS = 0;
-	int SUN_ID = -1;
-
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
-
-	//RB_AddGlowShaderLights();
+	/*if ( !SUN_VISIBLE )
+	{
+	VOLUME_LIGHT_INVERTED = qtrue;
+	return qfalse; // meh, gonna skip instead and help fps slightly...
+	}*/
 
 	float strengthMult = 1.0;
 	if (r_dynamiclight->integer < 3 || (r_dynamiclight->integer > 3 && r_dynamiclight->integer < 6))
 		strengthMult = 2.0; // because the lower samples result in less color...
 
-	//ri->Printf(PRINT_WARNING, "Sun screen pos is %f %f.\n", SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]);
+							//ri->Printf(PRINT_WARNING, "Sun screen pos is %f %f.\n", SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1]);
 
 	qboolean VOLUME_LIGHT_INVERTED = qfalse;
 
 	vec3_t sunColor;
 	VectorSet(sunColor, backEnd.refdef.sunCol[0] * strengthMult, backEnd.refdef.sunCol[1] * strengthMult, backEnd.refdef.sunCol[2] * strengthMult);
-
-	if ( !SUN_VISIBLE )
-	{
-		VOLUME_LIGHT_INVERTED = qtrue;
-		return qfalse; // meh, gonna skip instead and help fps slightly...
-	}
 
 	int dlightShader = r_dynamiclight->integer - 1;
 
@@ -1353,39 +1345,15 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	if (VOLUME_LIGHT_INVERTED)
 		shader = &tr.volumeLightInvertedShader[dlightShader];
 
+#define __USING_SHADOW_MAP__
+
+#ifndef __USING_SHADOW_MAP__
 	GLSL_BindProgram(shader);
 
-	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.linearDepthImage4096, TB_LIGHTMAP);
-
-	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
-	
-	float glowDimensionsX, glowDimensionsY;
-
-	// Use the most blurred version of glow...
-	if (r_anamorphic->integer)
-	{
-		GL_BindToTMU(tr.anamorphicRenderFBOImage, TB_GLOWMAP);
-		glowDimensionsX = tr.anamorphicRenderFBOImage->width;
-		glowDimensionsY = tr.anamorphicRenderFBOImage->height;
-	}
-	else if (r_bloom->integer)
-	{
-		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_GLOWMAP);
-		glowDimensionsX = tr.bloomRenderFBOImage[0]->width;
-		glowDimensionsY = tr.bloomRenderFBOImage[0]->height;
-	}
-	else
-	{
-		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
-		glowDimensionsX = tr.glowFboScaled[0]->colorImage[0]->width;
-		glowDimensionsY = tr.glowFboScaled[0]->colorImage[0]->height;
-	}
-
-	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	{
 		vec2_t screensize;
@@ -1395,25 +1363,16 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 	}
 
-	{
-		vec4_t viewInfo;
+	GLSL_SetUniformVec2(shader, UNIFORM_VLIGHTPOSITIONS, SUN_SCREEN_POSITION);
+	GLSL_SetUniformVec3(shader, UNIFORM_VLIGHTCOLORS, sunColor);
+	GLSL_SetUniformFloat(shader, UNIFORM_VLIGHTDISTANCES, 0.1);
 
-		//float zmax = backEnd.viewParms.zFar;
-		float zmax = 4096.0;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, (float)SUN_ID);
-
-		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	
 	{
 		vec4_t local0;
-		VectorSet4(local0, glowDimensionsX, glowDimensionsY, r_volumeLightStrength->value * 0.4 * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF); // * 0.4 to compensate for old setting.
+		VectorSet4(local0, 0.0, 0.0, r_volumeLightStrength->value * 0.4 * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF); // * 0.4 to compensate for old setting.
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 	}
-	
+
 	{
 		vec4_t local1;
 		VectorSet4(local1, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value);
@@ -1421,25 +1380,161 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	}
 
 
-	GLSL_SetUniformVec2(shader, UNIFORM_VLIGHTPOSITIONS, SUN_SCREEN_POSITION);
-	GLSL_SetUniformVec3(shader, UNIFORM_VLIGHTCOLORS, sunColor);
-	GLSL_SetUniformFloat(shader, UNIFORM_VLIGHTDISTANCES, 0.1);
-
-
 	//FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, shader, color, 0);
 	FBO_BlitFromTexture(tr.anamorphicRenderFBOImage, NULL, NULL, tr.volumetricFbo, NULL, shader, color, 0);
+#else //__USING_SHADOW_MAP__
+	FBO_t *oldFbo = glState.currentFBO;
+
+	float black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	qglClearBufferfv(GL_COLOR, 1, black);
+
+	vec4_t quadVerts[4];
+	vec2_t texCoords[4];
+	vec4_t box;
+
+	FBO_Bind(tr.volumetricFbo);
+
+	box[0] = backEnd.viewParms.viewportX      * tr.volumetricFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	box[1] = backEnd.viewParms.viewportY      * tr.volumetricFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+	box[2] = backEnd.viewParms.viewportWidth  * tr.volumetricFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	box[3] = backEnd.viewParms.viewportHeight * tr.volumetricFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+
+	qglViewport(box[0], box[1], box[2], box[3]);
+	qglScissor(box[0], box[1], box[2], box[3]);
+
+	box[0] = backEnd.viewParms.viewportX / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	box[1] = backEnd.viewParms.viewportY / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+	box[2] = box[0] + backEnd.viewParms.viewportWidth / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	box[3] = box[1] + backEnd.viewParms.viewportHeight / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+
+	texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
+	texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
+	texCoords[2][0] = box[2]; texCoords[2][1] = box[1];
+	texCoords[3][0] = box[0]; texCoords[3][1] = box[1];
+
+	box[0] = -1.0f;
+	box[1] = -1.0f;
+	box[2] = 1.0f;
+	box[3] = 1.0f;
+
+	VectorSet4(quadVerts[0], box[0], box[3], 0, 1);
+	VectorSet4(quadVerts[1], box[2], box[3], 0, 1);
+	VectorSet4(quadVerts[2], box[2], box[1], 0, 1);
+	VectorSet4(quadVerts[3], box[0], box[1], 0, 1);
+
+	GL_State(GLS_DEPTHTEST_DISABLE);
+
+	GLSL_BindProgram(shader);
+
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
+	GL_BindToTMU(tr.linearDepthImageZfar, TB_COLORMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+	GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_SHADOWMVP, backEnd.refdef.sunShadowMvp[0]);
+
+	GLSL_SetUniformInt(shader, UNIFORM_SHADOWMAP2, TB_SHADOWMAP2);
+	GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
+
+	GLSL_SetUniformInt(shader, UNIFORM_SHADOWMAP3, TB_SHADOWMAP3);
+	GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
+
+	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+
+	GLSL_SetUniformVec3(shader, UNIFORM_VLIGHTCOLORS, sunColor);
+
+	vec4_t sPos;
+	sPos[0] = SUN_POSITION[0];
+	sPos[1] = SUN_POSITION[1];
+	sPos[2] = SUN_POSITION[2];
+	sPos[3] = 1.0;
+	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN, sPos);
+
+	vec4_t vec;
+	VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
+	GLSL_SetUniformVec4(shader, UNIFORM_SETTINGS0, vec);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = r_occlusion->integer ? tr.occlusionOriginalZfar : backEnd.viewParms.zFar;
+
+		float zmax2 = backEnd.viewParms.zFar;
+		float ymax2 = zmax2 * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax2 = zmax2 * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+
+		float zmin = r_znear->value;
+
+		vec3_t viewBasis[3];
+		VectorScale(backEnd.refdef.viewaxis[0], zmax2, viewBasis[0]);
+		VectorScale(backEnd.refdef.viewaxis[1], xmax2, viewBasis[1]);
+		VectorScale(backEnd.refdef.viewaxis[2], ymax2, viewBasis[2]);
+
+		GLSL_SetUniformVec3(shader, UNIFORM_VIEWFORWARD, viewBasis[0]);
+		GLSL_SetUniformVec3(shader, UNIFORM_VIEWLEFT, viewBasis[1]);
+		GLSL_SetUniformVec3(shader, UNIFORM_VIEWUP, viewBasis[2]);
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, /*r_hdr->integer ? 32.0 :*/ 24.0, zmin);
+
+		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
+
+
+		{
+			vec4_t local0;
+			VectorSet4(local0, 0.0, 0.0, r_volumeLightStrength->value * 0.4 * SUN_VOLUMETRIC_SCALE, SUN_VOLUMETRIC_FALLOFF); // * 0.4 to compensate for old setting.
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
+		}
+
+		{
+			vec4_t local1;
+			VectorSet4(local1, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, 1.0 /*invert y*/, r_testvalue0->value, r_testvalue1->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, local1);
+		}
+
+		RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
+
+											   // reset viewport and scissor
+		FBO_Bind(oldFbo);
+		SetViewportAndScissor();
+	}
+#endif //__USING_SHADOW_MAP__
+
+	return qtrue;
+}
+
+qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+	int NUM_VISIBLE_LIGHTS = 0;
+	int SUN_ID = -1;
+
+	/*if ( !SUN_VISIBLE )
+	{
+	VOLUME_LIGHT_INVERTED = qtrue;
+	return qfalse; // meh, gonna skip instead and help fps slightly...
+	}*/
+
+	color[0] =
+	color[1] =
+	color[2] = 
+	color[3] = 1.0f;
 
 	// Combine render and volumetrics...
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
 
 	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+	//GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
 
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.volumetricFBOImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.volumetricFBOImage/*tr.volumetricFbo->colorImage[0]*/, TB_NORMALMAP);
 
 	vec2_t screensize;
 	screensize[0] = tr.volumetricFBOImage->width;
@@ -1448,11 +1543,22 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	{
 		vec4_t local1;
-		VectorSet4(local1, backEnd.refdef.floatTime, 0.0, 0.0, 0.0);
+		VectorSet4(local1, backEnd.refdef.floatTime, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 		GLSL_SetUniformVec4(&tr.volumeLightCombineShader, UNIFORM_LOCAL1, local1);
 	}
 
+#ifndef __USING_SHADOW_MAP__
 	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.volumeLightCombineShader, color, 0);
+#else //__USING_SHADOW_MAP__
+	/*ivec4_t box;
+	box[0] = backEnd.viewParms.viewportX      * tr.volumetricFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	box[1] = backEnd.viewParms.viewportY      * tr.volumetricFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+	box[2] = backEnd.viewParms.viewportWidth  * tr.volumetricFbo->width / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	box[3] = backEnd.viewParms.viewportHeight * tr.volumetricFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);*/
+
+	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
+	//FBO_BlitFromTexture(hdrFbo->colorImage[0], r_testvalue0->integer ? box : NULL, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
+#endif //__USING_SHADOW_MAP__
 
 	//ri->Printf(PRINT_WARNING, "%i visible dlights. %i total dlights.\n", NUM_CLOSE_VLIGHTS, backEnd.refdef.num_dlights);
 	return qtrue;

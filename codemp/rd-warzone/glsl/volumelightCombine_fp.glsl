@@ -3,7 +3,7 @@ uniform sampler2D	u_NormalMap;
 
 uniform vec2		u_Dimensions;
 
-uniform vec4		u_Local1;
+uniform vec4		u_Local1; // floatTime, r_testshaderValue1, r_testshaderValue2, r_testshaderValue3
 
 varying vec2		var_ScreenTex;
 
@@ -11,9 +11,8 @@ varying vec2		var_ScreenTex;
 //#define DEBUG
 
 // Shall we blur the result?
-////#define BLUR_WIDTH 3.0
-//#define BLUR_WIDTH 2.0
-#define BLUR_WIDTH 1.0
+//#define BLUR_WIDTH 1.0
+#define BLUR_WIDTH 2.0
 
 // Shall we pixelize randomly the output? -- Sucks!
 #define RANDOMIZE_PIXELS
@@ -28,7 +27,8 @@ float rand(vec2 co) {
 
 void main()
 {
-	vec4 diffuseColor = textureLod(u_DiffuseMap, var_ScreenTex, 0.0);
+	//vec3 diffuseColor = textureLod(u_DiffuseMap, vec2(var_ScreenTex.x, 1.0-var_ScreenTex.y), 0.0).rgb;
+	vec3 diffuseColor = texture(u_DiffuseMap, u_Local1.g > 0.0 ? vec2(var_ScreenTex.x, 1.0-var_ScreenTex.y) : var_ScreenTex).rgb;
 	
 #if defined(BLUR_WIDTH)
 	vec2 offset = vec2(1.0) / u_Dimensions;
@@ -52,7 +52,8 @@ void main()
 	volumeLight /= numSamples;
 
 #else
-	vec3 volumeLight = textureLod(u_NormalMap, var_ScreenTex, 0.0).rgb;
+	//vec3 volumeLight = textureLod(u_NormalMap, var_ScreenTex, 0.0).rgb;
+	vec3 volumeLight = texture(u_NormalMap, var_ScreenTex).rgb;
 #endif
 
 #ifdef APPLY_CONTRAST
@@ -71,5 +72,5 @@ void main()
 	volumeLight *= rand(var_ScreenTex * length(volumeLight.rgb) * u_Local1.r);
 #endif
 
-	gl_FragColor = vec4(diffuseColor.rgb + volumeLight, 1.0);
+	gl_FragColor = vec4(diffuseColor + volumeLight, 1.0);
 }

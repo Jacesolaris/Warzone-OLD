@@ -723,6 +723,64 @@ void R_ShowTime(void)
 	ri->Printf(PRINT_ALL, "^5The current day/night ^5Day night cycle time is ^7%.4f^5.\n", DAY_NIGHT_CURRENT_TIME * 24.0);
 }
 
+ void R_OpenGLToScreen(const vec4_t v, vec4_t outScreenPos) {
+
+	// Get the matrices and viewport
+	float modelView[16];
+	float projection[16];
+	double viewport[4];
+	double depthRange[2];
+
+	/*
+	qglGetDoublev(GL_MODELVIEW_MATRIX, modelView);
+	qglGetDoublev(GL_PROJECTION_MATRIX, projection);
+	qglGetDoublev(GL_VIEWPORT, viewport);
+	qglGetDoublev(GL_DEPTH_RANGE, depthRange);
+	*/
+
+	{
+		// FIXME: this could be a lot cleaner
+		//matrix_t translation;
+		//Matrix16Translation(backEnd.viewParms.ori.origin, translation);
+		//Matrix16Multiply(backEnd.viewParms.world.modelViewMatrix, translation, modelView);
+
+		//Matrix16Copy(matrix, glState.modelview);
+		//Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
+
+		Matrix16Copy(glState.modelview, modelView);
+		Matrix16Copy(glState.projection, projection);
+		qglGetDoublev(GL_VIEWPORT, viewport);
+		qglGetDoublev(GL_DEPTH_RANGE, depthRange);
+	}
+
+	// Compose the matrices into a single row-major transformation
+	vec4_t T[4];
+	int r, c, i;
+	for (r = 0; r < 4; ++r) {
+		for (c = 0; c < 4; ++c) {
+			T[r][c] = 0;
+			for (i = 0; i < 4; ++i) {
+				// OpenGL matrices are column major
+				T[r][c] += projection[r + i * 4] * modelView[i + c * 4];
+			}
+		}
+	}
+
+	// Transform the vertex
+	vec4_t result;
+	for (r = 0; r < 4; ++r) {
+		result[r] = DotProduct4(T[r], v);
+	}
+
+	// Homogeneous divide
+	const double rhw = 1 / result[4];
+
+	outScreenPos[0] = (1 + result[0] * rhw) * viewport[2] / 2 + viewport[0];
+	outScreenPos[1] = (1 - result[1] * rhw) * viewport[3] / 2 + viewport[1];
+	outScreenPos[2] = (result[2] * rhw) * (depthRange[1] - depthRange[0]) + depthRange[0];
+	outScreenPos[3] = rhw;
+}
+
 void RB_UpdateDayNightCycle()
 {
 	int nowTime = ri->Milliseconds();
@@ -857,30 +915,8 @@ void RB_UpdateDayNightCycle()
 	Matrix16Multiply(backEnd.viewParms.world.modelMatrix, trans, model);
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
-	//dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
-	dist = 4096.0;
-	//dist = 32768.0;
-
-	VectorScale(tr.sunDirection, dist, pos);
-
-	VectorCopy(pos, SUN_POSITION);
-
-	/*
-	// project sun point
-	Matrix16Transform(mvp, pos, hpos);
-
-	// transform to UV coords
-	hpos[3] = 0.5f / hpos[3];
-
-	pos[0] = 0.5f + hpos[0] * hpos[3];
-	pos[1] = 0.5f + hpos[1] * hpos[3];
-
-	SUN_SCREEN_POSITION[0] = pos[0];
-	SUN_SCREEN_POSITION[1] = pos[1];
-	*/
-
-	VectorAdd(SUN_POSITION, backEnd.refdef.vieworg, SUN_POSITION);
-	WorldCoordToScreenCoord(SUN_POSITION, &SUN_SCREEN_POSITION[0], &SUN_SCREEN_POSITION[1]);
+	extern void R_SetSunScreenPos(vec3_t sunDirection);
+	R_SetSunScreenPos(tr.sunDirection);
 
 	if (dot < cutoff)
 	{

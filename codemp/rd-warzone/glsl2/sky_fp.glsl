@@ -700,6 +700,7 @@ void main()
 	vec4 terrainColor = vec4(0.0);
 	vec3 nightGlow = vec3(0.0);
 	vec3 sunColorMod = vec3(1.0);
+	vec4 sun = vec4(0.0);
 
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
@@ -751,7 +752,6 @@ void main()
 			gl_FragColor.a = 1.0;
 		}
 
-		vec4 sun;
 		GetSun(sun, var_Position);
 
 		if (sun.a > 0.0)
@@ -958,7 +958,10 @@ void main()
 		}
 		else
 		{
-			out_Glow = vec4(0.0);
+			/*if (sun.a > 0.0)
+				out_Glow = sun;
+			else*/
+				out_Glow = vec4(0.0);
 		}
 
 		out_Position = vec4(var_Position.rgb, 1025.0/*SHADER_MATERIAL_TYPE+1.0*/);

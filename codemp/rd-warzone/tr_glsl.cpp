@@ -5279,44 +5279,15 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		GLSL_InitUniforms(&tr.volumeLightShader[i]);
 		GLSL_BindProgram(&tr.volumeLightShader[i]);
-		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
+		//GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		//GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		//GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
 		//GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 
-#if 0
-		GLSL_SetUniformMatrix16(&tr.volumeLightShader[i], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-			GLSL_SetUniformVec2(&tr.volumeLightShader[i], UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t viewInfo;
-
-			//float zmax = backEnd.viewParms.zFar;
-			float zmax = 4096.0;
-			float zmin = r_znear->value;
-
-			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-
-			GLSL_SetUniformVec4(&tr.volumeLightShader[i], UNIFORM_VIEWINFO, viewInfo);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
-			GLSL_SetUniformVec4(&tr.volumeLightShader[i], UNIFORM_LOCAL0, local0);
-		}
-
-
-		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_LIGHTCOUNT, 16);
-		vec2_t CLOSEST_VLIGHTS_POSITIONS[16] = { 0.0 };
-		GLSL_SetUniformVec2x16(&tr.volumeLightShader[i], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, 16);
-#endif
+		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
+		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SHADOWMAP, TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SHADOWMAP2, TB_SHADOWMAP2);
+		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SHADOWMAP3, TB_SHADOWMAP3);
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.volumeLightShader[i]);
@@ -5337,42 +5308,8 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_BindProgram(&tr.volumeLightInvertedShader[i]);
 		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
+		//GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
 		//GLSL_SetUniformInt(&tr.volumeLightInvertedShader[i], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-
-#if 0
-		GLSL_SetUniformMatrix16(&tr.volumeLightInvertedShader[i], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-			GLSL_SetUniformVec2(&tr.volumeLightInvertedShader[i], UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t viewInfo;
-
-			//float zmax = backEnd.viewParms.zFar;
-			float zmax = 4096.0;
-			float zmin = r_znear->value;
-
-			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-
-			GLSL_SetUniformVec4(&tr.volumeLightInvertedShader[i], UNIFORM_VIEWINFO, viewInfo);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
-			GLSL_SetUniformVec4(&tr.volumeLightInvertedShader[i], UNIFORM_LOCAL0, local0);
-		}
-
-
-		GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_LIGHTCOUNT, 16);
-		vec2_t CLOSEST_VLIGHTS_POSITIONS[16] = { 0.0 };
-		GLSL_SetUniformVec2x16(&tr.volumeLightInvertedShader[i], UNIFORM_VLIGHTPOSITIONS, CLOSEST_VLIGHTS_POSITIONS, 16);
-#endif
 
 #if defined(_DEBUG)
 		GLSL_FinishGPUShader(&tr.volumeLightInvertedShader[i]);
