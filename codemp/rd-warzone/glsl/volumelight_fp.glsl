@@ -153,14 +153,13 @@ float GetVolumetricShadow(void)
 	for (int i = 0; i < iVolumetricSamples; i++)
 	{
 		float depth = (i / float(iVolumetricSamples)) * sceneDepth;
-		//float depth = (1.0 - (i / float(iVolumetricSamples))) * sceneDepth;
 		vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
 		vec4 shadowpos = u_ShadowMvp * biasPos;
 
 		if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 		{
 			shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-			result += PCF(u_ShadowMap, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize) * dWeight;
+			result += PCF(u_ShadowMap, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize) > 0.9999999 ? dWeight : 0.0;
 			dWeight -= invSamples;
 			fWeight += invSamples;
 			continue;
@@ -171,7 +170,7 @@ float GetVolumetricShadow(void)
 		if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 		{
 			shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-			result += PCF(u_ShadowMap2, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize) * dWeight;
+			result += PCF(u_ShadowMap2, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize) > 0.9999999 ? dWeight : 0.0;
 			dWeight -= invSamples;
 			fWeight += invSamples;
 			continue;
@@ -182,7 +181,7 @@ float GetVolumetricShadow(void)
 		if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 		{
 			shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-			result += PCF(u_ShadowMap3, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 2.0)) * dWeight;
+			result += PCF(u_ShadowMap3, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 2.0)) > 0.9999999 ? dWeight : 0.0;
 			dWeight -= invSamples;
 			fWeight += invSamples;
 			continue;
@@ -202,19 +201,25 @@ void main()
 	}
 
 	float shadow = GetVolumetricShadow();
+
+#define lightLower2 ( 256.0 / 255.0 )
+#define lightUpper2 ( 255.0 / 16384.0 )
+	shadow = clamp((shadow - lightLower2) * lightUpper2, 0.0, 1.0);
+
 	vec3 totalColor = u_vlightColors * shadow;
+
 	totalColor.rgb *= VOLUMETRIC_STRENGTH;// * 1.5125;
 	
 	// Amplify contrast...
-#define lightLower ( 512.0 / 255.0 )
-#define lightUpper ( 255.0 / 4096.0 )
-	totalColor.rgb = clamp((totalColor.rgb - lightLower) * lightUpper, 0.0, 1.0);
+//#define lightLower ( 512.0 / 255.0 )
+//#define lightUpper ( 255.0 / 4096.0 )
+//	totalColor.rgb = clamp((totalColor.rgb - lightLower) * lightUpper, 0.0, 1.0);
 	
-	vec3 pMap = texture(u_PositionMap, var_DepthTex).xyz;
-	vec3 lDir = normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz);
-	vec3 vDir = normalize(pMap.xyz - u_ViewOrigin.xyz);
-	float atten = 1.0 - clamp(pow(distance(vDir, lDir) / 5.0, 0.3), 0.0, 1.0);
-	totalColor.rgb *= atten;
+//	vec3 pMap = texture(u_PositionMap, var_DepthTex).xyz;
+//	vec3 lDir = normalize(u_PrimaryLightOrigin.xyz - u_ViewOrigin.xyz);
+//	vec3 vDir = normalize(pMap.xyz - u_ViewOrigin.xyz);
+//	float atten = 1.0 - clamp(pow(distance(vDir, lDir) / 5.0, 0.3), 0.0, 1.0);
+//	totalColor.rgb *= atten;
 	//totalColor.rgb = vec3(atten);
 
 	if (u_Local1.r > 0.0)
