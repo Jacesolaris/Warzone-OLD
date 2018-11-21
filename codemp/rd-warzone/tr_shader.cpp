@@ -3859,6 +3859,8 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 	case MATERIAL_PUDDLE:
 	case MATERIAL_LAVA:
+	case MATERIAL_TREEBARK:
+	case MATERIAL_STONE:
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
@@ -3911,6 +3913,9 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_ROCK:				// 23			//
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_ROCK.\n", name);
+		break;
+	case MATERIAL_STONE:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_STONE.\n", name);
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_TILES.\n", name);
@@ -3992,6 +3997,9 @@ void DebugSurfaceTypeSelection( const char *name, int materialType)
 		break;
 	case MATERIAL_LAVA:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_LAVA.\n", name);
+		break;
+	case MATERIAL_TREEBARK:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_TREEBARK.\n", name);
 		break;
 	case MATERIAL_EFX:
 		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_EFX.\n", name);
@@ -4179,10 +4187,10 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_GREENLEAVES;
 	else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
-		return MATERIAL_SOLIDWOOD;
+		return MATERIAL_TREEBARK;
 	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
 		&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
-		return MATERIAL_SOLIDWOOD;
+		return MATERIAL_TREEBARK;
 
 	//
 	// Special cases - where we are pretty sure we want lots of specular and reflection...
@@ -4301,9 +4309,9 @@ int DetectMaterialType ( const char *name )
 		return MATERIAL_FABRIC;
 	else if (StringContainsWord(name, "tree") || StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves") || StringContainsWord(name, "fern") || StringContainsWord(name, "vine"))
 		return MATERIAL_GREENLEAVES;
-	else if (StringContainsWord(name, "wood") && !StringContainsWord(name, "street"))
-		return MATERIAL_SOLIDWOOD;
 	else if (StringContainsWord(name, "bamboo"))
+		return MATERIAL_TREEBARK;
+	else if (StringContainsWord(name, "wood") && !StringContainsWord(name, "street"))
 		return MATERIAL_SOLIDWOOD;
 	else if (StringContainsWord(name, "mud"))
 		return MATERIAL_MUD;
@@ -4349,7 +4357,7 @@ int DetectMaterialType ( const char *name )
 	else if (StringContainsWord(name, "red") || StringContainsWord(name, "blue") || StringContainsWord(name, "yellow") || StringContainsWord(name, "white") || StringContainsWord(name, "monitor"))
 		return MATERIAL_PLASTIC;
 	else if (StringContainsWord(name, "yavin") && (StringContainsWord(name, "trim") || StringContainsWord(name, "step") || StringContainsWord(name, "pad")))
-		return MATERIAL_ROCK;
+		return MATERIAL_STONE;
 	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "coruscant") || StringContainsWord(name, "/rooftop/") || StringContainsWord(name, "/nar_") || StringContainsWord(name, "/imperial/")))
 		return MATERIAL_TILES;
 	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "deathstar") || StringContainsWord(name, "imperial") || StringContainsWord(name, "shuttle") || StringContainsWord(name, "destroyer")))
@@ -4365,7 +4373,7 @@ int DetectMaterialType ( const char *name )
 	else if (StringContainsWord(name, "frame") || StringContainsWord(name, "wall") || StringContainsWord(name, "round") || StringContainsWord(name, "crate") || StringContainsWord(name, "trim") || StringContainsWord(name, "support") || StringContainsWord(name, "step") || StringContainsWord(name, "pad") || StringContainsWord(name, "weapon") || StringContainsWord(name, "gun"))
 		return MATERIAL_CONCRETE;
 	else if (StringContainsWord(name, "yavin"))
-		return MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
+		return MATERIAL_STONE; // On yavin maps, assume rock for anything else...
 	else if (StringContainsWord(name, "black") || StringContainsWord(name, "boon") || StringContainsWord(name, "items") || StringContainsWord(name, "shield"))
 		return MATERIAL_PLASTIC;
 	else if (StringContainsWord(name, "refract") || StringContainsWord(name, "reflect"))
@@ -4431,10 +4439,10 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.materialType = MATERIAL_GREENLEAVES;
 		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 				&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
-			shader.materialType = MATERIAL_SOLIDWOOD;
+			shader.materialType = MATERIAL_TREEBARK;
 		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
 				&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
-			shader.materialType = MATERIAL_SOLIDWOOD;
+			shader.materialType = MATERIAL_TREEBARK;
 
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
@@ -4518,7 +4526,7 @@ void AssignMaterialType ( const char *name, const char *text )
 	{// Always greenleaves... No parallax...
 #ifdef FIXME_TREE_BARK_PARALLAX
 		if (StringContainsWord(name, "bark") || StringContainsWord(name, "trunk") || StringContainsWord(name, "giant_tree") || StringContainsWord(name, "vine01"))
-			shader.materialType = MATERIAL_SOLIDWOOD;
+			shader.materialType = MATERIAL_TREEBARK;
 		else
 #endif
 			shader.materialType = MATERIAL_GREENLEAVES;
@@ -4613,6 +4621,12 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if (Q_stricmp(token, "indoor") == 0 || Q_stricmp(token, "inside") == 0)
 		{
 			shader.isIndoor = qtrue;
+			SkipRestOfLine(text);
+			continue;
+		}
+		else if (Q_stricmp(token, "vines") == 0 || Q_stricmp(token, "addVines") == 0)
+		{
+			shader.isVines = qtrue;
 			SkipRestOfLine(text);
 			continue;
 		}
@@ -5345,7 +5359,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 
 	// UQ1: Can't we do all this in one stage ffs???
-	if (r_normalMapping->integer >= 2 && checkNormals && r_normalMappingReal->integer)
+	if (r_normalMapping->integer >= 2 && r_normalMappingReal->integer && checkNormals)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -5668,8 +5682,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 #endif
-
-	if (checkSplats)
+	
+	if (r_splatMapping->integer && checkSplats)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -5877,10 +5891,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				hasRealRoofMap = qfalse;
 			}
 		}
-	}
-
-	if (checkSplats)
-	{
+	
 		if (splatControlMap && splatControlMap->bundle[0].image[0] && splatControlMap->bundle[0].image[0] != tr.whiteImage)
 		{// Got one...
 			diffuse->bundle[TB_SPLATCONTROLMAP] = splatControlMap->bundle[0];
@@ -8372,7 +8383,7 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 
 char uniqueGenericFoliageTreeBarkShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"q3map_material	solidwood\n"\
+"q3map_material	treebark\n"\
 "glowStrength 0.75\n"\
 "entityMergable\n"\
 "//tesselation\n"\
@@ -8647,11 +8658,8 @@ most world construction surfaces.
 ===============
 */
 
-#include "../client/tinythread.h"
-#include "../client/fast_mutex.h"
-using namespace tthread;
-tthread::fast_mutex findshader_lock;
-
+//#include <mutex>
+//std::mutex findshader_lock;
 
 shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
 	char		strippedName[MAX_IMAGE_PATH];
@@ -8698,6 +8706,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 #ifdef __DEBUG_SHADER_LOADING__
 	ri->Printf(PRINT_ALL, "Loading new shader %s.\n", name);
 #endif //__DEBUG_SHADER_LOADING__
+
+	//findshader_lock.lock();
 
 	// clear the global shader
 	ClearGlobalShader();
@@ -8790,6 +8800,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				{
 					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s shader is a warzoneEnabled shader.\n", strippedName);
 				}
+
+				//findshader_lock.unlock();
 				return sh;
 			}
 			else if (!allowGeneric)
@@ -8803,6 +8815,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				{
 					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s shader is not allowed to use AGS.\n", strippedName);
 				}
+				//findshader_lock.unlock();
 				return sh;
 			}
 			else if (forceShaderFileUsage)
@@ -8816,6 +8829,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				{
 					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s shader is forceShaderFileUsage.\n", strippedName);
 				}
+				//findshader_lock.unlock();
 				return sh;
 			}
 			else if (!haveImage)
@@ -8829,6 +8843,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				{
 					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s texture does not exist.\n", strippedName);
 				}
+				//findshader_lock.unlock();
 				return sh;
 			}
 			else if (shader.hasGlow)
@@ -8842,6 +8857,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				{
 					ri->Printf(PRINT_WARNING, "AGS SKIPPED because %s original had a glow stage.\n", strippedName);
 				}
+				//findshader_lock.unlock();
 				return sh;
 			}
 			else
@@ -9000,7 +9016,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		{
 			sprintf(myShader, uniqueGenericMetalShader, strippedName, strippedName, shaderCustomMap, lightMapText);
 		}
-		else if (material == MATERIAL_ROCK || StringContainsWord(name, "warzone/rocks"))
+		else if (material == MATERIAL_ROCK || material == MATERIAL_STONE || StringContainsWord(name, "warzone/rocks"))
 		{
 			sprintf(myShader, uniqueGenericRockShader, strippedName, strippedName, shaderCustomMap, strippedName);
 		}
@@ -9047,6 +9063,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				if (isEfxShader) sh->materialType = MATERIAL_EFX;
 				if (sh->materialType == MATERIAL_NONE) sh->materialType = material;
 
+				//findshader_lock.unlock();
 				return sh;
 			}
 			else
@@ -9118,6 +9135,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				sh->materialType = material;
 			}
 
+			//findshader_lock.unlock();
 			return sh;
 		}
 	}
@@ -9154,6 +9172,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	if (!image) {
 		ri->Printf(PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name);
 		shader.defaultShader = qtrue;
+		//findshader_lock.unlock();
 		return FinishShader();
 	}
 
@@ -9215,6 +9234,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	if (isEfxShader) shader.materialType = MATERIAL_EFX;
 	if (shader.materialType == MATERIAL_NONE) shader.materialType = material;
 
+	//findshader_lock.unlock();
 	return FinishShader();
 }
 

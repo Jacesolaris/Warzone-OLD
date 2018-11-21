@@ -2617,6 +2617,7 @@ static void _PlayerFootStep( const vec3_t origin,
 			}
 			break;
 		case MATERIAL_SOLIDWOOD:
+		case MATERIAL_TREEBARK:
 		case MATERIAL_HOLLOWWOOD:
 		case MATERIAL_POLISHEDWOOD:
 			if ( footStepType == FOOTSTEP_HEAVY_R || footStepType == FOOTSTEP_HEAVY_L) {
@@ -2642,6 +2643,7 @@ static void _PlayerFootStep( const vec3_t origin,
 
 		case MATERIAL_CONCRETE:
 		case MATERIAL_ROCK:
+		case MATERIAL_STONE:
 		case MATERIAL_ICE:
 		case MATERIAL_MARBLE:
 			if ( footStepType == FOOTSTEP_HEAVY_R || footStepType == FOOTSTEP_HEAVY_L) {

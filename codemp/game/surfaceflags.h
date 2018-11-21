@@ -116,15 +116,17 @@
 #define MATERIAL_PUDDLE							32			// shallow puddle on floor surface, or water that should not use GLSL.
 #define MATERIAL_POLISHEDWOOD					33			// shiny polished wood
 #define MATERIAL_LAVA							34			// lava
-#define MATERIAL_EFX							35			// any efx surfaces
-#define MATERIAL_BLASTERBOLT					36			// blaster bolts, sabers, etc
-#define MATERIAL_FIRE							37			// fire
-#define MATERIAL_SMOKE							38			// smoke
-#define MATERIAL_FIREFLIES						39			// fire flies fx
-#define MATERIAL_MAGIC_PARTICLES_TREE			40			// magic tree particle fx
-#define MATERIAL_MAGIC_PARTICLES				41			// magic particles (small particle fx)
-#define MATERIAL_PORTAL							42			// area transition portal
-#define MATERIAL_LAST							43			// number of materials
+#define MATERIAL_TREEBARK						35			// tree bark
+#define MATERIAL_STONE							36			// stone (rock but no vines)
+#define MATERIAL_EFX							37			// any efx surfaces
+#define MATERIAL_BLASTERBOLT					38			// blaster bolts, sabers, etc
+#define MATERIAL_FIRE							39			// fire
+#define MATERIAL_SMOKE							40			// smoke
+#define MATERIAL_FIREFLIES						41			// fire flies fx
+#define MATERIAL_MAGIC_PARTICLES_TREE			42			// magic tree particle fx
+#define MATERIAL_MAGIC_PARTICLES				43			// magic particles (small particle fx)
+#define MATERIAL_PORTAL							44			// area transition portal
+#define MATERIAL_LAST							45			// number of materials
 
 // Defined as a macro here so one change will affect all the relevant files
 
@@ -164,6 +166,8 @@
 	"puddle",							\
 	"polishedwood",						\
 	"lava",								\
+	"treebark",							\
+	"stone",							\
 	"efx",								\
 	"blasterbolt",						\
 	"fire",								\

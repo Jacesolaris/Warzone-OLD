@@ -2005,6 +2005,7 @@ void R_StitchAllPatches( void ) {
 	{
 		stitched = qfalse;
 
+#pragma omp parallel for schedule(dynamic)
 		for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
 			//
 			srfBspSurface_t *grid1 = (srfBspSurface_t *) s_worldData.surfaces[i].data;
@@ -2122,6 +2123,11 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	if (qboolean(aa->shader->materialType == MATERIAL_PORTAL) < qboolean(bb->shader->materialType == MATERIAL_PORTAL))
 		return -1;
 	else if (qboolean(aa->shader->materialType == MATERIAL_PORTAL) > qboolean(bb->shader->materialType == MATERIAL_PORTAL))
+		return 1;
+
+	if (qboolean(aa->shader->materialType == MATERIAL_LAVA) < qboolean(bb->shader->materialType == MATERIAL_LAVA))
+		return -1;
+	else if (qboolean(aa->shader->materialType == MATERIAL_LAVA) > qboolean(bb->shader->materialType == MATERIAL_LAVA))
 		return 1;
 #endif //__FX_SORTING__
 
@@ -3204,35 +3210,42 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 
 	DEBUG_StartTimer("R_LoadSurfacesParse", qfalse);
 
-	for ( i = 0 ; i < count ; i++, in++, out++ ) 
+	/*
+	dsurface_t *thisIn = in;
+	msurface_t *thisOut = out;
+	*/
+//#pragma omp parallel for schedule(dynamic)
+	for ( i = 0 ; i < count ; i++ /*in++, out++*/) 
 	{
-		switch ( LittleLong( in->surfaceType ) ) {
+		dsurface_t *thisIn = in + i;
+		msurface_t *thisOut = out + i;
+		switch ( LittleLong(thisIn->surfaceType ) ) {
 		case MST_PATCH:
-			ParseMesh ( in, dv, hdrVertColors, out );
+			ParseMesh (thisIn, dv, hdrVertColors, thisOut);
 			{
-				srfBspSurface_t *surface = (srfBspSurface_t *)out->data;
+				srfBspSurface_t *surface = (srfBspSurface_t *)thisOut->data;
 
-				out->cullinfo.type = CULLINFO_BOX | CULLINFO_SPHERE;
-				VectorCopy(surface->cullBounds[0], out->cullinfo.bounds[0]);
-				VectorCopy(surface->cullBounds[1], out->cullinfo.bounds[1]);
-				VectorCopy(surface->cullOrigin, out->cullinfo.localOrigin);
-				out->cullinfo.radius = surface->cullRadius;
+				thisOut->cullinfo.type = CULLINFO_BOX | CULLINFO_SPHERE;
+				VectorCopy(surface->cullBounds[0], thisOut->cullinfo.bounds[0]);
+				VectorCopy(surface->cullBounds[1], thisOut->cullinfo.bounds[1]);
+				VectorCopy(surface->cullOrigin, thisOut->cullinfo.localOrigin);
+				thisOut->cullinfo.radius = surface->cullRadius;
 			}
 			numMeshes++;
 			break;
 		case MST_FOLIAGE:
 		case MST_TRIANGLE_SOUP:
-			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
+			ParseTriSurf(thisIn, dv, hdrVertColors, thisOut, indexes );
 			numTriSurfs++;
 			break;
 		case MST_PLANAR:
-			ParseFace( in, dv, hdrVertColors, out, indexes );
+			ParseFace(thisIn, dv, hdrVertColors, thisOut, indexes );
 			numFaces++;
 			break;
 		case MST_FLARE:
-			ParseFlare( in, dv, out, indexes );
+			ParseFlare(thisIn, dv, thisOut, indexes );
 			{
-				out->cullinfo.type = CULLINFO_NONE;
+				thisOut->cullinfo.type = CULLINFO_NONE;
 			}
 			numFlares++;
 			break;
@@ -4055,12 +4068,16 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 		return qfalse;
 		break;
 	case MATERIAL_ROCK:				// 23			//
+	case MATERIAL_STONE:
 		return qfalse;
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
 		return qtrue;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		return qfalse;
+		break;
+	case MATERIAL_TREEBARK:
 		return qfalse;
 		break;
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
@@ -4136,8 +4153,6 @@ qboolean R_MaterialUsesCubemap ( int materialType)
 		return qtrue;
 		break;
 	case MATERIAL_LAVA:
-		return qtrue;
-		break;
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:

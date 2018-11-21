@@ -1,5 +1,5 @@
 #define __HIGH_PASS_SHARPEN__
-#define __LAVA__					// hmm, move to it's own shader?
+//#define __LAVA__					// hmm, move to it's own shader?
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 #define SCREEN_MAPS_LEAFS_THRESHOLD 0.001
@@ -406,15 +406,11 @@ void main()
 	vec4 diffuse = texture(u_DiffuseMap, texCoords);
 
 #if defined(__LAVA__)
-	if ( SHADER_MATERIAL_TYPE == MATERIAL_LAVA )
-	{
-		GetLava( diffuse, texCoords );
-	}
-	else
-	{
-		diffuse = texture(u_DiffuseMap, texCoords);
+	GetLava( diffuse, texCoords );
+#else //!defined(__LAVA__)
+	diffuse = texture(u_DiffuseMap, texCoords);
 
-#if defined(__HIGH_PASS_SHARPEN__)
+	#if defined(__HIGH_PASS_SHARPEN__)
 		if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
 		{
 			diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 16.0);
@@ -423,24 +419,9 @@ void main()
 		{
 			diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0 + (gl_FragCoord.z * 8.0));
 		}
-#endif //defined(__HIGH_PASS_SHARPEN__)
-	}
-#else
-
-	diffuse = texture(u_DiffuseMap, texCoords);
-
-#if defined(__HIGH_PASS_SHARPEN__)
-	if (USE_IS2D > 0.0 || USE_TEXTURECLAMP > 0.0)
-	{
-		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 16.0);
-	}
-	else
-	{
-		diffuse.rgb = Enhance(u_DiffuseMap, texCoords, diffuse.rgb, 8.0 + (gl_FragCoord.z * 8.0));
-	}
-#endif //defined(__HIGH_PASS_SHARPEN__)
-
+	#endif //defined(__HIGH_PASS_SHARPEN__)
 #endif //defined(__LAVA__)
+
 
 	// Set alpha early so that we can cull early...
 	gl_FragColor.a = clamp(diffuse.a * var_Color.a, 0.0, 1.0);
@@ -462,7 +443,7 @@ void main()
 	vec3 ambientColor = vec3(0.0);
 	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
 
-
+#if !defined(__LAVA__)
 	if (LIGHTMAP_ENABLED && SHADER_MATERIAL_TYPE != MATERIAL_LAVA)
 	{// TODO: Move to screen space?
 		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
@@ -543,10 +524,11 @@ void main()
 			lightColor = clamp(spec * lightColor, 0.0, 1.0);
 		}
 	}
-
+#endif //!defined(__LAVA__)
 
 	gl_FragColor.rgb = diffuse.rgb + ambientColor;
 
+#if !defined(__LAVA__)
 	if (USE_GLOW_BUFFER != 1.0 
 		&& USE_IS2D <= 0.0 
 		&& USE_VERTEX_ANIM <= 0.0
@@ -566,6 +548,7 @@ void main()
 	{
 		gl_FragColor.rgb = gl_FragColor.rgb * u_MapAmbient.rgb;
 	}
+#endif //!defined(__LAVA__)
 	
 	gl_FragColor.rgb *= clamp(lightColor, 0.0, 1.0);
 
@@ -617,20 +600,6 @@ void main()
 
 	float useDisplacementMapping = 0.0;
 
-	/*
-	if ( SHADER_MATERIAL_TYPE == MATERIAL_SOLIDWOOD 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_HOLLOWWOOD 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_ROCK 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_SAND 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_GRAVEL
-		|| SHADER_MATERIAL_TYPE == MATERIAL_SNOW 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_MUD 
-		|| SHADER_MATERIAL_TYPE == MATERIAL_DIRT )
-	{
-		useDisplacementMapping = 1.0;
-	}
-	*/
-
 	if (SHADER_MATERIAL_TYPE != MATERIAL_GREENLEAVES
 		&& SHADER_MATERIAL_TYPE != MATERIAL_DRYLEAVES
 		&& SHADER_MATERIAL_TYPE != MATERIAL_SHATTERGLASS
@@ -672,35 +641,31 @@ void main()
 #define glow_const_2 (255.0 / 229.0)
 
 #if defined(__LAVA__)
-	if (SHADER_MATERIAL_TYPE == MATERIAL_LAVA)
-	{
-		float power = length(gl_FragColor.rgb) / 3.0;
+	float power = length(gl_FragColor.rgb) / 3.0;
 		
-		power = pow(clamp(power*5.0, 0.0, 1.0), 3.0);
+	power = pow(clamp(power*5.0, 0.0, 1.0), 3.0);
 
-		out_Glow = vec4(gl_FragColor.rgb * power, 1.0);
+	out_Glow = vec4(gl_FragColor.rgb * power, 1.0);
 		
-		if (power > 0.8)
-			out_Glow = out_Glow * vec4(0.2, 0.2, 0.2, 8.0);
-		else
-			out_Glow = vec4(0.0);
-
-		out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
-		out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
-#ifdef __USE_REAL_NORMALMAPS__
-		out_NormalDetail = norm;
-#endif //__USE_REAL_NORMALMAPS__
-	}
+	if (power > 0.8)
+		out_Glow = out_Glow * vec4(0.2, 0.2, 0.2, 8.0);
 	else
-#endif //defined(__LAVA__)
+		out_Glow = vec4(0.0);
+
+	out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
+	out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
+	#ifdef __USE_REAL_NORMALMAPS__
+		out_NormalDetail = norm;
+	#endif //__USE_REAL_NORMALMAPS__
+#else //!defined(__LAVA__)
 	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 	{
 		out_Glow = vec4(0.0);
 		out_Position = vec4(0.0);
 		out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-		out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+			out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 	}
 	else if (USE_GLOW_BUFFER >= 2.0)
 	{// Merged diffuse+glow stage...
@@ -709,7 +674,6 @@ void main()
 		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
-#if 1 // Conversion of old stages to merged glows is disabled atm. Not happy with the results.
 #define GLSL_BLEND_ALPHA			0
 #define GLSL_BLEND_INVALPHA			1
 #define GLSL_BLEND_DST_ALPHA		2
@@ -751,9 +715,7 @@ void main()
 		{
 			glowColor.rgb = (glowColor.rgb * glowColor.a);
 		}
-#else
-		glowColor.rgb = (glowColor.rgb * glowColor.a);
-#endif
+
 
 		if (SHADER_GLOW_VIBRANCY != 0.0)
 		{
@@ -766,13 +728,9 @@ void main()
 		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
-		float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);//clamp(max(glowColor.r, max(glowColor.g, glowColor.b)), 0.0, 1.0);
+		float glowMax = clamp(length(glowColor.rgb) / 3.0, 0.0, 1.0);
 		glowColor.a *= glowMax;
 		glowColor.rgb *= glowColor.a;
-
-		//float gMax = max(glowColor.r, max(glowColor.g, glowColor.b));
-		//if (gMax > 1.0)
-		//	glowColor.rgb = glowColor.rgb / gMax;
 
 		glowColor.a = clamp(glowColor.a, 0.0, 1.0);
 		out_Glow = glowColor;
@@ -784,33 +742,33 @@ void main()
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = norm;
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = norm;
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 	}
 	else if (USE_GLOW_BUFFER > 0.0)
@@ -831,10 +789,6 @@ void main()
 		if (SHADER_MATERIAL_TYPE != MATERIAL_GLASS && SHADER_MATERIAL_TYPE != MATERIAL_BLASTERBOLT && length(glowColor.rgb) <= 0.0)
 			glowColor.a = 0.0;
 
-		//float gMax = max(glowColor.r, max(glowColor.g, glowColor.b));
-		//if (gMax > 1.0)
-		//	glowColor.rgb = glowColor.rgb / gMax;
-
 		glowColor.a = clamp(glowColor.a, 0.0, 1.0);
 		out_Glow = glowColor;
 
@@ -845,33 +799,33 @@ void main()
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 	}
 	else
@@ -882,33 +836,34 @@ void main()
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (SHADER_MATERIAL_TYPE == MATERIAL_EFX)
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else if (gl_FragColor.a >= alphaThreshold || SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0 || SHADER_MATERIAL_TYPE == MATERIAL_PUDDLE)
 		{
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), useDisplacementMapping), 1.0 );
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = norm;
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = norm;
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 		else
 		{
 			out_Position = vec4(0.0);
 			out_Normal = vec4(0.0);
-#ifdef __USE_REAL_NORMALMAPS__
-			out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = vec4(0.0);
+	#endif //__USE_REAL_NORMALMAPS__
 		}
 	}
+#endif //defined(__LAVA__)
 }

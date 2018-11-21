@@ -277,6 +277,8 @@ qboolean HaveSurfaceType( int materialType)
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 	case MATERIAL_PUDDLE:
 	case MATERIAL_LAVA:
+	case MATERIAL_TREEBARK:
+	case MATERIAL_STONE:
 	case MATERIAL_EFX:
 	case MATERIAL_BLASTERBOLT:
 	case MATERIAL_FIRE:
@@ -304,10 +306,10 @@ int DetectMaterialType(const char *name)
 		return MATERIAL_GREENLEAVES;
 	else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 		&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
-		return MATERIAL_SOLIDWOOD;
+		return MATERIAL_TREEBARK;
 	else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
 		&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
-		return MATERIAL_SOLIDWOOD;
+		return MATERIAL_TREEBARK;
 
 	//
 	// Special cases - where we are pretty sure we want lots of specular and reflection...
@@ -425,9 +427,9 @@ int DetectMaterialType(const char *name)
 		return MATERIAL_FABRIC;
 	else if (StringContainsWord(name, "tree") || StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves") || StringContainsWord(name, "fern") || StringContainsWord(name, "vine"))
 		return MATERIAL_GREENLEAVES;
-	else if (StringContainsWord(name, "wood") && !StringContainsWord(name, "street"))
-		return MATERIAL_SOLIDWOOD;
 	else if (StringContainsWord(name, "bamboo"))
+		return MATERIAL_TREEBARK;
+	else if (StringContainsWord(name, "wood") && !StringContainsWord(name, "street"))
 		return MATERIAL_SOLIDWOOD;
 	else if (StringContainsWord(name, "mud"))
 		return MATERIAL_MUD;
@@ -473,7 +475,7 @@ int DetectMaterialType(const char *name)
 	else if (StringContainsWord(name, "red") || StringContainsWord(name, "blue") || StringContainsWord(name, "yellow") || StringContainsWord(name, "white") || StringContainsWord(name, "monitor"))
 		return MATERIAL_PLASTIC;
 	else if (StringContainsWord(name, "yavin") && (StringContainsWord(name, "trim") || StringContainsWord(name, "step") || StringContainsWord(name, "pad")))
-		return MATERIAL_ROCK;
+		return MATERIAL_STONE;
 	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "coruscant") || StringContainsWord(name, "/rooftop/") || StringContainsWord(name, "/nar_") || StringContainsWord(name, "/imperial/")))
 		return MATERIAL_TILES;
 	else if (!StringContainsWord(name, "players") && (StringContainsWord(name, "deathstar") || StringContainsWord(name, "imperial") || StringContainsWord(name, "shuttle") || StringContainsWord(name, "destroyer")))
@@ -489,7 +491,7 @@ int DetectMaterialType(const char *name)
 	else if (StringContainsWord(name, "frame") || StringContainsWord(name, "wall") || StringContainsWord(name, "round") || StringContainsWord(name, "crate") || StringContainsWord(name, "trim") || StringContainsWord(name, "support") || StringContainsWord(name, "step") || StringContainsWord(name, "pad") || StringContainsWord(name, "weapon") || StringContainsWord(name, "gun"))
 		return MATERIAL_CONCRETE;
 	else if (StringContainsWord(name, "yavin"))
-		return MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
+		return MATERIAL_STONE; // On yavin maps, assume rock for anything else...
 	else if (StringContainsWord(name, "black") || StringContainsWord(name, "boon") || StringContainsWord(name, "items") || StringContainsWord(name, "shield"))
 		return MATERIAL_PLASTIC;
 	else if (StringContainsWord(name, "refract") || StringContainsWord(name, "reflect"))
@@ -534,10 +536,10 @@ int GetMaterialType ( const char *name, int materialType )
 			return MATERIAL_GREENLEAVES;
 		else if ((StringContainsWord(name, "yavin/tree2b") || StringContainsWord(name, "yavin/tree05") || StringContainsWord(name, "yavin/tree06"))
 			&& !(StringContainsWord(name, "yavin/tree05_vines") || StringContainsWord(name, "yavin/tree06b")))
-			return MATERIAL_SOLIDWOOD;
+			return MATERIAL_TREEBARK;
 		else if ((StringContainsWord(name, "yavin/tree08") || StringContainsWord(name, "yavin/tree09"))
 			&& !(StringContainsWord(name, "yavin/tree08b") || StringContainsWord(name, "yavin/tree09_vines") || StringContainsWord(name, "yavin/tree09a") || StringContainsWord(name, "yavin/tree09b") || StringContainsWord(name, "yavin/tree09d")))
-			return MATERIAL_SOLIDWOOD;
+			return MATERIAL_TREEBARK;
 
 		//
 		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!

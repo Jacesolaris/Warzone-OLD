@@ -1504,7 +1504,7 @@ typedef enum {
 					isGrass = qtrue;
 					isGroundFoliage = qtrue;
 				}
-				else if (thisShader->isVines || (thisShader->materialType == MATERIAL_SOLIDWOOD || thisShader->materialType == MATERIAL_ROCK))
+				else if (thisShader->isVines || (thisShader->materialType == MATERIAL_TREEBARK || thisShader->materialType == MATERIAL_ROCK))
 				{
 					isVines = qtrue;
 				}

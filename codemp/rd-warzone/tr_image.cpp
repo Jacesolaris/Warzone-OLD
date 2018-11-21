@@ -140,7 +140,7 @@ void GL_TextureMode( const char *string ) {
 			continue;
 		}
 
-		if ( glt->flags & IMGFLAG_MIPMAP ) 
+		if ( glt->flags & IMGFLAG_MIPMAP && r_mipMapTextures->integer )
 		{
 			GL_Bind (glt);
 			
@@ -334,7 +334,7 @@ void R_ImageList_f( void ) {
 		}
 
 		// mipmap adds about 50%
-		if (image->flags & IMGFLAG_MIPMAP)
+		if ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 			estSize += estSize / 2;
 
 		float printSize = GetReadableSize(estSize, &sizeSuffix);
@@ -461,7 +461,7 @@ void R_ImageHogList_f(void) {
 		}
 
 		// mipmap adds about 50%
-		if (image->flags & IMGFLAG_MIPMAP)
+		if ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 			estSize += estSize / 2;
 
 		if (estSize > 1024 * 1024)
@@ -1780,7 +1780,7 @@ static void RawImage_LowVramScale(byte **data, int *inout_width, int *inout_heig
 	int scaled_width;
 	int scaled_height;
 	qboolean picmip = (qboolean)(flags & IMGFLAG_PICMIP);
-	qboolean mipmap = (qboolean)(flags & IMGFLAG_MIPMAP);
+	qboolean mipmap = r_mipMapTextures->integer ? (qboolean)(flags & IMGFLAG_MIPMAP) : qfalse;
 	qboolean clampToEdge = (qboolean)(flags & IMGFLAG_CLAMPTOEDGE);
 
 	//
@@ -1851,7 +1851,7 @@ static void RawImage_ScaleToPower2( byte **data, int *inout_width, int *inout_he
 	int scaled_width;
 	int scaled_height;
 	qboolean picmip = (qboolean)(flags & IMGFLAG_PICMIP);
-	qboolean mipmap = (qboolean)(flags & IMGFLAG_MIPMAP);
+	qboolean mipmap = r_mipMapTextures->integer ? (qboolean)(flags & IMGFLAG_MIPMAP) : qfalse;
 	qboolean clampToEdge = (qboolean)(flags & IMGFLAG_CLAMPTOEDGE);
 
 	//
@@ -2273,7 +2273,7 @@ static void RawImage_UploadTexture( byte *data, int x, int y, int width, int hei
 		}
 		else if ( ShouldUseImmutableTextures( flags, internalFormat ) )
 		{
-			int numLevels = (flags & IMGFLAG_MIPMAP) ? CalcNumMipmapLevels (width, height) : 1;
+			int numLevels = ((flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer) ? CalcNumMipmapLevels (width, height) : 1;
 
 			qglTexStorage2D (GL_TEXTURE_2D, numLevels, internalFormat, width, height);
 			qglTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height, dataFormat, dataType, data);
@@ -2284,8 +2284,9 @@ static void RawImage_UploadTexture( byte *data, int x, int y, int width, int hei
 		}
 	}
 
-	if ((flags & IMGFLAG_MIPMAP) &&
-		(data != NULL || !ShouldUseImmutableTextures(flags, internalFormat) ))
+	if ((flags & IMGFLAG_MIPMAP) 
+		&& r_mipMapTextures->integer
+		&& (data != NULL || !ShouldUseImmutableTextures(flags, internalFormat) ))
 	{
 		// Don't need to generate mipmaps if we are generating an immutable texture and
 		// the data is NULL. All levels have already been allocated by glTexStorage2D.
@@ -2479,7 +2480,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 		Com_Memcpy(scaledBuffer, data, width * height * 4);
 	}
 	else if ( ( scaled_width == width ) && ( scaled_height == height ) ) {
-		if (!(flags & IMGFLAG_MIPMAP))
+		if (!((flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer))
 		{
 			RawImage_UploadTexture( data, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse );
 			//qglTexImage2D (GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -2517,7 +2518,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 	}
 
 	if (!(flags & IMGFLAG_NOLIGHTSCALE))
-		R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, (qboolean)(!(flags & IMGFLAG_MIPMAP)) );
+		R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, (qboolean)(!((flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)) );
 
 	*pUploadWidth = scaled_width;
 	*pUploadHeight = scaled_height;
@@ -2526,7 +2527,7 @@ static void Upload32( byte *data, int width, int height, imgType_t type, int fla
 
 done:
 
-	if (flags & IMGFLAG_MIPMAP)
+	if ((flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 	{
 		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
 		{
@@ -2534,16 +2535,6 @@ done:
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-
-			/*
-			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-			*/
-
-			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -2555,18 +2546,8 @@ done:
 		{
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			qglTexParameterf ( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 							  Com_Clamp( 1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value ) );
-
-			/*
-			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-			*/
-
-			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -2594,7 +2575,7 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 
 	RawImage_UploadTexture(NULL, 0, 0, scaled_width, scaled_height, internalFormat, type, flags, qfalse);
 
-	if (flags & IMGFLAG_MIPMAP)
+	if ((flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 	{
 		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
 		{
@@ -2602,16 +2583,6 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-
-			/*
-			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-			*/
-
-			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -2625,16 +2596,6 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 				Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-
-			/*
-			qglSamplerParameteri(texnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			qglSamplerParameteri(texnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-			qglSamplerParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-			Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value));
-			*/
-
-			//ri->Printf(PRINT_WARNING, "Using aniso %f. Max %f.\n", Com_Clamp(1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value), glConfig.maxTextureFilterAnisotropy);
 		}
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -2731,7 +2692,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-		if (image->flags & IMGFLAG_MIPMAP)
+		if ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 		{
 			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		}
@@ -2743,7 +2704,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 
 		if ( ShouldUseImmutableTextures( image->flags, internalFormat ) )
 		{
-			int numLevels = (image->flags & IMGFLAG_MIPMAP) ? CalcNumMipmapLevels (width, height) : 1;
+			int numLevels = ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer) ? CalcNumMipmapLevels (width, height) : 1;
 
 			qglTexStorage2D (GL_TEXTURE_CUBE_MAP, numLevels, internalFormat, width, height);
 
@@ -2765,7 +2726,7 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
 		}
 
-		if (image->flags & IMGFLAG_MIPMAP)
+		if ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 			qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 		image->uploadWidth = width;
@@ -2860,7 +2821,7 @@ image_t *R_CreateCubemapFromImageDatas(const char *name, byte **pic, int width, 
 		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-		if (image->flags & IMGFLAG_MIPMAP)
+		if ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 		{
 			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		}
@@ -2872,7 +2833,7 @@ image_t *R_CreateCubemapFromImageDatas(const char *name, byte **pic, int width, 
 
 		if (ShouldUseImmutableTextures(image->flags, internalFormat))
 		{
-			int numLevels = (image->flags & IMGFLAG_MIPMAP) ? CalcNumMipmapLevels(width, height) : 1;
+			int numLevels = ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer) ? CalcNumMipmapLevels(width, height) : 1;
 
 			qglTexStorage2D(GL_TEXTURE_CUBE_MAP, numLevels, internalFormat, width, height);
 
@@ -2894,7 +2855,7 @@ image_t *R_CreateCubemapFromImageDatas(const char *name, byte **pic, int width, 
 			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, GL_RGBA/*GL_BGRA*/, GL_UNSIGNED_BYTE, pic[5]);
 		}
 
-		if (image->flags & IMGFLAG_MIPMAP)
+		if ((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)
 			qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 		image->uploadWidth = width;
@@ -2972,7 +2933,7 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 	// copy or resample data as appropriate for first MIP level
 	if ( ( scaled_width == width ) && 
 		( scaled_height == height ) ) {
-		if (!(image->flags & IMGFLAG_MIPMAP))
+		if (!((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer))
 		{
 			scaled_x = x * scaled_width / width;
 			scaled_y = y * scaled_height / height;
@@ -3013,7 +2974,7 @@ void R_UpdateSubImage( image_t *image, byte *pic, int x, int y, int width, int h
 	}
 
 	if (!(image->flags & IMGFLAG_NOLIGHTSCALE))
-		R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, (qboolean)(!(image->flags & IMGFLAG_MIPMAP)) );
+		R_LightScaleTexture (scaledBuffer, scaled_width, scaled_height, (qboolean)(!((image->flags & IMGFLAG_MIPMAP) && r_mipMapTextures->integer)) );
 
 	scaled_x = x * scaled_width / width;
 	scaled_y = y * scaled_height / height;
@@ -4229,7 +4190,9 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 				}
 			}
 
-			flags |= IMGFLAG_MIPMAP;
+			if (r_mipMapTextures->integer)
+				flags |= IMGFLAG_MIPMAP;
+
 			flags &= ~IMGFLAG_CLAMPTOEDGE;
 		}
 		else
@@ -4256,7 +4219,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 				}
 			}
 
-			flags |= IMGFLAG_MIPMAP;
+			if (r_mipMapTextures->integer)
+				flags |= IMGFLAG_MIPMAP;
 
 #ifdef __TINY_IMAGE_LOADER__
 			if (isTIL)
@@ -4271,10 +4235,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		}
 	}
 
-	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_')
-	{
+	if (r_mipMapTextures->integer >= 2 && name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_')
+	{// Forced mipmaps on nearly everything 3D...
 		if (!(flags & IMGFLAG_MIPMAP) && type != IMGTYPE_SPLATCONTROLMAP && R_ShouldMipMap(name) /*&& (width >= 512 || height >= 512)*/)
-		{// UQ: Testing mipmap all...
+		{
 			flags |= IMGFLAG_MIPMAP;
 		}
 	}
@@ -4335,6 +4299,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	VectorCopy4(avgColor, image->lightColor);
 	VectorCopy4(avgColor, image->averageColor); // just in case i do something with lightColor in the future...
 
+#if 1
+	// Load any normal maps, specular maps, splat maps, etc that are also found...
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
 		&& !r_cartoon->integer
 		&& type != IMGTYPE_NORMAL 
@@ -4352,7 +4318,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& !(flags & IMGFLAG_CUBEMAP)
 		&& !r_lowVram->integer)
 	{
-		if (r_normalMappingReal->integer)
+		if (r_normalMapping->integer >= 2 && r_normalMappingReal->integer)
 		{
 			if (r_normalMapping->integer >= 2)
 			{
@@ -4365,8 +4331,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			}
 		}
 
-		if (r_specularMapping->integer) 
-			R_CreateSpecularMap( name, pic, width, height, flags );
+		if (r_specularMapping->integer)
+		{
+			R_CreateSpecularMap(name, pic, width, height, flags);
+		}
 
 		//R_CreateSubsurfaceMap( name, pic, width, height, flags );
 
@@ -4385,6 +4353,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			R_CreateRoofMap(name, pic, width, height, flags);
 		}
 	}
+#endif
 
 	if (skyImageNum != -1)
 	{// Copy pixels to their sky buffer numbers...
@@ -4557,7 +4526,9 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputNam
 					}
 				}
 
-				flags |= IMGFLAG_MIPMAP;
+				if (r_mipMapTextures->integer)
+					flags |= IMGFLAG_MIPMAP;
+
 				flags &= ~IMGFLAG_CLAMPTOEDGE;
 			}
 			else
@@ -4584,7 +4555,8 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputNam
 					}
 				}
 
-				flags |= IMGFLAG_MIPMAP;
+				if (r_mipMapTextures->integer)
+					flags |= IMGFLAG_MIPMAP;
 
 #ifdef __TINY_IMAGE_LOADER__
 				if (isTIL)
@@ -4710,7 +4682,8 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputNam
 	finalAvgColor[1] /= numNames;
 	finalAvgColor[2] /= numNames;
 
-	flags |= IMGFLAG_MIPMAP;
+	if (r_mipMapTextures->integer)
+		flags |= IMGFLAG_MIPMAP;
 
 	if (r_lowVram->integer)
 	{// Low vram modes, compress everything...

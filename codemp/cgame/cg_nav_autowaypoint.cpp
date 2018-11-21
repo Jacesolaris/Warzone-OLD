@@ -3786,6 +3786,8 @@ qboolean MaterialIsValidForWP(int materialType)
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
 	case MATERIAL_GLASS:			// 10			//
 	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+	case MATERIAL_TREEBARK:
+	case MATERIAL_STONE:
 		return qtrue;
 		break;
 	case MATERIAL_ROCK:				// 23			//
@@ -4125,6 +4127,9 @@ void DebugSurfaceType( int materialType)
 	case MATERIAL_ROCK:				// 23			//
 		trap->Print("Surface material is MATERIAL_ROCK.\n");
 		break;
+	case MATERIAL_STONE:
+		trap->Print("Surface material is MATERIAL_STONE.\n");
+		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
 		trap->Print("Surface material is MATERIAL_TILES.\n");
 		break;
@@ -4199,6 +4204,9 @@ void DebugSurfaceType( int materialType)
 		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 		trap->Print("Surface material is MATERIAL_COMPUTER.\n");
+		break;
+	case MATERIAL_TREEBARK:
+		trap->Print("Surface material is MATERIAL_TREEBARK.\n");
 		break;
 	default:
 		trap->Print("Surface material is MATERIAL_NONE.\n");

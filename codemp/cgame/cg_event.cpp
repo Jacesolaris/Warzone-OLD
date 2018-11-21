@@ -1683,6 +1683,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				soundType = FOOTSTEP_RUGWALK;
 				break;
 			case MATERIAL_SOLIDWOOD:
+			case MATERIAL_TREEBARK:
 			case MATERIAL_HOLLOWWOOD:
 			case MATERIAL_POLISHEDWOOD:
 				soundType = FOOTSTEP_WOODWALK;

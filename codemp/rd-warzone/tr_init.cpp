@@ -37,6 +37,7 @@ static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
 
+cvar_t	*r_mipMapTextures;
 cvar_t	*r_compressedTextures;
 
 cvar_t	*r_drawSort;
@@ -1436,6 +1437,7 @@ R_Register
 */
 void R_Register( void )
 {
+	r_mipMapTextures = ri->Cvar_Get("r_mipMapTextures", "2", CVAR_ARCHIVE);
 	r_compressedTextures = ri->Cvar_Get("r_compressedTextures", "2", CVAR_ARCHIVE);
 
 	r_drawSort = ri->Cvar_Get("r_drawSort", "1", CVAR_ARCHIVE);

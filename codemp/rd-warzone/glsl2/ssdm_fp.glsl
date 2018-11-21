@@ -112,11 +112,11 @@ void main(void)
 	float material = texture(u_PositionMap, var_TexCoords).a - 1.0;
 	float materialMultiplier = 1.0;
 
-	if (material == MATERIAL_ROCK)
+	if (material == MATERIAL_ROCK || material == MATERIAL_STONE)
 	{// Rock gets more displacement...
 		materialMultiplier = 3.0;
 	}
-	else if (material == MATERIAL_SOLIDWOOD)
+	else if (material == MATERIAL_TREEBARK)
 	{// Rock gets more displacement...
 		materialMultiplier = 1.5;
 	}

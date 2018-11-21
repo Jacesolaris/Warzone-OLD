@@ -297,6 +297,7 @@ In JA, we define these in the tr_local.h, which is much more logical
 
 extern cvar_t	*r_drawSort;
 
+extern cvar_t	*r_mipMapTextures;
 extern cvar_t	*r_compressedTextures;
 
 extern cvar_t	*r_cullNoDraws;

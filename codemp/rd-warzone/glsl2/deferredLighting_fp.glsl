@@ -262,6 +262,7 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.0;
 		break;
 	case MATERIAL_ROCK:				// 23			//
+	case MATERIAL_STONE:
 		specularReflectionScale = 0.002;
 		cubeReflectionScale = 0.0;
 		break;
@@ -270,6 +271,7 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 		cubeReflectionScale = 0.15;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+	case MATERIAL_TREEBARK:
 		specularReflectionScale = 0.0015;
 		cubeReflectionScale = 0.0;
 		break;
@@ -1022,7 +1024,7 @@ float proceduralSmoothNoise( vec3 p )
 
 void AddProceduralMoss(inout vec4 outColor, in vec4 position, in bool changedToWater, in vec3 originalPosition)
 {
-	if (position.a - 1.0 == MATERIAL_SOLIDWOOD
+	if (position.a - 1.0 == MATERIAL_TREEBARK
 		|| position.a - 1.0 == MATERIAL_SHORTGRASS
 		|| position.a - 1.0 == MATERIAL_LONGGRASS
 		|| position.a - 1.0 == MATERIAL_ROCK)

@@ -1251,6 +1251,7 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 		parallaxScale = 1.5;
 		break;
 	case MATERIAL_ROCK:				// 23			//
+	case MATERIAL_STONE:
 		specularScale = 0.22;
 		cubemapScale = 0.0;
 		parallaxScale = 1.5;
@@ -1261,6 +1262,7 @@ void RB_PBR_DefaultsForMaterial(float *settings, int MATERIAL_TYPE)
 		parallaxScale = 1.5;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+	case MATERIAL_TREEBARK:
 		specularScale = 0.05;
 		cubemapScale = 0.0;
 		parallaxScale = 1.5;
@@ -2135,7 +2137,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if (r_foliage->integer
 			&& r_foliageShadows->integer
 			&& VINES_ENABLED
-			&& (tess.shader->materialType == MATERIAL_SOLIDWOOD || tess.shader->materialType == MATERIAL_ROCK))
+			&& (tess.shader->materialType == MATERIAL_TREEBARK || tess.shader->materialType == MATERIAL_ROCK))
 		{
 			isVines = qtrue;
 		}
@@ -2174,7 +2176,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			&& r_foliageShadows->integer
 			&& VINES_ENABLED
 			&& ((tr.viewParms.flags & VPF_DEPTHSHADOW) || (tr.viewParms.flags & VPF_SHADOWPASS))
-			&& (tess.shader->materialType == MATERIAL_SOLIDWOOD || tess.shader->materialType == MATERIAL_ROCK))
+			&& (tess.shader->materialType == MATERIAL_TREEBARK || tess.shader->materialType == MATERIAL_ROCK))
 		{
 			isVines = qtrue;
 		}
@@ -2206,7 +2208,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else if (r_foliage->integer
 			&& VINES_ENABLED
-			&& (tess.shader->materialType == MATERIAL_SOLIDWOOD || tess.shader->materialType == MATERIAL_ROCK))
+			&& (tess.shader->materialType == MATERIAL_TREEBARK || tess.shader->materialType == MATERIAL_ROCK))
 		{
 			isVines = qtrue;
 		}
@@ -2317,7 +2319,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 #endif
-			/*if (tess.shader->materialType == MATERIAL_SOLIDWOOD)
+			/*if (tess.shader->materialType == MATERIAL_TREEBARK)
 			{// Always add tesselation to wood...
 				useTesselation = 1;
 				tessInner = 3.0;
@@ -2839,7 +2841,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (r_splatMapping->integer
 				//&& !r_lowVram->integer
-				&& tess.shader->materialType == MATERIAL_ROCK
+				&& (tess.shader->materialType == MATERIAL_ROCK || tess.shader->materialType == MATERIAL_STONE)
 				&& pStage->bundle[TB_STEEPMAP].image[0]
 				&& !pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 				&& !pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2851,7 +2853,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #ifdef __USE_REGIONS__
 			else if (r_splatMapping->integer
 				//&& !r_lowVram->integer
-				&& tess.shader->materialType == MATERIAL_ROCK
+				&& (tess.shader->materialType == MATERIAL_ROCK || tess.shader->materialType == MATERIAL_STONE)
 				&& (pStage->bundle[TB_STEEPMAP].image[0]
 					|| pStage->bundle[TB_WATER_EDGE_MAP].image[0]
 					|| pStage->bundle[TB_SPLATMAP1].image[0]
@@ -2991,6 +2993,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else
 			{
+				if (tess.shader->materialType == MATERIAL_LAVA)
+					sp = &tr.lightAllShader[2];
 				if (useTesselation)
 					sp = &tr.lightAllShader[1];
 				else
@@ -3617,7 +3621,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GL_BindToTMU(tr.skyImageShader->sky.outerbox[4], TB_COLORMAP); // Sky up...
 #endif
 		}
-		else if ( sp == &tr.lightAllShader[0] || sp == &tr.lightAllSplatShader[0] || sp == &tr.lightAllShader[1] || sp == &tr.lightAllSplatShader[1] || sp == &tr.lightAllSplatShader[2])
+		else if ( sp == &tr.lightAllShader[0] || sp == &tr.lightAllSplatShader[0] 
+			|| sp == &tr.lightAllShader[1] || sp == &tr.lightAllSplatShader[1] 
+			|| sp == &tr.lightAllShader[2] || sp == &tr.lightAllSplatShader[2])
 		{
 			int i;
 

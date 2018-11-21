@@ -1610,15 +1610,17 @@ const char glslMaterialsList[] =
 "#define MATERIAL_PUDDLE						32\n"\
 "#define MATERIAL_POLISHEDWOOD					33\n"\
 "#define MATERIAL_LAVA							34\n"\
-"#define MATERIAL_EFX							35\n"\
-"#define MATERIAL_BLASTERBOLT					36\n"\
-"#define MATERIAL_FIRE							37\n"\
-"#define MATERIAL_SMOKE							38\n"\
-"#define MATERIAL_FIREFLIES						39\n"\
-"#define MATERIAL_MAGIC_PARTICLES_TREE			40\n"\
-"#define MATERIAL_MAGIC_PARTICLES				41\n"\
-"#define MATERIAL_PORTAL						42\n"\
-"#define MATERIAL_LAST							43\n"\
+"#define MATERIAL_TREEBARK						35\n"\
+"#define MATERIAL_STONE							36\n"\
+"#define MATERIAL_EFX							37\n"\
+"#define MATERIAL_BLASTERBOLT					38\n"\
+"#define MATERIAL_FIRE							39\n"\
+"#define MATERIAL_SMOKE							40\n"\
+"#define MATERIAL_FIREFLIES						41\n"\
+"#define MATERIAL_MAGIC_PARTICLES_TREE			42\n"\
+"#define MATERIAL_MAGIC_PARTICLES				43\n"\
+"#define MATERIAL_PORTAL						44\n"\
+"#define MATERIAL_LAST							45\n"\
 "#define MATERIAL_SKY							1024\n"\
 "#define MATERIAL_SUN							1025\n"\
 "\n";
@@ -3395,6 +3397,32 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_deluxeMapping->integer)
 			strcat(extradefines, "#define USE_DELUXEMAP\n");
 
+		strcat(extradefines, va("#define MAX_GLM_BONEREFS %i\n", MAX_GLM_BONEREFS));
+
+		strcat(extradefines, "#define __LAVA__\n");
+
+		if (!GLSL_BeginLoadGPUShader(&tr.lightAllShader[2], "lightall2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load lightall (lava) shader!");
+		}
+	}
+
+	{
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+
+		extradefines[0] = '\0';
+
+		if (r_deluxeSpecular->value > 0.000001f)
+			strcat(extradefines, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+		if (r_hdr->integer && !glRefConfig.floatLightmap)
+			strcat(extradefines, "#define RGBM_LIGHTMAP\n");
+
+		strcat(extradefines, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_deluxeMapping->integer)
+			strcat(extradefines, "#define USE_DELUXEMAP\n");
+
 #ifdef __HEIGHTMAP_TERRAIN_TEST__
 		strcat(extradefines, "#define __HEIGHTMAP_TERRAIN_TEST__\n");
 #endif //__HEIGHTMAP_TERRAIN_TEST__
@@ -4496,7 +4524,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 	numEtcShaders++;
 	
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		if (!GLSL_EndLoadGPUShader(&tr.lightAllShader[i]))
 		{
@@ -6636,6 +6664,7 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.lightAllShader[0]);
 	GLSL_DeleteGPUShader(&tr.lightAllShader[1]);
+	GLSL_DeleteGPUShader(&tr.lightAllShader[2]);
 	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[0]);
 	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[1]);
 	GLSL_DeleteGPUShader(&tr.lightAllSplatShader[2]);
@@ -6802,7 +6831,9 @@ void GLSL_BindProgram(shaderProgram_t * program)
 		glState.currentProgram = program;
 		backEnd.pc.c_glslShaderBinds++;
 
-		if (program == &tr.lightAllShader[0] || program == &tr.lightAllSplatShader[0] || program == &tr.lightAllShader[1] || program == &tr.lightAllSplatShader[1] || program == &tr.lightAllSplatShader[2])
+		if (program == &tr.lightAllShader[0] || program == &tr.lightAllSplatShader[0] 
+			|| program == &tr.lightAllShader[1] || program == &tr.lightAllSplatShader[1] 
+			|| program == &tr.lightAllShader[2] || program == &tr.lightAllSplatShader[2])
 			backEnd.pc.c_lightallBinds++;
 		else if (program == &tr.depthPassShader)
 			backEnd.pc.c_depthPassBinds++;

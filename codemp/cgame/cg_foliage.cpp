@@ -3217,7 +3217,7 @@ float RoofHeightAbove(vec3_t org)
 		return -131072.0f;
 	}
 
-	if (tr.materialType == MATERIAL_SOLIDWOOD
+	if (tr.materialType == MATERIAL_TREEBARK
 		|| MaterialIsValidForGrass(tr.materialType)
 		|| tr.materialType == MATERIAL_SAND
 		|| tr.materialType == MATERIAL_ROCK
