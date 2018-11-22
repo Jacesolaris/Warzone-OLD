@@ -205,7 +205,7 @@ void main()
 	for (int i = 0; i < 12; i++)
 	{
 		vec3 plane = vCameraPos + originalRayDir * dis;
-		float f = SmoothNoise(vec3(plane.xy * 64.0, plane.z-(iTime*32.0)) * 0.3) * 1.75;
+		float f = SmoothNoise(vec3(plane.xy * 64.0, plane.z-(iTime*32.0)) * 0.3, 109.0) * 1.75;
 		f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, 1.0);
 		vec3 bri = vec3(1.0/*.25*/);
 		/*for (int t = 0; t < NUM_LIGHTS; t++)
