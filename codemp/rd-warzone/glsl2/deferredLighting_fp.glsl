@@ -1,12 +1,9 @@
 ﻿#ifndef __LQ_MODE__
 
 //#define SSDM_PROCEDURAL_MOSS
-#define __FAST_NORMAL_DETAIL__
 #define __AMBIENT_OCCLUSION__
-//#define __ENHANCED_AO__
-//#define __RANDOMIZE_LIGHT_PIXELS__
+#define __ENHANCED_AO__
 #define __SCREEN_SPACE_REFLECTIONS__
-//#define __FAST_LIGHTING__ // Game code now defines this when enabled...
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -60,7 +57,7 @@ uniform float								u_MaterialReflectiveness[MATERIAL_LAST];
 uniform int									u_lightCount;
 uniform vec3								u_lightPositions2[MAX_DEFERRED_LIGHTS];
 uniform float								u_lightDistances[MAX_DEFERRED_LIGHTS];
-uniform float								u_lightHeightScales[MAX_DEFERRED_LIGHTS];
+//uniform float								u_lightHeightScales[MAX_DEFERRED_LIGHTS];
 uniform vec3								u_lightColors[MAX_DEFERRED_LIGHTS];
 uniform float								u_lightConeAngles[MAX_DEFERRED_LIGHTS];
 uniform vec3								u_lightConeDirections[MAX_DEFERRED_LIGHTS];
@@ -202,12 +199,10 @@ vec4 positionMapAtCoord ( vec2 coord, out bool changedToWater, out vec3 original
 	{
 		bool isSky = (pos.a - 1.0 >= MATERIAL_SKY) ? true : false;
 
-		float isWater = textureLod(u_WaterPositionMap, coord, 0.0).a;
+		vec4 wMap = textureLod(u_WaterPositionMap, coord, 0.0);
 
-		if (isWater > 0.0 || (isWater > 0.0 && isSky))
+		if (wMap.a > 0.0 || (wMap.a > 0.0 && isSky))
 		{
-			vec3 wMap = textureLod(u_WaterPositionMap, coord, 0.0).xyz;
-		
 			if ((wMap.z > pos.z || isSky) && u_ViewOrigin.z > wMap.z)
 			{
 				pos.xyz = wMap.xyz;
@@ -458,29 +453,6 @@ float lnoise(in vec3 o)
 	return res;
 }
 
-#ifdef __RANDOMIZE_LIGHT_PIXELS__
-float lrand(vec2 co) {
-	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453) * 0.25 + 0.75;
-}
-#endif //__RANDOMIZE_LIGHT_PIXELS__
-
-float rand(vec2 co) {
-        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-float hash( float n ) {
-    return fract(sin(n)*687.3123);
-}
-
-float noise( in vec2 x ) {
-    vec2 p = floor(x);
-    vec2 f = fract(x);
-    f = f*f*(3.0-2.0*f);
-    float n = p.x + p.y*157.0;
-    return mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
-               mix( hash(n+157.0), hash(n+158.0),f.x),f.y);
-}
-
 vec3 TangentFromNormal ( vec3 normal )
 {
 	vec3 tangent;
@@ -497,10 +469,6 @@ vec3 TangentFromNormal ( vec3 normal )
 	}
 
 	return normalize(tangent);
-}
-
-float getHeight(vec2 uv) {
-  return length(texture(u_DiffuseMap, uv).rgb) / 3.0;
 }
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
@@ -559,7 +527,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	float upPos = coord.y;
 	float LAND_Y = 0.0;
 
-	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
+	for (float y = QLAND_Y; y <= topY && y <= QLAND_Y + (ph * scanSpeed); y += ph)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater, originalPosition);
@@ -622,7 +590,6 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 }
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
-#ifdef __FAST_NORMAL_DETAIL__
 vec4 normalVector(vec3 color) {
 	vec4 normals = vec4(color.rgb, length(color.rgb) / 3.0);
 	normals.rgb = vec3(length(normals.r - normals.a), length(normals.g - normals.a), length(normals.b - normals.a));
@@ -636,35 +603,6 @@ vec4 normalVector(vec3 color) {
 
 	return vec4(vec3(1.0) - (normalize(pow(N, vec3(4.0))) * 0.5 + 0.5), 1.0 - normals.a);
 }
-#else //!__FAST_NORMAL_DETAIL__
-vec4 bumpFromDepth(vec2 uv, vec2 resolution, float scale) {
-  vec2 step = 1. / resolution;
-    
-  float height = getHeight(uv);
-    
-  vec2 dxy = height - vec2(
-      getHeight(uv + vec2(step.x, 0.)), 
-      getHeight(uv + vec2(0., step.y))
-  );
-
-  vec3 N = vec3(dxy * scale / step, 1.);
-
-// Contrast...
-#define normLower ( 128.0 / 255.0 )
-#define normUpper (255.0 / 192.0 )
-  N = clamp((clamp(N - normLower, 0.0, 1.0)) * normUpper, 0.0, 1.0);
-
-  return vec4(normalize(N) * 0.5 + 0.5, height);
-}
-
-vec4 normalVector(vec2 coord) {
-	vec4 normals = bumpFromDepth(coord, u_Dimensions, 0.1 /*scale*/);
-	normals.r = 1.0 - normals.r;
-	normals.g = 1.0 - normals.g;
-	normals.b = 1.0 - normals.b;
-	return normals;
-}
-#endif //__FAST_NORMAL_DETAIL__
 
 #if defined(__AMBIENT_OCCLUSION__)
 float drawObject(in vec3 p){
@@ -718,6 +656,46 @@ float calculateAO(in vec3 pos, in vec3 nor, in vec2 texCoords)
 
 	return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
+
+/*
+#define NUM_AO_SAMPLES 8
+#define AO_MAX_DIST 64.0
+
+float getFastAO(in vec2 tc, in vec3 inPosition)
+{
+	float scale = 1.0;
+	float ao = 0.0;
+	float weight = 0.0;
+
+	float invScale = 1.0 / float(NUM_AO_SAMPLES);
+
+	for (int y = 1; y <= NUM_AO_SAMPLES; y++)
+	{
+		vec2 coord = tc + vec2(0.0, pixel.y * pow(float(y), float(y)));
+		vec4 pos = textureLod(u_PositionMap, coord, 0.0);
+		float dist = distance(inPosition.xyz, pos.xyz);
+
+		if (pos.a - 1.0 == MATERIAL_SKY || pos.a - 1.0 == MATERIAL_SUN)
+		{
+			ao += 0.0;
+		}
+		else if (inPosition.z < pos.z)
+		{
+			float itFactor = 1.0 - clamp(dist / AO_MAX_DIST, 0.0, 1.0);
+			ao += itFactor * scale;
+		}
+		else
+		{
+			ao += 0.0;
+		}
+
+		weight += invScale;
+		scale -= invScale;
+	}
+
+	return 1.0 - clamp(ao / weight, 0.0, 1.0);
+}
+*/
 
 /*float calcShadow( in vec3 ro, in vec3 rd, float k )
 {
@@ -1149,20 +1127,12 @@ void main(void)
 
 	if (normalDetail.a < 1.0)
 	{// If we don't have real normalmap, generate fallback normal offsets for this pixel from luminances...
-#ifdef __FAST_NORMAL_DETAIL__
 		normalDetail = normalVector(outColor.rgb);
-#else //!__FAST_NORMAL_DETAIL__
-		normalDetail = normalVector(texCoords);
-#endif //__FAST_NORMAL_DETAIL__
 	}
 
 #else //!__USE_REAL_NORMALMAPS__
 
-#ifdef __FAST_NORMAL_DETAIL__
 	vec4 normalDetail = normalVector(outColor.rgb);
-#else //!__FAST_NORMAL_DETAIL__
-	vec4 normalDetail = normalVector(texCoords);
-#endif //__FAST_NORMAL_DETAIL__
 
 #endif //__USE_REAL_NORMALMAPS__
 
@@ -1582,10 +1552,10 @@ void main(void)
 					}
 				}
 
-				if (u_lightHeightScales[li] > 0.0)
+				/*if (u_lightHeightScales[li] > 0.0)
 				{// ignore height differences, check later...
 					lightDist -= length(lightPos.z - position.z);
-				}
+				}*/
 
 				float lightPlayerDist = distance(lightPos.xyz, u_ViewOrigin.xyz);
 
@@ -1596,6 +1566,14 @@ void main(void)
 
 				// Attenuation...
 				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+
+				/*if (lightFade <= 0.0 && lightPlayerDist < distance(u_ViewOrigin.xyz, position.xyz))
+				{// Add light beams/coronas...
+					vec3 lbPos = u_ViewOrigin + (-E * lightPlayerDist);
+					float lbDist = distance(lightPos, lbPos);
+					lightFade = 1.0 - clamp((lbDist * lbDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+					lightFade = clamp(pow(lightFade, u_Local3.r), 0.0, 1.0);
+				}*/
 				
 				if (lightFade <= 0.0) continue;
 
@@ -1657,17 +1635,15 @@ void main(void)
 	}
 #endif //defined(__SCREEN_SPACE_REFLECTIONS__)
 
+
 #if defined(__AMBIENT_OCCLUSION__)
 	if (AO_TYPE == 1.0)
 	{// Fast AO enabled...
 		float ao = calculateAO(sunDir, N * 10000.0, texCoords);
-		//float ao = calculateAO(position.xyz, N, texCoords);
-		//float selfShadow = bad_ao(bump.xyz);
-		//float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
+		//float ao = getFastAO(texCoords, position.xyz);
+		
 		float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0), 0.0, 1.0);
-		//ao = clamp(ao * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		ao = clamp(((ao + selfShadow) / 2.0) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
-		//ao = clamp((ao * selfShadow) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		outColor.rgb *= ao;
 
 		/*if (u_Local3.r > 0.0)

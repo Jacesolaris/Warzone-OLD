@@ -5167,11 +5167,9 @@ void R_CreateBuiltinImages( void ) {
 
 	if (r_sunlightMode->integer >= 2)
 	{
-		for ( x = 0; x < 5; x++)
+		for ( x = 0; x < 3; x++)
 		{
-			if (x >= 3)
-				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 4.0) / vramScaleDiv, (r_shadowMapSize->integer * 4.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
-			else if (x >= 2)
+			if (x >= 2)
 				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 3.0) / vramScaleDiv, (r_shadowMapSize->integer * 3.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);
 			else if (x >= 1)
 				tr.sunShadowDepthImage[x] = R_CreateImage(va("*sunshadowdepth%i", x), NULL, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, (r_shadowMapSize->integer * 2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE, hdrDepth);

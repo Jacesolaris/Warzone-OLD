@@ -14,12 +14,10 @@ uniform vec4				u_Settings0;			// r_shadowSamples (numBlockerSearchSamples), r_s
 uniform vec3				u_ViewOrigin;
 uniform vec4				u_ViewInfo;				// zfar / znear, zfar, depthBits, znear
 
-precise varying vec2		var_DepthTex;
-precise varying vec3		var_ViewDir;
+varying vec2				var_DepthTex;
+varying vec3				var_ViewDir;
 
 #define						r_shadowMapSize			u_Settings0.g
-
-precise float DEPTH_MAX_ERROR = (1.0 / pow(2.0, u_ViewInfo.b));
 
 float offset_lookup(sampler2DShadow shadowmap, vec4 loc, vec2 offset, float scale)
 {
@@ -48,12 +46,11 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, floa
 //////////////////////////////////////////////////////////////////////////
 void main()
 {
-	precise float result = 1.0;
-	//precise float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex);
-	precise float depth = texture(u_ScreenDepthMap, var_DepthTex).x;
+	float result = 1.0;
+	float depth = texture(u_ScreenDepthMap, var_DepthTex).x;
 
-	precise vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
-	precise vec4 shadowpos = u_ShadowMvp * biasPos;
+	vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+	vec4 shadowpos = u_ShadowMvp * biasPos;
 
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
@@ -68,7 +65,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap2, shadowpos, shadowpos.z, 1.0 / r_shadowMapSize);
+		result = PCF(u_ShadowMap2, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 4.0));
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}
@@ -78,7 +75,7 @@ void main()
 	if (all(lessThanEqual(abs(shadowpos.xyz), vec3(abs(shadowpos.w)))))
 	{
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-		result = PCF(u_ShadowMap3, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 2.0));
+		result = PCF(u_ShadowMap3, shadowpos, shadowpos.z, 1.0 / (r_shadowMapSize * 6.0));
 		gl_FragColor = vec4(result, depth, 0.0, 1.0);
 		return;
 	}

@@ -139,12 +139,12 @@ float hash( const in float n ) {
 	return fract(sin(n)*4378.5453);
 }
 
-float noise(in vec3 o) 
+float noise(in vec3 o, in float seed) 
 {
 	vec3 p = floor(o);
 	vec3 fr = fract(o);
 		
-	float n = p.x + p.y*57.0 + p.z * 1009.0;
+	float n = p.x + p.y*57.0 + p.z * seed;
 
 	float a = hash(n+  0.0);
 	float b = hash(n+  1.0);
@@ -192,41 +192,53 @@ void main()
 {
 	vec3 col = texture(u_DiffuseMap, var_TexCoords).rgb;
 	vec4 position = texture(u_PositionMap, var_TexCoords);
-	vec3 originalRayDir = normalize(u_ViewOrigin - position.xyz);
+	vec3 originalRayDir = -normalize(u_ViewOrigin - position.xyz);
 	//vec3 originalRayDir = -normalize(position.xyz);
 	vec3 vCameraPos = u_ViewOrigin;//normalize(u_ViewOrigin);//vec3(0.0);//u_ViewOrigin;
 
+//#define __RAIN__
+#define __SNOW__
+
+#ifdef __RAIN__
 	// Twelve layers of rain sheets...
-	//vec2 q = var_TexCoords;
 	float dis = 1.;
 	for (int i = 0; i < 12; i++)
 	{
 		vec3 plane = vCameraPos + originalRayDir * dis;
-		
-		//if (plane.z > position.z || u_Local0.r > 0.0)
+		float f = SmoothNoise(vec3(plane.xy * 64.0, plane.z-(iTime*32.0)) * 0.3) * 1.75;
+		f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, 1.0);
+		vec3 bri = vec3(1.0/*.25*/);
+		/*for (int t = 0; t < NUM_LIGHTS; t++)
 		{
-			float f = pow(dis, .45)+.25;
-
-			//vec2 st =  f * (q * vec2(1.5, .05)+vec2(-iTime*.1+q.y*.5, iTime*.12));
-			//f = (texture(u_SpecularMap, st * .5, -99.0).x + texture(u_SpecularMap, st*.284, -99.0).y);
-			//f = (noise(st * 256.0) + noise(st * 145.408));
-			vec3 p = plane * f * 1.0;
-			f = SmoothNoise(vec3(p.xy, p.z-(iTime*32.0))) * 1.7;
-			//f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, q.y*.4+.05);
-			f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, 1.0);
-
-			vec3 bri = vec3(1.0/*.25*/);
-			/*for (int t = 0; t < NUM_LIGHTS; t++)
-			{
-				vec3 v3 = lightArray[t].xyz - plane.xyz;
-				float l = dot(v3, v3);
-				l = max(3.0-(l*l * .02), 0.0);
-				bri += l * lightColours[t];
-			}*/
-			col += bri*f;
-		}
+			vec3 v3 = lightArray[t].xyz - plane.xyz;
+			float l = dot(v3, v3);
+			l = max(3.0-(l*l * .02), 0.0);
+			bri += l * lightColours[t];
+		}*/
+		col += bri*f*0.25;
 		dis += 3.5;
 	}
+#endif //__RAIN__
+#ifdef __SNOW__
+	// Twelve layers of snow sheets...
+	float dis = 2.;
+	for (int i = 0; i < 12; i++)
+	{
+		vec3 plane = vCameraPos + originalRayDir * dis * 128.0;
+		float f = SmoothNoise(vec3(plane.xy, plane.z-(iTime*32.0)) * 0.3, 1009.0) * 1.7;
+		f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, 1.0);
+		vec3 bri = vec3(1.0/*.25*/);
+		/*for (int t = 0; t < NUM_LIGHTS; t++)
+		{
+			vec3 v3 = lightArray[t].xyz - plane.xyz;
+			float l = dot(v3, v3);
+			l = max(3.0-(l*l * .02), 0.0);
+			bri += l * lightColours[t];
+		}*/
+		col += bri*f*4.0;
+		dis += 3.5;
+	}
+#endif //__SNOW__
 
 	col = clamp(col, 0.0, 1.0);
 

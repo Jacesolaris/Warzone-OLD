@@ -3682,7 +3682,8 @@ typedef struct stageVars
 	vec2_t		texcoords[NUM_TEXTURE_BUNDLES][SHADER_MAX_VERTEXES];
 } stageVars_t;
 
-#define MAX_MULTIDRAW_PRIMITIVES	16384
+//#define MAX_MULTIDRAW_PRIMITIVES	16384
+#define MAX_MULTIDRAW_PRIMITIVES	65536
 
 struct shaderCommands_s 
 {
