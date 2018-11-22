@@ -179,11 +179,11 @@ const mat3 m = mat3( 0.00,  0.80,  0.60,
                     -0.80,  0.36, -0.48,
                     -0.60, -0.48,  0.64 );
 
-float SmoothNoise( vec3 p )
+float SmoothNoise( vec3 p, in float seed )
 {
     float f;
-    f  = 0.5000*noise( p ); p = m*p*2.02;
-    f += 0.2500*noise( p ); 
+    f  = 0.5000*noise( p, seed ); p = m*p*2.02;
+    f += 0.2500*noise( p, seed ); 
 	
     return f * (1.0 / (0.5000 + 0.2500));
 }
