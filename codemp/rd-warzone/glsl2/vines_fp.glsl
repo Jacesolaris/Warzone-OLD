@@ -1,13 +1,16 @@
+#define __CHRISTMAS_LIGHTS__
+
 uniform sampler2D	u_DiffuseMap;	// Land grass atlas
 uniform sampler2D	u_WaterEdgeMap; // Sea grass atlas
 
 uniform vec3		u_ViewOrigin;
 
-uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, 0.0
+uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, ENABLE_CHRISTMAS_EFFECT
 
 #define MAP_COLOR_SWITCH_RG			u_Settings5.r
 #define MAP_COLOR_SWITCH_RB			u_Settings5.g
 #define MAP_COLOR_SWITCH_GB			u_Settings5.b
+#define ENABLE_CHRISTMAS_EFFECT		u_Settings5.a
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
 uniform vec4						u_Local2; // hasSteepMap, hasWaterEdgeMap, haveNormalMap, SHADER_WATER_LEVEL
@@ -133,9 +136,67 @@ vec4 DecodeFloatRGBA( float v ) {
   return enc;
 }
 
+#ifdef __CHRISTMAS_LIGHTS__
+float hash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float noise(in vec3 o, in float seed) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * seed;
+
+	float a = hash(n+  0.0);
+	float b = hash(n+  1.0);
+	float c = hash(n+ 57.0);
+	float d = hash(n+ 58.0);
+	
+	float e = hash(n+  0.0 + 1009.0);
+	float f = hash(n+  1.0 + 1009.0);
+	float g = hash(n+ 57.0 + 1009.0);
+	float h = hash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 m = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float SmoothNoise( vec3 p, in float seed )
+{
+    float f;
+    f  = 0.5000*noise( p, seed ); p = m*p*2.02;
+    f += 0.2500*noise( p, seed ); 
+	
+    return f * (1.0 / (0.5000 + 0.2500));
+}
+#endif //__CHRISTMAS_LIGHTS__
+
 void main() 
 {
 	vec4 diffuse;
+#ifdef __CHRISTMAS_LIGHTS__
+	vec4 lights = vec4(0.0);
+#endif //__CHRISTMAS_LIGHTS__
 
 	vec2 tc = vTexCoord;
 
@@ -186,6 +247,18 @@ void main()
 #else
 		diffuse.a = 1.0;
 #endif
+
+#ifdef __CHRISTMAS_LIGHTS__
+		if (ENABLE_CHRISTMAS_EFFECT > 0.0 && diffuse.a > 0.05)
+		{
+			float mapmult = 0.05;
+			float f = SmoothNoise(vVertPosition.xyz * mapmult, 1009.0);
+			f = pow(f, 32.0);
+			vec3 bri = pow(vec3(SmoothNoise(vVertPosition.yzx * mapmult, 1009.0), SmoothNoise(vVertPosition.xzy * mapmult, 1009.0), SmoothNoise(vVertPosition.zyx * mapmult, 1009.0)), vec3(8.0));
+			lights.rgb = bri*f*10240.0;
+			lights.a = clamp(max(lights.r, max(lights.g, lights.b)), 0.0, 1.0);
+		}
+#endif //__CHRISTMAS_LIGHTS__
 	}
 	else
 	{
@@ -194,8 +267,13 @@ void main()
 
 	if (diffuse.a > 0.05/*0.5*/)
 	{
+	#ifdef __CHRISTMAS_LIGHTS__
+		gl_FragColor = vec4(clamp(diffuse.rgb + (lights.rgb * lights.a), 0.0, 1.0), diffuse.a);
+		out_Glow = vec4(lights);
+	#else //!__CHRISTMAS_LIGHTS__
 		gl_FragColor = vec4(diffuse);
 		out_Glow = vec4(0.0);
+	#endif //__CHRISTMAS_LIGHTS__
 		out_Normal = vec4(EncodeNormal(DecodeNormal(vVertNormal.xy)), 0.0, 1.0);
 #ifdef __USE_REAL_NORMALMAPS__
 		out_NormalDetail = vec4(0.0);

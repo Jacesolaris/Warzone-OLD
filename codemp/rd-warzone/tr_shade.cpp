@@ -52,6 +52,8 @@ extern qboolean		MAP_COLOR_SWITCH_RG;
 extern qboolean		MAP_COLOR_SWITCH_RB;
 extern qboolean		MAP_COLOR_SWITCH_GB;
 
+extern qboolean		ENABLE_CHRISTMAS_EFFECT;
+
 extern qboolean		GRASS_ENABLED;
 extern qboolean		GRASS_UNDERWATER_ONLY;
 extern qboolean		GRASS_RARE_PATCHES_ONLY;
@@ -3161,7 +3163,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_RG) ? 1.0 : 0.0,
 				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_RB) ? 1.0 : 0.0,
 				(backEnd.currentEntity == &tr.worldEntity && MAP_COLOR_SWITCH_GB) ? 1.0 : 0.0,
-				0.0);
+				(ENABLE_CHRISTMAS_EFFECT && tess.shader->materialType == MATERIAL_GREENLEAVES) ? 1.0 : 0.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
 
 			GLSL_SetUniformFloat(sp, UNIFORM_ZFAR, r_occlusion->integer ? tr.occlusionZfar : backEnd.viewParms.zFar);
@@ -3854,7 +3856,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #endif //__HUMANOIDS_BEND_GRASS__
 
 				GL_BindToTMU(tr.foliageAliasImage, TB_DIFFUSEMAP);
-				//GL_BindToTMU(tr.seaVinesAliasImage, TB_WATER_EDGE_MAP);
 
 				float TERRAIN_TESS_OFFSET = 0.0;
 
@@ -3961,7 +3962,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						MAP_COLOR_SWITCH_RG ? 1.0 : 0.0,
 						MAP_COLOR_SWITCH_RB ? 1.0 : 0.0,
 						MAP_COLOR_SWITCH_GB ? 1.0 : 0.0,
-						0.0);
+						ENABLE_CHRISTMAS_EFFECT ? 1.0 : 0.0);
 					GLSL_SetUniformVec4(sp, UNIFORM_SETTINGS5, vec);
 				}
 

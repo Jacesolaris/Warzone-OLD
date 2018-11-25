@@ -1385,6 +1385,7 @@ int			MAP_MAX_VIS_RANGE = 0;
 qboolean	ENABLE_DISPLACEMENT_MAPPING = qfalse;
 float		DISPLACEMENT_MAPPING_STRENGTH = 18.0;
 qboolean	MAP_REFLECTION_ENABLED = qfalse;
+qboolean	ENABLE_CHRISTMAS_EFFECT = qfalse;
 qboolean	TERRAIN_TESSELLATION_ENABLED = qtrue;
 float		TERRAIN_TESSELLATION_LEVEL = 11.0;
 float		TERRAIN_TESSELLATION_OFFSET = 16.0;
@@ -1617,6 +1618,8 @@ void MAPPING_LoadMapInfo(void)
 	}
 
 	MAP_REFLECTION_ENABLED = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_SCREEN_SPACE_REFLECTIONS", "0")) > 0) ? qtrue : qfalse;
+
+	ENABLE_CHRISTMAS_EFFECT = (atoi(IniRead(mapname, "EFFECTS", "ENABLE_CHRISTMAS_EFFECT", "0")) > 0) ? qtrue : qfalse;
 
 	//
 	// Tessellation...

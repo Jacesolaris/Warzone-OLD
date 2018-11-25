@@ -23,8 +23,11 @@ varying vec2			var_TexCoords;
 void main()
 {
 	float numValues = 1.0;
-	float color = texture(u_DiffuseMap, var_TexCoords.xy).x;
-	float depth = texture(u_ScreenDepthMap, var_TexCoords.xy).x;
+	//float color = texture(u_DiffuseMap, var_TexCoords.xy).x;
+	//float depth = texture(u_ScreenDepthMap, var_TexCoords.xy).x;
+	vec2 shadowInfo = texture(u_DiffuseMap, var_TexCoords.xy).xy;
+	float color = shadowInfo.x;
+	float depth = shadowInfo.y;
 	float inColor = color;
 
 	for (float x = -BLUR_RADIUS; x <= BLUR_RADIUS; x += BLUR_PIXELMULT)

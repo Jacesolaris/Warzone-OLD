@@ -441,8 +441,9 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	// Full scan from within scanSpeed px for the real 1st pixel...
 	float upPos = coord.y;
 	float LAND_Y = 0.0;
+	float topY2 = QLAND_Y + (ph * scanSpeed);
 
-	for (float y = QLAND_Y; y <= QLAND_Y + (ph * scanSpeed); y += ph)
+	for (float y = QLAND_Y; y <= topY2; y += ph)
 	{
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
@@ -875,44 +876,6 @@ vec3 DoUnderwater(vec3 position, bool isSky)
 }
 #endif //USE_DETAILED_UNDERWATER
 
-#if 0 // Hmm deferred lighting etc that run after this cause the above water geometry shadows to still show, etc, so, meh...
-const float SPEED = 0.5;
-//const float AMOUNT = 0.1;
-float AMOUNT = u_Local7.r;
-const float INVSCALE = 1.0 / 3.0;
-
-const mat2 mc = mat2(1.6, 1.2, -1.2, 1.6);
-
-vec2 hash(vec2 p) {
-	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
-}
-
-float noise(in vec2 p) {
-	const float K1 = 0.366025404; // (sqrt(3)-1)/2;
-	const float K2 = 0.211324865; // (3-sqrt(3))/6;
-	vec2 i = floor(p + (p.x + p.y)*K1);
-	vec2 a = p - i + (i.x + i.y)*K2;
-	vec2 o = (a.x>a.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0); //vec2 of = 0.5 + 0.5*vec2(sign(a.x-a.y), sign(a.y-a.x));
-	vec2 b = a - o + K2;
-	vec2 c = a - 1.0 + 2.0*K2;
-	vec3 h = max(0.5 - vec3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
-	vec3 n = h*h*h*h*vec3(dot(a, hash(i + 0.0)), dot(b, hash(i + o)), dot(c, hash(i + 1.0)));
-	return dot(n, vec3(70.0));
-}
-
-void GetUnderwaterUV(inout vec2 frag)
-{
-    // Adjust speed
-    float time = iTime * SPEED;
-    
-    // Create distortion vector
-    vec2 distort = (2.0 * vec2(noise(frag * INVSCALE + time * vec2(0.5, -0.7)), noise(frag * INVSCALE + time * vec2(-0.3, 1.1)))) * AMOUNT;
-    
-    frag = frag + distort;
-}
-#endif
-
 float GodRay(vec2 uv, float scale, float threshold, float speed, float angle){
 	float value = pow(sin((uv.x + uv.y * angle + iTime * speed) * scale), 6.0);
     value += float(threshold < value);
@@ -1095,7 +1058,7 @@ void main ( void )
 
 	if (pixelIsInWaterRange || pixelIsUnderWater || position.y <= level + waveHeight)
 	{
-		vec2 wind = normalize(waterMapLower.xzy).xy; // Waves head toward center of map. Should suit current WZ maps...
+		//vec2 wind = normalize(waterMapLower.xzy).xy; // Waves head toward center of map. Should suit current WZ maps...
 
 		// Find intersection with water surface
 		vec3 eyeVecNorm = normalize(ViewOrigin - waterMapLower.xyz);

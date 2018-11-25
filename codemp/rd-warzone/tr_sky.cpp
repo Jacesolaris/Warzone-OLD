@@ -1340,7 +1340,16 @@ void RB_DrawMoon(float scale, shader_t *shader) {
 
 	RB_BeginSurface(shader, 0, 0);
 
-	RB_AddQuadStamp(origin, vec1, vec2, colorWhite);
+	if (shader != tr.sunFlareShader)
+	{
+		vec4_t col;
+		VectorSet4(col, 0, 0, 0, 0);
+		RB_AddQuadStamp(origin, vec1, vec2, col);
+	}
+	else
+	{
+		RB_AddQuadStamp(origin, vec1, vec2, colorWhite);
+	}
 
 	RB_EndSurface();
 

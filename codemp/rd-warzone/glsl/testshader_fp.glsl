@@ -220,12 +220,12 @@ void main()
 	}
 #endif //__RAIN__
 #ifdef __SNOW__
-	// Twelve layers of snow sheets...
+	// Twelve layers of snow sheets... 4 is plenty it seems
 	float dis = 2.;
-	for (int i = 0; i < 12; i++)
+	for (int i = 0; i < 4/*12*/; i++)
 	{
 		vec3 plane = vCameraPos + originalRayDir * dis * 128.0;
-		float f = SmoothNoise(vec3(plane.xy, plane.z-(iTime*32.0)) * 0.3, 1009.0) * 1.7;
+		float f = SmoothNoise(vec3(plane.xy, plane.z+(iTime*32.0)) * 0.3, 1009.0) * 1.7;
 		f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, 1.0);
 		vec3 bri = vec3(1.0/*.25*/);
 		/*for (int t = 0; t < NUM_LIGHTS; t++)

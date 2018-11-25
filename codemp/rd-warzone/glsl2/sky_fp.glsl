@@ -921,74 +921,39 @@ void main()
 		gl_FragColor.a *= var_Color.a;
 	}
 
-	/*
-	if (USE_BLEND > 0.0)
-	{// Emulate RGB blending... Fuck I hate this crap...
-		float colStr = clamp(max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)), 0.0, 1.0);
-
-		if (USE_BLEND == 3.0)
-		{
-			gl_FragColor.a *= colStr * 2.0;
-			gl_FragColor.rgb *= 0.5;
-		}
-		else if (USE_BLEND == 2.0)
-		{
-			colStr = clamp(colStr + 0.1, 0.0, 1.0);
-			gl_FragColor.a = 1.0 - colStr;
-		}
-		else
-		{
-			colStr = clamp(colStr - 0.1, 0.0, 1.0);
-			gl_FragColor.a = colStr;
-		}
-	}
-	*/
-
 	gl_FragColor.a = 1.0; // just force it.
 	
-	//if (gl_FragColor.a > SCREEN_MAPS_ALPHA_THRESHOLD)
-	{
-		if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7 && terrainColor.a != 1.0)
-		{// Add night sky to glow map...
-			out_Glow = vec4(nightGlow, gl_FragColor.a);
+	if (SHADER_MATERIAL_TYPE == 1024.0 && SHADER_DAY_NIGHT_ENABLED > 0.0 && SHADER_NIGHT_SCALE > 0.7 && terrainColor.a != 1.0)
+	{// Add night sky to glow map...
+		out_Glow = vec4(nightGlow, gl_FragColor.a);
 
-			if (PROCEDURAL_SKY_ENABLED > 0.0)
-			{
-				out_Glow *= vec4(1.0, 1.0, 1.0, 8.0);
-				out_Glow.a *= PROCEDURAL_SKY_NIGHT_COLOR.a;
-			}
-		
-			// Scale by closeness to actual night...
-			float mult = (SHADER_NIGHT_SCALE - 0.7) * 3.333;
-			out_Glow *= mult;
-
-			// And enhance contrast...
-			out_Glow.rgb *= out_Glow.rgb;
-
-			// And reduce over-all brightness because it's sky and not a close light...
-			out_Glow.rgb *= 0.5;
-		}
-		else
+		if (PROCEDURAL_SKY_ENABLED > 0.0)
 		{
-			if (sun.a > 0.0 && terrainColor.a <= 0.0)
-				out_Glow = sun;
-			else
-				out_Glow = vec4(0.0);
+			out_Glow *= vec4(1.0, 1.0, 1.0, 8.0);
+			out_Glow.a *= PROCEDURAL_SKY_NIGHT_COLOR.a;
 		}
+		
+		// Scale by closeness to actual night...
+		float mult = (SHADER_NIGHT_SCALE - 0.7) * 3.333;
+		out_Glow *= mult;
 
-		out_Position = vec4(var_Position.rgb, 1025.0/*SHADER_MATERIAL_TYPE+1.0*/);
-		out_Normal = vec4(EncodeNormal(var_Normal.rgb), 0.0, 1.0);
-#ifdef __USE_REAL_NORMALMAPS__
-		out_NormalDetail = vec4(0.0);
-#endif //__USE_REAL_NORMALMAPS__
+		// And enhance contrast...
+		out_Glow.rgb *= out_Glow.rgb;
+
+		// And reduce over-all brightness because it's sky and not a close light...
+		out_Glow.rgb *= 0.5;
 	}
-	/*else
+	else
 	{
-		out_Glow = vec4(0.0);
-		out_Position = vec4(0.0);
-		out_Normal = vec4(0.0);
+		if (sun.a > 0.0 && terrainColor.a <= 0.0)
+			out_Glow = sun;
+		else
+			out_Glow = vec4(0.0);
+	}
+
+	out_Position = vec4(var_Position.rgb, 1025.0);
+	out_Normal = vec4(EncodeNormal(var_Normal.rgb), 0.0, 1.0);
 #ifdef __USE_REAL_NORMALMAPS__
-		out_NormalDetail = vec4(0.0);
+	out_NormalDetail = vec4(0.0);
 #endif //__USE_REAL_NORMALMAPS__
-	}*/
 }

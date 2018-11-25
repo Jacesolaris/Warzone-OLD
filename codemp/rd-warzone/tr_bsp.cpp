@@ -2005,7 +2005,7 @@ void R_StitchAllPatches( void ) {
 	{
 		stitched = qfalse;
 
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 		for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
 			//
 			srfBspSurface_t *grid1 = (srfBspSurface_t *) s_worldData.surfaces[i].data;

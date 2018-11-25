@@ -2390,7 +2390,7 @@ void RB_DofFocusDepth(void)
 	GLSL_SetUniformMatrix16(&tr.dofFocusDepthShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	{
-		const float quality = 32.0;
+		const float quality = 64.0;// 32.0;
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth / quality;
 		screensize[1] = glConfig.vidHeight / quality;

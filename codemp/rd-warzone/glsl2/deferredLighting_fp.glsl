@@ -1219,7 +1219,6 @@ void main(void)
 	vec3 cubeRayDir = reflect(E, flatNorm);
 	vec3 sunDir = normalize(position.xyz - u_PrimaryLightOrigin.xyz);
 	float NE = clamp(length(dot(N, E)), 0.0, 1.0);
-	float reflectVectorPower = pow(specularReflectivePower*NE, 16.0) * reflectionPower;
 
 
 	float diffuse = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
@@ -1249,9 +1248,6 @@ void main(void)
 
 	vec3 specularColor = vec3(0.0);
 	vec3 skyColor = vec3(0.0);
-	vec3 emissiveCubeLightColor = vec3(0.0);
-	vec3 emissiveCubeLightDirection = vec3(0.0);
-	vec3 irradiance = vec3(1.0);
 
 	/*if (NIGHT_SCALE > 0.0)
 		gl_FragColor = texture(u_SkyCubeMapNight, reflect(E.xyz, N.xyz), 1.0);
@@ -1453,6 +1449,7 @@ void main(void)
 #ifndef __LQ_MODE__
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + skyColor, clamp(NE * SKY_LIGHT_CONTRIBUTION * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 #endif //__LQ_MODE__
+		float reflectVectorPower = pow(specularReflectivePower*NE, 16.0) * reflectionPower;
 		outColor.rgb = mix(outColor.rgb, outColor.rgb + specularColor, clamp(pow(reflectVectorPower, 2.0) * cubeReflectionFactor * (origColorStrength * 0.75 + 0.25), 0.0, 1.0));
 		//outColor.rgb = skyColor;
 	}
@@ -1502,7 +1499,7 @@ void main(void)
 					lightColor = Vibrancy(lightColor, clamp(vib * 4.0, 0.0, 1.0));
 				}
 
-				lightColor.rgb *= lightsReflectionFactor * phongFactor * irradiance * origColorStrength * 8.0;
+				lightColor.rgb *= lightsReflectionFactor * phongFactor * origColorStrength * 8.0;
 
 				vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
 				lightColor.rgb += blinn;
@@ -1591,7 +1588,7 @@ void main(void)
 					float light_occlusion = 1.0;
 					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
 				
-					lightColor = lightColor * power * irradiance * origColorStrength * 2.0;// * maxStr;
+					lightColor = lightColor * power * origColorStrength * 2.0;// * maxStr;
 
 					addedLight.rgb += lightColor * lightStrength * 0.333 * selfShadow;
 

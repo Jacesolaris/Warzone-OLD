@@ -73,7 +73,6 @@ uniform float						u_zFar;
 varying vec3						var_VertPos;
 varying vec2						var_TexCoords;
 varying vec4						var_Color;
-//varying flat int					var_IgnoreCompletely;
 
 const float							fBranchHardiness = 0.001;
 const float							fBranchSize = 128.0;
@@ -97,24 +96,12 @@ vec2 GetSway ()
 
 void main()
 {
-	/*if (var_IgnoreCompletely == 1)
-	{
-		gl_FragColor = vec4(0.0);
-		return;
-	}*/
-
 	if (USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0 || HAS_ALPHA_BITS <= 0.0)
 	{// Can skip nearly everything... These are always going to be solid color...
 		gl_FragColor = vec4(1.0);
 	}
 	else
 	{
-		/*if (USE_IS2D <= 0.0 && distance(var_VertPos, u_ViewOrigin) > u_zFar)
-		{// Skip it all... Hmm, not on shadows...
-			gl_FragColor = vec4(0.0);
-			return;
-		}*/
-
 		vec2 texCoords = var_TexCoords;
 
 		if (SHADER_SWAY > 0.0)
@@ -122,14 +109,9 @@ void main()
 			texCoords += vec2(GetSway());
 		}
 
-		// Wait, we don't even need the colors, just the alphas... *sigh* causes some zfighting...
-		//gl_FragColor = texture(u_DiffuseMap, texCoords);
-		
-		gl_FragColor.a = texture(u_DiffuseMap, texCoords).a;
-		gl_FragColor.rgb = vec3(1.0);
-		
+		// We don't even need the colors, just the alphas...
+		gl_FragColor = vec4(1.0, 1.0, 1.0, texture(u_DiffuseMap, texCoords).a * var_Color.a);
 
-		gl_FragColor.a *= var_Color.a;
 
 		float alphaThreshold = (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES) ? SCREEN_MAPS_LEAFS_THRESHOLD : SCREEN_MAPS_ALPHA_THRESHOLD;
 
@@ -150,7 +132,7 @@ void main()
 		if (USE_BLEND == 3.0)
 		{
 			gl_FragColor.a *= colStr * 2.0;
-			gl_FragColor.rgb *= 0.5;
+			//gl_FragColor.rgb *= 0.5;
 		}
 		else if (USE_BLEND == 2.0)
 		{

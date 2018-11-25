@@ -1,5 +1,5 @@
 #define __HIGH_PASS_SHARPEN__
-//#define __LAVA__					// hmm, move to it's own shader?
+#define __CHRISTMAS_LIGHTS__
 
 #define SCREEN_MAPS_ALPHA_THRESHOLD 0.666
 #define SCREEN_MAPS_LEAFS_THRESHOLD 0.001
@@ -25,7 +25,7 @@ uniform vec4						u_Settings1; // useVertexAnim, useSkeletalAnim, blendMethod, i
 uniform vec4						u_Settings2; // LIGHTDEF_USE_LIGHTMAP, LIGHTDEF_USE_GLOW_BUFFER, LIGHTDEF_USE_CUBEMAP, LIGHTDEF_USE_TRIPLANAR
 uniform vec4						u_Settings3; // LIGHTDEF_USE_REGIONS, LIGHTDEF_IS_DETAIL, 0=DetailMapNormal 1=detailMapFromTC 2=detailMapFromWorld, USE_GLOW_BLEND_MODE
 uniform vec4						u_Settings4; // MAP_LIGHTMAP_MULTIPLIER, MAP_LIGHTMAP_ENHANCEMENT, 0.0, 0.0
-uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, 0.0
+uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, ENABLE_CHRISTMAS_EFFECT
 
 #define USE_TC						u_Settings0.r
 #define USE_DEFORM					u_Settings0.g
@@ -53,6 +53,7 @@ uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_
 #define MAP_COLOR_SWITCH_RG			u_Settings5.r
 #define MAP_COLOR_SWITCH_RB			u_Settings5.g
 #define MAP_COLOR_SWITCH_GB			u_Settings5.b
+#define ENABLE_CHRISTMAS_EFFECT		u_Settings5.a
 
 
 uniform vec4						u_Local1; // MAP_SIZE, sway, overlaySway, materialType
@@ -235,6 +236,61 @@ vec2 EncodeNormal(vec3 n)
 	return vec2(n.xy * 0.5 + 0.5);
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
+
+#ifdef __CHRISTMAS_LIGHTS__
+float hash( const in float n ) {
+	return fract(sin(n)*4378.5453);
+}
+
+float noise(in vec3 o, in float seed) 
+{
+	vec3 p = floor(o);
+	vec3 fr = fract(o);
+		
+	float n = p.x + p.y*57.0 + p.z * seed;
+
+	float a = hash(n+  0.0);
+	float b = hash(n+  1.0);
+	float c = hash(n+ 57.0);
+	float d = hash(n+ 58.0);
+	
+	float e = hash(n+  0.0 + 1009.0);
+	float f = hash(n+  1.0 + 1009.0);
+	float g = hash(n+ 57.0 + 1009.0);
+	float h = hash(n+ 58.0 + 1009.0);
+	
+	
+	vec3 fr2 = fr * fr;
+	vec3 fr3 = fr2 * fr;
+	
+	vec3 t = 3.0 * fr2 - 2.0 * fr3;
+	
+	float u = t.x;
+	float v = t.y;
+	float w = t.z;
+
+	// this last bit should be refactored to the same form as the rest :)
+	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
+	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
+	
+	float res = res1 * (1.0- w) + res2 * (w);
+	
+	return res;
+}
+
+const mat3 m = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float SmoothNoise( vec3 p, in float seed )
+{
+    float f;
+    f  = 0.5000*noise( p, seed ); p = m*p*2.02;
+    f += 0.2500*noise( p, seed ); 
+	
+    return f * (1.0 / (0.5000 + 0.2500));
+}
+#endif //__CHRISTMAS_LIGHTS__
 
 vec2 GetSway ()
 {
@@ -658,6 +714,31 @@ void main()
 		out_NormalDetail = norm;
 	#endif //__USE_REAL_NORMALMAPS__
 #else //!defined(__LAVA__)
+
+	#ifdef __CHRISTMAS_LIGHTS__
+		if (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES && ENABLE_CHRISTMAS_EFFECT > 0.0 && gl_FragColor.a >= alphaThreshold)
+		{
+			float mapmult = 0.01;
+			float f = SmoothNoise(m_vertPos.xyz * mapmult, 1009.0);
+			f = pow(f, 32.0);
+			vec3 bri = pow(vec3(SmoothNoise(m_vertPos.yzx * mapmult, 1009.0), SmoothNoise(m_vertPos.xzy * mapmult, 1009.0), SmoothNoise(m_vertPos.zyx * mapmult, 1009.0)), vec3(4.0));
+			vec4 lights = vec4(0.0);
+			lights.rgb = bri*f*512.0;
+			lights.a = clamp(max(lights.r, max(lights.g, lights.b)), 0.0, 1.0);
+			
+			gl_FragColor = vec4(clamp(gl_FragColor.rgb + (lights.rgb * lights.a), 0.0, 1.0), gl_FragColor.a);
+			out_Glow = vec4(lights);
+
+
+			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
+			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
+	#ifdef __USE_REAL_NORMALMAPS__
+				out_NormalDetail = norm;
+	#endif //__USE_REAL_NORMALMAPS__
+			return;
+		}
+	#endif //__CHRISTMAS_LIGHTS__
+
 	if (SHADER_MATERIAL_TYPE == 1024.0 || SHADER_MATERIAL_TYPE == 1025.0)
 	{
 		out_Glow = vec4(0.0);
