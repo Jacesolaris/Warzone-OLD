@@ -280,22 +280,6 @@ void main()
 	if (topVerts[0].z < MAP_WATER_LEVEL && topVerts[1].z < MAP_WATER_LEVEL)
 	{
 		return;
-		/*
-		iGrassType = 0;
-
-		vLocalSeed = round(vGrassFieldPos * GRASS_TYPE_UNIFORMALITY_SCALER) + 1.0;
-
-		if (randZeroOne() > GRASS_TYPE_UNIFORM_WATER)
-		{// Randomize...
-			iGrassType = randomInt(0, 3);
-		}
-
-		tcOffsetBegin = BakedOffsetsBegin[iGrassType];
-		tcOffsetEnd = tcOffsetBegin + 0.25;
-
-		// Final value set to 1 == an underwater grass...
-		iGrassType = 1;
-		*/
 	}
 	else
 	{

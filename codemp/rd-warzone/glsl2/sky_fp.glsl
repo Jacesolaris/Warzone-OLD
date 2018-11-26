@@ -229,11 +229,15 @@ const mat3 m = mat3( 0.00,  0.80,  0.60,
 
 float SmoothNoise( vec3 p )
 {
+#if 0
     float f;
     f  = 0.5000*pnoise( p ); p = m*p*2.02;
     f += 0.2500*pnoise( p ); 
 	
     return f * (1.0 / (0.5000 + 0.2500));
+#else
+	return pnoise(p);
+#endif
 }
 
 const mat2 mc = mat2(1.6, 1.2, -1.2, 1.6);
@@ -576,23 +580,13 @@ void GetPlanets(out vec4 fragColor, in vec3 position)
 
 #define bghtime (u_Time+285.)
 
-float hillnoise(in vec3 o) {
- 	return SmoothNoise(o.xyy);   
-}
-
-mat2 rot(const in float a) {
-	return mat2(cos(a),sin(a),-sin(a),cos(a));	
-}
-
-const mat2 m2 = mat2( 0.60, -0.80, 0.80, 0.60 );
-
 const mat3 m3 = mat3( 0.00,  0.80,  0.60,
                      -0.80,  0.36, -0.48,
                      -0.60, -0.48,  0.64 );
 
-float fbm( in vec3 p ) {
+float hillsFbm( in vec3 p ) {
     float f = 0.0;
-    f += 0.5000*hillnoise( p ); p = m3*p*1.22*PROCEDURAL_BACKGROUND_HILLS_SEED;
+    f += 0.5000*SmoothNoise( p ); p = m3*p*1.22*PROCEDURAL_BACKGROUND_HILLS_SEED;
     f += 0.2500*pnoise( p ); p = m3*p*1.53*PROCEDURAL_BACKGROUND_HILLS_SEED;
     f += 0.1250*pnoise( p ); p = m3*p*4.01*PROCEDURAL_BACKGROUND_HILLS_SEED;
     f += 0.0625*pnoise( p );
@@ -624,7 +618,7 @@ vec3 lig = normalize(u_PrimaryLightOrigin.xzy/*vec3( 0.3,0.5, 0.6)*/);
 float terrainMap( const in vec3 p ) 
 {
     float dist = pow(length(p) / 64.0, 0.2);
-    return (((fbm( (p.xzz*0.5+16.0)*0.00346 ) * 1.5 - PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS)*250.0*dist)+(dist*8.0)) - PROCEDURAL_BACKGROUND_HILLS_UPDOWN;
+    return (((hillsFbm( (p.xzz*0.5+16.0)*0.00346 ) * 1.5 - PROCEDURAL_BACKGROUND_HILLS_SMOOTHNESS)*250.0*dist)+(dist*8.0)) - PROCEDURAL_BACKGROUND_HILLS_UPDOWN;
 }
 
 vec4 raymarchTerrain( const in vec3 ro, const in vec3 rd, const in vec3 bgc, const in float startdist, in float dist ) {
@@ -672,13 +666,13 @@ vec4 raymarchTerrain( const in vec3 ro, const in vec3 rd, const in vec3 bgc, con
 
 		//col = vec3(0.2) + 0.7*texture( iChannel2, pos.xz * 0.01 ).xyz * vec3(1.,.9,0.6);
 		
-		float veg = 0.3*fbm(pos*0.2)+normal.y;
+		float veg = 0.3*hillsFbm(pos*0.2)+normal.y;
 					
 		if( veg > 0.75 ) {
-			col = vec3( PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR )*(0.5+0.5*fbm(pos*0.5))*0.6;
+			col = vec3( PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR )*(0.5+0.5*hillsFbm(pos*0.5))*0.6;
 		} else 
 		if( veg > 0.66 ) {
-			col = col*0.6+vec3( PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2 )*(0.5+0.5*fbm(pos*0.25))*0.3;
+			col = col*0.6+vec3( PROCEDURAL_BACKGROUND_HILLS_VEGETAION_COLOR2 )*(0.5+0.5*hillsFbm(pos*0.25))*0.3;
 		}
 		col *= vec3(0.5, 0.52, 0.65)*vec3(1.,.9,0.8);
 		

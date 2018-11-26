@@ -284,11 +284,15 @@ const mat3 m = mat3( 0.00,  0.80,  0.60,
 
 float SmoothNoise( vec3 p, in float seed )
 {
+#if 0
     float f;
     f  = 0.5000*noise( p, seed ); p = m*p*2.02;
     f += 0.2500*noise( p, seed ); 
 	
     return f * (1.0 / (0.5000 + 0.2500));
+#else
+	return noise(p, seed);
+#endif
 }
 #endif //__CHRISTMAS_LIGHTS__
 
@@ -718,12 +722,12 @@ void main()
 	#ifdef __CHRISTMAS_LIGHTS__
 		if (SHADER_MATERIAL_TYPE == MATERIAL_GREENLEAVES && ENABLE_CHRISTMAS_EFFECT > 0.0 && gl_FragColor.a >= alphaThreshold)
 		{
-			float mapmult = 0.01;
+			float mapmult = 0.05;//0.01;
 			float f = SmoothNoise(m_vertPos.xyz * mapmult, 1009.0);
 			f = pow(f, 32.0);
 			vec3 bri = pow(vec3(SmoothNoise(m_vertPos.yzx * mapmult, 1009.0), SmoothNoise(m_vertPos.xzy * mapmult, 1009.0), SmoothNoise(m_vertPos.zyx * mapmult, 1009.0)), vec3(4.0));
 			vec4 lights = vec4(0.0);
-			lights.rgb = bri*f*512.0;
+			lights.rgb = bri*f*32.0;//512.0;
 			lights.a = clamp(max(lights.r, max(lights.g, lights.b)), 0.0, 1.0);
 			
 			gl_FragColor = vec4(clamp(gl_FragColor.rgb + (lights.rgb * lights.a), 0.0, 1.0), gl_FragColor.a);

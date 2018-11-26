@@ -4,6 +4,7 @@
 #define __AMBIENT_OCCLUSION__
 #define __ENHANCED_AO__
 #define __SCREEN_SPACE_REFLECTIONS__
+//#define __SSDO__
 
 #ifdef USE_CUBEMAPS
 	#define __CUBEMAPS__
@@ -413,26 +414,26 @@ vec2 RB_PBR_DefaultsForMaterial(float MATERIAL_TYPE)
 	return settings;
 }
 
-float lhash( const in float n ) {
+float proceduralHash( const in float n ) {
 	return fract(sin(n)*4378.5453);
 }
 
-float lnoise(in vec3 o) 
+float proceduralNoise(in vec3 o) 
 {
 	vec3 p = floor(o);
 	vec3 fr = fract(o);
 		
 	float n = p.x + p.y*57.0 + p.z * 1009.0;
 
-	float a = lhash(n+  0.0);
-	float b = lhash(n+  1.0);
-	float c = lhash(n+ 57.0);
-	float d = lhash(n+ 58.0);
+	float a = proceduralHash(n+  0.0);
+	float b = proceduralHash(n+  1.0);
+	float c = proceduralHash(n+ 57.0);
+	float d = proceduralHash(n+ 58.0);
 	
-	float e = lhash(n+  0.0 + 1009.0);
-	float f = lhash(n+  1.0 + 1009.0);
-	float g = lhash(n+ 57.0 + 1009.0);
-	float h = lhash(n+ 58.0 + 1009.0);
+	float e = proceduralHash(n+  0.0 + 1009.0);
+	float f = proceduralHash(n+  1.0 + 1009.0);
+	float g = proceduralHash(n+ 57.0 + 1009.0);
+	float h = proceduralHash(n+ 58.0 + 1009.0);
 	
 	
 	vec3 fr2 = fr * fr;
@@ -453,6 +454,21 @@ float lnoise(in vec3 o)
 	return res;
 }
 
+const mat3 proceduralMat = mat3( 0.00,  0.80,  0.60,
+                    -0.80,  0.36, -0.48,
+                    -0.60, -0.48,  0.64 );
+
+float proceduralSmoothNoise( vec3 p )
+{
+    float f;
+    f  = 0.5000*proceduralNoise( p ); p = proceduralMat*p*2.02;
+    f += 0.2500*proceduralNoise( p ); 
+	
+    return clamp(f * 1.3333333333333333333333333333333, 0.0, 1.0);
+	//return proceduralNoise(p);
+}
+
+#if 0
 vec3 TangentFromNormal ( vec3 normal )
 {
 	vec3 tangent;
@@ -470,6 +486,7 @@ vec3 TangentFromNormal ( vec3 normal )
 
 	return normalize(tangent);
 }
+#endif
 
 #if defined(__SCREEN_SPACE_REFLECTIONS__)
 #define pw pixel.x
@@ -656,69 +673,6 @@ float calculateAO(in vec3 pos, in vec3 nor, in vec2 texCoords)
 
 	return clamp( 1.0 - occ, 0.0, 1.0 );    
 }
-
-/*
-#define NUM_AO_SAMPLES 8
-#define AO_MAX_DIST 64.0
-
-float getFastAO(in vec2 tc, in vec3 inPosition)
-{
-	float scale = 1.0;
-	float ao = 0.0;
-	float weight = 0.0;
-
-	float invScale = 1.0 / float(NUM_AO_SAMPLES);
-
-	for (int y = 1; y <= NUM_AO_SAMPLES; y++)
-	{
-		vec2 coord = tc + vec2(0.0, pixel.y * pow(float(y), float(y)));
-		vec4 pos = textureLod(u_PositionMap, coord, 0.0);
-		float dist = distance(inPosition.xyz, pos.xyz);
-
-		if (pos.a - 1.0 == MATERIAL_SKY || pos.a - 1.0 == MATERIAL_SUN)
-		{
-			ao += 0.0;
-		}
-		else if (inPosition.z < pos.z)
-		{
-			float itFactor = 1.0 - clamp(dist / AO_MAX_DIST, 0.0, 1.0);
-			ao += itFactor * scale;
-		}
-		else
-		{
-			ao += 0.0;
-		}
-
-		weight += invScale;
-		scale -= invScale;
-	}
-
-	return 1.0 - clamp(ao / weight, 0.0, 1.0);
-}
-*/
-
-/*float calcShadow( in vec3 ro, in vec3 rd, float k )
-{
-    float res = 1.0;
-
-    float t = 0.1;
-    for( int i=0; i<32; i++ )
-    {
-        vec3 pos = ro + rd*t;
-        //float h = DistanceField(pos, length(pos));
-		vec2 uv = GetMapTC(pos);
-		float h = texture(u_RoadsControlMap, uv).r;
-        res = min( res, smoothstep(0.0,1.0,8.0*h/t) );
-        t += clamp( h, 0.05, 10.0 );
-		if( res<0.01 ) break;
-    }
-    return clamp(res,0.0,1.0);
-}*/
-
-// that is really shitty AO but at least unlit fragments do not look so plain... :)
-float bad_ao(vec3 n) {
-    return abs(dot(n, vec3(0.0, 1.0, 0.0))); 
-}
 #endif //defined(__AMBIENT_OCCLUSION__)
 
 
@@ -863,10 +817,10 @@ float getdiffuse(vec3 n, vec3 l, float p) {
 }
 
 vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 diffuseColor, vec3 specularColor, float specPower, vec3 lightPos) {
-	float noise = lnoise(pos.xyx) * 0.5;
-	noise += lnoise(pos.yzx * 0.5);
-	noise += lnoise(pos.zxy * 0.25) * 2.0;
-	noise += lnoise(pos.yxz * 0.125) * 4.0;
+	float noise = proceduralNoise(pos.xyx) * 0.5;
+	noise += proceduralNoise(pos.yzx * 0.5);
+	noise += proceduralNoise(pos.zxy * 0.25) * 2.0;
+	noise += proceduralNoise(pos.yxz * 0.125) * 4.0;
 
 	vec3 albedo = pow(color, vec3(2.2));
 	albedo = mix(albedo, albedo * 1.3, noise * 0.35 - 1.0);
@@ -947,59 +901,6 @@ vec3 splatblend(vec3 color1, float a1, vec3 color2, float a2)
 //
 // Procedural texturing variation...
 //
-float proceduralHash( const in float n ) {
-	return fract(sin(n)*4378.5453);
-}
-
-float proceduralNoise(in vec3 o) 
-{
-	vec3 p = floor(o);
-	vec3 fr = fract(o);
-		
-	float n = p.x + p.y*57.0 + p.z * 1009.0;
-
-	float a = proceduralHash(n+  0.0);
-	float b = proceduralHash(n+  1.0);
-	float c = proceduralHash(n+ 57.0);
-	float d = proceduralHash(n+ 58.0);
-	
-	float e = proceduralHash(n+  0.0 + 1009.0);
-	float f = proceduralHash(n+  1.0 + 1009.0);
-	float g = proceduralHash(n+ 57.0 + 1009.0);
-	float h = proceduralHash(n+ 58.0 + 1009.0);
-	
-	
-	vec3 fr2 = fr * fr;
-	vec3 fr3 = fr2 * fr;
-	
-	vec3 t = 3.0 * fr2 - 2.0 * fr3;
-	
-	float u = t.x;
-	float v = t.y;
-	float w = t.z;
-
-	// this last bit should be refactored to the same form as the rest :)
-	float res1 = a + (b-a)*u +(c-a)*v + (a-b+d-c)*u*v;
-	float res2 = e + (f-e)*u +(g-e)*v + (e-f+h-g)*u*v;
-	
-	float res = res1 * (1.0- w) + res2 * (w);
-	
-	return res;
-}
-
-const mat3 proceduralMat = mat3( 0.00,  0.80,  0.60,
-                    -0.80,  0.36, -0.48,
-                    -0.60, -0.48,  0.64 );
-
-float proceduralSmoothNoise( vec3 p )
-{
-    float f;
-    f  = 0.5000*proceduralNoise( p ); p = proceduralMat*p*2.02;
-    f += 0.2500*proceduralNoise( p ); 
-	
-    return clamp(f * 1.3333333333333333333333333333333, 0.0, 1.0);
-}
-
 void AddProceduralMoss(inout vec4 outColor, in vec4 position, in bool changedToWater, in vec3 originalPosition)
 {
 	if (position.a - 1.0 == MATERIAL_TREEBARK
@@ -1009,7 +910,7 @@ void AddProceduralMoss(inout vec4 outColor, in vec4 position, in bool changedToW
 	{// add procedural moss...
 		vec3 usePos = changedToWater ? originalPosition.xyz : position.xyz;
 		vec3 pos = usePos.xyz * 0.005;
-		float moss = clamp(proceduralSmoothNoise( pos ), 0.0, 1.0);
+		float moss = clamp(proceduralNoise( pos ), 0.0, 1.0);
 		float mossMix = clamp(pow(moss, 3.0), 0.0, 1.0);
 
 #define mossLower ( 48.0 / 255.0 )
@@ -1027,7 +928,7 @@ void AddProceduralMoss(inout vec4 outColor, in vec4 position, in bool changedToW
 			pos2 = mix(pos2, pos3, 0.5);
 
 			vec3 pos4 = usePos.xyz * 0.08;
-			float mossPatches = clamp(proceduralSmoothNoise( pos4 ), 0.0, 1.0);
+			float mossPatches = clamp(proceduralNoise( pos4 ), 0.0, 1.0);
 			mossPatches = clamp(pow(mossPatches, 2.5), 0.0, 1.0);
 #define mossPatchLower ( 1.0 / 255.0 )
 #define mossPatchUpper ( 255.0 / 96.0 )
@@ -1433,16 +1334,18 @@ void main(void)
 	//
 	// SSDO input, if enabled...
 	//
+#ifdef __SSDO__
 	vec4 occlusion = vec4(0.0);
 	bool useOcclusion = false;
+#endif //__SSDO__
 
-#ifndef __LQ_MODE__
+#ifdef __SSDO__
 	if (USE_SSDO == 1.0)
 	{
 		useOcclusion = true;
 		occlusion = texture(u_HeightMap, texCoords);
 	}
-#endif //!__LQ_MODE__
+#endif //__SSDO__
 
 	if (SKY_LIGHT_CONTRIBUTION > 0.0 && cubeReflectionFactor > 0.0)
 	{// Sky light contributions...
@@ -1463,21 +1366,25 @@ void main(void)
 
 		if (phongFactor > 0.0 && NIGHT_SCALE < 1.0)
 		{// this is blinn phong
+#ifdef __SSDO__
 			float light_occlusion = 1.0;
 
-#ifndef __LQ_MODE__
 			if (useOcclusion)
 			{
 				light_occlusion = 1.0 - clamp(dot(vec4(-sunDir*E, 1.0), occlusion), 0.0, 1.0);
 			}
-#endif //__LQ_MODE__
+#endif //__SSDO__
 
 			float maxBright = clamp(max(outColor.r, max(outColor.g, outColor.b)), 0.0, 1.0);
 			float power = clamp(pow(maxBright * 0.75, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 		
 			vec3 lightColor = u_PrimaryLightColor.rgb;
 
+#ifdef __SSDO__
 			float lightMult = clamp(specularReflectivePower * power * light_occlusion, 0.0, 1.0);
+#else //!__SSDO__
+			float lightMult = clamp(specularReflectivePower * power, 0.0, 1.0);
+#endif //__SSDO__
 
 			if (lightMult > 0.0)
 			{
@@ -1486,6 +1393,7 @@ void main(void)
 				lightColor *= clamp(1.0 - NIGHT_SCALE, 0.0, 1.0); // Day->Night scaling of sunlight...
 				lightColor = clamp(lightColor, 0.0, 0.7);
 
+#if 0
 				// Add vibrancy to light color at sunset/sunrise???
 				if (NIGHT_SCALE > 0.0 && NIGHT_SCALE < 1.0)
 				{// Vibrancy gets greater the closer we get to night time...
@@ -1498,6 +1406,7 @@ void main(void)
 					}
 					lightColor = Vibrancy(lightColor, clamp(vib * 4.0, 0.0, 1.0));
 				}
+#endif
 
 				lightColor.rgb *= lightsReflectionFactor * phongFactor * origColorStrength * 8.0;
 
@@ -1522,90 +1431,75 @@ void main(void)
 			float power = maxBright * 0.85;
 			power = clamp(pow(power, LIGHT_COLOR_POWER) + 0.333, 0.0, 1.0);
 
-			for (int li = 0; li < u_lightCount; li++)
+			if (power > 0.0)
 			{
-				vec3 lightPos = u_lightPositions2[li].xyz;
-				vec3 lightDir = normalize(lightPos - position.xyz);
-				float lightDist = distance(lightPos, position.xyz);
-				float coneModifier = 1.0;
-
-				/*
-				uniform float								u_lightConeAngles[MAX_DEFERRED_LIGHTS];
-				uniform vec3								u_lightConeDirections[MAX_DEFERRED_LIGHTS];
-				*/
-				if (u_lightConeAngles[li] > 0.0)
+				for (int li = 0; li < u_lightCount; li++)
 				{
-					vec3 coneDir = normalize(u_lightConeDirections[li]);
+					vec3 lightPos = u_lightPositions2[li].xyz;
+					vec3 lightDir = normalize(lightPos - position.xyz);
+					float lightDist = distance(lightPos, position.xyz);
+					float coneModifier = 1.0;
 
-					float lightToSurfaceAngle = degrees(acos(dot(-lightDir, coneDir)));
-					
-					if (lightToSurfaceAngle > u_lightConeAngles[li])
-					{// Outside of this light's cone...
-						continue;
-					}
-					else
-					{// Adjust the brightness so the light is brightest at the center of the cone, and darker around the edges...
-						//coneModifier = /*1.0 -*/ (lightToSurfaceAngle / u_lightConeAngles[li]);
-					}
-				}
-
-				/*if (u_lightHeightScales[li] > 0.0)
-				{// ignore height differences, check later...
-					lightDist -= length(lightPos.z - position.z);
-				}*/
-
-				float lightPlayerDist = distance(lightPos.xyz, u_ViewOrigin.xyz);
-
-				float lightDistMult = 1.0 - clamp((lightPlayerDist / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
-				lightDistMult = pow(lightDistMult, 2.0);
-
-				if (lightDistMult <= 0.0) continue;
-
-				// Attenuation...
-				float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
-
-				/*if (lightFade <= 0.0 && lightPlayerDist < distance(u_ViewOrigin.xyz, position.xyz))
-				{// Add light beams/coronas...
-					vec3 lbPos = u_ViewOrigin + (-E * lightPlayerDist);
-					float lbDist = distance(lightPos, lbPos);
-					lightFade = 1.0 - clamp((lbDist * lbDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
-					lightFade = clamp(pow(lightFade, u_Local3.r), 0.0, 1.0);
-				}*/
-				
-				if (lightFade <= 0.0) continue;
-
-				lightFade = pow(lightFade, 2.0);
-
-				float lightStrength = coneModifier * lightDistMult * lightFade * specularReflectivePower * 0.5;
-
-				//float maxLightsScale = mix(0.0, 1.0, clamp(pow(1.0 - (float(li) / float(u_lightMax)), u_Local3.r), 0.0, 1.0));
-				float maxLightsScale = mix(0.01, 1.0, clamp(pow(1.0 - (lightPlayerDist / u_lightMaxDistance), 0.5), 0.0, 1.0));
-				lightStrength *= maxLightsScale;
-
-				if (lightStrength > 0.0)
-				{
-					vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * MAP_EMISSIVE_COLOR_SCALE * maxLightsScale; // Normalize.
-					float light_occlusion = 1.0;
-					float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb/*norm.rgb*/), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
-				
-					lightColor = lightColor * power * origColorStrength * 2.0;// * maxStr;
-
-					addedLight.rgb += lightColor * lightStrength * 0.333 * selfShadow;
-
-#ifndef __LQ_MODE__
-					if (useOcclusion)
+					if (u_lightConeAngles[li] > 0.0)
 					{
-						light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
+						vec3 coneDir = normalize(u_lightConeDirections[li]);
+
+						float lightToSurfaceAngle = degrees(acos(dot(-lightDir, coneDir)));
+					
+						if (lightToSurfaceAngle > u_lightConeAngles[li])
+						{// Outside of this light's cone...
+							continue;
+						}
 					}
-#endif //__LQ_MODE__
 
-					vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
-					addedLight.rgb += blinn;
+					float lightPlayerDist = distance(lightPos.xyz, u_ViewOrigin.xyz);
+
+					float lightDistMult = 1.0 - clamp((lightPlayerDist / MAX_DEFERRED_LIGHT_RANGE), 0.0, 1.0);
+					lightDistMult = pow(lightDistMult, 2.0);
+
+					if (lightDistMult > 0.0)
+					{
+						// Attenuation...
+						float lightFade = 1.0 - clamp((lightDist * lightDist) / (u_lightDistances[li] * u_lightDistances[li]), 0.0, 1.0);
+						lightFade = pow(lightFade, 2.0);
+
+						if (lightFade > 0.0)
+						{
+							float lightStrength = coneModifier * lightDistMult * lightFade * specularReflectivePower * 0.5;
+							float maxLightsScale = mix(0.01, 1.0, clamp(pow(1.0 - (lightPlayerDist / u_lightMaxDistance), 0.5), 0.0, 1.0));
+							lightStrength *= maxLightsScale;
+
+							if (lightStrength > 0.0)
+							{
+								vec3 lightColor = (u_lightColors[li].rgb / length(u_lightColors[li].rgb)) * MAP_EMISSIVE_COLOR_SCALE * maxLightsScale;
+								float selfShadow = clamp(pow(clamp(dot(-lightDir.rgb, bump.rgb), 0.0, 1.0), 8.0) * 0.6 + 0.6, 0.0, 1.0);
+				
+								lightColor = lightColor * power * origColorStrength * 2.0;
+
+								addedLight.rgb += lightColor * lightStrength * 0.333 * selfShadow;
+
+#ifdef __SSDO__
+								float light_occlusion = 1.0;
+
+								if (useOcclusion)
+								{
+									light_occlusion = (1.0 - clamp(dot(vec4(-lightDir*E, 1.0), occlusion), 0.0, 1.0));
+								}
+
+								vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * light_occlusion * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
+								addedLight.rgb += blinn;
+#else //!__SSDO__
+								vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, lightDir, lightColor * 0.06, lightColor, mix(0.1, 0.5, clamp(lightsReflectionFactor, 0.0, 1.0)) * clamp(lightStrength * phongFactor, 0.0, 1.0), lightPos) * lightFade * selfShadow;
+								addedLight.rgb += blinn;
+#endif //__SSDO__
+							}
+						}
+					}
 				}
-			}
 
-			addedLight.rgb *= lightsReflectionFactor; // More grey colors get more colorization from lights...
-			outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
+				addedLight.rgb *= lightsReflectionFactor; // More grey colors get more colorization from lights...
+				outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
+			}
 		}
 	}
 
@@ -1637,17 +1531,9 @@ void main(void)
 	if (AO_TYPE == 1.0)
 	{// Fast AO enabled...
 		float ao = calculateAO(sunDir, N * 10000.0, texCoords);
-		//float ao = getFastAO(texCoords, position.xyz);
-		
 		float selfShadow = clamp(pow(clamp(dot(-sunDir.rgb, bump.rgb), 0.0, 1.0), 8.0), 0.0, 1.0);
 		ao = clamp(((ao + selfShadow) / 2.0) * AO_MULTBRIGHT + AO_MINBRIGHT, AO_MINBRIGHT, 1.0);
 		outColor.rgb *= ao;
-
-		/*if (u_Local3.r > 0.0)
-		{
-			float sh = calcShadow( position.xyz, sunDir, u_Local3.g );
-			outColor.rgb *= sh;
-		}*/
 	}
 #endif //defined(__AMBIENT_OCCLUSION__)
 
@@ -1699,11 +1585,6 @@ void main(void)
 		outColor.rgb *= finalShadow;
 	}
 #endif //defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
-
-	// De-emphasize (darken) the distant map a bit...
-	//float depth = clamp(pow(1.0 - clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5), 0.35, 1.0); // darken distant
-	//float depth = clamp(pow(clamp(distance(position.xyz, u_ViewOrigin.xyz) / 65536.0, 0.0, 1.0), 4.5) * 100000.0 + 1.0, 1.0, 2.0); // brighten distant
-	//outColor.rgb *= depth;
 
 
 	if (!(CONTRAST_STRENGTH == 1.0 && SATURATION_STRENGTH == 1.0 && BRIGHTNESS_STRENGTH == 1.0))
