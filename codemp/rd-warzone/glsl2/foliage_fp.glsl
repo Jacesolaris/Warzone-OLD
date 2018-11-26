@@ -1,9 +1,12 @@
-uniform sampler2D	u_DiffuseMap;	// Land grass atlas
-uniform sampler2D	u_WaterEdgeMap; // Sea grass atlas
+uniform sampler2D					u_DiffuseMap;	// Land grass atlas
+uniform sampler2D					u_WaterEdgeMap; // Sea grass atlas
 
-uniform vec3		u_ViewOrigin;
+uniform vec3						u_ViewOrigin;
 
+uniform vec4						u_Settings1; // IS_DEPTH_PASS, 0.0, 0.0, 0.0
 uniform vec4						u_Settings5; // MAP_COLOR_SWITCH_RG, MAP_COLOR_SWITCH_RB, MAP_COLOR_SWITCH_GB, 0.0
+
+#define IS_DEPTH_PASS				u_Settings1.r
 
 #define MAP_COLOR_SWITCH_RG			u_Settings5.r
 #define MAP_COLOR_SWITCH_RB			u_Settings5.g
@@ -150,7 +153,14 @@ void main()
 
 	vec2 tc = vTexCoord;
 
-	diffuse = texture(u_DiffuseMap, tc);
+	if (IS_DEPTH_PASS > 0.0)
+	{
+		diffuse = vec4(1.0, 1.0, 1.0, texture(u_DiffuseMap, tc).a);
+	}
+	else 
+	{
+		diffuse = texture(u_DiffuseMap, tc);
+	}
 
 	if (MAP_COLOR_SWITCH_RG > 0.0)
 	{

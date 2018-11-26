@@ -443,7 +443,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	float LAND_Y = 0.0;
 	float topY2 = QLAND_Y + (ph * scanSpeed);
 
-	for (float y = QLAND_Y; y <= topY2; y += ph)
+	for (float y = QLAND_Y; y <= topY2; y += ph * 2.0)
 	{
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));

@@ -504,7 +504,7 @@ void main()
 	vec3 lightColor = clamp(var_Color.rgb, 0.0, 1.0);
 
 #if !defined(__LAVA__)
-	if (LIGHTMAP_ENABLED && SHADER_MATERIAL_TYPE != MATERIAL_LAVA)
+	if (LIGHTMAP_ENABLED)
 	{// TODO: Move to screen space?
 		vec4 lightmapColor = textureLod(u_LightMap, var_TexCoords2.st, 0.0);
 

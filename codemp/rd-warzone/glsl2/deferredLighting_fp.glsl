@@ -544,7 +544,7 @@ vec3 AddReflection(vec2 coord, vec4 positionMap, vec3 flatNorm, vec3 inColor, fl
 	float upPos = coord.y;
 	float LAND_Y = 0.0;
 
-	for (float y = QLAND_Y; y <= topY && y <= QLAND_Y + (ph * scanSpeed); y += ph)
+	for (float y = QLAND_Y; y <= topY && y <= QLAND_Y + (ph * scanSpeed); y += ph * 2.0)
 	{
 		vec3 norm = DecodeNormal(textureLod(u_NormalMap, vec2(coord.x, y), 0.0).xy);
 		vec4 pMap = positionMapAtCoord(vec2(coord.x, y), changedToWater, originalPosition);
