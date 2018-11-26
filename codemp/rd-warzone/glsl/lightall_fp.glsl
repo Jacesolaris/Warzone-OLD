@@ -733,7 +733,6 @@ void main()
 			gl_FragColor = vec4(clamp(gl_FragColor.rgb + (lights.rgb * lights.a), 0.0, 1.0), gl_FragColor.a);
 			out_Glow = vec4(lights);
 
-
 			out_Position = vec4(m_vertPos.xyz, SHADER_MATERIAL_TYPE+1.0);
 			out_Normal = vec4(vec3(EncodeNormal(N.xyz), 0.0), 1.0 );
 	#ifdef __USE_REAL_NORMALMAPS__

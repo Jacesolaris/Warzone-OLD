@@ -386,7 +386,7 @@ void main(void)
 	
 	gl_FragColor = vec4(displacement, norm.x * 0.5 + 0.5, norm.y * 0.5 + 0.5, 1.0);
 
-#else //!TEST_PARALLAX
+#else //TEST_PARALLAX
 
 	// normalize vectors after vertex shader
 	//vec3 V = normalize(o_toCameraInTangentSpace);

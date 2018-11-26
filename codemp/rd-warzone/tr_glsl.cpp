@@ -2704,13 +2704,13 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 				}
 			}
 
-			if (!StringContainsWord(name, "deferredLighting")
-				&& !StringContainsWord(name, "fxaa")
+			if (!StringContainsWord(name, "deferredLighting") // The optimizer doesn't like deferredLighting shader...
+				&& !StringContainsWord(name, "fxaa") // NV fxaa is not a fan of optimization
 				&& !StringContainsWord(name, "sky") // too big for optimizer i thinks...
-				&& !StringContainsWord(name, "instances")) // NV fxaa is not a fan of optimization
+				&& !StringContainsWord(name, "instances"))
 			{
 				if (fpCode)
-				{// The optimizer doesn't like deferredLighting shader...
+				{
 					glslopt_shader *shader = glslopt_optimize(ctx, kGlslOptShaderFragment, fpCode, 0);
 					if (glslopt_get_status(shader)) {
 						const char *newSource = glslopt_get_output(shader);
@@ -2724,7 +2724,7 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 					}
 					else {
 						const char *errorLog = glslopt_get_log(shader);
-						if (r_debugGLSLOptimizer->integer) ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
+						if (r_debugGLSLOptimizer->integer) ri->Printf(PRINT_WARNING, "GLSL optimization failed on frag shader %s.\n\nLOG:\n%s\n", name, errorLog);
 					}
 					glslopt_shader_delete(shader);
 				}
@@ -3280,7 +3280,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	startTime = ri->Milliseconds();
 
 #ifdef __GLSL_OPTIMIZER__
-	ctx = glslopt_initialize(kGlslTargetOpenGL);
+	if (r_glslOptimize->integer)
+	{
+		ctx = glslopt_initialize(kGlslTargetOpenGL);
+	}
 #endif //__GLSL_OPTIMIZER__
 
 
@@ -4431,7 +4434,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	//
 
 #ifdef __GLSL_OPTIMIZER__
-	glslopt_cleanup(ctx);
+	if (r_glslOptimize->integer)
+	{
+		glslopt_cleanup(ctx);
+	}
 #endif //__GLSL_OPTIMIZER__
 
 	//ri->Error(ERR_DROP, "Oh noes!\n");
