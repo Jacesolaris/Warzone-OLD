@@ -2689,18 +2689,18 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 			{// The optimizer doesn't like lightAll and depthPass vert shaders...
 				if (vpCode)
 				{
-					glslopt_shader *shader = glslopt_optimize(ctx, kGlslOptShaderVertex, vpCode, 0);
-					if (glslopt_get_status(shader)) {
-						const char *newSource = glslopt_get_output(shader);
+					glslopt_shader *sh = glslopt_optimize(ctx, kGlslOptShaderVertex, vpCode, 0);
+					if (glslopt_get_status(sh)) {
+						const char *newSource = glslopt_get_output(sh);
 						memset(vpCode, 0, sizeof(char) * MAX_GLSL_LENGTH);
 						strcpy(vpCode, newSource);
-						GLSL_PrintShaderOptimizationStats(va("%s (vert)", name), shader);
+						GLSL_PrintShaderOptimizationStats(va("%s (vert)", name), sh);
 					}
 					else {
-						const char *errorLog = glslopt_get_log(shader);
+						const char *errorLog = glslopt_get_log(sh);
 						if (r_debugGLSLOptimizer->integer) ri->Printf(PRINT_WARNING, "GLSL optimization failed on vert shader %s.\n\nLOG:\n%s\n", name, errorLog);
 					}
-					glslopt_shader_delete(shader);
+					glslopt_shader_delete(sh);
 				}
 			}
 
@@ -2711,22 +2711,22 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 			{
 				if (fpCode)
 				{
-					glslopt_shader *shader = glslopt_optimize(ctx, kGlslOptShaderFragment, fpCode, 0);
-					if (glslopt_get_status(shader)) {
-						const char *newSource = glslopt_get_output(shader);
+					glslopt_shader *sh = glslopt_optimize(ctx, kGlslOptShaderFragment, fpCode, 0);
+					if (glslopt_get_status(sh)) {
+						const char *newSource = glslopt_get_output(sh);
 #ifdef __GLSL_OPTIMIZER_DEBUG__
 						ri->Printf(PRINT_WARNING, "strlen %i\n", strlen(newSource));
 						ri->Printf(PRINT_WARNING, "%s\n", newSource);
 #endif //__GLSL_OPTIMIZER_DEBUG__
 						memset(fpCode, 0, sizeof(char) * MAX_GLSL_LENGTH);
 						strcpy(fpCode, newSource);
-						GLSL_PrintShaderOptimizationStats(va("%s (frag)", name), shader);
+						GLSL_PrintShaderOptimizationStats(va("%s (frag)", name), sh);
 					}
 					else {
-						const char *errorLog = glslopt_get_log(shader);
+						const char *errorLog = glslopt_get_log(sh);
 						if (r_debugGLSLOptimizer->integer) ri->Printf(PRINT_WARNING, "GLSL optimization failed on frag shader %s.\n\nLOG:\n%s\n", name, errorLog);
 					}
-					glslopt_shader_delete(shader);
+					glslopt_shader_delete(sh);
 				}
 			}
 		}

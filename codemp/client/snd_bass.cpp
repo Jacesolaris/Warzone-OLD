@@ -1328,7 +1328,15 @@ void BASS_GetMapStationTracks(void)
 			// Continue until we see an empty track slot...
 			if (strlen(MUSIC_TRACK) > 0)
 			{
-				strcpy(MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name, MUSIC_TRACK);
+				if (!strncmp(MUSIC_TRACK, "music/", 6))
+				{// Already has music/
+					strcpy(MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name, MUSIC_TRACK);
+				}
+				else
+				{// Add music/
+					sprintf(MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name, "music/%s", MUSIC_TRACK);
+				}
+
 				MAP_STATION_TRACKS_NUM++;
 			}
 			else
@@ -1690,7 +1698,7 @@ void BASS_InitDynamicList ( void )
 #ifdef __BASS_STREAM_MUSIC__
 bool BASS_IsMusicInPK3(char * filename)
 {
-	if (!strncmp(filename, "music/galactic", 9))
+	/*if (!strncmp(filename, "music/galactic", 9))
 	{
 		return false;
 	}
@@ -1703,19 +1711,24 @@ bool BASS_IsMusicInPK3(char * filename)
 	if (!strncmp(filename, "music/relaxing", 9))
 	{
 		return false;
-	}
+	}*/
 
 	if (!strncmp(filename, "http", 4))
 	{
 		return false;
 	}
 
-	if (StringContainsWord(filename, "music/custom"))
+	/*if (StringContainsWord(filename, "music/custom"))
 	{
 		return false;
-	}
+	}*/
 
-	return true;
+	int nChkSum1 = 0;
+	qboolean inPK3 = (qboolean)(FS_FileIsInPAK(filename, &nChkSum1) == 1);
+	
+	if (inPK3) return true;
+
+	return false;
 }
 
 void CALLBACK BASS_StreamMusic_StatusProc(const void *buffer, DWORD length, void *user)
