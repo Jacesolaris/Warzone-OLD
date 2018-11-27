@@ -1238,6 +1238,116 @@ void BASS_GetRelaxingTracks(void)
 	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3Relaxing In The Rim Radio^5 music tracks.\n", RELAXING_TRACKS_NUM);
 }
 
+// cl.mapname
+//
+// Map based radio station...
+//
+
+qboolean MAP_STATION_TRACKS_LOADED = qfalse;
+
+char MAP_STATION_MAPNAME[64] = { 0 };
+char MAP_STATION_NAME[512] = { 0 };
+int MAP_STATION_TRACKS_NUM = 0;
+
+radioMusicList_t MAP_STATION_TRACKS[512 + 1];
+
+void BASS_GetMapStationTracks(void)
+{
+	if (strcmp(MAP_STATION_MAPNAME, cl.mapname))
+	{// Mapname has changed... Init...
+		memset(MAP_STATION_NAME, 0, sizeof(MAP_STATION_NAME));
+		MAP_STATION_TRACKS_NUM = 0;
+		strcpy(MAP_STATION_MAPNAME, cl.mapname);
+		MAP_STATION_TRACKS_LOADED = qfalse;
+
+		if (strlen(MAP_STATION_MAPNAME) <= 0)
+		{// No map loaded... Empty list...
+			MAP_STATION_TRACKS_LOADED = qtrue;
+			MAP_STATION_TRACKS_NUM = 0;
+			return;
+		}
+	}
+
+	if (MAP_STATION_TRACKS_LOADED || strlen(MAP_STATION_MAPNAME) <= 0) return;
+
+	char radioIniName[512] = { 0 };
+	char radioMapStrippedName[64] = { 0 };
+	COM_StripExtension(MAP_STATION_MAPNAME, radioMapStrippedName, sizeof(radioMapStrippedName));
+	sprintf(radioIniName, "%s.radio", radioMapStrippedName);
+
+	strcpy(MAP_STATION_NAME, IniRead(radioIniName, "STATION", "NAME", ""));
+
+	//Com_Printf("MAP_STATION_NAME: %s. Radio file: %s.\n", MAP_STATION_NAME, radioIniName);
+
+	if (strlen(MAP_STATION_NAME) > 0)
+	{
+		for (int i = 0; i < 16; i++)
+		{// Load music from up to 16 specified folder names...
+			char MAP_STATION_FOLDER[512] = { 0 };
+			memset(MAP_STATION_FOLDER, 0, sizeof(MAP_STATION_FOLDER));
+
+			strcpy(MAP_STATION_FOLDER, IniRead(radioIniName, "STATION", va("MUSIC_FOLDER%i", i), ""));
+
+			//Com_Printf("MAP_STATION_FOLDER %i: %s.\n", i, MAP_STATION_FOLDER);
+
+			// Continue until we see an empty folder name...
+			if (strlen(MAP_STATION_FOLDER) > 0)
+			{
+				DIR *dir;
+				struct dirent *ent;
+				if ((dir = opendir(va("warzone/music/%s", MAP_STATION_FOLDER))) != NULL) {
+					/* all the files and directories within psy directory */
+					while ((ent = readdir(dir)) != NULL) {
+						if (ent->d_name[0] == '.') continue; // skip back directory...
+						if (ent->d_namlen < 3) continue;
+
+						sprintf(MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name, "music/%s/%s", MAP_STATION_FOLDER, ent->d_name);
+						//Com_Printf("Added %s track %s.\n", MAP_STATION_FOLDER, MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name);
+						MAP_STATION_TRACKS_NUM++;
+					}
+					closedir(dir);
+				}
+				else {
+					/* could not open directory */
+					perror("");
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		for (int i = 0; i < 512; i++)
+		{// Load music from up to 512 specified track names...
+			char MUSIC_TRACK[512] = { 0 };
+			memset(MUSIC_TRACK, 0, sizeof(MUSIC_TRACK));
+
+			strcpy(MUSIC_TRACK, IniRead(radioIniName, "STATION", va("MUSIC_TRACK%i", i), ""));
+
+			// Continue until we see an empty track slot...
+			if (strlen(MUSIC_TRACK) > 0)
+			{
+				strcpy(MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name, MUSIC_TRACK);
+				MAP_STATION_TRACKS_NUM++;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		MAP_STATION_TRACKS_LOADED = qtrue;
+		Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3%s^5 music tracks.\n", MAP_STATION_TRACKS_NUM, MAP_STATION_NAME);
+	}
+	else
+	{
+		MAP_STATION_TRACKS_LOADED = qtrue;
+		MAP_STATION_TRACKS_NUM = 0;
+		Com_Printf("^3BASS Sound System ^4- ^5Map has no custom radio stations.\n");
+	}
+}
+
 //
 // Imperial Advertisement Tracks...
 //
@@ -1397,7 +1507,7 @@ void BASS_AddDynamicTrack ( char *name )
 	{// Reverse check because "extra" music will always be at the end of the list :)
 		if (!strcmp(name, MUSIC_LIST[i].name)) return; // already in the list...
 	}
-
+	
 	MUSIC_LIST_UPDATING = qtrue;
 	strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, name);
 	MUSIC_LIST_COUNT++;
@@ -1458,8 +1568,8 @@ void BASS_InitDynamicList ( void )
 
 	qboolean MUSIC_SELECTION_CHANGED = qfalse;
 
-	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION)
-	{// Player changed music selection... Initialize the music list and reload...
+	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION || (s_musicSelection->integer == 3 && strcmp(MAP_STATION_MAPNAME, cl.mapname)))
+	{// Player changed music selection (or map has changed)... Initialize the music list and reload...
 		BASS_StopMusic(NULL);
 		MUSIC_LIST_UPDATING = qtrue;
 		MUSIC_LIST_INITIALIZED = qfalse;
@@ -1501,6 +1611,16 @@ void BASS_InitDynamicList ( void )
 		}
 	}
 	else if (s_musicSelection->integer == 3)
+	{// Add all map station tracks...
+		BASS_GetMapStationTracks();
+
+		for (int i = 0; i < MAP_STATION_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, MAP_STATION_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+	}
+	else if (s_musicSelection->integer == 4)
 	{// Add all known CUSTOM tracks to the list...
 		BASS_GetCustomTracks();
 
@@ -1534,32 +1654,34 @@ void BASS_InitDynamicList ( void )
 	//
 	// TODO? Keep these separate, and play 3 or 4 in a row before returning to music?
 	//
-	{// Add imperial ads to all stations...
-		BASS_GetImpAdsTracks();
+	if (MUSIC_LIST_COUNT > 0)
+	{
+		{// Add imperial ads to all stations...
+			BASS_GetImpAdsTracks();
 
-		// Add the imperial ads...
-		for (int i = 0; i < IMP_ADS_TRACKS_NUM; i++)
-		{
-			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, IMP_ADS_TRACKS[i].name);
-			MUSIC_LIST_COUNT++;
+			// Add the imperial ads...
+			for (int i = 0; i < IMP_ADS_TRACKS_NUM; i++)
+			{
+				strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, IMP_ADS_TRACKS[i].name);
+				MUSIC_LIST_COUNT++;
+			}
+
+			//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Imperial^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
 		}
 
-		//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Imperial^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
-	}
+		{// Add generic ads to all stations...
+			BASS_GetGenericAdsTracks();
 
-	{// Add generic ads to all stations...
-		BASS_GetGenericAdsTracks();
+			// Add the imperial ads...
+			for (int i = 0; i < GENERIC_ADS_TRACKS_NUM; i++)
+			{
+				strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, GENERIC_ADS_TRACKS[i].name);
+				MUSIC_LIST_COUNT++;
+			}
 
-		// Add the imperial ads...
-		for (int i = 0; i < GENERIC_ADS_TRACKS_NUM; i++)
-		{
-			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, GENERIC_ADS_TRACKS[i].name);
-			MUSIC_LIST_COUNT++;
+			//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Generic^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
 		}
-
-		//Com_Printf("^3BASS Sound System ^4- ^5Added ^7%i ^3Generic^5 advertisements.\n", IMP_ADS_TRACKS_NUM);
 	}
-
 
 	MUSIC_LIST_INITIALIZED = qtrue;
 	MUSIC_LIST_UPDATING = qfalse;
