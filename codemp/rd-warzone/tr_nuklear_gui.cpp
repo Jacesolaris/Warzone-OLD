@@ -73,6 +73,25 @@
 #define NK_SHADER_VERSION "#version 300 es\n"
 #endif
 
+qboolean keyStatus[MAX_KEYS] = { qfalse };
+vec2_t mouseStatus = { 0.5, 0.5 };
+qboolean menuOpen = qfalse;
+
+void RE_SendInputEvents(qboolean clientKeyStatus[MAX_KEYS], vec2_t clientMouseStatus, qboolean open)
+{
+	memcpy(keyStatus, clientKeyStatus, sizeof(keyStatus));
+	mouseStatus[0] = clientMouseStatus[0];
+	mouseStatus[1] = clientMouseStatus[1];
+
+	if (mouseStatus[0] > SCREEN_WIDTH) mouseStatus[0] = SCREEN_WIDTH;
+	if (mouseStatus[1] > SCREEN_HEIGHT) mouseStatus[1] = SCREEN_HEIGHT;
+	if (mouseStatus[0] < 0) mouseStatus[0] = 0;
+	if (mouseStatus[1] < 0) mouseStatus[1] = 0;
+
+	menuOpen = open;
+}
+
+
 struct media {
 	struct nk_font *font_14;
 	struct nk_font *font_15;
@@ -299,7 +318,6 @@ set_style(struct nk_context *ctx, enum theme theme)
 }
 #endif
 
-#ifdef __DEMOS__ // Here for examples...
 /* ===============================================================
 *
 *                          CUSTOM WIDGET
@@ -321,6 +339,106 @@ ui_piemenu(struct nk_context *ctx, struct nk_vec2 pos, float radius,
 	ctx->style.window.border_color = nk_rgba(0, 0, 0, 0);
 
 	total_space = nk_window_get_content_region(ctx);
+	ctx->style.window.spacing = nk_vec2(0, 0);
+	ctx->style.window.padding = nk_vec2(0, 0);
+
+	if (nk_popup_begin(ctx, NK_POPUP_STATIC, "piemenu", NK_WINDOW_NO_SCROLLBAR,
+		nk_rect(pos.x - total_space.x - radius, pos.y - radius - total_space.y,
+			2 * radius, 2 * radius)))
+	{
+		int i = 0;
+		struct nk_command_buffer* out = nk_window_get_canvas(ctx);
+		const struct nk_input *in = &ctx->input;
+
+		total_space = nk_window_get_content_region(ctx);
+		ctx->style.window.spacing = nk_vec2(4, 4);
+		ctx->style.window.padding = nk_vec2(8, 8);
+		nk_layout_row_dynamic(ctx, total_space.h, 1);
+		nk_widget(&bounds, ctx);
+
+		/* outer circle */
+		nk_fill_circle(out, bounds, nk_rgb(50, 50, 50));
+		{
+			/* circle buttons */
+			float step = (2 * 3.141592654f) / (float)(MAX(1, item_count));
+			float a_min = 0; float a_max = step;
+
+			struct nk_vec2 center = nk_vec2(bounds.x + bounds.w / 2.0f, bounds.y + bounds.h / 2.0f);
+			struct nk_vec2 drag = nk_vec2(in->mouse.pos.x - center.x, in->mouse.pos.y - center.y);
+			float angle = (float)atan2(drag.y, drag.x);
+			if (angle < -0.0f) angle += 2.0f * 3.141592654f;
+			active_item = (int)(angle / step);
+
+			for (i = 0; i < item_count; ++i) {
+				struct nk_rect content;
+				float rx, ry, dx, dy, a;
+				nk_fill_arc(out, center.x, center.y, (bounds.w / 2.0f),
+					a_min, a_max, (active_item == i) ? nk_rgb(45, 100, 255) : nk_rgb(60, 60, 60));
+
+				/* separator line */
+				rx = bounds.w / 2.0f; ry = 0;
+				dx = rx * (float)cos(a_min) - ry * (float)sin(a_min);
+				dy = rx * (float)sin(a_min) + ry * (float)cos(a_min);
+				nk_stroke_line(out, center.x, center.y,
+					center.x + dx, center.y + dy, 1.0f, nk_rgb(50, 50, 50));
+
+				/* button content */
+				a = a_min + (a_max - a_min) / 2.0f;
+				rx = bounds.w / 2.5f; ry = 0;
+				content.w = 30; content.h = 30;
+				content.x = center.x + ((rx * (float)cos(a) - ry * (float)sin(a)) - content.w / 2.0f);
+				content.y = center.y + (rx * (float)sin(a) + ry * (float)cos(a) - content.h / 2.0f);
+				nk_draw_image(out, content, &icons[i], nk_rgb(255, 255, 255));
+				a_min = a_max; a_max += step;
+			}
+		}
+		{
+			/* inner circle */
+			struct nk_rect inner;
+			inner.x = bounds.x + bounds.w / 2 - bounds.w / 4;
+			inner.y = bounds.y + bounds.h / 2 - bounds.h / 4;
+			inner.w = bounds.w / 2; inner.h = bounds.h / 2;
+			nk_fill_circle(out, inner, nk_rgb(45, 45, 45));
+
+			/* active icon content */
+			bounds.w = inner.w / 2.0f;
+			bounds.h = inner.h / 2.0f;
+			bounds.x = inner.x + inner.w / 2 - bounds.w / 2;
+			bounds.y = inner.y + inner.h / 2 - bounds.h / 2;
+			nk_draw_image(out, bounds, &icons[active_item], nk_rgb(255, 255, 255));
+		}
+		nk_layout_space_end(ctx);
+		if (!nk_input_is_mouse_down(&ctx->input, NK_BUTTON_RIGHT)) {
+			nk_popup_close(ctx);
+			ret = active_item;
+		}
+	}
+	else ret = -2;
+	ctx->style.window.spacing = nk_vec2(4, 4);
+	ctx->style.window.padding = nk_vec2(8, 8);
+	nk_popup_end(ctx);
+
+	ctx->style.window.fixed_background = background;
+	ctx->style.window.border_color = border;
+	return ret;
+}
+
+static int
+uq_piemenu(struct nk_context *ctx, struct nk_vec2 pos, float radius,
+	struct nk_image *icons, int item_count, struct nk_rect total_space)
+{
+	int ret = -1;
+	//struct nk_rect total_space;
+	struct nk_rect bounds;
+	int active_item = 0;
+
+	/* pie menu popup */
+	struct nk_color border = ctx->style.window.border_color;
+	struct nk_style_item background = ctx->style.window.fixed_background;
+	ctx->style.window.fixed_background = nk_style_item_hide();
+	ctx->style.window.border_color = nk_rgba(0, 0, 0, 0);
+
+	//total_space = nk_window_get_content_region(ctx);
 	ctx->style.window.spacing = nk_vec2(0, 0);
 	ctx->style.window.padding = nk_vec2(0, 0);
 
@@ -479,6 +597,7 @@ ui_widget_centered(struct nk_context *ctx, struct media *media, float height)
 	nk_spacing(ctx, 1);
 }
 
+#ifdef __DEMOS__ // Here for examples...
 static void
 button_demo(struct nk_context *ctx, struct media *media)
 {
@@ -1167,6 +1286,192 @@ GUI_Settings(struct nk_context *ctx, struct media *media)
 	nk_end(ctx);
 }
 
+extern char currentMapName[128];
+
+static struct nk_image icon_load(const char *filename); // below
+
+//
+// Radio UI...
+//
+qboolean			RADIO_CUSTOM_STATION_INITIALIZED = qfalse;
+char				RADIO_CUSTOM_STATION_NAME[512] = { 0 };
+char				RADIO_CUSTOM_STATION_ICON[512] = { 0 };
+char				RADIO_CUSTOM_STATION_MAPNAME[128] = { 0 };
+
+qboolean			RADIO_ICONS_INITIALIZED = qfalse;
+struct nk_image		RADIO_ICONS[6];
+
+void GUI_Radio_InitRadioIcons(void)
+{
+	if (!RADIO_ICONS_INITIALIZED)
+	{
+		RADIO_ICONS[0] = icon_load("Warzone/gui/images/radioStations/galacticRadio.png");
+		RADIO_ICONS[1] = icon_load("Warzone/gui/images/radioStations/mindWormRadio.png");
+		RADIO_ICONS[2] = icon_load("Warzone/gui/images/radioStations/relaxingRadio.png");
+		RADIO_ICONS[3] = icon_load("Warzone/gui/images/radioStations/mapRadio.png");
+		RADIO_ICONS[4] = icon_load("Warzone/gui/images/radioStations/customRadio.png");
+
+		RADIO_ICONS[5] = RADIO_ICONS[3]; // Backup of icon to save reloading later...
+	}
+
+	RADIO_ICONS_INITIALIZED = qtrue;
+}
+
+void GUI_Radio_InitCustomStations(void)
+{
+	GUI_Radio_InitRadioIcons();
+
+	if (strcmp(RADIO_CUSTOM_STATION_MAPNAME, currentMapName))
+	{// Mapname has changed... Init...
+		memset(RADIO_CUSTOM_STATION_NAME, 0, sizeof(RADIO_CUSTOM_STATION_NAME));
+		memset(RADIO_CUSTOM_STATION_MAPNAME, 0, sizeof(RADIO_CUSTOM_STATION_MAPNAME));
+		memset(RADIO_CUSTOM_STATION_ICON, 0, sizeof(RADIO_CUSTOM_STATION_MAPNAME));
+		strcpy(RADIO_CUSTOM_STATION_MAPNAME, currentMapName);
+		RADIO_CUSTOM_STATION_INITIALIZED = qfalse;
+	}
+
+	if (RADIO_CUSTOM_STATION_INITIALIZED) return;
+
+	char radioIniName[512] = { 0 };
+	char radioMapStrippedName[64] = { 0 };
+	COM_StripExtension(RADIO_CUSTOM_STATION_MAPNAME, radioMapStrippedName, sizeof(radioMapStrippedName));
+	sprintf(radioIniName, "maps/%s.radio", radioMapStrippedName);
+	strcpy(RADIO_CUSTOM_STATION_NAME, IniRead(radioIniName, "STATION", "NAME", ""));
+	strcpy(RADIO_CUSTOM_STATION_ICON, IniRead(radioIniName, "STATION", "ICON", ""));
+
+	if (RADIO_CUSTOM_STATION_ICON[0] != 0)
+	{
+		char icon[512] = { 0 };
+		sprintf(icon, "Warzone/gui/images/radioStations/%s.png", RADIO_CUSTOM_STATION_ICON);
+		RADIO_ICONS[3] = icon_load(icon);
+	}
+	else
+		RADIO_ICONS[3] = RADIO_ICONS[5];
+
+	RADIO_CUSTOM_STATION_INITIALIZED = qtrue;
+}
+
+static int radio_piemenu_active = 0;
+static struct nk_vec2 radio_piemenu_pos;
+
+static void
+GUI_Radio(struct nk_context *ctx, struct media *media)
+{
+	float size[2] = { 516.0, 170.0 };
+	char tooltipString[512] = { 0 };
+	memset(tooltipString, 0, sizeof(tooltipString));
+
+	GUI_Radio_InitCustomStations();
+
+	int i = 0;
+	nk_style_set_font(ctx, &media->font_20->handle);
+	nk_begin(ctx, "Radio", nk_rect(64.0, ((float)FBO_HEIGHT - size[1]) - 64.0, size[0], size[1]), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_NO_SCROLLBAR);
+
+	nk_layout_row_static(ctx, 96, 96, 5);
+
+
+	//
+	nk_color bgColor = nk_rgba(64, 64, 64, 255);
+	ctx->style.button.border_color = bgColor;
+	ctx->style.button.border = 4.0;
+	ctx->style.button.image_padding = nk_vec2(-1.0, -1.0);
+	ctx->style.button.rounding = 4.0;
+	
+	int currentRadioSelection = ri->Cvar_VariableValue("s_musicSelection");
+
+	if (currentRadioSelection == 0)
+	{
+		bgColor = ColorForQuality(QUALITY_BLUE);
+		ctx->style.button.border_color = bgColor;
+	}
+	else
+	{
+		bgColor = nk_rgba(64, 64, 64, 255);
+		ctx->style.button.border_color = bgColor;
+	}
+
+	if (nk_button_image_label(ctx, RADIO_ICONS[0], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+		ri->Cvar_Set("s_musicSelection", "0");
+
+	if (currentRadioSelection == 1)
+	{
+		bgColor = ColorForQuality(QUALITY_BLUE);
+		ctx->style.button.border_color = bgColor;
+	}
+	else
+	{
+		bgColor = nk_rgba(64, 64, 64, 255);
+		ctx->style.button.border_color = bgColor;
+	}
+
+	if (nk_button_image_label(ctx, RADIO_ICONS[1], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+		ri->Cvar_Set("s_musicSelection", "1");
+
+	if (currentRadioSelection == 2)
+	{
+		bgColor = ColorForQuality(QUALITY_BLUE);
+		ctx->style.button.border_color = bgColor;
+	}
+	else
+	{
+		bgColor = nk_rgba(64, 64, 64, 255);
+		ctx->style.button.border_color = bgColor;
+	}
+
+	if (nk_button_image_label(ctx, RADIO_ICONS[2], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+		ri->Cvar_Set("s_musicSelection", "2");
+
+
+	
+	if (strlen(RADIO_CUSTOM_STATION_NAME) > 0)
+	{
+		if (currentRadioSelection == 3)
+		{
+			bgColor = ColorForQuality(QUALITY_BLUE);
+			ctx->style.button.border_color = bgColor;
+		}
+		else
+		{
+			bgColor = nk_rgba(64, 64, 64, 255);
+			ctx->style.button.border_color = bgColor;
+		}
+
+		if (nk_button_image_label(ctx, RADIO_ICONS[3], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+			ri->Cvar_Set("s_musicSelection", "3");
+
+
+	}
+
+	if (currentRadioSelection == 4)
+	{
+		bgColor = ColorForQuality(QUALITY_BLUE);
+		ctx->style.button.border_color = bgColor;
+	}
+	else
+	{
+		bgColor = nk_rgba(64, 64, 64, 255);
+		ctx->style.button.border_color = bgColor;
+	}
+
+	if (nk_button_image_label(ctx, RADIO_ICONS[4], "", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+		ri->Cvar_Set("s_musicSelection", "4");
+
+
+
+
+	nk_layout_row_static(ctx, 28, 96, 5);
+	nk_style_set_font(ctx, &media->font_14->handle);
+	nk_text(ctx, (currentRadioSelection == 0) ? "^7Galactic Radio" : "Galactic Radio", strlen((currentRadioSelection == 0) ? "^7Galactic Radio" : "Galactic Radio"), NK_TEXT_CENTERED);
+	nk_text(ctx, (currentRadioSelection == 0) ? "^7Mind Worm Radio" : "Mind Worm Radio", strlen((currentRadioSelection == 0) ? "^7Mind Worm Radio" : "Mind Worm Radio"), NK_TEXT_CENTERED);
+	nk_text(ctx, (currentRadioSelection == 0) ? "^7Relaxing In The Rim" : "Relaxing In The Rim", strlen((currentRadioSelection == 0) ? "^7Relaxing In The Rim" : "Relaxing In The Rim"), NK_TEXT_CENTERED);
+	nk_text(ctx, (currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME, strlen((currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME), NK_TEXT_CENTERED);
+	nk_text(ctx, (currentRadioSelection == 0) ? "^7Custom Radio" : "^7Custom Radio", strlen((currentRadioSelection == 0) ? "^7Custom Radio" : "^7Custom Radio"), NK_TEXT_CENTERED);
+	//
+
+	nk_style_set_font(ctx, &media->font_14->handle);
+	nk_end(ctx);
+}
+
 int PREVIOUS_INVENTORY_TOOLTIP = -1;
 int PREVIOUS_INVENTORY_TOOLTIP_QUALITY = 0;
 int PREVIOUS_INVENTORY_TOOLTIP_TIME = 0;
@@ -1469,24 +1774,6 @@ device_shutdown(struct device *dev)
 	nk_buffer_free(&dev->cmds);
 }
 
-
-qboolean keyStatus[MAX_KEYS] = { qfalse };
-vec2_t mouseStatus = { 0.5, 0.5 };
-qboolean menuOpen = qfalse;
-
-void RE_SendInputEvents(qboolean clientKeyStatus[MAX_KEYS], vec2_t clientMouseStatus, qboolean open)
-{
-	memcpy(keyStatus, clientKeyStatus, sizeof(keyStatus));
-	mouseStatus[0] = clientMouseStatus[0];
-	mouseStatus[1] = clientMouseStatus[1];
-
-	if (mouseStatus[0] > SCREEN_WIDTH) mouseStatus[0] = SCREEN_WIDTH;
-	if (mouseStatus[1] > SCREEN_HEIGHT) mouseStatus[1] = SCREEN_HEIGHT;
-	if (mouseStatus[0] < 0) mouseStatus[0] = 0;
-	if (mouseStatus[1] < 0) mouseStatus[1] = 0;
-
-	menuOpen = open;
-}
 
 #include "imgui/include_imgui.h"
 
@@ -2348,6 +2635,7 @@ void NuklearUI_Main(void)
 
 			GUI_Inventory(&GUI_ctx, &GUI_media);
 			//GUI_Settings(&GUI_ctx, &GUI_media);
+			GUI_Radio(&GUI_ctx, &GUI_media);
 		}
 		else
 #endif
