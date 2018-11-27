@@ -1328,8 +1328,8 @@ void BASS_GetMapStationTracks(void)
 			// Continue until we see an empty track slot...
 			if (strlen(MUSIC_TRACK) > 0)
 			{
-				if (!strncmp(MUSIC_TRACK, "music/", 6))
-				{// Already has music/
+				if (!strncmp(MUSIC_TRACK, "music/", 6) || !strncmp(MUSIC_TRACK, "http", 4))
+				{// Already has music/ or is internet radio station...
 					strcpy(MAP_STATION_TRACKS[MAP_STATION_TRACKS_NUM].name, MUSIC_TRACK);
 				}
 				else
