@@ -1576,7 +1576,7 @@ void BASS_InitDynamicList ( void )
 
 	qboolean MUSIC_SELECTION_CHANGED = qfalse;
 
-	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION || (s_musicSelection->integer == 3 && strcmp(MAP_STATION_MAPNAME, cl.mapname)))
+	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION || (/*s_musicSelection->integer == 3 &&*/ strcmp(MAP_STATION_MAPNAME, cl.mapname)))
 	{// Player changed music selection (or map has changed)... Initialize the music list and reload...
 		BASS_StopMusic(NULL);
 		MUSIC_LIST_UPDATING = qtrue;

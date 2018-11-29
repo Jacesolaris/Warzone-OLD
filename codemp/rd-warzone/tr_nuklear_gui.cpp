@@ -1464,7 +1464,10 @@ GUI_Radio(struct nk_context *ctx, struct media *media)
 	nk_text(ctx, (currentRadioSelection == 0) ? "^7Galactic Radio" : "Galactic Radio", strlen((currentRadioSelection == 0) ? "^7Galactic Radio" : "Galactic Radio"), NK_TEXT_CENTERED);
 	nk_text(ctx, (currentRadioSelection == 0) ? "^7Mind Worm Radio" : "Mind Worm Radio", strlen((currentRadioSelection == 0) ? "^7Mind Worm Radio" : "Mind Worm Radio"), NK_TEXT_CENTERED);
 	nk_text(ctx, (currentRadioSelection == 0) ? "^7Relaxing In The Rim" : "Relaxing In The Rim", strlen((currentRadioSelection == 0) ? "^7Relaxing In The Rim" : "Relaxing In The Rim"), NK_TEXT_CENTERED);
-	nk_text(ctx, (currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME, strlen((currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME), NK_TEXT_CENTERED);
+	if (strlen(RADIO_CUSTOM_STATION_NAME) > 0)
+	{
+		nk_text(ctx, (currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME, strlen((currentRadioSelection == 0) ? va("^7%s", RADIO_CUSTOM_STATION_NAME) : RADIO_CUSTOM_STATION_NAME), NK_TEXT_CENTERED);
+	}
 	nk_text(ctx, (currentRadioSelection == 0) ? "^7Custom Radio" : "^7Custom Radio", strlen((currentRadioSelection == 0) ? "^7Custom Radio" : "^7Custom Radio"), NK_TEXT_CENTERED);
 	//
 
