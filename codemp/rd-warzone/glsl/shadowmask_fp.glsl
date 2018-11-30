@@ -21,8 +21,10 @@ varying vec3				var_ViewDir;
 
 float offset_lookup(sampler2DShadow shadowmap, vec4 loc, vec2 offset, float scale)
 {
-	float result = textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, loc.z, loc.w)) > 0.1 ? 1.0 : 0.0;
-	return result;
+	//float result = textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, (loc.z - u_Settings0.a), loc.w)) > 0.1 ? 1.0 : 0.0;
+	//return result;
+#define SHADOW_Z_ERROR_OFFSET 0.0001
+	return textureProj(shadowmap, vec4(loc.xy + offset * scale * loc.w, (loc.z + SHADOW_Z_ERROR_OFFSET), loc.w));
 }
 
 float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, float scale)
@@ -34,13 +36,21 @@ float PCF(const sampler2DShadow shadowmap, const vec4 st, const float dist, floa
 	vec2 offset = mod(sCoord.xy, 0.5);
 	offset.y += offset.x;  // y ^= x in floating point
 	if (offset.y > 1.1) offset.y = 0;
-	float shadowCoeff = (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, 0.5), scale) +
+	/*float shadowCoeff = (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, 0.5), scale) +
                offset_lookup(shadowmap, sCoord, offset + vec2(0.5, 0.5), scale) +
                offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, -1.5), scale) +
                offset_lookup(shadowmap, sCoord, offset + vec2(0.5, -1.5), scale) ) 
 			   * 0.25;
 
-	return shadowCoeff;
+	return shadowCoeff > u_Settings0.b ? 1.0 : 0.0;*/
+
+#define MAX_SHADOW_VALUE 0.9999999 //0.99999997
+	if (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, 0.5), scale) <= MAX_SHADOW_VALUE) return 0.0;
+	if (offset_lookup(shadowmap, sCoord, offset + vec2(0.5, 0.5), scale) <= MAX_SHADOW_VALUE) return 0.0;
+	if (offset_lookup(shadowmap, sCoord, offset + vec2(-1.5, -1.5), scale) <= MAX_SHADOW_VALUE) return 0.0;
+	if (offset_lookup(shadowmap, sCoord, offset + vec2(0.5, -1.5), scale) <= MAX_SHADOW_VALUE) return 0.0;
+
+	return 1.0;
 }
 
 //////////////////////////////////////////////////////////////////////////

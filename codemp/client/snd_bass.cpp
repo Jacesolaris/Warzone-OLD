@@ -1256,6 +1256,7 @@ void BASS_GetMapStationTracks(void)
 	if (strcmp(MAP_STATION_MAPNAME, cl.mapname))
 	{// Mapname has changed... Init...
 		memset(MAP_STATION_NAME, 0, sizeof(MAP_STATION_NAME));
+		memset(MAP_STATION_MAPNAME, 0, sizeof(MAP_STATION_MAPNAME));
 		MAP_STATION_TRACKS_NUM = 0;
 		strcpy(MAP_STATION_MAPNAME, cl.mapname);
 		MAP_STATION_TRACKS_LOADED = qfalse;
@@ -1575,8 +1576,12 @@ void BASS_InitDynamicList ( void )
 	if (BASS_CheckSoundDisabled()) return;
 
 	qboolean MUSIC_SELECTION_CHANGED = qfalse;
+	qboolean MAP_STATION_UPDATE = qfalse;
 
-	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION || (/*s_musicSelection->integer == 3 &&*/ strcmp(MAP_STATION_MAPNAME, cl.mapname)))
+	if (strlen(MAP_STATION_MAPNAME) > 0 && strlen(cl.mapname) > 0 && strcmp(MAP_STATION_MAPNAME, cl.mapname) && s_musicSelection->integer == 3)
+		MAP_STATION_UPDATE = qtrue;
+
+	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION || MAP_STATION_UPDATE)
 	{// Player changed music selection (or map has changed)... Initialize the music list and reload...
 		BASS_StopMusic(NULL);
 		MUSIC_LIST_UPDATING = qtrue;
