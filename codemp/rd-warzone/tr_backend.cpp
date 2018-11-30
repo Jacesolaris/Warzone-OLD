@@ -3249,9 +3249,13 @@ const void *RB_PostProcess(const void *data)
 
 		GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 
+		extern qboolean SHADOWS_FULL_SOLID;
 		vec4_t vec;
-		VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, r_testshaderValue1->value, r_testshaderValue2->value);
+		VectorSet4(vec, r_shadowSamples->value, r_shadowMapSize->value, SHADOWS_FULL_SOLID, 0.0);
 		GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS0, vec);
+
+		VectorSet4(vec, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_SETTINGS1, vec);
 
 		{
 			vec4_t viewInfo;

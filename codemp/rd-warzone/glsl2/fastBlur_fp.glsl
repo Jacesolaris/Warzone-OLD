@@ -23,18 +23,18 @@ varying vec2			var_TexCoords;
 void main()
 {
 	float numValues = 1.0;
-	//float color = texture(u_DiffuseMap, var_TexCoords.xy).x;
-	//float depth = texture(u_ScreenDepthMap, var_TexCoords.xy).x;
 	vec2 shadowInfo = texture(u_DiffuseMap, var_TexCoords.xy).xy;
 	float color = shadowInfo.x;
 	float depth = shadowInfo.y;
 	float inColor = color;
 
+	depth = clamp(pow(1.0 - depth, 4.0), 0.0, 1.0);
+
 	for (float x = -BLUR_RADIUS; x <= BLUR_RADIUS; x += BLUR_PIXELMULT)
 	{
 		for (float y = -BLUR_RADIUS; y <= BLUR_RADIUS; y += BLUR_PIXELMULT)
 		{
-			vec2 offset = vec2(x * px, y * py) * 2.0;
+			vec2 offset = vec2(x * px, y * py) * 2.0 * depth;
 			vec2 xy = vec2(var_TexCoords + offset);
 			color += texture(u_DiffuseMap, xy).x;
 			numValues += 1.0;
@@ -47,9 +47,7 @@ void main()
 #define contrastUpper ( 255.0 / 295.0 )
 	color = clamp((clamp(color - contrastLower, 0.0, 1.0)) * contrastUpper, 0.0, 1.0);
 
-	depth = pow(depth, 0.6);
-	float mixStrength = clamp(0.5 - depth, 0.2, 0.5);
-	gl_FragColor = vec4(clamp(mix(color, inColor, mixStrength), 0.0, 1.0), 0.0, 0.0, 1.0);
+	gl_FragColor = vec4(color, 0.0, 0.0, 1.0);
 }
 
 #else //!__FAST__

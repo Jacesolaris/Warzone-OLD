@@ -1458,6 +1458,7 @@ qboolean	AO_DIRECTIONAL = qfalse;
 float		AO_MINBRIGHT = 0.3;
 float		AO_MULTBRIGHT = 1.0;
 qboolean	SHADOWS_ENABLED = qfalse;
+qboolean	SHADOWS_FULL_SOLID = qfalse;
 float		SHADOW_MINBRIGHT = 0.7;
 float		SHADOW_MAXBRIGHT = 1.0;
 qboolean	FOG_POST_ENABLED = qtrue;
@@ -1885,6 +1886,7 @@ void MAPPING_LoadMapInfo(void)
 	// Shadows...
 	//
 	SHADOWS_ENABLED = (atoi(IniRead(mapname, "SHADOWS", "SHADOWS_ENABLED", "0")) > 0) ? qtrue : qfalse;
+	SHADOWS_FULL_SOLID = (atoi(IniRead(mapname, "SHADOWS", "SHADOWS_FULL_SOLID", "0")) > 0) ? qtrue : qfalse;
 	SHADOW_MINBRIGHT = atof(IniRead(mapname, "SHADOWS", "SHADOW_MINBRIGHT", "0.7"));
 	SHADOW_MAXBRIGHT = atof(IniRead(mapname, "SHADOWS", "SHADOW_MAXBRIGHT", "1.0"));
 
