@@ -354,7 +354,7 @@ float pw = (1.0/u_Dimensions.x);
 float ph = (1.0/u_Dimensions.y);
 
 #if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
-vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor, float height)
+vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColor, float height, vec3 surfacePoint)
 {
 	vec3 skyColor = vec3(0.0);
 	float skyContribution = 0.06;
@@ -370,7 +370,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		cubeInfo.xyz *= 1.0 / cubeInfo.w;
 		cubeInfo.w = 1.0 / cubeInfo.w;
 
-		vec3 E = normalize(ViewOrigin.xzy - positionMap.xzy);
+		vec3 E = normalize(ViewOrigin.xzy - surfacePoint.xzy/*positionMap.xzy*/);
 		vec3 cubeRayDir = reflect(E, vec3(0.0, 0.0, 1.0));
 
 		vec3 parallax = cubeInfo.xyz + cubeInfo.w * E;
@@ -380,7 +380,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 		reflected = vec3(-reflected.y, -reflected.z, -reflected.x);
 #else
-		vec3 E = normalize(ViewOrigin.xzy - positionMap.xzy);
+		vec3 E = normalize(ViewOrigin.xzy - surfacePoint.xzy/*positionMap.xzy*/);
 		vec3 reflected = reflect(E, vec3(0.0, 0.0, 1.0));
 #endif
 
@@ -411,8 +411,6 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 		return mix(inColor, skyColor, skyContribution);
 	}
 
-	float pixelDistance = distance(waterMapLower.xyz, ViewOrigin.xyz);
-
 	// Quick scan for pixel that is not water...
 	float QLAND_Y = 0.0;
 	float topY = min(coord.y + 0.6, 1.0); // Don'y scan further then this, waste of time as it will be bleneded out...
@@ -422,9 +420,8 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	for (float y = coord.y; y <= topY; y += ph * scanSpeed)
 	{
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
-		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 
-		if (isWater <= 0.0 && distance(pMap.xyz, ViewOrigin.xyz) > pixelDistance && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0)
 		{
 			QLAND_Y = y;
 			break;
@@ -443,12 +440,11 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	float LAND_Y = 0.0;
 	float topY2 = QLAND_Y + (ph * scanSpeed);
 
-	for (float y = QLAND_Y; y <= topY2; y += ph * 2.0)
+	for (float y = QLAND_Y; y <= topY2; y += ph * 4.0/*2.0*/)
 	{
 		float isWater = texture(u_WaterPositionMap, vec2(coord.x, y)).a;
-		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
 
-		if (isWater <= 0.0 && distance(pMap.xyz, ViewOrigin.xyz) > pixelDistance && (pMap.a - 1.0 == 1024.0 || pMap.a - 1.0 == 1025.0 || pMap.y >= waterMapLower.y || length(pMap.xyz) == 0.0))
+		if (isWater <= 0.0)
 		{
 			LAND_Y = y;
 			break;
@@ -474,7 +470,7 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 
 	vec2 finalPosition = clamp(vec2(coord.x + offset, upPos), 0.0, 1.0);
 
-	float isWater = texture(u_WaterPositionMap, finalPosition).a;
+	/*float isWater = texture(u_WaterPositionMap, finalPosition).a;
 
 	if (isWater > 0.0)
 	{// This position is water...
@@ -483,28 +479,80 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMapLower, vec3 inColo
 	else
 	{
 		vec4 pMap = positionMapAtCoord(finalPosition);
-		
+		float pixelDistance = distance(waterMapLower.xyz, ViewOrigin.xyz);
+
 		if (distance(pMap.xyz, ViewOrigin) <= pixelDistance)
 		{// This position is sky or closer than the original pixel...
 			return mix(inColor, skyColor, skyContribution);
 		}
 
 		inColor = mix(inColor, skyColor, skyContribution);
-	}
+	}*/
 
-	vec4 landColor = textureLod(u_DiffuseMap, finalPosition, 0.0);
-#if 0
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset + pw, upPos), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset - pw, upPos), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset, upPos + ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset, upPos - ph), 0.0);
-	//landColor /= 5.0;
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset + pw, upPos + ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset - pw, upPos - ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset + pw, upPos - ph), 0.0);
-	landColor += textureLod(u_DiffuseMap, vec2(coord.x + offset - pw, upPos + ph), 0.0);
-	landColor /= 9.0;
-#endif
+//#define FILL_IN_CLOSER_PIXELS
+#ifdef FILL_IN_CLOSER_PIXELS
+	vec4 pMap = positionMapAtCoord(finalPosition);
+	pMap.a -= 1.0;
+	float pixelDistance = distance(surfacePoint.xyz/*waterMapLower.xyz*/, ViewOrigin.xyz);
+
+	if (!(pMap.a == MATERIAL_SKY || pMap.a == MATERIAL_SUN) && distance(pMap.xyz, ViewOrigin) <= pixelDistance)
+	{// This position is closer than the original pixel... but not sky
+		//return mix(inColor, skyColor, skyContribution); // this sucks, leaves gaps, scan left or right for sky or something instead...
+		
+		for (float x = 0.0; x <= 0.5; x += pw * 4.0)
+		{
+			vec2 coord = vec2(finalPosition.x + x, finalPosition.y);
+
+			if (coord.x < 1.0)
+			{
+				vec4 pMap2 = positionMapAtCoord(coord);
+				pMap2.a -= 1.0;
+
+				if (!(pMap2.a == MATERIAL_SKY || pMap2.a == MATERIAL_SUN) && distance(pMap2.xyz, ViewOrigin) <= pixelDistance)
+				{// This position is closer than the original pixel... but not sky
+					
+				}
+				else
+				{// Hit!
+					finalPosition.x = coord.x;
+					break;
+				}
+			}
+
+			coord = vec2(finalPosition.x - x, finalPosition.y);
+
+			if (coord.x > 0.0)
+			{
+				vec4 pMap2 = positionMapAtCoord(coord);
+				pMap2.a -= 1.0;
+
+				if (!(pMap2.a == MATERIAL_SKY || pMap2.a == MATERIAL_SUN) && distance(pMap2.xyz, ViewOrigin) <= pixelDistance)
+				{// This position is closer than the original pixel... but not sky
+					
+				}
+				else
+				{// Hit!
+					finalPosition.x = coord.x;
+					break;
+				}
+			}
+		}
+	}
+#endif //FILL_IN_CLOSER_PIXELS
+
+	vec3 landColor = vec3(0.0);//textureLod(u_DiffuseMap, finalPosition, 0.0).rgb;
+
+	float blurPixels = 0.0;//1.0;
+	for (float x = -u_Local0.r; x < 128.0; x += max(64.0, 1.0))
+	{
+		for (float y = -u_Local0.r; y < 128.0; y += max(64.0, 1.0))
+		{
+			vec2 offset = vec2(x * pw, y * ph);
+			landColor += textureLod(u_DiffuseMap, finalPosition + offset, 0.0).rgb;
+			blurPixels += 1.0;
+		}
+	}
+	landColor /= blurPixels;
 
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * u_Local1.a);
 }
@@ -826,7 +874,7 @@ vec4 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float
 	//color += blinn_phong(waterMapUpper.xyz, color.rgb, normal, eyeVecNorm, lightDir, u_PrimaryLightColor.rgb, u_PrimaryLightColor.rgb, 1.0, u_PrimaryLightOrigin.xyz);
 
 #if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
-	color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color, 0.0);
+	color = AddReflection(texCoord, position.xyz, waterMapUpper.xyz, color, 0.0, position.xyz);
 #endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
 	return vec4(color, 1.0);
@@ -1209,7 +1257,7 @@ void main ( void )
 #if defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 		if (!pixelIsUnderWater && u_Local1.g >= 2.0)
 		{
-			color = AddReflection(var_TexCoords, position, vec3(surfacePoint.x/*waterMapLower3.x*/, level, surfacePoint.z/*waterMapLower3.z*/), color.rgb, height);
+			color = AddReflection(var_TexCoords, position, vec3(surfacePoint.x/*waterMapLower3.x*/, level, surfacePoint.z/*waterMapLower3.z*/), color.rgb, height, surfacePoint.xyz);
 		}
 #endif //defined(USE_REFLECTION) && !defined(__LQ_MODE__)
 
