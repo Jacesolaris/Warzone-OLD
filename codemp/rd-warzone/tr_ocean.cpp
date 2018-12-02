@@ -40,7 +40,7 @@ void OCEAN_InitOceanFast()
 		WATER_FAST_INITIALIZED = qtrue;
 
 		// constants
-		static const int QUAD_GRID_SIZE = 10;
+		static const int QUAD_GRID_SIZE = 1;// 10;
 		static const int NR_VERTICES = (QUAD_GRID_SIZE + 1)*(QUAD_GRID_SIZE + 1);
 		static const int NR_TRIANGLES = 2 * QUAD_GRID_SIZE*QUAD_GRID_SIZE;
 		static const int NR_INDICES = 3 * NR_TRIANGLES;
