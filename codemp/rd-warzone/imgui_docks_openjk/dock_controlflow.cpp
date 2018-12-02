@@ -53,6 +53,7 @@ void DockControlFlow::imgui() {
 		showCvar("RB_VolumetricLight (r_dynamiclight != 0)"                    , r_volumeLight     );
 		showCvar("Bloom Rays"                                                  , r_bloom           );
 		showCvar("FXAA"                                                        , r_fxaa            );
+		showCvar("TXAA"                                                        , r_txaa            );
 		showCvar("Show Depth"                                                  , r_showdepth       );
 		showCvar("Show Normals"                                                , r_shownormals     );
 		showCvar("Anaglyph"                                                    , r_trueAnaglyph    );

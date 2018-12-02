@@ -623,6 +623,27 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.volumetricFBOImage, 0);
 		R_CheckFBO(tr.volumetricFbo);
 	}
+
+	//
+	// Water Reflection FBO...
+	//
+	{
+		tr.waterReflectionRenderFBO = FBO_Create("_waterReflection", tr.waterReflectionRenderImage->width, tr.waterReflectionRenderImage->height);
+		FBO_Bind(tr.waterReflectionRenderFBO);
+		FBO_AttachTextureImage(tr.waterReflectionRenderImage, 0);
+		R_CheckFBO(tr.waterReflectionRenderFBO);
+	}
+
+	//
+	// TXAA FBO...
+	//
+	{
+		tr.txaaPreviousFBO = FBO_Create("_txaa", tr.txaaPreviousImage->width, tr.txaaPreviousImage->height);
+		FBO_Bind(tr.txaaPreviousFBO);
+		FBO_AttachTextureImage(tr.txaaPreviousImage, 0);
+		R_CheckFBO(tr.txaaPreviousFBO);
+	}
+	
 	
 #if 0
 	// only create a render FBO if we need to resolve MSAA or do HDR

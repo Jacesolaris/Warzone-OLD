@@ -3769,6 +3769,14 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
+		if (!SCREEN_BLUR && r_txaa->integer)
+		{
+			DEBUG_StartTimer("TXAA", qtrue);
+			RB_TXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs(&currentFbo, &currentOutFbo);
+			DEBUG_EndTimer(qtrue);
+		}
+
 		if (!SCREEN_BLUR && r_showdepth->integer)
 		{
 			DEBUG_StartTimer("Show Depth", qtrue);
@@ -3959,6 +3967,14 @@ const void *RB_PostProcess(const void *data)
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
 		FBO_BlitFromTexture(tr.skyCubeMapNight, NULL, NULL, NULL, dstBox, &tr.testcubeShader, NULL, 0);
+	}
+#endif
+
+#if 0
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.waterReflectionRenderImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 #endif
 

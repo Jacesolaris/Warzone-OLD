@@ -4,10 +4,6 @@ attribute vec4	attr_TexCoord0;
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform vec3	u_ViewOrigin;
 
-uniform vec3	u_ViewForward;
-uniform vec3	u_ViewLeft;
-uniform vec3	u_ViewUp;
-
 varying vec2	var_TexCoords;
 varying vec3	var_ViewDir;
 varying vec3	var_position;
@@ -23,7 +19,4 @@ void main()
 	//var_viewOrg = vec3(u_ModelViewProjectionMatrix * vec4(u_ViewOrigin, 1.0)).xyz;
 	var_viewOrg = vec3(var_TexCoords.xy, vec3(u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz, 1.0)).z);
 	var_position = vec3(u_ModelViewProjectionMatrix * vec4(attr_Position.xyz, 1.0)).xyz;
-
-	//vec2 screenCoords = gl_Position.xy / gl_Position.w;
-	//var_ViewDir = -(u_ViewForward + u_ViewLeft * -screenCoords.x + u_ViewUp * screenCoords.y);
 }

@@ -5120,6 +5120,10 @@ void R_CreateBuiltinImages( void ) {
 		//tr.volumetricFBOImage = R_CreateImage("_volumetric", NULL, (width / 2.0) / vramScaleDiv, (height / 2.0) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	}
 
+	tr.waterReflectionRenderImage = R_CreateImage("_waterReflection", NULL, (width / 4) / vramScaleDiv, (height / 4) / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA16F);
+
+	tr.txaaPreviousImage = R_CreateImage("_txaa", NULL, width / vramScaleDiv, height / vramScaleDiv, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+
 	//
 	// UQ1: End Added...
 	//

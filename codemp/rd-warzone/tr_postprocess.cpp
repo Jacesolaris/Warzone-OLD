@@ -2050,203 +2050,312 @@ extern float WATER_EXTINCTION3;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
-	vec4_t		color;
+	if (WATER_REFLECTIVENESS > 0.0 && r_glslWater->integer > 1.0 && !(tr.refdef.rdflags & RDF_UNDERWATER))
+	{// Generate reflections...
+		shaderProgram_t *shader = &tr.waterReflectionShader;
 
-	shaderProgram_t *shader = &tr.waterPostShader[Q_clampi(0, r_glslWater->integer-1, 2)];
+		GLSL_BindProgram(shader);
 
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
+		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-	GLSL_BindProgram(shader);
+		GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
-	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	/*GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);//backEnd.ori.modelViewMatrix);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
-	
-	matrix_t trans, model, mvp, invMvp;
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	Matrix16SimpleInverse( glState.modelviewProjection, invMvp);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);*/
+		GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
-	/*
-	heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
-	backBufferMap – current contents of the back buffer
-	positionMap – texture storing scene position vectors
-	normalMap – texture storing normal vectors for normal mapping as described in the section “The computation of normal vectors”
-	foamMap – texture containing foam – in my case it is a photo of foam converted to greyscale
-	reflectionMap – texture containing reflections rendered as described in the section “Reflection and refraction of light”
+		GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+		GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
 
-	uniform sampler2D u_HeightMap;	  // water heightmap
-	uniform sampler2D u_DiffuseMap;   // backBufferMap
-	uniform sampler2D u_PositionMap;  // map positions
-	uniform sampler2D u_WaterPositionMap; // water positions
-	uniform sampler2D u_NormalMap;	  // water normals
-	uniform sampler2D u_OverlayMap;   // foamMap
-	uniform sampler2D u_SpecularMap;  // reflectionMap
-	*/
+		GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GL_BindToTMU(tr.waterFoamImage[0], TB_OVERLAYMAP);
 
-	//GLSL_SetUniformInt(shader, UNIFORM_WATERHEIGHTMAP, TB_WATERHEIGHTMAP);
-	//GL_BindToTMU(tr.waterHeightImage, TB_WATERHEIGHTMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GL_BindToTMU(tr.waterFoamImage[1], TB_SPLATMAP1);
 
-	//GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
-	//GL_BindToTMU(tr.heightMapImage, TB_HEIGHTMAP);
-	
-	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GL_BindToTMU(tr.waterFoamImage[2], TB_SPLATMAP2);
 
-	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		GL_BindToTMU(tr.waterFoamImage[3], TB_SPLATMAP3);
 
-	GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
-	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GL_BindToTMU(tr.waterCausicsImage, TB_DETAILMAP);
 
-	GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GL_BindToTMU(tr.waterFoamImage[0], TB_OVERLAYMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GL_BindToTMU(tr.waterHeightMapImage, TB_HEIGHTMAP);
 
-	GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
-	GL_BindToTMU(tr.waterFoamImage[1], TB_SPLATMAP1);
+		GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+		GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
 
-	GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
-	GL_BindToTMU(tr.waterFoamImage[2], TB_SPLATMAP2);
+		GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+		GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
 
-	GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
-	GL_BindToTMU(tr.waterFoamImage[3], TB_SPLATMAP3);
-
-	GLSL_SetUniformInt(shader, UNIFORM_DETAILMAP, TB_DETAILMAP);
-	GL_BindToTMU(tr.waterCausicsImage, TB_DETAILMAP);
-
-	GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
-	GL_BindToTMU(tr.waterHeightMapImage, TB_HEIGHTMAP);
-
-	//GLSL_SetUniformInt(shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
-	//GL_BindToTMU(tr.defaultSplatControlImage, TB_SPLATCONTROLMAP);
-
-	//GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GL_BindToTMU(tr.linearDepthImage2048, TB_LIGHTMAP);
-
-	//GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	//GL_BindToTMU(tr.renderNormalImage, TB_SPECULARMAP);
-
-	GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
-	GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
-
-	GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
-	GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
-
-	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
-	GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
-
-	
-	vec3_t out;
-	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
- 	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
-	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
-
-	GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+		GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+		GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
 
-	GLSL_SetUniformInt(shader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-	//GLSL_SetUniformVec2x16(shader, UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_SCREEN_POSITIONS, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
-	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
-	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
-	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
-	//GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTHEIGHTSCALES, CLOSEST_LIGHTS_HEIGHTSCALES, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
-	GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHT_CONEANGLES, CLOSEST_LIGHTS_CONEANGLES, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
-	GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHT_CONEDIRECTIONS, CLOSEST_LIGHTS_CONEDIRECTIONS, NUM_CLOSE_LIGHTS/*MAX_DEFERRED_LIGHTS*/);
+		vec3_t out;
+		float dist = 4096.0;
+		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+		GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN, out);
 
-	{
-		vec4_t loc;
-		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
-		GLSL_SetUniformVec4(shader, UNIFORM_MINS, loc);
+		GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
 
-		VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
-		GLSL_SetUniformVec4(shader, UNIFORM_MAXS, loc);
 
-		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
-		GLSL_SetUniformVec4(shader, UNIFORM_MAPINFO, loc);
+		/*GLSL_SetUniformInt(shader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHT_CONEANGLES, CLOSEST_LIGHTS_CONEANGLES, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHT_CONEDIRECTIONS, CLOSEST_LIGHTS_CONEDIRECTIONS, NUM_CLOSE_LIGHTS);*/
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_MINS, loc);
+
+			VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_MAXS, loc);
+
+			VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
+			GLSL_SetUniformVec4(shader, UNIFORM_MAPINFO, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, (tr.refdef.rdflags & RDF_UNDERWATER) ? 1.0 : 0.0, WATER_REFLECTIVENESS);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_CLARITY);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2], tr.waterHeightMapImage != tr.whiteImage ? 1.0 : 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL3, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, WATER_EXTINCTION1, WATER_EXTINCTION2, WATER_EXTINCTION3);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL4, loc);
+		}
+
+		{
+			vec4_t local7;
+			VectorSet4(local7, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL7, local7);
+		}
+
+		{
+			vec4_t local8;
+			VectorSet4(local8, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL8, local8);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, WATER_UNDERWATER_CLARITY);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
+		}
+
+		{
+			vec4_t viewInfo;
+			float zmax = 2048.0;
+			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+			float zmin = r_znear->value;
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec2_t screensize;
+			screensize[0] = tr.waterReflectionRenderImage->width;
+			screensize[1] = tr.waterReflectionRenderImage->height;
+
+			GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		vec4i_t box;
+		VectorSet4(box, 0, tr.waterReflectionRenderImage->height, tr.waterReflectionRenderImage->width, -tr.waterReflectionRenderImage->height);
+		FBO_Blit(hdrFbo, NULL, NULL, tr.waterReflectionRenderFBO, box, shader, colorWhite, 0);
 	}
 
-	//vec3_t viewAngles;
-	//TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+	{// Actual water draw...
+		shaderProgram_t *shader = &tr.waterPostShader[Q_clampi(0, r_glslWater->integer - 1, 2)];
 
-	{
-		vec4_t loc;
-		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
+		GLSL_BindProgram(shader);
+
+		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+		GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+		GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+		GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GL_BindToTMU(tr.waterFoamImage[0], TB_OVERLAYMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GL_BindToTMU(tr.waterFoamImage[1], TB_SPLATMAP1);
+
+		GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GL_BindToTMU(tr.waterFoamImage[2], TB_SPLATMAP2);
+
+		GLSL_SetUniformInt(shader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		GL_BindToTMU(tr.waterFoamImage[3], TB_SPLATMAP3);
+
+		GLSL_SetUniformInt(shader, UNIFORM_DETAILMAP, TB_DETAILMAP);
+		GL_BindToTMU(tr.waterCausicsImage, TB_DETAILMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+		GL_BindToTMU(tr.waterHeightMapImage, TB_HEIGHTMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+		GL_BindToTMU(tr.skyCubeMap, TB_SKYCUBEMAP);
+
+		GLSL_SetUniformInt(shader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+		GL_BindToTMU(tr.skyCubeMapNight, TB_SKYCUBEMAPNIGHT);
+
+		GLSL_SetUniformInt(shader, UNIFORM_EMISSIVECUBE, TB_EMISSIVECUBE);
+		GL_BindToTMU(tr.waterReflectionRenderImage, TB_EMISSIVECUBE);
+
+		GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+		GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+
+		vec3_t out;
+		float dist = 4096.0;
+		VectorMA(backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out);
+		GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN, out);
+
+		GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+
+
+		/*GLSL_SetUniformInt(shader, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformFloatxX(shader, UNIFORM_LIGHT_CONEANGLES, CLOSEST_LIGHTS_CONEANGLES, NUM_CLOSE_LIGHTS);
+		GLSL_SetUniformVec3xX(shader, UNIFORM_LIGHT_CONEDIRECTIONS, CLOSEST_LIGHTS_CONEDIRECTIONS, NUM_CLOSE_LIGHTS);*/
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_MINS, loc);
+
+			VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_MAXS, loc);
+
+			VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
+			GLSL_SetUniformVec4(shader, UNIFORM_MAPINFO, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, (tr.refdef.rdflags & RDF_UNDERWATER) ? 1.0 : 0.0, WATER_REFLECTIVENESS);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_CLARITY);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2], tr.waterHeightMapImage != tr.whiteImage ? 1.0 : 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL3, loc);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, WATER_EXTINCTION1, WATER_EXTINCTION2, WATER_EXTINCTION3);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL4, loc);
+		}
+
+		{
+			vec4_t local7;
+			VectorSet4(local7, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL7, local7);
+		}
+
+		{
+			vec4_t local8;
+			VectorSet4(local8, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL8, local8);
+		}
+
+		{
+			vec4_t local9;
+			VectorSet4(local9, (DAY_NIGHT_CYCLE_ENABLED && RB_NightScale() < /*0.1927*/0.243) ? 1.0 - (RB_NightScale() / 0.243) : 0.0, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL9, local9);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, WATER_UNDERWATER_CLARITY);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
+		}
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+			GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		/*{
+			vec4_t viewInfo;
+
+			float zmax = r_occlusion->integer ? tr.occlusionOriginalZfar : backEnd.viewParms.zFar;
+
+			float zmax2 = backEnd.viewParms.zFar;
+			float ymax2 = zmax2 * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax2 = zmax2 * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+
+			float zmin = r_znear->value;
+
+			vec3_t viewBasis[3];
+			VectorScale(backEnd.refdef.viewaxis[0], zmax2, viewBasis[0]);
+			VectorScale(backEnd.refdef.viewaxis[1], xmax2, viewBasis[1]);
+			VectorScale(backEnd.refdef.viewaxis[2], ymax2, viewBasis[2]);
+
+			GLSL_SetUniformVec3(shader, UNIFORM_VIEWFORWARD, viewBasis[0]);
+			GLSL_SetUniformVec3(shader, UNIFORM_VIEWLEFT, viewBasis[1]);
+			GLSL_SetUniformVec3(shader, UNIFORM_VIEWUP, viewBasis[2]);
+
+			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, zmin);
+
+			GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
+		}*/
+
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, colorWhite, 0);
 	}
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, (tr.refdef.rdflags & RDF_UNDERWATER) ? 1.0 : 0.0, WATER_REFLECTIVENESS);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
-	}
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, WATER_COLOR_SHALLOW[0], WATER_COLOR_SHALLOW[1], WATER_COLOR_SHALLOW[2], WATER_CLARITY);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL2, loc);
-	}
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, WATER_COLOR_DEEP[0], WATER_COLOR_DEEP[1], WATER_COLOR_DEEP[2], tr.waterHeightMapImage != tr.whiteImage ? 1.0 : 0.0);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL3, loc);
-	}
-
-	{
-		vec4_t loc;
-		VectorSet4(loc, DAY_NIGHT_CYCLE_ENABLED ? RB_NightScale() : 0.0, WATER_EXTINCTION1, WATER_EXTINCTION2, WATER_EXTINCTION3);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL4, loc);
-	}
-
-	{
-		vec4_t local7;
-		VectorSet4(local7, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL7, local7);
-	}
-
-	{
-		vec4_t local8;
-		VectorSet4(local8, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL8, local8);
-	}
-
-	{
-		/*vec3_t mAngles, mCameraForward, mCameraLeft, mCameraDown;
-		TR_AxisToAngles(backEnd.viewParms.ori.axis, mAngles);
-		AngleVectors(mAngles, mCameraForward, mCameraLeft, mCameraDown);*/
-
-		vec4_t loc;
-		VectorSet4(loc, WATER_WAVE_HEIGHT, 0.5, WATER_USE_OCEAN, WATER_UNDERWATER_CLARITY);
-		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
-	}
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t viewInfo;
-		float zmax = 2048.0;
-		//float zmax = backEnd.viewParms.zFar;
-		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
-		float zmin = r_znear->value;
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, colorWhite, 0);
 }
 
 #if 0
@@ -3696,6 +3805,47 @@ void RB_FXAA(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fxaaShader, color, 0);
+}
+
+void RB_TXAA(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	GLSL_BindProgram(&tr.txaaShader);
+
+	GLSL_SetUniformInt(&tr.txaaShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.txaaShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GL_BindToTMU(tr.txaaPreviousImage, TB_GLOWMAP);
+
+	GLSL_SetUniformMatrix16(&tr.txaaShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.txaaShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fxaaShader, colorWhite, 0);
+	
+	/*
+	// Clear the txaaPrevious Image/FBO.
+	FBO_t *oldFbo = glState.currentFBO;
+	vec4_t oldColorMask;
+	VectorCopy4(backEnd.colorMask, oldColorMask);
+	FBO_Bind(tr.txaaPreviousFBO);
+	qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	qglClear(GL_COLOR_BUFFER_BIT);
+
+	// Return to normal FBO...
+	FBO_Bind(oldFbo);
+	qglColorMask(oldColorMask[0], oldColorMask[1], oldColorMask[2], oldColorMask[3]);
+	*/
+
+	// Copy the output to previous image for usage next frame...
+	FBO_FastBlit(ldrFbo, ldrBox, tr.txaaPreviousFBO, ldrBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void RB_LinearizeDepth(void)

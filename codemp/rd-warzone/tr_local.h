@@ -615,6 +615,7 @@ extern cvar_t  *r_esharpening;
 //extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_fxaaScanMod;
+extern cvar_t  *r_txaa;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
 extern cvar_t  *r_screenBlurSlow;
@@ -3040,6 +3041,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterForwardFastShader;
 	shaderProgram_t waterPostForwardShader;
 	shaderProgram_t waterPostShader[3];
+	shaderProgram_t waterReflectionShader;
 	shaderProgram_t furShader;
 	shaderProgram_t foliageShader;
 	shaderProgram_t grassShader[2];
@@ -3050,6 +3052,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t esharpeningShader;
 	//shaderProgram_t esharpening2Shader;
 	shaderProgram_t fxaaShader;
+	shaderProgram_t txaaShader;
 	shaderProgram_t underwaterShader;
 	shaderProgram_t bloomDarkenShader;
 	shaderProgram_t bloomBlurShader;
@@ -3080,6 +3083,7 @@ typedef struct trGlobals_s {
 	image_t        *anamorphicRenderFBOImage;
 	image_t        *bloomRenderFBOImage[3];
 	image_t        *volumetricFBOImage;
+	image_t        *waterReflectionRenderImage;
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
 	image_t        *genericFBO3Image;
@@ -3089,9 +3093,13 @@ typedef struct trGlobals_s {
 	image_t        *dummyImage3;
 	image_t        *dummyImage4;
 
+	image_t        *txaaPreviousImage;
+
 	FBO_t          *anamorphicRenderFBO;
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t		   *volumetricFbo;
+	FBO_t          *waterReflectionRenderFBO;
+	FBO_t          *txaaPreviousFBO;
 	FBO_t		   *genericFbo;
 	FBO_t		   *genericFbo2;
 	FBO_t		   *genericFbo3;
@@ -3490,6 +3498,7 @@ extern cvar_t  *r_esharpening;
 //extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
 extern cvar_t  *r_fxaaScanMod;
+extern cvar_t  *r_txaa;
 extern cvar_t  *r_underwater;
 extern cvar_t  *r_multipost;
 extern cvar_t	*r_steepParallax;

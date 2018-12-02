@@ -118,6 +118,8 @@ extern const char *fallbackShader_skyDome_fp;
 extern const char *fallbackShader_skyDome_vp;
 extern const char *fallbackShader_waterPost_fp;
 extern const char *fallbackShader_waterPost_vp;
+extern const char *fallbackShader_waterReflection_fp;
+extern const char *fallbackShader_waterReflection_vp;
 extern const char *fallbackShader_waterPostForward_fp;
 extern const char *fallbackShader_waterPostForward_vp;
 extern const char *fallbackShader_waterForward_fp;
@@ -173,6 +175,8 @@ extern const char *fallbackShader_underwater_vp;
 extern const char *fallbackShader_underwater_fp;
 extern const char *fallbackShader_fxaa_vp;
 extern const char *fallbackShader_fxaa_fp;
+extern const char *fallbackShader_txaa_vp;
+extern const char *fallbackShader_txaa_fp;
 extern const char *fallbackShader_fastBlur_vp;
 extern const char *fallbackShader_fastBlur_fp;
 extern const char *fallbackShader_distanceBlur_vp;
@@ -4050,6 +4054,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load waterPost[2] shader!");
 	}
 
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.waterReflectionShader, "waterReflection", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterReflection_vp, fallbackShader_waterReflection_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterReflection shader!");
+	}
+
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -4326,6 +4338,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.fxaaShader, "fxaa", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fxaa_vp, fallbackShader_fxaa_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load fxaa shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.txaaShader, "txaa", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_txaa_vp, fallbackShader_txaa_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load txaa shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -5597,6 +5617,7 @@ void GLSL_EndLoadGPUShaders(int startTime)
 		GLSL_SetUniformInt(&tr.waterPostShader[i], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		GLSL_SetUniformInt(&tr.waterPostShader[i], UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
 		GLSL_SetUniformInt(&tr.waterPostShader[i], UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+		GLSL_SetUniformInt(&tr.waterPostShader[i], UNIFORM_EMISSIVECUBE, TB_EMISSIVECUBE);
 
 		{
 			vec4_t viewInfo;
@@ -5626,6 +5647,57 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 		numEtcShaders++;
 	}
+
+	if (!GLSL_EndLoadGPUShader(&tr.waterReflectionShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterReflection shader!");
+	}
+
+	GLSL_InitUniforms(&tr.waterReflectionShader);
+
+	GLSL_BindProgram(&tr.waterReflectionShader);
+
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SKYCUBEMAP, TB_SKYCUBEMAP);
+	GLSL_SetUniformInt(&tr.waterReflectionShader, UNIFORM_SKYCUBEMAPNIGHT, TB_SKYCUBEMAPNIGHT);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.waterReflectionShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.waterReflectionShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.waterReflectionShader);
+#endif
+
+	numEtcShaders++;
+
 
 
 	for (int num = 0; num < 3; num++)
@@ -6257,6 +6329,36 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 	numEtcShaders++;
 
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.txaaShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load txaa shader!");
+	}
+
+	GLSL_InitUniforms(&tr.txaaShader);
+
+	GLSL_BindProgram(&tr.txaaShader);
+
+	GLSL_SetUniformInt(&tr.txaaShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.txaaShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.txaaShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.txaaShader);
+#endif
+
+	numEtcShaders++;
+
+
+
 	//generateNormalMap
 	if (!GLSL_EndLoadGPUShader(&tr.generateNormalMapShader))
 	{
@@ -6729,6 +6831,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.waterPostShader[0]);
 	GLSL_DeleteGPUShader(&tr.waterPostShader[1]);
 	GLSL_DeleteGPUShader(&tr.waterPostShader[2]);
+	GLSL_DeleteGPUShader(&tr.waterReflectionShader);
 	GLSL_DeleteGPUShader(&tr.furShader);
 	GLSL_DeleteGPUShader(&tr.foliageShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[0]);
@@ -6747,6 +6850,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.dofShader[1]);
 	GLSL_DeleteGPUShader(&tr.dofShader[2]);
 	GLSL_DeleteGPUShader(&tr.fxaaShader);
+	GLSL_DeleteGPUShader(&tr.txaaShader);
 	GLSL_DeleteGPUShader(&tr.underwaterShader);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[0]);
 	GLSL_DeleteGPUShader(&tr.volumeLightShader[1]);

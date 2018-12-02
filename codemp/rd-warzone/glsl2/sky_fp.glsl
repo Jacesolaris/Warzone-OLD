@@ -271,29 +271,32 @@ float fbm(vec2 n) {
 }
 
 vec3 extra_cheap_atmosphere(vec3 raydir, vec3 skyViewDir2, vec3 sunDir, inout vec3 sunColorMod) {
-	//return vec3(0.2, 0.3, 0.5);
-
 	vec3 sundir = sunDir;
 	sundir.y = abs(sundir.y);
 	float sunDirLength = pow(clamp(length(sundir.y), 0.0, 1.0), 2.25);
 	float rayDirLength = pow(clamp(length(raydir.y), 0.0, 1.0), 0.85);
 	float special_trick = 1.0 / (rayDirLength * 1.0 + 0.2);
-	float special_trick2 = 1.0 / (sunDirLength * 11.0 + 1.0);
+	float special_trick2 = 1.0 / (length(raydir.y) * 3.0 + 1.0);
+	
+	vec3 skyColor = PROCEDURAL_SKY_DAY_COLOR.rgb;
+	vec3 bluesky = skyColor;
+	vec3 bluesky2 = max(bluesky, bluesky - skyColor * 0.0896 * (special_trick + -6.0 * sunDirLength * sunDirLength));
+	
 	float dotSun = dot(sundir, raydir);
 	float raysundt = pow(abs(dotSun), 2.0);
-	float sundt = pow(max(0.0, dotSun), 8.0);
-	float mymie = sundt * special_trick * 0.2;
-	vec3 skyColor = PROCEDURAL_SKY_DAY_COLOR.rgb;
-	//vec3 suncolor = clamp(mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - skyColor), special_trick2), 0.0, 1.0);
-	vec3 suncolor = mix(u_PrimaryLightColor.rgb, vec3(2.0, 0.3, 0.1), clamp(special_trick2 * pow(max(0.0, dotSun), 1.5), 0.15, 0.75));
-	vec3 bluesky = skyColor * suncolor;
-	vec3 bluesky2 = max(bluesky, bluesky - skyColor * 0.0896 * (special_trick + -6.0 * sunDirLength * sunDirLength));
 	bluesky2 *= special_trick * (0.24 + raysundt * 0.24);
 
 	bluesky = clamp(bluesky, 0.0, 1.0);
 	bluesky2 = clamp(bluesky2, 0.0, 1.0);
 
-	vec3 color = (bluesky + bluesky2 + (mymie * suncolor));
+	// sunset
+	float sunsetIntensity = 0.9;
+	float sundt = pow(max(0.0, dotSun), 8.0);
+	float my = clamp(1.25-length(raydir.y*1.25), 0.0, 1.0);
+	my *= pow(clamp(3.0-distance(raydir.y, sundir.y), 0.0, 1.0), 1.25);
+	float mymie = pow(clamp(clamp(sundt, 0.1, 1.0) * (special_trick2 * 0.05 + 0.95), 0.0, sunsetIntensity), 0.75) * 0.9 * my;
+	vec3 suncolor = vec3(1.0, 0.5, 0.0);
+	vec3 color = (bluesky * 0.333 + bluesky2 * 0.333) + (mymie * suncolor);
 	sunColorMod = clamp(color, 0.0, 1.0);
 	return color * 0.5;
 }
