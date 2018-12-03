@@ -3367,7 +3367,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 	// find normalmap in case it's there
 	if (R_TextureFileExists(specularName) || R_TIL_TextureFileExists(specularName))
 	{
-		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, IMGFLAG_NONE);
+		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, IMGFLAG_MIPMAP);
 	}
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
@@ -3381,7 +3381,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 
 		if (R_TextureFileExists(specularName) || R_TIL_TextureFileExists(specularName))
 		{
-			specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, IMGFLAG_NONE);
+			specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, IMGFLAG_MIPMAP);
 		}
 	}
 }
@@ -3397,7 +3397,7 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, IMGFLAG_MIPMAP);
 	}
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
@@ -3411,7 +3411,7 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 
 		if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, IMGFLAG_NONE);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, IMGFLAG_MIPMAP);
 		}
 	}
 }
@@ -3429,7 +3429,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, IMGFLAG_MIPMAP);
 	}
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
@@ -3443,7 +3443,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 
 		if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, IMGFLAG_NONE);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, IMGFLAG_MIPMAP);
 		}
 	}
 }
@@ -3460,7 +3460,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, IMGFLAG_MIPMAP);
 	}
 
 	if (!SubsurfaceImage)
@@ -3473,7 +3473,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP, IMGFLAG_NONE);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_STEEPMAP, IMGFLAG_MIPMAP);
 		}
 	}
 }
@@ -3489,7 +3489,7 @@ static void R_CreateRoofMap(const char *name, byte *pic, int width, int height, 
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_ROOFMAP, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_ROOFMAP, IMGFLAG_MIPMAP);
 	}
 }
 
@@ -3504,7 +3504,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_MIPMAP);
 	}
 
 	if (!SubsurfaceImage)
@@ -3517,7 +3517,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_NONE);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_MIPMAP);
 		}
 	}
 
@@ -3531,7 +3531,7 @@ static void R_CreateWaterEdgeMap ( const char *name, byte *pic, int width, int h
 		// find normalmap in case it's there
 		if (R_TextureFileExists(SubsurfaceName2) || R_TIL_TextureFileExists(SubsurfaceName2))
 		{
-			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_NONE);
+			SubsurfaceImage = R_FindImageFile(SubsurfaceName2, IMGTYPE_WATER_EDGE_MAP, IMGFLAG_MIPMAP);
 		}
 	}
 }
@@ -3576,7 +3576,7 @@ static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP1, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP1, IMGFLAG_MIPMAP);
 	}
 }
 
@@ -3591,7 +3591,7 @@ static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP2, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP2, IMGFLAG_MIPMAP);
 	}
 }
 
@@ -3606,7 +3606,7 @@ static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	if (R_TextureFileExists(SubsurfaceName) || R_TIL_TextureFileExists(SubsurfaceName))
 	{
-		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, IMGFLAG_NONE);
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, IMGFLAG_MIPMAP);
 	}
 }
 

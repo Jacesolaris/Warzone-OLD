@@ -474,6 +474,51 @@ vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 	return color;
 }
 
+vec4 GetMapLod( in sampler2D tex, float scale, inout float depth, in float lodLevel)
+{
+	vec4 xaxis;
+	vec4 yaxis;
+	vec4 zaxis;
+	xaxis.a = 1.0;
+	yaxis.a = 1.0;
+	zaxis.a = 1.0;
+
+	vec2 tScale = vec2(scale);
+
+	if (!(u_textureScale.x <= 0.0 && u_textureScale.y <= 0.0) && !(u_textureScale.x == 1.0 && u_textureScale.y == 1.0))
+	{
+		tScale *= u_textureScale;
+	}
+
+#ifdef __SPLATS_LOOKUP_ALPHA__
+	xaxis = textureLod(tex, (m_vertPos.yz * tScale), lodLevel);
+	yaxis = textureLod(tex, (m_vertPos.xz * tScale), lodLevel);
+	zaxis = textureLod(tex, (m_vertPos.xy * tScale), lodLevel);
+#else //!__SPLATS_LOOKUP_ALPHA__
+	xaxis.rgb = textureLod(tex, (m_vertPos.yz * tScale), lodLevel).rgb;
+	yaxis.rgb = textureLod(tex, (m_vertPos.xz * tScale), lodLevel).rgb;
+	zaxis.rgb = textureLod(tex, (m_vertPos.xy * tScale), lodLevel).rgb;
+#endif //__SPLATS_LOOKUP_ALPHA__
+
+#if defined(__HIGH_PASS_SHARPEN__)
+	xaxis.rgb = Enhance(tex, (m_vertPos.yz * tScale), xaxis.rgb, 8.0 + (gl_FragCoord.z * 8.0));
+	yaxis.rgb = Enhance(tex, (m_vertPos.xz * tScale), yaxis.rgb, 8.0 + (gl_FragCoord.z * 8.0));
+	zaxis.rgb = Enhance(tex, (m_vertPos.xy * tScale), zaxis.rgb, 8.0 + (gl_FragCoord.z * 8.0));
+#endif //defined(__HIGH_PASS_SHARPEN__)
+
+	vec4 color = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+
+	float grain = SmoothNoise(m_vertPos.xyz * 5.0) * 0.5 + 1.75;
+	color.rgb = mix(color.rgb, vec3(color.rgb * grain), 0.2);
+
+	if (depth != -1.0)
+	{// Only bother calculating if requested...
+		depth = GetDepthForPixel(color);
+	}
+
+	return color;
+}
+
 vec4 SmoothMix(vec3 color1, vec3 color2, float mixf)
 {
 	float mixVal = clamp(mixf, 0.0, 1.0);
@@ -645,6 +690,17 @@ vec4 GetDiffuse2(vec2 texCoords, out float a1)
 	}
 }
 
+float Raverage_approx(float n)
+{
+    float n2 = n*n;
+    float n3 = n2*n;
+    float n4 = n3*n;
+    float n5 = n4*n;
+    float n6 = n5*n;
+    
+    return -0.0095*n6 + 0.1134*n5 - 0.5639*n4 + 1.4968*n3 - 2.2538*n2 + 1.9795*n - 0.7566;
+}
+
 vec4 GetDiffuse(vec2 texCoords)
 {
 	float diffuseA = 0.0;
@@ -676,6 +732,86 @@ vec4 GetDiffuse(vec2 texCoords)
 			float a1 = 0.0;
 			vec4 tex1 = GetMap(u_WaterEdgeMap, 0.0075, a1);
 			a1 = clamp(a1, 0.0, 1.0);
+
+			if (m_vertPos.z <= SHADER_WATER_LEVEL - 64.0)
+			{// Underwater... Wetness...
+				const float nl = 1.33283;
+				// lower layer
+				const float nr = 2.0;
+
+				float p = 1.0-1.0/(nl*nl)*(1.0-Raverage_approx(nl));
+				vec3 aD = 1.0 - tex1.rgb;
+				vec3 aW0 = aD * (1.0 - Raverage_approx(nr/nl))/(1.0-Raverage_approx(nr));
+				vec3 aW1 = aD;
+				vec3 aW = (1.0-aD)*aW0 +  aD*aW1;
+				vec3 A = (1.0-Raverage_approx(nl))*aW/(1.0-p*(1.0-aW));
+				vec3 wetDiffuse = 1.0-A;
+				tex1.rgb = wetDiffuse.rgb;
+			}
+
+			// Smoothed wet edge around water... Done as well because just doing pure lod lookups looks grainy and shit...
+			float lodLevel = 0.0;
+
+			if (m_vertPos.z < SHADER_WATER_LEVEL + 128.0 && m_vertPos.z > SHADER_WATER_LEVEL - 64.0)
+			{// Above water, add wet blurred edge...
+				float lodLevel = 1.0 - clamp(max(m_vertPos.z - (SHADER_WATER_LEVEL - 64.0), 0.0) / 192.0, 0.0, 1.0);
+
+				float wLodLevel = lodLevel;
+				lodLevel = pow(clamp(lodLevel * 1.5, 0.0, 1.0), 6.0);
+
+				float a3 = 0.0;
+				vec4 lCol = GetMapLod(u_WaterEdgeMap, 0.0075, a3, 16.0);
+				float lMix = clamp(a1 * 10.0, 0.0, 1.0);
+
+				//
+				// Wetness...
+				//
+				const float nl = 1.33283;
+				// lower layer
+				const float nr = 2.0;
+
+				float p = 1.0-1.0/(nl*nl)*(1.0-Raverage_approx(nl));
+				vec3 aD = 1.0 - lCol.rgb;
+				vec3 aW0 = aD * (1.0 - Raverage_approx(nr/nl))/(1.0-Raverage_approx(nr));
+				vec3 aW1 = aD;
+				vec3 aW = (1.0-aD)*aW0 +  aD*aW1;
+				vec3 A = (1.0-Raverage_approx(nl))*aW/(1.0-p*(1.0-aW));
+				vec3 wetDiffuse = 1.0-A;
+				float wetMix = 1.0 - pow(1.0 - clamp(wLodLevel - 0.7, 0.0, 1.0), 16.0);
+				lCol.rgb = mix(lCol.rgb, wetDiffuse.rgb, wetMix);
+				
+				tex1.rgb = mix(tex1.rgb, lCol.rgb, lodLevel * lMix);
+			}
+			else if (m_vertPos.z <= SHADER_WATER_LEVEL - 64.0 && m_vertPos.z > SHADER_WATER_LEVEL - 96.0)
+			{// Just under water a little... Blend back to normal...
+				float lodLevel = clamp(max(m_vertPos.z - (SHADER_WATER_LEVEL - 96.0), 0.0) / 32.0, 0.0, 1.0);
+
+				float wLodLevel = lodLevel;
+				lodLevel = pow(clamp(lodLevel * 1.5, 0.0, 1.0), 6.0);
+
+				float a3 = 0.0;
+				vec4 lCol = GetMapLod(u_WaterEdgeMap, 0.0075, a3, 16.0);
+				float lMix = clamp(a1 * 10.0, 0.0, 1.0);
+
+				//
+				// Wetness...
+				//
+				const float nl = 1.33283;
+				// lower layer
+				const float nr = 2.0;
+
+				float p = 1.0-1.0/(nl*nl)*(1.0-Raverage_approx(nl));
+				vec3 aD = 1.0 - lCol.rgb;
+				vec3 aW0 = aD * (1.0 - Raverage_approx(nr/nl))/(1.0-Raverage_approx(nr));
+				vec3 aW1 = aD;
+				vec3 aW = (1.0-aD)*aW0 +  aD*aW1;
+				vec3 A = (1.0-Raverage_approx(nl))*aW/(1.0-p*(1.0-aW));
+				vec3 wetDiffuse = 1.0-A;
+				float wetMix = 1.0 - pow(1.0 - clamp(wLodLevel - 0.7, 0.0, 1.0), 16.0);
+				lCol.rgb = wetDiffuse.rgb;
+
+				tex1.rgb = mix(tex1.rgb, lCol.rgb, lodLevel * lMix);
+			}
 
 #ifdef __USE_FULL_SPLAT_BLENDFUNC__
 			float a2 = clamp(diffuseA, 0.0, 1.0);

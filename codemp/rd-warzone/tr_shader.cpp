@@ -5488,7 +5488,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_SPECULAR, specularFlags);
+				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_SPECULAR, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -5498,7 +5498,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_SPECULAR, specularFlags);
+					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_SPECULAR, specularFlags | IMGFLAG_MIPMAP);
 				}
 				else
 				{
@@ -5508,7 +5508,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags | IMGFLAG_MIPMAP);
 			}
 			
 			if (!specularImg)
@@ -5519,7 +5519,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags | IMGFLAG_MIPMAP);
 				}
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
@@ -5561,7 +5561,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			StripCrap( specularName, specularName2, sizeof(specularName));
 			Q_strcat( specularName2, sizeof( specularName2 ), "_sub" );
 
-			specularImg = R_FindImageFile(specularName2, IMGTYPE_SUBSURFACE, specularFlags);
+			specularImg = R_FindImageFile(specularName2, IMGTYPE_SUBSURFACE, specularFlags | IMGFLAG_MIPMAP);
 
 			if (!specularImg)
 			{
@@ -5569,7 +5569,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap( specularName, specularName2, sizeof(specularName));
 				Q_strcat( specularName2, sizeof( specularName2 ), "_subsurface" );
 
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_SUBSURFACE, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_SUBSURFACE, specularFlags | IMGFLAG_MIPMAP);
 			}
 
 			if (specularImg)
@@ -5618,7 +5618,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_OVERLAY, specularFlags);
+				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_OVERLAY, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -5628,7 +5628,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_OVERLAY, specularFlags);
+					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_OVERLAY, specularFlags | IMGFLAG_MIPMAP);
 				}
 				else
 				{
@@ -5638,7 +5638,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags | IMGFLAG_MIPMAP);
 			}
 
 			if (!specularImg)
@@ -5649,7 +5649,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags | IMGFLAG_MIPMAP);
 				}
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
@@ -5710,7 +5710,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+				specularImg = R_DeferImageLoad(specularName2, IMGTYPE_STEEPMAP, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -5719,7 +5719,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags | IMGFLAG_MIPMAP);
 			}
 
 			if (!specularImg)
@@ -5731,7 +5731,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags);
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_STEEPMAP, specularFlags | IMGFLAG_MIPMAP);
 				}
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
@@ -5788,7 +5788,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 			{
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags | IMGFLAG_MIPMAP);
 			}
 
 			if (!specularImg)
@@ -5800,7 +5800,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags | IMGFLAG_MIPMAP);
 				}
 			}
 
@@ -5811,7 +5811,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				StripCrap(specularName, specularName2, sizeof(specularName2));
 				Q_strcat(specularName2, sizeof(specularName2), "_waterEdge");
 
-				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags);
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_WATER_EDGE_MAP, specularFlags | IMGFLAG_MIPMAP);
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -5857,7 +5857,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_ROOFMAP, specularFlags);
+					specularImg = R_DeferImageLoad(specularName2, IMGTYPE_ROOFMAP, specularFlags | IMGFLAG_MIPMAP);
 				}
 				else
 				{
@@ -5866,7 +5866,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 				if (R_TextureFileExists(specularName2) || R_TIL_TextureFileExists(specularName2))
 				{
-					specularImg = R_FindImageFile(specularName2, IMGTYPE_ROOFMAP, specularFlags);
+					specularImg = R_FindImageFile(specularName2, IMGTYPE_ROOFMAP, specularFlags | IMGFLAG_MIPMAP);
 				}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -5975,7 +5975,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP1, specularFlags);
+				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP1, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -5984,7 +5984,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP1, specularFlags);
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP1, specularFlags | IMGFLAG_MIPMAP);
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -6025,7 +6025,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP2, specularFlags);
+				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP2, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -6034,7 +6034,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP2, specularFlags);
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP2, specularFlags | IMGFLAG_MIPMAP);
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -6075,7 +6075,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP3, specularFlags);
+				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_SPLATMAP3, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -6084,7 +6084,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP3, specularFlags);
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP3, specularFlags | IMGFLAG_MIPMAP);
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
@@ -6121,7 +6121,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #ifdef __DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_DETAILMAP, specularFlags);
+				splatImg = R_DeferImageLoad(splatName2, IMGTYPE_DETAILMAP, specularFlags | IMGFLAG_MIPMAP);
 			}
 			else
 			{
@@ -6130,7 +6130,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 #else //!__DEFERRED_IMAGE_LOADING__
 			if (R_TextureFileExists(splatName2) || R_TIL_TextureFileExists(splatName2))
 			{
-				splatImg = R_FindImageFile(splatName2, IMGTYPE_DETAILMAP, specularFlags);
+				splatImg = R_FindImageFile(splatName2, IMGTYPE_DETAILMAP, specularFlags | IMGFLAG_MIPMAP);
 			}
 #endif //__DEFERRED_IMAGE_LOADING__
 
