@@ -4,6 +4,7 @@
 #define __AMBIENT_OCCLUSION__
 #define __ENHANCED_AO__
 #define __SCREEN_SPACE_REFLECTIONS__
+//#define __CLOUD_SHADOWS__
 //#define __SSDO__
 
 #ifdef USE_CUBEMAPS
@@ -43,11 +44,15 @@ uniform vec4								u_Local7; // cubemapEnabled, r_cubemapCullRange, r_cubeMapSi
 uniform vec4								u_Local8; // enableReflections, MAP_HDR_MIN, MAP_HDR_MAX, MAP_INFO_PLAYABLE_MAXS[2]
 uniform vec4								u_Local9; // PROCEDURAL_SNOW_HEIGHT_CURVE, MAP_USE_PALETTE_ON_SKY, SNOW_ENABLED, PROCEDURAL_SNOW_LOWEST_ELEVATION
 uniform vec4								u_Local10; // PROCEDURAL_SNOW_LUMINOSITY_CURVE, PROCEDURAL_SNOW_BRIGHTNESS, 0.0, 0.0
+uniform vec4								u_Local11; // PROCEDURAL_CLOUDS_ENABLED, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK
+uniform vec4								u_Local12; // PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT
 
 //uniform vec4								u_ViewInfo; // znear, zfar, zfar / znear, fov
 uniform vec3								u_ViewOrigin;
 uniform vec4								u_PrimaryLightOrigin;
 uniform vec3								u_PrimaryLightColor;
+
+uniform float								u_Time;
 
 uniform vec4								u_CubeMapInfo;
 uniform float								u_CubeMapStrength;
@@ -112,6 +117,19 @@ varying vec2								var_TexCoords;
 
 #define PROCEDURAL_SNOW_LUMINOSITY_CURVE	u_Local10.r
 #define PROCEDURAL_SNOW_BRIGHTNESS			u_Local10.g
+
+#define CLOUDS_ENABLED						u_Local11.r
+#define CLOUDS_CLOUDSCALE					u_Local11.g
+#define CLOUDS_SPEED						u_Local11.b
+#define CLOUDS_DARK							u_Local11.a
+
+#define CLOUDS_LIGHT						u_Local12.r
+#define CLOUDS_CLOUDCOVER					u_Local12.g
+#define CLOUDS_CLOUDALPHA					u_Local12.b
+#define CLOUDS_SKYTINT						u_Local12.a
+
+#define SHADER_DAY_NIGHT_ENABLED			u_Local5.r
+#define SHADER_NIGHT_SCALE					u_Local5.g
 
 #define WATER_ENABLED						u_Mins.a
 
@@ -861,6 +879,124 @@ vec3 blinn_phong(vec3 pos, vec3 color, vec3 normal, vec3 view, vec3 light, vec3 
 }
 #endif //defined(__LQ_MODE__) || defined(__FAST_LIGHTING__)
 
+#ifdef __CLOUD_SHADOWS__
+const mat2 mc = mat2(1.6, 1.2, -1.2, 1.6);
+
+vec2 hash(vec2 p) {
+	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+float noise(in vec2 p) {
+	const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+	const float K2 = 0.211324865; // (3-sqrt(3))/6;
+	vec2 i = floor(p + (p.x + p.y)*K1);
+	vec2 a = p - i + (i.x + i.y)*K2;
+	vec2 o = (a.x>a.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0); //vec2 of = 0.5 + 0.5*vec2(sign(a.x-a.y), sign(a.y-a.x));
+	vec2 b = a - o + K2;
+	vec2 c = a - 1.0 + 2.0*K2;
+	vec3 h = max(0.5 - vec3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
+	vec3 n = h*h*h*h*vec3(dot(a, hash(i + 0.0)), dot(b, hash(i + o)), dot(c, hash(i + 1.0)));
+	return dot(n, vec3(70.0));
+}
+
+float fbm(vec2 n) {
+	float total = 0.0, amplitude = 0.1;
+	for (int i = 0; i < 7; i++) {
+		total += noise(n) * amplitude;
+		n = mc * n;
+		amplitude *= 0.4;
+	}
+	return total;
+}
+
+vec4 Clouds(in vec2 fragCoord)
+{
+	vec2 p = fragCoord.xy;
+	vec2 uv = p;
+	float time = u_Time * CLOUDS_SPEED;
+	float q = fbm(uv * CLOUDS_CLOUDSCALE * 0.5);
+
+	//ridged noise shape
+	float r = 0.0;
+	uv *= CLOUDS_CLOUDSCALE;
+	uv -= q - time;
+	float weight = 0.8;
+	for (int i = 0; i<8; i++) {
+		r += abs(weight*noise(uv));
+		uv = mc*uv + time;
+		weight *= 0.7;
+	}
+
+	//noise shape
+	float f = 0.0;
+	uv = p;
+	uv *= CLOUDS_CLOUDSCALE;
+	uv -= q - time;
+	weight = 0.7;
+	for (int i = 0; i<8; i++) {
+		f += weight*noise(uv);
+		uv = mc*uv + time;
+		weight *= 0.6;
+	}
+
+	f *= r + f;
+
+	//noise colour
+	float c = 0.0;
+	time = u_Time * CLOUDS_SPEED * 2.0;
+	uv = p;
+	uv *= CLOUDS_CLOUDSCALE*2.0;
+	uv -= q - time;
+	weight = 0.4;
+	for (int i = 0; i<7; i++) {
+		c += weight*noise(uv);
+		uv = mc*uv + time;
+		weight *= 0.6;
+	}
+
+	//noise ridge colour
+	float c1 = 0.0;
+	time = u_Time * CLOUDS_SPEED * 3.0;
+	uv = p;
+	uv *= CLOUDS_CLOUDSCALE*3.0;
+	uv -= q - time;
+	weight = 0.4;
+	for (int i = 0; i<7; i++) {
+		c1 += abs(weight*noise(uv));
+		uv = mc*uv + time;
+		weight *= 0.6;
+	}
+
+	c += c1;
+
+	vec3 cloudcolour = /*vec3(1.1, 1.1, 0.9)*/vec3(1.0, 1.0, 1.0) * clamp((CLOUDS_DARK + CLOUDS_LIGHT*c), 0.0, 1.0);
+
+	f = CLOUDS_CLOUDCOVER + CLOUDS_CLOUDALPHA*f*r;
+
+	//vec3 result = mix(skycolour, clamp(CLOUDS_SKYTINT * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
+	vec3 result = cloudcolour;
+
+	return vec4(result.rgb, clamp(f + c, 0.0, 1.0));
+}
+
+float CloudShadows(vec3 position)
+{
+	vec3 cViewDir = normalize((u_PrimaryLightOrigin.xyz - position.xyz) + u_ViewOrigin.xyz);
+
+	vec4 cloudColor = Clouds(cViewDir.xy * 0.5 + 0.5);
+	cloudColor.a *= clamp(pow(-cViewDir.z, 1.75), 0.0, 1.0);
+	cloudColor.a *= 0.75;
+
+	if (NIGHT_SCALE > 0.0)
+	{// Adjust cloud color at night...
+		float nMult = clamp(1.25 - NIGHT_SCALE, 0.0, 1.0);
+		cloudColor *= nMult;
+	}
+
+	return 1.0 - cloudColor.a;
+}
+#endif //__CLOUD_SHADOWS__
 
 /*
 ** Contrast, saturation, brightness
@@ -1560,7 +1696,18 @@ void main(void)
 		shadowValue = clamp((clamp(shadowValue - sm_cont_1, 0.0, 1.0)) * sm_cont_2, 0.0, 1.0);
 		float finalShadow = clamp(shadowValue + SHADOW_MINBRIGHT, SHADOW_MINBRIGHT, SHADOW_MAXBRIGHT);
 		finalShadow = mix(finalShadow, 1.0, clamp(NIGHT_SCALE, 0.0, 1.0)); // Dampen out shadows at sunrise/sunset...
+
+#ifdef __CLOUD_SHADOWS__
+		if (CLOUDS_ENABLED > 0.0)
+		{
+			float cShadow = CloudShadows(position.xyz);
+			outColor.rgb *= min(cShadow, finalShadow);
+		}
+		else
+	#endif //__CLOUD_SHADOWS__
 		outColor.rgb *= finalShadow;
+
+	
 	}
 #endif //defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
 

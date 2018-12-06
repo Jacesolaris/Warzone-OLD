@@ -3014,17 +3014,21 @@ const void	*RB_WorldEffects( const void *data )
 #endif //__OCEAN__
 
 	extern qboolean RB_WeatherEnabled(void);
+	extern qboolean PROCEDURAL_CLOUDS_ENABLED;
+	extern qboolean PROCEDURAL_CLOUDS_LAYER;
+
+	qboolean doProceduralClouds = (qboolean)(PROCEDURAL_CLOUDS_ENABLED && PROCEDURAL_CLOUDS_LAYER);
 
 	if (!tr.world
 		|| (tr.viewParms.flags & VPF_NOPOSTPROCESS)
 		|| (tr.refdef.rdflags & RDF_NOWORLDMODEL)
 		|| (backEnd.refdef.rdflags & RDF_SKYBOXPORTAL)
-		|| (backEnd.viewParms.flags & VPF_SHADOWPASS)
-		|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)
-		|| backEnd.depthFill
+		|| ((backEnd.viewParms.flags & VPF_SHADOWPASS) && !doProceduralClouds)
+		|| ((backEnd.viewParms.flags & VPF_DEPTHSHADOW) && !doProceduralClouds)
+		|| (backEnd.depthFill && !doProceduralClouds)
 		|| (tr.renderCubeFbo && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 		|| (tr.renderSkyFbo && backEnd.viewParms.targetFbo == tr.renderSkyFbo)
-		|| (!RB_WeatherEnabled() && !waterEnabled))
+		|| (!RB_WeatherEnabled() && !waterEnabled && !doProceduralClouds))
 	{
 		// do nothing
 		return (const void *)(cmd + 1);
@@ -3039,6 +3043,12 @@ const void	*RB_WorldEffects( const void *data )
 	float previousZfar = tr.viewParms.zFar;
 	uint32_t previousState = glState.glStateBits;
 	int previousCull = glState.faceCulling;
+
+	if (doProceduralClouds)
+	{
+		void CLOUD_LAYER_Render();
+		CLOUD_LAYER_Render();
+	}
 
 	if (RB_WeatherEnabled())
 	{

@@ -127,6 +127,8 @@ extern const char *fallbackShader_waterForward_vp;
 extern const char *fallbackShader_waterForward_gs;
 extern const char *fallbackShader_waterForwardFast_fp;
 extern const char *fallbackShader_waterForwardFast_vp;
+extern const char *fallbackShader_clouds_fp;
+extern const char *fallbackShader_clouds_vp;
 extern const char *fallbackShader_foliage_fp;
 extern const char *fallbackShader_foliage_vp;
 extern const char *fallbackShader_foliage_cs;
@@ -4451,6 +4453,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load hbaoCombine shader!");
 	}*/
 
+	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD | ATTR_NORMAL;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.cloudsShader, "clouds", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_clouds_vp, fallbackShader_clouds_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load clouds shader!");
+	}
+
 	//
 	// UQ1: End Added...
 	//
@@ -6674,6 +6684,33 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.cloudsShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load clouds shader!");
+	}
+
+	GLSL_InitUniforms(&tr.cloudsShader);
+
+	GLSL_BindProgram(&tr.cloudsShader);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.cloudsShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.cloudsShader);
+#endif
+
+	numEtcShaders++;
+
+
+
 	/*if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load hbao shader!");
@@ -6834,6 +6871,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.waterPostShader[1]);
 	GLSL_DeleteGPUShader(&tr.waterPostShader[2]);
 	GLSL_DeleteGPUShader(&tr.waterReflectionShader);
+	GLSL_DeleteGPUShader(&tr.cloudsShader);
 	GLSL_DeleteGPUShader(&tr.furShader);
 	GLSL_DeleteGPUShader(&tr.foliageShader);
 	if (r_foliage->integer)	GLSL_DeleteGPUShader(&tr.grassShader[0]);

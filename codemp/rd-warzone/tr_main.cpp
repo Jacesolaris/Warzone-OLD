@@ -3291,9 +3291,35 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 
 			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
 
+			/*if (r_testvalue0->integer == 1)
+			{
+				FBO_Bind(tr.sunShadowFbo[level]);
+				qglClearColor(1, 1, 1, 1);
+				qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				qglClearDepth(1.0f);
+			}
+			else if (r_testvalue0->integer == 2)
+			{*/
+				qglClearColor(1, 1, 1, 1);
+				qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				qglClearDepth(1.0f);
+			//}
+
+
 			R_AddWorldSurfaces ();
 
-			R_AddPolygonSurfaces();
+			/*extern qboolean PROCEDURAL_CLOUDS_ENABLED;
+			extern qboolean PROCEDURAL_CLOUDS_LAYER;
+
+			qboolean doProceduralClouds = (qboolean)(PROCEDURAL_CLOUDS_ENABLED && PROCEDURAL_CLOUDS_LAYER);
+
+			if (doProceduralClouds)
+			{
+				void CLOUD_LAYER_Render();
+				CLOUD_LAYER_Render();
+			}*/
+
+			//R_AddPolygonSurfaces(); // UQ1: Don't really need these on the shadow map...
 
 			if (level < 2 || LODMODEL_MAP)
 				R_AddEntitySurfaces ();

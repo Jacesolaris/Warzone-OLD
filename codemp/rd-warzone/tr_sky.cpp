@@ -407,6 +407,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 	extern vec3_t		AURORA_COLOR;
 
 	extern qboolean		PROCEDURAL_CLOUDS_ENABLED;
+	extern qboolean		PROCEDURAL_CLOUDS_LAYER;
 	extern float		PROCEDURAL_CLOUDS_CLOUDSCALE;
 	extern float		PROCEDURAL_CLOUDS_SPEED;
 	extern float		PROCEDURAL_CLOUDS_DARK;
@@ -556,7 +557,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 			VectorSet4(vector, PROCEDURAL_SKY_ENABLED ? 1.0 : 0.0, dayNight24, PROCEDURAL_SKY_STAR_DENSITY, 1024.0);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // 0.0, 0.0, 0.0, materialType
 
-			VectorSet4(vector, PROCEDURAL_CLOUDS_ENABLED ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
+			VectorSet4(vector, (PROCEDURAL_CLOUDS_ENABLED && !PROCEDURAL_CLOUDS_LAYER) ? 1.0 : 0.0, PROCEDURAL_CLOUDS_CLOUDSCALE, PROCEDURAL_CLOUDS_SPEED, PROCEDURAL_CLOUDS_DARK);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
 
 			VectorSet4(vector, PROCEDURAL_CLOUDS_LIGHT, PROCEDURAL_CLOUDS_CLOUDCOVER, PROCEDURAL_CLOUDS_CLOUDALPHA, PROCEDURAL_CLOUDS_SKYTINT);

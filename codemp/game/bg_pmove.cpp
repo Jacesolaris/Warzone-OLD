@@ -6721,6 +6721,46 @@ static void PM_Footsteps( void ) {
 	*/
 }
 
+#define MAX_WALKABLE_SLOPE 46.0
+
+qboolean PM_IsWalkableSlope(trace_t trace) {
+	vec3_t slopeangles;
+	vectoangles( trace.plane.normal, slopeangles );
+
+	float pitch = slopeangles[0];
+
+	if (pitch > 180)
+	pitch -= 360;
+
+	if (pitch < -180)
+	pitch += 360;
+
+	pitch += 90.0f;
+
+	if (pitch > MAX_WALKABLE_SLOPE || pitch < -MAX_WALKABLE_SLOPE)
+		return qfalse;
+	
+	return qtrue;
+}
+
+qboolean PM_TraceIsClimbable(trace_t trace)
+{// UQ1: Hmm I dunno, probably should rework the old wall run/cling crap instead... Something more like AC games?
+#ifdef __CLIMBING__
+	switch (trace.materialType) {
+	case MATERIAL_ROCK:
+	case MATERIAL_TREEBARK:
+	case MATERIAL_CONCRETE:
+		if (!PM_IsWalkableSlope(trace))
+			return qtrue;
+		else
+			return qfalse;
+	default:
+		return qfalse;
+	}
+#else //!__CLIMBING__
+	return qfalse;
+#endif //__CLIMBING__
+}
 
 /*
 ================
@@ -6786,8 +6826,8 @@ void PM_CheckLadderMove(void)
 	centity_t *cent = &cg_entities[pm->ps->clientNum];
 	if (cent)
 	{
-		if (Distance(cent->lerpOrigin, cent->ladderCheckOrigin) <= 1)
-		{// Havn't moved, don't bother wasting CPU time on checking again...
+		if (!wasOnLadder && Distance(cent->lerpOrigin, cent->ladderCheckOrigin) <= 1)
+		{// Havn't moved, don't bother wasting CPU time on checking again... Also if currently climbing, we also want updates for accuracy...
 			pml.ladder = cent->ladderCheckLadder;
 			pml.ladderforward = cent->ladderCheckLadderForward;
 			VectorCopy(cent->ladderCheckLadderVec, pml.laddervec);
@@ -6805,8 +6845,8 @@ void PM_CheckLadderMove(void)
 	gentity_t *ent = &g_entities[pm->ps->clientNum];
 	if (ent)
 	{
-		if (Distance(ent->r.currentOrigin, ent->ladderCheckOrigin) <= 1)
-		{// Havn't moved, don't bother wasting CPU time on checking again...
+		if (!wasOnLadder && Distance(ent->r.currentOrigin, ent->ladderCheckOrigin) <= 1)
+		{// Havn't moved, don't bother wasting CPU time on checking again... Also if currently climbing, we also want updates for accuracy...
 			pml.ladder = ent->ladderCheckLadder;
 			pml.ladderforward = ent->ladderCheckLadderForward;
 			VectorCopy(ent->ladderCheckLadderVec, pml.laddervec);
@@ -6833,7 +6873,13 @@ void PM_CheckLadderMove(void)
 
 		BG_MoveTrace(&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
 
-		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+		/*vec3_t uporg;
+		VectorCopy(pm->ps->origin, uporg);
+		uporg[2] += 32.0;
+		VectorMA(uporg, tracedist, flatforward, spot);
+		BG_MoveTrace(&trace, uporg, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);*/
+
+		if ((trace.fraction < 1) && ((trace.contents & CONTENTS_LADDER) || PM_TraceIsClimbable(trace)))
 		{
 			pml.ladder = qtrue;
 		}
@@ -6848,7 +6894,7 @@ void PM_CheckLadderMove(void)
 		VectorMA (pm->ps->origin, tracedist, flatforward, spot);
 		BG_MoveTrace (&trace, pm->ps->origin, pm->mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
 
-		if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+		if ((trace.fraction < 1) && ((trace.contents & CONTENTS_LADDER) || PM_TraceIsClimbable(trace)))
 		{
 		pml.ladder = qtrue;
 		}
@@ -6872,7 +6918,7 @@ void PM_CheckLadderMove(void)
 			VectorMA(pm->ps->origin, -tracedist, pml.laddervec, spot);
 			BG_MoveTrace(&trace, pm->ps->origin, mins, pm->maxs, spot, pm->ps->clientNum, pm->tracemask);
 
-			if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
+			if ((trace.fraction < 1) && ((trace.contents & CONTENTS_LADDER) || PM_TraceIsClimbable(trace)))
 			{
 				pml.ladderforward = qtrue;
 				pml.ladder = qtrue;
@@ -6920,18 +6966,26 @@ void PM_CheckLadderMove(void)
 	{// UQ1: Disabled - only play anim if going down ladder
 		if (pm->ps->velocity[2] == 0)
 		{// Idle on ladder...
-			PM_StartTorsoAnim(BOTH_LADDER_IDLE);
-			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_IDLE, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			//PM_StartTorsoAnim(BOTH_LADDER_IDLE);
+			//PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_IDLE, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			//PM_StartTorsoAnim(BOTH_FORCEWALLHOLD_FORWARD);
+			PM_SetAnim(SETANIM_BOTH, BOTH_LADDER_IDLE, SETANIM_FLAG_NORMAL | SETANIM_FLAG_PACE); // UQ1: Just a guess, untested...
 		}
 		else if (pm->ps->velocity[2] > 0)
 		{// Going up...
-			PM_StartTorsoAnim(BOTH_LADDER_UP1);
-			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_UP1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			//PM_StartTorsoAnim(BOTH_LADDER_UP1);
+			//PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_UP1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			//PM_StartTorsoAnim(BOTH_FORCEWALLREBOUND_FORWARD);
+			//PM_SetAnim(SETANIM_LEGS, BOTH_FORCEWALLREBOUND_FORWARD, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			PM_SetAnim(SETANIM_BOTH, BOTH_LADDER_UP1, SETANIM_FLAG_NORMAL | SETANIM_FLAG_PACE);
 		}
 		else if (pm->ps->velocity[2] < 0)
 		{// Gound down...
-			PM_StartTorsoAnim(BOTH_LADDER_DWN1);
-			PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_DWN1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			//PM_StartTorsoAnim(BOTH_LADDER_DWN1);
+			//PM_SetAnim(SETANIM_LEGS, BOTH_LADDER_DWN1, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			//PM_StartTorsoAnim(BOTH_FORCEWALLREBOUND_BACK);
+			//PM_SetAnim(SETANIM_LEGS, BOTH_FORCEWALLREBOUND_BACK, SETANIM_FLAG_OVERRIDE); // UQ1: Just a guess, untested...
+			PM_SetAnim(SETANIM_BOTH, BOTH_LADDER_DWN1, SETANIM_FLAG_NORMAL | SETANIM_FLAG_PACE);
 		}
 	}
 
