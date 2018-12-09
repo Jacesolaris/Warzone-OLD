@@ -466,9 +466,8 @@ float getwaves(vec2 position) {
 		phase *= 1.2;
 		speed *= 1.02;
 	}
-	//return pow(w / ws, 0.2);
 	return clamp(w / ws, 0.0, 1.0);
-	//return clamp(pow(clamp(w / ws, 0.0, 1.0), u_Local0.r), 0.0, 1.0);
+	//return clamp(((w / ws) - 0.075) * 1.075, 0.0, 1.0);
 }
 
 /*

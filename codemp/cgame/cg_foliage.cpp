@@ -710,6 +710,79 @@ static const char *MushroomForest2ModelsList[] = {
 	"models/warzone/plants/smalltree06.md3",
 };
 
+static const char *FernsModelsList[] = {
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	// Near trees/walls, or normal...
+	"models/warzone/plants/newfern01.md3",
+	// Near trees/walls...
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern01.md3",
+	"models/warzone/plants/newfern05.md3",
+	"models/warzone/plants/newfern05.md3",
+	"models/warzone/plants/newfern05.md3",
+	"models/warzone/plants/newfern05.md3",
+	"models/warzone/plants/newfern04.md3",
+	"models/warzone/plants/newfern04.3ds",
+	"models/warzone/plants/newfern04.3ds",
+	"models/warzone/plants/newfern04.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+	"models/warzone/plants/newfern02.md3",
+};
+
 // =======================================================================================================================================
 //
 // CVAR related defines...
@@ -2812,6 +2885,15 @@ void FOLIAGE_DrawGrass(void)
 				for (i = 0; i < MAX_PLANT_MODELS; i++)
 				{
 					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(MushroomForest2ModelsList[i]);
+				}
+			}
+			else if (!strcmp(FOLIAGE_MODEL_SELECTION, "ferns"))
+			{
+				trap->Print("^1*** ^3%s^5: Map grass selection using foliageSet option \"^7ferns^5\".\n", "FOLIAGE", cgs.currentmapname);
+
+				for (i = 0; i < MAX_PLANT_MODELS; i++)
+				{
+					FOLIAGE_PLANT_MODELS[i] = trap->R_RegisterModel(FernsModelsList[i]);
 				}
 			}
 			else

@@ -240,138 +240,6 @@ vec2 EncodeNormal(vec3 n)
 }
 #endif //__ENCODE_NORMALS_RECONSTRUCT_Z__
 
-void DepthContrast ( inout float depth )
-{
-	const float contrast = 3.0;
-	const float brightness = 0.03;
-	// Apply contrast.
-	depth = ((depth - 0.5f) * max(contrast, 0)) + 0.5f;
-	// Apply brightness.
-	depth += brightness;
-	depth = clamp(depth, 0.0, 1.0);
-}
-
-float GetDepthForPixel(vec4 color)
-{
-	if (color.a /** var_Color.a*/ <= 0.0)
-	{
-		return 0.0;
-	}
-
-	float displacement = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
-	DepthContrast(displacement); // Enhance the dark/lights...
-	return (1.0 - displacement) * 0.9 + 0.1;
-}
-
-#ifdef USE_DETAIL_TEXTURES
-void AddDetail(inout vec4 color, in vec2 tc)
-{
-	// Add fine detail to everything...
-	vec2 coord = vec2(0.0);
-
-	if (USE_DETAIL_COORD == 1.0 || USE_TEXTURECLAMP > 0.0 || USE_IS2D > 0.0)
-	{// From TC... 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
-		coord = tc;
-	}
-	else if (USE_DETAIL_COORD == 2.0 || USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
-	{// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)
-		float xyoffset = (SHADER_MAP_SIZE - (SHADER_MAP_SIZE / 2.0)) / (SHADER_MAP_SIZE * 2.0);
-		coord = vec2(m_vertPos.xy / (SHADER_MAP_SIZE / 2.0)) * xyoffset;
-		coord *= (vec2(m_vertPos.z / (SHADER_MAP_SIZE / 2.0)) * xyoffset) * 2.0 - 1.0;
-	}
-	else
-	{// Standard... -1.0 -> +1.0 (good all-round option when matching specific coordinates is not needed)
-		coord = (tc * 2.0 - 1.0);
-	}
-
-    vec3 detail = texture(u_DetailMap, coord).rgb;
-
-	if (length(detail.rgb) <= 0.0) return;
-
-	color.rgb = color.rgb * detail.rgb * 2.0;
-}
-#endif //USE_DETAIL_TEXTURES
-
-bool IsRoadmapMaterial ( void )
-{
-	if (SHADER_MATERIAL_TYPE == MATERIAL_SHORTGRASS || SHADER_MATERIAL_TYPE == MATERIAL_LONGGRASS || SHADER_MATERIAL_TYPE == MATERIAL_SAND || SHADER_MATERIAL_TYPE == MATERIAL_SNOW || SHADER_MATERIAL_TYPE == MATERIAL_MUD || SHADER_MATERIAL_TYPE == MATERIAL_CONCRETE)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-vec4 GetControlMap( void )
-{
-	float scale = 1.0 / SHADER_MAP_SIZE; /* control scale */
-	vec4 control;
-	
-#ifdef __USE_REGIONS__
-	/*if (USE_REGIONS > 0.0)
-	{// Try to verticalize the control map, so hopefully we can paint it in a more vertical way to get snowtop mountains, etc...
-		float maxHeightOverWater = MAP_MAX_HEIGHT - SHADER_WATER_LEVEL;
-		float currentheightOverWater = MAP_MAX_HEIGHT - m_vertPos.z;
-		float y = pow(currentheightOverWater / maxHeightOverWater, SNOW_HEIGHT_STRENGTH);
-		float xyoffset = (SHADER_MAP_SIZE - (SHADER_MAP_SIZE / 2.0)) / (SHADER_MAP_SIZE * 2.0);
-		vec4 xaxis = texture( u_SplatControlMap, vec2((m_vertPos.x / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
-		vec4 yaxis = texture( u_SplatControlMap, vec2((m_vertPos.y / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
-		vec4 zaxis = texture( u_SplatControlMap, vec2((m_vertPos.z / (SHADER_MAP_SIZE / 2.0)) * xyoffset, y));
-		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
-	}
-	else */
-#endif //__USE_REGIONS__
-	if (USE_TRIPLANAR >= 2.0)
-	{
-		control = vec4(var_Color.rgb, 0.0);
-	}
-	else
-	{
-		float offset = (SHADER_MAP_SIZE / 2.0) * scale;
-		vec4 xaxis = texture( u_SplatControlMap, (m_vertPos.yz * scale) + offset);
-		vec4 yaxis = texture( u_SplatControlMap, (m_vertPos.xz * scale) + offset);
-		vec4 zaxis = texture( u_SplatControlMap, (m_vertPos.xy * scale) + offset);
-		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
-	}
-
-	if (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())
-	{// Also grab the roads map, if we have one...
-		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
-		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
-		float road = texture(u_RoadsControlMap, pixel).r;
-		road = clamp(pow(road * 1.5, 2.0), 0.0, 1.0);
-		control.a = road;
-	}
-	
-	return control;
-}
-
-#ifdef __USE_FULL_SPLAT_BLENDFUNC__
-vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
-{
-    float depth = 0.2;
-	float ma = max(texture1.a + a1, texture2.a + a2) - depth;
-
-    float b1 = max(texture1.a + a1 - ma, 0);
-    float b2 = max(texture2.a + a2 - ma, 0);
-
-    return ((texture1.rgb * b1) + (texture2.rgb * b2)) / (b1 + b2);
-}
-#endif //__USE_FULL_SPLAT_BLENDFUNC__
-
-#if defined(__HIGH_PASS_SHARPEN__)
-vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
-{
-	vec3 blur = textureLod(tex, uv, level).rgb;
-	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
-	col *= ((color - blur)*0.25 + 0.25) * 8.0;
-	col = col * color;
-	return col;
-}
-#endif //defined(__HIGH_PASS_SHARPEN__)
-
 vec3 vLocalSeed;
 
 float hash( const in float n ) {
@@ -431,6 +299,127 @@ float randZeroOne()
 {
 	return SmoothNoise(vec3(vLocalSeed.xy, 0.0) * 0.01); // * 0.01 to smooth over a larger area...
 }
+
+void DepthContrast ( inout float depth )
+{
+	const float contrast = 3.0;
+	const float brightness = 0.03;
+	// Apply contrast.
+	depth = ((depth - 0.5f) * max(contrast, 0)) + 0.5f;
+	// Apply brightness.
+	depth += brightness;
+	depth = clamp(depth, 0.0, 1.0);
+}
+
+float GetDepthForPixel(vec4 color)
+{
+	if (color.a /** var_Color.a*/ <= 0.0)
+	{
+		return 0.0;
+	}
+
+	float displacement = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
+	DepthContrast(displacement); // Enhance the dark/lights...
+	return (1.0 - displacement) * 0.9 + 0.1;
+}
+
+#ifdef USE_DETAIL_TEXTURES
+void AddDetail(inout vec4 color, in vec2 tc)
+{
+/*
+	// Add fine detail to everything...
+	vec2 coord = vec2(0.0);
+
+	if (USE_DETAIL_COORD == 1.0 || USE_TEXTURECLAMP > 0.0 || USE_IS2D > 0.0)
+	{// From TC... 1:1 match to diffuse coordinates... (good for guns/models/etc for adding detail)
+		coord = tc;
+	}
+	else if (USE_DETAIL_COORD == 2.0 || USE_TRIPLANAR > 0.0 || USE_REGIONS > 0.0)
+	{// From world... Using map coords like splatmaps... (good for splat mapping, etc for varying terrain shading)
+		float xyoffset = (SHADER_MAP_SIZE - (SHADER_MAP_SIZE / 2.0)) / (SHADER_MAP_SIZE * 2.0);
+		coord = vec2(m_vertPos.xy / (SHADER_MAP_SIZE / 2.0)) * xyoffset;
+		coord *= (vec2(m_vertPos.z / (SHADER_MAP_SIZE / 2.0)) * xyoffset) * 2.0 - 1.0;
+	}
+	else
+	{// Standard... -1.0 -> +1.0 (good all-round option when matching specific coordinates is not needed)
+		coord = (tc * 2.0 - 1.0);
+	}
+
+    vec3 detail = texture(u_DetailMap, coord).rgb;
+
+	if (length(detail.rgb) <= 0.0) return;
+
+	color.rgb = color.rgb * detail.rgb * 2.0;
+*/
+	float grain = SmoothNoise(m_vertPos.xyz * 5.0) * 0.5 + 1.75;
+	color.rgb = mix(color.rgb, vec3(color.rgb * grain), 0.2);
+}
+#endif //USE_DETAIL_TEXTURES
+
+bool IsRoadmapMaterial ( void )
+{
+	if (SHADER_MATERIAL_TYPE == MATERIAL_SHORTGRASS || SHADER_MATERIAL_TYPE == MATERIAL_LONGGRASS || SHADER_MATERIAL_TYPE == MATERIAL_SAND || SHADER_MATERIAL_TYPE == MATERIAL_SNOW || SHADER_MATERIAL_TYPE == MATERIAL_MUD || SHADER_MATERIAL_TYPE == MATERIAL_CONCRETE)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+vec4 GetControlMap( void )
+{
+	float scale = 1.0 / SHADER_MAP_SIZE; /* control scale */
+	vec4 control;
+	
+	if (USE_TRIPLANAR >= 2.0)
+	{
+		control = vec4(var_Color.rgb, 0.0);
+	}
+	else
+	{
+		float offset = (SHADER_MAP_SIZE / 2.0) * scale;
+		vec4 xaxis = texture( u_SplatControlMap, (m_vertPos.yz * scale) + offset);
+		vec4 yaxis = texture( u_SplatControlMap, (m_vertPos.xz * scale) + offset);
+		vec4 zaxis = texture( u_SplatControlMap, (m_vertPos.xy * scale) + offset);
+		control = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+		control.rgb = clamp(control.rgb * 10.0, 0.0, 1.0);
+	}
+
+	if (SHADER_HAS_SPLATMAP4 > 0.0 && IsRoadmapMaterial())
+	{// Also grab the roads map, if we have one...
+		vec2 mapSize = u_Maxs.xy - u_Mins.xy;
+		vec2 pixel = (m_vertPos.xy - u_Mins.xy) / mapSize;
+		float road = texture(u_RoadsControlMap, pixel).r;
+		road = clamp(pow(road * 1.5, 2.0), 0.0, 1.0);
+		control.a = road;
+	}
+	
+	return control;
+}
+
+#ifdef __USE_FULL_SPLAT_BLENDFUNC__
+vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
+{
+    float depth = 0.2;
+	float ma = max(texture1.a + a1, texture2.a + a2) - depth;
+
+    float b1 = max(texture1.a + a1 - ma, 0);
+    float b2 = max(texture2.a + a2 - ma, 0);
+
+    return ((texture1.rgb * b1) + (texture2.rgb * b2)) / (b1 + b2);
+}
+#endif //__USE_FULL_SPLAT_BLENDFUNC__
+
+#if defined(__HIGH_PASS_SHARPEN__)
+vec3 Enhance(in sampler2D tex, in vec2 uv, vec3 color, float level)
+{
+	vec3 blur = textureLod(tex, uv, level).rgb;
+	vec3 col = ((color - blur)*0.5 + 0.5) * 1.0;
+	col *= ((color - blur)*0.25 + 0.25) * 8.0;
+	col = col * color;
+	return col;
+}
+#endif //defined(__HIGH_PASS_SHARPEN__)
 
 vec4 GetMap( in sampler2D tex, float scale, inout float depth)
 {
