@@ -3319,10 +3319,11 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level, vec4_t sunDir, float l
 				CLOUD_LAYER_Render();
 			}*/
 
-			//R_AddPolygonSurfaces(); // UQ1: Don't really need these on the shadow map...
-
 			if (level < 2 || LODMODEL_MAP)
-				R_AddEntitySurfaces ();
+			{
+				//R_AddPolygonSurfaces(); // UQ1: Don't really need these on the shadow map...
+				R_AddEntitySurfaces();
+			}
 
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 

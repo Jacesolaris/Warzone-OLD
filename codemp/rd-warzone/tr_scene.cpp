@@ -1507,12 +1507,10 @@ void RE_RenderScene(const refdef_t *fd) {
 
 		/* Check for forced shadow updates if viewer changes position/angles */
 		qboolean forceUpdate = qfalse;
-		if (Distance(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES) > 0)
+		if (Distance(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES) > 32.0/*0.0*/)
 			forceUpdate = qtrue;
-		else if (Distance(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN) > 0)
+		else if (Distance(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN) > 256.0/*0.0*/)
 			forceUpdate = qtrue;
-		VectorCopy(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES);
-		VectorCopy(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN);
 
 		// Always update close shadows, so players/npcs moving around get shadows, even if the player's view doesn't change...
 		R_RenderSunShadowMaps(fd, 0, lightDir, lightHeight, lightOrigin);
@@ -1522,7 +1520,11 @@ void RE_RenderScene(const refdef_t *fd) {
 		if (nowTime >= NEXT_SHADOWMAP_UPDATE[0] || forceUpdate)
 		{
 			R_RenderSunShadowMaps(fd, 2, lightDir, lightHeight, lightOrigin);
-			NEXT_SHADOWMAP_UPDATE[0] = nowTime + 5000;
+			//NEXT_SHADOWMAP_UPDATE[0] = nowTime + 5000;
+			NEXT_SHADOWMAP_UPDATE[0] = nowTime + 10000;
+
+			VectorCopy(tr.refdef.viewangles, SHADOWMAP_LAST_VIEWANGLES);
+			VectorCopy(tr.refdef.vieworg, SHADOWMAP_LAST_VIEWORIGIN);
 		}
 
 		/*if (r_occlusion->integer)

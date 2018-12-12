@@ -8317,7 +8317,7 @@ This creates generic shaders for anything that has none to support rend2 stuff..
 
 #ifdef __SHADER_GENERATOR__
 char uniqueGenericGlow[] = "{\n"\
-"map %s_glow\n"\
+"map %s\n"\
 "blendFunc GL_ONE GL_ONE\n"\
 "glow\n"\
 "noScreenMap\n"\
@@ -8431,7 +8431,7 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "glowStrength 0.75\n"\
 "entityMergable\n"\
 "tesselation\n"\
-"tesselationLevel 7.0\n"\
+"tesselationLevel 3.0\n"\
 "tesselationAlpha 1.0\n"\
 "{\n"\
 "map %s\n"\
@@ -8457,7 +8457,7 @@ char uniqueGenericArmorShader[] = "{\n"\
 "glowStrength 8.0\n"\
 "cull	twosided\n"\
 "tesselation\n"\
-"tesselationLevel 7.0\n"\
+"tesselationLevel 3.0\n"\
 "tesselationAlpha 1.0\n"\
 "{\n"\
 "map %s\n"\
@@ -8889,7 +8889,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			strcpy(lightMapText, uniqueGenericLightmap);
 		}
 
-		char shaderCustomMap[256] = { 0 };
+		char shaderCustomMap[512] = { 0 };
 		int material = DetectMaterialType(name);
 
 		shader.defaultShader = qfalse;
@@ -8908,22 +8908,22 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 		if (R_TextureFileExists(glowName) || R_TIL_TextureFileExists(glowName))
 		{
-			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+			sprintf(shaderCustomMap, uniqueGenericGlow, glowName);
 		}
-		else if (R_TextureFileExists(glowName2) || R_TIL_TextureFileExists(glowName))
+		else if (R_TextureFileExists(glowName2) || R_TIL_TextureFileExists(glowName2))
 		{
-			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+			sprintf(shaderCustomMap, uniqueGenericGlow, glowName2);
 		}
-		else if (R_TextureFileExists(glowName3) || R_TIL_TextureFileExists(glowName))
+		else if (R_TextureFileExists(glowName3) || R_TIL_TextureFileExists(glowName3))
 		{
-			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+			sprintf(shaderCustomMap, uniqueGenericGlow, glowName3);
 		}
-		else if (R_TextureFileExists(glowName4) || R_TIL_TextureFileExists(glowName))
+		else if (R_TextureFileExists(glowName4) || R_TIL_TextureFileExists(glowName4))
 		{
-			sprintf(shaderCustomMap, uniqueGenericGlow, strippedName);
+			sprintf(shaderCustomMap, uniqueGenericGlow, glowName4);
 		}
 
-		if (shaderCustomMap[0] == 0)
+		//if (shaderCustomMap[0] == 0)
 		{// No glow? Add sky reflection map...
 			vec4_t settings;
 			RB_PBR_DefaultsForMaterial(settings, material);
@@ -8934,7 +8934,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				char shaderCustomAdditionMap[256] = { 0 };
 				reflectionStrength = reflectionStrength * 0.75 + 0.25;
 				sprintf(shaderCustomAdditionMap, uniqueGenericSkyMap, reflectionStrength);
-				sprintf(shaderCustomMap, shaderCustomAdditionMap);
+				sprintf(shaderCustomMap, "%s%s", shaderCustomMap, shaderCustomAdditionMap);
 			}
 		}
 

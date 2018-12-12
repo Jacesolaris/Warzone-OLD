@@ -3872,8 +3872,6 @@ image_t	*R_DeferImageLoad(const char *name, imgType_t type, int flags)
 
 //extern void R_LoadDDS(const char *filename, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips);
 
-#define __TINY_IMAGE_LOADER__
-
 #ifdef __TINY_IMAGE_LOADER__
 #include "TinyImageLoader\TinyImageLoader.h"
 
@@ -3925,6 +3923,11 @@ char *R_TIL_TextureFileExists(const char *name)
 		return "ico";
 	}
 
+	return NULL;
+}
+#else //!__TINY_IMAGE_LOADER__
+char *R_TIL_TextureFileExists(const char *name)
+{
 	return NULL;
 }
 #endif //__TINY_IMAGE_LOADER__
@@ -4435,7 +4438,9 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputNam
 	image_t		*image;
 	
 	byte		*pics[16] = { NULL };
+#ifdef __TINY_IMAGE_LOADER__
 	til::Image	*tImages[16] = { NULL };
+#endif //__TINY_IMAGE_LOADER__
 	bool		isTilImage[16] = { false };
 	bool		hasAlpha[16] = { false };
 	vec4_t		avgColors[16] = { 0 };
@@ -4592,16 +4597,20 @@ image_t	*R_BakeTextures(char names[16][512], int numNames, const char *outputNam
 #endif
 				Z_Free(pic);
 
+#ifdef __TINY_IMAGE_LOADER__
 			tImages[i] = NULL;
+#endif //__TINY_IMAGE_LOADER__
 			hasAlpha[i] = USE_ALPHA ? true : false;
 			isTilImage[i] = false;
 		}
 		else
 		{
 			pics[i] = pic;
+#ifdef __TINY_IMAGE_LOADER__
 			tImages[i] = tImage;
-			hasAlpha[i] = USE_ALPHA ? true : false;
 			isTilImage[i] = isTIL;
+#endif //__TINY_IMAGE_LOADER__
+			hasAlpha[i] = USE_ALPHA ? true : false;
 		}
 
 		VectorCopy4(avgColor, avgColors[i]);

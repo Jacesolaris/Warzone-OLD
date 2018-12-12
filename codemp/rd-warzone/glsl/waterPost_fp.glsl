@@ -470,36 +470,6 @@ float getwaves(vec2 position) {
 	//return clamp(((w / ws) - 0.075) * 1.075, 0.0, 1.0);
 }
 
-/*
-float sfract(float n)
-{
-    return smoothstep(0.0,1.0,fract(n));
-}
-float drand(vec2 n)
-{
- 	return fract(abs(sin(dot(n,vec2(5.3357,-5.8464))))*256.75+0.325);   
-}
-
-float dnoise(vec2 n)
-{
-    float h1 = mix(drand(vec2(floor(n.x),floor(n.y))),drand(vec2(ceil(n.x),floor(n.y))),sfract(n.x));
-    float h2 = mix(drand(vec2(floor(n.x),ceil(n.y))),drand(vec2(ceil(n.x),ceil(n.y))),sfract(n.x));
-    float s1 = mix(h1,h2,sfract(n.y));
-    return s1;
-}
-
-float getLakeWater( vec2 pos )
-{
-    vec2 p = pos+vec2(iTime*0.2,0.0)+vec2(dnoise(pos.xy),dnoise(pos.xy+8.0))*0.2;//Distort coordinates
-    float height = 0.1*pow(dnoise(p.xy+vec2(iTime*0.7,iTime*0.6))*0.5+dnoise(p.xy*8.0+vec2(iTime))*0.35+dnoise(p.xy*16.0+vec2(0.0,iTime*0.5))*0.1+dnoise(p.xy*24.0)*0.05,0.25);
-    //float model = p.y-height;
-    //return model;
-	return height;
-}
-*/
-
-#if 1
-// by TDM
 mat2 octave_m = mat2(1.6,1.2,-1.2,1.6);
 
 float sea_octave(vec2 uv, float choppy) {
@@ -527,44 +497,6 @@ float getwavesDetail( vec2 p )
     }
     return h;
 }
-#else
-float getwavesDetail(vec2 position) {
-#if 1
-	position *= 0.1;
-	float iter = 0.0;
-	float phase = 1.5;
-	float speed = 1.5;
-	float weight = 1.0;
-	float w = 0.0;
-	float ws = 0.0;
-	for (int i = 0; i<12; i++)
-	{
-		vec2 p = vec2(sin(iter), cos(iter)) * 8.0;
-		float res = wave(position, p, speed, phase, 0.0);
-		float res2 = wave(position, p, speed, phase, 0.003/*0.006*/);
-		position -= wavedrag(position, p) * (res - res2) * weight * DRAG_MULT * 8.0;
-		w += res * weight;
-		iter += 36.0;// 12.0;
-		ws += weight;
-		weight = mix(weight, 0.0, float(i+1) / 14.0/*0.1*/);
-		phase *= 1.67;//1.2;
-		speed *= 1.07;//1.02;
-	}
-
-	float height = clamp(w / ws, 0.0, 1.0);
-	/*
-	float height1 = SmoothNoise(position.xyy * 6.0) * 0.6 + 0.3;
-	float height2 = SmoothNoise(position.xyy * 48.0) * 0.6 + 0.3;
-	float height3 = mix(height1, height2, 0.075);
-	height = mix(height, height3, u_Local0.g);
-	*/
-#else
-	position *= 0.1;
-	float height = SmoothNoise(position.xyy * u_Local0.r) * u_Local0.b + u_Local0.a;
-#endif
-	return height;
-}
-#endif
 
 void GetHeightAndNormal(in vec2 pos, in float e, in float depth, inout float height, inout float chopheight, inout vec3 waveNormal, inout vec3 lightingNormal, in vec3 eyeVecNorm, in float timer, in float level) {
 #if !defined(__LQ_MODE__) && defined(REAL_WAVES)
@@ -818,41 +750,6 @@ vec4 WaterFall(vec3 color, vec3 color2, vec3 waterMapUpper, vec3 position, float
 #ifdef USE_DETAILED_UNDERWATER
 vec3 DoUnderwater(vec3 position, bool isSky)
 {
-/*
-#define NUM_SAMPLES 35
-	vec3 dir_light = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
-    vec2 uv = var_TexCoords;
-    float decay=0.96815;
-    float exposure=0.21;
-    float density=0.926;
-    float weight=0.58767;
-    
-    vec2 tc = uv;
-    //vec2 lightPos = vec2(dot(dir_light.x, dir_light.z), dir_light.y);//vec2(.5,.75);
-	vec2 lightPos = getViewCoord(dir_light.xyz);
-    vec2 deltaTexCoord = tc;
-    
-    deltaTexCoord =  uv-lightPos;
-    deltaTexCoord *= 1.0 / float(NUM_SAMPLES) * density;
-    
-    float illuminationDecay = 1.0;
-    vec3 color = texture(u_DiffuseMap, tc.xy).rgb*0.305104;
-	vec3 buffer = color;
-    
-    tc += deltaTexCoord * fract( sin(dot(uv.xy+fract(iTime), vec2(12.9898, 78.233)))* 43758.5453 );
-    
-    for(int i=0; i < NUM_SAMPLES; i++)
-    {
-        tc -= deltaTexCoord;
-        vec3 sampleTex = texture(u_DiffuseMap, tc).rgb*0.305104;
-        sampleTex *= illuminationDecay * weight;
-        color += sampleTex;
-        illuminationDecay *= decay;
-    }
-    color = pow(color*exposure+(buffer*.75), vec3(1.0/0.75));
-	return color;
-*/
-
 	vec3 color = mix(waterColorShallow.rgb, waterColorDeep.rgb, /*isSky ? 1.0 :*/ clamp((MAP_WATER_LEVEL - position.y) / 2048.0, 0.0, 1.0));
 	return color;
 }
@@ -1250,24 +1147,19 @@ void main ( void )
 		float whiteCaps = pow(clamp(chopheight, 0.0, 1.0), 16.0);
 		if (whiteCaps > 0.0)
 		{
-			//vec4 wcMap = GetWhiteCapMap(origWaterMapUpper.xzy);
-			//vec4 wcMap = vec4(SmoothNoise( origWaterMapUpper.xzy*0.0005 ));
-			//color.rgb = color.rgb + (wcMap.rgb * whiteCaps * wcMap.a);
-			
 			float wcMap = SmoothNoise( surfacePoint.xzy*0.0005 );
 			color.rgb = color.rgb + (wcMap * whiteCaps);
 		}
 
 		if (USE_OCEAN > 0.0)
 		{// add breaking waves
+#if 1
 			float aboveSeabed = 0.0;
 
 			if (HAVE_HEIGHTMAP > 0.0)
 			{
 				float hMap = GetHeightMap(surfacePoint.xzy);
 				aboveSeabed = (1.0 - clamp(hMap / 512.0, 0.0, 1.0));
-				//gl_FragColor = vec4(aboveSeabed, aboveSeabed, aboveSeabed, 1.0);
-				//return;
 			}
 			else
 			{
@@ -1287,6 +1179,24 @@ void main ( void )
 					color.rgb = color.rgb + (wcMap * breakingWhiteCaps);
 				}
 			}
+#else
+			float seaFloor = position.y;
+
+			if (HAVE_HEIGHTMAP > 0.0)
+			{
+				seaFloor = GetHeightMap(waterMapLower.xzy/*surfacePoint.xzy*/);
+			}
+			
+			float belowWaterHt = max(waterMapLower.y - seaFloor, 0.0) * u_Local0.r;
+			float waveHt = height * waveHeight;
+
+			if (waveHt >= belowWaterHt)
+			{// Breaking wave...
+				float breakingFoamFactor = pow(belowWaterHt / waveHt, u_Local0.g);
+				float wcMap = SmoothNoise( surfacePoint.xzy*0.0005 );
+				color.rgb = color.rgb + (wcMap * breakingFoamFactor);
+			}
+#endif
 		}
 
 		if (pixelIsUnderWater)
