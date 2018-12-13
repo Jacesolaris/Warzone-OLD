@@ -68,7 +68,6 @@ uniform mat4   u_BoneMatrices[20];
 varying vec2		var_DiffuseTex;
 varying vec4		var_Color;
 
-attribute vec3		attr_LightDirection;
 uniform mat4		u_ModelMatrix;
 uniform vec3		u_ViewOrigin;
 

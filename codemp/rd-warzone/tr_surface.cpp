@@ -608,7 +608,7 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 	glIndex_t      *inIndex;
 	srfVert_t      *dv;
 	float          *xyz, *texCoords, *lightCoords;
-	uint32_t        *lightdir;
+	//uint32_t        *lightdir;
 	uint32_t        *normal;
 	glIndex_t      *outIndex;
 	float          *color;
@@ -671,14 +671,6 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 		color = tess.vertexColors[ tess.numVertexes ];
 		for ( i = 0 ; i < numVerts ; i++, dv++, color+=4 )
 			VectorCopy4(dv->vertexColors[0], color);
-	}
-
-	if ( tess.shader->vertexAttribs & ATTR_LIGHTDIRECTION )
-	{
-		dv = verts;
-		lightdir = &tess.lightdir[ tess.numVertexes ];
-		for ( i = 0 ; i < numVerts ; i++, dv++, lightdir++ )
-			*lightdir = R_VboPackNormal(dv->lightdir);
 	}
 
 	//tess.dlightBits |= dlightBits;
@@ -2196,7 +2188,7 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 		texCoords = tess.texCoords[numVertexes][0];
 		lightCoords = tess.texCoords[numVertexes][1];
 		color = tess.vertexColors[numVertexes];
-		lightdir = &tess.lightdir[numVertexes];
+		//lightdir = &tess.lightdir[numVertexes];
 		//vDlightBits = &tess.vertexDlightBits[numVertexes];
 
 		for ( i = 0 ; i < rows ; i++ ) {
@@ -2235,11 +2227,6 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 				{
 					VectorCopy4(dv->vertexColors[0], color);
 					color += 4;
-				}
-
-				if ( tess.shader->vertexAttribs & ATTR_LIGHTDIRECTION )
-				{
-					*lightdir++ = R_VboPackNormal(dv->lightdir);
 				}
 
 				//*vDlightBits++ = dlightBits;

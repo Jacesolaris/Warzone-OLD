@@ -5120,7 +5120,6 @@ static void ComputeVertexAttribs(void)
 		}
 
 		shader.vertexAttribs |= ATTR_NORMAL;
-		shader.vertexAttribs |= ATTR_LIGHTDIRECTION;
 
 		for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 		{

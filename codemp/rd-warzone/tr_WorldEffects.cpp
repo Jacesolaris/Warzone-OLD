@@ -1763,7 +1763,7 @@ public:
 				int idx = tess.numIndexes;
 				vec2_t texCoords[3];
 				vec4_t triVerts[3];
-				vec3_t normal;
+				//vec3_t normal;
 
 				// triangle indexes for a simple tri
 				tess.indexes[idx] = ndx;
@@ -1878,7 +1878,7 @@ public:
 				int idx = tess.numIndexes;
 				vec2_t texCoords[4];
 				vec4_t quadVerts[4];
-				vec3_t normal;
+				//vec3_t normal;
 
 				// triangle indexes for a simple quad
 				tess.indexes[idx] = ndx;

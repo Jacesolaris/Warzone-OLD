@@ -2493,10 +2493,9 @@ struct packedVertex_t
 {
 	vec3_t position;
 	uint32_t normal;
-	uint32_t tangent;
+	//uint32_t tangent;
 	vec2_t texcoords[1 + MAXLIGHTMAPS];
 	vec4_t colors[MAXLIGHTMAPS];
-	uint32_t lightDirection;
 };
 
 #ifdef __USE_VBO_AREAS__
@@ -3026,7 +3025,7 @@ static void R_CreateWorldVBOs(void)
 					VectorCopy(bspSurf->verts[i].xyz, vert.position);
 
 					vert.normal = R_VboPackNormal(bspSurf->verts[i].normal);
-					vert.tangent = R_VboPackTangent(bspSurf->verts[i].tangent);
+					//vert.tangent = R_VboPackTangent(bspSurf->verts[i].tangent);
 					VectorCopy2(bspSurf->verts[i].st, vert.texcoords[0]);
 
 					for (int j = 0; j < MAXLIGHTMAPS; j++)
@@ -3037,9 +3036,10 @@ static void R_CreateWorldVBOs(void)
 					for (int j = 0; j < MAXLIGHTMAPS; j++)
 					{
 						VectorCopy4(bspSurf->verts[i].vertexColors[j], vert.colors[j]);
+						//vert.colors[j] = R_VboPackTangent(bspSurf->verts[i].vertexColors[j]);
 					}
 
-					vert.lightDirection = R_VboPackNormal(bspSurf->verts[i].lightdir);
+					//vert.lightDirection = R_VboPackNormal(bspSurf->verts[i].lightdir);
 				}
 			}
 
@@ -3058,14 +3058,12 @@ static void R_CreateWorldVBOs(void)
 			vbo->ofs_normal = offsetof(packedVertex_t, normal);
 			vbo->ofs_st = offsetof(packedVertex_t, texcoords);
 			vbo->ofs_vertexcolor = offsetof(packedVertex_t, colors);
-			vbo->ofs_lightdir = offsetof(packedVertex_t, lightDirection);
 
 			const size_t packedVertexSize = sizeof(packedVertex_t);
 			vbo->stride_xyz = packedVertexSize;
 			vbo->stride_normal = packedVertexSize;
 			vbo->stride_st = packedVertexSize;
 			vbo->stride_vertexcolor = packedVertexSize;
-			vbo->stride_lightdir = packedVertexSize;
 
 			// point bsp surfaces to VBO
 			for (currSurf = firstSurf; currSurf < lastSurf; currSurf++)

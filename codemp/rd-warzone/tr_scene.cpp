@@ -907,8 +907,8 @@ void RB_UpdateDayNightCycle()
 	const float cutoff = 0.25f;
 	float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
 
-	float dist;
-	vec4_t pos;// , hpos;
+	//float dist;
+	//vec4_t pos;// , hpos;
 	matrix_t trans, model, mvp;
 
 	Matrix16Translation(backEnd.viewParms.ori.origin, trans);

@@ -834,7 +834,6 @@ typedef struct VBO_s
 	uint32_t        ofs_normal;
 	uint32_t        ofs_st;
 	uint32_t        ofs_vertexcolor;
-	uint32_t        ofs_lightdir;
 	uint32_t		ofs_boneweights;
 	uint32_t		ofs_boneindexes;
 	uint32_t		ofs_instancesPosition;
@@ -845,7 +844,6 @@ typedef struct VBO_s
 	uint32_t        stride_normal;
 	uint32_t        stride_st;
 	uint32_t        stride_vertexcolor;
-	uint32_t        stride_lightdir;
 	uint32_t		stride_boneweights;
 	uint32_t		stride_boneindexes;
 	uint32_t		stride_instancesMVP;
@@ -1441,7 +1439,6 @@ enum
 	ATTR_INDEX_TEXCOORD1,
 	ATTR_INDEX_NORMAL,
 	ATTR_INDEX_COLOR,
-	ATTR_INDEX_LIGHTDIRECTION,
 	ATTR_INDEX_BONE_INDEXES,
 	ATTR_INDEX_BONE_WEIGHTS,
 
@@ -1462,17 +1459,16 @@ enum
 	ATTR_TEXCOORD1 = 0x0004,
 	ATTR_NORMAL = 0x0008,
 	ATTR_COLOR = 0x0010,
-	ATTR_LIGHTDIRECTION = 0x0020,
-	ATTR_BONE_INDEXES = 0x0040,
-	ATTR_BONE_WEIGHTS = 0x0080,
+	ATTR_BONE_INDEXES = 0x0020,
+	ATTR_BONE_WEIGHTS = 0x0040,
 
 	// for .md3 interpolation
-	ATTR_POSITION2 = 0x0100,
-	ATTR_NORMAL2 = 0x0200,
+	ATTR_POSITION2 = 0x0080,
+	ATTR_NORMAL2 = 0x0100,
 
-	ATTR_INSTANCES_TEXCOORD = 0x0400,
-	ATTR_INSTANCES_POSITION = 0x0800,
-	ATTR_INSTANCES_MVP = 0x1000,
+	ATTR_INSTANCES_TEXCOORD = 0x0200,
+	ATTR_INSTANCES_POSITION = 0x0400,
+	ATTR_INSTANCES_MVP = 0x0800,
 
 	ATTR_DEFAULT = ATTR_POSITION,
 	ATTR_BITS = ATTR_POSITION |
@@ -1480,7 +1476,6 @@ enum
 	ATTR_TEXCOORD1 |
 	ATTR_NORMAL |
 	ATTR_COLOR |
-	ATTR_LIGHTDIRECTION |
 	ATTR_BONE_INDEXES |
 	ATTR_BONE_WEIGHTS |
 	ATTR_POSITION2 |

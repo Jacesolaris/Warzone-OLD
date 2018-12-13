@@ -2190,7 +2190,6 @@ void GLSL_BindAttributeLocations(shaderProgram_t *program, int attribs) {
 	if (attribs & ATTR_TEXCOORD1     )		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1     , "attr_TexCoord1"     );
 	if (attribs & ATTR_NORMAL        )		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL        , "attr_Normal"        );
 	if (attribs & ATTR_COLOR         )		qglBindAttribLocation(program->program, ATTR_INDEX_COLOR         , "attr_Color"         );
-	if (attribs & ATTR_LIGHTDIRECTION)		qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
 	if (attribs & ATTR_POSITION2     )		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION2     , "attr_Position2"     );
 	if (attribs & ATTR_NORMAL2       )		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2       , "attr_Normal2"       );
 	if (attribs & ATTR_BONE_INDEXES  )		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES  , "attr_BoneIndexes"   );
@@ -3337,7 +3336,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3361,7 +3360,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3393,7 +3392,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3419,7 +3418,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3447,7 +3446,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3479,7 +3478,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3511,7 +3510,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 		extradefines[0] = '\0';
 
@@ -3525,7 +3524,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 		//attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 
 		extradefines[0] = '\0';
@@ -3537,7 +3536,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.sunPassShader, "sun", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sun_vp, fallbackShader_sun_fp, NULL, NULL, NULL))
@@ -3546,7 +3545,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.moonPassShader, "moon", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_planet_vp, fallbackShader_planet_fp, NULL, NULL, NULL))
@@ -3555,7 +3554,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.planetPassShader, "planet", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_planet_vp, fallbackShader_planet_fp, NULL, NULL, NULL))
@@ -3564,7 +3563,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.fireShader, "fire", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fire_vp, fallbackShader_fire_fp, NULL, NULL, NULL))
@@ -3573,7 +3572,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.smokeShader, "smoke", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_smoke_vp, fallbackShader_smoke_fp, NULL, NULL, NULL))
@@ -3581,7 +3580,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load smoke shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.magicParticlesShader, "magicParticles", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicParticles_vp, fallbackShader_magicParticles_fp, NULL, NULL, NULL))
@@ -3589,7 +3588,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load magicParticles shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.magicParticlesTreeShader, "magicParticlesTree", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicParticlesTree_vp, fallbackShader_magicParticlesTree_fp, NULL, NULL, NULL))
@@ -3597,7 +3596,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load magicParticlesTree shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.magicParticlesFireFlyShader, "magicParticlesFireFly", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_magicParticlesFireFly_vp, fallbackShader_magicParticlesFireFly_fp, NULL, NULL, NULL))
@@ -3606,7 +3605,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.portalShader, "portal", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_portal_vp, fallbackShader_portal_fp, NULL, NULL, NULL))
@@ -3615,7 +3614,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	}
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TEXCOORD1 | ATTR_POSITION2 | ATTR_NORMAL2 | ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
 
 	extradefines[0] = '\0';
 
@@ -3626,7 +3625,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 
 		extradefines[0] = '\0';
 
@@ -3639,7 +3638,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	if (r_foliage->integer)
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 
 		extradefines[0] = '\0';
 
@@ -3655,7 +3654,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 
 
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 
 		extradefines[0] = '\0';
 
@@ -3672,7 +3671,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	if (r_foliage->integer)
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 
 		extradefines[0] = '\0';
 
@@ -4029,7 +4028,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterPostShader[0], "waterPost0", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterPost_vp, fallbackShader_waterPost_fp, NULL, NULL, NULL))
@@ -4037,7 +4036,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load waterPost[0] shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_REFLECTION\n");
@@ -4047,7 +4046,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load waterPost[1] shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_REFLECTION\n");
@@ -4058,7 +4057,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load waterPost[2] shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterReflectionShader, "waterReflection", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterReflection_vp, fallbackShader_waterReflection_fp, NULL, NULL, NULL))
@@ -4388,7 +4387,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
@@ -4401,9 +4400,9 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 #ifdef __OCEAN__
-	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 #else //!__OCEAN__
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 #endif //__OCEAN__
 	extradefines[0] = '\0';
 
@@ -4415,9 +4414,9 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 #ifdef __OCEAN__
-	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD | ATTR_NORMAL;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_INSTANCES_POSITION | ATTR_INSTANCES_TEXCOORD | ATTR_NORMAL;// ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 #else //!__OCEAN__
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 #endif //__OCEAN__
 	extradefines[0] = '\0';
 
@@ -6793,7 +6792,6 @@ void GLSL_ShutdownGPUShaders(void)
 	qglDisableVertexAttribArray(ATTR_INDEX_NORMAL);
 	qglDisableVertexAttribArray(ATTR_INDEX_NORMAL2);
 	qglDisableVertexAttribArray(ATTR_INDEX_COLOR);
-	qglDisableVertexAttribArray(ATTR_INDEX_LIGHTDIRECTION);
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_INDEXES);
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_WEIGHTS);
 	
@@ -7074,20 +7072,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-	if (diff & ATTR_LIGHTDIRECTION)
-	{
-		if (stateBits & ATTR_LIGHTDIRECTION)
-		{
-			GLimp_LogComment("qglEnableVertexAttribArray( ATTR_INDEX_LIGHTDIRECTION )\n");
-			qglEnableVertexAttribArray(ATTR_INDEX_LIGHTDIRECTION);
-		}
-		else
-		{
-			GLimp_LogComment("qglDisableVertexAttribArray( ATTR_INDEX_LIGHTDIRECTION )\n");
-			qglDisableVertexAttribArray(ATTR_INDEX_LIGHTDIRECTION);
-		}
-	}
-
 	if (diff & ATTR_POSITION2)
 	{
 		if (stateBits & ATTR_POSITION2)
@@ -7268,15 +7252,9 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_COLOR )\n");
 
 		qglVertexAttribPointer(ATTR_INDEX_COLOR, 4, GL_FLOAT, 0, vbo->stride_vertexcolor, BUFFER_OFFSET(vbo->ofs_vertexcolor));
+		//qglVertexAttribPointer(ATTR_INDEX_COLOR, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_vertexcolor, BUFFER_OFFSET(vbo->ofs_vertexcolor + newFrame * vbo->size_normal));
+		//qglVertexAttribPointer(ATTR_INDEX_COLOR, 4, GL_HALF_FLOAT, 0, vbo->stride_vertexcolor, BUFFER_OFFSET(vbo->ofs_vertexcolor)); // add half-float lib for this?
 		glState.vertexAttribPointersSet |= ATTR_COLOR;
-	}
-
-	if ((attribBits & ATTR_LIGHTDIRECTION) && !(glState.vertexAttribPointersSet & ATTR_LIGHTDIRECTION))
-	{
-		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_LIGHTDIRECTION )\n");
-
-		qglVertexAttribPointer(ATTR_INDEX_LIGHTDIRECTION, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_lightdir, BUFFER_OFFSET(vbo->ofs_lightdir));
-		glState.vertexAttribPointersSet |= ATTR_LIGHTDIRECTION;
 	}
 
 	if ((attribBits & ATTR_POSITION2) && (!(glState.vertexAttribPointersSet & ATTR_POSITION2) || animated))

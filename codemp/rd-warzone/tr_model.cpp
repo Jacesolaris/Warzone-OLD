@@ -2239,8 +2239,6 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 
 			dataSize = 0;
 
-			R_OptimizeMesh((uint32_t *)&surf->numVerts, (uint32_t *)&surf->numIndexes, surf->indexes, (vec3_t *)(data + ofs_xyz));
-
 			ofs_xyz = dataSize;
 			dataSize += surf->numVerts * mdvModel->numFrames * sizeof(*verts);
 
@@ -2275,6 +2273,8 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 				texcoords[j][0] = st->st[0];
 				texcoords[j][1] = st->st[1];
 			}
+
+			R_OptimizeMesh((uint32_t *)&surf->numVerts, (uint32_t *)&surf->numIndexes, surf->indexes, (vec3_t *)(data + ofs_xyz));
 
 			vboSurf->surfaceType = SF_VBO_MDVMESH;
 			vboSurf->mdvModel = mdvModel;

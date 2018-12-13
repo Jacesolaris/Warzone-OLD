@@ -267,7 +267,7 @@ void R_InitVBOs(void)
 	dataSize += sizeof(tess.normal[0]);
 	dataSize += sizeof(tess.vertexColors[0]);
 	dataSize += sizeof(tess.texCoords[0][0]) * 2;
-	dataSize += sizeof(tess.lightdir[0]);
+	//dataSize += sizeof(tess.lightdir[0]);
 	dataSize *= SHADER_MAX_VERTEXES;
 
 	//tess.vbo = R_CreateVBO(NULL, dataSize, VBO_USAGE_DYNAMIC);
@@ -281,13 +281,11 @@ void R_InitVBOs(void)
 	tess.vbo->ofs_st          = offset; offset += sizeof(tess.texCoords[0][0]) * 2 * SHADER_MAX_VERTEXES;
 
 	tess.vbo->ofs_vertexcolor = offset; offset += sizeof(tess.vertexColors[0])     * SHADER_MAX_VERTEXES;
-	tess.vbo->ofs_lightdir    = offset;
 
 	tess.vbo->stride_xyz         = sizeof(tess.xyz[0]);
 	tess.vbo->stride_normal      = sizeof(tess.normal[0]);
 	tess.vbo->stride_vertexcolor = sizeof(tess.vertexColors[0]);
 	tess.vbo->stride_st          = sizeof(tess.texCoords[0][0]) * 2;
-	tess.vbo->stride_lightdir    = sizeof(tess.lightdir[0]);
 
 	dataSize = sizeof(tess.indexes[0]) * SHADER_MAX_INDEXES;
 
@@ -448,12 +446,6 @@ void RB_UpdateVBOs(unsigned int attribBits)
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]));
 				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]),     tess.vertexColors);
 			}
-
-			if(attribBits & ATTR_LIGHTDIRECTION)
-			{
-				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_lightdir, tess.numVertexes * sizeof(tess.lightdir[0]));
-				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_lightdir,    tess.numVertexes * sizeof(tess.lightdir[0]),         tess.lightdir);
-			}
 		}
 		else
 		{
@@ -461,7 +453,6 @@ void RB_UpdateVBOs(unsigned int attribBits)
 			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_st,          tess.numVertexes * sizeof(tess.texCoords[0][0]) * 2, tess.texCoords);
 			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_normal,      tess.numVertexes * sizeof(tess.normal[0]),           tess.normal);
 			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]),     tess.vertexColors);
-			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_lightdir,    tess.numVertexes * sizeof(tess.lightdir[0]),         tess.lightdir);
 		}
 	}
 

@@ -708,7 +708,7 @@ static void DrawSkySide( struct image_s *image, struct image_s *nightImage, cons
 		//else
 		//	GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 
-		vec3_t out;
+		//vec3_t out;
 		
 		if (tr.viewParms.flags & VPF_SKYCUBEDAY)
 		{
