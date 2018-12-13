@@ -2084,6 +2084,13 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 	aa = *(msurface_t **) a;
 	bb = *(msurface_t **) b;
 
+#ifdef __USE_VBO_AREAS__
+	if (aa->vboArea < bb->vboArea)
+		return -1;
+	else if (aa->vboArea > bb->vboArea)
+		return 1;
+#endif //__USE_VBO_AREAS__
+
 #ifdef __FX_SORTING__
 	if (qboolean(aa->shader == tr.sunShader) < qboolean(bb->shader == tr.sunShader))
 		return -1;
@@ -2457,7 +2464,6 @@ static int BSPSurfaceCompare(const void *a, const void *b)
 		return 1;
 #endif //__PLAYER_BASED_CUBEMAPS__
 
-
 	return 0;
 }
 
@@ -2499,7 +2505,7 @@ struct packedVertex_t
 };
 
 #ifdef __USE_VBO_AREAS__
-#define NUM_MAP_AREAS 256//64//16//9
+#define NUM_MAP_AREAS 4//16//256//64//16//9
 #define NUM_MAP_SECTIONS sqrt(NUM_MAP_AREAS)
 
 struct mapArea_t
@@ -2513,7 +2519,7 @@ struct mapArea_t
 struct mapAreas_t
 {
 	int numAreas = 0;
-	mapArea_t areas[NUM_MAP_AREAS*2];
+	mapArea_t areas[(NUM_MAP_AREAS*2)];
 };
 
 mapAreas_t MAP_AREAS;
@@ -2659,9 +2665,10 @@ qboolean R_AreaInFOV(vec3_t spot, vec3_t from)
 
 qboolean VBOAreaVisible(int areanum)
 {
+	if (areanum == -1) return qtrue;
+
 	mapArea_t *area = &MAP_AREAS.areas[areanum];
 
-#if 0
 	int r;
 	int planeBits = (tr.viewParms.flags & VPF_FARPLANEFRUSTUM) ? 31 : 15;
 
@@ -2675,6 +2682,7 @@ qboolean VBOAreaVisible(int areanum)
 		}
 	}
 
+#if 0
 	if (planeBits & 2) {
 		r = R_BoxOnPlaneSide(area->mins, area->maxs, &tr.viewParms.frustum[1]);
 		if (r == 2) {
@@ -2714,21 +2722,37 @@ qboolean VBOAreaVisible(int areanum)
 			planeBits &= ~16;			// all descendants will also be in front
 		}
 	}
-#else
-	if (!R_AreaInFOV(area->mins, tr.refdef.vieworg)
-		&& !R_AreaInFOV(area->maxs, tr.refdef.vieworg)
-		&& !R_AreaInFOV(area->center, tr.refdef.vieworg))
-	{
+#endif
+
+	if (Distance(area->center, tr.refdef.vieworg) > tr.occlusionZfar * 2.0)
+	{// Too far away...
 		return qfalse;
 	}
-#endif
+
+	return qtrue;
+}
+
+qboolean R_PointInBounds(vec3_t point, vec3_t mins, vec3_t maxs)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (point[i] < mins[i])
+		{
+			return qfalse;
+		}
+		if (point[i] > maxs[i])
+		{
+			return qfalse;
+		}
+	}
 
 	return qtrue;
 }
 
 void SetVBOVisibleAreas(void)
 {
-#if 0
 	int numVisible = 0;
 	int numInVisible = 0;
 
@@ -2736,13 +2760,18 @@ void SetVBOVisibleAreas(void)
 	{
 		if (r_occlusion->integer)
 		{
-			if (!VBOAreaVisible(i))
-			{
+			if (R_PointInBounds(tr.refdef.vieworg, MAP_AREAS.areas[i].mins, MAP_AREAS.areas[i].maxs))
+			{// We are inside this area, always visible...
+				MAP_AREAS.areas[i].visible = qtrue;
+				numVisible++;
+			}
+			else if (!VBOAreaVisible(i))
+			{// Not in view frustrum...
 				MAP_AREAS.areas[i].visible = qfalse;
 				numInVisible++;
 			}
 			else
-			{
+			{// Visible...
 				MAP_AREAS.areas[i].visible = qtrue;
 				numVisible++;
 			}
@@ -2758,16 +2787,18 @@ void SetVBOVisibleAreas(void)
 	{
 		ri->Printf(PRINT_ALL, "v: %i. i: %i.\n", numVisible, numInVisible);
 	}
-#endif
 }
 
 qboolean GetVBOAreaVisible(int area)
 {
-#if 0
-	return MAP_AREAS.areas[area].visible;
-#else
-	return qtrue;
-#endif
+	if (area >= 0)
+	{
+		return MAP_AREAS.areas[area].visible;
+	}
+	else
+	{// Sky etc...
+		return qtrue;
+	}
 }
 #endif //__USE_VBO_AREAS__
 
@@ -2793,8 +2824,8 @@ static void R_CreateWorldVBOs(void)
 	VBO_t *vbo;
 	IBO_t *ibo;
 
-	int maxVboSize = 16 * 1024 * 1024;
-	int maxIboSize = 4 * 1024 * 1024;
+	int maxVboSize = 16 * 64 * 1024 * 1024;
+	int maxIboSize = 4 * 64 * 1024 * 1024;
 
 	int             startTime, endTime;
 
@@ -2809,27 +2840,29 @@ static void R_CreateWorldVBOs(void)
 
 	for(surface = &s_worldData.surfaces[0]; surface < &s_worldData.surfaces[s_worldData.numsurfaces]; surface++)
 	{
-		srfBspSurface_t *bspSurf;
+		srfBspSurface_t *bspSurf = (srfBspSurface_t *)surface->data;
 		shader_t *shader = surface->shader;
 
-		if (shader->isPortal)
-			continue;
+#ifdef __USE_VBO_AREAS__
+		bspSurf->vboArea = -1;
+		surface->vboArea = -1;
 
-		if (shader->isSky)
-			continue;
+		vec3_t center;
+		VectorCopy(surface->cullinfo.bounds[0], bspSurf->cullBounds[0]);
+		VectorCopy(surface->cullinfo.bounds[1], bspSurf->cullBounds[1]);
+		VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
+		VectorScale(center, 0.5f, center);
+		VectorCopy(center, bspSurf->cullOrigin);
+#endif //__USE_VBO_AREAS__
 
-		if (ShaderRequiresCPUDeforms(shader))
+		if (shader->isPortal || shader->isSky || ShaderRequiresCPUDeforms(shader))
+		{
 			continue;
+		}
 
 		// check for this now so we can use srfBspSurface_t* universally in the rest of the function
 		if (!(*surface->data == SF_FACE || *surface->data == SF_GRID || *surface->data == SF_TRIANGLES))
 			continue;
-
-		bspSurf = (srfBspSurface_t *) surface->data;
-
-#ifdef __USE_VBO_AREAS__
-		bspSurf->vboArea = -1;
-#endif //__USE_VBO_AREAS__
 
 		if (!bspSurf->numIndexes || !bspSurf->numVerts)
 			continue;
@@ -2846,23 +2879,31 @@ static void R_CreateWorldVBOs(void)
 		srfBspSurface_t *bspSurf;
 		shader_t *shader = surface->shader;
 
-		if (shader->isPortal)
+		if (shader->isPortal || shader->isSky || ShaderRequiresCPUDeforms(shader))
+		{
 			continue;
-
-		if (shader->isSky)
-			continue;
-
-		if (ShaderRequiresCPUDeforms(shader))
-			continue;
+		}
 
 		// check for this now so we can use srfBspSurface_t* universally in the rest of the function
 		if (!(*surface->data == SF_FACE || *surface->data == SF_GRID || *surface->data == SF_TRIANGLES))
+		{
 			continue;
+		}
 
 		bspSurf = (srfBspSurface_t *) surface->data;
 
 		if (!bspSurf->numIndexes || !bspSurf->numVerts)
 			continue;
+
+#ifdef __USE_VBO_AREAS__
+		bspSurf->vboArea = GetVBOArea(bspSurf->cullOrigin);
+		surface->vboArea = bspSurf->vboArea;
+
+		if (r_areaVisDebug->integer)
+		{
+			ri->Printf(PRINT_ALL, "%.4f %.4f %.4f is in area %i. mins: %.4f %.4f %.4f. maxs: %.4f %.4f %.4f.\n", bspSurf->cullOrigin[0], bspSurf->cullOrigin[1], bspSurf->cullOrigin[2], bspSurf->vboArea, MAP_AREAS.areas[bspSurf->vboArea].mins[0], MAP_AREAS.areas[bspSurf->vboArea].mins[1], MAP_AREAS.areas[bspSurf->vboArea].mins[2], MAP_AREAS.areas[bspSurf->vboArea].maxs[0], MAP_AREAS.areas[bspSurf->vboArea].maxs[1], MAP_AREAS.areas[bspSurf->vboArea].maxs[2]);
+		}
+#endif //__USE_VBO_AREAS__
 
 		surfacesSorted[j++] = surface;
 	}
@@ -2897,20 +2938,7 @@ static void R_CreateWorldVBOs(void)
 					srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
 
 #ifdef __USE_VBO_AREAS__
-					vec3_t center;
-					if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
-					{
-						VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
-						VectorScale(center, 0.5f, center);
-					}
-					else
-					{
-						VectorCopy(bspSurf->cullOrigin, center);
-					}
-
-					int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
-
-					if (thisArea != a)
+					if (bspSurf->vboArea != a)
 					{// Not in the current VBO area, skip and it will be added to the right area later...
 						continue;
 					}
@@ -2939,20 +2967,7 @@ static void R_CreateWorldVBOs(void)
 				srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
 
 #ifdef __USE_VBO_AREAS__
-				vec3_t center;
-				if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
-				{
-					VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
-					VectorScale(center, 0.5f, center);
-				}
-				else
-				{
-					VectorCopy(bspSurf->cullOrigin, center);
-				}
-
-				int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
-
-				if (thisArea != a)
+				if (bspSurf->vboArea != a)
 				{// Not in the current VBO area, skip and it will be added to the right area later...
 					continue;
 				}
@@ -2985,20 +3000,7 @@ static void R_CreateWorldVBOs(void)
 				glIndex_t *surfIndex;
 
 #ifdef __USE_VBO_AREAS__
-				vec3_t center;
-				if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
-				{
-					VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
-					VectorScale(center, 0.5f, center);
-				}
-				else
-				{
-					VectorCopy(bspSurf->cullOrigin, center);
-				}
-
-				int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
-
-				if (thisArea != a)
+				if (bspSurf->vboArea != a)
 				{// Not in the current VBO area, skip and it will be added to the right area later...
 					continue;
 				}
@@ -3071,29 +3073,18 @@ static void R_CreateWorldVBOs(void)
 				srfBspSurface_t *bspSurf = (srfBspSurface_t *)(*currSurf)->data;
 
 #ifdef __USE_VBO_AREAS__
-				vec3_t center;
-				if (bspSurf->cullOrigin[0] == 0 && bspSurf->cullOrigin[1] == 0 && bspSurf->cullOrigin[2] == 0)
-				{
-					VectorAdd(bspSurf->cullBounds[0], bspSurf->cullBounds[1], center);
-					VectorScale(center, 0.5f, center);
-				}
-				else
-				{
-					VectorCopy(bspSurf->cullOrigin, center);
-				}
-
-				int thisArea = GetVBOArea(center/*bspSurf->cullOrigin*/);
-
-				if (thisArea != a)
+				if (bspSurf->vboArea != a)
 				{// Not in the current VBO area, skip and it will be added to the right area later...
 					continue;
 				}
-
-				bspSurf->vboArea = a;
 #endif //__USE_VBO_AREAS__
 
 				bspSurf->vbo = vbo;
 				bspSurf->ibo = ibo;
+
+#ifdef __USE_VBO_AREAS__
+				(*currSurf)->vbo = vbo;
+#endif //__USE_VBO_AREAS__
 			}
 
 			ri->Hunk_FreeTempMemory(indexes);
@@ -5179,9 +5170,9 @@ void R_MergeLeafSurfaces(void)
 
 			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
 
-//#ifdef __USE_VBO_AREAS__
-//			int area1 = GetVBOArea(surf1->cullinfo.centerOrigin);
-//#endif //__USE_VBO_AREAS__
+#ifdef __USE_VBO_AREAS__
+			int area1 = surf1->vboArea;
+#endif //__USE_VBO_AREAS__
 
 			for (k = j + 1; k < leaf->nummarksurfaces; k++)
 			{
@@ -5193,11 +5184,11 @@ void R_MergeLeafSurfaces(void)
 				msurface_t *surf2 = s_worldData.surfaces + surfNum2;
 				shader_t *shader2 = surf2->shader;
 
-//#ifdef __USE_VBO_AREAS__
-//				int area2 = GetVBOArea(surf1->cullinfo.centerOrigin);
-//				if (area1 != area2)
-//					continue;
-//#endif //__USE_VBO_AREAS__
+#ifdef __USE_VBO_AREAS__
+				int area2 = surf2->vboArea;
+				if (area1 != area2)
+					continue;
+#endif //__USE_VBO_AREAS__
 
 				if (shader1 != shader2 && deforms && ShaderRequiresCPUDeforms(shader2))
 					continue;

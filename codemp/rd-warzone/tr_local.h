@@ -2271,6 +2271,11 @@ typedef struct msurface_s {
 	srfSprites_t		*surfaceSprites;
 #endif //__XYC_SURFACE_SPRITES__
 
+#ifdef __USE_VBO_AREAS__
+	int					vboArea = -1;
+	VBO_t				*vbo = NULL;
+#endif //__USE_VBO_AREAS__
+
 	qboolean			isMerged;
 
 	surfaceType_t		*data;			// any of srf*_t

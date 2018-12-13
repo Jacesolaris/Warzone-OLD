@@ -1422,15 +1422,6 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 #endif //__REALTIME_SURFACE_SORTING__
 
 #ifdef __RENDER_FOLIAGE_LAST__
-/*
-typedef enum {
-	FOLIAGE_NONE,
-	FOLIAGE_GRASS,
-	FOLIAGE_GROUNDFOLIAGE,
-	FOLIAGE_VINES,
-	FOLIAGE_MAX
-} foliageTypes_t;
-*/
 	for (int type = FOLIAGE_NONE; type < FOLIAGE_MAX; type++)
 	{
 		// draw everything
