@@ -725,7 +725,7 @@ to actually render the visible surfaces for this view
 extern qboolean SUN_VISIBLE;
 extern float MAP_WATER_LEVEL;
 
-void RB_ClearWaterPositionMap ( void )
+void RB_ClearRenderBuffers ( void )
 {
 	//if (tr.renderFbo && backEnd.viewParms.targetFbo == tr.renderFbo)
 	if (!backEnd.depthFill 
@@ -738,6 +738,17 @@ void RB_ClearWaterPositionMap ( void )
 		{
 			FBO_t *oldFbo = glState.currentFBO;
 			FBO_Bind(tr.waterFbo);
+			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			qglClear(GL_COLOR_BUFFER_BIT);
+
+			FBO_Bind(oldFbo);
+			qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
+		}
+
+		{// Also clear the render pshadow map...
+			FBO_t *oldFbo = glState.currentFBO;
+			FBO_Bind(tr.renderPshadowsFbo);
 			qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 			qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			qglClear(GL_COLOR_BUFFER_BIT);
@@ -846,7 +857,7 @@ void RB_BeginDrawingView (void) {
 #endif
 	}
 
-	RB_ClearWaterPositionMap();
+	RB_ClearRenderBuffers();
 
 	// clear to white for shadow maps
 	if (backEnd.viewParms.flags & VPF_SHADOWMAP 
@@ -1421,8 +1432,10 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 	}
 #endif //__REALTIME_SURFACE_SORTING__
 
-#ifdef __RENDER_FOLIAGE_LAST__
-	for (int type = FOLIAGE_NONE; type < FOLIAGE_MAX; type++)
+	FBO_t *originalFBO = glState.currentFBO;
+
+#ifdef __RENDER_PASSES__
+	for (int type = RENDERPASS_NONE; type < RENDERPASS_MAX; type++)
 	{
 		// draw everything
 		backEnd.currentEntity = &tr.worldEntity;
@@ -1434,7 +1447,20 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 		oldDepthRange = 0;
 		oldSort = (uint64_t)-1;
 
-		backEnd.renderingFoliageType = (foliageTypes_t)type;
+		backEnd.renderPass = (renderPasses_t)type;
+
+		if (backEnd.renderPass == RENDERPASS_PSHADOWS && !(!backEnd.viewIsOutdoors || !SHADOWS_ENABLED || RB_NightScale() == 1.0))
+		{// No shadows in the day, when outdoors...
+			continue;
+		}
+		else if (backEnd.renderPass == RENDERPASS_PSHADOWS)
+		{
+			FBO_Bind(tr.renderPshadowsFbo);
+		}
+		else if (glState.currentFBO == tr.renderPshadowsFbo)
+		{// Switch back to original FBO after drawing PSHADOW pass...
+			FBO_Bind(originalFBO);
+		}
 
 		// First draw world normally...
 		for (i = 0; i < numDrawSurfs; ++i)
@@ -1455,6 +1481,7 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 			if (!drawSurf || !drawSurf->surface || *drawSurf->surface <= SF_BAD || *drawSurf->surface >= SF_NUM_SURFACE_TYPES || *drawSurf->surface <= SF_SKIP) continue;
 
 			shader_t *thisShader = tr.sortedShaders[(drawSurf->sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)];
+			int64_t thisEntityNum = (drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT) & REFENTITYNUM_MASK;
 
 			if (thisShader->surfaceFlags & SURF_NODRAW)
 			{// Skip nodraws completely...
@@ -1482,8 +1509,8 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 
 			qboolean doDraw = qtrue;
 
-			if (backEnd.renderingFoliageType != FOLIAGE_NONE)
-			{// Skip any surfs that are not of this renderingFoliageType...
+			if (backEnd.renderPass != RENDERPASS_NONE)
+			{// Skip any surfs that are not of this renderPass...
 				extern qboolean RB_ShouldUseGeometryGrass(int materialType);
 
 				qboolean isGrass = qfalse;
@@ -1500,15 +1527,19 @@ void RB_RenderDrawSurfList(drawSurf_t *drawSurfs, int numDrawSurfs, qboolean inQ
 					isVines = qtrue;
 				}
 
-				if (isGrass && backEnd.renderingFoliageType == FOLIAGE_GRASS)
+				if (isGrass && backEnd.renderPass == RENDERPASS_GRASS)
 				{
 					doDraw = qtrue;
 				}
-				else if (isGroundFoliage && backEnd.renderingFoliageType == FOLIAGE_GROUNDFOLIAGE)
+				else if (isGroundFoliage && backEnd.renderPass == RENDERPASS_GROUNDFOLIAGE)
 				{
 					doDraw = qtrue;
 				}
-				else if (isVines && backEnd.renderingFoliageType == FOLIAGE_VINES)
+				else if (isVines && backEnd.renderPass == RENDERPASS_VINES)
+				{
+					doDraw = qtrue;
+				}
+				else if (thisEntityNum == REFENTITYNUM_WORLD && backEnd.renderPass == RENDERPASS_PSHADOWS)
 				{
 					doDraw = qtrue;
 				}
@@ -3918,6 +3949,13 @@ const void *RB_PostProcess(const void *data)
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
 		FBO_BlitFromTexture(tr.shadowCubemaps[/* 0 */r_testvalue0->integer], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+	}
+
+	if (0)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.renderPshadowsImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
 	if (0)

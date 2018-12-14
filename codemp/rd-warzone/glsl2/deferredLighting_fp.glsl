@@ -24,7 +24,7 @@ uniform sampler2D							u_HeightMap;		// ssdoImage
 uniform sampler2D							u_GlowMap;			// anamorphic
 uniform sampler2D							u_ShadowMap;		// Screen Shadow Map
 uniform sampler2D							u_WaterEdgeMap;		// tr.shinyImage
-uniform sampler2D							u_RoadsControlMap;	// tr.random2K
+uniform sampler2D							u_RoadsControlMap;	// Screen Pshadows Map
 uniform samplerCube							u_SkyCubeMap;		// Day sky cubemap
 uniform samplerCube							u_SkyCubeMapNight;	// Night sky cubemap
 uniform samplerCube							u_CubeMap;			// Closest cubemap
@@ -1476,6 +1476,8 @@ void main(void)
 	{// If r_blinnPhong is <= 0.0 then this is pointless...
 		float phongFactor = (BLINN_PHONG_STRENGTH * 12.0) * SUN_PHONG_SCALE;
 
+		float PshadowValue = 1.0 - texture(u_RoadsControlMap, texCoords).a;
+
 #define LIGHT_COLOR_POWER			4.0
 
 		if (phongFactor > 0.0 && NIGHT_SCALE < 1.0)
@@ -1527,7 +1529,7 @@ void main(void)
 				vec3 blinn = blinn_phong(position.xyz, outColor.rgb, N, E, normalize(-sunDir), lightColor * 0.06, lightColor, 1.0, u_PrimaryLightOrigin.xyz);
 				lightColor.rgb += blinn;
 
-				outColor.rgb = outColor.rgb + max(lightColor, vec3(0.0));
+				outColor.rgb = outColor.rgb + max(lightColor * PshadowValue, vec3(0.0));
 			}
 		}
 
@@ -1612,7 +1614,7 @@ void main(void)
 				}
 
 				addedLight.rgb *= lightsReflectionFactor; // More grey colors get more colorization from lights...
-				outColor.rgb = outColor.rgb + max(addedLight, vec3(0.0));
+				outColor.rgb = outColor.rgb + max(addedLight * PshadowValue, vec3(0.0));
 			}
 		}
 	}
@@ -1706,8 +1708,6 @@ void main(void)
 		else
 	#endif //__CLOUD_SHADOWS__
 		outColor.rgb *= finalShadow;
-
-	
 	}
 #endif //defined(USE_SHADOWMAP) && !defined(__LQ_MODE__)
 

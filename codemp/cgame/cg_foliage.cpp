@@ -845,7 +845,7 @@ vec3_t		*FOLIAGE_AREAS_MAXS = NULL;
 
 
 qhandle_t	FOLIAGE_PLANT_MODEL[5] = { 0 };
-qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER = 0;
+qhandle_t	FOLAIGE_GRASS_BILLBOARD_SHADER = 0;
 qhandle_t	FOLIAGE_TREE_MODEL[16] = { 0 };
 //void		*FOLIAGE_TREE_G2_MODEL[16] = { NULL };
 float		FOLIAGE_TREE_RADIUS[16] = { 0 };
@@ -2665,7 +2665,7 @@ void FOLIAGE_DrawGrass(void)
 			float	customNormalFoliageModelsTempScalesList[69] = { 1.0 };
 			float	customRareFoliageModelsTempScalesList[69] = { 1.0 };
 
-			CUSTOM_FOLIAGE_MAX_DISTANCE = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLIAGE_MAX_DISTANCE", "0"));
+			CUSTOM_FOLIAGE_MAX_DISTANCE = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "FOLIAGE", "FOLAIGE_MAX_DISTANCE", "0"));
 
 			if (CUSTOM_FOLIAGE_MAX_DISTANCE != 0.0)
 			{

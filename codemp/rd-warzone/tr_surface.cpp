@@ -2068,7 +2068,7 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 	float	*texCoords, *lightCoords;
 	uint32_t *normal;
 	float   *color;
-	uint32_t *lightdir;
+	//uint32_t *lightdir;
 	srfVert_t	*dv;
 	int		rows, irows, vrows;
 	int		used;

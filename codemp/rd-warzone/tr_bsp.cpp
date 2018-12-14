@@ -4442,13 +4442,16 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 
 		if (hasGlow)
 		{
-#define EMISSIVE_MERGE_RADIUS 128.0//64.0
 			VectorScale(glowColor, emissiveColorScale, glowColor);
 			//VectorScale(glowColor, 0.333, glowColor);
 			//VectorNormalize(glowColor);
 
 			//R_AddLightVibrancy(glowColor, 0.1);
 			//VectorNormalize(glowColor);
+
+#ifdef __ALLOW_MAP_GLOWS_MERGE__
+
+#define EMISSIVE_MERGE_RADIUS 128.0//64.0
 
 			int sameColorTooCloseID = R_CloseLightOfColorNear(surfOrigin, 16.0, glowColor, 99999.0);
 			int sameColorGlowNearID = R_CloseLightOfColorNear(surfOrigin, EMISSIVE_MERGE_RADIUS, glowColor, 1.0);
@@ -4502,7 +4505,9 @@ static void R_SetupMapGlowsAndWaterPlane( void )
 						, MAP_GLOW_COLORS[sameColorGlowNearID][0], MAP_GLOW_COLORS[sameColorGlowNearID][1], MAP_GLOW_COLORS[sameColorGlowNearID][2]);
 				}
 			}
-			else if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+			else
+#endif //__ALLOW_MAP_GLOWS_MERGE__
+			if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
 			{
 				radius = Q_clamp(64.0, radius, 128.0);
 				

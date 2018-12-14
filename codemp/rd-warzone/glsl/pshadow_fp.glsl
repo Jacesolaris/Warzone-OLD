@@ -11,8 +11,14 @@ uniform vec4      u_Local0;			// shadowMapSize, testshadervalues
 uniform vec4      u_Local1;			// realLightOrigin[0], realLightOrigin[1], realLightOrigin[2], usingTessellation
 uniform vec4      u_Local2;			// playerOrigin[0], playerOrigin[1], playerOrigin[2], invLightPower
 
-varying vec3      var_Position;
-//varying vec3      var_Normal;
+#if defined(USE_TESSELLATION)
+	in precise vec3				WorldPos_FS_in;
+	#define m_vertPos			WorldPos_FS_in
+#else //!defined(USE_TESSELLATION)
+	varying vec3				var_Position;
+	//varying vec3				var_Normal;
+	#define m_vertPos			var_Position
+#endif //defined(USE_TESSELLATION)
 
 out vec4 out_Glow;
 out vec4 out_Position;
@@ -23,14 +29,21 @@ out vec4 out_NormalDetail;
 
 void main()
 {
-	vec3 lightToPos = var_Position.xyz - u_LightOrigin.xyz;
+	vec3 lightToPos = m_vertPos.xyz - u_LightOrigin.xyz;
 
-	float lightDist = distance(var_Position.xyz, u_Local1.xyz);
+	float lightDist = distance(m_vertPos.xyz, u_Local1.xyz);
 
 	float intensity = 1.0 - clamp(lightDist / u_LightRadius, 0.0, 1.0);
 	intensity = clamp(pow(intensity, 5.0), 0.0, 1.0);
 
 	intensity = mix(intensity, 0.0, u_Local2.a);
+
+	// Only draw shadows away from the light, not toward it, dah!
+	vec3 lightToPosN = normalize(u_Local1.xyz - m_vertPos.xyz);
+	vec3 entityToPosN = normalize(u_Local2.xyz - m_vertPos.xyz);
+	float dt = (max(dot(lightToPosN, entityToPosN), 0.0) > 0.0) ? 1.0 : 0.0;
+	//dt *= (distance(u_Local2.xyz, m_vertPos.xyz) < lightDist) ? 1.0 : 0.0;
+	intensity *= dt;
 
 	vec2 st = vec2(-dot(u_LightRight, lightToPos), dot(u_LightUp, lightToPos));
 	st = st * 0.5 + 0.5;
@@ -40,7 +53,7 @@ void main()
 		intensity = 0.0;
 	}
 
-	if (var_Position.z > u_Local2.z + 64.0)
+	if (m_vertPos.z > u_Local2.z + 64.0)
 	{// Light dir should always be facing down... Why the fuck is rend2 trying to draw shadows above the light???
 		intensity = 0.0;
 	}

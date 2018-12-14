@@ -3689,15 +3689,38 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load shadowfill shader!");
 	}
 
+	
 	attribs = ATTR_POSITION | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
-	Q_strcat(extradefines, 1024, "#define USE_PCF\n#define USE_DISCARD\n");
+	Q_strcat(extradefines, 1024, "#define USE_PCF\n");
 
-	if (!GLSL_BeginLoadGPUShader(&tr.pshadowShader, "pshadow", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_pshadow_vp, fallbackShader_pshadow_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.pshadowShader[0], "pshadow0", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_pshadow_vp, fallbackShader_pshadow_fp, NULL, NULL, NULL))
 	{
-		ri->Error(ERR_FATAL, "Could not load pshadow shader!");
+		ri->Error(ERR_FATAL, "Could not load pshadow0 shader!");
 	}
+
+#ifdef __PSHADOW_TESSELLATION__
+	attribs = ATTR_POSITION | ATTR_NORMAL;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define USE_PCF\n#define USE_TESSELLATION\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.pshadowShader[1], "pshadow1", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_pshadow_vp, fallbackShader_pshadow_fp, fallbackShader_tessellation_cs, fallbackShader_tessellation_es, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load pshadow1 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_NORMAL;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define USE_PCF\n#define USE_TESSELLATION\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.pshadowShader[2], "pshadow2", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_pshadow_vp, fallbackShader_pshadow_fp, fallbackShader_tessellationTerrain_cs, fallbackShader_tessellationTerrain_es, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load pshadow2 shader!");
+	}
+#endif //__PSHADOW_TESSELLATION__
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -4976,22 +4999,57 @@ void GLSL_EndLoadGPUShaders(int startTime)
 
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.pshadowShader))
+	if (!GLSL_EndLoadGPUShader(&tr.pshadowShader[0]))
 	{
-		ri->Error(ERR_FATAL, "Could not load pshadow shader!");
+		ri->Error(ERR_FATAL, "Could not load pshadow0 shader!");
 	}
 
-	GLSL_InitUniforms(&tr.pshadowShader);
+	GLSL_InitUniforms(&tr.pshadowShader[0]);
 
-	GLSL_BindProgram(&tr.pshadowShader);
-	GLSL_SetUniformInt(&tr.pshadowShader, UNIFORM_SHADOWMAP, TB_DIFFUSEMAP);
+	GLSL_BindProgram(&tr.pshadowShader[0]);
+	GLSL_SetUniformInt(&tr.pshadowShader[0], UNIFORM_SHADOWMAP, TB_DIFFUSEMAP);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.pshadowShader);
+	GLSL_FinishGPUShader(&tr.pshadowShader[0]);
 #endif
 
 	numEtcShaders++;
 
+#ifdef __PSHADOW_TESSELLATION__
+	if (!GLSL_EndLoadGPUShader(&tr.pshadowShader[1]))
+	{
+		ri->Error(ERR_FATAL, "Could not load pshadow1 shader!");
+	}
+
+	GLSL_InitUniforms(&tr.pshadowShader[1]);
+
+	GLSL_BindProgram(&tr.pshadowShader[1]);
+	GLSL_SetUniformInt(&tr.pshadowShader[1], UNIFORM_SHADOWMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.pshadowShader[1], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.pshadowShader[1]);
+#endif
+
+	numEtcShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.pshadowShader[2]))
+	{
+		ri->Error(ERR_FATAL, "Could not load pshadow2 shader!");
+	}
+
+	GLSL_InitUniforms(&tr.pshadowShader[2]);
+
+	GLSL_BindProgram(&tr.pshadowShader[2]);
+	GLSL_SetUniformInt(&tr.pshadowShader[2], UNIFORM_SHADOWMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.pshadowShader[2], UNIFORM_ROADSCONTROLMAP, TB_ROADSCONTROLMAP);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.pshadowShader[2]);
+#endif
+
+	numEtcShaders++;
+#endif //__PSHADOW_TESSELLATION__
 
 
 	if (!GLSL_EndLoadGPUShader(&tr.down4xShader))
@@ -6828,7 +6886,11 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.portalShader);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
-	GLSL_DeleteGPUShader(&tr.pshadowShader);
+	GLSL_DeleteGPUShader(&tr.pshadowShader[0]);
+#ifdef __PSHADOW_TESSELLATION__
+	GLSL_DeleteGPUShader(&tr.pshadowShader[1]);
+	GLSL_DeleteGPUShader(&tr.pshadowShader[2]);
+#endif //__PSHADOW_TESSELLATION__
 	GLSL_DeleteGPUShader(&tr.down4xShader);
 	GLSL_DeleteGPUShader(&tr.bokehShader);
 	GLSL_DeleteGPUShader(&tr.tonemapShader);

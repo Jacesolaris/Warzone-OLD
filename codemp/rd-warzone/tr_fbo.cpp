@@ -973,6 +973,14 @@ void FBO_Init(void)
 		qglClearColor(1, 1, 1, 1);
 		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//FBO_Bind(NULL);
+
+
+		tr.renderPshadowsFbo = FBO_Create("_renderPshadows", tr.renderPshadowsImage->width, tr.renderPshadowsImage->height);
+		FBO_Bind(tr.renderPshadowsFbo);
+		FBO_AttachTextureImage(tr.renderPshadowsImage, 0);
+		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+		FBO_SetupDrawBuffers();
+		R_CheckFBO(tr.renderPshadowsFbo);
 	}
 
 	//

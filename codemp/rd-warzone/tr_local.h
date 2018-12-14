@@ -85,6 +85,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define __MERGE_GLOW_STAGES__					// Tries to merge glow stages into the diffuse stage of shaders to reduce draw calls.
 
+#define __ALLOW_MAP_GLOWS_MERGE__				// Allow merging of (map glow) emissive lights...
+
 #define __ENTITY_LIGHTING_DLIGHT_GLOW__			// Add some dlight glow to entity lighting...
 #define __ENTITY_LIGHTING_MAP_GLOW__			// Add some emissive glow to entity lighting...
 
@@ -114,14 +116,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __GENERATED_SKY_CUBES__				// Generate sky cubemaps from sky render instead of using map's skybox textures... Doesn't like non-procedural for some reason, so disabled.
 
 #define __TERRAIN_TESSELATION__
-
+#define __PSHADOW_TESSELLATION__				// Tessellate pshadow draws so that they work correctly on tessellated terrain...
 
 #define __HUMANOIDS_BEND_GRASS__
 #ifdef __HUMANOIDS_BEND_GRASS__
 #define MAX_GRASSBEND_HUMANOIDS 4
 #endif //__HUMANOIDS_BEND_GRASS__
 
-#define __RENDER_FOLIAGE_LAST__
+#define __RENDER_PASSES__
 
 #define __FX_SORTING__
 #define __WATER_SORTING__
@@ -2736,12 +2738,13 @@ typedef struct {
 } backEndCounters_t;
 
 typedef enum {
-	FOLIAGE_NONE,
-	FOLIAGE_GRASS,
-	FOLIAGE_GROUNDFOLIAGE,
-	FOLIAGE_VINES,
-	FOLIAGE_MAX
-} foliageTypes_t;
+	RENDERPASS_NONE,
+	RENDERPASS_PSHADOWS,
+	RENDERPASS_GRASS,
+	RENDERPASS_GROUNDFOLIAGE,
+	RENDERPASS_VINES,
+	RENDERPASS_MAX
+} renderPasses_t;
 
 // all state modified by the back end is seperated
 // from the front end state
@@ -2754,7 +2757,7 @@ typedef struct {
 	trRefEntity_t		*currentEntity;
 	qboolean			skyRenderedThisView;	// flag for drawing sun
 
-	foliageTypes_t		renderingFoliageType;
+	renderPasses_t		renderPass;
 
 	qboolean			projection2D;	// if qtrue, drawstretchpic doesn't need to change modes
 	byte				color2D[4];
@@ -2873,6 +2876,7 @@ typedef struct trGlobals_s {
 	image_t					*renderNormalDetailedImage;
 	image_t					*renderPositionMapImage;
 	image_t					*waterPositionMapImage;
+	image_t					*renderPshadowsImage;
 #if 0
 	image_t					*glowImageScaled[4];
 #else
@@ -2917,6 +2921,7 @@ typedef struct trGlobals_s {
 	FBO_t					*renderGlowFbo;
 	FBO_t					*renderDetailFbo;
 	FBO_t					*renderWaterFbo;
+	FBO_t					*renderPshadowsFbo;
 	FBO_t					*renderNoDepthFbo;
 	FBO_t					*renderGUIFbo;
 	FBO_t					*waterFbo;
@@ -3007,7 +3012,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t magicParticlesFireFlyShader;
 	shaderProgram_t portalShader;
 	shaderProgram_t shadowmapShader;
-	shaderProgram_t pshadowShader;
+	shaderProgram_t pshadowShader[3];
 	shaderProgram_t down4xShader;
 	shaderProgram_t bokehShader;
 	shaderProgram_t tonemapShader;
